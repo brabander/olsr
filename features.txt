@@ -18,13 +18,13 @@ redirect messages
 automatically disable                X       ?        ?      ?
 anti-spoofing
 
-use 255.255.255.255 as broadcast     X       ?        !      !
+use 255.255.255.255 as broadcast     X       ?        X      !
 address on a single interface
 
-use 255.255.255.255 as broadcast     X       ?        !      !
+use 255.255.255.255 as broadcast     X       ?        X      !
 address on multiple interfaces
 
-use the same subnet broadcast        X       -        -      -
+use the same subnet broadcast        X       -        X      -
 address on multiple interfaces
 
 initially delete default routes      X       !        !      !
