@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.h,v 1.5 2004/10/19 19:23:01 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.6 2004/10/19 20:20:26 kattemat Exp $
  *
  */
 
@@ -30,7 +30,7 @@
 #include "olsr_protocol.h"
 #include "../olsr_cfg.h"
 
-#define SOFTWARE_VERSION "0.1.1"
+#define PARSER_VERSION "0.1.1"
 
 
 int current_line;
