@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.26 2005/02/09 19:06:15 kattemat Exp $
+$Id: CHANGELOG,v 1.27 2005/02/14 19:09:50 tlopatic Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -10,6 +10,9 @@ lookups of main addresses based on alias addresses _much_ faster.
 The mid_lookup_main_addr function alone has gone from >30% of the
 total CPU time used by olsrd to <1%.
 PLUGIN DEVELOPERS: datatypes for MID entries has been changed.
+
+Routing table calculation in the LQ case now uses balanced binary
+trees instead of linked lists, which makes lookups much faster.
 
 TIMEOUT OF DATASETS
 
