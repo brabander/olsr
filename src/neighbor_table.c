@@ -71,8 +71,6 @@ olsr_delete_neighbor_2_pointer(struct neighbor_entry *neighbor, union olsr_ip_ad
 	{
 	  /* Dequeue */
 	  DEQUEUE_ELEM(entry);
-	  //entry->prev->next = entry->next;
-	  //entry->next->prev = entry->prev;
 	  /* Delete */
 	  free(entry);
 	  return 1;	  
@@ -167,8 +165,6 @@ olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
       if(two_hop_entry->neighbor_2_pointer < 1)
 	{
 	  DEQUEUE_ELEM(two_hop_entry);
-	  //two_hop_entry->prev->next = two_hop_entry->next;
-	  //two_hop_entry->next->prev = two_hop_entry->prev;
 
 	  free(two_hop_entry);
 	}
@@ -184,8 +180,6 @@ olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
 
   /* Dequeue */
   DEQUEUE_ELEM(entry);
-  //entry->prev->next = entry->next;
-  //entry->next->prev = entry->prev;
 
   free(entry);
 
@@ -239,13 +233,6 @@ olsr_insert_neighbor_table(union olsr_ip_addr *main_addr)
 
   /* Queue */
   QUEUE_ELEM(neighbortable[hash], new_neigh);
-  
-  /*
-  neighbortable[hash].next->prev = new_neigh;
-  new_neigh->next = neighbortable[hash].next;
-  new_neigh->prev = &neighbortable[hash];
-  neighbortable[hash].next = new_neigh;
-  */
 
   return new_neigh;
 }
@@ -406,10 +393,9 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
 	  if(two_hop_entry->neighbor_2_pointer < 1)
 	    {
-	      /* FIX THIS */
+	      /* FIX THIS (fix what?)*/
 	      DEQUEUE_ELEM(two_hop_entry);
-	      //two_hop_entry->prev->next = two_hop_entry->next;
-	      //two_hop_entry->next->prev = two_hop_entry->prev;
+
 	      free((void *)two_hop_entry);
 	    }
 
@@ -418,9 +404,6 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
 	  /* Dequeue */
 	  DEQUEUE_ELEM(two_hop_to_delete);
-
-	  //two_hop_to_delete->prev->next = two_hop_to_delete->next;
-	  //two_hop_to_delete->next->prev = two_hop_to_delete->prev;
 
 	  free(two_hop_to_delete);
 

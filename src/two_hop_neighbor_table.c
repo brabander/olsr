@@ -73,8 +73,6 @@ olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, union olsr_
 
 	 /* dequeue */
 	 DEQUEUE_ELEM(entry_to_delete);
-	 //entry_to_delete->prev->next = entry_to_delete->next;
-	 //entry_to_delete->next->prev = entry_to_delete->prev;
 
 	 free(entry_to_delete);
        }
@@ -118,8 +116,6 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
   
   /* dequeue */
   DEQUEUE_ELEM(two_hop_neighbor);
-  //two_hop_neighbor->prev->next = two_hop_neighbor->next;
-  //two_hop_neighbor->next->prev = two_hop_neighbor->prev;
   
   free(two_hop_neighbor);
 }
@@ -144,12 +140,6 @@ olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 
   /* Queue */  
   QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
-  /*
-  two_hop_neighbortable[hash].next->prev = two_hop_neighbor;
-  two_hop_neighbor->next = two_hop_neighbortable[hash].next;
-  two_hop_neighbortable[hash].next = two_hop_neighbor;
-  two_hop_neighbor->prev = &two_hop_neighbortable[hash];
-  */
 }
 
 
