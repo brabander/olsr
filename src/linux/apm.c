@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: apm.c,v 1.6 2004/10/02 12:02:06 kattemat Exp $
+ * $Id: apm.c,v 1.7 2004/10/02 12:12:31 kattemat Exp $
  *
  */
 
@@ -93,7 +93,7 @@ const static char * acpi_ac[] =
 #define USE_APM    1
 #define USE_ACPI   2
 
-static int method;
+static int method, fd_index;
 
 /* Prototypes */
 
@@ -118,11 +118,11 @@ apm_init()
   method = -1;
   olsr_printf(3, "Initializing APM\n");
 
-  if(apm_read_apm(&ainfo))
-    method = USE_APM;
-  if(apm_read_acpi(&ainfo))
+  if(((fd_index = acpi_probe()) >= 0) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
-
+  else if(apm_read_apm(&ainfo))
+    method = USE_APM;
+  
   if(method)
     apm_printinfo(&ainfo);
 
@@ -244,20 +244,13 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
 {
   FILE *fd;
   char s1[32], s2[32], s3[32], s4[32], inbuff[127];
-  int fd_index;
   int bat_max = 5000; /* Find some sane value */
   int bat_val = 0;
-
-  /* Check for ACPI support */
-  if((fd = fopen(ACPI_PROC, "r")) == NULL) 
-    return 0;
-
-  fclose(fd);
   
   printf("READING ACPI\n");
 
 
-  if((fd_index = acpi_probe()) < 0)
+  if(fd_index < 0)
     {
       /* No battery was found or AC power was detected */
       ainfo->ac_line_status = OLSR_AC_POWERED;
