@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.14 2004/10/19 21:06:34 kattemat Exp $
+ * $Id: ifnet.c,v 1.15 2004/11/01 20:04:12 tlopatic Exp $
  *
  */
 
@@ -435,6 +435,7 @@ chk_if_changed(struct olsr_if *iface)
   /*
    * Deregister scheduled functions 
    */
+#if !defined USE_LINK_QUALITY
   olsr_remove_scheduler_event(&generate_hello, 
 			      ifp, 
 			      iface->cnf->hello_params.emission_interval, 
@@ -445,6 +446,18 @@ chk_if_changed(struct olsr_if *iface)
 			      iface->cnf->tc_params.emission_interval,
 			      0, 
 			      NULL);
+#else
+  olsr_remove_scheduler_event(&generate_lq_hello, 
+			      ifp, 
+			      iface->cnf->hello_params.emission_interval, 
+			      0, 
+			      NULL);
+  olsr_remove_scheduler_event(&generate_lq_tc, 
+			      ifp, 
+			      iface->cnf->tc_params.emission_interval,
+			      0, 
+			      NULL);
+#endif
   olsr_remove_scheduler_event(&generate_mid, 
 			      ifp, 
 			      iface->cnf->mid_params.emission_interval,
@@ -758,6 +771,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /*
    * Register scheduled functions 
    */
+#if !defined USE_LINK_QUALITY
   olsr_register_scheduler_event(&generate_hello, 
 				ifp, 
 				iface->cnf->hello_params.emission_interval, 
@@ -768,6 +782,18 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 				iface->cnf->tc_params.emission_interval,
 				0, 
 				NULL);
+#else
+  olsr_register_scheduler_event(&generate_lq_hello, 
+				ifp, 
+				iface->cnf->hello_params.emission_interval, 
+				0, 
+				NULL);
+  olsr_register_scheduler_event(&generate_lq_tc, 
+				ifp, 
+				iface->cnf->tc_params.emission_interval,
+				0, 
+				NULL);
+#endif
   olsr_register_scheduler_event(&generate_mid, 
 				ifp, 
 				iface->cnf->mid_params.emission_interval,

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: generate_msg.h,v 1.8 2004/11/01 20:04:12 tlopatic Exp $
  *
  */
 
@@ -44,5 +44,13 @@ generate_tc(void *);
 
 void
 generate_tabledisplay(void *);
+
+#if defined USE_LINK_QUALITY
+void
+generate_lq_hello(void *para);
+
+void
+generate_lq_tc(void *para);
+#endif
 
 #endif
