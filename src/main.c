@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.62 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: main.c,v 1.63 2005/02/25 16:03:47 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -449,7 +449,8 @@ main(int argc, char *argv[])
   /*
    * Print configuration 
    */
-  olsrd_print_cnf(olsr_cnf);  
+  if(olsr_cnf->debug_level > 1)
+    olsrd_print_cnf(olsr_cnf);
 
   /*
    *socket for icotl calls
