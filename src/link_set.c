@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.31 2004/11/21 14:22:33 kattemat Exp $
+ * $Id: link_set.c,v 1.32 2004/11/24 22:48:08 tlopatic Exp $
  */
 
 
@@ -1012,8 +1012,19 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   // calculate the new link quality
 
+#if 0
+  // quick start: receive the first packet => link quality = 1.0
+
   entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
     (float)entry->total_packets;
+#else
+  // slow start: receive the first packet => link quality = 1 / n
+  //             (n = window size)
+
+  entry->loss_link_quality =
+    (float)(entry->total_packets - entry->lost_packets) /
+    (float)(entry->loss_window_size);
+#endif
 
   // if the link quality has changed by more than 10 percent,
   // print the new link quality table
