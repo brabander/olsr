@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.22 2004/12/21 21:34:22 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.23 2004/12/27 19:51:28 kattemat Exp $
  */
 
 /*
@@ -708,10 +708,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	link = link->next;
       }
   }
-  else
-    {
-      size += sprintf(&buf[size], "<tr><td colspan=8>Link set not available in the olsrd version you are running!</td></tr>\n");
-    }
+
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
@@ -899,12 +896,6 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 /**
  *Converts a olsr_ip_addr to a string
  *Goes for both IPv4 and IPv6
- *
- *NON REENTRANT! If you need to use this
- *function twice in e.g. the same printf
- *it will not work.
- *You must use it in different calls e.g.
- *two different printfs
  *
  *@param the IP to convert
  *@return a pointer to a static string buffer
