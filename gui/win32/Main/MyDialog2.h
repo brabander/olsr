@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.h,v 1.6 2004/11/21 02:06:56 tlopatic Exp $
+ * $Id: MyDialog2.h,v 1.7 2005/02/28 18:12:16 tlopatic Exp $
  */
 
 #if !defined(AFX_MYDIALOG2_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_)
@@ -49,6 +49,7 @@
 #include "MyEdit.h"
 
 #define MAKELIB
+#define OLSR_PLUGIN
 #include <olsr_cfg.h>
 
 class MyDialog2 : public CDialog
