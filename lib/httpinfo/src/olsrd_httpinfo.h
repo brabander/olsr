@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.18 2004/12/28 20:32:51 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.19 2004/12/28 20:40:03 kattemat Exp $
  */
 
 /*
@@ -81,9 +81,9 @@ static const char *http_ok_head[] =
   "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
   "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
   "<TR BGCOLOR=\"#000044\">\n",
-  "<TD HEIGHT=\"69\" WIDTH=\"80%\" VALIGN=middle ALIGN=left>\n",
+  "<TD HEIGHT=\"69\" WIDTH=\"80%%\" VALIGN=middle ALIGN=left>\n",
   "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></TD>\n",
-  "<TD HEIGHT=\"69\" WIDTH=\"20%\" VALIGN=middle ALIGN=right>\n",
+  "<TD HEIGHT=\"69\" WIDTH=\"20%%\" VALIGN=middle ALIGN=right>\n",
   "<img src=\"/logo.gif\"></TD>\n",
   "</TR>\n<TR BGCOLOR=\"#8888cc\">\n",
   "<TD HEIGHT=\"25\" ALIGN=right VALIGN=middle colspan=2>\n",
@@ -120,11 +120,11 @@ static const char *http_ok_tail[] =
     "<TD ALIGN=center VALIGN=middle>\n",
     "<TABLE BORDER=0 CELLSPACING=3 CELLPADDING=2>\n",
     "<TR>\n",
-    "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=middle>\n",
+    "<TD WIDTH=\"50%%\" ALIGN=\"center\" VALIGN=middle>\n",
     "<CENTER>Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to<br>\n",
     "<A HREF=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</A> or \n",
     "<A HREF=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</A></CENTER></TD>\n",
-    "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=middle>\n",
+    "<TD WIDTH=\"50%%\" ALIGN=\"center\" VALIGN=middle>\n",
     "<CENTER>Official olsrd homepage:<br><A HREF=\"http://www.olsr.org/\">http://www.olsr.org</A>\n",
     "</CENTER>\n",
     "</TD>\n",
