@@ -20,5 +20,5 @@ for f in $srcs; do
 
     o=`echo $f | sed -e 's/c$/o/'`
 
-    gcc -MM -MT $o -mno-cygwin -O2 -Wall -c -DWIN32 -I../../src/win32 $f >>Makefile.win32
+    gcc -MM -MT $o -mno-cygwin -O2 -Wall -c -DWIN32 -I../../src/win32 -I../../src -DOLSR_PLUGIN $f >>Makefile.win32
 done
