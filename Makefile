@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-# $Id: Makefile,v 1.22 2004/11/12 21:20:53 kattemat Exp $
+# $Id: Makefile,v 1.23 2004/11/13 11:13:13 kattemat Exp $
 #
 
 #OS ?=		linux
@@ -159,7 +159,7 @@ olsrd:
 	@echo ' target OSes are:                   '
 	@echo ' ---------------------------------  '
 	@echo ' linux - GNU/Linux                  '
-	@echo ' win32 - Windows NT family(2k/XP)   '
+	@echo ' win32 - MS Windows                 '
 	@echo ' fbsd  - FreeBSD                    '
 	@echo ' osx   - Mac OS X                   '
 	@echo ' ---------------------------------  '
