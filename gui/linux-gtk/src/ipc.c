@@ -37,43 +37,6 @@
 int ipc_socket = 0;
 
 int
-ipc_get_socket()
-{
-  int sock;
-  //int flags;
-
-  /* grab an UNIX domain socket */
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
-    {
-      perror("socket");
-      exit(1);
-    }
-
-  printf("Socket: %d\n", sock);
-
-  /* Setting socket non-blocking */  
-  /*  
-  if ((flags = fcntl(sock, F_GETFL, 0)) < 0)
-    {
-      fprintf(stderr,"Error getting socket flags!\n");
-      exit(1);
-    }
-  
-  
-  if (fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
-    {
-      fprintf(stderr,"Error setting socket flags!\n");
-      exit(1);
-    }
-  */
-
-  return sock;
-
-}
-
-
-
-int
 ipc_close()
 {
 
@@ -98,7 +61,11 @@ ipc_connect(struct sockaddr_in *pin)
   connected = 0;
 
   if(!ipc_socket)
-    ipc_socket = ipc_get_socket();
+    if((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
+      {
+	perror("socket");
+	exit(1);
+      }
 
   printf("Attempting connect...");
 

@@ -48,7 +48,7 @@ main (int argc, char *argv[])
   /* Get IP */
   if ((hp = gethostbyname(argc > 1 ? argv[1] : "localhost")) == 0) 
     {
-      perror("Not a valid host");
+      fprintf(stderr, "Not a valid host \"%s\"\n", argv[1]);
       exit(1);
     }
   
