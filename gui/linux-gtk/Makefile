@@ -17,10 +17,10 @@ HDRS=	src/main.h src/interface.h src/callbacks.h src/ipc.h \
 all:	olsrd-gui
 
 olsrd-gui:	$(OBJS)
-	$(CC) $(LFLAGS) -o bin/$@ $(OBJS)
+	$(CC) $(LFLAGS) -o $@ $(OBJS)
 
 clean:
 	rm -f $(OBJS)
 
 install:
-	cp ./bin/olsrd-gui /usr/bin/
+	cp ./olsrd-gui /usr/bin/

@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.25 2004/11/21 10:51:09 kattemat Exp $
+# $Id: Makefile,v 1.26 2004/11/21 11:02:12 kattemat Exp $
 
 #OS ?=		linux
 #OS =		fbsd
@@ -92,7 +92,7 @@ $(DEPFILE):	$(SRCS) $(HDRS)
 		$(DEPEND) -Y $(INCLUDES) $(DEFINES) $(SRCS) >/dev/null 2>&1
 
 olsrd:		$(OBJS)
-		$(CC) -o bin/$@ $(OBJS) $(LIBS)
+		$(CC) -o $@ $(OBJS) $(LIBS)
 
 else
 ifeq ($(OS), fbsd)
@@ -114,7 +114,7 @@ $(DEPFILE):	$(SRCS) $(HDRS)
 		$(DEPEND) $(INCLUDES) $(DEFINES) $(SRCS)
 
 olsrd:		$(OBJS)
-		$(CC) -o bin/$@ $(OBJS) $(LIBS)
+		$(CC) -o $@ $(OBJS) $(LIBS)
 
 else
 ifeq ($(OS), win32)
@@ -139,7 +139,7 @@ $(DEPFILE):	$(SRCS) $(HDRS)
 		$(DEPEND) $(INCLUDES) $(DEFINES) $(SRCS) >/dev/null 2>&1
 
 olsrd:		$(OBJS)
-		$(CC) -o bin/$@ $(OBJS) $(LIBS)
+		$(CC) -o $@ $(OBJS) $(LIBS)
 
 else
 ifeq ($(OS), osx)
@@ -162,7 +162,7 @@ $(DEPFILE):	$(SRCS) $(HDRS)
 		$(DEPEND) $(INCLUDES) $(DEFINES) $(SRCS)
 
 olsrd:		$(OBJS)
-		$(CC) -o bin/$@ $(OBJS) $(LIBS)
+		$(CC) -o $@ $(OBJS) $(LIBS)
 
 else
 
@@ -224,7 +224,7 @@ clean:
 uberclean:
 		rm -f $(OBJS) $(DEPFILE) $(DEPBAK)
 		rm -f $(CFGDIR)/oscan.c $(CFGDIR)/oparse.h $(CFGDIR)/oparse.c
-		rm -f bin/olsrd bin/olsrd.exe
+		rm -f olsrd olsrd.exe
 		rm -f src/*~ src/linux/*~ src/unix/*~ src/win32/*~
 		rm -f src/bsd/*~ src/cfgparser/*~
 
@@ -234,8 +234,8 @@ install_libs:
 		done; 	
 
 install_bin:
-		$(STRIP) bin/olsrd
-		install -D -m 755 bin/olsrd $(PREFIX)/usr/sbin/olsrd
+		$(STRIP) olsrd
+		install -D -m 755 olsrd $(PREFIX)/usr/sbin/olsrd
 
 install:	install_bin
 		@echo olsrd uses the configfile $(PREFIX)/etc/olsr.conf
