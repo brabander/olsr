@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.7 2004/11/30 16:52:15 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.8 2004/12/01 18:16:46 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -53,18 +53,10 @@
 
 #include "olsr_plugin_io.h"
 
-/* Use this as PARSER_TYPE to receive ALL messages! */
-#define PROMISCUOUS 0xffffffff
-
-
-/*****************************************************************************
- *                               Plugin data                                 *
- *                       ALTER THIS TO YOUR OWN NEED                         *
- *****************************************************************************/
 
 #define PLUGIN_NAME    "OLSRD dynamic gateway plugin"
-#define PLUGIN_VERSION "0.2"
-#define PLUGIN_AUTHOR   "Andreas Tønnesen"
+#define PLUGIN_VERSION "0.3"
+#define PLUGIN_AUTHOR   "Various artists"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
 
@@ -107,19 +99,6 @@ union hna_netmask
   olsr_u16_t v6;
 };
 
-/***************************************************************************
- *                 Functions provided by uolsrd_plugin.c                   *
- *                  Similar to their siblings in olsrd                     *
- ***************************************************************************/
-
-char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
-
-/* All these could optionally be fetched from olsrd */
-
-char *
-olsr_ip_to_string(union olsr_ip_addr *);
-
-
 
 /****************************************************************************
  *                Function pointers to functions in olsrd                   *
@@ -134,9 +113,6 @@ int (*olsr_register_scheduler_event)(void (*)(void), void*, float, float, olsr_u
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);
-
-/* olsrd malloc wrapper */
-void *(*olsr_malloc)(size_t, const char *);
 
 /* Add hna net IPv4 */
 void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);

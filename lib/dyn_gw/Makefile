@@ -1,6 +1,6 @@
 
 CC ?= gcc
-NAME ?= olsrd_dyn_gw.so.0.2
+NAME ?= olsrd_dyn_gw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging

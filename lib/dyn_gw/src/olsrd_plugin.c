@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.9 2004/11/30 16:52:15 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.10 2004/12/01 18:16:46 kattemat Exp $
  */
 
 #include "olsrd_plugin.h"
@@ -179,15 +179,6 @@ fetch_olsrd_data()
 		     sizeof(olsr_printf)))
   {
     olsr_printf = NULL;
-    retval = 0;
-  }
-
-  /* Olsr malloc wrapper */
-  if(!olsr_plugin_io(GETF__OLSR_MALLOC, 
-		     &olsr_malloc, 
-		     sizeof(olsr_malloc)))
-  {
-    olsr_malloc = NULL;
     retval = 0;
   }
 

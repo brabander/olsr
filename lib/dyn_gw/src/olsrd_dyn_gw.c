@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.8 2004/12/01 07:32:44 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.9 2004/12/01 18:16:46 kattemat Exp $
  */
 
 /*
@@ -97,6 +97,11 @@ struct ping_list *
 add_to_ping_list(char *ping_address, struct ping_list *the_ping_list)
 {
   struct ping_list *new = (struct ping_list *) malloc(sizeof(struct ping_list));
+  if(new == NULL)
+    {
+      fprintf(stderr, "DYN GW: Out of memory!\n");
+      exit(0);
+    }
   new->ping_address = strdup(ping_address);
   new->next = the_ping_list;
   return new;
