@@ -1,32 +1,43 @@
 
 CC ?= gcc
 STRIP ?= strip
-NAME ?= olsrd_dyn_gw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-# -fPIC creates position independent code
+
+ifndef OS
+all:		help
+endif
+
+ifeq ($(OS), linux)
+NAME ?= olsrd_dyn_gw.so.0.3
+MYFLAGS ?= -Wall -fPIC -Dlinux -g # Uncomment -g for debugging
+LIBS ?= -lpthread -lc -lm
+CFLAGS ?= -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
+INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
+	      /sbin/ldconfig -n $(LIBDIR)
+all:	plugin
+else
+ifeq ($(OS), fbsd)
+NAME ?= olsrd_dyn_gw.so.0.3
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lpthread -lc -lm
 CFLAGS ?= -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
-STRIP ?= strip
+INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
+	      /sbin/ldconfig
+all:	plugin
+else
+all: 	help
+endif
+endif
+
 
 #Sourcefiles
-#add yours here
 SRCS=	src/olsrd_plugin.c src/olsrd_dyn_gw.c
 
 #Objectfiles
-#add yours here
 OBJS=	src/olsrd_plugin.o src/olsrd_dyn_gw.o
 
 #Headerfiles
-#add yours here
 HDRS=	src/olsrd_plugin.h src/olsrd_dyn_gw.h src/olsr_plugin_io.h
-
-# -Wl passes options to the linker(-soname,....)
-# Use -lc to link it against C library
-# not 100% sure if this is neccesary
-
-all: plugin
-
 
 plugin: $(OBJS)
 	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \
@@ -36,11 +47,24 @@ plugin: $(OBJS)
 
 install:
 	$(STRIP) $(NAME)
-	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
-	/sbin/ldconfig -n $(LIBDIR)
-
+	$(INSTALL_LIB)
 clean:
 	rm -f $(OBJS) $(NAME)
+
+help:
+	@echo
+	@echo '**** olsr.org dynGW plugin Make ****'
+	@echo ' You must provide a valid target OS '
+	@echo ' by setting the OS variable! Valid  '
+	@echo ' target OSes are:                   '
+	@echo ' ---------------------------------  '
+	@echo ' linux - GNU/Linux                  '
+	@echo ' fbsd  - FreeBSD                    '
+	@echo ' ---------------------------------  '
+	@echo ' Example - build for FreeBSD:       '
+	@echo ' gmake OS=fbsd                      '
+	@echo '************************************'
+	@echo
 
 src/olsrd_plugin.o: $(HDRS)
 
