@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.48 2005/03/14 21:28:16 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.49 2005/03/29 19:07:35 kattemat Exp $
  */
 
 /*
@@ -555,7 +555,7 @@ build_http_header(http_header_type type,
   /* Date */
   if(time(&currtime))
     {
-      strftime(timestr, 45, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", gmtime(&currtime));
+      strftime(timestr, 45, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", localtime(&currtime));
       strcat(buf, timestr);
     }
   
@@ -760,7 +760,7 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     uptime.tv_sec -= mins*60;
 
     time(&currtime);
-    strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
+    strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", localtime(&currtime));
 
 
     size += sprintf(&buf[size], "OS: %s\n<br>", OS);

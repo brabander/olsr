@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.29 2005/03/23 22:41:45 tlopatic Exp $
+ * $Id: scheduler.c,v 1.30 2005/03/29 19:07:19 kattemat Exp $
  */
 
 
@@ -125,11 +125,11 @@ scheduler()
 
       /* Update the global timestamp - kept for plugin compat */
       gettimeofday(&now, NULL);
-      nowtm = gmtime((time_t *)&now.tv_sec);
+      nowtm = localtime((time_t *)&now.tv_sec);
 
       while (nowtm == NULL)
 	{
-	  nowtm = gmtime((time_t *)&now.tv_sec);
+	  nowtm = localtime((time_t *)&now.tv_sec);
 	}
 
 

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.72 2005/03/28 18:11:06 kattemat Exp $
+ * $Id: main.c,v 1.73 2005/03/29 19:07:18 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -148,7 +148,7 @@ main(int argc, char *argv[])
   nowtm = NULL;
   while (nowtm == NULL)
     {
-      nowtm = gmtime((time_t *)&now.tv_sec);
+      nowtm = localtime((time_t *)&now.tv_sec);
     }
     
   /* The port to use for OLSR traffic */

@@ -1154,7 +1154,7 @@ update_nodes_list(struct node *node)
       if(node->timer.tv_usec)
       {
 	memset(&timer[0], 0, 20);
-	time_st = gmtime((time_t *)&node->timer.tv_sec);
+	time_st = localtime((time_t *)&node->timer.tv_sec);
 	sprintf(&timer[0], "%02d:%02d:%02d", time_st->tm_hour, time_st->tm_min, time_st->tm_sec);
 	gtk_clist_set_text(GTK_CLIST(node_list), i, 4, &timer[0]);
       }
