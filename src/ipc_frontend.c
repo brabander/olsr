@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.15 2004/11/12 06:34:09 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.16 2004/11/12 16:18:25 kattemat Exp $
  *
  */
 
@@ -61,6 +61,7 @@ ipc_init()
 {
   //int flags;
   struct   sockaddr_in sin;
+  int yes = 1;
 
   /* Add parser function */
   olsr_parser_add_function(&frontend_msgparser, PROMISCUOUS, 0);
@@ -70,6 +71,12 @@ ipc_init()
     {
       perror("IPC socket");
       olsr_exit("IPC socket", EXIT_FAILURE);
+    }
+
+  if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
+    {
+      perror("SO_REUSEADDR failed");
+      return 0;
     }
 
   /* complete the socket structure */
@@ -129,16 +136,16 @@ ipc_accept_thread()
 	  addr = inet_ntoa(pin.sin_addr);
 	  if(ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
 	    {
-	      olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
-	      close(ipc_connection);
-	    }
-	  else
-	    {
 	      ipc_active = OLSR_TRUE;
 	      ipc_send_net_info();
 	      ipc_send_all_routes();
 	      olsr_printf(1, "Connection from %s\n",addr);
+	    }
+	  else
+	    {
+	      olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
+	      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
+	      close(ipc_connection);
 	    }
 	}
 
@@ -150,6 +157,7 @@ olsr_bool
 ipc_check_allowed_ip(union olsr_ip_addr *addr)
 {
   struct ipc_host *ipch = olsr_cnf->ipc_hosts;
+  struct ipc_net *ipcn = olsr_cnf->ipc_nets;
 
   if(addr->v4 == ntohl(INADDR_LOOPBACK))
     return OLSR_TRUE;
@@ -162,7 +170,13 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
       ipch = ipch->next;
     }
 
-  /* XXX - TODO check networks */
+  /* check nets */
+  while(ipcn)
+    {
+      if((addr->v4 & ipcn->mask.v4) == (ipcn->net.v4 & ipcn->mask.v4))
+	return OLSR_TRUE;
+      ipcn = ipcn->next;
+    }
 
   return OLSR_FALSE;
 }
