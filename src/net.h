@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.14 2004/12/03 20:57:15 kattemat Exp $
+ * $Id: net.h,v 1.15 2005/02/12 23:07:02 spoggle Exp $
  */
 
 
@@ -49,6 +49,17 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
+/* Output buffer structure */
+
+struct olsr_netbuf
+{
+  char *buff;     /* Pointer to the allocated buffer */
+  int if_index;
+  int bufsize;    /* Size of the buffer */
+  int maxsize;    /* Max bytes of payload that can be added to the buffer */
+  int pending;    /* How much data is currently pending in the buffer */
+  int reserved;   /* Plugins can reserve space in buffers */
+};
 
 /* Packet transform functions */
 

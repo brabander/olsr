@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.30 2005/02/12 22:14:27 kattemat Exp $
+ * $Id: net.c,v 1.31 2005/02/12 23:07:02 spoggle Exp $
  */
 
 #include "net.h"
@@ -49,18 +49,7 @@ void
 WinSockPError(char *);
 #endif
 
-struct olsr_netbuf
-{
-  char *buff;     /* Pointer to the allocated buffer */
-  int if_index;
-  int bufsize;    /* Size of the buffer */
-  int maxsize;    /* Max bytes of payload that can be added to the buffer */
-  int pending;    /* How much data is currently pending in the buffer */
-  int reserved;   /* Plugins can reserve space in buffers */
-};
-
-
-static struct olsr_netbuf *netbufs[MAX_IFS];
+struct olsr_netbuf *netbufs[MAX_IFS];
 
 static char ipv6_buf[100]; /* for address coversion */
 
@@ -246,160 +235,6 @@ net_outbuffer_bytes_left(struct interface *ifp)
 
   return (netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending);
 }
-
-
-
-
-/**
- *Sends a packet on a given interface.
- *
- *@param ifp the interface to send on.
- *
- *@return negative on error
- */
-int
-net_output(struct interface *ifp)
-{
-  struct sockaddr_in *sin;  
-  struct sockaddr_in dst;
-  struct sockaddr_in6 *sin6;  
-  struct sockaddr_in6 dst6;
-  struct ptf *tmp_ptf_list;
-  int i, x;
-  union olsr_packet *outmsg;
-
-  sin = NULL;
-  sin6 = NULL;
-
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  if(!netbufs[ifp->if_nr]->pending)
-    return 0;
-
-  netbufs[ifp->if_nr]->pending += OLSR_HEADERSIZE;
-
-  outmsg = (union olsr_packet *)netbufs[ifp->if_nr]->buff;
-  /* Add the Packet seqno */
-  outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
-  /* Set the packetlength */
-  outmsg->v4.olsr_packlen = htons(netbufs[ifp->if_nr]->pending);
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IP version 4 */
-      sin = (struct sockaddr_in *)&ifp->int_broadaddr;
-
-      /* Copy sin */
-      dst = *sin;
-      sin = &dst;
-
-      if (sin->sin_port == 0)
-	sin->sin_port = olsr_udp_port;
-    }
-  else
-    {
-      /* IP version 6 */
-      sin6 = (struct sockaddr_in6 *)&ifp->int6_multaddr;
-      /* Copy sin */
-      dst6 = *sin6;
-      sin6 = &dst6;
-    }
-
-  /*
-   *Call possible packet transform functions registered by plugins  
-   */
-  tmp_ptf_list = ptf_list;
-  while(tmp_ptf_list != NULL)
-    {
-      tmp_ptf_list->function(netbufs[ifp->if_nr]->buff, &netbufs[ifp->if_nr]->pending);
-      tmp_ptf_list = tmp_ptf_list->next;
-    }
-
-  /*
-   *if the '-disp- option was given
-   *we print her decimal contetnt of the packets
-   */
-  if(disp_pack_out)
-    {
-      switch(netbufs[ifp->if_nr]->buff[4])
-	{
-	case(HELLO_MESSAGE):printf("\n\tHELLO ");break;
-	case(TC_MESSAGE):printf("\n\tTC ");break;
-	case(MID_MESSAGE):printf("\n\tMID ");break;
-	case(HNA_MESSAGE):printf("\n\tHNA ");break;
-	default:printf("\n\tTYPE: %d ", netbufs[ifp->if_nr]->buff[4]); break;
-	}
-      if(olsr_cnf->ip_version == AF_INET)
-	printf("to %s size: %d\n\t", ip_to_string((olsr_u32_t *)&sin->sin_addr.s_addr), netbufs[ifp->if_nr]->pending);
-      else
-	printf("to %s size: %d\n\t", ip6_to_string(&sin6->sin6_addr), netbufs[ifp->if_nr]->pending);
-
-      x = 0;
-
-      for(i = 0; i < netbufs[ifp->if_nr]->pending;i++)
-	{
-	  if(x == 4)
-	    {
-	      x = 0;
-	      printf("\n\t");
-	    }
-	  x++;
-	  if(olsr_cnf->ip_version == AF_INET)
-	    printf(" %3i", (u_char) netbufs[ifp->if_nr]->buff[i]);
-	  else
-	    printf(" %2x", (u_char) netbufs[ifp->if_nr]->buff[i]);
-	}
-      
-      printf("\n");
-    }
-  
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IP version 4 */
-      if(sendto(ifp->olsr_socket, 
-		netbufs[ifp->if_nr]->buff, 
-		netbufs[ifp->if_nr]->pending, 
-		MSG_DONTROUTE, 
-		(struct sockaddr *)sin, 
-		sizeof (*sin)) 
-	 < 0)
-	{
-	  perror("sendto(v4)");
-	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
-	  netbufs[ifp->if_nr]->pending = 0;
-	  return -1;
-	}
-    }
-  else
-    {
-      /* IP version 6 */
-      if(sendto(ifp->olsr_socket, 
-		netbufs[ifp->if_nr]->buff,
-		netbufs[ifp->if_nr]->pending, 
-		MSG_DONTROUTE, 
-		(struct sockaddr *)sin6, 
-		sizeof (*sin6)) 
-	 < 0)
-	{
-	  perror("sendto(v6)");
-	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
-	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_nr);
-	  fprintf(stderr, "To: %s (size: %d)\n", ip6_to_string(&sin6->sin6_addr), (int)sizeof(*sin6));
-	  fprintf(stderr, "Outputsize: %d\n", netbufs[ifp->if_nr]->pending);
-	  netbufs[ifp->if_nr]->pending = 0;
-	  return -1;
-	}
-    }
-  
-  netbufs[ifp->if_nr]->pending = 0;
-
-  return 1;
-}
-
-
-
-
 
 
 /**
