@@ -2,7 +2,6 @@
 
 srcs="\
     src/build_msg.c \
-    src/configfile.c \
     src/duplicate_set.c \
     src/generate_msg.c \
     src/hashing.c \
@@ -32,6 +31,7 @@ srcs="\
     src/socket_parser.c \
     src/tc_set.c \
     src/two_hop_neighbor_table.c \
+    src/cfgparser/olsrd_conf.c \
     src/win32/apm.c \
     src/win32/compat.c \
     src/win32/ifnet.c \

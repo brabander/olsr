@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: ifnet.c,v 1.5 2004/10/19 13:55:51 tlopatic Exp $
+ * $Id: ifnet.c,v 1.6 2004/10/19 21:44:56 tlopatic Exp $
  *
  */
 
@@ -324,7 +324,7 @@ void ListInterfaces(void)
   }
 }
 
-int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct if_name *IntName)
+int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct olsr_if *IntConf)
 {
   int MiniIndex;
   unsigned char Buff[MAX_INTERFACES * sizeof (MIB_IFROW) + 4];
@@ -339,9 +339,9 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct if_name *IntName)
     return -1;
   }
 
-  if (IntNameToMiniIndex(&MiniIndex, IntName->name) < 0)
+  if (IntNameToMiniIndex(&MiniIndex, IntConf->name) < 0)
   {
-    fprintf(stderr, "No such interface: %s!\n", IntName->name);
+    fprintf(stderr, "No such interface: %s!\n", IntConf->name);
     return -1;
   }
 
@@ -367,7 +367,7 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct if_name *IntName)
 
   if (TabIdx == IfTable->dwNumEntries)
   {
-    fprintf(stderr, "No such interface: %s!\n", IntName->name);
+    fprintf(stderr, "No such interface: %s!\n", IntConf->name);
     return -1;
   }
     
@@ -377,7 +377,7 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct if_name *IntName)
   return 0;
 }
 
-int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
+int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct olsr_if *IntConf)
 {
   int MiniIndex;
   int Sock;
@@ -386,9 +386,9 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
   int WsIdx;
   int CandIndex;
 
-  if (IntNameToMiniIndex(&MiniIndex, IntName->name) < 0)
+  if (IntNameToMiniIndex(&MiniIndex, IntConf->name) < 0)
   {
-    fprintf(stderr, "No such interface: %s!\n", IntName->name);
+    fprintf(stderr, "No such interface: %s!\n", IntConf->name);
     return -1;
   }
 
@@ -412,7 +412,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
 
   Num /= sizeof (INTERFACE_INFO);
 
-  olsr_printf(5, "%s:\n", IntName->name);
+  olsr_printf(5, "%s:\n", IntConf->name);
 
   for (WsIdx = 0; WsIdx < Num; WsIdx++)
   {
@@ -426,7 +426,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
 
   if (WsIdx == Num)
   {
-    fprintf(stderr, "No such interface: %s!\n", IntName->name);
+    fprintf(stderr, "No such interface: %s!\n", IntConf->name);
     return -1;
   }
     
@@ -476,14 +476,14 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
   return 0;
 }
 
-void RemoveInterface(struct if_name *IntName)
+void RemoveInterface(struct olsr_if *IntConf)
 {
   struct interface *Int, *Prev;
   struct ifchgf *Walker;
 
-  olsr_printf(1, "Removing interface %s.\n", IntName->name);
+  olsr_printf(1, "Removing interface %s.\n", IntConf->name);
   
-  Int = IntName->interf;
+  Int = IntConf->interf;
 
   for (Walker = ifchgf_list; Walker != NULL; Walker = Walker->next)
     Walker->function(Int, IFCHG_IF_REMOVE);
@@ -513,28 +513,26 @@ void RemoveInterface(struct if_name *IntName)
     }
   }
 
-  nbinterf--;
-  
   olsr_remove_scheduler_event(&generate_hello, Int,
-                              IntName->cnf->hello_params.emission_interval,
+                              IntConf->cnf->hello_params.emission_interval,
                               0, NULL);
 
   olsr_remove_scheduler_event(&generate_tc, Int,
-                              IntName->cnf->tc_params.emission_interval,
+                              IntConf->cnf->tc_params.emission_interval,
                               0, NULL);
 
   olsr_remove_scheduler_event(&generate_mid, Int,
-                              IntName->cnf->mid_params.emission_interval,
+                              IntConf->cnf->mid_params.emission_interval,
                               0, NULL);
 
   olsr_remove_scheduler_event(&generate_hna, Int,
-                              IntName->cnf->hna_params.emission_interval,
+                              IntConf->cnf->hna_params.emission_interval,
                               0, NULL);
 
   net_remove_buffer(Int);
 
-  IntName->configured = 0;
-  IntName->interf = NULL;
+  IntConf->configured = 0;
+  IntConf->interf = NULL;
 
   closesocket(Int->olsr_socket);
   remove_olsr_socket(Int->olsr_socket, &olsr_input);
@@ -542,7 +540,7 @@ void RemoveInterface(struct if_name *IntName)
   free(Int->int_name);
   free(Int);
 
-  if(nbinterf == 0 && !olsr_cnf->allow_no_interfaces)
+  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
   {
     olsr_printf(1, "No more active interfaces - exiting.\n");
     exit_value = EXIT_FAILURE;
@@ -550,7 +548,7 @@ void RemoveInterface(struct if_name *IntName)
   }
 }
 
-int chk_if_changed(struct if_name *IntName)
+int chk_if_changed(struct olsr_if *IntConf)
 {
   struct interface *Int;
   INTERFACE_INFO IntInfo;
@@ -568,21 +566,21 @@ int chk_if_changed(struct if_name *IntName)
   }
 
 #ifdef DEBUG
-  olsr_printf(3, "Checking if %s is set down or changed\n", IntName->name);
+  olsr_printf(3, "Checking if %s is set down or changed\n", IntConf->name);
 #endif
 
-  Int = IntName->interf;
+  Int = IntConf->interf;
 
-  if (InterfaceInfo(&IntInfo, &Index, IntName) < 0 ||
-      InterfaceEntry(&IntRow, &Index, IntName))
+  if (InterfaceInfo(&IntInfo, &Index, IntConf) < 0 ||
+      InterfaceEntry(&IntRow, &Index, IntConf))
   {
-    RemoveInterface(IntName);
+    RemoveInterface(IntConf);
     return 1;
   }
 
   Res = 0;
 
-  IsWlan = IsWireless(IntName->name);
+  IsWlan = IsWireless(IntConf->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
@@ -690,7 +688,7 @@ int chk_if_changed(struct if_name *IntName)
   return Res;
 }
 
-int chk_if_up(struct if_name *IntName, int DebugLevel)
+int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
 {
   struct interface *New;
   union olsr_ip_addr NullAddr;
@@ -707,8 +705,8 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
     return 0;
   }
 
-  if (InterfaceInfo(&IntInfo, &Index, IntName) < 0 ||
-      InterfaceEntry(&IntRow, &Index, IntName) < 0)
+  if (InterfaceInfo(&IntInfo, &Index, IntConf) < 0 ||
+      InterfaceEntry(&IntRow, &Index, IntConf) < 0)
     return 0;
 
   New = olsr_malloc(sizeof (struct interface), "Interface 1");
@@ -720,20 +718,20 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   memcpy(&New->int_broadaddr, &IntInfo.iiBroadcastAddress,
          sizeof (struct sockaddr_in));
 
-  if (IntName->cnf->ipv4_broadcast.v4 != 0)
+  if (IntConf->cnf->ipv4_broadcast.v4 != 0)
     ((struct sockaddr_in *)&New->int_broadaddr)->sin_addr.s_addr =
-      IntName->cnf->ipv4_broadcast.v4;
+      IntConf->cnf->ipv4_broadcast.v4;
 
   New->int_flags = IntInfo.iiFlags;
 
   New->int_mtu = IntRow.dwMtu;
 
-  New->int_name = olsr_malloc(strlen (IntName->name) + 1, "Interface 2");
-  strcpy(New->int_name, IntName->name);
+  New->int_name = olsr_malloc(strlen (IntConf->name) + 1, "Interface 2");
+  strcpy(New->int_name, IntConf->name);
 
-  New->if_nr = IntName->index;
+  New->if_nr = IntConf->index;
 
-  IsWlan = IsWireless(IntName->name);
+  IsWlan = IsWireless(IntConf->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
@@ -744,7 +742,7 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   New->olsr_seqnum = random() & 0xffff;
     
   olsr_printf(1, "\tInterface %s set up for use with index %d\n\n",
-              IntName->name, New->if_nr);
+              IntConf->name, New->if_nr);
       
   olsr_printf(1, "\tMTU: %d\n", New->int_mtu);
   olsr_printf(1, "\tAddress: %s\n", sockaddr_to_string(&New->int_addr));
@@ -763,7 +761,7 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   addrsock.sin_addr.s_addr = New->ip_addr.v4;
 
   New->olsr_socket = getsocket((struct sockaddr *)&addrsock,
-                               bufspace, New->int_name);
+                               127 * 1024, New->int_name);
       
   addrsock.sin_addr.s_addr = AddrSockAddr;
 
@@ -778,10 +776,8 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   New->int_next = ifnet;
   ifnet = New;
 
-  IntName->interf = New;
-  IntName->configured = 1;
-
-  nbinterf++;
+  IntConf->interf = New;
+  IntConf->configured = 1;
 
   memset(&NullAddr, 0, ipsize);
   
@@ -795,37 +791,35 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   net_add_buffer(New);
 
   olsr_register_scheduler_event(&generate_hello, New,
-                                IntName->cnf->hello_params.emission_interval,
+                                IntConf->cnf->hello_params.emission_interval,
                                 0, NULL);
 
   olsr_register_scheduler_event(&generate_tc, New,
-                                IntName->cnf->tc_params.emission_interval,
+                                IntConf->cnf->tc_params.emission_interval,
                                 0, NULL);
 
   olsr_register_scheduler_event(&generate_mid, New,
-                                IntName->cnf->mid_params.emission_interval,
+                                IntConf->cnf->mid_params.emission_interval,
                                 0, NULL);
 
   olsr_register_scheduler_event(&generate_hna, New,
-                                IntName->cnf->hna_params.emission_interval,
+                                IntConf->cnf->hna_params.emission_interval,
                                 0, NULL);
 
-  /* XXX */
-
   if(max_jitter == 0 ||
-     IntName->cnf->hello_params.emission_interval / 4 < max_jitter)
-    max_jitter = IntName->cnf->hello_params.emission_interval / 4;
+     IntConf->cnf->hello_params.emission_interval / 4 < max_jitter)
+    max_jitter = IntConf->cnf->hello_params.emission_interval / 4;
 
-  if(max_tc_vtime < IntName->cnf->tc_params.emission_interval)
-    max_tc_vtime = IntName->cnf->tc_params.emission_interval;
+  if(max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
+    max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
   New->hello_etime =
-    double_to_me(IntName->cnf->hello_params.emission_interval);
+    double_to_me(IntConf->cnf->hello_params.emission_interval);
 
-  New->valtimes.hello = double_to_me(IntName->cnf->hello_params.validity_time);
-  New->valtimes.tc = double_to_me(IntName->cnf->tc_params.validity_time);
-  New->valtimes.mid = double_to_me(IntName->cnf->mid_params.validity_time);
-  New->valtimes.hna = double_to_me(IntName->cnf->hna_params.validity_time);
+  New->valtimes.hello = double_to_me(IntConf->cnf->hello_params.validity_time);
+  New->valtimes.tc = double_to_me(IntConf->cnf->tc_params.validity_time);
+  New->valtimes.mid = double_to_me(IntConf->cnf->mid_params.validity_time);
+  New->valtimes.hna = double_to_me(IntConf->cnf->hna_params.validity_time);
 
   for (Walker = ifchgf_list; Walker != NULL; Walker = Walker->next)
     Walker->function(New, IFCHG_IF_ADD);
@@ -835,18 +829,18 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
 
 void check_interface_updates(void *dummy)
 {
-  struct if_name *tmp_if;
+  struct olsr_if *IntConf;
 
 #ifdef DEBUG
   olsr_printf(3, "Checking for updates in the interface set\n");
 #endif
 
-  for(tmp_if = if_names; tmp_if != NULL; tmp_if = tmp_if->next)
+  for(IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next)
   {
-    if(tmp_if->configured)    
-      chk_if_changed(tmp_if);
+    if(IntConf->configured)    
+      chk_if_changed(IntConf);
 
     else
-      chk_if_up(tmp_if, 3);
+      chk_if_up(IntConf, 3);
   }
 }

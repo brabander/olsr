@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: kernel_routes.c,v 1.4 2004/10/19 13:58:46 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.5 2004/10/19 21:44:56 tlopatic Exp $
  *
  */
 
@@ -26,6 +26,7 @@
 #include "net/route.h"
 
 #include "../kernel_routes.h"
+#include "../defs.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>
@@ -76,7 +77,7 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
     return -1;
   }
 
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
   {
     memset(&Route, 0, sizeof (Route));
 
@@ -115,20 +116,6 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
 
   olsr_printf(1, "Deleting IPv4 route to %s/%s via %s.\n", Str1, Str2, Str3);
 
-#if 0
-  Res = GetBestRoute(Dest->rt_dst.v4, 0, &Row);
-
-  if (Res != NO_ERROR)
-  {
-    fprintf(stderr, "GetBestRoute() = %08lx, %s", Res, StrError(Res));
-
-    // XXX - report error in a different way
-
-    errno = Res;
-
-    return -1;
-  }
-#else
   memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
 
   Row.dwForwardDest = Dest->rt_dst.v4;
@@ -137,7 +124,6 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
   Row.dwForwardIfIndex = Dest->rt_if->if_index;
   Row.dwForwardType = (Dest->rt_dst.v4 == Dest->rt_router.v4) ? 3 : 4;
   Row.dwForwardProto = 3; // PROTO_IP_NETMGMT
-#endif
 
   Res = DeleteIpForwardEntry(&Row);
 
@@ -152,7 +138,7 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
     return -1;
   }
 
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
   {
     memset(&Route, 0, sizeof (Route));
 
