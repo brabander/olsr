@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Frontend.h,v 1.3 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: Frontend.h,v 1.4 2004/11/21 17:10:27 tlopatic Exp $
  */
 
 #if !defined(AFX_FRONTEND_H__8033A41F_6FDC_4054_A582_AB7B6AC5EEAE__INCLUDED_)
@@ -56,6 +56,11 @@ class CFrontendApp : public CWinApp
 {
 public:
 	CFrontendApp();
+
+	int RedirectStdHandles(void);
+	unsigned int RedirectThreadFunc(void);
+
+	HANDLE OutRead;
 
 	//{{AFX_VIRTUAL(CFrontendApp)
 	public:

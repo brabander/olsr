@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Frontend.cpp,v 1.5 2004/11/21 02:06:56 tlopatic Exp $
+ * $Id: Frontend.cpp,v 1.6 2004/11/21 17:10:27 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -183,7 +183,115 @@ BOOL CFrontendApp::InitInstance()
 		}
 	}
 
+	RedirectStdHandles();
+
 	dlg.DoModal();
 
 	return FALSE;
+}
+
+unsigned int CFrontendApp::RedirectThreadFunc(void)
+{
+	char Buff[1000];
+	int Len;
+	int Left, Right;
+	CString Line;
+	CString Int;
+
+	while (::ReadFile(OutRead, Buff, sizeof (Buff) - 1, (unsigned long *)&Len, NULL))
+	{
+		if (Len == 0)
+			break;
+
+		Left = 0;
+
+		for (Right = 0; Right < Len; Right++)
+		{
+			if (Buff[Right] != 13)
+				Buff[Left++] = Buff[Right];
+		}
+
+		Len = Left;
+
+		Left = 0;
+
+		for (Right = 0; Right < Len; Right++)
+		{
+			if (Buff[Right] == 10)
+			{
+				Buff[Right] = 0;
+				Line += (Buff + Left);
+
+				AfxMessageBox(Line);
+
+				Line.Empty();
+
+				Left = Right + 1;
+			}
+		}
+
+		Buff[Right] = 0;
+		Line += (Buff + Left);
+	}
+
+	AfxEndThread(0);
+	return 0;
+}
+
+static unsigned int RedirectThreadStub(void *Arg)
+{
+	class CFrontendApp *This;
+
+	This = (class CFrontendApp *)Arg;
+
+	return This->RedirectThreadFunc();
+}
+
+struct IoInfo
+{
+	HANDLE Hand;
+	unsigned char Attr;
+	char Buff;
+#if defined _MT
+	int Flag;
+	CRITICAL_SECTION Lock;
+#endif
+};
+
+extern "C" struct IoInfo *__pioinfo[];
+
+extern "C" void win32_stdio_hack(unsigned int handle);
+
+int CFrontendApp::RedirectStdHandles(void)
+{
+	SECURITY_ATTRIBUTES SecAttr;
+	HANDLE OutWrite;
+	struct IoInfo *Info;
+
+	SecAttr.nLength = sizeof (SECURITY_ATTRIBUTES);
+	SecAttr.lpSecurityDescriptor = NULL;
+	SecAttr.bInheritHandle = TRUE;
+
+	if (!::CreatePipe(&OutRead, &OutWrite, &SecAttr, 0))
+	{
+		AfxMessageBox("Cannot create stdout pipe.");
+		return -1;
+	}
+
+	AfxBeginThread(RedirectThreadStub, (void *)this);
+
+	Info = __pioinfo[0];
+
+	// Info[1].Hand = OutWrite;
+	// Info[1].Attr = 0x89; // FOPEN | FTEXT | FPIPE;
+
+	Info[2].Hand = OutWrite;
+	Info[2].Attr = 0x89;
+
+	// stdout->_file = 1;
+	stderr->_file = 2;
+
+	win32_stdio_hack((unsigned int)OutWrite);
+
+	return 0;
 }

@@ -8,3 +8,4 @@ EXPORTS
 	olsrd_cnf_malloc
 	olsrd_cnf_free
         olsrd_sanity_check_cnf
+	win32_stdio_hack

@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.20 2004/11/21 10:52:16 kattemat Exp $
+ * $Id: oparse.y,v 1.21 2004/11/21 17:10:28 tlopatic Exp $
  */
 
 
@@ -239,7 +239,7 @@ ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
   if(inet_aton($2->string, &in) == 0)
     {
       fprintf(stderr, "Failed converting IP address IPC %s\n", $2->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
 
   ipch = malloc(sizeof(struct ipc_host));
@@ -264,13 +264,13 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
   if(inet_aton($2->string, &in1) == 0)
     {
       fprintf(stderr, "Failed converting IP net IPC %s\n", $2->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
 
   if(inet_aton($3->string, &in2) == 0)
     {
       fprintf(stderr, "Failed converting IP mask IPC %s\n", $3->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
 
   ipcn = malloc(sizeof(struct ipc_net));
@@ -297,7 +297,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
   if(inet_aton($2->string, &in) == 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
 
   cnf->interfaces->cnf->ipv4_broadcast.v4 = in.s_addr;
@@ -327,7 +327,7 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
   if(inet_pton(AF_INET6, $2->string, &in6) < 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
   memcpy(&cnf->interfaces->cnf->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
 
@@ -347,7 +347,7 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
   if(inet_pton(AF_INET6, $2->string, &in6) < 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
   memcpy(&cnf->interfaces->cnf->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
@@ -458,13 +458,13 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   if(inet_aton($1->string, &in) == 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $1->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
   h->net.v4 = in.s_addr;
   if(inet_aton($2->string, &in) == 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $1->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
   h->netmask.v4 = in.s_addr;
   /* Queue */
@@ -494,14 +494,14 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
   if(inet_pton(AF_INET6, $1->string, &in6) < 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $1->string);
-      exit(EXIT_FAILURE);
+      return -1;
     }
   memcpy(&h->net, &in6, sizeof(struct in6_addr));
 
   if(($2->integer < 0) || ($2->integer > 128))
     {
       fprintf(stderr, "Illegal IPv6 prefix length %d\n", $2->integer);
-      exit(EXIT_FAILURE);
+      return -1;
     }
 
   h->prefix_len = $2->integer;

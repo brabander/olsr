@@ -36,7 +36,7 @@
 # to the projcet. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.8 2004/11/20 23:57:32 kattemat Exp $
+# $Id: Makefile,v 1.9 2004/11/21 17:10:27 tlopatic Exp $
 
 
 
@@ -51,7 +51,7 @@ ifeq ($(OS), win32)
 LIBNAME ?=	olsrd_cfgparser.dll
 BINNAME ?=	olsrd_cfgparser.exe
 
-PORT_CFLAGS =	-mno-cygwin -I../win32
+PORT_CFLAGS =	-mno-cygwin -I../win32 -DWIN32_STDIO_HACK
 PORT_LDFLAGS =	-mno-cygwin
 PORT_OBJS =	../win32/compat.o
 PORT_LIBS =	-lws2_32

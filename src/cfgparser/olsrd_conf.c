@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.27 2004/11/21 10:52:16 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.28 2004/11/21 17:10:28 tlopatic Exp $
  */
 
 
@@ -169,7 +169,7 @@ olsrd_parse_cnf(const char *filename)
     {
       fclose(yyin);
       olsrd_free_cnf(cnf);
-      exit(0);
+      return NULL;
     }
   
   fclose(yyin);
@@ -470,14 +470,14 @@ get_default_if_config()
   if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
-      exit(EXIT_FAILURE);
+      return NULL;
     }
   memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
 
   if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
-      exit(EXIT_FAILURE);
+      return NULL;
     }
   memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
@@ -916,3 +916,38 @@ void olsrd_cnf_free(void *addr)
 {
   free(addr);
 }
+
+#if defined WIN32_STDIO_HACK
+struct ioinfo
+{
+	unsigned int handle;
+	unsigned char attr;
+	char buff;
+	int flag;
+	CRITICAL_SECTION lock;
+};
+
+void win32_stdio_hack(unsigned int handle)
+{
+  HMODULE lib;
+  struct ioinfo **info;
+
+  lib = LoadLibrary("msvcrt.dll");
+
+  info = (struct ioinfo **)GetProcAddress(lib, "__pioinfo");
+
+  // (*info)[1].handle = handle;
+  // (*info)[1].attr = 0x89; // FOPEN | FTEXT | FPIPE;
+
+  (*info)[2].handle = handle;
+  (*info)[2].attr = 0x89;
+
+  // stdout->_file = 1;
+  stderr->_file = 2;
+
+  // setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+}
+#else
+void win32_stdio_hack(unsigned int handle) {}
+#endif
