@@ -244,13 +244,6 @@ int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
 /* Register a "process changes" function */
 int (*register_pcf)(int (*)(int, int, int));
 
-/* Get the next message seqno in line */
-olsr_u16_t (*get_msg_seqno)();
-
-/* Check the duplicate table for prior processing */
-int (*check_dup_proc)(union olsr_ip_addr *, olsr_u16_t);
-
-
 /* Add a socket to the main olsrd select loop */
 void (*add_olsr_socket)(int, void(*)(int));
 
@@ -260,28 +253,11 @@ int (*remove_olsr_socket)(int, void(*)(int));
 /* get the link status to a neighbor */
 int (*check_neighbor_link)(union olsr_ip_addr *);
 
-/* Mantissa/exponen conversions */
-olsr_u8_t (*double_to_me)(double);
-
-double (*me_to_double)(olsr_u8_t);
-
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);
 
 /* olsrd malloc wrapper */
 void *(*olsr_malloc)(size_t, const char *);
-
-/* Add hna net IPv4 */
-void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv4 */
-int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Add hna net IPv6 */
-void (*add_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv6 */
-int (*remove_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
 
 
 /****************************************************************************
@@ -297,12 +273,6 @@ union olsr_ip_addr *main_addr; /* Main address */
 
 
 size_t             ipsize;     /* Size of the ipadresses used */
-struct timeval     *now;       /* the olsrds schedulers idea of current time */
-
-/* Data that can be altered by your plugin */
-char               *buffer;    /* The packet buffer - put your packet here */
-int                *outputsize;/* Pointer to the outputsize - set the size of your packet here */
-
 
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
