@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: unistd.h,v 1.3 2004/10/19 13:58:46 tlopatic Exp $
+ * $Id: unistd.h,v 1.4 2004/11/10 11:08:32 tlopatic Exp $
  *
  */
 
@@ -37,5 +37,7 @@ int getpid(void);
 
 #define IPTOS_TOS(x) (x & 0x1e)
 #define IPTOS_PREC(x) (x & 0xe0)
+
+int isatty(int fd);
 
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.31 2004/11/10 07:40:11 kattemat Exp $
+ * $Id: main.c,v 1.32 2004/11/10 11:08:32 tlopatic Exp $
  *
  */
 
@@ -578,10 +578,9 @@ main(int argc, char *argv[])
     }
 
   /* Print heartbeat to stdout */
-#ifndef win32
+
   if(olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO))
     olsr_register_scheduler_event(&generate_stdout_pulse, NULL, STDOUT_PULSE_INT, 0, NULL);
-#endif
   
   gettimeofday(&now, NULL);
 

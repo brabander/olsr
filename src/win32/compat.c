@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: compat.c,v 1.6 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: compat.c,v 1.7 2004/11/10 11:08:32 tlopatic Exp $
  *
  */
 
@@ -539,4 +539,31 @@ char *inet_ntop(int af, void *src, char *dst, int size)
   default:
     return (NULL);
   }
+}
+
+int isatty(int fd)
+{
+  HANDLE Hand;
+  CONSOLE_SCREEN_BUFFER_INFO Info;
+  unsigned long Events;
+
+  if (fd == 0)
+  {
+    Hand = GetStdHandle(STD_INPUT_HANDLE);
+    return GetNumberOfConsoleInputEvents(Hand, &Events);
+  }
+
+  else if (fd == 1)
+  {
+    Hand = GetStdHandle(STD_OUTPUT_HANDLE);
+    return GetConsoleScreenBufferInfo(Hand, &Info);
+  }
+
+  else if (fd == 2)
+  {
+    Hand = GetStdHandle(STD_ERROR_HANDLE);
+    return GetConsoleScreenBufferInfo(Hand, &Info);
+  }
+
+  return -1;
 }
