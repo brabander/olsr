@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.31 2004/11/30 17:12:28 tlopatic Exp $
+# $Id: Makefile,v 1.32 2004/11/30 17:27:26 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -118,6 +118,9 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll
+		$(STRIP) olsrd.exe
+		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
+		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
 		rm -rf ${TEMP}/olsr-${VERS}
 		rm -f ${TEMP}/olsr-${VERS}.zip
 		rm -f olsr-${VERS}.zip
@@ -147,6 +150,9 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Main/Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
 		gui/win32/Inst/installer.nsi
+		$(STRIP) olsrd.exe
+		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
+		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
 		rm -f olsr-setup.exe
 		rm -f olsr-${VERS}-setup.exe
 		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
