@@ -27,7 +27,20 @@ INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig 
 all: plugin
 else
+ifeq ($(OS), win32)
+NAME ?= olsrd_nameservice.dll
+NAMEFLAGS ?= -o $(NAME)
+MYFLAGS ?= -g -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -O2
+CFLAGS += $(MYFLAGS)
+LDFLAGS ?= -mno-cygwin -shared
+LIBS ?= -lws2_32
+COMPATOBJ = ../../src/win32/compat.o
+INSTALL_LIB = 	cp $(NAME) ../..
+all: plugin
+else
 all: 	help
+endif
 endif
 endif
 
@@ -57,6 +70,7 @@ help:
 	@echo ' ---------------------------------  '
 	@echo ' linux - GNU/Linux                  '
 	@echo ' fbsd  - FreeBSD                    '
+	@echo ' win32 - Windows                    '
 	@echo ' ---------------------------------  '
 	@echo ' Example - build for FreeBSD:       '
 	@echo ' gmake OS=fbsd                      '

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.2 2005/01/30 16:20:36 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.3 2005/01/30 16:33:53 kattemat Exp $ */
 
 
 /*
@@ -42,7 +42,34 @@
 #include "olsrd_plugin.h"
 #include "nameservice.h"
 
-#ifdef __FreeBSD__
+#ifdef WIN32
+
+static char *inet_ntop4(const unsigned char *src, char *dst, int size)
+{
+  static const char fmt[] = "%u.%u.%u.%u";
+  char tmp[sizeof "255.255.255.255"];
+
+  if (sprintf(tmp, fmt, src[0], src[1], src[2], src[3]) > size)
+    return (NULL);
+
+  return strcpy(dst, tmp);
+}
+
+char *inet_ntop(int af, void *src, char *dst, int size)
+{
+  switch (af)
+  {
+  case AF_INET:
+    return (inet_ntop4(src, dst, size));
+
+  default:
+    return (NULL);
+  }
+}
+
+#endif
+
+#ifndef linux
 
 #include <stdlib.h>
 
