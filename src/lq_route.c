@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.15 2004/12/03 18:43:34 tlopatic Exp $
+ * $Id: lq_route.c,v 1.16 2004/12/03 19:03:58 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -304,9 +304,9 @@ void olsr_calculate_lq_routing_table(void)
   struct list_node *node;
   struct dijk_vertex *myself;
   struct dijk_vertex *walker;
+  int hops;
   struct addresses *mid_walker;
   float etx;
-  int int_etx;
 
   // initialize the graph
 
@@ -414,13 +414,18 @@ void olsr_calculate_lq_routing_table(void)
   {
     vert = node->data;
 
+    hops = 1;
+
     // count hops to until the path ends or until we have reached a
     // one-hop neighbour
 
     for (walker = vert; walker != NULL && walker->prev != myself;
          walker = walker->prev)
+    {
       olsr_printf(2, "%s:%s <- ", olsr_ip_to_string(&walker->addr),
                   etx_to_string(walker->path_etx));
+      hops++;
+    }
 
     // if no path to a one-hop neighbour was found, ignore this node
 
@@ -438,32 +443,25 @@ void olsr_calculate_lq_routing_table(void)
     /*
      * on Linux we can add a new route for a destination before removing
      * the old route, so frequent route updates are not a problem, as
-     * we never have a time window in which there isn't any route
+     * we never have a time window in which there isn't any route; hence
+     * we can use the more volatile ETX value instead of the hop count
      */
 
-    int_etx = (int)vert->path_etx;
+    hops = (int)vert->path_etx;
 
-    if (int_etx > 100)
-      int_etx = 100;
-#else
-    /*
-     * on other OSes we do it the other way around - first remove, then
-     * add -, so we do not want to trigger route updates too often; we
-     * make sure that metric changes never trigger route changes
-     */
-
-    int_etx = 1;
+    if (hops > 100)
+      hops = 100;
 #endif
 
     // add a route to the main address of the destination node
 
-    olsr_insert_routing_table(&vert->addr, &walker->addr, int_etx);
+    olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
 
     // add routes to the remaining interfaces of the destination node
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
          mid_walker = mid_walker->next)
-      olsr_insert_routing_table(&mid_walker->address, &walker->addr, int_etx);
+      olsr_insert_routing_table(&mid_walker->address, &walker->addr, hops);
   }
 
   // free the graph
