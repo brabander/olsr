@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.18 2005/02/03 17:21:37 kattemat Exp $
+ * $Id: process_routes.c,v 1.19 2005/02/03 17:31:39 kattemat Exp $
  */
 
 
@@ -304,6 +304,10 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
       if(destination_ptr->destination->rt_metric > metric_counter)
 	metric_counter = destination_ptr->destination->rt_metric;
     }
+#ifdef DEBUG
+  olsr_printf(3, "%s highest metric %d\n",
+	      __func__, metric_counter);
+#endif
  
   while(delete_kernel_list!=NULL)
     {
@@ -327,9 +331,9 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 #endif
 	      
 	      if(olsr_cnf->ip_version == AF_INET)
-		error = olsr_ioctl_del_route(delete_kernel_list->destination);
+		error = olsr_ioctl_del_route(destination_ptr->destination);
 	      else
-		error = olsr_ioctl_del_route6(delete_kernel_list->destination);
+		error = olsr_ioctl_del_route6(destination_ptr->destination);
 	      
 	      if(error < 0)
 		{
