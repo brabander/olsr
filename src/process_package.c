@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.30 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: process_package.c,v 1.31 2005/02/16 14:44:44 tlopatic Exp $
  */
 
 
@@ -596,10 +596,19 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                       // so comparing path link quality values with ">" is
                       // equivalent to comparing ETX values with "<"
 
-                      walker->path_link_quality =
-                        link->loss_link_quality * link->neigh_link_quality *
+                      // the link quality between the 1-hop neighbour and the
+                      // 2-hop neighbour
+
+                      walker->second_hop_link_quality =
                         message_neighbors->link_quality *
                         message_neighbors->neigh_link_quality;
+
+                      // the total quality for the route
+                      // "us --- 1-hop --- 2-hop"
+
+                      walker->path_link_quality =
+                        walker->second_hop_link_quality *
+                        link->loss_link_quality * link->neigh_link_quality;
 
                       // if the link quality has changed by more than 10
                       // percent, signal
@@ -649,6 +658,7 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
 
   list_of_1_neighbors->path_link_quality = 0.0;
   list_of_1_neighbors->saved_path_link_quality = 0.0;
+  list_of_1_neighbors->second_hop_link_quality = 0.0;
 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;

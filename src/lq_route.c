@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.25 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: lq_route.c,v 1.26 2005/02/16 14:44:44 tlopatic Exp $
  */
 
 #include "defs.h"
 #include "tc_set.h"
 #include "neighbor_table.h"
+#include "two_hop_neighbor_table.h"
 #include "link_set.h"
 #include "routing_table.h"
 #include "mid_set.h"
@@ -325,6 +326,8 @@ void olsr_calculate_lq_routing_table(void)
   struct hna_entry *hna_gw;
   struct hna_net *hna;
   struct rt_entry *gw_rt, *hna_rt, *head_rt;
+  struct neighbor_2_entry *neigh2;
+  struct neighbor_list_entry *neigh_walker;
 
   if (ipsize == 4)
     avl_comp = avl_comp_ipv4;
@@ -349,6 +352,15 @@ void olsr_calculate_lq_routing_table(void)
       if (neigh->status == SYM)
         add_vertex(&vertex_tree, &vertex_list, &neigh->neighbor_main_addr,
                    INFINITE_ETX);
+
+  // add our two-hop neighbours
+
+  for (i = 0; i < HASHSIZE; i++)
+    for (neigh2 = two_hop_neighbortable[i].next;
+         neigh2 != &two_hop_neighbortable[i];
+         neigh2 = neigh2->next)
+      add_vertex(&vertex_tree, &vertex_list, &neigh2->neighbor_2_addr,
+                 INFINITE_ETX);
 
   // add remaining vertices
 
@@ -385,6 +397,28 @@ void olsr_calculate_lq_routing_table(void)
             add_edge(&vertex_tree, &vertex_list, &neigh->neighbor_main_addr,
                      &main_addr, etx);
           }
+      }
+
+  // add edges between our neighbours and our two-hop neighbours
+
+  for (i = 0; i < HASHSIZE; i++)
+    for (neigh2 = two_hop_neighbortable[i].next;
+         neigh2 != &two_hop_neighbortable[i];
+         neigh2 = neigh2->next)
+      for (neigh_walker = neigh2->neighbor_2_nblist.next;
+           neigh_walker != &neigh2->neighbor_2_nblist;
+           neigh_walker = neigh_walker->next)
+      {
+        if (neigh_walker->second_hop_link_quality >=
+            MIN_LINK_QUALITY * MIN_LINK_QUALITY)
+        {
+          neigh = neigh_walker->neighbor;
+
+          etx = 1.0 / neigh_walker->second_hop_link_quality;
+
+          add_edge(&vertex_tree, &vertex_list, &neigh2->neighbor_2_addr,
+                   &neigh->neighbor_main_addr, etx);
+        }
       }
 
   // add remaining edges
@@ -483,6 +517,7 @@ void olsr_calculate_lq_routing_table(void)
 #endif
 
     // add a route to the main address of the destination node
+
     link = get_best_link_to_neighbor(&walker->addr);
 
     olsr_insert_routing_table(&vert->addr,
@@ -494,13 +529,12 @@ void olsr_calculate_lq_routing_table(void)
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
          mid_walker = mid_walker->next_alias)
-      {
-	link = get_best_link_to_neighbor(&mid_walker->alias);
-	olsr_insert_routing_table(&mid_walker->alias,
-				  &link->neighbor_iface_addr,
-				  if_ifwithaddr(&link->local_iface_addr),
-				  hops);
-      }
+    {
+      olsr_insert_routing_table(&mid_walker->alias,
+                                &link->neighbor_iface_addr,
+                                if_ifwithaddr(&link->local_iface_addr),
+                                hops);
+    }
   }
 
   // add HNA routes - the set of unprocessed network nodes contains

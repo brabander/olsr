@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.h,v 1.11 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.h,v 1.12 2005/02/16 14:44:44 tlopatic Exp $
  */
 
 
@@ -52,6 +52,7 @@
 struct neighbor_list_entry 
 {
   struct	neighbor_entry *neighbor;
+  double        second_hop_link_quality;
   double        path_link_quality;
   double        saved_path_link_quality;
   struct	neighbor_list_entry *next;

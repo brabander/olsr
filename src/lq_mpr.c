@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.8 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.9 2005/02/16 14:44:43 tlopatic Exp $
  */
 
 #include "defs.h"
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
+#include "link_set.h"
 #include "lq_mpr.h"
 
 void olsr_calculate_lq_mpr(void)
@@ -52,6 +53,7 @@ void olsr_calculate_lq_mpr(void)
   struct neighbor_entry *neigh;
   double best;
   olsr_bool mpr_changes = OLSR_FALSE;
+  struct link_entry *link;
 
   for(i = 0; i < HASHSIZE; i++)
     {
@@ -92,10 +94,36 @@ void olsr_calculate_lq_mpr(void)
 
           neigh = olsr_lookup_neighbor_table(&neigh2->neighbor_2_addr);
 
-          // it it's a neighbour and also symmetric, then skip it
+          // if it's a neighbour and also symmetric, then examine
+          // the link quality
           
           if (neigh != NULL && neigh->status == SYM)
-            continue;
+            {
+              // if the direct link is better than the best route via
+              // an MPR, then prefer the direct link and do not select
+              // an MPR for this 2-hop neighbour
+
+              // determine the link quality of the direct link
+
+              link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+
+              best = link->loss_link_quality * link->neigh_link_quality;
+
+              // see wether we find a better route via an MPR
+
+              for (walker = neigh2->neighbor_2_nblist.next;
+                   walker != &neigh2->neighbor_2_nblist;
+                   walker = walker->next)
+                if (walker->path_link_quality > best)
+                  break;
+
+              // we've reached the end of the list, so we haven't found
+              // a better route via an MPR - so, skip MPR selection for
+              // this 1-hop neighbor
+
+              if (walker == &neigh2->neighbor_2_nblist)
+                continue;
+            }
 
           // find the connecting 1-hop neighbours with the
           // best total link qualities
