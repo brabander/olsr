@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.13 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: net.h,v 1.14 2004/12/03 20:57:15 kattemat Exp $
  */
 
 
@@ -69,10 +69,10 @@ net_add_buffer(struct interface *);
 int
 net_remove_buffer(struct interface *);
 
-inline int
+int
 net_outbuffer_bytes_left(struct interface *);
 
-inline olsr_u16_t
+olsr_u16_t
 net_output_pending(struct interface *);
 
 int

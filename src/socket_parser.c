@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.15 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: socket_parser.c,v 1.16 2004/12/03 20:57:15 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -79,7 +79,7 @@ add_olsr_socket(int fd, void(*pf)(int))
       fprintf(stderr, "Bogus socket entry - not registering...\n");
       return;
     }
-  olsr_printf(1, "Adding OLSR socket entry %d\n", fd);
+  olsr_printf(2, "Adding OLSR socket entry %d\n", fd);
 
   new_entry = olsr_malloc(sizeof(struct olsr_socket_entry), "Socket entry");
 

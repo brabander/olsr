@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.22 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: net.c,v 1.23 2004/12/03 20:57:15 kattemat Exp $
  */
 
 #include "net.h"
@@ -63,16 +63,6 @@ struct olsr_netbuf
 
 
 static struct olsr_netbuf *netbufs[MAX_IFS];
-
-
-
-void
-init_net()
-{
-  ptf_list = NULL;
-
-  return;
-}
 
 int
 net_add_buffer(struct interface *ifp)
@@ -123,8 +113,6 @@ net_remove_buffer(struct interface *ifp)
 int
 net_reserve_bufspace(struct interface *ifp, int size)
 {
-
-
   if((!netbufs[ifp->if_nr]) || (size > netbufs[ifp->if_nr]->maxsize))
     return -1;
   
@@ -135,7 +123,7 @@ net_reserve_bufspace(struct interface *ifp, int size)
 }
 
 
-inline olsr_u16_t
+olsr_u16_t
 net_output_pending(struct interface *ifp)
 {
   if(!netbufs[ifp->if_nr])
@@ -190,7 +178,7 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
 }
 
 
-inline int
+int
 net_outbuffer_bytes_left(struct interface *ifp)
 {
 

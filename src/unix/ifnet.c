@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.7 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: ifnet.c,v 1.8 2004/12/03 20:57:15 kattemat Exp $
  */
 
 
@@ -692,7 +692,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   olsr_printf(1, "\tMTU: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
-  olsr_printf(1, "\tInterface %s set up for use with index %d\n", iface->name, ifs.if_nr);
+  olsr_printf(1, "\tIndex %d\n", iface->name, ifs.if_nr);
 
   if(olsr_cnf->ip_version == AF_INET)
     {

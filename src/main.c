@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.47 2004/11/28 21:23:53 kattemat Exp $
+ * $Id: main.c,v 1.48 2004/12/03 20:57:15 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -136,9 +136,6 @@ main(int argc, char *argv[])
 
   /* Set default values */
   set_default_values();
-
-  /* Initialize network functions */
-  init_net();
  
   /* Get initial timestep */
   nowtm = NULL;
