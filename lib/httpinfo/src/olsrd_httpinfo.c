@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.18 2004/12/19 17:16:24 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.19 2004/12/19 20:21:24 kattemat Exp $
  */
 
 /*
@@ -580,7 +580,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 	size += sprintf(&buf[size], "<tr><th colspan=3>%s</th>\n", ifs->name);
 	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "<tr><td colspan=3>Status: DOWN</td></tr></table>\n");
+	    size += sprintf(&buf[size], "<tr><td colspan=3>Status: DOWN</td></tr>\n");
 	    continue;
 	  }
 	
