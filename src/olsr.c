@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.23 2004/11/20 15:40:52 tlopatic Exp $
+ * $Id: olsr.c,v 1.24 2004/11/20 17:10:03 tlopatic Exp $
  *
  */
 
@@ -165,7 +165,7 @@ olsr_process_changes()
      !changes_hna)
     return;
 
-  if (olsr_cnf->debug_level > 0)
+  if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
     {
       clear_console();
       printf("<<<< %s (%s) >>>>\n", SOFTWARE_VERSION, __DATE__);

@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.15 2004/11/11 21:14:18 kattemat Exp $
+ * $Id: oparse.y,v 1.16 2004/11/20 17:10:03 tlopatic Exp $
  *
  */
 
@@ -79,6 +79,8 @@ int yylex(void);
 %token TOK_TCREDUNDANCY
 %token TOK_MPRCOVERAGE
 %token TOK_LQ_LEVEL
+%token TOK_LQ_WSIZE
+%token TOK_CLEAR_SCREEN
 %token TOK_PLNAME
 %token TOK_PLPARAM
 
@@ -124,6 +126,8 @@ stmt:       idebug
           | atcredundancy
           | amprcoverage
           | alq_level
+          | alq_wsize
+          | bclear_screen
           | vcomment
 ;
 
@@ -633,6 +637,26 @@ alq_level: TOK_LQ_LEVEL TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("Link quality level %d\n", $2->integer);
   cnf->lq_level = $2->integer;
+
+  free($2);
+}
+;
+
+alq_wsize: TOK_LQ_WSIZE TOK_INTEGER
+{
+  if(PARSER_DEBUG) printf("Link quality window size %d\n", $2->integer);
+  cnf->lq_wsize = $2->integer;
+
+  free($2);
+}
+;
+
+bclear_screen: TOK_CLEAR_SCREEN TOK_BOOLEAN
+{
+  cnf->clear_screen = $2->boolean;
+
+  if (PARSER_DEBUG)
+    printf("Clear screen %s\n", cnf->clear_screen ? "enabled" : "disabled");
 
   free($2);
 }

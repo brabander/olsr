@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.28 2004/11/14 15:08:10 kattemat Exp $
+ * $Id: link_set.c,v 1.29 2004/11/20 17:10:02 tlopatic Exp $
  *
  */
 
@@ -480,7 +480,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       new_link->lost_packets = 0;
       new_link->total_packets = 0;
 
-      new_link->loss_window_size = 10;
+      new_link->loss_window_size = olsr_cnf->lq_wsize;
       new_link->loss_index = 0;
 
       memset(new_link->loss_bitmap, 0, sizeof (new_link->loss_bitmap));

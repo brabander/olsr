@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.9 2004/11/12 20:48:19 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.10 2004/11/20 17:10:03 tlopatic Exp $
  *
  */
 
@@ -38,6 +38,8 @@
 #define DEF_IPC_CONNECTIONS 0
 #define DEF_USE_HYST        OLSR_TRUE
 #define DEF_LQ_LEVEL        0
+#define DEF_LQ_WSIZE        10
+#define DEF_CLEAR_SCREEN    OLSR_FALSE
 
 
 #ifndef IPV6_ADDR_SITELOCAL
@@ -170,7 +172,9 @@ struct olsrd_config
   float                    pollrate;
   olsr_u8_t                tc_redundancy;
   olsr_u8_t                mpr_coverage;
+  olsr_bool                clear_screen;
   olsr_u8_t                lq_level;
+  olsr_u32_t               lq_wsize;
   struct plugin_entry      *plugins;
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;

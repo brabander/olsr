@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.18 2004/11/12 20:48:19 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.19 2004/11/20 17:10:03 tlopatic Exp $
  *
  */
 
@@ -264,6 +264,8 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
     cnf->lq_level = DEF_LQ_LEVEL;
+    cnf->lq_wsize = DEF_LQ_WSIZE;
+    cnf->clear_screen = DEF_CLEAR_SCREEN;
 }
 
 
@@ -445,8 +447,13 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "MprCoverage\t%d\n\n", cnf->mpr_coverage);
 
   fprintf(fd, "# Link quality level\n# 0 = do not use link quality\n# 1 = use link quality for MPR selection\n# 2 = use link quality for MPR selection and routing\n\n");
-   
   fprintf(fd, "LinkQualityLevel\t%d\n\n", cnf->lq_level);
+
+  fprintf(fd, "# Link quality window size\n\n");
+  fprintf(fd, "LinkQualityWinSize\t%d\n\n", cnf->lq_wsize);
+
+  fprintf(fd, "# Clear screen when printing debug output?\n\n");
+  fprintf(fd, "ClearScreen\t%s\n\n", cnf->clear_screen ? "yes" : "no");
 
   /* Plugins */
   fprintf(fd, "# Olsrd plugins to load\n# This must be the absolute path to the file\n# or the loader will use the following scheme:\n# - Try the paths in the LD_LIBRARY_PATH \n#   environment variable.\n# - The list of libraries cached in /etc/ld.so.cache\n# - /lib, followed by /usr/lib\n\n");
@@ -618,6 +625,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
    
   printf("LQ level         : %d\n", cnf->lq_level);
+
+  printf("LQ window size   : %d\n", cnf->lq_wsize);
+
+  printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 
   /* Interfaces */
   if(in)
