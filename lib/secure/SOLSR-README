@@ -1,34 +1,19 @@
 
-06.11.2004
-
-NOTE:
-DEVELOPMENT OF THIS PLUIGN HAS CEASED FROM OLSRD 0.4.8
-THIS PLUGIN WILL ONLY WORK WITH OLSRD <= 0.4.7
-
-There has been some heavy internal rewrites that will
-affect the way this plugin works in a serious way. The
-outputbuffering in olsrd is completely rewritten to
-work on a pr. interface basis. Due to this, this plugin 
-is no longer functional with olsrd >= 0.4.8. Sorry.
-
-If you would like to update and maintain this plugin,
-drop me a mail at andreto@olsr.org
-
-- Andreas Tønnesen
-
-
-
-
-OLD README:
-
-Secure OLSR 0.2 implementation notes
-(c)Andreas Tønnesen 06.05.04
+Secure OLSR 0.4 implementation notes
+(c)Andreas Tønnesen 2004
 
 This document contains information on how to
 use the secure OLSR plugin with the UniK olsr daemon.
 It does _not_ cover secure OLSR protocol issues.
 
 Lines starting with '# ' indicates shell commands.
+
+NOTES
+
+  The plugin interface and olsrd output buffering was
+  heavily rewritten for the 0.4.8 release. The plugin
+  should work with this release - but has not been
+  tested much.
 
 COMPILING
 
@@ -48,17 +33,22 @@ INSTALLING
 USAGE
 
   To make olsrd load the secure OLSR plugin add the
-  following line in the olsrd configuration file:
+  following in the olsrd configuration file:
 
-  LOAD_PLUGIN     olsrd_secure.so.X.X
+LoadPlugin "olsrd_secure.so.0.4"
+{
+    PlParam     "Keyfile"   "FILENAME"
+}
 
-  replacing the Xes with the version of the plugin.
+  replacing FILENAME with the full path of the file
+  containing the shared key.
 
-  The plugin uses a shared secret key - for nodes
-  to participate in the OLSR routing domain they
-  need to use the key used by the other nodes.
-  The key is 128-bits of size and is read from
-  the file:
+  The plugin uses this shared secret key for signature
+  generation and verification. For nodes to participate 
+  in the OLSR routing domain they need to use the key 
+  used by the other nodes.
+  The key is 128-bits of size and is read from the
+  specified file from the config file or by default from:
   /root/.olsr/olsrd_secure_key
 
   Copy the key to this file an all nodes. The plugin
