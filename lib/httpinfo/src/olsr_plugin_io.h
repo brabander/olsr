@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_plugin_io.h,v 1.1 2004/12/15 20:11:50 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.2 2004/12/18 00:18:25 kattemat Exp $
  */
 
 
@@ -57,6 +57,8 @@
  *                 GETD__MID_SET added
  *                 GETF__NET_RESERVE_BUFSPACE added 
  *                 GETF__NET_OUTBUFFER_PUSH_RESERVED added
+ *                 - Andreas
+ *         0.4.9 : GETD__LINK_SET added
  *                 - Andreas
  */
 
@@ -99,6 +101,8 @@
 #define GETD__ROUTINGTABLE                         113
 #define GETD__HNA_ROUTES                           114
 #define GETD__MID_SET                              115
+#define GETD__LINK_SET                             116
+
 
 /* Function fetching - starts at 500 */
 #define GETF__OLSR_REGISTER_SCHEDULER_EVENT        500

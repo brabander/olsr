@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.1 2004/12/15 20:11:50 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.2 2004/12/18 00:18:25 kattemat Exp $
  */
 
 /*
@@ -45,6 +45,7 @@
 
 
 #include "olsrd_plugin.h"
+#include "olsr_cfg.h"
 #include <stdio.h>
 
 
@@ -222,6 +223,15 @@ fetch_olsrd_data()
     hna_set = NULL;
     retval = 0;
   }
+
+  /* Link set */
+  if(!olsr_plugin_io(GETD__OLSR_CNF, 
+		     &cfg, 
+		     sizeof(cfg)))
+    {
+      hna_set = NULL;
+      retval = 0;
+    }
 
   /* Olsr debug output function */
   if(!olsr_plugin_io(GETF__OLSR_PRINTF, 

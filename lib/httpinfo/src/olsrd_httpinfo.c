@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.9 2004/12/17 17:38:07 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.10 2004/12/18 00:18:25 kattemat Exp $
  */
 
 /*
@@ -44,6 +44,7 @@
  */
 
 #include "olsrd_httpinfo.h"
+#include "olsr_cfg.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -247,7 +248,7 @@ parse_http_request(int fd)
       /* All is good */
 
       build_frame("Status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
-      build_frame("Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
+      build_frame("Links and Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
       build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
       build_frame("HNA", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
       build_frame("MID", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
@@ -409,19 +410,54 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     char systime[100];
     time_t currtime;
     int size = 0;
+    struct olsr_if *ifs;
 
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
 
+
+    size += sprintf(&buf[size], "%s\n", systime);
+
     size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
     
-    size += sprintf(&buf[size], "<td>%s</td>\n", systime);
-    size += sprintf(&buf[size], "<td>IP version: </td>\n");
-    size += sprintf(&buf[size], "<td>Debug level: </td></tr>\n");
-    size += sprintf(&buf[size], "</tr></table>\n");
+    size += sprintf(&buf[size], "<td>IP version: %d</td>\n", cfg->ip_version == AF_INET ? 4 : 6);
 
+    size += sprintf(&buf[size], "<td>Debug level: %d</td>\n", cfg->debug_level);
+
+    size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", cfg->tos);
+
+    size += sprintf(&buf[size], "</tr>\n<tr>\n", cfg->ip_version == AF_INET ? 4 : 6);
+
+    if(cfg->allow_no_interfaces)
+      size += sprintf(&buf[size], "<td>No interfaces allowed</td>\n");
+    else
+      size += sprintf(&buf[size], "<td>No interfaces not allowed</td>\n");
+
+    size += sprintf(&buf[size], "<td>Willingness: %d %s</td>\n", cfg->willingness, cfg->willingness_auto ? "(auto)" : "");
+
+    size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", cfg->use_hysteresis ? "Enabled" : "Disabled");
+
+    size += sprintf(&buf[size], "</tr>\n<tr>\n", cfg->ip_version == AF_INET ? 4 : 6);
+
+    size += sprintf(&buf[size], "<td>Pollrate: %0.2f</td>\n", cfg->pollrate);
+    size += sprintf(&buf[size], "<td>TC redundancy: %d</td>\n", cfg->tc_redundancy);
+    size += sprintf(&buf[size], "<td>MPR coverage: %d</td>\n", cfg->mpr_coverage);
+
+    size += sprintf(&buf[size], "</tr></table>\n");
+    
     size += sprintf(&buf[size], "Interfaces:<br>\n");
 
+    for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
+      {
+	size += sprintf(&buf[size], "<h2>%s</h2>\n", ifs->name);
+
+	if(!ifs->interf)
+	  {
+	    size += sprintf(&buf[size], "No such interface found<br>\n", ifs->name);
+	    continue;
+	  }
+    
+      }
     return size;
 }
 
@@ -432,10 +468,31 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
+  struct link_entry *link;
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "Links\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+
+  /* Link set */
+  if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)))
+  {
+    while(link)
+      {
+
+	size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%d</td><td>%d</td><td>%0.2f</td><td>%0.2f</td></tr>\n",
+			olsr_ip_to_string(&link->local_iface_addr),
+			olsr_ip_to_string(&link->neighbor_iface_addr),
+			link->L_link_quality, 
+			link->loss_link_quality,
+			link->lost_packets, 
+			link->total_packets,
+			link->neigh_link_quality, 
+			(link->loss_link_quality * link->neigh_link_quality) ? 1.0 / (link->loss_link_quality * link->neigh_link_quality) : 0.0);
+
+	link = link->next;
+      }
+  }
 
   size += sprintf(&buf[size], "</table><hr>\n");
 
@@ -531,6 +588,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   struct tc_entry *entry;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
+  struct hna4_entry *hna4;
 
   size = 0;
 
@@ -560,10 +618,17 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-
   size += sprintf(&buf[size], "</table><hr>\n");
   size += sprintf(&buf[size], "Local(announced) HNA entries\n");
   size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+
+  for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
+    {
+      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td></tr>\n", 
+		      olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
+		      olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
+    }
+
   size += sprintf(&buf[size], "</table><hr>\n");
 
 
@@ -579,6 +644,8 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=2 CELLPADDING=0 ALIGN=center><tr><td>Registered MID entries</td><td>Local(announced) MID entries</td></tr>\n");
   size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Alias</th></tr>\n");
   size += sprintf(&buf[size], "</table></td>\n");
+
+
   size += sprintf(&buf[size], "<th><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Interface</th><th>IP</th></tr>\n");
   size += sprintf(&buf[size], "</table></td></tr>\n");
   size += sprintf(&buf[size], "</table><hr>\n");
