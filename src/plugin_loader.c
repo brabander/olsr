@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.10 2004/11/06 09:20:09 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.11 2004/11/06 12:18:51 kattemat Exp $
  *
  */
 
@@ -79,7 +79,7 @@ int
 olsr_load_dl(char *libname, struct plugin_param *params)
 {
   struct olsr_plugin new_entry, *entry;
-  int *interface_version;
+  int (*interface_version)(void);
 
 
   olsr_printf(1, "---------- Plugin loader ----------\nLibrary: %s\n", libname);
@@ -90,9 +90,8 @@ olsr_load_dl(char *libname, struct plugin_param *params)
       return -1;
     }
 
-  /* Fetch the multipurpose function */
+  /* Fetch the interface version function */
   olsr_printf(1, "Checking plugin interface version....");
-  /* Register mp function */
   if((interface_version = dlsym(new_entry.dlhandle, "plugin_interface_version")) == NULL)
     {
       olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
@@ -101,8 +100,8 @@ olsr_load_dl(char *libname, struct plugin_param *params)
     }
   else
     {
-      olsr_printf(1, " %d - ", *interface_version);
-      if(*interface_version != PLUGIN_INTERFACE_VERSION)
+      olsr_printf(1, " %d - ", interface_version());
+      if(interface_version() != PLUGIN_INTERFACE_VERSION)
 	olsr_printf(1, "WARNING: VERSION MISSMATCH!\n");
       else
 	olsr_printf(1, "OK\n");
