@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.15 2004/12/06 10:44:43 tlopatic Exp $
+# $Id: Makefile,v 1.16 2004/12/12 17:54:00 kattemat Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -61,6 +61,10 @@ endif
 
 ifeq ($(OS), fbsd)
 DEPFLAGS +=	-D__FreeBSD__
+endif
+
+ifeq ($(OS), nbsd)
+DEPFLAGS +=	-D__NetBSD__
 endif
 
 ifeq ($(OS), osx)

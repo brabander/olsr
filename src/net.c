@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.24 2004/12/04 17:49:18 kattemat Exp $
+ * $Id: net.c,v 1.25 2004/12/12 17:54:00 kattemat Exp $
  */
 
 #include "net.h"
@@ -477,7 +477,7 @@ join_mcast(struct interface *ifs, int sock)
   COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-#if !defined __FreeBSD__ && !defined __MacOSX__
+#if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
   olsr_printf(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(sock, 

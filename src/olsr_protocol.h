@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.15 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.16 2004/12/12 17:54:00 kattemat Exp $
  */
 
 /*
@@ -75,7 +75,7 @@ typedef int8_t          olsr_8_t;
 typedef int16_t         olsr_16_t;
 typedef int32_t         olsr_32_t;
 
-#elif defined __FreeBSD__
+#elif defined __FreeBSD__ || defined __NetBSD__
 
 typedef	uint8_t		olsr_u8_t;
 typedef uint16_t       	olsr_u16_t;

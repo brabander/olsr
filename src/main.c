@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.50 2004/12/05 13:21:01 kattemat Exp $
+ * $Id: main.c,v 1.51 2004/12/12 17:53:59 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -480,7 +480,7 @@ main(int argc, char *argv[])
       olsr_exit(__func__, 0);
     }
 
-#if defined __FreeBSD__ || defined __MacOSX__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
   if ((rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
     {
       olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
@@ -690,7 +690,7 @@ olsr_shutdown(int signal)
   /* ioctl socket */
   close(ioctl_s);
 
-#if defined __FreeBSD__ || defined __MacOSX__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
   /* routing socket */
   close(rts);
 #endif

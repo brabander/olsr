@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.9 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: ifnet.c,v 1.10 2004/12/12 17:54:00 kattemat Exp $
  */
 
 
@@ -54,7 +54,7 @@
 #define SIOCGIWMODE	0x8B07		/* get operation mode */
 #define SIOCSIWSENS	0x8B08		/* set sensitivity (dBm) */
 #define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
-#elif defined __FreeBSD__ || defined __MacOSX__
+#elif defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
 #define ifr_netmask ifr_addr
 #endif
 

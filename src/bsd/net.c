@@ -36,12 +36,16 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.7 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: net.c,v 1.8 2004/12/12 17:54:00 kattemat Exp $
  */
 
 #include "../defs.h"
 #include "../net_os.h"
 #include "net.h"
+
+#ifdef __NetBSD__
+#include <sys/param.h>
+#endif
 
 #include <sys/sysctl.h>
 

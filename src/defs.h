@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.29 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: defs.h,v 1.30 2004/12/12 17:53:58 kattemat Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -144,7 +144,7 @@ int ioctl_s;
 
 /* routing socket */
 
-#if defined __FreeBSD__ || defined __MacOSX__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
 int rts;
 #endif
 
