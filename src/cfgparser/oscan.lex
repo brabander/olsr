@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oscan.lex,v 1.6 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: oscan.lex,v 1.7 2004/11/03 09:22:18 kattemat Exp $
  *
  */
 
@@ -193,19 +193,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 }
 
 
-"auto"|{DECDIGIT}+ {
+{DECDIGIT}+ {
 
   yylval = get_conf_token();
 
-  if (strncmp(yytext, "auto", 4) == 0)
-    {
-      yylval->boolean = 1;
-    }
-  else
-    {
-      yylval->boolean = 0;
-      yylval->integer = atoi(yytext);
-    }
+  yylval->integer = atoi(yytext);
 
   return TOK_INTEGER;
 
@@ -216,10 +208,10 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   yylval = get_conf_token();
 
   if (strncmp(yytext, "yes", 3) == 0)
-    yylval->boolean = 1;
+    yylval->boolean = TRUE;
 
   else
-    yylval->boolean = 0;
+    yylval->boolean = FALSE;
 
   return TOK_BOOLEAN;
 }
@@ -230,10 +222,10 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   yylval = get_conf_token();
 
   if (strncmp(yytext, "site-local", 10) == 0)
-    yylval->boolean = 1;
+    yylval->boolean = TRUE;
 
   else
-    yylval->boolean = 0;
+    yylval->boolean = FALSE;
 
   return TOK_IP6TYPE;
 }

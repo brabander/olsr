@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.10 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.11 2004/11/03 09:22:18 kattemat Exp $
  *
  */
 
@@ -160,7 +160,7 @@ olsrd_parse_cnf(char *filename)
     {
       /* set various stuff */
       in->index = cnf->ifcnt++;
-      in->configured = 0;
+      in->configured = FALSE;
       in->interf = NULL;
       in = in->next;
     }
@@ -315,6 +315,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   struct hna6_entry        *h6 = cnf->hna6_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
+  struct plugin_param      *pp;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -377,9 +378,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "TosValue\t%d\n\n", cnf->tos);
 
   /* Willingness */
-  fprintf(fd, "# The fixed willingness to use(0-7)\n# or \"auto\" to set willingness dynammically\n# based on battery/power status\n\n");
+  fprintf(fd, "# The fixed willingness to use(0-7)\n# If not set willingness will be calculated\n# dynammically based on battery/power status\n\n");
   if(cnf->willingness_auto)
-    fprintf(fd, "Willingness\tauto\n\n");
+    fprintf(fd, "#Willingness\t4\n\n");
   else
     fprintf(fd, "Willingness%d\n\n", cnf->willingness);
 
@@ -430,8 +431,14 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
       while(pe)
 	{
 	  fprintf(fd, "LoadPlugin \"%s\"\n{\n", pe->name);
-	  pe = pe->next;
+          pp = pe->params;
+          while(pp)
+            {
+              fprintf(fd, "    PlParam \"%s\" \"%s\"\n", pp->key, pp->value);
+              pp = pp->next;
+            }
 	  fprintf(fd, "}\n");
+	  pe = pe->next;
 	}
     }
   fprintf(fd, "\n");

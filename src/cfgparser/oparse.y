@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.9 2004/11/02 19:27:14 kattemat Exp $
+ * $Id: oparse.y,v 1.10 2004/11/03 09:22:18 kattemat Exp $
  *
  */
 
@@ -301,15 +301,8 @@ isethnaval: TOK_HNAVAL TOK_FLOAT
 idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 {
 
-  if($2->boolean == 1)
-    {
-      if(PARSER_DEBUG) printf("Debug levl AUTO\n");
-    }
-  else
-    {
-      cnf->debug_level = $2->integer;
-      if(PARSER_DEBUG) printf("Debug level: %d\n", cnf->debug_level);
-    }
+  cnf->debug_level = $2->integer;
+  if(PARSER_DEBUG) printf("Debug level: %d\n", cnf->debug_level);
 
   free($2);
 }
@@ -437,20 +430,18 @@ ifblock: TOK_INTERFACE TOK_STRING
 bnoint: TOK_NOINT TOK_BOOLEAN
 {
   if(PARSER_DEBUG) printf("Noint set to %d\n", $2->boolean);
+
+  cnf->allow_no_interfaces = $2->boolean;
+
   free($2);
 }
 ;
 
 atos: TOK_TOS TOK_INTEGER
 {
-  if($2->boolean == 1)
-    {
-      if(PARSER_DEBUG) printf("Tos AUTO\n");
-    }
-  else
-    {
-      if(PARSER_DEBUG) printf("TOS: %d\n", $2->integer);
-    }
+  if(PARSER_DEBUG) printf("TOS: %d\n", $2->integer);
+  cnf->tos = $2->integer;
+
   free($2);
 
 }
@@ -458,16 +449,11 @@ atos: TOK_TOS TOK_INTEGER
 
 awillingness: TOK_WILLINGNESS TOK_INTEGER
 {
-  if($2->boolean == 1)
-    {
-      if(PARSER_DEBUG) printf("Willingness AUTO\n");
-    }
-  else
-    {
-      if(PARSER_DEBUG) printf("Willingness: %d\n", $2->integer);
-      cnf->willingness_auto = 0;
-      cnf->willingness = $2->integer;
-    }
+  cnf->willingness_auto = FALSE;
+
+  if(PARSER_DEBUG) printf("Willingness: %d\n", $2->integer);
+  cnf->willingness = $2->integer;
+
   free($2);
 
 }
@@ -475,7 +461,9 @@ awillingness: TOK_WILLINGNESS TOK_INTEGER
 
 bipccon: TOK_IPCCON TOK_BOOLEAN
 {
-  if($2->boolean == 1)
+  cnf->open_ipc = $2->boolean;
+
+  if(cnf->open_ipc)
     {
       if(PARSER_DEBUG) printf("IPC allowed\n");
     }
@@ -491,7 +479,8 @@ bipccon: TOK_IPCCON TOK_BOOLEAN
 
 busehyst: TOK_USEHYST TOK_BOOLEAN
 {
-  if($2->boolean == 1)
+  cnf->use_hysteresis = $2->boolean;
+  if(cnf->use_hysteresis)
     {
       if(PARSER_DEBUG) printf("Hysteresis enabled\n");
     }
@@ -543,15 +532,9 @@ fpollrate: TOK_POLLRATE TOK_FLOAT
 
 atcredundancy: TOK_TCREDUNDANCY TOK_INTEGER
 {
-  if($2->boolean == 1)
-    {
-      if(PARSER_DEBUG) printf("TC redundancy AUTO\n");
-    }
-  else
-    {
-      if(PARSER_DEBUG) printf("TC redundancy %d\n", $2->integer);
-      cnf->tc_redundancy = $2->integer;
-    }
+  if(PARSER_DEBUG) printf("TC redundancy %d\n", $2->integer);
+  cnf->tc_redundancy = $2->integer;
+
   free($2);
 
 }
@@ -559,15 +542,9 @@ atcredundancy: TOK_TCREDUNDANCY TOK_INTEGER
 
 amprcoverage: TOK_MPRCOVERAGE TOK_INTEGER
 {
-  if($2->boolean == 1)
-    {
-      if(PARSER_DEBUG) printf("MPR coverage AUTO\n");
-    }
-  else
-    {
-      if(PARSER_DEBUG) printf("MPR coverage %d\n", $2->integer);
-      cnf->mpr_coverage = $2->integer;
-    }
+  if(PARSER_DEBUG) printf("MPR coverage %d\n", $2->integer);
+  cnf->mpr_coverage = $2->integer;
+
   free($2);
 }
 ;

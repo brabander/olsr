@@ -47,15 +47,15 @@ AllowNoInt	yes
 
 # TOS(type of service) value for
 # the IP header of control traffic.
-# auto is 16
+# If not set it will default to 16
 
-TosValue	auto
+#TosValue	16
 
 # The fixed willingness to use(0-7)
-# or "auto" to set willingness dynammically
-# based on battery/power status
+# If not set willingness will be calculated
+# dynammically based on battery/power status
 
-Willingness    	auto
+#Willingness    	4
 
 # Allow processes like the GUI front-end
 # to connect to the daemon. 'yes' or 'no'
@@ -85,7 +85,7 @@ UseHysteresis	yes
 
 
 # Polling rate in seconds(float). 
-# Auto uses default value 0.1 sec
+# Default value 0.1 sec
 
 Pollrate	0.1
 

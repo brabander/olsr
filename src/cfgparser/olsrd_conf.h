@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.h,v 1.7 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.8 2004/11/03 09:22:18 kattemat Exp $
  *
  */
 
@@ -41,7 +41,7 @@ struct conf_token
 {
   olsr_u32_t integer;
   float      floating;
-  olsr_u8_t  boolean;
+  olsr_bool  boolean;
   char       *string;
 };
 
