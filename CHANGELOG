@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.32 2005/02/19 15:26:41 kattemat Exp $
+$Id: CHANGELOG,v 1.33 2005/02/19 18:08:18 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -95,8 +95,15 @@ running in IPv6 mode.
 this should enable users to actually run one olsrd instance using
 IPv6 and one using IPv4 at the same time :)
 
+PLUGINS
 
-MINOR UPDATES
+The httpinfo, dyn_gw and dot_draw plugins now all include olsrd
+headerfiles directly. A plugin should define OLSR_PLUGIN before
+includeing olsrd headers. Doing things this way removed the 
+redundant datatype definitions that has so often caused trouble
+when things has been updated in olsrd.
+
+OTHER UPDATES
 
 - WLAN devices are now detected in FreeBSD
 - First specified interfaces IP is used as main address.
