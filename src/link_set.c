@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.37 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: link_set.c,v 1.38 2004/12/19 13:53:18 kattemat Exp $
  */
 
 
@@ -53,9 +53,6 @@
 #include "link_layer.h"
 #include "lq_route.h"
 
-/* Begin:
- * Prototypes for internal functions 
- */
 
 static int
 check_link_status(struct hello_message *);
@@ -74,10 +71,6 @@ olsr_time_out_link_set(void);
 static int
 get_neighbor_status(union olsr_ip_addr *);
 
-
-/* End:
- * Prototypes for internal functions 
- */
 
 
 
@@ -631,9 +624,6 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
   struct interface *local_if;
 #endif
 
-  /* Time out entries */
-  //timeout_link_set();
-
   /* Add if not registered */
   entry = add_new_entry(local, remote, &message->source_addr, message->vtime, message->htime);
 
@@ -674,7 +664,6 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
       /* L_SYM_time = current time + validity time */
       //printf("updating SYM time for %s\n", olsr_ip_to_string(remote));
       olsr_get_timestamp((olsr_u32_t) (message->vtime*1000), &entry->SYM_time);
-	//timeradd(&now, &tmp_timer, &entry->SYM_time);
 
       /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
       timeradd(&entry->SYM_time, &hold_time_neighbor, &entry->time);
@@ -700,14 +689,10 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
     olsr_process_hysteresis(entry);
 
   /* update neighbor status */
-  /* Return link status */
-  //status = lookup_link_status(entry);
-  /* UPDATED ! */
   status = get_neighbor_status(remote);
 
   /* Update neighbor */
   update_neighbor_status(entry->neighbor, status);
-  //update_neighbor_status(entry->neighbor);
 
   return entry;  
 }
@@ -842,7 +827,6 @@ olsr_time_out_link_set()
 		olsr_delete_neighbor_table(&tmp_link_set->neighbor->neighbor_main_addr);
 	      else
 		tmp_link_set->neighbor->linkcount--;
-	      //olsr_delete_neighbor_if_no_link(&tmp_link_set->neighbor->neighbor_main_addr);
 
 	      changes_neighborhood = OLSR_TRUE;
 
@@ -895,14 +879,11 @@ olsr_time_out_hysteresis()
 	  olsr_process_hysteresis(tmp_link_set);
 	  
 	  /* update neighbor status */
-	  //status = lookup_link_status(tmp_link_set);
-	  /* UPDATED ! */
 	  status = get_neighbor_status(&tmp_link_set->neighbor_iface_addr);
 
 
 	  /* Update neighbor */
 	  update_neighbor_status(tmp_link_set->neighbor, status);
-	  //update_neighbor_status(tmp_link_set->neighbor);
 
 	  /* Update seqno - not mentioned in the RFC... kind of a hack.. */
 	  tmp_link_set->olsr_seqno++;
