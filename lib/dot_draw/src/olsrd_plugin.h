@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.9 2004/12/03 20:52:27 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.10 2004/12/03 22:05:24 kattemat Exp $
  */
 
 /*
@@ -155,6 +155,7 @@ struct neighbor_entry
   olsr_u8_t                    willingness;
   olsr_bool                    is_mpr;
   olsr_bool                    was_mpr; /* Used to detect changes in MPR */
+  olsr_bool                    skip;
   int                          neighbor_2_nocov;
   int                          linkcount;
   struct neighbor_2_list_entry neighbor_2_list; 
@@ -166,14 +167,14 @@ struct neighbor_entry
 /* Two hop neighbor */
 
 
-
 struct neighbor_list_entry 
 {
   struct	neighbor_entry *neighbor;
+  double path_link_quality;
+  double saved_path_link_quality;
   struct	neighbor_list_entry *next;
   struct	neighbor_list_entry *prev;
 };
-
 
 struct neighbor_2_entry
 {
@@ -195,14 +196,11 @@ struct topo_dst
   olsr_u16_t T_seq;
   struct topo_dst *next;
   struct topo_dst *prev;
-#if defined USE_LINK_QUALITY
   double link_quality;
   double inverse_link_quality;
   double saved_link_quality;
   double saved_inverse_link_quality;
-#endif
 };
-
 
 struct tc_entry
 {
