@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: net.c,v 1.8 2004/11/17 17:14:28 tlopatic Exp $
+ * $Id: net.c,v 1.9 2004/11/18 21:12:29 tlopatic Exp $
  *
  */
 
@@ -236,10 +236,7 @@ static int SetEnableRedirKey(unsigned long New)
   if (RegQueryValueEx(Key, "EnableICMPRedirect", NULL, &Type,
                       (unsigned char *)&Old, &Len) != ERROR_SUCCESS ||
       Type != REG_DWORD)
-  {
-    RegCloseKey(Key);
-    return -1;
-  }
+    Old = 1;
 
   if (RegSetValueEx(Key, "EnableICMPRedirect", 0, REG_DWORD,
                     (unsigned char *)&New, sizeof (New)))
