@@ -19,12 +19,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.2 2004/11/17 15:49:10 tlopatic Exp $
+ * $Id: net.c,v 1.3 2004/11/17 16:01:19 tlopatic Exp $
  *
  */
 
 #include "../defs.h"
 #include "net.h"
+
+#include <sys/sysctl.h>
 
 static int ignore_redir;
 static int send_redir;
