@@ -100,7 +100,6 @@ net_outbuffer_push(olsr_u8_t *data, olsr_u16_t size)
   memcpy(&out_buffer[outputsize + OLSR_HEADERSIZE], data, size);
   outputsize += size;
 
-  printf("Adding %d bytes to outputbuffer\n", size);
   return 1;
 }
 
