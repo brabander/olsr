@@ -21,11 +21,12 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: net.c,v 1.5 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: net.c,v 1.6 2004/11/17 16:54:41 tlopatic Exp $
  *
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -211,4 +212,63 @@ int restore_settings(int Ver)
   disable_ip_forwarding(Ver);
 
   return 0;
+}
+
+static int SetEnableRedirKey(unsigned long New)
+{
+  HKEY Key;
+  unsigned long Type;
+  unsigned long Len;
+  unsigned long Old;
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                   "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                   0, KEY_READ | KEY_WRITE, &Key) != ERROR_SUCCESS)
+    return -1;
+
+  Len = sizeof (Old);
+
+  if (RegQueryValueEx(Key, "EnableICMPRedirect", NULL, &Type,
+                      (unsigned char *)&Old, &Len) != ERROR_SUCCESS ||
+      Type != REG_DWORD)
+  {
+    RegCloseKey(Key);
+    return -1;
+  }
+
+  if (RegSetValueEx(Key, "EnableICMPRedirect", 0, REG_DWORD,
+                    (unsigned char *)&New, sizeof (New)))
+  {
+    RegCloseKey(Key);
+    return -1;
+  }
+
+  RegCloseKey(Key);
+  return Old;
+}
+
+void DisableIcmpRedirects(void)
+{
+  int Res;
+
+  Res = SetEnableRedirKey(0);
+
+  if (Res == 0)
+    return;
+
+  fprintf(stderr, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
+
+  if (Res < 0)
+  {
+    fprintf(stderr, "Cannot disable ICMP redirect processing in the registry.\n");
+    fprintf(stderr, "Please disable it manually. Continuing in 3 seconds...\n");
+    Sleep(3000);
+
+    return;
+  }
+
+  fprintf(stderr, "I have disabled ICMP redirect processing in the registry for you.\n");
+  fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
+
+  exit(0);
 }

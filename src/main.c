@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.38 2004/11/12 22:11:54 kattemat Exp $
+ * $Id: main.c,v 1.39 2004/11/17 16:54:41 tlopatic Exp $
  *
  */
 
@@ -47,6 +47,7 @@
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signal);
 void ListInterfaces(void);
+void DisableIcmpRedirects(void);
 #else
 static void
 olsr_shutdown(int);
@@ -101,6 +102,8 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 #else
+  DisableIcmpRedirects();
+
   if (WSAStartup(0x0202, &WsaData))
     {
       fprintf(stderr, "Could not initialize WinSock.\n");
