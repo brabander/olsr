@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.12 2005/01/30 14:39:40 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.13 2005/01/30 14:57:35 kattemat Exp $
  */
 
 /*
@@ -55,7 +55,9 @@
 #endif
 #include <unistd.h>
 #include <errno.h>
+#ifndef WIN32
 #include <pthread.h>
+#endif
 #include <time.h>
 
 /* 
@@ -119,7 +121,8 @@ register_olsr_param(char *key, char *value)
   int i;
   union olsr_ip_addr temp_net;
   union hna_netmask temp_netmask;
-  char s_net[16],s_mask[16];
+  char s_netaddr[16];
+  char s_mask[16];
  
   //printf("%s():%s->%s\n",__func__,key,value);
   
@@ -143,9 +146,9 @@ register_olsr_param(char *key, char *value)
     }
   }else if (!strcmp(key, "HNA")) {
 	  //192.168.1.0  255.255.255.0
-	  i=sscanf(value,"%15s %15s",s_net,s_mask);
-	  //printf("%s():i:%i; net:%s; mask:%s\n",__func__,i,s_net,s_mask);
-	  if (inet_aton(s_net, &foo_addr)) {
+	  i=sscanf(value,"%15s %15s",s_netaddr,s_mask);
+	  //printf("%s():i:%i; net:%s; mask:%s\n",__func__,i,s_netaddr,s_mask);
+	  if (inet_aton(s_netaddr, &foo_addr)) {
 		  temp_net.v4=foo_addr.s_addr;
 		  //printf("GOT: %s(%08x)",inet_ntoa(foo_addr),foo_addr.s_addr);
 		  if (inet_aton(s_mask, &foo_addr)) {

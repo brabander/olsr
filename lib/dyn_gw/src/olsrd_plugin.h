@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.9 2004/12/21 13:46:51 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.10 2005/01/30 14:57:35 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -74,13 +74,21 @@
 /* types */
 #include <sys/types.h>
 
+#ifndef WIN32
 typedef u_int8_t        olsr_u8_t;
 typedef u_int16_t       olsr_u16_t;
 typedef u_int32_t       olsr_u32_t;
 typedef int8_t          olsr_8_t;
 typedef int16_t         olsr_16_t;
 typedef int32_t         olsr_32_t;
-
+#else
+typedef unsigned char olsr_u8_t;
+typedef unsigned short olsr_u16_t;
+typedef unsigned int olsr_u32_t;
+typedef char olsr_8_t;
+typedef short olsr_16_t;
+typedef int olsr_32_t;
+#endif
 
 
 /*

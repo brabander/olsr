@@ -25,7 +25,18 @@ INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	      /sbin/ldconfig
 all:	plugin
 else
+ifeq ($(OS), win32)
+NAME ?= olsrd_dyn_gw.dll
+NAMEFLAGS ?= -o $(NAME)
+CFLAGS ?= -g -O2 -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+LDFLAGS ?= -mno-cygwin -shared
+LIBS ?= -lws2_32
+COMPATOBJ = ../../src/win32/compat.o
+INSTALL_LIB = 	cp $(NAME) ../..
+all:		plugin
+else
 all: 	help
+endif
 endif
 endif
 
