@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dyn_gw.c,v 1.3 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.4 2004/11/05 23:24:40 kattemat Exp $
  *
  */
 
@@ -36,10 +36,12 @@
 #include <unistd.h>
 #include <errno.h>
 
-int ipc_socket;
-int ipc_open;
-int ipc_connection;
-int ipc_socket_up;
+static int ipc_socket;
+static int ipc_open;
+static int ipc_connection;
+static int ipc_socket_up;
+
+static int has_inet_gateway;
 
 /**
  *Do initialization here
@@ -76,6 +78,7 @@ int
 plugin_ipc_init()
 {
   struct sockaddr_in sin;
+  int on = 1;
 
   /* Init ipc socket */
   if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
@@ -92,7 +95,14 @@ plugin_ipc_init()
       sin.sin_family = AF_INET;
       sin.sin_addr.s_addr = INADDR_ANY;
       sin.sin_port = htons(9999);
-      
+
+      /* Set reuse */
+      if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) < 0)
+	{
+	  olsr_printf(1, "(DYN GW)SETSOCKOPT %s\n", strerror(errno));
+	  return 0;
+	}
+
       /* bind the socket to the port number */
       if (bind(ipc_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
 	{
@@ -313,98 +323,6 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
 /*************************************************************
  *                 TOOLS DERIVED FROM OLSRD                  *
  *************************************************************/
-
-
-/**
- *Hashing function. Creates a key based on
- *an 32-bit address.
- *@param address the address to hash
- *@return the hash(a value in the 0-31 range)
- */
-olsr_u32_t
-olsr_hashing(union olsr_ip_addr *address)
-{
-  olsr_u32_t hash;
-  char *tmp;
-
-  if(ipversion == AF_INET)
-    /* IPv4 */  
-    hash = (ntohl(address->v4));
-  else
-    {
-      /* IPv6 */
-      tmp = (char *) &address->v6;
-      hash = (ntohl(*tmp));
-    }
-
-  //hash &= 0x7fffffff; 
-  hash &= HASHMASK;
-
-  return hash;
-}
-
-
-
-/**
- *Checks if a timer has times out. That means
- *if it is smaller than present time.
- *@param timer the timeval struct to evaluate
- *@return positive if the timer has not timed out,
- *0 if it matches with present time and negative
- *if it is timed out.
- */
-int
-olsr_timed_out(struct timeval *timer)
-{
-  return(timercmp(timer, now, <));
-}
-
-
-
-/**
- *Initiates a "timer", wich is a timeval structure,
- *with the value given in time_value.
- *@param time_value the value to initialize the timer with
- *@param hold_timer the timer itself
- *@return nada
- */
-void
-olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
-{ 
-  olsr_u16_t  time_value_sec;
-  olsr_u16_t  time_value_msec;
-
-  time_value_sec = time_value/1000;
-  time_value_msec = time_value-(time_value_sec*1000);
-
-  hold_timer->tv_sec = time_value_sec;
-  hold_timer->tv_usec = time_value_msec*1000;   
-}
-
-
-
-
-
-/**
- *Generaties a timestamp a certain number of milliseconds
- *into the future.
- *
- *@param time_value how many milliseconds from now
- *@param hold_timer the timer itself
- *@return nada
- */
-void
-olsr_get_timestamp(olsr_u32_t delay, struct timeval *hold_timer)
-{ 
-  olsr_u16_t  time_value_sec;
-  olsr_u16_t  time_value_msec;
-
-  time_value_sec = delay/1000;
-  time_value_msec= delay - (delay*1000);
-
-  hold_timer->tv_sec = now->tv_sec + time_value_sec;
-  hold_timer->tv_usec = now->tv_usec + (time_value_msec*1000);   
-}
 
 
 /**

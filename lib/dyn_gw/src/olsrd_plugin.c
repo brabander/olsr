@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.3 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.4 2004/11/05 23:24:40 kattemat Exp $
  *
  */
 
@@ -59,6 +59,7 @@ register_olsr_data(struct olsr_plugin_data *);
 int
 fetch_olsrd_data();
 
+
 /*
  * Defines the version of the plugin interface that is used
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
@@ -76,8 +77,6 @@ my_init()
   printf("%s\n", MOD_DESC);
   /* Set interface version */
   plugin_interface_version = PLUGIN_INTERFACE_VERSION;
-
-  ifs = NULL;
 
   return;
 }
@@ -98,6 +97,14 @@ my_fini()
   olsr_plugin_exit();
 
   return;
+}
+
+
+int
+register_olsr_param(char *key, char *value)
+{
+  printf("Plugin receiving parameter key:\"%s\" value:\"%s\"\n", key, value);
+  return 0;
 }
 
 
@@ -191,10 +198,17 @@ fetch_olsrd_data()
   }
 
 
-  /* Interface list */
-  if(!olsr_plugin_io(GETD__IFNET, &ifs, sizeof(ifs)))
+  /* Add hna net IPv4 */
+  if(!olsr_plugin_io(GETF__ADD_LOCAL_HNA4_ENTRY, &add_local_hna4_entry, sizeof(add_local_hna4_entry)))
   {
-    ifs = NULL;
+    add_local_hna4_entry = NULL;
+    retval = 0;
+  }
+
+  /* Remove hna net IPv4 */
+  if(!olsr_plugin_io(GETF__REMOVE_LOCAL_HNA4_ENTRY, &remove_local_hna4_entry, sizeof(remove_local_hna4_entry)))
+  {
+    remove_local_hna4_entry = NULL;
     retval = 0;
   }
 
@@ -212,21 +226,6 @@ fetch_olsrd_data()
     remove_olsr_socket = NULL;
     retval = 0;
   }
-
-  /* Add hna net IPv4 */
-  if(!olsr_plugin_io(GETF__ADD_LOCAL_HNA4_ENTRY, &add_local_hna4_entry, sizeof(add_local_hna4_entry)))
-  {
-    add_local_hna4_entry = NULL;
-    retval = 0;
-  }
-
-  /* Remove hna net IPv4 */
-  if(!olsr_plugin_io(GETF__REMOVE_LOCAL_HNA4_ENTRY, &remove_local_hna4_entry, sizeof(remove_local_hna4_entry)))
-  {
-    remove_local_hna4_entry = NULL;
-    retval = 0;
-  }
-
 
   return retval;
 

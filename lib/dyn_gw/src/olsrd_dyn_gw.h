@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dyn_gw.h,v 1.3 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsrd_dyn_gw.h,v 1.4 2004/11/05 23:24:40 kattemat Exp $
  *
  */
 
@@ -39,8 +39,6 @@
 
 union olsr_ip_addr gw_net;
 union hna_netmask gw_netmask;
-
-int has_inet_gateway;
 
 /* Timeout function to register with the sceduler */
 void

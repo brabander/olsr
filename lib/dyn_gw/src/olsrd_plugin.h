@@ -57,16 +57,11 @@
  *****************************************************************************/
 
 #define PLUGIN_NAME    "OLSRD dynamic gateway plugin"
-#define PLUGIN_VERSION "0.1"
+#define PLUGIN_VERSION "0.2"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 1
+#define PLUGIN_INTERFACE_VERSION 2
 
-/* The type of message you will use */
-#define MESSAGE_TYPE 128
-
-/* The type of messages we will receive - can be set to promiscuous */
-#define PARSER_TYPE MESSAGE_TYPE
 
 
 
@@ -106,152 +101,6 @@ union hna_netmask
   olsr_u16_t v6;
 };
 
-#define MAX_TTL               0xff
-
-
-/*
- *Link Types
- */
-
-#define UNSPEC_LINK           0
-#define ASYM_LINK             1
-#define SYM_LINK              2
-#define LOST_LINK             3
-#define HIDE_LINK             4
-#define MAX_LINK              4
-
-
-/*
- * Mantissa scaling factor
- */
-
-#define VTIME_SCALE_FACTOR    0.0625
-
-
-/*
- * Hashing
- */
-
-#define	HASHSIZE	32
-#define	HASHMASK	(HASHSIZE - 1)
-
-#define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
-
-
-/****************************************************************************
- *                          INTERFACE SECTION                               *
- ****************************************************************************/
-
-/**
- *A struct containing all necessary information about each
- *interface participating in the OLSD routing
- */
-struct interface 
-{
-  /* IP version 4 */
-  struct	sockaddr int_addr;		/* address */
-  struct	sockaddr int_netmask;		/* netmask */
-  struct	sockaddr int_broadaddr;         /* broadcast address */
-  /* IP version 6 */
-  struct        sockaddr_in6 int6_addr;         /* Address */
-  struct        sockaddr_in6 int6_multaddr;     /* Multicast */
-  /* IP independent */
-  union         olsr_ip_addr ip_addr;
-  int           olsr_socket;                    /* The broadcast socket for this interface */
-  int	        int_metric;			/* metric of interface */
-  int	        int_flags;			/* see below */
-  char	        *int_name;			/* from kernel if structure */
-  int           if_index;                       /* Kernels index of this interface */
-  int           if_nr;                          /* This interfaces index internally*/
-  int           is_wireless;                    /* wireless interface or not*/
-  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
-  struct	interface *int_next;
-};
-
-/****************************************************************************
- *                            PACKET SECTION                                *
- ****************************************************************************/
-
-
-/**********************************
- * DEFINE YOUR CUSTOM PACKET HERE *
- **********************************/
-
-
-/*
- * OLSR message (several can exist in one OLSR packet)
- */
-
-struct olsrmsg
-{
-  olsr_u8_t     olsr_msgtype;
-  olsr_u8_t     olsr_vtime;
-  olsr_u16_t    olsr_msgsize;
-  olsr_u32_t    originator;
-  olsr_u8_t     ttl;
-  olsr_u8_t     hopcnt;
-  olsr_u16_t    seqno;
-
-  /* YOUR PACKET GOES HERE */
-
-};
-
-/*
- *IPv6
- */
-
-struct olsrmsg6
-{
-  olsr_u8_t        olsr_msgtype;
-  olsr_u8_t        olsr_vtime;
-  olsr_u16_t       olsr_msgsize;
-  struct in6_addr  originator;
-  olsr_u8_t        ttl;
-  olsr_u8_t        hopcnt;
-  olsr_u16_t       seqno;
-
-  /* YOUR PACKET GOES HERE */
-
-};
-
-/*
- * Generic OLSR packet - DO NOT ALTER
- */
-
-struct olsr 
-{
-  olsr_u16_t	  olsr_packlen;		/* packet length */
-  olsr_u16_t	  olsr_seqno;
-  struct olsrmsg  olsr_msg[1];          /* variable messages */
-};
-
-
-struct olsr6
-{
-  olsr_u16_t	    olsr_packlen;        /* packet length */
-  olsr_u16_t	    olsr_seqno;
-  struct olsrmsg6   olsr_msg[1];         /* variable messages */
-};
-
-
-/* 
- * ALWAYS USE THESE WRAPPERS TO
- * ENSURE IPv4 <-> IPv6 compability 
- */
-
-union olsr_message
-{
-  struct olsrmsg v4;
-  struct olsrmsg6 v6;
-};
-
-union olsr_packet
-{
-  struct olsr v4;
-  struct olsr6 v6;
-};
-
-
 /***************************************************************************
  *                 Functions provided by uolsrd_plugin.c                   *
  *                  Similar to their siblings in olsrd                     *
@@ -260,18 +109,6 @@ union olsr_packet
 char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
 
 /* All these could optionally be fetched from olsrd */
-
-olsr_u32_t
-olsr_hashing(union olsr_ip_addr *);
-
-void
-olsr_get_timestamp(olsr_u32_t, struct timeval *);
-
-void
-olsr_init_timer(olsr_u32_t, struct timeval *);
-
-int
-olsr_timed_out(struct timeval *);
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);
@@ -286,45 +123,8 @@ olsr_ip_to_string(union olsr_ip_addr *);
 /* The multi-purpose funtion. All other functions are fetched trough this */
 int (*olsr_plugin_io)(int, void *, size_t);
 
-/* add a prser function */
-void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), 
-				 int, int);
-
-/* Register a timeout function */
-int (*olsr_register_timeout_function)(void (*)());
-
 /* Register a scheduled event */
 int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
-
-/* Get the next message seqno in line */
-olsr_u16_t (*get_msg_seqno)();
-
-/* Transmit package */
-int (*net_output)(struct interface*);
-
-/* Check the duplicate table for prior processing */
-int (*check_dup_proc)(union olsr_ip_addr *, olsr_u16_t);
-
-/* Default forward algorithm */
-int (*default_fwd)(union olsr_message *, 
-		   union olsr_ip_addr *, 
-		   olsr_u16_t,  
-		   struct interface *, 
-		   union olsr_ip_addr *);
-
-/* Add a socket to the main olsrd select loop */
-void (*add_olsr_socket)(int, void(*)(int));
-
-/* Remove a socket from the main olsrd select loop */
-int (*remove_olsr_socket)(int, void(*)(int));
-
-/* get the link status to a neighbor */
-int (*check_neighbor_link)(union olsr_ip_addr *);
-
-/* Mantissa/exponen conversions */
-olsr_u8_t (*double_to_me)(double);
-
-double (*me_to_double)(olsr_u8_t);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);
@@ -338,11 +138,11 @@ void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
 /* Remove hna net IPv4 */
 int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
 
-/* Add hna net IPv6 */
-void (*add_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
+/* Add a socket to the main olsrd select loop */
+void (*add_olsr_socket)(int, void(*)(int));
 
-/* Remove hna net IPv6 */
-int (*remove_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
+/* Remove a socket from the main olsrd select loop */
+int (*remove_olsr_socket)(int, void(*)(int));
 
 
 /****************************************************************************
@@ -351,11 +151,6 @@ int (*remove_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
  *               NEVER ALTER DATA POINTED TO BY THESE POINTERS              * 
  *                   UNLESS YOU KNOW WHAT YOU ARE DOING!!!                  *
  ****************************************************************************/
-/**
- * The interface list from olsrd
- */
-
-struct interface   *ifs;
 
 /* These two are set automatically by olsrd at load time */
 int                ipversion;  /* IPversion in use */
@@ -364,10 +159,6 @@ union olsr_ip_addr *main_addr; /* Main address */
 
 size_t             ipsize;     /* Size of the ipadresses used */
 struct timeval     *now;       /* the olsrds schedulers idea of current time */
-
-/* Data that can be altered by your plugin */
-char               *buffer;    /* The packet buffer - put your packet here */
-int                *outputsize;/* Pointer to the outputsize - set the size of your packet here */
 
 
 /****************************************************************************
@@ -390,5 +181,8 @@ olsr_plugin_exit();
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
+
+int
+register_olsr_param(char *, char *);
 
 #endif
