@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.h,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsr.h,v 1.7 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -94,9 +94,6 @@ olsr_forward_message(union olsr_message *,
 		     olsr_u16_t, 
 		     struct interface *, 
 		     union olsr_ip_addr *);
-
-int
-buffer_forward(union olsr_message *, olsr_u16_t);
 
 void
 olsr_init_tables();

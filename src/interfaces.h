@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.6 2004/09/22 20:57:50 kattemat Exp $
+ * $Id: interfaces.h,v 1.7 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -80,7 +80,7 @@ struct interface
 };
 
 
-
+#define OLSR_DEFAULT_MTU             1500
 
 
 struct if_name

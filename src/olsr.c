@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
+ * $Id: olsr.c,v 1.12 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -43,6 +43,9 @@
 #include <stdarg.h>
 #include <signal.h>
 
+
+static int
+buffer_forward(struct interface *, union olsr_message *, olsr_u16_t);
 
 /**
  *Checks if a timer has timed out.
@@ -283,6 +286,7 @@ olsr_forward_message(union olsr_message *m,
   union olsr_ip_addr *src;
   struct neighbor_entry *neighbor;
   int msgsize;
+  struct interface *ifn;
 
 
   if(!olsr_check_dup_table_fwd(originator, seqno, &in_if->ip_addr))
@@ -342,34 +346,28 @@ olsr_forward_message(union olsr_message *m,
 
   msgsize = ntohs(m->v4.olsr_msgsize);
 
-  if(net_fwd_pending())
-    {
-      /*
-       * Check if message is to big to be piggybacked
-       */
-      if(net_fwdbuffer_push((olsr_u8_t *)m, msgsize) != msgsize)
+  /* looping trough interfaces */
+  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
+    { 
+      if(net_output_pending(ifn))
 	{
-	  olsr_printf(1, "Forwardbuffer full(%d + %d) - flushing!\n", net_fwd_pending(), msgsize);
-	  
-	  /* Send */
-	  net_forward();
-	  
-	  /* Buffer message */
-	  buffer_forward(m, msgsize);
+	  /*
+	   * Check if message is to big to be piggybacked
+	   */
+	  if(net_outbuffer_push(ifn, (olsr_u8_t *)m, msgsize) != msgsize)
+	    {
+	      /* Send */
+	      net_output(ifn);
+	      /* Buffer message */
+	      buffer_forward(ifn, m, msgsize);
+	    }
 	}
+      
       else
 	{
-#ifdef DEBUG
-	  olsr_printf(3, "Piggybacking message - buffer: %d msg: %d\n", net_fwd_pending(), msgsize);
-#endif
-	  /* piggyback message to outputbuffer */
+	  /* No forwarding pending */
+	  buffer_forward(ifn, m, msgsize);
 	}
-    }
-
-  else
-    {
-      /* No forwarding pending */
-      buffer_forward(m, msgsize);
     }
 
   return 1;
@@ -378,8 +376,8 @@ olsr_forward_message(union olsr_message *m,
 
 
 
-int
-buffer_forward(union olsr_message *m, olsr_u16_t msgsize)
+static int
+buffer_forward(struct interface *ifn, union olsr_message *m, olsr_u16_t msgsize)
 {
   float jitter;
   struct timeval jittertimer;
@@ -398,10 +396,10 @@ buffer_forward(union olsr_message *m, olsr_u16_t msgsize)
 #endif
 
   /* Copy message to outputbuffer */
-  if(net_fwdbuffer_push((olsr_u8_t *)m, msgsize) != msgsize)
+  if(net_outbuffer_push(ifn, (olsr_u8_t *)m, msgsize) != msgsize)
     {
-      olsr_printf(1, "Received message to big to be forwarded(%d bytes)!", msgsize);
-      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded(%d bytes)!", msgsize);
+      olsr_printf(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
       fwdtimer = now;
     }
 

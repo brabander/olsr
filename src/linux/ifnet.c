@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.8 2004/09/23 16:13:54 kattemat Exp $
+ * $Id: ifnet.c,v 1.9 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -124,7 +124,7 @@ chk_if_changed(struct if_name *iface)
   struct interface *ifp, *tmp_ifp;
   struct ifreq ifr;
   struct sockaddr_in6 tmp_saddr6;
-  int if_changes, smallest_mtu;
+  int if_changes;
   struct ifchgf *tmp_ifchgf_list;
   if_changes = 0;
 
@@ -198,9 +198,9 @@ chk_if_changed(struct if_name *iface)
       if(ifp->int_mtu != ifr.ifr_mtu)
 	{
 	  ifp->int_mtu = ifr.ifr_mtu;
-	  /* Update outputbuffer if needed */
-	  if(net_get_maxmsgsize() > (ifp->int_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
-	    net_set_maxmsgsize(ifp->int_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
+	  /* Create new outputbuffer */
+	  net_remove_buffer(ifp); /* Remove old */
+	  net_add_buffer(ifp);
 	}
     }
 
@@ -403,26 +403,8 @@ chk_if_changed(struct if_name *iface)
     }
 
 
-  /* Recalculate output buffersize */
-  /* find the smallest MTU */
-  if(ifnet)
-    {
-      tmp_ifp = ifnet;
-      smallest_mtu = 100000; /* start with a large value */
-      while(tmp_ifp)
-	{
-	  smallest_mtu = smallest_mtu > tmp_ifp->int_mtu ? tmp_ifp->int_mtu : smallest_mtu;
-	  tmp_ifp = tmp_ifp->int_next;
-	}
-      /* Update outputbuffer if needed */
-      if(net_get_maxmsgsize() > (smallest_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
-	net_set_maxmsgsize(smallest_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
-    }
-  else
-    {
-      /* set default if there are no more interfaces */
-      net_set_maxmsgsize(MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
-    }
+  /* Remove output buffer */
+  net_remove_buffer(ifp);
 
   /* Check main addr */
   if(COMP_IP(&main_addr, &ifp->ip_addr))
@@ -618,14 +600,13 @@ chk_if_up(struct if_name *iface, int debuglvl)
 
   /* Get MTU */
   if (ioctl(ioctl_s, SIOCGIFMTU, &ifr) < 0)
-    ifs.int_mtu = 0;
+    ifs.int_mtu = OLSR_DEFAULT_MTU;
   else
-    {
-      ifs.int_mtu = ifr.ifr_mtu;
-      /* Update outputbuffer if needed */
-      if(net_get_maxmsgsize() > (ifs.int_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
-	net_set_maxmsgsize(ifs.int_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
-    }
+    ifs.int_mtu = ifr.ifr_mtu;
+
+  /* Set up buffer */
+  net_add_buffer(&ifs);
+	       
   olsr_printf(1, "\tMTU: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);

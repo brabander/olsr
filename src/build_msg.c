@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
+ * $Id: build_msg.c,v 1.12 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -231,7 +231,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   //printf("HELLO build outputsize: %d\n", outputsize);
 
@@ -244,7 +244,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   h = &m->v4.message.hello;
@@ -326,7 +326,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 			      hinfo->size = ntohs(hinfo->size);
 			      
 			      /* Send partial packet */
-			      net_outbuffer_push(msg_buffer, curr_size);
+			      net_outbuffer_push(ifp, msg_buffer, curr_size);
 
 			      curr_size = 12; /* OLSR message header */
 			      curr_size += 4; /* Hello header */
@@ -338,7 +338,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 
 			  net_output(ifp);			  
 			  /* Reset size and pointers */
-			  remainsize = net_outbuffer_bytes_left();
+			  remainsize = net_outbuffer_bytes_left(ifp);
 			}
 		      memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
@@ -372,11 +372,11 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		      hinfo->size = ntohs(hinfo->size);
 		      
 		      /* Send partial packet */
-		      net_outbuffer_push(msg_buffer, curr_size);
+		      net_outbuffer_push(ifp, msg_buffer, curr_size);
 		      net_output(ifp);
 		      
 		      /* Reset size and pointers */
-		      remainsize = net_outbuffer_bytes_left();
+		      remainsize = net_outbuffer_bytes_left(ifp);
 		      curr_size = 12; /* OLSR message header */
 		      curr_size += 4; /* Hello header */
 		      
@@ -426,7 +426,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   m->v4.seqno = htons(get_msg_seqno());
   m->v4.olsr_msgsize = htons(curr_size);
   
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   /*
    * Delete the list of neighbor messages.
@@ -474,7 +474,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
     return;
 
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   //printf("HELLO build outputsize: %d\n", outputsize);
 
@@ -487,7 +487,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   //printf("HELLO build outputsize: %d\n", outputsize);
@@ -554,7 +554,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 			      hinfo6->size = ntohs(hinfo6->size);
 			      
 			      /* Send partial packet */
-			      net_outbuffer_push(msg_buffer, curr_size);
+			      net_outbuffer_push(ifp, msg_buffer, curr_size);
 			      curr_size = 24; /* OLSR message header */
 			      curr_size += 4; /* Hello header */
 			      
@@ -564,7 +564,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 			    }
 			  net_output(ifp);
 			  /* Reset size and pointers */
-			  remainsize = net_outbuffer_bytes_left();
+			  remainsize = net_outbuffer_bytes_left(ifp);
 			}
 		      memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
@@ -598,7 +598,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		      hinfo6->size = ntohs(hinfo6->size);
 		      
 		      /* Send partial packet */
-			  net_outbuffer_push(msg_buffer, curr_size);
+			  net_outbuffer_push(ifp, msg_buffer, curr_size);
 		      curr_size = 24; /* OLSR message header */
 		      curr_size += 4; /* Hello header */
 		      
@@ -615,7 +615,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 
 		      net_output(ifp);		      
 		      /* Reset size */
-		      remainsize = net_outbuffer_bytes_left();
+		      remainsize = net_outbuffer_bytes_left(ifp);
 		      
 		    }
 
@@ -651,7 +651,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());
   m->v6.olsr_msgsize = htons(curr_size);
 
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   /*
    * Delete the list of neighbor messages.
@@ -696,7 +696,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   m = (union olsr_message *)msg_buffer;
 
@@ -711,7 +711,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   /* Fill header */
@@ -739,7 +739,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	      m->v4.olsr_msgsize = htons(curr_size);
 	      m->v4.seqno = htons(get_msg_seqno());
 
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_outbuffer_push(ifp, msg_buffer, curr_size);
 	      
 	      /* Reset stuff */
 	      mprsaddr = tc->neigh;
@@ -750,7 +750,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	    }
 
 	  net_output(ifp);
-	  remainsize = net_outbuffer_bytes_left();
+	  remainsize = net_outbuffer_bytes_left(ifp);
 
 	}
       found = 1;
@@ -767,7 +767,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
       m->v4.olsr_msgsize = htons(curr_size);
       m->v4.seqno = htons(get_msg_seqno());
       
-      net_outbuffer_push(msg_buffer, curr_size);
+      net_outbuffer_push(ifp, msg_buffer, curr_size);
 
     }
   else
@@ -779,7 +779,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	  m->v4.olsr_msgsize = htons(curr_size);
 	  m->v4.seqno = htons(get_msg_seqno());
 
-	  net_outbuffer_push(msg_buffer, curr_size);
+	  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
 	}
     }
@@ -828,7 +828,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   if ((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   m = (union olsr_message *)msg_buffer;
 
@@ -842,7 +842,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   /* Fill header */
@@ -870,7 +870,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	      m->v6.olsr_msgsize = htons(curr_size);
 	      m->v6.seqno = htons(get_msg_seqno());
 
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_outbuffer_push(ifp, msg_buffer, curr_size);
 	      mprsaddr6 = tc6->neigh;
 	      curr_size = 24; /* OLSR message header */
 	      curr_size += 4; /* TC header */
@@ -878,7 +878,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	      partial_sent = 1;
 	    }
 	  net_output(ifp);
-	  remainsize = net_outbuffer_bytes_left();
+	  remainsize = net_outbuffer_bytes_left(ifp);
 		
 
 	}
@@ -896,7 +896,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
       m->v6.olsr_msgsize = htons(curr_size);
       m->v6.seqno = htons(get_msg_seqno());
 
-      net_outbuffer_push(msg_buffer, curr_size);
+      net_outbuffer_push(ifp, msg_buffer, curr_size);
 
     }
   else
@@ -908,7 +908,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	  m->v6.olsr_msgsize = htons(curr_size);
 	  m->v6.seqno = htons(get_msg_seqno());
 
-	  net_outbuffer_push(msg_buffer, curr_size);
+	  net_outbuffer_push(ifp, msg_buffer, curr_size);
 	}
     }
 
@@ -952,7 +952,7 @@ mid_build4(struct interface *ifp)
     return;
 
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   m = (union olsr_message *)msg_buffer;
 
@@ -962,7 +962,7 @@ mid_build4(struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   /* Fill header */
@@ -990,12 +990,12 @@ mid_build4(struct interface *ifp)
 		  m->v4.olsr_msgsize = htons(curr_size);
 		  m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
 		  
-		  net_outbuffer_push(msg_buffer, curr_size);
+		  net_outbuffer_push(ifp, msg_buffer, curr_size);
 		  curr_size = 12; /* OLSR message header */
 		  addrs = m->v4.message.mid.mid_addr;
 		}
 	      net_output(ifp);
-	      remainsize = net_outbuffer_bytes_left();
+	      remainsize = net_outbuffer_bytes_left(ifp);
 	    }
 	  
 	  COPY_IP(&addrs->addr, &ifs->ip_addr);
@@ -1009,7 +1009,7 @@ mid_build4(struct interface *ifp)
   m->v4.olsr_msgsize = htons(curr_size);
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
 
   return;
@@ -1040,7 +1040,7 @@ mid_build6(struct interface *ifp)
   if((ipversion != AF_INET6) || (!ifp) || (nbinterf <= 1))
     return;
 
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   curr_size = 24; /* OLSR message header */
 
@@ -1048,7 +1048,7 @@ mid_build6(struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   m = (union olsr_message *)msg_buffer;
@@ -1078,12 +1078,12 @@ mid_build6(struct interface *ifp)
 		  m->v6.olsr_msgsize = htons(curr_size);
 		  m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
 		  
-		  net_outbuffer_push(msg_buffer, curr_size);
+		  net_outbuffer_push(ifp, msg_buffer, curr_size);
 		  curr_size = 24; /* OLSR message header */
 		  addrs6 = m->v6.message.mid.mid_addr;
 		}
 	      net_output(ifp);
-	      remainsize = net_outbuffer_bytes_left();
+	      remainsize = net_outbuffer_bytes_left(ifp);
 	    }
 
 	  COPY_IP(&addrs6->addr, &ifs->ip_addr);
@@ -1096,7 +1096,7 @@ mid_build6(struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   return;
 }
@@ -1123,7 +1123,7 @@ hna_build4(struct interface *ifp)
   if((ipversion != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
     return;
     
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   curr_size = 12; /* OLSR message header */
 
@@ -1131,7 +1131,7 @@ hna_build4(struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   m = (union olsr_message *)msg_buffer;
@@ -1158,12 +1158,12 @@ hna_build4(struct interface *ifp)
 	    {
 	      m->v4.seqno = htons(get_msg_seqno());
 	      m->v4.olsr_msgsize = htons(curr_size);
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_outbuffer_push(ifp, msg_buffer, curr_size);
 	      curr_size = 12; /* OLSR message header */
 	      pair = m->v4.message.hna.hna_net;
 	    }
 	  net_output(ifp);
-	  remainsize = net_outbuffer_bytes_left();
+	  remainsize = net_outbuffer_bytes_left(ifp);
 	}
       COPY_IP(&pair->addr, &h->A_network_addr);
       COPY_IP(&pair->netmask, &h->A_netmask);
@@ -1174,7 +1174,7 @@ hna_build4(struct interface *ifp)
   m->v4.seqno = htons(get_msg_seqno());
   m->v4.olsr_msgsize = htons(curr_size);
 
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return;
@@ -1205,7 +1205,7 @@ hna_build6(struct interface *ifp)
     return;
 
     
-  remainsize = net_outbuffer_bytes_left();
+  remainsize = net_outbuffer_bytes_left(ifp);
 
   curr_size = 24; /* OLSR message header */
 
@@ -1213,7 +1213,7 @@ hna_build6(struct interface *ifp)
   if(curr_size > remainsize)
     {
       net_output(ifp);
-      remainsize = net_outbuffer_bytes_left();
+      remainsize = net_outbuffer_bytes_left(ifp);
     }
 
   m = (union olsr_message *)msg_buffer;   
@@ -1239,12 +1239,12 @@ hna_build6(struct interface *ifp)
 	    {
 	      m->v6.seqno = htons(get_msg_seqno());
 	      m->v6.olsr_msgsize = htons(curr_size);
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_outbuffer_push(ifp, msg_buffer, curr_size);
 	      curr_size = 24; /* OLSR message header */
 	      pair6 = m->v6.message.hna.hna_net;
 	    }
 	  net_output(ifp);
-	  remainsize = net_outbuffer_bytes_left();
+	  remainsize = net_outbuffer_bytes_left(ifp);
 	}
 
       //printf("Adding %s\n", olsr_ip_to_string(&h->hna_net.addr));
@@ -1258,7 +1258,7 @@ hna_build6(struct interface *ifp)
   m->v6.olsr_msgsize = htons(curr_size);
   m->v6.seqno = htons(get_msg_seqno());
 
-  net_outbuffer_push(msg_buffer, curr_size);
+  net_outbuffer_push(ifp, msg_buffer, curr_size);
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return;

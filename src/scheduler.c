@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.8 2004/09/22 17:00:29 kattemat Exp $
+ * $Id: scheduler.c,v 1.9 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -102,6 +102,8 @@ scheduler()
 
   struct event_entry *entry;
   struct timeout_entry *time_out_entry;
+
+  struct interface *ifn;
  
   interval_usec = (olsr_u32_t)(sched_poll_interval * 1000000);
 
@@ -195,15 +197,16 @@ scheduler()
 
 
 
-
-      /* Forward message(s) OUTSIDE INTERFACE LOOP */
-      if(net_fwd_pending() && TIMED_OUT(&fwdtimer)) 
+      /* looping trough interfaces */
+      for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
 	{ 
+	  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer)) 
+	    { 
 #ifdef DEBUG
-	  olsr_printf(3, "Forwarding message - size %d\n", fwdsize);
+	      olsr_printf(3, "Forwarding message - size %d\n", fwdsize);
 #endif	  
-	  net_forward();
-	  
+	      net_output(ifn);
+	    }
 	}
 
       /* C R I T I C A L - S E C T I O N - E N D */

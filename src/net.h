@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.8 2004/09/25 11:13:28 kattemat Exp $
+ * $Id: net.h,v 1.9 2004/09/25 21:06:07 kattemat Exp $
  *
  */
 
@@ -33,6 +33,9 @@
 #include "process_routes.h"
 #include <arpa/inet.h>
 #include <net/if.h>
+
+
+#define MAX_IFS          32
 
 /* Packet transform functions */
 
@@ -47,41 +50,29 @@ struct ptf *ptf_list;
 void
 init_net();
 
+int
+net_add_buffer(struct interface *);
+
+int
+net_remove_buffer(struct interface *);
+
 inline int
-net_outbuffer_bytes_left();
+net_outbuffer_bytes_left(struct interface *);
 
 inline olsr_u16_t
-net_fwd_pending();
-
-inline olsr_u16_t
-net_output_pending();
+net_output_pending(struct interface *);
 
 int
-net_set_maxmsgsize(olsr_u16_t);
-
-inline olsr_u16_t
-net_get_maxmsgsize();
+net_reserve_bufspace(struct interface *, int);
 
 int
-net_reserve_bufferspace(olsr_u16_t);
+net_outbuffer_push(struct interface *, olsr_u8_t *, olsr_u16_t);
 
 int
-net_outbuffer_push(olsr_u8_t *, olsr_u16_t);
-
-int
-net_outbuffer_push_reserved(olsr_u8_t *, olsr_u16_t);
-
-int
-net_fwdbuffer_push(olsr_u8_t *, olsr_u16_t);
-
-int
-net_fwdbuffer_push_reserved(olsr_u8_t *, olsr_u16_t);
+net_outbuffer_push_reserved(struct interface *, olsr_u8_t *, olsr_u16_t);
 
 int
 net_output(struct interface*);
-
-int
-net_forward();
 
 int
 net_sendroute(struct rt_entry *, struct sockaddr *);
