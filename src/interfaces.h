@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.24 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: interfaces.h,v 1.25 2005/03/07 06:28:44 kattemat Exp $
  */
 
 
@@ -161,7 +161,10 @@ int
 ifinit(void);
 
 olsr_u32_t
-add_if_geninfo(struct interface *, void *);
+get_if_property_id(void);
+
+void
+add_if_geninfo(struct interface *, void *, olsr_u32_t);
 
 void *
 get_if_geninfo(struct interface *, olsr_u32_t);

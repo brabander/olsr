@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.19 2005/03/06 12:38:09 kattemat Exp $
+ * $Id: interfaces.c,v 1.20 2005/03/07 06:28:44 kattemat Exp $
  */
 
 #include "defs.h"
@@ -53,9 +53,6 @@ struct ifchgf
   int (*function)(struct interface *, int);
   struct ifchgf *next;
 };
-
-static olsr_u32_t
-get_if_property_id(void);
 
 static struct ifchgf *ifchgf_list;
 
@@ -110,25 +107,24 @@ ifinit()
 }
 
 
-static olsr_u32_t
+olsr_u32_t
 get_if_property_id()
 {
   return if_property_id++;
 }
 
-olsr_u32_t
-add_if_geninfo(struct interface *ifp, void *data)
+void
+add_if_geninfo(struct interface *ifp, void *data, olsr_u32_t owner_id)
 {
   struct if_gen_property *igp = olsr_malloc(sizeof(struct if_gen_property), __func__);
 
-  igp->owner_id = get_if_property_id();
+  igp->owner_id = owner_id;
   igp->data = data;
 
   /* queue */
   igp->next = ifp->gen_properties;
   ifp->gen_properties = igp;
 
-  return igp->owner_id;
 }
 
 void *
