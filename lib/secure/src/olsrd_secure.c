@@ -31,13 +31,14 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- *POSSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE.
  *
+ * $Id: olsrd_secure.c,v 1.3 2004/11/06 16:43:54 kattemat Exp $
  */
 
 
 /*
- * Dynamic linked library for UniK OLSRd
+ * Dynamic linked library for the olsr.org olsr daemon
  */
 
 #include "olsrd_secure.h"
@@ -98,6 +99,9 @@ olsr_plugin_init()
       remove_olsr_socket(ints->olsr_socket, olsr_input);
       add_olsr_socket(ints->olsr_socket, &packet_parser);
      
+      /* XXX Fix maxsize */
+
+
       ints = ints->int_next;
     }
 

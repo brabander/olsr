@@ -31,13 +31,14 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- *POSSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE.
  *
+ * $Id: olsrd_plugin.h,v 1.3 2004/11/06 16:43:54 kattemat Exp $
  */
 
 
 /*
- * Dynamic linked library example for UniK OLSRd
+ * olsr.org olsr daemon security plugin
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -62,7 +63,7 @@
 #define PLUGIN_VERSION "0.3"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 1
+#define PLUGIN_INTERFACE_VERSION 2
 
 /* The type of message you will use */
 #define MESSAGE_TYPE 10
@@ -151,6 +152,13 @@ union hna_netmask
  *                          INTERFACE SECTION                               *
  ****************************************************************************/
 
+struct vtimes
+{
+  olsr_u8_t hello;
+  olsr_u8_t tc;
+  olsr_u8_t mid;
+  olsr_u8_t hna;
+};
 /**
  *A struct containing all necessary information about each
  *interface participating in the OLSD routing
@@ -168,12 +176,17 @@ struct interface
   union         olsr_ip_addr ip_addr;
   int           olsr_socket;                    /* The broadcast socket for this interface */
   int	        int_metric;			/* metric of interface */
+  int           int_mtu;                        /* MTU of interface */
   int	        int_flags;			/* see below */
   char	        *int_name;			/* from kernel if structure */
   int           if_index;                       /* Kernels index of this interface */
   int           if_nr;                          /* This interfaces index internally*/
   int           is_wireless;                    /* wireless interface or not*/
   olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+
+  float         hello_etime;
+  struct        vtimes valtimes;
+
   struct	interface *int_next;
 };
 
@@ -500,5 +513,8 @@ olsr_plugin_exit();
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
+
+int 
+get_plugin_interface_version();
 
 #endif

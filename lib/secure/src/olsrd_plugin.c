@@ -31,13 +31,11 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- *POSSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE.
  *
+ * $Id: olsrd_plugin.c,v 1.3 2004/11/06 16:43:54 kattemat Exp $
  */
 
-/*
- * Dynamic linked library example for UniK OLSRd
- */
 
 
 #include "olsrd_plugin.h"
@@ -76,7 +74,13 @@ fetch_olsrd_data();
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
  * Do not alter unless you know what you are doing!
  */
-int plugin_interface_version;
+int 
+get_plugin_interface_version()
+{
+  return PLUGIN_INTERFACE_VERSION;
+}
+
+
 
 /**
  *Constructor
@@ -87,7 +91,6 @@ my_init()
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
   /* Set interface version */
-  plugin_interface_version = PLUGIN_INTERFACE_VERSION;
 
   ifs = NULL;
 

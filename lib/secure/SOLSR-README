@@ -1,3 +1,26 @@
+
+06.11.2004
+
+NOTE:
+DEVELOPMENT OF THIS PLUIGN HAS CEASED FROM OLSRD 0.4.8
+THIS PLUGIN WILL ONLY WORK WITH OLSRD <= 0.4.7
+
+There has been some heavy internal rewrites that will
+affect the way this plugin works in a serious way. The
+outputbuffering in olsrd is completely rewritten to
+work on a pr. interface basis. Due to this, this plugin 
+is no longer functional with olsrd >= 0.4.8. Sorry.
+
+If you would like to update and maintain this plugin,
+drop me a mail at andreto@olsr.org
+
+- Andreas Tønnesen
+
+
+
+
+OLD README:
+
 Secure OLSR 0.2 implementation notes
 (c)Andreas Tønnesen 06.05.04
 
