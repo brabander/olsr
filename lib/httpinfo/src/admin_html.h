@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_html.h,v 1.2 2005/02/21 19:33:27 kattemat Exp $
+ * $Id: admin_html.h,v 1.3 2005/02/25 22:27:26 kattemat Exp $
  */
 
 /*
@@ -48,7 +48,6 @@
 #ifndef ADMIN_HTML_H
 #define ADMIN_HTML_H
 
-#ifdef ADMIN_INTERFACE
 static const char *admin_frame[] =
   {
     "<b>Administrator interface</b><hr>\n"
@@ -84,7 +83,5 @@ static const char *admin_frame[] =
 static char admin_basic_setting_int[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%d\"></td>\n";
 static char admin_basic_setting_float[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%0.2f\"></td>\n";
 static char admin_basic_setting_string[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
-
-#endif
 
 #endif
