@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.10 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.11 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -77,6 +77,15 @@ typedef char            olsr_8_t;
 typedef short           olsr_16_t;
 typedef int             olsr_32_t;
  
+#elif defined __MacOSX__
+
+typedef u_int8_t        olsr_u8_t;
+typedef u_int16_t       olsr_u16_t;
+typedef u_int32_t       olsr_u32_t;
+typedef int8_t          olsr_8_t;
+typedef int16_t         olsr_16_t;
+typedef int32_t         olsr_32_t;
+
 #else
 #       error "Unsupported system"
 #endif

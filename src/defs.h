@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.23 2004/11/05 02:06:13 tlopatic Exp $
+ * $Id: defs.h,v 1.24 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -134,7 +134,7 @@ int ioctl_s;
 
 /* routing socket */
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __MacOSX__
 int rts;
 #endif
 

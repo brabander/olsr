@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.11 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.12 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -40,10 +40,11 @@
 #ifdef WIN32
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
-#define MSG_NOSIGNAL 0
 void 
 WinSockPError(char *);
-#elif defined __FreeBSD__
+#endif
+
+#ifndef linux
 #define MSG_NOSIGNAL 0
 #endif
 

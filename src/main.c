@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.28 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: main.c,v 1.29 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -41,18 +41,15 @@
 
 #ifdef linux
 #include "linux/tunnel.h"
-static void
-olsr_shutdown(int);
-#elif defined WIN32
+#endif
+
+#ifdef WIN32
 #define close(x) closesocket(x)
-#include "win32/tunnel.h"
 int __stdcall SignalHandler(unsigned long signal);
 void ListInterfaces(void);
-#elif defined __FreeBSD__
+#else
 static void
 olsr_shutdown(int);
-#else
-#       error "Unsupported system"
 #endif
 
 /*
@@ -488,7 +485,7 @@ main(int argc, char *argv[])
       olsr_exit(__func__, 0);
     }
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __MacOSX__
   if ((rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
     {
       olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
@@ -591,7 +588,7 @@ main(int argc, char *argv[])
   if(olsr_cnf->open_ipc)
       ipc_init();
 
-#if !defined WIN32 && !defined __FreeBSD__
+#ifdef linux
   /* Initialize link-layer notifications */
   if(llinfo)
     init_link_layer_notification();
@@ -603,7 +600,7 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-#ifndef __FreeBSD__
+#ifdef linux
   /* Set up recieving tunnel if Inet gw */
   if(use_tunnel && check_inet_gw())
     set_up_gw_tunnel(&main_addr);
@@ -702,7 +699,7 @@ olsr_shutdown(int signal)
   /* ioctl socket */
   close(ioctl_s);
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __MacOSX__
   /* routing socket */
   close(rts);
 #endif

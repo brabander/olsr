@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.c,v 1.11 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: process_routes.c,v 1.12 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -30,13 +30,11 @@
 
 #ifdef linux
 #include "linux/tunnel.h"
-#elif defined WIN32
-#include "win32/tunnel.h"
+#endif
+
+#ifdef WIN32
 #undef strerror
 #define strerror(x) StrError(x)
-#elif defined __FreeBSD__
-#else
-#       error "Unsupported system"
 #endif
 
 
@@ -155,13 +153,13 @@ olsr_delete_all_kernel_routes()
   struct destination_n *delete_kernel_list=NULL;
   struct destination_n *tmp=NULL;
   union olsr_ip_addr *tmp_addr;
-#ifndef __FreeBSD__
+#ifdef linux
   olsr_u32_t tmp_tnl_addr;
 #endif
 
   olsr_printf(1, "Deleting all routes...\n");
 
-#ifndef __FreeBSD__
+#ifdef linux
   if(use_tunnel)
     {
       /* Delete Internet GW tunnel */

@@ -19,12 +19,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-# $Id: Makefile,v 1.13 2004/11/05 09:31:46 kattemat Exp $
+# $Id: Makefile,v 1.14 2004/11/05 14:33:30 tlopatic Exp $
 #
 
 OS ?=		linux
 #OS =		fbsd
 #OS =		win32
+#OS =		osx
 
 CC ?= 		gcc
 
@@ -77,7 +78,6 @@ CFLAGS ?=	-Isrc -Wall -Wmissing-prototypes -Wstrict-prototypes \
 
 LIBS =		-pthread -lm
 
-
 endif
 ifeq ($(OS), win32)
 
@@ -92,6 +92,21 @@ CFLAGS ?=	-Isrc -Isrc/win32 -Wall -Wmissing-prototypes \
 
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 
+endif
+ifeq ($(OS), osx)
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+
+OBJS +=		$(patsubst %.c,%.o,$(wildcard src/bsd/*.c)) \
+		$(patsubst %.c,%.o,$(wildcard src/unix/*.c))
+
+CFLAGS ?=	-D__MacOSX__ -Isrc -Wall -Wmissing-prototypes \
+		-Wstrict-prototypes -O2 -g 
+
+LIBS =		-lm -ldl
+ 
 endif
 
 all:		olsrd
@@ -134,7 +149,7 @@ clean:
 uberclean:
 		rm -f $(OBJS) $(DEPFILE) 
 		rm -f $(CFGDIR)/oscan.c $(CFGDIR)/oparse.h $(CFGDIR)/oparse.c
-		rm -f bin/olsrd
+		rm -f bin/olsrd bin/olsrd.exe
 		rm -f src/*~ src/linux/*~ src/unix/*~ src/win32/*~
 		rm -f src/bsd/*~ src/cfgparser/*~
 

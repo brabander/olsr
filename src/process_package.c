@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.12 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: process_package.c,v 1.13 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -38,8 +38,6 @@
 
 #ifdef linux 
 #include "linux/tunnel.h"
-#elif defined WIN32
-#include "win32/tunnel.h"
 #endif
 
 
@@ -405,7 +403,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
 
   while(hna_tmp)
     {
-#ifndef __FreeBSD__
+#ifdef linux
       /*
        * Set up tunnel to Internet gateway
        */

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.2 2004/11/05 08:07:32 kattemat Exp $
+ * $Id: ifnet.c,v 1.3 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -39,7 +39,7 @@
 #define SIOCGIWMODE	0x8B07		/* get operation mode */
 #define SIOCSIWSENS	0x8B08		/* set sensitivity (dBm) */
 #define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
-#elif defined __FreeBSD__
+#elif defined __FreeBSD__ || defined __MacOSX__
 #define ifr_netmask ifr_addr
 #endif
 
@@ -747,7 +747,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input);
   
-#if defined linux 
+#ifdef linux 
   /* Set TOS */
   
   if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)

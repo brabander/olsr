@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.15 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: link_set.c,v 1.16 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -394,7 +394,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 {
   struct link_entry *tmp_link_set, *new_link;
   struct neighbor_entry *neighbor;
-#if !defined WIN32 && !defined __FreeBSD__
+#ifdef linux
   struct interface *local_if;
 #endif
 
@@ -512,7 +512,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
     }
 
   /* Add to link-layer spy list */
-#if !defined WIN32 && !defined __FreeBSD__
+#ifdef linux
   if(llinfo)
     {
       local_if = if_ifwithaddr(local);
@@ -603,7 +603,7 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
 {
   int status;
   struct link_entry *entry;
-#if !defined WIN32 && !defined __FreeBSD__
+#ifdef linux
   struct interface *local_if;
 #endif
 
@@ -615,7 +615,7 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
 
   /* Update link layer info */
   /* Add to link-layer spy list */
-#if !defined WIN32 && !defined __FreeBSD__
+#ifdef linux
   if(llinfo && !entry->spy_activated)
     {
       local_if = if_ifwithaddr(local);

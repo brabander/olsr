@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: ifnet.c,v 1.8 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: ifnet.c,v 1.9 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -37,12 +37,6 @@
 #include "../scheduler.h"
 #include "../mantissa.h"
 
-#undef interface
-#undef TRUE
-#undef FALSE
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <iphlpapi.h>
 #include <iprtrmib.h>
 

@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: kernel_routes.c,v 1.6 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.7 2004/11/05 14:33:31 tlopatic Exp $
  *
  */
 
@@ -28,14 +28,10 @@
 #include "../kernel_routes.h"
 #include "../defs.h"
 
-#undef interface
-#undef TRUE
-#undef FALSE
-
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <iprtrmib.h>
 #include <iphlpapi.h>
+#undef interface
 
 char *StrError(unsigned int ErrNo);
 
