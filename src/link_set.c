@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.51 2005/02/17 21:36:29 kattemat Exp $
+ * $Id: link_set.c,v 1.52 2005/02/20 15:38:59 kattemat Exp $
  */
 
 
@@ -51,7 +51,6 @@
 #include "mpr.h"
 #include "olsr.h"
 #include "scheduler.h"
-#include "link_layer.h"
 #include "lq_route.h"
 
 static clock_t hold_time_neighbor;
@@ -392,9 +391,6 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 {
   struct link_entry *tmp_link_set, *new_link;
   struct neighbor_entry *neighbor;
-#ifdef linux
-  struct interface *local_if;
-#endif
 
   tmp_link_set = link_set;
 
@@ -516,19 +512,6 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       insert_mid_alias(remote_main, remote, 20.0);
     }
 
-  /* Add to link-layer spy list */
-#ifdef linux
-  if(llinfo)
-    {
-      local_if = if_ifwithaddr(local);
-      
-      olsr_printf(1, "Adding %s to spylist of interface %s\n", olsr_ip_to_string(remote), local_if->int_name);
-
-      if((local_if != NULL) && (add_spy_node(remote, local_if->int_name)))
-	new_link->spy_activated = 1;
-    }
-#endif
-
   return link_set;
 }
 
@@ -604,30 +587,16 @@ lookup_link_entry(union olsr_ip_addr *remote, union olsr_ip_addr *local)
  *@return the link_entry struct describing this link entry
  */
 struct link_entry *
-update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct hello_message *message, struct interface *in_if)
+update_link_entry(union olsr_ip_addr *local, 
+		  union olsr_ip_addr *remote, 
+		  struct hello_message *message, 
+		  struct interface *in_if)
 {
   int status;
   struct link_entry *entry;
-#ifdef linux
-  struct interface *local_if;
-#endif
 
   /* Add if not registered */
   entry = add_new_entry(local, remote, &message->source_addr, message->vtime, message->htime);
-
-  /* Update link layer info */
-  /* Add to link-layer spy list */
-#ifdef linux
-  if(llinfo && !entry->spy_activated)
-    {
-      local_if = if_ifwithaddr(local);
-      
-      olsr_printf(1, "Adding %s to spylist of interface %s\n", olsr_ip_to_string(remote), local_if->int_name);
-
-      if((local_if != NULL) && (add_spy_node(remote, local_if->int_name)))
-	entry->spy_activated = 1;
-    }
-#endif
 
   /* Update ASYM_time */
   //printf("Vtime is %f\n", message->vtime);

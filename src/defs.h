@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.35 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: defs.h,v 1.36 2005/02/20 15:38:59 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -75,15 +75,13 @@
 #define	HOPCNT_MAX		16	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IP_HDRSIZE          28
-
-#define MAX_IFS                 32
-
+#define MAX_IFS                 16
 
 /* Debug helper macro */
 #ifdef DEBUG
-#define debug(format,args...) \
-   olsr_printf(1, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
-   olsr_printf(1, format, ##args);
+#define olsr_debug(lvl,format,args...) \
+   olsr_printf(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
+   olsr_printf(lvl, format, ##args);
 #endif
 
 
@@ -104,10 +102,8 @@ clock_t now_times;              /* current idea of times(2) reported uptime */
 struct timeval now;		/* current idea of time */
 struct tm *nowtm;		/* current idea of time (in tm) */
 
-olsr_bool disp_pack_in;               /* display incoming packet content? */
-olsr_bool disp_pack_out;               /* display outgoing packet content? */
-
-int llinfo;
+olsr_bool disp_pack_in;         /* display incoming packet content? */
+olsr_bool disp_pack_out;        /* display outgoing packet content? */
 
 olsr_bool del_gws;
 
@@ -150,12 +146,6 @@ olsr_bool changes;                /* is set if changes occur in MPRS set */
 
 /* TC empty message sending */
 extern clock_t send_empty_tc;
-
-
-/* Used by everyone */
-
-extern int
-olsr_printf(int, char *, ...);
 
 /*
  *IPC functions

@@ -36,8 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_layer.c,v 1.9 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: link_layer.c,v 1.10 2005/02/20 15:38:59 kattemat Exp $
  */
+
+
+#if 0 /* DEPRECATED - KEPT FOR REFERENCE */
 
 /* Ugly fix to make this compile on wireless extentions < 16 */
 #define _LINUX_ETHTOOL_H
@@ -54,6 +57,17 @@
 #include <net/if_arp.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#include "olsr_protocol.h"
+
+void
+init_link_layer_notification(void);
+
+void
+poll_link_layer(void *);
+
+int
+add_spy_node(union olsr_ip_addr *, char *);
 
 
 extern char *
@@ -415,3 +429,6 @@ iw_get_range_info(char            *ifname,
 
   return 1;
 }
+
+
+#endif

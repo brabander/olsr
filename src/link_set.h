@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.23 2005/02/17 21:36:30 kattemat Exp $
+ * $Id: link_set.h,v 1.24 2005/02/20 15:38:59 kattemat Exp $
  */
 
 
@@ -97,11 +97,6 @@ struct link_entry
 
   double saved_loss_link_quality;
   double saved_neigh_link_quality;
-
-  /*
-   * Spy
-   */
-  olsr_u8_t                    spy_activated;
 
   struct link_entry *next;
 };

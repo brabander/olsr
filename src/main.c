@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.60 2005/02/03 20:38:55 kattemat Exp $
+ * $Id: main.c,v 1.61 2005/02/20 15:38:59 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -53,7 +53,6 @@
 #include "plugin_loader.h"
 #include "socket_parser.h"
 #include "apm.h"
-#include "link_layer.h"
 #include "net_os.h"
 
 #ifdef WIN32
@@ -398,17 +397,6 @@ main(int argc, char *argv[])
 	  continue;
 	}
 
-
-      /*
-       * Display link-layer info(experimental)
-       */
-      if (strcmp(*argv, "-llinfo") == 0) 
-	{
-	  argv++; argc--;
-	  llinfo = OLSR_TRUE;
-	  continue;
-	}
-
       /*
        * IPv6 multicast addr
        */
@@ -563,12 +551,6 @@ main(int argc, char *argv[])
   if(olsr_cnf->open_ipc)
       ipc_init();
 
-#ifdef linux
-  /* Initialize link-layer notifications */
-  if(llinfo)
-    init_link_layer_notification();
-#endif
-
   /* Initialisation of different tables to be used.*/
   olsr_init_tables();
 
@@ -721,7 +703,6 @@ set_default_values()
 
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
 
-  llinfo = OLSR_FALSE;
   del_gws = OLSR_FALSE;
 
   /* Display packet content */
