@@ -1,5 +1,7 @@
+---------------------------------------------------------------------
 NAMESERVICE PLUGIN FOR OLSRD
 by Bruno Randolf <bruno.randolf@4g-systems.biz>
+---------------------------------------------------------------------
 
 a simple DNS replacement for OLSR networks
 
@@ -12,22 +14,56 @@ available via ordinary DNS to other clients as well.
 the default location of the hosts file is
 /var/run/hosts_olsr 
 
-PLUGIN PARAMETERS
 
-"name"		the name of the OLSR node
+---------------------------------------------------------------------
+PLUGIN PARAMETERS (PlParam)
+---------------------------------------------------------------------
 
-"filename"	which file to write to 
-		(default: /var/run/hosts_olsr)
+PlParam "name" "my-name.mesh"
+
+	the name of this OLSR node (main address).
+	can be specified multiple times
+
+PlParam "IP.ADDR" "another-name.mesh"
+
+	a name for a specified IP address.
+	the IP address has to be either from one of the olsr 
+	interfaces or within a HNA network we announce.
+	can be specified multiple times
+
+PlParam "filename" "/name/of/hosts_file"
+
+	which file to write to.
+	(default: /var/run/hosts_olsr)
+
+PlParam "interval" "SEC"
+
+	interval for sending NAME messages in seconds.
+	(default: 120 - 2 minutes)
+		
+PlParam "timeout" "SEC"
+
+	validity time for received NAME messages.
+	(default: 3600 - 1 hour)
 
 
+---------------------------------------------------------------------
 SAMPLE CONFIG
+---------------------------------------------------------------------
 
-activate in /etc/olsrd.conf:
+add in /etc/olsrd.conf:
 
-LoadPlugin "olsrd_nameservice.so.0.1"
+LoadPlugin "olsrd_nameservice.so.0.2"
 {
 	PlParam "name" "thisismyname.mesh"
-	# optional:
-        #PlParam "filename" "/etc/hosts_olsr"
 }
-		
+
+
+---------------------------------------------------------------------
+TODO
+---------------------------------------------------------------------
+  
+ * implement a small DNS server into the plugin?
+
+---------------------------------------------------------------------
+EOF / 01.03.2005

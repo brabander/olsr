@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.3 2005/03/01 20:16:56 tlopatic Exp $ */
+/* $Id: nameservice.c,v 1.4 2005/03/01 21:35:14 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -43,18 +43,72 @@
 #include "olsrd_copy.h"
 
 
-/* The database - (using hashing) */
-struct name_entry list[HASHSIZE];
-
 /* send buffer: size of IPv6 message + the maximum size of the name */
 static char buffer[sizeof(struct olsrmsg6) + MAX_NAME];
 
-olsr_u8_t name_table_changed=0;
-
-char* my_name = "";
-olsr_u8_t my_name_len = 0;
+/* config parameters */
 static char my_filename_buff[MAX_FILE + 1];
 char* my_filename = my_filename_buff;
+int my_interval = EMISSION_INTERVAL;
+double my_timeout = NAME_VALID_TIME;
+
+/* the database (using hashing) */
+struct db_entry* list[HASHSIZE];
+struct name_entry *my_names = NULL;
+olsr_bool name_table_changed = OLSR_TRUE;
+
+
+void 
+free_name_entry_list(struct name_entry **list) 
+{
+	struct name_entry **tmp = list;
+	struct name_entry *to_delete;
+	while (*tmp != NULL) {
+		to_delete = *tmp;
+		*tmp = (*tmp)->next;
+		free( to_delete->name );
+		free( to_delete );
+		to_delete = NULL;
+	}
+}
+
+
+olsr_bool
+allowed_ip(union olsr_ip_addr *addr)
+{
+	// we only allow names for IP addresses which announce
+	// so the IP must either be from one of the interfaces
+	// or inside a HNA which we have configured
+	
+	struct hna4_entry *hna4;
+	struct olsr_if *ifs;
+	
+	olsr_printf(6, "checking %s\n", olsr_ip_to_string(addr));
+	
+	for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
+	{
+		struct interface *rifs = ifs->interf;
+		olsr_printf(6, "interface %s\n", olsr_ip_to_string(&rifs->ip_addr));
+		if (COMP_IP(&rifs->ip_addr, addr)) {
+			olsr_printf(6, "MATCHED\n");
+			return OLSR_TRUE;
+			
+		}
+	}
+	
+	for (hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
+	{
+		olsr_printf(6, "HNA %s/%s\n", 
+			olsr_ip_to_string(&hna4->net),
+			olsr_ip_to_string(&hna4->netmask));
+		
+		if ( hna4->netmask.v4 != 0 && (addr->v4 & hna4->netmask.v4) == hna4->net.v4 ) {
+			olsr_printf(6, "MATCHED\n");
+			return OLSR_TRUE;
+		}
+	}
+	return OLSR_FALSE;
+}
 
 
 /**
@@ -66,32 +120,49 @@ olsr_plugin_init()
 	int i;
 #ifdef WIN32
 	int len;
+
+	GetWindowsDirectory(my_filename_buff, MAX_FILE - 12);
+
+	len = strlen(my_filename_buff);
+ 
+	if (my_filename_buff[len - 1] != '\\')
+ 		my_filename_buff[len++] = '\\';
+ 
+	strcpy(my_filename_buff + len, "olsrd.hosts");
+#else
+	strcpy(my_filename_buff, "/var/run/hosts_olsr");
 #endif
 
 	/* Init list */
-	for(i = 0; i < HASHSIZE; i++)
-	{
-		list[i].next = &list[i];
-		list[i].prev = &list[i];
+	for(i = 0; i < HASHSIZE; i++) {
+		list[i] = NULL;
+	}
+	
+	/* fix received parameters */
+	// we have to do this here because some things like main_addr 
+	// are not known before
+	struct name_entry *name;
+	for (name = my_names; name != NULL; name = name->next) {
+		if (name->ip.v4 == 0) {
+			// insert main_addr
+			memcpy(&name->ip, main_addr, ipsize);
+		} else {
+			// IP from config file
+			// check if we are allowed to announce a name for this IP
+			// we can only do this if we also announce the IP
+			 
+			if (!allowed_ip(&name->ip)) {
+				olsr_printf(1, "NAME PLUGIN: name for unknown IP %s not allowed, fix your config!\n", 
+					olsr_ip_to_string(&name->ip));
+					exit(-1);
+			}	
+		}
 	}
 	
 	/* Register functions with olsrd */
 	olsr_parser_add_function(&olsr_parser, PARSER_TYPE, 1);
 	olsr_register_timeout_function(&olsr_timeout);
-	olsr_register_scheduler_event(&olsr_event, NULL, EMISSION_INTERVAL, 0, NULL);
-
-#ifdef WIN32
-	GetWindowsDirectory(my_filename_buff, MAX_FILE - 12);
-
-	len = strlen(my_filename_buff);
-
-	if (my_filename_buff[len - 1] != '\\')
-		my_filename_buff[len++] = '\\';
-
-	strcpy(my_filename_buff + len, "olsrd.hosts");
-#else
-	strcpy(my_filename_buff, "/var/run/hosts_olsr");
-#endif
+	olsr_register_scheduler_event(&olsr_event, NULL, my_interval, 0, NULL);
 
 	return 1;
 }
@@ -104,23 +175,82 @@ void
 olsr_plugin_exit()
 {
 	int i;
-	struct name_entry *tmp_list;
-	struct name_entry *entry_to_delete;
+	struct db_entry **tmp;
+	struct db_entry *to_delete;
+	
+	olsr_printf(2, "NAME PLUGIN: exit. cleaning up...\n");
+	
+	free_name_entry_list(&my_names);
 	
 	/* free list entries */
 	for(i = 0; i < HASHSIZE; i++)
 	{
-		tmp_list = list[i].next;
-		while(tmp_list != &list[i])
+		tmp = &list[i];
+		while(*tmp != NULL)
 		{
-			entry_to_delete = tmp_list;
-			tmp_list = tmp_list->next;
-			entry_to_delete->prev->next = entry_to_delete->next;
-			entry_to_delete->next->prev = entry_to_delete->prev;
-			free(entry_to_delete->name);
-			free(entry_to_delete);
+			to_delete = *tmp;
+			*tmp = (*tmp)->next;
+			free_name_entry_list(&to_delete->names);
+			free(to_delete);
+			to_delete = NULL;
 		}
 	}
+}
+
+
+/**
+ * Called for all plugin parameters
+ */
+int
+register_olsr_param(char *key, char *value)
+{
+	if(!strcmp(key, "name")) {
+		// name for main address
+		struct name_entry *tmp;
+		tmp = malloc(sizeof(struct name_entry));
+		tmp->name = strndup( value, MAX_NAME );
+		tmp->len = strlen( tmp->name );
+		tmp->type = NAME_HOST;
+		// will be set to main_addr later
+		memset(&tmp->ip, 0, sizeof(tmp->ip));
+		tmp->next = my_names;
+		my_names = tmp;
+		
+		printf("\nNAME PLUGIN parameter name: %s (%s)\n", tmp->name, olsr_ip_to_string(&tmp->ip));
+	} 
+	else if(!strcmp(key, "filename")) {
+		my_filename = strndup( value, MAX_FILE );
+		printf("\nNAME PLUGIN parameter filename: %s\n", my_filename);
+	}
+	else if(!strcmp(key, "interval")) {
+		my_interval = atoi(value);
+		printf("\n(NAME PLUGIN parameter interval: %d\n", my_interval);
+	}
+	else if(!strcmp(key, "timeout")) {
+		my_timeout = atof(value);
+		printf("\nNAME PLUGIN parameter timeout: %f\n", my_timeout);
+	}
+	else {
+		// assume this is an IP address and hostname
+		// the IPs are validated later
+		struct name_entry *tmp;
+		tmp = malloc(sizeof(struct name_entry));
+		tmp->name = strndup( value, MAX_NAME );
+		tmp->len = strlen( tmp->name );
+		tmp->type = 0xbb;
+		struct in_addr ip;
+		if (!inet_aton(key, &ip)) {
+			printf("\nNAME PLUGIN invalid IP %s, fix your config!\n", key);
+			exit(-1);
+		}
+		tmp->ip.v4 = ip.s_addr;
+		tmp->next = my_names;
+		my_names = tmp;
+		
+		printf("\nNAME PLUGIN parameter: %s (%s)\n", tmp->name, olsr_ip_to_string(&tmp->ip));
+	}
+		
+	return 1;
 }
 
 
@@ -131,37 +261,33 @@ olsr_plugin_exit()
 void
 olsr_timeout()
 {
-	struct name_entry *tmp_list;
-	struct name_entry *entry_to_delete;
+	struct db_entry **tmp;
+	struct db_entry *to_delete;
 	int index;
 
 	for(index=0;index<HASHSIZE;index++)
 	{
-		tmp_list = list[index].next;
-		while(tmp_list != &list[index])
+		for (tmp = &list[index]; *tmp != NULL; )
 		{
-			/*Check if the entry is timed out*/
-			if(olsr_timed_out(&tmp_list->timer))
+			/* check if the entry is timed out */
+			if (olsr_timed_out(&(*tmp)->timer))
 			{
-				entry_to_delete = tmp_list;
-				tmp_list = tmp_list->next;
-				olsr_printf(2, "NAME PLUGIN: %s timed out.. deleting\n", 
-					olsr_ip_to_string(&entry_to_delete->originator));
-				/* Dequeue */
-				entry_to_delete->prev->next = entry_to_delete->next;
-				entry_to_delete->next->prev = entry_to_delete->prev;
-
-				/* Delete */
-				free(entry_to_delete->name);
-				free(entry_to_delete);
+				to_delete = *tmp;
+				*tmp = (*tmp)->next;
 				
-				name_table_changed = 1;
+				olsr_printf(2, "NAME PLUGIN: %s timed out... deleting\n", 
+					olsr_ip_to_string(&to_delete->originator));
+	
+				/* Delete */
+				free_name_entry_list(&to_delete->names);
+				free(to_delete);
+				name_table_changed = OLSR_TRUE;
+			} else {
+				tmp = &(*tmp)->next;
 			}
-			else
-				tmp_list = tmp_list->next;
 		}
 	}
-	return;
+	write_name_table();
 }
 
 
@@ -180,19 +306,19 @@ olsr_event(void *foo)
 	/* looping trough interfaces */
 	for (ifn = ifs; ifn ; ifn = ifn->int_next) 
 	{
-		olsr_printf(3, "[%s]  ", ifn->int_name);
-		/* Fill message */
+		olsr_printf(3, "[%s]\n", ifn->int_name);
+		/* fill message */
 		if(ipversion == AF_INET)
 		{
 			/* IPv4 */
 			message->v4.olsr_msgtype = MESSAGE_TYPE;
-			message->v4.olsr_vtime = double_to_me(NAME_VALID_TIME);
+			message->v4.olsr_vtime = double_to_me(my_timeout);
 			memcpy(&message->v4.originator, main_addr, ipsize);
 			message->v4.ttl = MAX_TTL;
 			message->v4.hopcnt = 0;
 			message->v4.seqno = htons(get_msg_seqno());
 		
-			namesize = get_namemsg(&message->v4.msg);
+			namesize = encap_namemsg(&message->v4.msg);
 			namesize = namesize + sizeof(struct olsrmsg);
 		
 			message->v4.olsr_msgsize = htons(namesize);
@@ -201,33 +327,26 @@ olsr_event(void *foo)
 		{
 			/* IPv6 */
 			message->v6.olsr_msgtype = MESSAGE_TYPE;
-			message->v6.olsr_vtime = double_to_me(NAME_VALID_TIME);
+			message->v6.olsr_vtime = double_to_me(my_timeout);
 			memcpy(&message->v6.originator, main_addr, ipsize);
 			message->v6.ttl = MAX_TTL;
 			message->v6.hopcnt = 0;
 			message->v6.seqno = htons(get_msg_seqno());
 	  
-			namesize = get_namemsg(&message->v6.msg);
+			namesize = encap_namemsg(&message->v6.msg);
 			namesize = namesize + sizeof(struct olsrmsg6);
 	  
 			message->v6.olsr_msgsize = htons(namesize);
 		}
 	
-		if (net_outbuffer_push(ifn, buffer, namesize) != namesize)
-		{
-			/* Send data and try again */
+		if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
+			/* send data and try again */
 			net_output(ifn);
-			if (net_outbuffer_push(ifn, buffer, namesize) !=
-				namesize)
-			{
+			if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
 				olsr_printf(1, "NAME PLUGIN: could not send on interface: %s\n", ifn->int_name);
 			}
 		}
 	}
-
-	olsr_printf(3, "\n");
-
-	write_name_table();
 }
 
 
@@ -275,13 +394,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 		goto forward;
 	}
 
-	/* Process */
-	olsr_printf(3, "NAME PLUGIN: Processing NAME info from %s seqno: %d\n",
-		olsr_ip_to_string(&originator),
-		ntohs(m->v4.seqno));
-
 	update_name_entry(&originator, message, vtime);
-
 
 forward:
 	/* Forward the message if nessecary
@@ -290,70 +403,97 @@ forward:
 }
 
 
+#define roundup(x, y)	((((x)+((y)-1))/(y))*(y))  /* to any y */
+#define padding(x,r)	(r)-(x)%(r);
+
 /**
- * Get a name message. This fills the namemsg struct
- * AND appends the name after that! 
+ * Encapsulate a name message into a packet. 
  *
  * It assumed that there is enough space in the buffer to do this!
  *
- * Returns: the length of the name that was appended
+ * Returns: the length of the message that was appended
  */
 int
-get_namemsg(struct namemsg *msg)
+encap_namemsg(struct namemsg* msg)
 {
-	int i;
-	char *txt;
-
-	msg->name_len = my_name_len;
-
-	msg->pad[0] = 0;
-	msg->pad[1] = 0;
-	msg->pad[2] = 0;
-
-	// msg + 1 == &msg[1]
-
-	txt = (char *)(msg + 1);
-
-	memcpy(txt, my_name, my_name_len); 
-
-	for (i = my_name_len; (i & 3) != 0; i++)
-		txt[i] = 0;
-
-	return i;
+	struct name_entry *my_name = my_names;
+	struct name* to_packet;
+	char* pos = (char*)msg + sizeof(struct namemsg);
+	short i=0;
+	while (my_name!=NULL) 
+	{
+		olsr_printf(3, "NAME PLUGIN: Announcing name %s (%s)\n", 
+			my_name->name, olsr_ip_to_string(&my_name->ip));
+			
+		to_packet = (struct name*)pos;
+		to_packet->type = htons(my_name->type);
+		to_packet->len = htons(my_name->len);
+		memcpy(&to_packet->ip, &my_name->ip, ipsize);
+		pos += sizeof(struct name);
+		strncpy(pos, my_name->name, my_name->len);
+		pos += my_name->len;
+		// padding to 4 byte boundaries
+		long pad = (long)pos + roundup(my_name->len, 4) - my_name->len;
+		while ((long)pos < pad) {
+			*pos = '\0';
+			pos++;
+		}
+		my_name = my_name->next;
+		i++;
+	}
+	msg->nr_names = htons(i);
+	msg->version = htons(NAME_PROTOCOL_VERSION);
+	return pos - (char*)msg; //length
 }
 
 
 /**
- * Read a name message and update name_entry if necessary
- *
- * Return: 1 if entry was changed
+ * decapsulate a name message and update name_entries if necessary
  */
-int
-read_namemsg(struct namemsg *msg, struct name_entry *to)
+void
+decap_namemsg( struct namemsg *msg, struct name_entry **to )
 {
-	char *txt;
-
-	// msg + 1 == &msg[1]
-
- 	txt = (char*)(msg + 1);
-
-	if (to->name == NULL || 
-		strlen(to->name) != msg->name_len ||
-		memcmp(to->name, txt, msg->name_len) != 0)
-	{
-		if (to->name != NULL)
-			free(to->name);
-
-		to->name = olsr_malloc(msg->name_len + 1,
-			"new name_entry name");
-
-		memcpy(to->name, txt, msg->name_len);
-		to->name[msg->name_len] = '\0';
-
-		return 1;
+	char *pos;
+	struct name_entry *tmp;
+	struct name *from_packet; 
+	
+	olsr_printf(4, "NAME PLUGIN: decapsulating name msg\n");
+	
+	if (ntohs(msg->version) != NAME_PROTOCOL_VERSION) {
+		olsr_printf(3, "NAME PLUGIN: ignoring wrong version %d\n", msg->version);
+		return;
 	}
+	
+	// for now ist easier to just delete everything, than
+	// to update selectively
+	free_name_entry_list(to);
+	
+	/* now add the names from the message */
+	pos = (char*)msg + sizeof(struct namemsg);
+	int i;
+	for (i=ntohs(msg->nr_names); i >= 0; i--) {	
+		tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");
+		
+		from_packet = (struct name*)pos;
+		from_packet->type = ntohs(from_packet->type);
+		from_packet->len = ntohs(from_packet->len);
+		tmp->type = from_packet->type;
+		memcpy(&tmp->ip, &from_packet->ip, ipsize);
+		
+		tmp->name = olsr_malloc(from_packet->len+1, "new name_entry name");
+		strncpy(tmp->name, (char*)from_packet+sizeof(struct name), from_packet->len);
+		tmp->name[from_packet->len] = '\0';
 
-	return 0;	
+		olsr_printf(3, "NAME PLUGIN: New name %s (%s) %d\n", 
+			tmp->name, olsr_ip_to_string(&tmp->ip), from_packet->len);
+			
+		// queue to front
+		tmp->next = *to;
+		*to = tmp;
+
+		// next name from packet
+		pos += sizeof(struct name) + roundup(from_packet->len,4);
+	}
 }
 
 
@@ -361,46 +501,48 @@ read_namemsg(struct namemsg *msg, struct name_entry *to)
  * Update or register a new name entry
  */
 void
-update_name_entry(union olsr_ip_addr *originator, struct namemsg *message, double vtime)
+update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, double vtime)
 {
 	int hash;
-	struct name_entry *entry;
-	
+	struct db_entry *entry;
+
+	olsr_printf(3, "NAME PLUGIN: Received Name Message from %s\n", 
+		olsr_ip_to_string(originator));
+
 	hash = olsr_hashing(originator);
-	
-	// entry lookup
 
-	for (entry = list[hash].next; entry != &list[hash]; entry = entry->next)
-		if (memcmp(originator, &entry->originator, ipsize) == 0)
-			break;
-
-	// no entry found
-
-	if (entry == &list[hash])
+	/* find the entry for originator */
+	for (entry = list[hash]; entry != NULL; entry = entry->next)
 	{
-		entry = olsr_malloc(sizeof(struct name_entry), "new name_entry");
-		entry->name = NULL;
-		memcpy(&entry->originator, originator, ipsize);
-
-		entry->next = list[hash].next->prev;
-		entry->prev = &list[hash];
-
-		list[hash].next->prev = entry;
-		list[hash].next = entry;
+		if (memcmp(originator, &entry->originator, ipsize) == 0) {
+			// found
+			olsr_printf(4, "NAME PLUGIN: %s found\n", 
+				olsr_ip_to_string(originator));
+		
+			decap_namemsg(msg, &entry->names);
+ 			
+			olsr_get_timestamp(vtime * 1000, &entry->timer);
+			
+			name_table_changed = OLSR_TRUE;
+			return;
+		}
 	}
 
-	// update entry's timestamp
-
+	olsr_printf(3, "NAME PLUGIN: New entry %s\n", 
+		olsr_ip_to_string(originator));
+		
+	/* insert a new entry */
+	entry = olsr_malloc(sizeof(struct db_entry), "new db_entry");
+	memcpy(&entry->originator, originator, ipsize);
 	olsr_get_timestamp(vtime * 1000, &entry->timer);
+	entry->names = NULL;
+	// queue to front
+	entry->next = list[hash];
+	list[hash] = entry;
+	
+	decap_namemsg(msg, &entry->names);
 
-	// insert name into entry
-
-	if (read_namemsg(message, entry))
-	{
-		name_table_changed = 1;
-
-		olsr_printf(2, "NAME PLUGIN: Changed entry %s: %s\n", olsr_ip_to_string(originator), entry->name);
-	}
+	name_table_changed = OLSR_TRUE;
 }
 
 
@@ -411,31 +553,41 @@ void
 write_name_table()
 {
 	int hash;
-	struct name_entry *entry;
+	struct name_entry *name;
+	struct db_entry *entry;
 	FILE* hosts;
 
 	if(!name_table_changed)
 		return;
-	      
-	olsr_printf(2, "NAME PLUGIN: writing hosts file %s\n", my_filename);
-	
-	hosts = fopen( my_filename, "w" );
 
-	if (hosts == NULL)
-		return;
+	olsr_printf(2, "NAME PLUGIN: writing hosts file\n");
+		      
+	hosts = fopen( my_filename, "w" );
 	
 	fprintf(hosts, "# this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "# do not edit\n");
-	// add own IP and name
-	fprintf(hosts, "%s\t%s\n", olsr_ip_to_string(main_addr), my_name );
-
+	
+	// write own names
+	for (name = my_names; name != NULL; name = name->next) {
+		fprintf(hosts, "%s\t%s\t# myself\n", olsr_ip_to_string(&name->ip), name->name );
+	}
+	
+	// write received names
 	for(hash = 0; hash < HASHSIZE; hash++) 
 	{
-		for(entry = list[hash].next; entry != &list[hash]; entry = entry->next) 
-			fprintf(hosts, "%s\t%s\n", olsr_ip_to_string(&entry->originator), entry->name);
+		for(entry = list[hash]; entry != NULL; entry = entry->next)
+		{
+			for (name = entry->names; name != NULL; name = name->next) 
+			{
+				olsr_printf(6, "%s\t%s", olsr_ip_to_string(&name->ip), name->name);
+				olsr_printf(6, "\t#%s\n", olsr_ip_to_string(&entry->originator));
+				
+				fprintf(hosts, "%s\t%s", olsr_ip_to_string(&name->ip), name->name);
+				fprintf(hosts, "\t# %s\n", olsr_ip_to_string(&entry->originator));
+			}
+		}
 	}
 	
 	fclose(hosts);
-
-	name_table_changed = 0;
+	name_table_changed = OLSR_FALSE;
 }

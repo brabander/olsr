@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.2 2005/03/01 20:16:56 tlopatic Exp $ */
+/* $Id: nameservice.h,v 1.3 2005/03/01 21:35:14 tlopatic Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -42,31 +42,38 @@
 
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
-#define PLUGIN_VERSION	"0.1"
+#define PLUGIN_VERSION	"0.2"
 #define PLUGIN_AUTHOR	"Bruno Randolf"
 
 
 #define MESSAGE_TYPE		129
 #define PARSER_TYPE		MESSAGE_TYPE
-#define EMISSION_INTERVAL	30
-#define NAME_VALID_TIME		90.0
+#define EMISSION_INTERVAL	120 /* two minutes */
+#define NAME_VALID_TIME		3600 /* one hour */
+
+#define NAME_PROTOCOL_VERSION	1
 
 #define MAX_NAME 255
-char* my_name;
-olsr_u8_t my_name_len;
-
 #define MAX_FILE 255
 char* my_filename;
 
 
-/* Database entry */
 struct name_entry
 {
-  union olsr_ip_addr originator;  /* IP address of the node this entry describes */
-  struct timeval     timer;       /* Validity time */
-  char* name;
-  struct name_entry    *next;       /* Next element in line */
-  struct name_entry    *prev;       /* Previous elemnt in line */
+	union olsr_ip_addr	ip;
+	olsr_u16_t		type;
+	char			*name;
+	int			len;
+	struct name_entry	*next;		/* linked list */
+};
+
+/* database entry */
+struct db_entry
+{
+	union olsr_ip_addr	originator;	/* IP address of the node this entry describes */
+	struct timeval		timer;		/* Validity time */
+	struct name_entry	*names;		/* list of names this originator declares */
+	struct db_entry		*next;		/* linked list */
 };
 
 
@@ -83,15 +90,24 @@ void
 olsr_event(void *);
 
 int
-get_namemsg(struct namemsg *);
+encap_namemsg(struct namemsg *);
 
-int
-read_namemsg(struct namemsg *, struct name_entry *);
+void
+decap_namemsg(struct namemsg *, struct name_entry**);
 
 void
 update_name_entry(union olsr_ip_addr *, struct namemsg *, double);
 
 void
 write_name_table(void);
+
+int
+register_olsr_param(char *key, char *value);
+
+void 
+free_name_entry_list(struct name_entry **list);
+
+olsr_bool
+allowed_ip(union olsr_ip_addr *addr);
 
 #endif

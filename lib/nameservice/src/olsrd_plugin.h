@@ -29,10 +29,10 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.3 2005/02/21 19:47:29 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.4 2005/03/01 21:35:14 tlopatic Exp $ */
 
 /*
- * Dynamic linked library example for UniK OLSRd
+ * Dynamic linked library for UniK OLSRd
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -48,12 +48,22 @@
 
 #include "olsr_plugin_io.h"
 #include "olsr_types.h"
+#include "olsr_cfg.h"
 #include "hashing.h"
 #include "interfaces.h"
+
+char *
+strndup(const char *ptr, size_t size);
+
+#ifndef linux
+#include <stdlib.h>
+#endif
 
 /* Use this as PARSER_TYPE to receive ALL messages! */
 #define PROMISCUOUS 0xffffffff
 
+/* Global config pointer */
+struct olsrd_config *cfg;
 
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
@@ -227,7 +237,7 @@ get_plugin_interface_version(void);
  *                               Plugin data                                 *
  *****************************************************************************/
 
-#define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
+#define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION
 #define PLUGIN_INTERFACE_VERSION 2
 
 #endif

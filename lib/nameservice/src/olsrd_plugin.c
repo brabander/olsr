@@ -29,11 +29,10 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.6 2005/03/01 20:16:56 tlopatic Exp $ */
-
+/* $Id: olsrd_plugin.c,v 1.7 2005/03/01 21:35:14 tlopatic Exp $ */
 
 /*
- * Dynamic linked library example for UniK OLSRd
+ * Dynamic linked library for UniK OLSRd
  */
 
 #include <stdio.h>
@@ -43,14 +42,7 @@
 #include "nameservice.h"
 #include "plugin_loader.h"
 
-int
-register_olsr_param(char *, char *);
-
 #ifndef linux
-
-#include <stdlib.h>
-
-char *strndup(const char *ptr, size_t size);
 
 /* strndup() is a GNU extention */
 char *
@@ -70,7 +62,7 @@ strndup(const char *ptr, size_t size)
   if(!ret)
     return NULL;
 
-  memcpy(ret, ptr, len);
+  strncpy(ret, ptr, len);
   ret[len] = '\0';
 
   return ret;
@@ -144,23 +136,6 @@ plugin_io(int cmd, void *data, size_t size)
     }
   
   return 1;
-}
-
-int
-register_olsr_param(char *key, char *value)
-{
-	if(!strcmp(key, "name")) {
-		my_name = strndup( value, MAX_NAME );
-		my_name_len = strlen( my_name );
-		printf("(NAME) name: %s\n", my_name);
-	} 	
-	
-	if(!strcmp(key, "filename")) {
-		my_filename = strndup( value, MAX_FILE );
-		printf("(NAME) filename: %s\n", my_filename);
-	}
-	
-	return 1;
 }
 
 
@@ -351,5 +326,14 @@ fetch_olsrd_data()
     retval = 0;
   }
 
+  /* Configuration */
+  if(!olsr_plugin_io(GETD__OLSR_CNF, 
+		     &cfg, 
+		     sizeof(cfg)))
+    {
+      cfg = NULL;
+      retval = 0;
+    }
+    
   return retval;
 }

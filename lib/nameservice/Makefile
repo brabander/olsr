@@ -35,10 +35,10 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.7 2005/03/01 20:25:22 tlopatic Exp $
+# $Id: Makefile,v 1.8 2005/03/01 21:35:13 tlopatic Exp $
 
 PLUGIN_NAME =	olsrd_nameservice
-PLUGIN_VER =	0.1
+PLUGIN_VER =	0.2
 
 CC ?=		gcc
 STRIP ?=	strip
