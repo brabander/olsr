@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.11 2004/11/06 12:18:51 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.12 2004/11/06 12:31:54 kattemat Exp $
  *
  */
 
@@ -79,8 +79,8 @@ int
 olsr_load_dl(char *libname, struct plugin_param *params)
 {
   struct olsr_plugin new_entry, *entry;
-  int (*interface_version)(void);
-
+  int (*get_interface_version)(void);
+  int *interface_version;
 
   olsr_printf(1, "---------- Plugin loader ----------\nLibrary: %s\n", libname);
 
@@ -92,16 +92,28 @@ olsr_load_dl(char *libname, struct plugin_param *params)
 
   /* Fetch the interface version function */
   olsr_printf(1, "Checking plugin interface version....");
-  if((interface_version = dlsym(new_entry.dlhandle, "plugin_interface_version")) == NULL)
+  if((get_interface_version = dlsym(new_entry.dlhandle, "get_plugin_interface_version")) == NULL)
     {
-      olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
-      dlclose(new_entry.dlhandle);
-      return -1;
+      olsr_printf(1, "trying v1 detection...");
+      if((interface_version = dlsym(new_entry.dlhandle, "plugin_interface_version")) == NULL)
+	{
+	  olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
+	  dlclose(new_entry.dlhandle);
+	  return -1;
+	}
+      else
+	{
+	  olsr_printf(1, " %d - ", *interface_version);
+	  if(*interface_version != PLUGIN_INTERFACE_VERSION)
+	    olsr_printf(1, "WARNING: VERSION MISSMATCH!\n");
+	  else
+	    olsr_printf(1, "OK\n");
+	}
     }
   else
     {
-      olsr_printf(1, " %d - ", interface_version());
-      if(interface_version() != PLUGIN_INTERFACE_VERSION)
+      olsr_printf(1, " %d - ", get_interface_version());
+      if(get_interface_version() != PLUGIN_INTERFACE_VERSION)
 	olsr_printf(1, "WARNING: VERSION MISSMATCH!\n");
       else
 	olsr_printf(1, "OK\n");
