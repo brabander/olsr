@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.15 2005/02/02 19:59:31 kattemat Exp $
+ * $Id: packet.c,v 1.16 2005/02/04 06:30:46 kattemat Exp $
  */
 
 
@@ -94,7 +94,9 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   olsr_u16_t              index;
   int                     link;
 
+#ifdef DEBUG
   olsr_printf(3, "\tBuilding HELLO on interface %d\n", outif->if_nr);
+#endif
 
   message->neighbors=NULL;
   message->packet_seq_number=0;
@@ -104,17 +106,18 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   /* Set willingness */
 
   message->willingness = olsr_cnf->willingness;
-  //printf("Willingness: %d\n", olsr_cnf->willingness);
-
+#ifdef DEBUG
+  olsr_printf(3, "Willingness: %d\n", olsr_cnf->willingness);
+#endif
 
   /* Set TTL */
 
-  message->ttl = 1;
-  
-  //olsr_printf(3, "mpr is %d\n",message->mpr_seq_number);
-
+  message->ttl = 1;  
   COPY_IP(&message->source_addr, &main_addr);
 
+#ifdef DEBUG      
+      olsr_printf(5, "On link:\n");
+#endif
 
   /* Get the links of this interface */
   links = link_set;
@@ -125,30 +128,12 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       link = lookup_link_status(links);
       /* Update the status */
       
-      /* Update neighbor */
-      /* UPDATED ! */
-      //update_neighbor_status(links->neighbor, link);
-      //update_neighbor_status(links->neighbor);
-
-      //printf("\nLINK: %d\nSTATUS: %d\n\n", link, neighbor->status);
-      //printf("\nProcessing %s\n", olsr_ip_to_string(&links->neighbor_iface_addr));
-
-
       /* Check if this link tuple is registered on the outgoing interface */
       if(!COMP_IP(&links->local_iface_addr, &outif->ip_addr))
 	{
-	  olsr_printf(3, "ADDR: %s - ", olsr_ip_to_string(&outif->ip_addr));
-	  olsr_printf(3, "Wrong interface for %s ", olsr_ip_to_string(&links->local_iface_addr));
-
 	  links = links->next;
 	  continue;
 	}
-      
-      //printf("\tAdding link to %s\n", olsr_ip_to_string(&links->neighbor_main_address));
-
-
-      //printf("\tStatus: %d\n", neighbor->status);
-      //printf("\tLink: %d\n", message_neighbor->link);
 
       message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO");
       
@@ -208,10 +193,10 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       
       /* Set the main address */
       COPY_IP(&message_neighbor->main_address, &links->neighbor->neighbor_main_addr);
-      
-      olsr_printf(5, "%s - ", olsr_ip_to_string(&message_neighbor->address));
+#ifdef DEBUG      
+      olsr_printf(5, "Added: %s - ", olsr_ip_to_string(&message_neighbor->address));
       olsr_printf(5, " status %d\n", message_neighbor->status);
-      
+#endif
       message_neighbor->next=message->neighbors;
       message->neighbors=message_neighbor;	    
       
@@ -222,6 +207,9 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
 
 
+#ifdef DEBUG      
+      olsr_printf(5, "Not on link:\n");
+#endif
 
   /* Add the rest of the neighbors if running on multiple interfaces */
   
@@ -303,10 +291,10 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 	    COPY_IP(&message_neighbor->address, &neighbor->neighbor_main_addr);
 
 	    COPY_IP(&message_neighbor->main_address, &neighbor->neighbor_main_addr);
-	    
-	    olsr_printf(5, "%s           \n ", olsr_ip_to_string(&message_neighbor->address));
+#ifdef DEBUG
+	    olsr_printf(5, "Added: %s - ", olsr_ip_to_string(&message_neighbor->address));
 	    olsr_printf(5, " status  %d\n", message_neighbor->status);
-	    
+#endif
 	    message_neighbor->next=message->neighbors;
 	    message->neighbors=message_neighbor;	    
 	  }
@@ -462,7 +450,7 @@ olsr_build_tc_packet(struct tc_message *message)
  */
 
 void
-olsr_destroy_hna_message(struct hna_message *message)
+olsr_free_hna_packet(struct hna_message *message)
 {
   struct hna_net_addr  *hna_tmp, *hna_tmp2;
 
@@ -487,7 +475,7 @@ olsr_destroy_hna_message(struct hna_message *message)
  */
 
 void
-olsr_destroy_mid_message(struct mid_message *message)
+olsr_free_mid_packet(struct mid_message *message)
 {
   struct mid_alias *tmp_adr, *tmp_adr2;
 

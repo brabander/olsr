@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.28 2005/02/03 17:21:36 kattemat Exp $
+ * $Id: process_package.c,v 1.29 2005/02/04 06:30:46 kattemat Exp $
  */
 
 
@@ -361,7 +361,7 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
       olsr_printf(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
-      olsr_destroy_mid_message(&message);
+      olsr_free_mid_packet(&message);
       return;
     }
 
@@ -387,7 +387,7 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
 		       message.mid_seqno, 
 		       in_if,
 		       from_addr);
-  olsr_destroy_mid_message(&message);
+  olsr_free_mid_packet(&message);
 
   return;
 }
@@ -433,7 +433,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
       olsr_printf(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
-      olsr_destroy_hna_message(&message);
+      olsr_free_hna_packet(&message);
       return;
     }
 
@@ -450,7 +450,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
 		       message.packet_seq_number, 
 		       in_if,
 		       from_addr);
-  olsr_destroy_hna_message(&message);
+  olsr_free_hna_packet(&message);
 
   return;
 }

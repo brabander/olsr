@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.13 2005/02/02 19:59:31 kattemat Exp $
+ * $Id: packet.h,v 1.14 2005/02/04 06:30:46 kattemat Exp $
  */
 
 
@@ -175,15 +175,9 @@ int
 olsr_build_tc_packet(struct tc_message *);
 
 void
-olsr_destroy_hello_message(struct hello_message *);
+olsr_free_mid_packet(struct mid_message *);
 
 void
-olsr_destroy_mid_message(struct mid_message *);
-
-void
-olsr_destroy_hna_message(struct hna_message *);
-
-void
-olsr_destroy_tc_message(struct tc_message *);
+olsr_free_hna_packet(struct hna_message *);
 
 #endif
