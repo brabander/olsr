@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.49 2005/03/07 06:50:15 kattemat Exp $
+# $Id: Makefile,v 1.50 2005/03/07 06:51:09 kattemat Exp $
 
 VERS =		0.4.9
 
@@ -85,7 +85,8 @@ ifeq ($(OS), fbsd)
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
+                -Wmissing-declarations -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
 
@@ -103,7 +104,8 @@ ifeq ($(OS), nbsd)
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
+                -Wmissing-declarations -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__NetBSD__ $(INCLUDES) $(SRCS)
 
@@ -113,7 +115,8 @@ ifeq ($(OS), osx)
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 DEFINES =	-D__MacOSX__
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g 
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
+                -Wmissing-declarations -O2 -g 
 LIBS =		-lm -ldl
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
@@ -125,7 +128,7 @@ HDRS +=		$(wildcard src/win32/*.h)
 INCLUDES += 	-Isrc/win32
 DEFINES =	-DWIN32
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-mno-cygwin -O2 -g
+		-Wmissing-declarations -mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
