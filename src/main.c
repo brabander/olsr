@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.21 2004/11/02 21:14:12 kattemat Exp $
+ * $Id: main.c,v 1.22 2004/11/02 21:42:32 kattemat Exp $
  *
  */
 
@@ -41,6 +41,8 @@
 
 #ifdef linux
 #include "linux/tunnel.h"
+static void
+olsr_shutdown(int);
 #elif defined WIN32
 #define close(x) closesocket(x)
 #include "win32/tunnel.h"
@@ -63,8 +65,6 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-static void
-olsr_shutdown(int);
 
 /*
  * Local variable declarations 
@@ -654,7 +654,7 @@ main(int argc, char *argv[])
 int __stdcall
 SignalHandler(unsigned long signal)
 #else
-void
+static void
 olsr_shutdown(int signal)
 #endif
 {
