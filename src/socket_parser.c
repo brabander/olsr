@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.13 2004/11/12 20:48:19 kattemat Exp $
+ * $Id: socket_parser.c,v 1.14 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
@@ -138,89 +138,6 @@ remove_olsr_socket(int fd, void(*pf)(int))
 }
 
 
-
-
-
-void
-listen_loop()
-{
-  fd_set ibits;
-  int n;
-  struct olsr_socket_entry *olsr_sockets;
-  struct timeval tvp;
-
-  FD_ZERO(&ibits);
-
-  /* Main listening loop */
-  for (;;)
-    {
-      FD_ZERO(&ibits);
-      /* Adding file-descriptors to FD set */
-      /* Begin critical section */
-      pthread_mutex_lock(&mutex);
-      olsr_sockets = olsr_socket_entries;
-      while(olsr_sockets)
-	{
-	  FD_SET(olsr_sockets->fd, &ibits);
-	  olsr_sockets = olsr_sockets->next;
-	}
-      /* End critical section */
-      pthread_mutex_unlock(&mutex);
-
-
-      /* If there are no registered sockets we
-       * do not call select(2)
-       */
-      if (hfd == 0)
-	{
-	  sleep(OLSR_SELECT_TIMEOUT);
-	  continue;
-	}
-
-      /* Add timeout to ensure update */
-      tvp.tv_sec = OLSR_SELECT_TIMEOUT;
-      tvp.tv_usec = 0;
-      
-      /* Runnig select on the FD set */
-      n = select(hfd, &ibits, 0, 0, &tvp);
-      
-      /* Did somethig go wrong? */
-      if (n <= 0) 
-	{
-	  if (n < 0) 
-	    {
-	      if (errno == EINTR)
-		continue;
-	      olsr_syslog(OLSR_LOG_ERR, "select: %m");
-	      olsr_printf(1, "Error select: %s", strerror(errno));
-	    }
-	  continue;
-	}
-
-      gettimeofday(&now, NULL);      
-      
-      /* Begin critical section */
-      pthread_mutex_lock(&mutex);
-      olsr_sockets = olsr_socket_entries;
-      while(olsr_sockets)
-	{
-	  if(FD_ISSET(olsr_sockets->fd, &ibits))
-	    {
-	      olsr_sockets->process_function(olsr_sockets->fd);
-	    }
-	  olsr_sockets = olsr_sockets->next;
-	}
-      /* End critical section */
-      pthread_mutex_unlock(&mutex);
-  
-
-    } /* for(;;) */
-	
-} /* main */
-
-
-
-
 void
 poll_sockets()
 {
@@ -257,6 +174,7 @@ poll_sockets()
       return;
     }
 
+  /* Update time since this is much used by the parsing functions */
   gettimeofday(&now, NULL);      
   
   olsr_sockets = olsr_socket_entries;

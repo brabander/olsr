@@ -19,17 +19,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.h,v 1.7 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: scheduler.h,v 1.8 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
 
 
 
-#ifndef _OLSR_TIMER
-#define _OLSR_TIMER
-
-#include <pthread.h>
+#ifndef _OLSR_SCHEDULER
+#define _OLSR_SCHEDULER
 
 
 /* List entries */
@@ -57,24 +55,10 @@ struct event_entry
 
 /* Lists */
 struct timeout_entry *timeout_functions;
-
 struct event_entry *event_functions;
 
-
-/* The polling interval */
-float sched_poll_interval;
-
-
-/* mutex for thread */
-extern pthread_mutex_t mutex;
-
-
 float will_int; /* Willingness update interval */
-
 float max_jitter;
-
-int
-init_scheduler(float);
 
 int
 olsr_register_timeout_function(void (*)(void));
@@ -89,6 +73,6 @@ int
 olsr_remove_scheduler_event(void (*)(void *), void *, float, float, olsr_u8_t *);
 
 void
-start_scheduler(pthread_t *);
+scheduler(void);
 
 #endif

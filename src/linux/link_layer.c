@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_layer.c,v 1.6 2004/10/18 13:13:38 kattemat Exp $
+ * $Id: link_layer.c,v 1.7 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
@@ -36,7 +36,6 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <net/if_arp.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -70,7 +69,7 @@ int
 convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
 
 void
-ping_thread(void *);
+send_ping(union olsr_ip_addr *);
 
 
 void
@@ -185,7 +184,6 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
 {
   struct arpreq	arp_query;
   struct sockaddr_in tmp_sockaddr;
-  pthread_t ping_thr;
 
 
   memset(&arp_query, 0, sizeof(struct arpreq));
@@ -212,7 +210,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
       olsr_printf(1, "Arp failed: (%s) - trying lookup\n", strerror(errno));
 
       /* No address - create a thread that sends a PING */
-      pthread_create(&ping_thr, NULL, (void *)&ping_thread, ip);
+      send_ping(ip);
   
       return -1;
     }
@@ -236,9 +234,8 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
 /* ONLY IPv4 FOR NOW!!! */
 
 void
-ping_thread(void *_ip)
+send_ping(union olsr_ip_addr *ip)
 {
-  union olsr_ip_addr *ip;
   int ping_s;
   struct sockaddr dst;
   struct sockaddr_in *dst_in;
@@ -246,7 +243,6 @@ ping_thread(void *_ip)
   struct icmphdr *icp;
 
   dst_in = (struct sockaddr_in *) &dst;
-  ip = (union olsr_ip_addr *)_ip;
 
   dst_in->sin_family = AF_INET;
   memcpy(&dst_in->sin_addr, ip, ipsize);

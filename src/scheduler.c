@@ -19,16 +19,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.16 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: scheduler.c,v 1.17 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
-/*
- * Private functions
- */
-
-void
-scheduler(void);
 
 #include "defs.h"
 #include "scheduler.h"
@@ -42,35 +36,9 @@ scheduler(void);
 #include "build_msg.h"
 
 
-int
-init_scheduler(float poll_interval)
-{
-
-  sched_poll_interval = poll_interval;
-
-  timeout_functions = NULL;
-  event_functions = NULL;
-
-  return 1;
-}
+static float pollrate;
 
 
-/*
- * The mutex "mutex" is used to protect memory
- * between the scheduler, which runs in a thread
- * of its own, and the main thread which mainly
- * is packet processing and route calculation.
- */
-void
-start_scheduler(pthread_t *thread_id)
-{
-  /* Initialize the mutex */
-  pthread_mutex_init(&mutex, NULL);
-  /* Create the scheduler thread */
-  pthread_create(thread_id, NULL, (void *)&scheduler, NULL);
-
-  return;
-}
 
 /**
  *Main scheduler event loop. Polls at every
@@ -105,12 +73,14 @@ scheduler()
 
   struct interface *ifn;
  
-  interval_usec = (olsr_u32_t)(sched_poll_interval * 1000000);
+  pollrate = olsr_cnf->pollrate;
+
+  interval_usec = (olsr_u32_t)(pollrate * 1000000);
 
   interval.tv_sec = interval_usec / 1000000;
   interval.tv_usec = interval_usec % 1000000;
 
-  olsr_printf(1, "Scheduler started - polling every %0.2f seconds\n", sched_poll_interval);
+  olsr_printf(1, "Scheduler started - polling every %0.2f seconds\n", pollrate);
 
   olsr_printf(3, "Max jitter is %f\n\n", max_jitter);
 
@@ -122,11 +92,6 @@ scheduler()
     {
 
       gettimeofday(&start_of_loop, NULL);
-
-
-
-      /* C R I T I C A L - S E C T I O N - S T A R T */
-      pthread_mutex_lock(&mutex);
 
       /* Update the global timestamp */
       gettimeofday(&now, NULL);
@@ -171,7 +136,7 @@ scheduler()
       /* UPDATED - resets timer upon triggered execution */
       while(entry)
 	{
-	  entry->since_last += sched_poll_interval;
+	  entry->since_last += pollrate;
 
 	  /* Timed out */
 	  if((entry->since_last > entry->interval) ||
@@ -205,9 +170,6 @@ scheduler()
 	  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr])) 
 	    net_output(ifn);
 	}
-
-      /* C R I T I C A L - S E C T I O N - E N D */
-      pthread_mutex_unlock(&mutex);
 
 
       gettimeofday(&end_of_loop, NULL);

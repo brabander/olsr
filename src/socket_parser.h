@@ -19,15 +19,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.h,v 1.7 2004/11/12 20:48:19 kattemat Exp $
+ * $Id: socket_parser.h,v 1.8 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
 
 #ifndef _OLSR_SOCKET_PARSER
 #define _OLSR_SOCKET_PARSER
-
-#include <pthread.h>
 
 
 struct olsr_socket_entry
@@ -38,8 +36,6 @@ struct olsr_socket_entry
 };
 
 struct olsr_socket_entry *olsr_socket_entries;
-
-pthread_mutex_t mutex; /* Mutex for thread */
 
 
 void

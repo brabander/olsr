@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.36 2004/11/12 20:48:19 kattemat Exp $
+ * $Id: main.c,v 1.37 2004/11/12 21:20:23 kattemat Exp $
  *
  */
 
@@ -65,14 +65,6 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-#if !defined WIN32
-/*
- * Local variable declarations 
- */
-
-static pthread_t main_thread;
-#endif
-
 
 /**
  * Main entrypoint
@@ -84,9 +76,6 @@ main(int argc, char *argv[])
   /* For address convertions */
   struct in_addr in;
   struct in6_addr in6;
-
-  /* The thread for the scheduler */
-  pthread_t thread;
 
   struct if_config_options *default_ifcnf;
 
@@ -499,9 +488,6 @@ main(int argc, char *argv[])
    */
   enable_ip_forwarding(olsr_cnf->ip_version);
 
-  /* Initialize scheduler MUST HAPPEN BEFORE REGISTERING ANY FUNCTIONS! */
-  init_scheduler(olsr_cnf->pollrate);
-
   /* Initialize parser */
   olsr_init_parser();
 
@@ -621,8 +607,6 @@ main(int argc, char *argv[])
       setsid();
     }
 #endif
-  /* Starting scheduler */
-  start_scheduler(&thread);
 
   /*
    * Start syslog entry
@@ -642,12 +626,12 @@ main(int argc, char *argv[])
 #endif
 
   /* Register socket poll event */
-#if 0
   olsr_register_timeout_function(&poll_sockets);
-#endif
 
+  /* Starting scheduler */
+  scheduler();
   /* Go into listenloop */
-  listen_loop();
+  //listen_loop();
 
   /* Like we're ever going to reach this ;-) */
   return 1;
@@ -672,12 +656,6 @@ olsr_shutdown(int signal)
 #endif
 {
   struct interface *ifn;
-#ifndef WIN32
-  if(main_thread != pthread_self())
-    {
-      pthread_exit(0);
-    }
-#endif
 
   olsr_printf(1, "Received signal %d - shutting down\n", signal);
 
@@ -737,12 +715,6 @@ set_default_values()
   dup_hold_time = DUP_HOLD_TIME;
 
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
-
-
-#ifndef WIN32
-  /* Get main thread ID */
-  main_thread = pthread_self();
-#endif
 
   /* Gateway tunneling */
   use_tunnel = OLSR_FALSE;
