@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.7 2004/11/10 23:14:39 tlopatic Exp $
+ * $Id: lq_route.c,v 1.8 2004/11/10 23:30:12 tlopatic Exp $
  *
  */
 
@@ -201,7 +201,7 @@ static void free_everything(struct list *vertex_list)
 
 static struct dijk_vertex *extract_best(struct list *vertex_list)
 {
-  double best = -1.0;
+  double best = -2.0;
   struct list_node *node;
   struct dijk_vertex *vert;
   struct dijk_vertex *res = NULL;
@@ -216,7 +216,7 @@ static struct dijk_vertex *extract_best(struct list *vertex_list)
 
     // see whether the current vertex is better than what we have
 
-    if (!vert->done && vert->path_quality >= best)
+    if (!vert->done && vert->path_quality > best)
     {
       best = vert->path_quality;
       res = vert;
