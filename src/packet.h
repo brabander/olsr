@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.h,v 1.6 2004/11/01 19:27:11 tlopatic Exp $
+ * $Id: packet.h,v 1.7 2004/11/02 22:55:42 tlopatic Exp $
  *
  */
 
@@ -67,7 +67,6 @@ struct lq_hello_neighbor
   olsr_u8_t                link_type;
   olsr_u8_t                neigh_type;
   double                   link_quality;
-  union olsr_ip_addr       main;
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
 };

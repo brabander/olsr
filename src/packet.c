@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.8 2004/11/01 19:27:11 tlopatic Exp $
+ * $Id: packet.c,v 1.9 2004/11/02 22:55:42 tlopatic Exp $
  *
  */
 
@@ -532,7 +532,7 @@ olsr_build_lq_hello_packet(struct lq_hello_message *msg,
       else if (walker->neighbor->status == NOT_SYM)
         neigh->neigh_type = NOT_NEIGH;
   
-      COPY_IP(&neigh->main, &walker->neighbor->neighbor_main_addr);
+      // COPY_IP(&neigh->main, &walker->neighbor->neighbor_main_addr);
       COPY_IP(&neigh->addr, &walker->neighbor_iface_addr);
       
       olsr_printf(5, "%s - ", olsr_ip_to_string(&neigh->addr));

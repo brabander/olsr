@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.7 2004/10/20 17:11:33 tlopatic Exp $
+ * $Id: process_package.c,v 1.8 2004/11/02 22:55:43 tlopatic Exp $
  *
  */
 
@@ -50,9 +50,15 @@
 void
 olsr_init_package_process()
 {
-
+#if !defined USE_LINK_QUALITY
   olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
+#else
+  olsr_parser_add_function(&olsr_process_received_lq_hello,
+                           LQ_HELLO_MESSAGE, 1);
+  olsr_parser_add_function(&olsr_process_received_lq_tc,
+                           LQ_TC_MESSAGE, 1);
+#endif
   olsr_parser_add_function(&olsr_process_received_mid, MID_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_hna, HNA_MESSAGE, 1);
 }
@@ -97,13 +103,6 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
       //printf("MESSAGE HTIME: %f\n", message.htime);
       olsr_update_hysteresis_hello(link, message.htime);
     }
-
-#if defined USE_LINK_QUALITY
-  if (1)
-    {
-      olsr_update_packet_loss_hello_int(link, message.htime);
-    }
-#endif
 
   /* Check if we are chosen as MPR */
   if(olsr_lookup_mpr_status(&message, in_if))
@@ -645,3 +644,23 @@ olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
   return 0;
 }
 
+#if defined USE_LINK_QUALITY
+void
+olsr_process_received_lq_hello(union olsr_message *ser,
+                               struct interface *inif,
+                               union olsr_ip_addr *from)
+{
+  struct lq_hello_message deser;
+
+  lq_hello_chgestruct(&deser, ser);
+}
+
+void
+olsr_process_received_lq_tc(union olsr_message *ser, struct interface *inif,
+                            union olsr_ip_addr *from)
+{
+  struct lq_tc_message deser;
+
+  lq_tc_chgestruct(&deser, ser, from);
+}
+#endif
