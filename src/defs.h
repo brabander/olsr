@@ -43,7 +43,7 @@
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr.h" /* Everybody uses theese */
 
-#define VERSION "0.4.7-pre"
+#define VERSION "0.4.7"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
 
 #define	HOPCNT_MAX		16	/* maximum hops number */
