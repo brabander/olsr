@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.34 2005/02/25 16:03:19 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.35 2005/03/10 18:09:32 kattemat Exp $
  */
 
 
@@ -460,6 +460,7 @@ set_default_cnf(struct olsrd_config *cnf)
     memset(cnf, 0, sizeof(struct olsrd_config));
     
     cnf->debug_level = DEF_DEBUGLVL;
+    cnf->no_fork = OLSR_FALSE;
     cnf->ip_version  = AF_INET;
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;

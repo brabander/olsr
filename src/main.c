@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.68 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: main.c,v 1.69 2005/03/10 18:09:32 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -342,7 +342,7 @@ main(int argc, char *argv[])
 
   /* daemon mode */
 #ifndef WIN32
-  if (olsr_cnf->debug_level == 0)
+  if((olsr_cnf->debug_level == 0) && (!olsr_cnf->no_fork))
     {
       printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
       if (fork() != 0)
@@ -500,7 +500,7 @@ print_usage()
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
-  fprintf(stderr, "  [-T <Polling Rate (secs)>]\n"); 
+  fprintf(stderr, "  [-T <Polling Rate (secs)>] [-nofork]\n"); 
 
 }
 
@@ -742,6 +742,13 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-delgw") == 0) 
 	{
 	  del_gws = OLSR_TRUE;
+	  continue;
+	}
+
+
+      if (strcmp(*argv, "-nofork") == 0) 
+	{
+	  cnf->no_fork = OLSR_TRUE;
 	  continue;
 	}
 

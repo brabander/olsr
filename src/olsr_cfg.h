@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.21 2005/02/25 22:48:15 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.22 2005/03/10 18:09:32 kattemat Exp $
  */
 
 
@@ -187,6 +187,7 @@ struct ipc_net
 struct olsrd_config
 {
   int                      debug_level;
+  olsr_bool                no_fork;
   int                      ip_version;
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;

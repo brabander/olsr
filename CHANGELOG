@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.37 2005/03/09 23:46:44 tlopatic Exp $
+$Id: CHANGELOG,v 1.38 2005/03/10 18:11:27 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ IPV6 SOCKETS
 The socket option IPV6_V6ONLY is now set on IPv6 sockets in linux.
 This means that olsrd will no longer receive IPv4 traffic when
 running in IPv6 mode.
-this should enable users to actually run one olsrd instance using
+This should enable users to actually run one olsrd instance using
 IPv6 and one using IPv4 at the same time :)
 
 PLUGINS
@@ -117,6 +117,7 @@ OTHER UPDATES
 - Broadcastflag is not checked on interface if fixed broadcast is
   set in config.
 - Removed Linux link layer code as this was not really in use.
+- Added -nofork command line option
 
 BUGFIXES
 
