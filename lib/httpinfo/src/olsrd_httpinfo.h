@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.2 2004/12/16 14:58:54 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.3 2004/12/16 18:35:26 kattemat Exp $
  */
 
 /*
@@ -171,6 +171,48 @@ static const char *http_ok_tail[] =
     NULL
 };
 
+
+
+static const char *http_frame[] =
+{
+  "<P>\n<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
+  "<TR BGCOLOR=\"#CFCFCF\">\n<TH ALIGN=left><B>%s</B></TH>\n",
+  "</TR><TR BGCOLOR=\"#ECECEC\">\n",
+  "<TD>\n",
+  "<P>\n",
+  "<pre>\n",
+  "<!-- BODY -->",
+  "</pre>\n",
+  "</TD>\n",
+  "</TR>\n",
+  "</TABLE>\n",
+  NULL
+};
+
+static const char *http_double_frame[] =
+{
+  "<P>\n",
+  "<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
+  "<TR BGCOLOR=\"#CFCFCF\">\n",
+  "<TH ALIGN=left width=50\%><B>Registered MID</B></TH>\n"
+  "<TH ALIGN=left width=50\%><B>Local Interfaces</B></TH></TR>\n",
+  "<TR BGCOLOR=\"#ECECEC\">\n",
+  "<TD>\n",
+  "<P>\n",
+  "<pre>\n",
+  "INFO\n",
+  "</pre>\n",
+  "</TD>\n",
+  "<TD>\n",
+  "<P>\n",
+  "<pre>\n",
+  "INFO\n",
+  "</pre>\n",
+  "</TD>\n",
+  "</TR>\n",
+  "</TABLE>\n",
+  NULL
+};
 
 
 typedef enum

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.3 2004/12/16 15:26:20 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.4 2004/12/16 18:35:26 kattemat Exp $
  */
 
 /*
@@ -67,6 +67,16 @@ build_http_header(http_header_type, olsr_u32_t, char *, olsr_u32_t);
 
 int
 build_body(char *, olsr_u32_t);
+
+static int
+build_frame(char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
+
+int
+build_hello_body(char *, olsr_u32_t);
+
+int
+build_topo_body(char *, olsr_u32_t);
+
 
 static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
@@ -229,7 +239,11 @@ parse_http_request(int fd)
           }
       printf("\n\n");
       /* All is good */
-      build_body(body, sizeof(body));
+
+      build_frame("Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hello_body);
+      build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
+
+	//build_body(body, sizeof(body));
       i = 0;
       while(http_ok_tail[i])
           {
@@ -366,10 +380,7 @@ build_body(char *buf, olsr_u32_t bufsize)
 {
   int size;
   olsr_u8_t index;
-  struct neighbor_entry *neighbor_table_tmp;
-  struct neighbor_2_list_entry *list_2;
   struct tc_entry *entry;
-  struct topo_dst *dst_entry;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
 
@@ -380,56 +391,9 @@ build_body(char *buf, olsr_u32_t bufsize)
   strcat(buf, "NEIGHBORS:\n");
   
   
-  /* Neighbors */
-  for(index=0;index<HASHSIZE;index++)
-    {
-	  
-      for(neighbor_table_tmp = neighbortable[index].next;
-	  neighbor_table_tmp != &neighbortable[index];
-	  neighbor_table_tmp = neighbor_table_tmp->next)
-	{
-	  if(neighbor_table_tmp->is_mpr)
-	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s(MPR)\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
-	    }
-	  else
-	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
-	    }
-
-	  for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
-	      list_2 != &neighbor_table_tmp->neighbor_2_list;
-	      list_2 = list_2->next)
-	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
-	    }
-	      
-	}
-    }
 
   strcat(buf, "TOPOLOGY:\n");
 
-  /* Topology */  
-  for(index=0;index<HASHSIZE;index++)
-    {
-      /* For all TC entries */
-      entry = tc_table[index].next;
-      while(entry != &tc_table[index])
-	{
-	  /* For all destination entries of that TC entry */
-	  dst_entry = entry->destinations.next;
-	  while(dst_entry != &entry->destinations)
-	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(&entry->T_last_addr), olsr_ip_to_string(&dst_entry->T_dest_addr));
-	      dst_entry = dst_entry->next;
-	    }
-	  entry = entry->next;
-	}
-    }
 
   strcat(buf, "HNA:\n");
 
@@ -464,6 +428,98 @@ build_body(char *buf, olsr_u32_t bufsize)
 }
 
 
+static int
+build_frame(char *title, char *buf, olsr_u32_t size, int(*frame_body_cb)(char *, olsr_u32_t))
+{
+  int i;
+  printf("Building frame \"%s\"\n", title);
+  strcat(buf, http_frame[0]);
+  sprintf(&buf[strlen(buf)], http_frame[1], title);
+
+  i = 2;
+
+  while(http_frame[i])
+    {
+      if(!strcmp(http_frame[i], "<!-- BODY -->"))
+	frame_body_cb(&buf[strlen(buf)], size - strlen(buf));
+      else
+	strcat(buf, http_frame[i]);      
+
+      i++;
+    }
+
+  return strlen(buf);
+}
+
+
+int
+build_hello_body(char *buf, olsr_u32_t bufsize)
+{
+  struct neighbor_entry *neighbor_table_tmp;
+  struct neighbor_2_list_entry *list_2;
+  int size = 0, index;
+
+  printf("Build hello\n\n");
+  /* Neighbors */
+  for(index=0;index<HASHSIZE;index++)
+    {
+      for(neighbor_table_tmp = neighbortable[index].next;
+	  neighbor_table_tmp != &neighbortable[index];
+	  neighbor_table_tmp = neighbor_table_tmp->next)
+	{
+	  if(neighbor_table_tmp->is_mpr)
+	    {
+	      size = strlen(buf);
+	      sprintf(&buf[size], "%s -> %s(MPR)\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
+	    }
+	  else
+	    {
+	      size = strlen(buf);
+	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
+	    }
+	  
+	  for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
+	      list_2 != &neighbor_table_tmp->neighbor_2_list;
+	      list_2 = list_2->next)
+	    {
+	      size = strlen(buf);
+	      sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+	    }
+	      
+	}
+    }
+
+}
+
+
+
+int
+build_topo_body(char *buf, olsr_u32_t bufsize)
+{
+  int size;
+  olsr_u8_t index;
+  struct tc_entry *entry;
+  struct topo_dst *dst_entry;
+
+  /* Topology */  
+  for(index=0;index<HASHSIZE;index++)
+    {
+      /* For all TC entries */
+      entry = tc_table[index].next;
+      while(entry != &tc_table[index])
+	{
+	  /* For all destination entries of that TC entry */
+	  dst_entry = entry->destinations.next;
+	  while(dst_entry != &entry->destinations)
+	    {
+	      size = strlen(buf);
+	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(&entry->T_last_addr), olsr_ip_to_string(&dst_entry->T_dest_addr));
+	      dst_entry = dst_entry->next;
+	    }
+	  entry = entry->next;
+	}
+    }
+}
 
 
 /**
