@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.h,v 1.10 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: process_package.h,v 1.11 2005/02/20 17:34:10 kattemat Exp $
  */
 
 
@@ -45,6 +45,7 @@
 
 #include "olsr_protocol.h"
 #include "mpr.h"
+#include "packet.h"
 
 void
 olsr_init_package_process(void);

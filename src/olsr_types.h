@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.1 2005/02/20 17:24:50 kattemat Exp $
+ * $Id: olsr_types.h,v 1.2 2005/02/20 17:34:10 kattemat Exp $
  */
 
 /*
@@ -103,6 +103,12 @@ union olsr_ip_addr
 {
   olsr_u32_t v4;
   struct in6_addr v6;
+};
+
+union hna_netmask
+{
+  olsr_u32_t v4;
+  olsr_u16_t v6;
 };
 
 

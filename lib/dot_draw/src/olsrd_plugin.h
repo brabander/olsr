@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.14 2005/02/20 17:27:15 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.15 2005/02/20 17:33:43 kattemat Exp $
  */
 
 /*
@@ -60,12 +60,6 @@
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"
-/* hna_netmask (declared in packet.h) */
-union hna_netmask
-{
-  olsr_u32_t v4;
-  olsr_u16_t v6;
-};
 #include "hna_set.h"
 #include "mid_set.h"
 #include "link_set.h"

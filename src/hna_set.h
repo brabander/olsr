@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.h,v 1.12 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: hna_set.h,v 1.13 2005/02/20 17:34:10 kattemat Exp $
  */
 
 
@@ -45,7 +45,7 @@
 #define _OLSR_HNA
 
 #include "hashing.h"
-#include "packet.h"
+#include "olsr_types.h"
 
 /* hna_netmask declared in packet.h */
 

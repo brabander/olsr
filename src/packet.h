@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.15 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: packet.h,v 1.16 2005/02/20 17:34:10 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -45,15 +45,6 @@
 
 #include "olsr_protocol.h"
 #include "interfaces.h"
-
-
-
-
-union hna_netmask
-{
-  olsr_u32_t v4;
-  olsr_u16_t v6;
-};
 
 struct hello_neighbor
 {

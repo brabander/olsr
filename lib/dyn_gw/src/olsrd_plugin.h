@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.12 2005/02/20 17:27:15 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.13 2005/02/20 17:33:43 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -59,14 +59,6 @@
 #define PLUGIN_AUTHOR   "Various artists"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
-
-/* hna_netmask (declared in packet.h) */
-union hna_netmask
-{
-  olsr_u32_t v4;
-  olsr_u16_t v6;
-};
-
 
 /****************************************************************************
  *                Function pointers to functions in olsrd                   *
