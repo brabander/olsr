@@ -1,9 +1,7 @@
 #
 # UniK OLSR daemon config file
 #
-# Lines starting with a # are discarded.
-# To use default values - just comment
-# out the options.
+# Lines starting with a # are discarded
 #
 
 # Debug level(0-9)
@@ -12,7 +10,6 @@
 DebugLevel	1
 
 # IP version to use (4 or 6)
-# Defaults to IPv4
 
 IpVersion	4
 
@@ -31,7 +28,6 @@ Hna4
 # HNA IPv6 routes
 # syntax: netaddr prefix
 # Example Internet gateway:
-# :: 0
 Hna6
 {
      ::              0
@@ -41,16 +37,6 @@ Hna6
     fec0:2200:106:0:0:0:0:0 48
 }
 
-# Interfaces and their rulesets
-Interface "eth0"
-{
-    Setup "lan"
-}
-
-Interface "eth1"
-{
-    Setup "wlan"
-}
 
 # Should olsrd keep on running even if there are
 # no interfaces available? This is a good idea
@@ -61,15 +47,15 @@ AllowNoInt	yes
 
 # TOS(type of service) value for
 # the IP header of control traffic.
-# auto is 16
+# If not set it will default to 16
 
-TosValue	auto
+#TosValue	16
 
 # The fixed willingness to use(0-7)
-# or "auto" to set willingness dynammically
-# based on battery/power status
+# If not set willingness will be calculated
+# dynammically based on battery/power status
 
-Willingness    	auto
+#Willingness    	4
 
 # Allow processes like the GUI front-end
 # to connect to the daemon. 'yes' or 'no'
@@ -99,7 +85,7 @@ UseHysteresis	yes
 
 
 # Polling rate in seconds(float). 
-# Auto uses default value 0.1 sec
+# Default value 0.1 sec
 
 Pollrate	0.1
 
@@ -154,7 +140,12 @@ LoadPlugin "olsrd_dyn_gw.so.0.1"
 # olsrd_power.so.0.1
 
 
-IfSetup "lan"
+
+
+# Interfaces and their rules
+# Omitted options will be set to the
+# default values.
+Interface "eth0"
 {
 
     # IPv4 broadcast address to use. The
@@ -209,13 +200,10 @@ IfSetup "lan"
 
     # HNA validity time
     # HnaValidityTime 	15.0
-
 }
 
-
-IfSetup "wlan"
+Interface "eth1"
 {
-
     # IPv4 broadcast address to use. The
     # one usefull example would be 255.255.255.255
     # If not defined the broadcastaddress
