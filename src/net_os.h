@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.8 2005/02/17 19:47:10 kattemat Exp $
+ * $Id: net_os.h,v 1.9 2005/02/23 21:06:08 spoggle Exp $
  */
 
 
@@ -68,6 +68,13 @@ olsr_recvfrom(int,
 	      int, 
 	      struct sockaddr *,
 	      socklen_t *);
+
+int
+olsr_select(int, 
+	    fd_set *, 
+	    fd_set *, 
+	    fd_set *, 
+	    struct timeval *);
 
 int
 bind_socket_to_device(int, char *);

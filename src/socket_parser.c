@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.18 2005/01/22 01:08:48 kattemat Exp $
+ * $Id: socket_parser.c,v 1.19 2005/02/23 21:06:08 spoggle Exp $
  */
 
 #include <unistd.h>
@@ -176,7 +176,7 @@ poll_sockets()
     }
       
   /* Runnig select on the FD set */
-  n = select(hfd, &ibits, 0, 0, &tvp);
+  n = olsr_select(hfd, &ibits, 0, 0, &tvp);
   
   if(n == 0)
     return;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.14 2005/02/14 16:55:37 kattemat Exp $
+ * $Id: net.c,v 1.15 2005/02/23 21:06:08 spoggle Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -329,3 +329,20 @@ olsr_recvfrom(int  s,
 		  fromlen);
 }
 
+/**
+ * Wrapper for select(2)
+ */
+
+int
+olsr_select(int nfds,
+            fd_set *readfds,
+            fd_set *writefds,
+            fd_set *exceptfds,
+            struct timeval *timeout)
+{
+  return select(nfds,
+                readfds,
+                writefds,
+                exceptfds,
+                timeout);
+}
