@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.c,v 1.9 2004/10/19 21:06:34 kattemat Exp $
+ * $Id: interfaces.c,v 1.10 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -176,9 +176,9 @@ queue_if(char *name)
 
   /* strlen () does not return length including terminating /0 */
   interf_n->name = olsr_malloc(strlen(name) + 1, "queue interface name");
-  interf_n->cnf = get_default_ifcnf(olsr_cnf);
-  interf_n->configured = 0;
+  interf_n->cnf = NULL;
   interf_n->interf = NULL;
+  interf_n->configured = 0;
   interf_n->index = olsr_cnf->ifcnt++;
 
   strcpy(interf_n->name, name);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.6 2004/11/01 19:27:10 tlopatic Exp $
+ * $Id: olsr_protocol.h,v 1.7 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -43,6 +43,7 @@
 
 /* types */
 #include <sys/types.h>
+
 
 #ifdef linux
 

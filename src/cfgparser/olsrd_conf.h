@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.h,v 1.6 2004/10/19 20:20:26 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.7 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -30,7 +30,7 @@
 #include "olsr_protocol.h"
 #include "../olsr_cfg.h"
 
-#define PARSER_VERSION "0.1.1"
+#define PARSER_VERSION "0.1.2"
 
 
 int current_line;
@@ -48,10 +48,5 @@ struct conf_token
 void
 set_default_cnf(struct olsrd_config *);
 
-struct if_config_options *
-find_if_rule_by_name(struct if_config_options *, char *);
-
-struct if_config_options *
-get_default_if_config(void);
 
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.9 2004/10/20 10:33:20 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.10 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -120,7 +120,6 @@ struct olsrd_config *
 olsrd_parse_cnf(char *filename)
 {
   struct olsr_if *in;
-  struct if_config_options *io;
 
   cnf = malloc(sizeof(struct olsrd_config));
   if (cnf == NULL)
@@ -154,67 +153,21 @@ olsrd_parse_cnf(char *filename)
   
   fclose(yyin);
 
-  /* Add default ruleset */
 
-  io = get_default_if_config();
-  io->name = malloc(strlen(DEFAULT_IF_CONFIG_NAME) + 1);
-  strcpy(io->name, DEFAULT_IF_CONFIG_NAME);
-
-  /* Queue */
-  io->next = cnf->if_options;
-  cnf->if_options = io;
-
-  /* Verify and set up interface rulesets */
   in = cnf->interfaces;
 
   while(in)
     {
-      in->cnf = find_if_rule_by_name(cnf->if_options, in->config);
-
-      if(in->cnf == NULL)
-	{
-	  fprintf(stderr, "ERROR: Could not find a matching ruleset \"%s\" for %s\n", in->config, in->name);
-	  olsrd_free_cnf(cnf);
-	  exit(0);
-	}
       /* set various stuff */
       in->index = cnf->ifcnt++;
       in->configured = 0;
       in->interf = NULL;
-      /* Calculate max jitter */
       in = in->next;
     }
 
 
   return cnf;
 }
-
-
-
-
-struct olsrd_config *
-olsrd_get_default_cnf()
-{
-  cnf = malloc(sizeof(struct olsrd_config));
-  if (cnf == NULL)
-    {
-      fprintf(stderr, "Out of memory %s\n", __func__);
-      return NULL;
-  }
-
-  set_default_cnf(cnf);
-
-  cnf->if_options = get_default_if_config();
-  cnf->if_options->name = malloc(strlen(DEFAULT_IF_CONFIG_NAME) + 1);
-  strcpy(cnf->if_options->name, DEFAULT_IF_CONFIG_NAME);
-
-  return cnf;
-}
-
-
-
-
-
 
 
 void
@@ -224,7 +177,7 @@ olsrd_free_cnf(struct olsrd_config *cnf)
   struct hna6_entry        *h6d, *h6 = cnf->hna6_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
-  struct if_config_options *iod, *io = cnf->if_options;
+  struct if_config_options *iod, *io;
   
   while(h4)
     {
@@ -242,6 +195,13 @@ olsrd_free_cnf(struct olsrd_config *cnf)
 
   while(in)
     {
+      io = in->cnf;
+      while(io)
+	{
+	  iod = io;
+	  io = io->next;
+	  free(iod);
+	}
       ind = in;
       in = in->next;
       free(ind->name);
@@ -257,16 +217,26 @@ olsrd_free_cnf(struct olsrd_config *cnf)
       free(ped);
     }
 
-  while(io)
-    {
-      iod = io;
-      io = io->next;
-      free(iod->name);
-      free(iod);
-    }
-
   return;
 }
+
+
+
+struct olsrd_config *
+olsrd_get_default_cnf()
+{
+  cnf = malloc(sizeof(struct olsrd_config));
+  if (cnf == NULL)
+    {
+      fprintf(stderr, "Out of memory %s\n", __func__);
+      return NULL;
+  }
+
+  set_default_cnf(cnf);
+
+  return cnf;
+}
+
 
 
 
@@ -275,19 +245,19 @@ set_default_cnf(struct olsrd_config *cnf)
 {
     memset(cnf, 0, sizeof(struct olsrd_config));
     
-    cnf->debug_level = 1;
+    cnf->debug_level = DEF_DEBUGLVL;
     cnf->ip_version  = AF_INET;
-    cnf->allow_no_interfaces = 1;
-    cnf->tos = 16;
-    cnf->willingness_auto = 1;
-    cnf->open_ipc = 0;
+    cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
+    cnf->tos = DEF_TOS;
+    cnf->willingness_auto = DEF_WILL_AUTO;
+    cnf->open_ipc = DEF_OPEN_IPC;
 
-    cnf->use_hysteresis = 1;
+    cnf->use_hysteresis = DEF_USE_HYST;
     cnf->hysteresis_param.scaling = HYST_SCALING;
     cnf->hysteresis_param.thr_high = HYST_THRESHOLD_HIGH;
     cnf->hysteresis_param.thr_low = HYST_THRESHOLD_LOW;
 
-    cnf->pollrate = 0.1;
+    cnf->pollrate = DEF_POLLRATE;
 
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
@@ -304,7 +274,7 @@ get_default_if_config()
  
   memset(io, 0, sizeof(struct if_config_options));
 
-  io->ipv6_addrtype = 1;
+  io->ipv6_addrtype = 1; /* XXX - FixMe */
 
   if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
     {
@@ -345,7 +315,6 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   struct hna6_entry        *h6 = cnf->hna6_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
-  struct if_config_options *io = cnf->if_options;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -367,7 +336,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "# Debug level(0-9)\n# If set to 0 the daemon runs in the background\n\nDebugLevel\t%d\n\n", cnf->debug_level);
 
   /* IP version */
-  fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version);
+  if(cnf->ip_version == AF_INET6)
+    fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t6\n\n");
+  else
+    fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t4\n\n");
 
 
   /* HNA IPv4 */
@@ -392,23 +364,6 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
     }
 
   fprintf(fd, "}\n\n");
-
-
-  /* Interfaces */
-  fprintf(fd, "# Interfaces and their rulesets\n\n");
-  /* Interfaces */
-  if(in)
-    {
-      while(in)
-	{
-	  fprintf(fd, "Interface \"%s\"\n{\n", in->name);
-	  fprintf(fd, "    Setup\"%s\"\n", in->config);
-	  fprintf(fd, "}\n\n");
-	  in = in->next;
-	}
-    }
-  fprintf(fd, "\n");
-
 
   /* No interfaces */
   fprintf(fd, "# Should olsrd keep on running even if there are\n# no interfaces available? This is a good idea\n# for a PCMCIA/USB hotswap environment.\n# \"yes\" OR \"no\"\n\nAllowNoInt\t");
@@ -479,58 +434,91 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
 	  fprintf(fd, "}\n");
 	}
     }
-	  fprintf(fd, "\n");
+  fprintf(fd, "\n");
 
-  /* Rulesets */
-  while(io)
+  
+  
+
+  /* Interfaces */
+  fprintf(fd, "# Interfaces\n\n");
+  /* Interfaces */
+  if(in)
     {
-      fprintf(fd, "IfSetup \"%s\"\n{\n", io->name);
-
+      while(in)
+	{
+	  fprintf(fd, "Interface \"%s\"\n{\n", in->name);
+	  fprintf(fd, "\n");
       
-      fprintf(fd, "    # IPv4 broadcast address to use. The\n    # one usefull example would be 255.255.255.255\n    # If not defined the broadcastaddress\n    # every card is configured with is used\n\n");
+	  fprintf(fd, "    # IPv4 broadcast address to use. The\n    # one usefull example would be 255.255.255.255\n    # If not defined the broadcastaddress\n    # every card is configured with is used\n\n");
 
-      if(io->ipv4_broadcast.v4)
-	{
-	  in4.s_addr = io->ipv4_broadcast.v4;
-	  fprintf(fd, "    Ip4Broadcast\t %s\n\n", inet_ntoa(in4));
+	  if(in->cnf->ipv4_broadcast.v4)
+	    {
+	      in4.s_addr = in->cnf->ipv4_broadcast.v4;
+	      fprintf(fd, "    Ip4Broadcast\t %s\n\n", inet_ntoa(in4));
+	    }
+	  else
+	    {
+	      fprintf(fd, "    #Ip4Broadcast\t255.255.255.255\n\n");
+	    }
+	  
+	  
+	  fprintf(fd, "    # IPv6 address scope to use.\n    # Must be 'site-local' or 'global'\n\n");
+	  if(in->cnf->ipv6_addrtype)
+	    fprintf(fd, "    Ip6AddrType \tsite-local\n\n");
+	  else
+	    fprintf(fd, "    Ip6AddrType \tglobal\n\n");
+	  
+	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using site-local addresses.\n    # If not defined, ff05::15 is used\n");
+	  fprintf(fd, "    Ip6MulticastSite\t%s\n\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
+	  fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  
+	  
+	  
+	  fprintf(fd, "    # Emission and validity intervals.\n    # If not defined, RFC proposed values will\n    # in most cases be used.\n\n");
+	  
+	  
+	  if(in->cnf->hello_params.emission_interval != HELLO_INTERVAL)
+	    fprintf(fd, "    HelloInterval\t%0.2f\n", in->cnf->hello_params.emission_interval);
+	  else
+	    fprintf(fd, "    #HelloInterval\t%0.2f\n", in->cnf->hello_params.emission_interval);
+	  if(in->cnf->hello_params.validity_time != NEIGHB_HOLD_TIME)
+	    fprintf(fd, "    HelloValidityTime\t%0.2f\n", in->cnf->hello_params.validity_time);
+	  else
+	    fprintf(fd, "    #HelloValidityTime\t%0.2f\n", in->cnf->hello_params.validity_time);
+	  if(in->cnf->tc_params.emission_interval != TC_INTERVAL)
+	    fprintf(fd, "    TcInterval\t\t%0.2f\n", in->cnf->tc_params.emission_interval);
+	  else
+	    fprintf(fd, "    #TcInterval\t\t%0.2f\n", in->cnf->tc_params.emission_interval);
+	  if(in->cnf->tc_params.validity_time != TOP_HOLD_TIME)
+	    fprintf(fd, "    TcValidityTime\t%0.2f\n", in->cnf->tc_params.validity_time);
+	  else
+	    fprintf(fd, "    #TcValidityTime\t%0.2f\n", in->cnf->tc_params.validity_time);
+	  if(in->cnf->mid_params.emission_interval != MID_INTERVAL)
+	    fprintf(fd, "    MidInterval\t\t%0.2f\n", in->cnf->mid_params.emission_interval);
+	  else
+	    fprintf(fd, "    #MidInterval\t%0.2f\n", in->cnf->mid_params.emission_interval);
+	  if(in->cnf->mid_params.validity_time != MID_HOLD_TIME)
+	    fprintf(fd, "    MidValidityTime\t%0.2f\n", in->cnf->mid_params.validity_time);
+	  else
+	    fprintf(fd, "    #MidValidityTime\t%0.2f\n", in->cnf->mid_params.validity_time);
+	  if(in->cnf->hna_params.emission_interval != HNA_INTERVAL)
+	    fprintf(fd, "    HnaInterval\t\t%0.2f\n", in->cnf->hna_params.emission_interval);
+	  else
+	    fprintf(fd, "    #HnaInterval\t%0.2f\n", in->cnf->hna_params.emission_interval);
+	  if(in->cnf->hna_params.validity_time != HNA_HOLD_TIME)
+	    fprintf(fd, "    HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
+	  else
+	    fprintf(fd, "    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
+	  
+	  
+	  
+	  fprintf(fd, "}\n\n");
+	  in = in->next;
 	}
-      else
-	{
-	  fprintf(fd, "    #Ip4Broadcast\t255.255.255.255\n\n");
-	}
 
-
-      fprintf(fd, "    # IPv6 address scope to use.\n    # Must be 'site-local' or 'global'\n\n");
-      if(io->ipv6_addrtype)
-	fprintf(fd, "    Ip6AddrType \tsite-local\n\n");
-      else
-	fprintf(fd, "    Ip6AddrType \tglobal\n\n");
-
-      fprintf(fd, "    # IPv6 multicast address to use when\n    # using site-local addresses.\n    # If not defined, ff05::15 is used\n");
-      fprintf(fd, "    Ip6MulticastSite\t%s\n\n", (char *)inet_ntop(AF_INET6, &io->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
-      fprintf(fd, "    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
-      fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", (char *)inet_ntop(AF_INET6, &io->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
-
-
-
-      fprintf(fd, "    # Emission intervals.\n    # If not defined, RFC proposed values will\n    # in most cases be used.\n\n");
-
-
-      fprintf(fd, "    HelloInterval\t%0.2f\n", io->hello_params.emission_interval);
-      fprintf(fd, "    HelloValidityTime\t%0.2f\n", io->hello_params.validity_time);
-      fprintf(fd, "    TcInterval\t\t%0.2f\n", io->tc_params.emission_interval);
-      fprintf(fd, "    TcValidityTime\t%0.2f\n", io->tc_params.validity_time);
-      fprintf(fd, "    MidInterval\t\t%0.2f\n", io->mid_params.emission_interval);
-      fprintf(fd, "    MidValidityTime\t%0.2f\n", io->mid_params.validity_time);
-      fprintf(fd, "    HnaInterval\t\t%0.2f\n", io->hna_params.emission_interval);
-      fprintf(fd, "    HnaValidityTime\t%0.2f\n", io->hna_params.validity_time);
-
-
-
-      io = io->next;
-
-      fprintf(fd, "}\n\n\n");
     }
+
 
   fprintf(fd, "\n# END AUTOGENERATED CONFIG\n");
 
@@ -551,7 +539,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   struct hna6_entry        *h6 = cnf->hna6_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
-  struct if_config_options *io = cnf->if_options;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -586,50 +573,46 @@ olsrd_print_cnf(struct olsrd_config *cnf)
       printf("Interfaces:\n");
       while(in)
 	{
-	  printf("\tdev: \"%s\" ruleset: \"%s\"\n", in->name, in->config);
+	  printf(" dev: \"%s\"\n", in->name);
+	  
+	  if(in->cnf->ipv4_broadcast.v4)
+	    {
+	      in4.s_addr = in->cnf->ipv4_broadcast.v4;
+	      printf("\tIPv4 broadcast        : %s\n", inet_ntoa(in4));
+	    }
+	  else
+	    {
+	      printf("\tIPv4 broadcast        : AUTO\n");
+	    }
+	  
+	  if(in->cnf->ipv6_addrtype)
+	    printf("\tIPv6 addrtype         : site-local\n");
+	  else
+	    printf("\tIPv6 addrtype         : global\n");
+	  
+	  //union olsr_ip_addr       ipv6_multi_site;
+	  //union olsr_ip_addr       ipv6_multi_glbl;
+	  printf("\tIPv6 multicast site   : %s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  printf("\tIPv6 multicast global : %s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  
+	  printf("\tHELLO emission int    : %0.2f\n", in->cnf->hello_params.emission_interval);
+	  printf("\tHELLO validity time   : %0.2f\n", in->cnf->hello_params.validity_time);
+	  printf("\tTC emission int       : %0.2f\n", in->cnf->tc_params.emission_interval);
+	  printf("\tTC validity time      : %0.2f\n", in->cnf->tc_params.validity_time);
+	  printf("\tMID emission int      : %0.2f\n", in->cnf->mid_params.emission_interval);
+	  printf("\tMID validity time     : %0.2f\n", in->cnf->mid_params.validity_time);
+	  printf("\tHNA emission int      : %0.2f\n", in->cnf->hna_params.emission_interval);
+	  printf("\tHNA validity time     : %0.2f\n", in->cnf->hna_params.validity_time);
+	  
+	  
+	  
 	  in = in->next;
+
 	}
     }
 
-  /* Rulesets */
-  while(io)
-    {
-      printf("Interface ruleset \"%s\":\n", io->name);
-
-      
-      if(io->ipv4_broadcast.v4)
-	{
-	  in4.s_addr = io->ipv4_broadcast.v4;
-	  printf("\tIPv4 broadcast        : %s\n", inet_ntoa(in4));
-	}
-      else
-	{
-	  printf("\tIPv4 broadcast        : AUTO\n");
-	}
-
-      if(io->ipv6_addrtype)
-	printf("\tIPv6 addrtype         : site-local\n");
-      else
-	printf("\tIPv6 addrtype         : global\n");
-
-      //union olsr_ip_addr       ipv6_multi_site;
-      //union olsr_ip_addr       ipv6_multi_glbl;
-      printf("\tIPv6 multicast site   : %s\n", (char *)inet_ntop(AF_INET6, &io->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
-      printf("\tIPv6 multicast global : %s\n", (char *)inet_ntop(AF_INET6, &io->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
-
-      printf("\tHELLO emission int    : %0.2f\n", io->hello_params.emission_interval);
-      printf("\tHELLO validity time   : %0.2f\n", io->hello_params.validity_time);
-      printf("\tTC emission int       : %0.2f\n", io->tc_params.emission_interval);
-      printf("\tTC validity time      : %0.2f\n", io->tc_params.validity_time);
-      printf("\tMID emission int      : %0.2f\n", io->mid_params.emission_interval);
-      printf("\tMID validity time     : %0.2f\n", io->mid_params.validity_time);
-      printf("\tHNA emission int      : %0.2f\n", io->hna_params.emission_interval);
-      printf("\tHNA validity time     : %0.2f\n", io->hna_params.validity_time);
 
 
-
-      io = io->next;
-    }
 
   /* Plugins */
   if(pe)
@@ -683,17 +666,3 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 }
 
 
-
-
-struct if_config_options *
-find_if_rule_by_name(struct if_config_options *io, char *name)
-{
-
-  while(io)
-    {
-      if(strcmp(io->name, name) == 0)
-	return io;
-      io = io->next;
-    }
-  return NULL;
-}

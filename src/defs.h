@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.17 2004/10/19 20:18:00 kattemat Exp $
+ * $Id: defs.h,v 1.18 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -39,6 +39,7 @@
 
 #define UP             1
 #define DOWN           0
+
 
 #include "log.h"
 #include "olsr_protocol.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.1 2004/10/19 19:26:33 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.2 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -27,6 +27,14 @@
 #ifndef _OLSRD_CFGPARSER_H
 #define _OLSRD_CFGPARSER_H
 
+/* Default valuse not declared in olsr_protocol.h */
+#define DEF_POLLRATE       0.1
+#define DEF_WILL_AUTO      1
+#define DEF_ALLOW_NO_INTS  1
+#define DEF_TOS            16
+#define DEF_DEBUGLVL       1
+#define DEF_OPEN_IPC       0
+#define DEF_USE_HYST       1
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
@@ -60,8 +68,6 @@ struct interface
 
 #endif
 
-#define DEFAULT_IF_CONFIG_NAME "default_ifcfg"
-
 struct olsr_msg_params
 {
   float                    emission_interval;
@@ -70,7 +76,6 @@ struct olsr_msg_params
 
 struct if_config_options
 {
-  char                     *name;
   union olsr_ip_addr       ipv4_broadcast;
   int                      ipv6_addrtype;
   union olsr_ip_addr       ipv6_multi_site;
@@ -82,12 +87,14 @@ struct if_config_options
   struct if_config_options *next;
 };
 
+
+
 struct olsr_if
 {
   char                     *name;
   char                     *config;
-  int                      configured;
   int                      index;
+  int                      configured;
   struct interface         *interf;
   struct if_config_options *cnf;
   struct olsr_if           *next;
@@ -143,7 +150,6 @@ struct olsrd_config
   struct hna6_entry        *hna6_entries;
   struct olsr_if           *interfaces;
   olsr_u16_t               ifcnt;
-  struct if_config_options *if_options;
 };
 
 
@@ -154,9 +160,6 @@ struct olsrd_config
 struct olsrd_config *
 olsrd_parse_cnf(char *);
 
-struct olsrd_config *
-olsrd_get_default_cnf(void);
-
 void
 olsrd_free_cnf(struct olsrd_config *);
 
@@ -165,5 +168,11 @@ olsrd_print_cnf(struct olsrd_config *);
 
 int
 olsrd_write_cnf(struct olsrd_config *, char *);
+
+struct if_config_options *
+get_default_if_config(void);
+
+struct olsrd_config *
+olsrd_get_default_cnf(void);
 
 #endif

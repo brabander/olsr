@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.19 2004/10/20 18:21:00 kattemat Exp $
+ * $Id: main.c,v 1.20 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -59,6 +59,8 @@ print_usage(void);
 static void
 set_default_values(void);
 
+static int
+set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
 /*
  * End: Local function prototypes
@@ -71,6 +73,9 @@ set_default_values(void);
 int
 main(int argc, char *argv[])
 {
+  /* For address convertions */
+  struct in_addr in;
+  struct in6_addr in6;
 
   /* The thread for the scheduler */
   pthread_t thread;
@@ -180,7 +185,7 @@ main(int argc, char *argv[])
    */
 
   get_config(conf_file_name);
-  default_ifcnf = get_default_ifcnf(olsr_cnf);
+  default_ifcnf = get_default_if_config();
   
   if(default_ifcnf == NULL)
     {
@@ -225,7 +230,6 @@ main(int argc, char *argv[])
 	  continue;
 	}
 
-#if 0
       /*
        *Broadcast address
        */
@@ -244,12 +248,11 @@ main(int argc, char *argv[])
 	      continue;
 	    }
 		 
-	  memcpy(&bcastaddr.sin_addr, &in.s_addr, sizeof(olsr_u32_t));
+	  memcpy(&default_ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));
 
 
 	  continue;
 	}
-#endif
 
       /*
        * Enable additional debugging information to be logged.
@@ -411,7 +414,6 @@ main(int argc, char *argv[])
 
 	  continue;
 	}
-#if 0
 
       /*
        * IPv6 multicast addr
@@ -419,13 +421,19 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-multi") == 0) 
 	{
 	  argv++, argc--;
-	  strncpy(ipv6_mult, *argv, 50);
+	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
+	    {
+	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
+	      exit(EXIT_FAILURE);
+	    }
+
+	  memcpy(&default_ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
 
 	  argv++, argc--;
 
 	  continue;
 	}
-#endif
+
 
       /*
        * Should we display the contents of packages beeing sent?
@@ -452,6 +460,16 @@ main(int argc, char *argv[])
       print_usage();
       olsr_exit(__func__, EXIT_FAILURE);
     }
+
+  /*
+   * Set configuration for command-line specified interfaces
+   */
+  set_default_ifcnfs(olsr_cnf->interfaces, default_ifcnf);
+
+  /*
+   * Print configuration 
+   */
+  olsrd_print_cnf(olsr_cnf);  
 
   /*
    *socket for icotl calls
@@ -560,17 +578,6 @@ main(int argc, char *argv[])
 	}
     }
 
-
-  /* Initialize values for emission data 
-   * This also initiates message generation
-   */
-  /*
-  olsr_set_hello_interval(hello_int);
-  olsr_set_hello_nw_interval(hello_int_nw);
-  olsr_set_tc_interval(tc_int);
-  olsr_set_mid_interval(mid_int);
-  olsr_set_hna_interval(hna_int);
-  */
   /* Print tables to stdout */
   if(olsr_cnf->debug_level > 0)
     olsr_register_scheduler_event(&generate_tabledisplay, NULL, HELLO_INTERVAL, 0, NULL);
@@ -770,11 +777,7 @@ get_config(char *filename)
   /*
    * NB - CHECK IPv6 MULTICAST!
    */
-  if((olsr_cnf = olsrd_parse_cnf(filename)) != NULL)
-    {
-      olsrd_print_cnf(olsr_cnf);  
-    }
-  else
+  if((olsr_cnf = olsrd_parse_cnf(filename)) == NULL)
     {
       printf("Using default config values(no configfile)\n");
       olsr_cnf = olsrd_get_default_cnf();
@@ -786,16 +789,24 @@ get_config(char *filename)
 
 
 
-struct if_config_options *
-get_default_ifcnf(struct olsrd_config *cnf)
+/**
+ * Sets the provided configuration on all unconfigured
+ * interfaces
+ */
+int
+set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 {
-  struct if_config_options *ifc = cnf->if_options;
+  int changes = 0;
 
-  while(ifc)
+  while(ifs)
     {
-      if(!strcmp(ifc->name, DEFAULT_IF_CONFIG_NAME))
-        return ifc;
-      ifc = ifc->next;
+      if(ifs->cnf == NULL)
+	{
+	  ifs->cnf = olsr_malloc(sizeof(struct if_config_options), "Set default config");
+	  *ifs->cnf = *cnf;
+	  changes++;
+	}
+      ifs = ifs->next;
     }
-  return NULL;
+  return changes;
 }

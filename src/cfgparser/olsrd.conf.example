@@ -37,16 +37,6 @@ Hna6
     fec0:2200:106:0:0:0:0:0 48
 }
 
-# Interfaces and their rulesets
-Interface "eth0"
-{
-    Setup "lan"
-}
-
-Interface "eth1"
-{
-    Setup "wlan"
-}
 
 # Should olsrd keep on running even if there are
 # no interfaces available? This is a good idea
@@ -150,7 +140,12 @@ LoadPlugin "olsrd_dyn_gw.so.0.1"
 # olsrd_power.so.0.1
 
 
-IfSetup "lan"
+
+
+# Interfaces and their rules
+# Omitted options will be set to the
+# default values.
+Interface "eth0"
 {
 
     # IPv4 broadcast address to use. The
@@ -205,13 +200,10 @@ IfSetup "lan"
 
     # HNA validity time
     # HnaValidityTime 	15.0
-
 }
 
-
-IfSetup "wlan"
+Interface "eth1"
 {
-
     # IPv4 broadcast address to use. The
     # one usefull example would be 255.255.255.255
     # If not defined the broadcastaddress

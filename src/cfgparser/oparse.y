@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.7 2004/10/19 19:23:01 kattemat Exp $
+ * $Id: oparse.y,v 1.8 2004/11/01 20:13:27 kattemat Exp $
  *
  */
 
@@ -66,8 +66,6 @@ int yylex(void);
 %token TOK_HNA6
 %token TOK_PLUGIN
 %token TOK_INTERFACE
-%token TOK_IFSETTING
-%token TOK_IFSETUP
 %token TOK_NOINT
 %token TOK_TOS
 %token TOK_WILLINGNESS
@@ -127,7 +125,6 @@ block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
           | ifblock ifbody
           | plblock plbody
-          | isetblock isetbody
 ;
 
 hna4body:       TOK_OPEN hna4stmts TOK_CLOSE
@@ -148,17 +145,7 @@ ifbody:     TOK_OPEN ifstmts TOK_CLOSE
 ifstmts:   | ifstmts ifstmt
 ;
 
-ifstmt:     ifsetting
-          | vcomment
-;
-
-isetbody:   TOK_OPEN isetstmts TOK_CLOSE
-;
-
-isetstmts:   | isetstmts isetstmt
-;
-
-isetstmt:      vcomment
+ifstmt:      vcomment
              | isetip4br
              | isetip6addrt
              | isetip6mults
@@ -185,30 +172,6 @@ plstmt:     plparam
 
 
 
-
-isetblock:    TOK_IFSETUP TOK_STRING
-{
-  struct if_config_options *io = get_default_if_config();
-  if(io == NULL)
-    {
-      fprintf(stderr, "Out of memory(ADD IFRULE)\n");
-      YYABORT;
-    }
-
-  if(PARSER_DEBUG) printf("Interface setup: \"%s\"\n", $2->string);
-  
-  io->name = $2->string;
-  
-  
-  /* Queue */
-  io->next = cnf->if_options;
-  cnf->if_options = io;
-
-  free($2);
-}
-;
-
-
 isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 {
   struct in_addr in;
@@ -221,7 +184,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
       exit(EXIT_FAILURE);
     }
 
-  cnf->if_options->ipv4_broadcast.v4 = in.s_addr;
+  cnf->interfaces->cnf->ipv4_broadcast.v4 = in.s_addr;
 
   free($2->string);
   free($2);
@@ -231,9 +194,9 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
 {
   if($2->boolean)
-    cnf->if_options->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+    cnf->interfaces->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
   else
-    cnf->if_options->ipv6_addrtype = 0;
+    cnf->interfaces->cnf->ipv6_addrtype = 0;
 
   free($2);
 }
@@ -250,7 +213,7 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
       exit(EXIT_FAILURE);
     }
-  memcpy(&cnf->if_options->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+  memcpy(&cnf->interfaces->cnf->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
 
 
   free($2->string);
@@ -270,7 +233,7 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
       exit(EXIT_FAILURE);
     }
-  memcpy(&cnf->if_options->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+  memcpy(&cnf->interfaces->cnf->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
 
   free($2->string);
@@ -280,56 +243,56 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 isethelloint: TOK_HELLOINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", $2->floating);
-    cnf->if_options->hello_params.emission_interval = $2->floating;
+    cnf->interfaces->cnf->hello_params.emission_interval = $2->floating;
     free($2);
 }
 ;
 isethelloval: TOK_HELLOVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", $2->floating);
-    cnf->if_options->hello_params.validity_time = $2->floating;
+    cnf->interfaces->cnf->hello_params.validity_time = $2->floating;
     free($2);
 }
 ;
 isettcint: TOK_TCINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", $2->floating);
-    cnf->if_options->tc_params.emission_interval = $2->floating;
+    cnf->interfaces->cnf->tc_params.emission_interval = $2->floating;
     free($2);
 }
 ;
 isettcval: TOK_TCVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", $2->floating);
-    cnf->if_options->tc_params.validity_time = $2->floating;
+    cnf->interfaces->cnf->tc_params.validity_time = $2->floating;
     free($2);
 }
 ;
 isetmidint: TOK_MIDINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", $2->floating);
-    cnf->if_options->mid_params.emission_interval = $2->floating;
+    cnf->interfaces->cnf->mid_params.emission_interval = $2->floating;
     free($2);
 }
 ;
 isetmidval: TOK_MIDVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", $2->floating);
-    cnf->if_options->mid_params.validity_time = $2->floating;
+    cnf->interfaces->cnf->mid_params.validity_time = $2->floating;
     free($2);
 }
 ;
 isethnaint: TOK_HNAINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", $2->floating);
-    cnf->if_options->hna_params.emission_interval = $2->floating;
+    cnf->interfaces->cnf->hna_params.emission_interval = $2->floating;
     free($2);
 }
 ;
 isethnaval: TOK_HNAVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", $2->floating);
-    cnf->if_options->hna_params.validity_time = $2->floating;
+    cnf->interfaces->cnf->hna_params.validity_time = $2->floating;
     free($2);
 }
 ;
@@ -454,6 +417,14 @@ ifblock: TOK_INTERFACE TOK_STRING
       YYABORT;
     }
 
+  in->cnf = get_default_if_config();
+
+  if(in->cnf == NULL)
+    {
+      fprintf(stderr, "Out of memory(ADD IFRULE)\n");
+      YYABORT;
+    }
+
   in->name = $2->string;
 
   /* Queue */
@@ -462,18 +433,6 @@ ifblock: TOK_INTERFACE TOK_STRING
 
   free($2);
 }
-
-
-ifsetting: TOK_IFSETTING TOK_STRING
-{
-
-  cnf->interfaces->config = $2->string;
-
-  if(PARSER_DEBUG) printf("Interface: %s Ruleset: %s\n", $1->string, $2->string);
-
-  free($2);
-}
-;
 
 bnoint: TOK_NOINT TOK_BOOLEAN
 {
