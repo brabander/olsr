@@ -37,12 +37,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.10 2004/12/19 09:30:55 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.11 2004/12/21 13:46:48 kattemat Exp $
  */
 
 /*
- * Threaded ping code added by Jens Nachitgall
- *
+ * -Threaded ping code added by Jens Nachitgall
+ * -HNA4 checking by bjoern riemer
  */
 
 #include "olsrd_dyn_gw.h"
@@ -60,8 +60,8 @@
  * internal variables and functions
  */ 
 
-static int gw_already_added;
-static int has_available_gw;
+//static int gw_already_added;
+//static int has_available_gw;
 
 /* set default interval, in case none is given in the config file */
 static int check_interval = 5;
@@ -75,16 +75,32 @@ struct ping_list {
 static struct ping_list *
 add_to_ping_list(char *, struct ping_list *);
 
-struct ping_list *the_ping_list = NULL;
+//struct ping_list *the_ping_list = NULL;
+
+struct hna_list {
+  union olsr_ip_addr hna_net;
+  union hna_netmask hna_netmask;
+  struct ping_list *ping_hosts;
+  int hna_added;
+  int probe_ok;
+  struct hna_list *next;
+};
+
+static struct hna_list *
+	add_to_hna_list(struct hna_list *,
+				union olsr_ip_addr *hna_net,
+				union hna_netmask *hna_netmask );
+
+struct hna_list *the_hna_list = NULL;
 
 static void *
 looped_checks(void *foo);
 
 static int
-check_gw(union olsr_ip_addr *, union hna_netmask *);
+check_gw(union olsr_ip_addr *, union hna_netmask *,struct ping_list *);
 
 static int
-ping_is_possible(void);
+ping_is_possible(struct ping_list *);
 
    
      
@@ -98,18 +114,46 @@ register_olsr_param(char *key, char *value)
   /* foo_addr is only used for call to inet_aton */ 
   struct in_addr foo_addr;
   int retval = -1;
+  int i;
+  union olsr_ip_addr temp_net;
+  union hna_netmask temp_netmask;
+  char s_net[16],s_mask[16];
  
+  //printf("%s():%s->%s\n",__func__,key,value);
+  
   if (!strcmp(key, "Interval")) {
     if (sscanf(value, "%d", &check_interval) == 1) {
       retval = 1;
     }
-  }
-  if (!strcmp(key, "Ping")) {
+  }else if (!strcmp(key, "Ping")) {
     /* if value contains a valid IPaddr, then add it to the list */
-    if (inet_aton(strdup(value), &foo_addr)) {
-      the_ping_list = add_to_ping_list(value, the_ping_list);
-      retval = 1;
+    //if (inet_aton(strdup(value), &foo_addr)) {
+	if (inet_aton(value, &foo_addr)) {
+	    /*if first ping without hna then assume inet gateway*/
+		if (the_hna_list==NULL){
+		    temp_net.v4 = INET_NET;
+		    temp_netmask.v4 = INET_PREFIX;
+		    if ((the_hna_list = add_to_hna_list(the_hna_list,&temp_net,&temp_netmask))==NULL)
+			    return retval;
+		}
+		the_hna_list->ping_hosts=add_to_ping_list(value, the_hna_list->ping_hosts);
+		retval = 1;
     }
+  }else if (!strcmp(key, "HNA")) {
+	  //192.168.1.0  255.255.255.0
+	  i=sscanf(value,"%15s %15s",s_net,s_mask);
+	  //printf("%s():i:%i; net:%s; mask:%s\n",__func__,i,s_net,s_mask);
+	  if (inet_aton(s_net, &foo_addr)) {
+		  temp_net.v4=foo_addr.s_addr;
+		  //printf("GOT: %s(%08x)",inet_ntoa(foo_addr),foo_addr.s_addr);
+		  if (inet_aton(s_mask, &foo_addr)) {
+			  temp_netmask.v4=foo_addr.s_addr;
+			  //printf("/%s(%08x)\n",inet_ntoa(foo_addr),foo_addr.s_addr);
+			  //printf("%s():got->%s/%s\n",__func__,olsr_ip_to_string((union olsr_ip_addr *)&));
+			  if ((the_hna_list = add_to_hna_list(the_hna_list,&temp_net,&temp_netmask))!=NULL)
+				  retval = 1;
+		  }
+	  }
   }
   return retval;
 }
@@ -128,18 +172,18 @@ olsr_plugin_init()
 {
   pthread_t ping_thread;
   
-  gw_net.v4 = INET_NET;
-  gw_netmask.v4 = INET_PREFIX;
+  //gw_net.v4 = INET_NET;
+  //gw_netmask.v4 = INET_PREFIX;
 
-  gw_already_added = 0;
-  has_available_gw = 0;
+  //gw_already_added = 0;
+  //has_available_gw = 0;
 
   
   /* Remove all local Inet HNA entries */
-  while(remove_local_hna4_entry(&gw_net, &gw_netmask))
+  /*while(remove_local_hna4_entry(&gw_net, &gw_netmask))
   {
     olsr_printf(1, "HNA Internet gateway deleted\n");
-  }
+  }*/
 
   pthread_create(&ping_thread, NULL, looped_checks, NULL);
   
@@ -185,17 +229,32 @@ plugin_io(int cmd, void *data, size_t size)
 void
 olsr_event_doing_hna()
 {
+	struct hna_list *li;
+	/*
   if (has_available_gw == 1 && gw_already_added == 0) {
     olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
     add_local_hna4_entry(&gw_net, &gw_netmask);
     gw_already_added = 1;
   } else if ((has_available_gw == 0) && (gw_already_added == 1)) {
-    /* Remove all local Inet HNA entries */
+    // Remove all local Inet HNA entries /
     while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
       olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
     }
     gw_already_added = 0;
   }
+	*/
+	for(li=the_hna_list; li; li=li->next){
+		if((li->probe_ok==1)&&(li->hna_added==0)){
+			olsr_printf(1, "Adding OLSR local HNA entry\n");
+			add_local_hna4_entry(&li->hna_net, &li->hna_netmask);
+			li->hna_added=1;
+		}else if((li->probe_ok==0)&&(li->hna_added==1)){
+			while(remove_local_hna4_entry(&li->hna_net, &li->hna_netmask)) {
+				olsr_printf(1, "Removing OLSR local HNA entry\n");
+			}
+			li->hna_added=0;
+		}
+	}
 }
   
 
@@ -213,13 +272,31 @@ olsr_event_doing_hna()
 static void *
 looped_checks(void *foo)
 {
+	/*
+	struct hna_list {
+  union olsr_ip_addr hna_net;
+  union hna_netmask hna_netmask;
+  struct ping_list *ping_hosts;
+  int hna_added;
+  int probe_ok;
+  struct hna_list *next;
+};
+	*/
+	struct hna_list *li;
+	
   for(;;) {
     struct timespec remainder_spec;
     /* the time to wait in "Interval" sec (see connfig), default=5sec */
     struct timespec sleeptime_spec  = {(time_t) check_interval, 0L };
-
-    /* check for gw in table entry and if Ping IPs are given also do pings */
-    has_available_gw = check_gw(&gw_net, &gw_netmask);
+    
+    li=the_hna_list;
+    while(li){
+	    /* check for gw in table entry and if Ping IPs are given also do pings */
+	    li->probe_ok = check_gw(&li->hna_net,&li->hna_netmask,li->ping_hosts);
+	    //has_available_gw = check_gw(&gw_net, &gw_netmask);
+	    
+	    li=li->next;
+    }
 
     while(nanosleep(&sleeptime_spec, &remainder_spec) < 0)
       sleeptime_spec = remainder_spec;
@@ -228,7 +305,7 @@ looped_checks(void *foo)
 
 
 static int
-check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
+check_gw(union olsr_ip_addr *net, union hna_netmask *mask, struct ping_list *the_ping_list)
 {
     char buff[1024], iface[16];
     olsr_u32_t gate_addr, dest_addr, netmask;
@@ -251,8 +328,8 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
     olsr_printf(1, "Genmask         Destination     Gateway         "
                 "Flags Metric Ref    Use Iface\n");
     */
-    while (fgets(buff, 1023, fp)) 
-      {	
+    while (fgets(buff, 1023, fp))
+	{	
 	num = sscanf(buff, "%16s %128X %128X %X %d %d %d %128X \n",
 		     iface, &dest_addr, &gate_addr,
 		     &iflags, &refcnt, &use, &metric, &netmask);
@@ -272,39 +349,38 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
 		    metric, refcnt, use, iface);
 	*/
 
-	if((iflags & RTF_GATEWAY) &&
-	   (iflags & RTF_UP) &&
-	   (metric == 0) &&
-	   (netmask == mask->v4) && 
-	   (dest_addr == net->v4))
-	  {
-      /* don't ping, if there was no "Ping" IP addr in the config file */
-      if (the_ping_list != NULL) {  
-        /*validate the found inet gw by pinging*/ 
-        if (ping_is_possible()) {
-          olsr_printf(1, "INTERNET GATEWAY (ping is possible) VIA %s detected in routing table.\n", iface);
-          retval=1;      
-        }
-      } else {
-        olsr_printf(1, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
-        retval=1;      
-      }
-	  }
+		if( (iflags & RTF_UP) &&
+		   (metric == 0) &&
+		   (netmask == mask->v4) && 
+		   (dest_addr == net->v4))
+		{
+			if ( ((mask->v4==INET_PREFIX)&&(net->v4==INET_NET))&&(!(iflags & RTF_GATEWAY)))
+				return retval;
+			/* don't ping, if there was no "Ping" IP addr in the config file */
+			if (the_ping_list != NULL) {  
+				/*validate the found inet gw by pinging*/ 
+				if (ping_is_possible(the_ping_list)) {
+					olsr_printf(1, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+					retval=1;      
+				}
+			} else {
+				olsr_printf(1, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+				retval=1;      
+			}
+		}
 
-    }
+	}//while
 
-    fclose(fp);  
+	fclose(fp);  
   
-    if(retval == 0)
-      {
-	olsr_printf(1, "No Internet GWs detected...\n");
-      }
-  
+	if(retval == 0){
+		olsr_printf(1, "HNA[%08x/%08x] is invalid\n", net->v4,mask->v4);
+	}  
     return retval;
 }
 
 static int
-ping_is_possible() 
+ping_is_possible(struct ping_list *the_ping_list) 
 {
   struct ping_list *list;
   for (list = the_ping_list; list != NULL; list = list->next) {
@@ -335,4 +411,27 @@ add_to_ping_list(char *ping_address, struct ping_list *the_ping_list)
   new->next = the_ping_list;
   return new;
 }    
+
+
+
+static struct hna_list *
+add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, union hna_netmask *hna_netmask )
+{
+  struct hna_list *new = (struct hna_list *) malloc(sizeof(struct hna_list));
+  if(new == NULL)
+  {
+    fprintf(stderr, "DYN GW: Out of memory!\n");
+    exit(0);
+  }
+  //memcpy(&new->hna_net,hna_net,sizeof(union hna_net));
+  //memcpy(&new->hna_netmask,hna_netmask,sizeof(union hna_netmask));
+  new->hna_net.v4=hna_net->v4;
+  new->hna_netmask.v4=hna_netmask->v4;
+  new->hna_added=0;
+  new->probe_ok=0;
+  new->ping_hosts=NULL;
+  new->next=list_root;  
+
+  return new;
+}
 

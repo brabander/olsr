@@ -1,5 +1,6 @@
 
 CC ?= gcc
+STRIP ?= strip
 NAME ?= olsrd_dyn_gw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code

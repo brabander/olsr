@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.8 2004/12/01 18:16:46 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.9 2004/12/21 13:46:51 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -55,7 +55,7 @@
 
 
 #define PLUGIN_NAME    "OLSRD dynamic gateway plugin"
-#define PLUGIN_VERSION "0.3"
+#define PLUGIN_VERSION "0.4"
 #define PLUGIN_AUTHOR   "Various artists"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
