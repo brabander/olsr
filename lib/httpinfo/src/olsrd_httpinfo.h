@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.24 2005/01/02 19:40:55 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.25 2005/01/02 19:57:18 kattemat Exp $
  */
 
 /*
@@ -67,7 +67,10 @@ static const char *httpinfo_css[] =
 {
   "A {text-decoration: none}\n",
   "TH{text-align: left}\n",
-  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
+  "H1, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
+  "h2\n {\nfont-family: Helvetica;\n font-size: 14px;text-align: center;\n",
+  "line-height: 16px;\ntext-decoration: none;\nborder: 1px solid #ccc;\n",
+  "margin: 5px;\nbackground: #ececec;\n}\n",
   "hr\n{\nborder: none;\npadding: 1px;\nbackground: url(grayline.gif) repeat-x bottom;\n}\n",
   "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n",
   "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n",
@@ -106,7 +109,7 @@ static const char *http_ok_head[] =
   "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%\">",
   "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>",
   "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%\">",
-  "<img src=\"/logo.gif\"></td>",
+  "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>",
   "</tr>",
   "<p>",
   "</table>",
