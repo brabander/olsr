@@ -113,7 +113,7 @@ http://www.olsr.org
   6.1 COMPILING
 
     To compile:
-    cd fron-end
+    cd linux-gui
     make
     The binary is put in the bin directory
 
