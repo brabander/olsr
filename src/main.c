@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.24 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: main.c,v 1.25 2004/11/03 10:00:10 kattemat Exp $
  *
  */
 
@@ -371,7 +371,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-dispin") == 0) 
 	{
 	  argv++; argc--;
-	  disp_pack_in = 1;
+	  disp_pack_in = TRUE;
 	  continue;
 	}
 
@@ -381,7 +381,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-dispout") == 0) 
 	{
 	  argv++; argc--;
-	  disp_pack_out = 1;
+	  disp_pack_out = TRUE;
 	  continue;
 	}
 
@@ -392,7 +392,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-ipc") == 0) 
 	{
 	  argv++; argc--;
-	  olsr_cnf->open_ipc = 1;
+	  olsr_cnf->open_ipc = TRUE;
 	  continue;
 	}
 
@@ -403,7 +403,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-llinfo") == 0) 
 	{
 	  argv++; argc--;
-	  llinfo = 1;
+	  llinfo = TRUE;
 	  continue;
 	}
 
@@ -413,7 +413,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-tnl") == 0) 
 	{
 	  argv++; argc--;
-	  use_tunnel = 1;
+	  use_tunnel = TRUE;
 
 	  continue;
 	}
@@ -444,7 +444,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-delgw") == 0) 
 	{
 	  argv++; argc--;
-	  del_gws = 1;
+	  del_gws = TRUE;
 	  continue;
 	}
 
@@ -726,16 +726,16 @@ set_default_values()
 #endif
 
   /* Gateway tunneling */
-  use_tunnel = 0;
-  inet_tnl_added = 0;
-  gw_tunnel = 0;
+  use_tunnel = FALSE;
+  inet_tnl_added = FALSE;
+  gw_tunnel = FALSE;
 
-  llinfo = 0;
-  del_gws = 0;
+  llinfo = FALSE;
+  del_gws = FALSE;
 
   /* Display packet content */
-  disp_pack_in = 0;
-  disp_pack_out = 0;
+  disp_pack_in = FALSE;
+  disp_pack_out = FALSE;
 }
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tunnel.c,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: tunnel.c,v 1.6 2004/11/03 10:00:11 kattemat Exp $
  *
  */
 
@@ -134,7 +134,7 @@ add_ip_tunnel(struct ip_tunnel_parm *p)
   
   /* Store the gateway address */
   memcpy(&tnl_addr, &p->iph.daddr, ipsize);
-  inet_tnl_added = 1;
+  inet_tnl_added = TRUE;
   
   /* Enable tunnel forwarding for gateways */
   enable_tunl_forwarding();
@@ -225,7 +225,7 @@ set_up_gw_tunnel(union olsr_ip_addr *adr)
 
   printf("Setting up a GW side IP tunnel...\n");
 
-  gw_tunnel = 1;
+  gw_tunnel = TRUE;
 
   memset(&ifr, 0, sizeof(struct ifreq));
 

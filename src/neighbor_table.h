@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: neighbor_table.h,v 1.7 2004/11/03 10:00:11 kattemat Exp $
  *
  */
 
@@ -46,8 +46,8 @@ struct neighbor_entry
   union olsr_ip_addr           neighbor_main_addr;
   olsr_u8_t                    status;
   olsr_u8_t                    willingness;
-  olsr_u8_t                    is_mpr;
-  olsr_u8_t                    was_mpr; /* Used to detect changes in MPR */
+  olsr_bool                    is_mpr;
+  olsr_bool                    was_mpr; /* Used to detect changes in MPR */
   int                          neighbor_2_nocov;
   int                          linkcount;
   struct neighbor_2_list_entry neighbor_2_list; 

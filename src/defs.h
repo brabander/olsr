@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.20 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: defs.h,v 1.21 2004/11/03 10:00:10 kattemat Exp $
  *
  */
 
@@ -88,15 +88,16 @@ struct tm *nowtm;		/* current idea of time (in tm) */
 
 char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
 
-int disp_pack_in;               /* display incoming packet content? */
-int disp_pack_out;               /* display outgoing packet content? */
+olsr_bool disp_pack_in;               /* display incoming packet content? */
+olsr_bool disp_pack_out;               /* display outgoing packet content? */
 
 
 int llinfo;
 
-int inet_tnl_added; /* If Internet gateway tunnel is added */
-int use_tunnel; /* Use Internet gateway tunneling */
-int gw_tunnel; /* Work as Internet gateway */
+olsr_bool inet_tnl_added; /* If Internet gateway tunnel is added */
+olsr_bool use_tunnel; /* Use Internet gateway tunneling */
+olsr_bool gw_tunnel; /* Work as Internet gateway */
+olsr_bool del_gws;
 
 /*
  * Timer values
@@ -131,7 +132,6 @@ extern struct timeval hold_time_fwd;
 
 struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
-int del_gws;
 int minsize;
 
 

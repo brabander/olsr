@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.8 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.9 2004/11/03 10:00:11 kattemat Exp $
  *
  */
 
@@ -231,8 +231,8 @@ olsr_insert_neighbor_table(union olsr_ip_addr *main_addr)
   new_neigh->neighbor_2_list.prev = &new_neigh->neighbor_2_list;
   
   new_neigh->linkcount = 0;
-  new_neigh->is_mpr = 0;
-  new_neigh->was_mpr = 0;
+  new_neigh->is_mpr = FALSE;
+  new_neigh->was_mpr = FALSE;
 
   /* Queue */
   QUEUE_ELEM(neighbortable[hash], new_neigh);

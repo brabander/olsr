@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.9 2004/11/02 22:55:42 tlopatic Exp $
+ * $Id: packet.c,v 1.10 2004/11/03 10:00:11 kattemat Exp $
  *
  */
 
@@ -31,7 +31,7 @@
 #include "olsr.h"
 
 
-static int sending_tc = 0;
+static olsr_bool sending_tc = FALSE;
 
 /**
  *Build an internal HELLO package for this
@@ -49,7 +49,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   struct link_entry       *links;
   struct neighbor_entry   *neighbor;
   olsr_u16_t              index;
-  int                     found, link;
+  int                     link;
 
   olsr_printf(3, "\tBuilding HELLO on interface %d\n", outif->if_nr);
 
@@ -188,8 +188,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 	for(neighbor = neighbortable[index].next;
 	    neighbor != &neighbortable[index];
 	    neighbor=neighbor->next)
-	  {	    
-	    found = 0;
+	  {
 	    /* Check that the neighbor is not added yet */
 	    tmp_neigh = message->neighbors;
 	    //printf("Checking that the neighbor is not yet added\n");
@@ -198,13 +197,12 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 		if(COMP_IP(&tmp_neigh->main_address, &neighbor->neighbor_main_addr))
 		  {
 		    //printf("Not adding duplicate neighbor %s\n", olsr_ip_to_string(&neighbor->neighbor_main_addr));
-		    found = 1;
 		    break;
 		  }
 		tmp_neigh = tmp_neigh->next;
 	      }
 
-	    if(found)
+	    if(tmp_neigh)
 	      continue;
 	    
 	    message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO 2");
@@ -292,11 +290,8 @@ olsr_build_tc_packet(struct tc_message *message)
   struct neighbor_entry  *entry;
   //struct mpr_selector_hash  *mprs_hash;
   //olsr_u16_t          index;
-  int entry_added;
+  olsr_bool entry_added = FALSE;
   struct timeval tmp_timer;
-
-
-  entry_added = 0;
 
   message->multipoint_relay_selector_address=NULL;
   message->packet_seq_number=0;
@@ -330,14 +325,14 @@ olsr_build_tc_packet(struct tc_message *message)
 		COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		message_mpr->next = message->multipoint_relay_selector_address;
 		message->multipoint_relay_selector_address = message_mpr;
-		entry_added = 1;
+		entry_added = TRUE;
 		
 		break;
 	      }
 	    case(1):
 	      {
 		/* 1 = Add all MPR selectors and selected MPRs */
-		if((entry->is_mpr == 1) ||
+		if((entry->is_mpr) ||
 		   (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL))
 		  {
 		    //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
@@ -346,7 +341,7 @@ olsr_build_tc_packet(struct tc_message *message)
 		    COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;
-		    entry_added = 1;
+		    entry_added = TRUE;
 		  }
 		break;
 	      }
@@ -361,7 +356,7 @@ olsr_build_tc_packet(struct tc_message *message)
 		    COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;
-		    entry_added = 1;
+		    entry_added = TRUE;
 		  }
 		break;
 	      }		
@@ -372,7 +367,7 @@ olsr_build_tc_packet(struct tc_message *message)
 
   if(entry_added)
     {
-      sending_tc = 1;
+      sending_tc = TRUE;
     }
   else
     {
@@ -383,7 +378,7 @@ olsr_build_tc_packet(struct tc_message *message)
 	  olsr_printf(3, "No more MPR selectors - will send empty TCs\n");
 	  timeradd(&now, &tmp_timer, &send_empty_tc);
 
-	  sending_tc = 0;
+	  sending_tc = FALSE;
 	}
     }
 
@@ -603,7 +598,7 @@ olsr_build_lq_tc_packet(struct lq_tc_message *msg)
     }
 
   if (msg->neigh != NULL)
-    sending_tc = 1;
+    sending_tc = TRUE;
 
   else if (sending_tc)
     {
@@ -612,7 +607,7 @@ olsr_build_lq_tc_packet(struct lq_tc_message *msg)
 
       olsr_printf(3, "No more MPR selectors - will send empty LQ_TCs\n");
       
-      sending_tc = 0;
+      sending_tc = FALSE;
     }
 
   return 0;

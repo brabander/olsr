@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.18 2004/11/01 19:27:10 tlopatic Exp $
+ * $Id: build_msg.c,v 1.19 2004/11/03 10:00:10 kattemat Exp $
  *
  */
 
@@ -691,7 +691,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg *tc;
   struct neigh_info *mprsaddr; 
-  int found = 0, partial_sent = 0;
+  olsr_bool found = FALSE, partial_sent = FALSE;
 
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
     return;
@@ -745,15 +745,15 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	      mprsaddr = tc->neigh;
 	      curr_size = 12; /* OLSR message header */
 	      curr_size += 4; /* TC header */
-	      found = 0;
-	      partial_sent = 1;
+	      found = FALSE;
+	      partial_sent = TRUE;
 	    }
 
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 
 	}
-      found = 1;
+      found = TRUE;
       
       COPY_IP(&mprsaddr->addr, &mprs->address);
 
@@ -823,7 +823,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
-  int found = 0, partial_sent = 0;
+  olsr_bool found = FALSE, partial_sent = FALSE;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
     return;
@@ -874,15 +874,15 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	      mprsaddr6 = tc6->neigh;
 	      curr_size = 24; /* OLSR message header */
 	      curr_size += 4; /* TC header */
-	      found = 0;
-	      partial_sent = 1;
+	      found = FALSE;
+	      partial_sent = TRUE;
 	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 		
 
 	}
-      found = 1;
+      found = TRUE;
 
       //printf("mprsaddr6 is %x\n", (char *)mprsaddr6 - packet);
       //printf("Adding MPR-selector: %s\n", olsr_ip_to_string(&mprs->address));fflush(stdout);	    
@@ -1274,7 +1274,7 @@ lq_hello_build(struct lq_hello_message *msg, struct interface *outif)
   struct lq_hello_info_header *info_head;
   struct lq_hello_neighbor *neigh;
   unsigned char *buff;
-  int is_first;
+  olsr_bool is_first;
   int i, j;
 
   if (msg == NULL || outif == NULL)
@@ -1351,7 +1351,7 @@ lq_hello_build(struct lq_hello_message *msg, struct interface *outif)
 	  if(j == HIDE_LINK)
 	      continue;
 
-          is_first = 1;
+          is_first = TRUE;
 
           // loop through neighbors
 
@@ -1368,7 +1368,7 @@ lq_hello_build(struct lq_hello_message *msg, struct interface *outif)
               // no, we also need space for an info header, as this is the
               // first neighbor with the current neighor type and link type
 
-              if (is_first != 0)
+              if (is_first)
                 req += sizeof (struct lq_hello_info_header);
 
               // we do not have enough space left
@@ -1407,12 +1407,12 @@ lq_hello_build(struct lq_hello_message *msg, struct interface *outif)
 
                   // we need a new info header
 
-                  is_first = 1;
+                  is_first = TRUE;
                 }
 
               // create a new info header
 
-              if (is_first != 0)
+              if (is_first)
                 {
                   info_head = (struct lq_hello_info_header *)(buff + size);
                   size += sizeof (struct lq_hello_info_header);
@@ -1441,13 +1441,13 @@ lq_hello_build(struct lq_hello_message *msg, struct interface *outif)
               buff[size++] = 0;
               buff[size++] = 0;
 
-              is_first = 0;
+              is_first = FALSE;
 	    }
 
           // finalize the info header, if there are any neighbors with the
           // current neighbor type and link type
 
-	  if (is_first == 0)
+	  if (!is_first)
             info_head->size = ntohs(buff + size - (unsigned char *)info_head);
 	}
     }
@@ -1483,7 +1483,7 @@ lq_tc_build(struct lq_tc_message *msg, struct interface *outif)
   struct lq_tc_header *head;
   struct lq_tc_neighbor *neigh;
   unsigned char *buff;
-  int is_empty;
+  olsr_bool is_empty;
 
   if (msg == NULL || outif == NULL)
     return;
@@ -1549,7 +1549,7 @@ lq_tc_build(struct lq_tc_message *msg, struct interface *outif)
 
   // initially, we're empty
 
-  is_empty = 1;
+  is_empty = TRUE;
 
   // loop through neighbors
 
@@ -1603,7 +1603,7 @@ lq_tc_build(struct lq_tc_message *msg, struct interface *outif)
 
       // we're not empty any longer
 
-      is_empty = 0;
+      is_empty = FALSE;
     }
 
   // finalize the OLSR header
@@ -1623,15 +1623,15 @@ lq_tc_build(struct lq_tc_message *msg, struct interface *outif)
   // if we did not advertise any neighbors, we might still want to
   // send empty LQ_TC messages
 
-  if (is_empty != 0 && !TIMED_OUT(&send_empty_tc))
+  if (is_empty && !TIMED_OUT(&send_empty_tc))
   {
     olsr_printf(1, "LQ_TC: Sending empty package\n");
-    is_empty = 0;
+    is_empty = FALSE;
   }
 
   // move the message to the output buffer
 
-  if (is_empty == 0)
+  if (!is_empty)
     net_outbuffer_push(outif, msg_buffer, size + off);
 
   // clean-up
