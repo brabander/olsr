@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.18 2004/11/10 12:35:30 tlopatic Exp $
+ * $Id: process_package.c,v 1.19 2004/11/10 13:09:40 tlopatic Exp $
  *
  */
 
@@ -121,6 +121,13 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
         {
           changes_neighborhood = OLSR_TRUE;
           changes_topology = OLSR_TRUE;
+
+          // create a new ANSN
+
+          // XXX - we should check whether we actually
+          // announce this neighbour
+
+          changes = OLSR_TRUE;
         }
     }
 #endif
