@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.13 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.14 2005/02/14 18:25:03 tlopatic Exp $
  */
 
 #include <stdio.h>
@@ -62,8 +62,8 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
   inet_ntop(AF_INET, &Dest->rt_mask.v4, Str2, 16);
   inet_ntop(AF_INET, &Dest->rt_router.v4, Str3, 16);
 
-  olsr_printf(1, "Adding IPv4 route to %s/%s via %s and I/F 0x%x.\n",
-              Str1, Str2, Str3, Dest->rt_if->if_index);
+  olsr_printf(1, "Adding IPv4 route with metric %d to %s/%s via %s and I/F 0x%x.\n",
+              Dest->rt_metric, Str1, Str2, Str3, Dest->rt_if->if_index);
 
   memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
 
@@ -118,8 +118,8 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
   inet_ntop(AF_INET, &Dest->rt_mask.v4, Str2, 16);
   inet_ntop(AF_INET, &Dest->rt_router.v4, Str3, 16);
 
-  olsr_printf(1, "Deleting IPv4 route to %s/%s via %s and I/F 0x%x.\n",
-              Str1, Str2, Str3, Dest->rt_if->if_index);
+  olsr_printf(1, "Deleting IPv4 route with metric %d to %s/%s via %s and I/F 0x%x.\n",
+              Dest->rt_metric, Str1, Str2, Str3, Dest->rt_if->if_index);
 
   memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
 

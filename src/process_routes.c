@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.19 2005/02/03 17:31:39 kattemat Exp $
+ * $Id: process_routes.c,v 1.20 2005/02/14 18:25:03 tlopatic Exp $
  */
 
 
@@ -318,10 +318,9 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 	{
 
 	  if((destination_ptr->destination->rt_metric == metric_counter) &&
-	     ((last_run && 
-	       COMP_IP(&destination_ptr->destination->rt_dst, 
-		       &destination_ptr->destination->rt_router)) 
-	      || !last_run))
+	     ((last_run || 
+	       !COMP_IP(&destination_ptr->destination->rt_dst, 
+                        &destination_ptr->destination->rt_router))))
 	    {
 	      olsr_16_t error;
 #ifdef DEBUG
@@ -396,8 +395,9 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
       for(destination_kernel = add_kernel_list; destination_kernel != NULL; )
 	{
 	  if((destination_kernel->destination->rt_metric == metric_counter) &&
-	     ((first_run && 
-	       COMP_IP(&destination_kernel->destination->rt_dst, &destination_kernel->destination->rt_router)) || !first_run))
+	     (!first_run || 
+              COMP_IP(&destination_kernel->destination->rt_dst,
+                      &destination_kernel->destination->rt_router)))
 	    {
 	      olsr_16_t error;
 	      /* First add all 1-hop routes that has themselves as GW */
