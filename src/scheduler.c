@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.13 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: scheduler.c,v 1.14 2004/11/03 20:54:47 kattemat Exp $
  *
  */
 
@@ -157,7 +157,7 @@ scheduler()
 
       if(changes)
 	{
-	  olsr_printf(3, "ANSN UPDATED\n\n");
+	  olsr_printf(3, "ANSN UPDATED %d\n\n", ansn);
 	  ansn++;
 #warning changes is set to FALSE in scheduler now
           changes = FALSE;

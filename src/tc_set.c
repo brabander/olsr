@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.6 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: tc_set.c,v 1.7 2004/11/03 20:54:47 kattemat Exp $
  *
  */
 
@@ -189,10 +189,6 @@ olsr_tc_delete_mprs(struct tc_entry *entry, struct tc_message *msg)
 
 	  /* dequeue */
 	  DEQUEUE_ELEM(dst_to_del);
-	  /*
-	  dst_to_del->next->prev = dst_to_del->prev;
-	  dst_to_del->prev->next = dst_to_del->next;
-	  */
 
 	  free(dst_to_del);
 	  retval = 1;

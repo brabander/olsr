@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.8 2004/10/19 20:18:00 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.9 2004/11/03 20:54:47 kattemat Exp $
  *
  */
 
@@ -98,6 +98,10 @@ ipc_init()
 }
 
 
+/*
+ * XXX - the socket should just be registered with the socket parser.
+ * Should NOT spawn this listen thread!
+ */
 void
 ipc_accept_thread()
 {
@@ -128,7 +132,7 @@ ipc_accept_thread()
 	    }
 	  else
 	    {
-	      ipc_active = 1;
+	      ipc_active = TRUE;
 	      ipc_send_net_info();
 	      ipc_send_all_routes();
 	      olsr_printf(1, "Connection from %s\n",addr);
@@ -194,7 +198,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
       olsr_printf(1, "(OUTPUT)IPC connection lost!\n");
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
-      ipc_active = 0;
+      ipc_active = FALSE;
       return;
     }
   
@@ -278,7 +282,7 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
       olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
-      ipc_active = 0;
+      ipc_active = FALSE;
       return -1;
     }
 
@@ -340,7 +344,7 @@ ipc_send_all_routes()
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
-	      ipc_active = 0;
+	      ipc_active = FALSE;
 	      return -1;
 	    }
 
@@ -385,7 +389,7 @@ ipc_send_all_routes()
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
-	      ipc_active = 0;
+	      ipc_active = FALSE;
 	      return -1;
 	    }
 
