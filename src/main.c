@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.51 2004/12/12 17:53:59 kattemat Exp $
+ * $Id: main.c,v 1.52 2004/12/19 09:34:36 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -579,11 +579,6 @@ main(int argc, char *argv[])
   /* Initialisation of different tables to be used.*/
   olsr_init_tables();
 
-  /* Load plugins */
-  olsr_load_plugins();
-
-  olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
-
   /* daemon mode */
 #ifndef WIN32
   if (olsr_cnf->debug_level == 0)
@@ -596,6 +591,12 @@ main(int argc, char *argv[])
       setsid();
     }
 #endif
+
+  /* Load plugins */
+  olsr_load_plugins();
+
+  olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
+
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
