@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.12 2004/12/18 22:50:55 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.13 2004/12/19 09:37:59 kattemat Exp $
  */
 
 /*
@@ -67,7 +67,7 @@ int
 build_http_header(http_header_type, olsr_u32_t, char *, olsr_u32_t);
 
 static int
-build_frame(char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
+build_frame(char *, char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
 
 int
 build_routes_body(char *, olsr_u32_t);
@@ -255,12 +255,12 @@ parse_http_request(int fd)
       printf("\n\n");
       /* All is good */
 
-      build_frame("Status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
-      build_frame("Current Routes", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_routes_body);
-      build_frame("Links and Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
-      build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
-      build_frame("HNA", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
-      build_frame("MID", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
+      build_frame("Status", "status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
+      build_frame("Current Routes", "routes", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_routes_body);
+      build_frame("Links and Neighbors", "neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
+      build_frame("Topology", "topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
+      build_frame("HNA", "hna", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
+      build_frame("MID", "mid", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
 
       i = 0;
       while(http_ok_tail[i])
@@ -299,7 +299,6 @@ build_http_header(http_header_type type, olsr_u32_t size, char *buf, olsr_u32_t 
 {
   time_t currtime;
   char timestr[45];
-  char modtimestr[50];
   char tmp[30];
 
   memset(buf, 0, bufsize);
@@ -390,14 +389,12 @@ plugin_io(int cmd, void *data, size_t size)
 
 
 static int
-build_frame(char *title, char *buf, olsr_u32_t bufsize, int(*frame_body_cb)(char *, olsr_u32_t))
+build_frame(char *title, char *link, char *buf, olsr_u32_t bufsize, int(*frame_body_cb)(char *, olsr_u32_t))
 {
   int i = 0, size = 0;
 
-  printf("Building frame \"%s\"\n", title);
-
   size += sprintf(&buf[size], http_frame[i++]);
-  size += sprintf(&buf[size], http_frame[i++], title);
+  size += sprintf(&buf[size], http_frame[i++], link, title);
 
   while(http_frame[i])
     {
@@ -420,7 +417,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   struct rt_entry *routes;
 
   size += sprintf(&buf[size], "OLSR host routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -440,7 +437,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "OLSR HNA routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -490,9 +487,9 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "%s\n", systime);
 
     if(days)
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%s day(s) %02d hours %02d minutes %02 seconds</i>\n", days, hours, mins, uptime.tv_sec);
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i>\n", days, hours, mins, (int)uptime.tv_sec);
     else
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, uptime.tv_sec);
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, (int)uptime.tv_sec);
 
     size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
     
@@ -545,7 +542,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
 	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "<tr><td cellspan=3>No such interface found</td></tr></table>\n", ifs->name);
+	    size += sprintf(&buf[size], "<tr><td cellspan=3>No such interface found</td></tr></table>\n");
 	    continue;
 	  }
 
@@ -582,7 +579,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
       {
 	size += sprintf(&buf[size], "<tr><td>%s</td>\n", pentry->name);
 
-	size += sprintf(&buf[size], "<td><select>\n", pentry->name);
+	size += sprintf(&buf[size], "<td><select>\n");
 	size += sprintf(&buf[size], "<option>KEY, VALUE</option>\n");
 
 	for(pparam = pentry->params; pparam; pparam = pparam->next)
@@ -591,7 +588,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 			    pparam->key,
 			    pparam->value);
 	  }
-	size += sprintf(&buf[size], "</select></td></tr>\n", pentry->name);
+	size += sprintf(&buf[size], "</select></td></tr>\n");
 
       }
 
@@ -611,7 +608,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "Links\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
 
   /* Link set */
   if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
@@ -638,7 +635,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -689,7 +686,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -728,7 +725,6 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 {
   int size;
   olsr_u8_t index;
-  struct tc_entry *entry;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
   struct hna4_entry *hna4;
@@ -736,7 +732,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   size = 0;
 
   size += sprintf(&buf[size], "Remote HNA entries\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -763,7 +759,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "</table><hr>\n");
   size += sprintf(&buf[size], "Local(announced) HNA entries\n");
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
 
   for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
     {
@@ -787,7 +783,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   struct mid_entry *entry;
   struct addresses *alias;
 
-  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
   /* MID */  
   for(index=0;index<HASHSIZE;index++)

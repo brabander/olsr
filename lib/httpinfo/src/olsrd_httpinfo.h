@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.10 2004/12/18 19:12:35 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.11 2004/12/19 09:37:59 kattemat Exp $
  */
 
 /*
@@ -80,14 +80,11 @@ static const char *http_ok_head[] =
     "<TR BGCOLOR=\"#000044\">\n",
     "<TD WIDTH=30 HEIGHT=\"69\">",
     "</TD>\n",
-    "<TD WIDTH=345 VALIGN=center ALIGN=center>\n",
+    "<TD WIDTH=345 VALIGN=center ALIGN=left>\n",
     "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\"></b>olsr.org OLSR daemon<b></TD>\n",
     "<TD ALIGN=center VALIGN=bottom><FONT COLOR=white>\n"
     "</FONT></TD>\n",
     "</TR><TR BGCOLOR=\"#8888cc\">\n",
-    "<TD COLSPAN=2 HEIGHT=30 ALIGN=left VALIGN=center>\n",
-    "<B><FONT SIZE=+1 COLOR=\"#FFFFFF\">&nbsp;Version 0.4.8\n",
-    "</FONT></B></TD>\n",
     "<TD COLSPAN=2 ALIGN=right VALIGN=center>\n",
     "<TABLE WIDTH=\"100\%\" VALIGN=center>\n",
     "<TR>\n",
@@ -95,9 +92,12 @@ static const char *http_ok_head[] =
     "</TD>\n",
     "<TD ALIGN=right>\n",
     "<FONT COLOR=\"#FFFFFF\">\n",
-    "<A HREF=\"\"><B>Link1</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"\"><B>Link2</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"\"><B>Link3</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#status\"><B>Status</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#routes\"><B>Routes</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#neighbors\"><B>Neighbors</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#topology\"><B>Topology</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#hna\"><B>HNA</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"#mid\"><B>MID</B></A>&nbsp;|&nbsp;\n",
     "<A HREF=\"/\"><B>Refresh</B></A>&nbsp;&nbsp;\n",
     "</FONT>\n",
     "</TD>\n",
@@ -150,7 +150,7 @@ static const char *http_ok_tail[] =
 static const char *http_frame[] =
 {
   "<P>\n<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
-  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left>%s</TH>\n",
+  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left><a name=\"%s\">%s</a></TH>\n",
   "</TR><TR BGCOLOR=\"#ECECEC\">\n",
   "<TD>\n",
   "<P>\n",
