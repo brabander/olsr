@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.9 2004/12/17 17:38:08 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.10 2004/12/18 19:12:35 kattemat Exp $
  */
 
 /*
@@ -66,7 +66,7 @@ static const char *http_ok_head[] =
 {
     "<HEAD>\n",
     "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n",
-    "<TITLE>olsr.org</TITLE>\n",
+    "<TITLE>olsr.org httpinfo plugin</TITLE>\n",
     "</HEAD>\n",
     "<STYLE>\n",
     "<!--\n",

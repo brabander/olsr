@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.3 2004/12/18 00:18:25 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.4 2004/12/18 19:12:35 kattemat Exp $
  */
 
 /*
@@ -296,6 +296,26 @@ struct hna_entry
   struct hna_entry   *prev;
 };
 
+/*
+ * Generic address list elem
+ */
+struct addresses 
+{
+  union olsr_ip_addr address;
+  struct addresses *next;
+};
+
+/* MID set */
+struct mid_entry
+{
+  union olsr_ip_addr main_addr;
+  struct addresses *aliases;
+  struct mid_entry *prev;
+  struct mid_entry *next;
+  struct timeval ass_timer;  
+};
+
+
 /* The lists */
 
 struct neighbor_entry *neighbortable;
@@ -303,6 +323,7 @@ struct neighbor_2_entry *two_hop_neighbortable;
 struct link_entry *link_set;
 struct tc_entry *tc_table;
 struct hna_entry *hna_set;
+struct mid_entry *mid_set;
 
 
 /* Buffer for olsr_ip_to_string */
@@ -318,17 +339,8 @@ char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
 /* The multi-purpose funtion. All other functions are fetched trough this */
 int (*olsr_plugin_io)(int, void *, size_t);
 
-/* Register a "process changes" function */
-int (*register_pcf)(int (*)(int, int, int));
-
 /* Add a socket to the main olsrd select loop */
 void (*add_olsr_socket)(int, void(*)(int));
-
-/* Remove a socket from the main olsrd select loop */
-int (*remove_olsr_socket)(int, void(*)(int));
-
-/* get the link status to a neighbor */
-int (*check_neighbor_link)(union olsr_ip_addr *);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);

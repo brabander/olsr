@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.10 2004/12/18 00:18:25 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.11 2004/12/18 19:12:35 kattemat Exp $
  */
 
 /*
@@ -83,6 +83,9 @@ build_hna_body(char *, olsr_u32_t);
 
 int
 build_mid_body(char *, olsr_u32_t);
+
+char *
+sockaddr_to_string(struct sockaddr *);
 
 
 static int client_sockets[MAX_CLIENTS];
@@ -411,6 +414,8 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     time_t currtime;
     int size = 0;
     struct olsr_if *ifs;
+    struct plugin_entry *pentry;
+    struct plugin_param *pparam;
 
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
@@ -426,7 +431,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", cfg->tos);
 
-    size += sprintf(&buf[size], "</tr>\n<tr>\n", cfg->ip_version == AF_INET ? 4 : 6);
+    size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
     if(cfg->allow_no_interfaces)
       size += sprintf(&buf[size], "<td>No interfaces allowed</td>\n");
@@ -436,8 +441,22 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "<td>Willingness: %d %s</td>\n", cfg->willingness, cfg->willingness_auto ? "(auto)" : "");
 
     size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", cfg->use_hysteresis ? "Enabled" : "Disabled");
+    if(cfg->use_hysteresis)
+      {
+	size += sprintf(&buf[size], "</tr>\n<tr>\n");
+	
+	size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", cfg->hysteresis_param.scaling);
+	size += sprintf(&buf[size], "<td>Hyst upper: %0.2f</td>\n", cfg->hysteresis_param.thr_high);
+	size += sprintf(&buf[size], "<td>Hyst lower: %0.2f</td>\n", cfg->hysteresis_param.thr_low);
+      }
 
-    size += sprintf(&buf[size], "</tr>\n<tr>\n", cfg->ip_version == AF_INET ? 4 : 6);
+    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+
+    size += sprintf(&buf[size], "<td>LQ level: %d</td>\n", cfg->lq_level);
+    size += sprintf(&buf[size], "<td>LQ winsize: %d</td>\n", cfg->lq_wsize);
+    size += sprintf(&buf[size], "<td></td>\n");
+
+    size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
     size += sprintf(&buf[size], "<td>Pollrate: %0.2f</td>\n", cfg->pollrate);
     size += sprintf(&buf[size], "<td>TC redundancy: %d</td>\n", cfg->tc_redundancy);
@@ -445,19 +464,68 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "</tr></table>\n");
     
-    size += sprintf(&buf[size], "Interfaces:<br>\n");
+    size += sprintf(&buf[size], "<hr>Interfaces:<br>\n");
 
     for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
       {
-	size += sprintf(&buf[size], "<h2>%s</h2>\n", ifs->name);
+	struct interface *rifs = ifs->interf;
 
-	if(!ifs->interf)
+	size += sprintf(&buf[size], "<table width=790 border=0><tr><th cellspan=3>%s</th>\n", ifs->name);
+
+	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "No such interface found<br>\n", ifs->name);
+	    size += sprintf(&buf[size], "<tr><td cellspan=3>No such interface found</td></tr></table>\n", ifs->name);
 	    continue;
 	  }
-    
+
+	if(cfg->ip_version == AF_INET)
+	  {
+	    size += sprintf(&buf[size], "<tr><td>IP: %s</td>\n", 
+			    sockaddr_to_string(&rifs->int_addr));
+	    size += sprintf(&buf[size], "<td>MASK: %s</td>\n", 
+			    sockaddr_to_string(&rifs->int_netmask));
+	    size += sprintf(&buf[size], "<td>BCAST: %s</td></tr>\n",
+			    sockaddr_to_string(&rifs->int_broadaddr));
+	    size += sprintf(&buf[size], "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
+	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
+	    size += sprintf(&buf[size], "<td>STATUS: TBD</td></tr>\n");
+	  }
+	else
+	  {
+	    size += sprintf(&buf[size], "<tr><td>IP: TBD</td>\n");
+	    size += sprintf(&buf[size], "<td>MASK: TBD</td>\n");
+	    size += sprintf(&buf[size], "<td>BCAST: TBD</td></tr>\n");
+	    size += sprintf(&buf[size], "<tr><td>MTU: TBD</td>\n");
+	    size += sprintf(&buf[size], "<td>WLAN: TBD</td>\n");
+	    size += sprintf(&buf[size], "<td>STATUS: TBD</td></tr>\n");
+	  }	    
+	size += sprintf(&buf[size], "</table>\n");
+
       }
+
+    size += sprintf(&buf[size], "<hr>Plugins:<br>\n");
+
+    size += sprintf(&buf[size], "<table width=790 border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
+
+    for(pentry = cfg->plugins; pentry; pentry = pentry->next)
+      {
+	size += sprintf(&buf[size], "<tr><td>%s</td>\n", pentry->name);
+
+	size += sprintf(&buf[size], "<td><select>\n", pentry->name);
+	size += sprintf(&buf[size], "<option>KEY, VALUE</option>\n");
+
+	for(pparam = pentry->params; pparam; pparam = pparam->next)
+	  {
+	    size += sprintf(&buf[size], "<option>\"%s\", \"%s\"</option>\n",
+			    pparam->key,
+			    pparam->value);
+	  }
+	size += sprintf(&buf[size], "</select></td></tr>\n", pentry->name);
+
+      }
+
+    size += sprintf(&buf[size], "</table>\n");
+
     return size;
 }
 
@@ -468,18 +536,17 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
-  struct link_entry *link;
+  struct link_entry *link = NULL;
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "Links\n");
   size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
 
   /* Link set */
-  if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)))
+  if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
   {
     while(link)
       {
-
 	size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%d</td><td>%d</td><td>%0.2f</td><td>%0.2f</td></tr>\n",
 			olsr_ip_to_string(&link->local_iface_addr),
 			olsr_ip_to_string(&link->neighbor_iface_addr),
@@ -493,7 +560,10 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	link = link->next;
       }
   }
-
+  else
+    {
+      size += sprintf(&buf[size], "<tr><td colspan=8>Link set not available in the olsrd version you are running!</td></tr>\n");
+    }
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
@@ -516,6 +586,8 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 			  neigh->willingness);
 
 	  size += sprintf(&buf[size], "<td><select>\n");
+	  size += sprintf(&buf[size], "<option>IP ADDRESS</option>\n");
+
 	  thop_cnt = 0;
 
 	  for(list_2 = neigh->neighbor_2_list.next;
@@ -640,15 +712,36 @@ int
 build_mid_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
+  olsr_u8_t index;
+  struct mid_entry *entry;
+  struct addresses *alias;
 
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=2 CELLPADDING=0 ALIGN=center><tr><td>Registered MID entries</td><td>Local(announced) MID entries</td></tr>\n");
-  size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Alias</th></tr>\n");
-  size += sprintf(&buf[size], "</table></td>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  
+  /* MID */  
+  for(index=0;index<HASHSIZE;index++)
+    {
+      entry = mid_set[index].next;
+      while(entry != &mid_set[index])
+	{
+	  size += sprintf(&buf[size], "<tr><td>%s</td>\n", olsr_ip_to_string(&entry->main_addr));
+	  size += sprintf(&buf[size], "<td><select>\n<option>IP ADDRESS</option>\n");
 
+	  alias = entry->aliases;
+	  while(alias)
+	    {
+	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->address));
+	      alias = alias->next;
+	    }
 
-  size += sprintf(&buf[size], "<th><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Interface</th><th>IP</th></tr>\n");
-  size += sprintf(&buf[size], "</table></td></tr>\n");
+	  size += sprintf(&buf[size], "</tr>\n");
+	  entry = entry->next;
+	}
+    }
+
   size += sprintf(&buf[size], "</table><hr>\n");
+
+
 
   return size;
 }
@@ -727,3 +820,14 @@ olsr_netmask_to_string(union hna_netmask *mask)
 }
 
 
+
+
+char *
+sockaddr_to_string(struct sockaddr *address_to_convert)
+{
+  struct sockaddr_in           *address;
+  
+  address=(struct sockaddr_in *)address_to_convert; 
+  return(inet_ntoa(address->sin_addr));
+  
+}

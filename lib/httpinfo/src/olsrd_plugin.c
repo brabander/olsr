@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.2 2004/12/18 00:18:25 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.3 2004/12/18 19:12:35 kattemat Exp $
  */
 
 /*
@@ -123,7 +123,7 @@ my_fini()
 int
 register_olsr_param(char *key, char *value)
 {
-  if(!strcmp(key, "port"))
+  if(!strcmp(key, "port") || !strcmp(key, "Port"))
     {
      http_port = atoi(value);
      printf("(HTTPINFO) listening on port: %d\n", http_port);
@@ -224,7 +224,16 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-  /* Link set */
+  /* MID table */
+  if(!olsr_plugin_io(GETD__MID_SET, 
+		     &mid_set, 
+		     sizeof(mid_set)))
+  {
+    mid_set = NULL;
+    retval = 0;
+  }
+
+  /* Configuration */
   if(!olsr_plugin_io(GETD__OLSR_CNF, 
 		     &cfg, 
 		     sizeof(cfg)))
@@ -251,28 +260,12 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-  /* "ProcessChanges" event registration */
-  if(!olsr_plugin_io(GETF__REGISTER_PCF, 
-		     &register_pcf, 
-		     sizeof(register_pcf)))
-  {
-    register_pcf = NULL;
-    retval = 0;
-  }
-
-
-
   /* Add socket to OLSR select function */
-  if(!olsr_plugin_io(GETF__ADD_OLSR_SOCKET, &add_olsr_socket, sizeof(add_olsr_socket)))
+  if(!olsr_plugin_io(GETF__ADD_OLSR_SOCKET, 
+		     &add_olsr_socket, 
+		     sizeof(add_olsr_socket)))
   {
     add_olsr_socket = NULL;
-    retval = 0;
-  }
-
-  /* Remove socket from OLSR select function */
-  if(!olsr_plugin_io(GETF__REMOVE_OLSR_SOCKET, &remove_olsr_socket, sizeof(remove_olsr_socket)))
-  {
-    remove_olsr_socket = NULL;
     retval = 0;
   }
 
