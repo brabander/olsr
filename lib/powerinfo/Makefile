@@ -18,7 +18,7 @@ NAME ?= olsrd_power.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 LIBS ?= -lc -lm
-CFLAGS ?= -Wall -g -O2 $(PLUGINFLAGS)  -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -Wall -g -O2 -Wmissing-prototypes -Wstrict-prototypes
 LDFLAGS ?= -fPIC
 INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
@@ -29,7 +29,7 @@ NAME ?= olsrd_power.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 LIBS ?= -lc -lm
-CFLAGS ?= -Wall -g -O2 $(PLUGINFLAGS) -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -Wall -g -O2 -Wmissing-prototypes -Wstrict-prototypes
 LDFLAGS ?= -fPIC
 INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
@@ -37,9 +37,7 @@ all:	plugin
 else
 ifeq ($(OS), win32)
 NAME ?= olsrd_power.dll
-MYFLAGS ?= -g -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes $(PLUGINFLAGS)
-CFLAGS ?= -O2
-CFLAGS += $(MYFLAGS)
+CFLAGS ?= -O2 -g -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes $(PLUGINFLAGS)
 LDFLAGS ?= -mno-cygwin -shared -fPIC
 LIBS ?= -lws2_32
 INSTALL_LIB = 	cp $(NAME) ../..
@@ -48,6 +46,8 @@ all: 	help
 endif
 endif
 endif
+
+CFLAGS +=  $(PLUGINFLAGS)
 
 #Sourcefiles
 #add yours here
