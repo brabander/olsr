@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.30 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: link_set.c,v 1.31 2004/11/21 14:22:33 kattemat Exp $
  */
 
 
@@ -102,8 +102,6 @@ olsr_init_link_set()
       olsr_register_timeout_function(&olsr_time_out_packet_loss);
     }
 #endif
-
-  link_set = NULL;
 }
 
 

@@ -36,13 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.13 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: plugin.c,v 1.14 2004/11/21 14:22:33 kattemat Exp $
  */
 
 
 #include "olsr_plugin_io.h"
 #include <stdio.h>
-#include "plugin.h"
 #include "olsr.h"
 #include "defs.h"
 #include "parser.h"
@@ -59,6 +58,10 @@
 #include "apm.h"
 #include "routing_table.h"
 #include "mid_set.h"
+
+int
+olsr_plugin_io(int, void *, size_t);
+
 
 /**
  * Multi-purpose function for plugins

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.14 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: parser.c,v 1.15 2004/11/21 14:22:33 kattemat Exp $
  */
 
 #include "parser.h"
@@ -75,8 +75,6 @@ void
 olsr_init_parser()
 {
   olsr_printf(3, "Initializing parser...\n");
-
-  parse_functions = NULL;
 
   /* Initialize the packet functions */
   olsr_init_package_process();

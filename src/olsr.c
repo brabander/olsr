@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.29 2004/11/21 13:55:21 kattemat Exp $
+ * $Id: olsr.c,v 1.30 2004/11/21 14:22:33 kattemat Exp $
  */
 
 /**
@@ -331,9 +331,6 @@ olsr_init_tables()
 
   /* Initialize HNA set */
   olsr_init_hna_set();
-
-  /* Initialize ProcessChanges list */
-  ptf_list = NULL;
   
 }
 
