@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.1 2005/01/16 13:06:00 kattemat Exp $ */
+/* $Id: nameservice.c,v 1.2 2005/01/21 06:26:04 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -281,7 +281,7 @@ get_namemsg(struct namemsg *msg)
 {
 	msg->name_len = my_name_len;
 	char* txt = (char*)(msg + sizeof(struct namemsg));
-	strncpy(txt, my_name, MAX_NAME); 
+	strncpy(txt, my_name, my_name_len); 
 	return my_name_len;
 }
 
@@ -299,8 +299,9 @@ read_namemsg(struct namemsg *msg, struct name_entry *to)
 		if (to->name != NULL) {
 			free( to->name );
 		}
-		to->name = olsr_malloc(msg->name_len, "new name_entry name");
+		to->name = olsr_malloc(msg->name_len+1, "new name_entry name");
 		strncpy(to->name, txt, msg->name_len);
+		to->name[msg->name_len] = '\0';
 		return 1;
 	}
 	return 0;	
