@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.41 2005/01/24 07:55:35 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.42 2005/01/30 00:23:56 kattemat Exp $
  */
 
 /*
@@ -53,8 +53,23 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef OS
+#undef OS
+#endif
+
 #ifdef WIN32
 #define close(x) closesocket(x)
+#define OS "Windows"
+#endif
+#ifdef linux
+#define OS "GNU/Linux"
+#endif
+#ifdef __FreeBSD__
+#define OS "FreeBSD"
+#endif
+
+#ifndef OS
+#define OS "Undefined"
 #endif
 
 static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
@@ -753,6 +768,8 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
 
+
+    size += sprintf(&buf[size], "OS: %s\n<br>", OS);
 
     size += sprintf(&buf[size], "%s\n", systime);
 
