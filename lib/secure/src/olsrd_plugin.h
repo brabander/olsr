@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.5 2004/11/18 21:58:23 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.6 2004/11/19 17:03:15 kattemat Exp $
  */
 
 
@@ -459,6 +459,8 @@ int (*net_reserve_bufspace)(struct interface *, int);
 
 int (*net_outbuffer_push_reserved)(struct interface *, olsr_u8_t *, olsr_u16_t);
 
+int (*net_outbuffer_push)(struct interface *, olsr_u8_t *, olsr_u16_t);
+
 
 /****************************************************************************
  *                             Data from olsrd                              *
@@ -493,6 +495,9 @@ olsr_plugin_init();
 /* IPC initialization function */
 int
 plugin_ipc_init();
+
+int
+register_olsr_param(char *, char *);
 
 /* Destructor function */
 void

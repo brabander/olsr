@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.5 2004/11/18 22:00:48 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.6 2004/11/19 17:03:15 kattemat Exp $
  */
 
 
@@ -1033,7 +1033,7 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
 	      challenge);
 
   /* Add to buffer */
-  net_outbuffer_push(olsr_in_if, &crmsg, sizeof(struct c_respmsg));
+  net_outbuffer_push(olsr_in_if, (olsr_u8_t *)&crmsg, sizeof(struct c_respmsg));
   /* Send the request */
   net_output(olsr_in_if);
 
@@ -1105,7 +1105,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 	      olsr_ip_to_string(to));
 
   /* add to buffer */
-  net_outbuffer_push(olsr_in_if, &rrmsg, sizeof(struct r_respmsg));
+  net_outbuffer_push(olsr_in_if, (olsr_u8_t *)&rrmsg, sizeof(struct r_respmsg));
 
   /* Send the request */
   net_output(olsr_in_if);

@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.4 2004/11/18 21:57:35 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.5 2004/11/19 17:03:15 kattemat Exp $
  */
 
 
@@ -113,6 +113,13 @@ my_fini()
   olsr_plugin_exit();
 
   return;
+}
+
+
+int
+register_olsr_param(char *key, char *value)
+{
+  return 1;
 }
 
 
