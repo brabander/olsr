@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.66 2005/02/27 16:27:42 kattemat Exp $
+ * $Id: main.c,v 1.67 2005/02/27 16:57:15 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -358,7 +358,6 @@ main(int argc, char *argv[])
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr))
 
-
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
 
@@ -475,24 +474,12 @@ olsr_shutdown(int signal)
 static void
 set_default_values()
 {
-
-  memset(&main_addr, 0, sizeof(union olsr_ip_addr));
-
   exit_value = EXIT_SUCCESS; 
   /* If the application exits by signal it is concidered success,
    * if not, exit_value is set by the function calling olsr_exit.
    */
 
-  max_jitter = 0;
-  max_tc_vtime = 0;
-
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
-
-  del_gws = OLSR_FALSE;
-
-  /* Display packet content */
-  disp_pack_in = OLSR_FALSE;
-  disp_pack_out = OLSR_FALSE;
 
   /* Initialize empty TC timer */
   send_empty_tc = GET_TIMESTAMP(0);
