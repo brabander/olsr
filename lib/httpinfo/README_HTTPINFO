@@ -1,0 +1,8 @@
+HTTP MINI-SERVER PLUGIN FOR OLSRD
+by Andreas Tønnesen(andreto@olsr.org)
+
+installation:
+make
+make install
+
+- Andreas T
