@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.19 2004/11/14 19:14:36 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.20 2004/11/20 21:42:23 kattemat Exp $
  *
  */
 
@@ -72,7 +72,7 @@ ipc_init()
       olsr_exit("IPC socket", EXIT_FAILURE);
     }
 
-  if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
+  if(setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
     {
       perror("SO_REUSEADDR failed");
       return 0;
@@ -85,14 +85,21 @@ ipc_init()
   sin.sin_port = htons(IPC_PORT);
 
   /* bind the socket to the port number */
-  if (bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+  if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
     {
       perror("IPC bind");
-      olsr_exit("IPC bind", EXIT_FAILURE);
+      olsr_printf(1, "Will retry in 10 seconds...\n");
+      sleep(10);
+      if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+	{
+	  perror("IPC bind");
+	  olsr_exit("IPC bind", EXIT_FAILURE);
+	}
+      olsr_printf(1, "OK\n");
     }
 
   /* show that we are willing to listen */
-  if (listen(ipc_sock, olsr_cnf->ipc_connections) == -1) 
+  if(listen(ipc_sock, olsr_cnf->ipc_connections) == -1) 
     {
       perror("IPC listen");
       olsr_exit("IPC listen", EXIT_FAILURE);
@@ -512,11 +519,9 @@ ipc_send_net_info()
 int
 shutdown_ipc()
 {
-
+  olsr_printf(1, "Shutting down IPC...\n");
   close(ipc_sock);
-  
-  if(ipc_active)
-    close(ipc_connection);
+  close(ipc_connection);
   
   return 1;
 }
