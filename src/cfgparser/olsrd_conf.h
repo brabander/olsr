@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.h,v 1.10 2004/11/21 10:52:16 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.11 2004/11/22 14:03:59 kattemat Exp $
  */
 
 
@@ -64,5 +64,7 @@ struct conf_token
 void
 set_default_cnf(struct olsrd_config *);
 
+void 
+win32_stdio_hack(unsigned int);
 
 #endif
