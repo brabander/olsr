@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.42 2004/11/20 21:42:34 kattemat Exp $
+ * $Id: main.c,v 1.43 2004/11/20 23:27:24 kattemat Exp $
  *
  */
 
@@ -441,18 +441,9 @@ main(int argc, char *argv[])
   /* Sanity check configuration */
   if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
     {
+      print_usage();
       fprintf(stderr, "Bad configuration!\n");
       olsr_exit(__func__, EXIT_FAILURE);      
-    }
-
-  /*
-   *Interfaces need to be specified
-   */
-  if(olsr_cnf->interfaces == NULL)
-    {
-      fprintf(stderr, "OLSRD: no interfaces specified!\nuse the -i switch to specify interface(s)\nor set interface(s) in the configuration file!\n");
-      print_usage();
-      olsr_exit(__func__, EXIT_FAILURE);
     }
 
   /*
@@ -496,14 +487,6 @@ main(int argc, char *argv[])
 
   /* Initialize dynamic willingness calculation */
   olsr_init_willingness();
-
-  /* Sanity check for hysteresis values */
-  if((olsr_cnf->use_hysteresis) &&
-     (olsr_cnf->hysteresis_param.thr_high <= olsr_cnf->hysteresis_param.thr_low))
-    {
-      printf("Hysteresis threshold high lower than threshold low!!\nEdit the configuration file to fix this!\n\n");
-      olsr_exit(__func__, EXIT_FAILURE);
-    }
 
   /*
    *Set up willingness/APM
@@ -747,8 +730,8 @@ print_usage()
   fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
   fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"); 
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
-  fprintf(stderr, "  [-hint <hello interval value (secs)>] [-tcint <tc interval value (secs)>]\n");
-  fprintf(stderr, "  [-midint <mid interval value (secs)>] [-hnaint <hna interval value (secs)>]\n");
+  fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
+  fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
   fprintf(stderr, "  [-tos value (int)] [-T <Polling Rate (secs)>]\n"); 
 
 }
