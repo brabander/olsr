@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.16 2004/11/11 21:14:17 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.17 2004/11/12 16:33:13 kattemat Exp $
  *
  */
 
@@ -578,7 +578,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf(" *** olsrd configuration ***\n");
 
   printf("Debug Level      : %d\n", cnf->debug_level);
-  printf("IpVersion        : %d\n", cnf->ip_version);
+  if(cnf->ip_version == AF_INET6)
+    printf("IpVersion        : 6\n");
+  else
+    printf("IpVersion        : 4\n");
   if(cnf->allow_no_interfaces)
     printf("No interfaces    : ALLOWED\n");
   else
