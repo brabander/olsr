@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.7 2005/03/03 18:20:16 kattemat Exp $ */
+/* $Id: nameservice.c,v 1.8 2005/03/07 13:29:40 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -177,6 +177,7 @@ olsr_plugin_init()
 		if (name->ip.v4 == 0) {
 			// insert main_addr
 			memcpy(&name->ip, main_addr, ipsize);
+			prev = name;
 		} else {
 			// IP from config file
 			// check if we are allowed to announce a name for this IP
@@ -191,8 +192,10 @@ olsr_plugin_init()
 					free(name);
 				}
 			}
+			else {
+				prev = name;
+			}
 		}
-		prev = name;
 	}
 	
 	/* register functions with olsrd */
@@ -281,12 +284,11 @@ olsr_event(void *foo)
 	struct interface *ifn;
 	int namesize;
   
-	olsr_printf(3, "NAME PLUGIN: Generating packet - ");
-
 	/* looping trough interfaces */
 	for (ifn = ifs; ifn ; ifn = ifn->int_next) 
 	{
-		olsr_printf(3, "[%s]\n", ifn->int_name);
+		olsr_printf(3, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
+
 		/* fill message */
 		if(ipversion == AF_INET)
 		{
@@ -297,10 +299,10 @@ olsr_event(void *foo)
 			message->v4.ttl = MAX_TTL;
 			message->v4.hopcnt = 0;
 			message->v4.seqno = htons(get_msg_seqno());
-		
+			
 			namesize = encap_namemsg((struct namemsg*)&message->v4.message);
 			namesize = namesize + sizeof(struct olsrmsg);
-		
+			
 			message->v4.olsr_msgsize = htons(namesize);
 		}
 		else
@@ -312,13 +314,13 @@ olsr_event(void *foo)
 			message->v6.ttl = MAX_TTL;
 			message->v6.hopcnt = 0;
 			message->v6.seqno = htons(get_msg_seqno());
-	  
+			
 			namesize = encap_namemsg((struct namemsg*)&message->v6.message);
 			namesize = namesize + sizeof(struct olsrmsg6);
-	  
+			
 			message->v6.olsr_msgsize = htons(namesize);
 		}
-	
+		
 		if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
 			/* send data and try again */
 			net_output(ifn);
@@ -415,7 +417,7 @@ encap_namemsg(struct namemsg* msg)
 		pos += my_name->len;
 		// padding to 4 byte boundaries
                 for (k = my_name->len; (k & 3) != 0; k++)
-                  *pos++ = '\0';
+			*pos++ = '\0';
 		i++;
 	}
 	msg->nr_names = htons(i);
