@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.13 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: lq_route.c,v 1.14 2004/12/03 18:10:23 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -304,9 +304,9 @@ void olsr_calculate_lq_routing_table(void)
   struct list_node *node;
   struct dijk_vertex *myself;
   struct dijk_vertex *walker;
-  int hops;
   struct addresses *mid_walker;
   float etx;
+  int int_etx;
 
   // initialize the graph
 
@@ -414,18 +414,13 @@ void olsr_calculate_lq_routing_table(void)
   {
     vert = node->data;
 
-    hops = 1;
-
     // count hops to until the path ends or until we have reached a
     // one-hop neighbour
 
     for (walker = vert; walker != NULL && walker->prev != myself;
          walker = walker->prev)
-    {
       olsr_printf(2, "%s:%s <- ", olsr_ip_to_string(&walker->addr),
                   etx_to_string(walker->path_etx));
-      hops++;
-    }
 
     // if no path to a one-hop neighbour was found, ignore this node
 
@@ -439,15 +434,20 @@ void olsr_calculate_lq_routing_table(void)
       continue;
     }
 
+    int_etx = (int)vert->path_etx;
+
+    if (int_etx > 100)
+      int_etx = 100;
+
     // add a route to the main address of the destination node
 
-    olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
+    olsr_insert_routing_table(&vert->addr, &walker->addr, int_etx);
 
     // add routes to the remaining interfaces of the destination node
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
          mid_walker = mid_walker->next)
-      olsr_insert_routing_table(&mid_walker->address, &walker->addr, hops);
+      olsr_insert_routing_table(&mid_walker->address, &walker->addr, int_etx);
   }
 
   // free the graph
