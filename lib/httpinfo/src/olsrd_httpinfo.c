@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.33 2005/01/02 20:29:38 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.34 2005/01/03 20:12:49 kattemat Exp $
  */
 
 /*
@@ -68,7 +68,6 @@
 #define FRAMEWIDTH 800
 
 #define ACTIVE_TAB "class=\"active\""
-
 
 #define FILENREQ_MATCH(req, filename) \
         !strcmp(req, filename) || \
@@ -759,12 +758,12 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 	  }
 	else
 	  {
-	    size += sprintf(&buf[size], "<tr><td>IP: TBD</td>\n");
-	    size += sprintf(&buf[size], "<td>MASK: TBD</td>\n");
-	    size += sprintf(&buf[size], "<td>BCAST: TBD</td></tr>\n");
-	    size += sprintf(&buf[size], "<tr><td>MTU: TBD</td>\n");
-	    size += sprintf(&buf[size], "<td>WLAN: TBD</td>\n");
-	    size += sprintf(&buf[size], "<td>STATUS: TBD</td></tr>\n");
+	    size += sprintf(&buf[size], "<tr><td>IP: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_addr.sin6_addr));
+	    size += sprintf(&buf[size], "<td>MCAST: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_multaddr.sin6_addr));
+	    size += sprintf(&buf[size], "<td></td></tr>\n");
+	    size += sprintf(&buf[size], "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
+	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
+	    size += sprintf(&buf[size], "<td>STATUS: UP</td></tr>\n");
 	  }	    
 
       }
@@ -800,7 +799,7 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "</table>\n");
 
 
-    if(cfg->hna4_entries)
+    if((cfg->ip_version == AF_INET) && (cfg->hna4_entries))
       {
 	struct hna4_entry *hna4;
 	
@@ -812,6 +811,22 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 	    size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td></tr>\n", 
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
+	  }
+	
+	size += sprintf(&buf[size], "</table>\n");
+      }
+    else if((cfg->ip_version == AF_INET6) && (cfg->hna6_entries))
+      {
+	struct hna6_entry *hna6;
+	
+	size += sprintf(&buf[size], "<h2>Announced HNA entries</h2>\n");
+	size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Prefix length</th></tr>\n");
+	
+	for(hna6 = cfg->hna6_entries; hna6; hna6 = hna6->next)
+	  {
+	    size += sprintf(&buf[size], "<tr><td>%s</td><td>%d</td></tr>\n", 
+			    olsr_ip_to_string((union olsr_ip_addr *)&hna6->net),
+			    hna6->prefix_len);
 	  }
 	
 	size += sprintf(&buf[size], "</table>\n");
@@ -864,8 +879,6 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh != &neighbortable[index];
 	  neigh = neigh->next)
 	{
-	  olsr_printf(1, "Size: %d IP: %s\n", size, olsr_ip_to_string(&neigh->neighbor_main_addr));
-
 	  size += sprintf(&buf[size], 
 			  "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td>", 
 			  olsr_ip_to_string(&neigh->neighbor_main_addr),
@@ -909,7 +922,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last hop IP</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -924,8 +937,8 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  while(dst_entry != &entry->destinations)
 	    {
 	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%0.2f</td></tr>\n", 
-			      olsr_ip_to_string(&entry->T_last_addr), 
 			      olsr_ip_to_string(&dst_entry->T_dest_addr),
+			      olsr_ip_to_string(&entry->T_last_addr), 
 			      dst_entry->link_quality,
 			      dst_entry->inverse_link_quality,
 			      (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
