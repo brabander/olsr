@@ -37,7 +37,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.7 2004/11/30 16:52:15 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.8 2004/12/01 07:32:44 kattemat Exp $
+ */
+
+/*
+ * Threaded ping code added by Jens Nachitgall
+ *
  */
 
 #include "olsrd_dyn_gw.h"

@@ -1,22 +1,41 @@
-DYNAMIC INTERNET GATEWAY PLUGIN FOR UNIK OLSRD
+DYNAMIC INTERNET GATEWAY PLUGIN FOR olsr.org olsrd
 by Andreas Tønnesen(andreto@olsr.org)
+addittions by Jens Nachitgall
 
-06.11.2004
+30.11.2004
 TO BE UPDATED....
 
-- Upgraded to configm with v2 plugin interface
+- Upgraded to confirm with v2 plugin interface
 - removed IPC stuff
 - Removed much unnessecarry stuff
+- Added an optional validation based on the ping command, which caused
+  some internal restructuring, e.g. the dependency of a threading
+  library)
+- the config file accepts an "Interval", meaning how often the check is
+  done
 
 30.03.2004
 
 ABOUT
 
-Plugin is IPv4 only!
+Plugin is IPv4 only and it only runs on Linux with the libpthread
+library installed!
 
 This is a plugin that checks if the local node has a Internet-
-connection. A Internet-connetion is identified by a "default gw"
-with a hopcount of 0. That is a route to 0.0.0.0/0 with metric 0.
+connection. A Internet-connetion is identified by a "default gw" with a
+hopcount of 0. That is a route to 0.0.0.0/0 with metric 0.  By default
+the check is done every 5 secs. You can change the check interval by
+providing an value for "Interval" in the plugin's section of olsrd.conf.
+
+If one or more IPv4 addresses are given as values for "Ping" in the
+section or dyn_gw in olsrd.conf, then a test is done to validate if
+there is really an internet connection (and not just an entry in the
+routing table). If any of the arbitrary many given IPv4 addresses can be
+pinged, the validation was successful. The addresses are pinged in the
+order given in the olsrd.conf (i.e. the first given address is pinged
+first, the the 2nd, and so on). For this to work a command like 
+"ping -c 1 -q <PING-ADDRESS>" must be possible on the system olsrd runs
+on. The validation is based on the return value of this ping command.
 
 Since OLSR uses hopcount/metric on all routes this plugin will
 not respond to Internet gateways added by olsrd.
@@ -25,8 +44,7 @@ When a Internet gateway is discovered - this node will start
 announcing 0.0.0.0/0 connectivity by HNA messages flooded into
 the OLSR network. If the route is removed the HNA messages
 will not be transmitted. This check is totally dynamic and
-Internet connectivity might come and go. The check for connectivity
-is done every 5 seconds.
+Internet connectivity might come and go.
 
 This plugin will work very good with a automatic network cable
 detection daemon such as  netplug:
@@ -34,5 +52,3 @@ http://freshmeat.net/projects/key-netplug/
 
 This plugin is a good example of using plugins for other stuff
 than packet transmission.
-
-- Andreas T
