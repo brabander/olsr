@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.7 2004/11/24 13:10:56 tlopatic Exp $
+;  $Id: installer.nsi,v 1.8 2004/12/01 19:42:29 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -124,9 +124,11 @@ Section "Uninstall"
         Delete $INSTDIR\Switch.exe
         Delete $INSTDIR\Shim.exe
         Delete $INSTDIR\olsrd.exe
+	Delete $INSTDIR\olsrd_cfgparser.dll
         Delete $INSTDIR\README-WIN32.txt
         Delete $INSTDIR\linux-manual.txt
         Delete $INSTDIR\Default.olsr
+	Delete $INSTDIR\olsrd.conf
         Delete $INSTDIR\olsrd_dot_draw.dll
         Delete $INSTDIR\uninstall.exe
 
