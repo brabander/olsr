@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.6 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.7 2004/11/08 06:47:55 kattemat Exp $
  *
  */
 
@@ -37,6 +37,8 @@
 #define DEF_DEBUGLVL       1
 #define DEF_OPEN_IPC       OLSR_FALSE
 #define DEF_USE_HYST       OLSR_TRUE
+#define DEF_LQ_LEVEL       0
+
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.13 2004/11/07 21:39:25 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.14 2004/11/08 06:47:55 kattemat Exp $
  *
  */
 
@@ -189,12 +189,6 @@ union olsr_ip_addr
  */
 #define TC_REDUNDANCY         0
 #define MPR_COVERAGE          1
-
-/*
- * link quality defaults
- */
-
-#define LQ_LEVEL              0
 
 /*
  *Misc. Constants

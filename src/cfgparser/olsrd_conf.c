@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.14 2004/11/07 20:09:12 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.15 2004/11/08 06:47:55 kattemat Exp $
  *
  */
 
@@ -262,7 +262,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
-    cnf->lq_level = LQ_LEVEL;
+    cnf->lq_level = DEF_LQ_LEVEL;
 }
 
 
