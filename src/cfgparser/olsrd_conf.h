@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.h,v 1.2 2004/10/16 23:17:48 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.3 2004/10/17 11:52:41 kattemat Exp $
  *
  */
 
@@ -50,11 +50,5 @@ set_default_cnf(struct olsrd_config *);
 
 struct if_config_options *
 find_if_rule_by_name(struct if_config_options *, char *);
-
-struct conf_token *
-get_conf_token();
-
-struct if_config_options *
-get_default_if_config();
 
 #endif

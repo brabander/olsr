@@ -1,6 +1,6 @@
-#line 2 "oscan.c"
+#line 2 "src/cfgparser/oscan.c"
 
-#line 4 "oscan.c"
+#line 4 "src/cfgparser/oscan.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -817,8 +817,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "oscan.lex"
-#line 2 "oscan.lex"
+#line 1 "src/cfgparser/oscan.lex"
+#line 2 "src/cfgparser/oscan.lex"
 
 /*
  * OLSR ad-hoc routing table management protocol config parser
@@ -841,7 +841,7 @@ char *yytext;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oscan.c,v 1.1 2004/10/16 23:22:09 kattemat Exp $
+ * $Id: oscan.c,v 1.2 2004/10/17 11:52:41 kattemat Exp $
  *
  */
 
@@ -858,7 +858,21 @@ char *yytext;
 
 #include "oparse.h"
 
+/* Prototypes */
+int yyget_lineno(void);
+FILE * yyget_in(void);
+FILE* yyget_out(void);
+int yyget_leng(void);
+char *yyget_text(void);
+void yyset_lineno(int);
+void yyset_in(FILE *);
+void yyset_out(FILE *);
+int yyget_debug(void);
+void yyset_debug(int);
+int yylex_destroy(void);
 
+struct conf_token *
+get_conf_token(void);
 
 struct conf_token *
 get_conf_token()
@@ -879,46 +893,7 @@ get_conf_token()
 
 
 
-struct if_config_options *
-get_default_if_config()
-{
-  struct if_config_options *io = malloc(sizeof(struct if_config_options));
-  struct in6_addr in6;
- 
-  memset(io, 0, sizeof(struct if_config_options));
-
-  io->ipv6_addrtype = 1;
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
-
-
-  io->hello_params.emission_interval = HELLO_INTERVAL;
-  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-  io->tc_params.emission_interval = TC_INTERVAL;
-  io->tc_params.validity_time = TOP_HOLD_TIME;
-  io->mid_params.emission_interval = MID_INTERVAL;
-  io->mid_params.validity_time = MID_HOLD_TIME;
-  io->hna_params.emission_interval = HNA_INTERVAL;
-  io->hna_params.validity_time = HNA_HOLD_TIME;
-
-  return io;
-
-}
-
-
-#line 922 "oscan.c"
+#line 897 "src/cfgparser/oscan.c"
 
 #define INITIAL 0
 
@@ -1069,10 +1044,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 126 "oscan.lex"
+#line 101 "src/cfgparser/oscan.lex"
 
 
-#line 1076 "oscan.c"
+#line 1051 "src/cfgparser/oscan.c"
 
 	if ( (yy_init) )
 		{
@@ -1158,7 +1133,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 128 "oscan.lex"
+#line 103 "src/cfgparser/oscan.lex"
 {
 
   current_line++;
@@ -1167,7 +1142,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 134 "oscan.lex"
+#line 109 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_OPEN;
@@ -1175,7 +1150,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 139 "oscan.lex"
+#line 114 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_CLOSE;
@@ -1183,7 +1158,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 144 "oscan.lex"
+#line 119 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_SEMI;
@@ -1192,7 +1167,7 @@ YY_RULE_SETUP
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 149 "oscan.lex"
+#line 124 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
 
@@ -1213,7 +1188,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 167 "oscan.lex"
+#line 142 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
 
@@ -1224,7 +1199,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 175 "oscan.lex"
+#line 150 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
 
@@ -1234,7 +1209,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 182 "oscan.lex"
+#line 157 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
   
@@ -1254,7 +1229,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 201 "oscan.lex"
+#line 176 "src/cfgparser/oscan.lex"
 {
 
   yylval = get_conf_token();
@@ -1275,7 +1250,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 220 "oscan.lex"
+#line 195 "src/cfgparser/oscan.lex"
 {
 
   yylval = get_conf_token();
@@ -1296,7 +1271,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 239 "oscan.lex"
+#line 214 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
 
@@ -1311,7 +1286,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 253 "oscan.lex"
+#line 228 "src/cfgparser/oscan.lex"
 {
   yylval = get_conf_token();
 
@@ -1326,7 +1301,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 266 "oscan.lex"
+#line 241 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_DEBUGLEVEL;
@@ -1334,7 +1309,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 271 "oscan.lex"
+#line 246 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IPVERSION;
@@ -1342,7 +1317,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 276 "oscan.lex"
+#line 251 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HNA4;
@@ -1350,7 +1325,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 281 "oscan.lex"
+#line 256 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HNA6;
@@ -1358,7 +1333,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 286 "oscan.lex"
+#line 261 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_PLUGIN;
@@ -1366,7 +1341,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 291 "oscan.lex"
+#line 266 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_PLNAME;
@@ -1374,7 +1349,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 296 "oscan.lex"
+#line 271 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_PLPARAM;
@@ -1382,7 +1357,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 301 "oscan.lex"
+#line 276 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_INTERFACES;
@@ -1390,7 +1365,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 306 "oscan.lex"
+#line 281 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_NOINT;
@@ -1398,7 +1373,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 311 "oscan.lex"
+#line 286 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_TOS;
@@ -1406,7 +1381,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 316 "oscan.lex"
+#line 291 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_WILLINGNESS;
@@ -1414,7 +1389,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 321 "oscan.lex"
+#line 296 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IPCCON;
@@ -1422,7 +1397,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 326 "oscan.lex"
+#line 301 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_USEHYST;
@@ -1430,7 +1405,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 331 "oscan.lex"
+#line 306 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HYSTSCALE;
@@ -1438,7 +1413,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 336 "oscan.lex"
+#line 311 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HYSTUPPER;
@@ -1446,7 +1421,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 341 "oscan.lex"
+#line 316 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HYSTLOWER;
@@ -1454,7 +1429,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 346 "oscan.lex"
+#line 321 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_POLLRATE;
@@ -1462,7 +1437,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 352 "oscan.lex"
+#line 327 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_TCREDUNDANCY;
@@ -1470,7 +1445,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 357 "oscan.lex"
+#line 332 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_MPRCOVERAGE;
@@ -1478,7 +1453,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 363 "oscan.lex"
+#line 338 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IFSETUP;
@@ -1486,7 +1461,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 369 "oscan.lex"
+#line 344 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IP4BROADCAST;
@@ -1494,7 +1469,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 373 "oscan.lex"
+#line 348 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IP6ADDRTYPE;
@@ -1502,7 +1477,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 377 "oscan.lex"
+#line 352 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IP6MULTISITE;
@@ -1510,7 +1485,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 381 "oscan.lex"
+#line 356 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_IP6MULTIGLOBAL;
@@ -1518,7 +1493,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 385 "oscan.lex"
+#line 360 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HELLOINT;
@@ -1526,7 +1501,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 389 "oscan.lex"
+#line 364 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HELLOVAL;
@@ -1534,7 +1509,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 393 "oscan.lex"
+#line 368 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_TCINT;
@@ -1542,7 +1517,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 397 "oscan.lex"
+#line 372 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_TCVAL;
@@ -1550,7 +1525,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 401 "oscan.lex"
+#line 376 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_MIDINT;
@@ -1558,7 +1533,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 405 "oscan.lex"
+#line 380 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_MIDVAL;
@@ -1566,7 +1541,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 409 "oscan.lex"
+#line 384 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HNAINT;
@@ -1574,7 +1549,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 413 "oscan.lex"
+#line 388 "src/cfgparser/oscan.lex"
 {
   yylval = NULL;
   return TOK_HNAVAL;
@@ -1583,19 +1558,19 @@ YY_RULE_SETUP
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 420 "oscan.lex"
+#line 395 "src/cfgparser/oscan.lex"
 {
   current_line++;
 }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 424 "oscan.lex"
+#line 399 "src/cfgparser/oscan.lex"
 
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 426 "oscan.lex"
+#line 401 "src/cfgparser/oscan.lex"
 {
   /* Do nothing */
   //fprintf(stderr, "Failed to parse line %d of configuration file.\n",
@@ -1610,10 +1585,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 438 "oscan.lex"
+#line 413 "src/cfgparser/oscan.lex"
 ECHO;
 	YY_BREAK
-#line 1617 "oscan.c"
+#line 1592 "src/cfgparser/oscan.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2579,7 +2554,7 @@ void yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 438 "oscan.lex"
+#line 413 "src/cfgparser/oscan.lex"
 
 
 

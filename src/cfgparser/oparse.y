@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.2 2004/10/16 23:17:48 kattemat Exp $
+ * $Id: oparse.y,v 1.3 2004/10/17 11:52:41 kattemat Exp $
  *
  */
 
@@ -42,7 +42,52 @@
 
 void yyerror(char *);
 int yylex(void);
+
+struct if_config_options *
+get_default_if_config(void);
+
+
+struct if_config_options *
+get_default_if_config()
+{
+  struct if_config_options *io = malloc(sizeof(struct if_config_options));
+  struct in6_addr in6;
  
+  memset(io, 0, sizeof(struct if_config_options));
+
+  io->ipv6_addrtype = 1;
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+
+
+  io->hello_params.emission_interval = HELLO_INTERVAL;
+  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
+  io->tc_params.emission_interval = TC_INTERVAL;
+  io->tc_params.validity_time = TOP_HOLD_TIME;
+  io->mid_params.emission_interval = MID_INTERVAL;
+  io->mid_params.validity_time = MID_HOLD_TIME;
+  io->hna_params.emission_interval = HNA_INTERVAL;
+  io->hna_params.validity_time = HNA_HOLD_TIME;
+
+  return io;
+
+}
+
+
+
+
 %}
 
 %token TOK_OPEN

@@ -146,7 +146,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "oparse.y"
+#line 1 "src/cfgparser/oparse.y"
 
 
 /*
@@ -170,7 +170,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.c,v 1.1 2004/10/16 23:22:09 kattemat Exp $
+ * $Id: oparse.c,v 1.2 2004/10/17 11:52:41 kattemat Exp $
  *
  */
 
@@ -191,7 +191,52 @@
 
 void yyerror(char *);
 int yylex(void);
+
+struct if_config_options *
+get_default_if_config(void);
+
+
+struct if_config_options *
+get_default_if_config()
+{
+  struct if_config_options *io = malloc(sizeof(struct if_config_options));
+  struct in6_addr in6;
  
+  memset(io, 0, sizeof(struct if_config_options));
+
+  io->ipv6_addrtype = 1;
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+
+
+  io->hello_params.emission_interval = HELLO_INTERVAL;
+  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
+  io->tc_params.emission_interval = TC_INTERVAL;
+  io->tc_params.validity_time = TOP_HOLD_TIME;
+  io->mid_params.emission_interval = MID_INTERVAL;
+  io->mid_params.validity_time = MID_HOLD_TIME;
+  io->hna_params.emission_interval = HNA_INTERVAL;
+  io->hna_params.validity_time = HNA_HOLD_TIME;
+
+  return io;
+
+}
+
+
+
+
 
 
 /* Enabling traces.  */
@@ -220,7 +265,7 @@ typedef int YYSTYPE;
 
 
 /* Line 214 of yacc.c.  */
-#line 224 "oparse.c"
+#line 269 "y.tab.c"
 
 #if ! defined (yyoverflow) || YYERROR_VERBOSE
 
@@ -420,15 +465,15 @@ static const yysigned_char yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short yyrline[] =
 {
-       0,   100,   100,   101,   102,   105,   106,   107,   108,   109,
-     110,   111,   112,   113,   114,   115,   116,   117,   118,   121,
-     122,   123,   124,   125,   128,   131,   131,   134,   137,   137,
-     140,   143,   143,   146,   147,   150,   153,   153,   156,   157,
-     158,   159,   160,   161,   162,   163,   164,   165,   166,   167,
-     168,   171,   174,   174,   177,   178,   179,   185,   208,   227,
-     235,   255,   273,   280,   287,   294,   301,   308,   315,   322,
-     331,   349,   363,   399,   436,   460,   467,   482,   497,   513,
-     529,   538,   547,   555,   565,   581,   597,   619,   631
+       0,   145,   145,   146,   147,   150,   151,   152,   153,   154,
+     155,   156,   157,   158,   159,   160,   161,   162,   163,   166,
+     167,   168,   169,   170,   173,   176,   176,   179,   182,   182,
+     185,   188,   188,   191,   192,   195,   198,   198,   201,   202,
+     203,   204,   205,   206,   207,   208,   209,   210,   211,   212,
+     213,   216,   219,   219,   222,   223,   224,   230,   253,   272,
+     280,   300,   318,   325,   332,   339,   346,   353,   360,   367,
+     376,   394,   408,   444,   481,   505,   512,   527,   542,   558,
+     574,   583,   592,   600,   610,   626,   642,   664,   676
 };
 #endif
 
@@ -1222,7 +1267,7 @@ yyreduce:
   switch (yyn)
     {
         case 57:
-#line 186 "oparse.y"
+#line 231 "src/cfgparser/oparse.y"
     {
   struct if_config_options *io = get_default_if_config();
   if(io == NULL)
@@ -1241,11 +1286,11 @@ yyreduce:
   cnf->if_options = io;
 
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 58:
-#line 209 "oparse.y"
+#line 254 "src/cfgparser/oparse.y"
     {
   struct in_addr in;
 
@@ -1261,20 +1306,20 @@ yyreduce:
 
   free(yyvsp[0]->string);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 59:
-#line 228 "oparse.y"
+#line 273 "src/cfgparser/oparse.y"
     {
   cnf->if_options->ipv6_addrtype = yyvsp[0]->boolean;
   
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 60:
-#line 236 "oparse.y"
+#line 281 "src/cfgparser/oparse.y"
     {
   struct in6_addr in6;
 
@@ -1290,11 +1335,11 @@ yyreduce:
 
   free(yyvsp[0]->string);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 61:
-#line 256 "oparse.y"
+#line 301 "src/cfgparser/oparse.y"
     {
   struct in6_addr in6;
 
@@ -1310,83 +1355,83 @@ yyreduce:
 
   free(yyvsp[0]->string);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 62:
-#line 274 "oparse.y"
+#line 319 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hello_params.emission_interval = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 63:
-#line 281 "oparse.y"
+#line 326 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hello_params.validity_time = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 64:
-#line 288 "oparse.y"
+#line 333 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->tc_params.emission_interval = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 65:
-#line 295 "oparse.y"
+#line 340 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->tc_params.validity_time = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 66:
-#line 302 "oparse.y"
+#line 347 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->mid_params.emission_interval = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 67:
-#line 309 "oparse.y"
+#line 354 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->mid_params.validity_time = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 68:
-#line 316 "oparse.y"
+#line 361 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hna_params.emission_interval = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 69:
-#line 323 "oparse.y"
+#line 368 "src/cfgparser/oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hna_params.validity_time = yyvsp[0]->floating;
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 70:
-#line 332 "oparse.y"
+#line 377 "src/cfgparser/oparse.y"
     {
 
   if(yyvsp[0]->boolean == 1)
@@ -1400,11 +1445,11 @@ yyreduce:
     }
 
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 71:
-#line 350 "oparse.y"
+#line 395 "src/cfgparser/oparse.y"
     {
   if((yyvsp[0]->integer != 4) && (yyvsp[0]->integer != 6))
     {
@@ -1414,11 +1459,11 @@ yyreduce:
   cnf->ip_version = yyvsp[0]->integer;
   if(PARSER_DEBUG) printf("IpVersion: %d\n", cnf->ip_version);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 72:
-#line 364 "oparse.y"
+#line 409 "src/cfgparser/oparse.y"
     {
   struct hna4_entry *h = malloc(sizeof(struct hna4_entry));
   struct in_addr in;
@@ -1452,11 +1497,11 @@ yyreduce:
   free(yyvsp[0]->string);
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 73:
-#line 400 "oparse.y"
+#line 445 "src/cfgparser/oparse.y"
     {
   struct hna6_entry *h = malloc(sizeof(struct hna6_entry));
   struct in6_addr in6;
@@ -1491,11 +1536,11 @@ yyreduce:
   free(yyvsp[-1]);
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 74:
-#line 437 "oparse.y"
+#line 482 "src/cfgparser/oparse.y"
     {
   struct olsr_if *in = malloc(sizeof(struct olsr_if));
   
@@ -1516,19 +1561,19 @@ yyreduce:
 
   free(yyvsp[-1]);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 75:
-#line 461 "oparse.y"
+#line 506 "src/cfgparser/oparse.y"
     {
   if(PARSER_DEBUG) printf("Noint set to %d\n", yyvsp[0]->boolean);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 76:
-#line 468 "oparse.y"
+#line 513 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1540,11 +1585,11 @@ yyreduce:
     }
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 77:
-#line 483 "oparse.y"
+#line 528 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1556,11 +1601,11 @@ yyreduce:
     }
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 78:
-#line 498 "oparse.y"
+#line 543 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1572,11 +1617,11 @@ yyreduce:
     }
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 79:
-#line 514 "oparse.y"
+#line 559 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1588,48 +1633,48 @@ yyreduce:
     }
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 80:
-#line 530 "oparse.y"
+#line 575 "src/cfgparser/oparse.y"
     {
   cnf->hysteresis_param.scaling = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis Scaling: %0.2f\n", yyvsp[0]->floating);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 81:
-#line 539 "oparse.y"
+#line 584 "src/cfgparser/oparse.y"
     {
   cnf->hysteresis_param.thr_high = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis UpperThr: %0.2f\n", yyvsp[0]->floating);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 82:
-#line 548 "oparse.y"
+#line 593 "src/cfgparser/oparse.y"
     {
   cnf->hysteresis_param.thr_low = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis LowerThr: %0.2f\n", yyvsp[0]->floating);
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 83:
-#line 556 "oparse.y"
+#line 601 "src/cfgparser/oparse.y"
     {
   if(PARSER_DEBUG) printf("Pollrate %0.2f\n", yyvsp[0]->floating);
   cnf->pollrate = yyvsp[0]->floating;
 
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 84:
-#line 566 "oparse.y"
+#line 611 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1642,11 +1687,11 @@ yyreduce:
     }
   free(yyvsp[0]);
 
-;}
+}
     break;
 
   case 85:
-#line 582 "oparse.y"
+#line 627 "src/cfgparser/oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1658,11 +1703,11 @@ yyreduce:
       cnf->mpr_coverage = yyvsp[0]->integer;
     }
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 86:
-#line 598 "oparse.y"
+#line 643 "src/cfgparser/oparse.y"
     {
   struct plugin_entry *pe = malloc(sizeof(struct plugin_entry));
   
@@ -1681,11 +1726,11 @@ yyreduce:
   cnf->plugins = pe;
 
   free(yyvsp[0]);
-;}
+}
     break;
 
   case 87:
-#line 620 "oparse.y"
+#line 665 "src/cfgparser/oparse.y"
     {
 
     if(PARSER_DEBUG) printf("Plugin param key:\"%s\" val: \"%s\"\n", yyvsp[-1]->string, yyvsp[0]->string);
@@ -1694,21 +1739,21 @@ yyreduce:
     free(yyvsp[-1]);
     free(yyvsp[0]->string);
     free(yyvsp[0]);
-;}
+}
     break;
 
   case 88:
-#line 632 "oparse.y"
+#line 677 "src/cfgparser/oparse.y"
     {
     //if(PARSER_DEBUG) printf("Comment\n");
-;}
+}
     break;
 
 
     }
 
 /* Line 999 of yacc.c.  */
-#line 1712 "oparse.c"
+#line 1757 "y.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1902,11 +1947,12 @@ yyreturn:
 }
 
 
-#line 639 "oparse.y"
+#line 684 "src/cfgparser/oparse.y"
 
 
 void yyerror (char *string)
 {
   fprintf(stderr, "Config line %d: %s\n", current_line, string);
 }
+
 

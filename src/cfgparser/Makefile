@@ -8,13 +8,12 @@ ifdef MAKELIB
 NAME ?= $(LDNAME)
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 LDFLAGS ?= -shared -Wl,-soname,$(NAME)
-CFLAGS ?= -Wall -fPIC -g -DMAKELIB -I..
+CFLAGS ?= -Wall -Wall -Wmissing-prototypes -Wstrict-prototypes -fPIC -g -DMAKELIB -I..
 LIBS  ?= -lm -lc
-DEP = libclean
 else 
 NAME ?= olsrd_cfgparser
 LDFLAGS ?=
-CFLAGS ?= -Wall -g -DMAKEBIN -I..
+CFLAGS ?= -Wall -Wall -Wmissing-prototypes -Wstrict-prototypes -g -DMAKEBIN -I..
 endif
 
 BISON ?= bison
@@ -23,8 +22,9 @@ FLEX ?= flex
 
 all:	$(NAME)
 
-$(NAME):	$(DEP) $(OBJS)
+$(NAME):	$(OBJS)
 		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
+		rm -f *.o
 
 oscan.c:	oscan.lex oparse.h olsrd_conf.h
 		$(FLEX) -ooscan.c oscan.lex
@@ -42,10 +42,6 @@ clean:
 		rm -f *.o
 		rm -f $(NAME)
 		rm -f $(LDNAME)
-
-
-libclean:
-		rm -f *.o
 
 
 
