@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.11 2004/12/18 11:46:07 kattemat Exp $
+ * $Id: ifnet.c,v 1.12 2004/12/30 18:10:59 kattemat Exp $
  */
 
 
@@ -197,7 +197,9 @@ chk_if_changed(struct olsr_if *iface)
    */
 
   /* Check broadcast */
-  if ((olsr_cnf->ip_version == AF_INET) && (!(ifp->int_flags & IFF_BROADCAST))) 
+  if ((olsr_cnf->ip_version == AF_INET) && 
+      (iface->cnf->ipv4_broadcast.v4) && /* Skip if fixed bcast */ 
+      (!(ifp->int_flags & IFF_BROADCAST))) 
     {
       olsr_printf(3, "\tNo broadcast - removing\n");
       goto remove_interface;
@@ -562,7 +564,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     }
 
   /* Check broadcast */
-  if ((olsr_cnf->ip_version == AF_INET) && (!(ifs.int_flags & IFF_BROADCAST))) 
+  if ((olsr_cnf->ip_version == AF_INET) &&
+      (iface->cnf->ipv4_broadcast.v4) && /* Skip if fixed bcast */ 
+      (!(ifs.int_flags & IFF_BROADCAST))) 
     {
       olsr_printf(debuglvl, "\tNo broadcast - skipping\n");
       return 0;
