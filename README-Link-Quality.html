@@ -23,7 +23,7 @@
     <H2>olsrd Link Quality Extensions</H2>
 
     <P>
-      $Id: README-Link-Quality.html,v 1.1 2004/12/05 20:37:18 tlopatic Exp $
+      $Id: README-Link-Quality.html,v 1.2 2005/02/15 18:19:36 tlopatic Exp $
     </P>
 
     <H3>Credits</H3>
@@ -31,10 +31,10 @@
     <P>
       The way in which the ETX metric is applied to OLSR owes its
       existence to ideas conceived by the wonderful folks at
-      <A HREF="http://www.c-base.org">c-base</A> and
+      <A HREF="http://www.c-base.org">c-base</A>
+      and
       <A HREF="http://www.freifunk.net">freifunk.net</A>.
-      Any implementation bugs are nevertheless solely Thomas's fault,
-      though.
+      Any implementation bugs are solely Thomas's fault, though.
     </P>
 
     <P>
@@ -43,6 +43,17 @@
       for supplying a great testbed in Berlin, and for being
       you!
     </P>
+
+    <H3>Changes</H3>
+
+    <UL>
+      <LI>
+        <P>
+          0.4.9 - Documented the <EM>LinkQualityMult</EM>
+          configuration directive.
+        </P>
+      </LI>
+    </UL>
       
     <H3>Theory</H3>
 
@@ -305,6 +316,39 @@
       longer intervals just increase this value.
     </P>
 
+    <P>
+      Version 0.4.9 supports a third configuration parameter,
+      <EM>LinkQualityMult</EM>. This is a per-interface parameter, so
+      it may only appear in an interface configuration block. This
+      parameter can be used to alter the LQ values that we announce,
+      which will then result in an altered ETX for links between us
+      and our neighbors - remember that ETX = 1 / (NLQ x LQ).
+    </P>
+
+    <P>
+      The idea is to enable us to make certain links that we have
+      artificially appear better or worse than they actually are. In
+      this way we can manually affect the routing decisions made by
+      the OLSR network.
+    </P>
+    
+    <P>
+      The <EM>LinkQualityMult</EM> parameter is followed by an IP
+      address and a number, the multiplier. The IP address specifies
+      the IP address of the neighbor interface address of the link
+      that we want to manipulate. The LQ values that we determine for
+      this link are then multiplied by the given multiplier.
+    </P>
+
+    <P>
+      If the word <EM>default</EM> is specified in lieu of an IP
+      address, then this multiplier applies to all links via the
+      interface that we're configuring. Note, however, that a
+      multiplier linked to a real IP address has priority over the
+      default multiplier. So, we're looking for the most specific
+      match.
+    </P>
+
     <H4>Old Configuration Parameters</H4>
 
     <P>
@@ -369,6 +413,40 @@ Interface "if03"
   HelloValidityTime     20.0
 }
     </PRE>
+
+    <P>
+      Let's assume that we would like to use the
+      <EM>LinkQualityMult</EM> directive to multiply the LQ value that
+      we report for the link between our local interface <EM>if03</EM>
+      and an interface of one of our neighbors that has an IP address
+      of 192.168.0.1. Say, we'd like to multiply the LQ value by
+      0.5. We would then simply add the following line to the
+      <EM>Interface</EM> section of the above configuration file.
+    </P>
+
+    <PRE>
+  LinkQualityMult 192.168.0.1 0.5
+    </PRE>
+
+    <P>
+      Suppose that we would further like to multiply the LQ values
+      that we report for all other links between our local interface
+      <EM>if03</EM> and a neighbor interface by 0.8. We would then
+      add a second, default <EM>LinkQualityMult</EM> statement and we
+      would end up with the following two lines.
+    </P>
+
+    <PRE>
+  LinkQualityMult 192.168.0.1 0.5
+  LinkQualityMult default 0.8
+    </PRE>
+
+    <P>
+      For the link to 192.168.0.1 the first line would have precedence
+      over the second (default) line and 0.5 would be used as the
+      multiplier. For all other links the default multiplier of 0.8
+      would be used, as there isn't any better match.
+    </P>
 
     <H3>Debug Output</H3>
     
