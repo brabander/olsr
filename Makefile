@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.36 2004/12/01 21:08:42 kattemat Exp $
+# $Id: Makefile,v 1.37 2004/12/01 21:15:49 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -74,7 +74,7 @@ DEFINES += 	-Dlinux
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
 		-O2 -g #-pg -DDEBUG #-march=i686
 LIBS =		-lm -ldl
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -Y $(DEFINES) $(INCLUDES) $(SRCS) >/dev/null 2>&1
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) -Y $(INCLUDES) $(SRCS) >/dev/null 2>&1
 
 else
 ifeq ($(OS), fbsd)
