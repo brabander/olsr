@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.43 2004/12/06 12:20:47 tlopatic Exp $
+# $Id: Makefile,v 1.44 2004/12/12 17:53:38 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -88,6 +88,15 @@ HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
+
+else
+ifeq ($(OS), nbsd)
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
+LIBS =		-lm
+MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__NetBSD__ $(INCLUDES) $(SRCS)
 
 else
 ifeq ($(OS), osx)
@@ -163,6 +172,11 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
 		mv olsr-setup.exe olsr-${VERS}-setup.exe
 
+else
+
+all:	help
+
+endif
 endif
 endif
 endif
@@ -200,6 +214,7 @@ help:
 	@echo ' linux - GNU/Linux                  '
 	@echo ' win32 - MS Windows                 '
 	@echo ' fbsd  - FreeBSD                    '
+	@echo ' nbsd  - NetBSD                     '
 	@echo ' osx   - Mac OS X                   '
 	@echo ' ---------------------------------  '
 	@echo ' Example - build for windows:       '
