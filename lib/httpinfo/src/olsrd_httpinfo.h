@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.6 2004/12/17 13:01:12 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.7 2004/12/17 15:18:07 kattemat Exp $
  */
 
 /*
@@ -76,14 +76,14 @@ static const char *http_ok_head[] =
     "</STYLE>\n\n",
     "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
     "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
-    "<TR BGCOLOR=\"#000000\">\n",
+    "<TR BGCOLOR=\"#000044\">\n",
     "<TD WIDTH=30 HEIGHT=\"69\">",
     "</TD>\n",
     "<TD WIDTH=345 VALIGN=center ALIGN=center>\n",
     "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\"></b>olsr.org OLSR daemon<b></TD>\n",
     "<TD ALIGN=center VALIGN=bottom><FONT COLOR=white>\n"
     "</FONT></TD>\n",
-    "</TR><TR BGCOLOR=\"#888888\">\n",
+    "</TR><TR BGCOLOR=\"#8888cc\">\n",
     "<TD COLSPAN=2 HEIGHT=30 ALIGN=left VALIGN=center>\n",
     "<B><FONT SIZE=+1 COLOR=\"#FFFFFF\">&nbsp;Version 0.4.8\n",
     "</FONT></B></TD>\n",
@@ -121,14 +121,14 @@ static const char *http_ok_tail[] =
     "<HR ALIGN=center WIDTH=800>\n",
     "<P>\n",
     "<P>     \n",
-    "<TABLE WIDTH=800 BGCOLOR=\"#ECECEC\" BORDER=0 CELLPADDING=2 ALIGN=center>\n",
+    "<TABLE WIDTH=800 BGCOLOR=\"#E0E0FF\" BORDER=0 CELLPADDING=2 ALIGN=center>\n",
     "<TR>    \n",
     "<TD ALIGN=center VALIGN=center>\n",
     "<TABLE BORDER=0 CELLSPACING=3 CELLPADDING=2>\n",
     "<TR>\n",
     "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
     "</CENTER>\n",
-    "<CENTER>Plugin by Andreas T&oslash;nnesen. Send questions or comments to<br>\n",
+    "<CENTER>Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to<br>\n",
     "<A HREF=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</A> or \n",
     "<A HREF=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</A></CENTER></TD>\n",
     "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
@@ -149,7 +149,7 @@ static const char *http_ok_tail[] =
 static const char *http_frame[] =
 {
   "<P>\n<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
-  "<TR BGCOLOR=\"#CFCFCF\">\n<TH ALIGN=left><B>%s</B></TH>\n",
+  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left><B>%s</B></TH>\n",
   "</TR><TR BGCOLOR=\"#ECECEC\">\n",
   "<TD>\n",
   "<P>\n",
@@ -169,8 +169,6 @@ typedef enum
     HTTP_BAD_FILE,
     HTTP_OK
   }http_header_type;
-
-char netmask[5];
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);

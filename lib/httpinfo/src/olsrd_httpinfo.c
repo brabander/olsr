@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.7 2004/12/17 13:01:12 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.8 2004/12/17 15:18:07 kattemat Exp $
  */
 
 /*
@@ -428,12 +428,12 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index;
 
   size += sprintf(&buf[size], "Links\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>IP address</td><td>Hysteresis</td><td>LinkQuality</td><td>lost</td><td>total</td><td>NLQ</td><td>ETX</td></tr>\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
 
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>IP address</td><td>SYM</td><td>MPR</td><td>MPRS</td><td>Willingness</td></tr>\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th></tr>\n");
 
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
@@ -477,7 +477,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Source IP addr</td><td>Dest IP addr</td><td>LQ</td><td>ILQ</td><td>ETX</td></tr>\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -522,7 +522,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   size = 0;
 
   size += sprintf(&buf[size], "Remote HNA entries\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Network</td><td>Netmask</td><td>Gateway</td></tr>\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -550,7 +550,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "</table><hr>\n");
   size += sprintf(&buf[size], "Local(announced) HNA entries\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Network</td><td>Netmask</td></tr>\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
   size += sprintf(&buf[size], "</table><hr>\n");
 
 
@@ -564,9 +564,9 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   int size = 0;
 
   size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=2 CELLPADDING=0 ALIGN=center><tr><td>Registered MID entries</td><td>Local(announced) MID entries</td></tr>\n");
-  size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Main Address</td><td>Alias</td></tr>\n");
-  size += sprintf(&buf[size], "</table></td>\n");
-  size += sprintf(&buf[size], "<td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Interface</td><td>IP</td></tr>\n");
+  size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Alias</th></tr>\n");
+  size += sprintf(&buf[size], "</table></th>\n");
+  size += sprintf(&buf[size], "<th><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Interface</th><th>IP</th></tr>\n");
   size += sprintf(&buf[size], "</table></td></tr>\n");
   size += sprintf(&buf[size], "</table><hr>\n");
 
@@ -627,7 +627,8 @@ olsr_netmask_to_string(union hna_netmask *mask)
 {
   char *ret;
   struct in_addr in;
-  
+  static char netmask[5];
+
   if(ipversion == AF_INET)
     {
       in.s_addr = mask->v4;
