@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.36 2005/03/02 00:50:30 tlopatic Exp $
+$Id: CHANGELOG,v 1.37 2005/03/09 23:46:44 tlopatic Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -133,6 +133,8 @@ BUGFIXES
 - If a 2-hop neighbor is also a 1-hop neighbor, a bug made olsrd
   prefer a bad direct link to a better link via an MPR.
 - If a link or interface lookup failed, olsrd crashed.
+- Fixed a crash in the LQ packet generation code based on a
+  signed/unsigned integer comparison.
 
 
 0.4.8 ---------------------------------------------------------------------
