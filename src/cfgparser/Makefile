@@ -36,7 +36,7 @@
 # to the projcet. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.11 2004/12/01 18:38:53 kattemat Exp $
+# $Id: Makefile,v 1.12 2004/12/01 20:54:16 tlopatic Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -48,9 +48,19 @@ INCLUDES =	-I..
 SRCS =		olsrd_conf.c  oparse.c  oscan.c
 HDRS =		olsrd_conf.h  oparse.h
 PIPETONULL =
+DEPFLAGS =
 
 ifeq ($(OS), linux)
-PIPETONULL =  >/dev/null 2>&1
+PIPETONULL =	>/dev/null 2>&1
+DEPFLAGS +=	-Y -Dlinux
+endif
+
+ifeq ($(OS), fbsd)
+DEPFLAGS +=	-D__FreeBSD__
+endif
+
+ifeq ($(OS), osx)
+DEPFLAGS +=	-D__MacOSX__
 endif
 
 ifeq ($(OS), win32)
@@ -62,7 +72,7 @@ PORT_CFLAGS =	-mno-cygwin -I../win32 -DWIN32_STDIO_HACK
 PORT_LDFLAGS =	-mno-cygwin
 PORT_OBJS =	../win32/compat.o
 PORT_LIBS =	-lws2_32
-DEPFLAGS += 	-DWIN32_STDIO_HACK
+DEPFLAGS += 	-DWIN32_STDIO_HACK -DWIN32
 INCLUDES +=	../win32
 
 else
@@ -97,7 +107,7 @@ DEPFLAGS += 	-DMAKEBIN
 endif
 endif
 
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -Y $(INCLUDES) $(DEPFLAGS) $(SRCS) $(PIPETONULL)
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEPFLAGS) $(INCLUDES) $(SRCS) $(PIPETONULL)
 
 OBJS =		olsrd_conf.o oparse.o oscan.o $(PORT_OBJS)
 LIBS +=		$(PORT_LIBS)
