@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.2 2004/11/08 00:55:47 tlopatic Exp $
+ * $Id: lq_route.c,v 1.3 2004/11/08 01:29:19 tlopatic Exp $
  *
  */
 
@@ -255,7 +255,7 @@ static void relax(struct dijk_vertex *vert)
     // edge's destination, then we've found a better path to
     // this destination
 
-    if (new_quality > edge->dest->path_quality)
+    if (new_quality >= edge->dest->path_quality)
     {
       edge->dest->path_quality = new_quality;
       edge->dest->prev = vert;
