@@ -1,30 +1,43 @@
-/*
- * OLSR plugin
- * Copyright (C) 2004 Andreas Tønnesen (andreto@olsr.org)
- *
- * This file is part of the olsrd dynamic gateway detection.
- *
- * This is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This plugin is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with olsrd-unik; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
- * 
- * $Id: olsrd_dyn_gw.c,v 1.6 2004/11/07 10:57:54 kattemat Exp $
- *
- */
 
 /*
- * Dynamic linked library for UniK OLSRd
+ * The olsr.org Optimized Link-State Routing daemon(olsrd)
+ * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions 
+ * are met:
+ *
+ * * Redistributions of source code must retain the above copyright 
+ *   notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright 
+ *   notice, this list of conditions and the following disclaimer in 
+ *   the documentation and/or other materials provided with the 
+ *   distribution.
+ * * Neither the name of olsr.org, olsrd nor the names of its 
+ *   contributors may be used to endorse or promote products derived 
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Visit http://www.olsr.org for more information.
+ *
+ * If you find this software useful feel free to make a donation
+ * to the project. For more information see the website or contact
+ * the copyright holders.
+ *
+ * $Id: olsrd_dyn_gw.c,v 1.7 2004/11/30 16:52:15 kattemat Exp $
  */
 
 #include "olsrd_dyn_gw.h"
@@ -35,8 +48,54 @@
 #include <linux/in_route.h>
 #include <unistd.h>
 #include <errno.h>
+#include <pthread.h>
+#include <time.h>
+
 
 static int has_inet_gateway;
+static int has_available_gw;
+
+/* set default interval, in case none is given in the config file */
+static int interval = 5;
+
+/* list to store the Ping IP addresses given in the config file */
+struct ping_list {
+  char *ping_address;
+  struct ping_list *next;
+};
+struct ping_list *the_ping_list = NULL;
+
+int
+register_olsr_param(char *key, char *value)
+{
+  /* foo_addr is only used for call to inet_aton */ 
+  struct in_addr foo_addr;
+  int retval = -1;
+ 
+  if (!strcmp(key, "Interval")) {
+    if (sscanf(value, "%d", &interval) == 1) {
+      retval = 1;
+    }
+  }
+  if (!strcmp(key, "Ping")) {
+    /* if value contains a valid IPaddr, then add it to the list */
+    if (inet_aton(strdup(value), &foo_addr)) {
+      the_ping_list = add_to_ping_list(value, the_ping_list);
+      retval = 1;
+    }
+  }
+  return retval;
+}
+
+/* add the valid IPs to the head of the list */
+struct ping_list *
+add_to_ping_list(char *ping_address, struct ping_list *the_ping_list)
+{
+  struct ping_list *new = (struct ping_list *) malloc(sizeof(struct ping_list));
+  new->ping_address = strdup(ping_address);
+  new->next = the_ping_list;
+  return new;
+}    
 
 /**
  *Do initialization here
@@ -47,19 +106,24 @@ static int has_inet_gateway;
 int
 olsr_plugin_init()
 {
+  pthread_t ping_thread;
+  
   gw_net.v4 = INET_NET;
   gw_netmask.v4 = INET_PREFIX;
 
   has_inet_gateway = 0;
- 
+  has_available_gw = 0;
+  
   /* Remove all local Inet HNA entries */
   while(remove_local_hna4_entry(&gw_net, &gw_netmask))
     {
       olsr_printf(1, "HNA Internet gateway deleted\n");
     }
 
+  pthread_create(&ping_thread, NULL, olsr_event, NULL);
+  
   /* Register the GW check */
-  olsr_register_scheduler_event(&olsr_event, NULL, 5, 4, NULL);
+  olsr_register_scheduler_event(&olsr_event_doing_hna, NULL, 3, 4, NULL);
 
   return 1;
 }
@@ -95,37 +159,25 @@ plugin_io(int cmd, void *data, size_t size)
 
 
 /**
- *Scheduled event
+ * the threaded function which happens within an endless loop,
+ * reiterated every "Interval" sec (as given in the config or 
+ * the default value)
  */
-void
+void *
 olsr_event(void *foo)
 {
-  int res;
+  for(;;) {
+    struct timespec remainder_spec;
+    /* the time to wait in "Interval" sec (see connfig), default=5sec */
+    struct timespec sleeptime_spec  = {(time_t) interval, 0L };
 
-  res = check_gw(&gw_net, &gw_netmask);
+    /* check for gw in table entry and if Ping IPs are given also do pings */
+    has_available_gw = check_gw(&gw_net, &gw_netmask);
 
-  if((res == 1) && (has_inet_gateway == 0))
-    {
-      olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
-      add_local_hna4_entry(&gw_net, &gw_netmask);
-      has_inet_gateway = 1;
-    }
-  else
-    {
-      if((res == 0) && (has_inet_gateway == 1))
-	{
-	  /* Remove all local Inet HNA entries */
-	  while(remove_local_hna4_entry(&gw_net, &gw_netmask))
-	    {
-	      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
-	    }
-	  has_inet_gateway = 0;
-	}
-    }
-
+    while(nanosleep(&sleeptime_spec, &remainder_spec) < 0)
+      sleeptime_spec = remainder_spec;
+  }
 }
-
-
 
 
 int
@@ -179,8 +231,17 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
 	   (netmask == mask->v4) && 
 	   (dest_addr == net->v4))
 	  {
-	    olsr_printf(1, "INTERNET GATEWAY VIA %s detected.\n", iface);
-	    retval = 1;
+      /* don't ping, if there was no "Ping" IP addr in the config file */
+      if (the_ping_list != NULL) {  
+        /*validate the found inet gw by pinging*/ 
+        if (ping_is_possible()) {
+          olsr_printf(1, "INTERNET GATEWAY (ping is possible) VIA %s detected in routing table.\n", iface);
+          retval=1;      
+        }
+      } else {
+        olsr_printf(1, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
+        retval=1;      
+      }
 	  }
 
     }
@@ -195,53 +256,42 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
     return retval;
 }
 
-
-
-
-
-
-
-
-
-/*************************************************************
- *                 TOOLS DERIVED FROM OLSRD                  *
- *************************************************************/
-
-
-/**
- *Converts a olsr_ip_addr to a string
- *Goes for both IPv4 and IPv6
- *
- *NON REENTRANT! If you need to use this
- *function twice in e.g. the same printf
- *it will not work.
- *You must use it in different calls e.g.
- *two different printfs
- *
- *@param the IP to convert
- *@return a pointer to a static string buffer
- *representing the address in "dots and numbers"
- *
- */
-char *
-olsr_ip_to_string(union olsr_ip_addr *addr)
+int
+ping_is_possible() 
 {
-
-  char *ret;
-  struct in_addr in;
-  
-  if(ipversion == AF_INET)
-    {
-      in.s_addr=addr->v4;
-      ret = inet_ntoa(in);
+  struct ping_list *list;
+  for (list = the_ping_list; list != NULL; list = list->next) {
+    char ping_command[50] = "ping -c 1 -q ";
+    strcat(ping_command, list->ping_address);
+    olsr_printf(1, "\nDo ping on %s ...\n", list->ping_address);
+    if (system(ping_command) == 0) {
+      olsr_printf(1, "...OK\n\n");
+      return 1;      
+    } else {
+      olsr_printf(1, "...FAILED\n\n");
     }
-  else
-    {
-      /* IPv6 */
-      ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
-    }
-
-  return ret;
+  }
+  return 0;
 }
 
+/**
+ * Scheduled event to update the hna table,
+ * called from olsrd main thread to keep the hna table thread-safe
+ */
+void
+olsr_event_doing_hna()
+{
+  if (has_available_gw == 1 && has_inet_gateway == 0) {
+    olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
+    add_local_hna4_entry(&gw_net, &gw_netmask);
+    has_inet_gateway = 1;
+  } else if ((has_available_gw == 0) && (has_inet_gateway == 1)) {
+    /* Remove all local Inet HNA entries */
+    while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
+      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
+    }
+    has_inet_gateway = 0;
+  }
+}
+  
 

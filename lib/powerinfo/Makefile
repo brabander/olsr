@@ -6,6 +6,7 @@
 #Alter this file to fit your needs
 
 CC ?= gcc
+STRIP ?= strip
 NAME ?= olsrd_power.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
@@ -38,7 +39,7 @@ plugin: $(OBJS)
 
 
 install:
-	strip $(NAME)
+	$(STRIP) $(NAME)
 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
 	/sbin/ldconfig -n $(LIBDIR)
 

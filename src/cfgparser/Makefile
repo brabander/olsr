@@ -36,15 +36,14 @@
 # to the projcet. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.9 2004/11/21 17:10:27 tlopatic Exp $
+# $Id: Makefile,v 1.10 2004/11/30 16:52:16 kattemat Exp $
 
+CC ?=		gcc
+BISON ?=	bison
+FLEX ?=		flex
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -g 
+LIBDIR ?=	$(INSTALL_PREFIX)/usr/lib
 
-
-
-#OS =		linux
-#OS =		fbsd
-#OS =		win32
-#OS =		osx
 
 ifeq ($(OS), win32)
 
@@ -57,29 +56,6 @@ PORT_OBJS =	../win32/compat.o
 PORT_LIBS =	-lws2_32
 
 else
-ifeq ($(OS), linux)
-
-LIBNAME ?=	olsrd_cfgparser.so.0.1
-BINNAME ?=	olsrd_cfgparser
-
-PORT_CFLAGS =	-fPIC
-PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
-PORT_OBJS =
-PORT_LIBS =	-lm -lc
-
-else
-ifeq ($(OS), fbsd)
-
-LIBNAME ?=	olsrd_cfgparser.so.0.1
-BINNAME ?=	olsrd_cfgparser
-
-PORT_CFLAGS =	-fPIC
-PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
-PORT_OBJS =
-PORT_LIBS =	-lm -lc
-
-else
-ifeq ($(OS), osx)
 
 LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
@@ -90,50 +66,42 @@ PORT_OBJS =
 PORT_LIBS =	-lm -lc
 
 endif
-endif
-endif
-endif
 
-CC ?=		gcc
-OBJS =		olsrd_conf.o oparse.o oscan.o $(PORT_OBJS)
 
 ifdef MAKELIB
 
-LIBDIR ?=	$(PREFIX)/usr/lib
-LDFLAGS ?=	-shared -Wl,-soname,$(LIBNAME) $(PORT_LDFLAGS)
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-g -DMAKELIB -I.. $(PORT_CFLAGS)
-LIBS ?=		$(PORT_LIBS)
-
+LDFLAGS +=	-shared -Wl,-soname,$(LIBNAME)
+CFLAGS +=	-DMAKELIB
 NAME =		$(LIBNAME)
 
 else 
+ifdef MAKEBIN
 
-LDFLAGS ?=	$(PORT_LDFLAGS)
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-g -DMAKEBIN -I.. $(PORT_CFLAGS)
-LIBS ?=		$(PORT_LIBS)
-
+CFLAGS +=	-DMAKEBIN 
 NAME =		$(BINNAME)
 
 endif
+endif
 
-BISON ?=	bison
-FLEX ?=		flex
 
-all:		clean $(NAME)
+OBJS =		olsrd_conf.o oparse.o oscan.o $(PORT_OBJS)
+LIBS +=		$(PORT_LIBS)
+CFLAGS +=	-I.. $(PORT_CFLAGS)
+LDFLAGS +=	$(PORT_LDFLAGS)
+
+
+all:		$(OBJS) $(NAME)
 
 $(NAME):	$(OBJS)
 		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
-		rm -f *.o
 
-oscan.c:	oscan.lex oparse.h olsrd_conf.h
+oscan.c:	oscan.lex
 		$(FLEX) -ooscan.c oscan.lex
-
-oparse.h:	oparse.c
 
 oparse.c:	oparse.y olsrd_conf.h
 		$(BISON) -d -ooparse.c oparse.y
+
+.PHONY: install clean uberclean
 
 install:
 		install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
@@ -143,3 +111,6 @@ clean:
 		rm -f *.o
 		rm -f $(LIBNAME)
 		rm -f $(BINNAME)
+
+uberclean:	clean
+		rm -f oparse.c oparse.h oscan.c

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.h,v 1.11 2004/11/22 14:03:59 kattemat Exp $
+ * $Id: olsrd_conf.h,v 1.12 2004/11/30 16:52:16 kattemat Exp $
  */
 
 
@@ -44,7 +44,7 @@
 #define _OLSRD_CONF_H
 
 #include "olsr_protocol.h"
-#include "../olsr_cfg.h"
+#include "olsr_cfg.h"
 
 #define PARSER_VERSION "0.1.2"
 

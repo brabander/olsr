@@ -1,17 +1,12 @@
 
-#############################################
-# EXAMPLE MAKEFILE TO CREATE A OLSRD PLUGIN #
-#############################################
-
-#Alter this file to fit your needs
-
 CC ?= gcc
 NAME ?= olsrd_dyn_gw.so.0.2
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
-LIBS ?= -lc -lm
-CFLAGS ?= -g -O2
+LIBS ?= -lpthread -lc -lm
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
+STRIP ?= strip
 
 #Sourcefiles
 #add yours here
@@ -39,7 +34,7 @@ plugin: $(OBJS)
 
 
 install:
-	strip $(NAME)
+	$(STRIP) $(NAME)
 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
 	/sbin/ldconfig -n $(LIBDIR)
 
