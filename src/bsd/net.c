@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.19 2005/03/04 21:30:16 kattemat Exp $
+ * $Id: net.c,v 1.20 2005/03/20 16:52:25 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -52,10 +52,12 @@
 #include <net/if_var.h>
 #include <net/ethernet.h>
 
+#ifdef __FreeBSD__
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
 #include <dev/wi/if_wavelan_ieee.h>
 #include <dev/wi/if_wireg.h>
+#endif
 
 #ifdef SPOOF
 #include <net/if_dl.h>
