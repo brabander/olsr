@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.33 2005/02/17 17:21:24 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.34 2005/02/25 16:03:19 kattemat Exp $
  */
 
 
@@ -707,6 +707,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
       
 	  fprintf(fd, "    # IPv4 broadcast address to use. The\n    # one usefull example would be 255.255.255.255\n    # If not defined the broadcastaddress\n    # every card is configured with is used\n\n");
 
+
 	  if(in->cnf->ipv4_broadcast.v4)
 	    {
 	      in4.s_addr = in->cnf->ipv4_broadcast.v4;
@@ -770,21 +771,33 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
           mult = in->cnf->lq_mult;
 
           if (mult == NULL)
-            fprintf(fd, "    #LinkQualityMult\tdefault 1.0\n");
-
+	    {
+	      fprintf(fd, "    #LinkQualityMult\tdefault 1.0\n");
+	    }
           else
-          {
-            while (mult != NULL)
-            {
-              inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
-                        sizeof (ipv6_buf));
+	    {
+	      while (mult != NULL)
+		{
+		  inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
+			    sizeof (ipv6_buf));
+		  
+		  fprintf(fd, "    LinkQualityMult\t%s %0.2f\n",
+			  ipv6_buf, mult->val);
+		  
+		  mult = mult->next;
+		}
+	    }
 
-              fprintf(fd, "    LinkQualityMult\t%s %0.2f\n",
-                      ipv6_buf, mult->val);
+	  fprintf(fd, "    # When multiple links exist between hosts\n    # the weight of interface is used to determine\n    # the link to use. Normally the weight is\n    # automatically calculated by olsrd based\n    # on the characteristics of the interface,\n    # but here you can specify a fixed value.\n    # Olsrd will choose links with the lowest value.");
+	  if(in->cnf->weight.fixed)
+	    {
+	      fprintf(fd, "    Weight\t %d\n\n", in->cnf->weight.value);
+	    }
+	  else
+	    {
+	      fprintf(fd, "    #Weight\t 0\n\n");
+	    }
 
-              mult = mult->next;
-            }
-          }
 	  
 	  fprintf(fd, "}\n\n");
 	  in = in->next;

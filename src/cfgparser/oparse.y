@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.25 2005/02/17 17:21:24 kattemat Exp $
+ * $Id: oparse.y,v 1.26 2005/02/25 16:03:19 kattemat Exp $
  */
 
 
@@ -749,9 +749,8 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 
 ifstart: TOK_INTERFACE
 {
-  printf("setting ifs_in_curr_cfg = 0\n");
+  if(PARSER_DEBUG) printf("setting ifs_in_curr_cfg = 0\n");
   ifs_in_curr_cfg = 0;
-
 }
 ;
 
