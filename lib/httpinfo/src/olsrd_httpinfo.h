@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.20 2005/01/02 13:54:40 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.21 2005/01/02 14:10:48 kattemat Exp $
  */
 
 /*
@@ -72,6 +72,9 @@ static const char *httpinfo_css[] =
   "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n",
   "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n",
   "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n",
+  "#hdr\n{\nfont-size: 14px;\ntext-align: center;\n\nline-height: 16px;\n",
+  "text-decoration: none;\nborder-top: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n",
+  "margin: 5px;\nbackground: #ececec;\n}\n",
   "#container\n{\nwidth: 500px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n",
   "#tabnav\n{\nheight: 20px;\nmargin: 0;\npadding-left: 10px;\n",
   "background: url(grayline.gif) repeat-x bottom;\n}\n",
@@ -146,10 +149,10 @@ static const char *http_ok_tail[] =
 
 static const char *about_frame[] =
 {
-    "Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to<br>\n",
-    "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or <br>\n",
+    "Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to\n",
+    "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or\n",
     "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br>\n"
-    "Official olsrd homepage:<br><a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br>\n",
+    "Official olsrd homepage: <a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br>\n",
     NULL
 };
 
