@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.40 2005/03/31 22:27:51 spoggle Exp $
+$Id: CHANGELOG,v 1.41 2005/04/01 22:14:27 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -109,6 +109,12 @@ headerfiles directly. A plugin should define OLSR_PLUGIN before
 including olsrd headers. Doing things this way removed the 
 redundant datatype definitions that has so often caused trouble
 when things has been updated in olsrd.
+
+NETBSD SUPPORT
+
+olsrd now also compiles on NetBSD systems. Use 'make OS=nbsd' to
+build. This port is not very well tested and feedback is greatly
+appreciated.
 
 EXPERIMENTAL MULTI-INTERFACE CODE FOR FREEBSD
 
