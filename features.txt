@@ -9,10 +9,10 @@ Features supported by the different versions of olsrd.
 
 IPv6                                 X       !        !      !
 
-automatically enable IP              X       X        !      !
+automatically enable IP              X       X        X      X 
 forwarding
 
-automatically disable ICMP           X       !        !      !
+automatically disable ICMP           X       !        X      X 
 redirect messages
 
 automatically disable                X       ?        ?      ?
