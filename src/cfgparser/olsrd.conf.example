@@ -114,6 +114,29 @@ TcRedundancy	0
 
 MprCoverage	1
 
+# Link Quality Extension
+#
+# This non-standard extension tracks received / missed messages
+# from one-hop neighbours and determines the packet loss. We
+# spread this knowledge all over the mobile network and use it
+# to find reasonable links and routes.
+#
+# IMPORTANT: This feature BREAKS COMPATIBILITY with the OLSR
+# standard. You can thus only use this feature if it is used on
+# ALL NODES in your mobile mesh. Otherwise you'll end up with a
+# mobile mess!
+#
+# Possible values:
+#
+# 0 - off / normal RFC-compliant behaviour
+#
+# 1 - select multi-point relays that offer the lowest packet loss
+#     between us and our two-hop neighbours
+#
+# 2 - additionally select routes that minimize the packet loss
+#     between us and the other nodes in the mobile network
+
+LinkQualityLevel 0
 
 # Olsrd plugins to load
 # This must be the absolute path to the file
