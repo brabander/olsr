@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.16 2004/12/03 19:03:58 tlopatic Exp $
+ * $Id: lq_route.c,v 1.17 2004/12/03 19:10:51 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -439,7 +439,7 @@ void olsr_calculate_lq_routing_table(void)
       continue;
     }
 
-#if defined linux
+#if defined linux && 0
     /*
      * on Linux we can add a new route for a destination before removing
      * the old route, so frequent route updates are not a problem, as
