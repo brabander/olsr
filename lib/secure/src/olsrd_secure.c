@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.8 2004/12/04 15:18:45 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.9 2005/01/30 18:44:46 kattemat Exp $
  */
 
 
@@ -45,7 +45,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef linux
 #include <linux/in_route.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
