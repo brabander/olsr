@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.27 2005/02/14 19:09:50 tlopatic Exp $
+$Id: CHANGELOG,v 1.28 2005/02/15 17:42:55 tlopatic Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -31,6 +31,54 @@ Interface "if0" "if1" "if2"
 {
 	.....
 }
+
+Moreover, interface configurations now support the "LinkQualityMult"
+directive. It takes an IP address and a multiplier as arguments.
+
+Example:
+
+Interface "if0"
+{
+  [...]
+
+  LinkQualityMult 192.168.0.1 0.7
+  LinkQualityMult default 0.5
+
+  [...]
+}
+
+The idea is to make certain links via the configured interface
+artificially worse or better than they really are. The first parameter
+specifies the IP address of a neighbour interface. The second
+parameter is the multiplier to be applied to the link to the specified
+neighbour interface.
+
+After we have derived the link quality from the packet loss among the
+packets received from the specified neighbour interface, we multiply
+the link quality by the given multiplier. So, the multiplier changes
+the LQ value that we use when determining the ETX, which is 1 / (LQ *
+NLQ).
+
+If "default" is given as the IP address then the multiplier applies to
+all links via the configured interface. Note, however, that olsrd only
+assigns one multiplier to each link. It does so in the following way.
+
+* If there is a "LinkQualityMult" line that matches the IP address of
+  the link's neighbour interface, then use the multiplier in this
+  line.
+
+* If there isn't any matching line, then look for a "default" line. If
+  there is a "default" line, then use the multiplier in this "default"
+  line.
+
+* Otherwise use 1.0, i.e. do not modify the LQ value at all.
+
+Hence, a line with an IP address has priority over a "default" line.
+
+In the above example, the LQ value of the link between the local
+interface if0 and the neighbour interface 192.168.0.1 would be
+multiplied by 0.7. All other links between the local interface if0 and
+a neighbour interface would be multiplied by 0.5.
 
 MINOR UPDATES
 
