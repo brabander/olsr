@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.71 2005/03/23 22:41:26 tlopatic Exp $
+ * $Id: main.c,v 1.72 2005/03/28 18:11:06 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -353,11 +353,11 @@ main(int argc, char *argv[])
   if((olsr_cnf->debug_level == 0) && (!olsr_cnf->no_fork))
     {
       printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
-      if (fork() != 0)
+      if(daemon(0, 0) < 0)
 	{
-	  exit(EXIT_SUCCESS);
+	  printf("daemon(3) failed: %s\n", strerror(errno));
+	  exit(EXIT_FAILURE);
 	}
-      setsid();
     }
 #endif
 
