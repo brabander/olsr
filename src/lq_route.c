@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.8 2004/11/10 23:30:12 tlopatic Exp $
+ * $Id: lq_route.c,v 1.9 2004/11/11 23:22:34 tlopatic Exp $
  *
  */
 
@@ -31,8 +31,6 @@
 #include "mid_set.h"
 #include "lq_list.h"
 #include "lq_route.h"
-
-#define olsr_malloc(x, y) malloc(x)
 
 struct dijk_edge
 {
@@ -201,7 +199,7 @@ static void free_everything(struct list *vertex_list)
 
 static struct dijk_vertex *extract_best(struct list *vertex_list)
 {
-  double best = -2.0;
+  double best = 0.0;
   struct list_node *node;
   struct dijk_vertex *vert;
   struct dijk_vertex *res = NULL;
@@ -216,7 +214,7 @@ static struct dijk_vertex *extract_best(struct list *vertex_list)
 
     // see whether the current vertex is better than what we have
 
-    if (!vert->done && vert->path_quality > best)
+    if (!vert->done && vert->path_quality >= best)
     {
       best = vert->path_quality;
       res = vert;
@@ -295,7 +293,7 @@ void olsr_calculate_lq_routing_table(void)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next)
       if (neigh->status == SYM)
-        add_vertex(&vertex_list, &neigh->neighbor_main_addr, -1.0);
+        add_vertex(&vertex_list, &neigh->neighbor_main_addr, 0.0);
 
   // add remaining vertices
 
@@ -304,13 +302,13 @@ void olsr_calculate_lq_routing_table(void)
     {
       // add source
 
-      add_vertex(&vertex_list, &tcsrc->T_last_addr, -1.0);
+      add_vertex(&vertex_list, &tcsrc->T_last_addr, 0.0);
 
       // add destinations of this source
 
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
            tcdst = tcdst->next)
-        add_vertex(&vertex_list, &tcdst->T_dest_addr, -1.0);
+        add_vertex(&vertex_list, &tcdst->T_dest_addr, 0.0);
     }
 
   // add edges to and from our neighbours
