@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.14 2004/11/20 22:51:23 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.15 2004/11/21 00:50:54 tlopatic Exp $
  *
  */
 
@@ -59,7 +59,10 @@
 #define MIN_TC_REDUNDANCY   0
 #define MAX_HYST_PARAM      1.0
 #define MIN_HYST_PARAM      0.0
-
+#define MAX_LQ_LEVEL        2
+#define MIN_LQ_LEVEL        0
+#define MAX_LQ_WSIZE        128
+#define MIN_LQ_WSIZE        3
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U

@@ -36,7 +36,7 @@
  * to the projcet. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.25 2004/11/20 23:56:19 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.26 2004/11/21 00:50:54 tlopatic Exp $
  */
 
 
@@ -283,6 +283,22 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
      cnf->mpr_coverage > MAX_MPR_COVERAGE)
     {
       fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
+      return -1;
+    }
+
+  /* Link quality window size */
+
+  if (cnf->lq_wsize < MIN_LQ_WSIZE || cnf->lq_wsize > MAX_LQ_WSIZE)
+    {
+      fprintf(stderr, "LQ window size %d is not allowed\n", cnf->lq_wsize);
+      return -1;
+    }
+
+  /* Link quality level */
+
+  if (cnf->lq_level > MAX_LQ_LEVEL)
+    {
+      fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
       return -1;
     }
 
