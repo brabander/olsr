@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.11 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: link_set.h,v 1.12 2004/11/05 20:58:09 tlopatic Exp $
  *
  */
 
@@ -68,12 +68,14 @@ struct link_entry
   int lost_packets;
   int total_packets;
 
-  float loss_link_quality;
+  double loss_link_quality;
 
   int loss_window_size;
   int loss_index;
 
   unsigned char loss_bitmap[16];
+
+  double neigh_link_quality;
 #endif
 
   /*
@@ -126,10 +128,6 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
                         olsr_u16_t seqno);
 void olsr_print_link_set(void);
 float olsr_neighbor_best_link_quality(union olsr_ip_addr *main);
-struct link_entry *update_lq_link_entry(union olsr_ip_addr *local,
-                                        union olsr_ip_addr *remote,
-                                        struct lq_hello_message *lq_hello,
-                                        struct interface *inif);
 #endif
 
 #endif

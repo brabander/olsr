@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.16 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: olsr.c,v 1.17 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -36,6 +36,9 @@
 #include "mpr_selector_set.h"
 #include "mid_set.h"
 #include "mpr.h"
+#if defined USE_LINK_QUALITY
+#include "lq_mpr.h"
+#endif
 #include "scheduler.h"
 #include "generate_msg.h"
 #include "apm.h"
@@ -163,7 +166,11 @@ olsr_process_changes()
   if(changes_neighborhood)
     {
       /* Calculate new mprs, HNA and routing table */
+#if !defined USE_LINK_QUALITY
       olsr_calculate_mpr();
+#else
+      olsr_calculate_lq_mpr();
+#endif
       olsr_calculate_routing_table();
       olsr_calculate_hna_routes();
 

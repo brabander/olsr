@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr.c,v 1.10 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: mpr.c,v 1.11 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -449,7 +449,6 @@ add_will_always_nodes()
   return count;
 }
 
-
 /**
  *This function calculates the mpr neighbors
  *@return nada
@@ -529,9 +528,6 @@ olsr_calculate_mpr()
     }
 
 }
-
-
-
 
 /**
  *Optimize MPR set by removing all entries

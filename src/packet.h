@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.h,v 1.8 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: packet.h,v 1.9 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -43,6 +43,10 @@ struct hello_neighbor
 {
   olsr_u8_t             status;
   olsr_u8_t             link;
+#if defined USE_LINK_QUALITY
+  double                link_quality;
+  double                neigh_link_quality;
+#endif
   union olsr_ip_addr    main_address;
   union olsr_ip_addr    address;
   struct hello_neighbor *next;
@@ -63,7 +67,9 @@ struct hello_message
 
 struct tc_mpr_addr
 {
-
+#if defined USE_LINK_QUALITY
+  double             link_quality;
+#endif
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.h,v 1.8 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: process_package.h,v 1.9 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -34,7 +34,15 @@ void
 olsr_init_package_process(void);
 
 void
+olsr_hello_tap(struct hello_message *message, struct interface *in_if,
+               union olsr_ip_addr *from_addr);
+
+void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
+
+void
+olsr_tc_tap(struct tc_message *message, struct interface *in_if,
+            union olsr_ip_addr *from_addr, union olsr_message *m);
 
 void
 olsr_process_received_tc(union olsr_message *, struct interface *, union olsr_ip_addr *);

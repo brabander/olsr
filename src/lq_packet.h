@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of the olsr.org OLSR daemon.
  *
@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.h,v 1.1 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: lq_packet.h,v 1.2 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -72,6 +72,7 @@ struct lq_hello_neighbor
   olsr_u8_t                link_type;
   olsr_u8_t                neigh_type;
   double                   link_quality;
+  double                   neigh_link_quality;
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.16 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: link_set.c,v 1.17 2004/11/05 20:58:09 tlopatic Exp $
  *
  */
 
@@ -446,8 +446,9 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       olsr_get_timestamp((olsr_u32_t) htime*1500, &new_link->hello_timeout);
       new_link->last_htime = htime;
       new_link->olsr_seqno = 0;
-      new_link->L_link_quality = 0;
     }
+
+  new_link->L_link_quality = 0.0;
 
 #if defined USE_LINK_QUALITY
   if (1)
@@ -464,13 +465,14 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       new_link->lost_packets = 0;
       new_link->total_packets = 0;
 
-      new_link->loss_link_quality = 0.0;
-
       new_link->loss_window_size = 10;
       new_link->loss_index = 0;
 
       memset(new_link->loss_bitmap, 0, sizeof (new_link->loss_bitmap));
     }
+
+  new_link->loss_link_quality = 0.0;
+  new_link->neigh_link_quality = 0.0;
 #endif
 
   /* Add to queue */
@@ -894,15 +896,15 @@ void olsr_print_link_set(void)
 {
   struct link_entry *walker;
 
-  olsr_printf(1, "CURRENT LINK SET ------------------------------\n");
+  olsr_printf(1, "LINK SET --------------------------------------\n");
+  olsr_printf(1, "IP address      hyst  LQ    lost  total  NLQ\n");
 
   for (walker = link_set; walker != NULL; walker = walker->next)
-    olsr_printf(1, "%15s %5.3f %5.3f %d/%d\n",
+    olsr_printf(1, "%15s %5.3f %5.3f %3d   %3d    %5.3f\n",
                 olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
                 walker->lost_packets, walker->total_packets);
-
-  olsr_printf(1, "CURRENT LINK SET (END) ------------------------\n");
+  olsr_printf(1, "-----------------------------------------------\n");
 }
 
 static void update_packet_loss_worker(struct link_entry *entry, int lost)
@@ -912,8 +914,13 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   if (lost == 0)
     {
+      // packet not lost
+
       if ((entry->loss_bitmap[index] & mask) != 0)
         {
+          // but the packet that we replace was lost
+          // => decrement packet loss
+
           entry->loss_bitmap[index] &= ~mask;
           entry->lost_packets--;
         }
@@ -921,20 +928,33 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   else
     {
+      // packet lost
+
       if ((entry->loss_bitmap[index] & mask) == 0)
         {
+          // but the packet that we replace was not lost
+          // => increment packet loss
+
           entry->loss_bitmap[index] |= mask;
           entry->lost_packets++;
         }
     }
 
+  // move to the next packet
+
   entry->loss_index++;
+
+  // wrap around at the end of the packet loss window
 
   if (entry->loss_index >= entry->loss_window_size)
     entry->loss_index = 0;
 
+  // count the total number of handled packets up to the window size
+
   if (entry->total_packets < entry->loss_window_size)
     entry->total_packets++;
+
+  // calculate the link quality
 
   entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
     (float)entry->total_packets;
@@ -943,6 +963,9 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 void olsr_update_packet_loss_hello_int(struct link_entry *entry,
                                        double loss_hello_int)
 {
+  // called for every LQ HELLO message - update the timeout
+  // with the htime value from the message
+
   entry->loss_hello_int = loss_hello_int;
 }
 
@@ -951,18 +974,33 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
 {
   struct link_entry *entry;
 
+  // called for every OLSR packet
+
   entry = lookup_link_entry(rem, loc);
+
+  // it's the very first LQ HELLO message - we do not yet have a link
 
   if (entry == NULL)
     return;
     
+  // a) have we seen a packet before, i.e. is the sequence number valid?
+
+  // b) heuristically detect a restart (= sequence number reset)
+  //    of our neighbor
+
   if (entry->loss_seqno_valid != 0 && 
       (unsigned short)(seqno - entry->loss_seqno) < 100)
     {
+      // loop through all lost packets
+
       while (entry->loss_seqno != seqno)
         {
+          // have we already considered all lost LQ HELLO messages?
+
           if (entry->loss_missed_hellos == 0)
             update_packet_loss_worker(entry, 1);
+
+          // if not, then decrement the number of lost LQ HELLOs
 
           else
             entry->loss_missed_hellos--;
@@ -971,11 +1009,21 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
         }
     }
 
+  // we have received a packet, otherwise this function would not
+  // have been called
+
   update_packet_loss_worker(entry, 0);
+
+  // (re-)initialize
 
   entry->loss_missed_hellos = 0;
   entry->loss_seqno = seqno + 1;
+
+  // we now have a valid serial number for sure
+
   entry->loss_seqno_valid = 1;
+
+  // timeout for the first lost packet is 1.5 x htime
 
   olsr_get_timestamp((olsr_u32_t)(entry->loss_hello_int * 1500.0),
                      &entry->loss_timeout);
@@ -985,14 +1033,26 @@ static void olsr_time_out_packet_loss()
 {
   struct link_entry *walker;
 
+  // loop through all links
+
   for (walker = link_set; walker != NULL; walker = walker->next)
     {
+      // find a link that has not seen any packets for a very long
+      // time (first time: 1.5 x htime, subsequently: 1.0 x htime)
+
       if (!TIMED_OUT(&walker->loss_timeout))
         continue;
       
+      // count the lost packet
+
       update_packet_loss_worker(walker, 1);
 
+      // memorize that we've counted the packet, so that we do not
+      // count it a second time later
+
       walker->loss_missed_hellos++;
+
+      // next timeout in 1.0 x htime
 
       olsr_get_timestamp((olsr_u32_t)(walker->loss_hello_int * 1000.0),
                          &walker->loss_timeout);
@@ -1004,62 +1064,19 @@ float olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
   struct link_entry *walker;
   float res = 0.0;
 
+  // loop through all links
+
   for (walker = link_set; walker != NULL; walker = walker->next)
     {
+      // check whether it's a link to the requested neighbor and
+      // whether the link's (bidirectional = forth x back) quality
+      // is better than what we have
+
       if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
-         walker->loss_link_quality > res)
+         walker->loss_link_quality * walker->neigh_link_quality > res)
         res = walker->loss_link_quality;
     }
 
   return res;
-}
-
-struct link_entry *update_lq_link_entry(union olsr_ip_addr *local,
-                                        union olsr_ip_addr *remote,
-                                        struct lq_hello_message *lq_hello,
-                                        struct interface *inif)
-{
-  struct lq_hello_neighbor *neigh;
-  int stat;
-  struct link_entry *link;
-  struct interface *inter;
-
-  link = add_new_entry(local, remote, &lq_hello->comm.orig,
-                       lq_hello->comm.vtime, lq_hello->htime);
-
-  olsr_get_timestamp((olsr_u32_t)(lq_hello->comm.vtime * 1000),
-                     &link->ASYM_time);
-
-  for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
-      for (inter = ifnet; inter != NULL; inter = inter->int_next) 
-        if(COMP_IP(&neigh->addr, &inter->ip_addr))
-          break;
-
-  stat = (neigh != NULL) ? neigh->link_type : UNSPEC_LINK;
-
-  if (stat == LOST_LINK)
-    {
-      link->SYM_time = now;
-      link->SYM_time.tv_sec -= 1;
-    }
-
-  else if (stat == SYM_LINK || stat == ASYM_LINK)
-    {
-      olsr_get_timestamp((olsr_u32_t)(lq_hello->comm.vtime * 1000),
-                         &link->SYM_time);
-      timeradd(&link->SYM_time, &hold_time_neighbor, &link->time);
-    }
-
-  if(timercmp(&link->time, &link->ASYM_time, <))
-    link->time = link->ASYM_time;
-
-  if(olsr_cnf->use_hysteresis)
-    olsr_process_hysteresis(link);
-
-  stat = get_neighbor_status(remote);
-
-  update_neighbor_status(link->neighbor, stat);
-
-  return link;
 }
 #endif

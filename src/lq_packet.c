@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.c,v 1.2 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: lq_packet.c,v 1.3 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -45,6 +45,8 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   struct lq_hello_neighbor *neigh;
   struct link_entry *walker;
 
+  // initialize the static fields
+
   lq_hello->comm.type = LQ_HELLO_MESSAGE;
   lq_hello->comm.vtime = me_to_double(outif->valtimes.hello);
   lq_hello->comm.size = 0;
@@ -60,17 +62,30 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   lq_hello->neigh = NULL;
   
+  // loop through the link set
+
   for (walker = link_set; walker != NULL; walker = walker->next)
     {
+      // allocate a neighbour entry
+
       neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
       
+      // a) this neighbor interface IS NOT visible via the output interface
+
       if(!COMP_IP(&walker->local_iface_addr, &outif->ip_addr))
         neigh->link_type = UNSPEC_LINK;
       
+      // b) this neighbor interface IS visible via the output interface
+
       else
         neigh->link_type = lookup_link_status(walker);
 
+      // set the entry's link quality
+
       neigh->link_quality = walker->loss_link_quality;
+      neigh->neigh_link_quality = walker->neigh_link_quality;
+
+      // set the entry's neighbour type
 
       if(walker->neighbor->is_mpr)
         neigh->neigh_type = MPR_NEIGH;
@@ -81,8 +96,12 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
       else if (walker->neighbor->status == NOT_SYM)
         neigh->neigh_type = NOT_NEIGH;
   
+      // set the entry's neighbour interface address
+
       COPY_IP(&neigh->addr, &walker->neighbor_iface_addr);
       
+      // queue the neighbour entry
+
       neigh->next = lq_hello->neigh;
       lq_hello->neigh = neigh;
     }
@@ -93,11 +112,15 @@ destroy_lq_hello(struct lq_hello_message *lq_hello)
 {
   struct lq_hello_neighbor *walker, *aux;
 
+  // loop through the queued neighbour entries and free them
+
   for (walker = lq_hello->neigh; walker != NULL; walker = aux)
     {
       aux = walker->next;
       free(walker);
     }
+
+  lq_hello->neigh = NULL;
 }
 
 static void
@@ -106,6 +129,8 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   struct lq_tc_neighbor *neigh;
   int i;
   struct neighbor_entry *walker;
+
+  // initialize the static fields
 
   lq_tc->comm.type = LQ_TC_MESSAGE;
   lq_tc->comm.vtime = me_to_double(outif->valtimes.tc);
@@ -123,28 +148,44 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   lq_tc->neigh = NULL;
  
+  // loop through all neighbours
+  
   for(i = 0; i < HASHSIZE; i++)
     {
       for(walker = neighbortable[i].next; walker != &neighbortable[i];
           walker = walker->next)
         {
+          // only consider symmetric neighbours
+
           if(walker->status != SYM)
             continue;
+
+          // TC redundancy == 1: only consider MPRs and MPR selectors
 
           if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr &&
               olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
             continue;
 
+          // TC redundancy == 0: only consider MPR selectors
+
           else if (olsr_cnf->tc_redundancy == 0 &&
                    olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
             continue;
 
+          // allocate a neighbour entry
+          
           neigh = olsr_malloc(sizeof (struct lq_tc_neighbor), "Build LQ_TC");
 		
+          // set the entry's main address
+
           COPY_IP(&neigh->main, &walker->neighbor_main_addr);
+
+          // set the entry's link quality
 
           neigh->link_quality =
             olsr_neighbor_best_link_quality(&neigh->main);
+
+          // queue the neighbour entry
 
           neigh->next = lq_tc->neigh;
           lq_tc->neigh = neigh;
@@ -157,6 +198,8 @@ destroy_lq_tc(struct lq_tc_message *lq_tc)
 {
   struct lq_tc_neighbor *walker, *aux;
 
+  // loop through the queued neighbour entries and free them
+
   for (walker = lq_tc->neigh; walker != NULL; walker = aux)
     {
       aux = walker->next;
@@ -166,6 +209,8 @@ destroy_lq_tc(struct lq_tc_message *lq_tc)
 
 static int common_size(void)
 {
+  // return the size of the header shared by all OLSR messages
+
   return (olsr_cnf->ip_version == AF_INET) ?
     sizeof (struct olsr_header_v4) : sizeof (struct olsr_header_v6);
 }
@@ -174,6 +219,8 @@ static void serialize_common(struct olsr_common *comm)
 {
   struct olsr_header_v4 *olsr_head_v4;
   struct olsr_header_v6 *olsr_head_v6;
+
+  // serialize an IPv4 OLSR message header
 
   if (olsr_cnf->ip_version == AF_INET)
     {
@@ -189,6 +236,8 @@ static void serialize_common(struct olsr_common *comm)
       olsr_head_v4->hops = comm->hops;
       olsr_head_v4->seqno = htons(comm->seqno);
     }
+
+  // serialize an IPv6 OLSR message header
 
   olsr_head_v6 = (struct olsr_header_v6 *)msg_buffer;
 
@@ -334,10 +383,10 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
               // add the corresponding link quality
 
               buff[size++] = (unsigned char)(neigh->link_quality * 256);
+              buff[size++] = (unsigned char)(neigh->neigh_link_quality * 256);
 
               // pad
 
-              buff[size++] = 0;
               buff[size++] = 0;
               buff[size++] = 0;
 
@@ -466,6 +515,8 @@ static void *deserialize_common(struct olsr_common *comm, void *ser)
   struct olsr_header_v4 *olsr_head_v4;
   struct olsr_header_v6 *olsr_head_v6;
 
+  // deserialize an IPv4 OLSR message header
+
   if (olsr_cnf->ip_version == AF_INET)
     {
       olsr_head_v4 = (struct olsr_header_v4 *)ser;
@@ -482,6 +533,8 @@ static void *deserialize_common(struct olsr_common *comm, void *ser)
 
       return (void *)(olsr_head_v4 + 1);
     }
+
+  // deserialize an IPv6 OLSR message header
 
   olsr_head_v6 = (struct olsr_header_v6 *)ser;
 
@@ -540,8 +593,10 @@ deserialize_lq_hello(struct lq_hello_message *lq_hello, void *ser)
           COPY_IP(&neigh->addr, curr);
           curr += ipsize;
 
-          neigh->link_quality = (double)*curr / 256.0;
-          curr += 4;
+          neigh->link_quality = (double)*curr++ / 256.0;
+          neigh->neigh_link_quality = (double)*curr++ / 256.0;
+
+          curr += 2;
 
           neigh->link_type = EXTRACT_LINK(info_head->link_code);
           neigh->neigh_type = EXTRACT_STATUS(info_head->link_code);
@@ -602,144 +657,22 @@ deserialize_lq_tc(struct lq_tc_message *lq_tc, void *ser,
     }
 }
 
-static void process_lq_hello(struct lq_hello_message *lq_hello,
-                             struct interface *inif,
-                             union olsr_ip_addr *from)
-{
-  struct link_entry *link;
-  struct lq_hello_neighbor *neigh;
-  union olsr_ip_addr *addr;
-  struct neighbor_2_list_entry *n2le;
-  struct neighbor_2_entry *n2e;
-
-  // XXX - TODO: parse the link quality values
-
-  // create or update the link and neighbor entries
-
-  link = update_lq_link_entry(&inif->ip_addr, from, lq_hello, inif);
-
-  // pass the hello interval to the packet loss detector
-
-  olsr_update_packet_loss_hello_int(link, lq_hello->htime);
-
-  // pass the hello interval to hysteresis
-
-  if (olsr_cnf->use_hysteresis != 0)
-    olsr_update_hysteresis_hello(link, lq_hello->htime);
-
-  // have we been selected as an MPR?
-
-  for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
-    if (neigh->link_type == SYM_LINK && neigh->neigh_type == MPR_NEIGH &&
-        COMP_IP(&neigh->addr, &inif->ip_addr))
-      break;
-
-  // yes, we have
-
-  if (neigh != NULL)
-    olsr_update_mprs_set(&lq_hello->comm.orig, lq_hello->comm.vtime);
-
-  // our neighbor's willingness has changed
-
-  if(link->neighbor->willingness != lq_hello->will)
-    {
-      link->neighbor->willingness = lq_hello->will;
-
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
-    }
-
-  // we'll never be able to reach a two-hop neighbor via this neighbor,
-  // so there's nothing left to do
-
-  if(link->neighbor->willingness == WILL_NEVER)
-    {
-      olsr_process_changes();
-      return;
-    }
-  
-  // go through all neighbor entries in the LQ HELLO message
-
-  for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
-    {
-      // we cannot be our own two-hop neighbor
-
-      if (if_ifwithaddr(&neigh->addr) != NULL)
-        continue;
-
-      // find the the two-hop neighbor's main address
-
-      addr = mid_lookup_main_addr(&neigh->addr);
-
-      if (addr == NULL)
-        addr = &neigh->addr;
-
-      // our neighbor has a symmetric link to the two-hop neighbor
-
-      if(neigh->neigh_type == SYM_NEIGH || neigh->neigh_type == MPR_NEIGH)
-        {
-          // do we already know what we can reach this two-hop neighbor
-          // via the current neighbor?
-
-          n2le = olsr_lookup_my_neighbors(link->neighbor, addr);
-
-          // yes, we already know -> only update the timeout value
-
-          if (n2le != NULL)
-            olsr_get_timestamp((olsr_u32_t)lq_hello->comm.vtime * 1000,
-                               &n2le->neighbor_2_timer);
-
-          else
-            {
-              // do we already know this two-hop neighbor?
-              
-              n2e = olsr_lookup_two_hop_neighbor_table(addr);
-
-              // no, we don't -> create a new two-hop neighbor entry
-
-              if (n2e == NULL)
-                {
-                  n2e = olsr_malloc(sizeof(struct neighbor_2_entry),
-                                    "Process LQ_HELLO");
-		  
-                  n2e->neighbor_2_nblist.next = &n2e->neighbor_2_nblist;
-
-                  n2e->neighbor_2_nblist.prev = &n2e->neighbor_2_nblist;
-
-                  n2e->neighbor_2_pointer = 0;
-                  
-                  COPY_IP(&n2e->neighbor_2_addr, addr);
-
-                  olsr_insert_two_hop_neighbor_table(n2e);
-                }
-
-              // memorize that we can reach this two-hop neighbor via the
-              // current neighbor
-
-              olsr_linking_this_2_entries(link->neighbor, n2e,
-                                          (float)lq_hello->comm.vtime);
-
-              changes_neighborhood = OLSR_TRUE;
-              changes_topology = OLSR_TRUE;
-            }
-        }
-    }
-
-  olsr_process_changes();
-}
-
-static void process_lq_tc(struct lq_tc_message *lq_tc)
-{
-}
-
 void
 olsr_output_lq_hello(void *para)
 {
   struct lq_hello_message lq_hello;
   struct interface *outif = (struct interface *)para;
 
+  // create LQ_HELLO in internal format
+
   create_lq_hello(&lq_hello, outif);
+
+  // convert internal format into transmission format, send it
+
   serialize_lq_hello(&lq_hello, outif);
+
+  // destroy internal format
+
   destroy_lq_hello(&lq_hello);
 
   if(net_output_pending(outif))
@@ -754,32 +687,142 @@ olsr_output_lq_tc(void *para)
   struct interface *outif = (struct interface *)para;
   struct timeval timer;
 
+  // create LQ_TC in internal format
+
   create_lq_tc(&lq_tc, outif);
+
+  // a) the message is not empty
 
   if (lq_tc.neigh != NULL)
     {
       prev_empty = 0;
 
+      // convert internal format into transmission format, send it
+
       serialize_lq_tc(&lq_tc, outif);
     }
 
+  // b) this is the first empty message
+
   else if (prev_empty == 0)
     {
+      // initialize timer
+
       olsr_init_timer((olsr_u32_t)(max_tc_vtime * 3) * 1000, &timer);
       timeradd(&now, &timer, &send_empty_tc);
 
       prev_empty = 1;
 
+      // convert internal format into transmission format, send it
+
       serialize_lq_tc(&lq_tc, outif);
     }
 
+  // c) this is not the first empty message, send if timer hasn't fired
+
   else if (!TIMED_OUT(&send_empty_tc))
     serialize_lq_tc(&lq_tc, outif);
+
+  // destroy internal format
 
   destroy_lq_tc(&lq_tc);
 
   if(net_output_pending(outif) && TIMED_OUT(&fwdtimer[outif->if_nr]))
     set_buffer_timer(outif);
+}
+
+static void
+process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
+                 union olsr_ip_addr *from)
+{
+  struct hello_message hello;
+  struct lq_hello_neighbor *neigh;
+  struct hello_neighbor *new_neigh;
+
+  // XXX - translation is ugly; everybody should use lq_hello_message :-)
+
+  // move the static fields from LQ_HELLO to HELLO
+
+  hello.vtime = lq_hello->comm.vtime;
+  hello.htime = lq_hello->htime;
+
+  COPY_IP(&hello.source_addr, &lq_hello->comm.orig);
+
+  hello.packet_seq_number = lq_hello->comm.seqno;
+  hello.hop_count = lq_hello->comm.hops;
+  hello.ttl = lq_hello->comm.ttl;
+  hello.willingness = lq_hello->will;
+
+  // move all LQ_HELLO neighbours to HELLO
+
+  for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
+    {
+      // allocate HELLO neighbour
+
+      new_neigh = olsr_malloc(sizeof (struct hello_neighbor),
+                              "LQ_HELLO translation");
+
+      // copy fields
+
+      new_neigh->status = neigh->neigh_type;
+      new_neigh->link = neigh->link_type;
+      new_neigh->link_quality = neigh->link_quality;
+
+      COPY_IP(&new_neigh->address, &neigh->addr);
+
+      // queue HELLO neighbour
+
+      new_neigh->next = hello.neighbors;
+      hello.neighbors = new_neigh;
+    }
+
+  olsr_hello_tap(&hello, inif, from);
+}
+
+static void
+process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
+              union olsr_ip_addr *from, union olsr_message *ser)
+{
+  struct tc_message tc;
+  struct lq_tc_neighbor *neigh;
+  struct tc_mpr_addr *new_neigh;
+
+  // XXX - translation is ugly; everybody should use lq_tc_message :-)
+
+  // move the static fields from LQ_TC to TC
+
+  tc.vtime = lq_tc->comm.vtime;
+
+  COPY_IP(&tc.source_addr, &lq_tc->from);
+  COPY_IP(&tc.originator, &lq_tc->comm.orig);
+
+  tc.packet_seq_number = lq_tc->comm.seqno;
+  tc.hop_count = lq_tc->comm.hops;
+  tc.ttl = lq_tc->comm.ttl;
+  tc.ansn = lq_tc->ansn;
+
+  // move all LQ_TC neighbours to TC
+
+  for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next)
+    {
+      // allocate TC neighbour
+
+      new_neigh = olsr_malloc(sizeof (struct tc_mpr_addr),
+                              "LQ_TC translation");
+
+      // copy fields
+
+      new_neigh->link_quality = neigh->link_quality;
+
+      COPY_IP(&new_neigh->address, &neigh->main);
+
+      // queue TC neighbour
+
+      new_neigh->next = tc.multipoint_relay_selector_address;
+      tc.multipoint_relay_selector_address = new_neigh;
+    }
+
+  olsr_tc_tap(&tc, inif, from, ser);
 }
 
 void
@@ -789,8 +832,16 @@ olsr_input_lq_hello(union olsr_message *ser,
 {
   struct lq_hello_message lq_hello;
 
+  // convert received packet from transmission format into internal format
+
   deserialize_lq_hello(&lq_hello, ser);
+
+  // process internal format
+
   process_lq_hello(&lq_hello, inif, from);
+
+  // destroy internal format
+
   destroy_lq_hello(&lq_hello);
 }
 
@@ -799,9 +850,17 @@ olsr_input_lq_tc(union olsr_message *ser, struct interface *inif,
                  union olsr_ip_addr *from)
 {
   struct lq_tc_message lq_tc;
+  
+  // convert received packet from transmission format into internal format
 
   deserialize_lq_tc(&lq_tc, ser, from);
-  process_lq_tc(&lq_tc);
+
+  // process internal format
+
+  process_lq_tc(&lq_tc, inif, from, ser);
+
+  // destroy internal format
+
   destroy_lq_tc(&lq_tc);
 }
 #endif

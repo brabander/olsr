@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.13 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: process_package.c,v 1.14 2004/11/05 20:58:10 tlopatic Exp $
  *
  */
 
@@ -58,6 +58,87 @@ olsr_init_package_process()
   olsr_parser_add_function(&olsr_process_received_hna, HNA_MESSAGE, 1);
 }
 
+void
+olsr_hello_tap(struct hello_message *message, struct interface *in_if,
+               union olsr_ip_addr *from_addr)
+{
+  struct link_entry         *link;
+  struct neighbor_entry     *neighbor;
+  struct hello_neighbor *walker;
+
+  /*
+   * Update link status
+   */
+  link = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
+
+#if defined USE_LINK_QUALITY
+  // just in case our neighbor has changed its HELLO interval
+
+  olsr_update_packet_loss_hello_int(link, message->htime);
+
+  // find the input interface in the list of neighbor interfaces
+
+  for (walker = message->neighbors; walker != NULL; walker = walker->next)
+    if (COMP_IP(&walker->address, &in_if->ip_addr))
+      break;
+
+  // memorize our neighbour's idea of the link quality, so that we
+  // know the link quality in both directions
+
+  if (walker != NULL)
+    link->neigh_link_quality = walker->link_quality;
+
+  else
+    link->neigh_link_quality = 0.0;
+#endif
+  
+  neighbor = link->neighbor;
+
+  /*
+   * Hysteresis
+   */
+  if(olsr_cnf->use_hysteresis)
+    {
+      /* Update HELLO timeout */
+      //printf("MESSAGE HTIME: %f\n", message->htime);
+      olsr_update_hysteresis_hello(link, message->htime);
+    }
+
+  /* Check if we are chosen as MPR */
+  if(olsr_lookup_mpr_status(message, in_if))
+    /* source_addr is always the main addr of a node! */
+    olsr_update_mprs_set(&message->source_addr, (float)message->vtime);
+
+
+
+  /* Check willingness */
+  if(neighbor->willingness != message->willingness)
+    {
+      olsr_printf(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
+		  olsr_ip_to_string(&neighbor->neighbor_main_addr),
+		  neighbor->willingness,
+		  message->willingness);
+      /*
+       *If willingness changed - recalculate
+       */
+      neighbor->willingness = message->willingness;
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
+    }
+
+
+  /* Don't register neighbors of neighbors that announces WILL_NEVER */
+  if(neighbor->willingness != WILL_NEVER)
+    olsr_process_message_neighbors(neighbor, message);
+
+  /* Process changes immedeatly in case of MPR updates */
+  olsr_process_changes();
+
+  olsr_destroy_hello_message(message);
+
+  return;
+}
+
 /**
  *Processes a received HELLO message. 
  *
@@ -68,75 +149,111 @@ olsr_init_package_process()
 void
 olsr_process_received_hello(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
 {
-  struct link_entry         *link;
-  struct neighbor_entry     *neighbor;
   struct hello_message      message;
 
   hello_chgestruct(&message, m);
 
-  /*
-  if(COMP_IP(&message.source_addr, &main_addr))
+  olsr_hello_tap(&message, in_if, from_addr);
+}
+
+void
+olsr_tc_tap(struct tc_message *message, struct interface *in_if,
+            union olsr_ip_addr *from_addr, union olsr_message *m)
+{
+  struct tc_mpr_addr              *mpr;
+  struct tc_entry                 *tc_last;
+
+  if(!olsr_check_dup_table_proc(&message->originator, 
+                                message->packet_seq_number))
     {
-      olsr_destroy_hello_message(&message);
+      goto forward;
+    }
+
+  olsr_printf(3, "Processing TC from %s\n",
+              olsr_ip_to_string(&message->originator));
+
+  /*
+   *      If the sender interface (NB: not originator) of this message
+   *      is not in the symmetric 1-hop neighborhood of this node, the
+   *      message MUST be discarded.
+   */
+
+  if(check_neighbor_link(from_addr) != SYM_LINK)
+    {
+      olsr_printf(2, "Received TC from NON SYM neighbor %s\n",
+                  olsr_ip_to_string(from_addr));
+      olsr_destroy_tc_message(message);
       return;
     }
-  */
 
-  /*
-   * Update link status
-   */
-  link = update_link_entry(&in_if->ip_addr, from_addr, &message, in_if);
-
-  neighbor = link->neighbor;
-
-  /*
-   * Hysteresis
-   */
-  if(olsr_cnf->use_hysteresis)
+  if(olsr_cnf->debug_level > 2)
     {
-      /* Update HELLO timeout */
-      //printf("MESSAGE HTIME: %f\n", message.htime);
-      olsr_update_hysteresis_hello(link, message.htime);
+      mpr = message->multipoint_relay_selector_address;
+      olsr_printf(3, "mpr_selector_list:[");
+
+      while(mpr!=NULL)
+        {
+          olsr_printf(3, "%s:", olsr_ip_to_string(&mpr->address));
+          mpr=mpr->next;
+        }
+
+      olsr_printf(3, "]\n");
     }
 
-  /* Check if we are chosen as MPR */
-  if(olsr_lookup_mpr_status(&message, in_if))
-    /* source_addr is always the main addr of a node! */
-    olsr_update_mprs_set(&message.source_addr, (float)message.vtime);
-
-
-
-  /* Check willingness */
-  if(neighbor->willingness != message.willingness)
+  tc_last = olsr_lookup_tc_entry(&message->originator);
+   
+  if(tc_last != NULL)
     {
-      olsr_printf(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
-		  olsr_ip_to_string(&neighbor->neighbor_main_addr),
-		  neighbor->willingness,
-		  message.willingness);
-      /*
-       *If willingness changed - recalculate
-       */
-      neighbor->willingness = message.willingness;
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
+      /* Update entry */
+
+      /* Delete destinations with lower ANSN */
+      if(olsr_tc_delete_mprs(tc_last, message))
+        changes_topology = OLSR_TRUE; 
+
+      /* Update destinations */
+      if(olsr_tc_update_mprs(tc_last, message))
+        changes_topology = OLSR_TRUE;
+
+      /* Delete possible empty TC entry */
+      if(changes_topology)
+        olsr_tc_delete_entry_if_empty(tc_last);
     }
 
+  else
+    {
+      /*if message is empty then skip it */
+      if(message->multipoint_relay_selector_address != NULL)
+        {
+          /* New entry */
+          tc_last = olsr_add_tc_entry(&message->originator);      
+	  
+          /* Update destinations */
+          olsr_tc_update_mprs(tc_last, message);
+	  
+          changes_topology = OLSR_TRUE;
+        }
+      else
+        {
+          olsr_printf(3, "Dropping empty TC from %s\n",
+                      olsr_ip_to_string(&message->originator)); 
+        }
+    }
 
-  /* Don't register neighbors of neighbors that announces WILL_NEVER */
-  if(neighbor->willingness != WILL_NEVER)
-    olsr_process_message_neighbors(neighbor, &message);
+  /* Process changes */
+  //olsr_process_changes();
 
-  /* Process changes immedeatly in case of MPR updates */
-  olsr_process_changes();
+ forward:
 
-  olsr_destroy_hello_message(&message);
+  olsr_forward_message(m, 
+                       &message->originator, 
+                       message->packet_seq_number, 
+                       in_if,
+                       from_addr);
+
+  olsr_destroy_tc_message(message);
 
   return;
 }
-
-
-
-
 
 /**
  *Process a received TopologyControl message
@@ -148,111 +265,11 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
 void
 olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
 { 
-  struct tc_mpr_addr              *mpr;
-  struct tc_entry                 *tc_last;
   struct tc_message               message;
 
   tc_chgestruct(&message, m, from_addr);
 
-  /*    
-  if(COMP_IP(&message.originator, &main_addr))
-    { 
-      goto forward;
-    }
-  */
-
-  if(!olsr_check_dup_table_proc(&message.originator, 
-				message.packet_seq_number))
-    {
-      goto forward;
-    }
-
-  olsr_printf(3, "Processing TC from %s\n", olsr_ip_to_string(&message.originator));
-
-
-
-
-
-  /*
-   *      If the sender interface (NB: not originator) of this message
-   *      is not in the symmetric 1-hop neighborhood of this node, the
-   *      message MUST be discarded.
-   */
-
-  if(check_neighbor_link(from_addr) != SYM_LINK)
-    {
-      olsr_printf(2, "Received TC from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
-      olsr_destroy_tc_message(&message);
-      return;
-    }
-
-
-  if(olsr_cnf->debug_level > 2)
-    {
-      mpr = message.multipoint_relay_selector_address;
-      olsr_printf(3, "mpr_selector_list:[");      
-      while(mpr!=NULL)
-	{
-	  olsr_printf(3, "%s:", olsr_ip_to_string(&mpr->address));
-	  mpr=mpr->next;
-	}
-      olsr_printf(3, "]\n");
-    }
-
-
-
-  tc_last = olsr_lookup_tc_entry(&message.originator);
-  
- 
-  if(tc_last != NULL)
-    {
-      /* Update entry */
-
-      /* Delete destinations with lower ANSN */
-      if(olsr_tc_delete_mprs(tc_last, &message))
-	changes_topology = OLSR_TRUE; 
-
-      /* Update destinations */
-      if(olsr_tc_update_mprs(tc_last, &message))
-	changes_topology = OLSR_TRUE;
-
-      /* Delete possible empty TC entry */
-      if(changes_topology)
-	olsr_tc_delete_entry_if_empty(tc_last);
-
-    }
-  else
-    {
-      /*if message is empty then skip it */
-      if(message.multipoint_relay_selector_address != NULL)
-	{
-	  /* New entry */
-	  tc_last = olsr_add_tc_entry(&message.originator);      
-	  
-	  /* Update destinations */
-	  olsr_tc_update_mprs(tc_last, &message);
-	  
-	  changes_topology = OLSR_TRUE;
-	}
-      else
-	{
-	  olsr_printf(3, "Dropping empty TC from %s\n", olsr_ip_to_string(&message.originator)); 
-	}
-    }
-
-  /* Process changes */
-  //olsr_process_changes();
-
- forward:
-
-  olsr_forward_message(m, 
-		       &message.originator, 
-		       message.packet_seq_number, 
-		       in_if,
-		       from_addr);
-  olsr_destroy_tc_message(&message);
-
-  return;
+  olsr_tc_tap(&message, in_if, from_addr, m);
 }
 
 
@@ -456,19 +473,24 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
  *@return nada
  */
 void
-olsr_process_message_neighbors(struct neighbor_entry *neighbor,struct hello_message *message)
+olsr_process_message_neighbors(struct neighbor_entry *neighbor,
+                               struct hello_message *message)
 {
   struct hello_neighbor        *message_neighbors;
   struct neighbor_2_list_entry *two_hop_neighbor_yet;
   struct neighbor_2_entry      *two_hop_neighbor;
   union olsr_ip_addr           *neigh_addr;
-  
 
-  for(message_neighbors=message->neighbors;
-      message_neighbors!=NULL;
-      message_neighbors=message_neighbors->next)
+#if defined USE_LINK_QUALITY
+  struct neighbor_list_entry *walker;
+  double link_quality =
+    olsr_neighbor_best_link_quality(&neighbor->neighbor_main_addr);
+#endif
+
+  for(message_neighbors = message->neighbors;
+      message_neighbors != NULL;
+      message_neighbors = message_neighbors->next)
     {
-      
       /*
        *check all interfaces
        *so that we don't add ourselves to the
@@ -476,61 +498,102 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,struct hello_mess
        *IMPORTANT!
        */
       if(if_ifwithaddr(&message_neighbors->address) != NULL)
-	 continue;
+        continue;
 
       /* Get the main address */
-      if((neigh_addr = mid_lookup_main_addr(&message_neighbors->address)) != NULL)
-	COPY_IP(&message_neighbors->address, neigh_addr);
-      
 
-      if(((message_neighbors->status==SYM_NEIGH) || (message_neighbors->status==MPR_NEIGH)))
-	{
-	  //printf("\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
-	  
-	  //printf("\tMain addr: %s\n", olsr_ip_to_string(neigh_addr));
-	  
-	  if((two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->address))!=NULL)
-	    {
-	      
-	      /* Updating the holding time for this neighbor */
-	      olsr_get_timestamp((olsr_u32_t) message->vtime*1000, &two_hop_neighbor_yet->neighbor_2_timer);
+      neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
 
-	    }
-	  else
-	    {
-	      
-	      if((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->address)) == NULL)
-		{
-		 
-		  //printf("Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&message_neighbors->address)); 
-		  changes_neighborhood = OLSR_TRUE;
-		  changes_topology = OLSR_TRUE;
-		  two_hop_neighbor = olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
-		  
-		  two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
-		  two_hop_neighbor->neighbor_2_nblist.prev = &two_hop_neighbor->neighbor_2_nblist;
-		  two_hop_neighbor->neighbor_2_pointer=0;
-		  
-		  COPY_IP(&two_hop_neighbor->neighbor_2_addr,&message_neighbors->address);
-		  olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
-		  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime);
-		}
-	      else
-		{
-		  
-		  /*
-		    linking to this two_hop_neighbor entry
-		  */	
-		  changes_neighborhood = OLSR_TRUE;
-		  changes_topology = OLSR_TRUE;
-		  
-		  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime); 
-		}
-	    }
-	}
+      if (neigh_addr != NULL)
+        COPY_IP(&message_neighbors->address, neigh_addr);
       
+      if(((message_neighbors->status == SYM_NEIGH) ||
+          (message_neighbors->status == MPR_NEIGH)))
+        {
+          //printf("\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
+          //printf("\tMain addr: %s\n", olsr_ip_to_string(neigh_addr));
+	  
+          two_hop_neighbor_yet =
+            olsr_lookup_my_neighbors(neighbor,
+                                     &message_neighbors->address);
+
+          if (two_hop_neighbor_yet != NULL)
+            {
+              /* Updating the holding time for this neighbor */
+              olsr_get_timestamp((olsr_u32_t)message->vtime * 1000,
+                                 &two_hop_neighbor_yet->neighbor_2_timer);
+
+              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
+            }
+          else
+            {
+              two_hop_neighbor =
+                olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
+              if (two_hop_neighbor == NULL)
+                {
+                  //printf("Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&message_neighbors->address)); 
+
+                  changes_neighborhood = OLSR_TRUE;
+                  changes_topology = OLSR_TRUE;
+
+                  two_hop_neighbor =
+                    olsr_malloc(sizeof(struct neighbor_2_entry),
+                                "Process HELLO");
+		  
+                  two_hop_neighbor->neighbor_2_nblist.next =
+                    &two_hop_neighbor->neighbor_2_nblist;
+
+                  two_hop_neighbor->neighbor_2_nblist.prev =
+                    &two_hop_neighbor->neighbor_2_nblist;
+
+                  two_hop_neighbor->neighbor_2_pointer = 0;
+		  
+                  COPY_IP(&two_hop_neighbor->neighbor_2_addr,
+                          &message_neighbors->address);
+
+                  olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
+
+                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor,
+                                              (float)message->vtime);
+                }
+              else
+                {
+                  /*
+                    linking to this two_hop_neighbor entry
+                  */	
+                  changes_neighborhood = OLSR_TRUE;
+                  changes_topology = OLSR_TRUE;
+		  
+                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor,
+                                              (float)message->vtime); 
+                }
+            }
+#if defined USE_LINK_QUALITY
+          // loop through the one-hop neighbors that see this
+          // two hop neighbour
+
+          for (walker = two_hop_neighbor->neighbor_2_nblist.next;
+               walker != &two_hop_neighbor->neighbor_2_nblist;
+               walker = walker->next)
+            {
+              // have we found the one-hop neighbor that sent the
+              // HELLO message that we're current processing?
+
+              if (walker->neighbor == neighbor)
+                {
+                  // total link quality = link quality between us
+                  // and our one-hop neighbor x link quality between
+                  // our one-hop neighbor and the two-hop neighbor
+
+                  walker->full_link_quality =
+                    link_quality *
+                    message_neighbors->link_quality *
+                    message_neighbors->neigh_link_quality;
+                }
+            }
+#endif
+        }
     }
-
 }
 
 
@@ -558,6 +621,10 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
   list_of_2_neighbors = olsr_malloc(sizeof(struct neighbor_2_list_entry), "Link entries 2");
 
   list_of_1_neighbors->neighbor = neighbor;
+
+#if defined USE_LINK_QUALITY
+  list_of_1_neighbors->full_link_quality = 0.0;
+#endif
 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
