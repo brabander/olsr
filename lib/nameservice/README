@@ -89,11 +89,10 @@ UNIX VARIANTS:
 	
 WINDOWS:
 
-* overwrite C:\WINDOWS\system32\etc\hosts
-	[windows users, please verify that this is the right path]
+* overwrite C:\WINDOWS\system32\drivers\etc\hosts
 	be sure you have nothing in the file which you still need 
 	and configure the plugin with
-	PlParam "filename" "C:\WINDOWS\system32\etc\hosts"
+	PlParam "filename" "C:\WINDOWS\system32\drivers\etc\hosts"
 	
 
 ---------------------------------------------------------------------
