@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.9 2004/11/11 23:22:34 tlopatic Exp $
+ * $Id: lq_route.c,v 1.10 2004/11/15 11:14:06 tlopatic Exp $
  *
  */
 
@@ -32,11 +32,14 @@
 #include "lq_list.h"
 #include "lq_route.h"
 
+#define INFINITE_ETX (1 << 30)
+#define MIN_LINK_QUALITY 0.0001
+
 struct dijk_edge
 {
   struct list_node node;
   struct dijk_vertex *dest;
-  double link_quality;
+  int etx;
 };
 
 struct dijk_vertex
@@ -44,7 +47,7 @@ struct dijk_vertex
   struct list_node node;
   union olsr_ip_addr addr;
   struct list edge_list;
-  double path_quality;
+  int path_etx;
   struct dijk_vertex *prev;
   olsr_bool done;
 };
@@ -52,7 +55,7 @@ struct dijk_vertex
 // XXX - bad complexity
 
 static void add_vertex(struct list *vertex_list, union olsr_ip_addr *addr,
-                       double path_quality)
+                       int path_etx)
 {
   struct list_node *node;
   struct dijk_vertex *vert;
@@ -81,7 +84,7 @@ static void add_vertex(struct list *vertex_list, union olsr_ip_addr *addr,
 
     COPY_IP(&vert->addr, addr);
     
-    vert->path_quality = path_quality;
+    vert->path_etx = path_etx;
     vert->prev = NULL;
     vert->done = OLSR_FALSE;
 
@@ -94,7 +97,7 @@ static void add_vertex(struct list *vertex_list, union olsr_ip_addr *addr,
 // XXX - bad complexity
 
 static void add_edge(struct list *vertex_list, union olsr_ip_addr *src,
-                     union olsr_ip_addr *dst, double link_quality)
+                     union olsr_ip_addr *dst, int etx)
 {
   struct list_node *node;
   struct dijk_vertex *vert;
@@ -159,7 +162,7 @@ static void add_edge(struct list *vertex_list, union olsr_ip_addr *src,
   edge->node.data = edge;
 
   edge->dest = dvert;
-  edge->link_quality = link_quality;
+  edge->etx = etx;
 
   list_add_tail(&svert->edge_list, &edge->node);
 }
@@ -199,7 +202,7 @@ static void free_everything(struct list *vertex_list)
 
 static struct dijk_vertex *extract_best(struct list *vertex_list)
 {
-  double best = 0.0;
+  int best_etx = INFINITE_ETX + 1;
   struct list_node *node;
   struct dijk_vertex *vert;
   struct dijk_vertex *res = NULL;
@@ -214,9 +217,9 @@ static struct dijk_vertex *extract_best(struct list *vertex_list)
 
     // see whether the current vertex is better than what we have
 
-    if (!vert->done && vert->path_quality >= best)
+    if (!vert->done && vert->path_etx < best_etx)
     {
-      best = vert->path_quality;
+      best_etx = vert->path_etx;
       res = vert;
     }
 
@@ -234,7 +237,7 @@ static struct dijk_vertex *extract_best(struct list *vertex_list)
 static void relax(struct dijk_vertex *vert)
 {
   struct dijk_edge *edge;
-  double new_quality;
+  int new_etx;
   struct list_node *node;
 
   node = list_get_head(&vert->edge_list);
@@ -248,15 +251,15 @@ static void relax(struct dijk_vertex *vert)
     // total quality of the path through this vertex to the
     // destination of this edge
 
-    new_quality = vert->path_quality * edge->link_quality;
+    new_etx = vert->path_etx + edge->etx;
 
     // if it's better than the current path quality of this
     // edge's destination, then we've found a better path to
     // this destination
 
-    if (new_quality > edge->dest->path_quality)
+    if (new_etx < edge->dest->path_etx)
     {
-      edge->dest->path_quality = new_quality;
+      edge->dest->path_etx = new_etx;
       edge->dest->prev = vert;
     }
 
@@ -285,7 +288,7 @@ void olsr_calculate_lq_routing_table(void)
 
   // add ourselves to the vertex list
 
-  add_vertex(&vertex_list, &main_addr, 1.0);
+  add_vertex(&vertex_list, &main_addr, 0);
 
   // add our neighbours
 
@@ -293,7 +296,7 @@ void olsr_calculate_lq_routing_table(void)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next)
       if (neigh->status == SYM)
-        add_vertex(&vertex_list, &neigh->neighbor_main_addr, 0.0);
+        add_vertex(&vertex_list, &neigh->neighbor_main_addr, INFINITE_ETX);
 
   // add remaining vertices
 
@@ -302,13 +305,13 @@ void olsr_calculate_lq_routing_table(void)
     {
       // add source
 
-      add_vertex(&vertex_list, &tcsrc->T_last_addr, 0.0);
+      add_vertex(&vertex_list, &tcsrc->T_last_addr, INFINITE_ETX);
 
       // add destinations of this source
 
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
            tcdst = tcdst->next)
-        add_vertex(&vertex_list, &tcdst->T_dest_addr, 0.0);
+        add_vertex(&vertex_list, &tcdst->T_dest_addr, INFINITE_ETX);
     }
 
   // add edges to and from our neighbours
@@ -320,13 +323,15 @@ void olsr_calculate_lq_routing_table(void)
       {
         link = olsr_neighbor_best_link(&neigh->neighbor_main_addr);
 
-        add_edge(&vertex_list, &main_addr, &neigh->neighbor_main_addr,
-                 link->neigh_link_quality);
+        if (link->neigh_link_quality >= MIN_LINK_QUALITY)
+          add_edge(&vertex_list, &main_addr, &neigh->neighbor_main_addr,
+                   (int)(1.0 / link->neigh_link_quality));
 
         link = olsr_neighbor_best_inverse_link(&neigh->neighbor_main_addr);
 
-        add_edge(&vertex_list, &neigh->neighbor_main_addr, &main_addr,
-                 link->loss_link_quality);
+        if (link->loss_link_quality >= MIN_LINK_QUALITY)
+          add_edge(&vertex_list, &neigh->neighbor_main_addr, &main_addr,
+                   (int)(1.0 / link->loss_link_quality));
       }
 
   // add remaining edges
@@ -336,11 +341,13 @@ void olsr_calculate_lq_routing_table(void)
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
            tcdst = tcdst->next)
       {
-        add_edge(&vertex_list, &tcsrc->T_last_addr, &tcdst->T_dest_addr,
-                 tcdst->link_quality);
+        if (tcdst->link_quality >= MIN_LINK_QUALITY)
+          add_edge(&vertex_list, &tcsrc->T_last_addr, &tcdst->T_dest_addr,
+                   (int)(1.0 / tcdst->link_quality));
 
-        add_edge(&vertex_list, &tcdst->T_dest_addr, &tcsrc->T_last_addr,
-                 tcdst->inverse_link_quality);
+        if (tcdst->inverse_link_quality >= MIN_LINK_QUALITY)
+          add_edge(&vertex_list, &tcdst->T_dest_addr, &tcsrc->T_last_addr,
+                   (int)(1.0 / tcdst->inverse_link_quality));
       }
 
   // run Dijkstra's algorithm
