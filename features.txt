@@ -35,5 +35,3 @@ willingness based on                 X       X        ?      ?
 battery power
 
 TOS                                  X       -        -      -
-
-link layer information               X       -        -      -
