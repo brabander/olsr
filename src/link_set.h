@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.24 2005/02/20 15:38:59 kattemat Exp $
+ * $Id: link_set.h,v 1.25 2005/03/17 16:31:08 kattemat Exp $
  */
 
 
@@ -59,7 +59,7 @@ struct link_entry
   clock_t ASYM_time;
   clock_t time;
   struct neighbor_entry *neighbor;
-
+  olsr_u8_t prev_status;
   /*
    *Hysteresis
    */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.54 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: link_set.c,v 1.55 2005/03/17 16:31:07 kattemat Exp $
  */
 
 
@@ -432,6 +432,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
   /* L_time = current time + validity time */
   new_link->time = GET_TIMESTAMP(vtime*1000);
 
+  new_link->prev_status = ASYM_LINK;
 
   /* HYSTERESIS */
   if(olsr_cnf->use_hysteresis)
@@ -593,7 +594,6 @@ update_link_entry(union olsr_ip_addr *local,
 		  struct hello_message *message, 
 		  struct interface *in_if)
 {
-  int status;
   struct link_entry *entry;
 
   /* Add if not registered */
@@ -604,11 +604,11 @@ update_link_entry(union olsr_ip_addr *local,
   /* L_ASYM_time = current time + validity time */
   entry->ASYM_time = GET_TIMESTAMP(message->vtime*1000);
   
-  status = check_link_status(message, in_if);
+  entry->prev_status = check_link_status(message, in_if);
   
   //printf("Status %d\n", status);
   
-  switch(status)
+  switch(entry->prev_status)
     {
     case(LOST_LINK):
       /* L_SYM_time = current time - 1 (i.e., expired) */
@@ -644,11 +644,8 @@ update_link_entry(union olsr_ip_addr *local,
   if(olsr_cnf->use_hysteresis)
     olsr_process_hysteresis(entry);
 
-  /* update neighbor status */
-  status = get_neighbor_status(remote);
-
   /* Update neighbor */
-  update_neighbor_status(entry->neighbor, status);
+  update_neighbor_status(entry->neighbor, get_neighbor_status(remote));
 
   return entry;  
 }
@@ -780,6 +777,14 @@ olsr_time_out_link_set()
 	      tmp_link_set = link_set;
 	      continue;
 	    }	    
+	}
+      else if((tmp_link_set->prev_status == SYM_LINK) &&
+	      TIMED_OUT(tmp_link_set->SYM_time))
+	{
+	  tmp_link_set->prev_status = lookup_link_status(tmp_link_set);
+	  update_neighbor_status(tmp_link_set->neighbor, 
+				 get_neighbor_status(&tmp_link_set->neighbor_iface_addr));
+	  changes_neighborhood = OLSR_TRUE;
 	}
       
       last_link_entry = tmp_link_set;
