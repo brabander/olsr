@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $ Id $
+ * $Id: olsr.c,v 1.10 2004/09/21 19:06:56 kattemat Exp $
  *
  */
 
