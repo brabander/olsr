@@ -176,6 +176,6 @@ int
 register_olsr_param(char *, char *);
 
 int 
-plugin_interface_version();
+get_plugin_interface_version();
 
 #endif
