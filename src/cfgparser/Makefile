@@ -20,7 +20,7 @@ BISON ?= bison
 FLEX ?= flex
 
 
-all:	$(NAME)
+all:	clean $(NAME)
 
 $(NAME):	$(OBJS)
 		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
