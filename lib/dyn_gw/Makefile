@@ -22,7 +22,7 @@ OBJS=	src/olsrd_plugin.o src/olsrd_dyn_gw.o
 
 #Headerfiles
 #add yours here
-HDRS=	src/olsrd_plugin.h src/olsrd_dyn_gw.h
+HDRS=	src/olsrd_plugin.h src/olsrd_dyn_gw.h src/olsr_plugin_io.h
 
 # -Wl passes options to the linker(-soname,....)
 # Use -lc to link it against C library
@@ -42,3 +42,7 @@ install:
 
 clean:
 	rm -f $(OBJS) $(NAME)
+
+src/olsrd_plugin.o: $(HDRS)
+
+src/olsrd_dyn_gw.o: $(HDRS)

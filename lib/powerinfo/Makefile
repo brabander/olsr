@@ -30,7 +30,6 @@ HDRS=	src/olsrd_plugin.h src/olsrd_power.h
 
 all: plugin
 
-
 plugin: $(OBJS)
 	$(CC) $(LDFLAGS) $(MYFLAGS) -g -shared -Wl,-soname,$(NAME) \
 	-o $(NAME) $(OBJS) $(LIBS)
@@ -42,3 +41,9 @@ install:
 
 clean:
 	rm -f $(OBJS) $(NAME)
+
+
+src/olsrd_plugin.o: $(HDRS)
+
+src/olsrd_power.o: $(HDRS)
+
