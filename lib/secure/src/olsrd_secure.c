@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.10 2005/01/30 19:00:32 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.11 2005/03/04 22:56:39 kattemat Exp $
  */
 
 
@@ -53,14 +53,57 @@
 #include <signal.h>
 
 /* OpenSSL stuff */
-
 #include <openssl/sha.h>
-//#include <openssl/evp.h>
+
+#ifdef OS
+#undef OS
+#endif
 
 #ifdef WIN32
+#define close(x) closesocket(x)
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#define OS "Windows"
 #endif
+#ifdef linux
+#define OS "GNU/Linux"
+#endif
+#ifdef __FreeBSD__
+#define OS "FreeBSD"
+#endif
+
+#ifndef OS
+#define OS "Undefined"
+#endif
+
+
+#ifdef WIN32
+
+static char *inet_ntop4(const unsigned char *src, char *dst, int size)
+{
+  static const char fmt[] = "%u.%u.%u.%u";
+  char tmp[sizeof "255.255.255.255"];
+
+  if (sprintf(tmp, fmt, src[0], src[1], src[2], src[3]) > size)
+    return (NULL);
+
+  return strcpy(dst, tmp);
+}
+
+char *inet_ntop(int af, void *src, char *dst, int size)
+{
+  switch (af)
+  {
+  case AF_INET:
+    return (inet_ntop4(src, dst, size));
+
+  default:
+    return (NULL);
+  }
+}
+
+#endif
+
 
 /**
  *Do initialization here
@@ -230,7 +273,7 @@ packet_parser(int fd)
     {
       fromlen = sizeof(struct sockaddr_storage);
 
-      cc = recvfrom(fd, &inbuf, sizeof (inbuf), 0, (struct sockaddr *)&from, &fromlen);
+      cc = recvfrom(fd, (void *)&inbuf, sizeof (inbuf), 0, (struct sockaddr *)&from, &fromlen);
 
       if (cc <= 0) 
 	{
