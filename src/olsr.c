@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.37 2005/01/22 12:25:25 tlopatic Exp $
+ * $Id: olsr.c,v 1.38 2005/02/02 19:59:18 kattemat Exp $
  */
 
 /**
@@ -64,11 +64,6 @@
 
 
 /**
- *Checks if a timer has timed out.
- */
-
-
-/**
  *Initiates a "timer", wich is a timeval structure,
  *with the value given in time_value.
  *@param time_value the value to initialize the timer with
@@ -78,11 +73,8 @@
 inline void
 olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
 { 
-  olsr_u16_t  time_value_sec;
-  olsr_u16_t  time_value_msec;
-
-  time_value_sec = time_value/1000;
-  time_value_msec = time_value-(time_value_sec*1000);
+  olsr_u16_t  time_value_sec = time_value/1000;
+  olsr_u16_t  time_value_msec = time_value-(time_value_sec*1000);
 
   hold_timer->tv_sec = time_value_sec;
   hold_timer->tv_usec = time_value_msec*1000;   

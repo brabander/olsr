@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: packet.c,v 1.15 2005/02/02 19:59:31 kattemat Exp $
  */
 
 
@@ -48,6 +48,33 @@
 
 
 static olsr_bool sending_tc = OLSR_FALSE;
+
+
+
+/**
+ *Free the memory allocated for a HELLO packet.
+ *
+ *@param message the pointer to the packet to erase
+ *
+ *@return nada
+ */
+void
+olsr_free_hello_packet(struct hello_message *message)
+{
+  struct hello_neighbor *nb, *prev_nb;
+
+  if(!message)
+    return;
+  
+  nb = message->neighbors;
+  
+  while (nb)
+    {
+      prev_nb = nb;
+      nb = nb->next;
+      free(prev_nb);
+    }
+}
 
 /**
  *Build an internal HELLO package for this
@@ -291,6 +318,31 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
 
 /**
+ *Free the memory allocated for a TC packet.
+ *
+ *@param message the pointer to the packet to erase
+ *
+ *@return nada
+ */
+void 
+olsr_free_tc_packet(struct tc_message *message)
+{
+  struct tc_mpr_addr *mprs, *prev_mprs;
+
+  if(!message)
+    return;
+
+  mprs = message->multipoint_relay_selector_address;
+  
+  while (mprs)
+    {
+      prev_mprs = mprs;
+      mprs = mprs->next;
+      free(prev_mprs);
+    }
+}
+
+/**
  *Build an internal TC package for this
  *node.
  *
@@ -399,59 +451,6 @@ olsr_build_tc_packet(struct tc_message *message)
 
   return 0;
 }
-
-
-
-
-/**
- *Free the memory allocated for a HELLO packet.
- *
- *@param message the pointer to the packet to erase
- *
- *@return nada
- */
-void
-olsr_destroy_hello_message(struct hello_message *message)
-{
-  struct hello_neighbor  *neighbors;
-  struct hello_neighbor  *neighbors_tmp;
-
-
-  neighbors=message->neighbors;
-  
-  while(neighbors!=NULL)
-    {
-      neighbors_tmp=neighbors;
-      neighbors=neighbors->next;
-      free(neighbors_tmp);
-    }
-}
-
-
-/**
- *Free the memory allocated for a TC packet.
- *
- *@param message the pointer to the packet to erase
- *
- *@return nada
- */
-
-void
-olsr_destroy_tc_message(struct tc_message *message)
-{
-  struct tc_mpr_addr  *mpr_set;
-  struct tc_mpr_addr  *mpr_set_tmp;
-
-  mpr_set=message->multipoint_relay_selector_address;
-
-  while( mpr_set!=NULL)
-    {
-      mpr_set_tmp=mpr_set;
-      mpr_set=mpr_set->next;
-      free(mpr_set_tmp);
-    }
-}
-
 
 
 /**

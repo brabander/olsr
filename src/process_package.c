@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.26 2005/01/17 20:18:21 kattemat Exp $
+ * $Id: process_package.c,v 1.27 2005/02/02 19:59:31 kattemat Exp $
  */
 
 
@@ -181,7 +181,7 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
   /* Process changes immedeatly in case of MPR updates */
   olsr_process_changes();
 
-  olsr_destroy_hello_message(message);
+  olsr_free_hello_packet(message);
 
   return;
 }
@@ -229,7 +229,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
     {
       olsr_printf(2, "Received TC from NON SYM neighbor %s\n",
                   olsr_ip_to_string(from_addr));
-      olsr_destroy_tc_message(message);
+      olsr_free_tc_packet(message);
       return;
     }
 
@@ -297,7 +297,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
                        in_if,
                        from_addr);
 
-  olsr_destroy_tc_message(message);
+  olsr_free_tc_packet(message);
 
   return;
 }

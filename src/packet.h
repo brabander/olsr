@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.12 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: packet.h,v 1.13 2005/02/02 19:59:31 kattemat Exp $
  */
 
 
@@ -162,8 +162,14 @@ struct unknown_message
 };
 
 
+void
+olsr_free_hello_packet(struct hello_message *);
+
 int
 olsr_build_hello_packet(struct hello_message *, struct interface *);
+
+void 
+olsr_free_tc_packet(struct tc_message *);
 
 int
 olsr_build_tc_packet(struct tc_message *);

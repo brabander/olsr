@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.21 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: generate_msg.c,v 1.22 2005/02/02 19:59:18 kattemat Exp $
  */
 
 #include "generate_msg.h"
@@ -70,8 +70,11 @@ generate_hello(void *p)
 
   olsr_build_hello_packet(&hellopacket, ifn);
       
-  if(hello_build(&hellopacket, ifn))
+  if(queue_hello(&hellopacket, ifn))
     net_output(ifn);
+
+  olsr_free_hello_packet(&hellopacket);
+
 }
 
 void
@@ -82,10 +85,12 @@ generate_tc(void *p)
 
   olsr_build_tc_packet(&tcpacket);
 
-  if(tc_build(&tcpacket, ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_tc(&tcpacket, ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
+
+  olsr_free_tc_packet(&tcpacket);
 }
 
 void
@@ -93,7 +98,7 @@ generate_mid(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(mid_build(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_mid(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
@@ -107,7 +112,7 @@ generate_hna(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(hna_build(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_hna(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
