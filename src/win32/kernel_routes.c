@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: kernel_routes.c,v 1.8 2004/11/14 20:25:34 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.9 2004/11/14 20:48:03 tlopatic Exp $
  *
  */
 
@@ -76,7 +76,7 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
   }
 
   if(olsr_cnf->open_ipc)
-    ipc_route_send_rtentry(&Dest->rt_dst, &Dest->rt_router, &Dest->rt_metric,
+    ipc_route_send_rtentry(&Dest->rt_dst, &Dest->rt_router, Dest->rt_metric,
                            1, Dest->rt_if->int_name);
 
   return 0;
@@ -124,7 +124,7 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
   }
 
   if(olsr_cnf->open_ipc)
-    ipc_route_send_rtentry(&Dest->rt_dst, NULL, &Dest->rt_metric, 0, NULL);
+    ipc_route_send_rtentry(&Dest->rt_dst, NULL, Dest->rt_metric, 0, NULL);
 
   return 0;
 }
