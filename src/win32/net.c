@@ -21,12 +21,9 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: net.c,v 1.7 2004/11/17 17:03:39 tlopatic Exp $
+ * $Id: net.c,v 1.8 2004/11/17 17:14:28 tlopatic Exp $
  *
  */
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -35,17 +32,18 @@
 #include <iphlpapi.h>
 #undef interface
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "../defs.h"
+#include "../net_os.h"
+
 void WinSockPError(char *Str);
 void PError(char *);
 
 int olsr_printf(int, char *, ...);
 
-int getsocket(struct sockaddr *Addr, int BuffSize, char *Int);
-int getsocket6(struct sockaddr_in6 *Addr, int BuffSize, char *Int);
-int enable_ip_forwarding(int Ver);
-int disable_ip_forwarding(int Ver);
-int restore_settings(int Ver);
 void DisableIcmpRedirects(void);
+int disable_ip_forwarding(int Ver);
 
 int getsocket(struct sockaddr *Addr, int BuffSize, char *Int)
 {
