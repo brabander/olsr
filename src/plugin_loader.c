@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.9 2004/11/05 23:55:38 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.10 2004/11/06 09:20:09 kattemat Exp $
  *
  */
 
@@ -170,14 +170,21 @@ init_olsr_plugin(struct olsr_plugin *entry)
 {
   struct olsr_plugin_data plugin_data;
   struct plugin_param *params = entry->params;
+  int retval;
 
   if(entry->register_param)
     {
       olsr_printf(1, "Sending parameters...\n");
       while(params)
 	{
-	  olsr_printf(1, "\"%s\"/\"%s\"\n", params->key, params->value);
-	  entry->register_param(params->key, params->value);
+	  olsr_printf(1, "\"%s\"/\"%s\".... ", params->key, params->value);
+	  if((retval = entry->register_param(params->key, params->value)) < 0)
+	    {
+	      fprintf(stderr, "\nFatal error in plugin parameter \"%s\"/\"%s\"\n", params->key, params->value);
+	      exit(EXIT_FAILURE);
+	    }
+	  retval == 0 ? olsr_printf(1, "FAILED\n") : olsr_printf(1, "OK\n");
+
 	  params = params->next;
 	}
     }
