@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.35 2005/02/27 17:21:50 kattemat Exp $
+$Id: CHANGELOG,v 1.36 2005/03/02 00:50:30 tlopatic Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -132,6 +132,7 @@ BUGFIXES
   bug caused HNA prefixes to always be calculated to 0.
 - If a 2-hop neighbor is also a 1-hop neighbor, a bug made olsrd
   prefer a bad direct link to a better link via an MPR.
+- If a link or interface lookup failed, olsrd crashed.
 
 
 0.4.8 ---------------------------------------------------------------------
