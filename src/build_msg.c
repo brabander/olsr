@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.28 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: build_msg.c,v 1.29 2005/03/10 20:43:13 kattemat Exp $
  */
 
 
@@ -241,7 +241,7 @@ check_buffspace(int msgsize, int buffsize, char *type)
 static olsr_bool
 serialize_hello4(struct hello_message *message, struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   struct hello_neighbor *nb;
   union olsr_message *m;
   struct hellomsg *h;
@@ -414,7 +414,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 static olsr_bool
 serialize_hello6(struct hello_message *message, struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   struct hello_neighbor *nb;
   union olsr_message *m;
   struct hellomsg6 *h6;
@@ -580,7 +580,7 @@ static olsr_bool
 serialize_tc4(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
   struct tcmsg *tc;
@@ -706,7 +706,7 @@ static olsr_bool
 serialize_tc6(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
   struct tcmsg6 *tc6;
@@ -823,7 +823,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 static olsr_bool
 serialize_mid4(struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr *addrs;
@@ -919,7 +919,7 @@ serialize_mid4(struct interface *ifp)
 static olsr_bool
 serialize_mid6(struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr6 *addrs6;
@@ -1014,7 +1014,7 @@ serialize_mid6(struct interface *ifp)
 static olsr_bool
 serialize_hna4(struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
@@ -1103,7 +1103,7 @@ serialize_hna4(struct interface *ifp)
 static olsr_bool
 serialize_hna6(struct interface *ifp)
 {
-  int remainsize, curr_size;
+  olsr_u16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair6 *pair6;

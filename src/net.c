@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.37 2005/03/04 21:30:16 kattemat Exp $
+ * $Id: net.c,v 1.38 2005/03/10 20:43:13 kattemat Exp $
  */
 
 #include "net.h"
@@ -237,16 +237,18 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
  * @param ifp the interface corresponding to the buffer
  *
  * @return the number of bytes available in the buffer or
- *  -1 if no buffer was found
  */
 int
 net_outbuffer_bytes_left(struct interface *ifp)
 {
+  int remaining;
 
   if(!netbufs[ifp->if_nr])
-    return -1;
+    return 0;
 
-  return (netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending);
+  remaining = netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending;
+
+  return remaining ? remaining : 0;
 }
 
 
