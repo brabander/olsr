@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.15 2004/11/22 01:22:31 tlopatic Exp $
+$Id: CHANGELOG,v 1.16 2004/12/02 16:37:13 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
 
@@ -9,12 +9,6 @@ Olsrd is now distributed under a BSD style license. We belive olsrd will
 be better off using this license as it opens up for commercial players
 to use olsrd freely in their products. In the end this will lead to
 this kind of users doing serious testing and bugfixing of olsrd. 
-
-NO MORE THREADS
-
-Olsrd no longer uses any thread library on its operation. Everything
-now happens in the main thread allowing for use of olsrd on platforms
-with no thread library.
 
 ETX-LIKE LINK QUALITY DETECTION
 
@@ -68,8 +62,12 @@ probably not as reliable as the Linux version. We'd greatly appreciate
 feedback and bug reports. To compile you need GNU make. Then simply
 run "gmake OS=fbsd" to build the executable.
 
-CLEAR SCREEN
+DEBUG OUTPUT
 
+Tables are now only printed if changes occure, so there are no longer 
+any periodical output when using a debuglevel >0. A "heartbeat" is 
+now printet to STDOUT(if it is a terminal) in the form of a rotating 
+line to show that olsrd is actually operating.
 Adding "ClearScreen yes" to the configuration file clears the screen
 each time before the debug output shows updated information. This
 makes the debug output easier to read in many cases. "ClearScreen no"
@@ -80,12 +78,23 @@ PLUGIN INTERFACE
 
 There are some changes in the plugin interface. It is now at
 version 2. Plugin specific parameters from the configfile 
-will now be passed on to plugins.
+using the PlParam option, will now be passed on to plugins.
+To receive such parameters a plugin myst implement a function:
+int
+register_olsr_param(char *key, char *value)
+to which parameter pairs will be passed.
+
+NO MORE THREADS
+
+Olsrd no longer uses any thread library on its operation. Everything
+now happens in the main thread allowing for use of olsrd on platforms
+with no thread library.
 
 ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
 
 The willingness calculation for Linux, now also supports the more
-modern ACPI proc interface in addittion to APM.
+modern ACPI proc interface in addittion to APM. This is not well
+tested and feedback is appreciated!
 
 IPC OPTIONS
 
@@ -127,15 +136,12 @@ BUGFIXES
 
 A bug that caused the announced ANSN sequence number to never stop
 beeing increased when a change in the MPR selector set was detected
-has been fixed. This bug could cause unstable routes.
+has been fixed. Another TC related bug that caused timed out TC
+entries not to be deleted from the routing table in certain cases
+has also been fixed. Theese bugs could cause unstable routes.
 A bug that in many cases caused the wrong routes to be deleted 
 when using IPv6 has been fixed.
 
-PLUGINS
-
-There are a lot of changes that affects plugins in this release.
-This has mainly to do with the new outputbuffering and
-configuration schemes.
 
 0.4.7 ---------------------------------------------------------------------
 
