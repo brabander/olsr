@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.38 2005/03/10 18:11:27 kattemat Exp $
+$Id: CHANGELOG,v 1.39 2005/03/17 17:31:17 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -121,6 +121,9 @@ OTHER UPDATES
 
 BUGFIXES
 
+- Link sensing now works according to announced vtime from
+  neighbors. Previously links going symmetric->asymmetric
+  were not nessecarly detected until the holding time expired.
 - A bug in route addittion/removal that could lead to routes
   using GWs beeing added before the actual route to the GW
   was set up has been fixed.
