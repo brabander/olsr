@@ -36,6 +36,7 @@ srcs="\
     src/win32/compat.c \
     src/win32/ifnet.c \
     src/win32/kernel_routes.c \
+    src/win32/log.c \
     src/win32/net.c \
     src/win32/tunnel.c \
     "

@@ -35,6 +35,7 @@ OBJS =		src/build_msg.o \
 		src/win32/compat.o \
 		src/win32/ifnet.o \
 		src/win32/kernel_routes.o \
+		src/win32/log.o \
 		src/win32/net.o \
 		src/win32/tunnel.o
 

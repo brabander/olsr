@@ -1,5 +1,5 @@
 /*
- * $Id: compat.c,v 1.2 2004/09/15 11:18:42 tlopatic Exp $
+ * $Id: compat.c,v 1.3 2004/09/21 15:23:25 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -38,7 +38,6 @@
  */
 
 #include <pthread.h>
-#include <syslog.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <ctype.h>
@@ -121,24 +120,6 @@ int pthread_mutex_unlock(HANDLE *Hand)
     return -1;
 
   return 0;
-}
-
-void syslog(int Pri, char *Form, ...)
-{
-  Pri = Pri;
-  Form = Form;
-}
-
-void openlog(char *Id, int Opt, int Fac)
-{
-  Id = Id;
-  Opt = Opt;
-  Fac = Fac;
-}
-
-void setlogmask(int Mask)
-{
-  Mask = Mask;
 }
 
 void sleep(unsigned int Sec)

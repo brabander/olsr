@@ -1,5 +1,5 @@
 /*
- * $Id: syslog.h,v 1.2 2004/09/15 11:18:42 tlopatic Exp $
+ * $Id: log.c,v 1.1 2004/09/21 15:23:25 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -20,22 +20,10 @@
  *
  */
 
-#if !defined TL_SYSLOG_H_INCLUDED
+void olsr_openlog(const char *Id)
+{
+}
 
-#define TL_SYSLOG_H_INCLUDED
-
-#define LOG_ERR 0
-#define LOG_INFO 0
-
-#define LOG_PID 0
-#define LOG_ODELAY 0
-
-#define LOG_DAEMON 0
-
-#define LOG_UPTO(x) ((1 << ((x) + 1)) - 1)
-
-void syslog(int Pri, char *Form, ...);
-void openlog(char *Id, int Opt, int Fac);
-void setlogmask(int Mask);
-
-#endif
+void olsr_syslog(int Level, const char *Format, ...)
+{
+}

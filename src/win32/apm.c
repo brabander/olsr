@@ -1,5 +1,5 @@
 /*
- * $Id: apm.c,v 1.2 2004/09/15 11:18:42 tlopatic Exp $
+ * $Id: apm.c,v 1.3 2004/09/21 15:23:25 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * Derived from its Linux counterpart.
@@ -47,24 +47,11 @@ int apm_init()
   return 0;
 }
 
-int apm_printinfo(struct olsr_apm_info *ApmInfo)
+void apm_printinfo(struct olsr_apm_info *ApmInfo)
 {
-  olsr_printf(5, "APM info:\n\tAC status %d\n\tBattery status %d\n\tBattery percentage %d%%\n\tBattery time left: %d min\n\n",
+  olsr_printf(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
 	      ApmInfo->ac_line_status,
-	      ApmInfo->battery_status,
-	      ApmInfo->battery_percentage,
-	      ApmInfo->battery_time);
-	 
-  if(ApmInfo->battery_status >= 128)
-    olsr_printf(2, "No batteries detected\n");
-
-  else if (ApmInfo->ac_line_status)
-    olsr_printf(3, "Battery powered system detected - currently running on AC power\n");
-
-  else
-    olsr_printf(3, "System running on batteries\n");
-
-  return 0;
+	      ApmInfo->battery_percentage);
 }
 
 int apm_read(struct olsr_apm_info *ApmInfo)
@@ -76,10 +63,11 @@ int apm_read(struct olsr_apm_info *ApmInfo)
   if (!GetSystemPowerStatus(&PowerStat))
     return -1;
 
-  ApmInfo->ac_line_status = PowerStat.ACLineStatus;
-  ApmInfo->battery_status = PowerStat.BatteryFlag;
-  ApmInfo->battery_percentage = PowerStat.BatteryLifePercent;
-  ApmInfo->battery_time = PowerStat.BatteryLifeTime;
+  ApmInfo->ac_line_status = (PowerStat.ACLineStatus == 1) ?
+    OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
+    
+  ApmInfo->battery_percentage = (PowerStat.BatteryLifePercent <= 100) ?
+    PowerStat.BatteryLifePercent : 0;
 
   return 0;
 }
