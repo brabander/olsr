@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.3 2004/11/09 21:15:07 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.4 2005/01/30 18:00:16 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -101,6 +101,7 @@ int
 plugin_ipc_init()
 {
   struct sockaddr_in sin;
+  olsr_u32_t yes = 1;
 
   /* Init ipc socket */
   if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
@@ -110,6 +111,20 @@ plugin_ipc_init()
     }
   else
     {
+      if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
+      {
+	perror("SO_REUSEADDR failed");
+	return 0;
+      }
+
+#ifdef __FreeBSD__
+      if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) 
+      {
+	perror("SO_REUSEADDR failed");
+	return 0;
+      }
+#endif
+
       /* Bind the socket */
       
       /* complete the socket structure */
@@ -502,7 +517,11 @@ ipc_send(char *data, int size)
   if(!ipc_connected)
     return 0;
 
+#ifdef __FreeBSD__
+  if (send(ipc_connection, data, size, 0) < 0) 
+#else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 
+#endif
     {
       //perror("send - IPC");
       olsr_printf(1, "(OUTPUT)IPC connection lost!\n");
