@@ -16,9 +16,9 @@ endif
 ifeq ($(OS), linux)
 NAME ?= olsrd_dot_draw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-MYFLAGS ?= -Wall -fPIC -Dlinux -g # Uncomment -g for debugging
+MYFLAGS ?= -Wall -fPIC -Dlinux -I../../src -g # Uncomment -g for debugging
 LIBS ?= -lc -lm
-CFLAGS ?= -fPIC -g -O2
+CFLAGS ?= -fPIC -g -O2 -I../../src -DOLSR_PLUGIN
 INSTALL_LIB = 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
 all:	plugin
@@ -28,7 +28,7 @@ NAME ?= olsrd_dot_draw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lc -lm
-CFLAGS ?= -fPIC -g -O2
+CFLAGS ?= -fPIC -g -O2 -I../../src -DOLSR_PLUGIN
 INSTALL_LIB = 	install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
 all:	plugin
