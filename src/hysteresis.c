@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.15 2005/02/17 21:36:29 kattemat Exp $
+ * $Id: hysteresis.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
@@ -77,8 +77,8 @@ olsr_process_hysteresis(struct link_entry *entry)
     {
       if(entry->L_link_pending == 1)
 	{
-	  olsr_printf(1, "HYST[%s] link set to NOT pending!\n", 
-		      olsr_ip_to_string(&entry->neighbor_iface_addr));
+	  OLSR_PRINTF(1, "HYST[%s] link set to NOT pending!\n", 
+		      olsr_ip_to_string(&entry->neighbor_iface_addr))
 	  changes_neighborhood = OLSR_TRUE;
 	}
 
@@ -98,8 +98,8 @@ olsr_process_hysteresis(struct link_entry *entry)
     {
       if(entry->L_link_pending == 0)
 	{
-	  olsr_printf(1, "HYST[%s] link set to pending!\n", 
-		      olsr_ip_to_string(&entry->neighbor_iface_addr));
+	  OLSR_PRINTF(1, "HYST[%s] link set to pending!\n", 
+		      olsr_ip_to_string(&entry->neighbor_iface_addr))
 	  changes_neighborhood = OLSR_TRUE;
 	}
       
@@ -148,7 +148,7 @@ void
 olsr_update_hysteresis_hello(struct link_entry *entry, double htime)
 {
 #ifdef DEBUG
-  olsr_printf(3, "HYST[%s]: HELLO update vtime %f\n", olsr_ip_to_string(&entry->neighbor_iface_addr), htime*1.5);
+  OLSR_PRINTF(3, "HYST[%s]: HELLO update vtime %f\n", olsr_ip_to_string(&entry->neighbor_iface_addr), htime*1.5)
 #endif
   /* hello timeout = current time + hint time */
   /* SET TIMER TO 1.5 TIMES THE INTERVAL */
@@ -173,7 +173,7 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
     {
       link->L_link_quality = olsr_hyst_calc_stability(link->L_link_quality);
 #ifdef DEBUG
-      olsr_printf(3, "HYST[%s]: %0.3f\n", olsr_ip_to_string(remote), link->L_link_quality);
+      OLSR_PRINTF(3, "HYST[%s]: %0.3f\n", olsr_ip_to_string(remote), link->L_link_quality)
 #endif
 
       /* 
@@ -189,8 +189,8 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
 	    {
 	      link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
 #ifdef DEBUG
-	      olsr_printf(5, "HYST[%s] PACKET LOSS! %0.3f\n",
-			  olsr_ip_to_string(remote), link->L_link_quality);
+	      OLSR_PRINTF(5, "HYST[%s] PACKET LOSS! %0.3f\n",
+			  olsr_ip_to_string(remote), link->L_link_quality)
 #endif
 	      if(link->L_link_quality < olsr_cnf->hysteresis_param.thr_low)
 		break;

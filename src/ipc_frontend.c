@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.24 2005/02/13 15:27:28 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.25 2005/02/27 10:43:38 kattemat Exp $
  */
 
 /*
@@ -103,14 +103,14 @@ ipc_init()
   if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
     {
       perror("IPC bind");
-      olsr_printf(1, "Will retry in 10 seconds...\n");
+      OLSR_PRINTF(1, "Will retry in 10 seconds...\n")
       sleep(10);
       if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
 	{
 	  perror("IPC bind");
 	  olsr_exit("IPC bind", EXIT_FAILURE);
 	}
-      olsr_printf(1, "OK\n");
+      OLSR_PRINTF(1, "OK\n")
     }
 
   /* show that we are willing to listen */
@@ -144,18 +144,18 @@ ipc_accept(int fd)
     }
   else
     {
-      olsr_printf(1, "Front end connected\n");
+      OLSR_PRINTF(1, "Front end connected\n")
       addr = inet_ntoa(pin.sin_addr);
       if(ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
 	{
 	  ipc_active = OLSR_TRUE;
 	  ipc_send_net_info();
 	  ipc_send_all_routes();
-	  olsr_printf(1, "Connection from %s\n",addr);
+	  OLSR_PRINTF(1, "Connection from %s\n",addr)
 	}
       else
 	{
-	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
+	  OLSR_PRINTF(1, "Front end-connection from foregin host(%s) not allowed!\n", addr)
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
 	  close(ipc_connection);
 	}
@@ -241,7 +241,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
   
   if (send(ipc_connection, (void *)msg, size, MSG_NOSIGNAL) < 0) 
     {
-      olsr_printf(1, "(OUTPUT)IPC connection lost!\n");
+      OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n")
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
       ipc_active = OLSR_FALSE;
@@ -309,7 +309,7 @@ ipc_route_send_rtentry(union olsr_ip_addr *dst, union olsr_ip_addr *gw, int met,
   
   if (send(ipc_connection, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) // MSG_NOSIGNAL to avoid sigpipe
     {
-      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
+      OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n")
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
       ipc_active = OLSR_FALSE;
@@ -371,7 +371,7 @@ ipc_send_all_routes()
   
 	  if (send(ipc_connection, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) // MSG_NOSIGNAL to avoid sigpipe
 	    {
-	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
+	      OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n")
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
 	      ipc_active = OLSR_FALSE;
@@ -416,7 +416,7 @@ ipc_send_all_routes()
   
 	  if (send(ipc_connection, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) // MSG_NOSIGNAL to avoid sigpipe
 	    {
-	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
+	      OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n")
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
 	      ipc_active = OLSR_FALSE;
@@ -451,7 +451,7 @@ ipc_send_net_info()
 
   msg = (char *)net_msg;
 
-  olsr_printf(1, "Sending net-info to front end...\n");
+  OLSR_PRINTF(1, "Sending net-info to front end...\n")
   
   memset(net_msg, 0, sizeof(struct ipc_net_msg));
   
@@ -519,7 +519,7 @@ ipc_send_net_info()
 
   if (send(ipc_connection, (char *)net_msg, sizeof(struct ipc_net_msg), MSG_NOSIGNAL) < 0) 
     {
-      olsr_printf(1, "(NETINFO)IPC connection lost!\n");
+      OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n")
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
       return -1;
@@ -534,7 +534,7 @@ ipc_send_net_info()
 int
 shutdown_ipc()
 {
-  olsr_printf(1, "Shutting down IPC...\n");
+  OLSR_PRINTF(1, "Shutting down IPC...\n")
   close(ipc_sock);
   close(ipc_connection);
   

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.20 2005/02/24 10:14:10 kattemat Exp $
+ * $Id: socket_parser.c,v 1.21 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -78,7 +78,7 @@ add_olsr_socket(int fd, void(*pf)(int))
       fprintf(stderr, "Bogus socket entry - not registering...\n");
       return;
     }
-  olsr_printf(2, "Adding OLSR socket entry %d\n", fd);
+  OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd)
 
   new_entry = olsr_malloc(sizeof(struct olsr_socket_entry), "Socket entry");
 
@@ -111,7 +111,7 @@ remove_olsr_socket(int fd, void(*pf)(int))
       olsr_syslog(OLSR_LOG_ERR, "Bogus socket entry - not processing...\n");
       return 0;
     }
-  olsr_printf(1, "Removing OLSR socket entry %d\n", fd);
+  OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd)
 
   entry = olsr_socket_entries;
   prev_entry = NULL;
@@ -188,7 +188,7 @@ poll_sockets()
 	return;
 
       olsr_syslog(OLSR_LOG_ERR, "select: %m");
-      olsr_printf(1, "Error select: %s", strerror(errno));
+      OLSR_PRINTF(1, "Error select: %s", strerror(errno))
       return;
     }
 

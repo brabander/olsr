@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.5 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.6 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
-#include "../kernel_routes.h"
-#include "../olsr.h"
+#include "kernel_routes.h"
+#include "olsr.h"
+#include "defs.h"
 
 #include <net/if_dl.h>
 #include <ifaddrs.h>
@@ -66,8 +67,8 @@ static int add_del_route(struct rt_entry *dest, int add)
   inet_ntop(AF_INET, &dest->rt_mask.v4, Str2, 16);
   inet_ntop(AF_INET, &dest->rt_router.v4, Str3, 16);
 
-  olsr_printf(1, "%s IPv4 route to %s/%s via %s.\n",
-    (add != 0) ? "Adding" : "Removing", Str1, Str2, Str3);
+  OLSR_PRINTF(1, "%s IPv4 route to %s/%s via %s.\n",
+    (add != 0) ? "Adding" : "Removing", Str1, Str2, Str3)
 
   memset(buff, 0, sizeof (buff));
   memset(&sin, 0, sizeof (sin));

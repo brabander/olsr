@@ -36,14 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.16 2005/02/14 18:48:39 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.17 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
 
-#include "../kernel_routes.h"
-#include "../link_set.h"
-#include "../olsr.h"
+#include "kernel_routes.h"
+#include "link_set.h"
+#include "olsr.h"
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -70,9 +70,9 @@ olsr_ioctl_add_route(struct rt_entry *destination)
   inet_ntop(AF_INET, &destination->rt_mask.v4, mask_str, 16);
   inet_ntop(AF_INET, &destination->rt_router.v4, router_str, 16);
 
-  olsr_printf(1, "(ioctl)Adding route with metric %d to %s/%s via %s/%s.\n",
+  OLSR_PRINTF(1, "(ioctl)Adding route with metric %d to %s/%s via %s/%s.\n",
               destination->rt_metric, dst_str, mask_str, router_str,
-              destination->rt_if->int_name);
+              destination->rt_if->int_name)
   
   memset(&kernel_route, 0, sizeof(struct rtentry));
 
@@ -171,9 +171,9 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   int tmp;
   struct in6_addr zeroaddr;
 
-  olsr_printf(2, "(ioctl)Adding route: %s(hopc %d)\n", 
+  OLSR_PRINTF(2, "(ioctl)Adding route: %s(hopc %d)\n", 
 	      olsr_ip_to_string(&destination->rt_dst), 
-	      destination->rt_metric + 1);
+	      destination->rt_metric + 1)
   
 
   memset(&zeroaddr, 0, ipsize); /* Use for comparision */
@@ -204,8 +204,8 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
 
 
   
-  //olsr_printf(3, "Adding route to %s using gw ", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_dst));
-  //olsr_printf(3, "%s\n", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_gateway));
+  //OLSR_PRINTF(3, "Adding route to %s using gw ", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_dst))
+  //OLSR_PRINTF(3, "%s\n", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_gateway))
 
   if((tmp = ioctl(ioctl_s, SIOCADDRT, &kernel_route)) >= 0)
     {
@@ -243,9 +243,9 @@ olsr_ioctl_del_route(struct rt_entry *destination)
   inet_ntop(AF_INET, &destination->rt_mask.v4, mask_str, 16);
   inet_ntop(AF_INET, &destination->rt_router.v4, router_str, 16);
 
-  olsr_printf(1, "(ioctl)Deleting route with metric %d to %s/%s via %s/%s.\n",
+  OLSR_PRINTF(1, "(ioctl)Deleting route with metric %d to %s/%s via %s/%s.\n",
               destination->rt_metric, dst_str, mask_str, router_str,
-              destination->rt_if->int_name);
+              destination->rt_if->int_name)
   
   memset(&kernel_route,0,sizeof(struct rtentry));
 
@@ -311,12 +311,12 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
 
   union olsr_ip_addr tmp_addr = destination->rt_dst;
 
-  olsr_printf(2, "(ioctl)Deleting route: %s(hopc %d)\n", 
+  OLSR_PRINTF(2, "(ioctl)Deleting route: %s(hopc %d)\n", 
 	      olsr_ip_to_string(&destination->rt_dst), 
-	      destination->rt_metric);
+	      destination->rt_metric)
 
 
-  olsr_printf(1, "Deleting route: %s\n", olsr_ip_to_string(&tmp_addr));
+  OLSR_PRINTF(1, "Deleting route: %s\n", olsr_ip_to_string(&tmp_addr))
 
   memset(&kernel_route,0,sizeof(struct in6_rtmsg));
 
@@ -359,7 +359,7 @@ delete_all_inet_gws()
   struct ifconf ifc;
   struct ifreq *ifr;
   
-  olsr_printf(1, "Internet gateway detected...\nTrying to delete default gateways\n");
+  OLSR_PRINTF(1, "Internet gateway detected...\nTrying to delete default gateways\n")
   
   /* Get a socket */
   if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
@@ -388,11 +388,11 @@ delete_all_inet_gws()
       
       if(strcmp(ifr->ifr_ifrn.ifrn_name, "lo") == 0)
 	{
-	  olsr_printf(1, "Skipping loopback...\n");
+	  OLSR_PRINTF(1, "Skipping loopback...\n")
 	  continue;
 	}
 
-      olsr_printf(1, "Trying 0.0.0.0/0 %s...", ifr->ifr_ifrn.ifrn_name);
+      OLSR_PRINTF(1, "Trying 0.0.0.0/0 %s...", ifr->ifr_ifrn.ifrn_name)
       
       
       memset(&kernel_route,0,sizeof(struct rtentry));
@@ -424,9 +424,9 @@ delete_all_inet_gws()
       //printf("Inserting route entry on device %s\n\n", kernel_route.rt_dev);
       
       if((ioctl(s, SIOCDELRT, &kernel_route)) < 0)
-	olsr_printf(1, "NO\n");
+	OLSR_PRINTF(1, "NO\n")
       else
-	olsr_printf(1, "YES\n");
+	OLSR_PRINTF(1, "YES\n")
 
 
       free(kernel_route.rt_dev);

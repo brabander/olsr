@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.33 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: net.c,v 1.34 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include "net.h"
@@ -475,7 +475,7 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_interface = ifs->if_index;
 
 #if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
-  olsr_printf(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr))
   /* Send multicast */
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 
@@ -527,7 +527,7 @@ join_mcast(struct interface *ifs, int sock)
     }
 
 
-  olsr_printf(3, "OK\n");
+  OLSR_PRINTF(3, "OK\n")
   return 0;
 }
 
@@ -560,7 +560,7 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
     }
 
 #ifdef DEBUG
-  olsr_printf(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(adr));
+  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(adr))
 #endif
 
   return 1;
@@ -599,7 +599,7 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
     }
 
 #ifdef DEBUG
-  olsr_printf(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(adr), prefix);
+  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(adr), prefix)
 #endif
 
   return prefix;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.15 2005/02/23 18:59:28 kattemat Exp $
+ * $Id: interfaces.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include "defs.h"
@@ -92,7 +92,7 @@ ifinit()
       //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
     }
 
-  olsr_printf(1, "\n ---- Interface configuration ---- \n\n");
+  OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n")
   /* Run trough all interfaces immedeatly */
   for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
     {

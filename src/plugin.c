@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.17 2005/02/17 21:36:30 kattemat Exp $
+ * $Id: plugin.c,v 1.18 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
@@ -81,7 +81,7 @@ olsr_plugin_io(int cmd, void *data, size_t size)
 {
   void *ptr;
 
-  olsr_printf(3, "olsr_plugin_io(%d)\n", cmd);
+  OLSR_PRINTF(3, "olsr_plugin_io(%d)\n", cmd)
 
   switch(cmd)
     {

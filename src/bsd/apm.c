@@ -36,14 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.3 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: apm.c,v 1.4 2005/02/27 10:43:38 kattemat Exp $
  */
 
-#include "../apm.h"
+#include "apm.h"
+#include "defs.h"
 #include <stdio.h>
 #include <string.h>
-
-extern int olsr_printf(int, char *, ...);
 
 int apm_init()
 {

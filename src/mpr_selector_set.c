@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.12 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.13 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
@@ -57,7 +57,7 @@ static struct mpr_selector mprs_list;
 int
 olsr_init_mprs_set()
 {
-  olsr_printf(5, "MPRS: Init\n");
+  OLSR_PRINTF(5, "MPRS: Init\n")
   /* Initial values */
   ansn = 0;
 
@@ -96,7 +96,7 @@ olsr_add_mpr_selector(union olsr_ip_addr *addr, float vtime)
 {
   struct mpr_selector *new_entry;
 
-  olsr_printf(1, "MPRS: adding %s\n", olsr_ip_to_string(addr));
+  OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(addr))
 
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
 
@@ -133,7 +133,7 @@ olsr_lookup_mprs_set(union olsr_ip_addr *addr)
 
   if(addr == NULL)
     return NULL;
-  //olsr_printf(1, "MPRS: Lookup....");
+  //OLSR_PRINTF(1, "MPRS: Lookup....")
 
   mprs = mprs_list.next;
 
@@ -142,13 +142,13 @@ olsr_lookup_mprs_set(union olsr_ip_addr *addr)
 
       if(COMP_IP(&mprs->MS_main_addr, addr))
 	{
-	  //olsr_printf(1, "MATCH\n");
+	  //OLSR_PRINTF(1, "MATCH\n")
 	  return mprs;
 	}
       mprs = mprs->next;
     }
   
-  //olsr_printf(1, "NO MACH\n");
+  //OLSR_PRINTF(1, "NO MACH\n")
   return NULL;
 }
 
@@ -168,7 +168,7 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
   struct mpr_selector *mprs;
   int retval;
 
-  olsr_printf(5, "MPRS: Update %s\n", olsr_ip_to_string(addr));
+  OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(addr))
 
   retval = 0;
 
@@ -210,7 +210,7 @@ olsr_time_out_mprs_set()
 	  struct mpr_selector *mprs_to_delete = mprs;
 	  mprs = mprs->next;
 
-	  olsr_printf(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&mprs_to_delete->MS_main_addr));
+	  OLSR_PRINTF(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&mprs_to_delete->MS_main_addr))
 
 	  DEQUEUE_ELEM(mprs_to_delete);
 
@@ -236,12 +236,12 @@ olsr_print_mprs_set()
 
 
   mprs = mprs_list.next;
-  olsr_printf(1, "MPR SELECTORS: ");
+  OLSR_PRINTF(1, "MPR SELECTORS: ")
 
   while(mprs != &mprs_list)
     {
-      olsr_printf(1, "%s ", olsr_ip_to_string(&mprs->MS_main_addr));
+      OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&mprs->MS_main_addr))
       mprs = mprs->next;
     }
-  olsr_printf(1, "\n");
+  OLSR_PRINTF(1, "\n")
 }

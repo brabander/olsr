@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.15 2005/01/17 20:18:20 kattemat Exp $
+ * $Id: hna_set.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include "defs.h"
@@ -124,7 +124,7 @@ olsr_lookup_hna_gw(union olsr_ip_addr *gw)
   struct hna_entry *tmp_hna;
   olsr_u32_t hash;
 
-  //olsr_printf(5, "TC: lookup entry\n");
+  //OLSR_PRINTF(5, "TC: lookup entry\n")
 
   hash = olsr_hashing(gw);
   
@@ -319,16 +319,16 @@ olsr_print_hna_set()
 {
   int index;
 
-  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
+  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-	      now.tv_usec/10000);
+	      (int)now.tv_usec/10000)
   
   if(olsr_cnf->ip_version == AF_INET)
-    olsr_printf(1, "IP net          netmask         GW IP\n");
+    OLSR_PRINTF(1, "IP net          netmask         GW IP\n")
   else
-    olsr_printf(1, "IP net/prefixlen               GW IP\n");
+    OLSR_PRINTF(1, "IP net/prefixlen               GW IP\n")
 
   for(index=0;index<HASHSIZE;index++)
     {
@@ -343,14 +343,14 @@ olsr_print_hna_set()
 	    {
 	      if(olsr_cnf->ip_version == AF_INET)
 		{
-		  olsr_printf(1, "%-15s ", olsr_ip_to_string(&tmp_net->A_network_addr));
-		  olsr_printf(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&tmp_net->A_netmask.v4));
-		  olsr_printf(1, "%-15s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string(&tmp_net->A_network_addr))
+		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&tmp_net->A_netmask.v4))
+		  OLSR_PRINTF(1, "%-15s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr))
 		}
 	      else
 		{
-		  olsr_printf(1, "%-27s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6);
-		  olsr_printf(1, "%s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+		  OLSR_PRINTF(1, "%-27s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6)
+		  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr))
 		}
 
 	      tmp_net = tmp_net->next;

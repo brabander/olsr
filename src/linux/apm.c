@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.10 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: apm.c,v 1.11 2005/02/27 10:43:38 kattemat Exp $
  */
 
 /*
@@ -44,7 +44,8 @@
  * Acpi-Power Enlightenment epplet
  */
 
-#include "../apm.h"
+#include "apm.h"
+#include "defs.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -113,9 +114,6 @@ static int method, fd_index;
 
 /* Prototypes */
 
-extern int
-olsr_printf(int, char *, ...);
-
 static int
 apm_read_apm(struct olsr_apm_info *);
 
@@ -132,7 +130,7 @@ apm_init()
   struct olsr_apm_info ainfo;
 
   method = -1;
-  olsr_printf(3, "Initializing APM\n");
+  OLSR_PRINTF(3, "Initializing APM\n")
 
   if(((fd_index = acpi_probe()) >= 0) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
@@ -148,9 +146,9 @@ apm_init()
 void
 apm_printinfo(struct olsr_apm_info *ainfo)
 {
-  olsr_printf(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
+  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
 	      ainfo->ac_line_status,
-	      ainfo->battery_percentage);
+	      ainfo->battery_percentage)
 
   return;
 }

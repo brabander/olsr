@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.22 2005/02/23 21:06:08 spoggle Exp $
+ * $Id: net.c,v 1.23 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
@@ -72,7 +72,7 @@ bind_socket_to_device(int sock, char *dev_name)
   /*
    *Bind to device using the SO_BINDTODEVICE flag
    */
-  olsr_printf(3, "Binding socket %d to device %s\n", sock, dev_name);
+  OLSR_PRINTF(3, "Binding socket %d to device %s\n", sock, dev_name)
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
 
 }
@@ -130,7 +130,7 @@ enable_ip_forwarding(int version)
       fclose(proc_fwd);
       if(orig_fwd_state == '1')
 	{
-	  olsr_printf(3, "\nIP forwarding is enabled on this system\n");
+	  OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n")
 	}
       else
 	{
@@ -267,7 +267,7 @@ restore_settings(int version)
   char procfile[FILENAME_MAX];
   struct interface *ifs;
 
-  olsr_printf(1, "Restoring network state\n");
+  OLSR_PRINTF(1, "Restoring network state\n")
 
   /* Restore IP forwarding to "off" */
   if(orig_fwd_state == '0')
@@ -559,11 +559,11 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 	      sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
 		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	      olsr_printf(5, "\tinet6 addr: %s\n", addr6);
-	      olsr_printf(5, "\tScope: %d", scope);
+	      OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6)
+	      OLSR_PRINTF(5, "\tScope: %d", scope)
 	      if(scope == scope_in)
 		{
-		  olsr_printf(4, "IPv6 addr:\n");
+		  OLSR_PRINTF(4, "IPv6 addr:\n")
 		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
 		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
 		  fclose(f);
@@ -694,11 +694,11 @@ calculate_if_metric(char *ifname)
       /* Get bit rate */
       if(ioctl(ioctl_s, SIOCGIWRATE, &ifr) < 0)
 	{
-	  olsr_printf(1, "Not able to find rate for WLAN interface %s\n", ifname);
+	  OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname)
 	  return WEIGHT_WLAN_11MB;
 	}
       
-      olsr_printf(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
+      OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue)
 
       //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
       //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
@@ -717,24 +717,24 @@ calculate_if_metric(char *ifname)
 
       if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
-	  olsr_printf(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno));
+	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
+		      ifr.ifr_name, strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
       }
 
       mii->reg_num = MII_BMCR;
       if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-	olsr_printf(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno));
+	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
+		    strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       bmcr = mii->val_out;
 
 
-      olsr_printf(1, "%s: ", ifr.ifr_name);
-      olsr_printf(1, "%s Mbit, %s duplex\n",
+      OLSR_PRINTF(1, "%s: ", ifr.ifr_name)
+      OLSR_PRINTF(1, "%s Mbit, %s duplex\n",
 		  (bmcr & MII_BMCR_100MBIT) ? "100" : "10",
-		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
+		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half")
     
       is_if_link_up(ifname);
 
@@ -767,20 +767,20 @@ is_if_link_up(char *ifname)
 
       if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
-	  olsr_printf(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno));
+	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
+		      ifr.ifr_name, strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       mii->reg_num = MII_BMSR;
       if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-	olsr_printf(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno));
+	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
+		    strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       bmsr = mii->val_out;
 
-      olsr_printf(1, "%s: ", ifr.ifr_name);
-      olsr_printf(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");      
+      OLSR_PRINTF(1, "%s: ", ifr.ifr_name)
+      OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ")
     
       return (bmsr & MII_BMSR_LINK_VALID);
 

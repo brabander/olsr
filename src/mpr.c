@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr.c,v 1.13 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: mpr.c,v 1.14 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include "defs.h"
@@ -120,7 +120,7 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
 	  if((dup_neighbor != NULL) && (dup_neighbor->status != NOT_SYM))
 	    {
 	      
-	      //olsr_printf(1, "(1)Skipping 2h neighbor %s - already 1hop\n", olsr_ip_to_string(&two_hop_neighbor->neighbor_2_addr));
+	      //OLSR_PRINTF(1, "(1)Skipping 2h neighbor %s - already 1hop\n", olsr_ip_to_string(&two_hop_neighbor->neighbor_2_addr))
 
 	      continue;
 	    }
@@ -132,8 +132,8 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
 		{
 		  two_hop_list_tmp = olsr_malloc(sizeof(struct neighbor_2_list_entry), "MPR two hop list");
 
-		  //olsr_printf(1, "ONE LINK ADDING %s\n", olsr_ip_to_string(&two_hop_neighbor->neighbor_2_addr));
-		  
+		  //OLSR_PRINTF(1, "ONE LINK ADDING %s\n", olsr_ip_to_string(&two_hop_neighbor->neighbor_2_addr))
+
 		  /* Only queue one way here */		  
 		  two_hop_list_tmp->neighbor_2 = two_hop_neighbor;
 		  
@@ -169,7 +169,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
   
   count = *two_hop_covered_count;
 
-  olsr_printf(1, "Setting %s as MPR\n", olsr_ip_to_string(&one_hop_neighbor->neighbor_main_addr));
+  OLSR_PRINTF(1, "Setting %s as MPR\n", olsr_ip_to_string(&one_hop_neighbor->neighbor_main_addr))
 
   //printf("PRE COUNT: %d\n\n", count);
 
@@ -183,7 +183,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 
       if((dup_neighbor != NULL) && (dup_neighbor->status == SYM))
 	{
-	  //olsr_printf(7, "(2)Skipping 2h neighbor %s - already 1hop\n", olsr_ip_to_string(&second_hop_entries->neighbor_2->neighbor_2_addr));
+	  //OLSR_PRINTF(7, "(2)Skipping 2h neighbor %s - already 1hop\n", olsr_ip_to_string(&second_hop_entries->neighbor_2->neighbor_2_addr))
 	  continue;
 	}
 
@@ -196,7 +196,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 	  second_hop_entries->neighbor_2->mpr_covered_count++;
 	  the_one_hop_list = second_hop_entries->neighbor_2->neighbor_2_nblist.next;
 
-	  //olsr_printf(1, "[%s](%x) has coverage %d\n", olsr_ip_to_string(&second_hop_entries->neighbor_2->neighbor_2_addr), second_hop_entries->neighbor_2, second_hop_entries->neighbor_2->mpr_covered_count);
+	  //OLSR_PRINTF(1, "[%s](%x) has coverage %d\n", olsr_ip_to_string(&second_hop_entries->neighbor_2->neighbor_2_addr), second_hop_entries->neighbor_2, second_hop_entries->neighbor_2->mpr_covered_count)
 
 	  if(second_hop_entries->neighbor_2->mpr_covered_count >= olsr_cnf->mpr_coverage)
 	     count++;
@@ -424,7 +424,7 @@ olsr_calculate_two_hop_neighbors()
 	}
     }
   
-  olsr_printf(3, "Two hop neighbors: %d\n", sum);
+  OLSR_PRINTF(3, "Two hop neighbors: %d\n", sum)
   return sum;
 }
 
@@ -457,12 +457,12 @@ add_will_always_nodes()
 
 	  olsr_chosen_mpr(a_neighbor, &count); 
 
-	  olsr_printf(3, "Adding WILL_ALWAYS: %s\n", olsr_ip_to_string(&a_neighbor->neighbor_main_addr));
+	  OLSR_PRINTF(3, "Adding WILL_ALWAYS: %s\n", olsr_ip_to_string(&a_neighbor->neighbor_main_addr))
 
 	}
     }
   
-  //olsr_printf(1, "Count: %d\n", count);
+  //OLSR_PRINTF(1, "Count: %d\n", count)
   return count;
 }
 
@@ -481,7 +481,7 @@ olsr_calculate_mpr()
   struct neighbor_entry        *mprs; 
   int i;
 
-  olsr_printf(3, "\n**RECALCULATING MPR**\n\n");
+  OLSR_PRINTF(3, "\n**RECALCULATING MPR**\n\n")
 
   olsr_clear_mprs();
 
@@ -539,7 +539,7 @@ olsr_calculate_mpr()
 
   if(olsr_check_mpr_changes())
     {
-      olsr_printf(3, "CHANGES IN MPR SET\n");
+      OLSR_PRINTF(3, "CHANGES IN MPR SET\n")
       if(olsr_cnf->tc_redundancy > 0)
 	changes = OLSR_TRUE;
     }
@@ -601,7 +601,7 @@ olsr_optimize_mpr_set()
 		    }
 		  if(remove)
 		    {
-		      olsr_printf(3, "MPR OPTIMIZE: removiong mpr %s\n\n", olsr_ip_to_string(&a_neighbor->neighbor_main_addr));
+		      OLSR_PRINTF(3, "MPR OPTIMIZE: removiong mpr %s\n\n", olsr_ip_to_string(&a_neighbor->neighbor_main_addr))
 		      a_neighbor->is_mpr = OLSR_FALSE;
 		    }
 
@@ -624,7 +624,7 @@ olsr_print_mpr_set()
   int                   index;
   struct neighbor_entry *a_neighbor;
 
-  olsr_printf(1, "MPR SET: ");
+  OLSR_PRINTF(1, "MPR SET: ")
 
   for(index=0;index<HASHSIZE;index++)
     {
@@ -637,10 +637,10 @@ olsr_print_mpr_set()
 	   * Remove MPR settings
 	   */
 	  if(a_neighbor->is_mpr)
-	    olsr_printf(1, "[%s] ", olsr_ip_to_string(&a_neighbor->neighbor_main_addr));
+	    OLSR_PRINTF(1, "[%s] ", olsr_ip_to_string(&a_neighbor->neighbor_main_addr))
 	}
     }
 
-  olsr_printf(1, "\n");
+  OLSR_PRINTF(1, "\n")
 
 }

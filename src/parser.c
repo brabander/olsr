@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.19 2005/02/14 16:55:37 kattemat Exp $
+ * $Id: parser.c,v 1.20 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #include "parser.h"
@@ -69,7 +69,7 @@ static char inbuf[MAXMESSAGESIZE+1];
 void
 olsr_init_parser()
 {
-  olsr_printf(3, "Initializing parser...\n");
+  OLSR_PRINTF(3, "Initializing parser...\n")
 
   /* Initialize the packet functions */
   olsr_init_package_process();
@@ -81,7 +81,7 @@ olsr_parser_add_function(void (*function)(union olsr_message *, struct interface
 {
   struct parse_function_entry *new_entry;
 
-  olsr_printf(3, "Parser: registering event for type %d\n", type);
+  OLSR_PRINTF(3, "Parser: registering event for type %d\n", type)
  
 
   new_entry = olsr_malloc(sizeof(struct parse_function_entry), "Register parse function");
@@ -94,7 +94,7 @@ olsr_parser_add_function(void (*function)(union olsr_message *, struct interface
   new_entry->next = parse_functions;
   parse_functions = new_entry;
 
-  olsr_printf(3, "Register parse function: Added function for type %d\n", type);
+  OLSR_PRINTF(3, "Register parse function: Added function for type %d\n", type)
 
 }
 
@@ -164,7 +164,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   if (ntohs(olsr->olsr_packlen) != size)
     {
-      olsr_printf(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
+      OLSR_PRINTF(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen))
 	    
       olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
 	     olsr_ip_to_string(from_addr));
@@ -245,8 +245,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       /* Check size of message */
       if(count < 0)
 	{
-	  olsr_printf(1, "packet length error in  packet received from %s!",
-		      olsr_ip_to_string(from_addr));
+	  OLSR_PRINTF(1, "packet length error in  packet received from %s!",
+		      olsr_ip_to_string(from_addr))
 
 	  olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
 		 olsr_ip_to_string(from_addr));
@@ -260,9 +260,9 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv4 */
 	  if (m->v4.ttl <= 0)
 	    {
-	      olsr_printf(2, "Dropping packet type %d from neigh %s with TTL 0\n", 
+	      OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
-			  olsr_ip_to_string(from_addr)); 
+			  olsr_ip_to_string(from_addr))
 	      continue;
 	    }
 	}
@@ -271,9 +271,9 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv6 */
 	  if (m->v6.ttl <= 0) 
 	    {
-	      olsr_printf(2, "Dropping packet type %d from %s with TTL 0\n", 
+	      OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
-			  olsr_ip_to_string(from_addr)); 
+			  olsr_ip_to_string(from_addr))
 	      continue;
 	    }
 	}
@@ -290,7 +290,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       if(COMP_IP(&m->v4.originator, &main_addr))
 	{
 #ifdef DEBUG
-	  olsr_printf(3, "Not processing message originating from us!\n");
+	  OLSR_PRINTF(3, "Not processing message originating from us!\n")
 #endif
 	  continue;
 	}
@@ -321,10 +321,10 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	{
 	  unk_chgestruct(&unkpacket, m);
 	  
-	  olsr_printf(3, "Unknown type: %d, size %d, from %s\n",
+	  OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
 		      m->v4.olsr_msgtype,
 		      size,
-		      olsr_ip_to_string(&unkpacket.originator));
+		      olsr_ip_to_string(&unkpacket.originator))
 
 	  /* Forward message */
 	  if(!COMP_IP(&unkpacket.originator, &main_addr))
@@ -381,7 +381,7 @@ olsr_input(int fd)
 	{
 	  if (cc < 0 && errno != EWOULDBLOCK)
 	    {
-	      olsr_printf(1, "error recvfrom: %s", strerror(errno));
+	      OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno))
 	      olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
 	    }
 	  break;
@@ -403,7 +403,7 @@ olsr_input(int fd)
 	return;
 
 #ifdef DEBUG
-      olsr_printf(5, "Recieved a packet from %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
+      OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr))
 #endif
       //printf("\nCC: %d FROMLEN: %d\n\n", cc, fromlen);
       if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
@@ -416,9 +416,9 @@ olsr_input(int fd)
 
       if((olsr_in_if = if_ifwithsock(fd)) == NULL)
 	{
-	  olsr_printf(1, "Could not find input interface for message from %s size %d\n",
+	  OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
 		      olsr_ip_to_string(&from_addr),
-		      cc);
+		      cc)
 	  olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
 		 olsr_ip_to_string(&from_addr),
 		 cc);

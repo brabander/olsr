@@ -36,12 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.15 2005/02/23 21:06:08 spoggle Exp $
+ * $Id: net.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
  */
 
-#include "../defs.h"
-#include "../net_os.h"
-#include "../parser.h" /* dnc: needed for call to packet_parser() */
+#include "defs.h"
+#include "net_os.h"
+#include "parser.h" /* dnc: needed for call to packet_parser() */
 #include "net.h"
 
 #ifdef __NetBSD__
@@ -392,11 +392,11 @@ calculate_if_metric(char *ifname)
 
       if(ioctl(ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
 	{
-	  olsr_printf(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+	  OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name)
 	  return WEIGHT_ETHERNET_DEFAULT;
 	}
 
-      printf("%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
+      OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status)
 #endif
       return WEIGHT_ETHERNET_DEFAULT;
     }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.10 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.11 2005/02/27 10:43:38 kattemat Exp $
  */
 
 
@@ -61,7 +61,7 @@ olsr_init_duplicate_table()
 {
   int i;
 
-  olsr_printf(3, "Initializing duplicatetable - hashsize %d\n", HASHSIZE);
+  OLSR_PRINTF(3, "Initializing duplicatetable - hashsize %d\n", HASHSIZE)
 
   /* Since the holdingtime is rather large for duplicate
    * entries the timeoutfunction is only ran every 2 seconds
@@ -240,9 +240,9 @@ olsr_time_out_duplicate_table(void *foo)
 	    {
 	      struct dup_entry *entry_to_delete = tmp_dup_table;
 #ifdef DEBUG
-	      olsr_printf(5, "DUP TIMEOUT[%s] s: %d\n", 
+	      OLSR_PRINTF(5, "DUP TIMEOUT[%s] s: %d\n", 
 		          olsr_ip_to_string(&tmp_dup_table->addr),
-		          tmp_dup_table->seqno);
+		          tmp_dup_table->seqno)
 #endif
 	      tmp_dup_table = tmp_dup_table->next;
 	      olsr_del_dup_entry(entry_to_delete);
@@ -332,7 +332,7 @@ olsr_set_dup_forward(union olsr_ip_addr *originator,
     return 0;
   
 #ifdef DEBUG
-  olsr_printf(3, "Setting DUP %s/%d forwarded\n", olsr_ip_to_string(&tmp_dup_table->addr), seqno);
+  OLSR_PRINTF(3, "Setting DUP %s/%d forwarded\n", olsr_ip_to_string(&tmp_dup_table->addr), seqno)
 #endif
 
   /* Set forwarded */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.38 2005/02/26 23:01:40 kattemat Exp $
+ * $Id: defs.h,v 1.39 2005/02/27 10:43:38 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -84,8 +84,9 @@
 
 FILE *debug_handle;
 
-#ifdef NO_DEBUG
-#define OLSR_PRINTF(lvl, format, args...)
+#ifdef NODEBUG
+#define OLSR_PRINTF(lvl, format, args...) \
+   { }
 #else
 #define OLSR_PRINTF(lvl, format, args...) \
    { \
