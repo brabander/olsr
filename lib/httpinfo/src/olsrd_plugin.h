@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.12 2005/02/17 21:17:01 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.13 2005/02/17 21:31:52 kattemat Exp $
  */
 
 /*
@@ -210,61 +210,6 @@ struct neighbor_2_entry
   struct neighbor_2_entry    *prev;
   struct neighbor_2_entry    *next;
 };
-
-struct link_entry
-{
-  union olsr_ip_addr local_iface_addr;
-  union olsr_ip_addr neighbor_iface_addr;
-  clock_t SYM_time;
-  clock_t ASYM_time;
-  clock_t time;
-  struct neighbor_entry *neighbor;
-
-  /*
-   *Hysteresis
-   */
-  float L_link_quality;
-  int L_link_pending;
-  clock_t L_LOST_LINK_time;
-  clock_t hello_timeout; /* When we should receive a new HELLO */
-  double last_htime;
-  olsr_u16_t olsr_seqno;
-  olsr_bool olsr_seqno_valid;
-
-  /*
-   * packet loss
-   */
-
-  double loss_hello_int;
-  clock_t loss_timeout;
-
-  olsr_u16_t loss_seqno;
-  int loss_seqno_valid;
-  int loss_missed_hellos;
-
-  int lost_packets;
-  int total_packets;
-
-  double loss_link_quality;
-
-  int loss_window_size;
-  int loss_index;
-
-  unsigned char loss_bitmap[16];
-
-  double neigh_link_quality;
-
-  double saved_loss_link_quality;
-  double saved_neigh_link_quality;
-
-  /*
-   * Spy
-   */
-  olsr_u8_t                    spy_activated;
-
-  struct link_entry *next;
-};
-
 
 
 /* Topology entry */
