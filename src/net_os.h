@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.4 2005/02/12 23:07:02 spoggle Exp $
+ * $Id: net_os.h,v 1.5 2005/02/14 16:55:37 kattemat Exp $
  */
 
 
@@ -52,6 +52,22 @@
 #define _OLSR_NET_OS_H
 
 /* OS dependent functions */
+
+ssize_t
+olsr_sendto(int, 
+	    const void *, 
+	    size_t, 
+	    int, 
+	    const struct sockaddr *, 
+	    socklen_t);
+
+ssize_t  
+olsr_recvfrom(int, 
+	      void *, 
+	      size_t, 
+	      int, 
+	      struct sockaddr *,
+	      socklen_t *);
 
 int
 bind_socket_to_device(int, char *);
@@ -79,11 +95,5 @@ getsocket6(struct sockaddr_in6 *, int, char *);
 
 int
 get_ipv6_address(char *, struct sockaddr_in6 *, int);
-
-void
-olsr_input(int fd);
-
-int
-net_output(struct interface *ifp);
 
 #endif
