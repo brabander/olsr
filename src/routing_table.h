@@ -19,12 +19,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.h,v 1.7 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: routing_table.h,v 1.8 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
 #ifndef _OLSR_ROUTING_TABLE
 #define _OLSR_ROUTING_TABLE
+
+#include <net/route.h>
 
 #include "hna_set.h"
 

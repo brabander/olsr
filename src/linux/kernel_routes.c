@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.8 2004/10/19 20:03:15 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.9 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
@@ -29,6 +29,7 @@
 #include "../olsr.h"
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 /**
  *Insert a route in the kernel routing table

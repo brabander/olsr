@@ -19,23 +19,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.18 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: defs.h,v 1.19 2004/11/02 21:14:10 kattemat Exp $
  *
  */
 
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
 
-
+/* Common includes */
 #include <sys/time.h>
-#include <net/route.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
-#include <time.h>
 
 #define UP             1
 #define DOWN           0
@@ -50,6 +46,9 @@
 
 #define VERSION "0.4.8-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
+
+#define OLSRD_CONF_FILE_NAME "olsrd.conf"
+#define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
 
 #define	HOPCNT_MAX		16	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
@@ -134,11 +133,10 @@ struct timeval fwdtimer[MAX_IFS];	/* forwarding timer */
 
 extern struct timeval hold_time_fwd;
 
-extern struct sockaddr_in6 null_addr6;
+struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
-
-extern int del_gws;
-extern int minsize;
+int del_gws;
+int minsize;
 
 
 extern struct ip_tunnel_parm ipt;

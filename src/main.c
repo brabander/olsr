@@ -19,16 +19,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.20 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: main.c,v 1.21 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
+#include <unistd.h>
+#include <signal.h>
+#include <sys/stat.h>
 
-#include "main.h"
+#include "defs.h"
 #include "interfaces.h"
-#include "mantissa.h"
 #include "local_hna_set.h"
-#include "olsr.h"
 #include "scheduler.h"
 #include "parser.h"
 #include "generate_msg.h"
@@ -50,7 +51,7 @@ void ListInterfaces(void);
 #endif
 
 /*
- * Begin: Local function prototypes
+ * Local function prototypes
  */
 
 static void
@@ -62,9 +63,16 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
+static void
+olsr_shutdown(int);
+
 /*
- * End: Local function prototypes
+ * Local variable declarations 
  */
+
+extern pthread_mutex_t mutex;
+pthread_t main_thread;
+
 
 /**
  * Main entrypoint
@@ -162,7 +170,7 @@ main(int argc, char *argv[])
 
   if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) 
     {
-      argv++, argc--;
+      argv++; argc--;
       if(argc == 1)
 	{
 	  fprintf(stderr, "You must provide a filename when using the -f switch!\n");
@@ -176,18 +184,19 @@ main(int argc, char *argv[])
 	}
 		 
       strncpy(conf_file_name, argv[1], FILENAME_MAX);
-      argv++, argc--;
+      argv++; argc--;
 
     }
 
   /*
    * set up configuration prior to processing commandline options
    */
-
-  get_config(conf_file_name);
-  default_ifcnf = get_default_if_config();
-  
-  if(default_ifcnf == NULL)
+  if((olsr_cnf = olsrd_parse_cnf(conf_file_name)) == NULL)
+    {
+      printf("Using default config values(no configfile)\n");
+      olsr_cnf = olsrd_get_default_cnf();
+    }
+  if((default_ifcnf = get_default_if_config()) == NULL)
     {
       fprintf(stderr, "No default ifconfig found!\n");
       exit(EXIT_FAILURE);
@@ -197,7 +206,7 @@ main(int argc, char *argv[])
    * Process olsrd options.
    */
   
-  argv++, argc--;
+  argv++; argc--;
   while (argc > 0 && **argv == '-')
     {
 #ifdef WIN32
@@ -214,7 +223,7 @@ main(int argc, char *argv[])
       /*
        *Configfilename
        */
-      if (strcmp(*argv, "-f") == 0) 
+      if(strcmp(*argv, "-f") == 0) 
 	{
 	  fprintf(stderr, "Configfilename must ALWAYS be first argument!\n\n");
 	  olsr_exit(__func__, EXIT_FAILURE);
@@ -223,49 +232,43 @@ main(int argc, char *argv[])
       /*
        *Use IP version 6
        */
-      if (strcmp(*argv, "-ipv6") == 0) 
+      if(strcmp(*argv, "-ipv6") == 0) 
 	{
 	  olsr_cnf->ip_version = AF_INET6;
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
       /*
        *Broadcast address
        */
-      if (strcmp(*argv, "-bcast") == 0) 
+      if(strcmp(*argv, "-bcast") == 0) 
 	{
-	  argv++, argc--;
-	  if(argc == 0)
+	  argv++; argc--;
+	  if(!argc)
 	    {
 	      fprintf(stderr, "You must provide a broadcastaddr when using the -bcast switch!\n");
 	      olsr_exit(__func__, EXIT_FAILURE);
 	    }
-
 	  if (inet_aton(*argv, &in) == 0)
 	    {
 	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
 	      continue;
 	    }
-		 
-	  memcpy(&default_ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));
-
-
+	  memcpy(&default_ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));  
 	  continue;
 	}
-
+      
       /*
        * Enable additional debugging information to be logged.
        */
       if (strcmp(*argv, "-d") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%d", &olsr_cnf->debug_level);
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
-
-
 
 		
       /*
@@ -273,9 +276,15 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-i") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
+	  if(!argc || (*argv[0] == '-'))
+	    {
+	      fprintf(stderr, "You must provide an interface label!\n");
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+
 	  queue_if(*argv);
-	  argv++, argc--;
+	  argv++; argc--;
 
 	  while((argc) && (**argv != '-'))
 	    {
@@ -291,10 +300,10 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-hint") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%f", &default_ifcnf->hello_params.emission_interval);
           default_ifcnf->hello_params.validity_time = default_ifcnf->hello_params.emission_interval * 3;
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -304,10 +313,10 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-hnaint") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%f", &default_ifcnf->hna_params.emission_interval);
           default_ifcnf->hna_params.validity_time = default_ifcnf->hna_params.emission_interval * 3;
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -317,10 +326,10 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-midint") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%f", &default_ifcnf->mid_params.emission_interval);
           default_ifcnf->mid_params.validity_time = default_ifcnf->mid_params.emission_interval * 3;
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -330,10 +339,10 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-tcint") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%f", &default_ifcnf->tc_params.emission_interval);
           default_ifcnf->tc_params.validity_time = default_ifcnf->tc_params.emission_interval * 3;
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -343,9 +352,9 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-tos") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%d",(int *)&olsr_cnf->tos);
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -355,9 +364,9 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-T") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  sscanf(*argv,"%f",&olsr_cnf->pollrate);
-	  argv++, argc--;
+	  argv++; argc--;
 	  continue;
 	}
 
@@ -367,7 +376,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-dispin") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  disp_pack_in = 1;
 	  continue;
 	}
@@ -377,7 +386,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-dispout") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  disp_pack_out = 1;
 	  continue;
 	}
@@ -388,7 +397,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-ipc") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  olsr_cnf->open_ipc = 1;
 	  continue;
 	}
@@ -399,7 +408,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-llinfo") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  llinfo = 1;
 	  continue;
 	}
@@ -409,7 +418,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-tnl") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  use_tunnel = 1;
 
 	  continue;
@@ -420,7 +429,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-multi") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
 	    {
 	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
@@ -429,7 +438,7 @@ main(int argc, char *argv[])
 
 	  memcpy(&default_ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
 
-	  argv++, argc--;
+	  argv++; argc--;
 
 	  continue;
 	}
@@ -440,7 +449,7 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-delgw") == 0) 
 	{
-	  argv++, argc--;
+	  argv++; argc--;
 	  del_gws = 1;
 	  continue;
 	}
@@ -481,12 +490,6 @@ main(int argc, char *argv[])
       olsr_exit(__func__, 0);
     }
 
-
-  /* Type of service */
-  precedence = IPTOS_PREC(olsr_cnf->tos);
-  tos_bits = IPTOS_TOS(olsr_cnf->tos);
-
-
   /*
    *enable ip forwarding on host
    */
@@ -504,21 +507,12 @@ main(int argc, char *argv[])
   /* Initialize dynamic willingness calculation */
   olsr_init_willingness();
 
-  /* printout settings */
-  olsr_printf(1, "\npolling interval = %0.2f \ntos setting = %d \ntc_redunadancy = %d\nmpr coverage = %d\n", olsr_cnf->pollrate, olsr_cnf->tos, olsr_cnf->tc_redundancy, olsr_cnf->mpr_coverage);
-      
-  if(olsr_cnf->use_hysteresis)
+  /* Sanity check for hysteresis values */
+  if((olsr_cnf->use_hysteresis) &&
+     (olsr_cnf->hysteresis_param.thr_high <= olsr_cnf->hysteresis_param.thr_low))
     {
-      olsr_printf(1, "hysteresis scaling factor = %0.2f\nhysteresis threshold high = %0.2f\nhysteresis threshold low  = %0.2f\n\n",
-		  olsr_cnf->hysteresis_param.scaling,
-		  olsr_cnf->hysteresis_param.thr_high,
-		  olsr_cnf->hysteresis_param.thr_low);
-
-      if(olsr_cnf->hysteresis_param.thr_high <= olsr_cnf->hysteresis_param.thr_low)
-	{
-	  printf("Hysteresis threshold high lower than threshold low!!\nEdit the configuration file to fix this!\n\n");
-	  olsr_exit(__func__, EXIT_FAILURE);
-	}
+      printf("Hysteresis threshold high lower than threshold low!!\nEdit the configuration file to fix this!\n\n");
+      olsr_exit(__func__, EXIT_FAILURE);
     }
 
   /*
@@ -756,37 +750,11 @@ print_usage()
   fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
   fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-tnl] [-multi <IPv6 multicast address>]\n"); 
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
-  fprintf(stderr, "  [-midint <mid interval value (secs)>] [-hnaint <hna interval value (secs)>]\n");
   fprintf(stderr, "  [-hint <hello interval value (secs)>] [-tcint <tc interval value (secs)>]\n");
+  fprintf(stderr, "  [-midint <mid interval value (secs)>] [-hnaint <hna interval value (secs)>]\n");
   fprintf(stderr, "  [-tos value (int)] [-T <Polling Rate (secs)>]\n"); 
 
 }
-
-
-
-/**
- *Funtion that tries to read and parse the config
- *file "filename"
- *@param filename the name(full path) of the config file
- *@return negative on error
- */
-void
-get_config(char *filename)
-{
-
-  /*
-   * NB - CHECK IPv6 MULTICAST!
-   */
-  if((olsr_cnf = olsrd_parse_cnf(filename)) == NULL)
-    {
-      printf("Using default config values(no configfile)\n");
-      olsr_cnf = olsrd_get_default_cnf();
-    }
-
-  /* Add plugins */
-
-}
-
 
 
 /**

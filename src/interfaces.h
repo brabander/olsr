@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.10 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: interfaces.h,v 1.11 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
@@ -115,10 +115,7 @@ struct ifchgf *ifchgf_list;
 #define IFCHG_IF_UPDATE        3
 
 /* Variables needed to set up new sockets */
-extern int precedence;
-extern int tos_bits;
 extern int bufspace;
-
 
 /* The interface linked-list */
 struct interface *ifnet;

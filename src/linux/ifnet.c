@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.15 2004/11/01 20:04:12 tlopatic Exp $
+ * $Id: ifnet.c,v 1.16 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
@@ -40,22 +40,23 @@
 #define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
 
 
-#include "../interfaces.h"
-#include "../ifnet.h"
-#include "../defs.h"
-#include "../net_os.h"
-#include "../socket_parser.h"
-#include "../parser.h"
-#include "../scheduler.h"
-#include "../generate_msg.h"
-#include "../mantissa.h"
+#include "interfaces.h"
+#include "ifnet.h"
+#include "defs.h"
+#include "net_os.h"
+#include "socket_parser.h"
+#include "parser.h"
+#include "scheduler.h"
+#include "generate_msg.h"
+#include "mantissa.h"
 #include <signal.h>
 #include <net/if.h>
 #include <net/if_arp.h>
+#include <netinet/ip.h>
 #include <asm/types.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+#include <unistd.h>
 
 static int bufspace = 127*1024;	/* max. input buffer size to request */
 
@@ -509,6 +510,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
   struct ifchgf *tmp_ifchgf_list;
+  int precedence = IPTOS_PREC(olsr_cnf->tos);
+  int tos_bits = IPTOS_TOS(olsr_cnf->tos);
 
   memset(&ifr, 0, sizeof(struct ifreq));
   strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);

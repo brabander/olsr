@@ -19,11 +19,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.8 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: socket_parser.c,v 1.9 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
-
+#include <unistd.h>
 #include "socket_parser.h"
 #include "olsr.h"
 #include "defs.h"

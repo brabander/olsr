@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.c,v 1.10 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: interfaces.c,v 1.11 2004/11/02 21:14:12 kattemat Exp $
  *
  */
 
@@ -27,7 +27,6 @@
 #include "interfaces.h"
 #include "ifnet.h"
 #include "scheduler.h"
-#include "main.h"
 
 /**
  *Do initialization of various data needed for
