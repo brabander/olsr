@@ -19,20 +19,85 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.1 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: net.c,v 1.2 2004/11/17 15:49:10 tlopatic Exp $
  *
  */
 
 #include "../defs.h"
 #include "net.h"
 
+static int ignore_redir;
+static int send_redir;
+static int gateway;
+
+static int set_sysctl_int(char *name, int new)
+{
+  int old;
+  unsigned int len = sizeof (old);
+
+  if (sysctlbyname(name, &old, &len, &new, sizeof (new)) < 0)
+    return -1;
+
+  return old;
+}
+
 int enable_ip_forwarding(int version)
 {
+  char *name;
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.ip.forwarding";
+
+  else
+    name = "net.inet6.ip6.forwarding";
+
+  gateway = set_sysctl_int(name, 1);
+
+  if (gateway < 0)
+    {
+      fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually. Continuing in 3 seconds...\n");
+      sleep(3);
+    }
+
   return 1;
 }
 
 int disable_redirects(char *if_name, int index, int version)
 {
+  char *name;
+
+  // do not accept ICMP redirects
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.icmp.drop_redirect";
+
+  else
+    name = "net.inet6.icmp6.drop_redirect";
+
+  ignore_redir = set_sysctl_int(name, 1);
+
+  if (ignore_redir < 0)
+    {
+      fprintf(stderr, "Cannot disable incoming ICMP redirect messages. Please disable them manually. Continuing in 3 seconds...\n");
+      sleep(3);
+    }
+
+  // do not send ICMP redirects
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.ip.redirect";
+
+  else
+    name = "net.inet6.ip6.redirect";
+
+  send_redir = set_sysctl_int(name, 0);
+
+  if (send_redir < 0)
+    {
+      fprintf(stderr, "Cannot disable outgoing ICMP redirect messages. Please disable them manually. Continuing in 3 seconds...\n");
+      sleep(3);
+    }
+
   return 1;
 }
 
@@ -43,6 +108,38 @@ int deactivate_spoof(char *if_name, int index, int version)
 
 int restore_settings(int version)
 {
+  char *name;
+
+  // reset IP forwarding
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.ip.forwarding";
+
+  else
+    name = "net.inet6.ip6.forwarding";
+
+  set_sysctl_int(name, gateway);
+
+  // reset incoming ICMP redirects
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.icmp.drop_redirect";
+
+  else
+    name = "net.inet6.icmp6.drop_redirect";
+
+  set_sysctl_int(name, ignore_redir);
+
+  // reset outgoing ICMP redirects
+
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.ip.redirect";
+
+  else
+    name = "net.inet6.ip6.redirect";
+
+  set_sysctl_int(name, send_redir);
+
   return 1;
 }
 
