@@ -51,8 +51,6 @@ nn.11.04
   All this can be done on the command line(or in scripts), so there should
   not be any need to update the Makefile for different environments.
 
-  These changes also go for the pluginmakefiles.
-
   To compile:
   'make OS=targetos'
   Just type 'make' to see a list of available targets.
@@ -115,7 +113,7 @@ nn.11.04
     To compile:
     cd linux-gui
     make
-    The binary is put in the bin directory
+    The binary is put in the current directory
 
   6.2 RUNNING
 
