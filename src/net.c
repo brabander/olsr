@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.23 2004/12/03 20:57:15 kattemat Exp $
+ * $Id: net.c,v 1.24 2004/12/04 17:49:18 kattemat Exp $
  */
 
 #include "net.h"
@@ -64,6 +64,16 @@ struct olsr_netbuf
 
 static struct olsr_netbuf *netbufs[MAX_IFS];
 
+/**
+ * Create a outputbuffer for the given interface. This
+ * function will allocate the needed storage according 
+ * to the MTU of the interface.
+ *
+ * @param ifp the interface to create a buffer for
+ *
+ * @return 0 on success, negative if a buffer already existed
+ *  for the given interface
+ */ 
 int
 net_add_buffer(struct interface *ifp)
 {
@@ -89,11 +99,19 @@ net_add_buffer(struct interface *ifp)
 }
 
 
+/**
+ * Remove a outputbuffer. Frees the allocated memory.
+ *
+ * @param ifp the interface corresponding to the buffer
+ * to remove
+ *
+ * @return 0 on success, negative if no buffer is found
+ */
 int
 net_remove_buffer(struct interface *ifp)
 {
 
-  /* If a buffer already exists for this interface back off */
+  /* If a buffer does no exist for this interface back off */
   if(!netbufs[ifp->if_nr])
     return -1;
   
@@ -110,6 +128,20 @@ net_remove_buffer(struct interface *ifp)
 
 
 
+/**
+ * Reserve space in a outputbuffer. This should only be needed
+ * in very special cases. This will decrease the reported size
+ * of the buffer so that there is always <i>size</i> bytes
+ * of data available in the buffer. To add data in the reserved
+ * area one must use the net_outbuffer_push_reserved function.
+ *
+ * @param ifp the interface corresponding to the buffer
+ * to reserve space on
+ * @param size the number of bytes to reserve
+ *
+ * @return 0 on success, negative if there was not enough
+ *  bytes to reserve
+ */
 int
 net_reserve_bufspace(struct interface *ifp, int size)
 {
@@ -122,7 +154,14 @@ net_reserve_bufspace(struct interface *ifp, int size)
   return 0;
 }
 
-
+/**
+ * Returns the number of bytes pending in the buffer. That
+ * is the number of bytes added but not sent.
+ *
+ * @param ifp the interface corresponding to the buffer
+ *
+ * @return the number of bytes currently pending
+ */
 olsr_u16_t
 net_output_pending(struct interface *ifp)
 {
@@ -135,9 +174,15 @@ net_output_pending(struct interface *ifp)
 
 
 /**
- * Add data to the buffer that is to be transmitted
+ * Add data to a buffer.
  *
- * @return 0 if there was not enough room in buffer
+ * @param ifp the interface corresponding to the buffer
+ * @param data a pointer to the data to add
+ * @param size the number of byte to copy from data
+ *
+ * @return -1 if no buffer was found, 0 if there was not 
+ *  enough room in buffer or the number of bytes added on 
+ *  success
  */
 int
 net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
@@ -157,9 +202,15 @@ net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
 
 
 /**
- * Adddata to the reserved part of the buffer that is to be transmitted
+ * Add data to the reserved part of a buffer
  *
- * @return 0 if there was not enough room in buffer
+ * @param ifp the interface corresponding to the buffer
+ * @param data a pointer to the data to add
+ * @param size the number of byte to copy from data
+ *
+ * @return -1 if no buffer was found, 0 if there was not 
+ *  enough room in buffer or the number of bytes added on 
+ *  success
  */
 int
 net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
@@ -177,7 +228,15 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
   return size;
 }
 
-
+/**
+ * Report the number of bytes currently available in the buffer
+ * (not including possible reserved bytes)
+ *
+ * @param ifp the interface corresponding to the buffer
+ *
+ * @return the number of bytes available in the buffer or
+ *  -1 if no buffer was found
+ */
 int
 net_outbuffer_bytes_left(struct interface *ifp)
 {
@@ -343,8 +402,13 @@ net_output(struct interface *ifp)
 
 
 
-/*
- * Add a packet transform function
+/**
+ * Add a packet transform function. Theese are functions
+ * called just prior to sending data in a buffer.
+ *
+ * @param f the function pointer
+ *
+ * @returns 1
  */
 int
 add_ptf(int (*f)(char *, int *))
@@ -362,8 +426,13 @@ add_ptf(int (*f)(char *, int *))
   return 1;
 }
 
-/*
+/**
  * Remove a packet transform function
+ *
+ * @param f the function pointer
+ *
+ * @returns 1 if a functionpointer was removed
+ *  0 if not
  */
 int
 del_ptf(int (*f)(char *, int *))
@@ -469,6 +538,10 @@ join_mcast(struct interface *ifs, int sock)
 /**
  * Create a IPv6 netmask based on a prefix length
  *
+ * @param allocated address to build the netmask in
+ * @param prefix the prefix length
+ *
+ * @returns 1 on success 0 on failure
  */
 int
 olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
@@ -501,6 +574,9 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
 /**
  * Calculate prefix length based on a netmask
  *
+ * @param adr the address to use to calculate the prefix length
+ *
+ * @return the prefix length
  */
 olsr_u16_t
 olsr_netmask_to_prefix(union olsr_ip_addr *adr)
