@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.26 2004/12/29 21:33:14 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.27 2004/12/31 08:58:33 kattemat Exp $
  */
 
 /*
@@ -501,8 +501,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index;
   struct rt_entry *routes;
 
-  size += sprintf(&buf[size], "OLSR host routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th><th>Type</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -511,7 +510,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &host_routes[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n",
+	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>HOST</td></tr>\n",
 			  olsr_ip_to_string(&routes->rt_dst),
 			  olsr_ip_to_string(&routes->rt_router),
 			  routes->rt_metric,
@@ -519,19 +518,14 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table><hr>\n");
-
-  size += sprintf(&buf[size], "OLSR HNA routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
-
-  /* Neighbors */
+  /* HNA */
   for(index = 0;index < HASHSIZE;index++)
     {
       for(routes = hna_routes[index].next;
 	  routes != &hna_routes[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n",
+	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>HNA</td></tr>\n",
 			  olsr_ip_to_string(&routes->rt_dst),
 			  olsr_ip_to_string(&routes->rt_router),
 			  routes->rt_metric,
@@ -539,7 +533,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table><hr>\n");
+  size += sprintf(&buf[size], "</table>\n");
 
   return size;
 }
@@ -703,7 +697,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
 	  }
 	
-	size += sprintf(&buf[size], "</table><hr>\n");
+	size += sprintf(&buf[size], "</table>\n");
       }
     
 
@@ -798,7 +792,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -825,7 +819,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table><hr>\n");
+  size += sprintf(&buf[size], "</table>\n");
 
   return size;
 }
@@ -842,7 +836,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size = 0;
 
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -867,7 +861,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table><hr>\n");
+  size += sprintf(&buf[size], "</table>\n");
 
   return size;
 }
@@ -881,7 +875,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   struct mid_entry *entry;
   struct addresses *alias;
 
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
   /* MID */  
   for(index=0;index<HASHSIZE;index++)
@@ -905,7 +899,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table><hr>\n");
+  size += sprintf(&buf[size], "</table>\n");
 
 
 
