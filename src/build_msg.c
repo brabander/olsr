@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.16 2004/10/19 20:18:00 kattemat Exp $
+ * $Id: build_msg.c,v 1.17 2004/10/20 19:43:04 kattemat Exp $
  *
  */
 
@@ -686,7 +686,7 @@ static void
 tc_build4(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize, curr_size;;
+  int remainsize, curr_size;
   struct tc_mpr_addr *mprs, *prev_mprs;
   union olsr_message *m;
   struct tcmsg *tc;
@@ -818,7 +818,7 @@ static void
 tc_build6(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize, curr_size;;
+  int remainsize, curr_size;
   struct tc_mpr_addr *mprs, *prev_mprs;
   union olsr_message *m;
   struct tcmsg6 *tc6;

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.16 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: net.c,v 1.17 2004/10/20 19:43:04 kattemat Exp $
  *
  */
 
@@ -423,7 +423,8 @@ join_mcast(struct interface *ifs, int sock)
       return -1;
     }
 
-
+  /* Old libc fix */
+#ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 
@@ -431,6 +432,15 @@ join_mcast(struct interface *ifs, int sock)
 		(char *)&mcastreq, 
 		sizeof(struct ipv6_mreq)) 
      < 0)
+#else
+  /* Join reciever group */
+  if(setsockopt(sock, 
+		IPPROTO_IPV6, 
+		IPV6_ADD_MEMBERSHIP, 
+		(char *)&mcastreq, 
+		sizeof(struct ipv6_mreq)) 
+     < 0)
+#endif 
     {
       perror("Join multicast send");
       return -1;
