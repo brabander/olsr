@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.7 2004/12/28 20:32:51 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.8 2004/12/29 19:55:54 kattemat Exp $
  */
 
 /*
@@ -140,6 +140,22 @@ union hna_netmask
 
 #define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
 
+
+struct allowed_host
+{
+  union olsr_ip_addr       host;
+  struct allowed_host     *next;
+};
+
+struct allowed_net
+{
+  union olsr_ip_addr       net;
+  union olsr_ip_addr       mask;
+  struct allowed_net      *next;
+};
+
+struct allowed_host   *allowed_hosts;
+struct allowed_net    *allowed_nets;
 
 
 /*

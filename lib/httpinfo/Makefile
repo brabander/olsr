@@ -13,7 +13,7 @@ LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 ifeq ($(OS), linux)
 NAME ?= olsrd_httpinfo.so.0.1
 NAMEFLAGS ?= -Wl,-soname,$(NAME)
-CFLAGS ?= -g -O2 -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -g -O2 -fPIC -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes
 LDFLAGS ?= -fPIC -shared
 LIBS ?= -lc -lm
 INSTALL_LIB = 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
@@ -22,7 +22,7 @@ else
 ifeq ($(OS), win32)
 NAME ?= olsrd_httpinfo.dll
 NAMEFLAGS ?= -o $(NAME)
-CFLAGS ?= -g -O2 -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -g -O2 -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
 LDFLAGS ?= -mno-cygwin -shared
 LIBS ?= -lws2_32
 COMPATOBJ = ../../src/win32/compat.o

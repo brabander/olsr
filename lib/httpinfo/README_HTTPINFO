@@ -1,16 +1,43 @@
 HTTP MINI-SERVER PLUGIN FOR OLSRD 0.1
 by Andreas Tønnesen(andreto@olsr.org)
 
+ ABOUT
+
 This plugin implements a tiny HTTP server that
 will gespond to a GET request by returning a HTML
 formatted page contanin various information about
 the currently running olsrd process.
 
-The plugin takes one parameter "Port" to set the
-TCP port on which the server is to run. It defaults
-to 8080.
+ PARAMETERS
+
+The plugin takes the parameter "Port" "[portnumber]" 
+to set the TCP port on which the server is to run. 
+It defaults to 8080.
 Now remember to open this port in your firewall if 
 planning to access the HTTP server from a remote host!
+The parameter "Host" "[IP address]" is used to allow
+access from a single host(muliple such entries can
+be set) and the parameter "Net" "[IP net] [IP mask]"
+is used to allow access from entire net-ranges.
+To allow access from all hosts do:
+ PlParam   "0.0.0.0" "0.0.0.0"
+
+A configuration example:
+LoadPlugin "olsrd_httpinfo.so.0.1"
+{
+    PlParam     "port"   "80"
+    PlParam     "Host"   "163.24.87.3"
+    PlParam     "Host"   "80.23.53.22"
+    PlParam     "Net"    "10.0.0.0 255.0.0.0"
+    PlParam     "Net"    "192.168.0.0 255.255.0.0"
+}
+
+This will run the webserver on port 80(the normal
+HTTP port) and allow access from the hosts 163.24.87.3
+and 80.23.53.22 and the networks 10.0.0.0/8 and
+192.168.0.0/16.
+access is always allowed from 127.0.0.1(localhost).
+
 
 NOTE!
 If running olsrd 0.4.8, the plugin will not be able

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.24 2004/12/28 20:32:51 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.25 2004/12/29 19:55:54 kattemat Exp $
  */
 
 /*
@@ -98,6 +98,9 @@ build_mid_body(char *, olsr_u32_t);
 
 char *
 sockaddr_to_string(struct sockaddr *);
+
+olsr_bool
+check_allowed_ip(union olsr_ip_addr *);
 
 static struct timeval start_time;
 static struct http_stats stats;
@@ -205,6 +208,13 @@ parse_http_request(int fd)
     {
       olsr_printf(1, "(HTTPINFO) accept: %s\n", strerror(errno));
       goto close_connection;
+    }
+
+  if(!check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
+    {
+      olsr_printf(1, "HTTP request from non-allowed host %s!\n", 
+		  olsr_ip_to_string((union olsr_ip_addr *)&pin.sin_addr.s_addr));
+      close(client_sockets[curr_clients]);
     }
 
   addr = inet_ntoa(pin.sin_addr);
@@ -896,6 +906,37 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 
   return size;
 }
+
+
+
+olsr_bool
+check_allowed_ip(union olsr_ip_addr *addr)
+{
+  struct allowed_host *allh = allowed_hosts;
+  struct allowed_net *alln = allowed_nets;
+
+  if(addr->v4 == ntohl(INADDR_LOOPBACK))
+    return OLSR_TRUE;
+
+  /* check hosts */
+  while(allh)
+    {
+      if(addr->v4 == allh->host.v4)
+	return OLSR_TRUE;
+      allh = allh->next;
+    }
+
+  /* check nets */
+  while(alln)
+    {
+      if((addr->v4 & alln->mask.v4) == (alln->net.v4 & alln->mask.v4))
+	return OLSR_TRUE;
+      alln = alln->next;
+    }
+
+  return OLSR_FALSE;
+}
+
 
 /**
  *Converts a olsr_ip_addr to a string

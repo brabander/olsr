@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.6 2004/12/19 17:16:24 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.7 2004/12/29 19:55:54 kattemat Exp $
  */
 
 /*
@@ -129,6 +129,61 @@ register_olsr_param(char *key, char *value)
      http_port = atoi(value);
      printf("(HTTPINFO) listening on port: %d\n", http_port);
     }
+
+  if(!strcmp(key, "host") || !strcmp(key, "Host"))
+    {
+      struct in_addr in;
+      struct allowed_host *ah;
+      
+      if(inet_aton(value, &in) == 0)
+	return 0;
+
+      ah = malloc(sizeof(struct allowed_host));
+      if(!ah)
+	{
+	  fprintf(stderr, "(HTTPINFO) register param host out of memory!\n");
+	  exit(0);
+	}
+      ah->host.v4 = in.s_addr;
+      ah->next = allowed_hosts;
+      allowed_hosts = ah;
+      return 1;
+    }
+
+  if(!strcmp(key, "net") || !strcmp(key, "Net"))
+    {
+      struct in_addr net, mask;
+      struct allowed_net *an;
+      char sz_net[100], sz_mask[100]; /* IPv6 in the future */
+
+      if(sscanf(value, "%100s %100s", sz_net, sz_mask) != 2)
+	{
+	  olsr_printf(1, "(HTTPINFO) Error parsing net param \"%s\"!\n", value);
+	  return 0;
+	}
+
+      if(inet_aton(sz_net, &net) == 0)
+	return 0;
+
+      if(inet_aton(sz_mask, &mask) == 0)
+	return 0;
+
+      an = malloc(sizeof(struct allowed_net));
+      if(!an)
+	{
+	  fprintf(stderr, "(HTTPINFO) register param net out of memory!\n");
+	  exit(0);
+	}
+
+      an->net.v4 = net.s_addr;
+      an->mask.v4 = mask.s_addr;
+
+      an->next = allowed_nets;
+      allowed_nets = an;
+      return 1;
+      
+    }
+
   return 1;
 }
 
