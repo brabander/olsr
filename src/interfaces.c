@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.18 2005/03/04 17:02:19 kattemat Exp $
+ * $Id: interfaces.c,v 1.19 2005/03/06 12:38:09 kattemat Exp $
  */
 
 #include "defs.h"
@@ -53,6 +53,9 @@ struct ifchgf
   int (*function)(struct interface *, int);
   struct ifchgf *next;
 };
+
+static olsr_u32_t
+get_if_property_id(void);
 
 static struct ifchgf *ifchgf_list;
 
@@ -107,10 +110,79 @@ ifinit()
 }
 
 
-olsr_u32_t
-get_if_propery_id()
+static olsr_u32_t
+get_if_property_id()
 {
   return if_property_id++;
+}
+
+olsr_u32_t
+add_if_geninfo(struct interface *ifp, void *data)
+{
+  struct if_gen_property *igp = olsr_malloc(sizeof(struct if_gen_property), __func__);
+
+  igp->owner_id = get_if_property_id();
+  igp->data = data;
+
+  /* queue */
+  igp->next = ifp->gen_properties;
+  ifp->gen_properties = igp;
+
+  return igp->owner_id;
+}
+
+void *
+get_if_geninfo(struct interface *ifp, olsr_u32_t owner_id)
+{
+  struct if_gen_property *igp_list = ifp->gen_properties;
+
+
+  while(igp_list)
+    {
+      if(igp_list->owner_id == owner_id)
+	return igp_list->data;
+
+      igp_list = igp_list->next;
+    }
+
+  return NULL;
+}
+
+void *
+del_if_geninfo(struct interface *ifp, olsr_u32_t owner_id)
+{
+  void *data = NULL;
+  struct if_gen_property *igp_list = ifp->gen_properties;
+  struct if_gen_property *igp_prev = NULL;
+
+
+  while(igp_list)
+    {
+      if(igp_list->owner_id == owner_id)
+	break;
+
+      igp_prev = igp_list;
+      igp_list = igp_list->next;
+    }
+
+  /* Not found */
+  if(igp_list == NULL)
+    return NULL;
+
+  /* Dequeue */
+  if(igp_prev == NULL)
+    {
+      /* First elem */
+      ifp->gen_properties = igp_list->next;
+    }
+  else
+    {
+      igp_prev->next = igp_list->next;
+    }
+  data = igp_list->data;
+  free(igp_list);
+
+  return data;
 }
 
 
