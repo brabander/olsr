@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.12 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: generate_msg.c,v 1.13 2004/11/08 00:17:05 tlopatic Exp $
  *
  */
 
@@ -37,7 +37,7 @@
 #include "mpr_selector_set.h"
 #include "duplicate_set.h"
 #include "neighbor_table.h"
-
+#include "link_set.h"
 
 void
 generate_hello(void *p)
@@ -103,6 +103,9 @@ generate_tabledisplay(void *foo)
 {
   if(olsr_cnf->debug_level > 0) 
     {
+#if defined USE_LINK_QUALITY
+      olsr_print_link_set();
+#endif
       olsr_print_neighbor_table();
       
       if(olsr_cnf->debug_level > 1)
