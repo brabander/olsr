@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.11 2004/11/20 17:37:25 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.12 2004/11/20 18:46:03 kattemat Exp $
  *
  */
 
@@ -40,6 +40,25 @@
 #define DEF_LQ_LEVEL        0
 #define DEF_LQ_WSIZE        10
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
+
+/* Bounds */
+
+#define MIN_INTERVAL        0.01
+
+#define MAX_POLLRATE        10.0
+#define MIN_POLLRATE        0.01
+#define MAX_DEBUGLVL        9
+#define MIN_DEBUGLVL        0
+#define MAX_TOS             16
+#define MIN_TOS             0
+#define MAX_WILLINGNESS     7
+#define MIN_WILLINGNESS     1
+#define MAX_MPR_COVERAGE    20
+#define MIN_MPR_COVERAGE    1
+#define MAX_TC_REDUNDANCY   2
+#define MIN_TC_REDUNDANCY   0
+#define MAX_HYST_PARAM      1.0
+#define MIN_HYST_PARAM      0.0
 
 
 #ifndef IPV6_ADDR_SITELOCAL
