@@ -1,5 +1,5 @@
 /*
- * $Id: MyDialog1.cpp,v 1.2 2004/09/15 11:18:41 tlopatic Exp $
+ * $Id: MyDialog1.cpp,v 1.3 2004/11/18 18:02:37 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -86,6 +86,11 @@ void MyDialog1::AddOutputLine(CString Line)
 		m_OutputWindow.SetWindowText(Output);
 		m_OutputWindow.SetSel(Output.GetLength(), Output.GetLength());
 	}
+}
+
+void MyDialog1::SetFrozen(int NewFrozen)
+{
+	Frozen = NewFrozen;
 }
 
 BOOL MyDialog1::OnInitDialog() 

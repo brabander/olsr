@@ -2,7 +2,7 @@
 
 [General Info]
 Version=1
-LastClass=CFrontendApp
+LastClass=MyDialog1
 LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "frontend.h"
@@ -19,10 +19,10 @@ Class7=MyEdit
 Class8=MyTabCtrl
 
 ResourceCount=5
-Resource1=IDD_FRONTEND_DIALOG
-Resource2=IDD_DIALOG1
-Resource3=IDD_DIALOG2
-Resource4=IDD_DIALOG3
+Resource1=IDD_DIALOG1
+Resource2=IDD_DIALOG2
+Resource3=IDD_DIALOG3
+Resource4=IDD_FRONTEND_DIALOG
 Resource5=IDD_DIALOG4
 
 [CLS:CFrontendApp]
@@ -45,7 +45,7 @@ BaseClass=CDialog
 HeaderFile=MyDialog1.h
 ImplementationFile=MyDialog1.cpp
 Filter=D
-LastObject=IDC_BUTTON1
+LastObject=MyDialog1
 
 [CLS:MyDialog2]
 Type=0

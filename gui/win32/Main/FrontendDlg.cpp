@@ -1,5 +1,5 @@
 /*
- * $Id: FrontendDlg.cpp,v 1.4 2004/09/15 17:51:21 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.5 2004/11/18 18:02:36 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -903,6 +903,8 @@ void CFrontendDlg::OnCancel()
 void CFrontendDlg::OnStartButton() 
 {
 	m_StartButton.EnableWindow(FALSE);
+
+	m_TabCtrl.m_Dialog1.SetFrozen(1);
 
 	if (StartOlsrd() < 0)
 	{
