@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.18 2004/11/12 22:11:54 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.19 2004/11/14 19:14:36 kattemat Exp $
  *
  */
 
@@ -153,7 +153,7 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
   /* check hosts */
   while(ipch)
     {
-      if(COMP_IP(addr, &ipch->host))
+      if(addr->v4 == ipch->host.v4)
 	return OLSR_TRUE;
       ipch = ipch->next;
     }
@@ -321,7 +321,7 @@ ipc_send_all_routes()
 	  ifn = get_interface_link_set(&destination->rt_router);
 	  
 
-	  
+	  memset(&packet, 0, sizeof(struct ipcmsg));
 	  packet.size = htons(IPC_PACK_SIZE);
 	  packet.msgtype = ROUTE_IPC;
 	  
