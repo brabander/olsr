@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.11 2004/11/15 12:31:58 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.12 2004/11/18 21:58:46 kattemat Exp $
  *
  */
 
@@ -38,6 +38,8 @@
  *                 GETD__ROUTINGTABLE added
  *                 GETD__HNA_ROUTES added
  *                 GETD__MID_SET added
+ *                 GETF__NET_RESERVE_BUFSPACE added 
+ *                 GETF__NET_OUTBUFFER_PUSH_RESERVED added
  *                 - Andreas
  */
 
@@ -115,5 +117,7 @@
 #define GETF__DEL_IFCHGF                           530
 #define GETF__APM_READ                             531
 #define GETF__NET_OUTBUFFER_PUSH                   532
+#define GETF__NET_RESERVE_BUFSPACE                 533
+#define GETF__NET_OUTBUFFER_PUSH_RESERVED          534
 
 #endif

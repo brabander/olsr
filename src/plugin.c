@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin.c,v 1.11 2004/11/15 12:31:58 kattemat Exp $
+ * $Id: plugin.c,v 1.12 2004/11/18 21:58:46 kattemat Exp $
  *
  */
 
@@ -235,6 +235,14 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       break;
     case(GETF__NET_OUTBUFFER_PUSH):
       ptr = &net_outbuffer_push;
+      memcpy(data, &ptr, size);
+      break;
+    case(GETF__NET_RESERVE_BUFSPACE):
+      ptr = &net_reserve_bufspace;
+      memcpy(data, &ptr, size);
+      break;
+    case(GETF__NET_OUTBUFFER_PUSH_RESERVED):
+      ptr = &net_outbuffer_push_reserved;
       memcpy(data, &ptr, size);
       break;
 
