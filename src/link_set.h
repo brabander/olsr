@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.8 2004/10/20 17:11:33 tlopatic Exp $
+ * $Id: link_set.h,v 1.9 2004/10/21 20:57:19 tlopatic Exp $
  *
  */
 
@@ -67,6 +67,8 @@ struct link_entry
 
   int lost_packets;
   int total_packets;
+
+  float loss_link_quality;
 
   int loss_window_size;
   int loss_index;

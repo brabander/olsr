@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.10 2004/10/20 17:11:33 tlopatic Exp $
+ * $Id: link_set.c,v 1.11 2004/10/21 20:57:19 tlopatic Exp $
  *
  */
 
@@ -299,9 +299,17 @@ get_interface_link_set(union olsr_ip_addr *remote)
   struct link_entry *tmp_link_set;
   union olsr_ip_addr *remote_addr;
   struct interface *if_to_use, *tmp_if, *backup_if;
+#if defined USE_LINK_QUALITY
+  float link_quality, backup_link_quality;
+#endif
 
   if_to_use = NULL;
   backup_if = NULL;
+
+#if defined USE_LINK_QUALITY
+  link_quality = 0.0;
+  backup_link_quality = 0.0;
+#endif
 
   if(remote == NULL || link_set == NULL)
     {
@@ -329,16 +337,34 @@ get_interface_link_set(union olsr_ip_addr *remote)
 	  /* Must be symmetric link! */
 	  if(!TIMED_OUT(&tmp_link_set->SYM_time))
 	    {
-	      if((if_to_use == NULL) || (if_to_use->int_metric > tmp_if->int_metric))
-		if_to_use = tmp_if;
+#if !defined USE_LINK_QUALITY
+	      if (if_to_use == NULL || if_to_use->int_metric > tmp_if->int_metric)
+          if_to_use = tmp_if;
+#else
+        if (if_to_use == NULL ||
+            tmp_link_set->loss_link_quality > link_quality)
+          {
+            if_to_use = tmp_if;
+            link_quality = tmp_link_set->loss_link_quality;
+          }
+#endif
 	    }
 	  /* Backup solution in case the links have timed out */
 	  else
 	    {
-	      if((if_to_use == NULL) && ((backup_if == NULL) || (backup_if->int_metric > tmp_if->int_metric)))
-		{
-		  backup_if = tmp_if;
-		}
+#if !defined USE_LINK_QUALITY
+	      if (if_to_use == NULL &&
+            (backup_if == NULL || backup_if->int_metric > tmp_if->int_metric))
+          backup_if = tmp_if;
+#else
+        if (if_to_use == NULL &&
+            (backup_if == NULL ||
+             tmp_link_set->loss_link_quality > backup_link_quality))
+          {
+            backup_if = tmp_if;
+            backup_link_quality = tmp_link_set->loss_link_quality;
+          }
+#endif
 	    }
 	}
       
@@ -440,7 +466,9 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       new_link->lost_packets = 0;
       new_link->total_packets = 0;
 
-      new_link->loss_window_size = 25;
+      new_link->loss_link_quality = 0.0;
+
+      new_link->loss_window_size = 10;
       new_link->loss_index = 0;
 
       memset(new_link->loss_bitmap, 0, sizeof (new_link->loss_bitmap));
@@ -867,24 +895,14 @@ olsr_time_out_hysteresis()
 void olsr_print_link_set(void)
 {
   struct link_entry *walker;
-  float link_quality;
 
   olsr_printf(1, "CURRENT LINK SET ------------------------------\n");
 
   for (walker = link_set; walker != NULL; walker = walker->next)
-    {
-      if (walker->total_packets > 0)
-        link_quality = 1.0 - (float)walker->lost_packets /
-          (float)walker->total_packets;
-
-      else
-        link_quality = 0.0;
-
-      olsr_printf(1, "%15s %5.3f %5.3f %d/%d\n",
-                  olsr_ip_to_string(&walker->neighbor_iface_addr),
-                  walker->L_link_quality, link_quality,
-                  walker->lost_packets, walker->total_packets);
-    }
+    olsr_printf(1, "%15s %5.3f %5.3f %d/%d\n",
+                olsr_ip_to_string(&walker->neighbor_iface_addr),
+                walker->L_link_quality, walker->loss_link_quality,
+                walker->lost_packets, walker->total_packets);
 
   olsr_printf(1, "CURRENT LINK SET (END) ------------------------\n");
 }
@@ -919,6 +937,9 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   if (entry->total_packets < entry->loss_window_size)
     entry->total_packets++;
+
+  entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
+    (float)entry->total_packets;
 }
 
 void olsr_update_packet_loss_hello_int(struct link_entry *entry,
@@ -978,5 +999,20 @@ static void olsr_time_out_packet_loss()
       olsr_get_timestamp((olsr_u32_t)(walker->loss_hello_int * 1000.0),
                          &walker->loss_timeout);
     }
+}
+
+float olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
+{
+  struct link_entry *walker;
+  float res = 0.0;
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+    {
+      if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+         walker->loss_link_quality > res)
+        res = walker->loss_link_quality;
+    }
+
+  return res;
 }
 #endif
