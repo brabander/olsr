@@ -33,10 +33,10 @@
 # Visit http://www.olsr.org for more information.
 #
 # If you find this software useful feel free to make a donation
-# to the projcet. For more information see the website or contact
+# to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.14 2004/12/05 20:15:52 kattemat Exp $
+# $Id: Makefile,v 1.15 2004/12/06 10:44:43 tlopatic Exp $
 
 CC ?=		gcc
 BISON ?=	bison
