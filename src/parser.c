@@ -232,11 +232,9 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   int msgsize;
   int processed;
   struct parse_function_entry *entry;
-#ifdef DEBUG 
   char *packet = (char*)olsr;
   int i;
   int x = 0;
-#endif
 
   count = size - ((char *)m - (char *)olsr);
 
@@ -255,7 +253,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   //printf("Message from %s\n\n", olsr_ip_to_string(from_addr)); 
       
-#ifdef DEBUG 
   /* Display packet */
   if(disp_pack_in)
     {
@@ -277,7 +274,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	    
       printf("\n");
     }
-#endif
 
   if(ipversion == AF_INET)
     msgsize = ntohs(m->v4.olsr_msgsize);
