@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.17 2004/12/19 17:03:14 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.18 2004/12/19 17:16:24 kattemat Exp $
  */
 
 /*
@@ -694,7 +694,9 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 			  olsr_ip_to_string(&neigh->neighbor_main_addr),
 			  (neigh->status == SYM) ? "YES" : "NO",
 			  neigh->is_mpr ? "YES" : "NO",
-			  "ToDo",
+			  olsr_lookup_mprs_set ? 
+			  (olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO") 
+			  : "UNAVAILABLE",
 			  neigh->willingness);
 
 	  size += sprintf(&buf[size], "<td><select>\n");

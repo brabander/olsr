@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.5 2004/12/18 22:50:55 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.6 2004/12/19 17:16:24 kattemat Exp $
  */
 
 /*
@@ -345,6 +345,15 @@ struct rt_entry *hna_routes;
 
 char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
 
+/* MPR set entry */
+
+struct mpr_selector
+{
+  union olsr_ip_addr MS_main_addr;
+  struct timeval MS_time;
+  struct mpr_selector *next;
+  struct mpr_selector *prev;
+};
 
 /****************************************************************************
  *                Function pointers to functions in olsrd                   *
@@ -356,6 +365,10 @@ int (*olsr_plugin_io)(int, void *, size_t);
 
 /* Add a socket to the main olsrd select loop */
 void (*add_olsr_socket)(int, void(*)(int));
+
+/* Lookup MPR entry */
+struct mpr_selector *(*olsr_lookup_mprs_set)(union olsr_ip_addr *);
+
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);

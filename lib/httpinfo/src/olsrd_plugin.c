@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.5 2004/12/19 09:37:59 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.6 2004/12/19 17:16:24 kattemat Exp $
  */
 
 /*
@@ -260,6 +260,14 @@ fetch_olsrd_data()
       hna_set = NULL;
       retval = 0;
     }
+
+  if(!olsr_plugin_io(GETF__OLSR_LOOKUP_MPRS_SET, 
+		     &olsr_lookup_mprs_set, 
+		     sizeof(olsr_lookup_mprs_set)))
+  {
+    olsr_lookup_mprs_set = NULL;
+    retval = 0;
+  }
 
   /* Olsr debug output function */
   if(!olsr_plugin_io(GETF__OLSR_PRINTF, 
