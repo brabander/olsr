@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.5 2005/01/30 18:06:28 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.6 2005/03/04 22:03:54 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -40,6 +40,25 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#ifdef OS
+#undef OS
+#endif
+
+#ifdef WIN32
+#define close(x) closesocket(x)
+#define OS "Windows"
+#endif
+#ifdef linux
+#define OS "GNU/Linux"
+#endif
+#ifdef __FreeBSD__
+#define OS "FreeBSD"
+#endif
+
+#ifndef OS
+#define OS "Undefined"
+#endif
 
 int ipc_socket;
 int ipc_open;
