@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.18 2005/02/02 20:37:53 kattemat Exp $
+ * $Id: olsr.h,v 1.19 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -48,24 +48,11 @@
 
 #include <sys/time.h>
 
-/**
- * Process changes functions
- */
-
-struct pcf
-{
-  int (*function)(int, int, int);
-  struct pcf *next;
-};
-
-struct pcf *pcf_list;
-
-
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
 
-olsr_u16_t message_seqno;
+float will_int; /* Willingness update interval */
 
 /* Provides a timestamp s1 milliseconds in the future
    according to system ticks returned by times(2) */

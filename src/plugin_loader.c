@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.14 2004/11/21 14:22:33 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.15 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #include "plugin_loader.h"
@@ -55,6 +55,8 @@ olsr_load_dl(char *, struct plugin_param *);
 extern int
 olsr_plugin_io(int, void *, size_t);
 
+
+static struct olsr_plugin *olsr_plugins;
 
 
 /**

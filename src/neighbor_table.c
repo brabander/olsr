@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.25 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.26 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -45,6 +45,7 @@
 #include "two_hop_neighbor_table.h"
 #include "mid_set.h"
 #include "mpr.h"
+#include "neighbor_table.h"
 #include "olsr.h"
 #include "scheduler.h"
 #include "link_set.h"

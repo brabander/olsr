@@ -36,7 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.h,v 1.2 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: misc.h,v 1.3 2005/02/20 18:52:18 kattemat Exp $
  */
 
+#ifndef _OLSR_MISC_H
+#define _OLSR_MISC_H
+
 void clear_console(void);
+
+#endif

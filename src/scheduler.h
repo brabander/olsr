@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.h,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: scheduler.h,v 1.10 2005/02/20 18:52:19 kattemat Exp $
  */
 
 
@@ -68,12 +68,6 @@ struct event_entry
   struct event_entry *next;
 };
 
-
-/* Lists */
-struct timeout_entry *timeout_functions;
-struct event_entry *event_functions;
-
-float will_int; /* Willingness update interval */
 float max_jitter;
 
 int

@@ -36,8 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.1 2005/01/22 14:30:57 tlopatic Exp $
+ * $Id: lq_avl.h,v 1.2 2005/02/20 18:52:18 kattemat Exp $
  */
+
+#ifndef _LQ_AVL_H
+#define _LQ_AVL_H
 
 struct avl_node
 {
@@ -58,3 +61,5 @@ struct avl_tree
 void avl_init(struct avl_tree *, int (*)(void *, void *));
 struct avl_node *avl_find(struct avl_tree *, void *);
 int avl_insert(struct avl_tree *, struct avl_node *);
+
+#endif

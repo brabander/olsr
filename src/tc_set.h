@@ -36,14 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.13 2005/02/20 17:34:10 kattemat Exp $
+ * $Id: tc_set.h,v 1.14 2005/02/20 18:52:19 kattemat Exp $
  */
 
 #ifndef _OLSR_TOP_SET
 #define _OLSR_TOP_SET
 
 #include "defs.h"
-#include "hashing.h"
 #include "packet.h"
 
 struct topo_dst

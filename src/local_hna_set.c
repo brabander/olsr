@@ -36,10 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: local_hna_set.c,v 1.9 2005/02/20 18:52:18 kattemat Exp $
  */
 
-
+#include "defs.h"
 #include "local_hna_set.h"
 
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.16 2005/02/12 22:32:42 kattemat Exp $
+ * $Id: routing_table.c,v 1.17 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -45,7 +45,7 @@
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "mid_set.h"
-#include "mpr.h"
+#include "neighbor_table.h"
 #include "olsr.h"
 #include "link_set.h"
 

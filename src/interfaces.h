@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.18 2005/02/17 21:16:16 kattemat Exp $
+ * $Id: interfaces.h,v 1.19 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -46,9 +46,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#ifndef OLSR_PLUGIN
-#include "olsr_protocol.h"
-#endif
+#include "olsr_types.h"
 
 #define _PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
 
@@ -142,16 +140,6 @@ struct interface
 
 #ifndef OLSR_PLUGIN
 
-/* Ifchange functions */
-
-struct ifchgf
-{
-  int (*function)(struct interface *, int);
-  struct ifchgf *next;
-};
-
-struct ifchgf *ifchgf_list;
-
 /* Ifchange actions */
 
 #define IFCHG_IF_ADD           1
@@ -171,10 +159,13 @@ struct sockaddr_in6 addrsock6;
 int
 ifinit(void);
 
+void
+run_ifchg_cbs(struct interface *, int);
+
 struct interface *
 if_ifwithsock(int);
 
-struct	interface *
+struct interface *
 if_ifwithaddr(union olsr_ip_addr *);
 
 void
@@ -187,5 +178,4 @@ int
 del_ifchgf(int (*f)(struct interface *, int));
 
 #endif
-
 #endif

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.25 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: scheduler.c,v 1.26 2005/02/20 18:52:19 kattemat Exp $
  */
 
 
@@ -53,6 +53,10 @@
 
 
 static float pollrate;
+
+/* Lists */
+static struct timeout_entry *timeout_functions;
+static struct event_entry *event_functions;
 
 
 /**

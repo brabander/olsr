@@ -36,16 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.19 2005/02/17 21:16:16 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.20 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #ifndef _OLSRD_CFGPARSER_H
 #define _OLSRD_CFGPARSER_H
 
-#ifndef OLSR_PLUGIN
 #include "olsr_protocol.h"
-#endif
 
 /* Default valuse not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
@@ -86,34 +84,7 @@
 #define IPV6_ADDR_SITELOCAL    0x0040U
 #endif
 
-
-#ifdef MAKELIB
-
-struct interface 
-{
-  int foo;
-};
-
-#else 
-
-#ifdef MAKEBIN
-
-struct interface 
-{
-  int foo;
-};
-
-#else
-
-/* Part of olsrd */
-
-#ifndef OLSR_PLUGIN
 #include "interfaces.h"
-#endif
-
-#endif
-
-#endif
 
 struct olsr_msg_params
 {

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.61 2005/02/20 15:38:59 kattemat Exp $
+ * $Id: main.c,v 1.62 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -699,7 +699,6 @@ set_default_values()
 
   max_jitter = 0;
   max_tc_vtime = 0;
-  dup_hold_time = DUP_HOLD_TIME;
 
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
 

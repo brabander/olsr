@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.15 2005/02/12 23:07:02 spoggle Exp $
+ * $Id: net.h,v 1.16 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -60,16 +60,6 @@ struct olsr_netbuf
   int pending;    /* How much data is currently pending in the buffer */
   int reserved;   /* Plugins can reserve space in buffers */
 };
-
-/* Packet transform functions */
-
-struct ptf
-{
-  int (*function)(char *, int *);
-  struct ptf *next;
-};
-
-struct ptf *ptf_list;
 
 void
 init_net(void);

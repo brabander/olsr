@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mantissa.c,v 1.6 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mantissa.c,v 1.7 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #include "mantissa.h"
 #include "math.h"
+#include "olsr_protocol.h"
 
 /**
  *Function that converts a double to a mantissa/exponent

@@ -36,13 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr.c,v 1.12 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mpr.c,v 1.13 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #include "defs.h"
 #include "mpr.h"
 #include "two_hop_neighbor_table.h"
 #include "olsr.h"
+#include "neighbor_table.h"
 
 /* Begin:
  * Prototypes for internal functions 

@@ -36,13 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.h,v 1.9 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: duplicate_set.h,v 1.10 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #ifndef _OLSR_DUP_TABLE
 #define _OLSR_DUP_TABLE
 
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 
 #define UNKNOWN_MESSAGE 0
 
@@ -62,11 +62,6 @@ struct dup_iface
   union olsr_ip_addr     addr;      /* Addess of the interface */
   struct dup_iface       *next;     /* Next in line */
 };
-
-/* The duplicate table */
-struct dup_entry dup_set[HASHSIZE];
-
-float dup_hold_time;
 
 
 void

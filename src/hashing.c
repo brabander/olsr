@@ -36,13 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.c,v 1.8 2005/02/01 20:31:22 kattemat Exp $
+ * $Id: hashing.c,v 1.9 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #include "olsr_protocol.h"
 #include "hashing.h"
-
+#include "defs.h"
 
 /**
  *Hashing function. Creates a key based on

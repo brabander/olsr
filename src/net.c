@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.32 2005/02/14 16:55:37 kattemat Exp $
+ * $Id: net.c,v 1.33 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #include "net.h"
@@ -49,6 +49,17 @@
 void
 WinSockPError(char *);
 #endif
+
+
+/* Packet transform functions */
+
+struct ptf
+{
+  int (*function)(char *, int *);
+  struct ptf *next;
+};
+
+static struct ptf *ptf_list;
 
 struct olsr_netbuf *netbufs[MAX_IFS];
 

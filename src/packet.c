@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.18 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: packet.c,v 1.19 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -45,7 +45,7 @@
 #include "mpr_selector_set.h"
 #include "mpr.h"
 #include "olsr.h"
-
+#include "neighbor_table.h"
 
 static olsr_bool sending_tc = OLSR_FALSE;
 

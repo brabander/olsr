@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.3 2005/01/30 16:33:53 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.4 2005/02/20 18:51:59 kattemat Exp $ */
 
 
 /*
@@ -41,6 +41,9 @@
 
 #include "olsrd_plugin.h"
 #include "nameservice.h"
+
+int
+register_olsr_param(char *, char *);
 
 #ifdef WIN32
 

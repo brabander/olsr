@@ -36,8 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.h,v 1.5 2004/12/05 20:12:30 kattemat Exp $
+ * $Id: lq_packet.h,v 1.6 2005/02/20 18:52:18 kattemat Exp $
  */
+
+#ifndef _OLSR_LQ_PACKET_H
+#define _OLSR_LQ_PACKET_H
+
+#include "olsr_types.h"
 
 #define LQ_HELLO_MESSAGE      201
 #define LQ_TC_MESSAGE         202
@@ -152,3 +157,5 @@ void olsr_input_lq_hello(union olsr_message *ser, struct interface *inif,
 
 void olsr_input_lq_tc(union olsr_message *ser, struct interface *inif,
                       union olsr_ip_addr *from);
+
+#endif

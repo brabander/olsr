@@ -36,14 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mantissa.h,v 1.6 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mantissa.h,v 1.7 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #ifndef _OLSR_MANTISSA
 #define _OLSR_MANTISSA
 
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 
 
 olsr_u8_t

@@ -36,14 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.h,v 1.12 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: neighbor_table.h,v 1.13 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #ifndef _OLSR_NEIGH_TBL
 #define _OLSR_NEIGH_TBL
 
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 #include "hashing.h"
 
 

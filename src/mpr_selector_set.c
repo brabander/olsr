@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.11 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.12 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -46,6 +46,9 @@
 #include "scheduler.h"
 
 static olsr_u16_t ansn;
+
+/* MPR selector list */
+static struct mpr_selector mprs_list;
 
 /**
  *Initialize MPR selector set

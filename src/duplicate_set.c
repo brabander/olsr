@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.9 2005/01/17 20:18:18 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.10 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -45,6 +45,11 @@
 #include "duplicate_set.h"
 #include "olsr.h"
 #include "scheduler.h"
+
+/* The duplicate table */
+static struct dup_entry dup_set[HASHSIZE];
+
+static float dup_hold_time = DUP_HOLD_TIME;
 
 /**
  *Initialize the duplicate table entrys

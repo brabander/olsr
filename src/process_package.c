@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.31 2005/02/16 14:44:44 tlopatic Exp $
+ * $Id: process_package.c,v 1.32 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #include "defs.h"
 #include "process_package.h"
+#include "lq_packet.h"
 #include "hysteresis.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"

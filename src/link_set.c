@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.52 2005/02/20 15:38:59 kattemat Exp $
+ * $Id: link_set.c,v 1.53 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -49,6 +49,7 @@
 #include "hysteresis.h"
 #include "mid_set.h"
 #include "mpr.h"
+#include "neighbor_table.h"
 #include "olsr.h"
 #include "scheduler.h"
 #include "lq_route.h"

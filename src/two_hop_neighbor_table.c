@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.13 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.14 2005/02/20 18:52:19 kattemat Exp $
  */
 
 
@@ -44,7 +44,7 @@
 #include "defs.h"
 #include "two_hop_neighbor_table.h"
 #include "mid_set.h"
-#include "mpr.h"
+#include "neighbor_table.h"
 
 
 /**

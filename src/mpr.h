@@ -36,14 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr.h,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mpr.h,v 1.8 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
 #ifndef _OLSR_MPR
 #define _OLSR_MPR
-
-#include "neighbor_table.h"
 
 void
 olsr_calculate_mpr(void);

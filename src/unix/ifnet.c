@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.17 2005/02/17 17:21:24 kattemat Exp $
+ * $Id: ifnet.c,v 1.18 2005/02/20 18:52:19 kattemat Exp $
  */
 
 
@@ -53,6 +53,7 @@
 #include "scheduler.h"
 #include "generate_msg.h"
 #include "mantissa.h"
+#include "lq_packet.h"
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -137,7 +138,6 @@ chk_if_changed(struct olsr_if *iface)
   struct ifreq ifr;
   struct sockaddr_in6 tmp_saddr6;
   int if_changes;
-  struct ifchgf *tmp_ifchgf_list;
   if_changes = 0;
 
 #ifdef DEBUG
@@ -266,15 +266,7 @@ chk_if_changed(struct olsr_if *iface)
 	  memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, ipsize);
 	  memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, ipsize);
 
-	  /*
-	   *Call possible ifchange functions registered by plugins  
-	   */
-	  tmp_ifchgf_list = ifchgf_list;
-	  while(tmp_ifchgf_list != NULL)
-	    {
-	      tmp_ifchgf_list->function(ifp, IFCHG_IF_UPDATE);
-	      tmp_ifchgf_list = tmp_ifchgf_list->next;
-	    }
+	  run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
 
 	  return 1;	  	  
 	}
@@ -378,17 +370,8 @@ chk_if_changed(struct olsr_if *iface)
     }
 
   if(if_changes)
-    {
-      /*
-       *Call possible ifchange functions registered by plugins  
-       */
-      tmp_ifchgf_list = ifchgf_list;
-      while(tmp_ifchgf_list != NULL)
-	{
-	  tmp_ifchgf_list->function(ifp, IFCHG_IF_UPDATE);
-	  tmp_ifchgf_list = tmp_ifchgf_list->next;
-	}
-    }
+    run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
+
   return if_changes;
 
 
@@ -399,12 +382,7 @@ chk_if_changed(struct olsr_if *iface)
   /*
    *Call possible ifchange functions registered by plugins  
    */
-  tmp_ifchgf_list = ifchgf_list;
-  while(tmp_ifchgf_list != NULL)
-    {
-      tmp_ifchgf_list->function(ifp, IFCHG_IF_REMOVE);
-      tmp_ifchgf_list = tmp_ifchgf_list->next;
-    }
+  run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
   
   /* Dequeue */
   if(ifp == ifnet)
@@ -525,7 +503,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   struct interface ifs, *ifp;
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
-  struct ifchgf *tmp_ifchgf_list;
 #ifdef linux
   int precedence = IPTOS_PREC(olsr_cnf->tos);
   int tos_bits = IPTOS_TOS(olsr_cnf->tos);
@@ -857,12 +834,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /*
    *Call possible ifchange functions registered by plugins  
    */
-  tmp_ifchgf_list = ifchgf_list;
-  while(tmp_ifchgf_list != NULL)
-    {
-      tmp_ifchgf_list->function(ifp, IFCHG_IF_ADD);
-      tmp_ifchgf_list = tmp_ifchgf_list->next;
-    }
+  run_ifchg_cbs(ifp, IFCHG_IF_ADD);
 
   return 1;
 }

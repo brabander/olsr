@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.h,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: hashing.h,v 1.8 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -46,7 +46,7 @@
 #define	HASHSIZE	32
 #define	HASHMASK	(HASHSIZE - 1)
 
-#include "defs.h"
+#include "olsr_types.h"
 
 olsr_u32_t
 olsr_hashing(union olsr_ip_addr *);

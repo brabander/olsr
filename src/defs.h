@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.36 2005/02/20 15:38:59 kattemat Exp $
+ * $Id: defs.h,v 1.37 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -62,8 +62,6 @@
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr.h" /* Everybody uses theese */
 #include "olsr_cfg.h"
-
-#include "lq_packet.h"
 
 #define VERSION "0.4.9-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.9 2005/02/19 17:43:28 kattemat Exp $
+ * $Id: mpr_selector_set.h,v 1.10 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -56,9 +56,6 @@ struct mpr_selector
 
 
 #ifndef OLSR_PLUGIN
-
-/* MPR selector list */
-struct mpr_selector mprs_list;
 
 /* Timer to send empty TCs */
 clock_t send_empty_tc;

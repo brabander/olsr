@@ -36,13 +36,24 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.13 2005/02/12 22:32:41 kattemat Exp $
+ * $Id: interfaces.c,v 1.14 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #include "defs.h"
 #include "interfaces.h"
 #include "ifnet.h"
 #include "scheduler.h"
+
+
+/* Ifchange functions */
+
+struct ifchgf
+{
+  int (*function)(struct interface *, int);
+  struct ifchgf *next;
+};
+
+static struct ifchgf *ifchgf_list;
 
 /**
  *Do initialization of various data needed for
@@ -94,6 +105,18 @@ ifinit()
   return (ifnet == NULL) ? 0 : 1;
 }
 
+
+void
+run_ifchg_cbs(struct interface *ifp, int flag)
+{
+  struct ifchgf *tmp_ifchgf_list = ifchgf_list;
+
+  while(tmp_ifchgf_list != NULL)
+    {
+      tmp_ifchgf_list->function(ifp, flag);
+      tmp_ifchgf_list = tmp_ifchgf_list->next;
+    }
+}
 
 
 /**

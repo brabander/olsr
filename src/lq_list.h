@@ -36,8 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_list.h,v 1.2 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_list.h,v 1.3 2005/02/20 18:52:18 kattemat Exp $
  */
+
+#ifndef _LQ_LIST_H
+#define _LQ_LIST_H
 
 struct list_node
 {
@@ -70,3 +73,6 @@ void list_add_after(struct list *list, struct list_node *pos_node,
                     struct list_node *node);
 
 void list_remove(struct list *list, struct list_node *node);
+
+#endif
+

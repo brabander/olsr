@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.h,v 1.11 2005/02/20 17:34:10 kattemat Exp $
+ * $Id: process_package.h,v 1.12 2005/02/20 18:52:18 kattemat Exp $
  */
 
 
@@ -44,22 +44,20 @@
 #define _OLSR_PROCESS_PACKAGE
 
 #include "olsr_protocol.h"
-#include "mpr.h"
 #include "packet.h"
+#include "neighbor_table.h"
 
 void
 olsr_init_package_process(void);
 
 void
-olsr_hello_tap(struct hello_message *message, struct interface *in_if,
-               union olsr_ip_addr *from_addr);
+olsr_hello_tap(struct hello_message *, struct interface *, union olsr_ip_addr *);
 
 void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void
-olsr_tc_tap(struct tc_message *message, struct interface *in_if,
-            union olsr_ip_addr *from_addr, union olsr_message *m);
+olsr_tc_tap(struct tc_message *, struct interface *, union olsr_ip_addr *, union olsr_message *);
 
 void
 olsr_process_received_tc(union olsr_message *, struct interface *, union olsr_ip_addr *);
@@ -69,9 +67,6 @@ olsr_process_received_mid(union olsr_message *, struct interface *, union olsr_i
 
 void
 olsr_process_received_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-
-
 
 void
 olsr_process_message_neighbors(struct neighbor_entry *,struct hello_message *);

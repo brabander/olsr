@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.39 2005/02/02 20:37:52 kattemat Exp $
+ * $Id: olsr.c,v 1.40 2005/02/20 18:52:18 kattemat Exp $
  */
 
 /**
@@ -58,10 +58,25 @@
 #include "generate_msg.h"
 #include "apm.h"
 #include "misc.h"
+#include "neighbor_table.h"
 
 #include <stdarg.h>
 #include <signal.h>
 
+
+/**
+ * Process changes functions
+ */
+
+struct pcf
+{
+  int (*function)(int, int, int);
+  struct pcf *next;
+};
+
+static struct pcf *pcf_list;
+
+static olsr_u16_t message_seqno;
 
 /**
  *Initialize the message sequence number as a random value
@@ -456,8 +471,6 @@ olsr_calculate_willingness()
   /* If fixed willingness */
   if(!olsr_cnf->willingness_auto)
     return olsr_cnf->willingness;
-
-#warning CHANGES IN THE apm INTERFACE(0.4.8)!
 
   if(apm_read(&ainfo) < 1)
     return WILL_DEFAULT;
