@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.30 2005/02/16 14:44:43 tlopatic Exp $
+$Id: CHANGELOG,v 1.31 2005/02/17 20:05:02 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -31,6 +31,13 @@ Interface "if0" "if1" "if2"
 {
 	.....
 }
+
+Interface configurations now also support the "Weight" directive. When
+olsrd finds multiple links to a neighbor it will choose the link
+going via the interface with the lowest weight. Olsrd normally
+sets this weight dynamically based on interface characteristics,
+but if the user wishes to set a fixed weight in a interface(or
+a group of interfaces), this directive is now available.
 
 Moreover, interface configurations now support the "LinkQualityMult"
 directive. It takes an IP address and a multiplier as arguments.
