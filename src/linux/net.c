@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.13 2005/02/12 23:07:02 spoggle Exp $
+ * $Id: net.c,v 1.14 2005/02/13 11:00:51 kattemat Exp $
  */
 
 
@@ -47,6 +47,12 @@
 #include "net.h"
 #include "../defs.h"
 #include "../net_os.h"
+#include "../parser.h"
+
+
+extern struct olsr_netbuf *netbufs[];
+static char inbuf[MAXMESSAGESIZE+1];
+
 
 /**
  *Bind a socket to a device
@@ -561,11 +567,6 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
   return 0;
 }
 
-
-/* ======== moved from above ======== */
-
-extern struct olsr_netbuf *netbufs[];
-
 /**
  *Sends a packet on a given interface.
  *
@@ -633,8 +634,8 @@ net_output(struct interface *ifp)
     }
 
   /*
-   *if the '-disp- option was given
-   *we print her decimal contetnt of the packets
+   *if the -dispout option was given
+   *we print the contetnt of the packets
    */
   if(disp_pack_out)
     {
@@ -712,11 +713,6 @@ net_output(struct interface *ifp)
 
   return 1;
 }
-
-/* The outputbuffer on neighbornodes
- * will never exceed MAXMESSAGESIZE
- */
-static char inbuf[MAXMESSAGESIZE+1];
 
 /**
  *Processing OLSR data from socket. Reading data, setting 
