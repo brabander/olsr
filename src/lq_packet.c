@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.14 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: lq_packet.c,v 1.15 2005/03/09 23:06:30 tlopatic Exp $
  */
 
 #include "olsr_protocol.h"
@@ -317,7 +317,9 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   // initially, we want to put at least an info header, an IP address,
   // and the corresponding link quality into the message
 
-  if (rem < sizeof (struct lq_hello_info_header) + ipsize + 4)
+  // force signed comparison
+
+  if (rem < (int)(sizeof (struct lq_hello_info_header) + ipsize + 4))
   {
     net_output(outif);
 
@@ -357,7 +359,9 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
               // we do not have enough space left
 
-              if (size + req > rem)
+              // force signed comparison
+
+              if ((int)(size + req) > rem)
                 {
                   // finalize the OLSR header
 
@@ -473,7 +477,9 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   // initially, we want to put at least an IP address and the corresponding
   // link quality into the message
 
-  if (rem < ipsize + 4)
+  // force signed comparison
+
+  if (rem < (int)(ipsize + 4))
   {
     net_output(outif);
 
@@ -487,7 +493,9 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
       // we need space for an IP address plus link quality
       // information
 
-      if (size + ipsize + 4 > rem)
+      // force signed comparison
+
+      if ((int)(size + ipsize + 4) > rem)
         {
           // finalize the OLSR header
 
