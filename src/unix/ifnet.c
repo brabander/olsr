@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.21 2005/02/28 18:08:57 kattemat Exp $
+ * $Id: ifnet.c,v 1.22 2005/03/02 22:24:27 spoggle Exp $
  */
 
 
@@ -66,7 +66,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
-static int bufspace = 127*1024;	/* max. input buffer size to request */
+int bufspace = 127*1024;	/* max. input buffer size to request */
 
 
 int

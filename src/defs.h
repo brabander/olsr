@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.42 2005/02/28 18:08:54 kattemat Exp $
+ * $Id: defs.h,v 1.43 2005/03/02 22:24:26 spoggle Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -146,7 +146,6 @@ olsr_bool del_gws;
  */
 
 extern float will_int;
-extern float dup_hold_time;
 extern float max_jitter;
 
 size_t ipsize;
