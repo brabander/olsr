@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.22 2005/03/02 22:24:27 spoggle Exp $
+ * $Id: ifnet.c,v 1.23 2005/03/04 17:10:53 kattemat Exp $
  */
 
 
@@ -689,6 +689,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   
   memcpy(ifp, &ifs, sizeof(struct interface));
   
+  ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       
   strcpy(ifp->int_name, ifr.ifr_name);

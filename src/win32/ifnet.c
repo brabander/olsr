@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.19 2005/02/27 11:02:34 kattemat Exp $
+ * $Id: ifnet.c,v 1.20 2005/03/04 17:10:54 kattemat Exp $
  */
 
 #include "interfaces.h"
@@ -743,7 +743,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
     return 0;
 
   New = olsr_malloc(sizeof (struct interface), "Interface 1");
-      
+  New->gen_properties = NULL;
+
   memcpy(&New->int_addr, &IntInfo.iiAddress, sizeof (struct sockaddr_in));
 
   memcpy(&New->int_netmask, &IntInfo.iiNetmask, sizeof (struct sockaddr_in));
