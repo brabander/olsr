@@ -23,39 +23,58 @@ PLUGIN PARAMETERS (PlParam)
 PlParam "name" "my-name.mesh"
 
 	the name of this OLSR node (main address).
-	can be specified multiple times
+	can be specified multiple times for different names.
+
 
 PlParam "IP.ADDR" "another-name.mesh"
 
 	a name for a specified IP address.
 	the IP address has to be either from one of the olsr 
 	interfaces or within a HNA network we announce.
-	can be specified multiple times
+	can be specified multiple times.
 
-PlParam "filename" "/name/of/hosts_file"
 
-	which file to write to.
+PlParam "hosts-file" "/path/to/hosts_file"
+
+	which file to write to (usually /etc/hosts).
 	(default: /var/run/hosts_olsr)
+
 
 PlParam "interval" "SEC"
 
 	interval for sending NAME messages in seconds.
 	(default: 120 - 2 minutes)
 
+
 PlParam "timeout" "SEC"
 
-	validity time for received NAME messages.
+	validity time for received NAME messages in seconds.
 	(default: 3600 - 1 hour)
+
 
 PlParam "suffix" ".olsr"
 
 	local suffix which is appended to all received names.
 	(default: "")
 	
-PlParam "addhosts" "/path/to/file"
+
+PlParam "add-hosts" "/path/to/file"
 
 	copy contents of this additional hosts file to output file.
 	this is practical if you alreay use your /etc/hosts file.
+
+
+PlParam "dns-server" "IP.ADDR"
+	anounce that this IP has a full (upstream) DNS server. if 
+	IP.ADDR is not specified (""), the main address is used.
+	nodes which don't know a nameserver will automatically use
+	this nameserver.
+
+
+PlParam "resolv-file" "/path/to/resolv.conf"
+	path to resolv.conf file (usually /etc/resolv.conf)
+	if set, an the upstream nameserver annonced by another node
+	in the network is written to this file
 
 
 ---------------------------------------------------------------------
@@ -67,6 +86,8 @@ add in /etc/olsrd.conf:
 LoadPlugin "olsrd_nameservice.so.0.2"
 {
 	PlParam "name" "thisismyname.mesh"
+	PlParam "hosts-file" "/etc/hosts"
+	PlParam "resolv-file" "/etc/resolv.conf"
 }
 
 
@@ -108,4 +129,4 @@ TODO
  * or make dynamic DNS updates for bind?
 
 ---------------------------------------------------------------------
-EOF / 13.03.2005
+EOF / 17.03.2005

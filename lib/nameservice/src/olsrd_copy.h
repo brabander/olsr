@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_copy.h,v 1.2 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: olsrd_copy.h,v 1.3 2005/03/17 21:41:30 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -40,8 +40,6 @@
 
 // these functions are copied from the main olsrd source
 // TODO: there must be a better way!!!
-
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
 
 olsr_u32_t olsr_hashing(union olsr_ip_addr *address);
 

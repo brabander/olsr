@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.9 2005/03/13 22:25:05 br1 Exp $ */
+/* $Id: nameservice.c,v 1.10 2005/03/17 21:41:30 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -47,11 +47,14 @@
 static char buffer[10240];
 
 /* config parameters */
-static char my_filename[MAX_FILE + 1];
+static char my_hosts_file[MAX_FILE + 1];
 static char my_add_hosts[MAX_FILE + 1];
 static char my_suffix[MAX_SUFFIX];
-int my_interval = EMISSION_INTERVAL;
-double my_timeout = NAME_VALID_TIME;
+static int my_interval = EMISSION_INTERVAL;
+static double my_timeout = NAME_VALID_TIME;
+static olsr_bool have_dns_server = OLSR_FALSE;
+static union olsr_ip_addr my_dns_server;
+static char my_resolv_file[MAX_FILE +1];
 
 /* the database (using hashing) */
 struct db_entry* list[HASHSIZE];
@@ -70,25 +73,28 @@ name_constructor()
 #ifdef WIN32
 	int len;
 
-	GetWindowsDirectory(my_filename, MAX_FILE - 12);
+	GetWindowsDirectory(my_hosts_file, MAX_FILE - 12);
 
-	len = strlen(my_filename);
+	len = strlen(my_hosts_file);
  
-	if (my_filename[len - 1] != '\\')
- 		my_filename[len++] = '\\';
+	if (my_hosts_file[len - 1] != '\\')
+ 		my_hosts_file[len++] = '\\';
  
-	strcpy(my_filename + len, "hosts_olsr");
+	strcpy(my_hosts_file + len, "hosts_olsr");
 #else
-	strcpy(my_filename, "/var/run/hosts_olsr");
+	strcpy(my_hosts_file, "/var/run/hosts_olsr");
 #endif
 
 	my_suffix[0] = '\0';
 	my_add_hosts[0] = '\0';
+	my_resolv_file[0] = '\0';
 	
 	/* init list */
 	for(i = 0; i < HASHSIZE; i++) {
 		list[i] = NULL;
 	}
+	
+	memset(&my_dns_server, 0, sizeof(my_dns_server));
 }
 
 
@@ -98,7 +104,46 @@ name_constructor()
 int
 register_olsr_param(char *key, char *value)
 {
-	if(!strcmp(key, "name")) {
+	if(!strcmp(key, "interval")) {
+		my_interval = atoi(value);
+		printf("\nNAME PLUGIN: parameter interval: %d\n", my_interval);
+	}
+	else if(!strcmp(key, "timeout")) {
+		my_timeout = atof(value);
+		printf("\nNAME PLUGIN: parameter timeout: %f\n", my_timeout);
+	} 
+	else if(!strcmp(key, "hosts-file")) {
+		strncpy( my_hosts_file, value, MAX_FILE );
+		printf("\nNAME PLUGIN: parameter filename: %s\n", my_hosts_file);
+	}
+	else if(!strcmp(key, "resolv-file")) {
+		strncpy(my_resolv_file, value, MAX_FILE);
+		printf("\nNAME PLUGIN: parameter resolv file: %s\n", my_resolv_file);
+	}
+	else if(!strcmp(key, "suffix")) {
+		strncpy(my_suffix, value, MAX_SUFFIX);
+		printf("\nNAME PLUGIN: parameter suffix: %s\n", my_suffix);
+	}
+	else if(!strcmp(key, "add-hosts")) {
+		strncpy(my_add_hosts, value, MAX_FILE);
+		printf("\nNAME PLUGIN: parameter additional host: %s\n", my_add_hosts);
+	}
+	else if(!strcmp(key, "dns-server")) {
+		struct in_addr ip;
+		if (strlen(value) == 0) {
+			// set dns server ip to main address
+			// which is not known yet
+			have_dns_server = OLSR_TRUE;
+		}
+		else if (inet_aton(value, &ip)) {
+			my_dns_server.v4 = ip.s_addr;
+			have_dns_server = OLSR_TRUE;
+		}
+		else {
+			printf("\nNAME PLUGIN: invalid dns-server IP %s\n", value);
+		}
+	}
+	else if(!strcmp(key, "name")) {
 		// name for main address
 		struct name_entry *tmp;
 		tmp = malloc(sizeof(struct name_entry));
@@ -111,26 +156,6 @@ register_olsr_param(char *key, char *value)
 		my_names = tmp;
 		
 		printf("\nNAME PLUGIN: parameter name: %s (main address)\n", tmp->name);
-	} 
-	else if(!strcmp(key, "filename")) {
-		strncpy( my_filename, value, MAX_FILE );
-		printf("\nNAME PLUGIN: parameter filename: %s\n", my_filename);
-	}
-	else if(!strcmp(key, "interval")) {
-		my_interval = atoi(value);
-		printf("\nNAME PLUGIN: parameter interval: %d\n", my_interval);
-	}
-	else if(!strcmp(key, "timeout")) {
-		my_timeout = atof(value);
-		printf("\nNAME PLUGIN: parameter timeout: %f\n", my_timeout);
-	}
-	else if(!strcmp(key, "suffix")) {
-		strncpy(my_suffix, value, MAX_SUFFIX);
-		printf("\nNAME PLUGIN: parameter suffix: %s\n", my_suffix);
-	}
-	else if(!strcmp(key, "addhosts")) {
-		strncpy(my_add_hosts, value, MAX_FILE);
-		printf("\nNAME PLUGIN: parameter additional host: %s\n", my_add_hosts);
 	}
 	else {
 		// assume this is an IP address and hostname
@@ -150,7 +175,7 @@ register_olsr_param(char *key, char *value)
 				olsr_ip_to_string(&tmp->ip));
 		} 
 		else {
-			printf("\nNAME PLUGIN: invalid IP %s, fix your config!\n", key);
+			printf("\nNAME PLUGIN: invalid IP %s for name %s!\n", key, value);
 		}
 	}
 
@@ -186,8 +211,7 @@ olsr_plugin_init()
 		} else {
 			// IP from config file
 			// check if we are allowed to announce a name for this IP
-			// we can only do this if we also announce the IP
-			 
+			// we can only do this if we also announce the IP	 
 			if (!allowed_ip(&name->ip)) {
 				olsr_printf(1, "NAME PLUGIN: name for unknown IP %s not allowed, fix your config!\n", 
 					olsr_ip_to_string(&name->ip));
@@ -200,6 +224,24 @@ olsr_plugin_init()
 			else {
 				prev = name;
 			}
+		}
+	}
+		
+	if (have_dns_server) {
+		if (my_dns_server.v4 == 0) {
+			memcpy(&my_dns_server, main_addr, ipsize);
+			printf("\nNAME PLUGIN: announcing upstream DNS server: %s\n", 
+				olsr_ip_to_string(&my_dns_server));
+		}
+		else if (!allowed_ip(&my_dns_server)) {
+			printf("NAME PLUGIN: announcing DNS server on unknown IP %s is not allowed, fix your config!\n", 
+				olsr_ip_to_string(&my_dns_server));
+			memset(&my_dns_server, 0, sizeof(my_dns_server));
+			have_dns_server = OLSR_FALSE;
+		}
+		else {
+			printf("\nNAME PLUGIN: announcing upstream DNS server: %s\n", 
+				olsr_ip_to_string(&my_dns_server));
 		}
 	}
 	
@@ -245,6 +287,7 @@ olsr_plugin_exit()
 /**
  * A timeout function called every time
  * the scheduler is polled: time out old list entries
+ * and write changes to file
  */
 void
 olsr_timeout()
@@ -275,7 +318,8 @@ olsr_timeout()
 			}
 		}
 	}
-	write_name_table();
+	write_resolv_file();
+	write_hosts_file();
 }
 
 
@@ -408,6 +452,20 @@ encap_namemsg(struct namemsg* msg)
 	char* pos = (char*)msg + sizeof(struct namemsg);
 	short i=0;
         int k;
+	
+	// upstream dns server
+	if (have_dns_server) {
+		olsr_printf(3, "NAME PLUGIN: Announcing DNS server (%s)\n", 
+			olsr_ip_to_string(&my_dns_server));
+		to_packet = (struct name*)pos;
+		to_packet->type = htons(NAME_FORWARDER);
+		to_packet->len = htons(0);
+		memcpy(&to_packet->ip, &my_dns_server, ipsize);
+		pos += sizeof(struct name);
+		i++;
+	}
+
+	// names
 	for (my_name = my_names; my_name!=NULL; my_name = my_name->next)
 	{
 		olsr_printf(3, "NAME PLUGIN: Announcing name %s (%s) %d\n", 
@@ -452,10 +510,11 @@ decap_namemsg( struct namemsg *msg, int size, struct name_entry **to )
 	// for now ist easier to just delete everything, than
 	// to update selectively
 	free_name_entry_list(to);
+	name_table_changed = OLSR_TRUE;
 	
 	/* now add the names from the message */
 	pos = (char*)msg + sizeof(struct namemsg);
-	end_pos = pos + size - sizeof(struct name*); // at least one struct name hast to be left
+	end_pos = pos + size - sizeof(struct name*); // at least one struct name has to be left
 	
 	for (i=ntohs(msg->nr_names); i > 0 && pos<end_pos; i--) 
 	{
@@ -511,7 +570,6 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
  			
 			olsr_get_timestamp(vtime * 1000, &entry->timer);
 			
-			name_table_changed = OLSR_TRUE;
 			return;
 		}
 	}
@@ -538,7 +596,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
  * write names to a file in /etc/hosts compatible format
  */
 void
-write_name_table()
+write_hosts_file()
 {
 	int hash;
 	struct name_entry *name;
@@ -548,12 +606,12 @@ write_name_table()
 	int c=0;
 	time_t currtime;
   
-	if(!name_table_changed)
+	if (!name_table_changed)
 		return;
 
 	olsr_printf(2, "NAME PLUGIN: writing hosts file\n");
 		      
-	hosts = fopen( my_filename, "w" );
+	hosts = fopen( my_hosts_file, "w" );
 	if (hosts == NULL) {
 		olsr_printf(2, "NAME PLUGIN: cant write hosts file\n");
 		return;
@@ -584,28 +642,73 @@ write_name_table()
 	}
 	
 	// write received names
-	for(hash = 0; hash < HASHSIZE; hash++) 
+	for (hash = 0; hash < HASHSIZE; hash++) 
 	{
 		for(entry = list[hash]; entry != NULL; entry = entry->next)
 		{
 			for (name = entry->names; name != NULL; name = name->next) 
 			{
-				olsr_printf(6, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
-				olsr_printf(6, "\t#%s\n", olsr_ip_to_string(&entry->originator));
-				
-				fprintf(hosts, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
-				fprintf(hosts, "\t# %s\n", olsr_ip_to_string(&entry->originator));
+				if (name->type == NAME_HOST) {
+					olsr_printf(6, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
+					olsr_printf(6, "\t#%s\n", olsr_ip_to_string(&entry->originator));
+					
+					fprintf(hosts, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
+					fprintf(hosts, "\t# %s\n", olsr_ip_to_string(&entry->originator));
+				}
 			}
 		}
 	}
 
-	if(time(&currtime)) {
+	if (time(&currtime)) {
 		fprintf(hosts, "\n### written by olsrd at %s", ctime(&currtime));
 	}
 	  
 	fclose(hosts);
 	name_table_changed = OLSR_FALSE;
 }
+
+
+/**
+ * write upstream DNS servers to resolv.conf file
+ */
+void
+write_resolv_file()
+{
+	int hash;
+	struct name_entry *name;
+	struct db_entry *entry;
+	FILE* resolv;
+	
+	if (my_resolv_file[0] == '\0')
+		return;
+	
+	if (!name_table_changed)
+		return;
+
+	olsr_printf(2, "NAME PLUGIN: writing resolv file\n");
+		      
+	resolv = fopen( my_resolv_file, "w" );
+	if (resolv == NULL) {
+		olsr_printf(2, "NAME PLUGIN: cant write resolv file\n");
+		return;
+	}
+
+	for (hash = 0; hash < HASHSIZE; hash++) 
+	{
+		for(entry = list[hash]; entry != NULL; entry = entry->next)
+		{
+			for (name = entry->names; name != NULL; name = name->next) 
+			{
+				if (name->type == NAME_FORWARDER) {
+					//TODO: find the nearest one!!!
+					fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&name->ip));
+				}
+			}
+		}
+	}
+	fclose(resolv);
+}
+
 
 /**
  * completely free a list of name_entries
@@ -635,18 +738,16 @@ olsr_bool
 allowed_ip(union olsr_ip_addr *addr)
 {
 	struct hna4_entry *hna4;
-	struct olsr_if *ifs;
+	struct interface *iface;
 	
 	olsr_printf(6, "checking %s\n", olsr_ip_to_string(addr));
 	
-	for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
+	for(iface = ifs; iface; iface = iface->int_next)
 	{
-		struct interface *rifs = ifs->interf;
-		olsr_printf(6, "interface %s\n", olsr_ip_to_string(&rifs->ip_addr));
-		if (COMP_IP(&rifs->ip_addr, addr)) {
+		olsr_printf(6, "interface %s\n", olsr_ip_to_string(&iface->ip_addr));
+		if (COMP_IP(&iface->ip_addr, addr)) {
 			olsr_printf(6, "MATCHED\n");
 			return OLSR_TRUE;
-			
 		}
 	}
 	
@@ -655,7 +756,7 @@ allowed_ip(union olsr_ip_addr *addr)
 		olsr_printf(6, "HNA %s/%s\n", 
 			olsr_ip_to_string(&hna4->net),
 			olsr_ip_to_string(&hna4->netmask));
-		
+	
 		if ( hna4->netmask.v4 != 0 && (addr->v4 & hna4->netmask.v4) == hna4->net.v4 ) {
 			olsr_printf(6, "MATCHED\n");
 			return OLSR_TRUE;

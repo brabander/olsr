@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.6 2005/03/03 18:20:16 kattemat Exp $ */
+/* $Id: nameservice.h,v 1.7 2005/03/17 21:41:30 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -99,7 +99,10 @@ void
 update_name_entry(union olsr_ip_addr *, struct namemsg *, int, double);
 
 void
-write_name_table(void);
+write_hosts_file(void);
+
+void
+write_resolv_file(void);
 
 int
 register_olsr_param(char *key, char *value);
