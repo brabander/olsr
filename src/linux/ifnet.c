@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.13 2004/10/19 20:19:32 kattemat Exp $
+ * $Id: ifnet.c,v 1.14 2004/10/19 21:06:34 kattemat Exp $
  *
  */
 
@@ -56,6 +56,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+
+static int bufspace = 127*1024;	/* max. input buffer size to request */
 
 
 int

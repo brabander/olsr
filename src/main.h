@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.h,v 1.9 2004/10/19 20:59:14 kattemat Exp $
+ * $Id: main.h,v 1.10 2004/10/19 21:06:34 kattemat Exp $
  *
  */
 
@@ -44,8 +44,6 @@ struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 
 
 int     precedence;
 int     tos_bits;
-
-int	bufspace = 127*1024;	/* max. input buffer size to request */
 
 /* ID of the timer thread */
 pthread_t main_thread;
