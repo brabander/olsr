@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: hna_set.c,v 1.15 2005/01/17 20:18:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -264,25 +264,24 @@ void
 olsr_time_out_hna_set(void *foo)
 {
   int index;
-  struct hna_entry *tmp_hna, *hna_to_delete;
-  struct hna_net *tmp_net, *net_to_delete;
 
   for(index=0;index<HASHSIZE;index++)
     {
-      tmp_hna = hna_set[index].next;
+      struct hna_entry *tmp_hna = hna_set[index].next;
       /* Check all entrys */
       while(tmp_hna != &hna_set[index])
 	{
 	  /* Check all networks */
-	  tmp_net = tmp_hna->networks.next;
+	  struct hna_net *tmp_net = tmp_hna->networks.next;
 
 	  while(tmp_net != &tmp_hna->networks)
 	    {
 	      if(TIMED_OUT(tmp_net->A_time))
 		{
-		  net_to_delete = tmp_net;
+		  struct hna_net *net_to_delete = tmp_net;
 		  tmp_net = tmp_net->next;
-		  delete_hna_net(net_to_delete);
+		  DEQUEUE_ELEM(net_to_delete);
+		  free(net_to_delete);
 		  changes_hna = OLSR_TRUE;
 		}
 	      else
@@ -292,9 +291,13 @@ olsr_time_out_hna_set(void *foo)
 	  /* Delete gw entry if empty */
 	  if(tmp_hna->networks.next == &tmp_hna->networks)
 	    {
-	      hna_to_delete = tmp_hna;
+	      struct hna_entry *hna_to_delete = tmp_hna;
 	      tmp_hna = tmp_hna->next;
-	      delete_hna_entry(hna_to_delete);
+
+	      /* Dequeue */
+	      DEQUEUE_ELEM(hna_to_delete);
+	      /* Delete */
+	      free(hna_to_delete);
 	    }
 	  else
 	    tmp_hna = tmp_hna->next;
@@ -315,8 +318,6 @@ void
 olsr_print_hna_set()
 {
   int index;
-  struct hna_entry *tmp_hna;
-  struct hna_net *tmp_net;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
               nowtm->tm_hour,
@@ -331,12 +332,12 @@ olsr_print_hna_set()
 
   for(index=0;index<HASHSIZE;index++)
     {
-      tmp_hna = hna_set[index].next;
+      struct hna_entry *tmp_hna = hna_set[index].next;
       /* Check all entrys */
       while(tmp_hna != &hna_set[index])
 	{
 	  /* Check all networks */
-	  tmp_net = tmp_hna->networks.next;
+	  struct hna_net *tmp_net = tmp_hna->networks.next;
 
 	  while(tmp_net != &tmp_hna->networks)
 	    {
@@ -359,50 +360,5 @@ olsr_print_hna_set()
     }
 
 }
-
-
-
-
-
-/**
- *Deletes and dequeues a HNA network entry
- *
- *@param net the entry to delete
- */
-void
-delete_hna_net(struct hna_net *net)
-{
-
-  /* Dequeue */
-  net->prev->next = net->next;
-  net->next->prev = net->prev;
-
-  /* Delete */
-  free(net);
-
-}
-
-
-
-
-/**
- *Deletes and dequeues a hna gw entry
- *NETWORKS MUST BE DELETED FIRST!
- *
- *@param entry the entry to delete
- */
-void
-delete_hna_entry(struct hna_entry *entry)
-{
-  /* Dequeue */
-  entry->prev->next = entry->next;
-  entry->next->prev = entry->prev;
-
-  /* Delete */
-  free(entry);
-}
-
-
-
 
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.8 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.9 2005/01/17 20:18:18 kattemat Exp $
  */
 
 
@@ -156,7 +156,6 @@ olsr_check_dup_table_fwd(union olsr_ip_addr *originator,
 {
   olsr_u32_t hash;
   struct dup_entry *tmp_dup_table;
-  struct dup_iface *tmp_dup_iface;
 
   /* Hash the senders address */
   hash = olsr_hashing(originator);
@@ -169,6 +168,7 @@ olsr_check_dup_table_fwd(union olsr_ip_addr *originator,
       if(COMP_IP(&tmp_dup_table->addr, originator) &&
 	 (tmp_dup_table->seqno == seqno))
 	{
+	  struct dup_iface *tmp_dup_iface;
 	  /* Check retransmitted */
 	  if(tmp_dup_table->forwarded)
 	    return 0;
@@ -214,12 +214,7 @@ olsr_del_dup_entry(struct dup_entry *entry)
 
   /* Dequeue */
   DEQUEUE_ELEM(entry);
-  //entry->prev->next = entry->next;
-  //entry->next->prev = entry->prev;
-
-  /* Free entry */
   free(entry);
-
 }
 
 
@@ -228,26 +223,23 @@ void
 olsr_time_out_duplicate_table(void *foo)
 {
   int i;
-  struct dup_entry *tmp_dup_table, *entry_to_delete;
 
   for(i = 0; i < HASHSIZE; i++)
     {      
+      struct dup_entry *tmp_dup_table;
       tmp_dup_table = dup_set[i].next;
 
       while(tmp_dup_table != &dup_set[i])
 	{
 	  if(TIMED_OUT(tmp_dup_table->timer))
 	    {
-
+	      struct dup_entry *entry_to_delete = tmp_dup_table;
 #ifdef DEBUG
 	      olsr_printf(5, "DUP TIMEOUT[%s] s: %d\n", 
 		          olsr_ip_to_string(&tmp_dup_table->addr),
 		          tmp_dup_table->seqno);
 #endif
-
-	      entry_to_delete = tmp_dup_table;
 	      tmp_dup_table = tmp_dup_table->next;
-
 	      olsr_del_dup_entry(entry_to_delete);
 	    }
 	  else
@@ -357,13 +349,12 @@ void
 olsr_print_duplicate_table()
 {
   int i;
-  struct dup_entry *tmp_dup_table;
 
   printf("\nDUP TABLE:\n");
 
   for(i = 0; i < HASHSIZE; i++)
     {      
-      tmp_dup_table = dup_set[i].next;
+      struct dup_entry *tmp_dup_table = dup_set[i].next;
       
       //printf("Timeout %d %d\n", i, j);
       while(tmp_dup_table != &dup_set[i])

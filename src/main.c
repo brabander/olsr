@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.54 2005/01/17 10:58:48 tlopatic Exp $
+ * $Id: main.c,v 1.55 2005/01/17 20:18:20 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -92,13 +92,7 @@ static char copyright_string[] = "The olsr.org Optimized Link-State Routing daem
 int
 main(int argc, char *argv[])
 {
-  /* For address convertions */
-  struct in_addr in;
-  struct in6_addr in6;
-
   struct if_config_options *default_ifcnf;
-
-  struct stat statbuf;
   char conf_file_name[FILENAME_MAX];
   
   olsr_argv = argv;
@@ -176,6 +170,8 @@ main(int argc, char *argv[])
 
   if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) 
     {
+      struct stat statbuf;
+
       argv++; argc--;
       if(argc == 1)
 	{
@@ -250,6 +246,8 @@ main(int argc, char *argv[])
        */
       if(strcmp(*argv, "-bcast") == 0) 
 	{
+	  struct in_addr in;
+
 	  argv++; argc--;
 	  if(!argc)
 	    {
@@ -425,6 +423,8 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-multi") == 0) 
 	{
+	  struct in6_addr in6;
+
 	  argv++; argc--;
 	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
 	    {

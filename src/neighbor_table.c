@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.22 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.23 2005/01/17 20:18:21 kattemat Exp $
  */
 
 
@@ -146,7 +146,6 @@ int
 olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
 {  
   struct  neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
-  struct  neighbor_2_entry      *two_hop_entry;
   olsr_u32_t                    hash;
   struct neighbor_entry         *entry;
 
@@ -175,6 +174,8 @@ olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
 
   while(two_hop_list != &entry->neighbor_2_list)
     {
+      struct  neighbor_2_entry *two_hop_entry;
+
       two_hop_entry = two_hop_list->neighbor_2;
       
       two_hop_entry->neighbor_2_pointer--;
@@ -340,8 +341,6 @@ olsr_lookup_neighbor_table_alias(union olsr_ip_addr *dst)
 int
 update_neighbor_status(struct neighbor_entry *entry, int link)
 {
-  struct neighbor_2_entry *two_hop_neighbor;
-
   /*
    * Update neighbor entry
    */
@@ -351,6 +350,7 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
       /* N_status is set to SYM */
       if(entry->status == NOT_SYM)
 	{
+	  struct neighbor_2_entry *two_hop_neighbor;
 	  
 	  /* Delete posible 2 hop entry on this neighbor */
 	  if((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->neighbor_main_addr))!=NULL)
@@ -395,34 +395,32 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 void
 olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 {
-  struct  neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
-  struct  neighbor_2_entry      *two_hop_entry;
-
+  struct neighbor_2_list_entry *two_hop_list;
 
   two_hop_list = neighbor->neighbor_2_list.next;
-
-  //neighbor->neighbor_2_list = NULL;
 
   while(two_hop_list != &neighbor->neighbor_2_list)
     {
       if(TIMED_OUT(two_hop_list->neighbor_2_timer))
 	{
-	  two_hop_entry = two_hop_list->neighbor_2;
+	  struct neighbor_2_list_entry *two_hop_to_delete;
+	  struct neighbor_2_entry      *two_hop_entry = two_hop_list->neighbor_2;
+
 	  two_hop_entry->neighbor_2_pointer--;
 	  olsr_delete_neighbor_pointer(two_hop_entry, &neighbor->neighbor_main_addr);
-
+	  
 	  if(two_hop_entry->neighbor_2_pointer < 1)
 	    {
 	      DEQUEUE_ELEM(two_hop_entry);
 	      free((void *)two_hop_entry);
 	    }
-
+	  
 	  two_hop_to_delete = two_hop_list;
 	  two_hop_list = two_hop_list->next;
-
+	  
 	  /* Dequeue */
 	  DEQUEUE_ELEM(two_hop_to_delete);
-
+	  
 	  free(two_hop_to_delete);
 
 	  /* This flag is set to OLSR_TRUE to recalculate the MPR set and the routing table*/
@@ -444,16 +442,14 @@ void
 olsr_time_out_neighborhood_tables()
 {
   olsr_u8_t              index;
-  struct neighbor_entry  *entry;
   
   for(index=0;index<HASHSIZE;index++)
     {
-      entry = neighbortable[index].next;
+      struct neighbor_entry *entry = neighbortable[index].next;
 
       while(entry != &neighbortable[index])
 	{	  
 	  olsr_time_out_two_hop_neighbors(entry);
-
 	  entry = entry->next;
 	}
     }
@@ -473,9 +469,6 @@ void
 olsr_print_neighbor_table()
 {
   int i;
-  struct neighbor_entry *neigh;
-  struct link_entry *link;
-  double best_lq, inv_best_lq;
   char *fstr;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n",
@@ -498,13 +491,13 @@ olsr_print_neighbor_table()
 
   for (i = 0; i < HASHSIZE; i++)
     {
+      struct neighbor_entry *neigh;
       for(neigh = neighbortable[i].next; neigh != &neighbortable[i];
 	  neigh = neigh->next)
 	{
-          link = olsr_neighbor_best_link(&neigh->neighbor_main_addr);
-
-          best_lq = link->neigh_link_quality;
-          inv_best_lq = link->loss_link_quality;
+	  struct link_entry *link = olsr_neighbor_best_link(&neigh->neighbor_main_addr);
+	  double best_lq = link->neigh_link_quality;
+	  double inv_best_lq = link->loss_link_quality;
 
           olsr_printf(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
                       inv_best_lq, best_lq,

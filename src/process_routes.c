@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.15 2004/12/03 18:43:34 tlopatic Exp $
+ * $Id: process_routes.c,v 1.16 2005/01/17 20:18:22 kattemat Exp $
  */
 
 
@@ -123,7 +123,6 @@ struct destination_n *
 olsr_build_update_list(struct rt_entry *from_table,struct rt_entry *in_table)
 {
   struct destination_n *kernel_route_list = NULL;
-  struct destination_n *route_list = NULL;
   struct rt_entry      *destination;
   olsr_u8_t            index;
   
@@ -135,7 +134,7 @@ olsr_build_update_list(struct rt_entry *from_table,struct rt_entry *in_table)
 	{
 	  if (!olsr_find_up_route(destination, in_table))
 	    {
-	      
+	      struct destination_n *route_list;
 	      route_list = olsr_malloc(sizeof(struct destination_n), "create route tmp list");
 	      
 	      route_list->destination = destination;
@@ -162,8 +161,8 @@ olsr_build_update_list(struct rt_entry *from_table,struct rt_entry *in_table)
 int
 olsr_delete_all_kernel_routes()
 { 
-  struct destination_n *delete_kernel_list=NULL;
-  struct destination_n *tmp=NULL;
+  struct destination_n *delete_kernel_list = NULL;
+  struct destination_n *tmp = NULL;
   union olsr_ip_addr *tmp_addr;
 
   olsr_printf(1, "Deleting all routes...\n");
@@ -299,10 +298,10 @@ void
 olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 {
   struct destination_n *destination_kernel;
-  olsr_16_t error;
 
   while(delete_kernel_list!=NULL)
     {
+      olsr_16_t error;
       if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
@@ -343,16 +342,14 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 void 
 olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 {
-  struct destination_n *destination_kernel = NULL;
-  struct destination_n *previous_node = add_kernel_list;
-  olsr_16_t error;
-  int metric_counter = 0, first_run = 1;
-  //char str[46];
-  
-  //printf("Calculating routes\n");
+  int metric_counter = 0;
+  olsr_bool first_run = OLSR_TRUE;
   
   while(add_kernel_list != NULL)
     {
+      struct destination_n *destination_kernel = NULL;
+      struct destination_n *previous_node = add_kernel_list;
+
       //searching for all the items with metric equal to n
       for(destination_kernel = add_kernel_list; destination_kernel != NULL; )
 	{
@@ -360,19 +357,20 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	     ((first_run && 
 	       COMP_IP(&destination_kernel->destination->rt_dst, &destination_kernel->destination->rt_router)) || !first_run))
 	    {
+	      olsr_16_t error;
 	      /* First add all 1-hop routes that has themselves as GW */
-
+	      
 	      if(olsr_cnf->ip_version == AF_INET)
 		error=olsr_ioctl_add_route(destination_kernel->destination);
 	      else
 		error=olsr_ioctl_add_route6(destination_kernel->destination);
-		    
+	      
 	      if(error < 0) //print the error msg
 		{
 		  olsr_printf(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno));
 		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
 		}
-		    
+	      
 	      //getting rid of this node and hooking up the broken point
 	      if(destination_kernel == add_kernel_list) 
 		{
@@ -396,9 +394,9 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		
 	}
       if(first_run)
-	first_run = 0;
+	first_run = OLSR_FALSE;
       else
-	++metric_counter;
+	metric_counter++;
     }
 	
 }

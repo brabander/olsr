@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.11 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.12 2005/01/17 20:18:22 kattemat Exp $
  */
 
 
@@ -78,27 +78,28 @@ olsr_init_two_hop_table()
 void
 olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, union olsr_ip_addr *address)
 {
- struct	neighbor_list_entry *entry, *entry_to_delete;
-
- entry = two_hop_entry->neighbor_2_nblist.next;
-
-
- while(entry != &two_hop_entry->neighbor_2_nblist)
-   {
-     if(COMP_IP(&entry->neighbor->neighbor_main_addr, address))
-       {
-	 entry_to_delete = entry;
-	 entry = entry->next;
-
-	 /* dequeue */
-	 DEQUEUE_ELEM(entry_to_delete);
-
-	 free(entry_to_delete);
-       }
-     else
-       entry = entry->next;
-     
-   }
+  struct neighbor_list_entry *entry;
+  
+  entry = two_hop_entry->neighbor_2_nblist.next;
+  
+  
+  while(entry != &two_hop_entry->neighbor_2_nblist)
+    {
+      if(COMP_IP(&entry->neighbor->neighbor_main_addr, address))
+	{
+	  struct neighbor_list_entry *entry_to_delete = entry;
+	  entry = entry->next;
+	  
+	  /* dequeue */
+	  DEQUEUE_ELEM(entry_to_delete);
+	  
+	  free(entry_to_delete);
+	}
+      else
+	{
+	  entry = entry->next;
+	}
+    }
 }
 
 
@@ -113,29 +114,24 @@ olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, union olsr_
 void
 olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 {
-  struct neighbor_list_entry *one_hop_list, *entry_to_delete;
-  struct neighbor_entry      *one_hop_entry;
+  struct neighbor_list_entry *one_hop_list;
   
   one_hop_list = two_hop_neighbor->neighbor_2_nblist.next;
   
   /* Delete one hop links */
   while(one_hop_list != &two_hop_neighbor->neighbor_2_nblist)
     {
-      one_hop_entry = one_hop_list->neighbor;
-      olsr_delete_neighbor_2_pointer(one_hop_entry, &two_hop_neighbor->neighbor_2_addr);
-      
-      entry_to_delete = one_hop_list;
-      
-      one_hop_list = one_hop_list->next;
-      
-      /* no need to dequeue */
+      struct neighbor_entry *one_hop_entry = one_hop_list->neighbor;
+      struct neighbor_list_entry *entry_to_delete = one_hop_list;
 
+      olsr_delete_neighbor_2_pointer(one_hop_entry, &two_hop_neighbor->neighbor_2_addr);
+      one_hop_list = one_hop_list->next;
+      /* no need to dequeue */
       free(entry_to_delete);
     }
   
   /* dequeue */
   DEQUEUE_ELEM(two_hop_neighbor);
-  
   free(two_hop_neighbor);
 }
 
@@ -176,7 +172,6 @@ olsr_lookup_two_hop_neighbor_table(union olsr_ip_addr *dest)
 
   struct neighbor_2_entry  *neighbor_2;
   olsr_u32_t               hash;
-  struct addresses *adr;
 
   //printf("LOOKING FOR %s\n", olsr_ip_to_string(dest));
   hash = olsr_hashing(dest);
@@ -186,6 +181,8 @@ olsr_lookup_two_hop_neighbor_table(union olsr_ip_addr *dest)
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next)
     {
+      struct addresses *adr;
+
       //printf("Checking %s\n", olsr_ip_to_string(dest));
       if (COMP_IP(&neighbor_2->neighbor_2_addr, dest))
 	return neighbor_2;
@@ -245,11 +242,6 @@ void
 olsr_print_two_hop_neighbor_table()
 {
   int i;
-  struct neighbor_2_entry *neigh2;
-  struct neighbor_list_entry *entry;
-  struct neighbor_entry *neigh;
-  olsr_bool first;
-  double total_lq;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d -------------------------- TWO-HOP NEIGHBORS\n\n",
               nowtm->tm_hour,
@@ -261,15 +253,18 @@ olsr_print_two_hop_neighbor_table()
 
   for (i = 0; i < HASHSIZE; i++)
     {
+      struct neighbor_2_entry *neigh2;
       for (neigh2 = two_hop_neighbortable[i].next;
            neigh2 != &two_hop_neighbortable[i]; neigh2 = neigh2->next)
 	{
-          first = OLSR_TRUE;
+	  struct neighbor_list_entry *entry;
+	  olsr_bool first = OLSR_TRUE;
 
 	  for (entry = neigh2->neighbor_2_nblist.next;
                entry != &neigh2->neighbor_2_nblist; entry = entry->next)
 	    {
-              neigh = entry->neighbor;
+	      double total_lq;
+	      struct neighbor_entry *neigh = entry->neighbor;
 
               if (first)
                 {

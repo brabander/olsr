@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.9 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.10 2005/01/17 20:18:21 kattemat Exp $
  */
 
 
@@ -183,7 +183,7 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
 void
 olsr_time_out_mprs_set()
 {
-  struct mpr_selector *mprs, *mprs_to_delete;
+  struct mpr_selector *mprs;
 
   mprs = mprs_list.next;
 
@@ -193,7 +193,7 @@ olsr_time_out_mprs_set()
       if(TIMED_OUT(mprs->MS_time))
 	{
 	  /* Dequeue */
-	  mprs_to_delete = mprs;
+	  struct mpr_selector *mprs_to_delete = mprs;
 	  mprs = mprs->next;
 
 	  olsr_printf(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&mprs_to_delete->MS_main_addr));

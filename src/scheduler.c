@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.23 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: scheduler.c,v 1.24 2005/01/17 20:18:22 kattemat Exp $
  */
 
 
@@ -91,20 +91,15 @@ scheduler()
   struct tms tms_buf;
  
   pollrate = olsr_cnf->pollrate;
-
   interval_usec = (olsr_u32_t)(pollrate * 1000000);
 
   interval.tv_sec = interval_usec / 1000000;
   interval.tv_usec = interval_usec % 1000000;
 
   olsr_printf(1, "Scheduler started - polling every %0.2f seconds\n", pollrate);
-
   olsr_printf(3, "Max jitter is %f\n\n", max_jitter);
 
-
-
   /* Main scheduler event loop */
-
   for(;;)
     {
 
@@ -149,13 +144,11 @@ scheduler()
         {
 	  olsr_printf(3, "ANSN UPDATED %d\n\n", ansn);
 	  ansn++;
-#warning changes is set to OLSR_FALSE in scheduler now
           changes = OLSR_FALSE;
 	}
 
 
       /* Check scheduled events */
-
       entry = event_functions;
 
       /* UPDATED - resets timer upon triggered execution */

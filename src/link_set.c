@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.39 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: link_set.c,v 1.40 2005/01/17 20:18:20 kattemat Exp $
  */
 
 
@@ -168,8 +168,6 @@ static int
 get_neighbor_status(union olsr_ip_addr *address)
 {
   union olsr_ip_addr *main_addr;
-  struct addresses   *aliases;
-  struct link_entry  *link;
   struct interface   *ifs;
 
   //printf("GET_NEIGHBOR_STATUS\n");
@@ -183,6 +181,9 @@ get_neighbor_status(union olsr_ip_addr *address)
   /* Loop trough local interfaces to check all possebilities */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
+      struct addresses   *aliases;
+      struct link_entry  *link;
+
       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
       //printf("%s : ", olsr_ip_to_string(main_addr)); 
       if((link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
@@ -226,8 +227,6 @@ union olsr_ip_addr *
 get_neighbor_nexthop(union olsr_ip_addr *address)
 {
   union olsr_ip_addr *main_addr;
-  struct addresses   *aliases;
-  struct link_entry  *link;
   struct interface   *ifs;
 
   //printf("GET_NEIGHBOR_NEXTHOP\n");
@@ -241,6 +240,8 @@ get_neighbor_nexthop(union olsr_ip_addr *address)
   /* Loop trough local interfaces to check all possebilities */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
+      struct addresses   *aliases;
+      struct link_entry  *link;
       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
       //printf("%s : ", olsr_ip_to_string(main_addr)); 
       if((link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
@@ -298,8 +299,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
 {
   struct link_entry *tmp_link_set;
   union olsr_ip_addr *remote_addr;
-  struct interface *if_to_use, *tmp_if, *backup_if;
-  float link_quality, backup_link_quality, curr;
+  struct interface *if_to_use, *backup_if;
+  float link_quality, backup_link_quality;
 
   if_to_use = NULL;
   backup_if = NULL;
@@ -321,6 +322,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
   
   while(tmp_link_set)
     {
+      struct interface *tmp_if;
+      float curr;
       //printf("Checking %s vs ", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr));
       //printf("%s\n", olsr_ip_to_string(addr));
       
@@ -706,7 +709,7 @@ int
 replace_neighbor_link_set(struct neighbor_entry *old,
 			  struct neighbor_entry *new)
 {
-  struct link_entry *tmp_link_set, *last_link_entry;
+  struct link_entry *tmp_link_set;
   int retval;
 
   retval = 0;
@@ -715,7 +718,6 @@ replace_neighbor_link_set(struct neighbor_entry *old,
     return retval;
       
   tmp_link_set = link_set;
-  last_link_entry = NULL;
 
   while(tmp_link_set)
     {
@@ -744,14 +746,13 @@ replace_neighbor_link_set(struct neighbor_entry *old,
 static int
 check_link_status(struct hello_message *message)
 {
-
   struct hello_neighbor  *neighbors;
-  struct interface *ifd;
 
   neighbors = message->neighbors;
   
   while(neighbors!=NULL)
     {  
+      struct interface *ifd;
       //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&neighbors->address));
       //printf("against %s\n",olsr_ip_to_string(&main_addr));
 
@@ -852,7 +853,6 @@ olsr_time_out_hysteresis()
 {
 
   struct link_entry *tmp_link_set;
-  int status;
 
   if(link_set == NULL)
     return;
@@ -863,6 +863,8 @@ olsr_time_out_hysteresis()
     {
       if(TIMED_OUT(tmp_link_set->hello_timeout))
 	{
+	  int status;
+
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
 	  olsr_printf(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
 	  /* Update hello_timeout - NO SLACK THIS TIME */
@@ -891,7 +893,6 @@ void olsr_print_link_set(void)
 {
   struct link_entry *walker;
   char *fstr;
-  float etx;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
               nowtm->tm_hour,
@@ -913,6 +914,8 @@ void olsr_print_link_set(void)
 
   for (walker = link_set; walker != NULL; walker = walker->next)
   {
+    float etx;
+
     if (walker->loss_link_quality < MIN_LINK_QUALITY ||
         walker->neigh_link_quality < MIN_LINK_QUALITY)
       etx = 0.0;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.h,v 1.10 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: hna_set.h,v 1.11 2005/01/17 20:18:20 kattemat Exp $
  */
 
 
@@ -72,38 +72,23 @@ size_t netmask_size;
 int
 olsr_init_hna_set(void);
 
-
 struct hna_net *
 olsr_lookup_hna_net(struct hna_net *, union olsr_ip_addr *, union hna_netmask *);
-
 
 struct hna_entry *
 olsr_lookup_hna_gw(union olsr_ip_addr *);
 
-
-
 struct hna_entry *
 olsr_add_hna_entry(union olsr_ip_addr *);
-
 
 struct hna_net *
 olsr_add_hna_net(struct hna_entry *, union olsr_ip_addr *, union hna_netmask *);
 
-
 void
 olsr_update_hna_entry(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *, float);
 
-
 void
 olsr_time_out_hna_set(void *);
-
-
-void
-delete_hna_net(struct hna_net *);
-
-
-void
-delete_hna_entry(struct hna_entry *);
 
 void
 olsr_print_hna_set(void);

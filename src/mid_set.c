@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.10 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: mid_set.c,v 1.11 2005/01/17 20:18:21 kattemat Exp $
  */
 
 #include "defs.h"
@@ -90,15 +90,9 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
 {
   struct mid_entry *tmp;
   struct addresses *tmp_adr;
-  struct neighbor_2_entry *tmp_2_neighbor;
   olsr_u32_t hash;
-  struct neighbor_entry *tmp_neigh, *real_neigh;
-
-  //olsr_printf(5, "TC: lookup entry\n");
 
   hash = olsr_hashing(m_addr);
-
-
 
   /* Check for registered entry */
   for(tmp = mid_set[hash].next;
@@ -142,13 +136,15 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
    * and delete duplicate neighbor entries. Redirect
    * link entries to the correct neighbor entry.
    *
-   *THIS OPTIMALIZATION IS NOT SPECIFIED IN RFC3626
+   *THIS OPTIMIZATION IS NOT SPECIFIED IN RFC3626
    */
 
   tmp_adr = alias;
 
   while(tmp_adr)
     {
+      struct neighbor_2_entry *tmp_2_neighbor;
+      struct neighbor_entry *tmp_neigh, *real_neigh;
 
       /* Delete possible 2 hop neighbor */
       if((tmp_2_neighbor = olsr_lookup_two_hop_neighbor_table_mid(&tmp_adr->address)) != NULL)
@@ -171,11 +167,8 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
 
 	  replace_neighbor_link_set(tmp_neigh, real_neigh);
 
-	  /* Delete the neighbor */
 	  /* Dequeue */
 	  DEQUEUE_ELEM(tmp_neigh);
-	  //tmp_neigh->prev->next = tmp_neigh->next;
-	  //tmp_neigh->next->prev = tmp_neigh->prev;
 	  /* Delete */
 	  free(tmp_neigh);
 
@@ -238,18 +231,16 @@ insert_mid_alias(union olsr_ip_addr *main_add, union olsr_ip_addr *alias, float 
 union olsr_ip_addr *
 mid_lookup_main_addr(union olsr_ip_addr *adr)
 {
-
-  struct mid_entry *tmp_list;
-  struct addresses *tmp_addr;
   int index;
-
 
   for(index=0;index<HASHSIZE;index++)
     {
-      tmp_list = mid_set[index].next;
+      struct mid_entry *tmp_list = mid_set[index].next;
       /*Traverse MID list*/
       while(tmp_list != &mid_set[index])
 	{
+	  struct addresses *tmp_addr;
+
 	  if(COMP_IP(&tmp_list->main_addr, adr))
 	    return NULL;
 
@@ -346,21 +337,19 @@ olsr_update_mid_table(union olsr_ip_addr *adr, float vtime)
 void
 olsr_time_out_mid_set(void *foo)
 {
-  struct mid_entry *tmp_list;
-  struct mid_entry *entry_to_delete;
   int index;
 
 
   for(index=0;index<HASHSIZE;index++)
     {
-      tmp_list = mid_set[index].next;
+      struct mid_entry *tmp_list = mid_set[index].next;
       /*Traverse MID list*/
       while(tmp_list != &mid_set[index])
 	{
 	  /*Check if the entry is timed out*/
 	  if(TIMED_OUT(tmp_list->ass_timer))
 	    {
-	      entry_to_delete = tmp_list;
+	      struct mid_entry *entry_to_delete = tmp_list;
 	      tmp_list = tmp_list->next;
 #ifdef DEBUG
 	      olsr_printf(1, "MID info for %s timed out.. deleting it\n", 
@@ -388,21 +377,18 @@ olsr_time_out_mid_set(void *foo)
 int
 mid_delete_node(struct mid_entry *entry)
 {
-  struct addresses *aliases, *tmp_aliases;
+  struct addresses *aliases;
 
   /* Free aliases */
   aliases = entry->aliases;
   while(aliases)
     {
-      tmp_aliases = aliases;
+      struct addresses *tmp_aliases = aliases;
       aliases = aliases->next;
       free(tmp_aliases);
     }
   /* Dequeue */
   DEQUEUE_ELEM(entry);
-  //entry->prev->next = entry->next;
-  //entry->next->prev = entry->prev;
-
   free(entry);
   
   return 0;
@@ -417,24 +403,21 @@ void
 olsr_print_mid_set()
 {
 
-  struct mid_entry *tmp_list;
-  struct addresses *tmp_addr;
   int index;
 
   olsr_printf(1, "mid set: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec);
 
   for(index=0;index<HASHSIZE;index++)
     {
-      tmp_list = mid_set[index].next;
+      struct mid_entry *tmp_list = mid_set[index].next;
       /*Traverse MID list*/
       for(tmp_list = mid_set[index].next;
 	  tmp_list != &mid_set[index];
 	  tmp_list = tmp_list->next)
 	{
-	  olsr_printf(1, "%s: ", olsr_ip_to_string(&tmp_list->main_addr));
-	  
-	  tmp_addr = tmp_list->aliases;
-	  
+	  struct addresses *tmp_addr = tmp_list->aliases;
+
+	  olsr_printf(1, "%s: ", olsr_ip_to_string(&tmp_list->main_addr));	  
 	  while(tmp_addr)
 	    {
 	      olsr_printf(1, " %s ", olsr_ip_to_string(&tmp_addr->address));

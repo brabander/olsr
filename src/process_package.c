@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.25 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: process_package.c,v 1.26 2005/01/17 20:18:21 kattemat Exp $
  */
 
 
@@ -339,26 +339,18 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
   struct mid_alias *tmp_adr;
   struct mid_message message;
 
-
   mid_chgestruct(&message, m);
-
-  /*
-  if(COMP_IP(&message.mid_origaddr, &main_addr))
-    {
-      goto forward;  
-    }
-  */
 
   if(!olsr_check_dup_table_proc(&message.mid_origaddr, 
 				message.mid_seqno))
     {
       goto forward;
     }
-  
+
+#ifdef DEBUG
   olsr_printf(5, "Processing MID from %s...\n", olsr_ip_to_string(&message.mid_origaddr));
-
+#endif
   tmp_adr = message.mid_addr;
-
 
   /*
    *      If the sender interface (NB: not originator) of this message
@@ -372,8 +364,6 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
       olsr_destroy_mid_message(&message);
       return;
     }
-
-
 
   /* Update the timeout of the MID */
   olsr_update_mid_table(&message.mid_origaddr, (float)message.vtime);
@@ -391,11 +381,7 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
       tmp_adr = tmp_adr->next;
     } 
   
-  /*Update topology if neccesary*/
-  //olsr_process_changes();
-
- forward:
-  
+ forward:  
   olsr_forward_message(m, 
 		       &message.mid_origaddr, 
 		       message.mid_seqno, 
@@ -425,18 +411,11 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
   struct hna_net_addr  *hna_tmp;
   struct  hna_message message;
 
-  //printf("Processing HNA\n");
+#ifdef DEBUG
+  olsr_printf(5, "Processing HNA\n");
+#endif
 
   hna_chgestruct(&message, m);
-  
-
-  /* Process message */	  
-  /*
-  if(COMP_IP(&message.originator, &main_addr)) 
-    {
-      goto forward;
-    }
-  */
 
   if(!olsr_check_dup_table_proc(&message.originator, 
 				message.packet_seq_number))
@@ -444,20 +423,13 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
       goto forward;
     }
 
-
-
-
   hna_tmp = message.hna_net;
-
-
 
   /*
    *      If the sender interface (NB: not originator) of this message
    *      is not in the symmetric 1-hop neighborhood of this node, the
    *      message MUST be discarded.
    */
-
-
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
       olsr_printf(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
@@ -471,9 +443,6 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
       
       hna_tmp = hna_tmp->next;
     }
-  
-  /*Update topology if neccesary*/
-  //olsr_process_changes();
 
  forward:
   olsr_forward_message(m, 
@@ -503,16 +472,14 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                                struct hello_message *message)
 {
   struct hello_neighbor        *message_neighbors;
-  struct neighbor_2_list_entry *two_hop_neighbor_yet;
-  struct neighbor_2_entry      *two_hop_neighbor;
-  union olsr_ip_addr           *neigh_addr;
-  struct neighbor_list_entry *walker;
-  struct link_entry *link;
 
   for(message_neighbors = message->neighbors;
       message_neighbors != NULL;
       message_neighbors = message_neighbors->next)
     {
+      union olsr_ip_addr      *neigh_addr;
+      struct neighbor_2_entry *two_hop_neighbor;
+
       /*
        *check all interfaces
        *so that we don't add ourselves to the
@@ -523,7 +490,6 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
         continue;
 
       /* Get the main address */
-
       neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
 
       if (neigh_addr != NULL)
@@ -532,13 +498,12 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
       if(((message_neighbors->status == SYM_NEIGH) ||
           (message_neighbors->status == MPR_NEIGH)))
         {
-          //printf("\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
-          //printf("\tMain addr: %s\n", olsr_ip_to_string(neigh_addr));
-	  
-          two_hop_neighbor_yet =
-            olsr_lookup_my_neighbors(neighbor,
-                                     &message_neighbors->address);
-
+	  struct neighbor_2_list_entry *two_hop_neighbor_yet =
+            olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+#ifdef DEBUG
+          olsr_printf(7, "\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
+          olsr_printf(7, "\tMain addr: %s\n", olsr_ip_to_string(neigh_addr));
+#endif
           if (two_hop_neighbor_yet != NULL)
             {
               /* Updating the holding time for this neighbor */
@@ -551,8 +516,11 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                 olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
               if (two_hop_neighbor == NULL)
                 {
-                  //printf("Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&message_neighbors->address)); 
-
+#ifdef DEBUG
+                  olsr_printf(5, 
+			      "Adding 2 hop neighbor %s\n\n", 
+			      olsr_ip_to_string(&message_neighbors->address)); 
+#endif
                   changes_neighborhood = OLSR_TRUE;
                   changes_topology = OLSR_TRUE;
 
@@ -591,8 +559,10 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
           if (olsr_cnf->lq_level > 0)
             {
-              link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
+	      struct neighbor_list_entry *walker;
+	      struct link_entry *link;
 
+              link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
               // loop through the one-hop neighbors that see this
               // two hop neighbour
 
