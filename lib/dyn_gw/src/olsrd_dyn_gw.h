@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.h,v 1.7 2004/11/30 16:52:15 kattemat Exp $
+ * $Id: olsrd_dyn_gw.h,v 1.8 2004/12/19 09:30:55 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_TEST
@@ -53,24 +53,12 @@
 union olsr_ip_addr gw_net;
 union hna_netmask gw_netmask;
 
-/* Timeout function to register with the sceduler */
+/* Timeout function to register with the scheduler */
 void
 olsr_timeout(void);
 
 
-/* Event function to register with the sceduler */
-void *
-olsr_event(void *foo);
-
-int
-check_gw(union olsr_ip_addr *, union hna_netmask *);
-
-int
-ping_is_possible(void);
-
-struct ping_list *
-add_to_ping_list(char *, struct ping_list *);
-
+/* Event function to register with the scheduler */
 void
 olsr_event_doing_hna(void);
 

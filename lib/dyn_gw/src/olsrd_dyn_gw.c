@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.9 2004/12/01 18:16:46 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.10 2004/12/19 09:30:55 kattemat Exp $
  */
 
 /*
@@ -56,20 +56,42 @@
 #include <pthread.h>
 #include <time.h>
 
+/* 
+ * internal variables and functions
+ */ 
 
-static int has_inet_gateway;
+static int gw_already_added;
 static int has_available_gw;
 
 /* set default interval, in case none is given in the config file */
-static int interval = 5;
+static int check_interval = 5;
 
 /* list to store the Ping IP addresses given in the config file */
 struct ping_list {
   char *ping_address;
   struct ping_list *next;
 };
+
+static struct ping_list *
+add_to_ping_list(char *, struct ping_list *);
+
 struct ping_list *the_ping_list = NULL;
 
+static void *
+looped_checks(void *foo);
+
+static int
+check_gw(union olsr_ip_addr *, union hna_netmask *);
+
+static int
+ping_is_possible(void);
+
+   
+     
+
+/**
+ * read config file parameters
+ */  
 int
 register_olsr_param(char *key, char *value)
 {
@@ -78,7 +100,7 @@ register_olsr_param(char *key, char *value)
   int retval = -1;
  
   if (!strcmp(key, "Interval")) {
-    if (sscanf(value, "%d", &interval) == 1) {
+    if (sscanf(value, "%d", &check_interval) == 1) {
       retval = 1;
     }
   }
@@ -92,26 +114,14 @@ register_olsr_param(char *key, char *value)
   return retval;
 }
 
-/* add the valid IPs to the head of the list */
-struct ping_list *
-add_to_ping_list(char *ping_address, struct ping_list *the_ping_list)
-{
-  struct ping_list *new = (struct ping_list *) malloc(sizeof(struct ping_list));
-  if(new == NULL)
-    {
-      fprintf(stderr, "DYN GW: Out of memory!\n");
-      exit(0);
-    }
-  new->ping_address = strdup(ping_address);
-  new->next = the_ping_list;
-  return new;
-}    
 
 /**
  *Do initialization here
+ * 
  *
  *This function is called by the my_init
  *function in uolsrd_plugin.c
+ *It is ran _after_ register_olsr_param
  */
 int
 olsr_plugin_init()
@@ -121,16 +131,17 @@ olsr_plugin_init()
   gw_net.v4 = INET_NET;
   gw_netmask.v4 = INET_PREFIX;
 
-  has_inet_gateway = 0;
+  gw_already_added = 0;
   has_available_gw = 0;
+
   
   /* Remove all local Inet HNA entries */
   while(remove_local_hna4_entry(&gw_net, &gw_netmask))
-    {
-      olsr_printf(1, "HNA Internet gateway deleted\n");
-    }
+  {
+    olsr_printf(1, "HNA Internet gateway deleted\n");
+  }
 
-  pthread_create(&ping_thread, NULL, olsr_event, NULL);
+  pthread_create(&ping_thread, NULL, looped_checks, NULL);
   
   /* Register the GW check */
   olsr_register_scheduler_event(&olsr_event_doing_hna, NULL, 3, 4, NULL);
@@ -167,19 +178,45 @@ plugin_io(int cmd, void *data, size_t size)
 
 
 
+/**
+ * Scheduled event to update the hna table,
+ * called from olsrd main thread to keep the hna table thread-safe
+ */
+void
+olsr_event_doing_hna()
+{
+  if (has_available_gw == 1 && gw_already_added == 0) {
+    olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
+    add_local_hna4_entry(&gw_net, &gw_netmask);
+    gw_already_added = 1;
+  } else if ((has_available_gw == 0) && (gw_already_added == 1)) {
+    /* Remove all local Inet HNA entries */
+    while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
+      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
+    }
+    gw_already_added = 0;
+  }
+}
+  
+
+
+
+
+
+
 
 /**
  * the threaded function which happens within an endless loop,
  * reiterated every "Interval" sec (as given in the config or 
  * the default value)
  */
-void *
-olsr_event(void *foo)
+static void *
+looped_checks(void *foo)
 {
   for(;;) {
     struct timespec remainder_spec;
     /* the time to wait in "Interval" sec (see connfig), default=5sec */
-    struct timespec sleeptime_spec  = {(time_t) interval, 0L };
+    struct timespec sleeptime_spec  = {(time_t) check_interval, 0L };
 
     /* check for gw in table entry and if Ping IPs are given also do pings */
     has_available_gw = check_gw(&gw_net, &gw_netmask);
@@ -190,7 +227,7 @@ olsr_event(void *foo)
 }
 
 
-int
+static int
 check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
 {
     char buff[1024], iface[16];
@@ -266,7 +303,7 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
     return retval;
 }
 
-int
+static int
 ping_is_possible() 
 {
   struct ping_list *list;
@@ -284,24 +321,18 @@ ping_is_possible()
   return 0;
 }
 
-/**
- * Scheduled event to update the hna table,
- * called from olsrd main thread to keep the hna table thread-safe
- */
-void
-olsr_event_doing_hna()
+/* add the valid IPs to the head of the list */
+static struct ping_list *
+add_to_ping_list(char *ping_address, struct ping_list *the_ping_list)
 {
-  if (has_available_gw == 1 && has_inet_gateway == 0) {
-    olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
-    add_local_hna4_entry(&gw_net, &gw_netmask);
-    has_inet_gateway = 1;
-  } else if ((has_available_gw == 0) && (has_inet_gateway == 1)) {
-    /* Remove all local Inet HNA entries */
-    while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
-      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
-    }
-    has_inet_gateway = 0;
+  struct ping_list *new = (struct ping_list *) malloc(sizeof(struct ping_list));
+  if(new == NULL)
+  {
+    fprintf(stderr, "DYN GW: Out of memory!\n");
+    exit(0);
   }
-}
-  
+  new->ping_address = strdup(ping_address);
+  new->next = the_ping_list;
+  return new;
+}    
 
