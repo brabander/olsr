@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.16 2004/12/19 15:48:47 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.17 2004/12/19 17:03:14 kattemat Exp $
  */
 
 /*
@@ -57,6 +57,10 @@
 
 #define DEFAULT_TCP_PORT 8080
 
+#define HTML_BUFSIZE 1024*50
+
+#define FRAMEWIDTH 800
+
 static int
 get_http_socket(int);
 
@@ -67,7 +71,7 @@ int
 build_http_header(http_header_type, olsr_u32_t, char *, olsr_u32_t);
 
 static int
-build_frame(char *, char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
+build_frame(char *, char *, int, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
 
 int
 build_routes_body(char *, olsr_u32_t);
@@ -178,11 +182,11 @@ parse_http_request(int fd)
   socklen_t addrlen;
   char *addr;  
   char req[MAX_HTTPREQ_SIZE];
-  static char body[1024*50];
+  static char body[HTML_BUFSIZE];
   char req_type[11];
   char filename[251];
   char http_version[11];
-  int c = 0, r = 1;
+  int c = 0, r = 1, size = 0;
 
   addrlen = sizeof(struct sockaddr_in);
 
@@ -249,28 +253,59 @@ parse_http_request(int fd)
       int i = 0;
       while(http_ok_head[i])
           {
-              strcat(body, http_ok_head[i]);
+              size += sprintf(&body[size], http_ok_head[i]);
               i++;
           }
       printf("\n\n");
       /* All is good */
 
-      build_frame("Status", "status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
-      build_frame("Current Routes", "routes", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_routes_body);
-      build_frame("Links and Neighbors", "neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
-      build_frame("Topology", "topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
-      build_frame("HNA", "hna", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
-      build_frame("MID", "mid", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
+      size += build_frame("Status", 
+			  "status", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_status_body);
+      size += build_frame("Current Routes", 
+			  "routes", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_routes_body);
+      size += build_frame("Links and Neighbors", 
+			  "neighbors", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_neigh_body);
+      size += build_frame("Topology", 
+			  "topology", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_topo_body);
+      size += build_frame("HNA", 
+			  "hna", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_hna_body);
+      size += build_frame("MID", 
+			  "mid", 
+			  FRAMEWIDTH, 
+			  &body[size], 
+			  HTML_BUFSIZE - size, 
+			  &build_mid_body);
+
 
       i = 0;
       while(http_ok_tail[i])
           {
-              strcat(body, http_ok_tail[i]);
+              size += sprintf(&body[size], http_ok_tail[i]);
               i++;
           }
 
 
-      c = build_http_header(HTTP_OK, strlen(body), req, MAX_HTTPREQ_SIZE);
+      c = build_http_header(HTTP_OK, size, req, MAX_HTTPREQ_SIZE);
     }
   
   r = send(client_sockets[curr_clients], req, c, 0);   
@@ -280,7 +315,7 @@ parse_http_request(int fd)
       goto close_connection;
     }
 
-  r = send(client_sockets[curr_clients], body, strlen(body), 0);
+  r = send(client_sockets[curr_clients], body, size, 0);
   if(r < 0)
     {
       printf("(HTTPINFO) Failed sending data to client!\n");
@@ -326,11 +361,7 @@ build_http_header(http_header_type type, olsr_u32_t size, char *buf, olsr_u32_t 
     }
   
   /* Server version */
-  strcat(buf, "Server: ");
-  strcat(buf, PLUGIN_NAME " ");
-  strcat(buf, PLUGIN_VERSION " ");
-  strcat(buf, HTTP_VERSION);
-  strcat(buf, "\r\n");
+  strcat(buf, "Server: " PLUGIN_NAME " " PLUGIN_VERSION " " HTTP_VERSION "\r\n");
 
   /* connection-type */
   strcat(buf,"Connection: closed\r\n");
@@ -389,11 +420,16 @@ plugin_io(int cmd, void *data, size_t size)
 
 
 static int
-build_frame(char *title, char *link, char *buf, olsr_u32_t bufsize, int(*frame_body_cb)(char *, olsr_u32_t))
+build_frame(char *title, 
+	    char *link, 
+	    int width,
+	    char *buf,
+	    olsr_u32_t bufsize, 
+	    int(*frame_body_cb)(char *, olsr_u32_t))
 {
   int i = 0, size = 0;
 
-  size += sprintf(&buf[size], http_frame[i++]);
+  size += sprintf(&buf[size], http_frame[i++], width);
   size += sprintf(&buf[size], http_frame[i++], link, title);
 
   while(http_frame[i])
@@ -408,6 +444,7 @@ build_frame(char *title, char *link, char *buf, olsr_u32_t bufsize, int(*frame_b
 
   return size;
 }
+
 
 
 int
@@ -493,7 +530,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "<hr><table width=790 border=0>\n<tr>");
 
-    size += sprintf(&buf[size], "<td>Main address: %s</td>\n", olsr_ip_to_string(main_addr));
+    size += sprintf(&buf[size], "<td>Main address: <b>%s</b></td>\n", olsr_ip_to_string(main_addr));
     
     size += sprintf(&buf[size], "<td>IP version: %d</td>\n", cfg->ip_version == AF_INET ? 4 : 6);
 

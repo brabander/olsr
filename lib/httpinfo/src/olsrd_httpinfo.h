@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.13 2004/12/19 15:48:47 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.14 2004/12/19 17:03:15 kattemat Exp $
  */
 
 /*
@@ -72,7 +72,7 @@ static const char *http_ok_head[] =
   "<!--\n",
   "A {text-decoration: none}\n",
   "TH{text-align: left}\n",
-  "H1, H2, H3, TD, TH, B {font-family: Helvetica; font-size: 80%}\n",
+  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%}\n",
   "-->\n",
   "</STYLE>\n\n",
   "</HEAD>\n",
@@ -137,7 +137,7 @@ static const char *http_ok_tail[] =
 
 static const char *http_frame[] =
 {
-  "<P>\n<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
+  "<P>\n<TABLE WIDTH=%d CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
   "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left><a name=\"%s\">%s</a></TH>\n",
   "</TR><TR BGCOLOR=\"#ECECEC\">\n",
   "<TD>\n",
@@ -148,6 +148,7 @@ static const char *http_frame[] =
   "</TABLE>\n",
   NULL
 };
+
 
 
 typedef enum
