@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.15 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: tc_set.c,v 1.16 2004/11/30 07:48:52 kattemat Exp $
  */
 
 
@@ -406,6 +406,8 @@ olsr_time_out_tc_set()
 
 		  /* Delete */
 		  free(dst_to_delete);
+
+		  changes_topology = OLSR_TRUE;
 
 		}
 	      else
