@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
+ * $Id: net.c,v 1.12 2004/09/22 20:57:50 kattemat Exp $
  *
  */
 
@@ -34,7 +34,7 @@ void
 WinSockPError(char *);
 #endif
 
-
+#warning HEAPS of changes in net.c!!!
 
 static char out_buffer[MAXMESSAGESIZE+1];
 static char fwd_buffer[MAXMESSAGESIZE+1];
@@ -46,16 +46,14 @@ int outputsize = 0;         /* current size of the output buffer */
 int fwdsize = 0;         /* current size of the forward buffer */
 
 
-/* Max OLSR packet size */
-
-static int maxmessagesize = MAXMESSAGESIZE - OLSR_HEADERSIZE;
+/* Default max OLSR packet size */
+static int maxmessagesize = MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE;
 
 
 void
 init_net()
 {
   ptf_list = NULL;
-  maxmessagesize = MAXMESSAGESIZE - OLSR_HEADERSIZE;
 
   return;
 }
@@ -64,12 +62,13 @@ int
 net_set_maxmsgsize(olsr_u16_t new_size)
 {
 
-  if(new_size > (MAXMESSAGESIZE - OLSR_HEADERSIZE))
+  if(new_size > (MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
     return -1;
 
   else
     maxmessagesize = new_size;
 
+  olsr_printf(1, "Not outputbuffer maxsize set to %d\n", maxmessagesize);
   return maxmessagesize;
 }
 
@@ -172,7 +171,6 @@ net_output(struct interface *ifp)
   /* Add the Packet seqno */
   outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
-#warning 0.4.8 net_output now sets packetsize itself
   outmsg->v4.olsr_packlen = htons(outputsize);
 
   if(ipversion == AF_INET)
@@ -354,7 +352,6 @@ net_forward()
       /* Add the Packet seqno */
       fwdmsg->v4.olsr_seqno = htons(ifn->olsr_seqnum++);
       /* Set the packetlength */
-#warning 0.4.8 net_forward now sets packetsize itself
       fwdmsg->v4.olsr_packlen = htons(fwdsize);
 
       if(ipversion == AF_INET)

@@ -1,5 +1,22 @@
 This file states changes as of version 0.2.4:
 
+0.4.8 ---------------------------------------------------------------------
+
+CODE REWRITES
+
+Much of the message generation and net output code is rewritten.
+PUGIN DEVELOPERS must note that the buffers and size variables
+used in net output is no longer directly accessible!
+
+DYNAMIC NET OUTPUT BUFFER SIZE
+
+The outputbuffer is now dynamically set to the smallest MTU
+(minus UDP/IP headers) of any interface in use. This causes
+the buffer to be larger than before in most situation, which
+again means that one can stack even more messages in the same
+OLSR package.
+
+
 0.4.7 ---------------------------------------------------------------------
 
 NATIVE WINDOWS GUI AND INSTALLER

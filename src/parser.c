@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: parser.c,v 1.7 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: parser.c,v 1.8 2004/09/22 20:57:50 kattemat Exp $
  *
  */
 
@@ -42,6 +42,12 @@
 #undef strerror
 #define strerror(x) StrError(x)
 #endif
+
+
+/* The outputbuffer on neighbornodes
+ * will never exceed MAXMESSAGESIZE
+ */
+static char inbuf[MAXMESSAGESIZE+1];
 
 
 /**
@@ -137,11 +143,6 @@ olsr_input(int fd)
   int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
-  union
-  {
-    char	buf[MAXMESSAGESIZE+1];
-    struct	olsr olsr;
-  } inbuf;
 
 
   for (;;) 
@@ -149,7 +150,7 @@ olsr_input(int fd)
       fromlen = sizeof(struct sockaddr_storage);
 
       cc = recvfrom(fd, 
-		    (char *)&inbuf, 
+		    inbuf, 
 		    sizeof (inbuf), 
 		    0, 
 		    (struct sockaddr *)&from, 
@@ -208,7 +209,7 @@ olsr_input(int fd)
        * &inbuf.olsr 
        * cc - bytes read
        */
-      parse_packet(&inbuf.olsr, cc, olsr_in_if, &from_addr);
+      parse_packet((struct olsr *)inbuf, cc, olsr_in_if, &from_addr);
     
     }
 }

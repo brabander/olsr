@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: ifnet.c,v 1.7 2004/09/22 20:57:50 kattemat Exp $
  *
  */
 
@@ -124,7 +124,7 @@ chk_if_changed(struct if_name *iface)
   struct interface *ifp, *tmp_ifp;
   struct ifreq ifr;
   struct sockaddr_in6 tmp_saddr6;
-  int if_changes;
+  int if_changes, smallest_mtu;
   struct ifchgf *tmp_ifchgf_list;
   if_changes = 0;
 
@@ -189,6 +189,21 @@ chk_if_changed(struct if_name *iface)
 
   /* Set interface metric */
   ifp->int_metric = ifp->is_wireless;
+
+  /* Get MTU */
+  if (ioctl(ioctl_s, SIOCGIFMTU, &ifr) < 0)
+    ifp->int_mtu = 0;
+  else
+    {
+      if(ifp->int_mtu != ifr.ifr_mtu)
+	{
+	  ifp->int_mtu = ifr.ifr_mtu;
+	  /* Update outputbuffer if needed */
+	  if(net_get_maxmsgsize() > (ifp->int_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
+	    net_set_maxmsgsize(ifp->int_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
+	}
+    }
+
 
   /* Get interface index */
   ifp->if_index = if_nametoindex(ifr.ifr_name);
@@ -386,12 +401,30 @@ chk_if_changed(struct if_name *iface)
 	}
       tmp_ifp->int_next = ifp->int_next;
     }
+
+
+  /* Recalculate output buffersize */
+  /* find the smallest MTU */
+  if(ifnet)
+    {
+      tmp_ifp = ifnet;
+      smallest_mtu = 100000; /* start with a large value */
+      while(tmp_ifp)
+	{
+	  smallest_mtu = smallest_mtu > tmp_ifp->int_mtu ? tmp_ifp->int_mtu : smallest_mtu;
+	  tmp_ifp = tmp_ifp->int_next;
+	}
+      /* Update outputbuffer if needed */
+      if(net_get_maxmsgsize() > (smallest_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
+	net_set_maxmsgsize(smallest_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
+    }
+
   /* Check main addr */
   if(COMP_IP(&main_addr, &ifp->ip_addr))
     {
       if(ifnet == NULL)
 	{
-	  /* No more interface */
+	  /* No more interfaces */
 	  memset(&main_addr, 0, ipsize);
 	  olsr_printf(1, "No more interfaces...\n");
 	}
@@ -577,8 +610,21 @@ chk_if_up(struct if_name *iface, int debuglvl)
   /* setting the interfaces number*/
   ifs.if_nr = iface->index;
 
+
+  /* Get MTU */
+  if (ioctl(ioctl_s, SIOCGIFMTU, &ifr) < 0)
+    ifs.int_mtu = 0;
+  else
+    {
+      ifs.int_mtu = ifr.ifr_mtu;
+      /* Update outputbuffer if needed */
+      if(net_get_maxmsgsize() > (ifs.int_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
+	net_set_maxmsgsize(ifs.int_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
+    }
+  olsr_printf(1, "\tMTU: %d\n", ifs.int_mtu);
+
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
-  olsr_printf(1, "Interface %s set up for use with index %d\n", iface->name, ifs.if_nr);
+  olsr_printf(1, "\tInterface %s set up for use with index %d\n", iface->name, ifs.if_nr);
 
   if(ipversion == AF_INET)
     {

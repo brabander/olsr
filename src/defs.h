@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.11 2004/09/22 17:00:28 kattemat Exp $
+ * $Id: defs.h,v 1.12 2004/09/22 20:57:50 kattemat Exp $
  *
  */
 
@@ -50,7 +50,8 @@
 #define SOFTWARE_VERSION "olsr.org - " VERSION
 
 #define	HOPCNT_MAX		16	/* maximum hops number */
-#define	MAXMESSAGESIZE		512	/* max broadcast size */
+#define	MAXMESSAGESIZE		1500	/* max broadcast size */
+#define UDP_IP_HDRSIZE          28
 
 #define OLSR_SELECT_TIMEOUT     2       /* The timeout for the main select loop */
 /* Debug helper macro */
