@@ -28,16 +28,22 @@ LRESULT CALLBACK TrayIconProc( HWND, UINT, WPARAM, LPARAM lParam )
 
 void TrayIcon::displayPopup()
 {
-	HMENU hMenu = CreatePopupMenu();
-	hMenu = LoadMenu(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_TRAYMENU));
+	HMENU hMenu = LoadMenu(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_TRAYMENU));
+	HMENU hSubMenu = GetSubMenu(hMenu, 0);
+
+	EnableMenuItem(hSubMenu, IDM_STOP,
+		MF_BYCOMMAND | (main_dlg.m_StopButton.IsWindowEnabled() ? MF_ENABLED : MF_GRAYED));
 	
+	EnableMenuItem(hSubMenu, IDM_START,
+		MF_BYCOMMAND | (main_dlg.m_StartButton.IsWindowEnabled() ? MF_ENABLED : MF_GRAYED));
+
 	POINT pt;
 	
 	GetCursorPos(&pt);
 	
 	SetForegroundWindow( s_hWnd );
 	
-	int cmd = TrackPopupMenu(GetSubMenu(hMenu, 0),
+	int cmd = TrackPopupMenu(hSubMenu,
 		TPM_RIGHTBUTTON | TPM_RETURNCMD, 
 		pt.x, 
 		pt.y, 
@@ -55,18 +61,21 @@ void TrayIcon::displayPopup()
 		
 	case IDM_WINDOW:
 		main_dlg.OpenIcon();
+		main_dlg.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 		break;
 
 	case IDM_SETTINGS:
 		main_dlg.m_TabCtrl.SetCurSel(0);
 		main_dlg.m_TabCtrl.DisplayTabDialog();
 		main_dlg.OpenIcon();
+		main_dlg.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 		break;
 		
 	case IDM_OUTPUT:
 		main_dlg.m_TabCtrl.SetCurSel(1);
 		main_dlg.m_TabCtrl.DisplayTabDialog();
 		main_dlg.OpenIcon();
+		main_dlg.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 		break;
 		
 	case IDM_STOP:
