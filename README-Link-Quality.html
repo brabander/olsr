@@ -23,7 +23,7 @@
     <H2>olsrd Link Quality Extensions</H2>
 
     <P>
-      $Id: README-Link-Quality.html,v 1.2 2005/02/15 18:19:36 tlopatic Exp $
+      $Id: README-Link-Quality.html,v 1.3 2005/02/15 18:22:19 tlopatic Exp $
     </P>
 
     <H3>Credits</H3>
@@ -240,6 +240,8 @@
 
     <H4>New Configuration Parameters</H4>
 
+    <H5>LinkQualityLevel</H5>
+
     <P>
       Let's now have a look at how we would use the link quality
       extensions. The configuration parameter that controls link
@@ -294,6 +296,8 @@
       also mess up your routing!
     </P>
 
+    <H5>LinkQualityWinSize</H5>
+
     <P>
       The second configuration parameter related to link quality is
       <EM>LinkQualityWinSize</EM>. When determining the packet loss of
@@ -315,6 +319,8 @@
       in the link quality are accounted for relatively fast. For
       longer intervals just increase this value.
     </P>
+
+    <H5>LinkQualityMult</H5>
 
     <P>
       Version 0.4.9 supports a third configuration parameter,
