@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.24 2005/01/17 20:18:22 kattemat Exp $
+ * $Id: scheduler.c,v 1.25 2005/02/19 17:43:28 kattemat Exp $
  */
 
 
@@ -142,8 +142,8 @@ scheduler()
       /* Check for changes in topology */
       if(changes)
         {
-	  olsr_printf(3, "ANSN UPDATED %d\n\n", ansn);
-	  ansn++;
+	  olsr_printf(3, "ANSN UPDATED %d\n\n", get_local_ansn());
+	  increase_local_ansn();
           changes = OLSR_FALSE;
 	}
 

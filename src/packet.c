@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.17 2005/02/17 21:36:30 kattemat Exp $
+ * $Id: packet.c,v 1.18 2005/02/19 17:43:28 kattemat Exp $
  */
 
 
@@ -353,7 +353,7 @@ olsr_build_tc_packet(struct tc_message *message)
  
   message->hop_count = 0;
   message->ttl = MAX_TTL;
-  message->ansn = ansn;
+  message->ansn = get_local_ansn();
 
   COPY_IP(&message->originator, &main_addr);
   COPY_IP(&message->source_addr, &main_addr);

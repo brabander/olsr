@@ -36,16 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.13 2005/02/12 22:32:42 kattemat Exp $
+ * $Id: routing_table.h,v 1.14 2005/02/19 17:43:28 kattemat Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
 #define _OLSR_ROUTING_TABLE
 
 #include <net/route.h>
-
 #include "hna_set.h"
-
 
 #define NETMASK_HOST 0xffffffff
 #define NETMASK_DEFAULT 0x0
@@ -91,6 +89,8 @@ union olsr_kernel_route
 };
 
 
+#ifndef OLSR_PLUGIN
+
 struct rt_entry routingtable[HASHSIZE];
 struct rt_entry hna_routes[HASHSIZE];
 
@@ -116,4 +116,5 @@ olsr_lookup_routing_table(union olsr_ip_addr *);
 void
 olsr_free_routing_table(struct rt_entry *);
 
+#endif
 #endif

@@ -36,8 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.34 2005/02/03 20:38:55 kattemat Exp $
+ * $Id: defs.h,v 1.35 2005/02/19 17:43:28 kattemat Exp $
  */
+
+#ifndef OLSR_PLUGIN
 
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
@@ -181,5 +183,5 @@ ipc_route_send_rtentry(union olsr_ip_addr*, union olsr_ip_addr *, int, int, char
 
 
 
-
+#endif
 #endif

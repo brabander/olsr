@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.h,v 1.12 2005/02/16 14:44:44 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.h,v 1.13 2005/02/19 17:43:28 kattemat Exp $
  */
 
 
@@ -71,8 +71,9 @@ struct neighbor_2_entry
   struct neighbor_2_entry    *next;
 };
 
-struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
+#ifndef OLSR_PLUGIN
 
+struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
 
 int
 olsr_init_two_hop_table(void);
@@ -95,5 +96,5 @@ olsr_lookup_two_hop_neighbor_table_mid(union olsr_ip_addr *);
 void
 olsr_print_two_hop_neighbor_table(void);
 
-
+#endif
 #endif

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.8 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: mpr_selector_set.h,v 1.9 2005/02/19 17:43:28 kattemat Exp $
  */
 
 
@@ -55,17 +55,19 @@ struct mpr_selector
 };
 
 
+#ifndef OLSR_PLUGIN
+
 /* MPR selector list */
 struct mpr_selector mprs_list;
 
-/* This nodes ansn */
-olsr_u16_t ansn;
-
-/* MPR selector counter */
-int mprs_count;
-
 /* Timer to send empty TCs */
 clock_t send_empty_tc;
+
+olsr_u16_t
+get_local_ansn(void);
+
+void
+increase_local_ansn(void);
 
 int
 olsr_init_mprs_set(void);
@@ -90,5 +92,5 @@ olsr_time_out_mprs_set(void);
 void
 olsr_print_mprs_set(void);
 
-
+#endif
 #endif

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.11 2005/02/17 21:36:30 kattemat Exp $
+ * $Id: lq_packet.c,v 1.12 2005/02/19 17:43:28 kattemat Exp $
  */
 
 #include "olsr_protocol.h"
@@ -160,7 +160,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   COPY_IP(&lq_tc->from, &main_addr);
 
-  lq_tc->ansn = ansn;
+  lq_tc->ansn = get_local_ansn();
 
   lq_tc->neigh = NULL;
  

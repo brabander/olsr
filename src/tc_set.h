@@ -36,14 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.11 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: tc_set.h,v 1.12 2005/02/19 17:43:28 kattemat Exp $
  */
-
-#include "defs.h"
 
 #ifndef _OLSR_TOP_SET
 #define _OLSR_TOP_SET
 
+#include "defs.h"
 #include "hashing.h"
 
 
@@ -70,6 +69,7 @@ struct tc_entry
 };
 
 
+#ifndef OLSR_PLUGIN
 
 /* Queue */
 struct tc_entry tc_table[HASHSIZE];
@@ -107,4 +107,5 @@ olsr_print_tc_table(void);
 void
 olsr_time_out_tc_set(void);
 
+#endif
 #endif

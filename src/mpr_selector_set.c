@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.10 2005/01/17 20:18:21 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.11 2005/02/19 17:43:28 kattemat Exp $
  */
 
 
@@ -44,6 +44,8 @@
 #include "mpr_selector_set.h"
 #include "olsr.h"
 #include "scheduler.h"
+
+static olsr_u16_t ansn;
 
 /**
  *Initialize MPR selector set
@@ -54,7 +56,6 @@ olsr_init_mprs_set()
 {
   olsr_printf(5, "MPRS: Init\n");
   /* Initial values */
-  mprs_count = 0;
   ansn = 0;
 
   olsr_register_timeout_function(&olsr_time_out_mprs_set);
@@ -66,6 +67,18 @@ olsr_init_mprs_set()
   return 1;
 }
 
+
+olsr_u16_t 
+get_local_ansn()
+{
+  return ansn;
+}
+
+void
+increase_local_ansn()
+{
+  ansn++;
+}
 
 /**
  *Add a MPR selector to the MPR selector set
@@ -81,8 +94,6 @@ olsr_add_mpr_selector(union olsr_ip_addr *addr, float vtime)
   struct mpr_selector *new_entry;
 
   olsr_printf(1, "MPRS: adding %s\n", olsr_ip_to_string(addr));
-
-  mprs_count++;
 
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
 
@@ -199,10 +210,6 @@ olsr_time_out_mprs_set()
 	  olsr_printf(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&mprs_to_delete->MS_main_addr));
 
 	  DEQUEUE_ELEM(mprs_to_delete);
-	  //mprs_to_delete->prev->next = mprs_to_delete->next;
-	  //mprs_to_delete->next->prev = mprs_to_delete->prev;
-
-	  mprs_count--;
 
 	  /* Delete entry */
 	  free(mprs_to_delete);
