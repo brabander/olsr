@@ -1,17 +1,18 @@
 
-UnikOLSR 0.4.7
+olsr.org OLSR daemon 0.4.8
 
-by Andreas Tonnesen(andreto@olsr.org)
+Andreas Tonnesen(andreto@olsr.org)
+Thomas Lopatic  (thomas@lopatic.de)
+
 http://www.olsr.org
 
-18.08.04
+nn.11.04
 
 
 1. OLSR RFC COMPLIANCE
 
-  This version is RFC2636 compliant to my knowledge!
-
-  The OLSR-RFC definitions can be found in the olsr_protocol header file.
+  Olsrd is RFC3626 compliant. Most RFC realted definitions can be found 
+  in the olsr_protocol header file.
 
 
 2. EXTENTIONS
@@ -38,13 +39,6 @@ http://www.olsr.org
   - IPC to GUI front-end. A gui front-end can connect to the daemon
     if started with the -ipc switch or set in the configfile.
 
-  - Gateway tunneling. This is not easly configurated! For testing purposes.
-    This functioning will be updated in a later version. Do not try to
-    use this except you are 100% sure you need it!!
-
-  - Optional deletion of default gateways when recieving a 0.0.0.0/0.0.0.0
-    gw(in HNA).
-
 
 3. COMPILING & INSTALLING
 
@@ -57,7 +51,7 @@ http://www.olsr.org
   These changes also go for the pluginmakefiles.
 
   To compile:
-  'make'
+  'make OS=targetos'
 
   To install(you must be root):
   'make install'
@@ -83,7 +77,7 @@ http://www.olsr.org
   Edit the configuration file to fit your needs.
 
   Options in the config file can also be overridden by command line 
-  options. See the manual page olsrd(8) for details.
+  options. See the manual pages olsrd(8) and olsrd.conf(5) for details.
 
   To run the daemon you MUST specify which interface(s) to use either in
   the config file or by using the -i option.
