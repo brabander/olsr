@@ -1,6 +1,8 @@
 #
 # UniK OLSR daemon config file
 #
+# This file was shipped with olsrd 0.4.6
+#
 # Lines starting with a # are discarded
 #
 
@@ -29,7 +31,14 @@ IPVERSION	4
 
 # A list of whitespace separated interface names
 
-INTERFACES	int65539
+#INTERFACES	if02
+
+# Should olsrd keep on running even if there are
+# no interfaces available? This is a good idea
+# for a PCMCIA/USB hotswap environment.
+# "yes" OR "no"
+
+ALLOW_NO_INT	yes
 
 
 # Olsrd plugins to load
@@ -42,7 +51,7 @@ INTERFACES	int65539
 #
 # ONE PLUGIN PR. LINE
 
-#LOAD_PLUGIN 	olsrd_secure.so.0.2
+#LOAD_PLUGIN 	olsrd_secure.so.0.3
 #LOAD_PLUGIN	olsrd_dyn_gw.so.0.1
 #LOAD_PLUGIN	olsrd_power.so.0.1
 
