@@ -45,7 +45,7 @@ SRCS=	src/olsrd_plugin.c src/olsrd_dot_draw.c
 OBJS=	src/olsrd_plugin.o src/olsrd_dot_draw.o
 
 #Headerfiles
-HDRS=	src/olsrd_plugin.h src/olsrd_dot_draw.h src/olsr_plugin_io.h
+HDRS=	src/olsrd_plugin.h src/olsrd_dot_draw.h
 
 plugin: $(OBJS)
 	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \

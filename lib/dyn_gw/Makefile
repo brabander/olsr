@@ -50,7 +50,7 @@ SRCS=	src/olsrd_plugin.c src/olsrd_dyn_gw.c
 OBJS=	src/olsrd_plugin.o src/olsrd_dyn_gw.o
 
 #Headerfiles
-HDRS=	src/olsrd_plugin.h src/olsrd_dyn_gw.h src/olsr_plugin_io.h
+HDRS=	src/olsrd_plugin.h src/olsrd_dyn_gw.h
 
 plugin: $(OBJS)
 	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \
