@@ -39,7 +39,7 @@ CFLAGS ?= -g -O2 -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes
 LDFLAGS ?= -g -fPIC -shared
 LIBS ?= -lc -lm
 INSTALL_LIB = 	install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
-		/sbin/ldconfig $(LIBDIR)
+		/sbin/ldconfig
 all:		plugin
 else
 all: 	help
