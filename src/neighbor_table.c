@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.12 2004/11/10 11:54:28 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.13 2004/11/10 15:09:27 tlopatic Exp $
  *
  */
 
@@ -503,7 +503,7 @@ olsr_print_neighbor_table()
           total_lq = best_lq * inv_best_lq;
 
           olsr_printf(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
-                      best_lq, inv_best_lq, total_lq,
+                      inv_best_lq, best_lq, total_lq,
                       (neigh->status == SYM) ? "SYM" : "   ",
                       neigh->is_mpr ? "MPR" : "   ",
                       neigh->willingness);
