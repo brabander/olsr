@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.14 2004/11/21 14:22:33 kattemat Exp $
+ * $Id: plugin.c,v 1.15 2004/12/18 00:19:32 kattemat Exp $
  */
 
 
@@ -52,6 +52,7 @@
 #include "local_hna_set.h"
 #include "socket_parser.h"
 #include "neighbor_table.h"
+#include "link_set.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "hna_set.h"
@@ -121,9 +122,12 @@ olsr_plugin_io(int cmd, void *data, size_t size)
      case(GETD__MID_SET):
       *((struct mid_entry **)data) = mid_set;
       break;
-
+     case(GETD__LINK_SET):
+      *((struct link_entry **)data) = link_set;
+      break;
+      
       /* Function fetching */
-
+      
     case(GETF__OLSR_PRINTF):
       ptr = &olsr_printf;
       memcpy(data, &ptr, size);
