@@ -54,7 +54,6 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
 # ADD LINK32 ws2_32.lib iphlpapi.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Release/Switch.exe" /libpath:"C:\Program Files\Microsoft SDK\lib"
-# SUBTRACT LINK32 /pdbtype:<none>
 
 !ELSEIF  "$(CFG)" == "Frontend - Win32 Debug"
 
@@ -229,5 +228,9 @@ SOURCE=.\res\Frontend.ico
 SOURCE=.\res\Frontend.rc2
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\Switch.exe.manifest
+# End Source File
 # End Target
 # End Project

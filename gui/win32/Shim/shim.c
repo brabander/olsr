@@ -32,6 +32,7 @@ void EntryPoint(void)
 	char NewCmdLine[MAX_PATH + 500];
 	HANDLE Handles[2];
 	unsigned long Res;
+	int Quotes;
 
 	Handles[0] = OpenEvent(EVENT_ALL_ACCESS, FALSE, "TheOlsrdShimEvent");
 
@@ -43,8 +44,18 @@ void EntryPoint(void)
 
 	CmdLine = GetCommandLine();
 
-	while (*CmdLine != 0 && *CmdLine != 32)
+	Quotes = 0;
+	
+	while (*CmdLine != 0)
+	{
+		if (*CmdLine == '"')
+			Quotes = !Quotes;
+
+		else if (*CmdLine == ' ' && !Quotes)
+			break;
+
 		CmdLine++;
+	}
 
 	if (*CmdLine == 0)
 	{
