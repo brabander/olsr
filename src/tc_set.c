@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.20 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: tc_set.c,v 1.21 2005/02/26 23:01:41 kattemat Exp $
  */
 
 
@@ -57,7 +57,7 @@ olsr_init_tc()
  
   changes = OLSR_FALSE;
 
-  olsr_printf(5, "TC: init topo\n");
+  OLSR_PRINTF(5, "TC: init topo\n")
 
   olsr_register_timeout_function(&olsr_time_out_tc_set);
 
@@ -84,7 +84,7 @@ int
 olsr_tc_delete_entry_if_empty(struct tc_entry *entry)
 {
 
-  //olsr_printf(1, "TC: del entry if empty\n");
+  //OLSR_PRINTF(1, "TC: del entry if empty\n")
 
   if(entry->destinations.next == &entry->destinations)
     {
@@ -92,7 +92,7 @@ olsr_tc_delete_entry_if_empty(struct tc_entry *entry)
       DEQUEUE_ELEM(entry);
       //entry->prev->next = entry->next;
       //entry->next->prev = entry->prev;
-      olsr_printf(1, "TC-SET: Deleting empty entry %s ->\n", olsr_ip_to_string(&entry->T_last_addr));
+      OLSR_PRINTF(1, "TC-SET: Deleting empty entry %s ->\n", olsr_ip_to_string(&entry->T_last_addr))
       free(entry);
       return 1;
     }
@@ -116,7 +116,7 @@ olsr_lookup_tc_entry(union olsr_ip_addr *adr)
   struct tc_entry *entries;
   olsr_u32_t hash;
 
-  //olsr_printf(1, "TC: lookup entry\n");
+  //OLSR_PRINTF(1, "TC: lookup entry\n")
 
   hash = olsr_hashing(adr);
 
@@ -147,7 +147,7 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
   struct tc_entry *new_entry;
   olsr_u32_t hash;
 
-  olsr_printf(1, "TC: adding entry %s\n", olsr_ip_to_string(adr));
+  OLSR_PRINTF(1, "TC: adding entry %s\n", olsr_ip_to_string(adr))
 
   hash = olsr_hashing(adr);
 
@@ -187,7 +187,7 @@ olsr_tc_delete_mprs(struct tc_entry *entry, struct tc_message *msg)
   struct topo_dst *tmp_dsts, *dst_to_del;
   int retval;
 
-  //olsr_printf(5, "TC: deleting MPRS\n");
+  //OLSR_PRINTF(5, "TC: deleting MPRS\n")
 
   tmp_dsts = entry->destinations.next;
   retval = 0;
@@ -233,7 +233,7 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
   struct topo_dst *new_topo_dst, *existing_dst;
   int retval;
 
-  //olsr_printf(1, "TC: update MPRS\n");
+  //OLSR_PRINTF(1, "TC: update MPRS\n")
 
   retval = 0;
 
@@ -342,7 +342,7 @@ olsr_tc_lookup_dst(struct tc_entry *entry, union olsr_ip_addr *dst_addr)
 {
   struct topo_dst *dsts;
   
-  //olsr_printf(1, "TC: lookup dst\n");
+  //OLSR_PRINTF(1, "TC: lookup dst\n")
 
   for(dsts = entry->destinations.next; 
       dsts != &entry->destinations; 
@@ -427,21 +427,21 @@ olsr_print_tc_table()
   char *fstr;
   float etx;
   
-  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
+  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              now.tv_usec / 10000);
+              (int)now.tv_usec / 10000)
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "Source IP addr   Dest IP addr     LQ     ILQ    ETX\n");
+    OLSR_PRINTF(1, "Source IP addr   Dest IP addr     LQ     ILQ    ETX\n")
     fstr = "%-15s  %-15s  %5.3f  %5.3f  %.2f\n";
   }
 
   else
   {
-    olsr_printf(1, "Source IP addr                Dest IP addr                    LQ     ILQ    ETX\n");
+    OLSR_PRINTF(1, "Source IP addr                Dest IP addr                    LQ     ILQ    ETX\n")
     fstr = "%-30s%-30s  %5.3f  %5.3f  %.2f\n";
   }
 
@@ -463,10 +463,10 @@ olsr_print_tc_table()
           etx = 1.0 / (dst_entry->link_quality *
                        dst_entry->inverse_link_quality);
 
-        olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
+        OLSR_PRINTF(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
                     olsr_ip_to_string(&dst_entry->T_dest_addr),
                     dst_entry->link_quality, dst_entry->inverse_link_quality,
-                    etx);
+                    etx)
 
         dst_entry = dst_entry->next;
       }

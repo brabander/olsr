@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.63 2005/02/25 16:03:47 kattemat Exp $
+ * $Id: main.c,v 1.64 2005/02/26 23:01:41 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -95,6 +95,7 @@ main(int argc, char *argv[])
   char conf_file_name[FILENAME_MAX];
   struct tms tms_buf;
 
+  debug_handle = stdout;
   olsr_argv = argv;
 
 #ifdef WIN32
@@ -491,7 +492,7 @@ main(int argc, char *argv[])
     {
       if(apm_init() < 0)
 	{
-	  olsr_printf(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+	  OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT)
 
 	  olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
@@ -502,21 +503,21 @@ main(int argc, char *argv[])
 	{
 	  olsr_cnf->willingness = olsr_calculate_willingness();
 
-	  olsr_printf(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, will_int);
+	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, will_int)
 	}
     }
 
   /* Set ipsize and minimum packetsize */
   if(olsr_cnf->ip_version == AF_INET6)
     {
-      olsr_printf(1, "Using IP version 6\n");
+      OLSR_PRINTF(1, "Using IP version 6\n")
       ipsize = sizeof(struct in6_addr);
 
       minsize = (int)sizeof(olsr_u8_t) * 7; /* Minimum packetsize IPv6 */
     }
   else
     {
-      olsr_printf(1, "Using IP version 4\n");
+      OLSR_PRINTF(1, "Using IP version 4\n")
       ipsize = sizeof(olsr_u32_t);
 
       minsize = (int)sizeof(olsr_u8_t) * 4; /* Minimum packetsize IPv4 */
@@ -571,7 +572,7 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-  olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
+  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr))
 
 
   /* Start syslog entry */
@@ -644,11 +645,11 @@ olsr_shutdown(int signal)
 {
   struct interface *ifn;
 
-  olsr_printf(1, "Received signal %d - shutting down\n", signal);
+  OLSR_PRINTF(1, "Received signal %d - shutting down\n", signal)
 
   olsr_delete_all_kernel_routes();
 
-  olsr_printf(1, "Closing sockets...\n");
+  OLSR_PRINTF(1, "Closing sockets...\n")
 
   /* front-end IPC socket */
   if(olsr_cnf->open_ipc)
@@ -674,7 +675,7 @@ olsr_shutdown(int signal)
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", SOFTWARE_VERSION);
 
-  olsr_printf(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION);
+  OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION)
 
   exit(exit_value);
 }

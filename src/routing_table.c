@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.18 2005/02/23 18:53:05 kattemat Exp $
+ * $Id: routing_table.c,v 1.19 2005/02/26 23:01:41 kattemat Exp $
  */
 
 
@@ -222,7 +222,7 @@ olsr_fill_routing_table_with_neighbors()
   olsr_u8_t              index;
 
 #ifdef DEBUG
-  olsr_printf(7, "FILL ROUTING TABLE WITH NEIGHBORS\n");
+  OLSR_PRINTF(7, "FILL ROUTING TABLE WITH NEIGHBORS\n")
 #endif
 
   for(index=0;index<HASHSIZE;index++)
@@ -251,7 +251,7 @@ olsr_fill_routing_table_with_neighbors()
 		{
 		  struct link_entry *link = get_best_link_to_neighbor(&addrs2->alias);
 #ifdef DEBUG
-		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias));
+		  OLSR_PRINTF(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias))
 #endif
 		  if(link)
 		    {
@@ -344,15 +344,15 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 	      if(olsr_lookup_routing_table(n2_addr))
 		{
 #ifdef DEBUG
-		  olsr_printf(7, "2hop: %s already added\n", olsr_ip_to_string(n2_addr));
+		  OLSR_PRINTF(7, "2hop: %s already added\n", olsr_ip_to_string(n2_addr))
 #endif
 		  continue;
 		}	    
 
 	      if(!two_hop_neighbor_reachable(neigh_2_list))
 		{
-		  olsr_printf(1, "Two hop neighbor %s not added - no one hop neighbors.\n",
-			      olsr_ip_to_string(n2_addr));
+		  OLSR_PRINTF(1, "Two hop neighbor %s not added - no one hop neighbors.\n",
+			      olsr_ip_to_string(n2_addr))
 		  continue;
 		}
 
@@ -364,7 +364,7 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 		{
 		  struct link_entry *link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
 #ifdef DEBUG
-		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrsp->alias));
+		  OLSR_PRINTF(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrsp->alias))
 #endif
 		  if(link)
 		    {
@@ -460,8 +460,8 @@ olsr_calculate_routing_table()
 			{
 			  /* PRINT OUT: Last Hop to Final Destination */
 			  /* The function ip_to_string has to be seperately */
-			  olsr_printf(3, "%s -> ", olsr_ip_to_string(&list_destination_n->destination->rt_dst));
-			  olsr_printf(3, "%s\n", olsr_ip_to_string(&tmp_addrsp->alias));
+			  OLSR_PRINTF(3, "%s -> ", olsr_ip_to_string(&list_destination_n->destination->rt_dst))
+			  OLSR_PRINTF(3, "%s\n", olsr_ip_to_string(&tmp_addrsp->alias))
 			  
 			  destination_n_1 = olsr_malloc(sizeof(struct destination_n), 
 							"Calculate routing table 2");
@@ -611,7 +611,7 @@ olsr_calculate_hna_routes()
   olsr_u32_t index;
 
 #ifdef DEBUG
-  olsr_printf(3, "Calculating HNA routes\n");
+  OLSR_PRINTF(3, "Calculating HNA routes\n")
 #endif
 
   olsr_move_route_table(hna_routes, old_hna);
@@ -700,7 +700,7 @@ olsr_calculate_hna_routes()
 
   if(olsr_cnf->debug_level > 2)
     {
-      olsr_printf(3, "HNA table:\n");
+      OLSR_PRINTF(3, "HNA table:\n")
       olsr_print_routing_table(hna_routes);
     }
 
@@ -736,7 +736,6 @@ olsr_print_routing_table(struct rt_entry *table)
 	  printf("%s\n", olsr_ip_to_string(&destination->rt_router));
 	}
     }
-  fflush(stdout);
 }
 
 

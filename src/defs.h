@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.37 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: defs.h,v 1.38 2005/02/26 23:01:40 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -80,6 +80,18 @@
 #define olsr_debug(lvl,format,args...) \
    olsr_printf(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
    olsr_printf(lvl, format, ##args);
+#endif
+
+FILE *debug_handle;
+
+#ifdef NO_DEBUG
+#define OLSR_PRINTF(lvl, format, args...)
+#else
+#define OLSR_PRINTF(lvl, format, args...) \
+   { \
+     if((olsr_cnf->debug_level >= lvl) && debug_handle) \
+        fprintf(debug_handle, format, ##args); \
+   }
 #endif
 
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.53 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: link_set.c,v 1.54 2005/02/26 23:01:41 kattemat Exp $
  */
 
 
@@ -143,7 +143,7 @@ lookup_link_status(struct link_entry *entry)
       if(entry->L_link_pending == 1)
 	{
 #ifdef DEBUG
-	  olsr_printf(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&entry->neighbor_iface_addr));
+	  OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&entry->neighbor_iface_addr))
 #endif
 	  return HIDE_LINK;
 	}
@@ -409,7 +409,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
    */
 
 #ifdef DEBUG
-  olsr_printf(3, "Adding %s to link set\n", olsr_ip_to_string(remote));
+  OLSR_PRINTF(3, "Adding %s to link set\n", olsr_ip_to_string(remote))
 #endif
 
   /* a new tuple is created with... */
@@ -487,7 +487,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
     {
       neighbor = olsr_insert_neighbor_table(remote_main);
 #ifdef DEBUG
-      olsr_printf(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(remote_main));
+      OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(remote_main))
 #endif
     }
 
@@ -508,8 +508,8 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
        * We'll go for one that is hopefully long
        * enough in most cases. 20 seconds
        */
-      olsr_printf(1, "Adding MID alias main %s ", olsr_ip_to_string(remote_main));
-      olsr_printf(1, "-> %s based on HELLO\n\n", olsr_ip_to_string(remote));
+      OLSR_PRINTF(1, "Adding MID alias main %s ", olsr_ip_to_string(remote_main))
+      OLSR_PRINTF(1, "-> %s based on HELLO\n\n", olsr_ip_to_string(remote))
       insert_mid_alias(remote_main, remote, 20.0);
     }
 
@@ -817,7 +817,7 @@ olsr_time_out_hysteresis()
 	  int status;
 
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
-	  olsr_printf(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
+	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality)
 	  /* Update hello_timeout - NO SLACK THIS TIME */
 	  tmp_link_set->hello_timeout = GET_TIMESTAMP(tmp_link_set->last_htime*1000);
 	  /* Recalculate status */
@@ -845,21 +845,21 @@ void olsr_print_link_set(void)
   struct link_entry *walker;
   char *fstr;
 
-  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
+  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              now.tv_usec/10000);
+              (int)now.tv_usec/10000)
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ    ETX\n");
+    OLSR_PRINTF(1, "IP address       hyst   LQ     lost   total  NLQ    ETX\n")
     fstr = "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n";
   }
 
   else
   {
-    olsr_printf(1, "IP address                               hyst   LQ     lost   total  NLQ    ETX\n");
+    OLSR_PRINTF(1, "IP address                               hyst   LQ     lost   total  NLQ    ETX\n")
     fstr = "%-39s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n";
   }
 
@@ -874,10 +874,10 @@ void olsr_print_link_set(void)
     else
       etx = 1.0 / (walker->loss_link_quality * walker->neigh_link_quality);
 
-    olsr_printf(1, fstr, olsr_ip_to_string(&walker->neighbor_iface_addr),
+    OLSR_PRINTF(1, fstr, olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
 		walker->lost_packets, walker->total_packets,
-		walker->neigh_link_quality, etx);
+		walker->neigh_link_quality, etx)
   }
 }
 

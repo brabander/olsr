@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.20 2005/02/14 18:25:03 tlopatic Exp $
+ * $Id: process_routes.c,v 1.21 2005/02/26 23:01:41 kattemat Exp $
  */
 
 
@@ -165,17 +165,17 @@ olsr_delete_all_kernel_routes()
   struct destination_n *tmp = NULL;
   union olsr_ip_addr *tmp_addr;
 
-  olsr_printf(1, "Deleting all routes...\n");
+  OLSR_PRINTF(1, "Deleting all routes...\n")
 
   delete_kernel_list = olsr_build_update_list(hna_routes, old_hna);
 
   tmp = delete_kernel_list;
 
-  olsr_printf(1, "HNA list:\n");
+  OLSR_PRINTF(1, "HNA list:\n")
   while(tmp)
     {
       tmp_addr = &tmp->destination->rt_dst;
-      olsr_printf(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr));
+      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr))
       tmp = tmp->next;
     }
 
@@ -185,11 +185,11 @@ olsr_delete_all_kernel_routes()
 
   tmp = delete_kernel_list;
 
-  olsr_printf(1, "Route list:\n");
+  OLSR_PRINTF(1, "Route list:\n")
   while(tmp)
     {
       tmp_addr = &tmp->destination->rt_dst;
-      olsr_printf(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr));
+      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr))
       tmp = tmp->next;
     }
 
@@ -211,7 +211,7 @@ olsr_update_kernel_routes()
   struct destination_n *delete_kernel_list = NULL;
   struct destination_n *add_kernel_list = NULL;
   
-  olsr_printf(3, "Updating kernel routes...\n");
+  OLSR_PRINTF(3, "Updating kernel routes...\n")
   delete_kernel_list = olsr_build_update_list(old_routes, routingtable);
   add_kernel_list = olsr_build_update_list(routingtable, old_routes);
 
@@ -234,7 +234,7 @@ olsr_update_kernel_hna_routes()
   //struct destination_n *delete_kernel_list2;
   struct destination_n *add_kernel_list = NULL;
 
-  olsr_printf(3, "Updating kernel HNA routes...\n");
+  OLSR_PRINTF(3, "Updating kernel HNA routes...\n")
 
 
   delete_kernel_list = olsr_build_update_list(old_hna, hna_routes);
@@ -305,8 +305,8 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 	metric_counter = destination_ptr->destination->rt_metric;
     }
 #ifdef DEBUG
-  olsr_printf(3, "%s highest metric %d\n",
-	      __func__, metric_counter);
+  OLSR_PRINTF(3, "%s highest metric %d\n",
+	      __func__, metric_counter)
 #endif
  
   while(delete_kernel_list!=NULL)
@@ -324,9 +324,9 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 	    {
 	      olsr_16_t error;
 #ifdef DEBUG
-	      olsr_printf(3, "Deleting route to %s hopcount %d\n",
+	      OLSR_PRINTF(3, "Deleting route to %s hopcount %d\n",
 			  olsr_ip_to_string(&destination_ptr->destination->rt_dst),
-			  destination_ptr->destination->rt_metric);
+			  destination_ptr->destination->rt_metric)
 #endif
 	      
 	      if(olsr_cnf->ip_version == AF_INET)
@@ -336,7 +336,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 	      
 	      if(error < 0)
 		{
-		  olsr_printf(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno));
+		  OLSR_PRINTF(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno))
 		  olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
 		}
 	      
@@ -403,9 +403,9 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	      /* First add all 1-hop routes that has themselves as GW */
 
 #ifdef DEBUG
-	      olsr_printf(3, "Adding route to %s hopcount %d\n",
+	      OLSR_PRINTF(3, "Adding route to %s hopcount %d\n",
 			  olsr_ip_to_string(&destination_kernel->destination->rt_dst),
-			  destination_kernel->destination->rt_metric);
+			  destination_kernel->destination->rt_metric)
 #endif
 			  
 	      if(olsr_cnf->ip_version == AF_INET)
@@ -415,7 +415,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	      
 	      if(error < 0)
 		{
-		  olsr_printf(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno));
+		  OLSR_PRINTF(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno))
 		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
 		}
 	      

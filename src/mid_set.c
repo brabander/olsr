@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.13 2005/02/12 22:14:27 kattemat Exp $
+ * $Id: mid_set.c,v 1.14 2005/02/26 23:01:41 kattemat Exp $
  */
 
 #include "defs.h"
@@ -57,7 +57,7 @@ olsr_init_mid_set()
 {
   int index;
 
-  olsr_printf(5, "MID: init\n");
+  OLSR_PRINTF(5, "MID: init\n")
 
   /* Since the holdingtime is assumed to be rather large for 
    * MID entries, the timeoutfunction is only ran once every second
@@ -151,8 +151,8 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
       /* Delete possible 2 hop neighbor */
       if((tmp_2_neighbor = olsr_lookup_two_hop_neighbor_table_mid(&tmp_adr->alias)) != NULL)
 	{
-	  olsr_printf(1, "Deleting 2 hop node from MID: %s to ", olsr_ip_to_string(&tmp_adr->alias));
-	  olsr_printf(1, "%s\n", olsr_ip_to_string(m_addr));
+	  OLSR_PRINTF(1, "Deleting 2 hop node from MID: %s to ", olsr_ip_to_string(&tmp_adr->alias))
+	  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(m_addr))
 
 	  olsr_delete_two_hop_neighbor_table(tmp_2_neighbor);
 
@@ -164,8 +164,8 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
 	 && ((real_neigh = olsr_lookup_neighbor_table_alias(m_addr)) != NULL))
 
 	{
-	  olsr_printf(1, "[MID]Deleting bogus neighbor entry %s real ", olsr_ip_to_string(&tmp_adr->alias));
-	  olsr_printf(1, "%s\n", olsr_ip_to_string(m_addr));
+	  OLSR_PRINTF(1, "[MID]Deleting bogus neighbor entry %s real ", olsr_ip_to_string(&tmp_adr->alias))
+	  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(m_addr))
 
 	  replace_neighbor_link_set(tmp_neigh, real_neigh);
 
@@ -202,8 +202,8 @@ insert_mid_alias(union olsr_ip_addr *main_add, union olsr_ip_addr *alias, float 
 
   adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
   
-  olsr_printf(1, "Inserting alias %s for ", olsr_ip_to_string(alias));
-  olsr_printf(1, "%s\n", olsr_ip_to_string(main_add));
+  OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(alias))
+  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(main_add))
 
   COPY_IP(&adr->alias, alias);
   adr->next_alias = NULL;
@@ -265,7 +265,7 @@ mid_lookup_aliases(union olsr_ip_addr *adr)
   struct mid_entry *tmp_list;
   olsr_u32_t hash;
 
-  //olsr_printf(1, "MID: lookup entry...");
+  //OLSR_PRINTF(1, "MID: lookup entry...")
 
   hash = olsr_hashing(adr);
 
@@ -296,7 +296,7 @@ olsr_update_mid_table(union olsr_ip_addr *adr, float vtime)
   struct mid_entry *tmp_list = mid_set;
   olsr_u32_t hash;
 
-  olsr_printf(3, "MID: update %s\n", olsr_ip_to_string(adr));
+  OLSR_PRINTF(3, "MID: update %s\n", olsr_ip_to_string(adr))
   hash = olsr_hashing(adr);
 
   /* Check all registered nodes...*/
@@ -341,8 +341,8 @@ olsr_time_out_mid_set(void *foo)
 	      struct mid_entry *entry_to_delete = tmp_list;
 	      tmp_list = tmp_list->next;
 #ifdef DEBUG
-	      olsr_printf(1, "MID info for %s timed out.. deleting it\n", 
-			  olsr_ip_to_string(&entry_to_delete->main_addr));
+	      OLSR_PRINTF(1, "MID info for %s timed out.. deleting it\n", 
+			  olsr_ip_to_string(&entry_to_delete->main_addr))
 #endif
 	      /*Delete it*/
 	      mid_delete_node(entry_to_delete);
@@ -395,7 +395,7 @@ olsr_print_mid_set()
 
   int index;
 
-  olsr_printf(1, "mid set: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec);
+  OLSR_PRINTF(1, "mid set: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec)
 
   for(index=0;index<HASHSIZE;index++)
     {
@@ -407,14 +407,13 @@ olsr_print_mid_set()
 	{
 	  struct mid_address *tmp_addr = tmp_list->aliases;
 
-	  olsr_printf(1, "%s: ", olsr_ip_to_string(&tmp_list->main_addr));	  
+	  OLSR_PRINTF(1, "%s: ", olsr_ip_to_string(&tmp_list->main_addr))
 	  while(tmp_addr)
 	    {
-	      olsr_printf(1, " %s ", olsr_ip_to_string(&tmp_addr->alias));
+	      OLSR_PRINTF(1, " %s ", olsr_ip_to_string(&tmp_addr->alias))
 	      tmp_addr = tmp_addr->next_alias;
 	    }
-	  olsr_printf(1, "\n");
-	  
+	  OLSR_PRINTF(1, "\n")	  
 	}
     }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.26 2005/02/20 18:52:19 kattemat Exp $
+ * $Id: scheduler.c,v 1.27 2005/02/26 23:01:41 kattemat Exp $
  */
 
 
@@ -100,8 +100,8 @@ scheduler()
   interval.tv_sec = interval_usec / 1000000;
   interval.tv_usec = interval_usec % 1000000;
 
-  olsr_printf(1, "Scheduler started - polling every %0.2f seconds\n", pollrate);
-  olsr_printf(3, "Max jitter is %f\n\n", max_jitter);
+  OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n", pollrate)
+  OLSR_PRINTF(3, "Max jitter is %f\n\n", max_jitter)
 
   /* Main scheduler event loop */
   for(;;)
@@ -146,7 +146,7 @@ scheduler()
       /* Check for changes in topology */
       if(changes)
         {
-	  olsr_printf(3, "ANSN UPDATED %d\n\n", get_local_ansn());
+	  OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn())
 	  increase_local_ansn();
           changes = OLSR_FALSE;
 	}
@@ -177,7 +177,7 @@ scheduler()
 	      if(entry->trigger != NULL)
 		*(entry->trigger) = 0;
 	      
-	      //olsr_printf(3, "Since_last jitter: %0.2f\n", entry->since_last);
+	      //OLSR_PRINTF(3, "Since_last jitter: %0.2f\n", entry->since_last)
 
 	    }
 
@@ -243,7 +243,7 @@ olsr_register_scheduler_event(void (*event_function)(void *),
 {
   struct event_entry *new_entry;
 
-  olsr_printf(3, "Scheduler event registered int: %0.2f\n", interval);
+  OLSR_PRINTF(3, "Scheduler event registered int: %0.2f\n", interval)
 
   /* check that this entry is not added already */
   new_entry = event_functions;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.40 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: olsr.c,v 1.41 2005/02/26 23:01:41 kattemat Exp $
  */
 
 /**
@@ -104,7 +104,7 @@ register_pcf(int (*f)(int, int, int))
 {
   struct pcf *new_pcf;
 
-  olsr_printf(1, "Registering pcf function\n");
+  OLSR_PRINTF(1, "Registering pcf function\n")
 
   new_pcf = olsr_malloc(sizeof(struct pcf), "New PCF");
 
@@ -130,11 +130,11 @@ olsr_process_changes()
 
 #ifdef DEBUG
   if(changes_neighborhood)
-    olsr_printf(3, "CHANGES IN NEIGHBORHOOD\n");
+    OLSR_PRINTF(3, "CHANGES IN NEIGHBORHOOD\n")
   if(changes_topology)
-    olsr_printf(3, "CHANGES IN TOPOLOGY\n");
+    OLSR_PRINTF(3, "CHANGES IN TOPOLOGY\n")
   if(changes_hna)
-    olsr_printf(3, "CHANGES IN HNA\n");  
+    OLSR_PRINTF(3, "CHANGES IN HNA\n")
 #endif
   
   if(!changes_neighborhood &&
@@ -319,7 +319,7 @@ olsr_forward_message(union olsr_message *m,
   if(!olsr_check_dup_table_fwd(originator, seqno, &in_if->ip_addr))
     {
 #ifdef DEBUG
-      olsr_printf(3, "Message already forwarded!\n");
+      OLSR_PRINTF(3, "Message already forwarded!\n")
 #endif
       return 0;
     }
@@ -343,7 +343,7 @@ olsr_forward_message(union olsr_message *m,
   if(olsr_lookup_mprs_set(src) == NULL)
     {
 #ifdef DEBUG
-      olsr_printf(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(src));
+      OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(src))
 #endif
       return 0;
     }
@@ -390,7 +390,7 @@ olsr_forward_message(union olsr_message *m,
 	      
 	      if(net_outbuffer_push(ifn, (olsr_u8_t *)m, msgsize) != msgsize)
 		{
-		  olsr_printf(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+		  OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize)
 		  olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
 		}
 
@@ -404,7 +404,7 @@ olsr_forward_message(union olsr_message *m,
 	  
 	  if(net_outbuffer_push(ifn, (olsr_u8_t *)m, msgsize) != msgsize)
 	    {
-	      olsr_printf(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+	      OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize)
 	      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
 	    }
 	}
@@ -450,7 +450,7 @@ olsr_update_willingness(void *foo)
 
   if(tmp_will != olsr_cnf->willingness)
     {
-      olsr_printf(1, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
+      OLSR_PRINTF(1, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness)
     }
 }
 
@@ -502,7 +502,7 @@ olsr_calculate_willingness()
 void
 olsr_exit(const char *msg, int val)
 {
-  olsr_printf(1, "OLSR EXIT: %s\n", msg);
+  OLSR_PRINTF(1, "OLSR EXIT: %s\n", msg)
   olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
   fflush(stdout);
   exit_value = val;
@@ -527,7 +527,7 @@ olsr_malloc(size_t size, const char *id)
 
   if((ptr = malloc(size)) == 0) 
     {
-      olsr_printf(1, "OUT OF MEMORY: %s\n", strerror(errno));
+      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", strerror(errno))
       olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
       olsr_exit((char *)id, EXIT_FAILURE);
     }
@@ -546,11 +546,11 @@ olsr_printf(int loglevel, char *format, ...)
 {
   va_list arglist;
 
-  if(loglevel <= olsr_cnf->debug_level)
+  if((loglevel <= olsr_cnf->debug_level) && debug_handle)
     {
       va_start(arglist, format);
       
-      vprintf(format, arglist);
+      vfprintf(debug_handle, format, arglist);
       
       va_end(arglist);
     }
