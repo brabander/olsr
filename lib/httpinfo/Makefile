@@ -55,10 +55,12 @@ endif
 CFLAGS += $(PLUGINFLAGS)
 
 #Sourcefiles
-SRCS=	src/olsrd_plugin.c src/olsrd_httpinfo.c src/admin_interface.c
+SRCS=	src/olsrd_plugin.c src/olsrd_httpinfo.c src/admin_interface.c \
+	../../src/cfgparser/cfgfile_gen.c
 
 #Objectfiles
-OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o src/admin_interface.o
+OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o src/admin_interface.o \
+	../../src/cfgparser/cfgfile_gen.o
 
 #Headerfiles
 HDRS=	src/olsrd_plugin.h src/olsrd_httpinfo.h \

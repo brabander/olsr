@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.47 2005/02/21 19:33:51 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.48 2005/03/14 21:28:16 kattemat Exp $
  */
 
 /*
@@ -84,7 +84,7 @@ static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, A
 
 #define DEFAULT_TCP_PORT 8080
 
-#define HTML_BUFSIZE 1024*50
+#define HTML_BUFSIZE 1024*25
 
 #define FRAMEWIDTH 800
 
@@ -99,6 +99,7 @@ struct tab_entry
   char *tab_label;
   char *filename;
   int(*build_body_cb)(char *, olsr_u32_t);
+  olsr_bool display_tab;
 };
 
 struct static_bin_file_entry
@@ -162,6 +163,8 @@ build_all_body(char *, olsr_u32_t);
 int
 build_about_body(char *, olsr_u32_t);
 
+int
+build_cfgfile_body(char *, olsr_u32_t);
 
 
 char *
@@ -183,14 +186,15 @@ static int http_socket;
 
 struct tab_entry tab_entries[] =
   {
-    {"Configuration", "config", build_config_body},
-    {"Routes", "routes", build_routes_body},
-    {"Links/Topology", "nodes", build_nodes_body},
-    {"All", "all", build_all_body},
+    {"Configuration", "config", build_config_body, OLSR_TRUE},
+    {"Routes", "routes", build_routes_body, OLSR_TRUE},
+    {"Links/Topology", "nodes", build_nodes_body, OLSR_TRUE},
+    {"All", "all", build_all_body, OLSR_TRUE},
 #ifdef ADMIN_INTERFACE
-    {"Admin", "admin", build_admin_body},
+    {"Admin", "admin", build_admin_body, OLSR_TRUE},
 #endif
-    {"About", "about", build_about_body},
+    {"About", "about", build_about_body, OLSR_TRUE},
+    {"FOO", "cfgfile", build_cfgfile_body, OLSR_FALSE},
     {NULL, NULL, NULL}
   };
 
@@ -607,8 +611,11 @@ build_tabs(char *buf, int active)
 
   i++;
 
-  while(tab_entries[tabs].tab_label)
+  for(tabs = 0; tab_entries[tabs].tab_label; tabs++)
     {
+      if(!tab_entries[tabs].display_tab)
+	continue;
+
       if(tabs == active)
 	size += sprintf(&buf[size], 
 			html_tabs[i], 
@@ -621,7 +628,6 @@ build_tabs(char *buf, int active)
 			tab_entries[tabs].filename, 
 			" ", 
 			tab_entries[tabs].tab_label);
-      tabs++;
     }
   
   i++;      
@@ -766,7 +772,9 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     else
       size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
 
-      size += sprintf(&buf[size], "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+    size += sprintf(&buf[size], "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+
+    size += sprintf(&buf[size], "Click <a href=\"/cfgfile\">here</a> to <i>generate a configuration file for this node</i>.\n");
 
     size += sprintf(&buf[size], "<h2>Variables</h2>\n");
 
@@ -1158,6 +1166,34 @@ build_about_body(char *buf, olsr_u32_t bufsize)
       size += sprintf(&buf[size], about_frame[i]);
       i++;
     }
+  return size;
+}
+
+int
+build_cfgfile_body(char *buf, olsr_u32_t bufsize)
+{
+  int size = 0, i = 0;
+
+  while(cfgfile_body[i] && strcmp(cfgfile_body[i], "<!-- CFGFILE -->"))
+    {
+      size += sprintf(&buf[size], cfgfile_body[i]);
+      i++;
+    }
+
+  size += olsrd_write_cnf_buf(cfg, &buf[size], bufsize-size);
+  
+  if(size < 0)
+    {
+      size = sprintf(&buf[0], "ERROR GENERATING CONFIGFILE!\n");
+    }
+
+  i++;
+  while(cfgfile_body[i])
+    {
+      size += sprintf(&buf[size], cfgfile_body[i]);
+      i++;
+    }
+ 
   return size;
 }
 

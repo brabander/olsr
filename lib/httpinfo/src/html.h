@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.5 2005/02/21 19:33:48 kattemat Exp $
+ * $Id: html.h,v 1.6 2005/03/14 21:28:15 kattemat Exp $
  */
 
 /*
@@ -137,6 +137,18 @@ static const char *http_ok_tail[] =
     "</center>\n",
     "</div>\n",
     "</body></html>\n",
+    NULL
+};
+
+static const char *cfgfile_body[] =
+{
+    "\n\n",
+    "<b>This is a automatically generated configuration\n",
+    "file based on the current olsrd configuration of this node.<br>\n",
+    "<hr>\n",
+    "<pre>\n",
+    "<!-- CFGFILE -->",
+    "</pre>\n<hr>\n",
     NULL
 };
 

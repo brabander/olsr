@@ -1,12 +1,23 @@
 HTTP MINI-SERVER PLUGIN FOR OLSRD 0.1
 by Andreas Tønnesen(andreto@olsr.org)
 
+-----------------------------------------------------
+
  ABOUT
 
 This plugin implements a tiny HTTP server that
 will gespond to a GET request by returning a HTML
 formatted page contanin various information about
 the currently running olsrd process.
+This information includes detailed link status for
+all links and neighbors, all olsrd routes in the 
+kernel, local configuration, uptime and more. The
+plugin can also generate a olsrd configfile based
+on current running configuration.
+In adittion an experimental administrtion interface
+is available.
+
+-----------------------------------------------------
 
  PARAMETERS
 
@@ -38,6 +49,8 @@ and 80.23.53.22 and the networks 10.0.0.0/8 and
 192.168.0.0/16.
 access is always allowed from 127.0.0.1(localhost).
 
+-----------------------------------------------------
+
  EXPERIMENTAL ADMIN INTERFACE
 
 The plugin can be compiled with a experimental 
@@ -45,6 +58,8 @@ adminitrator interface. This is a web page that will
 let the user change olsrd settings in realtime.
 To compile with this feature pass ADMIN_INTERFACE=1
 as an argument to make(eg. make ADMIN_INTERFACE=1)
+
+-----------------------------------------------------
 
 NOTE!
 This plugin is very olsrd version sensitive. This means
