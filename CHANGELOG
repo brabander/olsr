@@ -1,7 +1,14 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.13 2004/11/12 21:24:55 kattemat Exp $
+$Id: CHANGELOG,v 1.14 2004/11/21 14:41:05 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
+
+LICENSE CHANGE
+
+Olsrd is now distributed under a BSD style license. We belive olsrd will
+be better off using this license as it opens up for commercial players
+to use olsrd freely in their products. In the end this will lead to
+this kind of users doing serious testing and bugfixing of olsrd. 
 
 NO MORE THREADS
 
