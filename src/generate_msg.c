@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.7 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: generate_msg.c,v 1.8 2004/09/25 21:52:27 kattemat Exp $
  *
  */
 
@@ -303,8 +303,10 @@ generate_tc()
       olsr_build_tc_packet(&tcpacket);
       tc_build(&tcpacket, ifn);
 
-      if(net_output_pending(ifn))
-	net_output(ifn);
+      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+	{
+	  set_buffer_timer(ifn);
+	}
     }
 }
 
@@ -319,8 +321,11 @@ generate_mid()
     {
       //printf("\nSending MID seq: %i\n", ifn->seqnums.mid_seqnum);
       mid_build(ifn);
-      if(net_output_pending(ifn))
-	net_output(ifn);
+
+      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+	{
+	  set_buffer_timer(ifn);
+	}
     }
 
 return;
@@ -338,8 +343,10 @@ generate_hna()
     { 
       hna_build(ifn);
       
-      if(net_output_pending(ifn))
-	net_output(ifn);
+      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+	{
+	  set_buffer_timer(ifn);
+	}
     }
   return;
 }

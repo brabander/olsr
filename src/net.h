@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.9 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: net.h,v 1.10 2004/09/25 21:52:27 kattemat Exp $
  *
  */
 
@@ -34,8 +34,6 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-
-#define MAX_IFS          32
 
 /* Packet transform functions */
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.12 2004/09/22 20:57:50 kattemat Exp $
+ * $Id: defs.h,v 1.13 2004/09/25 21:52:27 kattemat Exp $
  *
  */
 
@@ -54,8 +54,11 @@
 #define UDP_IP_HDRSIZE          28
 
 #define OLSR_SELECT_TIMEOUT     2       /* The timeout for the main select loop */
-/* Debug helper macro */
 
+#define MAX_IFS                 32
+
+
+/* Debug helper macro */
 #ifdef DEBUG
 #define debug(format,args...) \
    olsr_printf(1, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
@@ -198,7 +201,7 @@ int ioctl_s;
 extern float hello_int, tc_int, polling_int, hna_int;
 
 
-struct timeval fwdtimer;	/* forwarding timer */
+struct timeval fwdtimer[MAX_IFS];	/* forwarding timer */
 
 extern struct timeval hold_time_fwd;
 

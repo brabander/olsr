@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.9 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: scheduler.c,v 1.10 2004/09/25 21:52:27 kattemat Exp $
  *
  */
 
@@ -197,16 +197,11 @@ scheduler()
 
 
 
-      /* looping trough interfaces */
+      /* looping trough interfaces and emmittin pending data */
       for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
 	{ 
-	  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer)) 
-	    { 
-#ifdef DEBUG
-	      olsr_printf(3, "Forwarding message - size %d\n", fwdsize);
-#endif	  
-	      net_output(ifn);
-	    }
+	  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr])) 
+	    net_output(ifn);
 	}
 
       /* C R I T I C A L - S E C T I O N - E N D */
