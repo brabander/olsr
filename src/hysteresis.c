@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.12 2004/12/03 06:37:38 kattemat Exp $
+ * $Id: hysteresis.c,v 1.13 2004/12/03 16:12:32 tlopatic Exp $
  */
 
 
@@ -184,7 +184,8 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
        * been added to olsr_seqno there
        */
 
-      if (link->olsr_seqno_valid)
+      if (link->olsr_seqno_valid && 
+          (unsigned short)(seqno - link->olsr_seqno) < 100)
 	  while (link->olsr_seqno != seqno)
 	    {
 	      link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
