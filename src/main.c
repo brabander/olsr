@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.18 2004/10/19 20:59:14 kattemat Exp $
+ * $Id: main.c,v 1.19 2004/10/20 18:21:00 kattemat Exp $
  *
  */
 
@@ -119,9 +119,6 @@ main(int argc, char *argv[])
 
   /* Initialize network functions */
   init_net();
-
-  /* Initialize plugin loader */
-  olsr_init_plugin_loader();
  
   /* Get initial timestep */
   nowtm = NULL;

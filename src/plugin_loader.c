@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.7 2004/10/20 18:21:00 kattemat Exp $
  *
  */
 
@@ -32,18 +32,6 @@
 #include "plugin.h"
 #include "link_set.h"
 
-/**
- *Initializes the plugin loader engine
- *
- */
-
-void
-olsr_init_plugin_loader()
-{
-  olsr_plugins = NULL;
-  plugins_to_load = NULL;
-}
-
 
 /**
  *Function that loads all registered plugins
@@ -53,10 +41,10 @@ olsr_init_plugin_loader()
 int
 olsr_load_plugins()
 {
-  struct plugin_to_load *entry, *old;
+  struct plugin_entry *entry;
   int loaded;
 
-  entry = plugins_to_load;
+  entry = olsr_cnf->plugins;
   loaded = 0;
 
   olsr_printf(1, "Loading plugins...\n\n");
@@ -68,34 +56,9 @@ olsr_load_plugins()
       else
 	loaded ++; /* I'm loaded! */
 
-      old = entry;
       entry = entry->next;
-      free(old);
     }
   return loaded;
-}
-
-
-/**
- *Function to add a plugin to the set of
- *plugins to be loaded
- *
- *@param name filename of the lib. Must include
- *full path if the file is not located in the standard
- *lib directories
- */
-void
-olsr_add_plugin(char *name)
-{
-  struct plugin_to_load *entry;
-
-  olsr_printf(3, "Adding plugin: %s\n", name);
-
-  entry = olsr_malloc(sizeof(struct plugin_to_load), "Add plugin entry");
-
-  strcpy(entry->name, name);
-  entry->next = plugins_to_load;
-  plugins_to_load = entry;
 }
 
 
