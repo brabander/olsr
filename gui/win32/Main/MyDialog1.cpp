@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog1.cpp,v 1.5 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyDialog1.cpp,v 1.6 2004/11/24 16:46:21 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -133,7 +133,7 @@ BOOL MyDialog1::OnInitDialog()
 	
 	CClientDC DevCont(&m_OutputWindow);
 
-	EditFont.CreatePointFont(100, "Courier", NULL);
+	EditFont.CreatePointFont(90, "Courier New", NULL);
 	m_OutputWindow.SetFont(&EditFont);
 
 	m_FreezeButton.EnableWindow(FALSE);
