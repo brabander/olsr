@@ -40,11 +40,16 @@ PlParam "interval" "SEC"
 
 	interval for sending NAME messages in seconds.
 	(default: 120 - 2 minutes)
-		
+
 PlParam "timeout" "SEC"
 
 	validity time for received NAME messages.
 	(default: 3600 - 1 hour)
+
+PlParam "suffix" ".olsr"
+
+	local suffix which is appended to all received names
+	(default: "")
 
 
 ---------------------------------------------------------------------

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice_msg.h,v 1.3 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: nameservice_msg.h,v 1.4 2005/03/02 22:59:55 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -41,7 +41,7 @@
 
 typedef enum {
 	NAME_HOST = 0,
-	NAME_HNA = 1
+	NAME_SERVICE = 1
 } NAME_TYPE;
 
 

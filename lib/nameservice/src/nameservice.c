@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.5 2005/03/01 22:13:34 tlopatic Exp $ */
+/* $Id: nameservice.c,v 1.6 2005/03/02 22:59:55 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -47,8 +47,8 @@
 static char buffer[10240];
 
 /* config parameters */
-static char my_filename_buff[MAX_FILE + 1];
-char* my_filename = my_filename_buff;
+static char my_filename[MAX_FILE + 1];
+static char my_suffix[MAX_SUFFIX];
 int my_interval = EMISSION_INTERVAL;
 double my_timeout = NAME_VALID_TIME;
 
@@ -56,6 +56,25 @@ double my_timeout = NAME_VALID_TIME;
 struct db_entry* list[HASHSIZE];
 struct name_entry *my_names = NULL;
 olsr_bool name_table_changed = OLSR_TRUE;
+
+void
+name_constructor() {
+#ifdef WIN32
+	int len;
+
+	GetWindowsDirectory(my_filename, MAX_FILE - 12);
+
+	len = strlen(my_filename);
+ 
+	if (my_filename[len - 1] != '\\')
+ 		my_filename[len++] = '\\';
+ 
+	strcpy(my_filename + len, "olsrd.hosts");
+#else
+	strcpy(my_filename, "/var/run/hosts_olsr");
+#endif
+	my_suffix[0] = '\0';
+}
 
 
 void 
@@ -118,20 +137,6 @@ int
 olsr_plugin_init()
 {
 	int i;
-#ifdef WIN32
-	int len;
-
-	GetWindowsDirectory(my_filename_buff, MAX_FILE - 12);
-
-	len = strlen(my_filename_buff);
- 
-	if (my_filename_buff[len - 1] != '\\')
- 		my_filename_buff[len++] = '\\';
- 
-	strcpy(my_filename_buff + len, "olsrd.hosts");
-#else
-	strcpy(my_filename_buff, "/var/run/hosts_olsr");
-#endif
 
 	/* Init list */
 	for(i = 0; i < HASHSIZE; i++) {
@@ -219,7 +224,7 @@ register_olsr_param(char *key, char *value)
 		printf("\nNAME PLUGIN parameter name: %s (%s)\n", tmp->name, olsr_ip_to_string(&tmp->ip));
 	} 
 	else if(!strcmp(key, "filename")) {
-		my_filename = strndup( value, MAX_FILE );
+		strncpy( my_filename, value, MAX_FILE );
 		printf("\nNAME PLUGIN parameter filename: %s\n", my_filename);
 	}
 	else if(!strcmp(key, "interval")) {
@@ -230,6 +235,11 @@ register_olsr_param(char *key, char *value)
 		my_timeout = atof(value);
 		printf("\nNAME PLUGIN parameter timeout: %f\n", my_timeout);
 	}
+	else if(!strcmp(key, "suffix")) {
+		strncpy(my_suffix, value, MAX_SUFFIX);
+		printf("\nNAME PLUGIN parameter suffix: %s\n", my_suffix);
+	}
+
 	else {
 		// assume this is an IP address and hostname
 		// the IPs are validated later
@@ -237,7 +247,7 @@ register_olsr_param(char *key, char *value)
 		tmp = malloc(sizeof(struct name_entry));
 		tmp->name = strndup( value, MAX_NAME );
 		tmp->len = strlen( tmp->name );
-		tmp->type = 0xbb;
+		tmp->type = NAME_HOST;
 		struct in_addr ip;
 		if (!inet_aton(key, &ip)) {
 			printf("\nNAME PLUGIN invalid IP %s, fix your config!\n", key);
@@ -558,13 +568,18 @@ write_name_table()
 	olsr_printf(2, "NAME PLUGIN: writing hosts file\n");
 		      
 	hosts = fopen( my_filename, "w" );
+	if (hosts == NULL) {
+		olsr_printf(2, "NAME PLUGIN: cant write hosts file\n");
+		return;
+	}
 	
 	fprintf(hosts, "# this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "# do not edit\n");
 	
 	// write own names
 	for (name = my_names; name != NULL; name = name->next) {
-		fprintf(hosts, "%s\t%s\t# myself\n", olsr_ip_to_string(&name->ip), name->name );
+		fprintf(hosts, "%s\t%s%s\t# myself\n", olsr_ip_to_string(&name->ip),
+			name->name, my_suffix );
 	}
 	
 	// write received names
@@ -574,10 +589,10 @@ write_name_table()
 		{
 			for (name = entry->names; name != NULL; name = name->next) 
 			{
-				olsr_printf(6, "%s\t%s", olsr_ip_to_string(&name->ip), name->name);
+				olsr_printf(6, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
 				olsr_printf(6, "\t#%s\n", olsr_ip_to_string(&entry->originator));
 				
-				fprintf(hosts, "%s\t%s", olsr_ip_to_string(&name->ip), name->name);
+				fprintf(hosts, "%s\t%s%s", olsr_ip_to_string(&name->ip), name->name, my_suffix);
 				fprintf(hosts, "\t# %s\n", olsr_ip_to_string(&entry->originator));
 			}
 		}

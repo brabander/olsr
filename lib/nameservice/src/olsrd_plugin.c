@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.7 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: olsrd_plugin.c,v 1.8 2005/03/02 22:59:55 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -103,6 +103,8 @@ my_init()
 
   ifs = NULL;
 
+  name_constructor();
+  
   return;
 }
 

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.4 2005/03/02 20:51:36 tlopatic Exp $ */
+/* $Id: nameservice.h,v 1.5 2005/03/02 22:59:55 tlopatic Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -55,7 +55,7 @@
 
 #define MAX_NAME 255
 #define MAX_FILE 255
-char* my_filename;
+#define MAX_SUFFIX 255
 
 
 struct name_entry
@@ -109,5 +109,8 @@ free_name_entry_list(struct name_entry **list);
 
 olsr_bool
 allowed_ip(union olsr_ip_addr *addr);
+
+void
+name_constructor(void);
 
 #endif
