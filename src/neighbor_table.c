@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.23 2005/01/17 20:18:21 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.24 2005/01/22 00:09:18 kattemat Exp $
  */
 
 
@@ -273,7 +273,6 @@ olsr_lookup_neighbor_table(union olsr_ip_addr *dst)
 {
   struct neighbor_entry  *entry;
   olsr_u32_t             hash;
-  //struct addresses       *adr;
   union olsr_ip_addr     *tmp_ip;
 
   /*
@@ -315,7 +314,6 @@ olsr_lookup_neighbor_table_alias(union olsr_ip_addr *dst)
 {
   struct neighbor_entry  *entry;
   olsr_u32_t             hash;
-  //struct addresses       *adr;
   
   hash = olsr_hashing(dst);
 
@@ -325,7 +323,7 @@ olsr_lookup_neighbor_table_alias(union olsr_ip_addr *dst)
       entry != &neighbortable[hash];
       entry = entry->next)
     {
-      //printf("Checking %s\n", olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));
+      //printf("Checking %s\n", olsr_ip_to_string(&entry->neighbor_main_addr));
       if(COMP_IP(&entry->neighbor_main_addr, dst))
 	return entry;
       

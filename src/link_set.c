@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.40 2005/01/17 20:18:20 kattemat Exp $
+ * $Id: link_set.c,v 1.41 2005/01/22 00:09:18 kattemat Exp $
  */
 
 
@@ -181,7 +181,7 @@ get_neighbor_status(union olsr_ip_addr *address)
   /* Loop trough local interfaces to check all possebilities */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
-      struct addresses   *aliases;
+      struct mid_address   *aliases;
       struct link_entry  *link;
 
       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
@@ -195,11 +195,11 @@ get_neighbor_status(union olsr_ip_addr *address)
       /* Get aliases */
       for(aliases = mid_lookup_aliases(main_addr);
 	  aliases != NULL;
-	  aliases = aliases->next)
+	  aliases = aliases->next_alias)
 	{
 	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
 	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
-	  if((link = lookup_link_entry(&aliases->address, &ifs->ip_addr)) != NULL)
+	  if((link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
 	    {
 	      //printf("%d\n", lookup_link_status(link));
 
@@ -240,7 +240,7 @@ get_neighbor_nexthop(union olsr_ip_addr *address)
   /* Loop trough local interfaces to check all possebilities */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
-      struct addresses   *aliases;
+      struct mid_address *aliases;
       struct link_entry  *link;
       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
       //printf("%s : ", olsr_ip_to_string(main_addr)); 
@@ -253,16 +253,16 @@ get_neighbor_nexthop(union olsr_ip_addr *address)
       /* Get aliases */
       for(aliases = mid_lookup_aliases(main_addr);
 	  aliases != NULL;
-	  aliases = aliases->next)
+	  aliases = aliases->next_alias)
 	{
 	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
 	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
-	  if((link = lookup_link_entry(&aliases->address, &ifs->ip_addr)) != NULL)
+	  if((link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
 	    {
 	      //printf("%d\n", lookup_link_status(link));
 
 	      if(lookup_link_status(link) == SYM_LINK)
-		return &aliases->address;
+		return &aliases->alias;
 	    }
 	}
     }

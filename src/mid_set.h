@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.9 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: mid_set.h,v 1.10 2005/01/22 00:09:18 kattemat Exp $
  */
 
 
@@ -46,26 +46,40 @@
 
 #include "hashing.h"
 
+struct mid_address
+{
+  union olsr_ip_addr  alias;
+  struct mid_entry   *main_entry;
+
+  struct mid_address *next_alias;
+
+  /* These are for the reverse list */
+  struct mid_address *prev;
+  struct mid_address *next;
+};
+
 /*
  *Contains the main addr of a node and a list of aliases
  */
 struct mid_entry
 {
-  union olsr_ip_addr main_addr;
-  struct addresses  *aliases;
-  struct mid_entry  *prev;
-  struct mid_entry  *next;
-  clock_t            ass_timer;  
+  union olsr_ip_addr  main_addr;
+  struct mid_address *aliases;
+  struct mid_entry   *prev;
+  struct mid_entry   *next;
+  clock_t             ass_timer;  
 };
 
 
 struct mid_entry mid_set[HASHSIZE];
 
+struct mid_address reverse_mid_set[HASHSIZE];
+
 int
 olsr_init_mid_set(void);
 
 void 
-insert_mid_tuple(union olsr_ip_addr *, struct addresses *, float);
+insert_mid_tuple(union olsr_ip_addr *, struct mid_address *, float);
 
 void
 insert_mid_alias(union olsr_ip_addr *, union olsr_ip_addr *, float);
@@ -73,7 +87,7 @@ insert_mid_alias(union olsr_ip_addr *, union olsr_ip_addr *, float);
 union olsr_ip_addr *
 mid_lookup_main_addr(union olsr_ip_addr *);
 
-struct addresses *
+struct mid_address *
 mid_lookup_aliases(union olsr_ip_addr *);
 
 void

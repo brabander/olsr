@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.12 2005/01/17 20:18:22 kattemat Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.13 2005/01/22 00:09:18 kattemat Exp $
  */
 
 
@@ -181,7 +181,7 @@ olsr_lookup_two_hop_neighbor_table(union olsr_ip_addr *dest)
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next)
     {
-      struct addresses *adr;
+      struct mid_address *adr;
 
       //printf("Checking %s\n", olsr_ip_to_string(dest));
       if (COMP_IP(&neighbor_2->neighbor_2_addr, dest))
@@ -191,9 +191,9 @@ olsr_lookup_two_hop_neighbor_table(union olsr_ip_addr *dest)
 
       while(adr)
 	{
-	  if(COMP_IP(&adr->address, dest))
+	  if(COMP_IP(&adr->alias, dest))
 	    return neighbor_2;
-	  adr = adr->next;
+	  adr = adr->next_alias;
 	} 
     }
 

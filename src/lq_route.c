@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.19 2004/12/06 13:01:15 tlopatic Exp $
+ * $Id: lq_route.c,v 1.20 2005/01/22 00:09:18 kattemat Exp $
  */
 
 #include "defs.h"
@@ -304,7 +304,7 @@ void olsr_calculate_lq_routing_table(void)
   struct dijk_vertex *myself;
   struct dijk_vertex *walker;
   int hops;
-  struct addresses *mid_walker;
+  struct mid_address *mid_walker;
   float etx;
 
   // initialize the graph
@@ -460,8 +460,8 @@ void olsr_calculate_lq_routing_table(void)
     // add routes to the remaining interfaces of the destination node
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
-         mid_walker = mid_walker->next)
-      olsr_insert_routing_table(&mid_walker->address,
+         mid_walker = mid_walker->next_alias)
+      olsr_insert_routing_table(&mid_walker->alias,
                                 get_neighbor_nexthop(&walker->addr), hops);
   }
 

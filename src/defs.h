@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.32 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: defs.h,v 1.33 2005/01/22 00:09:18 kattemat Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -95,16 +95,6 @@ struct olsrd_config *olsr_cnf;
 
 /* Global tick resolution */
 olsr_u16_t system_tick_divider;
-
-/*
- * Generic address list elem
- */
-struct addresses 
-{
-  union olsr_ip_addr address;
-  struct addresses *next;
-};
-
 
 int exit_value; /* Global return value for process termination */
 
