@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.43 2005/03/02 22:24:26 spoggle Exp $
+ * $Id: defs.h,v 1.44 2005/03/06 19:33:35 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -145,8 +145,8 @@ olsr_bool del_gws;
  * Timer values
  */
 
-extern float will_int;
-extern float max_jitter;
+float will_int;
+float max_jitter;
 
 size_t ipsize;
 
@@ -173,7 +173,7 @@ int minsize;
 olsr_bool changes;                /* is set if changes occur in MPRS set */ 
 
 /* TC empty message sending */
-extern clock_t send_empty_tc;
+clock_t send_empty_tc;
 
 /*
  *IPC functions

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.18 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: plugin.c,v 1.19 2005/03/06 19:33:35 kattemat Exp $
  */
 
 
@@ -60,10 +60,7 @@
 #include "routing_table.h"
 #include "mid_set.h"
 #include "mpr_selector_set.h"
-
-int
-olsr_plugin_io(int, void *, size_t);
-
+#include "plugin_loader.h"
 
 /**
  * Multi-purpose function for plugins

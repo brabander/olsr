@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.42 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: olsr.c,v 1.43 2005/03/06 19:33:35 kattemat Exp $
  */
 
 /**
@@ -541,7 +541,7 @@ olsr_malloc(size_t size, const char *id)
  *
  */
 
-inline int
+int
 olsr_printf(int loglevel, char *format, ...)
 {
   va_list arglist;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.h,v 1.11 2005/02/25 22:48:15 kattemat Exp $
+ * $Id: plugin_loader.h,v 1.12 2005/03/06 19:33:35 kattemat Exp $
  */
 
 #ifndef _OLSR_PLUGIN_LOADER
@@ -83,6 +83,9 @@ olsr_load_plugins(void);
 
 void
 olsr_close_plugins(void);
+
+int
+olsr_plugin_io(int, void *, size_t);
 
 #endif
 #endif

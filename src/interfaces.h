@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.23 2005/03/06 18:08:29 kattemat Exp $
+ * $Id: interfaces.h,v 1.24 2005/03/06 19:33:35 kattemat Exp $
  */
 
 
@@ -149,9 +149,6 @@ struct interface
 #define IFCHG_IF_ADD           1
 #define IFCHG_IF_REMOVE        2
 #define IFCHG_IF_UPDATE        3
-
-/* Variables needed to set up new sockets */
-extern int bufspace;
 
 /* The interface linked-list */
 struct interface *ifnet;

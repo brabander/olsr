@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.20 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: olsr.h,v 1.21 2005/03/06 19:33:35 kattemat Exp $
  */
 
 
@@ -49,8 +49,6 @@
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
-
-float will_int; /* Willingness update interval */
 
 void
 register_pcf(int (*)(int, int, int));
@@ -92,7 +90,7 @@ olsr_exit(const char *, int);
 void *
 olsr_malloc(size_t, const char *);
 
-inline int
+int
 olsr_printf(int, char *, ...);
 
 #endif
