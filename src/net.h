@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.7 2004/09/22 17:00:28 kattemat Exp $
+ * $Id: net.h,v 1.8 2004/09/25 11:13:28 kattemat Exp $
  *
  */
 
@@ -63,10 +63,19 @@ inline olsr_u16_t
 net_get_maxmsgsize();
 
 int
+net_reserve_bufferspace(olsr_u16_t);
+
+int
 net_outbuffer_push(olsr_u8_t *, olsr_u16_t);
 
 int
+net_outbuffer_push_reserved(olsr_u8_t *, olsr_u16_t);
+
+int
 net_fwdbuffer_push(olsr_u8_t *, olsr_u16_t);
+
+int
+net_fwdbuffer_push_reserved(olsr_u8_t *, olsr_u16_t);
 
 int
 net_output(struct interface*);

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.12 2004/09/22 20:57:50 kattemat Exp $
+ * $Id: net.c,v 1.13 2004/09/25 11:13:28 kattemat Exp $
  *
  */
 
@@ -42,8 +42,10 @@ static char fwd_buffer[MAXMESSAGESIZE+1];
 static union olsr_packet *outmsg = (union olsr_packet *)out_buffer;
 static union olsr_packet *fwdmsg = (union olsr_packet *)fwd_buffer;
 
-int outputsize = 0;         /* current size of the output buffer */
-int fwdsize = 0;         /* current size of the forward buffer */
+static int outputsize = 0;      /* current size of the output buffer */
+static int fwdsize = 0;         /* current size of the forward buffer */
+
+static int netbuffer_reserved = 0;  /* plugins can reserve bufferspace */
 
 
 /* Default max OLSR packet size */
@@ -62,13 +64,35 @@ int
 net_set_maxmsgsize(olsr_u16_t new_size)
 {
 
-  if(new_size > (MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
+  if(new_size > (MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE - netbuffer_reserved))
     return -1;
 
   else
-    maxmessagesize = new_size;
+    maxmessagesize = new_size - netbuffer_reserved;
 
-  olsr_printf(1, "Not outputbuffer maxsize set to %d\n", maxmessagesize);
+  olsr_printf(1, "Not outputbuffer maxsize set to %d(%d bytes reserved)\n", 
+	      maxmessagesize, 
+	      netbuffer_reserved);
+  return maxmessagesize;
+}
+
+
+int
+net_reserve_bufferspace(olsr_u16_t size)
+{
+
+  if((netbuffer_reserved + size) > maxmessagesize)
+    return -1;
+
+  else
+    {
+      netbuffer_reserved += size;
+      maxmessagesize -= netbuffer_reserved;
+    }
+
+  olsr_printf(1, "Netbuffer reserved %d bytes - new maxsize %d\n", 
+	      netbuffer_reserved, 
+	      maxmessagesize);
   return maxmessagesize;
 }
 
@@ -112,6 +136,25 @@ net_outbuffer_push(olsr_u8_t *data, olsr_u16_t size)
 }
 
 
+/**
+ * Add data to the buffer that is to be transmitted
+ *
+ * @return 0 if there was not enough room in buffer
+ */
+int
+net_outbuffer_push_reserved(olsr_u8_t *data, olsr_u16_t size)
+{
+
+  if((outputsize + size) > (maxmessagesize + netbuffer_reserved))
+    return 0;
+
+  memcpy(&out_buffer[outputsize + OLSR_HEADERSIZE], data, size);
+  outputsize += size;
+
+  return 1;
+}
+
+
 
 /**
  * Add data to the buffer that is to be transmitted
@@ -142,6 +185,26 @@ net_fwdbuffer_push(olsr_u8_t *data, olsr_u16_t size)
 
   return 1;
 }
+
+
+/**
+ * Add data to the buffer that is to be forwarded
+ *
+ * @return 0 if there was not enough room in buffer
+ */
+int
+net_fwdbuffer_push_reserved(olsr_u8_t *data, olsr_u16_t size)
+{
+
+  if((fwdsize + size) > (maxmessagesize + netbuffer_reserved))
+    return 0;
+
+  memcpy(&fwd_buffer[fwdsize + OLSR_HEADERSIZE], data, size);
+  fwdsize += size;
+
+  return 1;
+}
+
 
 
 /**
