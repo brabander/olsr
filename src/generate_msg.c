@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.15 2004/11/09 21:09:58 kattemat Exp $
+ * $Id: generate_msg.c,v 1.16 2004/11/10 07:40:11 kattemat Exp $
  *
  */
 
@@ -112,6 +112,6 @@ generate_stdout_pulse(void *foo)
 
   pulse_state = pulse_state == 3 ? 0 : pulse_state + 1;
 
-  printf("\b%c", pulsedata[pulse_state]);
+  printf("\r%c", pulsedata[pulse_state]);
 
 }
