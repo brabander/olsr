@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.32 2004/11/10 11:08:32 tlopatic Exp $
+ * $Id: main.c,v 1.33 2004/11/10 11:57:12 tlopatic Exp $
  *
  */
 
@@ -609,9 +609,6 @@ main(int argc, char *argv[])
 #endif
 
   olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
-
-  olsr_printf(1, "NEIGHBORS: l=linkstate, m=MPR, w=willingness\n\n");
-
 
   /* daemon mode */
 #ifndef WIN32
