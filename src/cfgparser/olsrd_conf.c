@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.11 2004/11/03 09:22:18 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.12 2004/11/05 02:39:47 tlopatic Exp $
  *
  */
 
@@ -28,6 +28,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
