@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.47 2005/03/02 00:13:20 tlopatic Exp $
+# $Id: Makefile,v 1.48 2005/03/02 20:53:43 spoggle Exp $
 
 VERS =		0.4.9
 
@@ -87,6 +87,15 @@ SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
 LIBS =		-lm
+MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
+
+else
+ifeq ($(OS), fbsd-ll)
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+CFLAGS ?=	-Wall -Wmissing-prototypes -O2 -g -DSPOOF -I/usr/local/include
+LIBS =		-lm -L/usr/local/lib -lnet
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
 
 else
@@ -186,6 +195,7 @@ else
 
 all:	help
 
+endif
 endif
 endif
 endif

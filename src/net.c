@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.35 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: net.c,v 1.36 2005/03/02 20:53:43 spoggle Exp $
  */
 
 #include "net.h"
@@ -428,7 +428,7 @@ net_output(struct interface *ifp)
 		     netbufs[ifp->if_nr]->pending, 
 		     MSG_DONTROUTE, 
 		     (struct sockaddr *)sin, 
-		     sizeof (*sin)) 
+		     sizeof (*sin))
 	 < 0)
 	{
 	  perror("sendto(v4)");
@@ -445,7 +445,7 @@ net_output(struct interface *ifp)
 		     netbufs[ifp->if_nr]->pending, 
 		     MSG_DONTROUTE, 
 		     (struct sockaddr *)sin6, 
-		     sizeof (*sin6)) 
+		     sizeof (*sin6))
 	 < 0)
 	{
 	  perror("sendto(v6)");

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.17 2005/03/02 08:58:12 kattemat Exp $
+ * $Id: net.c,v 1.18 2005/03/02 20:53:43 spoggle Exp $
  */
 
 #include "defs.h"
@@ -56,6 +56,11 @@
 #include <net80211/ieee80211_ioctl.h>
 #include <dev/wi/if_wavelan_ieee.h>
 #include <dev/wi/if_wireg.h>
+
+#ifdef SPOOF
+#include <net/if_dl.h>
+#include <libnet.h>
+#endif /* SPOOF */
 
 //#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
 //#define SIOCGWAVELAN SIOCGIFGENERIC
@@ -218,6 +223,20 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
       return (-1);
     }
 
+#ifdef SPOOF
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
+    {
+      perror("SO_REUSEPORT failed");
+      return (-1);
+    }
+
+  if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, &on, sizeof(on)) < 0) 
+    {
+      perror("IP_RECVIF failed");
+      return (-1);
+    }
+#endif /* SPOOF */
+
   for (on = bufspace; ; on -= 1024) 
     {
       if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
@@ -301,6 +320,10 @@ int get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
  * Wrapper for sendto(2)
  */
 
+#ifdef SPOOF
+static u_int16_t ip_id = 0;
+#endif /* SPOOF */
+
 ssize_t
 olsr_sendto(int s, 
 	    const void *buf, 
@@ -309,7 +332,96 @@ olsr_sendto(int s,
 	    const struct sockaddr *to, 
 	    socklen_t tolen)
 {
+#ifdef SPOOF
+  /* IPv4 for now! */
+
+  libnet_t *context;
+  char errbuf[LIBNET_ERRBUF_SIZE];
+  libnet_ptag_t udp_tag, ip_tag, ether_tag;
+  unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  int status;
+  struct sockaddr_in *to_in = (struct sockaddr_in *) to;
+  u_int32_t destip;
+  struct interface *iface;
+
+  udp_tag = ip_tag = ether_tag = 0;
+  destip = to_in->sin_addr.s_addr;
+  iface = if_ifwithsock (s);
+
+  /* initialize libnet */
+  context = libnet_init(LIBNET_LINK, iface->int_name, errbuf);
+  if (context == NULL)
+    {
+      OLSR_PRINTF (1, "libnet init: %s\n", libnet_geterror (context))
+      return (0);
+    }
+
+  /* initialize IP ID field if necessary */
+  if (ip_id == 0)
+    {
+      ip_id = (u_int16_t) (arc4random () & 0xffff);
+    }
+
+  udp_tag = libnet_build_udp (698, 				/* src port */
+			      698,				/* dest port */
+			      LIBNET_UDP_H + len,		/* length */
+			      0,				/* checksum */
+			      buf,				/* payload */
+			      len,				/* payload size */
+			      context,				/* context */
+			      udp_tag);				/* pblock */
+  if (udp_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (context))
+	return (0);
+    }
+
+  ip_tag = libnet_build_ipv4 (LIBNET_IPV4_H + LIBNET_UDP_H + len, /* len */
+			      0,				/* TOS */
+			      ip_id++,				/* IP id */
+			      0,				/* IP frag */
+			      1,				/* IP TTL */
+			      IPPROTO_UDP,			/* protocol */
+			      0,				/* checksum */
+			      libnet_get_ipaddr4 (context),	/* src IP */
+			      destip,				/* dest IP */
+			      NULL,				/* payload */
+			      0,				/* payload len */
+			      context,				/* context */
+			      ip_tag);				/* pblock */
+  if (ip_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (context))
+      return (0);
+    }
+
+  ether_tag = libnet_build_ethernet (enet_broadcast,    	/* ethernet dest */
+				     libnet_get_hwaddr (context), /* ethernet source */
+				     ETHERTYPE_IP,		/* protocol type */
+				     NULL,        		/* payload */
+				     0,           		/* payload size */
+				     context,     		/* libnet handle */
+				     ether_tag);  		/* pblock tag */
+  if (ether_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (context))
+      return (0);
+    }
+ 
+  status = libnet_write (context);
+  if (status == -1)
+    {
+      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (context))
+      return (0);
+    }
+
+  libnet_destroy (context);
+
+  return (len);
+
+#else
   return sendto(s, buf, len, flags, to, tolen);
+#endif
 }
 
 
@@ -325,12 +437,67 @@ olsr_recvfrom(int  s,
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {
+#if SPOOF
+  struct msghdr mhdr;
+  struct iovec iov;
+  struct cmsghdr *cm;
+  struct sockaddr_dl *sdl;
+  struct sockaddr_in *sin = (struct sockaddr_in *) from; //XXX
+  unsigned char chdr[4096];
+  int count;
+  struct interface *ifc;
+  char iname[32];
+
+  bzero(&mhdr, sizeof(mhdr));
+  bzero(&iov, sizeof(iov));
+
+  mhdr.msg_name = (caddr_t) from;
+  mhdr.msg_namelen = *fromlen;
+  mhdr.msg_iov = &iov;
+  mhdr.msg_iovlen = 1;
+  mhdr.msg_control = (caddr_t) chdr;
+  mhdr.msg_controllen = sizeof (chdr);
+
+  iov.iov_len = MAXMESSAGESIZE;
+  iov.iov_base = buf;
+
+  count = recvmsg (s, &mhdr, MSG_DONTWAIT);
+  if (count <= 0)
+    {
+      return (count);
+    }
+
+  /* this needs to get communicated back to caller */
+  *fromlen = mhdr.msg_namelen;
+
+  cm = (struct cmsghdr *) chdr;
+  sdl = (struct sockaddr_dl *) CMSG_DATA (cm);
+  bzero (iname, sizeof (iname));
+  memcpy (iname, sdl->sdl_data, sdl->sdl_nlen);
+
+  ifc = if_ifwithsock (s);
+
+  if (strcmp (ifc->int_name, iname) != 0)
+    {
+      return (0);
+    }
+
+  OLSR_PRINTF (2, "%d bytes from %s, socket associated %s really received on %s\n",
+	       count,
+	       inet_ntoa (sin->sin_addr),
+	       ifc->int_name,
+	       iname);
+
+  return (count);
+
+#else /* SPOOF */
   return recvfrom(s, 
 		  buf, 
 		  len, 
 		  0, 
 		  from, 
 		  fromlen);
+#endif /* SPOOF */
 }
 
 /**
