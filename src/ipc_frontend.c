@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.23 2005/02/12 22:32:42 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.24 2005/02/13 15:27:28 kattemat Exp $
  */
 
 /*
@@ -340,7 +340,7 @@ ipc_send_all_routes()
 	  destination != &routingtable[index];
 	  destination = destination->next)
 	{
-	  ifn = NULL;//get_interface_link_set(&destination->rt_router);
+	  ifn = destination->rt_if;
 	  
 
 	  memset(&packet, 0, sizeof(struct ipcmsg));
@@ -387,7 +387,7 @@ ipc_send_all_routes()
 	  destination != &hna_routes[index];
 	  destination = destination->next)
 	{
-	  ifn = NULL;//get_interface_link_set(&destination->rt_router);
+	  ifn = destination->rt_if;
 
 	  packet.size = htons(IPC_PACK_SIZE);
 	  packet.msgtype = ROUTE_IPC;
