@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.19 2004/11/20 17:10:03 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.20 2004/11/20 17:37:25 tlopatic Exp $
  *
  */
 
@@ -728,4 +728,12 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     }
 }
 
+void *olsrd_cnf_malloc(unsigned int len)
+{
+  return malloc(len);
+}
 
+void olsrd_cnf_free(void *addr)
+{
+  free(addr);
+}
