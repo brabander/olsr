@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.3 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: misc.c,v 1.4 2004/11/21 10:56:29 kattemat Exp $
  */
 
 
 #include <stdio.h>
 #include <unistd.h>
+#include "misc.h"
 
 void clear_console(void)
 {
