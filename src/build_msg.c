@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.12 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: build_msg.c,v 1.13 2004/10/12 06:33:55 kattemat Exp $
  *
  */
 
@@ -887,6 +887,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
       //printf("mprsaddr6 is %x\n", (char *)mprsaddr6 - packet);
       //printf("Adding MPR-selector: %s\n", olsr_ip_to_string(&mprs->address));fflush(stdout);	    
       COPY_IP(&mprsaddr6->addr, &mprs->address);
+      curr_size += ipsize;
 
       mprsaddr6++;
     }
