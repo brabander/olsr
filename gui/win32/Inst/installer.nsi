@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.8 2004/12/01 19:42:29 tlopatic Exp $
+;  $Id: installer.nsi,v 1.9 2004/12/05 22:00:06 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -70,7 +70,7 @@ Section "Program Files"
         File ..\Shim\Release\Shim.exe
         File ..\..\..\olsrd.exe
         File ..\..\..\src\cfgparser\olsrd_cfgparser.dll
-        File ..\..\..\README-WIN32.txt
+        File /oname=README.txt ..\..\..\README
         File linux-manual.txt
         File /oname=olsrd.conf ..\..\..\files\olsrd.conf.default.win32
         File ..\..\..\gui\win32\Main\Default.olsr
@@ -91,7 +91,7 @@ Section "Start Menu Shortcuts"
         CreateDirectory $SMPROGRAMS\olsr.org
 
         CreateShortCut "$SMPROGRAMS\olsr.org\OLSR Switch.lnk" $INSTDIR\Switch.exe "" $INSTDIR\Switch.exe 0
-        CreateShortCut $SMPROGRAMS\olsr.org\README-WIN32.lnk $INSTDIR\README-WIN32.txt
+        CreateShortCut $SMPROGRAMS\olsr.org\README.lnk $INSTDIR\README.txt
         CreateShortCut $SMPROGRAMS\olsr.org\Uninstall.lnk $INSTDIR\uninstall.exe "" $INSTDIR\uninstall.exe 0
 
 SectionEnd
@@ -125,7 +125,7 @@ Section "Uninstall"
         Delete $INSTDIR\Shim.exe
         Delete $INSTDIR\olsrd.exe
 	Delete $INSTDIR\olsrd_cfgparser.dll
-        Delete $INSTDIR\README-WIN32.txt
+        Delete $INSTDIR\README.txt
         Delete $INSTDIR\linux-manual.txt
         Delete $INSTDIR\Default.olsr
 	Delete $INSTDIR\olsrd.conf
@@ -135,7 +135,7 @@ Section "Uninstall"
         RMDir $INSTDIR
 
         Delete "$SMPROGRAMS\olsr.org\OLSR Switch.lnk"
-        Delete $SMPROGRAMS\olsr.org\README-WIN32.lnk
+        Delete $SMPROGRAMS\olsr.org\README.lnk
         Delete $SMPROGRAMS\olsr.org\Uninstall.lnk
 
         RMDir $SMPROGRAMS\olsr.org
