@@ -67,7 +67,7 @@ static char buffer[sizeof(struct olsrmsg6)];
 
 /* Timeout function to register with the sceduler */
 void
-olsr_timeout();
+olsr_timeout(void);
 
 /* Parser function to register with the sceduler */
 void
@@ -87,6 +87,6 @@ int
 update_power_entry(union olsr_ip_addr *, struct powermsg *, double);
 
 void
-print_power_table();
+print_power_table(void);
 
 #endif

@@ -91,12 +91,12 @@ struct interface *olsr_in_if;
 
 /* Timeout function to register with the sceduler */
 void
-olsr_timeout();
+olsr_timeout(void);
 
 
 /* Event function to register with the sceduler */
 void
-olsr_event();
+olsr_event(void);
 
 int
 send_challenge(union olsr_ip_addr *);
@@ -138,7 +138,7 @@ void
 packet_parser(int);
 
 void
-timeout_timestamps();
+timeout_timestamps(void);
 
 int
 check_timestamp(union olsr_ip_addr *, time_t);

@@ -285,24 +285,24 @@ size_t             ipsize;     /* Size of the ipadresses used */
 
 /* Initialization function */
 int
-olsr_plugin_init();
+olsr_plugin_init(void);
 
 /* IPC initialization function */
 int
-plugin_ipc_init();
+plugin_ipc_init(void);
 
 int
 register_olsr_param(char *, char *);
 
 /* Destructor function */
 void
-olsr_plugin_exit();
+olsr_plugin_exit(void);
 
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
 
 int 
-get_plugin_interface_version();
+get_plugin_interface_version(void);
 
 #endif

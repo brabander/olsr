@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.3 2004/11/07 10:54:19 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.4 2004/11/30 17:04:45 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -292,13 +292,13 @@ int (*olsr_plugin_io)(int, void *, size_t);
 void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), int, int);
 
 /* Register a timeout function */
-int (*olsr_register_timeout_function)(void (*)());
+int (*olsr_register_timeout_function)(void (*)(void));
 
 /* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), void *, float, float, olsr_u8_t *);
+int (*olsr_register_scheduler_event)(void (*)(void *), void *, float, float, olsr_u8_t *);
 
 /* Get the next message seqno in line */
-olsr_u16_t (*get_msg_seqno)();
+olsr_u16_t (*get_msg_seqno)(void);
 
 int (*net_outbuffer_push)(struct interface *, olsr_u8_t *, olsr_u16_t);
 
@@ -363,15 +363,15 @@ struct timeval     *now;       /* the olsrds schedulers idea of current time */
 
 /* Initialization function */
 int
-olsr_plugin_init();
+olsr_plugin_init(void);
 
 /* IPC initialization function */
 int
-plugin_ipc_init();
+plugin_ipc_init(void);
 
 /* Destructor function */
 void
-olsr_plugin_exit();
+olsr_plugin_exit(void);
 
 /* Mulitpurpose funtion */
 int
@@ -379,6 +379,6 @@ plugin_io(int, void *, size_t);
 
 /* Plugin interface version */
 int 
-get_plugin_interface_version();
+get_plugin_interface_version(void);
 
 #endif

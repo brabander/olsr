@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.7 2004/11/19 20:52:06 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.8 2004/11/30 17:04:45 kattemat Exp $
  */
 
 
@@ -393,13 +393,13 @@ void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface
 				 int, int);
 
 /* Register a timeout function */
-int (*olsr_register_timeout_function)(void (*)());
+int (*olsr_register_timeout_function)(void (*)(void));
 
 /* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), void *, float, float, olsr_u8_t *);
+int (*olsr_register_scheduler_event)(void (*)(void), void *, float, float, olsr_u8_t *);
 
 /* Get the next message seqno in line */
-olsr_u16_t (*get_msg_seqno)();
+olsr_u16_t (*get_msg_seqno)(void);
 
 /* Transmit package */
 int (*net_output)(struct interface*);
@@ -493,24 +493,24 @@ struct timeval     *now;       /* the olsrds schedulers idea of current time */
 
 /* Initialization function */
 int
-olsr_plugin_init();
+olsr_plugin_init(void);
 
 /* IPC initialization function */
 int
-plugin_ipc_init();
+plugin_ipc_init(void);
 
 int
 register_olsr_param(char *, char *);
 
 /* Destructor function */
 void
-olsr_plugin_exit();
+olsr_plugin_exit(void);
 
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
 
 int 
-get_plugin_interface_version();
+get_plugin_interface_version(void);
 
 #endif

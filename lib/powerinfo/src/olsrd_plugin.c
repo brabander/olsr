@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.2 2004/11/07 10:54:19 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.3 2004/11/30 17:04:45 kattemat Exp $ */
 
 
 /*
@@ -66,7 +66,7 @@ int
 register_olsr_data(struct olsr_plugin_data *);
 
 int
-fetch_olsrd_data();
+fetch_olsrd_data(void);
 
 /*
  * Returns the version of the plugin interface that is used

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.5 2004/11/30 09:45:16 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.6 2004/11/30 17:04:33 kattemat Exp $
  *
  */
 
@@ -57,7 +57,7 @@ int
 register_olsr_data(struct olsr_plugin_data *);
 
 int
-fetch_olsrd_data();
+fetch_olsrd_data(void);
 
 
 /*
