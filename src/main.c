@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.57 2005/01/29 19:05:34 kattemat Exp $
+ * $Id: main.c,v 1.58 2005/01/29 23:42:39 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -703,6 +703,8 @@ olsr_shutdown(int signal)
 static void
 set_default_values()
 {
+  static struct tms tms_buf;
+
   memset(&main_addr, 0, sizeof(union olsr_ip_addr));
   memset(&null_addr6, 0, sizeof (union olsr_ip_addr));
 
@@ -725,7 +727,7 @@ set_default_values()
   disp_pack_out = OLSR_FALSE;
 
   /* Initialize empty TC timer */
-  send_empty_tc = GET_TIMESTAMP(0);
+  send_empty_tc = now_times = times(&tms_buf);
 }
 
 
