@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.39 2005/01/22 00:12:57 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.40 2005/01/23 11:08:31 kattemat Exp $
  */
 
 /*
@@ -148,6 +148,9 @@ sockaddr_to_string(struct sockaddr *);
 olsr_bool
 check_allowed_ip(union olsr_ip_addr *);
 
+static char *
+get_copyright_string(void);
+
 static struct timeval start_time;
 static struct http_stats stats;
 static int client_sockets[MAX_CLIENTS];
@@ -192,6 +195,7 @@ struct static_txt_file_entry static_txt_files[] =
 int
 olsr_plugin_init()
 {
+  get_copyright_string();
   /* Get start time */
   gettimeofday(&start_time, NULL);
 
@@ -231,6 +235,8 @@ get_http_socket(int port)
       close(s);
       return -1;
     }
+
+
 
   /* Bind the socket */
   
@@ -1324,7 +1330,7 @@ sockaddr_to_string(struct sockaddr *address_to_convert)
 }
 
 
-char *
+static char *
 get_copyright_string()
 {
   return copyright_string;
