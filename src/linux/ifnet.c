@@ -577,9 +577,17 @@ chk_if_up(struct if_name *iface, int debuglvl)
   syslog(LOG_INFO, "Adding interface %s\n", iface->name);
   olsr_printf(1, "Interface %s set up for use with index %d\n", iface->name, ifs.if_nr);
 
-  olsr_printf(1, "\tAddress:%s\n", sockaddr_to_string(&ifs.int_addr));
-  olsr_printf(1, "\tNetmask:%s\n", sockaddr_to_string(&ifs.int_netmask));
-  olsr_printf(1, "\tBroadcast address:%s\n", sockaddr_to_string(&ifs.int_broadaddr));
+  if(ipversion == AF_INET)
+    {
+      olsr_printf(1, "\tAddress:%s\n", sockaddr_to_string(&ifs.int_addr));
+      olsr_printf(1, "\tNetmask:%s\n", sockaddr_to_string(&ifs.int_netmask));
+      olsr_printf(1, "\tBroadcast address:%s\n", sockaddr_to_string(&ifs.int_broadaddr));
+    }
+  else
+    {
+      olsr_printf(1, "\tAddress: %s\n", ip6_to_string(&ifs.int6_addr.sin6_addr));
+      olsr_printf(1, "\tMulticast: %s\n", ip6_to_string(&ifs.int6_multaddr.sin6_addr));
+    }
 
   nbinterf++; 
   
