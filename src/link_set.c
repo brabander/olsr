@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.23 2004/11/10 11:54:28 tlopatic Exp $
+ * $Id: link_set.c,v 1.24 2004/11/10 12:35:30 tlopatic Exp $
  *
  */
 
@@ -988,6 +988,9 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   saved_lq = entry->loss_link_quality;
 
+  if (saved_lq == 0.0)
+    saved_lq = -1.0;
+
   // calculate the new link quality
 
   entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
@@ -999,7 +1002,10 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
   rel_lq = entry->loss_link_quality / saved_lq;
 
   if (rel_lq > 1.1 || rel_lq < 0.9)
-    changes_neighborhood = OLSR_TRUE;
+    {
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
+    }
 }
 
 void olsr_update_packet_loss_hello_int(struct link_entry *entry,
@@ -1099,27 +1105,6 @@ static void olsr_time_out_packet_loss()
       olsr_get_timestamp((olsr_u32_t)(walker->loss_hello_int * 1000.0),
                          &walker->loss_timeout);
     }
-}
-
-double olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
-{
-  struct link_entry *walker;
-  double res = 0.0;
-
-  // loop through all links
-
-  for (walker = link_set; walker != NULL; walker = walker->next)
-    {
-      // check whether it's a link to the requested neighbor and
-      // whether the link's (bidirectional = forth x back) quality
-      // is better than what we have
-
-      if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
-         walker->loss_link_quality * walker->neigh_link_quality >= res)
-        res = walker->loss_link_quality;
-    }
-
-  return res;
 }
 
 struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)

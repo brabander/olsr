@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.17 2004/11/10 11:54:28 tlopatic Exp $
+ * $Id: process_package.c,v 1.18 2004/11/10 12:35:30 tlopatic Exp $
  *
  */
 
@@ -100,6 +100,9 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
 
       saved_lq = link->neigh_link_quality;
 
+      if (saved_lq == 0.0)
+        saved_lq = -1.0;
+
       // memorize our neighbour's idea of the link quality, so that we
       // know the link quality in both directions
 
@@ -115,7 +118,10 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
       rel_lq = link->neigh_link_quality / saved_lq;
 
       if (rel_lq > 1.1 || rel_lq < 0.9)
-        changes_neighborhood = OLSR_TRUE;
+        {
+          changes_neighborhood = OLSR_TRUE;
+          changes_topology = OLSR_TRUE;
+        }
     }
 #endif
   
@@ -509,7 +515,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
   union olsr_ip_addr           *neigh_addr;
 #if defined USE_LINK_QUALITY
   struct neighbor_list_entry *walker;
-  double link_quality;
+  struct link_entry *link;
 #endif
 
   for(message_neighbors = message->neighbors;
@@ -596,8 +602,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 #if defined USE_LINK_QUALITY
           if (olsr_cnf->lq_level > 0)
             {
-              link_quality =
-                olsr_neighbor_best_link_quality(&neighbor->neighbor_main_addr);
+              link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
 
               // loop through the one-hop neighbors that see this
               // two hop neighbour
@@ -611,14 +616,33 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
                   if (walker->neighbor == neighbor)
                     {
+                      double saved_lq, rel_lq;
+
+                      // saved previous total link quality
+
+                      saved_lq = walker->full_link_quality;
+
+                      if (saved_lq == 0.0)
+                        saved_lq = -1.0;
+
                       // total link quality = link quality between us
                       // and our one-hop neighbor x link quality between
                       // our one-hop neighbor and the two-hop neighbor
 
                       walker->full_link_quality =
-                        link_quality *
-                        message_neighbors->link_quality *
+                        link->neigh_link_quality *
                         message_neighbors->neigh_link_quality;
+
+                      // if the link quality has changed by more than 10
+                      // percent, signal
+
+                      rel_lq = walker->full_link_quality / saved_lq;
+
+                      if (rel_lq > 1.1 || rel_lq < 0.9)
+                        {
+                          changes_neighborhood = OLSR_TRUE;
+                          changes_topology = OLSR_TRUE;
+                        }
                     }
                 }
             }

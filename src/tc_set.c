@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.9 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: tc_set.c,v 1.10 2004/11/10 12:35:30 tlopatic Exp $
  *
  */
 
@@ -263,6 +263,37 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	  /* Update entry */
 	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &existing_dst->T_time);
 	  existing_dst->T_seq = msg->ansn;
+
+#if defined USE_LINK_QUALITY
+          if (olsr_cnf->lq_level > 0)
+            {
+              double saved_lq, rel_lq;
+
+              saved_lq = existing_dst->link_quality;
+
+              if (saved_lq == 0.0)
+                saved_lq = -1.0;
+
+              existing_dst->link_quality = mprs->neigh_link_quality;
+
+              rel_lq = existing_dst->link_quality / saved_lq;
+
+              if (rel_lq > 1.1 || rel_lq < 0.9)
+                retval = 1;
+
+              saved_lq = existing_dst->inverse_link_quality;
+
+              if (saved_lq == 0.0)
+                saved_lq = -1.0;
+
+              existing_dst->inverse_link_quality = mprs->link_quality;
+
+              rel_lq = existing_dst->inverse_link_quality / saved_lq;
+
+              if (rel_lq > 1.1 || rel_lq < 0.9)
+                retval = 1;
+            }
+#endif
 	}
 
       mprs = mprs->next;
