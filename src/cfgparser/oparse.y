@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.22 2004/11/29 20:10:35 kattemat Exp $
+ * $Id: oparse.y,v 1.23 2005/01/01 12:13:58 kattemat Exp $
  */
 
 
@@ -60,7 +60,7 @@
 void yyerror(char *);
 int yylex(void);
 
-
+static int ifs_in_curr_cfg = 0;
 
 
 
@@ -186,6 +186,12 @@ ipcstmt:  vcomment
           | ipcnet
 ;
 
+ifblock:   ifstart ifnicks
+;
+
+ifnicks:   | ifnicks ifnick
+;
+
 ifbody:     TOK_OPEN ifstmts TOK_CLOSE
 ;
 
@@ -291,6 +297,8 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
 isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 {
   struct in_addr in;
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
 
   if(PARSER_DEBUG) printf("\tIPv4 broadcast: %s\n", $2->string);
 
@@ -300,7 +308,13 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
       return -1;
     }
 
-  cnf->interfaces->cnf->ipv4_broadcast.v4 = in.s_addr;
+  while(ifcnt)
+    {
+      ifs->cnf->ipv4_broadcast.v4 = in.s_addr;
+
+      ifs = ifs->next;
+      ifcnt--;
+    }
 
   free($2->string);
   free($2);
@@ -309,10 +323,29 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 
 isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
 {
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
   if($2->boolean)
-    cnf->interfaces->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+    {
+      while(ifcnt)
+	{
+	  ifs->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+	  
+	  ifs = ifs->next;
+	  ifcnt--;
+	}
+    }
   else
-    cnf->interfaces->cnf->ipv6_addrtype = 0;
+    {
+      while(ifcnt)
+	{
+	  ifs->cnf->ipv6_addrtype = 0;
+	  
+	  ifs = ifs->next;
+	  ifcnt--;
+	}
+    }
 
   free($2);
 }
@@ -321,6 +354,8 @@ isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
 isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
 {
   struct in6_addr in6;
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
 
   if(PARSER_DEBUG) printf("\tIPv6 site-local multicast: %s\n", $2->string);
 
@@ -329,7 +364,14 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
       return -1;
     }
-  memcpy(&cnf->interfaces->cnf->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+
+  while(ifcnt)
+    {
+      memcpy(&ifs->cnf->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
 
 
   free($2->string);
@@ -341,6 +383,8 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
 isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 {
   struct in6_addr in6;
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
 
   if(PARSER_DEBUG) printf("\tIPv6 global multicast: %s\n", $2->string);
 
@@ -349,7 +393,14 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
       fprintf(stderr, "Failed converting IP address %s\n", $2->string);
       return -1;
     }
-  memcpy(&cnf->interfaces->cnf->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+
+  while(ifcnt)
+    {
+      memcpy(&ifs->cnf->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
 
 
   free($2->string);
@@ -358,58 +409,141 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 ;
 isethelloint: TOK_HELLOINT TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->hello_params.emission_interval = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", $2->floating);
+
+  while(ifcnt)
+    {
+      ifs->cnf->hello_params.emission_interval = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isethelloval: TOK_HELLOVAL TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->hello_params.validity_time = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", $2->floating);
+
+  while(ifcnt)
+    {
+      ifs->cnf->hello_params.validity_time = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isettcint: TOK_TCINT TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->tc_params.emission_interval = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", $2->floating);
+
+  while(ifcnt)
+    {
+      ifs->cnf->tc_params.emission_interval = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+  free($2);
 }
 ;
 isettcval: TOK_TCVAL TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->tc_params.validity_time = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+  
+  if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", $2->floating);
+  while(ifcnt)
+    {
+      ifs->cnf->tc_params.validity_time = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isetmidint: TOK_MIDINT TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->mid_params.emission_interval = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+
+  if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", $2->floating);
+  while(ifcnt)
+    {
+      ifs->cnf->mid_params.emission_interval = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isetmidval: TOK_MIDVAL TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->mid_params.validity_time = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", $2->floating);
+  while(ifcnt)
+    {
+      ifs->cnf->mid_params.validity_time = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isethnaint: TOK_HNAINT TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->hna_params.emission_interval = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+  
+  if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", $2->floating);
+  while(ifcnt)
+    {
+      ifs->cnf->hna_params.emission_interval = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 isethnaval: TOK_HNAVAL TOK_FLOAT
 {
-    if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", $2->floating);
-    cnf->interfaces->cnf->hna_params.validity_time = $2->floating;
-    free($2);
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", $2->floating);
+  while(ifcnt)
+    {
+      ifs->cnf->hna_params.validity_time = $2->floating;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 
@@ -517,7 +651,15 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 }
 ;
 
-ifblock: TOK_INTERFACE TOK_STRING
+ifstart: TOK_INTERFACE
+{
+  printf("setting ifs_in_curr_cfg = 0\n");
+  ifs_in_curr_cfg = 0;
+
+}
+;
+
+ifnick: TOK_STRING
 {
   struct olsr_if *in = malloc(sizeof(struct olsr_if));
   
@@ -535,13 +677,15 @@ ifblock: TOK_INTERFACE TOK_STRING
       YYABORT;
     }
 
-  in->name = $2->string;
+  in->name = $1->string;
 
   /* Queue */
   in->next = cnf->interfaces;
   cnf->interfaces = in;
 
-  free($2);
+  ifs_in_curr_cfg++;
+
+  free($1);
 }
 ;
 
