@@ -1,5 +1,5 @@
 ;
-; $Id: installer.nsi,v 1.2 2004/09/15 13:38:30 tlopatic Exp $
+; $Id: installer.nsi,v 1.3 2004/09/15 17:50:25 tlopatic Exp $
 ; Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
 ;
 ; This file is part of olsr.org.
@@ -20,7 +20,7 @@
 ;
 
 Name olsr.org
-OutFile olsr-setup.exe
+OutFile ..\..\..\olsr-setup.exe
 BrandingText "www.olsr.org"
 InstallDir $PROGRAMFILES\olsr.org
 LicenseData ..\..\..\gpl.txt
