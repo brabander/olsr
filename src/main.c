@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.22 2004/11/02 21:42:32 kattemat Exp $
+ * $Id: main.c,v 1.23 2004/11/03 07:09:09 kattemat Exp $
  *
  */
 
@@ -70,8 +70,7 @@ set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
  * Local variable declarations 
  */
 
-extern pthread_mutex_t mutex;
-pthread_t main_thread;
+static pthread_t main_thread;
 
 
 /**
