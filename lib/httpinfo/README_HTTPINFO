@@ -46,14 +46,12 @@ let the user change olsrd settings in realtime.
 To compile with this feature pass ADMIN_INTERFACE=1
 as an argument to make(eg. make ADMIN_INTERFACE=1)
 
-As of now the admin page is only responding to some
-of the fields in the admin form. This will change :)
-However there are _tons_ of security related issues here.
-
 NOTE!
-If running olsrd 0.4.8, the plugin will not be able
-to display the link set. Use CVs version of olsrd
-if you need this functionallity.
+This plugin is very olsrd version sensitive. This means
+that to be sure everything woks as it is supposed to
+you should use the version of olsrd that the plugin 
+was shipped with. If using CVS you should check 
+out/update both olsrd and this plugin.
 
 The plugin should now compile on windows and FreeBSD
 as well.
@@ -61,8 +59,6 @@ To compile in windows:
 make OS=win32
 to compile in FreeBSD:
 gmake OS=fbsd
-
-Hey - this is my first port of anything to windows :-)
 
 installation:
 make
