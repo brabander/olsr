@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.19 2004/12/19 20:21:24 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.20 2004/12/20 21:27:47 kattemat Exp $
  */
 
 /*
@@ -45,6 +45,7 @@
 
 #include "olsrd_httpinfo.h"
 #include "olsr_cfg.h"
+#include "gfx.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -68,7 +69,7 @@ void
 parse_http_request(int);
 
 int
-build_http_header(http_header_type, olsr_u32_t, char *, olsr_u32_t);
+build_http_header(http_header_type, olsr_bool, olsr_u32_t, char *, olsr_u32_t);
 
 static int
 build_frame(char *, char *, int, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
@@ -240,13 +241,27 @@ parse_http_request(int fd)
     {
       /* We only support GET */
       strcpy(body, HTTP_400_MSG);
-      c = build_http_header(HTTP_BAD_REQ, strlen(body), req, MAX_HTTPREQ_SIZE);
+      c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
   else if(strlen(filename) > 1)
     {
-      /* We only support request for / */
-      strcpy(body, HTTP_404_MSG);
-      c = build_http_header(HTTP_BAD_FILE, strlen(body), req, MAX_HTTPREQ_SIZE);
+      if(!strcmp(filename, "/favicon.ico") || !strcmp(filename, "favicon.ico"))
+	{
+	  memcpy(body, favicon_ico, favicon_ico_len);
+	  size = favicon_ico_len;
+	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
+	}
+      else if(!strcmp(filename, "/logo.gif") || !strcmp(filename, "logo.gif"))
+	{
+	  memcpy(body, logo_gif, logo_gif_len);
+	  size = logo_gif_len;
+	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
+	}
+      else
+	{
+	  strcpy(body, HTTP_404_MSG);
+	  c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
+	}
     }
   else
     {
@@ -305,7 +320,7 @@ parse_http_request(int fd)
           }
 
 
-      c = build_http_header(HTTP_OK, size, req, MAX_HTTPREQ_SIZE);
+      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
     }
   
   r = send(client_sockets[curr_clients], req, c, 0);   
@@ -330,7 +345,11 @@ parse_http_request(int fd)
 
 
 int
-build_http_header(http_header_type type, olsr_u32_t size, char *buf, olsr_u32_t bufsize)
+build_http_header(http_header_type type, 
+		  olsr_bool is_html, 
+		  olsr_u32_t size, 
+		  char *buf, 
+		  olsr_u32_t bufsize)
 {
   time_t currtime;
   char timestr[45];
@@ -367,7 +386,10 @@ build_http_header(http_header_type type, olsr_u32_t size, char *buf, olsr_u32_t 
   strcat(buf,"Connection: closed\r\n");
 
   /* MIME type */
-  strcat(buf, "Content-type: text/html\r\n");
+  if(is_html)
+    strcat(buf, "Content-type: text/html\r\n");
+  else
+    strcat(buf, "Content-type: text/plain\r\n");
 
   /* Content length */
   if(size > 0)
@@ -382,6 +404,8 @@ build_http_header(http_header_type type, olsr_u32_t size, char *buf, olsr_u32_t 
    */
   strcat(buf, "Cache-Control: no-cache\r\n");
 
+  if(!is_html)
+    strcat(buf, "Accept-Ranges: bytes\r\n");
 
   /* End header */
   strcat(buf, "\r\n");

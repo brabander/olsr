@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.14 2004/12/19 17:03:15 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.15 2004/12/20 21:27:47 kattemat Exp $
  */
 
 /*
@@ -79,10 +79,12 @@ static const char *http_ok_head[] =
   "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
   "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
   "<TR BGCOLOR=\"#000044\">\n",
-  "<TD HEIGHT=\"69\" WIDTH=\"100%\" VALIGN=middle ALIGN=left>\n",
+  "<TD HEIGHT=\"69\" WIDTH=\"80%\" VALIGN=middle ALIGN=left>\n",
   "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></TD>\n",
+  "<TD HEIGHT=\"69\" WIDTH=\"20%\" VALIGN=middle ALIGN=right>\n",
+  "<img src=\"/logo.gif\"></TD>\n",
   "</TR>\n<TR BGCOLOR=\"#8888cc\">\n",
-  "<TD HEIGHT=\"25\" ALIGN=right VALIGN=middle>\n",
+  "<TD HEIGHT=\"25\" ALIGN=right VALIGN=middle colspan=2>\n",
   "<FONT COLOR=\"#FFFFFF\">\n",
   "<A HREF=\"#status\"><B>Status</B></A>&nbsp;|&nbsp;\n",
   "<A HREF=\"#routes\"><B>Routes</B></A>&nbsp;|&nbsp;\n",
@@ -157,6 +159,8 @@ typedef enum
     HTTP_BAD_FILE,
     HTTP_OK
   }http_header_type;
+
+
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);
