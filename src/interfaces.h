@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.22 2005/03/06 12:38:09 kattemat Exp $
+ * $Id: interfaces.h,v 1.23 2005/03/06 18:08:29 kattemat Exp $
  */
 
 
@@ -141,10 +141,6 @@ struct interface
 
 
 #define OLSR_DEFAULT_MTU             1500
-
-#define	IFF_PASSIVE	0x200000	/* can't tell if up/down */
-#define	IFF_INTERFACE	0x400000	/* hardware interface */
-
 
 #ifndef OLSR_PLUGIN
 

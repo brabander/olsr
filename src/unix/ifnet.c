@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.23 2005/03/04 17:10:53 kattemat Exp $
+ * $Id: ifnet.c,v 1.24 2005/03/06 18:08:29 kattemat Exp $
  */
 
 
@@ -166,7 +166,7 @@ chk_if_changed(struct olsr_if *iface)
       goto remove_interface;
     }
 
-  ifp->int_flags = ifr.ifr_flags | IFF_INTERFACE;
+  ifp->int_flags = ifr.ifr_flags;
 
   /*
    * First check if the interface is set DOWN
@@ -523,7 +523,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       return 0;
     }
 
-  ifs.int_flags = ifr.ifr_flags | IFF_INTERFACE;      
+  ifs.int_flags = ifr.ifr_flags;      
 
 
   if ((ifs.int_flags & IFF_UP) == 0)
