@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.18 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: lq_route.c,v 1.19 2004/12/06 13:01:15 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -454,13 +454,15 @@ void olsr_calculate_lq_routing_table(void)
 
     // add a route to the main address of the destination node
 
-    olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
+    olsr_insert_routing_table(&vert->addr,
+                              get_neighbor_nexthop(&walker->addr), hops);
 
     // add routes to the remaining interfaces of the destination node
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
          mid_walker = mid_walker->next)
-      olsr_insert_routing_table(&mid_walker->address, &walker->addr, hops);
+      olsr_insert_routing_table(&mid_walker->address,
+                                get_neighbor_nexthop(&walker->addr), hops);
   }
 
   // free the graph
