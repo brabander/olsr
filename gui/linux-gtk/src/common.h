@@ -38,7 +38,7 @@
 //#include "types.h"
 #include "olsr_protocol.h"
 
-#define SOFTWARE_VERSION "uOLSRd GUI 0.2.6" 
+#define SOFTWARE_VERSION "olsr.org GUI 0.2.7" 
 #define IPC_INTERVAL 500 //interval for IPC read timeout
 #define MAXPACKS 20
 #define BUFFSIZE 512
