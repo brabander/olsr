@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.44 2004/12/12 17:53:38 kattemat Exp $
+# $Id: Makefile,v 1.45 2004/12/19 09:27:17 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -255,6 +255,10 @@ install:	install_bin
 		mkdir -p $(INSTALL_PREFIX)/usr/share/man/man5/
 		cp files/olsrd.conf.5.gz $(INSTALL_PREFIX)/usr/share/man/man5/olsrd.conf.5.gz
 
+#
+# PLUGINS
+#
+
 libs: 
 		for i in lib/*; do \
 			$(MAKE) -C $$i; \
@@ -269,6 +273,32 @@ install_libs:
 		for i in lib/*; do \
 			$(MAKE) -C $$i LIBDIR=$(INSTALL_PREFIX)/usr/lib install; \
 		done; 	
+
+httpinfo:
+		$(MAKE) -C lib/httpinfo clean
+		$(MAKE) -C lib/httpinfo 
+		$(MAKE) -C lib/httpinfo install 
+
+dot_draw:
+		$(MAKE) -C lib/dot_draw clean
+		$(MAKE) -C lib/dot_draw 
+		$(MAKE) -C lib/dot_draw install
+
+dyn_gw:
+		$(MAKE) -C lib/dyn_gw clean
+		$(MAKE) -C lib/dyn_gw
+		$(MAKE) -C lib/dyn_gw install
+
+powerinfo:
+		$(MAKE) -C lib/powerinfo clean
+		$(MAKE) -C lib/powerinfo 
+		$(MAKE) -C lib/powerinfo install
+
+secure:
+		$(MAKE) -C lib/secure clean
+		$(MAKE) -C lib/secure
+		$(MAKE) -C lib/secure install
+
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h)
