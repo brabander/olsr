@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.6 2004/11/10 21:37:16 tlopatic Exp $
+ * $Id: lq_route.c,v 1.7 2004/11/10 23:14:39 tlopatic Exp $
  *
  */
 
@@ -367,16 +367,37 @@ void olsr_calculate_lq_routing_table(void)
   
   myself = node->data;
 
+  fprintf(stderr, "Dijkstra results:\n");
+
   for (node = list_get_next(node); node != NULL; node = list_get_next(node))
   {
     vert = node->data;
 
     hops = 1;
 
-    // count hops to until we have reached a one-hop neighbour
+    // count hops to until the path ends or until we have reached a
+    // one-hop neighbour
 
-    for (walker = vert; walker->prev != myself; walker = walker->prev)
-      hops++;
+    for (walker = vert; walker != NULL && walker->prev != myself;
+         walker = walker->prev)
+      {
+        fprintf(stderr, " %s", olsr_ip_to_string(&walker->addr));
+        hops++;
+      }
+
+    if (walker != NULL && walker->prev == myself)
+      fprintf(stderr, " %s (one-hop) - OK", olsr_ip_to_string(&walker->addr));
+
+    fprintf(stderr, "\n");
+
+    // no path found to a one-hop neighbour, ignore this node
+
+    if (walker == NULL)
+    {
+      fprintf(stderr, "No path found for %s.\n",
+              olsr_ip_to_string(&vert->addr));
+      continue;
+    }
 
     // add a route to the main address of the destination node
 
