@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.h,v 1.5 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyDialog2.h,v 1.6 2004/11/21 02:06:56 tlopatic Exp $
  */
 
 #if !defined(AFX_MYDIALOG2_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_)
@@ -122,6 +122,8 @@ protected:
 	void SetDebugLevel(int);
 
 	void Reset(void);
+
+	void OnEtxCheckWorker(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.cpp,v 1.6 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyDialog2.cpp,v 1.7 2004/11/21 02:06:56 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -207,13 +207,22 @@ void MyDialog2::OnHystCheck()
 	m_HystScaling.EnableWindow(EnaDis);
 }
 
-void MyDialog2::OnEtxCheck() 
+void MyDialog2::OnEtxCheckWorker() 
 {
 	BOOL EnaDis = m_EtxCheck.GetCheck();
 
 	m_EtxWindowSize.EnableWindow(EnaDis);
 	m_EtxRadio1.EnableWindow(EnaDis);
 	m_EtxRadio2.EnableWindow(EnaDis);
+}
+
+void MyDialog2::OnEtxCheck()
+{
+	OnEtxCheckWorker();
+
+	AfxMessageBox("WARNING - This parameter breaks compliance with the OLSR standard.\n\n"
+		"Make sure that either all nodes in your network use ETX or all nodes in your network don't use ETX.\n\n"
+		"DO NOT MIX NODES WITH DIFFERENT ETX SETTINGS!");
 }
 
 int MyDialog2::OpenConfigFile(CString PathName)
@@ -309,7 +318,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_EtxRadio1.SetCheck(Conf->lq_level == 1);
 	m_EtxRadio2.SetCheck(Conf->lq_level == 0 || Conf->lq_level == 2);
 
-	OnEtxCheck();
+	OnEtxCheckWorker();
 
 	m_InternetCheck.SetCheck(FALSE);
 

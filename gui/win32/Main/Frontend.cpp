@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Frontend.cpp,v 1.4 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: Frontend.cpp,v 1.5 2004/11/21 02:06:56 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -130,6 +130,8 @@ BOOL CFrontendApp::InitInstance()
 			BOOL (*Adjust)(HANDLE, BOOL, TOKEN_PRIVILEGES *, DWORD,
 				TOKEN_PRIVILEGES *, DWORD *);
 			HANDLE Token;
+
+			Proc = ::GetCurrentProcess();
 
 			Lib = ::LoadLibrary("advapi32.dll");
 

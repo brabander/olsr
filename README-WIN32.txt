@@ -99,6 +99,11 @@ how this version differs from the original Linux version.
   active, the link quality is additionally used to create the routing
   table.
 
+  WARNING - Enabling ETX breaks compliance with the OLSR
+  standard. ETX-enabled nodes do not interoperate with nodes that have
+  ETX switched off. DO NOT USE NODES WITH DIFFERENT ETX SETTINGS IN A
+  SINGLE NETWORK!
+
   The three buttons on the lower right of the "Settings" tab open
   previously saved settings, save the current settings to a
   configuration file, and reset the current settings to default
