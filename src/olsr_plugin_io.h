@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.9 2004/11/10 16:58:46 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.10 2004/11/10 17:35:33 kattemat Exp $
  *
  */
 
@@ -36,7 +36,7 @@
  *                 GETD_OUTPUTSIZE removed
  *                 GETF__NET_OUTBUFFER_PUSH added
  *                 GETD__ROUTINGTABLE added
- *                 GET__HNA_ROUTES added
+ *                 GETD__HNA_ROUTES added
  *                 - Andreas
  */
 
