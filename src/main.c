@@ -19,26 +19,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.9 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: main.c,v 1.10 2004/09/21 19:52:22 kattemat Exp $
  *
- */
-
-/*
- *This implementation was based on the INRIA OLSR implementation. 
- *
- *The INRIA code carries the following copyright:
- *
- * This Copyright notice is in French. An English summary is given
- * but the referee text is the French one.
- *
- * Copyright (c) 2000, 2001 Adokoe.Plakoo@inria.fr, INRIA Rocquencourt,
- *                          Anis.Laouiti@inria.fr, INRIA Rocquencourt.
  */
 
 
 #include "main.h"
 #include "interfaces.h"
-//#include "ifnet.h"
 #include "configfile.h"
 #include "mantissa.h"
 #include "local_hna_set.h"
@@ -78,12 +65,7 @@ set_default_values();
  */
 
 /**
- *The main funtion does a LOT of things. It should 
- *probably be much shorter
- *
- *After things are set up and the scheduler thread
- *is started, the main thread goes into a typical 
- *select(2) loop listening
+ * Main entrypoint
  */
 
 int
