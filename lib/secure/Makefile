@@ -16,7 +16,7 @@ ifeq ($(OS), linux)
 NAME ?= olsrd_secure.so.0.4
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 LIBS ?= -lc -lssl -lcrypto -lm
-LDFLAGS = -fPIC
+LDFLAGS += -fPIC
 CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
 INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
@@ -27,7 +27,7 @@ ifeq ($(OS), fbsd)
 NAME ?= olsrd_secure.so.0.4
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 LIBS ?= -lc -lssl -lcrypto -lm
-LDFLAGS = -fPIC
+LDFLAGS += -fPIC
 CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
 INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
