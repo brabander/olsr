@@ -77,13 +77,14 @@ olsrd.exe:	$(MAINOBJS)
 		gcc -mno-cygwin -o olsrd.exe $(MAINOBJS) -lws2_32 -liphlpapi
 
 olsrconf.dll:	$(CONFDLLOBJS)
-		gcc -mno-cygwin -shared -o olsrconf.dll $(CONFDLLOBJS) -lws2_32
+		gcc -mno-cygwin -shared -o olsrconf.dll $(CONFDLLOBJS) \
+		-lws2_32 -Wl,--out-implib,olsrconf.lib
 
 olsrconf.exe:	$(CONFEXEOBJS)
 		gcc -mno-cygwin -o olsrconf.exe $(CONFEXEOBJS) -lws2_32
 
 clean:
-		rm -f *.exe *.dll olsr-${VERS}.zip
+		rm -f *.exe *.dll *.lib *.zip
 		find . -name \*~ -exec rm -f {} \;
 		find src -name \*.o -exec rm -f {} \;
 
