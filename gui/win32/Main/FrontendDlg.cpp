@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: FrontendDlg.cpp,v 1.9 2005/01/17 11:52:36 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.10 2005/03/30 21:29:05 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -59,6 +59,9 @@ CFrontendDlg::CFrontendDlg(CWnd* pParent)
 	//}}AFX_DATA_INIT
 
 	Event = CreateEvent(NULL, FALSE, FALSE, "TheOlsrdShimEvent");
+
+	LogThread = NULL;
+	NetThread = NULL;
 }
 
 void CFrontendDlg::DoDataExchange(CDataExchange* pDX)
@@ -849,6 +852,8 @@ int CFrontendDlg::StartOlsrd()
 		::SetEvent(Event);
 		::WaitForSingleObject((HANDLE)LogThread, INFINITE);
 
+		LogThread = NULL;
+
 		return -1;
 	}
 
@@ -870,6 +875,8 @@ int CFrontendDlg::StartOlsrd()
 
 		::closesocket(SockHand);
 
+		LogThread = NULL;
+
 		return -1;
 	}
 
@@ -880,12 +887,18 @@ int CFrontendDlg::StartOlsrd()
 
 int CFrontendDlg::StopOlsrd()
 {
+	if (LogThread == NULL && NetThread == NULL)
+		return 0;
+
 	TrayIcon::getInstance()->setStatus( TrayIcon::OFF, "Off" );
 
 	::SetEvent(Event);
 
 	::WaitForSingleObject((HANDLE)LogThread, INFINITE);
 	::WaitForSingleObject((HANDLE)NetThread, INFINITE);
+
+	LogThread = NULL;
+	NetThread = NULL;
 
 	::DeleteFile(StoredTempFile);
 
