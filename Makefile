@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.33 2004/12/01 19:16:21 kattemat Exp $
+# $Id: Makefile,v 1.34 2004/12/01 20:47:33 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -74,7 +74,7 @@ DEFINES += 	-Dlinux
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
 		-O2 -g #-pg -DDEBUG #-march=i686
 LIBS =		-lm -ldl
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -Y $(INCLUDES) $(DEFINES) $(SRCS) >/dev/null 2>&1
+MAKEDEPEND = 	makedepend -f $(DEPFILE) -Y $(DEFINES) $(INCLUDES) $(SRCS) >/dev/null 2>&1
 
 else
 ifeq ($(OS), fbsd)
@@ -83,7 +83,7 @@ SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
 LIBS =		-lm
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
 else
 ifeq ($(OS), osx)
@@ -93,7 +93,7 @@ HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 DEFINES +=	-D__MacOSX__
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g 
 LIBS =		-lm -ldl
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
 else
 ifeq ($(OS), win32)
@@ -105,7 +105,7 @@ DEFINES +=	-DWIN32
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
 		-mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS) >/dev/null 2>&1
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
 olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
