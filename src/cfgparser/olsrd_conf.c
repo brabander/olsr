@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.22 2004/11/20 21:52:09 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.23 2004/11/20 22:37:40 kattemat Exp $
  *
  */
 
@@ -792,31 +792,25 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  if(in->cnf->ipv4_broadcast.v4)
 	    {
 	      in4.s_addr = in->cnf->ipv4_broadcast.v4;
-	      printf("\tIPv4 broadcast        : %s\n", inet_ntoa(in4));
+	      printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in4));
 	    }
 	  else
 	    {
-	      printf("\tIPv4 broadcast        : AUTO\n");
+	      printf("\tIPv4 broadcast           : AUTO\n");
 	    }
 	  
 	  if(in->cnf->ipv6_addrtype)
-	    printf("\tIPv6 addrtype         : site-local\n");
-	  else
-	    printf("\tIPv6 addrtype         : global\n");
+	    printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
 	  
 	  //union olsr_ip_addr       ipv6_multi_site;
 	  //union olsr_ip_addr       ipv6_multi_glbl;
-	  printf("\tIPv6 multicast site   : %s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
-	  printf("\tIPv6 multicast global : %s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  printf("\tIPv6 multicast site/glbl : %s", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  printf("/%s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  
-	  printf("\tHELLO emission int    : %0.2f\n", in->cnf->hello_params.emission_interval);
-	  printf("\tHELLO validity time   : %0.2f\n", in->cnf->hello_params.validity_time);
-	  printf("\tTC emission int       : %0.2f\n", in->cnf->tc_params.emission_interval);
-	  printf("\tTC validity time      : %0.2f\n", in->cnf->tc_params.validity_time);
-	  printf("\tMID emission int      : %0.2f\n", in->cnf->mid_params.emission_interval);
-	  printf("\tMID validity time     : %0.2f\n", in->cnf->mid_params.validity_time);
-	  printf("\tHNA emission int      : %0.2f\n", in->cnf->hna_params.emission_interval);
-	  printf("\tHNA validity time     : %0.2f\n", in->cnf->hna_params.validity_time);
+	  printf("\tHELLO emission/validity  : %0.2f/%0.2f\n", in->cnf->hello_params.emission_interval, in->cnf->hello_params.validity_time);
+	  printf("\tTC emission/validity     : %0.2f/%0.2f\n", in->cnf->tc_params.emission_interval, in->cnf->tc_params.validity_time);
+	  printf("\tMID emission/validity    : %0.2f/%0.2f\n", in->cnf->mid_params.emission_interval, in->cnf->mid_params.validity_time);
+	  printf("\tHNA emission/validity    : %0.2f/%0.2f\n", in->cnf->hna_params.emission_interval, in->cnf->hna_params.validity_time);
 	  
 	  
 	  
@@ -844,9 +838,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   if(cnf->use_hysteresis)
     {
       printf("Using hysteresis:\n");
-      printf("\tScaling : %0.2f\n", cnf->hysteresis_param.scaling);
-      printf("\tThr high: %0.2f\n", cnf->hysteresis_param.thr_high);
-      printf("\tThr low : %0.2f\n", cnf->hysteresis_param.thr_low);
+      printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
+      printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
     }
   else
     printf("Not using hysteresis\n");
