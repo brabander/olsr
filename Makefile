@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.41 2004/12/05 20:11:27 kattemat Exp $
+# $Id: Makefile,v 1.42 2004/12/05 22:04:19 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -115,7 +115,7 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
 		olsrd.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
-		README-WIN32.txt \
+		README \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
@@ -131,7 +131,7 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		cp gui/win32/Shim/Release/Shim.exe ${TEMP}/olsr-${VERS}
 		cp olsrd.exe ${TEMP}/olsr-${VERS}
 		cp src/cfgparser/olsrd_cfgparser.dll ${TEMP}/olsr-${VERS}
-		cp README-WIN32.txt ${TEMP}/olsr-${VERS}
+		cp README ${TEMP}/olsr-${VERS}
 		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
 		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/olsrd.conf
 		cp gui/win32/Main/Default.olsr ${TEMP}/olsr-${VERS}
@@ -146,7 +146,7 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
 		olsrd.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
-		README-WIN32.txt \
+		README \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
