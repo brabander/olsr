@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.19 2004/11/02 21:14:10 kattemat Exp $
+ * $Id: defs.h,v 1.20 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -32,10 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#define UP             1
-#define DOWN           0
-
 
 #include "log.h"
 #include "olsr_protocol.h"
@@ -142,7 +138,7 @@ int minsize;
 extern struct ip_tunnel_parm ipt;
 extern union olsr_ip_addr tnl_addr; /* The gateway address if inet_tnl_added==1 */
 
-olsr_u8_t changes;                /* is set if changes occur in MPRS set */ 
+olsr_bool changes;                /* is set if changes occur in MPRS set */ 
 
 /* TC empty message sending */
 extern struct timeval send_empty_tc;

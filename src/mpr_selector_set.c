@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr_selector_set.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.6 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -146,7 +146,7 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
     {
       olsr_add_mpr_selector(addr, vtime);
       retval = 1;
-      changes = UP;
+      changes = TRUE;
     }
   else
     {
@@ -190,7 +190,7 @@ olsr_time_out_mprs_set()
 
 	  /* Delete entry */
 	  free(mprs_to_delete);
-	  changes = UP;
+	  changes = TRUE;
 	}
       else
 	mprs = mprs->next;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.23 2004/11/03 07:09:09 kattemat Exp $
+ * $Id: main.c,v 1.24 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -120,11 +120,6 @@ main(int argc, char *argv[])
 
   /* Open syslog */
   olsr_openlog("olsrd");
-
-  /*
-   * Start syslog entry
-   */
-  olsr_syslog(OLSR_LOG_INFO, "%s started", SOFTWARE_VERSION);
 
   /* Set default values */
   set_default_values();
@@ -619,6 +614,11 @@ main(int argc, char *argv[])
 #endif
   /* Starting scheduler */
   start_scheduler(&thread);
+
+  /*
+   * Start syslog entry
+   */
+  olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
 
   /*
    *signal-handlers

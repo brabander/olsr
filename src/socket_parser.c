@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.9 2004/11/02 21:14:12 kattemat Exp $
+ * $Id: socket_parser.c,v 1.10 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -37,7 +37,7 @@
 #define strerror(x) StrError(x)
 #endif
 
-static int changes_sockets;
+static olsr_bool changes_sockets;
 
 /**
  * Add a socket and handler to the socketset
@@ -64,7 +64,7 @@ add_olsr_socket(int fd, void(*pf)(int))
   new_entry->fd = fd;
   new_entry->process_function = pf;
 
-  changes_sockets = 1;
+  changes_sockets = TRUE;
 
   /* Queue */
   new_entry->next = olsr_socket_entries;
@@ -102,13 +102,13 @@ remove_olsr_socket(int fd, void(*pf)(int))
 	    {
 	      olsr_socket_entries = entry->next;
 	      free(entry);
-	      changes_sockets = 1;
+	      changes_sockets = TRUE;
 	    }
 	  else
 	    {
 	      prev_entry->next = entry->next;
 	      free(entry);
-	      changes_sockets = 1;
+	      changes_sockets = TRUE;
 	    }
 	  return 1;
 	}
@@ -138,7 +138,7 @@ listen_loop()
    */
   hfd = 0;
 
-  changes_sockets = 0;
+  changes_sockets = FALSE;
 
   /* Begin critical section */
   pthread_mutex_lock(&mutex);
@@ -191,7 +191,7 @@ listen_loop()
 	    }
 	  /* End critical section */
 	  pthread_mutex_unlock(&mutex);
-	  changes_sockets = 0;
+	  changes_sockets = FALSE;
 	}
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mid_set.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: mid_set.c,v 1.7 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -142,7 +142,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
 
 	  olsr_delete_two_hop_neighbor_table(tmp_2_neighbor);
 
-	  changes_neighborhood = UP;
+	  changes_neighborhood = TRUE;
 	}
 
       /* Delete a possible neighbor entry */
@@ -163,7 +163,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
 	  /* Delete */
 	  free(tmp_neigh);
 
-	  changes_neighborhood = UP;
+	  changes_neighborhood = TRUE;
 	}
       
       tmp_adr = tmp_adr->next;
@@ -202,8 +202,8 @@ insert_mid_alias(union olsr_ip_addr *main_add, union olsr_ip_addr *alias, float 
   /*
    *Recalculate topology
    */
-  changes_neighborhood=UP;
-  changes_topology=UP;
+  changes_neighborhood = TRUE;
+  changes_topology = TRUE;
 
   //print_mid_list();
 }

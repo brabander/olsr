@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.3 2004/11/02 19:27:13 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.4 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -27,20 +27,21 @@
 #ifndef _OLSRD_CFGPARSER_H
 #define _OLSRD_CFGPARSER_H
 
+#include "olsr_protocol.h"
+
 /* Default valuse not declared in olsr_protocol.h */
 #define DEF_POLLRATE       0.1
-#define DEF_WILL_AUTO      1
-#define DEF_ALLOW_NO_INTS  1
+#define DEF_WILL_AUTO      TRUE
+#define DEF_ALLOW_NO_INTS  TRUE
 #define DEF_TOS            16
 #define DEF_DEBUGLVL       1
-#define DEF_OPEN_IPC       0
-#define DEF_USE_HYST       1
+#define DEF_OPEN_IPC       FALSE
+#define DEF_USE_HYST       TRUE
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
 #endif
 
-#include "olsr_protocol.h"
 
 #ifdef MAKELIB
 
@@ -94,7 +95,7 @@ struct olsr_if
   char                     *name;
   char                     *config;
   int                      index;
-  int                      configured;
+  olsr_bool                configured;
   struct interface         *interf;
   struct if_config_options *cnf;
   struct olsr_if           *next;
@@ -143,12 +144,12 @@ struct olsrd_config
 {
   int                      debug_level;
   int                      ip_version;
-  olsr_u8_t                allow_no_interfaces;
+  olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;
-  olsr_u8_t                willingness_auto;
+  olsr_bool                willingness_auto;
   olsr_u8_t                willingness;
-  olsr_u8_t                open_ipc;
-  olsr_u8_t                use_hysteresis;
+  olsr_bool                open_ipc;
+  olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
   float                    pollrate;
   olsr_u8_t                tc_redundancy;

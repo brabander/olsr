@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.7 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.8 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -44,6 +44,11 @@
 /* types */
 #include <sys/types.h>
 
+typedef enum
+{
+    FALSE = 0,
+    TRUE
+}olsr_bool;
 
 #ifdef linux
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr.c,v 1.7 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: mpr.c,v 1.8 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -525,7 +525,7 @@ olsr_calculate_mpr()
     {
       olsr_printf(3, "CHANGES IN MPR SET\n");
       if(olsr_cnf->tc_redundancy > 0)
-	changes = UP;
+	changes = TRUE;
     }
 
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.h,v 1.10 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: olsr.h,v 1.11 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -44,9 +44,9 @@ struct pcf
 struct pcf *pcf_list;
 
 
-olsr_8_t changes_topology;
-olsr_8_t changes_neighborhood;
-olsr_8_t changes_hna;
+olsr_bool changes_topology;
+olsr_bool changes_neighborhood;
+olsr_bool changes_hna;
 
 olsr_u16_t message_seqno;
 

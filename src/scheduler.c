@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.12 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: scheduler.c,v 1.13 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -159,6 +159,8 @@ scheduler()
 	{
 	  olsr_printf(3, "ANSN UPDATED\n\n");
 	  ansn++;
+#warning changes is set to FALSE in scheduler now
+          changes = FALSE;
 	}
 
 

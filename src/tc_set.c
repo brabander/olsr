@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: tc_set.c,v 1.6 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -42,7 +42,7 @@ olsr_init_tc()
   send_empty_tc.tv_sec = 0;
   send_empty_tc.tv_usec = 0;
 
-  changes = 0;
+  changes = FALSE;
 
   olsr_printf(5, "TC: init topo\n");
 

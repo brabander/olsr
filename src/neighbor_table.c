@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.7 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.8 2004/11/03 09:22:59 kattemat Exp $
  *
  */
 
@@ -186,7 +186,7 @@ olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
 
   free(entry);
 
-  changes_neighborhood = UP;
+  changes_neighborhood = TRUE;
   return 1;
 
 }
@@ -341,10 +341,10 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 	      olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
 	    }
   
-	  changes_neighborhood = UP;
-	  changes_topology = UP;
+	  changes_neighborhood = TRUE;
+	  changes_topology = TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = UP;
+	    changes = TRUE;
 	}
       entry->status = SYM;
     }
@@ -352,10 +352,10 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
     {
       if(entry->status == SYM)
 	{
-	  changes_neighborhood = UP;
-	  changes_topology = UP;
+	  changes_neighborhood = TRUE;
+	  changes_topology = TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = UP;
+	    changes = TRUE;
 	}
       /* else N_status is set to NOT_SYM */
       entry->status = NOT_SYM;
@@ -410,9 +410,9 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
 	  free(two_hop_to_delete);
 
-	  /* This flag is set to UP to recalculate the MPR set and the routing table*/
-	  changes_neighborhood=UP;
-	  changes_topology=UP;
+	  /* This flag is set to TRUE to recalculate the MPR set and the routing table*/
+	  changes_neighborhood = TRUE;
+	  changes_topology = TRUE;
 	  
 	}
       else
