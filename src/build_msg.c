@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.10 2004/09/21 19:51:11 kattemat Exp $
+ * $Id: build_msg.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
  *
  */
 
@@ -315,25 +315,30 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		       */
 		      if((curr_size + 4 + ipsize) > remainsize)
 			{
-			  /* Complete the headers */
-			  m->v4.seqno = htons(get_msg_seqno());
-			  m->v4.olsr_msgsize = htons(curr_size);
+			  /* Only send partial HELLO if it contains data */
+			  if(curr_size > (12 + 4))
+			    {
+			      /* Complete the headers */
+			      m->v4.seqno = htons(get_msg_seqno());
+			      m->v4.olsr_msgsize = htons(curr_size);
+			      
+			      hinfo->size = (char *)haddr - (char *)hinfo;
+			      hinfo->size = ntohs(hinfo->size);
+			      
+			      /* Send partial packet */
+			      net_outbuffer_push(msg_buffer, curr_size);
 
-			  hinfo->size = (char *)haddr - (char *)hinfo;
-			  hinfo->size = ntohs(hinfo->size);
-			  
-			  /* Send partial packet */
-			  net_outbuffer_push(msg_buffer, curr_size);
-			  net_output(ifp);
-			  
+			      curr_size = 12; /* OLSR message header */
+			      curr_size += 4; /* Hello header */
+			      
+			      h = &m->v4.message.hello;
+			      hinfo = h->hell_info;
+			      haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
+			    }
+
+			  net_output(ifp);			  
 			  /* Reset size and pointers */
 			  remainsize = net_outbuffer_bytes_left();
-			  curr_size = 12; /* OLSR message header */
-			  curr_size += 4; /* Hello header */
-
-			  h = &m->v4.message.hello;
-			  hinfo = h->hell_info;
-			  haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
 			}
 		      memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
@@ -356,6 +361,9 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		   */
 		  if((curr_size + ipsize) > remainsize)
 		    {
+		      /* If we get here the message contains data
+		       * - no need to check 
+		       */
 		      /* Complete the headers */
 		      m->v4.seqno = htons(get_msg_seqno());
 		      m->v4.olsr_msgsize = htons(curr_size);
@@ -532,27 +540,31 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		  sametype++;
 		  if (sametype == 1)
 		    {
+		      /* Check if there is room for header + one address */
 		      if((curr_size + 4 + ipsize) > remainsize)
 			{
-			  /* Complete the headers */
-			  m->v6.seqno = htons(get_msg_seqno());
-			  m->v6.olsr_msgsize = htons(curr_size);
-
-			  hinfo6->size = (char *)haddr - (char *)hinfo6;
-			  hinfo6->size = ntohs(hinfo6->size);
-			  
-			  /* Send partial packet */
-			  net_outbuffer_push(msg_buffer, curr_size);
+			  /* Only send partial HELLO if it contains data */
+			  if(curr_size > (24 + 4))
+			    {
+			      /* Complete the headers */
+			      m->v6.seqno = htons(get_msg_seqno());
+			      m->v6.olsr_msgsize = htons(curr_size);
+			      
+			      hinfo6->size = (char *)haddr - (char *)hinfo6;
+			      hinfo6->size = ntohs(hinfo6->size);
+			      
+			      /* Send partial packet */
+			      net_outbuffer_push(msg_buffer, curr_size);
+			      curr_size = 24; /* OLSR message header */
+			      curr_size += 4; /* Hello header */
+			      
+			      h6 = &m->v6.message.hello;
+			      hinfo6 = h6->hell_info;
+			      haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
+			    }
 			  net_output(ifp);
-			  
 			  /* Reset size and pointers */
 			  remainsize = net_outbuffer_bytes_left();
-			  curr_size = 24; /* OLSR message header */
-			  curr_size += 4; /* Hello header */
-			  
-			  h6 = &m->v6.message.hello;
-			  hinfo6 = h6->hell_info;
-			  haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
 			}
 		      memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
@@ -568,13 +580,16 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 
 		  /*
 		   * If there is not enough room left 
-		   * for the data in tho outputbuffer
+		   * for the data in the outputbuffer
 		   * we must send a partial HELLO and
 		   * continue building the rest of the
 		   * data in a new HELLO message
 		   */
 		  if((curr_size + ipsize) > remainsize)
 		    {
+		      /* If we get here the message contains data
+		       * - no need to check 
+		       */
 		      /* Complete the headers */
 		      m->v6.seqno = htons(get_msg_seqno());
 		      m->v6.olsr_msgsize = htons(curr_size);
@@ -583,11 +598,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		      hinfo6->size = ntohs(hinfo6->size);
 		      
 		      /* Send partial packet */
-		      net_outbuffer_push(msg_buffer, curr_size);
-		      net_output(ifp);
-		      
-		      /* Reset size and pointers */
-		      remainsize = net_outbuffer_bytes_left();
+			  net_outbuffer_push(msg_buffer, curr_size);
 		      curr_size = 24; /* OLSR message header */
 		      curr_size += 4; /* Hello header */
 		      
@@ -601,6 +612,10 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		      hinfo6->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
 		      //printf("(2)Setting neighbor link status: %x\n", hinfo->link_code);
 		      curr_size += 4; /* HELLO type section header */
+
+		      net_output(ifp);		      
+		      /* Reset size */
+		      remainsize = net_outbuffer_bytes_left();
 		      
 		    }
 
@@ -676,7 +691,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg *tc;
   struct neigh_info *mprsaddr; 
-  int found = 0;
+  int found = 0, partial_sent = 0;
 
   if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
@@ -718,21 +733,25 @@ tc_build4(struct tc_message *message, struct interface *ifp)
       if((curr_size + ipsize) > remainsize)
 	{
 
-	  olsr_printf(1, "Chomping TC!\n");
+	  /* Only add TC message if it contains data */
+	  if(curr_size > (12 + 4 ))
+	    {
+	      m->v4.olsr_msgsize = htons(curr_size);
+	      m->v4.seqno = htons(get_msg_seqno());
 
-	  m->v4.olsr_msgsize = htons(curr_size);
-	  m->v4.seqno = htons(get_msg_seqno());
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      
+	      /* Reset stuff */
+	      mprsaddr = tc->neigh;
+	      curr_size = 12; /* OLSR message header */
+	      curr_size += 4; /* TC header */
+	      found = 0;
+	      partial_sent = 1;
+	    }
 
-	  net_outbuffer_push(msg_buffer, curr_size);
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left();
 
-	  /* Reset stuff */
-	  mprsaddr = tc->neigh;
-	  curr_size = 12; /* OLSR message header */
-	  curr_size += 4; /* TC header */
-
-	  found = 0;
 	}
       found = 1;
       
@@ -753,7 +772,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
     }
   else
     {
-      if(!TIMED_OUT(&send_empty_tc))
+      if((!partial_sent) && (!TIMED_OUT(&send_empty_tc)))
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 
@@ -804,7 +823,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
-  int found = 0;
+  int found = 0, partial_sent = 0;
 
   if ((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
@@ -845,19 +864,23 @@ tc_build6(struct tc_message *message, struct interface *ifp)
       /*If packet is to be chomped */
       if((curr_size + ipsize) > remainsize)
 	{
-	  m->v6.olsr_msgsize = htons(curr_size);
-	  m->v6.seqno = htons(get_msg_seqno());
+	  /* Only add TC message if it contains data */
+	  if(curr_size > (24 + 4 ))
+	    {
+	      m->v6.olsr_msgsize = htons(curr_size);
+	      m->v6.seqno = htons(get_msg_seqno());
 
-	  net_outbuffer_push(msg_buffer, curr_size);
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      mprsaddr6 = tc6->neigh;
+	      curr_size = 24; /* OLSR message header */
+	      curr_size += 4; /* TC header */
+	      found = 0;
+	      partial_sent = 1;
+	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left();
-
-	  mprsaddr6 = tc6->neigh;
-	  curr_size = 24; /* OLSR message header */
-	  curr_size += 4; /* TC header */
 		
 
-	  found = 0;
 	}
       found = 1;
 
@@ -878,7 +901,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
     }
   else
     {
-      if(!TIMED_OUT(&send_empty_tc))
+      if((!partial_sent) && (!TIMED_OUT(&send_empty_tc)))
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 	    
@@ -960,15 +983,19 @@ mid_build4(struct interface *ifp)
 
 	  if((curr_size + ipsize) > remainsize)
 	    {
-	      /* set size */
-	      m->v4.olsr_msgsize = htons(curr_size);
-	      m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
-	      
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      /* Only add MID message if it contains data */
+	      if(curr_size > 12)
+		{
+		  /* set size */
+		  m->v4.olsr_msgsize = htons(curr_size);
+		  m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
+		  
+		  net_outbuffer_push(msg_buffer, curr_size);
+		  curr_size = 12; /* OLSR message header */
+		  addrs = m->v4.message.mid.mid_addr;
+		}
 	      net_output(ifp);
 	      remainsize = net_outbuffer_bytes_left();
-	      curr_size = 12; /* OLSR message header */
-	      addrs = m->v4.message.mid.mid_addr;
 	    }
 	  
 	  COPY_IP(&addrs->addr, &ifs->ip_addr);
@@ -1044,15 +1071,19 @@ mid_build6(struct interface *ifp)
 	{
 	  if((curr_size + ipsize) > remainsize)
 	    {
-	      /* set size */
-	      m->v6.olsr_msgsize = htons(curr_size);
-	      m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
-	      
-	      net_outbuffer_push(msg_buffer, curr_size);
+	      /* Only add MID message if it contains data */
+	      if(curr_size > 24)
+		{
+		  /* set size */
+		  m->v6.olsr_msgsize = htons(curr_size);
+		  m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
+		  
+		  net_outbuffer_push(msg_buffer, curr_size);
+		  curr_size = 24; /* OLSR message header */
+		  addrs6 = m->v6.message.mid.mid_addr;
+		}
 	      net_output(ifp);
 	      remainsize = net_outbuffer_bytes_left();
-	      curr_size = 24; /* OLSR message header */
-	      addrs6 = m->v6.message.mid.mid_addr;
 	    }
 
 	  COPY_IP(&addrs6->addr, &ifs->ip_addr);
@@ -1122,14 +1153,17 @@ hna_build4(struct interface *ifp)
     {
       if((curr_size + (2 * ipsize)) > remainsize)
 	{
-	  m->v4.seqno = htons(get_msg_seqno());
-	  m->v4.olsr_msgsize = htons(curr_size);
-
-	  net_outbuffer_push(msg_buffer, curr_size);
+	  /* Only add HNA message if it contains data */
+	  if(curr_size > 12)
+	    {
+	      m->v4.seqno = htons(get_msg_seqno());
+	      m->v4.olsr_msgsize = htons(curr_size);
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      curr_size = 12; /* OLSR message header */
+	      pair = m->v4.message.hna.hna_net;
+	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left();
-	  curr_size = 12; /* OLSR message header */
-	  pair = m->v4.message.hna.hna_net;
 	}
       COPY_IP(&pair->addr, &h->A_network_addr);
       COPY_IP(&pair->netmask, &h->A_netmask);
@@ -1200,14 +1234,17 @@ hna_build6(struct interface *ifp)
     {
       if((curr_size + (2 * ipsize)) > remainsize)
 	{
-	  m->v6.seqno = htons(get_msg_seqno());
-	  m->v6.olsr_msgsize = htons(curr_size);
-
-	  net_outbuffer_push(msg_buffer, curr_size);
+	  /* Only add HNA message if it contains data */
+	  if(curr_size > 24)
+	    {
+	      m->v6.seqno = htons(get_msg_seqno());
+	      m->v6.olsr_msgsize = htons(curr_size);
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      curr_size = 24; /* OLSR message header */
+	      pair6 = m->v6.message.hna.hna_net;
+	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left();
-	  curr_size = 24; /* OLSR message header */
-	  pair6 = m->v6.message.hna.hna_net;
 	}
 
       //printf("Adding %s\n", olsr_ip_to_string(&h->hna_net.addr));

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: net.h,v 1.7 2004/09/22 17:00:28 kattemat Exp $
  *
  */
 
@@ -49,6 +49,12 @@ init_net();
 
 inline int
 net_outbuffer_bytes_left();
+
+inline olsr_u16_t
+net_fwd_pending();
+
+inline olsr_u16_t
+net_output_pending();
 
 int
 net_set_maxmsgsize(olsr_u16_t);

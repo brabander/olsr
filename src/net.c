@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.10 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: net.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
  *
  */
 
@@ -85,6 +85,13 @@ inline olsr_u16_t
 net_fwd_pending()
 {
   return fwdsize;
+}
+
+
+inline olsr_u16_t
+net_output_pending()
+{
+  return outputsize;
 }
 
 /**

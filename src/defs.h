@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.10 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: defs.h,v 1.11 2004/09/22 17:00:28 kattemat Exp $
  *
  */
 
@@ -222,13 +222,6 @@ extern struct hna_entry *hna_old;
 
 extern struct ip_tunnel_parm ipt;
 extern union olsr_ip_addr tnl_addr; /* The gateway address if inet_tnl_added==1 */
-
-extern char	              packet[MAXMESSAGESIZE+1];
-extern int                    outputsize;
-extern union olsr_packet      *msg;
-extern char	              fwd_packet[MAXMESSAGESIZE+1];
-extern int                    fwdsize;
-extern union olsr_packet      *fwdmsg;
 
 olsr_u8_t changes;                /* is set if changes occur in MPRS set */ 
 

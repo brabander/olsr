@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.10 2004/09/21 19:06:56 kattemat Exp $
+ * $Id: olsr.c,v 1.11 2004/09/22 17:00:28 kattemat Exp $
  *
  */
 
@@ -347,9 +347,9 @@ olsr_forward_message(union olsr_message *m,
       /*
        * Check if message is to big to be piggybacked
        */
-      if(net_fwdbuffer_push(m, msgsize) != msgsize)
+      if(net_fwdbuffer_push((olsr_u8_t *)m, msgsize) != msgsize)
 	{
-	  olsr_printf(1, "Forwardbuffer full(%d + %d) - flushing!\n", fwdsize, msgsize);
+	  olsr_printf(1, "Forwardbuffer full(%d + %d) - flushing!\n", net_fwd_pending(), msgsize);
 	  
 	  /* Send */
 	  net_forward();
@@ -360,7 +360,7 @@ olsr_forward_message(union olsr_message *m,
       else
 	{
 #ifdef DEBUG
-	  olsr_printf(3, "Piggybacking message - buffer: %d msg: %d\n", fwdsize, msgsize);
+	  olsr_printf(3, "Piggybacking message - buffer: %d msg: %d\n", net_fwd_pending(), msgsize);
 #endif
 	  /* piggyback message to outputbuffer */
 	}
@@ -398,7 +398,7 @@ buffer_forward(union olsr_message *m, olsr_u16_t msgsize)
 #endif
 
   /* Copy message to outputbuffer */
-  if(net_fwdbuffer_push(m, msgsize) != msgsize)
+  if(net_fwdbuffer_push((olsr_u8_t *)m, msgsize) != msgsize)
     {
       olsr_printf(1, "Received message to big to be forwarded(%d bytes)!", msgsize);
       olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded(%d bytes)!", msgsize);
