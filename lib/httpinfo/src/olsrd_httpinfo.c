@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.14 2004/12/19 12:51:44 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.15 2004/12/19 15:04:30 kattemat Exp $
  */
 
 /*
@@ -491,7 +491,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     else
       size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, (int)uptime.tv_sec);
 
-    size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
+    size += sprintf(&buf[size], "<hr><table width=790 border=0>\n<tr>");
 
     size += sprintf(&buf[size], "<td>Main address: %s</td>\n", olsr_ip_to_string(main_addr));
     
@@ -510,24 +510,14 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", cfg->tos);
 
-    if(cfg->allow_no_interfaces)
-      size += sprintf(&buf[size], "<td>Will run without interfaces</td>\n");
-    else
-      size += sprintf(&buf[size], "<td>Will halt on no interfaces</td>\n");
-
     size += sprintf(&buf[size], "<td>Willingness: %d %s</td>\n", cfg->willingness, cfg->willingness_auto ? "(auto)" : "");
     
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
     size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", cfg->use_hysteresis ? "Enabled" : "Disabled");
-    if(cfg->use_hysteresis)
-      {
-	size += sprintf(&buf[size], "</tr>\n<tr>\n");
 	
-	size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", cfg->hysteresis_param.scaling);
-	size += sprintf(&buf[size], "<td>Hyst upper: %0.2f</td>\n", cfg->hysteresis_param.thr_high);
-	size += sprintf(&buf[size], "<td>Hyst lower: %0.2f</td>\n", cfg->hysteresis_param.thr_low);
-      }
+    size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", cfg->hysteresis_param.scaling);
+    size += sprintf(&buf[size], "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", cfg->hysteresis_param.thr_low, cfg->hysteresis_param.thr_high);
 
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
@@ -537,8 +527,11 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "<td></td>\n");
 
     size += sprintf(&buf[size], "</tr></table>\n");
-    
-    size += sprintf(&buf[size], "<hr>Interfaces:<br>\n");
+
+    size += sprintf(&buf[size], "<hr>\n");
+
+    size += sprintf(&buf[size], "Interfaces:<br>\n");
+
 
     size += sprintf(&buf[size], "<table width=790 border=0>\n");
 
@@ -550,7 +543,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 	size += sprintf(&buf[size], "<tr><th cellspan=3>%s</th>\n", ifs->name);
 	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "<tr><td cellspan=3>No such interface found</td></tr></table>\n");
+	    size += sprintf(&buf[size], "<tr><td cellspan=3>Status: DOWN</td></tr></table>\n");
 	    continue;
 	  }
 	
@@ -564,7 +557,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 			    sockaddr_to_string(&rifs->int_broadaddr));
 	    size += sprintf(&buf[size], "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
 	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
-	    size += sprintf(&buf[size], "<td>STATUS: TBD</td></tr>\n");
+	    size += sprintf(&buf[size], "<td>STATUS: UP</td></tr>\n");
 	  }
 	else
 	  {
@@ -579,6 +572,11 @@ build_status_body(char *buf, olsr_u32_t bufsize)
       }
 
     size += sprintf(&buf[size], "</table>\n");
+
+    if(cfg->allow_no_interfaces)
+      size += sprintf(&buf[size], "<i>Olsrd is configured to run even if no interfaces are available</i><br>\n");
+    else
+      size += sprintf(&buf[size], "<i>Olsrd is configured to halt if no interfaces are available</i><br>\n");
 
     size += sprintf(&buf[size], "<hr>Plugins:<br>\n");
 

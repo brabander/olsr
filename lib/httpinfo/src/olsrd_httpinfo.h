@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.11 2004/12/19 09:37:59 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.12 2004/12/19 15:04:30 kattemat Exp $
  */
 
 /*
@@ -64,50 +64,40 @@
 
 static const char *http_ok_head[] =
 {
-    "<HEAD>\n",
-    "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n",
-    "<TITLE>olsr.org httpinfo plugin</TITLE>\n",
-    "</HEAD>\n",
-    "<STYLE>\n",
-    "<!--\n",
-    "A {text-decoration: none}\n",
-    "TH{text-align: left}\n",
-    "H1, H2, H3, TD, TH, B {font-family: Helvetica; font-size: 80%}\n",
-    "-->\n",
-    "</STYLE>\n\n",
-    "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
-    "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
-    "<TR BGCOLOR=\"#000044\">\n",
-    "<TD WIDTH=30 HEIGHT=\"69\">",
-    "</TD>\n",
-    "<TD WIDTH=345 VALIGN=center ALIGN=left>\n",
-    "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\"></b>olsr.org OLSR daemon<b></TD>\n",
-    "<TD ALIGN=center VALIGN=bottom><FONT COLOR=white>\n"
-    "</FONT></TD>\n",
-    "</TR><TR BGCOLOR=\"#8888cc\">\n",
-    "<TD COLSPAN=2 ALIGN=right VALIGN=center>\n",
-    "<TABLE WIDTH=\"100\%\" VALIGN=center>\n",
-    "<TR>\n",
-    "<TD ALIGN=left>\n",
-    "</TD>\n",
-    "<TD ALIGN=right>\n",
-    "<FONT COLOR=\"#FFFFFF\">\n",
-    "<A HREF=\"#status\"><B>Status</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"#routes\"><B>Routes</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"#neighbors\"><B>Neighbors</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"#topology\"><B>Topology</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"#hna\"><B>HNA</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"#mid\"><B>MID</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=\"/\"><B>Refresh</B></A>&nbsp;&nbsp;\n",
-    "</FONT>\n",
-    "</TD>\n",
-    "</TR>\n",
-    "</TABLE>\n",
-    "</TD>\n",
-    "</TR>\n",
-    "</TABLE>\n",
-    "<!-- END HEAD -->\n\n",
-    NULL
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n",
+  "<HEAD>\n",
+  "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n",
+  "<TITLE>olsr.org httpinfo plugin</TITLE>\n",
+  "</HEAD>\n",
+  "<STYLE>\n",
+  "<!--\n",
+  "A {text-decoration: none}\n",
+  "TH{text-align: left}\n",
+  "H1, H2, H3, TD, TH, B {font-family: Helvetica; font-size: 80%}\n",
+  "-->\n",
+  "</STYLE>\n\n",
+  "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
+  "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
+  "<TR BGCOLOR=\"#000044\">\n",
+  "<TD HEIGHT=\"69\" WIDTH=\"100%\" VALIGN=center ALIGN=left>\n",
+  "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</TD>\n",
+  "</FONT></TD>\n",
+  "</TR>\n<TR BGCOLOR=\"#8888cc\">\n",
+  "<TD HEIGHT=\"25\" ALIGN=right VALIGN=center>\n",
+  "<FONT COLOR=\"#FFFFFF\">\n",
+  "<A HREF=\"#status\"><B>Status</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"#routes\"><B>Routes</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"#neighbors\"><B>Neighbors</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"#topology\"><B>Topology</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"#hna\"><B>HNA</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"#mid\"><B>MID</B></A>&nbsp;|&nbsp;\n",
+  "<A HREF=\"/\"><B>Refresh</B></A>&nbsp;&nbsp;\n",
+  "</FONT>\n",
+  "</TD>\n",
+  "</TR>\n",
+  "</TABLE>\n",
+  "<!-- END HEAD -->\n\n",
+  NULL
 };
 
 
