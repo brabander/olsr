@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.31 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: lq_route.c,v 1.32 2005/02/27 22:32:02 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -543,7 +543,7 @@ void olsr_calculate_lq_routing_table(void)
 
         if (olsr_lookup_routing_table(&link->neighbor_iface_addr) == NULL)
           olsr_insert_routing_table(&link->neighbor_iface_addr,
-                                    &link->neighbor_iface_addr, inter, hops);
+                                    &link->neighbor_iface_addr, inter, 1);
       }
     }
   }
