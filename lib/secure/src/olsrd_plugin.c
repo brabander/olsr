@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.5 2004/11/19 17:03:15 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.6 2004/11/19 20:52:05 kattemat Exp $
  */
 
 
@@ -119,6 +119,11 @@ my_fini()
 int
 register_olsr_param(char *key, char *value)
 {
+  if(!strcmp(key, "Keyfile"))
+    {
+      strncpy(keyfile, value, FILENAME_MAX);
+    }
+
   return 1;
 }
 
@@ -198,6 +203,14 @@ fetch_olsrd_data()
 		     sizeof(net_outbuffer_push_reserved)))
   {
     net_outbuffer_push_reserved = NULL;
+    retval = 0;
+  }
+
+  if(!olsr_plugin_io(GETF__NET_OUTBUFFER_PUSH, 
+		     &net_outbuffer_push, 
+		     sizeof(net_outbuffer_push)))
+  {
+    net_outbuffer_push = NULL;
     retval = 0;
   }
 

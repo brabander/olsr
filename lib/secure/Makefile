@@ -39,7 +39,7 @@ plugin: $(OBJS)
 
 
 install:
-	strip $(NAME)
+#	strip $(NAME)
 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
 	/sbin/ldconfig -n $(LIBDIR)
 

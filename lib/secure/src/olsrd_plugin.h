@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.6 2004/11/19 17:03:15 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.7 2004/11/19 20:52:06 kattemat Exp $
  */
 
 
@@ -51,6 +51,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "olsr_plugin_io.h"
 
@@ -79,6 +80,8 @@
 
 #define TIMED_OUT(s1) \
         timercmp(s1, now, <)
+
+char keyfile[FILENAME_MAX];
 
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
@@ -393,7 +396,7 @@ void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface
 int (*olsr_register_timeout_function)(void (*)());
 
 /* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
+int (*olsr_register_scheduler_event)(void (*)(), void *, float, float, olsr_u8_t *);
 
 /* Get the next message seqno in line */
 olsr_u16_t (*get_msg_seqno)();

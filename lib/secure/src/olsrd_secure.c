@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.6 2004/11/19 17:03:15 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.7 2004/11/19 20:52:06 kattemat Exp $
  */
 
 
@@ -78,9 +78,12 @@ olsr_plugin_init()
     }
   olsr_printf(1, "Timestamp database initialized\n");
 
-  if(read_key_from_file(KEYFILE) < 0)
+  if(!strlen(keyfile))
+    strcpy(keyfile, KEYFILE);
+
+  if(read_key_from_file(keyfile) < 0)
     {
-      olsr_printf(1, "[ENC]Could not read key from file!\nExitting!\n\n");
+      olsr_printf(1, "[ENC]Could not read key from file %s!\nExitting!\n\n", keyfile);
       exit(1);
     }
 
@@ -106,7 +109,7 @@ olsr_plugin_init()
     }
 
   /* Register timeout - poll every 2 seconds */
-  olsr_register_scheduler_event(&timeout_timestamps, 2, 0 , NULL);
+  olsr_register_scheduler_event(&timeout_timestamps, NULL, 2, 0 , NULL);
 
   return 1;
 }
@@ -1193,6 +1196,8 @@ read_key_from_file(char *file)
 
   keylen = 16;
   kf = fopen(file, "r");
+
+  olsr_printf(1, "[ENC]Reading key from file \"%s\"\n", file);
 
   if(kf == NULL)
     {
