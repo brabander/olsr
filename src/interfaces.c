@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.14 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: interfaces.c,v 1.15 2005/02/23 18:59:28 kattemat Exp $
  */
 
 #include "defs.h"
@@ -182,7 +182,33 @@ if_ifwithsock(int fd)
       ifp = ifp->int_next;
     }
   
-  return (ifp);
+  return NULL;
+}
+
+
+/**
+ *Find the interface with a given label.
+ *
+ *@param if_name the label of the interface to find.
+ *
+ *@return return the interface struct representing the interface
+ *that matched the label.
+ */
+struct interface *
+if_ifwithname(const char *if_name)
+{
+  struct interface *ifp;
+  ifp = ifnet;
+
+  while (ifp) 
+    {
+      /* good ol' strcmp should be sufficcient here */
+      if (!strcmp(ifp->int_name, if_name))
+	return ifp;
+      ifp = ifp->int_next;
+    }
+  
+  return NULL;
 }
 
 

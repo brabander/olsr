@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.19 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: interfaces.h,v 1.20 2005/02/23 18:59:28 kattemat Exp $
  */
 
 
@@ -167,6 +167,9 @@ if_ifwithsock(int);
 
 struct interface *
 if_ifwithaddr(union olsr_ip_addr *);
+
+struct interface *
+if_ifwithname(const char *);
 
 void
 queue_if(char *);
