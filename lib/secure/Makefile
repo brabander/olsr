@@ -6,7 +6,7 @@
 #Alter this file to fit your needs
 
 CC ?= gcc
-NAME ?= olsrd_secure.so.0.3
+NAME ?= olsrd_secure.so.0.4
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g #-DDEBUG# Uncomment -g for debugging

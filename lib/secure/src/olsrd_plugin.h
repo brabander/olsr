@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.4 2004/11/18 21:57:35 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.5 2004/11/18 21:58:23 kattemat Exp $
  */
 
 
@@ -60,7 +60,7 @@
 
 
 #define PLUGIN_NAME    "OLSRD signature plugin"
-#define PLUGIN_VERSION "0.3"
+#define PLUGIN_VERSION "0.4"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
