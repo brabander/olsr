@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.13 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.14 2005/01/31 21:28:55 kattemat Exp $
  */
 
 
@@ -235,7 +235,7 @@ olsr_ioctl_del_route(struct rt_entry *destination)
 
   olsr_printf(1, "(ioctl)Deleting route: %s(hopc %d)\n", 
 	      olsr_ip_to_string(&destination->rt_dst), 
-	      destination->rt_metric + 1);
+	      destination->rt_metric);
 
   memset(&kernel_route,0,sizeof(struct rtentry));
 
@@ -303,7 +303,7 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
 
   olsr_printf(2, "(ioctl)Deleting route: %s(hopc %d)\n", 
 	      olsr_ip_to_string(&destination->rt_dst), 
-	      destination->rt_metric + 1);
+	      destination->rt_metric);
 
 
   olsr_printf(1, "Deleting route: %s\n", olsr_ip_to_string(&tmp_addr));
