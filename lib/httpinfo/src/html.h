@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.1 2005/01/02 20:29:38 kattemat Exp $
+ * $Id: html.h,v 1.2 2005/01/05 20:39:50 kattemat Exp $
  */
 
 /*
@@ -71,6 +71,14 @@ static const char *httpinfo_css[] =
   "#tabnav a:link.active, #tabnav a:visited.active\n{\nborder-bottom: 1px solid #fff;\n",
   "background: #ffffff;\ncolor: #000;\n}\n",
   "#tabnav a:hover\n{\nbackground: #777777;\ncolor: #ffffff;\n}\n",
+  ".input_text\n{\nbackground: #E5E5E5;\nmargin-left: 5px; margin-top: 0px;\n",
+  "text-align: left;\n\nwidth: 100px;\npadding: 0px;\ncolor: #000000;\n",
+  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n",
+  "border: 1px solid #ccc;\n}\n", 
+  ".input_button\n{\nbackground: #B5D1EE;\nmargin-left: 5px;\nmargin-top: 0px;\n",
+  "text-align: center;\nwidth: 120px;\npadding: 0px;\ncolor: #000000;\n",
+  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n",
+  "border: 1px solid #000;\n}\n",
   NULL
 };
 
@@ -135,8 +143,13 @@ static const char *http_ok_tail[] =
 
 static const char *about_frame[] =
 {
-    "<b>Httpinfo olsrd plugin version 0.1</b><br>\n"
-    "by Andreas T&oslash;nnesen (C)2005.<hr>\n",
+    "<b>" PLUGIN_NAME " version " PLUGIN_VERSION "</b><br>\n"
+    "by Andreas T&oslash;nnesen (C)2005.<br>\n",
+#ifdef INCLUDE_SETTINGS
+    "Compiled <i>with experimental admin interface</i> " __DATE__ "<hr>\n"
+#else
+    "Compiled " __DATE__ "<hr>\n"
+#endif
     "This plugin implements a HTTP server that supplies\n",
     "the client with various dynamic web pages representing\n",
     "the current olsrd status.<br>The different pages include:\n",
@@ -156,6 +169,13 @@ static const char *about_frame[] =
     "<li><b>All</b> - Here all the previous pages are displayed as one.\n",
     "This is to make all information available as easy as possible(for example\n",
     "for a script) and using as few resources as possible.</li>\n",
+#ifdef INCLUDE_SETTINGS
+    "<li><b>Admin</b> - This page is highly experimental(and unsecure)!\n",
+    "As of now it is not working at all but it provides a impression of\n",
+    "the future possibilities of httpinfo. This is to be a interface to\n",
+    "changing olsrd settings in realtime. These settings include various\n"
+    "\"basic\" settings and local HNA settings.\n",
+#endif
     "<li><b>About</b> - this help page.</li>\n</ul>",
     "<hr>\n",
     "Send questions or comments to\n",
@@ -175,5 +195,44 @@ static const char *http_frame[] =
   NULL
 };
 
+
+#ifdef INCLUDE_SETTINGS
+static const char *admin_frame[] =
+  {
+    "<b>Administrator interface</b><hr>\n"
+    "<h2>Change basic settings</h2>\n",
+    "<form action=\"set_values\" method=\"post\">\n",
+    "<table width=\"100%%\">\n",
+    "<!-- BASICSETTINGS -->\n",
+    "</table>\n<br>\n",
+    "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n",
+    "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n",
+    "</form>\n",
+    "<h2>Add/remove local HNA entries</h2>\n",
+    "<form action=\"set_values\" method=\"post\">\n",
+    "<center><b>Network:</b>\n",
+    "<input type=\"text\" name=\"foo\" maxlength=\"100\" class=\"input_text\">\n",
+    "<b>Netmask/Prefix:</b>\n",
+    "<input type=\"text\" name=\"foo\" maxlength=\"16\" class=\"input_text\">\n",
+    "<input type=\"submit\" value=\"Add entry\" class=\"input_button\">\n",
+    "</center><hr>\n",
+    "<form action=\"set_values\" method=\"post\">\n",
+    "<table width=\"100%%\">\n",
+    "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n",
+    "<!-- HNAENTRIES -->\n",
+    "<tr><td><input type=\"checkbox\" name=\"foo\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
+    "</table>\n<br>\n",
+    "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n",
+    "</form>\n",
+
+    NULL
+};
+
+
+static char admin_basic_setting_int[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%d\"></td>\n";
+static char admin_basic_setting_float[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%0.2f\"></td>\n";
+static char admin_basic_setting_string[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
+
+#endif
 
 #endif

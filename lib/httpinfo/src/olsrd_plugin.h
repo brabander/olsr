@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.8 2004/12/29 19:55:54 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.9 2005/01/05 20:39:50 kattemat Exp $
  */
 
 /*
@@ -62,13 +62,12 @@
  *                       ALTER THIS TO YOUR OWN NEED                         *
  *****************************************************************************/
 
-#define PLUGIN_NAME    "OLSRD HTTP info plugin"
+#define PLUGIN_NAME    "Httpinfo olsrd plugin"
 #define PLUGIN_VERSION "0.1"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
 
-struct in_addr ipc_accept_ip;
 int http_port;
 
 /****************************************************************************

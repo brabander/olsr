@@ -30,6 +30,11 @@ INSTALL_LIB = 	cp $(NAME) ../..
 endif
 endif
 
+ifneq ($(INCLUDE_SETTINGS), )
+#@echo '\nWARNING - BUILDING WITH ADMIN INTERFACE!\n\n'
+CFLAGS += -DINCLUDE_SETTINGS
+endif
+
 #Sourcefiles
 #add yours here
 SRCS=	src/olsrd_plugin.c src/olsrd_httpinfo.c

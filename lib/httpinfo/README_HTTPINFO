@@ -38,6 +38,18 @@ and 80.23.53.22 and the networks 10.0.0.0/8 and
 192.168.0.0/16.
 access is always allowed from 127.0.0.1(localhost).
 
+ EXPERIMENTAL ADMIN INTERFACE
+
+The plugin can be compiled with a experimental 
+adminitrator interface. This is a web page that will
+let the user change olsrd settings in realtime.
+To compile with this feature pass INCLUDE_SETTINGS=1
+as an argument to make(eg. make INCLUDE_SETTINGS=1)
+
+As of now the admin page is not making any changes to
+olsrd - it is only a HTML form with no effect.
+But it will be usable eventually :) However there
+are _tons_ of security related issues here.
 
 NOTE!
 If running olsrd 0.4.8, the plugin will not be able
