@@ -34,8 +34,6 @@ recognize WLAN interfaces            X       X        !      !
 willingness based on                 X       X        ?      ?
 battery power
 
-gateway tunneling                    X       -        -      -
-
 TOS                                  X       -        -      -
 
 link layer information               X       -        -      -
