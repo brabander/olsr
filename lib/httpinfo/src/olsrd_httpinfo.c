@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.32 2005/01/02 19:57:18 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.33 2005/01/02 20:29:38 kattemat Exp $
  */
 
 /*
@@ -46,6 +46,7 @@
 #include "olsrd_httpinfo.h"
 #include "olsr_cfg.h"
 #include "gfx.h"
+#include "html.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

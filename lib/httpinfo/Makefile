@@ -41,7 +41,7 @@ OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o
 #Headerfiles
 #add yours here
 HDRS=	src/olsrd_plugin.h src/olsrd_httpinfo.h src/olsr_plugin_io.h\
-	src/gfx.h
+	src/gfx.h src/html.h
 
 all: plugin
 
