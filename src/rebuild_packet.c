@@ -102,18 +102,18 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
        * nextmsg contains size of
        * the addresses + 12 bytes(nextmessage, from address and the header)
        */
-      no_pairs = (ntohs(m->v6.olsr_msgsize) - 12) / 32; /* NB 32 not 8 */
+      no_pairs = (ntohs(m->v6.olsr_msgsize) - 24) / 32; /* NB 32 not 8 */
       
       COPY_IP(&hmsg->originator, &m->v6.originator);
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
       hmsg->hop_count =  m->v6.hopcnt;
-
+      
       /* Get vtime */
       hmsg->vtime = me_to_double(m->v6.olsr_vtime);
-
+      
       tmp_pairs = NULL;
       hna_pairs = NULL;
-
+      
       for(i = 0; i < no_pairs; i++)
 	{
 	  
