@@ -2,6 +2,11 @@ This file states changes as of version 0.2.4:
 
 0.4.8 ---------------------------------------------------------------------
 
+ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
+
+The willingness calculation for Linux, now also supports the more
+modern ACPI proc interface in addittion to APM.
+
 CODE REWRITES
 
 Much of the message generation and net output code is rewritten.
