@@ -69,7 +69,7 @@ IpcConnect
      # IPC connections that will be allowed
      # Setting this to 0 disables IPC
 
-     MaxConnections  1
+     MaxConnections  0
 
      # By default only 127.0.0.1 is allowed
      # to connect. Here allowed hosts can
@@ -99,12 +99,25 @@ UseHysteresis	yes
 # values are floating point values
 # in the interval 0,1
 # THR_LOW must always be lower than
-# THR_HIGH!!
+# THR_HIGH.
 
 #HystScaling	0.50
 #HystThrHigh	0.80
 #HystThrLow	0.30
 
+
+# Link quality level
+# 0 = do not use link quality
+# 1 = use link quality for MPR selection
+# 2 = use link quality for MPR selection and routing
+# Defaults to 0
+
+#LinkQualityLevel	0
+
+# Link quality window size
+# Defaults to 10
+
+#LinkQualityWinSize	10
 
 # Polling rate in seconds(float). 
 # Default value 0.05 sec
@@ -149,6 +162,13 @@ Pollrate	0.05
 
 #LoadPlugin "olsrd_dyn_gw.so.0.3"
 #{
+    # Here parameters are set to be sent to the
+    # plugin. Theese are on the form "key" "value".
+    # Parameters ofcause, differs from plugin to plugin.
+    # Consult the documentation of your plugin for details.
+
+    # Example: dyn_gw params
+
     # how often to check for Internet connectivity
     # defaults to 5 secs
 #   PlParam     "Interval"   "40"
