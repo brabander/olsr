@@ -1,7 +1,7 @@
 
 #
 # olsr.org makefile
-# $Id: Makefile,v 1.9 2004/10/19 22:13:21 kattemat Exp $
+# $Id: Makefile,v 1.10 2004/10/20 12:20:54 kattemat Exp $
 #
 
 CC ?= gcc
@@ -19,15 +19,15 @@ DEPEND= makedepend -Dlinux -Y -f $(DEPFILE) -- $(CFLAGS)
 
 SRCS= $(wildcard src/*.c) \
       $(wildcard src/linux/*.c) \
-      $(wildcard src/cfgparser/*.c)
+      $(CFGDIR)/oparse.c $(CFGDIR)/oscan.c $(CFGDIR)/olsrd_conf.c
 
 HDRS= $(wildcard src/*.h) \
       $(wildcard src/linux/*.h) \
-      $(wildcard src/cfgparser/*.h)
+      $(CFGDIR)/oparse.h $(CFGDIR)/olsrd_conf.h
 
 OBJS= $(patsubst %.c,%.o,$(wildcard src/*.c)) \
       $(patsubst %.c,%.o,$(wildcard src/linux/*.c)) \
-      $(patsubst %.c,%.o,$(wildcard src/cfgparser/*.c))
+      $(CFGDIR)/oparse.o $(CFGDIR)/oscan.o $(CFGDIR)/olsrd_conf.o
 
 
 all:	olsrd
@@ -66,7 +66,13 @@ clean_libs:
 
 .PHONY: clean
 clean:
-	-rm -f $(OBJS) $(DEPFILE)
+	rm -f $(OBJS)
+
+uberclean:
+	rm -f $(OBJS) $(DEPFILE) 
+	rm -f $(CFGDIR)/oscan.c $(CFGDIR)/oparse.h $(CFGDIR)/oparse.c
+	rm -f bin/olsrd
+	rm -f src/*~ src/linux/*~ src/cfgparser/*~
 
 install_libs:
 	for i in lib/*; do \
