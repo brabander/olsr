@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.1 2004/12/15 20:11:50 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.2 2004/12/16 14:58:54 kattemat Exp $
  */
 
 /*
@@ -145,7 +145,7 @@ get_http_socket(int port)
 }
 
 
-
+/* Non reentrant - but we are not multithreaded anyway */
 void
 parse_http_request(int fd)
 {
@@ -153,7 +153,7 @@ parse_http_request(int fd)
   socklen_t addrlen;
   char *addr;  
   char req[MAX_HTTPREQ_SIZE];
-  char body[1024*10];
+  static char body[1024*50];
   char req_type[11];
   char filename[251];
   char http_version[11];

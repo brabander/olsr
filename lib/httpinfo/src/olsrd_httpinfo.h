@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.1 2004/12/15 20:11:50 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.2 2004/12/16 14:58:54 kattemat Exp $
  */
 
 /*
@@ -82,7 +82,96 @@
 
 #define HTTP_400_MSG "<html><h1>400 - ERROR</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 #define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
-#define HTTP_200_MSG "<html><h1>OLSRD HTTP INFO-PLUGIN</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
+
+
+static const char *http_ok_head[] =
+{
+    "<HEAD>\n",
+    "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n",
+    "<TITLE>olsr.org</TITLE>\n",
+    "</HEAD>\n",
+    "<STYLE>\n",
+    "<!--\n",
+    "A {text-decoration: none}\n",
+    "H1, H2, H3, TD, TH, B {font-family: Helvetica}\n",
+    "-->\n",
+    "</STYLE>\n\n",
+    "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
+    "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
+    "<TR BGCOLOR=\"#000000\">\n",
+    "<TD WIDTH=30 HEIGHT=\"69\">",
+    "</TD>\n",
+    "<TD WIDTH=345 VALIGN=center ALIGN=center>\n",
+    "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\"></b>olsr.org OLSR daemon<b></TD>\n",
+    "<TD ALIGN=center VALIGN=bottom><FONT COLOR=white>\n"
+    "</FONT></TD>\n",
+    "</TR><TR BGCOLOR=\"#8F8F8F\">\n",
+    "<TD COLSPAN=2 HEIGHT=30 ALIGN=left VALIGN=center>\n",
+    "<B><FONT SIZE=+1 COLOR=\"#FFFFFF\">&nbsp;Version 0.4.8\n",
+    "</FONT></B></TD>\n",
+    "<TD COLSPAN=2 ALIGN=right VALIGN=center>\n",
+    "<TABLE WIDTH=\"100\%\" VALIGN=center>\n",
+    "<TR>\n",
+    "<TD ALIGN=left>\n",
+    "</TD>\n",
+    "<TD ALIGN=right>\n",
+    "<FONT COLOR=\"#FFFFFF\">\n",
+    "<A HREF=""><B>Link1</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=""><B>Link2</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=""><B>Link3</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=""><B>Link4</B></A>\n",
+    "</FONT>\n",
+    "</TD>\n",
+    "</TR>\n",
+    "</TABLE>\n",
+    "</TD>\n",
+    "</TR>\n",
+    "</TABLE>\n",
+    "<!-- END HEAD -->\n\n",
+    NULL
+};
+
+
+
+
+
+static const char *http_ok_tail[] =
+{
+    "\n<!-- START TAIL -->\n\n",
+    "<P>\n",
+    "<TABLE ALIGN=center WIDTH=800><TR><TD ALIGN=left>\n",
+    "<B>\n",
+    "<A HREF="">[link1]</A>&nbsp;&nbsp;\n",
+    "<A HREF="">[link2]</A>\n",
+    "</B>\n",
+    "</TD></TR></TABLE>\n",
+    "<P>\n",
+    "<HR ALIGN=center WIDTH=800>\n",
+    "<P>\n",
+    "<P>     \n",
+    "<TABLE WIDTH=800 BGCOLOR=\"#BFBFBF\" BORDER=0 CELLPADDING=2 ALIGN=center>\n",
+    "<TR>    \n",
+    "<TD ALIGN=center VALIGN=center>\n",
+    "<TABLE BGCOLOR=\"#ECECEC\" BORDER=0 CELLSPACING=3 CELLPADDING=2>\n",
+    "<TR>\n",
+    "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
+    "</CENTER>\n",
+    "<CENTER>For questions or comments on this plugin send mail to\n",
+    "<A HREF=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</A></CENTER></TD>\n",
+    "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
+    "<CENTER><FONT-=2>Official olsrd homepage:</FONT><br><A HREF=\"http://www.olsr.org/\">http://www.olsr.org</A>\n",
+    "</FONT></CENTER>\n",
+    "</TD>\n",
+    "</TR>\n",
+    "</TABLE>\n",
+    "</TD>\n",
+    "</TR>\n",
+    "</TABLE>\n",
+    "</BODY></HTML>\n",
+    NULL
+};
+
+
 
 typedef enum
   {
