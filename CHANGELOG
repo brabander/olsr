@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.22 2005/01/05 15:23:02 kattemat Exp $
+$Id: CHANGELOG,v 1.23 2005/01/14 18:20:19 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -15,14 +15,14 @@ Interface "if0" "if1" "if2"
 MINOR UPDATES
 
 - First specified interfaces IP is used as main address.
-- Broadcastflag is not checked on interface is fixed broadcast is
+- Broadcastflag is not checked on interface if fixed broadcast is
   set in config.
 
 BUGFIXES
 
 - A bug in the IPv6 multicast address configuration has been fixed.
   This caused olsrd not to work with global IPv6 addresses.
-- A bug in the IPv6 prefix-fromIPaddr function has been fixed. This
+- A bug in the IPv6 prefix-from IPaddr function has been fixed. This
   bug caused HNA prefixes to always be calculated to 0.
 
 
@@ -188,7 +188,7 @@ NATIVE WINDOWS GUI AND INSTALLER
 
 We now have a native Windows GUI. The GTK+ version is no longer
 supported on Windows. The new native GUI is pretty compact as it does
-not require the GTK+ runtime DLLs. In addition to monitoring olsrd's
+not require the GTK+ runtime DLLs. In addition to monitoring olsrds
 state the GUI offers an easy way for novice users to configure
 olsrd. It's pretty self-explanatory. Have a look at README-WIN32.txt
 for details. The Windows version now also comes with an installer
@@ -232,7 +232,7 @@ DYNAMIC NETWORK INTERFACE UPDATES
 Network interfaces can now be updated and removed/added at
 runtime. Olsrd will check all interfaces specified in the config 
 file or on the command-line, every 5 seconds. If updates
-occure, olsrd will register this and update the necessary data.
+occur, olsrd will register this and update the necessary data.
 If interfaces are removed or added, olsrd will detect this
 and configure the interfaces. If an interface is removed
 olsrd will continue to check the interface, so if say, a PCMCIA
@@ -282,7 +282,7 @@ CODE CLEANUPS
 PLUGIN INTERFCAE
 
 A new set of functions that are called whenever a change in the 
-interface configuration(update, addittion, removal) is made is 
+interface configuration(update, addition, removal) is made is 
 introduced.
 These functions are added and removed very much like the ptf
 functions. Available trough the functions add_ifchgf and del_ifchgf.
@@ -337,7 +337,7 @@ Due to this there are some updates in the configfile imperatives.
 CODE CLEANUPS
 
 Some new macros introduced for table insertion and removal and IP
-copying and comparision.
+copying and comparison.
 
 FRONT END BUGFIXES
 
@@ -370,7 +370,7 @@ These settings are not restored!
 CONFIGFILE OPTIONS FOR MID AND HNA ADDED
 
 Options to set the MID and HNA emission intervals and
-validitytime in the configfile added.
+validity time in the configfile added.
 
 IPv6 ADDRESS SCOPE
 
@@ -407,7 +407,7 @@ outgoing OLSR traffic.
 RESTRUCTURING
 
 Moved most headers out of OS dependent directories. The tunneling
-and link-layer notification interface is not yet seperated from
+and link-layer notification interface is not yet separated from
 the /linux directory.
 
 MANUALPAGE
@@ -434,7 +434,7 @@ LINK-LAYER NOTIFICATION
 Some preliminary link-layer notification code has been added. Link quality
 can be written to stdout if olsrd is started with the -llinfo switch.
 No action is currently taken based on this info. And info will only
-be retreived from the interface named "eth1".
+be retrieved from the interface named "eth1".
 This code is not usable for users as of yet!
 
 MPR UPDATES
@@ -449,7 +449,7 @@ There was a couple of bugs in the MPR selection code. All fixed.
 
 LINUX 2.6 BUG
 
-Users could not run olsrd on multiple inerface using the Linux 2.6 kernel
+Users could not run olsrd on multiple interfaces using the Linux 2.6 kernel
 series. This is now fixed.
 
 MINOR BUGS
@@ -459,7 +459,7 @@ deletion.
 
 MESSAGE-SEQUENCENUMBER INCOMPLIANCE
 
-Message-seqnos was implementaed on a pr. messagetype and pr. interface
+Message-seqnos was implemented on a pr. messagetype and pr. interface
 basis. This is not RFC3626 compliant and has been updates. All messages
 and interfaces now uses a global seuencenumber.
 
@@ -477,8 +477,8 @@ Optimizations based on profiling implemented.
 
 SANITATION
 
-Message size is checked for every massege before passing it to the
-appropriate message persing function. If the size is bigger than the
+Message size is checked for every message before passing it to the
+appropriate message parsing function. If the size is bigger than the
 remaining size of the olsr packet then the message is discarded.
 
 GUI FRONT-END
@@ -551,7 +551,7 @@ Some bugs in MPR selection fixed.
 
 CODE REWRITES
 
-HNA code completeley rewritten!
+HNA code completely rewritten!
 The old code was really bad! Now it is much cleaner implemented and
 should work fine.
 One- and two-hop neighbor list structures rewritten. They now use
@@ -560,7 +560,7 @@ sets use.
 
 CODE RESTRUCTURING
 
-Some code restructuing which resulted in the new files: timer.h,
+Some code restructuring which resulted in the new files: timer.h,
 mantissa.c, mantissa.h, hashing.c, hashing.h, linux/net.c 
 linux/net.h, linux/kernel_routes.c, linux/kernel_routes.h and some 
 renamed files
@@ -584,7 +584,7 @@ CODE REWRITES
 
 The entire TC set and MPR selector set code rewritten. Hashing and
 double linked lists added to the MID code.
-Lots of HNA code has been rewriteen as well.
+Lots of HNA code has been rewritten as well.
 
 HNA bugfix
 
@@ -609,7 +609,7 @@ the hack when receiving MID messages could be removed.
 IPv6
 
 Global addresses are now preferred. Sitelocal addresses are only used
-if no global adresses are found. There have been problems where
+if no global addresses are found. There have been problems where
 the address set in the IP header of IPv6 packets do not match the
 address chosen by OLSR.
 
@@ -623,7 +623,7 @@ and link sensing HELLO message format.
 
 HNA support using IPv6
 
-HNA now works using IPv6 as well! Just add the netwrok address and
+HNA now works using IPv6 as well! Just add the network address and
 prefix in the HNA6 section in the configfile. The IPv6 HNA packets differ
 some from the IPv4 as they don't send the netmask but the prefix.
 
@@ -641,13 +641,13 @@ New options: DEBUG, HNA6 and IPC-CONNECT added to config file.
 
 Output
 
-A printf-wrapper hans been introduced - debug level output handeling
+A printf-wrapper has been introduced - debug level output handling
 is much more uniform now.
-The daemon sould run fine in detatched mode now(DEBUG 0)
+The daemon should run fine in detached mode now(DEBUG 0)
 
 GUI front-end
 
-The GUI front-end can now connect and dissconnect at any time while the
+The GUI front-end can now connect and disconnect at any time while the
 daemon is running, if started using the -ipc switch or with IPC set to
 'yes' in the configfile.
 
@@ -661,7 +661,7 @@ A small HNA bug fixed.
 
 Forwarding jitter
 
-Forwarding jitter added. Messages are piggibacked if they arrive(and are to 
+Forwarding jitter added. Messages are piggybacked if they arrive(and are to 
 be forwarded) while there is data to be forwarded buffered.
 Added some bugfixes to support parsing of piggybacked messages as well.
 
@@ -673,19 +673,19 @@ a TC before the 2 hop neighbors were added.
 
 2 hop neighbor set
 
-All neighbors recieved in HELLO messages are added to the two hop 
+All neighbors received in HELLO messages are added to the two hop 
 neighborhood. This helps smoothing out the 1-to-2 hop transition as well.
 
 MID calculation
 
 MID calculation had to be updated due to the registering of two hop neighbors
-that are already one hop neighbors. They sould not be considered when calculatin
+that are already one hop neighbors. They should not be considered when calculating
 two hop coverage.
 
-Optimalizations
+Optimizations
 
 Deletion of possible one hop neighbors registered on non main-addresses when
-first registering MID info from a node removed. This can not occure due
+first registering MID info from a node removed. This can not occur due
 to the fact that registering of neighbor nodes are done on main addresses
 from link-sensing
 Option to not forward messages on wired links on which they arrived removed.
@@ -717,9 +717,9 @@ of HNA and MID generation.
 
 FORWARDING
 
-As an optimization messages have not been forwarded on the recieved interface
+As an optimization messages have not been forwarded on the received interface
 if this is registered as a non-WLAN interface. This causes problems for
-people using ethernet-to-WLAN adapters. This optimalization is now turned
+people using Ethernet-to-WLAN adapters. This optimization is now turned
 off by default. It can be activated using the -nofwlan option.
 
 BUGS
@@ -737,9 +737,9 @@ IPv6 functioning is not well tested in this release.
 
 HNA
 
-Updated HNA to be RFC compliant. This means that all recieved HNA tuples
-are registered and only the subset of uniqe entries(net/netmask) with
-the smallest hocount is inserted into the routing table.
+Updated HNA to be RFC compliant. This means that all received HNA tuples
+are registered and only the subset of unique entries(net/netmask) with
+the smallest hopcount is inserted into the routing table.
 
 Config file
 
@@ -758,7 +758,7 @@ MPR calculation is now based on the willingness announced by nodes.
 Neighbor set
 
 The neighbor set does not have timeouts on entries any more. Creation
-and deletion af neighbor entries is done from the link-set as suggested
+and deletion of neighbor entries is done from the link-set as suggested
 in the RFC.
 
 Cleanups
@@ -779,8 +779,8 @@ Due to the extensive amount of updates this release is versioned 0.3.0
 
 Duplicate table and forwarding
 
-The duplicate table functionallity is totally rewritten in 100% RFC
-compliance. The forward algorithm specified in the RFC is implmented
+The duplicate table functionality is totally rewritten in 100% RFC
+compliance. The forward algorithm specified in the RFC is implemented
 this meant rewriting much of the packet processing code. The daemon
 also forwards unknown packettypes now.
 
@@ -826,7 +826,7 @@ A bugs in the TC processing fixed.
 HNA
 
 Some serious HNA bugs fixed. These bugs caused a node to always choos the 
-gateway with the larges hopcout :) More seriousley - a bug caused looping
+gateway with the larges hopcout :) More seriously - a bug caused looping
 of HNA messages in certain scenarios.
 
 Package sequence numbers
@@ -836,7 +836,7 @@ in the RFC).
 
 Broadcast address
 
-Users can now specify the broadcast address to use. Usefull if one wishes to
+Users can now specify the broadcast address to use. Useful if one wishes to
 use the 255.255.255.255 broadcast.
 
 
@@ -845,7 +845,7 @@ use the 255.255.255.255 broadcast.
 
 Htime and Vtime
 
-Htime and Vtime processing and handeling added. Holding times used to be 
+Htime and Vtime processing and handling added. Holding times used to be 
 a static value for all nodes. Now every node can signal its vlidity time
 to others.
 To achieve this mantissa/exponent calculation functionality was added.
