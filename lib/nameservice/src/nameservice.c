@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.4 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: nameservice.c,v 1.5 2005/03/01 22:13:34 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -43,8 +43,8 @@
 #include "olsrd_copy.h"
 
 
-/* send buffer: size of IPv6 message + the maximum size of the name */
-static char buffer[sizeof(struct olsrmsg6) + MAX_NAME];
+/* send buffer: huge */
+static char buffer[10240];
 
 /* config parameters */
 static char my_filename_buff[MAX_FILE + 1];
@@ -403,9 +403,6 @@ forward:
 }
 
 
-#define roundup(x, y)	((((x)+((y)-1))/(y))*(y))  /* to any y */
-#define padding(x,r)	(r)-(x)%(r);
-
 /**
  * Encapsulate a name message into a packet. 
  *
@@ -420,6 +417,7 @@ encap_namemsg(struct namemsg* msg)
 	struct name* to_packet;
 	char* pos = (char*)msg + sizeof(struct namemsg);
 	short i=0;
+        int k;
 	while (my_name!=NULL) 
 	{
 		olsr_printf(3, "NAME PLUGIN: Announcing name %s (%s)\n", 
@@ -433,17 +431,14 @@ encap_namemsg(struct namemsg* msg)
 		strncpy(pos, my_name->name, my_name->len);
 		pos += my_name->len;
 		// padding to 4 byte boundaries
-		long pad = (long)pos + roundup(my_name->len, 4) - my_name->len;
-		while ((long)pos < pad) {
-			*pos = '\0';
-			pos++;
-		}
+                for (k = my_name->len; (k & 3) != 0; k++)
+                  *pos++ = '\0';
 		my_name = my_name->next;
 		i++;
 	}
 	msg->nr_names = htons(i);
 	msg->version = htons(NAME_PROTOCOL_VERSION);
-	return pos - (char*)msg; //length
+	return pos - (char*)(msg + 1); //length
 }
 
 
@@ -471,7 +466,7 @@ decap_namemsg( struct namemsg *msg, struct name_entry **to )
 	/* now add the names from the message */
 	pos = (char*)msg + sizeof(struct namemsg);
 	int i;
-	for (i=ntohs(msg->nr_names); i >= 0; i--) {	
+	for (i=ntohs(msg->nr_names); i > 0; i--) {	
 		tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");
 		
 		from_packet = (struct name*)pos;
@@ -492,7 +487,7 @@ decap_namemsg( struct namemsg *msg, struct name_entry **to )
 		*to = tmp;
 
 		// next name from packet
-		pos += sizeof(struct name) + roundup(from_packet->len,4);
+		pos += sizeof(struct name) + 1 + ((from_packet->len - 1) | 3);
 	}
 }
 
