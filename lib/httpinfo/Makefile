@@ -6,7 +6,6 @@
 CC ?= gcc
 STRIP ?= strip
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-# -fPIC creates position independent code
 
 ifndef OS
 all:		help
