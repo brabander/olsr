@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.8 2004/11/02 19:27:13 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.9 2004/11/05 23:55:38 kattemat Exp $
  *
  */
 
@@ -89,7 +89,6 @@ olsr_load_dl(char *libname, struct plugin_param *params)
       olsr_printf(1, "DL loading failed: \"%s\"!\n", dlerror());
       return -1;
     }
-
 
   /* Fetch the multipurpose function */
   olsr_printf(1, "Checking plugin interface version....");
@@ -177,7 +176,7 @@ init_olsr_plugin(struct olsr_plugin *entry)
       olsr_printf(1, "Sending parameters...\n");
       while(params)
 	{
-	  printf("\tKey:\"%s\" value:\"%s\"\n", params->key, params->value);
+	  olsr_printf(1, "\"%s\"/\"%s\"\n", params->key, params->value);
 	  entry->register_param(params->key, params->value);
 	  params = params->next;
 	}
@@ -204,12 +203,13 @@ void
 olsr_close_plugins()
 {
   struct olsr_plugin *entry;
-  
+
+  olsr_printf(1, "Closing plugins...\n");
   for(entry = olsr_plugins; 
       entry != NULL ; 
       entry = entry->next)
     {
-      dlclose(entry->dlhandle);
+      dlclose(&entry->dlhandle);
     }
 
 }
