@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.16 2005/02/17 17:21:24 kattemat Exp $
+ * $Id: oscan.lex,v 1.17 2005/02/20 19:54:18 kattemat Exp $
  */
 
 
@@ -68,6 +68,7 @@ void yyset_out(FILE *);
 int yyget_debug(void);
 void yyset_debug(int);
 int yylex_destroy(void);
+int yylex(void);
 
 struct conf_token *
 get_conf_token(void);
