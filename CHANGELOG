@@ -2,6 +2,10 @@ This file states changes as of version 0.2.4:
 
 0.4.8 ---------------------------------------------------------------------
 
+NEW CONFIGFILE PARSER/FORMAT/SCHEME
+
+ToDo
+
 ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
 
 The willingness calculation for Linux, now also supports the more
@@ -28,12 +32,14 @@ an API is available to plugins(and olsr code).
 
 OS DEPENDENT NETWORK INTERFACE
 
-The OS dependen ntework functions are now defined in net_os.h
+The OS dependen network functions are now defined in net_os.h
 instead of beeing mixed up with internal network functions
 in net.h.
 
-COMPILER WARNINGS
+NEW MAKEFILE (LINUX)
 
+The Linux makefile now includes automatic dependency generation 
+using makedepend.
 In the Linux makefile the '-Wmissing-prototypes -Wstrict-prototypes'
 arguments has been added. All the warnings issued by gcc after
 giving these arguments have been fixed for general- and Linux-code.
@@ -43,6 +49,11 @@ BUGFIXES
 A bug that in many cases caused the wrong routes to be deleted 
 when using IPv6 has been fixed.
 
+PLUGINS
+
+There are a lot of changes that affects plugins in this release.
+This has mainly to do with the new outputbuffering and
+configuration schemes.
 
 0.4.7 ---------------------------------------------------------------------
 
