@@ -175,4 +175,7 @@ plugin_io(int, void *, size_t);
 int
 register_olsr_param(char *, char *);
 
+int 
+plugin_interface_version();
+
 #endif
