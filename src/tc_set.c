@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.18 2004/12/05 13:53:00 kattemat Exp $
+ * $Id: tc_set.c,v 1.19 2004/12/19 12:20:00 kattemat Exp $
  */
 
 
@@ -254,6 +254,8 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	{
 	  /* New entry */
 	  new_topo_dst = olsr_malloc(sizeof(struct topo_dst), "add TC destination");
+
+	  memset(new_topo_dst, 0, sizeof(struct topo_dst));
 
 	  COPY_IP(&new_topo_dst->T_dest_addr, &mprs->address);
 	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &new_topo_dst->T_time);
