@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_cfgparser.h,v 1.1 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.1 2004/10/19 19:26:33 kattemat Exp $
  *
  */
 
@@ -33,6 +33,32 @@
 #endif
 
 #include "olsr_protocol.h"
+
+#ifdef MAKELIB
+
+struct interface 
+{
+  int foo;
+};
+
+#else 
+
+#ifdef MAKEBIN
+
+struct interface 
+{
+  int foo;
+};
+
+#else
+
+/* Part of olsrd */
+
+#include "interfaces.h"
+
+#endif
+
+#endif
 
 #define DEFAULT_IF_CONFIG_NAME "default_ifcfg"
 
@@ -60,14 +86,17 @@ struct olsr_if
 {
   char                     *name;
   char                     *config;
-  struct if_config_options *if_options;
+  int                      configured;
+  int                      index;
+  struct interface         *interf;
+  struct if_config_options *cnf;
   struct olsr_if           *next;
 };
 
 struct hna4_entry
 {
-  olsr_u32_t               net;
-  olsr_u32_t               netmask;
+  union olsr_ip_addr       net;
+  union olsr_ip_addr       netmask;
   struct hna4_entry        *next;
 };
 
@@ -113,6 +142,7 @@ struct olsrd_config
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;
   struct olsr_if           *interfaces;
+  olsr_u16_t               ifcnt;
   struct if_config_options *if_options;
 };
 
