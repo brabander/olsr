@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.14 2005/02/19 17:42:59 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.15 2005/02/20 17:27:15 kattemat Exp $
  */
 
 /*
@@ -56,7 +56,7 @@
 #include <math.h>
 
 #include "olsr_plugin_io.h"
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"

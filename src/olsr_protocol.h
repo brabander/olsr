@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.16 2004/12/12 17:54:00 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.17 2005/02/20 17:24:50 kattemat Exp $
  */
 
 /*
@@ -47,6 +47,8 @@
 #ifndef _PROTOCOLS_OLSR_H
 #define	_PROTOCOLS_OLSR_H
 
+#include "olsr_types.h"
+
 /* Port for OLSR to use */
 
 #define OLSRPORT       698
@@ -55,66 +57,6 @@
 
 #define OLSR_IPV6_MCAST_SITE_LOCAL "ff05::15"
 #define OLSR_IPV6_MCAST_GLOBAL     "ff0e::1"
-
-
-/* types */
-#include <sys/types.h>
-
-typedef enum
-{
-    OLSR_FALSE = 0,
-    OLSR_TRUE
-}olsr_bool;
-
-#ifdef linux
-
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-
-#elif defined __FreeBSD__ || defined __NetBSD__
-
-typedef	uint8_t		olsr_u8_t;
-typedef uint16_t       	olsr_u16_t;
-typedef uint32_t       	olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-
-#elif defined WIN32
-
-typedef unsigned char   olsr_u8_t;
-typedef unsigned short  olsr_u16_t;
-typedef unsigned int    olsr_u32_t;
-typedef char            olsr_8_t;
-typedef short           olsr_16_t;
-typedef int             olsr_32_t;
- 
-#elif defined __MacOSX__
-
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-
-#else
-#       error "Unsupported system"
-#endif
-
-/* IPv6 address format in6_addr */
-#include <netinet/in.h>
-
-union olsr_ip_addr
-{
-  olsr_u32_t v4;
-  struct in6_addr v6;
-};
-
 
 #define OLSR_HEADERSIZE (sizeof(olsr_u16_t) + sizeof(olsr_u16_t))
 
