@@ -2,6 +2,7 @@
 CC ?= gcc
 STRIP ?= strip
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
+PLUGINFLAGS = -fPIC -DOLSR_PLUGIN -I../../src
 
 ifndef OS
 all:		help
@@ -9,7 +10,7 @@ endif
 
 ifeq ($(OS), linux)
 NAME = olsrd_nameservice.so.0.1
-MYFLAGS = -Wall -fPIC -D_GNU_SOURCE
+MYFLAGS = -Wall -D_GNU_SOURCE $(PLUGINFLAGS)
 LIBS ?= -lc -lm
 CFLAGS ?= -O2
 CFLAGS += $(MYFLAGS)
@@ -19,7 +20,7 @@ all: plugin
 else
 ifeq ($(OS), fbsd)
 NAME = olsrd_nameservice.so.0.1
-MYFLAGS = -Wall -fPIC
+MYFLAGS = -Wall $(PLUGINFLAGS)
 LIBS ?= -lc -lm
 CFLAGS ?= -O2
 CFLAGS += $(MYFLAGS)
@@ -30,7 +31,7 @@ else
 ifeq ($(OS), win32)
 NAME ?= olsrd_nameservice.dll
 NAMEFLAGS ?= -o $(NAME)
-MYFLAGS ?= -g -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+MYFLAGS ?= -g -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes $(PLUGINFLAGS)
 CFLAGS ?= -O2
 CFLAGS += $(MYFLAGS)
 LDFLAGS ?= -mno-cygwin -shared

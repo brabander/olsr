@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.2 2005/01/30 16:33:53 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.3 2005/02/21 19:47:29 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -47,6 +47,9 @@
 #include <math.h>
 
 #include "olsr_plugin_io.h"
+#include "olsr_types.h"
+#include "hashing.h"
+#include "interfaces.h"
 
 /* Use this as PARSER_TYPE to receive ALL messages! */
 #define PROMISCUOUS 0xffffffff
@@ -55,41 +58,6 @@
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
  ****************************************************************************/
-
-/*
- * TYPES SECTION
- */
-
-/* types */
-#include <sys/types.h>
-
-#ifndef WIN32
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-#else
-typedef unsigned char olsr_u8_t;
-typedef unsigned short olsr_u16_t;
-typedef unsigned int olsr_u32_t;
-typedef char olsr_8_t;
-typedef short olsr_16_t;
-typedef int olsr_32_t;
-#endif
-
-
-/*
- * VARIOUS DEFINITIONS
- */
-
-union olsr_ip_addr
-{
-  olsr_u32_t v4;
-  struct in6_addr v6;
-};
-
 
 #define MAX_TTL               0xff
 
@@ -106,58 +74,8 @@ union olsr_ip_addr
 #define MAX_LINK              4
 
 
-
-/*
- * Hashing
- */
-
-#define	HASHSIZE	32
-#define	HASHMASK	(HASHSIZE - 1)
-
 #define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
 
-
-/****************************************************************************
- *                          INTERFACE SECTION                               *
- ****************************************************************************/
-struct vtimes
-{
-  olsr_u8_t hello;
-  olsr_u8_t tc;
-  olsr_u8_t mid;
-  olsr_u8_t hna;
-};
-
-/**
- *A struct containing all necessary information about each
- *interface participating in the OLSD routing
- */
-struct interface 
-{
-  /* IP version 4 */
-  struct	sockaddr int_addr;		/* address */
-  struct	sockaddr int_netmask;		/* netmask */
-  struct	sockaddr int_broadaddr;         /* broadcast address */
-  /* IP version 6 */
-  struct        sockaddr_in6 int6_addr;         /* Address */
-  struct        sockaddr_in6 int6_multaddr;     /* Multicast */
-  /* IP independent */
-  union         olsr_ip_addr ip_addr;
-  int           olsr_socket;                    /* The broadcast socket for this interface */
-  int	        int_metric;			/* metric of interface */
-  int           int_mtu;                        /* MTU of interface */
-  int	        int_flags;			/* see below */
-  char	        *int_name;			/* from kernel if structure */
-  int           if_index;                       /* Kernels index of this interface */
-  int           if_nr;                          /* This interfaces index internally*/
-  int           is_wireless;                    /* wireless interface or not*/
-  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
-
-  float         hello_etime;
-  struct        vtimes valtimes;
-
-  struct	interface *int_next;
-};
 
 
 /****************************************************************************
