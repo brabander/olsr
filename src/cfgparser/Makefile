@@ -42,9 +42,6 @@ clean:
 		rm -f *.o
 		rm -f $(NAME)
 		rm -f $(LDNAME)
-		rm -f *~
-		rm -f oscan.c
-		rm -f oparse.c oparse.h
 
 
 libclean:
