@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.h,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: ifnet.h,v 1.10 2005/02/15 20:40:31 kattemat Exp $
  */
 
 /* Network interface configuration interface.
@@ -64,10 +64,5 @@ chk_if_changed(struct olsr_if *);
 
 int
 chk_if_up(struct olsr_if *, int);
-
-#ifndef WIN32
-int
-check_wireless_interface(struct ifreq *);
-#endif
 
 #endif

@@ -36,25 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.14 2005/01/05 15:35:16 kattemat Exp $
+ * $Id: ifnet.c,v 1.15 2005/02/15 20:40:42 kattemat Exp $
  */
 
 
-#ifdef linux
-/*
- *Wireless definitions for ioctl calls
- *(from linux/wireless.h)
- */
-#define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
-#define SIOCSIWNWID	0x8B02		/* set network id (the cell) */
-#define SIOCGIWNWID	0x8B03		/* get network id */
-#define SIOCSIWFREQ	0x8B04		/* set channel/frequency (Hz) */
-#define SIOCGIWFREQ	0x8B05		/* get channel/frequency (Hz) */
-#define SIOCSIWMODE	0x8B06		/* set operation mode */
-#define SIOCGIWMODE	0x8B07		/* get operation mode */
-#define SIOCSIWSENS	0x8B08		/* set sensitivity (dBm) */
-#define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
-#elif defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
 #define ifr_netmask ifr_addr
 #endif
 
@@ -213,7 +199,7 @@ chk_if_changed(struct olsr_if *iface)
 
 
   /* trying to detect if interface is wireless. */
-  ifp->is_wireless = check_wireless_interface(&ifr);
+  ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
 
   /* Set interface metric */
   ifp->int_metric = ifp->is_wireless;
@@ -580,7 +566,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     }
 
   /* trying to detect if interface is wireless. */
-  if(check_wireless_interface(&ifr))
+  if(check_wireless_interface(ifr.ifr_name))
     {
       olsr_printf(debuglvl, "\tWireless interface detected\n");
       ifs.is_wireless = 1;
@@ -876,38 +862,5 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 
   return 1;
 }
-
-
-
-#ifdef linux
-/**
- *Check if a interface is wireless
- *Returns 1 if no info can be gathered
- *
- *@param sock socket to use for kernel communication
- *@param ifr a ifreq struct describing the interface
- *
- *@return 1 if interface is wireless(or no info was
- *found) 0 if not.
- */
-int
-check_wireless_interface(struct ifreq *ifr)
-{
-  if(ioctl(ioctl_s, SIOCGIWNAME, ifr) >= 0)
-    {
-      return 1;
-    }
-  else
-    {
-      return 0;
-    }
-
-}
-#else
-int check_wireless_interface(struct ifreq *ifr)
-{
-  return 1;
-}
-#endif
 
 

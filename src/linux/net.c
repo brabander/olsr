@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.15 2005/02/14 16:55:37 kattemat Exp $
+ * $Id: net.c,v 1.16 2005/02/15 20:40:43 kattemat Exp $
  */
 
 
@@ -48,6 +48,12 @@
 #include "../defs.h"
 #include "../net_os.h"
 #include "../parser.h"
+
+/*
+ *Wireless definitions for ioctl calls
+ *(from linux/wireless.h)
+ */
+#define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
 
 /**
  *Bind a socket to a device
@@ -596,4 +602,23 @@ olsr_recvfrom(int  s,
 		  0, 
 		  from, 
 		  fromlen);
+}
+
+
+
+int
+check_wireless_interface(char *ifname)
+{
+  struct ifreq ifr;
+  strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+
+  if(ioctl(ioctl_s, SIOCGIWNAME, &ifr) >= 0)
+    {
+      return 1;
+    }
+  else
+    {
+      return 0;
+    }
+
 }

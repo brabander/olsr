@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.10 2005/02/14 16:55:37 kattemat Exp $
+ * $Id: net.c,v 1.11 2005/02/15 20:40:43 kattemat Exp $
  */
 
 #include "../defs.h"
@@ -47,6 +47,9 @@
 #ifdef __NetBSD__
 #include <sys/param.h>
 #endif
+
+#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
+#define SIOCGWAVELAN SIOCGIFGENERIC
 
 #include <sys/sysctl.h>
 
@@ -319,4 +322,23 @@ olsr_recvfrom(int  s,
 		  0, 
 		  from, 
 		  fromlen);
+}
+
+
+
+int 
+check_wireless_interface(char *ifname)
+{
+  struct ifreq ifr;
+  strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+
+  if(ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0)
+    {
+      return 1;
+    }
+  else
+    {
+      return 0;
+    }
+  return 1;
 }
