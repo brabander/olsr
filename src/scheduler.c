@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.19 2004/11/15 15:56:07 tlopatic Exp $
+ * $Id: scheduler.c,v 1.20 2004/11/20 17:27:07 tlopatic Exp $
  *
  */
 
@@ -37,7 +37,7 @@
 
 
 static float pollrate;
-
+olsr_bool want_neigh;
 
 
 /**
@@ -120,13 +120,18 @@ scheduler()
 
       /* Check for changes in topology */
 
-      if(changes)
+      if (changes || want_neigh)
 	{
           // if the MPR selector might have been updated, we have to print
           // the updated neighbour table, as it now contains an "MPRS" column
 
           olsr_print_neighbor_table();
 
+          want_neigh = OLSR_FALSE;
+        }
+
+      if(changes)
+        {
 	  olsr_printf(3, "ANSN UPDATED %d\n\n", ansn);
 	  ansn++;
 #warning changes is set to OLSR_FALSE in scheduler now

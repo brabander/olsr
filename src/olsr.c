@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.24 2004/11/20 17:10:03 tlopatic Exp $
+ * $Id: olsr.c,v 1.25 2004/11/20 17:27:07 tlopatic Exp $
  *
  */
 
@@ -48,6 +48,7 @@
 #include <stdarg.h>
 #include <signal.h>
 
+olsr_bool want_neigh;
 
 /**
  *Checks if a timer has timed out.
@@ -160,6 +161,8 @@ olsr_process_changes()
     olsr_printf(3, "CHANGES IN HNA\n");  
 #endif
 
+  want_neigh = OLSR_FALSE;
+  
   if(!changes_neighborhood &&
      !changes_topology &&
      !changes_hna)
@@ -171,7 +174,7 @@ olsr_process_changes()
       printf("<<<< %s (%s) >>>>\n", SOFTWARE_VERSION, __DATE__);
     }
 
-  if(changes_neighborhood)
+  if (changes_neighborhood)
     {
       /* Calculate new mprs, HNA and routing table */
 #if defined USE_LINK_QUALITY
@@ -202,34 +205,9 @@ olsr_process_changes()
 #endif
 
       olsr_calculate_hna_routes();
-      
-      /* Print updated info */
-      if(olsr_cnf->debug_level > 0) 
-	{
-#ifdef USE_LINK_QUALITY
-	  olsr_print_link_set();
-#endif
-	  olsr_print_neighbor_table();
-
-	  if(olsr_cnf->debug_level > 1)
-	    olsr_print_tc_table();
-
-	  if(olsr_cnf->debug_level > 2) 
-	    {
-              // the MPR selector set is now displayed as part of the
-              // neighbour table
-	      // olsr_print_mprs_set();
-	      olsr_print_mid_set();
-	      olsr_print_duplicate_table();
-	    }
-	  if(changes_hna)
-	    olsr_print_hna_set();
-
-	}
-      goto process_pcf;  
     }
   
-  if(changes_topology)
+  else if (changes_topology)
     {
       /* calculate the routing table and HNA */
 #if defined USE_LINK_QUALITY
@@ -246,28 +224,36 @@ olsr_process_changes()
         }
 #endif
       olsr_calculate_hna_routes();
-
-      /* Print updated info */
-      if(olsr_cnf->debug_level > 1)
-	olsr_print_tc_table();
-
-      if(changes_hna)
-	olsr_print_hna_set();
-
-      goto process_pcf;  
     }
 
-  if(changes_hna)
+  else if (changes_hna)
     {
       /* Update HNA routes */
       olsr_calculate_hna_routes();
-
-      olsr_print_hna_set();
-
-      goto process_pcf;
     }
   
- process_pcf:
+  if (olsr_cnf->debug_level > 0)
+    {
+      want_neigh = OLSR_TRUE;
+
+      if (olsr_cnf->debug_level > 1)
+        olsr_print_tc_table();
+
+      if (olsr_cnf->debug_level > 2) 
+        {
+          olsr_print_mid_set();
+
+          if (olsr_cnf->debug_level > 3)
+            {
+              olsr_print_duplicate_table();
+              olsr_print_hna_set();
+            }
+        }
+
+#ifdef USE_LINK_QUALITY
+      olsr_print_link_set();
+#endif
+    }
 
   for(tmp_pc_list = pcf_list; 
       tmp_pc_list != NULL;
