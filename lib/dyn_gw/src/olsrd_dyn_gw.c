@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.11 2004/12/21 13:46:48 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.12 2005/01/30 14:39:40 kattemat Exp $
  */
 
 /*
@@ -50,7 +50,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <net/route.h>
+#ifdef linux
 #include <linux/in_route.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
