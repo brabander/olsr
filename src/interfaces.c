@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.20 2005/03/07 06:28:44 kattemat Exp $
+ * $Id: interfaces.c,v 1.21 2005/03/07 07:08:02 kattemat Exp $
  */
 
 #include "defs.h"
@@ -113,10 +113,15 @@ get_if_property_id()
   return if_property_id++;
 }
 
-void
+olsr_bool
 add_if_geninfo(struct interface *ifp, void *data, olsr_u32_t owner_id)
 {
-  struct if_gen_property *igp = olsr_malloc(sizeof(struct if_gen_property), __func__);
+  struct if_gen_property *igp;
+
+  if(get_if_geninfo(ifp, owner_id) != NULL)
+    return OLSR_FALSE;
+
+  igp = olsr_malloc(sizeof(struct if_gen_property), __func__);
 
   igp->owner_id = owner_id;
   igp->data = data;
@@ -125,6 +130,7 @@ add_if_geninfo(struct interface *ifp, void *data, olsr_u32_t owner_id)
   igp->next = ifp->gen_properties;
   ifp->gen_properties = igp;
 
+  return OLSR_TRUE;
 }
 
 void *
