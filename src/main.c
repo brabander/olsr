@@ -96,7 +96,7 @@ main(int argc, char *argv[])
   if(getuid() || getgid())
     {
       fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
-      olsr_exit(__func__, EXIT_FAILURE);
+      exit(EXIT_FAILURE);
     }
 #else
   if (WSAStartup(0x0202, &WsaData))
