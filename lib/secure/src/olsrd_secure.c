@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.7 2004/11/19 20:52:06 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.8 2004/12/04 15:18:45 kattemat Exp $
  */
 
 
@@ -81,9 +81,16 @@ olsr_plugin_init()
   if(!strlen(keyfile))
     strcpy(keyfile, KEYFILE);
 
-  if(read_key_from_file(keyfile) < 0)
+  i = read_key_from_file(keyfile);
+
+  if(i < 0)
     {
       olsr_printf(1, "[ENC]Could not read key from file %s!\nExitting!\n\n", keyfile);
+      exit(1);
+    }
+  if(i == 0)
+    {
+      olsr_printf(1, "[ENC]There was a problem reading key from file %s. Is the key long enough?\nExitting!\n\n", keyfile);
       exit(1);
     }
 
@@ -1209,12 +1216,12 @@ read_key_from_file(char *file)
     {
       olsr_printf(1, "[ENC]Could not read key from keyfile %s!\nError: %s\n", file, strerror(errno));
       fclose(kf);
-      return -1;
+      return 0;
     }
 
 
   fclose(kf);
-  return 0;
+  return 1;
 }
 
 
