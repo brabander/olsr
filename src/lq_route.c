@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.21 2005/01/22 12:25:25 tlopatic Exp $
+ * $Id: lq_route.c,v 1.22 2005/01/22 14:30:57 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -47,10 +47,12 @@
 #include "mid_set.h"
 #include "hna_set.h"
 #include "lq_list.h"
+#include "lq_avl.h"
 #include "lq_route.h"
 
 struct dijk_edge
 {
+  struct avl_node tree_node;
   struct list_node node;
   struct dijk_vertex *dest;
   float etx;
@@ -58,41 +60,39 @@ struct dijk_edge
 
 struct dijk_vertex
 {
+  struct avl_node tree_node;
   struct list_node node;
   union olsr_ip_addr addr;
+  struct avl_tree edge_tree;
   struct list edge_list;
   float path_etx;
   struct dijk_vertex *prev;
   olsr_bool done;
 };
 
-// XXX - bad complexity
-
-static void add_vertex(struct list *vertex_list, union olsr_ip_addr *addr,
-                       float path_etx)
+static int avl_comp(void *ip1, void *ip2)
 {
-  struct list_node *node;
+  return memcmp(ip1, ip2, ipsize);
+}
+
+static void add_vertex(struct avl_tree *vertex_tree, struct list *vertex_list,
+                       union olsr_ip_addr *addr, float path_etx)
+{
+  struct avl_node *node;
   struct dijk_vertex *vert;
 
   // see whether this destination is already in our list
 
-  node = list_get_head(vertex_list);
-
-  while (node != NULL)
-  {
-    vert = node->data;
-
-    if (COMP_IP(&vert->addr, addr))
-      break;
-
-    node = list_get_next(node);
-  }
+  node = avl_find(vertex_tree, addr);
 
   // if it's not in our list, add it
 
   if (node == NULL)
   {
     vert = olsr_malloc(sizeof (struct dijk_vertex), "Dijkstra vertex");
+
+    vert->tree_node.data = vert;
+    vert->tree_node.key = &vert->addr;
 
     vert->node.data = vert;
 
@@ -102,82 +102,67 @@ static void add_vertex(struct list *vertex_list, union olsr_ip_addr *addr,
     vert->prev = NULL;
     vert->done = OLSR_FALSE;
 
+    avl_init(&vert->edge_tree, avl_comp);
     list_init(&vert->edge_list);
 
+    avl_insert(vertex_tree, &vert->tree_node);
     list_add_tail(vertex_list, &vert->node);
   }
 }
 
-// XXX - bad complexity
-
-static void add_edge(struct list *vertex_list, union olsr_ip_addr *src,
-                     union olsr_ip_addr *dst, float etx)
+static void add_edge(struct avl_tree *vertex_tree, struct list *vertex_list,
+                     union olsr_ip_addr *src, union olsr_ip_addr *dst,
+                     float etx)
 {
-  struct list_node *node;
-  struct dijk_vertex *vert;
+  struct avl_node *node;
   struct dijk_vertex *svert;
   struct dijk_vertex *dvert;
   struct dijk_edge *edge;
 
-  // source and destination lookup
+  // source lookup
 
-  node = list_get_head(vertex_list);
+  node = avl_find(vertex_tree, src);
 
-  svert = NULL;
-  dvert = NULL;
+  // source vertex does not exist
 
-  while (node != NULL)
-  {
-    vert = node->data;
-
-    if (COMP_IP(&vert->addr, src))
-    {
-      svert = vert;
-
-      if (dvert != NULL)
-        break;
-    }
-
-    else if (COMP_IP(&vert->addr, dst))
-    {
-      dvert = vert;
-
-      if (svert != NULL)
-        break;
-    }
-
-    node = list_get_next(node);
-  }
-
-  // source or destination vertex does not exist
-
-  if (svert == NULL || dvert == NULL)
+  if (node == NULL)
     return;
 
-  node = list_get_head(&svert->edge_list);
+  svert = node->data;
 
-  while (node != NULL)
-  {
-    edge = node->data;
+  // destination lookup
 
-    if (edge->dest == dvert)
-      break;
+  node = avl_find(vertex_tree, dst);
 
-    node = list_get_next(node);
-  }
+  // destination vertex does not exist
+
+  if (node == NULL)
+    return;
+
+  dvert = node->data;
+
+  // edge lookup
+
+  node = avl_find(&svert->edge_tree, dst);
 
   // edge already exists
 
   if (node != NULL)
     return;
 
+  // add edge
+
   edge = olsr_malloc(sizeof (struct dijk_vertex), "Dijkstra edge");
+
+  edge->tree_node.data = edge;
+  edge->tree_node.key = &dvert->addr;
 
   edge->node.data = edge;
 
   edge->dest = dvert;
   edge->etx = etx;
 
+  avl_insert(&svert->edge_tree, &edge->tree_node);
   list_add_tail(&svert->edge_list, &edge->node);
 }
 
@@ -294,6 +279,7 @@ static char *etx_to_string(float etx)
 
 void olsr_calculate_lq_routing_table(void)
 {
+  struct avl_tree vertex_tree;
   struct list vertex_list;
   int i;
   struct tc_entry *tcsrc;
@@ -313,11 +299,12 @@ void olsr_calculate_lq_routing_table(void)
 
   // initialize the graph
 
+  avl_init(&vertex_tree, avl_comp);
   list_init(&vertex_list);
 
   // add ourselves to the vertex list
 
-  add_vertex(&vertex_list, &main_addr, 0.0);
+  add_vertex(&vertex_tree, &vertex_list, &main_addr, 0.0);
 
   // add our neighbours
 
@@ -325,7 +312,8 @@ void olsr_calculate_lq_routing_table(void)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next)
       if (neigh->status == SYM)
-        add_vertex(&vertex_list, &neigh->neighbor_main_addr, INFINITE_ETX);
+        add_vertex(&vertex_tree, &vertex_list, &neigh->neighbor_main_addr,
+                   INFINITE_ETX);
 
   // add remaining vertices
 
@@ -334,13 +322,15 @@ void olsr_calculate_lq_routing_table(void)
     {
       // add source
 
-      add_vertex(&vertex_list, &tcsrc->T_last_addr, INFINITE_ETX);
+      add_vertex(&vertex_tree, &vertex_list, &tcsrc->T_last_addr,
+                 INFINITE_ETX);
 
       // add destinations of this source
 
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
            tcdst = tcdst->next)
-        add_vertex(&vertex_list, &tcdst->T_dest_addr, INFINITE_ETX);
+        add_vertex(&vertex_tree, &vertex_list, &tcdst->T_dest_addr,
+                   INFINITE_ETX);
     }
 
   // add edges to and from our neighbours
@@ -357,11 +347,11 @@ void olsr_calculate_lq_routing_table(void)
           {
             etx = 1.0 / (link->loss_link_quality * link->neigh_link_quality);
 
-            add_edge(&vertex_list, &main_addr, &neigh->neighbor_main_addr,
-                     etx);
+            add_edge(&vertex_tree, &vertex_list, &main_addr,
+                     &neigh->neighbor_main_addr, etx);
 
-            add_edge(&vertex_list, &neigh->neighbor_main_addr, &main_addr,
-                     etx);
+            add_edge(&vertex_tree, &vertex_list, &neigh->neighbor_main_addr,
+                     &main_addr, etx);
           }
       }
 
@@ -377,11 +367,11 @@ void olsr_calculate_lq_routing_table(void)
           {
             etx = 1.0 / (tcdst->link_quality * tcdst->inverse_link_quality);
 
-            add_edge(&vertex_list, &tcsrc->T_last_addr, &tcdst->T_dest_addr,
-                     etx);
+            add_edge(&vertex_tree, &vertex_list, &tcsrc->T_last_addr,
+                     &tcdst->T_dest_addr, etx);
 
-            add_edge(&vertex_list, &tcdst->T_dest_addr, &tcsrc->T_last_addr,
-                     etx);
+            add_edge(&vertex_tree, &vertex_list, &tcdst->T_dest_addr,
+                     &tcsrc->T_last_addr, etx);
           }
       }
 
