@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.15 2004/12/19 15:04:30 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.16 2004/12/19 15:48:47 kattemat Exp $
  */
 
 /*
@@ -417,7 +417,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   struct rt_entry *routes;
 
   size += sprintf(&buf[size], "OLSR host routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -437,7 +437,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "OLSR HNA routes in kernel\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -540,10 +540,10 @@ build_status_body(char *buf, olsr_u32_t bufsize)
       {
 	struct interface *rifs = ifs->interf;
 
-	size += sprintf(&buf[size], "<tr><th cellspan=3>%s</th>\n", ifs->name);
+	size += sprintf(&buf[size], "<tr><th colspan=3>%s</th>\n", ifs->name);
 	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "<tr><td cellspan=3>Status: DOWN</td></tr></table>\n");
+	    size += sprintf(&buf[size], "<tr><td colspan=3>Status: DOWN</td></tr></table>\n");
 	    continue;
 	  }
 	
@@ -615,7 +615,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "Links\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
 
   /* Link set */
   if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
@@ -642,7 +642,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -671,7 +671,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	    {
 	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
 	      thop_cnt ++;
-                }
+	    }
 	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", thop_cnt);
 
 	}
@@ -693,7 +693,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -739,7 +739,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   size = 0;
 
   size += sprintf(&buf[size], "Remote HNA entries\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -766,7 +766,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "</table><hr>\n");
   size += sprintf(&buf[size], "Local(announced) HNA entries\n");
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
 
   for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
     {
@@ -790,7 +790,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   struct mid_entry *entry;
   struct addresses *alias;
 
-  size += sprintf(&buf[size], "<hr><table width=100%% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
   /* MID */  
   for(index=0;index<HASHSIZE;index++)
@@ -807,6 +807,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->address));
 	      alias = alias->next;
 	    }
+	  size += sprintf(&buf[size], "</select>\n");
 
 	  size += sprintf(&buf[size], "</tr>\n");
 	  entry = entry->next;
