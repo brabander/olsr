@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.13 2004/11/21 10:52:16 kattemat Exp $
+ * $Id: oscan.lex,v 1.14 2004/11/30 17:12:28 tlopatic Exp $
  */
 
 
@@ -49,6 +49,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 
 #include "olsrd_conf.h"

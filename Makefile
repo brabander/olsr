@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.30 2004/11/30 17:05:05 tlopatic Exp $
+# $Id: Makefile,v 1.31 2004/11/30 17:12:28 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -83,7 +83,6 @@ ifeq ($(OS), fbsd)
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-DEFINES +=	-D__FreeBSD__
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
