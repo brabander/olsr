@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.27 2005/02/02 19:59:31 kattemat Exp $
+ * $Id: process_package.c,v 1.28 2005/02/03 17:21:36 kattemat Exp $
  */
 
 
@@ -502,7 +502,6 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
             olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
 #ifdef DEBUG
           olsr_printf(7, "\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
-          olsr_printf(7, "\tMain addr: %s\n", olsr_ip_to_string(neigh_addr));
 #endif
           if (two_hop_neighbor_yet != NULL)
             {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.17 2005/02/01 21:10:36 kattemat Exp $
+ * $Id: process_routes.c,v 1.18 2005/02/03 17:21:37 kattemat Exp $
  */
 
 
@@ -214,14 +214,9 @@ olsr_update_kernel_routes()
   olsr_printf(3, "Updating kernel routes...\n");
   delete_kernel_list = olsr_build_update_list(old_routes, routingtable);
   add_kernel_list = olsr_build_update_list(routingtable, old_routes);
-  //#warning deletion and addition of routes swapped in 0.4.7 - TEST!
-#if !defined linux
+
   olsr_delete_routes_from_kernel(delete_kernel_list);
   olsr_add_routes_in_kernel(add_kernel_list);
-#else
-  olsr_add_routes_in_kernel(add_kernel_list);
-  olsr_delete_routes_from_kernel(delete_kernel_list);
-#endif
 }
 
 
@@ -297,37 +292,80 @@ olsr_move_route_table(struct rt_entry *original, struct rt_entry *new)
 void 
 olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 {
-  struct destination_n *destination_kernel;
+  struct destination_n *destination_ptr;
+  int metric_counter = 1;
+  olsr_bool last_run = OLSR_FALSE;
 
+  /* Find highest metric */
+  for(destination_ptr = delete_kernel_list;
+      destination_ptr != NULL;
+      destination_ptr = destination_ptr->next)
+    {
+      if(destination_ptr->destination->rt_metric > metric_counter)
+	metric_counter = destination_ptr->destination->rt_metric;
+    }
+ 
   while(delete_kernel_list!=NULL)
     {
-      olsr_16_t error;
-      if(olsr_cnf->ip_version == AF_INET)
+      struct destination_n *previous_node = delete_kernel_list;
+
+      /* searching for all the items with metric equal to n */
+      for(destination_ptr = delete_kernel_list; destination_ptr != NULL; )
 	{
-	  /* IPv4 */
-	  error = olsr_ioctl_del_route(delete_kernel_list->destination);
+
+	  if((destination_ptr->destination->rt_metric == metric_counter) &&
+	     ((last_run && 
+	       COMP_IP(&destination_ptr->destination->rt_dst, 
+		       &destination_ptr->destination->rt_router)) 
+	      || !last_run))
+	    {
+	      olsr_16_t error;
+#ifdef DEBUG
+	      olsr_printf(3, "Deleting route to %s hopcount %d\n",
+			  olsr_ip_to_string(&destination_ptr->destination->rt_dst),
+			  destination_ptr->destination->rt_metric);
+#endif
+	      
+	      if(olsr_cnf->ip_version == AF_INET)
+		error = olsr_ioctl_del_route(delete_kernel_list->destination);
+	      else
+		error = olsr_ioctl_del_route6(delete_kernel_list->destination);
+	      
+	      if(error < 0)
+		{
+		  olsr_printf(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno));
+		  olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
+		}
+	      
+	      /* Getting rid of this node and hooking up the broken point */
+	      if(destination_ptr == delete_kernel_list) 
+		{
+		  destination_ptr = delete_kernel_list->next;
+		  free(delete_kernel_list);
+		  delete_kernel_list = destination_ptr;
+		  previous_node = delete_kernel_list;
+		}
+	      else 
+		{
+		  previous_node->next = destination_ptr->next;
+		  free(destination_ptr);
+		  destination_ptr = previous_node->next;
+		}
+	    }
+	  else 
+	    {
+	      previous_node = destination_ptr;
+	      destination_ptr = destination_ptr->next;
+	    }
+		
 	}
+      if((metric_counter == 1) && !last_run)
+	last_run = OLSR_TRUE;
       else
-	{
-	  /* IPv6 */
-	  error = olsr_ioctl_del_route6(delete_kernel_list->destination);
-	}
-
-
-      if(error < 0)
-	{
-	  olsr_printf(1, "Delete route:%s\n", strerror(errno));
-	  olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
-	}
-
-      destination_kernel=delete_kernel_list;
-      delete_kernel_list=delete_kernel_list->next;
+	metric_counter--;
       
-      free(destination_kernel);
     }
-
-
-  
+ 
 }
 
 /**
@@ -342,7 +380,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 void 
 olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 {
-  int metric_counter = 0;
+  int metric_counter = 1;
   olsr_bool first_run = OLSR_TRUE;
   
   while(add_kernel_list != NULL)
@@ -359,7 +397,13 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	    {
 	      olsr_16_t error;
 	      /* First add all 1-hop routes that has themselves as GW */
-	      
+
+#ifdef DEBUG
+	      olsr_printf(3, "Adding route to %s hopcount %d\n",
+			  olsr_ip_to_string(&destination_kernel->destination->rt_dst),
+			  destination_kernel->destination->rt_metric);
+#endif
+			  
 	      if(olsr_cnf->ip_version == AF_INET)
 		error=olsr_ioctl_add_route(destination_kernel->destination);
 	      else
