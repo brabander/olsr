@@ -1,10 +1,20 @@
 This file states changes as of version 0.2.4:
+$Id: CHANGELOG,v 1.11 2004/11/06 15:24:19 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
 
 NEW CONFIGFILE PARSER/FORMAT/SCHEME
 
 ToDo
+
+FREEBSD AND MAC OSX PORT
+
+
+PLUGIN INTERFACE
+
+There are some changes in the plugin interface. It is now at
+version 2. Plugin specific parameters from the configfile 
+will now be passed on to plugins.
 
 ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
 
@@ -46,6 +56,9 @@ giving these arguments have been fixed for general- and Linux-code.
 
 BUGFIXES
 
+A bug that caused the announced ANSN sequence number to never stop
+beeing increased when a change in the MPR selector set was detected
+has been fixed. This bug could cause unstable routes.
 A bug that in many cases caused the wrong routes to be deleted 
 when using IPv6 has been fixed.
 
