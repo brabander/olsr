@@ -29,8 +29,19 @@ an API is available to plugins(and olsr code).
 OS DEPENDENT NETWORK INTERFACE
 
 The OS dependen ntework functions are now defined in net_os.h
-instead of beein mixed up with internal network functions
+instead of beeing mixed up with internal network functions
 in net.h.
+
+COMPILER WARNINGS
+
+In the Linux makefile the '-Wmissing-prototypes -Wstrict-prototypes'
+arguments has been added. All the warnings issued by gcc after
+giving these arguments have been fixed for general- and Linux-code.
+
+BUGFIXES
+
+A bug that in many cases caused the wrong routes to be deleted 
+when using IPv6 has been fixed.
 
 
 0.4.7 ---------------------------------------------------------------------
