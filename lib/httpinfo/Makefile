@@ -47,19 +47,19 @@ endif
 endif
 
 ifneq ($(INCLUDE_SETTINGS), )
-	@echo '\nWARNING - BUILDING WITH ADMIN INTERFACE!\n\n'
+	@echo 'WARNING - BUILDING WITH ADMIN INTERFACE!'
 CFLAGS += -DINCLUDE_SETTINGS
 endif
 
 #Sourcefiles
-SRCS=	src/olsrd_plugin.c src/olsrd_httpinfo.c
+SRCS=	src/olsrd_plugin.c src/olsrd_httpinfo.c src/admin_interface.c
 
 #Objectfiles
-OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o
+OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o src/admin_interface.o
 
 #Headerfiles
 HDRS=	src/olsrd_plugin.h src/olsrd_httpinfo.h src/olsr_plugin_io.h\
-	src/gfx.h src/html.h
+	src/gfx.h src/html.h src/admin_interface.h src/admin_html.h
 
 
 plugin: $(OBJS)
@@ -94,3 +94,5 @@ clean:
 src/olsrd_plugin.o: $(HDRS)
 
 src/olsrd_httpinfo.o: $(HDRS)
+
+src/admin_interface.o: $(HDRS)

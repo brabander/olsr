@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.3 2005/01/06 21:27:22 kattemat Exp $
+ * $Id: html.h,v 1.4 2005/02/08 23:29:40 kattemat Exp $
  */
 
 /*
@@ -195,44 +195,5 @@ static const char *http_frame[] =
   NULL
 };
 
-
-#ifdef INCLUDE_SETTINGS
-static const char *admin_frame[] =
-  {
-    "<b>Administrator interface</b><hr>\n"
-    "<h2>Change basic settings</h2>\n",
-    "<form action=\"set_values\" method=\"post\">\n",
-    "<table width=\"100%%\">\n",
-    "<!-- BASICSETTINGS -->\n",
-    "</table>\n<br>\n",
-    "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n",
-    "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n",
-    "</form>\n",
-    "<h2>Add/remove local HNA entries</h2>\n",
-    "<form action=\"set_values\" method=\"post\">\n",
-    "<table width=\"100%%\"><tr><td><b>Network:</b></td>\n",
-    "<td><input type=\"text\" name=\"foo\" maxlength=\"100\" class=\"input_text\"></td>\n",
-    "<td><b>Netmask/Prefix:</b></td>\n",
-    "<td><input type=\"text\" name=\"foo\" maxlength=\"16\" class=\"input_text\"></td>\n",
-    "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td>\n",
-    "</table><hr>\n",
-    "<form action=\"set_values\" method=\"post\">\n",
-    "<table width=\"100%%\">\n",
-    "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n",
-    "<!-- HNAENTRIES -->\n",
-    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"foo\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
-    "</table>\n<br>\n",
-    "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n",
-    "</form>\n",
-
-    NULL
-};
-
-
-static char admin_basic_setting_int[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%d\"></td>\n";
-static char admin_basic_setting_float[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%0.2f\"></td>\n";
-static char admin_basic_setting_string[] = "<td><b>%s</b></td>\n<td> <input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
-
-#endif
 
 #endif

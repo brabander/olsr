@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.42 2005/01/30 00:23:56 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.43 2005/02/08 23:29:40 kattemat Exp $
  */
 
 /*
@@ -47,6 +47,7 @@
 #include "olsr_cfg.h"
 #include "gfx.h"
 #include "html.h"
+#include "admin_interface.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -158,13 +159,7 @@ build_all_body(char *, olsr_u32_t);
 int
 build_about_body(char *, olsr_u32_t);
 
-#ifdef INCLUDE_SETTINGS
-int
-build_admin_body(char *, olsr_u32_t);
-#endif
 
-int
-process_set_values(char*, olsr_u32_t, char *, olsr_u32_t);
 
 char *
 sockaddr_to_string(struct sockaddr *);
@@ -213,7 +208,9 @@ struct static_txt_file_entry static_txt_files[] =
 
 struct dynamic_file_entry dynamic_files[] =
   {
+#ifdef INCLUDE_SETTINGS
     {"set_values", process_set_values},
+#endif
     {NULL, NULL}
   };
 
@@ -659,18 +656,6 @@ plugin_io(int cmd, void *data, size_t size)
   
   return 1;
 
-}
-
-
-int
-process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsize)
-{
-  int size = 0;
-
-  size += sprintf(buf, "<html>\n<head></head>\n<body>\nDATA:<br>\n%s\n</body>\n</html>\n", data);
-
-  printf("Dynamic Data: %s\n", data);
-  return size;
 }
 
 
@@ -1172,128 +1157,6 @@ build_about_body(char *buf, olsr_u32_t bufsize)
     }
   return size;
 }
-
-
-#ifdef INCLUDE_SETTINGS
-int
-build_admin_body(char *buf, olsr_u32_t bufsize)
-{
-  int size = 0, i = 0;
-
-  while(admin_frame[i] && strcmp(admin_frame[i], "<!-- BASICSETTINGS -->\n"))
-    {
-      size += sprintf(&buf[size], admin_frame[i]);
-      i++;
-    }
-  
-  if(!admin_frame[i])
-    return size;
-  
-  size += sprintf(&buf[size], "<tr>\n");
-
-  size += sprintf(&buf[size], admin_basic_setting_int,
-		  "Debug level:", "debug_level", 2, cfg->debug_level);
-  size += sprintf(&buf[size], admin_basic_setting_float,
-		  "Pollrate:", "pollrate", 4, cfg->pollrate);
-  size += sprintf(&buf[size], admin_basic_setting_string,
-		  "TOS:", "tos", 6, "TBD");
-
-  size += sprintf(&buf[size], "</tr>\n");
-  size += sprintf(&buf[size], "<tr>\n");
-
-  size += sprintf(&buf[size], admin_basic_setting_int,
-		  "TC redundancy:", "tc_redundancy", 1, cfg->tc_redundancy);
-  size += sprintf(&buf[size], admin_basic_setting_int,
-		  "MPR coverage:", "mpr_coverage", 1, cfg->mpr_coverage);
-  size += sprintf(&buf[size], admin_basic_setting_int,
-		  "Willingness:", "willingness", 1, cfg->willingness);
-
-  size += sprintf(&buf[size], "</tr>\n");
-  size += sprintf(&buf[size], "<tr>\n");
-
-  if(cfg->use_hysteresis)
-    {
-      size += sprintf(&buf[size], admin_basic_setting_float,
-		      "Hyst scaling:", "hyst_scaling", 4, cfg->hysteresis_param.scaling);
-
-      size += sprintf(&buf[size], admin_basic_setting_float,
-		      "Lower thr:", "hyst_lower", 4, cfg->hysteresis_param.thr_low);
-      size += sprintf(&buf[size], admin_basic_setting_float,
-		      "Upper thr:", "hyst_upper", 4, cfg->hysteresis_param.thr_high);
-    }
-  else
-    {
-      size += sprintf(&buf[size], "<td>Hysteresis disabled</td>\n");
-    }
-
-  size += sprintf(&buf[size], "</tr>\n");
-  size += sprintf(&buf[size], "<tr>\n");
-  
-  if(cfg->lq_level)
-    {
-      size += sprintf(&buf[size], admin_basic_setting_int,
-		      "LQ level:", "lq_level", 1, cfg->lq_level);
-      size += sprintf(&buf[size], admin_basic_setting_int,
-		      "LQ winsize:", "lq_wsize", 1, cfg->lq_wsize);
-    }
-  else
-    {
-      size += sprintf(&buf[size], "<td>LQ disabled</td>\n");
-    }
-
-
-  size += sprintf(&buf[size], "</tr>\n");
-  size += sprintf(&buf[size], "<tr>\n");
-
-  size += sprintf(&buf[size], "</tr>\n");
-  
-  i++;
-
-  while(admin_frame[i] && strcmp(admin_frame[i], "<!-- HNAENTRIES -->\n"))
-    {
-      size += sprintf(&buf[size], admin_frame[i]);
-      i++;
-    }
-
-  if(!admin_frame[i] || !admin_frame[i+1])
-    return size;
-
-  i++;
-
-  if((cfg->ip_version == AF_INET) && (cfg->hna4_entries))
-    {
-      struct hna4_entry *hna4;
-      
-      for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
-	{
-	  size += sprintf(&buf[size], admin_frame[i], 
-			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
-			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
-	}
-    }
-  else if((cfg->ip_version == AF_INET6) && (cfg->hna6_entries))
-    {
-      struct hna6_entry *hna6;
-	
-      for(hna6 = cfg->hna6_entries; hna6; hna6 = hna6->next)
-	{
-	  size += sprintf(&buf[size], admin_frame[i], 
-			  olsr_ip_to_string((union olsr_ip_addr *)&hna6->net),
-			  "TBD"/*hna6->prefix_len*/);
-	}
-    }
-  
-  i++;
-
-  while(admin_frame[i])
-    {
-      size += sprintf(&buf[size], admin_frame[i]);
-      i++;
-    }
-  
-  return size;
-}
-#endif
 
 
 olsr_bool
