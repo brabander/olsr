@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.73 2005/03/29 19:07:18 kattemat Exp $
+ * $Id: main.c,v 1.74 2005/04/05 09:01:03 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -641,7 +641,7 @@ olsr_process_arguments(int argc, char *argv[],
 	  printf("Queuing if %s\n", *argv);
 	  queue_if(*argv);
 
-	  while((argc - 1) && (argv[0][1] != '-'))
+	  while((argc - 1) && (argv[1][0] != '-'))
 	    {
 	      NEXT_ARG;
 	      printf("Queuing if %s\n", *argv);
