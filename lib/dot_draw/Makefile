@@ -6,7 +6,7 @@
 
 CC ?= gcc
 STRIP ?= strip
-
+PLUGINFLAGS = -fPIC -DOLSR_PLUGIN -I../../src/
 
 ifndef OS
 all:		help
@@ -16,9 +16,9 @@ endif
 ifeq ($(OS), linux)
 NAME ?= olsrd_dot_draw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-MYFLAGS ?= -Wall -fPIC -Dlinux -I../../src -g # Uncomment -g for debugging
+MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lc -lm
-CFLAGS ?= -fPIC -g -O2 -I../../src -DOLSR_PLUGIN
+CFLAGS ?= -g -O2  -Wall -Wmissing-prototypes -Wstrict-prototypes
 INSTALL_LIB = 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
 all:	plugin
@@ -28,7 +28,7 @@ NAME ?= olsrd_dot_draw.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lc -lm
-CFLAGS ?= -fPIC -g -O2 -I../../src -DOLSR_PLUGIN
+CFLAGS ?= -g -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes
 INSTALL_LIB = 	install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
 all:	plugin
@@ -37,6 +37,7 @@ all: 	help
 endif
 endif
 
+CFLAGS += $(PLUGINFLAGS)
 #Sourcefiles
 SRCS=	src/olsrd_plugin.c src/olsrd_dot_draw.c
 

@@ -2,6 +2,7 @@
 CC ?= gcc
 STRIP ?= strip
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
+PLUGINFLAGS = -fPIC -DOLSR_PLUGIN -I../../src
 
 ifndef OS
 all:		help
@@ -9,18 +10,18 @@ endif
 
 ifeq ($(OS), linux)
 NAME ?= olsrd_dyn_gw.so.0.3
-MYFLAGS ?= -Wall -fPIC -Dlinux -g # Uncomment -g for debugging
+MYFLAGS ?= -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lpthread -lc -lm
-CFLAGS ?= -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2 -I../../src/ -DOLSR_PLUGIN
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
 INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	      /sbin/ldconfig -n $(LIBDIR)
 all:	plugin
 else
 ifeq ($(OS), fbsd)
 NAME ?= olsrd_dyn_gw.so.0.3
-MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
+MYFLAGS ?= -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lpthread -lc -lm
-CFLAGS ?= -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2 -I../../src/ -DOLSR_PLUGIN
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2 
 INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	      /sbin/ldconfig
 all:	plugin
@@ -28,7 +29,7 @@ else
 ifeq ($(OS), win32)
 NAME ?= olsrd_dyn_gw.dll
 NAMEFLAGS ?= -o $(NAME)
-CFLAGS ?= -g -O2 -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes -I../../src/ -DOLSR_PLUGIN
+CFLAGS ?= -g -O2 -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes 
 LDFLAGS ?= -mno-cygwin -shared
 LIBS ?= -lws2_32
 COMPATOBJ = ../../src/win32/compat.o
@@ -40,6 +41,7 @@ endif
 endif
 endif
 
+CFLAGS += $(PLUGINFLAGS)
 
 #Sourcefiles
 SRCS=	src/olsrd_plugin.c src/olsrd_dyn_gw.c

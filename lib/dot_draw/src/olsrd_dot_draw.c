@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.10 2005/01/30 15:45:11 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.11 2005/02/20 15:51:15 kattemat Exp $
  */
 
 /*
@@ -58,6 +58,55 @@ int ipc_socket;
 int ipc_open;
 int ipc_connection;
 int ipc_socket_up;
+
+static double 
+calc_etx(double, double);
+
+static void inline
+ipc_print_neigh_link(struct neighbor_entry *);
+
+
+
+
+static void inline
+ipc_print_neigh_link(struct neighbor_entry *neighbor)
+{
+  char buf[256];
+  int len;
+  char* adr;
+  double etx=0.0;
+  char* style = "solid";
+  struct link_entry* link;
+  adr = olsr_ip_to_string(main_addr);
+  len = sprintf( buf, "\"%s\" -> ", adr );
+  ipc_send(buf, len);
+  
+  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
+  
+  if (neighbor->status == 0) { // non SYM
+  	style = "dashed";
+  }
+  else {
+    /* find best link to neighbor for the ETX */
+    //? why cant i just get it one time at fetch_olsrd_data??? (br1)
+    if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
+    {
+      link_set = link; // for olsr_neighbor_best_link    
+      link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
+      if (link) {
+        etx = calc_etx( link->loss_link_quality, link->neigh_link_quality);
+      }
+    }
+  }
+    
+  len = sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
+  ipc_send(buf, len);
+  
+   if (neighbor->is_mpr) {
+	len = sprintf( buf, "\"%s\"[shape=box];\n", adr );
+  	ipc_send(buf, len);
+  }
+}
 
 /**
  *Do initialization here
@@ -211,7 +260,6 @@ pcf_event(int changes_neighborhood,
   int res;
   olsr_u8_t index;
   struct neighbor_entry *neighbor_table_tmp;
-  struct neighbor_2_list_entry *list_2;
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
   struct hna_entry *tmp_hna;
@@ -291,52 +339,15 @@ pcf_event(int changes_neighborhood,
 }
 
 #define MIN_LINK_QUALITY 0.01
-double calc_etx( double loss, double neigh_loss ) {
-	if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
-		return 0.0;
-	else
-		return 1.0 / (loss * neigh_loss);
+static double 
+calc_etx(double loss, double neigh_loss) 
+{
+  if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
+    return 0.0;
+  else
+    return 1.0 / (loss * neigh_loss);
 }
 
-static void inline
-ipc_print_neigh_link(struct neighbor_entry *neighbor)
-{
-  char buf[256];
-  int len;
-  char* adr;
-  double etx=0.0;
-  char* style = "solid";
-  struct link_entry* link;
-  adr = olsr_ip_to_string(main_addr);
-  len = sprintf( buf, "\"%s\" -> ", adr );
-  ipc_send(buf, len);
-  
-  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
-  
-  if (neighbor->status == 0) { // non SYM
-  	style = "dashed";
-  }
-  else {
-    /* find best link to neighbor for the ETX */
-    //? why cant i just get it one time at fetch_olsrd_data??? (br1)
-    if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
-    {
-      link_set = link; // for olsr_neighbor_best_link    
-      link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
-      if (link) {
-        etx = calc_etx( link->loss_link_quality, link->neigh_link_quality);
-      }
-    }
-  }
-    
-  len = sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
-  ipc_send(buf, len);
-  
-   if (neighbor->is_mpr) {
-	len = sprintf( buf, "\"%s\"[shape=box];\n", adr );
-  	ipc_send(buf, len);
-  }
-}
 
 static void inline
 ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry)
