@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.20 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: lq_route.c,v 1.21 2005/01/22 12:25:25 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -45,6 +45,7 @@
 #include "link_set.h"
 #include "routing_table.h"
 #include "mid_set.h"
+#include "hna_set.h"
 #include "lq_list.h"
 #include "lq_route.h"
 
@@ -306,6 +307,9 @@ void olsr_calculate_lq_routing_table(void)
   int hops;
   struct mid_address *mid_walker;
   float etx;
+  struct hna_entry *hna_gw;
+  struct hna_net *hna;
+  struct rt_entry *gw_rt, *hna_rt, *head_rt;
 
   // initialize the graph
 
@@ -429,8 +433,15 @@ void olsr_calculate_lq_routing_table(void)
     // if no path to a one-hop neighbour was found, ignore this node
 
     if (walker != NULL)
+    {
       olsr_printf(2, "%s:%s (one-hop)\n", olsr_ip_to_string(&walker->addr),
                   etx_to_string(walker->path_etx));
+
+      // node reachable => add to the set of unprocessed nodes
+      // for HNA processing
+
+      vert->done = OLSR_FALSE;
+    }
 
     else
     {
@@ -463,6 +474,85 @@ void olsr_calculate_lq_routing_table(void)
          mid_walker = mid_walker->next_alias)
       olsr_insert_routing_table(&mid_walker->alias,
                                 get_neighbor_nexthop(&walker->addr), hops);
+  }
+
+  // add HNA routes - the set of unprocessed network nodes contains
+  // all reachable network nodes
+
+  for (;;)
+  {
+    // extract the network node with the best ETX and remove it
+    // from the set of unprocessed network nodes
+
+    vert = extract_best(&vertex_list);
+
+    // no more nodes left
+
+    if (vert == NULL)
+      break;
+
+    // find the node's HNAs
+
+    hna_gw = olsr_lookup_hna_gw(&vert->addr);
+
+    // node doesn't announce any HNAs
+
+    if (hna_gw == NULL)
+      continue;
+
+    // loop through the node's HNAs
+
+    for (hna = hna_gw->networks.next; hna != &hna_gw->networks;
+         hna = hna->next)
+    {
+      // we already have a route via a previous (better) node
+
+      if (olsr_lookup_routing_table(&hna->A_network_addr) != NULL)
+        continue;
+
+      // find route to the node
+
+      gw_rt = olsr_lookup_routing_table(&hna_gw->A_gateway_addr);
+
+      // should never happen as we only process reachable nodes
+
+      if (gw_rt == NULL)
+      {
+        fprintf(stderr, "LQ HNA processing: Gateway without a route.");
+        continue;
+      }
+
+      // create route for the HNA
+
+      hna_rt = olsr_malloc(sizeof(struct rt_entry), "LQ HNA route entry");
+
+      // set HNA IP address and netmask
+
+      COPY_IP(&hna_rt->rt_dst, &hna->A_network_addr);
+      hna_rt->rt_mask = hna->A_netmask;
+
+      // copy remaining fields from the node's route
+
+      COPY_IP(&hna_rt->rt_router, &gw_rt->rt_router);
+      hna_rt->rt_metric = gw_rt->rt_metric;
+      hna_rt->rt_if = gw_rt->rt_if;
+
+      // we're not a host route
+
+      hna_rt->rt_flags = RTF_UP | RTF_GATEWAY;
+
+      // find the correct list
+
+      head_rt = &routingtable[olsr_hashing(&hna->A_network_addr)];
+
+      // enqueue
+
+      head_rt->next->prev = hna_rt;
+      hna_rt->next = head_rt->next;
+
+      head_rt->next = hna_rt;
+      hna_rt->prev = head_rt;
+    }
   }
 
   // free the graph

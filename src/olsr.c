@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.36 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: olsr.c,v 1.37 2005/01/22 12:25:25 tlopatic Exp $
  */
 
 /**
@@ -201,14 +201,13 @@ olsr_process_changes()
       if (olsr_cnf->lq_level < 2)
         {
           olsr_calculate_routing_table();
+          olsr_calculate_hna_routes();
         }
 
       else
         {
           olsr_calculate_lq_routing_table();
         }
-
-      olsr_calculate_hna_routes();
     }
   
   else if (changes_topology)
@@ -218,20 +217,28 @@ olsr_process_changes()
       if (olsr_cnf->lq_level < 2)
         {
           olsr_calculate_routing_table();
+          olsr_calculate_hna_routes();
         }
 
       else
         {
           olsr_calculate_lq_routing_table();
         }
-
-      olsr_calculate_hna_routes();
     }
 
   else if (changes_hna)
     {
-      /* Update HNA routes */
-      olsr_calculate_hna_routes();
+      /* update HNA routes */
+
+      if (olsr_cnf->lq_level < 2)
+        {
+          olsr_calculate_hna_routes();
+        }
+
+      else
+        {
+          olsr_calculate_lq_routing_table();
+        }
     }
   
   if (olsr_cnf->debug_level > 0)

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.13 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: routing_table.c,v 1.14 2005/01/22 12:25:25 tlopatic Exp $
  */
 
 
@@ -62,9 +62,6 @@ olsr_fill_routing_table_with_two_hop_neighbors(void);
 
 static struct rt_entry *
 olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
-
-static struct rt_entry *
-olsr_lookup_routing_table(union olsr_ip_addr *);
 
 struct rt_entry *
 olsr_check_for_lower_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
@@ -107,7 +104,7 @@ olsr_init_routing_table()
  *@return a pointer to a rt_entry struct 
  *representing the route entry.
  */
-static struct rt_entry *
+struct rt_entry *
 olsr_lookup_routing_table(union olsr_ip_addr *dst)
 {
 
