@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.c,v 1.9 2004/11/09 21:09:58 kattemat Exp $
+ * $Id: hna_set.c,v 1.10 2004/11/14 13:58:49 kattemat Exp $
  *
  */
 
@@ -304,16 +304,16 @@ olsr_print_hna_set()
   struct hna_net *tmp_net;
   char tmp_ipv6net[45];
 
+  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d -------------------------------------------------- HNA SET\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+	      now.tv_usec/10000);
+  
   if(olsr_cnf->ip_version == AF_INET)
-    {
-      olsr_printf(1, "\n------------------------------------------------ HNA SET\n\n");
-      olsr_printf(1, "IP net          netmask         GW IP\n");
-    }
+    olsr_printf(1, "IP net          netmask         GW IP\n");
   else
-    {
-      olsr_printf(1, "\n------------------------------------------------- HNA SET\n\n");
-      olsr_printf(1, "IP net/prefixlen               GW IP\n");
-    }
+    olsr_printf(1, "IP net/prefixlen               GW IP\n");
 
   for(index=0;index<HASHSIZE;index++)
     {

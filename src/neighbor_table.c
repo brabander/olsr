@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.14 2004/11/10 17:11:36 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.15 2004/11/14 13:58:49 kattemat Exp $
  *
  */
 
@@ -466,11 +466,11 @@ olsr_print_neighbor_table()
   double best_lq, inv_best_lq;
   char *fstr;
 
-  olsr_printf(1, "\n--- %02d:%02d:%02d ------------------------------------------------------ NEIGHBORS\n\n",
+  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              now.tv_usec);
+              now.tv_usec/10000);
 
   if (olsr_cnf->ip_version == AF_INET)
   {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.26 2004/11/10 14:53:20 tlopatic Exp $
+ * $Id: link_set.c,v 1.27 2004/11/14 13:58:49 kattemat Exp $
  *
  */
 
@@ -914,11 +914,11 @@ void olsr_print_link_set(void)
   struct link_entry *walker;
   char *fstr;
 
-  olsr_printf(1, "\n--- %02d:%02d:%02d ---------------------------------------------------------- LINKS\n\n",
+  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              now.tv_usec);
+              now.tv_usec/10000);
 
   if (olsr_cnf->ip_version == AF_INET)
   {
