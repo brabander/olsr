@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.37 2004/12/01 21:15:49 kattemat Exp $
+# $Id: Makefile,v 1.38 2004/12/04 09:46:05 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -247,6 +247,6 @@ install_libs:
 		done; 	
 
 tags:
-		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS)
+		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h)
 
 sinclude	$(DEPFILE)
