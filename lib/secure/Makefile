@@ -12,7 +12,7 @@ LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g #-DDEBUG# Uncomment -g for debugging
 LIBS ?= -lc -lssl -lcrypto -lm
-CFLAGS ?= -g -O2
+CFLAGS ?= -fPIC -g -O2
 
 #Sourcefiles
 #add yours here

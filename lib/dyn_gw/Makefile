@@ -6,7 +6,7 @@ LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lpthread -lc -lm
-CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
+CFLAGS ?= -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2
 STRIP ?= strip
 
 #Sourcefiles
