@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.16 2004/12/02 16:37:13 kattemat Exp $
+$Id: CHANGELOG,v 1.17 2004/12/02 16:45:51 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
 
@@ -51,7 +51,21 @@ between 3 and 128 are legal.
 
 NEW CONFIGFILE PARSER/FORMAT/SCHEME
 
-ToDo
+A whole new config file syntax and parser is introduced with this
+release. The parser is generated using flex and bison and it is 
+designed to be very modular. The parser can be compiled as either
+a standalone binary, a shared library or as part of olsrd. This way
+other applications can parse and generate olsrd configuration files
+only by linking to the dynamic library.
+In the new configfile options can be set pr. interface, plugin
+parameters can be set, more IPC options can be set...and more.
+The syntax is documented in the olsrd.conf(5) manaul page found
+in the files/ directory.
+Olsrd internals now uses a single struct, as returned by the config
+parser, for all configuration in runtime. this means that updating
+values in this struct will dynamically update olsrd operation. It
+also means that all configuration is now kept in one place instead
+of spread all across the place.
 
 FREEBSD AND MAC OSX PORT
 
