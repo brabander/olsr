@@ -67,7 +67,8 @@ net_output(struct interface *ifp)
   /* Add the Packet seqno */
   ((struct olsr*)packet)->olsr_seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
-  //((struct olsr*)packet)->olsr_packlen = htons(outputsize);
+#warning 0.4.8 net_output now sets packetsize itself
+  ((struct olsr*)packet)->olsr_packlen = htons(outputsize);
 
   if(ipversion == AF_INET)
     {
@@ -246,6 +247,9 @@ net_forward()
       
       /* Add the Packet seqno */
       ((struct olsr*)fwd_packet)->olsr_seqno = htons(ifn->olsr_seqnum++);
+      /* Set the packetlength */
+#warning 0.4.8 net_forward now sets packetsize itself
+      ((struct olsr*)fwd_packet)->olsr_packlen = htons(fwdsize);
 
       if(ipversion == AF_INET)
 	{

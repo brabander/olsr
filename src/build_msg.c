@@ -218,7 +218,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   struct hellomsg *h;
   struct hellinfo *hinfo;
   union olsr_ip_addr *haddr;
-  int i, j, sametype, npackets = 0;
+  int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
   if (!message)
@@ -245,11 +245,9 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   m->v4.ttl = message->ttl;
   m->v4.hopcnt = 0;
 
+  /* Send pending packet if not room in buffer */
   if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    {
-      msg->v4.olsr_packlen = htons(outputsize);
-      net_output(ifp);
-    }
+    net_output(ifp);
 
   /* Set willingness */
   h->willingness = message->willingness; 
@@ -299,7 +297,6 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 	    {
 	      olsr_printf(1, "Chomping HELLO message\n");
 
-	      msg->v4.olsr_packlen = htons(outputsize);
 	      m->v4.olsr_msgtype = HELLO_MESSAGE;
 	      if(ifp->is_wireless)
 		m->v4.olsr_vtime = hello_vtime;
@@ -319,8 +316,6 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 	      h = &m->v4.message.hello;
 	      hinfo = h->hell_info;
 	      haddr = (union olsr_ip_addr *)&hinfo->neigh_addr;	
-
-	      npackets++;
 	    }
 
 	  /*
@@ -338,7 +333,6 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		{
 		  olsr_printf(1, "Chomping HELLO again\n");
 
-		  msg->v4.olsr_packlen = htons(outputsize);
 		  m->v4.olsr_msgtype = HELLO_MESSAGE;
 		  if(ifp->is_wireless)
 		    m->v4.olsr_vtime = hello_vtime;
@@ -351,9 +345,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		  hinfo->size = ntohs(hinfo->size);
 	      
 		  m->v4.seqno = htons(get_msg_seqno());
-	      
-		  //m->v4.seqno = htons(message->mpr_seq_number);
-	      
+
 		  net_output(ifp);
 	      
 		  m = (union olsr_message *)msg->v4.olsr_msg;
@@ -370,7 +362,6 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 
 	      
 		  lastpacket = sametype;
-		  npackets++;
 		}
 	  
 	  
@@ -429,11 +420,9 @@ hello_build4(struct hello_message *message, struct interface *ifp)
     m->v4.olsr_vtime = hello_nw_vtime;
 
   outputsize = (char *)hinfo - packet;
-  msg->v4.olsr_packlen = htons(outputsize);
+  
   if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    {
-      net_output(ifp);
-    }
+    net_output(ifp);
 
 
   /*
@@ -475,7 +464,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   struct hellinfo6 *hinfo6;
   union olsr_ip_addr *haddr;
 
-  int i, j, sametype, npackets = 0;
+  int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
   if (!message)
@@ -501,12 +490,9 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   m->v6.hopcnt = 0;
 
   if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    {
-      msg->v6.olsr_packlen = htons(outputsize); 
-      net_output(ifp);
-    }
-
-
+    net_output(ifp);
+  
+  
   /* Set willingness */
   h6->willingness = message->willingness; 
 
@@ -546,7 +532,6 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 	    {
 	      olsr_printf(1, "Chomping HELLO message\n");
 	      
-	      msg->v6.olsr_packlen = htons(outputsize);
 	      m->v6.olsr_msgtype = HELLO_MESSAGE;
 	      if(ifp->is_wireless)
 		m->v6.olsr_vtime = hello_vtime;
@@ -567,7 +552,6 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 	      hinfo6 = h6->hell_info;
 	      haddr = (union olsr_ip_addr *)&hinfo6->neigh_addr;
 	      
-	      npackets++;
 	    }
 	  
 	  /*
@@ -585,7 +569,6 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		{
 		  olsr_printf(1, "Chomping HELLO again\n");
 		  
-		  msg->v6.olsr_packlen = htons(outputsize);
 		  m->v6.olsr_msgtype = HELLO_MESSAGE;
 		  if(ifp->is_wireless)
 		    m->v6.olsr_vtime = hello_vtime;
@@ -617,7 +600,6 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		  
 		  
 		  lastpacket = sametype;
-		  npackets++;
 		}
 	      
 	      
@@ -676,11 +658,9 @@ hello_build6(struct hello_message *message, struct interface *ifp)
     m->v6.olsr_vtime = hello_nw_vtime;
 
   outputsize = (char *)hinfo6 - packet;
-  msg->v6.olsr_packlen = htons(outputsize);
+
   if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg6)) 
-    {
       net_output(ifp);
-    }
 
 
   /*
@@ -745,10 +725,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   tc->reserved = 0;
 
   if (outputsize > maxmessagesize - msgsize) 
-    {
-      msg->v4.olsr_packlen = htons(outputsize);
-      net_output(ifp);
-    }
+    net_output(ifp);
             
 
   /*Looping trough MPR selectors */
@@ -762,7 +739,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	{
 
 	  olsr_printf(1, "Chomping TC!\n");
-	  msg->v4.olsr_packlen = htons(outputsize);
+
 	  m->v4.olsr_vtime = tc_vtime;
 	  m->v4.olsr_msgtype = TC_MESSAGE;
 	  m->v4.olsr_msgsize = (char *)mprsaddr - (char *)m;
@@ -792,7 +769,6 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	    
       outputsize = (char *)mprsaddr - packet;
 
-      msg->v4.olsr_packlen = htons(outputsize);
       m->v4.olsr_msgtype = TC_MESSAGE;
       m->v4.olsr_msgsize = (char *)mprsaddr - (char *)m;
       m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
@@ -816,7 +792,6 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	    
 	  outputsize = 20;
 
-	  msg->v4.olsr_packlen = htons(outputsize);
 	  m->v4.olsr_msgtype = TC_MESSAGE;
 	  m->v4.olsr_msgsize = 16;
 	  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
@@ -832,12 +807,6 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	}
     }
 
-  /*	
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    {
-      net_output(ifp);	    
-    }
-  */
 
   /*
    * Delete the list of mprs messages
@@ -902,12 +871,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   tc6->reserved = 0;
 
   if (outputsize > maxmessagesize - msgsize) 
-    {
-
-      msg->v6.olsr_packlen = htons(outputsize);
-      
-      net_output(ifp);
-    }
+    net_output(ifp);
 
   
 
@@ -921,7 +885,6 @@ tc_build6(struct tc_message *message, struct interface *ifp)
       /*If packet is to be chomped */
       if (outputsize > maxmessagesize - (int)sizeof (mprsaddr6))
 	{
-	  msg->v6.olsr_packlen = htons(outputsize);
 	  m->v6.olsr_msgtype = TC_MESSAGE;
 	  m->v6.olsr_msgsize = (char *)mprsaddr6 - (char *)m;
 	  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
@@ -958,7 +921,6 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	    
       outputsize = (char *)mprsaddr6 - packet;
 
-      msg->v6.olsr_packlen = htons(outputsize);
       m->v6.olsr_msgtype = TC_MESSAGE;
       m->v6.olsr_msgsize = (char *)mprsaddr6 - (char *)m;
       m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
@@ -981,7 +943,6 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	    
 	  outputsize = 32;
 
-	  msg->v6.olsr_packlen = htons(outputsize);
 	  m->v6.olsr_msgtype = TC_MESSAGE;
 	  m->v6.olsr_msgsize = 28;
 	  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
@@ -996,13 +957,6 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	  COPY_IP(&m->v6.originator, &message->originator);
 	}
     }
-
-  /*
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    {
-      net_output(ifp);
-    }
-  */
 
   /*
    * Delete the list of mprs messages
@@ -1089,10 +1043,6 @@ mid_build4(struct interface *ifn)
   m->v4.olsr_vtime = mid_vtime;
 
   outputsize = (char*)addrs - packet; 
-  msg->v4.olsr_packlen = htons(outputsize);
-
-
-
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
 
@@ -1167,8 +1117,6 @@ mid_build6(struct interface *ifn)
   m->v6.olsr_vtime = mid_vtime;
 
   outputsize = (char*)addrs6 - packet;
-  msg->v6.olsr_packlen = htons(outputsize);
-
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
 
@@ -1231,7 +1179,6 @@ hna_build4(struct interface *ifp)
   m->v4.olsr_vtime = hna_vtime;
 
   outputsize = (char*)pair - packet;
-  msg->v4.olsr_packlen = htons(outputsize);
   //printf("Sending HNA (%d bytes)...\n", outputsize);
 
 }
@@ -1300,7 +1247,6 @@ hna_build6(struct interface *ifp)
   m->v6.olsr_vtime = hna_vtime;
   
   outputsize = (char*)pair6 - packet;
-  msg->v6.olsr_packlen = htons(outputsize);
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);
 

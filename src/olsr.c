@@ -365,8 +365,6 @@ olsr_forward_message(union olsr_message *m,
 
 	  memcpy(om, m, msgsize);
 	  fwdsize += msgsize;
-	  /* Set messagesize  - same for IPv4 and IPv6 */
-	  fwdmsg->v4.olsr_packlen = htons(fwdsize);
 	}
     }
 
