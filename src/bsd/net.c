@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: net.c,v 1.17 2005/03/02 08:58:12 kattemat Exp $
  */
 
 #include "defs.h"
@@ -355,6 +355,7 @@ olsr_select(int nfds,
 int 
 check_wireless_interface(char *ifname)
 {
+#ifdef __FreeBSD__
   struct wi_req	wreq;
   struct ifreq ifr;
 
@@ -368,6 +369,9 @@ check_wireless_interface(char *ifname)
   ifr.ifr_data = (caddr_t)&wreq;
 
   return (ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
+#else
+  return 0;
+#endif
 }
 
 #include <sys/sockio.h>
