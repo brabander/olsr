@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.35 2004/11/11 21:14:17 kattemat Exp $
+ * $Id: main.c,v 1.36 2004/11/12 20:48:19 kattemat Exp $
  *
  */
 
@@ -639,6 +639,11 @@ main(int argc, char *argv[])
 #else
   signal(SIGINT, olsr_shutdown);  
   signal(SIGTERM, olsr_shutdown);  
+#endif
+
+  /* Register socket poll event */
+#if 0
+  olsr_register_timeout_function(&poll_sockets);
 #endif
 
   /* Go into listenloop */

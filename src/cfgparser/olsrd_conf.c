@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.17 2004/11/12 16:33:13 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.18 2004/11/12 20:48:19 kattemat Exp $
  *
  */
 
@@ -432,7 +432,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "\n\n");
 
   /* Pollrate */
-  fprintf(fd, "# Polling rate in seconds(float).\n# Auto uses default value 0.1 sec\n\n");
+  fprintf(fd, "# Polling rate in seconds(float).\n# Auto uses default value 0.05 sec\n\n");
   fprintf(fd, "Pollrate\t%0.2f\n", cnf->pollrate);
 
   /* TC redundancy */

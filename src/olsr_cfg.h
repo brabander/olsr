@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.8 2004/11/11 21:14:17 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.9 2004/11/12 20:48:19 kattemat Exp $
  *
  */
 
@@ -30,7 +30,7 @@
 #include "olsr_protocol.h"
 
 /* Default valuse not declared in olsr_protocol.h */
-#define DEF_POLLRATE        0.1
+#define DEF_POLLRATE        0.05
 #define DEF_WILL_AUTO       OLSR_TRUE
 #define DEF_ALLOW_NO_INTS   OLSR_TRUE
 #define DEF_TOS             16

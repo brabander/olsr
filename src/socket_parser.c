@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.12 2004/11/12 20:17:59 kattemat Exp $
+ * $Id: socket_parser.c,v 1.13 2004/11/12 20:48:19 kattemat Exp $
  *
  */
 
@@ -39,6 +39,9 @@
 
 
 static int hfd = 0;
+
+static struct timeval tvp = {0, 0};
+static fd_set ibits;
 
 #warning highest FD for select is now set in socket add/remove functions
 
@@ -216,4 +219,55 @@ listen_loop()
 } /* main */
 
 
+
+
+void
+poll_sockets()
+{
+  int n;
+  struct olsr_socket_entry *olsr_sockets;
+
+
+  /* If there are no registered sockets we
+   * do not call select(2)
+   */
+  if(hfd == 0)
+    return;
+  
+  FD_ZERO(&ibits);
+  
+  /* Adding file-descriptors to FD set */
+  olsr_sockets = olsr_socket_entries;
+  while(olsr_sockets)
+    {
+      FD_SET(olsr_sockets->fd, &ibits);
+      olsr_sockets = olsr_sockets->next;
+    }
+      
+  /* Runnig select on the FD set */
+  n = select(hfd, &ibits, 0, 0, &tvp);
+  
+  if(n == 0)
+    return;
+  /* Did somethig go wrong? */
+  if ((n < 0) && errno != EINTR) 
+    {
+      olsr_syslog(OLSR_LOG_ERR, "select: %m");
+      olsr_printf(1, "Error select: %s", strerror(errno));
+      return;
+    }
+
+  gettimeofday(&now, NULL);      
+  
+  olsr_sockets = olsr_socket_entries;
+  while(olsr_sockets)
+    {
+      if(FD_ISSET(olsr_sockets->fd, &ibits))
+	{
+	  olsr_sockets->process_function(olsr_sockets->fd);
+	}
+      olsr_sockets = olsr_sockets->next;
+    }
+  	
+}
 

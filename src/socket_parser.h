@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: socket_parser.h,v 1.7 2004/11/12 20:48:19 kattemat Exp $
  *
  */
 
@@ -50,5 +50,8 @@ remove_olsr_socket(int, void(*)(int));
 
 void
 listen_loop(void);
+
+void
+poll_sockets(void);
 
 #endif
