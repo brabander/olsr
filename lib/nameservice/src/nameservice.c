@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.8 2005/03/07 13:29:40 br1 Exp $ */
+/* $Id: nameservice.c,v 1.9 2005/03/13 22:25:05 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -48,6 +48,7 @@ static char buffer[10240];
 
 /* config parameters */
 static char my_filename[MAX_FILE + 1];
+static char my_add_hosts[MAX_FILE + 1];
 static char my_suffix[MAX_SUFFIX];
 int my_interval = EMISSION_INTERVAL;
 double my_timeout = NAME_VALID_TIME;
@@ -82,6 +83,7 @@ name_constructor()
 #endif
 
 	my_suffix[0] = '\0';
+	my_add_hosts[0] = '\0';
 	
 	/* init list */
 	for(i = 0; i < HASHSIZE; i++) {
@@ -126,7 +128,10 @@ register_olsr_param(char *key, char *value)
 		strncpy(my_suffix, value, MAX_SUFFIX);
 		printf("\nNAME PLUGIN: parameter suffix: %s\n", my_suffix);
 	}
-
+	else if(!strcmp(key, "addhosts")) {
+		strncpy(my_add_hosts, value, MAX_FILE);
+		printf("\nNAME PLUGIN: parameter additional host: %s\n", my_add_hosts);
+	}
 	else {
 		// assume this is an IP address and hostname
 		struct in_addr ip;
@@ -539,7 +544,10 @@ write_name_table()
 	struct name_entry *name;
 	struct db_entry *entry;
 	FILE* hosts;
-
+	FILE* add_hosts;
+	int c=0;
+	time_t currtime;
+  
 	if(!name_table_changed)
 		return;
 
@@ -551,8 +559,23 @@ write_name_table()
 		return;
 	}
 	
-	fprintf(hosts, "# this /etc/hosts file is overwritten regularly by olsrd\n");
-	fprintf(hosts, "# do not edit\n");
+	fprintf(hosts, "### this /etc/hosts file is overwritten regularly by olsrd\n");
+	fprintf(hosts, "### do not edit\n\n");
+	
+	// copy content from additional hosts filename
+	if (my_add_hosts[0] != '\0') {
+		add_hosts = fopen( my_add_hosts, "r" );
+		if (add_hosts == NULL) {
+			olsr_printf(2, "NAME PLUGIN: cant open additional hosts file\n");
+		}
+		else {
+			fprintf(hosts, "### contents from '%s' ###\n\n", my_add_hosts);
+			while ((c = getc(add_hosts)) != EOF)
+				putc(c, hosts);
+		}
+		fclose(add_hosts);		
+		fprintf(hosts, "\n### olsr names ###\n\n");
+	}
 	
 	// write own names
 	for (name = my_names; name != NULL; name = name->next) {
@@ -575,7 +598,11 @@ write_name_table()
 			}
 		}
 	}
-	
+
+	if(time(&currtime)) {
+		fprintf(hosts, "\n### written by olsrd at %s", ctime(&currtime));
+	}
+	  
 	fclose(hosts);
 	name_table_changed = OLSR_FALSE;
 }

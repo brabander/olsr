@@ -49,8 +49,13 @@ PlParam "timeout" "SEC"
 
 PlParam "suffix" ".olsr"
 
-	local suffix which is appended to all received names
+	local suffix which is appended to all received names.
 	(default: "")
+	
+PlParam "addhosts" "/path/to/file"
+
+	copy contents of this additional hosts file to output file.
+	this is practical if you alreay use your /etc/hosts file.
 
 
 ---------------------------------------------------------------------
@@ -103,4 +108,4 @@ TODO
  * or make dynamic DNS updates for bind?
 
 ---------------------------------------------------------------------
-EOF / 03.03.2005
+EOF / 13.03.2005
