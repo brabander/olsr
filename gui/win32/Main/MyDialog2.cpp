@@ -165,7 +165,13 @@ void MyDialog2::Reset(void)
 	m_TunnelCheck.SetCheck(FALSE);
 
 	for (i = 0; i < Interfaces->GetSize(); i++)
-		m_InterfaceList.SetCheck(i, TRUE);
+	{
+		if ((*IsWlan)[i] == "-")
+			m_InterfaceList.SetCheck(i, FALSE);
+
+		else
+			m_InterfaceList.SetCheck(i, TRUE);
+	}
 
 	m_ManualWindow.SetWindowText("");
 }

@@ -42,7 +42,7 @@ public:
 	class MyDialog3 m_Dialog3;
 	class MyDialog4 m_Dialog4;
 
-	void InitTabDialogs(CStringArray *, CStringArray *);
+	void InitTabDialogs(CStringArray *, CStringArray *, CStringArray *);
 	void DisplayTabDialog(void);
 
 	//{{AFX_VIRTUAL(MyTabCtrl)

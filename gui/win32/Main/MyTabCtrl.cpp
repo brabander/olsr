@@ -45,7 +45,8 @@ BEGIN_MESSAGE_MAP(MyTabCtrl, CTabCtrl)
 END_MESSAGE_MAP()
 
 void MyTabCtrl::InitTabDialogs(CStringArray *Interfaces,
-							   CStringArray *Addresses)
+							   CStringArray *Addresses,
+							   CStringArray *IsWlan)
 {
 	int i;
 	CRect Client;
@@ -53,6 +54,7 @@ void MyTabCtrl::InitTabDialogs(CStringArray *Interfaces,
 
 	m_Dialog2.Interfaces = Interfaces;
 	m_Dialog2.Addresses = Addresses;
+	m_Dialog2.IsWlan = IsWlan;
 
 	m_Dialog1.Create(GetParent());
 	m_Dialog2.Create(GetParent());

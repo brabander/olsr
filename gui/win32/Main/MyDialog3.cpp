@@ -257,6 +257,8 @@ void MyDialog3::OnItemchangedNodeList(NMHDR* pNMHDR, LRESULT* pResult)
 	int Idx;
 	int Num;
 
+	pNMHDR = pNMHDR;
+
 	*pResult = 0;
 
 	Item = m_NodeList.GetNextItem(-1, LVNI_SELECTED);

@@ -86,6 +86,7 @@ protected:
 
 	CStringArray Interfaces;
 	CStringArray Addresses;
+	CStringArray IsWlan;
 
 	HANDLE OutRead, InWrite;
 	HANDLE ShimProc;

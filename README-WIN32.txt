@@ -45,6 +45,12 @@ how this version differs from the original Linux version.
   addresses to enable you to find out which made-up interface name
   corresponds to which of your physical interfaces.
 
+  "+" in front of the IP addresses means that the OLSR server has
+  identified the interface as a WLAN interface. "-" indicates that the
+  OLSR server considers this interface to be a wired interface. "?"
+  means "no idea". Detection currently only works on NT, 2000, and
+  XP. Windows 9x and ME will always display "?".
+
   For techies: The made-up names consist of the string "if" followed
   by a two-digit hex representation of the least significant byte of
   the Windows-internal interface index, which should be different for
@@ -130,13 +136,6 @@ how this version differs from the original Linux version.
     * IPv6.
 
     * Link layer statistics.
-
-    * WLAN interface detection. The Windows port does not recognize
-      whether an interface is a WLAN interface or a wired LAN
-      interface. All specified interfaces are assumed to be WLAN
-      interfaces. So, for example, specifying a different HELLO
-      interval for wired interfaces does not currently work. Instead,
-      the HELLO interval for WLAN interfaces is always used.
 
     * Gateway tunnelling. This is currently experimental on
       Windows. It is intended to work reliably on Windows 2000 and
@@ -234,4 +233,4 @@ please bear with me if there are any problems. Please do also feel
 free to suggest any features that you'd like to see in future
 releases.
 
-Thomas Lopatic <thomas@lopatic.de>, 2004-09-14
+Thomas Lopatic <thomas@lopatic.de>, 2004-09-15

@@ -61,6 +61,7 @@ BEGIN_MESSAGE_MAP(CFrontendDlg, CDialog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+#if 0
 static void HexDump(unsigned char *Mem, int Len)
 {
 	char Buff[10000];
@@ -94,6 +95,7 @@ static void HexDump(unsigned char *Mem, int Len)
 
 	::MessageBox(NULL, Buff, "HEXDUMP", MB_OK);
 }
+#endif
 
 // XXX - pretty inefficient
 
@@ -562,13 +564,14 @@ unsigned int CFrontendDlg::LogThreadFunc(void)
 				if (PipeMode == PIPE_MODE_RUN)
 					m_TabCtrl.m_Dialog1.AddOutputLine(Line);
 
-				else if (Line.GetLength() > 6 && Line[0] == 'i' && Line[1] == 'f')
+				else if (Line.GetLength() > 8 && Line[0] == 'i' && Line[1] == 'f')
 				{
 					Int = Line.Mid(0, 4);
 					Int.MakeUpper();
 
 					Interfaces.Add(Int);
-					Addresses.Add(Line.Mid(6));
+					IsWlan.Add(Line.Mid(6, 1));
+					Addresses.Add(Line.Mid(8));
 				}
 
 				Line.Empty();
@@ -867,7 +870,7 @@ BOOL CFrontendDlg::OnInitDialog()
 	m_TabCtrl.InsertItem(2, "Nodes");
 	m_TabCtrl.InsertItem(3, "Routes");
 
-	m_TabCtrl.InitTabDialogs(&Interfaces, &Addresses);
+	m_TabCtrl.InitTabDialogs(&Interfaces, &Addresses, &IsWlan);
 
 	m_StopButton.EnableWindow(FALSE);
 

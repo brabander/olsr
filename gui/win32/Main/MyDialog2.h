@@ -41,6 +41,7 @@ public:
 
 	CStringArray *Interfaces;
 	CStringArray *Addresses;
+	CStringArray *IsWlan;
 
 	//{{AFX_DATA(MyDialog2)
 	enum { IDD = IDD_DIALOG2 };

@@ -72,7 +72,8 @@ static int IntNameToMiniIndex(int *MiniIndex, char *String)
   int i, k;
   char ch;
 
-  if (String[0] != 'i' || String[1] != 'f')
+  if ((String[0] != 'i' && String[0] != 'I') ||
+      (String[1] != 'f' && String[1] != 'F'))
     return -1;
 
   *MiniIndex = 0;
@@ -93,6 +94,50 @@ static int IntNameToMiniIndex(int *MiniIndex, char *String)
   }
 
   return 0;
+}
+
+static int MiniIndexToGuid(char *Guid, int MiniIndex)
+{
+  IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
+  unsigned long AdInfoLen;
+  unsigned long Res;
+  
+  if (ipversion == AF_INET6)
+  {
+    fprintf(stderr, "IPv6 not supported by MiniIndexToGuid()!\n");
+    return -1;
+  }
+
+  AdInfoLen = sizeof (AdInfo);
+
+  Res = GetAdaptersInfo(AdInfo, &AdInfoLen);
+
+  if (Res != NO_ERROR)
+  {
+    fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", GetLastError(),
+            StrError(Res));
+    return -1;
+  }
+
+  for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
+  {
+    olsr_printf(5, "Index = %08x\n", Walker->Index);
+
+    if ((Walker->Index & 255) == MiniIndex)
+      break;
+  }
+
+  if (Walker != NULL)
+  {
+    olsr_printf(5, "Found interface.\n");
+
+    strcpy(Guid, Walker->AdapterName);
+    return 0;
+  }
+
+  olsr_printf(5, "Cannot map mini index %02x to an adapter GUID.\n",
+              MiniIndex);
+  return -1;
 }
 
 static int AddrToIndex(int *Index, unsigned int Addr)
@@ -145,6 +190,74 @@ static int AddrToIndex(int *Index, unsigned int Addr)
   return -1;
 }
 
+#if !defined OID_802_11_CONFIGURATION
+#define OID_802_11_CONFIGURATION 0x0d010211
+#endif
+
+#if !defined IOCTL_NDIS_QUERY_GLOBAL_STATS
+#define IOCTL_NDIS_QUERY_GLOBAL_STATS 0x00170002
+#endif
+
+static int IsWireless(char *IntName)
+{
+  int MiniIndex;
+  char DevName[43];
+  HANDLE DevHand;
+  unsigned int ErrNo;
+  unsigned int Oid;
+  unsigned char OutBuff[100];
+  unsigned long OutBytes;
+
+  if (IntNameToMiniIndex(&MiniIndex, IntName) < 0)
+    return -1;
+
+  DevName[0] = '\\';
+  DevName[1] = '\\';
+  DevName[2] = '.';
+  DevName[3] = '\\';
+
+  if (MiniIndexToGuid(DevName + 4, MiniIndex) < 0)
+    return -1;
+
+  olsr_printf(5, "Checking whether interface %s is wireless.\n", DevName);
+
+  DevHand = CreateFile(DevName, GENERIC_READ,
+                       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+
+  if (DevHand == INVALID_HANDLE_VALUE)
+  {
+    ErrNo = GetLastError();
+
+    olsr_printf(5, "CreateFile() = %08lx, %s\n", ErrNo, StrError(ErrNo));
+    return -1;
+  }
+
+  Oid = OID_802_11_CONFIGURATION;
+
+  if (!DeviceIoControl(DevHand, IOCTL_NDIS_QUERY_GLOBAL_STATS,
+                       &Oid, sizeof (Oid),
+                       OutBuff, sizeof (OutBuff),
+                       &OutBytes, NULL))
+  {
+    ErrNo = GetLastError();
+
+    CloseHandle(DevHand);
+
+    if (ErrNo == ERROR_GEN_FAILURE)
+    {
+      olsr_printf(5, "OID not supported. Device probably not wireless.\n");
+      return 0;
+    }
+
+    olsr_printf(5, "DeviceIoControl() = %08lx, %s\n", ErrNo, StrError(ErrNo));
+    return -1;
+  }
+
+  CloseHandle(DevHand);
+  return 1;
+}
+
 void ListInterfaces(void)
 {
   IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
@@ -152,6 +265,7 @@ void ListInterfaces(void)
   char IntName[5];
   IP_ADDR_STRING *Walker2;
   unsigned long Res;
+  int IsWlan;
   
   if (ipversion == AF_INET6)
   {
@@ -181,7 +295,18 @@ void ListInterfaces(void)
 
     MiniIndexToIntName(IntName, Walker->Index);
 
-    printf("%s:", IntName);
+    printf("%s: ", IntName);
+
+    IsWlan = IsWireless(IntName);
+
+    if (IsWlan < 0)
+      printf("?");
+
+    else if (IsWlan == 0)
+      printf("-");
+
+    else
+      printf("+");
 
     for (Walker2 = &Walker->IpAddressList; Walker2 != NULL;
          Walker2 = Walker2->Next)
@@ -463,6 +588,7 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   int Index;
   unsigned int AddrSockAddr;
   struct ifchgf *Walker;
+  int IsWlan;
   
   if (ipversion == AF_INET6)
   {
@@ -489,7 +615,15 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   strcpy(New->int_name, IntName->name);
 
   New->if_nr = IntName->index;
-  New->is_wireless = 1;
+
+  IsWlan = IsWireless(IntName->name);
+
+  if (IsWlan < 0)
+    New->is_wireless = 1;
+
+  else
+    New->is_wireless = IsWlan;
+
   New->olsr_seqnum = random() & 0xffff;
     
   olsr_printf(1, "\tInterface %s set up for use with index %d\n\n",

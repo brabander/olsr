@@ -19,10 +19,10 @@ Class7=MyEdit
 Class8=MyTabCtrl
 
 ResourceCount=5
-Resource1=IDD_DIALOG1
-Resource2=IDD_DIALOG2
-Resource3=IDD_DIALOG3
-Resource4=IDD_FRONTEND_DIALOG
+Resource1=IDD_DIALOG3
+Resource2=IDD_FRONTEND_DIALOG
+Resource3=IDD_DIALOG1
+Resource4=IDD_DIALOG2
 Resource5=IDD_DIALOG4
 
 [CLS:CFrontendApp]
