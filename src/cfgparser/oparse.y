@@ -35,10 +35,10 @@
  * Visit http://www.olsr.org for more information.
  *
  * If you find this software useful feel free to make a donation
- * to the projcet. For more information see the website or contact
+ * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.19 2004/11/20 23:57:32 kattemat Exp $
+ * $Id: oparse.y,v 1.20 2004/11/21 10:52:16 kattemat Exp $
  */
 
 

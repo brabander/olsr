@@ -33,10 +33,10 @@
  * Visit http://www.olsr.org for more information.
  *
  * If you find this software useful feel free to make a donation
- * to the projcet. For more information see the website or contact
+ * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.2 2004/11/21 00:02:08 kattemat Exp $
+ * $Id: misc.c,v 1.3 2004/11/21 10:50:52 kattemat Exp $
  */
 
 

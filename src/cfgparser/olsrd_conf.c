@@ -33,10 +33,10 @@
  * Visit http://www.olsr.org for more information.
  *
  * If you find this software useful feel free to make a donation
- * to the projcet. For more information see the website or contact
+ * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.26 2004/11/21 00:50:54 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.27 2004/11/21 10:52:16 kattemat Exp $
  */
 
 

@@ -33,10 +33,10 @@
  * Visit http://www.olsr.org for more information.
  *
  * If you find this software useful feel free to make a donation
- * to the projcet. For more information see the website or contact
+ * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.6 2004/11/21 00:04:24 kattemat Exp $
+ * $Id: net.c,v 1.7 2004/11/21 10:50:52 kattemat Exp $
  */
 
 #include "../defs.h"

@@ -32,10 +32,10 @@
 # Visit http://www.olsr.org for more information.
 #
 # If you find this software useful feel free to make a donation
-# to the projcet. For more information see the website or contact
+# to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.24 2004/11/20 23:57:32 kattemat Exp $
+# $Id: Makefile,v 1.25 2004/11/21 10:51:09 kattemat Exp $
 
 #OS ?=		linux
 #OS =		fbsd
