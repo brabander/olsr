@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.13 2005/02/17 07:19:49 kattemat Exp $
+ * $Id: net.c,v 1.14 2005/02/19 21:50:21 kattemat Exp $
  */
 
 #include "../defs.h"
@@ -352,6 +352,7 @@ check_wireless_interface(char *ifname)
   return (ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
 }
 
+#include <sys/sockio.h>
 
 int
 calculate_if_metric(char *ifname)
@@ -364,6 +365,21 @@ calculate_if_metric(char *ifname)
   else
     {
       /* Ethernet */
-      return 0;
+#if 0
+      /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
+      struct ifmediareq ifm;
+
+      memset(&ifm, 0, sizeof(ifm));
+      strlcpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
+
+      if(ioctl(ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
+	{
+	  olsr_printf(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+	  return WEIGHT_ETHERNET_DEFAULT;
+	}
+
+      printf("%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
+#endif
+      return WEIGHT_ETHERNET_DEFAULT;
     }
 }
