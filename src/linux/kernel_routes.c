@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.7 2004/10/09 17:36:48 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.8 2004/10/19 20:03:15 kattemat Exp $
  *
  */
 
@@ -110,7 +110,7 @@ olsr_ioctl_add_route(struct rt_entry *destination)
    *Send IPC route update message
    */
   
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
       {
 	if(destination->rt_router.v4)
 	  ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, destination->rt_if->int_name); /* Send interface name */
@@ -189,7 +189,7 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
     }
   else
     {
-      if(use_ipc)
+      if(olsr_cnf->open_ipc)
 	{
 	  if(memcmp(&destination->rt_router, &null_addr6, ipsize) != 0)
 	    ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, destination->rt_if->int_name); // Send interface name
@@ -253,7 +253,7 @@ olsr_ioctl_del_route(struct rt_entry *destination)
      *Send IPC route update message
      */
 
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
     ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 0, NULL);
 
   return tmp;
@@ -306,7 +306,7 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
      *Send IPC route update message
      */
 
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
     ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 0, NULL);
 
   return tmp;
