@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.6 2004/12/17 11:44:30 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.7 2004/12/17 13:01:12 kattemat Exp $
  */
 
 /*
@@ -380,26 +380,26 @@ plugin_io(int cmd, void *data, size_t size)
 
 
 static int
-build_frame(char *title, char *buf, olsr_u32_t size, int(*frame_body_cb)(char *, olsr_u32_t))
+build_frame(char *title, char *buf, olsr_u32_t bufsize, int(*frame_body_cb)(char *, olsr_u32_t))
 {
-  int i;
-  printf("Building frame \"%s\"\n", title);
-  strcat(buf, http_frame[0]);
-  sprintf(&buf[strlen(buf)], http_frame[1], title);
+  int i = 0, size = 0;
 
-  i = 2;
+  printf("Building frame \"%s\"\n", title);
+
+  size += sprintf(&buf[size], http_frame[i++]);
+  size += sprintf(&buf[size], http_frame[i++], title);
 
   while(http_frame[i])
     {
       if(!strcmp(http_frame[i], "<!-- BODY -->"))
-	frame_body_cb(&buf[strlen(buf)], size - strlen(buf));
+	size += frame_body_cb(&buf[size], bufsize - size);
       else
-	strcat(buf, http_frame[i]);      
+	size += sprintf(&buf[size], http_frame[i]);      
 
       i++;
     }
 
-  return strlen(buf);
+  return size;
 }
 
 
@@ -408,11 +408,14 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 {
     char systime[100];
     time_t currtime;
+    int size = 0;
 
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
     
-    strcat(buf, systime);
+    size += sprintf(&buf[size], systime);
+
+    return size;
 }
 
 
@@ -420,7 +423,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 int
 build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
-  struct neighbor_entry *neighbor_table_tmp;
+  struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
   int size = 0, index;
 
@@ -435,25 +438,25 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
-      for(neighbor_table_tmp = neighbortable[index].next;
-	  neighbor_table_tmp != &neighbortable[index];
-	  neighbor_table_tmp = neighbor_table_tmp->next)
+      for(neigh = neighbortable[index].next;
+	  neigh != &neighbortable[index];
+	  neigh = neigh->next)
 	{
-	  if(neighbor_table_tmp->is_mpr)
-	    {
-	      size += sprintf(&buf[size], "%s -> %s(MPR)\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
-	    }
-	  else
-	    {
-	      size += sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
-	    }
-	  
-	  for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
-	      list_2 != &neighbor_table_tmp->neighbor_2_list;
-	      list_2 = list_2->next)
-	    {
-	      size += sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
-	    }
+
+            size += sprintf(&buf[size], 
+                            "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", 
+                            olsr_ip_to_string(&neigh->neighbor_main_addr),
+                            (neigh->status == SYM) ? "YES " : "NO  ",
+                            neigh->is_mpr ? "YES " : "NO  ", 
+                            "ToDo",
+                            neigh->willingness);
+            
+            for(list_2 = neigh->neighbor_2_list.next;
+                list_2 != &neigh->neighbor_2_list;
+                list_2 = list_2->next)
+                {
+                    //size += sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+                }
 	      
 	}
     }
@@ -488,7 +491,12 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-	      size += sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(&entry->T_last_addr), olsr_ip_to_string(&dst_entry->T_dest_addr));
+                size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td></td><td></td></tr>\n", 
+                                olsr_ip_to_string(&entry->T_last_addr), 
+                                olsr_ip_to_string(&dst_entry->T_dest_addr),
+                                dst_entry->link_quality,
+                                dst_entry->inverse_link_quality);
+
 	      dst_entry = dst_entry->next;
 	    }
 	  entry = entry->next;
@@ -497,6 +505,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "</table><hr>\n");
 
+  return size;
 }
 
 
@@ -527,7 +536,10 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      size += sprintf(&buf[size], "GW: %s NET: %s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr), olsr_ip_to_string(&tmp_net->A_network_addr)/*, olsr_ip_to_string(&tmp_net->A_netmask.v4)*/);
+	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td></td>%s</tr>\n", 
+                              olsr_ip_to_string(&tmp_net->A_network_addr),
+                              olsr_netmask_to_string(&tmp_net->A_netmask),
+                              olsr_ip_to_string(&tmp_hna->A_gateway_addr));
 	      tmp_net = tmp_net->next;
 	    }
 	      
@@ -542,15 +554,23 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   size += sprintf(&buf[size], "</table><hr>\n");
 
 
-
+  return size;
 }
 
 
 int
 build_mid_body(char *buf, olsr_u32_t bufsize)
 {
+  int size = 0;
 
-    sprintf(buf, "No MID entries registered<br>");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=2 CELLPADDING=0 ALIGN=center><tr><td>Registered MID entries</td><td>Local(announced) MID entries</td></tr>\n");
+  size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Main Address</td><td>Alias</td></tr>\n");
+  size += sprintf(&buf[size], "</table></td>\n");
+  size += sprintf(&buf[size], "<td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Interface</td><td>IP</td></tr>\n");
+  size += sprintf(&buf[size], "</table></td></tr>\n");
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+  return size;
 }
 
 /**

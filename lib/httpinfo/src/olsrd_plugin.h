@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.1 2004/12/15 20:11:50 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.2 2004/12/17 13:01:12 kattemat Exp $
  */
 
 /*
@@ -74,6 +74,14 @@ int http_port;
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
  ****************************************************************************/
+
+/*
+ *Neighbor status
+ */
+
+#define NOT_SYM               0
+#define SYM                   1
+
 
 /*
  * TYPES SECTION

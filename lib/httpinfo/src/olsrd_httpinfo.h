@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.5 2004/12/17 11:44:30 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.6 2004/12/17 13:01:12 kattemat Exp $
  */
 
 /*
@@ -128,7 +128,7 @@ static const char *http_ok_tail[] =
     "<TR>\n",
     "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
     "</CENTER>\n",
-    "<CENTER>For questions or comments on this plugin send mail to<br>\n",
+    "<CENTER>Plugin by Andreas T&oslash;nnesen. Send questions or comments to<br>\n",
     "<A HREF=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</A> or \n",
     "<A HREF=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</A></CENTER></TD>\n",
     "<TD WIDTH=\"50\%\" ALIGN=\"center\" VALIGN=\"center\">\n",
@@ -161,7 +161,6 @@ static const char *http_frame[] =
   "</TABLE>\n",
   NULL
 };
-
 
 
 typedef enum
