@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.22 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: build_msg.c,v 1.23 2004/12/12 18:57:50 kattemat Exp $
  */
 
 
@@ -50,48 +50,36 @@
 
 static char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
-/* Begin:
- * Prototypes for internal functions 
- */
+/* Prototypes for internal functions */
 
 /* IPv4 */
 
-static void
+static olsr_bool
 hello_build4(struct hello_message *, struct interface *);
 
-static void
+static olsr_bool
 tc_build4(struct tc_message *, struct interface *);
 
-static void
+static olsr_bool
 mid_build4(struct interface *);
 
-static void
+static olsr_bool
 hna_build4(struct interface *);
 
 /* IPv6 */
 
-static void
+static olsr_bool
 hello_build6(struct hello_message *, struct interface *);
 
-static void
+static olsr_bool
 tc_build6(struct tc_message *, struct interface *);
 
-static void
+static olsr_bool
 mid_build6(struct interface *);
 
-static void
+static olsr_bool
 hna_build6(struct interface *);
 
-/* End:
- * Prototypes for internal functions 
- */
-
-
-
-/*
- * Generic calls
- * These are the functions to call from outside
- */
 
 
 /**
@@ -109,21 +97,17 @@ hna_build6(struct interface *);
  *@return nada
  */
 
-void
+olsr_bool
 hello_build(struct hello_message *message, struct interface *ifp)
 {
   switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
-      hello_build4(message, ifp);
-      break;
+      return hello_build4(message, ifp);
     case(AF_INET6):
-      hello_build6(message, ifp);
-      break;
-    default:
-      return;
+      return hello_build6(message, ifp);
     }
-  return;
+  return OLSR_FALSE;
 }
 
 
@@ -147,21 +131,17 @@ hello_build(struct hello_message *message, struct interface *ifp)
  *@return nada
  */
 
-void
+olsr_bool
 tc_build(struct tc_message *message, struct interface *ifp)           
 {
   switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
-      tc_build4(message, ifp);
-      break;
+      return tc_build4(message, ifp);
     case(AF_INET6):
-      tc_build6(message, ifp);
-      break;
-    default:
-      return;
+      return tc_build6(message, ifp);
     }
-  return;
+  return OLSR_FALSE;
 }
 
 
@@ -173,21 +153,17 @@ tc_build(struct tc_message *message, struct interface *ifp)
  *@return 1 on success
  */
 
-void
+olsr_bool
 mid_build(struct interface *ifn)
 {
   switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
-      mid_build4(ifn);
-      break;
+      return mid_build4(ifn);
     case(AF_INET6):
-      mid_build6(ifn);
-      break;
-    default:
-      return;
+      return mid_build6(ifn);
     }
-  return;
+  return OLSR_FALSE;
 }
 
 
@@ -198,21 +174,17 @@ mid_build(struct interface *ifn)
  *@param ifp the interface to send on
  *@return nada
  */
-void
+olsr_bool
 hna_build(struct interface *ifp)
 {
   switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
-      hna_build4(ifp);
-      break;
+      return hna_build4(ifp);
     case(AF_INET6):
-      hna_build6(ifp);
-      break;
-    default:
-      return;
+      return hna_build6(ifp);
     }
-  return;
+  return OLSR_FALSE;
 }
 
 /*
@@ -232,7 +204,7 @@ hna_build(struct interface *ifp)
  *@return nada
  */
 
-static void
+static olsr_bool
 hello_build4(struct hello_message *message, struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -245,7 +217,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
-    return;
+    return OLSR_FALSE;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -457,6 +429,8 @@ hello_build4(struct hello_message *message, struct interface *ifp)
       free(prev_nb);
     }
 
+  /* HELLO will always be generated */
+  return OLSR_TRUE;
 }
 
 
@@ -473,7 +447,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
  */
 
 
-static void
+static olsr_bool
 hello_build6(struct hello_message *message, struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -487,7 +461,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
-    return;
+    return OLSR_FALSE;
 
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -682,6 +656,8 @@ hello_build6(struct hello_message *message, struct interface *ifp)
       free(prev_nb);
     }
 
+  /* HELLO is always buildt */
+  return OLSR_TRUE;
 }
 
 
@@ -698,7 +674,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
  *@return nada
  */
 
-static void
+static olsr_bool
 tc_build4(struct tc_message *message, struct interface *ifp)           
 {
 
@@ -710,7 +686,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
-    return;
+    return OLSR_FALSE;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -797,6 +773,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 
 	  net_outbuffer_push(ifp, msg_buffer, curr_size);
 
+	  found = OLSR_TRUE;
 	}
     }
 
@@ -813,8 +790,9 @@ tc_build4(struct tc_message *message, struct interface *ifp)
       mprs = mprs->next;
       free(prev_mprs);
     }
-	
-	
+
+
+  return found ? OLSR_TRUE : OLSR_FALSE;	
 }
 
 
@@ -830,7 +808,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
  *@return nada
  */
 
-static void
+static olsr_bool
 tc_build6(struct tc_message *message, struct interface *ifp)           
 {
 
@@ -842,7 +820,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
-    return;
+    return OLSR_FALSE;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -926,6 +904,8 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	  m->v6.seqno = htons(get_msg_seqno());
 
 	  net_outbuffer_push(ifp, msg_buffer, curr_size);
+
+	  found = OLSR_TRUE;
 	}
     }
 
@@ -941,8 +921,8 @@ tc_build6(struct tc_message *message, struct interface *ifp)
       mprs = mprs->next;
       free(prev_mprs);
     }
-	
-	
+
+  return found ? OLSR_TRUE : OLSR_FALSE;	
 }
 
 
@@ -956,7 +936,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
  *@return 1 on success
  */
 
-static void
+static olsr_bool
 mid_build4(struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -966,7 +946,7 @@ mid_build4(struct interface *ifp)
   struct interface *ifs;  
 
   if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
-    return;
+    return OLSR_FALSE;
 
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -1029,7 +1009,7 @@ mid_build4(struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
 
-  return;
+  return OLSR_TRUE;
 }
 
 
@@ -1042,7 +1022,7 @@ mid_build4(struct interface *ifp)
  *@return 1 on success
  */
 
-static void
+static olsr_bool
 mid_build6(struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -1055,7 +1035,7 @@ mid_build6(struct interface *ifp)
 
 
   if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
-    return;
+    return OLSR_FALSE;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -1115,7 +1095,7 @@ mid_build6(struct interface *ifp)
   //printf("Sending MID (%d bytes)...\n", outputsize);
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-  return;
+  return OLSR_TRUE;
 }
 
 
@@ -1127,7 +1107,7 @@ mid_build6(struct interface *ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-static void
+static olsr_bool
 hna_build4(struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -1138,7 +1118,7 @@ hna_build4(struct interface *ifp)
 
   /* No hna nets */
   if((olsr_cnf->ip_version != AF_INET) || (!ifp) || h == NULL)
-    return;
+    return OLSR_FALSE;
     
   remainsize = net_outbuffer_bytes_left(ifp);
   
@@ -1193,7 +1173,7 @@ hna_build4(struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   //printf("Sending HNA (%d bytes)...\n", outputsize);
-  return;
+  return OLSR_FALSE;
 }
 
 
@@ -1206,7 +1186,7 @@ hna_build4(struct interface *ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-static void
+static olsr_bool
 hna_build6(struct interface *ifp)
 {
   int remainsize, curr_size;
@@ -1218,7 +1198,7 @@ hna_build6(struct interface *ifp)
   
   /* No hna nets */
   if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || h == NULL)
-    return;
+    return OLSR_FALSE;
 
     
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -1276,6 +1256,6 @@ hna_build6(struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);
-  return;
+  return OLSR_FALSE;
 
 }

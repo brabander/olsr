@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.h,v 1.10 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: build_msg.h,v 1.11 2004/12/12 18:57:51 kattemat Exp $
  */
 
 #ifndef _BUILD_MSG_H
@@ -45,16 +45,16 @@
 #include "packet.h"
 #include "olsr_protocol.h"
 
-void
+olsr_bool
 hello_build(struct hello_message *, struct interface *);
 
-void
+olsr_bool
 tc_build(struct tc_message *, struct interface *);
 
-void
+olsr_bool
 mid_build(struct interface *);
 
-void
+olsr_bool
 hna_build(struct interface *);
 
 #endif

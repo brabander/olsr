@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.19 2004/12/03 19:47:10 kattemat Exp $
+ * $Id: generate_msg.c,v 1.20 2004/12/12 18:57:51 kattemat Exp $
  */
 
 #include "generate_msg.h"
@@ -69,13 +69,10 @@ generate_hello(void *p)
   struct interface *ifn = (struct interface *)p;
 
   olsr_build_hello_packet(&hellopacket, ifn);
-  hello_build(&hellopacket, ifn);
       
-  if(net_output_pending(ifn))
+  if(hello_build(&hellopacket, ifn))
     net_output(ifn);
 }
-
-#warning 0.4.9: UPDATE build functions to return wheter or not a message was buildt
 
 void
 generate_tc(void *p)
@@ -84,9 +81,8 @@ generate_tc(void *p)
   struct interface *ifn = (struct interface *)p;
 
   olsr_build_tc_packet(&tcpacket);
-  tc_build(&tcpacket, ifn);
 
-  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+  if(tc_build(&tcpacket, ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
@@ -96,9 +92,8 @@ void
 generate_mid(void *p)
 {
   struct interface *ifn = (struct interface *)p;
-  mid_build(ifn);
   
-  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+  if(mid_build(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
@@ -111,9 +106,8 @@ void
 generate_hna(void *p)
 {
   struct interface *ifn = (struct interface *)p;
-  hna_build(ifn);
   
-  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+  if(hna_build(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
     {
       set_buffer_timer(ifn);
     }
