@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.20 2005/02/23 18:59:28 kattemat Exp $
+ * $Id: interfaces.h,v 1.21 2005/03/04 17:02:19 kattemat Exp $
  */
 
 
@@ -91,6 +91,12 @@ enum olsr_if_wieght
     WEIGHT_HIGHEST = WEIGHT_HIGH
   };
 
+struct if_gen_property
+{
+  olsr_u32_t             owner_id;
+  void                   *data;
+  struct if_gen_property *next;
+};
 
 struct vtimes
 {
@@ -128,6 +134,8 @@ struct interface
   float         hello_etime;
   struct        vtimes valtimes;
 
+  struct        if_gen_property *gen_properties;/* Generic interface properties */
+
   struct	interface *int_next;
 };
 
@@ -158,6 +166,9 @@ struct sockaddr_in6 addrsock6;
 
 int
 ifinit(void);
+
+olsr_u32_t
+get_if_propery_id(void);
 
 void
 run_ifchg_cbs(struct interface *, int);

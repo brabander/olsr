@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.17 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: interfaces.c,v 1.18 2005/03/04 17:02:19 kattemat Exp $
  */
 
 #include "defs.h"
@@ -45,8 +45,9 @@
 #include "scheduler.h"
 #include "olsr.h"
 
-/* Ifchange functions */
+static olsr_u32_t if_property_id;
 
+/* Ifchange functions */
 struct ifchgf
 {
   int (*function)(struct interface *, int);
@@ -103,6 +104,13 @@ ifinit()
   olsr_register_scheduler_event(&check_interface_updates, NULL, 5.0, 0, NULL);
 
   return (ifnet == NULL) ? 0 : 1;
+}
+
+
+olsr_u32_t
+get_if_propery_id()
+{
+  return if_property_id++;
 }
 
 
