@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.4 2004/10/17 12:28:02 kattemat Exp $
+ * $Id: oparse.y,v 1.5 2004/10/17 13:24:28 kattemat Exp $
  *
  */
 
@@ -106,7 +106,8 @@ get_default_if_config()
 %token TOK_HNA4
 %token TOK_HNA6
 %token TOK_PLUGIN
-%token TOK_INTERFACES
+%token TOK_INTERFACE
+%token TOK_IFSETTING
 %token TOK_IFSETUP
 %token TOK_NOINT
 %token TOK_TOS
@@ -165,7 +166,7 @@ stmt:       idebug
 
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
-          | TOK_INTERFACES ifbody
+          | ifblock ifbody
           | plblock plbody
           | isetblock isetbody
 ;
@@ -188,7 +189,7 @@ ifbody:     TOK_OPEN ifstmts TOK_CLOSE
 ifstmts:   | ifstmts ifstmt
 ;
 
-ifstmt:     ifentry
+ifstmt:     ifsetting
           | vcomment
 ;
 
@@ -477,7 +478,7 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 
 }
 
-ifentry: TOK_STRING TOK_STRING
+ifblock: TOK_INTERFACE TOK_STRING
 {
   struct olsr_if *in = malloc(sizeof(struct olsr_if));
   
@@ -487,16 +488,23 @@ ifentry: TOK_STRING TOK_STRING
       YYABORT;
     }
 
-  in->name = $1->string;
-  in->config = $2->string;
-
-  if(PARSER_DEBUG) printf("Interface: %s Ruleset: %s\n", $1->string, $2->string);
+  in->name = $2->string;
 
   /* Queue */
   in->next = cnf->interfaces;
   cnf->interfaces = in;
 
-  free($1);
+  free($2);
+}
+
+
+ifsetting: TOK_IFSETTING TOK_STRING
+{
+
+  cnf->interfaces->config = $2->string;
+
+  if(PARSER_DEBUG) printf("Interface: %s Ruleset: %s\n", $1->string, $2->string);
+
   free($2);
 }
 ;

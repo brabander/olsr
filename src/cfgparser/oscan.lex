@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oscan.lex,v 1.3 2004/10/17 11:52:41 kattemat Exp $
+ * $Id: oscan.lex,v 1.4 2004/10/17 13:24:28 kattemat Exp $
  *
  */
 
@@ -273,9 +273,14 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   return TOK_PLPARAM;
 }
 
-"Interfaces" {
+"Interface" {
   yylval = NULL;
-  return TOK_INTERFACES;
+  return TOK_INTERFACE;
+}
+
+"Setup" {
+  yylval = NULL;
+  return TOK_IFSETTING;
 }
 
 "AllowNoInt" {

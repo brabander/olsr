@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.4 2004/10/17 12:28:02 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.5 2004/10/17 13:24:28 kattemat Exp $
  *
  */
 
@@ -323,17 +323,19 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
 
 
   /* Interfaces */
-  fprintf(fd, "# Interfaces and their rulesets\nInterfaces\n{\n");
+  fprintf(fd, "# Interfaces and their rulesets\n\n");
   /* Interfaces */
   if(in)
     {
       while(in)
 	{
-	  fprintf(fd, "    \"%s\" \"%s\"\n", in->name, in->config);
+	  fprintf(fd, "Interface \"%s\"\n{\n", in->name);
+	  fprintf(fd, "    Setup\"%s\"\n", in->config);
+	  fprintf(fd, "}\n\n");
 	  in = in->next;
 	}
     }
-  fprintf(fd, "}\n\n");
+  fprintf(fd, "\n");
 
 
   /* No interfaces */

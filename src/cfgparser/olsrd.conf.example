@@ -38,10 +38,14 @@ Hna6
 }
 
 # Interfaces and their rulesets
-Interfaces
+Interface "eth0"
 {
-    "eth0" "lan"
-    "eth1" "wlan"
+    Setup "lan"
+}
+
+Interface "eth1"
+{
+    Setup "wlan"
 }
 
 # Should olsrd keep on running even if there are
