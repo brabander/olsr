@@ -29,7 +29,6 @@
 #include "plugin_loader.h"
 #include <string.h>
 #include <stdlib.h>
-#include <syslog.h>
 
 
 /**
