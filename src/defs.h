@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.40 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: defs.h,v 1.41 2005/02/28 09:52:13 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -67,7 +67,7 @@
 #define OLSRD_CONF_FILE_NAME "olsrd.conf"
 #define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
 
-#define	HOPCNT_MAX		16	/* maximum hops number */
+#define	HOPCNT_MAX		32	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IP_HDRSIZE          28
 #define MAX_IFS                 16

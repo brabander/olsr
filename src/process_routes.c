@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.22 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: process_routes.c,v 1.23 2005/02/28 09:52:13 kattemat Exp $
  */
 
 
@@ -44,6 +44,7 @@
 #include "olsr.h"
 #include "log.h"
 #include "kernel_routes.h"
+#include <assert.h>
 
 #ifdef WIN32
 #undef strerror
@@ -364,10 +365,15 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 		
 	}
       if((metric_counter == 1) && !last_run)
-	last_run = OLSR_TRUE;
+        {
+	  last_run = OLSR_TRUE;
+        }
       else
-	metric_counter--;
-      
+        {
+	  metric_counter--;
+        }
+
+      assert(metric_counter);
     }
  
 }
@@ -443,9 +449,15 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		
 	}
       if(first_run)
-	first_run = OLSR_FALSE;
+        {
+	  first_run = OLSR_FALSE;
+        }
       else
-	metric_counter++;
+        {
+	  metric_counter++;
+        }
+
+      assert(metric_counter < HOPCNT_MAX);
     }
 	
 }
