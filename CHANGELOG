@@ -5,16 +5,27 @@ This file states changes as of version 0.2.4:
 CODE REWRITES
 
 Much of the message generation and net output code is rewritten.
-PUGIN DEVELOPERS must note that the buffers and size variables
+Sending of partial messages should now work 100%. Also TC, MID 
+and HNA messages are now cached for a random amount of time
+before transmitted - this often leads to the situation where these
+messages are sent together with an HELLO maessage, which is highly
+desireable since it saves network resources.
+PLUGIN DEVELOPERS must note that the buffers and size variables
 used in net output is no longer directly accessible!
 
-DYNAMIC NET OUTPUT BUFFER SIZE
+NET OUTPUT CODE REWRITTEN
 
-The outputbuffer is now dynamically set to the smallest MTU
-(minus UDP/IP headers) of any interface in use. This causes
-the buffer to be larger than before in most situation, which
-again means that one can stack even more messages in the same
-OLSR package.
+Every interface now has one outputbuffer registered. This allows
+messages to be "cached" as explained above, so that multiple
+messages are stacked together.
+Also the outputbuffer and size are no longer accessable directly,
+an API is available to plugins(and olsr code).
+
+OS DEPENDENT NETWORK INTERFACE
+
+The OS dependen ntework functions are now defined in net_os.h
+instead of beein mixed up with internal network functions
+in net.h.
 
 
 0.4.7 ---------------------------------------------------------------------
