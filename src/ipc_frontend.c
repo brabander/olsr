@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.13 2004/11/11 21:14:17 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.14 2004/11/11 21:24:52 kattemat Exp $
  *
  */
 
@@ -127,7 +127,7 @@ ipc_accept_thread()
 	{
 	  olsr_printf(1, "Front end connected\n");
 	  addr = inet_ntoa(pin.sin_addr);
-	  if(ntohl(pin.sin_addr.s_addr) != INADDR_LOOPBACK)
+	  if(ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
 	    {
 	      olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
 	      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
@@ -146,7 +146,26 @@ ipc_accept_thread()
     }
 }
 
+olsr_bool
+ipc_check_allowed_ip(union olsr_ip_addr *addr)
+{
+  struct ipc_host *ipch = olsr_cnf->ipc_hosts;
 
+  if(addr->v4 == ntohl(INADDR_LOOPBACK))
+    return OLSR_TRUE;
+
+  /* check hosts */
+  while(ipch)
+    {
+      if(COMP_IP(addr, &ipch->host))
+	return OLSR_TRUE;
+      ipch = ipch->next;
+    }
+
+  /* XXX - TODO check networks */
+
+  return OLSR_FALSE;
+}
 
 /**
  *Read input from the IPC socket. Not in use.
