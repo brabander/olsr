@@ -4,12 +4,23 @@
 
 CC ?= gcc
 STRIP ?= strip
-NAME ?= olsrd_httpinfo.so.0.1
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
-MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
+
+ifeq ($(OS), win32)
+NAME ?= olsrd_httpinfo.dll
+NAMEFLAGS ?= -o $(NAME)
+CFLAGS ?= -g -O2 -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+LDFLAGS ?= -mno-cygwin -shared
+LIBS ?= -lws2_32
+COMPATOBJ = ../../src/win32/compat.o
+else
+NAME ?= olsrd_httpinfo.so.0.1
+NAMEFLAGS ?= -Wl,-soname,$(NAME)
+CFLAGS ?= -g -O2 -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes
+LDFLAGS ?= -fPIC -shared
 LIBS ?= -lc -lm
-CFLAGS ?= -g -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes
+endif
 
 #Sourcefiles
 #add yours here
@@ -24,17 +35,13 @@ OBJS=	src/olsrd_plugin.o src/olsrd_httpinfo.o
 HDRS=	src/olsrd_plugin.h src/olsrd_httpinfo.h src/olsr_plugin_io.h\
 	src/gfx.h
 
-# -Wl passes options to the linker(-soname,....)
-# Use -lc to link it against C library
-# not 100% sure if this is neccesary
-
 all: plugin
 
 
 plugin: $(OBJS)
-	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \
+	$(CC) $(LDFLAGS) $(NAMEFLAGS) \
 	-Wl,--version-script=version-script.txt \
-	-o $(NAME) $(OBJS) $(LIBS)
+	-o $(NAME) $(OBJS) $(COMPATOBJ) $(LIBS)
 
 
 install:

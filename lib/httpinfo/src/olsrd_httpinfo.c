@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.23 2004/12/27 19:51:28 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.24 2004/12/28 20:32:51 kattemat Exp $
  */
 
 /*
@@ -51,6 +51,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+
+#ifdef WIN32
+#define close(x) closesocket(x)
+#endif
 
 #define MAX_CLIENTS 3
 

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.17 2004/12/21 21:34:22 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.18 2004/12/28 20:32:51 kattemat Exp $
  */
 
 /*
@@ -74,7 +74,7 @@ static const char *http_ok_head[] =
   "<!--\n",
   "A {text-decoration: none}\n",
   "TH{text-align: left}\n",
-  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%}\n",
+  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
   "-->\n",
   "</STYLE>\n\n",
   "</HEAD>\n",
