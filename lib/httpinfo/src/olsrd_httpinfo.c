@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.25 2004/12/29 19:55:54 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.26 2004/12/29 21:33:14 kattemat Exp $
  */
 
 /*
@@ -688,6 +688,25 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "</table>\n");
 
+
+    if(cfg->hna4_entries)
+      {
+	struct hna4_entry *hna4;
+	
+	size += sprintf(&buf[size], "<hr>Announced HNA entries\n");
+	size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+	
+	for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
+	  {
+	    size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td></tr>\n", 
+			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
+			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
+	  }
+	
+	size += sprintf(&buf[size], "</table><hr>\n");
+      }
+    
+
     return size;
 }
 
@@ -820,11 +839,9 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   olsr_u8_t index;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
-  struct hna4_entry *hna4;
 
   size = 0;
 
-  size += sprintf(&buf[size], "Remote HNA entries\n");
   size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
@@ -851,18 +868,6 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
     }
 
   size += sprintf(&buf[size], "</table><hr>\n");
-  size += sprintf(&buf[size], "Local(announced) HNA entries\n");
-  size += sprintf(&buf[size], "<hr><table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
-
-  for(hna4 = cfg->hna4_entries; hna4; hna4 = hna4->next)
-    {
-      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td></tr>\n", 
-		      olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
-		      olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
-    }
-
-  size += sprintf(&buf[size], "</table><hr>\n");
-
 
   return size;
 }
