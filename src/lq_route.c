@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.32 2005/02/27 22:32:02 tlopatic Exp $
+ * $Id: lq_route.c,v 1.33 2005/03/02 21:14:54 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -523,23 +523,34 @@ void olsr_calculate_lq_routing_table(void)
 
       if (inter != NULL)
       {
-        // add a route to the main address of the destination node, if
-        // we haven't already added it above
+        // XXX - fix me: structurally prevent duplicates, don't test via
+        //       olsr_lookup_routing_table()
 
-        olsr_insert_routing_table(&vert->addr, &link->neighbor_iface_addr,
-                                  inter, hops);
+        // route addition, case A - add a route to the main address of the
+        // destination node
 
-        // add routes to the remaining interfaces of the destination node,
-        // if we haven't already added it above
+        if (olsr_lookup_routing_table(&vert->addr) == NULL)
+          olsr_insert_routing_table(&vert->addr, &link->neighbor_iface_addr,
+                                    inter, hops);
+
+        // route addition, case B - add routes to the remaining interfaces
+        // of the destination node
 
         for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
              mid_walker = mid_walker->next_alias)
-          olsr_insert_routing_table(&mid_walker->alias,
-                                    &link->neighbor_iface_addr, inter, hops);
+          if (olsr_lookup_routing_table(&mid_walker->alias) == NULL)
+            olsr_insert_routing_table(&mid_walker->alias,
+                                      &link->neighbor_iface_addr, inter, hops);
 
-        // make sure that we have a route to the router - e.g. in case
-        // the router's not the main address and it's MID entry has timed
-        // out
+        // XXX - we used to use olsr_lookup_routing_table() only here, but
+        //       this assumed that case A or case B had already happened for
+        //       this destination; if case A or case B happened after case C
+        //       for the same destination, we had duplicates, as cases A and
+        //       B would not test whether case C had already happened
+
+        // route addition, case C - make sure that we have a route to the
+        // router - e.g. in case the router's not the main address and it's
+        // MID entry has timed out
 
         if (olsr_lookup_routing_table(&link->neighbor_iface_addr) == NULL)
           olsr_insert_routing_table(&link->neighbor_iface_addr,
