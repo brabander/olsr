@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.8 2004/10/19 20:20:26 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.9 2004/10/20 10:33:20 kattemat Exp $
  *
  */
 
@@ -57,7 +57,7 @@ void
 my_init()
 {
   /* Print plugin info to stdout */
-  printf("olsrd config file parser %s loaded\n", SOFTWARE_VERSION);
+  printf("olsrd config file parser %s loaded\n", PARSER_VERSION);
 
   return;
 }
