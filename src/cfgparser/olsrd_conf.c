@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.30 2004/12/05 13:21:02 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.31 2004/12/30 16:33:31 kattemat Exp $
  */
 
 
@@ -137,7 +137,7 @@ main(int argc, char *argv[])
 struct olsrd_config *
 olsrd_parse_cnf(const char *filename)
 {
-  struct olsr_if *in;
+  struct olsr_if *in, *new_ifqueue, *in_tmp;
 
   /* Stop the compiler from complaining */
   strlen(copyright_string);
@@ -174,6 +174,20 @@ olsrd_parse_cnf(const char *filename)
   
   fclose(yyin);
 
+  /* Turn the if queue "around" (added by user request) */
+  in = cnf->interfaces;
+  new_ifqueue = NULL;
+
+  while(in)
+    {
+      in_tmp = in; 
+      in = in->next;
+
+      in_tmp->next = new_ifqueue;
+      new_ifqueue = in_tmp;
+    }
+
+  cnf->interfaces = new_ifqueue;
 
   in = cnf->interfaces;
 
