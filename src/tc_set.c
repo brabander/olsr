@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.11 2004/11/10 14:53:21 tlopatic Exp $
+ * $Id: tc_set.c,v 1.12 2004/11/15 14:59:39 tlopatic Exp $
  *
  */
 
@@ -412,32 +412,57 @@ olsr_time_out_tc_set()
 int
 olsr_print_tc_table()
 {
-  int index;
+  int i;
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
+  char *fstr;
+  double lq, ilq;
   
-  olsr_printf(1, "topology table: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec);
+  olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+              now.tv_usec / 10000);
 
-  for(index=0;index<HASHSIZE;index++)
+  if (olsr_cnf->ip_version == AF_INET)
+  {
+    olsr_printf(1, "Source IP addr   Dest IP addr     LQ     ILQ\n");
+    fstr = "%-15s  %-15s  %5.3f  %5.3f\n";
+  }
+
+  else
+  {
+    olsr_printf(1, "Source IP addr                Dest IP addr                    LQ     ILQ\n");
+    fstr = "%-30s%-30s  %5.3f  %5.3f\n";
+  }
+
+  for (i = 0; i < HASHSIZE; i++)
+  {
+    entry = tc_table[i].next;
+
+    while (entry != &tc_table[i])
     {
-      /* For all TC entries */
-      entry = tc_table[index].next;
-      while(entry != &tc_table[index])
-	{
-	  /* For all destination entries of that TC entry */
-	  dst_entry = entry->destinations.next;
-	  while(dst_entry != &entry->destinations)
-	    {
-	      olsr_printf(1, "%s", olsr_ip_to_string(&entry->T_last_addr));
-	      olsr_printf(1, " -> %s\n", olsr_ip_to_string(&dst_entry->T_dest_addr));
-	      dst_entry = dst_entry->next;
-	    }
-	  entry = entry->next;
-	}
-      
-    }
+      dst_entry = entry->destinations.next;
 
-  olsr_printf(1, "\n");
-  
+      while(dst_entry != &entry->destinations)
+      {
+#if defined USE_LINK_QUALITY
+        lq = dst_entry->link_quality;
+        ilq = dst_entry->inverse_link_quality;
+#else
+        lq = 0.0;
+        ilq = 0.0;
+#endif
+        olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
+                    olsr_ip_to_string(&dst_entry->T_dest_addr),
+                    dst_entry->link_quality, dst_entry->inverse_link_quality);
+
+        dst_entry = dst_entry->next;
+      }
+
+      entry = entry->next;
+    }
+  }
+
   return 1;
 }

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.19 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: net.c,v 1.20 2004/11/15 14:59:39 tlopatic Exp $
  *
  */
 
@@ -601,7 +601,8 @@ ip6_to_string(struct in6_addr *addr6)
 char *
 olsr_ip_to_string(union olsr_ip_addr *addr)
 {
-
+  static int index = 0;
+  static char buff[4][100];
   char *ret;
   struct in_addr in;
   
@@ -615,6 +616,12 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
       /* IPv6 */
       ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
     }
+
+  strcpy(buff[index], ret);
+
+  ret = buff[index];
+
+  index = (index + 1) & 3;
 
   return ret;
 }

@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.10 2004/11/15 11:14:06 tlopatic Exp $
+ * $Id: lq_route.c,v 1.11 2004/11/15 14:59:38 tlopatic Exp $
  *
  */
 
@@ -267,6 +267,17 @@ static void relax(struct dijk_vertex *vert)
   }
 }
 
+static char *etx_to_string(int etx)
+{
+  static char buff[10];
+
+  if (etx == INFINITE_ETX)
+    return "INF";
+
+  sprintf(buff, "%d", etx);
+  return buff;
+}
+
 void olsr_calculate_lq_routing_table(void)
 {
   struct list vertex_list;
@@ -372,7 +383,11 @@ void olsr_calculate_lq_routing_table(void)
   
   myself = node->data;
 
-  fprintf(stderr, "Dijkstra results:\n");
+  olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- DIJKSTRA\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+              now.tv_usec/10000);
 
   for (node = list_get_next(node); node != NULL; node = list_get_next(node))
   {
@@ -385,22 +400,21 @@ void olsr_calculate_lq_routing_table(void)
 
     for (walker = vert; walker != NULL && walker->prev != myself;
          walker = walker->prev)
-      {
-        fprintf(stderr, " %s", olsr_ip_to_string(&walker->addr));
-        hops++;
-      }
-
-    if (walker != NULL && walker->prev == myself)
-      fprintf(stderr, " %s (one-hop) - OK", olsr_ip_to_string(&walker->addr));
-
-    fprintf(stderr, "\n");
-
-    // no path found to a one-hop neighbour, ignore this node
-
-    if (walker == NULL)
     {
-      fprintf(stderr, "No path found for %s.\n",
-              olsr_ip_to_string(&vert->addr));
+      olsr_printf(2, "%s:%s <- ", olsr_ip_to_string(&walker->addr),
+                  etx_to_string(walker->path_etx));
+      hops++;
+    }
+
+    // if no path to a one-hop neighbour was found, ignore this node
+
+    if (walker != NULL)
+      olsr_printf(2, "%s:%s (one-hop)\n", olsr_ip_to_string(&walker->addr),
+                  etx_to_string(walker->path_etx));
+
+    else
+    {
+      olsr_printf(2, "FAILED\n", olsr_ip_to_string(&vert->addr));
       continue;
     }
 

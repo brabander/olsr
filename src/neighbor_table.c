@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.15 2004/11/14 13:58:49 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.16 2004/11/15 14:59:39 tlopatic Exp $
  *
  */
 
@@ -480,7 +480,7 @@ olsr_print_neighbor_table()
 
   else
   {
-    olsr_printf(1, "IP address                               LQ     NLQ    TLQ    SYM  MPR  will\n");
+    olsr_printf(1, "IP address                               LQ     NLQ    SYM  MPR  will\n");
     fstr = "%-39s  %5.3f  %5.3f  %s  %s  %d\n";
   }
 
