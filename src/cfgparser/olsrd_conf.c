@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.28 2004/11/21 17:10:28 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.29 2004/12/05 12:04:42 kattemat Exp $
  */
 
 
@@ -286,19 +286,18 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
-  /* Link quality window size */
+  /* Link quality level */
 
-  if (cnf->lq_wsize < MIN_LQ_WSIZE || cnf->lq_wsize > MAX_LQ_WSIZE)
+  if(cnf->lq_level > MAX_LQ_LEVEL)
     {
-      fprintf(stderr, "LQ window size %d is not allowed\n", cnf->lq_wsize);
+      fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
       return -1;
     }
 
-  /* Link quality level */
-
-  if (cnf->lq_level > MAX_LQ_LEVEL)
+  /* Link quality window size */
+  if(cnf->lq_level && (cnf->lq_wsize < MIN_LQ_WSIZE || cnf->lq_wsize > MAX_LQ_WSIZE))
     {
-      fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
+      fprintf(stderr, "LQ window size %d is not allowed\n", cnf->lq_wsize);
       return -1;
     }
 
