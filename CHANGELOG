@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.33 2005/02/19 18:08:18 kattemat Exp $
+$Id: CHANGELOG,v 1.34 2005/02/20 15:41:07 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -109,6 +109,7 @@ OTHER UPDATES
 - First specified interfaces IP is used as main address.
 - Broadcastflag is not checked on interface if fixed broadcast is
   set in config.
+- Removed Linux link layer code as this was not really in use.
 
 BUGFIXES
 
