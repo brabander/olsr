@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.10 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: compat.c,v 1.11 2005/01/17 10:58:48 tlopatic Exp $
  */
 
 /*
@@ -58,6 +58,7 @@
 
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/times.h>
 #include <ctype.h>
 #include <dlfcn.h>
 #include "defs.h"
@@ -115,6 +116,11 @@ void gettimeofday(struct timeval *TVal, void *TZone)
 
   TVal->tv_sec = (unsigned int)(Ticks / 10000000);
   TVal->tv_usec = (unsigned int)(Ticks % 10000000) / 10;
+}
+
+long times(struct tms *Dummy)
+{
+  return (long)GetTickCount();
 }
 
 int inet_aton(char *AddrStr, struct in_addr *Addr)

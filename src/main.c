@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.53 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: main.c,v 1.54 2005/01/17 10:58:48 tlopatic Exp $
  */
 
 #include <unistd.h>
@@ -111,10 +111,10 @@ main(int argc, char *argv[])
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
+#ifndef WIN32
   /* Initialize tick resolution */
   system_tick_divider = 1000/sysconf(_SC_CLK_TCK);
 
-#ifndef WIN32
   /* Check if user is root */
   if(getuid() || getgid())
     {
@@ -122,6 +122,8 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 #else
+  system_tick_divider = 1;
+
   DisableIcmpRedirects();
 
   if (WSAStartup(0x0202, &WsaData))
