@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.21 2004/12/21 17:37:13 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.22 2004/12/21 21:34:22 kattemat Exp $
  */
 
 /*
@@ -96,6 +96,7 @@ char *
 sockaddr_to_string(struct sockaddr *);
 
 static struct timeval start_time;
+static struct http_stats stats;
 static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
 static int http_socket;
@@ -220,6 +221,7 @@ parse_http_request(int fd)
   if(r < 0)
     {
       olsr_printf(1, "(HTTPINFO) Failed to recieve data from client!\n");
+      stats.err_hits++;
       goto close_connection;
     }
   
@@ -230,6 +232,7 @@ parse_http_request(int fd)
       if(sscanf(req, "%10s %250s\n", req_type, filename) != 2)
 	{
 	  olsr_printf(1, "(HTTPINFO) Error parsing request %s!\n", req);
+	  stats.err_hits++;
 	  goto close_connection;
 	}
     }
@@ -241,24 +244,28 @@ parse_http_request(int fd)
     {
       /* We only support GET */
       strcpy(body, HTTP_400_MSG);
+      stats.ill_hits++;
       c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
   else if(strlen(filename) > 1)
     {
       if(!strcmp(filename, "/favicon.ico") || !strcmp(filename, "favicon.ico"))
 	{
+	  stats.ok_hits++;
 	  memcpy(body, favicon_ico, favicon_ico_len);
 	  size = favicon_ico_len;
 	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
 	}
       else if(!strcmp(filename, "/logo.gif") || !strcmp(filename, "logo.gif"))
 	{
+	  stats.ok_hits++;
 	  memcpy(body, logo_gif, logo_gif_len);
 	  size = logo_gif_len;
 	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
 	}
       else
 	{
+	  stats.ill_hits++;
 	  strcpy(body, HTTP_404_MSG);
 	  c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
 	}
@@ -266,6 +273,9 @@ parse_http_request(int fd)
   else
     {
       int i = 0;
+
+      stats.ok_hits++;
+
       while(http_ok_head[i])
           {
               size += sprintf(&body[size], http_ok_head[i]);
@@ -548,9 +558,11 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "%s\n", systime);
 
     if(days)
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i>\n", days, hours, mins, (int)uptime.tv_sec);
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i><br>\n", days, hours, mins, (int)uptime.tv_sec);
     else
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, (int)uptime.tv_sec);
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
+
+      size += sprintf(&buf[size], "HTTP stats(ok/error/illegal): <i>%d/%d/%d</i>\n", stats.ok_hits, stats.err_hits, stats.ill_hits);
 
     size += sprintf(&buf[size], "<hr><table width=790 border=0>\n<tr>");
 

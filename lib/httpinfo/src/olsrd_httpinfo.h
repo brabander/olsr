@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.16 2004/12/21 08:55:46 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.17 2004/12/21 21:34:22 kattemat Exp $
  */
 
 /*
@@ -163,6 +163,12 @@ typedef enum
   }http_header_type;
 
 
+struct http_stats
+{
+  olsr_u32_t ok_hits;
+  olsr_u32_t err_hits;
+  olsr_u32_t ill_hits;
+};
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);
