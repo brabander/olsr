@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.1 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.2 2004/11/15 12:18:49 tlopatic Exp $
  *
  */
 
@@ -43,6 +43,7 @@ static int add_del_route(struct rt_entry *dest, int add)
   int step, step2;
   int len;
   char Str1[16], Str2[16], Str3[16];
+  int flags;
 
   inet_ntop(AF_INET, &dest->rt_dst.v4, Str1, 16);
   inet_ntop(AF_INET, &dest->rt_mask.v4, Str2, 16);
@@ -62,10 +63,21 @@ static int add_del_route(struct rt_entry *dest, int add)
 
   rtm = (struct rt_msghdr *)buff;
 
+  flags = dest->rt_flags;
+
+  // the host is directly reachable, so use cloning and a /32 net
+  // routing table entry
+
+  if ((flags & RTF_GATEWAY) == 0)
+  {
+    flags |= RTF_CLONING;
+    flags &= ~RTF_HOST;
+  }
+
   rtm->rtm_version = RTM_VERSION;
   rtm->rtm_type = (add != 0) ? RTM_ADD : RTM_DELETE;
   rtm->rtm_index = 0;
-  rtm->rtm_flags = dest->rt_flags;
+  rtm->rtm_flags = flags;
   rtm->rtm_addrs = RTA_DST | RTA_NETMASK | RTA_GATEWAY;
   rtm->rtm_seq = ++seq;
 
@@ -76,13 +88,16 @@ static int add_del_route(struct rt_entry *dest, int add)
   memcpy(walker, &sin, sizeof (sin));
   walker += step;
 
-  if ((dest->rt_flags & RTF_GATEWAY) != 0)
+  if ((flags & RTF_GATEWAY) != 0)
   {
     sin.sin_addr.s_addr = dest->rt_router.v4;
 
     memcpy(walker, &sin, sizeof (sin));
     walker += step;
   }
+
+  // the host is directly reachable, so add the output interface's
+  // MAC address
 
   else
   {
