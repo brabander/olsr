@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_mpr.c,v 1.3 2004/11/08 18:31:55 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.4 2004/11/08 23:25:57 tlopatic Exp $
  *
  */
 
@@ -97,10 +97,13 @@ void olsr_calculate_lq_mpr(void)
                 best = walker->full_link_quality;
               }
 
-          neigh->is_mpr = OLSR_TRUE;
-
-          if (neigh->is_mpr != neigh->was_mpr)
-            mpr_changes = OLSR_TRUE;
+          if (neigh != NULL)
+            {
+              neigh->is_mpr = OLSR_TRUE;
+          
+              if (neigh->is_mpr != neigh->was_mpr)
+                mpr_changes = OLSR_TRUE;
+            }
         }
     }
 

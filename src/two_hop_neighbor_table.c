@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: two_hop_neighbor_table.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.7 2004/11/08 23:25:57 tlopatic Exp $
  *
  */
 
@@ -228,33 +228,47 @@ olsr_lookup_two_hop_neighbor_table_mid(union olsr_ip_addr *dest)
 void
 olsr_print_two_hop_neighbor_table()
 {
-  olsr_u8_t                  index;
-  struct neighbor_2_entry    *neighbor_2;
+  int i;
+  struct neighbor_2_entry *neigh2;
+  struct neighbor_list_entry *entry;
+  struct neighbor_entry *neigh;
+  olsr_bool first;
+  double total_lq;
 
-  struct neighbor_list_entry *list_1=NULL;
+  olsr_printf(1, "\n-------------------------------------- TWO-HOP NEIGHBORS\n\n");
+  olsr_printf(1, "IP addr (2-hop)  IP addr (1-hop)  TLQ\n");
 
-  printf("THE TWO HOP NEIGHBORS\n");
-
-  for(index=0;index<HASHSIZE;index++)
+  for (i = 0; i < HASHSIZE; i++)
     {
-
-      for(neighbor_2 = two_hop_neighbortable[index].next;
-	  neighbor_2 != &two_hop_neighbortable[index];
-	  neighbor_2 = neighbor_2->next)
+      for (neigh2 = two_hop_neighbortable[i].next;
+           neigh2 != &two_hop_neighbortable[i]; neigh2 = neigh2->next)
 	{
-	  
-	  printf("ADDRESS TWO HOP NEIGHBORS\n");
-	  printf("%s \n", olsr_ip_to_string(&neighbor_2->neighbor_2_addr)); 
-	  printf("---------------------\n");
-	  
-	  printf("POINTED BY\n");
-	  for(list_1 = neighbor_2->neighbor_2_nblist.next;
-	      list_1 != &neighbor_2->neighbor_2_nblist;
-	      list_1 = list_1->next)
-	    {	      
-	      printf("%s \n", olsr_ip_to_string(&list_1->neighbor->neighbor_main_addr));
-	    }
-	  printf("---------------------\n");
+          first = OLSR_TRUE;
+
+	  for (entry = neigh2->neighbor_2_nblist.next;
+               entry != &neigh2->neighbor_2_nblist; entry = entry->next)
+	    {
+              neigh = entry->neighbor;
+
+              if (first)
+                {
+                  olsr_printf(1, "%-15s  ",
+                              olsr_ip_to_string(&neigh2->neighbor_2_addr));
+                  first = OLSR_FALSE;
+                }
+
+              else
+                olsr_printf(1, "                 ");
+
+#if defined USE_LINK_QUALITY
+              total_lq = entry->full_link_quality;
+#else
+              total_lq = 0.0;
+#endif
+              olsr_printf(1, "%-15s  %5.3f\n",
+                          olsr_ip_to_string(&neigh->neighbor_main_addr),
+                          total_lq);
+            }
 	}
     }
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.21 2004/11/08 00:57:58 tlopatic Exp $
+ * $Id: link_set.c,v 1.22 2004/11/08 23:25:57 tlopatic Exp $
  *
  */
 
@@ -910,7 +910,7 @@ void olsr_print_link_set(void)
 {
   struct link_entry *walker;
 
-  olsr_printf(1, "\nLINKS --------------------------------------------------\n\n");
+  olsr_printf(1, "\n-------------------------------------------------- LINKS\n\n");
   olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ\n");
 
   for (walker = link_set; walker != NULL; walker = walker->next)

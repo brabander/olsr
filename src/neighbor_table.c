@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.10 2004/11/05 11:52:55 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.11 2004/11/08 23:25:57 tlopatic Exp $
  *
  */
 
@@ -32,6 +32,7 @@
 #include "mpr.h"
 #include "olsr.h"
 #include "scheduler.h"
+#include "link_set.h"
 
 void
 olsr_init_neighbor_table()
@@ -457,37 +458,40 @@ olsr_time_out_neighborhood_tables()
 void
 olsr_print_neighbor_table()
 {
-  olsr_u8_t                    index;
-  struct neighbor_entry        *neighbor_table_tmp;
-  struct neighbor_2_list_entry *list_2;
+  int i;
+  struct neighbor_entry *neigh;
+#if defined USE_LINK_QUALITY
+  struct link_entry *link;
+#endif
+  double best_lq, inv_best_lq, total_lq;
 
+  olsr_printf(1, "\n---------------------------------------------- NEIGHBORS\n\n");
+  olsr_printf(1, "IP address       LQ     NLQ    TLQ    SYM  MPR  will\n");
 
-
-  olsr_printf(1, "Neighbor list(%02d:%02d:%02d.%06lu):\n", 
-	      nowtm->tm_hour, 
-	      nowtm->tm_min, 
-	      nowtm->tm_sec, 
-	      now.tv_usec);
-
-  for(index=0;index<HASHSIZE;index++)
+  for (i = 0; i < HASHSIZE; i++)
     {
-    
-      for(neighbor_table_tmp = neighbortable[index].next;
-	  neighbor_table_tmp != &neighbortable[index];
-	  neighbor_table_tmp = neighbor_table_tmp->next)
+      for(neigh = neighbortable[i].next; neigh != &neighbortable[i];
+	  neigh = neigh->next)
 	{
-	  olsr_printf(1, "%s:l=%d:m=%d:w=%d[2hlist:", 
-		      olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr),
-		      neighbor_table_tmp->status, neighbor_table_tmp->is_mpr, neighbor_table_tmp->willingness);
+#if defined USE_LINK_QUALITY
+          link = olsr_neighbor_best_link(&neigh->neighbor_main_addr);
+          best_lq = link->neigh_link_quality;
 
-	  for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
-	      list_2 != &neighbor_table_tmp->neighbor_2_list;
-	      list_2 = list_2->next)
-	    {
-	      olsr_printf(1, "%s:", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
-	    }
-	  olsr_printf(1, "]\n");
+          link = olsr_neighbor_best_inverse_link(&neigh->neighbor_main_addr);
+          inv_best_lq = link->loss_link_quality;
+#else
+          best_lq = 0.0;
+          inv_best_lq = 0.0;
+#endif
 
+          total_lq = best_lq * inv_best_lq;
+
+          olsr_printf(1, "%-15s  %5.3f  %5.3f  %5.3f  %s  %s  %d\n",
+                      olsr_ip_to_string(&neigh->neighbor_main_addr),
+                      best_lq, inv_best_lq, total_lq,
+                      (neigh->status == SYM) ? "SYM" : "   ",
+                      neigh->is_mpr ? "MPR" : "   ",
+                      neigh->willingness);
 	}
     }
 }
