@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.16 2004/11/12 16:18:25 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.17 2004/11/12 16:27:48 kattemat Exp $
  *
  */
 
@@ -35,6 +35,7 @@
 #include "link_set.h"
 #include "olsr.h"
 #include "parser.h"
+#include "socket_parser.h"
 #include "local_hna_set.h"
 
 #ifdef WIN32
@@ -47,8 +48,6 @@ WinSockPError(char *);
 #ifndef linux
 #define MSG_NOSIGNAL 0
 #endif
-
-pthread_t accept_thread;
 
 /**
  *Create the socket to use for IPC to the
@@ -99,58 +98,47 @@ ipc_init()
       olsr_exit("IPC listen", EXIT_FAILURE);
     }
 
-
-  /* Start the accept thread */
-
-  pthread_create(&accept_thread, NULL, (void *)&ipc_accept_thread, NULL);
+  /* Register the socket with the socket parser */
+  add_olsr_socket(ipc_sock, &ipc_accept);
 
   return ipc_sock;
 }
 
 
-/*
- * XXX - the socket should just be registered with the socket parser.
- * Should NOT spawn this listen thread!
- */
 void
-ipc_accept_thread()
+ipc_accept(int fd)
 {
   int 	             addrlen;
   struct sockaddr_in pin;
   char *addr;  
 
-  while(olsr_cnf->open_ipc)
+
+  addrlen = sizeof (struct sockaddr_in);
+  
+  if ((ipc_connection = accept(ipc_sock, (struct sockaddr *)  &pin, &addrlen)) == -1)
     {
-      olsr_printf(2, "\nFront-end accept thread initiated(socket %d)\n\n", ipc_sock);
-
-      addrlen = sizeof (struct sockaddr_in);
-
-      if ((ipc_connection = accept(ipc_sock, (struct sockaddr *)  &pin, &addrlen)) == -1)
+      perror("IPC accept");
+      olsr_exit("IPC accept", EXIT_FAILURE);
+    }
+  else
+    {
+      olsr_printf(1, "Front end connected\n");
+      addr = inet_ntoa(pin.sin_addr);
+      if(ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
 	{
-	  perror("IPC accept");
-	  olsr_exit("IPC accept", EXIT_FAILURE);
+	  ipc_active = OLSR_TRUE;
+	  ipc_send_net_info();
+	  ipc_send_all_routes();
+	  olsr_printf(1, "Connection from %s\n",addr);
 	}
       else
 	{
-	  olsr_printf(1, "Front end connected\n");
-	  addr = inet_ntoa(pin.sin_addr);
-	  if(ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
-	    {
-	      ipc_active = OLSR_TRUE;
-	      ipc_send_net_info();
-	      ipc_send_all_routes();
-	      olsr_printf(1, "Connection from %s\n",addr);
-	    }
-	  else
-	    {
-	      olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
-	      close(ipc_connection);
-	    }
+	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
+	  olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
+	  close(ipc_connection);
 	}
-
-      sleep(2);
     }
+
 }
 
 olsr_bool
@@ -541,7 +529,6 @@ int
 shutdown_ipc()
 {
 
-  pthread_kill(accept_thread, SIGTERM);
   close(ipc_sock);
   
   if(ipc_active)
