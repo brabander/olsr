@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.14 2004/11/10 12:35:30 tlopatic Exp $
+ * $Id: link_set.h,v 1.15 2004/11/10 14:53:21 tlopatic Exp $
  *
  */
 
@@ -76,6 +76,9 @@ struct link_entry
   unsigned char loss_bitmap[16];
 
   double neigh_link_quality;
+
+  double saved_loss_link_quality;
+  double saved_neigh_link_quality;
 #endif
 
   /*

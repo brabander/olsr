@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.25 2004/11/10 14:07:48 tlopatic Exp $
+ * $Id: link_set.c,v 1.26 2004/11/10 14:53:20 tlopatic Exp $
  *
  */
 
@@ -487,6 +487,9 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link->loss_link_quality = 0.0;
   new_link->neigh_link_quality = 0.0;
+
+  new_link->saved_loss_link_quality = 0.0;
+  new_link->saved_neigh_link_quality = 0.0;
 #endif
 
   /* Add to queue */
@@ -940,7 +943,7 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 {
   unsigned char mask = 1 << (entry->loss_index & 7);
   int index = entry->loss_index >> 3;
-  double saved_lq, rel_lq;
+  double rel_lq, saved_lq;
 
   if (lost == 0)
     {
@@ -984,9 +987,9 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
   if (entry->total_packets < entry->loss_window_size)
     entry->total_packets++;
 
-  // memorize the current link quality
+  // the current reference link quality
 
-  saved_lq = entry->loss_link_quality;
+  saved_lq = entry->saved_loss_link_quality;
 
   if (saved_lq == 0.0)
     saved_lq = -1.0;
@@ -1003,6 +1006,8 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   if (rel_lq > 1.1 || rel_lq < 0.9)
     {
+      entry->saved_loss_link_quality = entry->loss_link_quality;
+
       changes_neighborhood = OLSR_TRUE;
       changes_topology = OLSR_TRUE;
 

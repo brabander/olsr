@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.19 2004/11/10 13:09:40 tlopatic Exp $
+ * $Id: process_package.c,v 1.20 2004/11/10 14:53:21 tlopatic Exp $
  *
  */
 
@@ -96,9 +96,9 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
         if (COMP_IP(&walker->address, &in_if->ip_addr))
           break;
 
-      // memorize the currently stored link quality value
+      // the current reference link quality
 
-      saved_lq = link->neigh_link_quality;
+      saved_lq = link->saved_neigh_link_quality;
 
       if (saved_lq == 0.0)
         saved_lq = -1.0;
@@ -119,6 +119,8 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
 
       if (rel_lq > 1.1 || rel_lq < 0.9)
         {
+          link->saved_neigh_link_quality = link->neigh_link_quality;
+
           changes_neighborhood = OLSR_TRUE;
           changes_topology = OLSR_TRUE;
 
@@ -627,7 +629,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
                       // saved previous total link quality
 
-                      saved_lq = walker->full_link_quality;
+                      saved_lq = walker->saved_full_link_quality;
 
                       if (saved_lq == 0.0)
                         saved_lq = -1.0;
@@ -647,6 +649,9 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
                       if (rel_lq > 1.1 || rel_lq < 0.9)
                         {
+                          walker->saved_full_link_quality =
+                            walker->full_link_quality;
+
                           changes_neighborhood = OLSR_TRUE;
                           changes_topology = OLSR_TRUE;
                         }
@@ -686,6 +691,7 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
 
 #if defined USE_LINK_QUALITY
   list_of_1_neighbors->full_link_quality = 0.0;
+  list_of_1_neighbors->saved_full_link_quality = 0.0;
 #endif
 
   /* Queue */

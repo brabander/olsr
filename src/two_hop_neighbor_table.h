@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: two_hop_neighbor_table.h,v 1.7 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.h,v 1.8 2004/11/10 14:53:21 tlopatic Exp $
  *
  */
 
@@ -37,6 +37,7 @@ struct neighbor_list_entry
   struct	neighbor_entry *neighbor;
 #if defined USE_LINK_QUALITY
   double full_link_quality;
+  double saved_full_link_quality;
 #endif
   struct	neighbor_list_entry *next;
   struct	neighbor_list_entry *prev;

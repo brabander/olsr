@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.10 2004/11/10 12:35:30 tlopatic Exp $
+ * $Id: tc_set.c,v 1.11 2004/11/10 14:53:21 tlopatic Exp $
  *
  */
 
@@ -247,6 +247,10 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
       {
         new_topo_dst->link_quality = mprs->neigh_link_quality;
         new_topo_dst->inverse_link_quality = mprs->link_quality;
+
+        new_topo_dst->saved_link_quality = new_topo_dst->link_quality;
+        new_topo_dst->saved_inverse_link_quality =
+          new_topo_dst->inverse_link_quality;
       }
 #endif
 
@@ -269,7 +273,7 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
             {
               double saved_lq, rel_lq;
 
-              saved_lq = existing_dst->link_quality;
+              saved_lq = existing_dst->saved_link_quality;
 
               if (saved_lq == 0.0)
                 saved_lq = -1.0;
@@ -279,9 +283,14 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
               rel_lq = existing_dst->link_quality / saved_lq;
 
               if (rel_lq > 1.1 || rel_lq < 0.9)
-                retval = 1;
+                {
+                  existing_dst->saved_link_quality =
+                    existing_dst->link_quality;
 
-              saved_lq = existing_dst->inverse_link_quality;
+                  retval = 1;
+                }
+
+              saved_lq = existing_dst->saved_inverse_link_quality;
 
               if (saved_lq == 0.0)
                 saved_lq = -1.0;
@@ -291,7 +300,12 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
               rel_lq = existing_dst->inverse_link_quality / saved_lq;
 
               if (rel_lq > 1.1 || rel_lq < 0.9)
-                retval = 1;
+                {
+                  existing_dst->saved_inverse_link_quality =
+                    existing_dst->inverse_link_quality;
+
+                  retval = 1;
+                }
             }
 #endif
 	}
