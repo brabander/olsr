@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.21 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.22 2005/02/02 18:57:02 kattemat Exp $
  */
 
 /*
@@ -461,7 +461,7 @@ ipc_send_net_info()
   net_msg->msgtype = NET_IPC;
   
   /* MIDs */
-#warning fix IPC MIDcnt
+  /* XXX fix IPC MIDcnt */
   net_msg->mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
   
   /* HNAs */
@@ -483,7 +483,7 @@ ipc_send_net_info()
 
   /* Different values */
   /* Temporary fixes */
-#warning fix IPC intervals
+  /* XXX fix IPC intervals */
   net_msg->hello_int = 0;//htons((olsr_u16_t)hello_int);
   net_msg->hello_lan_int = 0;//htons((olsr_u16_t)hello_int_nw);
   net_msg->tc_int = 0;//htons((olsr_u16_t)tc_int);
