@@ -50,10 +50,16 @@
 
 /* Algorithm definitions */
 #define SHA1_INCLUDING_KEY   1
+#define MD5_INCLUDING_KEY   2
 
 #define	MAXMESSAGESIZE 512
 
+#ifdef USE_OPENSSL
 #define SIGNATURE_SIZE 20
+#else
+#define SIGNATURE_SIZE 16
+#endif
+
 #define KEYLENGTH      16
 
 #define UPPER_DIFF 3

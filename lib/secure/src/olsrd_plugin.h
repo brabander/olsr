@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.10 2005/02/25 22:43:11 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.11 2005/03/10 19:57:48 kattemat Exp $
  */
 
 
@@ -63,7 +63,7 @@
 
 
 #define PLUGIN_NAME    "OLSRD signature plugin"
-#define PLUGIN_VERSION "0.4"
+#define PLUGIN_VERSION "0.5"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
@@ -121,6 +121,11 @@ char keyfile[FILENAME_MAX];
 #define IFCHG_IF_REMOVE        2
 #define IFCHG_IF_UPDATE        3
 
+#ifdef USE_OPENSSL
+#define SIGSIZE   20
+#else
+#define SIGSIZE   16
+#endif
 
 /****************************************************************************
  *                            PACKET SECTION                                *
@@ -133,7 +138,7 @@ struct sig_msg
   olsr_u16_t    reserved;
 
   time_t        timestamp;
-  char          signature[20];
+  char          signature[SIGSIZE];
 };
 
 /*
@@ -173,7 +178,7 @@ struct challengemsg
   olsr_u32_t    destination;
   olsr_u32_t    challenge;
 
-  char          signature[20];
+  char          signature[SIGSIZE];
 
 };
 
@@ -193,9 +198,9 @@ struct c_respmsg
   olsr_u32_t    challenge;
   time_t        timestamp;
 
-  char          res_sig[20];
+  char          res_sig[SIGSIZE];
 
-  char          signature[20];
+  char          signature[SIGSIZE];
 
 };
 
@@ -213,9 +218,9 @@ struct r_respmsg
   olsr_u32_t    destination;
   time_t        timestamp;
 
-  char          res_sig[20];
+  char          res_sig[SIGSIZE];
 
-  char          signature[20];
+  char          signature[SIGSIZE];
 };
 
 
