@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_plugin_io.h,v 1.5 2004/11/30 16:52:15 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.6 2004/12/03 20:54:33 kattemat Exp $
  */
 
 
