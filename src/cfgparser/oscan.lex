@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oscan.lex,v 1.4 2004/10/17 13:24:28 kattemat Exp $
+ * $Id: oscan.lex,v 1.5 2004/10/18 14:17:45 tlopatic Exp $
  *
  */
 
@@ -29,6 +29,7 @@
 #define YYSTYPE struct conf_token *
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>

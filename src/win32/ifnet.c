@@ -1,5 +1,5 @@
 /*
- * $Id: ifnet.c,v 1.3 2004/09/15 11:18:42 tlopatic Exp $
+ * $Id: ifnet.c,v 1.4 2004/10/18 14:17:45 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * Derived from its Linux counterpart.
@@ -28,6 +28,9 @@
 #include "../net.h"
 #include "../parser.h"
 #include "../socket_parser.h"
+#include "../defs.h"
+#include "../net_os.h"
+#include "../ifnet.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -102,7 +105,7 @@ static int MiniIndexToGuid(char *Guid, int MiniIndex)
   unsigned long AdInfoLen;
   unsigned long Res;
   
-  if (ipversion == AF_INET6)
+  if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by MiniIndexToGuid()!\n");
     return -1;
@@ -150,7 +153,7 @@ static int AddrToIndex(int *Index, unsigned int Addr)
   
   olsr_printf(5, "AddrToIndex(%08x)\n", Addr);
 
-  if (ipversion == AF_INET6)
+  if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by AddrToIndex()!\n");
     return -1;
@@ -267,7 +270,7 @@ void ListInterfaces(void)
   unsigned long Res;
   int IsWlan;
   
-  if (ipversion == AF_INET6)
+  if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by ListInterfaces()!\n");
     return;
@@ -331,7 +334,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
     return -1;
   }
 
-  Sock = socket(ipversion, SOCK_STREAM, IPPROTO_TCP);
+  Sock = socket(olsr_cnf->ip_version, SOCK_STREAM, IPPROTO_TCP);
 
   if (Sock < 0)
   {
@@ -381,7 +384,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct if_name *IntName)
     return -1;
   }
 
-  if (ipversion == AF_INET && (IntInfo[WsIdx].iiFlags & IFF_BROADCAST) == 0)
+  if (olsr_cnf->ip_version == AF_INET && (IntInfo[WsIdx].iiFlags & IFF_BROADCAST) == 0)
   {
     olsr_printf(1, "\tNo broadcast - skipping it...\n");
     return -1;
@@ -462,7 +465,7 @@ void RemoveInterface(struct if_name *IntName)
   free(Int->int_name);
   free(Int);
 
-  if(nbinterf == 0 && !allow_no_int)
+  if(nbinterf == 0 && !olsr_cnf->allow_no_interfaces)
   {
     olsr_printf(1, "No more active interfaces - exiting.\n");
     exit_value = EXIT_FAILURE;
@@ -479,7 +482,7 @@ int chk_if_changed(struct if_name *IntName)
   union olsr_ip_addr OldVal, NewVal;
   struct ifchgf *Walker;
 
-  if (ipversion == AF_INET6)
+  if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by chk_if_changed()!\n");
     return 0;
@@ -590,7 +593,7 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   struct ifchgf *Walker;
   int IsWlan;
   
-  if (ipversion == AF_INET6)
+  if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by chk_if_up()!\n");
     return 0;
@@ -680,7 +683,7 @@ int chk_if_up(struct if_name *IntName, int DebugLevel)
   return 1;
 }
 
-void check_interface_updates()
+void check_interface_updates(void *dummy)
 {
   struct if_name *tmp_if;
 

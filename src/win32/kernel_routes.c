@@ -1,5 +1,5 @@
 /*
- * $Id: kernel_routes.c,v 1.2 2004/09/15 11:18:42 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.3 2004/10/18 14:17:45 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -21,12 +21,9 @@
  */
 
 #include <stdio.h>
-
-#include "../olsr_protocol.h"
 #include "net/route.h"
-#include "../routing_table.h"
-#include "../olsr.h"
-#include "../defs.h"
+
+#include "../kernel_routes.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>

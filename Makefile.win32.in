@@ -31,6 +31,9 @@ OBJS =		src/build_msg.o \
 		src/socket_parser.o \
 		src/tc_set.o \
 		src/two_hop_neighbor_table.o \
+		src/cfgparser/oscan.o \
+		src/cfgparser/oparse.o \
+		src/cfgparser/olsrd_conf.o \
 		src/win32/apm.o \
 		src/win32/compat.o \
 		src/win32/ifnet.o \
@@ -38,6 +41,15 @@ OBJS =		src/build_msg.o \
 		src/win32/log.o \
 		src/win32/net.o \
 		src/win32/tunnel.o
+
+all:		olsrd.exe
+
+src/cfgparser/oscan.c:	src/cfgparser/oscan.lex \
+		src/cfgparser/oparse.h src/cfgparser/olsrd_conf.h
+		flex -osrc/cfgparser/oscan.c src/cfgparser/oscan.lex
+
+src/cfgparser/oparse.c:	src/cfgparser/oparse.y src/cfgparser/olsrd_conf.h
+		bison -d -osrc/cfgparser/oparse.c src/cfgparser/oparse.y
 
 %.o:		%.c
 		gcc -mno-cygwin -O2 -Wall -c -DWIN32 \
