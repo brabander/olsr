@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.17 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: tc_set.c,v 1.18 2004/12/05 13:53:00 kattemat Exp $
  */
 
 
@@ -433,7 +433,7 @@ olsr_print_tc_table()
   char *fstr;
   float etx;
   
-  olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
+  olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,

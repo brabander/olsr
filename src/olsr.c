@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.32 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: olsr.c,v 1.33 2004/12/05 13:53:00 kattemat Exp $
  */
 
 /**
@@ -252,24 +252,21 @@ olsr_process_changes()
     }
   
   if (olsr_cnf->debug_level > 0)
-    {
-
-      if (olsr_cnf->debug_level > 1)
-        olsr_print_tc_table();
-
+    {      
       if (olsr_cnf->debug_level > 2) 
         {
           olsr_print_mid_set();
-
+	  
           if (olsr_cnf->debug_level > 3)
             {
               olsr_print_duplicate_table();
               olsr_print_hna_set();
             }
         }
-
+      
       olsr_print_link_set();
       olsr_print_neighbor_table();
+      olsr_print_tc_table();
     }
 
   for(tmp_pc_list = pcf_list; 
