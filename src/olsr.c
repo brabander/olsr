@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.21 2004/11/10 14:39:47 kattemat Exp $
+ * $Id: olsr.c,v 1.22 2004/11/15 15:50:08 tlopatic Exp $
  *
  */
 
@@ -209,7 +209,9 @@ olsr_process_changes()
 
 	  if(olsr_cnf->debug_level > 2) 
 	    {
-	      olsr_print_mprs_set();
+              // the MPR selector set is now displayed as part of the
+              // neighbour table
+	      // olsr_print_mprs_set();
 	      olsr_print_mid_set();
 	      olsr_print_duplicate_table();
 	    }
