@@ -238,9 +238,6 @@ char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
 /* The multi-purpose funtion. All other functions are fetched trough this */
 int (*olsr_plugin_io)(int, void *, size_t);
 
-/* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
-
 /* Register a "process changes" function */
 int (*register_pcf)(int (*)(int, int, int));
 
