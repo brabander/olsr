@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.13 2004/12/19 09:37:59 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.14 2004/12/19 12:51:44 kattemat Exp $
  */
 
 /*
@@ -492,21 +492,32 @@ build_status_body(char *buf, olsr_u32_t bufsize)
       size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, (int)uptime.tv_sec);
 
     size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
+
+    size += sprintf(&buf[size], "<td>Main address: %s</td>\n", olsr_ip_to_string(main_addr));
     
     size += sprintf(&buf[size], "<td>IP version: %d</td>\n", cfg->ip_version == AF_INET ? 4 : 6);
 
     size += sprintf(&buf[size], "<td>Debug level: %d</td>\n", cfg->debug_level);
 
-    size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", cfg->tos);
+    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+
+    size += sprintf(&buf[size], "<td>Pollrate: %0.2f</td>\n", cfg->pollrate);
+    size += sprintf(&buf[size], "<td>TC redundancy: %d</td>\n", cfg->tc_redundancy);
+    size += sprintf(&buf[size], "<td>MPR coverage: %d</td>\n", cfg->mpr_coverage);
+
 
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
+    size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", cfg->tos);
+
     if(cfg->allow_no_interfaces)
-      size += sprintf(&buf[size], "<td>No interfaces allowed</td>\n");
+      size += sprintf(&buf[size], "<td>Will run without interfaces</td>\n");
     else
-      size += sprintf(&buf[size], "<td>No interfaces not allowed</td>\n");
+      size += sprintf(&buf[size], "<td>Will halt on no interfaces</td>\n");
 
     size += sprintf(&buf[size], "<td>Willingness: %d %s</td>\n", cfg->willingness, cfg->willingness_auto ? "(auto)" : "");
+    
+    size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
     size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", cfg->use_hysteresis ? "Enabled" : "Disabled");
     if(cfg->use_hysteresis)
@@ -520,32 +531,29 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
+    size += sprintf(&buf[size], "<td>LQ extention: %s</td>\n", cfg->lq_level ? "Enabled" : "Disabled");
     size += sprintf(&buf[size], "<td>LQ level: %d</td>\n", cfg->lq_level);
     size += sprintf(&buf[size], "<td>LQ winsize: %d</td>\n", cfg->lq_wsize);
     size += sprintf(&buf[size], "<td></td>\n");
-
-    size += sprintf(&buf[size], "</tr>\n<tr>\n");
-
-    size += sprintf(&buf[size], "<td>Pollrate: %0.2f</td>\n", cfg->pollrate);
-    size += sprintf(&buf[size], "<td>TC redundancy: %d</td>\n", cfg->tc_redundancy);
-    size += sprintf(&buf[size], "<td>MPR coverage: %d</td>\n", cfg->mpr_coverage);
 
     size += sprintf(&buf[size], "</tr></table>\n");
     
     size += sprintf(&buf[size], "<hr>Interfaces:<br>\n");
 
+    size += sprintf(&buf[size], "<table width=790 border=0>\n");
+
+
     for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
       {
 	struct interface *rifs = ifs->interf;
 
-	size += sprintf(&buf[size], "<table width=790 border=0><tr><th cellspan=3>%s</th>\n", ifs->name);
-
+	size += sprintf(&buf[size], "<tr><th cellspan=3>%s</th>\n", ifs->name);
 	if(!rifs)
 	  {
 	    size += sprintf(&buf[size], "<tr><td cellspan=3>No such interface found</td></tr></table>\n");
 	    continue;
 	  }
-
+	
 	if(cfg->ip_version == AF_INET)
 	  {
 	    size += sprintf(&buf[size], "<tr><td>IP: %s</td>\n", 
@@ -567,9 +575,10 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 	    size += sprintf(&buf[size], "<td>WLAN: TBD</td>\n");
 	    size += sprintf(&buf[size], "<td>STATUS: TBD</td></tr>\n");
 	  }	    
-	size += sprintf(&buf[size], "</table>\n");
 
       }
+
+    size += sprintf(&buf[size], "</table>\n");
 
     size += sprintf(&buf[size], "<hr>Plugins:<br>\n");
 
