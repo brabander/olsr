@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.21 2004/11/20 21:42:35 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.22 2004/11/20 21:52:09 kattemat Exp $
  *
  */
 
@@ -185,6 +185,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+  /* IP version */
+  if(cnf->ip_version != AF_INET &&
+     cnf->ip_version != AF_INET6)
+    {
+      fprintf(stderr, "Ipversion %d not allowed!\n", cnf->ip_version);
+      return -1;
+    }
+
   /* TOS */
   if(//cnf->tos < MIN_TOS ||
      cnf->tos > MAX_TOS)
@@ -197,39 +205,40 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
      (cnf->willingness < MIN_WILLINGNESS ||
       cnf->willingness > MAX_WILLINGNESS))
     {
-      fprintf(stderr, "willingness %d is not allowed\n", cnf->willingness);
+      fprintf(stderr, "Willingness %d is not allowed\n", cnf->willingness);
       return -1;
     }
 
   /* Hysteresis */
-
-  if(cnf->hysteresis_param.scaling < MIN_HYST_PARAM ||
-     cnf->hysteresis_param.scaling > MAX_HYST_PARAM)
+  if(cnf->use_hysteresis == OLSR_TRUE)
     {
-      fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
-      return -1;
-    }
+      if(cnf->hysteresis_param.scaling < MIN_HYST_PARAM ||
+	 cnf->hysteresis_param.scaling > MAX_HYST_PARAM)
+	{
+	  fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
+	  return -1;
+	}
 
-  if(cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low)
-    {
-      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
-      return -1;
-    }
+      if(cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low)
+	{
+	  fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
+	  return -1;
+	}
 
-  if(cnf->hysteresis_param.thr_high < MIN_HYST_PARAM ||
-     cnf->hysteresis_param.thr_high > MAX_HYST_PARAM)
-    {
-      fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
-      return -1;
-    }
+      if(cnf->hysteresis_param.thr_high < MIN_HYST_PARAM ||
+	 cnf->hysteresis_param.thr_high > MAX_HYST_PARAM)
+	{
+	  fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
+	  return -1;
+	}
 
-  if(cnf->hysteresis_param.thr_low < MIN_HYST_PARAM ||
-     cnf->hysteresis_param.thr_low > MAX_HYST_PARAM)
-    {
-      fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
-      return -1;
+      if(cnf->hysteresis_param.thr_low < MIN_HYST_PARAM ||
+	 cnf->hysteresis_param.thr_low > MAX_HYST_PARAM)
+	{
+	  fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
+	  return -1;
+	}
     }
-
 
   /* Pollrate */
 
@@ -254,6 +263,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
      cnf->mpr_coverage > MAX_MPR_COVERAGE)
     {
       fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
+      return -1;
+    }
+
+  if(cnf->allow_no_interfaces == OLSR_FALSE &&
+     in == NULL)
+    {
+      fprintf(stderr, "No interfaces configured - and allow no int set to FALSE!\n");
       return -1;
     }
 
