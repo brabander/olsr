@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.23 2005/01/02 14:26:14 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.24 2005/01/02 19:40:55 kattemat Exp $
  */
 
 /*
@@ -149,7 +149,30 @@ static const char *http_ok_tail[] =
 
 static const char *about_frame[] =
 {
-    "Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to\n",
+    "<b>Httpinfo olsrd plugin version 0.1</b><br>\n"
+    "by Andreas T&oslash;nnesen (C)2005.<hr>\n",
+    "This plugin implements a HTTP server that supplies\n",
+    "the client with various dynamic web pages representing\n",
+    "the current olsrd status.<br>The different pages include:\n",
+    "<ul>\n<li><b>Configuration</b> - This page displays information\n",
+    "about the current olsrd configuration. This includes various\n",
+    "olsr settings such as IP version, MID/TC redundancy, hysteresis\n",
+    "etc. Information about the current status of the interfaces on\n",
+    "which olsrd is configured to run is also displayed. Loaded olsrd\n",
+    "plugins are shown with their plugin parameters. Finally all local\n",
+    "HNA entries are shown. These are the networks that the local host\n",
+    "will anounce itself as a gateway to.</li>\n",
+    "<li><b>Routes</b> - This page displays all routes currently set in\n",
+    "the kernel <i>by olsrd</i>. The type of route is also displayed(host\n",
+    "or HNA).</li>\n",
+    "<li><b>Links/Topology</b> - This page displays all information about\n",
+    "links, neighbors, topology, MID and HNA entries.</li>\n",
+    "<li><b>All</b> - Here all the previous pages are displayed as one.\n",
+    "This is to make all information available as easy as possible(for example\n",
+    "for a script) and using as few resources as possible.</li>\n",
+    "<li><b>About</b> - this help page.</li>\n</ul>",
+    "<hr>\n",
+    "Send questions or comments to\n",
     "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or\n",
     "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br>\n"
     "Official olsrd homepage: <a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br>\n",

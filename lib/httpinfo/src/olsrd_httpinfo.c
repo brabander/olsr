@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.30 2005/01/02 14:26:14 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.31 2005/01/02 19:40:54 kattemat Exp $
  */
 
 /*
@@ -112,7 +112,7 @@ int
 build_routes_body(char *, olsr_u32_t);
 
 int
-build_status_body(char *, olsr_u32_t);
+build_config_body(char *, olsr_u32_t);
 
 int
 build_neigh_body(char *, olsr_u32_t);
@@ -151,7 +151,7 @@ static int http_socket;
 
 struct tab_entry tab_entries[] =
   {
-    {"Status", "status", build_status_body},
+    {"Configuration", "config", build_config_body},
     {"Routes", "routes", build_routes_body},
     {"Links/Topology", "nodes", build_nodes_body},
     {"All", "all", build_all_body},
@@ -655,7 +655,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 }
 
 int
-build_status_body(char *buf, olsr_u32_t bufsize)
+build_config_body(char *buf, olsr_u32_t bufsize)
 {
     char systime[100];
     time_t currtime;
@@ -1041,7 +1041,7 @@ build_all_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
 
-  size += build_status_body(&buf[size], bufsize);
+  size += build_config_body(&buf[size], bufsize);
   size += build_routes_body(&buf[size], bufsize - size);
   size += build_neigh_body(&buf[size], bufsize);
   size += build_topo_body(&buf[size], bufsize - size);
