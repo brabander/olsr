@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.65 2005/02/27 11:02:22 kattemat Exp $
+ * $Id: main.c,v 1.66 2005/02/27 16:27:42 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -79,6 +79,11 @@ set_default_values(void);
 
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
+
+static int
+olsr_process_arguments(int, char *[], 
+		       struct olsrd_config *, 
+		       struct if_config_options *);
 
 static char **olsr_argv;
 
@@ -211,226 +216,8 @@ main(int argc, char *argv[])
   /*
    * Process olsrd options.
    */
-  
-  argv++; argc--;
-  while (argc > 0 && **argv == '-')
+  if(olsr_process_arguments(argc, argv, olsr_cnf, default_ifcnf) < 0)
     {
-#ifdef WIN32
-      /*
-       *Interface list
-       */
-      if (strcmp(*argv, "-int") == 0)
-        {
-          ListInterfaces();
-          exit(0);
-        }
-#endif
-
-      /*
-       *Configfilename
-       */
-      if(strcmp(*argv, "-f") == 0) 
-	{
-	  fprintf(stderr, "Configfilename must ALWAYS be first argument!\n\n");
-	  olsr_exit(__func__, EXIT_FAILURE);
-	}
-
-      /*
-       *Use IP version 6
-       */
-      if(strcmp(*argv, "-ipv6") == 0) 
-	{
-	  olsr_cnf->ip_version = AF_INET6;
-	  argv++; argc--;
-	  continue;
-	}
-
-      /*
-       *Broadcast address
-       */
-      if(strcmp(*argv, "-bcast") == 0) 
-	{
-	  struct in_addr in;
-
-	  argv++; argc--;
-	  if(!argc)
-	    {
-	      fprintf(stderr, "You must provide a broadcastaddr when using the -bcast switch!\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	  if (inet_aton(*argv, &in) == 0)
-	    {
-	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
-	      continue;
-	    }
-	  memcpy(&default_ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));  
-	  continue;
-	}
-      
-      /*
-       * Enable additional debugging information to be logged.
-       */
-      if (strcmp(*argv, "-d") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%d", &olsr_cnf->debug_level);
-	  argv++; argc--;
-	  continue;
-	}
-
-		
-      /*
-       * Interfaces to be used by olsrd.
-       */
-      if (strcmp(*argv, "-i") == 0) 
-	{
-	  argv++; argc--;
-	  if(!argc || (*argv[0] == '-'))
-	    {
-	      fprintf(stderr, "You must provide an interface label!\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-
-	  queue_if(*argv);
-	  argv++; argc--;
-
-	  while((argc) && (**argv != '-'))
-	    {
-	      queue_if(*argv);
-	      argv++; argc--;
-	    }
-
-	  continue;
-	}
-      /*
-       * Set the hello interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-hint") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%f", &default_ifcnf->hello_params.emission_interval);
-          default_ifcnf->hello_params.validity_time = default_ifcnf->hello_params.emission_interval * 3;
-	  argv++; argc--;
-	  continue;
-	}
-
-      /*
-       * Set the HNA interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-hnaint") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%f", &default_ifcnf->hna_params.emission_interval);
-          default_ifcnf->hna_params.validity_time = default_ifcnf->hna_params.emission_interval * 3;
-	  argv++; argc--;
-	  continue;
-	}
-
-      /*
-       * Set the MID interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-midint") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%f", &default_ifcnf->mid_params.emission_interval);
-          default_ifcnf->mid_params.validity_time = default_ifcnf->mid_params.emission_interval * 3;
-	  argv++; argc--;
-	  continue;
-	}
-
-      /*
-       * Set the tc interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-tcint") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%f", &default_ifcnf->tc_params.emission_interval);
-          default_ifcnf->tc_params.validity_time = default_ifcnf->tc_params.emission_interval * 3;
-	  argv++; argc--;
-	  continue;
-	}
-
-      /*
-       * Set the polling interval to be used by olsrd.
-       */
-      if (strcmp(*argv, "-T") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%f",&olsr_cnf->pollrate);
-	  argv++; argc--;
-	  continue;
-	}
-
-
-      /*
-       * Should we display the contents of packages beeing sent?
-       */
-      if (strcmp(*argv, "-dispin") == 0) 
-	{
-	  argv++; argc--;
-	  disp_pack_in = OLSR_TRUE;
-	  continue;
-	}
-
-      /*
-       * Should we display the contents of incoming packages?
-       */
-      if (strcmp(*argv, "-dispout") == 0) 
-	{
-	  argv++; argc--;
-	  disp_pack_out = OLSR_TRUE;
-	  continue;
-	}
-
-
-      /*
-       * Should we set up and send on a IPC socket for the front-end?
-       */
-      if (strcmp(*argv, "-ipc") == 0) 
-	{
-	  argv++; argc--;
-	  olsr_cnf->ipc_connections = 1;
-	  olsr_cnf->open_ipc = OLSR_TRUE;
-	  continue;
-	}
-
-      /*
-       * IPv6 multicast addr
-       */
-      if (strcmp(*argv, "-multi") == 0) 
-	{
-	  struct in6_addr in6;
-
-	  argv++; argc--;
-	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
-	    {
-	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
-	      exit(EXIT_FAILURE);
-	    }
-
-	  memcpy(&default_ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
-
-	  argv++; argc--;
-
-	  continue;
-	}
-
-
-      /*
-       * Delete possible default GWs
-       */
-      if (strcmp(*argv, "-delgw") == 0) 
-	{
-	  argv++; argc--;
-	  del_gws = OLSR_TRUE;
-	  continue;
-	}
-
-
       print_usage();
       olsr_exit(__func__, EXIT_FAILURE);
     }
@@ -512,20 +299,17 @@ main(int argc, char *argv[])
     {
       OLSR_PRINTF(1, "Using IP version 6\n")
       ipsize = sizeof(struct in6_addr);
-
       minsize = (int)sizeof(olsr_u8_t) * 7; /* Minimum packetsize IPv6 */
     }
   else
     {
       OLSR_PRINTF(1, "Using IP version 4\n")
       ipsize = sizeof(olsr_u32_t);
-
       minsize = (int)sizeof(olsr_u8_t) * 4; /* Minimum packetsize IPv4 */
     }
 
 
   /* Initializing networkinterfaces */
-
   if(!ifinit())
     {
       if(olsr_cnf->allow_no_interfaces)
@@ -757,4 +541,224 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
       ifs = ifs->next;
     }
   return changes;
+}
+
+
+#define NEXT_ARG argv++;argc--
+
+/**
+ * Process command line arguments passed to olsrd
+ *
+ */
+static int
+olsr_process_arguments(int argc, char *argv[], 
+		       struct olsrd_config *cnf, 
+		       struct if_config_options *ifcnf)
+{
+  while (argc > 1)
+    {
+      NEXT_ARG;
+#ifdef WIN32
+      /*
+       *Interface list
+       */
+      if (strcmp(*argv, "-int") == 0)
+        {
+          ListInterfaces();
+          exit(0);
+        }
+#endif
+
+      /*
+       *Configfilename
+       */
+      if(strcmp(*argv, "-f") == 0) 
+	{
+	  fprintf(stderr, "Configfilename must ALWAYS be first argument!\n\n");
+	  olsr_exit(__func__, EXIT_FAILURE);
+	}
+
+      /*
+       *Use IP version 6
+       */
+      if(strcmp(*argv, "-ipv6") == 0) 
+	{
+	  cnf->ip_version = AF_INET6;
+	  continue;
+	}
+
+      /*
+       *Broadcast address
+       */
+      if(strcmp(*argv, "-bcast") == 0) 
+	{
+	  struct in_addr in;
+	  NEXT_ARG;
+	  if(!argc)
+	    {
+	      fprintf(stderr, "You must provide a broadcastaddr when using the -bcast switch!\n");
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	  if (inet_aton(*argv, &in) == 0)
+	    {
+	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
+	      continue;
+	    }
+	  memcpy(&ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));  
+	  continue;
+	}
+      
+      /*
+       * Enable additional debugging information to be logged.
+       */
+      if (strcmp(*argv, "-d") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%d", &cnf->debug_level);
+	  continue;
+	}
+
+		
+      /*
+       * Interfaces to be used by olsrd.
+       */
+      if (strcmp(*argv, "-i") == 0) 
+	{
+	  NEXT_ARG;
+	  if(!argc || (*argv[0] == '-'))
+	    {
+	      fprintf(stderr, "You must provide an interface label!\n");
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	  printf("Queuing if %s\n", *argv);
+	  queue_if(*argv);
+
+	  while((argc - 1) && (argv[0][1] != '-'))
+	    {
+	      NEXT_ARG;
+	      printf("Queuing if %s\n", *argv);
+	      queue_if(*argv);
+	    }
+
+	  continue;
+	}
+      /*
+       * Set the hello interval to be used by olsrd.
+       * 
+       */
+      if (strcmp(*argv, "-hint") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%f", &ifcnf->hello_params.emission_interval);
+          ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval * 3;
+	  continue;
+	}
+
+      /*
+       * Set the HNA interval to be used by olsrd.
+       * 
+       */
+      if (strcmp(*argv, "-hnaint") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%f", &ifcnf->hna_params.emission_interval);
+          ifcnf->hna_params.validity_time = ifcnf->hna_params.emission_interval * 3;
+	  continue;
+	}
+
+      /*
+       * Set the MID interval to be used by olsrd.
+       * 
+       */
+      if (strcmp(*argv, "-midint") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%f", &ifcnf->mid_params.emission_interval);
+          ifcnf->mid_params.validity_time = ifcnf->mid_params.emission_interval * 3;
+	  continue;
+	}
+
+      /*
+       * Set the tc interval to be used by olsrd.
+       * 
+       */
+      if (strcmp(*argv, "-tcint") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%f", &ifcnf->tc_params.emission_interval);
+          ifcnf->tc_params.validity_time = ifcnf->tc_params.emission_interval * 3;
+	  continue;
+	}
+
+      /*
+       * Set the polling interval to be used by olsrd.
+       */
+      if (strcmp(*argv, "-T") == 0) 
+	{
+	  NEXT_ARG;
+	  sscanf(*argv,"%f",&cnf->pollrate);
+	  continue;
+	}
+
+
+      /*
+       * Should we display the contents of packages beeing sent?
+       */
+      if (strcmp(*argv, "-dispin") == 0) 
+	{
+	  disp_pack_in = OLSR_TRUE;
+	  continue;
+	}
+
+      /*
+       * Should we display the contents of incoming packages?
+       */
+      if (strcmp(*argv, "-dispout") == 0) 
+	{
+	  disp_pack_out = OLSR_TRUE;
+	  continue;
+	}
+
+
+      /*
+       * Should we set up and send on a IPC socket for the front-end?
+       */
+      if (strcmp(*argv, "-ipc") == 0) 
+	{
+	  cnf->ipc_connections = 1;
+	  cnf->open_ipc = OLSR_TRUE;
+	  continue;
+	}
+
+      /*
+       * IPv6 multicast addr
+       */
+      if (strcmp(*argv, "-multi") == 0) 
+	{
+	  struct in6_addr in6;
+	  NEXT_ARG;
+	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
+	    {
+	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
+	      exit(EXIT_FAILURE);
+	    }
+
+	  memcpy(&ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
+
+	  continue;
+	}
+
+
+      /*
+       * Delete possible default GWs
+       */
+      if (strcmp(*argv, "-delgw") == 0) 
+	{
+	  del_gws = OLSR_TRUE;
+	  continue;
+	}
+
+      return -1;
+    }
+  return 0;
 }
