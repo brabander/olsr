@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.18 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: generate_msg.c,v 1.19 2004/12/03 19:47:10 kattemat Exp $
  */
 
 #include "generate_msg.h"
@@ -74,6 +74,8 @@ generate_hello(void *p)
   if(net_output_pending(ifn))
     net_output(ifn);
 }
+
+#warning 0.4.9: UPDATE build functions to return wheter or not a message was buildt
 
 void
 generate_tc(void *p)
