@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.7 2004/11/08 06:47:55 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.8 2004/11/11 21:14:17 kattemat Exp $
  *
  */
 
@@ -30,14 +30,14 @@
 #include "olsr_protocol.h"
 
 /* Default valuse not declared in olsr_protocol.h */
-#define DEF_POLLRATE       0.1
-#define DEF_WILL_AUTO      OLSR_TRUE
-#define DEF_ALLOW_NO_INTS  OLSR_TRUE
-#define DEF_TOS            16
-#define DEF_DEBUGLVL       1
-#define DEF_OPEN_IPC       OLSR_FALSE
-#define DEF_USE_HYST       OLSR_TRUE
-#define DEF_LQ_LEVEL       0
+#define DEF_POLLRATE        0.1
+#define DEF_WILL_AUTO       OLSR_TRUE
+#define DEF_ALLOW_NO_INTS   OLSR_TRUE
+#define DEF_TOS             16
+#define DEF_DEBUGLVL        1
+#define DEF_IPC_CONNECTIONS 0
+#define DEF_USE_HYST        OLSR_TRUE
+#define DEF_LQ_LEVEL        0
 
 
 #ifndef IPV6_ADDR_SITELOCAL
@@ -138,6 +138,19 @@ struct plugin_entry
   struct plugin_entry      *next;
 };
 
+struct ipc_host
+{
+  union olsr_ip_addr       host;
+  struct ipc_host          *next;
+};
+
+struct ipc_net
+{
+  union olsr_ip_addr       net;
+  union olsr_ip_addr       mask;
+  struct ipc_net           *next;
+};
+
 /*
  * The config struct
  */
@@ -150,6 +163,7 @@ struct olsrd_config
   olsr_u16_t               tos;
   olsr_bool                willingness_auto;
   olsr_u8_t                willingness;
+  int                      ipc_connections;
   olsr_bool                open_ipc;
   olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
@@ -160,6 +174,8 @@ struct olsrd_config
   struct plugin_entry      *plugins;
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;
+  struct ipc_host          *ipc_hosts;
+  struct ipc_net           *ipc_nets;
   struct olsr_if           *interfaces;
   olsr_u16_t               ifcnt;
 };

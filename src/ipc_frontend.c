@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.12 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: ipc_frontend.c,v 1.13 2004/11/11 21:14:17 kattemat Exp $
  *
  */
 
@@ -494,7 +494,7 @@ ipc_send_net_info()
     {
       olsr_printf(1, "(NETINFO)IPC connection lost!\n");
       close(ipc_connection);
-      olsr_cnf->open_ipc = 0;
+      //olsr_cnf->open_ipc = 0;
       return -1;
     }
 

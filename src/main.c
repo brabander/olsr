@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.34 2004/11/10 14:39:47 kattemat Exp $
+ * $Id: main.c,v 1.35 2004/11/11 21:14:17 kattemat Exp $
  *
  */
 
@@ -393,6 +393,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-ipc") == 0) 
 	{
 	  argv++; argc--;
+	  olsr_cnf->ipc_connections = 1;
 	  olsr_cnf->open_ipc = OLSR_TRUE;
 	  continue;
 	}

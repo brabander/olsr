@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.14 2004/11/07 20:09:12 tlopatic Exp $
+ * $Id: oparse.y,v 1.15 2004/11/11 21:14:18 kattemat Exp $
  *
  */
 
@@ -82,6 +82,10 @@ int yylex(void);
 %token TOK_PLNAME
 %token TOK_PLPARAM
 
+%token TOK_HOSTLABEL
+%token TOK_NETLABEL
+%token TOK_MAXIPC
+
 %token TOK_IP4BROADCAST
 %token TOK_IP6ADDRTYPE
 %token TOK_IP6MULTISITE
@@ -112,7 +116,6 @@ stmt:       idebug
           | bnoint
           | atos
           | awillingness
-          | bipccon
           | busehyst
           | fhystscale
           | fhystupper
@@ -126,6 +129,7 @@ stmt:       idebug
 
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
+          | TOK_IPCCON ipcbody
           | ifblock ifbody
           | plblock plbody
 ;
@@ -148,6 +152,18 @@ hna6stmts: | hna6stmts hna6stmt
 
 hna6stmt:  vcomment
          | ihna6entry
+;
+
+ipcbody:    TOK_OPEN ipcstmts TOK_CLOSE
+;
+
+ipcstmts: | ipcstmts ipcstmt
+;
+
+ipcstmt:  vcomment
+          | imaxipc
+          | ipchost
+          | ipcnet
 ;
 
 ifbody:     TOK_OPEN ifstmts TOK_CLOSE
@@ -182,6 +198,75 @@ plstmt:     plparam
 ;
 
 
+imaxipc: TOK_MAXIPC TOK_INTEGER
+{
+  cnf->ipc_connections = $2->integer;
+
+  cnf->open_ipc = cnf->ipc_connections ? OLSR_TRUE : OLSR_FALSE;
+
+  free($2);
+}
+;
+
+
+ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
+{
+  struct in_addr in;
+  struct ipc_host *ipch;
+
+  if(PARSER_DEBUG) printf("\tIPC host: %s\n", $2->string);
+  
+  if(inet_aton($2->string, &in) == 0)
+    {
+      fprintf(stderr, "Failed converting IP address IPC %s\n", $2->string);
+      exit(EXIT_FAILURE);
+    }
+
+  ipch = malloc(sizeof(struct ipc_host));
+  ipch->host.v4 = in.s_addr;
+
+  ipch->next = cnf->ipc_hosts;
+  cnf->ipc_hosts = ipch;
+
+  free($2->string);
+  free($2);
+
+}
+;
+
+ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
+{
+  struct in_addr in1, in2;
+  struct ipc_net *ipcn;
+
+  if(PARSER_DEBUG) printf("\tIPC net: %s/%s\n", $2->string, $3->string);
+  
+  if(inet_aton($2->string, &in1) == 0)
+    {
+      fprintf(stderr, "Failed converting IP net IPC %s\n", $2->string);
+      exit(EXIT_FAILURE);
+    }
+
+  if(inet_aton($3->string, &in2) == 0)
+    {
+      fprintf(stderr, "Failed converting IP mask IPC %s\n", $3->string);
+      exit(EXIT_FAILURE);
+    }
+
+  ipcn = malloc(sizeof(struct ipc_net));
+  ipcn->net.v4 = in1.s_addr;
+  ipcn->mask.v4 = in2.s_addr;
+
+  ipcn->next = cnf->ipc_nets;
+  cnf->ipc_nets = ipcn;
+
+  free($2->string);
+  free($2);
+  free($3->string);
+  free($3);
+
+}
+;
 
 isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 {
@@ -191,7 +276,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 
   if(inet_aton($2->string, &in) == 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $1->string);
+      fprintf(stderr, "Failed converting IP address %s\n", $2->string);
       exit(EXIT_FAILURE);
     }
 
@@ -470,22 +555,6 @@ awillingness: TOK_WILLINGNESS TOK_INTEGER
 }
 ;
 
-bipccon: TOK_IPCCON TOK_BOOLEAN
-{
-  cnf->open_ipc = $2->boolean;
-
-  if(cnf->open_ipc)
-    {
-      if(PARSER_DEBUG) printf("IPC allowed\n");
-    }
-  else
-    {
-      if(PARSER_DEBUG) printf("IPC blocked\n");
-    }
-  free($2);
-
-}
-;
 
 
 busehyst: TOK_USEHYST TOK_BOOLEAN

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.15 2004/11/08 06:47:55 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.16 2004/11/11 21:14:17 kattemat Exp $
  *
  */
 
@@ -251,7 +251,8 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;
     cnf->willingness_auto = DEF_WILL_AUTO;
-    cnf->open_ipc = DEF_OPEN_IPC;
+    cnf->ipc_connections = DEF_IPC_CONNECTIONS;
+    cnf->open_ipc = cnf->ipc_connections ? OLSR_TRUE : OLSR_FALSE;
 
     cnf->use_hysteresis = DEF_USE_HYST;
     cnf->hysteresis_param.scaling = HYST_SCALING;
@@ -318,6 +319,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
   struct plugin_param      *pp;
+  struct ipc_host          *ih = cnf->ipc_hosts;
+  struct ipc_net           *ie = cnf->ipc_nets;
+
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -387,11 +391,27 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
     fprintf(fd, "Willingness%d\n\n", cnf->willingness);
 
   /* IPC */
-  fprintf(fd, "# Allow processes like the GUI front-end\n# to connect to the daemon. 'yes' or 'no'\n\n");
-  if(cnf->open_ipc)
-    fprintf(fd, "IpcConnect\tyes\n\n");
-  else
-    fprintf(fd, "IpcConnect\tno\n\n");
+  fprintf(fd, "# Allow processes like the GUI front-end\n# to connect to the daemon.\n\n");
+  fprintf(fd, "IpcConnect\n{\n");
+  fprintf(fd, "   MaxConnections  %d\n\n", cnf->ipc_connections);
+
+  while(ih)
+    {
+      in4.s_addr = ih->host.v4;
+      fprintf(fd, "   Host          %s\n", inet_ntoa(in4));
+      ih = ih->next;
+    }
+  fprintf(fd, "\n");
+  while(ie)
+    {
+      in4.s_addr = ie->net.v4;
+      fprintf(fd, "   Net           %s ", inet_ntoa(in4));
+      in4.s_addr = ie->mask.v4;
+      fprintf(fd, "%s\n", inet_ntoa(in4));
+      ie = ie->next;
+    }
+
+  fprintf(fd, "}\n\n");
 
 
 
@@ -550,6 +570,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   struct hna6_entry        *h6 = cnf->hna6_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
+  struct ipc_host          *ih = cnf->ipc_hosts;
+  struct ipc_net           *ie = cnf->ipc_nets;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -567,10 +589,24 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   else
     printf("Willingness      : %d\n", cnf->willingness);
 
-  if(cnf->open_ipc)
-    printf("IPC              : ENABLED\n");
-  else
-    printf("IPC              : DISABLED\n");
+  printf("IPC connections  : %d\n", cnf->ipc_connections);
+
+  while(ih)
+    {
+      in4.s_addr = ih->host.v4;
+      printf("\tHost %s\n", inet_ntoa(in4));
+      ih = ih->next;
+    }
+  
+  while(ie)
+    {
+      in4.s_addr = ie->net.v4;
+      printf("\tNet %s/", inet_ntoa(in4));
+      in4.s_addr = ie->mask.v4;
+      printf("%s\n", inet_ntoa(in4));
+      ie = ie->next;
+    }
+
 
   printf("Pollrate         : %0.2f\n", cnf->pollrate);
 
