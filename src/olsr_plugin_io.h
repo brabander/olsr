@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.7 2004/11/06 00:08:45 kattemat Exp $
  *
  */
 
@@ -29,7 +29,11 @@
  *                 interface struct.
  *                 Added GETF__ADD_IFCHGF and GETF__DEL_IFCHGF.
  *                 - Andreas
- *         0.4.8 : GETF__APM_READ added.
+ *         0.4.8 : GETF__APM_READ added
+ *                 GETD__OLSR_CNF added
+ *                 GETD_PACKET removed
+ *                 GETD_MAXMESSAGESIZE removed
+ *                 GETD_OUTPUTSIZE removed
  *                 - Andreas
  */
 
@@ -59,18 +63,16 @@
 #ifndef _OLSR_PLUGIN_IO
 #define _OLSR_PLUGIN_IO
 
-/* Data fetching - starts at 100 */
-#define GETD__PACKET                               100                            
-#define GETD__OUTPUTSIZE                           101
+/* Data fetching - starts at 100 (used to anyway) */
 #define GETD__IFNET                                102
 #define GETD__NOW                                  103
 #define GETD__PARSER_ENTRIES                       104
 #define GETD__OLSR_SOCKET_ENTRIES                  105
-#define GETD__MAXMESSAGESIZE                       106
 #define GETD__NEIGHBORTABLE                        108
 #define GETD__TWO_HOP_NEIGHBORTABLE                109
 #define GETD__TC_TABLE                             110
 #define GETD__HNA_SET                              111
+#define GETD__OLSR_CNF                             112
 
 /* Function fetching - starts at 500 */
 #define GETF__OLSR_REGISTER_SCHEDULER_EVENT        500
