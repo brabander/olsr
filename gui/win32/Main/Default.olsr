@@ -1,0 +1,38 @@
+#
+# Default configuration for the GUI
+#
+# $Id: Default.olsr,v 1.1 2004/11/20 23:20:37 tlopatic Exp $
+#
+
+DebugLevel		2
+
+LinkQualityLevel	0
+LinkQualityWinSize	10
+
+UseHysteresis		no
+
+HystScaling		0.1
+HystThrHigh		0.8
+HystThrLow		0.2
+
+Pollrate		0.05
+
+Interface "GUI"
+{
+	HelloInterval		2.0
+	HelloValidityTime	6.0
+
+	TcInterval		5.0
+	TcValidityTime		15.0
+
+	MidInterval		5.0
+	MidValidityTime		15.0
+
+	HnaInterval		5.0
+	HnaValidityTime		15.0
+}
+
+Hna4
+{
+	0.0.0.0 0.0.0.0
+}
