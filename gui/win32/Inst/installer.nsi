@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.12 2005/03/02 00:13:23 tlopatic Exp $
+;  $Id: installer.nsi,v 1.13 2005/03/31 18:20:02 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -60,9 +60,12 @@ Function .onInit
 NoAbort:
 FunctionEnd
 
+InstType "ETX Configuration (recommended)"
+InstType "RFC Configuration"
+
 Section "Program Files"
 
-        SectionIn RO
+        SectionIn 1 2 RO
 
         SetOutPath $INSTDIR
 
@@ -73,8 +76,8 @@ Section "Program Files"
         File /oname=README.txt ..\..\..\README
         File /oname=README-LQ.html ..\..\..\README-Link-Quality.html
         File linux-manual.txt
-        File /oname=olsrd.conf ..\..\..\files\olsrd.conf.default.win32
-        File ..\..\..\gui\win32\Main\Default.olsr
+        File /oname=olsrd.conf.rfc ..\..\..\files\olsrd.conf.win32.rfc
+        File /oname=olsrd.conf.lq ..\..\..\files\olsrd.conf.win32.lq
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
         File ..\..\..\lib\nameservice\olsrd_nameservice.dll
         File ..\..\..\lib\httpinfo\olsrd_httpinfo.dll
@@ -89,7 +92,29 @@ Section "Program Files"
 
 SectionEnd
 
+Section "ETX Configuration"
+
+        SectionIn 1 RO
+
+        File ..\..\..\gui\win32\Main\RFC-Default.olsr
+        File ..\..\..\gui\win32\Main\LQ-Default.olsr
+        File /oname=Default.olsr ..\..\..\gui\win32\Main\LQ-Default.olsr
+
+SectionEnd
+
+Section "RFC Configuration"
+
+        SectionIn 2 RO
+
+        File ..\..\..\gui\win32\Main\RFC-Default.olsr
+        File ..\..\..\gui\win32\Main\LQ-Default.olsr
+        File /oname=Default.olsr ..\..\..\gui\win32\Main\RFC-Default.olsr
+
+SectionEnd
+
 Section "Start Menu Shortcuts"
+
+        SectionIn 1 2
 
         CreateDirectory $SMPROGRAMS\olsr.org
 
@@ -102,11 +127,15 @@ SectionEnd
 
 Section "Desktop Shortcut"
 
+        SectionIn 1 2
+
         CreateShortCut "$DESKTOP\OLSR Switch.lnk" $INSTDIR\Switch.exe "" $INSTDIR\Switch.exe 0
 
 SectionEnd
 
 Section "File Association (*.olsr)"
+
+        SectionIn 1 2
 
         WriteRegStr HKCR .olsr "" OlsrOrgConfigFile
 
@@ -133,7 +162,10 @@ Section "Uninstall"
         Delete $INSTDIR\README-LQ.html
         Delete $INSTDIR\linux-manual.txt
         Delete $INSTDIR\Default.olsr
-	Delete $INSTDIR\olsrd.conf
+        Delete $INSTDIR\RFC-Default.olsr
+        Delete $INSTDIR\LQ-Default.olsr
+	Delete $INSTDIR\olsrd.conf.rfc
+	Delete $INSTDIR\olsrd.conf.lq
         Delete $INSTDIR\olsrd_dot_draw.dll
         Delete $INSTDIR\olsrd_nameservice.dll
         Delete $INSTDIR\olsrd_httpinfo.dll

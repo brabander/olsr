@@ -1,26 +1,14 @@
 #
-# olsr.org configuration file
+# Default configuration for the GUI
 #
-# This configuration file should be copied to the Windows
-# directory. It is then used when you run olsrd.exe directly, i.e.
-# without the GUI. If you use the GUI, then you do not need this
-# file. In this case look at Default.olsr instead.
-#
-# $Id: olsrd.conf.default.win32,v 1.6 2005/03/02 00:13:21 tlopatic Exp $
+# $Id: LQ-Default.olsr,v 1.1 2005/03/31 18:20:02 tlopatic Exp $
 #
 
 #
-# Periodically print the internal state, including information on
-# route calculation
+# By default don't print anything to save CPU cycles
 #
 
-DebugLevel		2
-
-#
-# Clear the screen each time the internal state changes
-#
-
-ClearScreen		no
+DebugLevel		0
 
 #
 # Enable the link quality extensions?
@@ -75,23 +63,6 @@ TcRedundancy		2
 MprCoverage		3
 
 #
-# Load the dot draw plugin
-#
-
-#LoadPlugin		"olsrd_dot_draw.dll"
-#{
-#}
-
-#
-# Load the name service plugin
-#
-
-#LoadPlugin		"olsrd_nameservice.dll"
-#{
-#	PlParam	"name"	"thomas"
-#}
-
-#
 # Load the HTTP info plugin
 #
 
@@ -101,20 +72,25 @@ LoadPlugin		"olsrd_httpinfo.dll"
 }
 
 #
-# IPv4 HNAs - syntax: netaddr netmask
+# This default gateway HNA will only be considered by the GUI if the
+# computer actually has a default route.
 #
 
 Hna4
 {
-#	0.0.0.0 0.0.0.0
+	0.0.0.0 0.0.0.0
 }
 
 #
-# Interfaces - use "olsrd.exe -int" to obtain a list of you interfaces
-# and then change "if99" to the name of your WLAN interface
+# Pseudo interface used by the GUI. If we do not select any interface
+# in the GUI, we still have to store the per-interface settings of the
+# GUI somewhere. We then simply create a pseudo interfaced named GUI"
+# for storing this information. When parsing the configuration file,
+# the settings will be read and will be used to populate the GUI, but
+# after that the "GUI" interface will be discarded.
 #
 
-Interface "if99"
+Interface "GUI"
 {
 	#
 	# HELLO interval and validity time in seconds (float)
@@ -142,5 +118,5 @@ Interface "if99"
 	#
 
 	HnaInterval		5.0
-	HnaValidityTime 	30.0
+	HnaValidityTime		30.0
 }

@@ -1,12 +1,11 @@
 #
 # Default configuration for the GUI
 #
-# $Id: Default.olsr,v 1.3 2005/03/02 00:13:23 tlopatic Exp $
+# $Id: RFC-Default.olsr,v 1.1 2005/03/31 18:20:02 tlopatic Exp $
 #
 
 #
-# Periodically print the internal state, including information on
-# route calculation
+# By default don't print anything to save CPU cycles
 #
 
 DebugLevel		0
@@ -19,7 +18,7 @@ DebugLevel		0
 # 2 - yes, use link quality for MPR selection and routing
 #
 
-LinkQualityLevel	2
+LinkQualityLevel	0
 
 #
 # Windows size for packet loss calculation
@@ -34,10 +33,10 @@ LinkQualityWinSize	10
 UseHysteresis		no
 
 #
-# If using hysteresis, use "smooth" parameters
+# If using hysteresis, use the RFC parameters
 #
 
-HystScaling		0.1
+HystScaling		0.5
 HystThrHigh		0.8
 HystThrLow		0.3
 
@@ -55,13 +54,13 @@ Pollrate		0.1
 # 2 - advertise all neighbors
 #
 
-TcRedundancy		2
+TcRedundancy		0
 
 #
 # Specifies by how many MPRs each two-hop neighbour should be covered
 #
 
-MprCoverage		3
+MprCoverage		1
 
 #
 # Load the HTTP info plugin
@@ -98,26 +97,26 @@ Interface "GUI"
 	#
 
 	HelloInterval		2.0
-	HelloValidityTime	20.0
+	HelloValidityTime	6.0
 
 	#
 	# TC interval and validity time in seconds (float)
 	#
 
 	TcInterval		5.0
-	TcValidityTime		30.0
+	TcValidityTime		15.0
 
 	#
 	# MID interval and validity time in seconds (float)
 	#
 
 	MidInterval		5.0
-	MidValidityTime		30.0
+	MidValidityTime		15.0
 
 	#
 	# HNA interval and validity time in seconds (float)
 	#
 
 	HnaInterval		5.0
-	HnaValidityTime		30.0
+	HnaValidityTime		15.0
 }

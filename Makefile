@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.53 2005/03/31 17:04:10 kattemat Exp $
+# $Id: Makefile,v 1.54 2005/03/31 18:19:54 tlopatic Exp $
 
 VERS =		0.4.9
 
@@ -149,8 +149,10 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		README \
 		README-Link-Quality.html \
 		gui/win32/Inst/linux-manual.txt \
-		files/olsrd.conf.default.win32 \
-		gui/win32/Main/Default.olsr \
+		files/olsrd.conf.win32.rfc \
+		files/olsrd.conf.win32.lq \
+		gui/win32/Main/RFC-Default.olsr \
+		gui/win32/Main/LQ-Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
 		lib/nameservice/olsrd_nameservice.dll \
 		lib/httpinfo/olsrd_httpinfo.dll
@@ -170,8 +172,10 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		cp README ${TEMP}/olsr-${VERS}
 		cp README-Link-Quality.html ${TEMP}/olsr-${VERS}
 		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
-		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/olsrd.conf
-		cp gui/win32/Main/Default.olsr ${TEMP}/olsr-${VERS}
+		cp files/olsrd.conf.win32.rfc ${TEMP}/olsr-${VERS}/olsrd.conf.rfc
+		cp files/olsrd.conf.win32.lq ${TEMP}/olsr-${VERS}/olsrd.conf.lq
+		cp gui/win32/Main/RFC-Default.olsr ${TEMP}/olsr-${VERS}
+		cp gui/win32/Main/LQ-Default.olsr ${TEMP}/olsr-${VERS}/Default.olsr
 		cp lib/dot_draw/olsrd_dot_draw.dll ${TEMP}/olsr-${VERS}
 		cp lib/nameservice/olsrd_nameservice.dll ${TEMP}/olsr-${VERS}
 		cp lib/httpinfo/olsrd_httpinfo.dll ${TEMP}/olsr-${VERS}
@@ -188,8 +192,10 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		README \
 		README-Link-Quality.html \
 		gui/win32/Inst/linux-manual.txt \
-		files/olsrd.conf.default.win32 \
-		gui/win32/Main/Default.olsr \
+		files/olsrd.conf.win32.rfc \
+		files/olsrd.conf.win32.lq \
+		gui/win32/Main/RFC-Default.olsr \
+		gui/win32/Main/LQ-Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
 		lib/nameservice/olsrd_nameservice.dll \
 		lib/httpinfo/olsrd_httpinfo.dll \
