@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.34 2005/02/20 15:41:07 kattemat Exp $
+$Id: CHANGELOG,v 1.35 2005/02/27 17:21:50 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -13,6 +13,13 @@ PLUGIN DEVELOPERS: datatypes for MID entries has been changed.
 
 Routing table calculation in the LQ case now uses balanced binary
 trees instead of linked lists, which makes lookups much faster.
+
+The debug output function olsr_printf() is not used by olsrd
+internals any more. Instead the macro OLSR_PRINTF is to be used.
+This macro does debug level testing _before_ doing any function
+calls(both printf itself and parameters to printf). This is a much 
+more optimized way of doing debug output. In addittion olsrd can
+be buildt without any debug output code if doing 'make NODEBUG=1'.
 
 TIMEOUT OF DATASETS
 
