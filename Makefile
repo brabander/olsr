@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.27 2004/11/24 13:10:52 tlopatic Exp $
+# $Id: Makefile,v 1.28 2004/11/28 00:13:27 tlopatic Exp $
 
 #OS ?=		linux
 #OS =		fbsd
@@ -168,7 +168,7 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		cd ${TEMP}; echo y | cacls olsr-${VERS} /T /G Everyone:F
 		cd ${TEMP}; zip -q -r olsr-${VERS}.zip olsr-${VERS}
 		cp ${TEMP}/olsr-${VERS}.zip .
-		rm -rf ${TEMP}olsr-${VERS}
+		rm -rf ${TEMP}/olsr-${VERS}
 		rm -f ${TEMP}/olsr-${VERS}.zip
 
 olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
