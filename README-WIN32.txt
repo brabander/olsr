@@ -63,9 +63,10 @@ how this version differs from the original Linux version.
                      ***** Running the GUI *****
 
   We now have a native Windows GUI. No more GTK+. Simply make sure
-  that "Switch.exe", "Shim.exe", and "olsrd.exe" are located in the
-  same directory and run "Switch.exe". "Shim.exe" is just an auxiliary
-  console application that is required by "Switch.exe".
+  that "Switch.exe", "Shim.exe", "olsrd.exe", "olsrd_cfgparser.dll",
+  and "Default.olsr" are located in the same directory and run
+  "Switch.exe". "Shim.exe" is just an auxiliary console application
+  that is required by "Switch.exe".
 
   The GUI is pretty self-explanatory. The three buttons on the lower
   right of the GUI window start the OLSR server, stop the OLSR server,
@@ -75,28 +76,33 @@ how this version differs from the original Linux version.
   run the OLSR server "olsrd.exe". When you click "Start" the GUI
   generates a temporary configuration file from the information given
   by the "Settings" tab. This temporary configuration file is passed
-  to the OLSR server via its "-f" option. If you need options that
-  cannot be controlled via the "Settings" tab, simply add them to the
-  "Manual additions" text box as you would add them to a configuration
-  file, e.g. "HNA 192.168.0.0 255.255.255.0". The contents of this
-  text box are appended to the temporary configuration file when it is
-  generated.
+  to the OLSR server via its "-f" option. 
 
   "Offer Internet connection" is only available if you have an
   Internet connection, i.e. if you have a default route configured. If
-  you tick this option, "HNA 0.0.0.0 0.0.0.0" is added to the
-  temporary configuration file, allowing other nodes in the OLSR
+  you tick this option an HNA entry for the default route is added to
+  the temporary configuration file, allowing other nodes in the OLSR
   network to use your Internet connection.
 
-  Gateway tunnelling and IP version 6 cannot currently be selected, as
-  support for these features is not yet complete in the Windows
-  version.
+  IP version 6 cannot currently be selected, as support for IPv6 is
+  not yet complete in the Windows version.
+
+  "Enable ETX link quality" tells the OLSR server to detect the
+  quality of its links to its neighbours using a variant of the ETX
+  metric. "Window size" specifies the number of most recent packets to
+  be used when calculating the packet loss. If, for example, this
+  parameter is set to 10, then the OLSR server will calculate the
+  packet loss among the most recent 10 OLSR packets received from each
+  neighbour. If "For MPR selection only" is active, the link quality
+  information is only used to select MPRs that offer the best paths to
+  your two-hop neighbours. If "For MPR selection and routing" is
+  active, the link quality is additionally used to create the routing
+  table.
 
   The three buttons on the lower right of the "Settings" tab open
   previously saved settings, save the current settings to a
   configuration file, and reset the current settings to default
-  values. When opening a saved configuration file, the GUI adds lines
-  that it cannot interpret to the "Manual additions" text box.
+  values.
 
   If you start the GUI with the path to a configuration file as the
   only command line argument, the GUI opens the given configuration
@@ -106,10 +112,12 @@ how this version differs from the original Linux version.
   OLSR server with a simple double click on the configuration file.
 
   The "Output" tab shows the output of the currently running OLSR
-  server. When you click "Start" The GUI simply invokes the OLSR
-  server "olsrd.exe" and intercepts its console output. Use the four
-  buttons on the upper right of the tab to freeze the output, resume
-  frozen output, save the output to a file, or clear the output.
+  server. The output is limited to 1000 lines. The 1001st line will
+  make the first line disappear and so on. When you click "Start" The
+  GUI simply invokes the OLSR server "olsrd.exe" and intercepts its
+  console output. Use the four buttons on the upper right of the tab
+  to freeze the output, resume frozen output, save the output to a
+  file, or clear the output.
 
   The "Nodes" tab contains information about the nodes that the OLSR
   server currently knows about. If you click on the address of a node
@@ -121,6 +129,16 @@ how this version differs from the original Linux version.
   The "Routes" tab shows the routes that the currently running OLSR
   server has added.
 
+  The default settings for the "Settings" tab are taken from the
+  "Default.olsr" file. The configuration of the last interface in this
+  file is used to populate the per-interface settings (HELLO interval,
+  etc.) in the "Settings" tab. If you do not want to specify any
+  interface in "Default.olsr", the problem arises that you do not have
+  such a last interface. In this case simply create an interface with
+  the special name of "GUI". This tells the GUI to use the
+  configuration of the interface for the per-interface settings and to
+  forget about this interface afterwards.
+
 
                    ***** Running the GTK+ GUI *****
 
@@ -131,13 +149,9 @@ how this version differs from the original Linux version.
                      ***** Missing features *****
 
   The Windows version currently does not implement the following
-  features known from the Linux release.
+  major features known from the Linux release.
 
-    * IPv6.
-
-    * Link layer statistics.
-
-    * Gateway tunnelling.
+    * IPv6
 
   There are also some Windows-specific features that I currently work
   on, but which have not made it into this release.
@@ -150,32 +164,16 @@ how this version differs from the original Linux version.
 
   To compile the Windows version of the OLSR server or the dot_draw
   plugin you need a Cygwin installation with a current version of GCC
-  and Mingw32. Each of the corresponding subdirectories contains a
-  shell script named "mkmf.sh" that takes "Makefile.win32.in" as its
-  input, appends the dependencies, and outputs "Makefile.win32". Then
-  simply say
-
-    make -f Makefile.win32 clean
-
-  to remove any compiled files or
-
-    make -f Makefile.win32 mclean
-
-  to remove any compiled files and the generated makefile. Say
-
-    make -f Makefile.win32
-
-  to compile the source code.
+  and Mingw32.
 
   The GUI has to be compiled with Visual C++ 6. Simply open the
   "Frontend.dsw" workspace in the Visual C++ 6 IDE. Then compile
   "Frontend" and "Shim", which creates "Switch.exe" and
-  "Shim.exe". Copy these two executables into the same directory as
-  "olsrd.exe" and you are ready to go.
+  "Shim.exe".
 
 Well, thanks for using an early release of a piece of software and
 please bear with me if there are any problems. Please do also feel
 free to suggest any features that you'd like to see in future
 releases.
 
-Thomas Lopatic <thomas@lopatic.de>, 2004-09-15
+Thomas Lopatic <thomas@lopatic.de>, 2004-11-21
