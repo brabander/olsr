@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.5 2004/12/17 07:43:52 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.6 2004/12/17 11:44:30 kattemat Exp $
  */
 
 /*
@@ -72,7 +72,7 @@ int
 build_status_body(char *, olsr_u32_t);
 
 int
-build_hello_body(char *, olsr_u32_t);
+build_neigh_body(char *, olsr_u32_t);
 
 int
 build_topo_body(char *, olsr_u32_t);
@@ -174,8 +174,6 @@ parse_http_request(int fd)
   char filename[251];
   char http_version[11];
   int c = 0, r = 1;
-  char statusheader[100];
-  time_t currtime;
 
   addrlen = sizeof(struct sockaddr_in);
 
@@ -247,11 +245,9 @@ parse_http_request(int fd)
           }
       printf("\n\n");
       /* All is good */
-      time(&currtime);
-      strftime(statusheader, 100, "Status <i>%a, %d %b %Y %H:%M:%S</i>", gmtime(&currtime));
 
-      build_frame(statusheader, &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
-      build_frame("Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hello_body);
+      build_frame("Status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
+      build_frame("Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
       build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
       build_frame("HNA", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
       build_frame("MID", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
@@ -410,20 +406,32 @@ build_frame(char *title, char *buf, olsr_u32_t size, int(*frame_body_cb)(char *,
 int
 build_status_body(char *buf, olsr_u32_t bufsize)
 {
+    char systime[100];
+    time_t currtime;
 
-  strcat(buf, "STATUS HERE");
+    time(&currtime);
+    strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
+    
+    strcat(buf, systime);
 }
 
 
 
 int
-build_hello_body(char *buf, olsr_u32_t bufsize)
+build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neighbor_table_tmp;
   struct neighbor_2_list_entry *list_2;
   int size = 0, index;
 
-  printf("Build hello\n\n");
+  size += sprintf(&buf[size], "Links\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>IP address</td><td>Hysteresis</td><td>LinkQuality</td><td>lost</td><td>total</td><td>NLQ</td><td>ETX</td></tr>\n");
+
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+  size += sprintf(&buf[size], "Neighbors\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>IP address</td><td>SYM</td><td>MPR</td><td>MPRS</td><td>Willingness</td></tr>\n");
+
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -433,26 +441,26 @@ build_hello_body(char *buf, olsr_u32_t bufsize)
 	{
 	  if(neighbor_table_tmp->is_mpr)
 	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s(MPR)\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
+	      size += sprintf(&buf[size], "%s -> %s(MPR)\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
 	    }
 	  else
 	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
+	      size += sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(main_addr), olsr_ip_to_string(&neighbor_table_tmp->neighbor_main_addr));		  
 	    }
 	  
 	  for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
 	      list_2 != &neighbor_table_tmp->neighbor_2_list;
 	      list_2 = list_2->next)
 	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+	      size += sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
 	    }
 	      
 	}
     }
 
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+  return size;
 }
 
 
@@ -460,10 +468,14 @@ build_hello_body(char *buf, olsr_u32_t bufsize)
 int
 build_topo_body(char *buf, olsr_u32_t bufsize)
 {
-  int size;
+  int size = 0;
   olsr_u8_t index;
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
+
+
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Source IP addr</td><td>Dest IP addr</td><td>LQ</td><td>ILQ</td><td>ETX</td></tr>\n");
+
 
   /* Topology */  
   for(index=0;index<HASHSIZE;index++)
@@ -476,13 +488,15 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(&entry->T_last_addr), olsr_ip_to_string(&dst_entry->T_dest_addr));
+	      size += sprintf(&buf[size], "%s -> %s\n", olsr_ip_to_string(&entry->T_last_addr), olsr_ip_to_string(&dst_entry->T_dest_addr));
 	      dst_entry = dst_entry->next;
 	    }
 	  entry = entry->next;
 	}
     }
+
+  size += sprintf(&buf[size], "</table><hr>\n");
+
 }
 
 
@@ -498,6 +512,9 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size = 0;
 
+  size += sprintf(&buf[size], "Remote HNA entries\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Network</td><td>Netmask</td><td>Gateway</td></tr>\n");
+
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -510,14 +527,22 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "GW: %s NET: %s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr), olsr_ip_to_string(&tmp_net->A_network_addr)/*, olsr_ip_to_string(&tmp_net->A_netmask.v4)*/);
+	      size += sprintf(&buf[size], "GW: %s NET: %s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr), olsr_ip_to_string(&tmp_net->A_network_addr)/*, olsr_ip_to_string(&tmp_net->A_netmask.v4)*/);
 	      tmp_net = tmp_net->next;
 	    }
 	      
 	  tmp_hna = tmp_hna->next;
 	}
     }
+
+
+  size += sprintf(&buf[size], "</table><hr>\n");
+  size += sprintf(&buf[size], "Local(announced) HNA entries\n");
+  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr BGCOLOR=\"#AAAAAA\"><td>Network</td><td>Netmask</td></tr>\n");
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+
+
 }
 
 
@@ -525,7 +550,7 @@ int
 build_mid_body(char *buf, olsr_u32_t bufsize)
 {
 
-  strcat(buf, "MID<br>\n");
+    sprintf(buf, "No MID entries registered<br>");
 }
 
 /**
