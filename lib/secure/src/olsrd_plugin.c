@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.6 2004/11/19 20:52:05 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.7 2004/11/19 20:56:51 kattemat Exp $
  */
 
 
@@ -89,9 +89,9 @@ void
 my_init()
 {
   /* Print plugin info to stdout */
+  /* We cannot use olsr_printf yet! */
   printf("%s\n", MOD_DESC);
-  /* Set interface version */
-
+  printf("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n"); 
   ifs = NULL;
 
   return;
