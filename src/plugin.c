@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin.c,v 1.9 2004/11/07 12:19:58 kattemat Exp $
+ * $Id: plugin.c,v 1.10 2004/11/10 16:58:46 kattemat Exp $
  *
  */
 
@@ -41,6 +41,7 @@
 #include "tc_set.h"
 #include "hna_set.h"
 #include "apm.h"
+#include "routing_table.h"
 
 /**
  * Multi-purpose function for plugins
@@ -91,6 +92,12 @@ olsr_plugin_io(int cmd, void *data, size_t size)
      case(GETD__OLSR_CNF):
       *((struct olsrd_config **)data) = olsr_cnf;
       break;
+      case(GETD__ROUTINGTABLE):
+      *((struct rt_entry **)data) = routingtable;
+      break;
+      case(GETD__HNA_ROUTES):
+      *((struct rt_entry **)data) = hna_routes;
+      break; 
 
       /* Function fetching */
 

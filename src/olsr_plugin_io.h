@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.8 2004/11/07 12:19:58 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.9 2004/11/10 16:58:46 kattemat Exp $
  *
  */
 
@@ -35,6 +35,8 @@
  *                 GETD_MAXMESSAGESIZE removed
  *                 GETD_OUTPUTSIZE removed
  *                 GETF__NET_OUTBUFFER_PUSH added
+ *                 GETD__ROUTINGTABLE added
+ *                 GET__HNA_ROUTES added
  *                 - Andreas
  */
 
@@ -74,6 +76,8 @@
 #define GETD__TC_TABLE                             110
 #define GETD__HNA_SET                              111
 #define GETD__OLSR_CNF                             112
+#define GETD__ROUTINGTABLE                         113
+#define GETD__HNA_ROUTES                           114
 
 /* Function fetching - starts at 500 */
 #define GETF__OLSR_REGISTER_SCHEDULER_EVENT        500
