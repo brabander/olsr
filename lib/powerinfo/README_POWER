@@ -1,20 +1,9 @@
-POWER STATUS PLUGIN FOR UNIK OLSRD
+POWER STATUS PLUGIN FOR OLSRD
 by Andreas Tønnesen(andreto@olsr.org)
-
-
-              ***  LICENCING ***
-
-THIS SOFTWARE IS LICENCED UNDER THE BSD LICENCE
-TO ENABLE DEVELOPERS TO USE THIS CODE IN PROJECTS
-USING NON-GLP LICENCING SCHEMES.
-
-IN OTHER WORDS - YOU ARE FREE TO USE THIS CODE AS
-A FRAMEWORK FOR WHATEVER YOU WANT.
-
 
 ABOUT
 
-The uolsrd power status plugin is ment to be a easy
+The olsrd power status plugin is ment to be a easy
 to understand example of how one can write custom
 plugins for the UniK olsr daemon.
 
@@ -25,6 +14,8 @@ All powerinfo is gathered in a database and you
 can wiev the output by telneting to 127.0.0.1
 port 8888 on the local machine.
 
+Feel free to use this as a framework for new 
+plugins! That's what it is intended to be used for.
 
 WHAT IS IT?
 
