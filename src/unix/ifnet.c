@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.1 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: ifnet.c,v 1.2 2004/11/05 08:07:32 kattemat Exp $
  *
  */
 
@@ -747,7 +747,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input);
   
- #if defined linux 
+#if defined linux 
   /* Set TOS */
   
   if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)
