@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: compat.c,v 1.8 2004/11/14 20:25:34 tlopatic Exp $
+ * $Id: compat.c,v 1.9 2004/11/17 17:03:39 tlopatic Exp $
  *
  */
 
@@ -42,7 +42,11 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <ctype.h>
+#include <dlfcn.h>
 #include "defs.h"
+
+void PError(char *Str);
+void WinSockPError(char *Str);
 
 void sleep(unsigned int Sec)
 {

@@ -18,14 +18,16 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: log.c,v 1.2 2004/10/19 13:58:46 tlopatic Exp $
+ * $Id: log.c,v 1.3 2004/11/17 17:03:39 tlopatic Exp $
  *
  */
+
+#include "../log.h"
 
 void olsr_openlog(const char *Id)
 {
 }
 
-void olsr_syslog(int Level, const char *Format, ...)
+void olsr_syslog(int Level, char *Format, ...)
 {
 }

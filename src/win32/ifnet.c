@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: ifnet.c,v 1.10 2004/11/07 20:09:12 tlopatic Exp $
+ * $Id: ifnet.c,v 1.11 2004/11/17 17:03:39 tlopatic Exp $
  *
  */
 
@@ -43,6 +43,12 @@
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
 int inet_pton(int af, char *src, void *dst);
+
+void ListInterfaces(void);
+int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct olsr_if *IntConf);
+int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index,
+                  struct olsr_if *IntConf);
+void RemoveInterface(struct olsr_if *IntConf);
 
 #define MAX_INTERFACES 25
 
