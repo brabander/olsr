@@ -35,11 +35,11 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.29 2004/11/30 16:52:15 kattemat Exp $
+# $Id: Makefile,v 1.30 2004/11/30 17:05:05 tlopatic Exp $
 
 VERS =		0.4.8
 
-#OS ?=		linux
+#OS =		linux
 #OS =		fbsd
 #OS =		win32
 #OS =		osx
@@ -52,7 +52,7 @@ FLEX ?=		flex
 INSTALL_PREFIX ?=
 
 DEFINES = 	-DUSE_LINK_QUALITY
-INCLUDES =	-I src
+INCLUDES =	-Isrc
 
 DEPFILE =	.depend
 
@@ -61,6 +61,12 @@ HDRS =		$(wildcard src/*.h)
 
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
+
+ifndef OS
+all:		help
+else
+all:		olsrd
+endif
 
 ifeq ($(OS), linux)
 
@@ -77,9 +83,19 @@ ifeq ($(OS), fbsd)
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-O2 -g
+DEFINES +=	-D__FreeBSD__
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g
 LIBS =		-lm
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
+
+else
+ifeq ($(OS), osx)
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+DEFINES +=	-D__MacOSX__
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g 
+LIBS =		-lm -ldl
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
 
 else
@@ -89,8 +105,8 @@ SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 INCLUDES += 	-Isrc/win32
 DEFINES +=	-DWIN32
-CFLAGS ?=	-Wall -Wmissing-prototypes \
-		-Wstrict-prototypes -mno-cygwin -O2 -g
+CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
+		-mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS) >/dev/null 2>&1
 
@@ -137,27 +153,10 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
 		mv olsr-setup.exe olsr-${VERS}-setup.exe
 
-else
-ifeq ($(OS), osx)
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-DEFINES +=	-D__MacOSX__
-CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g 
-LIBS =		-lm -ldl
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(INCLUDES) $(DEFINES) $(SRCS)
-
 endif
 endif
 endif
 endif
-
-ifndef OS
-all: help
-else
-all: olsrd
-endif
-
 
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 override CFLAGS += $(INCLUDES) $(DEFINES)
@@ -203,16 +202,16 @@ clean:
 		rm -f $(OBJS) olsrd olsrd.exe
 		$(MAKE) -C src/cfgparser clean
 
-uberclean:	clean libs_clean
+uberclean:	clean clean_libs
 		rm -f $(DEPFILE) $(DEPFILE).bak
 		rm -f src/*[o~] src/linux/*[o~] src/unix/*[o~] src/win32/*[o~]
 		rm -f src/bsd/*[o~] 
 		$(MAKE) -C src/cfgparser uberclean
 
-
 install_bin:
 		$(STRIP) olsrd
-		install -D -m 755 olsrd $(INSTALL_PREFIX)/usr/sbin/olsrd
+		mkdir -p $(INSTALL_PREFIX)/usr/sbin
+		install -m 755 olsrd $(INSTALL_PREFIX)/usr/sbin
 
 install:	install_bin
 		@echo olsrd uses the configfile $(INSTALL_PREFIX)/etc/olsr.conf
@@ -231,12 +230,12 @@ libs:
 			$(MAKE) -C $$i; \
 		done; 
 
-libs_clean: 
+clean_libs: 
 		for i in lib/*; do \
 			$(MAKE) -C $$i clean; \
 		done; 
 
-libs_install:
+install_libs:
 		for i in lib/*; do \
 			$(MAKE) -C $$i LIBDIR=$(INSTALL_PREFIX)/usr/lib install; \
 		done; 	
