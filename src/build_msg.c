@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.25 2005/02/02 19:59:17 kattemat Exp $
+ * $Id: build_msg.c,v 1.26 2005/02/15 20:49:05 kattemat Exp $
  */
 
 
@@ -675,7 +675,8 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
     {
       if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
 	{
-	  olsr_printf(1, "TC: Sending empty package\n");
+	  if(!TIMED_OUT(send_empty_tc))
+	    olsr_printf(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, send_empty_tc, now_times, (int)((send_empty_tc) - now_times));
 
 	  m->v4.olsr_msgsize = htons(curr_size);
 	  m->v4.seqno = htons(get_msg_seqno());

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.16 2005/02/15 20:40:43 kattemat Exp $
+ * $Id: net.c,v 1.17 2005/02/15 20:49:21 kattemat Exp $
  */
 
 
@@ -610,6 +610,8 @@ int
 check_wireless_interface(char *ifname)
 {
   struct ifreq ifr;
+
+  memset(&ifr, 0, sizeof(ifr));
   strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
   if(ioctl(ioctl_s, SIOCGIWNAME, &ifr) >= 0)

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.11 2005/02/15 20:40:43 kattemat Exp $
+ * $Id: net.c,v 1.12 2005/02/15 20:49:20 kattemat Exp $
  */
 
 #include "../defs.h"
@@ -48,8 +48,17 @@
 #include <sys/param.h>
 #endif
 
-#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
-#define SIOCGWAVELAN SIOCGIFGENERIC
+#include <net/if.h>
+#include <net/if_var.h>
+#include <net/ethernet.h>
+
+#include <net80211/ieee80211.h>
+#include <net80211/ieee80211_ioctl.h>
+#include <dev/wi/if_wavelan_ieee.h>
+#include <dev/wi/if_wireg.h>
+
+//#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
+//#define SIOCGWAVELAN SIOCGIFGENERIC
 
 #include <sys/sysctl.h>
 
@@ -325,12 +334,21 @@ olsr_recvfrom(int  s,
 }
 
 
-
+#warning FreeBSD WLAN detection untested!
 int 
 check_wireless_interface(char *ifname)
 {
+  struct wi_req	wreq;
   struct ifreq ifr;
+
+  memset((char *)&wreq, 0, sizeof(wreq));
+  memset((char *)&ifr, 0, sizeof(ifr));
+
+  wreq.wi_len = WI_MAX_DATALEN;
+  wreq.wi_type = WI_RID_IFACE_STATS;
+
   strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+  ifr.ifr_data = (caddr_t)&wreq;
 
   if(ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0)
     {
