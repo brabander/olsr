@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.19 2005/02/17 07:19:49 kattemat Exp $
+ * $Id: net.c,v 1.20 2005/02/17 19:47:10 kattemat Exp $
  */
 
 
@@ -620,15 +620,8 @@ check_wireless_interface(char *ifname)
 }
 
 #if 0
-/* network interface ioctl's for MII commands */
-#ifndef SIOCGMIIPHY
-#define SIOCGMIIPHY (SIOCDEVPRIVATE)	/* Read from current PHY */
-#define SIOCGMIIREG (SIOCDEVPRIVATE+1) 	/* Read any PHY register */
-#define SIOCSMIIREG (SIOCDEVPRIVATE+2) 	/* Write any PHY register */
-#define SIOCGPARAMS (SIOCDEVPRIVATE+3) 	/* Read operational parameters */
-#define SIOCSPARAMS (SIOCDEVPRIVATE+4) 	/* Set operational parameters */
-#endif
 
+#include <linux/sockios.h>
 #include <linux/types.h>
 
 /* This data structure is used for all the MII ioctl's */
@@ -667,40 +660,23 @@ struct mii_data {
 #define  MII_BMSR_JABBER	0x0002
 #define  MII_BMSR_EXT_CAP	0x0001
 
-#define MII_PHY_ID1		0x02
-#define MII_PHY_ID2		0x03
-
-/* Auto-Negotiation Advertisement Register */
-#define MII_ANAR		0x04
-/* Auto-Negotiation Link Partner Ability Register */
-#define MII_ANLPAR		0x05
-#define  MII_AN_NEXT_PAGE	0x8000
-#define  MII_AN_ACK		0x4000
-#define  MII_AN_REMOTE_FAULT	0x2000
-#define  MII_AN_ABILITY_MASK	0x07e0
-#define  MII_AN_FLOW_CONTROL	0x0400
-#define  MII_AN_100BASET4	0x0200
-#define  MII_AN_100BASETX_FD	0x0100
-#define  MII_AN_100BASETX_HD	0x0080
-#define  MII_AN_10BASET_FD	0x0040
-#define  MII_AN_10BASET_HD	0x0020
-#define  MII_AN_PROT_MASK	0x001f
-#define  MII_AN_PROT_802_3	0x0001
-
-/* Auto-Negotiation Expansion Register */
-#define MII_ANER		0x06
-#define  MII_ANER_MULT_FAULT	0x0010
-#define  MII_ANER_LP_NP_ABLE	0x0008
-#define  MII_ANER_NP_ABLE	0x0004
-#define  MII_ANER_PAGE_RX	0x0002
-#define  MII_ANER_LP_AN_ABLE	0x0001
-
-
 int
 calculate_if_metric(char *ifname)
 {
   if(check_wireless_interface(ifname))
     {
+      struct ifreq ifr;
+      strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+      
+      /* Get bit rate */
+      if(ioctl(ioctl_s, SIOCGIWRATE, &ifr) < 0)
+	{
+	  olsr_printf(1, "Not able to find rate for WLAN interface %s\n", ifname);
+	  return WEIGHT_WLAN_11MB;
+	}
+      
+      olsr_printf(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
+
       //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
       //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
       //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
@@ -708,40 +684,82 @@ calculate_if_metric(char *ifname)
     }
   else
     {
+      /* Ethernet */
       /* Mii wizardry */
       struct ifreq ifr;
       struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-      mii->reg_num = MII_BMSR;
+      int bmcr;
       memset(&ifr, 0, sizeof(ifr));
       strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-      printf("Ethernet device assumed. Trying to get configuration...\n");      
       if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
 	  olsr_printf(1, "SIOCGMIIPHY on '%s' failed: %s\n",
 		      ifr.ifr_name, strerror(errno));
-	//return WEIGHT_ETHERNET_DEFAULT;
+	return WEIGHT_ETHERNET_DEFAULT;
       }
+
+      mii->reg_num = MII_BMCR;
       if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
 	olsr_printf(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
 		    strerror(errno));
-	//return WEIGHT_ETHERNET_DEFAULT;
+	return WEIGHT_ETHERNET_DEFAULT;
       }
+      bmcr = mii->val_out;
 
+
+      olsr_printf(1, "%s: ", ifr.ifr_name);
       olsr_printf(1, "%s Mbit, %s duplex\n",
-		  (mii->val_out & MII_BMCR_100MBIT) ? "100" : "10",
-		  (mii->val_out & MII_BMCR_DUPLEX) ? "full" : "half");
-
-
+		  (bmcr & MII_BMCR_100MBIT) ? "100" : "10",
+		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
+    
+      is_if_link_up(ifname);
 
       if(mii->val_out & MII_BMCR_100MBIT)
 	return WEIGHT_ETHERNET_100MB;
       else
 	return WEIGHT_ETHERNET_10MB;
-      /* Ethernet */
-      //WEIGHT_ETHERNET_10MB,     /* Ethernet 10Mb  */
-      //WEIGHT_ETHERNET_100MB,    /* Ethernet 100Mb */
       //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
+
+    }
+}
+
+
+olsr_bool
+is_if_link_up(char *ifname)
+{
+  if(check_wireless_interface(ifname))
+    {
+      /* No link checking on wireless devices */
+      return OLSR_TRUE;
+    }
+  else
+    {
+      /* Mii wizardry */
+      struct ifreq ifr;
+      struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
+      int bmsr;
+      memset(&ifr, 0, sizeof(ifr));
+      strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+
+      if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+	if (errno != ENODEV)
+	  olsr_printf(1, "SIOCGMIIPHY on '%s' failed: %s\n",
+		      ifr.ifr_name, strerror(errno));
+	return WEIGHT_ETHERNET_DEFAULT;
+      }
+      mii->reg_num = MII_BMSR;
+      if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+	olsr_printf(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
+		    strerror(errno));
+	return WEIGHT_ETHERNET_DEFAULT;
+      }
+      bmsr = mii->val_out;
+
+      olsr_printf(1, "%s: ", ifr.ifr_name);
+      olsr_printf(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");      
+    
+      return (bmsr & MII_BMSR_LINK_VALID);
 
     }
 }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.7 2005/02/17 07:19:49 kattemat Exp $
+ * $Id: net_os.h,v 1.8 2005/02/17 19:47:10 kattemat Exp $
  */
 
 
@@ -101,5 +101,8 @@ calculate_if_metric(char *);
 
 int
 check_wireless_interface(char *);
+
+olsr_bool
+is_if_link_up(char *);
 
 #endif
