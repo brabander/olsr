@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.26 2004/11/12 22:11:54 kattemat Exp $
+ * $Id: defs.h,v 1.27 2004/11/17 19:21:41 kattemat Exp $
  *
  */
 
@@ -101,9 +101,6 @@ olsr_bool disp_pack_out;               /* display outgoing packet content? */
 
 int llinfo;
 
-olsr_bool inet_tnl_added; /* If Internet gateway tunnel is added */
-olsr_bool use_tunnel; /* Use Internet gateway tunneling */
-olsr_bool gw_tunnel; /* Work as Internet gateway */
 olsr_bool del_gws;
 
 /*
@@ -146,10 +143,6 @@ extern struct timeval hold_time_fwd;
 struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
 int minsize;
-
-
-extern struct ip_tunnel_parm ipt;
-extern union olsr_ip_addr tnl_addr; /* The gateway address if inet_tnl_added==1 */
 
 olsr_bool changes;                /* is set if changes occur in MPRS set */ 
 

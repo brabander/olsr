@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.c,v 1.9 2004/11/07 17:51:20 tlopatic Exp $
+ * $Id: routing_table.c,v 1.10 2004/11/17 19:21:42 kattemat Exp $
  *
  */
 
@@ -634,7 +634,7 @@ olsr_calculate_hna_routes()
 		  /* Fill struct */
 		  /* Net */
 		  COPY_IP(&new_rt->rt_dst, &tmp_net->A_network_addr);
-		  memcpy(&new_rt->rt_mask, &tmp_net->A_netmask, netmask_size);
+		  new_rt->rt_mask = tmp_net->A_netmask;
 		  /* Gateway */
 		  COPY_IP(&new_rt->rt_router, &tmp_rt->rt_router);
 		  /* Metric */
@@ -651,7 +651,7 @@ olsr_calculate_hna_routes()
 		  /* Fill struct */
 		  /* Net */
 		  COPY_IP(&new_rt->rt_dst, &tmp_net->A_network_addr);
-		  memcpy(&new_rt->rt_mask, &tmp_net->A_netmask, netmask_size);
+		  new_rt->rt_mask = tmp_net->A_netmask;
 		  /* Gateway */
 		  COPY_IP(&new_rt->rt_router, &tmp_rt->rt_router);
 		  /* Metric */

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: kernel_routes.h,v 1.7 2004/11/17 19:21:41 kattemat Exp $
  *
  */
 
@@ -45,12 +45,6 @@ olsr_ioctl_del_route(struct rt_entry *destination);
 int
 olsr_ioctl_del_route6(struct rt_entry *destination);
 
-
-int
-add_tunnel_route(union olsr_ip_addr *);
-
-int
-delete_tunnel_route(void);
 
 int
 delete_all_inet_gws(void);

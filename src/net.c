@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.20 2004/11/15 14:59:39 tlopatic Exp $
+ * $Id: net.c,v 1.21 2004/11/17 19:21:41 kattemat Exp $
  *
  */
 
@@ -291,11 +291,6 @@ net_output(struct interface *ifp)
       
       printf("\n");
     }
-
-  /*
-   *packet points to the same memory area as the *msg pointer
-   *used when building packets.
-   */
   
   if(olsr_cnf->ip_version == AF_INET)
     {

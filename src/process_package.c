@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.20 2004/11/10 14:53:21 tlopatic Exp $
+ * $Id: process_package.c,v 1.21 2004/11/17 19:21:41 kattemat Exp $
  *
  */
 
@@ -35,10 +35,6 @@
 #include "parser.h"
 #include "duplicate_set.h"
 #include "rebuild_packet.h"
-
-#ifdef linux 
-#include "linux/tunnel.h"
-#endif
 
 
 /**
@@ -462,28 +458,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
 
   while(hna_tmp)
     {
-#ifdef linux
-      /*
-       * Set up tunnel to Internet gateway
-       */
-      if((use_tunnel) && (olsr_cnf->ip_version == AF_INET) && (hna_tmp->net.v4 == 0))
-	{
-	  if(inet_tnl_added || gw_tunnel)
-	    {
-	      hna_tmp = hna_tmp->next;
-	      continue;
-	    }
-	  
-	  olsr_printf(1, "Internet gateway discovered! Setting up tunnel:\n");
-
-	  /* Set up tunnel endpoint */
-	  set_up_source_tnl(&main_addr, &message.originator, in_if->if_index); 
-	}
-      else
-#endif
-	{
-	  olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime); 
-	}
+      olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime); 
       
       hna_tmp = hna_tmp->next;
     }

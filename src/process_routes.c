@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.c,v 1.12 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: process_routes.c,v 1.13 2004/11/17 19:21:42 kattemat Exp $
  *
  */
 
@@ -27,10 +27,6 @@
 #include "defs.h"
 #include "olsr.h"
 #include "kernel_routes.h"
-
-#ifdef linux
-#include "linux/tunnel.h"
-#endif
 
 #ifdef WIN32
 #undef strerror
@@ -153,23 +149,8 @@ olsr_delete_all_kernel_routes()
   struct destination_n *delete_kernel_list=NULL;
   struct destination_n *tmp=NULL;
   union olsr_ip_addr *tmp_addr;
-#ifdef linux
-  olsr_u32_t tmp_tnl_addr;
-#endif
 
   olsr_printf(1, "Deleting all routes...\n");
-
-#ifdef linux
-  if(use_tunnel)
-    {
-      /* Delete Internet GW tunnel */
-      delete_tunnel_route();
-      /* Take down tunnel */
-      del_ip_tunnel(&ipt);
-      tmp_tnl_addr = 0;
-      set_up_gw_tunnel((union olsr_ip_addr *)&tmp_tnl_addr);
-    }
-#endif
 
   delete_kernel_list = olsr_build_update_list(hna_routes, old_hna);
 
@@ -367,7 +348,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		    
 	      if(error < 0) //print the error msg
 		{
-		  olsr_printf(1, "Add route: %s\n",strerror(errno));
+		  olsr_printf(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno));
 		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
 		}
 		    

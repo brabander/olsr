@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.39 2004/11/17 16:54:41 tlopatic Exp $
+ * $Id: main.c,v 1.40 2004/11/17 19:21:41 kattemat Exp $
  *
  */
 
@@ -38,10 +38,6 @@
 #include "apm.h"
 #include "link_layer.h"
 #include "net_os.h"
-
-#ifdef linux
-#include "linux/tunnel.h"
-#endif
 
 #ifdef WIN32
 #define close(x) closesocket(x)
@@ -402,17 +398,6 @@ main(int argc, char *argv[])
 	}
 
       /*
-       * Use Internet gateway tunneling?
-       */
-      if (strcmp(*argv, "-tnl") == 0) 
-	{
-	  argv++; argc--;
-	  use_tunnel = OLSR_TRUE;
-
-	  continue;
-	}
-
-      /*
        * IPv6 multicast addr
        */
       if (strcmp(*argv, "-multi") == 0) 
@@ -590,12 +575,6 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-#ifdef linux
-  /* Set up recieving tunnel if Inet gw */
-  if(use_tunnel && check_inet_gw())
-    set_up_gw_tunnel(&main_addr);
-#endif
-
   olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
 
   /* daemon mode */
@@ -716,11 +695,6 @@ set_default_values()
   dup_hold_time = DUP_HOLD_TIME;
 
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
-
-  /* Gateway tunneling */
-  use_tunnel = OLSR_FALSE;
-  inet_tnl_added = OLSR_FALSE;
-  gw_tunnel = OLSR_FALSE;
 
   llinfo = OLSR_FALSE;
   del_gws = OLSR_FALSE;
