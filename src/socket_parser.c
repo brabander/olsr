@@ -36,13 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.19 2005/02/23 21:06:08 spoggle Exp $
+ * $Id: socket_parser.c,v 1.20 2005/02/24 10:14:10 kattemat Exp $
  */
 
 #include <unistd.h>
 #include "socket_parser.h"
 #include "olsr.h"
 #include "defs.h"
+#include "net_os.h"
 
 #ifdef WIN32
 #undef EINTR
