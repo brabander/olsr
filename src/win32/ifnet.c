@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.20 2005/03/04 17:10:54 kattemat Exp $
+ * $Id: ifnet.c,v 1.21 2005/03/10 13:30:56 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -152,7 +152,7 @@ static int MiniIndexToGuid(char *Guid, int MiniIndex)
   {
     OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index)
 
-    if ((Walker->Index & 255) == MiniIndex)
+      if ((int)(Walker->Index & 255) == MiniIndex)
       break;
   }
 
@@ -378,15 +378,15 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct olsr_if *IntConf)
     return -1;
   }
 
-  for (TabIdx = 0; TabIdx < IfTable->dwNumEntries; TabIdx++)
+  for (TabIdx = 0; TabIdx < (int)IfTable->dwNumEntries; TabIdx++)
   {
     OLSR_PRINTF(5, "Index = %08x\n", (int)IfTable->table[TabIdx].dwIndex)
 
-    if ((IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
+      if ((int)(IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
       break;
   }
 
-  if (TabIdx == IfTable->dwNumEntries)
+  if (TabIdx == (int)IfTable->dwNumEntries)
   {
     fprintf(stderr, "No such interface: %s!\n", IntConf->name);
     return -1;
@@ -630,7 +630,7 @@ int chk_if_changed(struct olsr_if *IntConf)
     Res = 1;
   }
 
-  if (Int->int_mtu != IntRow.dwMtu)
+  if (Int->int_mtu != (int)IntRow.dwMtu)
   {
     OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu, (int)IntRow.dwMtu)
 
