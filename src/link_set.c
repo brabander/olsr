@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.55 2005/03/17 16:31:07 kattemat Exp $
+ * $Id: link_set.c,v 1.56 2005/03/17 16:37:27 kattemat Exp $
  */
 
 
@@ -807,7 +807,6 @@ olsr_time_out_link_set()
 static void
 olsr_time_out_hysteresis()
 {
-
   struct link_entry *tmp_link_set;
 
   if(link_set == NULL)
@@ -819,8 +818,6 @@ olsr_time_out_hysteresis()
     {
       if(TIMED_OUT(tmp_link_set->hello_timeout))
 	{
-	  int status;
-
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
 	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality)
 	  /* Update hello_timeout - NO SLACK THIS TIME */
@@ -830,11 +827,11 @@ olsr_time_out_hysteresis()
 	  olsr_process_hysteresis(tmp_link_set);
 	  
 	  /* update neighbor status */
-	  status = get_neighbor_status(&tmp_link_set->neighbor_iface_addr);
 
 
 	  /* Update neighbor */
-	  update_neighbor_status(tmp_link_set->neighbor, status);
+	  update_neighbor_status(tmp_link_set->neighbor, 
+				 get_neighbor_status(&tmp_link_set->neighbor_iface_addr));
 
 	  /* Update seqno - not mentioned in the RFC... kind of a hack.. */
 	  tmp_link_set->olsr_seqno++;
