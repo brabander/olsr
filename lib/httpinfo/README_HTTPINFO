@@ -56,9 +56,13 @@ If running olsrd 0.4.8, the plugin will not be able
 to display the link set. Use CVs version of olsrd
 if you need this functionallity.
 
-The plugin should now compile on windows as well.
-Do:
+The plugin should now compile on windows and FreeBSD
+as well.
+To compile in windows:
 make OS=win32
+to compile in FreeBSD:
+gmake OS=fbsd
+
 Hey - this is my first port of anything to windows :-)
 
 installation:
