@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.46 2004/11/21 10:50:52 kattemat Exp $
+ * $Id: main.c,v 1.47 2004/11/28 21:23:53 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -456,6 +456,10 @@ main(int argc, char *argv[])
       olsr_exit(__func__, EXIT_FAILURE);
     }
 
+  /*
+   * Set configuration for command-line specified interfaces
+   */
+  set_default_ifcnfs(olsr_cnf->interfaces, default_ifcnf);
 
   /* Sanity check configuration */
   if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
@@ -464,11 +468,6 @@ main(int argc, char *argv[])
       fprintf(stderr, "Bad configuration!\n");
       olsr_exit(__func__, EXIT_FAILURE);      
     }
-
-  /*
-   * Set configuration for command-line specified interfaces
-   */
-  set_default_ifcnfs(olsr_cnf->interfaces, default_ifcnf);
 
   /*
    * Print configuration 
