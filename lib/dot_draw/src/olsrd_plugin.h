@@ -57,7 +57,7 @@
  *****************************************************************************/
 
 #define PLUGIN_NAME    "OLSRD dot draw plugin"
-#define PLUGIN_VERSION "0.1"
+#define PLUGIN_VERSION "0.2"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 1
