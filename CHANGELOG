@@ -1,7 +1,40 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.11 2004/11/06 15:24:19 kattemat Exp $
+$Id: CHANGELOG,v 1.12 2004/11/09 00:05:41 tlopatic Exp $
 
 0.4.8 ---------------------------------------------------------------------
+
+LINK QUALITY DETECTION
+
+We can now determine the packet loss on a link by looking at the serial
+numbers of the OLSR messages received from a neighbour. This tells us how
+many packets get through from our neighbour to us. We use a new extended
+kind of HELLO messages (LQ_HELLO messages, LQ = link quality) to broadcast
+the link quality that we have determined on our end of the link to our
+neighbours. So do our neighbours, and we as well as they end up with an
+idea of how good the link is in both directions. From the LQ_HELLOs we
+also learn the link quality between our neighbours and our two-hop neigh-
+bours. In this way we can select those neighbours as MPRs that have the
+best links to our two-hop neighbours. To distribute the link quality
+throughout the network, we use a new extended version of TC messages
+(LQ_TC messages). They contain the qualities at both ends of each of our
+links. Nodes can then run Dijkstra's algorithm to find a path between
+themselves and other nodes that minimizes the packet loss.
+
+If the newly introduced "LinkQualityLevel" is set to zero in the
+configuration file, link quality is not used and the daemon behaves as
+before, i.e. as specified by the OLSR RFC. If this parameter is set
+to 1, LQ_HELLOs and LQ_TCs are used instead of HELLOs and TCs, link
+quality is measured and MPRs are selected based on the link qualities.
+If this parameter is set to 2, the routing table is additionally
+calculated based on the link qualities.
+
+Setting "LinkQualityLevel" to a non-zero value BREAKS COMPATIBILITY. You
+will then not be able to participate in RFC-conformant OLSR networks
+any longer. This is because we use LQ_HELLOs and LQ_TCs instead of HELLOs
+and TCs in this case.
+
+It's best practice to set "LinkQualityLevel" to the same value on all
+nodes in a network.
 
 NEW CONFIGFILE PARSER/FORMAT/SCHEME
 
