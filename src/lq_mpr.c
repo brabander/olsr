@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.6 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.7 2004/11/29 19:29:28 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -49,7 +49,7 @@ void olsr_calculate_lq_mpr(void)
 {
   struct neighbor_2_entry *neigh2;
   struct neighbor_list_entry *walker;
-  int i;
+  int i, k;
   struct neighbor_entry *neigh;
   double best;
   olsr_bool mpr_changes = OLSR_FALSE;
@@ -98,28 +98,49 @@ void olsr_calculate_lq_mpr(void)
           if (neigh != NULL && neigh->status == SYM)
             continue;
 
-          // find the connecting 1-hop neighbour with the
-          // best total link quality
+          // find the connecting 1-hop neighbours with the
+          // best total link qualities
 
-          neigh = NULL;
-          best = -1.0;
+          // mark all 1-hop neighbours as not selected
 
           for (walker = neigh2->neighbor_2_nblist.next;
                walker != &neigh2->neighbor_2_nblist;
                walker = walker->next)
-            if (walker->neighbor->status == SYM &&
-                walker->path_link_quality > best)
-              {
-                neigh = walker->neighbor;
-                best = walker->path_link_quality;
-              }
+            walker->neighbor->skip = OLSR_FALSE;
 
-          if (neigh != NULL)
+          for (k = 0; k < olsr_cnf->mpr_coverage; k++)
             {
-              neigh->is_mpr = OLSR_TRUE;
+              // look for the best 1-hop neighbour that we haven't
+              // yet selected
+
+              neigh = NULL;
+              best = -1.0;
+
+              for (walker = neigh2->neighbor_2_nblist.next;
+                   walker != &neigh2->neighbor_2_nblist;
+                   walker = walker->next)
+                if (walker->neighbor->status == SYM &&
+                    !walker->neighbor->skip &&
+                    walker->path_link_quality > best)
+                  {
+                    neigh = walker->neighbor;
+                    best = walker->path_link_quality;
+                  }
+
+              if (neigh != NULL)
+                {
+                  neigh->is_mpr = OLSR_TRUE;
+                  neigh->skip = OLSR_TRUE;
           
-              if (neigh->is_mpr != neigh->was_mpr)
-                mpr_changes = OLSR_TRUE;
+                  if (neigh->is_mpr != neigh->was_mpr)
+                    mpr_changes = OLSR_TRUE;
+                }
+
+              // no neighbour found => the requested MPR coverage cannot
+              // be satisfied => stop
+
+              else
+                break;
             }
         }
     }

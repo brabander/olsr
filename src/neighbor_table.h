@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.h,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: neighbor_table.h,v 1.9 2004/11/29 19:29:28 tlopatic Exp $
  */
 
 
@@ -64,6 +64,9 @@ struct neighbor_entry
   olsr_u8_t                    willingness;
   olsr_bool                    is_mpr;
   olsr_bool                    was_mpr; /* Used to detect changes in MPR */
+#if defined USE_LINK_QUALITY
+  olsr_bool                    skip;
+#endif
   int                          neighbor_2_nocov;
   int                          linkcount;
   struct neighbor_2_list_entry neighbor_2_list; 
