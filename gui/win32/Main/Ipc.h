@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Ipc.h,v 1.4 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: Ipc.h,v 1.5 2004/12/05 20:37:18 tlopatic Exp $
  */
 
 #if !defined TL_IPC_H
@@ -46,8 +46,8 @@
 #define MSG_TYPE_OLSR_TC 2
 #define MSG_TYPE_OLSR_MID 3
 #define MSG_TYPE_OLSR_HNA 4
-#define MSG_TYPE_OLSR_LQ_HELLO 5
-#define MSG_TYPE_OLSR_LQ_TC 6
+#define MSG_TYPE_OLSR_LQ_HELLO 201
+#define MSG_TYPE_OLSR_LQ_TC 202
 
 #define MSG_TYPE_IPC_ROUTE 11
 #define MSG_TYPE_IPC_CONFIG 12
