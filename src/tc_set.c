@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.13 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: tc_set.c,v 1.14 2004/11/21 13:55:21 kattemat Exp $
  */
 
 
@@ -432,7 +432,6 @@ olsr_print_tc_table()
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
   char *fstr;
-  double lq, ilq;
   
   olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
@@ -463,15 +462,14 @@ olsr_print_tc_table()
       while(dst_entry != &entry->destinations)
       {
 #if defined USE_LINK_QUALITY
-        lq = dst_entry->link_quality;
-        ilq = dst_entry->inverse_link_quality;
-#else
-        lq = 0.0;
-        ilq = 0.0;
-#endif
         olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
                     olsr_ip_to_string(&dst_entry->T_dest_addr),
                     dst_entry->link_quality, dst_entry->inverse_link_quality);
+#else
+        olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
+                    olsr_ip_to_string(&dst_entry->T_dest_addr),
+                    0, 0);
+#endif
 
         dst_entry = dst_entry->next;
       }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.28 2004/11/21 13:45:50 kattemat Exp $
+ * $Id: olsr.c,v 1.29 2004/11/21 13:55:21 kattemat Exp $
  */
 
 /**
@@ -262,7 +262,9 @@ olsr_process_changes()
             }
         }
 
+#ifdef USE_LINK_QUALITY
       olsr_print_link_set();
+#endif
       olsr_print_neighbor_table();
     }
 
