@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.27 2005/01/03 19:00:01 kattemat Exp $
+ * $Id: net.c,v 1.28 2005/02/03 20:38:55 kattemat Exp $
  */
 
 #include "net.h"
@@ -63,6 +63,8 @@ struct olsr_netbuf
 
 
 static struct olsr_netbuf *netbufs[MAX_IFS];
+
+static char ipv6_buf[100]; /* for address coversion */
 
 /**
  * Create a outputbuffer for the given interface. This
@@ -657,7 +659,7 @@ ip_to_string(olsr_u32_t *address)
  *Converts the 32bit olsr_u32_t datatype to
  *a char array.
  *
- *<b>NON REENTRANT!!!!</b>
+ *<b>NON REENTRANT</b>
  *
  *@param addr6 the address to "convert"
  *@return a char pointer to the string containing the IP

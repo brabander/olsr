@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.33 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: defs.h,v 1.34 2005/02/03 20:38:55 kattemat Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -74,8 +74,6 @@
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IP_HDRSIZE          28
 
-#define OLSR_SELECT_TIMEOUT     2       /* The timeout for the main select loop */
-
 #define MAX_IFS                 32
 
 
@@ -104,8 +102,6 @@ clock_t now_times;              /* current idea of times(2) reported uptime */
 struct timeval now;		/* current idea of time */
 struct tm *nowtm;		/* current idea of time (in tm) */
 
-char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
-
 olsr_bool disp_pack_in;               /* display incoming packet content? */
 olsr_bool disp_pack_out;               /* display outgoing packet content? */
 
@@ -132,14 +128,12 @@ union olsr_ip_addr main_addr;
 /*
  * OLSR UPD port
  */
-
 int olsr_udp_port;
 
 /* The socket used for all ioctls */
 int ioctl_s;
 
 /* routing socket */
-
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
 int rts;
 #endif
@@ -147,10 +141,6 @@ int rts;
 float max_tc_vtime;
 
 clock_t fwdtimer[MAX_IFS];	/* forwarding timer */
-
-extern struct timeval hold_time_fwd;
-
-struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
 int minsize;
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.14 2005/01/31 21:28:55 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.15 2005/02/03 20:38:55 kattemat Exp $
  */
 
 
@@ -47,6 +47,10 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+
+
+static struct sockaddr_in6 null_addr6; /* Address used as Originator Address IPv6 */
 
 /**
  *Insert a route in the kernel routing table

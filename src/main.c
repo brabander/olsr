@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.59 2005/01/29 23:45:26 kattemat Exp $
+ * $Id: main.c,v 1.60 2005/02/03 20:38:55 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -709,7 +709,6 @@ set_default_values()
 {
 
   memset(&main_addr, 0, sizeof(union olsr_ip_addr));
-  memset(&null_addr6, 0, sizeof (union olsr_ip_addr));
 
   exit_value = EXIT_SUCCESS; 
   /* If the application exits by signal it is concidered success,
