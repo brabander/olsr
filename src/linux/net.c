@@ -344,6 +344,11 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
     }
 #endif
 
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
+    {
+      perror("SO_REUSEADDR failed");
+      return (-1);
+    }
 
 
 
@@ -450,6 +455,13 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
 
 
 #endif
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
+    {
+      perror("SO_REUSEADDR failed");
+      return (-1);
+    }
+
 
   /*
    * WHEN USING KERNEL 2.6 THIS MUST HAPPEN PRIOR TO THE PORT BINDING!!!!
