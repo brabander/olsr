@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.4 2005/01/30 18:00:16 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.5 2005/01/30 18:06:28 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -48,6 +48,33 @@ int ipc_connected;
 
 int
 ipc_send(char *, int);
+
+#ifdef WIN32
+
+static char *inet_ntop4(const unsigned char *src, char *dst, int size)
+{
+  static const char fmt[] = "%u.%u.%u.%u";
+  char tmp[sizeof "255.255.255.255"];
+
+  if (sprintf(tmp, fmt, src[0], src[1], src[2], src[3]) > size)
+    return (NULL);
+
+  return strcpy(dst, tmp);
+}
+
+char *inet_ntop(int af, void *src, char *dst, int size)
+{
+  switch (af)
+  {
+  case AF_INET:
+    return (inet_ntop4(src, dst, size));
+
+  default:
+    return (NULL);
+  }
+}
+
+#endif
 
 /**
  *Do initialization here

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.4 2004/11/30 17:04:45 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.5 2005/01/30 18:06:28 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -82,13 +82,21 @@
 /* types */
 #include <sys/types.h>
 
+#ifndef WIN32
 typedef u_int8_t        olsr_u8_t;
 typedef u_int16_t       olsr_u16_t;
 typedef u_int32_t       olsr_u32_t;
 typedef int8_t          olsr_8_t;
 typedef int16_t         olsr_16_t;
 typedef int32_t         olsr_32_t;
-
+#else
+typedef unsigned char olsr_u8_t;
+typedef unsigned short olsr_u16_t;
+typedef unsigned int olsr_u32_t;
+typedef char olsr_8_t;
+typedef short olsr_16_t;
+typedef int olsr_32_t;
+#endif
 
 
 /*

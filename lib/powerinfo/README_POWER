@@ -17,6 +17,14 @@ port 8888 on the local machine.
 Feel free to use this as a framework for new 
 plugins! That's what it is intended to be used for.
 
+PORTABILITY
+
+The plugin compiles for GNU/Linux, FreeBSD and
+win32, but the APM interface only works on APM/ACPI 
+enabled GNU/Linux systems. But since this plugin
+is ment to be a startingpoint for new plugins, it
+has been "ported" to the other OSes.
+
 WHAT IS IT?
 
 This code compiles as a dynamic loadable library -
