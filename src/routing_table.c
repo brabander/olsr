@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.14 2005/01/22 12:25:25 tlopatic Exp $
+ * $Id: routing_table.c,v 1.15 2005/02/01 20:27:57 kattemat Exp $
  */
 
 
@@ -65,6 +65,9 @@ olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
 
 struct rt_entry *
 olsr_check_for_lower_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+
+static olsr_bool
+two_hop_neighbor_reachable(struct neighbor_2_list_entry *);
 
 /* End:
  * Prototypes for internal functions 
@@ -256,7 +259,7 @@ olsr_fill_routing_table_with_neighbors()
 	      while(addrs2!=NULL)
 		{
 #ifdef DEBUG
-		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs->alias));
+		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias));
 #endif
 		  /* New in 0.4.6 */
 		  new_route_entry = olsr_insert_routing_table(&addrs2->alias, get_neighbor_nexthop(&addrs2->alias), 1);
@@ -269,6 +272,30 @@ olsr_fill_routing_table_with_neighbors()
 
 
   return 1;
+}
+
+
+/**
+ * Check if a two hop neighbor is reachable trough
+ * a one hop neighbor with willingness != WILL_NEVER
+ *
+ * @return OLSR_TRUE if reachable OLSR_FALSE if not
+ */
+static olsr_bool
+two_hop_neighbor_reachable(struct neighbor_2_list_entry *neigh_2_list)
+{
+  struct neighbor_list_entry *neighbors;
+
+  for(neighbors = neigh_2_list->neighbor_2->neighbor_2_nblist.next;
+      neighbors != &neigh_2_list->neighbor_2->neighbor_2_nblist;
+      neighbors = neighbors->next)
+    {
+      if((neighbors->neighbor->status != NOT_NEIGH) &&
+	 (neighbors->neighbor->willingness != WILL_NEVER))
+	return OLSR_TRUE;
+    }
+
+  return OLSR_FALSE;  
 }
 
 
@@ -307,11 +334,9 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 	      neigh_2_list != &neighbor->neighbor_2_list;
 	      neigh_2_list = neigh_2_list->next)
 	    {
-	      olsr_bool neighbor_ok;
 	      union olsr_ip_addr *n2_addr;
 	      static struct mid_address addrs;
 	      struct mid_address *addrsp;
-	      struct neighbor_list_entry *neighbors;
 	      
 	      n2_addr = &neigh_2_list->neighbor_2->neighbor_2_addr;
 	      
@@ -323,22 +348,7 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 		  continue;
 		}	    
 
-	      /*
-	       * Neighbor is only added if avalible trough
-	       * a 1 hop neighbor with willingness != WILL_NEVER
-	       */
-	      neighbor_ok = OLSR_FALSE;
-
-	      for(neighbors = neigh_2_list->neighbor_2->neighbor_2_nblist.next;
-		  neighbors != &neigh_2_list->neighbor_2->neighbor_2_nblist;
-		  neighbors = neighbors->next)
-		{
-		  if((neighbors->neighbor->status != NOT_NEIGH) &&
-		     (neighbors->neighbor->willingness != WILL_NEVER))
-		    neighbor_ok = OLSR_TRUE;
-		}
-
-	      if(!neighbor_ok)
+	      if(!two_hop_neighbor_reachable(neigh_2_list))
 		{
 		  olsr_printf(1, "Two hop neighbor %s not added - no one hop neighbors.\n",
 			      olsr_ip_to_string(n2_addr));
@@ -378,7 +388,7 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 
     }
 
-  return(list_destination_n);
+  return list_destination_n;
 }
 
 
