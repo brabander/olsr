@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.50 2005/03/31 04:43:55 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.51 2005/03/31 17:18:47 kattemat Exp $
  */
 
 /*
@@ -82,7 +82,7 @@ static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, A
 
 #define MAX_HTTPREQ_SIZE 1024 * 10
 
-#define DEFAULT_TCP_PORT 8080
+#define DEFAULT_TCP_PORT 1978
 
 #define HTML_BUFSIZE 1024*75
 
