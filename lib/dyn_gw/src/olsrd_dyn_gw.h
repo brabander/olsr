@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.h,v 1.9 2004/12/21 13:46:51 kattemat Exp $
+ * $Id: olsrd_dyn_gw.h,v 1.10 2005/02/19 17:56:05 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_TEST
@@ -50,9 +50,6 @@
 
 #define PROCENTRY_ROUTE "/proc/net/route"
 
-//union olsr_ip_addr gw_net;
-//union hna_netmask gw_netmask;
-
 /* Timeout function to register with the scheduler */
 void
 olsr_timeout(void);
@@ -61,9 +58,5 @@ olsr_timeout(void);
 /* Event function to register with the scheduler */
 void
 olsr_event_doing_hna(void);
-
-
-
-
 
 #endif

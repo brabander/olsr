@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.10 2005/01/30 14:57:35 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.11 2005/02/19 17:56:05 kattemat Exp $
  */
 
 #ifndef _OLSRD_PLUGIN_DEFS
@@ -52,7 +52,7 @@
 #include <math.h>
 
 #include "olsr_plugin_io.h"
-
+#include "olsr_protocol.h"
 
 #define PLUGIN_NAME    "OLSRD dynamic gateway plugin"
 #define PLUGIN_VERSION "0.4"
@@ -60,47 +60,7 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
 
-
-
-
-/****************************************************************************
- *           Various datastructures and definitions from olsrd              *
- ****************************************************************************/
-
-/*
- * TYPES SECTION
- */
-
-/* types */
-#include <sys/types.h>
-
-#ifndef WIN32
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-#else
-typedef unsigned char olsr_u8_t;
-typedef unsigned short olsr_u16_t;
-typedef unsigned int olsr_u32_t;
-typedef char olsr_8_t;
-typedef short olsr_16_t;
-typedef int olsr_32_t;
-#endif
-
-
-/*
- * VARIOUS DEFINITIONS
- */
-
-union olsr_ip_addr
-{
-  olsr_u32_t v4;
-  struct in6_addr v6;
-};
-
+/* hna_netmask (declared in packet.h) */
 union hna_netmask
 {
   olsr_u32_t v4;
