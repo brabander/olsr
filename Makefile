@@ -19,7 +19,7 @@ SRCS=	src/interfaces.c src/parser.c src/build_msg.c \
 	src/rebuild_packet.c src/plugin_loader.c src/plugin.c \
 	src/linux/net.c src/linux/apm.c src/linux/tunnel.c \
 	src/linux/kernel_routes.c src/linux/link_layer.c \
-	src/linux/ifnet.c
+	src/linux/ifnet.c src/linux/log.c
 
 OBJS=	src/interfaces.o src/parser.o src/build_msg.o \
 	src/scheduler.o src/main.o src/two_hop_neighbor_table.o \
@@ -33,7 +33,7 @@ OBJS=	src/interfaces.o src/parser.o src/build_msg.o \
 	src/rebuild_packet.o src/plugin_loader.o src/plugin.o \
 	src/linux/net.o src/linux/apm.o src/linux/tunnel.o \
 	src/linux/kernel_routes.o src/linux/link_layer.o \
-	src/linux/ifnet.o
+	src/linux/ifnet.o src/linux/log.o
 
 HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/olsr.h src/two_hop_neighbor_table.h olsr_plugin_io.h \
@@ -46,7 +46,7 @@ HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/local_hna_set.h src/hashing.h src/hysteresis.h \
 	src/generate_msg.h src/rebuild_packet.h src/plugin_loader.h \
 	src/plugin.h src/socket_parser.h src/ifnet.h\
-	src/kernel_routes.h \
+	src/kernel_routes.h src/log.h \
 	src/apm.h src/linux/tunnel.h src/scheduler.h \
 	src/linux/net.h	src/linux/link_layer.h
 
