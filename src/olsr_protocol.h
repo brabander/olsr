@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.8 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.9 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -131,13 +131,7 @@ union olsr_ip_addr
 #define TC_MESSAGE            2
 #define MID_MESSAGE           3
 #define HNA_MESSAGE           4
-#if !defined USE_LINK_QUALITY
 #define MAX_MESSAGE           4
-#else
-#define LQ_HELLO_MESSAGE      5
-#define LQ_TC_MESSAGE         6
-#define MAX_MESSAGE           6
-#endif
 
 /*
  *Link Types
@@ -282,28 +276,6 @@ struct hellomsg6
   struct hellinfo6   hell_info[1];
 };
 
-#if defined USE_LINK_QUALITY
-struct lq_hello_header
-{
-  olsr_u16_t reserved;
-  olsr_u8_t  htime;
-  olsr_u8_t  will;
-};
-
-struct lq_hello_info_header
-{
-  olsr_u8_t  link_code;
-  olsr_u8_t  reserved;
-  olsr_u16_t size;
-};
-
-struct lq_tc_header
-{
-  olsr_u16_t ansn;
-  olsr_u16_t reserved;
-};
-#endif
-
 /*
  * Topology Control packet
  */
@@ -437,10 +409,6 @@ struct olsrmsg
     struct tcmsg    tc;
     struct hnamsg   hna;
     struct midmsg   mid;
-#if defined USE_LINK_QUALITY
-    struct lq_hello_header lq_hello;
-    struct lq_tc_header    lq_tc;
-#endif
   } message;
 
 };
@@ -465,10 +433,6 @@ struct olsrmsg6
     struct tcmsg6    tc;
     struct hnamsg6   hna;
     struct midmsg6   mid;
-#if defined USE_LINK_QUALITY
-    struct lq_hello_header lq_hello;
-    struct lq_tc_header    lq_tc;
-#endif
   } message;
 
 };

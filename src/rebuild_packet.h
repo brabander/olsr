@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: rebuild_packet.h,v 1.6 2004/11/02 22:55:43 tlopatic Exp $
+ * $Id: rebuild_packet.h,v 1.7 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -46,14 +46,5 @@ hello_chgestruct(struct hello_message *, union olsr_message *);
 
 void
 tc_chgestruct(struct tc_message *, union olsr_message *, union olsr_ip_addr *);
-
-#if defined USE_LINK_QUALITY
-void
-lq_hello_chgestruct(struct lq_hello_message *deser, union olsr_message *ser);
-
-void
-lq_tc_chgestruct(struct lq_tc_message *deser, union olsr_message *ser,
-                 union olsr_ip_addr *from);
-#endif
 
 #endif

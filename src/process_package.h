@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.h,v 1.7 2004/11/02 22:55:43 tlopatic Exp $
+ * $Id: process_package.h,v 1.8 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -56,16 +56,5 @@ olsr_linking_this_2_entries(struct neighbor_entry *,struct neighbor_2_entry *, f
 
 int
 olsr_lookup_mpr_status(struct hello_message *, struct interface *);
-
-#if defined USE_LINK_QUALITY
-void
-olsr_process_received_lq_hello(union olsr_message *ser,
-                               struct interface *inif,
-                               union olsr_ip_addr *from);
-
-void
-olsr_process_received_lq_tc(union olsr_message *ser, struct interface *inif,
-                            union olsr_ip_addr *from);
-#endif
 
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.9 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: process_package.c,v 1.10 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -35,7 +35,6 @@
 #include "parser.h"
 #include "duplicate_set.h"
 #include "rebuild_packet.h"
-
 
 #ifdef linux 
 #include "linux/tunnel.h"
@@ -54,10 +53,8 @@ olsr_init_package_process()
   olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
 #else
-  olsr_parser_add_function(&olsr_process_received_lq_hello,
-                           LQ_HELLO_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_process_received_lq_tc,
-                           LQ_TC_MESSAGE, 1);
+  olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
+  olsr_parser_add_function(&olsr_input_lq_tc, LQ_TC_MESSAGE, 1);
 #endif
   olsr_parser_add_function(&olsr_process_received_mid, MID_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_hna, HNA_MESSAGE, 1);
@@ -643,24 +640,3 @@ olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
   /* Not found */
   return 0;
 }
-
-#if defined USE_LINK_QUALITY
-void
-olsr_process_received_lq_hello(union olsr_message *ser,
-                               struct interface *inif,
-                               union olsr_ip_addr *from)
-{
-  struct lq_hello_message deser;
-
-  lq_hello_chgestruct(&deser, ser);
-}
-
-void
-olsr_process_received_lq_tc(union olsr_message *ser, struct interface *inif,
-                            union olsr_ip_addr *from)
-{
-  struct lq_tc_message deser;
-
-  lq_tc_chgestruct(&deser, ser, from);
-}
-#endif

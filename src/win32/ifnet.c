@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: ifnet.c,v 1.7 2004/11/01 20:04:12 tlopatic Exp $
+ * $Id: ifnet.c,v 1.8 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -37,6 +37,12 @@
 #include "../scheduler.h"
 #include "../mantissa.h"
 
+#undef interface
+#undef TRUE
+#undef FALSE
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <iphlpapi.h>
 #include <iprtrmib.h>
 
@@ -522,11 +528,11 @@ void RemoveInterface(struct olsr_if *IntConf)
                               IntConf->cnf->tc_params.emission_interval,
                               0, NULL);
 #else
-  olsr_remove_scheduler_event(&generate_lq_hello, Int,
+  olsr_remove_scheduler_event(&olsr_output_lq_hello, Int,
                               IntConf->cnf->hello_params.emission_interval,
                               0, NULL);
 
-  olsr_remove_scheduler_event(&generate_lq_tc, Int,
+  olsr_remove_scheduler_event(&olsr_output_lq_tc, Int,
                               IntConf->cnf->tc_params.emission_interval,
                               0, NULL);
 #endif
@@ -808,11 +814,11 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
                                 IntConf->cnf->tc_params.emission_interval,
                                 0, NULL);
 #else
-  olsr_register_scheduler_event(&generate_lq_hello, New,
+  olsr_register_scheduler_event(&olsr_output_lq_hello, New,
                                 IntConf->cnf->hello_params.emission_interval,
                                 0, NULL);
 
-  olsr_register_scheduler_event(&generate_lq_tc, New,
+  olsr_register_scheduler_event(&olsr_output_lq_tc, New,
                                 IntConf->cnf->tc_params.emission_interval,
                                 0, NULL);
 #endif

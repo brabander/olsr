@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.25 2004/11/03 10:00:10 kattemat Exp $
+ * $Id: main.c,v 1.26 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -65,12 +65,13 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-
+#ifndef WIN32
 /*
  * Local variable declarations 
  */
 
 static pthread_t main_thread;
+#endif
 
 
 /**

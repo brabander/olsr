@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.11 2004/11/01 19:27:10 tlopatic Exp $
+ * $Id: generate_msg.c,v 1.12 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -37,9 +37,6 @@
 #include "mpr_selector_set.h"
 #include "duplicate_set.h"
 #include "neighbor_table.h"
-#if defined USE_LINK_QUALITY
-#include "link_set.h"
-#endif
 
 
 void
@@ -69,34 +66,6 @@ generate_tc(void *p)
       set_buffer_timer(ifn);
     }
 }
-
-#if defined USE_LINK_QUALITY
-void
-generate_lq_hello(void *para)
-{
-  struct lq_hello_message lq_hello;
-  struct interface *outif = (struct interface *)para;
-
-  olsr_build_lq_hello_packet(&lq_hello, outif);
-  lq_hello_build(&lq_hello, outif);
-      
-  if(net_output_pending(outif))
-    net_output(outif);
-}
-
-void
-generate_lq_tc(void *para)
-{
-  struct lq_tc_message lq_tc;
-  struct interface *outif = (struct interface *)para;
-
-  olsr_build_lq_tc_packet(&lq_tc);
-  lq_tc_build(&lq_tc, outif);
-
-  if(net_output_pending(outif) && TIMED_OUT(&fwdtimer[outif->if_nr]))
-    set_buffer_timer(outif);
-}
-#endif
 
 void
 generate_mid(void *p)
@@ -134,9 +103,6 @@ generate_tabledisplay(void *foo)
 {
   if(olsr_cnf->debug_level > 0) 
     {
-#if defined USE_LINK_QUALITY
-      olsr_print_link_set();
-#endif
       olsr_print_neighbor_table();
       
       if(olsr_cnf->debug_level > 1)

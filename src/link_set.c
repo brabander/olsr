@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.12 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: link_set.c,v 1.13 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -36,8 +36,6 @@
 #include "scheduler.h"
 
 #include "link_layer.h"
-
-
 
 /* Begin:
  * Prototypes for internal functions 
@@ -1014,5 +1012,54 @@ float olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
     }
 
   return res;
+}
+
+struct link_entry *update_lq_link_entry(union olsr_ip_addr *local,
+                                        union olsr_ip_addr *remote,
+                                        struct lq_hello_message *lq_hello,
+                                        struct interface *inif)
+{
+  struct lq_hello_neighbor *neigh;
+  int stat;
+  struct link_entry *link;
+  struct interface *inter;
+
+  link = add_new_entry(local, remote, &lq_hello->comm.orig,
+                       lq_hello->comm.vtime, lq_hello->htime);
+
+  olsr_get_timestamp((olsr_u32_t)(lq_hello->comm.vtime * 1000),
+                     &link->ASYM_time);
+
+  for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
+      for (inter = ifnet; inter != NULL; inter = inter->int_next) 
+        if(COMP_IP(&neigh->addr, &inter->ip_addr))
+          break;
+
+  stat = (neigh != NULL) ? neigh->link_type : UNSPEC_LINK;
+
+  if (stat == LOST_LINK)
+    {
+      link->SYM_time = now;
+      link->SYM_time.tv_sec -= 1;
+    }
+
+  else if (stat == SYM_LINK || stat == ASYM_LINK)
+    {
+      olsr_get_timestamp((olsr_u32_t)(lq_hello->comm.vtime * 1000),
+                         &link->SYM_time);
+      timeradd(&link->SYM_time, &hold_time_neighbor, &link->time);
+    }
+
+  if(timercmp(&link->time, &link->ASYM_time, <))
+    link->time = link->ASYM_time;
+
+  if(olsr_cnf->use_hysteresis)
+    olsr_process_hysteresis(link);
+
+  stat = get_neighbor_status(remote);
+
+  update_neighbor_status(link->neighbor, stat);
+
+  return link;
 }
 #endif

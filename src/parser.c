@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: parser.c,v 1.10 2004/10/20 17:11:33 tlopatic Exp $
+ * $Id: parser.c,v 1.11 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -244,16 +244,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   if (count < minsize)
     return;
-
-#if defined USE_LINK_QUALITY
-  // simulate packet loss
-
-  if (0 && random() % 100 < 40)
-    {
-      printf("*** PACKET LOST ***\n");
-      return;
-    }
-#endif
 
   if (ntohs(olsr->olsr_packlen) != size)
     {

@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: in.h,v 1.3 2004/10/19 13:58:46 tlopatic Exp $
+ * $Id: in.h,v 1.4 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -30,5 +30,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #undef interface
+#undef TRUE
+#undef FALSE
 
 #endif

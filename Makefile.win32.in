@@ -33,6 +33,7 @@ MAINOBJS =	src/build_msg.o \
 		src/cfgparser/oparse.o \
 		src/cfgparser/oscan.o \
 		src/cfgparser/olsrd_conf.o \
+		src/lq_packet.o \
 		src/win32/apm.o \
 		src/win32/compat.o \
 		src/win32/ifnet.o \

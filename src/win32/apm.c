@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: apm.c,v 1.5 2004/10/19 13:58:46 tlopatic Exp $
+ * $Id: apm.c,v 1.6 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -29,9 +29,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#undef interface
+#undef TRUE
+#undef FALSE
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#undef interface
 
 extern int olsr_printf(int, char *, ...);
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.21 2004/11/03 10:00:10 kattemat Exp $
+ * $Id: defs.h,v 1.22 2004/11/03 18:19:54 tlopatic Exp $
  *
  */
 
@@ -31,7 +31,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
+#include <time.h>
 
 #include "log.h"
 #include "olsr_protocol.h"
@@ -39,6 +41,10 @@
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr.h" /* Everybody uses theese */
 #include "olsr_cfg.h"
+
+#if defined USE_LINK_QUALITY
+#include "lq_packet.h"
+#endif
 
 #define VERSION "0.4.8-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
