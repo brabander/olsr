@@ -29,7 +29,7 @@ address on multiple interfaces
 
 initially delete default routes      X       !        !      !
 
-recognize WLAN interfaces            X       X        !      !
+recognize WLAN interfaces            X       X        X      !
 
 willingness based on                 X       X        ?      ?
 battery power

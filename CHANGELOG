@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.28 2005/02/15 17:42:55 tlopatic Exp $
+$Id: CHANGELOG,v 1.29 2005/02/16 06:52:13 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -82,12 +82,16 @@ a neighbour interface would be multiplied by 0.5.
 
 MINOR UPDATES
 
+- WLAN devices are now detected in FreeBSD
 - First specified interfaces IP is used as main address.
 - Broadcastflag is not checked on interface if fixed broadcast is
   set in config.
 
 BUGFIXES
 
+- A bug in route addittion/removal that could lead to routes
+  using GWs beeing added before the actual route to the GW
+  was set up has been fixed.
 - A bug in the interface selection in route calculation has been
   fixed. New routes are no longer added prior to deleting old ones
   since this caused trouble.
