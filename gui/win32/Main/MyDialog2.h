@@ -1,5 +1,5 @@
 /*
- * $Id: MyDialog2.h,v 1.3 2004/09/15 11:18:41 tlopatic Exp $
+ * $Id: MyDialog2.h,v 1.4 2004/11/20 22:52:49 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -29,6 +29,9 @@
 
 #include "MyEdit.h"
 
+#define MAKELIB
+#include <olsr_cfg.h>
+
 class MyDialog2 : public CDialog
 {
 public:
@@ -37,31 +40,35 @@ public:
 	BOOL Create(CWnd *Parent);
 
 	int OpenConfigFile(CString);
-	int SaveConfigFile(CString);
+	int SaveConfigFile(CString, int);
 
 	CStringArray *Interfaces;
 	CStringArray *Addresses;
 	CStringArray *IsWlan;
 
+	struct olsrd_config *Conf;
+
 	//{{AFX_DATA(MyDialog2)
 	enum { IDD = IDD_DIALOG2 };
-	CButton	m_TunnelCheck;
+	CButton	m_EtxRadio2;
+	CButton	m_EtxRadio1;
+	CEdit	m_EtxWindowSize;
+	CButton	m_EtxCheck;
 	CButton	m_Ipv6Check;
 	CButton	m_InternetCheck;
 	CButton	m_HystCheck;
 	MyEdit	m_HystThresholdHigh;
 	MyEdit	m_HystThresholdLow;
 	MyEdit	m_HystScaling;
-	MyEdit	m_HnaMult;
-	MyEdit	m_MidMult;
+	MyEdit	m_HnaHold;
+	MyEdit	m_MidHold;
 	MyEdit	m_PollInt;
-	MyEdit	m_TcMult;
+	MyEdit	m_TcHold;
 	MyEdit	m_TcInt;
 	MyEdit	m_HnaInt;
 	MyEdit	m_MidInt;
-	MyEdit	m_HelloMult;
+	MyEdit	m_HelloHold;
 	MyEdit	m_HelloInt;
-	CEdit	m_ManualWindow;
 	CListCtrl	m_InterfaceList;
 	CStatic	m_DebugLevelText;
 	CSliderCtrl	m_DebugLevel;
@@ -83,6 +90,10 @@ protected:
 	afx_msg void OnOpenButton();
 	afx_msg void OnSaveButton();
 	afx_msg void OnResetButton();
+	afx_msg void OnEtxCheck();
+	afx_msg void OnEtxRadio1();
+	afx_msg void OnEtxRadio2();
+	afx_msg void OnKillfocusEtxWinSize();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -90,10 +101,6 @@ protected:
 
 	int DebugLevel;
 	void SetDebugLevel(int);
-
-	void GetInterfaceList(CString &);
-
-	void WriteParameter(CFile *, CString, CString);
 
 	void Reset(void);
 };

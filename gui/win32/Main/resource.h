@@ -38,16 +38,19 @@
 #define IDC_EDIT12                      1023
 #define IDC_EDIT13                      1024
 #define IDC_LIST4                       1025
+#define IDC_EDIT14                      1025
 #define IDC_LIST5                       1026
 #define IDC_LIST6                       1027
+#define IDC_RADIO1                      1029
+#define IDC_RADIO2                      1030
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        140
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1027
+#define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

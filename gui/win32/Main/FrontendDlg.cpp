@@ -1,5 +1,5 @@
 /*
- * $Id: FrontendDlg.cpp,v 1.5 2004/11/18 18:02:36 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.6 2004/11/20 22:52:49 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -769,14 +769,14 @@ int CFrontendDlg::StartOlsrd()
 
 	StoredTempFile = TempPath;
 
-	if (m_TabCtrl.m_Dialog2.SaveConfigFile(StoredTempFile) < 0)
+	if (m_TabCtrl.m_Dialog2.SaveConfigFile(StoredTempFile, 0) < 0)
 	{
 		AfxMessageBox("Cannot save temporary configuration file '" + 
 			StoredTempFile + "'.");
 		return -1;
 	}
 
-	CmdLine += " -f " + StoredTempFile + " -ipc";
+	CmdLine += " -f " + StoredTempFile;
 
 	if (ExecutePipe((const char *)CmdLine, &InWrite, &OutRead, &ShimProc) < 0)
 	{
@@ -806,7 +806,7 @@ int CFrontendDlg::StartOlsrd()
 		return -1;
 	}
 
-	for (Try = 0; Try < 10; Try++)
+	for (Try = 0; Try < 5; Try++)
 	{
 		if (::connect(SockHand, (struct sockaddr *)&Addr,
 			sizeof (struct sockaddr_in)) >= 0)
@@ -908,6 +908,9 @@ void CFrontendDlg::OnStartButton()
 
 	if (StartOlsrd() < 0)
 	{
+		m_TabCtrl.m_Dialog1.SetFrozen(0);
+		m_TabCtrl.m_Dialog1.AddOutputLine("");
+
 		AfxMessageBox("Cannot start OLSR server.");
 
 		m_StartButton.EnableWindow(TRUE);

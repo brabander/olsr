@@ -68,7 +68,7 @@ IDD_FRONTEND_DIALOG DIALOGEX 0, 0, 399, 289
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "olsr.org Switch 0.4.7"
+CAPTION "olsr.org Switch 0.4.8"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Tab1",IDC_TAB1,"SysTabControl32",0x0,7,7,383,256
@@ -97,6 +97,10 @@ BEGIN
                     WS_TABSTOP,7,19,103,76
     CONTROL         "Slider2",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS | 
                     TBS_BOTH | WS_TABSTOP,8,116,87,26
+    CONTROL         "Enable IP version 6",IDC_CHECK3,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,155,93,10
+    CONTROL         "Offer Internet connection",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,171,93,10
     EDITTEXT        IDC_EDIT1,189,7,26,12,ES_RIGHT
     EDITTEXT        IDC_EDIT2,299,7,26,12,ES_RIGHT
     EDITTEXT        IDC_EDIT3,189,23,26,12,ES_RIGHT
@@ -105,26 +109,25 @@ BEGIN
     EDITTEXT        IDC_EDIT10,299,39,26,12,ES_RIGHT
     EDITTEXT        IDC_EDIT5,189,55,26,12,ES_RIGHT
     EDITTEXT        IDC_EDIT6,299,55,26,12,ES_RIGHT
-    EDITTEXT        IDC_EDIT7,189,71,26,12,ES_RIGHT
-    CONTROL         "Use hysteresis",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,134,89,60,10
-    EDITTEXT        IDC_EDIT11,189,102,26,12,ES_RIGHT
-    EDITTEXT        IDC_EDIT12,189,119,26,12,ES_RIGHT
-    EDITTEXT        IDC_EDIT13,189,135,26,12,ES_RIGHT
-    CONTROL         "Offer Internet connection",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,253,89,93,10
-    CONTROL         "Enable IP version 6",IDC_CHECK3,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,253,105,93,10
-    CONTROL         "Allow gateway tunneling",IDC_CHECK4,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,253,121,93,10
-    EDITTEXT        IDC_EDIT8,7,164,363,47,ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN | WS_VSCROLL
+    EDITTEXT        IDC_EDIT7,189,77,26,12,ES_RIGHT
+    CONTROL         "Enable hysteresis",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,134,101,74,10
+    EDITTEXT        IDC_EDIT12,189,115,26,12,ES_RIGHT
+    EDITTEXT        IDC_EDIT13,299,115,26,12,ES_RIGHT
+    EDITTEXT        IDC_EDIT11,189,131,26,12,ES_RIGHT
+    CONTROL         "Enable ETX link quality",IDC_CHECK4,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,132,155,92,10
+    CONTROL         "for MPR selection only",IDC_RADIO1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,132,171,87,10
+    CONTROL         "for MPR selection and routing",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,132,187,109,
+                    10
+    EDITTEXT        IDC_EDIT14,299,169,26,12,ES_RIGHT | ES_NUMBER
     PUSHBUTTON      "Open",IDC_BUTTON4,210,219,50,14
     PUSHBUTTON      "Save",IDC_BUTTON5,265,219,50,14
     PUSHBUTTON      "Reset",IDC_BUTTON1,320,219,50,14
     LTEXT           "Interface list",IDC_STATIC,7,8,39,8
     LTEXT           "Debug level",IDC_STATIC,7,105,39,8
-    LTEXT           "Manual additions",IDC_STATIC,7,153,54,8
     RTEXT           "HELLO interval:",IDC_STATIC,132,9,51,8
     RTEXT           "HELLO hold:",IDC_STATIC,251,9,42,8
     RTEXT           "MID interval:",IDC_STATIC,132,25,41,8
@@ -133,20 +136,21 @@ BEGIN
     RTEXT           "HNA hold:",IDC_STATIC,251,41,34,8
     RTEXT           "TC interval:",IDC_STATIC,132,57,37,8
     RTEXT           "TC hold:",IDC_STATIC,251,57,28,8
-    RTEXT           "Poll interval:",IDC_STATIC,132,73,39,8
+    RTEXT           "Poll interval:",IDC_STATIC,132,79,39,8
     LTEXT           "sec",IDC_STATIC,219,9,12,8
-    LTEXT           "x",IDC_STATIC,329,9,8,8
+    LTEXT           "sec",IDC_STATIC,329,9,12,8
     LTEXT           "sec",IDC_STATIC,219,25,12,8
-    LTEXT           "x",IDC_STATIC,329,25,8,8
+    LTEXT           "sec",IDC_STATIC,329,25,12,8
     LTEXT           "sec",IDC_STATIC,219,41,12,8
-    LTEXT           "x",IDC_STATIC,329,41,8,8
+    LTEXT           "sec",IDC_STATIC,329,41,12,8
     LTEXT           "sec",IDC_STATIC,219,57,12,8
-    LTEXT           "x",IDC_STATIC,329,57,8,8
-    LTEXT           "sec",IDC_STATIC,219,73,12,8
+    LTEXT           "sec",IDC_STATIC,329,57,12,8
+    LTEXT           "sec",IDC_STATIC,219,79,12,8
     CTEXT           "0",IDC_TEXT1,96,123,11,8
-    RTEXT           "Scaling:",IDC_STATIC,132,105,26,8
-    RTEXT           "Low threshold:",IDC_STATIC,131,121,47,8
-    RTEXT           "High threshold:",IDC_STATIC,131,137,48,8
+    RTEXT           "Scaling:",IDC_STATIC,132,133,26,8
+    RTEXT           "Low mark:",IDC_STATIC,132,117,34,8
+    RTEXT           "High mark:",IDC_STATIC,251,117,35,8
+    RTEXT           "Window size:",IDC_STATIC,251,171,43,8
 END
 
 IDD_DIALOG3 DIALOG DISCARDABLE  0, 0, 377, 240
