@@ -59,7 +59,8 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 2
 
-
+struct in_addr ipc_accept_ip;
+int ipc_port;
 
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
@@ -185,6 +186,12 @@ struct topo_dst
   olsr_u16_t T_seq;
   struct topo_dst *next;
   struct topo_dst *prev;
+#if defined USE_LINK_QUALITY
+  double link_quality;
+  double inverse_link_quality;
+  double saved_link_quality;
+  double saved_inverse_link_quality;
+#endif
 };
 
 
@@ -283,6 +290,9 @@ olsr_plugin_init();
 /* IPC initialization function */
 int
 plugin_ipc_init();
+
+int
+register_olsr_param(char *, char *);
 
 /* Destructor function */
 void

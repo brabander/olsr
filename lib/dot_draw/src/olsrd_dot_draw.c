@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dot_draw.c,v 1.6 2004/11/06 14:07:20 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.7 2004/11/30 09:45:16 kattemat Exp $
  *
  */
 
@@ -88,7 +88,7 @@ plugin_ipc_init()
       memset(&sin, 0, sizeof(sin));
       sin.sin_family = AF_INET;
       sin.sin_addr.s_addr = INADDR_ANY;
-      sin.sin_port = htons(2004);
+      sin.sin_port = htons(ipc_port);
       
       /* bind the socket to the port number */
       if (bind(ipc_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
@@ -130,7 +130,7 @@ ipc_action(int fd)
   else
     {
       addr = inet_ntoa(pin.sin_addr);
-      if(ntohl(pin.sin_addr.s_addr) != INADDR_LOOPBACK)
+      if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
 	{
 	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
 	  close(ipc_connection);
@@ -246,7 +246,6 @@ pcf_event(int changes_neighborhood,
 		}
 	      entry = entry->next;
 	    }
-	  
 	}
 
       /* HNA entries */

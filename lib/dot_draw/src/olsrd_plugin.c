@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.4 2004/11/06 14:07:20 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.5 2004/11/30 09:45:16 kattemat Exp $
  *
  */
 
@@ -82,6 +82,10 @@ my_init()
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
 
+  /* defaults for parameters */
+  ipc_port = 2004;
+  ipc_accept_ip.s_addr = htonl(INADDR_LOOPBACK);
+  
   return;
 }
 
@@ -103,6 +107,22 @@ my_fini()
   return;
 }
 
+int
+register_olsr_param(char *key, char *value)
+{
+  if(!strcmp(key, "port"))
+    {
+     ipc_port = atoi(value);
+     printf("(DOT DRAW) listening on port: %d\n", ipc_port);
+    }
+
+  if(!strcmp(key, "accept"))
+    {
+	inet_aton(value, &ipc_accept_ip);
+	printf("(DOT DRAW) accept only: %s\n", inet_ntoa(ipc_accept_ip));
+    }
+  return 1;
+}
 
 /**
  *Register needed functions and pointers
