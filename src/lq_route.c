@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.3 2004/11/08 01:29:19 tlopatic Exp $
+ * $Id: lq_route.c,v 1.4 2004/11/08 01:51:29 tlopatic Exp $
  *
  */
 
@@ -255,7 +255,7 @@ static void relax(struct dijk_vertex *vert)
     // edge's destination, then we've found a better path to
     // this destination
 
-    if (new_quality >= edge->dest->path_quality)
+    if (new_quality > edge->dest->path_quality)
     {
       edge->dest->path_quality = new_quality;
       edge->dest->prev = vert;
@@ -293,7 +293,7 @@ void olsr_calculate_lq_routing_table(void)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next)
       if (neigh->status == SYM)
-        add_vertex(&vertex_list, &neigh->neighbor_main_addr, 0.0);
+        add_vertex(&vertex_list, &neigh->neighbor_main_addr, -1.0);
 
   // add remaining vertices
 
@@ -302,13 +302,13 @@ void olsr_calculate_lq_routing_table(void)
     {
       // add source
 
-      add_vertex(&vertex_list, &tcsrc->T_last_addr, 0.0);
+      add_vertex(&vertex_list, &tcsrc->T_last_addr, -1.0);
 
       // add destinations of this source
 
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
            tcdst = tcdst->next)
-        add_vertex(&vertex_list, &tcdst->T_dest_addr, 0.0);
+        add_vertex(&vertex_list, &tcdst->T_dest_addr, -1.0);
     }
 
   // add edges to and from our neighbours
