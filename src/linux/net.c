@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.20 2005/02/17 19:47:10 kattemat Exp $
+ * $Id: net.c,v 1.21 2005/02/19 15:27:48 kattemat Exp $
  */
 
 
@@ -451,6 +451,13 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       return (-1);
     }
 
+#ifdef IPV6_V6ONLY
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) < 0) 
+    {
+      perror("setsockopt(IPV6_V6ONLY)");
+      syslog(LOG_ERR, "setsockopt(IPV6_V6ONLY): %m");
+    }
+#endif
 
 
   //#ifdef SO_BROADCAST
