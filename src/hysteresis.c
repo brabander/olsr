@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.11 2004/12/02 19:00:03 kattemat Exp $
+ * $Id: hysteresis.c,v 1.12 2004/12/03 06:37:38 kattemat Exp $
  */
 
 
@@ -193,7 +193,7 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
 			  olsr_ip_to_string(remote), link->L_link_quality);
 #endif
 	      if(link->L_link_quality < olsr_cnf->hysteresis_param.thr_low)
-		return;
+		break;
 
 	      link->olsr_seqno++;
 	    }
