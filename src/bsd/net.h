@@ -1,4 +1,3 @@
-
 /*
  * OLSR ad-hoc routing table management protocol
  * Copyright (C) 2004 Andreas Tønnesen (andreto@ifi.uio.no)
@@ -20,50 +19,28 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: log.c,v 1.3 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: net.h,v 1.1 2004/11/05 02:06:14 tlopatic Exp $
  *
  */
 
-/* 
- * System logging interface for GNU/Linux systems
- */
 
-#include "../log.h"
+
+#ifndef _OLSR_NET_LINUX
+#define _OLSR_NET_LINUX
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 #include <syslog.h>
-#include <stdarg.h>
+#include <netinet/in.h>
+#include "../olsr_protocol.h"
 
-void
-olsr_openlog(const char *ident)
-{
-  openlog(ident, LOG_PID | LOG_ODELAY, LOG_DAEMON);
-  setlogmask(LOG_UPTO(LOG_INFO));
+extern int
+olsr_printf(int, char *, ...);
 
-  return;
-}
-
-
-void
-olsr_syslog(int level, char *format, ...)
-{
-
-  int linux_level;
-  va_list arglist;
-
-  switch(level)
-    {
-    case(OLSR_LOG_INFO):
-      linux_level = LOG_INFO;
-      break;
-    case(OLSR_LOG_ERR):
-      linux_level = LOG_ERR;
-      break;
-    default:
-      return;
-    }
-
-  va_start(arglist, format);
-  vsyslog(linux_level, format, arglist);
-  va_end(arglist);
-
-  return;
-}
+#endif

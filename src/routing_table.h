@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.h,v 1.8 2004/11/02 21:14:12 kattemat Exp $
+ * $Id: routing_table.h,v 1.9 2004/11/05 02:06:14 tlopatic Exp $
  *
  */
 
@@ -59,8 +59,19 @@ struct destination_n
  */
 union olsr_kernel_route
 {
-  struct rtentry v4;
-  struct in6_rtmsg v6;
+  struct
+  {
+    struct sockaddr rt_dst;
+    struct sockaddr rt_gateway;
+    olsr_u32_t rt_metric;
+  } v4;
+
+  struct
+  {
+    struct in6_addr rtmsg_dst;
+    struct in6_addr rtmsg_gateway;
+    olsr_u32_t rtmsg_metric;
+  } v6;
 };
 
 

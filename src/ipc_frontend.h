@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.h,v 1.7 2004/11/03 20:54:47 kattemat Exp $
+ * $Id: ipc_frontend.h,v 1.8 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 /*
@@ -33,6 +33,8 @@
 #ifndef _OLSR_IPC
 #define _OLSR_IPC
 
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>

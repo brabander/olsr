@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.26 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: main.c,v 1.27 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
@@ -48,6 +48,9 @@ olsr_shutdown(int);
 #include "win32/tunnel.h"
 int __stdcall SignalHandler(unsigned long signal);
 void ListInterfaces(void);
+#elif defined __FreeBSD__
+static void
+olsr_shutdown(int);
 #else
 #       error "Unsupported system"
 #endif
@@ -65,7 +68,7 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-#ifndef WIN32
+#if !defined WIN32
 /*
  * Local variable declarations 
  */
@@ -132,7 +135,7 @@ main(int argc, char *argv[])
   nowtm = NULL;
   while (nowtm == NULL)
     {
-      nowtm = gmtime(&now.tv_sec);
+      nowtm = gmtime((time_t *)&now.tv_sec);
     }
     
   /* The port to use for OLSR traffic */
@@ -479,11 +482,19 @@ main(int argc, char *argv[])
    *socket for icotl calls
    */
   if ((ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0)) < 0) 
+
     {
       olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
-      close(ioctl_s);
       olsr_exit(__func__, 0);
     }
+
+#ifdef __FreeBSD__
+  if ((rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
+    {
+      olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
+      olsr_exit(__func__, 0);
+    }
+#endif
 
   /*
    *enable ip forwarding on host
@@ -580,7 +591,7 @@ main(int argc, char *argv[])
   if(olsr_cnf->open_ipc)
       ipc_init();
 
-#ifndef WIN32
+#if !defined WIN32 && !defined __FreeBSD__
   /* Initialize link-layer notifications */
   if(llinfo)
     init_link_layer_notification();
@@ -592,9 +603,11 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
+#ifndef __FreeBSD__
   /* Set up recieving tunnel if Inet gw */
   if(use_tunnel && check_inet_gw())
     set_up_gw_tunnel(&main_addr);
+#endif
 
   olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
 
@@ -688,6 +701,11 @@ olsr_shutdown(int signal)
 
   /* ioctl socket */
   close(ioctl_s);
+
+#ifdef __FreeBSD__
+  /* routing socket */
+  close(rts);
+#endif
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", SOFTWARE_VERSION);
 

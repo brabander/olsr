@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.10 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: process_package.c,v 1.11 2004/11/05 02:06:14 tlopatic Exp $
  *
  */
 
@@ -405,7 +405,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
 
   while(hna_tmp)
     {
-      
+#ifndef __FreeBSD__
       /*
        * Set up tunnel to Internet gateway
        */
@@ -423,6 +423,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
 	  set_up_source_tnl(&main_addr, &message.originator, in_if->if_index); 
 	}
       else
+#endif
 	{
 	  olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime); 
 	}

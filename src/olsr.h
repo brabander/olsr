@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.h,v 1.11 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: olsr.h,v 1.12 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
@@ -30,6 +30,7 @@
 #include "olsr_protocol.h"
 #include "interfaces.h"
 
+#include <sys/time.h>
 
 /**
  * Process changes functions

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.9 2004/11/03 20:54:47 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.10 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
@@ -43,6 +43,8 @@
 #define MSG_NOSIGNAL 0
 void 
 WinSockPError(char *);
+#elif defined __FreeBSD__
+#define MSG_NOSIGNAL 0
 #endif
 
 pthread_t accept_thread;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.14 2004/11/03 20:54:47 kattemat Exp $
+ * $Id: scheduler.c,v 1.15 2004/11/05 02:06:14 tlopatic Exp $
  *
  */
 
@@ -130,11 +130,11 @@ scheduler()
 
       /* Update the global timestamp */
       gettimeofday(&now, NULL);
-      nowtm = gmtime(&now.tv_sec);
+      nowtm = gmtime((time_t *)&now.tv_sec);
 
       while (nowtm == NULL)
 	{
-	  nowtm = gmtime(&now.tv_sec);
+	  nowtm = gmtime((time_t *)&now.tv_sec);
 	}
 
 

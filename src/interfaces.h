@@ -20,13 +20,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.11 2004/11/02 21:14:12 kattemat Exp $
+ * $Id: interfaces.h,v 1.12 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
 
 #ifndef _OLSR_INTERFACE
 #define _OLSR_INTERFACE
+
+#include <sys/socket.h>
 
 #include "olsr_protocol.h"
 

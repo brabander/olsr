@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.17 2004/10/20 19:43:04 kattemat Exp $
+ * $Id: net.c,v 1.18 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
@@ -410,6 +410,7 @@ join_mcast(struct interface *ifs, int sock)
   COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
   mcastreq.ipv6mr_interface = ifs->if_index;
 
+#if !defined __FreeBSD__
   olsr_printf(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(sock, 
@@ -422,6 +423,9 @@ join_mcast(struct interface *ifs, int sock)
       perror("Join multicast");
       return -1;
     }
+#else
+#warning implement IPV6_ADD_MEMBERSHIP
+#endif
 
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP

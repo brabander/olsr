@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.22 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: defs.h,v 1.23 2004/11/05 02:06:13 tlopatic Exp $
  *
  */
 
@@ -28,6 +28,8 @@
 
 /* Common includes */
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,6 +131,12 @@ int olsr_udp_port;
 
 /* The socket used for all ioctls */
 int ioctl_s;
+
+/* routing socket */
+
+#ifdef __FreeBSD__
+int rts;
+#endif
 
 float max_tc_vtime;
 

@@ -20,11 +20,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.17 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: ifnet.c,v 1.1 2004/11/05 02:06:14 tlopatic Exp $
  *
  */
 
 
+#ifdef linux
 /*
  *Wireless definitions for ioctl calls
  *(from linux/wireless.h)
@@ -38,7 +39,9 @@
 #define SIOCGIWMODE	0x8B07		/* get operation mode */
 #define SIOCSIWSENS	0x8B08		/* set sensitivity (dBm) */
 #define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
-
+#elif defined __FreeBSD__
+#define ifr_netmask ifr_addr
+#endif
 
 #include "interfaces.h"
 #include "ifnet.h"
@@ -50,10 +53,11 @@
 #include "generate_msg.h"
 #include "mantissa.h"
 #include <signal.h>
+#include <sys/types.h>
 #include <net/if.h>
 #include <net/if_arp.h>
+#include <netinet/in_systm.h>
 #include <netinet/ip.h>
-#include <asm/types.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -510,8 +514,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
   struct ifchgf *tmp_ifchgf_list;
+#ifdef linux
   int precedence = IPTOS_PREC(olsr_cnf->tos);
   int tos_bits = IPTOS_TOS(olsr_cnf->tos);
+#endif
 
   memset(&ifr, 0, sizeof(struct ifreq));
   strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);
@@ -741,7 +747,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input);
   
-  
+ #if defined linux 
   /* Set TOS */
   
   if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)
@@ -754,6 +760,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       perror("setsockopt(IP_TOS)");
       olsr_syslog(OLSR_LOG_ERR, "setsockopt(IP_TOS) error %m");
     }
+#endif
   
   /*
    *Initialize sequencenumber as a random 16bit value
@@ -839,7 +846,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 
 
 
-
+#ifdef linux
 /**
  *Check if a interface is wireless
  *Returns 1 if no info can be gathered
@@ -863,4 +870,11 @@ check_wireless_interface(struct ifreq *ifr)
     }
 
 }
+#else
+int check_wireless_interface(struct ifreq *ifr)
+{
+  return 1;
+}
+#endif
+
 
