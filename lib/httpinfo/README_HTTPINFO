@@ -20,7 +20,7 @@ if you need this functionallity.
 The plugin should now compile on windows as well.
 Do:
 make OS=win32
-
+Hey - this is my first port of anything to windows :-)
 
 installation:
 make
