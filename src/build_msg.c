@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.9 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: build_msg.c,v 1.10 2004/09/21 19:51:11 kattemat Exp $
  *
  */
 
@@ -260,17 +260,12 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   /* Set source(main) addr */
   COPY_IP(&m->v4.originator, &main_addr);
 
-  if(ifp->is_wireless)
-    m->v4.olsr_vtime = hello_vtime;
-  else
-    m->v4.olsr_vtime = hello_nw_vtime;
+  m->v4.olsr_vtime = ifp->is_wireless ? hello_vtime : hello_nw_vtime;
 
   /* Fill HELLO header */
   h->willingness = message->willingness; 
-  if(ifp->is_wireless)
-    h->htime = htime;
-  else
-    h->htime = htime_nw;
+  h->htime = ifp->is_wireless ? htime : htime_nw;
+
   memset(&h->reserved, 0, sizeof(olsr_u16_t));
   
 
@@ -308,16 +303,87 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		  sametype++;
 		  if (sametype == 1)
 		    {
+
+		      /*
+		       * If there is not enough room left 
+		       * for the data in tho outputbuffer
+		       * we must send a partial HELLO and
+		       * continue building the rest of the
+		       * data in a new HELLO message
+		       * Add ipsize in check since there is
+		       * no use sending just the type header
+		       */
+		      if((curr_size + 4 + ipsize) > remainsize)
+			{
+			  /* Complete the headers */
+			  m->v4.seqno = htons(get_msg_seqno());
+			  m->v4.olsr_msgsize = htons(curr_size);
+
+			  hinfo->size = (char *)haddr - (char *)hinfo;
+			  hinfo->size = ntohs(hinfo->size);
+			  
+			  /* Send partial packet */
+			  net_outbuffer_push(msg_buffer, curr_size);
+			  net_output(ifp);
+			  
+			  /* Reset size and pointers */
+			  remainsize = net_outbuffer_bytes_left();
+			  curr_size = 12; /* OLSR message header */
+			  curr_size += 4; /* Hello header */
+
+			  h = &m->v4.message.hello;
+			  hinfo = h->hell_info;
+			  haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
+			}
 		      memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
 		      hinfo->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
 		      //printf("(2)Setting neighbor link status: %x\n", hinfo->link_code);
+		      curr_size += 4; /* HELLO type section header */
 		    }
 
 #ifdef DEBUG
 		  olsr_printf(5, "\tLink status of %s: ", olsr_ip_to_string(&nb->address));
 		  olsr_printf(5, "%d\n", nb->link);
 #endif
+		  
+		  /*
+		   * If there is not enough room left 
+		   * for the data in tho outputbuffer
+		   * we must send a partial HELLO and
+		   * continue building the rest of the
+		   * data in a new HELLO message
+		   */
+		  if((curr_size + ipsize) > remainsize)
+		    {
+		      /* Complete the headers */
+		      m->v4.seqno = htons(get_msg_seqno());
+		      m->v4.olsr_msgsize = htons(curr_size);
+		      
+		      hinfo->size = (char *)haddr - (char *)hinfo;
+		      hinfo->size = ntohs(hinfo->size);
+		      
+		      /* Send partial packet */
+		      net_outbuffer_push(msg_buffer, curr_size);
+		      net_output(ifp);
+		      
+		      /* Reset size and pointers */
+		      remainsize = net_outbuffer_bytes_left();
+		      curr_size = 12; /* OLSR message header */
+		      curr_size += 4; /* Hello header */
+		      
+		      h = &m->v4.message.hello;
+		      hinfo = h->hell_info;
+		      haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
+		      
+		      /* Rebuild TYPE header */
+		      memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
+		      /* Set link and status for this group of neighbors (this is the first) */
+		      hinfo->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
+		      //printf("(2)Setting neighbor link status: %x\n", hinfo->link_code);
+		      curr_size += 4; /* HELLO type section header */
+		      
+		    }
 
 		  COPY_IP(haddr, &nb->address);
 
@@ -326,6 +392,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 		   *Point to next address
 		   */
 		  haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4];
+		  curr_size += ipsize; /* IP address added */
 
 		  //printf("\n2: %d\n\n", (char *)haddr - packet); 
 		  //printf("Ipsize: %d\n", ipsize);
@@ -349,10 +416,9 @@ hello_build4(struct hello_message *message, struct interface *ifp)
     } /* for i*/
      
   m->v4.seqno = htons(get_msg_seqno());
-  m->v4.olsr_msgsize = (char *)hinfo - (char *)m;
-  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
+  m->v4.olsr_msgsize = htons(curr_size);
   
-  net_outbuffer_push(msg_buffer, (char *)hinfo - (char *)m);
+  net_outbuffer_push(msg_buffer, curr_size);
 
   /*
    * Delete the list of neighbor messages.
@@ -428,17 +494,14 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   /* Set source(main) addr */
   COPY_IP(&m->v6.originator, &main_addr);
   m->v6.olsr_msgtype = HELLO_MESSAGE;
-  if(ifp->is_wireless)
-    m->v6.olsr_vtime = hello_vtime;
-  else
-    m->v6.olsr_vtime = hello_nw_vtime;
+
+  m->v6.olsr_vtime = ifp->is_wireless ? hello_vtime : hello_nw_vtime;
   
   /* Fill packet header */
   h6->willingness = message->willingness; 
-  if(ifp->is_wireless)
-    h6->htime = htime;
-  else
-    h6->htime = htime_nw;
+
+  h6->htime = ifp->is_wireless ? htime : htime_nw;
+
   memset(&h6->reserved, 0, sizeof(olsr_u16_t));
   
   
@@ -469,16 +532,77 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		  sametype++;
 		  if (sametype == 1)
 		    {
+		      if((curr_size + 4 + ipsize) > remainsize)
+			{
+			  /* Complete the headers */
+			  m->v6.seqno = htons(get_msg_seqno());
+			  m->v6.olsr_msgsize = htons(curr_size);
+
+			  hinfo6->size = (char *)haddr - (char *)hinfo6;
+			  hinfo6->size = ntohs(hinfo6->size);
+			  
+			  /* Send partial packet */
+			  net_outbuffer_push(msg_buffer, curr_size);
+			  net_output(ifp);
+			  
+			  /* Reset size and pointers */
+			  remainsize = net_outbuffer_bytes_left();
+			  curr_size = 24; /* OLSR message header */
+			  curr_size += 4; /* Hello header */
+			  
+			  h6 = &m->v6.message.hello;
+			  hinfo6 = h6->hell_info;
+			  haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
+			}
 		      memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
 		      /* Set link and status for this group of neighbors (this is the first) */
 		      hinfo6->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
 		      //printf("(2)Setting neighbor link status: %x\n", hinfo->link_code);
+		      curr_size += 4; /* HELLO type section header */
 		    }
 
 #ifdef DEBUG
 		  olsr_printf(5, "\tLink status of %s: ", olsr_ip_to_string(&nb->address));
 		  olsr_printf(5, "%d\n", nb->link);
 #endif
+
+		  /*
+		   * If there is not enough room left 
+		   * for the data in tho outputbuffer
+		   * we must send a partial HELLO and
+		   * continue building the rest of the
+		   * data in a new HELLO message
+		   */
+		  if((curr_size + ipsize) > remainsize)
+		    {
+		      /* Complete the headers */
+		      m->v6.seqno = htons(get_msg_seqno());
+		      m->v6.olsr_msgsize = htons(curr_size);
+		      
+		      hinfo6->size = (char *)haddr - (char *)hinfo6;
+		      hinfo6->size = ntohs(hinfo6->size);
+		      
+		      /* Send partial packet */
+		      net_outbuffer_push(msg_buffer, curr_size);
+		      net_output(ifp);
+		      
+		      /* Reset size and pointers */
+		      remainsize = net_outbuffer_bytes_left();
+		      curr_size = 24; /* OLSR message header */
+		      curr_size += 4; /* Hello header */
+		      
+		      h6 = &m->v6.message.hello;
+		      hinfo6 = h6->hell_info;
+		      haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
+		      
+		      /* Rebuild TYPE header */
+		      memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
+		      /* Set link and status for this group of neighbors (this is the first) */
+		      hinfo6->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
+		      //printf("(2)Setting neighbor link status: %x\n", hinfo->link_code);
+		      curr_size += 4; /* HELLO type section header */
+		      
+		    }
 
 		  COPY_IP(haddr, &nb->address);
 		  
@@ -487,7 +611,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 		   *Point to next address
 		   */
 		  haddr++;
-		  
+		  curr_size += ipsize; /* IP address added */ 
 		  //printf("\n2: %d\n\n", (char *)haddr - packet); 
 		  //printf("Ipsize: %d\n", ipsize);
 		  
@@ -510,10 +634,9 @@ hello_build6(struct hello_message *message, struct interface *ifp)
     } /* for i */
 
   m->v6.seqno = htons(get_msg_seqno());
-  m->v6.olsr_msgsize = (char *)hinfo6 - (char *)m;
-  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
+  m->v6.olsr_msgsize = htons(curr_size);
 
-  net_outbuffer_push(msg_buffer, (char *)hinfo6 - (char *)m);
+  net_outbuffer_push(msg_buffer, curr_size);
 
   /*
    * Delete the list of neighbor messages.
