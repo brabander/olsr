@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.38 2005/01/14 17:50:03 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.39 2005/01/22 00:12:57 kattemat Exp $
  */
 
 /*
@@ -1015,7 +1015,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   int size = 0;
   olsr_u8_t index;
   struct mid_entry *entry;
-  struct addresses *alias;
+  struct mid_address *alias;
 
   size += sprintf(&buf[size], "<h2>MID entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
@@ -1031,8 +1031,8 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 	  alias = entry->aliases;
 	  while(alias)
 	    {
-	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->address));
-	      alias = alias->next;
+	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->alias));
+	      alias = alias->next_alias;
 	    }
 	  size += sprintf(&buf[size], "</select>\n");
 

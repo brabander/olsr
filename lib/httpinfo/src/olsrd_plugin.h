@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.10 2005/01/16 20:17:24 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.11 2005/01/22 00:12:58 kattemat Exp $
  */
 
 /*
@@ -311,24 +311,30 @@ struct hna_entry
   struct hna_entry   *prev;
 };
 
-/*
- * Generic address list elem
- */
-struct addresses 
+struct mid_address
 {
-  union olsr_ip_addr address;
-  struct addresses *next;
+  union olsr_ip_addr  alias;
+  struct mid_entry   *main_entry;
+
+  struct mid_address *next_alias;
+
+  /* These are for the reverse list */
+  struct mid_address *prev;
+  struct mid_address *next;
 };
 
-/* MID set */
+/*
+ *Contains the main addr of a node and a list of aliases
+ */
 struct mid_entry
 {
-  union olsr_ip_addr main_addr;
-  struct addresses  *aliases;
-  struct mid_entry  *prev;
-  struct mid_entry  *next;
-  clock_t            ass_timer;  
+  union olsr_ip_addr  main_addr;
+  struct mid_address *aliases;
+  struct mid_entry   *prev;
+  struct mid_entry   *next;
+  clock_t             ass_timer;  
 };
+
 
 /* Routing table */
 struct rt_entry
