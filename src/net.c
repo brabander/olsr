@@ -21,6 +21,8 @@
  *
  */
 
+/* $Id: net.c,v 1.8 2004/09/21 18:24:39 kattemat Exp $ */
+
 
 #include "net.h"
 #include "olsr.h"
