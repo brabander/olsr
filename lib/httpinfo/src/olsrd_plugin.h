@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.13 2005/02/17 21:31:52 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.14 2005/02/19 17:42:59 kattemat Exp $
  */
 
 /*
@@ -56,12 +56,20 @@
 #include <math.h>
 
 #include "olsr_plugin_io.h"
-
-
-/*****************************************************************************
- *                               Plugin data                                 *
- *                       ALTER THIS TO YOUR OWN NEED                         *
- *****************************************************************************/
+#include "olsr_protocol.h"
+#include "neighbor_table.h"
+#include "two_hop_neighbor_table.h"
+#include "tc_set.h"
+/* hna_netmask (declared in packet.h) */
+union hna_netmask
+{
+  olsr_u32_t v4;
+  olsr_u16_t v6;
+};
+#include "hna_set.h"
+#include "mid_set.h"
+#include "mpr_selector_set.h"
+#include "routing_table.h"
 
 #define PLUGIN_NAME    "Httpinfo olsrd plugin"
 #define PLUGIN_VERSION "0.1"
@@ -71,75 +79,7 @@
 
 int http_port;
 
-/****************************************************************************
- *           Various datastructures and definitions from olsrd              *
- ****************************************************************************/
-
-/*
- *Neighbor status
- */
-
-#define NOT_SYM               0
-#define SYM                   1
-
-
-/*
- * TYPES SECTION
- */
-
-typedef enum
-{
-    OLSR_FALSE = 0,
-    OLSR_TRUE
-}olsr_bool;
-
-
-
-/* types */
-#include <sys/types.h>
-
-#ifndef WIN32
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-#else
-typedef unsigned char olsr_u8_t;
-typedef unsigned short olsr_u16_t;
-typedef unsigned int olsr_u32_t;
-typedef char olsr_8_t;
-typedef short olsr_16_t;
-typedef int olsr_32_t;
-#endif
-
-
-/*
- * VARIOUS DEFINITIONS
- */
-
-union olsr_ip_addr
-{
-  olsr_u32_t v4;
-  struct in6_addr v6;
-};
-
-union hna_netmask
-{
-  olsr_u32_t v4;
-  olsr_u16_t v6;
-};
-
-/*
- * Hashing
- */
-
-#define	HASHSIZE	32
-#define	HASHMASK	(HASHSIZE - 1)
-
-#define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
-
+/* Allowed hosts stuff */
 
 struct allowed_host
 {
@@ -157,146 +97,7 @@ struct allowed_net
 struct allowed_host   *allowed_hosts;
 struct allowed_net    *allowed_nets;
 
-
-/*
- * Neighbor structures
- */
-
-/* One hop neighbor */
-
-struct neighbor_2_list_entry 
-{
-  struct neighbor_2_entry      *neighbor_2;
-  clock_t       	       neighbor_2_timer;
-  struct neighbor_2_list_entry *next;
-  struct neighbor_2_list_entry *prev;
-};
-
-struct neighbor_entry
-{
-  union olsr_ip_addr           neighbor_main_addr;
-  olsr_u8_t                    status;
-  olsr_u8_t                    willingness;
-  olsr_bool                    is_mpr;
-  olsr_bool                    was_mpr; /* Used to detect changes in MPR */
-  olsr_bool                    skip;
-  int                          neighbor_2_nocov;
-  int                          linkcount;
-  struct neighbor_2_list_entry neighbor_2_list; 
-  struct neighbor_entry        *next;
-  struct neighbor_entry        *prev;
-};
-
-
-/* Two hop neighbor */
-
-
-struct neighbor_list_entry 
-{
-  struct	neighbor_entry *neighbor;
-  double path_link_quality;
-  double saved_path_link_quality;
-  struct	neighbor_list_entry *next;
-  struct	neighbor_list_entry *prev;
-};
-
-struct neighbor_2_entry
-{
-  union olsr_ip_addr         neighbor_2_addr;
-  olsr_u8_t      	     mpr_covered_count;    /*used in mpr calculation*/
-  olsr_u8_t      	     processed;            /*used in mpr calculation*/
-  olsr_16_t                  neighbor_2_pointer;   /* Neighbor count */
-  struct neighbor_list_entry neighbor_2_nblist; 
-  struct neighbor_2_entry    *prev;
-  struct neighbor_2_entry    *next;
-};
-
-
-/* Topology entry */
-
-struct topo_dst
-{
-  union olsr_ip_addr T_dest_addr;
-  clock_t            T_time;
-  olsr_u16_t         T_seq;
-  struct topo_dst   *next;
-  struct topo_dst   *prev;
-  double             link_quality;
-  double             inverse_link_quality;
-  double             saved_link_quality;
-  double             saved_inverse_link_quality;
-};
-
-struct tc_entry
-{
-  union olsr_ip_addr T_last_addr;
-  struct topo_dst destinations;
-  struct tc_entry *next;
-  struct tc_entry *prev;
-};
-
-/* HNA */
-
-/* hna_netmask declared in packet.h */
-
-struct hna_net
-{
-  union olsr_ip_addr A_network_addr;
-  union hna_netmask  A_netmask;
-  clock_t            A_time;
-  struct hna_net     *next;
-  struct hna_net     *prev;
-};
-
-struct hna_entry
-{
-  union olsr_ip_addr A_gateway_addr;
-  struct hna_net     networks;
-  struct hna_entry   *next;
-  struct hna_entry   *prev;
-};
-
-struct mid_address
-{
-  union olsr_ip_addr  alias;
-  struct mid_entry   *main_entry;
-
-  struct mid_address *next_alias;
-
-  /* These are for the reverse list */
-  struct mid_address *prev;
-  struct mid_address *next;
-};
-
-/*
- *Contains the main addr of a node and a list of aliases
- */
-struct mid_entry
-{
-  union olsr_ip_addr  main_addr;
-  struct mid_address *aliases;
-  struct mid_entry   *prev;
-  struct mid_entry   *next;
-  clock_t             ass_timer;  
-};
-
-
-/* Routing table */
-struct rt_entry
-{
-  union olsr_ip_addr    rt_dst;
-  union olsr_ip_addr    rt_router;
-  union hna_netmask     rt_mask;
-  olsr_u8_t  	        rt_flags; 
-  olsr_u16_t 	        rt_metric;
-  struct interface      *rt_if;
-  struct rt_entry       *prev;
-  struct rt_entry       *next;
-};
-
-
 /* The lists */
-
 struct neighbor_entry *neighbortable;
 struct neighbor_2_entry *two_hop_neighbortable;
 struct link_entry *link_set;
@@ -310,16 +111,6 @@ struct rt_entry *hna_routes;
 /* Buffer for olsr_ip_to_string */
 
 char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
-
-/* MPR set entry */
-
-struct mpr_selector
-{
-  union olsr_ip_addr  MS_main_addr;
-  clock_t             MS_time;
-  struct mpr_selector *next;
-  struct mpr_selector *prev;
-};
 
 /* Global config pointer */
 struct olsrd_config *cfg;
