@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.c,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: hashing.c,v 1.8 2005/02/01 20:31:22 kattemat Exp $
  */
 
 
@@ -66,19 +66,7 @@ olsr_hashing(union olsr_ip_addr *address)
       hash = (ntohl(*tmp));
     }
 
-  /* REMOVE */
-#ifdef DEBUG
-#warning Remove debug output in hash.c
-  olsr_printf(1, "HASH %s->%d:", olsr_ip_to_string(address), hash);
-#endif
-
-  //hash &= 0x7fffffff; 
   hash &= HASHMASK;
-
-#ifdef DEBUG
-  olsr_printf(1, "%d\n", hash);
-#endif
-
 
   return hash;
 }
