@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.21 2004/11/21 17:10:28 tlopatic Exp $
+ * $Id: oparse.y,v 1.22 2004/11/29 20:10:35 kattemat Exp $
  */
 
 
@@ -477,6 +477,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   free($2);
 
 }
+;
 
 ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 {
@@ -514,6 +515,7 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
   free($2);
 
 }
+;
 
 ifblock: TOK_INTERFACE TOK_STRING
 {
@@ -541,6 +543,7 @@ ifblock: TOK_INTERFACE TOK_STRING
 
   free($2);
 }
+;
 
 bnoint: TOK_NOINT TOK_BOOLEAN
 {
