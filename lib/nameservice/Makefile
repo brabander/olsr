@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.6 2005/03/01 20:16:56 tlopatic Exp $
+# $Id: Makefile,v 1.7 2005/03/01 20:25:22 tlopatic Exp $
 
 PLUGIN_NAME =	olsrd_nameservice
 PLUGIN_VER =	0.1
@@ -82,7 +82,7 @@ ifeq ($(OS), linux)
 
 NAME ?=		$(PLUGIN_NAME).so.$(PLUGIN_VER)
 
-CFLAGS_ADD +=	-Dlinux
+CFLAGS_ADD +=	-Dlinux -D_GNU_SOURCE
 CFLAGS_ADD2 +=	-fPIC
 LDFLAGS_ADD +=	-fPIC -Wl,-soname,$(NAME)
 
