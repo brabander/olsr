@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.12 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: interfaces.c,v 1.13 2005/02/12 22:32:41 kattemat Exp $
  */
 
 #include "defs.h"
@@ -109,6 +109,9 @@ struct interface *
 if_ifwithaddr(union olsr_ip_addr *addr)
 {
   struct interface *ifp;
+
+  if(!addr)
+    return NULL;
 
   for (ifp = ifnet; ifp; ifp = ifp->int_next)
     {

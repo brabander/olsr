@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.45 2005/02/12 11:26:21 kattemat Exp $
+ * $Id: link_set.c,v 1.46 2005/02/12 22:32:42 kattemat Exp $
  */
 
 
@@ -71,6 +71,8 @@ olsr_time_out_link_set(void);
 static int
 get_neighbor_status(union olsr_ip_addr *);
 
+static struct link_entry *
+find_best_link(union olsr_ip_addr *);
 
 
 
@@ -213,180 +215,120 @@ get_neighbor_status(union olsr_ip_addr *address)
 }
 
 
-
-
 /**
- *Get the remote interface address to use as nexthop
- *to reach the remote host.
+ *Find the best link to a neighbor interface 
  *
- *@param address the address of the remote host
- *@return the nexthop address to use. Returns the pointer
- *passed as arg 1 if nothing is found(if no MID is registered).
  */
-union olsr_ip_addr *
-get_neighbor_nexthop(union olsr_ip_addr *address)
+
+static struct link_entry *
+find_best_link(union olsr_ip_addr *remote)
 {
-  union olsr_ip_addr *main_addr;
-  struct interface   *ifs;
-
-  /* First try to find a direct link */
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
-    {
-      struct link_entry  *link;
-      if((link = lookup_link_entry(address, &ifs->ip_addr)) != NULL)
-	{
-	  if(lookup_link_status(link) == SYM_LINK)
-	    return address;
-	}
-    }
-
-  /* Find main address */
-  if(!(main_addr = mid_lookup_main_addr(address)))
-    main_addr = address;
-  
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
-    {
-      struct mid_address *aliases;
-      struct link_entry  *link;
-
-      /* Try main address */
-      if((!COMP_IP(main_addr, address)) &&
-	 (link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
-	{
-	  if(lookup_link_status(link) == SYM_LINK)
-	    return main_addr;
-	}
-      
-      /* Try aliases */
-      for(aliases = mid_lookup_aliases(main_addr);
-	  aliases != NULL;
-	  aliases = aliases->next_alias)
-	{
-	  if((!COMP_IP(&aliases->alias, address)) &&
-	     (link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
-	    {
-	      if(lookup_link_status(link) == SYM_LINK)
-		return &aliases->alias;
-	    }
-	}
-    }
-  
-  /* This shoud only happen if not MID addresses for the
-   * multi-homed remote host are registered yet
-   */
-  return address;
-}
-
-
-
-
-/**
- *Get the interface to use when setting up
- *a route to a neighbor. The interface with
- *the lowest metric is used.
- *
- *As this function is only called by the route calculation
- *functions it is considered that the caller is responsible
- *for making sure the neighbor is symmetric.
- *Due to experiences of route calculaition queryig for interfaces
- *when no links with a valid SYM time is avalibe, the function
- *will return a possible interface with an expired SYM time
- *if no SYM links were discovered.
- *
- *@param address of the neighbor - does not have to
- *be the main address
- *
- *@return a interface struct representing the interface to use
- */
-struct interface *
-get_interface_link_set(union olsr_ip_addr *remote)
-{
-  struct link_entry *tmp_link_set;
-  struct interface *if_to_use, *backup_if;
-  float link_quality, backup_link_quality;
-
-  if_to_use = NULL;
-  backup_if = NULL;
-
-  link_quality = -1.0;
-  backup_link_quality = -1.0;
-
-  if(remote == NULL || link_set == NULL)
-    {
-      olsr_printf(1, "Get interface: not sane request or empty link set!\n");
-      return NULL;
-    }
-
+  struct link_entry *tmp_link_set, *entry;
+  int curr_metric = MAX_IF_METRIC;
+  float curr_lq = -1.0;
 
   tmp_link_set = link_set;
+  entry = NULL;
+
   while(tmp_link_set)
     {
-      struct interface *tmp_if;
-      float curr;
-      //printf("Checking %s vs ", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr));
-      //printf("%s\n", olsr_ip_to_string(addr));
-      
       if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr))
 	{
-	  tmp_if = if_ifwithaddr(&tmp_link_set->local_iface_addr);
+	  struct interface *tmp_if = if_ifwithaddr(&tmp_link_set->local_iface_addr);
 
-	  /* Must be symmetric link! */
-	  if(!TIMED_OUT(tmp_link_set->SYM_time))
+	  if (olsr_cnf->lq_level == 0)
 	    {
-              if (olsr_cnf->lq_level == 0)
-                {
-                  if (if_to_use == NULL ||
-                      if_to_use->int_metric > tmp_if->int_metric)
-                    if_to_use = tmp_if;
-                }
-              else
-                {
-                  curr = tmp_link_set->loss_link_quality *
-                    tmp_link_set->neigh_link_quality;
-
-                  if (curr > link_quality)
-                    {
-                      if_to_use = tmp_if;
-                      link_quality = curr;
-                    }
-                }
+	      if(tmp_if->int_metric < curr_metric)
+		{
+		  entry = tmp_link_set;
+		  curr_metric = tmp_if->int_metric;
+		}
 	    }
-	  /* Backup solution in case the links have timed out */
 	  else
 	    {
-              if (olsr_cnf->lq_level == 0)
-                {
-                  if (if_to_use == NULL &&
-                      (backup_if == NULL ||
-                       backup_if->int_metric > tmp_if->int_metric))
-                    backup_if = tmp_if;
-                }
+	      float tmp_lq = tmp_link_set->loss_link_quality *
+		tmp_link_set->neigh_link_quality;
 
-              else 
-                {
-                  curr = tmp_link_set->loss_link_quality *
-                    tmp_link_set->neigh_link_quality;
-
-                  if (if_to_use == NULL && curr > backup_link_quality)
-                    {
-                      backup_if = tmp_if;
-                      backup_link_quality = curr;
-                    }
-                }
-            }
+	      if (tmp_lq > curr_lq)
+		{
+		  entry = tmp_link_set;
+		  curr_lq = tmp_lq;
+		}
+	    }
 	}
-      
-      tmp_link_set = tmp_link_set->next;
+	  tmp_link_set = tmp_link_set->next;
+    }
+  
+  return entry;
+}
+
+
+/**
+ * Find best link to a neighbor
+ */
+
+struct link_entry *
+get_best_link_to_neighbor(union olsr_ip_addr *remote)
+{
+  struct link_entry *good_link = NULL, *backup_link = NULL;
+  int curr_metric = MAX_IF_METRIC;
+  float curr_lq = -1.0;
+  union olsr_ip_addr *main_addr;
+  struct mid_address *aliases, main_alias;
+  
+  /* Find main address */
+  if(!(main_addr = mid_lookup_main_addr(remote)))
+    main_addr = remote;
+
+  COPY_IP(&main_alias.alias, main_addr);
+  main_alias.next_alias = mid_lookup_aliases(main_addr);
+
+  for(aliases = &main_alias;
+      aliases != NULL;
+      aliases = aliases->next_alias)
+    {
+      struct link_entry *link;
+
+      if((link = find_best_link(&aliases->alias)) != NULL)
+	{
+	  if (olsr_cnf->lq_level == 0)
+	    {
+	      struct interface *tmp_if = if_ifwithaddr(&link->local_iface_addr);
+	      if((tmp_if->int_metric < curr_metric) ||
+		 /* Prefer the requested link */
+		 ((tmp_if->int_metric == curr_metric) && 
+		  COMP_IP(&link->local_iface_addr, remote)))
+		{
+		  curr_metric = tmp_if->int_metric;
+		  if(lookup_link_status(link) == SYM_LINK)
+		    good_link = link;
+		  else
+		    backup_link = link;
+		}
+	    }
+	  else
+	    {
+	      float tmp_lq = link->loss_link_quality *
+		link->neigh_link_quality;
+	      
+	      if((tmp_lq > curr_lq) ||
+		 /* Prefer the requested link */
+		 ((tmp_lq == curr_lq) && 
+		  COMP_IP(&link->local_iface_addr, remote)))		  
+		{
+		  curr_lq = tmp_lq;
+		  if(lookup_link_status(link) == SYM_LINK)
+		    good_link = link;
+		  else
+		    backup_link = link;
+		}
+	    } 
+	}
     }
 
-
-  
-  /* Not found */
-  if(if_to_use == NULL)
-    return backup_if;
-  
-  return if_to_use;
+  return good_link ? good_link : backup_link;
 }
+
 
 
 
@@ -414,7 +356,8 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   while(tmp_link_set)
     {
-      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr))
+      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr) &&
+	 COMP_IP(local, &tmp_link_set->local_iface_addr))
 	return tmp_link_set;
       tmp_link_set = tmp_link_set->next;
     }

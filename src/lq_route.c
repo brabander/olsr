@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.23 2005/01/24 10:35:58 tlopatic Exp $
+ * $Id: lq_route.c,v 1.24 2005/02/12 22:32:42 kattemat Exp $
  */
 
 #include "defs.h"
@@ -483,16 +483,24 @@ void olsr_calculate_lq_routing_table(void)
 #endif
 
     // add a route to the main address of the destination node
+    link = get_best_link_to_neighbor(&walker->addr);
 
     olsr_insert_routing_table(&vert->addr,
-                              get_neighbor_nexthop(&walker->addr), hops);
+			      &link->neighbor_iface_addr,
+			      if_ifwithaddr(&link->local_iface_addr),
+                              hops);
 
     // add routes to the remaining interfaces of the destination node
 
     for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
          mid_walker = mid_walker->next_alias)
-      olsr_insert_routing_table(&mid_walker->alias,
-                                get_neighbor_nexthop(&walker->addr), hops);
+      {
+	link = get_best_link_to_neighbor(&mid_walker->alias);
+	olsr_insert_routing_table(&mid_walker->alias,
+				  &link->neighbor_iface_addr,
+				  if_ifwithaddr(&link->local_iface_addr),
+				  hops);
+      }
   }
 
   // add HNA routes - the set of unprocessed network nodes contains

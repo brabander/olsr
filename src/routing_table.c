@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.15 2005/02/01 20:27:57 kattemat Exp $
+ * $Id: routing_table.c,v 1.16 2005/02/12 22:32:42 kattemat Exp $
  */
 
 
@@ -169,7 +169,10 @@ olsr_free_routing_table(struct rt_entry *table)
  *@return the new rt_entry struct
  */
 struct rt_entry *
-olsr_insert_routing_table(union olsr_ip_addr *dst, union olsr_ip_addr *router, int metric)
+olsr_insert_routing_table(union olsr_ip_addr *dst, 
+			  union olsr_ip_addr *router, 
+			  struct interface *iface, 
+			  int metric)
 {
   struct rt_entry *new_route_entry, *rt_list;
   olsr_u32_t       hash;
@@ -181,6 +184,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, union olsr_ip_addr *router, i
 
   COPY_IP(&new_route_entry->rt_dst, dst);
   COPY_IP(&new_route_entry->rt_router, router);
+  new_route_entry->rt_if = iface;
 
   new_route_entry->rt_metric = metric;
   if(COMP_IP(dst, router))
@@ -195,18 +199,6 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, union olsr_ip_addr *router, i
   else
     /* IPv6 */
     new_route_entry->rt_mask.v6 = 128;
-
-  /* Find interface */
-  if((new_route_entry->rt_if = get_interface_link_set(router)) == NULL)
-    {
-      fprintf(stderr, "ADD ROUTE 1: %s Could not find neighbor interface ", 
-	      olsr_ip_to_string(dst));
-      fprintf(stderr, "for %s!!\n", 
-	      olsr_ip_to_string(router));
-      free(new_route_entry);
-      return NULL;
-    }
-  
 
   /* queue */
   rt_list->next->prev = new_route_entry;
@@ -258,11 +250,15 @@ olsr_fill_routing_table_with_neighbors()
 
 	      while(addrs2!=NULL)
 		{
+		  struct link_entry *link = get_best_link_to_neighbor(&addrs2->alias);
 #ifdef DEBUG
 		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias));
 #endif
-		  /* New in 0.4.6 */
-		  new_route_entry = olsr_insert_routing_table(&addrs2->alias, get_neighbor_nexthop(&addrs2->alias), 1);
+
+		  new_route_entry = olsr_insert_routing_table(&addrs2->alias, 
+							      &link->neighbor_iface_addr,
+							      if_ifwithaddr(&link->local_iface_addr),
+							      1);
 	      
 		  addrs2 = addrs2->next_alias;
 		}
@@ -362,13 +358,14 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 	      while(addrsp!=NULL)
 		{
 		  struct rt_entry *new_route_entry = NULL;
+		  struct link_entry *link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
 #ifdef DEBUG
 		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrsp->alias));
 #endif
-		  /* New in 0.4.6 */
 		  new_route_entry = 
 		    olsr_insert_routing_table(&addrsp->alias, 
-					      get_neighbor_nexthop(&neighbor->neighbor_main_addr), 
+					      &link->neighbor_iface_addr,
+					      if_ifwithaddr(&link->local_iface_addr),
 					      2);
 
 		  if(new_route_entry != NULL)
@@ -462,6 +459,7 @@ olsr_calculate_routing_table()
 			  destination_n_1->destination = 
 			    olsr_insert_routing_table(&tmp_addrsp->alias, 
 						      &list_destination_n->destination->rt_router, 
+						      list_destination_n->destination->rt_if,
 						      list_destination_n->destination->rt_metric+1);
 			  if(destination_n_1->destination != NULL)
 			    {
@@ -651,11 +649,14 @@ olsr_calculate_hna_routes()
 		  new_rt->rt_metric = tmp_rt->rt_metric;
 		  /* Flags */
 		  new_rt->rt_flags = RTF_UP | RTF_GATEWAY;
-
+		  /* Interface */
+		  new_rt->rt_if = tmp_rt->rt_if;
 		}
 	      /* If not - create a new one */
 	      else
 		{
+		  olsr_u32_t  hna_hash;
+
 		  new_rt = olsr_malloc(sizeof(struct rt_entry), "New rt entry");
 
 		  /* Fill struct */
@@ -668,26 +669,16 @@ olsr_calculate_hna_routes()
 		  new_rt->rt_metric = tmp_rt->rt_metric;
 		  /* Flags */
 		  new_rt->rt_flags = RTF_UP | RTF_GATEWAY;
-	      
-		  /* Find interface */
-		  if((new_rt->rt_if = get_interface_link_set(&new_rt->rt_router)) == NULL)
-		    {
-		      fprintf(stderr, "ADD ROUTE 2: %s Could not find neighbor interface!!!\n", 
-			      olsr_ip_to_string(&new_rt->rt_dst));
-		      /* This hopefullt never happens */
-		      free(new_rt);
-		    }
-		  else
-		    {
-		      olsr_u32_t  hna_hash;
 
-		      /* Queue HASH will almost always be 0 */
-		      hna_hash = olsr_hashing(&tmp_net->A_network_addr);
-		      hna_routes[hna_hash].next->prev = new_rt;
-		      new_rt->next = hna_routes[hna_hash].next;
-		      hna_routes[hna_hash].next = new_rt;
-		      new_rt->prev = &hna_routes[hna_hash];
-		    }
+		  /* Interface */
+		  new_rt->rt_if = tmp_rt->rt_if;
+	      		  
+		  /* Queue HASH will almost always be 0 */
+		  hna_hash = olsr_hashing(&tmp_net->A_network_addr);
+		  hna_routes[hna_hash].next->prev = new_rt;
+		  new_rt->next = hna_routes[hna_hash].next;
+		  hna_routes[hna_hash].next = new_rt;
+		  new_rt->prev = &hna_routes[hna_hash];
 		}
 	    }
 	}

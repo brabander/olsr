@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.14 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: interfaces.h,v 1.15 2005/02/12 22:32:42 kattemat Exp $
  */
 
 
@@ -68,6 +68,8 @@
 #define IPV6_ADDR_MAPPED	0x1000U
 #define IPV6_ADDR_RESERVED	0x2000U
 
+
+#define MAX_IF_METRIC           100
 
 struct vtimes
 {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.19 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: link_set.h,v 1.20 2005/02/12 22:32:42 kattemat Exp $
  */
 
 
@@ -117,11 +117,8 @@ clock_t hold_time_neighbor;
 void
 olsr_init_link_set(void);
 
-struct interface *
-get_interface_link_set(union olsr_ip_addr *);
-
-union olsr_ip_addr *
-get_neighbor_nexthop(union olsr_ip_addr *);
+struct link_entry *
+get_best_link_to_neighbor(union olsr_ip_addr *);
 
 struct link_entry *
 lookup_link_entry(union olsr_ip_addr *, union olsr_ip_addr *);
@@ -139,10 +136,16 @@ replace_neighbor_link_set(struct neighbor_entry *,
 int
 lookup_link_status(struct link_entry *);
 
-void olsr_update_packet_loss_hello_int(struct link_entry *entry, double htime);
-void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
-                        olsr_u16_t seqno);
-void olsr_print_link_set(void);
-struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
+void 
+olsr_update_packet_loss_hello_int(struct link_entry *, double);
+
+void 
+olsr_update_packet_loss(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
+
+void 
+olsr_print_link_set(void);
+
+struct link_entry *
+olsr_neighbor_best_link(union olsr_ip_addr *);
 
 #endif
