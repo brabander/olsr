@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.7 2004/10/09 17:36:48 kattemat Exp $
  *
  */
 
@@ -154,24 +154,23 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   memset(&zeroaddr, 0, ipsize); /* Use for comparision */
 
 
-  memset(&kernel_route,0,sizeof(struct in6_rtmsg));
+  memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
 
-  memcpy(&kernel_route.rtmsg_dst,
-	 &destination->rt_dst,
-	 ipsize);
+  COPY_IP(&kernel_route.rtmsg_dst, &destination->rt_dst);
 
   kernel_route.rtmsg_flags = destination->rt_flags;
   kernel_route.rtmsg_metric = destination->rt_metric;
   
   kernel_route.rtmsg_dst_len =   kernel_route.rtmsg_dst_len = destination->rt_mask.v6;
 
-  if(memcmp(&destination->rt_dst, &destination->rt_router.v6, ipsize) != 0)
+  if(memcmp(&destination->rt_dst, &destination->rt_router, ipsize) != 0)
     {
-      memcpy(&kernel_route.rtmsg_gateway, 
-	     &destination->rt_router,
-	     ipsize);
+      COPY_IP(&kernel_route.rtmsg_gateway, &destination->rt_router);
     }
-
+  else
+    {
+      COPY_IP(&kernel_route.rtmsg_gateway, &destination->rt_dst);
+    }
 
       /*
        * set interface
@@ -183,7 +182,7 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   //olsr_printf(3, "Adding route to %s using gw ", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_dst));
   //olsr_printf(3, "%s\n", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_gateway));
 
-  if((tmp = ioctl(ioctl_s, SIOCADDRT,&kernel_route)) < 0)
+  if((tmp = ioctl(ioctl_s, SIOCADDRT, &kernel_route)) < 0)
     {
       olsr_printf(1, "Add route: %s\n", strerror(errno));
       olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
@@ -295,6 +294,9 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
   memcpy(&kernel_route.rtmsg_dst, &destination->rt_dst, ipsize);
 
   memcpy(&kernel_route.rtmsg_gateway, &destination->rt_router, ipsize);
+
+  kernel_route.rtmsg_flags = destination->rt_flags;
+  kernel_route.rtmsg_metric = destination->rt_metric;
 
 
   tmp = ioctl(ioctl_s, SIOCDELRT,&kernel_route);
