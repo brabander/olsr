@@ -7,6 +7,8 @@ VERS_1.0
     olsrd_write_cnf;
     get_default_if_config;
     olsrd_get_default_cnf;
+    olsrd_cnf_malloc;
+    olsrd_cnf_free;
   local:
     *;
 };
