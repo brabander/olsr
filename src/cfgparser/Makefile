@@ -36,7 +36,7 @@
 # to the projcet. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.12 2004/12/01 20:54:16 tlopatic Exp $
+# $Id: Makefile,v 1.13 2004/12/01 21:16:58 kattemat Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -52,7 +52,7 @@ DEPFLAGS =
 
 ifeq ($(OS), linux)
 PIPETONULL =	>/dev/null 2>&1
-DEPFLAGS +=	-Y -Dlinux
+DEPFLAGS +=	-Dlinux -Y
 endif
 
 ifeq ($(OS), fbsd)
