@@ -1,36 +1,96 @@
 #
 # Default configuration for the GUI
 #
-# $Id: Default.olsr,v 1.1 2004/11/20 23:20:37 tlopatic Exp $
+# $Id: Default.olsr,v 1.2 2004/11/24 13:10:56 tlopatic Exp $
+#
+
+#
+# Periodically print the internal state, including information on
+# route calculation
 #
 
 DebugLevel		2
 
+#
+# Enable the link quality extensions?
+#
+# 0 - no
+# 1 - yes, use link quality for MPR selection
+# 2 - yes, use link quality for MPR selection and routing
+#
+
 LinkQualityLevel	0
+
+#
+# Windows size for packet loss calculation
+#
+
 LinkQualityWinSize	10
+
+#
+# Do not use hysteresis
+#
 
 UseHysteresis		no
 
+#
+# If using hysteresis, use "smooth" parameters
+#
+
 HystScaling		0.1
 HystThrHigh		0.8
-HystThrLow		0.2
+HystThrLow		0.3
+
+#
+# The pollrate used by the scheduler
+#
 
 Pollrate		0.05
 
+#
+# Pseudo interface used by the GUI. If we do not select any interface
+# in the GUI, we still have to store the per-interface settings of the
+# GUI somewhere. We then simply create a pseudo interfaced named GUI"
+# for storing this information. When parsing the configuration file,
+# the settings will be read and will be used to populate the GUI, but
+# after that the "GUI" interface will be discarded.
+#
+
 Interface "GUI"
 {
+	#
+	# HELLO interval and validity time in seconds (float)
+	#
+
 	HelloInterval		2.0
 	HelloValidityTime	6.0
+
+	#
+	# TC interval and validity time in seconds (float)
+	#
 
 	TcInterval		5.0
 	TcValidityTime		15.0
 
+	#
+	# MID interval and validity time in seconds (float)
+	#
+
 	MidInterval		5.0
 	MidValidityTime		15.0
+
+	#
+	# HNA interval and validity time in seconds (float)
+	#
 
 	HnaInterval		5.0
 	HnaValidityTime		15.0
 }
+
+#
+# This default gateway HNA will only be considered by the GUI if the
+# computer actually has a default route.
+#
 
 Hna4
 {

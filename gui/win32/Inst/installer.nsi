@@ -36,14 +36,14 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.6 2004/11/21 01:21:10 tlopatic Exp $
+;  $Id: installer.nsi,v 1.7 2004/11/24 13:10:56 tlopatic Exp $
 ;
 
 Name olsr.org
 OutFile ..\..\..\olsr-setup.exe
 BrandingText "www.olsr.org"
 InstallDir $PROGRAMFILES\olsr.org
-LicenseData ..\..\..\gpl.txt
+LicenseData ..\..\..\license.txt
 XPStyle on
 
 Page license
@@ -55,7 +55,7 @@ UninstPage uninstConfirm
 UninstPage instfiles
 
 Function .onInit
-        MessageBox MB_YESNO "This will install olsr.org 0.4.7 on your computer. Continue?" IDYES NoAbort
+        MessageBox MB_YESNO "This will install olsr.org 0.4.8 on your computer. Continue?" IDYES NoAbort
         Abort
 NoAbort:
 FunctionEnd
@@ -69,9 +69,11 @@ Section "Program Files"
         File ..\Main\Release\Switch.exe
         File ..\Shim\Release\Shim.exe
         File ..\..\..\olsrd.exe
+        File ..\..\..\src\cfgparser\olsrd_cfgparser.dll
         File ..\..\..\README-WIN32.txt
         File linux-manual.txt
-        File /oname=Default.olsr ..\..\..\files\olsrd.conf.default.win32
+        File /oname=olsrd.conf ..\..\..\files\olsrd.conf.default.win32
+        File ..\..\..\gui\win32\Main\Default.olsr
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
 
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org DisplayName olsr.org

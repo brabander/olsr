@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.26 2004/11/21 11:02:12 kattemat Exp $
+# $Id: Makefile,v 1.27 2004/11/24 13:10:52 tlopatic Exp $
 
 #OS ?=		linux
 #OS =		fbsd
@@ -140,6 +140,51 @@ $(DEPFILE):	$(SRCS) $(HDRS)
 
 olsrd:		$(OBJS)
 		$(CC) -o $@ $(OBJS) $(LIBS)
+
+VERS =		0.4.8
+
+olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
+		gui/win32/Shim/Release/Shim.exe \
+		olsrd.exe \
+		src/cfgparser/olsrd_cfgparser.dll \
+		README-WIN32.txt \
+		gui/win32/Inst/linux-manual.txt \
+		files/olsrd.conf.default.win32 \
+		gui/win32/Main/Default.olsr \
+		lib/dot_draw/olsrd_dot_draw.dll
+		rm -rf ${TEMP}/olsr-${VERS}
+		rm -f ${TEMP}/olsr-${VERS}.zip
+		rm -f olsr-${VERS}.zip
+		mkdir ${TEMP}/olsr-${VERS}
+		cp gui/win32/Main/Release/Switch.exe ${TEMP}/olsr-${VERS}
+		cp gui/win32/Shim/Release/Shim.exe ${TEMP}/olsr-${VERS}
+		cp olsrd.exe ${TEMP}/olsr-${VERS}
+		cp src/cfgparser/olsrd_cfgparser.dll ${TEMP}/olsr-${VERS}
+		cp README-WIN32.txt ${TEMP}/olsr-${VERS}
+		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
+		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/olsrd.conf
+		cp gui/win32/Main/Default.olsr ${TEMP}/olsr-${VERS}
+		cp lib/dot_draw/olsrd_dot_draw.dll ${TEMP}/olsr-${VERS}
+		cd ${TEMP}; echo y | cacls olsr-${VERS} /T /G Everyone:F
+		cd ${TEMP}; zip -q -r olsr-${VERS}.zip olsr-${VERS}
+		cp ${TEMP}/olsr-${VERS}.zip .
+		rm -rf ${TEMP}olsr-${VERS}
+		rm -f ${TEMP}/olsr-${VERS}.zip
+
+olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
+		gui/win32/Shim/Release/Shim.exe \
+		olsrd.exe \
+		src/cfgparser/olsrd_cfgparser.dll \
+		README-WIN32.txt \
+		gui/win32/Inst/linux-manual.txt \
+		files/olsrd.conf.default.win32 \
+		gui/win32/Main/Default.olsr \
+		lib/dot_draw/olsrd_dot_draw.dll \
+		gui/win32/Inst/installer.nsi
+		rm -f olsr-setup.exe
+		rm -f olsr-${VERS}-setup.exe
+		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
+		mv olsr-setup.exe olsr-${VERS}-setup.exe
 
 else
 ifeq ($(OS), osx)
