@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.14 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.15 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
 #include "rebuild_packet.h"
 #include "defs.h"
+#include "olsr.h"
 #include "mid_set.h"
 #include "mantissa.h"
 

@@ -36,11 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.22 2005/02/02 19:59:18 kattemat Exp $
+ * $Id: generate_msg.c,v 1.23 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "generate_msg.h"
 #include "defs.h"
+#include "olsr.h"
 #include "build_msg.h"
 #include "packet.h"
 

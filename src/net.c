@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.34 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: net.c,v 1.35 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "net.h"
+#include "log.h"
 #include "olsr.h"
 #include "net_os.h"
 #include <stdlib.h>

@@ -36,11 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.16 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.17 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "plugin_loader.h"
 #include "defs.h"
+#include "olsr.h"
 
 /* Local functions */
 

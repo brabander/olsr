@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.13 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: lq_packet.c,v 1.14 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "olsr_protocol.h"
@@ -52,6 +52,7 @@
 #include "process_package.h" // XXX - remove
 #include "two_hop_neighbor_table.h"
 #include "hysteresis.h"
+#include "olsr.h"
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 

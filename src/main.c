@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.67 2005/02/27 16:57:15 kattemat Exp $
+ * $Id: main.c,v 1.68 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -45,8 +45,8 @@
 #include <sys/stat.h>
 
 #include "defs.h"
-#include "interfaces.h"
-#include "local_hna_set.h"
+#include "olsr.h"
+#include "log.h"
 #include "scheduler.h"
 #include "parser.h"
 #include "generate_msg.h"

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.17 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.18 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
@@ -44,6 +44,7 @@
 #include "kernel_routes.h"
 #include "link_set.h"
 #include "olsr.h"
+#include "log.h"
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>

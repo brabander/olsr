@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.25 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.26 2005/02/27 18:39:43 kattemat Exp $
  */
 
 /*
@@ -49,6 +49,7 @@
 #include "ipc_frontend.h"
 #include "link_set.h"
 #include "olsr.h"
+#include "log.h"
 #include "parser.h"
 #include "socket_parser.h"
 #include "local_hna_set.h"

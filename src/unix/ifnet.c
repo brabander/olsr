@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.19 2005/02/26 23:01:42 kattemat Exp $
+ * $Id: ifnet.c,v 1.20 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
@@ -47,6 +47,7 @@
 #include "interfaces.h"
 #include "ifnet.h"
 #include "defs.h"
+#include "olsr.h"
 #include "net_os.h"
 #include "socket_parser.h"
 #include "parser.h"
@@ -54,6 +55,7 @@
 #include "generate_msg.h"
 #include "mantissa.h"
 #include "lq_packet.h"
+#include "log.h"
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.2 2005/02/20 17:34:10 kattemat Exp $
+ * $Id: olsr_types.h,v 1.3 2005/02/27 18:39:43 kattemat Exp $
  */
 
 /*
@@ -56,7 +56,7 @@ typedef enum
     OLSR_TRUE
 }olsr_bool;
 
-#ifdef linux
+#if defined linux || defined __MacOSX__
 
 typedef u_int8_t        olsr_u8_t;
 typedef u_int16_t       olsr_u16_t;
@@ -82,15 +82,6 @@ typedef unsigned int    olsr_u32_t;
 typedef char            olsr_8_t;
 typedef short           olsr_16_t;
 typedef int             olsr_32_t;
- 
-#elif defined __MacOSX__
-
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
 
 #else
 #       error "Unsupported system"

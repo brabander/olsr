@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.19 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: olsr.h,v 1.20 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
@@ -46,39 +46,11 @@
 #include "olsr_protocol.h"
 #include "interfaces.h"
 
-#include <sys/time.h>
-
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
 
 float will_int; /* Willingness update interval */
-
-/* Provides a timestamp s1 milliseconds in the future
-   according to system ticks returned by times(2) */
-#define GET_TIMESTAMP(s1) \
-        now_times + ((s1) / system_tick_divider)
-
-#define TIMED_OUT(s1) \
-        ((int)((s1) - now_times) < 0)
-
-
-/*
- * Queueing macros
- */
-
-/* First "argument" is NOT a pointer! */
-
-#define QUEUE_ELEM(pre, new) \
-        pre.next->prev = new; \
-        new->next = pre.next; \
-        new->prev = &pre; \
-        pre.next = new
-
-#define DEQUEUE_ELEM(elem) \
-	elem->prev->next = elem->next; \
-	elem->next->prev = elem->prev
-
 
 void
 register_pcf(int (*)(int, int, int));

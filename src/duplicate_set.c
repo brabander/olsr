@@ -36,15 +36,15 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.11 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.12 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
 
 #include "defs.h"
 #include "duplicate_set.h"
-#include "olsr.h"
 #include "scheduler.h"
+#include "olsr.h"
 
 /* The duplicate table */
 static struct dup_entry dup_set[HASHSIZE];

@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.27 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: scheduler.c,v 1.28 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
 #include "defs.h"
 #include "scheduler.h"
+#include "log.h"
 #include "tc_set.h"
 #include "link_set.h"
 #include "duplicate_set.h"

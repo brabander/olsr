@@ -36,15 +36,15 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.27 2005/02/26 23:01:40 kattemat Exp $
+ * $Id: build_msg.c,v 1.28 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
 #include "defs.h"
+#include "olsr.h"
+#include "log.h"
 #include "build_msg.h"
 #include "local_hna_set.h"
-#include "olsr.h"
-
 
 #define BMSG_DBGLVL 5
 

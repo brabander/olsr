@@ -36,12 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.9 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: local_hna_set.c,v 1.10 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "defs.h"
 #include "local_hna_set.h"
-
+#include "olsr.h"
 
 void
 add_local_hna4_entry(union olsr_ip_addr *net, union olsr_ip_addr *mask)

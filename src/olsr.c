@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.41 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: olsr.c,v 1.42 2005/02/27 18:39:43 kattemat Exp $
  */
 
 /**
@@ -55,10 +55,10 @@
 #include "lq_mpr.h"
 #include "lq_route.h"
 #include "scheduler.h"
-#include "generate_msg.h"
 #include "apm.h"
 #include "misc.h"
 #include "neighbor_table.h"
+#include "log.h"
 
 #include <stdarg.h>
 #include <signal.h>

@@ -36,14 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: interfaces.c,v 1.17 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "defs.h"
 #include "interfaces.h"
 #include "ifnet.h"
 #include "scheduler.h"
-
+#include "olsr.h"
 
 /* Ifchange functions */
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.39 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: defs.h,v 1.40 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -56,11 +56,8 @@
 #include <errno.h>
 #include <time.h>
 
-#include "log.h"
 #include "olsr_protocol.h"
-#include "process_routes.h" /* Needed for rt_entry */
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
-#include "olsr.h" /* Everybody uses theese */
 #include "olsr_cfg.h"
 
 #define VERSION "0.4.9-pre"
@@ -78,8 +75,8 @@
 /* Debug helper macro */
 #ifdef DEBUG
 #define olsr_debug(lvl,format,args...) \
-   olsr_printf(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
-   olsr_printf(lvl, format, ##args);
+   OLSR_PRINTF(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
+   OLSR_PRINTF(lvl, format, ##args);
 #endif
 
 FILE *debug_handle;
@@ -94,6 +91,31 @@ FILE *debug_handle;
         fprintf(debug_handle, format, ##args); \
    }
 #endif
+
+/* Provides a timestamp s1 milliseconds in the future
+   according to system ticks returned by times(2) */
+#define GET_TIMESTAMP(s1) \
+        now_times + ((s1) / system_tick_divider)
+
+#define TIMED_OUT(s1) \
+        ((int)((s1) - now_times) < 0)
+
+
+/*
+ * Queueing macros
+ */
+
+/* First "argument" is NOT a pointer! */
+
+#define QUEUE_ELEM(pre, new) \
+        pre.next->prev = new; \
+        new->next = pre.next; \
+        new->prev = &pre; \
+        pre.next = new
+
+#define DEQUEUE_ELEM(elem) \
+	elem->prev->next = elem->next; \
+	elem->next->prev = elem->prev
 
 
 /*
@@ -128,15 +150,10 @@ extern float max_jitter;
 
 size_t ipsize;
 
-/*
- * Address of this hosts OLSR interfaces
- * and main address of this node
- * and number of OLSR interfaces on this host
- */
+/* Main address of this node */
 union olsr_ip_addr main_addr;
-/*
- * OLSR UPD port
- */
+
+/* OLSR UPD port */
 int olsr_udp_port;
 
 /* The socket used for all ioctls */

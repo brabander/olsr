@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.20 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: parser.c,v 1.21 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "parser.h"
@@ -49,6 +49,7 @@
 #include "olsr.h"
 #include "rebuild_packet.h"
 #include "net_os.h"
+#include "log.h"
 
 #ifdef WIN32
 #undef EWOULDBLOCK

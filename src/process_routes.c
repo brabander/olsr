@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.21 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: process_routes.c,v 1.22 2005/02/27 18:39:43 kattemat Exp $
  */
 
 
 #include "defs.h"
 #include "olsr.h"
+#include "log.h"
 #include "kernel_routes.h"
 
 #ifdef WIN32

@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.30 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: lq_route.c,v 1.31 2005/02/27 18:39:43 kattemat Exp $
  */
 
 #include "defs.h"
+#include "olsr.h"
 #include "tc_set.h"
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
