@@ -198,10 +198,6 @@ how this version differs from the original Linux version.
   There are also some Windows-specific features that I currently work
   on, but which have not made it into this release.
 
-    * A nice installation package. However, there will always be a ZIP
-      archive available, too, for those who do not like installation
-      packages.
-
     * The option to run the OLSR server as a Windows service on
       Windows NT, 2000, and XP.
 
