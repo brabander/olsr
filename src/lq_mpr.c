@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_mpr.c,v 1.2 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.3 2004/11/08 18:31:55 tlopatic Exp $
  *
  */
 
@@ -72,16 +72,26 @@ void olsr_calculate_lq_mpr(void)
            neigh2 != &two_hop_neighbortable[i];
            neigh2 = neigh2->next)
         {
+          // check whether this 2-hop neighbour is also a neighbour
+
+          neigh = olsr_lookup_neighbor_table(&neigh2->neighbor_2_addr);
+
+          // it it's a neighbour and also symmetric, then skip it
+          
+          if (neigh != NULL && neigh->status == SYM)
+            continue;
+
           // find the connecting 1-hop neighbour with the
           // best total link quality
 
           neigh = NULL;
-          best = 0.0;
+          best = -1.0;
 
           for (walker = neigh2->neighbor_2_nblist.next;
                walker != &neigh2->neighbor_2_nblist;
                walker = walker->next)
-            if (walker->full_link_quality >= best)
+            if (walker->neighbor->status == SYM &&
+                walker->full_link_quality > best)
               {
                 neigh = walker->neighbor;
                 best = walker->full_link_quality;
