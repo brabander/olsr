@@ -360,8 +360,11 @@ ipc_evaluate_message(union olsr_message *olsr_in)
       break;
     default:
       if(!freeze_packets)
-	packet_list_add("UNKNOWN", "?", "?");
-
+	{
+	  char unk_label[8];
+	  sprintf(unk_label, "%d", type);
+	  packet_list_add(unk_label, ip_to_string(originator), itoa_buf);
+	}
 	printf("Unknown packet type %d\n", type);
       
     }
