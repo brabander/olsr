@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.12 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: olsr_protocol.h,v 1.13 2004/11/07 21:39:25 kattemat Exp $
  *
  */
 
@@ -108,7 +108,6 @@ union olsr_ip_addr
  */
 
 #define HELLO_INTERVAL        2
-#define HELLO_INTERVAL_NW     HELLO_INTERVAL * 2
 #define REFRESH_INTERVAL      2
 #define TC_INTERVAL           5
 #define MID_INTERVAL          TC_INTERVAL
@@ -119,8 +118,6 @@ union olsr_ip_addr
  */
 
 #define NEIGHB_HOLD_TIME      3 * REFRESH_INTERVAL
-/*extra: time to delete for non-wireless interfaces */
-#define NEIGHB_HOLD_TIME_NW   NEIGHB_HOLD_TIME * 2
 #define TOP_HOLD_TIME         3 * TC_INTERVAL
 #define DUP_HOLD_TIME         30
 #define MID_HOLD_TIME         3 * MID_INTERVAL
