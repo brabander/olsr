@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.13 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: olsr.h,v 1.14 2004/12/14 20:15:52 kattemat Exp $
  */
 
 
@@ -90,7 +90,7 @@ olsr_u16_t message_seqno;
 void
 register_pcf(int (*)(int, int, int));
 
-inline void
+void
 olsr_process_changes(void);
 
 inline void

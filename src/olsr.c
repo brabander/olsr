@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.33 2004/12/05 13:53:00 kattemat Exp $
+ * $Id: olsr.c,v 1.34 2004/12/14 20:15:52 kattemat Exp $
  */
 
 /**
@@ -159,14 +159,11 @@ register_pcf(int (*f)(int, int, int))
  *update the routing table.
  *@return 0
  */
-inline void
+void
 olsr_process_changes()
 {
 
   struct pcf *tmp_pc_list;
-  static char title[100] = "";
-  char tmp_title[100];
-  int len, i;
 
 #ifdef DEBUG
   if(changes_neighborhood)
@@ -185,21 +182,7 @@ olsr_process_changes()
   if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
   {
       clear_console();
-
-      if (title[0] == 0)
-      {
-        len = sprintf(tmp_title, "*** %s (%s) ***\n",
-                      SOFTWARE_VERSION, __DATE__);
-
-        len = (74 - len) / 2;
-        
-        for (i = 0; i < len; i++)
-          title[i] = ' ';
-
-        strcpy(title + i, tmp_title);
-      }
-
-      printf(title);
+      printf(OLSRD_VERSION_DATE);
   }
 
   if (changes_neighborhood)

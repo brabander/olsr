@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.30 2004/12/12 17:53:58 kattemat Exp $
+ * $Id: defs.h,v 1.31 2004/12/14 20:15:52 kattemat Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -62,8 +62,9 @@
 
 #include "lq_packet.h"
 
-#define VERSION "0.4.8-pre"
+#define VERSION "0.4.9-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
+#define OLSRD_VERSION_DATE "       *** " SOFTWARE_VERSION " (" __DATE__ ") ***\n"
 
 #define OLSRD_CONF_FILE_NAME "olsrd.conf"
 #define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
