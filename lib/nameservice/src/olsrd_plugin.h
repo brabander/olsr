@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.4 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: olsrd_plugin.h,v 1.5 2005/03/03 18:20:16 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -48,6 +48,7 @@
 
 #include "olsr_plugin_io.h"
 #include "olsr_types.h"
+#include "olsr_protocol.h"
 #include "olsr_cfg.h"
 #include "hashing.h"
 #include "interfaces.h"
@@ -85,29 +86,6 @@ struct olsrd_config *cfg;
 
 
 #define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
-
-
-
-/****************************************************************************
- *                            PACKET SECTION                                *
- ****************************************************************************/
-
- /**********************************
- * DEFINE YOUR CUSTOM PACKET HERE *
- **********************************/
-#include "nameservice_msg.h"
-
-/* 
- * ALWAYS USE THESE WRAPPERS TO
- * ENSURE IPv4 <-> IPv6 compability 
- */
-
-union olsr_message
-{
-  struct olsrmsg v4;
-  struct olsrmsg6 v6;
-};
-
 
 
 

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.5 2005/03/02 22:59:55 tlopatic Exp $ */
+/* $Id: nameservice.h,v 1.6 2005/03/03 18:20:16 kattemat Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -39,7 +39,7 @@
 #define _NAMESERVICE_PLUGIN
 
 #include "olsrd_plugin.h"
-
+#include "nameservice_msg.h"
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
 #define PLUGIN_VERSION	"0.2"
@@ -62,8 +62,8 @@ struct name_entry
 {
 	union olsr_ip_addr	ip;
 	olsr_u16_t		type;
+	olsr_u16_t		len;
 	char			*name;
-	int			len;
 	struct name_entry	*next;		/* linked list */
 };
 
@@ -93,10 +93,10 @@ int
 encap_namemsg(struct namemsg *);
 
 void
-decap_namemsg(struct namemsg *, struct name_entry**);
+decap_namemsg(struct namemsg *, int, struct name_entry**);
 
 void
-update_name_entry(union olsr_ip_addr *, struct namemsg *, double);
+update_name_entry(union olsr_ip_addr *, struct namemsg *, int, double);
 
 void
 write_name_table(void);

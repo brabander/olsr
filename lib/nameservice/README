@@ -12,7 +12,8 @@ read by a DNS server like "dnsmasq", to make the names
 available via ordinary DNS to other clients as well.
 
 the default location of the hosts file is
-/var/run/hosts_olsr 
+"/var/run/hosts_olsr" on unixes
+"C:\WINDOWS\hosts_olsr" on windows
 
 
 ---------------------------------------------------------------------
@@ -65,10 +66,42 @@ LoadPlugin "olsrd_nameservice.so.0.2"
 
 
 ---------------------------------------------------------------------
+USING THE NAME INFORMATION
+---------------------------------------------------------------------
+
+to use the name information distributed by the plugin actually for
+name resolution you can do one of the following.
+
+UNIX VARIANTS:
+
+* overwrite /etc/hosts
+	be sure you have nothing in /etc/hosts which you still need and
+	configure the plugin with PlParam "filename" "/etc/hosts"
+	
+* link /etc/hosts (only on unix variants)
+	ln -s /var/run/hosts_olsr /etc/hosts
+	
+* use dnsmasq
+	if you want to make the names available via ordinary DNS
+	you can use dnsmasq to read the hosts file and serve it to
+	users. add the following to dnsmasq.conf and restart dnsmasq
+	addn-hosts=/var/run/hosts_olsr
+	
+WINDOWS:
+
+* overwrite C:\WINDOWS\system32\etc\hosts
+	[windows users, please verify that this is the right path]
+	be sure you have nothing in the file which you still need 
+	and configure the plugin with
+	PlParam "filename" "C:\WINDOWS\system32\etc\hosts"
+	
+
+---------------------------------------------------------------------
 TODO
 ---------------------------------------------------------------------
   
  * implement a small DNS server into the plugin?
+ * or make dynamic DNS updates for bind?
 
 ---------------------------------------------------------------------
-EOF / 01.03.2005
+EOF / 03.03.2005
