@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.3 2004/10/16 23:17:48 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.4 2004/10/17 12:28:02 kattemat Exp $
  *
  */
 
@@ -395,17 +395,17 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
 
 
   /* Plugins */
-  fprintf(fd, "# Olsrd plugins to load\n# This must be the absolute path to the file\n# or the loader will use the following scheme:\n# - Try the paths in the LD_LIBRARY_PATH \n#   environment variable.\n# - The list of libraries cached in /etc/ld.so.cache\n# - /lib, followed by /usr/lib\n\nLoadPlugin\n{\n");
+  fprintf(fd, "# Olsrd plugins to load\n# This must be the absolute path to the file\n# or the loader will use the following scheme:\n# - Try the paths in the LD_LIBRARY_PATH \n#   environment variable.\n# - The list of libraries cached in /etc/ld.so.cache\n# - /lib, followed by /usr/lib\n\n");
   if(pe)
     {
       while(pe)
 	{
-	  fprintf(fd, "    PlName \"%s\"\n", pe->name);
+	  fprintf(fd, "LoadPlugin \"%s\"\n{\n", pe->name);
 	  pe = pe->next;
+	  fprintf(fd, "}\n");
 	}
     }
-  fprintf(fd, "}\n\n");
-
+	  fprintf(fd, "\n");
 
   /* Rulesets */
   while(io)

@@ -841,7 +841,7 @@ char *yytext;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oscan.c,v 1.2 2004/10/17 11:52:41 kattemat Exp $
+ * $Id: oscan.c,v 1.3 2004/10/17 12:28:02 kattemat Exp $
  *
  */
 

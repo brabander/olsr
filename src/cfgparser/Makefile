@@ -8,12 +8,12 @@ ifdef MAKELIB
 NAME ?= $(LDNAME)
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 LDFLAGS ?= -shared -Wl,-soname,$(NAME)
-CFLAGS ?= -Wall -Wall -Wmissing-prototypes -Wstrict-prototypes -fPIC -g -DMAKELIB -I..
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -fPIC -g -DMAKELIB -I..
 LIBS  ?= -lm -lc
 else 
 NAME ?= olsrd_cfgparser
 LDFLAGS ?=
-CFLAGS ?= -Wall -Wall -Wmissing-prototypes -Wstrict-prototypes -g -DMAKEBIN -I..
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -DMAKEBIN -I..
 endif
 
 BISON ?= bison

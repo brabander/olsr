@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.3 2004/10/17 11:52:41 kattemat Exp $
+ * $Id: oparse.y,v 1.4 2004/10/17 12:28:02 kattemat Exp $
  *
  */
 
@@ -166,7 +166,7 @@ stmt:       idebug
 block:      TOK_HNA4 hna4body
           | TOK_HNA6 hna6body
           | TOK_INTERFACES ifbody
-          | TOK_PLUGIN plbody
+          | plblock plbody
           | isetblock isetbody
 ;
 
@@ -219,8 +219,7 @@ plbody:     TOK_OPEN plstmts TOK_CLOSE
 plstmts:   | plstmts plstmt
 ;
 
-plstmt:     plname
-          | plparam
+plstmt:     plparam
           | vcomment
 ;
 
@@ -639,7 +638,7 @@ amprcoverage: TOK_MPRCOVERAGE TOK_INTEGER
 ;
 
 
-plname: TOK_PLNAME TOK_STRING
+plblock: TOK_PLUGIN TOK_STRING
 {
   struct plugin_entry *pe = malloc(sizeof(struct plugin_entry));
   

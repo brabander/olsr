@@ -128,12 +128,15 @@ MprCoverage	1
 #   environment variable.
 # - The list of libraries cached in /etc/ld.so.cache
 # - /lib, followed by /usr/lib
-LoadPlugin
+LoadPlugin "olsrd_secure.so.0.3"
 {
-    PlName	"olsrd_secure.so.0.3"
     PlParam     "key1"   "value1"
+    # Might be possible to set options here in
+    # future versions
+}
 
-    PlName	"olsrd_dyn_gw.so.0.1"
+LoadPlugin "olsrd_dyn_gw.so.0.1"
+{
     PlParam     "key4"   "value3"
     # Might be possible to set options here in
     # future versions
