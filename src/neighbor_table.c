@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.16 2004/11/15 14:59:39 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.17 2004/11/15 15:18:37 tlopatic Exp $
  *
  */
 
@@ -33,6 +33,7 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "link_set.h"
+#include "mpr_selector_set.h"
 
 void
 olsr_init_neighbor_table()
@@ -465,6 +466,8 @@ olsr_print_neighbor_table()
 #endif
   double best_lq, inv_best_lq;
   char *fstr;
+  struct mpr_selector *mprs;
+  char *sel;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n",
               nowtm->tm_hour,
@@ -474,14 +477,14 @@ olsr_print_neighbor_table()
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "IP address       LQ     NLQ    SYM  MPR  will\n");
-    fstr = "%-15s  %5.3f  %5.3f  %s  %s  %d\n";
+    olsr_printf(1, "IP address       LQ     NLQ    SYM  MPR  MPRS  will\n");
+    fstr = "%-15s  %5.3f  %5.3f  %s  %s  %s  %d\n";
   }
 
   else
   {
-    olsr_printf(1, "IP address                               LQ     NLQ    SYM  MPR  will\n");
-    fstr = "%-39s  %5.3f  %5.3f  %s  %s  %d\n";
+    olsr_printf(1, "IP address                               LQ     NLQ    SYM  MPR  MPRS  will\n");
+    fstr = "%-39s  %5.3f  %5.3f  %s  %s  %s  %d\n";
   }
 
   for (i = 0; i < HASHSIZE; i++)
@@ -499,13 +502,21 @@ olsr_print_neighbor_table()
           best_lq = 0.0;
           inv_best_lq = 0.0;
 #endif
+          sel = "    ";
+
+          for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next)
+            if (COMP_IP(&mprs->MS_main_addr, &neigh->neighbor_main_addr))
+              {
+                sel = "MPRS";
+                break;
+              }
 
           olsr_printf(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
                       inv_best_lq, best_lq,
                       (neigh->status == SYM) ? "SYM" : "   ",
-                      neigh->is_mpr ? "MPR" : "   ",
+                      neigh->is_mpr ? "MPR" : "   ", sel,
                       neigh->willingness);
-	}
+        }
     }
 }
 
