@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.14 2004/12/03 18:10:23 tlopatic Exp $
+ * $Id: lq_route.c,v 1.15 2004/12/03 18:43:34 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -434,10 +434,26 @@ void olsr_calculate_lq_routing_table(void)
       continue;
     }
 
+#if defined linux
+    /*
+     * on Linux we can add a new route for a destination before removing
+     * the old route, so frequent route updates are not a problem, as
+     * we never have a time window in which there isn't any route
+     */
+
     int_etx = (int)vert->path_etx;
 
     if (int_etx > 100)
       int_etx = 100;
+#else
+    /*
+     * on other OSes we do it the other way around - first remove, then
+     * add -, so we do not want to trigger route updates too often; we
+     * make sure that metric changes never trigger route changes
+     */
+
+    int_etx = 1;
+#endif
 
     // add a route to the main address of the destination node
 

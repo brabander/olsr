@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.14 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: process_routes.c,v 1.15 2004/12/03 18:43:34 tlopatic Exp $
  */
 
 
@@ -216,8 +216,13 @@ olsr_update_kernel_routes()
   delete_kernel_list = olsr_build_update_list(old_routes, routingtable);
   add_kernel_list = olsr_build_update_list(routingtable, old_routes);
   //#warning deletion and addition of routes swapped in 0.4.7 - TEST!
+#if !defined linux
+  olsr_delete_routes_from_kernel(delete_kernel_list);
+  olsr_add_routes_in_kernel(add_kernel_list);
+#else
   olsr_add_routes_in_kernel(add_kernel_list);
   olsr_delete_routes_from_kernel(delete_kernel_list);
+#endif
 }
 
 
