@@ -36,7 +36,7 @@
 # to the projcet. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.13 2004/12/01 21:16:58 kattemat Exp $
+# $Id: Makefile,v 1.14 2004/12/05 20:15:52 kattemat Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -49,6 +49,10 @@ SRCS =		olsrd_conf.c  oparse.c  oscan.c
 HDRS =		olsrd_conf.h  oparse.h
 PIPETONULL =
 DEPFLAGS =
+
+ifeq ($(OS), Windows_NT)
+OS =		win32
+endif
 
 ifeq ($(OS), linux)
 PIPETONULL =	>/dev/null 2>&1
