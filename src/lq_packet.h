@@ -36,11 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.h,v 1.4 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_packet.h,v 1.5 2004/12/05 20:12:30 kattemat Exp $
  */
 
-#define LQ_HELLO_MESSAGE      5
-#define LQ_TC_MESSAGE         6
+#define LQ_HELLO_MESSAGE      201
+#define LQ_TC_MESSAGE         202
 
 // deserialized OLSR header
 
