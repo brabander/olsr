@@ -1,6 +1,19 @@
 HTTP MINI-SERVER PLUGIN FOR OLSRD
 by Andreas Tønnesen(andreto@olsr.org)
 
+16.12.04
+I only just started work on this plugin yesterday.
+It's in CVS so that I can work on it from multiple
+locations - it's not very usable to anyone right now...
+
+Still - if you want to try it - set olsrd to load it
+and point your webbrowser to 
+http://127.0.0.1:8080
+to access from you local host. Remote access is also
+allowed. I think this can be a cool feature for
+embedded devices :)
+
+
 installation:
 make
 make install
