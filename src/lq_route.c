@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.27 2005/02/17 02:06:22 tlopatic Exp $
+ * $Id: lq_route.c,v 1.28 2005/02/17 16:45:57 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -535,6 +535,16 @@ void olsr_calculate_lq_routing_table(void)
              mid_walker = mid_walker->next_alias)
           olsr_insert_routing_table(&mid_walker->alias,
                                     &link->neighbor_iface_addr, inter, hops);
+
+#ifdef __UNTESTED__
+        // make sure that we have a route to the router - e.g. in case
+        // the router's not the main address and it's MID entry has timed
+        // out
+
+        if (olsr_lookup_routing_table(&link->neighbor_iface_addr) == NULL)
+          olsr_insert_routing_table(&link->neighbor_iface_addr,
+                                    &link->neighbor_iface_addr, inter, hops);
+#endif
       }
     }
   }
