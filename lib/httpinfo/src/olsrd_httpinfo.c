@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.37 2005/01/06 21:27:22 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.38 2005/01/14 17:50:03 kattemat Exp $
  */
 
 /*
@@ -56,6 +56,8 @@
 #ifdef WIN32
 #define close(x) closesocket(x)
 #endif
+
+static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 #define MAX_CLIENTS 3
 
@@ -1319,4 +1321,11 @@ sockaddr_to_string(struct sockaddr *address_to_convert)
   address=(struct sockaddr_in *)address_to_convert; 
   return(inet_ntoa(address->sin_addr));
   
+}
+
+
+char *
+get_copyright_string()
+{
+  return copyright_string;
 }
