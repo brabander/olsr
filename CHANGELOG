@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.25 2005/01/24 16:39:15 kattemat Exp $
+$Id: CHANGELOG,v 1.26 2005/02/09 19:06:15 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -37,6 +37,9 @@ MINOR UPDATES
 
 BUGFIXES
 
+- A bug in the interface selection in route calculation has been
+  fixed. New routes are no longer added prior to deleting old ones
+  since this caused trouble.
 - A bug in the IPv6 multicast address configuration has been fixed.
   This caused olsrd not to work with global IPv6 addresses.
 - A bug in the IPv6 prefix-from IPaddr function has been fixed. This
