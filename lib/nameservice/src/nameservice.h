@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.3 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: nameservice.h,v 1.4 2005/03/02 20:51:36 tlopatic Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -46,7 +46,7 @@
 #define PLUGIN_AUTHOR	"Bruno Randolf"
 
 
-#define MESSAGE_TYPE		129
+#define MESSAGE_TYPE		130
 #define PARSER_TYPE		MESSAGE_TYPE
 #define EMISSION_INTERVAL	120 /* two minutes */
 #define NAME_VALID_TIME		3600 /* one hour */
