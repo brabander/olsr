@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: kernel_routes.c,v 1.9 2004/11/14 20:48:03 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.10 2004/11/20 15:40:52 tlopatic Exp $
  *
  */
 
@@ -132,13 +132,6 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
 // XXX - to be implemented
 
 int olsr_ioctl_del_route6(struct rt_entry *Dest)
-{
-  return 0;
-}
-
-// XXX - to be implemented
-
-int delete_tunnel_route()
 {
   return 0;
 }

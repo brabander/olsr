@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.22 2004/11/15 15:50:08 tlopatic Exp $
+ * $Id: olsr.c,v 1.23 2004/11/20 15:40:52 tlopatic Exp $
  *
  */
 
@@ -43,6 +43,7 @@
 #include "scheduler.h"
 #include "generate_msg.h"
 #include "apm.h"
+#include "misc.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -163,6 +164,12 @@ olsr_process_changes()
      !changes_topology &&
      !changes_hna)
     return;
+
+  if (olsr_cnf->debug_level > 0)
+    {
+      clear_console();
+      printf("<<<< %s (%s) >>>>\n", SOFTWARE_VERSION, __DATE__);
+    }
 
   if(changes_neighborhood)
     {

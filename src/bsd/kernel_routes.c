@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.2 2004/11/15 12:18:49 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.3 2004/11/20 15:40:52 tlopatic Exp $
  *
  */
 
@@ -161,14 +161,3 @@ int olsr_ioctl_del_route6(struct rt_entry *dest)
 {
   return 0;
 }
-
-int add_tunnel_route(union olsr_ip_addr *gw)
-{
-  return 0;
-}
-
-int delete_tunnel_route()
-{
-  return 0;
-}
-
