@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.18 2005/02/27 10:48:05 kattemat Exp $
+ * $Id: ifnet.c,v 1.19 2005/02/27 11:02:34 kattemat Exp $
  */
 
 #include "interfaces.h"
@@ -150,7 +150,7 @@ static int MiniIndexToGuid(char *Guid, int MiniIndex)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
+    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index)
 
     if ((Walker->Index & 255) == MiniIndex)
       break;
@@ -197,7 +197,7 @@ static int AddrToIndex(int *Index, unsigned int Addr)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
+    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index)
 
     for (Walker2 = &Walker->IpAddressList; Walker2 != NULL;
          Walker2 = Walker2->Next)
@@ -258,7 +258,7 @@ static int IsWireless(char *IntName)
   {
     ErrNo = GetLastError();
 
-    OLSR_PRINTF(5, "CreateFile() = %08lx, %s\n", ErrNo, StrError(ErrNo))
+    OLSR_PRINTF(5, "CreateFile() = %08x, %s\n", ErrNo, StrError(ErrNo))
     return -1;
   }
 
@@ -279,7 +279,7 @@ static int IsWireless(char *IntName)
       return 0;
     }
 
-    OLSR_PRINTF(5, "DeviceIoControl() = %08lx, %s\n", ErrNo, StrError(ErrNo))
+    OLSR_PRINTF(5, "DeviceIoControl() = %08x, %s\n", ErrNo, StrError(ErrNo))
     return -1;
   }
 
@@ -320,7 +320,7 @@ void ListInterfaces(void)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
+    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index)
 
     MiniIndexToIntName(IntName, Walker->Index);
 
@@ -380,7 +380,7 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct olsr_if *IntConf)
 
   for (TabIdx = 0; TabIdx < IfTable->dwNumEntries; TabIdx++)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", IfTable->table[TabIdx].dwIndex)
+    OLSR_PRINTF(5, "Index = %08x\n", (int)IfTable->table[TabIdx].dwIndex)
 
     if ((IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
       break;
@@ -455,7 +455,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct olsr_if *IntConf)
 
   OLSR_PRINTF(5, "\tIndex: %08x\n", *Index)
 
-  OLSR_PRINTF(5, "\tFlags: %08x\n", IntInfo[WsIdx].iiFlags)
+  OLSR_PRINTF(5, "\tFlags: %08x\n", (int)IntInfo[WsIdx].iiFlags)
 
   if ((IntInfo[WsIdx].iiFlags & IFF_UP) == 0)
   {
@@ -632,7 +632,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
   if (Int->int_mtu != IntRow.dwMtu)
   {
-    OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", Int->int_mtu, IntRow.dwMtu)
+    OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu, (int)IntRow.dwMtu)
 
     Int->int_mtu = IntRow.dwMtu;
 

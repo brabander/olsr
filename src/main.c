@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.64 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: main.c,v 1.65 2005/02/27 11:02:22 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -645,7 +645,7 @@ olsr_shutdown(int signal)
 {
   struct interface *ifn;
 
-  OLSR_PRINTF(1, "Received signal %d - shutting down\n", signal)
+  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signal)
 
   olsr_delete_all_kernel_routes();
 
