@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.10 2004/12/02 18:03:14 tlopatic Exp $
+ * $Id: hysteresis.c,v 1.11 2004/12/02 19:00:03 kattemat Exp $
  */
 
 
@@ -185,17 +185,19 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
        */
 
       if (link->olsr_seqno_valid)
-        while (link->olsr_seqno != seqno)
-          {
-            //printf("HYS: packet lost.. last seqno %d received seqno %d!\n", link->olsr_seqno, seqno);
-            link->L_link_quality =
-              olsr_hyst_calc_instability(link->L_link_quality);
+	  while (link->olsr_seqno != seqno)
+	    {
+	      link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
 #ifdef DEBUG
-            olsr_printf(5, "HYST[%s] PACKET LOSS! %0.3f\n",
-                        olsr_ip_to_string(remote), link->L_link_quality);
+	      olsr_printf(5, "HYST[%s] PACKET LOSS! %0.3f\n",
+			  olsr_ip_to_string(remote), link->L_link_quality);
 #endif
-            link->olsr_seqno++;
-          }
+	      if(link->L_link_quality < olsr_cnf->hysteresis_param.thr_low)
+		return;
+
+	      link->olsr_seqno++;
+	    }
+
 
       link->olsr_seqno = seqno + 1;
       link->olsr_seqno_valid = OLSR_TRUE;
