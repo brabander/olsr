@@ -31,7 +31,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: main.c,v 1.44 2004/11/20 23:37:39 kattemat Exp $
+ * Visit http://www.olsr.org for more information.
+ *
+ * If you find this software useful feel free to make a donation
+ * to the projcet. For more information see the website or contact
+ * the copyright holders.
+ *
+ * $Id: main.c,v 1.45 2004/11/20 23:46:08 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -76,6 +82,8 @@ static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
 static char **olsr_argv;
+
+static char copyright_string[] = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 /**
  * Main entrypoint
@@ -619,6 +627,9 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   scheduler();
+
+  /* Stop the compiler from complaining */
+  strlen(copyright_string);
 
   /* Like we're ever going to reach this ;-) */
   return 1;
