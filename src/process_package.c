@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.16 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: process_package.c,v 1.17 2004/11/10 11:54:28 tlopatic Exp $
  *
  */
 
@@ -74,6 +74,8 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
   struct neighbor_entry     *neighbor;
 #if defined USE_LINK_QUALITY
   struct hello_neighbor *walker;
+  double saved_lq;
+  double rel_lq;
 #endif
 
   /*
@@ -94,6 +96,10 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
         if (COMP_IP(&walker->address, &in_if->ip_addr))
           break;
 
+      // memorize the currently stored link quality value
+
+      saved_lq = link->neigh_link_quality;
+
       // memorize our neighbour's idea of the link quality, so that we
       // know the link quality in both directions
 
@@ -102,6 +108,14 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
 
       else
         link->neigh_link_quality = 0.0;
+
+      // if the link quality has changed by more than 10 percent,
+      // print the new link quality table
+
+      rel_lq = link->neigh_link_quality / saved_lq;
+
+      if (rel_lq > 1.1 || rel_lq < 0.9)
+        changes_neighborhood = OLSR_TRUE;
     }
 #endif
   

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.11 2004/11/08 23:25:57 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.12 2004/11/10 11:54:28 tlopatic Exp $
  *
  */
 
@@ -464,9 +464,25 @@ olsr_print_neighbor_table()
   struct link_entry *link;
 #endif
   double best_lq, inv_best_lq, total_lq;
+  char *fstr;
 
-  olsr_printf(1, "\n---------------------------------------------- NEIGHBORS\n\n");
-  olsr_printf(1, "IP address       LQ     NLQ    TLQ    SYM  MPR  will\n");
+  olsr_printf(1, "\n--- %02d:%02d:%02d ------------------------------------------------------ NEIGHBORS\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+              now.tv_usec);
+
+  if (olsr_cnf->ip_version == AF_INET)
+  {
+    olsr_printf(1, "IP address       LQ     NLQ    TLQ    SYM  MPR  will\n");
+    fstr = "%-15s  %5.3f  %5.3f  %5.3f  %s  %s  %d\n";
+  }
+
+  else
+  {
+    olsr_printf(1, "IP address                               LQ     NLQ    TLQ    SYM  MPR  will\n");
+    fstr = "%-39s  %5.3f  %5.3f  %5.3f  %s  %s  %d\n";
+  }
 
   for (i = 0; i < HASHSIZE; i++)
     {
@@ -486,8 +502,7 @@ olsr_print_neighbor_table()
 
           total_lq = best_lq * inv_best_lq;
 
-          olsr_printf(1, "%-15s  %5.3f  %5.3f  %5.3f  %s  %s  %d\n",
-                      olsr_ip_to_string(&neigh->neighbor_main_addr),
+          olsr_printf(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
                       best_lq, inv_best_lq, total_lq,
                       (neigh->status == SYM) ? "SYM" : "   ",
                       neigh->is_mpr ? "MPR" : "   ",

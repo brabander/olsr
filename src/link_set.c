@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.22 2004/11/08 23:25:57 tlopatic Exp $
+ * $Id: link_set.c,v 1.23 2004/11/10 11:54:28 tlopatic Exp $
  *
  */
 
@@ -909,13 +909,28 @@ olsr_time_out_hysteresis()
 void olsr_print_link_set(void)
 {
   struct link_entry *walker;
+  char *fstr;
 
-  olsr_printf(1, "\n-------------------------------------------------- LINKS\n\n");
-  olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ\n");
+  olsr_printf(1, "\n--- %02d:%02d:%02d ---------------------------------------------------------- LINKS\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+              now.tv_usec);
+
+  if (olsr_cnf->ip_version == AF_INET)
+  {
+    olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ\n");
+    fstr = "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n";
+  }
+
+  else
+  {
+    olsr_printf(1, "IP address                               hyst   LQ     lost   total  NLQ\n");
+    fstr = "%-39s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n";
+  }
 
   for (walker = link_set; walker != NULL; walker = walker->next)
-    olsr_printf(1, "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n",
-                olsr_ip_to_string(&walker->neighbor_iface_addr),
+    olsr_printf(1, fstr, olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
                 walker->lost_packets, walker->total_packets,
                 walker->neigh_link_quality);
@@ -925,6 +940,7 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 {
   unsigned char mask = 1 << (entry->loss_index & 7);
   int index = entry->loss_index >> 3;
+  double saved_lq, rel_lq;
 
   if (lost == 0)
     {
@@ -968,10 +984,22 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
   if (entry->total_packets < entry->loss_window_size)
     entry->total_packets++;
 
-  // calculate the link quality
+  // memorize the current link quality
+
+  saved_lq = entry->loss_link_quality;
+
+  // calculate the new link quality
 
   entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
     (float)entry->total_packets;
+
+  // if the link quality has changed by more than 10 percent,
+  // print the new link quality table
+
+  rel_lq = entry->loss_link_quality / saved_lq;
+
+  if (rel_lq > 1.1 || rel_lq < 0.9)
+    changes_neighborhood = OLSR_TRUE;
 }
 
 void olsr_update_packet_loss_hello_int(struct link_entry *entry,

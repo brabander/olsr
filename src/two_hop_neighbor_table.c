@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: two_hop_neighbor_table.c,v 1.7 2004/11/08 23:25:57 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.8 2004/11/10 11:54:28 tlopatic Exp $
  *
  */
 
@@ -235,7 +235,12 @@ olsr_print_two_hop_neighbor_table()
   olsr_bool first;
   double total_lq;
 
-  olsr_printf(1, "\n-------------------------------------- TWO-HOP NEIGHBORS\n\n");
+  olsr_printf(1, "\n--- %02d:%02d:%02d -------------------------- TWO-HOP NEIGHBORS\n\n",
+              nowtm->tm_hour,
+              nowtm->tm_min,
+              nowtm->tm_sec,
+              now.tv_usec);
+
   olsr_printf(1, "IP addr (2-hop)  IP addr (1-hop)  TLQ\n");
 
   for (i = 0; i < HASHSIZE; i++)
