@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.15 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: olsr.c,v 1.16 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -198,9 +198,9 @@ olsr_process_changes()
 			    changes_hna);
     }
 
-  changes_neighborhood = FALSE;
-  changes_topology = FALSE;
-  changes_hna = FALSE;
+  changes_neighborhood = OLSR_FALSE;
+  changes_topology = OLSR_FALSE;
+  changes_hna = OLSR_FALSE;
 
 
   return;
@@ -219,9 +219,9 @@ void
 olsr_init_tables()
 {
   
-  changes_topology = FALSE;
-  changes_neighborhood = FALSE;
-  changes_hna = FALSE;
+  changes_topology = OLSR_FALSE;
+  changes_neighborhood = OLSR_FALSE;
+  changes_hna = OLSR_FALSE;
 
   /* Initialize link set */
   olsr_init_link_set();

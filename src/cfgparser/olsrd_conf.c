@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.12 2004/11/05 02:39:47 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.13 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -161,7 +161,7 @@ olsrd_parse_cnf(char *filename)
     {
       /* set various stuff */
       in->index = cnf->ifcnt++;
-      in->configured = FALSE;
+      in->configured = OLSR_FALSE;
       in->interf = NULL;
       in = in->next;
     }

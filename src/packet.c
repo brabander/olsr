@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.11 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: packet.c,v 1.12 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -31,7 +31,7 @@
 #include "olsr.h"
 
 
-static olsr_bool sending_tc = FALSE;
+static olsr_bool sending_tc = OLSR_FALSE;
 
 /**
  *Build an internal HELLO package for this
@@ -290,7 +290,7 @@ olsr_build_tc_packet(struct tc_message *message)
   struct neighbor_entry  *entry;
   //struct mpr_selector_hash  *mprs_hash;
   //olsr_u16_t          index;
-  olsr_bool entry_added = FALSE;
+  olsr_bool entry_added = OLSR_FALSE;
   struct timeval tmp_timer;
 
   message->multipoint_relay_selector_address=NULL;
@@ -325,7 +325,7 @@ olsr_build_tc_packet(struct tc_message *message)
 		COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		message_mpr->next = message->multipoint_relay_selector_address;
 		message->multipoint_relay_selector_address = message_mpr;
-		entry_added = TRUE;
+		entry_added = OLSR_TRUE;
 		
 		break;
 	      }
@@ -341,7 +341,7 @@ olsr_build_tc_packet(struct tc_message *message)
 		    COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;
-		    entry_added = TRUE;
+		    entry_added = OLSR_TRUE;
 		  }
 		break;
 	      }
@@ -356,7 +356,7 @@ olsr_build_tc_packet(struct tc_message *message)
 		    COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;
-		    entry_added = TRUE;
+		    entry_added = OLSR_TRUE;
 		  }
 		break;
 	      }		
@@ -367,7 +367,7 @@ olsr_build_tc_packet(struct tc_message *message)
 
   if(entry_added)
     {
-      sending_tc = TRUE;
+      sending_tc = OLSR_TRUE;
     }
   else
     {
@@ -378,7 +378,7 @@ olsr_build_tc_packet(struct tc_message *message)
 	  olsr_printf(3, "No more MPR selectors - will send empty TCs\n");
 	  timeradd(&now, &tmp_timer, &send_empty_tc);
 
-	  sending_tc = FALSE;
+	  sending_tc = OLSR_FALSE;
 	}
     }
 

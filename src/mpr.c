@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr.c,v 1.9 2004/11/03 10:00:11 kattemat Exp $
+ * $Id: mpr.c,v 1.10 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -156,7 +156,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 
   //printf("PRE COUNT: %d\n\n", count);
 
-  one_hop_neighbor->is_mpr = TRUE; //NBS_MPR;
+  one_hop_neighbor->is_mpr = OLSR_TRUE; //NBS_MPR;
   
   for(second_hop_entries = one_hop_neighbor->neighbor_2_list.next;
       second_hop_entries != &one_hop_neighbor->neighbor_2_list;
@@ -273,8 +273,8 @@ olsr_clear_mprs()
 	  /* Clear MPR selection */
 	  if(a_neighbor->is_mpr)
 	    {
-	      a_neighbor->was_mpr = TRUE;
-	      a_neighbor->is_mpr = FALSE;
+	      a_neighbor->was_mpr = OLSR_TRUE;
+	      a_neighbor->is_mpr = OLSR_FALSE;
 	    }
 
 	  /* Clear two hop neighbors coverage count */
@@ -312,7 +312,7 @@ olsr_check_mpr_changes()
 	{
 	  if(a_neighbor->was_mpr)
 	    {
-	      a_neighbor->was_mpr = FALSE;
+	      a_neighbor->was_mpr = OLSR_FALSE;
 	      if(!a_neighbor->is_mpr)
 		retval = 1;
 	    }
@@ -525,7 +525,7 @@ olsr_calculate_mpr()
     {
       olsr_printf(3, "CHANGES IN MPR SET\n");
       if(olsr_cnf->tc_redundancy > 0)
-	changes = TRUE;
+	changes = OLSR_TRUE;
     }
 
 }
@@ -589,7 +589,7 @@ olsr_optimize_mpr_set()
 		  if(remove)
 		    {
 		      olsr_printf(3, "MPR OPTIMIZE: removiong mpr %s\n\n", olsr_ip_to_string(&a_neighbor->neighbor_main_addr));
-		      a_neighbor->is_mpr = FALSE;
+		      a_neighbor->is_mpr = OLSR_FALSE;
 		    }
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.20 2004/11/03 18:19:53 tlopatic Exp $
+ * $Id: build_msg.c,v 1.21 2004/11/05 11:52:53 kattemat Exp $
  *
  */
 
@@ -691,7 +691,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg *tc;
   struct neigh_info *mprsaddr; 
-  olsr_bool found = FALSE, partial_sent = FALSE;
+  olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
     return;
@@ -745,15 +745,15 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	      mprsaddr = tc->neigh;
 	      curr_size = 12; /* OLSR message header */
 	      curr_size += 4; /* TC header */
-	      found = FALSE;
-	      partial_sent = TRUE;
+	      found = OLSR_FALSE;
+	      partial_sent = OLSR_TRUE;
 	    }
 
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 
 	}
-      found = TRUE;
+      found = OLSR_TRUE;
       
       COPY_IP(&mprsaddr->addr, &mprs->address);
 
@@ -823,7 +823,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
-  olsr_bool found = FALSE, partial_sent = FALSE;
+  olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
     return;
@@ -874,15 +874,15 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	      mprsaddr6 = tc6->neigh;
 	      curr_size = 24; /* OLSR message header */
 	      curr_size += 4; /* TC header */
-	      found = FALSE;
-	      partial_sent = TRUE;
+	      found = OLSR_FALSE;
+	      partial_sent = OLSR_TRUE;
 	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 		
 
 	}
-      found = TRUE;
+      found = OLSR_TRUE;
 
       //printf("mprsaddr6 is %x\n", (char *)mprsaddr6 - packet);
       //printf("Adding MPR-selector: %s\n", olsr_ip_to_string(&mprs->address));fflush(stdout);	    

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.c,v 1.7 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: hna_set.c,v 1.8 2004/11/05 11:52:54 kattemat Exp $
  *
  */
 
@@ -226,7 +226,7 @@ olsr_update_hna_entry(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna
     {
       /* Need to add the net */
       net_entry = olsr_add_hna_net(gw_entry, net, mask);
-      changes_hna = TRUE;
+      changes_hna = OLSR_TRUE;
     }
 
   /* Update holdingtime */
@@ -268,7 +268,7 @@ olsr_time_out_hna_set(void *foo)
 		  net_to_delete = tmp_net;
 		  tmp_net = tmp_net->next;
 		  delete_hna_net(net_to_delete);
-		  changes_hna = TRUE;
+		  changes_hna = OLSR_TRUE;
 		}
 	      else
 		tmp_net = tmp_net->next;

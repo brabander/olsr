@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.9 2004/11/03 10:00:11 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.10 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -186,7 +186,7 @@ olsr_delete_neighbor_table(union olsr_ip_addr *neighbor_addr)
 
   free(entry);
 
-  changes_neighborhood = TRUE;
+  changes_neighborhood = OLSR_TRUE;
   return 1;
 
 }
@@ -231,8 +231,8 @@ olsr_insert_neighbor_table(union olsr_ip_addr *main_addr)
   new_neigh->neighbor_2_list.prev = &new_neigh->neighbor_2_list;
   
   new_neigh->linkcount = 0;
-  new_neigh->is_mpr = FALSE;
-  new_neigh->was_mpr = FALSE;
+  new_neigh->is_mpr = OLSR_FALSE;
+  new_neigh->was_mpr = OLSR_FALSE;
 
   /* Queue */
   QUEUE_ELEM(neighbortable[hash], new_neigh);
@@ -341,10 +341,10 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 	      olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
 	    }
   
-	  changes_neighborhood = TRUE;
-	  changes_topology = TRUE;
+	  changes_neighborhood = OLSR_TRUE;
+	  changes_topology = OLSR_TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = TRUE;
+	    changes = OLSR_TRUE;
 	}
       entry->status = SYM;
     }
@@ -352,10 +352,10 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
     {
       if(entry->status == SYM)
 	{
-	  changes_neighborhood = TRUE;
-	  changes_topology = TRUE;
+	  changes_neighborhood = OLSR_TRUE;
+	  changes_topology = OLSR_TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = TRUE;
+	    changes = OLSR_TRUE;
 	}
       /* else N_status is set to NOT_SYM */
       entry->status = NOT_SYM;
@@ -410,9 +410,9 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
 	  free(two_hop_to_delete);
 
-	  /* This flag is set to TRUE to recalculate the MPR set and the routing table*/
-	  changes_neighborhood = TRUE;
-	  changes_topology = TRUE;
+	  /* This flag is set to OLSR_TRUE to recalculate the MPR set and the routing table*/
+	  changes_neighborhood = OLSR_TRUE;
+	  changes_topology = OLSR_TRUE;
 	  
 	}
       else

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.4 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.5 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -31,12 +31,12 @@
 
 /* Default valuse not declared in olsr_protocol.h */
 #define DEF_POLLRATE       0.1
-#define DEF_WILL_AUTO      TRUE
-#define DEF_ALLOW_NO_INTS  TRUE
+#define DEF_WILL_AUTO      OLSR_TRUE
+#define DEF_ALLOW_NO_INTS  OLSR_TRUE
 #define DEF_TOS            16
 #define DEF_DEBUGLVL       1
-#define DEF_OPEN_IPC       FALSE
-#define DEF_USE_HYST       TRUE
+#define DEF_OPEN_IPC       OLSR_FALSE
+#define DEF_USE_HYST       OLSR_TRUE
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U

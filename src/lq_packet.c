@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.c,v 1.1 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.2 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -645,8 +645,8 @@ static void process_lq_hello(struct lq_hello_message *lq_hello,
     {
       link->neighbor->willingness = lq_hello->will;
 
-      changes_neighborhood = TRUE;
-      changes_topology = TRUE;
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
     }
 
   // we'll never be able to reach a two-hop neighbor via this neighbor,
@@ -719,8 +719,8 @@ static void process_lq_hello(struct lq_hello_message *lq_hello,
               olsr_linking_this_2_entries(link->neighbor, n2e,
                                           (float)lq_hello->comm.vtime);
 
-              changes_neighborhood = TRUE;
-              changes_topology = TRUE;
+              changes_neighborhood = OLSR_TRUE;
+              changes_topology = OLSR_TRUE;
             }
         }
     }

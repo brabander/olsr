@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.11 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: process_package.c,v 1.12 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -119,8 +119,8 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
        *If willingness changed - recalculate
        */
       neighbor->willingness = message.willingness;
-      changes_neighborhood = TRUE;
-      changes_topology = TRUE;
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
     }
 
 
@@ -212,11 +212,11 @@ olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union o
 
       /* Delete destinations with lower ANSN */
       if(olsr_tc_delete_mprs(tc_last, &message))
-	changes_topology = TRUE; 
+	changes_topology = OLSR_TRUE; 
 
       /* Update destinations */
       if(olsr_tc_update_mprs(tc_last, &message))
-	changes_topology = TRUE;
+	changes_topology = OLSR_TRUE;
 
       /* Delete possible empty TC entry */
       if(changes_topology)
@@ -234,7 +234,7 @@ olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union o
 	  /* Update destinations */
 	  olsr_tc_update_mprs(tc_last, &message);
 	  
-	  changes_topology = TRUE;
+	  changes_topology = OLSR_TRUE;
 	}
       else
 	{
@@ -505,8 +505,8 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,struct hello_mess
 		{
 		 
 		  //printf("Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&message_neighbors->address)); 
-		  changes_neighborhood = TRUE;
-		  changes_topology = TRUE;
+		  changes_neighborhood = OLSR_TRUE;
+		  changes_topology = OLSR_TRUE;
 		  two_hop_neighbor = olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
 		  
 		  two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
@@ -523,8 +523,8 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,struct hello_mess
 		  /*
 		    linking to this two_hop_neighbor entry
 		  */	
-		  changes_neighborhood = TRUE;
-		  changes_topology = TRUE;
+		  changes_neighborhood = OLSR_TRUE;
+		  changes_topology = OLSR_TRUE;
 		  
 		  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime); 
 		}

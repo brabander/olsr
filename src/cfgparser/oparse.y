@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.11 2004/11/05 02:39:47 tlopatic Exp $
+ * $Id: oparse.y,v 1.12 2004/11/05 11:52:57 kattemat Exp $
  *
  */
 
@@ -450,7 +450,7 @@ atos: TOK_TOS TOK_INTEGER
 
 awillingness: TOK_WILLINGNESS TOK_INTEGER
 {
-  cnf->willingness_auto = FALSE;
+  cnf->willingness_auto = OLSR_FALSE;
 
   if(PARSER_DEBUG) printf("Willingness: %d\n", $2->integer);
   cnf->willingness = $2->integer;

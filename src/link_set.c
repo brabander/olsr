@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.14 2004/11/05 02:06:13 tlopatic Exp $
+ * $Id: link_set.c,v 1.15 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -804,7 +804,7 @@ olsr_time_out_link_set()
 		tmp_link_set->neighbor->linkcount--;
 
 	      //olsr_delete_neighbor_if_no_link(&tmp_link_set->neighbor->neighbor_main_addr);
-	      changes_neighborhood = TRUE;
+	      changes_neighborhood = OLSR_TRUE;
 
 	      free(tmp_link_set);
 	      tmp_link_set = last_link_entry;
@@ -820,7 +820,7 @@ olsr_time_out_link_set()
 		tmp_link_set->neighbor->linkcount--;
 	      //olsr_delete_neighbor_if_no_link(&tmp_link_set->neighbor->neighbor_main_addr);
 
-	      changes_neighborhood = TRUE;
+	      changes_neighborhood = OLSR_TRUE;
 
 	      free(tmp_link_set);
 	      tmp_link_set = link_set;

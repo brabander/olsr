@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_protocol.h,v 1.9 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: olsr_protocol.h,v 1.10 2004/11/05 11:52:56 kattemat Exp $
  *
  */
 
@@ -46,8 +46,8 @@
 
 typedef enum
 {
-    FALSE = 0,
-    TRUE
+    OLSR_FALSE = 0,
+    OLSR_TRUE
 }olsr_bool;
 
 #ifdef linux

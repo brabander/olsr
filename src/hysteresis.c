@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hysteresis.c,v 1.7 2004/11/03 09:22:59 kattemat Exp $
+ * $Id: hysteresis.c,v 1.8 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -63,14 +63,14 @@ olsr_process_hysteresis(struct link_entry *entry)
 	{
 	  olsr_printf(1, "HYST[%s] link set to NOT pending!\n", 
 		      olsr_ip_to_string(&entry->neighbor_iface_addr));
-	  changes_neighborhood = TRUE;
+	  changes_neighborhood = OLSR_TRUE;
 	}
 
       /* Pending = false */
       entry->L_link_pending = 0;
 
       if(!TIMED_OUT(&entry->L_LOST_LINK_time))
-	changes_neighborhood = TRUE;
+	changes_neighborhood = OLSR_TRUE;
 
       /* time = now -1 */
       entry->L_LOST_LINK_time = now;
@@ -85,14 +85,14 @@ olsr_process_hysteresis(struct link_entry *entry)
 	{
 	  olsr_printf(1, "HYST[%s] link set to pending!\n", 
 		      olsr_ip_to_string(&entry->neighbor_iface_addr));
-	  changes_neighborhood = TRUE;
+	  changes_neighborhood = OLSR_TRUE;
 	}
       
       /* Pending = true */
       entry->L_link_pending = 1;
 
       if(TIMED_OUT(&entry->L_LOST_LINK_time))
-	changes_neighborhood = TRUE;
+	changes_neighborhood = OLSR_TRUE;
 
       /* Timer = min (L_time, current time + NEIGHB_HOLD_TIME) */
       //tmp_timer = now;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.10 2004/11/05 02:06:13 tlopatic Exp $
+ * $Id: ipc_frontend.c,v 1.11 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -134,7 +134,7 @@ ipc_accept_thread()
 	    }
 	  else
 	    {
-	      ipc_active = TRUE;
+	      ipc_active = OLSR_TRUE;
 	      ipc_send_net_info();
 	      ipc_send_all_routes();
 	      olsr_printf(1, "Connection from %s\n",addr);
@@ -200,7 +200,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
       olsr_printf(1, "(OUTPUT)IPC connection lost!\n");
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
-      ipc_active = FALSE;
+      ipc_active = OLSR_FALSE;
       return;
     }
   
@@ -284,7 +284,7 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
       olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
       close(ipc_connection);
       //olsr_cnf->open_ipc = 0;
-      ipc_active = FALSE;
+      ipc_active = OLSR_FALSE;
       return -1;
     }
 
@@ -346,7 +346,7 @@ ipc_send_all_routes()
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
-	      ipc_active = FALSE;
+	      ipc_active = OLSR_FALSE;
 	      return -1;
 	    }
 
@@ -391,7 +391,7 @@ ipc_send_all_routes()
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
 	      //olsr_cnf->open_ipc = 0;
-	      ipc_active = FALSE;
+	      ipc_active = OLSR_FALSE;
 	      return -1;
 	    }
 

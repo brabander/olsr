@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.27 2004/11/05 02:06:13 tlopatic Exp $
+ * $Id: main.c,v 1.28 2004/11/05 11:52:55 kattemat Exp $
  *
  */
 
@@ -375,7 +375,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-dispin") == 0) 
 	{
 	  argv++; argc--;
-	  disp_pack_in = TRUE;
+	  disp_pack_in = OLSR_TRUE;
 	  continue;
 	}
 
@@ -385,7 +385,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-dispout") == 0) 
 	{
 	  argv++; argc--;
-	  disp_pack_out = TRUE;
+	  disp_pack_out = OLSR_TRUE;
 	  continue;
 	}
 
@@ -396,7 +396,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-ipc") == 0) 
 	{
 	  argv++; argc--;
-	  olsr_cnf->open_ipc = TRUE;
+	  olsr_cnf->open_ipc = OLSR_TRUE;
 	  continue;
 	}
 
@@ -407,7 +407,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-llinfo") == 0) 
 	{
 	  argv++; argc--;
-	  llinfo = TRUE;
+	  llinfo = OLSR_TRUE;
 	  continue;
 	}
 
@@ -417,7 +417,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-tnl") == 0) 
 	{
 	  argv++; argc--;
-	  use_tunnel = TRUE;
+	  use_tunnel = OLSR_TRUE;
 
 	  continue;
 	}
@@ -448,7 +448,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-delgw") == 0) 
 	{
 	  argv++; argc--;
-	  del_gws = TRUE;
+	  del_gws = OLSR_TRUE;
 	  continue;
 	}
 
@@ -640,7 +640,7 @@ main(int argc, char *argv[])
 
   /* ctrl-C and friends */
 #ifdef WIN32
-  SetConsoleCtrlHandler(SignalHandler, TRUE);
+  SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
 #else
   signal(SIGINT, olsr_shutdown);  
   signal(SIGTERM, olsr_shutdown);  
@@ -745,16 +745,16 @@ set_default_values()
 #endif
 
   /* Gateway tunneling */
-  use_tunnel = FALSE;
-  inet_tnl_added = FALSE;
-  gw_tunnel = FALSE;
+  use_tunnel = OLSR_FALSE;
+  inet_tnl_added = OLSR_FALSE;
+  gw_tunnel = OLSR_FALSE;
 
-  llinfo = FALSE;
-  del_gws = FALSE;
+  llinfo = OLSR_FALSE;
+  del_gws = OLSR_FALSE;
 
   /* Display packet content */
-  disp_pack_in = FALSE;
-  disp_pack_out = FALSE;
+  disp_pack_in = OLSR_FALSE;
+  disp_pack_out = OLSR_FALSE;
 }
 
 
