@@ -1,5 +1,19 @@
 This file states changes as of version 0.2.4:
 
+0.4.7 ---------------------------------------------------------------------
+
+NATIVE WINDOWS GUI AND INSTALLER
+
+We now have a native Windows GUI. The GTK+ version is no longer
+supported on Windows. The new native GUI is pretty compact as it does
+not require the GTK+ runtime DLLs. In addition to monitoring olsrd's
+state the GUI offers an easy way for novice users to configure
+olsrd. It's pretty self-explanatory. Have a look at README-WIN32.txt
+for details. The Windows version now also comes with an installer
+based on the freely available Nullsoft Scriptable Install System
+(NSIS). Looks like the Windows port is becoming more and more
+Windows-ish. :-)
+
 0.4.6 ---------------------------------------------------------------------
 
 WINDOWS PORT!
