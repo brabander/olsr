@@ -22,7 +22,7 @@ OBJS=	src/olsrd_plugin.o src/olsrd_power.o
 
 #Headerfiles
 #add yours here
-HDRS=	src/olsrd_plugin.h src/olsrd_power.h
+HDRS=	src/olsrd_plugin.h src/olsrd_power.h src/olsr_plugin_io.h
 
 # -Wl passes options to the linker(-soname,....)
 # Use -lc to link it against C library
