@@ -71,6 +71,7 @@ help:
 	@echo ' ---------------------------------  '
 	@echo ' linux - GNU/Linux                  '
 	@echo ' fbsd  - FreeBSD                    '
+	@echo ' win32 - Windows                    '
 	@echo ' ---------------------------------  '
 	@echo ' Example - build for FreeBSD:       '
 	@echo ' gmake OS=fbsd                      '

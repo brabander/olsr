@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.13 2005/01/30 14:57:35 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.14 2005/01/30 15:12:59 kattemat Exp $
  */
 
 /*
@@ -55,17 +55,32 @@
 #endif
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 #ifndef WIN32
 #include <pthread.h>
+#else
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef interface
+
+#define close(x) closesocket(x)
+
+typedef HANDLE pthread_mutex_t;
+typedef HANDLE pthread_t;
+
+int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg);
+int pthread_kill(HANDLE Hand, int Sig);
+int pthread_mutex_init(HANDLE *Hand, void *Attr);
+int pthread_mutex_lock(HANDLE *Hand);
+int pthread_mutex_unlock(HANDLE *Hand);
+
+struct ThreadPara
+{
+  void *(*Func)(void *);
+  void *Arg;
+};
+
 #endif
-#include <time.h>
-
-/* 
- * internal variables and functions
- */ 
-
-//static int gw_already_added;
-//static int has_available_gw;
 
 /* set default interval, in case none is given in the config file */
 static int check_interval = 5;
@@ -440,3 +455,100 @@ add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, union 
   return new;
 }
 
+
+
+#ifdef WIN32
+
+/*
+ * Windows ptread compat stuff
+ */
+static unsigned long __stdcall ThreadWrapper(void *Para)
+{
+  struct ThreadPara *Cast;
+  void *(*Func)(void *);
+  void *Arg;
+
+  Cast = (struct ThreadPara *)Para;
+
+  Func = Cast->Func;
+  Arg = Cast->Arg;
+  
+  HeapFree(GetProcessHeap(), 0, Para);
+
+  Func(Arg);
+
+  return 0;
+}
+
+int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg)
+{
+  struct ThreadPara *Para;
+  unsigned long ThreadId;
+
+  Para = HeapAlloc(GetProcessHeap(), 0, sizeof (struct ThreadPara));
+
+  if (Para == NULL)
+    return -1;
+
+  Para->Func = Func;
+  Para->Arg = Arg;
+
+  *Hand = CreateThread(NULL, 0, ThreadWrapper, Para, 0, &ThreadId);
+
+  if (*Hand == NULL)
+    return -1;
+
+  return 0;
+}
+
+int pthread_kill(HANDLE Hand, int Sig)
+{
+  if (!TerminateThread(Hand, 0))
+    return -1;
+
+  return 0;
+}
+
+int pthread_mutex_init(HANDLE *Hand, void *Attr)
+{
+  *Hand = CreateMutex(NULL, FALSE, NULL);
+
+  if (*Hand == NULL)
+    return -1;
+
+  return 0;
+}
+
+int pthread_mutex_lock(HANDLE *Hand)
+{
+  if (WaitForSingleObject(*Hand, INFINITE) == WAIT_FAILED)
+    return -1;
+
+  return 0;
+}
+
+int pthread_mutex_unlock(HANDLE *Hand)
+{
+  if (!ReleaseMutex(*Hand))
+    return -1;
+
+  return 0;
+}
+
+int inet_aton(char *AddrStr, struct in_addr *Addr)
+{
+  Addr->s_addr = inet_addr(AddrStr);
+
+  return 1;
+}
+
+int nanosleep(struct timespec *Req, struct timespec *Rem)
+{
+  Sleep(Req->tv_sec * 1000 + Req->tv_nsec / 1000000);
+
+  Rem->tv_sec = 0;
+  Rem->tv_nsec = 0;
+
+  return 0;
+}
+#endif
