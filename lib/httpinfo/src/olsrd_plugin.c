@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.3 2004/12/18 19:12:35 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.4 2004/12/18 22:50:55 kattemat Exp $
  */
 
 /*
@@ -232,6 +232,24 @@ fetch_olsrd_data()
     mid_set = NULL;
     retval = 0;
   }
+
+
+  if(!olsr_plugin_io(GETD__ROUTINGTABLE,
+		     &host_routes,
+		     sizeof(host_routes)))
+  {
+    host_routes = NULL;
+    retval = 0;
+  }
+
+  if(!olsr_plugin_io(GETD__HNA_ROUTES,
+		     &hna_routes,
+		     sizeof(hna_routes)))
+  {
+    hna_routes = NULL;
+    retval = 0;
+  }
+
 
   /* Configuration */
   if(!olsr_plugin_io(GETD__OLSR_CNF, 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.11 2004/12/18 19:12:35 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.12 2004/12/18 22:50:55 kattemat Exp $
  */
 
 /*
@@ -70,6 +70,9 @@ static int
 build_frame(char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
 
 int
+build_routes_body(char *, olsr_u32_t);
+
+int
 build_status_body(char *, olsr_u32_t);
 
 int
@@ -87,7 +90,7 @@ build_mid_body(char *, olsr_u32_t);
 char *
 sockaddr_to_string(struct sockaddr *);
 
-
+static struct timeval start_time;
 static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
 static int http_socket;
@@ -101,6 +104,8 @@ static int http_socket;
 int
 olsr_plugin_init()
 {
+  /* Get start time */
+  gettimeofday(&start_time, NULL);
 
   curr_clients = 0;
   /* set up HTTP socket */
@@ -251,6 +256,7 @@ parse_http_request(int fd)
       /* All is good */
 
       build_frame("Status", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
+      build_frame("Current Routes", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_routes_body);
       build_frame("Links and Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_neigh_body);
       build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
       build_frame("HNA", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
@@ -408,6 +414,55 @@ build_frame(char *title, char *buf, olsr_u32_t bufsize, int(*frame_body_cb)(char
 
 
 int
+build_routes_body(char *buf, olsr_u32_t bufsize)
+{
+  int size = 0, index;
+  struct rt_entry *routes;
+
+  size += sprintf(&buf[size], "OLSR host routes in kernel\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+
+  /* Neighbors */
+  for(index = 0;index < HASHSIZE;index++)
+    {
+      for(routes = host_routes[index].next;
+	  routes != &host_routes[index];
+	  routes = routes->next)
+	{
+	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n",
+			  olsr_ip_to_string(&routes->rt_dst),
+			  olsr_ip_to_string(&routes->rt_router),
+			  routes->rt_metric,
+			  routes->rt_if->int_name);
+	}
+    }
+
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+  size += sprintf(&buf[size], "OLSR HNA routes in kernel\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th></tr>\n");
+
+  /* Neighbors */
+  for(index = 0;index < HASHSIZE;index++)
+    {
+      for(routes = hna_routes[index].next;
+	  routes != &hna_routes[index];
+	  routes = routes->next)
+	{
+	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td></tr>\n",
+			  olsr_ip_to_string(&routes->rt_dst),
+			  olsr_ip_to_string(&routes->rt_router),
+			  routes->rt_metric,
+			  routes->rt_if->int_name);
+	}
+    }
+
+  size += sprintf(&buf[size], "</table><hr>\n");
+
+  return size;
+}
+
+int
 build_status_body(char *buf, olsr_u32_t bufsize)
 {
     char systime[100];
@@ -416,12 +471,28 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     struct olsr_if *ifs;
     struct plugin_entry *pentry;
     struct plugin_param *pparam;
+    struct timeval now, uptime;
+    int hours, mins, days;
+
+    gettimeofday(&now, NULL);
+    timersub(&now, &start_time, &uptime);
+    days = uptime.tv_sec/86400;
+    uptime.tv_sec -= days*86400;
+    hours = uptime.tv_sec/3600;
+    uptime.tv_sec -= hours*3600;
+    mins = uptime.tv_sec/60;
+    uptime.tv_sec -= mins*60;
 
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
 
 
     size += sprintf(&buf[size], "%s\n", systime);
+
+    if(days)
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%s day(s) %02d hours %02d minutes %02 seconds</i>\n", days, hours, mins, uptime.tv_sec);
+    else
+      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i>\n", hours, mins, uptime.tv_sec);
 
     size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
     

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.4 2004/12/18 19:12:35 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.5 2004/12/18 22:50:55 kattemat Exp $
  */
 
 /*
@@ -315,6 +315,19 @@ struct mid_entry
   struct timeval ass_timer;  
 };
 
+/* Routing table */
+struct rt_entry
+{
+  union olsr_ip_addr    rt_dst;
+  union olsr_ip_addr    rt_router;
+  union hna_netmask     rt_mask;
+  olsr_u8_t  	        rt_flags; 
+  olsr_u16_t 	        rt_metric;
+  struct interface      *rt_if;
+  struct rt_entry       *prev;
+  struct rt_entry       *next;
+};
+
 
 /* The lists */
 
@@ -324,6 +337,8 @@ struct link_entry *link_set;
 struct tc_entry *tc_table;
 struct hna_entry *hna_set;
 struct mid_entry *mid_set;
+struct rt_entry *host_routes;
+struct rt_entry *hna_routes;
 
 
 /* Buffer for olsr_ip_to_string */
