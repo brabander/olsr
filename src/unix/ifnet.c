@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.16 2005/02/17 07:19:49 kattemat Exp $
+ * $Id: ifnet.c,v 1.17 2005/02/17 17:21:24 kattemat Exp $
  */
 
 
@@ -202,7 +202,10 @@ chk_if_changed(struct olsr_if *iface)
   ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
 
   /* Set interface metric */
-  ifp->int_metric = calculate_if_metric(ifr.ifr_name);
+  if(iface->cnf->weight.fixed)
+    ifp->int_metric = iface->cnf->weight.value;
+  else
+    ifp->int_metric = calculate_if_metric(ifr.ifr_name);
 
   /* Get MTU */
   if (ioctl(ioctl_s, SIOCGIFMTU, &ifr) < 0)
@@ -660,7 +663,11 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   ifs.if_index = if_nametoindex(ifr.ifr_name);
   
   /* Set interface metric */
-  ifs.int_metric = calculate_if_metric(ifr.ifr_name);
+  /* Set interface metric */
+  if(iface->cnf->weight.fixed)
+    ifs.int_metric = iface->cnf->weight.value;
+  else
+    ifs.int_metric = calculate_if_metric(ifr.ifr_name);
   olsr_printf(1, "\tMetric: %d\n", ifs.int_metric);
 
   /* setting the interfaces number*/

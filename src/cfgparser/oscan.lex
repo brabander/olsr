@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.15 2005/02/15 17:17:56 tlopatic Exp $
+ * $Id: oscan.lex,v 1.16 2005/02/17 17:21:24 kattemat Exp $
  */
 
 
@@ -379,6 +379,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "ClearScreen" {
   yylval = NULL;
   return TOK_CLEAR_SCREEN;
+}
+
+"Weight" {
+  yylval = NULL;
+  return TOK_IFWEIGHT;
 }
 
 "Ip4Broadcast" {

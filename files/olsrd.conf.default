@@ -249,5 +249,17 @@ Interface "XXX" "YYY"
 
     # HNA validity time
     # HnaValidityTime 	15.0
+
+    # When multiple links exist between hosts
+    # the weight of interface is used to determine
+    # the link to use. Normally the weight is
+    # automatically calculated by olsrd based
+    # on the characteristics of the interface,
+    # but here you can specify a fixed value.
+    # Olsrd will choos links with the lowest value.
+
+    # Weight 0
+
+
 }
 

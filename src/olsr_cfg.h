@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.17 2005/02/15 17:17:43 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.18 2005/02/17 17:21:24 kattemat Exp $
  */
 
 
@@ -124,12 +124,19 @@ struct olsr_lq_mult
   struct olsr_lq_mult *next;
 };
 
+struct olsr_if_weight
+{
+  int        value;
+  olsr_bool  fixed;
+};
+
 struct if_config_options
 {
   union olsr_ip_addr       ipv4_broadcast;
   int                      ipv6_addrtype;
   union olsr_ip_addr       ipv6_multi_site;
   union olsr_ip_addr       ipv6_multi_glbl;
+  struct olsr_if_weight    weight;
   struct olsr_msg_params   hello_params;
   struct olsr_msg_params   tc_params;
   struct olsr_msg_params   mid_params;

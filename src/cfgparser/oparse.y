@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.24 2005/02/15 17:17:46 tlopatic Exp $
+ * $Id: oparse.y,v 1.25 2005/02/17 17:21:24 kattemat Exp $
  */
 
 
@@ -162,6 +162,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 %token TOK_IP6ADDRTYPE
 %token TOK_IP6MULTISITE
 %token TOK_IP6MULTIGLOBAL
+%token TOK_IFWEIGHT
 %token TOK_HELLOINT
 %token TOK_HELLOVAL
 %token TOK_TCINT
@@ -254,6 +255,7 @@ ifstmts:   | ifstmts ifstmt
 ;
 
 ifstmt:      vcomment
+             | iifweight
              | isetip4br
              | isetip6addrt
              | isetip6mults
@@ -289,7 +291,6 @@ imaxipc: TOK_MAXIPC TOK_INTEGER
   free($2);
 }
 ;
-
 
 ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
 {
@@ -347,6 +348,26 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
   free($3->string);
   free($3);
 
+}
+;
+
+iifweight:       TOK_IFWEIGHT TOK_INTEGER
+{
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("Fixed willingness: %d\n", $2->integer);
+
+  while(ifcnt)
+    {
+      ifs->cnf->weight.value = $2->integer;
+      ifs->cnf->weight.fixed = OLSR_TRUE;
+
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
 }
 ;
 

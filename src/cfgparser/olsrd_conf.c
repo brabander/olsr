@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.32 2005/02/15 17:17:44 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.33 2005/02/17 17:21:24 kattemat Exp $
  */
 
 
@@ -174,7 +174,7 @@ olsrd_parse_cnf(const char *filename)
   
   fclose(yyin);
 
-  /* Turn the if queue "around" (added by user request) */
+  /* Reverse the queue (added by user request) */
   in = cnf->interfaces;
   new_ifqueue = NULL;
 
@@ -344,7 +344,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Interface %s has no configuration!\n", in->name);
 	  return -1;
 	}
-
+	
       /* HELLO interval */
       if(io->hello_params.emission_interval < cnf->pollrate ||
 	 io->hello_params.emission_interval > io->hello_params.validity_time)
@@ -509,6 +509,9 @@ get_default_if_config()
   memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
   io->lq_mult = NULL;
+
+  io->weight.fixed = OLSR_FALSE;
+  io->weight.value = 0;
 
   io->hello_params.emission_interval = HELLO_INTERVAL;
   io->hello_params.validity_time = NEIGHB_HOLD_TIME;
