@@ -33,6 +33,7 @@ all: plugin
 
 plugin: $(OBJS)
 	$(CC) $(LDFLAGS) $(MYFLAGS) -g -shared -Wl,-soname,$(NAME) \
+	-Wl,--version-script=version-script.txt \
 	-o $(NAME) $(OBJS) $(LIBS)
 
 
