@@ -1,5 +1,5 @@
 /*
- * $Id: FrontendDlg.cpp,v 1.3 2004/09/15 11:18:41 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.4 2004/09/15 17:51:21 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -157,7 +157,7 @@ Restart3:
 
 		while (Pos2 != NULL)
 		{
-			HnaEntry = Entry.HnaList.GetNext(Pos2);
+			HnaEntry = Entry.HnaList.GetAt(Pos2);
 
 			if (HnaEntry.Timeout < Now)
 			{
