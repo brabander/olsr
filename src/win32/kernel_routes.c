@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: kernel_routes.c,v 1.7 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.8 2004/11/14 20:25:34 tlopatic Exp $
  *
  */
 
@@ -39,8 +39,6 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
 {
   MIB_IPFORWARDROW Row;
   unsigned long Res;
-  union olsr_kernel_route Route;
-  char *IntString;
   char Str1[16], Str2[16], Str3[16];
 
   inet_ntop(AF_INET, &Dest->rt_dst.v4, Str1, 16);
@@ -78,20 +76,8 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
   }
 
   if(olsr_cnf->open_ipc)
-  {
-    memset(&Route, 0, sizeof (Route));
-
-    Route.v4.rt_metric = Dest->rt_metric;
-
-    ((struct sockaddr_in *)&Route.v4.rt_gateway)->sin_addr.s_addr =
-      Dest->rt_router.v4;
-
-    ((struct sockaddr_in *)&Route.v4.rt_dst)->sin_addr.s_addr =
-      Dest->rt_dst.v4;
-
-    IntString = (Dest->rt_router.v4 == 0) ? NULL : Dest->rt_if->int_name;
-    ipc_route_send_rtentry(&Route, 1, IntString);
-  }
+    ipc_route_send_rtentry(&Dest->rt_dst, &Dest->rt_router, &Dest->rt_metric,
+                           1, Dest->rt_if->int_name);
 
   return 0;
 }
@@ -107,7 +93,6 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
 {
   MIB_IPFORWARDROW Row;
   unsigned long Res;
-  union olsr_kernel_route Route;
   char Str1[16], Str2[16], Str3[16];
 
   inet_ntop(AF_INET, &Dest->rt_dst.v4, Str1, 16);
@@ -139,19 +124,7 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
   }
 
   if(olsr_cnf->open_ipc)
-  {
-    memset(&Route, 0, sizeof (Route));
-
-    Route.v4.rt_metric = Dest->rt_metric;
-
-    ((struct sockaddr_in *)&Route.v4.rt_gateway)->sin_addr.s_addr =
-      Dest->rt_router.v4;
-
-    ((struct sockaddr_in *)&Route.v4.rt_dst)->sin_addr.s_addr =
-      Dest->rt_dst.v4;
-
-    ipc_route_send_rtentry(&Route, 0, NULL);
-  }
+    ipc_route_send_rtentry(&Dest->rt_dst, NULL, &Dest->rt_metric, 0, NULL);
 
   return 0;
 }

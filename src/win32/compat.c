@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: compat.c,v 1.7 2004/11/10 11:08:32 tlopatic Exp $
+ * $Id: compat.c,v 1.8 2004/11/14 20:25:34 tlopatic Exp $
  *
  */
 
@@ -39,90 +39,10 @@
  * SOFTWARE.
  */
 
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <ctype.h>
 #include "defs.h"
-
-struct ThreadPara
-{
-  void *(*Func)(void *);
-  void *Arg;
-};
-
-static unsigned long __stdcall ThreadWrapper(void *Para)
-{
-  struct ThreadPara *Cast;
-  void *(*Func)(void *);
-  void *Arg;
-
-  Cast = (struct ThreadPara *)Para;
-
-  Func = Cast->Func;
-  Arg = Cast->Arg;
-  
-  HeapFree(GetProcessHeap(), 0, Para);
-
-  Func(Arg);
-
-  return 0;
-}
-
-int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg)
-{
-  struct ThreadPara *Para;
-  unsigned long ThreadId;
-
-  Para = HeapAlloc(GetProcessHeap(), 0, sizeof (struct ThreadPara));
-
-  if (Para == NULL)
-    return -1;
-
-  Para->Func = Func;
-  Para->Arg = Arg;
-
-  *Hand = CreateThread(NULL, 0, ThreadWrapper, Para, 0, &ThreadId);
-
-  if (*Hand == NULL)
-    return -1;
-
-  return 0;
-}
-
-int pthread_kill(HANDLE Hand, int Sig)
-{
-  if (!TerminateThread(Hand, 0))
-    return -1;
-
-  return 0;
-}
-
-int pthread_mutex_init(HANDLE *Hand, void *Attr)
-{
-  *Hand = CreateMutex(NULL, FALSE, NULL);
-
-  if (*Hand == NULL)
-    return -1;
-
-  return 0;
-}
-
-int pthread_mutex_lock(HANDLE *Hand)
-{
-  if (WaitForSingleObject(*Hand, INFINITE) == WAIT_FAILED)
-    return -1;
-
-  return 0;
-}
-
-int pthread_mutex_unlock(HANDLE *Hand)
-{
-  if (!ReleaseMutex(*Hand))
-    return -1;
-
-  return 0;
-}
 
 void sleep(unsigned int Sec)
 {
