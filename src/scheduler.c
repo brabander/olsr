@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.18 2004/11/15 15:50:08 tlopatic Exp $
+ * $Id: scheduler.c,v 1.19 2004/11/15 15:56:07 tlopatic Exp $
  *
  */
 
@@ -122,9 +122,8 @@ scheduler()
 
       if(changes)
 	{
-          // if the MPR selector set was update, we have to print
-          // the updated neighbour table, as it now contains an
-          // "MPRS" column
+          // if the MPR selector might have been updated, we have to print
+          // the updated neighbour table, as it now contains an "MPRS" column
 
           olsr_print_neighbor_table();
 
