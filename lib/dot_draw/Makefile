@@ -11,6 +11,7 @@ LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
 # -fPIC creates position independent code
 MYFLAGS ?= -Wall -fPIC -g # Uncomment -g for debugging
 LIBS ?= -lc -lm
+CFLAGS ?= -g -O2
 
 #Sourcefiles
 #add yours here
@@ -32,12 +33,13 @@ all: plugin
 
 
 plugin: $(OBJS)
-	$(CC) $(LDFLAGS) $(MYFLAGS) -g -shared -Wl,-soname,$(NAME) \
+	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \
 	-Wl,--version-script=version-script.txt \
 	-o $(NAME) $(OBJS) $(LIBS)
 
 
 install:
+	strip $(NAME)
 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
 	/sbin/ldconfig -n $(LIBDIR)
 
