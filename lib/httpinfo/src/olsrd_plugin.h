@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.11 2005/01/22 00:12:58 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.12 2005/02/17 21:17:01 kattemat Exp $
  */
 
 /*
@@ -375,6 +375,9 @@ struct mpr_selector
   struct mpr_selector *next;
   struct mpr_selector *prev;
 };
+
+/* Global config pointer */
+struct olsrd_config *cfg;
 
 /****************************************************************************
  *                Function pointers to functions in olsrd                   *

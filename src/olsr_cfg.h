@@ -36,14 +36,16 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.18 2005/02/17 17:21:24 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.19 2005/02/17 21:16:16 kattemat Exp $
  */
 
 
 #ifndef _OLSRD_CFGPARSER_H
 #define _OLSRD_CFGPARSER_H
 
+#ifndef OLSR_PLUGIN
 #include "olsr_protocol.h"
+#endif
 
 /* Default valuse not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
@@ -105,7 +107,9 @@ struct interface
 
 /* Part of olsrd */
 
+#ifndef OLSR_PLUGIN
 #include "interfaces.h"
+#endif
 
 #endif
 

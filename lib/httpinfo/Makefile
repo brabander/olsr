@@ -6,6 +6,7 @@
 CC ?= gcc
 STRIP ?= strip
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
+OLSR_LIBDIR ?= ../../src/
 
 ifndef OS
 all:		help
@@ -14,7 +15,7 @@ endif
 ifeq ($(OS), linux)
 NAME ?= olsrd_httpinfo.so.0.1
 NAMEFLAGS ?= -Wl,-soname,$(NAME)
-CFLAGS ?= -g -O2 -fPIC -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -g -O2 -fPIC -DOLSR_PLUGIN -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes -I$(OLSR_LIBDIR)
 LDFLAGS ?= -g -fPIC -shared
 LIBS ?= -lc -lm
 INSTALL_LIB = 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
@@ -24,7 +25,7 @@ else
 ifeq ($(OS), win32)
 NAME ?= olsrd_httpinfo.dll
 NAMEFLAGS ?= -o $(NAME)
-CFLAGS ?= -g -O2 -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -g -O2 -fPIC -DOLSR_PLUGIN -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes -I$(OLSR_LIBDIR)
 LDFLAGS ?= -mno-cygwin -shared
 LIBS ?= -lws2_32
 COMPATOBJ = ../../src/win32/compat.o
@@ -34,7 +35,7 @@ else
 ifeq ($(OS), fbsd)
 NAME ?= olsrd_httpinfo.so.0.1
 NAMEFLAGS ?= -Wl,-soname,$(NAME)
-CFLAGS ?= -g -O2 -fPIC -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -g -O2 -fPIC -DOLSR_PLUGIN -Wall -Wmissing-prototypes -Wstrict-prototypes -I$(OLSR_LIBDIR)
 LDFLAGS ?= -g -fPIC -shared
 LIBS ?= -lc -lm
 INSTALL_LIB = 	install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
