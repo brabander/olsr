@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.17 2005/02/12 23:07:02 spoggle Exp $
+ * $Id: parser.c,v 1.18 2005/02/14 15:54:30 tlopatic Exp $
  */
 
 #include "parser.h"
@@ -50,15 +50,6 @@
 #include "rebuild_packet.h"
 
 //union olsr_ip_addr tmp_addr;
-#ifdef WIN32
-#undef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#undef errno
-#define errno WSAGetLastError()
-#undef strerror
-#define strerror(x) StrError(x)
-#endif
-
 
 /**
  *Initialize the parser. 

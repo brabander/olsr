@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.20 2005/02/12 22:32:42 kattemat Exp $
+ * $Id: link_set.h,v 1.21 2005/02/14 15:54:30 tlopatic Exp $
  */
 
 
@@ -144,8 +144,5 @@ olsr_update_packet_loss(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
 
 void 
 olsr_print_link_set(void);
-
-struct link_entry *
-olsr_neighbor_best_link(union olsr_ip_addr *);
 
 #endif

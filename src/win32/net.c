@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.12 2005/02/12 23:07:02 spoggle Exp $
+ * $Id: net.c,v 1.13 2005/02/14 15:54:30 tlopatic Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -50,6 +50,15 @@
 #include <stdlib.h>
 #include "../defs.h"
 #include "../net_os.h"
+
+// XXX - really port I/O functions to Windows
+
+#undef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#undef errno
+#define errno WSAGetLastError()
+#undef strerror
+#define strerror(x) StrError(x)
 
 void WinSockPError(char *Str);
 void PError(char *);

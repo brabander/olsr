@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.9 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: lq_packet.c,v 1.10 2005/02/14 15:54:30 tlopatic Exp $
  */
 
 #include "olsr_protocol.h"
@@ -198,7 +198,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
           // set the entry's link quality
 
-          link = olsr_neighbor_best_link(&neigh->main);
+          link = get_best_link_to_neighbor(&neigh->main);
 
           neigh->link_quality = link->loss_link_quality;
           neigh->neigh_link_quality = link->neigh_link_quality;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.47 2005/02/12 22:42:34 kattemat Exp $
+ * $Id: link_set.c,v 1.48 2005/02/14 15:54:29 tlopatic Exp $
  */
 
 
@@ -70,9 +70,6 @@ olsr_time_out_link_set(void);
 
 static int
 get_neighbor_status(union olsr_ip_addr *);
-
-static inline struct link_entry *
-find_best_link(union olsr_ip_addr *);
 
 
 
@@ -214,55 +211,6 @@ get_neighbor_status(union olsr_ip_addr *address)
   return 0;
 }
 
-
-/**
- *Find the best link to a neighbor interface 
- *
- */
-
-static inline struct link_entry *
-find_best_link(union olsr_ip_addr *remote)
-{
-  struct link_entry *tmp_link_set, *entry;
-  int curr_metric = MAX_IF_METRIC;
-  float curr_lq = -1.0;
-
-  tmp_link_set = link_set;
-  entry = NULL;
-
-  while(tmp_link_set)
-    {
-      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr))
-	{
-	  struct interface *tmp_if = if_ifwithaddr(&tmp_link_set->local_iface_addr);
-
-	  if (olsr_cnf->lq_level == 0)
-	    {
-	      if(tmp_if->int_metric < curr_metric)
-		{
-		  entry = tmp_link_set;
-		  curr_metric = tmp_if->int_metric;
-		}
-	    }
-	  else
-	    {
-	      float tmp_lq = tmp_link_set->loss_link_quality *
-		tmp_link_set->neigh_link_quality;
-
-	      if (tmp_lq > curr_lq)
-		{
-		  entry = tmp_link_set;
-		  curr_lq = tmp_lq;
-		}
-	    }
-	}
-	  tmp_link_set = tmp_link_set->next;
-    }
-  
-  return entry;
-}
-
-
 /**
  * Find best link to a neighbor
  */
@@ -270,61 +218,100 @@ find_best_link(union olsr_ip_addr *remote)
 struct link_entry *
 get_best_link_to_neighbor(union olsr_ip_addr *remote)
 {
-  struct link_entry *good_link = NULL, *backup_link = NULL;
+  union olsr_ip_addr *main_addr;
+  struct link_entry *walker, *good_link, *backup_link;
   int curr_metric = MAX_IF_METRIC;
   float curr_lq = -1.0;
-  union olsr_ip_addr *main_addr;
-  struct mid_address *aliases, main_alias;
   
-  /* Find main address */
-  if(!(main_addr = mid_lookup_main_addr(remote)))
+  // main address lookup
+
+  main_addr = mid_lookup_main_addr(remote);
+
+  // "remote" *already is* the main address
+
+  if (main_addr == NULL)
     main_addr = remote;
 
-  COPY_IP(&main_alias.alias, main_addr);
-  main_alias.next_alias = mid_lookup_aliases(main_addr);
+  // we haven't selected any links, yet
 
-  for(aliases = &main_alias;
-      aliases != NULL;
-      aliases = aliases->next_alias)
+  good_link = NULL;
+  backup_link = NULL;
+
+  // loop through all links that we have
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    // if this is not a link to the neighour in question, skip
+
+    if (!COMP_IP(&walker->neighbor->neighbor_main_addr, main_addr))
+      continue;
+
+    // handle the non-LQ case
+
+    if (olsr_cnf->lq_level == 0)
     {
-      struct link_entry *link;
+      struct interface *tmp_if;
 
-      if((link = find_best_link(&aliases->alias)) != NULL)
-	{
-	  if (olsr_cnf->lq_level == 0)
-	    {
-	      struct interface *tmp_if = if_ifwithaddr(&link->local_iface_addr);
-	      if((tmp_if->int_metric < curr_metric) ||
-		 /* Prefer the requested link */
-		 ((tmp_if->int_metric == curr_metric) && 
-		  COMP_IP(&link->local_iface_addr, remote)))
-		{
-		  curr_metric = tmp_if->int_metric;
-		  if(lookup_link_status(link) == SYM_LINK)
-		    good_link = link;
-		  else
-		    backup_link = link;
-		}
-	    }
-	  else
-	    {
-	      float tmp_lq = link->loss_link_quality *
-		link->neigh_link_quality;
-	      
-	      if((tmp_lq > curr_lq) ||
-		 /* Prefer the requested link */
-		 ((tmp_lq == curr_lq) && 
-		  COMP_IP(&link->local_iface_addr, remote)))		  
-		{
-		  curr_lq = tmp_lq;
-		  if(lookup_link_status(link) == SYM_LINK)
-		    good_link = link;
-		  else
-		    backup_link = link;
-		}
-	    } 
-	}
+      // find the interface for the link - we select the link with the
+      // best local interface metric
+
+      tmp_if = if_ifwithaddr(&walker->local_iface_addr);
+
+      // is this interface better than anything we had before?
+
+      if ((tmp_if->int_metric < curr_metric) ||
+          // use the requested remote interface address as a tie-breaker
+          ((tmp_if->int_metric == curr_metric) && 
+           COMP_IP(&walker->local_iface_addr, remote)))
+      {
+        // memorize the interface's metric
+
+        curr_metric = tmp_if->int_metric;
+
+        // prefer symmetric links over asymmetric links
+
+        if (lookup_link_status(walker) == SYM_LINK)
+          good_link = walker;
+
+        else
+          backup_link = walker;
+      }
     }
+
+    // handle the LQ case
+
+    else
+    {
+      float tmp_lq;
+
+      // calculate the bi-directional link quality - we select the link
+      // with the best link quality
+
+      tmp_lq = walker->loss_link_quality * walker->neigh_link_quality;
+
+      // is this link better than anything we had before?
+	      
+      if((tmp_lq > curr_lq) ||
+         // use the requested remote interface address as a tie-breaker
+         ((tmp_lq == curr_lq) && COMP_IP(&walker->local_iface_addr, remote)))
+      {
+        // memorize the link quality
+
+        curr_lq = tmp_lq;
+
+        // prefer symmetric links over asymmetric links
+
+        if(lookup_link_status(walker) == SYM_LINK)
+          good_link = walker;
+
+        else
+          backup_link = walker;
+      }
+    }
+  }
+
+  // if we haven't found any symmetric links, try to return an
+  // asymmetric link
 
   return good_link ? good_link : backup_link;
 }
@@ -1045,33 +1032,4 @@ static void olsr_time_out_packet_loss()
 
       walker->loss_timeout = GET_TIMESTAMP(walker->loss_hello_int * 1000.0);
     }
-}
-
-struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
-{
-  struct link_entry *walker;
-  double best = 0.0;
-  double curr;
-  struct link_entry *res = NULL;
-
-  // loop through all links
-
-  for (walker = link_set; walker != NULL; walker = walker->next)
-  {
-    // check whether it's a link to the requested neighbor and
-    // whether the link's quality is better than what we have
-
-    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr))
-    {
-      curr = walker->loss_link_quality * walker->neigh_link_quality;
-
-      if (curr >= best)
-      {
-        best = curr;
-        res = walker;
-      }
-    }
-  }
-
-  return res;
 }
