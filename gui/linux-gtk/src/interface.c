@@ -377,7 +377,7 @@ create_main_window (void)
    *The connect button
    */
 
-  connect_button = gtk_button_new_with_label ("Connect to localhost");
+  connect_button = gtk_button_new_with_label ("Connect to host");
   gtk_widget_ref (connect_button);
   gtk_object_set_data_full (GTK_OBJECT (main_window), "connect_button", connect_button,
                             (GtkDestroyNotify) gtk_widget_unref);
@@ -1127,7 +1127,7 @@ update_nodes_list(struct node *node)
   char itoa_buf[10];
 
   if(memcmp(&node->addr, &main_addr, ipsize) == 0)
-    dest = "localhost";
+    dest = "local";
   else
     dest = ip_to_string(&node->addr);
 
@@ -1435,7 +1435,7 @@ set_net_info(gchar *info, int disp_button)
 
   memset(&title[0], 0, 255);
   gtk_label_set_text((GtkLabel *)info_label, info); 
-  gtk_label_set_text((GtkLabel *)net_label, "Connected\nto localhost"); 
+  gtk_label_set_text((GtkLabel *)net_label, "Connected"); 
 
   strcat(title, SOFTWARE_VERSION);
   strcat(title, " - ");
@@ -1461,7 +1461,7 @@ set_net_info_offline()
 void
 set_net_info_connecting()
 {
-  gtk_label_set_text((GtkLabel *)net_label, "Connecting to localhost...");  
+  gtk_label_set_text((GtkLabel *)net_label, "Connecting...");  
 }
 
 
