@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.9 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: ifnet.c,v 1.10 2004/09/26 10:47:27 kattemat Exp $
  *
  */
 
@@ -43,6 +43,7 @@
 #include "../interfaces.h"
 #include "../ifnet.h"
 #include "../defs.h"
+#include "../net_os.h"
 #include "../socket_parser.h"
 #include "../parser.h"
 #include <signal.h>

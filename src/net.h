@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.10 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: net.h,v 1.11 2004/09/26 10:47:27 kattemat Exp $
  *
  */
 
@@ -102,32 +102,6 @@ add_ptf(int (*)(char *, int *));
 int
 del_ptf(int (*f)(char *, int *));
 
-
-/* OS dependent functions */
-
-int
-bind_socket_to_device(int, char *);
-
-int
-convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
-
-int
-disable_redirects(char *, int, int);
-
-int
-deactivate_spoof(char *, int, int);
-
-int
-restore_settings(int);
-
-int
-enable_ip_forwarding(int);
-
-int  
-getsocket(struct sockaddr *, int, char *);
-
-int  
-getsocket6(struct sockaddr_in6 *, int, char *);
 
 
 #endif

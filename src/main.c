@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.10 2004/09/21 19:52:22 kattemat Exp $
+ * $Id: main.c,v 1.11 2004/09/26 10:47:27 kattemat Exp $
  *
  */
 
@@ -37,6 +37,7 @@
 #include "socket_parser.h"
 #include "apm.h"
 #include "link_layer.h"
+#include "net_os.h"
 
 #ifdef linux
 #include "linux/tunnel.h"
