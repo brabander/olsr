@@ -59,31 +59,11 @@ struct pwrentry
 struct pwrentry list[HASHSIZE];
 
 
-#define SOURCE_AC      0
-#define SOURCE_BATTERY 1
-
 int has_apm;
 
-#define APM_PROC "/proc/apm"
+/* set buffer to size of IPv6 message */
+static char buffer[sizeof(struct olsrmsg6)];
 
-
-struct olsr_apm_info
-{
-  char driver_version[10];
-  int apm_version_major;
-  int apm_version_minor;
-  int apm_flags;
-  int ac_line_status;
-  int battery_status;
-  int battery_flags;
-  int battery_percentage;
-  int battery_time;
-  int using_minutes;
-};
-
-/*
- * "Private" functions.
- */
 
 /* Timeout function to register with the sceduler */
 void
@@ -95,10 +75,7 @@ olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 /* Event function to register with the sceduler */
 void
-olsr_event();
-
-int 
-apm_read(struct olsr_apm_info *);
+olsr_event(void *);
 
 void
 ipc_action(int fd);

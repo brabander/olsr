@@ -29,6 +29,8 @@
  *
  */
 
+/* $Id: olsrd_plugin.h,v 1.3 2004/11/07 10:54:19 kattemat Exp $ */
+
 /*
  * Dynamic linked library example for UniK OLSRd
  */
@@ -56,10 +58,10 @@
  *****************************************************************************/
 
 #define PLUGIN_NAME    "OLSRD Powerstatus plugin"
-#define PLUGIN_VERSION "0.1"
+#define PLUGIN_VERSION "0.3"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 1
+#define PLUGIN_INTERFACE_VERSION 2
 
 /* The type of message you will use */
 #define MESSAGE_TYPE 128
@@ -99,11 +101,6 @@ union olsr_ip_addr
   struct in6_addr v6;
 };
 
-union hna_netmask
-{
-  olsr_u32_t v4;
-  olsr_u16_t v6;
-};
 
 #define MAX_TTL               0xff
 
@@ -120,12 +117,6 @@ union hna_netmask
 #define MAX_LINK              4
 
 
-/*
- * Mantissa scaling factor
- */
-
-#define VTIME_SCALE_FACTOR    0.0625
-
 
 /*
  * Hashing
@@ -140,6 +131,13 @@ union hna_netmask
 /****************************************************************************
  *                          INTERFACE SECTION                               *
  ****************************************************************************/
+struct vtimes
+{
+  olsr_u8_t hello;
+  olsr_u8_t tc;
+  olsr_u8_t mid;
+  olsr_u8_t hna;
+};
 
 /**
  *A struct containing all necessary information about each
@@ -157,17 +155,36 @@ struct interface
   /* IP independent */
   union         olsr_ip_addr ip_addr;
   int           olsr_socket;                    /* The broadcast socket for this interface */
-  int	        int_metric;			/* init's routing entry */
+  int	        int_metric;			/* metric of interface */
   int           int_mtu;                        /* MTU of interface */
   int	        int_flags;			/* see below */
   char	        *int_name;			/* from kernel if structure */
   int           if_index;                       /* Kernels index of this interface */
-  int           if_nr;                          /* This interfaces number internally*/
+  int           if_nr;                          /* This interfaces index internally*/
   int           is_wireless;                    /* wireless interface or not*/
-  olsr_u16_t    olsr_seqnum;                    /* Sequence numbers*/
+  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+
+  float         hello_etime;
+  struct        vtimes valtimes;
+
   struct	interface *int_next;
 };
 
+
+
+
+/****************************************************************************
+ *                        POWERSTATUS SECTION                               *
+ ****************************************************************************/
+
+#define OLSR_BATTERY_POWERED  0
+#define OLSR_AC_POWERED       1
+
+struct olsr_apm_info
+{
+  int ac_line_status;
+  int battery_percentage;
+};
 
 /****************************************************************************
  *                            PACKET SECTION                                *
@@ -223,26 +240,6 @@ struct olsrmsg6
 
 };
 
-/*
- * Generic OLSR packet - DO NOT ALTER
- */
-
-struct olsr 
-{
-  olsr_u16_t	  olsr_packlen;		/* packet length */
-  olsr_u16_t	  olsr_seqno;
-  struct olsrmsg  olsr_msg[1];          /* variable messages */
-};
-
-
-struct olsr6
-{
-  olsr_u16_t	    olsr_packlen;        /* packet length */
-  olsr_u16_t	    olsr_seqno;
-  struct olsrmsg6   olsr_msg[1];         /* variable messages */
-};
-
-
 /* 
  * ALWAYS USE THESE WRAPPERS TO
  * ENSURE IPv4 <-> IPv6 compability 
@@ -254,11 +251,7 @@ union olsr_message
   struct olsrmsg6 v6;
 };
 
-union olsr_packet
-{
-  struct olsr v4;
-  struct olsr6 v6;
-};
+
 
 
 /***************************************************************************
@@ -296,17 +289,18 @@ olsr_ip_to_string(union olsr_ip_addr *);
 int (*olsr_plugin_io)(int, void *, size_t);
 
 /* add a prser function */
-void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), 
-				 int, int);
+void (*olsr_parser_add_function)(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), int, int);
 
 /* Register a timeout function */
 int (*olsr_register_timeout_function)(void (*)());
 
 /* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
+int (*olsr_register_scheduler_event)(void (*)(), void *, float, float, olsr_u8_t *);
 
 /* Get the next message seqno in line */
 olsr_u16_t (*get_msg_seqno)();
+
+int (*net_outbuffer_push)(struct interface *, olsr_u8_t *, olsr_u16_t);
 
 /* Transmit package */
 int (*net_output)(struct interface*);
@@ -324,9 +318,6 @@ int (*default_fwd)(union olsr_message *,
 /* Add a socket to the main olsrd select loop */
 void (*add_olsr_socket)(int, void(*)(int));
 
-/* Remove a socket from the main olsrd select loop */
-int (*remove_olsr_socket)(int, void(*)(int));
-
 /* get the link status to a neighbor */
 int (*check_neighbor_link)(union olsr_ip_addr *);
 
@@ -341,17 +332,7 @@ int (*olsr_printf)(int, char *, ...);
 /* olsrd malloc wrapper */
 void *(*olsr_malloc)(size_t, const char *);
 
-/* Add hna net IPv4 */
-void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv4 */
-int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Add hna net IPv6 */
-void (*add_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv6 */
-int (*remove_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
+int (*apm_read)(struct olsr_apm_info *);
 
 
 /****************************************************************************
@@ -374,10 +355,6 @@ union olsr_ip_addr *main_addr; /* Main address */
 size_t             ipsize;     /* Size of the ipadresses used */
 struct timeval     *now;       /* the olsrds schedulers idea of current time */
 
-/* Data that can be altered by your plugin */
-char               *buffer;    /* The packet buffer - put your packet here */
-int                *outputsize;/* Pointer to the outputsize - set the size of your packet here */
-
 
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
@@ -399,5 +376,9 @@ olsr_plugin_exit();
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
+
+/* Plugin interface version */
+int 
+get_plugin_interface_version();
 
 #endif

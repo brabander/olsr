@@ -21,7 +21,7 @@ plugins for the UniK olsr daemon.
 It gathers powerifno from the local node by polling
 the /proc/apm pseudofile. So to diffuse powerinfo
 about a node it needs to have APM enabled.
-All powerinfo is gathered in a database en you
+All powerinfo is gathered in a database and you
 can wiev the output by telneting to 127.0.0.1
 port 8888 on the local machine.
 

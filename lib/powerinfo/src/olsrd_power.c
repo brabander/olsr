@@ -29,6 +29,8 @@
  *
  */
 
+/* $Id: olsrd_power.c,v 1.2 2004/11/07 10:54:19 kattemat Exp $ */
+
 /*
  * Dynamic linked library example for UniK OLSRd
  */
@@ -85,7 +87,7 @@ olsr_plugin_init()
 
   olsr_register_timeout_function(&olsr_timeout);
 
-  olsr_register_scheduler_event(&olsr_event, EMISSION_INTERVAL, 0, NULL);
+  olsr_register_scheduler_event(&olsr_event, NULL, EMISSION_INTERVAL, 0, NULL);
 
   return 1;
 }
@@ -240,10 +242,9 @@ olsr_timeout()
  *Scheduled event
  */
 void
-olsr_event()
+olsr_event(void *foo)
 {
-  union olsr_packet *packet;
-  union olsr_message *message;
+  union olsr_message *message = (union olsr_message*)buffer;
   struct interface *ifn;
 
   /* If we can't produce power info we do nothing */ 
@@ -251,16 +252,6 @@ olsr_event()
     return;
 
   olsr_printf(3, "PLUG-IN: Generating package - ");
-
-  /* Cast the char* buffer to the packetformat */
-  packet = (union olsr_packet*)buffer;
-
-  /* Fetch the message based on IPversion */
-  if(ipversion == AF_INET)
-    message = (union olsr_message *)packet->v4.olsr_msg;
-  else
-    message = (union olsr_message *)packet->v6.olsr_msg;
-
 
   /* looping trough interfaces */
   for (ifn = ifs; ifn ; ifn = ifn->int_next) 
@@ -279,9 +270,16 @@ olsr_event()
 	  message->v4.seqno = htons(get_msg_seqno());
 	  
 	  get_powerstatus(&message->v4.msg);
-	  
-	  *outputsize = sizeof(struct olsrmsg) + sizeof(olsr_u32_t);
-	  packet->v4.olsr_packlen = htons(*outputsize);
+
+	  if(net_outbuffer_push(ifn, (olsr_u8_t *)message, sizeof(struct olsrmsg)) != sizeof(struct olsrmsg))
+	    {
+
+	      /* Send data and try again */
+	      net_output(ifn);
+	      if(net_outbuffer_push(ifn, (olsr_u8_t *)message, sizeof(struct olsrmsg)) != sizeof(struct olsrmsg))
+		olsr_printf(1, "Powerplugin: could not write to buffer for interface: %s\n", ifn->int_name);
+	    }
+
 	}
       else
 	{
@@ -295,15 +293,19 @@ olsr_event()
 	  message->v6.seqno = htons(get_msg_seqno());
 	  
 	  get_powerstatus(&message->v6.msg);
-	  
-	  *outputsize = sizeof(struct olsrmsg6) + sizeof(olsr_u32_t);
-	  packet->v6.olsr_packlen = htons(*outputsize);
+
+	  if(net_outbuffer_push(ifn, (olsr_u8_t *)message, sizeof(struct olsrmsg6)) != sizeof(struct olsrmsg6))
+	    {
+	      /* Send data and try again */
+	      net_output(ifn);
+	      if(net_outbuffer_push(ifn, (olsr_u8_t *)message, sizeof(struct olsrmsg6)) != sizeof(struct olsrmsg6))
+		olsr_printf(1, "Powerplugin: could not write to buffer for interface: %s\n", ifn->int_name);
+	    }
+
 	}
 
-      /* Send data */
-      net_output(ifn);
     }
-  olsr_printf(3, "\n");
+  olsr_printf(2, "\n");
 
   /* Try to set up IPC socket if not already up */
   if(!ipc_open)
@@ -417,7 +419,7 @@ update_power_entry(union olsr_ip_addr *originator, struct powermsg *message, dou
 
   olsr_printf(1, "New power entry %s: ", olsr_ip_to_string(originator));
 
-  if(message->source_type == SOURCE_BATTERY)
+  if(message->source_type == OLSR_BATTERY_POWERED)
     olsr_printf(1, "BATTERY P: %d%% T: %d mins\n",
 	   message->percentage,
 	   message->time_left);
@@ -471,7 +473,7 @@ print_power_table()
 	sprintf(buf, "[%s]: ", olsr_ip_to_string(&entry->originator));
 	ipc_send(buf, strlen(buf));
 
-	if(entry->source_type == SOURCE_BATTERY)
+	if(entry->source_type == OLSR_BATTERY_POWERED)
 	  {
 	    sprintf(buf,
 		    "BATTERY P: %d%% T: %d mins\n",
@@ -524,83 +526,18 @@ get_powerstatus(struct powermsg *msg)
 
   if(apm_info.ac_line_status)
     {
-      msg->source_type = SOURCE_AC;
+      msg->source_type = OLSR_AC_POWERED;
       msg->percentage = 0;
       msg->time_left = 0;
     }
   else
     {
-      msg->source_type = SOURCE_BATTERY;
-      msg->percentage = apm_info.battery_percentage;
-      msg->time_left = apm_info.battery_time;
+      msg->source_type = OLSR_BATTERY_POWERED;
+      msg->percentage = apm_info.ac_line_status;
+      msg->time_left = 0;
     }
 
   return 1;
-}
-
-
-
-
-
-
-int
-apm_read(struct olsr_apm_info *ainfo)
-{
-  char buffer[100];
-  char units[10];
-  FILE *apm_procfile;
-
-  /* Open procfile */
-  if((apm_procfile = fopen(APM_PROC, "r")) == NULL)
-    return -1;
-
-
-  fgets(buffer, sizeof(buffer) - 1, apm_procfile);
-  if(buffer == NULL)
-    {
-      /* Try re-opening the file */
-      if((apm_procfile = fopen(APM_PROC, "r")) < 0)
-	return -1;
-      fgets(buffer, sizeof(buffer) - 1, apm_procfile);
-      if(buffer == NULL)
-	{
-	  /* Giving up */
-	  fprintf(stderr, "OLSRD-POWER: Could not read APM info");
-	  return -1;
-	}
-    }
-
-  buffer[sizeof(buffer) - 1] = '\0';
-
-
-  /* Get the info */
-  sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n",
-	 ainfo->driver_version,
-	 &ainfo->apm_version_major,
-	 &ainfo->apm_version_minor,
-	 &ainfo->apm_flags,
-	 &ainfo->ac_line_status,
-	 &ainfo->battery_status,
-	 &ainfo->battery_flags,
-	 &ainfo->battery_percentage,
-	 &ainfo->battery_time,
-	 units);
-
-  ainfo->using_minutes = !strncmp(units, "min", 3) ? 1 : 0;
-
-  /*
-   * Should take care of old APM type info here
-   */
-
-  /*
-   * Fix possible percentage error
-   */
-  if(ainfo->battery_percentage > 100)
-    ainfo->battery_percentage = -1;
-
-  fclose(apm_procfile);
-
-  return 0;
 }
 
 

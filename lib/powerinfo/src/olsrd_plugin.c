@@ -29,6 +29,9 @@
  *
  */
 
+/* $Id: olsrd_plugin.c,v 1.2 2004/11/07 10:54:19 kattemat Exp $ */
+
+
 /*
  * Dynamic linked library example for UniK OLSRd
  */
@@ -66,11 +69,14 @@ int
 fetch_olsrd_data();
 
 /*
- * Defines the version of the plugin interface that is used
+ * Returns the version of the plugin interface that is used
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
- * Do not alter unless you know what you are doing!
  */
-int plugin_interface_version;
+int 
+get_plugin_interface_version()
+{
+  return PLUGIN_INTERFACE_VERSION;
+}
 
 /**
  *Constructor
@@ -80,8 +86,6 @@ my_init()
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
-  /* Set interface version */
-  plugin_interface_version = PLUGIN_INTERFACE_VERSION;
 
   ifs = NULL;
 
@@ -170,16 +174,9 @@ fetch_olsrd_data()
 
 
   /* Packet buffer */
-  if(!olsr_plugin_io(GETD__PACKET, &buffer, sizeof(buffer)))
+  if(!olsr_plugin_io(GETF__NET_OUTBUFFER_PUSH, &net_outbuffer_push, sizeof(net_outbuffer_push)))
   {
-    buffer = NULL;
-    retval = 0;
-  }
-
-  /* Packet buffer size */
-  if(!olsr_plugin_io(GETD__OUTPUTSIZE, &outputsize, sizeof(outputsize)))
-  {
-    outputsize = NULL;
+    net_outbuffer_push = NULL;
     retval = 0;
   }
 
@@ -300,14 +297,6 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-
-  /* Remove socket from OLSR select function */
-  if(!olsr_plugin_io(GETF__REMOVE_OLSR_SOCKET, &remove_olsr_socket, sizeof(remove_olsr_socket)))
-  {
-    remove_olsr_socket = NULL;
-    retval = 0;
-  }
-
   /* Neighbor link status lookup */
   if(!olsr_plugin_io(GETF__CHECK_NEIGHBOR_LINK, &check_neighbor_link, sizeof(check_neighbor_link)))
   {
@@ -315,6 +304,13 @@ fetch_olsrd_data()
     retval = 0;
   }
 
+
+  /* Apm info */
+  if(!olsr_plugin_io(GETF__APM_READ, &apm_read, sizeof(apm_read)))
+  {
+    apm_read = NULL;
+    retval = 0;
+  }
 
   return retval;
 
