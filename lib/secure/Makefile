@@ -16,10 +16,6 @@ ifdef DEBUG
 PLUGINFLAGS += -DDEBUG
 endif
 
-ifndef OS
-all:		help
-endif
-
 ifeq ($(OS), linux)
 NAME ?= olsrd_secure.so.0.5
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
@@ -33,6 +29,7 @@ INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
 
 all:	plugin
+install:install_olsrd
 else
 ifeq ($(OS), fbsd)
 NAME ?= olsrd_secure.so.0.5
@@ -47,6 +44,7 @@ INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
 
 all:	plugin
+install:install_olsrd
 else
 ifeq ($(OS), win32)
 NAME ?= olsrd_secure.dll
@@ -57,9 +55,11 @@ ifdef USE_OPENSSL
 LIBS += -lssl -lcrypto
 endif
 INSTALL_LIB = 	cp $(NAME) ../..
-all: plugin
+all:    plugin
+install:install_olsrd
 else
 all: 	help
+install:help
 endif
 endif
 endif
@@ -93,7 +93,7 @@ plugin: $(OBJS)
 	-o $(NAME) $(OBJS) $(LIBS)
 
 
-install:
+install_olsrd:
 	$(STRIP) $(NAME)
 	$(INSTALL_LIB)
 

@@ -9,10 +9,6 @@ CC ?= gcc
 STRIP ?= strip
 PLUGINFLAGS =  -fPIC -DOLSR_PLUGIN -I../../src
 
-ifndef OS
-all:		help
-endif
-
 ifeq ($(OS), linux)
 NAME ?= olsrd_power.so.0.3
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
@@ -23,6 +19,7 @@ LDFLAGS ?= -fPIC
 INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
 all:	plugin
+install:install_olsrd
 else
 ifeq ($(OS), fbsd)
 NAME ?= olsrd_power.so.0.3
@@ -34,6 +31,7 @@ LDFLAGS ?= -fPIC
 INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
 all:	plugin
+install:install_olsrd
 else
 ifeq ($(OS), win32)
 NAME ?= olsrd_power.dll
@@ -43,6 +41,7 @@ LIBS ?= -lws2_32
 INSTALL_LIB = 	cp $(NAME) ../..
 else
 all: 	help
+install:help
 endif
 endif
 endif
@@ -71,7 +70,7 @@ plugin: $(OBJS)
 	-o $(NAME) $(OBJS) $(LIBS)
 
 
-install:
+install_olsrd:
 	$(STRIP) $(NAME)
 	$(INSTALL_LIB)
 
