@@ -33,13 +33,109 @@ WinSockPError(char *);
 #endif
 
 
+
+static char out_buffer[MAXMESSAGESIZE+1];
+static char fwd_buffer[MAXMESSAGESIZE+1];
+
+static union olsr_packet *outmsg = (union olsr_packet *)out_buffer;
+static union olsr_packet *fwdmsg = (union olsr_packet *)fwd_buffer;
+
+int outputsize = 0;         /* current size of the output buffer */
+int fwdsize = 0;         /* current size of the forward buffer */
+
+
+/* Max OLSR packet size */
+
+static int maxmessagesize = MAXMESSAGESIZE - OLSR_HEADERSIZE;
+
+
 void
 init_net()
 {
   ptf_list = NULL;
+  maxmessagesize = MAXMESSAGESIZE - OLSR_HEADERSIZE;
 
   return;
 }
+
+int
+net_set_maxmsgsize(olsr_u16_t new_size)
+{
+
+  if(new_size > (MAXMESSAGESIZE - OLSR_HEADERSIZE))
+    return -1;
+
+  else
+    maxmessagesize = new_size;
+
+  return maxmessagesize;
+}
+
+
+inline olsr_u16_t
+net_get_maxmsgsize()
+{
+  return maxmessagesize;
+}
+
+
+inline olsr_u16_t
+net_fwd_pending()
+{
+  return fwdsize;
+}
+
+/**
+ * Add data to the buffer that is to be transmitted
+ *
+ * @return 0 if there was not enough room in buffer
+ */
+int
+net_outbuffer_push(olsr_u8_t *data, olsr_u16_t size)
+{
+
+  if((outputsize + size) > maxmessagesize)
+    return 0;
+
+  memcpy(&out_buffer[outputsize + OLSR_HEADERSIZE], data, size);
+  outputsize += size;
+
+  printf("Adding %d bytes to outputbuffer\n", size);
+  return 1;
+}
+
+
+
+/**
+ * Add data to the buffer that is to be transmitted
+ *
+ * @return 0 if there was not enough room in buffer
+ */
+inline int
+net_outbuffer_bytes_left()
+{
+  return (maxmessagesize - outputsize);
+}
+
+
+/**
+ * Add data to the buffer that is to be forwarded
+ *
+ * @return 0 if there was not enough room in buffer
+ */
+int
+net_fwdbuffer_push(olsr_u8_t *data, olsr_u16_t size)
+{
+
+  if((fwdsize + size) > maxmessagesize)
+    return 0;
+
+  memcpy(&fwd_buffer[fwdsize + OLSR_HEADERSIZE], data, size);
+  fwdsize += size;
+
+  return 1;
+}
+
 
 /**
  *Sends a packet on a given interface.
@@ -64,11 +160,12 @@ net_output(struct interface *ifp)
   if(outputsize <= 0)
     return -1;
 
+  outputsize += OLSR_HEADERSIZE;
   /* Add the Packet seqno */
-  ((struct olsr*)packet)->olsr_seqno = htons(ifp->olsr_seqnum++);
+  outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
 #warning 0.4.8 net_output now sets packetsize itself
-  ((struct olsr*)packet)->olsr_packlen = htons(outputsize);
+  outmsg->v4.olsr_packlen = htons(outputsize);
 
   if(ipversion == AF_INET)
     {
@@ -102,7 +199,7 @@ net_output(struct interface *ifp)
   /*
   if(disp_pack_out)
     {
-      switch(packet[4])
+      switch(out_buffer[4])
 	{
 	case(HELLO_MESSAGE):printf("\n\tHELLO ");break;
 	case(TC_MESSAGE):printf("\n\tTC ");break;
@@ -125,9 +222,9 @@ net_output(struct interface *ifp)
 	    }
 	  x++;
 	  if(ipversion == AF_INET)
-	    printf(" %3i", (u_char) packet[i]);
+	    printf(" %3i", (u_char) out_buffer[i]);
 	  else
-	    printf(" %2x", (u_char) packet[i]);
+	    printf(" %2x", (u_char) out_buffer[i]);
 	}
       
       printf("\n");
@@ -140,7 +237,7 @@ net_output(struct interface *ifp)
   tmp_ptf_list = ptf_list;
   while(tmp_ptf_list != NULL)
     {
-      tmp_ptf_list->function(packet, &outputsize);
+      tmp_ptf_list->function(out_buffer, &outputsize);
       tmp_ptf_list = tmp_ptf_list->next;
     }
 
@@ -150,13 +247,13 @@ net_output(struct interface *ifp)
    */
   if(disp_pack_out)
     {
-      switch(packet[4])
+      switch(out_buffer[4])
 	{
 	case(HELLO_MESSAGE):printf("\n\tHELLO ");break;
 	case(TC_MESSAGE):printf("\n\tTC ");break;
 	case(MID_MESSAGE):printf("\n\tMID ");break;
 	case(HNA_MESSAGE):printf("\n\tHNA ");break;
-	default:printf("\n\tTYPE: %d ", packet[4]); break;
+	default:printf("\n\tTYPE: %d ", out_buffer[4]); break;
 	}
       if(ipversion == AF_INET)
 	printf("to %s size: %d\n\t", ip_to_string((olsr_u32_t *)&sin->sin_addr.s_addr), outputsize);
@@ -174,9 +271,9 @@ net_output(struct interface *ifp)
 	    }
 	  x++;
 	  if(ipversion == AF_INET)
-	    printf(" %3i", (u_char) packet[i]);
+	    printf(" %3i", (u_char) out_buffer[i]);
 	  else
-	    printf(" %2x", (u_char) packet[i]);
+	    printf(" %2x", (u_char) out_buffer[i]);
 	}
       
       printf("\n");
@@ -190,7 +287,7 @@ net_output(struct interface *ifp)
   if(ipversion == AF_INET)
     {
       /* IP version 4 */
-      if(sendto(ifp->olsr_socket, packet, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
+      if(sendto(ifp->olsr_socket, out_buffer, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
 	{
 	  perror("sendto(v4)");
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
@@ -201,7 +298,7 @@ net_output(struct interface *ifp)
   else
     {
       /* IP version 6 */
-      if(sendto(ifp->olsr_socket, packet, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
+      if(sendto(ifp->olsr_socket, out_buffer, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
 	{
 	  perror("sendto(v6)");
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
@@ -245,11 +342,12 @@ net_forward()
   for (ifn = ifnet; ifn; ifn = ifn->int_next) 
     {
       
+      fwdsize += OLSR_HEADERSIZE;      
       /* Add the Packet seqno */
-      ((struct olsr*)fwd_packet)->olsr_seqno = htons(ifn->olsr_seqnum++);
+      fwdmsg->v4.olsr_seqno = htons(ifn->olsr_seqnum++);
       /* Set the packetlength */
 #warning 0.4.8 net_forward now sets packetsize itself
-      ((struct olsr*)fwd_packet)->olsr_packlen = htons(fwdsize);
+      fwdmsg->v4.olsr_packlen = htons(fwdsize);
 
       if(ipversion == AF_INET)
 	{
@@ -298,9 +396,9 @@ net_forward()
 		}
 	      x++;
 	      if(ipversion == AF_INET)
-		printf(" %3i", (u_char) fwd_packet[i]);
+		printf(" %3i", (u_char) fwd_buffer[i]);
 	      else
-		printf(" %2x", (u_char) fwd_packet[i]);
+		printf(" %2x", (u_char) fwd_buffer[i]);
 	    }
 	  
 	  printf("\n");
@@ -313,7 +411,7 @@ net_forward()
       tmp_ptf_list = ptf_list;
       while(tmp_ptf_list != NULL)
 	{
-	  tmp_ptf_list->function(fwd_packet, &fwdsize);
+	  tmp_ptf_list->function(fwd_buffer, &fwdsize);
 	  tmp_ptf_list = tmp_ptf_list->next;
 	}
 
@@ -321,7 +419,7 @@ net_forward()
       if(ipversion == AF_INET)
 	{
 	  /* IP version 4 */
-	  if(sendto(ifn->olsr_socket, fwd_packet, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
+	  if(sendto(ifn->olsr_socket, fwd_buffer, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
 	    {
 	      perror("sendto(v4)");
 	      olsr_syslog(OLSR_LOG_ERR, "OLSR: forward sendto IPv4 %m");
@@ -331,7 +429,7 @@ net_forward()
       else
 	{
 	  /* IP version 6 */
-	  if(sendto(ifn->olsr_socket, fwd_packet, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
+	  if(sendto(ifn->olsr_socket, fwd_buffer, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
 	    {
 	      perror("sendto(v6)");
 	      olsr_syslog(OLSR_LOG_ERR, "OLSR: forward sendto IPv6 %m");

@@ -93,7 +93,7 @@ olsr_forward_message(union olsr_message *,
 		     union olsr_ip_addr *);
 
 int
-buffer_forward(union olsr_message *);
+buffer_forward(union olsr_message *, olsr_u16_t);
 
 void
 olsr_init_tables();

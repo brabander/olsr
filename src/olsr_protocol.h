@@ -82,6 +82,9 @@ union olsr_ip_addr
 };
 
 
+#define OLSR_HEADERSIZE (sizeof(olsr_u16_t) + sizeof(olsr_u16_t))
+
+
 /*
  *Emission Intervals
  */

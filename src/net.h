@@ -44,6 +44,21 @@ struct ptf *ptf_list;
 void
 init_net();
 
+inline int
+net_outbuffer_bytes_left();
+
+int
+net_set_maxmsgsize(olsr_u16_t);
+
+inline olsr_u16_t
+net_get_maxmsgsize();
+
+int
+net_outbuffer_push(olsr_u8_t *, olsr_u16_t);
+
+int
+net_fwdbuffer_push(olsr_u8_t *, olsr_u16_t);
+
 int
 net_output(struct interface*);
 

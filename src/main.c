@@ -817,8 +817,6 @@ set_default_values()
 
   mpr_coverage = MPR_COVERAGE;
 
-  maxmessagesize = MAXMESSAGESIZE;
-
   ipv6_addrtype = IPV6_ADDR_SITELOCAL;
 
   /* Default multicastaddresses */

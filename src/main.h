@@ -35,19 +35,11 @@
 
 struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
-char	packet[MAXMESSAGESIZE+1];
-char	fwd_packet[MAXMESSAGESIZE+1];
-int     outputsize = 0;         /* current size of the output buffer */
-int     fwdsize = 0;         /* current size of the forward buffer */
-
 int     precedence;
 int     tos_bits;
 
 int     option_i = 0;
 int	bufspace = 127*1024;	/* max. input buffer size to request */
-
-union olsr_packet *msg = (union olsr_packet *)packet;
-union olsr_packet *fwdmsg = (union olsr_packet *)fwd_packet;
 
 /* ID of the timer thread */
 pthread_t main_thread;

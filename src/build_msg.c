@@ -27,6 +27,10 @@
 #include "olsr.h"
 
 
+/* All these functions share this buffer */
+
+static char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+
 /* Begin:
  * Prototypes for internal functions 
  */
@@ -212,7 +216,7 @@ hna_build(struct interface *ifp)
 static void
 hello_build4(struct hello_message *message, struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   struct hello_neighbor *nb, *prev_nb;
   union olsr_message *m;
   struct hellomsg *h;
@@ -224,13 +228,21 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) + sizeof(msg->v4.olsr_seqno));
+  remainsize = net_outbuffer_bytes_left();
 
   //printf("HELLO build outputsize: %d\n", outputsize);
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v4.olsr_msg + remainsize)
-    : (union olsr_message *) msg->v4.olsr_msg;
+  m = (union olsr_message *)msg_buffer;
+
+  curr_size = 12; /* OLSR message header */
+  curr_size += 4; /* Hello header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
 
   h = &m->v4.message.hello;
   hinfo = h->hell_info;
@@ -238,28 +250,26 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   
   //printf("Neighbor addr: %s\n", olsr_ip_to_string(haddr));fflush(stdout);
 
-  /* Set hopcount and ttl */
+  /* Fill message header */
   m->v4.ttl = message->ttl;
   m->v4.hopcnt = 0;
+  m->v4.olsr_msgtype = HELLO_MESSAGE;
+  /* Set source(main) addr */
+  COPY_IP(&m->v4.originator, &main_addr);
 
-  /* Send pending packet if not room in buffer */
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    net_output(ifp);
+  if(ifp->is_wireless)
+    m->v4.olsr_vtime = hello_vtime;
+  else
+    m->v4.olsr_vtime = hello_nw_vtime;
 
-  /* Set willingness */
+  /* Fill HELLO header */
   h->willingness = message->willingness; 
-
   if(ifp->is_wireless)
     h->htime = htime;
   else
     h->htime = htime_nw;
-
-
   memset(&h->reserved, 0, sizeof(olsr_u16_t));
   
-  /* Set source(main) addr */
-  
-  COPY_IP(&m->v4.originator, &main_addr);
 
   /*
    *Loops trough all possible neighbor statuses
@@ -283,85 +293,13 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 
 	  lastpacket = sametype = 0;
 
-	  outputsize = (char *)hinfo - packet;
-
 	  //printf("Neighbortype %d outputsize %d\n", i, outputsize);
-
-	  /*
-	   *Only if we're gona chop the packet
-	   */
-	  if (outputsize > maxmessagesize - (int)sizeof (struct hellinfo)) 
-	    {
-	      olsr_printf(1, "Chomping HELLO message\n");
-
-	      m->v4.olsr_msgtype = HELLO_MESSAGE;
-	      if(ifp->is_wireless)
-		m->v4.olsr_vtime = hello_vtime;
-	      else
-		m->v4.olsr_vtime = hello_nw_vtime;
-
-	      m->v4.olsr_msgsize = (char *)hinfo - (char *)m;
-	      m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-	      hinfo->size = (char *)haddr - (char *)hinfo;
-	      hinfo->size = ntohs(hinfo->size);
-	  
-	      m->v4.seqno = htons(get_msg_seqno());		
-	  
-	      net_output(ifp);
-	  
-	      m = (union olsr_message *)msg->v4.olsr_msg;
-	      h = &m->v4.message.hello;
-	      hinfo = h->hell_info;
-	      haddr = (union olsr_ip_addr *)&hinfo->neigh_addr;	
-	    }
 
 	  /*
 	   *Looping trough neighbors
 	   */
 	  for (nb = message->neighbors; nb != NULL; nb = nb->next) 
-	    {
-	  
-	      outputsize = (char *)haddr - packet;
-	  
-	      /*
-	       *If we're gonna chop it...again
-	       */
-	      if (outputsize > maxmessagesize - (int)ipsize)
-		{
-		  olsr_printf(1, "Chomping HELLO again\n");
-
-		  m->v4.olsr_msgtype = HELLO_MESSAGE;
-		  if(ifp->is_wireless)
-		    m->v4.olsr_vtime = hello_vtime;
-		  else
-		    m->v4.olsr_vtime = hello_nw_vtime;
-
-		  m->v4.olsr_msgsize = (char *)haddr - (char *)m;
-		  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-		  hinfo->size = (char *)haddr - (char *)hinfo;
-		  hinfo->size = ntohs(hinfo->size);
-	      
-		  m->v4.seqno = htons(get_msg_seqno());
-
-		  net_output(ifp);
-	      
-		  m = (union olsr_message *)msg->v4.olsr_msg;
-		  h = &m->v4.message.hello;
-		  hinfo = h->hell_info;
-		  haddr = (union olsr_ip_addr *)&hinfo->neigh_addr;
-
-		  memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
-		  /* Set link and status */
-		  //hinfo->link_code = j | (i<<2);
-		  hinfo->link_code = CREATE_LINK_CODE(i, j);
-
-		  //printf("Setting neighbor link status: %x\n", hinfo->link_code);
-
-	      
-		  lastpacket = sametype;
-		}
-	  
-	  
+	    {	  
 	      if ((nb->status == i) && (nb->link == j))
 		{
 		  sametype++;
@@ -410,17 +348,8 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   m->v4.seqno = htons(get_msg_seqno());
   m->v4.olsr_msgsize = (char *)hinfo - (char *)m;
   m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-  m->v4.olsr_msgtype = HELLO_MESSAGE;
-  if(ifp->is_wireless)
-    m->v4.olsr_vtime = hello_vtime;
-  else
-    m->v4.olsr_vtime = hello_nw_vtime;
-
-  outputsize = (char *)hinfo - packet;
   
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    net_output(ifp);
-
+  net_outbuffer_push(msg_buffer, (char *)hinfo - (char *)m);
 
   /*
    * Delete the list of neighbor messages.
@@ -454,7 +383,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
 static void
 hello_build6(struct hello_message *message, struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   struct hello_neighbor *nb, *prev_nb;
   union olsr_message *m;
   struct hellomsg6 *h6;
@@ -467,40 +396,49 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   if((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) + sizeof(msg->v6.olsr_seqno));
+
+  remainsize = net_outbuffer_bytes_left();
 
   //printf("HELLO build outputsize: %d\n", outputsize);
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v6.olsr_msg + remainsize)
-    : (union olsr_message *) msg->v6.olsr_msg;
+  m = (union olsr_message *)msg_buffer;
+
+  curr_size = 24; /* OLSR message header */
+  curr_size += 4; /* Hello header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  //printf("HELLO build outputsize: %d\n", outputsize);
   h6 = &m->v6.message.hello;
   hinfo6 = h6->hell_info;
   haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
 
 
-  /* Set hopcount and ttl */
+  /* Fill message header */
   m->v6.ttl = message->ttl;
   m->v6.hopcnt = 0;
-
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg)) 
-    net_output(ifp);
+  /* Set source(main) addr */
+  COPY_IP(&m->v6.originator, &main_addr);
+  m->v6.olsr_msgtype = HELLO_MESSAGE;
+  if(ifp->is_wireless)
+    m->v6.olsr_vtime = hello_vtime;
+  else
+    m->v6.olsr_vtime = hello_nw_vtime;
   
-  
-  /* Set willingness */
+  /* Fill packet header */
   h6->willingness = message->willingness; 
-
   if(ifp->is_wireless)
     h6->htime = htime;
   else
     h6->htime = htime_nw;
-  
   memset(&h6->reserved, 0, sizeof(olsr_u16_t));
   
   
-  /* Set source(main) addr */
-  
-  COPY_IP(&m->v6.originator, &main_addr);
 
   /*
    *Loops trough all possible neighbor statuses
@@ -515,88 +453,14 @@ hello_build6(struct hello_message *message, struct interface *ifp)
 	  
 	  lastpacket = sametype = 0;
 	  
-	  outputsize = (char *)hinfo6 - packet;
 	  
 	  //printf("Neighbortype %d outputsize %d\n", i, outputsize);
-	  
-	  /*
-	   *Only if we're gona chop the packet
-	   */
-	  if (outputsize > maxmessagesize - (int)sizeof (struct hellinfo)) 
-	    {
-	      olsr_printf(1, "Chomping HELLO message\n");
-	      
-	      m->v6.olsr_msgtype = HELLO_MESSAGE;
-	      if(ifp->is_wireless)
-		m->v6.olsr_vtime = hello_vtime;
-	      else
-		m->v6.olsr_vtime = hello_nw_vtime;
-	      
-	      m->v6.olsr_msgsize = (char *)hinfo6 - (char *)m;
-	      m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-	      hinfo6->size = (char *)haddr - (char *)hinfo6;
-	      hinfo6->size = ntohs(hinfo6->size);
-	      
-	      m->v6.seqno = htons(get_msg_seqno());		
-	      
-	      net_output(ifp);
-	      
-	      m = (union olsr_message *)msg->v6.olsr_msg;
-	      h6 = &m->v6.message.hello;
-	      hinfo6 = h6->hell_info;
-	      haddr = (union olsr_ip_addr *)&hinfo6->neigh_addr;
-	      
-	    }
-	  
+	  	  
 	  /*
 	   *Looping trough neighbors
 	   */
 	  for (nb = message->neighbors; nb != NULL; nb = nb->next) 
-	    {
-	      
-	      outputsize = (char *)haddr - packet;
-	      
-	      /*
-	       *If we're gonna chop it...again
-	       */
-	      if (outputsize > maxmessagesize - (int)ipsize)
-		{
-		  olsr_printf(1, "Chomping HELLO again\n");
-		  
-		  m->v6.olsr_msgtype = HELLO_MESSAGE;
-		  if(ifp->is_wireless)
-		    m->v6.olsr_vtime = hello_vtime;
-		  else
-		    m->v6.olsr_vtime = hello_nw_vtime;
-		  
-		  m->v6.olsr_msgsize = (char *)haddr - (char *)m;
-		  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-		  hinfo6->size = (char *)haddr - (char *)hinfo6;
-		  hinfo6->size = ntohs(hinfo6->size);
-		  
-		  m->v6.seqno = htons(get_msg_seqno());
-		  
-		  //m->v6.seqno = htons(message->mpr_seq_number);
-		  
-		  net_output(ifp);
-		  
-		  m = (union olsr_message *)msg->v6.olsr_msg;
-		  h6 = &m->v6.message.hello;
-		  hinfo6 = h6->hell_info;
-		  haddr = (union olsr_ip_addr *)&hinfo6->neigh_addr;
-		  
-
-		  memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
-		  /* Set link and status */
-		  hinfo6->link_code = CREATE_LINK_CODE(i, j);//j | (i<<2);
-  	  
-		  //printf("Setting neighbor link status: %d\n", nb->link);
-		  
-		  
-		  lastpacket = sametype;
-		}
-	      
-	      
+	    {	      
 	      if ((nb->status == i) && (nb->link == j))
 		{	      
 		  sametype++;
@@ -645,17 +509,8 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());
   m->v6.olsr_msgsize = (char *)hinfo6 - (char *)m;
   m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-  m->v6.olsr_msgtype = HELLO_MESSAGE;
-  if(ifp->is_wireless)
-    m->v6.olsr_vtime = hello_vtime;
-  else
-    m->v6.olsr_vtime = hello_nw_vtime;
 
-  outputsize = (char *)hinfo6 - packet;
-
-  if (outputsize > maxmessagesize - (int)sizeof (struct olsrmsg6)) 
-      net_output(ifp);
-
+  net_outbuffer_push(msg_buffer, (char *)hinfo6 - (char *)m);
 
   /*
    * Delete the list of neighbor messages.
@@ -690,85 +545,84 @@ static void
 tc_build4(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize;
+  int remainsize, curr_size;;
   struct tc_mpr_addr *mprs, *prev_mprs;
   union olsr_message *m;
   struct tcmsg *tc;
   struct neigh_info *mprsaddr; 
   int found = 0;
-  int msgsize;
-
 
   if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) + sizeof(msg->v4.olsr_seqno));
+  remainsize = net_outbuffer_bytes_left();
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v4.olsr_msg + remainsize)
-    : (union olsr_message *) msg->v4.olsr_msg;
+  m = (union olsr_message *)msg_buffer;
+
   tc = &m->v4.message.tc;
-  mprsaddr = tc->neigh;
-  msgsize = (int)sizeof(struct olsrmsg);
-  tc->reserved = 0;
 
-  if (outputsize > maxmessagesize - msgsize) 
-    net_output(ifp);
-            
+
+  mprsaddr = tc->neigh;
+  curr_size = 12; /* OLSR message header */
+  curr_size += 4; /* TC header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  /* Fill header */
+  m->v4.olsr_vtime = tc_vtime;
+  m->v4.olsr_msgtype = TC_MESSAGE;
+  m->v4.hopcnt = message->hop_count;
+  m->v4.ttl = message->ttl;
+  COPY_IP(&m->v4.originator, &message->originator);
+
+  /* Fill TC header */
+  tc->ansn = htons(message->ansn);
+  tc->reserved = 0;
+  
 
   /*Looping trough MPR selectors */
   for (mprs = message->multipoint_relay_selector_address; mprs != NULL;mprs = mprs->next) 
     {
-	    
-      outputsize = (char *)mprsaddr - packet;
-
       /*If packet is to be chomped */
-      if (outputsize > maxmessagesize - (int)sizeof (mprsaddr))
+      if((curr_size + ipsize) > remainsize)
 	{
 
 	  olsr_printf(1, "Chomping TC!\n");
 
-	  m->v4.olsr_vtime = tc_vtime;
-	  m->v4.olsr_msgtype = TC_MESSAGE;
-	  m->v4.olsr_msgsize = (char *)mprsaddr - (char *)m;
-	  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
+	  m->v4.olsr_msgsize = htons(curr_size);
 	  m->v4.seqno = htons(get_msg_seqno());
-	  m->v4.hopcnt = message->hop_count;
-	  m->v4.ttl = message->ttl;
-	  COPY_IP(&m->v4.originator, &message->originator);
 
+	  net_outbuffer_push(msg_buffer, curr_size);
 	  net_output(ifp);
-		
-	  m = (union olsr_message *)msg->v4.olsr_msg;
-	  tc = &m->v4.message.tc;
+	  remainsize = net_outbuffer_bytes_left();
 
+	  /* Reset stuff */
 	  mprsaddr = tc->neigh;
+	  curr_size = 12; /* OLSR message header */
+	  curr_size += 4; /* TC header */
+
 	  found = 0;
 	}
       found = 1;
-	    
+      
       COPY_IP(&mprsaddr->addr, &mprs->address);
 
+      curr_size += ipsize;
       mprsaddr++;
     }
 
   if (found)
     {
 	    
-      outputsize = (char *)mprsaddr - packet;
-
-      m->v4.olsr_msgtype = TC_MESSAGE;
-      m->v4.olsr_msgsize = (char *)mprsaddr - (char *)m;
-      m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-      m->v4.olsr_vtime = tc_vtime;
-      
+      m->v4.olsr_msgsize = htons(curr_size);
       m->v4.seqno = htons(get_msg_seqno());
-      tc->ansn = htons(message->ansn);
       
-      m->v4.hopcnt = message->hop_count;
-      m->v4.ttl = message->ttl;
-
-      COPY_IP(&m->v4.originator, &message->originator);
+      net_outbuffer_push(msg_buffer, curr_size);
 
     }
   else
@@ -777,21 +631,11 @@ tc_build4(struct tc_message *message, struct interface *ifp)
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 
-	    
-	  outputsize = 20;
-
-	  m->v4.olsr_msgtype = TC_MESSAGE;
-	  m->v4.olsr_msgsize = 16;
-	  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-	  m->v4.olsr_vtime = tc_vtime;
-	  
+	  m->v4.olsr_msgsize = htons(curr_size);
 	  m->v4.seqno = htons(get_msg_seqno());
-	  tc->ansn = htons(message->ansn);
-	  
-	  m->v4.hopcnt = message->hop_count;
-	  m->v4.ttl = message->ttl;
-	  
-	  COPY_IP(&m->v4.originator, &message->originator);
+
+	  net_outbuffer_push(msg_buffer, curr_size);
+
 	}
     }
 
@@ -829,63 +673,63 @@ static void
 tc_build6(struct tc_message *message, struct interface *ifp)           
 {
 
-  int remainsize;
+  int remainsize, curr_size;;
   struct tc_mpr_addr *mprs, *prev_mprs;
   union olsr_message *m;
   struct tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
   int found = 0;
-  int msgsize;
-
 
   if ((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) + sizeof(msg->v6.olsr_seqno));
+  remainsize = net_outbuffer_bytes_left();
 
+  m = (union olsr_message *)msg_buffer;
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v6.olsr_msg + remainsize)
-    : (union olsr_message *) msg->v6.olsr_msg;
   tc6 = &m->v6.message.tc;
+
   mprsaddr6 = tc6->neigh;
-  msgsize = (int)sizeof(struct olsrmsg6);
+  curr_size = 24; /* OLSR message header */
+  curr_size += 4; /* TC header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  /* Fill header */
+  m->v6.olsr_vtime = tc_vtime;
+  m->v6.olsr_msgtype = TC_MESSAGE;
+  m->v6.hopcnt = message->hop_count;
+  m->v6.ttl = message->ttl;
+  COPY_IP(&m->v6.originator, &message->originator);
+
+  /* Fill TC header */
+  tc6->ansn = htons(message->ansn);
   tc6->reserved = 0;
-
-  if (outputsize > maxmessagesize - msgsize) 
-    net_output(ifp);
-
   
 
   /*Looping trough MPR selectors */
   for (mprs = message->multipoint_relay_selector_address; mprs != NULL;mprs = mprs->next) 
     {
 	    
-      outputsize = (char *)mprsaddr6 - packet;
-
-
       /*If packet is to be chomped */
-      if (outputsize > maxmessagesize - (int)sizeof (mprsaddr6))
+      if((curr_size + ipsize) > remainsize)
 	{
-	  m->v6.olsr_msgtype = TC_MESSAGE;
-	  m->v6.olsr_msgsize = (char *)mprsaddr6 - (char *)m;
-	  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-	  m->v6.olsr_vtime = tc_vtime;
-	  
+	  m->v6.olsr_msgsize = htons(curr_size);
 	  m->v6.seqno = htons(get_msg_seqno());
-	  tc6->ansn = htons(message->ansn);
-	  
-	  m->v6.hopcnt = message->hop_count;
-	  m->v6.ttl = message->ttl;
 
-	  COPY_IP(&m->v6.originator, &message->originator);
-
+	  net_outbuffer_push(msg_buffer, curr_size);
 	  net_output(ifp);
-		
-	  m = (union olsr_message *)msg->v6.olsr_msg;
-	  tc6 = &m->v6.message.tc;
+	  remainsize = net_outbuffer_bytes_left();
 
 	  mprsaddr6 = tc6->neigh;
+	  curr_size = 24; /* OLSR message header */
+	  curr_size += 4; /* TC header */
+		
 
 	  found = 0;
 	}
@@ -900,21 +744,10 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	
   if (found)
     {
-	    
-      outputsize = (char *)mprsaddr6 - packet;
-
-      m->v6.olsr_msgtype = TC_MESSAGE;
-      m->v6.olsr_msgsize = (char *)mprsaddr6 - (char *)m;
-      m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-      m->v6.olsr_vtime = tc_vtime;
-
+      m->v6.olsr_msgsize = htons(curr_size);
       m->v6.seqno = htons(get_msg_seqno());
-      tc6->ansn = htons(message->ansn);
-      
-      m->v6.hopcnt = message->hop_count;
-      m->v6.ttl = message->ttl;
 
-      COPY_IP(&m->v6.originator, &message->originator);
+      net_outbuffer_push(msg_buffer, curr_size);
 
     }
   else
@@ -923,20 +756,10 @@ tc_build6(struct tc_message *message, struct interface *ifp)
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 	    
-	  outputsize = 32;
-
-	  m->v6.olsr_msgtype = TC_MESSAGE;
-	  m->v6.olsr_msgsize = 28;
-	  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-	  m->v6.olsr_vtime = tc_vtime;
-	  
+	  m->v6.olsr_msgsize = htons(curr_size);
 	  m->v6.seqno = htons(get_msg_seqno());
-	  tc6->ansn = htons(message->ansn);
-	  
-	  m->v6.hopcnt = message->hop_count;
-	  m->v6.ttl = message->ttl;
-	  
-	  COPY_IP(&m->v6.originator, &message->originator);
+
+	  net_outbuffer_push(msg_buffer, curr_size);
 	}
     }
 
@@ -963,67 +786,77 @@ tc_build6(struct tc_message *message, struct interface *ifp)
  *IP version 4
  *
  *<b>NO INTERNAL BUFFER</b>
- *@param ifn use this interfaces address as main address
+ *@param ifp use this interfaces address as main address
  *@return 1 on success
  */
 
 static void
-mid_build4(struct interface *ifn)
+mid_build4(struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr *addrs;
-  struct midmsg *mmsg;
   struct interface *ifs;  
 
-  if((ipversion != AF_INET) || (!ifn) || (nbinterf <= 1))
+  if((ipversion != AF_INET) || (!ifp) || (nbinterf <= 1))
     return;
 
-  //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
-  remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) 
-			     + sizeof(msg->v4.olsr_seqno));
+  remainsize = net_outbuffer_bytes_left();
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v4.olsr_msg + remainsize)
-    :(union olsr_message *) msg->v4.olsr_msg;
+  m = (union olsr_message *)msg_buffer;
 
-  mmsg = &m->v4.message.mid;
+  curr_size = 12; /* OLSR message header */
 
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  /* Fill header */
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
-
-  m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
-
-  /* pad - seems we don't need this....*/
-  //memset(mmsg->mid_res, 0, sizeof(mmsg->mid_res));
-  //mmsg->mid_res = 0;
-      
   /* Set main(first) address */
   COPY_IP(&m->v4.originator, &main_addr);
-      
-  addrs = mmsg->mid_addr;
+  m->v4.olsr_msgtype = MID_MESSAGE;
+  m->v4.olsr_vtime = mid_vtime;
+ 
+  addrs = m->v4.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
       if(!COMP_IP(&main_addr, &ifs->ip_addr))
 	{
+
+	  if((curr_size + ipsize) > remainsize)
+	    {
+	      /* set size */
+	      m->v4.olsr_msgsize = htons(curr_size);
+	      m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
+	      
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_output(ifp);
+	      remainsize = net_outbuffer_bytes_left();
+	      curr_size = 12; /* OLSR message header */
+	      addrs = m->v4.message.mid.mid_addr;
+	    }
+	  
 	  COPY_IP(&addrs->addr, &ifs->ip_addr);
 	  addrs++;
+	  curr_size += ipsize;
 	}
     }
 
-  m->v4.olsr_msgtype = MID_MESSAGE;
-  m->v4.olsr_msgsize = (char*)addrs - (char*)m;
-  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
 
-  m->v4.olsr_vtime = mid_vtime;
-
-  outputsize = (char*)addrs - packet; 
+  m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
+  m->v4.olsr_msgsize = htons(curr_size);
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
+  net_outbuffer_push(msg_buffer, curr_size);
 
 
   return;
@@ -1035,67 +868,78 @@ mid_build4(struct interface *ifn)
  *IP version 6
  *
  *<b>NO INTERNAL BUFFER</b>
- *@param ifn use this interfaces address as main address
+ *@param ifp use this interfaces address as main address
  *@return 1 on success
  */
 
 static void
-mid_build6(struct interface *ifn)
+mid_build6(struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr6 *addrs6;
-  struct midmsg6 *mmsg6;
   struct interface *ifs;
 
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
 
-  if((ipversion != AF_INET6) || (!ifn) || (nbinterf <= 1))
+  if((ipversion != AF_INET6) || (!ifp) || (nbinterf <= 1))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) 
-			     + sizeof(msg->v6.olsr_seqno));
+  remainsize = net_outbuffer_bytes_left();
 
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v6.olsr_msg + remainsize)
-    :(union olsr_message *) msg->v6.olsr_msg;
-      
-  mmsg6 = &m->v6.message.mid;
+  curr_size = 24; /* OLSR message header */
 
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  m = (union olsr_message *)msg_buffer;
+    
+  /* Build header */
   m->v6.hopcnt = 0;
-  m->v6.ttl = MAX_TTL;
-
-  m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
-  /* pad - seems we don't need this....*/
-  //memset(mmsg->mid_res, 0, sizeof(mmsg->mid_res));
-  //mmsg->mid_res = 0;
-      
+  m->v6.ttl = MAX_TTL;      
+  m->v6.olsr_msgtype = MID_MESSAGE;
+  m->v6.olsr_vtime = mid_vtime;
   /* Set main(first) address */
   COPY_IP(&m->v6.originator, &main_addr);
-      
-  addrs6 = mmsg6->mid_addr;
+   
+
+  addrs6 = m->v6.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
       if(!COMP_IP(&main_addr, &ifs->ip_addr))
 	{
+	  if((curr_size + ipsize) > remainsize)
+	    {
+	      /* set size */
+	      m->v6.olsr_msgsize = htons(curr_size);
+	      m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
+	      
+	      net_outbuffer_push(msg_buffer, curr_size);
+	      net_output(ifp);
+	      remainsize = net_outbuffer_bytes_left();
+	      curr_size = 24; /* OLSR message header */
+	      addrs6 = m->v6.message.mid.mid_addr;
+	    }
+
 	  COPY_IP(&addrs6->addr, &ifs->ip_addr);
 	  addrs6++;
+	  curr_size += ipsize;
 	}
     }
 
-  m->v6.olsr_msgtype = MID_MESSAGE;
-  m->v6.olsr_msgsize = (char*)addrs6 - (char*)m;
-  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-  m->v6.olsr_vtime = mid_vtime;
-
-  outputsize = (char*)addrs6 - packet;
+  m->v6.olsr_msgsize = htons(curr_size);
+  m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
-
+  net_outbuffer_push(msg_buffer, curr_size);
 
   return;
 }
@@ -1112,49 +956,66 @@ mid_build6(struct interface *ifn)
 static void
 hna_build4(struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
-  struct hnamsg *hmsg;
   struct local_hna_entry *h;
 
   /* No hna nets */
   if((ipversion != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
     return;
     
-  remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) 
-			     + sizeof(msg->v4.olsr_seqno));
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v4.olsr_msg + remainsize)
-    :(union olsr_message *) msg->v4.olsr_msg;
+  remainsize = net_outbuffer_bytes_left();
 
-  hmsg = &m->v4.message.hna;
+  curr_size = 12; /* OLSR message header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  m = (union olsr_message *)msg_buffer;
     
+
+  /* Fill header */
   COPY_IP(&m->v4.originator, &main_addr);
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
+  m->v4.olsr_msgtype = HNA_MESSAGE;
+  m->v4.olsr_vtime = hna_vtime;
 
-  m->v4.seqno = htons(get_msg_seqno());
 
-
-  pair = hmsg->hna_net;
+  pair = m->v4.message.hna.hna_net;
 
   for(h = local_hna4_set.next;
       h != &local_hna4_set;
       h = h->next)
     {
+      if((curr_size + (2 * ipsize)) > remainsize)
+	{
+	  m->v4.seqno = htons(get_msg_seqno());
+	  m->v4.olsr_msgsize = htons(curr_size);
+
+	  net_outbuffer_push(msg_buffer, curr_size);
+	  net_output(ifp);
+	  remainsize = net_outbuffer_bytes_left();
+	  curr_size = 12; /* OLSR message header */
+	  pair = m->v4.message.hna.hna_net;
+	}
       COPY_IP(&pair->addr, &h->A_network_addr);
       COPY_IP(&pair->netmask, &h->A_netmask);
       pair++;
+      curr_size += (2 * ipsize);
     }
-      
-  m->v4.olsr_msgtype = HNA_MESSAGE;
-  m->v4.olsr_msgsize = (char*)pair - (char*)m;
-  m->v4.olsr_msgsize = htons(m->v4.olsr_msgsize);
-  m->v4.olsr_vtime = hna_vtime;
 
-  outputsize = (char*)pair - packet;
+  m->v4.seqno = htons(get_msg_seqno());
+  m->v4.olsr_msgsize = htons(curr_size);
+
+  net_outbuffer_push(msg_buffer, curr_size);
+
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return;
 }
@@ -1172,11 +1033,10 @@ hna_build4(struct interface *ifp)
 static void
 hna_build6(struct interface *ifp)
 {
-  int remainsize;
+  int remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair6 *pair6;
-  struct hnamsg6 *hmsg6;
   union olsr_ip_addr tmp_netmask;
   struct local_hna_entry *h;
   
@@ -1184,42 +1044,58 @@ hna_build6(struct interface *ifp)
   if((ipversion != AF_INET6) || (!ifp) || (local_hna6_set.next == &local_hna6_set))
     return;
 
-  remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) 
-			     + sizeof(msg->v6.olsr_seqno));
-
-  m = outputsize ? 
-    (union olsr_message *)((char *)msg->v6.olsr_msg + remainsize)
-    :(union olsr_message *) msg->v6.olsr_msg;
-
-  hmsg6 = &m->v6.message.hna;
     
+  remainsize = net_outbuffer_bytes_left();
+
+  curr_size = 24; /* OLSR message header */
+
+  /* Send pending packet if not room in buffer */
+  if(curr_size > remainsize)
+    {
+      net_output(ifp);
+      remainsize = net_outbuffer_bytes_left();
+    }
+
+  m = (union olsr_message *)msg_buffer;   
+
+  /* Fill header */
   COPY_IP(&m->v6.originator, &main_addr);
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
+  m->v6.olsr_msgtype = HNA_MESSAGE;
+  m->v6.olsr_vtime = hna_vtime;
 
-  m->v6.seqno = htons(get_msg_seqno());
-
-
-  pair6 = hmsg6->hna_net;
+  pair6 = m->v6.message.hna.hna_net;
 
 
   for(h = local_hna6_set.next;
       h != &local_hna6_set;
       h = h->next)
     {
+      if((curr_size + (2 * ipsize)) > remainsize)
+	{
+	  m->v6.seqno = htons(get_msg_seqno());
+	  m->v6.olsr_msgsize = htons(curr_size);
+
+	  net_outbuffer_push(msg_buffer, curr_size);
+	  net_output(ifp);
+	  remainsize = net_outbuffer_bytes_left();
+	  curr_size = 24; /* OLSR message header */
+	  pair6 = m->v6.message.hna.hna_net;
+	}
+
       //printf("Adding %s\n", olsr_ip_to_string(&h->hna_net.addr));
       COPY_IP(&pair6->addr, &h->A_network_addr);
       olsr_prefix_to_netmask(&tmp_netmask, h->A_netmask.v6);
       COPY_IP(&pair6->netmask, &tmp_netmask);
       pair6++;
+      curr_size += (2 * ipsize);
     }
   
-  m->v6.olsr_msgtype = HNA_MESSAGE;
-  m->v6.olsr_msgsize = (char*)pair6 - (char*)m;
-  m->v6.olsr_msgsize = htons(m->v6.olsr_msgsize);
-  m->v6.olsr_vtime = hna_vtime;
-  
-  outputsize = (char*)pair6 - packet;
+  m->v6.olsr_msgsize = htons(curr_size);
+  m->v6.seqno = htons(get_msg_seqno());
+
+  net_outbuffer_push(msg_buffer, curr_size);
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return;

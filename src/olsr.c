@@ -277,7 +277,6 @@ olsr_forward_message(union olsr_message *m,
 		     struct interface *in_if, 
 		     union olsr_ip_addr *from_addr)
 {
-  union olsr_message *om;
   union olsr_ip_addr *src;
   struct neighbor_entry *neighbor;
   int msgsize;
@@ -340,20 +339,20 @@ olsr_forward_message(union olsr_message *m,
 
   msgsize = ntohs(m->v4.olsr_msgsize);
 
-  if(fwdsize)
+  if(net_fwd_pending())
     {
       /*
        * Check if message is to big to be piggybacked
        */
-      if((fwdsize + msgsize) > maxmessagesize)
+      if(net_fwdbuffer_push(m, msgsize) != msgsize)
 	{
 	  olsr_printf(1, "Forwardbuffer full(%d + %d) - flushing!\n", fwdsize, msgsize);
-
+	  
 	  /* Send */
 	  net_forward();
-
+	  
 	  /* Buffer message */
-	  buffer_forward(m);
+	  buffer_forward(m, msgsize);
 	}
       else
 	{
@@ -361,17 +360,13 @@ olsr_forward_message(union olsr_message *m,
 	  olsr_printf(3, "Piggybacking message - buffer: %d msg: %d\n", fwdsize, msgsize);
 #endif
 	  /* piggyback message to outputbuffer */
-	  om = 	(union olsr_message *)((char*)fwdmsg + fwdsize);
-
-	  memcpy(om, m, msgsize);
-	  fwdsize += msgsize;
 	}
     }
 
   else
     {
       /* No forwarding pending */
-      buffer_forward(m);
+      buffer_forward(m, msgsize);
     }
 
   return 1;
@@ -381,13 +376,10 @@ olsr_forward_message(union olsr_message *m,
 
 
 int
-buffer_forward(union olsr_message *m)
+buffer_forward(union olsr_message *m, olsr_u16_t msgsize)
 {
   float jitter;
   struct timeval jittertimer;
-  int msgsize;
-
-  msgsize = ntohs(m->v4.olsr_msgsize);  
       
   /* Set timer */
   jitter = (float) random()/RAND_MAX;
@@ -397,18 +389,18 @@ buffer_forward(union olsr_message *m)
   
   timeradd(&now, &jittertimer, &fwdtimer);
   
-  /* Add header and message */
-  fwdsize = sizeof(olsr_u16_t) + sizeof(olsr_u16_t) + msgsize;
-  
-  /* Set messagesize  - same for IPv4 and IPv6 */
-  fwdmsg->v4.olsr_packlen = htons(fwdsize);
   
 #ifdef DEBUG
   olsr_printf(3, "Adding jitter for forwarding: %f size: %d\n", jitter, fwdsize);
 #endif
 
   /* Copy message to outputbuffer */
-  memcpy(fwdmsg->v4.olsr_msg, m, msgsize);
+  if(net_fwdbuffer_push(m, msgsize) != msgsize)
+    {
+      olsr_printf(1, "Received message to big to be forwarded(%d bytes)!", msgsize);
+      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded(%d bytes)!", msgsize);
+      fwdtimer = now;
+    }
 
   return 1;
 }

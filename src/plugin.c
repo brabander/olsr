@@ -60,12 +60,16 @@ olsr_plugin_io(int cmd, void *data, size_t size)
     {
 
       /* Data fetching */
+      /*
     case(GETD__PACKET):
       *((char **)data) = packet;
       break;
+      */
+      /*
     case(GETD__OUTPUTSIZE):
       *((int **)data) = &outputsize;
       break;
+      */
     case(GETD__IFNET):
       *((struct interface **)data) = ifnet;
       break;
@@ -78,9 +82,11 @@ olsr_plugin_io(int cmd, void *data, size_t size)
     case(GETD__OLSR_SOCKET_ENTRIES):
       *((struct olsr_socket_entry **)data) = olsr_socket_entries;
       break;
+      /*
     case(GETD__MAXMESSAGESIZE):
       *((int **)data) = &maxmessagesize;
       break;
+      */
     case(GETD__NEIGHBORTABLE):
       *((struct neighbor_entry **)data) = neighbortable;
       break;

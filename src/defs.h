@@ -179,11 +179,6 @@ int mpr_coverage;
 
 int olsr_udp_port;
 
-
-/* Max OLSR packet size */
-
-int maxmessagesize;
-
 /* Timeout multipliers */
 
 int neighbor_timeout_mult;
