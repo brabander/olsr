@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.16 2005/01/17 20:18:22 kattemat Exp $
+ * $Id: process_routes.c,v 1.17 2005/02/01 21:10:36 kattemat Exp $
  */
 
 
@@ -350,7 +350,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
       struct destination_n *destination_kernel = NULL;
       struct destination_n *previous_node = add_kernel_list;
 
-      //searching for all the items with metric equal to n
+      /* searching for all the items with metric equal to n */
       for(destination_kernel = add_kernel_list; destination_kernel != NULL; )
 	{
 	  if((destination_kernel->destination->rt_metric == metric_counter) &&
@@ -365,13 +365,13 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	      else
 		error=olsr_ioctl_add_route6(destination_kernel->destination);
 	      
-	      if(error < 0) //print the error msg
+	      if(error < 0)
 		{
 		  olsr_printf(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno));
 		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
 		}
 	      
-	      //getting rid of this node and hooking up the broken point
+	      /* Getting rid of this node and hooking up the broken point */
 	      if(destination_kernel == add_kernel_list) 
 		{
 		  destination_kernel = add_kernel_list->next;
