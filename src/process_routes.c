@@ -212,8 +212,9 @@ olsr_update_kernel_routes()
   olsr_printf(3, "Updating kernel routes...\n");
   delete_kernel_list = olsr_build_update_list(old_routes, routingtable);
   add_kernel_list = olsr_build_update_list(routingtable, old_routes);
-  olsr_delete_routes_from_kernel(delete_kernel_list);
+#warning deletion and addition of routes swapped in 0.4.7 - TEST!
   olsr_add_routes_in_kernel(add_kernel_list);
+  olsr_delete_routes_from_kernel(delete_kernel_list);
 }
 
 
