@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.16 2004/12/12 17:54:00 kattemat Exp $
+# $Id: Makefile,v 1.17 2005/03/14 21:24:22 kattemat Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -45,7 +45,7 @@ CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -g
 LIBDIR ?=	$(INSTALL_PREFIX)/usr/lib
 DEPFILE =	.depend
 INCLUDES =	-I..
-SRCS =		olsrd_conf.c  oparse.c  oscan.c
+SRCS =		olsrd_conf.c  oparse.c  oscan.c cfgfile_gen.c
 HDRS =		olsrd_conf.h  oparse.h
 PIPETONULL =
 DEPFLAGS =
@@ -117,7 +117,7 @@ endif
 
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEPFLAGS) $(INCLUDES) $(SRCS) $(PIPETONULL)
 
-OBJS =		olsrd_conf.o oparse.o oscan.o $(PORT_OBJS)
+OBJS =		olsrd_conf.o oparse.o oscan.o cfgfile_gen.o $(PORT_OBJS)
 LIBS +=		$(PORT_LIBS)
 CFLAGS +=	-I.. $(PORT_CFLAGS)
 LDFLAGS +=	$(PORT_LDFLAGS)

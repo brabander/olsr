@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.22 2005/03/10 18:09:32 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.23 2005/03/14 21:24:21 kattemat Exp $
  */
 
 
@@ -234,6 +234,9 @@ olsrd_print_cnf(struct olsrd_config *);
 
 int
 olsrd_write_cnf(struct olsrd_config *, const char *);
+
+int
+olsrd_write_cnf_buf(struct olsrd_config *, char *, olsr_u32_t);
 
 struct if_config_options *
 get_default_if_config(void);
