@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: hysteresis.c,v 1.10 2004/12/02 18:03:14 tlopatic Exp $
  */
 
 
@@ -176,21 +176,30 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local
 #ifdef DEBUG
       olsr_printf(3, "HYST[%s]: %0.3f\n", olsr_ip_to_string(remote), link->L_link_quality);
 #endif
-      /* Check for missing packets - AVOID WRAP AROUND and FIRST TIME
-       * checking for 0 is kind of a ugly hack...
+
+      /* 
+       * see how many packets we have missed and update the link quality
+       * for each missed packet; HELLOs have already been accounted for by
+       * the timeout function and the number of missed HELLOs has already
+       * been added to olsr_seqno there
        */
-      if((link->olsr_seqno + 1 < seqno) &&
-	 (link->olsr_seqno != 0) &&
-	 (seqno != 0))
-	{
-	  //printf("HYS: packet lost.. last seqno %d received seqno %d!\n", link->olsr_seqno, seqno);
-	  link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
+
+      if (link->olsr_seqno_valid)
+        while (link->olsr_seqno != seqno)
+          {
+            //printf("HYS: packet lost.. last seqno %d received seqno %d!\n", link->olsr_seqno, seqno);
+            link->L_link_quality =
+              olsr_hyst_calc_instability(link->L_link_quality);
 #ifdef DEBUG
-	  olsr_printf(5, "HYST[%s] PACKET LOSS! %0.3f\n", olsr_ip_to_string(remote), link->L_link_quality);
+            olsr_printf(5, "HYST[%s] PACKET LOSS! %0.3f\n",
+                        olsr_ip_to_string(remote), link->L_link_quality);
 #endif
-	}
-      /* Set seqno */
-      link->olsr_seqno = seqno;
+            link->olsr_seqno++;
+          }
+
+      link->olsr_seqno = seqno + 1;
+      link->olsr_seqno_valid = OLSR_TRUE;
+
       //printf("Updating seqno to: %d\n", link->olsr_seqno);
     }
   return;

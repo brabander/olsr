@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.16 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: link_set.h,v 1.17 2004/12/02 18:03:15 tlopatic Exp $
  */
 
 
@@ -68,6 +68,7 @@ struct link_entry
   struct timeval hello_timeout; /* When we should receive a new HELLO */
   double last_htime;
   olsr_u16_t olsr_seqno;
+  olsr_bool olsr_seqno_valid;
 
 #if defined USE_LINK_QUALITY
   /*

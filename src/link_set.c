@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.35 2004/11/29 06:28:49 kattemat Exp $
+ * $Id: link_set.c,v 1.36 2004/12/02 18:03:15 tlopatic Exp $
  */
 
 
@@ -482,6 +482,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       olsr_get_timestamp((olsr_u32_t) htime*1500, &new_link->hello_timeout);
       new_link->last_htime = htime;
       new_link->olsr_seqno = 0;
+      new_link->olsr_seqno_valid = OLSR_FALSE;
     }
 
   new_link->L_link_quality = 0.0;
