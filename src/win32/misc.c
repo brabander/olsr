@@ -36,12 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.2 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: misc.c,v 1.3 2005/02/14 17:49:51 tlopatic Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef interface
+
+#include <misc.h>
 
 void clear_console(void)
 {
