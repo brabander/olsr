@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.15 2005/02/03 20:38:55 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.16 2005/02/14 18:48:39 tlopatic Exp $
  */
 
 
@@ -62,16 +62,18 @@ static struct sockaddr_in6 null_addr6; /* Address used as Originator Address IPv
 int
 olsr_ioctl_add_route(struct rt_entry *destination)
 {
-
   struct rtentry kernel_route;
   int tmp;
+  char dst_str[16], mask_str[16], router_str[16];
 
-  olsr_printf(1, "(ioctl)Adding route: %s ", 
-	      olsr_ip_to_string(&destination->rt_dst));
-  olsr_printf(1, "gw %s (hopc %d)\n", 
-	      olsr_ip_to_string(&destination->rt_router), 
-	      destination->rt_metric);
+  inet_ntop(AF_INET, &destination->rt_dst.v4, dst_str, 16);
+  inet_ntop(AF_INET, &destination->rt_mask.v4, mask_str, 16);
+  inet_ntop(AF_INET, &destination->rt_router.v4, router_str, 16);
 
+  olsr_printf(1, "(ioctl)Adding route with metric %d to %s/%s via %s/%s.\n",
+              destination->rt_metric, dst_str, mask_str, router_str,
+              destination->rt_if->int_name);
+  
   memset(&kernel_route, 0, sizeof(struct rtentry));
 
   ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
@@ -233,14 +235,18 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
 int
 olsr_ioctl_del_route(struct rt_entry *destination)
 {
-
   struct rtentry kernel_route;
   int tmp;
+  char dst_str[16], mask_str[16], router_str[16];
 
-  olsr_printf(1, "(ioctl)Deleting route: %s(hopc %d)\n", 
-	      olsr_ip_to_string(&destination->rt_dst), 
-	      destination->rt_metric);
+  inet_ntop(AF_INET, &destination->rt_dst.v4, dst_str, 16);
+  inet_ntop(AF_INET, &destination->rt_mask.v4, mask_str, 16);
+  inet_ntop(AF_INET, &destination->rt_router.v4, router_str, 16);
 
+  olsr_printf(1, "(ioctl)Deleting route with metric %d to %s/%s via %s/%s.\n",
+              destination->rt_metric, dst_str, mask_str, router_str,
+              destination->rt_if->int_name);
+  
   memset(&kernel_route,0,sizeof(struct rtentry));
 
   ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
