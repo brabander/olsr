@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.41 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: link_set.c,v 1.42 2005/01/27 18:43:01 tlopatic Exp $
  */
 
 
@@ -55,7 +55,7 @@
 
 
 static int
-check_link_status(struct hello_message *);
+check_link_status(struct hello_message *message, struct interface *in_if);
 
 static void
 olsr_time_out_hysteresis(void);
@@ -645,7 +645,7 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
   /* L_ASYM_time = current time + validity time */
   entry->ASYM_time = GET_TIMESTAMP(message->vtime*1000);
   
-  status = check_link_status(message);
+  status = check_link_status(message, in_if);
   
   //printf("Status %d\n", status);
   
@@ -744,26 +744,18 @@ replace_neighbor_link_set(struct neighbor_entry *old,
  *@return the link status
  */
 static int
-check_link_status(struct hello_message *message)
+check_link_status(struct hello_message *message, struct interface *in_if)
 {
   struct hello_neighbor  *neighbors;
 
   neighbors = message->neighbors;
   
   while(neighbors!=NULL)
-    {  
-      struct interface *ifd;
-      //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&neighbors->address));
-      //printf("against %s\n",olsr_ip_to_string(&main_addr));
-
-      /* Check all interfaces */	  
-      for (ifd = ifnet; ifd ; ifd = ifd->int_next) 
-	{
-	  if(COMP_IP(&neighbors->address, &ifd->ip_addr))
-	    {
-	      //printf("ok");
-	      return neighbors->link;
-	    }
+    {
+      if(COMP_IP(&neighbors->address, &in_if->ip_addr))
+        {
+	  //printf("ok");
+	  return neighbors->link;
 	}
 
       neighbors = neighbors->next; 
