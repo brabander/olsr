@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.30 2004/11/21 14:22:33 kattemat Exp $
+ * $Id: olsr.c,v 1.31 2004/11/29 20:47:01 tlopatic Exp $
  */
 
 /**
@@ -166,6 +166,9 @@ olsr_process_changes()
 {
 
   struct pcf *tmp_pc_list;
+  static char title[100] = "";
+  char tmp_title[100];
+  int len, i;
 
 #ifdef DEBUG
   if(changes_neighborhood)
@@ -184,7 +187,21 @@ olsr_process_changes()
   if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
   {
       clear_console();
-      printf("<<<< %s (%s) >>>>\n", SOFTWARE_VERSION, __DATE__);
+
+      if (title[0] == 0)
+      {
+        len = sprintf(tmp_title, "*** %s (%s) ***\n",
+                      SOFTWARE_VERSION, __DATE__);
+
+        len = (74 - len) / 2;
+        
+        for (i = 0; i < len; i++)
+          title[i] = ' ';
+
+        strcpy(title + i, tmp_title);
+      }
+
+      printf(title);
   }
 
   if (changes_neighborhood)
