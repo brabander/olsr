@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.31 2004/11/29 20:47:01 tlopatic Exp $
+ * $Id: olsr.c,v 1.32 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 /**
@@ -52,10 +52,8 @@
 #include "mpr_selector_set.h"
 #include "mid_set.h"
 #include "mpr.h"
-#if defined USE_LINK_QUALITY
 #include "lq_mpr.h"
 #include "lq_route.h"
-#endif
 #include "scheduler.h"
 #include "generate_msg.h"
 #include "apm.h"
@@ -207,12 +205,9 @@ olsr_process_changes()
   if (changes_neighborhood)
     {
       /* Calculate new mprs, HNA and routing table */
-#if defined USE_LINK_QUALITY
       if (olsr_cnf->lq_level < 1)
         {
-#endif
           olsr_calculate_mpr();
-#if defined USE_LINK_QUALITY
         }
 
       else
@@ -220,19 +215,15 @@ olsr_process_changes()
           olsr_calculate_lq_mpr();
         }
 
-
       if (olsr_cnf->lq_level < 2)
         {
-#endif
           olsr_calculate_routing_table();
-#if defined USE_LINK_QUALITY
         }
 
       else
         {
           olsr_calculate_lq_routing_table();
         }
-#endif
 
       olsr_calculate_hna_routes();
     }
@@ -240,19 +231,17 @@ olsr_process_changes()
   else if (changes_topology)
     {
       /* calculate the routing table and HNA */
-#if defined USE_LINK_QUALITY
+
       if (olsr_cnf->lq_level < 2)
         {
-#endif
           olsr_calculate_routing_table();
-#if defined USE_LINK_QUALITY
         }
 
       else
         {
           olsr_calculate_lq_routing_table();
         }
-#endif
+
       olsr_calculate_hna_routes();
     }
 
@@ -279,9 +268,7 @@ olsr_process_changes()
             }
         }
 
-#ifdef USE_LINK_QUALITY
       olsr_print_link_set();
-#endif
       olsr_print_neighbor_table();
     }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.16 2004/11/30 07:48:52 kattemat Exp $
+ * $Id: tc_set.c,v 1.17 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -259,17 +259,15 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &new_topo_dst->T_time);
 	  new_topo_dst->T_seq = msg->ansn;
 
-#if defined USE_LINK_QUALITY
-    if (olsr_cnf->lq_level > 0)
-      {
-        new_topo_dst->link_quality = mprs->neigh_link_quality;
-        new_topo_dst->inverse_link_quality = mprs->link_quality;
+          if (olsr_cnf->lq_level > 0)
+            {
+              new_topo_dst->link_quality = mprs->neigh_link_quality;
+              new_topo_dst->inverse_link_quality = mprs->link_quality;
 
-        new_topo_dst->saved_link_quality = new_topo_dst->link_quality;
-        new_topo_dst->saved_inverse_link_quality =
-          new_topo_dst->inverse_link_quality;
-      }
-#endif
+              new_topo_dst->saved_link_quality = new_topo_dst->link_quality;
+              new_topo_dst->saved_inverse_link_quality =
+                new_topo_dst->inverse_link_quality;
+            }
 
 	  /* Add to queue */
 	  new_topo_dst->prev = &entry->destinations;
@@ -285,7 +283,6 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &existing_dst->T_time);
 	  existing_dst->T_seq = msg->ansn;
 
-#if defined USE_LINK_QUALITY
           if (olsr_cnf->lq_level > 0)
             {
               double saved_lq, rel_lq;
@@ -324,7 +321,6 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
                   retval = 1;
                 }
             }
-#endif
 	}
 
       mprs = mprs->next;
@@ -435,9 +431,7 @@ olsr_print_tc_table()
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
   char *fstr;
-#if defined USE_LINK_QUALITY
   float etx;
-#endif
   
   olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
@@ -467,7 +461,6 @@ olsr_print_tc_table()
 
       while(dst_entry != &entry->destinations)
       {
-#if defined USE_LINK_QUALITY
         if (dst_entry->link_quality < MIN_LINK_QUALITY ||
             dst_entry->inverse_link_quality < MIN_LINK_QUALITY)
           etx = 0.0;
@@ -480,11 +473,6 @@ olsr_print_tc_table()
                     olsr_ip_to_string(&dst_entry->T_dest_addr),
                     dst_entry->link_quality, dst_entry->inverse_link_quality,
                     etx);
-#else
-        olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
-                    olsr_ip_to_string(&dst_entry->T_dest_addr),
-                    0.0, 0.0, 0.0);
-#endif
 
         dst_entry = dst_entry->next;
       }

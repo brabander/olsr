@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.12 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: ifnet.c,v 1.13 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 #include "../interfaces.h"
@@ -533,10 +533,8 @@ void RemoveInterface(struct olsr_if *IntConf)
     }
   }
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level == 0)
     {
-#endif
       olsr_remove_scheduler_event(&generate_hello, Int,
                                   IntConf->cnf->hello_params.emission_interval,
                                   0, NULL);
@@ -544,7 +542,6 @@ void RemoveInterface(struct olsr_if *IntConf)
       olsr_remove_scheduler_event(&generate_tc, Int,
                                   IntConf->cnf->tc_params.emission_interval,
                                   0, NULL);
-#if defined USE_LINK_QUALITY
     }
 
   else
@@ -557,7 +554,7 @@ void RemoveInterface(struct olsr_if *IntConf)
                                   IntConf->cnf->tc_params.emission_interval,
                                   0, NULL);
     }
-#endif
+
   olsr_remove_scheduler_event(&generate_mid, Int,
                               IntConf->cnf->mid_params.emission_interval,
                               0, NULL);
@@ -827,10 +824,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
 
   net_add_buffer(New);
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level == 0)
     {
-#endif
       olsr_register_scheduler_event(&generate_hello, New,
                                     IntConf->cnf->hello_params.emission_interval,
                                     0, NULL);
@@ -838,7 +833,6 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
       olsr_register_scheduler_event(&generate_tc, New,
                                     IntConf->cnf->tc_params.emission_interval,
                                     0, NULL);
-#if defined USE_LINK_QUALITY
     }
 
   else
@@ -851,7 +845,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
                                     IntConf->cnf->tc_params.emission_interval,
                                     0, NULL);
     }
-#endif
+
   olsr_register_scheduler_event(&generate_mid, New,
                                 IntConf->cnf->mid_params.emission_interval,
                                 0, NULL);

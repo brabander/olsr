@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.36 2004/12/02 18:03:15 tlopatic Exp $
+ * $Id: link_set.c,v 1.37 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -63,9 +63,7 @@ check_link_status(struct hello_message *);
 static void
 olsr_time_out_hysteresis(void);
 
-#if defined USE_LINK_QUALITY
 static void olsr_time_out_packet_loss(void);
-#endif
 
 static struct link_entry *
 add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
@@ -96,12 +94,10 @@ olsr_init_link_set()
       olsr_register_timeout_function(&olsr_time_out_hysteresis);
     }
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level > 0)
     {
       olsr_register_timeout_function(&olsr_time_out_packet_loss);
     }
-#endif
 }
 
 
@@ -311,17 +307,13 @@ get_interface_link_set(union olsr_ip_addr *remote)
   struct link_entry *tmp_link_set;
   union olsr_ip_addr *remote_addr;
   struct interface *if_to_use, *tmp_if, *backup_if;
-#if defined USE_LINK_QUALITY
   float link_quality, backup_link_quality, curr;
-#endif
 
   if_to_use = NULL;
   backup_if = NULL;
 
-#if defined USE_LINK_QUALITY
   link_quality = -1.0;
   backup_link_quality = -1.0;
-#endif
 
   if(remote == NULL || link_set == NULL)
     {
@@ -349,14 +341,11 @@ get_interface_link_set(union olsr_ip_addr *remote)
 	  /* Must be symmetric link! */
 	  if(!TIMED_OUT(&tmp_link_set->SYM_time))
 	    {
-#if defined USE_LINK_QUALITY
               if (olsr_cnf->lq_level == 0)
                 {
-#endif
                   if (if_to_use == NULL ||
                       if_to_use->int_metric > tmp_if->int_metric)
                     if_to_use = tmp_if;
-#if defined USE_LINK_QUALITY
                 }
 
               else
@@ -370,20 +359,16 @@ get_interface_link_set(union olsr_ip_addr *remote)
                       link_quality = curr;
                     }
                 }
-#endif
 	    }
 	  /* Backup solution in case the links have timed out */
 	  else
 	    {
-#if defined USE_LINK_QUALITY
               if (olsr_cnf->lq_level == 0)
                 {
-#endif
                   if (if_to_use == NULL &&
                       (backup_if == NULL ||
                        backup_if->int_metric > tmp_if->int_metric))
                     backup_if = tmp_if;
-#if defined USE_LINK_QUALITY
                 }
 
               else 
@@ -397,7 +382,6 @@ get_interface_link_set(union olsr_ip_addr *remote)
                       backup_link_quality = curr;
                     }
                 }
-#endif
             }
 	}
       
@@ -487,7 +471,6 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link->L_link_quality = 0.0;
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level > 0)
     {
       new_link->loss_hello_int = htime;
@@ -513,7 +496,6 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link->saved_loss_link_quality = 0.0;
   new_link->saved_neigh_link_quality = 0.0;
-#endif
 
   /* Add to queue */
   new_link->next = link_set;
@@ -931,7 +913,6 @@ olsr_time_out_hysteresis()
   return;
 }
 
-#if defined USE_LINK_QUALITY
 void olsr_print_link_set(void)
 {
   struct link_entry *walker;
@@ -1184,4 +1165,3 @@ struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
 
   return res;
 }
-#endif

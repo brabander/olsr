@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.17 2004/12/02 18:03:15 tlopatic Exp $
+ * $Id: link_set.h,v 1.18 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -70,7 +70,6 @@ struct link_entry
   olsr_u16_t olsr_seqno;
   olsr_bool olsr_seqno_valid;
 
-#if defined USE_LINK_QUALITY
   /*
    * packet loss
    */
@@ -96,7 +95,6 @@ struct link_entry
 
   double saved_loss_link_quality;
   double saved_neigh_link_quality;
-#endif
 
   /*
    * Spy
@@ -142,13 +140,10 @@ replace_neighbor_link_set(struct neighbor_entry *,
 int
 lookup_link_status(struct link_entry *);
 
-#if defined USE_LINK_QUALITY
 void olsr_update_packet_loss_hello_int(struct link_entry *entry, double htime);
 void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
                         olsr_u16_t seqno);
 void olsr_print_link_set(void);
 struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
-struct link_entry *olsr_neighbor_best_inverse_link(union olsr_ip_addr *main);
-#endif
 
 #endif

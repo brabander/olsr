@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: tc_set.h,v 1.10 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -54,12 +54,10 @@ struct topo_dst
   olsr_u16_t T_seq;
   struct topo_dst *next;
   struct topo_dst *prev;
-#if defined USE_LINK_QUALITY
   double link_quality;
   double inverse_link_quality;
   double saved_link_quality;
   double saved_inverse_link_quality;
-#endif
 };
 
 

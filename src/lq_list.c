@@ -36,10 +36,9 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_list.c,v 1.2 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_list.c,v 1.3 2004/12/04 17:06:57 tlopatic Exp $
  */
 
-#if defined USE_LINK_QUALITY
 #include <stdlib.h>
 #include "lq_list.h"
 
@@ -141,4 +140,3 @@ void list_remove(struct list *list, struct list_node *node)
   else
     node->next->prev = node->prev;
 }
-#endif

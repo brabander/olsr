@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.38 2004/12/04 09:46:05 kattemat Exp $
+# $Id: Makefile,v 1.39 2004/12/04 17:06:56 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -46,7 +46,6 @@ FLEX ?=		flex
 
 INSTALL_PREFIX ?=
 
-DEFINES = 	-DUSE_LINK_QUALITY
 INCLUDES =	-Isrc
 
 DEPFILE =	.depend
@@ -70,7 +69,7 @@ ifeq ($(OS), linux)
 
 SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
-DEFINES += 	-Dlinux
+DEFINES = 	-Dlinux
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
 		-O2 -g #-pg -DDEBUG #-march=i686
 LIBS =		-lm -ldl
@@ -90,7 +89,7 @@ ifeq ($(OS), osx)
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-DEFINES +=	-D__MacOSX__
+DEFINES =	-D__MacOSX__
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g 
 LIBS =		-lm -ldl
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
@@ -101,7 +100,7 @@ ifeq ($(OS), win32)
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 INCLUDES += 	-Isrc/win32
-DEFINES +=	-DWIN32
+DEFINES =	-DWIN32
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
 		-mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
@@ -206,7 +205,7 @@ clean:
 		$(MAKE) -C src/cfgparser clean
 
 uberclean:	clean clean_libs
-		rm -f $(DEPFILE) $(DEPFILE).bak
+		rm -f $(DEPFILE) $(DEPFILE).bak *~
 		rm -f src/*[o~] src/linux/*[o~] src/unix/*[o~] src/win32/*[o~]
 		rm -f src/bsd/*[o~] 
 		$(MAKE) -C src/cfgparser uberclean

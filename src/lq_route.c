@@ -36,10 +36,9 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.17 2004/12/03 19:10:51 tlopatic Exp $
+ * $Id: lq_route.c,v 1.18 2004/12/04 17:06:57 tlopatic Exp $
  */
 
-#if defined USE_LINK_QUALITY
 #include "defs.h"
 #include "tc_set.h"
 #include "neighbor_table.h"
@@ -476,4 +475,3 @@ void olsr_calculate_lq_routing_table(void)
 
   olsr_free_routing_table(old_routes);
 }
-#endif

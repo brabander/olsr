@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.8 2004/12/03 20:57:15 kattemat Exp $
+ * $Id: ifnet.c,v 1.9 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -455,10 +455,9 @@ chk_if_changed(struct olsr_if *iface)
   /*
    * Deregister scheduled functions 
    */
-#if defined USE_LINK_QUALITY
+
   if (olsr_cnf->lq_level == 0)
     {
-#endif
       olsr_remove_scheduler_event(&generate_hello, 
                                   ifp, 
                                   iface->cnf->hello_params.emission_interval, 
@@ -469,7 +468,6 @@ chk_if_changed(struct olsr_if *iface)
                                   iface->cnf->tc_params.emission_interval,
                                   0, 
                                   NULL);
-#if defined USE_LINK_QUALITY
     }
 
   else
@@ -485,7 +483,7 @@ chk_if_changed(struct olsr_if *iface)
                                   0, 
                                   NULL);
     }
-#endif
+
   olsr_remove_scheduler_event(&generate_mid, 
 			      ifp, 
 			      iface->cnf->mid_params.emission_interval,
@@ -804,10 +802,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /*
    * Register scheduled functions 
    */
-#if defined USE_LINK_QUALITY
+
   if (olsr_cnf->lq_level == 0)
     {
-#endif
       olsr_register_scheduler_event(&generate_hello, 
                                     ifp, 
                                     iface->cnf->hello_params.emission_interval, 
@@ -818,7 +815,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
                                     iface->cnf->tc_params.emission_interval,
                                     0, 
                                     NULL);
-#if defined USE_LINK_QUALITY
     }
 
   else
@@ -834,7 +830,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
                                     0, 
                                     NULL);
     }
-#endif
+
   olsr_register_scheduler_event(&generate_mid, 
 				ifp, 
 				iface->cnf->mid_params.emission_interval,

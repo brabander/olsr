@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.28 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: defs.h,v 1.29 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -60,9 +60,7 @@
 #include "olsr.h" /* Everybody uses theese */
 #include "olsr_cfg.h"
 
-#if defined USE_LINK_QUALITY
 #include "lq_packet.h"
-#endif
 
 #define VERSION "0.4.8-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION

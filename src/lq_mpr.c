@@ -36,10 +36,9 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.7 2004/11/29 19:29:28 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.8 2004/12/04 17:06:57 tlopatic Exp $
  */
 
-#if defined USE_LINK_QUALITY
 #include "defs.h"
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
@@ -148,4 +147,3 @@ void olsr_calculate_lq_mpr(void)
   if (mpr_changes && olsr_cnf->tc_redundancy > 0)
     changes = OLSR_TRUE;
 }
-#endif

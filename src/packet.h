@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.11 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: packet.h,v 1.12 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -59,10 +59,8 @@ struct hello_neighbor
 {
   olsr_u8_t             status;
   olsr_u8_t             link;
-#if defined USE_LINK_QUALITY
   double                link_quality;
   double                neigh_link_quality;
-#endif
   union olsr_ip_addr    main_address;
   union olsr_ip_addr    address;
   struct hello_neighbor *next;
@@ -83,10 +81,8 @@ struct hello_message
 
 struct tc_mpr_addr
 {
-#if defined USE_LINK_QUALITY
   double             link_quality;
   double             neigh_link_quality;
-#endif
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
 };

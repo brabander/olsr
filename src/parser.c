@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.15 2004/11/21 14:22:33 kattemat Exp $
+ * $Id: parser.c,v 1.16 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 #include "parser.h"
@@ -319,13 +319,11 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	}
     }
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level > 0)
     {
       olsr_update_packet_loss(from_addr, &in_if->ip_addr,
                               ntohs(olsr->olsr_seqno));
     }
-#endif
   
   for ( ; count > 0; m = (union olsr_message *)((char *)m + (msgsize)))
     {

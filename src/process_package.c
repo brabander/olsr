@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.23 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: process_package.c,v 1.24 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -59,13 +59,10 @@
 void
 olsr_init_package_process()
 {
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level == 0)
     {
-#endif
       olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
       olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
-#if defined USE_LINK_QUALITY
     }
 
   else
@@ -73,7 +70,7 @@ olsr_init_package_process()
       olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
       olsr_parser_add_function(&olsr_input_lq_tc, LQ_TC_MESSAGE, 1);
     }
-#endif
+
   olsr_parser_add_function(&olsr_process_received_mid, MID_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_hna, HNA_MESSAGE, 1);
 }
@@ -84,18 +81,15 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
 {
   struct link_entry         *link;
   struct neighbor_entry     *neighbor;
-#if defined USE_LINK_QUALITY
   struct hello_neighbor *walker;
   double saved_lq;
   double rel_lq;
-#endif
 
   /*
    * Update link status
    */
   link = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
 
-#if defined USE_LINK_QUALITY
   if (olsr_cnf->lq_level > 0)
     {
       // just in case our neighbor has changed its HELLO interval
@@ -144,7 +138,6 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
           changes = OLSR_TRUE;
         }
     }
-#endif
   
   neighbor = link->neighbor;
 
@@ -513,10 +506,8 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
   struct neighbor_2_list_entry *two_hop_neighbor_yet;
   struct neighbor_2_entry      *two_hop_neighbor;
   union olsr_ip_addr           *neigh_addr;
-#if defined USE_LINK_QUALITY
   struct neighbor_list_entry *walker;
   struct link_entry *link;
-#endif
 
   for(message_neighbors = message->neighbors;
       message_neighbors != NULL;
@@ -599,7 +590,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                                               (float)message->vtime); 
                 }
             }
-#if defined USE_LINK_QUALITY
+
           if (olsr_cnf->lq_level > 0)
             {
               link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
@@ -658,7 +649,6 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                     }
                 }
             }
-#endif
         }
     }
 }
@@ -689,10 +679,8 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
 
   list_of_1_neighbors->neighbor = neighbor;
 
-#if defined USE_LINK_QUALITY
   list_of_1_neighbors->path_link_quality = 0.0;
   list_of_1_neighbors->saved_path_link_quality = 0.0;
-#endif
 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;

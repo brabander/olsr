@@ -37,10 +37,9 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.7 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.8 2004/12/04 17:06:57 tlopatic Exp $
  */
 
-#if defined USE_LINK_QUALITY
 #include "olsr_protocol.h"
 #include "defs.h"
 #include "interfaces.h"
@@ -896,4 +895,3 @@ olsr_input_lq_tc(union olsr_message *ser, struct interface *inif,
 
   destroy_lq_tc(&lq_tc);
 }
-#endif

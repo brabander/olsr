@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.10 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.11 2004/12/04 17:06:57 tlopatic Exp $
  */
 
 
@@ -281,11 +281,8 @@ olsr_print_two_hop_neighbor_table()
               else
                 olsr_printf(1, "                 ");
 
-#if defined USE_LINK_QUALITY
               total_lq = entry->path_link_quality;
-#else
-              total_lq = 0.0;
-#endif
+
               olsr_printf(1, "%-15s  %5.3f\n",
                           olsr_ip_to_string(&neigh->neighbor_main_addr),
                           total_lq);
