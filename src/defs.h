@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.24 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: defs.h,v 1.25 2004/11/09 21:09:57 kattemat Exp $
  *
  */
 
@@ -98,7 +98,6 @@ char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
 
 olsr_bool disp_pack_in;               /* display incoming packet content? */
 olsr_bool disp_pack_out;               /* display outgoing packet content? */
-
 
 int llinfo;
 

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.c,v 1.8 2004/11/05 11:52:54 kattemat Exp $
+ * $Id: hna_set.c,v 1.9 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -288,6 +288,64 @@ olsr_time_out_hna_set(void *foo)
 
 }
 
+
+
+/**
+ *Function that times out all entrys in the hna set and
+ *deletes the timed out ones.
+ *
+ *@return nada
+ */
+void
+olsr_print_hna_set()
+{
+  int index;
+  struct hna_entry *tmp_hna;
+  struct hna_net *tmp_net;
+  char tmp_ipv6net[45];
+
+  if(olsr_cnf->ip_version == AF_INET)
+    {
+      olsr_printf(1, "\n------------------------------------------------ HNA SET\n\n");
+      olsr_printf(1, "IP net          netmask         GW IP\n");
+    }
+  else
+    {
+      olsr_printf(1, "\n------------------------------------------------- HNA SET\n\n");
+      olsr_printf(1, "IP net/prefixlen               GW IP\n");
+    }
+
+  for(index=0;index<HASHSIZE;index++)
+    {
+      tmp_hna = hna_set[index].next;
+      /* Check all entrys */
+      while(tmp_hna != &hna_set[index])
+	{
+	  /* Check all networks */
+	  tmp_net = tmp_hna->networks.next;
+
+	  while(tmp_net != &tmp_hna->networks)
+	    {
+	      if(olsr_cnf->ip_version == AF_INET)
+		{
+		  olsr_printf(1, "%-15s ", olsr_ip_to_string(&tmp_net->A_network_addr));
+		  olsr_printf(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&tmp_net->A_netmask.v4));
+		  olsr_printf(1, "%-15s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+		}
+	      else
+		{
+		  sprintf(tmp_ipv6net, "%s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6);
+		  olsr_printf(1, "%-30s ", tmp_ipv6net);
+		  olsr_printf(1, "%s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+		}
+
+	      tmp_net = tmp_net->next;
+	    }
+	  tmp_hna = tmp_hna->next;
+	}
+    }
+
+}
 
 
 

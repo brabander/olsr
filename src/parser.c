@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: parser.c,v 1.12 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: parser.c,v 1.13 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -345,7 +345,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv4 */
 	  if (m->v4.ttl <= 0)
 	    {
-	      olsr_printf(1, "Dropping packet type %d from neigh %s with TTL 0\n", 
+	      olsr_printf(2, "Dropping packet type %d from neigh %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
 			  olsr_ip_to_string(from_addr)); 
 	      continue;
@@ -356,7 +356,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv6 */
 	  if (m->v6.ttl <= 0) 
 	    {
-	      olsr_printf(1, "Dropping packet type %d from %s with TTL 0\n", 
+	      olsr_printf(2, "Dropping packet type %d from %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
 			  olsr_ip_to_string(from_addr)); 
 	      continue;
@@ -406,7 +406,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	{
 	  unk_chgestruct(&unkpacket, m);
 	  
-	  olsr_printf(1, "Unknown type: %d, size %d, from %s\n",
+	  olsr_printf(3, "Unknown type: %d, size %d, from %s\n",
 		      m->v4.olsr_msgtype,
 		      size,
 		      olsr_ip_to_string(&unkpacket.originator));

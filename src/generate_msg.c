@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.14 2004/11/08 23:25:57 tlopatic Exp $
+ * $Id: generate_msg.c,v 1.15 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -39,6 +39,12 @@
 #include "neighbor_table.h"
 #include "link_set.h"
 #include "two_hop_neighbor_table.h"
+
+
+static char pulsedata[] = {'\\', '|', '/', '-'};
+#define PULSE_MAX 4
+static olsr_u8_t pulse_state = 0;
+
 
 void
 generate_hello(void *p)
@@ -96,31 +102,16 @@ generate_hna(void *p)
 }
 
 
-/**
- *Displays various tables depending on debuglevel
- */
 void
-generate_tabledisplay(void *foo)
+generate_stdout_pulse(void *foo)
 {
-  if(olsr_cnf->debug_level > 0) 
-    {
-#if defined USE_LINK_QUALITY
-      olsr_print_link_set();
-#endif
-      olsr_print_neighbor_table();
-#if defined USE_LINK_QUALITY
-      olsr_print_two_hop_neighbor_table();
-#endif
-      
-      if(olsr_cnf->debug_level > 1)
-	{
-	  olsr_print_tc_table();
-	  if(olsr_cnf->debug_level > 2) 
-	    {
-	      olsr_print_mprs_set();
-	      olsr_print_mid_set();
-	      olsr_print_duplicate_table();
-	    }
-	}
-    }
+  if(olsr_cnf->debug_level == 0)
+    return;
+
+  stdout_pulse_set = OLSR_TRUE;
+
+  pulse_state = pulse_state == 3 ? 0 : pulse_state + 1;
+
+  printf("\b%c", pulsedata[pulse_state]);
+
 }

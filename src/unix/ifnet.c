@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.4 2004/11/07 20:09:12 tlopatic Exp $
+ * $Id: ifnet.c,v 1.5 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -116,7 +116,7 @@ check_interface_updates(void *foo)
       if(tmp_if->configured)
 	chk_if_changed(tmp_if);
       else
-	chk_if_up(tmp_if, 1);
+	chk_if_up(tmp_if, 3);
     }
 
   return;
@@ -159,7 +159,7 @@ chk_if_changed(struct olsr_if *iface)
   /* Get flags (and check if interface exists) */
   if (ioctl(ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
     {
-      olsr_printf(1, "No such interface: %s\n", iface->name);
+      olsr_printf(3, "No such interface: %s\n", iface->name);
       goto remove_interface;
     }
 
@@ -184,13 +184,13 @@ chk_if_changed(struct olsr_if *iface)
   /* Check broadcast */
   if ((olsr_cnf->ip_version == AF_INET) && (!(ifp->int_flags & IFF_BROADCAST))) 
     {
-      olsr_printf(1, "\tNo broadcast - removing\n");
+      olsr_printf(3, "\tNo broadcast - removing\n");
       goto remove_interface;
     }
 
   if (ifp->int_flags & IFF_LOOPBACK)
     {
-      olsr_printf(1, "\tThis is a loopback interface - removing it...\n");
+      olsr_printf(3, "\tThis is a loopback interface - removing it...\n");
       goto remove_interface;
     }
 
@@ -231,9 +231,9 @@ chk_if_changed(struct olsr_if *iface)
       if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, iface->cnf->ipv6_addrtype) <= 0)
 	{
 	  if(iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL)
-	    olsr_printf(1, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
+	    olsr_printf(3, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
 	  else
-	    olsr_printf(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
+	    olsr_printf(3, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
 	  
 	  
 	  goto remove_interface;

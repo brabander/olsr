@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.19 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: olsr.c,v 1.20 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -195,7 +195,28 @@ olsr_process_changes()
 #endif
 
       olsr_calculate_hna_routes();
+      
+      /* Print updated info */
+      if(olsr_cnf->debug_level > 0) 
+	{
+#ifdef USE_LINK_QUALITY
+	  olsr_print_link_set();
+#endif
+	  olsr_print_neighbor_table();
 
+	  if(olsr_cnf->debug_level > 1)
+	    olsr_print_tc_table();
+
+	  if(olsr_cnf->debug_level > 2) 
+	    {
+	      olsr_print_mprs_set();
+	      olsr_print_mid_set();
+	      olsr_print_duplicate_table();
+	    }
+	  if(changes_hna)
+	    olsr_print_hna_set();
+
+	}
       goto process_pcf;  
     }
   
@@ -217,6 +238,13 @@ olsr_process_changes()
 #endif
       olsr_calculate_hna_routes();
 
+      /* Print updated info */
+      if(olsr_cnf->debug_level > 1)
+	olsr_print_tc_table();
+
+      if(changes_hna)
+	olsr_print_hna_set();
+
       goto process_pcf;  
     }
 
@@ -224,6 +252,8 @@ olsr_process_changes()
     {
       /* Update HNA routes */
       olsr_calculate_hna_routes();
+
+      olsr_print_hna_set();
 
       goto process_pcf;
     }
@@ -561,14 +591,22 @@ olsr_printf(int loglevel, char *format, ...)
 {
   va_list arglist;
 
-  va_start(arglist, format);
-
   if(loglevel <= olsr_cnf->debug_level)
     {
+
+      if(stdout_pulse_set)
+	{
+	  printf("\b");
+	  stdout_pulse_set = OLSR_FALSE;
+	}
+
+      va_start(arglist, format);
+      
       vprintf(format, arglist);
+      
+      va_end(arglist);
     }
 
-  va_end(arglist);
 
   return 0;
 }

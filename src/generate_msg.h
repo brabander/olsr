@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.h,v 1.9 2004/11/03 18:19:54 tlopatic Exp $
+ * $Id: generate_msg.h,v 1.10 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -27,6 +27,10 @@
 #define _OLSR_GEN_MSG
 
 #include "interfaces.h"
+
+#define STDOUT_PULSE_INT 0.6
+
+olsr_bool stdout_pulse_set;
 
 /* Functions */
 
@@ -43,6 +47,6 @@ void
 generate_tc(void *);
 
 void
-generate_tabledisplay(void *);
+generate_stdout_pulse(void *);
 
 #endif

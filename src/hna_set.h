@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: hna_set.h,v 1.8 2004/11/09 21:09:58 kattemat Exp $
  *
  */
 
@@ -89,5 +89,7 @@ delete_hna_net(struct hna_net *);
 void
 delete_hna_entry(struct hna_entry *);
 
+void
+olsr_print_hna_set(void);
 
 #endif
