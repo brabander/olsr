@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.2 2005/01/05 20:39:50 kattemat Exp $
+ * $Id: html.h,v 1.3 2005/01/06 21:27:22 kattemat Exp $
  */
 
 /*
@@ -210,17 +210,17 @@ static const char *admin_frame[] =
     "</form>\n",
     "<h2>Add/remove local HNA entries</h2>\n",
     "<form action=\"set_values\" method=\"post\">\n",
-    "<center><b>Network:</b>\n",
-    "<input type=\"text\" name=\"foo\" maxlength=\"100\" class=\"input_text\">\n",
-    "<b>Netmask/Prefix:</b>\n",
-    "<input type=\"text\" name=\"foo\" maxlength=\"16\" class=\"input_text\">\n",
-    "<input type=\"submit\" value=\"Add entry\" class=\"input_button\">\n",
-    "</center><hr>\n",
+    "<table width=\"100%%\"><tr><td><b>Network:</b></td>\n",
+    "<td><input type=\"text\" name=\"foo\" maxlength=\"100\" class=\"input_text\"></td>\n",
+    "<td><b>Netmask/Prefix:</b></td>\n",
+    "<td><input type=\"text\" name=\"foo\" maxlength=\"16\" class=\"input_text\"></td>\n",
+    "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td>\n",
+    "</table><hr>\n",
     "<form action=\"set_values\" method=\"post\">\n",
     "<table width=\"100%%\">\n",
     "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n",
     "<!-- HNAENTRIES -->\n",
-    "<tr><td><input type=\"checkbox\" name=\"foo\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
+    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"foo\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
     "</table>\n<br>\n",
     "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n",
     "</form>\n",

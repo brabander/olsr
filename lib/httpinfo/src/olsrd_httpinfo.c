@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.36 2005/01/05 20:39:50 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.37 2005/01/06 21:27:22 kattemat Exp $
  */
 
 /*
@@ -1123,6 +1123,40 @@ build_admin_body(char *buf, olsr_u32_t bufsize)
 		  "MPR coverage:", "mpr_coverage", 1, cfg->mpr_coverage);
   size += sprintf(&buf[size], admin_basic_setting_int,
 		  "Willingness:", "willingness", 1, cfg->willingness);
+
+  size += sprintf(&buf[size], "</tr>\n");
+  size += sprintf(&buf[size], "<tr>\n");
+
+  if(cfg->use_hysteresis)
+    {
+      size += sprintf(&buf[size], admin_basic_setting_float,
+		      "Hyst scaling:", "hyst_scaling", 4, cfg->hysteresis_param.scaling);
+
+      size += sprintf(&buf[size], admin_basic_setting_float,
+		      "Lower thr:", "hyst_lower", 4, cfg->hysteresis_param.thr_low);
+      size += sprintf(&buf[size], admin_basic_setting_float,
+		      "Upper thr:", "hyst_upper", 4, cfg->hysteresis_param.thr_high);
+    }
+  else
+    {
+      size += sprintf(&buf[size], "<td>Hysteresis disabled</td>\n");
+    }
+
+  size += sprintf(&buf[size], "</tr>\n");
+  size += sprintf(&buf[size], "<tr>\n");
+  
+  if(cfg->lq_level)
+    {
+      size += sprintf(&buf[size], admin_basic_setting_int,
+		      "LQ level:", "lq_level", 1, cfg->lq_level);
+      size += sprintf(&buf[size], admin_basic_setting_int,
+		      "LQ winsize:", "lq_wsize", 1, cfg->lq_wsize);
+    }
+  else
+    {
+      size += sprintf(&buf[size], "<td>LQ disabled</td>\n");
+    }
+
 
   size += sprintf(&buf[size], "</tr>\n");
   size += sprintf(&buf[size], "<tr>\n");
