@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.1 2005/02/08 23:29:40 kattemat Exp $
+ * $Id: admin_interface.c,v 1.2 2005/02/08 23:37:23 kattemat Exp $
  */
 
 /*
@@ -184,21 +184,45 @@ process_param(char *key, char *value)
 
   if(!strcmp(key, "debug_level"))
     {
-      int dl = atoi(value);
-      if((dl < 0) || (dl > 9))
+      int ival = atoi(value);
+      if((ival < 0) || (ival > 9))
 	return -1;
 
-      cfg->debug_level = dl;
+      cfg->debug_level = ival;
     }
+
+  if(!strcmp(key, "tc_redundancy"))
+    {
+      int ival = atoi(value);
+      if((ival < 0) || (ival > 3))
+	return -1;
+
+      cfg->tc_redundancy = ival;
+    }
+
+  if(!strcmp(key, "mpr_coverage"))
+    {
+      int ival = atoi(value);
+      if(ival < 0)
+	return -1;
+
+      cfg->mpr_coverage = ival;
+    }
+
+  if(!strcmp(key, "willingness"))
+    {
+      int ival = atoi(value);
+      if((ival < 0) || (ival > 7))
+	return -1;
+
+      cfg->willingness = ival;
+    }
+
 
   return 0;
 #if 0
   { 1, admin_basic_setting_float, "Pollrate:", "pollrate", 4, &cfg->pollrate },
   { 1, admin_basic_setting_string, "TOS:", "tos", 6, "TBD" },
-
-  { 1, admin_basic_setting_int, "TC redundancy:", "tc_redundancy", 1, &cfg->tc_redundancy},
-  { 1, admin_basic_setting_int, "MPR coverage:", "mpr_coverage", 1, &cfg->mpr_coverage },
-  { 1, admin_basic_setting_int, "Willingness:", "willingness", 1, &cfg->willingness },
 
   { cfg->use_hysteresis, admin_basic_setting_float, "Hyst scaling:", "hyst_scaling", 4, &cfg->hysteresis_param.scaling },
   { cfg->use_hysteresis, admin_basic_setting_float, "Lower thr:", "hyst_lower", 4, &cfg->hysteresis_param.thr_low },
