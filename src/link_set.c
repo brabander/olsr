@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.42 2005/01/27 18:43:01 tlopatic Exp $
+ * $Id: link_set.c,v 1.43 2005/01/31 19:57:10 kattemat Exp $
  */
 
 
@@ -502,12 +502,14 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
   if(NULL == (neighbor = olsr_lookup_neighbor_table(remote_main)))
     {
       neighbor = olsr_insert_neighbor_table(remote_main);
-      /* Copy the main address */
-      COPY_IP(&neighbor->neighbor_main_addr, remote_main);
 #ifdef DEBUG
       olsr_printf(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(remote_main));
 #endif
     }
+
+  /* Copy the main address - make sure this is done every time
+   * as neighbors might change main address */
+  COPY_IP(&neighbor->neighbor_main_addr, remote_main);
 
   neighbor->linkcount++;
 
