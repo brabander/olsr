@@ -1,11 +1,11 @@
-/*
- * $Id: net.c,v 1.2 2004/09/15 11:18:42 tlopatic Exp $
+/* 
+ * OLSR ad-hoc routing table management protocol
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * Derived from its Linux counterpart.
  * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
  *
- * This file is part of olsr.org.
+ * This file is part of the olsr.org OLSR daemon.
  *
  * olsr.org is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
  * You should have received a copy of the GNU General Public License
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * $Id: net.c,v 1.3 2004/10/19 13:58:46 tlopatic Exp $
  *
  */
 
