@@ -31,8 +31,8 @@ OBJS =		src/build_msg.o \
 		src/socket_parser.o \
 		src/tc_set.o \
 		src/two_hop_neighbor_table.o \
-		src/cfgparser/oscan.o \
 		src/cfgparser/oparse.o \
+		src/cfgparser/oscan.o \
 		src/cfgparser/olsrd_conf.o \
 		src/win32/apm.o \
 		src/win32/compat.o \
