@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.24 2004/11/10 12:35:30 tlopatic Exp $
+ * $Id: link_set.c,v 1.25 2004/11/10 14:07:48 tlopatic Exp $
  *
  */
 
@@ -1005,6 +1005,13 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
     {
       changes_neighborhood = OLSR_TRUE;
       changes_topology = OLSR_TRUE;
+
+      // create a new ANSN
+
+      // XXX - we should check whether we actually
+      // announce this neighbour
+
+      changes = OLSR_TRUE;
     }
 }
 

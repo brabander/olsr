@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.4 2004/11/08 01:51:29 tlopatic Exp $
+ * $Id: lq_route.c,v 1.5 2004/11/10 14:07:48 tlopatic Exp $
  *
  */
 
@@ -28,6 +28,7 @@
 #include "neighbor_table.h"
 #include "link_set.h"
 #include "routing_table.h"
+#include "mid_set.h"
 #include "lq_list.h"
 #include "lq_route.h"
 
@@ -278,6 +279,7 @@ void olsr_calculate_lq_routing_table(void)
   struct dijk_vertex *myself;
   struct dijk_vertex *walker;
   int hops;
+  struct addresses *mid_walker;
 
   // initialize the graph
 
@@ -359,50 +361,32 @@ void olsr_calculate_lq_routing_table(void)
 
   olsr_move_route_table(routingtable, old_routes);
 
-  for (i = 0; i < 2; i++)
+  node = list_get_head(&vertex_list);
+
+  // we're the first vertex in the list
+  
+  myself = node->data;
+
+  for (node = list_get_next(node); node != NULL; node = list_get_next(node))
   {
-    node = list_get_head(&vertex_list);
+    vert = node->data;
 
-    // we're the first vertex in the list
+    hops = 1;
 
-    myself = node->data;
+    // count hops to until we have reached a one-hop neighbour
 
-    node = list_get_next(node);
+    for (walker = vert; walker->prev != myself; walker = walker->prev)
+      hops++;
 
-    // loop through the remaining vertices
+    // add a route to the main address of the destination node
 
-    while (node != NULL)
-    {
-      vert = node->data;
+    olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
 
-      // one-hop neighbours go first
+    // add routes to the remaining interfaces of the destination node
 
-      if (i == 0 && vert->prev == myself)
-        olsr_insert_routing_table(&vert->addr, &vert->addr, 1);
-
-      // add everybody else in the second pass
-
-      if (i == 1)
-      {
-        hops = 1;
-        walker = vert;
-
-        // count hops to until a one-hop neighbour is reached
-
-        while (walker->prev != myself)
-        {
-          hops++;
-          walker = walker->prev;
-        }
-
-        // add, if this is not a one-hop neighbour
-
-        if (hops > 1)
-          olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
-      }
-
-      node = list_get_next(node);
-    }
+    for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
+         mid_walker = mid_walker->next)
+      olsr_insert_routing_table(&mid_walker->address, &walker->addr, hops);
   }
 
   // free the graph
