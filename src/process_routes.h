@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: process_routes.h,v 1.7 2004/11/17 19:24:01 kattemat Exp $
  *
  */
 
@@ -31,8 +31,6 @@
 
 #include <sys/ioctl.h>
 
-
-olsr_u32_t tunl_netmask, tunl_gw;
 
 struct rt_entry old_routes[HASHSIZE];
 struct rt_entry old_hna[HASHSIZE];

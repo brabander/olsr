@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.40 2004/11/17 19:21:41 kattemat Exp $
+ * $Id: main.c,v 1.41 2004/11/17 19:24:01 kattemat Exp $
  *
  */
 
@@ -713,7 +713,7 @@ print_usage()
 
   fprintf(stderr, "An error occured somwhere between your keyboard and your chair!\n"); 
   fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
-  fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-tnl] [-multi <IPv6 multicast address>]\n"); 
+  fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"); 
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-hint <hello interval value (secs)>] [-tcint <tc interval value (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval value (secs)>] [-hnaint <hna interval value (secs)>]\n");
