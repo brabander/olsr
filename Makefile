@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.45 2004/12/19 09:27:17 kattemat Exp $
+# $Id: Makefile,v 1.46 2005/02/27 10:43:15 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -76,8 +76,8 @@ SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
 DEFINES = 	-Dlinux
 CFLAGS ?=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-O2 -g #-pg -DDEBUG #-march=i686
-LIBS =		-lm -ldl
+		-O2 -g #-DDEBUG #-pg #-march=i686
+LIBS =		-lm -ldl #-pg
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) -Y $(INCLUDES) $(SRCS) >/dev/null 2>&1
 
 else
@@ -180,6 +180,10 @@ endif
 endif
 endif
 endif
+endif
+
+ifneq ($(NODEBUG), )
+CFLAGS += -DNODEBUG
 endif
 
 OBJS = $(patsubst %.c,%.o,$(SRCS))
