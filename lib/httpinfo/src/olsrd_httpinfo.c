@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.29 2005/01/02 14:10:48 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.30 2005/01/02 14:26:14 kattemat Exp $
  */
 
 /*
@@ -775,7 +775,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     else
       size += sprintf(&buf[size], "<i>Olsrd is configured to halt if no interfaces are available</i><br>\n");
 
-    size += sprintf(&buf[size], "<div id=\"hdr\">Plugins:</div>\n");
+    size += sprintf(&buf[size], "<div id=\"hdr\">Plugins</div>\n");
 
     size += sprintf(&buf[size], "<table width=\"100%%\" border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
 

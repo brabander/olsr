@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.22 2005/01/02 14:21:11 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.23 2005/01/02 14:26:14 kattemat Exp $
  */
 
 /*
@@ -72,7 +72,7 @@ static const char *httpinfo_css[] =
   "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n",
   "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n",
   "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n",
-  "#hdr\n{\nfont-size: 14px;\ntext-align: center;\n\nline-height: 16px;\n",
+  "#hdr\n{\nfont-size: 14px;\ntext-align: center;\nline-height: 16px;\n",
   "text-decoration: none;\nborder: 1px solid #ccc;\n",
   "margin: 5px;\nbackground: #ececec;\n}\n",
   "#container\n{\nwidth: 500px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n",
@@ -81,7 +81,7 @@ static const char *httpinfo_css[] =
   "#tabnav li\n{\nmargin: 0;\npadding: 0;\ndisplay: inline;\nlist-style-type: none;\n}\n",
   "#tabnav a:link, #tabnav a:visited\n{\nfloat: left;\nbackground: #ececec;\n",
   "font-size: 12px;\nline-height: 14px;\nfont-weight: bold;\npadding: 2px 10px 2px 10px;\n",
-  "margin-right: 4px;\nborder: 1px solid #ccc;\ntext-decoration: none;\ncolor: #666;\n}",
+  "margin-right: 4px;\nborder: 1px solid #ccc;\ntext-decoration: none;\ncolor: #777;\n}\n",
   "#tabnav a:link.active, #tabnav a:visited.active\n{\nborder-bottom: 1px solid #fff;\n",
   "background: #ffffff;\ncolor: #000;\n}\n",
   "#tabnav a:hover\n{\nbackground: #777777;\ncolor: #ffffff;\n}\n",
