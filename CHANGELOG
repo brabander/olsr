@@ -1,11 +1,11 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.17 2004/12/02 16:45:51 kattemat Exp $
+$Id: CHANGELOG,v 1.18 2004/12/05 15:13:43 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
 
 LICENSE CHANGE
 
-Olsrd is now distributed under a BSD style license. We belive olsrd will
+Olsrd is now distributed under a BSD style license. We believe olsrd will
 be better off using this license as it opens up for commercial players
 to use olsrd freely in their products. In the end this will lead to
 this kind of users doing serious testing and bugfixing of olsrd. 
@@ -13,15 +13,15 @@ this kind of users doing serious testing and bugfixing of olsrd.
 ETX-LIKE LINK QUALITY DETECTION
 
 We can now determine the packet loss on a link by looking at the serial
-numbers of the OLSR messages received from a neighbour. This tells us how
-many packets get through from our neighbour to us. We use a new extended
+numbers of the OLSR messages received from a neighbor. This tells us how
+many packets get through from our neighbor to us. We use a new extended
 kind of HELLO messages (LQ_HELLO messages, LQ = link quality) to broadcast
 the link quality that we have determined on our end of the link to our
-neighbours. So do our neighbours, and we as well as they end up with an
+neighbors. So do our neighbors, and we as well as they end up with an
 idea of how good the link is in both directions. From the LQ_HELLOs we
-also learn the link quality between our neighbours and our two-hop neigh-
-bours. In this way we can select those neighbours as MPRs that have the
-best links to our two-hop neighbours. To distribute the link quality
+also learn the link quality between our neighbors and our two-hop neigh-
+bors. In this way we can select those neighbors as MPRs that have the
+best links to our two-hop neighbors. To distribute the link quality
 throughout the network, we use a new extended version of TC messages
 (LQ_TC messages). They contain the qualities at both ends of each of our
 links. Nodes can then run Dijkstra's algorithm to find a path between
@@ -44,7 +44,7 @@ It's best practice to set "LinkQualityLevel" to the same value on all
 nodes in a network.
 
 When determining the quality of a link olsrd only considers a given
-number of most recent OLSR packets received from its neighbours. By
+number of most recent OLSR packets received from its neighbors. By
 default, olsrd looks at the 10 most recent OLSR packets. This can be
 changed via the "LinkQualityWinSize" configuration option. Values
 between 3 and 128 are legal.
@@ -59,7 +59,7 @@ other applications can parse and generate olsrd configuration files
 only by linking to the dynamic library.
 In the new configfile options can be set pr. interface, plugin
 parameters can be set, more IPC options can be set...and more.
-The syntax is documented in the olsrd.conf(5) manaul page found
+The syntax is documented in the olsrd.conf(5) manual page found
 in the files/ directory.
 Olsrd internals now uses a single struct, as returned by the config
 parser, for all configuration in runtime. this means that updating
@@ -76,11 +76,16 @@ probably not as reliable as the Linux version. We'd greatly appreciate
 feedback and bug reports. To compile you need GNU make. Then simply
 run "gmake OS=fbsd" to build the executable.
 
+NEW MAKEFILE(S)
+
+The makefiles used to build olsrd have been rewritten and now includes
+dependency file generation using makedep.
+
 DEBUG OUTPUT
 
-Tables are now only printed if changes occure, so there are no longer 
+Tables are now only printed if changes occur, so there are no longer 
 any periodical output when using a debuglevel >0. A "heartbeat" is 
-now printet to STDOUT(if it is a terminal) in the form of a rotating 
+now printed to STDOUT(if it is a terminal) in the form of a rotating 
 line to show that olsrd is actually operating.
 Adding "ClearScreen yes" to the configuration file clears the screen
 each time before the debug output shows updated information. This
@@ -93,7 +98,7 @@ PLUGIN INTERFACE
 There are some changes in the plugin interface. It is now at
 version 2. Plugin specific parameters from the configfile 
 using the PlParam option, will now be passed on to plugins.
-To receive such parameters a plugin myst implement a function:
+To receive such parameters a plugin must implement a function:
 int
 register_olsr_param(char *key, char *value)
 to which parameter pairs will be passed.
@@ -107,7 +112,7 @@ with no thread library.
 ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
 
 The willingness calculation for Linux, now also supports the more
-modern ACPI proc interface in addittion to APM. This is not well
+modern ACPI proc interface in addition to APM. This is not well
 tested and feedback is appreciated!
 
 IPC OPTIONS
@@ -122,8 +127,8 @@ Much of the message generation and net output code is rewritten.
 Sending of partial messages should now work 100%. Also TC, MID 
 and HNA messages are now cached for a random amount of time
 before transmitted - this often leads to the situation where these
-messages are sent together with an HELLO maessage, which is highly
-desireable since it saves network resources.
+messages are sent together with an HELLO message, which is highly
+desirable since it saves network resources.
 PLUGIN DEVELOPERS must note that the buffers and size variables
 used in net output is no longer directly accessible!
 
@@ -132,27 +137,22 @@ NET OUTPUT CODE REWRITTEN
 Every interface now has one outputbuffer registered. This allows
 messages to be "cached" as explained above, so that multiple
 messages are stacked together.
-Also the outputbuffer and size are no longer accessable directly,
+Also the outputbuffer and size are no longer accessible directly,
 an API is available to plugins(and olsr code).
 
 OS DEPENDENT NETWORK INTERFACE
 
-The OS dependen network functions are now defined in net_os.h
-instead of beeing mixed up with internal network functions
+The OS dependent network functions are now defined in net_os.h
+instead of being mixed up with internal network functions
 in net.h.
-
-NEW MAKEFILE
-
-The common makefile now includes automatic dependency generation 
-using makedepend.
 
 BUGFIXES
 
 A bug that caused the announced ANSN sequence number to never stop
-beeing increased when a change in the MPR selector set was detected
+being increased when a change in the MPR selector set was detected
 has been fixed. Another TC related bug that caused timed out TC
 entries not to be deleted from the routing table in certain cases
-has also been fixed. Theese bugs could cause unstable routes.
+has also been fixed. These bugs could cause unstable routes.
 A bug that in many cases caused the wrong routes to be deleted 
 when using IPv6 has been fixed.
 
