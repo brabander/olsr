@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.3 2004/11/06 16:43:54 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.4 2004/11/18 21:57:35 kattemat Exp $
  */
 
 
@@ -99,17 +99,12 @@ olsr_plugin_init()
       remove_olsr_socket(ints->olsr_socket, olsr_input);
       add_olsr_socket(ints->olsr_socket, &packet_parser);
      
-      /* XXX Fix maxsize */
-
+      /* Reducing maxmessagesize */
+      net_reserve_bufspace(ints, sizeof(struct olsrmsg));
 
       ints = ints->int_next;
     }
 
-  /* Reducing maxmessagesize */
-
-  *maxmessagesize -= sizeof(struct olsrmsg);
-
-  printf("Maxmessagesize is now: %d\n", *maxmessagesize);
   /* Register timeout - poll every 2 seconds */
   olsr_register_scheduler_event(&timeout_timestamps, 2, 0 , NULL);
 
@@ -614,55 +609,53 @@ check_timestamp(union olsr_ip_addr *originator, time_t tstamp)
 int
 send_challenge(union olsr_ip_addr *new_host)
 {
-  struct challengemsg *cmsg;
+  struct challengemsg cmsg;
   struct stamp *entry;
   olsr_u32_t challenge, hash;
 
   olsr_printf(1, "[ENC]Building CHALLENGE message\n");
 
-  cmsg = (struct challengemsg *)&buffer[4];
   /* Set the size including OLSR packet size */
-  *outputsize = sizeof(struct challengemsg) + 4;
 
 
   challenge = rand() << 16;
   challenge |= rand();
 
   /* Fill challengemessage */
-  cmsg->olsr_msgtype = TYPE_CHALLENGE;
-  cmsg->olsr_vtime = 0;
-  cmsg->olsr_msgsize = htons(sizeof(struct challengemsg));
-  memcpy(&cmsg->originator, main_addr, ipsize);
-  cmsg->ttl = 1;
-  cmsg->hopcnt = 0;
-  cmsg->seqno = htons(get_msg_seqno());
+  cmsg.olsr_msgtype = TYPE_CHALLENGE;
+  cmsg.olsr_vtime = 0;
+  cmsg.olsr_msgsize = htons(sizeof(struct challengemsg));
+  memcpy(&cmsg.originator, main_addr, ipsize);
+  cmsg.ttl = 1;
+  cmsg.hopcnt = 0;
+  cmsg.seqno = htons(get_msg_seqno());
 
   /* Fill subheader */
-  memcpy(&cmsg->destination, new_host, ipsize);
-  cmsg->challenge = htonl(challenge);
+  memcpy(&cmsg.destination, new_host, ipsize);
+  cmsg.challenge = htonl(challenge);
 
   olsr_printf(3, "[ENC]Size: %d\n", sizeof(struct challengemsg));
 
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
-  memcpy(checksum_cache, cmsg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
+  memcpy(checksum_cache, &cmsg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct challengemsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the SHA1 hash */
   SHA1(checksum_cache, 
        (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, 
-       cmsg->signature);
+       cmsg.signature);
 
   olsr_printf(3, "[ENC]Sending timestamp request to %s challenge 0x%x\n", 
 	      olsr_ip_to_string(new_host),
 	      challenge);
 
+  /* Add to buffer */
+  net_outbuffer_push(olsr_in_if, (olsr_u8_t *)&cmsg, sizeof(struct challengemsg));
+
   /* Send the request */
-
   net_output(olsr_in_if);
-
-  *outputsize = 0;
 
   /* Create new entry */
   entry = malloc(sizeof(struct stamp));
@@ -977,15 +970,10 @@ parse_challenge(char *in_msg)
 int
 send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, struct stamp *entry)
 {
-  struct c_respmsg *crmsg;
+  struct c_respmsg crmsg;
   olsr_u32_t challenge;
 
   olsr_printf(1, "[ENC]Building CRESPONSE message\n");
-
-  crmsg = (struct c_respmsg *)&buffer[4];
-  /* Set the size including OLSR packet size */
-  *outputsize = sizeof(struct c_respmsg) + 4;
-
 
   challenge = rand() << 16;
   challenge |= rand();
@@ -995,21 +983,21 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   olsr_printf(3, "[ENC]Challenge-response: 0x%x\n", challenge);
 
   /* Fill challengemessage */
-  crmsg->olsr_msgtype = TYPE_CRESPONSE;
-  crmsg->olsr_vtime = 0;
-  crmsg->olsr_msgsize = htons(sizeof(struct c_respmsg));
-  memcpy(&crmsg->originator, main_addr, ipsize);
-  crmsg->ttl = 1;
-  crmsg->hopcnt = 0;
-  crmsg->seqno = htons(get_msg_seqno());
+  crmsg.olsr_msgtype = TYPE_CRESPONSE;
+  crmsg.olsr_vtime = 0;
+  crmsg.olsr_msgsize = htons(sizeof(struct c_respmsg));
+  memcpy(&crmsg.originator, main_addr, ipsize);
+  crmsg.ttl = 1;
+  crmsg.hopcnt = 0;
+  crmsg.seqno = htons(get_msg_seqno());
 
   /* set timestamp */
-  crmsg->timestamp = now->tv_sec;
-  olsr_printf(3, "[ENC]Timestamp %d\n", crmsg->timestamp);
+  crmsg.timestamp = now->tv_sec;
+  olsr_printf(3, "[ENC]Timestamp %d\n", crmsg.timestamp);
 
   /* Fill subheader */
-  memcpy(&crmsg->destination, to, ipsize);
-  crmsg->challenge = htonl(challenge);
+  memcpy(&crmsg.destination, to, ipsize);
+  crmsg.challenge = htonl(challenge);
 
   /* Create digest of received challenge + IP */
 
@@ -1022,31 +1010,30 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   /* Create the SHA1 hash */
   SHA1(checksum_cache, 
        sizeof(olsr_u32_t) + ipsize, 
-       crmsg->res_sig);
+       crmsg.res_sig);
 
 
   /* Now create the digest of the message and the key */
 
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
-  memcpy(checksum_cache, crmsg, sizeof(struct c_respmsg) - SIGNATURE_SIZE);
+  memcpy(checksum_cache, &crmsg, sizeof(struct c_respmsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct c_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the SHA1 hash */
   SHA1(checksum_cache, 
        (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
-       crmsg->signature);
+       crmsg.signature);
 
   olsr_printf(3, "[ENC]Sending challenge response to %s challenge 0x%x\n", 
 	      olsr_ip_to_string(to),
 	      challenge);
 
+  /* Add to buffer */
+  net_outbuffer_push(olsr_in_if, &crmsg, sizeof(struct c_respmsg));
   /* Send the request */
-
   net_output(olsr_in_if);
-
-  *outputsize = 0;
 
   return 1;
 }
@@ -1064,30 +1051,26 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
 int
 send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 {
-  struct r_respmsg *rrmsg;
+  struct r_respmsg rrmsg;
 
   olsr_printf(1, "[ENC]Building RRESPONSE message\n");
 
-  rrmsg = (struct r_respmsg *)&buffer[4];
-  /* Set the size including OLSR packet size */
-  *outputsize = sizeof(struct r_respmsg) + 4;
-
 
   /* Fill challengemessage */
-  rrmsg->olsr_msgtype = TYPE_RRESPONSE;
-  rrmsg->olsr_vtime = 0;
-  rrmsg->olsr_msgsize = htons(sizeof(struct r_respmsg));
-  memcpy(&rrmsg->originator, main_addr, ipsize);
-  rrmsg->ttl = 1;
-  rrmsg->hopcnt = 0;
-  rrmsg->seqno = htons(get_msg_seqno());
+  rrmsg.olsr_msgtype = TYPE_RRESPONSE;
+  rrmsg.olsr_vtime = 0;
+  rrmsg.olsr_msgsize = htons(sizeof(struct r_respmsg));
+  memcpy(&rrmsg.originator, main_addr, ipsize);
+  rrmsg.ttl = 1;
+  rrmsg.hopcnt = 0;
+  rrmsg.seqno = htons(get_msg_seqno());
 
   /* set timestamp */
-  rrmsg->timestamp = now->tv_sec;
-  olsr_printf(3, "[ENC]Timestamp %d\n", rrmsg->timestamp);
+  rrmsg.timestamp = now->tv_sec;
+  olsr_printf(3, "[ENC]Timestamp %d\n", rrmsg.timestamp);
 
   /* Fill subheader */
-  memcpy(&rrmsg->destination, to, ipsize);
+  memcpy(&rrmsg.destination, to, ipsize);
 
   /* Create digest of received challenge + IP */
 
@@ -1100,30 +1083,30 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   /* Create the SHA1 hash */
   SHA1(checksum_cache, 
        sizeof(olsr_u32_t) + ipsize, 
-       rrmsg->res_sig);
+       rrmsg.res_sig);
 
 
   /* Now create the digest of the message and the key */
 
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
-  memcpy(checksum_cache, rrmsg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
+  memcpy(checksum_cache, &rrmsg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct r_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the SHA1 hash */
   SHA1(checksum_cache, 
        (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
-       rrmsg->signature);
+       rrmsg.signature);
 
   olsr_printf(3, "[ENC]Sending response response to %s\n", 
 	      olsr_ip_to_string(to));
 
+  /* add to buffer */
+  net_outbuffer_push(olsr_in_if, &rrmsg, sizeof(struct r_respmsg));
+
   /* Send the request */
-
   net_output(olsr_in_if);
-
-  *outputsize = 0;
 
   return 1;
 }

@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.3 2004/11/06 16:43:54 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.4 2004/11/18 21:57:35 kattemat Exp $
  */
 
 
@@ -67,6 +67,8 @@
 
 /* The type of message you will use */
 #define MESSAGE_TYPE 10
+
+#define       MAXMESSAGESIZE          512
 
 /* The type of messages we will receive - can be set to promiscuous */
 #define PARSER_TYPE MESSAGE_TYPE
@@ -145,7 +147,6 @@ union hna_netmask
 
 #define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
 
-#define	MAXMESSAGESIZE		512	/* max broadcast size */
 
 
 /****************************************************************************
@@ -430,18 +431,6 @@ int (*olsr_printf)(int, char *, ...);
 /* olsrd malloc wrapper */
 void *(*olsr_malloc)(size_t, const char *);
 
-/* Add hna net IPv4 */
-void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv4 */
-int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Add hna net IPv6 */
-void (*add_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
-
-/* Remove hna net IPv6 */
-int (*remove_local_hna6_entry)(union olsr_ip_addr *, union hna_netmask *);
-
 /* Add a packet transform function */
 int (*add_ptf)(int(*)(char *, int *));
 
@@ -466,6 +455,9 @@ int (*add_ifchgf)(int(*)(struct interface *, int));
 /* Remove an ifchange function */
 int (*del_ifchgf)(int(*)(struct interface *, int));
 
+int (*net_reserve_bufspace)(struct interface *, int);
+
+int (*net_outbuffer_push_reserved)(struct interface *, olsr_u8_t *, olsr_u16_t);
 
 
 /****************************************************************************
@@ -488,10 +480,6 @@ union olsr_ip_addr *main_addr; /* Main address */
 size_t             ipsize;     /* Size of the ipadresses used */
 struct timeval     *now;       /* the olsrds schedulers idea of current time */
 
-/* Data that can be altered by your plugin */
-char               *buffer;    /* The packet buffer - put your packet here */
-int                *outputsize;/* Pointer to the outputsize - set the size of your packet here */
-int                *maxmessagesize;
 
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *

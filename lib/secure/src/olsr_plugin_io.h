@@ -1,37 +1,25 @@
-
 /*
- * Secure OLSR plugin
- * http://www.olsr.org
+ * OLSR ad-hoc routing table management protocol
+ * Copyright (C) 2004 Andreas Tønnesen (andreto@ifi.uio.no)
  *
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
- * All rights reserved.
+ * This file is part of the olsr.org OLSR daemon.
  *
- * Redistribution and use in source and binary forms, with or 
- * without modification, are permitted provided that the following 
- * conditions are met:
+ * olsr.org is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * * Redistributions of source code must retain the above copyright 
- *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
- *   distribution.
- * * Neither the name of olsrd, olsr.org nor the names of its 
- *   contributors may be used to endorse or promote products derived 
- *   from this software without specific prior written permission.
+ * olsr.org is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- *POSSIBILITY OF SUCH DAMAGE.
+ * You should have received a copy of the GNU General Public License
+ * along with olsr.org; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ * 
+ * $Id: olsr_plugin_io.h,v 1.3 2004/11/18 21:57:35 kattemat Exp $
  *
  */
 
@@ -41,7 +29,18 @@
  *                 interface struct.
  *                 Added GETF__ADD_IFCHGF and GETF__DEL_IFCHGF.
  *                 - Andreas
- *
+ *         0.4.8 : GETF__APM_READ added
+ *                 GETD__OLSR_CNF added
+ *                 GETD_PACKET removed
+ *                 GETD_MAXMESSAGESIZE removed
+ *                 GETD_OUTPUTSIZE removed
+ *                 GETF__NET_OUTBUFFER_PUSH added
+ *                 GETD__ROUTINGTABLE added
+ *                 GETD__HNA_ROUTES added
+ *                 GETD__MID_SET added
+ *                 GETF__NET_RESERVE_BUFSPACE added 
+ *                 GETF__NET_OUTBUFFER_PUSH_RESERVED added
+ *                 - Andreas
  */
 
 /*
@@ -70,18 +69,19 @@
 #ifndef _OLSR_PLUGIN_IO
 #define _OLSR_PLUGIN_IO
 
-/* Data fetching - starts at 100 */
-#define GETD__PACKET                               100                            
-#define GETD__OUTPUTSIZE                           101
+/* Data fetching - starts at 100 (used to anyway) */
 #define GETD__IFNET                                102
 #define GETD__NOW                                  103
 #define GETD__PARSER_ENTRIES                       104
 #define GETD__OLSR_SOCKET_ENTRIES                  105
-#define GETD__MAXMESSAGESIZE                       106
 #define GETD__NEIGHBORTABLE                        108
 #define GETD__TWO_HOP_NEIGHBORTABLE                109
 #define GETD__TC_TABLE                             110
 #define GETD__HNA_SET                              111
+#define GETD__OLSR_CNF                             112
+#define GETD__ROUTINGTABLE                         113
+#define GETD__HNA_ROUTES                           114
+#define GETD__MID_SET                              115
 
 /* Function fetching - starts at 500 */
 #define GETF__OLSR_REGISTER_SCHEDULER_EVENT        500
@@ -115,5 +115,9 @@
 #define GETF__OLSR_HASHING                         528
 #define GETF__ADD_IFCHGF                           529
 #define GETF__DEL_IFCHGF                           530
+#define GETF__APM_READ                             531
+#define GETF__NET_OUTBUFFER_PUSH                   532
+#define GETF__NET_RESERVE_BUFSPACE                 533
+#define GETF__NET_OUTBUFFER_PUSH_RESERVED          534
 
 #endif

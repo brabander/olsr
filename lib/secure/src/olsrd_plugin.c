@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.3 2004/11/06 16:43:54 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.4 2004/11/18 21:57:35 kattemat Exp $
  */
 
 
@@ -178,35 +178,23 @@ fetch_olsrd_data()
   int retval = 1;
 
 
-  /* Olsr debug output function */
-  if(!olsr_plugin_io(GETD__OUTPUTSIZE, 
-		     &outputsize, 
-		     sizeof(outputsize)))
+  if(!olsr_plugin_io(GETF__NET_RESERVE_BUFSPACE, 
+		     &net_reserve_bufspace, 
+		     sizeof(net_reserve_bufspace)))
   {
-    outputsize = NULL;
+    net_reserve_bufspace = NULL;
     retval = 0;
   }
 
-  /* Olsr debug output function */
-  if(!olsr_plugin_io(GETD__MAXMESSAGESIZE, 
-		     &maxmessagesize, 
-		     sizeof(maxmessagesize)))
+  if(!olsr_plugin_io(GETF__NET_OUTBUFFER_PUSH_RESERVED, 
+		     &net_outbuffer_push_reserved, 
+		     sizeof(net_outbuffer_push_reserved)))
   {
-    maxmessagesize = NULL;
-    retval = 0;
-  }
-
-  /* Olsr debug output function */
-  if(!olsr_plugin_io(GETD__PACKET, 
-		     &buffer, 
-		     sizeof(buffer)))
-  {
-    buffer = NULL;
+    net_outbuffer_push_reserved = NULL;
     retval = 0;
   }
 
 
-  /* Olsr debug output function */
   if(!olsr_plugin_io(GETF__OLSR_PRINTF, 
 		     &olsr_printf, 
 		     sizeof(olsr_printf)))
@@ -215,7 +203,6 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-  /* Olsr debug output function */
   if(!olsr_plugin_io(GETD__NOW, 
 		     &now, 
 		     sizeof(now)))
@@ -224,7 +211,6 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-  /* Olsr debug output function */
   if(!olsr_plugin_io(GETF__NET_OUTPUT, 
 		     &net_output, 
 		     sizeof(net_output)))
@@ -272,20 +258,6 @@ fetch_olsrd_data()
   if(!olsr_plugin_io(GETF__REMOVE_OLSR_SOCKET, &remove_olsr_socket, sizeof(remove_olsr_socket)))
   {
     remove_olsr_socket = NULL;
-    retval = 0;
-  }
-
-  /* Add hna net IPv4 */
-  if(!olsr_plugin_io(GETF__ADD_LOCAL_HNA4_ENTRY, &add_local_hna4_entry, sizeof(add_local_hna4_entry)))
-  {
-    add_local_hna4_entry = NULL;
-    retval = 0;
-  }
-
-  /* Remove hna net IPv4 */
-  if(!olsr_plugin_io(GETF__REMOVE_LOCAL_HNA4_ENTRY, &remove_local_hna4_entry, sizeof(remove_local_hna4_entry)))
-  {
-    remove_local_hna4_entry = NULL;
     retval = 0;
   }
 
