@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.3 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.4 2004/11/06 14:07:20 kattemat Exp $
  *
  */
 
@@ -59,12 +59,19 @@ register_olsr_data(struct olsr_plugin_data *);
 int
 fetch_olsrd_data();
 
+
 /*
  * Defines the version of the plugin interface that is used
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
  * Do not alter unless you know what you are doing!
  */
-int plugin_interface_version;
+int 
+get_plugin_interface_version()
+{
+  return PLUGIN_INTERFACE_VERSION;
+}
+
+
 
 /**
  *Constructor
@@ -74,8 +81,6 @@ my_init()
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
-  /* Set interface version */
-  plugin_interface_version = PLUGIN_INTERFACE_VERSION;
 
   return;
 }

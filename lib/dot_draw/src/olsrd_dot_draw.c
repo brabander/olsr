@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dot_draw.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.6 2004/11/06 14:07:20 kattemat Exp $
  *
  */
 
@@ -140,6 +140,7 @@ ipc_action(int fd)
 	{
 	  ipc_open = 1;
 	  olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n",addr);
+	  pcf_event(1, 1, 1);
 	}
     }
 

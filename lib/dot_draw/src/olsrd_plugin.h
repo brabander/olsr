@@ -47,9 +47,6 @@
 
 #include "olsr_plugin_io.h"
 
-/* Use this as PARSER_TYPE to receive ALL messages! */
-#define PROMISCUOUS 0xffffffff
-
 
 /*****************************************************************************
  *                               Plugin data                                 *
@@ -60,13 +57,7 @@
 #define PLUGIN_VERSION "0.2"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 1
-
-/* The type of message you will use */
-#define MESSAGE_TYPE 128
-
-/* The type of messages we will receive - can be set to promiscuous */
-#define PARSER_TYPE MESSAGE_TYPE
+#define PLUGIN_INTERFACE_VERSION 2
 
 
 
@@ -77,6 +68,14 @@
 /*
  * TYPES SECTION
  */
+
+typedef enum
+{
+    OLSR_FALSE = 0,
+    OLSR_TRUE
+}olsr_bool;
+
+
 
 /* types */
 #include <sys/types.h>
@@ -114,28 +113,6 @@ union hna_netmask
   olsr_u16_t v6;
 };
 
-#define MAX_TTL               0xff
-
-
-/*
- *Link Types
- */
-
-#define UNSPEC_LINK           0
-#define ASYM_LINK             1
-#define SYM_LINK              2
-#define LOST_LINK             3
-#define HIDE_LINK             4
-#define MAX_LINK              4
-
-
-/*
- * Mantissa scaling factor
- */
-
-#define VTIME_SCALE_FACTOR    0.0625
-
-
 /*
  * Hashing
  */
@@ -166,8 +143,8 @@ struct neighbor_entry
   union olsr_ip_addr           neighbor_main_addr;
   olsr_u8_t                    status;
   olsr_u8_t                    willingness;
-  olsr_u8_t                    is_mpr;
-  olsr_u8_t                    was_mpr; /* Used to detect changes in MPR */
+  olsr_bool                    is_mpr;
+  olsr_bool                    was_mpr; /* Used to detect changes in MPR */
   int                          neighbor_2_nocov;
   int                          linkcount;
   struct neighbor_2_list_entry neighbor_2_list; 
@@ -347,5 +324,8 @@ olsr_plugin_exit();
 /* Mulitpurpose funtion */
 int
 plugin_io(int, void *, size_t);
+
+int 
+get_plugin_interface_version();
 
 #endif

@@ -1,6 +1,14 @@
 DOT DATA GENERATION PLUGIN FOR UNIK OLSRD
 by Andreas Tønnesen(andreto@olsr.org)
 
+06.11.2004
+
+- Updated plugin interface version
+- Added plugin interface version function
+- Topology is generated upon every new connection
+
+MORE TO COME...
+
 29.06.2004
 
 ABOUT
