@@ -35,14 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.32 2004/11/30 17:27:26 tlopatic Exp $
+# $Id: Makefile,v 1.33 2004/12/01 19:16:21 kattemat Exp $
 
 VERS =		0.4.8
-
-#OS =		linux
-#OS =		fbsd
-#OS =		win32
-#OS =		osx
 
 CC ?= 		gcc
 STRIP ?=	strip
@@ -61,6 +56,9 @@ HDRS =		$(wildcard src/*.h)
 
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
+
+TAGCMD ?=	etags	
+TAGFILE ?=	src/TAGS
 
 ifndef OS
 all:		help
@@ -244,5 +242,8 @@ install_libs:
 		for i in lib/*; do \
 			$(MAKE) -C $$i LIBDIR=$(INSTALL_PREFIX)/usr/lib install; \
 		done; 	
+
+tags:
+		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS)
 
 sinclude	$(DEPFILE)
