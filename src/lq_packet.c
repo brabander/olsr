@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.10 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.11 2005/02/17 21:36:30 kattemat Exp $
  */
 
 #include "olsr_protocol.h"
@@ -79,7 +79,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   
   // loop through the link set
 
-  for (walker = link_set; walker != NULL; walker = walker->next)
+  for (walker = get_link_set(); walker != NULL; walker = walker->next)
     {
       // allocate a neighbour entry
 

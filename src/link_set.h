@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.22 2005/02/17 02:06:22 tlopatic Exp $
+ * $Id: link_set.h,v 1.23 2005/02/17 21:36:30 kattemat Exp $
  */
 
 
@@ -44,11 +44,12 @@
  * Link sensing database for the OLSR routing daemon
  */
 
-
-#include "defs.h"
-
 #ifndef _LINK_SET_H
 #define _LINK_SET_H
+
+#ifndef OLSR_PLUGIN
+#include "packet.h"
+#endif
 
 struct link_entry
 {
@@ -105,15 +106,14 @@ struct link_entry
   struct link_entry *next;
 };
 
-
-/* The link sets - one pr. interface */
-
-struct link_entry *link_set;
-
-/* Timer */
-clock_t hold_time_neighbor;
-
+#ifndef OLSR_PLUGIN
 /* Function prototypes */
+
+struct link_entry *
+get_link_set(void);
+
+clock_t 
+get_hold_time_neighbor(void);
 
 void
 olsr_init_link_set(void);
@@ -145,5 +145,6 @@ olsr_update_packet_loss(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
 
 void 
 olsr_print_link_set(void);
+#endif
 
 #endif

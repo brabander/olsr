@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
+ * $Id: hysteresis.c,v 1.15 2005/02/17 21:36:29 kattemat Exp $
  */
 
 
@@ -112,7 +112,7 @@ olsr_process_hysteresis(struct link_entry *entry)
       /* Timer = min (L_time, current time + NEIGHB_HOLD_TIME) */
       //tmp_timer = now;
       //tmp_timer.tv_sec += NEIGHB_HOLD_TIME; /* Takafumi fix */
-      tmp_timer = now_times + hold_time_neighbor;
+      tmp_timer = now_times + get_hold_time_neighbor();
 
 	entry->L_LOST_LINK_time = 
 	  entry->time > tmp_timer ? tmp_timer : entry->time;

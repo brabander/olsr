@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.16 2005/02/04 06:30:46 kattemat Exp $
+ * $Id: packet.c,v 1.17 2005/02/17 21:36:30 kattemat Exp $
  */
 
 
@@ -120,7 +120,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 #endif
 
   /* Get the links of this interface */
-  links = link_set;
+  links = get_link_set();
 
   while(links != NULL)
     {      

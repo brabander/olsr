@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.16 2004/12/19 17:14:03 kattemat Exp $
+ * $Id: plugin.c,v 1.17 2005/02/17 21:36:30 kattemat Exp $
  */
 
 
@@ -124,7 +124,7 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       *((struct mid_entry **)data) = mid_set;
       break;
      case(GETD__LINK_SET):
-      *((struct link_entry **)data) = link_set;
+      *((struct link_entry **)data) = get_link_set();
       break;
       
       /* Function fetching */
