@@ -178,6 +178,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 		  olsr_printf(3, "IPv6 addr:\n");
 		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
 		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
+		  fclose(f);
 		  return 1;
 		}
 	    }
