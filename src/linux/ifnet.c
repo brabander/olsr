@@ -1,0 +1,719 @@
+
+/*
+ * OLSR ad-hoc routing table management protocol
+ * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ *
+ * This file is part of olsrd-unik.
+ *
+ * olsrd-unik is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * olsrd-unik is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with olsrd-unik; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+
+/*
+ *Wireless definitions for ioctl calls
+ *(from linux/wireless.h)
+ */
+#define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
+#define SIOCSIWNWID	0x8B02		/* set network id (the cell) */
+#define SIOCGIWNWID	0x8B03		/* get network id */
+#define SIOCSIWFREQ	0x8B04		/* set channel/frequency (Hz) */
+#define SIOCGIWFREQ	0x8B05		/* get channel/frequency (Hz) */
+#define SIOCSIWMODE	0x8B06		/* set operation mode */
+#define SIOCGIWMODE	0x8B07		/* get operation mode */
+#define SIOCSIWSENS	0x8B08		/* set sensitivity (dBm) */
+#define SIOCGIWSENS	0x8B09		/* get sensitivity (dBm) */
+
+
+#include "../interfaces.h"
+#include "../ifnet.h"
+#include "../defs.h"
+#include "../socket_parser.h"
+#include "../parser.h"
+#include <signal.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <asm/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
+
+
+int
+set_flag(char *ifname, short flag)
+{
+  struct ifreq ifr;
+
+  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+
+  /* Get flags */
+  if (ioctl(ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+    {
+      fprintf(stderr,"ioctl (get interface flags)");
+      return -1;
+    }
+
+  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+  
+  //printf("Setting flags for if \"%s\"\n", ifr.ifr_name);
+
+  if(!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)))
+    {
+      /* Add UP */
+      ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
+      /* Set flags + UP */
+      if(ioctl(ioctl_s, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	  fprintf(stderr, "ERROR(%s): %s\n", ifr.ifr_name, strerror(errno));
+	  return -1;
+	}
+    }
+  return 1;
+
+}
+
+
+
+
+void
+check_interface_updates()
+{
+  struct if_name *tmp_if;
+
+#ifdef DEBUG
+  olsr_printf(3, "Checking for updates in the interface set\n");
+#endif
+
+  for(tmp_if = if_names; tmp_if != NULL; tmp_if = tmp_if->next)
+    {
+
+      if(tmp_if->configured)
+	chk_if_changed(tmp_if);
+      else
+	chk_if_up(tmp_if, 1);
+    }
+
+  return;
+}
+
+/**
+ * Checks if an initialized interface is changed
+ * that is if it has been set down or the address
+ * has been changed.
+ *
+ *@param iface the if_name struct describing the interface
+ */
+int
+chk_if_changed(struct if_name *iface)
+{
+  struct interface *ifp, *tmp_ifp;
+  struct ifreq ifr;
+  struct sockaddr_in6 tmp_saddr6;
+  int if_changes;
+  struct ifchgf *tmp_ifchgf_list;
+  if_changes = 0;
+
+#ifdef DEBUG
+  olsr_printf(3, "Checking if %s is set down or changed\n", iface->name);
+#endif
+
+  ifp = iface->interf;
+
+  if(ifp == NULL)
+    {
+      /* Should not happen */
+      iface->configured = 0;
+      return 0;
+    }
+
+  memset(&ifr, 0, sizeof(struct ifreq));
+  strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);
+
+
+  /* Get flags (and check if interface exists) */
+  if (ioctl(ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+    {
+      olsr_printf(1, "No such interface: %s\n", iface->name);
+      goto remove_interface;
+    }
+
+  ifp->int_flags = ifr.ifr_flags | IFF_INTERFACE;
+
+  /*
+   * First check if the interface is set DOWN
+   */
+
+  if ((ifp->int_flags & IFF_UP) == 0)
+    {
+      olsr_printf(1, "\tInterface %s not up - removing it...\n", iface->name);
+      goto remove_interface;
+    }
+
+  /*
+   * We do all the interface type checks over.
+   * This is because the interface might be a PCMCIA card. Therefore
+   * It might not be the same physical interface as we configured earlier.
+   */
+
+  /* Check broadcast */
+  if ((ipversion == AF_INET) && (!(ifp->int_flags & IFF_BROADCAST))) 
+    {
+      olsr_printf(1, "\tNo broadcast - removing\n");
+      goto remove_interface;
+    }
+
+  if (ifp->int_flags & IFF_LOOPBACK)
+    {
+      olsr_printf(1, "\tThis is a loopback interface - removing it...\n");
+      goto remove_interface;
+    }
+
+
+  /* trying to detect if interface is wireless. */
+  ifp->is_wireless = check_wireless_interface(&ifr);
+
+  /* Set interface metric */
+  ifp->int_metric = ifp->is_wireless;
+
+  /* Get interface index */
+  ifp->if_index = if_nametoindex(ifr.ifr_name);
+
+  /*
+   * Now check if the IP has changed
+   */
+  
+  /* IP version 6 */
+  if(ipversion == AF_INET6)
+    {
+      /* Get interface address */
+      
+      if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, ipv6_addrtype) <= 0)
+	{
+	  if(ipv6_addrtype == IPV6_ADDR_SITELOCAL)
+	    olsr_printf(1, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
+	  else
+	    olsr_printf(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
+	  
+	  
+	  goto remove_interface;
+	}
+      
+#ifdef DEBUG
+      olsr_printf(3, "\tAddress: %s\n", ip6_to_string(&tmp_saddr6.sin6_addr));
+#endif
+
+      if(memcmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr, ipsize) != 0)
+	{
+	  olsr_printf(1, "New IP address for %s:\n", ifr.ifr_name);
+	  olsr_printf(1, "\tOld: %s\n", ip6_to_string(&ifp->int6_addr.sin6_addr));
+	  olsr_printf(1, "\tNew: %s\n", ip6_to_string(&tmp_saddr6.sin6_addr));
+
+	  /* Check main addr */
+	  if(memcmp(&main_addr, &tmp_saddr6.sin6_addr, ipsize) == 0)
+	    {
+	      /* Update main addr */
+	      memcpy(&main_addr, &tmp_saddr6.sin6_addr, ipsize);
+	    }
+
+	  /* Update address */
+	  memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, ipsize);
+	  memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, ipsize);
+
+	  /*
+	   *Call possible ifchange functions registered by plugins  
+	   */
+	  tmp_ifchgf_list = ifchgf_list;
+	  while(tmp_ifchgf_list != NULL)
+	    {
+	      tmp_ifchgf_list->function(ifp, IFCHG_IF_UPDATE);
+	      tmp_ifchgf_list = tmp_ifchgf_list->next;
+	    }
+
+	  return 1;	  	  
+	}
+      return 0;
+
+    }
+  else
+  /* IP version 4 */
+    {
+      /* Check interface address (IPv4)*/
+      if(ioctl(ioctl_s, SIOCGIFADDR, &ifr) < 0) 
+	{
+	  olsr_printf(1, "\tCould not get address of interface - removing it\n");
+	  goto remove_interface;
+	}
+
+#ifdef DEBUG
+      olsr_printf(3, "\tAddress:%s\n", sockaddr_to_string(&ifr.ifr_addr));
+#endif
+
+      if(memcmp(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr,
+		&((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
+		ipsize) != 0)
+	{
+	  /* New address */
+	  olsr_printf(1, "IPv4 address changed for %s\n", ifr.ifr_name);
+	  olsr_printf(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_addr));
+	  olsr_printf(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_addr));
+	  
+	  if(memcmp(&main_addr, 
+		    &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		    ipsize) == 0)
+	    {
+	      olsr_printf(1, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
+	      syslog(LOG_INFO, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
+	      memcpy(&main_addr, 
+		     &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		     ipsize);
+	    }
+
+	  ifp->int_addr = ifr.ifr_addr;
+	  memcpy(&ifp->ip_addr, 
+		 &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		 ipsize);
+
+	  if_changes = 1;
+	}
+
+      /* Check netmask */
+      if (ioctl(ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
+	{
+	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  goto remove_interface;
+	}
+
+#ifdef DEBUG
+      olsr_printf(3, "\tNetmask:%s\n", sockaddr_to_string(&ifr.ifr_netmask));
+#endif
+
+      if(memcmp(&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr,
+		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, 
+		ipsize) != 0)
+	{
+	  /* New address */
+	  olsr_printf(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
+	  olsr_printf(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_netmask));
+	  olsr_printf(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_netmask));
+
+	  ifp->int_netmask = ifr.ifr_netmask;
+
+	  if_changes = 1;
+	}
+            
+      /* Check broadcast address */      
+      if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	{
+	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  goto remove_interface;
+	}
+
+#ifdef DEBUG
+      olsr_printf(3, "\tBroadcast address:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
+#endif
+      
+      if(memcmp(&((struct sockaddr_in *)&ifp->int_broadaddr)->sin_addr.s_addr,
+		&((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr, 
+		ipsize) != 0)
+	{
+
+	  /* New address */
+	  olsr_printf(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
+	  olsr_printf(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_broadaddr));
+	  olsr_printf(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
+
+	  ifp->int_broadaddr = ifr.ifr_broadaddr;
+	  if_changes = 1;
+	}            
+      
+    }
+
+  if(if_changes)
+    {
+      /*
+       *Call possible ifchange functions registered by plugins  
+       */
+      tmp_ifchgf_list = ifchgf_list;
+      while(tmp_ifchgf_list != NULL)
+	{
+	  tmp_ifchgf_list->function(ifp, IFCHG_IF_UPDATE);
+	  tmp_ifchgf_list = tmp_ifchgf_list->next;
+	}
+    }
+  return if_changes;
+
+
+ remove_interface:
+  olsr_printf(1, "Removing interface %s\n", iface->name);
+  syslog(LOG_INFO, "Removing interface %s\n", iface->name);
+
+  /*
+   *Call possible ifchange functions registered by plugins  
+   */
+  tmp_ifchgf_list = ifchgf_list;
+  while(tmp_ifchgf_list != NULL)
+    {
+      tmp_ifchgf_list->function(ifp, IFCHG_IF_REMOVE);
+      tmp_ifchgf_list = tmp_ifchgf_list->next;
+    }
+  
+  /* Dequeue */
+  if(ifp == ifnet)
+    {
+      ifnet = ifp->int_next;
+    }
+  else
+    {
+      tmp_ifp = ifnet;
+      while(tmp_ifp->int_next != ifp)
+	{
+	  tmp_ifp = tmp_ifp->int_next;
+	}
+      tmp_ifp->int_next = ifp->int_next;
+    }
+  /* Check main addr */
+  if(COMP_IP(&main_addr, &ifp->ip_addr))
+    {
+      if(ifnet == NULL)
+	{
+	  /* No more interface */
+	  memset(&main_addr, 0, ipsize);
+	  olsr_printf(1, "No more interfaces...\n");
+	}
+      else
+	{
+	  COPY_IP(&main_addr, &ifnet->ip_addr);
+	  olsr_printf(1, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+	  syslog(LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+	}
+    }
+
+  nbinterf--;
+
+  iface->configured = 0;
+  iface->interf = NULL;
+  /* Close olsr socket */
+  close(ifp->olsr_socket);
+  remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+  /* Free memory */
+  free(ifp->int_name);
+  free(ifp);
+
+  if((nbinterf == 0) && (!allow_no_int))
+    {
+      olsr_printf(1, "No more active interfaces - exiting.\n");
+      syslog(LOG_INFO, "No more active interfaces - exiting.\n");
+      exit_value = EXIT_FAILURE;
+      kill(getpid(), SIGINT);
+    }
+
+  return 0;
+
+}
+
+
+
+/**
+ * Initializes a interface described by iface,
+ * if it is set up and is of the correct type.
+ *
+ *@param iface the if_name struct describing the interface
+ *@param so the socket to use for ioctls
+ *
+ */
+int
+chk_if_up(struct if_name *iface, int debuglvl)
+{
+  struct interface ifs, *ifp;
+  struct ifreq ifr;
+  union olsr_ip_addr null_addr;
+  struct ifchgf *tmp_ifchgf_list;
+
+  memset(&ifr, 0, sizeof(struct ifreq));
+  strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);
+
+  olsr_printf(debuglvl, "Checking %s:\n", ifr.ifr_name);
+
+  /* Get flags (and check if interface exists) */
+  if (ioctl(ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+    {
+      olsr_printf(debuglvl, "\tNo such interface!\n");
+      return 0;
+    }
+
+  ifs.int_flags = ifr.ifr_flags | IFF_INTERFACE;      
+
+
+  if ((ifs.int_flags & IFF_UP) == 0)
+    {
+      olsr_printf(debuglvl, "\tInterface not up - skipping it...\n");
+      return 0;
+    }
+
+  /* Check broadcast */
+  if ((ipversion == AF_INET) && (!(ifs.int_flags & IFF_BROADCAST))) 
+    {
+      olsr_printf(debuglvl, "\tNo broadcast - skipping\n");
+      return 0;
+    }
+
+
+  if (ifs.int_flags & IFF_LOOPBACK)
+    {
+      olsr_printf(debuglvl, "\tThis is a loopback interface - skipping it...\n");
+      return 0;
+    }
+
+  /* trying to detect if interface is wireless. */
+  if(check_wireless_interface(&ifr))
+    {
+      olsr_printf(debuglvl, "\tWireless interface detected\n");
+      ifs.is_wireless = 1;
+    }
+  else
+    {
+      olsr_printf(debuglvl, "\tNot a wireless interface\n");
+      ifs.is_wireless = 0;
+    }
+
+  
+  /* IP version 6 */
+  if(ipversion == AF_INET6)
+    {
+      /* Get interface address */
+      
+      if(get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, ipv6_addrtype) <= 0)
+	{
+	  if(ipv6_addrtype == IPV6_ADDR_SITELOCAL)
+	    olsr_printf(debuglvl, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
+	  else
+	    olsr_printf(debuglvl, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
+	  
+	  return 0;
+	}
+      
+      olsr_printf(debuglvl, "\tAddress: %s\n", ip6_to_string(&ifs.int6_addr.sin6_addr));
+      
+      
+      /* Set default multicast address */
+      if(inet_pton(AF_INET6, ipv6_mult, &ifs.int6_multaddr.sin6_addr) < 0)
+	{
+	  perror("Convert multicastaddr");
+	  return 0;
+	}
+	  
+      /* Set address family */
+      ifs.int6_multaddr.sin6_family = AF_INET6;
+      /* Set port */
+      ifs.int6_multaddr.sin6_port = olsr_udp_port;
+      
+      olsr_printf(debuglvl, "\tMulticast: %s\n", ip6_to_string(&ifs.int6_multaddr.sin6_addr));
+      
+    }
+  /* IP version 4 */
+  else
+    {
+      /* Get interface address (IPv4)*/
+      if(ioctl(ioctl_s, SIOCGIFADDR, &ifr) < 0) 
+	{
+	  olsr_printf(debuglvl, "\tCould not get address of interface - skipping it\n");
+	  return 0;
+	}
+      
+      ifs.int_addr = ifr.ifr_addr;
+      
+      /* Find netmask */
+      
+      if (ioctl(ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
+	{
+	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  return 0;
+	}
+      
+      ifs.int_netmask = ifr.ifr_netmask;
+      
+      /* Find broadcast address */
+      
+      if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	{
+	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  return 0;
+	}
+      
+      ifs.int_broadaddr = ifr.ifr_broadaddr;
+      
+      
+      /* Deactivate IP spoof filter */
+      deactivate_spoof(ifr.ifr_name, nbinterf, ipversion);
+      
+      /* Disable ICMP redirects */
+      disable_redirects(ifr.ifr_name, nbinterf, ipversion);
+      
+    }
+  
+  
+  /* Get interface index */
+  
+  ifs.if_index = if_nametoindex(ifr.ifr_name);
+  
+  /* Set interface metric */
+  ifs.int_metric = ifs.is_wireless;
+  
+  /* setting the interfaces number*/
+  ifs.if_nr = iface->index;
+
+  syslog(LOG_INFO, "Adding interface %s\n", iface->name);
+  olsr_printf(1, "Interface %s set up for use with index %d\n", iface->name, ifs.if_nr);
+
+  olsr_printf(1, "\tAddress:%s\n", sockaddr_to_string(&ifs.int_addr));
+  olsr_printf(1, "\tNetmask:%s\n", sockaddr_to_string(&ifs.int_netmask));
+  olsr_printf(1, "\tBroadcast address:%s\n", sockaddr_to_string(&ifs.int_broadaddr));
+
+  nbinterf++; 
+  
+  ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
+  
+  iface->configured = 1;
+  iface->interf = ifp;
+  
+  memcpy(ifp, &ifs, sizeof(struct interface));
+  
+  ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
+      
+  strcpy(ifp->int_name, ifr.ifr_name);
+  /* Segfaults if using strncpy(IFNAMSIZ) why oh why?? */
+  ifp->int_next = ifnet;
+  ifnet = ifp;
+
+  if(ipversion == AF_INET)
+    {
+      /* IP version 4 */
+      ifp->ip_addr.v4 = ((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr;
+      
+      /*
+       *We create one socket for each interface and bind
+       *the socket to it. This to ensure that we can control
+       *on what interface the message is transmitted
+       */
+      
+      ifp->olsr_socket = getsocket((struct sockaddr *)&addrsock, bufspace, ifp->int_name);
+      
+      if (ifp->olsr_socket < 0)
+	{
+	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
+	  syslog(LOG_ERR, "Could not initialize socket... exiting!\n\n");
+	  exit_value = EXIT_FAILURE;
+	  kill(getpid(), SIGINT);
+	}
+    }
+  else
+    {
+      /* IP version 6 */
+      memcpy(&ifp->ip_addr, &ifp->int6_addr.sin6_addr, ipsize);
+
+      
+      /*
+       *We create one socket for each interface and bind
+       *the socket to it. This to ensure that we can control
+       *on what interface the message is transmitted
+       */
+      
+      ifp->olsr_socket = getsocket6(&addrsock6, bufspace, ifp->int_name);
+      
+      join_mcast(ifp, ifp->olsr_socket);
+      
+      if (ifp->olsr_socket < 0)
+	{
+	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
+	  syslog(LOG_ERR, "Could not initialize socket... exiting!\n\n");
+	  exit_value = EXIT_FAILURE;
+	  kill(getpid(), SIGINT);
+	}
+      
+    }
+  
+  /* Register socket */
+  add_olsr_socket(ifp->olsr_socket, &olsr_input);
+  
+  
+  /* Set TOS */
+  
+  if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)
+    {
+      perror("setsockopt(SO_PRIORITY)");
+      syslog(LOG_ERR, "OLSRD: setsockopt(SO_PRIORITY) error %m");
+    }
+  if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char*)&tos_bits, sizeof(tos_bits)) < 0)    
+    {
+      perror("setsockopt(IP_TOS)");
+      syslog(LOG_ERR, "setsockopt(IP_TOS) error %m");
+    }
+  
+  /*
+   *Initialize sequencenumber as a random 16bit value
+   */
+  ifp->olsr_seqnum = random() & 0xFFFF;
+
+  /*
+   * Set main address if this is the only interface
+   */
+  memset(&null_addr, 0, ipsize);
+  if(COMP_IP(&null_addr, &main_addr))
+    {
+      COPY_IP(&main_addr, &ifp->ip_addr);
+      olsr_printf(1, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+      syslog(LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+    }
+  
+  /*
+   *Call possible ifchange functions registered by plugins  
+   */
+  tmp_ifchgf_list = ifchgf_list;
+  while(tmp_ifchgf_list != NULL)
+    {
+      tmp_ifchgf_list->function(ifp, IFCHG_IF_ADD);
+      tmp_ifchgf_list = tmp_ifchgf_list->next;
+    }
+
+  return 1;
+}
+
+
+
+
+/**
+ *Check if a interface is wireless
+ *Returns 1 if no info can be gathered
+ *
+ *@param sock socket to use for kernel communication
+ *@param ifr a ifreq struct describing the interface
+ *
+ *@return 1 if interface is wireless(or no info was
+ *found) 0 if not.
+ */
+int
+check_wireless_interface(struct ifreq *ifr)
+{
+  if(ioctl(ioctl_s, SIOCGIWNAME, ifr) >= 0)
+    {
+      return 1;
+    }
+  else
+    {
+      return 0;
+    }
+
+}
+

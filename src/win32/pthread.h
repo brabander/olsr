@@ -1,0 +1,40 @@
+/*
+ * Functions for the Windows port
+ * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
+ *
+ * This file is part of olsrd-unik.
+ *
+ * olsrd-unik is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * olsrd-unik is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with olsrd-unik; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#if !defined TL_PTHREAD_H_INCLUDED
+
+#define TL_PTHREAD_H_INCLUDED
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef interface
+
+typedef HANDLE pthread_mutex_t;
+typedef HANDLE pthread_t;
+
+int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg);
+int pthread_kill(HANDLE Hand, int Sig);
+int pthread_mutex_init(HANDLE *Hand, void *Attr);
+int pthread_mutex_lock(HANDLE *Hand);
+int pthread_mutex_unlock(HANDLE *Hand);
+
+#endif

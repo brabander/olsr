@@ -1,0 +1,21 @@
+DOT DATA GENERATION PLUGIN FOR UNIK OLSRD
+by Andreas Tønnesen(andreto@olsr.org)
+
+29.06.2004
+
+ABOUT
+
+Note that this code is a quick hack done at the Wizards Of Oz 3
+
+The plugin generates output (over a TCP socket) in the dot format.
+The dot tool generates visual presentations of directed graphs.
+It can be downloaded as part of the GraphViz package from:
+http://www.graphviz.org/
+
+telet to 127.0.0.1 port 2004 to receive the data
+
+installation:
+make
+make install
+
+- Andreas T

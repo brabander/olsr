@@ -1,0 +1,36 @@
+DYNAMIC INTERNET GATEWAY PLUGIN FOR UNIK OLSRD
+by Andreas Tønnesen(andreto@olsr.org)
+
+30.03.2004
+
+ABOUT
+
+Plugin is IPv4 only!
+
+This is a plugin that checks if the local node has a Internet-
+connection. A Internet-connetion is identified by a "default gw"
+with a hopcount of 0. That is a route to 0.0.0.0/0 with metric 0.
+
+Since OLSR uses hopcount/metric on all routes this plugin will
+not respond to Internet gateways added by olsrd.
+
+When a Internet gateway is discovered - this node will start
+announcing 0.0.0.0/0 connectivity by HNA messages flooded into
+the OLSR network. If the route is removed the HNA messages
+will not be transmitted. This check is totally dynamic and
+Internet connectivity might come and go. The check for connectivity
+is done every 5 seconds.
+
+This plugin will work very good with a automatic network cable
+detection daemon such as  netplug:
+http://freshmeat.net/projects/key-netplug/
+
+
+telet to 127.0.0.1 port 9999
+for IPC messages
+
+
+This plugin is a good example of using plugins for other stuff
+than packet transmission.
+
+- Andreas T

@@ -1,0 +1,47 @@
+Secure OLSR 0.2 implementation notes
+(c)Andreas Tønnesen 06.05.04
+
+This document contains information on how to
+use the secure OLSR plugin with the UniK olsr daemon.
+It does _not_ cover secure OLSR protocol issues.
+
+Lines starting with '# ' indicates shell commands.
+
+COMPILING
+
+  To compile simply do:
+  # make
+
+  Note that the plugin depends on the openssl libraries.
+
+INSTALLING
+
+  To install:
+  # make install
+
+  This will run ldconfig to update the dynamic linker.
+  It might take a while.
+
+USAGE
+
+  To make olsrd load the secure OLSR plugin add the
+  following line in the olsrd configuration file:
+
+  LOAD_PLUGIN     olsrd_secure.so.X.X
+
+  replacing the Xes with the version of the plugin.
+
+  The plugin uses a shared secret key - for nodes
+  to participate in the OLSR routing domain they
+  need to use the key used by the other nodes.
+  The key is 128-bits of size and is read from
+  the file:
+  /root/.olsr/olsrd_secure_key
+
+  Copy the key to this file an all nodes. The plugin
+  will terminate olsrd if this file cannot be found.
+
+  Now start olsrd and the let the plugin do its
+  thing :)
+
+- Andreas

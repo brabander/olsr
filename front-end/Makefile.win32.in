@@ -1,0 +1,38 @@
+GTKBASE =	../../gtk
+
+OBJS =		src/main.o \
+		src/interface.o \
+		src/callbacks.o \
+		src/ipc.o \
+		src/packet.o \
+		src/nodes.o \
+		src/routes.o \
+		src/win32/compat.o
+
+%.o:		%.c
+		gcc -mno-cygwin -mms-bitfields -O2 -Wall -c -DWIN32 \
+		-Isrc/win32 \
+                -I$(GTKBASE)/include/gtk-2.0 \
+                -I$(GTKBASE)/include/glib-2.0 \
+                -I$(GTKBASE)/lib/gtk-2.0/include \
+                -I$(GTKBASE)/lib/glib-2.0/include \
+                -I$(GTKBASE)/include/pango-1.0 \
+                -I$(GTKBASE)/include/atk-1.0 \
+                -o$@ $<
+
+olsrd-gui:	$(OBJS)
+		gcc -mno-cygwin -o olsrd-gui.exe $(OBJS) \
+                -lws2_32 \
+                -L$(GTKBASE)/lib \
+                -llibgtk-win32-2.0 \
+                -llibgdk-win32-2.0 \
+                -llibglib-2.0 \
+                -llibgobject-2.0
+
+clean:
+		rm -f olsrd-gui.exe
+		find . -name \*~ -exec rm -f {} \;
+		find src -name \*.o -exec rm -f {} \;
+
+mclean:		clean
+		rm -f Makefile.win32

@@ -1,0 +1,130 @@
+
+UnikOLSR 0.4.6
+
+by Andreas Tonnesen(andreto@olsr.org)
+http://www.olsr.org
+
+04.08.04
+
+
+1. OLSR RFC COMPLIANCE
+
+  This version is RFC2636 compliant to my knowledge!
+
+  The OLSR-RFC definitions can be found in the olsr_protocol header file.
+
+
+2. EXTENTIONS
+
+  This version also has some extentions which are part of other projects:
+
+  Plugins:
+
+  - Secure OLSR plugin. This plugin adds a signature to all messages
+    to ensure data integrity. This way only nodes with access to the
+    shared key can participate in the routing.
+    The key is read as the first 128 bits from /root/.olsr/olsrd_secure_key
+    You need to have the OpenSSL libs installed to use this plugin.
+
+  - Powerplugin. A plugin that uses OLSRs MPR flooding to spread information
+    about the powerstatus of nodes.
+
+  - Dynamic Internet gateway. A plugin that dynamically adds and removes Internet
+    HNA transmissions based on if there exists a default gateway to Internet
+    with hopcount = 0(non OLSR gateway).
+
+  Built in:
+
+  - IPC to GUI front-end. A gui front-end can connect to the daemon
+    if started with the -ipc switch or set in the configfile.
+
+  - Gateway tunneling. This is not easly configurated! For testing purposes.
+    This functioning will be updated in a later version. Do not try to
+    use this except you are 100% sure you need it!!
+
+  - Optional deletion of default gateways when recieving a 0.0.0.0/0.0.0.0
+    gw(in HNA).
+
+
+3. COMPILING & INSTALLING
+
+  The makefile is updated in this version.
+  To install to a directoy different from / use INSTALL_PREFIX=targetdir
+  To use other compilers set CC=yourcompiler
+  All this can be done on the command line(or in scripts), so there should
+  not be any need to update the Makefile for different environments.
+
+  These changes also go for the pluginmakefiles.
+
+  To compile:
+  'make'
+
+  To install(you must be root):
+  'make install'
+
+  This also installs the standard configuration file((PREFIXDIR)/etc/olsrd.conf)
+  YOU MUST EDIT THIS FILE!
+
+  To clean up object files run
+  'make clean'
+
+
+  To compile and install the power plugin:
+  cd lib/power
+  make; make install
+
+  To compile and install the dynamic GW plugin:
+  cd lib/dyn_gw
+  make; make install
+
+4. CONFIGURING & RUNNING:
+
+  OBS!!!!
+  Edit the configuration file to fit your needs.
+
+  Options in the config file can also be overridden by command line 
+  options. See the manual page olsrd(8) for details.
+
+  To run the daemon you MUST specify which interface(s) to use either in
+  the config file or by using the -i option.
+
+  The binary is named 'olsrd' and is installed in (PREFIX)/usr/sbin. 
+  You must have root privelegies to run olsrd!
+
+  To run the daemon in the background you can either start olsrd
+  with the '-d 0' switch or set DEBUG to 0 in the config file.
+
+  To use plugins add them to the configfile as explained in the file.
+
+  4.1 SOME COMMAND-LINE OPTIONS:
+
+  DEPRECATED
+  See the manpage for command line options.
+
+5. BUGS
+
+  Problems have been reported when running in daemon mode(DEBUG 0). If this
+  causes problems and you need to run olsrd in the background you could
+  just redirect output to /dev/null( > /dev/null)
+
+
+6. FRONT-END
+
+  6.1 COMPILING
+
+    To compile:
+    cd fron-end
+    make
+    The binary is put in the bin directory
+
+  6.2 RUNNING
+
+    To run simply:
+    cd bin
+    ./olsrd-gui
+ 
+    REMEMBER olsrd must be started using the -ipc switch or the
+    IPC option must be set to yes to be able to use the GUI front-end
+
+  6.3 BUGS
+ 

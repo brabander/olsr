@@ -1,0 +1,100 @@
+/*
+ * OLSR ad-hoc routing table management protocol
+ * Copyright (C) 2004 Andreas Tønnesen (andreto@ifi.uio.no)
+ *
+ * This file is part of olsrd-unik.
+ *
+ * UniK olsrd is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * UniK olsrd is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with olsrd-unik; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#ifndef _OLSR_ROUTING_TABLE
+#define _OLSR_ROUTING_TABLE
+
+#include "hna_set.h"
+
+
+#define NETMASK_HOST 0xffffffff
+#define NETMASK_DEFAULT 0x0
+
+struct rt_entry
+{
+  union olsr_ip_addr    rt_dst;
+  union olsr_ip_addr    rt_router;
+  union hna_netmask     rt_mask;
+  olsr_u8_t  	        rt_flags; 
+  olsr_u16_t 	        rt_metric;
+  struct interface      *rt_if;
+  struct rt_entry       *prev;
+  struct rt_entry       *next;
+};
+
+
+struct destination_n
+{
+  struct rt_entry      *destination;
+  struct destination_n *next;
+};
+
+
+/**
+ * IPv4 <-> IPv6 wrapper
+ */
+union olsr_kernel_route
+{
+  struct rtentry v4;
+  struct in6_rtmsg v6;
+};
+
+
+struct rt_entry routingtable[HASHSIZE];
+struct rt_entry hna_routes[HASHSIZE];
+
+
+int
+olsr_init_routing_table();
+
+struct rt_entry *
+olsr_lookup_routing_table(union olsr_ip_addr *);
+
+void
+olsr_free_routing_table(struct rt_entry *);
+
+struct rt_entry *
+olsr_insert_routing_table(union olsr_ip_addr *, union olsr_ip_addr *, int);
+
+int
+olsr_fill_routing_table_with_neighbors();
+
+void 
+olsr_calculate_routing_table();
+
+struct rt_entry *
+olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+
+struct rt_entry *
+olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+
+void
+olsr_calculate_hna_routes();
+
+void
+olsr_print_routing_table(struct rt_entry *);
+
+void
+olsr_update_default_gateway();
+
+
+#endif

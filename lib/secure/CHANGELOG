@@ -1,0 +1,5 @@
+This changelog states changes from version 0.2
+
+0.3 - Only some minor fixes to make the plugin work
+      with olsrd 0.4.6.
+      Dynamic interface removal/addition supported.

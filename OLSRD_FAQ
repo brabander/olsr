@@ -1,0 +1,60 @@
+THIS IS THE FAQ FROM THE OLSRd HOME PAGE(www.olsr.org):
+
+
+Q: When using 255.255.255.255 as broadcast address nodes with addresses from different subnets, but on the same link, don't hear eachother!
+A: To make this work you must disable ingress filtering on the interfaces. This is done by typing:
+echo "0" > /proc/sys/net/ipv4/conf/eth0/rp_filter
+in a shell. Replace eth0 with the interface you are using. From 0.4.4 this will be done automatically by olsrd.
+
+Q: When using IPv6 I get a Cannot assign requested address error.
+A: Olsrd uses a site-local multicast address for control traffic when using IPv6(since broadcast is not avalible in IPv6). If your interfaces are not configured with a site-local address then you should eiter configure them with a site-local address or use a global multicast address like ff0e::1. The multicast address to use can be set by the IP6MULTI directive in the config file.
+
+Q: I get a bind: Address already in use when trying to run OLSRd on multiple interfaces.
+A: If you are using a 2.6 kernel this will occure in all olsrd versions prior to 0.4.1. Either upgrade olsrd(preferred) or downgrade your kernel.
+
+Q: I change the uolsrd.conf file and nothing happens! Or: olsrd will no linger start when I run the uolsrd command!
+A: From release 0.3.6 the binary is named olsrd and the configfile is named olsrd.conf. You should remove old configfiles!
+
+Q: Does uOLSRd compile for strong-ARM architecture?
+A: Yes.Get this cross-compiler.
+ARM binaries can also be downloaded from the download section.
+
+Q: Can I use uOLSRd in simulators such as NS2?
+A: Not to my knowledge. There is no simulator specific code in uOLSRd.
+
+Q: Does uOLSRd have IPv6 support?
+A: Yes.
+
+Q: What keeps uOLSRd from compiling on, say, FreeBSD?
+A: Various issues prevents this - the main one is that when running on multiple interfaes uOLSRd sets up one socket on each interface to be able to control on what interfaces messages are sent. To do this the flag SO_BINDTODEVICE is set on the socket using the setsockopt(2) call. This flag, or any similar, does not exist in freeBSD.
+uOLSRd will work without SO_BINDTODEVICE if no two OLSR interfaces use tha same broadcastaddress. This is a unacceptable limitation IMO.
+I am going to look into BPF(BSD packet filter) one day - as this seem to might provide the functionallity needed.
+
+UPDATE:
+I have consulted the helpfull folks at the freebsd-net mailinglist, and I think this problem will be solved now! So a FreeBSD port will hopefully happen somwhere in the 0.4 branch.
+
+Q: I get uOLSRd up and running - but the nodes don't seem to "hear" eachother! Have I discovered a bug!?
+A: I would say with 99% certainty that this is a configuration problem. Here are the most common mistakes:
+
+    * If using IPv4 make sure the interfaces(that are supposed to be on the same network) are using a common broadcastaddress!
+    * If using WLAN interfaces make sure the ESSID/key match and that the cards are set in ad-hoc mode!
+    * Make sure you are not blocking UDP/698. If using netfilter run iptables -L as root to see what rules are set. iptables -F flushes all rules.
+
+
+
+Q: I can't get uOLSRd to start.... why oh why??
+A: Some things to check for:
+
+    * You must be root to run uOLSRd.
+    * Interfaces must be preconfigured with IP address and broadcast address for uOLSRd to use them. They must also be set UP and RUNNING(flags). Use the ifconfig tool to configure and check c onfiguration of interfaces.
+    * You must specify on which interface(s) uOLSRd should run(using the -i switch or configfile).
+    * uOLSRd can not run on alias interfaces i.e. interfaces with names containing : like eth0:0.
+
+
+
+Q: The GUI front-end failed to compile... why?
+A: You probably don't have GTK2.0 development libraries installed.
+
+Q: On what platforms does uOLSRd compile?
+A: As of yet uOLSRd compiles on the Linux(>=2.2) platform.
+

@@ -1,0 +1,52 @@
+OBJS =		src/build_msg.o \
+		src/configfile.o \
+		src/duplicate_set.o \
+		src/generate_msg.o \
+		src/hashing.o \
+		src/hna_set.o \
+		src/hysteresis.o \
+		src/interfaces.o \
+		src/ipc_frontend.o \
+		src/link_set.o \
+		src/local_hna_set.o \
+		src/main.o \
+		src/mantissa.o \
+		src/mid_set.o \
+		src/mpr.o \
+		src/mpr_selector_set.o \
+		src/neighbor_table.o \
+		src/net.o \
+		src/olsr.o \
+		src/packet.o \
+		src/parser.o \
+		src/plugin.o \
+		src/plugin_loader.o \
+		src/process_package.o \
+		src/process_routes.o \
+		src/rebuild_packet.o \
+		src/routing_table.o \
+		src/scheduler.o \
+		src/socket_parser.o \
+		src/tc_set.o \
+		src/two_hop_neighbor_table.o \
+		src/win32/apm.o \
+		src/win32/compat.o \
+		src/win32/ifnet.o \
+		src/win32/kernel_routes.o \
+		src/win32/net.o \
+		src/win32/tunnel.o
+
+%.o:		%.c
+		gcc -mno-cygwin -O2 -Wall -c -DWIN32 \
+		-Isrc -Isrc/win32 -o$@ $<
+
+olsrd:		$(OBJS)
+		gcc -mno-cygwin -o olsrd.exe $(OBJS) -lws2_32 -liphlpapi
+
+clean:
+		rm -f olsrd.exe *.dll
+		find . -name \*~ -exec rm -f {} \;
+		find src -name \*.o -exec rm -f {} \;
+
+mclean:		clean
+		rm -f Makefile.win32
