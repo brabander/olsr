@@ -102,7 +102,7 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
        * nextmsg contains size of
        * the addresses + 12 bytes(nextmessage, from address and the header)
        */
-      no_pairs = (ntohs(m->v6.olsr_msgsize) - 12) / 20; /* NB 32 not 8 */
+      no_pairs = (ntohs(m->v6.olsr_msgsize) - 12) / 32; /* NB 32 not 8 */
       
       COPY_IP(&hmsg->originator, &m->v6.originator);
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
@@ -215,7 +215,7 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
       
       if(debug_level > 1)
 	{
-	  olsr_printf(2, "Alias list for %s", ip_to_string(&mmsg->mid_origaddr.v4));
+	  olsr_printf(2, "Alias list for %s: ", ip_to_string(&mmsg->mid_origaddr.v4));
 	  olsr_printf(2, "%s", ip_to_string(&mmsg->addr.v4));
 	  fflush(stdout);
 	  alias_tmp = mmsg->mid_addr;
