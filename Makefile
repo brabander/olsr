@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.52 2005/03/21 02:17:36 tlopatic Exp $
+# $Id: Makefile,v 1.53 2005/03/31 17:04:10 kattemat Exp $
 
 VERS =		0.4.9
 
@@ -63,12 +63,6 @@ CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.
 TAGCMD ?=	etags	
 TAGFILE ?=	src/TAGS
 
-ifndef OS
-all:		help
-else
-all:		cfgparser olsrd
-endif
-
 ifeq ($(OS), Windows_NT)
 OS =		win32
 endif
@@ -82,6 +76,9 @@ CFLAGS ?=	$(CCWARNINGS) -O2 -g #-DDEBUG #-pg #-march=i686
 LIBS =		-lm -ldl #-pg
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) -Y $(INCLUDES) $(SRCS) >/dev/null 2>&1
 
+all:	 cfgparser olsrd
+install: install_olsrd
+
 else
 ifeq ($(OS), fbsd)
 
@@ -90,6 +87,9 @@ HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	$(CCWARNINGS) -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
+
+all:	 cfgparser olsrd
+install: install_olsrd
 
 else
 ifeq ($(OS), fbsd-ll)
@@ -100,6 +100,9 @@ CFLAGS ?=	-Wall -Wmissing-prototypes -O2 -g -DSPOOF -I/usr/local/include
 LIBS =		-lm -L/usr/local/lib -lnet
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
 
+all:     cfgparser olsrd
+install: install_olsrd
+
 else
 ifeq ($(OS), nbsd)
 
@@ -108,6 +111,9 @@ HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	$(CCWARNINGS) -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__NetBSD__ $(INCLUDES) $(SRCS)
+
+all:	 cfgparser olsrd
+install: install_olsrd
 
 else
 ifeq ($(OS), osx)
@@ -119,6 +125,9 @@ CFLAGS ?=	$(CCWARNINGS) -O2 -g
 LIBS =		-lm -ldl
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 
+all:	 cfgparser olsrd
+install: install_olsrd
+
 else
 ifeq ($(OS), win32)
 
@@ -129,6 +138,9 @@ DEFINES =	-DWIN32
 CFLAGS ?=	$(CCWARNINGS) -mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
+
+all:	 cfgparser olsrd
+install: install_olsrd
 
 olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
@@ -206,7 +218,7 @@ MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
 else
 
 all:	help
-
+install:help
 endif
 endif
 endif
@@ -277,7 +289,7 @@ install_bin:
 		mkdir -p $(INSTALL_PREFIX)/usr/sbin
 		install -m 755 olsrd $(INSTALL_PREFIX)/usr/sbin
 
-install:	install_bin
+install_olsrd:	install_bin
 		@echo olsrd uses the configfile $(INSTALL_PREFIX)/etc/olsr.conf
 		@echo a default configfile. A sample configfile
 		@echo can be installed
