@@ -1,5 +1,5 @@
 /*
- * $Id: apm.c,v 1.3 2004/09/21 15:23:25 tlopatic Exp $
+ * $Id: apm.c,v 1.4 2004/09/21 15:30:14 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * Derived from its Linux counterpart.
@@ -61,7 +61,7 @@ int apm_read(struct olsr_apm_info *ApmInfo)
   memset(ApmInfo, 0, sizeof (struct olsr_apm_info));
 
   if (!GetSystemPowerStatus(&PowerStat))
-    return -1;
+    return 0;
 
   ApmInfo->ac_line_status = (PowerStat.ACLineStatus == 1) ?
     OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
@@ -69,5 +69,5 @@ int apm_read(struct olsr_apm_info *ApmInfo)
   ApmInfo->battery_percentage = (PowerStat.BatteryLifePercent <= 100) ?
     PowerStat.BatteryLifePercent : 0;
 
-  return 0;
+  return 1;
 }
