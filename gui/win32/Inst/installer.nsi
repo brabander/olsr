@@ -1,9 +1,30 @@
+;
+; $Id: installer.nsi,v 1.2 2004/09/15 13:38:30 tlopatic Exp $
+; Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
+;
+; This file is part of olsr.org.
+;
+; olsr.org is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version.
+;
+; olsr.org is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with olsr.org; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+
 Name olsr.org
 OutFile olsr-setup.exe
-
+BrandingText "www.olsr.org"
 InstallDir $PROGRAMFILES\olsr.org
-
 LicenseData ..\..\..\gpl.txt
+XPStyle on
 
 Page license
 Page components
@@ -12,6 +33,12 @@ Page instfiles
 
 UninstPage uninstConfirm
 UninstPage instfiles
+
+Function .onInit
+        MessageBox MB_YESNO "This will install olsr.org 0.4.7 on your computer. Continue?" IDYES NoAbort
+        Abort
+NoAbort:
+FunctionEnd
 
 Section "Program Files"
 
