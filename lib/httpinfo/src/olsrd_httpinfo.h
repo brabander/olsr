@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.26 2005/01/02 20:29:38 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.27 2005/01/24 07:55:35 kattemat Exp $
  */
 
 /*
@@ -72,6 +72,7 @@ typedef enum
 struct http_stats
 {
   olsr_u32_t ok_hits;
+  olsr_u32_t dyn_hits;
   olsr_u32_t err_hits;
   olsr_u32_t ill_hits;
 };

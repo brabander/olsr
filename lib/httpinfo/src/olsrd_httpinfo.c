@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.40 2005/01/23 11:08:31 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.41 2005/01/24 07:55:35 kattemat Exp $
  */
 
 /*
@@ -95,6 +95,12 @@ struct static_txt_file_entry
   const char **data;
 };
 
+struct dynamic_file_entry
+{
+  char *filename;
+  int(*process_data_cb)(char *, olsr_u32_t, char *, olsr_u32_t);
+};
+
 static int
 get_http_socket(int);
 
@@ -142,6 +148,9 @@ int
 build_admin_body(char *, olsr_u32_t);
 #endif
 
+int
+process_set_values(char*, olsr_u32_t, char *, olsr_u32_t);
+
 char *
 sockaddr_to_string(struct sockaddr *);
 
@@ -183,6 +192,13 @@ struct static_bin_file_entry static_bin_files[] =
 struct static_txt_file_entry static_txt_files[] =
   {
     {"httpinfo.css", httpinfo_css},
+    {NULL, NULL}
+  };
+
+
+struct dynamic_file_entry dynamic_files[] =
+  {
+    {"set_values", process_set_values},
     {NULL, NULL}
   };
 
@@ -335,14 +351,38 @@ parse_http_request(int fd)
   
   olsr_printf(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
 
-  if(strcmp(req_type, "GET"))
+  if(!strcmp(req_type, "POST"))
     {
+#ifdef INCLUDE_SETTINGS
+      int i = 0;
+      while(dynamic_files[i].filename)
+	{
+	  printf("POST checking %s\n", dynamic_files[i].filename);
+	  if(FILENREQ_MATCH(filename, dynamic_files[i].filename))
+	    {
+	      olsr_u32_t param_size;
+
+	      stats.ok_hits++;
+
+	      param_size = recv(client_sockets[curr_clients], req, MAX_HTTPREQ_SIZE-1, 0);
+
+	      req[param_size] = '\0';
+	      printf("Dynamic read %d bytes\n", param_size);
+	      
+	      //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
+	      size += dynamic_files[i].process_data_cb(req, param_size, &body[size], HTML_BUFSIZE - size);
+	      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);  
+	      goto send_http_data;
+	    }
+	  i++;
+	}
+#endif
       /* We only support GET */
       strcpy(body, HTTP_400_MSG);
       stats.ill_hits++;
       c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
-  else
+  else if(!strcmp(req_type, "GET"))
     {
       int i = 0;
       int y = 0;
@@ -433,6 +473,13 @@ parse_http_request(int fd)
       stats.ill_hits++;
       strcpy(body, HTTP_404_MSG);
       c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
+    }
+  else
+    {
+      /* We only support GET */
+      strcpy(body, HTTP_400_MSG);
+      stats.ill_hits++;
+      c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
 
  send_http_data:
@@ -600,6 +647,18 @@ plugin_io(int cmd, void *data, size_t size)
 }
 
 
+int
+process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsize)
+{
+  int size = 0;
+
+  size += sprintf(buf, "<html>\n<head></head>\n<body>\nDATA:<br>\n%s\n</body>\n</html>\n", data);
+
+  printf("Dynamic Data: %s\n", data);
+  return size;
+}
+
+
 static int
 build_frame(char *title, 
 	    char *link, 
@@ -702,7 +761,7 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     else
       size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
 
-      size += sprintf(&buf[size], "HTTP stats(ok/error/illegal): <i>%d/%d/%d</i>\n", stats.ok_hits, stats.err_hits, stats.ill_hits);
+      size += sprintf(&buf[size], "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
 
     size += sprintf(&buf[size], "<h2>Variables</h2>\n");
 
