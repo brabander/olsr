@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.28 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: scheduler.c,v 1.29 2005/03/23 22:41:45 tlopatic Exp $
  */
 
 
@@ -52,6 +52,10 @@
 #include "olsr.h"
 #include "build_msg.h"
 
+#if defined WIN32
+extern olsr_bool olsr_win32_end_request;
+extern olsr_bool olsr_win32_end_flag;
+#endif
 
 static float pollrate;
 
@@ -224,8 +228,27 @@ scheduler()
 	  while(nanosleep(&sleeptime_spec, &remainder_spec) < 0)
 	    sleeptime_spec = remainder_spec;
 	}
+
+#if defined WIN32
+      // the Ctrl-C signal handler thread asks us to exit
+
+      if (olsr_win32_end_request)
+        break;
+#endif
       
     }//end for
+
+#if defined WIN32
+  // tell the Ctrl-C signal handler thread that we have exited
+
+  olsr_win32_end_flag = TRUE;
+
+  // the Ctrl-C signal handler thread will exit the process and
+  // hence also kill us
+  
+  while (1)
+    Sleep(1000);
+#endif
 }
 
 

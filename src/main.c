@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.70 2005/03/21 02:17:36 tlopatic Exp $
+ * $Id: main.c,v 1.71 2005/03/23 22:41:26 tlopatic Exp $
  */
 
 #include <unistd.h>
@@ -60,6 +60,8 @@
 int __stdcall SignalHandler(unsigned long signal);
 void ListInterfaces(void);
 void DisableIcmpRedirects(void);
+olsr_bool olsr_win32_end_request = OLSR_FALSE;
+olsr_bool olsr_win32_end_flag = OLSR_FALSE;
 #else
 static void
 olsr_shutdown(int);
@@ -436,7 +438,18 @@ olsr_shutdown(int signal)
 {
   struct interface *ifn;
 
-  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signal)
+  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signal);
+
+#ifdef WIN32
+  OLSR_PRINTF(1, "Waiting for the scheduler to stop.\n");
+
+  olsr_win32_end_request = TRUE;
+
+  while (!olsr_win32_end_flag)
+    Sleep(100);
+
+  OLSR_PRINTF(1, "Scheduler stopped.\n");
+#endif
 
   olsr_delete_all_kernel_routes();
 
