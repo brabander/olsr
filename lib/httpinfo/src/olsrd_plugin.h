@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.9 2005/01/05 20:39:50 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.10 2005/01/16 20:17:24 kattemat Exp $
  */
 
 /*
@@ -49,6 +49,7 @@
 
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/times.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <time.h>
@@ -166,7 +167,7 @@ struct allowed_net    *allowed_nets;
 struct neighbor_2_list_entry 
 {
   struct neighbor_2_entry      *neighbor_2;
-  struct timeval	       neighbor_2_timer;
+  clock_t       	       neighbor_2_timer;
   struct neighbor_2_list_entry *next;
   struct neighbor_2_list_entry *prev;
 };
@@ -210,15 +211,13 @@ struct neighbor_2_entry
   struct neighbor_2_entry    *next;
 };
 
-
-/* Link entry */
 struct link_entry
 {
   union olsr_ip_addr local_iface_addr;
   union olsr_ip_addr neighbor_iface_addr;
-  struct timeval SYM_time;
-  struct timeval ASYM_time;
-  struct timeval time;
+  clock_t SYM_time;
+  clock_t ASYM_time;
+  clock_t time;
   struct neighbor_entry *neighbor;
 
   /*
@@ -226,8 +225,8 @@ struct link_entry
    */
   float L_link_quality;
   int L_link_pending;
-  struct timeval L_LOST_LINK_time;
-  struct timeval hello_timeout; /* When we should receive a new HELLO */
+  clock_t L_LOST_LINK_time;
+  clock_t hello_timeout; /* When we should receive a new HELLO */
   double last_htime;
   olsr_u16_t olsr_seqno;
   olsr_bool olsr_seqno_valid;
@@ -237,7 +236,7 @@ struct link_entry
    */
 
   double loss_hello_int;
-  struct timeval loss_timeout;
+  clock_t loss_timeout;
 
   olsr_u16_t loss_seqno;
   int loss_seqno_valid;
@@ -267,19 +266,20 @@ struct link_entry
 };
 
 
+
 /* Topology entry */
 
 struct topo_dst
 {
   union olsr_ip_addr T_dest_addr;
-  struct timeval T_time;
-  olsr_u16_t T_seq;
-  struct topo_dst *next;
-  struct topo_dst *prev;
-  double link_quality;
-  double inverse_link_quality;
-  double saved_link_quality;
-  double saved_inverse_link_quality;
+  clock_t            T_time;
+  olsr_u16_t         T_seq;
+  struct topo_dst   *next;
+  struct topo_dst   *prev;
+  double             link_quality;
+  double             inverse_link_quality;
+  double             saved_link_quality;
+  double             saved_inverse_link_quality;
 };
 
 struct tc_entry
@@ -298,7 +298,7 @@ struct hna_net
 {
   union olsr_ip_addr A_network_addr;
   union hna_netmask  A_netmask;
-  struct timeval     A_time;
+  clock_t            A_time;
   struct hna_net     *next;
   struct hna_net     *prev;
 };
@@ -324,10 +324,10 @@ struct addresses
 struct mid_entry
 {
   union olsr_ip_addr main_addr;
-  struct addresses *aliases;
-  struct mid_entry *prev;
-  struct mid_entry *next;
-  struct timeval ass_timer;  
+  struct addresses  *aliases;
+  struct mid_entry  *prev;
+  struct mid_entry  *next;
+  clock_t            ass_timer;  
 };
 
 /* Routing table */
@@ -364,8 +364,8 @@ char ipv6_buf[100]; /* buffer for IPv6 inet_htop */
 
 struct mpr_selector
 {
-  union olsr_ip_addr MS_main_addr;
-  struct timeval MS_time;
+  union olsr_ip_addr  MS_main_addr;
+  clock_t             MS_time;
   struct mpr_selector *next;
   struct mpr_selector *prev;
 };
