@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.41 2004/11/17 19:24:01 kattemat Exp $
+ * $Id: main.c,v 1.42 2004/11/20 21:42:34 kattemat Exp $
  *
  */
 
@@ -52,6 +52,8 @@ olsr_shutdown(int);
 /*
  * Local function prototypes
  */
+void
+olsr_reconfigure(int);
 
 static void
 print_usage(void);
@@ -62,6 +64,7 @@ set_default_values(void);
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
+static char **olsr_argv;
 
 /**
  * Main entrypoint
@@ -79,6 +82,8 @@ main(int argc, char *argv[])
   struct stat statbuf;
   char conf_file_name[FILENAME_MAX];
   
+  olsr_argv = argv;
+
 #ifdef WIN32
   WSADATA WsaData;
   int len;
@@ -433,6 +438,13 @@ main(int argc, char *argv[])
     }
 
 
+  /* Sanity check configuration */
+  if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
+    {
+      fprintf(stderr, "Bad configuration!\n");
+      olsr_exit(__func__, EXIT_FAILURE);      
+    }
+
   /*
    *Interfaces need to be specified
    */
@@ -603,6 +615,7 @@ main(int argc, char *argv[])
 #ifdef WIN32
   SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
 #else
+  signal(SIGHUP, olsr_reconfigure);  
   signal(SIGINT, olsr_shutdown);  
   signal(SIGTERM, olsr_shutdown);  
 #endif
@@ -620,7 +633,26 @@ main(int argc, char *argv[])
 
 
 
+/**
+ * Reconfigure olsrd. Currently kind of a hack...
+ *
+ */
+#ifndef WIN32
+void
+olsr_reconfigure(int signal)
+{
+  if(!fork())
+    {
+      /* New process */
+      sleep(3);
+      printf("Restarting %s\n", olsr_argv[0]);
+      execv(olsr_argv[0], olsr_argv);
+    }
+  olsr_shutdown(0);
 
+  printf("RECONFIGURING!\n");
+}
+#endif
 
 
 /**

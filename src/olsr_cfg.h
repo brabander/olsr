@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.12 2004/11/20 18:46:03 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.13 2004/11/20 21:42:35 kattemat Exp $
  *
  */
 
@@ -108,7 +108,6 @@ struct if_config_options
   struct olsr_msg_params   tc_params;
   struct olsr_msg_params   mid_params;
   struct olsr_msg_params   hna_params;
-  struct if_config_options *next;
 };
 
 
@@ -210,6 +209,9 @@ struct olsrd_config
 
 struct olsrd_config *
 olsrd_parse_cnf(char *);
+
+int
+olsrd_sanity_check_cnf(struct olsrd_config *);
 
 void
 olsrd_free_cnf(struct olsrd_config *);

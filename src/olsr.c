@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.25 2004/11/20 17:27:07 tlopatic Exp $
+ * $Id: olsr.c,v 1.26 2004/11/20 21:42:35 kattemat Exp $
  *
  */
 
@@ -169,10 +169,10 @@ olsr_process_changes()
     return;
 
   if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
-    {
+  {
       clear_console();
       printf("<<<< %s (%s) >>>>\n", SOFTWARE_VERSION, __DATE__);
-    }
+  }
 
   if (changes_neighborhood)
     {

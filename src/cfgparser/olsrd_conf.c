@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.20 2004/11/20 17:37:25 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.21 2004/11/20 21:42:35 kattemat Exp $
  *
  */
 
@@ -171,6 +171,148 @@ olsrd_parse_cnf(char *filename)
 }
 
 
+int
+olsrd_sanity_check_cnf(struct olsrd_config *cnf)
+{
+  struct olsr_if           *in = cnf->interfaces;
+  struct if_config_options *io;
+
+  /* Debug level */
+  if(cnf->debug_level < MIN_DEBUGLVL ||
+     cnf->debug_level > MAX_DEBUGLVL)
+    {
+      fprintf(stderr, "Debuglevel %d is not allowed\n", cnf->debug_level);
+      return -1;
+    }
+
+  /* TOS */
+  if(//cnf->tos < MIN_TOS ||
+     cnf->tos > MAX_TOS)
+    {
+      fprintf(stderr, "TOS %d is not allowed\n", cnf->tos);
+      return -1;
+    }
+
+  if(cnf->willingness_auto == OLSR_FALSE &&
+     (cnf->willingness < MIN_WILLINGNESS ||
+      cnf->willingness > MAX_WILLINGNESS))
+    {
+      fprintf(stderr, "willingness %d is not allowed\n", cnf->willingness);
+      return -1;
+    }
+
+  /* Hysteresis */
+
+  if(cnf->hysteresis_param.scaling < MIN_HYST_PARAM ||
+     cnf->hysteresis_param.scaling > MAX_HYST_PARAM)
+    {
+      fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
+      return -1;
+    }
+
+  if(cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low)
+    {
+      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
+      return -1;
+    }
+
+  if(cnf->hysteresis_param.thr_high < MIN_HYST_PARAM ||
+     cnf->hysteresis_param.thr_high > MAX_HYST_PARAM)
+    {
+      fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
+      return -1;
+    }
+
+  if(cnf->hysteresis_param.thr_low < MIN_HYST_PARAM ||
+     cnf->hysteresis_param.thr_low > MAX_HYST_PARAM)
+    {
+      fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
+      return -1;
+    }
+
+
+  /* Pollrate */
+
+  if(cnf->pollrate < MIN_POLLRATE ||
+     cnf->pollrate > MAX_POLLRATE)
+    {
+      fprintf(stderr, "Pollrate %0.2f is not allowed\n", cnf->pollrate);
+      return -1;
+    }
+
+  /* TC redundancy */
+
+  if(//cnf->tc_redundancy < MIN_TC_REDUNDANCY ||
+     cnf->tc_redundancy > MAX_TC_REDUNDANCY)
+    {
+      fprintf(stderr, "TC redundancy %d is not allowed\n", cnf->tc_redundancy);
+      return -1;
+    }
+
+  /* MPR coverage */
+  if(cnf->mpr_coverage < MIN_MPR_COVERAGE ||
+     cnf->mpr_coverage > MAX_MPR_COVERAGE)
+    {
+      fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
+      return -1;
+    }
+
+  /* Interfaces */
+  while(in)
+    {
+      io = in->cnf;
+
+      if(in->name == NULL || !strlen(in->name))
+	{
+	  fprintf(stderr, "Interface has no name!\n");
+	  return -1;
+	}
+
+      if(io == NULL)
+	{
+	  fprintf(stderr, "Interface %s has no configuration!\n", in->name);
+	  return -1;
+	}
+
+      /* HELLO interval */
+      if(io->hello_params.emission_interval < cnf->pollrate ||
+	 io->hello_params.emission_interval > io->hello_params.validity_time)
+	{
+	  fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval, io->hello_params.validity_time);
+	  return -1;
+	}
+
+      /* TC interval */
+      if(io->tc_params.emission_interval < cnf->pollrate ||
+	 io->tc_params.emission_interval > io->tc_params.validity_time)
+	{
+	  fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f)\n", io->tc_params.emission_interval, io->tc_params.validity_time);
+	  return -1;
+	}
+
+      /* MID interval */
+      if(io->mid_params.emission_interval < cnf->pollrate ||
+	 io->mid_params.emission_interval > io->mid_params.validity_time)
+	{
+	  fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval, io->mid_params.validity_time);
+	  return -1;
+	}
+
+      /* HNA interval */
+      if(io->hna_params.emission_interval < cnf->pollrate ||
+	 io->hna_params.emission_interval > io->hna_params.validity_time)
+	{
+	  fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n", io->hna_params.emission_interval, io->hna_params.validity_time);
+	  return -1;
+	}
+
+      in = in->next;
+    }
+
+  return 0;
+}
+
+
 void
 olsrd_free_cnf(struct olsrd_config *cnf)
 {
@@ -178,7 +320,6 @@ olsrd_free_cnf(struct olsrd_config *cnf)
   struct hna6_entry        *h6d, *h6 = cnf->hna6_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
-  struct if_config_options *iod, *io;
   
   while(h4)
     {
@@ -196,13 +337,7 @@ olsrd_free_cnf(struct olsrd_config *cnf)
 
   while(in)
     {
-      io = in->cnf;
-      while(io)
-	{
-	  iod = io;
-	  io = io->next;
-	  free(iod);
-	}
+      free(in->cnf);
       ind = in;
       in = in->next;
       free(ind->name);

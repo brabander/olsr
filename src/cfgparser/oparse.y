@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.17 2004/11/20 18:46:03 kattemat Exp $
+ * $Id: oparse.y,v 1.18 2004/11/20 21:42:35 kattemat Exp $
  *
  */
 
@@ -343,11 +343,6 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 isethelloint: TOK_HELLOINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->hello_params.emission_interval = $2->floating;
     free($2);
 }
@@ -355,11 +350,6 @@ isethelloint: TOK_HELLOINT TOK_FLOAT
 isethelloval: TOK_HELLOVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->hello_params.validity_time = $2->floating;
     free($2);
 }
@@ -367,11 +357,6 @@ isethelloval: TOK_HELLOVAL TOK_FLOAT
 isettcint: TOK_TCINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->tc_params.emission_interval = $2->floating;
     free($2);
 }
@@ -379,11 +364,6 @@ isettcint: TOK_TCINT TOK_FLOAT
 isettcval: TOK_TCVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->tc_params.validity_time = $2->floating;
     free($2);
 }
@@ -391,11 +371,6 @@ isettcval: TOK_TCVAL TOK_FLOAT
 isetmidint: TOK_MIDINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->mid_params.emission_interval = $2->floating;
     free($2);
 }
@@ -403,11 +378,6 @@ isetmidint: TOK_MIDINT TOK_FLOAT
 isetmidval: TOK_MIDVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->mid_params.validity_time = $2->floating;
     free($2);
 }
@@ -415,11 +385,6 @@ isetmidval: TOK_MIDVAL TOK_FLOAT
 isethnaint: TOK_HNAINT TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->hna_params.emission_interval = $2->floating;
     free($2);
 }
@@ -427,11 +392,6 @@ isethnaint: TOK_HNAINT TOK_FLOAT
 isethnaval: TOK_HNAVAL TOK_FLOAT
 {
     if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", $2->floating);
-    if($2->floating < MIN_INTERVAL)
-      {
-	fprintf(stderr, "%0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
     cnf->interfaces->cnf->hna_params.validity_time = $2->floating;
     free($2);
 }
@@ -443,13 +403,6 @@ idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 
   cnf->debug_level = $2->integer;
   if(PARSER_DEBUG) printf("Debug level: %d\n", cnf->debug_level);
-    if($2->integer < MIN_DEBUGLVL ||
-       $2->integer > MAX_DEBUGLVL)
-      {
-	fprintf(stderr, "Debuglevel %d is not allowed\n", $2->integer);
-	exit(EXIT_FAILURE);
-      }
-
   free($2);
 }
 ;
@@ -586,13 +539,6 @@ bnoint: TOK_NOINT TOK_BOOLEAN
 atos: TOK_TOS TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("TOS: %d\n", $2->integer);
-    if($2->integer < MIN_TOS ||
-       $2->integer > MAX_TOS)
-      {
-	fprintf(stderr, "%d is not allowed\n", $2->integer);
-	exit(EXIT_FAILURE);
-      }
-
   cnf->tos = $2->integer;
 
   free($2);
@@ -605,12 +551,6 @@ awillingness: TOK_WILLINGNESS TOK_INTEGER
   cnf->willingness_auto = OLSR_FALSE;
 
   if(PARSER_DEBUG) printf("Willingness: %d\n", $2->integer);
-    if($2->integer < MIN_WILLINGNESS ||
-       $2->integer > MAX_WILLINGNESS)
-      {
-	fprintf(stderr, "willingness %d is not allowed\n", $2->integer);
-	exit(EXIT_FAILURE);
-      }
   cnf->willingness = $2->integer;
 
   free($2);
@@ -641,13 +581,6 @@ fhystscale: TOK_HYSTSCALE TOK_FLOAT
 {
   cnf->hysteresis_param.scaling = $2->floating;
   if(PARSER_DEBUG) printf("Hysteresis Scaling: %0.2f\n", $2->floating);
-    if($2->floating < MIN_HYST_PARAM ||
-       $2->floating > MAX_HYST_PARAM)
-      {
-	fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
-
   free($2);
 }
 ;
@@ -657,12 +590,6 @@ fhystupper: TOK_HYSTUPPER TOK_FLOAT
 {
   cnf->hysteresis_param.thr_high = $2->floating;
   if(PARSER_DEBUG) printf("Hysteresis UpperThr: %0.2f\n", $2->floating);
-    if($2->floating < MIN_HYST_PARAM ||
-       $2->floating > MAX_HYST_PARAM)
-      {
-	fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
   free($2);
 }
 ;
@@ -672,12 +599,6 @@ fhystlower: TOK_HYSTLOWER TOK_FLOAT
 {
   cnf->hysteresis_param.thr_low = $2->floating;
   if(PARSER_DEBUG) printf("Hysteresis LowerThr: %0.2f\n", $2->floating);
-    if($2->floating < MIN_HYST_PARAM ||
-       $2->floating > MAX_HYST_PARAM)
-      {
-	fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
   free($2);
 }
 ;
@@ -685,12 +606,6 @@ fhystlower: TOK_HYSTLOWER TOK_FLOAT
 fpollrate: TOK_POLLRATE TOK_FLOAT
 {
   if(PARSER_DEBUG) printf("Pollrate %0.2f\n", $2->floating);
-    if($2->floating < MIN_POLLRATE ||
-       $2->floating > MAX_POLLRATE)
-      {
-	fprintf(stderr, "Pollrate %0.2f is not allowed\n", $2->floating);
-	exit(EXIT_FAILURE);
-      }
   cnf->pollrate = $2->floating;
 
   free($2);
@@ -701,32 +616,15 @@ fpollrate: TOK_POLLRATE TOK_FLOAT
 atcredundancy: TOK_TCREDUNDANCY TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("TC redundancy %d\n", $2->integer);
-  if($2->integer < MIN_TC_REDUNDANCY ||
-     $2->integer > MAX_TC_REDUNDANCY)
-    {
-      fprintf(stderr, "TC redundancy %d is not allowed\n", $2->integer);
-      exit(EXIT_FAILURE);
-    }
-
   cnf->tc_redundancy = $2->integer;
-
   free($2);
-
 }
 ;
 
 amprcoverage: TOK_MPRCOVERAGE TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("MPR coverage %d\n", $2->integer);
-    if($2->integer < MIN_MPR_COVERAGE ||
-       $2->integer > MAX_MPR_COVERAGE)
-      {
-	fprintf(stderr, "MPR coverage %d is not allowed\n", $2->integer);
-	exit(EXIT_FAILURE);
-      }
-
   cnf->mpr_coverage = $2->integer;
-
   free($2);
 }
 ;
@@ -735,7 +633,6 @@ alq_level: TOK_LQ_LEVEL TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("Link quality level %d\n", $2->integer);
   cnf->lq_level = $2->integer;
-
   free($2);
 }
 ;
@@ -744,7 +641,6 @@ alq_wsize: TOK_LQ_WSIZE TOK_INTEGER
 {
   if(PARSER_DEBUG) printf("Link quality window size %d\n", $2->integer);
   cnf->lq_wsize = $2->integer;
-
   free($2);
 }
 ;
