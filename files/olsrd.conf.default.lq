@@ -6,14 +6,23 @@
 # This file was shipped with olsrd 0.X.X
 #
 
+# This file is an example of a typical
+# configuration for a mostly static
+# network(regarding mobility) using
+# the LQ extention
+
 # Debug level(0-9)
 # If set to 0 the daemon runs in the background
 
-DebugLevel	1
+DebugLevel	2
 
 # IP version to use (4 or 6)
 
 IpVersion	4
+
+# Clear the screen each time the internal state changes
+
+ClearScreen     yes
 
 # HNA IPv4 routes
 # syntax: netaddr netmask
@@ -90,7 +99,7 @@ IpcConnect
 # link sensing but delays neighbor registration.
 # Used by default. 'yes' or 'no'
 
-UseHysteresis	yes
+UseHysteresis	no
 
 # Hysteresis parameters
 # Do not alter these unless you know 
@@ -112,12 +121,12 @@ UseHysteresis	yes
 # 2 = use link quality for MPR selection and routing
 # Defaults to 0
 
-#LinkQualityLevel	0
+LinkQualityLevel	2
 
 # Link quality window size
 # Defaults to 10
 
-#LinkQualityWinSize	10
+LinkQualityWinSize	10
 
 # Polling rate in seconds(float). 
 # Default value 0.05 sec
@@ -135,7 +144,7 @@ Pollrate	0.05
 #
 # defaults to 0
 
-#TcRedundancy	0
+TcRedundancy	2
 
 
 #
@@ -147,7 +156,7 @@ Pollrate	0.05
 #
 # defaults to 1
 
-#MprCoverage	1
+MprCoverage	3
 
 
 # Olsrd plugins to load
@@ -227,28 +236,28 @@ Interface "XXX" "YYY"
     # be used in most cases.
 
     # Hello interval in seconds(float)
-    # HelloInterval    2.0
+    HelloInterval    2.0
 
     # HELLO validity time
-    # HelloValidityTime	6.0
+    HelloValidityTime	20.0
 
     # TC interval in seconds(float)
-    # TcInterval        5.0
+    TcInterval        5.0
 
     # TC validity time
-    # TcValidityTime	15.0
+    TcValidityTime	30.0
 
     # MID interval in seconds(float)
-    # MidInterval	5.0
+    MidInterval	5.0
 
     # MID validity time
-    # MidValidityTime	15.0
+    MidValidityTime	30.0
 
     # HNA interval in seconds(float)
-    # HnaInterval	5.0
+    HnaInterval	5.0
 
     # HNA validity time
-    # HnaValidityTime 	15.0
+    HnaValidityTime 	30.0
 
     # When multiple links exist between hosts
     # the weight of interface is used to determine
