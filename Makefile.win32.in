@@ -1,6 +1,6 @@
 VERS =		0.4.7
 
-OBJS =		src/build_msg.o \
+MAINOBJS =	src/build_msg.o \
 		src/configfile.o \
 		src/duplicate_set.o \
 		src/generate_msg.o \
@@ -42,7 +42,18 @@ OBJS =		src/build_msg.o \
 		src/win32/net.o \
 		src/win32/tunnel.o
 
-all:		olsrd.exe
+CONFDLLOBJS =	src/win32/olsrconf.def \
+		src/cfgparser/oparse.o \
+		src/cfgparser/oscan.o \
+		src/cfgparser/confdll-olsrd_conf.o \
+		src/win32/compat.o
+
+CONFEXEOBJS =	src/cfgparser/oparse.o \
+		src/cfgparser/oscan.o \
+		src/cfgparser/confexe-olsrd_conf.o \
+		src/win32/compat.o
+
+all:		olsrd.exe olsrconf.dll olsrconf.exe
 
 src/cfgparser/oscan.c:	src/cfgparser/oscan.lex \
 		src/cfgparser/oparse.h src/cfgparser/olsrd_conf.h
@@ -55,11 +66,25 @@ src/cfgparser/oparse.c:	src/cfgparser/oparse.y src/cfgparser/olsrd_conf.h
 		gcc -mno-cygwin -O2 -Wall -c -DWIN32 \
 		-Isrc -Isrc/win32 -o$@ $<
 
-olsrd.exe:	$(OBJS)
-		gcc -mno-cygwin -o olsrd.exe $(OBJS) -lws2_32 -liphlpapi
+confdll-%.o:	%.c
+		gcc -mno-cygwin -O2 -Wall -c -DWIN32 -DMAKELIB \
+		-Isrc -Isrc/win32 -o$@ $<
+
+confexe-%.o:	%.c
+		gcc -mno-cygwin -O2 -Wall -c -DWIN32 -DMAKEBIN \
+		-Isrc -Isrc/win32 -o$@ $<
+
+olsrd.exe:	$(MAINOBJS)
+		gcc -mno-cygwin -o olsrd.exe $(MAINOBJS) -lws2_32 -liphlpapi
+
+olsrconf.dll:	$(CONFDLLOBJS)
+		gcc -mno-cygwin -shared -o olsrconf.dll $(CONFDLLOBJS) -lws2_32
+
+olsrconf.exe:	$(CONFEXEOBJS)
+		gcc -mno-cygwin -o olsrconf.exe $(CONFEXEOBJS) -lws2_32
 
 clean:
-		rm -f olsrd.exe olsr-${VERS}.zip olsr-${VERS}-setup.exe *.dll
+		rm -f *.exe *.dll olsr-${VERS}.zip
 		find . -name \*~ -exec rm -f {} \;
 		find src -name \*.o -exec rm -f {} \;
 
