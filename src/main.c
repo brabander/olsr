@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.49 2004/12/04 17:31:33 kattemat Exp $
+ * $Id: main.c,v 1.50 2004/12/05 13:21:01 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -461,7 +461,6 @@ main(int argc, char *argv[])
   /* Sanity check configuration */
   if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
     {
-      print_usage();
       fprintf(stderr, "Bad configuration!\n");
       olsr_exit(__func__, EXIT_FAILURE);      
     }

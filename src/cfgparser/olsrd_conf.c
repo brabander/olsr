@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.29 2004/12/05 12:04:42 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.30 2004/12/05 13:21:02 kattemat Exp $
  */
 
 
@@ -283,6 +283,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
      cnf->mpr_coverage > MAX_MPR_COVERAGE)
     {
       fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
+      return -1;
+    }
+
+  /* Link Q and hysteresis cannot be activated at the same time */
+  if(cnf->use_hysteresis == OLSR_TRUE && cnf->lq_level)
+    {
+      fprintf(stderr, "Hysteresis and LinkQuality cannot both be active! Deactivate one of them.\n");
       return -1;
     }
 
