@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.12 2004/11/05 11:52:57 kattemat Exp $
+ * $Id: oparse.y,v 1.13 2004/11/06 00:08:26 kattemat Exp $
  *
  */
 
@@ -131,13 +131,21 @@ block:      TOK_HNA4 hna4body
 hna4body:       TOK_OPEN hna4stmts TOK_CLOSE
 ;
 
-hna4stmts: | hna4stmts ihna4entry
+hna4stmts: | hna4stmts hna4stmt
+;
+
+hna4stmt:  vcomment
+         | ihna4entry
 ;
 
 hna6body:       TOK_OPEN hna6stmts TOK_CLOSE
 ;
 
-hna6stmts: | hna6stmts ihna6entry
+hna6stmts: | hna6stmts hna6stmt
+;
+
+hna6stmt:  vcomment
+         | ihna6entry
 ;
 
 ifbody:     TOK_OPEN ifstmts TOK_CLOSE
