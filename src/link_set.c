@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.43 2005/01/31 19:57:10 kattemat Exp $
+ * $Id: link_set.c,v 1.44 2005/02/12 10:59:38 kattemat Exp $
  */
 
 
@@ -229,38 +229,42 @@ get_neighbor_nexthop(union olsr_ip_addr *address)
   union olsr_ip_addr *main_addr;
   struct interface   *ifs;
 
-  //printf("GET_NEIGHBOR_NEXTHOP\n");
+  /* First try to find a direct link */
+  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
+    {
+      struct link_entry  *link;
+      if((link = lookup_link_entry(address, &ifs->ip_addr)) != NULL)
+	{
+	  if(lookup_link_status(link) == SYM_LINK)
+	    return address;
+	}
+    }
 
   /* Find main address */
   if(!(main_addr = mid_lookup_main_addr(address)))
     main_addr = address;
-
-  //printf("\tmain: %s\n", olsr_ip_to_string(main_addr));
-
-  /* Loop trough local interfaces to check all possebilities */
+  
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
       struct mid_address *aliases;
       struct link_entry  *link;
-      //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
-      //printf("%s : ", olsr_ip_to_string(main_addr)); 
-      if((link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
+
+      /* Try main address */
+      if((!COMP_IP(main_addr, address)) &&
+	 (link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
 	{
-	  //printf("%d\n", lookup_link_status(link));
 	  if(lookup_link_status(link) == SYM_LINK)
 	    return main_addr;
 	}
-      /* Get aliases */
+      
+      /* Try aliases */
       for(aliases = mid_lookup_aliases(main_addr);
 	  aliases != NULL;
 	  aliases = aliases->next_alias)
 	{
-	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
-	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
-	  if((link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
+	  if((!COMP_IP(&aliases->alias, address)) &&
+	     (link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
 	    {
-	      //printf("%d\n", lookup_link_status(link));
-
 	      if(lookup_link_status(link) == SYM_LINK)
 		return &aliases->alias;
 	    }
