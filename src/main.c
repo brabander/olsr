@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.48 2004/12/03 20:57:15 kattemat Exp $
+ * $Id: main.c,v 1.49 2004/12/04 17:31:33 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -439,7 +439,7 @@ main(int argc, char *argv[])
 
 
       /*
-       * Should we display the contents of packages beeing sent?
+       * Delete possible default GWs
        */
       if (strcmp(*argv, "-delgw") == 0) 
 	{
@@ -525,9 +525,7 @@ main(int argc, char *argv[])
 	}
     }
 
-  /**
-   *Set ipsize and minimum packetsize
-   */
+  /* Set ipsize and minimum packetsize */
   if(olsr_cnf->ip_version == AF_INET6)
     {
       olsr_printf(1, "Using IP version 6\n");
@@ -600,9 +598,7 @@ main(int argc, char *argv[])
     }
 #endif
 
-  /*
-   * Start syslog entry
-   */
+  /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
 
   /*
@@ -637,6 +633,7 @@ main(int argc, char *argv[])
 /**
  * Reconfigure olsrd. Currently kind of a hack...
  *
+ *@param signal the signal that triggered this callback
  */
 #ifndef WIN32
 void
@@ -657,8 +654,9 @@ olsr_reconfigure(int signal)
 
 
 /**
- *Function called at shutdown
+ *Function called at shutdown. Signal handler
  *
+ * @param signal the signal that triggered this call
  */
 #ifdef WIN32
 int __stdcall
@@ -711,6 +709,7 @@ olsr_shutdown(int signal)
 
 /**
  *Sets the default values of variables at startup
+ *
  */
 static void
 set_default_values()
@@ -739,7 +738,9 @@ set_default_values()
 
 
 
-
+/**
+ * Print the command line usage
+ */
 static void
 print_usage()
 {
@@ -758,6 +759,9 @@ print_usage()
 /**
  * Sets the provided configuration on all unconfigured
  * interfaces
+ *
+ * @param ifs a linked list of interfaces to check and possible update
+ * @param cnf the default configuration to set on unconfigured interfaces
  */
 int
 set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
