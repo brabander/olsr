@@ -30,6 +30,31 @@
 #include "olsr.h"
 #include "link_set.h"
 
+
+/* Begin:
+ * Prototypes for internal functions 
+ */
+
+static void
+olsr_free_routing_table(struct rt_entry *);
+
+static int
+olsr_fill_routing_table_with_neighbors();
+
+static struct destination_n *
+olsr_fill_routing_table_with_two_hop_neighbors();
+
+static struct rt_entry *
+olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+
+static struct rt_entry *
+olsr_lookup_routing_table(union olsr_ip_addr *);
+
+/* End:
+ * Prototypes for internal functions 
+ */
+
+
 /**
  *Initialize the routing table
  */
@@ -63,7 +88,7 @@ olsr_init_routing_table()
  *@return a pointer to a rt_entry struct 
  *representing the route entry.
  */
-struct rt_entry *
+static struct rt_entry *
 olsr_lookup_routing_table(union olsr_ip_addr *dst)
 {
 
@@ -95,7 +120,7 @@ olsr_lookup_routing_table(union olsr_ip_addr *dst)
  *
  *@return nada
  */
-void
+static void
 olsr_free_routing_table(struct rt_entry *table)
 {
   struct rt_entry *destination;
@@ -185,7 +210,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, union olsr_ip_addr *router, i
  *
  *@return a pointer to a destination_n linked-list of the neighbors.
  */
-int
+static int
 olsr_fill_routing_table_with_neighbors()
 {
   olsr_u8_t              index;
@@ -243,7 +268,7 @@ olsr_fill_routing_table_with_neighbors()
  *@return a pointer to a destination_n linked-list of the neighbors.
  */
 
-struct destination_n *
+static struct destination_n *
 olsr_fill_routing_table_with_two_hop_neighbors()
 {
   struct destination_n         *list_destination_n=NULL;
@@ -480,7 +505,7 @@ olsr_calculate_routing_table()
  *
  *@return the localted entry if found. NULL if not
  */
-struct rt_entry *
+static struct rt_entry *
 olsr_check_for_higher_hopcount(struct rt_entry *routes, struct hna_net *net, olsr_u16_t metric)
 {
   int index;

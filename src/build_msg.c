@@ -26,8 +26,48 @@
 #include "local_hna_set.h"
 #include "olsr.h"
 
+
+/* Begin:
+ * Prototypes for internal functions 
+ */
+
+/* IPv4 */
+
+static void
+hello_build4(struct hello_message *, struct interface *);
+
+static void
+tc_build4(struct tc_message *, struct interface *);
+
+static int
+mid_build4(struct interface *);
+
+static void
+hna_build4(struct interface *);
+
+/* IPv6 */
+
+static void
+hello_build6(struct hello_message *, struct interface *);
+
+static void
+tc_build6(struct tc_message *, struct interface *);
+
+static int
+mid_build6(struct interface *);
+
+static void
+hna_build6(struct interface *);
+
+/* End:
+ * Prototypes for internal functions 
+ */
+
+
+
 /*
  * Generic calls
+ * These are the functions to call from outside
  */
 
 
@@ -169,7 +209,7 @@ hna_build(struct interface *ifp)
  *@return nada
  */
 
-void
+static void
 hello_build4(struct hello_message *message, struct interface *ifp)
 {
   int remainsize;
@@ -425,7 +465,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
  */
 
 
-void
+static void
 hello_build6(struct hello_message *message, struct interface *ifp)
 {
   int remainsize;
@@ -672,7 +712,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
  *@return nada
  */
 
-void
+static void
 tc_build4(struct tc_message *message, struct interface *ifp)           
 {
 
@@ -828,7 +868,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
  *@return nada
  */
 
-void
+static void
 tc_build6(struct tc_message *message, struct interface *ifp)           
 {
 
@@ -1145,7 +1185,7 @@ mid_build6(struct interface *ifn)
  *@param ifp the interface to send on
  *@return nada
  */
-void
+static void
 hna_build4(struct interface *ifp)
 {
   int remainsize;
@@ -1206,7 +1246,7 @@ hna_build4(struct interface *ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-void
+static void
 hna_build6(struct interface *ifp)
 {
   int remainsize;

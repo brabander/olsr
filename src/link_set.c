@@ -34,6 +34,34 @@
 
 #include "link_layer.h"
 
+
+
+/* Begin:
+ * Prototypes for internal functions 
+ */
+
+static int
+check_link_status(struct hello_message *);
+
+static void
+olsr_time_out_hysteresis();
+
+static struct link_entry *
+add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
+
+static void
+olsr_time_out_link_set();
+
+static int
+get_neighbor_status(union olsr_ip_addr *);
+
+
+/* End:
+ * Prototypes for internal functions 
+ */
+
+
+
 void
 olsr_init_link_set()
 {
@@ -122,7 +150,7 @@ lookup_link_status(struct link_entry *entry)
  *
  *@return SYM_LINK if a symmetric link exists 0 if not
  */
-int
+static int
 get_neighbor_status(union olsr_ip_addr *address)
 {
   union olsr_ip_addr *main_addr;
@@ -323,7 +351,7 @@ get_interface_link_set(union olsr_ip_addr *remote)
  *@param htime the HELLO interval of the remote node
  */
 
-struct link_entry *
+static struct link_entry *
 add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, double vtime, double htime)
 {
   struct link_entry *tmp_link_set, *new_link;
@@ -650,7 +678,7 @@ replace_neighbor_link_set(struct neighbor_entry *old,
  *
  *@return the link status
  */
-int
+static int
 check_link_status(struct hello_message *message)
 {
 
@@ -688,12 +716,11 @@ check_link_status(struct hello_message *message)
  *deleted.
  *
  */
-void
+static void
 olsr_time_out_link_set()
 {
 
   struct link_entry *tmp_link_set, *last_link_entry;
-
 
   if(link_set == NULL)
     return;
@@ -758,7 +785,7 @@ olsr_time_out_link_set()
  *
  *@return nada
  */
-void
+static void
 olsr_time_out_hysteresis()
 {
 
@@ -767,7 +794,7 @@ olsr_time_out_hysteresis()
 
   if(link_set == NULL)
     return;
-      
+
   tmp_link_set = link_set;
 
   while(tmp_link_set)

@@ -25,6 +25,43 @@
 #include "two_hop_neighbor_table.h"
 #include "olsr.h"
 
+/* Begin:
+ * Prototypes for internal functions 
+ */
+
+static olsr_u16_t
+add_will_always_nodes();
+
+static void
+olsr_optimize_mpr_set();
+
+static void
+olsr_clear_mprs();
+
+static void
+olsr_clear_two_hop_processed();
+
+static struct neighbor_entry *
+olsr_find_maximum_covered(int);
+
+static olsr_u16_t
+olsr_calculate_two_hop_neighbors();
+
+static int
+olsr_check_mpr_changes();
+
+static int
+olsr_chosen_mpr(struct neighbor_entry *, olsr_u16_t *);
+
+static struct neighbor_2_list_entry *
+olsr_find_2_hop_neighbors_with_1_link(int);
+
+
+/* End:
+ * Prototypes for internal functions 
+ */
+
+
 
 /**
  *Find all 2 hop neighbors with 1 link
@@ -35,7 +72,7 @@
  *
  *@return a linked list of allocated neighbor_2_list_entry structures
  */
-struct neighbor_2_list_entry *
+static struct neighbor_2_list_entry *
 olsr_find_2_hop_neighbors_with_1_link(int willingness)
 {
   
@@ -102,7 +139,7 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
  *This function processes the chosen MPRs and updates the counters
  *used in calculations
  */
-int
+static int
 olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_covered_count)
 {
   struct neighbor_list_entry   *the_one_hop_list;
@@ -176,7 +213,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
  *
  *@return a pointer to the neighbor_entry struct
  */
-struct neighbor_entry *
+static struct neighbor_entry *
 olsr_find_maximum_covered(int willingness)
 {
   olsr_u16_t                  maximum;
@@ -217,7 +254,7 @@ olsr_find_maximum_covered(int willingness)
 /**
  *Remove all MPR registrations
  */
-void
+static void
 olsr_clear_mprs()
 {
   olsr_u32_t index;
@@ -255,7 +292,7 @@ olsr_clear_mprs()
  *
  *@return 1 if changes occured 0 if not
  */
-int
+static int
 olsr_check_mpr_changes()
 {
   olsr_u32_t index;
@@ -287,7 +324,7 @@ olsr_check_mpr_changes()
  *Clears out proccess registration
  *on two hop neighbors
  */
-void
+static void
 olsr_clear_two_hop_processed()
 {
   struct neighbor_2_entry  *neighbor_2;
@@ -310,7 +347,7 @@ olsr_clear_two_hop_processed()
 /**
  *This function calculates the number of two hop neighbors
  */
-olsr_u16_t
+static olsr_u16_t
 olsr_calculate_two_hop_neighbors()
 {
   olsr_u8_t                    index;
@@ -377,7 +414,7 @@ olsr_calculate_two_hop_neighbors()
 /**
  * Adds all nodes with willingness set to WILL_ALWAYS
  */
-olsr_u16_t
+static olsr_u16_t
 add_will_always_nodes()
 {
 
@@ -502,7 +539,7 @@ olsr_calculate_mpr()
  *
  *@return nada
  */
-void
+static void
 olsr_optimize_mpr_set()
 {
   int i, remove, index;

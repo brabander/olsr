@@ -66,35 +66,13 @@ struct rt_entry hna_routes[HASHSIZE];
 int
 olsr_init_routing_table();
 
-struct rt_entry *
-olsr_lookup_routing_table(union olsr_ip_addr *);
-
-void
-olsr_free_routing_table(struct rt_entry *);
-
-struct rt_entry *
-olsr_insert_routing_table(union olsr_ip_addr *, union olsr_ip_addr *, int);
-
-int
-olsr_fill_routing_table_with_neighbors();
-
 void 
 olsr_calculate_routing_table();
-
-struct rt_entry *
-olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
-
-struct rt_entry *
-olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
 
 void
 olsr_calculate_hna_routes();
 
 void
 olsr_print_routing_table(struct rt_entry *);
-
-void
-olsr_update_default_gateway();
-
 
 #endif

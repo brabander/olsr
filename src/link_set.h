@@ -72,14 +72,8 @@ struct timeval  hold_time_neighbor_nw;
 void
 olsr_init_link_set();
 
-struct link_entry *
-add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
-
-int
-lookup_link_status(struct link_entry *);
-
-struct link_entry *
-update_link_entry(union olsr_ip_addr *, union olsr_ip_addr *, struct hello_message *, struct interface *);
+struct interface *
+get_interface_link_set(union olsr_ip_addr *);
 
 union olsr_ip_addr *
 get_neighbor_nexthop(union olsr_ip_addr *);
@@ -87,26 +81,18 @@ get_neighbor_nexthop(union olsr_ip_addr *);
 struct link_entry *
 lookup_link_entry(union olsr_ip_addr *, union olsr_ip_addr *);
 
-int
-replace_neighbor_link_set(struct neighbor_entry *,
-			  struct neighbor_entry *);
-
-int
-check_link_status(struct hello_message *);
-
-void
-olsr_time_out_link_set();
-
-struct interface *
-get_interface_link_set(union olsr_ip_addr *);
+struct link_entry *
+update_link_entry(union olsr_ip_addr *, union olsr_ip_addr *, struct hello_message *, struct interface *);
 
 int
 check_neighbor_link(union olsr_ip_addr *);
 
 int
-get_neighbor_status(union olsr_ip_addr *);
+replace_neighbor_link_set(struct neighbor_entry *,
+			  struct neighbor_entry *);
 
-void
-olsr_time_out_hysteresis();
+int
+lookup_link_status(struct link_entry *);
+
 
 #endif

@@ -39,34 +39,6 @@ void
 hna_build(struct interface *);
 
 
-/* IPv4 */
-
-void
-hello_build4(struct hello_message *, struct interface *);
-
-void
-tc_build4(struct tc_message *, struct interface *);
-
-int
-mid_build4(struct interface *);
-
-void
-hna_build4(struct interface *);
-
-/* IPv6 */
-
-void
-hello_build6(struct hello_message *, struct interface *);
-
-void
-tc_build6(struct tc_message *, struct interface *);
-
-int
-mid_build6(struct interface *);
-
-void
-hna_build6(struct interface *);
-
 
 
 #endif

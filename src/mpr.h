@@ -26,36 +26,11 @@
 
 #include "neighbor_table.h"
 
-
-struct neighbor_2_list_entry *
-olsr_find_2_hop_neighbors_with_1_link(int);
-
-int
-olsr_chosen_mpr(struct neighbor_entry *, olsr_u16_t *);
-
-int
-olsr_check_mpr_changes();
-
-olsr_u16_t
-olsr_calculate_two_hop_neighbors();
-
-struct neighbor_entry *
-olsr_find_maximum_covered(int);
-
-void
-olsr_clear_two_hop_processed();
-
 void
 olsr_calculate_mpr();
 
 void
-olsr_clear_mprs();
-
-void
 olsr_print_mpr_set();
-
-void
-olsr_optimize_mpr_set();
 
 
 #endif
