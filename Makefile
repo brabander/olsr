@@ -65,10 +65,11 @@ all:	olsrd
 olsrd:	$(OBJS)
 	$(CC) $(LIBS) -o bin/$@ $(OBJS)
 
-oparse.h: $(CFGDIR)/oparse.c
-
-oparse.c: $(CFGDIR)/oparse.y $(CFGDIR)/olsrd_conf.h
+$(CFGDIR)/oparse.c: $(CFGDIR)/oparse.y $(CFGDIR)/olsrd_conf.h
 	$(BISON) -d -o$(CFGDIR)/oparse.c $(CFGDIR)/oparse.y
+
+$(CFGDIR)/oparse.h: $(CFGDIR)/oparse.c
+
 
 $(CFGDIR)/oscan.c: $(CFGDIR)/oscan.lex $(CFGDIR)/oparse.h $(CFGDIR)/olsrd_conf.h
 	$(FLEX) -o$(CFGDIR)/oscan.c $(CFGDIR)/oscan.lex
