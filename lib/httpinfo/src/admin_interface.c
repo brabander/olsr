@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.4 2005/02/28 20:28:59 kattemat Exp $
+ * $Id: admin_interface.c,v 1.5 2005/03/14 19:38:39 kattemat Exp $
  */
 
 /*
@@ -113,7 +113,7 @@ build_admin_body(char *buf, olsr_u32_t bufsize)
       size += sprintf(&buf[size], admin_basic_setting_int,
 		      "LQ level:", "lq_level", 1, cfg->lq_level);
       size += sprintf(&buf[size], admin_basic_setting_int,
-		      "LQ winsize:", "lq_wsize", 1, cfg->lq_wsize);
+		      "LQ winsize:", "lq_wsize", 2, cfg->lq_wsize);
     }
   else
     {
