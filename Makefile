@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.40 2004/12/05 12:04:06 kattemat Exp $
+# $Id: Makefile,v 1.41 2004/12/05 20:11:27 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -64,6 +64,10 @@ ifndef OS
 all:		help
 else
 all:		cfgparser olsrd
+endif
+
+ifeq ($(OS), Windows_NT)
+OS =		win32
 endif
 
 ifeq ($(OS), linux)
