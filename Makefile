@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.39 2004/12/04 17:06:56 tlopatic Exp $
+# $Id: Makefile,v 1.40 2004/12/05 12:04:06 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -55,6 +55,7 @@ HDRS =		$(wildcard src/*.h)
 
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
+CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
 
 TAGCMD ?=	etags	
 TAGFILE ?=	src/TAGS
@@ -62,7 +63,7 @@ TAGFILE ?=	src/TAGS
 ifndef OS
 all:		help
 else
-all:		olsrd
+all:		cfgparser olsrd
 endif
 
 ifeq ($(OS), linux)
@@ -174,9 +175,11 @@ ifdef MAKEDEPEND
 		$(MAKEDEPEND)
 endif
 
-$(CFGOBJS):
-		$(MAKE) -C src/cfgparser
+cfgparser:	$(CFGDEPS)
+		$(MAKE) -C $(CFGDIR)
 
+$(CFGOBJS):
+		$(MAKE) -C $(CFGDIR)
 
 .PHONY: help libs clean_libs clean uberclean install_libs install_bin install
 
