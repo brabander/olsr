@@ -210,8 +210,6 @@ scheduler()
 
       gettimeofday(&end_of_loop, NULL);
 
-#warning UPDATES IN SCHEDULER - TEST!
-
       timersub(&end_of_loop, &start_of_loop, &time_used);
 
 

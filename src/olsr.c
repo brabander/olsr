@@ -77,8 +77,6 @@ olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
 inline void
 olsr_get_timestamp(olsr_u32_t delay, struct timeval *hold_timer)
 { 
-#warning BUGFIX - TEST!
-
   hold_timer->tv_sec = now.tv_sec + delay / 1000;
   hold_timer->tv_usec = now.tv_usec + (delay % 1000) * 1000;
   

@@ -407,8 +407,6 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link->neighbor = neighbor;
 
-#warning UPDATE IN LINK SET!
-
   if(!COMP_IP(remote, remote_main))
     {
       /* Add MID alias if not already registered */

@@ -188,11 +188,9 @@ listen_loop()
 	    }
 	  /* End critical section */
 	  pthread_mutex_unlock(&mutex);
-#warning bugfix in select loop!
 	  changes_sockets = 0;
 	}
 
-#warning select now uses timeout
 
       /* If there are no registered sockets we
        * do not call select(2)
