@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.h,v 1.10 2004/11/09 21:09:58 kattemat Exp $
+ * $Id: generate_msg.h,v 1.11 2004/11/10 14:40:37 kattemat Exp $
  *
  */
 
@@ -29,8 +29,6 @@
 #include "interfaces.h"
 
 #define STDOUT_PULSE_INT 0.6
-
-olsr_bool stdout_pulse_set;
 
 /* Functions */
 

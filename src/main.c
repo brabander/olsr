@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.33 2004/11/10 11:57:12 tlopatic Exp $
+ * $Id: main.c,v 1.34 2004/11/10 14:39:47 kattemat Exp $
  *
  */
 
@@ -92,8 +92,6 @@ main(int argc, char *argv[])
 
   struct stat statbuf;
   char conf_file_name[FILENAME_MAX];
-
-  stdout_pulse_set = OLSR_FALSE;
   
 #ifdef WIN32
   WSADATA WsaData;

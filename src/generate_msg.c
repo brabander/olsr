@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.16 2004/11/10 07:40:11 kattemat Exp $
+ * $Id: generate_msg.c,v 1.17 2004/11/10 14:38:59 kattemat Exp $
  *
  */
 
@@ -108,10 +108,8 @@ generate_stdout_pulse(void *foo)
   if(olsr_cnf->debug_level == 0)
     return;
 
-  stdout_pulse_set = OLSR_TRUE;
-
   pulse_state = pulse_state == 3 ? 0 : pulse_state + 1;
 
-  printf("\r%c", pulsedata[pulse_state]);
+  printf("%c\r", pulsedata[pulse_state]);
 
 }

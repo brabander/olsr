@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.20 2004/11/09 21:09:58 kattemat Exp $
+ * $Id: olsr.c,v 1.21 2004/11/10 14:39:47 kattemat Exp $
  *
  */
 
@@ -593,13 +593,6 @@ olsr_printf(int loglevel, char *format, ...)
 
   if(loglevel <= olsr_cnf->debug_level)
     {
-
-      if(stdout_pulse_set)
-	{
-	  printf("\b");
-	  stdout_pulse_set = OLSR_FALSE;
-	}
-
       va_start(arglist, format);
       
       vprintf(format, arglist);
