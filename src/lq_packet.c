@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.8 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.9 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #include "olsr_protocol.h"
@@ -711,7 +711,6 @@ olsr_output_lq_tc(void *para)
   static int prev_empty = 1;
   struct lq_tc_message lq_tc;
   struct interface *outif = (struct interface *)para;
-  struct timeval timer;
 
   // create LQ_TC in internal format
 
@@ -734,8 +733,7 @@ olsr_output_lq_tc(void *para)
     {
       // initialize timer
 
-      olsr_init_timer((olsr_u32_t)(max_tc_vtime * 3) * 1000, &timer);
-      timeradd(&now, &timer, &send_empty_tc);
+      send_empty_tc = GET_TIMESTAMP((max_tc_vtime * 3) * 1000);
 
       prev_empty = 1;
 
@@ -746,14 +744,14 @@ olsr_output_lq_tc(void *para)
 
   // c) this is not the first empty message, send if timer hasn't fired
 
-  else if (!TIMED_OUT(&send_empty_tc))
+  else if (!TIMED_OUT(send_empty_tc))
     serialize_lq_tc(&lq_tc, outif);
 
   // destroy internal format
 
   destroy_lq_tc(&lq_tc);
 
-  if(net_output_pending(outif) && TIMED_OUT(&fwdtimer[outif->if_nr]))
+  if(net_output_pending(outif) && TIMED_OUT(fwdtimer[outif->if_nr]))
     set_buffer_timer(outif);
 }
 

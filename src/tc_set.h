@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.10 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: tc_set.h,v 1.11 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #include "defs.h"
@@ -50,23 +50,23 @@
 struct topo_dst
 {
   union olsr_ip_addr T_dest_addr;
-  struct timeval T_time;
-  olsr_u16_t T_seq;
-  struct topo_dst *next;
-  struct topo_dst *prev;
-  double link_quality;
-  double inverse_link_quality;
-  double saved_link_quality;
-  double saved_inverse_link_quality;
+  clock_t            T_time;
+  olsr_u16_t         T_seq;
+  struct topo_dst   *next;
+  struct topo_dst   *prev;
+  double             link_quality;
+  double             inverse_link_quality;
+  double             saved_link_quality;
+  double             saved_inverse_link_quality;
 };
 
 
 struct tc_entry
 {
   union olsr_ip_addr T_last_addr;
-  struct topo_dst destinations;
-  struct tc_entry *next;
-  struct tc_entry *prev;
+  struct topo_dst    destinations;
+  struct tc_entry   *next;
+  struct tc_entry   *prev;
 };
 
 

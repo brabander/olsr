@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.13 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: packet.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -307,7 +307,6 @@ olsr_build_tc_packet(struct tc_message *message)
   //struct mpr_selector_hash  *mprs_hash;
   //olsr_u16_t          index;
   olsr_bool entry_added = OLSR_FALSE;
-  struct timeval tmp_timer;
 
   message->multipoint_relay_selector_address=NULL;
   message->packet_seq_number=0;
@@ -390,9 +389,8 @@ olsr_build_tc_packet(struct tc_message *message)
       if(sending_tc)
 	{
 	  /* Send empty TC */
-	  olsr_init_timer((olsr_u32_t) (max_tc_vtime*3)*1000, &tmp_timer);
 	  olsr_printf(3, "No more MPR selectors - will send empty TCs\n");
-	  timeradd(&now, &tmp_timer, &send_empty_tc);
+	  send_empty_tc = GET_TIMESTAMP((max_tc_vtime*3)*1000);
 
 	  sending_tc = OLSR_FALSE;
 	}

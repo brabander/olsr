@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mid_set.c,v 1.10 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #include "defs.h"
@@ -115,7 +115,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
       tmp_adr = tmp->aliases;
       tmp->aliases = alias;
       alias->next = tmp_adr;
-      olsr_get_timestamp((olsr_u32_t) vtime*1000, &tmp->ass_timer);
+      tmp->ass_timer = GET_TIMESTAMP(vtime*1000);
     }
       /*Create new node*/
   else
@@ -124,7 +124,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct addresses *alias, float vtim
 
       tmp->aliases = alias;
       COPY_IP(&tmp->main_addr, m_addr);
-      olsr_get_timestamp((olsr_u32_t) vtime*1000, &tmp->ass_timer);
+      tmp->ass_timer = GET_TIMESTAMP(vtime*1000);
       /* Queue */
       QUEUE_ELEM(mid_set[hash], tmp);
       /*
@@ -328,7 +328,7 @@ olsr_update_mid_table(union olsr_ip_addr *adr, float vtime)
       if(COMP_IP(&tmp_list->main_addr, adr))
 	{
 	  //printf("Updating timer for node %s\n",ip_to_string(&tmp_list->main_addr));
-	  olsr_get_timestamp((olsr_u32_t) vtime*1000, &tmp_list->ass_timer);
+	  tmp_list->ass_timer = GET_TIMESTAMP(vtime*1000);
 
 	  return 1;
 	}
@@ -358,7 +358,7 @@ olsr_time_out_mid_set(void *foo)
       while(tmp_list != &mid_set[index])
 	{
 	  /*Check if the entry is timed out*/
-	  if(TIMED_OUT(&tmp_list->ass_timer))
+	  if(TIMED_OUT(tmp_list->ass_timer))
 	    {
 	      entry_to_delete = tmp_list;
 	      tmp_list = tmp_list->next;

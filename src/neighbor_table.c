@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.21 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: neighbor_table.c,v 1.22 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -405,7 +405,7 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
   while(two_hop_list != &neighbor->neighbor_2_list)
     {
-      if(TIMED_OUT(&two_hop_list->neighbor_2_timer))
+      if(TIMED_OUT(two_hop_list->neighbor_2_timer))
 	{
 	  two_hop_entry = two_hop_list->neighbor_2;
 	  two_hop_entry->neighbor_2_pointer--;
@@ -413,9 +413,7 @@ olsr_time_out_two_hop_neighbors(struct neighbor_entry  *neighbor)
 
 	  if(two_hop_entry->neighbor_2_pointer < 1)
 	    {
-	      /* FIX THIS (fix what?)*/
 	      DEQUEUE_ELEM(two_hop_entry);
-
 	      free((void *)two_hop_entry);
 	    }
 

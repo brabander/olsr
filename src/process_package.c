@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.24 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: process_package.c,v 1.25 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -542,9 +542,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
           if (two_hop_neighbor_yet != NULL)
             {
               /* Updating the holding time for this neighbor */
-              olsr_get_timestamp((olsr_u32_t)message->vtime * 1000,
-                                 &two_hop_neighbor_yet->neighbor_2_timer);
-
+              two_hop_neighbor_yet->neighbor_2_timer = GET_TIMESTAMP(message->vtime*1000);
               two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
             }
           else
@@ -691,7 +689,7 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
 
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
   
-  olsr_get_timestamp((olsr_u32_t) vtime*1000, &list_of_2_neighbors->neighbor_2_timer);
+  list_of_2_neighbors->neighbor_2_timer = GET_TIMESTAMP(vtime*1000);
 
   /* Queue */
   neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;

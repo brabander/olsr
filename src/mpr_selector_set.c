@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.9 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -88,7 +88,7 @@ olsr_add_mpr_selector(union olsr_ip_addr *addr, float vtime)
 
   /* Fill struct */
   COPY_IP(&new_entry->MS_main_addr, addr);
-  olsr_get_timestamp((olsr_u32_t) vtime*1000, &new_entry->MS_time);
+  new_entry->MS_time = GET_TIMESTAMP(vtime*1000);
 
   /* Queue */
   QUEUE_ELEM(mprs_list, new_entry);
@@ -166,7 +166,7 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
     }
   else
     {
-      olsr_get_timestamp((olsr_u32_t) vtime*1000, &mprs->MS_time);
+      mprs->MS_time = GET_TIMESTAMP(vtime*1000);
     }
   return retval;
 }
@@ -190,7 +190,7 @@ olsr_time_out_mprs_set()
   while(mprs != &mprs_list)
     {
 
-      if(TIMED_OUT(&mprs->MS_time))
+      if(TIMED_OUT(mprs->MS_time))
 	{
 	  /* Dequeue */
 	  mprs_to_delete = mprs;

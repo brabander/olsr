@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.14 2004/12/14 20:15:52 kattemat Exp $
+ * $Id: olsr.h,v 1.15 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -67,8 +67,14 @@ olsr_bool changes_hna;
 
 olsr_u16_t message_seqno;
 
+/* Provides a timestamp s1 milliseconds in the future
+   according to system ticks returned by times(2) */
+#define GET_TIMESTAMP(s1) \
+        now_times + ((s1) / system_tick_divider)
+
 #define TIMED_OUT(s1) \
-        timercmp(s1, &now, <)
+        (s1 < now_times)
+
 
 /*
  * Queueing macros

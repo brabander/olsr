@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.h,v 1.10 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: neighbor_table.h,v 1.11 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -50,7 +50,7 @@
 struct neighbor_2_list_entry 
 {
   struct neighbor_2_entry      *neighbor_2;
-  struct timeval	       neighbor_2_timer;
+  clock_t       	       neighbor_2_timer;
   struct neighbor_2_list_entry *next;
   struct neighbor_2_list_entry *prev;
 };

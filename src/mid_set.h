@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mid_set.h,v 1.9 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -52,10 +52,10 @@
 struct mid_entry
 {
   union olsr_ip_addr main_addr;
-  struct addresses *aliases;
-  struct mid_entry *prev;
-  struct mid_entry *next;
-  struct timeval ass_timer;  
+  struct addresses  *aliases;
+  struct mid_entry  *prev;
+  struct mid_entry  *next;
+  clock_t            ass_timer;  
 };
 
 

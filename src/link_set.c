@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.38 2004/12/19 13:53:18 kattemat Exp $
+ * $Id: link_set.c,v 1.39 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -79,7 +79,7 @@ olsr_init_link_set()
 {
 
   /* Timers */
-  olsr_init_timer((olsr_u32_t) (NEIGHB_HOLD_TIME*1000), &hold_time_neighbor);
+  hold_time_neighbor = (NEIGHB_HOLD_TIME*1000) / system_tick_divider;
 
   olsr_register_timeout_function(&olsr_time_out_link_set);
   if(olsr_cnf->use_hysteresis)
@@ -108,9 +108,7 @@ lookup_link_status(struct link_entry *entry)
 {
 
   if(entry == NULL || link_set == NULL)
-    {
-      return UNSPEC_LINK;
-    }
+    return UNSPEC_LINK;
 
   /*
    * Hysteresis
@@ -121,7 +119,8 @@ lookup_link_status(struct link_entry *entry)
 	if L_LOST_LINK_time is not expired, the link is advertised
 	with a link type of LOST_LINK.
       */
-      if(!TIMED_OUT(&entry->L_LOST_LINK_time))
+
+      if(!TIMED_OUT(entry->L_LOST_LINK_time))
 	return LOST_LINK;
       /*
 	otherwise, if L_LOST_LINK_time is expired and L_link_pending
@@ -141,10 +140,10 @@ lookup_link_status(struct link_entry *entry)
       */
     }
 
-  if(!TIMED_OUT(&entry->SYM_time))
+  if(!TIMED_OUT(entry->SYM_time))
     return SYM_LINK;
 
-  if(!TIMED_OUT(&entry->ASYM_time))
+  if(!TIMED_OUT(entry->ASYM_time))
     return ASYM_LINK;
 
   return LOST_LINK;
@@ -332,7 +331,7 @@ get_interface_link_set(union olsr_ip_addr *remote)
 	  tmp_if = if_ifwithaddr(&tmp_link_set->local_iface_addr);
 
 	  /* Must be symmetric link! */
-	  if(!TIMED_OUT(&tmp_link_set->SYM_time))
+	  if(!TIMED_OUT(tmp_link_set->SYM_time))
 	    {
               if (olsr_cnf->lq_level == 0)
                 {
@@ -443,20 +442,18 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
   COPY_IP(&new_link->neighbor_iface_addr, remote);
 
   /* L_SYM_time            = current time - 1 (expired) */
-  new_link->SYM_time = now;
-  /* Subtract 1 */
-  new_link->SYM_time.tv_sec -= 1;
+  new_link->SYM_time = now_times - 1;
 
   /* L_time = current time + validity time */
-  olsr_get_timestamp((olsr_u32_t) vtime*1000, &new_link->time);
+  new_link->time = GET_TIMESTAMP(vtime*1000);
 
 
   /* HYSTERESIS */
   if(olsr_cnf->use_hysteresis)
     {
       new_link->L_link_pending = 1;
-      olsr_get_timestamp((olsr_u32_t) vtime*1000, &new_link->L_LOST_LINK_time);
-      olsr_get_timestamp((olsr_u32_t) htime*1500, &new_link->hello_timeout);
+      new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime*1000);
+      new_link->hello_timeout = GET_TIMESTAMP(htime*1500);
       new_link->last_htime = htime;
       new_link->olsr_seqno = 0;
       new_link->olsr_seqno_valid = OLSR_FALSE;
@@ -468,8 +465,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
     {
       new_link->loss_hello_int = htime;
 
-      olsr_get_timestamp((olsr_u32_t)(htime * 1500.0),
-                         &new_link->loss_timeout);
+      new_link->loss_timeout = GET_TIMESTAMP(htime * 1500.0);
 
       new_link->loss_seqno = 0;
       new_link->loss_seqno_valid = 0;
@@ -644,36 +640,34 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
   /* Update ASYM_time */
   //printf("Vtime is %f\n", message->vtime);
   /* L_ASYM_time = current time + validity time */
-  olsr_get_timestamp((olsr_u32_t) (message->vtime*1000), &entry->ASYM_time);
-
-
+  entry->ASYM_time = GET_TIMESTAMP(message->vtime*1000);
+  
   status = check_link_status(message);
-
+  
   //printf("Status %d\n", status);
-
+  
   switch(status)
     {
     case(LOST_LINK):
       /* L_SYM_time = current time - 1 (i.e., expired) */
-      entry->SYM_time = now;
-      entry->SYM_time.tv_sec -= 1;
+      entry->SYM_time = now_times - 1;
 
       break;
     case(SYM_LINK):
     case(ASYM_LINK):
       /* L_SYM_time = current time + validity time */
       //printf("updating SYM time for %s\n", olsr_ip_to_string(remote));
-      olsr_get_timestamp((olsr_u32_t) (message->vtime*1000), &entry->SYM_time);
+      entry->SYM_time = GET_TIMESTAMP(message->vtime*1000);
 
       /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-      timeradd(&entry->SYM_time, &hold_time_neighbor, &entry->time);
+      entry->time = entry->SYM_time + hold_time_neighbor;
 
       break;
     default:;
     }
 
   /* L_time = max(L_time, L_ASYM_time) */
-  if(timercmp(&entry->time, &entry->ASYM_time, <))
+  if(entry->time < entry->ASYM_time)
     entry->time = entry->ASYM_time;
 
 
@@ -800,7 +794,7 @@ olsr_time_out_link_set()
   while(tmp_link_set)
     {
 
-      if(TIMED_OUT(&tmp_link_set->time))
+      if(TIMED_OUT(tmp_link_set->time))
 	{
 	  if(last_link_entry != NULL)
 	    {
@@ -867,13 +861,12 @@ olsr_time_out_hysteresis()
 
   while(tmp_link_set)
     {
-      if(TIMED_OUT(&tmp_link_set->hello_timeout))
+      if(TIMED_OUT(tmp_link_set->hello_timeout))
 	{
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
 	  olsr_printf(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
 	  /* Update hello_timeout - NO SLACK THIS TIME */
-	  olsr_get_timestamp((olsr_u32_t) tmp_link_set->last_htime*1000, &tmp_link_set->hello_timeout);
-
+	  tmp_link_set->hello_timeout = GET_TIMESTAMP(tmp_link_set->last_htime*1000);
 	  /* Recalculate status */
 	  /* Update hysteresis values */
 	  olsr_process_hysteresis(tmp_link_set);
@@ -1084,8 +1077,7 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
 
   // timeout for the first lost packet is 1.5 x htime
 
-  olsr_get_timestamp((olsr_u32_t)(entry->loss_hello_int * 1500.0),
-                     &entry->loss_timeout);
+  entry->loss_timeout = GET_TIMESTAMP(entry->loss_hello_int * 1500.0);
 }
 
 static void olsr_time_out_packet_loss()
@@ -1099,7 +1091,7 @@ static void olsr_time_out_packet_loss()
       // find a link that has not seen any packets for a very long
       // time (first time: 1.5 x htime, subsequently: 1.0 x htime)
 
-      if (!TIMED_OUT(&walker->loss_timeout))
+      if (!TIMED_OUT(walker->loss_timeout))
         continue;
       
       // count the lost packet
@@ -1113,8 +1105,7 @@ static void olsr_time_out_packet_loss()
 
       // next timeout in 1.0 x htime
 
-      olsr_get_timestamp((olsr_u32_t)(walker->loss_hello_int * 1000.0),
-                         &walker->loss_timeout);
+      walker->loss_timeout = GET_TIMESTAMP(walker->loss_hello_int * 1000.0);
     }
 }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.13 2004/12/03 16:12:32 tlopatic Exp $
+ * $Id: hysteresis.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -70,7 +70,7 @@ olsr_hyst_calc_instability(float old_quality)
 int
 olsr_process_hysteresis(struct link_entry *entry)
 {
-  struct timeval tmp_timer;
+  clock_t tmp_timer;
 
   //printf("PROCESSING QUALITY: %f\n", entry->L_link_quality);
   if(entry->L_link_quality > hhigh)
@@ -85,12 +85,11 @@ olsr_process_hysteresis(struct link_entry *entry)
       /* Pending = false */
       entry->L_link_pending = 0;
 
-      if(!TIMED_OUT(&entry->L_LOST_LINK_time))
+      if(!TIMED_OUT(entry->L_LOST_LINK_time))
 	changes_neighborhood = OLSR_TRUE;
 
       /* time = now -1 */
-      entry->L_LOST_LINK_time = now;
-      entry->L_LOST_LINK_time.tv_sec -= 1;
+      entry->L_LOST_LINK_time = now_times - 1;
 
       return 1;
     }
@@ -107,16 +106,16 @@ olsr_process_hysteresis(struct link_entry *entry)
       /* Pending = true */
       entry->L_link_pending = 1;
 
-      if(TIMED_OUT(&entry->L_LOST_LINK_time))
+      if(TIMED_OUT(entry->L_LOST_LINK_time))
 	changes_neighborhood = OLSR_TRUE;
 
       /* Timer = min (L_time, current time + NEIGHB_HOLD_TIME) */
       //tmp_timer = now;
       //tmp_timer.tv_sec += NEIGHB_HOLD_TIME; /* Takafumi fix */
-	timeradd(&now, &hold_time_neighbor, &tmp_timer);
+      tmp_timer = now_times + hold_time_neighbor;
 
 	entry->L_LOST_LINK_time = 
-	(timercmp(&entry->time, &tmp_timer, >) > 0) ? tmp_timer : entry->time;
+	  entry->time > tmp_timer ? tmp_timer : entry->time;
 
       /* (the link is then considered as lost according to section
 	 8.5 and this may produce a neighbor loss).
@@ -155,7 +154,7 @@ olsr_update_hysteresis_hello(struct link_entry *entry, double htime)
   /* SET TIMER TO 1.5 TIMES THE INTERVAL */
   /* Update timer */
 
-  olsr_get_timestamp((olsr_u32_t) htime*1500, &entry->hello_timeout);
+  entry->hello_timeout = GET_TIMESTAMP(htime*1500);
 
   return;
 }

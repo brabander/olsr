@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.31 2004/12/14 20:15:52 kattemat Exp $
+ * $Id: defs.h,v 1.32 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #ifndef _OLSR_DEFS
@@ -44,6 +44,7 @@
 
 /* Common includes */
 #include <sys/time.h>
+#include <sys/times.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -92,6 +93,9 @@
 
 struct olsrd_config *olsr_cnf;
 
+/* Global tick resolution */
+olsr_u16_t system_tick_divider;
+
 /*
  * Generic address list elem
  */
@@ -106,6 +110,7 @@ int exit_value; /* Global return value for process termination */
 
 
 /* Timer data */
+clock_t now_times;              /* current idea of times(2) reported uptime */
 struct timeval now;		/* current idea of time */
 struct tm *nowtm;		/* current idea of time (in tm) */
 
@@ -151,7 +156,7 @@ int rts;
 
 float max_tc_vtime;
 
-struct timeval fwdtimer[MAX_IFS];	/* forwarding timer */
+clock_t fwdtimer[MAX_IFS];	/* forwarding timer */
 
 extern struct timeval hold_time_fwd;
 
@@ -162,7 +167,7 @@ int minsize;
 olsr_bool changes;                /* is set if changes occur in MPRS set */ 
 
 /* TC empty message sending */
-extern struct timeval send_empty_tc;
+extern clock_t send_empty_tc;
 
 
 /* Used by everyone */

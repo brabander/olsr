@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.8 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -57,9 +57,6 @@ olsr_init_duplicate_table()
   int i;
 
   olsr_printf(3, "Initializing duplicatetable - hashsize %d\n", HASHSIZE);
-
-  /* Initialize duplicate set holding time */
-  olsr_init_timer((olsr_u32_t) (dup_hold_time*1000), &hold_time_duplicate);
 
   /* Since the holdingtime is rather large for duplicate
    * entries the timeoutfunction is only ran every 2 seconds
@@ -100,7 +97,7 @@ olsr_add_dup_entry(union olsr_ip_addr *originator, olsr_u16_t seqno)
   /* Seqno */
   new_dup_entry->seqno = seqno;
   /* Set timer */
-  timeradd(&now, &hold_time_duplicate, &new_dup_entry->timer);
+  new_dup_entry->timer = GET_TIMESTAMP(dup_hold_time*1000);
   /* Interfaces */
   new_dup_entry->ifaces = NULL;
   /* Forwarded */
@@ -239,7 +236,7 @@ olsr_time_out_duplicate_table(void *foo)
 
       while(tmp_dup_table != &dup_set[i])
 	{
-	  if(TIMED_OUT(&tmp_dup_table->timer))
+	  if(TIMED_OUT(tmp_dup_table->timer))
 	    {
 
 #ifdef DEBUG
@@ -303,7 +300,7 @@ olsr_update_dup_entry(union olsr_ip_addr *originator,
   tmp_dup_table->ifaces = new_iface;
   
   /* Set timer */
-  timeradd(&now, &hold_time_duplicate, &tmp_dup_table->timer);
+  tmp_dup_table->timer = GET_TIMESTAMP(dup_hold_time*1000);
   
   return 1;
 }
@@ -345,7 +342,7 @@ olsr_set_dup_forward(union olsr_ip_addr *originator,
   tmp_dup_table->forwarded = 1;
   
   /* Set timer */
-  timeradd(&now, &hold_time_duplicate, &tmp_dup_table->timer);
+  tmp_dup_table->timer = GET_TIMESTAMP(dup_hold_time*1000);
   
   return 1;
 }

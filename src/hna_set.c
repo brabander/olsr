@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.13 2004/12/15 17:20:54 kattemat Exp $
+ * $Id: hna_set.c,v 1.14 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #include "defs.h"
@@ -245,7 +245,7 @@ olsr_update_hna_entry(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna
     }
 
   /* Update holdingtime */
-  olsr_get_timestamp((olsr_u32_t) vtime*1000, &net_entry->A_time);
+  net_entry->A_time = GET_TIMESTAMP(vtime*1000);
 
 }
 
@@ -278,7 +278,7 @@ olsr_time_out_hna_set(void *foo)
 
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      if(TIMED_OUT(&tmp_net->A_time))
+	      if(TIMED_OUT(tmp_net->A_time))
 		{
 		  net_to_delete = tmp_net;
 		  tmp_net = tmp_net->next;

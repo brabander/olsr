@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.h,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: duplicate_set.h,v 1.9 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #ifndef _OLSR_DUP_TABLE
@@ -50,7 +50,7 @@ struct dup_entry
 {
   union olsr_ip_addr     addr;      /* IP address of originator */
   olsr_u16_t             seqno;     /* Seqno of message */
-  struct timeval         timer;	    /* Holding time */
+  clock_t                timer;	    /* Holding time */
   struct dup_iface       *ifaces;   /* Interfaces this message was recieved on */
   olsr_u8_t              forwarded; /* If this message was forwarded or not */
   struct dup_entry       *next;     /* Next entry */
@@ -65,8 +65,6 @@ struct dup_iface
 
 /* The duplicate table */
 struct dup_entry dup_set[HASHSIZE];
-
-struct timeval  hold_time_duplicate;
 
 float dup_hold_time;
 

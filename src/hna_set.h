@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.h,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: hna_set.h,v 1.10 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -53,7 +53,7 @@ struct hna_net
 {
   union olsr_ip_addr A_network_addr;
   union hna_netmask  A_netmask;
-  struct timeval     A_time;
+  clock_t            A_time;
   struct hna_net     *next;
   struct hna_net     *prev;
 };

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: mpr_selector_set.h,v 1.8 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -48,8 +48,8 @@
 
 struct mpr_selector
 {
-  union olsr_ip_addr MS_main_addr;
-  struct timeval MS_time;
+  union olsr_ip_addr  MS_main_addr;
+  clock_t             MS_time;
   struct mpr_selector *next;
   struct mpr_selector *prev;
 };
@@ -65,7 +65,7 @@ olsr_u16_t ansn;
 int mprs_count;
 
 /* Timer to send empty TCs */
-struct timeval send_empty_tc;
+clock_t send_empty_tc;
 
 int
 olsr_init_mprs_set(void);

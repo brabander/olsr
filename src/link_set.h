@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.18 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: link_set.h,v 1.19 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -54,9 +54,9 @@ struct link_entry
 {
   union olsr_ip_addr local_iface_addr;
   union olsr_ip_addr neighbor_iface_addr;
-  struct timeval SYM_time;
-  struct timeval ASYM_time;
-  struct timeval time;
+  clock_t SYM_time;
+  clock_t ASYM_time;
+  clock_t time;
   struct neighbor_entry *neighbor;
 
   /*
@@ -64,8 +64,8 @@ struct link_entry
    */
   float L_link_quality;
   int L_link_pending;
-  struct timeval L_LOST_LINK_time;
-  struct timeval hello_timeout; /* When we should receive a new HELLO */
+  clock_t L_LOST_LINK_time;
+  clock_t hello_timeout; /* When we should receive a new HELLO */
   double last_htime;
   olsr_u16_t olsr_seqno;
   olsr_bool olsr_seqno_valid;
@@ -75,7 +75,7 @@ struct link_entry
    */
 
   double loss_hello_int;
-  struct timeval loss_timeout;
+  clock_t loss_timeout;
 
   olsr_u16_t loss_seqno;
   int loss_seqno_valid;
@@ -109,9 +109,8 @@ struct link_entry
 
 struct link_entry *link_set;
 
-/* Timers */
-struct timeval  hold_time_neighbor;
-struct timeval  hold_time_neighbor_nw;
+/* Timer */
+clock_t hold_time_neighbor;
 
 /* Function prototypes */
 

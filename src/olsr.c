@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.35 2004/12/15 17:21:01 kattemat Exp $
+ * $Id: olsr.c,v 1.36 2005/01/16 19:49:28 kattemat Exp $
  */
 
 /**
@@ -449,15 +449,12 @@ void
 set_buffer_timer(struct interface *ifn)
 {
   float jitter;
-  struct timeval jittertimer;
       
   /* Set timer */
   jitter = (float) random()/RAND_MAX;
   jitter *= max_jitter;
 
-  olsr_init_timer((olsr_u32_t) (jitter*1000), &jittertimer);
-
-  timeradd(&now, &jittertimer, &fwdtimer[ifn->if_nr]);
+  fwdtimer[ifn->if_nr] = GET_TIMESTAMP(jitter*1000);
 
 }
 

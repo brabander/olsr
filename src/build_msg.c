@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.23 2004/12/12 18:57:50 kattemat Exp $
+ * $Id: build_msg.c,v 1.24 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -764,7 +764,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
     }
   else
     {
-      if((!partial_sent) && (!TIMED_OUT(&send_empty_tc)))
+      if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 
@@ -896,7 +896,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
     }
   else
     {
-      if((!partial_sent) && (!TIMED_OUT(&send_empty_tc)))
+      if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
 	{
 	  olsr_printf(1, "TC: Sending empty package\n");
 	    

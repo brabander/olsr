@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.52 2004/12/19 09:34:36 kattemat Exp $
+ * $Id: main.c,v 1.53 2005/01/16 19:49:28 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -111,8 +111,8 @@ main(int argc, char *argv[])
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
-  /* Initialize socket list */
-  olsr_socket_entries = NULL;
+  /* Initialize tick resolution */
+  system_tick_divider = 1000/sysconf(_SC_CLK_TCK);
 
 #ifndef WIN32
   /* Check if user is root */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.19 2004/12/19 12:20:00 kattemat Exp $
+ * $Id: tc_set.c,v 1.20 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -54,11 +54,7 @@ int
 olsr_init_tc()
 {
   int index;
-  
-  /* Set timer to zero */
-  send_empty_tc.tv_sec = 0;
-  send_empty_tc.tv_usec = 0;
-
+ 
   changes = OLSR_FALSE;
 
   olsr_printf(5, "TC: init topo\n");
@@ -258,7 +254,7 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	  memset(new_topo_dst, 0, sizeof(struct topo_dst));
 
 	  COPY_IP(&new_topo_dst->T_dest_addr, &mprs->address);
-	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &new_topo_dst->T_time);
+	  new_topo_dst->T_time = GET_TIMESTAMP(msg->vtime*1000);
 	  new_topo_dst->T_seq = msg->ansn;
 
           if (olsr_cnf->lq_level > 0)
@@ -282,7 +278,7 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
       else
 	{
 	  /* Update entry */
-	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &existing_dst->T_time);
+	  existing_dst->T_time = GET_TIMESTAMP(msg->vtime*1000);
 	  existing_dst->T_seq = msg->ansn;
 
           if (olsr_cnf->lq_level > 0)
@@ -390,16 +386,12 @@ olsr_time_out_tc_set()
 	  while(dst_entry != &entry->destinations)
 	    {
 	      /* If timed out - delete */
-	      if(TIMED_OUT(&dst_entry->T_time))
+	      if(TIMED_OUT(dst_entry->T_time))
 		{
 		  deleted = 1;
 		  /* Dequeue */
 		  DEQUEUE_ELEM(dst_entry);
-		  //dst_entry->prev->next = dst_entry->next;
-		  //dst_entry->next->prev = dst_entry->prev;
-
 		  dst_to_delete = dst_entry;
-
 		  dst_entry = dst_entry->next;
 
 		  /* Delete */

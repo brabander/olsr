@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.22 2004/11/21 13:45:50 kattemat Exp $
+ * $Id: scheduler.c,v 1.23 2005/01/16 19:49:28 kattemat Exp $
  */
 
 
@@ -75,8 +75,7 @@ scheduler()
   /*
    *Used to calculate sleep time
    */
-  struct timeval start_of_loop;
-  struct timeval end_of_loop;
+  clock_t end_of_loop;
   struct timeval time_used;
   struct timeval interval;
   struct timeval sleeptime_val;
@@ -87,6 +86,9 @@ scheduler()
   struct timeout_entry *time_out_entry;
 
   struct interface *ifn;
+
+  /* Global buffer for times(2) calls */
+  struct tms tms_buf;
  
   pollrate = olsr_cnf->pollrate;
 
@@ -106,9 +108,18 @@ scheduler()
   for(;;)
     {
 
-      gettimeofday(&start_of_loop, NULL);
+      /* Update now_times */
+      if((now_times = times(&tms_buf)) < 0)
+	{
+	  if((now_times = times(&tms_buf)) < 0)
+	    {
+	      fprintf(stderr, "Fatal!scheduler could not get new_times.\n%s\n", strerror(errno));
+	      olsr_syslog(OLSR_LOG_ERR, "Fatal!scheduler could not get new_times.\n%m\n");
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	}
 
-      /* Update the global timestamp */
+      /* Update the global timestamp - kept for plugin compat */
       gettimeofday(&now, NULL);
       nowtm = gmtime((time_t *)&now.tv_sec);
 
@@ -181,18 +192,26 @@ scheduler()
       /* looping trough interfaces and emmittin pending data */
       for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
 	{ 
-	  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr])) 
+	  if(net_output_pending(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr])) 
 	    net_output(ifn);
 	}
 
 
-      gettimeofday(&end_of_loop, NULL);
+      if((end_of_loop = times(&tms_buf)) < 0)
+	{
+	  if((end_of_loop = times(&tms_buf)) < 0)
+	    {
+	      fprintf(stderr, "Fatal!scheduler could not get new_times.\n%s\n", strerror(errno));
+	      olsr_syslog(OLSR_LOG_ERR, "Fatal!scheduler could not get new_times.\n%m\n");
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	}
 
-      timersub(&end_of_loop, &start_of_loop, &time_used);
+      //printf("Tick diff: %d\n", end_of_loop - now_times);
+      time_used.tv_sec = ((end_of_loop - now_times) * system_tick_divider) / 1000;
+      time_used.tv_usec = ((end_of_loop - now_times) * system_tick_divider) % 1000;
 
-
-      //printf("Time to sleep: %ld\n", sleeptime.tv_nsec);
-      //printf("Time used: %ld\n", time_used.tv_usec/1000);
+      //printf("Time used: %d.%04d\n", time_used.tv_sec, time_used.tv_usec);
 
       if(timercmp(&time_used, &interval, <))
 	{
