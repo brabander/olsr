@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.55 2005/01/17 20:18:20 kattemat Exp $
+ * $Id: main.c,v 1.56 2005/01/23 18:12:13 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -349,19 +349,6 @@ main(int argc, char *argv[])
 	  argv++; argc--;
 	  continue;
 	}
-
-      /*
-       * Set the tos bits to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-tos") == 0) 
-	{
-	  argv++; argc--;
-	  sscanf(*argv,"%d",(int *)&olsr_cnf->tos);
-	  argv++; argc--;
-	  continue;
-	}
-
 
       /*
        * Set the polling interval to be used by olsrd.
@@ -753,7 +740,7 @@ print_usage()
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
-  fprintf(stderr, "  [-tos value (int)] [-T <Polling Rate (secs)>]\n"); 
+  fprintf(stderr, "  [-T <Polling Rate (secs)>]\n"); 
 
 }
 
