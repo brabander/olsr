@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.14 2005/02/17 17:23:19 kattemat Exp $
+ * $Id: ifnet.c,v 1.15 2005/02/19 18:17:27 kattemat Exp $
  */
 
 #include "../interfaces.h"
@@ -624,8 +624,8 @@ int chk_if_changed(struct olsr_if *IntConf)
     olsr_printf(1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
 
     Int->is_wireless = IsWlan;
-    if(IntConf->weight.fixed)
-      Int->int_metric = IntConf->weight.value;
+    if(IntConf->cnf->weight.fixed)
+      Int->int_metric = IntConf->cnf->weight.value;
     else
       Int->int_metric = IsWlan;
 
@@ -774,8 +774,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
     IsWlan = 1;
 
   New->is_wireless = IsWlan;
-  if(IntConf->weight.fixed)
-    New->int_metric = IntConf->weight.value;
+  if(IntConf->cnf->weight.fixed)
+    New->int_metric = IntConf->cnf->weight.value;
   else
     New->int_metric = IsWlan;
 
