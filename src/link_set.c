@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.34 2004/11/28 13:43:59 tlopatic Exp $
+ * $Id: link_set.c,v 1.35 2004/11/29 06:28:49 kattemat Exp $
  */
 
 
@@ -396,8 +396,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
                       backup_if = tmp_if;
                       backup_link_quality = curr;
                     }
-#endif
                 }
+#endif
             }
 	}
       
