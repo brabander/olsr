@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.11 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.12 2004/12/03 18:01:59 tlopatic Exp $
  */
 
 #include <stdio.h>
@@ -72,6 +72,7 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
   Row.dwForwardIfIndex = Dest->rt_if->if_index;
   Row.dwForwardType = (Dest->rt_dst.v4 == Dest->rt_router.v4) ? 3 : 4;
   Row.dwForwardProto = 3; // PROTO_IP_NETMGMT
+  Row.dwForwardMetric1 = Dest->rt_metric;
 
   Res = SetIpForwardEntry(&Row);
 
@@ -126,6 +127,7 @@ int olsr_ioctl_del_route(struct rt_entry *Dest)
   Row.dwForwardIfIndex = Dest->rt_if->if_index;
   Row.dwForwardType = (Dest->rt_dst.v4 == Dest->rt_router.v4) ? 3 : 4;
   Row.dwForwardProto = 3; // PROTO_IP_NETMGMT
+  Row.dwForwardMetric1 = Dest->rt_metric;
 
   Res = DeleteIpForwardEntry(&Row);
 
