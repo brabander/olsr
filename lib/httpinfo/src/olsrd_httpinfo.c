@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.4 2004/12/16 18:35:26 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.5 2004/12/17 07:43:52 kattemat Exp $
  */
 
 /*
@@ -65,17 +65,23 @@ parse_http_request(int);
 int
 build_http_header(http_header_type, olsr_u32_t, char *, olsr_u32_t);
 
-int
-build_body(char *, olsr_u32_t);
-
 static int
 build_frame(char *, char *, olsr_u32_t, int(*frame_body_cb)(char *, olsr_u32_t));
+
+int
+build_status_body(char *, olsr_u32_t);
 
 int
 build_hello_body(char *, olsr_u32_t);
 
 int
 build_topo_body(char *, olsr_u32_t);
+
+int
+build_hna_body(char *, olsr_u32_t);
+
+int
+build_mid_body(char *, olsr_u32_t);
 
 
 static int client_sockets[MAX_CLIENTS];
@@ -168,6 +174,8 @@ parse_http_request(int fd)
   char filename[251];
   char http_version[11];
   int c = 0, r = 1;
+  char statusheader[100];
+  time_t currtime;
 
   addrlen = sizeof(struct sockaddr_in);
 
@@ -239,11 +247,15 @@ parse_http_request(int fd)
           }
       printf("\n\n");
       /* All is good */
+      time(&currtime);
+      strftime(statusheader, 100, "Status <i>%a, %d %b %Y %H:%M:%S</i>", gmtime(&currtime));
 
+      build_frame(statusheader, &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_status_body);
       build_frame("Neighbors", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hello_body);
       build_frame("Topology", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_topo_body);
+      build_frame("HNA", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_hna_body);
+      build_frame("MID", &body[strlen(body)], MAX_HTTPREQ_SIZE - strlen(body), &build_mid_body);
 
-	//build_body(body, sizeof(body));
       i = 0;
       while(http_ok_tail[i])
           {
@@ -367,64 +379,7 @@ plugin_io(int cmd, void *data, size_t size)
     }
   
   return 1;
-}
 
-
-
-
-/**
- *Scheduled event
- */
-int
-build_body(char *buf, olsr_u32_t bufsize)
-{
-  int size;
-  olsr_u8_t index;
-  struct tc_entry *entry;
-  struct hna_entry *tmp_hna;
-  struct hna_net *tmp_net;
-
-  size = 0;
-
-  strcat(buf,"<pre>\n");
-
-  strcat(buf, "NEIGHBORS:\n");
-  
-  
-
-  strcat(buf, "TOPOLOGY:\n");
-
-
-  strcat(buf, "HNA:\n");
-
-  /* HNA entries */
-  for(index=0;index<HASHSIZE;index++)
-    {
-      tmp_hna = hna_set[index].next;
-      /* Check all entrys */
-      while(tmp_hna != &hna_set[index])
-	{
-	  /* Check all networks */
-	  tmp_net = tmp_hna->networks.next;
-	      
-	  while(tmp_net != &tmp_hna->networks)
-	    {
-	      size = strlen(buf);
-	      sprintf(&buf[size], "GW: %s NET: %s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr), olsr_ip_to_string(&tmp_net->A_network_addr)/*, olsr_ip_to_string(&tmp_net->A_netmask.v4)*/);
-	      tmp_net = tmp_net->next;
-	    }
-	      
-	  tmp_hna = tmp_hna->next;
-	}
-    }
-
-
-  strcat(buf, "\n\n");
-
-
-  strcat(buf,"</pre>\n");
-  
-  return strlen(buf);
 }
 
 
@@ -450,6 +405,15 @@ build_frame(char *title, char *buf, olsr_u32_t size, int(*frame_body_cb)(char *,
 
   return strlen(buf);
 }
+
+
+int
+build_status_body(char *buf, olsr_u32_t bufsize)
+{
+
+  strcat(buf, "STATUS HERE");
+}
+
 
 
 int
@@ -521,6 +485,48 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
     }
 }
 
+
+
+int
+build_hna_body(char *buf, olsr_u32_t bufsize)
+{
+  int size;
+  olsr_u8_t index;
+  struct tc_entry *entry;
+  struct hna_entry *tmp_hna;
+  struct hna_net *tmp_net;
+
+  size = 0;
+
+  /* HNA entries */
+  for(index=0;index<HASHSIZE;index++)
+    {
+      tmp_hna = hna_set[index].next;
+      /* Check all entrys */
+      while(tmp_hna != &hna_set[index])
+	{
+	  /* Check all networks */
+	  tmp_net = tmp_hna->networks.next;
+	      
+	  while(tmp_net != &tmp_hna->networks)
+	    {
+	      size = strlen(buf);
+	      sprintf(&buf[size], "GW: %s NET: %s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr), olsr_ip_to_string(&tmp_net->A_network_addr)/*, olsr_ip_to_string(&tmp_net->A_netmask.v4)*/);
+	      tmp_net = tmp_net->next;
+	    }
+	      
+	  tmp_hna = tmp_hna->next;
+	}
+    }
+}
+
+
+int
+build_mid_body(char *buf, olsr_u32_t bufsize)
+{
+
+  strcat(buf, "MID<br>\n");
+}
 
 /**
  *Converts a olsr_ip_addr to a string

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.3 2004/12/16 18:35:26 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.4 2004/12/17 07:43:52 kattemat Exp $
  */
 
 /*
@@ -116,10 +116,10 @@ static const char *http_ok_head[] =
     "</TD>\n",
     "<TD ALIGN=right>\n",
     "<FONT COLOR=\"#FFFFFF\">\n",
-    "<A HREF=""><B>Link1</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=""><B>Link2</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=""><B>Link3</B></A>&nbsp;|&nbsp;\n",
-    "<A HREF=""><B>Link4</B></A>\n",
+    "<A HREF=\"\"><B>Link1</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"\"><B>Link2</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"\"><B>Link3</B></A>&nbsp;|&nbsp;\n",
+    "<A HREF=\"/\"><B>Refresh</B></A>&nbsp;&nbsp;\n",
     "</FONT>\n",
     "</TD>\n",
     "</TR>\n",
@@ -141,8 +141,8 @@ static const char *http_ok_tail[] =
     "<P>\n",
     "<TABLE ALIGN=center WIDTH=800><TR><TD ALIGN=left>\n",
     "<B>\n",
-    "<A HREF="">[link1]</A>&nbsp;&nbsp;\n",
-    "<A HREF="">[link2]</A>\n",
+    "<A HREF=\"\">[link1]</A>&nbsp;&nbsp;\n",
+    "<A HREF=\"\">[link2]</A>\n",
     "</B>\n",
     "</TD></TR></TABLE>\n",
     "<P>\n",
