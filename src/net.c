@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.29 2005/02/08 12:55:23 kattemat Exp $
+ * $Id: net.c,v 1.30 2005/02/12 22:14:27 kattemat Exp $
  */
 
 #include "net.h"
@@ -48,8 +48,6 @@
 void
 WinSockPError(char *);
 #endif
-
-#warning Interface configuration is now responsible for setting up outputbuffers!!
 
 struct olsr_netbuf
 {

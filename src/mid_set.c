@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.12 2005/01/22 00:09:18 kattemat Exp $
+ * $Id: mid_set.c,v 1.13 2005/02/12 22:14:27 kattemat Exp $
  */
 
 #include "defs.h"
@@ -236,7 +236,6 @@ mid_lookup_main_addr(union olsr_ip_addr *adr)
   olsr_u32_t hash;
   struct mid_address *tmp_list;
 
-#warning MID SET NOW HAS REVERSE INDEXING!
   hash = olsr_hashing(adr);
   /*Traverse MID list*/
   for(tmp_list = reverse_mid_set[hash].next; 
