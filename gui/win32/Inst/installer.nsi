@@ -1,5 +1,5 @@
 ;
-; $Id: installer.nsi,v 1.4 2004/09/15 20:01:09 tlopatic Exp $
+; $Id: installer.nsi,v 1.5 2004/09/16 09:45:26 tlopatic Exp $
 ; Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
 ;
 ; This file is part of olsr.org.
@@ -105,6 +105,7 @@ Section "Uninstall"
         Delete $INSTDIR\README-WIN32.txt
         Delete $INSTDIR\linux-manual.txt
         Delete $INSTDIR\Default.olsr
+        Delete $INSTDIR\olsrd_dot_draw.dll
         Delete $INSTDIR\uninstall.exe
 
         RMDir $INSTDIR

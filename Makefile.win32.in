@@ -1,3 +1,5 @@
+VERS =		0.4.7
+
 OBJS =		src/build_msg.o \
 		src/configfile.o \
 		src/duplicate_set.o \
@@ -40,13 +42,51 @@ OBJS =		src/build_msg.o \
 		gcc -mno-cygwin -O2 -Wall -c -DWIN32 \
 		-Isrc -Isrc/win32 -o$@ $<
 
-olsrd:		$(OBJS)
+olsrd.exe:	$(OBJS)
 		gcc -mno-cygwin -o olsrd.exe $(OBJS) -lws2_32 -liphlpapi
 
 clean:
-		rm -f olsrd.exe *.dll
+		rm -f olsrd.exe olsr-${VERS}.zip olsr-${VERS}-setup.exe *.dll
 		find . -name \*~ -exec rm -f {} \;
 		find src -name \*.o -exec rm -f {} \;
 
 mclean:		clean
 		rm -f Makefile.win32
+
+olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
+		gui/win32/Shim/Release/Shim.exe \
+		olsrd.exe \
+		README-WIN32.txt \
+		gui/win32/Inst/linux-manual.txt \
+		files/olsrd.conf.default.win32 \
+		lib/dot_draw/olsrd_dot_draw.dll
+		rm -rf ${TEMP}/olsr-${VERS}
+		rm -f ${TEMP}/olsr-${VERS}.zip
+		rm -f olsr-${VERS}.zip
+		mkdir ${TEMP}/olsr-${VERS}
+		cp gui/win32/Main/Release/Switch.exe ${TEMP}/olsr-${VERS}
+		cp gui/win32/Shim/Release/Shim.exe ${TEMP}/olsr-${VERS}
+		cp olsrd.exe ${TEMP}/olsr-${VERS}
+		cp README-WIN32.txt ${TEMP}/olsr-${VERS}
+		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
+		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/Default.olsr
+		cp lib/dot_draw/olsrd_dot_draw.dll ${TEMP}/olsr-${VERS}
+		cd ${TEMP}; echo y | cacls olsr-${VERS} /T /G Everyone:F
+		cd ${TEMP}; zip -q -r olsr-${VERS}.zip olsr-${VERS}
+		cp ${TEMP}/olsr-${VERS}.zip .
+		rm -rf ${TEMP}olsr-${VERS}
+		rm -f ${TEMP}/olsr-${VERS}.zip
+
+olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
+		gui/win32/Shim/Release/Shim.exe \
+		olsrd.exe \
+		README-WIN32.txt \
+		gui/win32/Inst/linux-manual.txt \
+		files/olsrd.conf.default.win32 \
+		lib/dot_draw/olsrd_dot_draw.dll \
+		gui/win32/Inst/installer.nsi
+		rm -f olsr-setup.exe
+		rm -f olsr-${VERS}-setup.exe
+		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
+		mv olsr-setup.exe olsr-${VERS}-setup.exe
+
