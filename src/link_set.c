@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.27 2004/11/14 13:58:49 kattemat Exp $
+ * $Id: link_set.c,v 1.28 2004/11/14 15:08:10 kattemat Exp $
  *
  */
 
@@ -434,6 +434,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link = olsr_malloc(sizeof(struct link_entry), "new link entry");
 
+  memset(new_link, 0 , sizeof(struct link_entry));
   /*
    * L_local_iface_addr = Address of the interface
    * which received the HELLO message
@@ -935,8 +936,9 @@ void olsr_print_link_set(void)
   for (walker = link_set; walker != NULL; walker = walker->next)
     olsr_printf(1, fstr, olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
-                walker->lost_packets, walker->total_packets,
-                walker->neigh_link_quality);
+		walker->lost_packets, walker->total_packets,
+		walker->neigh_link_quality);
+
 }
 
 static void update_packet_loss_worker(struct link_entry *entry, int lost)
