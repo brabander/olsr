@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.2 2004/12/16 14:58:54 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.3 2004/12/16 15:26:20 kattemat Exp $
  */
 
 /*
@@ -221,8 +221,23 @@ parse_http_request(int fd)
     }
   else
     {
+      int i = 0;
+      while(http_ok_head[i])
+          {
+              strcat(body, http_ok_head[i]);
+              i++;
+          }
+      printf("\n\n");
       /* All is good */
       build_body(body, sizeof(body));
+      i = 0;
+      while(http_ok_tail[i])
+          {
+              strcat(body, http_ok_tail[i]);
+              i++;
+          }
+
+
       c = build_http_header(HTTP_OK, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
   
@@ -360,7 +375,7 @@ build_body(char *buf, olsr_u32_t bufsize)
 
   size = 0;
 
-  strcat(buf,"<http>\n<pre>\n");
+  strcat(buf,"<pre>\n");
 
   strcat(buf, "NEIGHBORS:\n");
   
@@ -443,7 +458,7 @@ build_body(char *buf, olsr_u32_t bufsize)
   strcat(buf, "\n\n");
 
 
-  strcat(buf,"</pre><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION "</i>\n</http>\n");
+  strcat(buf,"</pre>\n");
   
   return strlen(buf);
 }
