@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.h,v 1.7 2004/10/20 18:21:00 kattemat Exp $
+ * $Id: plugin_loader.h,v 1.8 2004/11/02 19:27:13 kattemat Exp $
  *
  */
 
@@ -29,10 +29,11 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include "olsr_protocol.h"
+#include "olsr_cfg.h"
 
 #define MAX_LIBS 10
 
-#define PLUGIN_INTERFACE_VERSION 1
+#define PLUGIN_INTERFACE_VERSION 2
 
 /* Data to sent to the plugin with the register_olsr_function call */
 struct olsr_plugin_data
@@ -48,6 +49,10 @@ struct olsr_plugin
   /* The handle */
   void *dlhandle;
 
+  /* Params */
+  struct plugin_param *params;
+
+  int (*register_param)(char *, char *);
   int (*register_olsr_data)(struct olsr_plugin_data *);
 
   /* Multi - purpose function */
@@ -61,12 +66,6 @@ struct olsr_plugin *olsr_plugins;
 
 int
 olsr_load_plugins(void);
-
-void
-init_olsr_plugin(struct olsr_plugin *);
-
-int
-olsr_load_dl(char *);
 
 void
 olsr_close_plugins(void);

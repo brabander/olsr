@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.2 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.3 2004/11/02 19:27:13 kattemat Exp $
  *
  */
 
@@ -121,9 +121,17 @@ struct hyst_param
   float                    thr_low;
 };
 
+struct plugin_param
+{
+  char                     *key;
+  char                     *value;
+  struct plugin_param      *next;
+};
+
 struct plugin_entry
 {
   char                     *name;
+  struct plugin_param      *params;
   struct plugin_entry      *next;
 };
 

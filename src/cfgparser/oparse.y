@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.8 2004/11/01 20:13:27 kattemat Exp $
+ * $Id: oparse.y,v 1.9 2004/11/02 19:27:14 kattemat Exp $
  *
  */
 
@@ -584,6 +584,8 @@ plblock: TOK_PLUGIN TOK_STRING
     }
 
   pe->name = $2->string;
+
+  pe->params = NULL;
   
   if(PARSER_DEBUG) printf("Plugin: %s\n", $2->string);
 
@@ -597,13 +599,25 @@ plblock: TOK_PLUGIN TOK_STRING
 
 plparam: TOK_PLPARAM TOK_STRING TOK_STRING
 {
+  struct plugin_param *pp = malloc(sizeof(struct plugin_param));
+  
+  if(pp == NULL)
+    {
+      fprintf(stderr, "Out of memory(ADD PP)\n");
+      YYABORT;
+    }
+  
+  if(PARSER_DEBUG) printf("Plugin param key:\"%s\" val: \"%s\"\n", $2->string, $3->string);
+  
+  pp->key = $2->string;
+  pp->value = $3->string;
 
-    if(PARSER_DEBUG) printf("Plugin param key:\"%s\" val: \"%s\"\n", $2->string, $3->string);
+  /* Queue */
+  pp->next = cnf->plugins->params;
+  cnf->plugins->params = pp;
 
-    free($2->string);
-    free($2);
-    free($3->string);
-    free($3);
+  free($2);
+  free($3);
 }
 ;
 

@@ -19,18 +19,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.7 2004/10/20 18:21:00 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.8 2004/11/02 19:27:13 kattemat Exp $
  *
  */
 
 #include "plugin_loader.h"
 #include "defs.h"
-#include "olsr.h"
-#include "scheduler.h"
-#include "parser.h"
-#include "duplicate_set.h"
 #include "plugin.h"
-#include "link_set.h"
+
+/* Local functions */
+
+static void
+init_olsr_plugin(struct olsr_plugin *);
+
+static int
+olsr_load_dl(char *, struct plugin_param *);
+
+
 
 
 /**
@@ -51,10 +56,10 @@ olsr_load_plugins()
 
   while(entry)
     {  
-      if(olsr_load_dl(entry->name) < 0)
+      if(olsr_load_dl(entry->name, entry->params) < 0)
 	olsr_printf(1, "-- PLUGIN LOADING FAILED! --\n\n");
       else
-	loaded ++; /* I'm loaded! */
+	loaded ++;
 
       entry = entry->next;
     }
@@ -71,16 +76,17 @@ olsr_load_plugins()
  *@return negative on error
  */
 int
-olsr_load_dl(char *libname)
+olsr_load_dl(char *libname, struct plugin_param *params)
 {
   struct olsr_plugin new_entry, *entry;
   int *interface_version;
+
 
   olsr_printf(1, "---------- Plugin loader ----------\nLibrary: %s\n", libname);
 
   if((new_entry.dlhandle = dlopen(libname, RTLD_NOW)) == NULL)
     {
-      olsr_printf(1, "DL loading failed: %s!\n", dlerror());
+      olsr_printf(1, "DL loading failed: \"%s\"!\n", dlerror());
       return -1;
     }
 
@@ -90,7 +96,7 @@ olsr_load_dl(char *libname)
   /* Register mp function */
   if((interface_version = dlsym(new_entry.dlhandle, "plugin_interface_version")) == NULL)
     {
-      olsr_printf(1, "\nPlug-in interface version location failed!\n%s\n", dlerror());
+      olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
       dlclose(new_entry.dlhandle);
       return -1;
     }
@@ -98,41 +104,43 @@ olsr_load_dl(char *libname)
     {
       olsr_printf(1, " %d - ", *interface_version);
       if(*interface_version != PLUGIN_INTERFACE_VERSION)
-	{
-	  olsr_printf(1, "VERSION MISSMATCH!\n");
-	  dlclose(new_entry.dlhandle);
-	  return -1;
-	}
+	olsr_printf(1, "WARNING: VERSION MISSMATCH!\n");
       else
 	olsr_printf(1, "OK\n");
     }
 
+  olsr_printf(1, "Trying to fetch register function....");
+  
+  if((new_entry.register_olsr_data = dlsym(new_entry.dlhandle, "register_olsr_data")) == NULL)
+    {
+      /* This function must be present */
+      olsr_printf(1, "\nCould not find function registration function in plugin!\n%s\nCRITICAL ERROR - aborting!\n", dlerror());
+      dlclose(new_entry.dlhandle);
+      return -1;
+    }
+  olsr_printf(1, "OK\n");
+
 
   /* Fetch the multipurpose function */
   olsr_printf(1, "Trying to fetch plugin IO function....");
-  /* Register mp function */
   if((new_entry.plugin_io = dlsym(new_entry.dlhandle, "plugin_io")) == NULL)
-    {
-      olsr_printf(1, "\nPlug-in IO function location %s failed!\n%s\n", libname, dlerror());
-      dlclose(new_entry.dlhandle);
-      return -1;
-    }
-  olsr_printf(1, "OK\n");
+    olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
+  else
+    olsr_printf(1, "OK\n");
 
+  /* Fetch the parameter function */
+  olsr_printf(1, "Trying to fetch param function....");
+  if((new_entry.register_param = dlsym(new_entry.dlhandle, "register_olsr_param")) == NULL)
+    olsr_printf(1, "FAILED: \"%s\"\n", dlerror());
+  else
+    olsr_printf(1, "OK\n");
 
-  olsr_printf(1, "Trying to fetch register function....");
-
-  if((new_entry.register_olsr_data = dlsym(new_entry.dlhandle, "register_olsr_data")) == NULL)
-    {
-      olsr_printf(1, "\nCould not find function registration function in plugin!\n", dlerror());
-      dlclose(new_entry.dlhandle);
-      return -1;
-    }
-  olsr_printf(1, "OK\n");
 
   entry = olsr_malloc(sizeof(struct olsr_plugin), "Plugin entry");
 
   memcpy(entry, &new_entry, sizeof(struct olsr_plugin));
+
+  entry->params = params;
 
   /* Initialize the plugin */
   init_olsr_plugin(entry);
@@ -162,6 +170,18 @@ void
 init_olsr_plugin(struct olsr_plugin *entry)
 {
   struct olsr_plugin_data plugin_data;
+  struct plugin_param *params = entry->params;
+
+  if(entry->register_param)
+    {
+      olsr_printf(1, "Sending parameters...\n");
+      while(params)
+	{
+	  printf("\tKey:\"%s\" value:\"%s\"\n", params->key, params->value);
+	  entry->register_param(params->key, params->value);
+	  params = params->next;
+	}
+    }
 
   olsr_printf(1, "Running registration function...\n");
   /* Fill struct */
