@@ -1,5 +1,5 @@
 /*
- * $Id: Ipc.h,v 1.2 2004/09/15 11:18:41 tlopatic Exp $
+ * $Id: Ipc.h,v 1.3 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -27,6 +27,8 @@
 #define MSG_TYPE_OLSR_TC 2
 #define MSG_TYPE_OLSR_MID 3
 #define MSG_TYPE_OLSR_HNA 4
+#define MSG_TYPE_OLSR_LQ_HELLO 5
+#define MSG_TYPE_OLSR_LQ_TC 6
 
 #define MSG_TYPE_IPC_ROUTE 11
 #define MSG_TYPE_IPC_CONFIG 12

@@ -1,5 +1,5 @@
 /*
- * $Id: MyDialog2.cpp,v 1.4 2004/11/20 22:52:49 tlopatic Exp $
+ * $Id: MyDialog2.cpp,v 1.5 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -288,7 +288,9 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_EtxWindowSize.SetWindowText(Conv);
 
 	m_EtxRadio1.SetCheck(Conf->lq_level == 1);
-	m_EtxRadio2.SetCheck(Conf->lq_level == 2);
+	m_EtxRadio2.SetCheck(Conf->lq_level == 0 || Conf->lq_level == 2);
+
+	OnEtxCheck();
 
 	m_InternetCheck.SetCheck(FALSE);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: MyDialog1.cpp,v 1.3 2004/11/18 18:02:37 tlopatic Exp $
+ * $Id: MyDialog1.cpp,v 1.4 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -33,6 +33,8 @@ static char THIS_FILE[] = __FILE__;
 MyDialog1::MyDialog1(CWnd* pParent)
 	: CDialog(MyDialog1::IDD, pParent)
 {
+	NumLines = 0;
+
 	//{{AFX_DATA_INIT(MyDialog1)
 	//}}AFX_DATA_INIT
 }
@@ -77,8 +79,21 @@ void MyDialog1::OnCancel()
 
 void MyDialog1::AddOutputLine(CString Line)
 {
+	int Index;
+
 	CritSect.Lock();
+
 	Output += Line + "\r\n";
+
+	if (NumLines == 1000)
+	{
+		Index = Output.Find("\r\n");
+		Output.Delete(0, Index + 2);
+	}
+
+	else
+		NumLines++;
+
 	CritSect.Unlock();
 
 	if (Frozen == 0)
@@ -116,6 +131,7 @@ void MyDialog1::OnClearButton()
 {
 	CritSect.Lock();
 	Output.Empty();
+	NumLines = 0;
 	CritSect.Unlock();
 
 	m_OutputWindow.SetWindowText(Output);

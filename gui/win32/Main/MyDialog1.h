@@ -1,5 +1,5 @@
 /*
- * $Id: MyDialog1.h,v 1.3 2004/11/18 18:02:37 tlopatic Exp $
+ * $Id: MyDialog1.h,v 1.4 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -70,6 +70,7 @@ protected:
 
 	CCriticalSection CritSect;
 	CString Output;
+	int NumLines;
 
 	int Frozen;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: FrontendDlg.cpp,v 1.6 2004/11/20 22:52:49 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.7 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -289,7 +289,7 @@ void CFrontendDlg::AddNode(unsigned int NodeAddr, unsigned int VTime)
 	m_TabCtrl.m_Dialog3.UpdateNodeInfo(NodeList);
 }
 
-void CFrontendDlg::HandleOlsrTc(struct OlsrTc *Msg)
+void CFrontendDlg::HandleOlsrTc(struct OlsrTc *Msg, int UseLq)
 {
 	int Size;
 	unsigned int *Addr;
@@ -312,6 +312,13 @@ void CFrontendDlg::HandleOlsrTc(struct OlsrTc *Msg)
 		AddMpr(*Addr, Msg->Header.Orig, Msg->Header.VTime);
 
 		Addr++;
+
+		if (UseLq != 0)
+		{
+			Size -= 4;
+			Addr++;
+		}
+
 	}
 }
 
@@ -365,7 +372,7 @@ void CFrontendDlg::HandleOlsrHna(struct OlsrHeader *Msg)
 	}
 }
 
-void CFrontendDlg::HandleOlsrHello(struct OlsrHello *Msg)
+void CFrontendDlg::HandleOlsrHello(struct OlsrHello *Msg, int UseLq)
 {
 	int Size, LinkSize;
 	struct OlsrHelloLink *Link;
@@ -403,6 +410,12 @@ void CFrontendDlg::HandleOlsrHello(struct OlsrHello *Msg)
 				AddMpr(*Addr, Msg->Header.Orig, Msg->Header.VTime);
 
 			Addr++;
+
+			if (UseLq != 0)
+			{
+				LinkSize -= 4;
+				Addr++;
+			}
 		}
 
 		Link = (struct OlsrHelloLink *)Addr;
@@ -502,11 +515,11 @@ unsigned int CFrontendDlg::NetThreadFunc(void)
 			break;
 
 		case MSG_TYPE_OLSR_HELLO:
-			HandleOlsrHello((struct OlsrHello *)Msg);
+			HandleOlsrHello((struct OlsrHello *)Msg, 0);
 			break;
 
 		case MSG_TYPE_OLSR_TC:
-			HandleOlsrTc((struct OlsrTc *)Msg);
+			HandleOlsrTc((struct OlsrTc *)Msg, 0);
 			break;
 
 		case MSG_TYPE_OLSR_MID:
@@ -515,6 +528,14 @@ unsigned int CFrontendDlg::NetThreadFunc(void)
 
 		case MSG_TYPE_OLSR_HNA:
 			HandleOlsrHna((struct OlsrHeader *)Msg);
+			break;
+
+		case MSG_TYPE_OLSR_LQ_HELLO:
+			HandleOlsrHello((struct OlsrHello *)Msg, 1);
+			break;
+
+		case MSG_TYPE_OLSR_LQ_TC:
+			HandleOlsrTc((struct OlsrTc *)Msg, 1);
 			break;
 		}
 

@@ -1,5 +1,5 @@
 /*
- * $Id: FrontendDlg.h,v 1.3 2004/09/15 11:18:41 tlopatic Exp $
+ * $Id: FrontendDlg.h,v 1.4 2004/11/20 23:17:47 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
@@ -93,8 +93,8 @@ protected:
 
 	void HandleIpcRoute(struct IpcRoute *);
 	void HandleIpcConfig(struct IpcConfig *);
-	void HandleOlsrHello(struct OlsrHello *);
-	void HandleOlsrTc(struct OlsrTc *);
+	void HandleOlsrHello(struct OlsrHello *, int);
+	void HandleOlsrTc(struct OlsrTc *, int);
 	void HandleOlsrMid(struct OlsrHeader *);
 	void HandleOlsrHna(struct OlsrHeader *);
 
