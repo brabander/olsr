@@ -21,6 +21,12 @@ interfaces from wired interfaces. We can now, for example, set
 different HELLO intervals for WLAN interfaces and wired interfaces,
 respectively.
 
+ROUTE UPDATES
+
+The order of updates of calculated routes is swapped. Now new routes
+are added prior to deleting old ones. This could fix issues where
+in some very very few cases one could experiment loss of routes.
+
 BUGFIXES
 
 There were quite some bugs in IPv6 operation in 0.4.6. These are
