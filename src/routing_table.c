@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.17 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: routing_table.c,v 1.18 2005/02/23 18:53:05 kattemat Exp $
  */
 
 
@@ -220,7 +220,6 @@ static int
 olsr_fill_routing_table_with_neighbors()
 {
   olsr_u8_t              index;
-  struct rt_entry        *new_route_entry=NULL;
 
 #ifdef DEBUG
   olsr_printf(7, "FILL ROUTING TABLE WITH NEIGHBORS\n");
@@ -254,11 +253,17 @@ olsr_fill_routing_table_with_neighbors()
 #ifdef DEBUG
 		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias));
 #endif
-
-		  new_route_entry = olsr_insert_routing_table(&addrs2->alias, 
-							      &link->neighbor_iface_addr,
-							      if_ifwithaddr(&link->local_iface_addr),
-							      1);
+		  if(link)
+		    {
+		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
+		      if(iface)
+			{
+			  olsr_insert_routing_table(&addrs2->alias, 
+						    &link->neighbor_iface_addr,
+						    iface,
+						    1);
+			}
+		    }
 	      
 		  addrs2 = addrs2->next_alias;
 		}
@@ -357,34 +362,40 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 
 	      while(addrsp!=NULL)
 		{
-		  struct rt_entry *new_route_entry = NULL;
 		  struct link_entry *link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
 #ifdef DEBUG
 		  olsr_printf(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrsp->alias));
 #endif
-		  new_route_entry = 
-		    olsr_insert_routing_table(&addrsp->alias, 
-					      &link->neighbor_iface_addr,
-					      if_ifwithaddr(&link->local_iface_addr),
-					      2);
-
-		  if(new_route_entry != NULL)
+		  if(link)
 		    {
-		      struct destination_n *list_destination_tmp;
-		      list_destination_tmp = olsr_malloc(sizeof(struct destination_n), 
-							 "Fill rt table 2 hop tmp");
-		      
-		      list_destination_tmp->destination = new_route_entry;
-		      list_destination_tmp->next = list_destination_n;
-		      list_destination_n = list_destination_tmp;
+		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
+		      if(iface)
+			{
+			  struct rt_entry *new_route_entry = 
+			    olsr_insert_routing_table(&addrsp->alias, 
+						      &link->neighbor_iface_addr,
+						      iface,
+						      2);
+			  
+			  if(new_route_entry != NULL)
+			    {
+			      struct destination_n *list_destination_tmp;
+			      list_destination_tmp = olsr_malloc(sizeof(struct destination_n), 
+								 "Fill rt table 2 hop tmp");
+			      
+			      list_destination_tmp->destination = new_route_entry;
+			      list_destination_tmp->next = list_destination_n;
+			      list_destination_n = list_destination_tmp;
+			    }
+			}
 		    }
 		  addrsp = addrsp->next_alias; 
 		}
 	    }
 	}
-
+      
     }
-
+  
   return list_destination_n;
 }
 
