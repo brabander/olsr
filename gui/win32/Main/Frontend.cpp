@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Frontend.cpp,v 1.6 2004/11/21 17:10:27 tlopatic Exp $
+ * $Id: Frontend.cpp,v 1.7 2005/01/17 11:52:35 tlopatic Exp $
  */
 
 #include "stdafx.h"
 #include "Frontend.h"
 #include "FrontendDlg.h"
+#include "TrayIcon.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -105,6 +106,8 @@ BOOL CFrontendApp::InitInstance()
 	ParseCommandLine(CmdLineInfo);
 
 	CFrontendDlg dlg;
+
+	tray_icon = new TrayIcon( dlg, AfxGetInstanceHandle() );
 
 	dlg.ConfigFile = CmdLineInfo.m_strFileName;
 

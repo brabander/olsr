@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: FrontendDlg.h,v 1.5 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: FrontendDlg.h,v 1.6 2005/01/17 11:52:36 tlopatic Exp $
  */
 
 #if !defined(AFX_FRONTENDDLG_H__7D68FBC0_7448_479B_81F0_3FBBDE291395__INCLUDED_)
@@ -68,13 +68,13 @@ public:
 	unsigned int NetThreadFunc(void);
 
 	CString ConfigFile;
+protected:
 
 	//{{AFX_VIRTUAL(CFrontendDlg)
-	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
 	//}}AFX_VIRTUAL
 
-protected:
+public:
 	//{{AFX_MSG(CFrontendDlg)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnOK();
@@ -84,7 +84,11 @@ protected:
 	afx_msg void OnExitButton();
 	//}}AFX_MSG
 
+protected:
 	DECLARE_MESSAGE_MAP()
+
+	int StartOlsrd(void);
+	int StopOlsrd(void);
 
 	int GetInterfaces(void);
 
@@ -93,9 +97,6 @@ protected:
 	CString StoredTempFile;
 
 	SOCKET SockHand;
-
-	int StartOlsrd(void);
-	int StopOlsrd(void);
 
 	int PipeMode;
 	int ExecutePipe(const char *, HANDLE *, HANDLE *, HANDLE *);

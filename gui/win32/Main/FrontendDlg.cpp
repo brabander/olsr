@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: FrontendDlg.cpp,v 1.8 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.9 2005/01/17 11:52:36 tlopatic Exp $
  */
 
 #include "stdafx.h"
 #include "Frontend.h"
 #include "FrontendDlg.h"
+#include "TrayIcon.h"
 
 #include "Ipc.h"
 
@@ -189,6 +190,11 @@ Restart3:
 
 		NodeList.GetNext(Pos);
 	}
+
+	if( NodeList.IsEmpty() )
+		TrayIcon::getInstance()->setStatus( TrayIcon::ON, "No nodes found" );
+	else
+		TrayIcon::getInstance()->setStatus( TrayIcon::CONNECTED, "Nodes available" );
 
 	m_TabCtrl.m_Dialog3.UpdateNodeInfo(NodeList);
 }
@@ -874,6 +880,8 @@ int CFrontendDlg::StartOlsrd()
 
 int CFrontendDlg::StopOlsrd()
 {
+	TrayIcon::getInstance()->setStatus( TrayIcon::OFF, "Off" );
+
 	::SetEvent(Event);
 
 	::WaitForSingleObject((HANDLE)LogThread, INFINITE);
@@ -976,6 +984,8 @@ void CFrontendDlg::OnStopButton()
 
 void CFrontendDlg::OnExitButton()
 {
+	delete TrayIcon::getInstance();
+
 	if (StopOlsrd() < 0)
 		return;
 
