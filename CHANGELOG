@@ -1,7 +1,15 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.24 2005/01/16 20:33:53 kattemat Exp $
+$Id: CHANGELOG,v 1.25 2005/01/24 16:39:15 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
+
+OPTIMIZATIONS
+
+The MID database is now also indexed by alias addresses. this makes
+lookups of main addresses based on alias addresses _much_ faster.
+The mid_lookup_main_addr function alone has gone from >30% of the
+total CPU time used by olsrd to <1%.
+PLUGIN DEVELOPERS: datatypes for MID entries has been changed.
 
 TIMEOUT OF DATASETS
 
@@ -9,8 +17,8 @@ Validity times for dataset entries are now set using the clock_t type
 (used to be struct timeval). This data is now fetched from the times(2)
 function instead of gettimeofday(2). This prevents possible problems
 if the system time is changed.
-PLUGIN DEVELOPERS need to note that datatypes for close to all
-dataset entries(link, neighbor, mid, hna, tc etc.) has been changed!!
+PLUGIN DEVELOPERS: Note that datatypes for close to all dataset entries
+(link, neighbor, mid, hna, tc etc.) has been changed!!
 
 CONFIGURATION FILE
 
