@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.7 2004/12/03 20:52:27 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.8 2005/01/01 17:58:34 kattemat Exp $
  */
 
 /*
@@ -221,6 +221,13 @@ fetch_olsrd_data()
     retval = 0;
   }
 
+  /* link set */
+  if(!olsr_plugin_io(GETD__LINK_SET, &link_set, sizeof(link_set))) {
+    link_set = NULL;
+    printf("********* err\n");
+    retval = 0;
+  }
+  
   /* Topoloy table */
   if(!olsr_plugin_io(GETD__TC_TABLE, 
 		     &tc_table, 

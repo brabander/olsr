@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.h,v 1.4 2004/12/03 20:52:27 kattemat Exp $
+ * $Id: olsrd_dot_draw.h,v 1.5 2005/01/01 17:58:34 kattemat Exp $
  */
 
 /*
@@ -60,7 +60,7 @@ void
 ipc_action(int);
 
 static void inline
-ipc_print_neigh_link(union olsr_ip_addr *, union olsr_ip_addr *);
+ipc_print_neigh_link(struct neighbor_entry *neighbor);
 
 static void inline
 ipc_print_2h_link(union olsr_ip_addr *, union olsr_ip_addr *);
@@ -69,7 +69,7 @@ static void inline
 ipc_print_mpr_link(union olsr_ip_addr *, union olsr_ip_addr *);
 
 static void inline
-ipc_print_tc_link(union olsr_ip_addr *, union olsr_ip_addr *);
+ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry);
 
 static void inline
 ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
@@ -83,5 +83,6 @@ olsr_ip_to_string(union olsr_ip_addr *);
 char *
 olsr_netmask_to_string(union hna_netmask *);
 
+struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
 
 #endif

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_plugin_io.h,v 1.4 2004/12/03 20:52:27 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.5 2005/01/01 17:58:34 kattemat Exp $
  */
 
 
@@ -99,6 +99,7 @@
 #define GETD__ROUTINGTABLE                         113
 #define GETD__HNA_ROUTES                           114
 #define GETD__MID_SET                              115
+#define GETD__LINK_SET                             116
 
 /* Function fetching - starts at 500 */
 #define GETF__OLSR_REGISTER_SCHEDULER_EVENT        500

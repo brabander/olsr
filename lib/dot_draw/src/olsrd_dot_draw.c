@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.8 2004/12/03 20:52:27 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.9 2005/01/01 17:58:34 kattemat Exp $
  */
 
 /*
@@ -225,25 +225,7 @@ pcf_event(int changes_neighborhood,
 	      neighbor_table_tmp != &neighbortable[index];
 	      neighbor_table_tmp = neighbor_table_tmp->next)
 	    {
-	      if(neighbor_table_tmp->is_mpr)
-		{
-		  ipc_print_mpr_link(main_addr, &neighbor_table_tmp->neighbor_main_addr);		  
-		  ipc_print_mpr_link(&neighbor_table_tmp->neighbor_main_addr, main_addr);
-		}
-	      else
-		{
-		  ipc_print_neigh_link(main_addr, &neighbor_table_tmp->neighbor_main_addr);		  
-		  ipc_print_neigh_link(&neighbor_table_tmp->neighbor_main_addr, main_addr);
-		}
-
-	      for(list_2 = neighbor_table_tmp->neighbor_2_list.next;
-		  list_2 != &neighbor_table_tmp->neighbor_2_list;
-		  list_2 = list_2->next)
-		{
-		  ipc_print_2h_link(&neighbor_table_tmp->neighbor_main_addr, 
-				    &list_2->neighbor_2->neighbor_2_addr);
-		}
-	      
+	      ipc_print_neigh_link( neighbor_table_tmp );
 	    }
 	}
 
@@ -258,7 +240,7 @@ pcf_event(int changes_neighborhood,
 	      dst_entry = entry->destinations.next;
 	      while(dst_entry != &entry->destinations)
 		{
-		  ipc_print_tc_link(&entry->T_last_addr, &dst_entry->T_dest_addr);
+		  ipc_print_tc_link(entry, dst_entry);
 		  dst_entry = dst_entry->next;
 		}
 	      entry = entry->next;
@@ -300,67 +282,69 @@ pcf_event(int changes_neighborhood,
   return res;
 }
 
-
-
-
-static void inline
-ipc_print_neigh_link(union olsr_ip_addr *from, union olsr_ip_addr *to)
-{
-  char *adr;
-
-  adr = olsr_ip_to_string(from);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
-  adr = olsr_ip_to_string(to);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"neigh\", style=dashed];\n", strlen("\"[label=\"neigh\", style=dashed];\n"));
-
+#define MIN_LINK_QUALITY 0.01
+double calc_etx( double loss, double neigh_loss ) {
+	if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
+		return 0.0;
+	else
+		return 1.0 / (loss * neigh_loss);
 }
 
 static void inline
-ipc_print_2h_link(union olsr_ip_addr *from, union olsr_ip_addr *to)
+ipc_print_neigh_link(struct neighbor_entry *neighbor)
 {
-  char *adr;
-
-  adr = olsr_ip_to_string(from);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
-  adr = olsr_ip_to_string(to);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"2 hop\"];\n", strlen("\"[label=\"2 hop\"];\n"));
-
+  char buf[256];
+  int len;
+  char* adr;
+  double etx=0.0;
+  char* style = "solid";
+  struct link_entry* link;
+  adr = olsr_ip_to_string(main_addr);
+  len = sprintf( buf, "\"%s\" -> ", adr );
+  ipc_send(buf, len);
+  
+  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
+  
+  if (neighbor->status == 0) { // non SYM
+  	style = "dashed";
+  }
+  else {
+    /* find best link to neighbor for the ETX */
+    //? why cant i just get it one time at fetch_olsrd_data??? (br1)
+    if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
+    {
+      link_set = link; // for olsr_neighbor_best_link    
+      link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
+      if (link) {
+        etx = calc_etx( link->loss_link_quality, link->neigh_link_quality);
+      }
+    }
+  }
+    
+  len = sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
+  ipc_send(buf, len);
+  
+   if (neighbor->is_mpr) {
+	len = sprintf( buf, "\"%s\"[shape=box];\n", adr );
+  	ipc_send(buf, len);
+  }
 }
 
 static void inline
-ipc_print_mpr_link(union olsr_ip_addr *from, union olsr_ip_addr *to)
+ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry)
 {
-  char *adr;
+  char buf[256];
+  int len;
+  char* adr;
+  double etx = calc_etx( dst_entry->link_quality, dst_entry->inverse_link_quality );
 
-  adr = olsr_ip_to_string(from);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
-  adr = olsr_ip_to_string(to);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"MPR\", style=dashed];\n", strlen("\"[label=\"MPR\", style=dashed]];\n"));
-
-}
-
-static void inline
-ipc_print_tc_link(union olsr_ip_addr *from, union olsr_ip_addr *to)
-{
-  char *adr;
-
-  adr = olsr_ip_to_string(from);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
-  adr = olsr_ip_to_string(to);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"TC\"];\n", strlen("\"[label=\"TC\"];\n"));
-
+  adr = olsr_ip_to_string(&entry->T_last_addr);
+  len = sprintf( buf, "\"%s\" -> ", adr );
+  ipc_send(buf, len);
+  
+  adr = olsr_ip_to_string(&dst_entry->T_dest_addr);
+  len = sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", adr, etx );
+  ipc_send(buf, len);
 }
 
 static void inline
@@ -415,12 +399,6 @@ ipc_send(char *data, int size)
  *Converts a olsr_ip_addr to a string
  *Goes for both IPv4 and IPv6
  *
- *NON REENTRANT! If you need to use this
- *function twice in e.g. the same printf
- *it will not work.
- *You must use it in different calls e.g.
- *two different printfs
- *
  *@param the IP to convert
  *@return a pointer to a static string buffer
  *representing the address in "dots and numbers"
@@ -429,10 +407,11 @@ ipc_send(char *data, int size)
 char *
 olsr_ip_to_string(union olsr_ip_addr *addr)
 {
-
+  static int index = 0;
+  static char buff[4][100];
   char *ret;
   struct in_addr in;
-  
+ 
   if(ipversion == AF_INET)
     {
       in.s_addr=addr->v4;
@@ -444,10 +423,14 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
       ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
     }
 
+  strncpy(buff[index], ret, 100);
+
+  ret = buff[index];
+
+  index = (index + 1) & 3;
+
   return ret;
 }
-
-
 
 
 /**
@@ -476,4 +459,32 @@ olsr_netmask_to_string(union hna_netmask *mask)
   return ret;
 }
 
+#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
+struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
+{
+  struct link_entry *walker;
+  double best = 0.0;
+  double curr;
+  struct link_entry *res = NULL;
+
+  // loop through all links
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    // check whether it's a link to the requested neighbor and
+    // whether the link's quality is better than what we have
+    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr))
+    {
+      curr = walker->loss_link_quality * walker->neigh_link_quality;
+
+      if (curr >= best)
+      {
+        best = curr;
+        res = walker;
+      }
+    }
+  }
+
+  return res;
+}
 
