@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.7 2004/11/06 00:08:45 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.8 2004/11/07 12:19:58 kattemat Exp $
  *
  */
 
@@ -34,6 +34,7 @@
  *                 GETD_PACKET removed
  *                 GETD_MAXMESSAGESIZE removed
  *                 GETD_OUTPUTSIZE removed
+ *                 GETF__NET_OUTBUFFER_PUSH added
  *                 - Andreas
  */
 
@@ -107,5 +108,6 @@
 #define GETF__ADD_IFCHGF                           529
 #define GETF__DEL_IFCHGF                           530
 #define GETF__APM_READ                             531
+#define GETF__NET_OUTBUFFER_PUSH                   532
 
 #endif
