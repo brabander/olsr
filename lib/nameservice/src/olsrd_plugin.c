@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.1 2005/01/16 13:06:00 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.2 2005/01/30 16:20:36 kattemat Exp $ */
 
 
 /*
@@ -42,6 +42,35 @@
 #include "olsrd_plugin.h"
 #include "nameservice.h"
 
+#ifdef __FreeBSD__
+
+#include <stdlib.h>
+
+/* strndup() is a GNU extention */
+char *
+strndup(const char *ptr, size_t size)
+{
+  int len = strlen(ptr);
+  char *ret = NULL;
+
+  if(!len)
+    return NULL;
+
+  if(len > size)
+    len = size;
+
+  ret = malloc(len + 1);
+  
+  if(!ret)
+    return NULL;
+
+  strncpy(ret, ptr, len);
+  ret[len] = '\0';
+
+  return ret;
+}
+
+#endif
 
 /* Data to sent to the plugin with the register_olsr_function call 
  * THIS STRUCT MUST MATCH ITS SIBLING IN plugin_loader.h IN OLSRD
