@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.17 2005/01/17 20:24:17 kattemat Exp $
+ * $Id: socket_parser.c,v 1.18 2005/01/22 01:08:48 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -157,7 +157,7 @@ poll_sockets()
 {
   int n;
   struct olsr_socket_entry *olsr_sockets;
-
+  static struct tms tms_buf;
 
   /* If there are no registered sockets we
    * do not call select(2)
@@ -181,8 +181,11 @@ poll_sockets()
   if(n == 0)
     return;
   /* Did somethig go wrong? */
-  if ((n < 0) && errno != EINTR) 
+  if (n < 0) 
     {
+      if(errno == EINTR)
+	return;
+
       olsr_syslog(OLSR_LOG_ERR, "select: %m");
       olsr_printf(1, "Error select: %s", strerror(errno));
       return;
@@ -190,7 +193,8 @@ poll_sockets()
 
   /* Update time since this is much used by the parsing functions */
   gettimeofday(&now, NULL);      
-  
+  now_times = times(&tms_buf);
+
   olsr_sockets = olsr_socket_entries;
   while(olsr_sockets)
     {
