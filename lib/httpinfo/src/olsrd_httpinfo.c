@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.27 2004/12/31 08:58:33 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.28 2005/01/02 13:54:40 kattemat Exp $
  */
 
 /*
@@ -66,8 +66,38 @@
 
 #define FRAMEWIDTH 800
 
+#define ACTIVE_TAB "class=\"active\""
+
+
+#define FILENREQ_MATCH(req, filename) \
+        !strcmp(req, filename) || \
+        (strlen(req) && !strcmp(&req[1], filename))
+
+struct tab_entry
+{
+  char *tab_label;
+  char *filename;
+  int(*build_body_cb)(char *, olsr_u32_t);
+};
+
+struct static_bin_file_entry
+{
+  char *filename;
+  unsigned char *data;
+  unsigned int data_size;
+};
+
+struct static_txt_file_entry
+{
+  char *filename;
+  const char **data;
+};
+
 static int
 get_http_socket(int);
+
+int
+build_tabs(char *, int);
 
 void
 parse_http_request(int);
@@ -96,6 +126,15 @@ build_hna_body(char *, olsr_u32_t);
 int
 build_mid_body(char *, olsr_u32_t);
 
+int
+build_nodes_body(char *, olsr_u32_t);
+
+int
+build_all_body(char *, olsr_u32_t);
+
+int
+build_about_body(char *, olsr_u32_t);
+
 char *
 sockaddr_to_string(struct sockaddr *);
 
@@ -107,6 +146,32 @@ static struct http_stats stats;
 static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
 static int http_socket;
+
+
+
+struct tab_entry tab_entries[] =
+  {
+    {"Status", "status", build_status_body},
+    {"Routes", "routes", build_routes_body},
+    {"Links/Topology", "nodes", build_nodes_body},
+    {"All", "all", build_all_body},
+    {"About", "about", build_about_body},
+    {NULL, NULL, NULL}
+  };
+
+struct static_bin_file_entry static_bin_files[] =
+  {
+    {"favicon.ico", favicon_ico, 1406/*favicon_ico_len*/},
+    {"logo.gif", logo_gif, 2801/*logo_gif_len*/},
+    {"grayline.gif", grayline_gif, 43/*grayline_gif_len*/},
+    {NULL, NULL, 0}
+  };
+
+struct static_txt_file_entry static_txt_files[] =
+  {
+    {"httpinfo.css", httpinfo_css},
+    {NULL, NULL}
+  };
 
 /**
  *Do initialization here
@@ -261,91 +326,100 @@ parse_http_request(int fd)
       stats.ill_hits++;
       c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
-  else if(strlen(filename) > 1)
-    {
-      if(!strcmp(filename, "/favicon.ico") || !strcmp(filename, "favicon.ico"))
-	{
-	  stats.ok_hits++;
-	  memcpy(body, favicon_ico, favicon_ico_len);
-	  size = favicon_ico_len;
-	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
-	}
-      else if(!strcmp(filename, "/logo.gif") || !strcmp(filename, "logo.gif"))
-	{
-	  stats.ok_hits++;
-	  memcpy(body, logo_gif, logo_gif_len);
-	  size = logo_gif_len;
-	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
-	}
-      else
-	{
-	  stats.ill_hits++;
-	  strcpy(body, HTTP_404_MSG);
-	  c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
-	}
-    }
   else
     {
       int i = 0;
+      int y = 0;
 
-      stats.ok_hits++;
-
-      while(http_ok_head[i])
-          {
-              size += sprintf(&body[size], http_ok_head[i]);
-              i++;
-          }
-      olsr_printf(1, "\n\n");
-      /* All is good */
-
-      size += build_frame("Status", 
-			  "status", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_status_body);
-      size += build_frame("Current Routes", 
-			  "routes", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_routes_body);
-      size += build_frame("Links and Neighbors", 
-			  "neighbors", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_neigh_body);
-      size += build_frame("Topology", 
-			  "topology", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_topo_body);
-      size += build_frame("HNA", 
-			  "hna", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_hna_body);
-      size += build_frame("MID", 
-			  "mid", 
-			  FRAMEWIDTH, 
-			  &body[size], 
-			  HTML_BUFSIZE - size, 
-			  &build_mid_body);
-
+      while(static_bin_files[i].filename)
+	{
+	  if(FILENREQ_MATCH(filename, static_bin_files[i].filename))
+	    break;
+	  i++;
+	}
+      
+      if(static_bin_files[i].filename)
+	{
+	  stats.ok_hits++;
+	  memcpy(body, static_bin_files[i].data, static_bin_files[i].data_size);
+	  size = static_bin_files[i].data_size;
+	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
+	  goto send_http_data;
+	}
 
       i = 0;
-      while(http_ok_tail[i])
-          {
-              size += sprintf(&body[size], http_ok_tail[i]);
-              i++;
-          }
 
+      while(static_txt_files[i].filename)
+	{
+	  if(FILENREQ_MATCH(filename, static_txt_files[i].filename))
+	    break;
+	  i++;
+	}
+      
+      if(static_txt_files[i].filename)
+	{
+	  stats.ok_hits++;
+	  y = 0;
+	  while(static_txt_files[i].data[y])
+	    {
+	      size += sprintf(&body[size], static_txt_files[i].data[y]);
+	      y++;
+	    }
 
-      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
+	  c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, MAX_HTTPREQ_SIZE);  
+	  goto send_http_data;
+	}
+
+      i = 0;
+
+      if(strlen(filename) > 1)
+	{
+	  while(tab_entries[i].filename)
+	    {
+	      if(FILENREQ_MATCH(filename, tab_entries[i].filename))
+		break;
+	      i++;
+	    }
+	}
+
+      if(tab_entries[i].filename)
+	{
+	  y = 0;
+	  while(http_ok_head[y])
+	    {
+	      size += sprintf(&body[size], http_ok_head[y]);
+	      y++;
+	    }
+	  
+	  size += build_tabs(&body[size], i);
+	  size += build_frame("Current Routes", 
+			      "routes", 
+			      FRAMEWIDTH, 
+			      &body[size], 
+			      HTML_BUFSIZE - size, 
+			      tab_entries[i].build_body_cb);
+	  
+	  stats.ok_hits++;
+	  
+	  y = 0;
+	  while(http_ok_tail[y])
+	    {
+	      size += sprintf(&body[size], http_ok_tail[y]);
+	      y++;
+	    }  
+	  
+	  c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
+	  
+	  goto send_http_data;
+	}
+      
+      
+      stats.ill_hits++;
+      strcpy(body, HTTP_404_MSG);
+      c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, MAX_HTTPREQ_SIZE);
     }
+
+ send_http_data:
   
   r = send(client_sockets[curr_clients], req, c, 0);   
   if(r < 0)
@@ -440,6 +514,49 @@ build_http_header(http_header_type type,
 
 }
 
+
+
+int 
+build_tabs(char *buf, int active)
+{
+  int size = 0, i = 0, tabs = 0;
+
+  while(strcmp(html_tabs[i], "<!-- TAB ELEMENTS -->"))
+    {
+      size += sprintf(&buf[size], html_tabs[i]);
+      i++;
+    }
+
+  i++;
+
+  while(tab_entries[tabs].tab_label)
+    {
+      if(tabs == active)
+	size += sprintf(&buf[size], 
+			html_tabs[i], 
+			tab_entries[tabs].filename, 
+			ACTIVE_TAB, 
+			tab_entries[tabs].tab_label);
+      else
+	size += sprintf(&buf[size], 
+			html_tabs[i], 
+			tab_entries[tabs].filename, 
+			" ", 
+			tab_entries[tabs].tab_label);
+      tabs++;
+    }
+  
+  i++;      
+  while(html_tabs[i])
+    {
+      size += sprintf(&buf[size], html_tabs[i]);
+      i++;
+    }
+  
+  return size;
+}
+
+
 /*
  * destructor - called at unload
  */
@@ -476,9 +593,6 @@ build_frame(char *title,
 	    int(*frame_body_cb)(char *, olsr_u32_t))
 {
   int i = 0, size = 0;
-
-  size += sprintf(&buf[size], http_frame[i++], width);
-  size += sprintf(&buf[size], http_frame[i++], link, title);
 
   while(http_frame[i])
     {
@@ -572,7 +686,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
       size += sprintf(&buf[size], "HTTP stats(ok/error/illegal): <i>%d/%d/%d</i>\n", stats.ok_hits, stats.err_hits, stats.ill_hits);
 
-    size += sprintf(&buf[size], "<hr><table width=790 border=0>\n<tr>");
+    size += sprintf(&buf[size], "<hr><table width=\"100%%\" border=0>\n<tr>");
 
     size += sprintf(&buf[size], "<td>Main address: <b>%s</b></td>\n", olsr_ip_to_string(main_addr));
     
@@ -614,7 +728,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
     size += sprintf(&buf[size], "Interfaces:<br>\n");
 
 
-    size += sprintf(&buf[size], "<table width=790 border=0>\n");
+    size += sprintf(&buf[size], "<table width=\"100%%\" border=0>\n");
 
 
     for(ifs = cfg->interfaces; ifs; ifs = ifs->next)
@@ -661,7 +775,7 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     size += sprintf(&buf[size], "<hr>Plugins:<br>\n");
 
-    size += sprintf(&buf[size], "<table width=790 border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
+    size += sprintf(&buf[size], "<table width=\"100%%\" border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
 
     for(pentry = cfg->plugins; pentry; pentry = pentry->next)
       {
@@ -792,7 +906,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "Topology entries:<hr>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -819,7 +933,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += sprintf(&buf[size], "</table><hr>\n");
 
   return size;
 }
@@ -836,7 +950,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size = 0;
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += sprintf(&buf[size], "HNA entries:<hr>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -861,7 +975,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += sprintf(&buf[size], "</table><hr>\n");
 
   return size;
 }
@@ -875,7 +989,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
   struct mid_entry *entry;
   struct addresses *alias;
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  size += sprintf(&buf[size], "MID entries:<hr>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
   /* MID */  
   for(index=0;index<HASHSIZE;index++)
@@ -899,7 +1013,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += sprintf(&buf[size], "</table><hr>\n");
 
 
 
@@ -907,6 +1021,47 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 }
 
 
+int
+build_nodes_body(char *buf, olsr_u32_t bufsize)
+{
+  int size = 0;
+
+  size += build_neigh_body(buf, bufsize);
+  size += build_topo_body(&buf[size], bufsize - size);
+  size += build_hna_body(&buf[size], bufsize - size);
+  size += build_mid_body(&buf[size], bufsize - size);
+
+  return size;
+}
+
+int
+build_all_body(char *buf, olsr_u32_t bufsize)
+{
+  int size = 0;
+
+  size += build_status_body(&buf[size], bufsize);
+  size += build_routes_body(&buf[size], bufsize - size);
+  size += build_neigh_body(&buf[size], bufsize);
+  size += build_topo_body(&buf[size], bufsize - size);
+  size += build_hna_body(&buf[size], bufsize - size);
+  size += build_mid_body(&buf[size], bufsize - size);
+
+  return size;
+}
+
+
+int
+build_about_body(char *buf, olsr_u32_t bufsize)
+{
+  int size = 0, i = 0;
+
+  while(about_frame[i])
+    {
+      size += sprintf(&buf[size], about_frame[i]);
+      i++;
+    }
+  return size;
+}
 
 olsr_bool
 check_allowed_ip(union olsr_ip_addr *addr)

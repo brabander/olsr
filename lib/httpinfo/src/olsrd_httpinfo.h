@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.19 2004/12/28 20:40:03 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.20 2005/01/02 13:54:40 kattemat Exp $
  */
 
 /*
@@ -62,6 +62,31 @@
 #define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 
 
+
+static const char *httpinfo_css[] =
+{
+  "A {text-decoration: none}\n",
+  "TH{text-align: left}\n",
+  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
+  "hr\n{\nborder: none;\npadding: 1px;\nbackground: url(grayline.gif) repeat-x bottom;\n}\n",
+  "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n",
+  "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n",
+  "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n",
+  "#container\n{\nwidth: 500px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n",
+  "#tabnav\n{\nheight: 20px;\nmargin: 0;\npadding-left: 10px;\n",
+  "background: url(grayline.gif) repeat-x bottom;\n}\n",
+  "#tabnav li\n{\nmargin: 0;\npadding: 0;\ndisplay: inline;\nlist-style-type: none;\n}\n",
+  "#tabnav a:link, #tabnav a:visited\n{\nfloat: left;\nbackground: #ececec;\n",
+  "font-size: 12px;\nline-height: 14px;\nfont-weight: bold;\npadding: 2px 10px 2px 10px;\n",
+  "margin-right: 4px;\nborder: 1px solid #ccc;\ntext-decoration: none;\ncolor: #666;\n}",
+  "#tabnav a:link.active, #tabnav a:visited.active\n{\nborder-bottom: 1px solid #fff;\n",
+  "background: #ffffff;\ncolor: #000;\n}\n",
+  "#tabnav a:hover\n{\nbackground: #777777;\ncolor: #ffffff;\n}\n",
+  NULL
+};
+
+
+
 static const char *http_ok_head[] =
 {
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n",
@@ -70,36 +95,34 @@ static const char *http_ok_head[] =
   "<TITLE>olsr.org httpinfo plugin</TITLE>\n",
   "<link rel=\"icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n",
   "<link rel=\"shortcut icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n",
-  "<STYLE type=\"text/css\">\n",
-  "<!--\n",
-  "A {text-decoration: none}\n",
-  "TH{text-align: left}\n",
-  "H1, H2, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
-  "-->\n",
-  "</STYLE>\n\n",
+  "<link rel=\"stylesheet\" type=\"text/css\" href=\"httpinfo.css\">\n",
   "</HEAD>\n",
-  "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
-  "<TABLE WIDTH=800 BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center>\n",
-  "<TR BGCOLOR=\"#000044\">\n",
-  "<TD HEIGHT=\"69\" WIDTH=\"80%%\" VALIGN=middle ALIGN=left>\n",
-  "<FONT COLOR=white SIZE=\"6\" FACE=\"timesroman\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></TD>\n",
-  "<TD HEIGHT=\"69\" WIDTH=\"20%%\" VALIGN=middle ALIGN=right>\n",
-  "<img src=\"/logo.gif\"></TD>\n",
-  "</TR>\n<TR BGCOLOR=\"#8888cc\">\n",
-  "<TD HEIGHT=\"25\" ALIGN=right VALIGN=middle colspan=2>\n",
-  "<FONT COLOR=\"#FFFFFF\">\n",
-  "<A HREF=\"#status\"><B>Status</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"#routes\"><B>Routes</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"#neighbors\"><B>Neighbors</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"#topology\"><B>Topology</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"#hna\"><B>HNA</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"#mid\"><B>MID</B></A>&nbsp;|&nbsp;\n",
-  "<A HREF=\"/\"><B>Refresh</B></A>&nbsp;&nbsp;\n",
-  "</FONT>\n",
-  "</TD>\n",
-  "</TR>\n",
-  "</TABLE>\n",
+  "<body bgcolor=\"#ffffff\" text=\"#000000\">\n",
+  "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"800\">"
+  "<tbody><tr bgcolor=\"#ffffff\">",
+  "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%\">",
+  "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>",
+  "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%\">",
+  "<img src=\"/logo.gif\"></td>",
+  "</tr>",
+  "<p>",
+  "</table>",
   "<!-- END HEAD -->\n\n",
+  NULL
+};
+
+
+
+static const char *html_tabs[] =
+{
+  "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"800\">\n",
+  "<tr bgcolor=\"#ffffff\"><td>\n",
+  "<ul id=\"tabnav\">\n",
+  "<!-- TAB ELEMENTS -->",
+  "<li><a href=\"%s\" %s>%s</a></li>\n",
+  "</ul>\n",
+  "</td></tr>\n",
+  "<tr><td>\n",
   NULL
 };
 
@@ -110,30 +133,23 @@ static const char *http_ok_head[] =
 static const char *http_ok_tail[] =
 {
     "\n<!-- START TAIL -->\n\n",
-    "<P>\n",
-    "<P>\n",
-    "<HR ALIGN=center WIDTH=800>\n",
-    "<P>\n",
-    "<P>\n",
-    "<TABLE WIDTH=800 BGCOLOR=\"#E0E0FF\" BORDER=0 CELLPADDING=2 ALIGN=center>\n",
-    "<TR>    \n",
-    "<TD ALIGN=center VALIGN=middle>\n",
-    "<TABLE BORDER=0 CELLSPACING=3 CELLPADDING=2>\n",
-    "<TR>\n",
-    "<TD WIDTH=\"50%%\" ALIGN=\"center\" VALIGN=middle>\n",
-    "<CENTER>Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to<br>\n",
-    "<A HREF=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</A> or \n",
-    "<A HREF=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</A></CENTER></TD>\n",
-    "<TD WIDTH=\"50%%\" ALIGN=\"center\" VALIGN=middle>\n",
-    "<CENTER>Official olsrd homepage:<br><A HREF=\"http://www.olsr.org/\">http://www.olsr.org</A>\n",
-    "</CENTER>\n",
-    "</TD>\n",
-    "</TR>\n",
-    "</TABLE>\n",
-    "</TD>\n",
-    "</TR>\n",
-    "</TABLE>\n",
-    "</BODY></HTML>\n",
+    "<div id=\"footer\">\n\n",
+    "<p><center>\n",
+    "(C)2005 Andreas T&oslash;nnesen<br>\n",
+    "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n",
+    "</center>\n",
+    "</div>\n",
+    "</body></html>\n",
+    NULL
+};
+
+
+static const char *about_frame[] =
+{
+    "Plugin by Andreas T&oslash;nnesen.<br> Send questions or comments to<br>\n",
+    "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or <br>\n",
+    "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br>\n"
+    "Official olsrd homepage:<br><a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br>\n",
     NULL
 };
 
@@ -141,15 +157,9 @@ static const char *http_ok_tail[] =
 
 static const char *http_frame[] =
 {
-  "<P>\n<TABLE WIDTH=%d CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
-  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left><a name=\"%s\">%s</a></TH>\n",
-  "</TR><TR BGCOLOR=\"#ECECEC\">\n",
-  "<TD>\n",
-  "<P>\n",
+  "<div id=\"maintable\">\n",
   "<!-- BODY -->",
-  "</TD>\n",
-  "</TR>\n",
-  "</TABLE>\n",
+  "</div>\n",
   NULL
 };
 

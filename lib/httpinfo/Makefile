@@ -14,7 +14,7 @@ ifeq ($(OS), linux)
 NAME ?= olsrd_httpinfo.so.0.1
 NAMEFLAGS ?= -Wl,-soname,$(NAME)
 CFLAGS ?= -g -O2 -fPIC -Dlinux -Wall -Wmissing-prototypes -Wstrict-prototypes
-LDFLAGS ?= -fPIC -shared
+LDFLAGS ?= -g -fPIC -shared
 LIBS ?= -lc -lm
 INSTALL_LIB = 	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 		/sbin/ldconfig -n $(LIBDIR)
