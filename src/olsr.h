@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.17 2005/01/22 14:44:45 tlopatic Exp $
+ * $Id: olsr.h,v 1.18 2005/02/02 20:37:53 kattemat Exp $
  */
 
 
@@ -98,12 +98,6 @@ register_pcf(int (*)(int, int, int));
 
 void
 olsr_process_changes(void);
-
-inline void
-olsr_init_timer(olsr_u32_t, struct timeval *);
-
-inline void
-olsr_get_timestamp(olsr_u32_t, struct timeval *);
 
 void
 init_msg_seqno(void);

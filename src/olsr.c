@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.38 2005/02/02 19:59:18 kattemat Exp $
+ * $Id: olsr.c,v 1.39 2005/02/02 20:37:52 kattemat Exp $
  */
 
 /**
@@ -61,50 +61,6 @@
 
 #include <stdarg.h>
 #include <signal.h>
-
-
-/**
- *Initiates a "timer", wich is a timeval structure,
- *with the value given in time_value.
- *@param time_value the value to initialize the timer with
- *@param hold_timer the timer itself
- *@return nada
- */
-inline void
-olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
-{ 
-  olsr_u16_t  time_value_sec = time_value/1000;
-  olsr_u16_t  time_value_msec = time_value-(time_value_sec*1000);
-
-  hold_timer->tv_sec = time_value_sec;
-  hold_timer->tv_usec = time_value_msec*1000;   
-}
-
-
-
-
-
-/**
- *Generaties a timestamp a certain number of milliseconds
- *into the future.
- *
- *@param time_value how many milliseconds from now
- *@param hold_timer the timer itself
- *@return nada
- */
-inline void
-olsr_get_timestamp(olsr_u32_t delay, struct timeval *hold_timer)
-{ 
-  hold_timer->tv_sec = now.tv_sec + delay / 1000;
-  hold_timer->tv_usec = now.tv_usec + (delay % 1000) * 1000;
-  
-  if (hold_timer->tv_usec > 1000000)
-    {
-      hold_timer->tv_sec++;
-      hold_timer->tv_usec -= 1000000;
-    }
-}
-
 
 
 /**
@@ -463,7 +419,8 @@ void
 olsr_init_willingness()
 {
   if(olsr_cnf->willingness_auto)
-    olsr_register_scheduler_event(&olsr_update_willingness, NULL, will_int, will_int, NULL);
+    olsr_register_scheduler_event(&olsr_update_willingness, 
+				  NULL, will_int, will_int, NULL);
 }
 
 void
