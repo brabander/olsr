@@ -3,7 +3,7 @@
  * OLSR ad-hoc routing table management protocol
  * Copyright (C) 2004 Andreas Tønnesen (andreto@ifi.uio.no)
  *
- * This file is part of olsr.org.
+ * This file is part of the olsr.org OLSR daemon.
  *
  * olsr.org is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -2,20 +2,20 @@
  * OLSR ad-hoc routing table management protocol
  * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
  *
- * This file is part of the UniK OLSR daemon.
+ * This file is part of the olsr.org daemon.
  *
- * The UniK OLSR daemon is free software; you can redistribute it and/or modify
+ * The olsr.org daemon is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * The UniK OLSR daemon is distributed in the hope that it will be useful,
+ * The olsr.org daemon is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with the UniK OLSR daemon; if not, write to the Free Software
+ * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
@@ -56,28 +56,22 @@
 /* Set typo of service value */
 #define OLSRD_SET_TOS             0x31
 
-/* Set pollingrate */
-#define OLSRD_SET_POLLRATE        0x32
-
-/* No forwarding of receieved messages on LAN interfaces */
-#define OLSRD_SET_NOFWDLAN        0x33
-
-
-
+/* set debuglevel */
+#define OLSRD_SET_DEBUG_LVL       0x40
 
 /*
  * Packet formats
  */
 
-struct uolsrset_req
+struct olsrset_req
 {
   olsr_u8_t req;
 }
 
-struct uolsrset_cmd
+struct olsrset_cmd
 {
   olsr_u8_t cmd;
-  char      data[16];
+  u_char      data[16];
 }
 
 
