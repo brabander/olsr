@@ -20,7 +20,7 @@ access from a single host(muliple such entries can
 be set) and the parameter "Net" "[IP net] [IP mask]"
 is used to allow access from entire net-ranges.
 To allow access from all hosts do:
- PlParam   "0.0.0.0" "0.0.0.0"
+ PlParam   "Net" "0.0.0.0 0.0.0.0"
 
 A configuration example:
 LoadPlugin "olsrd_httpinfo.so.0.1"
