@@ -1,5 +1,5 @@
 ;
-; $Id: installer.nsi,v 1.3 2004/09/15 17:50:25 tlopatic Exp $
+; $Id: installer.nsi,v 1.4 2004/09/15 20:01:09 tlopatic Exp $
 ; Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
 ;
 ; This file is part of olsr.org.
@@ -52,6 +52,7 @@ Section "Program Files"
         File ..\..\..\README-WIN32.txt
         File linux-manual.txt
         File /oname=Default.olsr ..\..\..\files\olsrd.conf.default.win32
+        File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
 
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org DisplayName olsr.org
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org UninstallString $INSTDIR\uninstall.exe
