@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.h,v 1.9 2004/11/05 02:06:14 tlopatic Exp $
+ * $Id: routing_table.h,v 1.10 2004/11/07 17:51:20 tlopatic Exp $
  *
  */
 
@@ -90,5 +90,11 @@ olsr_calculate_hna_routes(void);
 
 void
 olsr_print_routing_table(struct rt_entry *);
+
+struct rt_entry *
+olsr_insert_routing_table(union olsr_ip_addr *, union olsr_ip_addr *, int);
+
+void
+olsr_free_routing_table(struct rt_entry *);
 
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: tc_set.h,v 1.7 2004/11/07 17:51:20 tlopatic Exp $
  *
  */
 
@@ -38,6 +38,10 @@ struct topo_dst
   olsr_u16_t T_seq;
   struct topo_dst *next;
   struct topo_dst *prev;
+#if defined USE_LINK_QUALITY
+  double link_quality;
+  double inverse_link_quality;
+#endif
 };
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.17 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: olsr.c,v 1.18 2004/11/07 17:51:20 tlopatic Exp $
  *
  */
 
@@ -38,6 +38,7 @@
 #include "mpr.h"
 #if defined USE_LINK_QUALITY
 #include "lq_mpr.h"
+#include "lq_route.h"
 #endif
 #include "scheduler.h"
 #include "generate_msg.h"
@@ -168,10 +169,11 @@ olsr_process_changes()
       /* Calculate new mprs, HNA and routing table */
 #if !defined USE_LINK_QUALITY
       olsr_calculate_mpr();
+      olsr_calculate_routing_table();
 #else
       olsr_calculate_lq_mpr();
+      olsr_calculate_lq_routing_table();
 #endif
-      olsr_calculate_routing_table();
       olsr_calculate_hna_routes();
 
       goto process_pcf;  
@@ -180,7 +182,11 @@ olsr_process_changes()
   if(changes_topology)
     {
       /* calculate the routing table and HNA */
+#if !defined USE_LINK_QUALITY
       olsr_calculate_routing_table();
+#else
+      olsr_calculate_lq_routing_table();
+#endif
       olsr_calculate_hna_routes();
 
       goto process_pcf;  

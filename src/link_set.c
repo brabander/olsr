@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.17 2004/11/05 20:58:09 tlopatic Exp $
+ * $Id: link_set.c,v 1.18 2004/11/07 17:51:20 tlopatic Exp $
  *
  */
 
@@ -1059,10 +1059,10 @@ static void olsr_time_out_packet_loss()
     }
 }
 
-float olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
+double olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
 {
   struct link_entry *walker;
-  float res = 0.0;
+  double res = 0.0;
 
   // loop through all links
 
@@ -1073,9 +1073,57 @@ float olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
       // is better than what we have
 
       if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
-         walker->loss_link_quality * walker->neigh_link_quality > res)
+         walker->loss_link_quality * walker->neigh_link_quality >= res)
         res = walker->loss_link_quality;
     }
+
+  return res;
+}
+
+struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
+{
+  struct link_entry *walker;
+  double best = 0.0;
+  struct link_entry *res = NULL;
+
+  // loop through all links
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    // check whether it's a link to the requested neighbor and
+    // whether the link's quality is better than what we have
+
+    if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+       walker->neigh_link_quality >= best)
+    {
+      best = walker->loss_link_quality;
+      res = walker;
+    }
+  }
+
+  return res;
+}
+
+struct link_entry *olsr_neighbor_best_inverse_link(union olsr_ip_addr *main)
+{
+  struct link_entry *walker;
+  double best = 0.0;
+  struct link_entry *res = NULL;
+
+  // loop through all links
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    // check whether it's a link to the requested neighbor and
+    // whether the link's quality is better than what we have
+
+    if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+       walker->loss_link_quality >= best)
+    {
+      best = walker->loss_link_quality;
+      res = walker;
+    }
+  }
 
   return res;
 }

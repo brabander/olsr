@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.12 2004/11/05 20:58:09 tlopatic Exp $
+ * $Id: link_set.h,v 1.13 2004/11/07 17:51:20 tlopatic Exp $
  *
  */
 
@@ -127,7 +127,9 @@ void olsr_update_packet_loss_hello_int(struct link_entry *entry, double htime);
 void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
                         olsr_u16_t seqno);
 void olsr_print_link_set(void);
-float olsr_neighbor_best_link_quality(union olsr_ip_addr *main);
+double olsr_neighbor_best_link_quality(union olsr_ip_addr *main);
+struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
+struct link_entry *olsr_neighbor_best_inverse_link(union olsr_ip_addr *main);
 #endif
 
 #endif
