@@ -19,11 +19,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.4 2004/11/17 16:17:41 tlopatic Exp $
+ * $Id: net.c,v 1.5 2004/11/17 17:14:43 tlopatic Exp $
  *
  */
 
 #include "../defs.h"
+#include "../net_os.h"
 #include "net.h"
 
 #include <sys/sysctl.h>
