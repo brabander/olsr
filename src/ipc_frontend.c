@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.14 2004/11/11 21:24:52 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.15 2004/11/12 06:34:09 kattemat Exp $
  *
  */
 
@@ -86,7 +86,7 @@ ipc_init()
     }
 
   /* show that we are willing to listen */
-  if (listen(ipc_sock, 5) == -1) 
+  if (listen(ipc_sock, olsr_cnf->ipc_connections) == -1) 
     {
       perror("IPC listen");
       olsr_exit("IPC listen", EXIT_FAILURE);
