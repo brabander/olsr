@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.8 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: apm.c,v 1.9 2005/02/27 10:48:05 kattemat Exp $
  */
 
-#include "../apm.h"
+#include "apm.h"
+#include "defs.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -47,13 +48,11 @@
 #include <windows.h>
 #undef interface
 
-extern int olsr_printf(int, char *, ...);
-
 int apm_init()
 {
   struct olsr_apm_info ApmInfo;
 
-  olsr_printf(3, "Initializing APM\n");
+  OLSR_PRINTF(3, "Initializing APM\n")
 
   if(apm_read(&ApmInfo) < 0)
     return -1;
@@ -65,9 +64,9 @@ int apm_init()
 
 void apm_printinfo(struct olsr_apm_info *ApmInfo)
 {
-  olsr_printf(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
+  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
 	      ApmInfo->ac_line_status,
-	      ApmInfo->battery_percentage);
+	      ApmInfo->battery_percentage)
 }
 
 int apm_read(struct olsr_apm_info *ApmInfo)

@@ -36,21 +36,21 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.17 2005/02/20 19:01:06 kattemat Exp $
+ * $Id: ifnet.c,v 1.18 2005/02/27 10:48:05 kattemat Exp $
  */
 
-#include "../interfaces.h"
-#include "../olsr.h"
-#include "../net.h"
-#include "../parser.h"
-#include "../socket_parser.h"
-#include "../defs.h"
-#include "../net_os.h"
-#include "../ifnet.h"
-#include "../generate_msg.h"
-#include "../scheduler.h"
-#include "../mantissa.h"
-#include "../lq_packet.h"
+#include "interfaces.h"
+#include "olsr.h"
+#include "net.h"
+#include "parser.h"
+#include "socket_parser.h"
+#include "defs.h"
+#include "net_os.h"
+#include "ifnet.h"
+#include "generate_msg.h"
+#include "scheduler.h"
+#include "mantissa.h"
+#include "lq_packet.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -150,7 +150,7 @@ static int MiniIndexToGuid(char *Guid, int MiniIndex)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    olsr_printf(5, "Index = %08x\n", Walker->Index);
+    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
 
     if ((Walker->Index & 255) == MiniIndex)
       break;
@@ -158,14 +158,14 @@ static int MiniIndexToGuid(char *Guid, int MiniIndex)
 
   if (Walker != NULL)
   {
-    olsr_printf(5, "Found interface.\n");
+    OLSR_PRINTF(5, "Found interface.\n")
 
     strcpy(Guid, Walker->AdapterName);
     return 0;
   }
 
-  olsr_printf(5, "Cannot map mini index %02x to an adapter GUID.\n",
-              MiniIndex);
+  OLSR_PRINTF(5, "Cannot map mini index %02x to an adapter GUID.\n",
+              MiniIndex)
   return -1;
 }
 
@@ -177,7 +177,7 @@ static int AddrToIndex(int *Index, unsigned int Addr)
   IP_ADDR_STRING *Walker2;
   unsigned long Res;
   
-  olsr_printf(5, "AddrToIndex(%08x)\n", Addr);
+  OLSR_PRINTF(5, "AddrToIndex(%08x)\n", Addr)
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
@@ -197,25 +197,25 @@ static int AddrToIndex(int *Index, unsigned int Addr)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    olsr_printf(5, "Index = %08x\n", Walker->Index);
+    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
 
     for (Walker2 = &Walker->IpAddressList; Walker2 != NULL;
          Walker2 = Walker2->Next)
     {
       inet_pton(AF_INET, Walker2->IpAddress.String, &IntAddr);
 
-      olsr_printf(5, "\tIP address = %08x\n", IntAddr);
+      OLSR_PRINTF(5, "\tIP address = %08x\n", IntAddr)
 
       if (Addr == IntAddr)
       {
-        olsr_printf(5, "Found interface.\n");
+        OLSR_PRINTF(5, "Found interface.\n")
         *Index = Walker->Index;
         return 0;
       }
     }
   }
 
-  olsr_printf(5, "Cannot map IP address %08x to an adapter index.\n", Addr);
+  OLSR_PRINTF(5, "Cannot map IP address %08x to an adapter index.\n", Addr)
   return -1;
 }
 
@@ -248,7 +248,7 @@ static int IsWireless(char *IntName)
   if (MiniIndexToGuid(DevName + 4, MiniIndex) < 0)
     return -1;
 
-  olsr_printf(5, "Checking whether interface %s is wireless.\n", DevName);
+  OLSR_PRINTF(5, "Checking whether interface %s is wireless.\n", DevName)
 
   DevHand = CreateFile(DevName, GENERIC_READ,
                        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
@@ -258,7 +258,7 @@ static int IsWireless(char *IntName)
   {
     ErrNo = GetLastError();
 
-    olsr_printf(5, "CreateFile() = %08lx, %s\n", ErrNo, StrError(ErrNo));
+    OLSR_PRINTF(5, "CreateFile() = %08lx, %s\n", ErrNo, StrError(ErrNo))
     return -1;
   }
 
@@ -275,11 +275,11 @@ static int IsWireless(char *IntName)
 
     if (ErrNo == ERROR_GEN_FAILURE)
     {
-      olsr_printf(5, "OID not supported. Device probably not wireless.\n");
+      OLSR_PRINTF(5, "OID not supported. Device probably not wireless.\n")
       return 0;
     }
 
-    olsr_printf(5, "DeviceIoControl() = %08lx, %s\n", ErrNo, StrError(ErrNo));
+    OLSR_PRINTF(5, "DeviceIoControl() = %08lx, %s\n", ErrNo, StrError(ErrNo))
     return -1;
   }
 
@@ -320,7 +320,7 @@ void ListInterfaces(void)
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    olsr_printf(5, "Index = %08x\n", Walker->Index);
+    OLSR_PRINTF(5, "Index = %08x\n", Walker->Index)
 
     MiniIndexToIntName(IntName, Walker->Index);
 
@@ -380,7 +380,7 @@ int InterfaceEntry(MIB_IFROW *IntPara, int *Index, struct olsr_if *IntConf)
 
   for (TabIdx = 0; TabIdx < IfTable->dwNumEntries; TabIdx++)
   {
-    olsr_printf(5, "Index = %08x\n", IfTable->table[TabIdx].dwIndex);
+    OLSR_PRINTF(5, "Index = %08x\n", IfTable->table[TabIdx].dwIndex)
 
     if ((IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
       break;
@@ -433,7 +433,7 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct olsr_if *IntConf)
 
   Num /= sizeof (INTERFACE_INFO);
 
-  olsr_printf(5, "%s:\n", IntConf->name);
+  OLSR_PRINTF(5, "%s:\n", IntConf->name)
 
   for (WsIdx = 0; WsIdx < Num; WsIdx++)
   {
@@ -453,26 +453,26 @@ int InterfaceInfo(INTERFACE_INFO *IntPara, int *Index, struct olsr_if *IntConf)
     
   *Index = CandIndex;
 
-  olsr_printf(5, "\tIndex: %08x\n", *Index);
+  OLSR_PRINTF(5, "\tIndex: %08x\n", *Index)
 
-  olsr_printf(5, "\tFlags: %08x\n", IntInfo[WsIdx].iiFlags);
+  OLSR_PRINTF(5, "\tFlags: %08x\n", IntInfo[WsIdx].iiFlags)
 
   if ((IntInfo[WsIdx].iiFlags & IFF_UP) == 0)
   {
-    olsr_printf(1, "\tInterface not up - skipping it...\n");
+    OLSR_PRINTF(1, "\tInterface not up - skipping it...\n")
     return -1;
   }
 
   if (olsr_cnf->ip_version == AF_INET &&
       (IntInfo[WsIdx].iiFlags & IFF_BROADCAST) == 0)
   {
-    olsr_printf(1, "\tNo broadcast - skipping it...\n");
+    OLSR_PRINTF(1, "\tNo broadcast - skipping it...\n")
     return -1;
   }
 
   if ((IntInfo[WsIdx].iiFlags & IFF_LOOPBACK) != 0)
   {
-    olsr_printf(1, "\tThis is a loopback interface - skipping it...\n");
+    OLSR_PRINTF(1, "\tThis is a loopback interface - skipping it...\n")
     return -1;
   }
 
@@ -501,7 +501,7 @@ void RemoveInterface(struct olsr_if *IntConf)
 {
   struct interface *Int, *Prev;
 
-  olsr_printf(1, "Removing interface %s.\n", IntConf->name);
+  OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name)
   
   Int = IntConf->interf;
 
@@ -522,13 +522,13 @@ void RemoveInterface(struct olsr_if *IntConf)
     if(ifnet == NULL)
     {
       memset(&main_addr, 0, ipsize);
-      olsr_printf(1, "Removed last interface. Cleared main address.\n");
+      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n")
     }
 
     else
     {
       COPY_IP(&main_addr, &ifnet->ip_addr);
-      olsr_printf(1, "New main address: %s.\n", olsr_ip_to_string(&main_addr));
+      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&main_addr))
     }
   }
 
@@ -575,7 +575,7 @@ void RemoveInterface(struct olsr_if *IntConf)
 
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
   {
-    olsr_printf(1, "No more active interfaces - exiting.\n");
+    OLSR_PRINTF(1, "No more active interfaces - exiting.\n")
     exit_value = EXIT_FAILURE;
     CallSignalHandler();
   }
@@ -598,7 +598,7 @@ int chk_if_changed(struct olsr_if *IntConf)
   }
 
 #ifdef DEBUG
-  olsr_printf(3, "Checking if %s is set down or changed\n", IntConf->name);
+  OLSR_PRINTF(3, "Checking if %s is set down or changed\n", IntConf->name)
 #endif
 
   Int = IntConf->interf;
@@ -619,7 +619,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
   if (Int->is_wireless != IsWlan)
   {
-    olsr_printf(1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
+    OLSR_PRINTF(1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan)
 
     Int->is_wireless = IsWlan;
     if(IntConf->cnf->weight.fixed)
@@ -632,7 +632,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
   if (Int->int_mtu != IntRow.dwMtu)
   {
-    olsr_printf(1, "\tMTU change: %d -> %d.\n", Int->int_mtu, IntRow.dwMtu);
+    OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", Int->int_mtu, IntRow.dwMtu)
 
     Int->int_mtu = IntRow.dwMtu;
 
@@ -646,14 +646,14 @@ int chk_if_changed(struct olsr_if *IntConf)
   NewVal.v4 = ((struct sockaddr_in *)&IntInfo.iiAddress)->sin_addr.s_addr;
 
 #ifdef DEBUG
-  olsr_printf(3, "\tAddress: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&NewVal))
 #endif
 
   if (NewVal.v4 != OldVal.v4)
   {
-    olsr_printf(1, "\tAddress change.\n");
-    olsr_printf(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    olsr_printf(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tAddress change.\n")
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal))
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal))
 
     Int->ip_addr.v4 = NewVal.v4;
 
@@ -661,7 +661,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
     if (main_addr.v4 == OldVal.v4)
     {
-      olsr_printf(1, "\tMain address change.\n");
+      OLSR_PRINTF(1, "\tMain address change.\n")
 
       main_addr.v4 = NewVal.v4;
     }
@@ -670,20 +670,20 @@ int chk_if_changed(struct olsr_if *IntConf)
   }
 
   else
-    olsr_printf(3, "\tNo address change.\n");
+    OLSR_PRINTF(3, "\tNo address change.\n")
 
   OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr.s_addr;
   NewVal.v4 = ((struct sockaddr_in *)&IntInfo.iiNetmask)->sin_addr.s_addr;
 
 #ifdef DEBUG
-  olsr_printf(3, "\tNetmask: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&NewVal))
 #endif
 
   if(NewVal.v4 != OldVal.v4)
   {
-    olsr_printf(1, "\tNetmask change.\n");
-    olsr_printf(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    olsr_printf(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tNetmask change.\n")
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal))
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal))
 
     memcpy(&Int->int_netmask, &IntInfo.iiNetmask, sizeof (struct sockaddr_in));
 
@@ -691,21 +691,21 @@ int chk_if_changed(struct olsr_if *IntConf)
   }
 
   else
-    olsr_printf(3, "\tNo netmask change.\n");
+    OLSR_PRINTF(3, "\tNo netmask change.\n")
 
   OldVal.v4 = ((struct sockaddr_in *)&Int->int_broadaddr)->sin_addr.s_addr;
   NewVal.v4 =
     ((struct sockaddr_in *)&IntInfo.iiBroadcastAddress)->sin_addr.s_addr;
 
 #ifdef DEBUG
-  olsr_printf(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&NewVal))
 #endif
 
   if(NewVal.v4 != OldVal.v4)
   {
-    olsr_printf(1, "\tBroadcast address change.\n");
-    olsr_printf(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    olsr_printf(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tBroadcast address change.\n")
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal))
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal))
 
     memcpy(&Int->int_broadaddr, &IntInfo.iiBroadcastAddress,
            sizeof (struct sockaddr_in));
@@ -714,7 +714,7 @@ int chk_if_changed(struct olsr_if *IntConf)
   }
 
   else
-    olsr_printf(3, "\tNo broadcast address change.\n");
+    OLSR_PRINTF(3, "\tNo broadcast address change.\n")
 
   if (Res != 0)
     run_ifchg_cbs(Int, IFCHG_IF_UPDATE);
@@ -777,21 +777,21 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
 
   New->olsr_seqnum = random() & 0xffff;
     
-  olsr_printf(1, "\tInterface %s set up for use with index %d\n\n",
-              IntConf->name, New->if_nr);
+  OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n",
+              IntConf->name, New->if_nr)
       
-  olsr_printf(1, "\tMTU: %d\n", New->int_mtu);
-  olsr_printf(1, "\tAddress: %s\n", sockaddr_to_string(&New->int_addr));
-  olsr_printf(1, "\tNetmask: %s\n", sockaddr_to_string(&New->int_netmask));
-  olsr_printf(1, "\tBroadcast address: %s\n",
-              sockaddr_to_string(&New->int_broadaddr));
+  OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu)
+  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr_to_string(&New->int_addr))
+  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr_to_string(&New->int_netmask))
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n",
+              sockaddr_to_string(&New->int_broadaddr))
 
   New->ip_addr.v4 =
     ((struct sockaddr_in *)&New->int_addr)->sin_addr.s_addr;
       
   New->if_index = Index;
 
-  olsr_printf(3, "\tKernel index: %08x\n", New->if_index);
+  OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index)
 
   AddrSockAddr = addrsock.sin_addr.s_addr;
   addrsock.sin_addr.s_addr = New->ip_addr.v4;
@@ -820,8 +820,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
   if(COMP_IP(&NullAddr, &main_addr))
   {
     COPY_IP(&main_addr, &New->ip_addr);
-
-    olsr_printf(1, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&main_addr))
   }
 
   net_add_buffer(New);
@@ -881,7 +880,7 @@ void check_interface_updates(void *dummy)
   struct olsr_if *IntConf;
 
 #ifdef DEBUG
-  olsr_printf(3, "Checking for updates in the interface set\n");
+  OLSR_PRINTF(3, "Checking for updates in the interface set\n")
 #endif
 
   for(IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next)

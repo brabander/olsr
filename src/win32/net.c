@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.15 2005/02/23 21:06:08 spoggle Exp $
+ * $Id: net.c,v 1.16 2005/02/27 10:48:05 kattemat Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -48,14 +48,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../defs.h"
-#include "../net_os.h"
+#include "defs.h"
+#include "net_os.h"
 
 
 void WinSockPError(char *Str);
 void PError(char *);
 
-int olsr_printf(int, char *, ...);
 
 void DisableIcmpRedirects(void);
 int disable_ip_forwarding(int Ver);
@@ -191,7 +190,7 @@ int enable_ip_forwarding(int Ver)
     return -1;
   }
 
-  olsr_printf(3, "Routing enabled.\n");
+  OLSR_PRINTF(3, "Routing enabled.\n")
 
   return 0;
 }
@@ -222,7 +221,7 @@ int disable_ip_forwarding(int Ver)
     return -1;
   }
 
-  olsr_printf(3, "Routing disabled, count = %u.\n", Count);
+  OLSR_PRINTF(3, "Routing disabled, count = %u.\n", Count)
 
   return 0;
 }
