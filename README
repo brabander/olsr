@@ -1,10 +1,10 @@
 
-UnikOLSR 0.4.6
+UnikOLSR 0.4.7
 
 by Andreas Tonnesen(andreto@olsr.org)
 http://www.olsr.org
 
-04.08.04
+18.08.04
 
 
 1. OLSR RFC COMPLIANCE
@@ -109,6 +109,8 @@ http://www.olsr.org
 
 
 6. FRONT-END
+
+  These are instructions to build the Linux GTK-based GUI.
 
   6.1 COMPILING
 
