@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.14 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: main.c,v 1.15 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -280,18 +280,17 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-i") == 0) 
 	{
 	  argv++, argc--;
-	  queue_if(*argv, default_ifcnf);
+	  queue_if(*argv);
 	  argv++, argc--;
 
 	  while((argc) && (**argv != '-'))
 	    {
-	      queue_if(*argv, default_ifcnf);
+	      queue_if(*argv);
 	      argv++; argc--;
 	    }
 
 	  continue;
 	}
-
       /*
        * Set the hello interval to be used by olsrd.
        * 
@@ -456,7 +455,7 @@ main(int argc, char *argv[])
   /*
    *Interfaces need to be specified
    */
-  if(if_names == NULL)
+  if(olsr_cnf->interfaces == NULL)
     {
       fprintf(stderr, "OLSRD: no interfaces specified!\nuse the -i switch to specify interface(s)\nor set interface(s) in the configuration file!\n");
       print_usage();
@@ -607,7 +606,7 @@ main(int argc, char *argv[])
   olsr_load_plugins();
 
   /* Set up recieving tunnel if Inet gw */
-  if(use_tunnel && inet_gw)
+  if(use_tunnel && check_inet_gw())
     set_up_gw_tunnel(&main_addr);
 
   olsr_printf(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr));
@@ -723,15 +722,11 @@ set_default_values()
    * if not, exit_value is set by the function calling olsr_exit.
    */
 
-  if_names = NULL;
-
   max_jitter = 0;
   max_tc_vtime = 0;
   dup_hold_time = DUP_HOLD_TIME;
 
   sending_tc = 0;
-
-  queued_ifs = 0;
 
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
 
@@ -742,9 +737,6 @@ set_default_values()
   /* Get main thread ID */
   main_thread = pthread_self();
 #endif
-
-  /* local HNA set must be initialized before reading options */
-  olsr_init_local_hna_set();
 
   /* Gateway tunneling */
   use_tunnel = 0;

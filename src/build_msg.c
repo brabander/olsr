@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.14 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: build_msg.c,v 1.15 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -1118,39 +1118,37 @@ hna_build4(struct interface *ifp)
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
-  struct local_hna_entry *h;
+  struct hna4_entry *h = olsr_cnf->hna4_entries;
 
   /* No hna nets */
-  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
+  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || h == NULL)
     return;
     
   remainsize = net_outbuffer_bytes_left(ifp);
-
+  
   curr_size = 12; /* OLSR message header */
-
+  
   /* Send pending packet if not room in buffer */
   if(curr_size > remainsize)
     {
       net_output(ifp);
       remainsize = net_outbuffer_bytes_left(ifp);
     }
-
+  
   m = (union olsr_message *)msg_buffer;
-    
-
+  
+  
   /* Fill header */
   COPY_IP(&m->v4.originator, &main_addr);
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
   m->v4.olsr_vtime = ifp->valtimes.hna;
-
+  
 
   pair = m->v4.message.hna.hna_net;
-
-  for(h = local_hna4_set.next;
-      h != &local_hna4_set;
-      h = h->next)
+  
+  while(h)
     {
       if((curr_size + (2 * ipsize)) > remainsize)
 	{
@@ -1166,10 +1164,11 @@ hna_build4(struct interface *ifp)
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 	}
-      COPY_IP(&pair->addr, &h->A_network_addr);
-      COPY_IP(&pair->netmask, &h->A_netmask);
+      COPY_IP(&pair->addr, &h->net);
+      COPY_IP(&pair->netmask, &h->netmask);
       pair++;
       curr_size += (2 * ipsize);
+      h = h->next;
     }
 
   m->v4.seqno = htons(get_msg_seqno());
@@ -1199,10 +1198,10 @@ hna_build6(struct interface *ifp)
   union olsr_message *m;
   struct hnapair6 *pair6;
   union olsr_ip_addr tmp_netmask;
-  struct local_hna_entry *h;
+  struct hna6_entry *h = olsr_cnf->hna6_entries;
   
   /* No hna nets */
-  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (local_hna6_set.next == &local_hna6_set))
+  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || h == NULL)
     return;
 
     
@@ -1229,9 +1228,7 @@ hna_build6(struct interface *ifp)
   pair6 = m->v6.message.hna.hna_net;
 
 
-  for(h = local_hna6_set.next;
-      h != &local_hna6_set;
-      h = h->next)
+  while(h)
     {
       if((curr_size + (2 * ipsize)) > remainsize)
 	{
@@ -1247,18 +1244,19 @@ hna_build6(struct interface *ifp)
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
 	}
-
+      
       //printf("Adding %s\n", olsr_ip_to_string(&h->hna_net.addr));
-      COPY_IP(&pair6->addr, &h->A_network_addr);
-      olsr_prefix_to_netmask(&tmp_netmask, h->A_netmask.v6);
+      COPY_IP(&pair6->addr, &h->net);
+      olsr_prefix_to_netmask(&tmp_netmask, h->prefix_len);
       COPY_IP(&pair6->netmask, &tmp_netmask);
       pair6++;
       curr_size += (2 * ipsize);
+      h = h->next;
     }
   
   m->v6.olsr_msgsize = htons(curr_size);
   m->v6.seqno = htons(get_msg_seqno());
-
+  
   net_outbuffer_push(ifp, msg_buffer, curr_size);
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);

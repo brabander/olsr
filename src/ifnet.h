@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: ifnet.h,v 1.8 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -36,6 +36,8 @@
 //#include <arpa/inet.h>
 #include <net/if.h>
 
+#include "olsr_cfg.h"
+
 int
 set_flag(char *, short);
 
@@ -43,10 +45,10 @@ void
 check_interface_updates(void *);
 
 int
-chk_if_changed(struct if_name *);
+chk_if_changed(struct olsr_if *);
 
 int
-chk_if_up(struct if_name *, int);
+chk_if_up(struct olsr_if *, int);
 
 #ifndef WIN32
 int

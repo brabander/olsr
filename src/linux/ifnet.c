@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.11 2004/10/18 13:13:38 kattemat Exp $
+ * $Id: ifnet.c,v 1.12 2004/10/19 19:23:01 kattemat Exp $
  *
  */
 
@@ -97,13 +97,13 @@ set_flag(char *ifname, short flag)
 void
 check_interface_updates(void *foo)
 {
-  struct if_name *tmp_if;
+  struct olsr_if *tmp_if;
 
 #ifdef DEBUG
   olsr_printf(3, "Checking for updates in the interface set\n");
 #endif
 
-  for(tmp_if = if_names; tmp_if != NULL; tmp_if = tmp_if->next)
+  for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
     {
 
       if(tmp_if->configured)
@@ -120,10 +120,10 @@ check_interface_updates(void *foo)
  * that is if it has been set down or the address
  * has been changed.
  *
- *@param iface the if_name struct describing the interface
+ *@param iface the olsr_if struct describing the interface
  */
 int
-chk_if_changed(struct if_name *iface)
+chk_if_changed(struct olsr_if *iface)
 {
   struct interface *ifp, *tmp_ifp;
   struct ifreq ifr;
@@ -485,12 +485,12 @@ chk_if_changed(struct if_name *iface)
  * Initializes a interface described by iface,
  * if it is set up and is of the correct type.
  *
- *@param iface the if_name struct describing the interface
+ *@param iface the olsr_if struct describing the interface
  *@param so the socket to use for ioctls
  *
  */
 int
-chk_if_up(struct if_name *iface, int debuglvl)
+chk_if_up(struct olsr_if *iface, int debuglvl)
 {
   struct interface ifs, *ifp;
   struct ifreq ifr;

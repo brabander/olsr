@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: oparse.y,v 1.7 2004/10/19 19:23:01 kattemat Exp $
  *
  */
 
@@ -389,13 +389,13 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
       fprintf(stderr, "Failed converting IP address %s\n", $1->string);
       exit(EXIT_FAILURE);
     }
-  h->net = in.s_addr;
+  h->net.v4 = in.s_addr;
   if(inet_aton($2->string, &in) == 0)
     {
       fprintf(stderr, "Failed converting IP address %s\n", $1->string);
       exit(EXIT_FAILURE);
     }
-  h->netmask = in.s_addr;
+  h->netmask.v4 = in.s_addr;
   /* Queue */
   h->next = cnf->hna4_entries;
   cnf->hna4_entries = h;

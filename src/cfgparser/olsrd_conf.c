@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.7 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -164,21 +164,27 @@ olsrd_parse_cnf(char *filename)
   io->next = cnf->if_options;
   cnf->if_options = io;
 
-  /* Verify interface rulesets */
+  /* Verify and set up interface rulesets */
   in = cnf->interfaces;
 
   while(in)
     {
-      in->if_options = find_if_rule_by_name(cnf->if_options, in->config);
+      in->cnf = find_if_rule_by_name(cnf->if_options, in->config);
 
-      if(in->if_options == NULL)
+      if(in->cnf == NULL)
 	{
 	  fprintf(stderr, "ERROR: Could not find a matching ruleset \"%s\" for %s\n", in->config, in->name);
 	  olsrd_free_cnf(cnf);
 	  exit(0);
 	}
+      /* set various stuff */
+      in->index = cnf->ifcnt++;
+      in->configured = 0;
+      in->interf = NULL;
+      /* Calculate max jitter */
       in = in->next;
     }
+
 
   return cnf;
 }
@@ -368,9 +374,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "# HNA IPv4 routes\n# syntax: netaddr netmask\n# Example Internet gateway:\n# 0.0.0.0 0.0.0.0\n\nHna4\n{\n");
   while(h4)
     {
-      in4.s_addr=h4->net;
+      in4.s_addr = h4->net.v4;
       fprintf(fd, "    %s ", inet_ntoa(in4));
-      in4.s_addr=h4->netmask;
+      in4.s_addr = h4->netmask.v4;
       fprintf(fd, "%s\n", inet_ntoa(in4));
       h4 = h4->next;
     }
@@ -655,9 +661,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
       printf("HNA4 entries:\n");
       while(h4)
 	{
-	  in4.s_addr=h4->net;
+	  in4.s_addr = h4->net.v4;
 	  printf("\t%s/", inet_ntoa(in4));
-	  in4.s_addr=h4->netmask;
+	  in4.s_addr = h4->netmask.v4;
 	  printf("%s\n", inet_ntoa(in4));
 
 	  h4 = h4->next;

@@ -56,8 +56,8 @@ HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/plugin.h src/socket_parser.h src/ifnet.h \
 	src/kernel_routes.h src/log.h src/net_os.h \
 	src/apm.h src/linux/tunnel.h src/scheduler.h \
+	src/olsr_cfg.h \
 	$(CFGDIR)/oparse.h $(CFGDIR)/olsrd_conf.h \
-	$(CFGDIR)/olsrd_cfgparser.h \
 	src/linux/net.h	src/linux/link_layer.h
 
 all:	olsrd

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.15 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: defs.h,v 1.16 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -45,7 +45,7 @@
 #include "process_routes.h" /* Needed for rt_entry */
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr.h" /* Everybody uses theese */
-#include "olsrd_cfgparser.h"
+#include "olsr_cfg.h"
 
 #define VERSION "0.4.8-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
@@ -152,7 +152,6 @@ extern struct sockaddr_in6 null_addr6;
 
 
 extern int del_gws;
-extern int inet_gw; /* Are we an internet gateway? */
 
 extern int minsize;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: local_hna_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: local_hna_set.h,v 1.7 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -32,35 +32,19 @@
 #include "hna_set.h"
 
 
-struct local_hna_entry
-{
-  union olsr_ip_addr     A_network_addr;
-  union hna_netmask      A_netmask;
-  struct local_hna_entry *next;
-  struct local_hna_entry *prev;
-};
-
-
-struct local_hna_entry local_hna4_set;
-struct local_hna_entry local_hna6_set;
-
-extern size_t netmask_size;
-int inet_gw;
-
-
-int
-olsr_init_local_hna_set(void);
+void
+add_local_hna4_entry(union olsr_ip_addr *, union olsr_ip_addr *);
 
 void
-add_local_hna4_entry(union olsr_ip_addr *, union hna_netmask *);
-
-void
-add_local_hna6_entry(union olsr_ip_addr *, union hna_netmask *);
+add_local_hna6_entry(union olsr_ip_addr *, olsr_u16_t);
 
 int
-remove_local_hna4_entry(union olsr_ip_addr *, union hna_netmask *);
+remove_local_hna4_entry(union olsr_ip_addr *, union olsr_ip_addr *);
 
 int
-remove_local_hna6_entry(union olsr_ip_addr *, union hna_netmask *);
+remove_local_hna6_entry(union olsr_ip_addr *, olsr_u16_t);
+
+int
+check_inet_gw(void);
 
 #endif

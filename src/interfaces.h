@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.9 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: interfaces.h,v 1.10 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -93,22 +93,6 @@ struct interface
 
 #define OLSR_DEFAULT_MTU             1500
 
-
-struct if_name
-{
-  char *name;
-  int configured;
-  int index;
-  float max_jitter;
-  struct interface *interf;
-  struct if_config_options *cnf;
-  struct if_name *next;
-};
-
-struct if_name *if_names;
-
-int queued_ifs;
-
 #define	IFF_PASSIVE	0x200000	/* can't tell if up/down */
 #define	IFF_INTERFACE	0x400000	/* hardware interface */
 
@@ -153,7 +137,7 @@ struct	interface *
 if_ifwithaddr(union olsr_ip_addr *);
 
 void
-queue_if(char *, struct if_config_options *);
+queue_if(char *);
 
 int
 add_ifchgf(int (*f)(struct interface *, int));

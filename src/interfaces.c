@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.c,v 1.7 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: interfaces.c,v 1.8 2004/10/19 19:23:00 kattemat Exp $
  *
  */
 
@@ -27,6 +27,7 @@
 #include "interfaces.h"
 #include "ifnet.h"
 #include "scheduler.h"
+#include "configfile.h"
 
 /**
  *Do initialization of various data needed for
@@ -38,12 +39,11 @@
 int
 ifinit()
 {
-  struct if_name *tmp_if;
+  struct olsr_if *tmp_if;
 
 
   /* Initial values */
   ifnet = NULL;
-  nbinterf = 0;
 
   /*
    *Initializing addrsock struct to be
@@ -68,7 +68,7 @@ ifinit()
 
   olsr_printf(1, "\n ---- Interface configuration ---- \n\n");
   /* Run trough all interfaces immedeatly */
-  for(tmp_if = if_names; tmp_if != NULL; tmp_if = tmp_if->next)
+  for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
     {
       chk_if_up(tmp_if, 1);	
     }
@@ -76,7 +76,7 @@ ifinit()
   /* register network interface update function with scheduler */
   olsr_register_scheduler_event(&check_interface_updates, NULL, 5.0, 0, NULL);
 
-  return nbinterf;
+  return (ifnet == NULL) ? 0 : 1;
 }
 
 
@@ -145,8 +145,6 @@ if_ifwithsock(int fd)
 }
 
 
-
-
 /**
  *Create a new interf_name struct using a given
  *name and insert it into the interface list.
@@ -156,15 +154,14 @@ if_ifwithsock(int fd)
  *@return nada
  */
 void
-queue_if(char *name, struct if_config_options *ico)
+queue_if(char *name)
 {
 
-  struct if_name *interf_n;
+  struct olsr_if *interf_n = olsr_cnf->interfaces;
 
   //printf("Adding interface %s\n", name);
 
   /* check if the inerfaces already exists */
-  interf_n = if_names;
   while(interf_n != NULL)
     {
       if(memcmp(interf_n->name, name, strlen(name)) == 0)
@@ -175,22 +172,20 @@ queue_if(char *name, struct if_config_options *ico)
       interf_n = interf_n->next;
     }
 
-  interf_n = olsr_malloc(sizeof(struct if_name), "queue interface");
+  interf_n = olsr_malloc(sizeof(struct olsr_if), "queue interface");
 
   /* strlen () does not return length including terminating /0 */
   interf_n->name = olsr_malloc(strlen(name) + 1, "queue interface name");
-  interf_n->cnf = ico;
-  interf_n->max_jitter = ico->hello_params.emission_interval / 4;
+  interf_n->cnf = get_default_ifcnf(olsr_cnf);
   interf_n->configured = 0;
   interf_n->interf = NULL;
-  interf_n->index = queued_ifs++;
+  interf_n->index = olsr_cnf->ifcnt++;
 
   strcpy(interf_n->name, name);
-  interf_n->next = if_names;
-  if_names = interf_n;
+  interf_n->next = olsr_cnf->interfaces;
+  olsr_cnf->interfaces = interf_n;
 
 }
-
 
 
 
