@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.54 2005/03/31 18:19:54 tlopatic Exp $
+# $Id: Makefile,v 1.55 2005/03/31 18:39:15 kattemat Exp $
 
 VERS =		0.4.9
 
@@ -296,11 +296,14 @@ install_bin:
 		install -m 755 olsrd $(INSTALL_PREFIX)/usr/sbin
 
 install_olsrd:	install_bin
+		@echo ========= C O N F I G U R A T I O N - F I L E ============
 		@echo olsrd uses the configfile $(INSTALL_PREFIX)/etc/olsr.conf
-		@echo a default configfile. A sample configfile
-		@echo can be installed
+		@echo a default configfile. A sample RFC-compliance aimed
+		@echo configfile can be installed. Note that a LQ-based configfile
+		@echo can be found at files/olsrd.conf.default.lq
+		@echo ==========================================================
 		mkdir -p $(INSTALL_PREFIX)/etc
-		cp -i files/olsrd.conf.default $(INSTALL_PREFIX)/etc/olsrd.conf
+		cp -i files/olsrd.conf.default.rfc $(INSTALL_PREFIX)/etc/olsrd.conf
 		@echo -------------------------------------------
 		@echo Edit $(INSTALL_PREFIX)/etc/olsrd.conf before running olsrd!!
 		@echo -------------------------------------------
