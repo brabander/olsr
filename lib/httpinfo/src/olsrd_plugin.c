@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.9 2005/02/25 22:27:26 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.10 2005/03/03 13:05:11 kattemat Exp $
  */
 
 /*
@@ -298,7 +298,7 @@ fetch_olsrd_data()
 		     &cfg, 
 		     sizeof(cfg)))
     {
-      hna_set = NULL;
+      cfg = NULL;
       retval = 0;
     }
 
