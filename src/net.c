@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.26 2004/12/15 17:20:57 kattemat Exp $
+ * $Id: net.c,v 1.27 2005/01/03 19:00:01 kattemat Exp $
  */
 
 #include "net.h"
@@ -585,8 +585,6 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
   int i, tmp;
 
   prefix = 0;
-
-  memset(adr, 0, ipsize);
 
   for(i = 0; i < 16; i++)
     {
