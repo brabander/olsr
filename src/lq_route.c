@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.26 2005/02/16 14:44:44 tlopatic Exp $
+ * $Id: lq_route.c,v 1.27 2005/02/17 02:06:22 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -328,6 +328,7 @@ void olsr_calculate_lq_routing_table(void)
   struct rt_entry *gw_rt, *hna_rt, *head_rt;
   struct neighbor_2_entry *neigh2;
   struct neighbor_list_entry *neigh_walker;
+  struct interface *inter;
 
   if (ipsize == 4)
     avl_comp = avl_comp_ipv4;
@@ -502,38 +503,39 @@ void olsr_calculate_lq_routing_table(void)
       continue;
     }
 
-#if defined linux && 0
-    /*
-     * on Linux we can add a new route for a destination before removing
-     * the old route, so frequent route updates are not a problem, as
-     * we never have a time window in which there isn't any route; hence
-     * we can use the more volatile ETX value instead of the hop count
-     */
-
-    hops = (int)vert->path_etx;
-
-    if (hops > 100)
-      hops = 100;
-#endif
-
-    // add a route to the main address of the destination node
+    // find the best link to the one-hop neighbour
 
     link = get_best_link_to_neighbor(&walker->addr);
 
-    olsr_insert_routing_table(&vert->addr,
-			      &link->neighbor_iface_addr,
-			      if_ifwithaddr(&link->local_iface_addr),
-                              hops);
+    // we may see NULL here, if the one-hop neighbour is not in the
+    // link and neighbour sets any longer, but we have derived an edge
+    // between us and the one-hop neighbour from the TC set
 
-    // add routes to the remaining interfaces of the destination node
-
-    for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
-         mid_walker = mid_walker->next_alias)
+    if (link != NULL)
     {
-      olsr_insert_routing_table(&mid_walker->alias,
-                                &link->neighbor_iface_addr,
-                                if_ifwithaddr(&link->local_iface_addr),
-                                hops);
+      // find the interface for the found link
+
+      inter = if_ifwithaddr(&link->local_iface_addr);
+
+      // we may see NULL here if the interface is down, but we have
+      // links that haven't timed out, yet
+
+      if (inter != NULL)
+      {
+        // add a route to the main address of the destination node, if
+        // we haven't already added it above
+
+        olsr_insert_routing_table(&vert->addr, &link->neighbor_iface_addr,
+                                  inter, hops);
+
+        // add routes to the remaining interfaces of the destination node,
+        // if we haven't already added it above
+
+        for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
+             mid_walker = mid_walker->next_alias)
+          olsr_insert_routing_table(&mid_walker->alias,
+                                    &link->neighbor_iface_addr, inter, hops);
+      }
     }
   }
 
@@ -561,6 +563,16 @@ void olsr_calculate_lq_routing_table(void)
     if (hna_gw == NULL)
       continue;
 
+    // find route to the node
+
+    gw_rt = olsr_lookup_routing_table(&hna_gw->A_gateway_addr);
+
+    // maybe we haven't found a link or an interface for the gateway above
+    // and hence haven't added a route - skip the HNA in this case
+
+    if (gw_rt == NULL)
+      continue;
+
     // loop through the node's HNAs
 
     for (hna = hna_gw->networks.next; hna != &hna_gw->networks;
@@ -570,18 +582,6 @@ void olsr_calculate_lq_routing_table(void)
 
       if (olsr_lookup_routing_table(&hna->A_network_addr) != NULL)
         continue;
-
-      // find route to the node
-
-      gw_rt = olsr_lookup_routing_table(&hna_gw->A_gateway_addr);
-
-      // should never happen as we only process reachable nodes
-
-      if (gw_rt == NULL)
-      {
-        fprintf(stderr, "LQ HNA processing: Gateway without a route.");
-        continue;
-      }
 
       // create route for the HNA
 

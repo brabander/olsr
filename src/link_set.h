@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.21 2005/02/14 15:54:30 tlopatic Exp $
+ * $Id: link_set.h,v 1.22 2005/02/17 02:06:22 tlopatic Exp $
  */
 
 
@@ -85,6 +85,7 @@ struct link_entry
   int total_packets;
 
   double loss_link_quality;
+  double loss_link_multiplier;
 
   int loss_window_size;
   int loss_index;
