@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.4 2004/11/18 21:57:35 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.5 2004/11/18 22:00:48 kattemat Exp $
  */
 
 
@@ -173,6 +173,8 @@ ifchange(struct interface *ifn, int action)
       olsr_printf(1, "[ENC]Hijacking %s socket %d\n", ifn->int_name, ifn->olsr_socket);
       remove_olsr_socket(ifn->olsr_socket, olsr_input);
       add_olsr_socket(ifn->olsr_socket, &packet_parser);
+      /* Reducing maxmessagesize */
+      net_reserve_bufspace(ifn, sizeof(struct olsrmsg));
       break;
 
     case(IFCHG_IF_REMOVE):
