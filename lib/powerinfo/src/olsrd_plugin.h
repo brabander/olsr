@@ -156,7 +156,9 @@ struct interface
   struct        sockaddr_in6 int6_multaddr;     /* Multicast */
   /* IP independent */
   union         olsr_ip_addr ip_addr;
+  int           olsr_socket;                    /* The broadcast socket for this interface */
   int	        int_metric;			/* init's routing entry */
+  int           int_mtu;                        /* MTU of interface */
   int	        int_flags;			/* see below */
   char	        *int_name;			/* from kernel if structure */
   int           if_index;                       /* Kernels index of this interface */
