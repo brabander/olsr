@@ -6,6 +6,7 @@
 
 CC ?= gcc
 STRIP ?= strip
+PLUGINFLAGS = -fPIC -DOLSR_PLUGIN -I../../src
 
 ifndef OS
 all:		help
@@ -14,9 +15,9 @@ endif
 ifeq ($(OS), linux)
 NAME ?= olsrd_secure.so.0.4
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-MYFLAGS ?= -Wall -fPIC -g #-DDEBUG# Uncomment -g for debugging
 LIBS ?= -lc -lssl -lcrypto -lm
-CFLAGS ?= -fPIC -g -O2
+LDFLAGS = -fPIC
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2 $(PLUGINFLAGS)
 INSTALL_LIB = install -D -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig -n $(LIBDIR)
 
@@ -25,9 +26,9 @@ else
 ifeq ($(OS), fbsd)
 NAME ?= olsrd_secure.so.0.4
 LIBDIR ?= $(INSTALL_PREFIX)/usr/lib
-MYFLAGS ?= -Wall -fPIC -g #-DDEBUG# Uncomment -g for debugging
 LIBS ?= -lc -lssl -lcrypto -lm
-CFLAGS ?= -fPIC -g -O2
+LDFLAGS = -fPIC
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -g -O2 $(PLUGINFLAGS)
 INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 	/sbin/ldconfig
 
@@ -35,10 +36,8 @@ all:	plugin
 else
 ifeq ($(OS), win32)
 NAME ?= olsrd_secure.dll
-MYFLAGS ?= -g -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
-CFLAGS ?= -O2
-CFLAGS += $(MYFLAGS)
-LDFLAGS ?= -mno-cygwin -shared
+CFLAGS ?= -O2 -g $(PLUGINFLAGS) -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+LDFLAGS ?= -fPIC -mno-cygwin -shared
 LIBS ?= -lws2_32 -lssl -lcrypto
 INSTALL_LIB = 	cp $(NAME) ../..
 all: plugin
@@ -55,11 +54,11 @@ SRCS=	src/olsrd_plugin.c src/olsrd_secure.c
 OBJS=	src/olsrd_plugin.o src/olsrd_secure.o
 
 #Headerfiles
-HDRS=	src/olsrd_plugin.h src/olsrd_secure.h src/olsr_plugin_io.h
+HDRS=	src/olsrd_plugin.h src/olsrd_secure.h
 
 
 plugin: $(OBJS)
-	$(CC) $(LDFLAGS) $(MYFLAGS) -shared -Wl,-soname,$(NAME) \
+	$(CC) $(LDFLAGS) -shared -Wl,-soname,$(NAME) \
 	-Wl,--version-script=version-script.txt \
 	-o $(NAME) $(OBJS) $(LIBS)
 

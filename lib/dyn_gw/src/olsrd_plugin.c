@@ -37,23 +37,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.10 2004/12/01 18:16:46 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.11 2005/02/25 22:43:21 kattemat Exp $
  */
 
 #include "olsrd_plugin.h"
+#include "plugin_loader.h"
 #include <stdio.h>
-
-
-/* Data to sent to the plugin with the register_olsr_function call 
- * THIS STRUCT MUST MATCH ITS SIBLING IN plugin_loader.h IN OLSRD
- */
-struct olsr_plugin_data
-{
-  int ipversion;
-  union olsr_ip_addr *main_addr;
-  int (*olsr_plugin_io)(int, void *, size_t);
-};
-
 
 /**
  * "Private" declarations

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.4 2005/02/20 18:51:59 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.5 2005/02/25 22:43:21 kattemat Exp $ */
 
 
 /*
@@ -41,6 +41,7 @@
 
 #include "olsrd_plugin.h"
 #include "nameservice.h"
+#include "plugin_loader.h"
 
 int
 register_olsr_param(char *, char *);
@@ -101,21 +102,6 @@ strndup(const char *ptr, size_t size)
 }
 
 #endif
-
-/* Data to sent to the plugin with the register_olsr_function call 
- * THIS STRUCT MUST MATCH ITS SIBLING IN plugin_loader.h IN OLSRD
- */
-struct olsr_plugin_data
-{
-  int ipversion;
-  union olsr_ip_addr *main_addr;
-  int (*olsr_plugin_io)(int, void *, size_t);
-};
-
-
-/**
- * "Private" declarations
- */
 
 void __attribute__ ((constructor)) 
 my_init(void);
