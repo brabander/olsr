@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-# $Id: Makefile,v 1.6 2004/11/09 00:34:50 tlopatic Exp $
+# $Id: Makefile,v 1.7 2004/11/09 00:42:47 tlopatic Exp $
 #
 
 #OS =		linux
@@ -44,7 +44,7 @@ LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
 
 PORT_CFLAGS =	-fPIC
-PORT_LDFLAGS =
+PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
 PORT_OBJS =
 PORT_LIBS =	-lm -lc
 
@@ -55,7 +55,7 @@ LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
 
 PORT_CFLAGS =	-fPIC
-PORT_LDFLAGS =
+PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
 PORT_OBJS =
 PORT_LIBS =	-lm -lc
 
@@ -66,7 +66,7 @@ LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
 
 PORT_CFLAGS =	-fPIC
-PORT_LDFLAGS =
+PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
 PORT_OBJS =
 PORT_LIBS =	-lm -lc
 
