@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin.c,v 1.10 2004/11/10 16:58:46 kattemat Exp $
+ * $Id: plugin.c,v 1.11 2004/11/15 12:31:58 kattemat Exp $
  *
  */
 
@@ -42,6 +42,7 @@
 #include "hna_set.h"
 #include "apm.h"
 #include "routing_table.h"
+#include "mid_set.h"
 
 /**
  * Multi-purpose function for plugins
@@ -98,6 +99,9 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       case(GETD__HNA_ROUTES):
       *((struct rt_entry **)data) = hna_routes;
       break; 
+     case(GETD__MID_SET):
+      *((struct mid_entry **)data) = mid_set;
+      break;
 
       /* Function fetching */
 
