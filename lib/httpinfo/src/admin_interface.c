@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.2 2005/02/08 23:37:23 kattemat Exp $
+ * $Id: admin_interface.c,v 1.3 2005/02/21 19:33:30 kattemat Exp $
  */
 
 /*
@@ -52,10 +52,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-
-
-#ifdef INCLUDE_SETTINGS
 
 int
 build_admin_body(char *buf, olsr_u32_t bufsize)
@@ -151,6 +147,8 @@ build_admin_body(char *buf, olsr_u32_t bufsize)
 	{
 	  size += sprintf(&buf[size], admin_frame[i], 
 			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
+			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask),
+			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
 			  olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
 	}
     }
@@ -178,9 +176,13 @@ build_admin_body(char *buf, olsr_u32_t bufsize)
 }
 
 
+#ifdef ADMIN_INTERFACE
+
 int
 process_param(char *key, char *value)
 {
+  static olsr_u32_t curr_hna_net;
+  static olsr_bool curr_hna_ok = OLSR_FALSE;
 
   if(!strcmp(key, "debug_level"))
     {
@@ -189,6 +191,7 @@ process_param(char *key, char *value)
 	return -1;
 
       cfg->debug_level = ival;
+      return 1;
     }
 
   if(!strcmp(key, "tc_redundancy"))
@@ -198,6 +201,7 @@ process_param(char *key, char *value)
 	return -1;
 
       cfg->tc_redundancy = ival;
+      return 1;
     }
 
   if(!strcmp(key, "mpr_coverage"))
@@ -207,6 +211,7 @@ process_param(char *key, char *value)
 	return -1;
 
       cfg->mpr_coverage = ival;
+      return 1;
     }
 
   if(!strcmp(key, "willingness"))
@@ -216,21 +221,123 @@ process_param(char *key, char *value)
 	return -1;
 
       cfg->willingness = ival;
+      return 1;
+    }
+
+  if(!strcmp(key, "lq_level"))
+    {
+      int ival = atoi(value);
+      if((ival < 0) || (ival > 2))
+	return -1;
+
+      cfg->lq_level = ival;
+      return 1;
+    }
+
+  if(!strcmp(key, "lq_wsize"))
+    {
+      int ival = atoi(value);
+      if((ival < 0) || (ival > 10))
+	return -1;
+
+      cfg->lq_wsize = ival;
+      return 1;
+    }
+
+  if(!strcmp(key, "hyst_scaling"))
+    {
+      float fval = 1.1;
+      sscanf(value, "%f", &fval);
+      if((fval < 0.0) || (fval > 1.0))
+	return -1;
+
+      printf("HYST SCALING: %f\n", fval);
+      cfg->hysteresis_param.scaling = fval;
+      return 1;
+    }
+
+  if(!strcmp(key, "hyst_scaling"))
+    {
+      float fval = 1.1;
+      sscanf(value, "%f", &fval);
+      if((fval < 0.0) || (fval > 1.0))
+	return -1;
+
+      cfg->hysteresis_param.scaling = fval;
+      return 1;
+    }
+
+  if(!strcmp(key, "hyst_lower"))
+    {
+      float fval = 1.1;
+      sscanf(value, "%f", &fval);
+      if((fval < 0.0) || (fval > 1.0))
+	return -1;
+
+      cfg->hysteresis_param.thr_low = fval;
+      return 1;
+    }
+
+  if(!strcmp(key, "hyst_upper"))
+    {
+      float fval = 1.1;
+      sscanf(value, "%f", &fval);
+      if((fval < 0.0) || (fval > 1.0))
+	return -1;
+
+      cfg->hysteresis_param.thr_high = fval;
+      return 1;
+    }
+
+  if(!strcmp(key, "pollrate"))
+    {
+      float fval = 1.1;
+      sscanf(value, "%f", &fval);
+      if((fval < 0.0) || (fval > 1.0))
+	return -1;
+
+      cfg->pollrate = fval;
+      return 1;
     }
 
 
+  if(!strcmp(key, "hna_new_net"))
+    {
+      struct in_addr in;
+
+      if(inet_aton(value, &in) == 0)
+	{
+	  fprintf(stderr, "Failed converting new HNA net %s\n", value);
+	  return -1;
+	}
+      curr_hna_ok = OLSR_TRUE;
+      curr_hna_net = in.s_addr;
+      return 1;
+    }
+
+  if(!strcmp(key, "hna_new_netmask"))
+    {
+      struct in_addr in;
+
+      if(!curr_hna_ok)
+	return -1;
+
+      curr_hna_ok = OLSR_FALSE;
+
+      if(inet_aton(value, &in) == 0)
+	{
+	  fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+	  return -1;
+	}
+      add_local_hna4_entry((union olsr_ip_addr *)&curr_hna_net,
+			   (union hna_netmask *)&in.s_addr);
+      
+      return 1;
+    }
+
   return 0;
 #if 0
-  { 1, admin_basic_setting_float, "Pollrate:", "pollrate", 4, &cfg->pollrate },
   { 1, admin_basic_setting_string, "TOS:", "tos", 6, "TBD" },
-
-  { cfg->use_hysteresis, admin_basic_setting_float, "Hyst scaling:", "hyst_scaling", 4, &cfg->hysteresis_param.scaling },
-  { cfg->use_hysteresis, admin_basic_setting_float, "Lower thr:", "hyst_lower", 4, &cfg->hysteresis_param.thr_low },
-  { cfg->use_hysteresis, admin_basic_setting_float, "Upper thr:", "hyst_upper", 4, &cfg->hysteresis_param.thr_high },
-
-  { cfg->lq_level, admin_basic_setting_int, "LQ level:", "lq_level", 1, &cfg->lq_level},
-  { cfg->lq_level, admin_basic_setting_int, "LQ winsize:", "lq_wsize", 1, &cfg->lq_wsize},
-
 #endif
 }
 
@@ -256,7 +363,7 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
       if(data[i] == '&')
 	{
 	  data[i] = '\0';
-	  size += sprintf(&buf[size], "<b>Key:</b>%s<br>\n<b>Value:</b>%s<br>\n", 
+	  size += sprintf(&buf[size], "<b>Key:</b>%s <b>Value:</b>%s<br>\n", 
 			  &data[key_start], &data[val_start]);
 	  process_param(&data[key_start], &data[val_start]);
 	  printf("Key: %s\nValue: %s\n", 
@@ -264,6 +371,12 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
 	  key_start = i + 1;
 	}
     }  
+
+  process_param(&data[key_start], &data[val_start]);
+  size += sprintf(&buf[size], "<b>Key:</b>%s <b>Value:</b>%s<br>\n", 
+		  &data[key_start], &data[val_start]);
+  printf("Key: %s\nValue: %s\n", 
+	 &data[key_start], &data[val_start]);
 
   size += sprintf(&buf[size], "\n</body>\n</html>\n");
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.7 2004/12/29 19:55:54 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.8 2005/02/21 19:34:19 kattemat Exp $
  */
 
 /*
@@ -348,6 +348,20 @@ fetch_olsrd_data()
 		     sizeof(add_olsr_socket)))
   {
     add_olsr_socket = NULL;
+    retval = 0;
+  }
+
+  /* Add hna net IPv4 */
+  if(!olsr_plugin_io(GETF__ADD_LOCAL_HNA4_ENTRY, &add_local_hna4_entry, sizeof(add_local_hna4_entry)))
+  {
+    add_local_hna4_entry = NULL;
+    retval = 0;
+  }
+
+  /* Remove hna net IPv4 */
+  if(!olsr_plugin_io(GETF__REMOVE_LOCAL_HNA4_ENTRY, &remove_local_hna4_entry, sizeof(remove_local_hna4_entry)))
+  {
+    remove_local_hna4_entry = NULL;
     retval = 0;
   }
 

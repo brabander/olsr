@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.4 2005/02/08 23:29:40 kattemat Exp $
+ * $Id: html.h,v 1.5 2005/02/21 19:33:48 kattemat Exp $
  */
 
 /*
@@ -145,7 +145,7 @@ static const char *about_frame[] =
 {
     "<b>" PLUGIN_NAME " version " PLUGIN_VERSION "</b><br>\n"
     "by Andreas T&oslash;nnesen (C)2005.<br>\n",
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
     "Compiled <i>with experimental admin interface</i> " __DATE__ "<hr>\n"
 #else
     "Compiled " __DATE__ "<hr>\n"
@@ -169,7 +169,7 @@ static const char *about_frame[] =
     "<li><b>All</b> - Here all the previous pages are displayed as one.\n",
     "This is to make all information available as easy as possible(for example\n",
     "for a script) and using as few resources as possible.</li>\n",
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
     "<li><b>Admin</b> - This page is highly experimental(and unsecure)!\n",
     "As of now it is not working at all but it provides a impression of\n",
     "the future possibilities of httpinfo. This is to be a interface to\n",

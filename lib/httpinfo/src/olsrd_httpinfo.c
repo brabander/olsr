@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.46 2005/02/20 18:51:58 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.47 2005/02/21 19:33:51 kattemat Exp $
  */
 
 /*
@@ -187,7 +187,7 @@ struct tab_entry tab_entries[] =
     {"Routes", "routes", build_routes_body},
     {"Links/Topology", "nodes", build_nodes_body},
     {"All", "all", build_all_body},
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
     {"Admin", "admin", build_admin_body},
 #endif
     {"About", "about", build_about_body},
@@ -211,7 +211,7 @@ struct static_txt_file_entry static_txt_files[] =
 
 struct dynamic_file_entry dynamic_files[] =
   {
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
     {"set_values", process_set_values},
 #endif
     {NULL, NULL}
@@ -368,7 +368,7 @@ parse_http_request(int fd)
 
   if(!strcmp(req_type, "POST"))
     {
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
       int i = 0;
       while(dynamic_files[i].filename)
 	{

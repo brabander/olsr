@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.16 2005/02/20 17:33:43 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.17 2005/02/21 19:34:22 kattemat Exp $
  */
 
 /*
@@ -130,6 +130,11 @@ int (*olsr_printf)(int, char *, ...);
 /* olsrd malloc wrapper */
 void *(*olsr_malloc)(size_t, const char *);
 
+/* Add hna net IPv4 */
+void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
+
+/* Remove hna net IPv4 */
+int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
 
 /****************************************************************************
  *                             Data from olsrd                              *

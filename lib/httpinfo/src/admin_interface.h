@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.h,v 1.1 2005/02/08 23:29:40 kattemat Exp $
+ * $Id: admin_interface.h,v 1.2 2005/02/21 19:33:48 kattemat Exp $
  */
 
 /*
@@ -48,7 +48,6 @@
 #ifndef ADMIN_INTERFACE_H
 #define ADMIN_INTERFACE_H
 
-#ifdef INCLUDE_SETTINGS
 int
 build_admin_body(char *, olsr_u32_t);
 
@@ -57,6 +56,5 @@ process_set_values(char*, olsr_u32_t, char *, olsr_u32_t);
 
 int
 process_param(char *, char *);
-#endif
 
 #endif

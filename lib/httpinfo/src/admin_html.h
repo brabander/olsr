@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_html.h,v 1.1 2005/02/08 23:29:38 kattemat Exp $
+ * $Id: admin_html.h,v 1.2 2005/02/21 19:33:27 kattemat Exp $
  */
 
 /*
@@ -48,7 +48,7 @@
 #ifndef ADMIN_HTML_H
 #define ADMIN_HTML_H
 
-#ifdef INCLUDE_SETTINGS
+#ifdef ADMIN_INTERFACE
 static const char *admin_frame[] =
   {
     "<b>Administrator interface</b><hr>\n"
@@ -63,16 +63,16 @@ static const char *admin_frame[] =
     "<h2>Add/remove local HNA entries</h2>\n",
     "<form action=\"set_values\" method=\"post\">\n",
     "<table width=\"100%%\"><tr><td><b>Network:</b></td>\n",
-    "<td><input type=\"text\" name=\"foo\" maxlength=\"100\" class=\"input_text\"></td>\n",
+    "<td><input type=\"text\" name=\"hna_new_net\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n",
     "<td><b>Netmask/Prefix:</b></td>\n",
-    "<td><input type=\"text\" name=\"foo\" maxlength=\"16\" class=\"input_text\"></td>\n",
-    "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td>\n",
+    "<td><input type=\"text\" name=\"hna_new_netmask\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n",
+    "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n",
     "</table><hr>\n",
     "<form action=\"set_values\" method=\"post\">\n",
     "<table width=\"100%%\">\n",
     "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n",
     "<!-- HNAENTRIES -->\n",
-    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"foo\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
+    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"%s/%s\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
     "</table>\n<br>\n",
     "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n",
     "</form>\n",
