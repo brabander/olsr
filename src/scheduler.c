@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.21 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: scheduler.c,v 1.22 2004/11/21 13:45:50 kattemat Exp $
  */
 
 
@@ -53,7 +53,6 @@
 
 
 static float pollrate;
-olsr_bool want_neigh;
 
 
 /**
@@ -135,17 +134,6 @@ scheduler()
 
 
       /* Check for changes in topology */
-
-      if (changes || want_neigh)
-	{
-          // if the MPR selector might have been updated, we have to print
-          // the updated neighbour table, as it now contains an "MPRS" column
-
-          olsr_print_neighbor_table();
-
-          want_neigh = OLSR_FALSE;
-        }
-
       if(changes)
         {
 	  olsr_printf(3, "ANSN UPDATED %d\n\n", ansn);

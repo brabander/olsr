@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.27 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: olsr.c,v 1.28 2004/11/21 13:45:50 kattemat Exp $
  */
 
 /**
@@ -64,7 +64,6 @@
 #include <stdarg.h>
 #include <signal.h>
 
-olsr_bool want_neigh;
 
 /**
  *Checks if a timer has timed out.
@@ -176,8 +175,6 @@ olsr_process_changes()
   if(changes_hna)
     olsr_printf(3, "CHANGES IN HNA\n");  
 #endif
-
-  want_neigh = OLSR_FALSE;
   
   if(!changes_neighborhood &&
      !changes_topology &&
@@ -250,7 +247,6 @@ olsr_process_changes()
   
   if (olsr_cnf->debug_level > 0)
     {
-      want_neigh = OLSR_TRUE;
 
       if (olsr_cnf->debug_level > 1)
         olsr_print_tc_table();
@@ -266,9 +262,8 @@ olsr_process_changes()
             }
         }
 
-#ifdef USE_LINK_QUALITY
       olsr_print_link_set();
-#endif
+      olsr_print_neighbor_table();
     }
 
   for(tmp_pc_list = pcf_list; 

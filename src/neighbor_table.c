@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.18 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.19 2004/11/21 13:45:50 kattemat Exp $
  */
 
 
@@ -481,8 +481,6 @@ olsr_print_neighbor_table()
 #endif
   double best_lq, inv_best_lq;
   char *fstr;
-  struct mpr_selector *mprs;
-  char *sel;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n",
               nowtm->tm_hour,
@@ -492,13 +490,13 @@ olsr_print_neighbor_table()
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "IP address       LQ     NLQ    SYM  MPR  MPRS  will\n");
+    olsr_printf(1, "IP address       LQ     NLQ    SYM   MPR   MPRS  will\n");
     fstr = "%-15s  %5.3f  %5.3f  %s  %s  %s  %d\n";
   }
 
   else
   {
-    olsr_printf(1, "IP address                               LQ     NLQ    SYM  MPR  MPRS  will\n");
+    olsr_printf(1, "IP address                               LQ     NLQ    SYM   MPR   MPRS  will\n");
     fstr = "%-39s  %5.3f  %5.3f  %s  %s  %s  %d\n";
   }
 
@@ -517,19 +515,12 @@ olsr_print_neighbor_table()
           best_lq = 0.0;
           inv_best_lq = 0.0;
 #endif
-          sel = "    ";
-
-          for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next)
-            if (COMP_IP(&mprs->MS_main_addr, &neigh->neighbor_main_addr))
-              {
-                sel = "MPRS";
-                break;
-              }
 
           olsr_printf(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
                       inv_best_lq, best_lq,
-                      (neigh->status == SYM) ? "SYM" : "   ",
-                      neigh->is_mpr ? "MPR" : "   ", sel,
+                      (neigh->status == SYM) ? "YES " : "NO  ",
+                      neigh->is_mpr ? "YES " : "NO  ", 
+		      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
                       neigh->willingness);
         }
     }
