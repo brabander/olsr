@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.16 2005/02/17 07:19:40 kattemat Exp $
+ * $Id: interfaces.h,v 1.17 2005/02/17 07:40:18 kattemat Exp $
  */
 
 
@@ -72,23 +72,21 @@
 #define MAX_IF_METRIC           100
 
 
-/*
- * Weights for interface types, higher
- * weights are prefered over lower
- */
 enum olsr_if_wieght
   {
     WEIGHT_LOWEST = 0,
-    WEIGHT_SERIAL_LOW,        /* Serial device        */
-    WEIGHT_WLAN_DEFAULT,      /* WLAN unknown rate    */
-    WEIGHT_WLAN_LOW,          /* <11Mb WLAN           */
-    WEIGHT_WLAN_11MB,         /* 11Mb 802.11b         */
-    WEIGHT_WLAN_54MB,         /* 54Mb 802.11g         */
-    WEIGHT_WLAN_HIGH,         /* >54Mb WLAN           */
-    WEIGHT_ETHERNET_DEFAULT,  /* Ethernet unknown rate*/
-    WEIGHT_ETHERNET_10MB,     /* Ethernet 10Mb        */
-    WEIGHT_ETHERNET_100MB,    /* Ethernet 100Mb       */
+    WEIGHT_LOW,
+    WEIGHT_ETHERNET_1GBP,     /* Ethernet 1Gb+        */
     WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb         */
+    WEIGHT_ETHERNET_100MB,    /* Ethernet 100Mb       */
+    WEIGHT_ETHERNET_10MB,     /* Ethernet 10Mb        */
+    WEIGHT_ETHERNET_DEFAULT,  /* Ethernet unknown rate*/
+    WEIGHT_WLAN_HIGH,         /* >54Mb WLAN           */
+    WEIGHT_WLAN_54MB,         /* 54Mb 802.11g         */
+    WEIGHT_WLAN_11MB,         /* 11Mb 802.11b         */
+    WEIGHT_WLAN_LOW,          /* <11Mb WLAN           */
+    WEIGHT_WLAN_DEFAULT,      /* WLAN unknown rate    */
+    WEIGHT_SERIAL,            /* Serial device        */
     WEIGHT_HIGH,              /* Max                  */
     WEIGHT_HIGHEST = WEIGHT_HIGH
   };
