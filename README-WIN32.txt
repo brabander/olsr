@@ -137,62 +137,7 @@ how this version differs from the original Linux version.
 
     * Link layer statistics.
 
-    * Gateway tunnelling. This is currently experimental on
-      Windows. It is intended to work reliably on Windows 2000 and
-      Windows XP in a later version. It is based on the ipinip.sys
-      device driver that comes with these operating systems, but which
-      is completely undocumented. I've figured out how to use the
-      device driver, but it looks like I've still missed one or two
-      little things. So, tunnelling might work on your OS version, but
-      it might as well not work. Unfortunately, currently I do not
-      even know why it works on some systems and fails on other
-      systems.
-
-      If you are brave, do the following, but be prepared for a BSOD
-      (blue screen of death) as a worst-case scenario. This is nothing
-      for the faint of the heart. :-) Never try this on production
-      systems.
-
-        * Start the IP-in-IP tunnel driver before running the OLSR
-          server:
-
-            net start ipinip
-
-        * When the OLSR server reports that the tunnel has been
-          established, find out, which interface index the tunnel
-          device has been assigned:
-
-            route print
-
-        * Let's assume that the interface index is 0x1234 and the
-          gateway's IP address is 1.2.3.4. Manually add a default
-          route through the other end of the tunnel:
-
-            route add 0.0.0.0 mask 0.0.0.0 1.2.3.4 if 0x1234
-
-        * Try to ping somebody beyond the gateway and let me know
-          whether it works. If it doesn't and if you have time, please
-          do a packet dump for me to determine whether IP-in-IP
-          packets are leaving your system and, if yes, what they look
-          like.
-
-      If you know of any freely available tunnel driver for Windows,
-      please let me know. We could then think about switching from the
-      native ipinip.sys driver to an alternative driver, perhaps one
-      that also works on Windows 9x.
-
-      If you are the Microsoft person that is responsible for the
-      tunnel driver, please have a look at my code in
-      src/win32/tunnel.* and tell me what I'm missing.
-
-    * Multiple interfaces in the same subnet. As they all share the
-      same subnet broadcast address, there's no way to tell Windows
-      which of these interfaces to send OLSR packets through. I guess
-      that we'll have to come up with a device driver that sits
-      between the TCP/IP stack and the network adapters and that
-      directs outbound OLSR packets to the correct interface after
-      they've been routed by the TCP/IP stack. Looks like there isn't
-      any other solution on Windows.
+    * Gateway tunnelling.
 
   There are also some Windows-specific features that I currently work
   on, but which have not made it into this release.
