@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.35 2004/12/01 20:50:14 tlopatic Exp $
+# $Id: Makefile,v 1.36 2004/12/01 21:08:42 kattemat Exp $
 
 VERS =		0.4.8
 
@@ -225,8 +225,11 @@ install:	install_bin
 		@echo -------------------------------------------
 		@echo Edit $(INSTALL_PREFIX)/etc/olsrd.conf before running olsrd!!
 		@echo -------------------------------------------
+		@echo Installing manpages olsrd\(8\) and olsrd.conf\(5\)
 		mkdir -p $(INSTALL_PREFIX)/usr/share/man/man8/
 		cp files/olsrd.8.gz $(INSTALL_PREFIX)/usr/share/man/man8/olsrd.8.gz
+		mkdir -p $(INSTALL_PREFIX)/usr/share/man/man5/
+		cp files/olsrd.conf.5.gz $(INSTALL_PREFIX)/usr/share/man/man5/olsrd.conf.5.gz
 
 libs: 
 		for i in lib/*; do \
