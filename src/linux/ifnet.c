@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.12 2004/10/19 19:23:01 kattemat Exp $
+ * $Id: ifnet.c,v 1.13 2004/10/19 20:19:32 kattemat Exp $
  *
  */
 
@@ -429,8 +429,6 @@ chk_if_changed(struct olsr_if *iface)
 	}
     }
 
-  nbinterf--;
-
 
   /*
    * Deregister scheduled functions 
@@ -467,7 +465,7 @@ chk_if_changed(struct olsr_if *iface)
   free(ifp->int_name);
   free(ifp);
 
-  if((nbinterf == 0) && (!olsr_cnf->allow_no_interfaces))
+  if((ifnet == NULL) && (!olsr_cnf->allow_no_interfaces))
     {
       olsr_printf(1, "No more active interfaces - exiting.\n");
       olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
@@ -616,10 +614,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 	}
       
       /* Deactivate IP spoof filter */
-      deactivate_spoof(ifr.ifr_name, nbinterf, olsr_cnf->ip_version);
+      deactivate_spoof(ifr.ifr_name, iface->index, olsr_cnf->ip_version);
       
       /* Disable ICMP redirects */
-      disable_redirects(ifr.ifr_name, nbinterf, olsr_cnf->ip_version);
+      disable_redirects(ifr.ifr_name, iface->index, olsr_cnf->ip_version);
       
     }
   
@@ -660,8 +658,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       olsr_printf(1, "\tAddress: %s\n", ip6_to_string(&ifs.int6_addr.sin6_addr));
       olsr_printf(1, "\tMulticast: %s\n", ip6_to_string(&ifs.int6_multaddr.sin6_addr));
     }
-
-  nbinterf++; 
   
   ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
   

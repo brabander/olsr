@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.15 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: main.c,v 1.16 2004/10/19 20:18:00 kattemat Exp $
  *
  */
 
@@ -726,12 +726,8 @@ set_default_values()
   max_tc_vtime = 0;
   dup_hold_time = DUP_HOLD_TIME;
 
-  sending_tc = 0;
-
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
 
-  llinfo = 0;
-  del_gws = 0;
 
 #ifndef WIN32
   /* Get main thread ID */
@@ -742,6 +738,9 @@ set_default_values()
   use_tunnel = 0;
   inet_tnl_added = 0;
   gw_tunnel = 0;
+
+  llinfo = 0;
+  del_gws = 0;
 
   /* Display packet content */
   disp_pack_in = 0;

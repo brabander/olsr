@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.16 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: defs.h,v 1.17 2004/10/19 20:18:00 kattemat Exp $
  *
  */
 
@@ -74,7 +74,7 @@
 struct olsrd_config *olsr_cnf;
 
 /*
- * Address list
+ * Generic address list elem
  */
 struct addresses 
 {
@@ -95,8 +95,6 @@ char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
 int disp_pack_in;               /* display incoming packet content? */
 int disp_pack_out;               /* display outgoing packet content? */
 
-
-int use_ipc; /* Should we use the ipc socket for the front-end */
 
 int llinfo;
 
@@ -120,26 +118,13 @@ size_t ipsize;
  * and number of OLSR interfaces on this host
  */
 union olsr_ip_addr main_addr;
-int nbinterf;
-
-int sending_tc;
-
 /*
  * OLSR UPD port
  */
 
 int olsr_udp_port;
 
-/* Timeout multipliers */
-
-int neighbor_timeout_mult;
-int topology_timeout_mult;
-int neighbor_timeout_mult_nw;
-int mid_timeout_mult;
-int hna_timeout_mult;
-
 /* The socket used for all ioctls */
-
 int ioctl_s;
 
 float max_tc_vtime;
@@ -152,21 +137,13 @@ extern struct sockaddr_in6 null_addr6;
 
 
 extern int del_gws;
-
 extern int minsize;
-
-
-extern struct hna_entry *hna_old;
-
 
 
 extern struct ip_tunnel_parm ipt;
 extern union olsr_ip_addr tnl_addr; /* The gateway address if inet_tnl_added==1 */
 
 olsr_u8_t changes;                /* is set if changes occur in MPRS set */ 
-
-extern float                  topology_hold_time, neighbor_hold_time;
-
 
 /* TC empty message sending */
 extern struct timeval send_empty_tc;
@@ -180,6 +157,7 @@ olsr_printf(int, char *, ...);
 /*
  *IPC functions
  *These are moved to a plugin soon
+ * soon... duh!
  */
 
 int

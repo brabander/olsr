@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: packet.c,v 1.7 2004/10/19 20:19:32 kattemat Exp $
  *
  */
 
@@ -30,6 +30,8 @@
 #include "mpr.h"
 #include "olsr.h"
 
+
+static int sending_tc = 0;
 
 /**
  *Build an internal HELLO package for this
@@ -179,9 +181,9 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
 
 
-  /* Add the rest of the neighbors */
+  /* Add the rest of the neighbors if running on multiple interfaces */
   
-  if(nbinterf > 1)
+  if(ifnet != NULL && ifnet->int_next != NULL)
     for(index=0;index<HASHSIZE;index++)
       {       
 	for(neighbor = neighbortable[index].next;

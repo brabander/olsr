@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.7 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.8 2004/10/19 20:18:00 kattemat Exp $
  *
  */
 
@@ -427,7 +427,8 @@ ipc_send_net_info()
   net_msg->msgtype = NET_IPC;
   
   /* MIDs */
-  net_msg->mids = nbinterf - 1;
+#warning fix IPC MIDcnt
+  net_msg->mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
   
   /* HNAs */
   if(olsr_cnf->ip_version == AF_INET6)
@@ -448,6 +449,7 @@ ipc_send_net_info()
 
   /* Different values */
   /* Temporary fixes */
+#warning fix IPC intervals
   net_msg->hello_int = 0;//htons((olsr_u16_t)hello_int);
   net_msg->hello_lan_int = 0;//htons((olsr_u16_t)hello_int_nw);
   net_msg->tc_int = 0;//htons((olsr_u16_t)tc_int);

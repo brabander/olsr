@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.15 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: build_msg.c,v 1.16 2004/10/19 20:18:00 kattemat Exp $
  *
  */
 
@@ -949,7 +949,7 @@ mid_build4(struct interface *ifp)
   struct midaddr *addrs;
   struct interface *ifs;  
 
-  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (nbinterf <= 1))
+  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
     return;
 
 
@@ -1038,7 +1038,7 @@ mid_build6(struct interface *ifp)
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
 
-  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (nbinterf <= 1))
+  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
     return;
 
   remainsize = net_outbuffer_bytes_left(ifp);
