@@ -83,7 +83,7 @@ remove_olsr_socket(int fd, void(*pf)(int))
 
   if((fd == 0) || (pf == NULL))
     {
-      syslog(LOG_ERR, "Bogus socket entry - not processing...\n");
+      olsr_syslog(OLSR_LOG_ERR, "Bogus socket entry - not processing...\n");
       return 0;
     }
   olsr_printf(1, "Removing OLSR socket entry %d\n", fd);
@@ -215,7 +215,7 @@ listen_loop()
 	    {
 	      if (errno == EINTR)
 		continue;
-	      syslog(LOG_ERR, "select: %m");
+	      olsr_syslog(OLSR_LOG_ERR, "select: %m");
 	      olsr_printf(1, "Error select: %s", strerror(errno));
 	    }
 	  continue;

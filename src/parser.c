@@ -157,7 +157,7 @@ olsr_input(int fd)
 	  if (cc < 0 && errno != EWOULDBLOCK)
 	    {
 	      olsr_printf(1, "error recvfrom: %s", strerror(errno));
-	      syslog(LOG_ERR, "error recvfrom: %m");
+	      olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
 	    }
 	  break;
 	}
@@ -194,7 +194,7 @@ olsr_input(int fd)
 	  olsr_printf(1, "Could not find input interface for message from %s size %d\n",
 		      olsr_ip_to_string(&from_addr),
 		      cc);
-	  syslog(LOG_ERR, "Could not find input interface for message from %s size %d\n",
+	  olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
 		 olsr_ip_to_string(&from_addr),
 		 cc);
 	  return ;
@@ -246,7 +246,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
     {
       olsr_printf(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
 	    
-      syslog(LOG_ERR, " packet length error in  packet received from %s!",
+      olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
 	     olsr_ip_to_string(from_addr));
       return;
     }
@@ -323,7 +323,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  olsr_printf(1, "packet length error in  packet received from %s!",
 		      olsr_ip_to_string(from_addr));
 
-	  syslog(LOG_ERR, " packet length error in  packet received from %s!",
+	  olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
 		 olsr_ip_to_string(from_addr));
 	  break;
 	}

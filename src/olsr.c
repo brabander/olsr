@@ -489,7 +489,7 @@ void
 olsr_exit(const char *msg, int val)
 {
   olsr_printf(1, "OLSR EXIT: %s\n", msg);
-  syslog(LOG_ERR, "olsrd exit: %s\n", msg);
+  olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
   fflush(stdout);
   exit_value = val;
 
@@ -514,7 +514,7 @@ olsr_malloc(size_t size, const char *id)
   if((ptr = malloc(size)) == 0) 
     {
       olsr_printf(1, "OUT OF MEMORY: %s\n", strerror(errno));
-      syslog(LOG_ERR, "olsrd: out of memory!: %m\n");
+      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
       olsr_exit((char *)id, EXIT_FAILURE);
     }
   return ptr;

@@ -120,7 +120,7 @@ ipc_accept_thread()
 	  if(ntohl(pin.sin_addr.s_addr) != INADDR_LOOPBACK)
 	    {
 	      olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	      syslog(LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
+	      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
 	      close(ipc_connection);
 	    }
 	  else

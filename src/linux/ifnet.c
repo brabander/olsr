@@ -274,7 +274,7 @@ chk_if_changed(struct if_name *iface)
 		    ipsize) == 0)
 	    {
 	      olsr_printf(1, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
-	      syslog(LOG_INFO, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
+	      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
 	      memcpy(&main_addr, 
 		     &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
 		     ipsize);
@@ -291,7 +291,7 @@ chk_if_changed(struct if_name *iface)
       /* Check netmask */
       if (ioctl(ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
 	{
-	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	  goto remove_interface;
 	}
 
@@ -316,7 +316,7 @@ chk_if_changed(struct if_name *iface)
       /* Check broadcast address */      
       if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
 	{
-	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	  goto remove_interface;
 	}
 
@@ -357,7 +357,7 @@ chk_if_changed(struct if_name *iface)
 
  remove_interface:
   olsr_printf(1, "Removing interface %s\n", iface->name);
-  syslog(LOG_INFO, "Removing interface %s\n", iface->name);
+  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
   /*
    *Call possible ifchange functions registered by plugins  
@@ -396,7 +396,7 @@ chk_if_changed(struct if_name *iface)
 	{
 	  COPY_IP(&main_addr, &ifnet->ip_addr);
 	  olsr_printf(1, "New main address: %s\n", olsr_ip_to_string(&main_addr));
-	  syslog(LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+	  olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
 	}
     }
 
@@ -414,7 +414,7 @@ chk_if_changed(struct if_name *iface)
   if((nbinterf == 0) && (!allow_no_int))
     {
       olsr_printf(1, "No more active interfaces - exiting.\n");
-      syslog(LOG_INFO, "No more active interfaces - exiting.\n");
+      olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
       exit_value = EXIT_FAILURE;
       kill(getpid(), SIGINT);
     }
@@ -538,7 +538,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
       
       if (ioctl(ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
 	{
-	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	  return 0;
 	}
       
@@ -548,7 +548,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
       
       if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
 	{
-	  syslog(LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	  return 0;
 	}
       
@@ -574,7 +574,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
   /* setting the interfaces number*/
   ifs.if_nr = iface->index;
 
-  syslog(LOG_INFO, "Adding interface %s\n", iface->name);
+  olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
   olsr_printf(1, "Interface %s set up for use with index %d\n", iface->name, ifs.if_nr);
 
   if(ipversion == AF_INET)
@@ -621,7 +621,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-	  syslog(LOG_ERR, "Could not initialize socket... exiting!\n\n");
+	  olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
 	  exit_value = EXIT_FAILURE;
 	  kill(getpid(), SIGINT);
 	}
@@ -645,7 +645,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-	  syslog(LOG_ERR, "Could not initialize socket... exiting!\n\n");
+	  olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
 	  exit_value = EXIT_FAILURE;
 	  kill(getpid(), SIGINT);
 	}
@@ -661,12 +661,12 @@ chk_if_up(struct if_name *iface, int debuglvl)
   if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)
     {
       perror("setsockopt(SO_PRIORITY)");
-      syslog(LOG_ERR, "OLSRD: setsockopt(SO_PRIORITY) error %m");
+      olsr_syslog(OLSR_LOG_ERR, "OLSRD: setsockopt(SO_PRIORITY) error %m");
     }
   if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char*)&tos_bits, sizeof(tos_bits)) < 0)    
     {
       perror("setsockopt(IP_TOS)");
-      syslog(LOG_ERR, "setsockopt(IP_TOS) error %m");
+      olsr_syslog(OLSR_LOG_ERR, "setsockopt(IP_TOS) error %m");
     }
   
   /*
@@ -682,7 +682,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
     {
       COPY_IP(&main_addr, &ifp->ip_addr);
       olsr_printf(1, "New main address: %s\n", olsr_ip_to_string(&main_addr));
-      syslog(LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
+      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
     }
   
   /*

@@ -658,7 +658,7 @@ read_config_file(char *filename)
             }
 
 
-	  //syslog(LOG_ERR, "Could not parse config file(%s) line:\"%s\"", filename, line);
+	  //olsr_syslog(OLSR_LOG_ERR, "Could not parse config file(%s) line:\"%s\"", filename, line);
 
 	  olsr_printf(1, "Could not parse config file(%s) line: %s", filename, line);
 	}

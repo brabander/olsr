@@ -59,6 +59,21 @@ void ListInterfaces(void);
 #       error "Unsupported system"
 #endif
 
+/*
+ * Begin: Local function prototypes
+ */
+
+static void
+print_usage();
+
+static void
+set_default_values();
+
+
+/*
+ * End: Local function prototypes
+ */
+
 /**
  *The main funtion does a LOT of things. It should 
  *probably be much shorter
@@ -107,13 +122,12 @@ main(int argc, char *argv[])
 #endif
 
   /* Open syslog */
-  openlog("olsrd", LOG_PID | LOG_ODELAY, LOG_DAEMON);
-  setlogmask(LOG_UPTO(LOG_INFO));
+  olsr_openlog("olsrd");
 
   /*
    * Start syslog entry
    */
-  syslog(LOG_INFO, "%s started", SOFTWARE_VERSION);
+  olsr_syslog(OLSR_LOG_INFO, "%s started", SOFTWARE_VERSION);
 
   /* Set default values */
   set_default_values();
@@ -499,7 +513,7 @@ main(int argc, char *argv[])
    */
   if ((ioctl_s = socket(ipversion, SOCK_DGRAM, 0)) < 0) 
     {
-      syslog(LOG_ERR, "ioctl socket: %m");
+      olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
       close(ioctl_s);
       olsr_exit(__func__, 0);
     }
@@ -590,7 +604,7 @@ tc_redunadancy = %d          mpr coverage = %d\n",
 	{
 	  olsr_printf(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
-	  syslog(LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+	  olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
 	  willingness_set = 1;
 	  my_willingness = WILL_DEFAULT;
@@ -765,7 +779,7 @@ olsr_shutdown(int signal)
   /* ioctl socket */
   close(ioctl_s);
 
-  syslog(LOG_INFO, "%s stopped", SOFTWARE_VERSION);
+  olsr_syslog(OLSR_LOG_INFO, "%s stopped", SOFTWARE_VERSION);
 
   olsr_printf(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION);
 
@@ -780,7 +794,7 @@ olsr_shutdown(int signal)
 /**
  *Sets the default values of variables at startup
  */
-void
+static void
 set_default_values()
 {
   memset(&main_addr, 0, sizeof(union olsr_ip_addr));
@@ -880,7 +894,7 @@ set_default_values()
 
 
 
-void
+static void
 print_usage()
 {
 

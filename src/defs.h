@@ -27,7 +27,6 @@
 #include <sys/time.h>
 #include <net/route.h>
 
-#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +37,7 @@
 #define UP             1
 #define DOWN           0
 
+#include "log.h"
 #include "olsr_protocol.h"
 #include "process_routes.h" /* Needed for rt_entry */
 #include "net.h" /* IPaddr -> string conversions is used by everyone */

@@ -256,7 +256,7 @@ olsr_register_scheduler_event(void (*event_function)(), float interval, float in
 	 (new_entry->interval == interval))
 	{
 	  fprintf(stderr, "Register scheduler event: Event alread registered!\n");
-	  syslog(LOG_ERR, "Register scheduler event: Event alread registered!\n");
+	  olsr_syslog(OLSR_LOG_ERR, "Register scheduler event: Event alread registered!\n");
 	  return 0;
 	}
       new_entry = new_entry->next;
@@ -328,7 +328,7 @@ olsr_register_timeout_function(void (*time_out_function)())
       if(new_entry->function == time_out_function)
 	{
 	  fprintf(stderr, "Register scheduler timeout: Event alread registered!\n");
-	  syslog(LOG_ERR, "Register scheduler timeout: Event alread registered!\n");
+	  olsr_syslog(OLSR_LOG_ERR, "Register scheduler timeout: Event alread registered!\n");
 	  return 0;
 	}
       new_entry = new_entry->next;

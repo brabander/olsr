@@ -29,7 +29,6 @@
 #include <pthread.h>
 #include <errno.h>
 #include <signal.h>
-#include <syslog.h>
 #include <sys/utsname.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
@@ -68,11 +67,5 @@ extern pthread_mutex_t mutex; /* Mutex for thread */
 
 void
 olsr_shutdown(int);
-
-void
-print_usage();
-
-void
-set_default_values();
 
 #endif

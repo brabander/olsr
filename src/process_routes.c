@@ -310,7 +310,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
       if(error < 0)
 	{
 	  olsr_printf(1, "Delete route:%s\n", strerror(errno));
-	  syslog(LOG_ERR, "Delete route:%m");
+	  olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
 	}
 
       destination_kernel=delete_kernel_list;
@@ -362,7 +362,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		    if(error < 0) //print the error msg
 		      {
 			olsr_printf(1, "Add route: %s\n",strerror(errno));
-			syslog(LOG_ERR, "Add route:%m");
+			olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
 		      }
 		    
 		    //getting rid of this node and hooking up the broken point

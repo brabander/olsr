@@ -193,7 +193,7 @@ net_output(struct interface *ifp)
       if(sendto(ifp->olsr_socket, packet, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
 	{
 	  perror("sendto(v4)");
-	  syslog(LOG_ERR, "OLSR: sendto IPv4 %m");
+	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
 	  outputsize = 0;
 	  return -1;
 	}
@@ -204,7 +204,7 @@ net_output(struct interface *ifp)
       if(sendto(ifp->olsr_socket, packet, outputsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
 	{
 	  perror("sendto(v6)");
-	  syslog(LOG_ERR, "OLSR: sendto IPv6 %m");
+	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
 	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_nr);
 	  fprintf(stderr, "To: %s (size: %d)\n", ip6_to_string(&sin6->sin6_addr), sizeof(*sin6));
 	  fprintf(stderr, "Outputsize: %d\n", outputsize);
@@ -324,7 +324,7 @@ net_forward()
 	  if(sendto(ifn->olsr_socket, fwd_packet, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof (*sin)) < 0)
 	    {
 	      perror("sendto(v4)");
-	      syslog(LOG_ERR, "OLSR: forward sendto IPv4 %m");
+	      olsr_syslog(OLSR_LOG_ERR, "OLSR: forward sendto IPv4 %m");
 	      return -1;
 	    }
 	}
@@ -334,7 +334,7 @@ net_forward()
 	  if(sendto(ifn->olsr_socket, fwd_packet, fwdsize, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof (*sin6)) < 0)
 	    {
 	      perror("sendto(v6)");
-	      syslog(LOG_ERR, "OLSR: forward sendto IPv6 %m");
+	      olsr_syslog(OLSR_LOG_ERR, "OLSR: forward sendto IPv6 %m");
 	      fprintf(stderr, "Socket: %d interface: %d\n", ifn->olsr_socket, ifn->if_nr);
 	      fprintf(stderr, "To: %s (size: %d)\n", ip6_to_string(&sin6->sin6_addr), sizeof(*sin6));
 	      fprintf(stderr, "Outputsize: %d\n", fwdsize);

@@ -183,7 +183,7 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   if((tmp = ioctl(ioctl_s, SIOCADDRT,&kernel_route)) < 0)
     {
       olsr_printf(1, "Add route: %s\n", strerror(errno));
-      syslog(LOG_ERR, "Add route:%m");
+      olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
     }
   else
     {
@@ -413,7 +413,7 @@ add_tunnel_route(union olsr_ip_addr *gw)
   if((tmp = ioctl(ioctl_s,SIOCADDRT,&kernel_route)) < 0)
     {
       olsr_printf(1, "Add tunnel route: %s\n", strerror(errno));
-      syslog(LOG_ERR, "Add tunnel route:%m");
+      olsr_syslog(OLSR_LOG_ERR, "Add tunnel route:%m");
     }
 
   free(kernel_route.rt_dev);
@@ -464,7 +464,7 @@ delete_tunnel_route()
   if((tmp = ioctl(ioctl_s,SIOCDELRT,&kernel_route)) < 0)
     {
       olsr_printf(1, "Del tunnel route: %s\n", strerror(errno));
-      syslog(LOG_ERR, "Del tunnel route:%m");
+      olsr_syslog(OLSR_LOG_ERR, "Del tunnel route:%m");
     }
   
   free(kernel_route.rt_dev);
@@ -504,7 +504,7 @@ delete_tunnel_route()
   if((tmp = ioctl(ioctl_s,SIOCDELRT,&kernel_route)) < 0)
     {
       olsr_printf(1, "Del tunnel route: %s\n", strerror(errno));
-      syslog(LOG_ERR, "Del tunnel route:%m");
+      olsr_syslog(OLSR_LOG_ERR, "Del tunnel route:%m");
     }
   
 
@@ -534,7 +534,7 @@ delete_all_inet_gws()
   /* Get a socket */
   if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
     {
-      syslog(LOG_ERR, "socket: %m");
+      olsr_syslog(OLSR_LOG_ERR, "socket: %m");
       close(s);
       return -1;
     }
@@ -543,7 +543,7 @@ delete_all_inet_gws()
   ifc.ifc_buf = buf;
   if (ioctl(s, SIOCGIFCONF, (char *)&ifc) < 0) 
     {
-      syslog(LOG_ERR, "ioctl (get interface configuration)");
+      olsr_syslog(OLSR_LOG_ERR, "ioctl (get interface configuration)");
       close(s);
       return -1;
     }
