@@ -38,7 +38,6 @@
 
 
 //int ipc_socket;
-struct sockaddr_in pin;
 int connected;
 
 

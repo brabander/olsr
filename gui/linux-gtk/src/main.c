@@ -22,10 +22,15 @@
 
 #include "common.h"
 #include "main.h"
+#include "ipc.h"
 
 int
 main (int argc, char *argv[])
 {
+  struct hostent *hp;
+  struct in_addr in;
+  struct sockaddr_in pin;
+
 #ifdef WIN32
   WSADATA WsaData;
 #endif
@@ -39,6 +44,23 @@ main (int argc, char *argv[])
     }
 #endif
 
+  
+  /* Get IP */
+  if ((hp = gethostbyname(argc > 1 ? argv[1] : "localhost")) == 0) 
+    {
+      perror("Not a valid host");
+      exit(1);
+    }
+  
+  in.s_addr=((struct in_addr *)(hp->h_addr))->s_addr;
+  printf("Address: %s\n", inet_ntoa(in));
+  
+  /* fill in the socket structure with host information */
+  memset(&pin, 0, sizeof(pin));
+  pin.sin_family = AF_INET;
+  pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+  pin.sin_port = htons(IPC_PORT);
+  
   gtk_init (&argc, &argv);
 
   init_nodes();
@@ -65,7 +87,7 @@ main (int argc, char *argv[])
   nodes_timeout = NEIGHB_HOLD_TIME_NW;
   init_timer((olsr_u32_t) (nodes_timeout * 1000), &hold_time_nodes);
 
-  ipc_connect();
+  ipc_connect(&pin);
 
   add_timeouts();
 

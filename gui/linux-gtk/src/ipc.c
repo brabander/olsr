@@ -39,28 +39,8 @@ int ipc_socket = 0;
 int
 ipc_get_socket()
 {
-  struct hostent *hp;
-  char *addr;
-  struct in_addr *in;
   int sock;
   //int flags;
-
-  
-  if ((hp = gethostbyname("localhost")) == 0) 
-    {
-      perror("gethostbyname");
-      exit(1);
-    }
-
-  in = (struct in_addr *) hp->h_addr;
-  addr = inet_ntoa(*in);
-  printf("Address: %s\n", addr);
-
-  /* fill in the socket structure with host information */
-  memset(&pin, 0, sizeof(pin));
-  pin.sin_family = AF_INET;
-  pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-  pin.sin_port = htons(IPC_PORT);
 
   /* grab an UNIX domain socket */
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
@@ -106,7 +86,7 @@ ipc_close()
 
 
 int
-ipc_connect()
+ipc_connect(struct sockaddr_in *pin)
 {
 #ifdef WIN32
   int On = 1;
@@ -117,13 +97,13 @@ ipc_connect()
 
   connected = 0;
 
-  printf("Attempting connect...");
-
   if(!ipc_socket)
     ipc_socket = ipc_get_socket();
 
+  printf("Attempting connect...");
+
   /* connect to PORT on HOST */
-  if (connect(ipc_socket,(struct sockaddr *)  &pin, sizeof(pin)) < 0) 
+  if (connect(ipc_socket,(struct sockaddr *) pin, sizeof(*pin)) < 0) 
     {
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       set_net_info_offline();
