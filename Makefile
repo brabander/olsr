@@ -45,8 +45,8 @@ HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/process_package.h src/mpr.h src/ipc_olsrset.h \
 	src/local_hna_set.h src/hashing.h src/hysteresis.h \
 	src/generate_msg.h src/rebuild_packet.h src/plugin_loader.h \
-	src/plugin.h src/socket_parser.h src/ifnet.h\
-	src/kernel_routes.h src/log.h \
+	src/plugin.h src/socket_parser.h src/ifnet.h \
+	src/kernel_routes.h src/log.h src/net_os.h \
 	src/apm.h src/linux/tunnel.h src/scheduler.h \
 	src/linux/net.h	src/linux/link_layer.h
 
