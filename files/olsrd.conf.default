@@ -103,9 +103,9 @@ UseHysteresis	yes
 
 
 # Polling rate in seconds(float). 
-# Default value 0.1 sec
+# Default value 0.05 sec
 
-Pollrate	0.1
+Pollrate	0.05
 
 
 # TC redundancy
