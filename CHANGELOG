@@ -1,7 +1,16 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.19 2004/12/30 18:09:35 kattemat Exp $
+$Id: CHANGELOG,v 1.20 2005/01/01 12:19:47 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
+
+CONFIGURATION FILE
+
+Multiple interfaces can now use the same interface configuration block.
+Example:
+Interface "if0" "if1" "if2"
+{
+	.....
+}
 
 MINOR UPDATES
 
