@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.h,v 1.10 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: plugin_loader.h,v 1.11 2005/02/25 22:48:15 kattemat Exp $
  */
 
 #ifndef _OLSR_PLUGIN_LOADER
@@ -44,12 +44,8 @@
 
 #include <dlfcn.h>
 #include <stdio.h>
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 #include "olsr_cfg.h"
-
-#define MAX_LIBS 10
-
-#define PLUGIN_INTERFACE_VERSION 2
 
 /* Data to sent to the plugin with the register_olsr_function call */
 struct olsr_plugin_data
@@ -58,6 +54,11 @@ struct olsr_plugin_data
   union olsr_ip_addr *main_addr;
   int (*olsr_plugin_io)(int, void *, size_t);
 };
+
+#ifndef OLSR_PLUGIN
+
+#define MAX_LIBS 10
+#define PLUGIN_INTERFACE_VERSION 2
 
 
 struct olsr_plugin
@@ -83,4 +84,5 @@ olsr_load_plugins(void);
 void
 olsr_close_plugins(void);
 
+#endif
 #endif
