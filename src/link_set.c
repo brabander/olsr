@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.32 2004/11/24 22:48:08 tlopatic Exp $
+ * $Id: link_set.c,v 1.33 2004/11/25 02:02:49 tlopatic Exp $
  */
 
 
@@ -1025,6 +1025,25 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
     (float)(entry->total_packets - entry->lost_packets) /
     (float)(entry->loss_window_size);
 #endif
+
+  // XXX - if we do not get any packets from our neighbour
+  // any longer, we do not know the link quality at the remote
+  // end of the link
+  //
+  // heuristic: expire the link in this case; let's see how this
+  // works
+
+  if (entry->lost_packets == entry->total_packets)
+    {
+      entry->SYM_time = now;
+      entry->SYM_time.tv_sec -= 1;
+
+      entry->ASYM_time = now;
+      entry->ASYM_time.tv_sec -= 1;
+
+      entry->time = now;
+      entry->time.tv_sec -= 1;
+    }
 
   // if the link quality has changed by more than 10 percent,
   // print the new link quality table
