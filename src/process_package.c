@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.15 2004/11/07 18:48:54 kattemat Exp $
+ * $Id: process_package.c,v 1.16 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -47,12 +47,20 @@
 void
 olsr_init_package_process()
 {
-#if !defined USE_LINK_QUALITY
-  olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
-#else
-  olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_lq_tc, LQ_TC_MESSAGE, 1);
+#if defined USE_LINK_QUALITY
+  if (olsr_cnf->lq_level == 0)
+    {
+#endif
+      olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
+#if defined USE_LINK_QUALITY
+    }
+
+  else
+    {
+      olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_input_lq_tc, LQ_TC_MESSAGE, 1);
+    }
 #endif
   olsr_parser_add_function(&olsr_process_received_mid, MID_MESSAGE, 1);
   olsr_parser_add_function(&olsr_process_received_hna, HNA_MESSAGE, 1);
@@ -74,24 +82,27 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
   link = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
 
 #if defined USE_LINK_QUALITY
-  // just in case our neighbor has changed its HELLO interval
+  if (olsr_cnf->lq_level > 0)
+    {
+      // just in case our neighbor has changed its HELLO interval
 
-  olsr_update_packet_loss_hello_int(link, message->htime);
+      olsr_update_packet_loss_hello_int(link, message->htime);
 
-  // find the input interface in the list of neighbor interfaces
+      // find the input interface in the list of neighbor interfaces
 
-  for (walker = message->neighbors; walker != NULL; walker = walker->next)
-    if (COMP_IP(&walker->address, &in_if->ip_addr))
-      break;
+      for (walker = message->neighbors; walker != NULL; walker = walker->next)
+        if (COMP_IP(&walker->address, &in_if->ip_addr))
+          break;
 
-  // memorize our neighbour's idea of the link quality, so that we
-  // know the link quality in both directions
+      // memorize our neighbour's idea of the link quality, so that we
+      // know the link quality in both directions
 
-  if (walker != NULL)
-    link->neigh_link_quality = walker->link_quality;
+      if (walker != NULL)
+        link->neigh_link_quality = walker->link_quality;
 
-  else
-    link->neigh_link_quality = 0.0;
+      else
+        link->neigh_link_quality = 0.0;
+    }
 #endif
   
   neighbor = link->neighbor;
@@ -482,11 +493,9 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
   struct neighbor_2_list_entry *two_hop_neighbor_yet;
   struct neighbor_2_entry      *two_hop_neighbor;
   union olsr_ip_addr           *neigh_addr;
-
 #if defined USE_LINK_QUALITY
   struct neighbor_list_entry *walker;
-  double link_quality =
-    olsr_neighbor_best_link_quality(&neighbor->neighbor_main_addr);
+  double link_quality;
 #endif
 
   for(message_neighbors = message->neighbors;
@@ -571,26 +580,32 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                 }
             }
 #if defined USE_LINK_QUALITY
-          // loop through the one-hop neighbors that see this
-          // two hop neighbour
-
-          for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-               walker != &two_hop_neighbor->neighbor_2_nblist;
-               walker = walker->next)
+          if (olsr_cnf->lq_level > 0)
             {
-              // have we found the one-hop neighbor that sent the
-              // HELLO message that we're current processing?
+              link_quality =
+                olsr_neighbor_best_link_quality(&neighbor->neighbor_main_addr);
 
-              if (walker->neighbor == neighbor)
+              // loop through the one-hop neighbors that see this
+              // two hop neighbour
+
+              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
+                   walker != &two_hop_neighbor->neighbor_2_nblist;
+                   walker = walker->next)
                 {
-                  // total link quality = link quality between us
-                  // and our one-hop neighbor x link quality between
-                  // our one-hop neighbor and the two-hop neighbor
+                  // have we found the one-hop neighbor that sent the
+                  // HELLO message that we're current processing?
 
-                  walker->full_link_quality =
-                    link_quality *
-                    message_neighbors->link_quality *
-                    message_neighbors->neigh_link_quality;
+                  if (walker->neighbor == neighbor)
+                    {
+                      // total link quality = link quality between us
+                      // and our one-hop neighbor x link quality between
+                      // our one-hop neighbor and the two-hop neighbor
+
+                      walker->full_link_quality =
+                        link_quality *
+                        message_neighbors->link_quality *
+                        message_neighbors->neigh_link_quality;
+                    }
                 }
             }
 #endif

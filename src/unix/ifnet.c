@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.3 2004/11/05 14:33:31 tlopatic Exp $
+ * $Id: ifnet.c,v 1.4 2004/11/07 20:09:12 tlopatic Exp $
  *
  */
 
@@ -440,28 +440,36 @@ chk_if_changed(struct olsr_if *iface)
   /*
    * Deregister scheduled functions 
    */
-#if !defined USE_LINK_QUALITY
-  olsr_remove_scheduler_event(&generate_hello, 
-			      ifp, 
-			      iface->cnf->hello_params.emission_interval, 
-			      0, 
-			      NULL);
-  olsr_remove_scheduler_event(&generate_tc, 
-			      ifp, 
-			      iface->cnf->tc_params.emission_interval,
-			      0, 
-			      NULL);
-#else
-  olsr_remove_scheduler_event(&olsr_output_lq_hello, 
-			      ifp, 
-			      iface->cnf->hello_params.emission_interval, 
-			      0, 
-			      NULL);
-  olsr_remove_scheduler_event(&olsr_output_lq_tc, 
-			      ifp, 
-			      iface->cnf->tc_params.emission_interval,
-			      0, 
-			      NULL);
+#if defined USE_LINK_QUALITY
+  if (olsr_cnf->lq_level == 0)
+    {
+#endif
+      olsr_remove_scheduler_event(&generate_hello, 
+                                  ifp, 
+                                  iface->cnf->hello_params.emission_interval, 
+                                  0, 
+                                  NULL);
+      olsr_remove_scheduler_event(&generate_tc, 
+                                  ifp, 
+                                  iface->cnf->tc_params.emission_interval,
+                                  0, 
+                                  NULL);
+#if defined USE_LINK_QUALITY
+    }
+
+  else
+    {
+      olsr_remove_scheduler_event(&olsr_output_lq_hello, 
+                                  ifp, 
+                                  iface->cnf->hello_params.emission_interval, 
+                                  0, 
+                                  NULL);
+      olsr_remove_scheduler_event(&olsr_output_lq_tc, 
+                                  ifp, 
+                                  iface->cnf->tc_params.emission_interval,
+                                  0, 
+                                  NULL);
+    }
 #endif
   olsr_remove_scheduler_event(&generate_mid, 
 			      ifp, 
@@ -781,28 +789,36 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   /*
    * Register scheduled functions 
    */
-#if !defined USE_LINK_QUALITY
-  olsr_register_scheduler_event(&generate_hello, 
-				ifp, 
-				iface->cnf->hello_params.emission_interval, 
-				0, 
-				NULL);
-  olsr_register_scheduler_event(&generate_tc, 
-				ifp, 
-				iface->cnf->tc_params.emission_interval,
-				0, 
-				NULL);
-#else
-  olsr_register_scheduler_event(&olsr_output_lq_hello, 
-				ifp, 
-				iface->cnf->hello_params.emission_interval, 
-				0, 
-				NULL);
-  olsr_register_scheduler_event(&olsr_output_lq_tc, 
-				ifp, 
-				iface->cnf->tc_params.emission_interval,
-				0, 
-				NULL);
+#if defined USE_LINK_QUALITY
+  if (olsr_cnf->lq_level == 0)
+    {
+#endif
+      olsr_register_scheduler_event(&generate_hello, 
+                                    ifp, 
+                                    iface->cnf->hello_params.emission_interval, 
+                                    0, 
+                                    NULL);
+      olsr_register_scheduler_event(&generate_tc, 
+                                    ifp, 
+                                    iface->cnf->tc_params.emission_interval,
+                                    0, 
+                                    NULL);
+#if defined USE_LINK_QUALITY
+    }
+
+  else
+    {
+      olsr_register_scheduler_event(&olsr_output_lq_hello, 
+                                    ifp, 
+                                    iface->cnf->hello_params.emission_interval, 
+                                    0, 
+                                    NULL);
+      olsr_register_scheduler_event(&olsr_output_lq_tc, 
+                                    ifp, 
+                                    iface->cnf->tc_params.emission_interval,
+                                    0, 
+                                    NULL);
+    }
 #endif
   olsr_register_scheduler_event(&generate_mid, 
 				ifp, 

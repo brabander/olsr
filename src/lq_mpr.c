@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_mpr.c,v 1.1 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: lq_mpr.c,v 1.2 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -35,6 +35,7 @@ void olsr_calculate_lq_mpr(void)
   int i;
   struct neighbor_entry *neigh;
   double best;
+  olsr_bool mpr_changes = OLSR_FALSE;
 
   for(i = 0; i < HASHSIZE; i++)
     {
@@ -59,7 +60,7 @@ void olsr_calculate_lq_mpr(void)
           neigh->is_mpr = OLSR_TRUE;
 
           if (neigh->is_mpr != neigh->was_mpr)
-            changes = OLSR_TRUE;
+            mpr_changes = OLSR_TRUE;
         }
     }
 
@@ -89,8 +90,11 @@ void olsr_calculate_lq_mpr(void)
           neigh->is_mpr = OLSR_TRUE;
 
           if (neigh->is_mpr != neigh->was_mpr)
-            changes = OLSR_TRUE;
+            mpr_changes = OLSR_TRUE;
         }
     }
+
+  if (mpr_changes && olsr_cnf->tc_redundancy > 0)
+    changes = OLSR_TRUE;
 }
 #endif

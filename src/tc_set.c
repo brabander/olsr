@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.c,v 1.8 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: tc_set.c,v 1.9 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -241,6 +241,15 @@ olsr_tc_update_mprs(struct tc_entry *entry, struct tc_message *msg)
 	  COPY_IP(&new_topo_dst->T_dest_addr, &mprs->address);
 	  olsr_get_timestamp((olsr_u32_t) msg->vtime*1000, &new_topo_dst->T_time);
 	  new_topo_dst->T_seq = msg->ansn;
+
+#if defined USE_LINK_QUALITY
+    if (olsr_cnf->lq_level > 0)
+      {
+        new_topo_dst->link_quality = mprs->neigh_link_quality;
+        new_topo_dst->inverse_link_quality = mprs->link_quality;
+      }
+#endif
+
 	  /* Add to queue */
 	  new_topo_dst->prev = &entry->destinations;
 	  new_topo_dst->next = entry->destinations.next;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.18 2004/11/07 17:51:20 tlopatic Exp $
+ * $Id: link_set.c,v 1.19 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -81,7 +81,7 @@ olsr_init_link_set()
     }
 
 #if defined USE_LINK_QUALITY
-  if (1)
+  if (olsr_cnf->lq_level > 0)
     {
       olsr_register_timeout_function(&olsr_time_out_packet_loss);
     }
@@ -335,32 +335,46 @@ get_interface_link_set(union olsr_ip_addr *remote)
 	  /* Must be symmetric link! */
 	  if(!TIMED_OUT(&tmp_link_set->SYM_time))
 	    {
-#if !defined USE_LINK_QUALITY
-	      if (if_to_use == NULL || if_to_use->int_metric > tmp_if->int_metric)
-          if_to_use = tmp_if;
-#else
-        if (if_to_use == NULL ||
-            tmp_link_set->loss_link_quality > link_quality)
+#if defined USE_LINK_QUALITY
+        if (olsr_cnf->lq_level == 0)
+          {
+#endif
+            if (if_to_use == NULL || if_to_use->int_metric > tmp_if->int_metric)
+              if_to_use = tmp_if;
+#if defined USE_LINK_QUALITY
+          }
+
+        else if (if_to_use == NULL ||
+                 tmp_link_set->neigh_link_quality *
+                 tmp_link_set->loss_link_quality > link_quality)
           {
             if_to_use = tmp_if;
-            link_quality = tmp_link_set->loss_link_quality;
+            link_quality = tmp_link_set->neigh_link_quality *
+              tmp_link_set->loss_link_quality;
           }
 #endif
 	    }
 	  /* Backup solution in case the links have timed out */
 	  else
 	    {
-#if !defined USE_LINK_QUALITY
-	      if (if_to_use == NULL &&
-            (backup_if == NULL || backup_if->int_metric > tmp_if->int_metric))
-          backup_if = tmp_if;
-#else
-        if (if_to_use == NULL &&
-            (backup_if == NULL ||
-             tmp_link_set->loss_link_quality > backup_link_quality))
+#if defined USE_LINK_QUALITY
+        if (olsr_cnf->lq_level == 0)
+          {
+#endif
+            if (if_to_use == NULL &&
+                (backup_if == NULL || backup_if->int_metric > tmp_if->int_metric))
+              backup_if = tmp_if;
+#if defined USE_LINK_QUALITY
+          }
+
+        else if (if_to_use == NULL &&
+                 (backup_if == NULL ||
+                  tmp_link_set->neigh_link_quality *
+                  tmp_link_set->loss_link_quality > backup_link_quality))
           {
             backup_if = tmp_if;
-            backup_link_quality = tmp_link_set->loss_link_quality;
+            backup_link_quality = tmp_link_set->neigh_link_quality *
+              tmp_link_set->loss_link_quality;
           }
 #endif
 	    }
@@ -451,7 +465,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
   new_link->L_link_quality = 0.0;
 
 #if defined USE_LINK_QUALITY
-  if (1)
+  if (olsr_cnf->lq_level > 0)
     {
       new_link->loss_hello_int = htime;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.h,v 1.2 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: lq_packet.h,v 1.3 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -106,6 +106,7 @@ struct lq_hello_header
 struct lq_tc_neighbor
 {
   double                link_quality;
+  double                neigh_link_quality;
   union olsr_ip_addr    main;
   struct lq_tc_neighbor *next;
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.5 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.6 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -154,6 +154,7 @@ struct olsrd_config
   float                    pollrate;
   olsr_u8_t                tc_redundancy;
   olsr_u8_t                mpr_coverage;
+  olsr_u8_t                lq_level;
   struct plugin_entry      *plugins;
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;

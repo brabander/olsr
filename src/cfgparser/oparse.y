@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.13 2004/11/06 00:08:26 kattemat Exp $
+ * $Id: oparse.y,v 1.14 2004/11/07 20:09:12 tlopatic Exp $
  *
  */
 
@@ -78,6 +78,7 @@ int yylex(void);
 %token TOK_POLLRATE
 %token TOK_TCREDUNDANCY
 %token TOK_MPRCOVERAGE
+%token TOK_LQ_LEVEL
 %token TOK_PLNAME
 %token TOK_PLPARAM
 
@@ -119,6 +120,7 @@ stmt:       idebug
           | fpollrate
           | atcredundancy
           | amprcoverage
+          | alq_level
           | vcomment
 ;
 
@@ -558,6 +560,14 @@ amprcoverage: TOK_MPRCOVERAGE TOK_INTEGER
 }
 ;
 
+alq_level: TOK_LQ_LEVEL TOK_INTEGER
+{
+  if(PARSER_DEBUG) printf("Link quality level %d\n", $2->integer);
+  cnf->lq_level = $2->integer;
+
+  free($2);
+}
+;
 
 plblock: TOK_PLUGIN TOK_STRING
 {

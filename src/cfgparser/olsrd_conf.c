@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.13 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.14 2004/11/07 20:09:12 tlopatic Exp $
  *
  */
 
@@ -262,6 +262,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
+    cnf->lq_level = LQ_LEVEL;
 }
 
 
@@ -422,8 +423,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
   fprintf(fd, "# MPR coverage\n# Specifies how many MPRs a node should\n# try select to reach every 2 hop neighbor\n# Can be set to any integer >0\n# defaults to 1\n\n");
 
   fprintf(fd, "MprCoverage\t%d\n\n", cnf->mpr_coverage);
-   
 
+  fprintf(fd, "# Link quality level\n# 0 = do not use link quality\n# 1 = use link quality for MPR selection\n# 2 = use link quality for MPR selection and routing\n\n");
+   
+  fprintf(fd, "LinkQualityLevel\t%d\n\n", cnf->lq_level);
 
   /* Plugins */
   fprintf(fd, "# Olsrd plugins to load\n# This must be the absolute path to the file\n# or the loader will use the following scheme:\n# - Try the paths in the LD_LIBRARY_PATH \n#   environment variable.\n# - The list of libraries cached in /etc/ld.so.cache\n# - /lib, followed by /usr/lib\n\n");
@@ -575,6 +578,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
    
+  printf("LQ level         : %d\n", cnf->lq_level);
+
   /* Interfaces */
   if(in)
     {

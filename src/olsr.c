@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.18 2004/11/07 17:51:20 tlopatic Exp $
+ * $Id: olsr.c,v 1.19 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -167,13 +167,33 @@ olsr_process_changes()
   if(changes_neighborhood)
     {
       /* Calculate new mprs, HNA and routing table */
-#if !defined USE_LINK_QUALITY
-      olsr_calculate_mpr();
-      olsr_calculate_routing_table();
-#else
-      olsr_calculate_lq_mpr();
-      olsr_calculate_lq_routing_table();
+#if defined USE_LINK_QUALITY
+      if (olsr_cnf->lq_level < 1)
+        {
 #endif
+          olsr_calculate_mpr();
+#if defined USE_LINK_QUALITY
+        }
+
+      else
+        {
+          olsr_calculate_lq_mpr();
+        }
+
+
+      if (olsr_cnf->lq_level < 2)
+        {
+#endif
+          olsr_calculate_routing_table();
+#if defined USE_LINK_QUALITY
+        }
+
+      else
+        {
+          olsr_calculate_lq_routing_table();
+        }
+#endif
+
       olsr_calculate_hna_routes();
 
       goto process_pcf;  
@@ -182,10 +202,18 @@ olsr_process_changes()
   if(changes_topology)
     {
       /* calculate the routing table and HNA */
-#if !defined USE_LINK_QUALITY
-      olsr_calculate_routing_table();
-#else
-      olsr_calculate_lq_routing_table();
+#if defined USE_LINK_QUALITY
+      if (olsr_cnf->lq_level < 2)
+        {
+#endif
+          olsr_calculate_routing_table();
+#if defined USE_LINK_QUALITY
+        }
+
+      else
+        {
+          olsr_calculate_lq_routing_table();
+        }
 #endif
       olsr_calculate_hna_routes();
 

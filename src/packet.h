@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.h,v 1.9 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: packet.h,v 1.10 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -69,6 +69,7 @@ struct tc_mpr_addr
 {
 #if defined USE_LINK_QUALITY
   double             link_quality;
+  double             neigh_link_quality;
 #endif
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;

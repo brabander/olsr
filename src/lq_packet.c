@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.c,v 1.3 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.4 2004/11/07 20:09:11 tlopatic Exp $
  *
  */
 
@@ -129,6 +129,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   struct lq_tc_neighbor *neigh;
   int i;
   struct neighbor_entry *walker;
+  struct link_entry *link;
 
   // initialize the static fields
 
@@ -182,8 +183,11 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
           // set the entry's link quality
 
-          neigh->link_quality =
-            olsr_neighbor_best_link_quality(&neigh->main);
+          link = olsr_neighbor_best_inverse_link(&neigh->main);
+          neigh->link_quality = link->loss_link_quality;
+
+          link = olsr_neighbor_best_link(&neigh->main);
+          neigh->neigh_link_quality = link->neigh_link_quality;
 
           // queue the neighbour entry
 
@@ -493,10 +497,10 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
       // add the corresponding link quality
 
       buff[size++] = (unsigned char)(neigh->link_quality * 256);
+      buff[size++] = (unsigned char)(neigh->neigh_link_quality * 256);
 
       // pad
 
-      buff[size++] = 0;
       buff[size++] = 0;
       buff[size++] = 0;
     }
@@ -649,8 +653,10 @@ deserialize_lq_tc(struct lq_tc_message *lq_tc, void *ser,
       COPY_IP(&neigh->main, curr);
       curr += ipsize;
 
-      neigh->link_quality = (double)*curr / 256.0;
-      curr += 4;
+      neigh->link_quality = (double)*curr++ / 256.0;
+      neigh->neigh_link_quality = (double)*curr++ / 256.0;
+
+      curr += 2;
 
       neigh->next = lq_tc->neigh;
       lq_tc->neigh = neigh;
@@ -813,6 +819,7 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
       // copy fields
 
       new_neigh->link_quality = neigh->link_quality;
+      new_neigh->neigh_link_quality = neigh->neigh_link_quality;
 
       COPY_IP(&new_neigh->address, &neigh->main);
 
