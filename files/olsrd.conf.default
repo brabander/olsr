@@ -256,7 +256,7 @@ Interface "XXX" "YYY"
     # automatically calculated by olsrd based
     # on the characteristics of the interface,
     # but here you can specify a fixed value.
-    # Olsrd will choos links with the lowest value.
+    # Olsrd will choose links with the lowest value.
 
     # Weight 0
 
