@@ -118,16 +118,6 @@ main(int argc, char *argv[])
   /* Set default values */
   set_default_values();
 
-  /*
-   *socket for icotl calls
-   */
-  if ((ioctl_s = socket(ipversion, SOCK_DGRAM, 0)) < 0) 
-    {
-      syslog(LOG_ERR, "ioctl socket: %m");
-      close(ioctl_s);
-      olsr_exit(__func__, 0);
-    }
-
   /* Initialize network functions */
   init_net();
 
@@ -504,6 +494,16 @@ main(int argc, char *argv[])
       olsr_exit(__func__, EXIT_FAILURE);
     }
 
+  /*
+   *socket for icotl calls
+   */
+  if ((ioctl_s = socket(ipversion, SOCK_DGRAM, 0)) < 0) 
+    {
+      syslog(LOG_ERR, "ioctl socket: %m");
+      close(ioctl_s);
+      olsr_exit(__func__, 0);
+    }
+
 
   /* Type of service */
   precedence = IPTOS_PREC(tos);
@@ -689,7 +689,7 @@ tc_redunadancy = %d          mpr coverage = %d\n",
       printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
       if (fork() != 0)
 	{
-	  olsr_exit(__func__, EXIT_SUCCESS);
+	  exit(1);
 	}
       setsid();
     }
