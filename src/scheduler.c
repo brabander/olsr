@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.10 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: scheduler.c,v 1.11 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -28,7 +28,7 @@
  */
 
 void
-scheduler();
+scheduler(void);
 
 #include "defs.h"
 #include "scheduler.h"
@@ -241,7 +241,7 @@ scheduler()
  *this function should be triggered immediatley
  */
 int
-olsr_register_scheduler_event(void (*event_function)(), float interval, float initial, olsr_u8_t *trigger)
+olsr_register_scheduler_event(void (*event_function)(void), float interval, float initial, olsr_u8_t *trigger)
 {
   struct event_entry *new_entry;
 
@@ -284,7 +284,7 @@ olsr_register_scheduler_event(void (*event_function)(), float interval, float in
  *this function should be triggered immediatley
  */
 int
-olsr_remove_scheduler_event(void (*event_function)(), float interval, float initial, olsr_u8_t *trigger)
+olsr_remove_scheduler_event(void (*event_function)(void), float interval, float initial, olsr_u8_t *trigger)
 {
   struct event_entry *entry, *prev;
 
@@ -317,7 +317,7 @@ olsr_remove_scheduler_event(void (*event_function)(), float interval, float init
 
 
 int
-olsr_register_timeout_function(void (*time_out_function)())
+olsr_register_timeout_function(void (*time_out_function)(void))
 {
   struct timeout_entry *new_entry;
 
@@ -347,7 +347,7 @@ olsr_register_timeout_function(void (*time_out_function)())
 
 
 int
-olsr_remove_timeout_function(void (*time_out_function)())
+olsr_remove_timeout_function(void (*time_out_function)(void))
 {
   struct timeout_entry *entry, *prev;
 

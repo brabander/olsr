@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin.c,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: plugin.c,v 1.7 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -40,6 +40,7 @@
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"
 #include "hna_set.h"
+#include "apm.h"
 
 /**
  * Multi-purpose function for plugins
@@ -227,6 +228,10 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       break;
     case(GETF__DEL_IFCHGF):
       ptr = &del_ifchgf;
+      memcpy(data, &ptr, size);
+      break;
+    case(GETF__APM_READ):
+      ptr = &apm_read;
       memcpy(data, &ptr, size);
       break;
  

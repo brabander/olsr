@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.h,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: scheduler.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -38,7 +38,7 @@
 
 struct timeout_entry
 {
-  void (*function)();
+  void (*function)(void);
   struct timeout_entry *next;
 };
 
@@ -46,7 +46,7 @@ struct timeout_entry
 
 struct event_entry
 {
-  void (*function)();
+  void (*function)(void);
   float interval;
   float since_last;
   olsr_u8_t *trigger;
@@ -91,16 +91,16 @@ int
 init_scheduler(float);
 
 int
-olsr_register_timeout_function(void (*)());
+olsr_register_timeout_function(void (*)(void));
 
 int
-olsr_remove_timeout_function(void (*)());
+olsr_remove_timeout_function(void (*)(void));
 
 int
-olsr_register_scheduler_event(void (*)(), float, float, olsr_u8_t *);
+olsr_register_scheduler_event(void (*)(void), float, float, olsr_u8_t *);
 
 int
-olsr_remove_scheduler_event(void (*)(), float, float, olsr_u8_t *);
+olsr_remove_scheduler_event(void (*)(void), float, float, olsr_u8_t *);
 
 void
 start_scheduler(pthread_t *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_plugin_io.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -29,7 +29,8 @@
  *                 interface struct.
  *                 Added GETF__ADD_IFCHGF and GETF__DEL_IFCHGF.
  *                 - Andreas
- *
+ *         0.4.8 : GETF__APM_READ added.
+ *                 - Andreas
  */
 
 /*
@@ -103,5 +104,6 @@
 #define GETF__OLSR_HASHING                         528
 #define GETF__ADD_IFCHGF                           529
 #define GETF__DEL_IFCHGF                           530
+#define GETF__APM_READ                             531
 
 #endif

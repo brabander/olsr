@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: process_package.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -31,7 +31,7 @@
 #include "mpr.h"
 
 void
-olsr_init_package_process();
+olsr_init_package_process(void);
 
 void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);

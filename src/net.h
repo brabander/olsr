@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.h,v 1.11 2004/09/26 10:47:27 kattemat Exp $
+ * $Id: net.h,v 1.12 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -46,7 +46,7 @@ struct ptf
 struct ptf *ptf_list;
 
 void
-init_net();
+init_net(void);
 
 int
 net_add_buffer(struct interface *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: apm.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: apm.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -41,7 +41,7 @@ struct olsr_apm_info
 };
 
 
-int apm_init();
+int apm_init(void);
 
 void apm_printinfo(struct olsr_apm_info *);
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mid_set.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: mid_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -49,7 +49,7 @@ struct mid_entry
 struct mid_entry mid_set[HASHSIZE];
 
 int
-olsr_init_mid_set();
+olsr_init_mid_set(void);
 
 void 
 insert_mid_tuple(union olsr_ip_addr *, struct addresses *, float);
@@ -64,10 +64,10 @@ struct addresses *
 mid_lookup_aliases(union olsr_ip_addr *);
 
 void
-olsr_print_mid_set();
+olsr_print_mid_set(void);
 
 void
-olsr_time_out_mid_set();
+olsr_time_out_mid_set(void);
 
 int
 olsr_update_mid_table(union olsr_ip_addr *, float);

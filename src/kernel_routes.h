@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: kernel_routes.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -50,10 +50,10 @@ int
 add_tunnel_route(union olsr_ip_addr *);
 
 int
-delete_tunnel_route();
+delete_tunnel_route(void);
 
 int
-delete_all_inet_gws();
+delete_all_inet_gws(void);
 
 
 #endif

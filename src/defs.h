@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.13 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: defs.h,v 1.14 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -247,19 +247,19 @@ olsr_printf(int, char *, ...);
  */
 
 int
-ipc_init();
+ipc_init(void);
 
 int
 ipc_input(int);
 
 int
-shutdown_ipc();
+shutdown_ipc(void);
 
 int
 ipc_output(struct olsr *);
 
 int
-ipc_send_net_info();
+ipc_send_net_info(void);
 
 int
 ipc_route_send_rtentry(union olsr_kernel_route *, int, char *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: mpr.c,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -33,25 +33,25 @@
  */
 
 static olsr_u16_t
-add_will_always_nodes();
+add_will_always_nodes(void);
 
 static void
-olsr_optimize_mpr_set();
+olsr_optimize_mpr_set(void);
 
 static void
-olsr_clear_mprs();
+olsr_clear_mprs(void);
 
 static void
-olsr_clear_two_hop_processed();
+olsr_clear_two_hop_processed(void);
 
 static struct neighbor_entry *
 olsr_find_maximum_covered(int);
 
 static olsr_u16_t
-olsr_calculate_two_hop_neighbors();
+olsr_calculate_two_hop_neighbors(void);
 
 static int
-olsr_check_mpr_changes();
+olsr_check_mpr_changes(void);
 
 static int
 olsr_chosen_mpr(struct neighbor_entry *, olsr_u16_t *);

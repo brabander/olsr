@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: ipc_frontend.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 /*
@@ -86,10 +86,10 @@ int ipc_sock;
 int ipc_active;
 
 void
-ipc_accept_thread();
+ipc_accept_thread(void);
 
 int
-ipc_send_all_routes();
+ipc_send_all_routes(void);
 
 void
 frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);

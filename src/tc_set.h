@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: tc_set.h,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: tc_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -55,7 +55,7 @@ struct tc_entry
 struct tc_entry tc_table[HASHSIZE];
 
 int
-olsr_init_tc();
+olsr_init_tc(void);
 
 
 int
@@ -82,9 +82,9 @@ int
 olsr_tc_update_mprs(struct tc_entry *, struct tc_message *);
 
 int
-olsr_print_tc_table();
+olsr_print_tc_table(void);
 
 void
-olsr_time_out_tc_set();
+olsr_time_out_tc_set(void);
 
 #endif

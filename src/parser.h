@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: parser.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: parser.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -44,7 +44,7 @@ struct parse_function_entry
 struct parse_function_entry *parse_functions;
 
 void
-olsr_init_parser();
+olsr_init_parser(void);
 
 void 
 olsr_input(int);

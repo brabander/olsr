@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: plugin_loader.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -69,13 +69,13 @@ struct plugin_to_load
 struct plugin_to_load *plugins_to_load;
 
 void
-olsr_init_plugin_loader();
+olsr_init_plugin_loader(void);
 
 void
 olsr_add_plugin(char *);
 
 int
-olsr_load_plugins();
+olsr_load_plugins(void);
 
 void
 init_olsr_plugin(struct olsr_plugin *);
@@ -84,6 +84,6 @@ int
 olsr_load_dl(char *);
 
 void
-olsr_close_plugins();
+olsr_close_plugins(void);
 
 #endif

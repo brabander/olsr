@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.h,v 1.8 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: olsr.h,v 1.9 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -74,7 +74,7 @@ void
 register_pcf(int (*)(int, int, int));
 
 inline void
-olsr_process_changes();
+olsr_process_changes(void);
 
 inline void
 olsr_init_timer(olsr_u32_t, struct timeval *);
@@ -83,10 +83,10 @@ inline void
 olsr_get_timestamp(olsr_u32_t, struct timeval *);
 
 void
-init_msg_seqno();
+init_msg_seqno(void);
 
 inline olsr_u16_t
-get_msg_seqno();
+get_msg_seqno(void);
 
 int
 olsr_forward_message(union olsr_message *, 
@@ -99,16 +99,16 @@ void
 set_buffer_timer(struct interface *);
 
 void
-olsr_init_tables();
+olsr_init_tables(void);
 
 void
-olsr_init_willingness();
+olsr_init_willingness(void);
 
 void
-olsr_update_willingness();
+olsr_update_willingness(void);
 
 olsr_u8_t
-olsr_calculate_willingness();
+olsr_calculate_willingness(void);
 
 void
 olsr_exit(const char *, int);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: duplicate_set.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: duplicate_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -55,10 +55,10 @@ struct dup_entry dup_set[HASHSIZE];
 struct timeval  hold_time_duplicate;
 
 void
-olsr_init_duplicate_table();
+olsr_init_duplicate_table(void);
 
 void
-olsr_time_out_duplicate_table();
+olsr_time_out_duplicate_table(void);
 
 int
 olsr_check_dup_table_proc(union olsr_ip_addr *, olsr_u16_t);
@@ -70,7 +70,7 @@ void
 olsr_del_dup_entry(struct dup_entry *);
 
 void
-olsr_print_duplicate_table();
+olsr_print_duplicate_table(void);
 
 struct dup_entry *
 olsr_add_dup_entry(union olsr_ip_addr *, olsr_u16_t);

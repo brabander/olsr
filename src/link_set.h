@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: link_set.h,v 1.7 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -73,7 +73,7 @@ struct timeval  hold_time_neighbor_nw;
 /* Function prototypes */
 
 void
-olsr_init_link_set();
+olsr_init_link_set(void);
 
 struct interface *
 get_interface_link_set(union olsr_ip_addr *);

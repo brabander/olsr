@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: net.c,v 1.7 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -30,6 +30,7 @@
 
 #include "net.h"
 #include "../defs.h"
+#include "../net_os.h"
 
 /**
  *Bind a socket to a device

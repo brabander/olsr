@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.12 2004/10/02 07:15:42 kattemat Exp $
+ * $Id: main.c,v 1.13 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -55,10 +55,10 @@ void ListInterfaces(void);
  */
 
 static void
-print_usage();
+print_usage(void);
 
 static void
-set_default_values();
+set_default_values(void);
 
 
 /*

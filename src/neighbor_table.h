@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: neighbor_table.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -63,7 +63,7 @@ struct neighbor_entry
 struct neighbor_entry neighbortable[HASHSIZE];
 
 void
-olsr_init_neighbor_table();
+olsr_init_neighbor_table(void);
 
 int
 olsr_delete_neighbor_2_pointer(struct neighbor_entry *, union olsr_ip_addr *);
@@ -87,10 +87,10 @@ void
 olsr_time_out_two_hop_neighbors(struct neighbor_entry  *);
 
 void
-olsr_time_out_neighborhood_tables();
+olsr_time_out_neighborhood_tables(void);
 
 void
-olsr_print_neighbor_table();
+olsr_print_neighbor_table(void);
 
 
 int

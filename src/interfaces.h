@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.7 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: interfaces.h,v 1.8 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -131,7 +131,7 @@ struct sockaddr_in addrsock;
 struct sockaddr_in6 addrsock6;
 
 int
-ifinit();
+ifinit(void);
 
 struct interface *
 if_ifwithsock(int);

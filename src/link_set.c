@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.7 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: link_set.c,v 1.8 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -47,13 +47,13 @@ static int
 check_link_status(struct hello_message *);
 
 static void
-olsr_time_out_hysteresis();
+olsr_time_out_hysteresis(void);
 
 static struct link_entry *
 add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
 
 static void
-olsr_time_out_link_set();
+olsr_time_out_link_set(void);
 
 static int
 get_neighbor_status(union olsr_ip_addr *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.h,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: process_routes.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -38,7 +38,7 @@ struct rt_entry old_routes[HASHSIZE];
 struct rt_entry old_hna[HASHSIZE];
 
 int
-olsr_init_old_table();
+olsr_init_old_table(void);
 
 int
 olsr_find_up_route(struct rt_entry *dst,struct rt_entry *table);
@@ -47,10 +47,10 @@ struct destination_n *
 olsr_build_update_list(struct rt_entry *from_table, struct rt_entry *in_table);
 
 void
-olsr_update_kernel_routes();
+olsr_update_kernel_routes(void);
 
 void
-olsr_update_kernel_hna_routes();
+olsr_update_kernel_hna_routes(void);
 
 void
 olsr_move_route_table(struct rt_entry *, struct rt_entry *);
@@ -62,6 +62,6 @@ void
 olsr_add_routes_in_kernel(struct destination_n *add_kernel_list);
 
 int
-olsr_delete_all_kernel_routes();
+olsr_delete_all_kernel_routes(void);
 
 #endif

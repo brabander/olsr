@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: generate_msg.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -46,21 +46,21 @@ int
 olsr_set_hna_interval(float);
 
 void
-generate_hello();
+generate_hello(void);
 
 void
-generate_hello_nw();
+generate_hello_nw(void);
 
 void
-generate_mid();
+generate_mid(void);
 
 void
-generate_hna();
+generate_hna(void);
 
 void
-generate_tc();
+generate_tc(void);
 
 void
-generate_tabledisplay();
+generate_tabledisplay(void);
 
 #endif

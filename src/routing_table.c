@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: routing_table.c,v 1.7 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -42,16 +42,22 @@ static void
 olsr_free_routing_table(struct rt_entry *);
 
 static int
-olsr_fill_routing_table_with_neighbors();
+olsr_fill_routing_table_with_neighbors(void);
 
 static struct destination_n *
-olsr_fill_routing_table_with_two_hop_neighbors();
+olsr_fill_routing_table_with_two_hop_neighbors(void);
 
 static struct rt_entry *
 olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
 
 static struct rt_entry *
 olsr_lookup_routing_table(union olsr_ip_addr *);
+
+struct rt_entry *
+olsr_insert_routing_table(union olsr_ip_addr *, union olsr_ip_addr *, int);
+
+struct rt_entry *
+olsr_check_for_lower_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
 
 /* End:
  * Prototypes for internal functions 

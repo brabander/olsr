@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: apm.c,v 1.7 2004/10/02 12:12:31 kattemat Exp $
+ * $Id: apm.c,v 1.8 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -107,7 +107,7 @@ static int
 apm_read_acpi(struct olsr_apm_info *);
 
 static int
-acpi_probe();
+acpi_probe(void);
 
 
 int 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.c,v 1.8 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: process_routes.c,v 1.9 2004/10/09 22:32:47 kattemat Exp $
  *
  */
 
@@ -165,7 +165,7 @@ olsr_delete_all_kernel_routes()
       /* Take down tunnel */
       del_ip_tunnel(&ipt);
       tmp_tnl_addr = 0;
-      set_up_gw_tunnel(&tmp_tnl_addr);
+      set_up_gw_tunnel((union olsr_ip_addr *)&tmp_tnl_addr);
     }
 
   delete_kernel_list = olsr_build_update_list(hna_routes, old_hna);
@@ -270,14 +270,14 @@ olsr_move_route_table(struct rt_entry *original, struct rt_entry *new)
       else
 	{
 	  /* Copy to old */
-	   new[index].next = original[index].next;
-	   new[index].next->prev = &new[index];
-	   new[index].prev = original[index].prev;
-	   new[index].prev->next = &new[index];
+	  new[index].next = original[index].next;
+	  new[index].next->prev = &new[index];
+	  new[index].prev = original[index].prev;
+	  new[index].prev->next = &new[index];
 
-	   /* Clear original */
-	   original[index].next = &original[index];
-	   original[index].prev = &original[index];
+	  /* Clear original */
+	  original[index].next = &original[index];
+	  original[index].prev = &original[index];
 	}
     }
 }
@@ -338,63 +338,63 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 void 
 olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 {
-	struct destination_n *destination_kernel = NULL;
-	struct destination_n *previous_node = add_kernel_list;
-	olsr_16_t error;
-	int metric_counter = 0, first_run = 1;
-	//char str[46];
+  struct destination_n *destination_kernel = NULL;
+  struct destination_n *previous_node = add_kernel_list;
+  olsr_16_t error;
+  int metric_counter = 0, first_run = 1;
+  //char str[46];
+  
+  //printf("Calculating routes\n");
+  
+  while(add_kernel_list != NULL)
+    {
+      //searching for all the items with metric equal to n
+      for(destination_kernel = add_kernel_list; destination_kernel != NULL; )
+	{
+	  if((destination_kernel->destination->rt_metric == metric_counter) &&
+	     ((first_run && 
+	       COMP_IP(&destination_kernel->destination->rt_dst, &destination_kernel->destination->rt_router)) || !first_run))
+	    {
+	      /* First add all 1-hop routes that has themselves as GW */
 
-	//printf("Calculating routes\n");
-
-	while(add_kernel_list != NULL)
-	  {
-	    //searching for all the items with metric equal to n
-	    for(destination_kernel = add_kernel_list; destination_kernel != NULL; )
-	      {
-		if((destination_kernel->destination->rt_metric == metric_counter) &&
-		   ((first_run && 
-		     COMP_IP(&destination_kernel->destination->rt_dst, &destination_kernel->destination->rt_router)) || !first_run))
-		  {
-		    /* First add all 1-hop routes that has themselves as GW */
-
-		    if(ipversion == AF_INET)
-		      error=olsr_ioctl_add_route(destination_kernel->destination);
-		    else
-		      error=olsr_ioctl_add_route6(destination_kernel->destination);
+	      if(ipversion == AF_INET)
+		error=olsr_ioctl_add_route(destination_kernel->destination);
+	      else
+		error=olsr_ioctl_add_route6(destination_kernel->destination);
 		    
-		    if(error < 0) //print the error msg
-		      {
-			olsr_printf(1, "Add route: %s\n",strerror(errno));
-			olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
-		      }
+	      if(error < 0) //print the error msg
+		{
+		  olsr_printf(1, "Add route: %s\n",strerror(errno));
+		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
+		}
 		    
-		    //getting rid of this node and hooking up the broken point
-		    if(destination_kernel == add_kernel_list) 
-		      {
-			destination_kernel = add_kernel_list->next;
-			free(add_kernel_list);
-			add_kernel_list = destination_kernel;
-			previous_node=add_kernel_list;
-		      }
-		    else 
-		      {
-			previous_node->next = destination_kernel->next;
-			free(destination_kernel);
-			destination_kernel = previous_node->next;
-		      }
-		  }
-		else 
-		  {
-		    previous_node = destination_kernel;
-		    destination_kernel = destination_kernel->next;
-		  }
+	      //getting rid of this node and hooking up the broken point
+	      if(destination_kernel == add_kernel_list) 
+		{
+		  destination_kernel = add_kernel_list->next;
+		  free(add_kernel_list);
+		  add_kernel_list = destination_kernel;
+		  previous_node=add_kernel_list;
+		}
+	      else 
+		{
+		  previous_node->next = destination_kernel->next;
+		  free(destination_kernel);
+		  destination_kernel = previous_node->next;
+		}
+	    }
+	  else 
+	    {
+	      previous_node = destination_kernel;
+	      destination_kernel = destination_kernel->next;
+	    }
 		
-	      }
-	    if(first_run)
-	      first_run = 0;
-	    else
-	      ++metric_counter;
-	  }
+	}
+      if(first_run)
+	first_run = 0;
+      else
+	++metric_counter;
+    }
 	
 }
 
