@@ -35,7 +35,6 @@ CFLAGS ?= -O2
 CFLAGS += $(MYFLAGS)
 LDFLAGS ?= -mno-cygwin -shared
 LIBS ?= -lws2_32
-COMPATOBJ = ../../src/win32/compat.o
 INSTALL_LIB = 	cp $(NAME) ../..
 all: plugin
 else
