@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.11 2004/09/26 10:47:27 kattemat Exp $
+ * $Id: main.c,v 1.12 2004/10/02 07:15:42 kattemat Exp $
  *
  */
 
@@ -689,7 +689,7 @@ tc_redunadancy = %d          mpr coverage = %d\n",
       printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
       if (fork() != 0)
 	{
-	  exit(1);
+	  exit(EXIT_SUCCESS);
 	}
       setsid();
     }
