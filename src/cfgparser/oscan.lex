@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.14 2004/11/30 17:12:28 tlopatic Exp $
+ * $Id: oscan.lex,v 1.15 2005/02/15 17:17:56 tlopatic Exp $
  */
 
 
@@ -114,7 +114,6 @@ IP6PAT8 ({HEXBYTE}:){1,7}:
 IP6PAT9 ::
 
 IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{IP6PAT8}|{IP6PAT9}
-
 
 %%
 
@@ -209,6 +208,10 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   return TOK_IP6_ADDR;
 }
 
+"default" {
+  yylval = NULL;
+  return TOK_DEFAULT;
+}
 
 {DECDIGIT}+ {
 
@@ -366,6 +369,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "LinkQualityWinSize" {
   yylval = NULL;
   return TOK_LQ_WSIZE;
+}
+
+"LinkQualityMult" {
+  yylval = NULL;
+  return TOK_LQ_MULT;
 }
 
 "ClearScreen" {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.31 2004/12/30 16:33:31 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.32 2005/02/15 17:17:44 tlopatic Exp $
  */
 
 
@@ -391,6 +391,7 @@ olsrd_free_cnf(struct olsrd_config *cnf)
   struct hna6_entry        *h6d, *h6 = cnf->hna6_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
+  struct olsr_lq_mult      *mult, *next_mult;
   
   while(h4)
     {
@@ -408,6 +409,12 @@ olsrd_free_cnf(struct olsrd_config *cnf)
 
   while(in)
     {
+      for (mult = in->cnf->lq_mult; mult != NULL; mult = next_mult)
+      {
+        next_mult = mult->next;
+        free(mult);
+      }
+
       free(in->cnf);
       ind = in;
       in = in->next;
@@ -501,6 +508,7 @@ get_default_if_config()
     }
   memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
+  io->lq_mult = NULL;
 
   io->hello_params.emission_interval = HELLO_INTERVAL;
   io->hello_params.validity_time = NEIGHB_HOLD_TIME;
@@ -529,6 +537,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   struct plugin_param      *pp;
   struct ipc_host          *ih = cnf->ipc_hosts;
   struct ipc_net           *ie = cnf->ipc_nets;
+  struct olsr_lq_mult      *mult;
 
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
@@ -755,7 +764,24 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	  else
 	    fprintf(fd, "    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
 	  
-	  
+          mult = in->cnf->lq_mult;
+
+          if (mult == NULL)
+            fprintf(fd, "    #LinkQualityMult\tdefault 1.0\n");
+
+          else
+          {
+            while (mult != NULL)
+            {
+              inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
+                        sizeof (ipv6_buf));
+
+              fprintf(fd, "    LinkQualityMult\t%s %0.2f\n",
+                      ipv6_buf, mult->val);
+
+              mult = mult->next;
+            }
+          }
 	  
 	  fprintf(fd, "}\n\n");
 	  in = in->next;
@@ -785,6 +811,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   struct plugin_entry      *pe = cnf->plugins;
   struct ipc_host          *ih = cnf->ipc_hosts;
   struct ipc_net           *ie = cnf->ipc_nets;
+  struct olsr_lq_mult      *mult;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
@@ -867,10 +894,16 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  printf("\tMID emission/validity    : %0.2f/%0.2f\n", in->cnf->mid_params.emission_interval, in->cnf->mid_params.validity_time);
 	  printf("\tHNA emission/validity    : %0.2f/%0.2f\n", in->cnf->hna_params.emission_interval, in->cnf->hna_params.validity_time);
 	  
-	  
+          for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next)
+          {
+            inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
+                      sizeof (ipv6_buf));
+
+            printf("\tLinkQualityMult          : %s %0.2f\n",
+                   ipv6_buf, mult->val);
+          }
 	  
 	  in = in->next;
-
 	}
     }
 

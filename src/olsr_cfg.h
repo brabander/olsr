@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.16 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.17 2005/02/15 17:17:43 tlopatic Exp $
  */
 
 
@@ -117,6 +117,13 @@ struct olsr_msg_params
   float                    validity_time;
 };
 
+struct olsr_lq_mult
+{
+  union olsr_ip_addr addr;
+  float val;
+  struct olsr_lq_mult *next;
+};
+
 struct if_config_options
 {
   union olsr_ip_addr       ipv4_broadcast;
@@ -127,6 +134,7 @@ struct if_config_options
   struct olsr_msg_params   tc_params;
   struct olsr_msg_params   mid_params;
   struct olsr_msg_params   hna_params;
+  struct olsr_lq_mult      *lq_mult;
 };
 
 

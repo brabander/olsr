@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.23 2005/01/01 12:13:58 kattemat Exp $
+ * $Id: oparse.y,v 1.24 2005/02/15 17:17:46 tlopatic Exp $
  */
 
 
@@ -62,8 +62,61 @@ int yylex(void);
 
 static int ifs_in_curr_cfg = 0;
 
+static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg);
 
+static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
+{
+  union olsr_ip_addr addr;
+  int i;
+  struct olsr_if *walker;
+  struct olsr_lq_mult *mult;
 
+#if PARSER_DEBUG > 0
+  printf("\tLinkQualityMult %s %0.2f\n",
+         (ip_addr_arg != NULL) ? ip_addr_arg->string : "any",
+         mult_arg->floating);
+#endif
+
+  memset(&addr, 0, sizeof (union olsr_ip_addr));
+
+  if(ip_addr_arg != NULL &&
+     inet_pton(cnf->ip_version, ip_addr_arg->string, &addr) < 0)
+  {
+    fprintf(stderr, "Cannot parse IP address %s.\n", ip_addr_arg->string);
+    return -1;
+  }
+
+  walker = cnf->interfaces;
+
+  for (i = 0; i < ifs_in_curr_cfg; i++)
+  {
+    mult = malloc(sizeof (struct olsr_lq_mult));
+
+    if (mult == NULL)
+    {
+      fprintf(stderr, "Out of memory (LQ multiplier).\n");
+      return -1;
+    }
+
+    memcpy(&mult->addr, &addr, sizeof (union olsr_ip_addr));
+    mult->val = mult_arg->floating;
+
+    mult->next = walker->cnf->lq_mult;
+    walker->cnf->lq_mult = mult;
+
+    walker = walker->next;
+  }
+
+  if (ip_addr_arg != NULL)
+  {
+    free(ip_addr_arg->string);
+    free(ip_addr_arg);
+  }
+
+  free(mult_arg);
+
+  return 0;
+}
 %}
 
 %token TOK_OPEN
@@ -96,6 +149,7 @@ static int ifs_in_curr_cfg = 0;
 %token TOK_MPRCOVERAGE
 %token TOK_LQ_LEVEL
 %token TOK_LQ_WSIZE
+%token TOK_LQ_MULT
 %token TOK_CLEAR_SCREEN
 %token TOK_PLNAME
 %token TOK_PLPARAM
@@ -119,6 +173,7 @@ static int ifs_in_curr_cfg = 0;
 
 %token TOK_IP4_ADDR
 %token TOK_IP6_ADDR
+%token TOK_DEFAULT
 
 %token TOK_COMMENT
 
@@ -211,6 +266,7 @@ ifstmt:      vcomment
              | isetmidval
              | isethnaint
              | isethnaval
+             | isetlqmult
 ;
 
 plbody:     TOK_OPEN plstmts TOK_CLOSE
@@ -547,6 +603,25 @@ isethnaval: TOK_HNAVAL TOK_FLOAT
 }
 ;
 
+isetlqmult: TOK_LQ_MULT TOK_DEFAULT TOK_FLOAT
+{
+  if (lq_mult_helper($2, $3) < 0)
+    YYABORT;
+}
+
+          | TOK_LQ_MULT TOK_IP4_ADDR TOK_FLOAT
+{
+  if (lq_mult_helper($2, $3) < 0)
+    YYABORT;
+}
+
+          | TOK_LQ_MULT TOK_IP6_ADDR TOK_FLOAT
+{
+  if (lq_mult_helper($2, $3) < 0)
+    YYABORT;
+}
+
+          ;
 
 idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.48 2005/02/14 15:54:29 tlopatic Exp $
+ * $Id: link_set.c,v 1.49 2005/02/15 17:17:42 tlopatic Exp $
  */
 
 
@@ -852,6 +852,47 @@ void olsr_print_link_set(void)
   }
 }
 
+static void multiply_link_quality(struct link_entry *entry)
+{
+  struct interface *inter;
+  struct olsr_if *cfg_inter;
+  struct olsr_lq_mult *mult;
+  float val = -1.0;
+  union olsr_ip_addr null_addr;
+
+  // find the interface for the link
+
+  inter = if_ifwithaddr(&entry->local_iface_addr);
+
+  // find the interface configuration for the interface
+
+  for (cfg_inter = olsr_cnf->interfaces; cfg_inter != NULL;
+       cfg_inter = cfg_inter->next)
+    if (cfg_inter->interf == inter)
+      break;
+
+  // create a null address for comparison
+
+  memset(&null_addr, 0, sizeof (union olsr_ip_addr));
+
+  // loop through the multiplier entries
+
+  for (mult = cfg_inter->cnf->lq_mult; mult != NULL; mult = mult->next)
+  {
+    // use the default multiplier only if there isn't any entry that
+    // has a matching IP address
+
+    if ((COMP_IP(&mult->addr, &null_addr) && val < 0.0) ||
+        COMP_IP(&mult->addr, &entry->neighbor_iface_addr))
+      val = mult->val;
+  }
+
+  // if we have found an entry, then multiply
+
+  if (val >= 0)
+    entry->loss_link_quality *= val;
+}
+
 static void update_packet_loss_worker(struct link_entry *entry, int lost)
 {
   unsigned char mask = 1 << (entry->loss_index & 7);
@@ -915,6 +956,10 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
   entry->loss_link_quality =
     (float)(entry->total_packets - entry->lost_packets) /
     (float)(entry->loss_window_size);
+
+  // multiply the calculated link quality with the user-specified multiplier
+
+  multiply_link_quality(entry);
 
   // if the link quality has changed by more than 10 percent,
   // print the new link quality table
