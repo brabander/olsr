@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.46 2005/02/12 22:32:42 kattemat Exp $
+ * $Id: link_set.c,v 1.47 2005/02/12 22:42:34 kattemat Exp $
  */
 
 
@@ -71,7 +71,7 @@ olsr_time_out_link_set(void);
 static int
 get_neighbor_status(union olsr_ip_addr *);
 
-static struct link_entry *
+static inline struct link_entry *
 find_best_link(union olsr_ip_addr *);
 
 
@@ -220,7 +220,7 @@ get_neighbor_status(union olsr_ip_addr *address)
  *
  */
 
-static struct link_entry *
+static inline struct link_entry *
 find_best_link(union olsr_ip_addr *remote)
 {
   struct link_entry *tmp_link_set, *entry;
