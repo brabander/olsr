@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.4 2004/11/05 23:24:40 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.5 2004/11/06 09:19:14 kattemat Exp $
  *
  */
 
@@ -103,8 +103,7 @@ my_fini()
 int
 register_olsr_param(char *key, char *value)
 {
-  printf("Plugin receiving parameter key:\"%s\" value:\"%s\"\n", key, value);
-  return 0;
+  return 1;
 }
 
 
