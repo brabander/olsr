@@ -1,3 +1,9 @@
+
+#
+# olsr.org makefile
+# $Id: Makefile,v 1.9 2004/10/19 22:13:21 kattemat Exp $
+#
+
 CC ?= gcc
 
 CFLAGS ?= -Isrc -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g #-pg -DDEBUG #-march=i686
@@ -14,6 +20,10 @@ DEPEND= makedepend -Dlinux -Y -f $(DEPFILE) -- $(CFLAGS)
 SRCS= $(wildcard src/*.c) \
       $(wildcard src/linux/*.c) \
       $(wildcard src/cfgparser/*.c)
+
+HDRS= $(wildcard src/*.h) \
+      $(wildcard src/linux/*.h) \
+      $(wildcard src/cfgparser/*.h)
 
 OBJS= $(patsubst %.c,%.o,$(wildcard src/*.c)) \
       $(patsubst %.c,%.o,$(wildcard src/linux/*.c)) \
