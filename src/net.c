@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.14 2004/09/25 21:06:07 kattemat Exp $
+ * $Id: net.c,v 1.15 2004/09/28 05:50:06 kattemat Exp $
  *
  */
 
@@ -149,7 +149,7 @@ net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
   memcpy(&netbufs[ifp->if_nr]->buff[netbufs[ifp->if_nr]->pending + OLSR_HEADERSIZE], data, size);
   netbufs[ifp->if_nr]->pending += size;
 
-  return 1;
+  return size;
 }
 
 
@@ -171,7 +171,7 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
   memcpy(&netbufs[ifp->if_nr]->buff[netbufs[ifp->if_nr]->pending + OLSR_HEADERSIZE], data, size);
   netbufs[ifp->if_nr]->pending += size;
 
-  return 1;
+  return size;
 }
 
 
