@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.13 2005/01/05 15:23:02 kattemat Exp $
+ * $Id: ifnet.c,v 1.14 2005/01/05 15:35:16 kattemat Exp $
  */
 
 
@@ -610,7 +610,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       olsr_printf(debuglvl, "\tAddress: %s\n", ip6_to_string(&ifs.int6_addr.sin6_addr));
       
       /* Multicast */
-      ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == 1) ? 
+      ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL) ? 
 	iface->cnf->ipv6_multi_site.v6 :
 	iface->cnf->ipv6_multi_glbl.v6;
       /* Set address family */
