@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.16 2004/12/03 20:57:15 kattemat Exp $
+ * $Id: socket_parser.c,v 1.17 2005/01/17 20:24:17 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -58,8 +58,6 @@ static int hfd = 0;
 
 static struct timeval tvp = {0, 0};
 static fd_set ibits;
-
-#warning highest FD for select is now set in socket add/remove functions
 
 /**
  * Add a socket and handler to the socketset
