@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.16 2005/02/27 10:48:05 kattemat Exp $
+ * $Id: net.c,v 1.17 2005/03/04 21:30:17 kattemat Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -289,6 +289,69 @@ void DisableIcmpRedirects(void)
   fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
 
   exit(0);
+}
+
+
+int join_mcast(struct interface *Nic, int Sock)
+{
+  /* See linux/in6.h */
+
+  struct ipv6_mreq McastReq;
+
+  COPY_IP(&McastReq.ipv6mr_multiaddr, &Nic->int6_multaddr.sin6_addr);
+  McastReq.ipv6mr_interface = Nic->if_index;
+
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string((union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr))
+  /* Send multicast */
+  if(setsockopt(Sock, 
+		IPPROTO_IPV6, 
+		IPV6_ADD_MEMBERSHIP, 
+		(char *)&McastReq, 
+		sizeof(struct ipv6_mreq)) 
+     < 0)
+    {
+      perror("Join multicast");
+      return -1;
+    }
+
+  /* Old libc fix */
+#ifdef IPV6_JOIN_GROUP
+  /* Join reciever group */
+  if(setsockopt(Sock, 
+		IPPROTO_IPV6, 
+		IPV6_JOIN_GROUP, 
+		(char *)&McastReq, 
+		sizeof(struct ipv6_mreq)) 
+     < 0)
+#else
+  /* Join reciever group */
+  if(setsockopt(Sock, 
+		IPPROTO_IPV6, 
+		IPV6_ADD_MEMBERSHIP, 
+		(char *)&McastReq, 
+		sizeof(struct ipv6_mreq)) 
+     < 0)
+#endif 
+    {
+      perror("Join multicast send");
+      return -1;
+    }
+
+  
+  if(setsockopt(Sock, 
+		IPPROTO_IPV6, 
+		IPV6_MULTICAST_IF, 
+		(char *)&McastReq.ipv6mr_interface, 
+		sizeof(McastReq.ipv6mr_interface)) 
+     < 0)
+    {
+      perror("Set multicast if");
+      return -1;
+    }
+
+
+  OLSR_PRINTF(3, "OK\n")
+  return 0;
 }
 
 

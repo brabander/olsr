@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.16 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: net.h,v 1.17 2005/03/04 21:30:16 kattemat Exp $
  */
 
 
@@ -108,9 +108,6 @@ ip6_to_string(struct in6_addr *);
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);
-
-int
-join_mcast(struct interface *, int);
 
 int
 add_ptf(int (*)(char *, int *));

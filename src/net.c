@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.36 2005/03/02 20:53:43 spoggle Exp $
+ * $Id: net.c,v 1.37 2005/03/04 21:30:16 kattemat Exp $
  */
 
 #include "net.h"
@@ -463,74 +463,6 @@ net_output(struct interface *ifp)
   return 1;
 }
 
-
-
-int
-join_mcast(struct interface *ifs, int sock)
-{
-  /* See linux/in6.h */
-
-  struct ipv6_mreq mcastreq;
-
-  COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
-  mcastreq.ipv6mr_interface = ifs->if_index;
-
-#if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr))
-  /* Send multicast */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
-     < 0)
-    {
-      perror("Join multicast");
-      return -1;
-    }
-#else
-#warning implement IPV6_ADD_MEMBERSHIP
-#endif
-
-  /* Old libc fix */
-#ifdef IPV6_JOIN_GROUP
-  /* Join reciever group */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_JOIN_GROUP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
-     < 0)
-#else
-  /* Join reciever group */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
-     < 0)
-#endif 
-    {
-      perror("Join multicast send");
-      return -1;
-    }
-
-  
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_MULTICAST_IF, 
-		(char *)&mcastreq.ipv6mr_interface, 
-		sizeof(mcastreq.ipv6mr_interface)) 
-     < 0)
-    {
-      perror("Set multicast if");
-      return -1;
-    }
-
-
-  OLSR_PRINTF(3, "OK\n")
-  return 0;
-}
 
 
 /**

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.9 2005/02/23 21:06:08 spoggle Exp $
+ * $Id: net_os.h,v 1.10 2005/03/04 21:30:16 kattemat Exp $
  */
 
 
@@ -111,5 +111,8 @@ check_wireless_interface(char *);
 
 olsr_bool
 is_if_link_up(char *);
+
+int
+join_mcast(struct interface *, int);
 
 #endif
