@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.12 2004/12/05 13:45:31 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.13 2005/01/03 19:00:20 kattemat Exp $
  */
 
 
@@ -62,8 +62,7 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
   struct hnapair *haddr;
   struct hnapair6 *haddr6;
   struct hna_net_addr *hna_pairs, *tmp_pairs;
-  int no_pairs, i, first_pair;
-  first_pair = 1;
+  int no_pairs, i;
 
   /*Check if everyting is ok*/
   if ((!m) || (m->v4.olsr_msgtype != HNA_MESSAGE))
@@ -140,6 +139,7 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
 	  
 	  COPY_IP(&hna_pairs->net, &haddr6->addr);
 	  hna_pairs->netmask.v6 = olsr_netmask_to_prefix((union olsr_ip_addr *)&haddr6->netmask);
+
 	  hna_pairs->next = tmp_pairs;
 	  
 	  tmp_pairs = hna_pairs;
