@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.2 2004/11/07 10:54:19 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.3 2004/11/09 21:15:07 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -61,6 +61,11 @@ olsr_plugin_init()
   int i;
   struct olsr_apm_info apm_info;
 
+  if(ipversion != AF_INET)
+    {
+      fprintf(stderr, "This plugin only supports IPv4!\n");
+      return 0;
+    }
   /* Initial IPC value */
   ipc_open = 0;
 
