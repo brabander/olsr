@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.42 2004/12/05 22:04:19 tlopatic Exp $
+# $Id: Makefile,v 1.43 2004/12/06 12:20:47 tlopatic Exp $
 
 VERS =		0.4.8
 
@@ -116,6 +116,7 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		olsrd.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
 		README \
+		README-Link-Quality.html \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
@@ -132,6 +133,7 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		cp olsrd.exe ${TEMP}/olsr-${VERS}
 		cp src/cfgparser/olsrd_cfgparser.dll ${TEMP}/olsr-${VERS}
 		cp README ${TEMP}/olsr-${VERS}
+		cp README-Link-Quality.html ${TEMP}/olsr-${VERS}
 		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
 		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/olsrd.conf
 		cp gui/win32/Main/Default.olsr ${TEMP}/olsr-${VERS}
@@ -147,6 +149,7 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		olsrd.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
 		README \
+		README-Link-Quality.html \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
