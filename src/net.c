@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.25 2004/12/12 17:54:00 kattemat Exp $
+ * $Id: net.c,v 1.26 2004/12/15 17:20:57 kattemat Exp $
  */
 
 #include "net.h"
@@ -691,7 +691,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
       ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
     }
 
-  strcpy(buff[index], ret);
+  strncpy(buff[index], ret, 100);
 
   ret = buff[index];
 

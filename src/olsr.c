@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.34 2004/12/14 20:15:52 kattemat Exp $
+ * $Id: olsr.c,v 1.35 2004/12/15 17:21:01 kattemat Exp $
  */
 
 /**
@@ -182,7 +182,7 @@ olsr_process_changes()
   if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
   {
       clear_console();
-      printf(OLSRD_VERSION_DATE);
+      printf("%s", OLSRD_VERSION_DATE);
   }
 
   if (changes_neighborhood)

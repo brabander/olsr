@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.12 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: hna_set.c,v 1.13 2004/12/15 17:20:54 kattemat Exp $
  */
 
 #include "defs.h"
@@ -317,7 +317,6 @@ olsr_print_hna_set()
   int index;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
-  char tmp_ipv6net[45];
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
               nowtm->tm_hour,
@@ -349,8 +348,7 @@ olsr_print_hna_set()
 		}
 	      else
 		{
-		  sprintf(tmp_ipv6net, "%s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6);
-		  olsr_printf(1, "%-30s ", tmp_ipv6net);
+		  olsr_printf(1, "%-27s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6);
 		  olsr_printf(1, "%s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
 		}
 
