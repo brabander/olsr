@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.16 2005/02/20 18:52:19 kattemat Exp $
+ * $Id: ifnet.c,v 1.17 2005/02/20 19:01:06 kattemat Exp $
  */
 
 #include "../interfaces.h"
@@ -50,6 +50,7 @@
 #include "../generate_msg.h"
 #include "../scheduler.h"
 #include "../mantissa.h"
+#include "../lq_packet.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -870,7 +871,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
   New->valtimes.mid = double_to_me(IntConf->cnf->mid_params.validity_time);
   New->valtimes.hna = double_to_me(IntConf->cnf->hna_params.validity_time);
 
-  run_ifchg_cbs(Int, IFCHG_IF_ADD);
+  run_ifchg_cbs(New, IFCHG_IF_ADD);
 
   return 1;
 }
