@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.h,v 1.7 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: link_set.h,v 1.8 2004/10/20 17:11:33 tlopatic Exp $
  *
  */
 
@@ -52,6 +52,27 @@ struct link_entry
   struct timeval hello_timeout; /* When we should receive a new HELLO */
   double last_htime;
   olsr_u16_t olsr_seqno;
+
+#if defined USE_LINK_QUALITY
+  /*
+   * packet loss
+   */
+
+  double loss_hello_int;
+  struct timeval loss_timeout;
+
+  olsr_u16_t loss_seqno;
+  int loss_seqno_valid;
+  int loss_missed_hellos;
+
+  int lost_packets;
+  int total_packets;
+
+  int loss_window_size;
+  int loss_index;
+
+  unsigned char loss_bitmap[16];
+#endif
 
   /*
    * Spy
@@ -97,5 +118,11 @@ replace_neighbor_link_set(struct neighbor_entry *,
 int
 lookup_link_status(struct link_entry *);
 
+#if defined USE_LINK_QUALITY
+void olsr_update_packet_loss_hello_int(struct link_entry *entry, double htime);
+void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
+                        olsr_u16_t seqno);
+void olsr_print_link_set(void);
+#endif
 
 #endif

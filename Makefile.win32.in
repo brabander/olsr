@@ -85,6 +85,8 @@ olsrconf.exe:	$(CONFEXEOBJS)
 
 clean:
 		rm -f *.exe *.dll *.lib *.zip
+		rm -f src/cfgparser/oparse.c src/cfgparser/oparse.h
+		rm -f src/cfgparser/oscan.c
 		find . -name \*~ -exec rm -f {} \;
 		find src -name \*.o -exec rm -f {} \;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.9 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: link_set.c,v 1.10 2004/10/20 17:11:33 tlopatic Exp $
  *
  */
 
@@ -49,6 +49,10 @@ check_link_status(struct hello_message *);
 static void
 olsr_time_out_hysteresis(void);
 
+#if defined USE_LINK_QUALITY
+static void olsr_time_out_packet_loss(void);
+#endif
+
 static struct link_entry *
 add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
 
@@ -77,6 +81,14 @@ olsr_init_link_set()
     {
       olsr_register_timeout_function(&olsr_time_out_hysteresis);
     }
+
+#if defined USE_LINK_QUALITY
+  if (1)
+    {
+      olsr_register_timeout_function(&olsr_time_out_packet_loss);
+    }
+#endif
+
   link_set = NULL;
 }
 
@@ -412,6 +424,29 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       new_link->olsr_seqno = 0;
       new_link->L_link_quality = 0;
     }
+
+#if defined USE_LINK_QUALITY
+  if (1)
+    {
+      new_link->loss_hello_int = htime;
+
+      olsr_get_timestamp((olsr_u32_t)(htime * 1500.0),
+                         &new_link->loss_timeout);
+
+      new_link->loss_seqno = 0;
+      new_link->loss_seqno_valid = 0;
+      new_link->loss_missed_hellos = 0;
+
+      new_link->lost_packets = 0;
+      new_link->total_packets = 0;
+
+      new_link->loss_window_size = 25;
+      new_link->loss_index = 0;
+
+      memset(new_link->loss_bitmap, 0, sizeof (new_link->loss_bitmap));
+    }
+#endif
+
   /* Add to queue */
   new_link->next = link_set;
   link_set = new_link;
@@ -828,3 +863,120 @@ olsr_time_out_hysteresis()
   return;
 }
 
+#if defined USE_LINK_QUALITY
+void olsr_print_link_set(void)
+{
+  struct link_entry *walker;
+  float link_quality;
+
+  olsr_printf(1, "CURRENT LINK SET ------------------------------\n");
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+    {
+      if (walker->total_packets > 0)
+        link_quality = 1.0 - (float)walker->lost_packets /
+          (float)walker->total_packets;
+
+      else
+        link_quality = 0.0;
+
+      olsr_printf(1, "%15s %5.3f %5.3f %d/%d\n",
+                  olsr_ip_to_string(&walker->neighbor_iface_addr),
+                  walker->L_link_quality, link_quality,
+                  walker->lost_packets, walker->total_packets);
+    }
+
+  olsr_printf(1, "CURRENT LINK SET (END) ------------------------\n");
+}
+
+static void update_packet_loss_worker(struct link_entry *entry, int lost)
+{
+  unsigned char mask = 1 << (entry->loss_index & 7);
+  int index = entry->loss_index >> 3;
+
+  if (lost == 0)
+    {
+      if ((entry->loss_bitmap[index] & mask) != 0)
+        {
+          entry->loss_bitmap[index] &= ~mask;
+          entry->lost_packets--;
+        }
+    }
+
+  else
+    {
+      if ((entry->loss_bitmap[index] & mask) == 0)
+        {
+          entry->loss_bitmap[index] |= mask;
+          entry->lost_packets++;
+        }
+    }
+
+  entry->loss_index++;
+
+  if (entry->loss_index >= entry->loss_window_size)
+    entry->loss_index = 0;
+
+  if (entry->total_packets < entry->loss_window_size)
+    entry->total_packets++;
+}
+
+void olsr_update_packet_loss_hello_int(struct link_entry *entry,
+                                       double loss_hello_int)
+{
+  entry->loss_hello_int = loss_hello_int;
+}
+
+void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
+                             olsr_u16_t seqno)
+{
+  struct link_entry *entry;
+
+  entry = lookup_link_entry(rem, loc);
+
+  if (entry == NULL)
+    return;
+    
+  if (entry->loss_seqno_valid != 0 && 
+      (unsigned short)(seqno - entry->loss_seqno) < 100)
+    {
+      while (entry->loss_seqno != seqno)
+        {
+          if (entry->loss_missed_hellos == 0)
+            update_packet_loss_worker(entry, 1);
+
+          else
+            entry->loss_missed_hellos--;
+
+          entry->loss_seqno++;
+        }
+    }
+
+  update_packet_loss_worker(entry, 0);
+
+  entry->loss_missed_hellos = 0;
+  entry->loss_seqno = seqno + 1;
+  entry->loss_seqno_valid = 1;
+
+  olsr_get_timestamp((olsr_u32_t)(entry->loss_hello_int * 1500.0),
+                     &entry->loss_timeout);
+}
+
+static void olsr_time_out_packet_loss()
+{
+  struct link_entry *walker;
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+    {
+      if (!TIMED_OUT(&walker->loss_timeout))
+        continue;
+      
+      update_packet_loss_worker(walker, 1);
+
+      walker->loss_missed_hellos++;
+
+      olsr_get_timestamp((olsr_u32_t)(walker->loss_hello_int * 1000.0),
+                         &walker->loss_timeout);
+    }
+}
+#endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: process_package.c,v 1.7 2004/10/20 17:11:33 tlopatic Exp $
  *
  */
 
@@ -97,6 +97,13 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
       //printf("MESSAGE HTIME: %f\n", message.htime);
       olsr_update_hysteresis_hello(link, message.htime);
     }
+
+#if defined USE_LINK_QUALITY
+  if (1)
+    {
+      olsr_update_packet_loss_hello_int(link, message.htime);
+    }
+#endif
 
   /* Check if we are chosen as MPR */
   if(olsr_lookup_mpr_status(&message, in_if))
