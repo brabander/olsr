@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-# $Id: Makefile,v 1.19 2004/11/08 01:54:05 tlopatic Exp $
+# $Id: Makefile,v 1.20 2004/11/09 00:44:52 tlopatic Exp $
 #
 
 #OS ?=		linux
@@ -105,7 +105,7 @@ HDRS +=		$(wildcard src/win32/*.h)
 OBJS +=		$(patsubst %.c,%.o,$(wildcard src/win32/*.c))
 
 CFLAGS ?=	-Isrc -Isrc/win32 -Wall -Wmissing-prototypes \
-		-Wstrict-prototypes -mno-cygwin -O2 -g -DWIN32
+		-Wstrict-prototypes -mno-cygwin -O2 -g -DWIN32 -DUSE_LINK_QUALITY
 
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 
