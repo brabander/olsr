@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.14 2004/11/05 20:58:10 tlopatic Exp $
+ * $Id: process_package.c,v 1.15 2004/11/07 18:48:54 kattemat Exp $
  *
  */
 
@@ -64,7 +64,9 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
 {
   struct link_entry         *link;
   struct neighbor_entry     *neighbor;
+#if defined USE_LINK_QUALITY
   struct hello_neighbor *walker;
+#endif
 
   /*
    * Update link status
