@@ -1,7 +1,13 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.12 2004/11/09 00:05:41 tlopatic Exp $
+$Id: CHANGELOG,v 1.13 2004/11/12 21:24:55 kattemat Exp $
 
 0.4.8 ---------------------------------------------------------------------
+
+NO MORE THREADS
+
+Olsrd no longer uses any thread library on its operation. Everything
+now happens in the main thread allowing for use of olsrd on platforms
+with no thread library.
 
 LINK QUALITY DETECTION
 
@@ -54,6 +60,12 @@ ACPI SUPPORT IN WILLINGNESS CALCULATION(LINUX)
 The willingness calculation for Linux, now also supports the more
 modern ACPI proc interface in addittion to APM.
 
+IPC OPTIONS
+
+Various options regarding IPC connections can now be set in the 
+configfile. The options are max connections, allowed unicast
+hosts and allowed net-ranges.
+
 CODE REWRITES
 
 Much of the message generation and net output code is rewritten.
@@ -79,13 +91,10 @@ The OS dependen network functions are now defined in net_os.h
 instead of beeing mixed up with internal network functions
 in net.h.
 
-NEW MAKEFILE (LINUX)
+NEW MAKEFILE
 
-The Linux makefile now includes automatic dependency generation 
+The common makefile now includes automatic dependency generation 
 using makedepend.
-In the Linux makefile the '-Wmissing-prototypes -Wstrict-prototypes'
-arguments has been added. All the warnings issued by gcc after
-giving these arguments have been fixed for general- and Linux-code.
 
 BUGFIXES
 
