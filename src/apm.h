@@ -24,25 +24,30 @@
 #ifndef _OLSR_APM
 #define _OLSR_APM
 
+/*
+ * Interface to OS dependent power management information
+ */
+
+#define OLSR_BATTERY_POWERED  0
+#define OLSR_AC_POWERED       1
 
 struct olsr_apm_info
 {
-  char driver_version[10];
-  int apm_version_major;
-  int apm_version_minor;
-  int apm_flags;
   int ac_line_status;
-  int battery_status;
-  int battery_flags;
   int battery_percentage;
-  int battery_time;
-  int using_minutes;
 };
 
 
 int apm_init();
 
-int apm_printinfo(struct olsr_apm_info *);
+void apm_printinfo(struct olsr_apm_info *);
+
+/* 
+ * This function should return 0 if no powerinfo
+ * is available. If returning 1 the function must
+ * fill the provided olsr_apm_info struct with
+ * the current power status.
+ */
 
 int apm_read(struct olsr_apm_info *);
 

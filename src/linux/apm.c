@@ -26,6 +26,21 @@
 
 #define APM_PROC "/proc/apm"
 
+struct linux_apm_info
+{
+  char driver_version[10];
+  int apm_version_major;
+  int apm_version_minor;
+  int apm_flags;
+  int ac_line_status;
+  int battery_status;
+  int battery_flags;
+  int battery_percentage;
+  int battery_time;
+  int using_minutes;
+};
+
+
 extern int
 olsr_printf(int, char *, ...);
 
@@ -43,39 +58,14 @@ apm_init()
   return 1;
 }
 
-int
+void
 apm_printinfo(struct olsr_apm_info *ainfo)
 {
-  olsr_printf(5, "APM info:\n\tKernel driver %s(APM BIOS %d.%d)\n\tFlags:0x%08d\n\tAC status %d\n\tBattery status %d\n\tBattery flags 0x%08x\n\tBattery percentage %d%%\n\tBattery time left: %d min\n\n",
-	      ainfo->driver_version,
-	      ainfo->apm_version_major,
-	      ainfo->apm_version_minor,
-	      ainfo->apm_flags,
+  olsr_printf(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
 	      ainfo->ac_line_status,
-	      ainfo->battery_status,
-	      ainfo->battery_flags,
-	      ainfo->battery_percentage,
-	      ainfo->battery_time);
-	 
-  if((ainfo->battery_status == 255) && (ainfo->ac_line_status))
-    {
-      olsr_printf(2, "No batterys detected\n");
-    }
-  else
-    {
-      if((ainfo->battery_status != 255) && (ainfo->ac_line_status))
-	{
-	  olsr_printf(3, "Battery powered system detected - currently running on AC power\n");
-	}
-      else
-	if(!ainfo->ac_line_status)
-	  {
-	    olsr_printf(3, "System running on batterys\n");
-	  }
-    }
+	      ainfo->battery_percentage);
 
-
-  return 0;
+  return;
 }
 
 
@@ -85,10 +75,11 @@ apm_read(struct olsr_apm_info *ainfo)
   char buffer[100];
   char units[10];
   FILE *apm_procfile;
+  struct linux_apm_info lainfo;
 
   /* Open procfile */
   if((apm_procfile = fopen(APM_PROC, "r")) == NULL)
-    return -1;
+    return 0;
 
 
   fgets(buffer, sizeof(buffer) - 1, apm_procfile);
@@ -96,13 +87,14 @@ apm_read(struct olsr_apm_info *ainfo)
     {
       /* Try re-opening the file */
       if((apm_procfile = fopen(APM_PROC, "r")) < 0)
-	return -1;
+	return 0;
       fgets(buffer, sizeof(buffer) - 1, apm_procfile);
       if(buffer == NULL)
 	{
 	  /* Giving up */
 	  fprintf(stderr, "OLSRD: Could not read APM info - setting willingness to default");
-	  return -1;
+	  fclose(apm_procfile);
+	  return 0;
 	}
     }
 
@@ -112,18 +104,18 @@ apm_read(struct olsr_apm_info *ainfo)
 
   /* Get the info */
   sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n",
-	 ainfo->driver_version,
-	 &ainfo->apm_version_major,
-	 &ainfo->apm_version_minor,
-	 &ainfo->apm_flags,
-	 &ainfo->ac_line_status,
-	 &ainfo->battery_status,
-	 &ainfo->battery_flags,
-	 &ainfo->battery_percentage,
-	 &ainfo->battery_time,
+	 lainfo.driver_version,
+	 &lainfo.apm_version_major,
+	 &lainfo.apm_version_minor,
+	 &lainfo.apm_flags,
+	 &lainfo.ac_line_status,
+	 &lainfo.battery_status,
+	 &lainfo.battery_flags,
+	 &lainfo.battery_percentage,
+	 &lainfo.battery_time,
 	 units);
 
-  ainfo->using_minutes = !strncmp(units, "min", 3) ? 1 : 0;
+  lainfo.using_minutes = !strncmp(units, "min", 3) ? 1 : 0;
 
   /*
    * Should take care of old APM type info here
@@ -132,10 +124,19 @@ apm_read(struct olsr_apm_info *ainfo)
   /*
    * Fix possible percentage error
    */
-  if(ainfo->battery_percentage > 100)
-    ainfo->battery_percentage = -1;
+  if(lainfo.battery_percentage > 100)
+    lainfo.battery_percentage = -1;
 
+  /* Fill the provided struct */
+
+  if(lainfo.ac_line_status)
+    ainfo->ac_line_status = OLSR_AC_POWERED;
+  else
+    ainfo->ac_line_status = OLSR_BATTERY_POWERED;
+  
+  ainfo->battery_percentage = lainfo.battery_percentage;
+  
   fclose(apm_procfile);
 
-  return 0;
+  return 1;
 }

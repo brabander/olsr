@@ -20,6 +20,10 @@
  *
  */
 
+/**
+ * All these functions are global
+ */
+
 #include "defs.h"
 #include "olsr.h"
 #include "link_set.h"
@@ -454,14 +458,15 @@ olsr_calculate_willingness()
   if(willingness_set)
     return my_willingness;
 
+#warning CHANGES IN THE apm INTERFACE(0.4.8)!
 
-  if(apm_read(&ainfo) < 0)
+  if(apm_read(&ainfo) < 1)
     return WILL_DEFAULT;
 
   apm_printinfo(&ainfo);
 
   /* If AC powered */
-  if(ainfo.ac_line_status)
+  if(ainfo.ac_line_status == OLSR_AC_POWERED)
     return 6;
 
   /* If battery powered 
