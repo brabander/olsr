@@ -1,7 +1,16 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.23 2005/01/14 18:20:19 kattemat Exp $
+$Id: CHANGELOG,v 1.24 2005/01/16 20:33:53 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
+
+TIMEOUT OF DATASETS
+
+Validity times for dataset entries are now set using the clock_t type
+(used to be struct timeval). This data is now fetched from the times(2)
+function instead of gettimeofday(2). This prevents possible problems
+if the system time is changed.
+PLUGIN DEVELOPERS need to note that datatypes for close to all
+dataset entries(link, neighbor, mid, hna, tc etc.) has been changed!!
 
 CONFIGURATION FILE
 
