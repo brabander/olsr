@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.11 2005/01/14 05:20:29 kattemat Exp $
+ * $Id: net.c,v 1.12 2005/01/14 05:21:10 kattemat Exp $
  */
 
 
@@ -543,11 +543,11 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 	      sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
 		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	      olsr_printf(4, "\tinet6 addr: %s\n", addr6);
-	      olsr_printf(4, "\tScope: %d", scope);
+	      olsr_printf(5, "\tinet6 addr: %s\n", addr6);
+	      olsr_printf(5, "\tScope: %d", scope);
 	      if(scope == scope_in)
 		{
-		  olsr_printf(3, "IPv6 addr:\n");
+		  olsr_printf(4, "IPv6 addr:\n");
 		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
 		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
 		  fclose(f);
