@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.31 2005/02/17 20:05:02 kattemat Exp $
+$Id: CHANGELOG,v 1.32 2005/02/19 15:26:41 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -86,6 +86,15 @@ In the above example, the LQ value of the link between the local
 interface if0 and the neighbour interface 192.168.0.1 would be
 multiplied by 0.7. All other links between the local interface if0 and
 a neighbour interface would be multiplied by 0.5.
+
+IPV6 SOCKETS
+
+The socket option IPV6_V6ONLY is now set on IPv6 sockets in linux.
+This means that olsrd will no longer receive IPv4 traffic when
+running in IPv6 mode.
+this should enable users to actually run one olsrd instance using
+IPv6 and one using IPv4 at the same time :)
+
 
 MINOR UPDATES
 
