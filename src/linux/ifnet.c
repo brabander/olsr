@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $ Id $
+ * $Id: ifnet.c,v 1.6 2004/09/21 19:08:58 kattemat Exp $
  *
  */
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $ Id $
+ * $Id: mantissa.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
  *
  */
 
