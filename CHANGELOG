@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.21 2005/01/03 19:03:24 kattemat Exp $
+$Id: CHANGELOG,v 1.22 2005/01/05 15:23:02 kattemat Exp $
 
 0.4.9 ---------------------------------------------------------------------
 
@@ -20,8 +20,10 @@ MINOR UPDATES
 
 BUGFIXES
 
-A bug in the IPv6 prefix-fromIPaddr function has been fixed. This
-bug caused HNA prefixes to always be calculated to 0.
+- A bug in the IPv6 multicast address configuration has been fixed.
+  This caused olsrd not to work with global IPv6 addresses.
+- A bug in the IPv6 prefix-fromIPaddr function has been fixed. This
+  bug caused HNA prefixes to always be calculated to 0.
 
 
 0.4.8 ---------------------------------------------------------------------
