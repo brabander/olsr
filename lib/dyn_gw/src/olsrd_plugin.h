@@ -124,7 +124,7 @@ olsr_ip_to_string(union olsr_ip_addr *);
 int (*olsr_plugin_io)(int, void *, size_t);
 
 /* Register a scheduled event */
-int (*olsr_register_scheduler_event)(void (*)(), float, float, olsr_u8_t *);
+int (*olsr_register_scheduler_event)(void (*)(), void*, float, float, olsr_u8_t *);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);

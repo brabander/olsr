@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dyn_gw.c,v 1.5 2004/11/06 12:04:38 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.6 2004/11/07 10:57:54 kattemat Exp $
  *
  */
 
@@ -59,7 +59,7 @@ olsr_plugin_init()
     }
 
   /* Register the GW check */
-  olsr_register_scheduler_event(&olsr_event, 5, 4, NULL);
+  olsr_register_scheduler_event(&olsr_event, NULL, 5, 4, NULL);
 
   return 1;
 }
@@ -98,7 +98,7 @@ plugin_io(int cmd, void *data, size_t size)
  *Scheduled event
  */
 void
-olsr_event()
+olsr_event(void *foo)
 {
   int res;
 
