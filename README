@@ -1,29 +1,127 @@
 
-olsr.org OLSR daemon 0.4.8
++====================================================================+
+| README - olsr.org OLSR daemon 0.4.8, 05.12.04                      |
++====================================================================+
 
 Andreas Tonnesen(andreto@olsr.org)
 Thomas Lopatic  (thomas@lopatic.de)
 
 http://www.olsr.org
 
-nn.11.04
+CONTENTS:
+
+I.   - GENERAL INFORMATION
+     * ABOUT
+     * GETTING HOLD OF OLSRD
+     * RELEASE NOTES
+     * RFC COMPLIANCE
+     * PLUGINS
+     * LINK QUALITY ROUTING
+     * KNOWN PROBLEMS
+     * FUTURE WORK
+
+II.  - BUILDING AND RUNNING OLSRD
+     * GENERAL INFORMATION
+     * PLUGINS
+     * GUI FRONTENDS
+
+     * LINUX
+     * WINDOWS
+     * FREEBSD
+     * OSX
+  
 
 
-1. OLSR RFC COMPLIANCE
+----------------------------------------------------------------------
+ I.   - GENERAL INFORMATION
+----------------------------------------------------------------------
 
-  Olsrd is RFC3626 compliant. Most RFC realted definitions can be found 
-  in the olsr_protocol header file.
+=========
+ * ABOUT
+=========
+
+The olsr.org OLSR daemon is an implementation of the Optimized Link State
+routing protocol. The protocol is documented in RFC3626. The website
+of olsrd is http://www.olsr.org
+Olsrd started out as part of the master thesis project for Andreas Tønnesen 
+at UniK University Graduate Center in Norway. This master thesis is now 
+finished(it is available for download at the olsrd website) but the olsrd 
+project moves on. Initially olsrd only compiled for GNU/Linux systems.
+Then Thomas Lopatic joined up with the project in aug. 04 and he has seen 
+to it that olsrd now, also compiles on MS-Windows, Mac OSX and FreeBSD.
+
+Olsrd is designed to be a modular an extendible implementation. It features
+a plugin interface, allowing for developers to extend OLDR operation without
+interfering with the core code. It also features a experimental link quality
+routing scheme, by Thomas and people at the c-base in Berlin.
+
+To ask questions or make comments, join up with the mailinglists:
+olsr-dev@olsr.org   - develpoment discussion
+olsr-users@olsr.org - usage discussion
+
+A bugtracker is also available at the sourcefige project site
+http://sourceforge.net/projects/olsrd/
+
+Olsrd source or binaries can be downloaded from olsr.org. CVS is available
+for the brave ;)
 
 
-2. EXTENTIONS
+=================
+ * RELEASE NOTES
+=================
 
-  This version also has some extentions which are part of other projects:
 
-  Plugins:
+
+==================
+ * RFC COMPLIANCE
+==================
+
+If olsrd is ran without using link-quality routing/MPR selection it is RFC3626
+compliant in that it will interoperate with other RFC3626 implementations.
+Internally there are a few things that are solved differently that proposed 
+in the RFC. Check out the "Conclusions" section of my master thesis for details.
+
+
+===========
+ * PLUGINS
+===========
+
+Olsrd supports dynamic loading of plugins(dynamially loaded libraries) for 
+functions like generation and processing of private packagetypes, setting
+olsrd configurations in run-time and much more. This design is chosen for
+amongst others, the following reasons:
+
+ * No need to change any code in the olsr daemon to add custom packages or 
+   funtionallity.
+ * Users are free to implement olsrd plugins and licence them under whatever 
+   terms they like.
+ * If you, unlike yours truly, don't love C, the plugins can be written in 
+   any language that can be compiled as a dynamic library. Linux even allows 
+   scripts!
+ * No need for people with extended OLSR versions to rely on heavy patching 
+   to maintain functionality when new olsrd versions are released.
+
+OLSR provides a default forwarding algorithm that allows for forwarding of OLSR 
+messages of unknown types. This is really neat - because it means that even if 
+only a subset of the nodes in the network actually known how to interperet 
+a certain messagetype - all nodes will forward them according to the MPR 
+pragma. A user may want to use the optimized flooding technique in OLSR to 
+broadcast certain information, routing related or not, to all nodes that knows 
+how to handle this message. Services that needs to broadcast/multicast data can 
+encapsulate data in a private OLSR messagetype using a olsrd plugin. 
+
+The design of the various entities of OLSR allows one to easily add special 
+functionality into most aspects of OLSR. One can both register functions and 
+unregister them with the socket parser, packet parser, scheduler and HNA set etc. 
+This opens up for possibilities like intercepting current operation and replacing 
+it with custiom actions.
+
+  Plugins that are part of this release(can be found in the lib/ directory):
 
   - Dynamic Internet gateway. A plugin that dynamically adds and removes Internet
     HNA transmissions based on if there exists a default gateway to Internet
-    with hopcount = 0(non OLSR gateway).
+    with hopcount = 0(non OLSR gateway). It has been extended to be able to
+    ping Intenet nodes to check for connectivity as well.
 
   - Dot draw. A plugin that produces output in the dot format representing
     the network topology.
@@ -37,92 +135,116 @@ nn.11.04
     about the powerstatus of nodes. Ment as an example plugin to get coders
     started.
 
-  Built in:
 
-  - IPC to GUI front-end. A gui front-end can connect to the daemon
-    if started with the -ipc switch or set in the configfile.
+========================
+ * LINK QUALITY ROUTING
+========================
 
+==================
+ * KNOWN PROBLEMS
+==================
 
-3. COMPILING & INSTALLING
+Thomas: something about the Vienna problems?
 
-  The makefile is updated in this version.
-  To install to a directoy different from / use INSTALL_PREFIX=targetdir
-  To use other compilers set CC=yourcompiler
-  All this can be done on the command line(or in scripts), so there should
-  not be any need to update the Makefile for different environments.
+===============
+ * FUTURE WORK
+===============
 
-  To compile:
-  'make OS=targetos'
-  Just type 'make' to see a list of available targets.
-
-  To install(you must be root):
-  'make install'
-
-  This also installs the standard configuration file((PREFIXDIR)/etc/olsrd.conf)
-  YOU MUST EDIT THIS FILE!
-
-  To clean up object files run
-  'make clean'
+As the 0.4.8 release contains huge amounts of new code, the releases up to 0.5 
+will focus much on bugfixing. If relativley serious bugs are found new releases
+will be made fixing theese issues.
+Asides from that there will be some focus on redesigning the IPC interface, and
+hopefully we will end up with a neat platform independent GUI front-end to
+work over this new IPC interface.
+IPv6 support for Windows, FreeBSD and OSX will also be an issue.
 
 
-  To compile and install the power plugin:
-  cd lib/power
-  make; make install
+----------------------------------------------------------------------
+ II.  - BUILDING AND RUNNING OLSRD
+----------------------------------------------------------------------
 
-  To compile and install the dynamic GW plugin:
-  cd lib/dyn_gw
-  make; make install
+=======================
+ * GENERAL INFORMATION
+=======================
 
-4. CONFIGURING & RUNNING:
+Olsrd is implemented in pure C with very few dependencies. The 0.4.8
+release has removed the pthread dependency making olsrd even more
+portable! Olsrd is known to run on various hardware like:
+ * x86    - your regular PC
+ * PPC    - Macintosh hardware
+ * MIPSEL - Embedded systems like the LinkSys WRT54g
+ * ARM    - Embedded systems like Compaq/HP iPaq
+A binary tarball featuring x86, MIPSEL and ARM binaries is available
+for download at olsr.org
 
-  OBS!!!!
-  Edit the configuration file to fit your needs.
+===========
+ * PLUGINS
+===========
 
-  Options in the config file can also be overridden by command line 
-  options. See the manual pages olsrd(8) and olsrd.conf(5) for details.
+All the available plugins are also implemented in C and requires gcc/libc
+to build. the dot_draw plugin compiles for Windows and GNU/Linux. the rest
+of the plugins will only compile for GNU/Linux.
+Building the plugins are just a matter of executing:
+make
+while installing requires(as root):
+make install
+To use the plugins add them to the olsrd configuration file.
 
-  To run the daemon you MUST specify which interface(s) to use either in
-  the config file or by using the -i option.
+=================
+ * GUI FRONTENDS
+=================
 
-  The binary is named 'olsrd' and is installed in (PREFIX)/usr/sbin. 
-  You must have root privelegies to run olsrd!
+A GUI front end for GNU/Linux using GTK is available in the gui/ directory.
+this implementation is really no longer supported, but it should work with
+0.4.8 except that it will not show correct configuration parameters.
 
-  To run the daemon in the background you can either start olsrd
-  with the '-d 0' switch or set DEBUG to 0 in the config file.
+Thomas: windows GUI
 
-  To use plugins add them to the configfile as explained in the file.
+=========
+ * LINUX
+=========
 
-  4.1 SOME COMMAND-LINE OPTIONS:
+To build olsrd you need to have all the regular development tools installed.
+This includes gcc, make, glibc, makedep etc.
+To install to a directoy different from /(/etc, /usr/bin) use INSTALL_PREFIX=targetdir
+To use other compilers set CC=yourcompiler
 
-  DEPRECATED
-  See the manpage for command line options.
-
-5. BUGS
-
-  Problems have been reported when running in daemon mode(DEBUG 0). If this
-  causes problems and you need to run olsrd in the background you could
-  just redirect output to /dev/null( > /dev/null)
+To build:
+ make OS=linux
+To install(as root):
+ make install
+To delete object files run:
+ make clean
 
 
-6. FRONT-END
+Before running olsrd you must edit the default configuration file /etc/olsrd.conf
+adding atleast what interfaces olsrd is to run on. Options in the config file can 
+also be overridden by command line options. See the manual pages olsrd(8) and 
+olsrd.conf(5) for details.
+The binary is named 'olsrd' and is installed in (PREFIX)/usr/sbin. 
+You must have root privelegies to run olsrd!
+To run olsrd just type:
+olsrd
 
-  These are instructions to build the Linux GTK-based GUI.
+If debuglevel is set to 0 olsrd will detatch and run in the background, if not
+it will keep running in your shell.
 
-  6.1 COMPILING
+===========
+ * WINDOWS
+===========
 
-    To compile:
-    cd linux-gui
-    make
-    The binary is put in the current directory
+Thomas:
 
-  6.2 RUNNING
+===========
+ * FREEBSD
+===========
 
-    To run simply:
-    cd bin
-    ./olsrd-gui
- 
-    REMEMBER olsrd must be started using the -ipc switch or the
-    IPC option must be set to yes to be able to use the GUI front-end
+=======
+ * OSX
+=======
 
-  6.3 BUGS
- 
+
+
+
+
+$Id: README,v 1.7 2004/12/05 16:28:27 kattemat Exp $
