@@ -36,20 +36,21 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.4 2004/11/21 10:56:29 kattemat Exp $
+ * $Id: misc.c,v 1.5 2005/03/10 07:01:48 kattemat Exp $
  */
 
 
 #include <stdio.h>
 #include <unistd.h>
 #include "misc.h"
+#include "olsr_types.h"
 
 void clear_console(void)
 {
   FILE *pipe;
   static int first_time = 1;
   static char clear_buff[100];
-  static int len = 0;
+  static olsr_u16_t len = 0;
   int c;
   int i;
 

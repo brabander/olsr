@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.21 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: parser.c,v 1.22 2005/03/10 07:01:48 kattemat Exp $
  */
 
 #include "parser.h"
@@ -78,7 +78,7 @@ olsr_init_parser()
 }
 
 void
-olsr_parser_add_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), int type, int forwarding)
+olsr_parser_add_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t type, int forwarding)
 {
   struct parse_function_entry *new_entry;
 
@@ -102,7 +102,7 @@ olsr_parser_add_function(void (*function)(union olsr_message *, struct interface
 
 
 int
-olsr_parser_remove_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), int type, int forwarding)
+olsr_parser_remove_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t type, int forwarding)
 {
   struct parse_function_entry *entry, *prev;
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.12 2005/03/04 17:01:57 kattemat Exp $
+ * $Id: apm.c,v 1.13 2005/03/10 07:01:48 kattemat Exp $
  */
 
 /*
@@ -324,7 +324,7 @@ acpi_probe()
 {
   char s1[32], s2[32];
   FILE *fd;
-  int i;
+  olsr_u16_t i;
   
 
   /* First check for AC power */
