@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.22 2005/01/22 14:30:57 tlopatic Exp $
+ * $Id: lq_route.c,v 1.23 2005/01/24 10:35:58 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -70,10 +70,23 @@ struct dijk_vertex
   olsr_bool done;
 };
 
-static int avl_comp(void *ip1, void *ip2)
+static int avl_comp_ipv6(void *ip1, void *ip2)
 {
   return memcmp(ip1, ip2, ipsize);
 }
+
+static int avl_comp_ipv4(void *ip1, void *ip2)
+{
+  if (*(unsigned int *)ip1 < *(unsigned int *)ip2)
+    return -1;
+
+  if (*(unsigned int *)ip1 == *(unsigned int *)ip2)
+    return 0;
+
+  return 1;
+}
+
+static int (*avl_comp)(void *, void *);
 
 static void add_vertex(struct avl_tree *vertex_tree, struct list *vertex_list,
                        union olsr_ip_addr *addr, float path_etx)
@@ -141,29 +154,45 @@ static void add_edge(struct avl_tree *vertex_tree, struct list *vertex_list,
 
   dvert = node->data;
 
-  // edge lookup
+  // check for existing forward edge
 
-  node = avl_find(&svert->edge_tree, dst);
+  if (avl_find(&svert->edge_tree, dst) == NULL)
+  {
+    // add forward edge
 
-  // edge already exists
+    edge = olsr_malloc(sizeof (struct dijk_vertex), "Dijkstra edge 1");
 
-  if (node != NULL)
-    return;
+    edge->tree_node.data = edge;
+    edge->tree_node.key = &dvert->addr;
 
-  // add edge
+    edge->node.data = edge;
 
-  edge = olsr_malloc(sizeof (struct dijk_vertex), "Dijkstra edge");
+    edge->dest = dvert;
+    edge->etx = etx;
 
-  edge->tree_node.data = edge;
-  edge->tree_node.key = &dvert->addr;
+    avl_insert(&svert->edge_tree, &edge->tree_node);
+    list_add_tail(&svert->edge_list, &edge->node);
+  }
 
-  edge->node.data = edge;
+  // check for existing inverse edge
 
-  edge->dest = dvert;
-  edge->etx = etx;
+  if (avl_find(&dvert->edge_tree, src) == NULL)
+  {
+    // add inverse edge
 
-  avl_insert(&svert->edge_tree, &edge->tree_node);
-  list_add_tail(&svert->edge_list, &edge->node);
+    edge = olsr_malloc(sizeof (struct dijk_vertex), "Dijkstra edge 2");
+
+    edge->tree_node.data = edge;
+    edge->tree_node.key = &svert->addr;
+
+    edge->node.data = edge;
+
+    edge->dest = svert;
+    edge->etx = etx;
+
+    avl_insert(&dvert->edge_tree, &edge->tree_node);
+    list_add_tail(&dvert->edge_list, &edge->node);
+  }
 }
 
 static void free_everything(struct list *vertex_list)
@@ -297,6 +326,12 @@ void olsr_calculate_lq_routing_table(void)
   struct hna_net *hna;
   struct rt_entry *gw_rt, *hna_rt, *head_rt;
 
+  if (ipsize == 4)
+    avl_comp = avl_comp_ipv4;
+
+  else
+    avl_comp = avl_comp_ipv6;
+
   // initialize the graph
 
   avl_init(&vertex_tree, avl_comp);
@@ -347,9 +382,6 @@ void olsr_calculate_lq_routing_table(void)
           {
             etx = 1.0 / (link->loss_link_quality * link->neigh_link_quality);
 
-            add_edge(&vertex_tree, &vertex_list, &main_addr,
-                     &neigh->neighbor_main_addr, etx);
-
             add_edge(&vertex_tree, &vertex_list, &neigh->neighbor_main_addr,
                      &main_addr, etx);
           }
@@ -366,9 +398,6 @@ void olsr_calculate_lq_routing_table(void)
             tcdst->inverse_link_quality >= MIN_LINK_QUALITY)
           {
             etx = 1.0 / (tcdst->link_quality * tcdst->inverse_link_quality);
-
-            add_edge(&vertex_tree, &vertex_list, &tcsrc->T_last_addr,
-                     &tcdst->T_dest_addr, etx);
 
             add_edge(&vertex_tree, &vertex_list, &tcdst->T_dest_addr,
                      &tcsrc->T_last_addr, etx);
