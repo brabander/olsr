@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.20 2004/12/20 21:27:47 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.21 2004/12/21 17:37:13 kattemat Exp $
  */
 
 /*
@@ -144,7 +144,7 @@ get_http_socket(int port)
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
     {
-      perror("SO_REUSEADDR failed");
+      olsr_printf(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
       close(s);
       return -1;
     }
@@ -219,7 +219,7 @@ parse_http_request(int fd)
   
   if(r < 0)
     {
-      printf("(HTTPINFO) Failed to recieve data from client!\n");
+      olsr_printf(1, "(HTTPINFO) Failed to recieve data from client!\n");
       goto close_connection;
     }
   
@@ -229,13 +229,13 @@ parse_http_request(int fd)
       /* Try without HTTP version */
       if(sscanf(req, "%10s %250s\n", req_type, filename) != 2)
 	{
-	  printf("(HTTPINFO) Error parsing request %s!\n", req);
+	  olsr_printf(1, "(HTTPINFO) Error parsing request %s!\n", req);
 	  goto close_connection;
 	}
     }
   
   
-  printf("Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
+  olsr_printf(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
 
   if(strcmp(req_type, "GET"))
     {
@@ -271,7 +271,7 @@ parse_http_request(int fd)
               size += sprintf(&body[size], http_ok_head[i]);
               i++;
           }
-      printf("\n\n");
+      olsr_printf(1, "\n\n");
       /* All is good */
 
       size += build_frame("Status", 
@@ -326,14 +326,14 @@ parse_http_request(int fd)
   r = send(client_sockets[curr_clients], req, c, 0);   
   if(r < 0)
     {
-      printf("(HTTPINFO) Failed sending data to client!\n");
+      olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
     }
 
   r = send(client_sockets[curr_clients], body, size, 0);
   if(r < 0)
     {
-      printf("(HTTPINFO) Failed sending data to client!\n");
+      olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
     }
 
@@ -410,7 +410,7 @@ build_http_header(http_header_type type,
   /* End header */
   strcat(buf, "\r\n");
   
-  printf("HEADER:\n%s", buf);
+  olsr_printf(1, "HEADER:\n%s", buf);
 
   return strlen(buf);
 
@@ -711,7 +711,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh != &neighbortable[index];
 	  neigh = neigh->next)
 	{
-	  printf("Size: %d IP: %s\n", size, olsr_ip_to_string(&neigh->neighbor_main_addr));
+	  olsr_printf(1, "Size: %d IP: %s\n", size, olsr_ip_to_string(&neigh->neighbor_main_addr));
 
 	  size += sprintf(&buf[size], 
 			  "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td>", 
