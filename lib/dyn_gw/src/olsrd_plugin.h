@@ -138,12 +138,6 @@ void (*add_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
 /* Remove hna net IPv4 */
 int (*remove_local_hna4_entry)(union olsr_ip_addr *, union hna_netmask *);
 
-/* Add a socket to the main olsrd select loop */
-void (*add_olsr_socket)(int, void(*)(int));
-
-/* Remove a socket from the main olsrd select loop */
-int (*remove_olsr_socket)(int, void(*)(int));
-
 
 /****************************************************************************
  *                             Data from olsrd                              *
@@ -169,10 +163,6 @@ struct timeval     *now;       /* the olsrds schedulers idea of current time */
 /* Initialization function */
 int
 olsr_plugin_init();
-
-/* IPC initialization function */
-int
-plugin_ipc_init();
 
 /* Destructor function */
 void

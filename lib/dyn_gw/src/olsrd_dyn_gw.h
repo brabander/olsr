@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dyn_gw.h,v 1.4 2004/11/05 23:24:40 kattemat Exp $
+ * $Id: olsrd_dyn_gw.h,v 1.5 2004/11/06 12:04:38 kattemat Exp $
  *
  */
 
@@ -49,13 +49,7 @@ olsr_timeout();
 void
 olsr_event();
 
-void
-ipc_action(int);
-
 int
 check_gw(union olsr_ip_addr *, union hna_netmask *);
-
-int
-ipc_send(char *, int);
 
 #endif

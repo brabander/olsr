@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_plugin.c,v 1.5 2004/11/06 09:19:14 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.6 2004/11/06 12:04:38 kattemat Exp $
  *
  */
 
@@ -103,6 +103,7 @@ my_fini()
 int
 register_olsr_param(char *key, char *value)
 {
+  //if(!strcmp(key, "Ip6Net"
   return 1;
 }
 
@@ -152,11 +153,6 @@ register_olsr_data(struct olsr_plugin_data *data)
       return 0;
     }
 
-  if(!plugin_ipc_init())
-    {
-      fprintf(stderr, "Could not initialize plugin IPC!\n");
-      return 0;
-    }
   return 1;
 
 }
@@ -208,21 +204,6 @@ fetch_olsrd_data()
   if(!olsr_plugin_io(GETF__REMOVE_LOCAL_HNA4_ENTRY, &remove_local_hna4_entry, sizeof(remove_local_hna4_entry)))
   {
     remove_local_hna4_entry = NULL;
-    retval = 0;
-  }
-
-
-  /* Add socket to OLSR select function */
-  if(!olsr_plugin_io(GETF__ADD_OLSR_SOCKET, &add_olsr_socket, sizeof(add_olsr_socket)))
-  {
-    add_olsr_socket = NULL;
-    retval = 0;
-  }
-
-  /* Remove socket from OLSR select function */
-  if(!olsr_plugin_io(GETF__REMOVE_OLSR_SOCKET, &remove_olsr_socket, sizeof(remove_olsr_socket)))
-  {
-    remove_olsr_socket = NULL;
     retval = 0;
   }
 

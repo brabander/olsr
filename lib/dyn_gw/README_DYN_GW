@@ -1,7 +1,12 @@
 DYNAMIC INTERNET GATEWAY PLUGIN FOR UNIK OLSRD
 by Andreas Tønnesen(andreto@olsr.org)
 
+06.11.2004
 TO BE UPDATED....
+
+- Upgraded to configm with v2 plugin interface
+- removed IPC stuff
+- Removed much unnessecarry stuff
 
 30.03.2004
 
@@ -26,11 +31,6 @@ is done every 5 seconds.
 This plugin will work very good with a automatic network cable
 detection daemon such as  netplug:
 http://freshmeat.net/projects/key-netplug/
-
-
-telet to 127.0.0.1 port 9999
-for IPC messages
-
 
 This plugin is a good example of using plugins for other stuff
 than packet transmission.

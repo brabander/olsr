@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_dyn_gw.c,v 1.4 2004/11/05 23:24:40 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.5 2004/11/06 12:04:38 kattemat Exp $
  *
  */
 
@@ -35,11 +35,6 @@
 #include <linux/in_route.h>
 #include <unistd.h>
 #include <errno.h>
-
-static int ipc_socket;
-static int ipc_open;
-static int ipc_connection;
-static int ipc_socket_up;
 
 static int has_inet_gateway;
 
@@ -63,100 +58,13 @@ olsr_plugin_init()
       olsr_printf(1, "HNA Internet gateway deleted\n");
     }
 
-
-  /* Initial IPC value */
-  ipc_open = 0;
-  ipc_socket_up = 0;
-
   /* Register the GW check */
   olsr_register_scheduler_event(&olsr_event, 5, 4, NULL);
 
   return 1;
 }
 
-int
-plugin_ipc_init()
-{
-  struct sockaddr_in sin;
-  int on = 1;
 
-  /* Init ipc socket */
-  if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
-    {
-      olsr_printf(1, "(DYN GW)IPC socket %s\n", strerror(errno));
-      return 0;
-    }
-  else
-    {
-      /* Bind the socket */
-      
-      /* complete the socket structure */
-      memset(&sin, 0, sizeof(sin));
-      sin.sin_family = AF_INET;
-      sin.sin_addr.s_addr = INADDR_ANY;
-      sin.sin_port = htons(9999);
-
-      /* Set reuse */
-      if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) < 0)
-	{
-	  olsr_printf(1, "(DYN GW)SETSOCKOPT %s\n", strerror(errno));
-	  return 0;
-	}
-
-      /* bind the socket to the port number */
-      if (bind(ipc_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
-	{
-	  olsr_printf(1, "(DYN GW)IPC bind %s\n", strerror(errno));
-	  return 0;
-	}
-      
-      /* show that we are willing to listen */
-      if (listen(ipc_socket, 1) == -1) 
-	{
-	  olsr_printf(1, "(DYN GW)IPC listen %s\n", strerror(errno));
-	  return 0;
-	}
-
-
-      /* Register with olsrd */
-      add_olsr_socket(ipc_socket, &ipc_action);
-      ipc_socket_up = 1;
-    }
-
-  return 1;
-}
-
-void
-ipc_action(int fd)
-{
-  struct sockaddr_in pin;
-  socklen_t addrlen;
-  char *addr;  
-
-  addrlen = sizeof(struct sockaddr_in);
-
-  if ((ipc_connection = accept(ipc_socket, (struct sockaddr *)  &pin, &addrlen)) == -1)
-    {
-      olsr_printf(1, "(DYN GW)IPC accept: %s\n", strerror(errno));
-      exit(1);
-    }
-  else
-    {
-      addr = inet_ntoa(pin.sin_addr);
-      if(ntohl(pin.sin_addr.s_addr) != INADDR_LOOPBACK)
-	{
-	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	  close(ipc_connection);
-	  return;
-	}
-      else
-	{
-	  ipc_open = 1;
-	  olsr_printf(1, "(DYN GW)IPC: Connection from %s\n",addr);
-	}
-    }
-
-}
 
 /*
  * destructor - called at unload
@@ -164,8 +72,7 @@ ipc_action(int fd)
 void
 olsr_plugin_exit()
 {
-  if(ipc_open)
-    close(ipc_socket);
+
 }
 
 
@@ -199,7 +106,7 @@ olsr_event()
 
   if((res == 1) && (has_inet_gateway == 0))
     {
-      ipc_send("Adding OLSR local HNA entry for Internet\n", strlen("Adding OLSR local HNA entry for Internet\n"));
+      olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
       add_local_hna4_entry(&gw_net, &gw_netmask);
       has_inet_gateway = 1;
     }
@@ -210,38 +117,15 @@ olsr_event()
 	  /* Remove all local Inet HNA entries */
 	  while(remove_local_hna4_entry(&gw_net, &gw_netmask))
 	    {
-	      ipc_send("Removing OLSR local HNA entry for Internet\n", strlen("Removing OLSR local HNA entry for Internet\n"));
+	      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
 	    }
 	  has_inet_gateway = 0;
 	}
     }
 
-  if(!ipc_socket_up)
-    plugin_ipc_init();
-
 }
 
 
-
-
-
-
-int
-ipc_send(char *data, int size)
-{
-  if(!ipc_open)
-    return 0;
-
-  if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 
-    {
-      olsr_printf(1, "(DYN GW)IPC connection lost!\n");
-      close(ipc_connection);
-      ipc_open = 0;
-      return -1;
-    }
-
-  return 1;
-}
 
 
 int
@@ -258,7 +142,7 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
     if (!fp) 
       {
         perror(PROCENTRY_ROUTE);
-        ipc_send("INET (IPv4) not configured in this system.\n", strlen("INET (IPv4) not configured in this system.\n"));
+        olsr_printf(1, "INET (IPv4) not configured in this system.\n");
 	return -1;
       }
     
@@ -295,8 +179,7 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
 	   (netmask == mask->v4) && 
 	   (dest_addr == net->v4))
 	  {
-	    sprintf(buff, "INTERNET GATEWAY VIA %s detected.\n", iface);
-	    ipc_send(buff, strlen(buff));
+	    olsr_printf(1, "INTERNET GATEWAY VIA %s detected.\n", iface);
 	    retval = 1;
 	  }
 
@@ -306,7 +189,7 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask)
   
     if(retval == 0)
       {
-	ipc_send("No Internet GWs detected...\n", strlen("No Internet GWs detected...\n"));
+	olsr_printf(1, "No Internet GWs detected...\n");
       }
   
     return retval;
