@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.23 2004/11/20 22:37:40 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.24 2004/11/20 22:51:23 tlopatic Exp $
  *
  */
 
@@ -118,7 +118,7 @@ main(int argc, char *argv[])
 #endif
 
 struct olsrd_config *
-olsrd_parse_cnf(char *filename)
+olsrd_parse_cnf(const char *filename)
 {
   struct olsr_if *in;
 
@@ -465,7 +465,7 @@ get_default_if_config()
 
 
 int
-olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
+olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 {
   struct hna4_entry        *h4 = cnf->hna4_entries;
   struct hna6_entry        *h6 = cnf->hna6_entries;

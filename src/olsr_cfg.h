@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr_cfg.h,v 1.13 2004/11/20 21:42:35 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.14 2004/11/20 22:51:23 tlopatic Exp $
  *
  */
 
@@ -202,13 +202,16 @@ struct olsrd_config
   olsr_u16_t               ifcnt;
 };
 
+#if defined __cplusplus
+extern "C" {
+#endif
 
 /*
  * Interface to parser
  */
 
 struct olsrd_config *
-olsrd_parse_cnf(char *);
+olsrd_parse_cnf(const char *);
 
 int
 olsrd_sanity_check_cnf(struct olsrd_config *);
@@ -220,7 +223,7 @@ void
 olsrd_print_cnf(struct olsrd_config *);
 
 int
-olsrd_write_cnf(struct olsrd_config *, char *);
+olsrd_write_cnf(struct olsrd_config *, const char *);
 
 struct if_config_options *
 get_default_if_config(void);
@@ -233,5 +236,9 @@ olsrd_cnf_malloc(unsigned int);
 
 void
 olsrd_cnf_free(void *);
+
+#if defined __cplusplus
+}
+#endif
 
 #endif
