@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.11 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: apm.c,v 1.12 2005/03/04 17:01:57 kattemat Exp $
  */
 
 /*
@@ -49,8 +49,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#warning ACPI code not tested!!!!
 
 /* APM related stuff */
 
