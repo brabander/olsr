@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.21 2005/01/02 14:10:48 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.22 2005/01/02 14:21:11 kattemat Exp $
  */
 
 /*
@@ -73,7 +73,7 @@ static const char *httpinfo_css[] =
   "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n",
   "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n",
   "#hdr\n{\nfont-size: 14px;\ntext-align: center;\n\nline-height: 16px;\n",
-  "text-decoration: none;\nborder-top: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n",
+  "text-decoration: none;\nborder: 1px solid #ccc;\n",
   "margin: 5px;\nbackground: #ececec;\n}\n",
   "#container\n{\nwidth: 500px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n",
   "#tabnav\n{\nheight: 20px;\nmargin: 0;\npadding-left: 10px;\n",
