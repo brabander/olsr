@@ -1,9 +1,9 @@
 CC ?= gcc
 
-CFLAGS ?= -Wall -O2 #-g #-pg -DDEBUG #-march=i686
+CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g #-pg -DDEBUG #-march=i686
 LIBS = -lpthread -lm -ldl
 INSTALL_PREFIX ?=
-
+STRIP ?= strip
 
 # Keep OS specific files last
 
@@ -76,6 +76,7 @@ install_libs:
 
 
 install_bin:
+	$(STRIP) bin/olsrd
 	install -D -m 755 bin/olsrd $(INSTALL_PREFIX)/usr/sbin/olsrd
 
 install: install_bin
