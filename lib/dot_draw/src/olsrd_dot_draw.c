@@ -63,6 +63,7 @@ int
 plugin_ipc_init()
 {
   struct sockaddr_in sin;
+  olsr_u32_t yes = 1;
 
   /* Init ipc socket */
   if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
@@ -72,6 +73,12 @@ plugin_ipc_init()
     }
   else
     {
+    if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) 
+      {
+	perror("SO_REUSEADDR failed");
+	return 0;
+      }
+
       /* Bind the socket */
       
       /* complete the socket structure */
