@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.44 2005/02/12 10:59:38 kattemat Exp $
+ * $Id: link_set.c,v 1.45 2005/02/12 11:26:21 kattemat Exp $
  */
 
 
@@ -302,7 +302,6 @@ struct interface *
 get_interface_link_set(union olsr_ip_addr *remote)
 {
   struct link_entry *tmp_link_set;
-  union olsr_ip_addr *remote_addr;
   struct interface *if_to_use, *backup_if;
   float link_quality, backup_link_quality;
 
@@ -318,12 +317,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
       return NULL;
     }
 
-  /* Check for main address of address */
-  if((remote_addr = mid_lookup_main_addr(remote)) == NULL)
-    remote_addr = remote;
 
   tmp_link_set = link_set;
-  
   while(tmp_link_set)
     {
       struct interface *tmp_if;
@@ -331,10 +326,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
       //printf("Checking %s vs ", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr));
       //printf("%s\n", olsr_ip_to_string(addr));
       
-      if(COMP_IP(remote_addr, &tmp_link_set->neighbor->neighbor_main_addr) ||
-	 COMP_IP(remote_addr, &tmp_link_set->neighbor_iface_addr))
+      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr))
 	{
-
 	  tmp_if = if_ifwithaddr(&tmp_link_set->local_iface_addr);
 
 	  /* Must be symmetric link! */
@@ -346,7 +339,6 @@ get_interface_link_set(union olsr_ip_addr *remote)
                       if_to_use->int_metric > tmp_if->int_metric)
                     if_to_use = tmp_if;
                 }
-
               else
                 {
                   curr = tmp_link_set->loss_link_quality *
@@ -386,6 +378,8 @@ get_interface_link_set(union olsr_ip_addr *remote)
       
       tmp_link_set = tmp_link_set->next;
     }
+
+
   
   /* Not found */
   if(if_to_use == NULL)
