@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.7 2004/09/22 20:57:50 kattemat Exp $
+ * $Id: ifnet.c,v 1.8 2004/09/23 16:13:54 kattemat Exp $
  *
  */
 
@@ -417,6 +417,11 @@ chk_if_changed(struct if_name *iface)
       /* Update outputbuffer if needed */
       if(net_get_maxmsgsize() > (smallest_mtu  - OLSR_HEADERSIZE - UDP_IP_HDRSIZE))
 	net_set_maxmsgsize(smallest_mtu - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
+    }
+  else
+    {
+      /* set default if there are no more interfaces */
+      net_set_maxmsgsize(MAXMESSAGESIZE - OLSR_HEADERSIZE - UDP_IP_HDRSIZE);
     }
 
   /* Check main addr */
