@@ -1,0 +1,33 @@
+NAMESERVICE PLUGIN FOR OLSRD
+by Bruno Randolf <bruno.randolf@4g-systems.biz>
+
+a simple DNS replacement for OLSR networks
+
+this plugin distributes host name information over OLSR
+and writes a file in /etc/hosts format. this file can be 
+used to resolve hostnames on the local system and/or be
+read by a DNS server like "dnsmasq", to make the names 
+available via ordinary DNS to other clients as well.
+
+the default location of the hosts file is
+/var/run/hosts_olsr 
+
+PLUGIN PARAMETERS
+
+"name"		the name of the OLSR node
+
+"filename"	which file to write to 
+		(default: /var/run/hosts_olsr)
+
+
+SAMPLE CONFIG
+
+activate in /etc/olsrd.conf:
+
+LoadPlugin "olsrd_nameservice.so.0.1"
+{
+	PlParam "name" "thisismyname.mesh"
+	# optional:
+        #PlParam "filename" "/etc/hosts_olsr"
+}
+		
