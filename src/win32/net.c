@@ -21,7 +21,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: net.c,v 1.9 2004/11/18 21:12:29 tlopatic Exp $
+ * $Id: net.c,v 1.10 2004/11/21 00:25:17 tlopatic Exp $
  *
  */
 
@@ -255,11 +255,12 @@ void DisableIcmpRedirects(void)
 
   Res = SetEnableRedirKey(0);
 
-  if (Res == 0)
+  if (Res != 1)
     return;
 
   fprintf(stderr, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
 
+#if 0
   if (Res < 0)
   {
     fprintf(stderr, "Cannot disable ICMP redirect processing in the registry.\n");
@@ -268,6 +269,7 @@ void DisableIcmpRedirects(void)
 
     return;
   }
+#endif
 
   fprintf(stderr, "I have disabled ICMP redirect processing in the registry for you.\n");
   fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
