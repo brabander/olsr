@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.1 2005/01/16 13:06:00 kattemat Exp $ */
+/* $Id: nameservice.h,v 1.2 2005/03/01 20:16:56 tlopatic Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -88,7 +88,7 @@ get_namemsg(struct namemsg *);
 int
 read_namemsg(struct namemsg *, struct name_entry *);
 
-int
+void
 update_name_entry(union olsr_ip_addr *, struct namemsg *, double);
 
 void

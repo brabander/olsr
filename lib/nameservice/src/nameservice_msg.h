@@ -4,6 +4,7 @@
 struct namemsg
 {
   olsr_u8_t name_len;   	// length of the following name filed
+  olsr_u8_t pad[3];             // added by the compiler anyway
 };
 
 /*

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.2 2005/01/21 06:26:04 kattemat Exp $ */
+/* $Id: nameservice.c,v 1.3 2005/03/01 20:16:56 tlopatic Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -53,7 +53,8 @@ olsr_u8_t name_table_changed=0;
 
 char* my_name = "";
 olsr_u8_t my_name_len = 0;
-char* my_filename = "/var/run/hosts_olsr";
+static char my_filename_buff[MAX_FILE + 1];
+char* my_filename = my_filename_buff;
 
 
 /**
@@ -63,6 +64,10 @@ int
 olsr_plugin_init()
 {
 	int i;
+#ifdef WIN32
+	int len;
+#endif
+
 	/* Init list */
 	for(i = 0; i < HASHSIZE; i++)
 	{
@@ -74,6 +79,19 @@ olsr_plugin_init()
 	olsr_parser_add_function(&olsr_parser, PARSER_TYPE, 1);
 	olsr_register_timeout_function(&olsr_timeout);
 	olsr_register_scheduler_event(&olsr_event, NULL, EMISSION_INTERVAL, 0, NULL);
+
+#ifdef WIN32
+	GetWindowsDirectory(my_filename_buff, MAX_FILE - 12);
+
+	len = strlen(my_filename_buff);
+
+	if (my_filename_buff[len - 1] != '\\')
+		my_filename_buff[len++] = '\\';
+
+	strcpy(my_filename_buff + len, "olsrd.hosts");
+#else
+	strcpy(my_filename_buff, "/var/run/hosts_olsr");
+#endif
 
 	return 1;
 }
@@ -195,17 +213,21 @@ olsr_event(void *foo)
 			message->v6.olsr_msgsize = htons(namesize);
 		}
 	
-		if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
+		if (net_outbuffer_push(ifn, buffer, namesize) != namesize)
+		{
 			/* Send data and try again */
 			net_output(ifn);
-			if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
+			if (net_outbuffer_push(ifn, buffer, namesize) !=
+				namesize)
+			{
 				olsr_printf(1, "NAME PLUGIN: could not send on interface: %s\n", ifn->int_name);
 			}
 		}
 	}
+
 	olsr_printf(3, "\n");
+
 	write_name_table();
-	return;
 }
 
 
@@ -279,10 +301,25 @@ forward:
 int
 get_namemsg(struct namemsg *msg)
 {
+	int i;
+	char *txt;
+
 	msg->name_len = my_name_len;
-	char* txt = (char*)(msg + sizeof(struct namemsg));
-	strncpy(txt, my_name, my_name_len); 
-	return my_name_len;
+
+	msg->pad[0] = 0;
+	msg->pad[1] = 0;
+	msg->pad[2] = 0;
+
+	// msg + 1 == &msg[1]
+
+	txt = (char *)(msg + 1);
+
+	memcpy(txt, my_name, my_name_len); 
+
+	for (i = my_name_len; (i & 3) != 0; i++)
+		txt[i] = 0;
+
+	return i;
 }
 
 
@@ -294,16 +331,28 @@ get_namemsg(struct namemsg *msg)
 int
 read_namemsg(struct namemsg *msg, struct name_entry *to)
 {
-	char* txt = (char*)(msg + sizeof(struct namemsg));
-	if (to->name == NULL || strncmp(to->name, txt, MAX_NAME) != 0) {
-		if (to->name != NULL) {
-			free( to->name );
-		}
-		to->name = olsr_malloc(msg->name_len+1, "new name_entry name");
-		strncpy(to->name, txt, msg->name_len);
+	char *txt;
+
+	// msg + 1 == &msg[1]
+
+ 	txt = (char*)(msg + 1);
+
+	if (to->name == NULL || 
+		strlen(to->name) != msg->name_len ||
+		memcmp(to->name, txt, msg->name_len) != 0)
+	{
+		if (to->name != NULL)
+			free(to->name);
+
+		to->name = olsr_malloc(msg->name_len + 1,
+			"new name_entry name");
+
+		memcpy(to->name, txt, msg->name_len);
 		to->name[msg->name_len] = '\0';
+
 		return 1;
 	}
+
 	return 0;	
 }
 
@@ -311,7 +360,7 @@ read_namemsg(struct namemsg *msg, struct name_entry *to)
 /**
  * Update or register a new name entry
  */
-int
+void
 update_name_entry(union olsr_ip_addr *originator, struct namemsg *message, double vtime)
 {
 	int hash;
@@ -319,35 +368,39 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *message, doubl
 	
 	hash = olsr_hashing(originator);
 	
-	/* Check for the entry */
-	for(entry = list[hash].next; entry != &list[hash]; entry = entry->next)
+	// entry lookup
+
+	for (entry = list[hash].next; entry != &list[hash]; entry = entry->next)
+		if (memcmp(originator, &entry->originator, ipsize) == 0)
+			break;
+
+	// no entry found
+
+	if (entry == &list[hash])
 	{
-		if(memcmp(originator, &entry->originator, ipsize) == 0) {
-			if (read_namemsg( message, entry )) {
-				name_table_changed = 1;
-			}
-			olsr_get_timestamp(vtime * 1000, &entry->timer);
-			return 0;
-		}
+		entry = olsr_malloc(sizeof(struct name_entry), "new name_entry");
+		entry->name = NULL;
+		memcpy(&entry->originator, originator, ipsize);
+
+		entry->next = list[hash].next->prev;
+		entry->prev = &list[hash];
+
+		list[hash].next->prev = entry;
+		list[hash].next = entry;
 	}
 
-	entry = olsr_malloc(sizeof(struct name_entry), "new name_entry");
-	entry->name = NULL;
-	memcpy(&entry->originator, originator, ipsize);
+	// update entry's timestamp
+
 	olsr_get_timestamp(vtime * 1000, &entry->timer);
-	
-	read_namemsg( message, entry );
 
-	olsr_printf(2, "NAME PLUGIN: New entry %s: %s\n", olsr_ip_to_string(originator), entry->name);
-		
-	/* Queue */
-	entry->next = list[hash].next->prev;
-	entry->prev = &list[hash];
-	list[hash].next->prev = entry;
-	list[hash].next = entry;
+	// insert name into entry
 
-	name_table_changed = 1;
-	return 1;
+	if (read_namemsg(message, entry))
+	{
+		name_table_changed = 1;
+
+		olsr_printf(2, "NAME PLUGIN: Changed entry %s: %s\n", olsr_ip_to_string(originator), entry->name);
+	}
 }
 
 
@@ -359,15 +412,17 @@ write_name_table()
 {
 	int hash;
 	struct name_entry *entry;
-	char buf[MAX_NAME+17];
 	FILE* hosts;
 
-	olsr_printf(2, "NAME PLUGIN: writing hosts file\n");
-	
 	if(!name_table_changed)
 		return;
 	      
+	olsr_printf(2, "NAME PLUGIN: writing hosts file %s\n", my_filename);
+	
 	hosts = fopen( my_filename, "w" );
+
+	if (hosts == NULL)
+		return;
 	
 	fprintf(hosts, "# this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "# do not edit\n");
@@ -377,12 +432,10 @@ write_name_table()
 	for(hash = 0; hash < HASHSIZE; hash++) 
 	{
 		for(entry = list[hash].next; entry != &list[hash]; entry = entry->next) 
-		{
-			sprintf(buf, "%s\t%s\n", olsr_ip_to_string(&entry->originator), entry->name);
-			fprintf(hosts, "%s", buf);
-		}
+			fprintf(hosts, "%s\t%s\n", olsr_ip_to_string(&entry->originator), entry->name);
 	}
 	
 	fclose(hosts);
+
 	name_table_changed = 0;
 }

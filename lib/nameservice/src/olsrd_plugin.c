@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.5 2005/02/25 22:43:21 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.6 2005/03/01 20:16:56 tlopatic Exp $ */
 
 
 /*
@@ -46,36 +46,11 @@
 int
 register_olsr_param(char *, char *);
 
-#ifdef WIN32
-
-static char *inet_ntop4(const unsigned char *src, char *dst, int size)
-{
-  static const char fmt[] = "%u.%u.%u.%u";
-  char tmp[sizeof "255.255.255.255"];
-
-  if (sprintf(tmp, fmt, src[0], src[1], src[2], src[3]) > size)
-    return (NULL);
-
-  return strcpy(dst, tmp);
-}
-
-char *inet_ntop(int af, void *src, char *dst, int size)
-{
-  switch (af)
-  {
-  case AF_INET:
-    return (inet_ntop4(src, dst, size));
-
-  default:
-    return (NULL);
-  }
-}
-
-#endif
-
 #ifndef linux
 
 #include <stdlib.h>
+
+char *strndup(const char *ptr, size_t size);
 
 /* strndup() is a GNU extention */
 char *
@@ -95,7 +70,7 @@ strndup(const char *ptr, size_t size)
   if(!ret)
     return NULL;
 
-  strncpy(ret, ptr, len);
+  memcpy(ret, ptr, len);
   ret[len] = '\0';
 
   return ret;
