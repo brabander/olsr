@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.41 2005/02/28 09:52:13 kattemat Exp $
+ * $Id: defs.h,v 1.42 2005/02/28 18:08:54 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -69,7 +69,8 @@
 
 #define	HOPCNT_MAX		32	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
-#define UDP_IP_HDRSIZE          28
+#define UDP_IPV4_HDRSIZE        28
+#define UDP_IPV6_HDRSIZE        48
 #define MAX_IFS                 16
 
 /* Debug helper macro */

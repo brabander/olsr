@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.20 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: ifnet.c,v 1.21 2005/02/28 18:08:57 kattemat Exp $
  */
 
 
@@ -214,6 +214,7 @@ chk_if_changed(struct olsr_if *iface)
     ifp->int_mtu = 0;
   else
     {
+      ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
       if(ifp->int_mtu != ifr.ifr_mtu)
 	{
 	  ifp->int_mtu = ifr.ifr_mtu;
@@ -659,10 +660,12 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   else
     ifs.int_mtu = ifr.ifr_mtu;
 
+  ifs.int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+
   /* Set up buffer */
   net_add_buffer(&ifs);
 	       
-  OLSR_PRINTF(1, "\tMTU: %d\n", ifs.int_mtu)
+  OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifs.int_mtu)
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
   OLSR_PRINTF(1, "\tIndex %d\n", ifs.if_nr)
