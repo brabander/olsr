@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.16 2005/01/17 17:19:55 tlopatic Exp $
+ * $Id: olsr.h,v 1.17 2005/01/22 14:44:45 tlopatic Exp $
  */
 
 
@@ -73,7 +73,7 @@ olsr_u16_t message_seqno;
         now_times + ((s1) / system_tick_divider)
 
 #define TIMED_OUT(s1) \
-        ((s1) - now_times < 0)
+        ((int)((s1) - now_times) < 0)
 
 
 /*
