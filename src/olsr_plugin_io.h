@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_plugin_io.h,v 1.14 2004/12/18 00:19:31 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.15 2004/12/19 17:14:02 kattemat Exp $
  */
 
 
@@ -59,6 +59,7 @@
  *                 GETF__NET_OUTBUFFER_PUSH_RESERVED added
  *                 - Andreas
  *         0.4.9 : GETD__LINK_SET added
+ *                 GETF__OLSR_LOOKUP_MPRS_SET added
  *                 - Andreas
  */
 
@@ -140,5 +141,6 @@
 #define GETF__NET_OUTBUFFER_PUSH                   532
 #define GETF__NET_RESERVE_BUFSPACE                 533
 #define GETF__NET_OUTBUFFER_PUSH_RESERVED          534
+#define GETF__OLSR_LOOKUP_MPRS_SET                 535
 
 #endif

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.15 2004/12/18 00:19:32 kattemat Exp $
+ * $Id: plugin.c,v 1.16 2004/12/19 17:14:03 kattemat Exp $
  */
 
 
@@ -59,6 +59,7 @@
 #include "apm.h"
 #include "routing_table.h"
 #include "mid_set.h"
+#include "mpr_selector_set.h"
 
 int
 olsr_plugin_io(int, void *, size_t);
@@ -266,6 +267,11 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       break;
     case(GETF__NET_OUTBUFFER_PUSH_RESERVED):
       ptr = &net_outbuffer_push_reserved;
+      memcpy(data, &ptr, size);
+      break;
+
+    case(GETF__OLSR_LOOKUP_MPRS_SET):
+      ptr = &olsr_lookup_mprs_set;
       memcpy(data, &ptr, size);
       break;
 
