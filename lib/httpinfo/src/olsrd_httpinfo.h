@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.8 2004/12/17 15:38:45 kattemat Exp $
+ * $Id: olsrd_httpinfo.h,v 1.9 2004/12/17 17:38:08 kattemat Exp $
  */
 
 /*
@@ -72,7 +72,7 @@ static const char *http_ok_head[] =
     "<!--\n",
     "A {text-decoration: none}\n",
     "TH{text-align: left}\n",
-    "H1, H2, H3, TD, TH, B {font-family: Helvetica}\n",
+    "H1, H2, H3, TD, TH, B {font-family: Helvetica; font-size: 80%}\n",
     "-->\n",
     "</STYLE>\n\n",
     "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#0000000\">\n",
@@ -150,13 +150,11 @@ static const char *http_ok_tail[] =
 static const char *http_frame[] =
 {
   "<P>\n<TABLE WIDTH=800 CELLSPACING=0 CELLPADDING=3 BORDER=1 ALIGN=center>\n",
-  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left><B>%s</B></TH>\n",
+  "<TR BGCOLOR=\"#E0E0FF\">\n<TH ALIGN=left>%s</TH>\n",
   "</TR><TR BGCOLOR=\"#ECECEC\">\n",
   "<TD>\n",
   "<P>\n",
-  "<pre>\n",
   "<!-- BODY -->",
-  "</pre>\n",
   "</TD>\n",
   "</TR>\n",
   "</TABLE>\n",

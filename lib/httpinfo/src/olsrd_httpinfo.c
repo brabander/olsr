@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.8 2004/12/17 15:18:07 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.9 2004/12/17 17:38:07 kattemat Exp $
  */
 
 /*
@@ -412,8 +412,15 @@ build_status_body(char *buf, olsr_u32_t bufsize)
 
     time(&currtime);
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", gmtime(&currtime));
+
+    size += sprintf(&buf[size], "<table width=790 border=0>\n<tr>");
     
-    size += sprintf(&buf[size], systime);
+    size += sprintf(&buf[size], "<td>%s</td>\n", systime);
+    size += sprintf(&buf[size], "<td>IP version: </td>\n");
+    size += sprintf(&buf[size], "<td>Debug level: </td></tr>\n");
+    size += sprintf(&buf[size], "</tr></table>\n");
+
+    size += sprintf(&buf[size], "Interfaces:<br>\n");
 
     return size;
 }
@@ -425,16 +432,15 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
-  int size = 0, index;
+  int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "Links\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
 
   size += sprintf(&buf[size], "</table><hr>\n");
 
   size += sprintf(&buf[size], "Neighbors\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th></tr>\n");
-
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -442,22 +448,28 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh != &neighbortable[index];
 	  neigh = neigh->next)
 	{
+	  printf("Size: %d IP: %s\n", size, olsr_ip_to_string(&neigh->neighbor_main_addr));
 
-            size += sprintf(&buf[size], 
-                            "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", 
-                            olsr_ip_to_string(&neigh->neighbor_main_addr),
-                            (neigh->status == SYM) ? "YES " : "NO  ",
-                            neigh->is_mpr ? "YES " : "NO  ", 
-                            "ToDo",
-                            neigh->willingness);
-            
-            for(list_2 = neigh->neighbor_2_list.next;
-                list_2 != &neigh->neighbor_2_list;
-                list_2 = list_2->next)
-                {
-                    //size += sprintf(&buf[size], "\t-> %s\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+	  size += sprintf(&buf[size], 
+			  "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td>", 
+			  olsr_ip_to_string(&neigh->neighbor_main_addr),
+			  (neigh->status == SYM) ? "YES" : "NO",
+			  neigh->is_mpr ? "YES" : "NO",
+			  "ToDo",
+			  neigh->willingness);
+
+	  size += sprintf(&buf[size], "<td><select>\n");
+	  thop_cnt = 0;
+
+	  for(list_2 = neigh->neighbor_2_list.next;
+	      list_2 != &neigh->neighbor_2_list;
+	      list_2 = list_2->next)
+	    {
+	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+	      thop_cnt ++;
                 }
-	      
+	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", thop_cnt);
+
 	}
     }
 
@@ -477,7 +489,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Source IP addr</th><th>Dest IP addr</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
 
 
   /* Topology */  
@@ -491,11 +503,12 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-                size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td></td><td></td></tr>\n", 
-                                olsr_ip_to_string(&entry->T_last_addr), 
-                                olsr_ip_to_string(&dst_entry->T_dest_addr),
-                                dst_entry->link_quality,
-                                dst_entry->inverse_link_quality);
+	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%0.2f</td></tr>\n", 
+			      olsr_ip_to_string(&entry->T_last_addr), 
+			      olsr_ip_to_string(&dst_entry->T_dest_addr),
+			      dst_entry->link_quality,
+			      dst_entry->inverse_link_quality,
+			      (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
 
 	      dst_entry = dst_entry->next;
 	    }
@@ -522,7 +535,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
   size = 0;
 
   size += sprintf(&buf[size], "Remote HNA entries\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -536,7 +549,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td></td>%s</tr>\n", 
+	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n", 
                               olsr_ip_to_string(&tmp_net->A_network_addr),
                               olsr_netmask_to_string(&tmp_net->A_netmask),
                               olsr_ip_to_string(&tmp_hna->A_gateway_addr));
@@ -550,7 +563,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "</table><hr>\n");
   size += sprintf(&buf[size], "Local(announced) HNA entries\n");
-  size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+  size += sprintf(&buf[size], "<hr><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
   size += sprintf(&buf[size], "</table><hr>\n");
 
 
@@ -565,7 +578,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "<table width=100% BORDER=0 CELLSPACING=2 CELLPADDING=0 ALIGN=center><tr><td>Registered MID entries</td><td>Local(announced) MID entries</td></tr>\n");
   size += sprintf(&buf[size], "<tr><td><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Alias</th></tr>\n");
-  size += sprintf(&buf[size], "</table></th>\n");
+  size += sprintf(&buf[size], "</table></td>\n");
   size += sprintf(&buf[size], "<th><table width=100% BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Interface</th><th>IP</th></tr>\n");
   size += sprintf(&buf[size], "</table></td></tr>\n");
   size += sprintf(&buf[size], "</table><hr>\n");
