@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.9 2005/01/30 18:44:46 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.10 2005/01/30 19:00:32 kattemat Exp $
  */
 
 
@@ -57,6 +57,10 @@
 #include <openssl/sha.h>
 //#include <openssl/evp.h>
 
+#ifdef WIN32
+#undef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 
 /**
  *Do initialization here

@@ -33,7 +33,18 @@ INSTALL_LIB = install -m 755 $(NAME) $(LIBDIR)/$(NAME);\
 
 all:	plugin
 else
+ifeq ($(OS), win32)
+NAME ?= olsrd_secure.dll
+MYFLAGS ?= -g -fPIC -DWIN32 -mno-cygwin -I../../src/win32 -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS ?= -O2
+CFLAGS += $(MYFLAGS)
+LDFLAGS ?= -mno-cygwin -shared
+LIBS ?= -lws2_32 -lssl -lcrypto
+INSTALL_LIB = 	cp $(NAME) ../..
+all: plugin
+else
 all: 	help
+endif
 endif
 endif
 
