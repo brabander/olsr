@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.c,v 1.13 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: olsr.c,v 1.14 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -320,7 +320,7 @@ olsr_forward_message(union olsr_message *m,
 
 
   /* Treat TTL hopcnt */
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       m->v4.hopcnt++;
@@ -406,23 +406,23 @@ set_buffer_timer(struct interface *ifn)
 void
 olsr_init_willingness()
 {
-  if(!willingness_set)
-    olsr_register_scheduler_event(&olsr_update_willingness, will_int, will_int, NULL);
+  if(olsr_cnf->willingness_auto)
+    olsr_register_scheduler_event(&olsr_update_willingness, NULL, will_int, will_int, NULL);
 }
 
 void
-olsr_update_willingness()
+olsr_update_willingness(void *foo)
 {
   int tmp_will;
 
-  tmp_will = my_willingness;
+  tmp_will = olsr_cnf->willingness;
 
   /* Re-calculate willingness */
-  my_willingness = olsr_calculate_willingness();
+  olsr_cnf->willingness = olsr_calculate_willingness();
 
-  if(tmp_will != my_willingness)
+  if(tmp_will != olsr_cnf->willingness)
     {
-      olsr_printf(1, "Local willingness updated: old %d new %d\n", tmp_will, my_willingness);
+      olsr_printf(1, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
     }
 }
 
@@ -441,8 +441,8 @@ olsr_calculate_willingness()
   struct olsr_apm_info ainfo;
 
   /* If fixed willingness */
-  if(willingness_set)
-    return my_willingness;
+  if(!olsr_cnf->willingness_auto)
+    return olsr_cnf->willingness;
 
 #warning CHANGES IN THE apm INTERFACE(0.4.8)!
 
@@ -522,7 +522,7 @@ olsr_printf(int loglevel, char *format, ...)
 
   va_start(arglist, format);
 
-  if(loglevel <= debug_level)
+  if(loglevel <= olsr_cnf->debug_level)
     {
       vprintf(format, arglist);
     }

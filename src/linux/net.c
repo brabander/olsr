@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.7 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: net.c,v 1.8 2004/10/18 13:13:38 kattemat Exp $
  *
  */
 
@@ -500,3 +500,47 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
   return (sock);
 }
 
+
+/*
+ *From net-tools lib/interface.c
+ *
+ */
+
+int
+get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
+{
+  char addr6[40], devname[IFNAMSIZ];
+  char addr6p[8][5];
+  int plen, scope, dad_status, if_idx;
+  FILE *f;
+  struct sockaddr_in6 tmp_sockaddr6;
+
+  if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) 
+    {
+      while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n",
+		    addr6p[0], addr6p[1], addr6p[2], addr6p[3],
+		    addr6p[4], addr6p[5], addr6p[6], addr6p[7],
+		    &if_idx, &plen, &scope, &dad_status, devname) != EOF) 
+	{
+	  if (!strcmp(devname, ifname)) 
+	    {
+	      sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
+		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
+		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
+	      olsr_printf(2, "\tinet6 addr: %s\n", addr6);
+	      olsr_printf(2, "\tScope:");
+	      if(scope == scope_in)
+		{
+		  olsr_printf(3, "IPv6 addr:\n");
+		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
+		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
+		  fclose(f);
+		  return 1;
+		}
+	    }
+	}
+      fclose(f);
+    }
+  
+  return 0;
+}

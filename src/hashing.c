@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hashing.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: hashing.c,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -40,7 +40,7 @@ olsr_hashing(union olsr_ip_addr *address)
   olsr_u32_t hash;
   char *tmp;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     /* IPv4 */  
     hash = (ntohl(address->v4));
   else

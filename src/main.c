@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.13 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: main.c,v 1.14 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -72,11 +72,11 @@ set_default_values(void);
 int
 main(int argc, char *argv[])
 {
-  //struct interface *ifp;
-  struct in_addr in;
 
   /* The thread for the scheduler */
   pthread_t thread;
+
+  struct if_config_options *default_ifcnf;
 
   struct stat statbuf;
   char conf_file_name[FILENAME_MAX];
@@ -170,7 +170,7 @@ main(int argc, char *argv[])
 
       if (stat(argv[1], &statbuf) < 0)
 	{
-	  fprintf(stderr, "Could not finc specified config file %s!\n%s\n\n", argv[1], strerror(errno));
+	  fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
 	  olsr_exit(__func__, EXIT_FAILURE);
 	}
 		 
@@ -183,8 +183,20 @@ main(int argc, char *argv[])
    * Reading configfile options prior to processing commandline options
    */
 
-  read_config_file(conf_file_name);
+  if(read_config_file(conf_file_name) < 0)
+    {
+      fprintf(stderr, "Error parsing configig file %s!\n", conf_file_name);
+      exit(EXIT_FAILURE);
+    }
+
+  default_ifcnf = get_default_ifcnf(olsr_cnf);
   
+  if(default_ifcnf == NULL)
+    {
+      fprintf(stderr, "No default ifconfig found!\n");
+      exit(EXIT_FAILURE);
+    }
+
   /*
    * Process olsrd options.
    */
@@ -217,12 +229,12 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-ipv6") == 0) 
 	{
-	  ipversion = AF_INET6;
+	  olsr_cnf->ip_version = AF_INET6;
 	  argv++, argc--;
 	  continue;
 	}
 
-
+#if 0
       /*
        *Broadcast address
        */
@@ -240,15 +252,13 @@ main(int argc, char *argv[])
 	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
 	      continue;
 	    }
-
-	  bcast_set = 1;
 		 
 	  memcpy(&bcastaddr.sin_addr, &in.s_addr, sizeof(olsr_u32_t));
 
 
 	  continue;
 	}
-
+#endif
 
       /*
        * Enable additional debugging information to be logged.
@@ -256,7 +266,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-d") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%d", &debug_level);
+	  sscanf(*argv,"%d", &olsr_cnf->debug_level);
 	  argv++, argc--;
 	  continue;
 	}
@@ -269,20 +279,19 @@ main(int argc, char *argv[])
        */
       if (strcmp(*argv, "-i") == 0) 
 	{
-	  option_i = 1;
 	  argv++, argc--;
-	  queue_if(*argv);
+	  queue_if(*argv, default_ifcnf);
 	  argv++, argc--;
 
 	  while((argc) && (**argv != '-'))
 	    {
-	      queue_if(*argv);
+	      queue_if(*argv, default_ifcnf);
 	      argv++; argc--;
 	    }
 
 	  continue;
 	}
-		
+
       /*
        * Set the hello interval to be used by olsrd.
        * 
@@ -290,19 +299,8 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-hint") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%f",&hello_int);
-	  argv++, argc--;
-	  continue;
-	}
-
-      /*
-       * Set the hello interval to be used by olsrd.
-       * on nonwireless interfaces
-       */
-      if (strcmp(*argv, "-hintn") == 0) 
-	{
-	  argv++, argc--;
-	  sscanf(*argv,"%f",&hello_int_nw);
+	  sscanf(*argv,"%f", &default_ifcnf->hello_params.emission_interval);
+          default_ifcnf->hello_params.validity_time = default_ifcnf->hello_params.emission_interval * 3;
 	  argv++, argc--;
 	  continue;
 	}
@@ -314,7 +312,8 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-hnaint") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%f", &hna_int);
+	  sscanf(*argv,"%f", &default_ifcnf->hna_params.emission_interval);
+          default_ifcnf->hna_params.validity_time = default_ifcnf->hna_params.emission_interval * 3;
 	  argv++, argc--;
 	  continue;
 	}
@@ -326,7 +325,8 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-midint") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%f", &mid_int);
+	  sscanf(*argv,"%f", &default_ifcnf->mid_params.emission_interval);
+          default_ifcnf->mid_params.validity_time = default_ifcnf->mid_params.emission_interval * 3;
 	  argv++, argc--;
 	  continue;
 	}
@@ -338,7 +338,8 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-tcint") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%f",&tc_int);
+	  sscanf(*argv,"%f", &default_ifcnf->tc_params.emission_interval);
+          default_ifcnf->tc_params.validity_time = default_ifcnf->tc_params.emission_interval * 3;
 	  argv++, argc--;
 	  continue;
 	}
@@ -350,7 +351,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-tos") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%d",(int *)&tos);
+	  sscanf(*argv,"%d",(int *)&olsr_cnf->tos);
 	  argv++, argc--;
 	  continue;
 	}
@@ -362,43 +363,11 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-T") == 0) 
 	{
 	  argv++, argc--;
-	  sscanf(*argv,"%f",&polling_int);
+	  sscanf(*argv,"%f",&olsr_cnf->pollrate);
 	  argv++, argc--;
 	  continue;
 	}
 
-      /*
-       * Set the vtime miltiplier
-       */
-      if (strcmp(*argv, "-hhold") == 0) 
-	{
-	  argv++, argc--;
-	  sscanf(*argv,"%d",&neighbor_timeout_mult);
-	  argv++, argc--;
-	  continue;
-	}
-
-      /*
-       * Set the vtime miltiplier for non-WLAN cards
-       */
-      if (strcmp(*argv, "-nhhold") == 0) 
-	{
-	  argv++, argc--;
-	  sscanf(*argv,"%d",&neighbor_timeout_mult_nw);
-	  argv++, argc--;
-	  continue;
-	}
-
-      /*
-       * Set the TC vtime multiplier
-       */
-      if (strcmp(*argv, "-thold") == 0) 
-	{
-	  argv++, argc--;
-	  sscanf(*argv,"%d",&topology_timeout_mult);
-	  argv++, argc--;
-	  continue;
-	}
 
       /*
        * Should we display the contents of packages beeing sent?
@@ -427,7 +396,7 @@ main(int argc, char *argv[])
       if (strcmp(*argv, "-ipc") == 0) 
 	{
 	  argv++, argc--;
-	  use_ipc = 1;
+	  olsr_cnf->open_ipc = 1;
 	  continue;
 	}
 
@@ -452,7 +421,7 @@ main(int argc, char *argv[])
 
 	  continue;
 	}
-
+#if 0
 
       /*
        * IPv6 multicast addr
@@ -466,7 +435,7 @@ main(int argc, char *argv[])
 
 	  continue;
 	}
-
+#endif
 
       /*
        * Should we display the contents of packages beeing sent?
@@ -487,7 +456,7 @@ main(int argc, char *argv[])
   /*
    *Interfaces need to be specified
    */
-  if(!option_i)
+  if(if_names == NULL)
     {
       fprintf(stderr, "OLSRD: no interfaces specified!\nuse the -i switch to specify interface(s)\nor set interface(s) in the configuration file!\n");
       print_usage();
@@ -497,7 +466,7 @@ main(int argc, char *argv[])
   /*
    *socket for icotl calls
    */
-  if ((ioctl_s = socket(ipversion, SOCK_DGRAM, 0)) < 0) 
+  if ((ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0)) < 0) 
     {
       olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
       close(ioctl_s);
@@ -506,20 +475,17 @@ main(int argc, char *argv[])
 
 
   /* Type of service */
-  precedence = IPTOS_PREC(tos);
-  tos_bits = IPTOS_TOS(tos);
+  precedence = IPTOS_PREC(olsr_cnf->tos);
+  tos_bits = IPTOS_TOS(olsr_cnf->tos);
 
 
   /*
    *enable ip forwarding on host
    */
-  enable_ip_forwarding(ipversion);
-
-
-
+  enable_ip_forwarding(olsr_cnf->ip_version);
 
   /* Initialize scheduler MUST HAPPEN BEFORE REGISTERING ANY FUNCTIONS! */
-  init_scheduler(polling_int);
+  init_scheduler(olsr_cnf->pollrate);
 
   /* Initialize parser */
   olsr_init_parser();
@@ -530,61 +496,27 @@ main(int argc, char *argv[])
   /* Initialize dynamic willingness calculation */
   olsr_init_willingness();
 
-
-  /* Initialize values for emission data 
-   * This also initiates message generation
-   */
-  olsr_set_hello_interval(hello_int);
-  olsr_set_hello_nw_interval(hello_int_nw);
-  olsr_set_tc_interval(tc_int);
-  olsr_set_mid_interval(mid_int);
-  olsr_set_hna_interval(hna_int);
-
-  /* Print tables to stdout */
-  if(debug_level > 0)
-    olsr_register_scheduler_event(&generate_tabledisplay, hello_int, 0, NULL);
-
-
   /* printout settings */
-  olsr_printf(1, "\n\
-hello interval = %0.2f       hello int nonwireless = %0.2f \n\
-tc interval = %0.2f          polling interval = %0.2f \n\
-neighbor_hold_time = %0.2f   neighbor_hold_time_nw = %0.2f \n\
-topology_hold_time = %0.2f  tos setting = %d \n\
-hna_interval = %0.2f         mid_interval = %0.2f\n\
-tc_redunadancy = %d          mpr coverage = %d\n", 
-	      hello_int, hello_int_nw, \
-	      tc_int, polling_int, \
-	      neighbor_hold_time, neighbor_hold_time_nw, topology_hold_time, \
-	      tos, hna_int, mid_int, \
-	      tc_redundancy, mpr_coverage);
+  olsr_printf(1, "\npolling interval = %0.2f \ntos setting = %d \ntc_redunadancy = %d\nmpr coverage = %d\n", olsr_cnf->pollrate, olsr_cnf->tos, olsr_cnf->tc_redundancy, olsr_cnf->mpr_coverage);
       
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
       olsr_printf(1, "hysteresis scaling factor = %0.2f\nhysteresis threshold high = %0.2f\nhysteresis threshold low  = %0.2f\n\n",
-		  hyst_scaling,
-		  hyst_threshold_high,
-		  hyst_threshold_low);
+		  olsr_cnf->hysteresis_param.scaling,
+		  olsr_cnf->hysteresis_param.thr_high,
+		  olsr_cnf->hysteresis_param.thr_low);
 
-      if(hyst_threshold_high <= hyst_threshold_low)
+      if(olsr_cnf->hysteresis_param.thr_high <= olsr_cnf->hysteresis_param.thr_low)
 	{
 	  printf("Hysteresis threshold high lower than threshold low!!\nEdit the configuration file to fix this!\n\n");
 	  olsr_exit(__func__, EXIT_FAILURE);
 	}
     }
 
-  if(ipversion == AF_INET)
-    {
-      if(bcast_set)
-	olsr_printf(2, "Using %s broadcast\n", olsr_ip_to_string((union olsr_ip_addr *) &bcastaddr.sin_addr));
-      else
-	olsr_printf(2, "Using broadcastaddresses fetched from interfaces\n");
-    }
-
   /*
    *Set up willingness/APM
    */
-  if(!willingness_set)
+  if(olsr_cnf->willingness_auto)
     {
       if(apm_init() < 0)
 	{
@@ -592,38 +524,24 @@ tc_redunadancy = %d          mpr coverage = %d\n",
 
 	  olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
-	  willingness_set = 1;
-	  my_willingness = WILL_DEFAULT;
+	  olsr_cnf->willingness_auto = 0;
+	  olsr_cnf->willingness = WILL_DEFAULT;
 	}
       else
 	{
-	  my_willingness = olsr_calculate_willingness();
+	  olsr_cnf->willingness = olsr_calculate_willingness();
 
-	  olsr_printf(1, "Willingness set to %d - next update in %.1f secs\n", my_willingness, will_int);
+	  olsr_printf(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, will_int);
 	}
     }
 
   /**
    *Set ipsize and minimum packetsize
    */
-  if(ipversion == AF_INET6)
+  if(olsr_cnf->ip_version == AF_INET6)
     {
       olsr_printf(1, "Using IP version 6\n");
       ipsize = sizeof(struct in6_addr);
-
-      /* Set multicast address */
-      if(ipv6_addrtype == IPV6_ADDR_SITELOCAL)
-	{
-	  /* Site local */
-	  strncpy(ipv6_mult, ipv6_mult_site, 50);
-	}
-      else
-	{
-	  /* Global */
-	  strncpy(ipv6_mult, ipv6_mult_global, 50);
-	}
-
-      olsr_printf(1, "Using multicast address %s\n", ipv6_mult);
 
       minsize = (int)sizeof(olsr_u8_t) * 7; /* Minimum packetsize IPv6 */
     }
@@ -640,7 +558,7 @@ tc_redunadancy = %d          mpr coverage = %d\n",
 
   if(!ifinit())
     {
-      if(allow_no_int)
+      if(olsr_cnf->allow_no_interfaces)
 	{
 	  fprintf(stderr, "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
 	  sleep(5);
@@ -653,12 +571,27 @@ tc_redunadancy = %d          mpr coverage = %d\n",
     }
 
 
+  /* Initialize values for emission data 
+   * This also initiates message generation
+   */
+  /*
+  olsr_set_hello_interval(hello_int);
+  olsr_set_hello_nw_interval(hello_int_nw);
+  olsr_set_tc_interval(tc_int);
+  olsr_set_mid_interval(mid_int);
+  olsr_set_hna_interval(hna_int);
+  */
+  /* Print tables to stdout */
+  if(olsr_cnf->debug_level > 0)
+    olsr_register_scheduler_event(&generate_tabledisplay, NULL, HELLO_INTERVAL, 0, NULL);
+  
+  
   gettimeofday(&now, NULL);
 
 
   /* Initialize the IPC socket */
 
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
       ipc_init();
 
 #ifndef WIN32
@@ -684,7 +617,7 @@ tc_redunadancy = %d          mpr coverage = %d\n",
 
   /* daemon mode */
 #ifndef WIN32
-  if (debug_level == 0)
+  if (olsr_cnf->debug_level == 0)
     {
       printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
       if (fork() != 0)
@@ -749,7 +682,7 @@ olsr_shutdown(int signal)
   olsr_printf(1, "Closing sockets...\n");
 
   /* front-end IPC socket */
-  if(use_ipc)
+  if(olsr_cnf->open_ipc)
     shutdown_ipc();
 
   /* OLSR sockets */
@@ -760,7 +693,7 @@ olsr_shutdown(int signal)
   olsr_close_plugins();
 
   /* Reset network settings */
-  restore_settings(ipversion);
+  restore_settings(olsr_cnf->ip_version);
 
   /* ioctl socket */
   close(ioctl_s);
@@ -776,7 +709,6 @@ olsr_shutdown(int signal)
 
 
 
-
 /**
  *Sets the default values of variables at startup
  */
@@ -786,67 +718,25 @@ set_default_values()
   memset(&main_addr, 0, sizeof(union olsr_ip_addr));
   memset(&null_addr6, 0, sizeof (union olsr_ip_addr));
 
-  allow_no_int = 1;
-
   exit_value = EXIT_SUCCESS; 
   /* If the application exits by signal it is concidered success,
    * if not, exit_value is set by the function calling olsr_exit.
    */
 
-  tos = 16;
-
   if_names = NULL;
+
+  max_jitter = 0;
+  max_tc_vtime = 0;
+  dup_hold_time = DUP_HOLD_TIME;
 
   sending_tc = 0;
 
   queued_ifs = 0;
 
-  mpr_coverage = MPR_COVERAGE;
-
-  ipv6_addrtype = IPV6_ADDR_SITELOCAL;
-
-  /* Default multicastaddresses */
-  strncpy(ipv6_mult_site, OLSR_IPV6_MCAST_SITE_LOCAL, strlen(OLSR_IPV6_MCAST_SITE_LOCAL));
-  strncpy(ipv6_mult_global, OLSR_IPV6_MCAST_GLOBAL, strlen(OLSR_IPV6_MCAST_GLOBAL));
-
-  /* EMISSION/HOLD INTERVALS */
-
-  hello_int = HELLO_INTERVAL;
-  hello_int_nw = HELLO_INTERVAL;
-  tc_int = TC_INTERVAL;
-  hna_int = 2 * TC_INTERVAL;
-  polling_int = 0.1;
-  mid_int = MID_INTERVAL;
   will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
 
-  neighbor_timeout_mult = 3;
-  topology_timeout_mult = 3;
-  neighbor_timeout_mult_nw = 3;
-  mid_timeout_mult = 3;
-  hna_timeout_mult = 3;
-
-  topology_hold_time = TOP_HOLD_TIME;
-  neighbor_hold_time = NEIGHB_HOLD_TIME;
-  neighbor_hold_time_nw = NEIGHB_HOLD_TIME;
-  mid_hold_time = MID_HOLD_TIME;
-  hna_hold_time = 2 * (3 * TC_INTERVAL);
-  dup_hold_time = DUP_HOLD_TIME;
-
-  /* TC redundancy */
-  tc_redundancy = TC_REDUNDANCY;
-
-  /* Hysteresis */
-  use_hysteresis = 1;
-  hyst_scaling = HYST_SCALING;
-  hyst_threshold_low = HYST_THRESHOLD_LOW;
-  hyst_threshold_high = HYST_THRESHOLD_HIGH;
-
-  use_ipc = 0;
   llinfo = 0;
-  bcast_set = 0;
   del_gws = 0;
-  /* DEBUG ON BY DEFAULT */
-  debug_level = 1;
 
 #ifndef WIN32
   /* Get main thread ID */
@@ -856,13 +746,6 @@ set_default_values()
   /* local HNA set must be initialized before reading options */
   olsr_init_local_hna_set();
 
-  /*
-   * set fixed willingness off by default
-   */
-  willingness_set = 0;
-
-  ipv6_mult[0] = 0;
-
   /* Gateway tunneling */
   use_tunnel = 0;
   inet_tnl_added = 0;
@@ -871,8 +754,6 @@ set_default_values()
   /* Display packet content */
   disp_pack_in = 0;
   disp_pack_out = 0;
-
-  ipversion = AF_INET;
 }
 
 
@@ -888,10 +769,6 @@ print_usage()
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-midint <mid interval value (secs)>] [-hnaint <hna interval value (secs)>]\n");
   fprintf(stderr, "  [-hint <hello interval value (secs)>] [-tcint <tc interval value (secs)>]\n");
-  fprintf(stderr, "  [-hhold <HELLO validity time as a multiplier of the HELLO interval>]\n");
-  fprintf(stderr, "  [-nhhold <HELLO validity time on non-wireless interfaces>]\n");
-  fprintf(stderr, "  [-thold <TC validity time as a multiplier of the TC interval>]\n");
-  fprintf(stderr, "  [-tos value (int)] [-nhint <hello interval value (secs) for non-WLAN>]\n");
-  fprintf(stderr, "  [-T <Polling Rate (secs)>]\n"); 
+  fprintf(stderr, "  [-tos value (int)] [-T <Polling Rate (secs)>]\n"); 
 
 }

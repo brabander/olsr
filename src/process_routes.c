@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_routes.c,v 1.9 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: process_routes.c,v 1.10 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -298,7 +298,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 
   while(delete_kernel_list!=NULL)
     {
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
 	  error = olsr_ioctl_del_route(delete_kernel_list->destination);
@@ -357,7 +357,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 	    {
 	      /* First add all 1-hop routes that has themselves as GW */
 
-	      if(ipversion == AF_INET)
+	      if(olsr_cnf->ip_version == AF_INET)
 		error=olsr_ioctl_add_route(destination_kernel->destination);
 	      else
 		error=olsr_ioctl_add_route6(destination_kernel->destination);

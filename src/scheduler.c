@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.c,v 1.11 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: scheduler.c,v 1.12 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -178,7 +178,7 @@ scheduler()
 	      (*(entry->trigger) == 1)))
 	    {
 	      /* Run scheduled function */
-	      entry->function();
+	      entry->function(entry->param);
 
 	      /* Set jitter */
 	      entry->since_last = (float) random()/RAND_MAX;
@@ -241,7 +241,11 @@ scheduler()
  *this function should be triggered immediatley
  */
 int
-olsr_register_scheduler_event(void (*event_function)(void), float interval, float initial, olsr_u8_t *trigger)
+olsr_register_scheduler_event(void (*event_function)(void *), 
+			      void *par,
+			      float interval, 
+			      float initial, 
+			      olsr_u8_t *trigger)
 {
   struct event_entry *new_entry;
 
@@ -252,6 +256,7 @@ olsr_register_scheduler_event(void (*event_function)(void), float interval, floa
   while(new_entry)
     {
       if((new_entry->function == event_function) &&
+	 (new_entry->param == par) &&
 	 (new_entry->trigger == trigger) &&
 	 (new_entry->interval == interval))
 	{
@@ -265,6 +270,7 @@ olsr_register_scheduler_event(void (*event_function)(void), float interval, floa
   new_entry = olsr_malloc(sizeof(struct event_entry), "add scheduler event");
 
   new_entry->function = event_function;
+  new_entry->param = par;
   new_entry->interval = interval;
   new_entry->since_last = interval - initial;
   new_entry->next = event_functions;
@@ -284,7 +290,11 @@ olsr_register_scheduler_event(void (*event_function)(void), float interval, floa
  *this function should be triggered immediatley
  */
 int
-olsr_remove_scheduler_event(void (*event_function)(void), float interval, float initial, olsr_u8_t *trigger)
+olsr_remove_scheduler_event(void (*event_function)(void *), 
+			    void *par,
+			    float interval, 
+			    float initial, 
+			    olsr_u8_t *trigger)
 {
   struct event_entry *entry, *prev;
 
@@ -294,6 +304,7 @@ olsr_remove_scheduler_event(void (*event_function)(void), float interval, float 
   while(entry)
     {
       if((entry->function == event_function) &&
+	 (entry->param == par) &&
 	 (entry->trigger == trigger) &&
 	 (entry->interval == interval))
 	{

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.c,v 1.10 2004/09/26 10:47:27 kattemat Exp $
+ * $Id: ifnet.c,v 1.11 2004/10/18 13:13:38 kattemat Exp $
  *
  */
 
@@ -46,6 +46,9 @@
 #include "../net_os.h"
 #include "../socket_parser.h"
 #include "../parser.h"
+#include "../scheduler.h"
+#include "../generate_msg.h"
+#include "../mantissa.h"
 #include <signal.h>
 #include <net/if.h>
 #include <net/if_arp.h>
@@ -92,7 +95,7 @@ set_flag(char *ifname, short flag)
 
 
 void
-check_interface_updates()
+check_interface_updates(void *foo)
 {
   struct if_name *tmp_if;
 
@@ -172,7 +175,7 @@ chk_if_changed(struct if_name *iface)
    */
 
   /* Check broadcast */
-  if ((ipversion == AF_INET) && (!(ifp->int_flags & IFF_BROADCAST))) 
+  if ((olsr_cnf->ip_version == AF_INET) && (!(ifp->int_flags & IFF_BROADCAST))) 
     {
       olsr_printf(1, "\tNo broadcast - removing\n");
       goto remove_interface;
@@ -214,13 +217,13 @@ chk_if_changed(struct if_name *iface)
    */
   
   /* IP version 6 */
-  if(ipversion == AF_INET6)
+  if(olsr_cnf->ip_version == AF_INET6)
     {
       /* Get interface address */
       
-      if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, ipv6_addrtype) <= 0)
+      if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, iface->cnf->ipv6_addrtype) <= 0)
 	{
-	  if(ipv6_addrtype == IPV6_ADDR_SITELOCAL)
+	  if(iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL)
 	    olsr_printf(1, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
 	  else
 	    olsr_printf(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
@@ -331,32 +334,34 @@ chk_if_changed(struct if_name *iface)
 
 	  if_changes = 1;
 	}
-            
-      /* Check broadcast address */      
-      if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+      
+      if(!iface->cnf->ipv4_broadcast.v4)
 	{
-	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
-	  goto remove_interface;
-	}
-
+	  /* Check broadcast address */      
+	  if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	    {
+	      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	      goto remove_interface;
+	    }
+	  
 #ifdef DEBUG
-      olsr_printf(3, "\tBroadcast address:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
+	  olsr_printf(3, "\tBroadcast address:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
 #endif
-      
-      if(memcmp(&((struct sockaddr_in *)&ifp->int_broadaddr)->sin_addr.s_addr,
-		&((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr, 
-		ipsize) != 0)
-	{
-
-	  /* New address */
-	  olsr_printf(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
-	  olsr_printf(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_broadaddr));
-	  olsr_printf(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
-
-	  ifp->int_broadaddr = ifr.ifr_broadaddr;
-	  if_changes = 1;
-	}            
-      
+	  
+	  if(memcmp(&((struct sockaddr_in *)&ifp->int_broadaddr)->sin_addr.s_addr,
+		    &((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr, 
+		    ipsize) != 0)
+	    {
+	      
+	      /* New address */
+	      olsr_printf(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
+	      olsr_printf(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_broadaddr));
+	      olsr_printf(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_broadaddr));
+	      
+	      ifp->int_broadaddr = ifr.ifr_broadaddr;
+	      if_changes = 1;
+	    }            
+	}
     }
 
   if(if_changes)
@@ -426,6 +431,33 @@ chk_if_changed(struct if_name *iface)
 
   nbinterf--;
 
+
+  /*
+   * Deregister scheduled functions 
+   */
+  olsr_remove_scheduler_event(&generate_hello, 
+			      ifp, 
+			      iface->cnf->hello_params.emission_interval, 
+			      0, 
+			      NULL);
+  olsr_remove_scheduler_event(&generate_tc, 
+			      ifp, 
+			      iface->cnf->tc_params.emission_interval,
+			      0, 
+			      NULL);
+  olsr_remove_scheduler_event(&generate_mid, 
+			      ifp, 
+			      iface->cnf->mid_params.emission_interval,
+			      0, 
+			      NULL);
+  olsr_remove_scheduler_event(&generate_hna, 
+			      ifp, 
+			      iface->cnf->hna_params.emission_interval,
+			      0, 
+			      NULL);
+
+
+
   iface->configured = 0;
   iface->interf = NULL;
   /* Close olsr socket */
@@ -435,7 +467,7 @@ chk_if_changed(struct if_name *iface)
   free(ifp->int_name);
   free(ifp);
 
-  if((nbinterf == 0) && (!allow_no_int))
+  if((nbinterf == 0) && (!olsr_cnf->allow_no_interfaces))
     {
       olsr_printf(1, "No more active interfaces - exiting.\n");
       olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
@@ -487,7 +519,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
     }
 
   /* Check broadcast */
-  if ((ipversion == AF_INET) && (!(ifs.int_flags & IFF_BROADCAST))) 
+  if ((olsr_cnf->ip_version == AF_INET) && (!(ifs.int_flags & IFF_BROADCAST))) 
     {
       olsr_printf(debuglvl, "\tNo broadcast - skipping\n");
       return 0;
@@ -514,13 +546,13 @@ chk_if_up(struct if_name *iface, int debuglvl)
 
   
   /* IP version 6 */
-  if(ipversion == AF_INET6)
+  if(olsr_cnf->ip_version == AF_INET6)
     {
       /* Get interface address */
       
-      if(get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, ipv6_addrtype) <= 0)
+      if(get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, iface->cnf->ipv6_addrtype) <= 0)
 	{
-	  if(ipv6_addrtype == IPV6_ADDR_SITELOCAL)
+	  if(iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL)
 	    olsr_printf(debuglvl, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
 	  else
 	    olsr_printf(debuglvl, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
@@ -530,14 +562,8 @@ chk_if_up(struct if_name *iface, int debuglvl)
       
       olsr_printf(debuglvl, "\tAddress: %s\n", ip6_to_string(&ifs.int6_addr.sin6_addr));
       
-      
-      /* Set default multicast address */
-      if(inet_pton(AF_INET6, ipv6_mult, &ifs.int6_multaddr.sin6_addr) < 0)
-	{
-	  perror("Convert multicastaddr");
-	  return 0;
-	}
-	  
+      /* Multicast */
+      ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == 1) ? iface->cnf->ipv6_multi_site.v6 :iface->cnf->ipv6_multi_site.v6;
       /* Set address family */
       ifs.int6_multaddr.sin6_family = AF_INET6;
       /* Set port */
@@ -562,28 +588,38 @@ chk_if_up(struct if_name *iface, int debuglvl)
       
       if (ioctl(ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
 	{
-	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get netmask)", ifr.ifr_name);
 	  return 0;
 	}
       
       ifs.int_netmask = ifr.ifr_netmask;
       
       /* Find broadcast address */
-      
-      if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+      if(iface->cnf->ipv4_broadcast.v4)
 	{
-	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
-	  return 0;
+	  /* Specified broadcast */
+	  memset(&ifs.int_broadaddr, 0, sizeof(struct sockaddr));
+	  memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr, 
+		 &iface->cnf->ipv4_broadcast.v4, 
+		 sizeof(olsr_u32_t));
+	}
+      else
+	{
+	  /* Autodetect */
+	  if (ioctl(ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	    {
+	      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+	      return 0;
+	    }
+	  
+	  ifs.int_broadaddr = ifr.ifr_broadaddr;
 	}
       
-      ifs.int_broadaddr = ifr.ifr_broadaddr;
-      
-      
       /* Deactivate IP spoof filter */
-      deactivate_spoof(ifr.ifr_name, nbinterf, ipversion);
+      deactivate_spoof(ifr.ifr_name, nbinterf, olsr_cnf->ip_version);
       
       /* Disable ICMP redirects */
-      disable_redirects(ifr.ifr_name, nbinterf, ipversion);
+      disable_redirects(ifr.ifr_name, nbinterf, olsr_cnf->ip_version);
       
     }
   
@@ -613,7 +649,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
   olsr_printf(1, "\tInterface %s set up for use with index %d\n", iface->name, ifs.if_nr);
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       olsr_printf(1, "\tAddress:%s\n", sockaddr_to_string(&ifs.int_addr));
       olsr_printf(1, "\tNetmask:%s\n", sockaddr_to_string(&ifs.int_netmask));
@@ -641,7 +677,7 @@ chk_if_up(struct if_name *iface, int debuglvl)
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
       ifp->ip_addr.v4 = ((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr;
@@ -721,6 +757,46 @@ chk_if_up(struct if_name *iface, int debuglvl)
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&main_addr));
     }
   
+  /*
+   * Register scheduled functions 
+   */
+  olsr_register_scheduler_event(&generate_hello, 
+				ifp, 
+				iface->cnf->hello_params.emission_interval, 
+				0, 
+				NULL);
+  olsr_register_scheduler_event(&generate_tc, 
+				ifp, 
+				iface->cnf->tc_params.emission_interval,
+				0, 
+				NULL);
+  olsr_register_scheduler_event(&generate_mid, 
+				ifp, 
+				iface->cnf->mid_params.emission_interval,
+				0, 
+				NULL);
+  olsr_register_scheduler_event(&generate_hna, 
+				ifp, 
+				iface->cnf->hna_params.emission_interval,
+				0, 
+				NULL);
+
+  /* Recalculate max jitter */
+
+  if((max_jitter == 0) || ((iface->cnf->hello_params.emission_interval / 4) < max_jitter))
+    max_jitter = iface->cnf->hello_params.emission_interval / 4;
+
+  /* Recalculate max topology hold time */
+  if(max_tc_vtime < iface->cnf->tc_params.emission_interval)
+    max_tc_vtime = iface->cnf->tc_params.emission_interval;
+
+  ifp->hello_etime = double_to_me(iface->cnf->hello_params.emission_interval);
+  ifp->valtimes.hello = double_to_me(iface->cnf->hello_params.validity_time);
+  ifp->valtimes.tc = double_to_me(iface->cnf->tc_params.validity_time);
+  ifp->valtimes.mid = double_to_me(iface->cnf->mid_params.validity_time);
+  ifp->valtimes.hna = double_to_me(iface->cnf->hna_params.validity_time);
+
+
   /*
    *Call possible ifchange functions registered by plugins  
    */

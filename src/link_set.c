@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.8 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: link_set.c,v 1.9 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -70,11 +70,10 @@ olsr_init_link_set()
 {
 
   /* Timers */
-  olsr_init_timer((olsr_u32_t) (neighbor_hold_time*1000), &hold_time_neighbor);
-  olsr_init_timer((olsr_u32_t) (neighbor_hold_time_nw*1000), &hold_time_neighbor_nw);
+  olsr_init_timer((olsr_u32_t) (NEIGHB_HOLD_TIME*1000), &hold_time_neighbor);
 
   olsr_register_timeout_function(&olsr_time_out_link_set);
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
       olsr_register_timeout_function(&olsr_time_out_hysteresis);
     }
@@ -103,7 +102,7 @@ lookup_link_status(struct link_entry *entry)
   /*
    * Hysteresis
    */
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
       /*
 	if L_LOST_LINK_time is not expired, the link is advertised
@@ -404,7 +403,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
 
   /* HYSTERESIS */
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
       new_link->L_link_pending = 1;
       olsr_get_timestamp((olsr_u32_t) vtime*1000, &new_link->L_LOST_LINK_time);
@@ -593,10 +592,7 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
 	//timeradd(&now, &tmp_timer, &entry->SYM_time);
 
       /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-      if(in_if->is_wireless)
-	timeradd(&entry->SYM_time, &hold_time_neighbor, &entry->time);
-      else
-	timeradd(&entry->SYM_time, &hold_time_neighbor_nw, &entry->time);
+      timeradd(&entry->SYM_time, &hold_time_neighbor, &entry->time);
 
       break;
     default:;
@@ -615,7 +611,7 @@ update_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, struct 
   */
 
   /* Update hysteresis values */
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     olsr_process_hysteresis(entry);
 
   /* update neighbor status */

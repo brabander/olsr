@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mid_set.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: mid_set.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -46,7 +46,7 @@ olsr_init_mid_set()
   /* Since the holdingtime is assumed to be rather large for 
    * MID entries, the timeoutfunction is only ran once every second
    */
-  olsr_register_scheduler_event(&olsr_time_out_mid_set, 1, 0, NULL);
+  olsr_register_scheduler_event(&olsr_time_out_mid_set, NULL, 1, 0, NULL);
 
   for(index=0;index<HASHSIZE;index++)
     {
@@ -328,7 +328,7 @@ olsr_update_mid_table(union olsr_ip_addr *adr, float vtime)
  *@return nada
  */
 void
-olsr_time_out_mid_set()
+olsr_time_out_mid_set(void *foo)
 {
   struct mid_entry *tmp_list;
   struct mid_entry *entry_to_delete;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: scheduler.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: scheduler.h,v 1.7 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -46,7 +46,8 @@ struct timeout_entry
 
 struct event_entry
 {
-  void (*function)(void);
+  void (*function)(void *);
+  void *param;
   float interval;
   float since_last;
   olsr_u8_t *trigger;
@@ -68,24 +69,9 @@ float sched_poll_interval;
 extern pthread_mutex_t mutex;
 
 
-/* EMISSION/HOLD INTERVALS */
-
-float hello_int;
-float hello_int_nw;
-float tc_int;
-float hna_int;
-float polling_int;
-float mid_int;
 float will_int; /* Willingness update interval */
 
 float max_jitter;
-
-float topology_hold_time;
-float neighbor_hold_time;
-float neighbor_hold_time_nw;
-float mid_hold_time;
-float hna_hold_time;
-float dup_hold_time;
 
 int
 init_scheduler(float);
@@ -97,10 +83,10 @@ int
 olsr_remove_timeout_function(void (*)(void));
 
 int
-olsr_register_scheduler_event(void (*)(void), float, float, olsr_u8_t *);
+olsr_register_scheduler_event(void (*)(void *), void *, float, float, olsr_u8_t *);
 
 int
-olsr_remove_scheduler_event(void (*)(void), float, float, olsr_u8_t *);
+olsr_remove_scheduler_event(void (*)(void *), void *, float, float, olsr_u8_t *);
 
 void
 start_scheduler(pthread_t *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.c,v 1.13 2004/10/12 06:33:55 kattemat Exp $
+ * $Id: build_msg.c,v 1.14 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -96,7 +96,7 @@ hna_build6(struct interface *);
 void
 hello_build(struct hello_message *message, struct interface *ifp)
 {
-  switch(ipversion)
+  switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
       hello_build4(message, ifp);
@@ -134,7 +134,7 @@ hello_build(struct hello_message *message, struct interface *ifp)
 void
 tc_build(struct tc_message *message, struct interface *ifp)           
 {
-  switch(ipversion)
+  switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
       tc_build4(message, ifp);
@@ -160,7 +160,7 @@ tc_build(struct tc_message *message, struct interface *ifp)
 void
 mid_build(struct interface *ifn)
 {
-  switch(ipversion)
+  switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
       mid_build4(ifn);
@@ -185,7 +185,7 @@ mid_build(struct interface *ifn)
 void
 hna_build(struct interface *ifp)
 {
-  switch(ipversion)
+  switch(olsr_cnf->ip_version)
     {
     case(AF_INET):
       hna_build4(ifp);
@@ -228,7 +228,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
-  if((!message) || (!ifp) || (ipversion != AF_INET))
+  if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
     return;
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -260,11 +260,11 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   /* Set source(main) addr */
   COPY_IP(&m->v4.originator, &main_addr);
 
-  m->v4.olsr_vtime = ifp->is_wireless ? hello_vtime : hello_nw_vtime;
+  m->v4.olsr_vtime = ifp->valtimes.hello;
 
   /* Fill HELLO header */
   h->willingness = message->willingness; 
-  h->htime = ifp->is_wireless ? htime : htime_nw;
+  h->htime = ifp->hello_etime;
 
   memset(&h->reserved, 0, sizeof(olsr_u16_t));
   
@@ -470,7 +470,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
-  if((!message) || (!ifp) || (ipversion != AF_INET6))
+  if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
     return;
 
 
@@ -503,12 +503,12 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   COPY_IP(&m->v6.originator, &main_addr);
   m->v6.olsr_msgtype = HELLO_MESSAGE;
 
-  m->v6.olsr_vtime = ifp->is_wireless ? hello_vtime : hello_nw_vtime;
+  m->v6.olsr_vtime = ifp->valtimes.hello;
   
   /* Fill packet header */
   h6->willingness = message->willingness; 
 
-  h6->htime = ifp->is_wireless ? htime : htime_nw;
+  h6->htime = ifp->hello_etime;
 
   memset(&h6->reserved, 0, sizeof(olsr_u16_t));
   
@@ -693,7 +693,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   struct neigh_info *mprsaddr; 
   int found = 0, partial_sent = 0;
 
-  if((!message) || (!ifp) || (ipversion != AF_INET))
+  if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
     return;
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -715,7 +715,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
     }
 
   /* Fill header */
-  m->v4.olsr_vtime = tc_vtime;
+  m->v4.olsr_vtime = ifp->valtimes.tc;
   m->v4.olsr_msgtype = TC_MESSAGE;
   m->v4.hopcnt = message->hop_count;
   m->v4.ttl = message->ttl;
@@ -825,7 +825,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   struct neigh_info6 *mprsaddr6; 
   int found = 0, partial_sent = 0;
 
-  if ((!message) || (!ifp) || (ipversion != AF_INET6))
+  if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
     return;
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -846,7 +846,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
     }
 
   /* Fill header */
-  m->v6.olsr_vtime = tc_vtime;
+  m->v6.olsr_vtime = ifp->valtimes.tc;
   m->v6.olsr_msgtype = TC_MESSAGE;
   m->v6.hopcnt = message->hop_count;
   m->v6.ttl = message->ttl;
@@ -949,7 +949,7 @@ mid_build4(struct interface *ifp)
   struct midaddr *addrs;
   struct interface *ifs;  
 
-  if((ipversion != AF_INET) || (!ifp) || (nbinterf <= 1))
+  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (nbinterf <= 1))
     return;
 
 
@@ -972,7 +972,7 @@ mid_build4(struct interface *ifp)
   /* Set main(first) address */
   COPY_IP(&m->v4.originator, &main_addr);
   m->v4.olsr_msgtype = MID_MESSAGE;
-  m->v4.olsr_vtime = mid_vtime;
+  m->v4.olsr_vtime = ifp->valtimes.mid;
  
   addrs = m->v4.message.mid.mid_addr;
 
@@ -1038,7 +1038,7 @@ mid_build6(struct interface *ifp)
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
 
-  if((ipversion != AF_INET6) || (!ifp) || (nbinterf <= 1))
+  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (nbinterf <= 1))
     return;
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -1058,7 +1058,7 @@ mid_build6(struct interface *ifp)
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;      
   m->v6.olsr_msgtype = MID_MESSAGE;
-  m->v6.olsr_vtime = mid_vtime;
+  m->v6.olsr_vtime = ifp->valtimes.mid;
   /* Set main(first) address */
   COPY_IP(&m->v6.originator, &main_addr);
    
@@ -1121,7 +1121,7 @@ hna_build4(struct interface *ifp)
   struct local_hna_entry *h;
 
   /* No hna nets */
-  if((ipversion != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
+  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
     return;
     
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -1143,7 +1143,7 @@ hna_build4(struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
-  m->v4.olsr_vtime = hna_vtime;
+  m->v4.olsr_vtime = ifp->valtimes.hna;
 
 
   pair = m->v4.message.hna.hna_net;
@@ -1202,7 +1202,7 @@ hna_build6(struct interface *ifp)
   struct local_hna_entry *h;
   
   /* No hna nets */
-  if((ipversion != AF_INET6) || (!ifp) || (local_hna6_set.next == &local_hna6_set))
+  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (local_hna6_set.next == &local_hna6_set))
     return;
 
     
@@ -1224,7 +1224,7 @@ hna_build6(struct interface *ifp)
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = HNA_MESSAGE;
-  m->v6.olsr_vtime = hna_vtime;
+  m->v6.olsr_vtime = ifp->valtimes.hna;
 
   pair6 = m->v6.message.hna.hna_net;
 

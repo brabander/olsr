@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: rebuild_packet.c,v 1.7 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.8 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -54,7 +54,7 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
     return;
   
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       hna = &m->v4.message.hna;
       haddr = hna->hna_net;
@@ -179,7 +179,7 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
 
   alias = NULL;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
 
@@ -216,7 +216,7 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
 	}
       
       
-      if(debug_level > 1)
+      if(olsr_cnf->debug_level > 1)
 	{
 	  olsr_printf(2, "Alias list for %s: ", ip_to_string(&mmsg->mid_origaddr.v4));
 	  olsr_printf(2, "%s", ip_to_string(&mmsg->addr.v4));
@@ -269,7 +269,7 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
 	}
 
 
-      if(debug_level > 1)
+      if(olsr_cnf->debug_level > 1)
 	{
 	  olsr_printf(2, "Alias list for %s", ip6_to_string(&mmsg->mid_origaddr.v6));
 	  olsr_printf(2, "%s", ip6_to_string(&mmsg->addr.v6));
@@ -307,7 +307,7 @@ unk_chgestruct(struct unknown_message *umsg, union olsr_message *m)
     return;
 
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       /* address */
@@ -356,7 +356,7 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
   if ((!m) || (m->v4.olsr_msgtype != HELLO_MESSAGE))
     return;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       h = &m->v4.message.hello;
@@ -485,7 +485,7 @@ tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr
   if ((!m) || (m->v4.olsr_msgtype != TC_MESSAGE))
     return;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       tc = &m->v4.message.tc;

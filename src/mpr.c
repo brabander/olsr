@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: mpr.c,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: mpr.c,v 1.7 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -171,7 +171,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 	}
 
       //      if(!second_hop_entries->neighbor_2->neighbor_2_state)
-      //if(second_hop_entries->neighbor_2->mpr_covered_count < mpr_coverage)
+      //if(second_hop_entries->neighbor_2->mpr_covered_count < olsr_cnf->mpr_coverage)
       //{
 	  /*
 	    Now the neighbor is covered by this mpr
@@ -181,7 +181,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 
 	  //olsr_printf(1, "[%s](%x) has coverage %d\n", olsr_ip_to_string(&second_hop_entries->neighbor_2->neighbor_2_addr), second_hop_entries->neighbor_2, second_hop_entries->neighbor_2->mpr_covered_count);
 
-	  if(second_hop_entries->neighbor_2->mpr_covered_count >= mpr_coverage)
+	  if(second_hop_entries->neighbor_2->mpr_covered_count >= olsr_cnf->mpr_coverage)
 	     count++;
 		      
 	  while(the_one_hop_list != &second_hop_entries->neighbor_2->neighbor_2_nblist)
@@ -189,7 +189,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t *two_hop_cov
 	      
 	      if((the_one_hop_list->neighbor->status == SYM))
 		{
-		  if(second_hop_entries->neighbor_2->mpr_covered_count >= mpr_coverage)
+		  if(second_hop_entries->neighbor_2->mpr_covered_count >= olsr_cnf->mpr_coverage)
 		    {
 		      the_one_hop_list->neighbor->neighbor_2_nocov--;
 		    }
@@ -524,7 +524,7 @@ olsr_calculate_mpr()
   if(olsr_check_mpr_changes())
     {
       olsr_printf(3, "CHANGES IN MPR SET\n");
-      if(tc_redundancy > 0)
+      if(olsr_cnf->tc_redundancy > 0)
 	changes = UP;
     }
 
@@ -582,7 +582,7 @@ olsr_optimize_mpr_set()
 		      
 		      //printf("\t[%s] coverage %d\n", olsr_ip_to_string(&two_hop_list->neighbor_2->neighbor_2_addr), two_hop_list->neighbor_2->mpr_covered_count);
 		      /* Do not remove if we find a entry which need this MPR */
-		      if(two_hop_list->neighbor_2->mpr_covered_count <= mpr_coverage)
+		      if(two_hop_list->neighbor_2->mpr_covered_count <= olsr_cnf->mpr_coverage)
 			remove = 0;
 		      
 		    }

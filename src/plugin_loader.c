@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: plugin_loader.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -202,7 +202,7 @@ init_olsr_plugin(struct olsr_plugin *entry)
 
   olsr_printf(1, "Running registration function...\n");
   /* Fill struct */
-  plugin_data.ipversion = ipversion;
+  plugin_data.ipversion = olsr_cnf->ip_version;
   plugin_data.main_addr = &main_addr;
 
   plugin_data.olsr_plugin_io = &olsr_plugin_io;

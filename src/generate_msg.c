@@ -19,17 +19,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.c,v 1.8 2004/09/25 21:52:27 kattemat Exp $
+ * $Id: generate_msg.c,v 1.9 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
 #include "generate_msg.h"
 #include "defs.h"
-#include "scheduler.h"
 #include "build_msg.h"
 #include "packet.h"
-#include "mantissa.h"
-#include "link_set.h"
 
 /*
  * Infomation repositiries
@@ -42,313 +39,60 @@
 #include "neighbor_table.h"
 
 
-/**
- * Function that sets the HELLO emission interval and
- * calculates all other nessecarry values such as
- * the VTIME value to emit in messages.
- * The message generation function is removed
- * and re-registered
- *
- *@param interval the new emission interval
- *
- *@return negative on error
- */
-int
-olsr_set_hello_interval(float interval)
-{
-  if(interval < polling_int)
-    return -1;
-
-  /* Unregister function */
-  olsr_remove_scheduler_event(&generate_hello, hello_int, 0, NULL);
-
-  hello_int = interval;
-
-  /* Re-calculate holdingtime to announce */
-  neighbor_hold_time = hello_int * neighbor_timeout_mult;
-
-  olsr_printf(3, "Setting HELLO interval to %0.2f timeout %0.2f\n", interval, neighbor_hold_time);
-
-  hello_vtime = double_to_me(neighbor_hold_time);
-
-  htime = double_to_me(hello_int);
-
-  olsr_init_timer((olsr_u32_t) (neighbor_hold_time*1000), &hold_time_neighbor);
-
-
-  /* Reregister function */
-  olsr_register_scheduler_event(&generate_hello, hello_int, 0, NULL);
-
-  /*
-   *Jitter according to the RFC
-   */
-  max_jitter = hello_int / 4;
-
-  return 1;
-}
-
-/**
- * Function that sets the HELLO emission interval 
- * for non-wireless interfaces and
- * calculates all other nessecarry values such as
- * the VTIME value to emit in messages.
- * The message generation function is removed
- * and re-registered
- *
- *@param interval the new emission interval
- *
- *@return negative on error
- */
-int
-olsr_set_hello_nw_interval(float interval)
-{
-
-  if(interval < polling_int)
-    return -1;
-
-
-  /* Unregister function */
-  olsr_remove_scheduler_event(&generate_hello_nw, hello_int_nw, 0, NULL);
-
-  hello_int_nw = interval;
-
-  /* Re-calculate holdingtime to announce */
-  neighbor_hold_time_nw = hello_int_nw * neighbor_timeout_mult_nw;
-
-  olsr_printf(3, "Setting HELLO NW interval to %0.2f hold time %0.2f\n", interval, neighbor_hold_time_nw);
-
-  hello_nw_vtime = double_to_me(neighbor_hold_time_nw);
-
-  htime_nw = double_to_me(hello_int_nw);
-
-  olsr_init_timer((olsr_u32_t) (neighbor_hold_time_nw*1000), &hold_time_neighbor_nw);
-
-
-  /* Reregister function */
-  olsr_register_scheduler_event(&generate_hello_nw, hello_int_nw, 0, NULL);
-
-  return 1;
-}
-
-
-/**
- * Function that sets the TC emission interval and
- * calculates all other nessecarry values such as
- * the VTIME value to emit in messages.
- * The message generation function is removed
- * and re-registered
- *
- *@param interval the new emission interval
- *
- *@return negative on error
- */
-
-int
-olsr_set_tc_interval(float interval)
-{
-  if(interval < polling_int)
-    return -1;
-  /* Unregister function */
-  olsr_remove_scheduler_event(&generate_tc, tc_int, 0, NULL);
-
-  tc_int = interval;
-
-  /* Re-calculate holdingtime to announce */
-  topology_hold_time = tc_int * topology_timeout_mult;
-
-  olsr_printf(3, "Setting TC interval to %0.2f timeout %0.2f\n", interval, topology_hold_time);
-
-  tc_vtime = double_to_me(topology_hold_time);
-
-  /* Reregister function */
-  olsr_register_scheduler_event(&generate_tc, tc_int, 0, &changes);
-
-  return 1;
-}
-
-
-/**
- * Function that sets the MID emission interval and
- * calculates all other nessecarry values such as
- * the VTIME value to emit in messages.
- * The message generation function is removed
- * and re-registered
- *
- *@param interval the new emission interval
- *
- *@return negative on error
- */
-
-int
-olsr_set_mid_interval(float interval)
-{
-  if(interval < polling_int)
-    return -1;
-
-  if(nbinterf > 1)
-    return 0;
-
-  /* Unregister function */
-  olsr_remove_scheduler_event(&generate_mid, mid_int, 0, NULL);
-
-  mid_int = interval;
-
-  /* Re-calculate holdingtime to announce */
-  mid_hold_time = mid_int * mid_timeout_mult;
-
-  olsr_printf(3, "Setting MID interval to %0.2f timeout %0.2f\n", interval, mid_hold_time);
-
-  mid_vtime = double_to_me(mid_hold_time);
-
-  /* Reregister function */
-  olsr_register_scheduler_event(&generate_mid, mid_int, mid_int/2, NULL);
-
-  return 1;
-}
-
-
-/**
- * Function that sets the HNA emission interval and
- * calculates all other nessecarry values such as
- * the VTIME value to emit in messages.
- * The message generation function is removed
- * and re-registered
- *
- *@param interval the new emission interval
- *
- *@return negative on error
- */
-
-int
-olsr_set_hna_interval(float interval)
-{
-  if(interval < polling_int)
-    return -1;
-
-  /* Unregister function */
-  olsr_remove_scheduler_event(&generate_hna, hna_int, 0, NULL);
-
-  hna_int = interval;
-
-  /* Re-calculate holdingtime to announce */
-  hna_hold_time = hna_int * hna_timeout_mult;
-
-  olsr_printf(3, "Setting HNA interval to %0.2f timeout %0.2f\n", interval, hna_hold_time);
-
-  hna_vtime = double_to_me(hna_hold_time);
-
-  olsr_register_scheduler_event(&generate_hna, hna_int, hna_int/2, NULL);
-
-  return 1;
-}
-
-
-
-
-
 void
-generate_hello()
+generate_hello(void *p)
 {
-  struct interface *ifn;
   struct hello_message hellopacket;
+  struct interface *ifn = (struct interface *)p;
 
-  /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
-    {
-      if(!ifn->is_wireless)
-	continue;
+  olsr_build_hello_packet(&hellopacket, ifn);
+  hello_build(&hellopacket, ifn);
       
-      olsr_build_hello_packet(&hellopacket, ifn);
-      hello_build(&hellopacket, ifn);
-      
-      if(net_output_pending(ifn))
-	net_output(ifn);
-      
-    }
+  if(net_output_pending(ifn))
+    net_output(ifn);
 }
 
 void
-generate_hello_nw()
+generate_tc(void *p)
 {
-  struct interface *ifn;
-  struct hello_message hellopacket;
-
-  /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
-    {
-      if(ifn->is_wireless)
-	continue;
-      
-      olsr_build_hello_packet(&hellopacket, ifn);
-      hello_build(&hellopacket, ifn);
-
-      if(net_output_pending(ifn))
-	net_output(ifn);
-
-    }
-  return;
-}
-
-
-
-void
-generate_tc()
-{
-  struct interface *ifn;
   struct tc_message tcpacket;
+  struct interface *ifn = (struct interface *)p;
 
-  /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
+  olsr_build_tc_packet(&tcpacket);
+  tc_build(&tcpacket, ifn);
+
+  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
     {
-      olsr_build_tc_packet(&tcpacket);
-      tc_build(&tcpacket, ifn);
-
-      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
-	{
-	  set_buffer_timer(ifn);
-	}
+      set_buffer_timer(ifn);
     }
 }
 
 
 void
-generate_mid()
+generate_mid(void *p)
 {
-  struct interface *ifn;
-
-  /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
+  struct interface *ifn = (struct interface *)p;
+  mid_build(ifn);
+  
+  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
     {
-      //printf("\nSending MID seq: %i\n", ifn->seqnums.mid_seqnum);
-      mid_build(ifn);
-
-      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
-	{
-	  set_buffer_timer(ifn);
-	}
+      set_buffer_timer(ifn);
     }
 
-return;
 }
 
 
 
 void
-generate_hna()
+generate_hna(void *p)
 {
-  struct interface *ifn;
-
-  /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
-    { 
-      hna_build(ifn);
-      
-      if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
-	{
-	  set_buffer_timer(ifn);
-	}
+  struct interface *ifn = (struct interface *)p;
+  hna_build(ifn);
+  
+  if(net_output_pending(ifn) && TIMED_OUT(&fwdtimer[ifn->if_nr]))
+    {
+      set_buffer_timer(ifn);
     }
-  return;
 }
 
 
@@ -356,16 +100,16 @@ generate_hna()
  *Displays various tables depending on debuglevel
  */
 void
-generate_tabledisplay()
+generate_tabledisplay(void *foo)
 {
-  if(debug_level > 0) 
+  if(olsr_cnf->debug_level > 0) 
     {
       olsr_print_neighbor_table();
       
-      if(debug_level > 1)
+      if(olsr_cnf->debug_level > 1)
 	{
 	  olsr_print_tc_table();
-	  if(debug_level > 2) 
+	  if(olsr_cnf->debug_level > 2) 
 	    {
 	      olsr_print_mprs_set();
 	      olsr_print_mid_set();

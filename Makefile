@@ -1,9 +1,12 @@
 CC ?= gcc
 
-CFLAGS ?= -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g #-pg -DDEBUG #-march=i686
+CFLAGS ?= -Isrc -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g #-pg -DDEBUG #-march=i686
 LIBS = -lpthread -lm -ldl
 INSTALL_PREFIX ?=
 STRIP ?= strip
+BISON ?= bison
+FLEX ?= flex
+CFGDIR = src/cfgparser
 
 # Keep OS specific files last
 
@@ -17,6 +20,8 @@ SRCS=	src/interfaces.c src/parser.c src/build_msg.c \
 	src/process_package.c src/mpr.c src/local_hna_set.c \
 	src/hashing.c src/hysteresis.c src/generate_msg.c \
 	src/rebuild_packet.c src/plugin_loader.c src/plugin.c \
+	$(CFGDIR)/oparse.c $(CFGDIR)/oscan.c \
+	$(CFGDIR)/olsrd_conf.c \
 	src/linux/net.c src/linux/apm.c src/linux/tunnel.c \
 	src/linux/kernel_routes.c src/linux/link_layer.c \
 	src/linux/ifnet.c src/linux/log.c
@@ -31,9 +36,12 @@ OBJS=	src/interfaces.o src/parser.o src/build_msg.o \
 	src/process_package.o src/mpr.o src/local_hna_set.o\
 	src/hashing.o src/hysteresis.o src/generate_msg.o \
 	src/rebuild_packet.o src/plugin_loader.o src/plugin.o \
+	$(CFGDIR)/oparse.o $(CFGDIR)/oscan.o \
+	$(CFGDIR)/olsrd_conf.o \
 	src/linux/net.o src/linux/apm.o src/linux/tunnel.o \
 	src/linux/kernel_routes.o src/linux/link_layer.o \
 	src/linux/ifnet.o src/linux/log.o
+
 
 HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/olsr.h src/two_hop_neighbor_table.h olsr_plugin_io.h \
@@ -48,12 +56,22 @@ HDRS=	src/defs.h src/interfaces.h src/packet.h src/build_msg.h \
 	src/plugin.h src/socket_parser.h src/ifnet.h \
 	src/kernel_routes.h src/log.h src/net_os.h \
 	src/apm.h src/linux/tunnel.h src/scheduler.h \
+	$(CFGDIR)/oparse.h $(CFGDIR)/olsrd_conf.h \
+	$(CFGDIR)/olsrd_cfgparser.h \
 	src/linux/net.h	src/linux/link_layer.h
 
 all:	olsrd
 
 olsrd:	$(OBJS)
 	$(CC) $(LIBS) -o bin/$@ $(OBJS)
+
+oparse.h: $(CFGDIR)/oparse.c
+
+oparse.c: $(CFGDIR)/oparse.y $(CFGDIR)/olsrd_conf.h
+	$(BISON) -d -o$(CFGDIR)/oparse.c $(CFGDIR)/oparse.y
+
+$(CFGDIR)/oscan.c: $(CFGDIR)/oscan.lex $(CFGDIR)/oparse.h $(CFGDIR)/olsrd_conf.h
+	$(FLEX) -o$(CFGDIR)/oscan.c $(CFGDIR)/oscan.lex
 
 libs: 
 	for i in lib/*; do \

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: packet.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -58,16 +58,15 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
   /* Set willingness */
 
-  message->willingness = my_willingness;
-  //printf("Willingness: %d\n", my_willingness);
+  message->willingness = olsr_cnf->willingness;
+  //printf("Willingness: %d\n", olsr_cnf->willingness);
 
 
   /* Set TTL */
 
   message->ttl = 1;
   
-  //if(debug_level > 3)
-  //printf("mpr is %d\n",message->mpr_seq_number);
+  //olsr_printf(3, "mpr is %d\n",message->mpr_seq_number);
 
   COPY_IP(&message->source_addr, &main_addr);
 
@@ -319,7 +318,7 @@ olsr_build_tc_packet(struct tc_message *message)
 	  if(entry->status != SYM)
 	    continue;
 
-	  switch(tc_redundancy)
+	  switch(olsr_cnf->tc_redundancy)
 	    {
 	    case(2):
 	      {
@@ -379,7 +378,7 @@ olsr_build_tc_packet(struct tc_message *message)
       if(sending_tc)
 	{
 	  /* Send empty TC */
-	  olsr_init_timer((olsr_u32_t) topology_hold_time*1000, &tmp_timer);
+	  olsr_init_timer((olsr_u32_t) (max_tc_vtime*3)*1000, &tmp_timer);
 	  olsr_printf(3, "No more MPR selectors - will send empty TCs\n");
 	  timeradd(&now, &tmp_timer, &send_empty_tc);
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net_os.h,v 1.1 2004/09/26 10:46:07 kattemat Exp $
+ * $Id: net_os.h,v 1.2 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -60,5 +60,8 @@ getsocket(struct sockaddr *, int, char *);
 
 int  
 getsocket6(struct sockaddr_in6 *, int, char *);
+
+int
+get_ipv6_address(char *, struct sockaddr_in6 *, int);
 
 #endif

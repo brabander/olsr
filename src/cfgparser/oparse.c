@@ -172,7 +172,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.c,v 1.4 2004/10/17 13:24:28 kattemat Exp $
+ * $Id: oparse.c,v 1.5 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -194,47 +194,6 @@
 void yyerror(char *);
 int yylex(void);
 
-struct if_config_options *
-get_default_if_config(void);
-
-
-struct if_config_options *
-get_default_if_config()
-{
-  struct if_config_options *io = malloc(sizeof(struct if_config_options));
-  struct in6_addr in6;
- 
-  memset(io, 0, sizeof(struct if_config_options));
-
-  io->ipv6_addrtype = 1;
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
-
-
-  io->hello_params.emission_interval = HELLO_INTERVAL;
-  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-  io->tc_params.emission_interval = TC_INTERVAL;
-  io->tc_params.validity_time = TOP_HOLD_TIME;
-  io->mid_params.emission_interval = MID_INTERVAL;
-  io->mid_params.validity_time = MID_HOLD_TIME;
-  io->hna_params.emission_interval = HNA_INTERVAL;
-  io->hna_params.validity_time = HNA_HOLD_TIME;
-
-  return io;
-
-}
 
 
 
@@ -267,7 +226,7 @@ typedef int YYSTYPE;
 
 
 /* Line 214 of yacc.c.  */
-#line 271 "oparse.c"
+#line 230 "oparse.c"
 
 #if ! defined (yyoverflow) || YYERROR_VERBOSE
 
@@ -467,15 +426,15 @@ static const yysigned_char yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short yyrline[] =
 {
-       0,   146,   146,   147,   148,   151,   152,   153,   154,   155,
-     156,   157,   158,   159,   160,   161,   162,   163,   164,   167,
-     168,   169,   170,   171,   174,   177,   177,   180,   183,   183,
-     186,   189,   189,   192,   193,   196,   199,   199,   202,   203,
-     204,   205,   206,   207,   208,   209,   210,   211,   212,   213,
-     214,   217,   220,   220,   223,   224,   230,   253,   272,   280,
-     300,   318,   325,   332,   339,   346,   353,   360,   367,   376,
-     394,   408,   444,   481,   501,   512,   519,   534,   549,   565,
-     581,   590,   599,   607,   617,   633,   649,   671,   683
+       0,   105,   105,   106,   107,   110,   111,   112,   113,   114,
+     115,   116,   117,   118,   119,   120,   121,   122,   123,   126,
+     127,   128,   129,   130,   133,   136,   136,   139,   142,   142,
+     145,   148,   148,   151,   152,   155,   158,   158,   161,   162,
+     163,   164,   165,   166,   167,   168,   169,   170,   171,   172,
+     173,   176,   179,   179,   182,   183,   189,   212,   231,   242,
+     262,   280,   287,   294,   301,   308,   315,   322,   329,   338,
+     356,   374,   410,   447,   467,   478,   485,   500,   517,   533,
+     549,   558,   567,   575,   585,   601,   617,   639,   651
 };
 #endif
 
@@ -1269,7 +1228,7 @@ yyreduce:
   switch (yyn)
     {
         case 56:
-#line 231 "oparse.y"
+#line 190 "oparse.y"
     {
   struct if_config_options *io = get_default_if_config();
   if(io == NULL)
@@ -1292,7 +1251,7 @@ yyreduce:
     break;
 
   case 57:
-#line 254 "oparse.y"
+#line 213 "oparse.y"
     {
   struct in_addr in;
 
@@ -1312,16 +1271,19 @@ yyreduce:
     break;
 
   case 58:
-#line 273 "oparse.y"
+#line 232 "oparse.y"
     {
-  cnf->if_options->ipv6_addrtype = yyvsp[0]->boolean;
-  
+  if(yyvsp[0]->boolean)
+    cnf->if_options->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+  else
+    cnf->if_options->ipv6_addrtype = 0;
+
   free(yyvsp[0]);
 ;}
     break;
 
   case 59:
-#line 281 "oparse.y"
+#line 243 "oparse.y"
     {
   struct in6_addr in6;
 
@@ -1341,7 +1303,7 @@ yyreduce:
     break;
 
   case 60:
-#line 301 "oparse.y"
+#line 263 "oparse.y"
     {
   struct in6_addr in6;
 
@@ -1361,7 +1323,7 @@ yyreduce:
     break;
 
   case 61:
-#line 319 "oparse.y"
+#line 281 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHELLO interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hello_params.emission_interval = yyvsp[0]->floating;
@@ -1370,7 +1332,7 @@ yyreduce:
     break;
 
   case 62:
-#line 326 "oparse.y"
+#line 288 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHELLO validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hello_params.validity_time = yyvsp[0]->floating;
@@ -1379,7 +1341,7 @@ yyreduce:
     break;
 
   case 63:
-#line 333 "oparse.y"
+#line 295 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tTC interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->tc_params.emission_interval = yyvsp[0]->floating;
@@ -1388,7 +1350,7 @@ yyreduce:
     break;
 
   case 64:
-#line 340 "oparse.y"
+#line 302 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tTC validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->tc_params.validity_time = yyvsp[0]->floating;
@@ -1397,7 +1359,7 @@ yyreduce:
     break;
 
   case 65:
-#line 347 "oparse.y"
+#line 309 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tMID interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->mid_params.emission_interval = yyvsp[0]->floating;
@@ -1406,7 +1368,7 @@ yyreduce:
     break;
 
   case 66:
-#line 354 "oparse.y"
+#line 316 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tMID validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->mid_params.validity_time = yyvsp[0]->floating;
@@ -1415,7 +1377,7 @@ yyreduce:
     break;
 
   case 67:
-#line 361 "oparse.y"
+#line 323 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHNA interval: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hna_params.emission_interval = yyvsp[0]->floating;
@@ -1424,7 +1386,7 @@ yyreduce:
     break;
 
   case 68:
-#line 368 "oparse.y"
+#line 330 "oparse.y"
     {
     if(PARSER_DEBUG) printf("\tHNA validity: %0.2f\n", yyvsp[0]->floating);
     cnf->if_options->hna_params.validity_time = yyvsp[0]->floating;
@@ -1433,7 +1395,7 @@ yyreduce:
     break;
 
   case 69:
-#line 377 "oparse.y"
+#line 339 "oparse.y"
     {
 
   if(yyvsp[0]->boolean == 1)
@@ -1451,21 +1413,25 @@ yyreduce:
     break;
 
   case 70:
-#line 395 "oparse.y"
+#line 357 "oparse.y"
     {
-  if((yyvsp[0]->integer != 4) && (yyvsp[0]->integer != 6))
+  if(yyvsp[0]->integer == 4)
+    cnf->ip_version = AF_INET;
+  else if(yyvsp[0]->integer == 6)
+    cnf->ip_version = AF_INET6;
+  else
     {
       fprintf(stderr, "IPversion must be 4 or 6!\n");
       YYABORT;
     }
-  cnf->ip_version = yyvsp[0]->integer;
-  if(PARSER_DEBUG) printf("IpVersion: %d\n", cnf->ip_version);
+
+  if(PARSER_DEBUG) printf("IpVersion: %d\n", yyvsp[0]->integer);
   free(yyvsp[0]);
 ;}
     break;
 
   case 71:
-#line 409 "oparse.y"
+#line 375 "oparse.y"
     {
   struct hna4_entry *h = malloc(sizeof(struct hna4_entry));
   struct in_addr in;
@@ -1503,7 +1469,7 @@ yyreduce:
     break;
 
   case 72:
-#line 445 "oparse.y"
+#line 411 "oparse.y"
     {
   struct hna6_entry *h = malloc(sizeof(struct hna6_entry));
   struct in6_addr in6;
@@ -1542,7 +1508,7 @@ yyreduce:
     break;
 
   case 73:
-#line 482 "oparse.y"
+#line 448 "oparse.y"
     {
   struct olsr_if *in = malloc(sizeof(struct olsr_if));
   
@@ -1563,7 +1529,7 @@ yyreduce:
     break;
 
   case 74:
-#line 502 "oparse.y"
+#line 468 "oparse.y"
     {
 
   cnf->interfaces->config = yyvsp[0]->string;
@@ -1575,7 +1541,7 @@ yyreduce:
     break;
 
   case 75:
-#line 513 "oparse.y"
+#line 479 "oparse.y"
     {
   if(PARSER_DEBUG) printf("Noint set to %d\n", yyvsp[0]->boolean);
   free(yyvsp[0]);
@@ -1583,7 +1549,7 @@ yyreduce:
     break;
 
   case 76:
-#line 520 "oparse.y"
+#line 486 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1599,7 +1565,7 @@ yyreduce:
     break;
 
   case 77:
-#line 535 "oparse.y"
+#line 501 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1608,6 +1574,8 @@ yyreduce:
   else
     {
       if(PARSER_DEBUG) printf("Willingness: %d\n", yyvsp[0]->integer);
+      cnf->willingness_auto = 0;
+      cnf->willingness = yyvsp[0]->integer;
     }
   free(yyvsp[0]);
 
@@ -1615,7 +1583,7 @@ yyreduce:
     break;
 
   case 78:
-#line 550 "oparse.y"
+#line 518 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1631,7 +1599,7 @@ yyreduce:
     break;
 
   case 79:
-#line 566 "oparse.y"
+#line 534 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1647,7 +1615,7 @@ yyreduce:
     break;
 
   case 80:
-#line 582 "oparse.y"
+#line 550 "oparse.y"
     {
   cnf->hysteresis_param.scaling = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis Scaling: %0.2f\n", yyvsp[0]->floating);
@@ -1656,7 +1624,7 @@ yyreduce:
     break;
 
   case 81:
-#line 591 "oparse.y"
+#line 559 "oparse.y"
     {
   cnf->hysteresis_param.thr_high = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis UpperThr: %0.2f\n", yyvsp[0]->floating);
@@ -1665,7 +1633,7 @@ yyreduce:
     break;
 
   case 82:
-#line 600 "oparse.y"
+#line 568 "oparse.y"
     {
   cnf->hysteresis_param.thr_low = yyvsp[0]->floating;
   if(PARSER_DEBUG) printf("Hysteresis LowerThr: %0.2f\n", yyvsp[0]->floating);
@@ -1674,7 +1642,7 @@ yyreduce:
     break;
 
   case 83:
-#line 608 "oparse.y"
+#line 576 "oparse.y"
     {
   if(PARSER_DEBUG) printf("Pollrate %0.2f\n", yyvsp[0]->floating);
   cnf->pollrate = yyvsp[0]->floating;
@@ -1684,7 +1652,7 @@ yyreduce:
     break;
 
   case 84:
-#line 618 "oparse.y"
+#line 586 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1701,7 +1669,7 @@ yyreduce:
     break;
 
   case 85:
-#line 634 "oparse.y"
+#line 602 "oparse.y"
     {
   if(yyvsp[0]->boolean == 1)
     {
@@ -1717,7 +1685,7 @@ yyreduce:
     break;
 
   case 86:
-#line 650 "oparse.y"
+#line 618 "oparse.y"
     {
   struct plugin_entry *pe = malloc(sizeof(struct plugin_entry));
   
@@ -1740,7 +1708,7 @@ yyreduce:
     break;
 
   case 87:
-#line 672 "oparse.y"
+#line 640 "oparse.y"
     {
 
     if(PARSER_DEBUG) printf("Plugin param key:\"%s\" val: \"%s\"\n", yyvsp[-1]->string, yyvsp[0]->string);
@@ -1753,7 +1721,7 @@ yyreduce:
     break;
 
   case 88:
-#line 684 "oparse.y"
+#line 652 "oparse.y"
     {
     //if(PARSER_DEBUG) printf("Comment\n");
 ;}
@@ -1763,7 +1731,7 @@ yyreduce:
     }
 
 /* Line 999 of yacc.c.  */
-#line 1767 "oparse.c"
+#line 1735 "oparse.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1957,7 +1925,7 @@ yyreturn:
 }
 
 
-#line 691 "oparse.y"
+#line 659 "oparse.y"
 
 
 void yyerror (char *string)

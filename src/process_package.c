@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: process_package.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: process_package.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -91,7 +91,7 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
   /*
    * Hysteresis
    */
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
       /* Update HELLO timeout */
       //printf("MESSAGE HTIME: %f\n", message.htime);
@@ -186,7 +186,7 @@ olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union o
     }
 
 
-  if(debug_level > 2)
+  if(olsr_cnf->debug_level > 2)
     {
       mpr = message.multipoint_relay_selector_address;
       olsr_printf(3, "mpr_selector_list:[");      
@@ -406,7 +406,7 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
       /*
        * Set up tunnel to Internet gateway
        */
-      if((use_tunnel) && (ipversion == AF_INET) && (hna_tmp->net.v4 == 0))
+      if((use_tunnel) && (olsr_cnf->ip_version == AF_INET) && (hna_tmp->net.v4 == 0))
 	{
 	  if(inet_tnl_added || gw_tunnel)
 	    {
@@ -606,7 +606,7 @@ olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
       //printf("against %s\n",olsr_ip_to_string(&main_addr));
 
 
-    if(ipversion == AF_INET)
+    if(olsr_cnf->ip_version == AF_INET)
       {	
 	/* IPv4 */  
 	if(COMP_IP(&neighbors->address, &in_if->ip_addr))

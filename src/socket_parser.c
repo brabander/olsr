@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.7 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: socket_parser.c,v 1.8 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -37,7 +37,7 @@
 #define strerror(x) StrError(x)
 #endif
 
-int changes_sockets;
+static int changes_sockets;
 
 /**
  * Add a socket and handler to the socketset

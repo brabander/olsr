@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsr.h,v 1.9 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: olsr.h,v 1.10 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -105,7 +105,7 @@ void
 olsr_init_willingness(void);
 
 void
-olsr_update_willingness(void);
+olsr_update_willingness(void *);
 
 olsr_u8_t
 olsr_calculate_willingness(void);

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ifnet.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: ifnet.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -40,7 +40,7 @@ int
 set_flag(char *, short);
 
 void
-check_interface_updates(void);
+check_interface_updates(void *);
 
 int
 chk_if_changed(struct if_name *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: generate_msg.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: generate_msg.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -30,37 +30,19 @@
 
 /* Functions */
 
-int
-olsr_set_hello_interval(float);
-
-int
-olsr_set_hello_nw_interval(float);
-
-int
-olsr_set_tc_interval(float);
-
-int
-olsr_set_mid_interval(float);
-
-int
-olsr_set_hna_interval(float);
+void
+generate_hello(void *);
 
 void
-generate_hello(void);
+generate_mid(void *);
 
 void
-generate_hello_nw(void);
+generate_hna(void *);
 
 void
-generate_mid(void);
+generate_tc(void *);
 
 void
-generate_hna(void);
-
-void
-generate_tc(void);
-
-void
-generate_tabledisplay(void);
+generate_tabledisplay(void *);
 
 #endif

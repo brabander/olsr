@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: configfile.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: configfile.h,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
  
@@ -47,8 +47,7 @@ char ipv6_mult_global[50];             /* IPv6 multicast group global */
 int
 read_config_file(char *);
 
-/* So we don't have to include main.h */
-extern void
-queue_if(char *);
+struct if_config_options *
+get_default_ifcnf(struct olsrd_config *);
 
 #endif

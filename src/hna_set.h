@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: hna_set.h,v 1.7 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -79,7 +79,7 @@ olsr_update_hna_entry(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netm
 
 
 void
-olsr_time_out_hna_set(void);
+olsr_time_out_hna_set(void *);
 
 
 void

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: configfile.c,v 1.7 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: configfile.c,v 1.8 2004/10/18 13:13:36 kattemat Exp $
  *
  */
  
@@ -30,9 +30,11 @@
 #include "local_hna_set.h"
 #include "olsr.h"
 #include "plugin_loader.h"
+#include "interfaces.h"
 #include <string.h>
 #include <stdlib.h>
 
+#include "olsrd_cfgparser.h"
 
 /**
  *Funtion that tries to read and parse the config
@@ -43,6 +45,59 @@
 int
 read_config_file(char *filename)
 {
+  struct olsr_if *in;
+  union hna_netmask netmask;
+  struct hna4_entry *h4;
+  struct hna6_entry *h6;
+
+  /*
+   * NB - CHECK IPv6 MULTICAST!
+   */
+  if((olsr_cnf = olsrd_parse_cnf(filename)) != NULL)
+    {
+      olsrd_print_cnf(olsr_cnf);  
+    }
+  else
+    {
+      printf("Using default config values(no configfile)\n");
+      olsr_cnf = olsrd_get_default_cnf();
+      return -1;
+    }
+
+  /* Add interfaces */
+  in = olsr_cnf->interfaces;
+  while(in)
+    {
+      queue_if(in->name, in->if_options);
+      in = in->next;
+    }
+
+  /* Add HNA4 entries */
+  h4 = olsr_cnf->hna4_entries;
+
+  while(h4)
+    {
+      netmask.v4 = h4->netmask;
+      add_local_hna4_entry((union olsr_ip_addr *)&h4->net, &netmask);
+      h4 = h4->next;
+    }
+
+  /* Add HNA6 entries */
+  h6 = olsr_cnf->hna6_entries;
+
+  while(h6)
+    {
+      netmask.v6 = h6->prefix_len;
+      add_local_hna6_entry(&h6->net, &netmask);
+      h6 = h6->next;
+    }
+
+  /* Add plugins */
+
+
+  return 0;
+
+#if 0
   FILE *conf_file;
   char line[CONFIG_MAX_LINESIZE];
   char *linebuf, *firstbuf;
@@ -55,193 +110,7 @@ read_config_file(char *filename)
   union olsr_ip_addr net;
   union hna_netmask netmask;
 
-  conf_file = fopen(filename, "r");
 
-  olsr_printf(2, "Trying to read configuration from %s...", filename);
-
-  if(conf_file == NULL)
-    {
-      olsr_printf(2, "failed\n");
-      return -1;
-    }
-
-  olsr_printf(2, "OK\n\n");
-
-  /*output:
-   *Description: (at position 28)<value>
-   */
-
-  while(fgets(line, CONFIG_MAX_LINESIZE, conf_file))
-    {
-      if((line[0] != ' ') && 
-	 (line[0] != '#') && 
-	 (line[0] != '\n'))
-	{
-	  olsr_printf(5, "parsing: %s", line);
-
-	  /*
-	   * IP version
-	   */
-	  if(strncmp(line, "IPVERSION", 9) == 0)
-	    {
-	      sscanf(&line[9], "%1d", &ipv);
-	      switch(ipv)
-		{
-		case(4):
-		  ipversion = AF_INET;
-		  break;
-		case(6):
-		  ipversion = AF_INET6;
-		  break;
-		default:
-		  fprintf(stderr, "configfile: IPVERSION parsing failed(%d)!\n", ipv);
-		  break;
-		}
-	      olsr_printf(2, "IPVERSION:                 %d\n", ipv);
-	      continue;
-	    }
-
-	  /* 
-	   * Interfaces 
-	   */
-	  if(strncmp(line, "INTERFACES", 10) == 0)
-	    {
-
-	      linebuf = olsr_malloc(strlen(&line[10] + 1), "Config");
-	      firstbuf = linebuf;
-	      linebuf = strtok(&line[10], " \t\n");
-
-	      /* Interfaces to run on */
-	      while(linebuf != NULL)
-		{
-		  option_i = 1;
-		  /* Insert into queue */
-		  queue_if(linebuf);
-
-		  olsr_printf(2, "adding interface:          %s\n", linebuf);
-
-		  linebuf = strtok(NULL, " \t\n");		  
-		}
-
-	      free(firstbuf);
-	      continue;
-	    }
-
-	  /* 
-	   * Run if no iterfaces are present? 
-	   */
-	  if(strncmp(line, "ALLOW_NO_INT", 12) == 0)
-	    {
-              sscanf(&line[12], "%s", tmp);
-              if(strncmp(tmp, "yes", 3) == 0)
-		{
-		  allow_no_int = 1;
-		}
-	      else
-		{
-		  allow_no_int = 0;
-		}
-
-	      olsr_printf(2, "Allow no interfaces:       %s\n", tmp);
-
-              continue;
-	    }
-
-	  /*
-	   * HNA
-	   */
-	  if(strncmp(line, "HNA4", 4) == 0)
-	    {
-	      sscanf(&line[4], "%s %s", addr, mask);
-	      if (inet_aton(addr, &in) == 0)
-		{
-		  fprintf(stderr, "Error parsing HNA addr %s from configfile\n", addr);
-		  olsr_exit(__func__, EXIT_FAILURE);
-		}
-	      memcpy(&net, &in.s_addr, sizeof(olsr_u32_t));
-	      if (inet_aton(mask, &in) == 0)
-		{
-		  fprintf(stderr, "Error parsing HNA netmask %s from configfile\n", addr);
-		  olsr_exit(__func__, EXIT_FAILURE);
-		}
-	      memcpy(&netmask, &in.s_addr, sizeof(olsr_u32_t));
-
-	      olsr_printf(2, "HNA:                       %s/%s\n", addr, mask);	    
-	      
-	      add_local_hna4_entry(&net, &netmask);
-	      continue;
-	    }
-
-
-	  /*
-	   * HNA IPv6
-	   */
-	  if(strncmp(line, "HNA6", 4) == 0)
-	    {
-	      memset(addr6, 0, 50);
-	      sscanf(&line[4], "%s %d", addr6, &prefix6);
-
-	      //prefix6 = atol(&line[4 + strlen(addr6)]);
-	      if(inet_pton(AF_INET6, addr6, &in6) < 0)
-		{
-		  fprintf(stderr, "Error parsing HNA INET6 addr %s from configfile\n", addr6);
-		  olsr_exit(__func__, EXIT_FAILURE);
-		}
-	      memcpy(&net, &in6, sizeof(struct in6_addr));
-
-	      /* Create the netmask */
-	      if((prefix6 < 0) || (prefix6 > 128))
-		{
-		  fprintf(stderr, "Error parsing HNA INET6 prefix %d for %s from configfile\n", prefix6, addr6);
-		  olsr_exit(__func__, EXIT_FAILURE);
-		}	      
-	      //olsr_printf(2, "HNA6: %s\n", (char *)inet_ntop(AF_INET6, &in6, addr6, 50));
-	      //if (inet_aton(mask, &in) == 0) continue;
-	      //memcpy(&h.hna_net.netmask, &in.s_addr, sizeof(olsr_u32_t));
-	      
-
-	      olsr_printf(2, "HNA6:                      %s/%d\n", addr6, prefix6);	    
-
-	      netmask.v6 = prefix6;
-
-	      add_local_hna6_entry(&net, &netmask);
-
-	      continue;
-	    }
-
-
-	  /*
-	   *Pollrate
-	   */
-          if(strncmp(line, "POLLRATE", 8) == 0)
-            {
-              sscanf(&line[8], "%4s", tmp);
-              if(strncmp(tmp, "auto", 4) != 0)
-		sscanf(&line[8], "%4f", &polling_int);
-
-	      olsr_printf(2, "Polling rate:              %s\n", tmp);
-
-              continue;
-            }
-
-
-
-	  /*
-	   *DEBUGLEVEL
-	   */
-          if(strncmp(line, "DEBUG", 5) == 0)
-            {
-              sscanf(&line[5], "%d", &tmp_debug_level);
-	      if((tmp_debug_level < 0) || (tmp_debug_level > 9))
-		{
-		  fprintf(stderr, "Wrong DEBUG value \"%d\" in config file!\n", debug_level);
-		  olsr_exit(__func__, EXIT_FAILURE);
-		}
-	      debug_level = tmp_debug_level;
-	      olsr_printf(2, "Debug level:               %d\n", debug_level);
-
-              continue;
-            }
 
 	  /*
 	   * IPv4 broadcast 255.255.255.255 or interface detection
@@ -662,14 +531,30 @@ read_config_file(char *filename)
 	  //olsr_syslog(OLSR_LOG_ERR, "Could not parse config file(%s) line:\"%s\"", filename, line);
 
 	  olsr_printf(1, "Could not parse config file(%s) line: %s", filename, line);
-	}
+	
       else
 	olsr_printf(5, "Skipping: %s", line);
-    }
+    
 
 
   fclose(conf_file);
   return 0;
+
+#endif
 }
 
 
+
+struct if_config_options *
+get_default_ifcnf(struct olsrd_config *cnf)
+{
+  struct if_config_options *ifc = cnf->if_options;
+
+  while(ifc)
+    {
+      if(!strcmp(ifc->name, DEFAULT_IF_CONFIG_NAME))
+        return ifc;
+      ifc = ifc->next;
+    }
+  return NULL;
+}

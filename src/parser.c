@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: parser.c,v 1.8 2004/09/22 20:57:50 kattemat Exp $
+ * $Id: parser.c,v 1.9 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -166,7 +166,7 @@ olsr_input(int fd)
 	  break;
 	}
 
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 sender address */
 	  COPY_IP(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr);
@@ -185,9 +185,9 @@ olsr_input(int fd)
       olsr_printf(5, "Recieved a packet from %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
 #endif
       //printf("\nCC: %d FROMLEN: %d\n\n", cc, fromlen);
-      if ((ipversion == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
+      if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
 	break;
-      else if ((ipversion == AF_INET6) && (fromlen != sizeof (struct sockaddr_in6)))
+      else if ((olsr_cnf->ip_version == AF_INET6) && (fromlen != sizeof (struct sockaddr_in6)))
 	break;
 
       //printf("Recieved data on socket %d\n", socknr);
@@ -270,7 +270,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	      printf("\n\t");
 	    }
 	  x++;
-	  if(ipversion == AF_INET)
+	  if(olsr_cnf->ip_version == AF_INET)
 	    printf(" %03i", (u_char) packet[i]);
 	  else
 	    printf(" %02x", (u_char) packet[i]);
@@ -279,7 +279,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       printf("\n");
     }
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     msgsize = ntohs(m->v4.olsr_msgsize);
   else
     msgsize = ntohs(m->v6.olsr_msgsize);
@@ -288,9 +288,9 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   /*
    * Hysteresis update - for every OLSR package
    */
-  if(use_hysteresis)
+  if(olsr_cnf->use_hysteresis)
     {
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
 	  update_hysteresis_incoming(from_addr, 
@@ -314,7 +314,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       if (count < minsize)
 	break;
       
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	msgsize = ntohs(m->v4.olsr_msgsize);
       else
 	msgsize = ntohs(m->v6.olsr_msgsize);
@@ -334,7 +334,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
 
       /* Treat TTL hopcnt */
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
 	  if (m->v4.ttl <= 0)

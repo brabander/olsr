@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hashing.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: hashing.h,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -30,7 +30,7 @@
 #define	HASHSIZE	32
 #define	HASHMASK	(HASHSIZE - 1)
 
-extern int ipversion;
+#include "defs.h"
 
 olsr_u32_t
 olsr_hashing(union olsr_ip_addr *);

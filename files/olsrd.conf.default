@@ -1,162 +1,80 @@
 #
 # UniK OLSR daemon config file
 #
-# This file was shipped with olsrd 0.4.8
-#
-# Lines starting with a # are discarded
+# Lines starting with a # are discarded.
+# To use default values - just comment
+# out the options.
 #
 
 # Debug level(0-9)
 # If set to 0 the daemon runs in the background
 
-DEBUG		1
+DebugLevel	1
 
 # IP version to use (4 or 6)
+# Defaults to IPv4
 
-IPVERSION	4
+IpVersion	4
 
 # HNA IPv4 routes
 # syntax: netaddr netmask
 # Example Internet gateway:
-# HNA4 0.0.0.0 0.0.0.0
+# 0.0.0.0 0.0.0.0
 
-#HNA4 15.15.0.0 255.255.255.0
+Hna4
+{
+    0.0.0.0   0.0.0.0
+    15.15.0.0 255.255.255.0
+    15.16.0.0 255.255.255.0
+}
 
 # HNA IPv6 routes
 # syntax: netaddr prefix
 # Example Internet gateway:
-#HNA6 :: 0
+# :: 0
+Hna6
+{
+     ::              0
+    fecb:ab:ed:: 48
+    fecb:ff:dd::dd:d 48
+    fec0:2200:106:: 48
+    fec0:2200:106:0:0:0:0:0 48
+}
 
-#HNA6 fec0:2200:106:: 48
+# Interfaces and their rulesets
+Interface "eth0"
+{
+    Setup "lan"
+}
 
-# A list of whitespace separated interface names
-
-INTERFACES	eth1 eth0
+Interface "eth1"
+{
+    Setup "wlan"
+}
 
 # Should olsrd keep on running even if there are
 # no interfaces available? This is a good idea
 # for a PCMCIA/USB hotswap environment.
 # "yes" OR "no"
 
-ALLOW_NO_INT	yes
-
-
-# Olsrd plugins to load
-# This must be the absolute path to the file
-# or the loader will use the following scheme:
-# - Try the paths in the LD_LIBRARY_PATH 
-#   environment variable.
-# - The list of libraries cached in /etc/ld.so.cache
-# - /lib, followed by /usr/lib
-#
-# ONE PLUGIN PR. LINE
-
-#LOAD_PLUGIN 	olsrd_secure.so.0.3
-#LOAD_PLUGIN	olsrd_dyn_gw.so.0.1
-#LOAD_PLUGIN	olsrd_power.so.0.1
-
-# IPv4 broadcast address to use. The
-# one usefull example would be 255.255.255.255
-# 'auto' uses the broadcastaddress
-# every card is configured with
-
-IP4BROAD	auto
-
-# IPv6 address scope to use.
-# Must be 'site-local' or 'global'
-
-IP6ADDRTYPE	site-local
-
-# IPv6 multicast address to use when
-# using site-local addresses.
-# 'auto' uses the default ff05::15
-
-IP6MULTI-SITE	auto
-
-# IPv6 multicast address to use when
-# using global addresses
-# 'auto' uses the default ff0e::1
-
-IP6MULTI-GLOBAL	auto
-
-# Polling rate in seconds(float). 
-# Auto uses default value 0.1 sec
-
-POLLRATE	auto
-
-# Hello interval in seconds(float)
-# auto uses RFC proposed value
-
-HELLOINT	auto
-
-# HELLO hold time as a multiplier
-# of the HELLOINT. Auto is the
-# RFC proposed interval
-
-HELLOMULTI	auto
-
-# TC interval in seconds(float)
-# auto uses RFC proposed value
-
-TCINT		auto
-
-# TC hold time as a multiplier
-# of the TCINT. Auto is the
-# RFC proposed interval
-
-TCMULTI		auto
-
-# HELLO interval for sending
-# interval/holding time for wired
-# links. This is a multiplier of
-# the HELLOINT value. Auto is 2
-
-NWHELLOINT	auto
-
-# HELLO hold time for wired links,
-# as a multiplier of the NWHELLOINT. 
-# Auto is NWHELLOINT * 3.
-
-NWHELLOMULTI	auto
-
-# MID interval in seconds(float)
-# auto uses RFC proposed value
-
-MIDINT		auto
-
-# MID hold time as a multiplier
-# of the MIDINT. Auto is the
-# RFC proposed interval
-
-MIDMULTI	auto
-
-# HNA interval in seconds(float)
-# auto uses 3*TCINT
-
-HNAINT		auto
-
-# HNA hold time as a multiplier
-# of the HNAINT. Auto is the
-# RFC proposed interval
-
-HNAMULTI	auto
+AllowNoInt	yes
 
 # TOS(type of service) value for
 # the IP header of control traffic.
 # auto is 16
 
-TOSVALUE	auto
+TosValue	auto
 
 # The fixed willingness to use(0-7)
 # or "auto" to set willingness dynammically
 # based on battery/power status
 
-WILLINGNESS    	auto
+Willingness    	auto
 
 # Allow processes like the GUI front-end
 # to connect to the daemon. 'yes' or 'no'
 
-IPC-CONNECT    	no
+IpcConnect    	no
 
 
 # Wether to use hysteresis or not
@@ -164,7 +82,7 @@ IPC-CONNECT    	no
 # link sensing but delays neighbor registration.
 # Used by default. 'yes' or 'no'
 
-USE_HYSTERESIS	yes
+UseHysteresis	yes
 
 # Hysteresis parameters
 # Do not alter these unless you know 
@@ -175,9 +93,15 @@ USE_HYSTERESIS	yes
 # THR_LOW must always be lower than
 # THR_HIGH!!
 
-HYST_SCALING	auto
-HYST_THR_HIGH	auto
-HYST_THR_LOW	auto
+#HystScaling	0.50
+#HystThrHigh	0.80
+#HystThrLow	0.30
+
+
+# Polling rate in seconds(float). 
+# Auto uses default value 0.1 sec
+
+Pollrate	0.1
 
 
 # TC redundancy
@@ -188,18 +112,161 @@ HYST_THR_LOW	auto
 # 1 - send MPR selectors and MPRs
 # 2 - send all neighbors
 #
-# auto - defaults to 0
+# defaults to 0
 
-TC_REDUNDANCY	auto
+TcRedundancy	0
 
 
 #
-# MPR redundancy
+# MPR coverage
 # Specifies how many MPRs a node should
 # try select to reach every 2 hop neighbor
 #
 # Can be set to any integer >0
 #
-# auto - defaults to 1
+# defaults to 1
 
-MPR_COVERAGE	auto
+MprCoverage	1
+
+
+# Olsrd plugins to load
+# This must be the absolute path to the file
+# or the loader will use the following scheme:
+# - Try the paths in the LD_LIBRARY_PATH 
+#   environment variable.
+# - The list of libraries cached in /etc/ld.so.cache
+# - /lib, followed by /usr/lib
+LoadPlugin "olsrd_secure.so.0.3"
+{
+    PlParam     "key1"   "value1"
+    # Might be possible to set options here in
+    # future versions
+}
+
+LoadPlugin "olsrd_dyn_gw.so.0.1"
+{
+    PlParam     "key4"   "value3"
+    # Might be possible to set options here in
+    # future versions
+}
+
+# olsrd_dyn_gw.so.0.1
+# olsrd_power.so.0.1
+
+
+IfSetup "lan"
+{
+
+    # IPv4 broadcast address to use. The
+    # one usefull example would be 255.255.255.255
+    # If not defined the broadcastaddress
+    # every card is configured with is used
+
+    Ip4Broadcast	255.255.255.255
+
+    # IPv6 address scope to use.
+    # Must be 'site-local' or 'global'
+
+    # Ip6AddrType		site-local
+
+    # IPv6 multicast address to use when
+    # using site-local addresses.
+    # If not defined, ff05::15 is used
+
+    Ip6MulticastSite	ff05::11
+
+    # IPv6 multicast address to use when
+    # using global addresses
+    # If not defined, ff0e::1 is used
+
+    # Ip6MulticastGlobal	ff0e::1
+
+
+    # Emission intervals.
+    # If not defined, RFC proposed values will
+    # be used in most cases.
+
+    # Hello interval in seconds(float)
+    # HelloInterval    2.0
+
+    # HELLO validity time
+    # HelloValidityTime	6.0
+
+    # TC interval in seconds(float)
+    TcInterval        5.0
+
+    # TC validity time
+    # TcValidityTime	15.0
+
+    # MID interval in seconds(float)
+    # MidInterval	5.0
+
+    # MID validity time
+    # MidValidityTime	15.0
+
+    # HNA interval in seconds(float)
+    # HnaInterval	5.0
+
+    # HNA validity time
+    # HnaValidityTime 	15.0
+
+}
+
+
+IfSetup "wlan"
+{
+
+    # IPv4 broadcast address to use. The
+    # one usefull example would be 255.255.255.255
+    # If not defined the broadcastaddress
+    # every card is configured with is used
+
+    # Ip4Broadcast	255.255.255.255
+
+    # IPv6 address scope to use.
+    # Must be 'site-local' or 'global'
+
+    Ip6AddrType		site-local
+
+    # IPv6 multicast address to use when
+    # using site-local addresses.
+    # If not defined, ff05::15 is used
+
+    Ip6MulticastSite	ff05::15
+
+    # IPv6 multicast address to use when
+    # using global addresses
+    # If not defined, ff0e::1 is used
+
+    Ip6MulticastGlobal	ff0e::1
+
+
+    # Emission intervals.
+    # If not defined, RFC proposed values will
+    # be used in most cases.
+
+    # Hello interval in seconds(float)
+    HelloInterval    1.0
+
+    # HELLO validity time
+    HelloValidityTime	3.0
+
+    # TC interval in seconds(float)
+    TcInterval        4.0
+
+    # TC validity time
+    TcValidityTime	14.0
+
+    # MID interval in seconds(float)
+    MidInterval	5.0
+
+    # MID validity time
+    MidValidityTime	15.0
+
+    # HNA interval in seconds(float)
+    HnaInterval	5.0
+
+    # HNA validity time
+    HnaValidityTime 	15.0
+
+}

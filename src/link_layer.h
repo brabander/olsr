@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_layer.h,v 1.6 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: link_layer.h,v 1.7 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -32,7 +32,7 @@ void
 init_link_layer_notification(void);
 
 void
-poll_link_layer(void);
+poll_link_layer(void *);
 
 int
 add_spy_node(union olsr_ip_addr *, char *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.c,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: interfaces.c,v 1.7 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -49,7 +49,7 @@ ifinit()
    *Initializing addrsock struct to be
    *used on all the sockets
    */
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
       memset(&addrsock, 0, sizeof (addrsock));
@@ -74,7 +74,7 @@ ifinit()
     }
   
   /* register network interface update function with scheduler */
-  olsr_register_scheduler_event(&check_interface_updates, 5.0, 0, NULL);
+  olsr_register_scheduler_event(&check_interface_updates, NULL, 5.0, 0, NULL);
 
   return nbinterf;
 }
@@ -97,7 +97,7 @@ if_ifwithaddr(union olsr_ip_addr *addr)
 
   for (ifp = ifnet; ifp; ifp = ifp->int_next)
     {
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
 	  //printf("Checking: %s == ", inet_ntoa(((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
@@ -144,56 +144,6 @@ if_ifwithsock(int fd)
   return (ifp);
 }
 
-#ifndef WIN32
-/*
- *From net-tools lib/interface.c
- *
- */
-
-int
-get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
-{
-  char addr6[40], devname[IFNAMSIZ];
-  char addr6p[8][5];
-  int plen, scope, dad_status, if_idx;
-  FILE *f;
-  struct sockaddr_in6 tmp_sockaddr6;
-
-  if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) 
-    {
-      while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n",
-		    addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-		    addr6p[4], addr6p[5], addr6p[6], addr6p[7],
-		    &if_idx, &plen, &scope, &dad_status, devname) != EOF) 
-	{
-	  if (!strcmp(devname, ifname)) 
-	    {
-	      sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
-		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	      if(debug_level > 1)
-		{
-		  olsr_printf(1, "\tinet6 addr: %s\n", addr6);
-		  olsr_printf(3, "\tScope:");
-		}
-	      if(scope == scope_in)
-		{
-		  olsr_printf(3, "IPv6 addr:\n");
-		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
-		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
-		  fclose(f);
-		  return 1;
-		}
-	    }
-	}
-      fclose(f);
-    }
-  
-  return 0;
-}
-#endif
-
-
 
 
 
@@ -206,7 +156,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
  *@return nada
  */
 void
-queue_if(char *name)
+queue_if(char *name, struct if_config_options *ico)
 {
 
   struct if_name *interf_n;
@@ -229,6 +179,8 @@ queue_if(char *name)
 
   /* strlen () does not return length including terminating /0 */
   interf_n->name = olsr_malloc(strlen(name) + 1, "queue interface name");
+  interf_n->cnf = ico;
+  interf_n->max_jitter = ico->hello_params.emission_interval / 4;
   interf_n->configured = 0;
   interf_n->interf = NULL;
   interf_n->index = queued_ifs++;

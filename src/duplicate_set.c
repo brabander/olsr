@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: duplicate_set.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: duplicate_set.c,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -48,7 +48,7 @@ olsr_init_duplicate_table()
   /* Since the holdingtime is rather large for duplicate
    * entries the timeoutfunction is only ran every 2 seconds
    */
-  olsr_register_scheduler_event(&olsr_time_out_duplicate_table, 2, 0, NULL);
+  olsr_register_scheduler_event(&olsr_time_out_duplicate_table, NULL, 2, 0, NULL);
   
   for(i = 0; i < HASHSIZE; i++)
     {
@@ -212,7 +212,7 @@ olsr_del_dup_entry(struct dup_entry *entry)
 
 
 void
-olsr_time_out_duplicate_table()
+olsr_time_out_duplicate_table(void *foo)
 {
   int i;
   struct dup_entry *tmp_dup_table, *entry_to_delete;

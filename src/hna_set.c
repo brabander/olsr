@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hna_set.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: hna_set.c,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -38,7 +38,7 @@ olsr_init_hna_set()
 
   int index;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       netmask_size = sizeof(olsr_u32_t);
     }
@@ -50,7 +50,7 @@ olsr_init_hna_set()
   /* Since the holdingtime is assumed to be rather large for 
    * HNA entries, the timeoutfunction is only ran once every second
    */
-  olsr_register_scheduler_event(&olsr_time_out_hna_set, 1, 0, NULL);
+  olsr_register_scheduler_event(&olsr_time_out_hna_set, NULL, 1, 0, NULL);
 
   for(index=0;index<HASHSIZE;index++)
     {
@@ -246,7 +246,7 @@ olsr_update_hna_entry(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna
  *@return nada
  */
 void
-olsr_time_out_hna_set()
+olsr_time_out_hna_set(void *foo)
 {
   int index;
   struct hna_entry *tmp_hna, *hna_to_delete;

@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: oparse.y,v 1.5 2004/10/17 13:24:28 kattemat Exp $
+ * $Id: oparse.y,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -43,47 +43,6 @@
 void yyerror(char *);
 int yylex(void);
 
-struct if_config_options *
-get_default_if_config(void);
-
-
-struct if_config_options *
-get_default_if_config()
-{
-  struct if_config_options *io = malloc(sizeof(struct if_config_options));
-  struct in6_addr in6;
- 
-  memset(io, 0, sizeof(struct if_config_options));
-
-  io->ipv6_addrtype = 1;
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
-
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
-      exit(EXIT_FAILURE);
-    }
-  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
-
-
-  io->hello_params.emission_interval = HELLO_INTERVAL;
-  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-  io->tc_params.emission_interval = TC_INTERVAL;
-  io->tc_params.validity_time = TOP_HOLD_TIME;
-  io->mid_params.emission_interval = MID_INTERVAL;
-  io->mid_params.validity_time = MID_HOLD_TIME;
-  io->hna_params.emission_interval = HNA_INTERVAL;
-  io->hna_params.validity_time = HNA_HOLD_TIME;
-
-  return io;
-
-}
 
 
 
@@ -271,8 +230,11 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 
 isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
 {
-  cnf->if_options->ipv6_addrtype = $2->boolean;
-  
+  if($2->boolean)
+    cnf->if_options->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+  else
+    cnf->if_options->ipv6_addrtype = 0;
+
   free($2);
 }
 ;
@@ -393,13 +355,17 @@ idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 
 iipversion:    TOK_IPVERSION TOK_INTEGER
 {
-  if(($2->integer != 4) && ($2->integer != 6))
+  if($2->integer == 4)
+    cnf->ip_version = AF_INET;
+  else if($2->integer == 6)
+    cnf->ip_version = AF_INET6;
+  else
     {
       fprintf(stderr, "IPversion must be 4 or 6!\n");
       YYABORT;
     }
-  cnf->ip_version = $2->integer;
-  if(PARSER_DEBUG) printf("IpVersion: %d\n", cnf->ip_version);
+
+  if(PARSER_DEBUG) printf("IpVersion: %d\n", $2->integer);
   free($2);
 }
 ;
@@ -540,6 +506,8 @@ awillingness: TOK_WILLINGNESS TOK_INTEGER
   else
     {
       if(PARSER_DEBUG) printf("Willingness: %d\n", $2->integer);
+      cnf->willingness_auto = 0;
+      cnf->willingness = $2->integer;
     }
   free($2);
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: routing_table.c,v 1.7 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: routing_table.c,v 1.8 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -184,7 +184,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, union olsr_ip_addr *router, i
   else
     new_route_entry->rt_flags = (RTF_UP|RTF_HOST|RTF_GATEWAY);
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     /* IPv4 */
     new_route_entry->rt_mask.v4 = NETMASK_HOST;
   else
@@ -484,7 +484,7 @@ olsr_calculate_routing_table()
     }
 
 
-  if(debug_level > 5)
+  if(olsr_cnf->debug_level > 5)
     {
       printf("************** TABLES ****************\n");
       printf("Routing table:\n");
@@ -690,7 +690,7 @@ olsr_calculate_hna_routes()
   /* Update kernel */
   olsr_update_kernel_hna_routes();
 
-  if(debug_level > 2)
+  if(olsr_cnf->debug_level > 2)
     {
       olsr_printf(3, "HNA table:\n");
       olsr_print_routing_table(hna_routes);

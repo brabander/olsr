@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_cfgparser.h,v 1.2 2004/10/16 23:17:48 kattemat Exp $
+ * $Id: olsrd_cfgparser.h,v 1.1 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -28,7 +28,13 @@
 #define _OLSRD_CFGPARSER_H
 
 
+#ifndef IPV6_ADDR_SITELOCAL
+#define IPV6_ADDR_SITELOCAL    0x0040U
+#endif
+
 #include "olsr_protocol.h"
+
+#define DEFAULT_IF_CONFIG_NAME "default_ifcfg"
 
 struct olsr_msg_params
 {
@@ -91,12 +97,12 @@ struct plugin_entry
 
 struct olsrd_config
 {
-  olsr_u8_t                debug_level;
-  olsr_u8_t                ip_version;
+  int                      debug_level;
+  int                      ip_version;
   olsr_u8_t                allow_no_interfaces;
   olsr_u16_t               tos;
-  olsr_u8_t                auto_willingness;
-  olsr_u8_t                fixed_willingness;
+  olsr_u8_t                willingness_auto;
+  olsr_u8_t                willingness;
   olsr_u8_t                open_ipc;
   olsr_u8_t                use_hysteresis;
   struct hyst_param        hysteresis_param;
@@ -117,6 +123,9 @@ struct olsrd_config
 
 struct olsrd_config *
 olsrd_parse_cnf(char *);
+
+struct olsrd_config *
+olsrd_get_default_cnf(void);
 
 void
 olsrd_free_cnf(struct olsrd_config *);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_layer.c,v 1.5 2004/09/21 19:08:58 kattemat Exp $
+ * $Id: link_layer.c,v 1.6 2004/10/18 13:13:38 kattemat Exp $
  *
  */
 
@@ -87,7 +87,7 @@ init_link_layer_notification()
 	clear_spy_list(ifd->int_name);
     }
 
-  olsr_register_scheduler_event(&poll_link_layer, poll_int, 0, NULL);
+  olsr_register_scheduler_event(&poll_link_layer, NULL, poll_int, 0, NULL);
 
   return;
 }
@@ -287,7 +287,7 @@ ping_thread(void *_ip)
 }
 
 void
-poll_link_layer()
+poll_link_layer(void *foo)
 {
   struct iwreq		wrq;
   char		        buffer[(sizeof(struct iw_quality) +

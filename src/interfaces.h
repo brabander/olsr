@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: interfaces.h,v 1.8 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: interfaces.h,v 1.9 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -51,6 +51,13 @@
 #define IPV6_ADDR_RESERVED	0x2000U
 
 
+struct vtimes
+{
+  olsr_u8_t hello;
+  olsr_u8_t tc;
+  olsr_u8_t mid;
+  olsr_u8_t hna;
+};
 
 /**
  *A struct containing all necessary information about each
@@ -76,6 +83,10 @@ struct interface
   int           if_nr;                          /* This interfaces index internally*/
   int           is_wireless;                    /* wireless interface or not*/
   olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+
+  float         hello_etime;
+  struct        vtimes valtimes;
+
   struct	interface *int_next;
 };
 
@@ -88,7 +99,9 @@ struct if_name
   char *name;
   int configured;
   int index;
+  float max_jitter;
   struct interface *interf;
+  struct if_config_options *cnf;
   struct if_name *next;
 };
 
@@ -139,11 +152,8 @@ if_ifwithsock(int);
 struct	interface *
 if_ifwithaddr(union olsr_ip_addr *);
 
-int
-get_ipv6_address(char *, struct sockaddr_in6 *, int);
-
 void
-queue_if(char *);
+queue_if(char *, struct if_config_options *);
 
 int
 add_ifchgf(int (*f)(struct interface *, int));

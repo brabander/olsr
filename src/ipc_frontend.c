@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -105,7 +105,7 @@ ipc_accept_thread()
   struct sockaddr_in pin;
   char *addr;  
 
-  while(use_ipc)
+  while(olsr_cnf->open_ipc)
     {
       olsr_printf(2, "\nFront-end accept thread initiated(socket %d)\n\n", ipc_sock);
 
@@ -184,7 +184,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
   if(!ipc_active)
     return;
   
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     size = ntohs(msg->v4.olsr_msgsize);
   else
     size = ntohs(msg->v6.olsr_msgsize);
@@ -193,7 +193,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
     {
       olsr_printf(1, "(OUTPUT)IPC connection lost!\n");
       close(ipc_connection);
-      //use_ipc = 0;
+      //olsr_cnf->open_ipc = 0;
       ipc_active = 0;
       return;
     }
@@ -224,7 +224,7 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     COPY_IP(&packet.target_addr, &((struct sockaddr_in *)&kernel_route->v4.rt_dst)->sin_addr.s_addr);
   else
     COPY_IP(&packet.target_addr, &kernel_route->v6.rtmsg_dst);
@@ -232,7 +232,7 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
   packet.add = add;
   if(add)
     {
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	{
 	  packet.metric = kernel_route->v4.rt_metric - 1;
 	  COPY_IP(&packet.gateway_addr, &((struct sockaddr_in *)&kernel_route->v4.rt_gateway)->sin_addr.s_addr);
@@ -277,7 +277,7 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
     {
       olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
       close(ipc_connection);
-      //use_ipc = 0;
+      //olsr_cnf->open_ipc = 0;
       ipc_active = 0;
       return -1;
     }
@@ -317,7 +317,7 @@ ipc_send_all_routes()
 	  
 	  packet.add = 1;
 
-	  if(ipversion == AF_INET)
+	  if(olsr_cnf->ip_version == AF_INET)
 	    {
 	      packet.metric = (olsr_u8_t)(destination->rt_metric - 1);
 	    }
@@ -339,7 +339,7 @@ ipc_send_all_routes()
 	    {
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
-	      //use_ipc = 0;
+	      //olsr_cnf->open_ipc = 0;
 	      ipc_active = 0;
 	      return -1;
 	    }
@@ -362,7 +362,7 @@ ipc_send_all_routes()
 	  
 	  packet.add = 1;
 
-	  if(ipversion == AF_INET)
+	  if(olsr_cnf->ip_version == AF_INET)
 	    {
 	      packet.metric = (olsr_u8_t)(destination->rt_metric - 1);
 	    }
@@ -384,7 +384,7 @@ ipc_send_all_routes()
 	    {
 	      olsr_printf(1, "(RT_ENTRY)IPC connection lost!\n");
 	      close(ipc_connection);
-	      //use_ipc = 0;
+	      //olsr_cnf->open_ipc = 0;
 	      ipc_active = 0;
 	      return -1;
 	    }
@@ -430,7 +430,7 @@ ipc_send_net_info()
   net_msg->mids = nbinterf - 1;
   
   /* HNAs */
-  if(ipversion == AF_INET6)
+  if(olsr_cnf->ip_version == AF_INET6)
     {
       if(local_hna6_set.next == &local_hna6_set)
 	net_msg->hnas = 0;
@@ -438,7 +438,7 @@ ipc_send_net_info()
 	net_msg->hnas = 1;
     }
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       if(local_hna4_set.next == &local_hna4_set)
 	net_msg->hnas = 0;
@@ -447,13 +447,14 @@ ipc_send_net_info()
     }
 
   /* Different values */
-  net_msg->hello_int = htons((olsr_u16_t)hello_int);
-  net_msg->hello_lan_int = htons((olsr_u16_t)hello_int_nw);
-  net_msg->tc_int = htons((olsr_u16_t)tc_int);
-  net_msg->neigh_hold = htons((olsr_u16_t)neighbor_hold_time);
-  net_msg->topology_hold = htons((olsr_u16_t)topology_hold_time);
+  /* Temporary fixes */
+  net_msg->hello_int = 0;//htons((olsr_u16_t)hello_int);
+  net_msg->hello_lan_int = 0;//htons((olsr_u16_t)hello_int_nw);
+  net_msg->tc_int = 0;//htons((olsr_u16_t)tc_int);
+  net_msg->neigh_hold = 0;//htons((olsr_u16_t)neighbor_hold_time);
+  net_msg->topology_hold = 0;//htons((olsr_u16_t)topology_hold_time);
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     net_msg->ipv6 = 0;
   else
     net_msg->ipv6 = 1;
@@ -484,7 +485,7 @@ ipc_send_net_info()
     {
       olsr_printf(1, "(NETINFO)IPC connection lost!\n");
       close(ipc_connection);
-      use_ipc = 0;
+      olsr_cnf->open_ipc = 0;
       return -1;
     }
 

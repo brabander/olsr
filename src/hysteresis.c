@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: hysteresis.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: hysteresis.c,v 1.6 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -31,11 +31,14 @@
 #include "defs.h"
 #include "olsr.h"
 
+#define hscaling olsr_cnf->hysteresis_param.scaling
+#define hhigh    olsr_cnf->hysteresis_param.thr_high
+#define hlow     olsr_cnf->hysteresis_param.thr_low
 
 inline float
 olsr_hyst_calc_stability(float old_quality)
 {
-  return (((1 - hyst_scaling) * old_quality) + hyst_scaling);
+  return (((1 - hscaling) * old_quality) + hscaling);
 }
 
 
@@ -43,7 +46,7 @@ olsr_hyst_calc_stability(float old_quality)
 inline float
 olsr_hyst_calc_instability(float old_quality)
 {
-  return ((1 - hyst_scaling) * old_quality);
+  return ((1 - hscaling) * old_quality);
 }
 
 
@@ -54,7 +57,7 @@ olsr_process_hysteresis(struct link_entry *entry)
   struct timeval tmp_timer;
 
   //printf("PROCESSING QUALITY: %f\n", entry->L_link_quality);
-  if(entry->L_link_quality > hyst_threshold_high)
+  if(entry->L_link_quality > hhigh)
     {
       if(entry->L_link_pending == 1)
 	{
@@ -76,7 +79,7 @@ olsr_process_hysteresis(struct link_entry *entry)
       return 1;
     }
 
-  if(entry->L_link_quality < hyst_threshold_low)
+  if(entry->L_link_quality < hlow)
     {
       if(entry->L_link_pending == 0)
 	{

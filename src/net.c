@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: net.c,v 1.15 2004/09/28 05:50:06 kattemat Exp $
+ * $Id: net.c,v 1.16 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -223,7 +223,7 @@ net_output(struct interface *ifp)
   /* Set the packetlength */
   outmsg->v4.olsr_packlen = htons(netbufs[ifp->if_nr]->pending);
 
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
       sin = (struct sockaddr_in *)&ifp->int_broadaddr;
@@ -231,10 +231,6 @@ net_output(struct interface *ifp)
       /* Copy sin */
       dst = *sin;
       sin = &dst;
-
-      /* Set user defined broadcastaddr */
-      if(bcast_set)
-	memcpy(&dst.sin_addr.s_addr, &bcastaddr.sin_addr, sizeof(olsr_u32_t));
 
       if (sin->sin_port == 0)
 	sin->sin_port = olsr_udp_port;
@@ -272,7 +268,7 @@ net_output(struct interface *ifp)
 	case(HNA_MESSAGE):printf("\n\tHNA ");break;
 	default:printf("\n\tTYPE: %d ", netbufs[ifp->if_nr]->buff[4]); break;
 	}
-      if(ipversion == AF_INET)
+      if(olsr_cnf->ip_version == AF_INET)
 	printf("to %s size: %d\n\t", ip_to_string((olsr_u32_t *)&sin->sin_addr.s_addr), netbufs[ifp->if_nr]->pending);
       else
 	printf("to %s size: %d\n\t", ip6_to_string(&sin6->sin6_addr), netbufs[ifp->if_nr]->pending);
@@ -287,7 +283,7 @@ net_output(struct interface *ifp)
 	      printf("\n\t");
 	    }
 	  x++;
-	  if(ipversion == AF_INET)
+	  if(olsr_cnf->ip_version == AF_INET)
 	    printf(" %3i", (u_char) netbufs[ifp->if_nr]->buff[i]);
 	  else
 	    printf(" %2x", (u_char) netbufs[ifp->if_nr]->buff[i]);
@@ -301,7 +297,7 @@ net_output(struct interface *ifp)
    *used when building packets.
    */
   
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
       if(sendto(ifp->olsr_socket, 
@@ -595,7 +591,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
   char *ret;
   struct in_addr in;
   
-  if(ipversion == AF_INET)
+  if(olsr_cnf->ip_version == AF_INET)
     {
       in.s_addr=addr->v4;
       ret = inet_ntoa(in);

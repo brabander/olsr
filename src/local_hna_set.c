@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: local_hna_set.c,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: local_hna_set.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -32,14 +32,6 @@ olsr_init_local_hna_set()
 {
 
   inet_gw = 0;
-  if(ipversion == AF_INET)
-    {
-      netmask_size = sizeof(olsr_u32_t);
-    }
-  else
-    {
-      netmask_size = sizeof(olsr_u16_t);
-    }
 
   local_hna4_set.next = &local_hna4_set;
   local_hna4_set.prev = &local_hna4_set;

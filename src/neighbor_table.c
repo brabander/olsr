@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: neighbor_table.c,v 1.6 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.7 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -343,7 +343,7 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
   
 	  changes_neighborhood = UP;
 	  changes_topology = UP;
-	  if(tc_redundancy > 1)
+	  if(olsr_cnf->tc_redundancy > 1)
 	    changes = UP;
 	}
       entry->status = SYM;
@@ -354,7 +354,7 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 	{
 	  changes_neighborhood = UP;
 	  changes_topology = UP;
-	  if(tc_redundancy > 1)
+	  if(olsr_cnf->tc_redundancy > 1)
 	    changes = UP;
 	}
       /* else N_status is set to NOT_SYM */

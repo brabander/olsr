@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: olsrd_conf.c,v 1.5 2004/10/17 13:24:28 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.6 2004/10/18 13:13:37 kattemat Exp $
  *
  */
 
@@ -120,6 +120,7 @@ struct olsrd_config *
 olsrd_parse_cnf(char *filename)
 {
   struct olsr_if *in;
+  struct if_config_options *io;
 
   cnf = malloc(sizeof(struct olsrd_config));
   if (cnf == NULL)
@@ -148,10 +149,20 @@ olsrd_parse_cnf(char *filename)
     {
       fclose(yyin);
       olsrd_free_cnf(cnf);
-      return NULL;
+      exit(0);
     }
   
   fclose(yyin);
+
+  /* Add default ruleset */
+
+  io = get_default_if_config();
+  io->name = malloc(strlen(DEFAULT_IF_CONFIG_NAME) + 1);
+  strcpy(io->name, DEFAULT_IF_CONFIG_NAME);
+
+  /* Queue */
+  io->next = cnf->if_options;
+  cnf->if_options = io;
 
   /* Verify interface rulesets */
   in = cnf->interfaces;
@@ -164,7 +175,7 @@ olsrd_parse_cnf(char *filename)
 	{
 	  fprintf(stderr, "ERROR: Could not find a matching ruleset \"%s\" for %s\n", in->config, in->name);
 	  olsrd_free_cnf(cnf);
-	  return NULL;
+	  exit(0);
 	}
       in = in->next;
     }
@@ -172,6 +183,27 @@ olsrd_parse_cnf(char *filename)
   return cnf;
 }
 
+
+
+
+struct olsrd_config *
+olsrd_get_default_cnf()
+{
+  cnf = malloc(sizeof(struct olsrd_config));
+  if (cnf == NULL)
+    {
+      fprintf(stderr, "Out of memory %s\n", __func__);
+      return NULL;
+  }
+
+  set_default_cnf(cnf);
+
+  cnf->if_options = get_default_if_config();
+  cnf->if_options->name = malloc(strlen(DEFAULT_IF_CONFIG_NAME) + 1);
+  strcpy(cnf->if_options->name, DEFAULT_IF_CONFIG_NAME);
+
+  return cnf;
+}
 
 
 
@@ -238,10 +270,10 @@ set_default_cnf(struct olsrd_config *cnf)
     memset(cnf, 0, sizeof(struct olsrd_config));
     
     cnf->debug_level = 1;
-    cnf->ip_version  = 4;
+    cnf->ip_version  = AF_INET;
     cnf->allow_no_interfaces = 1;
     cnf->tos = 16;
-    cnf->auto_willingness = 1;
+    cnf->willingness_auto = 1;
     cnf->open_ipc = 0;
 
     cnf->use_hysteresis = 1;
@@ -255,6 +287,46 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->mpr_coverage = MPR_COVERAGE;
 }
 
+
+
+
+struct if_config_options *
+get_default_if_config()
+{
+  struct if_config_options *io = malloc(sizeof(struct if_config_options));
+  struct in6_addr in6;
+ 
+  memset(io, 0, sizeof(struct if_config_options));
+
+  io->ipv6_addrtype = 1;
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+
+  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
+    {
+      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
+      exit(EXIT_FAILURE);
+    }
+  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+
+
+  io->hello_params.emission_interval = HELLO_INTERVAL;
+  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
+  io->tc_params.emission_interval = TC_INTERVAL;
+  io->tc_params.validity_time = TOP_HOLD_TIME;
+  io->mid_params.emission_interval = MID_INTERVAL;
+  io->mid_params.validity_time = MID_HOLD_TIME;
+  io->hna_params.emission_interval = HNA_INTERVAL;
+  io->hna_params.validity_time = HNA_HOLD_TIME;
+
+  return io;
+
+}
 
 
 
@@ -294,29 +366,23 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
 
   /* HNA IPv4 */
   fprintf(fd, "# HNA IPv4 routes\n# syntax: netaddr netmask\n# Example Internet gateway:\n# 0.0.0.0 0.0.0.0\n\nHna4\n{\n");
-  if(h4)
+  while(h4)
     {
-      while(h4)
-	{
-	  in4.s_addr=h4->net;
-	  fprintf(fd, "    %s ", inet_ntoa(in4));
-	  in4.s_addr=h4->netmask;
-	  fprintf(fd, "%s\n", inet_ntoa(in4));
-	  h4 = h4->next;
-	}
+      in4.s_addr=h4->net;
+      fprintf(fd, "    %s ", inet_ntoa(in4));
+      in4.s_addr=h4->netmask;
+      fprintf(fd, "%s\n", inet_ntoa(in4));
+      h4 = h4->next;
     }
   fprintf(fd, "}\n\n");
 
 
   /* HNA IPv6 */
   fprintf(fd, "# HNA IPv6 routes\n# syntax: netaddr prefix\n# Example Internet gateway:\nHna6\n{\n");
-  if(h6)
+  while(h6)
     {
-      while(h6)
-	{
-	  fprintf(fd, "    %s/%d\n", (char *)inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
-	  h6 = h6->next;
-	}
+      fprintf(fd, "    %s/%d\n", (char *)inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
+      h6 = h6->next;
     }
 
   fprintf(fd, "}\n\n");
@@ -351,10 +417,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, char *fname)
 
   /* Willingness */
   fprintf(fd, "# The fixed willingness to use(0-7)\n# or \"auto\" to set willingness dynammically\n# based on battery/power status\n\n");
-  if(cnf->auto_willingness)
+  if(cnf->willingness_auto)
     fprintf(fd, "Willingness\tauto\n\n");
   else
-    fprintf(fd, "Willingness%d\n\n", cnf->fixed_willingness);
+    fprintf(fd, "Willingness%d\n\n", cnf->willingness);
 
   /* IPC */
   fprintf(fd, "# Allow processes like the GUI front-end\n# to connect to the daemon. 'yes' or 'no'\n\n");
@@ -492,10 +558,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   else
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
-  if(cnf->auto_willingness)
+  if(cnf->willingness_auto)
     printf("Willingness      : AUTO\n");
   else
-    printf("Willingness      : %d\n", cnf->fixed_willingness);
+    printf("Willingness      : %d\n", cnf->willingness);
 
   if(cnf->open_ipc)
     printf("IPC              : ENABLED\n");

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.14 2004/10/09 22:32:47 kattemat Exp $
+ * $Id: defs.h,v 1.15 2004/10/18 13:13:36 kattemat Exp $
  *
  */
 
@@ -45,6 +45,7 @@
 #include "process_routes.h" /* Needed for rt_entry */
 #include "net.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr.h" /* Everybody uses theese */
+#include "olsrd_cfgparser.h"
 
 #define VERSION "0.4.8-pre"
 #define SOFTWARE_VERSION "olsr.org - " VERSION
@@ -65,6 +66,13 @@
    olsr_printf(1, format, ##args);
 #endif
 
+
+/*
+ * Global olsrd configuragtion
+ */
+
+struct olsrd_config *olsr_cnf;
+
 /*
  * Address list
  */
@@ -77,22 +85,12 @@ struct addresses
 
 int exit_value; /* Global return value for process termination */
 
-/* mantissa/exponent Vtime and Htime variables */
-olsr_u8_t hello_vtime;
-olsr_u8_t hello_nw_vtime;
-olsr_u8_t tc_vtime;
-olsr_u8_t mid_vtime;
-olsr_u8_t hna_vtime;
-olsr_u8_t htime;
-olsr_u8_t htime_nw;
-
 
 /* Timer data */
 struct timeval now;		/* current idea of time */
 struct tm *nowtm;		/* current idea of time (in tm) */
 
 char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
-char ipv6_mult[50];             /* IPv6 multicast group */
 
 int disp_pack_in;               /* display incoming packet content? */
 int disp_pack_out;               /* display outgoing packet content? */
@@ -100,53 +98,21 @@ int disp_pack_out;               /* display outgoing packet content? */
 
 int use_ipc; /* Should we use the ipc socket for the front-end */
 
-int use_hysteresis;
-
 int llinfo;
 
 int inet_tnl_added; /* If Internet gateway tunnel is added */
 int use_tunnel; /* Use Internet gateway tunneling */
 int gw_tunnel; /* Work as Internet gateway */
 
-
-/*
- * Willingness
- */
-int willingness_set;
-int my_willingness;
-
-
 /*
  * Timer values
  */
 
 extern float will_int;
-extern float neighbor_hold_time_nw;
-extern float mid_hold_time;
-extern float hna_hold_time;
 extern float dup_hold_time;
-extern float hello_int_nw;
-extern float mid_int;
 extern float max_jitter;
 
-
-/*
- * Debug value
- */
-int debug_level;
-
-/*
- * Ipversion beeing used AF_INET or AF_INET6
- * and size of an IP address
- */
-int ipversion;
 size_t ipsize;
-
-/*
- * IPv6 addresstype to use
- * global or site-local
- */
-int ipv6_addrtype;
 
 /*
  * Address of this hosts OLSR interfaces
@@ -155,30 +121,8 @@ int ipv6_addrtype;
  */
 union olsr_ip_addr main_addr;
 int nbinterf;
-int allow_no_int; /* Run if no interfaces are present? */
 
-/*
- * Hysteresis data
- */
-
-float hyst_scaling;
-float hyst_threshold_low;
-float hyst_threshold_high;
-
-
-/*
- * TC redundancy
- */
-
-int tc_redundancy;
 int sending_tc;
-
-/*
- * MPR redundacy
- */
-
-int mpr_coverage;
-
 
 /*
  * OLSR UPD port
@@ -198,8 +142,7 @@ int hna_timeout_mult;
 
 int ioctl_s;
 
-extern float hello_int, tc_int, polling_int, hna_int;
-
+float max_tc_vtime;
 
 struct timeval fwdtimer[MAX_IFS];	/* forwarding timer */
 
@@ -212,12 +155,6 @@ extern int del_gws;
 extern int inet_gw; /* Are we an internet gateway? */
 
 extern int minsize;
-
-extern int option_i;
-
-/* Broadcast 255.255.255.255 */
-extern int bcast_set;
-extern struct sockaddr_in bcastaddr;
 
 
 extern struct hna_entry *hna_old;
