@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.h,v 1.8 2004/10/18 13:13:37 kattemat Exp $
+ * $Id: main.h,v 1.9 2004/10/19 20:59:14 kattemat Exp $
  *
  */
 
@@ -35,6 +35,10 @@
 #include <sys/utsname.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
+
+#define OLSRD_CONF_FILE_NAME "olsrd.conf"
+#define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
+
 
 struct sockaddr_in6 null_addr6;      /* Address used as Originator Address IPv6 */
 
@@ -55,5 +59,11 @@ extern pthread_mutex_t mutex; /* Mutex for thread */
 
 void
 olsr_shutdown(int);
+
+void
+get_config(char *);
+
+struct if_config_options *
+get_default_ifcnf(struct olsrd_config *);
 
 #endif

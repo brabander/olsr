@@ -19,14 +19,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.17 2004/10/19 20:55:41 kattemat Exp $
+ * $Id: main.c,v 1.18 2004/10/19 20:59:14 kattemat Exp $
  *
  */
 
 
 #include "main.h"
 #include "interfaces.h"
-#include "configfile.h"
 #include "mantissa.h"
 #include "local_hna_set.h"
 #include "olsr.h"
@@ -757,4 +756,49 @@ print_usage()
   fprintf(stderr, "  [-hint <hello interval value (secs)>] [-tcint <tc interval value (secs)>]\n");
   fprintf(stderr, "  [-tos value (int)] [-T <Polling Rate (secs)>]\n"); 
 
+}
+
+
+
+/**
+ *Funtion that tries to read and parse the config
+ *file "filename"
+ *@param filename the name(full path) of the config file
+ *@return negative on error
+ */
+void
+get_config(char *filename)
+{
+
+  /*
+   * NB - CHECK IPv6 MULTICAST!
+   */
+  if((olsr_cnf = olsrd_parse_cnf(filename)) != NULL)
+    {
+      olsrd_print_cnf(olsr_cnf);  
+    }
+  else
+    {
+      printf("Using default config values(no configfile)\n");
+      olsr_cnf = olsrd_get_default_cnf();
+    }
+
+  /* Add plugins */
+
+}
+
+
+
+struct if_config_options *
+get_default_ifcnf(struct olsrd_config *cnf)
+{
+  struct if_config_options *ifc = cnf->if_options;
+
+  while(ifc)
+    {
+      if(!strcmp(ifc->name, DEFAULT_IF_CONFIG_NAME))
+        return ifc;
+      ifc = ifc->next;
+    }
+  return NULL;
 }
