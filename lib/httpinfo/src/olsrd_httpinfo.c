@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.34 2005/01/03 20:12:49 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.35 2005/01/03 21:04:02 kattemat Exp $
  */
 
 /*
@@ -980,9 +980,11 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n", 
-                              olsr_ip_to_string(&tmp_net->A_network_addr),
-                              olsr_netmask_to_string(&tmp_net->A_netmask),
+	      size += sprintf(&buf[size], "<tr><td>%s</td>", 
+			      olsr_ip_to_string(&tmp_net->A_network_addr));
+	      size += sprintf(&buf[size], "<td>%s</td>",
+			      olsr_netmask_to_string(&tmp_net->A_netmask));
+	      size += sprintf(&buf[size], "<td>%s</td></tr>\n",
                               olsr_ip_to_string(&tmp_hna->A_gateway_addr));
 	      tmp_net = tmp_net->next;
 	    }
