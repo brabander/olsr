@@ -1,7 +1,9 @@
 #
-# UniK OLSR daemon config file
+# olsr.org OLSR daemon config file
 #
 # Lines starting with a # are discarded
+#
+# This file was shipped with olsrd 0.X.X
 #
 
 # Debug level(0-9)
@@ -20,9 +22,10 @@ IpVersion	4
 
 Hna4
 {
-    0.0.0.0   0.0.0.0
-    15.15.0.0 255.255.255.0
-    15.16.0.0 255.255.255.0
+#   Internet gateway:
+#   0.0.0.0      0.0.0.0
+#   more entries can be added:
+#   192.168.1.0  255.255.255.0
 }
 
 # HNA IPv6 routes
@@ -30,11 +33,10 @@ Hna4
 # Example Internet gateway:
 Hna6
 {
-     ::              0
-    fecb:ab:ed:: 48
-    fecb:ff:dd::dd:d 48
-    fec0:2200:106:: 48
-    fec0:2200:106:0:0:0:0:0 48
+#   Internet gateway:
+#   ::              0
+#   more entries can be added:
+#   fec0:2200:106:: 48
 }
 
 
@@ -53,7 +55,8 @@ AllowNoInt	yes
 
 # The fixed willingness to use(0-7)
 # If not set willingness will be calculated
-# dynammically based on battery/power status
+# dynamically based on battery/power status
+# if such information is available
 
 #Willingness    	4
 
@@ -73,12 +76,13 @@ IpcConnect
      # be added
 
      Host            127.0.0.1
-     Host            10.0.0.5
+     #Host            10.0.0.5
 
-     # Specify entire net-ranges that are 
-     # allowed to connect
+     # You can also specify entire net-ranges 
+     # that are allowed to connect. Multiple
+     # entries are allowed
 
-     Net             192.168.1.0 255.255.255.0     
+     #Net             192.168.1.0 255.255.255.0     
 }
 
 # Wether to use hysteresis or not
@@ -118,7 +122,7 @@ Pollrate	0.05
 #
 # defaults to 0
 
-TcRedundancy	0
+#TcRedundancy	0
 
 
 #
@@ -130,7 +134,7 @@ TcRedundancy	0
 #
 # defaults to 1
 
-MprCoverage	1
+#MprCoverage	1
 
 
 # Olsrd plugins to load
@@ -140,30 +144,27 @@ MprCoverage	1
 #   environment variable.
 # - The list of libraries cached in /etc/ld.so.cache
 # - /lib, followed by /usr/lib
-LoadPlugin "olsrd_secure.so.0.3"
-{
-    PlParam     "key1"   "value1"
-    # Might be possible to set options here in
-    # future versions
-}
 
-LoadPlugin "olsrd_dyn_gw.so.0.1"
-{
-    PlParam     "key4"   "value3"
-    # Might be possible to set options here in
-    # future versions
-}
+# Example plugin entry:
 
-# olsrd_dyn_gw.so.0.1
-# olsrd_power.so.0.1
-
+#LoadPlugin "olsrd_secure.so.0.3"
+#{
+    # Send parameters to plugin. Mulitple
+    # entries are allowed.
+    #PlParam     "key1"   "value1"
+#}
 
 
 
 # Interfaces and their rules
 # Omitted options will be set to the
-# default values.
-Interface "eth0"
+# default values. Multiple interfaces
+# can be specified.
+
+# !!CHANGE THE INTERFACE LABEL TO MATCH YOUR INTERFACE!!
+# (eg. wlan0 or eth1):
+
+Interface "XXX"
 {
 
     # IPv4 broadcast address to use. The
@@ -171,7 +172,7 @@ Interface "eth0"
     # If not defined the broadcastaddress
     # every card is configured with is used
 
-    Ip4Broadcast	255.255.255.255
+    # Ip4Broadcast		255.255.255.255
 
     # IPv6 address scope to use.
     # Must be 'site-local' or 'global'
@@ -182,7 +183,7 @@ Interface "eth0"
     # using site-local addresses.
     # If not defined, ff05::15 is used
 
-    Ip6MulticastSite	ff05::11
+    # Ip6MulticastSite		ff05::11
 
     # IPv6 multicast address to use when
     # using global addresses
@@ -202,7 +203,7 @@ Interface "eth0"
     # HelloValidityTime	6.0
 
     # TC interval in seconds(float)
-    TcInterval        5.0
+    # TcInterval        5.0
 
     # TC validity time
     # TcValidityTime	15.0
@@ -220,59 +221,3 @@ Interface "eth0"
     # HnaValidityTime 	15.0
 }
 
-Interface "eth1"
-{
-    # IPv4 broadcast address to use. The
-    # one usefull example would be 255.255.255.255
-    # If not defined the broadcastaddress
-    # every card is configured with is used
-
-    # Ip4Broadcast	255.255.255.255
-
-    # IPv6 address scope to use.
-    # Must be 'site-local' or 'global'
-
-    Ip6AddrType		site-local
-
-    # IPv6 multicast address to use when
-    # using site-local addresses.
-    # If not defined, ff05::15 is used
-
-    Ip6MulticastSite	ff05::15
-
-    # IPv6 multicast address to use when
-    # using global addresses
-    # If not defined, ff0e::1 is used
-
-    Ip6MulticastGlobal	ff0e::1
-
-
-    # Emission intervals.
-    # If not defined, RFC proposed values will
-    # be used in most cases.
-
-    # Hello interval in seconds(float)
-    HelloInterval    1.0
-
-    # HELLO validity time
-    HelloValidityTime	3.0
-
-    # TC interval in seconds(float)
-    TcInterval        4.0
-
-    # TC validity time
-    TcValidityTime	14.0
-
-    # MID interval in seconds(float)
-    MidInterval	5.0
-
-    # MID validity time
-    MidValidityTime	15.0
-
-    # HNA interval in seconds(float)
-    HnaInterval	5.0
-
-    # HNA validity time
-    HnaValidityTime 	15.0
-
-}
