@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.56 2005/01/23 18:12:13 kattemat Exp $
+ * $Id: main.c,v 1.57 2005/01/29 19:05:34 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -723,6 +723,9 @@ set_default_values()
   /* Display packet content */
   disp_pack_in = OLSR_FALSE;
   disp_pack_out = OLSR_FALSE;
+
+  /* Initialize empty TC timer */
+  send_empty_tc = GET_TIMESTAMP(0);
 }
 
 
