@@ -73,7 +73,7 @@ plugin_ipc_init()
     }
   else
     {
-    if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) 
+      if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
       {
 	perror("SO_REUSEADDR failed");
 	return 0;
