@@ -32,7 +32,7 @@ hello_build(struct hello_message *, struct interface *);
 void
 tc_build(struct tc_message *, struct interface *);
 
-int
+void
 mid_build(struct interface *);
 
 void

@@ -39,7 +39,7 @@ hello_build4(struct hello_message *, struct interface *);
 static void
 tc_build4(struct tc_message *, struct interface *);
 
-static int
+static void
 mid_build4(struct interface *);
 
 static void
@@ -53,7 +53,7 @@ hello_build6(struct hello_message *, struct interface *);
 static void
 tc_build6(struct tc_message *, struct interface *);
 
-static int
+static void
 mid_build6(struct interface *);
 
 static void
@@ -150,21 +150,21 @@ tc_build(struct tc_message *message, struct interface *ifp)
  *@return 1 on success
  */
 
-int
+void
 mid_build(struct interface *ifn)
 {
   switch(ipversion)
     {
     case(AF_INET):
-      return mid_build4(ifn);
+      mid_build4(ifn);
       break;
     case(AF_INET6):
-      return mid_build6(ifn);
+      mid_build6(ifn);
       break;
     default:
-      return -1;
+      return;
     }
-  return -1;
+  return;
 }
 
 
@@ -221,10 +221,7 @@ hello_build4(struct hello_message *message, struct interface *ifp)
   int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
-  if (!message)
-    return;
-
-  if(ipversion != AF_INET)
+  if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
   remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) + sizeof(msg->v4.olsr_seqno));
@@ -467,10 +464,7 @@ hello_build6(struct hello_message *message, struct interface *ifp)
   int i, j, sametype;
   int lastpacket = 0; /* number of neighbors with the same
 			 greater link status in the last packet */
-  if (!message)
-    return;
-
-  if(ipversion != AF_INET6)
+  if((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
 
   remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) + sizeof(msg->v6.olsr_seqno));
@@ -705,13 +699,7 @@ tc_build4(struct tc_message *message, struct interface *ifp)
   int msgsize;
 
 
-  if (!message)
-    return;
-
-  if (!ifp)
-    return;
-
-  if(ipversion != AF_INET)
+  if((!message) || (!ifp) || (ipversion != AF_INET))
     return;
 
   remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) + sizeof(msg->v4.olsr_seqno));
@@ -850,13 +838,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
   int msgsize;
 
 
-  if (!message)
-    return;
-
-  if(!ifp)
-    return;
-
-  if(ipversion != AF_INET6)
+  if ((!message) || (!ifp) || (ipversion != AF_INET6))
     return;
 
   remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) + sizeof(msg->v6.olsr_seqno));
@@ -985,7 +967,7 @@ tc_build6(struct tc_message *message, struct interface *ifp)
  *@return 1 on success
  */
 
-int
+static void
 mid_build4(struct interface *ifn)
 {
   int remainsize;
@@ -995,11 +977,8 @@ mid_build4(struct interface *ifn)
   struct midmsg *mmsg;
   struct interface *ifs;  
 
-  if(ipversion != AF_INET)
-    return -1;
-
-  if(nbinterf <= 1)
-    return 0;
+  if((ipversion != AF_INET) || (!ifn) || (nbinterf <= 1))
+    return;
 
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
@@ -1047,7 +1026,7 @@ mid_build4(struct interface *ifn)
   //printf("Sending MID (%d bytes)...\n", outputsize);
 
 
-  return 0;
+  return;
 }
 
 
@@ -1060,7 +1039,7 @@ mid_build4(struct interface *ifn)
  *@return 1 on success
  */
 
-int
+static void
 mid_build6(struct interface *ifn)
 {
   int remainsize;
@@ -1073,11 +1052,8 @@ mid_build6(struct interface *ifn)
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
 
-  if(ipversion != AF_INET6)
-    return -1;
-
-  if(nbinterf <= 1)
-    return 0;
+  if((ipversion != AF_INET6) || (!ifn) || (nbinterf <= 1))
+    return;
 
   remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) 
 			     + sizeof(msg->v6.olsr_seqno));
@@ -1121,7 +1097,7 @@ mid_build6(struct interface *ifn)
   //printf("Sending MID (%d bytes)...\n", outputsize);
 
 
-  return 0;
+  return;
 }
 
 
@@ -1144,7 +1120,7 @@ hna_build4(struct interface *ifp)
   struct local_hna_entry *h;
 
   /* No hna nets */
-  if (local_hna4_set.next == &local_hna4_set)
+  if((ipversion != AF_INET) || (!ifp) || (local_hna4_set.next == &local_hna4_set))
     return;
     
   remainsize = outputsize - (sizeof(msg->v4.olsr_packlen) 
@@ -1180,7 +1156,7 @@ hna_build4(struct interface *ifp)
 
   outputsize = (char*)pair - packet;
   //printf("Sending HNA (%d bytes)...\n", outputsize);
-
+  return;
 }
 
 
@@ -1203,12 +1179,9 @@ hna_build6(struct interface *ifp)
   struct hnamsg6 *hmsg6;
   union olsr_ip_addr tmp_netmask;
   struct local_hna_entry *h;
-
-  if(ipversion != AF_INET6)
-    return;    
-
+  
   /* No hna nets */
-  if (local_hna6_set.next == &local_hna6_set)
+  if((ipversion != AF_INET6) || (!ifp) || (local_hna6_set.next == &local_hna6_set))
     return;
 
   remainsize = outputsize - (sizeof(msg->v6.olsr_packlen) 
@@ -1249,7 +1222,7 @@ hna_build6(struct interface *ifp)
   outputsize = (char*)pair6 - packet;
   
   //printf("Sending HNA (%d bytes)...\n", outputsize);
-
+  return;
 
 }
 
