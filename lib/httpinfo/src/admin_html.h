@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_html.h,v 1.3 2005/02/25 22:27:26 kattemat Exp $
+ * $Id: admin_html.h,v 1.4 2005/02/28 20:28:59 kattemat Exp $
  */
 
 /*
@@ -71,7 +71,7 @@ static const char *admin_frame[] =
     "<table width=\"100%%\">\n",
     "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n",
     "<!-- HNAENTRIES -->\n",
-    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"%s/%s\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
+    "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%s\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n",
     "</table>\n<br>\n",
     "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n",
     "</form>\n",

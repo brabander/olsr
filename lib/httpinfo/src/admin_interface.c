@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.3 2005/02/21 19:33:30 kattemat Exp $
+ * $Id: admin_interface.c,v 1.4 2005/02/28 20:28:59 kattemat Exp $
  */
 
 /*
@@ -335,6 +335,38 @@ process_param(char *key, char *value)
       return 1;
     }
 
+  if(!strncmp(key, "del_hna", 7) && !strcmp(value, "on"))
+    {
+      struct in_addr net, mask;
+      char ip_net[16], ip_mask[16];
+      int seperator = 0;
+
+      while(key[7 + seperator] != '*')
+	seperator++;
+
+      strncpy(ip_net, &key[7], seperator);
+      ip_net[seperator] = 0;
+      strncpy(ip_mask, &key[7 + seperator + 1], 16);
+      olsr_printf(1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
+
+      if(inet_aton(ip_net, &net) == 0)
+	{
+	  fprintf(stderr, "Failed converting HNA net %s for deletion\n", ip_net);
+	  return -1;
+	}
+
+      if(inet_aton(ip_mask, &mask) == 0)
+	{
+	  fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
+	  return -1;
+	}
+
+      remove_local_hna4_entry((union olsr_ip_addr *)&net.s_addr,
+			      (union hna_netmask *)&mask.s_addr);
+
+      return 1;
+    }
+
   return 0;
 #if 0
   { 1, admin_basic_setting_string, "TOS:", "tos", 6, "TBD" },
@@ -347,7 +379,9 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
   int size = 0;
   int i, val_start, key_start;
 
-  size += sprintf(buf, "<html>\n<head></head>\n<body>\nDATA:<br>\n%s\n", data);
+  printf("Dynamic Data: %s\n", data);
+
+  size += sprintf(buf, "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
 
   key_start = 0;
   val_start = 0;
@@ -363,24 +397,32 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
       if(data[i] == '&')
 	{
 	  data[i] = '\0';
-	  size += sprintf(&buf[size], "<b>Key:</b>%s <b>Value:</b>%s<br>\n", 
-			  &data[key_start], &data[val_start]);
-	  process_param(&data[key_start], &data[val_start]);
+	  if(!process_param(&data[key_start], &data[val_start]))
+	    {
+	      size += sprintf(&buf[size], "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", 
+			      &data[key_start], &data[val_start]);
+	      return -1;
+	    }
+
 	  printf("Key: %s\nValue: %s\n", 
 		 &data[key_start], &data[val_start]);
 	  key_start = i + 1;
 	}
     }  
 
-  process_param(&data[key_start], &data[val_start]);
-  size += sprintf(&buf[size], "<b>Key:</b>%s <b>Value:</b>%s<br>\n", 
-		  &data[key_start], &data[val_start]);
+  if(!process_param(&data[key_start], &data[val_start]))
+    {
+      size += sprintf(&buf[size], "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", 
+		      &data[key_start], &data[val_start]);
+      return -1;
+    }
+
   printf("Key: %s\nValue: %s\n", 
 	 &data[key_start], &data[val_start]);
 
+  size += sprintf(&buf[size], "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n</body>\n</html>\n");
   size += sprintf(&buf[size], "\n</body>\n</html>\n");
 
-  printf("Dynamic Data: %s\n", data);
   return size;
 }
 #endif
