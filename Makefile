@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.51 2005/03/10 06:55:44 kattemat Exp $
+# $Id: Makefile,v 1.52 2005/03/21 02:17:36 tlopatic Exp $
 
 VERS =		0.4.9
 
@@ -193,9 +193,21 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		mv olsr-setup.exe olsr-${VERS}-setup.exe
 
 else
+ifeq ($(OS), wince)
+
+SRCS +=		$(wildcard src/win32/*.c)
+HDRS +=		$(wildcard src/win32/*.h)
+INCLUDES += 	-Isrc/win32 -Isrc/win32/ce
+DEFINES =	-DWIN32 -DWINCE
+CFLAGS ?=	$(CCWARNINGS) -O2 -g
+LIBS =		-lwinsock -liphlpapi
+MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
+
+else
 
 all:	help
 
+endif
 endif
 endif
 endif

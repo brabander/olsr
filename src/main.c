@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.69 2005/03/10 18:09:32 kattemat Exp $
+ * $Id: main.c,v 1.70 2005/03/21 02:17:36 tlopatic Exp $
  */
 
 #include <unistd.h>
@@ -165,11 +165,15 @@ main(int argc, char *argv[])
    * check if a configfile name was given as parameter
    */
 #ifdef WIN32
+#ifndef WINCE
   GetWindowsDirectory(conf_file_name, FILENAME_MAX - 11);
+#else
+  conf_file_name[0] = 0;
+#endif
   
   len = strlen(conf_file_name);
   
-  if (conf_file_name[len - 1] != '\\')
+  if (len == 0 || conf_file_name[len - 1] != '\\')
     conf_file_name[len++] = '\\';
   
   strcpy(conf_file_name + len, "olsrd.conf");
@@ -326,8 +330,10 @@ main(int argc, char *argv[])
 
   /* Print heartbeat to stdout */
 
+#if !defined WINCE
   if(olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO))
     olsr_register_scheduler_event(&generate_stdout_pulse, NULL, STDOUT_PULSE_INT, 0, NULL);
+#endif
   
   gettimeofday(&now, NULL);
 
@@ -367,7 +373,9 @@ main(int argc, char *argv[])
 
   /* ctrl-C and friends */
 #ifdef WIN32
+#ifndef WINCE
   SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
+#endif
 #else
   signal(SIGHUP, olsr_reconfigure);  
   signal(SIGINT, olsr_shutdown);  

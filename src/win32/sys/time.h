@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: time.h,v 1.6 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: time.h,v 1.7 2005/03/21 02:17:37 tlopatic Exp $
  */
 
 #if !defined TL_SYS_TIME_H_INCLUDED
@@ -78,13 +78,18 @@
   }                                             \
   while (0)
 
+#if !defined WINCE
 struct timespec
 {
   unsigned int tv_sec;
   unsigned int tv_nsec;
 };
+#else
+#include <time.h>
+#endif
 
 int nanosleep(struct timespec *Req, struct timespec *Rem);
+
 void gettimeofday(struct timeval *TVal, void *TZone);
 
 #endif

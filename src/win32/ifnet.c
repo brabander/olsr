@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.22 2005/03/21 00:39:14 tlopatic Exp $
+ * $Id: ifnet.c,v 1.23 2005/03/21 02:17:36 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -236,6 +236,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
 static int IsWireless(char *IntName)
 {
+#if !defined WINCE
   struct InterfaceInfo Info;
   char DevName[43];
   HANDLE DevHand;
@@ -290,6 +291,7 @@ static int IsWireless(char *IntName)
   }
 
   CloseHandle(DevHand);
+#endif
   return 1;
 }
 

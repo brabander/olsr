@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.9 2005/02/27 10:48:05 kattemat Exp $
+ * $Id: apm.c,v 1.10 2005/03/21 02:17:36 tlopatic Exp $
  */
 
 #include "apm.h"
@@ -71,6 +71,7 @@ void apm_printinfo(struct olsr_apm_info *ApmInfo)
 
 int apm_read(struct olsr_apm_info *ApmInfo)
 {
+#if !defined WINCE
   SYSTEM_POWER_STATUS PowerStat;
 
   memset(ApmInfo, 0, sizeof (struct olsr_apm_info));
@@ -85,4 +86,7 @@ int apm_read(struct olsr_apm_info *ApmInfo)
     PowerStat.BatteryLifePercent : 0;
 
   return 1;
+#else
+  return 0;
+#endif
 }

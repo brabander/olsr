@@ -36,8 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.17 2005/03/04 21:30:17 kattemat Exp $
+ * $Id: net.c,v 1.18 2005/03/21 02:17:37 tlopatic Exp $
  */
+
+#if defined WINCE
+#include <sys/types.h> // for time_t
+#endif
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -51,10 +55,14 @@
 #include "defs.h"
 #include "net_os.h"
 
+#if defined WINCE
+#define WIDE_STRING(s) L##s
+#else
+#define WIDE_STRING(s) s
+#endif
 
 void WinSockPError(char *Str);
 void PError(char *);
-
 
 void DisableIcmpRedirects(void);
 int disable_ip_forwarding(int Ver);
@@ -162,14 +170,14 @@ int enable_ip_forwarding(int Ver)
   HANDLE Hand;
 
   Ver = Ver;
-  
-  Lib = LoadLibrary("iphlpapi.dll");
+
+  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
 
   if (Lib == NULL)
     return 0;
 
-  EnableRouter = (unsigned int _stdcall (*)(HANDLE *, OVERLAPPED *))
-    GetProcAddress(Lib, "EnableRouter");
+  EnableRouter = (unsigned int __stdcall (*)(HANDLE *, OVERLAPPED *))
+    GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
 
   if (EnableRouter == NULL)
     return 0;
@@ -204,13 +212,13 @@ int disable_ip_forwarding(int Ver)
 
   Ver = Ver;
   
-  Lib = LoadLibrary("iphlpapi.dll");
+  Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
 
   if (Lib == NULL)
     return 0;
 
-  UnenableRouter = (unsigned int _stdcall (*)(OVERLAPPED *, unsigned int *))
-    GetProcAddress(Lib, "UnenableRouter");
+  UnenableRouter = (unsigned int __stdcall (*)(OVERLAPPED *, unsigned int *))
+    GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
   if (UnenableRouter == NULL)
     return 0;
@@ -235,6 +243,7 @@ int restore_settings(int Ver)
 
 static int SetEnableRedirKey(unsigned long New)
 {
+#if !defined WINCE
   HKEY Key;
   unsigned long Type;
   unsigned long Len;
@@ -261,6 +270,9 @@ static int SetEnableRedirKey(unsigned long New)
 
   RegCloseKey(Key);
   return Old;
+#else
+  return 0;
+#endif
 }
 
 void DisableIcmpRedirects(void)

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.11 2005/01/17 10:58:48 tlopatic Exp $
+ * $Id: compat.c,v 1.12 2005/03/21 02:17:36 tlopatic Exp $
  */
 
 /*
@@ -82,7 +82,7 @@ unsigned int random(void)
 {
   RandState = RandState * 1103515245 + 12345;
 
-  return (RandState ^ (RandState >> 16)) % (RAND_MAX + 1);
+  return (RandState ^ (RandState >> 16)) & RAND_MAX;
 }
 
 int getpid(void)
@@ -133,51 +133,48 @@ int inet_aton(char *AddrStr, struct in_addr *Addr)
 char *StrError(unsigned int ErrNo)
 {
   static char Msg[1000];
-  
+
+#if !defined WINCE
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
-		sizeof (Msg), NULL);
-	
+                sizeof (Msg), NULL);
+#else
+  short WideMsg[1000];
+
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), WideMsg,
+                sizeof (WideMsg) / 2, NULL);
+
+  if (WideCharToMultiByte(CP_ACP, 0, WideMsg, -1, Msg, sizeof (Msg),
+                          NULL, NULL) == 0)
+    strcpy(Msg, "[cannot convert string]");
+#endif
+
   return Msg;
 }
 
 void PError(char *Str)
 {
-  char Msg[1000];
-  int Len;
-
-  sprintf(Msg, "ERROR - %s: ", Str);
-
-  Len = strlen(Msg);
-
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg + Len,
-                sizeof (Msg) - Len, NULL);
-
-  fprintf(stderr, "%s\n", Msg);
+  fprintf(stderr, "ERROR - %s: %s", Str, StrError(GetLastError()));
 }
 
 void WinSockPError(char *Str)
 {
-  char Msg[1000];
-  int Len;
-
-  sprintf(Msg, "ERROR - %s: ", Str);
-
-  Len = strlen(Msg);
-
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(),
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg + Len,
-                sizeof (Msg) - Len, NULL);
-
-  fprintf(stderr, "%s\n", Msg);
+  fprintf(stderr, "ERROR - %s: %s", Str, StrError(WSAGetLastError()));
 }
 
 // XXX - not thread-safe, which is okay for our purposes
  
 void *dlopen(char *Name, int Flags)
 {
+#if !defined WINCE
   return (void *)LoadLibrary(Name);
+#else
+  short WideName[1000];
+
+  MultiByteToWideChar(CP_ACP, 0, Name, -1, WideName, sizeof (WideName));
+  return (void *)LoadLibrary(WideName);
+#endif
 }
 
 int dlclose(void *Handle)
@@ -188,7 +185,14 @@ int dlclose(void *Handle)
 
 void *dlsym(void *Handle, char *Name)
 {
+#if !defined WINCE
   return GetProcAddress((HMODULE)Handle, Name);
+#else
+  short WideName[1000];
+
+  MultiByteToWideChar(CP_ACP, 0, Name, -1, WideName, sizeof (WideName));
+  return GetProcAddress((HMODULE)Handle, WideName);
+#endif
 }
 
 char *dlerror(void)
@@ -490,6 +494,7 @@ char *inet_ntop(int af, void *src, char *dst, int size)
 
 int isatty(int fd)
 {
+#if !defined WINCE
   HANDLE Hand;
   CONSOLE_SCREEN_BUFFER_INFO Info;
   unsigned long Events;
@@ -513,4 +518,7 @@ int isatty(int fd)
   }
 
   return -1;
+#else
+  return 0;
+#endif
 }

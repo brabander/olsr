@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.3 2005/02/14 17:49:51 tlopatic Exp $
+ * $Id: misc.c,v 1.4 2005/03/21 02:17:37 tlopatic Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -47,6 +47,7 @@
 
 void clear_console(void)
 {
+#if !defined WINCE
   HANDLE Hand;
   CONSOLE_SCREEN_BUFFER_INFO Info;
   unsigned long Written;
@@ -71,4 +72,5 @@ void clear_console(void)
     return;
 
   SetConsoleCursorPosition(Hand, Home);
+#endif
 }

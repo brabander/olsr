@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.17 2005/03/14 21:24:22 kattemat Exp $
+# $Id: Makefile,v 1.18 2005/03/21 02:17:36 tlopatic Exp $
 
 CC ?=		gcc
 BISON ?=	bison
@@ -84,6 +84,19 @@ DEPFLAGS += 	-DWIN32_STDIO_HACK -DWIN32
 INCLUDES +=	../win32
 
 else
+ifeq ($(OS), wince)
+
+LIBNAME ?=
+BINNAME ?=
+
+PORT_CFLAGS =	-I../win32 -I../win32/ce
+PORT_LDFLAGS =
+PORT_OBJS =
+PORT_LIBS =
+DEPFLAGS += 	-DWIN32 -DWINCE
+INCLUDES +=	../win32 ../win32/ce
+
+else
 
 LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
@@ -93,6 +106,7 @@ PORT_LDFLAGS =	-Wl,--version-script=version-script.txt
 PORT_OBJS =
 PORT_LIBS =	-lm -lc
 
+endif
 endif
 
 
