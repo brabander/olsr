@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: lq_packet.c,v 1.4 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.5 2004/11/08 00:15:46 tlopatic Exp $
  *
  */
 
@@ -239,6 +239,8 @@ static void serialize_common(struct olsr_common *comm)
       olsr_head_v4->ttl = comm->ttl;
       olsr_head_v4->hops = comm->hops;
       olsr_head_v4->seqno = htons(comm->seqno);
+
+      return;
     }
 
   // serialize an IPv6 OLSR message header
@@ -386,8 +388,8 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
               // add the corresponding link quality
 
-              buff[size++] = (unsigned char)(neigh->link_quality * 256);
-              buff[size++] = (unsigned char)(neigh->neigh_link_quality * 256);
+              buff[size++] = (unsigned char)(neigh->link_quality * 255);
+              buff[size++] = (unsigned char)(neigh->neigh_link_quality * 255);
 
               // pad
 
@@ -496,8 +498,8 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
       // add the corresponding link quality
 
-      buff[size++] = (unsigned char)(neigh->link_quality * 256);
-      buff[size++] = (unsigned char)(neigh->neigh_link_quality * 256);
+      buff[size++] = (unsigned char)(neigh->link_quality * 255);
+      buff[size++] = (unsigned char)(neigh->neigh_link_quality * 255);
 
       // pad
 
@@ -579,6 +581,8 @@ deserialize_lq_hello(struct lq_hello_message *lq_hello, void *ser)
   lq_hello->htime = me_to_double(head->htime);
   lq_hello->will = head->will;
 
+  lq_hello->neigh = NULL;
+
   curr = (unsigned char *)(head + 1);
 
   while (curr < limit)
@@ -591,14 +595,14 @@ deserialize_lq_hello(struct lq_hello_message *lq_hello, void *ser)
       
       while (curr < limit2)
         {
-          neigh = olsr_malloc(sizeof (struct lq_tc_neighbor),
+          neigh = olsr_malloc(sizeof (struct lq_hello_neighbor),
                               "LQ_HELLO deserialization");
 
           COPY_IP(&neigh->addr, curr);
           curr += ipsize;
 
-          neigh->link_quality = (double)*curr++ / 256.0;
-          neigh->neigh_link_quality = (double)*curr++ / 256.0;
+          neigh->link_quality = (double)*curr++ / 255.0;
+          neigh->neigh_link_quality = (double)*curr++ / 255.0;
 
           curr += 2;
 
@@ -643,6 +647,8 @@ deserialize_lq_tc(struct lq_tc_message *lq_tc, void *ser,
 
   lq_tc->ansn =  ntohs(head->ansn);
 
+  lq_tc->neigh = NULL;
+
   curr = (unsigned char *)(head + 1);
 
   while (curr < limit)
@@ -653,8 +659,8 @@ deserialize_lq_tc(struct lq_tc_message *lq_tc, void *ser,
       COPY_IP(&neigh->main, curr);
       curr += ipsize;
 
-      neigh->link_quality = (double)*curr++ / 256.0;
-      neigh->neigh_link_quality = (double)*curr++ / 256.0;
+      neigh->link_quality = (double)*curr++ / 255.0;
+      neigh->neigh_link_quality = (double)*curr++ / 255.0;
 
       curr += 2;
 
@@ -759,6 +765,8 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
   hello.ttl = lq_hello->comm.ttl;
   hello.willingness = lq_hello->will;
 
+  hello.neighbors = NULL;
+
   // move all LQ_HELLO neighbours to HELLO
 
   for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
@@ -773,6 +781,7 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
       new_neigh->status = neigh->neigh_type;
       new_neigh->link = neigh->link_type;
       new_neigh->link_quality = neigh->link_quality;
+      new_neigh->neigh_link_quality = neigh->neigh_link_quality;
 
       COPY_IP(&new_neigh->address, &neigh->addr);
 
@@ -806,6 +815,8 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
   tc.hop_count = lq_tc->comm.hops;
   tc.ttl = lq_tc->comm.ttl;
   tc.ansn = lq_tc->ansn;
+
+  tc.multipoint_relay_selector_address = NULL;
 
   // move all LQ_TC neighbours to TC
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: link_set.c,v 1.19 2004/11/07 20:09:11 tlopatic Exp $
+ * $Id: link_set.c,v 1.20 2004/11/08 00:15:46 tlopatic Exp $
  *
  */
 
@@ -910,15 +910,14 @@ void olsr_print_link_set(void)
 {
   struct link_entry *walker;
 
-  olsr_printf(1, "LINK SET --------------------------------------\n");
-  olsr_printf(1, "IP address      hyst  LQ    lost  total  NLQ\n");
+  olsr_printf(1, "\nLINKS --------------------------------------------------\n\n");
+  olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ\n");
 
   for (walker = link_set; walker != NULL; walker = walker->next)
-    olsr_printf(1, "%15s %5.3f %5.3f %3d   %3d    %5.3f\n",
+    olsr_printf(1, "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n",
                 olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
                 walker->lost_packets, walker->total_packets);
-  olsr_printf(1, "-----------------------------------------------\n");
 }
 
 static void update_packet_loss_worker(struct link_entry *entry, int lost)
@@ -1086,7 +1085,7 @@ double olsr_neighbor_best_link_quality(union olsr_ip_addr *main)
       // whether the link's (bidirectional = forth x back) quality
       // is better than what we have
 
-      if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+      if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
          walker->loss_link_quality * walker->neigh_link_quality >= res)
         res = walker->loss_link_quality;
     }
@@ -1107,7 +1106,7 @@ struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
     // check whether it's a link to the requested neighbor and
     // whether the link's quality is better than what we have
 
-    if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
        walker->neigh_link_quality >= best)
     {
       best = walker->loss_link_quality;
@@ -1131,7 +1130,7 @@ struct link_entry *olsr_neighbor_best_inverse_link(union olsr_ip_addr *main)
     // check whether it's a link to the requested neighbor and
     // whether the link's quality is better than what we have
 
-    if(COMP_IP(&main, &walker->neighbor->neighbor_main_addr) &&
+    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
        walker->loss_link_quality >= best)
     {
       best = walker->loss_link_quality;
