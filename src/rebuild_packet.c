@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.11 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.12 2004/12/05 13:45:31 kattemat Exp $
  */
 
 
@@ -234,16 +234,16 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
       
       if(olsr_cnf->debug_level > 1)
 	{
-	  olsr_printf(2, "Alias list for %s: ", ip_to_string(&mmsg->mid_origaddr.v4));
-	  olsr_printf(2, "%s", ip_to_string(&mmsg->addr.v4));
+	  olsr_printf(3, "Alias list for %s: ", ip_to_string(&mmsg->mid_origaddr.v4));
+	  olsr_printf(3, "%s", ip_to_string(&mmsg->addr.v4));
 	  fflush(stdout);
 	  alias_tmp = mmsg->mid_addr;
 	  while(alias_tmp)
 	    {
-	      olsr_printf(2, " - %s", ip_to_string(&alias_tmp->alias_addr.v4));fflush(stdout);
+	      olsr_printf(3, " - %s", ip_to_string(&alias_tmp->alias_addr.v4));fflush(stdout);
 	      alias_tmp = alias_tmp->next;
 	    }
-	  olsr_printf(2, "\n");
+	  olsr_printf(3, "\n");
 	}
     }
   else
@@ -287,16 +287,16 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
 
       if(olsr_cnf->debug_level > 1)
 	{
-	  olsr_printf(2, "Alias list for %s", ip6_to_string(&mmsg->mid_origaddr.v6));
-	  olsr_printf(2, "%s", ip6_to_string(&mmsg->addr.v6));
+	  olsr_printf(3, "Alias list for %s", ip6_to_string(&mmsg->mid_origaddr.v6));
+	  olsr_printf(3, "%s", ip6_to_string(&mmsg->addr.v6));
 	  fflush(stdout);
 	  alias_tmp = mmsg->mid_addr;
 	  while(alias_tmp)
 	    {
-	      olsr_printf(2, " - %s", ip6_to_string(&alias_tmp->alias_addr.v6));fflush(stdout);
+	      olsr_printf(3, " - %s", ip6_to_string(&alias_tmp->alias_addr.v6));fflush(stdout);
 	      alias_tmp = alias_tmp->next;
 	    }
-	  olsr_printf(2, "\n");
+	  olsr_printf(3, "\n");
 	}
     }
 
