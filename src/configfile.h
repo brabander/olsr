@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: configfile.h,v 1.6 2004/10/18 13:13:36 kattemat Exp $
+ * $Id: configfile.h,v 1.7 2004/10/19 20:55:41 kattemat Exp $
  *
  */
  
@@ -37,15 +37,11 @@
 #define MAX_KEYWORDS 4
 
 
-extern int nonwlan_multiplier;
-
-extern olsr_u8_t tos;
-
 char ipv6_mult_site[50];             /* IPv6 multicast group site-local */
 char ipv6_mult_global[50];             /* IPv6 multicast group global */
 
-int
-read_config_file(char *);
+void
+get_config(char *);
 
 struct if_config_options *
 get_default_ifcnf(struct olsrd_config *);

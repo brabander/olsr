@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.16 2004/10/19 20:18:00 kattemat Exp $
+ * $Id: main.c,v 1.17 2004/10/19 20:55:41 kattemat Exp $
  *
  */
 
@@ -165,13 +165,13 @@ main(int argc, char *argv[])
       if(argc == 1)
 	{
 	  fprintf(stderr, "You must provide a filename when using the -f switch!\n");
-	  olsr_exit(__func__, EXIT_FAILURE);
+	  exit(EXIT_FAILURE);
 	}
 
       if (stat(argv[1], &statbuf) < 0)
 	{
 	  fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
-	  olsr_exit(__func__, EXIT_FAILURE);
+	  exit(EXIT_FAILURE);
 	}
 		 
       strncpy(conf_file_name, argv[1], FILENAME_MAX);
@@ -180,15 +180,10 @@ main(int argc, char *argv[])
     }
 
   /*
-   * Reading configfile options prior to processing commandline options
+   * set up configuration prior to processing commandline options
    */
 
-  if(read_config_file(conf_file_name) < 0)
-    {
-      fprintf(stderr, "Error parsing configig file %s!\n", conf_file_name);
-      exit(EXIT_FAILURE);
-    }
-
+  get_config(conf_file_name);
   default_ifcnf = get_default_ifcnf(olsr_cnf);
   
   if(default_ifcnf == NULL)

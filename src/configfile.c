@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: configfile.c,v 1.9 2004/10/19 19:23:00 kattemat Exp $
+ * $Id: configfile.c,v 1.10 2004/10/19 20:55:41 kattemat Exp $
  *
  */
  
@@ -42,8 +42,8 @@
  *@param filename the name(full path) of the config file
  *@return negative on error
  */
-int
-read_config_file(char *filename)
+void
+get_config(char *filename)
 {
 
   /*
@@ -57,13 +57,10 @@ read_config_file(char *filename)
     {
       printf("Using default config values(no configfile)\n");
       olsr_cnf = olsrd_get_default_cnf();
-      return -1;
     }
 
   /* Add plugins */
 
-
-  return 0;
 }
 
 
