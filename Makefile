@@ -1,10 +1,11 @@
 
 #
 # olsr.org makefile
-# $Id: Makefile,v 1.10 2004/10/20 12:20:54 kattemat Exp $
+# $Id: Makefile,v 1.11 2004/11/04 20:25:05 kattemat Exp $
 #
 
 CC ?= gcc
+MAKE ?= make
 
 CFLAGS ?= -Isrc -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -g #-pg -DDEBUG #-march=i686
 LIBS = -lpthread -lm -ldl
@@ -37,7 +38,7 @@ olsrd:	$(OBJS)
 
 depend:
 	rm -f $(DEPFILE)
-	make $(DEPFILE)
+	$(MAKE) $(DEPFILE)
 
 
 $(DEPFILE):
