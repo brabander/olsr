@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.12 2005/02/15 20:49:20 kattemat Exp $
+ * $Id: net.c,v 1.13 2005/02/17 07:19:49 kattemat Exp $
  */
 
 #include "../defs.h"
@@ -334,7 +334,6 @@ olsr_recvfrom(int  s,
 }
 
 
-#warning FreeBSD WLAN detection untested!
 int 
 check_wireless_interface(char *ifname)
 {
@@ -350,13 +349,21 @@ check_wireless_interface(char *ifname)
   strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
   ifr.ifr_data = (caddr_t)&wreq;
 
-  if(ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0)
+  return (ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
+}
+
+
+int
+calculate_if_metric(char *ifname)
+{
+  if(check_wireless_interface(ifname))
     {
+      /* Wireless */
       return 1;
     }
   else
     {
+      /* Ethernet */
       return 0;
     }
-  return 1;
 }

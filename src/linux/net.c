@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.18 2005/02/15 21:03:40 kattemat Exp $
+ * $Id: net.c,v 1.19 2005/02/17 07:19:49 kattemat Exp $
  */
 
 
@@ -49,11 +49,13 @@
 #include "../net_os.h"
 #include "../parser.h"
 
+
 /*
  *Wireless definitions for ioctl calls
  *(from linux/wireless.h)
  */
 #define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
+#define SIOCGIWRATE	0x8B21		/* get default bit rate (bps) */
 
 /**
  *Bind a socket to a device
@@ -614,13 +616,141 @@ check_wireless_interface(char *ifname)
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-  if(ioctl(ioctl_s, SIOCGIWNAME, &ifr) >= 0)
+  return (ioctl(ioctl_s, SIOCGIWNAME, &ifr) >= 0) ? 1 : 0;
+}
+
+#if 0
+/* network interface ioctl's for MII commands */
+#ifndef SIOCGMIIPHY
+#define SIOCGMIIPHY (SIOCDEVPRIVATE)	/* Read from current PHY */
+#define SIOCGMIIREG (SIOCDEVPRIVATE+1) 	/* Read any PHY register */
+#define SIOCSMIIREG (SIOCDEVPRIVATE+2) 	/* Write any PHY register */
+#define SIOCGPARAMS (SIOCDEVPRIVATE+3) 	/* Read operational parameters */
+#define SIOCSPARAMS (SIOCDEVPRIVATE+4) 	/* Set operational parameters */
+#endif
+
+#include <linux/types.h>
+
+/* This data structure is used for all the MII ioctl's */
+struct mii_data {
+    __u16	phy_id;
+    __u16	reg_num;
+    __u16	val_in;
+    __u16	val_out;
+};
+
+
+/* Basic Mode Control Register */
+#define MII_BMCR		0x00
+#define  MII_BMCR_RESET		0x8000
+#define  MII_BMCR_LOOPBACK	0x4000
+#define  MII_BMCR_100MBIT	0x2000
+#define  MII_BMCR_AN_ENA	0x1000
+#define  MII_BMCR_ISOLATE	0x0400
+#define  MII_BMCR_RESTART	0x0200
+#define  MII_BMCR_DUPLEX	0x0100
+#define  MII_BMCR_COLTEST	0x0080
+
+/* Basic Mode Status Register */
+#define MII_BMSR		0x01
+#define  MII_BMSR_CAP_MASK	0xf800
+#define  MII_BMSR_100BASET4	0x8000
+#define  MII_BMSR_100BASETX_FD	0x4000
+#define  MII_BMSR_100BASETX_HD	0x2000
+#define  MII_BMSR_10BASET_FD	0x1000
+#define  MII_BMSR_10BASET_HD	0x0800
+#define  MII_BMSR_NO_PREAMBLE	0x0040
+#define  MII_BMSR_AN_COMPLETE	0x0020
+#define  MII_BMSR_REMOTE_FAULT	0x0010
+#define  MII_BMSR_AN_ABLE	0x0008
+#define  MII_BMSR_LINK_VALID	0x0004
+#define  MII_BMSR_JABBER	0x0002
+#define  MII_BMSR_EXT_CAP	0x0001
+
+#define MII_PHY_ID1		0x02
+#define MII_PHY_ID2		0x03
+
+/* Auto-Negotiation Advertisement Register */
+#define MII_ANAR		0x04
+/* Auto-Negotiation Link Partner Ability Register */
+#define MII_ANLPAR		0x05
+#define  MII_AN_NEXT_PAGE	0x8000
+#define  MII_AN_ACK		0x4000
+#define  MII_AN_REMOTE_FAULT	0x2000
+#define  MII_AN_ABILITY_MASK	0x07e0
+#define  MII_AN_FLOW_CONTROL	0x0400
+#define  MII_AN_100BASET4	0x0200
+#define  MII_AN_100BASETX_FD	0x0100
+#define  MII_AN_100BASETX_HD	0x0080
+#define  MII_AN_10BASET_FD	0x0040
+#define  MII_AN_10BASET_HD	0x0020
+#define  MII_AN_PROT_MASK	0x001f
+#define  MII_AN_PROT_802_3	0x0001
+
+/* Auto-Negotiation Expansion Register */
+#define MII_ANER		0x06
+#define  MII_ANER_MULT_FAULT	0x0010
+#define  MII_ANER_LP_NP_ABLE	0x0008
+#define  MII_ANER_NP_ABLE	0x0004
+#define  MII_ANER_PAGE_RX	0x0002
+#define  MII_ANER_LP_AN_ABLE	0x0001
+
+
+int
+calculate_if_metric(char *ifname)
+{
+  if(check_wireless_interface(ifname))
     {
-      return 1;
+      //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
+      //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
+      //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
+      return WEIGHT_WLAN_LOW;
     }
   else
     {
-      return 0;
-    }
+      /* Mii wizardry */
+      struct ifreq ifr;
+      struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
+      mii->reg_num = MII_BMSR;
+      memset(&ifr, 0, sizeof(ifr));
+      strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
+      printf("Ethernet device assumed. Trying to get configuration...\n");      
+      if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+	if (errno != ENODEV)
+	  olsr_printf(1, "SIOCGMIIPHY on '%s' failed: %s\n",
+		      ifr.ifr_name, strerror(errno));
+	//return WEIGHT_ETHERNET_DEFAULT;
+      }
+      if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+	olsr_printf(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
+		    strerror(errno));
+	//return WEIGHT_ETHERNET_DEFAULT;
+      }
+
+      olsr_printf(1, "%s Mbit, %s duplex\n",
+		  (mii->val_out & MII_BMCR_100MBIT) ? "100" : "10",
+		  (mii->val_out & MII_BMCR_DUPLEX) ? "full" : "half");
+
+
+
+      if(mii->val_out & MII_BMCR_100MBIT)
+	return WEIGHT_ETHERNET_100MB;
+      else
+	return WEIGHT_ETHERNET_10MB;
+      /* Ethernet */
+      //WEIGHT_ETHERNET_10MB,     /* Ethernet 10Mb  */
+      //WEIGHT_ETHERNET_100MB,    /* Ethernet 100Mb */
+      //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
+
+    }
 }
+
+#else
+int
+calculate_if_metric(char *ifname)
+{
+  return check_wireless_interface(ifname);
+}
+#endif
+  

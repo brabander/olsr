@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.15 2005/02/15 20:40:42 kattemat Exp $
+ * $Id: ifnet.c,v 1.16 2005/02/17 07:19:49 kattemat Exp $
  */
 
 
@@ -202,7 +202,7 @@ chk_if_changed(struct olsr_if *iface)
   ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
 
   /* Set interface metric */
-  ifp->int_metric = ifp->is_wireless;
+  ifp->int_metric = calculate_if_metric(ifr.ifr_name);
 
   /* Get MTU */
   if (ioctl(ioctl_s, SIOCGIFMTU, &ifr) < 0)
@@ -566,16 +566,12 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     }
 
   /* trying to detect if interface is wireless. */
-  if(check_wireless_interface(ifr.ifr_name))
-    {
-      olsr_printf(debuglvl, "\tWireless interface detected\n");
-      ifs.is_wireless = 1;
-    }
+  ifs.is_wireless = check_wireless_interface(ifr.ifr_name);
+
+  if(ifs.is_wireless)
+    olsr_printf(debuglvl, "\tWireless interface detected\n");
   else
-    {
-      olsr_printf(debuglvl, "\tNot a wireless interface\n");
-      ifs.is_wireless = 0;
-    }
+    olsr_printf(debuglvl, "\tNot a wireless interface\n");
 
   
   /* IP version 6 */
@@ -664,8 +660,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   ifs.if_index = if_nametoindex(ifr.ifr_name);
   
   /* Set interface metric */
-  ifs.int_metric = ifs.is_wireless;
-  
+  ifs.int_metric = calculate_if_metric(ifr.ifr_name);
+  olsr_printf(1, "\tMetric: %d\n", ifs.int_metric);
+
   /* setting the interfaces number*/
   ifs.if_nr = iface->index;
 

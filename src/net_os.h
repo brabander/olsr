@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.6 2005/02/15 20:40:26 kattemat Exp $
+ * $Id: net_os.h,v 1.7 2005/02/17 07:19:49 kattemat Exp $
  */
 
 
@@ -96,9 +96,10 @@ getsocket6(struct sockaddr_in6 *, int, char *);
 int
 get_ipv6_address(char *, struct sockaddr_in6 *, int);
 
-#ifndef WIN32
+int
+calculate_if_metric(char *);
+
 int
 check_wireless_interface(char *);
-#endif
 
 #endif
