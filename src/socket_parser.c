@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: socket_parser.c,v 1.11 2004/11/05 11:52:56 kattemat Exp $
+ * $Id: socket_parser.c,v 1.12 2004/11/12 20:17:59 kattemat Exp $
  *
  */
 
@@ -37,7 +37,10 @@
 #define strerror(x) StrError(x)
 #endif
 
-static olsr_bool changes_sockets;
+
+static int hfd = 0;
+
+#warning highest FD for select is now set in socket add/remove functions
 
 /**
  * Add a socket and handler to the socketset
@@ -64,11 +67,12 @@ add_olsr_socket(int fd, void(*pf)(int))
   new_entry->fd = fd;
   new_entry->process_function = pf;
 
-  changes_sockets = OLSR_TRUE;
-
   /* Queue */
   new_entry->next = olsr_socket_entries;
   olsr_socket_entries = new_entry;
+
+  if(fd + 1 > hfd)
+    hfd = fd + 1;
 }
 
 /**
@@ -102,13 +106,24 @@ remove_olsr_socket(int fd, void(*pf)(int))
 	    {
 	      olsr_socket_entries = entry->next;
 	      free(entry);
-	      changes_sockets = OLSR_TRUE;
 	    }
 	  else
 	    {
 	      prev_entry->next = entry->next;
 	      free(entry);
-	      changes_sockets = OLSR_TRUE;
+	    }
+
+	  if(hfd == fd + 1)
+	    {
+	      /* Re-calculate highest FD */
+	      entry = olsr_socket_entries;
+	      hfd = 0;
+	      while(entry)
+		{
+		  if(entry->fd + 1 > hfd)
+		    hfd = entry->fd + 1;
+		  entry = entry->next;
+		}
 	    }
 	  return 1;
 	}
@@ -127,36 +142,11 @@ void
 listen_loop()
 {
   fd_set ibits;
-  int hfd, n;
+  int n;
   struct olsr_socket_entry *olsr_sockets;
   struct timeval tvp;
 
   FD_ZERO(&ibits);
-
-  /*
-   *Find highest FD
-   */
-  hfd = 0;
-
-  changes_sockets = OLSR_FALSE;
-
-  /* Begin critical section */
-  pthread_mutex_lock(&mutex);
-
-  olsr_sockets = olsr_socket_entries;
-
-  olsr_printf(3, "SOCKETS: ");
-
-  while(olsr_sockets)
-    {
-      olsr_printf(3, "%d ", olsr_sockets->fd);
-      if((olsr_sockets->fd + 1) > hfd)
-	hfd = olsr_sockets->fd + 1;
-      olsr_sockets = olsr_sockets->next;
-    }
-  /* End critical section */
-  pthread_mutex_unlock(&mutex);
-  olsr_printf(3, "\n");
 
   /* Main listening loop */
   for (;;)
@@ -173,26 +163,6 @@ listen_loop()
 	}
       /* End critical section */
       pthread_mutex_unlock(&mutex);
-
-      if(changes_sockets)
-	{
-	  hfd = 0;
-	  olsr_printf(3, "Recalculating hfd\n");
-	  /* Begin critical section */
-	  pthread_mutex_lock(&mutex);
-	  olsr_sockets = olsr_socket_entries;
-
-	  /* Recalculate highest FD */	  
-	  while(olsr_sockets)
-	    {
-	      if((olsr_sockets->fd + 1) > hfd)
-		hfd = olsr_sockets->fd + 1;
-	      olsr_sockets = olsr_sockets->next;
-	    }
-	  /* End critical section */
-	  pthread_mutex_unlock(&mutex);
-	  changes_sockets = OLSR_FALSE;
-	}
 
 
       /* If there are no registered sockets we
