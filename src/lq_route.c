@@ -18,7 +18,7 @@
  * along with olsr.org; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: lq_route.c,v 1.1 2004/11/07 17:51:20 tlopatic Exp $
+ * $Id: lq_route.c,v 1.2 2004/11/08 00:55:47 tlopatic Exp $
  *
  */
 
@@ -287,6 +287,14 @@ void olsr_calculate_lq_routing_table(void)
 
   add_vertex(&vertex_list, &main_addr, 1.0);
 
+  // add our neighbours
+
+  for (i = 0; i < HASHSIZE; i++)
+    for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
+         neigh = neigh->next)
+      if (neigh->status == SYM)
+        add_vertex(&vertex_list, &neigh->neighbor_main_addr, 0.0);
+
   // add remaining vertices
 
   for (i = 0; i < HASHSIZE; i++)
@@ -317,7 +325,7 @@ void olsr_calculate_lq_routing_table(void)
 
         link = olsr_neighbor_best_inverse_link(&neigh->neighbor_main_addr);
 
-        add_edge(&vertex_list, &main_addr, &neigh->neighbor_main_addr,
+        add_edge(&vertex_list, &neigh->neighbor_main_addr, &main_addr,
                  link->loss_link_quality);
       }
 
@@ -392,6 +400,8 @@ void olsr_calculate_lq_routing_table(void)
         if (hops > 1)
           olsr_insert_routing_table(&vert->addr, &walker->addr, hops);
       }
+
+      node = list_get_next(node);
     }
   }
 
