@@ -1,5 +1,5 @@
 /*
- * Windows GUI for olsr.org
+ * $Id: HnaEntry.cpp,v 1.2 2004/09/15 11:18:41 tlopatic Exp $
  * Copyright (C) 2004 Thomas Lopatic (thomas@lopatic.de)
  *
  * This file is part of olsr.org.
