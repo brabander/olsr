@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.11 2005/02/14 20:39:29 tlopatic Exp $
+;  $Id: installer.nsi,v 1.12 2005/03/02 00:13:23 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -76,6 +76,8 @@ Section "Program Files"
         File /oname=olsrd.conf ..\..\..\files\olsrd.conf.default.win32
         File ..\..\..\gui\win32\Main\Default.olsr
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
+        File ..\..\..\lib\nameservice\olsrd_nameservice.dll
+        File ..\..\..\lib\httpinfo\olsrd_httpinfo.dll
 
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org DisplayName olsr.org
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org UninstallString $INSTDIR\uninstall.exe
@@ -133,6 +135,8 @@ Section "Uninstall"
         Delete $INSTDIR\Default.olsr
 	Delete $INSTDIR\olsrd.conf
         Delete $INSTDIR\olsrd_dot_draw.dll
+        Delete $INSTDIR\olsrd_nameservice.dll
+        Delete $INSTDIR\olsrd_httpinfo.dll
         Delete $INSTDIR\uninstall.exe
 
         RMDir $INSTDIR

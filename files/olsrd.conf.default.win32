@@ -6,7 +6,7 @@
 # without the GUI. If you use the GUI, then you do not need this
 # file. In this case look at Default.olsr instead.
 #
-# $Id: olsrd.conf.default.win32,v 1.5 2004/11/24 13:10:53 tlopatic Exp $
+# $Id: olsrd.conf.default.win32,v 1.6 2005/03/02 00:13:21 tlopatic Exp $
 #
 
 #
@@ -20,22 +20,23 @@ DebugLevel		2
 # Clear the screen each time the internal state changes
 #
 
-ClearScreen		yes
+ClearScreen		no
 
 #
-# IP version to use - the Windows port only supports IPv4
+# Enable the link quality extensions?
+#
+# 0 - no
+# 1 - yes, use link quality for MPR selection
+# 2 - yes, use link quality for MPR selection and routing
 #
 
-IpVersion		4
+LinkQualityLevel	2
 
 #
-# IPv4 HNAs - syntax: netaddr netmask
+# Windows size for packet loss calculation
 #
 
-Hna4
-{
-#	0.0.0.0 0.0.0.0
-}
+LinkQualityWinSize	10
 
 #
 # Do not use hysteresis
@@ -47,9 +48,15 @@ UseHysteresis		no
 # If using hysteresis, use "smooth" parameters
 #
 
-HystScaling		0.10
-HystThrHigh		0.80
-HystThrLow		0.30
+HystScaling		0.1
+HystThrHigh		0.8
+HystThrLow		0.3
+
+#
+# The pollrate used by the scheduler
+#
+
+Pollrate		0.1
 
 #
 # Which neighbours should be advertised via TC messages?
@@ -59,39 +66,47 @@ HystThrLow		0.30
 # 2 - advertise all neighbors
 #
 
-TcRedundancy		0
+TcRedundancy		2
 
 #
 # Specifies by how many MPRs each two-hop neighbour should be covered
 #
 
-MprCoverage		1
-
-#
-# Enable the link quality extensions?
-#
-# 0 - no
-# 1 - yes, use link quality for MPR selection
-# 2 - yes, use link quality for MPR selection and routing
-#
-
-LinkQualityLevel	0
-
-#
-# Windows size for packet loss calculation
-#
-
-LinkQualityWinSize	10
+MprCoverage		3
 
 #
 # Load the dot draw plugin
 #
 
-LoadPlugin		"olsrd_dot_draw.dll"
+#LoadPlugin		"olsrd_dot_draw.dll"
+#{
+#}
+
+#
+# Load the name service plugin
+#
+
+#LoadPlugin		"olsrd_nameservice.dll"
+#{
+#	PlParam	"name"	"thomas"
+#}
+
+#
+# Load the HTTP info plugin
+#
+
+LoadPlugin		"olsrd_httpinfo.dll"
 {
-	#
-	# Plugin does not support any parameters
-	#
+	PlParam	"Net"	"0.0.0.0 0.0.0.0"
+}
+
+#
+# IPv4 HNAs - syntax: netaddr netmask
+#
+
+Hna4
+{
+#	0.0.0.0 0.0.0.0
 }
 
 #
@@ -101,53 +116,31 @@ LoadPlugin		"olsrd_dot_draw.dll"
 
 Interface "if99"
 {
-
 	#
-	# HELLO interval in seconds (float)
+	# HELLO interval and validity time in seconds (float)
 	#
 
 	HelloInterval		2.0
+	HelloValidityTime	20.0
 
 	#
-	# HELLO validity time
-	#
-
-	HelloValidityTime	6.0
-
-	#
-	# TC interval in seconds (float)
+	# TC interval and validity time in seconds (float)
 	#
 
 	TcInterval		5.0
+	TcValidityTime		30.0
 
 	#
-	# TC validity time
-	#
-
-	TcValidityTime		15.0
-
-	#
-	# MID interval in seconds (float)
+	# MID interval and validity time in seconds (float)
 	#
 
 	MidInterval		5.0
+	MidValidityTime		30.0
 
 	#
-	# MID validity time
-	#
-
-	MidValidityTime		15.0
-
-	#
-	# HNA interval in seconds (float)
+	# HNA interval and validity time in seconds (float)
 	#
 
 	HnaInterval		5.0
-
-	#
-	# HNA validity time
-	#
-
-	HnaValidityTime 	15.0
+	HnaValidityTime 	30.0
 }
-

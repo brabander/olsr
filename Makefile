@@ -35,9 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.46 2005/02/27 10:43:15 kattemat Exp $
+# $Id: Makefile,v 1.47 2005/03/02 00:13:20 tlopatic Exp $
 
-VERS =		0.4.8
+VERS =		0.4.9
 
 CC ?= 		gcc
 STRIP ?=	strip
@@ -129,10 +129,14 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
-		lib/dot_draw/olsrd_dot_draw.dll
+		lib/dot_draw/olsrd_dot_draw.dll \
+		lib/nameservice/olsrd_nameservice.dll \
+		lib/httpinfo/olsrd_httpinfo.dll
 		$(STRIP) olsrd.exe
 		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
 		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
+		$(STRIP) lib/nameservice/olsrd_nameservice.dll
+		$(STRIP) lib/httpinfo/olsrd_httpinfo.dll
 		rm -rf ${TEMP}/olsr-${VERS}
 		rm -f ${TEMP}/olsr-${VERS}.zip
 		rm -f olsr-${VERS}.zip
@@ -147,6 +151,8 @@ olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
 		cp files/olsrd.conf.default.win32 ${TEMP}/olsr-${VERS}/olsrd.conf
 		cp gui/win32/Main/Default.olsr ${TEMP}/olsr-${VERS}
 		cp lib/dot_draw/olsrd_dot_draw.dll ${TEMP}/olsr-${VERS}
+		cp lib/nameservice/olsrd_nameservice.dll ${TEMP}/olsr-${VERS}
+		cp lib/httpinfo/olsrd_httpinfo.dll ${TEMP}/olsr-${VERS}
 		cd ${TEMP}; echo y | cacls olsr-${VERS} /T /G Everyone:F
 		cd ${TEMP}; zip -q -r olsr-${VERS}.zip olsr-${VERS}
 		cp ${TEMP}/olsr-${VERS}.zip .
@@ -163,10 +169,14 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		files/olsrd.conf.default.win32 \
 		gui/win32/Main/Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
+		lib/nameservice/olsrd_nameservice.dll \
+		lib/httpinfo/olsrd_httpinfo.dll \
 		gui/win32/Inst/installer.nsi
 		$(STRIP) olsrd.exe
 		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
 		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
+		$(STRIP) lib/nameservice/olsrd_nameservice.dll
+		$(STRIP) lib/httpinfo/olsrd_httpinfo.dll
 		rm -f olsr-setup.exe
 		rm -f olsr-${VERS}-setup.exe
 		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
@@ -285,8 +295,11 @@ httpinfo:
 
 dot_draw:
 		$(MAKE) -C lib/dot_draw clean
-		$(MAKE) -C lib/dot_draw 
 		$(MAKE) -C lib/dot_draw install
+
+nameservice:
+		$(MAKE) -C lib/nameservice clean
+		$(MAKE) -C lib/nameservice install
 
 dyn_gw:
 		$(MAKE) -C lib/dyn_gw clean

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.cpp,v 1.7 2004/11/21 02:06:56 tlopatic Exp $
+ * $Id: MyDialog2.cpp,v 1.8 2005/03/02 00:13:23 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -81,6 +81,8 @@ void MyDialog2::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(MyDialog2)
+	DDX_Control(pDX, IDC_COMBO1, m_TcRed);
+	DDX_Control(pDX, IDC_EDIT15, m_MprCov);
 	DDX_Control(pDX, IDC_RADIO2, m_EtxRadio2);
 	DDX_Control(pDX, IDC_RADIO1, m_EtxRadio1);
 	DDX_Control(pDX, IDC_EDIT14, m_EtxWindowSize);
@@ -193,6 +195,8 @@ BOOL MyDialog2::OnInitDialog()
 	if (::GetBestRoute(0, 0, &IpFwdRow) != NO_ERROR)
 		m_InternetCheck.EnableWindow(FALSE);
 
+	m_MprCov.LimitText(1);
+
 	Reset();
 
 	return TRUE;
@@ -296,6 +300,11 @@ int MyDialog2::OpenConfigFile(CString PathName)
 
 	Conv.Format("%.2f", Conf->pollrate);
 	m_PollInt.SetWindowText(Conv);
+
+	Conv.Format("%d", Conf->mpr_coverage);
+	m_MprCov.SetWindowText(Conv);
+
+	m_TcRed.SetCurSel(Conf->tc_redundancy);
 
 	m_HystCheck.SetCheck(Conf->use_hysteresis);
 
@@ -495,6 +504,11 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	m_PollInt.GetWindowText(Conv);
 	Conf->pollrate = (float)atof(Conv);
+
+	Conf->tc_redundancy = (unsigned char)m_TcRed.GetCurSel();
+
+	m_MprCov.GetWindowText(Conv);
+	Conf->mpr_coverage = (unsigned char)atoi(Conv);
 
 	Conf->use_hysteresis = m_HystCheck.GetCheck() ? OLSR_TRUE : OLSR_FALSE;
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.h,v 1.7 2005/02/28 18:12:16 tlopatic Exp $
+ * $Id: MyDialog2.h,v 1.8 2005/03/02 00:13:23 tlopatic Exp $
  */
 
 #if !defined(AFX_MYDIALOG2_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_)
@@ -70,6 +70,8 @@ public:
 
 	//{{AFX_DATA(MyDialog2)
 	enum { IDD = IDD_DIALOG2 };
+	CComboBox	m_TcRed;
+	CEdit	m_MprCov;
 	CButton	m_EtxRadio2;
 	CButton	m_EtxRadio1;
 	CEdit	m_EtxWindowSize;
