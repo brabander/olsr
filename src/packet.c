@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.c,v 1.7 2004/10/19 20:19:32 kattemat Exp $
+ * $Id: packet.c,v 1.8 2004/11/01 19:27:11 tlopatic Exp $
  *
  */
 
@@ -113,7 +113,6 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       /* Find the link status */
       message_neighbor->link = link;
 
-   
       /*
        * Calculate neighbor status
        */
@@ -494,4 +493,140 @@ olsr_destroy_mid_message(struct mid_message *message)
     }
 }
 
+#if defined USE_LINK_QUALITY
+int
+olsr_build_lq_hello_packet(struct lq_hello_message *msg,
+                           struct interface *outif)
+{
+  struct lq_hello_neighbor *neigh;
+  struct link_entry *walker;
 
+  olsr_printf(3, "\tBuilding LQ_HELLO on interface %d\n", outif->if_nr);
+
+  COPY_IP(&msg->main, &main_addr);
+
+  msg->seqno = 0;
+  msg->hops = 0;
+  msg->ttl = 1;
+  msg->will = olsr_cnf->willingness;
+  msg->neigh = NULL;
+  
+  for (walker = link_set; walker != NULL; walker = walker->next)
+    {
+      neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
+      
+      if(!COMP_IP(&walker->local_iface_addr, &outif->ip_addr))
+        neigh->link_type = UNSPEC_LINK;
+      
+      else
+        neigh->link_type = lookup_link_status(walker);
+
+      neigh->link_quality = walker->loss_link_quality;
+
+      if(walker->neighbor->is_mpr)
+        neigh->neigh_type = MPR_NEIGH;
+
+      else if (walker->neighbor->status == SYM)
+        neigh->neigh_type = SYM_NEIGH;
+
+      else if (walker->neighbor->status == NOT_SYM)
+        neigh->neigh_type = NOT_NEIGH;
+  
+      COPY_IP(&neigh->main, &walker->neighbor->neighbor_main_addr);
+      COPY_IP(&neigh->addr, &walker->neighbor_iface_addr);
+      
+      olsr_printf(5, "%s - ", olsr_ip_to_string(&neigh->addr));
+      olsr_printf(5, " neighbor type %d\n", neigh->neigh_type);
+      
+      neigh->next = msg->neigh;
+      msg->neigh = neigh;
+    }
+  
+  return 0;
+}
+
+void
+olsr_destroy_lq_hello_message(struct lq_hello_message *msg)
+{
+  struct lq_hello_neighbor *walker, *aux;
+
+  for (walker = msg->neigh; walker != NULL; walker = aux)
+    {
+      aux = walker->next;
+      free(walker);
+    }
+}
+
+int
+olsr_build_lq_tc_packet(struct lq_tc_message *msg)
+{
+  struct lq_tc_neighbor *neigh;
+  int i;
+  struct neighbor_entry *walker;
+  struct timeval timer;
+
+  COPY_IP(&msg->main, &main_addr);
+  COPY_IP(&msg->orig, &main_addr);
+  
+  msg->seqno = 0;
+  msg->hops = 0;
+  msg->ttl = MAX_TTL;
+  msg->ansn = ansn;
+  msg->neigh = NULL;
+ 
+  for(i = 0; i < HASHSIZE; i++)
+    {
+      for(walker = neighbortable[i].next; walker != &neighbortable[i];
+	  walker = walker->next)
+	{
+	  if(walker->status != SYM)
+	    continue;
+
+          if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr &&
+              olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
+            continue;
+
+          else if (olsr_cnf->tc_redundancy == 0 &&
+              olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
+            continue;
+
+          neigh = olsr_malloc(sizeof (struct lq_tc_neighbor), "Build LQ_TC");
+		
+          COPY_IP(&neigh->main, &walker->neighbor_main_addr);
+
+          neigh->link_quality =
+            olsr_neighbor_best_link_quality(&neigh->main);
+
+          neigh->next = msg->neigh;
+          msg->neigh = neigh;
+        }
+    }
+
+  if (msg->neigh != NULL)
+    sending_tc = 1;
+
+  else if (sending_tc)
+    {
+      olsr_init_timer((olsr_u32_t)(max_tc_vtime * 3) * 1000, &timer);
+      timeradd(&now, &timer, &send_empty_tc);
+
+      olsr_printf(3, "No more MPR selectors - will send empty LQ_TCs\n");
+      
+      sending_tc = 0;
+    }
+
+  return 0;
+}
+
+void
+olsr_destroy_lq_tc_message(struct lq_tc_message *msg)
+{
+  struct lq_tc_neighbor *walker, *aux;
+
+  for (walker = msg->neigh; walker != NULL; walker = aux)
+    {
+      aux = walker->next;
+      free(walker);
+    }
+}
+#endif

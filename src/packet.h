@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: packet.h,v 1.5 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: packet.h,v 1.6 2004/11/01 19:27:11 tlopatic Exp $
  *
  */
 
@@ -48,8 +48,6 @@ struct hello_neighbor
   struct hello_neighbor *next;
 };
 
-
-
 struct hello_message
 {
   double                 vtime;
@@ -63,6 +61,29 @@ struct hello_message
   
 };
 
+#if defined USE_LINK_QUALITY
+struct lq_hello_neighbor
+{
+  olsr_u8_t                link_type;
+  olsr_u8_t                neigh_type;
+  double                   link_quality;
+  union olsr_ip_addr       main;
+  union olsr_ip_addr       addr;
+  struct lq_hello_neighbor *next;
+};
+
+struct lq_hello_message
+{
+  double                   vtime;
+  double                   htime;
+  union olsr_ip_addr       main;
+  olsr_u16_t               seqno;
+  olsr_u8_t                hops;
+  olsr_u8_t                ttl;
+  olsr_u8_t                will;
+  struct lq_hello_neighbor *neigh;
+};
+#endif
 
 struct tc_mpr_addr
 {
@@ -70,7 +91,6 @@ struct tc_mpr_addr
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
 };
-
 
 struct tc_message
 {
@@ -84,7 +104,26 @@ struct tc_message
   struct tc_mpr_addr  *multipoint_relay_selector_address;
 };
 
+#if defined USE_LINK_QUALITY
+struct lq_tc_neighbor
+{
+  double                link_quality;
+  union olsr_ip_addr    main;
+  struct lq_tc_neighbor *next;
+};
 
+struct lq_tc_message
+{
+  double                vtime;
+  union olsr_ip_addr    main;
+  union olsr_ip_addr    orig;
+  olsr_u16_t            seqno;
+  olsr_u8_t             hops;
+  olsr_u8_t             ttl;
+  olsr_u16_t            ansn;
+  struct lq_tc_neighbor *neigh;
+};
+#endif
 
 /*
  *HNA message format:
@@ -167,6 +206,18 @@ olsr_destroy_hna_message(struct hna_message *);
 void
 olsr_destroy_tc_message(struct tc_message *);
 
+#if defined USE_LINK_QUALITY
+int
+olsr_build_lq_hello_packet(struct lq_hello_message *, struct interface *);
 
+int
+olsr_build_lq_tc_packet(struct lq_tc_message *);
+
+void
+olsr_destroy_lq_hello_message(struct lq_hello_message *);
+
+void
+olsr_destroy_lq_tc_message(struct lq_tc_message *);
+#endif
 
 #endif

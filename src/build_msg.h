@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: build_msg.h,v 1.7 2004/09/21 19:08:57 kattemat Exp $
+ * $Id: build_msg.h,v 1.8 2004/11/01 19:27:10 tlopatic Exp $
  *
  */
 
@@ -41,7 +41,12 @@ mid_build(struct interface *);
 void
 hna_build(struct interface *);
 
+#if defined USE_LINK_QUALITY
+void
+lq_hello_build(struct lq_hello_message *msg, struct interface *outif);
 
-
+void
+lq_tc_build(struct lq_tc_message *msg, struct interface *outif);
+#endif
 
 #endif
