@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyTabCtrl.h,v 1.4 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyTabCtrl.h,v 1.5 2005/02/14 20:39:30 tlopatic Exp $
  */
 
 #if !defined(AFX_MYTABCTRL_H__D443FF52_C52D_4C89_AB4B_19B09687EBAE__INCLUDED_)
@@ -71,6 +71,7 @@ public:
 
 protected:
 	CDialog *Dialogs[4];
+
 	int Sel;
 
 	//{{AFX_MSG(MyTabCtrl)

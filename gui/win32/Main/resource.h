@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
+// Microsoft Developer Studio generated include file.
 // Used by Frontend.rc
 //
 #define IDD_FRONTEND_DIALOG             102
@@ -12,6 +12,7 @@
 #define IDI_ICON1                       132
 #define IDR_241                         138
 #define IDI_ICON3                       141
+#define IDR_TRAYMENU                    141
 #define IDI_ICON2                       142
 #define IDC_TAB1                        1000
 #define IDC_BUTTON1                     1001
@@ -45,13 +46,19 @@
 #define IDC_LIST6                       1027
 #define IDC_RADIO1                      1029
 #define IDC_RADIO2                      1030
+#define IDM_START                       32773
+#define IDM_STOP                        32774
+#define IDM_WINDOW                      32775
+#define IDM_SETTINGS                    32776
+#define IDM_OUTPUT                      32777
+#define IDM_EXIT                        32778
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

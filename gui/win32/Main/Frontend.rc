@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+//Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
 
@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (USA) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
     "#define _AFX_NO_OLE_RESOURCES\r\n"
@@ -65,10 +65,10 @@ END
 //
 
 IDD_FRONTEND_DIALOG DIALOGEX 0, 0, 399, 289
-STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "olsr.org Switch 0.4.8"
+CAPTION "olsr.org Switch 0.4.9"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tab1",IDC_TAB1,"SysTabControl32",0x0,7,7,383,256
@@ -77,8 +77,8 @@ BEGIN
     PUSHBUTTON      "Exit",IDC_BUTTON3,340,268,50,14
 END
 
-IDD_DIALOG1 DIALOG  0, 0, 377, 240
-STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 377, 240
+STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT1,7,25,363,208,ES_MULTILINE | ES_READONLY | 
@@ -89,8 +89,8 @@ BEGIN
     PUSHBUTTON      "Clear",IDC_BUTTON1,320,7,50,14
 END
 
-IDD_DIALOG2 DIALOG  0, 0, 377, 240
-STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 377, 240
+STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_LIST | WS_BORDER | 
@@ -153,8 +153,8 @@ BEGIN
     RTEXT           "Window size:",IDC_STATIC,251,171,43,8
 END
 
-IDD_DIALOG3 DIALOG  0, 0, 377, 240
-STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE
+IDD_DIALOG3 DIALOG DISCARDABLE  0, 0, 377, 240
+STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_REPORT | 
@@ -169,8 +169,8 @@ BEGIN
     LTEXT           "Node information",IDC_STATIC,257,7,59,8
 END
 
-IDD_DIALOG4 DIALOG  0, 0, 377, 240
-STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE
+IDD_DIALOG4 DIALOG DISCARDABLE  0, 0, 377, 240
+STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_REPORT | WS_BORDER | 
@@ -185,7 +185,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO MOVEABLE PURE 
 BEGIN
     IDD_FRONTEND_DIALOG, DIALOG
     BEGIN
@@ -237,17 +237,39 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "res\\Frontend.ico"
-IDI_ICON3               ICON                    "res\\Tray2.ico"
-IDI_ICON2               ICON                    "res\\Tray1.ico"
+IDI_ICON1               ICON    DISCARDABLE     "res\\Frontend.ico"
+IDI_ICON3               ICON    DISCARDABLE     "res\\Tray2.ico"
+IDI_ICON2               ICON    DISCARDABLE     "res\\Tray1.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // RT_MANIFEST
 //
 
-IDR_241                 RT_MANIFEST             "Switch.exe.manifest"
-#endif    // Englisch (USA) resources
+IDR_241                 RT_MANIFEST MOVEABLE PURE "Switch.exe.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_TRAYMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "IDR_TRAYMENU"
+    BEGIN
+        MENUITEM "Start",                       IDM_START
+        MENUITEM "Stop",                        IDM_STOP
+        POPUP "Show"
+        BEGIN
+            MENUITEM "Window",                      IDM_WINDOW
+            MENUITEM "Settings",                    IDM_SETTINGS
+            MENUITEM "Output",                      IDM_OUTPUT
+        END
+        MENUITEM "Exit",                        IDM_EXIT
+    END
+END
+
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

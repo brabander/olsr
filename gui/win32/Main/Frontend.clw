@@ -18,12 +18,13 @@ Class6=MyDialog4
 Class7=MyEdit
 Class8=MyTabCtrl
 
-ResourceCount=5
-Resource1=IDD_DIALOG1
-Resource2=IDD_DIALOG2
-Resource3=IDD_DIALOG3
-Resource4=IDD_FRONTEND_DIALOG
-Resource5=IDD_DIALOG4
+ResourceCount=6
+Resource1=IDD_DIALOG3
+Resource2=IDD_DIALOG4
+Resource3=IDD_FRONTEND_DIALOG
+Resource4=IDD_DIALOG2
+Resource5=IDD_DIALOG1
+Resource6=IDR_TRAYMENU
 
 [CLS:CFrontendApp]
 Type=0
@@ -173,4 +174,15 @@ Class=MyDialog4
 ControlCount=2
 Control1=IDC_LIST1,SysListView32,1350631425
 Control2=IDC_STATIC,static,1342308352
+
+[MNU:IDR_TRAYMENU]
+Type=1
+Class=?
+Command1=IDM_START
+Command2=IDM_STOP
+Command3=IDM_WINDOW
+Command4=IDM_SETTINGS
+Command5=IDM_OUTPUT
+Command6=IDM_EXIT
+CommandCount=6
 

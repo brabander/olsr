@@ -235,6 +235,14 @@ SOURCE=.\res\Frontend.ico
 
 SOURCE=.\res\Frontend.rc2
 # End Source File
+# Begin Source File
+
+SOURCE=.\res\Tray1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\Tray2.ico
+# End Source File
 # End Group
 # Begin Source File
 
