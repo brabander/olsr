@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: ipc_frontend.c,v 1.17 2004/11/12 16:27:48 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.18 2004/11/12 22:11:54 kattemat Exp $
  *
  */
 
@@ -240,7 +240,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if, union olsr_
  *@return negative on error
  */
 int
-ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int_name)
+ipc_route_send_rtentry(union olsr_ip_addr *dst, union olsr_ip_addr *gw, int met, int add, char *int_name)
 {
   struct ipcmsg packet;
   //int i, x;
@@ -249,39 +249,23 @@ ipc_route_send_rtentry(union olsr_kernel_route *kernel_route, int add, char *int
   if(!ipc_active)
     return 0;
 
+  memset(&packet, 0, sizeof(struct ipcmsg));
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
 
-  if(olsr_cnf->ip_version == AF_INET)
-    COPY_IP(&packet.target_addr, &((struct sockaddr_in *)&kernel_route->v4.rt_dst)->sin_addr.s_addr);
-  else
-    COPY_IP(&packet.target_addr, &kernel_route->v6.rtmsg_dst);
+  COPY_IP(&packet.target_addr, dst);
 
   packet.add = add;
-  if(add)
+  if(add && gw)
     {
-      if(olsr_cnf->ip_version == AF_INET)
-	{
-	  packet.metric = kernel_route->v4.rt_metric - 1;
-	  COPY_IP(&packet.gateway_addr, &((struct sockaddr_in *)&kernel_route->v4.rt_gateway)->sin_addr.s_addr);
-	}
-      else
-	{
-	  packet.metric = kernel_route->v6.rtmsg_metric;
-	  COPY_IP(&packet.gateway_addr, &kernel_route->v6.rtmsg_gateway);
-	}
+      packet.metric = met;
+      COPY_IP(&packet.gateway_addr, gw);
+    }
 
-      if(int_name != NULL)
-	memcpy(&packet.device[0], int_name, 4);
-      else
-	memset(&packet.device[0], 0, 4);
-    }
+  if(int_name != NULL)
+    memcpy(&packet.device[0], int_name, 4);
   else
-    {
-      memset(&packet.metric, 0, 1);
-      memset(&packet.gateway_addr, 0, 4);
-      memset(&packet.device[0], 0, 4);
-    }
+    memset(&packet.device[0], 0, 4);
 
 
   tmp = (char *) &packet;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: kernel_routes.c,v 1.9 2004/11/02 21:14:12 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.10 2004/11/12 22:11:54 kattemat Exp $
  *
  */
 
@@ -113,10 +113,11 @@ olsr_ioctl_add_route(struct rt_entry *destination)
   
   if(olsr_cnf->open_ipc)
       {
-	if(destination->rt_router.v4)
-	  ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, destination->rt_if->int_name); /* Send interface name */
-	else
-	  ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, NULL);
+	ipc_route_send_rtentry(&destination->rt_dst, 
+			       &destination->rt_router, 
+			       destination->rt_metric, 
+			       1,
+			       destination->rt_if->int_name); /* Send interface name */
       }
   
   
@@ -193,9 +194,12 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
       if(olsr_cnf->open_ipc)
 	{
 	  if(memcmp(&destination->rt_router, &null_addr6, ipsize) != 0)
-	    ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, destination->rt_if->int_name); // Send interface name
-	  else
-	    ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 1, NULL);
+	    ipc_route_send_rtentry(&destination->rt_dst, 
+				   &destination->rt_router, 
+				   destination->rt_metric, 
+				   1,
+				   destination->rt_if->int_name); /* Send interface name */
+
 	}
     }
     return(tmp);
@@ -255,7 +259,11 @@ olsr_ioctl_del_route(struct rt_entry *destination)
      */
 
   if(olsr_cnf->open_ipc)
-    ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 0, NULL);
+    ipc_route_send_rtentry(&destination->rt_dst, 
+			   NULL, 
+			   destination->rt_metric, 
+			   0,
+			   NULL); /* Send interface name */
 
   return tmp;
 }
@@ -308,7 +316,11 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
      */
 
   if(olsr_cnf->open_ipc)
-    ipc_route_send_rtentry((union olsr_kernel_route *)&kernel_route, 0, NULL);
+    ipc_route_send_rtentry(&destination->rt_dst, 
+			   NULL, 
+			   destination->rt_metric, 
+			   0,
+			   NULL); /* Send interface name */
 
   return tmp;
 }

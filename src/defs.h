@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: defs.h,v 1.25 2004/11/09 21:09:57 kattemat Exp $
+ * $Id: defs.h,v 1.26 2004/11/12 22:11:54 kattemat Exp $
  *
  */
 
@@ -184,7 +184,7 @@ int
 ipc_send_net_info(void);
 
 int
-ipc_route_send_rtentry(union olsr_kernel_route *, int, char *);
+ipc_route_send_rtentry(union olsr_ip_addr*, union olsr_ip_addr *, int, int, char *);
 
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * 
- * $Id: main.c,v 1.37 2004/11/12 21:20:23 kattemat Exp $
+ * $Id: main.c,v 1.38 2004/11/12 22:11:54 kattemat Exp $
  *
  */
 
@@ -630,8 +630,6 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   scheduler();
-  /* Go into listenloop */
-  //listen_loop();
 
   /* Like we're ever going to reach this ;-) */
   return 1;
