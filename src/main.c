@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.58 2005/01/29 23:42:39 kattemat Exp $
+ * $Id: main.c,v 1.59 2005/01/29 23:45:26 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -94,7 +94,8 @@ main(int argc, char *argv[])
 {
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
-  
+  struct tms tms_buf;
+
   olsr_argv = argv;
 
 #ifdef WIN32
@@ -126,6 +127,9 @@ main(int argc, char *argv[])
       olsr_exit(__func__, EXIT_FAILURE);
     }
 #endif
+
+  /* Grab initial timestamp */
+  now_times = times(&tms_buf);
 
   /* Open syslog */
   olsr_openlog("olsrd");
@@ -703,7 +707,6 @@ olsr_shutdown(int signal)
 static void
 set_default_values()
 {
-  static struct tms tms_buf;
 
   memset(&main_addr, 0, sizeof(union olsr_ip_addr));
   memset(&null_addr6, 0, sizeof (union olsr_ip_addr));
@@ -727,7 +730,7 @@ set_default_values()
   disp_pack_out = OLSR_FALSE;
 
   /* Initialize empty TC timer */
-  send_empty_tc = now_times = times(&tms_buf);
+  send_empty_tc = GET_TIMESTAMP(0);
 }
 
 
