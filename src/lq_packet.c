@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.6 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_packet.c,v 1.7 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -199,10 +199,9 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
           // set the entry's link quality
 
-          link = olsr_neighbor_best_inverse_link(&neigh->main);
-          neigh->link_quality = link->loss_link_quality;
-
           link = olsr_neighbor_best_link(&neigh->main);
+
+          neigh->link_quality = link->loss_link_quality;
           neigh->neigh_link_quality = link->neigh_link_quality;
 
           // queue the neighbour entry

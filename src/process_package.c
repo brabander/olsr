@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.22 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: process_package.c,v 1.23 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 
@@ -620,28 +620,37 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
                       // saved previous total link quality
 
-                      saved_lq = walker->saved_full_link_quality;
+                      saved_lq = walker->saved_path_link_quality;
 
                       if (saved_lq == 0.0)
                         saved_lq = -1.0;
 
-                      // total link quality = link quality between us
+                      // path link quality = link quality between us
                       // and our one-hop neighbor x link quality between
                       // our one-hop neighbor and the two-hop neighbor
 
-                      walker->full_link_quality =
-                        link->neigh_link_quality *
+                      // let's compare this to ETX:
+
+                      // 1 / LQ1 + 1 / LQ2 < 1 / LQ3 + 1 / LQ4 <=>
+                      // LQ1 * LQ2 > LQ3 * LQ4
+
+                      // so comparing path link quality values with ">" is
+                      // equivalent to comparing ETX values with "<"
+
+                      walker->path_link_quality =
+                        link->loss_link_quality * link->neigh_link_quality *
+                        message_neighbors->link_quality *
                         message_neighbors->neigh_link_quality;
 
                       // if the link quality has changed by more than 10
                       // percent, signal
 
-                      rel_lq = walker->full_link_quality / saved_lq;
+                      rel_lq = walker->path_link_quality / saved_lq;
 
                       if (rel_lq > 1.1 || rel_lq < 0.9)
                         {
-                          walker->saved_full_link_quality =
-                            walker->full_link_quality;
+                          walker->saved_path_link_quality =
+                            walker->path_link_quality;
 
                           changes_neighborhood = OLSR_TRUE;
                           changes_topology = OLSR_TRUE;
@@ -681,8 +690,8 @@ olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_en
   list_of_1_neighbors->neighbor = neighbor;
 
 #if defined USE_LINK_QUALITY
-  list_of_1_neighbors->full_link_quality = 0.0;
-  list_of_1_neighbors->saved_full_link_quality = 0.0;
+  list_of_1_neighbors->path_link_quality = 0.0;
+  list_of_1_neighbors->saved_path_link_quality = 0.0;
 #endif
 
   /* Queue */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.19 2004/11/21 13:45:50 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.20 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 
@@ -507,9 +507,8 @@ olsr_print_neighbor_table()
 	{
 #if defined USE_LINK_QUALITY
           link = olsr_neighbor_best_link(&neigh->neighbor_main_addr);
-          best_lq = link->neigh_link_quality;
 
-          link = olsr_neighbor_best_inverse_link(&neigh->neighbor_main_addr);
+          best_lq = link->neigh_link_quality;
           inv_best_lq = link->loss_link_quality;
 #else
           best_lq = 0.0;

@@ -36,11 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.h,v 1.2 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_route.h,v 1.3 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 #ifndef _LQ_ROUTE_H
 #define _LQ_ROUTE_H
+
+#define INFINITE_ETX ((float)(1 << 30))
+#define MIN_LINK_QUALITY 0.01
 
 void olsr_calculate_lq_routing_table(void);
 

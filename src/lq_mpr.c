@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.5 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: lq_mpr.c,v 1.6 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 #if defined USE_LINK_QUALITY
@@ -108,10 +108,10 @@ void olsr_calculate_lq_mpr(void)
                walker != &neigh2->neighbor_2_nblist;
                walker = walker->next)
             if (walker->neighbor->status == SYM &&
-                walker->full_link_quality > best)
+                walker->path_link_quality > best)
               {
                 neigh = walker->neighbor;
-                best = walker->full_link_quality;
+                best = walker->path_link_quality;
               }
 
           if (neigh != NULL)

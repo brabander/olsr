@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.33 2004/11/25 02:02:49 tlopatic Exp $
+ * $Id: link_set.c,v 1.34 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 
@@ -50,8 +50,8 @@
 #include "mpr.h"
 #include "olsr.h"
 #include "scheduler.h"
-
 #include "link_layer.h"
+#include "lq_route.h"
 
 /* Begin:
  * Prototypes for internal functions 
@@ -312,15 +312,15 @@ get_interface_link_set(union olsr_ip_addr *remote)
   union olsr_ip_addr *remote_addr;
   struct interface *if_to_use, *tmp_if, *backup_if;
 #if defined USE_LINK_QUALITY
-  float link_quality, backup_link_quality;
+  float link_quality, backup_link_quality, curr;
 #endif
 
   if_to_use = NULL;
   backup_if = NULL;
 
 #if defined USE_LINK_QUALITY
-  link_quality = 0.0;
-  backup_link_quality = 0.0;
+  link_quality = -1.0;
+  backup_link_quality = -1.0;
 #endif
 
   if(remote == NULL || link_set == NULL)
@@ -350,48 +350,55 @@ get_interface_link_set(union olsr_ip_addr *remote)
 	  if(!TIMED_OUT(&tmp_link_set->SYM_time))
 	    {
 #if defined USE_LINK_QUALITY
-        if (olsr_cnf->lq_level == 0)
-          {
+              if (olsr_cnf->lq_level == 0)
+                {
 #endif
-            if (if_to_use == NULL || if_to_use->int_metric > tmp_if->int_metric)
-              if_to_use = tmp_if;
+                  if (if_to_use == NULL ||
+                      if_to_use->int_metric > tmp_if->int_metric)
+                    if_to_use = tmp_if;
 #if defined USE_LINK_QUALITY
-          }
+                }
 
-        else if (if_to_use == NULL ||
-                 tmp_link_set->neigh_link_quality *
-                 tmp_link_set->loss_link_quality > link_quality)
-          {
-            if_to_use = tmp_if;
-            link_quality = tmp_link_set->neigh_link_quality *
-              tmp_link_set->loss_link_quality;
-          }
+              else
+                {
+                  curr = tmp_link_set->loss_link_quality *
+                    tmp_link_set->neigh_link_quality;
+
+                  if (curr > link_quality)
+                    {
+                      if_to_use = tmp_if;
+                      link_quality = curr;
+                    }
+                }
 #endif
 	    }
 	  /* Backup solution in case the links have timed out */
 	  else
 	    {
 #if defined USE_LINK_QUALITY
-        if (olsr_cnf->lq_level == 0)
-          {
+              if (olsr_cnf->lq_level == 0)
+                {
 #endif
-            if (if_to_use == NULL &&
-                (backup_if == NULL || backup_if->int_metric > tmp_if->int_metric))
-              backup_if = tmp_if;
+                  if (if_to_use == NULL &&
+                      (backup_if == NULL ||
+                       backup_if->int_metric > tmp_if->int_metric))
+                    backup_if = tmp_if;
 #if defined USE_LINK_QUALITY
-          }
+                }
 
-        else if (if_to_use == NULL &&
-                 (backup_if == NULL ||
-                  tmp_link_set->neigh_link_quality *
-                  tmp_link_set->loss_link_quality > backup_link_quality))
-          {
-            backup_if = tmp_if;
-            backup_link_quality = tmp_link_set->neigh_link_quality *
-              tmp_link_set->loss_link_quality;
-          }
+              else 
+                {
+                  curr = tmp_link_set->loss_link_quality *
+                    tmp_link_set->neigh_link_quality;
+
+                  if (if_to_use == NULL && curr > backup_link_quality)
+                    {
+                      backup_if = tmp_if;
+                      backup_link_quality = curr;
+                    }
 #endif
-	    }
+                }
+            }
 	}
       
       tmp_link_set = tmp_link_set->next;
@@ -928,6 +935,7 @@ void olsr_print_link_set(void)
 {
   struct link_entry *walker;
   char *fstr;
+  float etx;
 
   olsr_printf(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
               nowtm->tm_hour,
@@ -937,22 +945,30 @@ void olsr_print_link_set(void)
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ\n");
-    fstr = "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n";
+    olsr_printf(1, "IP address       hyst   LQ     lost   total  NLQ    ETX\n");
+    fstr = "%-15s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n";
   }
 
   else
   {
-    olsr_printf(1, "IP address                               hyst   LQ     lost   total  NLQ\n");
-    fstr = "%-39s  %5.3f  %5.3f  %-3d    %-3d    %5.3f\n";
+    olsr_printf(1, "IP address                               hyst   LQ     lost   total  NLQ    ETX\n");
+    fstr = "%-39s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n";
   }
 
   for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    if (walker->loss_link_quality < MIN_LINK_QUALITY ||
+        walker->neigh_link_quality < MIN_LINK_QUALITY)
+      etx = 0.0;
+
+    else
+      etx = 1.0 / (walker->loss_link_quality * walker->neigh_link_quality);
+
     olsr_printf(1, fstr, olsr_ip_to_string(&walker->neighbor_iface_addr),
                 walker->L_link_quality, walker->loss_link_quality,
 		walker->lost_packets, walker->total_packets,
-		walker->neigh_link_quality);
-
+		walker->neigh_link_quality, etx);
+  }
 }
 
 static void update_packet_loss_worker(struct link_entry *entry, int lost)
@@ -1011,39 +1027,13 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
     saved_lq = -1.0;
 
   // calculate the new link quality
-
-#if 0
-  // quick start: receive the first packet => link quality = 1.0
-
-  entry->loss_link_quality = 1.0 - (float)entry->lost_packets /
-    (float)entry->total_packets;
-#else
-  // slow start: receive the first packet => link quality = 1 / n
-  //             (n = window size)
+  //
+  // start slowly: receive the first packet => link quality = 1 / n
+  //               (n = window size)
 
   entry->loss_link_quality =
     (float)(entry->total_packets - entry->lost_packets) /
     (float)(entry->loss_window_size);
-#endif
-
-  // XXX - if we do not get any packets from our neighbour
-  // any longer, we do not know the link quality at the remote
-  // end of the link
-  //
-  // heuristic: expire the link in this case; let's see how this
-  // works
-
-  if (entry->lost_packets == entry->total_packets)
-    {
-      entry->SYM_time = now;
-      entry->SYM_time.tv_sec -= 1;
-
-      entry->ASYM_time = now;
-      entry->ASYM_time.tv_sec -= 1;
-
-      entry->time = now;
-      entry->time.tv_sec -= 1;
-    }
 
   // if the link quality has changed by more than 10 percent,
   // print the new link quality table
@@ -1169,6 +1159,7 @@ struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
 {
   struct link_entry *walker;
   double best = 0.0;
+  double curr;
   struct link_entry *res = NULL;
 
   // loop through all links
@@ -1178,35 +1169,15 @@ struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
     // check whether it's a link to the requested neighbor and
     // whether the link's quality is better than what we have
 
-    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
-       walker->neigh_link_quality >= best)
+    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr))
     {
-      best = walker->loss_link_quality;
-      res = walker;
-    }
-  }
+      curr = walker->loss_link_quality * walker->neigh_link_quality;
 
-  return res;
-}
-
-struct link_entry *olsr_neighbor_best_inverse_link(union olsr_ip_addr *main)
-{
-  struct link_entry *walker;
-  double best = 0.0;
-  struct link_entry *res = NULL;
-
-  // loop through all links
-
-  for (walker = link_set; walker != NULL; walker = walker->next)
-  {
-    // check whether it's a link to the requested neighbor and
-    // whether the link's quality is better than what we have
-
-    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr) &&
-       walker->loss_link_quality >= best)
-    {
-      best = walker->loss_link_quality;
-      res = walker;
+      if (curr >= best)
+      {
+        best = curr;
+        res = walker;
+      }
     }
   }
 

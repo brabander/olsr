@@ -36,13 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.14 2004/11/21 13:55:21 kattemat Exp $
+ * $Id: tc_set.c,v 1.15 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 
 #include "tc_set.h"
 #include "olsr.h"
 #include "scheduler.h"
+#include "lq_route.h"
 
 /**
  * Initialize the topology set
@@ -432,6 +433,9 @@ olsr_print_tc_table()
   struct tc_entry *entry;
   struct topo_dst *dst_entry;
   char *fstr;
+#if defined USE_LINK_QUALITY
+  float etx;
+#endif
   
   olsr_printf(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
@@ -441,14 +445,14 @@ olsr_print_tc_table()
 
   if (olsr_cnf->ip_version == AF_INET)
   {
-    olsr_printf(1, "Source IP addr   Dest IP addr     LQ     ILQ\n");
-    fstr = "%-15s  %-15s  %5.3f  %5.3f\n";
+    olsr_printf(1, "Source IP addr   Dest IP addr     LQ     ILQ    ETX\n");
+    fstr = "%-15s  %-15s  %5.3f  %5.3f  %.2f\n";
   }
 
   else
   {
-    olsr_printf(1, "Source IP addr                Dest IP addr                    LQ     ILQ\n");
-    fstr = "%-30s%-30s  %5.3f  %5.3f\n";
+    olsr_printf(1, "Source IP addr                Dest IP addr                    LQ     ILQ    ETX\n");
+    fstr = "%-30s%-30s  %5.3f  %5.3f  %.2f\n";
   }
 
   for (i = 0; i < HASHSIZE; i++)
@@ -462,13 +466,22 @@ olsr_print_tc_table()
       while(dst_entry != &entry->destinations)
       {
 #if defined USE_LINK_QUALITY
+        if (dst_entry->link_quality < MIN_LINK_QUALITY ||
+            dst_entry->inverse_link_quality < MIN_LINK_QUALITY)
+          etx = 0.0;
+
+        else
+          etx = 1.0 / (dst_entry->link_quality *
+                       dst_entry->inverse_link_quality);
+
         olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
                     olsr_ip_to_string(&dst_entry->T_dest_addr),
-                    dst_entry->link_quality, dst_entry->inverse_link_quality);
+                    dst_entry->link_quality, dst_entry->inverse_link_quality,
+                    etx);
 #else
         olsr_printf(1, fstr, olsr_ip_to_string(&entry->T_last_addr),
                     olsr_ip_to_string(&dst_entry->T_dest_addr),
-                    0, 0);
+                    0.0, 0.0, 0.0);
 #endif
 
         dst_entry = dst_entry->next;

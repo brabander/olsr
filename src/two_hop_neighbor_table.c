@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.9 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.10 2004/11/28 13:43:59 tlopatic Exp $
  */
 
 
@@ -282,7 +282,7 @@ olsr_print_two_hop_neighbor_table()
                 olsr_printf(1, "                 ");
 
 #if defined USE_LINK_QUALITY
-              total_lq = entry->full_link_quality;
+              total_lq = entry->path_link_quality;
 #else
               total_lq = 0.0;
 #endif
