@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.7 2005/04/07 17:41:56 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.8 2005/04/07 18:22:20 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -604,7 +604,7 @@ get_powerstatus(struct powermsg *msg)
     {
       msg->source_type = OLSR_BATTERY_POWERED;
       msg->percentage = apm_info.battery_percentage;
-      msg->time_left = 0;
+      msg->time_left = apm_info.battery_time_left;
     }
 
   return 1;

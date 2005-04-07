@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.6 2005/02/25 22:35:53 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.7 2005/04/07 18:22:20 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -49,6 +49,7 @@
 #include "olsr_plugin_io.h"
 #include "olsr_types.h"
 #include "interfaces.h"
+#include "apm.h"
 
 /* Use this as PARSER_TYPE to receive ALL messages! */
 #define PROMISCUOUS 0xffffffff
@@ -103,19 +104,6 @@
 
 #define MAXIFS         8 /* Maximum number of interfaces (from defs.h) in uOLSRd */
 
-
-/****************************************************************************
- *                        POWERSTATUS SECTION                               *
- ****************************************************************************/
-
-#define OLSR_BATTERY_POWERED  0
-#define OLSR_AC_POWERED       1
-
-struct olsr_apm_info
-{
-  int ac_line_status;
-  int battery_percentage;
-};
 
 /****************************************************************************
  *                            PACKET SECTION                                *
