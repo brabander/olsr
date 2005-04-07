@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.h,v 1.7 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: apm.h,v 1.8 2005/04/07 18:22:43 kattemat Exp $
  */
 
 
@@ -54,8 +54,10 @@ struct olsr_apm_info
 {
   int ac_line_status;
   int battery_percentage;
+  int battery_time_left; /* Time left in minutes */
 };
 
+#ifndef OLSR_PLUGIN
 
 int apm_init(void);
 
@@ -70,4 +72,5 @@ void apm_printinfo(struct olsr_apm_info *);
 
 int apm_read(struct olsr_apm_info *);
 
+#endif
 #endif
