@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.17 2005/02/21 19:34:22 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.18 2005/04/10 11:45:35 kattemat Exp $
  */
 
 /*
@@ -69,7 +69,7 @@
 #define PLUGIN_VERSION "0.1"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 2
+#define PLUGIN_INTERFACE_VERSION 3
 
 int http_port;
 

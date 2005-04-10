@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.7 2005/04/07 18:22:20 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.8 2005/04/10 11:45:35 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -64,7 +64,7 @@
 #define PLUGIN_VERSION "0.3"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
-#define PLUGIN_INTERFACE_VERSION 2
+#define PLUGIN_INTERFACE_VERSION 3
 
 /* The type of message you will use */
 #define MESSAGE_TYPE 128

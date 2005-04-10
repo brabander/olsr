@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.5 2005/03/03 18:20:16 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.6 2005/04/10 11:45:35 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -216,6 +216,6 @@ get_plugin_interface_version(void);
  *****************************************************************************/
 
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION
-#define PLUGIN_INTERFACE_VERSION 2
+#define PLUGIN_INTERFACE_VERSION 3
 
 #endif
