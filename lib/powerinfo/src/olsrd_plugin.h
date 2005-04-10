@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.8 2005/04/10 11:45:35 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.9 2005/04/10 11:52:05 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -287,6 +287,9 @@ olsr_plugin_init(void);
 /* IPC initialization function */
 int
 plugin_ipc_init(void);
+
+int
+register_olsr_param(char *, char *);
 
 /* Destructor function */
 void

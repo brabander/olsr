@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.4 2005/02/25 22:35:53 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.5 2005/04/10 11:52:05 kattemat Exp $ */
 
 
 /*
@@ -95,6 +95,11 @@ my_fini()
   return;
 }
 
+int
+register_olsr_param(char *key, char *value)
+{
+  return 1;
+}
 
 /**
  *Register needed functions and pointers
