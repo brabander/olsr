@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.18 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.19 2005/04/10 11:41:50 kattemat Exp $
  */
 
 #include "plugin_loader.h"
@@ -120,18 +120,28 @@ olsr_load_dl(char *libname, struct plugin_param *params)
 	{
 	  OLSR_PRINTF(1, " %d - ", *interface_version)
 	  if(*interface_version != PLUGIN_INTERFACE_VERSION)
-	    OLSR_PRINTF(1, "WARNING: VERSION MISSMATCH!\n")
+	    {
+	      OLSR_PRINTF(1, "\n\nWARNING: VERSION MISSMATCH! DETECTED %d CURRENT VERSION %d\nTHIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\nWILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(), PLUGIN_INTERFACE_VERSION)
+              sleep(5);
+	    }
 	  else
-	    OLSR_PRINTF(1, "OK\n")
+	    {
+	      OLSR_PRINTF(1, "OK\n")
+	    }
 	}
     }
   else
     {
       OLSR_PRINTF(1, " %d - ", get_interface_version())
       if(get_interface_version() != PLUGIN_INTERFACE_VERSION)
-	OLSR_PRINTF(1, "WARNING: VERSION MISSMATCH!\n")
+	{
+	  OLSR_PRINTF(1, "\n\nWARNING: VERSION MISSMATCH! DETECTED %d CURRENT VERSION %d\nTHIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\nWILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(), PLUGIN_INTERFACE_VERSION)
+          sleep(5);
+	}
       else
-	OLSR_PRINTF(1, "OK\n")
+	{
+	  OLSR_PRINTF(1, "OK\n")
+	}
     }
 
   OLSR_PRINTF(1, "Trying to fetch register function....")
