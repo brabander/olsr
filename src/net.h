@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.17 2005/03/04 21:30:16 kattemat Exp $
+ * $Id: net.h,v 1.18 2005/04/11 18:43:40 kattemat Exp $
  */
 
 
@@ -48,6 +48,13 @@
 #include "process_routes.h"
 #include <arpa/inet.h>
 #include <net/if.h>
+
+struct deny_address_entry
+{
+  union olsr_ip_addr        addr;
+  struct deny_address_entry *next;
+};
+
 
 /* Output buffer structure */
 
@@ -115,6 +122,10 @@ add_ptf(int (*)(char *, int *));
 int
 del_ptf(int (*f)(char *, int *));
 
+olsr_bool
+olsr_validate_address(union olsr_ip_addr *);
 
+void
+olsr_add_invalid_address(union olsr_ip_addr *);
 
 #endif

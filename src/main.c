@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.74 2005/04/05 09:01:03 kattemat Exp $
+ * $Id: main.c,v 1.75 2005/04/11 18:43:37 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -314,6 +314,8 @@ main(int argc, char *argv[])
       minsize = (int)sizeof(olsr_u8_t) * 4; /* Minimum packetsize IPv4 */
     }
 
+  /* Initialize net */
+  init_net();
 
   /* Initializing networkinterfaces */
   if(!ifinit())

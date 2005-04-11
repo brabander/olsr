@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.38 2005/03/10 20:43:13 kattemat Exp $
+ * $Id: net.c,v 1.39 2005/04/11 18:43:40 kattemat Exp $
  */
 
 #include "net.h"
@@ -65,6 +65,61 @@ static struct ptf *ptf_list;
 struct olsr_netbuf *netbufs[MAX_IFS];
 
 static char ipv6_buf[100]; /* for address coversion */
+
+static struct deny_address_entry *deny_entries;
+
+static char *deny_ipv4_defaults[] =
+  {
+    "0.0.0.0",
+    "127.0.0.1",
+    NULL
+  };
+
+static char *deny_ipv6_defaults[] =
+  {
+    "0::0",
+    "0::1",
+    NULL
+  };
+
+
+void
+init_net()
+{
+  union olsr_ip_addr addr;
+  int i;
+
+  /* Block invalid addresses */
+  if(olsr_cnf->ip_version == AF_INET)
+    {
+      /* IPv4 */
+      for(i = 0; deny_ipv4_defaults[i] != NULL; i++)
+	{
+	  if(inet_pton(olsr_cnf->ip_version, deny_ipv4_defaults[i], &addr) < 0)
+	    {
+	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
+		      deny_ipv4_defaults[i]);
+	      continue;
+	    }
+	  olsr_add_invalid_address(&addr);
+	}
+    }
+  else 
+    {
+      /* IPv6 */
+      for(i = 0; deny_ipv6_defaults[i] != NULL; i++)
+	{
+	  if(inet_pton(olsr_cnf->ip_version, deny_ipv6_defaults[i], &addr) < 0)
+	    {
+	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
+		      deny_ipv6_defaults[i]);
+	      continue;
+	    }
+	  olsr_add_invalid_address(&addr);
+	}
+
+    }
+}
 
 /**
  * Create a outputbuffer for the given interface. This
@@ -628,4 +683,50 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
   index = (index + 1) & 3;
 
   return ret;
+}
+
+
+void
+olsr_add_invalid_address(union olsr_ip_addr *adr)
+{
+  struct deny_address_entry *new_entry;
+
+  new_entry = olsr_malloc(sizeof(struct deny_address_entry), "Add deny address");
+
+  new_entry->next = deny_entries;
+  COPY_IP(&new_entry->addr, adr);
+
+  deny_entries = new_entry;
+
+  OLSR_PRINTF(1, "Added %s to IP deny set\n", olsr_ip_to_string(&new_entry->addr))
+  return;
+}
+
+/**
+ *Converts the 32bit olsr_u32_t datatype to
+ *a char array.
+ *
+ *<b>NON REENTRANT</b>
+ *
+ *@param addr6 the address to "convert"
+ *@return a char pointer to the string containing the IP
+ */
+olsr_bool
+olsr_validate_address(union olsr_ip_addr *adr)
+{
+  struct deny_address_entry *deny_entry = deny_entries;
+
+  while(deny_entry)
+    {
+      if(COMP_IP(adr, &deny_entry->addr))
+	{
+	  OLSR_PRINTF(1, "Validation of address %s failed!\n",
+		      olsr_ip_to_string(adr))
+	  return OLSR_FALSE;
+	}
+
+      deny_entry = deny_entry->next;
+    }
+
+  return OLSR_TRUE;
 }
