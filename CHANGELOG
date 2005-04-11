@@ -1,5 +1,16 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.41 2005/04/01 22:14:27 kattemat Exp $
+$Id: CHANGELOG,v 1.42 2005/04/11 09:09:23 kattemat Exp $
+
+0.4.10 --------------------------------------------------------------------
+
+PLUGIN INTERFACE
+
+Updated interface version to 3 and added more noticeable warning 
+for version missmatch.
+
+BUGFIXES
+
+- Fixed a bug that prevented setting willingness 0 in the configfile
 
 0.4.9 ---------------------------------------------------------------------
 
