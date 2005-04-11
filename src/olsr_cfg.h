@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.23 2005/03/14 21:24:21 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.24 2005/04/11 09:01:59 kattemat Exp $
  */
 
 
@@ -68,7 +68,7 @@
 #define MAX_TOS             16
 #define MIN_TOS             0
 #define MAX_WILLINGNESS     7
-#define MIN_WILLINGNESS     1
+#define MIN_WILLINGNESS     0
 #define MAX_MPR_COVERAGE    20
 #define MIN_MPR_COVERAGE    1
 #define MAX_TC_REDUNDANCY   2
