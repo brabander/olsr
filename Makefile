@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.55 2005/03/31 18:39:15 kattemat Exp $
+# $Id: Makefile,v 1.56 2005/04/12 17:17:25 tlopatic Exp $
 
 VERS =		0.4.9
 
@@ -336,6 +336,10 @@ httpinfo:
 		$(MAKE) -C lib/httpinfo clean
 		$(MAKE) -C lib/httpinfo 
 		$(MAKE) -C lib/httpinfo install 
+
+tas:
+		$(MAKE) -C lib/tas clean
+		$(MAKE) -C lib/tas install
 
 dot_draw:
 		$(MAKE) -C lib/dot_draw clean
