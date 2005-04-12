@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: plugin.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
  */
 
 #include <string.h>
@@ -160,7 +160,7 @@ int iterNeighTabNext(char *buff, int len)
   if (iterNeighTab == NULL)
     return -1;
 
-  snprintf(buff, len, "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~",
+  snprintf(buff, len, "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~0~1.2.3.4~1~2.3.4.5~]~",
            rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen),
            iterNeighTab->status == SYM ? "true" : "false",
            iterNeighTab->is_mpr != 0 ? "true" : "false",

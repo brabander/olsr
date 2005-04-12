@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua_ext.c,v 1.1 2005/04/12 17:17:25 tlopatic Exp $
+ * $Id: glua_ext.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
  */
 
 #include "lua/lua.h"
@@ -51,6 +51,8 @@
 #include "http.h"
 #include "glua.h"
 #include "glua_ext.h"
+
+#include <string.h>
 
 static char *getToken(char **point)
 {
@@ -112,11 +114,66 @@ int tasOlsrGetMessage(lua_State *lua)
   return 2;
 }
 
+static void addSubTable(lua_State *lua, char **walker)
+{
+  char *token;
+  unsigned int val;
+
+  token = getToken(walker);
+
+  if (token == NULL)
+  {
+    error("premature end of buffer\n");
+    return;
+  }
+
+  lua_pushstring(lua, token);
+  lua_newtable(lua);
+
+  while (**walker != 0)
+  {
+    token = getToken(walker);
+
+    if (token == NULL)
+    {
+      error("premature end of buffer\n");
+      return;
+    }
+
+    if (strcmp(token, "]") == 0)
+      return;
+
+    if (strcmp(token, "[") == 0)
+      addSubTable(lua, walker);
+
+    else
+    {
+      if (stringToInt(&val, token) < 0)
+        lua_pushstring(lua, token);
+
+      else
+        lua_pushnumber(lua, val);
+
+      token = getToken(walker);
+
+      if (token == NULL)
+      {
+        error("premature end of buffer\n");
+        return;
+      }
+
+      lua_pushstring(lua, token);
+    }
+
+    lua_settable(lua, -3);
+  }
+}
+
 static void addTable(lua_State *lua, char *name, void (*init)(void),
                      int (*next)(char *buff, int len))
 {
   int i;
-  char buff[1024], *walker;
+  char buff[1024], *walker, *token;
 
   lua_pushstring(lua, name);
   lua_newtable(lua);
@@ -134,8 +191,31 @@ static void addTable(lua_State *lua, char *name, void (*init)(void),
 
     while (*walker != 0)
     {
-      lua_pushstring(lua, getToken(&walker));
-      lua_pushstring(lua, getToken(&walker));
+      token = getToken(&walker);
+
+      if (token == NULL)
+      {
+        error("premature end of buffer\n");
+        return;
+      }
+
+      if (strcmp(token, "[") == 0)
+        addSubTable(lua, &walker);
+
+      else
+      {
+        lua_pushstring(lua, token);
+
+        token = getToken(&walker);
+
+        if (token == NULL)
+        {
+          error("premature end of buffer\n");
+          return;
+        }
+
+        lua_pushstring(lua, token);
+      }
 
       lua_settable(lua, -3);
     }

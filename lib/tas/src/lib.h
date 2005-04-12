@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lib.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: lib.h,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
  */
 
 #define DEBUG_MESSAGE 1
@@ -52,3 +52,5 @@ extern void debug(int facility, char *form, ...);
 extern char *strdupAdd(const char *string, int add);
 extern char *myStrdup(const char *string);
 extern void chomp(char *line, int len);
+extern char *intToString(char *buff, unsigned int val);
+extern int stringToInt(unsigned int *val, const char *buff);

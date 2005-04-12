@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lib.c,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: lib.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
  */
 
 #include "link.h"
@@ -97,4 +97,41 @@ void chomp(char *line, int len)
 
     line[len] = 0;
   }
+}
+
+char *intToString(char *buff, unsigned int val)
+{
+  int i;
+
+  buff[9] = 0;
+
+  for (i = 8; i >= 0; i--)
+  {
+    buff[i] = (char)(val % 10 + '0');
+
+    val /= 10;
+
+    if (val == 0)
+      break;
+  }
+
+  return buff + i;
+}
+
+int stringToInt(unsigned int *val, const char *buff)
+{
+  *val = 0;
+
+  while (*buff != 0)
+  {
+    if (*buff < '0' || *buff > '9')
+      return -1;
+
+    else
+      *val = *val * 10 + *buff - '0';
+
+    buff++;
+  }
+
+  return 0;
 }

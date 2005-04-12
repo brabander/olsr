@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.1 2005/04/12 17:17:25 tlopatic Exp $
+ * $Id: http.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
  */
 
 #include "link.h"
@@ -276,43 +276,6 @@ static int decBase64(unsigned char *out, char *in)
       *out++ = (unsigned char)val;
 
     state = (state + 1) & 3;
-  }
-
-  return 0;
-}
-
-static char *intToString(char *buff, unsigned int val)
-{
-  int i;
-
-  buff[9] = 0;
-
-  for (i = 8; i >= 0; i--)
-  {
-    buff[i] = (char)(val % 10 + '0');
-
-    val /= 10;
-
-    if (val == 0)
-      break;
-  }
-
-  return buff + i;
-}
-
-static int stringToInt(unsigned int *val, const char *buff)
-{
-  *val = 0;
-
-  while (*buff != 0)
-  {
-    if (*buff < '0' || *buff > '9')
-      return -1;
-
-    else
-      *val = *val * 10 + *buff - '0';
-
-    buff++;
   }
 
   return 0;

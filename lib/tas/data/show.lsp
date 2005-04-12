@@ -102,6 +102,9 @@ end
         <td>
           <b>Willingness</b>
         </td>
+        <td>
+          <b>2-Hop Neighbors</b>
+        </td>
       <tr>
 
 <?lua
@@ -127,6 +130,29 @@ while olsr_state["neighbors"][i] do
         </td>
         <td>
           <?lua tas.write(olsr_state["neighbors"][i]["willingness"]) ?>
+        </td>
+        <td>
+
+          <?lua
+
+           k = 0
+
+           while olsr_state["neighbors"][i]["neighbors2"][k] do
+
+            tas.write(olsr_state["neighbors"][i]["neighbors2"][k])
+
+          ?>
+
+          <br>
+
+          <?lua
+
+            k = k + 1
+
+           end
+
+          ?>
+
         </td>
       </tr>
 
