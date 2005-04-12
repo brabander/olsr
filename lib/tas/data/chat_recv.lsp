@@ -68,14 +68,22 @@
   </head>
   <body>
 
-    <h2>User "<?lua tas.write(nick) ?>" in channel "<?lua tas.write(channel) ?>"</h2>
-    <hr>
-
 <?lua
 
  for i = 0, listLen - 1 do
 
+  if i == listLen - 1 then
+
 ?>
+
+ <a name="bottom"></a>
+
+<?lua
+
+  end
+
+?>
+
     <p>
       <b><?lua tas.write(list[i]["nick"]) ?></b>
       (<a href="http://<?lua tas.write(list[i]["from"]) ?>:<?lua tas.write(httpPort) ?>/pub/profile.html" target="_profile"><?lua tas.write(list[i]["from"]) ?></a>),
