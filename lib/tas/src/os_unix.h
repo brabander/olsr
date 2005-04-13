@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: os_unix.h,v 1.2 2005/04/13 22:10:23 tlopatic Exp $
  */
 
 #if defined linux
@@ -65,6 +65,8 @@ struct timeStamp
 {
   unsigned int time;
 };
+
+extern void getRandomBytes(unsigned char *buff, int len);
 
 extern int addrLen(int family);
 

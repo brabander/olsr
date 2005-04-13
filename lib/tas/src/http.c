@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
+ * $Id: http.c,v 1.3 2005/04/13 22:10:22 tlopatic Exp $
  */
 
 #include "link.h"
@@ -444,7 +444,7 @@ void httpInit(void)
   confMessTime = DEF_CONFIG_MESS_TIME;
   confMessLimit = DEF_CONFIG_MESS_LIMIT;
 
-  memset(cookieStruct.key, 0, 16);
+  getRandomBytes(cookieStruct.key, 16);
 }
 
 int httpSetAddress(const char *addrStr)
@@ -1587,10 +1587,11 @@ static int serviceConn(struct connInfo *info)
     currSess = NULL;
 
     for (head = info->firstHead; head != NULL; head = head->next)
-      if (memcmp(head->name, "cookie", 7) == 0)
+      if (memcmp(head->name, "cookie", 7) == 0 &&
+          cookieToSession(&sessId, head->value) >= 0)
         break;
 
-    if (head != NULL && cookieToSession(&sessId, head->value) >= 0)
+    if (head != NULL)
     {
       debug(DEBUG_SESSION, "looking for existing session\n");
 
@@ -1601,6 +1602,8 @@ static int serviceConn(struct connInfo *info)
         debug(DEBUG_SESSION, "existing session found\n");
 
         currSess = sess[i];
+
+        now(&currSess->time);
       }
     }
 

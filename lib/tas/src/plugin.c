@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
+ * $Id: plugin.c,v 1.3 2005/04/13 22:10:23 tlopatic Exp $
  */
 
 #include <string.h>
@@ -157,16 +157,49 @@ void iterLinkTabInit(void)
 
 int iterNeighTabNext(char *buff, int len)
 {
+  int res;
+  int i;
+  struct neighbor_2_list_entry *neigh2;
+  
   if (iterNeighTab == NULL)
     return -1;
 
-  snprintf(buff, len, "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~0~1.2.3.4~1~2.3.4.5~]~",
-           rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen),
-           iterNeighTab->status == SYM ? "true" : "false",
-           iterNeighTab->is_mpr != 0 ? "true" : "false",
-           lookupMprs(&iterNeighTab->neighbor_main_addr) != NULL ?
-           "true" : "false",
-           iterNeighTab->willingness);
+  res = snprintf(buff, len,
+                 "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~",
+                 rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen),
+                 iterNeighTab->status == SYM ? "true" : "false",
+                 iterNeighTab->is_mpr != 0 ? "true" : "false",
+                 lookupMprs(&iterNeighTab->neighbor_main_addr) != NULL ?
+                 "true" : "false",
+                 iterNeighTab->willingness);
+
+  i = 0;
+
+  len -= res;
+  buff += res;
+
+  len -= 2;
+
+  for (neigh2 = iterNeighTab->neighbor_2_list.next;
+       neigh2 != &iterNeighTab->neighbor_2_list;
+       neigh2 = neigh2->next)
+  {
+    res = snprintf(buff, len, "%d~%s~", i,
+                   rawIpAddrToString(&neigh2->neighbor_2->neighbor_2_addr,
+                                     ipAddrLen));
+
+    if (res < len)
+      buff += res;
+
+    len -= res;
+
+    if (len <= 0)
+      break;
+
+    i++;
+  }
+
+  strcpy(buff, "]~");
 
   iterNeighTab = iterNeighTab->next;
 

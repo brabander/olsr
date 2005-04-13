@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.c,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: os_unix.c,v 1.2 2005/04/13 22:10:23 tlopatic Exp $
  */
 
 #if defined linux
@@ -66,6 +66,15 @@
 
 static int mainSocket;
 
+// XXX - insecure
+
+void getRandomBytes(unsigned char *buff, int len)
+{
+  memset(buff, 0, len);
+
+  buff[0] = (unsigned char)getpid();
+}
+
 int addrLen(int family)
 {
   return (family == AF_INET) ? sizeof (struct in_addr) :
@@ -92,8 +101,20 @@ int timedOut(struct timeStamp *timeStamp, int sec)
 unsigned int getMicro(void)
 {
   struct timeval timeVal;
+  static struct timeval timeValPrev;
+  static int firstTime = 1;
 
   gettimeofday(&timeVal, NULL);
+
+  if (firstTime == 0 &&
+      timeValPrev.tv_sec == timeVal.tv_sec &&
+      timeValPrev.tv_usec >= timeVal.tv_usec)
+    return timeValPrev.tv_sec * 1000000 + timeValPrev.tv_usec;
+
+  firstTime = 0;
+
+  timeValPrev.tv_sec = timeVal.tv_sec;
+  timeValPrev.tv_usec = timeVal.tv_usec;
 
   return timeVal.tv_sec * 1000000 + timeVal.tv_usec;
 }
