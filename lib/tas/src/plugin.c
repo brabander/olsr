@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.3 2005/04/13 22:10:23 tlopatic Exp $
+ * $Id: plugin.c,v 1.4 2005/04/13 22:53:13 tlopatic Exp $
  */
 
 #include <string.h>
@@ -75,7 +75,6 @@ static union olsr_ip_addr *mainAddr;
 
 static struct interface *intTab = NULL;
 static struct neighbor_entry *neighTab = NULL;
-static struct neighbor_2_entry *neigh2Tab = NULL;
 static struct mid_entry *midTab = NULL;
 static struct tc_entry *tcTab = NULL;
 static struct hna_entry *hnaTab = NULL;
@@ -106,7 +105,6 @@ static int iterIndex;
 static struct interface *iterIntTab = NULL;
 static struct link_entry *iterLinkTab = NULL;
 static struct neighbor_entry *iterNeighTab = NULL;
-static struct neighbor_2_entry *iterNeigh2Tab = NULL;
 static struct mid_entry *iterMidTab = NULL;
 static struct tc_entry *iterTcTab = NULL;
 static struct hna_entry *iterHnaTab = NULL;
@@ -117,6 +115,15 @@ static void __attribute__((constructor)) banner(void)
   printf("Tiny Application Server 0.1 by olsr.org\n");
 }
 
+static double lqToEtx(double lq, double nlq)
+{
+  if (lq < MIN_LINK_QUALITY || nlq < MIN_LINK_QUALITY)
+    return 0.0;
+
+  else
+    return 1.0 / (lq * nlq);
+}
+
 int iterLinkTabNext(char *buff, int len)
 {
   double etx;
@@ -124,13 +131,8 @@ int iterLinkTabNext(char *buff, int len)
   if (iterLinkTab == NULL)
     return -1;
 
-  if (iterLinkTab->loss_link_quality < MIN_LINK_QUALITY ||
-      iterLinkTab->neigh_link_quality < MIN_LINK_QUALITY)
-    etx = 0.0;
-
-  else
-    etx = 1.0 / (iterLinkTab->loss_link_quality *
-                 iterLinkTab->neigh_link_quality);
+  etx = lqToEtx(iterLinkTab->loss_link_quality,
+                iterLinkTab->neigh_link_quality);
 
   snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~lq~%f~nlq~%f~etx~%f~",
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
@@ -271,6 +273,78 @@ void iterRouteTabInit(void)
     if (routeTab[iterIndex].next != &routeTab[iterIndex])
     {
       iterRouteTab = routeTab[iterIndex].next;
+      break;
+    }
+}
+
+int iterTcTabNext(char *buff, int len)
+{
+  int res;
+  int i;
+  struct topo_dst *dest;
+  
+  if (iterTcTab == NULL)
+    return -1;
+
+  res = snprintf(buff, len,
+                 "main~%s~[~destinations~",
+                 rawIpAddrToString(&iterTcTab->T_last_addr, ipAddrLen));
+
+  i = 0;
+
+  len -= res;
+  buff += res;
+
+  len -= 2;
+
+  for (dest = iterTcTab->destinations.next; dest != &iterTcTab->destinations;
+       dest = dest->next)
+  {
+    res = snprintf(buff, len, "[~%d~address~%s~etx~%f~]~", i,
+                   rawIpAddrToString(&dest->T_dest_addr, ipAddrLen),
+                   lqToEtx(dest->link_quality, dest->inverse_link_quality));
+
+    if (res < len)
+      buff += res;
+
+    len -= res;
+
+    if (len <= 0)
+      break;
+
+    i++;
+  }
+
+  strcpy(buff, "]~");
+
+  iterTcTab = iterTcTab->next;
+
+  if (iterTcTab == &tcTab[iterIndex])
+  {
+    iterTcTab = NULL;
+    
+    while (++iterIndex < HASHSIZE)
+      if (tcTab[iterIndex].next != &tcTab[iterIndex])
+      {
+        iterTcTab = tcTab[iterIndex].next;
+        break;
+      }
+  }
+
+  return 0;
+}
+
+void iterTcTabInit(void)
+{
+  iterTcTab = NULL;
+
+  if (tcTab == NULL)
+    return;
+
+  for (iterIndex = 0; iterIndex < HASHSIZE; iterIndex++)
+    if (tcTab[iterIndex].next != &tcTab[iterIndex])
+    {
+      iterTcTab = tcTab[iterIndex].next;
       break;
     }
 }
@@ -425,7 +499,6 @@ int register_olsr_data(struct olsr_plugin_data *data)
 
   pluginIo(GETD__IFNET, &intTab, sizeof (intTab));
   pluginIo(GETD__NEIGHBORTABLE, &neighTab, sizeof (neighTab));
-  pluginIo(GETD__TWO_HOP_NEIGHBORTABLE, &neigh2Tab, sizeof (neigh2Tab));
   pluginIo(GETD__MID_SET, &midTab, sizeof (midTab));
   pluginIo(GETD__TC_TABLE, &tcTab, sizeof (tcTab));
   pluginIo(GETD__HNA_SET, &hnaTab, sizeof (hnaTab));

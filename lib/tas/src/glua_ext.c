@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua_ext.c,v 1.2 2005/04/12 19:57:26 tlopatic Exp $
+ * $Id: glua_ext.c,v 1.3 2005/04/13 22:53:13 tlopatic Exp $
  */
 
 #include "lua/lua.h"
@@ -127,7 +127,12 @@ static void addSubTable(lua_State *lua, char **walker)
     return;
   }
 
-  lua_pushstring(lua, token);
+  if (stringToInt(&val, token) < 0)
+    lua_pushstring(lua, token);
+
+  else
+    lua_pushnumber(lua, val);
+
   lua_newtable(lua);
 
   while (**walker != 0)
@@ -233,6 +238,7 @@ int tasOlsrGetInfo(lua_State *lua)
   addTable(lua, "routes", iterRouteTabInit, iterRouteTabNext);
   addTable(lua, "links", iterLinkTabInit, iterLinkTabNext);
   addTable(lua, "neighbors", iterNeighTabInit, iterNeighTabNext);
+  addTable(lua, "topology", iterTcTabInit, iterTcTabNext);
 
   return 1;
 }

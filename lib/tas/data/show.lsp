@@ -166,6 +166,91 @@ end
 
     </table>
 
+    <h2>Topology</h2>
+
+    <table border="1">
+      <tr>
+        <td>
+          <b>Main</b>
+        </td>
+        <td>
+          <b>Destination</b>
+        </td>
+        <td>
+          <b>ETX</b>
+        </td>
+      <tr>
+
+<?lua
+
+i = 0
+
+while olsr_state["topology"][i] do
+
+?>
+
+      <tr>
+        <td>
+          <?lua tas.write(olsr_state["topology"][i]["main"]) ?>
+        </td>
+        <td>
+
+          <?lua
+
+           k = 0
+
+           while olsr_state["topology"][i]["destinations"][k] do
+
+            tas.write(olsr_state["topology"][i]["destinations"][k]["address"])
+
+          ?>
+
+          <br>
+
+          <?lua
+
+            k = k + 1
+
+           end
+
+          ?>
+
+        </td>
+        <td>
+
+          <?lua
+
+           k = 0
+
+           while olsr_state["topology"][i]["destinations"][k] do
+
+            tas.write(olsr_state["topology"][i]["destinations"][k]["etx"])
+
+          ?>
+
+          <br>
+
+          <?lua
+
+            k = k + 1
+
+           end
+
+          ?>
+
+        </td>
+      </tr>
+
+<?lua
+
+i = i + 1
+
+end
+
+?>
+
+    </table>
+
     <h2>Routes</h2>
 
     <table border="1">
