@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.45 2005/04/05 05:39:43 kattemat Exp $
+ * $Id: defs.h,v 1.46 2005/04/14 23:29:15 spoggle Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -64,8 +64,10 @@
 #define SOFTWARE_VERSION "olsr.org - " VERSION
 #define OLSRD_VERSION_DATE "       *** " SOFTWARE_VERSION " (" __DATE__ ") ***\n"
 
+#ifndef OLSRD_GLOBAL_CONF_FILE
 #define OLSRD_CONF_FILE_NAME "olsrd.conf"
 #define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
+#endif
 
 #define	HOPCNT_MAX		32	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */

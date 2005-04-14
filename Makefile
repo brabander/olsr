@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.56 2005/04/12 17:17:25 tlopatic Exp $
+# $Id: Makefile,v 1.57 2005/04/14 23:29:15 spoggle Exp $
 
 VERS =		0.4.9
 
@@ -46,8 +46,6 @@ FLEX ?=		flex
 
 CCWARNINGS = -Wall -Wmissing-prototypes -Wstrict-prototypes \
              -Wmissing-declarations -Wsign-compare
-
-INSTALL_PREFIX ?=
 
 INCLUDES =	-Isrc
 
@@ -69,12 +67,19 @@ endif
 
 ifeq ($(OS), linux)
 
+#
+# LINUX SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
+
 SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
 DEFINES = 	-Dlinux
 CFLAGS ?=	$(CCWARNINGS) -O2 -g #-DDEBUG #-pg #-march=i686
 LIBS =		-lm -ldl #-pg
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) -Y $(INCLUDES) $(SRCS) >/dev/null 2>&1
+LIBDIR =	$(INSTALL_PREFIX)/usr/lib
 
 all:	 cfgparser olsrd
 install: install_olsrd
@@ -82,11 +87,20 @@ install: install_olsrd
 else
 ifeq ($(OS), fbsd)
 
+#
+# FREEBSD SPECIFIC CONFIGURATION
+#
+
+LOCALBASE?=	/usr/local
+INSTALL_PREFIX?= $(LOCALBASE)
+CFGFILE?=	$(INSTALL_PREFIX)/etc/olsrd.conf
+
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	$(CCWARNINGS) -O2 -g
+CFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
+LIBDIR =	$(INSTALL_PREFIX)/lib
 
 all:	 cfgparser olsrd
 install: install_olsrd
@@ -94,17 +108,32 @@ install: install_olsrd
 else
 ifeq ($(OS), fbsd-ll)
 
+#
+# FREEBSD/LIBNET SPECIFIC CONFIGURATION
+#
+
+LOCALBASE?=	/usr/local
+INSTALL_PREFIX?= $(LOCALBASE)
+CFGFILE?=	$(INSTALL_PREFIX)/etc/olsrd.conf
+
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	-Wall -Wmissing-prototypes -O2 -g -DSPOOF -I/usr/local/include
-LIBS =		-lm -L/usr/local/lib -lnet
+CFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"${CFGFILE}\"  -DSPOOF -I${LOCALBASE}/include
+LIBS =		-lm -L${LOCALBASE}/lib -lnet
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
+LIBDIR =	$(INSTALL_PREFIX)/lib
 
 all:     cfgparser olsrd
 install: install_olsrd
 
 else
 ifeq ($(OS), nbsd)
+
+#
+# NETBSD SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
@@ -117,6 +146,12 @@ install: install_olsrd
 
 else
 ifeq ($(OS), osx)
+
+#
+# MACOSX SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
@@ -131,6 +166,12 @@ install: install_olsrd
 else
 ifeq ($(OS), win32)
 
+#
+# WINDOWS32 SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
+
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 INCLUDES += 	-Isrc/win32
@@ -138,6 +179,7 @@ DEFINES =	-DWIN32
 CFLAGS ?=	$(CCWARNINGS) -mno-cygwin -O2 -g
 LIBS =		-mno-cygwin -lws2_32 -liphlpapi
 MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
+LIBDIR =	$(INSTALL_PREFIX)/usr/lib
 
 all:	 cfgparser olsrd
 install: install_olsrd
@@ -213,6 +255,12 @@ olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
 else
 ifeq ($(OS), wince)
 
+#
+# WINDOWS CE SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
+
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 INCLUDES += 	-Isrc/win32 -Isrc/win32/ce
@@ -225,6 +273,7 @@ else
 
 all:	help
 install:help
+
 endif
 endif
 endif
@@ -232,6 +281,10 @@ endif
 endif
 endif
 endif
+
+#
+# END OF OS SPECIFIC STUFF
+#
 
 ifneq ($(NODEBUG), )
 CFLAGS += -DNODEBUG
@@ -318,19 +371,13 @@ install_olsrd:	install_bin
 #
 
 libs: 
-		for i in lib/*; do \
-			$(MAKE) -C $$i; \
-		done; 
+		$(MAKE) -C lib LIBDIR=$(LIBDIR)
 
 clean_libs: 
-		for i in lib/*; do \
-			$(MAKE) -C $$i clean; \
-		done; 
+		$(MAKE) -C lib LIBDIR=$(LIBDIR) clean
 
 install_libs:
-		for i in lib/*; do \
-			$(MAKE) -C $$i LIBDIR=$(INSTALL_PREFIX)/usr/lib install; \
-		done; 	
+		$(MAKE) -C lib LIBDIR=$(LIBDIR) install
 
 httpinfo:
 		$(MAKE) -C lib/httpinfo clean
