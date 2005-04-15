@@ -49,7 +49,6 @@ endif
 subdirs:	$(SUBDIRS)
 
 $(SUBDIRS):
-	@echo $(MAKE) -C $@ OS=$(REALOS) $(MAKECMDGOALS)
 	$(MAKE) -C $@ OS=$(REALOS) $(MAKECMDGOALS)
 
 help:
