@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.36 2005/03/14 21:24:22 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.37 2005/04/18 05:52:14 kattemat Exp $
  */
 
 
@@ -236,8 +236,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
   if(cnf->willingness_auto == OLSR_FALSE &&
-     (cnf->willingness < MIN_WILLINGNESS ||
-      cnf->willingness > MAX_WILLINGNESS))
+     (cnf->willingness > MAX_WILLINGNESS))
     {
       fprintf(stderr, "Willingness %d is not allowed\n", cnf->willingness);
       return -1;
