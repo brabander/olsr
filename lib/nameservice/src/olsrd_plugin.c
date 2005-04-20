@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.8 2005/03/02 22:59:55 tlopatic Exp $ */
+/* $Id: olsrd_plugin.c,v 1.9 2005/04/20 17:57:00 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -259,8 +259,6 @@ fetch_olsrd_data()
     retval = 0;
   }
 
-
-
   /* Mantissa/exponent to double conversion */
   if(!olsr_plugin_io(GETF__ME_TO_DOUBLE, 
 		     &me_to_double, 
@@ -269,7 +267,6 @@ fetch_olsrd_data()
     me_to_double = NULL;
     retval = 0;
   }
-
 
   /* Interface list */
   if(!olsr_plugin_io(GETD__IFNET, &ifs, sizeof(ifs)))
@@ -329,13 +326,15 @@ fetch_olsrd_data()
   }
 
   /* Configuration */
-  if(!olsr_plugin_io(GETD__OLSR_CNF, 
-		     &cfg, 
-		     sizeof(cfg)))
-    {
+  if(!olsr_plugin_io(GETD__OLSR_CNF, &cfg, sizeof(cfg))) {
       cfg = NULL;
       retval = 0;
-    }
-    
+  }
+  
+  if(!olsr_plugin_io(GETD__ROUTINGTABLE, &routingtable, sizeof(routingtable))) {
+    routingtable = NULL;
+    retval = 0;
+  }
+  
   return retval;
 }

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_copy.h,v 1.3 2005/03/17 21:41:30 br1 Exp $ */
+/* $Id: olsrd_copy.h,v 1.4 2005/04/20 17:57:00 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -50,5 +50,8 @@ void olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer);
 void olsr_get_timestamp(olsr_u32_t delay, struct timeval *hold_timer);
 
 char * olsr_ip_to_string(union olsr_ip_addr *addr);
+
+struct rt_entry *
+olsr_lookup_routing_table(union olsr_ip_addr *dst);
 
 #endif

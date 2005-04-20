@@ -29,7 +29,7 @@
  *
  */
  
-/* $Id: olsrd_copy.c,v 1.2 2005/03/01 21:35:14 tlopatic Exp $ */
+/* $Id: olsrd_copy.c,v 1.3 2005/04/20 17:57:00 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -42,7 +42,9 @@
 // these functions are copied from the main olsrd source
 // TODO: there must be a better way!!!
 
+#include <string.h>
 #include "olsrd_plugin.h"
+#include "olsrd_copy.h"
 
 /**
  *Hashing function. Creates a key based on
@@ -170,4 +172,34 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
     }
 
   return ret;
+}
+
+
+/**
+ *Look up an entry in the routing table.
+ *
+ *@param dst the address of the entry
+ *
+ *@return a pointer to a rt_entry struct 
+ *representing the route entry.
+ */
+struct rt_entry *
+olsr_lookup_routing_table(union olsr_ip_addr *dst)
+{
+
+  struct rt_entry *rt_table;
+  olsr_u32_t      hash;
+
+  hash = olsr_hashing(dst);
+
+  for(rt_table = routingtable[hash].next;
+      rt_table != &routingtable[hash];
+      rt_table = rt_table->next)
+    {
+      if (COMP_IP(&rt_table->rt_dst, dst))
+	{
+	  return(rt_table);
+	}
+    }
+  return(NULL); 
 }

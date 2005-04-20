@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.10 2005/03/17 21:41:30 br1 Exp $ */
+/* $Id: nameservice.c,v 1.11 2005/04/20 17:57:00 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -42,6 +42,7 @@
 #include "nameservice.h"
 #include "olsrd_copy.h"
 
+#include "routing_table.h"
 
 /* send buffer: huge */
 static char buffer[10240];
@@ -677,7 +678,10 @@ write_resolv_file()
 	int hash;
 	struct name_entry *name;
 	struct db_entry *entry;
+	struct rt_entry *best_routes = NULL;
+	struct rt_entry *route, *tmp, *last;
 	FILE* resolv;
+	int i=0;
 	
 	if (my_resolv_file[0] == '\0')
 		return;
@@ -686,12 +690,6 @@ write_resolv_file()
 		return;
 
 	olsr_printf(2, "NAME PLUGIN: writing resolv file\n");
-		      
-	resolv = fopen( my_resolv_file, "w" );
-	if (resolv == NULL) {
-		olsr_printf(2, "NAME PLUGIN: cant write resolv file\n");
-		return;
-	}
 
 	for (hash = 0; hash < HASHSIZE; hash++) 
 	{
@@ -699,12 +697,69 @@ write_resolv_file()
 		{
 			for (name = entry->names; name != NULL; name = name->next) 
 			{
-				if (name->type == NAME_FORWARDER) {
-					//TODO: find the nearest one!!!
-					fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&name->ip));
+				if (name->type != NAME_FORWARDER)
+					continue;
+				
+				/* find the nearest one */
+				route = olsr_lookup_routing_table(&name->ip);
+				if (route==NULL) // it's possible that route is not present yet
+					continue;
+				
+				if (best_routes == NULL || route->rt_etx < best_routes->rt_etx) {
+					olsr_printf(6, "NAME PLUGIN: best nameserver %s\n",
+						olsr_ip_to_string(&route->rt_dst));
+					if (best_routes!=NULL)
+						olsr_printf(6, "NAME PLUGIN: better than %f (%s)\n",
+							best_routes->rt_etx,
+							olsr_ip_to_string(&best_routes->rt_dst));
+					
+					tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
+					memcpy(&tmp->rt_dst, &route->rt_dst, ipsize);
+					tmp->rt_etx = route->rt_etx;
+					tmp->next = best_routes;
+					best_routes = tmp;
+				} else {
+					// queue in etx order
+					last = best_routes;
+					while ( last->next!=NULL && i<3 ) {
+						if (last->next->rt_etx > route->rt_etx)
+							break;
+						last = last->next;
+						i++;
+					}
+					if (i<3) {
+						olsr_printf(6, "NAME PLUGIN: queue %f (%s)",
+							route->rt_etx,
+							olsr_ip_to_string(&route->rt_dst));
+						olsr_printf(6, " after %f (%s)\n", 
+							last->rt_etx, olsr_ip_to_string(&last->rt_dst));
+						
+						tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
+						memcpy(&tmp->rt_dst, &route->rt_dst, ipsize);
+						tmp->rt_etx = route->rt_etx;
+						tmp->next = last->next;
+						last->next = tmp;
+					} else {
+						olsr_printf(6, "NAME PLUGIN: don't need more than 3 nameservers\n");
+					}
 				}
 			}
 		}
+	}
+	if (best_routes==NULL)
+		return;
+		 
+	/* write to file */
+	resolv = fopen( my_resolv_file, "w" );
+	if (resolv == NULL) {
+		olsr_printf(2, "NAME PLUGIN: can't write resolv file\n");
+		return;
+	}
+	i=0;
+	for (tmp=best_routes; tmp!=NULL && i<3; tmp=tmp->next) {
+		olsr_printf(6, "NAME PLUGIN: nameserver %s\n", olsr_ip_to_string(&tmp->rt_dst));
+		fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&tmp->rt_dst));
+		i++;
 	}
 	fclose(resolv);
 }

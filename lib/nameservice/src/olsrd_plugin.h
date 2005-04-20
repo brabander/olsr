@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.6 2005/04/10 11:45:35 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.7 2005/04/20 17:57:00 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -52,6 +52,7 @@
 #include "olsr_cfg.h"
 #include "hashing.h"
 #include "interfaces.h"
+#include "routing_table.h"
 
 char *
 strndup(const char *ptr, size_t size);
@@ -65,6 +66,7 @@ strndup(const char *ptr, size_t size);
 
 /* Global config pointer */
 struct olsrd_config *cfg;
+struct rt_entry *routingtable;
 
 /****************************************************************************
  *           Various datastructures and definitions from olsrd              *
