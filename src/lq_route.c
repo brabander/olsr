@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.33 2005/03/02 21:14:54 tlopatic Exp $
+ * $Id: lq_route.c,v 1.34 2005/04/20 17:52:11 br1 Exp $
  */
 
 #include "defs.h"
@@ -531,7 +531,7 @@ void olsr_calculate_lq_routing_table(void)
 
         if (olsr_lookup_routing_table(&vert->addr) == NULL)
           olsr_insert_routing_table(&vert->addr, &link->neighbor_iface_addr,
-                                    inter, hops);
+                                    inter, hops, vert->path_etx);
 
         // route addition, case B - add routes to the remaining interfaces
         // of the destination node
@@ -540,7 +540,8 @@ void olsr_calculate_lq_routing_table(void)
              mid_walker = mid_walker->next_alias)
           if (olsr_lookup_routing_table(&mid_walker->alias) == NULL)
             olsr_insert_routing_table(&mid_walker->alias,
-                                      &link->neighbor_iface_addr, inter, hops);
+                                      &link->neighbor_iface_addr, inter, hops, 
+                                      vert->path_etx);
 
         // XXX - we used to use olsr_lookup_routing_table() only here, but
         //       this assumed that case A or case B had already happened for
@@ -554,7 +555,8 @@ void olsr_calculate_lq_routing_table(void)
 
         if (olsr_lookup_routing_table(&link->neighbor_iface_addr) == NULL)
           olsr_insert_routing_table(&link->neighbor_iface_addr,
-                                    &link->neighbor_iface_addr, inter, 1);
+                                    &link->neighbor_iface_addr, inter, 1,
+                                    vert->path_etx);
       }
     }
   }
@@ -616,6 +618,7 @@ void olsr_calculate_lq_routing_table(void)
 
       COPY_IP(&hna_rt->rt_router, &gw_rt->rt_router);
       hna_rt->rt_metric = gw_rt->rt_metric;
+      hna_rt->rt_etx = gw_rt->rt_etx;
       hna_rt->rt_if = gw_rt->rt_if;
 
       // we're not a host route

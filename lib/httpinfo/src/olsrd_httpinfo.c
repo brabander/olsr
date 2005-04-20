@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.51 2005/03/31 17:18:47 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.52 2005/04/20 17:52:11 br1 Exp $
  */
 
 /*
@@ -701,7 +701,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "<h2>OLSR routes in kernel</h2>\n");
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Interface</th><th>Type</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th><th>Type</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -710,10 +710,11 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &host_routes[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>HOST</td></tr>\n",
+	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%.2f</td><td>%s</td><td>HOST</td></tr>\n",
 			  olsr_ip_to_string(&routes->rt_dst),
 			  olsr_ip_to_string(&routes->rt_router),
 			  routes->rt_metric,
+			  routes->rt_etx,
 			  routes->rt_if->int_name);
 	}
     }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.19 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: routing_table.c,v 1.20 2005/04/20 17:52:12 br1 Exp $
  */
 
 
@@ -172,7 +172,8 @@ struct rt_entry *
 olsr_insert_routing_table(union olsr_ip_addr *dst, 
 			  union olsr_ip_addr *router, 
 			  struct interface *iface, 
-			  int metric)
+			  int metric,
+			  float etx)
 {
   struct rt_entry *new_route_entry, *rt_list;
   olsr_u32_t       hash;
@@ -187,6 +188,8 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
   new_route_entry->rt_if = iface;
 
   new_route_entry->rt_metric = metric;
+  new_route_entry->rt_etx = etx;
+  
   if(COMP_IP(dst, router))
     /* Not GW */
     new_route_entry->rt_flags = (RTF_UP|RTF_HOST);
@@ -261,7 +264,8 @@ olsr_fill_routing_table_with_neighbors()
 			  olsr_insert_routing_table(&addrs2->alias, 
 						    &link->neighbor_iface_addr,
 						    iface,
-						    1);
+						    1,
+						    0);
 			}
 		    }
 	      
@@ -375,7 +379,8 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 			    olsr_insert_routing_table(&addrsp->alias, 
 						      &link->neighbor_iface_addr,
 						      iface,
-						      2);
+						      2,
+						      0);
 			  
 			  if(new_route_entry != NULL)
 			    {
@@ -471,7 +476,8 @@ olsr_calculate_routing_table()
 			    olsr_insert_routing_table(&tmp_addrsp->alias, 
 						      &list_destination_n->destination->rt_router, 
 						      list_destination_n->destination->rt_if,
-						      list_destination_n->destination->rt_metric+1);
+						      list_destination_n->destination->rt_metric+1,
+						      0);
 			  if(destination_n_1->destination != NULL)
 			    {
 			      destination_n_1->next=list_destination_n_1;
