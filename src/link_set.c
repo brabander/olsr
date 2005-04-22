@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.56 2005/03/17 16:37:27 kattemat Exp $
+ * $Id: link_set.c,v 1.57 2005/04/22 11:48:04 kattemat Exp $
  */
 
 
@@ -271,6 +271,9 @@ get_best_link_to_neighbor(union olsr_ip_addr *remote)
       // best local interface metric
 
       tmp_if = if_ifwithaddr(&walker->local_iface_addr);
+
+      if(!tmp_if)
+	continue;
 
       // is this interface better than anything we had before?
 
