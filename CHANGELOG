@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.43 2005/04/11 18:43:22 kattemat Exp $
+$Id: CHANGELOG,v 1.44 2005/04/22 11:59:04 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ for version missmatch.
 
 BUGFIXES
 
+- Fixed crash when changing IPv6 address at run-time
 - Fixed a bug that prevented setting willingness 0 in the configfile
 
 0.4.9 ---------------------------------------------------------------------
