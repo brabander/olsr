@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.19 2005/04/25 10:57:17 br1 Exp $
+# $Id: Makefile,v 1.20 2005/04/25 11:36:23 br1 Exp $
 
 PLUGIN_NAME =	olsrd_httpinfo
 PLUGIN_VER =	0.1
@@ -166,6 +166,13 @@ endif
 endif
 endif
 
+EXTRA_OBJS += ../../src/cfgparser/cfgfile_gen.o
+
+ifneq ($(ADMIN_INTERFACE), )
+	@echo 'WARNING - BUILDING WITH ADMIN INTERFACE!'
+CFLAGS_ADD += -DADMIN_INTERFACE
+endif
+		
 CFLAGS ?=	$(CFLAGS_SET)
 LDFLAGS ?=	$(LDFLAGS_SET)
 
