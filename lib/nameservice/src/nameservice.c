@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.11 2005/04/20 17:57:00 br1 Exp $ */
+/* $Id: nameservice.c,v 1.12 2005/04/28 12:46:32 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -620,6 +620,8 @@ write_hosts_file()
 	
 	fprintf(hosts, "### this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "### do not edit\n\n");
+
+	fprintf(hosts, "127.0.0.1\tlocalhost\n\n");
 	
 	// copy content from additional hosts filename
 	if (my_add_hosts[0] != '\0') {
