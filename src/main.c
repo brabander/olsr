@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.75 2005/04/11 18:43:37 kattemat Exp $
+ * $Id: main.c,v 1.76 2005/05/13 10:13:36 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -555,6 +555,16 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 
 
 #define NEXT_ARG argv++;argc--
+#define CHECK_ARGC if(!argc) { \
+      if((argc - 1) == 1){ \
+      fprintf(stderr, "Error parsing command line options!\n"); \
+      olsr_exit(__func__, EXIT_FAILURE); \
+      } else { \
+      argv--; \
+      fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
+      olsr_exit(__func__, EXIT_FAILURE); \
+     } \
+     }
 
 /**
  * Process command line arguments passed to olsrd
@@ -604,11 +614,8 @@ olsr_process_arguments(int argc, char *argv[],
 	{
 	  struct in_addr in;
 	  NEXT_ARG;
-	  if(!argc)
-	    {
-	      fprintf(stderr, "You must provide a broadcastaddr when using the -bcast switch!\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
+          CHECK_ARGC;
+
 	  if (inet_aton(*argv, &in) == 0)
 	    {
 	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
@@ -624,6 +631,8 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-d") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
+
 	  sscanf(*argv,"%d", &cnf->debug_level);
 	  continue;
 	}
@@ -635,7 +644,9 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-i") == 0) 
 	{
 	  NEXT_ARG;
-	  if(!argc || (*argv[0] == '-'))
+          CHECK_ARGC;
+
+	  if(*argv[0] == '-')
 	    {
 	      fprintf(stderr, "You must provide an interface label!\n");
 	      olsr_exit(__func__, EXIT_FAILURE);
@@ -659,6 +670,7 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-hint") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  sscanf(*argv,"%f", &ifcnf->hello_params.emission_interval);
           ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval * 3;
 	  continue;
@@ -671,6 +683,7 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-hnaint") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  sscanf(*argv,"%f", &ifcnf->hna_params.emission_interval);
           ifcnf->hna_params.validity_time = ifcnf->hna_params.emission_interval * 3;
 	  continue;
@@ -683,6 +696,7 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-midint") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  sscanf(*argv,"%f", &ifcnf->mid_params.emission_interval);
           ifcnf->mid_params.validity_time = ifcnf->mid_params.emission_interval * 3;
 	  continue;
@@ -695,6 +709,7 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-tcint") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  sscanf(*argv,"%f", &ifcnf->tc_params.emission_interval);
           ifcnf->tc_params.validity_time = ifcnf->tc_params.emission_interval * 3;
 	  continue;
@@ -706,6 +721,7 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-T") == 0) 
 	{
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  sscanf(*argv,"%f",&cnf->pollrate);
 	  continue;
 	}
@@ -747,6 +763,7 @@ olsr_process_arguments(int argc, char *argv[],
 	{
 	  struct in6_addr in6;
 	  NEXT_ARG;
+          CHECK_ARGC;
 	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
 	    {
 	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
