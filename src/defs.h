@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.46 2005/04/14 23:29:15 spoggle Exp $
+ * $Id: defs.h,v 1.47 2005/05/15 13:43:34 kattemat Exp $
  */
 
 #ifndef OLSR_PLUGIN
@@ -162,7 +162,7 @@ int olsr_udp_port;
 int ioctl_s;
 
 /* routing socket */
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
 int rts;
 #endif
 
