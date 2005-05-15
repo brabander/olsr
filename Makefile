@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.57 2005/04/14 23:29:15 spoggle Exp $
+# $Id: Makefile,v 1.58 2005/05/15 17:51:30 kattemat Exp $
 
 VERS =		0.4.9
 
@@ -140,6 +140,24 @@ HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
 CFLAGS ?=	$(CCWARNINGS) -O2 -g
 LIBS =		-lm
 MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__NetBSD__ $(INCLUDES) $(SRCS)
+
+all:	 cfgparser olsrd
+install: install_olsrd
+
+else
+ifeq ($(OS), obsd)
+
+#
+# OPENBSD SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+CFLAGS ?=	$(CCWARNINGS) -O2 -g
+LIBS =		-lm
+MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__OpenBSD__ $(INCLUDES) $(SRCS)
 
 all:	 cfgparser olsrd
 install: install_olsrd
@@ -281,6 +299,7 @@ endif
 endif
 endif
 endif
+endif
 
 #
 # END OF OS SPECIFIC STUFF
@@ -323,6 +342,7 @@ help:
 	@echo ' win32 - MS Windows                 '
 	@echo ' fbsd  - FreeBSD                    '
 	@echo ' nbsd  - NetBSD                     '
+	@echo ' obsd  - OpenBSD                    '
 	@echo ' osx   - Mac OS X                   '
 	@echo ' ---------------------------------  '
 	@echo ' Example - build for windows:       '
