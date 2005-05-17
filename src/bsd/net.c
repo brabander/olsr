@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.20 2005/03/20 16:52:25 tlopatic Exp $
+ * $Id: net.c,v 1.21 2005/05/17 09:48:06 kattemat Exp $
  */
 
 #include "defs.h"
@@ -44,15 +44,21 @@
 #include "parser.h" /* dnc: needed for call to packet_parser() */
 #include "net.h"
 
+#include <net/if.h>
+
 #ifdef __NetBSD__
 #include <sys/param.h>
+#include <net/ethernet.h>
+#include <net/if_var.h>
 #endif
 
-#include <net/if.h>
-#include <net/if_var.h>
-#include <net/ethernet.h>
+#ifdef __OpenBSD__
+#include <netinet/if_ether.h>
+#endif
 
 #ifdef __FreeBSD__
+#include <net/if_var.h>
+#include <net/ethernet.h>
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
 #include <dev/wi/if_wavelan_ieee.h>
@@ -80,8 +86,11 @@ static int set_sysctl_int(char *name, int new)
   int old;
   unsigned int len = sizeof (old);
 
+  /* Andreas: very temporary fix for OpenBSD */
+#ifndef __OpenBSD__
   if (sysctlbyname(name, &old, &len, &new, sizeof (new)) < 0)
     return -1;
+#endif
 
   return old;
 }
