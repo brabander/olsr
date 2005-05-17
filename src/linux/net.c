@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.24 2005/03/04 21:30:16 kattemat Exp $
+ * $Id: net.c,v 1.25 2005/05/17 23:53:01 kattemat Exp $
  */
 
 
@@ -100,12 +100,12 @@ enable_ip_forwarding(int version)
 
   if(version == AF_INET)
     {
-      strcpy(procfile, "/proc/sys/net/ipv4/ip_forward");
+      strncpy(procfile, "/proc/sys/net/ipv4/ip_forward", FILENAME_MAX);
     }
   else
     if(version == AF_INET6)
       {
-	strcpy(procfile, "/proc/sys/net/ipv6/conf/all/forwarding");
+	strncpy(procfile, "/proc/sys/net/ipv6/conf/all/forwarding", FILENAME_MAX);
       }
     else
       return -1;
