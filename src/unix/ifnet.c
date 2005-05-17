@@ -36,11 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.25 2005/03/07 19:17:02 kattemat Exp $
+ * $Id: ifnet.c,v 1.26 2005/05/17 23:44:26 kattemat Exp $
  */
 
 
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
 #define ifr_netmask ifr_addr
 #endif
 
