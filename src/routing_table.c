@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.20 2005/04/20 17:52:12 br1 Exp $
+ * $Id: routing_table.c,v 1.21 2005/05/19 20:26:22 kattemat Exp $
  */
 
 
@@ -730,7 +730,7 @@ olsr_print_routing_table(struct rt_entry *table)
   olsr_u8_t index;
 
   printf("ROUTING TABLE\n");
-  printf("DESTINATION\tNEXT HOP\n");
+  printf("DESTINATION\tNEXT HOP\tHOPCNT\tINTERFACE\n");
   for(index=0;index<HASHSIZE;index++)
     {
       struct rt_entry *destination;
@@ -739,7 +739,10 @@ olsr_print_routing_table(struct rt_entry *table)
 	  destination = destination->next)
 	{
 	  printf("%s\t", olsr_ip_to_string(&destination->rt_dst));
-	  printf("%s\n", olsr_ip_to_string(&destination->rt_router));
+	  printf("%s\t%d\t%s\n", 
+		 olsr_ip_to_string(&destination->rt_router),
+		 destination->rt_metric,
+		 destination->rt_if->int_name);
 	}
     }
 }
