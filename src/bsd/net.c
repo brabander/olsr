@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.21 2005/05/17 09:48:06 kattemat Exp $
+ * $Id: net.c,v 1.22 2005/05/21 10:04:12 kattemat Exp $
  */
 
 #include "defs.h"
@@ -54,6 +54,11 @@
 
 #ifdef __OpenBSD__
 #include <netinet/if_ether.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netinet/icmp_var.h>
+#include <netinet/icmp6.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -86,8 +91,45 @@ static int set_sysctl_int(char *name, int new)
   int old;
   unsigned int len = sizeof (old);
 
-  /* Andreas: very temporary fix for OpenBSD */
-#ifndef __OpenBSD__
+#ifdef __OpenBSD__
+  int mib[4];
+
+  /* Set net.inet.ip.forwarding by default. */
+  mib[0] = CTL_NET;
+  mib[1] = PF_INET;
+  mib[2] = IPPROTO_IP;
+  mib[3] = IPCTL_FORWARDING;
+
+  if (!strcmp(name, "net.inet6.ip6.forwarding"))
+  {
+    mib[1] = PF_INET6;
+    mib[2] = IPPROTO_IPV6;
+  }
+  else if (!strcmp(name, "net.inet.icmp.rediraccept"))
+  {
+    mib[2] = IPPROTO_ICMP;
+    mib[3] = ICMPCTL_REDIRACCEPT;
+  }
+  else if (!strcmp(name, "net.inet6.icmp6.rediraccept"))
+  {
+    mib[2] = IPPROTO_ICMPV6;
+    mib[3] = ICMPV6CTL_REDIRACCEPT;
+  }
+  else if (!strcmp(name, "net.inet.ip.redirect"))
+  {
+    mib[3] = IPCTL_SENDREDIRECTS;
+  }
+  else if (!strcmp(name, "net.inet6.ip6.redirect"))
+  {
+    mib[1] = PF_INET6;
+    mib[2] = IPPROTO_IPV6;
+    mib[3] = IPCTL_SENDREDIRECTS;
+  }
+
+  if (sysctl(mib, 4, &old, &len, &new, sizeof (new)) < 0)
+    return -1;
+#else
+
   if (sysctlbyname(name, &old, &len, &new, sizeof (new)) < 0)
     return -1;
 #endif
@@ -132,6 +174,15 @@ int disable_redirects(char *if_name, int index, int version)
 
   // do not accept ICMP redirects
 
+#ifdef __OpenBSD__
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.icmp.rediraccept";
+
+  else
+    name = "net.inet6.icmp6.rediraccept";
+
+  ignore_redir = set_sysctl_int(name, 0);
+#else
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
 
@@ -139,6 +190,7 @@ int disable_redirects(char *if_name, int index, int version)
     name = "net.inet6.icmp6.drop_redirect";
 
   ignore_redir = set_sysctl_int(name, 1);
+#endif
 
   if (ignore_redir < 0)
     {
@@ -186,11 +238,19 @@ int restore_settings(int version)
 
   // reset incoming ICMP redirects
 
+#ifdef __OpenBSD__
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.icmp.rediraccept";
+  else
+    name = "net.inet6.icmp6.rediraccept";
+
+#else
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
 
   else
     name = "net.inet6.icmp6.drop_redirect";
+#endif
 
   set_sysctl_int(name, ignore_redir);
 
