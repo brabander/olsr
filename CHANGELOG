@@ -1,7 +1,12 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.44 2005/04/22 11:59:04 kattemat Exp $
+$Id: CHANGELOG,v 1.45 2005/05/21 11:40:36 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
+
+OPENBSD SUPPORT
+
+olsrd now also compiles on OpenBSD systems. Thanks a lot to Holger
+Mauermann for the patches! Use 'make OS=obsd' to build. 
 
 IP ADDRESS VALIDATION
 
