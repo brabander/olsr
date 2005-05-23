@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.45 2005/05/21 11:40:36 kattemat Exp $
+$Id: CHANGELOG,v 1.46 2005/05/23 18:02:03 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -24,6 +24,9 @@ BUGFIXES
 
 - Fixed crash when changing IPv6 address at run-time
 - Fixed a bug that prevented setting willingness 0 in the configfile
+- Did various updates to prevent assertion when a neighbor
+  has changed IP and sends HELLO before its olsrd precess has detected
+  the change.
 
 0.4.9 ---------------------------------------------------------------------
 
