@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.57 2005/04/22 11:48:04 kattemat Exp $
+ * $Id: link_set.c,v 1.58 2005/05/23 17:43:01 kattemat Exp $
  */
 
 
@@ -510,11 +510,11 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
       /* This is kind of sketchy... and not specified
        * in the RFC. We can only guess a vtime.
        * We'll go for one that is hopefully long
-       * enough in most cases. 20 seconds
+       * enough in most cases. 10 seconds
        */
       OLSR_PRINTF(1, "Adding MID alias main %s ", olsr_ip_to_string(remote_main))
       OLSR_PRINTF(1, "-> %s based on HELLO\n\n", olsr_ip_to_string(remote))
-      insert_mid_alias(remote_main, remote, 20.0);
+      insert_mid_alias(remote_main, remote, MID_ALIAS_HACK_VTIME);
     }
 
   return link_set;
