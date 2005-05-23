@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.78 2005/05/17 23:44:26 kattemat Exp $
+ * $Id: main.c,v 1.79 2005/05/23 18:26:33 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -232,6 +232,9 @@ main(int argc, char *argv[])
    * Set configuration for command-line specified interfaces
    */
   set_default_ifcnfs(olsr_cnf->interfaces, default_ifcnf);
+
+  /* free the default ifcnf */
+  free(default_ifcnf);
 
   /* Sanity check configuration */
   if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
