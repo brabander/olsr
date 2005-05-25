@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.34 2005/04/20 17:52:11 br1 Exp $
+ * $Id: lq_route.c,v 1.35 2005/05/25 16:33:25 br1 Exp $
  */
 
 #include "defs.h"
@@ -304,7 +304,7 @@ static char *etx_to_string(float etx)
   if (etx == INFINITE_ETX)
     return "INF";
 
-  sprintf(buff, "%.2f", etx);
+  snprintf(buff, 20, "%.2f", etx);
   return buff;
 }
 

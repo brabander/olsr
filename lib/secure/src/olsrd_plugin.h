@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.13 2005/05/25 13:39:08 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.14 2005/05/25 16:33:24 br1 Exp $
  */
 
 
@@ -45,6 +45,7 @@
 #define _OLSRD_PLUGIN_DEFS
 
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.15 2005/05/25 13:50:22 br1 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.16 2005/05/25 16:33:24 br1 Exp $
  */
 
 /*
@@ -350,7 +350,7 @@ check_gw(union olsr_ip_addr *net, union hna_netmask *mask, struct ping_list *the
     */
     while (fgets(buff, 1023, fp))
 	{	
-	num = sscanf(buff, "%16s %128X %128X %X %d %d %d %128X \n",
+	num = sscanf(buff, "%15s %128X %128X %X %d %d %d %128X \n",
 		     iface, &dest_addr, &gate_addr,
 		     &iflags, &refcnt, &use, &metric, &netmask);
 

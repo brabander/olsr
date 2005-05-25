@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.8 2005/05/25 13:43:30 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.9 2005/05/25 16:33:24 br1 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -39,6 +39,7 @@
 #define _OLSRD_PLUGIN_DEFS
 
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.16 2005/04/10 11:45:35 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.17 2005/05/25 16:33:24 br1 Exp $
  */
 
 /*
@@ -47,6 +47,7 @@
 #define _OLSRD_PLUGIN_DEFS
 
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

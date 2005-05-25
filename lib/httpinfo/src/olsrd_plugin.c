@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.10 2005/03/03 13:05:11 kattemat Exp $
+ * $Id: olsrd_plugin.c,v 1.11 2005/05/25 16:33:24 br1 Exp $
  */
 
 /*
@@ -142,7 +142,7 @@ register_olsr_param(char *key, char *value)
       struct allowed_net *an;
       char sz_net[100], sz_mask[100]; /* IPv6 in the future */
 
-      if(sscanf(value, "%100s %100s", sz_net, sz_mask) != 2)
+      if(sscanf(value, "%99s %99s", sz_net, sz_mask) != 2)
 	{
 	  olsr_printf(1, "(HTTPINFO) Error parsing net param \"%s\"!\n", value);
 	  return 0;
