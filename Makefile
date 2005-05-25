@@ -35,293 +35,21 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.58 2005/05/15 17:51:30 kattemat Exp $
+# $Id: Makefile,v 1.59 2005/05/25 13:50:22 br1 Exp $
 
-VERS =		0.4.9
+TOPDIR = .
+include Makefile.inc
 
-CC ?= 		gcc
-STRIP ?=	strip
-BISON ?=	bison
-FLEX ?=		flex
-
-CCWARNINGS = -Wall -Wmissing-prototypes -Wstrict-prototypes \
-             -Wmissing-declarations -Wsign-compare
-
-INCLUDES =	-Isrc
-
-DEPFILE =	.depend
-
-SRCS =		$(wildcard src/*.c)
-HDRS =		$(wildcard src/*.h)
+VERS =		0.4.10pre
 
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
 CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
 
-TAGCMD ?=	etags	
-TAGFILE ?=	src/TAGS
-
-ifeq ($(OS), Windows_NT)
-OS =		win32
-endif
-
-ifeq ($(OS), linux)
-
-#
-# LINUX SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
-DEFINES = 	-Dlinux
-CFLAGS ?=	$(CCWARNINGS) -O2 -g #-DDEBUG #-pg #-march=i686
-LIBS =		-lm -ldl #-pg
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) -Y $(INCLUDES) $(SRCS) >/dev/null 2>&1
-LIBDIR =	$(INSTALL_PREFIX)/usr/lib
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), fbsd)
-
-#
-# FREEBSD SPECIFIC CONFIGURATION
-#
-
-LOCALBASE?=	/usr/local
-INSTALL_PREFIX?= $(LOCALBASE)
-CFGFILE?=	$(INSTALL_PREFIX)/etc/olsrd.conf
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
-LIBS =		-lm
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
-LIBDIR =	$(INSTALL_PREFIX)/lib
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), fbsd-ll)
-
-#
-# FREEBSD/LIBNET SPECIFIC CONFIGURATION
-#
-
-LOCALBASE?=	/usr/local
-INSTALL_PREFIX?= $(LOCALBASE)
-CFGFILE?=	$(INSTALL_PREFIX)/etc/olsrd.conf
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"${CFGFILE}\"  -DSPOOF -I${LOCALBASE}/include
-LIBS =		-lm -L${LOCALBASE}/lib -lnet
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__FreeBSD__ $(INCLUDES) $(SRCS)
-LIBDIR =	$(INSTALL_PREFIX)/lib
-
-all:     cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), nbsd)
-
-#
-# NETBSD SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	$(CCWARNINGS) -O2 -g
-LIBS =		-lm
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__NetBSD__ $(INCLUDES) $(SRCS)
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), obsd)
-
-#
-# OPENBSD SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-CFLAGS ?=	$(CCWARNINGS) -O2 -g
-LIBS =		-lm
-MAKEDEPEND = 	makedepend -f $(DEPFILE) -D__OpenBSD__ $(INCLUDES) $(SRCS)
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), osx)
-
-#
-# MACOSX SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
-DEFINES =	-D__MacOSX__
-CFLAGS ?=	$(CCWARNINGS) -O2 -g 
-LIBS =		-lm -ldl
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-else
-ifeq ($(OS), win32)
-
-#
-# WINDOWS32 SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS +=		$(wildcard src/win32/*.c)
-HDRS +=		$(wildcard src/win32/*.h)
-INCLUDES += 	-Isrc/win32
-DEFINES =	-DWIN32
-CFLAGS ?=	$(CCWARNINGS) -mno-cygwin -O2 -g
-LIBS =		-mno-cygwin -lws2_32 -liphlpapi
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
-LIBDIR =	$(INSTALL_PREFIX)/usr/lib
-
-all:	 cfgparser olsrd
-install: install_olsrd
-
-olsr-${VERS}.zip:	gui/win32/Main/Release/Switch.exe \
-		gui/win32/Shim/Release/Shim.exe \
-		olsrd.exe \
-		src/cfgparser/olsrd_cfgparser.dll \
-		README \
-		README-Link-Quality.html \
-		gui/win32/Inst/linux-manual.txt \
-		files/olsrd.conf.win32.rfc \
-		files/olsrd.conf.win32.lq \
-		gui/win32/Main/RFC-Default.olsr \
-		gui/win32/Main/LQ-Default.olsr \
-		lib/dot_draw/olsrd_dot_draw.dll \
-		lib/nameservice/olsrd_nameservice.dll \
-		lib/httpinfo/olsrd_httpinfo.dll
-		$(STRIP) olsrd.exe
-		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
-		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
-		$(STRIP) lib/nameservice/olsrd_nameservice.dll
-		$(STRIP) lib/httpinfo/olsrd_httpinfo.dll
-		rm -rf ${TEMP}/olsr-${VERS}
-		rm -f ${TEMP}/olsr-${VERS}.zip
-		rm -f olsr-${VERS}.zip
-		mkdir ${TEMP}/olsr-${VERS}
-		cp gui/win32/Main/Release/Switch.exe ${TEMP}/olsr-${VERS}
-		cp gui/win32/Shim/Release/Shim.exe ${TEMP}/olsr-${VERS}
-		cp olsrd.exe ${TEMP}/olsr-${VERS}
-		cp src/cfgparser/olsrd_cfgparser.dll ${TEMP}/olsr-${VERS}
-		cp README ${TEMP}/olsr-${VERS}
-		cp README-Link-Quality.html ${TEMP}/olsr-${VERS}
-		cp gui/win32/Inst/linux-manual.txt ${TEMP}/olsr-${VERS}
-		cp files/olsrd.conf.win32.rfc ${TEMP}/olsr-${VERS}/olsrd.conf.rfc
-		cp files/olsrd.conf.win32.lq ${TEMP}/olsr-${VERS}/olsrd.conf.lq
-		cp gui/win32/Main/RFC-Default.olsr ${TEMP}/olsr-${VERS}
-		cp gui/win32/Main/LQ-Default.olsr ${TEMP}/olsr-${VERS}/Default.olsr
-		cp lib/dot_draw/olsrd_dot_draw.dll ${TEMP}/olsr-${VERS}
-		cp lib/nameservice/olsrd_nameservice.dll ${TEMP}/olsr-${VERS}
-		cp lib/httpinfo/olsrd_httpinfo.dll ${TEMP}/olsr-${VERS}
-		cd ${TEMP}; echo y | cacls olsr-${VERS} /T /G Everyone:F
-		cd ${TEMP}; zip -q -r olsr-${VERS}.zip olsr-${VERS}
-		cp ${TEMP}/olsr-${VERS}.zip .
-		rm -rf ${TEMP}/olsr-${VERS}
-		rm -f ${TEMP}/olsr-${VERS}.zip
-
-olsr-${VERS}-setup.exe:	gui/win32/Main/Release/Switch.exe \
-		gui/win32/Shim/Release/Shim.exe \
-		olsrd.exe \
-		src/cfgparser/olsrd_cfgparser.dll \
-		README \
-		README-Link-Quality.html \
-		gui/win32/Inst/linux-manual.txt \
-		files/olsrd.conf.win32.rfc \
-		files/olsrd.conf.win32.lq \
-		gui/win32/Main/RFC-Default.olsr \
-		gui/win32/Main/LQ-Default.olsr \
-		lib/dot_draw/olsrd_dot_draw.dll \
-		lib/nameservice/olsrd_nameservice.dll \
-		lib/httpinfo/olsrd_httpinfo.dll \
-		gui/win32/Inst/installer.nsi
-		$(STRIP) olsrd.exe
-		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
-		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
-		$(STRIP) lib/nameservice/olsrd_nameservice.dll
-		$(STRIP) lib/httpinfo/olsrd_httpinfo.dll
-		rm -f olsr-setup.exe
-		rm -f olsr-${VERS}-setup.exe
-		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
-		mv olsr-setup.exe olsr-${VERS}-setup.exe
-
-else
-ifeq ($(OS), wince)
-
-#
-# WINDOWS CE SPECIFIC CONFIGURATION
-#
-
-INSTALL_PREFIX ?=
-
-SRCS +=		$(wildcard src/win32/*.c)
-HDRS +=		$(wildcard src/win32/*.h)
-INCLUDES += 	-Isrc/win32 -Isrc/win32/ce
-DEFINES =	-DWIN32 -DWINCE
-CFLAGS ?=	$(CCWARNINGS) -O2 -g
-LIBS =		-lwinsock -liphlpapi
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(DEFINES) $(INCLUDES) $(SRCS)
-
-else
-
-all:	help
-install:help
-
-endif
-endif
-endif
-endif
-endif
-endif
-endif
-endif
-
-#
-# END OF OS SPECIFIC STUFF
-#
-
-ifneq ($(NODEBUG), )
-CFLAGS += -DNODEBUG
-endif
-
-OBJS = $(patsubst %.c,%.o,$(SRCS))
-override CFLAGS += $(INCLUDES) $(DEFINES)
-export CFLAGS
-
+default_target: cfgparser olsrd
 
 olsrd:		$(OBJS) $(CFGOBJS)
 		$(CC) -o $@ $(OBJS) $(CFGOBJS) $(LIBS) 
-
-$(DEPFILE):	$(SRCS) $(HDRS)
-ifdef MAKEDEPEND
-		@echo '# olsrd dependency file. AUTOGENERATED' > $(DEPFILE)
-		$(MAKEDEPEND)
-endif
 
 cfgparser:	$(CFGDEPS)
 		$(MAKE) -C $(CFGDIR)
@@ -329,44 +57,23 @@ cfgparser:	$(CFGDEPS)
 $(CFGOBJS):
 		$(MAKE) -C $(CFGDIR)
 
-.PHONY: help libs clean_libs clean uberclean install_libs install_bin install
-
-help:
-	@echo
-	@echo '***** olsr.org olsr daemon Make ****'
-	@echo ' You must provide a valid target OS '
-	@echo ' by setting the OS variable! Valid  '
-	@echo ' target OSes are:                   '
-	@echo ' ---------------------------------  '
-	@echo ' linux - GNU/Linux                  '
-	@echo ' win32 - MS Windows                 '
-	@echo ' fbsd  - FreeBSD                    '
-	@echo ' nbsd  - NetBSD                     '
-	@echo ' obsd  - OpenBSD                    '
-	@echo ' osx   - Mac OS X                   '
-	@echo ' ---------------------------------  '
-	@echo ' Example - build for windows:       '
-	@echo ' make OS=win32                      '
-	@echo ' If you are developing olsrd code,  '
-	@echo ' exporting the OS variable might    '
-	@echo ' be a good idea :-) Have fun!       '
-	@echo '************************************'
-	@echo
+.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install
 
 clean:
-		rm -f $(OBJS) olsrd olsrd.exe
+		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe $(TAGFILE)
 		$(MAKE) -C src/cfgparser clean
 
 uberclean:	clean clean_libs
-		rm -f $(DEPFILE) $(DEPFILE).bak *~
-		rm -f src/*[o~] src/linux/*[o~] src/unix/*[o~] src/win32/*[o~]
-		rm -f src/bsd/*[o~] 
+		-rm -f src/*[od~] src/linux/*[od~] src/unix/*[od~] src/win32/*[od~]
+		-rm -f src/bsd/*[od~] 
 		$(MAKE) -C src/cfgparser uberclean
 
+install: install_olsrd
+
 install_bin:
-		$(STRIP) olsrd
-		mkdir -p $(INSTALL_PREFIX)/usr/sbin
-		install -m 755 olsrd $(INSTALL_PREFIX)/usr/sbin
+		$(STRIP) $(EXENAME)
+		mkdir -p $(SBINDIR)
+		install -m 755 $(EXENAME) $(SBINDIR)
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
@@ -375,16 +82,19 @@ install_olsrd:	install_bin
 		@echo configfile can be installed. Note that a LQ-based configfile
 		@echo can be found at files/olsrd.conf.default.lq
 		@echo ==========================================================
-		mkdir -p $(INSTALL_PREFIX)/etc
-		cp -i files/olsrd.conf.default.rfc $(INSTALL_PREFIX)/etc/olsrd.conf
+		mkdir -p $(ETCDIR)
+		-cp -i files/olsrd.conf.default.rfc $(CFGFILE)
 		@echo -------------------------------------------
-		@echo Edit $(INSTALL_PREFIX)/etc/olsrd.conf before running olsrd!!
+		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
 		@echo Installing manpages olsrd\(8\) and olsrd.conf\(5\)
-		mkdir -p $(INSTALL_PREFIX)/usr/share/man/man8/
-		cp files/olsrd.8.gz $(INSTALL_PREFIX)/usr/share/man/man8/olsrd.8.gz
-		mkdir -p $(INSTALL_PREFIX)/usr/share/man/man5/
-		cp files/olsrd.conf.5.gz $(INSTALL_PREFIX)/usr/share/man/man5/olsrd.conf.5.gz
+		mkdir -p $(MANDIR)/man8/
+		cp files/olsrd.8.gz $(MANDIR)/man8/olsrd.8.gz
+		mkdir -p $(MANDIR)/man5/
+		cp files/olsrd.conf.5.gz $(MANDIR)/man5/olsrd.conf.5.gz
+
+tags:
+		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h)
 
 #
 # PLUGINS
@@ -393,10 +103,10 @@ install_olsrd:	install_bin
 libs: 
 		$(MAKE) -C lib LIBDIR=$(LIBDIR)
 
-clean_libs: 
+libs_clean clean_libs:
 		$(MAKE) -C lib LIBDIR=$(LIBDIR) clean
 
-install_libs:
+libs_install install_libs:
 		$(MAKE) -C lib LIBDIR=$(LIBDIR) install
 
 httpinfo:
@@ -430,9 +140,3 @@ secure:
 		$(MAKE) -C lib/secure clean
 		$(MAKE) -C lib/secure
 		$(MAKE) -C lib/secure install
-
-
-tags:
-		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h)
-
-sinclude	$(DEPFILE)

@@ -1,0 +1,16 @@
+#
+# MAC OSX SPECIFIC CONFIGURATION
+#
+
+INSTALL_PREFIX ?=
+LIBDIR =	$(INSTALL_PREFIX)/usr/lib
+
+SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+
+DEFINES =	-D__MacOSX__
+LIBS =		-lm -ldl
+
+PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
+INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
+		/sbin/ldconfig

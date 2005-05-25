@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.14 2005/01/30 15:12:59 kattemat Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.15 2005/05/25 13:50:22 br1 Exp $
  */
 
 /*
@@ -535,20 +535,4 @@ int pthread_mutex_unlock(HANDLE *Hand)
   return 0;
 }
 
-int inet_aton(char *AddrStr, struct in_addr *Addr)
-{
-  Addr->s_addr = inet_addr(AddrStr);
-
-  return 1;
-}
-
-int nanosleep(struct timespec *Req, struct timespec *Rem)
-{
-  Sleep(Req->tv_sec * 1000 + Req->tv_nsec / 1000000);
-
-  Rem->tv_sec = 0;
-  Rem->tv_nsec = 0;
-
-  return 0;
-}
 #endif

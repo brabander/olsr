@@ -1,7 +1,5 @@
-#
-# The olsr.org Optimized Link-State Routing daemon (olsrd)
-#
-# Copyright (c) 2004, Thomas Lopatic (thomas@olsr.org)
+# The olsr.org Optimized Link-State Routing daemon(olsrd)
+# Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -37,189 +35,35 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.1 2005/04/12 17:17:25 tlopatic Exp $
-#
+# $Id: Makefile,v 1.2 2005/05/25 13:50:22 br1 Exp $
 
+OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_tas
 PLUGIN_VER =	0.1
 
-CC ?=		gcc
-STRIP ?=	strip
-
-# default CFLAGS and LDFLAGS, used if not externally set
-
-# used for compilation: yes
-# used for dependency file generation: no
-
-CFLAGS_SET =	-g -Os -Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-Wmissing-declarations -Wsign-compare
-LDFLAGS_SET =	-g
-
-# always appended to default or externally set CFLAGS and LDFLAGS
-
-# used for compilation: yes
-# used for dependency file generation: yes
-
-CFLAGS_ADD =	-DOLSR_PLUGIN -I../../src
-LDFLAGS_ADD =	-Wall -shared -Wl,--version-script=version-script.txt
-
-# same as CFLAGS_ADD, but not used for dependency file generation
-
-# used for compilation: yes
-# used for dependency file generation: no
-
-CFLAGS_ADD2 =	# nothing
-
-DEPFILE =	.depend
+TOPDIR = ../..
+include $(TOPDIR)/Makefile.inc
 
 SRCS =		$(wildcard src/*.c src/lua/*.c)
-OBJS =		$(patsubst %.c,%.o, $(SRCS))
 HDRS =		$(wildcard src/*.h src/lua/*.h)
 
-ifndef OS
-all:		help
-install:	help
-clean:		help
-endif
+ifeq ($(OS),fbsd)
 
-ifeq ($(OS), linux)
-
-NAME ?=		$(PLUGIN_NAME).so.$(PLUGIN_VER)
-
-CFLAGS_ADD +=	-Dlinux
-CFLAGS_ADD2 +=	-fPIC
-LDFLAGS_ADD +=	-fPIC -Wl,-soname,$(NAME)
-
-CFLAGS_SET +=	# nothing
-LDFLAGS_SET +=	# nothing
-
-LIBS ?=		-lc -lm
-
-LIBDIR ?=	$(INSTALL_PREFIX)/usr/lib
-
-INSTALL_LIB =	install -D -m 755 $(NAME) $(LIBDIR)/$(NAME); \
-		/sbin/ldconfig -n $(LIBDIR)
-
-EXTRA_OBJS =	# nothing
-
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(CFLAGS_ADD) -Y $(INCLUDES) \
-		$(SRCS) >/dev/null 2>&1
-
-all:		all2
-install:	install2
-clean:		clean2
-
-else
-ifeq ($(OS), fbsd)
-
-NAME ?=		$(PLUGIN_NAME).so.$(PLUGIN_VER)
-
-CFLAGS_ADD +=	# nothing
-CFLAGS_ADD2 +=	-fPIC
-LDFLAGS_ADD +=	-fPIC -Wl,-soname,$(NAME)
-
-CFLAGS_SET +=	# nothing
-LDFLAGS_SET +=	# nothing
-
-LIBS ?=		-lc -lm
-
-LIBDIR ?=	$(INSTALL_PREFIX)/usr/lib
-
-INSTALL_LIB =	install -m 755 $(NAME) $(LIBDIR)/$(NAME); \
-		/sbin/ldconfig
-
-EXTRA_OBJS =	# nothing
-
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(CFLAGS_ADD) $(INCLUDES) $(SRCS)
-
-all:		all2
-install:	install2
-clean:		clean2
-
-else
-ifeq ($(OS), win32)
-
-NAME ?=		$(PLUGIN_NAME).dll
-
-CFLAGS_ADD +=	-mno-cygwin -DWIN32
-CFLAGS_ADD2 +=	# nothing
-LDFLAGS_ADD +=	-mno-cygwin -Wl,-soname,$(NAME)
-
-CFLAGS_SET +=	# nothing
-LDFLAGS_SET +=	# nothing
-
-LIBS ?=		-lws2_32
-
-INSTALL_LIB =	cp $(NAME) ../..
-
-EXTRA_OBJS =	# nothing
-
-MAKEDEPEND = 	makedepend -f $(DEPFILE) $(CFLAGS_ADD) $(INCLUDES) $(SRCS)
-
-all:		all2
-install:	install2
-clean:		clean2
+default_target install clean: 
+	@echo "*** TAS Plugin not supported on FreeBSD yet, sorry!"
 
 else
 
-all:		help
-install:	help
-clean:		help
+default_target: $(PLUGIN_FULLNAME)
 
-endif
-endif
-endif
+$(PLUGIN_FULLNAME): $(OBJS)
+		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
-CFLAGS ?=	$(CFLAGS_SET)
-LDFLAGS ?=	$(LDFLAGS_SET)
-
-CFLAGS		+= $(CFLAGS_ADD) $(CFLAGS_ADD2)
-LDFLAGS		+= $(LDFLAGS_ADD)
-
-all2:		$(NAME) test
-
-$(NAME):	$(OBJS) $(EXTRA_OBJS)
-		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(EXTRA_OBJS) $(LIBS)
-
-test:		test.o
-		$(CC) -o test test.o $(NAME)
-
-install2:	$(NAME)
-		$(STRIP) $(NAME)
+install:	$(PLUGIN_FULLNAME)
+		$(STRIP) $(PLUGIN_FULLNAME)
 		$(INSTALL_LIB)
 
-clean2:
-		rm -f $(OBJS) $(NAME) $(DEPFILE) $(DEPFILE).bak
-		rm -f test.o test
-		find . -name \*~ -exec rm {} \;
+clean:
+		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
 
-$(DEPFILE):	$(SRCS) $(HDRS)
-ifdef MAKEDEPEND
-		echo "# Generated automatically. DO NOT EDIT." >$(DEPFILE)
-		$(MAKEDEPEND)
 endif
-
-help:
-		@echo
-		@echo '                     * * * *  olsr.org Plugin Make  * * * *'
-		@echo
-		@echo '  Plugin: $(PLUGIN_NAME), version $(PLUGIN_VER)'
-		@echo
-		@echo '  You must provide a valid target OS by setting the OS variable.'
-		@echo
-		@echo '  Valid settings are:'
-		@echo
-		@echo '    linux - GNU/Linux'
-		@echo '    win32 - Microsoft Windows'
-		@echo '    fbsd  - FreeBSD'
-		@echo
-		@echo '  Example - Build on Windows:'
-		@echo
-		@echo '    make OS=win32'
-		@echo
-		@echo '  Example - Build and install on Linux:'
-		@echo
-		@echo '    make OS=linux install            '
-		@echo
-
-sinclude $(DEPFILE)

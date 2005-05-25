@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.12 2005/03/10 19:57:48 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.13 2005/05/25 13:50:22 br1 Exp $
  */
 
 
@@ -100,34 +100,6 @@ MD5_checksum(char *data, olsr_u16_t data_len, char *hashbuf)
 
 #ifndef OS
 #define OS "Undefined"
-#endif
-
-
-#ifdef WIN32
-
-static char *inet_ntop4(const unsigned char *src, char *dst, int size)
-{
-  static const char fmt[] = "%u.%u.%u.%u";
-  char tmp[sizeof "255.255.255.255"];
-
-  if (sprintf(tmp, fmt, src[0], src[1], src[2], src[3]) > size)
-    return (NULL);
-
-  return strcpy(dst, tmp);
-}
-
-char *inet_ntop(int af, void *src, char *dst, int size)
-{
-  switch (af)
-  {
-  case AF_INET:
-    return (inet_ntop4(src, dst, size));
-
-  default:
-    return (NULL);
-  }
-}
-
 #endif
 
 
