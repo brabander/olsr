@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.23 2005/03/21 02:17:36 tlopatic Exp $
+ * $Id: ifnet.c,v 1.24 2005/05/25 22:17:07 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -216,8 +216,9 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   strcpy(Info->Guid, Walker->AdapterName);
 
-  if (IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED &&
-      IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
+  if ((IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED &&
+      IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL) ||
+      Info->Addr == 0)
   {
     OLSR_PRINTF(3, "Interface %s not up!\n", Name);
     return -1;

@@ -13,7 +13,7 @@ ifdef OLSRD_PLUGIN
 endif
 
 DEFINES +=	-DWIN32
-LIBS +=		-mno-cygwin -lws2_32 -liphlpapi
+LIBS +=		-mno-cygwin -Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols -lws2_32 -liphlpapi
 
 INCLUDES += 	-I$(TOPDIR)/src/win32
 CFLAGS +=	-mno-cygwin
