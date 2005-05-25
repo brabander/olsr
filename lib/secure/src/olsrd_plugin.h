@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.h,v 1.12 2005/04/10 11:45:35 kattemat Exp $
+ * $Id: olsrd_plugin.h,v 1.13 2005/05/25 13:39:08 kattemat Exp $
  */
 
 
@@ -349,10 +349,8 @@ int (*remove_olsr_socket)(int, void(*)(int));
 /* get the link status to a neighbor */
 int (*check_neighbor_link)(union olsr_ip_addr *);
 
-/* Mantissa/exponen conversions */
+/* Mantissa/exponent conversions */
 olsr_u8_t (*double_to_me)(double);
-
-double (*me_to_double)(olsr_u8_t);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);
