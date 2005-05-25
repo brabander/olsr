@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.5 2005/04/10 11:52:05 kattemat Exp $ */
+/* $Id: olsrd_plugin.c,v 1.6 2005/05/25 13:41:47 kattemat Exp $ */
 
 
 /*
@@ -224,18 +224,6 @@ fetch_olsrd_data()
     double_to_me = NULL;
     retval = 0;
   }
-
-
-
-  /* Mantissa/exponent to double conversion */
-  if(!olsr_plugin_io(GETF__ME_TO_DOUBLE, 
-		     &me_to_double, 
-		     sizeof(me_to_double)))
-  {
-    me_to_double = NULL;
-    retval = 0;
-  }
-
 
   /* Interface list */
   if(!olsr_plugin_io(GETD__IFNET, &ifs, sizeof(ifs)))

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.9 2005/04/10 11:52:05 kattemat Exp $ */
+/* $Id: olsrd_plugin.h,v 1.10 2005/05/25 13:41:47 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -72,6 +72,28 @@
 /* The type of messages we will receive - can be set to promiscuous */
 #define PARSER_TYPE MESSAGE_TYPE
 
+
+/*
+ * Scaling factor
+ */
+
+#define VTIME_SCALE_FACTOR    0.0625
+
+/**
+ * Macro for converting a mantissa/exponent 8bit value back
+ * to double as described in RFC3626:
+ *
+ * value = C*(1+a/16)*2^b [in seconds]
+ *
+ *  where a is the integer represented by the four highest bits of the
+ *  field and b the integer represented by the four lowest bits of the
+ *  field.
+ *
+ * me is the 8 bit mantissa/exponent value
+ *
+ */
+#define ME_TO_DOUBLE(me) \
+  (double)(VTIME_SCALE_FACTOR*(1+(double)(me>>4)/16)*(double)(1<<(me&0x0F)))
 
 
 /****************************************************************************
@@ -240,10 +262,8 @@ void (*add_olsr_socket)(int, void(*)(int));
 /* get the link status to a neighbor */
 int (*check_neighbor_link)(union olsr_ip_addr *);
 
-/* Mantissa/exponen conversions */
+/* Mantissa/exponent conversions */
 olsr_u8_t (*double_to_me)(double);
-
-double (*me_to_double)(olsr_u8_t);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);

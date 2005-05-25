@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.7 2005/04/20 17:57:00 br1 Exp $ */
+/* $Id: olsrd_plugin.h,v 1.8 2005/05/25 13:43:30 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -158,10 +158,8 @@ void (*add_olsr_socket)(int, void(*)(int));
 /* get the link status to a neighbor */
 int (*check_neighbor_link)(union olsr_ip_addr *);
 
-/* Mantissa/exponen conversions */
+/* Mantissa/exponent conversions */
 olsr_u8_t (*double_to_me)(double);
-
-double (*me_to_double)(olsr_u8_t);
 
 /* olsrd printf wrapper */
 int (*olsr_printf)(int, char *, ...);

@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.8 2005/04/07 18:22:20 kattemat Exp $ */
+/* $Id: olsrd_power.c,v 1.9 2005/05/25 13:41:47 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -398,12 +398,12 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
   if(ipversion == AF_INET)
     {
       message = &m->v4.msg;
-      vtime = me_to_double(m->v4.olsr_vtime);
+      vtime = ME_TO_DOUBLE(m->v4.olsr_vtime);
     }
   else
     {
       message = &m->v6.msg;
-      vtime = me_to_double(m->v6.olsr_vtime);
+      vtime = ME_TO_DOUBLE(m->v6.olsr_vtime);
     }
 
   /* Check if message originated from this node */

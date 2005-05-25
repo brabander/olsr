@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.9 2005/04/20 17:57:00 br1 Exp $ */
+/* $Id: olsrd_plugin.c,v 1.10 2005/05/25 13:43:30 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -256,15 +256,6 @@ fetch_olsrd_data()
 		     sizeof(double_to_me)))
   {
     double_to_me = NULL;
-    retval = 0;
-  }
-
-  /* Mantissa/exponent to double conversion */
-  if(!olsr_plugin_io(GETF__ME_TO_DOUBLE, 
-		     &me_to_double, 
-		     sizeof(me_to_double)))
-  {
-    me_to_double = NULL;
     retval = 0;
   }
 
