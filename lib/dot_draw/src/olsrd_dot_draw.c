@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.11 2005/02/20 15:51:15 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.12 2005/05/25 16:00:42 br1 Exp $
  */
 
 /*
@@ -399,7 +399,7 @@ ipc_send(char *data, int size)
   if(!ipc_open)
     return 0;
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __NetBSD__
   if (send(ipc_connection, data, size, 0) < 0) 
 #else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 

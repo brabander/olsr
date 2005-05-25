@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.22 2005/05/21 10:04:12 kattemat Exp $
+ * $Id: net.c,v 1.23 2005/05/25 16:00:42 br1 Exp $
  */
 
 #include "defs.h"
@@ -48,8 +48,7 @@
 
 #ifdef __NetBSD__
 #include <sys/param.h>
-#include <net/ethernet.h>
-#include <net/if_var.h>
+#include <net/if_ether.h>
 #endif
 
 #ifdef __OpenBSD__
