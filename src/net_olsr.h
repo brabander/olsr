@@ -36,13 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.18 2005/04/11 18:43:40 kattemat Exp $
+ * $Id: net_olsr.h,v 1.1 2005/05/25 20:59:46 kattemat Exp $
  */
 
 
 
-#ifndef _OLSR_NET
-#define _OLSR_NET
+#ifndef _NET_OLSR
+#define _NET_OLSR
 
 #include "defs.h"
 #include "process_routes.h"
