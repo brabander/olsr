@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.23 2005/05/23 14:12:57 kattemat Exp $
+ * $Id: interfaces.c,v 1.24 2005/05/25 14:32:52 br1 Exp $
  */
 
 #include "defs.h"
@@ -330,7 +330,7 @@ queue_if(char *name)
   interf_n->configured = 0;
   interf_n->index = olsr_cnf->ifcnt++;
 
-  strncpy(interf_n->name, name, sizeof(interf_n->name));
+  strncpy(interf_n->name, name, strlen(name) + 1);
   interf_n->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = interf_n;
 
