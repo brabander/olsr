@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_plugin_io.h,v 1.15 2004/12/19 17:14:02 kattemat Exp $
+ * $Id: olsr_plugin_io.h,v 1.16 2005/05/25 13:37:33 kattemat Exp $
  */
 
 
@@ -60,6 +60,8 @@
  *                 - Andreas
  *         0.4.9 : GETD__LINK_SET added
  *                 GETF__OLSR_LOOKUP_MPRS_SET added
+ *                 - Andreas
+ *         0.4.10: GETF__ME_TO_DOUBLE removed
  *                 - Andreas
  */
 
@@ -122,7 +124,6 @@
 #define GETF__OLSR_PRINTF                          513
 #define GETF__OLSR_MALLOC                          514
 #define GETF__DOUBLE_TO_ME                         515
-#define GETF__ME_TO_DOUBLE                         516
 #define GETF__ADD_LOCAL_HNA4_ENTRY                 517
 #define GETF__REMOVE_LOCAL_HNA4_ENTRY              518
 #define GETF__ADD_LOCAL_HNA6_ENTRY                 519

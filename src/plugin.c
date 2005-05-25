@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.19 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: plugin.c,v 1.20 2005/05/25 13:36:59 kattemat Exp $
  */
 
 
@@ -136,10 +136,6 @@ olsr_plugin_io(int cmd, void *data, size_t size)
       break;
     case(GETF__DOUBLE_TO_ME):
       ptr = &double_to_me;
-      memcpy(data, &ptr, size);
-      break;
-    case(GETF__ME_TO_DOUBLE):
-      ptr = &me_to_double;
       memcpy(data, &ptr, size);
       break;
     case(GETF__OLSR_REGISTER_SCHEDULER_EVENT):
