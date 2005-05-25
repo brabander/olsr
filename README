@@ -219,10 +219,10 @@ olsrd		+/+	+/+	+/+	+/+	+/+	?
 PLUGINS
 dot_draw	+/+	+/?	+/+	+/+	+/+	?
 dyn_gw		+/+	+/?	+/?	+/?	+/?	?
-httpinfo	+/+	+/?	+/?	+/?	+/?	?
+httpinfo	+/+	+/+	+/+	+/?	+/?	?
 nameservice	+/+	+/?	+/?	+/?	+/?	?
-powerinfo	+/+	+/?	+/?	+/?	+/?	?
-secure		+/+	+/?	+/?	+/?	+/?	?
+powerinfo	+/+	+/+	+/+	+/?	+/?	?
+secure		+/+	+/+	+/+	+/?	+/?	?
 tas		+/+	-	-	-	-	?
 ------------------------------------------------------------
 
@@ -453,4 +453,4 @@ to use "osx" instead of "fbsd", as in
   gmake OS=osx
 
 
-$Id: README,v 1.9 2005/05/25 16:56:22 br1 Exp $
+$Id: README,v 1.10 2005/05/25 18:23:05 kattemat Exp $
