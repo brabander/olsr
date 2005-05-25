@@ -9,7 +9,7 @@ SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
 
 DEFINES = 	-Dlinux
-LIBS =		-lm -ldl
+LIBS =		-ldl
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
