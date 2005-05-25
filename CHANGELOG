@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.46 2005/05/23 18:02:03 kattemat Exp $
+$Id: CHANGELOG,v 1.47 2005/05/25 14:51:37 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -19,6 +19,13 @@ PLUGIN INTERFACE
 
 Updated interface version to 3 and added more noticeable warning 
 for version missmatch.
+
+MATH LIB DEPENDENCY
+
+The dependency on the math lib came from the use of pow(3) in hte
+mantissa/exponent calculation. The calls to pow in this long forgotten 
+code, was very unnessecarry. The pow calls are replaced with bitwise 
+shifts and -lm is no longer needed.
 
 BUGFIXES
 
