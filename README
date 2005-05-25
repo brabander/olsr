@@ -208,6 +208,29 @@ while installing requires(as root):
 make install
 To use the plugins add them to the olsrd configuration file.
 
+=====================
+ * OS SUPPORT STATUS
+=====================
+
+COMPONENT/OS	Linux	Win32	FreeBSD	NetBSD	OpenBSD	OSX
+------------------------------------------------------------
+olsrd		+/+	+/+	+/+	+/+	+/+	?
+------------------------------------------------------------
+PLUGINS
+dot_draw	+/+	+/?	+/+	+/+	+/+	?
+dyn_gw		+/+	+/?	+/?	+/?	+/?	?
+httpinfo	+/+	+/?	+/?	+/?	+/?	?
+nameservice	+/+	+/?	+/?	+/?	+/?	?
+powerinfo	+/+	+/?	+/?	+/?	+/?	?
+secure		+/+	+/?	+/?	+/?	+/?	?
+tas		+/+	-	-	-	-	?
+------------------------------------------------------------
+
+LEGEND:   +/+ = compiles/runs
+          +/- = compiles/does not work
+          -   = does not compile
+          ?   = unknown
+
 =================
  * GUI FRONTENDS
 =================
@@ -430,4 +453,4 @@ to use "osx" instead of "fbsd", as in
   gmake OS=osx
 
 
-$Id: README,v 1.8 2004/12/05 21:45:46 tlopatic Exp $
+$Id: README,v 1.9 2005/05/25 16:56:22 br1 Exp $
