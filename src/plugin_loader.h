@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.h,v 1.13 2005/04/10 11:41:50 kattemat Exp $
+ * $Id: plugin_loader.h,v 1.14 2005/05/26 16:09:26 br1 Exp $
  */
 
 #ifndef _OLSR_PLUGIN_LOADER
@@ -58,23 +58,25 @@ struct olsr_plugin_data
 #ifndef OLSR_PLUGIN
 
 #define MAX_LIBS 10
-#define PLUGIN_INTERFACE_VERSION 3
+#define PLUGIN_INTERFACE_VERSION 4
 
 
 struct olsr_plugin
 {
   /* The handle */
   void *dlhandle;
-
-  /* Params */
+  
   struct plugin_param *params;
-
-  int (*register_param)(char *, char *);
+  int plugin_interface_version;
+  
+  /* old interface (PLUGIN_INTERFACE_VERSION <= 3) */
   int (*register_olsr_data)(struct olsr_plugin_data *);
+  int (*plugin_io)(int, void *, size_t); /* Multi - purpose function */
 
-  /* Multi - purpose function */
-  int (*plugin_io)(int, void *, size_t);
-
+  /* new interface (PLUGIN_INTERFACE_VERSION >= 4)*/
+  int (*register_param)(char *, char *);
+  int (*plugin_init)(void);
+  
   struct olsr_plugin *next;
 };
 
