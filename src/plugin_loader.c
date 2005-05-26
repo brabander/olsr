@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.20 2005/05/26 16:09:25 br1 Exp $
+ * $Id: plugin_loader.c,v 1.21 2005/05/26 16:18:15 kattemat Exp $
  */
 
 #include "plugin_loader.h"
@@ -262,6 +262,6 @@ olsr_close_plugins()
       entry != NULL ; 
       entry = entry->next)
     {
-      dlclose(&entry->dlhandle);
+      dlclose(entry->dlhandle);
     }
 }
