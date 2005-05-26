@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.43 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: olsr.c,v 1.44 2005/05/26 09:55:11 kattemat Exp $
  */
 
 /**
@@ -59,6 +59,7 @@
 #include "misc.h"
 #include "neighbor_table.h"
 #include "log.h"
+#include "lq_packet.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -490,6 +491,32 @@ olsr_calculate_willingness()
   return (ainfo.battery_percentage / 26);
 }
 
+const char *
+olsr_msgtype_to_string(olsr_u8_t msgtype)
+{
+  static char type[20];
+
+  switch(msgtype)
+    {
+    case(HELLO_MESSAGE):
+      return "HELLO";
+    case(TC_MESSAGE):
+      return "TC";
+    case(MID_MESSAGE):
+      return "MID";
+    case(HNA_MESSAGE):
+      return "HNA";
+    case(LQ_HELLO_MESSAGE):
+      return("LQ-HELLO");
+    case(LQ_TC_MESSAGE):
+      return("LQ-TC");
+    default:
+      break;
+    }
+
+  snprintf(type, 20, "UNKNOWN(%d)", msgtype);
+  return type;
+}
 
 
 /**

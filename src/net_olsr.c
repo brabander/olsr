@@ -36,13 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.1 2005/05/25 20:59:46 kattemat Exp $
+ * $Id: net_olsr.c,v 1.2 2005/05/26 09:55:11 kattemat Exp $
  */
 
 #include "net_olsr.h"
 #include "log.h"
 #include "olsr.h"
 #include "net_os.h"
+#include "print_packet.h"
 #include <stdlib.h>
 
 #ifdef WIN32
@@ -388,7 +389,6 @@ net_output(struct interface *ifp)
   struct sockaddr_in6 *sin6;  
   struct sockaddr_in6 dst6;
   struct ptf *tmp_ptf_list;
-  int i, x;
   union olsr_packet *outmsg;
 
   sin = NULL;
@@ -444,38 +444,8 @@ net_output(struct interface *ifp)
    *we print the contetnt of the packets
    */
   if(disp_pack_out)
-    {
-      switch(netbufs[ifp->if_nr]->buff[4])
-	{
-	case(HELLO_MESSAGE):printf("\n\tHELLO ");break;
-	case(TC_MESSAGE):printf("\n\tTC ");break;
-	case(MID_MESSAGE):printf("\n\tMID ");break;
-	case(HNA_MESSAGE):printf("\n\tHNA ");break;
-	default:printf("\n\tTYPE: %d ", netbufs[ifp->if_nr]->buff[4]); break;
-	}
-      if(olsr_cnf->ip_version == AF_INET)
-	printf("to %s size: %d\n\t", ip_to_string((olsr_u32_t *)&sin->sin_addr.s_addr), netbufs[ifp->if_nr]->pending);
-      else
-	printf("to %s size: %d\n\t", ip6_to_string(&sin6->sin6_addr), netbufs[ifp->if_nr]->pending);
-
-      x = 0;
-
-      for(i = 0; i < netbufs[ifp->if_nr]->pending;i++)
-	{
-	  if(x == 4)
-	    {
-	      x = 0;
-	      printf("\n\t");
-	    }
-	  x++;
-	  if(olsr_cnf->ip_version == AF_INET)
-	    printf(" %3i", (u_char) netbufs[ifp->if_nr]->buff[i]);
-	  else
-	    printf(" %2x", (u_char) netbufs[ifp->if_nr]->buff[i]);
-	}
-      
-      printf("\n");
-    }
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)netbufs[ifp->if_nr]->buff, 
+				 netbufs[ifp->if_nr]->pending, &ifp->ip_addr); 
   
   if(olsr_cnf->ip_version == AF_INET)
     {

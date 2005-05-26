@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.22 2005/03/10 07:01:48 kattemat Exp $
+ * $Id: parser.c,v 1.23 2005/05/26 09:55:11 kattemat Exp $
  */
 
 #include "parser.h"
@@ -50,6 +50,7 @@
 #include "rebuild_packet.h"
 #include "net_os.h"
 #include "log.h"
+#include "print_packet.h"
 
 #ifdef WIN32
 #undef EWOULDBLOCK
@@ -154,9 +155,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   int msgsize;
   int processed;
   struct parse_function_entry *entry;
-  char *packet = (char*)olsr;
-  int i;
-  int x = 0;
 
   count = size - ((char *)m - (char *)olsr);
 
@@ -176,25 +174,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       
   /* Display packet */
   if(disp_pack_in)
-    {
-      printf("\n\tfrom: %s\n\tsize: %d\n\tcontent(decimal):\n\t", olsr_ip_to_string(from_addr), size);
-	
-      for(i = 0; i < size;i++)
-	{
-	  if(x == 4)
-	    {
-	      x = 0;
-	      printf("\n\t");
-	    }
-	  x++;
-	  if(olsr_cnf->ip_version == AF_INET)
-	    printf(" %03i", (u_char) packet[i]);
-	  else
-	    printf(" %02x", (u_char) packet[i]);
-	}
-	    
-      printf("\n");
-    }
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
 
   if(olsr_cnf->ip_version == AF_INET)
     msgsize = ntohs(m->v4.olsr_msgsize);

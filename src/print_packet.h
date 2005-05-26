@@ -36,64 +36,20 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.22 2005/05/26 09:55:11 kattemat Exp $
+ * $Id: print_packet.h,v 1.1 2005/05/26 09:55:11 kattemat Exp $
  */
 
+#ifndef _PRINT_PACKET
+#define _PRINT_PACKET
 
-#ifndef _OLSR_FUNCTIONS
-#define _OLSR_FUNCTIONS
-
+#include "olsr_types.h"
 #include "olsr_protocol.h"
-#include "interfaces.h"
+#include <stdio.h>
 
-olsr_bool changes_topology;
-olsr_bool changes_neighborhood;
-olsr_bool changes_hna;
+olsr_8_t
+print_olsr_serialized_packet(FILE *, union olsr_packet *, olsr_u16_t, union olsr_ip_addr *);
 
-void
-register_pcf(int (*)(int, int, int));
-
-void
-olsr_process_changes(void);
-
-void
-init_msg_seqno(void);
-
-inline olsr_u16_t
-get_msg_seqno(void);
-
-int
-olsr_forward_message(union olsr_message *, 
-		     union olsr_ip_addr *, 
-		     olsr_u16_t, 
-		     struct interface *, 
-		     union olsr_ip_addr *);
-
-void
-set_buffer_timer(struct interface *);
-
-void
-olsr_init_tables(void);
-
-void
-olsr_init_willingness(void);
-
-void
-olsr_update_willingness(void *);
-
-olsr_u8_t
-olsr_calculate_willingness(void);
-
-const char *
-olsr_msgtype_to_string(olsr_u8_t);
-
-void
-olsr_exit(const char *, int);
-
-void *
-olsr_malloc(size_t, const char *);
-
-int
-olsr_printf(int, char *, ...);
+olsr_8_t
+print_olsr_serialized_message(FILE *, union olsr_message *);
 
 #endif
