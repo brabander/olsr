@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.59 2005/05/25 13:50:22 br1 Exp $
+# $Id: Makefile,v 1.60 2005/05/26 11:31:17 br1 Exp $
 
 TOPDIR = .
 include Makefile.inc
@@ -49,7 +49,7 @@ CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.
 default_target: cfgparser olsrd
 
 olsrd:		$(OBJS) $(CFGOBJS)
-		$(CC) -o $@ $(OBJS) $(CFGOBJS) $(LIBS) 
+		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(CFGOBJS) $(LIBS)
 
 cfgparser:	$(CFGDEPS)
 		$(MAKE) -C $(CFGDIR)
