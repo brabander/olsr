@@ -36,12 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.24 2005/05/25 22:17:07 tlopatic Exp $
+ * $Id: ifnet.c,v 1.25 2005/05/26 21:04:22 kattemat Exp $
  */
 
 #include "interfaces.h"
 #include "olsr.h"
-#include "net.h"
 #include "parser.h"
 #include "socket_parser.h"
 #include "defs.h"
