@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.17 2005/02/20 17:24:50 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.18 2005/05/26 11:11:10 kattemat Exp $
  */
 
 /*
@@ -59,6 +59,9 @@
 #define OLSR_IPV6_MCAST_GLOBAL     "ff0e::1"
 
 #define OLSR_HEADERSIZE (sizeof(olsr_u16_t) + sizeof(olsr_u16_t))
+
+#define OLSR_MSGHDRSZ_IPV4 12
+#define OLSR_MSGHDRSZ_IPV6 24
 
 
 /*

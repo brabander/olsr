@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.1 2005/05/26 09:55:11 kattemat Exp $
+ * $Id: print_packet.c,v 1.2 2005/05/26 11:12:16 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -48,6 +48,20 @@
 static void
 print_messagedump(FILE *, olsr_u8_t *, olsr_16_t);
 
+static void
+print_midmsg(FILE *, olsr_u8_t *, olsr_16_t);
+
+static void
+print_hnamsg(FILE *, olsr_u8_t *, olsr_16_t);
+
+static void
+print_tcmsg(FILE *, olsr_u8_t *, olsr_16_t);
+
+static void
+print_tcmsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
+
+static void
+print_hellomsg(FILE *, olsr_u8_t *, olsr_16_t);
 
 /* Entire packet */
 olsr_8_t
@@ -87,21 +101,51 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 {
 
   fprintf(handle, "   ------------ OLSR MESSAGE ------------\n");
-
+  fprintf(handle, "    Sender main addr: %s\n", 
+	  olsr_ip_to_string((union olsr_ip_addr *)&msg->v4.originator));
   fprintf(handle, "    Type: %s, size: %d, vtime: %0.2f\n", 
 	  olsr_msgtype_to_string(msg->v4.olsr_msgtype), 
 	  ntohs(msg->v4.olsr_msgsize),
 	  ME_TO_DOUBLE(msg->v4.olsr_vtime));
+  fprintf(handle, "    TTL: %d, Hopcnt: %d, seqno: %d\n",
+	  (olsr_cnf->ip_version == AF_INET) ? msg->v4.ttl : msg->v6.ttl,
+	  (olsr_cnf->ip_version == AF_INET) ? msg->v4.hopcnt : msg->v6.hopcnt,
+	  ntohs((olsr_cnf->ip_version == AF_INET) ? msg->v4.seqno : msg->v6.seqno));
 
   switch(msg->v4.olsr_msgtype)
     {
-      /* ToDo: add print functions for individual messagetypes */
-    case(HELLO_MESSAGE):
-    case(TC_MESSAGE):
+      /* Print functions for individual messagetypes */
     case(MID_MESSAGE):
+      print_midmsg(handle,
+		   (olsr_cnf->ip_version == AF_INET) ? 
+		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		   ntohs(msg->v4.olsr_msgsize));
+      break;
     case(HNA_MESSAGE):
-    case(LQ_HELLO_MESSAGE):
+      print_hnamsg(handle,
+		   (olsr_cnf->ip_version == AF_INET) ? 
+		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		   ntohs(msg->v4.olsr_msgsize));
+      break;
+    case(TC_MESSAGE):
+      print_tcmsg(handle,
+		  (olsr_cnf->ip_version == AF_INET) ? 
+		  (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		  ntohs(msg->v4.olsr_msgsize));
+      break;
     case(LQ_TC_MESSAGE):
+      print_tcmsg_lq(handle,
+		     (olsr_cnf->ip_version == AF_INET) ? 
+		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		     ntohs(msg->v4.olsr_msgsize));
+      break;
+    case(HELLO_MESSAGE):
+      print_hellomsg(handle,
+		     (olsr_cnf->ip_version == AF_INET) ? 
+		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		     ntohs(msg->v4.olsr_msgsize));
+      break;
+    case(LQ_HELLO_MESSAGE):
     default:
       print_messagedump(handle, (olsr_u8_t *)msg, ntohs(msg->v4.olsr_msgsize));
     }
@@ -126,9 +170,101 @@ print_messagedump(FILE *handle, olsr_u8_t *msg, olsr_16_t size)
 	}
       x++;
       if(olsr_cnf->ip_version == AF_INET)
-	printf(" %-3i ", (u_char) msg[i]);
+	fprintf(handle, " %-3i ", (u_char) msg[i]);
       else
-	printf(" %-2x ", (u_char) msg[i]);
+	fprintf(handle, " %-2x ", (u_char) msg[i]);
     }
   fprintf(handle, "\n");
+}
+
+
+static void
+print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+
+  data +=2 ;
+  remsize -= 2;
+  fprintf(handle, "    +Htime: %0.2f\n", ME_TO_DOUBLE(*data));
+
+  data += 1;
+  remsize -= 1;
+  fprintf(handle, "    +Willingness: %d\n", *data);
+
+  /* ToDo: print neighor sets */
+}
+
+static void
+print_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+  
+  fprintf(handle, "    +ANSN: %d\n", htons(((struct tcmsg *)data)->ansn));
+
+  data += 4;
+  remsize -= 4;
+
+  while(remsize)
+    {
+      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      data += ipsize;
+      fprintf(handle, "    +LQ: %d, ", *data);
+      data += 1;
+      fprintf(handle, "RLQ: %d\n", *data);
+      data += 2;
+      remsize -= (ipsize + 4);
+    }
+
+}
+
+
+static void
+print_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+  
+  fprintf(handle, "    +ANSN: %d\n", htons(((struct tcmsg *)data)->ansn));
+
+  data += 4;
+  remsize -= 4;
+
+  while(remsize)
+    {
+      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      data += ipsize;
+
+      remsize -= ipsize;
+    }
+
+}
+
+
+static void
+print_hnamsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+
+  while(remsize)
+    {
+      fprintf(handle, "    +Network: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      data += ipsize;
+      fprintf(handle, "    +Netmask: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      data += ipsize;
+
+      remsize -= (ipsize*2);
+    }
+
+}
+
+static void
+print_midmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+
+  while(remsize)
+    {
+      fprintf(handle, "    +Alias: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      data += ipsize;
+      remsize -= ipsize;
+    }
 }
