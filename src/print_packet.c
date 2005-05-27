@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.3 2005/05/27 07:00:32 kattemat Exp $
+ * $Id: print_packet.c,v 1.4 2005/05/27 08:29:22 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -62,6 +62,9 @@ print_tcmsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
 
 static void
 print_hellomsg(FILE *, olsr_u8_t *, olsr_16_t);
+
+static void
+print_hellomsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
 
 /* Entire packet */
 olsr_8_t
@@ -146,6 +149,11 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     case(LQ_HELLO_MESSAGE):
+      print_hellomsg_lq(handle,
+			(olsr_cnf->ip_version == AF_INET) ? 
+			(olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		     ntohs(msg->v4.olsr_msgsize));
+      break;
     default:
       print_messagedump(handle, (olsr_u8_t *)msg, ntohs(msg->v4.olsr_msgsize));
     }
@@ -180,6 +188,24 @@ print_messagedump(FILE *handle, olsr_u8_t *msg, olsr_16_t size)
 
 static void
 print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+{
+  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+
+  data +=2 ;
+  remsize -= 2;
+  fprintf(handle, "    +Htime: %0.2f\n", ME_TO_DOUBLE(*data));
+
+  data += 1;
+  remsize -= 1;
+  fprintf(handle, "    +Willingness: %d\n", *data);
+
+  /* ToDo: print neighor sets */
+
+  /* TESTING TESTING */
+}
+
+static void
+print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 
