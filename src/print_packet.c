@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.2 2005/05/26 11:12:16 kattemat Exp $
+ * $Id: print_packet.c,v 1.3 2005/05/27 07:00:32 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -192,6 +192,8 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
   fprintf(handle, "    +Willingness: %d\n", *data);
 
   /* ToDo: print neighor sets */
+
+  /* TESTING TESTING */
 }
 
 static void
