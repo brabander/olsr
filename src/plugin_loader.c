@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.21 2005/05/26 16:18:15 kattemat Exp $
+ * $Id: plugin_loader.c,v 1.22 2005/05/28 15:56:47 kattemat Exp $
  */
 
 #include "plugin_loader.h"
@@ -164,9 +164,15 @@ olsr_load_dl(char *libname, struct plugin_param *params)
       /* Fetch the init function */
       OLSR_PRINTF(1, "Trying to fetch plugin init function... ")
       if((new_entry.plugin_init = dlsym(new_entry.dlhandle, "plugin_init")) == NULL)
-        OLSR_PRINTF(1, "FAILED: \"%s\"\n", dlerror())
+	{
+	  OLSR_PRINTF(1, "FAILED: \"%s\"\n", dlerror())
+          dlclose(new_entry.dlhandle);
+          return -1;
+        }
       else
-        OLSR_PRINTF(1, "OK\n")	
+	{
+	  OLSR_PRINTF(1, "OK\n")	
+	}
     }
 
   /* Fetch the parameter function */
@@ -227,7 +233,7 @@ init_olsr_plugin(struct olsr_plugin *entry)
         }
     }
 
-  if ( entry->plugin_interface_version < 4 ) 
+  if (entry->plugin_interface_version < 4) 
     {
       /* old plugin interface */
       
