@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.37 2005/04/18 05:52:14 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.38 2005/05/28 19:30:47 kattemat Exp $
  */
 
 
@@ -56,41 +56,6 @@ extern FILE *yyin;
 extern int yyparse(void);
 
 static char copyright_string[] = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
-
-#ifdef MAKELIB
-
-/* Build as DLL */
-
-void __attribute__ ((constructor)) 
-my_init(void);
-
-void __attribute__ ((destructor)) 
-my_fini(void);
-
-
-/**
- *Constructor
- */
-void
-my_init()
-{
-  /* Print plugin info to stdout */
-  printf("olsrd config file parser %s loaded\n", PARSER_VERSION);
-
-  return;
-}
-
-/**
- *Destructor
- */
-void
-my_fini()
-{
-  printf("See you around!\n");
-  return;
-}
-
-#else
 
 #ifdef MAKEBIN
 
@@ -129,8 +94,6 @@ main(int argc, char *argv[])
 
 /* Build as part of olsrd */
 
-
-#endif
 
 #endif
 
