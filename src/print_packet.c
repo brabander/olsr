@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.6 2005/05/28 14:06:25 kattemat Exp $
+ * $Id: print_packet.c,v 1.7 2005/05/28 14:43:07 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -256,18 +256,70 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 static void
 print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 {
-  int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
+  union olsr_ip_addr *haddr;
+  int hellosize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 
-  data +=2 ;
-  remsize -= 2;
-  fprintf(handle, "    +Htime: %0.2f\n", ME_TO_DOUBLE(*data));
+  fprintf(handle, "    +Htime: %0.2f\n", ME_TO_DOUBLE(data[2]));
 
-  data += 1;
-  remsize -= 1;
-  fprintf(handle, "    +Willingness: %d\n", *data);
+  fprintf(handle, "    +Willingness: %d\n", data[3]);
 
-  /* ToDo: print neighor sets */
+  if(olsr_cnf->ip_version == AF_INET)
+    {
+      /* IPv4 */
+      struct hellomsg *h;
+      struct hellinfo *hinf;
 
+      h = (struct hellomsg *)data;
+
+      for (hinf = h->hell_info; 
+	   (char *)hinf < ((char *)data + hellosize); 
+	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
+	{
+
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
+		  olsr_link_to_string(EXTRACT_LINK(hinf->link_code)), 
+		  olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)),
+		  ntohs(hinf->size));
+
+	  for (haddr = (union olsr_ip_addr  *)&hinf->neigh_addr; 
+	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
+	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8])
+	    {
+	      olsr_u8_t *quality = (olsr_u8_t *)haddr + ipsize;
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
+	    }
+	}
+
+      
+    }
+  else
+    {
+      /* IPv6 */
+      struct hellomsg6 *h6;
+      struct hellinfo6 *hinf6;
+
+      h6 = (struct hellomsg6 *)data;
+
+      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize)); 
+	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
+	{
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
+		  olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)), 
+		  olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)),
+		  ntohs(hinf6->size));
+
+	  for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; 
+	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; 
+	       haddr++)
+	    {
+	      olsr_u8_t *quality = (olsr_u8_t *)haddr + ipsize;
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
+	    }
+	}
+
+    }
 }
 
 static void
