@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.22 2005/05/26 09:55:11 kattemat Exp $
+ * $Id: olsr.h,v 1.23 2005/05/28 14:01:59 kattemat Exp $
  */
 
 
@@ -86,6 +86,12 @@ olsr_calculate_willingness(void);
 
 const char *
 olsr_msgtype_to_string(olsr_u8_t);
+
+const char *
+olsr_link_to_string(olsr_u8_t);
+
+const char *
+olsr_status_to_string(olsr_u8_t);
 
 void
 olsr_exit(const char *, int);
