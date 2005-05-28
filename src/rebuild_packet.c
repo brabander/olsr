@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.16 2005/05/25 13:36:41 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.17 2005/05/28 13:04:57 kattemat Exp $
  */
 
 
@@ -58,10 +58,6 @@
 void
 hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
 {
-  struct hnamsg *hna;
-  struct hnamsg6 *hna6;
-  struct hnapair *haddr;
-  struct hnapair6 *haddr6;
   struct hna_net_addr *hna_pairs, *tmp_pairs;
   int no_pairs, i;
 
@@ -72,6 +68,10 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
 
   if(olsr_cnf->ip_version == AF_INET)
     {
+      /* IPv4 */
+      struct hnamsg *hna;
+      struct hnapair *haddr;
+
       hna = &m->v4.message.hna;
       haddr = hna->hna_net;
 
@@ -113,6 +113,9 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
   else
     {
       /* IPv6 */
+      struct hnamsg6 *hna6;
+      struct hnapair6 *haddr6;
+
       hna6 = &m->v6.message.hna;
       haddr6 = hna6->hna_net;
 
@@ -183,10 +186,6 @@ void
 mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
 {
   int i;
-  struct midmsg *mid;
-  struct midaddr *maddr;
-  struct midmsg6 *mid6;
-  struct midaddr6 *maddr6;
   struct mid_alias *alias, *alias_tmp;
   int no_aliases;
 
@@ -199,6 +198,8 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
+      struct midmsg *mid;
+      struct midaddr *maddr;
 
       mid = &m->v4.message.mid;
       maddr = mid->mid_addr;
@@ -249,6 +250,8 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
   else
     {
       /* IPv6 */
+      struct midmsg6 *mid6;
+      struct midaddr6 *maddr6;
 
       mid6 = &m->v6.message.mid;
       maddr6 = mid6->mid_addr;
@@ -360,10 +363,6 @@ unk_chgestruct(struct unknown_message *umsg, union olsr_message *m)
 void
 hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 {
-  struct hellomsg *h;
-  struct hellomsg6 *h6;
-  struct hellinfo *hinfo, *hinf;
-  struct hellinfo6 *hinfo6, *hinf6;
   union olsr_ip_addr *haddr, *hadr;
   struct hello_neighbor *nb;
   
@@ -374,6 +373,9 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 
   if(olsr_cnf->ip_version == AF_INET)
     {
+      struct hellomsg *h;
+      struct hellinfo *hinfo, *hinf;
+
       /* IPv4 */
       h = &m->v4.message.hello;
       hinfo = h->hell_info;
@@ -425,6 +427,9 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
     }
   else
     {
+      struct hellomsg6 *h6;
+      struct hellinfo6 *hinfo6, *hinf6;
+
       /* IPv6 */
       h6 = &m->v6.message.hello;
       hinfo6 = h6->hell_info;
@@ -489,10 +494,6 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 void
 tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr *from_addr)
 {
-  struct tcmsg *tc;
-  struct tcmsg6 *tc6;
-  struct neigh_info *mprsaddr, *maddr;
-  struct neigh_info6 *mprsaddr6, *maddr6;
   struct tc_mpr_addr *mprs;
   union olsr_ip_addr *tmp_addr;
 
@@ -504,6 +505,9 @@ tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
+      struct tcmsg *tc;
+      struct neigh_info *mprsaddr, *maddr;
+
       tc = &m->v4.message.tc;
       mprsaddr = tc->neigh;
 
@@ -542,6 +546,9 @@ tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr
   else
     {
       /* IPv6 */
+      struct tcmsg6 *tc6;
+      struct neigh_info6 *mprsaddr6, *maddr6;
+
       tc6 = &m->v6.message.tc;
       mprsaddr6 = tc6->neigh;
 
