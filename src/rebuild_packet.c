@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.17 2005/05/28 13:04:57 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.18 2005/05/28 13:29:57 kattemat Exp $
  */
 
 
@@ -363,7 +363,7 @@ unk_chgestruct(struct unknown_message *umsg, union olsr_message *m)
 void
 hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 {
-  union olsr_ip_addr *haddr, *hadr;
+  union olsr_ip_addr *hadr;
   struct hello_neighbor *nb;
   
   hmsg->neighbors = NULL;
@@ -374,11 +374,10 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
   if(olsr_cnf->ip_version == AF_INET)
     {
       struct hellomsg *h;
-      struct hellinfo *hinfo, *hinf;
+      struct hellinfo *hinf;
 
       /* IPv4 */
       h = &m->v4.message.hello;
-      hinfo = h->hell_info;
       COPY_IP(&hmsg->source_addr, &m->v4.originator);
       hmsg->packet_seq_number = ntohs(m->v4.seqno);
 
@@ -394,33 +393,25 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 
       OLSR_PRINTF(3, "Got HELLO vtime: %f htime: %f\n", hmsg->vtime, hmsg->htime)
 
-      for (hinf = hinfo; (char *)hinf < ((char *)m + (ntohs(m->v4.olsr_msgsize))); 
+      for (hinf = h->hell_info; (char *)hinf < ((char *)m + (ntohs(m->v4.olsr_msgsize))); 
 	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
 	{
 	  
-	  haddr = (union olsr_ip_addr  *)&hinf->neigh_addr;
-	    
-	  //printf("Haddr: %x, max: %x\n", (int)hadr, (int)hinf + ntohs(hinf->size));
-	  for (hadr = haddr; (char *)hadr < (char *)hinf + ntohs(hinf->size); hadr = (union olsr_ip_addr *)&hadr->v6.s6_addr[4])
+	  for (hadr = (union olsr_ip_addr  *)&hinf->neigh_addr; 
+	       (char *)hadr < (char *)hinf + ntohs(hinf->size); 
+	       hadr = (union olsr_ip_addr *)&hadr->v6.s6_addr[4])
 	    {
-	      //printf("*");
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "HELLO chgestruct");
 
 	      COPY_IP(&nb->address, hadr);
 
 	      /* Fetch link and status */
-	      //nb->link = hinf->link_code & 0x3; /* Two last bits */
 	      nb->link = EXTRACT_LINK(hinf->link_code);
-	      //nb->status =  (hinf->link_code & 0xC)>>2; /* Two previous bits */
 	      nb->status = EXTRACT_STATUS(hinf->link_code);
-
-	      //printf("HELLO: %s link code %d status %d\n", olsr_ip_to_string(&nb->address), nb->link, nb->status);
 
 	      nb->next = hmsg->neighbors;
 	      hmsg->neighbors = nb;
-	      //printf("Haddr: %x, max: %x\n", (int)hadr, (int)hinf + ntohs(hinf->size));
 	    }
-	  //printf("\n");
 	}
 
       
@@ -428,11 +419,10 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
   else
     {
       struct hellomsg6 *h6;
-      struct hellinfo6 *hinfo6, *hinf6;
+      struct hellinfo6 *hinf6;
 
       /* IPv6 */
       h6 = &m->v6.message.hello;
-      hinfo6 = h6->hell_info;
       COPY_IP(&hmsg->source_addr, &m->v6.originator);
       //printf("parsing HELLO from %s\n", olsr_ip_to_string(&hmsg->source_addr));
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
@@ -449,30 +439,24 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
       OLSR_PRINTF(3, "Got HELLO vtime: %f htime: %f\n", hmsg->vtime, hmsg->htime)
 
 
-      for (hinf6 = hinfo6; (char *)hinf6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); 
+      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); 
 	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
 	{
-	  //printf("Status %d:\n", hinf6->link_code);
 
-	  haddr = (union olsr_ip_addr *)hinf6->neigh_addr;
-	    
-	  for (hadr = haddr; (char *)hadr < (char *)hinf6 + ntohs(hinf6->size); hadr++)
+	  for (hadr = (union olsr_ip_addr *)hinf6->neigh_addr; 
+	       (char *)hadr < (char *)hinf6 + ntohs(hinf6->size); 
+	       hadr++)
 	    {
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "OLSR chgestruct 2");
 
 	      COPY_IP(&nb->address, hadr);
 
 	      /* Fetch link and status */
-	      //nb->link = hinf6->link_code & 0x3; /* Two last bits */
-	      //nb->status =  (hinf6->link_code & 0xC)>>2; /* Two previous bits */
 	      nb->link = EXTRACT_LINK(hinf6->link_code);
 	      nb->status = EXTRACT_STATUS(hinf6->link_code);
 
-	      //printf("HELLO: link code %d status %d\n", nb->link, nb->status);
-
 	      nb->next = hmsg->neighbors;
 	      hmsg->neighbors = nb;
-	      //printf("\t%s link: %d\n", olsr_ip_to_string(&nb->address), nb->status);
 	    }
 	}
 
