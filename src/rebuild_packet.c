@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.18 2005/05/28 13:29:57 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.19 2005/05/28 16:01:14 kattemat Exp $
  */
 
 
@@ -69,11 +69,9 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
-      struct hnamsg *hna;
       struct hnapair *haddr;
 
-      hna = &m->v4.message.hna;
-      haddr = hna->hna_net;
+      haddr = m->v4.message.hna.hna_net;
 
       /*
        * How many HNA pairs?
@@ -113,11 +111,9 @@ hna_chgestruct(struct hna_message *hmsg, union olsr_message *m)
   else
     {
       /* IPv6 */
-      struct hnamsg6 *hna6;
       struct hnapair6 *haddr6;
 
-      hna6 = &m->v6.message.hna;
-      haddr6 = hna6->hna_net;
+      haddr6 = m->v6.message.hna.hna_net;
 
       /*
        * How many HNA pairs?
@@ -198,11 +194,9 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
-      struct midmsg *mid;
       struct midaddr *maddr;
 
-      mid = &m->v4.message.mid;
-      maddr = mid->mid_addr;
+      maddr = m->v4.message.mid.mid_addr;
       /*
        * How many aliases?
        * nextmsg contains size of
@@ -250,11 +244,9 @@ mid_chgestruct(struct mid_message *mmsg, union olsr_message *m)
   else
     {
       /* IPv6 */
-      struct midmsg6 *mid6;
       struct midaddr6 *maddr6;
 
-      mid6 = &m->v6.message.mid;
-      maddr6 = mid6->mid_addr;
+      maddr6 = m->v6.message.mid.mid_addr;
       /*
        * How many aliases?
        * nextmsg contains size of
@@ -373,11 +365,9 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 
   if(olsr_cnf->ip_version == AF_INET)
     {
-      struct hellomsg *h;
       struct hellinfo *hinf;
 
       /* IPv4 */
-      h = &m->v4.message.hello;
       COPY_IP(&hmsg->source_addr, &m->v4.originator);
       hmsg->packet_seq_number = ntohs(m->v4.seqno);
 
@@ -393,7 +383,8 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
 
       OLSR_PRINTF(3, "Got HELLO vtime: %f htime: %f\n", hmsg->vtime, hmsg->htime)
 
-      for (hinf = h->hell_info; (char *)hinf < ((char *)m + (ntohs(m->v4.olsr_msgsize))); 
+      for (hinf = m->v4.message.hello.hell_info; 
+	   (char *)hinf < ((char *)m + (ntohs(m->v4.olsr_msgsize))); 
 	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
 	{
 	  
@@ -418,11 +409,9 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
     }
   else
     {
-      struct hellomsg6 *h6;
       struct hellinfo6 *hinf6;
 
       /* IPv6 */
-      h6 = &m->v6.message.hello;
       COPY_IP(&hmsg->source_addr, &m->v6.originator);
       //printf("parsing HELLO from %s\n", olsr_ip_to_string(&hmsg->source_addr));
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
@@ -439,7 +428,8 @@ hello_chgestruct(struct hello_message *hmsg, union olsr_message *m)
       OLSR_PRINTF(3, "Got HELLO vtime: %f htime: %f\n", hmsg->vtime, hmsg->htime)
 
 
-      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); 
+      for (hinf6 = m->v6.message.hello.hell_info; 
+	   (char *)hinf6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); 
 	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
 	{
 
