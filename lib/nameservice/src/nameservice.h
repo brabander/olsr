@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.7 2005/03/17 21:41:30 br1 Exp $ */
+/* $Id: nameservice.h,v 1.8 2005/05/29 12:47:42 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -37,6 +37,10 @@
 
 #ifndef _NAMESERVICE_PLUGIN
 #define _NAMESERVICE_PLUGIN
+
+#include "olsr_types.h"
+#include "interfaces.h"
+#include "olsr_protocol.h"
 
 #include "olsrd_plugin.h"
 #include "nameservice_msg.h"
@@ -115,5 +119,11 @@ allowed_ip(union olsr_ip_addr *addr);
 
 void
 name_constructor(void);
+
+void
+name_destructor(void);
+
+int
+name_init(void);
 
 #endif

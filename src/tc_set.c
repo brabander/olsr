@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.21 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: tc_set.c,v 1.22 2005/05/29 12:47:46 br1 Exp $
  */
 
 
@@ -44,6 +44,10 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "lq_route.h"
+
+
+struct tc_entry tc_table[HASHSIZE];
+
 
 /**
  * Initialize the topology set

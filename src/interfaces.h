@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.27 2005/05/23 14:12:57 kattemat Exp $
+ * $Id: interfaces.h,v 1.28 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -142,8 +142,6 @@ struct interface
 
 #define OLSR_DEFAULT_MTU             1500
 
-#ifndef OLSR_PLUGIN
-
 /* Ifchange actions */
 
 #define IFCHG_IF_ADD           1
@@ -153,12 +151,14 @@ struct interface
 /* The rate to poll for interface changes at */
 #define IFCHANGES_POLL_INT     2.5
 
+
 /* The interface linked-list */
-struct interface *ifnet;
+extern struct interface *ifnet;
 
 /* Datastructures to use when creating new sockets */
-struct sockaddr_in addrsock;
-struct sockaddr_in6 addrsock6;
+extern struct sockaddr_in addrsock;
+extern struct sockaddr_in6 addrsock6;
+
 
 int
 ifinit(void);
@@ -196,5 +196,4 @@ add_ifchgf(int (*f)(struct interface *, int));
 int
 del_ifchgf(int (*f)(struct interface *, int));
 
-#endif
 #endif

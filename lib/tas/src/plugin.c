@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.4 2005/04/13 22:53:13 tlopatic Exp $
+ * $Id: plugin.c,v 1.5 2005/05/29 12:47:44 br1 Exp $
  */
 
 #include <string.h>
@@ -51,8 +51,10 @@
 #include "glua.h"
 #include "glua_ext.h"
 
-#include <olsr_plugin_io.h>
-#include <plugin_loader.h>
+#include <defs.h>
+#include <olsr.h>
+#include <scheduler.h>
+#include <parser.h>
 #include <link_set.h>
 #include <neighbor_table.h>
 #include <two_hop_neighbor_table.h>
@@ -62,13 +64,14 @@
 #include <routing_table.h>
 #include <olsr_protocol.h>
 #include <lq_route.h>
+#include <mpr_selector_set.h>
+#include <duplicate_set.h>
 
 #define MESSAGE_TYPE 129
 
-int get_plugin_interface_version(void);
-int plugin_io(int cmd, void *data, int len);
-int register_olsr_data(struct olsr_plugin_data *data);
-int register_olsr_param(char *name, char *value);
+int olsrd_plugin_interface_version(void);
+int olsrd_plugin_register_param(char *name, char *value);
+int olsrd_plugin_init(void);
 
 static int ipAddrLen;
 static union olsr_ip_addr *mainAddr;
@@ -80,26 +83,6 @@ static struct tc_entry *tcTab = NULL;
 static struct hna_entry *hnaTab = NULL;
 static struct rt_entry *routeTab = NULL;
 static struct olsrd_config *config = NULL;
-
-static int (*pluginIo)(int which, void *data, int len);
-
-static int (*regTimeout)(void (*timeoutFunc)(void));
-static int (*regParser)(void (*parserFunc)(unsigned char *mess,
-                                           struct interface *inInt,
-                                           union olsr_ip_addr *neighIntAddr),
-                        int type, int forward);
-static int (*checkLink)(union olsr_ip_addr *neighIntAddr);
-static int (*checkDup)(union olsr_ip_addr *origAddr, unsigned short seqNo);
-static int (*forward)(unsigned char *mess, union olsr_ip_addr *origAddr,
-                      unsigned short seqNo, struct interface *inInt,
-                      union olsr_ip_addr *neighIntAddr);
-
-static unsigned short (*getSeqNo)(void);
-static int (*netPush)(struct interface *outInt, void *mess,
-                      unsigned short size);
-static int (*netOutput)(struct interface *outInt);
-
-static void *(*lookupMprs)(union olsr_ip_addr *neighAddr);
 
 static int iterIndex;
 static struct interface *iterIntTab = NULL;
@@ -148,13 +131,7 @@ int iterLinkTabNext(char *buff, int len)
 
 void iterLinkTabInit(void)
 {
-  if (pluginIo == NULL)
-  {
-    iterLinkTab = NULL;
-    return;
-  }
-
-  pluginIo(GETD__LINK_SET, &iterLinkTab, sizeof (iterLinkTab));
+  iterLinkTab = get_link_set();
 }
 
 int iterNeighTabNext(char *buff, int len)
@@ -171,7 +148,7 @@ int iterNeighTabNext(char *buff, int len)
                  rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen),
                  iterNeighTab->status == SYM ? "true" : "false",
                  iterNeighTab->is_mpr != 0 ? "true" : "false",
-                 lookupMprs(&iterNeighTab->neighbor_main_addr) != NULL ?
+                 olsr_lookup_mprs_set(&iterNeighTab->neighbor_main_addr) != NULL ?
                  "true" : "false",
                  iterNeighTab->willingness);
 
@@ -361,7 +338,7 @@ static void parserFunc(unsigned char *mess, struct interface *inInt,
   if (memcmp(orig, mainAddr, ipAddrLen) == 0)
     return;
 
-  if (checkLink(neighIntAddr) != SYM_LINK)
+  if (check_neighbor_link(neighIntAddr) != SYM_LINK)
   {
     error("TAS message not from symmetric neighbour\n");
     return;
@@ -373,7 +350,7 @@ static void parserFunc(unsigned char *mess, struct interface *inInt,
     return;
   }
 
-  if (checkDup(orig, seqNo) != 0)
+  if (olsr_check_dup_table_proc(orig, seqNo) != 0)
   {
     len -= ipAddrLen + 8;
     service = mess + ipAddrLen + 8;
@@ -406,7 +383,7 @@ static void parserFunc(unsigned char *mess, struct interface *inInt,
     httpAddTasMessage(service, string, rawIpAddrToString(orig, ipAddrLen));
   }
 
-  forward(mess, orig, seqNo, inInt, neighIntAddr);
+  olsr_forward_message((union olsr_message *)mess, orig, seqNo, inInt, neighIntAddr);
 }
 
 void sendMessage(const char *service, const char *string)
@@ -424,7 +401,7 @@ void sendMessage(const char *service, const char *string)
 
   walker = mess = allocMem(len);
 
-  seqNo = getSeqNo();
+  seqNo = get_msg_seqno();
 
   *walker++ = MESSAGE_TYPE;
   *walker++ = 0;
@@ -454,10 +431,10 @@ void sendMessage(const char *service, const char *string)
 
   for (inter = intTab; inter != NULL; inter = inter->int_next)
   {
-    if (netPush(inter, mess, len) != len)
+    if (net_outbuffer_push(inter, mess, len) != len)
     {
-      netOutput(inter);
-      netPush(inter, mess, len);
+      net_output(inter);
+      net_outbuffer_push(inter, mess, len);
     }
   }
 }
@@ -478,53 +455,33 @@ static void serviceFunc(void)
     httpService((int)(1.0 / config->pollrate));
 }
 
-int get_plugin_interface_version(void)
+int olsrd_plugin_interface_version(void)
 {
+  return 4;
+}
+
+int olsrd_plugin_init()
+{
+  ipAddrLen = ipsize;
+  mainAddr = &main_addr;
+
+  intTab = ifnet;
+  neighTab = neighbortable;
+  midTab = mid_set;
+  tcTab = tc_table;
+  hnaTab = hna_set;
+  routeTab = routingtable;
+  config = olsr_cnf;
+
   httpInit();
-
-  return 3;
-}
-
-int plugin_io(int cmd, void *data, int len)
-{
-  return 0;
-}
-
-int register_olsr_data(struct olsr_plugin_data *data)
-{
-  ipAddrLen = addrLen(data->ipversion);
-  mainAddr = data->main_addr;
-
-  pluginIo = (int (*)(int, void *, int))data->olsr_plugin_io;
-
-  pluginIo(GETD__IFNET, &intTab, sizeof (intTab));
-  pluginIo(GETD__NEIGHBORTABLE, &neighTab, sizeof (neighTab));
-  pluginIo(GETD__MID_SET, &midTab, sizeof (midTab));
-  pluginIo(GETD__TC_TABLE, &tcTab, sizeof (tcTab));
-  pluginIo(GETD__HNA_SET, &hnaTab, sizeof (hnaTab));
-  pluginIo(GETD__ROUTINGTABLE, &routeTab, sizeof (routeTab));
-  pluginIo(GETD__OLSR_CNF, &config, sizeof (config));
-
-  pluginIo(GETF__OLSR_REGISTER_TIMEOUT_FUNCTION, &regTimeout,
-           sizeof (regTimeout));
-  pluginIo(GETF__OLSR_PARSER_ADD_FUNCTION, &regParser, sizeof (regParser));
-  pluginIo(GETF__CHECK_NEIGHBOR_LINK, &checkLink, sizeof (checkLink));
-  pluginIo(GETF__OLSR_CHECK_DUP_TABLE_PROC, &checkDup, sizeof (checkDup));
-  pluginIo(GETF__OLSR_FORWARD_MESSAGE, &forward, sizeof (forward));
-
-  pluginIo(GETF__GET_MSG_SEQNO, &getSeqNo, sizeof (getSeqNo));
-  pluginIo(GETF__NET_OUTBUFFER_PUSH, &netPush, sizeof (netPush));
-  pluginIo(GETF__NET_OUTPUT, &netOutput, sizeof (netOutput));
-
-  pluginIo(GETF__OLSR_LOOKUP_MPRS_SET, &lookupMprs, sizeof (lookupMprs));
-
-  regTimeout(serviceFunc);
-  regParser(parserFunc, MESSAGE_TYPE, 1);
+  
+  olsr_register_timeout_function(serviceFunc);
+  olsr_parser_add_function(parserFunc, MESSAGE_TYPE, 1);
 
   return 0;
 }
 
-int register_olsr_param(char *name, char *value)
+int olsrd_plugin_register_param(char *name, char *value)
 {
   if (strcmp(name, "address") == 0)
   {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.45 2005/05/28 14:01:59 kattemat Exp $
+ * $Id: olsr.c,v 1.46 2005/05/29 12:47:45 br1 Exp $
  */
 
 /**
@@ -63,6 +63,11 @@
 
 #include <stdarg.h>
 #include <signal.h>
+
+
+olsr_bool changes_topology;
+olsr_bool changes_neighborhood;
+olsr_bool changes_hna;
 
 
 /**

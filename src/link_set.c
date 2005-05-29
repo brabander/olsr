@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.58 2005/05/23 17:43:01 kattemat Exp $
+ * $Id: link_set.c,v 1.59 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -54,9 +54,11 @@
 #include "scheduler.h"
 #include "lq_route.h"
 
+
 static clock_t hold_time_neighbor;
 
-static struct link_entry *link_set;
+struct link_entry *link_set;
+
 
 static int
 check_link_status(struct hello_message *message, struct interface *in_if);

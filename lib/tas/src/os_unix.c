@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.c,v 1.2 2005/04/13 22:10:23 tlopatic Exp $
+ * $Id: os_unix.c,v 1.3 2005/05/29 12:47:44 br1 Exp $
  */
 
 #if defined linux
@@ -81,7 +81,7 @@ int addrLen(int family)
     sizeof (struct in6_addr);
 }
 
-void now(struct timeStamp *timeStamp)
+void os_now(struct timeStamp *timeStamp)
 {
   time((time_t *)&timeStamp->time);
 }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.27 2005/02/26 23:01:41 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.28 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -50,6 +50,10 @@
 #include "scheduler.h"
 #include "link_set.h"
 #include "mpr_selector_set.h"
+
+
+struct neighbor_entry neighbortable[HASHSIZE];
+
 
 void
 olsr_init_neighbor_table()

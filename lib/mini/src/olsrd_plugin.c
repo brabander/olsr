@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.1 2005/05/26 16:09:25 br1 Exp $ */
+/* $Id: olsrd_plugin.c,v 1.2 2005/05/29 12:47:41 br1 Exp $ */
 
  /*
  * Example plugin for olsrd.org OLSR daemon
@@ -53,9 +53,9 @@
  * Used by main olsrd to check plugin interface version
  */
 int 
-get_plugin_interface_version()
+olsrd_plugin_interface_version()
 {
-	return PLUGIN_INTERFACE_VERSION;
+	return OLSRD_PLUGIN_INTERFACE_VERSION;
 }
 
 
@@ -64,7 +64,7 @@ get_plugin_interface_version()
  * Called for all plugin parameters
  */
 int
-register_olsr_param(char *key, char *value)
+olsrd_plugin_register_param(char *key, char *value)
 {
 	if(!strcmp(key, "test")) {
 		printf("\n*** MINI: parameter test: %s\n", value);
@@ -79,7 +79,7 @@ register_olsr_param(char *key, char *value)
  * Called after all parameters are passed
  */
 int
-plugin_init()
+olsrd_plugin_init()
 {
 	printf("*** MINI: plugin_init\n");
 	
@@ -95,6 +95,13 @@ plugin_init()
  ****************************************************************************/
 
 /* attention: make static to avoid name clashes */
+
+static void __attribute__ ((constructor)) 
+my_init(void);
+
+static void __attribute__ ((destructor)) 
+my_fini(void);
+
 
 /**
  * Optional Private Constructor

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.21 2005/05/19 20:26:22 kattemat Exp $
+ * $Id: routing_table.c,v 1.22 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -48,6 +48,10 @@
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "link_set.h"
+
+
+struct rt_entry routingtable[HASHSIZE];
+struct rt_entry hna_routes[HASHSIZE];
 
 
 /* Begin:

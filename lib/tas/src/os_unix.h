@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.h,v 1.2 2005/04/13 22:10:23 tlopatic Exp $
+ * $Id: os_unix.h,v 1.3 2005/05/29 12:47:44 br1 Exp $
  */
 
 #if defined linux
@@ -70,7 +70,7 @@ extern void getRandomBytes(unsigned char *buff, int len);
 
 extern int addrLen(int family);
 
-extern void now(struct timeStamp *timeStamp);
+extern void os_now(struct timeStamp *timeStamp);
 extern int timedOut(struct timeStamp *timeStamp, int sec);
 
 extern unsigned int getMicro(void);

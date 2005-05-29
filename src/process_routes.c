@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.25 2005/05/23 17:27:41 kattemat Exp $
+ * $Id: process_routes.c,v 1.26 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -51,6 +51,9 @@
 #define strerror(x) StrError(x)
 #endif
 
+
+struct rt_entry old_routes[HASHSIZE];
+struct rt_entry old_hna[HASHSIZE];
 
 
 int

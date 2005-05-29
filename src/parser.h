@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.h,v 1.8 2005/03/10 07:01:48 kattemat Exp $
+ * $Id: parser.h,v 1.9 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -57,7 +57,7 @@ struct parse_function_entry
 };
 
 
-struct parse_function_entry *parse_functions;
+extern struct parse_function_entry *parse_functions;
 
 void
 olsr_init_parser(void);

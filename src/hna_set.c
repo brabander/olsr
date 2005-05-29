@@ -36,12 +36,16 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.16 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: hna_set.c,v 1.17 2005/05/29 12:47:45 br1 Exp $
  */
 
 #include "defs.h"
 #include "olsr.h"
 #include "scheduler.h"
+
+
+struct hna_entry hna_set[HASHSIZE];
+size_t netmask_size;
 
 
 /**

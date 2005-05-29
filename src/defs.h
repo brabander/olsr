@@ -36,10 +36,9 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.48 2005/05/25 20:59:46 kattemat Exp $
+ * $Id: defs.h,v 1.49 2005/05/29 12:47:45 br1 Exp $
  */
 
-#ifndef OLSR_PLUGIN
 
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
@@ -82,7 +81,7 @@
    OLSR_PRINTF(lvl, format, ##args);
 #endif
 
-FILE *debug_handle;
+extern FILE *debug_handle;
 
 #ifdef NODEBUG
 #define OLSR_PRINTF(lvl, format, args...) \
@@ -125,57 +124,57 @@ FILE *debug_handle;
  * Global olsrd configuragtion
  */
 
-struct olsrd_config *olsr_cnf;
+extern struct olsrd_config *olsr_cnf;
 
 /* Global tick resolution */
-olsr_u16_t system_tick_divider;
+extern olsr_u16_t system_tick_divider;
 
-int exit_value; /* Global return value for process termination */
+extern int exit_value; /* Global return value for process termination */
 
 
 /* Timer data */
-clock_t now_times;              /* current idea of times(2) reported uptime */
-struct timeval now;		/* current idea of time */
-struct tm *nowtm;		/* current idea of time (in tm) */
+extern clock_t now_times;              /* current idea of times(2) reported uptime */
+extern struct timeval now;		/* current idea of time */
+extern struct tm *nowtm;		/* current idea of time (in tm) */
 
-olsr_bool disp_pack_in;         /* display incoming packet content? */
-olsr_bool disp_pack_out;        /* display outgoing packet content? */
+extern olsr_bool disp_pack_in;         /* display incoming packet content? */
+extern olsr_bool disp_pack_out;        /* display outgoing packet content? */
 
-olsr_bool del_gws;
+extern olsr_bool del_gws;
 
 /*
  * Timer values
  */
 
-float will_int;
-float max_jitter;
+extern float will_int;
+extern float max_jitter;
 
-size_t ipsize;
+extern size_t ipsize;
 
 /* Main address of this node */
-union olsr_ip_addr main_addr;
+extern union olsr_ip_addr main_addr;
 
 /* OLSR UPD port */
-int olsr_udp_port;
+extern int olsr_udp_port;
 
 /* The socket used for all ioctls */
-int ioctl_s;
+extern int ioctl_s;
 
 /* routing socket */
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-int rts;
+extern int rts;
 #endif
 
-float max_tc_vtime;
+extern float max_tc_vtime;
 
-clock_t fwdtimer[MAX_IFS];	/* forwarding timer */
+extern clock_t fwdtimer[MAX_IFS];	/* forwarding timer */
 
-int minsize;
+extern int minsize;
 
-olsr_bool changes;                /* is set if changes occur in MPRS set */ 
+extern olsr_bool changes;                /* is set if changes occur in MPRS set */ 
 
 /* TC empty message sending */
-clock_t send_empty_tc;
+extern clock_t send_empty_tc;
 
 /*
  *IPC functions
@@ -201,7 +200,4 @@ ipc_send_net_info(void);
 int
 ipc_route_send_rtentry(union olsr_ip_addr*, union olsr_ip_addr *, int, int, char *);
 
-
-
-#endif
 #endif

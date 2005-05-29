@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.24 2005/05/25 14:32:52 br1 Exp $
+ * $Id: interfaces.c,v 1.25 2005/05/29 12:47:45 br1 Exp $
  */
 
 #include "defs.h"
@@ -45,7 +45,16 @@
 #include "scheduler.h"
 #include "olsr.h"
 
+
 static olsr_u32_t if_property_id;
+
+/* The interface linked-list */
+struct interface *ifnet;
+
+/* Datastructures to use when creating new sockets */
+struct sockaddr_in addrsock;
+struct sockaddr_in6 addrsock6;
+
 
 /* Ifchange functions */
 struct ifchgf

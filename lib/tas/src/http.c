@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.3 2005/04/13 22:10:22 tlopatic Exp $
+ * $Id: http.c,v 1.4 2005/05/29 12:47:44 br1 Exp $
  */
 
 #include "link.h"
@@ -382,7 +382,7 @@ static struct sessInfo *newSessInfo(void)
   info->id = sessId++;
   info->data = NULL;
 
-  now(&info->time);
+  os_now(&info->time);
 
   debug(DEBUG_SESSION, "new session, id = %u\n", info->id);
 
@@ -1603,7 +1603,7 @@ static int serviceConn(struct connInfo *info)
 
         currSess = sess[i];
 
-        now(&currSess->time);
+        os_now(&currSess->time);
       }
     }
 
@@ -1868,7 +1868,7 @@ void httpAddTasMessage(const char *service, const char *string,
 
   msg->next = NULL;
 
-  now(&msg->time);
+  os_now(&msg->time);
 
   msg->service = myStrdup(service);
   msg->string = myStrdup(string);

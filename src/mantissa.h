@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mantissa.h,v 1.8 2005/05/25 13:36:26 kattemat Exp $
+ * $Id: mantissa.h,v 1.9 2005/05/29 12:47:45 br1 Exp $
  */
 
 
@@ -63,10 +63,7 @@
 #define ME_TO_DOUBLE(me) \
   (double)(VTIME_SCALE_FACTOR*(1+(double)(me>>4)/16)*(double)(1<<(me&0x0F)))
 
-#ifndef OLSR_PLUGIN
-
 olsr_u8_t
 double_to_me(double);
 
-#endif
 #endif

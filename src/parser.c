@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.23 2005/05/26 09:55:11 kattemat Exp $
+ * $Id: parser.c,v 1.24 2005/05/29 12:47:45 br1 Exp $
  */
 
 #include "parser.h"
@@ -60,6 +60,8 @@
 #undef strerror
 #define strerror(x) StrError(x)
 #endif
+
+struct parse_function_entry *parse_functions;
 
 static char inbuf[MAXMESSAGESIZE+1];
 

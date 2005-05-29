@@ -36,14 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.11 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: mpr_selector_set.h,v 1.12 2005/05/29 12:47:45 br1 Exp $
  */
-
 
 
 #ifndef _OLSR_MPRS_SET
 #define _OLSR_MPRS_SET
-
 
 
 struct mpr_selector
@@ -54,8 +52,6 @@ struct mpr_selector
   struct mpr_selector *prev;
 };
 
-
-#ifndef OLSR_PLUGIN
 
 olsr_u16_t
 get_local_ansn(void);
@@ -86,5 +82,4 @@ olsr_time_out_mprs_set(void);
 void
 olsr_print_mprs_set(void);
 
-#endif
 #endif

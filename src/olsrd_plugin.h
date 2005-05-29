@@ -29,19 +29,19 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.1 2005/05/26 16:09:25 br1 Exp $ */
+/* $Id: olsrd_plugin.h,v 1.1 2005/05/29 12:47:45 br1 Exp $ */
 
 /*
  * Example plugin for olsrd.org OLSR daemon
  * Only the bare minimum
  */
 
-#ifndef _OLSRD_PLUGIN_MINI
-#define _OLSRD_PLUGIN_MINI
+#ifndef _OLSRD_PLUGIN
+#define _OLSRD_PLUGIN
 
 
 /* Interface version 4 is new direct access to main functions */
-#define PLUGIN_INTERFACE_VERSION 4
+#define OLSRD_PLUGIN_INTERFACE_VERSION 4
 
 
 /****************************************************************************
@@ -53,7 +53,7 @@
  * Used by main olsrd to check plugin interface version
  */
 int 
-get_plugin_interface_version(void);
+olsrd_plugin_interface_version(void);
 
 
 /**
@@ -61,7 +61,7 @@ get_plugin_interface_version(void);
  * Called for all plugin parameters
  */
 int
-register_olsr_param(char *key, char *value);
+olsrd_plugin_register_param(char *key, char *value);
 
 
 /**
@@ -69,20 +69,7 @@ register_olsr_param(char *key, char *value);
  * Called after all parameters are passed
  */
 int
-plugin_init(void);
-
-
-/****************************************************************************
- *       Optional private constructor and destructor functions              *
- ****************************************************************************/
-
-/* attention: make static to avoid name clashes */
-
-static void __attribute__ ((constructor))
-my_init(void);
-
-static void __attribute__ ((destructor)) 
-my_fini(void);
+olsrd_plugin_init(void);
 
 
 #endif
