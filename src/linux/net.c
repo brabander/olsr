@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.26 2005/05/30 13:13:39 kattemat Exp $
+ * $Id: net.c,v 1.27 2005/05/30 17:23:09 kattemat Exp $
  */
 
 
@@ -299,6 +299,9 @@ restore_settings(int version)
 
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
+      /* Discard host-emulation interfaces */
+      if(ifs->is_hcif)
+	continue;
       /* ICMP redirects */
       
       /* Generate the procfile name */
