@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.23 2005/05/25 16:00:42 br1 Exp $
+ * $Id: net.c,v 1.24 2005/05/30 14:08:57 kattemat Exp $
  */
 
 #include "defs.h"
@@ -265,6 +265,48 @@ int restore_settings(int version)
 
   return 1;
 }
+
+
+/**
+ *Creates a nonblocking broadcast socket.
+ *@param sa sockaddr struct. Used for bind(2).
+ *@return the FD of the socket or -1 on error.
+ */
+int
+gethemusocket(struct sockaddr_in *pin)
+{
+  int sock, on = 1;
+
+  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+
+
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    {
+      perror("hcsocket");
+      syslog(LOG_ERR, "hcsocket: %m");
+      return (-1);
+    }
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
+    {
+      perror("SO_REUSEADDR failed");
+      return (-1);
+    }
+  /* connect to PORT on HOST */
+  if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0) 
+    {
+      printf("FAILED\n");
+      fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+      printf("connection refused\n");
+      return (-1);
+    }
+
+  printf("OK\n");
+
+  /* Keep TCP socket blocking */  
+  return (sock);
+}
+
 
 int
 getsocket(struct sockaddr *sa, int bufspace, char *int_name)
