@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.59 2005/05/29 12:47:45 br1 Exp $
+ * $Id: link_set.c,v 1.60 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -271,7 +271,6 @@ get_best_link_to_neighbor(union olsr_ip_addr *remote)
 
       // find the interface for the link - we select the link with the
       // best local interface metric
-
       tmp_if = if_ifwithaddr(&walker->local_iface_addr);
 
       if(!tmp_if)
@@ -414,7 +413,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
    */
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Adding %s to link set\n", olsr_ip_to_string(remote))
+  OLSR_PRINTF(1, "Adding %s=>%s to link set\n", olsr_ip_to_string(local), olsr_ip_to_string(remote))
 #endif
 
   /* a new tuple is created with... */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.10 2005/03/04 21:30:16 kattemat Exp $
+ * $Id: net_os.h,v 1.11 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -93,6 +93,9 @@ restore_settings(int);
 
 int
 enable_ip_forwarding(int);
+
+int
+gethemusocket(struct sockaddr_in *);
 
 int  
 getsocket(struct sockaddr *, int, char *);

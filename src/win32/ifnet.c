@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.25 2005/05/26 21:04:22 kattemat Exp $
+ * $Id: ifnet.c,v 1.26 2005/05/30 13:13:48 kattemat Exp $
  */
 
 #include "interfaces.h"
@@ -740,8 +740,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
   if(max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
-  New->hello_etime =
-    double_to_me(IntConf->cnf->hello_params.emission_interval);
+  New->hello_etime = IntConf->cnf->hello_params.emission_interval;
 
   New->valtimes.hello = double_to_me(IntConf->cnf->hello_params.validity_time);
   New->valtimes.tc = double_to_me(IntConf->cnf->tc_params.validity_time);

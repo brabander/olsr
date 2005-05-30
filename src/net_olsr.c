@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.2 2005/05/26 09:55:11 kattemat Exp $
+ * $Id: net_olsr.c,v 1.3 2005/05/30 13:13:38 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -72,7 +72,6 @@ static struct deny_address_entry *deny_entries;
 static char *deny_ipv4_defaults[] =
   {
     "0.0.0.0",
-    "127.0.0.1",
     NULL
   };
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.26 2005/05/29 12:47:45 br1 Exp $
+ * $Id: process_routes.c,v 1.27 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -301,6 +301,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
   int metric_counter = 1;
   olsr_bool last_run = OLSR_FALSE;
 
+
   /* Find highest metric */
   for(destination_ptr = delete_kernel_list;
       destination_ptr != NULL;
@@ -344,16 +345,18 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 			      olsr_ip_to_string(&destination_ptr->destination->rt_dst),
 			      destination_ptr->destination->rt_metric)
 #endif
-		    
-		    if(olsr_cnf->ip_version == AF_INET)
-		      error = olsr_ioctl_del_route(destination_ptr->destination);
-		    else
-		      error = olsr_ioctl_del_route6(destination_ptr->destination);
-		  
-		  if(error < 0)
-		    {
-		      OLSR_PRINTF(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno))
-			olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
+		    if(!olsr_cnf->host_emul)
+		      {
+			if(olsr_cnf->ip_version == AF_INET)
+			  error = olsr_ioctl_del_route(destination_ptr->destination);
+			else
+			  error = olsr_ioctl_del_route6(destination_ptr->destination);
+			
+			if(error < 0)
+			  {
+			    OLSR_PRINTF(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno))
+			      olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
+			  }
 		    }
 		  
 		  /* Getting rid of this node and hooking up the broken point */
@@ -430,16 +433,20 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 			  destination_kernel->destination->rt_metric)
 #endif
 			  
-	      if(olsr_cnf->ip_version == AF_INET)
-		error=olsr_ioctl_add_route(destination_kernel->destination);
-	      else
-		error=olsr_ioctl_add_route6(destination_kernel->destination);
-	      
-	      if(error < 0)
-		{
-		  OLSR_PRINTF(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno))
-		  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
-		}
+		if(!olsr_cnf->host_emul)
+		  {
+		    if(olsr_cnf->ip_version == AF_INET)
+		      error=olsr_ioctl_add_route(destination_kernel->destination);
+		    else
+		      error=olsr_ioctl_add_route6(destination_kernel->destination);
+		    
+		    if(error < 0)
+		      {
+			OLSR_PRINTF(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno))
+			  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
+		      }
+		  }
+
 	      
 	      /* Getting rid of this node and hooking up the broken point */
 	      if(destination_kernel == add_kernel_list) 

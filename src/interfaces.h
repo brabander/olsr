@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.28 2005/05/29 12:47:45 br1 Exp $
+ * $Id: interfaces.h,v 1.29 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -121,6 +121,7 @@ struct interface
   struct        sockaddr_in6 int6_multaddr;     /* Multicast */
   /* IP independent */
   union         olsr_ip_addr ip_addr;
+  int           is_hcif;                        /* Is this a emulated host-client if? */
   int           olsr_socket;                    /* The broadcast socket for this interface */
   int	        int_metric;			/* metric of interface */
   int           int_mtu;                        /* MTU of interface */
@@ -187,7 +188,7 @@ if_ifwithaddr(union olsr_ip_addr *);
 struct interface *
 if_ifwithname(const char *);
 
-void
+struct olsr_if *
 queue_if(char *);
 
 int

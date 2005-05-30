@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.79 2005/05/23 18:26:33 kattemat Exp $
+ * $Id: main.c,v 1.80 2005/05/30 13:13:38 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -526,7 +526,7 @@ print_usage()
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
-  fprintf(stderr, "  [-T <Polling Rate (secs)>] [-nofork]\n"); 
+  fprintf(stderr, "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>] \n"); 
 
 }
 
@@ -774,6 +774,36 @@ olsr_process_arguments(int argc, char *argv[],
 	    }
 
 	  memcpy(&ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
+
+	  continue;
+	}
+
+      /*
+       * Host emulation
+       */
+      if (strcmp(*argv, "-hemu") == 0) 
+	{
+	  struct in_addr in;
+	  struct olsr_if *ifa;
+      
+	  NEXT_ARG;
+          CHECK_ARGC;
+	  if(inet_pton(AF_INET, *argv, &in) < 0)
+	    {
+	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
+	      exit(EXIT_FAILURE);
+	    }
+	  /* Add hemu interface */
+
+	  ifa = queue_if("hcif01");
+
+	  if(!ifa)
+	    continue;
+
+	  ifa->cnf = get_default_if_config();
+	  ifa->host_emul = OLSR_TRUE;
+	  memcpy(&ifa->hemu_ip, &in, sizeof(union olsr_ip_addr));
+	  cnf->host_emul = OLSR_TRUE;
 
 	  continue;
 	}

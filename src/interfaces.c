@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.25 2005/05/29 12:47:45 br1 Exp $
+ * $Id: interfaces.c,v 1.26 2005/05/30 13:13:37 kattemat Exp $
  */
 
 #include "defs.h"
@@ -44,7 +44,6 @@
 #include "ifnet.h"
 #include "scheduler.h"
 #include "olsr.h"
-
 
 static olsr_u32_t if_property_id;
 
@@ -103,11 +102,17 @@ ifinit()
     }
 
   OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n")
-  /* Run trough all interfaces immedeatly */
-  for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
-    {
-      chk_if_up(tmp_if, 1);	
-    }
+    /* Run trough all interfaces immedeatly */
+    for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
+      {
+	if(!tmp_if->host_emul)
+	  {
+	    if(!olsr_cnf->host_emul) /* XXX: TEMPORARY! */
+	      chk_if_up(tmp_if, 1);	
+	  }
+	else
+	  add_hemu_if(tmp_if);
+      }
   
   /* register network interface update function with scheduler */
   olsr_register_scheduler_event(&check_interface_updates, NULL, IFCHANGES_POLL_INT, 0, NULL);
@@ -311,7 +316,7 @@ if_ifwithname(const char *if_name)
  *
  *@return nada
  */
-void
+struct olsr_if *
 queue_if(char *name)
 {
 
@@ -325,7 +330,7 @@ queue_if(char *name)
       if(memcmp(interf_n->name, name, strlen(name)) == 0)
 	{
 	  fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
-	  return;
+	  return NULL;
 	}
       interf_n = interf_n->next;
     }
@@ -343,6 +348,7 @@ queue_if(char *name)
   interf_n->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = interf_n;
 
+  return interf_n;
 }
 
 

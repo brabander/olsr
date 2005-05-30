@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.24 2005/04/11 09:01:59 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.25 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -127,6 +127,8 @@ struct olsr_if
   char                     *config;
   int                      index;
   olsr_bool                configured;
+  olsr_bool                host_emul;
+  union olsr_ip_addr       hemu_ip;
   struct interface         *interf;
   struct if_config_options *cnf;
   struct olsr_if           *next;
@@ -188,6 +190,7 @@ struct olsrd_config
 {
   int                      debug_level;
   olsr_bool                no_fork;
+  olsr_bool                host_emul;
   int                      ip_version;
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;

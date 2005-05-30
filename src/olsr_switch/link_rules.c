@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,36 +36,29 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.h,v 1.11 2005/05/30 13:13:37 kattemat Exp $
+ * $Id: link_rules.c,v 1.1 2005/05/30 13:13:47 kattemat Exp $
  */
 
-/* Network interface configuration interface.
- * Platform independent - the implementations
- * reside in OS/ifnet.c(e.g. linux/ifnet.c)
- */
+#include "link_rules.h"
+#include "olsr_host_switch.h"
 
-#ifndef _OLSR_IFNET
-#define _OLSR_IFNET
+#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
 
-/* To get ifreq */
-//#include <arpa/inet.h>
-#include <net/if.h>
-
-#include "olsr_cfg.h"
 
 int
-set_flag(char *, short);
+ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
+{
+  struct ohs_ip_link *links = oc->links;
 
-void
-check_interface_updates(void *);
+  while(links)
+    {
+      if(COMP_IP(&links->dst, dst))
+	{
+	  return 0;
+	}
 
-int
-chk_if_changed(struct olsr_if *);
+      links = links->next;
+    }
 
-int
-chk_if_up(struct olsr_if *, int);
-
-int
-add_hemu_if(struct olsr_if *);
-
-#endif
+  return 1;
+}

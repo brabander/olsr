@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.24 2005/05/29 12:47:45 br1 Exp $
+ * $Id: parser.c,v 1.25 2005/05/30 13:13:38 kattemat Exp $
  */
 
 #include "parser.h"
@@ -348,7 +348,6 @@ olsr_input(int fd)
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
 
-
   for (;;) 
     {
       fromlen = sizeof(struct sockaddr_storage);
@@ -380,23 +379,21 @@ olsr_input(int fd)
 	  /* IPv6 sender address */
 	  COPY_IP(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr);
 	}
-
-      /* are we talking to ourselves? */
-      if(if_ifwithaddr(&from_addr) != NULL)
-	return;
-
+      
+      
 #ifdef DEBUG
       OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr))
 #endif
-      //printf("\nCC: %d FROMLEN: %d\n\n", cc, fromlen);
-      if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
-	break;
-      else if ((olsr_cnf->ip_version == AF_INET6) && (fromlen != sizeof (struct sockaddr_in6)))
-	break;
-
-      //printf("Recieved data on socket %d\n", socknr);
-
-
+	
+	if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
+	  break;
+	else if ((olsr_cnf->ip_version == AF_INET6) && (fromlen != sizeof (struct sockaddr_in6)))
+	  break;
+      
+      /* are we talking to ourselves? */
+      if(if_ifwithaddr(&from_addr) != NULL)
+	return;
+      
       if((olsr_in_if = if_ifwithsock(fd)) == NULL)
 	{
 	  OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
@@ -416,6 +413,97 @@ olsr_input(int fd)
       parse_packet((struct olsr *)inbuf, cc, olsr_in_if, &from_addr);
     
     }
+}
+
+
+
+
+/**
+ *Processing OLSR data from socket. Reading data, setting 
+ *wich interface recieved the message, Sends IPC(if used) 
+ *and passes the packet on to parse_packet().
+ *
+ *@param fd the filedescriptor that data should be read from.
+ *@return nada
+ */
+void
+olsr_input_hostemu(int fd)
+{
+  /* sockaddr_in6 is bigger than sockaddr !!!! */
+  struct sockaddr_storage from;
+  size_t fromlen;
+  int cc;
+  struct interface *olsr_in_if;
+  union olsr_ip_addr from_addr;
+  olsr_u16_t pcklen;
+
+  /* Host emulator receives IP address first to emulate
+     direct link */
+
+  if((cc = recv(fd, from_addr.v6.s6_addr, ipsize, 0)) != (int)ipsize)
+    {
+      fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
+      COPY_IP(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator);
+    }
+
+  /* are we talking to ourselves? */
+  if(if_ifwithaddr(&from_addr) != NULL)
+    return;
+      
+  /* Extract size */
+  if((cc = recv(fd, &pcklen, 2, MSG_PEEK)) != 2)
+    {
+      fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
+      return;
+    }
+  else
+    {
+      pcklen = ntohs(pcklen);
+    }
+
+  fromlen = sizeof(struct sockaddr_storage);
+  
+  cc = olsr_recvfrom(fd, 
+		     inbuf, 
+		     pcklen, 
+		     0, 
+		     (struct sockaddr *)&from, 
+		     &fromlen);
+
+  if (cc <= 0) 
+    {
+      if (cc < 0 && errno != EWOULDBLOCK)
+	{
+	  OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno))
+	    olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
+	}
+      return;
+    }
+  
+  if(cc != pcklen)
+    {
+      printf("Could not read whole packet(size %d, read %d)\n", pcklen, cc);
+      return;
+    }
+
+  if((olsr_in_if = if_ifwithsock(fd)) == NULL)
+    {
+      OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
+		  olsr_ip_to_string(&from_addr),
+		  cc)
+	olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
+		    olsr_ip_to_string(&from_addr),
+		    cc);
+      return;
+    }
+  
+  /*
+   * &from - sender
+   * &inbuf.olsr 
+   * cc - bytes read
+   */
+  parse_packet((struct olsr *)inbuf, cc, olsr_in_if, &from_addr);
+  
 }
 
 

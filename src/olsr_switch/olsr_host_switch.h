@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,36 +36,37 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.h,v 1.11 2005/05/30 13:13:37 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.1 2005/05/30 13:13:47 kattemat Exp $
  */
 
-/* Network interface configuration interface.
- * Platform independent - the implementations
- * reside in OS/ifnet.c(e.g. linux/ifnet.c)
- */
+#ifndef _OLSR_HOST_SWITCH
+#define _OLSR_HOST_SWITCH
 
-#ifndef _OLSR_IFNET
-#define _OLSR_IFNET
+#include "olsr_types.h"
 
-/* To get ifreq */
-//#include <arpa/inet.h>
-#include <net/if.h>
+#define OHS_TCP_PORT 10150
 
-#include "olsr_cfg.h"
+#define OHS_VERSION "0.1"
 
-int
-set_flag(char *, short);
+#define OHS_OUT_OF_MEMORY(s) \
+ { printf("ohsd: out of memory \"%s\"!\n", s); ohs_close(0);}
 
-void
-check_interface_updates(void *);
 
-int
-chk_if_changed(struct olsr_if *);
+struct ohs_ip_link
+{
+  union olsr_ip_addr   dst;
+  olsr_u8_t            quality; /* 0 - 100 */
+  struct ohs_ip_link   *next;
+};
 
-int
-chk_if_up(struct olsr_if *, int);
+struct ohs_connection
+{
+  union olsr_ip_addr     ip_addr;
+  int                    socket;
+  struct ohs_ip_link     *links;
+  struct ohs_connection  *next;
+};
 
-int
-add_hemu_if(struct olsr_if *);
+extern int ipsize;
 
 #endif

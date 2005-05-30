@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.h,v 1.9 2005/05/29 12:47:45 br1 Exp $
+ * $Id: parser.h,v 1.10 2005/05/30 13:13:38 kattemat Exp $
  */
 
 
@@ -64,6 +64,9 @@ olsr_init_parser(void);
 
 void 
 olsr_input(int);
+
+void
+olsr_input_hostemu(int);
 
 void
 olsr_parser_add_function(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t, int);
