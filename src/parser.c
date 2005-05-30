@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.25 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: parser.c,v 1.26 2005/05/30 20:24:02 kattemat Exp $
  */
 
 #include "parser.h"
@@ -453,6 +453,11 @@ olsr_input_hostemu(int fd)
   /* Extract size */
   if((cc = recv(fd, &pcklen, 2, MSG_PEEK)) != 2)
     {
+      if(cc == 0)
+	{
+	  fprintf(stderr, "Lost olsr_switch connection - exit!\n");
+	  olsr_exit(__func__, EXIT_FAILURE);
+	}
       fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
       return;
     }
