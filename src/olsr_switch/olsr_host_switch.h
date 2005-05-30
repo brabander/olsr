@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.3 2005/05/30 19:57:49 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.4 2005/05/30 20:24:54 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -63,6 +63,8 @@ struct ohs_connection
 {
   union olsr_ip_addr     ip_addr;
   int                    socket;
+  olsr_u32_t             rx;
+  olsr_u32_t             tx;
   struct ohs_ip_link     *links;
   struct ohs_connection  *next;
 };

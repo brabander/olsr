@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.2 2005/05/30 19:57:49 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.3 2005/05/30 20:24:54 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -76,7 +76,7 @@ ohs_cmd_list(FILE *handle, char *args)
 
   while(oc)
     {
-      printf("\t%s\n", olsr_ip_to_string(&oc->ip_addr));
+      printf("\t%s - Rx: %d Tx: %d\n", olsr_ip_to_string(&oc->ip_addr), oc->rx, oc->tx);
       oc = oc->next;
     }
 

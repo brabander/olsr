@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.4 2005/05/30 19:57:49 kattemat Exp $
+ * $Id: main.c,v 1.5 2005/05/30 20:24:54 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -142,6 +142,8 @@ ohs_init_new_connection(int s)
   oc->socket = s;
 
   oc->links = NULL;
+  oc->rx = 0;
+  oc->tx = 0;
 
   /* Queue */
   oc->next = ohs_conns;
@@ -205,6 +207,7 @@ ohs_route_data(struct ohs_connection *oc)
   ssize_t len;
   int cnt = 0;
 
+  oc->tx++;
   /* Read data */
   if((len = recv(oc->socket, data_buffer, OHS_BUFSIZE, 0)) <= 0)
     return -1;
@@ -236,6 +239,7 @@ ohs_route_data(struct ohs_connection *oc)
 	    {
 	      printf("Error sending(buf %d != sent %d)\n", len, sent);
 	    }
+	  ohs_cs->rx++;
 	  cnt++;
 	}
     }
