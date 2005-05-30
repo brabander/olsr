@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
@@ -36,30 +37,32 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.2 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: ohs_cmd.h,v 1.1 2005/05/30 19:17:20 kattemat Exp $
  */
 
-#include "link_rules.h"
-#include "olsr_host_switch.h"
-#include <string.h>
 
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
+#ifndef _OHS_CMD
+#define _OHS_CMD
 
+#include <stdio.h>
+
+struct ohs_command
+{
+  char *cmd;
+  char *syntax;
+  char *helptext_brief;
+  char *helptext_long;
+  int (*cmd_cb)(FILE *);
+};
 
 int
-ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
-{
-  struct ohs_ip_link *links = oc->links;
+ohs_parse_command(FILE *);
 
-  while(links)
-    {
-      if(COMP_IP(&links->dst, dst))
-	{
-	  return 0;
-	}
+int
+ohs_cmd_help(FILE *);
 
-      links = links->next;
-    }
+int
+ohs_cmd_exit(FILE *);
 
-  return 1;
-}
+
+#endif

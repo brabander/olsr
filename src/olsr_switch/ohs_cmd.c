@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
@@ -36,30 +37,82 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.2 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.1 2005/05/30 19:17:20 kattemat Exp $
  */
 
-#include "link_rules.h"
 #include "olsr_host_switch.h"
+#include "commands.h"
 #include <string.h>
 
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
+int
+ohs_cmd_help(FILE *handle)
+{
+  int i;
 
+  printf("Olsrd host switch version %s\n", OHS_VERSION);
+  printf("Available commands:\n");
+
+  for(i = 0; ohs_commands[i].cmd; i++)
+    {
+      if(ohs_commands[i].helptext_brief)
+	printf("%s - %s\n", 
+	       ohs_commands[i].cmd,
+	       ohs_commands[i].helptext_brief);
+    }
+  return i;
+}
 
 int
-ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
+ohs_cmd_exit(FILE *handle)
 {
-  struct ohs_ip_link *links = oc->links;
 
-  while(links)
+  printf("Exitting... bye-bye!\n");
+
+#ifdef WIN32
+  SignalHandler(0);
+#else
+  ohs_close(0);
+#endif
+
+  return 0;
+}
+
+int
+ohs_parse_command(FILE *handle)
+{
+  char input_data[100];
+  int i;
+
+  fscanf(handle, "%s", input_data);
+
+  printf("ohs_parse_command: %s\n", input_data);
+  for(i = 0; ohs_commands[i].cmd; i++)
     {
-      if(COMP_IP(&links->dst, dst))
+      if(!strcmp(input_data, ohs_commands[i].cmd))
 	{
-	  return 0;
+	  if(ohs_commands[i].cmd_cb)
+	    {
+	      ohs_commands[i].cmd_cb(handle);
+	    }
+	  else
+	    {
+	      printf("No action registered on cmd %s!\n", input_data);
+	    }
+	  break;
 	}
-
-      links = links->next;
+    }
+  
+  if(!ohs_commands[i].cmd)
+    {
+      printf("%s: no such cmd!\n", input_data);
     }
 
-  return 1;
+  i = 0;
+  /* Drain */
+  while(fgetc(handle) != '\n')
+    {
+      i++;
+    }
+
+  return i;
 }

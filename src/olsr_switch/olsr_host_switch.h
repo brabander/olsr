@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.1 2005/05/30 13:13:47 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.2 2005/05/30 19:17:20 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -68,5 +68,14 @@ struct ohs_connection
 };
 
 extern int ipsize;
+
+
+#ifdef WIN32
+int __stdcall
+SignalHandler(unsigned long);
+#else
+void
+ohs_close(int);
+#endif
 
 #endif

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.2 2005/05/30 14:32:00 kattemat Exp $
+ * $Id: main.c,v 1.3 2005/05/30 19:17:20 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -46,12 +46,13 @@
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signal);
 #else
-static void
+void
 olsr_shutdown(int);
 #endif
 
 #include "olsr_host_switch.h"
 #include "link_rules.h"
+#include "ohs_cmd.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -59,6 +60,9 @@ olsr_shutdown(int);
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 static int srv_socket;
 
@@ -105,7 +109,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
 int __stdcall
 SignalHandler(unsigned long signal)
 #else
-static void
+void
 ohs_close(int signal)
 #endif
 {
@@ -149,6 +153,8 @@ ohs_init_new_connection(int s)
   memcpy(&oc->ip_addr, new_addr, 4);
   oc->ip_addr.v4 = ntohl(oc->ip_addr.v4);
   printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
+
+  return 1;
 }
 
 int
@@ -183,6 +189,8 @@ ohs_delete_connection(struct ohs_connection *oc)
     }
   /* Free */
   free(oc);
+
+  return 0;
 }
 
 int
@@ -190,6 +198,7 @@ ohs_route_data(struct ohs_connection *oc)
 {
   struct ohs_connection *ohs_cs;
   ssize_t len;
+  int cnt = 0;
 
   /* Read data */
   if((len = recv(oc->socket, data_buffer, OHS_BUFSIZE, 0)) <= 0)
@@ -219,17 +228,17 @@ ohs_route_data(struct ohs_connection *oc)
 	  if((sent = send(ohs_cs->socket, data_buffer, len, 0)) != len)
 	    {
 	      printf("Error sending(buf %d != sent %d)\n", len, sent);
-	    } 
+	    }
+	  cnt++;
 	}
     }
 
-
+  return cnt;
 }
 
 int
 ohs_init_connect_sockets()
 {
-  int i;
   olsr_u32_t yes = 1;
   struct sockaddr_in sin;
 
@@ -265,16 +274,18 @@ ohs_init_connect_sockets()
   /* show that we are willing to listen */
   if (listen(srv_socket, 5) == -1) 
     {
-      printf("listen failed for socket: %s\n", i, strerror(errno));
+      printf("listen failed for socket: %s\n", strerror(errno));
       exit(0);
     }
-
+  return 1;
 }
+
 
 int
 ohs_configure()
 {
 
+  return 1;
 }
 
 void
@@ -282,12 +293,16 @@ ohs_listen_loop()
 {
   int n;
   fd_set ibits;
+  int fn_stdin = fileno(stdin);
 
-  printf("ohs_listen_loop\n");
+
+  printf("OHS command interper reading from STDIN\n");
+  printf("\n> ");
+  fflush(stdout);
 
   while(1)
     {
-      int i, high;
+      int high;
 
       struct ohs_connection *ohs_cs;
 
@@ -297,6 +312,12 @@ ohs_listen_loop()
       /* Add server socket */
       high = srv_socket;
       FD_SET(srv_socket, &ibits);
+
+
+      if(fn_stdin > high) 
+	high = fn_stdin;
+
+      FD_SET(fn_stdin, &ibits);
 
       /* Add clients */
       for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
@@ -355,7 +376,13 @@ ohs_listen_loop()
 		  ohs_delete_connection(ohs_tmp);
 	    }
 	}
-      
+
+      if(FD_ISSET(fn_stdin, &ibits))
+	{
+	  ohs_parse_command(stdin);
+	  printf("\n> ");
+	  fflush(stdout);
+	}      
     }
 }
 
@@ -383,4 +410,5 @@ main(int argc, char *argv[])
 
   ohs_close(0);
 
+  return 1;
 }

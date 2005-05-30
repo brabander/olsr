@@ -2,7 +2,7 @@
 CC ?= gcc
 BINNAME = olsr_switch
 INCLUDES += -I./..
-CFLAGS += -O2 -g $(INCLUDES)
+CFLAGS += -O2 -g $(INCLUDES) -Wall
 LDFLAGS +=
 TOPDIR = ../../
 
