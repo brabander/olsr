@@ -37,10 +37,18 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.1 2005/05/30 13:13:47 kattemat Exp $
+ * $Id: main.c,v 1.2 2005/05/30 14:32:00 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
+
+#ifdef WIN32
+#define close(x) closesocket(x)
+int __stdcall SignalHandler(unsigned long signal);
+#else
+static void
+olsr_shutdown(int);
+#endif
 
 #include "olsr_host_switch.h"
 #include "link_rules.h"
@@ -93,8 +101,13 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
 }
 
 
+#ifdef WIN32
+int __stdcall
+SignalHandler(unsigned long signal)
+#else
 static void
 ohs_close(int signal)
+#endif
 {
   printf("OHS: exit\n");
 
@@ -357,9 +370,12 @@ main(int argc, char *argv[])
   ipsize = 4;
 
   ohs_init_connect_sockets();
-
+#ifdef WIN32
+  SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
+#else
   signal(SIGINT, ohs_close);  
   signal(SIGTERM, ohs_close);  
+#endif
 
   ohs_configure();
 
