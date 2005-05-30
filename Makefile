@@ -35,13 +35,14 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.60 2005/05/26 11:31:17 br1 Exp $
+# $Id: Makefile,v 1.61 2005/05/30 13:15:42 kattemat Exp $
 
 TOPDIR = .
 include Makefile.inc
 
 VERS =		0.4.10pre
 
+SWITCHDIR =     src/olsr_switch
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
 CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
@@ -54,6 +55,9 @@ olsrd:		$(OBJS) $(CFGOBJS)
 cfgparser:	$(CFGDEPS)
 		$(MAKE) -C $(CFGDIR)
 
+switch:		
+		$(MAKE) -C $(SWITCHDIR)
+
 $(CFGOBJS):
 		$(MAKE) -C $(CFGDIR)
 
@@ -61,12 +65,14 @@ $(CFGOBJS):
 
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe $(TAGFILE)
-		$(MAKE) -C src/cfgparser clean
+		$(MAKE) -C $(CFGDIR) clean
+		$(MAKE) -C $(SWITCHDIR) clean
 
 uberclean:	clean clean_libs
 		-rm -f src/*[od~] src/linux/*[od~] src/unix/*[od~] src/win32/*[od~]
 		-rm -f src/bsd/*[od~] 
-		$(MAKE) -C src/cfgparser uberclean
+		$(MAKE) -C $(CFGDIR) uberclean
+		$(MAKE) -C $(SWITCHDIR) clean
 
 install: install_olsrd
 
