@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.2 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.3 2005/05/30 19:57:49 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -69,6 +69,13 @@ struct ohs_connection
 
 extern int ipsize;
 
+extern olsr_u32_t logbits;
+
+extern struct ohs_connection *ohs_conns;
+
+#define LOG_DEFAULT 0x0
+#define LOG_FORWARD 0x1
+#define LOG_CONNECT 0x3
 
 #ifdef WIN32
 int __stdcall
@@ -77,5 +84,8 @@ SignalHandler(unsigned long);
 void
 ohs_close(int);
 #endif
+
+char *
+olsr_ip_to_string(union olsr_ip_addr *);
 
 #endif

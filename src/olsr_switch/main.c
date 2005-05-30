@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.3 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: main.c,v 1.4 2005/05/30 19:57:49 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -69,12 +69,14 @@ static int srv_socket;
 #define OHS_BUFSIZE 1500
 static olsr_u8_t data_buffer[OHS_BUFSIZE];
 
-static struct ohs_connection *ohs_conns;
+struct ohs_connection *ohs_conns;
 
 
 static int ip_version;
 int ipsize;
 static char ipv6_buf[100]; /* for address coversion */
+
+olsr_u32_t logbits;
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *addr)
@@ -127,7 +129,8 @@ ohs_init_new_connection(int s)
   struct ohs_connection *oc;
   olsr_u8_t new_addr[4];
 
-  printf("ohs_init_new_connection\n");
+  if(logbits & LOG_CONNECT)
+    printf("ohs_init_new_connection\n");
 
   /* Create new client node */
   oc = malloc(sizeof(struct ohs_connection));
@@ -152,7 +155,8 @@ ohs_init_new_connection(int s)
     }
   memcpy(&oc->ip_addr, new_addr, 4);
   oc->ip_addr.v4 = ntohl(oc->ip_addr.v4);
-  printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
+  if(logbits & LOG_CONNECT)
+    printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
 
   return 1;
 }
@@ -164,7 +168,8 @@ ohs_delete_connection(struct ohs_connection *oc)
   /* Close the socket */
   close(oc->socket);
 
-  printf("Removing entry %s\n", olsr_ip_to_string(&oc->ip_addr));
+  if(logbits & LOG_CONNECT)
+    printf("Removing entry %s\n", olsr_ip_to_string(&oc->ip_addr));
   /* De-queue */
   if(oc == ohs_conns)
     {
@@ -204,7 +209,8 @@ ohs_route_data(struct ohs_connection *oc)
   if((len = recv(oc->socket, data_buffer, OHS_BUFSIZE, 0)) <= 0)
     return -1;
 
-  printf("Received %d bytes from %s\n", len, olsr_ip_to_string(&oc->ip_addr));
+  if(logbits & LOG_FORWARD)
+    printf("Received %d bytes from %s\n", len, olsr_ip_to_string(&oc->ip_addr));
 
   /* Loop trough clients */
   for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
@@ -221,9 +227,10 @@ ohs_route_data(struct ohs_connection *oc)
 	      printf("Error sending link address!\n");
 	    }
 	  /* Send data */
-	  printf("Sending %d bytes %s=>%s\n", len, 
-		 olsr_ip_to_string(&oc->ip_addr),
-		 olsr_ip_to_string(&ohs_cs->ip_addr));
+	  if(logbits & LOG_FORWARD)
+	    printf("Sending %d bytes %s=>%s\n", len, 
+		   olsr_ip_to_string(&oc->ip_addr),
+		   olsr_ip_to_string(&ohs_cs->ip_addr));
 
 	  if((sent = send(ohs_cs->socket, data_buffer, len, 0)) != len)
 	    {
@@ -393,6 +400,7 @@ main(int argc, char *argv[])
 
   printf("olsrd host-switch daemon version %s starting\n", OHS_VERSION);
 
+  logbits = LOG_DEFAULT;
   ip_version = AF_INET;
   ipsize = 4;
 

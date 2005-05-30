@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.h,v 1.1 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: ohs_cmd.h,v 1.2 2005/05/30 19:57:49 kattemat Exp $
  */
 
 
@@ -52,17 +52,23 @@ struct ohs_command
   char *syntax;
   char *helptext_brief;
   char *helptext_long;
-  int (*cmd_cb)(FILE *);
+  int (*cmd_cb)(FILE *, char *);
 };
 
 int
 ohs_parse_command(FILE *);
 
 int
-ohs_cmd_help(FILE *);
+ohs_cmd_list(FILE *, char *);
 
 int
-ohs_cmd_exit(FILE *);
+ohs_cmd_help(FILE *, char *);
+
+int
+ohs_cmd_exit(FILE *, char *);
+
+int
+ohs_cmd_log(FILE *, char *);
 
 
 #endif

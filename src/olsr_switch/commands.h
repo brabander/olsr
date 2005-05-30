@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: commands.h,v 1.1 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: commands.h,v 1.2 2005/05/30 19:57:49 kattemat Exp $
  */
 
 
@@ -58,6 +58,16 @@ static struct ohs_command ohs_commands[] =
       "Exits olsr host switch",
       "Exits olsr host switch",
       ohs_cmd_exit
+    },
+    { "log", "log <set [type]>",
+      "Displays or sets log bits",
+      "...",
+      ohs_cmd_log
+    },
+    { "list", "list",
+      "List all connected clients",
+      "...",
+      ohs_cmd_list
     },
     { NULL, NULL,
       NULL,
