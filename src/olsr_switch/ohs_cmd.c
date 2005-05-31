@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.7 2005/05/31 08:55:23 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.8 2005/05/31 14:04:21 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -273,41 +273,42 @@ ohs_cmd_log(FILE *handle, char *args)
 {
   olsr_u8_t set = 0;
 
-  set = !strncmp(args, " set", strlen(" set"));
-
-  if(set || !strncmp(args, " unset", strlen(" unset")))
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+  if(strlen(tok_buf) &&
+     ((set = !strncmp(tok_buf, "set", strlen("set"))) || 
+      !strncmp(tok_buf, "unset", strlen("unset"))))
     {
-      if(strlen(args) > (strlen("set") + 1))
-	{
-	  olsr_u32_t new_bit = 0;
-	  
-	  if(!strncmp(&args[set ? 4 : 6], " CON", strlen(" CON")))
+        olsr_u32_t new_bit = 0;
+        
+        args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+        if(!strlen(tok_buf))
+            goto print_usage;
+        
+        
+        if(!strncmp(tok_buf, "CON", strlen("CON")))
 	    new_bit = LOG_CONNECT;
-	  else if(!strncmp(&args[set ? 4 : 6], " FOR", strlen(" FOR")))
-	    new_bit = LOG_CONNECT;
-	  else if(!strncmp(&args[set ? 4 : 6], " LIN", strlen(" LIN")))
+        else if(!strncmp(tok_buf, "FOR", strlen("FOR")))
+	    new_bit = LOG_FORWARD;
+        else if(!strncmp(tok_buf, "LIN", strlen("LIN")))
 	    new_bit = LOG_LINK;
 	  
-	  if(!new_bit)
+        if(!new_bit)
 	    goto print_usage;
 
-	  if(set)
+        if(set)
 	    logbits |= new_bit;
-	  else
+        else
 	    logbits &= ~new_bit;
 
-	  printf("%s log bit: 0x%08x, new log: 0x%08x\n", set ? "Setting" : "Removing",
-		 new_bit, logbits);
+        printf("%s log bit: 0x%08x, new log: 0x%08x\n", set ? "Setting" : "Removing",
+               new_bit, logbits);
 
-	}
-      else
-	{
-	  goto print_usage;
-	}
     }
   else
     {
-      if(strlen(args))
+      if(strlen(tok_buf))
 	goto print_usage;
 
       printf("Log: (0x%08x) ", logbits);
