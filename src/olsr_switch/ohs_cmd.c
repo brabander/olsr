@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.3 2005/05/30 20:24:54 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.4 2005/05/31 05:30:40 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -47,6 +47,9 @@
 
 #define ARG_BUF_SIZE 500
 static char arg_buf[ARG_BUF_SIZE];
+
+#define TOK_BUF_SIZE 500
+static char tok_buf[TOK_BUF_SIZE];
 
 static void
 get_arg_buf(FILE *handle, char *buf, size_t size)
@@ -66,6 +69,78 @@ get_arg_buf(FILE *handle, char *buf, size_t size)
   printf("Args: %s\n", buf);
 }
 
+static int
+get_next_token(char *src, char *dst, size_t buflen)
+{
+  int i = 0, j = 0;
+
+  dst[0] = 0;
+  /* Skip leading spaces */
+  while(src[j] == ' ' && src[j] != 0)
+    {
+      j++;
+    }
+
+  src += j;
+  i = 0;
+  while((src[i] != ' ') && (src[i] != 0) && (i < (buflen - 1)))
+    {
+      dst[i] = src[i];
+      i++;
+    }
+  dst[i] = 0;
+
+  printf("Extracted token: %s\n", dst);
+  return i + j;
+}
+
+int
+ohs_cmd_link(FILE *handle, char *args)
+{
+  olsr_u8_t bi = 0;
+  struct ohs_connection *src, *dst;
+
+  if(strlen(args) < strlen("bi"))
+    goto print_usage;
+
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+
+  if(!strlen(tok_buf))
+    goto print_usage;
+
+  if(!strncmp(tok_buf, "bi", strlen("bi")))
+    {
+      bi = 1;
+      args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+
+      if(!strlen(tok_buf))
+	goto print_usage;
+    }
+
+  printf("IP src: %s\n", tok_buf);
+
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+  if(!strlen(tok_buf))
+    goto print_usage;
+
+  printf("IP dst: %s\n", tok_buf);
+
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+  if(!strlen(tok_buf))
+    goto print_usage;
+
+  printf("Quality: %d\n", atoi(tok_buf));
+
+  printf("%sdirectional link %c=>...\n", bi ? "Bi" : "Uni",
+	 bi ? '<' : '=');
+     
+  return 1;
+ print_usage:
+  printf("link <bi> srcIP dstIP [0-100]");
+  return -1;
+}
 
 int
 ohs_cmd_list(FILE *handle, char *args)

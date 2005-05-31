@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.h,v 1.2 2005/05/30 19:57:49 kattemat Exp $
+ * $Id: ohs_cmd.h,v 1.3 2005/05/31 05:30:40 kattemat Exp $
  */
 
 
@@ -70,5 +70,7 @@ ohs_cmd_exit(FILE *, char *);
 int
 ohs_cmd_log(FILE *, char *);
 
+int
+ohs_cmd_link(FILE *, char *);
 
 #endif

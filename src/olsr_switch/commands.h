@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: commands.h,v 1.2 2005/05/30 19:57:49 kattemat Exp $
+ * $Id: commands.h,v 1.3 2005/05/31 05:30:40 kattemat Exp $
  */
 
 
@@ -68,6 +68,11 @@ static struct ohs_command ohs_commands[] =
       "List all connected clients",
       "...",
       ohs_cmd_list
+    },
+    { "link", "link <bi> srcIP dstIP [0-100]",
+      "Manipulate links",
+      "...",
+      ohs_cmd_link
     },
     { NULL, NULL,
       NULL,
