@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: commands.h,v 1.3 2005/05/31 05:30:40 kattemat Exp $
+ * $Id: commands.h,v 1.4 2005/05/31 16:40:45 kattemat Exp $
  */
 
 
@@ -61,17 +61,17 @@ static struct ohs_command ohs_commands[] =
     },
     { "log", "log <set [type]>",
       "Displays or sets log bits",
-      "...",
+      "This command sets or clears various logbits. Available logbits are:\n FORWARD - display info about all traffic forwarding\n CONNECT - display info about all connections happening\n LINK - display all link lookup information\n",
       ohs_cmd_log
     },
-    { "list", "list",
-      "List all connected clients",
-      "...",
+    { "list", "list <clients|links>",
+      "List all connected clients or links",
+      "This command will list all the clients or all the links registered by olsr_switch. By default clients are listed.",
       ohs_cmd_list
     },
     { "link", "link <bi> srcIP dstIP [0-100]",
       "Manipulate links",
-      "...",
+      "This command is used for manipulating olsr links. The link quality is a number between 0-100 representing the chance in percentage for a packet to be forwarded on the link.\nTo make the link between 10.0.0.1 and 10.0.0.2 have 50% packetloss do:\nlink 10.0.0.1 10.0.0.2 50\nNote that this will only effect the unidirectional link 10.0.0.1 -> 10.0.0.2. To make the changes affect traffic in both directions do:\nlink bi 10.0.0.1 10.0.0.2 50\nTo completly block a link do:\nlink 10.0.0.1 10.0.0.2 0\nTo make all traffic pass(delete the entry) do:\nlink 10.0.0.1 10.0.0.2 100\nNote that \"bi\" can be used in all these examples. To list all manipulated links use 'list links'.\n",
       ohs_cmd_link
     },
     { NULL, NULL,

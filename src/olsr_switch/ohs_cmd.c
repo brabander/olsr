@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.8 2005/05/31 14:04:21 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.9 2005/05/31 16:40:45 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -71,8 +71,6 @@ get_arg_buf(FILE *handle, char *buf, size_t size)
     }
 
   buf[pos] = 0;
-
-  printf("Args: %s\n", buf);
 }
 
 static int
@@ -96,7 +94,8 @@ get_next_token(char *src, char *dst, size_t buflen)
     }
   dst[i] = 0;
 
-  printf("Extracted token: %s\n", dst);
+  if(strlen(dst))
+    printf("Extracted token: %s\n", dst);
   return i + j;
 }
 
@@ -196,7 +195,7 @@ ohs_cmd_link(FILE *handle, char *args)
       if(!link)
         {
           /* Create new link */
-            link = malloc(sizeof(link));
+            link = malloc(sizeof(struct ohs_ip_link));
             if(!link)
               OHS_OUT_OF_MEMORY("New link");
             /* Queue */
@@ -213,7 +212,7 @@ ohs_cmd_link(FILE *handle, char *args)
           if(!inv_link)
             {
               /* Create new link */
-              inv_link = malloc(sizeof(link));
+              inv_link = malloc(sizeof(struct ohs_ip_link));
               if(!inv_link)
                 OHS_OUT_OF_MEMORY("New link");
               /* Queue */
@@ -237,13 +236,45 @@ ohs_cmd_list(FILE *handle, char *args)
 {
   struct ohs_connection *oc = ohs_conns;
 
-  printf("All connected clients:\n");
-
-  while(oc)
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+  if(!strlen(tok_buf) || 
+     !strncmp(tok_buf, "clients", strlen("clients")))
     {
-      printf("\t%s - Rx: %d Tx: %d LinkCnt: %d\n", olsr_ip_to_string(&oc->ip_addr), 
-             oc->rx, oc->tx, oc->linkcnt);
-      oc = oc->next;
+      printf("All connected clients:\n");
+      
+      while(oc)
+	{
+	  printf("\t%s - Rx: %d Tx: %d LinkCnt: %d\n", olsr_ip_to_string(&oc->ip_addr), 
+		 oc->rx, oc->tx, oc->linkcnt);
+	  oc = oc->next;
+	}
+    }
+  else if(!strncmp(tok_buf, "links", strlen("links")))
+    {
+      printf("All configured links:\n");
+      
+      while(oc)
+	{
+	  struct ohs_ip_link *links = oc->links;
+
+	  while(links)
+	    {
+	      printf("\t%s => %s Quality: %d\n", 
+		     olsr_ip_to_string(&oc->ip_addr),
+		     olsr_ip_to_string(&links->dst),
+		     links->quality);
+
+	      links = links->next;
+	    }
+	  oc = oc->next;
+	}
+    }
+  else
+    {
+
+      printf("list [clients|links]");
+      return -1;
     }
 
   return 1;
@@ -254,17 +285,38 @@ ohs_cmd_help(FILE *handle, char *args)
 {
   int i;
 
-  printf("Olsrd host switch version %s\n", OHS_VERSION);
-  printf("Available commands:\n");
-
-  for(i = 0; ohs_commands[i].cmd; i++)
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+  
+  if(!strlen(tok_buf))
     {
-      if(ohs_commands[i].helptext_brief)
-	printf("\t%s - %s\n", 
-	       ohs_commands[i].cmd,
-	       ohs_commands[i].helptext_brief);
+      printf("Olsrd host switch version %s\n", OHS_VERSION);
+      printf("Available commands:\n");
+      
+      for(i = 0; ohs_commands[i].cmd; i++)
+	{
+	  if(ohs_commands[i].helptext_brief)
+	    printf("\t%s - %s\n", 
+		   ohs_commands[i].cmd,
+		   ohs_commands[i].helptext_brief);
+	}
+      printf("\nType 'help cmd' for help on a specific command\n");
     }
-  printf("\nType 'help cmd' for help on a specific command(NIY)\n");
+  else
+    {
+      for(i = 0; ohs_commands[i].cmd; i++)
+	{
+	  if(!strncmp(tok_buf, ohs_commands[i].cmd, strlen(ohs_commands[i].cmd)))
+	    {
+	      printf("Usage: %s\nDescription:\n%s\n", 
+		     ohs_commands[i].syntax,
+		     ohs_commands[i].helptext_long);
+	      return 1;
+	    }
+	}
+
+      printf("Usage: help <command>\n");
+    }
+
   return i;
 }
 
@@ -354,7 +406,6 @@ ohs_parse_command(FILE *handle)
 
   get_arg_buf(handle, arg_buf, ARG_BUF_SIZE);
 
-  printf("ohs_parse_command: %s\n", input_data);
   for(i = 0; ohs_commands[i].cmd; i++)
     {
       if(!strcmp(input_data, ohs_commands[i].cmd))
