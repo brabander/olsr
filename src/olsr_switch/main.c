@@ -37,14 +37,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.7 2005/05/31 08:55:23 kattemat Exp $
+ * $Id: main.c,v 1.8 2005/05/31 17:49:31 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall SignalHandler(unsigned long signal);
+int __stdcall ohs_close(unsigned long signal);
 #else
 void
 olsr_shutdown(int);
@@ -110,7 +110,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
 
 #ifdef WIN32
 int __stdcall
-SignalHandler(unsigned long signal)
+ohs_close(unsigned long signal)
 #else
 void
 ohs_close(int signal)
@@ -229,7 +229,7 @@ ohs_route_data(struct ohs_connection *oc)
     return -1;
 
   if(logbits & LOG_FORWARD)
-    printf("Received %d bytes from %s\n", len, olsr_ip_to_string(&oc->ip_addr));
+    printf("Received %d bytes from %s\n", (int)len, olsr_ip_to_string(&oc->ip_addr));
 
   /* Loop trough clients */
   for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
@@ -247,13 +247,13 @@ ohs_route_data(struct ohs_connection *oc)
 	    }
 	  /* Send data */
 	  if(logbits & LOG_FORWARD)
-	    printf("Sending %d bytes %s=>%s\n", len, 
+	    printf("Sending %d bytes %s=>%s\n", (int)len, 
 		   olsr_ip_to_string(&oc->ip_addr),
 		   olsr_ip_to_string(&ohs_cs->ip_addr));
 
 	  if((sent = send(ohs_cs->socket, data_buffer, len, 0)) != len)
 	    {
-	      printf("Error sending(buf %d != sent %d)\n", len, sent);
+	      printf("Error sending(buf %d != sent %d)\n", (int)len, (int)sent);
 	    }
 	  ohs_cs->rx++;
 	  cnt++;
@@ -428,7 +428,7 @@ main(int argc, char *argv[])
 
   ohs_init_connect_sockets();
 #ifdef WIN32
-  SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
+  SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
 #else
   signal(SIGINT, ohs_close);  
   signal(SIGTERM, ohs_close);  
