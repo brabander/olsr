@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.9 2005/05/31 18:18:00 kattemat Exp $
+ * $Id: main.c,v 1.10 2005/05/31 19:59:32 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -263,9 +263,9 @@ ohs_init_connect_sockets()
 
   printf("Initiating socket TCP port %d\n", OHS_TCP_PORT);
 
-  if((srv_socket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+  if((srv_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-      printf("Could not initialize socket: %s\n", strerror(errno));
+      printf("Could not initialize socket(%d): %s\n", srv_socket, strerror(errno));
       exit(0);
     }
 
@@ -410,6 +410,21 @@ int
 main(int argc, char *argv[])
 {
 
+#ifdef WIN32
+  WSADATA WsaData;
+  int len;
+
+  if (WSAStartup(0x0202, &WsaData))
+    {
+      fprintf(stderr, "Could not initialize WinSock.\n");
+      exit(EXIT_FAILURE);
+    }
+  SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
+#else
+  signal(SIGINT, ohs_close);  
+  signal(SIGTERM, ohs_close);  
+#endif
+
   printf("olsrd host-switch daemon version %s starting\n", OHS_VERSION);
 
   logbits = LOG_DEFAULT;
@@ -418,13 +433,8 @@ main(int argc, char *argv[])
 
   srand((unsigned int)time(NULL));
 
+
   ohs_init_connect_sockets();
-#ifdef WIN32
-  SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
-#else
-  signal(SIGINT, ohs_close);  
-  signal(SIGTERM, ohs_close);  
-#endif
 
   ohs_configure();
 

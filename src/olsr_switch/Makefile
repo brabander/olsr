@@ -15,12 +15,11 @@ BINNAME = olsr_switch.exe
 CFLAGS += -DWIN32 -mno-cygwin
 INCLUDES += -I./../win32/
 SRCS +=	$(TOPDIR)src/win32/compat.c
-OBJS +=	$(TOPDIR)src/win32/compat.o
 LIBS += -mno-cygwin -lws2_32 -liphlpapi
 endif
 
 all: 	$(OBJS)
-	$(CC) $(LDFLAGS) $(LIBS) -o $(TOPDIR)$(BINNAME) $(OBJS)
+	$(CC) $(LDFLAGS) -o $(TOPDIR)$(BINNAME) $(OBJS) $(LIBS)
 
 clean:
 	rm -f *.o
