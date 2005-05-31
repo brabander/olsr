@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.5 2005/05/31 06:52:28 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.6 2005/05/31 07:34:18 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -107,7 +107,7 @@ ohs_cmd_link(FILE *handle, char *args)
   struct ohs_connection *src, *dst;
   struct in_addr iaddr;
   int qual;
-  struct ohs_ip_link *link;
+  struct ohs_ip_link *link, *inv_link;
 
   if(strlen(args) < strlen("bi"))
     goto print_usage;
@@ -178,14 +178,18 @@ ohs_cmd_link(FILE *handle, char *args)
          olsr_ip_to_string(&dst->ip_addr), qual);
 
   link = get_link(src, &dst->ip_addr);
+  if(bi)
+    inv_link = get_link(dst, &src->ip_addr);
+  else
+    inv_link = NULL;
 
   if(qual == 100)
     {
       /* Remove link entry */
       if(link)
-        {
-          remove_link(src, link);
-        }
+        remove_link(src, link);
+      if(inv_link)
+        remove_link(dst, inv_link);
     }
   else 
     {
@@ -203,6 +207,23 @@ ohs_cmd_link(FILE *handle, char *args)
         }
 
       link->quality = qual;
+
+      if(bi)
+        {
+          if(!inv_link)
+            {
+              /* Create new link */
+              inv_link = malloc(sizeof(link));
+              if(!inv_link)
+                OHS_OUT_OF_MEMORY("New link");
+              /* Queue */
+              inv_link->next = dst->links;
+              dst->links = inv_link;
+              COPY_IP(&inv_link->dst, &src->ip_addr);
+              dst->linkcnt++;
+            }
+          inv_link->quality = qual;
+        }
     }
 
   return 1;
