@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.10 2005/05/31 19:59:32 kattemat Exp $
+ * $Id: main.c,v 1.11 2005/05/31 20:23:33 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -57,13 +57,21 @@
 #include <unistd.h>
 #include <time.h>
 
+#ifdef WIN32
+#undef EINTR
+#define EINTR WSAEINTR
+#undef errno
+#define errno WSAGetLastError()
+#undef strerror
+#define strerror(x) StrError(x)
+#endif
+
 static int srv_socket;
 
 #define OHS_BUFSIZE 1500
 static olsr_u8_t data_buffer[OHS_BUFSIZE];
 
 struct ohs_connection *ohs_conns;
-
 
 static int ip_version;
 int ipsize;
@@ -412,7 +420,6 @@ main(int argc, char *argv[])
 
 #ifdef WIN32
   WSADATA WsaData;
-  int len;
 
   if (WSAStartup(0x0202, &WsaData))
     {
