@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.6 2005/05/31 08:55:23 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.7 2005/05/31 18:18:00 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -54,6 +54,14 @@
 #define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
 
 #define COPY_IP(to, from) memcpy(to, from, ipsize)
+
+#ifdef WIN32
+#define close(x) closesocket(x)
+int __stdcall ohs_close(unsigned long signal);
+#else
+void
+ohs_close(int);
+#endif
 
 struct ohs_ip_link
 {

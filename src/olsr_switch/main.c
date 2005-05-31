@@ -37,18 +37,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.8 2005/05/31 17:49:31 kattemat Exp $
+ * $Id: main.c,v 1.9 2005/05/31 18:18:00 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
-
-#ifdef WIN32
-#define close(x) closesocket(x)
-int __stdcall ohs_close(unsigned long signal);
-#else
-void
-olsr_shutdown(int);
-#endif
 
 #include "olsr_host_switch.h"
 #include "link_rules.h"

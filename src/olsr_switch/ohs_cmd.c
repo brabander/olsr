@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.9 2005/05/31 16:40:45 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.10 2005/05/31 18:18:00 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -387,12 +387,7 @@ ohs_cmd_exit(FILE *handle, char *args)
 
   printf("Exitting... bye-bye!\n");
 
-#ifdef WIN32
-  SignalHandler(0);
-#else
   ohs_close(0);
-#endif
-
   return 0;
 }
 
