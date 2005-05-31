@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.6 2005/05/31 06:52:28 kattemat Exp $
+ * $Id: main.c,v 1.7 2005/05/31 08:55:23 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -63,6 +63,7 @@ olsr_shutdown(int);
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 static int srv_socket;
 
@@ -422,6 +423,8 @@ main(int argc, char *argv[])
   logbits = LOG_DEFAULT;
   ip_version = AF_INET;
   ipsize = 4;
+
+  srand((unsigned int)time(NULL));
 
   ohs_init_connect_sockets();
 #ifdef WIN32

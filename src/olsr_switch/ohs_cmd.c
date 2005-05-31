@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.6 2005/05/31 07:34:18 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.7 2005/05/31 08:55:23 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -285,6 +285,8 @@ ohs_cmd_log(FILE *handle, char *args)
 	    new_bit = LOG_CONNECT;
 	  else if(!strncmp(&args[set ? 4 : 6], " FOR", strlen(" FOR")))
 	    new_bit = LOG_CONNECT;
+	  else if(!strncmp(&args[set ? 4 : 6], " LIN", strlen(" LIN")))
+	    new_bit = LOG_LINK;
 	  
 	  if(!new_bit)
 	    goto print_usage;
@@ -313,13 +315,15 @@ ohs_cmd_log(FILE *handle, char *args)
 	printf("CONNECT ");
       if(logbits & LOG_FORWARD)
 	printf("FORWARD ");
+      if(logbits & LOG_LINK)
+	printf("LINK ");
 
       printf("\n");
     }
   return 1;
 
  print_usage:
-  printf("Usage: log <[set|unset] [CONNECT|FORWARD]>\n");
+  printf("Usage: log <[set|unset] [CONNECT|FORWARD|LINK]>\n");
   return 0;
 
 }

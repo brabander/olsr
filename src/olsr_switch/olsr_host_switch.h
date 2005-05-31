@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.5 2005/05/31 06:52:28 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.6 2005/05/31 08:55:23 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -81,7 +81,8 @@ extern struct ohs_connection *ohs_conns;
 
 #define LOG_DEFAULT 0x0
 #define LOG_FORWARD 0x1
-#define LOG_CONNECT 0x3
+#define LOG_CONNECT 0x2
+#define LOG_LINK    0x4
 
 #ifdef WIN32
 int __stdcall

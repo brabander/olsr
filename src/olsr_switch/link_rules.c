@@ -36,13 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.3 2005/05/31 06:52:28 kattemat Exp $
+ * $Id: link_rules.c,v 1.4 2005/05/31 08:55:22 kattemat Exp $
  */
 
 #include "link_rules.h"
 #include "olsr_host_switch.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int
 ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
@@ -53,7 +54,32 @@ ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
     {
       if(COMP_IP(&links->dst, dst))
 	{
-	  return 0;
+          int r;
+
+          if(links->quality == 0)
+            {
+              if(logbits & LOG_LINK)
+                printf("%s -> %s Q: %d\n", 
+                   olsr_ip_to_string(&oc->ip_addr),
+                   olsr_ip_to_string(dst),
+                   links->quality);
+
+              return 0;
+            }
+
+          r = 1 + (int)((100.0*rand())/(RAND_MAX + 1.0));
+
+          if(logbits & LOG_LINK)
+            printf("%s -> %s Q: %d R: %d\n", 
+                   olsr_ip_to_string(&oc->ip_addr),
+                   olsr_ip_to_string(dst),
+                   links->quality, r);
+
+          /* Random - based on quality */
+          if(links->quality > r)
+            return 0;
+          else
+            return 1;
 	}
 
       links = links->next;
