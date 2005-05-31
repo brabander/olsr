@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.4 2005/05/30 20:24:54 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.5 2005/05/31 06:52:28 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -51,6 +51,9 @@
 #define OHS_OUT_OF_MEMORY(s) \
  { printf("ohsd: out of memory \"%s\"!\n", s); ohs_close(0);}
 
+#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
+
+#define COPY_IP(to, from) memcpy(to, from, ipsize)
 
 struct ohs_ip_link
 {
@@ -65,6 +68,7 @@ struct ohs_connection
   int                    socket;
   olsr_u32_t             rx;
   olsr_u32_t             tx;
+  olsr_u32_t             linkcnt;
   struct ohs_ip_link     *links;
   struct ohs_connection  *next;
 };
@@ -89,5 +93,8 @@ ohs_close(int);
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *);
+
+struct ohs_connection *
+get_client_by_addr(union olsr_ip_addr *);
 
 #endif

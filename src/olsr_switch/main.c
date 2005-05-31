@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.5 2005/05/30 20:24:54 kattemat Exp $
+ * $Id: main.c,v 1.6 2005/05/31 06:52:28 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -122,6 +122,20 @@ ohs_close(int signal)
   exit(0);
 }
 
+struct ohs_connection *
+get_client_by_addr(union olsr_ip_addr *adr)
+{
+  struct ohs_connection *oc = ohs_conns;
+
+  while(oc)
+    {
+      if(COMP_IP(adr, &oc->ip_addr))
+        return oc;
+      oc = oc->next;
+    }
+  return NULL;
+}
+
 
 int
 ohs_init_new_connection(int s)
@@ -144,6 +158,7 @@ ohs_init_new_connection(int s)
   oc->links = NULL;
   oc->rx = 0;
   oc->tx = 0;
+  oc->linkcnt = 0;
 
   /* Queue */
   oc->next = ohs_conns;

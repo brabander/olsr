@@ -36,15 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.2 2005/05/30 19:17:20 kattemat Exp $
+ * $Id: link_rules.c,v 1.3 2005/05/31 06:52:28 kattemat Exp $
  */
 
 #include "link_rules.h"
 #include "olsr_host_switch.h"
 #include <string.h>
-
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
-
+#include <stdlib.h>
 
 int
 ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
@@ -62,4 +60,48 @@ ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
     }
 
   return 1;
+}
+
+int
+remove_link(struct ohs_connection *oc, struct ohs_ip_link *lnk)
+{
+  struct ohs_ip_link *links = oc->links;
+  struct ohs_ip_link *prev_link = NULL;
+
+  while(links)
+    {
+      if(links == lnk)
+        {
+          /* Remove */
+          if(prev_link)
+            prev_link->next = links->next;
+          else
+            oc->links = links->next;
+
+          free(lnk);
+          oc->linkcnt--;
+          return 1;
+        }
+      prev_link = links;
+      links = links->next;
+    }
+  return 0;
+}
+
+struct ohs_ip_link *
+get_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
+{
+  struct ohs_ip_link *links = oc->links;
+
+  while(links)
+    {
+      if(COMP_IP(&links->dst, dst))
+	{
+	  return links;
+	}
+
+      links = links->next;
+    }
+
+  return NULL;
 }

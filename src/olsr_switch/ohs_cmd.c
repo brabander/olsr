@@ -37,13 +37,19 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.4 2005/05/31 05:30:40 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.5 2005/05/31 06:52:28 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
 #include "olsr_types.h"
 #include "commands.h"
+#include "link_rules.h"
 #include <string.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 #define ARG_BUF_SIZE 500
 static char arg_buf[ARG_BUF_SIZE];
@@ -99,6 +105,9 @@ ohs_cmd_link(FILE *handle, char *args)
 {
   olsr_u8_t bi = 0;
   struct ohs_connection *src, *dst;
+  struct in_addr iaddr;
+  int qual;
+  struct ohs_ip_link *link;
 
   if(strlen(args) < strlen("bi"))
     goto print_usage;
@@ -117,25 +126,85 @@ ohs_cmd_link(FILE *handle, char *args)
 	goto print_usage;
     }
 
-  printf("IP src: %s\n", tok_buf);
+  if(!inet_aton(tok_buf, &iaddr))
+    {
+      printf("Invalid src IP %s\n", tok_buf);
+      return -1;
+    }
+
+  src = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
+
+  if(!src)
+    {
+      printf("No such client: %s!\n", tok_buf);
+      return -1;
+    }
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
   
   if(!strlen(tok_buf))
     goto print_usage;
 
-  printf("IP dst: %s\n", tok_buf);
+  if(!inet_aton(tok_buf, &iaddr))
+    {
+      printf("Invalid src IP %s\n", tok_buf);
+      return -1;
+    }
+
+  dst = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
+
+  if(!dst)
+    {
+      printf("No such client: %s!\n", tok_buf);
+      return -1;
+    }
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
   
   if(!strlen(tok_buf))
     goto print_usage;
 
-  printf("Quality: %d\n", atoi(tok_buf));
+  qual = atoi(tok_buf);
 
-  printf("%sdirectional link %c=>...\n", bi ? "Bi" : "Uni",
-	 bi ? '<' : '=');
-     
+  if(qual < 0 || qual > 100)
+    {
+      printf("Link quality out of range(0-100)\n");
+      return -1;
+    }
+  
+  printf("%s %sdirectional link %s %c=> %s quality %d\n", 
+         (qual == 100) ? "Removing" : "Setting", bi ? "bi" : "uni",
+	 olsr_ip_to_string(&src->ip_addr), bi ? '<' : '=', 
+         olsr_ip_to_string(&dst->ip_addr), qual);
+
+  link = get_link(src, &dst->ip_addr);
+
+  if(qual == 100)
+    {
+      /* Remove link entry */
+      if(link)
+        {
+          remove_link(src, link);
+        }
+    }
+  else 
+    {
+      if(!link)
+        {
+          /* Create new link */
+            link = malloc(sizeof(link));
+            if(!link)
+              OHS_OUT_OF_MEMORY("New link");
+            /* Queue */
+            link->next = src->links;
+            src->links = link;
+            COPY_IP(&link->dst, &dst->ip_addr);
+            src->linkcnt++;
+        }
+
+      link->quality = qual;
+    }
+
   return 1;
  print_usage:
   printf("link <bi> srcIP dstIP [0-100]");
@@ -151,7 +220,8 @@ ohs_cmd_list(FILE *handle, char *args)
 
   while(oc)
     {
-      printf("\t%s - Rx: %d Tx: %d\n", olsr_ip_to_string(&oc->ip_addr), oc->rx, oc->tx);
+      printf("\t%s - Rx: %d Tx: %d LinkCnt: %d\n", olsr_ip_to_string(&oc->ip_addr), 
+             oc->rx, oc->tx, oc->linkcnt);
       oc = oc->next;
     }
 
