@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.10 2005/05/31 18:18:00 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.11 2005/05/31 20:37:00 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -64,7 +64,7 @@ get_arg_buf(FILE *handle, char *buf, size_t size)
   int pos = 0;
 
   while(((c = fgetc(handle)) != '\n') &&
-	pos < (size - 2))
+	pos < ((int)size - 2))
     {
       buf[pos] = c;
       pos++;
@@ -87,7 +87,7 @@ get_next_token(char *src, char *dst, size_t buflen)
 
   src += j;
   i = 0;
-  while((src[i] != ' ') && (src[i] != 0) && (i < (buflen - 1)))
+  while((src[i] != ' ') && (src[i] != 0) && (i < ((int)buflen - 1)))
     {
       dst[i] = src[i];
       i++;

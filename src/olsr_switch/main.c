@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.11 2005/05/31 20:23:33 kattemat Exp $
+ * $Id: main.c,v 1.12 2005/05/31 20:37:00 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -78,6 +78,28 @@ int ipsize;
 static char ipv6_buf[100]; /* for address coversion */
 
 olsr_u32_t logbits;
+
+/* local functions */
+static int
+ohs_init_new_connection(int);
+
+static int
+ohs_route_data(struct ohs_connection *);
+
+static int
+ohs_init_connect_sockets(void);
+
+static int
+ohs_configure(void);
+
+static void
+ohs_listen_loop(void);
+
+static int
+ohs_delete_connection(struct ohs_connection *);
+
+
+
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *addr)
@@ -138,7 +160,7 @@ get_client_by_addr(union olsr_ip_addr *adr)
 }
 
 
-int
+static int
 ohs_init_new_connection(int s)
 {
   struct ohs_connection *oc;
@@ -179,7 +201,7 @@ ohs_init_new_connection(int s)
   return 1;
 }
 
-int
+static int
 ohs_delete_connection(struct ohs_connection *oc)
 {
 
@@ -216,7 +238,7 @@ ohs_delete_connection(struct ohs_connection *oc)
   return 0;
 }
 
-int
+static int
 ohs_route_data(struct ohs_connection *oc)
 {
   struct ohs_connection *ohs_cs;
@@ -263,7 +285,7 @@ ohs_route_data(struct ohs_connection *oc)
   return cnt;
 }
 
-int
+static int
 ohs_init_connect_sockets()
 {
   olsr_u32_t yes = 1;
@@ -308,14 +330,14 @@ ohs_init_connect_sockets()
 }
 
 
-int
+static int
 ohs_configure()
 {
 
   return 1;
 }
 
-void
+static void
 ohs_listen_loop()
 {
   int n;

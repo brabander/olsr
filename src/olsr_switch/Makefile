@@ -2,7 +2,8 @@
 CC ?= gcc
 BINNAME = olsr_switch
 INCLUDES += -I./..
-CFLAGS += -O2 -g $(INCLUDES) -Wall -MD
+CFLAGS += -O2 -g $(INCLUDES) -Wall -MD  -Wmissing-prototypes -Wstrict-prototypes \
+	-Wmissing-declarations -Wsign-compare
 LDFLAGS +=
 TOPDIR = ../../
 
