@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.11 2005/05/31 20:37:00 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.12 2005/06/01 05:32:15 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -102,14 +102,11 @@ get_next_token(char *src, char *dst, size_t buflen)
 int
 ohs_cmd_link(FILE *handle, char *args)
 {
-  olsr_u8_t bi = 0;
+  olsr_u8_t bi = 0, wildc_src = 0, wildc_dst = 0;
   struct ohs_connection *src, *dst;
   struct in_addr iaddr;
   int qual;
   struct ohs_ip_link *link, *inv_link;
-
-  if(strlen(args) < strlen("bi"))
-    goto print_usage;
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
 
@@ -125,18 +122,26 @@ ohs_cmd_link(FILE *handle, char *args)
 	goto print_usage;
     }
 
-  if(!inet_aton(tok_buf, &iaddr))
+  if(tok_buf[0] == '*')
     {
-      printf("Invalid src IP %s\n", tok_buf);
-      return -1;
+      wildc_src = 1;
+      src = NULL;
     }
-
-  src = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
-
-  if(!src)
+  else
     {
-      printf("No such client: %s!\n", tok_buf);
-      return -1;
+      if(!inet_aton(tok_buf, &iaddr))
+	{
+	  printf("Invalid src IP %s\n", tok_buf);
+	  return -1;
+	}
+
+      src = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
+
+      if(!src)
+	{
+	  printf("No such client: %s!\n", tok_buf);
+	  return -1;
+	}
     }
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
@@ -144,18 +149,27 @@ ohs_cmd_link(FILE *handle, char *args)
   if(!strlen(tok_buf))
     goto print_usage;
 
-  if(!inet_aton(tok_buf, &iaddr))
+  if(tok_buf[0] == '*')
     {
-      printf("Invalid src IP %s\n", tok_buf);
-      return -1;
+      wildc_dst = 1;
+      dst = NULL;
     }
-
-  dst = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
-
-  if(!dst)
+  else
     {
-      printf("No such client: %s!\n", tok_buf);
-      return -1;
+      
+      if(!inet_aton(tok_buf, &iaddr))
+	{
+	  printf("Invalid src IP %s\n", tok_buf);
+	  return -1;
+	}
+      
+      dst = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
+      
+      if(!dst)
+	{
+	  printf("No such client: %s!\n", tok_buf);
+	  return -1;
+	}
     }
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
@@ -171,10 +185,14 @@ ohs_cmd_link(FILE *handle, char *args)
       return -1;
     }
   
-  printf("%s %sdirectional link %s %c=> %s quality %d\n", 
+  printf("%s %sdirectional link(s) %s %c=> %s quality %d\n", 
          (qual == 100) ? "Removing" : "Setting", bi ? "bi" : "uni",
-	 olsr_ip_to_string(&src->ip_addr), bi ? '<' : '=', 
-         olsr_ip_to_string(&dst->ip_addr), qual);
+	 wildc_src ? "*" : olsr_ip_to_string(&src->ip_addr), bi ? '<' : '=', 
+         wildc_dst ? "*" : olsr_ip_to_string(&dst->ip_addr), qual);
+
+  /* Wildcards not implemented yet */
+  if(wildc_src || wildc_dst)
+    return -1;
 
   link = get_link(src, &dst->ip_addr);
   if(bi)
