@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.4 2005/05/31 08:55:22 kattemat Exp $
+ * $Id: link_rules.c,v 1.5 2005/06/01 18:53:29 kattemat Exp $
  */
 
 #include "link_rules.h"
@@ -86,6 +86,25 @@ ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
     }
 
   return 1;
+}
+
+
+struct ohs_ip_link *
+add_link(struct ohs_connection *src, struct ohs_connection *dst)
+{
+  struct ohs_ip_link *link;
+  
+  /* Create new link */
+  link = malloc(sizeof(struct ohs_ip_link));
+  if(!link)
+    OHS_OUT_OF_MEMORY("New link");
+  /* Queue */
+  link->next = src->links;
+  src->links = link;
+  COPY_IP(&link->dst, &dst->ip_addr);
+  src->linkcnt++;
+
+  return link;
 }
 
 int

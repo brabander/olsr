@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.h,v 1.2 2005/05/31 06:52:28 kattemat Exp $
+ * $Id: link_rules.h,v 1.3 2005/06/01 18:53:29 kattemat Exp $
  */
 
 
@@ -51,6 +51,9 @@ ohs_check_link(struct ohs_connection *, union olsr_ip_addr *);
 
 struct ohs_ip_link *
 get_link(struct ohs_connection *, union olsr_ip_addr *);
+
+struct ohs_ip_link *
+add_link(struct ohs_connection *, struct ohs_connection *);
 
 int
 remove_link(struct ohs_connection *, struct ohs_ip_link *);

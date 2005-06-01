@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.12 2005/06/01 05:32:15 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.13 2005/06/01 18:53:29 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -94,8 +94,8 @@ get_next_token(char *src, char *dst, size_t buflen)
     }
   dst[i] = 0;
 
-  if(strlen(dst))
-    printf("Extracted token: %s\n", dst);
+  //if(strlen(dst))
+  //printf("Extracted token: %s\n", dst);
   return i + j;
 }
 
@@ -125,7 +125,7 @@ ohs_cmd_link(FILE *handle, char *args)
   if(tok_buf[0] == '*')
     {
       wildc_src = 1;
-      src = NULL;
+      src = ohs_conns;
     }
   else
     {
@@ -152,7 +152,7 @@ ohs_cmd_link(FILE *handle, char *args)
   if(tok_buf[0] == '*')
     {
       wildc_dst = 1;
-      dst = NULL;
+      dst = ohs_conns;
     }
   else
     {
@@ -164,7 +164,6 @@ ohs_cmd_link(FILE *handle, char *args)
 	}
       
       dst = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
-      
       if(!dst)
 	{
 	  printf("No such client: %s!\n", tok_buf);
@@ -177,6 +176,12 @@ ohs_cmd_link(FILE *handle, char *args)
   if(!strlen(tok_buf))
     goto print_usage;
 
+  /* No use for bi if both src and dst are widcards */
+  if(wildc_dst && wildc_dst)
+    {
+      bi = 0;
+    }
+
   qual = atoi(tok_buf);
 
   if(qual < 0 || qual > 100)
@@ -184,63 +189,62 @@ ohs_cmd_link(FILE *handle, char *args)
       printf("Link quality out of range(0-100)\n");
       return -1;
     }
-  
-  printf("%s %sdirectional link(s) %s %c=> %s quality %d\n", 
-         (qual == 100) ? "Removing" : "Setting", bi ? "bi" : "uni",
-	 wildc_src ? "*" : olsr_ip_to_string(&src->ip_addr), bi ? '<' : '=', 
-         wildc_dst ? "*" : olsr_ip_to_string(&dst->ip_addr), qual);
 
-  /* Wildcards not implemented yet */
-  if(wildc_src || wildc_dst)
-    return -1;
-
-  link = get_link(src, &dst->ip_addr);
-  if(bi)
-    inv_link = get_link(dst, &src->ip_addr);
-  else
-    inv_link = NULL;
-
-  if(qual == 100)
+  while(src)
     {
-      /* Remove link entry */
-      if(link)
-        remove_link(src, link);
-      if(inv_link)
-        remove_link(dst, inv_link);
-    }
-  else 
-    {
-      if(!link)
-        {
-          /* Create new link */
-            link = malloc(sizeof(struct ohs_ip_link));
-            if(!link)
-              OHS_OUT_OF_MEMORY("New link");
-            /* Queue */
-            link->next = src->links;
-            src->links = link;
-            COPY_IP(&link->dst, &dst->ip_addr);
-            src->linkcnt++;
-        }
 
-      link->quality = qual;
+      while(dst)
+	{
 
-      if(bi)
-        {
-          if(!inv_link)
-            {
-              /* Create new link */
-              inv_link = malloc(sizeof(struct ohs_ip_link));
-              if(!inv_link)
-                OHS_OUT_OF_MEMORY("New link");
-              /* Queue */
-              inv_link->next = dst->links;
-              dst->links = inv_link;
-              COPY_IP(&inv_link->dst, &src->ip_addr);
-              dst->linkcnt++;
-            }
-          inv_link->quality = qual;
-        }
+	  if(src == dst)
+	    goto next_iteration;
+
+	  link = get_link(src, &dst->ip_addr);
+	  
+	  inv_link = bi ? get_link(dst, &src->ip_addr) : NULL;
+	  
+	  if(qual == 100)
+	    {
+	      /* Remove link entry */
+	      if(link)
+		remove_link(src, link);
+	      if(inv_link)
+		remove_link(dst, inv_link);
+	    }
+	  else 
+	    {
+	      if(!link)
+		{
+		  /* Create new link */
+		  link = add_link(src, dst);
+		}
+	      
+	      link->quality = qual;
+	      
+	      if(bi)
+		{
+		  if(!inv_link)
+		    {
+		      /* Create new link */
+		      inv_link = add_link(dst, src);
+		    }
+		  inv_link->quality = qual;
+		}
+	    }
+
+	  printf("%s %sdirectional link(s) %s %c=> %s quality %d\n", 
+		 (qual == 100) ? "Removing" : "Setting", bi ? "bi" : "uni",
+		 olsr_ip_to_string(&src->ip_addr), bi ? '<' : '=', 
+		 olsr_ip_to_string(&dst->ip_addr), qual);
+
+	next_iteration:
+	  if(wildc_dst)
+	    dst = dst->next;
+	  else
+	    break;
+	}
+      dst = wildc_dst ? ohs_conns : dst;
+      src = wildc_src ? src->next : NULL;
     }
 
   return 1;
