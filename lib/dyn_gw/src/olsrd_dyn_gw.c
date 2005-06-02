@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.17 2005/05/29 12:47:40 br1 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.18 2005/06/02 13:59:12 br1 Exp $
  */
 
 /*
@@ -56,6 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <net/route.h>
 #ifdef linux
 #include <linux/in_route.h>
