@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.62 2005/06/02 14:41:57 br1 Exp $
+# $Id: Makefile,v 1.63 2005/06/02 19:12:24 spoggle Exp $
 
 TOPDIR = .
 include Makefile.inc
@@ -67,7 +67,7 @@ switch:
 $(CFGOBJS):
 		$(MAKE) -C $(CFGDIR)
 
-.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install
+.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all
 
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe $(TAGFILE)
@@ -152,3 +152,6 @@ secure:
 		$(MAKE) -C lib/secure clean
 		$(MAKE) -C lib/secure
 		$(MAKE) -C lib/secure install
+
+build_all:	cfgparser olsrd libs
+install_all:	install install_libs
