@@ -2,12 +2,13 @@
 
 #ifndef linux
 #include <stdlib.h>
+#include <string.h>
 
 /* strndup() is a GNU extention */
 char *
 strndup(const char *ptr, size_t size)
 {
-  int len = strlen(ptr);
+  size_t len = strlen(ptr);
   char *ret = NULL;
 
   if(!len)

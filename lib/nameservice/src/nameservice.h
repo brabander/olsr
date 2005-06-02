@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.8 2005/05/29 12:47:42 br1 Exp $ */
+/* $Id: nameservice.h,v 1.9 2005/06/02 15:34:00 br1 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -37,6 +37,8 @@
 
 #ifndef _NAMESERVICE_PLUGIN
 #define _NAMESERVICE_PLUGIN
+
+#include <sys/time.h>
 
 #include "olsr_types.h"
 #include "interfaces.h"
