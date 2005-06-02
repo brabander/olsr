@@ -35,10 +35,16 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.61 2005/05/30 13:15:42 kattemat Exp $
+# $Id: Makefile,v 1.62 2005/06/02 14:41:57 br1 Exp $
 
 TOPDIR = .
 include Makefile.inc
+
+LIBS +=		$(OS_LIB_DYNLOAD)
+
+ifeq ($(OS), win32)
+LDFLAGS +=	-Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols
+endif
 
 VERS =		0.4.10pre
 

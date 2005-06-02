@@ -8,20 +8,22 @@ EXENAME = olsrd.exe
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 
-ifdef OLSRD_PLUGIN
-	LIBS += $(TOPDIR)/src/win32/compat.o
-endif
-
 DEFINES +=	-DWIN32
-LIBS +=		-mno-cygwin -Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols -lws2_32 -liphlpapi
-
+LIBS +=		-mno-cygwin -lws2_32 -liphlpapi
 INCLUDES += 	-I$(TOPDIR)/src/win32
 CFLAGS +=	-mno-cygwin
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).dll
 INSTALL_LIB =	cp $(PLUGIN_FULLNAME) ../..
 
-OS_PTHREAD = 
+ifdef OLSRD_PLUGIN
+LDFLAGS +=	-L$(TOPDIR)
+#LIBS += 	$(TOPDIR)/src/win32/compat.o
+LIBS +=		-lolsrd
+endif
+
+OS_LIB_PTHREAD =
+OS_LIB_DYNLOAD =
 
 olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \

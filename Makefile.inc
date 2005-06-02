@@ -26,8 +26,8 @@ endif
 
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
-CFLAGS +=	-DOLSR_PLUGIN -fPIC
-LDFLAGS +=	-shared  -fPIC -Wl,-soname,$(PLUGIN_NAME)
+CFLAGS +=	-DOLSR_PLUGIN
+LDFLAGS +=	-shared -Wl,-soname,$(PLUGIN_NAME)
 LDFLAGS +=	-Wl,--version-script=version-script.txt 
 else
 # c and ld flags for main

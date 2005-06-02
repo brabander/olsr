@@ -3,6 +3,7 @@ include $(TOPDIR)/Makefile.inc
 
 ifeq ($(OS), win32)
 BINNAME = olsr_switch.exe
+OBJS += ../win32/compat.o
 else
 BINNAME = olsr_switch
 endif

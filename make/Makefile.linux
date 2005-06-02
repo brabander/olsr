@@ -9,10 +9,16 @@ SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
 
 DEFINES = 	-Dlinux
-LIBS =		-ldl
+LIBS =		
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
 		/sbin/ldconfig -n $(LIBDIR)
+
+ifdef OLSRD_PLUGIN
+CFLAGS +=	-fPIC
+LDFLAGS +=	-fPIC
+endif
 		
-OS_PTHREAD = -lpthread
+OS_LIB_PTHREAD = -lpthread
+OS_LIB_DYNLOAD = -ldl

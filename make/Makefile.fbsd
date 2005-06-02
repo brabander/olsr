@@ -23,8 +23,14 @@ LIBS =+		-L$(INSTALL_PREFIX)/lib -lnet
 
 endif
 
+ifdef OLSRD_PLUGIN
+CFLAGS +=	-fPIC
+LDFLAGS +=	-fPIC
+endif
+
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
 		/sbin/ldconfig
 
-OS_PTHREAD = -pthread
+OS_LIB_PTHREAD = -pthread
+OS_LIB_DYNLOAD = -ldl

@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.19 2005/05/25 13:50:22 br1 Exp $
+# $Id: Makefile,v 1.20 2005/06/02 14:41:59 br1 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -55,8 +55,6 @@ else
 
 LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
-CFLAGS +=	-fPIC
-LDFLAGS +=	-Wl,--version-script=version-script.txt
 
 endif
 
