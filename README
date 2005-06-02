@@ -215,16 +215,16 @@ To use the plugins add them to the olsrd configuration file.
 COMPONENT/OS	Linux	Win32	FreeBSD	NetBSD	OpenBSD	OSX
 ------------------------------------------------------------
 olsrd		+/+	+/+	+/+	+/+	+/+	?
-olsr_switch	+/+	+/?	+/+	+/+	?	?
+olsr_switch	+/+	+/?	+/+	+/+	+/+	?
 ------------------------------------------------------------
 PLUGINS
 dot_draw	+/+	+/?	+/+	+/+	+/+	?
-dyn_gw		+/+	+/?	+/-	+/-	+/?	?
-httpinfo	+/+	+/+	+/+	+/+	+/?	?
-mini		+/+	+/?	+/+	+/+	?	?
-nameservice	+/+	+/?	+/+	+/+	+/?	?
-powerinfo	+/+	+/+	+/-	+/-	+/?	?
-secure		+/+	+/+	+/+	+/+	+/?	?
+dyn_gw		+/+	+/?	+/-	+/-	+/-	?
+httpinfo	+/+	+/+	+/+	+/+	+/+	?
+mini		+/+	+/?	+/+	+/+	+/+	?
+nameservice	+/+	+/?	+/+	+/+	+/+	?
+powerinfo	+/+	+/+	+/-	+/-	+/-	?
+secure		+/+	+/+	+/+	+/+	+/+	?
 tas		+/+	-	-	-	-	?
 ------------------------------------------------------------
 
@@ -455,4 +455,4 @@ to use "osx" instead of "fbsd", as in
   gmake OS=osx
 
 
-$Id: README,v 1.14 2005/06/02 15:33:59 br1 Exp $
+$Id: README,v 1.15 2005/06/02 15:49:11 br1 Exp $
