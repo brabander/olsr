@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.14 2005/05/29 12:47:40 br1 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.15 2005/06/02 15:09:37 br1 Exp $
  */
 
 /*
@@ -57,6 +57,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #include "olsr.h"
 #include "olsr_types.h"

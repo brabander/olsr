@@ -33,4 +33,4 @@ INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
 		/sbin/ldconfig
 
 OS_LIB_PTHREAD = -pthread
-OS_LIB_DYNLOAD = -ldl
+OS_LIB_DYNLOAD = 

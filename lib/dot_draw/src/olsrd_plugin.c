@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.11 2005/05/29 12:47:40 br1 Exp $
+ * $Id: olsrd_plugin.c,v 1.12 2005/06/02 15:09:37 br1 Exp $
  */
 
 /*
@@ -48,6 +48,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #include "olsrd_plugin.h"
 #include "olsrd_dot_draw.h"
