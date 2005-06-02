@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.12 2005/05/31 20:37:00 kattemat Exp $
+ * $Id: main.c,v 1.13 2005/06/02 18:38:56 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -345,7 +345,7 @@ ohs_listen_loop()
   int fn_stdin = fileno(stdin);
 
 
-  printf("OHS command interper reading from STDIN\n");
+  printf("OHS command interpreter reading from STDIN\n");
   printf("\n> ");
   fflush(stdout);
 
