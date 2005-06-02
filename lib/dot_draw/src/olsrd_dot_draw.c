@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.15 2005/06/02 15:09:37 br1 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.16 2005/06/02 18:20:15 kattemat Exp $
  */
 
 /*
@@ -253,6 +253,19 @@ ipc_action(int fd)
 
   addrlen = sizeof(struct sockaddr_in);
 
+  if (ipc_open)
+    {
+      while(close(ipc_connection) == -1) 
+        {
+          olsr_printf(1, "(DOT DRAW) Error on closing previously active TCP connection on fd %d: %s\n", ipc_connection, strerror(errno));
+          if (errno != EINTR)
+            {
+	      break;
+            }
+        }
+      ipc_open = 0;
+    }
+  
   if ((ipc_connection = accept(ipc_socket, (struct sockaddr *)  &pin, &addrlen)) == -1)
     {
       olsr_printf(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
