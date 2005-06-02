@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.13 2005/06/01 18:53:29 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.14 2005/06/02 19:06:24 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -177,7 +177,7 @@ ohs_cmd_link(FILE *handle, char *args)
     goto print_usage;
 
   /* No use for bi if both src and dst are widcards */
-  if(wildc_dst && wildc_dst)
+  if(wildc_src && wildc_dst)
     {
       bi = 0;
     }
