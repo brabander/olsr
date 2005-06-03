@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.14 2005/06/03 06:12:23 kattemat Exp $
+ * $Id: main.c,v 1.15 2005/06/03 16:36:20 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -183,10 +183,6 @@ ohs_init_new_connection(int s)
   oc->tx = 0;
   oc->linkcnt = 0;
 
-  /* Queue */
-  oc->next = ohs_conns;
-  ohs_conns = oc;
-
   /* Get "fake IP" */
   if(recv(oc->socket, new_addr, 4, 0) != 4)
     {
@@ -197,6 +193,19 @@ ohs_init_new_connection(int s)
   oc->ip_addr.v4 = ntohl(oc->ip_addr.v4);
   if(logbits & LOG_CONNECT)
     printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
+
+  if(get_client_by_addr(&oc->ip_addr))
+    {
+      if(logbits & LOG_CONNECT)
+	printf("IP: %s DUPLICATE! Disconecting client!\n", olsr_ip_to_string(&oc->ip_addr));
+
+      close(s);
+      return -1;
+    }
+
+  /* Queue */
+  oc->next = ohs_conns;
+  ohs_conns = oc;
 
   return 1;
 }
