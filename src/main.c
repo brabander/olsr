@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.80 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: main.c,v 1.81 2005/06/03 08:00:55 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -655,13 +655,13 @@ olsr_process_arguments(int argc, char *argv[],
 	      olsr_exit(__func__, EXIT_FAILURE);
 	    }
 	  printf("Queuing if %s\n", *argv);
-	  queue_if(*argv);
+	  queue_if(*argv, OLSR_FALSE);
 
 	  while((argc - 1) && (argv[1][0] != '-'))
 	    {
 	      NEXT_ARG;
 	      printf("Queuing if %s\n", *argv);
-	      queue_if(*argv);
+	      queue_if(*argv, OLSR_FALSE);
 	    }
 
 	  continue;
@@ -795,7 +795,7 @@ olsr_process_arguments(int argc, char *argv[],
 	    }
 	  /* Add hemu interface */
 
-	  ifa = queue_if("hcif01");
+	  ifa = queue_if("hcif01", OLSR_TRUE);
 
 	  if(!ifa)
 	    continue;

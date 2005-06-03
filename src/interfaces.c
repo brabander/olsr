@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.26 2005/05/30 13:13:37 kattemat Exp $
+ * $Id: interfaces.c,v 1.27 2005/06/03 08:00:55 kattemat Exp $
  */
 
 #include "defs.h"
@@ -317,9 +317,8 @@ if_ifwithname(const char *if_name)
  *@return nada
  */
 struct olsr_if *
-queue_if(char *name)
+queue_if(char *name, int hemu)
 {
-
   struct olsr_if *interf_n = olsr_cnf->interfaces;
 
   //printf("Adding interface %s\n", name);
@@ -343,6 +342,8 @@ queue_if(char *name)
   interf_n->interf = NULL;
   interf_n->configured = 0;
   interf_n->index = olsr_cnf->ifcnt++;
+
+  interf_n->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
 
   strncpy(interf_n->name, name, strlen(name) + 1);
   interf_n->next = olsr_cnf->interfaces;

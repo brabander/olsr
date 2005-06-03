@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.29 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: interfaces.h,v 1.30 2005/06/03 08:00:55 kattemat Exp $
  */
 
 
@@ -189,7 +189,7 @@ struct interface *
 if_ifwithname(const char *);
 
 struct olsr_if *
-queue_if(char *);
+queue_if(char *, int);
 
 int
 add_ifchgf(int (*f)(struct interface *, int));
