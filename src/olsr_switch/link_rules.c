@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.5 2005/06/01 18:53:29 kattemat Exp $
+ * $Id: link_rules.c,v 1.6 2005/06/03 06:12:23 kattemat Exp $
  */
 
 #include "link_rules.h"
@@ -88,6 +88,27 @@ ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
   return 1;
 }
 
+int
+ohs_delete_all_related_links(struct ohs_connection *oc)
+{
+  struct ohs_ip_link *links = oc->links;
+  int cnt = 0;
+
+  /* Delete links from this node*/
+  while(links)
+    {
+      struct ohs_ip_link *tmp_link = links;
+      links = links->next;
+      free(tmp_link);
+      cnt++;
+    }
+
+  /* Delete links to this node */
+
+  // XXX - ToDo
+
+  return cnt;
+}
 
 struct ohs_ip_link *
 add_link(struct ohs_connection *src, struct ohs_connection *dst)

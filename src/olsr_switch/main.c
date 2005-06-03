@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.13 2005/06/02 18:38:56 kattemat Exp $
+ * $Id: main.c,v 1.14 2005/06/03 06:12:23 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -83,7 +83,7 @@ olsr_u32_t logbits;
 static int
 ohs_init_new_connection(int);
 
-static int
+inline static int
 ohs_route_data(struct ohs_connection *);
 
 static int
@@ -205,6 +205,9 @@ static int
 ohs_delete_connection(struct ohs_connection *oc)
 {
 
+  if(!oc)
+    return -1;
+
   /* Close the socket */
   close(oc->socket);
 
@@ -232,13 +235,15 @@ ohs_delete_connection(struct ohs_connection *oc)
 	  curr_entry = curr_entry->next;
 	}
     }
+
+  ohs_delete_all_related_links(oc);
   /* Free */
   free(oc);
 
   return 0;
 }
 
-static int
+inline static int
 ohs_route_data(struct ohs_connection *oc)
 {
   struct ohs_connection *ohs_cs;
