@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.40 2005/06/03 20:08:20 spoggle Exp $
+ * $Id: olsrd_conf.c,v 1.41 2005/06/03 20:11:28 spoggle Exp $
  */
 
 
@@ -160,7 +160,7 @@ olsrd_parse_cnf(const char *filename)
       in->index = cnf->ifcnt++;
       in->configured = OLSR_FALSE;
       in->interf = NULL;
-      in->host_emul = OLSR_FALSE; //XXXDNC
+      in->host_emul = OLSR_FALSE;
       in = in->next;
     }
 
