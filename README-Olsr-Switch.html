@@ -15,7 +15,7 @@
 </HEAD>
 <BODY>
 <H1>Olsr_Switch network simulation</H1>
-<P><I>$Id: README-Olsr-Switch.html,v 1.2 2005/06/04 21:07:08 kattemat Exp $</I> 
+<P><I>$Id: README-Olsr-Switch.html,v 1.3 2005/06/04 22:28:27 kattemat Exp $</I> 
 </P>
 <H2>Summary</H2>
 <P>This document gives a brief introduction to the <A HREF="http://www.olsr.org/">olsr.org</A>
@@ -467,12 +467,21 @@ wants to create a GUI front-end that should not be to much work.
 <H2>Performance</H2>
 <P>Regarding CPU load I have not done any real testing, but I did try
 seeing how far I could get on my 1.3Ghz/512MB-RAM desktop system
-running olsrd instances in the background against olsrd_switch. 20
-instances seems to work ok, but at 30 things got worse. However, this
-was only using a idle network(no topology changes). But as soon as
-olsrd instances can connect from other hosts one can distribute the
-load. Also the application will be subject to various future
-optimizations. 
+running LQ olsrd instances in the background initiated from olsrd_switch. 
+When reaching a certain amount (15+) the cPU load is very high for 
+neighbor detection, but as soon as links stabelize the CPU is almost
+idle again. I have ran with 30+ nodes with no problem. But do not start
+to many instances at the same time.
+</P>
+<P>
+Note that, this
+was only using a idle network(no topology changes except new nodes joining). 
+But as soon as olsrd instances can connect from other hosts one can 
+distribute the load. Also the application will be subject to various future
+optimizations.
+</P>
+<P>
+Network load measurement tools will also be on the to-do list.
 </P>
 <HR>
 <P><I>by <A HREF="mailto:andreto--at--olsr.org">Andreas T&oslash;nnesen</A></I>
