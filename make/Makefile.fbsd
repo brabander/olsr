@@ -7,7 +7,7 @@ SBINDIR = $(INSTALL_PREFIX)/sbin
 ETCDIR = $(INSTALL_PREFIX)/etc
 LIBDIR = $(INSTALL_PREFIX)/lib
 DOCDIR = $(INSTALL_PREFIX)/share/doc
-MANDIR = $(INSTALL_PREFIX)/share/man
+MANDIR = $(INSTALL_PREFIX)/man
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
