@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.7 2005/05/31 18:18:00 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.8 2005/06/04 21:07:33 kattemat Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -47,6 +47,8 @@
 #define OHS_TCP_PORT 10150
 
 #define OHS_VERSION "0.1"
+
+#define OHS_DEFAULT_OLSRD_PATH "./olsrd"
 
 #define OHS_OUT_OF_MEMORY(s) \
  { printf("ohsd: out of memory \"%s\"!\n", s); ohs_close(0);}
@@ -105,5 +107,8 @@ olsr_ip_to_string(union olsr_ip_addr *);
 
 struct ohs_connection *
 get_client_by_addr(union olsr_ip_addr *);
+
+int
+ohs_delete_connection(struct ohs_connection *);
 
 #endif

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.h,v 1.3 2005/05/31 05:30:40 kattemat Exp $
+ * $Id: ohs_cmd.h,v 1.4 2005/06/04 21:07:33 kattemat Exp $
  */
 
 
@@ -56,7 +56,13 @@ struct ohs_command
 };
 
 int
+ohs_set_olsrd_path(char *);
+
+int
 ohs_parse_command(FILE *);
+
+int
+ohs_cmd_olsrd(FILE *, char *);
 
 int
 ohs_cmd_list(FILE *, char *);

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.14 2005/06/02 19:06:24 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.15 2005/06/04 21:07:33 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -49,6 +49,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 
 #define ARG_BUF_SIZE 500
@@ -56,6 +60,9 @@ static char arg_buf[ARG_BUF_SIZE];
 
 #define TOK_BUF_SIZE 500
 static char tok_buf[TOK_BUF_SIZE];
+
+#define MAX_OLSRD_ARGS 10
+static char olsrd_path[FILENAME_MAX];
 
 static void
 get_arg_buf(FILE *handle, char *buf, size_t size)
@@ -97,6 +104,144 @@ get_next_token(char *src, char *dst, size_t buflen)
   //if(strlen(dst))
   //printf("Extracted token: %s\n", dst);
   return i + j;
+}
+
+int
+ohs_set_olsrd_path(char *path)
+{
+  strncpy(olsrd_path, path, FILENAME_MAX);
+  return 0;
+}
+
+int
+ohs_cmd_olsrd(FILE *handle, char *args)
+{
+  char *olsrd_args[MAX_OLSRD_ARGS];
+  struct in_addr iaddr;
+
+  args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+
+  if(!strlen(tok_buf))
+    goto print_usage;
+
+  /* Start olsrd instance */
+  if(!strncmp(tok_buf, "start", strlen("start")))
+    {
+      int argc = 0, i = 0;
+
+      args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+      
+      if(!strlen(tok_buf))
+	goto print_usage;
+
+      if(!inet_aton(tok_buf, &iaddr))
+	{
+	  printf("Invalid IP %s\n", tok_buf);
+	  goto print_usage;
+	}
+
+      olsrd_args[argc++] = olsrd_path;
+
+      if(1) /* config file is set */
+	{
+	  olsrd_args[argc++] = "-f";
+	  olsrd_args[argc++] = "/etc/olsrd-emu.conf";
+	}
+      olsrd_args[argc++] = "-hemu";
+      olsrd_args[argc++] = tok_buf;
+
+      olsrd_args[argc++] = "-d";
+      olsrd_args[argc++] = "0";
+      olsrd_args[argc++] = "-nofork";
+      olsrd_args[argc] = NULL;
+
+      printf("Executing: %s", olsrd_path);
+      for(i = 0; i < argc; i++)
+	printf(" %s", olsrd_args[i]);
+      printf("\n");
+
+      if(fork())
+	return 1;
+
+      if(execve(olsrd_path, olsrd_args, NULL) < 0)
+	{
+	  printf("Error executing olsrd: %s\n", strerror(errno));
+	  exit(1);
+	}
+    }
+  /* Stop olsrd instance */
+  else if(!strncmp(tok_buf, "stop", strlen("stop")))
+    {
+      struct ohs_connection *oc;
+
+      args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+      
+      if(!strlen(tok_buf))
+	goto print_usage;
+
+      if(!inet_aton(tok_buf, &iaddr))
+	{
+	  printf("Invalid IP %s\n", tok_buf);
+	  goto print_usage;
+	}
+
+      oc = get_client_by_addr((union olsr_ip_addr *)&iaddr.s_addr);
+
+      if(!oc)
+	{
+	  printf("No such client: %s\n", tok_buf);
+	  return -1;
+	}
+      ohs_delete_connection(oc);
+      
+      return 1;
+    }
+  /* Set olsrd binary path */
+  else if(!strncmp(tok_buf, "setb", strlen("setb")))
+    {
+      struct stat sbuf;
+
+      args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
+      
+      if(!strlen(tok_buf))
+	goto print_usage;
+
+      if(stat(tok_buf, &sbuf) < 0)
+	{
+	  printf("Error setting binary \"%s\": %s\n",
+		 tok_buf, strerror(errno));
+	  return -1;
+	}
+
+      if((sbuf.st_mode & S_IFDIR) || !(sbuf.st_mode & S_IXUSR))
+	{
+	  printf("Error setting binary \"%s\": Not a regular execuatble file!\n",
+		 tok_buf);
+	  return -1;
+	}
+
+      printf("New olsrd binary path:\"%s\"\n", tok_buf);
+      ohs_set_olsrd_path(tok_buf);
+
+      return 1;
+
+    }
+  /* Set arguments */
+  else if(!strncmp(tok_buf, "seta", strlen("seta")))
+    {
+
+    }
+  /* Show settings */
+  else if(!strncmp(tok_buf, "show", strlen("show")))
+    {
+      printf("olsrd command settings:\n\tBinary path: %s\n\tArguments  : \n",
+	     olsrd_path);
+      return 1;
+    }
+
+ print_usage:
+  printf("Usage: olsrd [start|stop|show|setb|seta] [IP|path|args]\n");
+  return 0;
 }
 
 int

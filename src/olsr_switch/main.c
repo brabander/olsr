@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.15 2005/06/03 16:36:20 kattemat Exp $
+ * $Id: main.c,v 1.16 2005/06/04 21:07:33 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -47,6 +47,7 @@
 #include "ohs_cmd.h"
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
 #include <netinet/in.h>
@@ -94,12 +95,6 @@ ohs_configure(void);
 
 static void
 ohs_listen_loop(void);
-
-static int
-ohs_delete_connection(struct ohs_connection *);
-
-
-
 
 char *
 olsr_ip_to_string(union olsr_ip_addr *addr)
@@ -210,7 +205,7 @@ ohs_init_new_connection(int s)
   return 1;
 }
 
-static int
+int
 ohs_delete_connection(struct ohs_connection *oc)
 {
 
@@ -449,7 +444,6 @@ ohs_listen_loop()
     }
 }
 
-
 int
 main(int argc, char *argv[])
 {
@@ -466,6 +460,9 @@ main(int argc, char *argv[])
 #else
   signal(SIGINT, ohs_close);  
   signal(SIGTERM, ohs_close);  
+
+  /* Avoid zombie children */
+  signal(SIGCHLD, SIG_IGN);
 #endif
 
   printf("olsrd host-switch daemon version %s starting\n", OHS_VERSION);
@@ -476,6 +473,7 @@ main(int argc, char *argv[])
 
   srand((unsigned int)time(NULL));
 
+  ohs_set_olsrd_path(OHS_DEFAULT_OLSRD_PATH);
 
   ohs_init_connect_sockets();
 

@@ -15,7 +15,7 @@
 </HEAD>
 <BODY>
 <H1>Olsr_Switch network simulation</H1>
-<P><I>$Id: README-Olsr-Switch.html,v 1.1 2005/06/03 17:25:12 kattemat Exp $</I> 
+<P><I>$Id: README-Olsr-Switch.html,v 1.2 2005/06/04 21:07:08 kattemat Exp $</I> 
 </P>
 <H2>Summary</H2>
 <P>This document gives a brief introduction to the <A HREF="http://www.olsr.org/">olsr.org</A>
@@ -135,7 +135,10 @@ OHS command interpreter reading from STDIN
 &gt;</PRE><P>
 <BR><BR>
 </P>
-<P>To start olsrd in host-emulation mode do: 
+<P>olsrd_switch has a buildt-in command for starting and
+stopping local olsrd instances and we will learn more about 
+this later. But olsrd can also be ran in host-emulation mode
+from the command line. To start olsrd in host-emulation mode do: 
 </P>
 <PRE STYLE="margin-bottom: 0.2in">./olsrd -hemu <B>IP-ADDRESS</B></PRE><P>
 Here <I>IP-ADDRESS</I> will be the IP address that the process will
@@ -204,8 +207,27 @@ To set 50% packetloss on all links to 10.0.0.2 do:
 To delete all links do:
  link * * 100
 Wildcards can also be used in combination with 'bi'.
-To list all manipulated links use 'list links'.</PRE><H3>
-others</H3>
+To list all manipulated links use 'list links'.</PRE>
+<H3>olsrd</H3>
+<P>The <I>olsrd</I> command is used for manipulating links. Here is
+the help page for this command: 
+</P>
+<PRE>
+> help olsrd
+Usage: <B>olsrd [start|stop|show|setb|seta] [IP|path|args]</B>
+Description:
+<I>This command is used for managing local olsrd instances from within olsr_switch.</I>
+<I>The command can be configured in runtime using the setb and seta sub-commands.</I>
+To show the current olsrd command-configuration do:
+ olsrd show
+To set the olsrd binary path do:
+ olsrd setb /full/path/to/olsrd
+To start a olsrd instance with a IP address of 10.0.0.1, do:
+ olsrd start 10.0.0.1
+To stop that same instance do:
+ olsrd stop 10.0.0.1
+</PRE>
+<H3>others</H3>
 <P>Two other commands are available: 
 </P>
 <UL>
@@ -268,7 +290,19 @@ IP address       LQ     NLQ    SYM   MPR   MPRS  will
 
 Source IP addr   Dest IP addr     LQ     ILQ    ETX
 </PRE><P>
-We have our own virtual network! :-) At out switch prompt the command
+We now have our own virtual network! Notice that you can
+start olsrd instances from olsr_switch using the <i>olsrd</i>
+command. The equvivalent of the above command line statement
+would be:
+<PRE>
+olsrd start 10.0.0.x
+</PRE>
+<P>
+Given that the olsrd command is configured properly
+(see olsrd show, setb and seta).
+</P>
+<P>
+At our switch prompt the command
 <I>list</I> yields the following output: 
 </P>
 <PRE>All connected clients:
