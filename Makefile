@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.63 2005/06/02 19:12:24 spoggle Exp $
+# $Id: Makefile,v 1.64 2005/06/05 15:16:49 kattemat Exp $
 
 TOPDIR = .
 include Makefile.inc
@@ -52,6 +52,7 @@ SWITCHDIR =     src/olsr_switch
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
 CFGDEPS = 	$(wildcard $(CFGDIR)/*.c) $(wildcard $(CFGDIR)/*.h) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
+TAG_SRCS = $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h) $(wildcard src/olsr_switch/*.c) $(wildcard src/olsr_switch/*.h)
 
 default_target: cfgparser olsrd
 
@@ -106,7 +107,7 @@ install_olsrd:	install_bin
 		cp files/olsrd.conf.5.gz $(MANDIR)/man5/olsrd.conf.5.gz
 
 tags:
-		$(TAGCMD) -o $(TAGFILE) $(SRCS) $(HDRS) $(wildcard src/cfgparser/*.c) $(wildcard src/cfgparser/*.h)
+		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
 
 #
 # PLUGINS
