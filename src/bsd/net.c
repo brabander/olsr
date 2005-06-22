@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.24 2005/05/30 14:08:57 kattemat Exp $
+ * $Id: net.c,v 1.25 2005/06/22 20:04:35 kattemat Exp $
  */
 
 #include "defs.h"
@@ -63,10 +63,12 @@
 #ifdef __FreeBSD__
 #include <net/if_var.h>
 #include <net/ethernet.h>
+#ifndef FBSD_NO_80211
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
 #include <dev/wi/if_wavelan_ieee.h>
 #include <dev/wi/if_wireg.h>
+#endif
 #endif
 
 #ifdef SPOOF
@@ -706,7 +708,7 @@ olsr_select(int nfds,
 int 
 check_wireless_interface(char *ifname)
 {
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ &&  !defined FBSD_NO_80211
   struct wi_req	wreq;
   struct ifreq ifr;
 
