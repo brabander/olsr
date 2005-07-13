@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.64 2005/06/05 15:16:49 kattemat Exp $
+# $Id: Makefile,v 1.65 2005/07/13 21:45:50 kattemat Exp $
 
 TOPDIR = .
 include Makefile.inc
@@ -153,6 +153,11 @@ secure:
 		$(MAKE) -C lib/secure clean
 		$(MAKE) -C lib/secure
 		$(MAKE) -C lib/secure install
+
+pgraph:
+		$(MAKE) -C lib/pgraph clean
+		$(MAKE) -C lib/pgraph 
+		$(MAKE) -C lib/pgraph install 
 
 build_all:	cfgparser olsrd libs
 install_all:	install install_libs
