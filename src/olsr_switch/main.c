@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.17 2005/08/04 18:57:11 kattemat Exp $
+ * $Id: main.c,v 1.18 2005/08/04 19:43:35 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -347,13 +347,14 @@ ohs_configure()
   return 1;
 }
 
+
 static void
 ohs_listen_loop()
 {
   int n;
   fd_set ibits;
   int fn_stdin = fileno(stdin);
-
+  struct timeval select_timeout = {0 , 5};
 
   printf("OHS command interpreter reading from STDIN\n");
   printf("\n> ");
@@ -372,12 +373,12 @@ ohs_listen_loop()
       high = srv_socket;
       FD_SET(srv_socket, &ibits);
 
-
+#ifndef WIN32
       if(fn_stdin > high) 
 	high = fn_stdin;
 
       FD_SET(fn_stdin, &ibits);
-
+#endif
       /* Add clients */
       for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
 	{
@@ -388,10 +389,10 @@ ohs_listen_loop()
 	}
 
       /* block */
-      n = select(high + 1, &ibits, 0, 0, NULL);
+      n = select(high + 1, &ibits, 0, 0, &select_timeout);
       
       if(n == 0)
-	continue;
+	goto read_stdin;
 
       /* Did somethig go wrong? */
       if (n < 0) 
@@ -400,7 +401,7 @@ ohs_listen_loop()
 	    continue;
 	  
 	  printf("Error select: %s", strerror(errno));
-	  continue;
+	  goto read_stdin;
 	}
       
       /* Check server socket */
@@ -435,8 +436,12 @@ ohs_listen_loop()
 		  ohs_delete_connection(ohs_tmp);
 	    }
 	}
-
+#if WIN32
+    read_stdin:
+      if(WaitForSingleObject(fn_stdin, 0) >= 0)
+#else
       if(FD_ISSET(fn_stdin, &ibits))
+#endif
 	{
 	  ohs_parse_command(stdin);
 	  printf("\n> ");
