@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.15 2005/06/04 21:07:33 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.16 2005/08/04 18:57:11 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -116,6 +116,10 @@ ohs_set_olsrd_path(char *path)
 int
 ohs_cmd_olsrd(FILE *handle, char *args)
 {
+#ifdef WIN32
+  printf("olsrd command not available in windows version\nStart instances manually\n");
+  return 0;
+#else
   char *olsrd_args[MAX_OLSRD_ARGS];
   struct in_addr iaddr;
 
@@ -242,6 +246,7 @@ ohs_cmd_olsrd(FILE *handle, char *args)
  print_usage:
   printf("Usage: olsrd [start|stop|show|setb|seta] [IP|path|args]\n");
   return 0;
+#endif
 }
 
 int

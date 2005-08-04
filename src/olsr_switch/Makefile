@@ -8,9 +8,6 @@ else
 BINNAME = olsr_switch
 endif
 
-LDFLAGS =
-LIBS =
-
 default_target:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $(TOPDIR)/$(BINNAME) $(OBJS) $(LIBS)
 

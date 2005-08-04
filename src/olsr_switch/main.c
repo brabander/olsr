@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.16 2005/06/04 21:07:33 kattemat Exp $
+ * $Id: main.c,v 1.17 2005/08/04 18:57:11 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -47,7 +47,6 @@
 #include "ohs_cmd.h"
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
 #include <netinet/in.h>
@@ -65,6 +64,8 @@
 #define errno WSAGetLastError()
 #undef strerror
 #define strerror(x) StrError(x)
+#else
+#include <sys/wait.h>
 #endif
 
 static int srv_socket;
