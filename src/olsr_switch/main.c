@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.18 2005/08/04 19:43:35 kattemat Exp $
+ * $Id: main.c,v 1.19 2005/08/04 19:55:17 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -392,7 +392,11 @@ ohs_listen_loop()
       n = select(high + 1, &ibits, 0, 0, &select_timeout);
       
       if(n == 0)
+#ifdef WIN32
 	goto read_stdin;
+#else
+        continue;
+#endif
 
       /* Did somethig go wrong? */
       if (n < 0) 
@@ -401,7 +405,11 @@ ohs_listen_loop()
 	    continue;
 	  
 	  printf("Error select: %s", strerror(errno));
-	  goto read_stdin;
+#ifdef WIN32
+          goto read_stdin;
+#else
+          continue;
+#endif
 	}
       
       /* Check server socket */
