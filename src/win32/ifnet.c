@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.27 2005/05/30 13:50:27 kattemat Exp $
+ * $Id: ifnet.c,v 1.28 2005/08/04 20:45:29 kattemat Exp $
  */
 
 #include "interfaces.h"
@@ -812,6 +812,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
 
   New->int_flags = 0;
 
+  New->is_hcif = OLSR_FALSE;
+
   New->int_mtu = Info.Mtu;
 
   New->int_name = olsr_malloc(strlen (IntConf->name) + 1, "Interface 2");
@@ -941,6 +943,12 @@ void check_interface_updates(void *dummy)
 
   for(IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next)
   {
+    if(IntConf->host_emul)
+      continue;
+      
+    if(olsr_cnf->host_emul) /* XXX: TEMPORARY! */
+      continue;
+ 
     if(IntConf->configured)    
       chk_if_changed(IntConf);
 
