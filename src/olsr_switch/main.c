@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.19 2005/08/04 19:55:17 kattemat Exp $
+ * $Id: main.c,v 1.20 2005/08/05 15:15:19 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -353,8 +353,12 @@ ohs_listen_loop()
 {
   int n;
   fd_set ibits;
+#ifdef WIN32
+  struct timeval select_timeout;
+  HANDLE  stdIn = GetStdHandle(STD_INPUT_HANDLE);
+#else
   int fn_stdin = fileno(stdin);
-  struct timeval select_timeout = {0 , 5};
+#endif
 
   printf("OHS command interpreter reading from STDIN\n");
   printf("\n> ");
@@ -373,7 +377,10 @@ ohs_listen_loop()
       high = srv_socket;
       FD_SET(srv_socket, &ibits);
 
-#ifndef WIN32
+#ifdef WIN32
+      select_timeout.tv_sec = 0;
+      select_timeout.tv_usec = 5;
+#else
       if(fn_stdin > high) 
 	high = fn_stdin;
 
@@ -388,8 +395,12 @@ ohs_listen_loop()
 	  FD_SET(ohs_cs->socket, &ibits);
 	}
 
-      /* block */
+#ifdef WIN32
       n = select(high + 1, &ibits, 0, 0, &select_timeout);
+#else
+      /* block */
+      n = select(high + 1, &ibits, 0, 0, NULL);
+#endif
       
       if(n == 0)
 #ifdef WIN32
@@ -446,7 +457,7 @@ ohs_listen_loop()
 	}
 #if WIN32
     read_stdin:
-      if(WaitForSingleObject(fn_stdin, 0) >= 0)
+      if(WaitForSingleObject(stdIn, 5L) == WAIT_OBJECT_0)
 #else
       if(FD_ISSET(fn_stdin, &ibits))
 #endif
@@ -454,7 +465,8 @@ ohs_listen_loop()
 	  ohs_parse_command(stdin);
 	  printf("\n> ");
 	  fflush(stdout);
-	}      
+	}
+      printf("*");
     }
 }
 
