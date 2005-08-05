@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.27 2005/05/30 13:13:47 kattemat Exp $
+ * $Id: ifnet.c,v 1.28 2005/08/05 13:47:40 kattemat Exp $
  */
 
 
@@ -150,6 +150,9 @@ chk_if_changed(struct olsr_if *iface)
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking if %s is set down or changed\n", iface->name)
 #endif
+
+  if(iface->host_emul)
+    return -1;
 
   ifp = iface->interf;
 
