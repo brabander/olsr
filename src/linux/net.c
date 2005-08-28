@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.27 2005/05/30 17:23:09 kattemat Exp $
+ * $Id: net.c,v 1.28 2005/08/28 19:30:30 kattemat Exp $
  */
 
 
@@ -152,6 +152,53 @@ enable_ip_forwarding(int version)
     }
   return 1;
       
+}
+
+
+int
+disable_redirects_global(int version)
+{
+  FILE *proc_redirect;
+  char procfile[FILENAME_MAX];
+
+  if(version == AF_INET6)
+    return -1;
+
+  strcpy(procfile, "/proc/sys/net/ipv4/conf/all/send_redirects");
+
+  if((proc_redirect = fopen(procfile, "r")) == NULL)
+    {
+      fprintf(stderr, "WARNING! Could not open the %s file to check/disable ICMP redirects!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that ICMP redirects are disabled!\n\n", procfile);
+      
+      sleep(3);
+      return -1;
+    }
+  else
+    {
+      orig_global_redirect_state = fgetc(proc_redirect);
+      fclose(proc_redirect);
+    }
+
+  if(orig_global_redirect_state == '0')
+    {
+      return 0;
+    }
+
+  if ((proc_redirect = fopen(procfile, "w"))==NULL)
+    {
+      fprintf(stderr, "Could not open %s for writing!\n", procfile);
+      fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that ICMP redirect is disabeled!\n\n");
+      sleep(3);
+      return 0;
+    }
+  else
+    {
+      syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
+      fputs("0", proc_redirect);
+    }
+  fclose(proc_redirect);
+  
+  return 1;
 }
 
 
@@ -293,6 +340,27 @@ restore_settings(int version)
 	}
 
     }
+
+  /* Restore global ICMP redirect setting */
+  if(orig_global_redirect_state != '0')
+    {
+      if(version == AF_INET)
+	{
+	  strcpy(procfile, "/proc/sys/net/ipv4/conf/all/send_redirects");
+
+	  if ((proc_fd = fopen(procfile, "w")) == NULL)
+	    {
+	      fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+	    }
+	  else
+	    {
+	      syslog(LOG_INFO, "Resetting %s to %c\n", procfile, orig_global_redirect_state);
+	      fputc(orig_global_redirect_state, proc_fd);
+	      fclose(proc_fd);
+	    }
+	}
+    }
+
 
   if(version == AF_INET6)
     return 0;

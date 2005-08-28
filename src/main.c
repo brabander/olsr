@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.81 2005/06/03 08:00:55 kattemat Exp $
+ * $Id: main.c,v 1.82 2005/08/28 19:30:29 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -248,6 +248,11 @@ main(int argc, char *argv[])
    */
   if(olsr_cnf->debug_level > 1)
     olsrd_print_cnf(olsr_cnf);
+
+#ifndef WIN32
+  /* Disable redirects globally */
+  disable_redirects_global(olsr_cnf->ip_version);
+#endif
 
   /*
    *socket for icotl calls

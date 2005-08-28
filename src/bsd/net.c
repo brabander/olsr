@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.25 2005/06/22 20:04:35 kattemat Exp $
+ * $Id: net.c,v 1.26 2005/08/28 19:30:29 kattemat Exp $
  */
 
 #include "defs.h"
@@ -84,8 +84,6 @@
 static int ignore_redir;
 static int send_redir;
 static int gateway;
-
-static int first_time = 1;
 
 static int set_sysctl_int(char *name, int new)
 {
@@ -159,19 +157,10 @@ int enable_ip_forwarding(int version)
   return 1;
 }
 
-int disable_redirects(char *if_name, int index, int version)
+int
+disable_redirects_global(int version)
 {
   char *name;
-
-  // this function gets called for each interface olsrd uses; however,
-  // FreeBSD can only globally control ICMP redirects, and not on a
-  // per-interface basis; hence, only disable ICMP redirects on the first
-  // invocation
-
-  if (first_time == 0)
-    return 1;
-
-  first_time = 0;
 
   // do not accept ICMP redirects
 
@@ -215,6 +204,15 @@ int disable_redirects(char *if_name, int index, int version)
       sleep(3);
     }
 
+  return 1;
+}
+
+int disable_redirects(char *if_name, int index, int version)
+{
+  // this function gets called for each interface olsrd uses; however,
+  // FreeBSD can only globally control ICMP redirects, and not on a
+  // per-interface basis; hence, only disable ICMP redirects in the "global"
+  // function
   return 1;
 }
 

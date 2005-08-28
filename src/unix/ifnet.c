@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.28 2005/08/05 13:47:40 kattemat Exp $
+ * $Id: ifnet.c,v 1.29 2005/08/28 19:30:30 kattemat Exp $
  */
 
 
@@ -902,7 +902,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     {
       /* IP version 4 */
       ifp->ip_addr.v4 = ((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr;
-      
+      ((struct sockaddr_in *)&addrsock)->sin_addr.s_addr =  
+	((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr;
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control

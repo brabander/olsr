@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.11 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: net_os.h,v 1.12 2005/08/28 19:30:29 kattemat Exp $
  */
 
 
@@ -84,6 +84,9 @@ convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
 
 int
 disable_redirects(char *, int, int);
+
+int
+disable_redirects_global(int);
 
 int
 deactivate_spoof(char *, int, int);
