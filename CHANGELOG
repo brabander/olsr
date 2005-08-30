@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.47 2005/05/25 14:51:37 kattemat Exp $
+$Id: CHANGELOG,v 1.48 2005/08/30 20:09:05 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -26,6 +26,12 @@ The dependency on the math lib came from the use of pow(3) in hte
 mantissa/exponent calculation. The calls to pow in this long forgotten 
 code, was very unnessecarry. The pow calls are replaced with bitwise 
 shifts and -lm is no longer needed.
+
+ICMP REDIRECTS ON LINUX
+
+On Linux systems "0" is now also written to the all/send_redirects
+procfile and not only the pr. interface ones. Hopefully this resolves
+problems reported with systems still sending ICMP redirects.
 
 BUGFIXES
 
