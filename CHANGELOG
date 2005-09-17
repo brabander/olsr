@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.48 2005/08/30 20:09:05 kattemat Exp $
+$Id: CHANGELOG,v 1.49 2005/09/17 20:48:49 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -35,6 +35,8 @@ problems reported with systems still sending ICMP redirects.
 
 BUGFIXES
 
+- Fixed init of IPv6 addrtype variable. It used to be uninitialized,
+  causing it to default to site-local and have some weird side-effects.
 - Fixed crash when changing IPv6 address at run-time
 - Fixed a bug that prevented setting willingness 0 in the configfile
 - Did various updates to prevent assertion when a neighbor

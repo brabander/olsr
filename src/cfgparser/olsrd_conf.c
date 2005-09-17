@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.41 2005/06/03 20:11:28 spoggle Exp $
+ * $Id: olsrd_conf.c,v 1.42 2005/09/17 20:48:50 kattemat Exp $
  */
 
 
@@ -478,6 +478,8 @@ get_default_if_config()
   io->weight.fixed = OLSR_FALSE;
   io->weight.value = 0;
 
+  io->ipv6_addrtype = 0; /* global */
+
   io->hello_params.emission_interval = HELLO_INTERVAL;
   io->hello_params.validity_time = NEIGHB_HOLD_TIME;
   io->tc_params.emission_interval = TC_INTERVAL;
@@ -572,8 +574,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	      printf("\tIPv4 broadcast           : AUTO\n");
 	    }
 	  
-	  if(in->cnf->ipv6_addrtype)
-	    printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
+	  printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
 	  
 	  //union olsr_ip_addr       ipv6_multi_site;
 	  //union olsr_ip_addr       ipv6_multi_glbl;
