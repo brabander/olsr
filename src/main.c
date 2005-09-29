@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.82 2005/08/28 19:30:29 kattemat Exp $
+ * $Id: main.c,v 1.83 2005/09/29 05:53:34 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -362,7 +362,7 @@ main(int argc, char *argv[])
 #ifndef WIN32
   if((olsr_cnf->debug_level == 0) && (!olsr_cnf->no_fork))
     {
-      printf("%s detattching from the current process...\n", SOFTWARE_VERSION);
+      printf("%s detaching from the current process...\n", SOFTWARE_VERSION);
       if(daemon(0, 0) < 0)
 	{
 	  printf("daemon(3) failed: %s\n", strerror(errno));
