@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.16 2005/05/25 13:36:41 kattemat Exp $
+ * $Id: lq_packet.c,v 1.17 2005/10/08 15:43:56 kattemat Exp $
  */
 
 #include "olsr_protocol.h"
@@ -773,6 +773,12 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
   struct lq_hello_neighbor *neigh;
   struct hello_neighbor *new_neigh;
 
+  // SVEN_OLA: Check the message source addr
+  if(!olsr_validate_address(&lq_hello->comm.orig))
+    {
+      return;
+    }
+
   // XXX - translation is ugly; everybody should use lq_hello_message :-)
 
   // move the static fields from LQ_HELLO to HELLO
@@ -793,6 +799,9 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
 
   for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
     {
+      // SVEN_OLA: Also check the neighbours
+      if(!olsr_validate_address(&neigh->addr)) continue;
+      
       // allocate HELLO neighbour
 
       new_neigh = olsr_malloc(sizeof (struct hello_neighbor),
@@ -824,6 +833,12 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
   struct lq_tc_neighbor *neigh;
   struct tc_mpr_addr *new_neigh;
 
+  // SVEN_OLA: Check the message source addr
+  if(!olsr_validate_address(&lq_tc->from)||!olsr_validate_address(&lq_tc->comm.orig))
+    {
+      return;
+    }
+
   // XXX - translation is ugly; everybody should use lq_tc_message :-)
 
   // move the static fields from LQ_TC to TC
@@ -844,6 +859,9 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
 
   for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next)
     {
+      // SVEN_OLA: Also check the neighbours
+      if(!olsr_validate_address(&neigh->main)) continue;
+      
       // allocate TC neighbour
 
       new_neigh = olsr_malloc(sizeof (struct tc_mpr_addr),
