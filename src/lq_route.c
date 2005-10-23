@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.36 2005/10/23 20:11:50 tlopatic Exp $
+ * $Id: lq_route.c,v 1.37 2005/10/23 20:58:14 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -365,7 +365,9 @@ void olsr_calculate_lq_routing_table(void)
   struct hna_net *hna;
   struct rt_entry *gw_rt, *hna_rt, *head_rt;
   struct neighbor_2_entry *neigh2;
+#if 0
   struct neighbor_list_entry *neigh_walker;
+#endif
   struct interface *inter;
 
   if (ipsize == 4)
@@ -424,14 +426,18 @@ void olsr_calculate_lq_routing_table(void)
       {
         link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
 
-        if (link->loss_link_quality >= MIN_LINK_QUALITY &&
-            link->neigh_link_quality >= MIN_LINK_QUALITY)
+        if (link->loss_link_quality2 >= MIN_LINK_QUALITY &&
+            link->neigh_link_quality2 >= MIN_LINK_QUALITY)
           {
-            etx = 1.0 / (link->loss_link_quality * link->neigh_link_quality);
+            etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
 
             add_edge(&vertex_tree, &neigh->neighbor_main_addr, &main_addr, etx);
           }
       }
+
+// we now rely solely on TC messages for routes to our two-hop neighbours
+
+#if 0
 
   // add edges between our neighbours and our two-hop neighbours
 
@@ -454,6 +460,8 @@ void olsr_calculate_lq_routing_table(void)
                    &neigh->neighbor_main_addr, etx);
         }
       }
+
+#endif
 
   // add remaining edges
 

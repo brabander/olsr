@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.17 2005/10/08 15:43:56 kattemat Exp $
+ * $Id: lq_packet.c,v 1.18 2005/10/23 20:58:14 tlopatic Exp $
  */
 
 #include "olsr_protocol.h"
@@ -53,6 +53,8 @@
 #include "two_hop_neighbor_table.h"
 #include "hysteresis.h"
 #include "olsr.h"
+
+olsr_bool lq_tc_pending = OLSR_FALSE;
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
@@ -147,6 +149,11 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   int i;
   struct neighbor_entry *walker;
   struct link_entry *link;
+
+  // remember that we have generated an LQ TC message; this is
+  // checked in net_output()
+
+  lq_tc_pending = OLSR_TRUE;
 
   // initialize the static fields
 

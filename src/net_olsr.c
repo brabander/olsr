@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.4 2005/10/08 15:43:56 kattemat Exp $
+ * $Id: net_olsr.c,v 1.5 2005/10/23 20:58:14 tlopatic Exp $
  */
 
 #include "net_olsr.h"
@@ -44,7 +44,10 @@
 #include "olsr.h"
 #include "net_os.h"
 #include "print_packet.h"
+#include "link_set.h"
 #include <stdlib.h>
+
+extern olsr_bool lq_tc_pending;
 
 #ifdef WIN32
 #define perror(x) WinSockPError(x)
@@ -487,6 +490,12 @@ net_output(struct interface *ifp)
     }
   
   netbufs[ifp->if_nr]->pending = 0;
+
+  // if we've just transmitted a TC message, let Dijkstra use the current
+  // link qualities for the links to our neighbours
+
+  olsr_update_dijkstra_link_qualities();
+  lq_tc_pending = OLSR_FALSE;
 
   return 1;
 }

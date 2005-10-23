@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.60 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: link_set.c,v 1.61 2005/10/23 20:58:14 tlopatic Exp $
  */
 
 
@@ -474,6 +474,9 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   new_link->loss_link_quality = 0.0;
   new_link->neigh_link_quality = 0.0;
+
+  new_link->loss_link_quality2 = 0.0;
+  new_link->neigh_link_quality2 = 0.0;
 
   new_link->saved_loss_link_quality = 0.0;
   new_link->saved_neigh_link_quality = 0.0;
@@ -1072,3 +1075,15 @@ static void olsr_time_out_packet_loss()
       walker->loss_timeout = GET_TIMESTAMP(walker->loss_hello_int * 1000.0);
     }
 }
+
+void olsr_update_dijkstra_link_qualities()
+{
+  struct link_entry *walker;
+
+  for (walker = link_set; walker != NULL; walker = walker->next)
+  {
+    walker->loss_link_quality2 = walker->loss_link_quality;
+    walker->neigh_link_quality2 = walker->neigh_link_quality;
+  }
+}
+
