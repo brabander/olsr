@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.17 2005/10/23 19:01:04 tlopatic Exp $
+ * $Id: ohs_cmd.c,v 1.18 2005/10/23 19:17:48 tlopatic Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -595,14 +595,17 @@ ohs_parse_command(void)
   fputc(c, stdout);
   fflush(stdout);
 
-#else
-  c = fgetc(stdin);
-#endif
-
   if (c != '\n' && c != '\r' && cmd_len < (int)sizeof (cmd_line) - 1)
     cmd_line[cmd_len++] = (char)c;
 
   else
+#else
+  fgets(cmd_line, sizeof (cmd_line), stdin);
+
+  for (cmd_len = 0; cmd_line[cmd_len] != 0 && cmd_line[cmd_len] != '\n';
+       cmd_len++);
+#endif
+
   {
     cmd_line[cmd_len] = 0;
     cmd_len = 0;
