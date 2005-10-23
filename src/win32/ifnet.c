@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.28 2005/08/04 20:45:29 kattemat Exp $
+ * $Id: ifnet.c,v 1.29 2005/10/23 19:01:04 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -182,6 +182,9 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
     
   Info->Index = IfTable->table[TabIdx].dwIndex;
   Info->Mtu = (int)IfTable->table[TabIdx].dwMtu;
+
+  Info->Mtu -= (olsr_cnf->ip_version == AF_INET6) ?
+    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   BuffLen = sizeof (AdInfo);
 
@@ -482,7 +485,8 @@ int add_hemu_if(struct olsr_if *iface)
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
 
-  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ?
+    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   /* Set up buffer */
   net_add_buffer(ifp);
@@ -550,7 +554,7 @@ int add_hemu_if(struct olsr_if *iface)
   addr[2] = htonl(addr[2]);
   addr[3] = htonl(addr[3]);
 
-  if(send(ifp->olsr_socket, addr , ipsize, 0) != (int)ipsize)
+  if(send(ifp->olsr_socket, (char *)addr, ipsize, 0) != (int)ipsize)
     {
       fprintf(stderr, "Error sending IP!");
     }  

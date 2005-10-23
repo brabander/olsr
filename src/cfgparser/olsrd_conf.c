@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.42 2005/09/17 20:48:50 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.43 2005/10/23 19:01:04 tlopatic Exp $
  */
 
 
@@ -315,6 +315,20 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval, io->hello_params.validity_time);
 	  return -1;
 	}
+
+      if (cnf->lq_level > 0)
+      {
+        float want = cnf->lq_wsize * io->hello_params.emission_interval;
+
+        if (io->hello_params.validity_time < want)
+        {
+          io->hello_params.validity_time = want;
+
+          fprintf(stderr,
+                  "WARNING: %s HELLO validity time set to %.1f seconds!\n",
+                  in->name, want);
+        }
+      }
 
       /* TC interval */
       if(io->tc_params.emission_interval < cnf->pollrate ||

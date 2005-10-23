@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.16 2005/08/04 18:57:11 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.17 2005/10/23 19:01:04 tlopatic Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -55,30 +55,11 @@
 #include <errno.h>
 
 
-#define ARG_BUF_SIZE 500
-static char arg_buf[ARG_BUF_SIZE];
-
 #define TOK_BUF_SIZE 500
 static char tok_buf[TOK_BUF_SIZE];
 
 #define MAX_OLSRD_ARGS 10
 static char olsrd_path[FILENAME_MAX];
-
-static void
-get_arg_buf(FILE *handle, char *buf, size_t size)
-{
-  char c = 0;
-  int pos = 0;
-
-  while(((c = fgetc(handle)) != '\n') &&
-	pos < ((int)size - 2))
-    {
-      buf[pos] = c;
-      pos++;
-    }
-
-  buf[pos] = 0;
-}
 
 static int
 get_next_token(char *src, char *dst, size_t buflen)
@@ -114,7 +95,7 @@ ohs_set_olsrd_path(char *path)
 }
 
 int
-ohs_cmd_olsrd(FILE *handle, char *args)
+ohs_cmd_olsrd(char *args)
 {
 #ifdef WIN32
   printf("olsrd command not available in windows version\nStart instances manually\n");
@@ -250,7 +231,7 @@ ohs_cmd_olsrd(FILE *handle, char *args)
 }
 
 int
-ohs_cmd_link(FILE *handle, char *args)
+ohs_cmd_link(char *args)
 {
   olsr_u8_t bi = 0, wildc_src = 0, wildc_dst = 0;
   struct ohs_connection *src, *dst;
@@ -404,7 +385,7 @@ ohs_cmd_link(FILE *handle, char *args)
 }
 
 int
-ohs_cmd_list(FILE *handle, char *args)
+ohs_cmd_list(char *args)
 {
   struct ohs_connection *oc = ohs_conns;
 
@@ -453,7 +434,7 @@ ohs_cmd_list(FILE *handle, char *args)
 }
 
 int
-ohs_cmd_help(FILE *handle, char *args)
+ohs_cmd_help(char *args)
 {
   int i;
 
@@ -493,7 +474,7 @@ ohs_cmd_help(FILE *handle, char *args)
 }
 
 int
-ohs_cmd_log(FILE *handle, char *args)
+ohs_cmd_log(char *args)
 {
   olsr_u8_t set = 0;
 
@@ -554,7 +535,7 @@ ohs_cmd_log(FILE *handle, char *args)
 }
 
 int
-ohs_cmd_exit(FILE *handle, char *args)
+ohs_cmd_exit(char *args)
 {
 
   printf("Exitting... bye-bye!\n");
@@ -563,37 +544,89 @@ ohs_cmd_exit(FILE *handle, char *args)
   return 0;
 }
 
-int
-ohs_parse_command(FILE *handle)
+void
+ohs_parse_command(void)
 {
-  char input_data[100];
+  static char cmd_line[500];
+  static int cmd_len = 0;
+  char c;
+  char *args;
+  char cmd_token[20];
   int i;
+#if defined WIN32
+  unsigned long Read;
+  INPUT_RECORD InRec;
+  KEY_EVENT_RECORD *KeyEventRec;
+#endif
 
-  fscanf(handle, "%s", input_data);
+#if defined WIN32
+  if (!ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &InRec, sizeof (InRec), &Read))
+  {
+    fprintf(stderr, "ReadConsoleInput failed: %s\n", strerror(GetLastError()));
+    return;
+  }
 
-  get_arg_buf(handle, arg_buf, ARG_BUF_SIZE);
+  if (InRec.EventType != KEY_EVENT)
+    return;
 
-  for(i = 0; ohs_commands[i].cmd; i++)
+  KeyEventRec = &InRec.Event.KeyEvent;
+
+  if (!KeyEventRec->bKeyDown)
+    return;
+
+  c = KeyEventRec->uChar.AsciiChar;
+
+  if (c == 8)
+  {
+    if (cmd_len == 0)
+      return;
+
+    cmd_len--;
+
+    fputc(8, stdout);
+    fputc(32, stdout);
+    fputc(8, stdout);
+
+    fflush(stdout);
+
+    return;
+  }
+
+  fputc(c, stdout);
+  fflush(stdout);
+
+#else
+  c = fgetc(stdin);
+#endif
+
+  if (c != '\n' && c != '\r' && cmd_len < (int)sizeof (cmd_line) - 1)
+    cmd_line[cmd_len++] = (char)c;
+
+  else
+  {
+    cmd_line[cmd_len] = 0;
+    cmd_len = 0;
+
+    args = cmd_line + get_next_token(cmd_line, cmd_token, sizeof (cmd_token));
+
+    for (i = 0; ohs_commands[i].cmd != NULL; i++)
     {
-      if(!strcmp(input_data, ohs_commands[i].cmd))
-	{
-	  if(ohs_commands[i].cmd_cb)
-	    {
-	      ohs_commands[i].cmd_cb(handle, arg_buf);
-	    }
-	  else
-	    {
-	      printf("No action registered on cmd %s!\n", input_data);
-	    }
-	  break;
-	}
+      if (strcmp(cmd_token, ohs_commands[i].cmd) == 0)
+      {
+        if(ohs_commands[i].cmd_cb != NULL)
+          ohs_commands[i].cmd_cb(args);
+
+        else
+          printf("No action registered on cmd %s!\n", cmd_token);
+
+        break;
+      }
     }
   
-  if(!ohs_commands[i].cmd)
-    {
-      printf("%s: no such cmd!\n", input_data);
-    }
+    if(ohs_commands[i].cmd == NULL)
+      printf("%s: no such cmd!\n", cmd_token);
 
-
-  return 0;
+    printf("\n> ");
+    fflush(stdout);
+  }
 }

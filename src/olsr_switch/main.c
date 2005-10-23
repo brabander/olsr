@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.20 2005/08/05 15:15:19 kattemat Exp $
+ * $Id: main.c,v 1.21 2005/10/23 19:01:04 tlopatic Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -58,12 +58,11 @@
 #include <time.h>
 
 #ifdef WIN32
-#undef EINTR
-#define EINTR WSAEINTR
 #undef errno
 #define errno WSAGetLastError()
 #undef strerror
 #define strerror(x) StrError(x)
+#define close(x) closesocket(x)
 #else
 #include <sys/wait.h>
 #endif
@@ -161,6 +160,7 @@ ohs_init_new_connection(int s)
 {
   struct ohs_connection *oc;
   olsr_u8_t new_addr[4];
+  int i;
 
   if(logbits & LOG_CONNECT)
     printf("ohs_init_new_connection\n");
@@ -179,12 +179,27 @@ ohs_init_new_connection(int s)
   oc->tx = 0;
   oc->linkcnt = 0;
 
+  // hack alert: WSAEventSelect makes sockets non-blocking, so the
+  // recv() may return without having read anything on Windows; hence
+  // re-try for 2 seconds on Windows; shouldn't harm Linux et al.
+
   /* Get "fake IP" */
-  if(recv(oc->socket, new_addr, 4, 0) != 4)
-    {
-      printf("Failed to fetch IP address!\n");
-      return -1;
-    }
+  for (i = 0; i < 20; i++)
+  {
+    if (recv(oc->socket, new_addr, 4, 0) == 4)
+      break;
+
+#if defined WIN32
+    Sleep(100);
+#endif
+  }
+
+  if (i == 20)
+  {
+    printf("Failed to fetch IP address! (%s)\n", strerror(errno));
+    return -1;
+  }
+
   memcpy(&oc->ip_addr, new_addr, 4);
   oc->ip_addr.v4 = ntohl(oc->ip_addr.v4);
   if(logbits & LOG_CONNECT)
@@ -347,22 +362,43 @@ ohs_configure()
   return 1;
 }
 
+static void accept_handler(void)
+{
+  struct sockaddr_in pin;
+  socklen_t addrlen = sizeof(pin);
+  int s;
+	  
+  memset(&pin, 0 , sizeof(pin));
+
+  if((s = accept(srv_socket, (struct sockaddr *)&pin, &addrlen)) < 0)
+    {
+      printf("accept failed socket: %s\n", strerror(errno));
+    }
+  else
+    {
+      /* Create new node */
+      ohs_init_new_connection(s);
+    }
+}
+
+static void stdin_handler(void)
+{
+  ohs_parse_command();
+}
+
+static void read_handler(struct ohs_connection *con)
+{
+  if (ohs_route_data(con) < 0)
+    ohs_delete_connection(con);
+}
 
 static void
 ohs_listen_loop()
 {
+#if !defined WIN32
   int n;
   fd_set ibits;
-#ifdef WIN32
-  struct timeval select_timeout;
-  HANDLE  stdIn = GetStdHandle(STD_INPUT_HANDLE);
-#else
   int fn_stdin = fileno(stdin);
-#endif
-
-  printf("OHS command interpreter reading from STDIN\n");
-  printf("\n> ");
-  fflush(stdout);
 
   while(1)
     {
@@ -377,15 +413,11 @@ ohs_listen_loop()
       high = srv_socket;
       FD_SET(srv_socket, &ibits);
 
-#ifdef WIN32
-      select_timeout.tv_sec = 0;
-      select_timeout.tv_usec = 5;
-#else
       if(fn_stdin > high) 
 	high = fn_stdin;
 
       FD_SET(fn_stdin, &ibits);
-#endif
+
       /* Add clients */
       for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
 	{
@@ -395,19 +427,11 @@ ohs_listen_loop()
 	  FD_SET(ohs_cs->socket, &ibits);
 	}
 
-#ifdef WIN32
-      n = select(high + 1, &ibits, 0, 0, &select_timeout);
-#else
       /* block */
       n = select(high + 1, &ibits, 0, 0, NULL);
-#endif
       
       if(n == 0)
-#ifdef WIN32
-	goto read_stdin;
-#else
         continue;
-#endif
 
       /* Did somethig go wrong? */
       if (n < 0) 
@@ -416,32 +440,13 @@ ohs_listen_loop()
 	    continue;
 	  
 	  printf("Error select: %s", strerror(errno));
-#ifdef WIN32
-          goto read_stdin;
-#else
           continue;
-#endif
 	}
       
       /* Check server socket */
       if(FD_ISSET(srv_socket, &ibits))
-	{
-	  struct sockaddr_in pin;
-	  socklen_t addrlen = sizeof(pin);
-	  int s;
-	  
-	  memset(&pin, 0 , sizeof(pin));
+        accept_handler();
 
-	  if((s = accept(srv_socket, (struct sockaddr *)&pin, &addrlen)) < 0)
-	    {
-	      printf("accept failed socket: %s\n", strerror(errno));
-	    }
-	  else
-	    {
-	      /* Create new node */
-	      ohs_init_new_connection(s);
-	    }
-	}
       /* Loop trough clients */
       ohs_cs = ohs_conns;
       while(ohs_cs)
@@ -450,24 +455,82 @@ ohs_listen_loop()
 	  ohs_cs = ohs_cs->next;
 
 	  if(FD_ISSET(ohs_tmp->socket, &ibits))
-	    {
-	      if(ohs_route_data(ohs_tmp) < 0)
-		  ohs_delete_connection(ohs_tmp);
-	    }
+            read_handler(ohs_tmp);
 	}
-#if WIN32
-    read_stdin:
-      if(WaitForSingleObject(stdIn, 5L) == WAIT_OBJECT_0)
-#else
+
       if(FD_ISSET(fn_stdin, &ibits))
-#endif
-	{
-	  ohs_parse_command(stdin);
-	  printf("\n> ");
-	  fflush(stdout);
-	}
+        stdin_handler();
+
       printf("*");
+      fflush(stdout);
     }
+#else
+  HANDLE Objects[2];
+  WSANETWORKEVENTS NetEvents;
+  struct ohs_connection *Walker, *TmpWalker;
+  unsigned int Res;
+
+  Objects[0] = GetStdHandle(STD_INPUT_HANDLE);
+  Objects[1] = WSACreateEvent();
+
+  if (WSAEventSelect(srv_socket, Objects[1], FD_ACCEPT) == SOCKET_ERROR)
+  {
+    fprintf(stderr, "WSAEventSelect failed (1): %s\n", strerror(errno));
+    return;
+  }
+
+  while (1)
+  {
+    for (Walker = ohs_conns; Walker != NULL; Walker = Walker->next)
+    {
+      if (WSAEventSelect(Walker->socket, Objects[1], FD_READ | FD_CLOSE) == SOCKET_ERROR)
+      {
+        fprintf(stderr, "WSAEventSelect failed (2): %s\n", strerror(errno));
+        Sleep(1000);
+        continue;
+      }
+    }
+
+    Res = WaitForMultipleObjects(2, Objects, FALSE, INFINITE);
+
+    if (Res == WAIT_FAILED)
+    {
+      fprintf(stderr, "WaitForMultipleObjects failed: %s\n", strerror(GetLastError()));
+      Sleep(1000);
+      continue;
+    }
+
+    if (Res == WAIT_OBJECT_0)
+      stdin_handler();
+
+    else if (Res == WAIT_OBJECT_0 + 1)
+    {
+      if (WSAEnumNetworkEvents(srv_socket, Objects[1], &NetEvents) == SOCKET_ERROR)
+        fprintf(stderr, "WSAEnumNetworkEvents failed (1): %s\n", strerror(errno));
+
+      else
+      {
+        if ((NetEvents.lNetworkEvents & FD_ACCEPT) != 0)
+          accept_handler();
+      }
+
+      for (Walker = ohs_conns; Walker != NULL; Walker = TmpWalker)
+      {
+        TmpWalker = Walker->next;
+
+        if (WSAEnumNetworkEvents(Walker->socket, Objects[1], &NetEvents) == SOCKET_ERROR)
+          fprintf(stderr, "WSAEnumNetworkEvents failed (2): %s\n", strerror(errno));
+
+        else
+        {
+          if ((NetEvents.lNetworkEvents & (FD_READ | FD_CLOSE)) != 0)
+            read_handler(Walker);
+        }
+      }
+    }
+  }
+  
+#endif
 }
 
 int
@@ -482,7 +545,9 @@ main(int argc, char *argv[])
       fprintf(stderr, "Could not initialize WinSock.\n");
       exit(EXIT_FAILURE);
     }
+
   SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
+
 #else
   signal(SIGINT, ohs_close);  
   signal(SIGTERM, ohs_close);  
@@ -504,6 +569,10 @@ main(int argc, char *argv[])
   ohs_init_connect_sockets();
 
   ohs_configure();
+
+  printf("OHS command interpreter reading from STDIN\n");
+  printf("\n> ");
+  fflush(stdout);
 
   ohs_listen_loop();
 
