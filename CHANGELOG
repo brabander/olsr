@@ -1,7 +1,17 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.50 2005/10/28 19:16:09 kattemat Exp $
+$Id: CHANGELOG,v 1.51 2005/10/28 19:21:32 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
+
+OLSR NETWORK SIMULATOR
+
+An application called olsr_switch(sorry for the nameclash with the win32 
+GUI) has been added. If olsrd is ran using the -hint option it can now
+connect to olsr_switch and be part of a virtual network. This means
+that multiple instances can be ran at the same host! The olsr_switch
+application allows the user to define link variables on all viritual
+links in the network, creating all possible topologies. Read more in 
+the readme file.
 
 OPENBSD SUPPORT
 
@@ -22,7 +32,7 @@ for version missmatch.
 
 MATH LIB DEPENDENCY
 
-The dependency on the math lib came from the use of pow(3) in hte
+The dependency on the math lib came from the use of pow(3) in the
 mantissa/exponent calculation. The calls to pow in this long forgotten 
 code, was very unnessecarry. The pow calls are replaced with bitwise 
 shifts and -lm is no longer needed.
