@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.49 2005/09/17 20:48:49 kattemat Exp $
+$Id: CHANGELOG,v 1.50 2005/10/28 19:16:09 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -42,6 +42,7 @@ BUGFIXES
 - Did various updates to prevent assertion when a neighbor
   has changed IP and sends HELLO before its olsrd precess has detected
   the change.
+- Fixed return value check on times(2) calls in the scheduler
 
 0.4.9 ---------------------------------------------------------------------
 
