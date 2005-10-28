@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.30 2005/03/29 19:07:19 kattemat Exp $
+ * $Id: scheduler.c,v 1.31 2005/10/28 18:39:33 kattemat Exp $
  */
 
 
@@ -113,9 +113,9 @@ scheduler()
     {
 
       /* Update now_times */
-      if((now_times = times(&tms_buf)) < 0)
+      if((now_times = times(&tms_buf)) == -1)
 	{
-	  if((now_times = times(&tms_buf)) < 0)
+	  if((now_times = times(&tms_buf)) == -1)
 	    {
 	      fprintf(stderr, "Fatal!scheduler could not get new_times.\n%s\n", strerror(errno));
 	      olsr_syslog(OLSR_LOG_ERR, "Fatal!scheduler could not get new_times.\n%m\n");
