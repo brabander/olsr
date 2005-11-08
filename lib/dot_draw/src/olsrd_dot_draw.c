@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.17 2005/07/13 21:43:16 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.18 2005/11/08 11:24:04 kattemat Exp $
  */
 
 /*
@@ -77,10 +77,11 @@
 #endif
 
 
-int ipc_socket;
-int ipc_open;
-int ipc_connection;
-int ipc_socket_up;
+static int ipc_socket;
+static int ipc_open;
+static int ipc_connection;
+static int ipc_socket_up;
+
 
 
 /* IPC initialization function */
@@ -108,6 +109,9 @@ ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
 
 static int
 ipc_send(char *, int);
+
+static int
+ipc_send_str(char *);
 
 static double 
 calc_etx(double, double);
@@ -151,14 +155,13 @@ static void inline
 ipc_print_neigh_link(struct neighbor_entry *neighbor)
 {
   char buf[256];
-  int len;
   char* adr;
   double etx=0.0;
   char* style = "solid";
   struct link_entry* link;
   adr = olsr_ip_to_string(&main_addr);
-  len = sprintf( buf, "\"%s\" -> ", adr );
-  ipc_send(buf, len);
+  sprintf( buf, "\"%s\" -> ", adr );
+  ipc_send_str(buf);
   
   adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
   
@@ -172,12 +175,12 @@ ipc_print_neigh_link(struct neighbor_entry *neighbor)
       }
   }
     
-  len = sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
-  ipc_send(buf, len);
+  sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
+  ipc_send_str(buf);
   
    if (neighbor->is_mpr) {
-	len = sprintf( buf, "\"%s\"[shape=box];\n", adr );
-  	ipc_send(buf, len);
+	sprintf( buf, "\"%s\"[shape=box];\n", adr );
+  	ipc_send_str(buf);
   }
 }
 
@@ -310,7 +313,7 @@ pcf_event(int changes_neighborhood,
     {
       /* Print tables to IPC socket */
 
-      ipc_send("digraph topology\n{\n", strlen("digraph topology\n{\n"));
+      ipc_send_str("digraph topology\n{\n");
 
       /* Neighbors */
       for(index=0;index<HASHSIZE;index++)
@@ -365,7 +368,7 @@ pcf_event(int changes_neighborhood,
 	}
 
 
-      ipc_send("}\n\n", strlen("}\n\n"));
+      ipc_send_str("}\n\n");
 
       res = 1;
     }
@@ -393,17 +396,16 @@ static void inline
 ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry)
 {
   char buf[256];
-  int len;
   char* adr;
   double etx = calc_etx( dst_entry->link_quality, dst_entry->inverse_link_quality );
 
   adr = olsr_ip_to_string(&entry->T_last_addr);
-  len = sprintf( buf, "\"%s\" -> ", adr );
-  ipc_send(buf, len);
+  sprintf( buf, "\"%s\" -> ", adr );
+  ipc_send_str(buf);
   
   adr = olsr_ip_to_string(&dst_entry->T_dest_addr);
-  len = sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", adr, etx );
-  ipc_send(buf, len);
+  sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", adr, etx );
+  ipc_send_str(buf);
 }
 
 
@@ -413,23 +415,31 @@ ipc_print_net(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna_netmask
   char *adr;
 
   adr = olsr_ip_to_string(gw);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
+  ipc_send_str("\"");
+  ipc_send_str(adr);
+  ipc_send_str("\" -> \"");
   adr = olsr_ip_to_string(net);
-  ipc_send(adr, strlen(adr));
-  ipc_send("/", 1);
+  ipc_send_str(adr);
+  ipc_send_str("/");
   adr = olsr_netmask_to_string(mask);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"HNA\"];\n", strlen("\"[label=\"HNA\"];\n"));
-  ipc_send("\"", 1);
+  ipc_send_str(adr);
+  ipc_send_str("\"[label=\"HNA\"];\n");
+  ipc_send_str("\"");
   adr = olsr_ip_to_string(net);
-  ipc_send(adr, strlen(adr));
-  ipc_send("/", 1);
+  ipc_send_str(adr);
+  ipc_send_str("/");
   adr = olsr_netmask_to_string(mask);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"", 1);
-  ipc_send("[shape=diamond];\n", strlen("[shape=diamond];\n"));
+  ipc_send_str(adr);
+  ipc_send_str("\"");
+  ipc_send_str("[shape=diamond];\n");
+}
+
+static int
+ipc_send_str(char *data)
+{
+  if(!ipc_open)
+    return 0;
+  return ipc_send(data, strlen(data));
 }
 
 
@@ -454,9 +464,6 @@ ipc_send(char *data, int size)
   return 1;
 }
 
-
-static char netmask[5];
-
 static char*
 olsr_netmask_to_string(union hna_netmask *mask)
 {
@@ -467,14 +474,13 @@ olsr_netmask_to_string(union hna_netmask *mask)
     {
       in.s_addr = mask->v4;
       ret = inet_ntoa(in);
-      return ret;
-
     }
   else
     {
       /* IPv6 */
+      static char netmask[5];
       sprintf(netmask, "%d", mask->v6);
-      return netmask;
+      ret = netmask;
     }
 
   return ret;
