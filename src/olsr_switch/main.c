@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.21 2005/10/23 19:01:04 tlopatic Exp $
+ * $Id: main.c,v 1.22 2005/11/08 17:05:23 kattemat Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -461,8 +461,6 @@ ohs_listen_loop()
       if(FD_ISSET(fn_stdin, &ibits))
         stdin_handler();
 
-      printf("*");
-      fflush(stdout);
     }
 #else
   HANDLE Objects[2];
