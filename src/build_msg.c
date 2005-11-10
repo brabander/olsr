@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.30 2005/05/30 13:13:37 kattemat Exp $
+ * $Id: build_msg.c,v 1.31 2005/11/10 19:35:12 kattemat Exp $
  */
 
 
@@ -64,7 +64,7 @@
 
 /* All these functions share this buffer */
 
-static char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+static olsr_u8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
 /* Prototypes for internal functions */
 
