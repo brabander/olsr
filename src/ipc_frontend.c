@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.26 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.27 2005/11/10 19:33:57 kattemat Exp $
  */
 
 /*
@@ -131,7 +131,7 @@ ipc_init()
 void
 ipc_accept(int fd)
 {
-  int 	             addrlen;
+  socklen_t addrlen;
   struct sockaddr_in pin;
   char *addr;  
 
