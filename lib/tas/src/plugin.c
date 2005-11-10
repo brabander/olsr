@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.5 2005/05/29 12:47:44 br1 Exp $
+ * $Id: plugin.c,v 1.6 2005/11/10 19:50:42 kattemat Exp $
  */
 
 #include <string.h>
@@ -85,12 +85,16 @@ static struct rt_entry *routeTab = NULL;
 static struct olsrd_config *config = NULL;
 
 static int iterIndex;
+#if 0
+/* not used */
 static struct interface *iterIntTab = NULL;
+static struct mid_entry *iterMidTab = NULL;
+static struct hna_entry *iterHnaTab = NULL;
+#endif
+
 static struct link_entry *iterLinkTab = NULL;
 static struct neighbor_entry *iterNeighTab = NULL;
-static struct mid_entry *iterMidTab = NULL;
 static struct tc_entry *iterTcTab = NULL;
-static struct hna_entry *iterHnaTab = NULL;
 static struct rt_entry *iterRouteTab = NULL;
 
 static void __attribute__((constructor)) banner(void)
@@ -326,9 +330,10 @@ void iterTcTabInit(void)
     }
 }
 
-static void parserFunc(unsigned char *mess, struct interface *inInt,
+static void parserFunc(union olsr_message *msg, struct interface *inInt,
                        union olsr_ip_addr *neighIntAddr)
 {
+  char *mess = (char *)msg;
   union olsr_ip_addr *orig = (union olsr_ip_addr *)(mess + 4);
   unsigned short seqNo = (mess[ipAddrLen + 6] << 8) | mess[ipAddrLen + 7];
   int len = (mess[2] << 8) | mess[3];
@@ -383,7 +388,7 @@ static void parserFunc(unsigned char *mess, struct interface *inInt,
     httpAddTasMessage(service, string, rawIpAddrToString(orig, ipAddrLen));
   }
 
-  olsr_forward_message((union olsr_message *)mess, orig, seqNo, inInt, neighIntAddr);
+  olsr_forward_message(msg, orig, seqNo, inInt, neighIntAddr);
 }
 
 void sendMessage(const char *service, const char *string)

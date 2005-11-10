@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.4 2005/05/29 12:47:44 br1 Exp $
+ * $Id: http.c,v 1.5 2005/11/10 19:50:42 kattemat Exp $
  */
 
 #include "link.h"
@@ -860,7 +860,7 @@ static char *getToken(char **point)
 
 static void writeBuffString(struct inOutBuff *write, const char *string)
 {
-  writeBuff(write, string, strlen(string));
+  writeBuff(write, (unsigned char *)string, strlen(string));
 }
 
 static int cookieToSession(unsigned int *sessId, char *cookie)
@@ -944,13 +944,13 @@ static void printBuff(struct inOutBuff *buff, const char *form, ...)
       i++;
 
     if (i > start)
-      writeBuff(buff, form + start, i - start);
+      writeBuff(buff, (unsigned char *)(form + start), i - start);
 
     if (form[i] == 0)
       break;
 
     if (form[i + 1] == '%')
-      writeBuff(buff, "%", 1);
+      writeBuff(buff, (unsigned char *)"%", 1);
 
     else if (form[i + 1] == 's')
     {
@@ -1122,7 +1122,7 @@ static int serviceConn(struct connInfo *info)
 
     line = allocBuff(info, len);
 
-    readBuff(&info->read, line, len);
+    readBuff(&info->read, (unsigned char *)line, len);
     chomp(line, len);
 
     debug(DEBUG_REQUEST, "request line is '%s'\n", line);
@@ -1245,7 +1245,7 @@ static int serviceConn(struct connInfo *info)
 
     line = allocBuff(info, len);
 
-    readBuff(&info->read, line, len);
+    readBuff(&info->read, (unsigned char *)line, len);
     chomp(line, len);
 
     debug(DEBUG_REQUEST, "header line is '%s'\n", line);
@@ -1380,7 +1380,7 @@ static int serviceConn(struct connInfo *info)
 
       tmp2 = allocBuff(info, strlen(tmp) * 3 / 4 + 1);
 
-      if (decBase64(tmp2, tmp) < 0)
+      if (decBase64((unsigned char *)tmp2, tmp) < 0)
       {
         error("base-64 decode failed\n");
         writeError(info, 401);

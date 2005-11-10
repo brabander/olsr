@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.c,v 1.3 2005/05/29 12:47:44 br1 Exp $
+ * $Id: os_unix.c,v 1.4 2005/11/10 19:50:42 kattemat Exp $
  */
 
 #if defined linux
@@ -497,7 +497,7 @@ int createMainSocket(const struct ipAddr *addr, int port)
 int acceptConn(struct fileId **sockId, struct ipAddr **addr)
 {
   struct sockaddr sockAddr;
-  int len;
+  socklen_t len;
   int sock;
   int flags;
 

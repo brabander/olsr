@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.c,v 1.1 2005/04/12 17:17:25 tlopatic Exp $
+ * $Id: glua.c,v 1.2 2005/11/10 19:50:42 kattemat Exp $
  */
 
 #include "lua/lua.h"
@@ -157,7 +157,7 @@ int lspToLua(const char *rootDir, const char *lspFileName,
 
   for (;;)
   {
-    if (code == 0 && (i == lspLen || strncmp(buff + i, "<?lua", 5) == 0))
+    if (code == 0 && (i == lspLen || strncmp((char *)(buff + i), "<?lua", 5) == 0))
     {
       fprintf(file, "tas.write(\"");
 
@@ -185,7 +185,7 @@ int lspToLua(const char *rootDir, const char *lspFileName,
       continue;
     }
 
-    if (code == 1 && (i == lspLen || strncmp(buff + i, "?>", 2) == 0))
+    if (code == 1 && (i == lspLen || strncmp((char *)(buff + i), "?>", 2) == 0))
     {
       for (k = start; k < i; k++)
         if (buff[k] != 13)
@@ -298,7 +298,7 @@ static int tasWrite(lua_State *lua)
     if (strConv == NULL)
       return luaL_error(lua, "cannot convert value to string");
 
-    writeBuff(&info->write[2], strConv, strlen(strConv));
+    writeBuff(&info->write[2], (unsigned char *)strConv, strlen(strConv));
 
     lua_pop(lua, 1);
   }
@@ -320,8 +320,8 @@ static int tasAddHeaderLine(lua_State *lua)
 
   chomp(line, strlen(line));
 
-  writeBuff(&info->write[1], line, strlen(line));
-  writeBuff(&info->write[1], "\r\n", 2);
+  writeBuff(&info->write[1], (unsigned char *)line, strlen(line));
+  writeBuff(&info->write[1], (unsigned char *)"\r\n", 2);
 
   freeMem(line);
 
