@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.14 2005/05/29 12:47:44 br1 Exp $
+ * $Id: olsrd_secure.c,v 1.15 2005/11/10 19:25:37 kattemat Exp $
  */
 
 
@@ -71,16 +71,13 @@
 #include "md5.h"
 
 static void
-MD5_checksum(char *, olsr_u16_t, char *);
-
-static void
 MD5_checksum(char *data, olsr_u16_t data_len, char *hashbuf)
 {
   MD5_CTX context;
 
   MD5Init(&context);
-  MD5Update(&context, data, data_len);
-  MD5Final(hashbuf, &context);
+  MD5Update(&context, (unsigned char *)data, data_len);
+  MD5Final((unsigned char *)hashbuf, &context);
 }
 
 #define CHECKSUM MD5_checksum
