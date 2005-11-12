@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.18 2005/10/23 19:17:48 tlopatic Exp $
+ * $Id: ohs_cmd.c,v 1.19 2005/11/12 08:07:43 kattemat Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -549,11 +549,11 @@ ohs_parse_command(void)
 {
   static char cmd_line[500];
   static int cmd_len = 0;
-  char c;
   char *args;
   char cmd_token[20];
   int i;
 #if defined WIN32
+  char c;
   unsigned long Read;
   INPUT_RECORD InRec;
   KEY_EVENT_RECORD *KeyEventRec;
