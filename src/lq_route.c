@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.37 2005/10/23 20:58:14 tlopatic Exp $
+ * $Id: lq_route.c,v 1.38 2005/11/15 23:46:20 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -605,6 +605,10 @@ void olsr_calculate_lq_routing_table(void)
     }
   }
 
+  // save the old HNA routing table
+
+  olsr_move_route_table(hna_routes, old_hna);
+
   // add HNA routes - the set of unprocessed network nodes contains
   // all reachable network nodes
 
@@ -671,7 +675,7 @@ void olsr_calculate_lq_routing_table(void)
 
       // find the correct list
 
-      head_rt = &routingtable[olsr_hashing(&hna->A_network_addr)];
+      head_rt = &hna_routes[olsr_hashing(&hna->A_network_addr)];
 
       // enqueue
 
@@ -690,8 +694,10 @@ void olsr_calculate_lq_routing_table(void)
   // move the route changes into the kernel
 
   olsr_update_kernel_routes();
+  olsr_update_kernel_hna_routes();
 
   // free the saved routing table
 
   olsr_free_routing_table(old_routes);
+  olsr_free_routing_table(old_hna);
 }

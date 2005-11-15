@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.c,v 1.2 2005/11/10 19:50:42 kattemat Exp $
+ * $Id: glua.c,v 1.3 2005/11/15 23:46:19 tlopatic Exp $
  */
 
 #include "lua/lua.h"
@@ -177,19 +177,34 @@ int lspToLua(const char *rootDir, const char *lspFileName,
       if (i == lspLen)
         break;
 
-      i += 5;
-      start = i;
+      if (buff[i + 5] == '=')
+      {
+        i += 6;
+        code = 2;
+      }
 
-      code = 1;
+      else
+      {
+        i += 5;
+        code = 1;
+      }
+
+      start = i;
 
       continue;
     }
 
-    if (code == 1 && (i == lspLen || strncmp((char *)(buff + i), "?>", 2) == 0))
+    if (code > 0 && (i == lspLen || strncmp((char *)(buff + i), "?>", 2) == 0))
     {
+      if (code > 1)
+        fprintf(file, "tas.write(");
+
       for (k = start; k < i; k++)
         if (buff[k] != 13)
           fputc(buff[k], file);
+
+      if (code > 1)
+        fputc(')', file);
 
       fputc('\n', file);
 

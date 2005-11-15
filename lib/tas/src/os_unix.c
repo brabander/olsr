@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.c,v 1.4 2005/11/10 19:50:42 kattemat Exp $
+ * $Id: os_unix.c,v 1.5 2005/11/15 23:46:20 tlopatic Exp $
  */
 
 #if defined linux
@@ -66,13 +66,37 @@
 
 static int mainSocket;
 
-// XXX - insecure
-
 void getRandomBytes(unsigned char *buff, int len)
 {
+  int file;
+  int readLen;
+
   memset(buff, 0, len);
 
-  buff[0] = (unsigned char)getpid();
+  file = open("/dev/random", O_RDONLY);
+
+  if (file < 0)
+  {
+    fprintf(stderr, "warning: cannot open /dev/random\n");
+    return;
+  }
+
+  while (len > 0)
+  {
+    readLen = read(file, buff, len);
+
+    if (readLen < 0)
+    {
+      fprintf(stderr, "warning: cannot read from /dev/random\n");
+      close(file);
+      return;
+    }
+
+    buff += readLen;
+    len -= readLen;
+  }
+
+  close(file);
 }
 
 int addrLen(int family)
