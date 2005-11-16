@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.22 2005/05/29 12:47:45 br1 Exp $
+ * $Id: routing_table.c,v 1.23 2005/11/16 23:55:54 tlopatic Exp $
  */
 
 
@@ -133,8 +133,28 @@ olsr_lookup_routing_table(union olsr_ip_addr *dst)
   
 }
 
+/**
+ * Look up an entry in the HNA routing table.
+ *
+ * @param dst the address of the entry
+ *
+ * @return a pointer to a rt_entry struct 
+ * representing the route entry.
+ */
 
+struct rt_entry *
+olsr_lookup_hna_routing_table(union olsr_ip_addr *dst)
+{
+  struct rt_entry *walker;
+  olsr_u32_t hash = olsr_hashing(dst);
 
+  for (walker = hna_routes[hash].next; walker != &hna_routes[hash];
+       walker = walker->next)
+    if (COMP_IP(&walker->rt_dst, dst))
+      return walker;
+
+  return NULL;
+}
 
 /**
  *Delete all the entries in the routing table hash

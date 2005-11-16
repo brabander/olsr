@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.16 2005/05/29 12:47:45 br1 Exp $
+ * $Id: routing_table.h,v 1.17 2005/11/16 23:55:54 tlopatic Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -111,6 +111,9 @@ olsr_insert_routing_table(union olsr_ip_addr *, union olsr_ip_addr *, struct int
 
 struct rt_entry *
 olsr_lookup_routing_table(union olsr_ip_addr *);
+
+struct rt_entry *
+olsr_lookup_hna_routing_table(union olsr_ip_addr *dst);
 
 void
 olsr_free_routing_table(struct rt_entry *);

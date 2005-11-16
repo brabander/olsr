@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.38 2005/11/15 23:46:20 tlopatic Exp $
+ * $Id: lq_route.c,v 1.39 2005/11/16 23:55:54 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -650,7 +650,7 @@ void olsr_calculate_lq_routing_table(void)
     {
       // we already have a route via a previous (better) node
 
-      if (olsr_lookup_routing_table(&hna->A_network_addr) != NULL)
+      if (olsr_lookup_hna_routing_table(&hna->A_network_addr) != NULL)
         continue;
 
       // create route for the HNA
