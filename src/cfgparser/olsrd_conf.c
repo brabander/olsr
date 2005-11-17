@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.44 2005/11/15 23:46:20 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.45 2005/11/17 01:58:52 tlopatic Exp $
  */
 
 
@@ -452,6 +452,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
     cnf->lq_level = DEF_LQ_LEVEL;
+    cnf->lq_fish = DEF_LQ_FISH;
     cnf->lq_wsize = DEF_LQ_WSIZE;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
 }

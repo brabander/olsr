@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.27 2005/06/04 15:13:53 kattemat Exp $
+ * $Id: parser.c,v 1.28 2005/11/17 01:58:52 tlopatic Exp $
  */
 
 #include "parser.h"
@@ -241,7 +241,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 */
-	  if (m->v4.ttl <= 0)
+	  if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0)
 	    {
 	      OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
@@ -252,7 +252,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       else
 	{
 	  /* IPv6 */
-	  if (m->v6.ttl <= 0) 
+	  if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0) 
 	    {
 	      OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,

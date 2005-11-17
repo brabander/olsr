@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.25 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.26 2005/11/17 01:58:52 tlopatic Exp $
  */
 
 
@@ -54,6 +54,7 @@
 #define DEF_IPC_CONNECTIONS 0
 #define DEF_USE_HYST        OLSR_TRUE
 #define DEF_LQ_LEVEL        0
+#define DEF_LQ_FISH         0
 #define DEF_LQ_WSIZE        10
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
 
@@ -206,6 +207,7 @@ struct olsrd_config
   olsr_bool                clear_screen;
   olsr_u8_t                lq_level;
   olsr_u32_t               lq_wsize;
+  olsr_u8_t                lq_fish;
   struct plugin_entry      *plugins;
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;

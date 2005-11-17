@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.17 2005/02/20 19:54:18 kattemat Exp $
+ * $Id: oscan.lex,v 1.18 2005/11/17 01:58:52 tlopatic Exp $
  */
 
 
@@ -365,6 +365,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "LinkQualityLevel" {
   yylval = NULL;
   return TOK_LQ_LEVEL;
+}
+
+"LinkQualityFishEye" {
+  yylval = NULL;
+  return TOK_LQ_FISH;
 }
 
 "LinkQualityWinSize" {
