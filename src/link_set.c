@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.61 2005/10/23 20:58:14 tlopatic Exp $
+ * $Id: link_set.c,v 1.62 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 
@@ -967,8 +967,14 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
     {
       entry->saved_loss_link_quality = entry->loss_link_quality;
 
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
+      if (olsr_cnf->lq_dlimit > 0)
+      {
+        changes_neighborhood = OLSR_TRUE;
+        changes_topology = OLSR_TRUE;
+      }
+
+      else
+        OLSR_PRINTF(3, "Skipping Dijkstra (1)\n")
 
       // create a new ANSN
 

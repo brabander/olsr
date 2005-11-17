@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.34 2005/04/11 18:43:40 kattemat Exp $
+ * $Id: process_package.c,v 1.35 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 
@@ -128,8 +128,14 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
         {
           link->saved_neigh_link_quality = link->neigh_link_quality;
 
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
+          if (olsr_cnf->lq_dlimit > 0)
+          {
+            changes_neighborhood = OLSR_TRUE;
+            changes_topology = OLSR_TRUE;
+          }
+
+          else
+            OLSR_PRINTF(3, "Skipping Dijkstra (2)\n")
 
           // create a new ANSN
 
@@ -645,8 +651,14 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                           walker->saved_path_link_quality =
                             walker->path_link_quality;
 
-                          changes_neighborhood = OLSR_TRUE;
-                          changes_topology = OLSR_TRUE;
+                          if (olsr_cnf->lq_dlimit > 0)
+                          {
+                            changes_neighborhood = OLSR_TRUE;
+                            changes_topology = OLSR_TRUE;
+                          }
+
+                          else
+                            OLSR_PRINTF(3, "Skipping Dijkstra (3)\n")
                         }
                     }
                 }

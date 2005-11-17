@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.45 2005/11/17 01:58:52 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.46 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 
@@ -453,6 +453,8 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->mpr_coverage = MPR_COVERAGE;
     cnf->lq_level = DEF_LQ_LEVEL;
     cnf->lq_fish = DEF_LQ_FISH;
+    cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
+    cnf->lq_dinter = DEF_LQ_DIJK_INTER;
     cnf->lq_wsize = DEF_LQ_WSIZE;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
 }
@@ -562,6 +564,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
    
   printf("LQ level         : %d\n", cnf->lq_level);
+
+  printf("LQ fish eye      : %d\n", cnf->lq_fish);
+
+  printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
 
   printf("LQ window size   : %d\n", cnf->lq_wsize);
 

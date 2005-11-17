@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.46 2005/05/29 12:47:45 br1 Exp $
+ * $Id: olsr.c,v 1.47 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 /**
@@ -68,7 +68,6 @@
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
-
 
 /**
  * Process changes functions

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.31 2005/10/28 18:39:33 kattemat Exp $
+ * $Id: scheduler.c,v 1.32 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 
@@ -63,6 +63,14 @@ static float pollrate;
 static struct timeout_entry *timeout_functions;
 static struct event_entry *event_functions;
 
+
+static void trigger_dijkstra(void *dummy)
+{
+  OLSR_PRINTF(3, "Triggering Dijkstra\n");
+
+  changes_neighborhood = OLSR_TRUE;
+  changes_topology = OLSR_TRUE;
+}
 
 /**
  *Main scheduler event loop. Polls at every
@@ -99,6 +107,9 @@ scheduler()
   /* Global buffer for times(2) calls */
   struct tms tms_buf;
  
+  if(olsr_cnf->lq_level > 1 && olsr_cnf->lq_dinter > 0.0)
+    olsr_register_scheduler_event(trigger_dijkstra, NULL, olsr_cnf->lq_dinter, 0, NULL);
+
   pollrate = olsr_cnf->pollrate;
   interval_usec = (olsr_u32_t)(pollrate * 1000000);
 

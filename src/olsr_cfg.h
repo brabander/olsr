@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.26 2005/11/17 01:58:52 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.27 2005/11/17 04:25:44 tlopatic Exp $
  */
 
 
@@ -55,6 +55,8 @@
 #define DEF_USE_HYST        OLSR_TRUE
 #define DEF_LQ_LEVEL        0
 #define DEF_LQ_FISH         0
+#define DEF_LQ_DIJK_LIMIT   255
+#define DEF_LQ_DIJK_INTER   0.0
 #define DEF_LQ_WSIZE        10
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
 
@@ -208,6 +210,8 @@ struct olsrd_config
   olsr_u8_t                lq_level;
   olsr_u32_t               lq_wsize;
   olsr_u8_t                lq_fish;
+  olsr_u8_t                lq_dlimit;
+  float                    lq_dinter;
   struct plugin_entry      *plugins;
   struct hna4_entry        *hna4_entries;
   struct hna6_entry        *hna6_entries;
