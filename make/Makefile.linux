@@ -16,6 +16,13 @@ INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME);
 		/sbin/ldconfig -n $(LIBDIR)
 
 ifdef OLSRD_PLUGIN
+GENERATE_PIC = true
+endif
+ifeq ($(shell arch),x86_64)
+GENERATE_PIC = true
+endif
+
+ifdef GENERATE_PIC
 CFLAGS +=	-fPIC
 LDFLAGS +=	-fPIC
 endif
