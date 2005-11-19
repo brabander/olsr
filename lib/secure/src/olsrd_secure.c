@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.15 2005/11/10 19:25:37 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.16 2005/11/19 08:30:44 kattemat Exp $
  */
 
 
@@ -638,7 +638,8 @@ check_timestamp(union olsr_ip_addr *originator, time_t tstamp)
   olsr_printf(3, "[ENC]Diff set to : %d\n", entry->diff);
 
   /* update validtime */
-  olsr_get_timestamp((olsr_u32_t) TIMESTAMP_HOLD_TIME*1000, &entry->valtime);
+
+  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
   return 1;
 }
@@ -713,8 +714,8 @@ send_challenge(union olsr_ip_addr *new_host)
   memcpy(&entry->addr, new_host, ipsize);
 
   /* update validtime - not validated */
-  olsr_get_timestamp((olsr_u32_t) EXCHANGE_HOLD_TIME*1000, &entry->conftime);
-  
+  entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
+
   hash = olsr_hashing(new_host);
   
   /* Queue */
@@ -810,7 +811,7 @@ parse_cres(char *in_msg)
   entry->diff = now.tv_sec - msg->timestamp;
 
   /* update validtime - validated entry */
-  olsr_get_timestamp((olsr_u32_t) TIMESTAMP_HOLD_TIME*1000, &entry->valtime);
+  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
   olsr_printf(1, "[ENC]%s registered with diff %d!\n",
 	      olsr_ip_to_string((union olsr_ip_addr *)&msg->originator),
@@ -905,7 +906,7 @@ parse_rres(char *in_msg)
   entry->diff = now.tv_sec - msg->timestamp;
 
   /* update validtime - validated entry */
-  olsr_get_timestamp((olsr_u32_t) TIMESTAMP_HOLD_TIME*1000, &entry->valtime);
+  entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
   olsr_printf(1, "[ENC]%s registered with diff %d!\n",
 	      olsr_ip_to_string((union olsr_ip_addr *)&msg->originator),
@@ -991,8 +992,7 @@ parse_challenge(char *in_msg)
   entry->validated = 0;
 
   /* update validtime - not validated */
-  olsr_get_timestamp((olsr_u32_t) EXCHANGE_HOLD_TIME*1000, &entry->conftime);
-
+  entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
 
   /* Build and send response */
 
@@ -1256,72 +1256,5 @@ read_key_from_file(char *file)
 
   fclose(kf);
   return 1;
-}
-
-
-/*************************************************************
- *                 TOOLS DERIVED FROM OLSRD                  *
- *************************************************************/
-
-
-/**
- *Checks if a timer has times out. That means
- *if it is smaller than present time.
- *@param timer the timeval struct to evaluate
- *@return positive if the timer has not timed out,
- *0 if it matches with present time and negative
- *if it is timed out.
- */
-int
-olsr_timed_out(struct timeval *timer)
-{
-  return(timercmp(timer, &now, <));
-}
-
-
-
-/**
- *Initiates a "timer", wich is a timeval structure,
- *with the value given in time_value.
- *@param time_value the value to initialize the timer with
- *@param hold_timer the timer itself
- *@return nada
- */
-void
-olsr_init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
-{ 
-  olsr_u16_t  time_value_sec;
-  olsr_u16_t  time_value_msec;
-
-  time_value_sec = time_value/1000;
-  time_value_msec = time_value-(time_value_sec*1000);
-
-  hold_timer->tv_sec = time_value_sec;
-  hold_timer->tv_usec = time_value_msec*1000;   
-}
-
-
-
-
-
-/**
- *Generaties a timestamp a certain number of milliseconds
- *into the future.
- *
- *@param time_value how many milliseconds from now
- *@param hold_timer the timer itself
- *@return nada
- */
-void
-olsr_get_timestamp(olsr_u32_t delay, struct timeval *hold_timer)
-{ 
-  olsr_u16_t  time_value_sec;
-  olsr_u16_t  time_value_msec;
-
-  time_value_sec = delay/1000;
-  time_value_msec= delay - (delay*1000);
-
-  hold_timer->tv_sec = now.tv_sec + time_value_sec;
-  hold_timer->tv_usec = now.tv_usec + (time_value_msec*1000);   
 }
 

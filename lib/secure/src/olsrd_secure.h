@@ -78,8 +78,8 @@ struct stamp
   int diff;
   olsr_u32_t challenge;
   olsr_u8_t validated;
-  struct timeval valtime; /* Validity time */
-  struct timeval conftime; /* Reconfiguration time */
+  clock_t valtime; /* Validity time */
+  clock_t conftime; /* Reconfiguration time */
   struct stamp *prev;
   struct stamp *next;
 };
@@ -155,15 +155,6 @@ lookup_timestamp_entry(union olsr_ip_addr *);
 
 int
 read_key_from_file(char *);
-
-void
-olsr_get_timestamp(olsr_u32_t, struct timeval *);
-
-void
-olsr_init_timer(olsr_u32_t, struct timeval *);
-
-int
-olsr_timed_out(struct timeval *);
 
 int
 secure_plugin_init(void);
