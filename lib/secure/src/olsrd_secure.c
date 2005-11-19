@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.16 2005/11/19 08:30:44 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.17 2005/11/19 08:37:23 kattemat Exp $
  */
 
 
@@ -245,7 +245,7 @@ packet_parser(int fd)
 {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
-  size_t fromlen;
+  socklen_t fromlen;
   int cc;
   union olsr_ip_addr from_addr;
   union

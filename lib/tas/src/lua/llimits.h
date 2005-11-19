@@ -1,5 +1,5 @@
 /*
-** $Id: llimits.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+** $Id: llimits.h,v 1.2 2005/11/19 08:39:26 kattemat Exp $
 ** Limits, basic types, and some other `installation-dependent' definitions
 ** See Copyright Notice in lua.h
 */
@@ -41,7 +41,7 @@
 */
 
 /* an unsigned integer to hold hash values */
-typedef unsigned int lu_hash;
+typedef unsigned long int lu_hash;
 /* its signed equivalent */
 typedef int ls_hash;
 
