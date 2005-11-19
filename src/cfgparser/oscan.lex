@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.19 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: oscan.lex,v 1.20 2005/11/19 08:49:44 kattemat Exp $
  */
 
 
@@ -81,7 +81,7 @@ get_conf_token()
   if (t == NULL)
     {
       fprintf(stderr, "Cannot allocate %d bytes for an configuration token.\n",
-	      sizeof (struct conf_token));
+	      (int) sizeof (struct conf_token));
       exit(EXIT_FAILURE);
     }
 

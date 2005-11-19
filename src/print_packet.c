@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.7 2005/05/28 14:43:07 kattemat Exp $
+ * $Id: print_packet.c,v 1.8 2005/11/19 08:49:44 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -90,7 +90,7 @@ print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
     {
       print_olsr_serialized_message(handle, msg);
       remainsize -= ntohs(msg->v4.olsr_msgsize);
-      msg = (union olsr_message *)((int)msg + (int)ntohs(msg->v4.olsr_msgsize));
+      msg = (union olsr_message *)((char *)msg + ntohs(msg->v4.olsr_msgsize));
     }
 
   /* Done */

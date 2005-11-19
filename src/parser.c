@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.28 2005/11/17 01:58:52 tlopatic Exp $
+ * $Id: parser.c,v 1.29 2005/11/19 08:49:44 kattemat Exp $
  */
 
 #include "parser.h"
@@ -343,7 +343,7 @@ olsr_input(int fd)
 {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
-  size_t fromlen;
+  socklen_t fromlen;
   int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
@@ -431,7 +431,7 @@ olsr_input_hostemu(int fd)
 {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
-  size_t fromlen;
+  socklen_t fromlen;
   int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;

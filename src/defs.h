@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.49 2005/05/29 12:47:45 br1 Exp $
+ * $Id: defs.h,v 1.50 2005/11/19 08:49:44 kattemat Exp $
  */
 
 
@@ -97,7 +97,7 @@ extern FILE *debug_handle;
 /* Provides a timestamp s1 milliseconds in the future
    according to system ticks returned by times(2) */
 #define GET_TIMESTAMP(s1) \
-        now_times + ((s1) / system_tick_divider)
+        (now_times + ((s1) / system_tick_divider))
 
 #define TIMED_OUT(s1) \
         ((int)((s1) - now_times) < 0)
