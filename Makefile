@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.65 2005/07/13 21:45:50 kattemat Exp $
+# $Id: Makefile,v 1.66 2005/11/21 06:27:29 kattemat Exp $
 
 TOPDIR = .
 include Makefile.inc
@@ -76,8 +76,8 @@ clean:
 		$(MAKE) -C $(SWITCHDIR) clean
 
 uberclean:	clean clean_libs
-		-rm -f src/*[od~] src/linux/*[od~] src/unix/*[od~] src/win32/*[od~]
-		-rm -f src/bsd/*[od~] 
+		-rm -f src/*.[od~] 
+		-rm -f src/linux/*.[od~] src/unix/*.[od~] src/win32/*.[od~] src/bsd/*.[od~]
 		$(MAKE) -C $(CFGDIR) uberclean
 		$(MAKE) -C $(SWITCHDIR) clean
 
