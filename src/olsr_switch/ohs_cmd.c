@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.20 2005/11/20 20:45:33 kattemat Exp $
+ * $Id: ohs_cmd.c,v 1.21 2005/11/22 10:12:30 tlopatic Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -600,8 +600,6 @@ ohs_parse_command(void)
 
   else
 #else
-  fgets(cmd_line, sizeof (cmd_line), stdin);
-
   if(fgets(cmd_line, sizeof (cmd_line), stdin) == NULL) {
     ohs_cmd_exit(NULL);
   }
