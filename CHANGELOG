@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.51 2005/10/28 19:21:32 kattemat Exp $
+$Id: CHANGELOG,v 1.52 2005/11/23 05:54:03 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -16,7 +16,12 @@ the readme file.
 OPENBSD SUPPORT
 
 olsrd now also compiles on OpenBSD systems. Thanks a lot to Holger
-Mauermann for the patches! Use 'make OS=obsd' to build. 
+Mauermann for the patches! 
+
+BUILDSYSTEM REWRITE
+
+Bruno has rewritten the make system. OS detection is now done
+automagically and the general design is much improved.
 
 IP ADDRESS VALIDATION
 
