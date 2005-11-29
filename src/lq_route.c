@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.39 2005/11/16 23:55:54 tlopatic Exp $
+ * $Id: lq_route.c,v 1.40 2005/11/29 18:37:58 kattemat Exp $
  */
 
 #include "defs.h"
@@ -425,6 +425,9 @@ void olsr_calculate_lq_routing_table(void)
       if (neigh->status == SYM)
       {
         link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+
+	if(!link)
+	  continue;
 
         if (link->loss_link_quality2 >= MIN_LINK_QUALITY &&
             link->neigh_link_quality2 >= MIN_LINK_QUALITY)

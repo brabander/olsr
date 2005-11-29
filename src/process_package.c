@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.35 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: process_package.c,v 1.36 2005/11/29 18:38:40 kattemat Exp $
  */
 
 
@@ -593,6 +593,9 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 	      struct link_entry *link;
 
               link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+
+	      if(!link)
+		continue;
 
               // loop through the one-hop neighbors that see this
               // two hop neighbour

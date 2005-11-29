@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.28 2005/05/29 12:47:45 br1 Exp $
+ * $Id: neighbor_table.c,v 1.29 2005/11/29 18:37:58 kattemat Exp $
  */
 
 
@@ -500,8 +500,13 @@ olsr_print_neighbor_table()
 	{
 	  struct link_entry *link =
             get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-	  double best_lq = link->neigh_link_quality;
-	  double inv_best_lq = link->loss_link_quality;
+	  double best_lq, inv_best_lq;
+
+	  if(!link) 
+	    continue;
+
+	  best_lq = link->neigh_link_quality;
+	  inv_best_lq = link->loss_link_quality;
 
           OLSR_PRINTF(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
                       inv_best_lq, best_lq,
