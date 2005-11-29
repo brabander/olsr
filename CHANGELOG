@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.52 2005/11/23 05:54:03 kattemat Exp $
+$Id: CHANGELOG,v 1.53 2005/11/29 19:09:59 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -58,6 +58,8 @@ BUGFIXES
   has changed IP and sends HELLO before its olsrd precess has detected
   the change.
 - Fixed return value check on times(2) calls in the scheduler
+- Fixed bug(s) that could cause crash when an interface was brought
+  down while olsrd was running.
 
 0.4.9 ---------------------------------------------------------------------
 
