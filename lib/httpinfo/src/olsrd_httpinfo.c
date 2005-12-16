@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.54 2005/11/10 19:28:02 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.55 2005/12/16 15:16:42 kattemat Exp $
  */
 
 /*
@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -188,6 +189,11 @@ static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
 static int http_socket;
 
+int netsprintf(char *str, const char* format, ...);
+static int netsprintf_direct = 0;
+static int netsprintf_error = 0;
+#define sprintf netsprintf
+#define NETDIRECT
 
 
 struct tab_entry tab_entries[] =
@@ -465,6 +471,11 @@ parse_http_request(int fd)
 
       if(tab_entries[i].filename)
 	{
+#ifdef NETDIRECT
+	  netsprintf_error = 0;
+	  netsprintf_direct = 1;
+	  c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
+#endif
 	  y = 0;
 	  while(http_ok_head[y])
 	    {
@@ -489,9 +500,14 @@ parse_http_request(int fd)
 	      y++;
 	    }  
 	  
+#ifdef NETDIRECT
+	  netsprintf_direct = 1;
+	  goto close_connection;
+#else
 	  c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
 	  
 	  goto send_http_data;
+#endif
 	}
       
       
@@ -580,7 +596,7 @@ build_http_header(http_header_type type,
   /* Content length */
   if(size > 0)
     {
-      sprintf(tmp, "Content-length: %i\r\n", size);
+      snprintf(tmp, sizeof(tmp), "Content-length: %i\r\n", size);
       strcat(buf, tmp);
     }
 
@@ -1234,7 +1250,7 @@ olsr_netmask_to_string(union hna_netmask *mask)
   else
     {
       /* IPv6 */
-      sprintf(netmask, "%d", mask->v6);
+      snprintf(netmask, sizeof(netmask), "%d", mask->v6);
       return netmask;
     }
 
@@ -1248,4 +1264,30 @@ static char *
 get_copyright_string()
 {
   return copyright_string;
+}
+
+/*
+ * In a bigger mesh, there are probs with the fixed
+ * bufsize. Because the Content-Length header is
+ * optional, the sprintf() is changed to a more
+ * scalable solution here.
+ */
+ 
+int netsprintf(char *str, const char* format, ...)
+{
+	va_list arg;
+	int rv;
+	va_start(arg, format);
+	rv = vsprintf(str, format, arg);
+	va_end(arg);
+	if (0 != netsprintf_direct) {
+		if (0 == netsprintf_error) {
+			if (0 > send(client_sockets[curr_clients], str, rv, 0)) {
+				olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+				netsprintf_error = 1;
+			}
+		}
+		return 0;
+	}
+	return rv;
 }
