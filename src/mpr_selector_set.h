@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.12 2005/05/29 12:47:45 br1 Exp $
+ * $Id: mpr_selector_set.h,v 1.13 2005/12/16 08:21:59 kattemat Exp $
  */
 
 
@@ -52,6 +52,9 @@ struct mpr_selector
   struct mpr_selector *prev;
 };
 
+
+olsr_bool
+olsr_is_mpr(void);
 
 olsr_u16_t
 get_local_ansn(void);
