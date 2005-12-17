@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.55 2005/12/16 15:16:42 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.56 2005/12/17 17:22:26 kattemat Exp $
  */
 
 /*
@@ -472,9 +472,15 @@ parse_http_request(int fd)
       if(tab_entries[i].filename)
 	{
 #ifdef NETDIRECT
+	  c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
+	  r = send(client_sockets[curr_clients], req, c, 0);   
+	  if(r < 0)
+	    {
+	      olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+	      goto close_connection;
+	    }
 	  netsprintf_error = 0;
 	  netsprintf_direct = 1;
-	  c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);
 #endif
 	  y = 0;
 	  while(http_ok_head[y])
