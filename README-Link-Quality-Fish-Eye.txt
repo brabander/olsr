@@ -123,7 +123,7 @@ reduces TC message redundancy, so it should be switched off in the
 configuration file /etc/olsrd.conf with these lines:
 
         TcRedundancy 2
-        MprCoverage 25
+        MprCoverage  7
 
 olsrd with LQ Extension attempts to know the best routes all over the
 whole mesh cloud, but it is likely that it never will be able to

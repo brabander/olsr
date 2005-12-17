@@ -253,7 +253,7 @@ Interface "XXX" "YYY"
     TcInterval        0.5
 
     # TC validity time
-    TcValidityTime	50.0
+    TcValidityTime	250.0
 
     # MID interval in seconds(float)
     MidInterval	5.0
