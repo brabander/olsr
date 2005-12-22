@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.56 2005/12/17 17:22:26 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.57 2005/12/22 15:06:52 kattemat Exp $
  */
 
 /*
@@ -807,6 +807,8 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 
 
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
+
+    size += sprintf(&buf[size], "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
 
     size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
 

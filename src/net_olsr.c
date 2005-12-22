@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.5 2005/10/23 20:58:14 tlopatic Exp $
+ * $Id: net_olsr.c,v 1.6 2005/12/22 15:06:52 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -151,7 +151,8 @@ net_add_buffer(struct interface *ifp)
   /* Fill struct */
   new_buf->bufsize = ifp->int_mtu;
   new_buf->if_index = ifp->if_nr;
-  new_buf->maxsize = ifp->int_mtu - OLSR_HEADERSIZE;
+  new_buf->maxsize = ifp->int_mtu - OLSR_HEADERSIZE - (olsr_cnf->ip_version == AF_INET ? 28 : 0);
+
   new_buf->pending = 0;
   new_buf->reserved = 0;
 
