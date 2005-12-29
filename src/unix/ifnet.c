@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.30 2005/10/08 15:38:38 kattemat Exp $
+ * $Id: ifnet.c,v 1.31 2005/12/29 18:37:16 tlopatic Exp $
  */
 
 
@@ -223,7 +223,8 @@ chk_if_changed(struct olsr_if *iface)
     ifp->int_mtu = 0;
   else
     {
-      ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+      ifr.ifr_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+
       if(ifp->int_mtu != ifr.ifr_mtu)
 	{
 	  ifp->int_mtu = ifr.ifr_mtu;
