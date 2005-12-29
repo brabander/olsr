@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.32 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: scheduler.c,v 1.33 2005/12/29 22:34:37 kattemat Exp $
  */
 
 
@@ -124,15 +124,7 @@ scheduler()
     {
 
       /* Update now_times */
-      if((now_times = times(&tms_buf)) == -1)
-	{
-	  if((now_times = times(&tms_buf)) == -1)
-	    {
-	      fprintf(stderr, "Fatal!scheduler could not get new_times.\n%s\n", strerror(errno));
-	      olsr_syslog(OLSR_LOG_ERR, "Fatal!scheduler could not get new_times.\n%m\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	}
+      now_times = times(&tms_buf);
 
       /* Update the global timestamp - kept for plugin compat */
       gettimeofday(&now, NULL);
@@ -210,15 +202,7 @@ scheduler()
 	}
 
 
-      if((end_of_loop = times(&tms_buf)) < 0)
-	{
-	  if((end_of_loop = times(&tms_buf)) < 0)
-	    {
-	      fprintf(stderr, "Fatal!scheduler could not get new_times.\n%s\n", strerror(errno));
-	      olsr_syslog(OLSR_LOG_ERR, "Fatal!scheduler could not get new_times.\n%m\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	}
+      end_of_loop = times(&tms_buf);
 
       //printf("Tick diff: %d\n", end_of_loop - now_times);
       time_used.tv_sec = ((end_of_loop - now_times) * system_tick_divider) / 1000;
