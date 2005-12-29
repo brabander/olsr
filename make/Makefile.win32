@@ -28,9 +28,12 @@ OS_LIB_DYNLOAD =
 olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
 		olsrd.exe \
+		olsr_switch.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
 		README \
 		README-Link-Quality.html \
+		README-Link-Quality-Fish-Eye.txt \
+		README-Olsr-Switch.html \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.win32.rfc \
 		files/olsrd.conf.win32.lq \
@@ -40,6 +43,7 @@ olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		lib/nameservice/olsrd_nameservice.dll \
 		lib/httpinfo/olsrd_httpinfo.dll
 		$(STRIP) olsrd.exe
+		$(STRIP) olsr_switch.exe
 		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
 		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
 		$(STRIP) lib/nameservice/olsrd_nameservice.dll
@@ -51,9 +55,12 @@ olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		cp gui/win32/Main/Release/Switch.exe $(TEMP)/olsr-$(VERS)
 		cp gui/win32/Shim/Release/Shim.exe $(TEMP)/olsr-$(VERS)
 		cp olsrd.exe $(TEMP)/olsr-$(VERS)
+		cp olsr_switch.exe $(TEMP)/olsr-$(VERS)
 		cp src/cfgparser/olsrd_cfgparser.dll $(TEMP)/olsr-$(VERS)
 		cp README $(TEMP)/olsr-$(VERS)
 		cp README-Link-Quality.html $(TEMP)/olsr-$(VERS)
+		cp README-Link-Quality-Fish-Eye.txt $(TEMP)/olsr-$(VERS)
+		cp README-Olsr-Switch.html $(TEMP)/olsr-$(VERS)
 		cp gui/win32/Inst/linux-manual.txt $(TEMP)/olsr-$(VERS)
 		cp files/olsrd.conf.win32.rfc $(TEMP)/olsr-$(VERS)/olsrd.conf.rfc
 		cp files/olsrd.conf.win32.lq $(TEMP)/olsr-$(VERS)/olsrd.conf.lq
@@ -71,9 +78,12 @@ olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 olsr-$(VERS)-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Shim/Release/Shim.exe \
 		olsrd.exe \
+		olsr_switch.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
 		README \
 		README-Link-Quality.html \
+		README-Link-Quality-Fish-Eye.txt \
+		README-Olsr-Switch.html \
 		gui/win32/Inst/linux-manual.txt \
 		files/olsrd.conf.win32.rfc \
 		files/olsrd.conf.win32.lq \
@@ -84,6 +94,7 @@ olsr-$(VERS)-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		lib/httpinfo/olsrd_httpinfo.dll \
 		gui/win32/Inst/installer.nsi
 		$(STRIP) olsrd.exe
+		$(STRIP) olsr_switch.exe
 		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
 		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
 		$(STRIP) lib/nameservice/olsrd_nameservice.dll

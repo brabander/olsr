@@ -35,7 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.66 2005/11/21 06:27:29 kattemat Exp $
+# $Id: Makefile,v 1.67 2005/12/29 21:26:31 tlopatic Exp $
+
+VERS =		0.4.10pre
 
 TOPDIR = .
 include Makefile.inc
@@ -45,8 +47,6 @@ LIBS +=		$(OS_LIB_DYNLOAD)
 ifeq ($(OS), win32)
 LDFLAGS +=	-Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols
 endif
-
-VERS =		0.4.10pre
 
 SWITCHDIR =     src/olsr_switch
 CFGDIR =	src/cfgparser
