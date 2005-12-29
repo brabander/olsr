@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.18 2005/11/08 11:24:04 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.19 2005/12/29 19:48:43 tlopatic Exp $
  */
 
 /*
@@ -205,7 +205,7 @@ plugin_ipc_init()
 	return 0;
       }
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__
       if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) 
       {
 	perror("SO_REUSEADDR failed");
@@ -449,7 +449,7 @@ ipc_send(char *data, int size)
   if(!ipc_open)
     return 0;
 
-#if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__ || defined __MacOSX__
   if (send(ipc_connection, data, size, 0) < 0) 
 #else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 

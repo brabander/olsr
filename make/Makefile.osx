@@ -17,7 +17,9 @@ INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
 
 ifdef OLSRD_PLUGIN
 CFLAGS +=	-fPIC
-LDFLAGS +=	-fPIC
+LDFLAGS =	-fPIC -dynamiclib -single_module -flat_namespace -undefined suppress
+else
+LDFLAGS = -dynamic
 endif
 		
 OS_LIB_PTHREAD =

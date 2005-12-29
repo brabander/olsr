@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.13 2005/05/29 12:47:43 br1 Exp $ */
+/* $Id: olsrd_power.c,v 1.14 2005/12/29 19:48:43 tlopatic Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -544,7 +544,7 @@ ipc_send(char *data, int size)
   if(!ipc_connected)
     return 0;
 
-#if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__ || defined __MacOSX__
   if (send(ipc_connection, data, size, 0) < 0) 
 #else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.1 2005/07/13 21:45:08 kattemat Exp $
+ * $Id: olsrd_pgraph.c,v 1.2 2005/12/29 19:48:43 tlopatic Exp $
  */
 
 /*
@@ -392,7 +392,7 @@ ipc_send(char *data, int size)
   if(!ipc_open)
     return 0;
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __MacOSX__
   if (send(ipc_connection, data, size, 0) < 0) 
 #else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 

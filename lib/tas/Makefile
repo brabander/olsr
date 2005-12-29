@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.3 2005/05/25 15:05:34 br1 Exp $
+# $Id: Makefile,v 1.4 2005/12/29 19:48:43 tlopatic Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_tas
@@ -51,10 +51,10 @@ ifneq ($(OS),win32)
 LIBS +=		-lm
 endif
 
-ifeq ($(OS),fbsd)
+ifneq ($(OS),linux)
 
 default_target install clean: 
-	@echo "*** TAS Plugin not supported on FreeBSD yet, sorry!"
+	@echo "*** TAS Plugin only supported on Linux, sorry!"
 
 else
 

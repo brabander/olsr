@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.20 2005/06/02 14:41:59 br1 Exp $
+# $Id: Makefile,v 1.21 2005/12/29 19:48:43 tlopatic Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -67,7 +67,13 @@ NAME =		$(BINNAME)
 else 
 
 # build lib per default
+
+ifeq (${OS}, osx)
+LDFLAGS += -dynamiclib -single_module
+else
 LDFLAGS +=	-shared -Wl,-soname,$(LIBNAME)
+endif
+
 CFLAGS +=	-DMAKELIB
 NAME =		$(LIBNAME)
 
