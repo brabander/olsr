@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.19 2005/12/29 19:48:43 tlopatic Exp $
+ * $Id: olsrd_dot_draw.c,v 1.20 2005/12/30 02:23:59 tlopatic Exp $
  */
 
 /*
@@ -205,7 +205,7 @@ plugin_ipc_init()
 	return 0;
       }
 
-#if defined __FreeBSD__
+#if defined __FreeBSD__ && defined SO_NOSIGPIPE
       if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) 
       {
 	perror("SO_REUSEADDR failed");

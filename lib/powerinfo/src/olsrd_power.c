@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.14 2005/12/29 19:48:43 tlopatic Exp $ */
+/* $Id: olsrd_power.c,v 1.15 2005/12/30 02:24:00 tlopatic Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -158,7 +158,7 @@ plugin_ipc_init()
 	return 0;
       }
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ && defined SO_NOSIGPIPE
       if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) 
       {
 	perror("SO_REUSEADDR failed");
