@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.27 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: olsr_cfg.h,v 1.28 2006/01/04 19:05:03 kattemat Exp $
  */
 
 
@@ -52,8 +52,8 @@
 #define DEF_TOS             16
 #define DEF_DEBUGLVL        1
 #define DEF_IPC_CONNECTIONS 0
-#define DEF_USE_HYST        OLSR_TRUE
-#define DEF_LQ_LEVEL        0
+#define DEF_USE_HYST        OLSR_FALSE
+#define DEF_LQ_LEVEL        2
 #define DEF_LQ_FISH         0
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
