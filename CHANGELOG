@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.54 2005/12/21 14:58:06 kattemat Exp $
+$Id: CHANGELOG,v 1.55 2006/01/04 09:08:08 kattemat Exp $
 
 0.4.10 --------------------------------------------------------------------
 
@@ -59,19 +59,13 @@ BUGFIXES
   causing it to default to site-local and have some weird side-effects.
 - Fixed crash when changing IPv6 address at run-time
 - Fixed a bug that prevented setting willingness 0 in the configfile
-<<<<<<< CHANGELOG
 - Fixed bad handling of missing command line arguments
-=======
 - Did various updates to prevent assertion when a neighbor
   has changed IP and sends HELLO before its olsrd precess has detected
   the change.
-<<<<<<< CHANGELOG
->>>>>>> 1.47
-=======
 - Fixed return value check on times(2) calls in the scheduler
 - Fixed bug(s) that could cause crash when an interface was brought
   down while olsrd was running.
->>>>>>> 1.53
 
 0.4.9 ---------------------------------------------------------------------
 
