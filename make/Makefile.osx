@@ -2,6 +2,10 @@
 # MAC OSX SPECIFIC CONFIGURATION
 #
 
+# don't strip executables and bundles for now until we figure out the proper way
+# to do it (flags).
+STRIP = \#
+
 INSTALL_PREFIX ?=
 LIBDIR =	$(INSTALL_PREFIX)/usr/lib
 
@@ -12,12 +16,10 @@ DEFINES =	-D__MacOSX__
 LIBS =		
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
-INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
-		/sbin/ldconfig
+INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME)
 
 ifdef OLSRD_PLUGIN
-CFLAGS +=	-fPIC
-LDFLAGS =	-fPIC -dynamiclib -single_module -flat_namespace -undefined suppress
+LDFLAGS = -bundle -flat_namespace -undefined suppress
 else
 LDFLAGS = -dynamic
 endif
