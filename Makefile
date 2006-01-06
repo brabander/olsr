@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.68 2006/01/04 15:51:19 kattemat Exp $
+# $Id: Makefile,v 1.69 2006/01/06 06:52:17 kattemat Exp $
 
 VERS =		0.5.0pre
 
@@ -71,11 +71,12 @@ $(CFGOBJS):
 .PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all
 
 clean:
-		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe $(TAGFILE)
+		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe
 		$(MAKE) -C $(CFGDIR) clean
 		$(MAKE) -C $(SWITCHDIR) clean
 
 uberclean:	clean clean_libs
+		-rm -f $(TAGFILE)
 		-rm -f src/*.[od~] 
 		-rm -f src/linux/*.[od~] src/unix/*.[od~] src/win32/*.[od~] src/bsd/*.[od~]
 		$(MAKE) -C $(CFGDIR) uberclean
