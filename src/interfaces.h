@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.30 2005/06/03 08:00:55 kattemat Exp $
+ * $Id: interfaces.h,v 1.31 2006/01/06 06:54:04 kattemat Exp $
  */
 
 
@@ -134,6 +134,8 @@ struct interface
 
   float         hello_etime;
   struct        vtimes valtimes;
+
+  void          *libnet_ctx;                    /* libnet context(void to avoid dependency */
 
   struct        if_gen_property *gen_properties;/* Generic interface properties */
 

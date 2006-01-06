@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.31 2005/12/29 18:37:16 tlopatic Exp $
+ * $Id: ifnet.c,v 1.32 2006/01/06 06:54:04 kattemat Exp $
  */
 
 
@@ -49,6 +49,7 @@
 #include "defs.h"
 #include "olsr.h"
 #include "net_os.h"
+#include "net_olsr.h"
 #include "socket_parser.h"
 #include "parser.h"
 #include "scheduler.h"
@@ -65,6 +66,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+
+#ifdef USE_LIBNET
+#include <libnet.h>
+#endif
 
 int bufspace = 127*1024;	/* max. input buffer size to request */
 
@@ -484,6 +489,10 @@ chk_if_changed(struct olsr_if *iface)
   /* Close olsr socket */
   close(ifp->olsr_socket);
   remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+#ifdef USE_LIBNET
+  libnet_destroy(ifp->libnet_ctx);
+#endif
+
   /* Free memory */
   free(ifp->int_name);
   free(ifp);
@@ -918,6 +927,20 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 	  exit_value = EXIT_FAILURE;
 	  kill(getpid(), SIGINT);
 	}
+
+#ifdef USE_LIBNET
+      ifp->libnet_ctx = libnet_init(LIBNET_RAW4, ifp->int_name, get_libnet_errbuf());
+
+      if(ifp->libnet_ctx == NULL)
+	{
+	  fprintf(stderr, "Could not initialize libnet... exiting!\n\n");
+	  olsr_syslog(OLSR_LOG_ERR, "Could not initialize libnet... exiting!\n\n");
+	  exit_value = EXIT_FAILURE;
+	  kill(getpid(), SIGINT);
+	}
+#else
+      ifp->libnet_ctx = NULL;
+#endif
     }
   else
     {

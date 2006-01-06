@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.7 2005/12/29 18:37:16 tlopatic Exp $
+ * $Id: net_olsr.c,v 1.8 2006/01/06 06:54:04 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -46,6 +46,11 @@
 #include "print_packet.h"
 #include "link_set.h"
 #include <stdlib.h>
+#include <assert.h>
+
+#ifdef USE_LIBNET
+#include <libnet.h>
+#endif
 
 extern olsr_bool lq_tc_pending;
 
@@ -87,6 +92,15 @@ static char *deny_ipv6_defaults[] =
     NULL
   };
 
+#ifdef USE_LIBNET
+static char errbuf[LIBNET_ERRBUF_SIZE];
+
+char *
+get_libnet_errbuf()
+{
+  return errbuf;
+}
+#endif
 
 void
 init_net()
@@ -454,6 +468,61 @@ net_output(struct interface *ifp)
   
   if(olsr_cnf->ip_version == AF_INET)
     {
+#ifdef USE_LIBNET
+      libnet_ptag_t udp_ptag = 0, ip_ptag = 0;
+      int bytes_written;
+
+      printf("LIBNET TX %d bytes on %s\n", 
+	     netbufs[ifp->if_nr]->pending, ifp->int_name);
+      
+      assert(ifp->libnet_ctx != NULL);
+
+      udp_ptag = libnet_build_udp(OLSRPORT, 
+				  OLSRPORT,
+				  LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+				  0,
+				  (u_int8_t *)netbufs[ifp->if_nr]->buff, 
+				  netbufs[ifp->if_nr]->pending, 
+				  ifp->libnet_ctx,
+				  udp_ptag);
+      if(udp_ptag == -1)
+	{
+	  OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	  return (0);
+	}
+      
+      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+				  olsr_cnf->tos,
+				  ifp->olsr_seqnum,
+				  0,
+				  255,
+				  IPPROTO_UDP,
+				  0,
+				  ifp->ip_addr.v4,
+				  sin->sin_addr.s_addr,
+				  NULL,
+				  0,
+				  ifp->libnet_ctx,
+				  ip_ptag);
+      if(ip_ptag == -1)
+	{
+	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	    return (0);
+	}
+      
+      if((bytes_written = libnet_write(ifp->libnet_ctx)) == -1)
+	{
+	  OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (ifp->libnet_ctx))
+	    return (0);
+	}
+      if(bytes_written != (int)(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending))
+	{
+	  printf("libnet_write returned %d, expected %d\n", 
+		 bytes_written, LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending);
+	}
+      
+      libnet_clear_packet(ifp->libnet_ctx);
+#else
       /* IP version 4 */
       if(olsr_sendto(ifp->olsr_socket, 
 		     netbufs[ifp->if_nr]->buff, 
@@ -468,6 +537,7 @@ net_output(struct interface *ifp)
 	  netbufs[ifp->if_nr]->pending = 0;
 	  return -1;
 	}
+#endif
     }
   else
     {

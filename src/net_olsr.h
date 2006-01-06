@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.1 2005/05/25 20:59:46 kattemat Exp $
+ * $Id: net_olsr.h,v 1.2 2006/01/06 06:54:37 kattemat Exp $
  */
 
 
@@ -67,6 +67,11 @@ struct olsr_netbuf
   int pending;    /* How much data is currently pending in the buffer */
   int reserved;   /* Plugins can reserve space in buffers */
 };
+
+#ifdef USE_LIBNET
+char *
+get_libnet_errbuf(void);
+#endif
 
 void
 init_net(void);

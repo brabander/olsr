@@ -26,6 +26,11 @@ ifdef GENERATE_PIC
 CFLAGS +=	-fPIC
 LDFLAGS +=	-fPIC
 endif
-		
+
+ifdef USE_LIBNET
+LIBS +=		-lnet
+CFLAGS +=	-DUSE_LIBNET
+endif
+
 OS_LIB_PTHREAD = -lpthread
 OS_LIB_DYNLOAD = -ldl
