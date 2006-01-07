@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.34 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: scheduler.c,v 1.35 2006/01/07 17:18:32 kattemat Exp $
  */
 
 
@@ -56,6 +56,11 @@
 extern olsr_bool olsr_win32_end_request;
 extern olsr_bool olsr_win32_end_flag;
 #endif
+
+/* Timer data, global. Externed in defs.h */
+clock_t now_times;              /* current idea of times(2) reported uptime */
+struct timeval now;		/* current idea of time */
+struct tm *nowtm;		/* current idea of time (in tm) */
 
 static float pollrate;
 

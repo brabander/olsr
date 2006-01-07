@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.84 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: main.c,v 1.85 2006/01/07 17:18:32 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -55,6 +55,10 @@
 #include "apm.h"
 #include "net_os.h"
 #include "build_msg.h"
+
+/* Global stuff externed in defs.h */
+FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
+struct olsrd_config *olsr_cnf;  /* The global configuration */
 
 #ifdef WIN32
 #define close(x) closesocket(x)
@@ -88,6 +92,7 @@ olsr_process_arguments(int, char *[],
 static char **olsr_argv;
 
 static char copyright_string[] = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+
 
 /**
  * Main entrypoint
