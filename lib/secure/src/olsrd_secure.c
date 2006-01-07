@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.17 2005/11/19 08:37:23 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.18 2006/01/07 08:17:44 kattemat Exp $
  */
 
 
@@ -273,12 +273,12 @@ packet_parser(int fd)
       if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 sender address */
-	  memcpy(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr, ipsize);
+	  memcpy(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr, olsr_cnf->ipsize);
 	}
       else
 	{
 	  /* IPv6 sender address */
-	  memcpy(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr, ipsize);
+	  memcpy(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr, olsr_cnf->ipsize);
 	}
 
       /*
@@ -414,7 +414,7 @@ add_signature(char *pck, int *size)
   msg->olsr_msgtype = MESSAGE_TYPE;
   msg->olsr_vtime = 0;
   msg->olsr_msgsize = htons(sizeof(struct s_olsrmsg));
-  memcpy(&msg->originator, &main_addr, ipsize);
+  memcpy(&msg->originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   msg->ttl = 1;
   msg->hopcnt = 0;
   msg->seqno = htons(get_msg_seqno());
@@ -672,13 +672,13 @@ send_challenge(union olsr_ip_addr *new_host)
   cmsg.olsr_msgtype = TYPE_CHALLENGE;
   cmsg.olsr_vtime = 0;
   cmsg.olsr_msgsize = htons(sizeof(struct challengemsg));
-  memcpy(&cmsg.originator, &main_addr, ipsize);
+  memcpy(&cmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   cmsg.ttl = 1;
   cmsg.hopcnt = 0;
   cmsg.seqno = htons(get_msg_seqno());
 
   /* Fill subheader */
-  memcpy(&cmsg.destination, new_host, ipsize);
+  memcpy(&cmsg.destination, new_host, olsr_cnf->ipsize);
   cmsg.challenge = htonl(challenge);
 
   olsr_printf(3, "[ENC]Size: %d\n", sizeof(struct challengemsg));
@@ -711,7 +711,7 @@ send_challenge(union olsr_ip_addr *new_host)
   entry->validated = 0;
   entry->challenge = challenge;
 
-  memcpy(&entry->addr, new_host, ipsize);
+  memcpy(&entry->addr, new_host, olsr_cnf->ipsize);
 
   /* update validtime - not validated */
   entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
@@ -785,11 +785,11 @@ parse_cres(char *in_msg)
   /* First the challenge received */
   memcpy(checksum_cache, &entry->challenge, 4);
   /* Then the local IP */
-  memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, ipsize);
+  memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, olsr_cnf->ipsize);
 
   /* Create the hash */
   CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + ipsize, 
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   sha1_hash);
 
 
@@ -880,11 +880,11 @@ parse_rres(char *in_msg)
   /* First the challenge received */
   memcpy(checksum_cache, &entry->challenge, 4);
   /* Then the local IP */
-  memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, ipsize);
+  memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, olsr_cnf->ipsize);
 
   /* Create the hash */
   CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + ipsize, 
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   sha1_hash);
 
 
@@ -939,7 +939,7 @@ parse_challenge(char *in_msg)
   if((entry = lookup_timestamp_entry((union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       entry = malloc(sizeof(struct stamp));
-      memcpy(&entry->addr, &msg->originator, ipsize);
+      memcpy(&entry->addr, &msg->originator, olsr_cnf->ipsize);
 
       hash = olsr_hashing((union olsr_ip_addr *)&msg->originator);
   
@@ -1032,7 +1032,7 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   crmsg.olsr_msgtype = TYPE_CRESPONSE;
   crmsg.olsr_vtime = 0;
   crmsg.olsr_msgsize = htons(sizeof(struct c_respmsg));
-  memcpy(&crmsg.originator, &main_addr, ipsize);
+  memcpy(&crmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   crmsg.ttl = 1;
   crmsg.hopcnt = 0;
   crmsg.seqno = htons(get_msg_seqno());
@@ -1042,7 +1042,7 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   olsr_printf(3, "[ENC]Timestamp %d\n", crmsg.timestamp);
 
   /* Fill subheader */
-  memcpy(&crmsg.destination, to, ipsize);
+  memcpy(&crmsg.destination, to, olsr_cnf->ipsize);
   crmsg.challenge = htonl(challenge);
 
   /* Create digest of received challenge + IP */
@@ -1051,11 +1051,11 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   /* First the challenge received */
   memcpy(checksum_cache, &chal_in, 4);
   /* Then the local IP */
-  memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, ipsize);
+  memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, olsr_cnf->ipsize);
 
   /* Create the hash */
   CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + ipsize, 
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   crmsg.res_sig);
 
 
@@ -1106,7 +1106,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   rrmsg.olsr_msgtype = TYPE_RRESPONSE;
   rrmsg.olsr_vtime = 0;
   rrmsg.olsr_msgsize = htons(sizeof(struct r_respmsg));
-  memcpy(&rrmsg.originator, &main_addr, ipsize);
+  memcpy(&rrmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   rrmsg.ttl = 1;
   rrmsg.hopcnt = 0;
   rrmsg.seqno = htons(get_msg_seqno());
@@ -1116,7 +1116,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   olsr_printf(3, "[ENC]Timestamp %d\n", rrmsg.timestamp);
 
   /* Fill subheader */
-  memcpy(&rrmsg.destination, to, ipsize);
+  memcpy(&rrmsg.destination, to, olsr_cnf->ipsize);
 
   /* Create digest of received challenge + IP */
 
@@ -1124,11 +1124,11 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   /* First the challenge received */
   memcpy(checksum_cache, &chal_in, 4);
   /* Then the local IP */
-  memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, ipsize);
+  memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, olsr_cnf->ipsize);
 
   /* Create the hash */
   CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + ipsize, 
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   rrmsg.res_sig);
 
 
@@ -1171,7 +1171,7 @@ lookup_timestamp_entry(union olsr_ip_addr *adr)
       entry != &timestamps[hash];
       entry = entry->next)
     {
-      if(memcmp(&entry->addr, adr, ipsize) == 0)
+      if(memcmp(&entry->addr, adr, olsr_cnf->ipsize) == 0)
 	{
 	  olsr_printf(3, "[ENC]Match for %s\n", olsr_ip_to_string(adr));
 	  return entry;

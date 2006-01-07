@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.20 2005/12/30 02:23:59 tlopatic Exp $
+ * $Id: olsrd_dot_draw.c,v 1.21 2006/01/07 08:17:43 kattemat Exp $
  */
 
 /*
@@ -159,7 +159,7 @@ ipc_print_neigh_link(struct neighbor_entry *neighbor)
   double etx=0.0;
   char* style = "solid";
   struct link_entry* link;
-  adr = olsr_ip_to_string(&main_addr);
+  adr = olsr_ip_to_string(&olsr_cnf->main_addr);
   sprintf( buf, "\"%s\" -> ", adr );
   ipc_send_str(buf);
   

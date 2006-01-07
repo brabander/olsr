@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.14 2005/05/29 12:47:42 br1 Exp $ */
+/* $Id: nameservice.c,v 1.15 2006/01/07 08:17:43 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -216,7 +216,7 @@ name_init()
 	for (name = my_names; name != NULL; name = name->next) {
 		if (name->ip.v4 == 0) {
 			// insert main_addr
-			memcpy(&name->ip, &main_addr, ipsize);
+			memcpy(&name->ip, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			prev = name;
 		} else {
 			// IP from config file
@@ -239,7 +239,7 @@ name_init()
 		
 	if (have_dns_server) {
 		if (my_dns_server.v4 == 0) {
-			memcpy(&my_dns_server, &main_addr, ipsize);
+			memcpy(&my_dns_server, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			printf("\nNAME PLUGIN: announcing upstream DNS server: %s\n", 
 				olsr_ip_to_string(&my_dns_server));
 		}
@@ -354,7 +354,7 @@ olsr_event(void *foo)
 			/* IPv4 */
 			message->v4.olsr_msgtype = MESSAGE_TYPE;
 			message->v4.olsr_vtime = double_to_me(my_timeout);
-			memcpy(&message->v4.originator, &main_addr, ipsize);
+			memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			message->v4.ttl = MAX_TTL;
 			message->v4.hopcnt = 0;
 			message->v4.seqno = htons(get_msg_seqno());
@@ -369,7 +369,7 @@ olsr_event(void *foo)
 			/* IPv6 */
 			message->v6.olsr_msgtype = MESSAGE_TYPE;
 			message->v6.olsr_vtime = double_to_me(my_timeout);
-			memcpy(&message->v6.originator, &main_addr, ipsize);
+			memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			message->v6.ttl = MAX_TTL;
 			message->v6.hopcnt = 0;
 			message->v6.seqno = htons(get_msg_seqno());
@@ -403,7 +403,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 	int size;
 
 	/* Fetch the originator of the messsage */
-	memcpy(&originator, &m->v4.originator, ipsize);
+	memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
 		
 	/* Fetch the message based on IP version */
 	if(olsr_cnf->ip_version == AF_INET) {
@@ -419,7 +419,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 
 	/* Check if message originated from this node. 
 	If so - back off */
-	if(memcmp(&originator, &main_addr, ipsize) == 0)
+	if(memcmp(&originator, &olsr_cnf->main_addr, olsr_cnf->ipsize) == 0)
 		return;
 
 	/* Check that the neighbor this message was received from is symmetric. 
@@ -470,7 +470,7 @@ encap_namemsg(struct namemsg* msg)
 		to_packet = (struct name*)pos;
 		to_packet->type = htons(NAME_FORWARDER);
 		to_packet->len = htons(0);
-		memcpy(&to_packet->ip, &my_dns_server, ipsize);
+		memcpy(&to_packet->ip, &my_dns_server, olsr_cnf->ipsize);
 		pos += sizeof(struct name);
 		i++;
 	}
@@ -484,7 +484,7 @@ encap_namemsg(struct namemsg* msg)
 		to_packet = (struct name*)pos;
 		to_packet->type = htons(my_name->type);
 		to_packet->len = htons(my_name->len);
-		memcpy(&to_packet->ip, &my_name->ip, ipsize);
+		memcpy(&to_packet->ip, &my_name->ip, olsr_cnf->ipsize);
 		pos += sizeof(struct name);
 		strncpy(pos, my_name->name, my_name->len);
 		pos += my_name->len;
@@ -534,7 +534,7 @@ decap_namemsg( struct namemsg *msg, int size, struct name_entry **to )
 		tmp->type = ntohs(from_packet->type);
 		tmp->len = ntohs(from_packet->len) > MAX_NAME ? MAX_NAME : ntohs(from_packet->len);
 		tmp->name = olsr_malloc(tmp->len+1, "new name_entry name");
-		memcpy(&tmp->ip, &from_packet->ip, ipsize);
+		memcpy(&tmp->ip, &from_packet->ip, olsr_cnf->ipsize);
 		pos += sizeof(struct name);
 		strncpy(tmp->name, pos, tmp->len);
 		tmp->name[tmp->len] = '\0';
@@ -571,7 +571,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
 	/* find the entry for originator */
 	for (entry = list[hash]; entry != NULL; entry = entry->next)
 	{
-		if (memcmp(originator, &entry->originator, ipsize) == 0) {
+		if (memcmp(originator, &entry->originator, olsr_cnf->ipsize) == 0) {
 			// found
 			olsr_printf(4, "NAME PLUGIN: %s found\n", 
 				olsr_ip_to_string(originator));
@@ -590,7 +590,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
 	/* insert a new entry */
 	entry = olsr_malloc(sizeof(struct db_entry), "new db_entry");
 	
-	memcpy(&entry->originator, originator, ipsize);
+	memcpy(&entry->originator, originator, olsr_cnf->ipsize);
 	olsr_get_timestamp(vtime * 1000, &entry->timer);
 	entry->names = NULL;
 	// queue to front
@@ -726,7 +726,7 @@ write_resolv_file()
 							olsr_ip_to_string(&best_routes->rt_dst));
 					
 					tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
-					memcpy(&tmp->rt_dst, &route->rt_dst, ipsize);
+					memcpy(&tmp->rt_dst, &route->rt_dst, olsr_cnf->ipsize);
 					tmp->rt_etx = route->rt_etx;
 					tmp->next = best_routes;
 					best_routes = tmp;
@@ -747,7 +747,7 @@ write_resolv_file()
 							last->rt_etx, olsr_ip_to_string(&last->rt_dst));
 						
 						tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
-						memcpy(&tmp->rt_dst, &route->rt_dst, ipsize);
+						memcpy(&tmp->rt_dst, &route->rt_dst, olsr_cnf->ipsize);
 						tmp->rt_etx = route->rt_etx;
 						tmp->next = last->next;
 						last->next = tmp;

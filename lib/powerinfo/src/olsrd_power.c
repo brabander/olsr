@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_power.c,v 1.15 2005/12/30 02:24:00 tlopatic Exp $ */
+/* $Id: olsrd_power.c,v 1.16 2006/01/07 08:17:44 kattemat Exp $ */
 
 /*
  * Dynamic linked library example for UniK OLSRd
@@ -308,7 +308,7 @@ olsr_event(void *foo)
 	  message->v4.olsr_msgtype = MESSAGE_TYPE;
 	  message->v4.olsr_vtime = double_to_me(7.5);
 	  message->v4.olsr_msgsize = htons(sizeof(struct olsrmsg));
-	  memcpy(&message->v4.originator, &main_addr, ipsize);
+	  memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 	  message->v4.ttl = MAX_TTL;
 	  message->v4.hopcnt = 0;
 	  message->v4.seqno = htons(get_msg_seqno());
@@ -331,7 +331,7 @@ olsr_event(void *foo)
 	  message->v6.olsr_msgtype = MESSAGE_TYPE;
 	  message->v6.olsr_vtime = double_to_me(7.5);
 	  message->v6.olsr_msgsize = htons(sizeof(struct olsrmsg));
-	  memcpy(&message->v6.originator, &main_addr, ipsize);
+	  memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 	  message->v6.ttl = MAX_TTL;
 	  message->v6.hopcnt = 0;
 	  message->v6.seqno = htons(get_msg_seqno());
@@ -373,7 +373,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
   pm = (union p_olsr_message*)m;
 
   /* Fetch the originator of the messsage */
-  memcpy(&originator, &m->v4.originator, ipsize);
+  memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
 
   /* Fetch the message based on IP version */
   if(olsr_cnf->ip_version == AF_INET)
@@ -388,7 +388,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
     }
 
   /* Check if message originated from this node */
-  if(memcmp(&originator, &main_addr, ipsize) == 0)
+  if(memcmp(&originator, &olsr_cnf->main_addr, olsr_cnf->ipsize) == 0)
     /* If so - back off */
     return;
 
@@ -452,7 +452,7 @@ update_power_entry(union olsr_ip_addr *originator, struct powermsg *message, dou
       entry != &list[hash];
       entry = entry->next)
     {
-      if(memcmp(originator, &entry->originator, ipsize) == 0)
+      if(memcmp(originator, &entry->originator, olsr_cnf->ipsize) == 0)
 	{
 	  entry->source_type = message->source_type;
 	  entry->percentage = message->percentage;
@@ -477,7 +477,7 @@ update_power_entry(union olsr_ip_addr *originator, struct powermsg *message, dou
      
   /* Fill struct */
 
-  memcpy(&entry->originator, originator, ipsize);
+  memcpy(&entry->originator, originator, olsr_cnf->ipsize);
 
   entry->source_type = message->source_type;
   entry->percentage = message->percentage;

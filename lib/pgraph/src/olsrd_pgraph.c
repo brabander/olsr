@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.2 2005/12/29 19:48:43 tlopatic Exp $
+ * $Id: olsrd_pgraph.c,v 1.3 2006/01/07 08:17:43 kattemat Exp $
  */
 
 /*
@@ -82,7 +82,7 @@ ipc_print_neigh_link(struct neighbor_entry *neighbor)
 //  char* style = "solid";
 //  struct link_entry* link;
 
-  main_adr = olsr_ip_to_string(&main_addr);
+  main_adr = olsr_ip_to_string(&olsr_cnf->main_addr);
   adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
   len = sprintf( buf, "add link %s %s\n", main_adr, adr );
   ipc_send(buf, len);
@@ -223,7 +223,7 @@ ipc_action(int fd)
 */
 	  ipc_open = 1;
 	  olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n",addr);
-          len = sprintf(buf, "add node %s\n", olsr_ip_to_string(&main_addr));
+          len = sprintf(buf, "add node %s\n", olsr_ip_to_string(&olsr_cnf->main_addr));
   	  ipc_send(buf, len);
 	  pcf_event(1, 1, 1);
 //	}
@@ -408,7 +408,6 @@ ipc_send(char *data, int size)
 }
 
 
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
 struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
 {
   struct link_entry *walker;
