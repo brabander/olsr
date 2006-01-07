@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.36 2005/11/29 18:38:40 kattemat Exp $
+ * $Id: process_package.c,v 1.37 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -52,6 +52,7 @@
 #include "parser.h"
 #include "duplicate_set.h"
 #include "rebuild_packet.h"
+#include "scheduler.h"
 
 
 /**
@@ -142,7 +143,7 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
           // XXX - we should check whether we actually
           // announce this neighbour
 
-          changes = OLSR_TRUE;
+	  signal_link_changes(OLSR_TRUE);
         }
     }
   

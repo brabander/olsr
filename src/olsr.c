@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.47 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: olsr.c,v 1.48 2006/01/07 08:16:20 kattemat Exp $
  */
 
 /**
@@ -427,9 +427,9 @@ set_buffer_timer(struct interface *ifn)
       
   /* Set timer */
   jitter = (float) random()/RAND_MAX;
-  jitter *= max_jitter;
+  jitter *= olsr_cnf->max_jitter;
 
-  fwdtimer[ifn->if_nr] = GET_TIMESTAMP(jitter*1000);
+  ifn->fwdtimer = GET_TIMESTAMP(jitter*1000);
 
 }
 
@@ -440,7 +440,7 @@ olsr_init_willingness()
 {
   if(olsr_cnf->willingness_auto)
     olsr_register_scheduler_event(&olsr_update_willingness, 
-				  NULL, will_int, will_int, NULL);
+				  NULL, olsr_cnf->will_int, olsr_cnf->will_int, NULL);
 }
 
 void
@@ -584,7 +584,7 @@ olsr_exit(const char *msg, int val)
   OLSR_PRINTF(1, "OLSR EXIT: %s\n", msg)
   olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
   fflush(stdout);
-  exit_value = val;
+  olsr_cnf->exit_value = val;
 
   raise(SIGTERM);
 }

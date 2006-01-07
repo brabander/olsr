@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.51 2006/01/04 15:51:19 kattemat Exp $
+ * $Id: defs.h,v 1.52 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -74,6 +74,7 @@
 #define UDP_IPV6_HDRSIZE        48
 #define MAX_IFS                 16
 
+#define MIN_PACKET_SIZE(ver)  (int)(sizeof(olsr_u8_t) * ((ver == AF_INET) ? 4 : 7))
 /* Debug helper macro */
 #ifdef DEBUG
 #define olsr_debug(lvl,format,args...) \
@@ -97,7 +98,7 @@ extern FILE *debug_handle;
 /* Provides a timestamp s1 milliseconds in the future
    according to system ticks returned by times(2) */
 #define GET_TIMESTAMP(s1) \
-        (now_times + ((s1) / system_tick_divider))
+        (now_times + ((s1) / olsr_cnf->system_tick_divider))
 
 #define TIMED_OUT(s1) \
         ((int)((s1) - now_times) < 0)
@@ -126,55 +127,10 @@ extern FILE *debug_handle;
 
 extern struct olsrd_config *olsr_cnf;
 
-/* Global tick resolution */
-extern olsr_u16_t system_tick_divider;
-
-extern int exit_value; /* Global return value for process termination */
-
-
 /* Timer data */
 extern clock_t now_times;              /* current idea of times(2) reported uptime */
 extern struct timeval now;		/* current idea of time */
 extern struct tm *nowtm;		/* current idea of time (in tm) */
-
-extern olsr_bool disp_pack_in;         /* display incoming packet content? */
-extern olsr_bool disp_pack_out;        /* display outgoing packet content? */
-
-extern olsr_bool del_gws;
-
-/*
- * Timer values
- */
-
-extern float will_int;
-extern float max_jitter;
-
-extern size_t ipsize;
-
-/* Main address of this node */
-extern union olsr_ip_addr main_addr;
-
-/* OLSR UPD port */
-extern int olsr_udp_port;
-
-/* The socket used for all ioctls */
-extern int ioctl_s;
-
-/* routing socket */
-#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-extern int rts;
-#endif
-
-extern float max_tc_vtime;
-
-extern clock_t fwdtimer[MAX_IFS];	/* forwarding timer */
-
-extern int minsize;
-
-extern olsr_bool changes;                /* is set if changes occur in MPRS set */ 
-
-/* TC empty message sending */
-extern clock_t send_empty_tc;
 
 /*
  *IPC functions

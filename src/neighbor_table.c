@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.29 2005/11/29 18:37:58 kattemat Exp $
+ * $Id: neighbor_table.c,v 1.30 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -364,7 +364,7 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 	  changes_neighborhood = OLSR_TRUE;
 	  changes_topology = OLSR_TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = OLSR_TRUE;
+	    signal_link_changes(OLSR_TRUE);
 	}
       entry->status = SYM;
     }
@@ -375,7 +375,7 @@ update_neighbor_status(struct neighbor_entry *entry, int link)
 	  changes_neighborhood = OLSR_TRUE;
 	  changes_topology = OLSR_TRUE;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    changes = OLSR_TRUE;
+	    signal_link_changes(OLSR_TRUE);
 	}
       /* else N_status is set to NOT_SYM */
       entry->status = NOT_SYM;

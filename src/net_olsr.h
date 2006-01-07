@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.2 2006/01/06 06:54:37 kattemat Exp $
+ * $Id: net_olsr.h,v 1.3 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -72,6 +72,9 @@ struct olsr_netbuf
 char *
 get_libnet_errbuf(void);
 #endif
+
+void
+net_set_disp_pack_out(olsr_bool);
 
 void
 init_net(void);

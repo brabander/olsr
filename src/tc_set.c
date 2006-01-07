@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.23 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: tc_set.c,v 1.24 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -59,8 +59,6 @@ olsr_init_tc()
 {
   int index;
  
-  changes = OLSR_FALSE;
-
   OLSR_PRINTF(5, "TC: init topo\n")
 
   olsr_register_timeout_function(&olsr_time_out_tc_set);

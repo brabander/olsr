@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.46 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.47 2006/01/07 08:16:24 kattemat Exp $
  */
 
 
@@ -457,6 +457,14 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->lq_dinter = DEF_LQ_DIJK_INTER;
     cnf->lq_wsize = DEF_LQ_WSIZE;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
+
+    cnf->del_gws = OLSR_FALSE;
+    cnf->will_int = 10 * HELLO_INTERVAL;
+    cnf->max_jitter = 0.0;
+    cnf->exit_value = EXIT_SUCCESS;
+    cnf->max_tc_vtime = 0.0;
+    cnf->ioctl_s = 0;
+    cnf->rts = 0;
 }
 
 

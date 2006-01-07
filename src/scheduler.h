@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.h,v 1.11 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: scheduler.h,v 1.12 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -67,6 +67,9 @@ struct event_entry
   olsr_u8_t *trigger;
   struct event_entry *next;
 };
+
+void
+signal_link_changes(olsr_bool);
 
 int
 olsr_register_timeout_function(void (*)(void));

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.6 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.7 2006/01/07 08:16:22 kattemat Exp $
  */
 
 
@@ -152,7 +152,7 @@ static int add_del_route(struct rt_entry *dest, int add)
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
 
-  len = write(rts, buff, rtm->rtm_msglen);
+  len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
 
   if (len < rtm->rtm_msglen)
     fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));

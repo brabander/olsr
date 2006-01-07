@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.28 2006/01/04 19:05:03 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.29 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -219,6 +219,19 @@ struct olsrd_config
   struct ipc_net           *ipc_nets;
   struct olsr_if           *interfaces;
   olsr_u16_t               ifcnt;
+
+  /* Stuff set by olsrd */
+  size_t                   ipsize;               /* Size of address */
+  olsr_u16_t               system_tick_divider;  /* Tick resolution */
+  olsr_bool                del_gws;              /* Delete InternetGWs at startup */
+  union olsr_ip_addr       main_addr;            /* Main address of this node */
+  float                    will_int;
+  float                    max_jitter;
+  int                      exit_value; /* Global return value for process termination */
+  float                    max_tc_vtime;
+
+  int                      ioctl_s;              /* Socket used for ioctl calls */
+  int                      rts;                  /* Socket used for route changes on BSDs */
 };
 
 #if defined __cplusplus

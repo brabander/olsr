@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.10 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: local_hna_set.c,v 1.11 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -110,7 +110,7 @@ remove_local_hna6_entry(union olsr_ip_addr *net, olsr_u16_t prefix_len)
 
   while(h6)
     {
-      if((memcmp(net, &h6->net, ipsize) == 0) && 
+      if((memcmp(net, &h6->net, olsr_cnf->ipsize) == 0) && 
 	 (prefix_len == h6->prefix_len))
 	{
 	  /* Dequeue */

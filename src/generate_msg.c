@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.23 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: generate_msg.c,v 1.24 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "generate_msg.h"
@@ -86,7 +86,7 @@ generate_tc(void *p)
 
   olsr_build_tc_packet(&tcpacket);
 
-  if(queue_tc(&tcpacket, ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_tc(&tcpacket, ifn) && TIMED_OUT(ifn->fwdtimer))
     {
       set_buffer_timer(ifn);
     }
@@ -99,7 +99,7 @@ generate_mid(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(queue_mid(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_mid(ifn) && TIMED_OUT(ifn->fwdtimer))
     {
       set_buffer_timer(ifn);
     }
@@ -113,7 +113,7 @@ generate_hna(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(queue_hna(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr]))
+  if(queue_hna(ifn) && TIMED_OUT(ifn->fwdtimer))
     {
       set_buffer_timer(ifn);
     }

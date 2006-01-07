@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.83 2005/09/29 05:53:34 kattemat Exp $
+ * $Id: main.c,v 1.84 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -54,6 +54,7 @@
 #include "socket_parser.h"
 #include "apm.h"
 #include "net_os.h"
+#include "build_msg.h"
 
 #ifdef WIN32
 #define close(x) closesocket(x)
@@ -75,9 +76,6 @@ olsr_reconfigure(int);
 
 static void
 print_usage(void);
-
-static void
-set_default_values(void);
 
 static int
 set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
@@ -114,9 +112,6 @@ main(int argc, char *argv[])
   setbuf(stderr, NULL);
 
 #ifndef WIN32
-  /* Initialize tick resolution */
-  system_tick_divider = 1000/sysconf(_SC_CLK_TCK);
-
   /* Check if user is root */
   if(getuid() || getgid())
     {
@@ -124,8 +119,6 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 #else
-  system_tick_divider = 1;
-
   DisableIcmpRedirects();
 
   if (WSAStartup(0x0202, &WsaData))
@@ -141,18 +134,12 @@ main(int argc, char *argv[])
   /* Open syslog */
   olsr_openlog("olsrd");
 
-  /* Set default values */
-  set_default_values();
- 
   /* Get initial timestep */
   nowtm = NULL;
   while (nowtm == NULL)
     {
       nowtm = localtime((time_t *)&now.tv_sec);
     }
-    
-  /* The port to use for OLSR traffic */
-  olsr_udp_port = htons(OLSRPORT);
     
   printf("\n *** %s ***\n Build date: %s\n http://www.olsr.org\n\n", 
 	 SOFTWARE_VERSION, 
@@ -219,6 +206,13 @@ main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 
+  /* Initialize tick resolution */
+#ifndef WIN32
+  olsr_cnf->system_tick_divider = 1000/sysconf(_SC_CLK_TCK);
+#else
+  olsr_cnf->system_tick_divider = 1;
+#endif
+
   /*
    * Process olsrd options.
    */
@@ -257,7 +251,7 @@ main(int argc, char *argv[])
   /*
    *socket for icotl calls
    */
-  if ((ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0)) < 0) 
+  if ((olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0)) < 0) 
 
     {
       olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
@@ -265,12 +259,15 @@ main(int argc, char *argv[])
     }
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-  if ((rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
+  if ((olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
     {
       olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
       olsr_exit(__func__, 0);
     }
 #endif
+
+  /* Init empty TC timer */
+  set_empty_tc_timer(GET_TIMESTAMP(0));
 
   /*
    *enable ip forwarding on host
@@ -304,22 +301,20 @@ main(int argc, char *argv[])
 	{
 	  olsr_cnf->willingness = olsr_calculate_willingness();
 
-	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, will_int)
+	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int)
 	}
     }
 
-  /* Set ipsize and minimum packetsize */
+  /* Set ipsize */
   if(olsr_cnf->ip_version == AF_INET6)
     {
       OLSR_PRINTF(1, "Using IP version 6\n")
-      ipsize = sizeof(struct in6_addr);
-      minsize = (int)sizeof(olsr_u8_t) * 7; /* Minimum packetsize IPv6 */
+      olsr_cnf->ipsize = sizeof(struct in6_addr);
     }
   else
     {
       OLSR_PRINTF(1, "Using IP version 4\n")
-      ipsize = sizeof(olsr_u32_t);
-      minsize = (int)sizeof(olsr_u8_t) * 4; /* Minimum packetsize IPv4 */
+      olsr_cnf->ipsize = sizeof(olsr_u32_t);
     }
 
   /* Initialize net */
@@ -374,7 +369,7 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&main_addr))
+  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&olsr_cnf->main_addr))
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
@@ -480,43 +475,19 @@ olsr_shutdown(int signal)
   restore_settings(olsr_cnf->ip_version);
 
   /* ioctl socket */
-  close(ioctl_s);
+  close(olsr_cnf->ioctl_s);
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
-  close(rts);
+  close(olsr_cnf->rts);
 #endif
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", SOFTWARE_VERSION);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION)
 
-  exit(exit_value);
+  exit(olsr_cnf->exit_value);
 }
-
-
-
-
-
-/**
- *Sets the default values of variables at startup
- *
- */
-static void
-set_default_values()
-{
-  exit_value = EXIT_SUCCESS; 
-  /* If the application exits by signal it is concidered success,
-   * if not, exit_value is set by the function calling olsr_exit.
-   */
-
-  will_int = 10 * HELLO_INTERVAL; /* Willingness update interval */
-
-  /* Initialize empty TC timer */
-  send_empty_tc = GET_TIMESTAMP(0);
-}
-
-
 
 /**
  * Print the command line usage
@@ -740,7 +711,7 @@ olsr_process_arguments(int argc, char *argv[],
        */
       if (strcmp(*argv, "-dispin") == 0) 
 	{
-	  disp_pack_in = OLSR_TRUE;
+	  parser_set_disp_pack_in(OLSR_TRUE);
 	  continue;
 	}
 
@@ -749,7 +720,7 @@ olsr_process_arguments(int argc, char *argv[],
        */
       if (strcmp(*argv, "-dispout") == 0) 
 	{
-	  disp_pack_out = OLSR_TRUE;
+	  net_set_disp_pack_out(OLSR_TRUE);
 	  continue;
 	}
 
@@ -819,7 +790,7 @@ olsr_process_arguments(int argc, char *argv[],
        */
       if (strcmp(*argv, "-delgw") == 0) 
 	{
-	  del_gws = OLSR_TRUE;
+	  olsr_cnf->del_gws = OLSR_TRUE;
 	  continue;
 	}
 

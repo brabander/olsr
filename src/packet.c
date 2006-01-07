@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.20 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: packet.c,v 1.21 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -46,10 +46,9 @@
 #include "mpr.h"
 #include "olsr.h"
 #include "neighbor_table.h"
+#include "build_msg.h"
 
 static olsr_bool sending_tc = OLSR_FALSE;
-
-
 
 /**
  *Free the memory allocated for a HELLO packet.
@@ -113,7 +112,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   /* Set TTL */
 
   message->ttl = 1;  
-  COPY_IP(&message->source_addr, &main_addr);
+  COPY_IP(&message->source_addr, &olsr_cnf->main_addr);
 
 #ifdef DEBUG
       OLSR_PRINTF(5, "On link:\n")
@@ -355,8 +354,8 @@ olsr_build_tc_packet(struct tc_message *message)
   message->ttl = MAX_TTL;
   message->ansn = get_local_ansn();
 
-  COPY_IP(&message->originator, &main_addr);
-  COPY_IP(&message->source_addr, &main_addr);
+  COPY_IP(&message->originator, &olsr_cnf->main_addr);
+  COPY_IP(&message->source_addr, &olsr_cnf->main_addr);
   
 
   /* Loop trough all neighbors */  
@@ -430,7 +429,7 @@ olsr_build_tc_packet(struct tc_message *message)
 	{
 	  /* Send empty TC */
 	  OLSR_PRINTF(3, "No more MPR selectors - will send empty TCs\n")
-	  send_empty_tc = GET_TIMESTAMP((max_tc_vtime*3)*1000);
+	  set_empty_tc_timer(GET_TIMESTAMP((olsr_cnf->max_tc_vtime*3)*1000));
 
 	  sending_tc = OLSR_FALSE;
 	}

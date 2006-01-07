@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.62 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: link_set.c,v 1.63 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -95,7 +95,7 @@ olsr_init_link_set()
 {
 
   /* Timers */
-  hold_time_neighbor = (NEIGHB_HOLD_TIME*1000) / system_tick_divider;
+  hold_time_neighbor = (NEIGHB_HOLD_TIME*1000) / olsr_cnf->system_tick_divider;
 
   olsr_register_timeout_function(&olsr_time_out_link_set);
   if(olsr_cnf->use_hysteresis)
@@ -981,7 +981,7 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
       // XXX - we should check whether we actually
       // announce this neighbour
 
-      changes = OLSR_TRUE;
+      signal_link_changes(OLSR_TRUE);
     }
 }
 

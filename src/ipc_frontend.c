@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.27 2005/11/10 19:33:57 kattemat Exp $
+ * $Id: ipc_frontend.c,v 1.28 2006/01/07 08:16:20 kattemat Exp $
  */
 
 /*
@@ -497,7 +497,7 @@ ipc_send_net_info()
     net_msg->ipv6 = 1;
  
   /* Main addr */
-  COPY_IP(&net_msg->main_addr, &main_addr);
+  COPY_IP(&net_msg->main_addr, &olsr_cnf->main_addr);
 
 
   /*

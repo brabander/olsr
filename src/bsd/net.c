@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.26 2005/08/28 19:30:29 kattemat Exp $
+ * $Id: net.c,v 1.27 2006/01/07 08:16:22 kattemat Exp $
  */
 
 #include "defs.h"
@@ -719,7 +719,7 @@ check_wireless_interface(char *ifname)
   strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
   ifr.ifr_data = (caddr_t)&wreq;
 
-  return (ioctl(ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
+  return (ioctl(olsr_cnf->ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
 #else
   return 0;
 #endif
@@ -745,7 +745,7 @@ calculate_if_metric(char *ifname)
       memset(&ifm, 0, sizeof(ifm));
       strlcpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
 
-      if(ioctl(ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
 	{
 	  OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name)
 	  return WEIGHT_ETHERNET_DEFAULT;

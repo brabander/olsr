@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.h,v 1.12 2005/02/02 19:59:18 kattemat Exp $
+ * $Id: build_msg.h,v 1.13 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #ifndef _BUILD_MSG_H
@@ -44,6 +44,13 @@
 
 #include "packet.h"
 #include "olsr_protocol.h"
+#include <time.h> /* For clock_t */
+
+void
+set_empty_tc_timer(clock_t);
+
+clock_t
+get_empty_tc_timer(void);
 
 olsr_bool
 queue_hello(struct hello_message *, struct interface *);

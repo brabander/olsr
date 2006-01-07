@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.14 2005/12/16 08:21:59 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.15 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -186,7 +186,7 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
     {
       olsr_add_mpr_selector(addr, vtime);
       retval = 1;
-      changes = OLSR_TRUE;
+      signal_link_changes(OLSR_TRUE);
     }
   else
     {
@@ -226,7 +226,7 @@ olsr_time_out_mprs_set()
 
 	  /* Delete entry */
 	  free(mprs_to_delete);
-	  changes = OLSR_TRUE;
+	  signal_link_changes(OLSR_TRUE);
 	}
       else
 	mprs = mprs->next;

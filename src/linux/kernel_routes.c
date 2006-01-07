@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.18 2005/02/27 18:39:43 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.19 2006/01/07 08:16:24 kattemat Exp $
  */
 
 
@@ -93,16 +93,12 @@ olsr_ioctl_add_route(struct rt_entry *destination)
   
   kernel_route.rt_metric = destination->rt_metric + 1;
 
-  /* 
-   * Thales Internet GW fix
-   */
-
-  if((del_gws) &&
+  if((olsr_cnf->del_gws) &&
      (destination->rt_dst.v4 == INADDR_ANY) &&
      (destination->rt_dst.v4 == INADDR_ANY))
     {
       delete_all_inet_gws();
-      del_gws = 0;
+      olsr_cnf->del_gws = OLSR_FALSE;
     }
 
   /*
@@ -128,7 +124,7 @@ olsr_ioctl_add_route(struct rt_entry *destination)
 
   //printf("\tiface: %s\n", kernel_route.rt_dev);    
   
-  tmp = ioctl(ioctl_s,SIOCADDRT,&kernel_route);
+  tmp = ioctl(olsr_cnf->ioctl_s,SIOCADDRT,&kernel_route);
   /*  kernel_route.rt_dev=*/
 
   /*
@@ -177,7 +173,7 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
 	      destination->rt_metric + 1)
   
 
-  memset(&zeroaddr, 0, ipsize); /* Use for comparision */
+  memset(&zeroaddr, 0, olsr_cnf->ipsize); /* Use for comparision */
 
 
   memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
@@ -189,7 +185,7 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   
   kernel_route.rtmsg_dst_len = destination->rt_mask.v6;
 
-  if(memcmp(&destination->rt_dst, &destination->rt_router, ipsize) != 0)
+  if(memcmp(&destination->rt_dst, &destination->rt_router, olsr_cnf->ipsize) != 0)
     {
       COPY_IP(&kernel_route.rtmsg_gateway, &destination->rt_router);
     }
@@ -208,11 +204,11 @@ olsr_ioctl_add_route6(struct rt_entry *destination)
   //OLSR_PRINTF(3, "Adding route to %s using gw ", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_dst))
   //OLSR_PRINTF(3, "%s\n", olsr_ip_to_string((union olsr_ip_addr *)&kernel_route.rtmsg_gateway))
 
-  if((tmp = ioctl(ioctl_s, SIOCADDRT, &kernel_route)) >= 0)
+  if((tmp = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route)) >= 0)
     {
       if(olsr_cnf->open_ipc)
 	{
-	  if(memcmp(&destination->rt_router, &null_addr6, ipsize) != 0)
+	  if(memcmp(&destination->rt_router, &null_addr6, olsr_cnf->ipsize) != 0)
 	    ipc_route_send_rtentry(&destination->rt_dst, 
 				   &destination->rt_router, 
 				   destination->rt_metric, 
@@ -274,7 +270,7 @@ olsr_ioctl_del_route(struct rt_entry *destination)
   //printf("\tiface: %s\n", kernel_route.rt_dev);    
   */
 
-  tmp = ioctl(ioctl_s, SIOCDELRT, &kernel_route);
+  tmp = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route);
 
 
     /*
@@ -323,15 +319,15 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
 
   kernel_route.rtmsg_dst_len = destination->rt_mask.v6;
 
-  memcpy(&kernel_route.rtmsg_dst, &destination->rt_dst, ipsize);
+  memcpy(&kernel_route.rtmsg_dst, &destination->rt_dst, olsr_cnf->ipsize);
 
-  memcpy(&kernel_route.rtmsg_gateway, &destination->rt_router, ipsize);
+  memcpy(&kernel_route.rtmsg_gateway, &destination->rt_router, olsr_cnf->ipsize);
 
   kernel_route.rtmsg_flags = destination->rt_flags;
   kernel_route.rtmsg_metric = destination->rt_metric;
 
 
-  tmp = ioctl(ioctl_s, SIOCDELRT,&kernel_route);
+  tmp = ioctl(olsr_cnf->ioctl_s, SIOCDELRT,&kernel_route);
 
 
     /*
@@ -406,7 +402,7 @@ delete_all_inet_gws()
       ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr.s_addr = INADDR_ANY;
       ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_family=AF_INET;
       
-      //memcpy(&kernel_route.rt_gateway, gw, ipsize);
+      //memcpy(&kernel_route.rt_gateway, gw, olsr_cnf->ipsize);
       
 	   
 	   

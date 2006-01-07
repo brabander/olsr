@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.29 2005/09/17 20:48:50 kattemat Exp $
+ * $Id: net.c,v 1.30 2006/01/07 08:16:24 kattemat Exp $
  */
 
 
@@ -821,7 +821,7 @@ check_wireless_interface(char *ifname)
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-  return (ioctl(ioctl_s, SIOCGIWNAME, &ifr) >= 0) ? 1 : 0;
+  return (ioctl(olsr_cnf->ioctl_s, SIOCGIWNAME, &ifr) >= 0) ? 1 : 0;
 }
 
 #if 0
@@ -874,7 +874,7 @@ calculate_if_metric(char *ifname)
       strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
       
       /* Get bit rate */
-      if(ioctl(ioctl_s, SIOCGIWRATE, &ifr) < 0)
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0)
 	{
 	  OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname)
 	  return WEIGHT_WLAN_11MB;
@@ -897,7 +897,7 @@ calculate_if_metric(char *ifname)
       memset(&ifr, 0, sizeof(ifr));
       strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-      if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
 	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
 		      ifr.ifr_name, strerror(errno))
@@ -905,7 +905,7 @@ calculate_if_metric(char *ifname)
       }
 
       mii->reg_num = MII_BMCR;
-      if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
 	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
 		    strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
@@ -947,14 +947,14 @@ is_if_link_up(char *ifname)
       memset(&ifr, 0, sizeof(ifr));
       strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-      if (ioctl(ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
 	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
 		      ifr.ifr_name, strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       mii->reg_num = MII_BMSR;
-      if (ioctl(ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
 	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
 		    strerror(errno))
 	return WEIGHT_ETHERNET_DEFAULT;

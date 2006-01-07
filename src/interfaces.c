@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.27 2005/06/03 08:00:55 kattemat Exp $
+ * $Id: interfaces.c,v 1.28 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -89,7 +89,7 @@ ifinit()
       /* IP version 4 */
       memset(&addrsock, 0, sizeof (addrsock));
       addrsock.sin_family = AF_INET;
-      addrsock.sin_port = olsr_udp_port;
+      addrsock.sin_port = htons(OLSRPORT);
       (addrsock.sin_addr).s_addr = INADDR_ANY;
     }
   else
@@ -97,7 +97,7 @@ ifinit()
       /* IP version 6 */
       memset(&addrsock6, 0, sizeof (addrsock6));
       addrsock6.sin6_family = AF_INET6;
-      addrsock6.sin6_port = olsr_udp_port;
+      addrsock6.sin6_port = htons(OLSRPORT);
       //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
     }
 

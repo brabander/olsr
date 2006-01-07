@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.33 2005/12/29 22:34:37 kattemat Exp $
+ * $Id: scheduler.c,v 1.34 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -63,8 +63,16 @@ static float pollrate;
 static struct timeout_entry *timeout_functions;
 static struct event_entry *event_functions;
 
+static olsr_bool link_changes; /* is set if changes occur in MPRS set */ 
 
-static void trigger_dijkstra(void *dummy)
+void
+signal_link_changes(olsr_bool val)
+{
+  link_changes = val;
+}
+
+static void 
+trigger_dijkstra(void *dummy)
 {
   OLSR_PRINTF(3, "Triggering Dijkstra\n");
 
@@ -107,6 +115,8 @@ scheduler()
   /* Global buffer for times(2) calls */
   struct tms tms_buf;
  
+  link_changes = OLSR_FALSE;
+
   if(olsr_cnf->lq_level > 1 && olsr_cnf->lq_dinter > 0.0)
     olsr_register_scheduler_event(trigger_dijkstra, NULL, olsr_cnf->lq_dinter, 0, NULL);
 
@@ -117,7 +127,7 @@ scheduler()
   interval.tv_usec = interval_usec % 1000000;
 
   OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n", pollrate)
-  OLSR_PRINTF(3, "Max jitter is %f\n\n", max_jitter)
+  OLSR_PRINTF(3, "Max jitter is %f\n\n", olsr_cnf->max_jitter)
 
   /* Main scheduler event loop */
   for(;;)
@@ -152,11 +162,11 @@ scheduler()
 
 
       /* Check for changes in topology */
-      if(changes)
+      if(link_changes)
         {
 	  OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn())
 	  increase_local_ansn();
-          changes = OLSR_FALSE;
+          link_changes = OLSR_FALSE;
 	}
 
 
@@ -179,7 +189,7 @@ scheduler()
 
 	      /* Set jitter */
 	      entry->since_last = (float) random()/RAND_MAX;
-	      entry->since_last *= max_jitter;
+	      entry->since_last *= olsr_cnf->max_jitter;
 	      
 	      /* Reset trigger */
 	      if(entry->trigger != NULL)
@@ -197,7 +207,7 @@ scheduler()
       /* looping trough interfaces and emmittin pending data */
       for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
 	{ 
-	  if(net_output_pending(ifn) && TIMED_OUT(fwdtimer[ifn->if_nr])) 
+	  if(net_output_pending(ifn) && TIMED_OUT(ifn->fwdtimer)) 
 	    net_output(ifn);
 	}
 
@@ -205,8 +215,8 @@ scheduler()
       end_of_loop = times(&tms_buf);
 
       //printf("Tick diff: %d\n", end_of_loop - now_times);
-      time_used.tv_sec = ((end_of_loop - now_times) * system_tick_divider) / 1000;
-      time_used.tv_usec = ((end_of_loop - now_times) * system_tick_divider) % 1000;
+      time_used.tv_sec = ((end_of_loop - now_times) * olsr_cnf->system_tick_divider) / 1000;
+      time_used.tv_usec = ((end_of_loop - now_times) * olsr_cnf->system_tick_divider) % 1000;
 
       //printf("Time used: %d.%04d\n", time_used.tv_sec, time_used.tv_usec);
 

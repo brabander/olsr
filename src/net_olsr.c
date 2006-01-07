@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.9 2006/01/06 07:21:04 kattemat Exp $
+ * $Id: net_olsr.c,v 1.10 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -53,6 +53,9 @@
 #endif
 
 extern olsr_bool lq_tc_pending;
+
+static olsr_bool disp_pack_out = OLSR_FALSE;
+
 
 #ifdef WIN32
 #define perror(x) WinSockPError(x)
@@ -101,6 +104,13 @@ get_libnet_errbuf()
   return errbuf;
 }
 #endif
+
+
+void
+net_set_disp_pack_out(olsr_bool val)
+{
+  disp_pack_out = val;
+}
 
 void
 init_net()
@@ -440,7 +450,7 @@ net_output(struct interface *ifp)
       sin = &dst;
 
       if (sin->sin_port == 0)
-	sin->sin_port = olsr_udp_port;
+	sin->sin_port = htons(OLSRPORT);
     }
   else
     {
@@ -595,7 +605,7 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
   p = prefix;
   i = 0;
 
-  memset(adr, 0, ipsize);
+  memset(adr, 0, olsr_cnf->ipsize);
 
   for(;p > 0; p -= 8)
     {

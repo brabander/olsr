@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.19 2005/10/11 14:55:55 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.20 2006/01/07 08:16:20 kattemat Exp $
  */
 
 /*
@@ -189,9 +189,9 @@
  * Macros for comparing and copying IP addresses
  */
 
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
+#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, olsr_cnf->ipsize))
 
-#define COPY_IP(to, from) memcpy(to, from, ipsize)
+#define COPY_IP(to, from) memcpy(to, from, olsr_cnf->ipsize)
 
 
 

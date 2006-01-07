@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.29 2005/10/23 19:01:04 tlopatic Exp $
+ * $Id: ifnet.c,v 1.30 2006/01/07 08:16:26 kattemat Exp $
  */
 
 #include "interfaces.h"
@@ -376,18 +376,18 @@ void RemoveInterface(struct olsr_if *IntConf)
     Prev->int_next = Int->int_next;
   }
 
-  if(COMP_IP(&main_addr, &Int->ip_addr))
+  if(COMP_IP(&olsr_cnf->main_addr, &Int->ip_addr))
   {
     if(ifnet == NULL)
     {
-      memset(&main_addr, 0, ipsize);
+      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
       OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n")
     }
 
     else
     {
-      COPY_IP(&main_addr, &ifnet->ip_addr);
-      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&main_addr))
+      COPY_IP(&olsr_cnf->main_addr, &ifnet->ip_addr);
+      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&olsr_cnf->main_addr))
     }
   }
 
@@ -435,7 +435,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
   {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n")
-    exit_value = EXIT_FAILURE;
+    olsr_cnf->exit_value = EXIT_FAILURE;
     CallSignalHandler();
   }
 }
@@ -473,11 +473,11 @@ int add_hemu_if(struct olsr_if *iface)
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  memset(&null_addr, 0, ipsize);
-  if(COMP_IP(&null_addr, &main_addr))
+  memset(&null_addr, 0, olsr_cnf->ipsize);
+  if(COMP_IP(&null_addr, &olsr_cnf->main_addr))
     {
-      COPY_IP(&main_addr, &iface->hemu_ip);
-      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&main_addr))
+      COPY_IP(&olsr_cnf->main_addr, &iface->hemu_ip);
+      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&olsr_cnf->main_addr))
     }
 
   /* setting the interfaces number*/
@@ -505,7 +505,7 @@ int add_hemu_if(struct olsr_if *iface)
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
-      memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, ipsize);
+      memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
       
       /*
        *We create one socket for each interface and bind
@@ -525,7 +525,7 @@ int add_hemu_if(struct olsr_if *iface)
   else
     {
       /* IP version 6 */
-      memcpy(&ifp->ip_addr, &iface->hemu_ip, ipsize);
+      memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
 #if 0      
       /*
@@ -548,13 +548,13 @@ int add_hemu_if(struct olsr_if *iface)
     }
 
   /* Send IP as first 4/16 bytes on socket */
-  memcpy(addr, iface->hemu_ip.v6.s6_addr, ipsize);
+  memcpy(addr, iface->hemu_ip.v6.s6_addr, olsr_cnf->ipsize);
   addr[0] = htonl(addr[0]);
   addr[1] = htonl(addr[1]);
   addr[2] = htonl(addr[2]);
   addr[3] = htonl(addr[3]);
 
-  if(send(ifp->olsr_socket, (char *)addr, ipsize, 0) != (int)ipsize)
+  if(send(ifp->olsr_socket, (char *)addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error sending IP!");
     }  
@@ -604,12 +604,13 @@ int add_hemu_if(struct olsr_if *iface)
 
   /* Recalculate max jitter */
 
-  if((max_jitter == 0) || ((iface->cnf->hello_params.emission_interval / 4) < max_jitter))
-    max_jitter = iface->cnf->hello_params.emission_interval / 4;
+  if((olsr_cnf->max_jitter == 0) || 
+     ((iface->cnf->hello_params.emission_interval / 4) < olsr_cnf->max_jitter))
+    olsr_cnf->max_jitter = iface->cnf->hello_params.emission_interval / 4;
 
   /* Recalculate max topology hold time */
-  if(max_tc_vtime < iface->cnf->tc_params.emission_interval)
-    max_tc_vtime = iface->cnf->tc_params.emission_interval;
+  if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
+    olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
 
   ifp->hello_etime = iface->cnf->hello_params.emission_interval;
   ifp->valtimes.hello = double_to_me(iface->cnf->hello_params.validity_time);
@@ -703,11 +704,11 @@ int chk_if_changed(struct olsr_if *IntConf)
     AddrIn->sin_port = 0;
     AddrIn->sin_addr.s_addr = NewVal.v4;
 
-    if (main_addr.v4 == OldVal.v4)
+    if (olsr_cnf->main_addr.v4 == OldVal.v4)
     {
       OLSR_PRINTF(1, "\tMain address change.\n")
 
-      main_addr.v4 = NewVal.v4;
+      olsr_cnf->main_addr.v4 = NewVal.v4;
     }
 
     Res = 1;
@@ -878,12 +879,12 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
   IntConf->interf = New;
   IntConf->configured = 1;
 
-  memset(&NullAddr, 0, ipsize);
+  memset(&NullAddr, 0, olsr_cnf->ipsize);
   
-  if(COMP_IP(&NullAddr, &main_addr))
+  if(COMP_IP(&NullAddr, &olsr_cnf->main_addr))
   {
-    COPY_IP(&main_addr, &New->ip_addr);
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&main_addr))
+    COPY_IP(&olsr_cnf->main_addr, &New->ip_addr);
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&olsr_cnf->main_addr))
   }
 
   net_add_buffer(New);
@@ -918,12 +919,12 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
                                 IntConf->cnf->hna_params.emission_interval,
                                 0, NULL);
 
-  if(max_jitter == 0 ||
-     IntConf->cnf->hello_params.emission_interval / 4 < max_jitter)
-    max_jitter = IntConf->cnf->hello_params.emission_interval / 4;
+  if(olsr_cnf->max_jitter == 0 ||
+     IntConf->cnf->hello_params.emission_interval / 4 < olsr_cnf->max_jitter)
+    olsr_cnf->max_jitter = IntConf->cnf->hello_params.emission_interval / 4;
 
-  if(max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
-    max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
+  if(olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
+    olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
   New->hello_etime = IntConf->cnf->hello_params.emission_interval;
 

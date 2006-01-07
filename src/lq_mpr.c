@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.10 2005/11/29 18:37:58 kattemat Exp $
+ * $Id: lq_mpr.c,v 1.11 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -44,6 +44,7 @@
 #include "two_hop_neighbor_table.h"
 #include "link_set.h"
 #include "lq_mpr.h"
+#include "scheduler.h"
 
 void olsr_calculate_lq_mpr(void)
 {
@@ -176,5 +177,5 @@ void olsr_calculate_lq_mpr(void)
     }
 
   if (mpr_changes && olsr_cnf->tc_redundancy > 0)
-    changes = OLSR_TRUE;
+    signal_link_changes(OLSR_TRUE);
 }

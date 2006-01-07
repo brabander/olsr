@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.31 2006/01/06 06:54:04 kattemat Exp $
+ * $Id: interfaces.h,v 1.32 2006/01/07 08:16:20 kattemat Exp $
  */
 
 
@@ -45,6 +45,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include "olsr_types.h"
 
@@ -134,6 +135,8 @@ struct interface
 
   float         hello_etime;
   struct        vtimes valtimes;
+
+  clock_t       fwdtimer;                       /* Timeout for OLSR forwarding on this if */
 
   void          *libnet_ctx;                    /* libnet context(void to avoid dependency */
 

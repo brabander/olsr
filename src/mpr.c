@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr.c,v 1.14 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: mpr.c,v 1.15 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -44,6 +44,7 @@
 #include "two_hop_neighbor_table.h"
 #include "olsr.h"
 #include "neighbor_table.h"
+#include "scheduler.h"
 
 /* Begin:
  * Prototypes for internal functions 
@@ -541,7 +542,7 @@ olsr_calculate_mpr()
     {
       OLSR_PRINTF(3, "CHANGES IN MPR SET\n")
       if(olsr_cnf->tc_redundancy > 0)
-	changes = OLSR_TRUE;
+	signal_link_changes(OLSR_TRUE);
     }
 
 }

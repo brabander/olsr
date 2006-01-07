@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.8 2005/11/19 08:49:44 kattemat Exp $
+ * $Id: print_packet.c,v 1.9 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "print_packet.h"
@@ -285,7 +285,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8])
 	    {
-	      olsr_u8_t *quality = (olsr_u8_t *)haddr + ipsize;
+	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
 	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
@@ -313,7 +313,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; 
 	       haddr++)
 	    {
-	      olsr_u8_t *quality = (olsr_u8_t *)haddr + ipsize;
+	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
 	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
@@ -335,12 +335,12 @@ print_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
   while(remsize)
     {
       fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
-      data += ipsize;
+      data += olsr_cnf->ipsize;
       fprintf(handle, "    +LQ: %d, ", *data);
       data += 1;
       fprintf(handle, "RLQ: %d\n", *data);
       data += 2;
-      remsize -= (ipsize + 4);
+      remsize -= (olsr_cnf->ipsize + 4);
     }
 
 }
@@ -359,9 +359,9 @@ print_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
   while(remsize)
     {
       fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
-      data += ipsize;
+      data += olsr_cnf->ipsize;
 
-      remsize -= ipsize;
+      remsize -= olsr_cnf->ipsize;
     }
 
 }
@@ -375,11 +375,11 @@ print_hnamsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
   while(remsize)
     {
       fprintf(handle, "    +Network: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
-      data += ipsize;
+      data += olsr_cnf->ipsize;
       fprintf(handle, "    +Netmask: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
-      data += ipsize;
+      data += olsr_cnf->ipsize;
 
-      remsize -= (ipsize*2);
+      remsize -= (olsr_cnf->ipsize*2);
     }
 
 }
@@ -392,7 +392,7 @@ print_midmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
   while(remsize)
     {
       fprintf(handle, "    +Alias: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
-      data += ipsize;
-      remsize -= ipsize;
+      data += olsr_cnf->ipsize;
+      remsize -= olsr_cnf->ipsize;
     }
 }

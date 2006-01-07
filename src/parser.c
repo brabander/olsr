@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.29 2005/11/19 08:49:44 kattemat Exp $
+ * $Id: parser.c,v 1.30 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "parser.h"
@@ -64,6 +64,14 @@
 struct parse_function_entry *parse_functions;
 
 static char inbuf[MAXMESSAGESIZE+1];
+
+static olsr_bool disp_pack_in = OLSR_FALSE;
+
+void
+parser_set_disp_pack_in(olsr_bool val)
+{
+  disp_pack_in = val;
+}
 
 /**
  *Initialize the parser. 
@@ -160,7 +168,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   count = size - ((char *)m - (char *)olsr);
 
-  if (count < minsize)
+  if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
     return;
 
   if (ntohs(olsr->olsr_packlen) != size)
@@ -215,7 +223,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
     {
 
       processed = 0;      
-      if (count < minsize)
+      if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
 	break;
       
       if(olsr_cnf->ip_version == AF_INET)
@@ -270,7 +278,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
        */
 
       /* Should be the same for IPv4 and IPv6 */
-      if(COMP_IP(&m->v4.originator, &main_addr))
+      if(COMP_IP(&m->v4.originator, &olsr_cnf->main_addr))
 	{
 #ifdef DEBUG
 	  OLSR_PRINTF(3, "Not processing message originating from us!\n")
@@ -310,7 +318,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 		      olsr_ip_to_string(&unkpacket.originator))
 
 	  /* Forward message */
-	  if(!COMP_IP(&unkpacket.originator, &main_addr))
+	  if(!COMP_IP(&unkpacket.originator, &olsr_cnf->main_addr))
 	    {	      
 	      /* Forward */
 	      olsr_forward_message(m, 
@@ -440,7 +448,7 @@ olsr_input_hostemu(int fd)
   /* Host emulator receives IP address first to emulate
      direct link */
 
-  if((cc = recv(fd, from_addr.v6.s6_addr, ipsize, 0)) != (int)ipsize)
+  if((cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0)) != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
       COPY_IP(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator);

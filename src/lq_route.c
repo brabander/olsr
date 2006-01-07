@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.40 2005/11/29 18:37:58 kattemat Exp $
+ * $Id: lq_route.c,v 1.41 2006/01/07 08:16:20 kattemat Exp $
  */
 
 #include "defs.h"
@@ -74,7 +74,7 @@ struct dijk_vertex
 
 static int avl_comp_ipv6(void *ip1, void *ip2)
 {
-  return memcmp(ip1, ip2, ipsize);
+  return memcmp(ip1, ip2, olsr_cnf->ipsize);
 }
 
 static int avl_comp_ipv4(void *ip1, void *ip2)
@@ -205,7 +205,7 @@ static void create_vertex_list_rec(struct list *vertex_list,
 
   // add the vertex to the list, if it's not us
 
-  if ((*comp)(&main_addr, node->key) != 0)
+  if ((*comp)(&olsr_cnf->main_addr, node->key) != 0)
   {
     vert->node.data = vert;
     list_add_tail(vertex_list, &vert->node);
@@ -223,7 +223,7 @@ static void create_vertex_list(struct avl_tree *vertex_tree,
 
   // make ourselves the first vertex in the list
 
-  node = avl_find(vertex_tree, &main_addr);
+  node = avl_find(vertex_tree, &olsr_cnf->main_addr);
   vert = node->data;
 
   vert->node.data = vert;
@@ -370,7 +370,7 @@ void olsr_calculate_lq_routing_table(void)
 #endif
   struct interface *inter;
 
-  if (ipsize == 4)
+  if (olsr_cnf->ipsize == 4)
     avl_comp = avl_comp_ipv4;
 
   else
@@ -383,7 +383,7 @@ void olsr_calculate_lq_routing_table(void)
 
   // add ourselves to the vertex tree
 
-  add_vertex(&vertex_tree, &main_addr, 0.0);
+  add_vertex(&vertex_tree, &olsr_cnf->main_addr, 0.0);
 
   // add our neighbours
 
@@ -434,7 +434,7 @@ void olsr_calculate_lq_routing_table(void)
           {
             etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
 
-            add_edge(&vertex_tree, &neigh->neighbor_main_addr, &main_addr, etx);
+            add_edge(&vertex_tree, &neigh->neighbor_main_addr, &olsr_cnf->main_addr, etx);
           }
       }
 
