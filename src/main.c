@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.85 2006/01/07 17:18:32 kattemat Exp $
+ * $Id: main.c,v 1.86 2006/01/07 18:05:05 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -504,6 +504,7 @@ print_usage()
   fprintf(stderr, "An error occured somwhere between your keyboard and your chair!\n"); 
   fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
   fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"); 
+  fprintf(stderr, "  [-lql <LQ level>] [-lqw <LQ winsize>]\n"); 
   fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
   fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
@@ -606,6 +607,42 @@ olsr_process_arguments(int argc, char *argv[],
 	      continue;
 	    }
 	  memcpy(&ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));  
+	  continue;
+	}
+
+      /*
+       * Set LQ level
+       */
+      if (strcmp(*argv, "-lql") == 0) 
+	{
+	  int tmp_lq_level;
+	  NEXT_ARG;
+          CHECK_ARGC;
+	  
+	  /* Sanity checking is done later */
+	  sscanf(*argv, "%d", &tmp_lq_level);
+	  olsr_cnf->lq_level = tmp_lq_level;
+	  continue;
+	}
+
+      /*
+       * Set LQ winsize
+       */
+      if (strcmp(*argv, "-lqw") == 0) 
+	{
+	  int tmp_lq_wsize;
+	  NEXT_ARG;
+          CHECK_ARGC;
+	  
+	  sscanf(*argv, "%d", &tmp_lq_wsize);
+
+	  if(tmp_lq_wsize < MIN_LQ_WSIZE || tmp_lq_wsize > MAX_LQ_WSIZE)
+	    {
+	      printf("LQ winsize %d not allowed. Range [%d-%d]\n", 
+		     tmp_lq_wsize, MIN_LQ_WSIZE, MAX_LQ_WSIZE);
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	  olsr_cnf->lq_wsize = tmp_lq_wsize;
 	  continue;
 	}
       
