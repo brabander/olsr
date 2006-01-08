@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.10 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: net_olsr.c,v 1.11 2006/01/08 20:27:17 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -401,8 +401,6 @@ del_ptf(int (*f)(char *, int *))
   return 0;
 }
 
-
-
 /**
  *Sends a packet on a given interface.
  *
@@ -412,6 +410,139 @@ del_ptf(int (*f)(char *, int *))
  */
 int
 net_output(struct interface *ifp)
+#ifdef USE_LIBNET
+{
+  struct ptf *tmp_ptf_list;
+  union olsr_packet *outmsg;
+  int retval;
+  libnet_ptag_t udp_ptag = 0, ip_ptag = 0;
+
+  if(!netbufs[ifp->if_nr])
+    return -1;
+
+  if(!netbufs[ifp->if_nr]->pending)
+    return 0;
+  
+  assert(ifp->libnet_ctx != NULL);    
+
+  netbufs[ifp->if_nr]->pending += OLSR_HEADERSIZE;
+
+  retval = netbufs[ifp->if_nr]->pending;
+
+  outmsg = (union olsr_packet *)netbufs[ifp->if_nr]->buff;
+  /* Add the Packet seqno */
+  outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
+  /* Set the packetlength */
+  outmsg->v4.olsr_packlen = htons(netbufs[ifp->if_nr]->pending);
+
+  /*
+   *Call possible packet transform functions registered by plugins  
+   */
+  tmp_ptf_list = ptf_list;
+  while(tmp_ptf_list != NULL)
+    {
+      tmp_ptf_list->function(netbufs[ifp->if_nr]->buff, &netbufs[ifp->if_nr]->pending);
+      tmp_ptf_list = tmp_ptf_list->next;
+    }
+
+  /*
+   *if the -dispout option was given
+   *we print the contetnt of the packets
+   */
+  if(disp_pack_out)
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)netbufs[ifp->if_nr]->buff, 
+				 netbufs[ifp->if_nr]->pending, &ifp->ip_addr); 
+
+  printf("LIBNET TX %d bytes on %s\n", 
+	 netbufs[ifp->if_nr]->pending, ifp->int_name);
+  
+  udp_ptag = libnet_build_udp(OLSRPORT, 
+			      OLSRPORT,
+			      LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+			      0,
+			      (u_int8_t *)netbufs[ifp->if_nr]->buff, 
+			      netbufs[ifp->if_nr]->pending, 
+			      ifp->libnet_ctx,
+			      0);
+  if(udp_ptag == -1)
+    {
+      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	netbufs[ifp->if_nr]->pending = 0;
+      libnet_clear_packet(ifp->libnet_ctx);
+      return -1;
+    }
+
+  if(olsr_cnf->ip_version == AF_INET)
+    {
+      /* IP version 4 */      
+      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+				  olsr_cnf->tos,
+				  ifp->olsr_seqnum,
+				  0x4000, /* Don't fragment */
+				  255,
+				  IPPROTO_UDP,
+				  0,
+				  ifp->ip_addr.v4,
+				  ((struct sockaddr_in *)&ifp->int_broadaddr)->sin_addr.s_addr,
+				  NULL,
+				  0,
+				  ifp->libnet_ctx,
+				  0);
+      if(ip_ptag == -1)
+	{
+	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	  netbufs[ifp->if_nr]->pending = 0;
+	  libnet_clear_packet(ifp->libnet_ctx);
+	  return -1;
+	}
+      
+    }
+  else
+    {
+      /* IP version 6 */
+      struct libnet_in6_addr src, dst;
+
+      memcpy(&src, &ifp->ip_addr.v6, sizeof(src));
+      memcpy(&dst, &((struct sockaddr_in6 *)&ifp->int6_multaddr)->sin6_addr, sizeof(dst));
+ 
+      ip_ptag = libnet_build_ipv6(0, /* Traffic class */
+				  0, /* Flow label */
+				  LIBNET_IPV6_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+				  IPPROTO_UDP, /* Next Header */
+				  64, /* Hop Limit */
+				  src,
+				  dst,
+				  NULL, /* Optional payload */
+				  0, /* Optional payload length */
+				  ifp->libnet_ctx,
+				  0);
+
+      if(ip_ptag == -1)
+	{
+	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	  netbufs[ifp->if_nr]->pending = 0;
+	  libnet_clear_packet(ifp->libnet_ctx);
+	  return -1;
+	}
+    }
+  if((retval = libnet_write(ifp->libnet_ctx)) == -1)
+    {
+      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (ifp->libnet_ctx))
+    }
+
+  libnet_clear_packet(ifp->libnet_ctx);
+  
+  netbufs[ifp->if_nr]->pending = 0;
+
+  // if we've just transmitted a TC message, let Dijkstra use the current
+  // link qualities for the links to our neighbours
+
+  olsr_update_dijkstra_link_qualities();
+  lq_tc_pending = OLSR_FALSE;
+
+  return retval;
+}
+#else
 {
   struct sockaddr_in *sin;  
   struct sockaddr_in dst;
@@ -481,63 +612,6 @@ net_output(struct interface *ifp)
   
   if(olsr_cnf->ip_version == AF_INET)
     {
-#ifdef USE_LIBNET
-      libnet_ptag_t udp_ptag = 0, ip_ptag = 0;
-
-      printf("LIBNET TX %d bytes on %s\n", 
-	     netbufs[ifp->if_nr]->pending, ifp->int_name);
-      
-      assert(ifp->libnet_ctx != NULL);
-
-      udp_ptag = libnet_build_udp(OLSRPORT, 
-				  OLSRPORT,
-				  LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
-				  0,
-				  (u_int8_t *)netbufs[ifp->if_nr]->buff, 
-				  netbufs[ifp->if_nr]->pending, 
-				  ifp->libnet_ctx,
-				  udp_ptag);
-      if(udp_ptag == -1)
-	{
-	  OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	  netbufs[ifp->if_nr]->pending = 0;
-	  libnet_clear_packet(ifp->libnet_ctx);
-	  return -1;
-	}
-      
-      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
-				  olsr_cnf->tos,
-				  ifp->olsr_seqnum,
-				  0x4000, /* Don't fragment */
-				  255,
-				  IPPROTO_UDP,
-				  0,
-				  ifp->ip_addr.v4,
-				  sin->sin_addr.s_addr,
-				  NULL,
-				  0,
-				  ifp->libnet_ctx,
-				  ip_ptag);
-      if(ip_ptag == -1)
-	{
-	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	  netbufs[ifp->if_nr]->pending = 0;
-	  libnet_clear_packet(ifp->libnet_ctx);
-	  return -1;
-	}
-      
-      if((retval = libnet_write(ifp->libnet_ctx)) == -1)
-	{
-	  OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (ifp->libnet_ctx))
-	}
-      if(retval != (int)(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending))
-	{
-	  printf("libnet_write returned %d, expected %d\n", 
-		 retval, LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending);
-	}
-      
-      libnet_clear_packet(ifp->libnet_ctx);
-#else
       /* IP version 4 */
       if(olsr_sendto(ifp->olsr_socket, 
 		     netbufs[ifp->if_nr]->buff, 
@@ -551,7 +625,6 @@ net_output(struct interface *ifp)
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
 	  retval = -1;
 	}
-#endif
     }
   else
     {
@@ -583,7 +656,7 @@ net_output(struct interface *ifp)
 
   return retval;
 }
-
+#endif
 
 
 /**
