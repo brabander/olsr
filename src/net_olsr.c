@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.12 2006/01/10 20:38:19 kattemat Exp $
+ * $Id: net_olsr.c,v 1.13 2006/01/10 20:49:01 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -96,6 +96,9 @@ static char *deny_ipv6_defaults[] =
   };
 
 #ifdef USE_LIBNET
+int
+olsr_in_cksum(olsr_u16_t *, int);
+
 static char errbuf[LIBNET_ERRBUF_SIZE];
 
 char *
@@ -401,6 +404,7 @@ del_ptf(int (*f)(char *, int *))
   return 0;
 }
 
+#ifdef USE_LIBNET
 /*
  * Stolen from libnet
  */
@@ -430,7 +434,7 @@ olsr_in_cksum(olsr_u16_t *buf, int len)
     
     return sum;
 }
-
+#endif
 
 /**
  *Sends a packet on a given interface.
@@ -533,7 +537,7 @@ net_output(struct interface *ifp)
     {
       /* IP version 6 */
       struct libnet_in6_addr src, dst;
-      int sum;
+      //int sum;
 
       memcpy(&src, &ifp->ip_addr.v6, sizeof(src));
       memcpy(&dst, &((struct sockaddr_in6 *)&ifp->int6_multaddr)->sin6_addr, sizeof(dst));
@@ -574,12 +578,14 @@ net_output(struct interface *ifp)
 	  libnet_clear_packet(ifp->libnet_ctx);
 	  return -1;
 	}
+    }
 
 #if 0
  {
    libnet_ptag_t ether_tag = 0;
    unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
+   /* We should add layer2 as well later */
    ether_tag = libnet_build_ethernet(enet_broadcast,
 				     libnet_get_hwaddr(ifp->libnet_ctx),
 				     ETHERTYPE_IP,
