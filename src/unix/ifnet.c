@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.34 2006/01/08 20:27:18 kattemat Exp $
+ * $Id: ifnet.c,v 1.35 2006/01/10 20:38:19 kattemat Exp $
  */
 
 
@@ -895,12 +895,13 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     }
   
   ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
-  
+
   iface->configured = 1;
   iface->interf = ifp;
   
   memcpy(ifp, &ifs, sizeof(struct interface));
   
+  ifp->libnet_ctx = NULL;  
   ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       
@@ -957,21 +958,24 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     }
 
 #ifdef USE_LIBNET
-      ifp->libnet_ctx = libnet_init((olsr_cnf->ip_version == AF_INET) ? 
-				    LIBNET_RAW4 : LIBNET_RAW6, 
-				    ifp->int_name, get_libnet_errbuf());
-
-      if(ifp->libnet_ctx == NULL)
-	{
-	  fprintf(stderr, "Could not initialize libnet... exiting!\n\n");
-	  olsr_syslog(OLSR_LOG_ERR, "Could not initialize libnet... exiting!\n\n");
-	  olsr_cnf->exit_value = EXIT_FAILURE;
-	  kill(getpid(), SIGINT);
-	}
+#if 1
+  ifp->libnet_ctx = libnet_init((olsr_cnf->ip_version == AF_INET) ? 
+				LIBNET_RAW4 : LIBNET_RAW6, 
+				ifp->int_name, get_libnet_errbuf());
 #else
-      ifp->libnet_ctx = NULL;
+  ifp->libnet_ctx = libnet_init(LIBNET_LINK, ifp->int_name, get_libnet_errbuf());
 #endif
-  
+
+  if(ifp->libnet_ctx == NULL)
+    {
+      fprintf(stderr, "Could not initialize libnet... exiting!\n\n");
+      olsr_syslog(OLSR_LOG_ERR, "Could not initialize libnet... exiting!\n\n");
+      olsr_cnf->exit_value = EXIT_FAILURE;
+      kill(getpid(), SIGINT);
+    }
+#endif
+  set_buffer_timer(ifp);
+
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input);
   

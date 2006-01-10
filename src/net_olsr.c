@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.11 2006/01/08 20:27:17 kattemat Exp $
+ * $Id: net_olsr.c,v 1.12 2006/01/10 20:38:19 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -401,6 +401,37 @@ del_ptf(int (*f)(char *, int *))
   return 0;
 }
 
+/*
+ * Stolen from libnet
+ */
+
+#define OLSR_CKSUM_CARRY(x) \
+    (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
+
+int
+olsr_in_cksum(olsr_u16_t *buf, int len)
+{
+    int sum;
+    u_int16_t last_byte;
+
+    sum = 0;
+    last_byte = 0;
+
+    while (len > 1)
+      {
+        sum += *buf++;
+        len -= 2;
+      }
+    if (len == 1)
+      {
+        *(u_int8_t*)&last_byte = *(u_int8_t*)buf;
+        sum += last_byte;
+      }
+    
+    return sum;
+}
+
+
 /**
  *Sends a packet on a given interface.
  *
@@ -455,7 +486,7 @@ net_output(struct interface *ifp)
 
   printf("LIBNET TX %d bytes on %s\n", 
 	 netbufs[ifp->if_nr]->pending, ifp->int_name);
-  
+
   udp_ptag = libnet_build_udp(OLSRPORT, 
 			      OLSRPORT,
 			      LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
@@ -464,6 +495,7 @@ net_output(struct interface *ifp)
 			      netbufs[ifp->if_nr]->pending, 
 			      ifp->libnet_ctx,
 			      0);
+
   if(udp_ptag == -1)
     {
       OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
@@ -471,7 +503,7 @@ net_output(struct interface *ifp)
       libnet_clear_packet(ifp->libnet_ctx);
       return -1;
     }
-
+  
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */      
@@ -501,10 +533,28 @@ net_output(struct interface *ifp)
     {
       /* IP version 6 */
       struct libnet_in6_addr src, dst;
+      int sum;
 
       memcpy(&src, &ifp->ip_addr.v6, sizeof(src));
       memcpy(&dst, &((struct sockaddr_in6 *)&ifp->int6_multaddr)->sin6_addr, sizeof(dst));
- 
+
+
+      /* !!!ATTENTION!!!
+       * There is a bug in libnet (libnet_build_udp) 1.1.2 that causes
+       * a crash if requesting auto-generated UDP checksums when
+       * using IPv6.
+       * Since we want backwards compability(well... as of now it
+       * is actually current compability), we MUST manually generate
+       * a checksum when in IPv6 mode.
+       * Yepp - it sux
+       * - Andreas
+       */
+      libnet_toggle_checksum(ifp->libnet_ctx, udp_ptag, LIBNET_OFF);
+
+      /* TODO: generate and insert CHKSUM */
+
+      printf("Build IPv6 size: %d\n",
+	     LIBNET_IPV6_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending);
       ip_ptag = libnet_build_ipv6(0, /* Traffic class */
 				  0, /* Flow label */
 				  LIBNET_IPV6_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
@@ -524,11 +574,34 @@ net_output(struct interface *ifp)
 	  libnet_clear_packet(ifp->libnet_ctx);
 	  return -1;
 	}
-    }
+
+#if 0
+ {
+   libnet_ptag_t ether_tag = 0;
+   unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+   ether_tag = libnet_build_ethernet(enet_broadcast,
+				     libnet_get_hwaddr(ifp->libnet_ctx),
+				     ETHERTYPE_IP,
+				     NULL,        		/* payload */
+				     0,           		/* payload size */
+				     ifp->libnet_ctx, 		/* libnet handle */
+				     0);  		        /* pblock tag */
+   if (ether_tag == -1)
+     {
+       OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (ifp->libnet_ctx))
+	 netbufs[ifp->if_nr]->pending = 0;
+       libnet_clear_packet(ifp->libnet_ctx);
+       return -1;
+     }
+ }
+#endif
+
   if((retval = libnet_write(ifp->libnet_ctx)) == -1)
     {
       OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (ifp->libnet_ctx))
     }
+  printf("RETVAL: %d\n", retval); fflush(stdout);
 
   libnet_clear_packet(ifp->libnet_ctx);
   
