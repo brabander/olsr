@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.86 2006/01/07 18:05:05 kattemat Exp $
+ * $Id: main.c,v 1.87 2006/01/10 06:20:13 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -118,7 +118,7 @@ main(int argc, char *argv[])
 
 #ifndef WIN32
   /* Check if user is root */
-  if(getuid() || getgid())
+  if(getuid())
     {
       fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
       exit(EXIT_FAILURE);
