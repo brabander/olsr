@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.20 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: olsr_protocol.h,v 1.21 2006/01/12 11:00:49 kattemat Exp $
  */
 
 /*
@@ -148,7 +148,7 @@
 /*
  *Redundancy defaults
  */
-#define TC_REDUNDANCY         0
+#define TC_REDUNDANCY         2
 #define MPR_COVERAGE          1
 
 /*
