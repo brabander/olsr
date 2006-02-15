@@ -3,7 +3,11 @@
 #
 
 INSTALL_PREFIX ?=
+ifeq ($(shell arch),x86_64)
+LIBDIR =	$(INSTALL_PREFIX)/usr/lib64
+else
 LIBDIR =	$(INSTALL_PREFIX)/usr/lib
+endif
 
 SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
