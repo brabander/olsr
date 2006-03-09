@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.47 2006/01/07 08:16:24 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.48 2006/03/09 15:05:27 tlopatic Exp $
  */
 
 
@@ -480,18 +480,10 @@ get_default_if_config()
 
   io->ipv6_addrtype = 1; /* XXX - FixMe */
 
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_SITE_LOCAL);
-      return NULL;
-    }
+  inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6);
   memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
 
-  if(inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6) < 0)
-    {
-      fprintf(stderr, "Failed converting IP address %s\n", OLSR_IPV6_MCAST_GLOBAL);
-      return NULL;
-    }
+  inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6);
   memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
 
   io->lq_mult = NULL;
