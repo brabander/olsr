@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.35 2006/01/10 20:38:19 kattemat Exp $
+ * $Id: ifnet.c,v 1.36 2006/04/11 14:59:20 kattemat Exp $
  */
 
 
@@ -315,19 +315,19 @@ chk_if_changed(struct olsr_if *iface)
 	  OLSR_PRINTF(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_addr))
 	  
 	  if(memcmp(&olsr_cnf->main_addr, 
-		    &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		    &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		    olsr_cnf->ipsize) == 0)
 	    {
 	      OLSR_PRINTF(1, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr))
 	      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr));
 	      memcpy(&olsr_cnf->main_addr, 
-		     &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		     &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		     olsr_cnf->ipsize);
 	    }
 
 	  ifp->int_addr = ifr.ifr_addr;
 	  memcpy(&ifp->ip_addr, 
-		 &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		 &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		 olsr_cnf->ipsize);
 
 	  if_changes = 1;
