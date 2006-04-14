@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.88 2006/01/10 17:43:32 kattemat Exp $
+ * $Id: main.c,v 1.89 2006/04/14 05:04:16 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -392,6 +392,7 @@ main(int argc, char *argv[])
   signal(SIGHUP, olsr_reconfigure);  
   signal(SIGINT, olsr_shutdown);  
   signal(SIGTERM, olsr_shutdown);  
+  signal(SIGPIPE, SIG_IGN);
 #endif
 
   /* Register socket poll event */
