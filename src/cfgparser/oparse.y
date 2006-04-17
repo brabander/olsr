@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.28 2005/11/17 04:25:44 tlopatic Exp $
+ * $Id: oparse.y,v 1.29 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -145,6 +145,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 %token TOK_HYSTUPPER
 %token TOK_HYSTLOWER
 %token TOK_POLLRATE
+%token TOK_NICCHGSPOLLRT
 %token TOK_TCREDUNDANCY
 %token TOK_MPRCOVERAGE
 %token TOK_LQ_LEVEL
@@ -173,6 +174,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 %token TOK_MIDVAL
 %token TOK_HNAINT
 %token TOK_HNAVAL
+%token TOK_AUTODETCHG
 
 %token TOK_IP4_ADDR
 %token TOK_IP6_ADDR
@@ -197,6 +199,7 @@ stmt:       idebug
           | fhystupper
           | fhystlower
           | fpollrate
+          | fnicchgspollrt
           | atcredundancy
           | amprcoverage
           | alq_level
@@ -272,6 +275,7 @@ ifstmt:      vcomment
              | isetmidval
              | isethnaint
              | isethnaval
+             | isetautodetchg
              | isetlqmult
 ;
 
@@ -627,6 +631,23 @@ isethnaval: TOK_HNAVAL TOK_FLOAT
   free($2);
 }
 ;
+isetautodetchg: TOK_AUTODETCHG TOK_BOOLEAN
+{
+  int ifcnt = ifs_in_curr_cfg;
+  struct olsr_if *ifs = cnf->interfaces;
+
+  if(PARSER_DEBUG) printf("\tAutodetect changes: %s\n", $2->boolean ? "YES" : "NO");
+  while(ifcnt)
+    {
+      ifs->cnf->autodetect_chg = $2->boolean;
+      
+      ifs = ifs->next;
+      ifcnt--;
+    }
+
+  free($2);
+}
+;
 
 isetlqmult: TOK_LQ_MULT TOK_DEFAULT TOK_FLOAT
 {
@@ -874,6 +895,14 @@ fpollrate: TOK_POLLRATE TOK_FLOAT
 }
 ;
 
+fnicchgspollrt: TOK_NICCHGSPOLLRT TOK_FLOAT
+{
+  if(PARSER_DEBUG) printf("NIC Changes Pollrate %0.2f\n", $2->floating);
+  cnf->nic_chgs_pollrate = $2->floating;
+
+  free($2);
+}
+;
 
 atcredundancy: TOK_TCREDUNDANCY TOK_INTEGER
 {

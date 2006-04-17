@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.29 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: olsr_cfg.h,v 1.30 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -47,6 +47,7 @@
 
 /* Default valuse not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
+#define DEF_NICCHGPOLLRT    2.5
 #define DEF_WILL_AUTO       OLSR_TRUE
 #define DEF_ALLOW_NO_INTS   OLSR_TRUE
 #define DEF_TOS             16
@@ -66,6 +67,8 @@
 
 #define MAX_POLLRATE        10.0
 #define MIN_POLLRATE        0.01
+#define MAX_NICCHGPOLLRT    100.0
+#define MIN_NICCHGPOLLRT    1.0
 #define MAX_DEBUGLVL        9
 #define MIN_DEBUGLVL        0
 #define MAX_TOS             16
@@ -120,6 +123,7 @@ struct if_config_options
   struct olsr_msg_params   mid_params;
   struct olsr_msg_params   hna_params;
   struct olsr_lq_mult      *lq_mult;
+  olsr_bool                autodetect_chg;
 };
 
 
@@ -204,6 +208,7 @@ struct olsrd_config
   olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
   float                    pollrate;
+  float                    nic_chgs_pollrate;
   olsr_u8_t                tc_redundancy;
   olsr_u8_t                mpr_coverage;
   olsr_bool                clear_screen;

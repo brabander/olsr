@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.20 2005/11/19 08:49:44 kattemat Exp $
+ * $Id: oscan.lex,v 1.21 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -276,6 +276,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   return TOK_IPVERSION;
 }
 
+"NicChgsPollInt" {
+  yylval = NULL;
+  return TOK_NICCHGSPOLLRT;
+}
+
 "Hna4" {
   yylval = NULL;
   return TOK_HNA4;
@@ -445,7 +450,10 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
   yylval = NULL;
   return TOK_HNAVAL;
 }
-
+"AutoDetectChanges" {
+  yylval = NULL;
+  return TOK_AUTODETCHG;
+}
 
 
 \n|\r\n {

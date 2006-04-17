@@ -6,7 +6,7 @@
 # without the GUI. If you use the GUI, then you do not need this
 # file. In this case look at Default.olsr instead.
 #
-# $Id: olsrd.conf.win32.rfc,v 1.1 2005/03/31 18:19:54 tlopatic Exp $
+# $Id: olsrd.conf.win32.rfc,v 1.2 2006/04/17 18:31:08 kattemat Exp $
 #
 
 #
@@ -57,6 +57,11 @@ HystThrLow		0.3
 #
 
 Pollrate		0.1
+
+# Interval to poll network interfaces for configuration 
+# changes. Defaults to 2.5 seconds
+
+NicChgsPollInt  3.0
 
 #
 # Which neighbours should be advertised via TC messages?
@@ -116,6 +121,16 @@ Hna4
 
 Interface "if99"
 {
+        # Olsrd can autodetect changes in NIC
+        # configurations(IP address changes etc.). 
+        # This is Enabled by default and the interval
+        # to poll for changes on is defined by 
+        # NicChgsPollInt.
+        # This polling can be disabled pr. NIC by setting
+        # AutoDetectChanges to no.
+
+        # AutoDetectChanges            yes
+
 	#
 	# HELLO interval and validity time in seconds (float)
 	#

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.37 2006/04/14 05:18:31 kattemat Exp $
+ * $Id: ifnet.c,v 1.38 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -127,10 +127,23 @@ check_interface_updates(void *foo)
       if(olsr_cnf->host_emul) /* XXX: TEMPORARY! */
 	continue;
 
+      if(!tmp_if->cnf->autodetect_chg) 
+        {
+#ifdef DEBUG
+          /* Don't check this interface */
+          OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name)
+#endif
+          continue;
+        }
+
       if(tmp_if->configured)
-	chk_if_changed(tmp_if);
+        {
+          chk_if_changed(tmp_if);
+        }
       else
-	chk_if_up(tmp_if, 3);
+        {
+          chk_if_up(tmp_if, 3);
+        }
     }
 
   return;

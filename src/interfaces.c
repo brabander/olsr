@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.28 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: interfaces.c,v 1.29 2006/04/17 18:31:09 kattemat Exp $
  */
 
 #include "defs.h"
@@ -115,7 +115,8 @@ ifinit()
       }
   
   /* register network interface update function with scheduler */
-  olsr_register_scheduler_event(&check_interface_updates, NULL, IFCHANGES_POLL_INT, 0, NULL);
+  olsr_register_scheduler_event(&check_interface_updates, NULL, 
+                                olsr_cnf->nic_chgs_pollrate, 0, NULL);
 
   return (ifnet == NULL) ? 0 : 1;
 }

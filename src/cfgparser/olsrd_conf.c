@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.48 2006/03/09 15:05:27 tlopatic Exp $
+ * $Id: olsrd_conf.c,v 1.49 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -246,6 +246,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+  /* NIC Changes Pollrate */
+
+  if(cnf->nic_chgs_pollrate < MIN_NICCHGPOLLRT ||
+     cnf->nic_chgs_pollrate > MAX_NICCHGPOLLRT)
+    {
+      fprintf(stderr, "NIC Changes Pollrate %0.2f is not allowed\n", cnf->nic_chgs_pollrate);
+      return -1;
+    }
+
   /* TC redundancy */
 
   if(//cnf->tc_redundancy < MIN_TC_REDUNDANCY ||
@@ -448,6 +457,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->hysteresis_param.thr_low = HYST_THRESHOLD_LOW;
 
     cnf->pollrate = DEF_POLLRATE;
+    cnf->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
 
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
@@ -501,6 +511,7 @@ get_default_if_config()
   io->mid_params.validity_time = MID_HOLD_TIME;
   io->hna_params.emission_interval = HNA_INTERVAL;
   io->hna_params.validity_time = HNA_HOLD_TIME;
+  io->autodetect_chg = OLSR_TRUE;
 
   return io;
 
@@ -559,6 +570,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("Pollrate         : %0.2f\n", cnf->pollrate);
 
+  printf("NIC ChangPollrate: %0.2f\n", cnf->nic_chgs_pollrate);
+
   printf("TC redundancy    : %d\n", cnf->tc_redundancy);
 
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
@@ -611,7 +624,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
             printf("\tLinkQualityMult          : %s %0.2f\n",
                    ipv6_buf, mult->val);
           }
-	  
+
+          printf("\tAutodetetc changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");
+
 	  in = in->next;
 	}
     }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.2 2005/12/30 02:24:00 tlopatic Exp $
+ * $Id: cfgfile_gen.c,v 1.3 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -178,6 +178,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Polling rate in seconds(float).\n# Auto uses default value 0.05 sec\n\n");
   fprintf(fd, "Pollrate\t%0.2f\n", cnf->pollrate);
 
+  /* NIC Changes Pollrate */
+  fprintf(fd, "# Interval to poll network interfaces for configuration\n# changes. Defaults to 2.5 seconds\n");
+  fprintf(fd, "NicChgsPollInt\t%0.2f\n", cnf->nic_chgs_pollrate);
+
   /* TC redundancy */
   fprintf(fd, "# TC redundancy\n# Specifies how much neighbor info should\n# be sent in TC messages\n# Possible values are:\n# 0 - only send MPR selectors\n# 1 - send MPR selectors and MPRs\n# 2 - send all neighbors\n#\n# defaults to 0\n\n");
   fprintf(fd, "TcRedundancy\t%d\n\n", cnf->tc_redundancy);
@@ -254,7 +258,8 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	  fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  
 	  
-	  
+          fprintf(fd, "    # Olsrd can autodetect changes in\n    # interface configurations. Enabled by default\n    # turn off to save CPU.\n    AutoDetectChanges: %s\n", in->cnf->autodetect_chg ? "yes" : "no");
+
 	  fprintf(fd, "    # Emission and validity intervals.\n    # If not defined, RFC proposed values will\n    # in most cases be used.\n\n");
 	  
 	  

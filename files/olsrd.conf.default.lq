@@ -133,6 +133,10 @@ LinkQualityWinSize	10
 
 Pollrate	0.05
 
+# Interval to poll network interfaces for configuration 
+# changes. Defaults to 2.5 seconds
+
+NicChgsPollInt  3.0
 
 # TC redundancy
 # Specifies how much neighbor info should
@@ -205,6 +209,15 @@ MprCoverage	3
 
 Interface "XXX" "YYY"
 {
+    # Olsrd can autodetect changes in NIC
+    # configurations(IP address changes etc.). 
+    # This is Enabled by default and the interval
+    # to poll for changes on is defined by 
+    # NicChgsPollInt.
+    # This polling can be disabled pr. NIC by setting
+    # AutoDetectChanges to no.
+
+    # AutoDetectChanges            yes
 
     # IPv4 broadcast address to use. The
     # one usefull example would be 255.255.255.255

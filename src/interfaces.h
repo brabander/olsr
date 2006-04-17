@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.32 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: interfaces.h,v 1.33 2006/04/17 18:31:09 kattemat Exp $
  */
 
 
@@ -153,10 +153,6 @@ struct interface
 #define IFCHG_IF_ADD           1
 #define IFCHG_IF_REMOVE        2
 #define IFCHG_IF_UPDATE        3
-
-/* The rate to poll for interface changes at */
-#define IFCHANGES_POLL_INT     2.5
-
 
 /* The interface linked-list */
 extern struct interface *ifnet;
