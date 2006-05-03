@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.69 2006/01/06 06:52:17 kattemat Exp $
+# $Id: Makefile,v 1.70 2006/05/03 08:59:16 kattemat Exp $
 
 VERS =		0.5.0pre
 
@@ -159,6 +159,11 @@ pgraph:
 		$(MAKE) -C lib/pgraph clean
 		$(MAKE) -C lib/pgraph 
 		$(MAKE) -C lib/pgraph install 
+
+bmf:
+		$(MAKE) -C lib/bmf clean
+		$(MAKE) -C lib/bmf 
+		$(MAKE) -C lib/bmf install 
 
 build_all:	cfgparser olsrd libs
 install_all:	install install_libs
