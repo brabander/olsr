@@ -1,6 +1,6 @@
 CC ?=	gcc
 
-CFLAGS ?= -Wall `pkg-config --cflags gtk+-2.0`
+CFLAGS += -Wall `pkg-config --cflags gtk+-2.0`
 LFLAGS= `pkg-config --libs gtk+-2.0`
 
 OBJS=	src/main.o src/interface.o src/callbacks.o src/ipc.o \
