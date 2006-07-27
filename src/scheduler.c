@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.35 2006/01/07 17:18:32 kattemat Exp $
+ * $Id: scheduler.c,v 1.36 2006/07/27 15:53:16 kattemat Exp $
  */
 
 
@@ -344,6 +344,7 @@ olsr_remove_scheduler_event(void (*event_function)(void *),
 	    {
 	      prev->next = entry->next;
 	    }
+          free(entry);
 	  return 1;
 	}
 
