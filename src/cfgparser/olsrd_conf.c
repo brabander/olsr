@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.49 2006/04/17 18:31:09 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.50 2006/09/14 08:03:29 kattemat Exp $
  */
 
 
@@ -110,7 +110,7 @@ olsrd_parse_cnf(const char *filename)
     {
       fprintf(stderr, "Out of memory %s\n", __func__);
       return NULL;
-  }
+    }
 
   set_default_cnf(cnf);
 
@@ -124,7 +124,7 @@ olsrd_parse_cnf(const char *filename)
 	      filename, strerror(errno));
       free(cnf);
       return NULL;
-  }
+    }
 
   current_line = 1;
 
@@ -426,7 +426,7 @@ olsrd_get_default_cnf()
     {
       fprintf(stderr, "Out of memory %s\n", __func__);
       return NULL;
-  }
+    }
 
   set_default_cnf(cnf);
 
@@ -485,7 +485,13 @@ get_default_if_config()
 {
   struct if_config_options *io = malloc(sizeof(struct if_config_options));
   struct in6_addr in6;
- 
+
+  if(io == NULL)
+    {
+      fprintf(stderr, "Out of memory %s\n", __func__);
+      return NULL;
+    }
+
   memset(io, 0, sizeof(struct if_config_options));
 
   io->ipv6_addrtype = 1; /* XXX - FixMe */
