@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.6 2005/05/29 12:47:41 br1 Exp $
+ * $Id: admin_interface.c,v 1.7 2006/09/18 18:55:30 kattemat Exp $
  */
 
 /*
@@ -52,6 +52,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+extern int netsprintf(char *str, const char* format, ...);
+#define sprintf netsprintf
+#define NETDIRECT
 
 int
 build_admin_body(char *buf, olsr_u32_t bufsize)

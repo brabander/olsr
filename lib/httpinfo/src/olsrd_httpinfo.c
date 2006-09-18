@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.58 2006/01/07 08:17:43 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.59 2006/09/18 18:55:30 kattemat Exp $
  */
 
 /*
@@ -1191,7 +1191,18 @@ build_cfgfile_body(char *buf, olsr_u32_t bufsize)
       i++;
     }
 
-  size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize-size);
+#ifdef NETDIRECT
+    {
+        /* Hack to make netdirect stuff work with
+           olsrd_write_cnf_buf
+        */
+        char tmpBuf[10000];
+        size = olsrd_write_cnf_buf(olsr_cnf, tmpBuf, 10000);
+        sprintf(&buf[size], tmpBuf);
+    }
+#else
+  size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize - size);
+#endif
   
   if(size < 0)
     {
@@ -1204,7 +1215,7 @@ build_cfgfile_body(char *buf, olsr_u32_t bufsize)
       size += sprintf(&buf[size], cfgfile_body[i]);
       i++;
     }
- 
+  printf("RETURNING %d\n", size);
   return size;
 }
 
