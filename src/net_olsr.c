@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.13 2006/01/10 20:49:01 kattemat Exp $
+ * $Id: net_olsr.c,v 1.14 2006/10/02 08:37:17 kattemat Exp $
  */
 
 #include "net_olsr.h"
@@ -761,7 +761,7 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
 
   for(;p > 0; p -= 8)
     {
-      adr->v6.s6_addr[i] = (p < 8) ? 0xff ^ (0xff << p) : 0xff;
+      adr->v6.s6_addr[i] = (p < 8) ? 0xff ^ (0xff >> p) : 0xff;
       i++;
     }
 
@@ -799,7 +799,7 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
 	{
 	  for(tmp = adr->v6.s6_addr[i];
 	      tmp > 0;
-	      tmp = tmp >> 1)
+	      tmp = (tmp << 1) & 0xff)
 	    prefix++;
 	}
     }
