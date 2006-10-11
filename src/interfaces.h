@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.33 2006/04/17 18:31:09 kattemat Exp $
+ * $Id: interfaces.h,v 1.34 2006/10/11 20:58:45 tlopatic Exp $
  */
 
 
@@ -141,6 +141,8 @@ struct interface
   void          *libnet_ctx;                    /* libnet context(void to avoid dependency */
 
   struct        if_gen_property *gen_properties;/* Generic interface properties */
+
+  int           ttl_index; /* index in TTL array for fish-eye */
 
   struct	interface *int_next;
 };

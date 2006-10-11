@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.31 2006/10/11 20:18:36 tlopatic Exp $
+ * $Id: ifnet.c,v 1.32 2006/10/11 20:58:45 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -914,6 +914,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
     New->int_metric = IsWlan;
 
   New->olsr_seqnum = random() & 0xffff;
+
+  New->ttl_index = 0;
     
   OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n",
               IntConf->name, New->if_nr)

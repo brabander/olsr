@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.38 2006/04/17 18:31:09 kattemat Exp $
+ * $Id: ifnet.c,v 1.39 2006/10/11 20:58:45 tlopatic Exp $
  */
 
 
@@ -886,6 +886,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
     ifs.int_mtu = ifr.ifr_mtu;
 
   ifs.int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+
+  ifs.ttl_index = 0;
 
   /* Set up buffer */
   net_add_buffer(&ifs);

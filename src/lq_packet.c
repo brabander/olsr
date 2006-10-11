@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.20 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: lq_packet.c,v 1.21 2006/10/11 20:58:45 tlopatic Exp $
  */
 
 #include "olsr_protocol.h"
@@ -151,7 +151,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   struct neighbor_entry *walker;
   struct link_entry *link;
   static int ttl_list[] = { MAX_TTL, 3, 2, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1, 0 };
-  static int ttl_index = 0;
 
   // remember that we have generated an LQ TC message; this is
   // checked in net_output()
@@ -168,10 +167,10 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   if (olsr_cnf->lq_fish > 0)
   {
-    if (ttl_list[ttl_index] == 0)
-      ttl_index = 0;
+    if (ttl_list[outif->ttl_index] == 0)
+      outif->ttl_index = 0;
 
-    lq_tc->comm.ttl = ttl_list[ttl_index++];
+    lq_tc->comm.ttl = ttl_list[outif->ttl_index++];
 
     OLSR_PRINTF(3, "Creating LQ TC with TTL %d.\n", lq_tc->comm.ttl);
   }
