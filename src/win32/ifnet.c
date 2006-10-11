@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.30 2006/01/07 08:16:26 kattemat Exp $
+ * $Id: ifnet.c,v 1.31 2006/10/11 20:18:36 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -132,6 +132,67 @@ static int IntNameToMiniIndex(int *MiniIndex, char *String)
   return 0;
 }
 
+static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
+{
+  typedef DWORD (*GETADAPTERSADDRESSES)(ULONG Family,
+                                        DWORD Flags,
+                                        PVOID Reserved,
+                                        PIP_ADAPTER_ADDRESSES pAdapterAddresses,
+                                        PULONG pOutBufLen);
+  unsigned long BuffLen;
+  unsigned long Res;
+  IP_ADAPTER_ADDRESSES AdAddr[MAX_INTERFACES], *WalkerAddr;
+  char FriendlyName[MAX_INTERFACE_NAME_LEN];
+  HMODULE h;
+  GETADAPTERSADDRESSES pfGetAdaptersAddresses;
+  
+  h = LoadLibrary("iphlpapi.dll");
+
+  if (h == NULL)
+  {
+    fprintf(stderr, "LoadLibrary() = %08lx", GetLastError());
+    return -1;
+  }
+
+  pfGetAdaptersAddresses = (GETADAPTERSADDRESSES) GetProcAddress(h, "GetAdaptersAddresses");
+
+  if (pfGetAdaptersAddresses == NULL)
+  {
+    fprintf(stderr, "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n", GetLastError());
+    return -1;
+  }
+  
+  BuffLen = sizeof (AdAddr);
+
+  Res = pfGetAdaptersAddresses(AF_INET, 0, NULL, AdAddr, &BuffLen);
+
+  if (Res != NO_ERROR)
+  {  
+    fprintf(stderr, "GetAdaptersAddresses() = %08lx", GetLastError());
+    return -1;
+  }
+
+  for (WalkerAddr = AdAddr; WalkerAddr != NULL; WalkerAddr = WalkerAddr->Next)
+  {
+    OLSR_PRINTF(5, "Index = %08x - ", (int)WalkerAddr->IfIndex);
+
+    wcstombs(FriendlyName, WalkerAddr->FriendlyName, MAX_INTERFACE_NAME_LEN); 
+
+    OLSR_PRINTF(5, "Friendly name = %s\n", FriendlyName);
+
+    if (strncmp(FriendlyName, String, MAX_INTERFACE_NAME_LEN) == 0)
+      break;
+  }
+
+  if (WalkerAddr == NULL)
+  {
+    fprintf(stderr, "No such interface: %s!\n", String);
+    return -1;
+  }
+
+  *MiniIndex = WalkerAddr->IfIndex & 255;
+}
+
 int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 {
   int MiniIndex;
@@ -148,10 +209,23 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
     return -1;
   }
 
-  if (IntNameToMiniIndex(&MiniIndex, Name) < 0)
+  if ((Name[0] != 'i' && Name[0] != 'I') ||
+      (Name[1] != 'f' && Name[1] != 'F'))
   {
-    fprintf(stderr, "No such interface: %s!\n", Name);
-    return -1;
+    if (FriendlyNameToMiniIndex(&MiniIndex, Name) < 0)
+    {
+      fprintf(stderr, "No such interface: %s!\n", Name);
+      return -1;
+    }
+  }
+
+  else
+  {
+    if (IntNameToMiniIndex(&MiniIndex, Name) < 0)
+    {
+      fprintf(stderr, "No such interface: %s!\n", Name);
+      return -1;
+    }
   }
 
   IfTable = (MIB_IFTABLE *)Buff;

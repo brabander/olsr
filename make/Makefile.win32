@@ -8,7 +8,7 @@ EXENAME = olsrd.exe
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 
-DEFINES +=	-DWIN32
+DEFINES +=	-DWIN32 -D_WIN32_WINNT=0x0501
 LIBS +=		-mno-cygwin -lws2_32 -liphlpapi
 INCLUDES += 	-I$(TOPDIR)/src/win32
 CFLAGS +=	-mno-cygwin
