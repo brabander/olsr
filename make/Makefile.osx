@@ -26,3 +26,7 @@ endif
 		
 OS_LIB_PTHREAD =
 OS_LIB_DYNLOAD =
+
+# Local Variables:
+# mode: makefile
+# End:

@@ -103,3 +103,7 @@ olsr-$(VERS)-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		rm -f olsr-$(VERS)-setup.exe
 		C:/Program\ Files/NSIS/makensis gui\win32\Inst\installer.nsi
 		mv olsr-setup.exe olsr-$(VERS)-setup.exe
+
+# Local Variables:
+# mode: makefile
+# End:

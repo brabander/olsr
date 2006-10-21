@@ -38,3 +38,7 @@ endif
 
 OS_LIB_PTHREAD = -lpthread
 OS_LIB_DYNLOAD = -ldl
+
+# Local Variables:
+# mode: makefile
+# End:

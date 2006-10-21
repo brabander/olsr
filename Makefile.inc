@@ -94,6 +94,10 @@ help:
 	@echo ' be a good idea :-) Have fun!       '
 	@echo '************************************'
 	@echo
-	
+
 # include dependencies
 -include $(SRCS:%.c=%.d)
+
+# Local Variables:
+# mode: makefile
+# End:
