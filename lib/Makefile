@@ -1,4 +1,4 @@
-SUBDIRS = dot_draw dyn_gw httpinfo mini nameservice powerinfo secure tas bmf
+SUBDIRS = dot_draw dyn_gw httpinfo mini nameservice secure tas bmf
 
 .PHONY: $(SUBDIRS)
 
