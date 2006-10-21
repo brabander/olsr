@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.70 2006/05/03 08:59:16 kattemat Exp $
+# $Id: Makefile,v 1.71 2006/10/21 21:21:55 bernd67 Exp $
 
 VERS =		0.5.0pre
 
@@ -68,7 +68,7 @@ switch:
 $(CFGOBJS):
 		$(MAKE) -C $(CFGDIR)
 
-.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all
+.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all
 
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe
@@ -167,3 +167,4 @@ bmf:
 
 build_all:	cfgparser olsrd libs
 install_all:	install install_libs
+clean_all:	uberclean clean_libs
