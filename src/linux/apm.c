@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.14 2005/04/07 18:22:43 kattemat Exp $
+ * $Id: apm.c,v 1.15 2006/10/26 22:02:56 bernd67 Exp $
  */
 
 /*
@@ -73,7 +73,7 @@ struct linux_apm_info
 
 #define ACPI_PROC "/proc/acpi/info"
 
-const static char * acpi_info[] = 
+static const char * acpi_info[] = 
   {
     "/proc/acpi/battery/0/info",
     "/proc/acpi/battery/1/info",
@@ -82,7 +82,7 @@ const static char * acpi_info[] =
     "/proc/acpi/battery/BAT1/info" 
   };
 
-const static char * acpi_state[] =
+static const char * acpi_state[] =
   {    
     "/proc/acpi/battery/0/status",
     "/proc/acpi/battery/1/status",
@@ -95,7 +95,7 @@ const static char * acpi_state[] =
 #define ACPI_BT_CNT  (sizeof(acpi_state) / sizeof(char *))
 
 
-const static char * acpi_ac[] = 
+static const char * acpi_ac[] = 
   {    
     "/proc/acpi/ac_adapter/0/status",
     "/proc/acpi/ac_adapter/AC/state",
@@ -123,7 +123,7 @@ acpi_probe(void);
 
 
 int 
-apm_init()
+apm_init(void)
 {
   struct olsr_apm_info ainfo;
 
@@ -195,7 +195,7 @@ apm_read_apm(struct olsr_apm_info *ainfo)
   if(buffer == NULL)
     {
       /* Try re-opening the file */
-      if((apm_procfile = fopen(APM_PROC, "r")) < 0)
+      if((apm_procfile = fopen(APM_PROC, "r")) != NULL)
 	return 0;
       fgets(buffer, sizeof(buffer) - 1, apm_procfile);
       if(buffer == NULL)
@@ -322,7 +322,7 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
 
 
 static int
-acpi_probe()
+acpi_probe(void)
 {
   char s1[32], s2[32];
   FILE *fd;
