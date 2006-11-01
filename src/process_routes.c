@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.27 2005/05/30 13:13:38 kattemat Exp $
+ * $Id: process_routes.c,v 1.28 2006/11/01 09:20:13 kattemat Exp $
  */
 
 
@@ -413,8 +413,6 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
     {
       struct destination_n *destination_kernel = NULL;
       struct destination_n *previous_node = add_kernel_list;
-
-      assert(metric_counter < HOPCNT_MAX);
 
       /* searching for all the items with metric equal to n */
       for(destination_kernel = add_kernel_list; destination_kernel != NULL; )

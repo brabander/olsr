@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.52 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: defs.h,v 1.53 2006/11/01 09:20:13 kattemat Exp $
  */
 
 
@@ -68,7 +68,6 @@
 #define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
 #endif
 
-#define	HOPCNT_MAX		32	/* maximum hops number */
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        48
