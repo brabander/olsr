@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.59 2006/09/18 18:55:30 kattemat Exp $
+ * $Id: olsrd_httpinfo.c,v 1.60 2006/11/05 23:03:56 bernd67 Exp $
  */
 
 /*
@@ -297,6 +297,7 @@ get_http_socket(int port)
   if (bind(s, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
     {
       olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
+      close(s);
       return -1;
     }
       
@@ -304,6 +305,7 @@ get_http_socket(int port)
   if (listen(s, 1) == -1) 
     {
       olsr_printf(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
+      close(s);
       return -1;
     }
 

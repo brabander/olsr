@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.30 2006/01/07 08:16:24 kattemat Exp $
+ * $Id: net.c,v 1.31 2006/11/05 23:03:56 bernd67 Exp $
  */
 
 
@@ -434,6 +434,7 @@ gethemusocket(struct sockaddr_in *pin)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
   /* connect to PORT on HOST */
@@ -442,6 +443,7 @@ gethemusocket(struct sockaddr_in *pin)
       printf("FAILED\n");
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       printf("connection refused\n");
+      close(sock);
       return (-1);
     }
 
@@ -487,6 +489,7 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
 
@@ -520,6 +523,7 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
     {
       fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
       syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
+      close(sock);
       return -1;
     }
 
@@ -606,6 +610,7 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
 
@@ -619,6 +624,7 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
     {
       fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
       syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
+      close(sock);
       return -1;
     }
 

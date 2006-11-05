@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.19 2005/05/30 13:50:27 kattemat Exp $
+ * $Id: net.c,v 1.20 2006/11/05 23:03:56 bernd67 Exp $
  */
 
 #if defined WINCE
@@ -87,6 +87,7 @@ gethemusocket(struct sockaddr_in *pin)
       printf("FAILED\n");
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       printf("connection refused\n");
+      closesocket(sock);
       return (-1);
     }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.27 2006/01/07 08:16:22 kattemat Exp $
+ * $Id: net.c,v 1.28 2006/11/05 23:03:56 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -290,6 +290,7 @@ gethemusocket(struct sockaddr_in *pin)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
   /* connect to PORT on HOST */
@@ -298,6 +299,7 @@ gethemusocket(struct sockaddr_in *pin)
       printf("FAILED\n");
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       printf("connection refused\n");
+      close(sock);
       return (-1);
     }
 
@@ -332,6 +334,7 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
 
@@ -339,12 +342,14 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEPORT failed");
+      close(sock);
       return (-1);
     }
 
   if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, &on, sizeof(on)) < 0) 
     {
       perror("IP_RECVIF failed");
+      close(sock);
       return (-1);
     }
 #endif /* SPOOF */
@@ -403,6 +408,7 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
+      close(sock);
       return (-1);
     }
 

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.22 2005/11/08 17:05:23 kattemat Exp $
+ * $Id: main.c,v 1.23 2006/11/05 23:03:56 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -342,6 +342,7 @@ ohs_init_connect_sockets()
   if (bind(srv_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
     {
       printf("bind failed for socket: %s\n", strerror(errno));
+      close(srv_socket);
       exit(0);
     }
   
@@ -349,6 +350,7 @@ ohs_init_connect_sockets()
   if (listen(srv_socket, 5) == -1) 
     {
       printf("listen failed for socket: %s\n", strerror(errno));
+      close(srv_socket);
       exit(0);
     }
   return 1;
