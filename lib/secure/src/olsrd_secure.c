@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.18 2006/01/07 08:17:44 kattemat Exp $
+ * $Id: olsrd_secure.c,v 1.19 2006/11/06 23:40:41 bernd67 Exp $
  */
 
 
@@ -952,7 +952,7 @@ parse_challenge(char *in_msg)
   else
     {
       /* Check configuration timeout */
-      if(!TIMED_OUT(&entry->conftime))
+      if(!TIMED_OUT(entry->conftime))
 	{
 	  /* If registered - do not accept! */
 	  olsr_printf(1, "[ENC]Challenge from registered node...dropping!\n");
