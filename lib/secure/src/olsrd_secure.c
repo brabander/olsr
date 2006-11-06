@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.19 2006/11/06 23:40:41 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.20 2006/11/06 23:46:47 bernd67 Exp $
  */
 
 
@@ -1205,7 +1205,7 @@ timeout_timestamps(void* foo)
       while(tmp_list != &timestamps[index])
 	{
 	  /*Check if the entry is timed out*/
-	  if((TIMED_OUT(&tmp_list->valtime)) && (TIMED_OUT(&tmp_list->conftime)))
+	  if((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime)))
 	    {
 	      entry_to_delete = tmp_list;
 	      tmp_list = tmp_list->next;
