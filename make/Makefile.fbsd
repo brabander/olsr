@@ -2,12 +2,12 @@
 # FREEBSD SPECIFIC CONFIGURATION
 #
 
-INSTALL_PREFIX ?= /usr/local
-SBINDIR = $(INSTALL_PREFIX)/sbin
-ETCDIR = $(INSTALL_PREFIX)/etc
-LIBDIR = $(INSTALL_PREFIX)/lib
-DOCDIR = $(INSTALL_PREFIX)/share/doc
-MANDIR = $(INSTALL_PREFIX)/man
+DESTDIR ?= /usr/local
+SBINDIR = $(DESTDIR)/sbin
+ETCDIR = $(DESTDIR)/etc
+LIBDIR = $(DESTDIR)/lib
+DOCDIR = $(DESTDIR)/share/doc
+MANDIR = $(DESTDIR)/man
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
@@ -22,8 +22,8 @@ endif
 
 ifdef LIBNET
 
-CFLAGS +=	-DSPOOF -I$(INSTALL_PREFIX)/include
-LIBS +=		-L$(INSTALL_PREFIX)/lib -lnet
+CFLAGS +=	-DSPOOF -I$(DESTDIR)/include
+LIBS +=		-L$(DESTDIR)/lib -lnet
 
 endif
 

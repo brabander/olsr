@@ -15,4 +15,5 @@ clean:
 	rm -f $(OBJS)
 
 install:
-	cp ./olsrd-gui /usr/bin/
+	mkdir -p ${DESTDIR}/usr/bin
+	cp ./olsrd-gui ${DESTDIR}/usr/bin/

@@ -6,12 +6,12 @@ FLEX ?=		flex
 TAGCMD ?=	etags
 
 # target directories and names
-#INSTALL_PREFIX = 
-SBINDIR = $(INSTALL_PREFIX)/usr/sbin
-ETCDIR = $(INSTALL_PREFIX)/etc
-LIBDIR = $(INSTALL_PREFIX)/usr/lib
-DOCDIR = $(INSTALL_PREFIX)/usr/share/doc
-MANDIR = $(INSTALL_PREFIX)/usr/share/man
+# DESTDIR =
+SBINDIR = $(DESTDIR)/usr/sbin
+ETCDIR = $(DESTDIR)/etc
+LIBDIR = $(DESTDIR)/usr/lib
+DOCDIR = $(DESTDIR)/usr/share/doc
+MANDIR = $(DESTDIR)/usr/share/man
 CFGFILE = $(ETCDIR)/olsrd.conf
 EXENAME = olsrd
 

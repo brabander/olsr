@@ -2,7 +2,7 @@
 # WINDOWS32 SPECIFIC CONFIGURATION
 #
 
-INSTALL_PREFIX ?=
+DESTDIR ?=
 EXENAME = olsrd.exe
 
 SRCS +=		$(wildcard src/win32/*.c)

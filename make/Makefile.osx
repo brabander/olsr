@@ -6,8 +6,8 @@
 # to do it (flags).
 STRIP = \#
 
-INSTALL_PREFIX ?=
-LIBDIR =	$(INSTALL_PREFIX)/usr/lib
+DESTDIR ?=
+LIBDIR =	$(DESTDIR)/usr/lib
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
