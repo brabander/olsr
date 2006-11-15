@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.15 2006/11/15 20:58:51 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.16 2006/11/15 21:13:52 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -88,7 +88,7 @@ struct olsr_netbuf
 
 struct ptf
 {
-  int (*function)(char *, int *);
+  packet_transform_function function;
   struct ptf *next;
 };
 
@@ -349,14 +349,10 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
 int
 net_outbuffer_bytes_left(struct interface *ifp)
 {
-  int remaining;
-
   if(!netbufs[ifp->if_nr])
     return 0;
 
-  remaining = netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending;
-
-  return remaining ? remaining : 0;
+  return netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending;
 }
 
 
@@ -369,7 +365,7 @@ net_outbuffer_bytes_left(struct interface *ifp)
  * @returns 1
  */
 int
-add_ptf(int (*f)(char *, int *))
+add_ptf(packet_transform_function f)
 {
 
   struct ptf *new_ptf;
@@ -393,7 +389,7 @@ add_ptf(int (*f)(char *, int *))
  *  0 if not
  */
 int
-del_ptf(int (*f)(char *, int *))
+del_ptf(packet_transform_function f)
 {
   struct ptf *tmp_ptf, *prev;
 
@@ -406,15 +402,10 @@ del_ptf(int (*f)(char *, int *))
 	{
 	  /* Remove entry */
 	  if(prev == NULL)
-	    {
 	      ptf_list = tmp_ptf->next;
-	      free(tmp_ptf);
-	    }
 	  else
-	    {
 	      prev->next = tmp_ptf->next;
-	      free(tmp_ptf);
-	    }
+          free(tmp_ptf);
 	  return 1;
 	}
       prev = tmp_ptf;

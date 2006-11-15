@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.4 2006/11/15 20:58:51 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.5 2006/11/15 21:13:52 bernd67 Exp $
  */
 
 
@@ -48,6 +48,8 @@
 #include "process_routes.h"
 #include <arpa/inet.h>
 #include <net/if.h>
+
+typedef int (*packet_transform_function)(char *, int *);
 
 #ifdef USE_LIBNET
 char *
@@ -106,10 +108,10 @@ char *
 olsr_ip_to_string(union olsr_ip_addr *);
 
 int
-add_ptf(int (*)(char *, int *));
+add_ptf(packet_transform_function);
 
 int
-del_ptf(int (*f)(char *, int *));
+del_ptf(packet_transform_function);
 
 olsr_bool
 olsr_validate_address(union olsr_ip_addr *);
