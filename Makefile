@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.72 2006/10/28 14:21:26 bernd67 Exp $
+# $Id: Makefile,v 1.73 2006/11/15 22:09:16 bernd67 Exp $
 
 VERS =		0.5.0pre
 
@@ -91,7 +91,7 @@ install_bin:
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
-		@echo olsrd uses the configfile $(INSTALL_PREFIX)/etc/olsr.conf
+		@echo olsrd uses the configfile $(DESTDIR)/etc/olsr.conf
 		@echo a default configfile. A sample RFC-compliance aimed
 		@echo configfile can be installed. Note that a LQ-based configfile
 		@echo can be found at files/olsrd.conf.default.lq
