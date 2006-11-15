@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.39 2006/10/11 20:58:45 tlopatic Exp $
+ * $Id: ifnet.c,v 1.40 2006/11/15 23:07:59 bernd67 Exp $
  */
 
 
@@ -746,6 +746,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       return 0;
     }
 
+  memset(&ifs.netbuf, 0, sizeof(struct olsr_netbuf));
   ifs.int_flags = ifr.ifr_flags;      
 
 
@@ -916,7 +917,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   
   memcpy(ifp, &ifs, sizeof(struct interface));
   
+#ifdef USE_LIBNET
   ifp->libnet_ctx = NULL;  
+#endif
   ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       

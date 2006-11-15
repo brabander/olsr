@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.16 2006/11/15 21:13:52 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.17 2006/11/15 23:07:59 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -72,18 +72,6 @@ struct deny_address_entry
 };
 
 
-/* Output buffer structure */
-
-struct olsr_netbuf
-{
-  char *buff;     /* Pointer to the allocated buffer */
-  int if_index;
-  int bufsize;    /* Size of the buffer */
-  int maxsize;    /* Max bytes of payload that can be added to the buffer */
-  int pending;    /* How much data is currently pending in the buffer */
-  int reserved;   /* Plugins can reserve space in buffers */
-};
-
 /* Packet transform functions */
 
 struct ptf
@@ -93,8 +81,6 @@ struct ptf
 };
 
 static struct ptf *ptf_list;
-
-static struct olsr_netbuf *netbufs[MAX_IFS];
 
 static char ipv6_buf[100]; /* for address coversion */
 
@@ -186,28 +172,27 @@ init_net(void)
 int
 net_add_buffer(struct interface *ifp)
 {
-  struct olsr_netbuf *new_buf;
-
-  /* If a buffer already exists for this interface back off */
-  if(netbufs[ifp->if_nr])
-    return -1;
-
-  new_buf = olsr_malloc(sizeof(struct olsr_netbuf), "add_netbuff1");
-  new_buf->buff = olsr_malloc(ifp->int_mtu, "add_netbuff2");
+  /* Can the interfaces MTU actually change? If not, we can elimiate
+   * the "bufsize" field in "struct olsr_netbuf".
+   */
+  if (ifp->netbuf.bufsize != ifp->int_mtu && ifp->netbuf.buff != NULL) {
+    free(ifp->netbuf.buff);
+    ifp->netbuf.buff = NULL;
+  }
+  
+  if (ifp->netbuf.buff == NULL) {
+    ifp->netbuf.buff = olsr_malloc(ifp->int_mtu, "add_netbuff");
+  }
 
   /* Fill struct */
-  new_buf->bufsize = ifp->int_mtu;
-  new_buf->if_index = ifp->if_nr;
-  new_buf->maxsize = ifp->int_mtu - OLSR_HEADERSIZE;
+  ifp->netbuf.bufsize = ifp->int_mtu;
+  ifp->netbuf.maxsize = ifp->int_mtu - OLSR_HEADERSIZE;
 
-  new_buf->pending = 0;
-  new_buf->reserved = 0;
-
-  netbufs[ifp->if_nr] = new_buf;
+  ifp->netbuf.pending = 0;
+  ifp->netbuf.reserved = 0;
 
   return 0;
 }
-
 
 /**
  * Remove a outputbuffer. Frees the allocated memory.
@@ -220,22 +205,15 @@ net_add_buffer(struct interface *ifp)
 int
 net_remove_buffer(struct interface *ifp)
 {
-
-  /* If a buffer does no exist for this interface back off */
-  if(!netbufs[ifp->if_nr])
-    return -1;
-  
   /* Flush pending data */
-  if(netbufs[ifp->if_nr]->pending)
+  if(ifp->netbuf.pending)
     net_output(ifp);
 
-  free(netbufs[ifp->if_nr]->buff);
-  free(netbufs[ifp->if_nr]);
-  netbufs[ifp->if_nr] = NULL;
+  free(ifp->netbuf.buff);
+  ifp->netbuf.buff = NULL;
 
   return 0;
 }
-
 
 
 /**
@@ -255,11 +233,11 @@ net_remove_buffer(struct interface *ifp)
 int
 net_reserve_bufspace(struct interface *ifp, int size)
 {
-  if((!netbufs[ifp->if_nr]) || (size > netbufs[ifp->if_nr]->maxsize))
+  if(size > ifp->netbuf.maxsize)
     return -1;
   
-  netbufs[ifp->if_nr]->reserved = size;
-  netbufs[ifp->if_nr]->maxsize -= size;
+  ifp->netbuf.reserved = size;
+  ifp->netbuf.maxsize -= size;
   
   return 0;
 }
@@ -275,10 +253,7 @@ net_reserve_bufspace(struct interface *ifp, int size)
 olsr_u16_t
 net_output_pending(struct interface *ifp)
 {
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  return netbufs[ifp->if_nr]->pending;
+  return ifp->netbuf.pending;
 }
 
 
@@ -297,15 +272,11 @@ net_output_pending(struct interface *ifp)
 int
 net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
 {
-
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  if((netbufs[ifp->if_nr]->pending + size) > netbufs[ifp->if_nr]->maxsize)
+  if((ifp->netbuf.pending + size) > ifp->netbuf.maxsize)
     return 0;
 
-  memcpy(&netbufs[ifp->if_nr]->buff[netbufs[ifp->if_nr]->pending + OLSR_HEADERSIZE], data, size);
-  netbufs[ifp->if_nr]->pending += size;
+  memcpy(&ifp->netbuf.buff[ifp->netbuf.pending + OLSR_HEADERSIZE], data, size);
+  ifp->netbuf.pending += size;
 
   return size;
 }
@@ -325,15 +296,11 @@ net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
 int
 net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
 {
-
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  if((netbufs[ifp->if_nr]->pending + size) > (netbufs[ifp->if_nr]->maxsize + netbufs[ifp->if_nr]->reserved))
+  if((ifp->netbuf.pending + size) > (ifp->netbuf.maxsize + ifp->netbuf.reserved))
     return 0;
 
-  memcpy(&netbufs[ifp->if_nr]->buff[netbufs[ifp->if_nr]->pending + OLSR_HEADERSIZE], data, size);
-  netbufs[ifp->if_nr]->pending += size;
+  memcpy(&ifp->netbuf.buff[ifp->netbuf.pending + OLSR_HEADERSIZE], data, size);
+  ifp->netbuf.pending += size;
 
   return size;
 }
@@ -349,10 +316,7 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
 int
 net_outbuffer_bytes_left(struct interface *ifp)
 {
-  if(!netbufs[ifp->if_nr])
-    return 0;
-
-  return netbufs[ifp->if_nr]->maxsize - netbufs[ifp->if_nr]->pending;
+  return ifp->netbuf.maxsize - ifp->netbuf.pending;
 }
 
 
@@ -456,30 +420,27 @@ olsr_in_cksum(olsr_u16_t *buf, int len)
  */
 int
 net_output(struct interface *ifp)
-#ifdef USE_LIBNET
 {
+#ifdef USE_LIBNET
   struct ptf *tmp_ptf_list;
   union olsr_packet *outmsg;
   int retval;
   libnet_ptag_t udp_ptag = 0, ip_ptag = 0;
 
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  if(!netbufs[ifp->if_nr]->pending)
+  if(!ifp->netbuf.pending)
     return 0;
   
   assert(ifp->libnet_ctx != NULL);    
 
-  netbufs[ifp->if_nr]->pending += OLSR_HEADERSIZE;
+  ifp->netbuf.pending += OLSR_HEADERSIZE;
 
-  retval = netbufs[ifp->if_nr]->pending;
+  retval = ifp->netbuf.pending;
 
-  outmsg = (union olsr_packet *)netbufs[ifp->if_nr]->buff;
+  outmsg = (union olsr_packet *)ifp->netbuf.buff;
   /* Add the Packet seqno */
   outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
-  outmsg->v4.olsr_packlen = htons(netbufs[ifp->if_nr]->pending);
+  outmsg->v4.olsr_packlen = htons(ifp->netbuf.pending);
 
   /*
    *Call possible packet transform functions registered by plugins  
@@ -487,7 +448,7 @@ net_output(struct interface *ifp)
   tmp_ptf_list = ptf_list;
   while(tmp_ptf_list != NULL)
     {
-      tmp_ptf_list->function(netbufs[ifp->if_nr]->buff, &netbufs[ifp->if_nr]->pending);
+      tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
       tmp_ptf_list = tmp_ptf_list->next;
     }
 
@@ -496,25 +457,25 @@ net_output(struct interface *ifp)
    *we print the contetnt of the packets
    */
   if(disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)netbufs[ifp->if_nr]->buff, 
-				 netbufs[ifp->if_nr]->pending, &ifp->ip_addr); 
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, 
+				 ifp->netbuf.pending, &ifp->ip_addr); 
 
   printf("LIBNET TX %d bytes on %s\n", 
-	 netbufs[ifp->if_nr]->pending, ifp->int_name);
+	 ifp->netbuf.pending, ifp->int_name);
 
   udp_ptag = libnet_build_udp(OLSRPORT, 
 			      OLSRPORT,
-			      LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+			      LIBNET_UDP_H + ifp->netbuf.pending,
 			      0,
-			      (u_int8_t *)netbufs[ifp->if_nr]->buff, 
-			      netbufs[ifp->if_nr]->pending, 
+			      (u_int8_t *)ifp->netbuf.buff, 
+			      ifp->netbuf.pending, 
 			      ifp->libnet_ctx,
 			      0);
 
   if(udp_ptag == -1)
     {
       OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	netbufs[ifp->if_nr]->pending = 0;
+      ifp->netbuf.pending = 0;
       libnet_clear_packet(ifp->libnet_ctx);
       return -1;
     }
@@ -522,7 +483,7 @@ net_output(struct interface *ifp)
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */      
-      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + ifp->netbuf.pending,
 				  olsr_cnf->tos,
 				  ifp->olsr_seqnum,
 				  0x4000, /* Don't fragment */
@@ -538,7 +499,7 @@ net_output(struct interface *ifp)
       if(ip_ptag == -1)
 	{
 	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	  netbufs[ifp->if_nr]->pending = 0;
+	  ifp->netbuf.pending = 0;
 	  libnet_clear_packet(ifp->libnet_ctx);
 	  return -1;
 	}
@@ -569,10 +530,10 @@ net_output(struct interface *ifp)
       /* TODO: generate and insert CHKSUM */
 
       printf("Build IPv6 size: %d\n",
-	     LIBNET_IPV6_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending);
+	     LIBNET_IPV6_H + LIBNET_UDP_H + ifp->netbuf.pending);
       ip_ptag = libnet_build_ipv6(0, /* Traffic class */
 				  0, /* Flow label */
-				  LIBNET_IPV6_H + LIBNET_UDP_H + netbufs[ifp->if_nr]->pending,
+				  LIBNET_IPV6_H + LIBNET_UDP_H + ifp->netbuf.pending,
 				  IPPROTO_UDP, /* Next Header */
 				  64, /* Hop Limit */
 				  src,
@@ -585,7 +546,7 @@ net_output(struct interface *ifp)
       if(ip_ptag == -1)
 	{
 	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	  netbufs[ifp->if_nr]->pending = 0;
+          ifp->netbuf.pending = 0;
 	  libnet_clear_packet(ifp->libnet_ctx);
 	  return -1;
 	}
@@ -594,7 +555,7 @@ net_output(struct interface *ifp)
 #if 0
  {
    libnet_ptag_t ether_tag = 0;
-   unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   static const unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
    /* We should add layer2 as well later */
    ether_tag = libnet_build_ethernet(enet_broadcast,
@@ -607,7 +568,7 @@ net_output(struct interface *ifp)
    if (ether_tag == -1)
      {
        OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	 netbufs[ifp->if_nr]->pending = 0;
+       ifp->netbuf.pending = 0;
        libnet_clear_packet(ifp->libnet_ctx);
        return -1;
      }
@@ -622,18 +583,8 @@ net_output(struct interface *ifp)
 
   libnet_clear_packet(ifp->libnet_ctx);
   
-  netbufs[ifp->if_nr]->pending = 0;
-
-  // if we've just transmitted a TC message, let Dijkstra use the current
-  // link qualities for the links to our neighbours
-
-  olsr_update_dijkstra_link_qualities();
-  lq_tc_pending = OLSR_FALSE;
-
-  return retval;
-}
+  ifp->netbuf.pending = 0;
 #else
-{
   struct sockaddr_in *sin;  
   struct sockaddr_in dst;
   struct sockaddr_in6 *sin6;  
@@ -645,21 +596,18 @@ net_output(struct interface *ifp)
   sin = NULL;
   sin6 = NULL;
 
-  if(!netbufs[ifp->if_nr])
-    return -1;
-
-  if(!netbufs[ifp->if_nr]->pending)
+  if(!ifp->netbuf.pending)
     return 0;
 
-  netbufs[ifp->if_nr]->pending += OLSR_HEADERSIZE;
+  ifp->netbuf.pending += OLSR_HEADERSIZE;
 
-  retval = netbufs[ifp->if_nr]->pending;
+  retval = ifp->netbuf.pending;
 
-  outmsg = (union olsr_packet *)netbufs[ifp->if_nr]->buff;
+  outmsg = (union olsr_packet *)ifp->netbuf.buff;
   /* Add the Packet seqno */
   outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
   /* Set the packetlength */
-  outmsg->v4.olsr_packlen = htons(netbufs[ifp->if_nr]->pending);
+  outmsg->v4.olsr_packlen = htons(ifp->netbuf.pending);
 
   if(olsr_cnf->ip_version == AF_INET)
     {
@@ -688,7 +636,7 @@ net_output(struct interface *ifp)
   tmp_ptf_list = ptf_list;
   while(tmp_ptf_list != NULL)
     {
-      tmp_ptf_list->function(netbufs[ifp->if_nr]->buff, &netbufs[ifp->if_nr]->pending);
+      tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
       tmp_ptf_list = tmp_ptf_list->next;
     }
 
@@ -697,15 +645,15 @@ net_output(struct interface *ifp)
    *we print the content of the packets
    */
   if(disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)netbufs[ifp->if_nr]->buff, 
-				 netbufs[ifp->if_nr]->pending, &ifp->ip_addr); 
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, 
+				 ifp->netbuf.pending, &ifp->ip_addr); 
   
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
       if(olsr_sendto(ifp->olsr_socket, 
-		     netbufs[ifp->if_nr]->buff, 
-		     netbufs[ifp->if_nr]->pending, 
+                     ifp->netbuf.buff, 
+		     ifp->netbuf.pending, 
 		     MSG_DONTROUTE, 
 		     (struct sockaddr *)sin, 
 		     sizeof (*sin))
@@ -720,8 +668,8 @@ net_output(struct interface *ifp)
     {
       /* IP version 6 */
       if(olsr_sendto(ifp->olsr_socket, 
-		     netbufs[ifp->if_nr]->buff,
-		     netbufs[ifp->if_nr]->pending, 
+		     ifp->netbuf.buff,
+		     ifp->netbuf.pending, 
 		     MSG_DONTROUTE, 
 		     (struct sockaddr *)sin6, 
 		     sizeof (*sin6))
@@ -731,13 +679,13 @@ net_output(struct interface *ifp)
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
 	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_nr);
 	  fprintf(stderr, "To: %s (size: %d)\n", ip6_to_string(&sin6->sin6_addr), (int)sizeof(*sin6));
-	  fprintf(stderr, "Outputsize: %d\n", netbufs[ifp->if_nr]->pending);
+	  fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
 	  retval = -1;
 	}
     }
   
-  netbufs[ifp->if_nr]->pending = 0;
-
+  ifp->netbuf.pending = 0;
+#endif
   // if we've just transmitted a TC message, let Dijkstra use the current
   // link qualities for the links to our neighbours
 
@@ -746,7 +694,6 @@ net_output(struct interface *ifp)
 
   return retval;
 }
-#endif
 
 
 /**

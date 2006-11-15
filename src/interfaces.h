@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.34 2006/10/11 20:58:45 tlopatic Exp $
+ * $Id: interfaces.h,v 1.35 2006/11/15 23:07:59 bernd67 Exp $
  */
 
 
@@ -107,6 +107,18 @@ struct vtimes
   olsr_u8_t hna;
 };
 
+/* Output buffer structure. This should actually be in net_olsr.h but we have circular references then.
+ */
+struct olsr_netbuf
+{
+  olsr_u8_t *buff;/* Pointer to the allocated buffer */
+  int bufsize;    /* Size of the buffer */
+  int maxsize;    /* Max bytes of payload that can be added to the buffer */
+  int pending;    /* How much data is currently pending in the buffer */
+  int reserved;   /* Plugins can reserve space in buffers */
+};
+
+
 /**
  *A struct containing all necessary information about each
  *interface participating in the OLSD routing
@@ -138,7 +150,10 @@ struct interface
 
   clock_t       fwdtimer;                       /* Timeout for OLSR forwarding on this if */
 
+#ifdef USE_LIBNET
   void          *libnet_ctx;                    /* libnet context(void to avoid dependency */
+#endif
+  struct olsr_netbuf netbuf;                    /* the buffer to construct the packet data */
 
   struct        if_gen_property *gen_properties;/* Generic interface properties */
 
