@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.3 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: net_olsr.h,v 1.4 2006/11/15 20:58:51 bernd67 Exp $
  */
 
 
@@ -48,25 +48,6 @@
 #include "process_routes.h"
 #include <arpa/inet.h>
 #include <net/if.h>
-
-struct deny_address_entry
-{
-  union olsr_ip_addr        addr;
-  struct deny_address_entry *next;
-};
-
-
-/* Output buffer structure */
-
-struct olsr_netbuf
-{
-  char *buff;     /* Pointer to the allocated buffer */
-  int if_index;
-  int bufsize;    /* Size of the buffer */
-  int maxsize;    /* Max bytes of payload that can be added to the buffer */
-  int pending;    /* How much data is currently pending in the buffer */
-  int reserved;   /* Plugins can reserve space in buffers */
-};
 
 #ifdef USE_LIBNET
 char *

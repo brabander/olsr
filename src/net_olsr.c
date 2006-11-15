@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.14 2006/10/02 08:37:17 kattemat Exp $
+ * $Id: net_olsr.c,v 1.15 2006/11/15 20:58:51 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -52,6 +52,7 @@
 #include <libnet.h>
 #endif
 
+
 extern olsr_bool lq_tc_pending;
 
 static olsr_bool disp_pack_out = OLSR_FALSE;
@@ -64,6 +65,25 @@ WinSockPError(char *);
 #endif
 
 
+struct deny_address_entry
+{
+  union olsr_ip_addr        addr;
+  struct deny_address_entry *next;
+};
+
+
+/* Output buffer structure */
+
+struct olsr_netbuf
+{
+  char *buff;     /* Pointer to the allocated buffer */
+  int if_index;
+  int bufsize;    /* Size of the buffer */
+  int maxsize;    /* Max bytes of payload that can be added to the buffer */
+  int pending;    /* How much data is currently pending in the buffer */
+  int reserved;   /* Plugins can reserve space in buffers */
+};
+
 /* Packet transform functions */
 
 struct ptf
@@ -74,13 +94,13 @@ struct ptf
 
 static struct ptf *ptf_list;
 
-struct olsr_netbuf *netbufs[MAX_IFS];
+static struct olsr_netbuf *netbufs[MAX_IFS];
 
 static char ipv6_buf[100]; /* for address coversion */
 
 static struct deny_address_entry *deny_entries;
 
-static char *deny_ipv4_defaults[] =
+static const char * const deny_ipv4_defaults[] =
   {
     "0.0.0.0",
     //SVEN_OLA: This address is not plausible too
@@ -88,7 +108,7 @@ static char *deny_ipv4_defaults[] =
     NULL
   };
 
-static char *deny_ipv6_defaults[] =
+static const char * const deny_ipv6_defaults[] =
   {
     "0::0",
     "0::1",
@@ -102,7 +122,7 @@ olsr_in_cksum(olsr_u16_t *, int);
 static char errbuf[LIBNET_ERRBUF_SIZE];
 
 char *
-get_libnet_errbuf()
+get_libnet_errbuf(void)
 {
   return errbuf;
 }
@@ -116,7 +136,7 @@ net_set_disp_pack_out(olsr_bool val)
 }
 
 void
-init_net()
+init_net(void)
 {
   union olsr_ip_addr addr;
   int i;
@@ -683,7 +703,7 @@ net_output(struct interface *ifp)
 
   /*
    *if the -dispout option was given
-   *we print the contetnt of the packets
+   *we print the content of the packets
    */
   if(disp_pack_out)
     print_olsr_serialized_packet(stdout, (union olsr_packet *)netbufs[ifp->if_nr]->buff, 
