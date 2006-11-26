@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.15 2006/10/26 22:02:56 bernd67 Exp $
+ * $Id: apm.c,v 1.16 2006/11/26 00:32:14 bernd67 Exp $
  */
 
 /*
@@ -190,15 +190,14 @@ apm_read_apm(struct olsr_apm_info *ainfo)
   if((apm_procfile = fopen(APM_PROC, "r")) == NULL)
     return 0;
 
-
-  fgets(buffer, sizeof(buffer) - 1, apm_procfile);
-  if(buffer == NULL)
+  if(fgets(buffer, sizeof(buffer) - 1, apm_procfile) == NULL)
     {
+      fclose(apm_procfile);
       /* Try re-opening the file */
       if((apm_procfile = fopen(APM_PROC, "r")) != NULL)
 	return 0;
-      fgets(buffer, sizeof(buffer) - 1, apm_procfile);
-      if(buffer == NULL)
+
+      if(fgets(buffer, sizeof(buffer) - 1, apm_procfile) == NULL)
 	{
 	  /* Giving up */
 	  fprintf(stderr, "OLSRD: Could not read APM info - setting willingness to default");
