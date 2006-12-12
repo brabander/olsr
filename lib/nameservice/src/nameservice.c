@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.15 2006/01/07 08:17:43 kattemat Exp $ */
+/* $Id: nameservice.c,v 1.16 2006/12/12 10:54:52 kattemat Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -71,6 +71,8 @@ struct db_entry* list[HASHSIZE];
 struct name_entry *my_names = NULL;
 olsr_bool name_table_changed = OLSR_TRUE;
 
+static void free_routing_table_list(struct rt_entry **list) ;
+static struct rt_entry *host_lookup_routing_table(union olsr_ip_addr *);
 
 /**
  * do initialization
@@ -139,14 +141,14 @@ olsrd_plugin_register_param(char *key, char *value)
 		printf("\nNAME PLUGIN: parameter additional host: %s\n", my_add_hosts);
 	}
 	else if(!strcmp(key, "dns-server")) {
-		struct in_addr ip;
+		union olsr_ip_addr ip;
 		if (strlen(value) == 0) {
 			// set dns server ip to main address
 			// which is not known yet
 			have_dns_server = OLSR_TRUE;
 		}
-		else if (inet_aton(value, &ip)) {
-			my_dns_server.v4 = ip.s_addr;
+		else if (inet_pton(olsr_cnf->ip_version, value, &ip) == 1) {
+			memcpy(&my_dns_server, &ip, olsr_cnf->ipsize);
 			have_dns_server = OLSR_TRUE;
 		}
 		else {
@@ -169,16 +171,16 @@ olsrd_plugin_register_param(char *key, char *value)
 	}
 	else {
 		// assume this is an IP address and hostname
-		struct in_addr ip;
+		union olsr_ip_addr ip;
 		
-		if (inet_aton(key, &ip)) {
+		if (inet_pton(olsr_cnf->ip_version, key, &ip) == 1) {
 			// the IP is validated later
 			struct name_entry *tmp;
 			tmp = malloc(sizeof(struct name_entry));
 			tmp->name = strndup( value, MAX_NAME );
 			tmp->len = strlen( tmp->name );
 			tmp->type = NAME_HOST;
-			tmp->ip.v4 = ip.s_addr;
+			memcpy(&tmp->ip, &ip, olsr_cnf->ipsize);
 			tmp->next = my_names;
 			my_names = tmp;
 			printf("\nNAME PLUGIN: parameter %s (%s)\n", tmp->name,
@@ -211,10 +213,13 @@ name_init()
 {
 	struct name_entry *name;
 	struct name_entry *prev=NULL;
+	union olsr_ip_addr ipz;
+
+	memset(&ipz, 0, sizeof(ipz));
 
 	/* fixup names and IP addresses */
 	for (name = my_names; name != NULL; name = name->next) {
-		if (name->ip.v4 == 0) {
+		if (memcmp(&name->ip, &ipz, olsr_cnf->ipsize) == 0) {
 			// insert main_addr
 			memcpy(&name->ip, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			prev = name;
@@ -238,7 +243,7 @@ name_init()
 	}
 		
 	if (have_dns_server) {
-		if (my_dns_server.v4 == 0) {
+		if (memcmp(&my_dns_server, &ipz, olsr_cnf->ipsize) == 0) {
 			memcpy(&my_dns_server, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			printf("\nNAME PLUGIN: announcing upstream DNS server: %s\n", 
 				olsr_ip_to_string(&my_dns_server));
@@ -401,9 +406,16 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 	union olsr_ip_addr originator;
 	double vtime;
 	int size;
+ 	olsr_u16_t seqno;
 
 	/* Fetch the originator of the messsage */
-	memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
+	if(olsr_cnf->ip_version == AF_INET) {
+		memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
+		seqno = ntohs(m->v4.seqno);
+	} else {
+		memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
+		seqno = ntohs(m->v6.seqno);
+	}
 		
 	/* Fetch the message based on IP version */
 	if(olsr_cnf->ip_version == AF_INET) {
@@ -414,7 +426,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 	else {
 		vtime = ME_TO_DOUBLE(m->v6.olsr_vtime);
 		size = ntohs(m->v6.olsr_msgsize);
-		namemessage = (struct namemsg*)&m->v4.message;
+		namemessage = (struct namemsg*)&m->v6.message;
 	}
 
 	/* Check if message originated from this node. 
@@ -433,7 +445,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 	* Remeber that this also registeres the message as
 	* processed if nessecary
 	*/
-	if(!olsr_check_dup_table_proc(&originator, ntohs(m->v4.seqno))) {
+	if(!olsr_check_dup_table_proc(&originator, seqno)) {
 		/* If so - do not process */
 		goto forward;
 	}
@@ -443,7 +455,7 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 forward:
 	/* Forward the message if nessecary
 	* default_fwd does all the work for us! */
-	olsr_forward_message(m, &originator, ntohs(m->v4.seqno), in_if, in_addr);
+	olsr_forward_message(m, &originator, seqno, in_if, in_addr);
 }
 
 
@@ -631,7 +643,8 @@ write_hosts_file()
 	fprintf(hosts, "### this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "### do not edit\n\n");
 
-	fprintf(hosts, "127.0.0.1\tlocalhost\n\n");
+	fprintf(hosts, "127.0.0.1\tlocalhost\n");
+	fprintf(hosts, "::1\t\tlocalhost\n\n");
 	
 	// copy content from additional hosts filename
 	if (my_add_hosts[0] != '\0') {
@@ -688,10 +701,10 @@ void
 write_resolv_file()
 {
 	int hash;
-	struct name_entry *name;
+	struct name_entry *name, *tmp_dns, *last_dns, *dnslist = NULL;
 	struct db_entry *entry;
 	struct rt_entry *best_routes = NULL;
-	struct rt_entry *route, *tmp, *last;
+	struct rt_entry *route, *tmp = NULL, *last;
 	FILE* resolv;
 	int i=0;
 	
@@ -713,13 +726,13 @@ write_resolv_file()
 					continue;
 				
 				/* find the nearest one */
-				route = olsr_lookup_routing_table(&name->ip);
+				route = host_lookup_routing_table(&name->ip);
 				if (route==NULL) // it's possible that route is not present yet
 					continue;
 				
 				if (best_routes == NULL || route->rt_etx < best_routes->rt_etx) {
 					olsr_printf(6, "NAME PLUGIN: best nameserver %s\n",
-						olsr_ip_to_string(&route->rt_dst));
+						olsr_ip_to_string(&name->ip));
 					if (best_routes!=NULL)
 						olsr_printf(6, "NAME PLUGIN: better than %f (%s)\n",
 							best_routes->rt_etx,
@@ -730,27 +743,44 @@ write_resolv_file()
 					tmp->rt_etx = route->rt_etx;
 					tmp->next = best_routes;
 					best_routes = tmp;
+					tmp_dns = olsr_malloc(sizeof(struct name_entry), "write_resolv name_entry");
+					COPY_IP(&tmp_dns->ip, &name->ip);
+					tmp_dns->type = name->type;
+					tmp_dns->len = 0;
+					tmp_dns->name = NULL;
+					tmp_dns->next = dnslist;
+					dnslist = tmp_dns;
 				} else {
 					// queue in etx order
 					last = best_routes;
+					last_dns = dnslist;
 					while ( last->next!=NULL && i<3 ) {
 						if (last->next->rt_etx > route->rt_etx)
 							break;
 						last = last->next;
+						last_dns = last_dns->next;
 						i++;
 					}
 					if (i<3) {
 						olsr_printf(6, "NAME PLUGIN: queue %f (%s)",
 							route->rt_etx,
-							olsr_ip_to_string(&route->rt_dst));
+							olsr_ip_to_string(&name->ip));
 						olsr_printf(6, " after %f (%s)\n", 
-							last->rt_etx, olsr_ip_to_string(&last->rt_dst));
+  							last->rt_etx, olsr_ip_to_string(&last_dns->ip));
 						
 						tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
 						memcpy(&tmp->rt_dst, &route->rt_dst, olsr_cnf->ipsize);
 						tmp->rt_etx = route->rt_etx;
 						tmp->next = last->next;
 						last->next = tmp;
+
+						tmp_dns = olsr_malloc(sizeof(struct name_entry), "write_resolv name_entry");
+						COPY_IP(&tmp_dns->ip, &name->ip);
+						tmp_dns->type = name->type;
+						tmp_dns->len = 0;
+						tmp_dns->name = NULL;
+						tmp_dns->next = last_dns->next;
+						last_dns->next = tmp_dns;
 					} else {
 						olsr_printf(6, "NAME PLUGIN: don't need more than 3 nameservers\n");
 					}
@@ -768,11 +798,15 @@ write_resolv_file()
 		return;
 	}
 	i=0;
-	for (tmp=best_routes; tmp!=NULL && i<3; tmp=tmp->next) {
-		olsr_printf(6, "NAME PLUGIN: nameserver %s\n", olsr_ip_to_string(&tmp->rt_dst));
-		fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&tmp->rt_dst));
+	for (tmp_dns=dnslist; tmp_dns!=NULL && i<3; tmp_dns=tmp_dns->next) {
+		olsr_printf(6, "NAME PLUGIN: nameserver %s\n", olsr_ip_to_string(&tmp_dns->ip));
+		fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&tmp_dns->ip));
 		i++;
 	}
+	free_name_entry_list(&dnslist);
+        if(tmp != NULL) {
+            free_routing_table_list(&tmp);
+        }
 	fclose(resolv);
 }
 
@@ -796,6 +830,23 @@ free_name_entry_list(struct name_entry **list)
 
 
 /**
+ * completely free a list of rt_entries
+ */
+static void 
+free_routing_table_list(struct rt_entry **list) 
+{
+	struct rt_entry **tmp = list;
+	struct rt_entry *to_delete;
+	while (*tmp != NULL) {
+		to_delete = *tmp;
+		*tmp = (*tmp)->next;
+		free( to_delete );
+		to_delete = NULL;
+	}
+}
+
+
+/**
  * we only allow names for IP addresses which we are
  * responsible for: 
  * so the IP must either be from one of the interfaces
@@ -805,7 +856,9 @@ olsr_bool
 allowed_ip(union olsr_ip_addr *addr)
 {
 	struct hna4_entry *hna4;
+	struct hna6_entry *hna6;
 	struct interface *iface;
+	union olsr_ip_addr tmp_ip, tmp_msk;
 	
 	olsr_printf(6, "checking %s\n", olsr_ip_to_string(addr));
 	
@@ -818,16 +871,84 @@ allowed_ip(union olsr_ip_addr *addr)
 		}
 	}
 	
-	for (hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
-	{
-		olsr_printf(6, "HNA %s/%s\n", 
-			olsr_ip_to_string(&hna4->net),
-			olsr_ip_to_string(&hna4->netmask));
+	if (olsr_cnf->ip_version == AF_INET) {
+		for (hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
+		{
+			olsr_printf(6, "HNA %s/%s\n", 
+				olsr_ip_to_string(&hna4->net),
+				olsr_ip_to_string(&hna4->netmask));
 	
-		if ( hna4->netmask.v4 != 0 && (addr->v4 & hna4->netmask.v4) == hna4->net.v4 ) {
-			olsr_printf(6, "MATCHED\n");
-			return OLSR_TRUE;
+			if ( hna4->netmask.v4 != 0 &&
+			    (addr->v4 & hna4->netmask.v4) == hna4->net.v4 ) {
+				olsr_printf(6, "MATCHED\n");
+				return OLSR_TRUE;
+			}
+		}
+	} else {
+		int i;
+
+		for (hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
+		{
+			olsr_printf(6, "HNA %s/%d\n", 
+				olsr_ip_to_string(&hna6->net),
+				hna6->prefix_len);
+			if ( hna6->prefix_len == 0 )
+				continue;
+			olsr_prefix_to_netmask(&tmp_msk, hna6->prefix_len);
+			for (i = 0; i < 16; i++) {
+				tmp_ip.v6.s6_addr[i] = addr->v6.s6_addr[i] &
+					tmp_msk.v6.s6_addr[i];
+			}
+			if (COMP_IP(&tmp_ip, &hna6->net)) {
+				olsr_printf(6, "MATCHED\n");
+				return OLSR_TRUE;
+			}
 		}
 	}
 	return OLSR_FALSE;
+}
+
+static struct rt_entry *
+host_lookup_routing_table(union olsr_ip_addr *dst)
+{
+	olsr_u32_t index;
+	union olsr_ip_addr tmp_ip, tmp_msk;
+	struct rt_entry *walker;
+  
+	walker = olsr_lookup_routing_table(dst);
+	if (walker != NULL)
+		return walker;
+
+	for (index = 0; index < HASHSIZE; index++) {
+		for (walker = hna_routes[index].next;
+		    walker != &hna_routes[index]; walker = walker->next) {
+			if (COMP_IP(&walker->rt_dst, dst))
+				return walker;
+			if (olsr_cnf->ip_version == AF_INET) {
+				if ( walker->rt_mask.v4 != 0 &&
+				    (dst->v4 & walker->rt_mask.v4) ==
+				    walker->rt_dst.v4 ) {
+					olsr_printf(6, "MATCHED\n");
+					return walker;
+				}
+			} else {
+				int i;
+
+				if ( walker->rt_mask.v6 == 0 )
+					continue;
+				olsr_prefix_to_netmask(&tmp_msk,
+				    walker->rt_mask.v6);
+				for (i = 0; i < 16; i++) {
+					tmp_ip.v6.s6_addr[i] =
+					    dst->v6.s6_addr[i] &
+					    tmp_msk.v6.s6_addr[i];
+				}
+				if (COMP_IP(&tmp_ip, &walker->rt_dst)) {
+					olsr_printf(6, "MATCHED\n");
+					return walker;
+				}
+			}
+		}
+	}
+        return NULL;
 }
