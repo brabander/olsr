@@ -1,5 +1,13 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.55 2006/01/04 09:08:08 kattemat Exp $
+$Id: CHANGELOG,v 1.56 2006/12/12 11:26:01 kattemat Exp $
+
+0.4.11 --------------------------------------------------------------------
+
+FreeBSD IPv6 SUPPORT
+
+Patch from John Hay applied.
+
+BUGFIXES
 
 0.4.10 --------------------------------------------------------------------
 
