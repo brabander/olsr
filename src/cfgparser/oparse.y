@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.29 2006/04/17 18:31:09 kattemat Exp $
+ * $Id: oparse.y,v 1.30 2006/12/12 11:22:15 kattemat Exp $
  */
 
 
@@ -389,7 +389,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 
   if(inet_aton($2->string, &in) == 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $2->string);
+      fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
       return -1;
     }
 
@@ -446,7 +446,7 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
 
   if(inet_pton(AF_INET6, $2->string, &in6) < 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $2->string);
+      fprintf(stderr, "isetip6mults: Failed converting IP address %s\n", $2->string);
       return -1;
     }
 
@@ -475,7 +475,7 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 
   if(inet_pton(AF_INET6, $2->string, &in6) < 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $2->string);
+      fprintf(stderr, "isetip6multg: Failed converting IP address %s\n", $2->string);
       return -1;
     }
 
@@ -712,13 +712,13 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
 
   if(inet_aton($1->string, &in) == 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $1->string);
+      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
       return -1;
     }
   h->net.v4 = in.s_addr;
   if(inet_aton($2->string, &in) == 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $1->string);
+      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
       return -1;
     }
   h->netmask.v4 = in.s_addr;
@@ -749,14 +749,14 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 
   if(inet_pton(AF_INET6, $1->string, &in6) < 0)
     {
-      fprintf(stderr, "Failed converting IP address %s\n", $1->string);
+      fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", $1->string);
       return -1;
     }
   memcpy(&h->net, &in6, sizeof(struct in6_addr));
 
   if(($2->integer < 0) || ($2->integer > 128))
     {
-      fprintf(stderr, "Illegal IPv6 prefix length %d\n", $2->integer);
+      fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", $2->integer);
       return -1;
     }
 
