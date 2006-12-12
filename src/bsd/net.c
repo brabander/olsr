@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.28 2006/11/05 23:03:56 bernd67 Exp $
+ * $Id: net.c,v 1.29 2006/12/12 11:20:53 kattemat Exp $
  */
 
 #include "defs.h"
@@ -61,8 +61,10 @@
 #endif
 
 #ifdef __FreeBSD__
+#include <ifaddrs.h>
 #include <net/if_var.h>
 #include <net/ethernet.h>
+#include <netinet/in_var.h>
 #ifndef FBSD_NO_80211
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
@@ -71,8 +73,8 @@
 #endif
 #endif
 
-#ifdef SPOOF
 #include <net/if_dl.h>
+#ifdef SPOOF
 #include <libnet.h>
 #endif /* SPOOF */
 
@@ -172,6 +174,17 @@ disable_redirects_global(int version)
     name = "net.inet6.icmp6.rediraccept";
 
   ignore_redir = set_sysctl_int(name, 0);
+#elif defined __FreeBSD__
+  if (olsr_cnf->ip_version == AF_INET)
+  {
+    name = "net.inet.icmp.drop_redirect";
+    ignore_redir = set_sysctl_int(name, 1);
+  }
+  else
+  {
+    name = "net.inet6.icmp6.rediraccept";
+    ignore_redir = set_sysctl_int(name, 0);
+  }
 #else
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
@@ -243,6 +256,12 @@ int restore_settings(int version)
   else
     name = "net.inet6.icmp6.rediraccept";
 
+#elif defined __FreeBSD__
+  if (olsr_cnf->ip_version == AF_INET)
+    name = "net.inet.icmp.drop_redirect";
+
+  else
+    name = "net.inet6.icmp6.rediraccept";
 #else
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
@@ -338,7 +357,6 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
       return (-1);
     }
 
-#ifdef SPOOF
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEPORT failed");
@@ -352,7 +370,6 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
       close(sock);
       return (-1);
     }
-#endif /* SPOOF */
 
   for (on = bufspace; ; on -= 1024) 
     {
@@ -412,6 +429,18 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       return (-1);
     }
 
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
+    {
+      perror("SO_REUSEPORT failed");
+      return (-1);
+    }
+
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)) < 0)
+    {
+      perror("IPV6_RECVPKTINFO failed");
+      return (-1);
+    }
+
   if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
     {
       perror("bind");
@@ -431,31 +460,16 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
 int
 join_mcast(struct interface *ifs, int sock)
 {
-  /* See linux/in6.h */
+  /* See netinet6/in6.h */
 
   struct ipv6_mreq mcastreq;
 
   COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-#if 0
   OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr))
-  /* Send multicast */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
-     < 0)
-    {
-      perror("Join multicast");
-      return -1;
-    }
-#else
-#warning implement IPV6_ADD_MEMBERSHIP
-#endif
 
-  /* Old libc fix */
+  /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
   if(setsockopt(sock, 
@@ -464,8 +478,8 @@ join_mcast(struct interface *ifs, int sock)
 		(char *)&mcastreq, 
 		sizeof(struct ipv6_mreq)) 
      < 0)
-#else
-  /* Join reciever group */
+#else /* rfc 2133, obsoleted */
+  /* Join receiver group */
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 
 		IPV6_ADD_MEMBERSHIP, 
@@ -500,6 +514,70 @@ join_mcast(struct interface *ifs, int sock)
 
 int get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 {
+  struct ifaddrs *ifap, *ifa;
+  const struct sockaddr_in6 *sin6 = NULL;
+  struct in6_ifreq ifr6;
+  int found = 0;
+  int s6;
+  u_int32_t flags6;
+
+  if (getifaddrs(&ifap) != 0)
+    {
+      OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n")
+      return 0;
+    }
+
+  for (ifa = ifap; ifa; ifa = ifa->ifa_next)
+    {
+      if (ifa->ifa_addr->sa_family == AF_INET6 &&
+          strcmp(ifa->ifa_name, ifname) == 0)
+        {
+	  sin6 = (const struct sockaddr_in6 *)ifa->ifa_addr;
+	  if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
+	    continue;
+	  strncpy(ifr6.ifr_name, ifname, sizeof(ifname));
+	  if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0)
+	    {
+	      OLSR_PRINTF(3, "socket(AF_INET6,SOCK_DGRAM)");
+	      break;
+	    }
+	  ifr6.ifr_addr = *sin6;
+	  if (ioctl(s6, SIOCGIFAFLAG_IN6, &ifr6) < 0)
+	    {
+	      OLSR_PRINTF(3, "ioctl(SIOCGIFAFLAG_IN6)");
+	      close(s6);
+	      break;
+	    }
+	  close(s6);
+	  flags6 = ifr6.ifr_ifru.ifru_flags6;
+	  if ((flags6 & IN6_IFF_ANYCAST) != 0)
+	    continue;
+	  if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr))
+	    {
+	      if (scope_in)
+		{
+		  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr,
+			 sizeof(struct in6_addr));
+		  found = 1;
+		  break;
+		}
+	    }
+	  else
+	    {
+	      if (scope_in == 0)
+		{
+		  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr,
+			 sizeof(struct in6_addr));
+		  found = 1;
+		  break;
+		}
+	    }
+	}
+    }
+  freeifaddrs(ifap);
+  if (found)
+    return 1;
+
   return 0;
 }
 
@@ -627,16 +705,19 @@ olsr_recvfrom(int  s,
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {
-#if SPOOF
   struct msghdr mhdr;
   struct iovec iov;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
   struct sockaddr_in *sin = (struct sockaddr_in *) from; //XXX
+  struct sockaddr_in6 *sin6;
+  struct in6_addr *iaddr6;
+  struct in6_pktinfo *pkti;
+  struct interface *ifc;
+  char addrstr[INET6_ADDRSTRLEN];
+  char iname[IFNAMSIZ];
   unsigned char chdr[4096];
   int count;
-  struct interface *ifc;
-  char iname[32];
 
   bzero(&mhdr, sizeof(mhdr));
   bzero(&iov, sizeof(iov));
@@ -659,35 +740,45 @@ olsr_recvfrom(int  s,
 
   /* this needs to get communicated back to caller */
   *fromlen = mhdr.msg_namelen;
-
-  cm = (struct cmsghdr *) chdr;
-  sdl = (struct sockaddr_dl *) CMSG_DATA (cm);
-  bzero (iname, sizeof (iname));
-  memcpy (iname, sdl->sdl_data, sdl->sdl_nlen);
+  if (olsr_cnf->ip_version == AF_INET6)
+    {
+      for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(&mhdr); cm;
+	   cm = (struct cmsghdr *)CMSG_NXTHDR(&mhdr, cm))
+	{
+	  if (cm->cmsg_level == IPPROTO_IPV6 && cm->cmsg_type == IPV6_PKTINFO)
+	    {
+	      pkti = (struct in6_pktinfo *) CMSG_DATA(cm);
+	      iaddr6 = &pkti->ipi6_addr;
+	      if_indextoname(pkti->ipi6_ifindex, iname);
+	    }
+	}
+    }
+  else
+    {
+      cm = (struct cmsghdr *) chdr;
+      sdl = (struct sockaddr_dl *) CMSG_DATA (cm);
+      bzero (iname, sizeof (iname));
+      memcpy (iname, sdl->sdl_data, sdl->sdl_nlen);
+    }
 
   ifc = if_ifwithsock (s);
+
+  sin6 = (struct sockaddr_in6 *)from;
+  OLSR_PRINTF (4, "%d bytes from %s, socket associated %s really received on %s\n",
+	       count,
+	       (olsr_cnf->ip_version == AF_INET6) ?
+		 inet_ntop(AF_INET6, (char *)&sin6->sin6_addr, addrstr,
+				     INET6_ADDRSTRLEN):
+	         inet_ntoa (sin->sin_addr),
+	       ifc->int_name,
+	       iname);
 
   if (strcmp (ifc->int_name, iname) != 0)
     {
       return (0);
     }
 
-  OLSR_PRINTF (2, "%d bytes from %s, socket associated %s really received on %s\n",
-	       count,
-	       inet_ntoa (sin->sin_addr),
-	       ifc->int_name,
-	       iname);
-
   return (count);
-
-#else /* SPOOF */
-  return recvfrom(s, 
-		  buf, 
-		  len, 
-		  0, 
-		  from, 
-		  fromlen);
-#endif /* SPOOF */
 }
 
 /**

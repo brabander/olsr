@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.7 2006/01/07 08:16:22 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.8 2006/12/12 11:20:53 kattemat Exp $
  */
 
 
@@ -170,12 +170,103 @@ int olsr_ioctl_del_route(struct rt_entry *dest)
   return add_del_route(dest, 0);
 }
 
+static int add_del_route6(struct rt_entry *dest, int add)
+{
+  struct rt_msghdr *rtm;
+  unsigned char buff[512];
+  unsigned char *walker;
+  struct sockaddr_in6 sin6;
+  struct sockaddr_dl sdl;
+  int step, step_dl;
+  int len;
+  char Str1[40], Str2[40];
+
+  inet_ntop(AF_INET6, &dest->rt_dst.v6, Str1, 40);
+  inet_ntop(AF_INET6, &dest->rt_router.v6, Str2, 40);
+
+  OLSR_PRINTF(1, "%s IPv6 route to %s/%d via %s.\n",
+    (add != 0) ? "Adding" : "Removing", Str1, dest->rt_mask.v6, Str2)
+
+  memset(buff, 0, sizeof (buff));
+  memset(&sin6, 0, sizeof (sin6));
+  memset(&sdl, 0, sizeof (sdl));
+
+  sin6.sin6_len = sizeof (sin6);
+  sin6.sin6_family = AF_INET6;
+  sdl.sdl_len = sizeof (sdl);
+  sdl.sdl_family = AF_LINK;
+
+  step = 1 + ((sizeof (struct sockaddr_in6) - 1) | 3);
+  step_dl = 1 + ((sizeof (struct sockaddr_dl) - 1) | 3);
+
+  rtm = (struct rt_msghdr *)buff;
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = (add != 0) ? RTM_ADD : RTM_DELETE;
+  rtm->rtm_index = 0;
+  rtm->rtm_flags = dest->rt_flags;
+  rtm->rtm_addrs = RTA_DST | RTA_GATEWAY;
+  rtm->rtm_seq = ++seq;
+
+  walker = buff + sizeof (struct rt_msghdr);
+
+  memcpy(&sin6.sin6_addr.s6_addr, &dest->rt_dst.v6, sizeof(struct in6_addr));
+
+  memcpy(walker, &sin6, sizeof (sin6));
+  walker += step;
+
+  if ((rtm->rtm_flags & RTF_GATEWAY) != 0)
+  {
+    memcpy(&sin6.sin6_addr.s6_addr, &dest->rt_router.v6, sizeof(struct in6_addr));
+
+    memcpy(walker, &sin6, sizeof (sin6));
+    walker += step;
+  }
+
+  // the host is directly reachable, so add the output interface's address
+
+  else
+  {
+    memcpy(&sin6.sin6_addr.s6_addr, &dest->rt_if->int6_addr.sin6_addr.s6_addr,
+      sizeof(struct in6_addr));
+
+    memcpy(walker, &sin6, sizeof (sin6));
+    walker += step;
+    rtm->rtm_flags |= RTF_LLINFO;
+  }
+
+  if ((rtm->rtm_flags & RTF_HOST) == 0)
+  {
+    olsr_prefix_to_netmask((union olsr_ip_addr *)&sin6.sin6_addr, dest->rt_mask.v6);
+    memcpy(walker, &sin6, sizeof (sin6));
+    walker += step;
+    rtm->rtm_addrs |= RTA_NETMASK;
+  }
+
+  if ((rtm->rtm_flags & RTF_GATEWAY) != 0)
+  {
+    strcpy(&sdl.sdl_data[0], dest->rt_if->int_name);
+    sdl.sdl_nlen = (u_char)strlen(dest->rt_if->int_name);
+    memcpy(walker, &sdl, sizeof (sdl));
+    walker += step_dl;
+    rtm->rtm_addrs |= RTA_IFP;
+  }
+
+  rtm->rtm_msglen = (unsigned short)(walker - buff);
+
+  len = write(rts, buff, rtm->rtm_msglen);
+
+  if (len < rtm->rtm_msglen)
+    fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
+
+  return 0;
+}
+
 int olsr_ioctl_add_route6(struct rt_entry *dest)
 {
-  return 0;
+  return add_del_route6(dest, 1);
 }
 
 int olsr_ioctl_del_route6(struct rt_entry *dest)
 {
-  return 0;
+  return add_del_route6(dest, 0);
 }
