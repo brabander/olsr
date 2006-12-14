@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.30 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: parser.c,v 1.31 2006/12/14 11:29:20 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -201,21 +201,21 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	{
 	  /* IPv4 */
 	  update_hysteresis_incoming(from_addr, 
-				     &in_if->ip_addr,
+				     in_if,
 				     ntohs(olsr->olsr_seqno));
 	}
       else
 	{
 	  /* IPv6 */
 	  update_hysteresis_incoming(from_addr, 
-				     &in_if->ip_addr, 
+				     in_if, 
 				     ntohs(olsr->olsr_seqno));
 	}
     }
 
   if (olsr_cnf->lq_level > 0)
     {
-      olsr_update_packet_loss(from_addr, &in_if->ip_addr,
+      olsr_update_packet_loss(from_addr, in_if,
                               ntohs(olsr->olsr_seqno));
     }
   

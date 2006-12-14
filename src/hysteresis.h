@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.h,v 1.7 2005/03/06 19:33:35 kattemat Exp $
+ * $Id: hysteresis.h,v 1.8 2006/12/14 11:29:19 bernd67 Exp $
  */
 
 
@@ -60,6 +60,6 @@ void
 olsr_update_hysteresis_hello(struct link_entry *, double);
 
 void
-update_hysteresis_incoming(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
+update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, olsr_u16_t);
 
 #endif

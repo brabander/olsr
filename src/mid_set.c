@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.15 2005/05/29 12:47:45 br1 Exp $
+ * $Id: mid_set.c,v 1.16 2006/12/14 11:29:20 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -51,6 +51,7 @@
 struct mid_entry mid_set[HASHSIZE];
 struct mid_address reverse_mid_set[HASHSIZE];
 
+struct mid_entry *mid_lookup_entry_bymain(union olsr_ip_addr *adr);
 
 /**
  * Initialize the MID set
@@ -204,6 +205,9 @@ void
 insert_mid_alias(union olsr_ip_addr *main_add, union olsr_ip_addr *alias, float vtime)
 {
   struct mid_address *adr;
+  struct neighbor_entry *ne_old, *ne_new;
+  struct mid_entry *me_old;
+  int ne_ref_rp_count;
 
   adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
   
@@ -212,6 +216,28 @@ insert_mid_alias(union olsr_ip_addr *main_add, union olsr_ip_addr *alias, float 
 
   COPY_IP(&adr->alias, alias);
   adr->next_alias = NULL;
+  
+  // If we have an entry for this alias in neighbortable, we better adjust it's
+  // main address, because otherwise a fatal inconsistency between
+  // neighbortable and link_set will be created by way of this mid entry.
+  ne_old = olsr_lookup_neighbor_table_alias(alias);
+  if (ne_old != NULL) {
+     OLSR_PRINTF(2, "Remote main address change detected. Mangling neighbortable to replace %s with %s.\n", olsr_ip_to_string(alias), olsr_ip_to_string(main_add));
+     olsr_delete_neighbor_table(alias);
+     ne_new = olsr_insert_neighbor_table(main_add);
+     // adjust pointers to neighbortable-entry in link_set
+     ne_ref_rp_count = replace_neighbor_link_set(ne_old, ne_new);
+     if (ne_ref_rp_count > 0)
+        OLSR_PRINTF(2, "Performed %d neighbortable-pointer replacements (%p -> %p) in link_set.\n", ne_ref_rp_count, ne_old, ne_new);
+     
+     me_old = mid_lookup_entry_bymain(alias);
+     if (me_old) {
+        // we knew aliases to the previous main address; better forget about
+        // them now.
+        OLSR_PRINTF(2, "I already have an mid entry mapping addresses to this alias address. Removing existing mid entry to preserve consistency of mid_set.\n");
+        mid_delete_node(me_old);
+     }
+  }
   
   insert_mid_tuple(main_add, adr, vtime);
   
@@ -255,17 +281,13 @@ mid_lookup_main_addr(union olsr_ip_addr *adr)
 }
 
 
-
-
-/*
- *Find all aliases for an address.
+/* Find mid entry to an address.
+ * @param adr the main address to search for
  *
- *@param adr the main address to search for
- *
- *@return a linked list of addresses structs
+ * @return a linked list of address structs
  */
-struct mid_address *
-mid_lookup_aliases(union olsr_ip_addr *adr)
+struct mid_entry *
+mid_lookup_entry_bymain(union olsr_ip_addr *adr)
 {
   struct mid_entry *tmp_list;
   olsr_u32_t hash;
@@ -280,11 +302,26 @@ mid_lookup_aliases(union olsr_ip_addr *adr)
       tmp_list = tmp_list->next)
     {
       if(COMP_IP(&tmp_list->main_addr, adr))
-	return tmp_list->aliases;
+	return tmp_list;
     }
 
 
   return NULL;
+}
+
+
+/*
+ *Find all aliases for an address.
+ *
+ *@param adr the main address to search for
+ *
+ *@return a linked list of addresses structs
+ */
+inline struct mid_address *
+mid_lookup_aliases(union olsr_ip_addr *adr)
+{
+  struct mid_entry *tmp = mid_lookup_entry_bymain(adr);
+  return tmp ? tmp->aliases : NULL;
 }
 
 

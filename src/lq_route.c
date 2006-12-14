@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.41 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: lq_route.c,v 1.42 2006/12/14 11:29:20 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -562,8 +562,8 @@ void olsr_calculate_lq_routing_table(void)
     if (link != NULL)
     {
       // find the interface for the found link
-
-      inter = if_ifwithaddr(&link->local_iface_addr);
+      inter = link->if_name ? if_ifwithname(link->if_name) : 
+              if_ifwithaddr(&link->local_iface_addr);
 
       // we may see NULL here if the interface is down, but we have
       // links that haven't timed out, yet

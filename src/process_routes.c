@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.28 2006/11/01 09:20:13 kattemat Exp $
+ * $Id: process_routes.c,v 1.29 2006/12/14 11:29:20 bernd67 Exp $
  */
 
 
@@ -116,8 +116,8 @@ olsr_find_up_route(struct rt_entry *dst, struct rt_entry *table)
 
 
 /**
- *Create a list containing the entries in in_table
- *that does not exist in from_table
+ *Create a list containing the entries in from_table
+ *that do not exist in in_table
  *
  *@param from_table the table to use
  *@param in_table the routes already added

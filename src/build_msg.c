@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.32 2006/01/07 08:16:19 kattemat Exp $
+ * $Id: build_msg.c,v 1.33 2006/12/14 11:29:19 bernd67 Exp $
  */
 
 
@@ -921,7 +921,8 @@ serialize_mid4(struct interface *ifp)
   m->v4.olsr_msgsize = htons(curr_size);
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
-  net_outbuffer_push(ifp, msg_buffer, curr_size);
+  if(curr_size > OLSR_MID_IPV4_HDRSIZE)
+    net_outbuffer_push(ifp, msg_buffer, curr_size);
 
 
   return OLSR_TRUE;
@@ -1018,7 +1019,8 @@ serialize_mid6(struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
 
   //printf("Sending MID (%d bytes)...\n", outputsize);
-  net_outbuffer_push(ifp, msg_buffer, curr_size);
+  if(curr_size > OLSR_MID_IPV6_HDRSIZE)
+    net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   return OLSR_TRUE;
 }

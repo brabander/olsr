@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.23 2005/11/16 23:55:54 tlopatic Exp $
+ * $Id: routing_table.c,v 1.24 2006/12/14 11:29:20 bernd67 Exp $
  */
 
 
@@ -282,7 +282,8 @@ olsr_fill_routing_table_with_neighbors()
 #endif
 		  if(link)
 		    {
-		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
+		      struct interface *iface = link->if_name ? if_ifwithname(link->if_name) :
+		                                if_ifwithaddr(&link->local_iface_addr);
 		      if(iface)
 			{
 			  olsr_insert_routing_table(&addrs2->alias, 
@@ -396,7 +397,8 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 #endif
 		  if(link)
 		    {
-		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
+		    struct interface *iface = link->if_name ? if_ifwithname(link->if_name) :
+		                                if_ifwithaddr(&link->local_iface_addr);
 		      if(iface)
 			{
 			  struct rt_entry *new_route_entry = 
