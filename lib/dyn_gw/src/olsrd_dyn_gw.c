@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.18 2005/06/02 13:59:12 br1 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.19 2007/01/30 16:48:34 bernd67 Exp $
  */
 
 /*
@@ -297,6 +297,7 @@ looped_checks(void *foo)
     while(nanosleep(&sleeptime_spec, &remainder_spec) < 0)
       sleeptime_spec = remainder_spec;
   }
+  return NULL;
 }
 
 
