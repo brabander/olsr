@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.35 2006/11/15 23:07:59 bernd67 Exp $
+ * $Id: interfaces.h,v 1.36 2007/01/30 16:52:41 bernd67 Exp $
  */
 
 
@@ -156,7 +156,7 @@ struct interface
   struct olsr_netbuf netbuf;                    /* the buffer to construct the packet data */
 
   struct        if_gen_property *gen_properties;/* Generic interface properties */
-
+  
   int           ttl_index; /* index in TTL array for fish-eye */
 
   struct	interface *int_next;
