@@ -4,7 +4,7 @@
 
 ARCH := $(shell uname -m)
 DESTDIR ?=
-LIBDIR =	$(DESTDIR)$(shell [ "$(ARCH)" = "x86_64" && -d "/usr/lib64" ] && echo "/usr/lib64" || echo "/usr/lib")
+LIBDIR =	$(DESTDIR)$(shell if [ "$(ARCH)" = "x86_64" -a -d "/usr/lib64" ]; then echo "/usr/lib64"; else echo "/usr/lib"; fi)
 
 SRCS += 	$(wildcard src/linux/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h) $(wildcard src/unix/*.h)
