@@ -23,7 +23,7 @@ LDFLAGS = -bundle -flat_namespace -undefined suppress
 else
 LDFLAGS = -dynamic
 endif
-		
+
 OS_LIB_PTHREAD =
 OS_LIB_DYNLOAD =
 
