@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.36 2006/07/27 15:53:16 kattemat Exp $
+ * $Id: scheduler.c,v 1.37 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -83,6 +83,7 @@ trigger_dijkstra(void *dummy)
 
   changes_neighborhood = OLSR_TRUE;
   changes_topology = OLSR_TRUE;
+  changes_force = OLSR_TRUE;
 }
 
 /**

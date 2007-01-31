@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.21 2006/10/11 20:58:45 tlopatic Exp $
+ * $Id: lq_packet.c,v 1.22 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -150,7 +150,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   int i;
   struct neighbor_entry *walker;
   struct link_entry *link;
-  static int ttl_list[] = { MAX_TTL, 3, 2, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1, 0 };
+  static int ttl_list[] = { 1, 2, 1, 4, 1, 2, 1, 8, 1, 2, 1, 4, 1, 2, 1, MAX_TTL-1, 0};
 
   // remember that we have generated an LQ TC message; this is
   // checked in net_output()
@@ -167,9 +167,13 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   if (olsr_cnf->lq_fish > 0)
   {
+    // SVEN_OLA: Too lazy to find the different iface inits. This will do it too.
+    if (outif->ttl_index >= (int)(sizeof(ttl_list) / sizeof(ttl_list[0])))
+      outif->ttl_index = 0;
+    
     if (ttl_list[outif->ttl_index] == 0)
       outif->ttl_index = 0;
-
+  
     lq_tc->comm.ttl = ttl_list[outif->ttl_index++];
 
     OLSR_PRINTF(3, "Creating LQ TC with TTL %d.\n", lq_tc->comm.ttl);
@@ -223,8 +227,10 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
           link = get_best_link_to_neighbor(&neigh->main);
 
-          neigh->link_quality = link->loss_link_quality;
-          neigh->neigh_link_quality = link->neigh_link_quality;
+          if (link) {
+            neigh->link_quality = link->loss_link_quality;
+            neigh->neigh_link_quality = link->neigh_link_quality;
+          }
 
           // queue the neighbour entry
 

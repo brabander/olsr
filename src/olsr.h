@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.24 2005/05/29 12:47:45 br1 Exp $
+ * $Id: olsr.h,v 1.25 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -49,6 +49,7 @@
 extern olsr_bool changes_topology;
 extern olsr_bool changes_neighborhood;
 extern olsr_bool changes_hna;
+extern olsr_bool changes_force;
 
 void
 register_pcf(int (*)(int, int, int));

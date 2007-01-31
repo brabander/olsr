@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.h,v 1.9 2005/05/29 12:47:45 br1 Exp $
+ * $Id: process_routes.h,v 1.10 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -49,6 +49,34 @@
 
 extern struct rt_entry old_routes[HASHSIZE];
 extern struct rt_entry old_hna[HASHSIZE];
+
+void
+olsr_init_export_route(void);
+
+void
+olsr_addroute_add_function(int (*)(struct rt_entry*), olsr_u8_t);
+
+int
+olsr_addroute_remove_function(int (*)(struct rt_entry*), olsr_u8_t);
+
+void
+olsr_delroute_add_function(int (*)(struct rt_entry*), olsr_u8_t);
+
+int
+olsr_delroute_remove_function(int (*)(struct rt_entry*), olsr_u8_t);
+
+int
+olsr_export_add_route (struct rt_entry*); 
+
+int
+olsr_export_del_route (struct rt_entry*); 
+
+int
+olsr_export_add_route6 (struct rt_entry*); 
+
+int
+olsr_export_del_route6 (struct rt_entry*); 
+
 
 int
 olsr_init_old_table(void);

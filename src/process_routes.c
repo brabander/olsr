@@ -3,6 +3,9 @@
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
+ * export_route_entry interface added by Immo 'FaUl Wehrenberg 
+ * <immo@chaostreff-dortmund.de>
+ *
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions 
  * are met:
@@ -36,9 +39,8 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.29 2006/12/14 11:29:20 bernd67 Exp $
+ * $Id: process_routes.c,v 1.30 2007/01/31 12:36:50 bernd67 Exp $
  */
-
 
 #include "defs.h"
 #include "olsr.h"
@@ -51,9 +53,161 @@
 #define strerror(x) StrError(x)
 #endif
 
+struct export_route_entry
+{
+  olsr_u8_t type;       /* AF_INET/AF_INET6 */
+  int (*function)(struct rt_entry*);
+  struct export_route_entry *next;
+};
+
+
+static struct export_route_entry *add_routes;
+static struct export_route_entry *del_routes;
+
 
 struct rt_entry old_routes[HASHSIZE];
 struct rt_entry old_hna[HASHSIZE];
+
+void 
+olsr_addroute_add_function(int (*function)(struct rt_entry*), olsr_u8_t type) 
+{
+  struct export_route_entry *tmp;
+  tmp = olsr_malloc(sizeof *tmp, "olsr_addroute_add_function");
+  tmp->type = type;
+  tmp->function = function;
+  tmp->next = add_routes;
+  add_routes = tmp;
+}
+
+void 
+olsr_delroute_add_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+{
+  struct export_route_entry *tmp;
+  tmp = olsr_malloc(sizeof *tmp, "olsr_delroute_add_function");
+  tmp->type = type;
+  tmp->function = function;
+  tmp->next = del_routes;
+  del_routes = tmp;
+}
+
+
+int 
+olsr_addroute_remove_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+{
+  struct export_route_entry *tmp, *prev = NULL /* Make compiler happy */; 
+  tmp = add_routes;
+  while (tmp) 
+    {
+      if (function == tmp->function && type == tmp->type) 
+	{
+	  if (tmp == add_routes) 
+	    {
+	      add_routes = add_routes->next;
+	      free (tmp);
+	      return 1;
+	    }
+	  else 
+	    {
+	      prev->next = tmp->next;
+	      free (tmp);
+	      return 1;
+	    }
+	}
+      prev = tmp;
+      tmp = tmp->next;
+    }
+  return 0;
+}
+
+int
+olsr_delroute_remove_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+{
+  struct export_route_entry *tmp, *prev = NULL /* Make compiler happy */;
+  tmp = del_routes;
+  while (tmp) 
+    {
+      if (function == tmp->function && type == tmp->type) 
+	{
+	  if (tmp == del_routes) 
+	    {
+	      del_routes = del_routes->next;
+	      free (tmp);
+	      return 1;
+	    }
+	  else 
+	    {
+	      prev->next = tmp->next;
+	      free (tmp);
+	      return 1; 
+	    }
+	}
+      prev = tmp;
+      tmp = tmp->next;
+    }
+  return 0;
+}
+
+void 
+olsr_init_export_route() 
+{
+  olsr_addroute_add_function(&olsr_ioctl_add_route, AF_INET);
+  olsr_addroute_add_function(&olsr_ioctl_add_route6, AF_INET6);
+  olsr_delroute_add_function(&olsr_ioctl_del_route, AF_INET);
+  olsr_delroute_add_function(&olsr_ioctl_del_route6, AF_INET6);
+}
+
+int
+olsr_export_add_route (struct rt_entry *e) 
+{
+  int retval = 0;
+  struct export_route_entry *tmp;
+  for (tmp = add_routes; tmp; tmp = tmp->next)
+    {
+      if (tmp->type == AF_INET)
+	retval = tmp->function(e);
+    }
+  return retval;
+}
+
+int
+olsr_export_add_route6 (struct rt_entry *e) 
+{
+  int retval = 0;
+  struct export_route_entry *tmp;
+  for (tmp = add_routes; tmp; tmp = tmp->next)
+    {
+      if (tmp->type == AF_INET6)
+	retval = tmp->function(e);
+    }
+  return retval;
+}
+
+int
+olsr_export_del_route (struct rt_entry *e) 
+{
+  int retval = 0;
+  struct export_route_entry *tmp;
+  for (tmp = del_routes; tmp; tmp = tmp->next)
+    {
+      if (tmp->type == AF_INET)
+	retval = tmp->function(e);
+    }
+  return retval;
+}
+
+int
+olsr_export_del_route6 (struct rt_entry *e) 
+{
+  int retval = 0;
+  struct export_route_entry *tmp;
+  for (tmp = del_routes; tmp; tmp = tmp->next)
+    {
+      if (tmp->type == AF_INET6)
+	retval = tmp->function(e);
+    }
+  return retval;
+}
+
 
 
 int
@@ -348,9 +502,9 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 		    if(!olsr_cnf->host_emul)
 		      {
 			if(olsr_cnf->ip_version == AF_INET)
-			  error = olsr_ioctl_del_route(destination_ptr->destination);
+			  error = olsr_export_del_route(destination_ptr->destination);
 			else
-			  error = olsr_ioctl_del_route6(destination_ptr->destination);
+			  error = olsr_export_del_route6(destination_ptr->destination);
 			
 			if(error < 0)
 			  {
@@ -434,9 +588,9 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		if(!olsr_cnf->host_emul)
 		  {
 		    if(olsr_cnf->ip_version == AF_INET)
-		      error=olsr_ioctl_add_route(destination_kernel->destination);
+		      error=olsr_export_add_route(destination_kernel->destination);
 		    else
-		      error=olsr_ioctl_add_route6(destination_kernel->destination);
+		      error=olsr_export_add_route6(destination_kernel->destination);
 		    
 		    if(error < 0)
 		      {

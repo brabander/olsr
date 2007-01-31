@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.c,v 1.9 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: hashing.c,v 1.10 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -58,7 +58,7 @@ olsr_hashing(union olsr_ip_addr *address)
 
   if(olsr_cnf->ip_version == AF_INET)
     /* IPv4 */  
-    hash = (ntohl(address->v4));
+    hash = address->v4x[0] ^ address->v4x[1] ^ address->v4x[2] ^ address->v4x[3];
   else
     {
       /* IPv6 */

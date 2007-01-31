@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.20 2006/11/06 23:46:47 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.21 2007/01/31 12:36:49 bernd67 Exp $
  */
 
 
@@ -71,13 +71,13 @@
 #include "md5.h"
 
 static void
-MD5_checksum(char *data, olsr_u16_t data_len, char *hashbuf)
+MD5_checksum(const olsr_u8_t *data, const olsr_u16_t data_len, olsr_u8_t *hashbuf)
 {
   MD5_CTX context;
 
   MD5Init(&context);
-  MD5Update(&context, (unsigned char *)data, data_len);
-  MD5Final((unsigned char *)hashbuf, &context);
+  MD5Update(&context, data, data_len);
+  MD5Final(hashbuf, &context);
 }
 
 #define CHECKSUM MD5_checksum
@@ -395,7 +395,7 @@ check_auth(char *pck, int *size)
  * increase the size
  */
 int
-add_signature(char *pck, int *size)
+add_signature(olsr_u8_t *pck, int *size)
 {
   struct s_olsrmsg *msg;
 #ifdef DEBUG
@@ -431,6 +431,8 @@ add_signature(char *pck, int *size)
   /* Set the new size */
   *size = *size + sizeof(struct s_olsrmsg);
   
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, pck, *size - SIGNATURE_SIZE);
@@ -439,7 +441,7 @@ add_signature(char *pck, int *size)
   
   /* Create the hash */
   CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + KEYLENGTH, &pck[*size - SIGNATURE_SIZE]);
- 
+  } 
 
 #ifdef DEBUG
   olsr_printf(1, "Signature message:\n");
@@ -470,7 +472,7 @@ int
 validate_packet(char *pck, int *size)
 {
   int packetsize;
-  char sha1_hash[SIGNATURE_SIZE];
+  olsr_u8_t sha1_hash[SIGNATURE_SIZE];
   struct s_olsrmsg *sig;
   time_t rec_time;
 
@@ -540,17 +542,18 @@ validate_packet(char *pck, int *size)
   //olsr_printf(1, "Packet sane...\n");
 
  one_checksum_SHA:
-
+ 
+ {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, pck, *size - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[*size - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
-
   /* generate SHA-1 */
   CHECKSUM(checksum_cache, *size - SIGNATURE_SIZE + KEYLENGTH, sha1_hash);
-
+ }
 
 #ifdef DEBUG
   olsr_printf(1, "Recevied hash:\n");
@@ -683,6 +686,8 @@ send_challenge(union olsr_ip_addr *new_host)
 
   olsr_printf(3, "[ENC]Size: %d\n", sizeof(struct challengemsg));
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, &cmsg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
@@ -693,7 +698,7 @@ send_challenge(union olsr_ip_addr *new_host)
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   cmsg.signature);
-
+  }
   olsr_printf(3, "[ENC]Sending timestamp request to %s challenge 0x%x\n", 
 	      olsr_ip_to_string(new_host),
 	      challenge);
@@ -733,7 +738,7 @@ int
 parse_cres(char *in_msg)
 {
   struct c_respmsg *msg;
-  char sha1_hash[SIGNATURE_SIZE];
+  olsr_u8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
 
   msg = (struct c_respmsg *)in_msg;
@@ -751,6 +756,8 @@ parse_cres(char *in_msg)
 
   /* Check signature */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, msg, sizeof(struct c_respmsg) - SIGNATURE_SIZE);
@@ -761,6 +768,7 @@ parse_cres(char *in_msg)
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   sha1_hash);
+  }
   
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
@@ -782,6 +790,8 @@ parse_cres(char *in_msg)
   /* Generate the digest */
   olsr_printf(3, "[ENC]Entry-challenge 0x%x\n", entry->challenge);
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* First the challenge received */
   memcpy(checksum_cache, &entry->challenge, 4);
   /* Then the local IP */
@@ -791,7 +801,7 @@ parse_cres(char *in_msg)
   CHECKSUM(checksum_cache, 
 	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   sha1_hash);
-
+  }
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
@@ -830,7 +840,7 @@ int
 parse_rres(char *in_msg)
 {
   struct r_respmsg *msg;
-  char sha1_hash[SIGNATURE_SIZE];
+  olsr_u8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
 
   msg = (struct r_respmsg *)in_msg;
@@ -846,6 +856,8 @@ parse_rres(char *in_msg)
 
   /* Check signature */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, msg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
@@ -856,6 +868,7 @@ parse_rres(char *in_msg)
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   sha1_hash);
+  }
   
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
@@ -877,6 +890,8 @@ parse_rres(char *in_msg)
   /* Generate the digest */
   olsr_printf(3, "[ENC]Entry-challenge 0x%x\n", entry->challenge);
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* First the challenge received */
   memcpy(checksum_cache, &entry->challenge, 4);
   /* Then the local IP */
@@ -886,7 +901,7 @@ parse_rres(char *in_msg)
   CHECKSUM(checksum_cache, 
 	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   sha1_hash);
-
+  }
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
@@ -920,7 +935,7 @@ int
 parse_challenge(char *in_msg)
 {
   struct challengemsg *msg;
-  char sha1_hash[SIGNATURE_SIZE];
+  olsr_u8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
   olsr_u32_t hash;
 
@@ -968,6 +983,8 @@ parse_challenge(char *in_msg)
 
   /* Check signature */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, msg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
@@ -978,7 +995,7 @@ parse_challenge(char *in_msg)
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   sha1_hash);
-  
+  }  
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
       olsr_printf(1, "[ENC]Signature missmatch in challenge!\n");
@@ -1047,6 +1064,8 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
 
   /* Create digest of received challenge + IP */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the challenge received */
   memcpy(checksum_cache, &chal_in, 4);
@@ -1057,10 +1076,12 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   CHECKSUM(checksum_cache, 
 	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   crmsg.res_sig);
-
+  }
 
   /* Now create the digest of the message and the key */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, &crmsg, sizeof(struct c_respmsg) - SIGNATURE_SIZE);
@@ -1071,6 +1092,7 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   crmsg.signature);
+  }
 
   olsr_printf(3, "[ENC]Sending challenge response to %s challenge 0x%x\n", 
 	      olsr_ip_to_string(to),
@@ -1120,6 +1142,8 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 
   /* Create digest of received challenge + IP */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the challenge received */
   memcpy(checksum_cache, &chal_in, 4);
@@ -1130,10 +1154,12 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   CHECKSUM(checksum_cache, 
 	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
 	   rrmsg.res_sig);
-
+  }
 
   /* Now create the digest of the message and the key */
 
+  {
+  olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
   /* First the OLSR packet + signature message - digest */
   memcpy(checksum_cache, &rrmsg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
@@ -1144,6 +1170,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
   CHECKSUM(checksum_cache, 
 	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
 	   rrmsg.signature);
+  }
 
   olsr_printf(3, "[ENC]Sending response response to %s\n", 
 	      olsr_ip_to_string(to));

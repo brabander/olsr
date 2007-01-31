@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.48 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: olsr.c,v 1.49 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 /**
@@ -68,6 +68,7 @@
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
+olsr_bool changes_force;
 
 /**
  * Process changes functions
@@ -142,6 +143,11 @@ olsr_process_changes()
     OLSR_PRINTF(3, "CHANGES IN HNA\n")
 #endif
   
+  if(!changes_force &&
+     2 <= olsr_cnf->lq_level &&
+     0 >= olsr_cnf->lq_dlimit)
+    return;
+    
   if(!changes_neighborhood &&
      !changes_topology &&
      !changes_hna)
@@ -171,11 +177,6 @@ olsr_process_changes()
           olsr_calculate_routing_table();
           olsr_calculate_hna_routes();
         }
-
-      else
-        {
-          olsr_calculate_lq_routing_table();
-        }
     }
   
   else if (changes_topology)
@@ -187,11 +188,6 @@ olsr_process_changes()
           olsr_calculate_routing_table();
           olsr_calculate_hna_routes();
         }
-
-      else
-        {
-          olsr_calculate_lq_routing_table();
-        }
     }
 
   else if (changes_hna)
@@ -202,11 +198,11 @@ olsr_process_changes()
         {
           olsr_calculate_hna_routes();
         }
-
-      else
-        {
-          olsr_calculate_lq_routing_table();
-        }
+    }
+  
+  if (olsr_cnf->lq_level >= 2)
+    {
+      olsr_calculate_lq_routing_table();
     }
   
   if (olsr_cnf->debug_level > 0)
@@ -239,6 +235,7 @@ olsr_process_changes()
   changes_neighborhood = OLSR_FALSE;
   changes_topology = OLSR_FALSE;
   changes_hna = OLSR_FALSE;
+  changes_force = OLSR_FALSE;
 
 
   return;

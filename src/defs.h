@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.54 2006/11/15 23:07:59 bernd67 Exp $
+ * $Id: defs.h,v 1.55 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -70,7 +70,7 @@
 
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
-#define UDP_IPV6_HDRSIZE        48
+#define UDP_IPV6_HDRSIZE        62
 
 #define MIN_PACKET_SIZE(ver)  (int)(sizeof(olsr_u8_t) * ((ver == AF_INET) ? 4 : 7))
 /* Debug helper macro */

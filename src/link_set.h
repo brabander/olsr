@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.29 2006/12/14 11:29:19 bernd67 Exp $
+ * $Id: link_set.h,v 1.30 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -116,6 +116,9 @@ get_hold_time_neighbor(void);
 
 void
 olsr_init_link_set(void);
+
+void
+del_if_link_entries(union olsr_ip_addr *);
 
 struct link_entry *
 get_best_link_to_neighbor(union olsr_ip_addr *);

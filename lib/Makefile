@@ -1,4 +1,4 @@
-SUBDIRS = dot_draw dyn_gw httpinfo mini nameservice secure tas bmf
+SUBDIRS := $(shell find -maxdepth 1 -type d -not -name ".*" -not -name "CVS" -printf "%f\n")
 
 .PHONY: $(SUBDIRS)
 

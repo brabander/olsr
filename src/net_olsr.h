@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.5 2006/11/15 21:13:52 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.6 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -49,7 +49,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-typedef int (*packet_transform_function)(char *, int *);
+typedef int (*packet_transform_function)(olsr_u8_t *, int *);
 
 #ifdef USE_LIBNET
 char *

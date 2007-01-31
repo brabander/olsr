@@ -36,10 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.1 2005/01/22 14:30:57 tlopatic Exp $
+ * $Id: lq_avl.c,v 1.2 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include <stddef.h>
+#ifndef DISABLE_SVEN_OLA
+#include <time.h>
+#endif
 
 #include "lq_avl.h"
 
@@ -52,11 +55,33 @@ void avl_init(struct avl_tree *tree, int (*comp)(void *, void *))
   tree->comp = comp;
 }
 
+#ifndef DISABLE_SVEN_OLA
+static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
+{
+  if (*(unsigned int *)key < *(unsigned int *)node->key) {
+    if (node->left != NULL) {
+      return avl_find_rec_ipv4(node->left, key);
+    }
+  }
+  else if (*(unsigned int *)key > *(unsigned int *)node->key) {
+    if (node->right != NULL) {
+      return avl_find_rec_ipv4(node->right, key);
+    }
+  }
+  return node;
+}
+#endif
+
 static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
                                      int (*comp)(void *, void *))
 {
   int diff;
 
+#ifndef DISABLE_SVEN_OLA
+  if (0 == comp) {
+    return avl_find_rec_ipv4(node, key);
+  }
+#endif
   diff = (*comp)(key, node->key);
 
   if (diff < 0)
@@ -87,6 +112,13 @@ struct avl_node *avl_find(struct avl_tree *tree, void *key)
 
   node = avl_find_rec(tree->root, key, tree->comp);
 
+#ifndef DISABLE_SVEN_OLA
+  if (0 == tree->comp) {
+    if (0 != svenola_avl_comp_ipv4(node->key, key))
+      return NULL;
+  }
+  else
+#endif
   if ((*tree->comp)(node->key, key) != 0)
     return NULL;
 
@@ -228,6 +260,12 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
 
   node = avl_find_rec(tree->root, new->key, tree->comp);
 
+#ifndef DISABLE_SVEN_OLA
+  if (0 == tree->comp) {
+    diff = svenola_avl_comp_ipv4(new->key, node->key);
+  }
+  else
+#endif
   diff = (*tree->comp)(new->key, node->key);
 
   if (diff == 0)

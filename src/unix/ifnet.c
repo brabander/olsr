@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.40 2006/11/15 23:07:59 bernd67 Exp $
+ * $Id: ifnet.c,v 1.41 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -57,6 +57,7 @@
 #include "mantissa.h"
 #include "lq_packet.h"
 #include "log.h"
+#include "link_set.h"
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -410,6 +411,8 @@ chk_if_changed(struct olsr_if *iface)
   OLSR_PRINTF(1, "Removing interface %s\n", iface->name)
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
+  del_if_link_entries(&ifp->ip_addr);
+
   /*
    *Call possible ifchange functions registered by plugins  
    */
@@ -712,6 +715,17 @@ add_hemu_if(struct olsr_if *iface)
   return 1;
 }
 
+static char basename[32];
+char* if_basename(char* name);
+char* if_basename(char* name)
+{
+	char *p = strchr(name, ':');
+	if (0 == p || p - name >= (int)(sizeof(basename) / sizeof(basename[0]) - 1)) return name;
+	memcpy(basename, name, p - name);
+	basename[p - name] = 0;
+	return basename;
+}
+
 /**
  * Initializes a interface described by iface,
  * if it is set up and is of the correct type.
@@ -856,10 +870,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 	}
       
       /* Deactivate IP spoof filter */
-      deactivate_spoof(ifr.ifr_name, iface->index, olsr_cnf->ip_version);
+      deactivate_spoof(if_basename(ifr.ifr_name), iface->index, olsr_cnf->ip_version);
       
       /* Disable ICMP redirects */
-      disable_redirects(ifr.ifr_name, iface->index, olsr_cnf->ip_version);
+      disable_redirects(if_basename(ifr.ifr_name), iface->index, olsr_cnf->ip_version);
       
     }
   
@@ -923,7 +937,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       
-  strcpy(ifp->int_name, ifr.ifr_name);
+  strcpy(ifp->int_name, if_basename(ifr.ifr_name));
   /* Segfaults if using strncpy(IFNAMSIZ) why oh why?? */
   ifp->int_next = ifnet;
   ifnet = ifp;

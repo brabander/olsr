@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.30 2006/12/12 11:22:15 kattemat Exp $
+ * $Id: oparse.y,v 1.31 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -722,6 +722,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
       return -1;
     }
   h->netmask.v4 = in.s_addr;
+  h->net.v4 &= h->netmask.v4;
   /* Queue */
   h->next = cnf->hna4_entries;
   cnf->hna4_entries = h;

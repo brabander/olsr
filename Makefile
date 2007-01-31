@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.73 2006/11/15 22:09:16 bernd67 Exp $
+# $Id: Makefile,v 1.74 2007/01/31 12:36:49 bernd67 Exp $
 
 VERS =		0.5.0pre
 
@@ -144,6 +144,11 @@ dyn_gw:
 		$(MAKE) -C lib/dyn_gw clean
 		$(MAKE) -C lib/dyn_gw
 		$(MAKE) -C lib/dyn_gw install
+
+dyn_gw_plain:
+		$(MAKE) -C lib/dyn_gw_plain clean
+		$(MAKE) -C lib/dyn_gw_plain
+		$(MAKE) -C lib/dyn_gw_plain install
 
 secure:
 		$(MAKE) -C lib/secure clean

@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: secure_messages.h,v 1.1 2005/05/29 12:47:44 br1 Exp $
+ * $Id: secure_messages.h,v 1.2 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -128,7 +128,7 @@ struct challengemsg
   olsr_u32_t    destination;
   olsr_u32_t    challenge;
 
-  char          signature[SIGSIZE];
+  olsr_u8_t     signature[SIGSIZE];
 
 };
 
@@ -148,10 +148,9 @@ struct c_respmsg
   olsr_u32_t    challenge;
   time_t        timestamp;
 
-  char          res_sig[SIGSIZE];
+  olsr_u8_t     res_sig[SIGSIZE];
 
-  char          signature[SIGSIZE];
-
+  olsr_u8_t     signature[SIGSIZE];
 };
 
 
@@ -168,9 +167,9 @@ struct r_respmsg
   olsr_u32_t    destination;
   time_t        timestamp;
 
-  char          res_sig[SIGSIZE];
+  olsr_u8_t     res_sig[SIGSIZE];
 
-  char          signature[SIGSIZE];
+  olsr_u8_t     signature[SIGSIZE];
 };
 
 

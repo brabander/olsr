@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.19 2006/01/07 08:16:24 kattemat Exp $
+ * $Id: kernel_routes.c,v 1.20 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -240,9 +240,8 @@ olsr_ioctl_del_route(struct rt_entry *destination)
   inet_ntop(AF_INET, &destination->rt_mask.v4, mask_str, 16);
   inet_ntop(AF_INET, &destination->rt_router.v4, router_str, 16);
 
-  OLSR_PRINTF(1, "(ioctl)Deleting route with metric %d to %s/%s via %s/%s.\n",
-              destination->rt_metric, dst_str, mask_str, router_str,
-              destination->rt_if->int_name)
+  OLSR_PRINTF(1, "(ioctl)Deleting route with metric %d to %s/%s via %s.\n",
+              destination->rt_metric, dst_str, mask_str, router_str)
   
   memset(&kernel_route,0,sizeof(struct rtentry));
 

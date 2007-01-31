@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.89 2006/04/14 05:04:16 kattemat Exp $
+ * $Id: main.c,v 1.90 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -282,6 +282,9 @@ main(int argc, char *argv[])
   /* Initialize parser */
   olsr_init_parser();
 
+  /* Initialize route-exporter */
+  olsr_init_export_route();
+
   /* Initialize message sequencnumber */
   init_msg_seqno();
 
@@ -510,7 +513,7 @@ print_usage()
   fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
   fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
   fprintf(stderr, "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>] \n"); 
-
+  fprintf(stderr, "  [-lql <LQ level>] [-lqw <LQ winsize>]\n");
 }
 
 

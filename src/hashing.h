@@ -36,14 +36,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.h,v 1.8 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: hashing.h,v 1.9 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
 #ifndef _OLSR_HASHING
 #define _OLSR_HASHING
 
-#define	HASHSIZE	32
+#define	HASHSIZE	128
 #define	HASHMASK	(HASHSIZE - 1)
 
 #include "olsr_types.h"

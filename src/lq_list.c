@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_list.c,v 1.3 2004/12/04 17:06:57 tlopatic Exp $
+ * $Id: lq_list.c,v 1.4 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include <stdlib.h>
@@ -48,6 +48,7 @@ void list_init(struct list *list)
   list->tail = NULL;
 }
 
+#ifdef DISABLE_SVEN_OLA
 struct list_node *list_get_head(struct list *list)
 {
   return list->head;
@@ -67,6 +68,7 @@ struct list_node *list_get_prev(struct list_node *node)
 {
   return node->prev;
 }
+#endif
 
 void list_add_head(struct list *list, struct list_node *node)
 {

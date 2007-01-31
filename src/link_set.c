@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.64 2006/12/14 11:29:19 bernd67 Exp $
+ * $Id: link_set.c,v 1.65 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 
@@ -379,6 +379,69 @@ static void set_loss_link_multiplier(struct link_entry *entry)
   // store the multiplier
 
   entry->loss_link_multiplier = val;
+}
+
+/**
+ *Delete all interface link entries
+ *
+ *@param interface ip address
+ */
+
+void
+del_if_link_entries(union olsr_ip_addr *int_addr)
+{
+  struct link_entry *tmp_link_set, *last_link_entry;
+
+  if(link_set == NULL)
+    return;
+
+  tmp_link_set = link_set;
+  last_link_entry = NULL;
+
+  while(tmp_link_set)
+    {
+
+      if(COMP_IP(int_addr, &tmp_link_set->local_iface_addr))
+        {
+          if(last_link_entry != NULL)
+            {
+              last_link_entry->next = tmp_link_set->next;
+
+              /* Delete neighbor entry */
+              if(tmp_link_set->neighbor->linkcount == 1)
+                olsr_delete_neighbor_table(&tmp_link_set->neighbor->neighbor_main_addr);
+              else
+                tmp_link_set->neighbor->linkcount--;
+
+              //olsr_delete_neighbor_if_no_link(&tmp_link_set->neighbor->neighbor_main_addr);
+              changes_neighborhood = OLSR_TRUE;
+
+              free(tmp_link_set);
+              tmp_link_set = last_link_entry;
+            }
+          else
+            {
+              link_set = tmp_link_set->next; /* CHANGED */
+
+              /* Delete neighbor entry */
+              if(tmp_link_set->neighbor->linkcount == 1)
+                olsr_delete_neighbor_table(&tmp_link_set->neighbor->neighbor_main_addr);
+              else
+                tmp_link_set->neighbor->linkcount--;
+
+              changes_neighborhood = OLSR_TRUE;
+
+              free(tmp_link_set);
+              tmp_link_set = link_set;
+              continue;
+            }
+        }
+
+      last_link_entry = tmp_link_set;
+      tmp_link_set = tmp_link_set->next;
+    }
+
+  return;
 }
 
 /**
@@ -959,8 +1022,9 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   entry->loss_link_quality =
     (float)(entry->total_packets - entry->lost_packets) /
-    (float)(entry->loss_window_size);
-
+    (float)(entry->loss_window_size < (2 * 4) ? entry->loss_window_size: 
+    4 * ((entry->loss_window_size / 4 - 1) * entry->total_packets + entry->loss_window_size) / entry->loss_window_size);
+    
   // multiply the calculated link quality with the user-specified multiplier
 
   entry->loss_link_quality *= entry->loss_link_multiplier;

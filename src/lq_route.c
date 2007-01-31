@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.42 2006/12/14 11:29:20 bernd67 Exp $
+ * $Id: lq_route.c,v 1.43 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -77,6 +77,7 @@ static int avl_comp_ipv6(void *ip1, void *ip2)
   return memcmp(ip1, ip2, olsr_cnf->ipsize);
 }
 
+#ifdef DISABLE_SVEN_OLA
 static int avl_comp_ipv4(void *ip1, void *ip2)
 {
   if (*(unsigned int *)ip1 < *(unsigned int *)ip2)
@@ -87,6 +88,7 @@ static int avl_comp_ipv4(void *ip1, void *ip2)
 
   return 1;
 }
+#endif
 
 static int (*avl_comp)(void *, void *);
 
@@ -204,7 +206,16 @@ static void create_vertex_list_rec(struct list *vertex_list,
     create_vertex_list_rec(vertex_list, node->left, comp);
 
   // add the vertex to the list, if it's not us
-
+#ifndef DISABLE_SVEN_OLA
+  if (NULL == comp) {
+    if (svenola_avl_comp_ipv4(&olsr_cnf->main_addr, node->key) != 0)
+    {
+      vert->node.data = vert;
+      list_add_tail(vertex_list, &vert->node);
+    }
+  }
+  else
+#endif
   if ((*comp)(&olsr_cnf->main_addr, node->key) != 0)
   {
     vert->node.data = vert;
@@ -266,6 +277,156 @@ static void free_everything(struct list *vertex_list)
 }
 
 // XXX - bad complexity
+#define SVEN_OPT
+#undef SVEN_OPT_DBG
+
+/*
+ * The function extract_best() is most expensive (>50% CPU in profiling).
+ * It is called in two modes: while doing Dijkstra route calculation and
+ * while searching for a direct route/hna. The latter can be optimized
+ * because the stored verices do not change from call to call and it is
+ * more sufficient to have them sorted/popped from a list rather than 
+ * searching the complete list by every call. Sven-Ola@gmx.de, 11/2006
+ */
+ 
+#ifdef SVEN_OPT
+static struct dijk_vertex **etx_cache = 0;
+static int etx_cache_count;
+static int etx_cache_get;
+#ifdef SVEN_OPT_DBG
+static int etx_cache_saved = 0;
+#endif
+
+static int etx_cache_compare(const void *a, const void *b)
+{
+  // Oh jeah. I love this macro assembler :)
+  
+  if ((*(struct dijk_vertex **)a)->path_etx > (*(struct dijk_vertex **)b)->path_etx) return 1;
+  if ((*(struct dijk_vertex **)a)->path_etx < (*(struct dijk_vertex **)b)->path_etx) return -1;
+  
+  // This is for debugging only: etx==etx then compare pointers
+  // to make it possible to compare to the original search algo.
+  if (*(struct dijk_vertex **)a > *(struct dijk_vertex **)b) return 1;
+  if (*(struct dijk_vertex **)a < *(struct dijk_vertex **)b) return -1;
+  
+  return 0;
+}
+
+static struct dijk_vertex *extract_best_route(struct list *vertex_list)
+{
+#ifdef SVEN_OPT_DBG
+  float best_etx = INFINITE_ETX + 1.0;
+#endif
+  struct list_node *node;
+  struct dijk_vertex *vert;
+  struct dijk_vertex *res = NULL;
+
+#ifdef SVEN_OPT_DBG
+  node = list_get_head(vertex_list);
+
+  // loop through all vertices
+  
+  while (node != NULL)
+  {
+    vert = node->data;
+
+    // see whether the current vertex is better than what we have
+
+    if (!vert->done && vert->path_etx < best_etx)
+    {
+      best_etx = vert->path_etx;
+      res = vert;
+    }
+    else if (!vert->done && vert->path_etx == best_etx && vert < res)
+    {
+      // Otherwise order is undefined if etx==etx and debug will complain
+      best_etx = vert->path_etx;
+      res = vert;
+    }
+
+    node = list_get_next(node);
+  }
+#endif
+  if (NULL == etx_cache)
+  {
+    int count = 0;
+    node = list_get_head(vertex_list);
+    while (node != NULL)
+    {
+      vert = node->data;
+      if (!vert->done && vert->path_etx < INFINITE_ETX) count++;
+      node = list_get_next(node);
+    }
+    if (0 < count)
+    {
+      etx_cache = olsr_malloc(sizeof(etx_cache[0]) * count, "ETX Cache");
+#ifdef SVEN_OPT_DBG
+      printf("count=%d, Malloc(%d)=%p\n", count, sizeof(etx_cache[0]) * count, etx_cache);
+#endif
+      node = list_get_head(vertex_list);
+      etx_cache_count = 0;
+      etx_cache_get = 0;
+      while (node != NULL)
+      {
+        vert = node->data;
+        if (!vert->done && vert->path_etx < INFINITE_ETX)
+        {
+          etx_cache[etx_cache_count] = vert;
+          etx_cache_count++;
+        }
+        node = list_get_next(node);
+      }
+#ifdef SVEN_OPT_DBG
+      printf("qsort(etx_cache_count=%d)\n", etx_cache_count);
+#endif
+      qsort(etx_cache, etx_cache_count, sizeof(etx_cache[0]), etx_cache_compare);
+#ifdef SVEN_OPT_DBG
+      if (0 < etx_cache_count)
+      {
+        int i = 0; 
+        while(i < etx_cache_count && i < 10)
+        {
+          printf("%d: %p=%f\n", i, etx_cache[i], etx_cache[i]->path_etx);
+          i++;
+        }
+      }
+#endif
+    }
+  }
+
+#ifdef SVEN_OPT_DBG
+  if (NULL != etx_cache)
+  {
+    struct dijk_vertex *rescache = NULL;
+    if (etx_cache_get < etx_cache_count)
+    {
+      rescache = etx_cache[etx_cache_get++];
+    }
+    if (res != rescache)
+    {
+      printf("miss: etx_cache_get=%d, res=%p,%f != rescache=%p,%f\n",
+        etx_cache_get, res, (NULL != res ? res->path_etx : -1), rescache, (NULL != rescache ? rescache->path_etx : -1));
+    }
+    else
+    {
+      etx_cache_saved++;
+    }
+  }
+#else
+  if (NULL != etx_cache && etx_cache_get < etx_cache_count)
+  {
+    res = etx_cache[etx_cache_get++];
+  }
+#endif
+
+  // if we've found a vertex, remove it from the set
+
+  if (res != NULL)
+    res->done = OLSR_TRUE;
+
+  return res;
+}
+#endif // SVEN_OPT
 
 static struct dijk_vertex *extract_best(struct list *vertex_list)
 {
@@ -371,8 +532,11 @@ void olsr_calculate_lq_routing_table(void)
   struct interface *inter;
 
   if (olsr_cnf->ipsize == 4)
+#ifndef DISABLE_SVEN_OLA
+    avl_comp = 0;
+#else
     avl_comp = avl_comp_ipv4;
-
+#endif
   else
     avl_comp = avl_comp_ipv6;
 
@@ -614,13 +778,27 @@ void olsr_calculate_lq_routing_table(void)
 
   // add HNA routes - the set of unprocessed network nodes contains
   // all reachable network nodes
+#ifdef SVEN_OPT
+#ifdef SVEN_OPT_DBG
+  printf("free etx_cache, saved compares=%d, etx_cache=%p\n", etx_cache_saved, etx_cache);
+  etx_cache_saved = 0;
+#endif
+  if (NULL != etx_cache) {
+    free(etx_cache);
+    etx_cache = NULL;
+  }
+#endif
 
   for (;;)
   {
     // extract the network node with the best ETX and remove it
     // from the set of unprocessed network nodes
 
+#ifdef SVEN_OPT
+    vert = extract_best_route(&vertex_list);
+#else
     vert = extract_best(&vertex_list);
+#endif
 
     // no more nodes left
 

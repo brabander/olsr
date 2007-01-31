@@ -46,7 +46,7 @@
 #include "hashing.h"
 
 
-#define KEYFILE "/root/.olsr/olsrd_secure_key"
+#define KEYFILE "/etc/olsrd.d/olsrd_secure_key"
 
 /* Schemes */
 #define ONE_CHECKSUM          1
@@ -91,8 +91,6 @@ struct stamp
 
 struct stamp timestamps[HASHSIZE];
 
-char checksum_cache[512 + KEYLENGTH];
-
 /* Input interface */
 struct interface *olsr_in_if;
 
@@ -136,7 +134,7 @@ int
 ipc_send(char *, int);
 
 int
-add_signature(char *, int*);
+add_signature(olsr_u8_t *, int*);
 
 int
 validate_packet(char *, int*);

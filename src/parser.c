@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.31 2006/12/14 11:29:20 bernd67 Exp $
+ * $Id: parser.c,v 1.32 2007/01/31 12:36:50 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -60,6 +60,14 @@
 #undef strerror
 #define strerror(x) StrError(x)
 #endif
+
+/* Sven-Ola: On very slow devices used in huge networks
+ * the amount of lq_tc messages is so high, that the 
+ * recv() loop never ends. This is a small hack to end
+ * the loop in this cases
+ */
+ 
+unsigned int cpu_overload_exit = 0;
 
 struct parse_function_entry *parse_functions;
 
@@ -355,9 +363,16 @@ olsr_input(int fd)
   int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
-
+  cpu_overload_exit = 0;
+  
   for (;;) 
     {
+      if (32 < ++cpu_overload_exit)
+      {
+        OLSR_PRINTF(1, "CPU overload detected, ending olsr_input() loop\n")
+      	break;
+      }
+      
       fromlen = sizeof(struct sockaddr_storage);
 
       cc = olsr_recvfrom(fd, 
