@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.31 2006/11/05 23:03:56 bernd67 Exp $
+ * $Id: net.c,v 1.32 2007/02/04 23:36:35 bernd67 Exp $
  */
 
 
@@ -57,6 +57,10 @@
 #define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
 #define SIOCGIWRATE	0x8B21		/* get default bit rate (bps) */
 
+/* The original state of the IP forwarding proc entry */
+static char orig_fwd_state;
+static char orig_global_redirect_state;
+
 /**
  *Bind a socket to a device
  *
@@ -76,8 +80,6 @@ bind_socket_to_device(int sock, char *dev_name)
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
 
 }
-
-
 
 
 /**
@@ -207,7 +209,7 @@ disable_redirects_global(int version)
  *@return 1 on sucess 0 on failiure
  */ 
 int
-disable_redirects(char *if_name, int index, int version)
+disable_redirects(const char *if_name, struct interface *iface, int version)
 {
   FILE *proc_redirect;
   char procfile[FILENAME_MAX];
@@ -228,7 +230,7 @@ disable_redirects(char *if_name, int index, int version)
     }
   else
     {
-      nic_states[index].redirect = fgetc(proc_redirect);
+      iface->nic_state.redirect = fgetc(proc_redirect);
       fclose(proc_redirect);
       
     }
@@ -257,7 +259,7 @@ disable_redirects(char *if_name, int index, int version)
  *@return 1 on sucess 0 on failiure
  */ 
 int
-deactivate_spoof(char *if_name, int index, int version)
+deactivate_spoof(const char *if_name, struct interface *iface, int version)
 {
   FILE *proc_spoof;
   char procfile[FILENAME_MAX];
@@ -279,7 +281,7 @@ deactivate_spoof(char *if_name, int index, int version)
     }
   else
     {
-      nic_states[index].spoof = fgetc(proc_spoof);
+      iface->nic_state.spoof = fgetc(proc_spoof);
       fclose(proc_spoof);
       
     }
@@ -381,9 +383,9 @@ restore_settings(int version)
 	}
       else
 	{
-	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, nic_states[ifs->if_nr].redirect);
+	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.redirect);
 
-	  fputc(nic_states[ifs->if_nr].redirect, proc_fd);
+	  fputc(ifs->nic_state.redirect, proc_fd);
 	  fclose(proc_fd);
 	}
 
@@ -399,9 +401,9 @@ restore_settings(int version)
 	}
       else
 	{
-	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, nic_states[ifs->if_nr].spoof);
+	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.spoof);
 
-	  fputc(nic_states[ifs->if_nr].spoof, proc_fd);
+	  fputc(ifs->nic_state.spoof, proc_fd);
 	  fclose(proc_fd);
 	}
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.h,v 1.7 2005/08/28 19:30:30 kattemat Exp $
+ * $Id: net.h,v 1.8 2007/02/04 23:36:35 bernd67 Exp $
  */
 
 
@@ -56,31 +56,12 @@
 #include <netinet/in.h>
 #include "../olsr_protocol.h"
 
-#define MAXIFS                  8 /* Maximum number of network interfaces */
-
 /* Redirect proc entry */
 #define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"
 
 /* IP spoof proc entry */
 #define SPOOF_PROC "/proc/sys/net/ipv4/conf/%s/rp_filter"
 
-/* The original state of the IP forwarding proc entry */
-char orig_fwd_state;
-char orig_global_redirect_state;
-
-/* Struct uesd to store original redirect/ingress setting */
-struct nic_state
-{
-  int index; /* The OLSR index of the interface */
-  char redirect; /* The original state of icmp redirect */
-  char spoof; /* The original state of the IP spoof filter */
-  struct nic_state *next;
-};
-
-struct nic_state nic_states[MAXIFS];
-
-
-extern int
-olsr_printf(int, char *, ...);
+extern int olsr_printf(int, char *, ...);
 
 #endif

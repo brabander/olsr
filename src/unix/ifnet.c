@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.42 2007/02/04 22:37:35 bernd67 Exp $
+ * $Id: ifnet.c,v 1.43 2007/02/04 23:36:35 bernd67 Exp $
  */
 
 
@@ -870,10 +870,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
 	}
       
       /* Deactivate IP spoof filter */
-      deactivate_spoof(if_basename(ifr.ifr_name), iface->index, olsr_cnf->ip_version);
+      deactivate_spoof(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
       
       /* Disable ICMP redirects */
-      disable_redirects(if_basename(ifr.ifr_name), iface->index, olsr_cnf->ip_version);
+      disable_redirects(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
       
     }
   

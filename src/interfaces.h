@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.36 2007/01/30 16:52:41 bernd67 Exp $
+ * $Id: interfaces.h,v 1.37 2007/02/04 23:36:35 bernd67 Exp $
  */
 
 
@@ -158,6 +158,15 @@ struct interface
   struct        if_gen_property *gen_properties;/* Generic interface properties */
   
   int           ttl_index; /* index in TTL array for fish-eye */
+
+#ifdef linux
+/* Struct uesd to store original redirect/ingress setting */
+  struct nic_state
+  {
+    char redirect; /* The original state of icmp redirect */
+    char spoof; /* The original state of the IP spoof filter */
+  } nic_state;
+#endif
 
   struct	interface *int_next;
 };
