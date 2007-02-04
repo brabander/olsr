@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.4 2006/12/12 11:22:15 kattemat Exp $
+ * $Id: cfgfile_gen.c,v 1.5 2007/02/04 22:37:36 bernd67 Exp $
  */
 
 
@@ -316,7 +316,17 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 		}
 	    }
 
-	  fprintf(fd, "    # When multiple links exist between hosts\n    # the weight of interface is used to determine\n    # the link to use. Normally the weight is\n    # automatically calculated by olsrd based\n    # on the characteristics of the interface,\n    # but here you can specify a fixed value.\n    # Olsrd will choose links with the lowest value.\n");
+         fprintf(fd, "    # When multiple links exist between hosts\n");
+         fprintf(fd, "    # the weight of interface is used to determine\n");
+         fprintf(fd, "    # the link to use. Normally the weight is\n");
+         fprintf(fd, "    # automatically calculated by olsrd based\n");
+         fprintf(fd, "    # on the characteristics of the interface,\n");
+         fprintf(fd, "    # but here you can specify a fixed value.\n");
+         fprintf(fd, "    # Olsrd will choose links with the lowest value.\n");
+         fprintf(fd, "    # Note:\n");
+         fprintf(fd, "    # Interface weight is used only when LinkQualityLevel is 0.\n");
+         fprintf(fd, "    # For any other value of LinkQualityLevel, the interface ETX\n");
+         fprintf(fd, "    # value is used instead.\n\n");
 	  if(in->cnf->weight.fixed)
 	    {
 	      fprintf(fd, "    Weight\t %d\n\n", in->cnf->weight.value);
@@ -621,9 +631,19 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 	    }
 
 	  if(first)
-    	    WRITE_TO_BUF("    # When multiple links exist between hosts\n    # the weight of interface is used to determine\n    # the link to use. Normally the weight is\n")
-          if(first)
-            WRITE_TO_BUF("    # automatically calculated by olsrd based\n    # on the characteristics of the interface,\n    # but here you can specify a fixed value.\n    # Olsrd will choose links with the lowest value.\n")
+	    {
+             WRITE_TO_BUF("    # When multiple links exist between hosts\n");
+             WRITE_TO_BUF("    # the weight of interface is used to determine\n");
+             WRITE_TO_BUF("    # the link to use. Normally the weight is\n")
+             WRITE_TO_BUF("    # automatically calculated by olsrd based\n");
+             WRITE_TO_BUF("    # on the characteristics of the interface,\n");
+             WRITE_TO_BUF("    # but here you can specify a fixed value.\n");
+             WRITE_TO_BUF("    # Olsrd will choose links with the lowest value.\n")
+             WRITE_TO_BUF("    # Note:\n");
+             WRITE_TO_BUF("    # Interface weight is used only when LinkQualityLevel is 0.\n");
+             WRITE_TO_BUF("    # For any other value of LinkQualityLevel, the interface ETX\n");
+             WRITE_TO_BUF("    # value is used instead.\n\n");
+            }
 	  if(in->cnf->weight.fixed)
 	    {
 	      WRITE_TO_BUF("    Weight\t %d\n\n", in->cnf->weight.value)

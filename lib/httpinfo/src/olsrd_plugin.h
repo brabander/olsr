@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.20 2005/05/29 12:47:41 br1 Exp $
+ * $Id: olsrd_plugin.h,v 1.21 2007/02/04 22:37:36 bernd67 Exp $
  */
 
 /*
@@ -71,7 +71,7 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 4
 
-int http_port;
+extern int http_port;
 
 /* Allowed hosts stuff */
 

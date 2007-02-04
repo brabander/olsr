@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.60 2006/11/05 23:03:56 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.61 2007/02/04 22:37:36 bernd67 Exp $
  */
 
 /*
@@ -715,7 +715,10 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "<h2>OLSR routes in kernel</h2>\n");
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th><th>Type</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th>");
+  if (olsr_cnf->lq_level > 0)
+    size += sprintf(&buf[size], "<th>ETX</th>");
+  size += sprintf(&buf[size], "<th>Interface</th><th>Type</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -724,12 +727,23 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &routingtable[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%.2f</td><td>%s</td><td>HOST</td></tr>\n",
-			  olsr_ip_to_string(&routes->rt_dst),
-			  olsr_ip_to_string(&routes->rt_router),
-			  routes->rt_metric,
-			  routes->rt_etx,
-			  routes->rt_if->int_name);
+	  size += sprintf(&buf[size],
+                         "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
+                         "<td><a href=\"http://%s:%d/all\">%s</a></td>"
+                         "<td>%d</td>",
+                         olsr_ip_to_string(&routes->rt_dst),
+                         http_port,
+                         olsr_ip_to_string(&routes->rt_dst),
+                         olsr_ip_to_string(&routes->rt_router),
+                         http_port,
+                         olsr_ip_to_string(&routes->rt_router),
+                         routes->rt_metric);
+          if (olsr_cnf->lq_level > 0)
+	    size += sprintf(&buf[size], "<td>%.2f</td>", routes->rt_etx);
+	  size += sprintf(&buf[size],
+                         "<td>%s</td>"
+                         "<td>HOST</td></tr>\n",
+                         routes->rt_if->int_name);
 	}
     }
 
@@ -740,11 +754,21 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &hna_routes[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>HNA</td></tr>\n",
-			  olsr_ip_to_string(&routes->rt_dst),
-			  olsr_ip_to_string(&routes->rt_router),
-			  routes->rt_metric,
-			  routes->rt_if->int_name);
+	  size += sprintf(&buf[size],
+                         "<tr><td>%s</td>"
+                         "<td><a href=\"http://%s:%d/all\">%s</a></td>"
+                         "<td>%d</td>",
+                         olsr_ip_to_string(&routes->rt_dst),
+                         olsr_ip_to_string(&routes->rt_router),
+                         http_port,
+                         olsr_ip_to_string(&routes->rt_router),
+                         routes->rt_metric);
+          if (olsr_cnf->lq_level > 0)
+	    size += sprintf(&buf[size], "<td>%.2f</td>", routes->rt_etx);
+	  size += sprintf(&buf[size],
+                         "<td>%s</td>"
+                         "<td>HNA</td></tr>\n",
+                         routes->rt_if->int_name);
 	}
     }
 
@@ -818,17 +842,24 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
-    size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
-	
-    size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
-    size += sprintf(&buf[size], "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
+    if (olsr_cnf->lq_level == 0)
+      {
+        size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
+	if (olsr_cnf->use_hysteresis)
+          {
+            size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
+            size += sprintf(&buf[size], "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
+          }
+      }
 
     size += sprintf(&buf[size], "</tr>\n<tr>\n");
 
-    size += sprintf(&buf[size], "<td>LQ extention: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
-    size += sprintf(&buf[size], "<td>LQ level: %d</td>\n", olsr_cnf->lq_level);
-    size += sprintf(&buf[size], "<td>LQ winsize: %d</td>\n", olsr_cnf->lq_wsize);
-    size += sprintf(&buf[size], "<td></td>\n");
+    size += sprintf(&buf[size], "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
+    if (olsr_cnf->lq_level)
+      {
+        size += sprintf(&buf[size], "<td>LQ level: %d</td>\n", olsr_cnf->lq_level);
+        size += sprintf(&buf[size], "<td>LQ winsize: %d</td>\n", olsr_cnf->lq_wsize);
+      }
 
     size += sprintf(&buf[size], "</tr></table>\n");
 
@@ -870,7 +901,6 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
 	    size += sprintf(&buf[size], "<td>STATUS: UP</td></tr>\n");
 	  }	    
-
       }
 
     size += sprintf(&buf[size], "</table>\n");
@@ -952,21 +982,39 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "<h2>Links</h2>\n");
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th><th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th>\n");
+  if (olsr_cnf->lq_level > 0)
+    size += sprintf(&buf[size], "<th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th>\n");
+  size += sprintf(&buf[size], "</tr>\n");
 
   /* Link set */
   link = link_set;
     while(link)
       {
-	size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%d</td><td>%d</td><td>%0.2f</td><td>%0.2f</td></tr>\n",
-			olsr_ip_to_string(&link->local_iface_addr),
-			olsr_ip_to_string(&link->neighbor_iface_addr),
-			link->L_link_quality, 
-			link->loss_link_quality,
-			link->lost_packets, 
-			link->total_packets,
-			link->neigh_link_quality, 
-			(link->loss_link_quality * link->neigh_link_quality) ? 1.0 / (link->loss_link_quality * link->neigh_link_quality) : 0.0);
+	size += sprintf(&buf[size],
+                       "<tr><td>%s</td>"
+                       "<td><a href=\"http://%s:%d/all\">%s</a></td>"
+                       "<td>%0.2f</td>",
+                       olsr_ip_to_string(&link->local_iface_addr),
+                       olsr_ip_to_string(&link->neighbor_iface_addr),
+                       http_port,
+                       olsr_ip_to_string(&link->neighbor_iface_addr),
+                       link->L_link_quality);
+        if (olsr_cnf->lq_level > 0)
+          {
+	    size += sprintf(&buf[size],
+                           "<td>%0.2f</td>"
+                           "<td>%d</td>"
+                           "<td>%d</td>"
+                           "<td>%0.2f</td>"
+                           "<td>%0.2f</td></tr>\n",
+                           link->loss_link_quality,
+                           link->lost_packets, 
+                           link->total_packets,
+                           link->neigh_link_quality, 
+                           (link->loss_link_quality * link->neigh_link_quality) ? 1.0 / (link->loss_link_quality * link->neigh_link_quality) : 0.0);
+          }
+	size += sprintf(&buf[size], "</tr>\n");
 
 	link = link->next;
       }
@@ -983,7 +1031,13 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh = neigh->next)
 	{
 	  size += sprintf(&buf[size], 
-			  "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td>", 
+			  "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
+			  "<td>%s</td>"
+			  "<td>%s</td>"
+			  "<td>%s</td>"
+			  "<td>%d</td>", 
+			  olsr_ip_to_string(&neigh->neighbor_main_addr),
+                          http_port,
 			  olsr_ip_to_string(&neigh->neighbor_main_addr),
 			  (neigh->status == SYM) ? "YES" : "NO",
 			  neigh->is_mpr ? "YES" : "NO",
@@ -1023,7 +1077,10 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last hop IP</th><th>LQ</th><th>ILQ</th><th>ETX</th></tr>\n");
+  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last hop IP</th>");
+  if (olsr_cnf->lq_level > 0)
+    size += sprintf(&buf[size], "<th>LQ</th><th>ILQ</th><th>ETX</th>");
+  size += sprintf(&buf[size], "</tr>\n");
 
 
   /* Topology */  
@@ -1037,12 +1094,26 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-	      size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td><td>%0.2f</td><td>%0.2f</td><td>%0.2f</td></tr>\n", 
-			      olsr_ip_to_string(&dst_entry->T_dest_addr),
-			      olsr_ip_to_string(&entry->T_last_addr), 
-			      dst_entry->link_quality,
-			      dst_entry->inverse_link_quality,
-			      (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
+	      size += sprintf(&buf[size],
+                             "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
+                             "<td><a href=\"http://%s:%d/all\">%s</a></td>",
+                             olsr_ip_to_string(&dst_entry->T_dest_addr),
+                             http_port,
+                             olsr_ip_to_string(&dst_entry->T_dest_addr),
+                             olsr_ip_to_string(&entry->T_last_addr), 
+                             http_port,
+                             olsr_ip_to_string(&entry->T_last_addr));
+              if (olsr_cnf->lq_level > 0)
+                {
+	          size += sprintf(&buf[size],
+                                 "<td>%0.2f</td>"
+                                 "<td>%0.2f</td>"
+                                 "<td>%0.2f</td>\n",
+                                 dst_entry->link_quality,
+                                 dst_entry->inverse_link_quality,
+                                 (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
+                }
+	      size += sprintf(&buf[size], "</tr>\n");
 
 	      dst_entry = dst_entry->next;
 	    }
@@ -1085,7 +1156,9 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 			      olsr_ip_to_string(&tmp_net->A_network_addr));
 	      size += sprintf(&buf[size], "<td>%s</td>",
 			      olsr_netmask_to_string(&tmp_net->A_netmask));
-	      size += sprintf(&buf[size], "<td>%s</td></tr>\n",
+	      size += sprintf(&buf[size], "<td><a href=\"http://%s:%d/all\">%s</a></td></tr>\n",
+                              olsr_ip_to_string(&tmp_hna->A_gateway_addr),
+                              http_port,
                               olsr_ip_to_string(&tmp_hna->A_gateway_addr));
 	      tmp_net = tmp_net->next;
 	    }
@@ -1103,7 +1176,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 int
 build_mid_body(char *buf, olsr_u32_t bufsize)
 {
-  int size = 0;
+  int size = 0, mid_cnt;
   olsr_u8_t index;
   struct mid_entry *entry;
   struct mid_address *alias;
@@ -1116,18 +1189,21 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
       entry = mid_set[index].next;
       while(entry != &mid_set[index])
 	{
-	  size += sprintf(&buf[size], "<tr><td>%s</td>\n", olsr_ip_to_string(&entry->main_addr));
+	  size += sprintf(&buf[size], "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>\n",
+	                  olsr_ip_to_string(&entry->main_addr),
+                          http_port,
+	                  olsr_ip_to_string(&entry->main_addr));
 	  size += sprintf(&buf[size], "<td><select>\n<option>IP ADDRESS</option>\n");
 
 	  alias = entry->aliases;
+	  mid_cnt = 0;
 	  while(alias)
 	    {
 	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->alias));
+	      mid_cnt ++;
 	      alias = alias->next_alias;
 	    }
-	  size += sprintf(&buf[size], "</select>\n");
-
-	  size += sprintf(&buf[size], "</tr>\n");
+	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", mid_cnt);
 	  entry = entry->next;
 	}
     }

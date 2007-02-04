@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.12 2005/05/29 12:47:41 br1 Exp $
+ * $Id: olsrd_plugin.c,v 1.13 2007/02/04 22:37:36 bernd67 Exp $
  */
 
 /*
@@ -50,6 +50,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "olsrd_httpinfo.h"
+
+int http_port = 0;
 
 static void __attribute__ ((constructor)) 
 my_init(void);

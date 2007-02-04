@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.6 2005/03/14 21:28:15 kattemat Exp $
+ * $Id: html.h,v 1.7 2007/02/04 22:37:36 bernd67 Exp $
  */
 
 /*
@@ -48,7 +48,7 @@
 
 static const char *httpinfo_css[] =
 {
-  "A {text-decoration: none}\n",
+  "#A {text-decoration: none}\n",
   "TH{text-align: left}\n",
   "H1, H3, TD, TH {font-family: Helvetica; font-size: 80%%}\n",
   "h2\n {\nfont-family: Helvetica;\n font-size: 14px;text-align: center;\n",

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.41 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: ifnet.c,v 1.42 2007/02/04 22:37:35 bernd67 Exp $
  */
 
 
@@ -882,7 +882,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   
   ifs.if_index = if_nametoindex(ifr.ifr_name);
   
-  /* Set interface metric */
   /* Set interface metric */
   if(iface->cnf->weight.fixed)
     ifs.int_metric = iface->cnf->weight.value;
