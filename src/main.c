@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.90 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: main.c,v 1.91 2007/02/04 23:27:55 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -505,7 +505,7 @@ static void
 print_usage()
 {
 
-  fprintf(stderr, "An error occured somwhere between your keyboard and your chair!\n"); 
+  fprintf(stderr, "An error occured somewhere between your keyboard and your chair!\n"); 
   fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
   fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"); 
   fprintf(stderr, "  [-lql <LQ level>] [-lqw <LQ winsize>]\n"); 
