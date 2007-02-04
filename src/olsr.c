@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.49 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: olsr.c,v 1.50 2007/02/04 22:47:45 bernd67 Exp $
  */
 
 /**
@@ -213,13 +213,17 @@ olsr_process_changes()
 	  
           if (olsr_cnf->debug_level > 3)
             {
-              olsr_print_duplicate_table();
+             if (olsr_cnf->debug_level > 8)
+               {
+                 olsr_print_duplicate_table();
+               }
               olsr_print_hna_set();
             }
         }
       
       olsr_print_link_set();
       olsr_print_neighbor_table();
+      olsr_print_two_hop_neighbor_table();
       olsr_print_tc_table();
     }
 
