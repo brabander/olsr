@@ -46,7 +46,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <net/route.h>
-#include <linux/in_route.h>
 #include <unistd.h>
 #include <errno.h>
 
