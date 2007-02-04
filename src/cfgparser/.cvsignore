@@ -2,3 +2,4 @@
 olsrd_cfgparser.so.*
 oparse.[ch]
 oscan.c
+olsrd_cfgparser.dll
