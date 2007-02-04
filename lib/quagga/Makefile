@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.1 2007/01/31 12:38:26 bernd67 Exp $
+# $Id: Makefile,v 1.2 2007/02/04 21:21:16 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_quagga
@@ -52,6 +52,13 @@ CFLAGS +=-DUSE_UNIX_DOMAIN_SOCKET
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
+ifneq ($(OS),linux)
+
+default_target install clean: 
+	@echo "*** TAS Plugin only supported on Linux, sorry!"
+
+else
+
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS)
@@ -63,3 +70,5 @@ install:	$(PLUGIN_FULLNAME)
 
 clean:
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
+
+endif
