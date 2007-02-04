@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.9 2005/06/02 15:34:00 br1 Exp $ */
+/* $Id: nameservice.h,v 1.10 2007/02/04 21:11:48 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -39,6 +39,7 @@
 #define _NAMESERVICE_PLUGIN
 
 #include <sys/time.h>
+#include <regex.h>
 
 #include "olsr_types.h"
 #include "interfaces.h"
@@ -51,19 +52,27 @@
 #define PLUGIN_VERSION	"0.2"
 #define PLUGIN_AUTHOR	"Bruno Randolf"
 
+// useful to set for the freifunkfirmware to remove all
+// calls to olsr_printf by the empty statement ";"
+//#define olsr_printf(...) ;
 
 #define MESSAGE_TYPE		130
 #define PARSER_TYPE		MESSAGE_TYPE
 #define EMISSION_INTERVAL	120 /* two minutes */
-#define NAME_VALID_TIME		3600 /* one hour */
+#define NAME_VALID_TIME		1800 /* half one hour */
 
 #define NAME_PROTOCOL_VERSION	1
 
-#define MAX_NAME 255
+#define MAX_NAME 127
 #define MAX_FILE 255
-#define MAX_SUFFIX 255
+#define MAX_SUFFIX 63
 
-
+/**
+ * a linked list of name_entry
+ * if type is NAME_HOST, name is a hostname and ip its IP addr
+ * if type is NAME_FORWARDER, then ip is a dns-server (and name is irrelevant)
+ * if type is NAME_SERVICE, then name is a service-line (and the ip is irrelevant)
+ */
 struct name_entry
 {
 	union olsr_ip_addr	ip;
@@ -73,7 +82,17 @@ struct name_entry
 	struct name_entry	*next;		/* linked list */
 };
 
-/* database entry */
+/* *
+ * linked list of db_entries for each originator with
+ * originator being its main_addr
+ * 
+ * names points to the name_entry with its hostname, dns-server or
+ * service-line entry
+ *
+ * all the db_entries are hashed in nameservice.c to avoid a too long list
+ * for many nodes in a net
+ *
+ * */
 struct db_entry
 {
 	union olsr_ip_addr	originator;	/* IP address of the node this entry describes */
@@ -98,14 +117,35 @@ olsr_event(void *);
 int
 encap_namemsg(struct namemsg *);
 
+struct name_entry*
+add_name_to_list(struct name_entry *my_list, char *value, int type, struct in_addr *ip);
+
+struct name_entry*
+remove_nonvalid_names_from_list(struct name_entry *my_list, int type);
+
+void 
+free_all_list_entries(struct db_entry **this_db_list) ;
+
 void
-decap_namemsg(struct namemsg *, int, struct name_entry**);
+timeout_old_names(struct db_entry **this_list, olsr_bool *this_table_changed);
+
+void
+decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_table_changed );
+
+void
+insert_new_name_in_list(union olsr_ip_addr *originator, struct db_entry **this_list, struct name *from_packet, olsr_bool *this_table_changed, double vtime);
+
+olsr_bool
+allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip);
 
 void
 update_name_entry(union olsr_ip_addr *, struct namemsg *, int, double);
 
 void
 write_hosts_file(void);
+
+void
+write_services_file(void);
 
 void
 write_resolv_file(void);
@@ -118,6 +158,18 @@ free_name_entry_list(struct name_entry **list);
 
 olsr_bool
 allowed_ip(union olsr_ip_addr *addr);
+
+olsr_bool
+allowed_service(char *service_line);
+
+olsr_bool
+is_name_wellformed(char *service_line);
+
+olsr_bool
+is_service_wellformed(char *service_line);
+
+char*  
+create_packet(struct name *to, struct name_entry *from);
 
 void
 name_constructor(void);
