@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.74 2007/01/31 12:36:49 bernd67 Exp $
+# $Id: Makefile,v 1.75 2007/02/05 21:17:26 bernd67 Exp $
 
 VERS =		0.5.0pre
 
@@ -85,13 +85,13 @@ uberclean:	clean clean_libs
 install: install_olsrd
 
 install_bin:
-		$(STRIP) $(EXENAME)
 		mkdir -p $(SBINDIR)
 		install -m 755 $(EXENAME) $(SBINDIR)
+		$(STRIP) $(SBINDIR)/$(EXENAME)
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
-		@echo olsrd uses the configfile $(DESTDIR)/etc/olsr.conf
+		@echo olsrd uses the configfile $(CFGFILE)
 		@echo a default configfile. A sample RFC-compliance aimed
 		@echo configfile can be installed. Note that a LQ-based configfile
 		@echo can be found at files/olsrd.conf.default.lq
@@ -110,6 +110,12 @@ install_olsrd:	install_bin
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
 
+rpm:
+		@$(RM) olsrd-current.tar.bz2
+		@echo "Creating olsrd-current.tar.bz2 ..."
+		@./list-excludes.sh | tar  --exclude-from=- --exclude="olsrd-current.tar.bz2" -C .. -cjf olsrd-current.tar.bz2 olsrd-current
+		@echo "Building RPMs..."
+		@rpmbuild -ta olsrd-current.tar.bz2
 #
 # PLUGINS
 #
@@ -126,44 +132,50 @@ libs_install install_libs:
 httpinfo:
 		$(MAKE) -C lib/httpinfo clean
 		$(MAKE) -C lib/httpinfo 
-		$(MAKE) -C lib/httpinfo install 
+		$(MAKE) -C lib/httpinfo DESTDIR=$(DESTDIR) install 
 
 tas:
 		$(MAKE) -C lib/tas clean
-		$(MAKE) -C lib/tas install
+		$(MAKE) -C lib/tas DESTDIR=$(DESTDIR) install
 
 dot_draw:
 		$(MAKE) -C lib/dot_draw clean
-		$(MAKE) -C lib/dot_draw install
+		$(MAKE) -C lib/dot_draw DESTDIR=$(DESTDIR) install
 
 nameservice:
 		$(MAKE) -C lib/nameservice clean
-		$(MAKE) -C lib/nameservice install
+		$(MAKE) -C lib/nameservice DESTDIR=$(DESTDIR) install
 
 dyn_gw:
 		$(MAKE) -C lib/dyn_gw clean
 		$(MAKE) -C lib/dyn_gw
-		$(MAKE) -C lib/dyn_gw install
+		$(MAKE) -C lib/dyn_gw DESTDIR=$(DESTDIR) install
 
 dyn_gw_plain:
 		$(MAKE) -C lib/dyn_gw_plain clean
 		$(MAKE) -C lib/dyn_gw_plain
-		$(MAKE) -C lib/dyn_gw_plain install
+		$(MAKE) -C lib/dyn_gw_plain DESTDIR=$(DESTDIR) install
 
 secure:
 		$(MAKE) -C lib/secure clean
 		$(MAKE) -C lib/secure
-		$(MAKE) -C lib/secure install
+		$(MAKE) -C lib/secure DESTDIR=$(DESTDIR) install
 
 pgraph:
 		$(MAKE) -C lib/pgraph clean
 		$(MAKE) -C lib/pgraph 
-		$(MAKE) -C lib/pgraph install 
+		$(MAKE) -C lib/pgraph DESTDIR=$(DESTDIR) install 
 
 bmf:
 		$(MAKE) -C lib/bmf clean
 		$(MAKE) -C lib/bmf 
-		$(MAKE) -C lib/bmf install 
+		$(MAKE) -C lib/bmf DESTDIR=$(DESTDIR) install 
+
+quagga:
+		$(MAKE) -C lib/quagga clean
+		$(MAKE) -C lib/quagga 
+		$(MAKE) -C lib/quagga DESTDIR=$(DESTDIR) install 
+
 
 build_all:	cfgparser olsrd libs
 install_all:	install install_libs
