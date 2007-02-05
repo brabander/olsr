@@ -1,19 +1,20 @@
 # programs
-CC ?= 		gcc
+CCACHE =        $(shell sh -c "type -path ccache")
+CC ?= 		$(CCACHE) gcc
 STRIP ?=	strip
 BISON ?=	bison
 FLEX ?=		flex
 TAGCMD ?=	etags
 
 # target directories and names
-# DESTDIR =
-SBINDIR = $(DESTDIR)/usr/sbin
-ETCDIR = $(DESTDIR)/etc
-LIBDIR = $(DESTDIR)/usr/lib
-DOCDIR = $(DESTDIR)/usr/share/doc
-MANDIR = $(DESTDIR)/usr/share/man
-CFGFILE = $(ETCDIR)/olsrd.conf
-EXENAME = olsrd
+DESTDIR ?=
+SBINDIR ?= $(DESTDIR)/usr/sbin
+ETCDIR  ?= $(DESTDIR)/etc
+LIBDIR  ?= $(DESTDIR)/usr/lib
+DOCDIR  ?= $(DESTDIR)/usr/share/doc
+MANDIR  ?= $(DESTDIR)/usr/share/man
+CFGFILE ?= $(ETCDIR)/olsrd.conf
+EXENAME ?= olsrd
 
 INCLUDES =	-Isrc -I$(TOPDIR)/src 
 
