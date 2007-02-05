@@ -319,7 +319,7 @@ for details.
 To build olsrd you need to have all the regular development tools 
 installed. This includes gcc, make, glibc, makedep etc.
 To install to a directory different from /(/etc, /usr/bin) use 
-INSTALL_PREFIX=targetdir. To use other compilers set CC=yourcompiler.
+DESTDIR=targetdir. To use other compilers set CC=yourcompiler.
 
 To build:
  make
@@ -439,4 +439,4 @@ limitations with respect to testing and maturity apply. Building and
 installing works in the same was as on FreeBSD.
 
 
-$Id: README,v 1.16 2005/11/23 05:51:07 kattemat Exp $
+$Id: README,v 1.17 2007/02/05 21:49:43 bernd67 Exp $
