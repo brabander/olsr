@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.10 2007/02/04 21:11:48 bernd67 Exp $ */
+/* $Id: nameservice.h,v 1.11 2007/02/06 21:07:11 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -118,7 +118,7 @@ int
 encap_namemsg(struct namemsg *);
 
 struct name_entry*
-add_name_to_list(struct name_entry *my_list, char *value, int type, struct in_addr *ip);
+add_name_to_list(struct name_entry *my_list, char *value, int type, const union olsr_ip_addr *ip);
 
 struct name_entry*
 remove_nonvalid_names_from_list(struct name_entry *my_list, int type);

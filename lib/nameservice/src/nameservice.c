@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.17 2007/02/04 21:11:48 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.18 2007/02/06 21:07:11 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -183,11 +183,11 @@ olsrd_plugin_register_param(char *key, char *value)
 		olsr_printf(1,"\nNAME PLUGIN: parameter services-file: %s", my_services_file);
 	}
 	else if(!strcmp(key, "dns-server")) {
-		struct in_addr ip;
+		union olsr_ip_addr ip;
 		if (strlen(value) == 0) {
             my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, NULL);
             olsr_printf(1,"\nNAME PLUGIN: parameter dns-server: (main address)");
-        } else if (inet_aton(value, &ip)) {
+        } else if (inet_pton(olsr_cnf->ip_version, value, &ip)) {
             my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, &ip);
             olsr_printf(1,"\nNAME PLUGIN: parameter dns-server: (%s)", value);
         } else {
@@ -206,7 +206,7 @@ olsrd_plugin_register_param(char *key, char *value)
 	}
 	else {
 		// assume this is an IP address and hostname
-		struct in_addr ip;
+		union olsr_ip_addr ip;
 		
 		if (inet_pton(olsr_cnf->ip_version, key, &ip) == 1) {
 			// the IP is validated later
@@ -227,10 +227,9 @@ olsrd_plugin_register_param(char *key, char *value)
  * to the front of my_list
  */
 struct name_entry* 
-add_name_to_list(struct name_entry *my_list, char *value, int type, struct in_addr *ip) 
+add_name_to_list(struct name_entry *my_list, char *value, int type, const union olsr_ip_addr *ip) 
 {
-		struct name_entry *tmp;
-		tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry add_name_to_list");
+		struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry add_name_to_list");
         tmp->name = strndup( value, MAX_NAME );
         tmp->len = strlen( tmp->name );
         tmp->type = type;
@@ -238,7 +237,7 @@ add_name_to_list(struct name_entry *my_list, char *value, int type, struct in_ad
         if (ip==NULL) 
             memset(&tmp->ip, 0, sizeof(tmp->ip));
         else
-            tmp->ip.v4 = ip->s_addr;
+            tmp->ip = *ip;
         tmp->next = my_list;
         return tmp;
 }
@@ -547,7 +546,7 @@ olsr_event(void *foo)
  * Parse name olsr message of NAME type
  */
 void
-olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *in_addr)
+olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *ipaddr)
 {
 	struct namemsg *namemessage;
 	union olsr_ip_addr originator;
@@ -583,8 +582,8 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 
 	/* Check that the neighbor this message was received from is symmetric. 
 	If not - back off*/
-	if(check_neighbor_link(in_addr) != SYM_LINK) {
-		olsr_printf(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(in_addr));
+	if(check_neighbor_link(ipaddr) != SYM_LINK) {
+		olsr_printf(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(ipaddr));
 		return;
 	}
 
@@ -592,17 +591,14 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 	* Remeber that this also registeres the message as
 	* processed if nessecary
 	*/
-	if(!olsr_check_dup_table_proc(&originator, seqno)) {
-		/* If so - do not process */
-		goto forward;
+	if(olsr_check_dup_table_proc(&originator, seqno)) {
+		/* If not so - process */
+        update_name_entry(&originator, namemessage, size, vtime);
 	}
 
-	update_name_entry(&originator, namemessage, size, vtime);
-
-forward:
 	/* Forward the message if nessecary
 	* default_fwd does all the work for us! */
-	olsr_forward_message(m, &originator, seqno, in_if, in_addr);
+	olsr_forward_message(m, &originator, seqno, in_if, ipaddr);
 }
 
 
@@ -1266,7 +1262,6 @@ olsr_bool
 allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip_match) 
 {
     char *hostname_or_ip;
-    struct in_addr ip;
     union olsr_ip_addr olsr_ip;
     struct name_entry *name;
     if (hostname_or_ip_match->rm_so < 0 || hostname_or_ip_match->rm_eo < 0) {
@@ -1285,8 +1280,7 @@ allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip
     }
     
     //ip in service-line is allowed 
-    if (inet_aton(hostname_or_ip, &ip)) {
-        olsr_ip.v4 = ip.s_addr;
+    if (inet_pton(olsr_cnf->ip_version, hostname_or_ip, &olsr_ip)) {
         if (allowed_ip(&olsr_ip)) {
             olsr_printf(2, "NAME PLUGIN: ip %s in service %s is OK\n", olsr_ip_to_string(&olsr_ip), service_line);
             free(hostname_or_ip);
