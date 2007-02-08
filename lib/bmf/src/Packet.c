@@ -30,7 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: Packet.c,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* $Id: Packet.c,v 1.2 2007/02/08 10:31:43 bernd67 Exp $ */
 
 #include "Packet.h"
 
@@ -38,6 +38,7 @@
 #include <assert.h> /* assert() */
 #include <sys/types.h> /* u_int32_t */
 #include <netinet/in.h> /* ntohs(), htons() */
+#include <asm/byteorder.h>
 #include <linux/ip.h>
 
 /* Retrieve the TTL (Time To Live) value from the IP header of the
