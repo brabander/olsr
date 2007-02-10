@@ -53,7 +53,7 @@ LoadPlugin "olsrd_secure.so.0.4"
   used by the other nodes.
   The key is 128-bits of size and is read from the
   specified file from the config file or by default from:
-  /root/.olsr/olsrd_secure_key
+  /etc/olsrd.d/olsrd_secure_key
 
   Copy the key to this file an all nodes. The plugin
   will terminate olsrd if this file cannot be found.
