@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_layer.c,v 1.11 2005/02/27 10:43:38 kattemat Exp $
+ * $Id: link_layer.c,v 1.12 2007/02/10 17:11:49 bernd67 Exp $
  */
 
 
@@ -79,10 +79,6 @@ olsr_ip_to_string(union olsr_ip_addr *);
 
 #define	MAXIPLEN	60
 #define	MAXICMPLEN	76
-
-extern size_t ipsize;
-
-extern int ioctl_s;
 
 float poll_int = 0.2;
 
@@ -131,7 +127,7 @@ clear_spy_list(char *ifname)
   /* Set device name */
   strncpy(wrq.ifr_name, ifname, IFNAMSIZ);
 
-  if(ioctl(ioctl_s, SIOCSIWSPY, &wrq) < 0)
+  if(ioctl(olsr_cnf->ioctl_s, SIOCSIWSPY, &wrq) < 0)
     {
       OLSR_PRINTF(1, "Could not clear spylist %s\n", strerror(errno))
       return -1;
@@ -162,7 +158,7 @@ add_spy_node(union olsr_ip_addr *addr, char *interface)
 
   strncpy(wrq.ifr_name, interface, IFNAMSIZ);
 
-  if(ioctl(ioctl_s, SIOCGIWSPY, &wrq) < 0)
+  if(ioctl(olsr_cnf->ioctl_s, SIOCGIWSPY, &wrq) < 0)
     {
       OLSR_PRINTF(1, "Could not get old spylist %s\n", strerror(errno))
       return 0;
@@ -195,7 +191,7 @@ add_spy_node(union olsr_ip_addr *addr, char *interface)
   /* Set device name */
   strncpy(wrq.ifr_name, interface, IFNAMSIZ);
   
-  if(ioctl(ioctl_s, SIOCSIWSPY, &wrq) < 0)
+  if(ioctl(olsr_cnf->ioctl_s, SIOCSIWSPY, &wrq) < 0)
     {
       OLSR_PRINTF(1, "Could not clear spylist %s\n", strerror(errno))
       return 0;
@@ -222,7 +218,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
   tmp_sockaddr.sin_family = AF_INET;
   tmp_sockaddr.sin_port = 0;
 
-  memcpy(&tmp_sockaddr.sin_addr, ip, ipsize);
+  memcpy(&tmp_sockaddr.sin_addr, ip, olsr_cnf->ipsize);
 
   /* Translate IP addresses to MAC addresses */
   memcpy(&arp_query.arp_pa, &tmp_sockaddr, sizeof(struct sockaddr_in));
@@ -231,7 +227,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
 
   strncpy(arp_query.arp_dev, interface, IFNAMSIZ);
   
-  if((ioctl(ioctl_s, SIOCGARP, &arp_query) < 0) ||
+  if((ioctl(olsr_cnf->ioctl_s, SIOCGARP, &arp_query) < 0) ||
      !(arp_query.arp_flags & ATF_COM)) /* ATF_COM - hw addr valid */
     {
       OLSR_PRINTF(1, "Arp failed: (%s) - trying lookup\n", strerror(errno))
@@ -272,7 +268,7 @@ send_ping(union olsr_ip_addr *ip)
   dst_in = (struct sockaddr_in *) &dst;
 
   dst_in->sin_family = AF_INET;
-  memcpy(&dst_in->sin_addr, ip, ipsize);
+  memcpy(&dst_in->sin_addr, ip, olsr_cnf->ipsize);
 
   OLSR_PRINTF(1, "pinging %s\n\n", olsr_ip_to_string(ip))
 
@@ -339,7 +335,7 @@ poll_link_layer(void *foo)
       strncpy(wrq.ifr_name, iflist->int_name, IFNAMSIZ);
       
       /* Do the request */
-      if(ioctl(ioctl_s, SIOCGIWSPY, &wrq) < 0)
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIWSPY, &wrq) < 0)
 	{
 	  OLSR_PRINTF(1, "%-8.16s  Interface doesn't support wireless statistic collection\n\n", iflist->int_name)
 	  return;
@@ -413,7 +409,7 @@ iw_get_range_info(char            *ifname,
   /* Set device name */
   strncpy(wrq.ifr_name, ifname, IFNAMSIZ);
 
-  if(ioctl(ioctl_s, SIOCGIWRANGE, &wrq) < 0)
+  if(ioctl(olsr_cnf->ioctl_s, SIOCGIWRANGE, &wrq) < 0)
     {
       OLSR_PRINTF(1, "NO RANGE\n")
       return -1;
