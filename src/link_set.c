@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.65 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: link_set.c,v 1.66 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -202,7 +202,7 @@ get_neighbor_status(union olsr_ip_addr *address)
 
       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
       //printf("%s : ", olsr_ip_to_string(main_addr)); 
-      if((link = lookup_link_entry(main_addr, ifs)) != NULL)
+      if((link = lookup_link_entry(main_addr, NULL, ifs)) != NULL)
 	{
 	  //printf("%d\n", lookup_link_status(link));
 	  if(lookup_link_status(link) == SYM_LINK)
@@ -215,7 +215,7 @@ get_neighbor_status(union olsr_ip_addr *address)
 	{
 	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
 	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
-	  if((link = lookup_link_entry(&aliases->alias, ifs)) != NULL)
+            if((link = lookup_link_entry(&aliases->alias, NULL, ifs)) != NULL)
 	    {
 	      //printf("%d\n", lookup_link_status(link));
 
@@ -263,7 +263,7 @@ get_best_link_to_neighbor(union olsr_ip_addr *remote)
     if (!COMP_IP(&walker->neighbor->neighbor_main_addr, main_addr))
       continue;
 
-    // handle the non-LQ case
+    // handle the non-LQ, RFC-compliant case
 
     if (olsr_cnf->lq_level == 0)
     {
@@ -298,7 +298,7 @@ get_best_link_to_neighbor(union olsr_ip_addr *remote)
       }
     }
 
-    // handle the LQ case
+    // handle the LQ, non-RFC compliant case
 
     else
     {
@@ -450,7 +450,7 @@ del_if_link_entries(union olsr_ip_addr *int_addr)
  *
  *@param local the local IP address
  *@param remote the remote IP address
- *@param remote_main teh remote nodes main address
+ *@param remote_main the remote nodes main address
  *@param vtime the validity time of the entry
  *@param htime the HELLO interval of the remote node
  *@param local_if the local interface
@@ -462,7 +462,7 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
   struct link_entry *tmp_link_set, *new_link;
   struct neighbor_entry *neighbor;
 
-  if((tmp_link_set = lookup_link_entry(remote, local_if))) return tmp_link_set;
+  if((tmp_link_set = lookup_link_entry(remote, remote_main, local_if))) return tmp_link_set;
 
   /*
    * if there exists no link tuple with
@@ -567,7 +567,12 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
 
   /* Copy the main address - make sure this is done every time
    * as neighbors might change main address */
-  COPY_IP(&neighbor->neighbor_main_addr, remote_main);
+  /* Erik Tromp - OOPS! Don't do this! Neighbor entries are hashed through their
+   * neighbor_main_addr field, and when that field is changed, their position
+   * in the hash table is no longer correct, so that the function
+   * olsr_lookup_neighbor_table() can no longer find the neighbor
+   * entry. */
+  /*COPY_IP(&neighbor->neighbor_main_addr, remote_main);*/
 
   neighbor->linkcount++;
 
@@ -582,9 +587,14 @@ add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_
        * We'll go for one that is hopefully long
        * enough in most cases. 10 seconds
        */
-      OLSR_PRINTF(1, "Adding MID alias main %s ", olsr_ip_to_string(remote_main))
-      OLSR_PRINTF(1, "-> %s based on HELLO\n\n", olsr_ip_to_string(remote))
-      insert_mid_alias(remote_main, remote, MID_ALIAS_HACK_VTIME);
+    /* Erik Tromp - commented out. It is not RFC-compliant. Also, MID aliases
+     * that are not explicitly declared by a node will be removed as soon as
+     * the olsr_prune_aliases(...) function is called.
+     *
+     * OLSR_PRINTF(1, "Adding MID alias main %s ", olsr_ip_to_string(remote_main))
+     * OLSR_PRINTF(1, "-> %s based on HELLO\n\n", olsr_ip_to_string(remote))
+     * insert_mid_alias(remote_main, remote, MID_ALIAS_HACK_VTIME);
+     */
     }
 
   return link_set;
@@ -620,12 +630,13 @@ check_neighbor_link(union olsr_ip_addr *int_addr)
  *Lookup a link entry
  *
  *@param remote the remote interface address
+ *@param remote_main the remote nodes main address
  *@param local the local interface address
  *
  *@return the link entry if found, NULL if not
  */
 struct link_entry *
-lookup_link_entry(union olsr_ip_addr *remote, struct interface *local)
+lookup_link_entry(union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, struct interface *local)
 {
   struct link_entry *tmp_link_set;
 
@@ -634,10 +645,13 @@ lookup_link_entry(union olsr_ip_addr *remote, struct interface *local)
   while(tmp_link_set)
     {
       if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr) &&
-	 (tmp_link_set->if_name ?
-	  !strcmp(tmp_link_set->if_name, local->int_name) :
-	  COMP_IP(&local->ip_addr, &tmp_link_set->local_iface_addr)
-	 ))
+	 (tmp_link_set->if_name
+          ? !strcmp(tmp_link_set->if_name, local->int_name)
+          : COMP_IP(&local->ip_addr, &tmp_link_set->local_iface_addr)
+          ) &&
+         /* check the remote-main address only if there is one given */
+         (remote_main == NULL || COMP_IP(remote_main, &tmp_link_set->neighbor->neighbor_main_addr))
+         )
 	return tmp_link_set;
       tmp_link_set = tmp_link_set->next;
     }
@@ -1072,7 +1086,7 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, struct interface *loc,
 
   // called for every OLSR packet
 
-  entry = lookup_link_entry(rem, loc);
+  entry = lookup_link_entry(rem, NULL, loc);
 
   // it's the very first LQ HELLO message - we do not yet have a link
 

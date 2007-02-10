@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.11 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: local_hna_set.c,v 1.12 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -128,6 +128,45 @@ remove_local_hna6_entry(union olsr_ip_addr *net, olsr_u16_t prefix_len)
 
   return 0;
 }
+
+struct hna4_entry *
+find_local_hna4_entry(union olsr_ip_addr *net, olsr_u32_t mask)
+{
+  struct hna4_entry *h4 = olsr_cnf->hna4_entries;
+
+  while(h4)
+    {
+      if((net->v4 == h4->net.v4) && 
+	 (mask == h4->netmask.v4))
+	{
+	  return h4;
+	}
+      h4 = h4->next;
+    }
+
+  return NULL;
+}
+
+
+
+struct hna6_entry *
+find_local_hna6_entry(union olsr_ip_addr *net, olsr_u16_t prefix_len)
+{
+  struct hna6_entry *h6 = olsr_cnf->hna6_entries;
+
+  while(h6)
+    {
+      if((memcmp(net, &h6->net, olsr_cnf->ipsize) == 0) && 
+	 (prefix_len == h6->prefix_len))
+	{
+	  return h6;
+	}
+      h6 = h6->next;
+    }
+
+  return NULL;
+}
+
 
 
 

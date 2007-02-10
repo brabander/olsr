@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.16 2006/12/14 11:29:20 bernd67 Exp $
+ * $Id: mid_set.c,v 1.17 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -46,6 +46,7 @@
 #include "scheduler.h"
 #include "neighbor_table.h"
 #include "link_set.h"
+#include "packet.h" /* struct mid_alias */
 
 
 struct mid_entry mid_set[HASHSIZE];
@@ -100,6 +101,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
   struct mid_entry *tmp;
   struct mid_address *tmp_adr;
   olsr_u32_t hash, alias_hash;
+  union olsr_ip_addr *registered_m_addr;
 
   hash = olsr_hashing(m_addr);
   alias_hash = olsr_hashing(&alias->alias);
@@ -111,8 +113,16 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
     {
       if(COMP_IP(&tmp->main_addr, m_addr))
 	break;
+     }
+
+  /* Check if alias is already registered with m_addr */
+  registered_m_addr = mid_lookup_main_addr(&alias->alias);
+  if (registered_m_addr != NULL && COMP_IP(registered_m_addr, m_addr))
+    {
+      /* Alias is already registered with main address. Nothing to do here. */
+      return;
     }
-	 
+
   /*If the address was registered*/ 
   if(tmp != &mid_set[hash])
     {
@@ -349,13 +359,98 @@ olsr_update_mid_table(union olsr_ip_addr *adr, float vtime)
       /*find match*/
       if(COMP_IP(&tmp_list->main_addr, adr))
 	{
-	  //printf("Updating timer for node %s\n",ip_to_string(&tmp_list->main_addr));
+	  // printf("MID: Updating timer for node %s\n", olsr_ip_to_string(&tmp_list->main_addr));
 	  tmp_list->ass_timer = GET_TIMESTAMP(vtime*1000);
 
 	  return 1;
 	}
     }
   return 0;
+}
+
+
+/**
+ *Remove aliases from 'entry' which are not listed in 'declared_aliases'.
+ *
+ *@param entry the MID entry
+ *@param declared_aliases the list of declared aliases for the MID entry
+ *
+ *@return nada
+ */
+void
+olsr_prune_aliases(union olsr_ip_addr *m_addr, struct mid_alias *declared_aliases)
+{
+  struct mid_entry *entry;
+  olsr_u32_t hash;
+  struct mid_address *registered_aliases;
+  struct mid_address *previous_alias;
+  struct mid_alias *save_declared_aliases = declared_aliases;
+
+  hash = olsr_hashing(m_addr);
+
+  /* Check for registered entry */
+  for(entry = mid_set[hash].next;
+      entry != &mid_set[hash];
+      entry = entry->next)
+    {
+      if(COMP_IP(&entry->main_addr, m_addr))
+	break;
+    }
+  if(entry == &mid_set[hash])
+    {
+      /* MID entry not found, nothing to prune here */
+      return;
+    }
+
+  registered_aliases = entry->aliases;
+  previous_alias = NULL;
+
+  while(registered_aliases != 0)
+    {
+      struct mid_address *current_alias = registered_aliases;
+      registered_aliases = registered_aliases->next_alias;
+
+      declared_aliases = save_declared_aliases;
+
+      /* Go through the list of declared aliases to find the matching current alias */
+      while(declared_aliases != 0 &&
+            ! COMP_IP(&current_alias->alias, &declared_aliases->alias_addr))
+        {
+          declared_aliases = declared_aliases->next;
+        }
+
+      if (declared_aliases == 0)
+        {
+          /* Current alias not found in list of declared aliases: free current alias */
+          OLSR_PRINTF(1, "MID remove: (%s, ", olsr_ip_to_string(&entry->main_addr))
+          OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&current_alias->alias))
+
+          /* Update linked list as seen by 'entry' */
+          if (previous_alias != NULL)
+            {
+              previous_alias->next_alias = current_alias->next_alias;
+            }
+          else
+            {
+              entry->aliases = current_alias->next_alias;
+            }
+
+          /* Remove from hash table */
+          DEQUEUE_ELEM(current_alias);
+ 
+          free(current_alias);
+
+          /*
+           *Recalculate topology
+           */
+          changes_neighborhood = OLSR_TRUE;
+          changes_topology = OLSR_TRUE;
+        }
+      else
+        {
+          previous_alias = current_alias;
+        }
+    }
 }
 
 

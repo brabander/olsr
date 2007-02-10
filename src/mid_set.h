@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.13 2005/05/29 12:47:45 br1 Exp $
+ * $Id: mid_set.h,v 1.14 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -73,6 +73,7 @@ struct mid_entry
 extern struct mid_entry mid_set[HASHSIZE];
 extern struct mid_address reverse_mid_set[HASHSIZE];
 
+struct mid_alias;
 
 int
 olsr_init_mid_set(void);
@@ -94,6 +95,9 @@ olsr_print_mid_set(void);
 
 void
 olsr_time_out_mid_set(void *);
+
+void
+olsr_prune_aliases(union olsr_ip_addr *m_addr, struct mid_alias *declared_aliases);
 
 int
 olsr_update_mid_table(union olsr_ip_addr *, float);

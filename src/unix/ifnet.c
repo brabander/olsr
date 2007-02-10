@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.43 2007/02/04 23:36:35 bernd67 Exp $
+ * $Id: ifnet.c,v 1.44 2007/02/10 19:27:33 bernd67 Exp $
  */
 
 
@@ -327,9 +327,11 @@ chk_if_changed(struct olsr_if *iface)
 	  OLSR_PRINTF(1, "IPv4 address changed for %s\n", ifr.ifr_name)
 	  OLSR_PRINTF(1, "\tOld:%s\n", sockaddr_to_string(&ifp->int_addr))
 	  OLSR_PRINTF(1, "\tNew:%s\n", sockaddr_to_string(&ifr.ifr_addr))
-	  
+
+	  ifp->int_addr = ifr.ifr_addr;
+
 	  if(memcmp(&olsr_cnf->main_addr, 
-		    &((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, 
+		    &ifp->ip_addr,
 		    olsr_cnf->ipsize) == 0)
 	    {
 	      OLSR_PRINTF(1, "New main address: %s\n", sockaddr_to_string(&ifr.ifr_addr))
@@ -339,7 +341,6 @@ chk_if_changed(struct olsr_if *iface)
 		     olsr_cnf->ipsize);
 	    }
 
-	  ifp->int_addr = ifr.ifr_addr;
 	  memcpy(&ifp->ip_addr, 
 		 &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		 olsr_cnf->ipsize);

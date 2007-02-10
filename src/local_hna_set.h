@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.h,v 1.9 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: local_hna_set.h,v 1.10 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -57,6 +57,12 @@ remove_local_hna4_entry(union olsr_ip_addr *, union olsr_ip_addr *);
 
 int
 remove_local_hna6_entry(union olsr_ip_addr *, olsr_u16_t);
+
+struct hna4_entry *
+find_local_hna4_entry(union olsr_ip_addr *net, olsr_u32_t mask);
+
+struct hna6_entry *
+find_local_hna6_entry(union olsr_ip_addr *net, olsr_u16_t prefix_len);
 
 int
 check_inet_gw(void);

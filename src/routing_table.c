@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.24 2006/12/14 11:29:20 bernd67 Exp $
+ * $Id: routing_table.c,v 1.25 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -65,10 +65,10 @@ static struct destination_n *
 olsr_fill_routing_table_with_two_hop_neighbors(void);
 
 static struct rt_entry *
-olsr_check_for_higher_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+olsr_check_for_higher_quality(struct rt_entry *, struct hna_net *, float);
 
 struct rt_entry *
-olsr_check_for_lower_hopcount(struct rt_entry *, struct hna_net *, olsr_u16_t);
+olsr_check_for_lower_quality(struct rt_entry *, struct hna_net *, float);
 
 static olsr_bool
 two_hop_neighbor_reachable(struct neighbor_2_list_entry *);
@@ -212,7 +212,12 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
   new_route_entry->rt_if = iface;
 
   new_route_entry->rt_metric = metric;
-  new_route_entry->rt_etx = etx;
+  if (etx< 0.0)
+    /* non-LQ case */
+    new_route_entry->rt_etx = (float)metric;
+  else
+    /* LQ case */
+    new_route_entry->rt_etx = etx;
   
   if(COMP_IP(dst, router))
     /* Not GW */
@@ -290,7 +295,7 @@ olsr_fill_routing_table_with_neighbors()
 						    &link->neighbor_iface_addr,
 						    iface,
 						    1,
-						    0);
+						    -1.0);
 			}
 		    }
 	      
@@ -406,7 +411,7 @@ olsr_fill_routing_table_with_two_hop_neighbors()
 						      &link->neighbor_iface_addr,
 						      iface,
 						      2,
-						      0);
+						      -1.0);
 			  
 			  if(new_route_entry != NULL)
 			    {
@@ -503,7 +508,7 @@ olsr_calculate_routing_table()
 						      &list_destination_n->destination->rt_router, 
 						      list_destination_n->destination->rt_if,
 						      list_destination_n->destination->rt_metric+1,
-						      0);
+						      -1.0);
 			  if(destination_n_1->destination != NULL)
 			    {
 			      destination_n_1->next=list_destination_n_1;
@@ -551,17 +556,17 @@ olsr_calculate_routing_table()
 
 
 /**
- *Check for a entry with a higher hopcount than
+ *Check for an entry with a higher quality (lower etx) than
  *a given value in a routing table
  *
  *@param routes the routingtable to look in
  *@param net the network entry to look for
- *@param metric the metric to check for
+ *@param etx the metric to check for
  *
- *@return the localted entry if found. NULL if not
+ *@return the located entry if found. NULL if not
  */
 static struct rt_entry *
-olsr_check_for_higher_hopcount(struct rt_entry *routes, struct hna_net *net, olsr_u16_t metric)
+olsr_check_for_higher_quality(struct rt_entry *routes, struct hna_net *net, float etx)
 {
   int index;
 
@@ -576,8 +581,8 @@ olsr_check_for_higher_hopcount(struct rt_entry *routes, struct hna_net *net, ols
 	  if(COMP_IP(&tmp_routes->rt_dst, &net->A_network_addr) &&
 	     (memcmp(&tmp_routes->rt_mask, &net->A_netmask, netmask_size) == 0))
 	    {
-	      /* Found a entry */
-	      if(tmp_routes->rt_metric > metric)
+	      /* Found an entry */
+	      if(tmp_routes->rt_etx < etx)
 		return tmp_routes;
 	      else
 		return NULL;
@@ -591,17 +596,17 @@ olsr_check_for_higher_hopcount(struct rt_entry *routes, struct hna_net *net, ols
 
 
 /**
- *Check for a entry with a lower or equal hopcount than
+ *Check for an entry with a lower or equal quality (higher or equal etx) than
  *a given value in a routing table
  *
  *@param routes the routingtable to look in
  *@param net the network entry to look for
- *@param metric the metric to check for
+ *@param etx the metric to check for
  *
- *@return the localted entry if found. NULL if not
+ *@return the located entry if found. NULL if not
  */
 struct rt_entry *
-olsr_check_for_lower_hopcount(struct rt_entry *routes, struct hna_net *net, olsr_u16_t metric)
+olsr_check_for_lower_quality(struct rt_entry *routes, struct hna_net *net, float etx)
 {
   int index;
 
@@ -616,8 +621,8 @@ olsr_check_for_lower_hopcount(struct rt_entry *routes, struct hna_net *net, olsr
 	  if(COMP_IP(&tmp_routes->rt_dst, &net->A_network_addr) &&
 	     (memcmp(&tmp_routes->rt_mask, &net->A_netmask, netmask_size) == 0))
 	    {
-	      /* Found a entry */
-	      if(tmp_routes->rt_metric <= metric)
+	      /* Found an entry */
+	      if(tmp_routes->rt_etx >= etx)
 		return tmp_routes;
 	      else
 		return NULL;
@@ -674,13 +679,13 @@ olsr_calculate_hna_routes()
 		}
 
 	      /* If there exists a better or equal entry - skip */
-	      if(olsr_check_for_lower_hopcount(hna_routes, tmp_net, tmp_rt->rt_metric) != NULL)
+	      if(olsr_check_for_higher_quality(hna_routes, tmp_net, tmp_rt->rt_etx) != NULL)
 		{
 		  continue;
 		}
 
-	      /* If we find an entry with higher hopcount we just edit it */
-	      if((new_rt = olsr_check_for_higher_hopcount(hna_routes, tmp_net, tmp_rt->rt_metric)) != NULL)
+	      /* If we find an entry with lower quality we just edit it */
+	      if((new_rt = olsr_check_for_lower_quality(hna_routes, tmp_net, tmp_rt->rt_etx)) != NULL)
 		{
 		  /* Fill struct */
 		  /* Net */
@@ -689,6 +694,7 @@ olsr_calculate_hna_routes()
 		  /* Gateway */
 		  COPY_IP(&new_rt->rt_router, &tmp_rt->rt_router);
 		  /* Metric */
+		  new_rt->rt_etx = tmp_rt->rt_etx;
 		  new_rt->rt_metric = tmp_rt->rt_metric;
 		  /* Flags */
 		  new_rt->rt_flags = RTF_UP | RTF_GATEWAY;
@@ -709,6 +715,7 @@ olsr_calculate_hna_routes()
 		  /* Gateway */
 		  COPY_IP(&new_rt->rt_router, &tmp_rt->rt_router);
 		  /* Metric */
+		  new_rt->rt_etx = tmp_rt->rt_etx;
 		  new_rt->rt_metric = tmp_rt->rt_metric;
 		  /* Flags */
 		  new_rt->rt_flags = RTF_UP | RTF_GATEWAY;

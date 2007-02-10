@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.17 2006/12/14 11:29:19 bernd67 Exp $
+ * $Id: hysteresis.c,v 1.18 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -166,7 +166,7 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, 
 {
   struct link_entry *link;
 
-  link = lookup_link_entry(remote, local);
+  link = lookup_link_entry(remote, NULL, local);
 
   /* Calculate new quality */      
   if(link != NULL)

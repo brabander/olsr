@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.30 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: link_set.h,v 1.31 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 
@@ -124,7 +124,7 @@ struct link_entry *
 get_best_link_to_neighbor(union olsr_ip_addr *);
 
 struct link_entry *
-lookup_link_entry(union olsr_ip_addr *, struct interface *);
+lookup_link_entry(union olsr_ip_addr *, union olsr_ip_addr *remote_main, struct interface *);
 
 struct link_entry *
 update_link_entry(union olsr_ip_addr *, union olsr_ip_addr *, struct hello_message *, struct interface *);

@@ -267,6 +267,7 @@ Interface "XXX" "YYY"
     # HNA validity time
     # HnaValidityTime 	15.0
 
+
     # When multiple links exist between hosts
     # the weight of interface is used to determine
     # the link to use. Normally the weight is
@@ -274,9 +275,29 @@ Interface "XXX" "YYY"
     # on the characteristics of the interface,
     # but here you can specify a fixed value.
     # Olsrd will choose links with the lowest value.
-
+    # Note:
+    # Interface weight is used only when LinkQualityLevel is set to 0.
+    # For any other value of LinkQualityLevel, the interface ETX
+    # value is used instead.
     # Weight 0
 
+
+    # If a certain route should be preferred 
+    # or ignored by the mesh, the Link Quality 
+    # value of a node can be multiplied with a factor 
+    # entered here. In the example the route 
+    # using 192.168.0.1 would rather be ignored.
+    # A multiplier of 0.5 will result in a small
+    # (bad) LinkQuality value and a high (bad)
+    # ETX value.
+    # Note:
+    # Link quality multiplier is used only when
+    # LinkQualityLevel is > 0.
+
+    # LinkQualityMult 192.168.0.1 0.5
+
+    # This multiplier applies to all other nodes 
+    # LinkQualityMult default 0.8
 
 }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.11 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: lq_mpr.c,v 1.12 2007/02/10 19:27:32 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -52,7 +52,7 @@ void olsr_calculate_lq_mpr(void)
   struct neighbor_list_entry *walker;
   int i, k;
   struct neighbor_entry *neigh;
-  double best;
+  double best, best_1hop;
   olsr_bool mpr_changes = OLSR_FALSE;
   struct link_entry *link;
 
@@ -91,6 +91,8 @@ void olsr_calculate_lq_mpr(void)
            neigh2 != &two_hop_neighbortable[i];
            neigh2 = neigh2->next)
         {
+          best_1hop = -1.0;
+
           // check whether this 2-hop neighbour is also a neighbour
 
           neigh = olsr_lookup_neighbor_table(&neigh2->neighbor_2_addr);
@@ -111,14 +113,14 @@ void olsr_calculate_lq_mpr(void)
 	      if(!link)
 		continue;
 
-              best = link->loss_link_quality * link->neigh_link_quality;
+              best_1hop = link->loss_link_quality * link->neigh_link_quality;
 
               // see wether we find a better route via an MPR
 
               for (walker = neigh2->neighbor_2_nblist.next;
                    walker != &neigh2->neighbor_2_nblist;
                    walker = walker->next)
-                if (walker->path_link_quality > best)
+                if (walker->path_link_quality > best_1hop)
                   break;
 
               // we've reached the end of the list, so we haven't found
@@ -158,7 +160,10 @@ void olsr_calculate_lq_mpr(void)
                     best = walker->path_link_quality;
                   }
 
-              if (neigh != NULL)
+              // Found a 1-hop neighbor that we haven't previously selected.
+              // Use it as MPR only when the 2-hop path through it is better than
+              // any existing 1-hop path.
+              if ((neigh != NULL) && (best > best_1hop))
                 {
                   neigh->is_mpr = OLSR_TRUE;
                   neigh->skip = OLSR_TRUE;
