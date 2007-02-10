@@ -33,13 +33,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: Address.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : Address.h
+ * Description: IP packet characterization functions
+ * Created    : 29 Jun 2006
+ *
+ * $Id: Address.h,v 1.2 2007/02/10 17:05:55 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 #include "olsr_types.h" /* olsr_ip_addr */
 #include "interfaces.h" /* struct interface */
 
+struct TBmfInterface;
+
+extern int EnableLocalBroadcast;
+
+int DoLocalBroadcast(const char* enable);
 int IsMulticast(union olsr_ip_addr* ipAddress);
-int IsLocalBroadcast(union olsr_ip_addr* destIp, struct interface* ifFrom);
-int IsOlsrOrBmfPacket(unsigned char* buffer, ssize_t len);
+int IsLocalBroadcast(union olsr_ip_addr* destIp, struct sockaddr* broadAddr);
+int IsOlsrOrBmfPacket(struct TBmfInterface* intf, unsigned char* ethPkt, size_t len);
 
 #endif /* _BMF_ADDRESS_H */

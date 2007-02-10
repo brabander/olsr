@@ -33,19 +33,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: Bmf.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : Bmf.h
+ * Description: Multicast forwarding functions
+ * Created    : 29 Jun 2006
+ *
+ * $Id: Bmf.h,v 1.2 2007/02/10 17:05:55 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 /* BMF plugin data */
-#define PLUGIN_NAME "OLSRD Basic Multicast Forwarding plugin"
-#define PLUGIN_VERSION "1.0.1 (" __DATE__ " " __TIME__ ")"
+#define PLUGIN_NAME "OLSRD Basic Multicast Forwarding (BMF) plugin"
+#define PLUGIN_NAME_SHORT "OLSRD BMF"
+#define PLUGIN_VERSION "1.3 (" __DATE__ " " __TIME__ ")"
 #define PLUGIN_COPYRIGHT "  (C) Thales Communications Huizen, Netherlands"
-#define PLUGIN_AUTHOR "  Erik Tromp (erik_tromp@hotmail.com)"
+#define PLUGIN_AUTHOR "  Erik Tromp (erik.tromp@nl.thalesgroup.com)"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION "\n" PLUGIN_COPYRIGHT "\n" PLUGIN_AUTHOR
 
 /* UDP-Port on which multicast packets are encapsulated */
-#define BMF_ENCAP_PORT 50505
+#define BMF_ENCAP_PORT 50698
 
-int InitBmf(void);
+struct interface;
+
+int InterfaceChange(struct interface* interf, int action);
+int InitBmf(struct interface* skipThisIntf);
 void CloseBmf(void);
 int RegisterBmfParameter(char* key, char* value);
 

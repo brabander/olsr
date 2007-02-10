@@ -33,7 +33,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: DropList.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : DropList.h
+ * Description: List of MAC addresses of hosts from which all packets are dropped.
+ * Created    : 29 Jun 2006
+ *
+ * $Id: DropList.h,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 struct TMacAddress
 {

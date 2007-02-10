@@ -30,7 +30,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: Packet.c,v 1.2 2007/02/08 10:31:43 bernd67 Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : Packet.c
+ * Description: BMF and IP packet processing functions
+ * Created    : 29 Jun 2006
+ *
+ * $Id: Packet.c,v 1.3 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 #include "Packet.h"
 
@@ -38,11 +44,56 @@
 #include <assert.h> /* assert() */
 #include <sys/types.h> /* u_int32_t */
 #include <netinet/in.h> /* ntohs(), htons() */
-#include <asm/byteorder.h>
-#include <linux/ip.h>
+#include <netinet/ip.h> /* struct iphdr */
 
-/* Retrieve the TTL (Time To Live) value from the IP header of the
- * passed ethernet packet */
+#include <stdio.h>
+/* -------------------------------------------------------------------------
+ * Function   : GetIpPacketLength
+ * Description: Retrieve the IP packet length (in bytes) of the passed
+ *              ethernet-IP packet
+ * Input      : buffer - the ethernet-IP packet
+ * Output     : none
+ * Return     : IP packet length
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
+int GetIpPacketLength(unsigned char* buffer)
+{
+  struct iphdr* iph;
+
+  assert(buffer != NULL);
+
+  iph = (struct iphdr*) (buffer + IP_HDR_OFFSET);
+  return ntohs(iph->tot_len);
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : GetIpHeaderLength
+ * Description: Retrieve the IP header length (in bytes) of the passed
+ *              ethernet-IP packet
+ * Input      : buffer - the ethernet-IP packet
+ * Output     : none
+ * Return     : IP header length
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
+int GetIpHeaderLength(unsigned char* buffer)
+{
+  struct iphdr* iph;
+
+  assert(buffer != NULL);
+
+  iph = (struct iphdr*) (buffer + IP_HDR_OFFSET);
+  return iph->ihl << 2;
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : GetIpTtl
+ * Description: Retrieve the TTL (Time To Live) value from the IP header of
+ *              the passed ethernet-IP packet
+ * Input      : buffer - the ethernet-IP packet
+ * Output     : none
+ * Return     : TTL value
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
 int GetIpTtl(unsigned char* buffer)
 {
   struct iphdr* iph;
@@ -53,6 +104,15 @@ int GetIpTtl(unsigned char* buffer)
   return iph->ttl;
 }
 
+/* -------------------------------------------------------------------------
+ * Function   : SaveTtlAndChecksum
+ * Description: Save the TTL (Time To Live) value and IP checksum as found in
+ *              the IP header of the passed ethernet-IP packet
+ * Input      : buffer - the ethernet-IP packet
+ * Output     : sttl - the TTL and checksum values
+ * Return     : none
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
 void SaveTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl)
 {
   struct iphdr* iph;
@@ -64,6 +124,16 @@ void SaveTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl)
   sttl->check = ntohs(iph->check);
 }
 
+/* -------------------------------------------------------------------------
+ * Function   : RestoreTtlAndChecksum
+ * Description: Restore the TTL (Time To Live) value and IP checksum in
+ *              the IP header of the passed ethernet-IP packet
+ * Input      : buffer - the ethernet-IP packet
+ *              sttl - the TTL and checksum values
+ * Output     : none
+ * Return     : none
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
 void RestoreTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl)
 {
   struct iphdr* iph;
@@ -75,9 +145,17 @@ void RestoreTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl)
   iph->check = htons(sttl->check);
 }
 
-/* For an IP packet, decrement the TTL value and update the IP header
- * checksum accordingly. See also RFC1141. */
-void PacketDecreaseTtlAndUpdateHeaderChecksum(unsigned char* buffer)
+/* -------------------------------------------------------------------------
+ * Function   : DecreaseTtlAndUpdateHeaderChecksum
+ * Description: For an IP packet, decrement the TTL value and update the IP header
+ *              checksum accordingly.
+ * Input      : buffer - the ethernet-IP packet
+ * Output     : none
+ * Return     : none
+ * Data Used  : none
+ * Notes      : See also RFC1141
+ * ------------------------------------------------------------------------- */
+void DecreaseTtlAndUpdateHeaderChecksum(unsigned char* buffer)
 {
   struct iphdr* iph;
   u_int32_t sum;

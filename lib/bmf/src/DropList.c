@@ -30,7 +30,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: DropList.c,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : DropList.c
+ * Description: List of MAC addresses of hosts from which received multicast
+ *              and local broadcast packets are dropped.
+ * Created    : 29 Jun 2006
+ *
+ * $Id: DropList.c,v 1.2 2007/02/10 17:05:55 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 
 #include "DropList.h"
@@ -50,15 +57,24 @@
 
 static struct TMacAddress* DroppedMacAddresses = NULL;
 
-/* Register a MAC address in the drop list. The registered MAC address will be matched
- * to the source MAC address of incoming multicast packets. If matched, the multicast
- * packet will be silently dropped.
- * The drop list is needed only in lab environments, where hidden nodes are simulated
- * by using iptables with the -m mac --mac-source option (as in:
- * "iptables -A INPUT -m mac --mac-source 00:0C:29:EE:C9:D0 -j DROP")
- * The drop list is needed because network interfaces in promiscuous mode will still
- * capture packets even if they are specified to be dropped by iptables.
- */
+/* -------------------------------------------------------------------------
+ * Function   : DropMac
+ * Description: Register a MAC address in the drop list
+ * Input      : macStr - MAC address as string
+ * Output     : none
+ * Return     : fail (0) or success (1)
+ * Data Used  : DroppedMacAddresses
+ * Notes      : The registered MAC address will be matched to the source MAC 
+ *              address of incoming multicast packets. If matched, the multicast 
+ *              packet will be dropped. 
+ *              The drop list is needed only in lab environments, where hidden
+ *              nodes are simulated by using iptables with the
+ *              -m mac helper and --mac-source option (as in: 
+ *              "iptables -A INPUT -m mac --mac-source 00:0C:29:EE:C9:D0 -j DROP") 
+ *              The drop list is needed because network interfaces in promiscuous 
+ *              mode will still capture packets even if they are specified to 
+ *              be dropped by iptables.
+ * ------------------------------------------------------------------------- */
 int DropMac(const char* macStr)
 {
   unsigned int mac[6];
@@ -86,7 +102,14 @@ int DropMac(const char* macStr)
   return 1;
 }
 
-/* Return 1 if macAddress is in the drop list, else 0 */
+/* -------------------------------------------------------------------------
+ * Function   : IsInDropList
+ * Description: Check if a MAC address is in the drop list
+ * Input      : macAddress
+ * Output     : none
+ * Return     : true (1) or false (0)
+ * Data Used  : DroppedMacAddresses
+ * ------------------------------------------------------------------------- */
 int IsInDropList(const unsigned char* macAddress)
 {
   struct TMacAddress* ma = DroppedMacAddresses;

@@ -33,7 +33,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: Packet.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : Packet.h
+ * Description: BMF and IP packet processing functions
+ * Created    : 29 Jun 2006
+ *
+ * $Id: Packet.h,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 /* System includes */
 #include <net/if.h> /* IFNAMSIZ, IFHWADDRLEN */
@@ -49,15 +55,31 @@
 
 #define IPV4_TYPE 0x0800
 
+/* BMF-encapsulated packets are Ethernet-IP-UDP packets, which start
+ * with a 16-bytes BMF header (struct TEncapHeader), followed by the
+ * encapsulated Ethernet-IP packet itself */
+
+struct TEncapHeader
+{
+  u_int32_t crc32;
+  u_int32_t futureExpansion1;
+  u_int32_t futureExpansion2;
+  u_int32_t futureExpansion3;
+} __attribute__((__packed__));
+
+#define	ENCAP_HDR_LEN (sizeof(struct TEncapHeader))
+
 struct TSaveTtl
 {
   u_int8_t ttl;
   u_int16_t check;
-};
+} __attribute__((__packed__));
 
+int GetIpPacketLength(unsigned char* buffer);
+int GetIpHeaderLength(unsigned char* buffer);
 int GetIpTtl(unsigned char* buffer);
 void SaveTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl);
 void RestoreTtlAndChecksum(unsigned char* buffer, struct TSaveTtl* sttl);
-void PacketDecreaseTtlAndUpdateHeaderChecksum(unsigned char* buffer);
+void DecreaseTtlAndUpdateHeaderChecksum(unsigned char* buffer);
 
 #endif /* _BMF_PACKET_H */

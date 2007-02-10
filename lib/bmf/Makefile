@@ -31,11 +31,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: Makefile,v 1.1 2006/05/03 08:59:04 kattemat Exp $
+# $Id: Makefile,v 1.2 2007/02/10 17:05:55 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_bmf
-PLUGIN_VER =	1.0.1
+PLUGIN_VER =	1.3
 
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc

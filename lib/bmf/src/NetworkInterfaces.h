@@ -33,10 +33,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: NetworkInterfaces.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : NetworkInterfaces.h
+ * Description: Functions to open and close sockets
+ * Created    : 29 Jun 2006
+ *
+ * $Id: NetworkInterfaces.h,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
+
+/* System includes */
+#include <netinet/in.h> /* struct in_addr */
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */
+
+/* Size of buffer in which packets are received */
+#define BMF_BUFFER_SIZE 2048
 
 struct TBmfInterface
 {
@@ -44,7 +56,7 @@ struct TBmfInterface
   int capturingSkfd;
 
   /* File descriptor of UDP (datagram) socket for encapsulated multicast packets. 
-   * Set to -1 if interface is not OLSR-enabled. */
+   * Only used for OLSR-enabled interfaces; set to -1 if interface is not OLSR-enabled. */
   int encapsulatingSkfd;
 
   unsigned char macAddr[IFHWADDRLEN];
@@ -55,25 +67,54 @@ struct TBmfInterface
    * OLSR-enabled. */
   struct interface* olsrIntf;
 
-  /* Kernels index of this network interface */
-  int ifIndex;
-  
+  /* IP address of this network interface */
+  struct sockaddr intAddr;
+
+  /* Broadcast address of this network interface */
+  struct sockaddr broadAddr;
+
+  #define FRAGMENT_HISTORY_SIZE 10
+  struct TFragmentHistory
+  {
+    u_int16_t ipId;
+    u_int8_t ipProto;
+    struct in_addr ipSrc;
+    struct in_addr ipDst;
+  } fragmentHistory [FRAGMENT_HISTORY_SIZE];
+
+  int nextFragmentHistoryEntry;
+
   /* Next element in list */
   struct TBmfInterface* next; 
 };
 
 extern struct TBmfInterface* BmfInterfaces;
 
+extern int HighestSkfd;
+extern fd_set InputSet;
+
 extern int EtherTunTapFd;
 
-extern const char* EtherTunTapIfName;
+extern char EtherTunTapIfName[];
+
+extern u_int32_t EtherTunTapIp;
+extern u_int32_t EtherTunTapIpMask;
+extern u_int32_t EtherTunTapIpBroadcast;
+
+extern int CapturePacketsOnOlsrInterfaces;
 
 enum TTunOrTap { TT_TUN = 0, TT_TAP };
 extern enum TTunOrTap TunOrTap;
 
-int CreateBmfNetworkInterfaces(void);
+int SetBmfInterfaceName(const char* ifname);
+int SetBmfInterfaceType(const char* iftype);
+int SetBmfInterfaceIp(const char* ip);
+int SetCapturePacketsOnOlsrInterfaces(const char* enable);
+int CreateBmfNetworkInterfaces(struct interface* skipThisIntf);
+void AddInterface(struct interface* newIntf);
 void CloseBmfNetworkInterfaces(void);
 int AddNonOlsrBmfIf(const char* ifName);
 int IsNonOlsrBmfIf(const char* ifName);
+void CheckAndUpdateLocalBroadcast(unsigned char* buffer, struct sockaddr* broadAddr);
 
 #endif /* _BMF_NETWORKINTERFACES_H */

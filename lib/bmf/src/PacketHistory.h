@@ -33,11 +33,18 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: PacketHistory.h,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : PacketHistory.h
+ * Description: Functions for keeping and accessing the history of processed
+ *              multicast IP packets.
+ * Created    : 29 Jun 2006
+ *
+ * $Id: PacketHistory.h,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 #include <sys/types.h> /* ssize_t */
 
-/* 2 bits per seen packet fingerping: 
+/* 2 bits per seen packet: 
  * 11 = "seen recently",
  * 01 = "timing out"
  * 00 = "not seen recently"
@@ -49,8 +56,10 @@
 #define HISTORY_TABLE_SIZE ((1 << NBITS_IN_UINT16) / NPACKETS_PER_ENTRY)
 
 void InitPacketHistory(void);
-void MarkRecentPacket(unsigned char* buffer, ssize_t len);
-int CheckMarkRecentPacket(unsigned char* buffer, ssize_t len);
+u_int32_t PacketCrc32(unsigned char* ethPkt, ssize_t len);
+u_int16_t Hash16(u_int32_t hash32);
+void MarkRecentPacket(u_int16_t hash16);
+int CheckAndMarkRecentPacket(u_int16_t hash16);
 void PrunePacketHistory(void*);
 
 #endif /* _BMF_PACKETHISTORY_H */

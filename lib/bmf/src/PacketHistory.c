@@ -30,14 +30,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $Id: PacketHistory.c,v 1.1 2006/05/03 08:59:04 kattemat Exp $ */
+/* -------------------------------------------------------------------------
+ * File       : PacketHistory.c
+ * Description: Functions for keeping and accessing the history of processed
+ *              multicast IP packets.
+ * Created    : 29 Jun 2006
+ *
+ * $Id: PacketHistory.c,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * ------------------------------------------------------------------------- */
 
 #include "PacketHistory.h"
 
 /* System includes */
 #include <assert.h> /* assert() */
-#include <sys/types.h> /* u_int16_t, u_int32_t */
 #include <string.h> /* memset */
+#include <sys/types.h> /* u_int16_t, u_int32_t */
+#include <netinet/ip.h> /* struct iphdr */
 
 /* OLSRD includes */
 #include "olsr.h" /* olsr_printf */
@@ -47,8 +55,18 @@
 
 static u_int32_t PacketHistory[HISTORY_TABLE_SIZE];
 
-/* Calculate 16-bits CRC according to CRC-CCITT specification, modified
- * to leave out some parts of the packet. */
+#define CRC_UPTO_NBYTES 256
+
+#if 0
+/* -------------------------------------------------------------------------
+ * Function   : CalcCrcCcitt
+ * Description: Calculate 16-bits CRC according to CRC-CCITT specification
+ * Input      : buffer - the bytes to calculate the CRC value over
+ *              len - the number of bytes to calculate the CRC value over
+ * Output     : none
+ * Return     : CRC-16 value
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
 static u_int16_t CalcCrcCcitt(unsigned char* buffer, ssize_t len)
 {
   /* Initial value of 0xFFFF should be 0x1D0F according to
@@ -60,10 +78,6 @@ static u_int16_t CalcCrcCcitt(unsigned char* buffer, ssize_t len)
 
   for (i = 0; i < len; i++)
   {
-    /* Skip IP header checksum; we want to avoid as much as possible
-     * calculating a checksum over data containing a checksum */
-    if (i >= 12 && i < 14) continue;
-
     crc  = (unsigned char)(crc >> 8) | (crc << 8);
     crc ^= buffer[i];
     crc ^= (unsigned char)(crc & 0xff) >> 4;
@@ -71,75 +85,198 @@ static u_int16_t CalcCrcCcitt(unsigned char* buffer, ssize_t len)
     crc ^= ((crc & 0xff) << 4) << 1;
   }
   return crc;
-
-#if 0
-  /* Alternative, simpler and perhaps just as good: add source IP address,
-   * destination IP address and IP identification, in 16-bit */
-  return
-    ((buffer[0x0E] << 8) + buffer[0x0F]) + ((buffer[0x10] << 8) + buffer[0x11]) +
-    ((buffer[0x12] << 8) + buffer[0x13]) + ((buffer[0x14] << 8) + buffer[0x15]) +
-    ((buffer[0x06] << 8) + buffer[0x07]);
+}
 #endif
+
+/* -------------------------------------------------------------------------
+ * Function   : GenerateCrc32Table
+ * Description: Generate the table of CRC remainders for all possible bytes,
+ *              according to CRC-32-IEEE 802.3
+ * Input      : none
+ * Output     : none
+ * Return     : none
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
+#define CRC32_POLYNOMIAL 0xedb88320UL /* bit-inverse of 0x04c11db7UL */
+
+static unsigned long CrcTable[256];
+
+static void GenerateCrc32Table(void)
+{
+  int i, j;
+  u_int32_t crc;
+  for (i = 0; i < 256; i++)
+  {
+    crc = (u_int32_t) i;
+    for (j = 0; j < 8; j++)
+    {
+      if (crc & 1)
+      {
+        crc = (crc >> 1) ^ CRC32_POLYNOMIAL;
+      }
+      else
+      {
+        crc = (crc >> 1);
+      }
+    }
+    CrcTable[i] = crc;
+  }
 }
 
+/* -------------------------------------------------------------------------
+ * Function   : CalcCrc32
+ * Description: Calculate CRC-32 according to CRC-32-IEEE 802.3
+ * Input      : buffer - the bytes to calculate the CRC value over
+ *              len - the number of bytes to calculate the CRC value over
+ * Output     : none
+ * Return     : CRC-32 value
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
+static u_int32_t CalcCrc32(unsigned char* buffer, ssize_t len)
+{
+  int i, j;
+  u_int32_t crc = 0xffffffffUL;
+  for (i = 0; i < len; i++)
+  {
+    j = ((int) (crc & 0xFF) ^ *buffer++);
+    crc = (crc >> 8) ^ CrcTable[j];
+  }
+  return crc ^ 0xffffffffUL;
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : PacketCrc32
+ * Description: Calculates the CRC-32 value for an Ethernet packet
+ * Input      : ethPkt - the Ethernet packet
+ *              len - the number of octets in the Ethernet packet
+ * Output     : none
+ * Return     : 32-bits hash value
+ * Data Used  : none
+ * Notes      : The source and destination MAC address are not taken into account
+ *              in the CRC calculation.
+ * ------------------------------------------------------------------------- */
+u_int32_t PacketCrc32(unsigned char* ethPkt, ssize_t len)
+{
+  ssize_t nCrcBytes;
+  struct TSaveTtl sttl;
+  struct iphdr* iph;
+  u_int32_t result;
+
+  assert(ethPkt != NULL);
+
+  /* Start CRC calculation at ethertype; skip source and destination MAC 
+   * addresses, and ethertype.
+   *
+   * Also skip TTL: in a multi-homed OLSR-network, the same multicast packet
+   * may enter the network multiple times, each copy differing only in its
+   * TTL value. BMF must not calculate a different CRC for packets that
+   * differ only in TTL. Skip also the IP-header checksum, because it changes
+   * along with TTL. Besides, it is not a good idea to calculate a CRC over
+   * data that already contains a checksum.
+   *
+   * Clip number of bytes over which CRC is calculated to prevent
+   * long packets from possibly claiming too much CPU resources. */
+  nCrcBytes = len - IP_HDR_OFFSET;
+  assert(nCrcBytes > 0);
+  if (nCrcBytes > CRC_UPTO_NBYTES)
+  {
+    nCrcBytes = CRC_UPTO_NBYTES;
+  }
+
+  SaveTtlAndChecksum(ethPkt, &sttl);
+
+  iph = (struct iphdr*) (ethPkt + IP_HDR_OFFSET);
+  iph->ttl = 0xFF; /* fixed value of TTL for CRC-32 calculation */
+  iph->check = 0x5A5A; /* fixed value of IP header checksum for CRC-32 calculation */
+
+  result = CalcCrc32(ethPkt + IP_HDR_OFFSET, nCrcBytes);
+
+  RestoreTtlAndChecksum(ethPkt, &sttl);
+  return result;
+}
+
+/* Calculates a 16-bit hash value from a 32-bit hash value */
+u_int16_t Hash16(u_int32_t hash32)
+{
+  return ((hash32 >> 16) + hash32) & 0xFFFFU;
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : InitPacketHistory
+ * Description: Initialize the packet history table and CRC-32 table
+ * Input      : none
+ * Output     : none
+ * Return     : none
+ * Data Used  : PacketHistory
+ * ------------------------------------------------------------------------- */
 void InitPacketHistory()
 {
   memset(PacketHistory, 0, sizeof(PacketHistory));
+  GenerateCrc32Table();
 }
 
-/* Record the fact that this packet was seen recently */
-void MarkRecentPacket(unsigned char* buffer, ssize_t len)
+/* -------------------------------------------------------------------------
+ * Function   : MarkRecentPacket
+ * Description: Record the fact that this packet was seen recently
+ * Input      : hash16
+ * Output     : none
+ * Return     : none
+ * Data Used  : PacketHistory
+ * ------------------------------------------------------------------------- */
+void MarkRecentPacket(u_int16_t hash16)
 {
-  u_int16_t crc;
   u_int32_t index;
   uint offset;
 
-  assert(buffer != NULL);
-
-  /* Start CRC calculation at ethertype; skip source and destination MAC 
-   * addresses */
-  crc = CalcCrcCcitt(buffer + ETH_TYPE_OFFSET, len - ETH_TYPE_OFFSET);
-
-  index = crc / NPACKETS_PER_ENTRY;
+  index = hash16 / NPACKETS_PER_ENTRY;
   assert(index < HISTORY_TABLE_SIZE);
 
-  offset = (crc % NPACKETS_PER_ENTRY) * NBITS_PER_PACKET;
+  offset = (hash16 % NPACKETS_PER_ENTRY) * NBITS_PER_PACKET;
   assert(offset <= NBITS_IN_UINT32 - NBITS_PER_PACKET);
 
-  /* Mark "seen recently" */
+  /* Mark as "seen recently" */
   PacketHistory[index] = PacketHistory[index] | (0x3u << offset);
 }
 
-/* Check if this packet was seen recently */
-int CheckMarkRecentPacket(unsigned char* buffer, ssize_t len)
+/* -------------------------------------------------------------------------
+ * Function   : CheckAndMarkRecentPacket
+ * Description: Check if this packet was seen recently, then record the fact
+ *              that this packet was seen recently.
+ * Input      : hash16
+ * Output     : none
+ * Return     : not recently seen (0), recently seen (1)
+ * Data Used  : PacketHistory
+ * ------------------------------------------------------------------------- */
+int CheckAndMarkRecentPacket(u_int16_t hash16)
 {
-  u_int16_t crc;
   u_int32_t index;
   uint offset;
   u_int32_t bitMask;
   int result;
 
-  assert(buffer != NULL);
-
-  /* Start CRC calculation at ethertype; skip source and destination MAC 
-   * addresses */
-  crc = CalcCrcCcitt(buffer + ETH_TYPE_OFFSET, len - ETH_TYPE_OFFSET);
-
-  index = crc / NPACKETS_PER_ENTRY;
+  index = hash16 / NPACKETS_PER_ENTRY;
   assert(index < HISTORY_TABLE_SIZE);
 
-  offset =  (crc % NPACKETS_PER_ENTRY) * NBITS_PER_PACKET;
+  offset =  (hash16 % NPACKETS_PER_ENTRY) * NBITS_PER_PACKET;
   assert(offset <= NBITS_IN_UINT32 - NBITS_PER_PACKET);
 
   bitMask = 0x1u << offset;
   result = ((PacketHistory[index] & bitMask) == bitMask);
   
-  /* Always mark "seen recently" */
+  /* Always mark as "seen recently" */
   PacketHistory[index] = PacketHistory[index] | (0x3u << offset);
 
   return result;
 }
   
+/* -------------------------------------------------------------------------
+ * Function   : PrunePacketHistory
+ * Description: Prune the packet history table.
+ * Input      : useless - not used
+ * Output     : none
+ * Return     : none
+ * Data Used  : PacketHistory
+ * ------------------------------------------------------------------------- */
 void PrunePacketHistory(void* useless)
 {
   uint i;
