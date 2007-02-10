@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.6 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.7 2007/02/10 19:59:51 bernd67 Exp $
  */
 
 
@@ -50,11 +50,6 @@
 #include <net/if.h>
 
 typedef int (*packet_transform_function)(olsr_u8_t *, int *);
-
-#ifdef USE_LIBNET
-char *
-get_libnet_errbuf(void);
-#endif
 
 void
 net_set_disp_pack_out(olsr_bool);

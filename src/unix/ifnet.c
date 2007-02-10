@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.44 2007/02/10 19:27:33 bernd67 Exp $
+ * $Id: ifnet.c,v 1.45 2007/02/10 19:59:51 bernd67 Exp $
  */
 
 
@@ -67,10 +67,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-
-#ifdef USE_LIBNET
-#include <libnet.h>
-#endif
 
 int bufspace = 127*1024;	/* max. input buffer size to request */
 
@@ -506,9 +502,6 @@ chk_if_changed(struct olsr_if *iface)
   /* Close olsr socket */
   close(ifp->olsr_socket);
   remove_olsr_socket(ifp->olsr_socket, &olsr_input);
-#ifdef USE_LIBNET
-  libnet_destroy(ifp->libnet_ctx);
-#endif
 
   /* Free memory */
   free(ifp->int_name);
@@ -931,9 +924,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
   
   memcpy(ifp, &ifs, sizeof(struct interface));
   
-#ifdef USE_LIBNET
-  ifp->libnet_ctx = NULL;  
-#endif
   ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       
@@ -989,23 +979,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       
     }
 
-#ifdef USE_LIBNET
-#if 1
-  ifp->libnet_ctx = libnet_init((olsr_cnf->ip_version == AF_INET) ? 
-				LIBNET_RAW4 : LIBNET_RAW6, 
-				ifp->int_name, get_libnet_errbuf());
-#else
-  ifp->libnet_ctx = libnet_init(LIBNET_LINK, ifp->int_name, get_libnet_errbuf());
-#endif
-
-  if(ifp->libnet_ctx == NULL)
-    {
-      fprintf(stderr, "Could not initialize libnet... exiting!\n\n");
-      olsr_syslog(OLSR_LOG_ERR, "Could not initialize libnet... exiting!\n\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      kill(getpid(), SIGINT);
-    }
-#endif
   set_buffer_timer(ifp);
 
   /* Register socket */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.18 2007/02/10 17:36:51 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.19 2007/02/10 19:59:51 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -47,11 +47,6 @@
 #include "link_set.h"
 #include <stdlib.h>
 #include <assert.h>
-
-#ifdef USE_LIBNET
-#include <libnet.h>
-#endif
-
 
 extern olsr_bool lq_tc_pending;
 
@@ -99,20 +94,6 @@ static const char * const deny_ipv6_defaults[] =
     "0::1",
     NULL
   };
-
-#ifdef USE_LIBNET
-int
-olsr_in_cksum(olsr_u16_t *, int);
-
-static char errbuf[LIBNET_ERRBUF_SIZE];
-
-char *
-get_libnet_errbuf(void)
-{
-  return errbuf;
-}
-#endif
-
 
 void
 net_set_disp_pack_out(olsr_bool val)
@@ -378,38 +359,6 @@ del_ptf(packet_transform_function f)
   return 0;
 }
 
-#ifdef USE_LIBNET
-/*
- * Stolen from libnet
- */
-
-#define OLSR_CKSUM_CARRY(x) \
-    (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
-
-int
-olsr_in_cksum(olsr_u16_t *buf, int len)
-{
-    int sum;
-    u_int16_t last_byte;
-
-    sum = 0;
-    last_byte = 0;
-
-    while (len > 1)
-      {
-        sum += *buf++;
-        len -= 2;
-      }
-    if (len == 1)
-      {
-        *(u_int8_t*)&last_byte = *(u_int8_t*)buf;
-        sum += last_byte;
-      }
-    
-    return sum;
-}
-#endif
-
 /**
  *Sends a packet on a given interface.
  *
@@ -420,170 +369,6 @@ olsr_in_cksum(olsr_u16_t *buf, int len)
 int
 net_output(struct interface *ifp)
 {
-#ifdef USE_LIBNET
-  struct ptf *tmp_ptf_list;
-  union olsr_packet *outmsg;
-  int retval;
-  libnet_ptag_t udp_ptag = 0, ip_ptag = 0;
-
-  if(!ifp->netbuf.pending)
-    return 0;
-  
-  assert(ifp->libnet_ctx != NULL);    
-
-  ifp->netbuf.pending += OLSR_HEADERSIZE;
-
-  retval = ifp->netbuf.pending;
-
-  outmsg = (union olsr_packet *)ifp->netbuf.buff;
-  /* Add the Packet seqno */
-  outmsg->v4.olsr_seqno = htons(ifp->olsr_seqnum++);
-  /* Set the packetlength */
-  outmsg->v4.olsr_packlen = htons(ifp->netbuf.pending);
-
-  /*
-   *Call possible packet transform functions registered by plugins  
-   */
-  tmp_ptf_list = ptf_list;
-  while(tmp_ptf_list != NULL)
-    {
-      tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
-      tmp_ptf_list = tmp_ptf_list->next;
-    }
-
-  /*
-   *if the -dispout option was given
-   *we print the contetnt of the packets
-   */
-  if(disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, 
-				 ifp->netbuf.pending, &ifp->ip_addr); 
-
-  printf("LIBNET TX %d bytes on %s\n", 
-	 ifp->netbuf.pending, ifp->int_name);
-
-  udp_ptag = libnet_build_udp(OLSRPORT, 
-			      OLSRPORT,
-			      LIBNET_UDP_H + ifp->netbuf.pending,
-			      0,
-			      (u_int8_t *)ifp->netbuf.buff, 
-			      ifp->netbuf.pending, 
-			      ifp->libnet_ctx,
-			      0);
-
-  if(udp_ptag == -1)
-    {
-      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-      ifp->netbuf.pending = 0;
-      libnet_clear_packet(ifp->libnet_ctx);
-      return -1;
-    }
-  
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IP version 4 */      
-      ip_ptag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + ifp->netbuf.pending,
-				  olsr_cnf->tos,
-				  ifp->olsr_seqnum,
-				  0x4000, /* Don't fragment */
-				  255,
-				  IPPROTO_UDP,
-				  0,
-				  ifp->ip_addr.v4,
-				  ((struct sockaddr_in *)&ifp->int_broadaddr)->sin_addr.s_addr,
-				  NULL,
-				  0,
-				  ifp->libnet_ctx,
-				  0);
-      if(ip_ptag == -1)
-	{
-	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-	  ifp->netbuf.pending = 0;
-	  libnet_clear_packet(ifp->libnet_ctx);
-	  return -1;
-	}
-      
-    }
-  else
-    {
-      /* IP version 6 */
-      struct libnet_in6_addr src, dst;
-      //int sum;
-
-      memcpy(&src, &ifp->ip_addr.v6, sizeof(src));
-      memcpy(&dst, &((struct sockaddr_in6 *)&ifp->int6_multaddr)->sin6_addr, sizeof(dst));
-
-
-      /* !!!ATTENTION!!!
-       * There is a bug in libnet (libnet_build_udp) 1.1.2 that causes
-       * a crash if requesting auto-generated UDP checksums when
-       * using IPv6.
-       * Since we want backwards compability(well... as of now it
-       * is actually current compability), we MUST manually generate
-       * a checksum when in IPv6 mode.
-       * Yepp - it sux
-       * - Andreas
-       */
-      libnet_toggle_checksum(ifp->libnet_ctx, udp_ptag, LIBNET_OFF);
-
-      /* TODO: generate and insert CHKSUM */
-
-      printf("Build IPv6 size: %d\n",
-	     LIBNET_IPV6_H + LIBNET_UDP_H + ifp->netbuf.pending);
-      ip_ptag = libnet_build_ipv6(0, /* Traffic class */
-				  0, /* Flow label */
-				  LIBNET_IPV6_H + LIBNET_UDP_H + ifp->netbuf.pending,
-				  IPPROTO_UDP, /* Next Header */
-				  64, /* Hop Limit */
-				  src,
-				  dst,
-				  NULL, /* Optional payload */
-				  0, /* Optional payload length */
-				  ifp->libnet_ctx,
-				  0);
-
-      if(ip_ptag == -1)
-	{
-	  OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (ifp->libnet_ctx))
-          ifp->netbuf.pending = 0;
-	  libnet_clear_packet(ifp->libnet_ctx);
-	  return -1;
-	}
-    }
-
-#if 0
- {
-   libnet_ptag_t ether_tag = 0;
-   static const unsigned char enet_broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-   /* We should add layer2 as well later */
-   ether_tag = libnet_build_ethernet(enet_broadcast,
-				     libnet_get_hwaddr(ifp->libnet_ctx),
-				     ETHERTYPE_IP,
-				     NULL,        		/* payload */
-				     0,           		/* payload size */
-				     ifp->libnet_ctx, 		/* libnet handle */
-				     0);  		        /* pblock tag */
-   if (ether_tag == -1)
-     {
-       OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (ifp->libnet_ctx))
-       ifp->netbuf.pending = 0;
-       libnet_clear_packet(ifp->libnet_ctx);
-       return -1;
-     }
- }
-#endif
-
-  if((retval = libnet_write(ifp->libnet_ctx)) == -1)
-    {
-      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (ifp->libnet_ctx))
-    }
-  printf("RETVAL: %d\n", retval); fflush(stdout);
-
-  libnet_clear_packet(ifp->libnet_ctx);
-  
-  ifp->netbuf.pending = 0;
-#else
   struct sockaddr_in *sin;  
   struct sockaddr_in dst;
   struct sockaddr_in6 *sin6;  
@@ -684,7 +469,7 @@ net_output(struct interface *ifp)
     }
   
   ifp->netbuf.pending = 0;
-#endif
+
   // if we've just transmitted a TC message, let Dijkstra use the current
   // link qualities for the links to our neighbours
 

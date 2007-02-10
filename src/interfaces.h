@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.37 2007/02/04 23:36:35 bernd67 Exp $
+ * $Id: interfaces.h,v 1.38 2007/02/10 19:59:51 bernd67 Exp $
  */
 
 
@@ -150,9 +150,6 @@ struct interface
 
   clock_t       fwdtimer;                       /* Timeout for OLSR forwarding on this if */
 
-#ifdef USE_LIBNET
-  void          *libnet_ctx;                    /* libnet context(void to avoid dependency */
-#endif
   struct olsr_netbuf netbuf;                    /* the buffer to construct the packet data */
 
   struct        if_gen_property *gen_properties;/* Generic interface properties */
