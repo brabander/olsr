@@ -2,6 +2,7 @@
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2003, Andreas Tønnesen (andreto@olsr.org)
  *               2004, Thomas Lopatic (thomas@lopatic.de)
+ *               2006, for some fixups, sven-ola(gmx.de)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -37,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.22 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.23 2007/02/10 17:36:51 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -167,7 +168,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   if (olsr_cnf->lq_fish > 0)
   {
-    // SVEN_OLA: Too lazy to find the different iface inits. This will do it too.
+    // Sven-Ola: Too lazy to find the different iface inits. This will do it too.
     if (outif->ttl_index >= (int)(sizeof(ttl_list) / sizeof(ttl_list[0])))
       outif->ttl_index = 0;
     
@@ -800,7 +801,7 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
   struct lq_hello_neighbor *neigh;
   struct hello_neighbor *new_neigh;
 
-  // SVEN_OLA: Check the message source addr
+  // Sven-Ola: Check the message source addr
   if(!olsr_validate_address(&lq_hello->comm.orig))
     {
       return;
@@ -826,7 +827,7 @@ process_lq_hello(struct lq_hello_message *lq_hello, struct interface *inif,
 
   for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
     {
-      // SVEN_OLA: Also check the neighbours
+      // Sven-Ola: Also check the neighbours
       if(!olsr_validate_address(&neigh->addr)) continue;
       
       // allocate HELLO neighbour
@@ -860,7 +861,7 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
   struct lq_tc_neighbor *neigh;
   struct tc_mpr_addr *new_neigh;
 
-  // SVEN_OLA: Check the message source addr
+  // Sven-Ola: Check the message source addr
   if(!olsr_validate_address(&lq_tc->from)||!olsr_validate_address(&lq_tc->comm.orig))
     {
       return;
@@ -886,7 +887,7 @@ process_lq_tc(struct lq_tc_message *lq_tc, struct interface *inif,
 
   for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next)
     {
-      // SVEN_OLA: Also check the neighbours
+      // Sven-Ola: Also check the neighbours
       if(!olsr_validate_address(&neigh->main)) continue;
       
       // allocate TC neighbour

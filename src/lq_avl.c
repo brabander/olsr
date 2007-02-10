@@ -1,6 +1,7 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
+ * IPv4 performance optimization (c) 2006, sven-ola(gmx.de)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,13 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.2 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.3 2007/02/10 17:36:51 bernd67 Exp $
  */
 
 #include <stddef.h>
-#ifndef DISABLE_SVEN_OLA
 #include <time.h>
-#endif
 
 #include "lq_avl.h"
 
@@ -55,7 +54,6 @@ void avl_init(struct avl_tree *tree, int (*comp)(void *, void *))
   tree->comp = comp;
 }
 
-#ifndef DISABLE_SVEN_OLA
 static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
 {
   if (*(unsigned int *)key < *(unsigned int *)node->key) {
@@ -70,18 +68,16 @@ static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
   }
   return node;
 }
-#endif
 
 static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
                                      int (*comp)(void *, void *))
 {
   int diff;
 
-#ifndef DISABLE_SVEN_OLA
   if (0 == comp) {
     return avl_find_rec_ipv4(node, key);
   }
-#endif
+
   diff = (*comp)(key, node->key);
 
   if (diff < 0)
@@ -112,15 +108,14 @@ struct avl_node *avl_find(struct avl_tree *tree, void *key)
 
   node = avl_find_rec(tree->root, key, tree->comp);
 
-#ifndef DISABLE_SVEN_OLA
   if (0 == tree->comp) {
-    if (0 != svenola_avl_comp_ipv4(node->key, key))
+    if (0 != inline_avl_comp_ipv4(node->key, key))
       return NULL;
   }
-  else
-#endif
-  if ((*tree->comp)(node->key, key) != 0)
-    return NULL;
+  else {
+    if ((*tree->comp)(node->key, key) != 0)
+      return NULL;
+  }
 
   return node;
 }
@@ -260,13 +255,12 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
 
   node = avl_find_rec(tree->root, new->key, tree->comp);
 
-#ifndef DISABLE_SVEN_OLA
   if (0 == tree->comp) {
-    diff = svenola_avl_comp_ipv4(new->key, node->key);
+    diff = inline_avl_comp_ipv4(new->key, node->key);
   }
-  else
-#endif
-  diff = (*tree->comp)(new->key, node->key);
+  else {
+    diff = (*tree->comp)(new->key, node->key);
+  }
 
   if (diff == 0)
     return -1;

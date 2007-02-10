@@ -1,6 +1,7 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
+ * IPv4 performance optimization (c) 2006, sven-ola(gmx.de)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_list.h,v 1.4 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: lq_list.h,v 1.5 2007/02/10 17:36:51 bernd67 Exp $
  */
 
 #ifndef _LQ_LIST_H
@@ -58,18 +59,10 @@ struct list
 
 void list_init(struct list *list);
 
-#ifndef DISABLE_SVEN_OLA
-#define list_get_head(node) (node)->head
-#define list_get_tail(node) (node)->tail
-#define list_get_next(node) (node)->next
-#define list_get_prev(node) (node)->prev
-#else
-struct list_node *list_get_head(struct list *list);
-struct list_node *list_get_tail(struct list *list);
-
-struct list_node *list_get_next(struct list_node *node);
-struct list_node *list_get_prev(struct list_node *node);
-#endif
+#define list_get_head(node) ((node)->head)
+#define list_get_tail(node) ((node)->tail)
+#define list_get_next(node) ((node)->next)
+#define list_get_prev(node) ((node)->prev)
 
 void list_add_head(struct list *list, struct list_node *node);
 void list_add_tail(struct list *list, struct list_node *node);

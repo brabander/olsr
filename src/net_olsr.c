@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.17 2006/11/15 23:07:59 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.18 2007/02/10 17:36:51 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -89,7 +89,6 @@ static struct deny_address_entry *deny_entries;
 static const char * const deny_ipv4_defaults[] =
   {
     "0.0.0.0",
-    //SVEN_OLA: This address is not plausible too
     "127.0.0.1",
     NULL
   };

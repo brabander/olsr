@@ -1,6 +1,7 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
+ * IPv4 performance optimization (c) 2006, sven-ola(gmx.de)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.3 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: lq_avl.h,v 1.4 2007/02/10 17:36:51 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -62,9 +63,8 @@ void avl_init(struct avl_tree *, int (*)(void *, void *));
 struct avl_node *avl_find(struct avl_tree *, void *);
 int avl_insert(struct avl_tree *, struct avl_node *);
 
-#ifndef DISABLE_SVEN_OLA
-#define svenola_avl_comp_ipv4(ip1, ip2) \
+#define inline_avl_comp_ipv4(ip1, ip2) \
   (*(unsigned int *)ip1 == *(unsigned int *)ip2 ? 0 : \
   *(unsigned int *)ip1 < *(unsigned int *)ip2 ? -1 : +1)
-#endif
+
 #endif
