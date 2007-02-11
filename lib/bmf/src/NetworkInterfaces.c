@@ -35,7 +35,7 @@
  * Description: Functions to open and close sockets
  * Created    : 29 Jun 2006
  *
- * $Id: NetworkInterfaces.c,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * $Id: NetworkInterfaces.c,v 1.3 2007/02/11 11:51:56 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 #include "NetworkInterfaces.h"
@@ -1141,10 +1141,7 @@ void CloseBmfNetworkInterfaces()
 
     kernel_route.rt_dev = EtherTunTapIfName;
 
-    /* Sven-Ola@gmx.de: not available in olsrd-0.5/src/defs.h */
-    extern int ioctl_s;
-
-    if (ioctl(ioctl_s, SIOCDELRT, &kernel_route) < 0)
+    if (ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route) < 0)
     {
       olsr_printf(
         1,
