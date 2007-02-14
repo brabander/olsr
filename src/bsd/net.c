@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.30 2007/02/04 23:36:35 bernd67 Exp $
+ * $Id: net.c,v 1.31 2007/02/14 13:03:13 kattemat Exp $
  */
 
 #include "defs.h"
@@ -220,7 +220,7 @@ disable_redirects_global(int version)
   return 1;
 }
 
-int disable_redirects(char *if_name, struct interface *iface, int version)
+int disable_redirects(const char *if_name, struct interface *iface, int version)
 {
   // this function gets called for each interface olsrd uses; however,
   // FreeBSD can only globally control ICMP redirects, and not on a
@@ -229,7 +229,7 @@ int disable_redirects(char *if_name, struct interface *iface, int version)
   return 1;
 }
 
-int deactivate_spoof(char *if_name, struct interface *iface, int version)
+int deactivate_spoof(const char *if_name, struct interface *iface, int version)
 {
   return 1;
 }
