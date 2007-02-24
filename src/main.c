@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.91 2007/02/04 23:27:55 bernd67 Exp $
+ * $Id: main.c,v 1.92 2007/02/24 11:54:24 kattemat Exp $
  */
 
 #include <unistd.h>
@@ -104,6 +104,9 @@ main(int argc, char *argv[])
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct tms tms_buf;
+
+  /* Stop the compiler from complaining */
+  (void)copyright_string;
 
   debug_handle = stdout;
   olsr_argv = argv;
@@ -403,9 +406,6 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   scheduler();
-
-  /* Stop the compiler from complaining */
-  strlen(copyright_string);
 
   /* Like we're ever going to reach this ;-) */
   return 1;
