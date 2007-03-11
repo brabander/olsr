@@ -89,7 +89,7 @@ int olsrd_plugin_register_param(char *key, char *value) {
 
 int olsrd_plugin_init() {
   if(olsr_cnf->ip_version != AF_INET) {
-    fputs("see the source - ipv4 so far not supportet\n" ,stderr);
+    fputs("see the source - ipv6 so far not supportet\n" ,stderr);
     return 1;
   }
 

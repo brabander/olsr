@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.3 2007/02/10 17:36:51 bernd67 Exp $
+# $Id: Makefile,v 1.4 2007/03/11 20:59:17 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_quagga
@@ -52,13 +52,10 @@ CFLAGS +=-DUSE_UNIX_DOMAIN_SOCKET
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-ifneq ($(OS),linux)
-
-default_target install clean: 
-	@echo "*** Quagga Plugin only supported on Linux, sorry!"
-
+ifeq ($(OS),win32)
+default_target install clean:
+	@echo "**** Quagga not supportet on Windows (so it would be pointless to build the Quagga Plugin"
 else
-
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS)
@@ -70,5 +67,4 @@ install:	$(PLUGIN_FULLNAME)
 
 clean:
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
-
 endif

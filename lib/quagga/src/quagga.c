@@ -20,12 +20,12 @@
 #endif
 
 #define HAVE_SOCKLEN_T
-#include <quagga/zebra.h>
 
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <quagga/zebra.h>
 #include "quagga.h"
 
 #include "olsr.h"
