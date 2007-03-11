@@ -30,7 +30,7 @@ PlParam "ExportRoutes" "<only/both>"
 	exportes olsr-routes to quagga or to both, quagga and kernel
 	no routes are exportet if not set.
 
-PlParam "Localpref" "true"
+PlParam "LocalPref" "true"
         sets the zebra SELECTED-flag on the routes exported to zebra
 	which means these routes are prefered in any case.
 
@@ -49,8 +49,8 @@ LoadPlugin "olsrd_quagga.so.0.2.2"
 	PlParam "redistribute" "ospf"
 	PlParam "redistribute" "bgp"
 	PlParam "ExportRoutes" "only"
-        PlParam "Distance" "125" 
-	PlParam "Localpref" "false"
+	PlParam "Distance" "125" 
+	PlParam "LocalPref" "false"
 }
 
 

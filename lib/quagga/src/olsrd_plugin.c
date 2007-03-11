@@ -70,16 +70,16 @@ int olsrd_plugin_register_param(char *key, char *value) {
     }
   }
   else if (!strcmp(key, "Distance")) {
-    unsigned int distance = atoi (key);
+    unsigned int distance = atoi (value);
     if (distance < 255)
       zebra_olsr_distance(distance);
       return 1;
   }
   
   else if (!strcmp(key, "LocalPref")) {
-    if (!strcmp(key, "true")) 
+    if (!strcmp(value, "true")) 
       zebra_olsr_localpref();
-    else if (strcmp (key, "false"))
+    else if (strcmp (value, "false"))
       return -1;
     return 1;
   }

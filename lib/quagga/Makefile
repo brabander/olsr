@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.4 2007/03/11 20:59:17 bernd67 Exp $
+# $Id: Makefile,v 1.5 2007/03/11 23:26:06 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_quagga

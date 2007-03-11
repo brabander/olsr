@@ -155,7 +155,7 @@ void *my_realloc (void *buf, size_t s, const char *c) {
 }
 
 int init_zebra () {
-  if (!zebra_connect()) {
+  if (zebra_connect() < 0 || !(zebra.status&STATUS_CONNECTED)) {
     olsr_exit ("AIIIII, could not connect to zebra! is zebra running?", 
 	       EXIT_FAILURE);
   }
@@ -166,7 +166,7 @@ static int zebra_reconnect (void) {
   struct ipv4_route *tmp;
   int i;
 
-  if (!zebra_connect()) 
+  if (zebra_connect() < 0 || !(zebra.status&STATUS_CONNECTED)) 
     // log: zebra-reconnect failed
     ;
   for (i = 0; ZEBRA_ROUTE_MAX - 1; i++)
@@ -355,7 +355,7 @@ static char* zebra_route_packet (struct ipv4_route r, ssize_t *optlen) {
   if (r.message & ZAPI_MESSAGE_IFINDEX)
     *optlen += r.ind_num * sizeof *r.index + 1;
   if (r.message & ZAPI_MESSAGE_DISTANCE)
-    *optlen++;
+    (*optlen)++;
   if (r.message & ZAPI_MESSAGE_METRIC)
     *optlen += sizeof r.metric;
 
@@ -392,12 +392,12 @@ static char* zebra_route_packet (struct ipv4_route r, ssize_t *optlen) {
     memcpy (t, r.index, sizeof *r.index * r.ind_num);
     t += sizeof r.index * r.ind_num;
   }
+  if (r.message & ZAPI_MESSAGE_DISTANCE)
+    *t++ = r.distance;
   if (r.message & ZAPI_MESSAGE_METRIC) {
     memcpy (t, &r.metric, sizeof r.metric);
     t += sizeof r.metric;
   }
-  if (r.message & ZAPI_MESSAGE_DISTANCE)
-    *t++ = r.distance;
   return cmdopt;
 }
 

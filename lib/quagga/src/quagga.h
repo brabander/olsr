@@ -47,7 +47,7 @@ struct ipv4_route {
   uint8_t ind_num;
   uint32_t *index;
   uint32_t metric;
-  uint32_t distance;
+  uint8_t distance;
   struct ipv4_route *next;
 };
 
