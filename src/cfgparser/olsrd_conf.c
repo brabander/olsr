@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.50 2006/09/14 08:03:29 kattemat Exp $
+ * $Id: olsrd_conf.c,v 1.51 2007/03/14 13:59:30 bernd67 Exp $
  */
 
 
@@ -103,7 +103,7 @@ olsrd_parse_cnf(const char *filename)
   struct olsr_if *in, *new_ifqueue, *in_tmp;
 
   /* Stop the compiler from complaining */
-  strlen(copyright_string);
+  (void)strlen(copyright_string);
 
   cnf = malloc(sizeof(struct olsrd_config));
   if (cnf == NULL)
