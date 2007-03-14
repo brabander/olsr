@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.31 2007/02/14 13:03:13 kattemat Exp $
+ * $Id: net.c,v 1.32 2007/03/14 14:01:13 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -73,6 +73,13 @@
 #endif
 #endif
 
+#ifdef __MacOSX__
+#include <ifaddrs.h>
+#include <net/if_var.h>
+#include <net/ethernet.h>
+#include <netinet/in_var.h>
+#endif
+
 #include <net/if_dl.h>
 #ifdef SPOOF
 #include <libnet.h>
@@ -90,7 +97,11 @@ static int gateway;
 static int set_sysctl_int(char *name, int new)
 {
   int old;
+#if __MacOSX__
+  size_t len = sizeof (old);
+#else
   unsigned int len = sizeof (old);
+#endif
 
 #ifdef __OpenBSD__
   int mib[4];
@@ -174,7 +185,7 @@ disable_redirects_global(int version)
     name = "net.inet6.icmp6.rediraccept";
 
   ignore_redir = set_sysctl_int(name, 0);
-#elif defined __FreeBSD__
+#elif defined __FreeBSD__ || defined __MacOSX__
   if (olsr_cnf->ip_version == AF_INET)
   {
     name = "net.inet.icmp.drop_redirect";
@@ -256,7 +267,7 @@ int restore_settings(int version)
   else
     name = "net.inet6.icmp6.rediraccept";
 
-#elif defined __FreeBSD__
+#elif defined __FreeBSD__ || defined __MacOSX__
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
 
@@ -435,11 +446,19 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       return (-1);
     }
 
+#ifdef IPV6_RECVPKTINFO
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)) < 0)
     {
       perror("IPV6_RECVPKTINFO failed");
       return (-1);
     }
+#elif defined IPV6_PKTINFO
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, &on, sizeof(on)) < 0)
+      {
+	perror("IPV6_PKTINFO failed");
+	return (-1);
+      }
+#endif
 
   if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
     {

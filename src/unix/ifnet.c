@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.45 2007/02/10 19:59:51 bernd67 Exp $
+ * $Id: ifnet.c,v 1.46 2007/03/14 14:01:14 bernd67 Exp $
  */
 
 
@@ -817,6 +817,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl)
       /* Set port */
       ifs.int6_multaddr.sin6_port = htons(OLSRPORT);
       
+#ifdef __MacOSX__
+      ifs.int6_multaddr.sin6_scope_id = 0;
+#endif
+
       OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&ifs.int6_multaddr.sin6_addr))
       
     }
