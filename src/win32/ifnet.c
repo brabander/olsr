@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.32 2006/10/11 20:58:45 tlopatic Exp $
+ * $Id: ifnet.c,v 1.33 2007/03/26 15:33:44 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -54,10 +54,57 @@
 #include <iphlpapi.h>
 #include <iprtrmib.h>
 
+struct MibIpInterfaceRow
+{
+  USHORT Family;
+  ULONG64 InterfaceLuid;
+  ULONG InterfaceIndex;
+  ULONG MaxReassemblySize;
+  ULONG64 InterfaceIdentifier;
+  ULONG MinRouterAdvertisementInterval;
+  ULONG MaxRouterAdvertisementInterval;
+  BOOLEAN AdvertisingEnabled;
+  BOOLEAN ForwardingEnabled;
+  BOOLEAN WeakHostSend;
+  BOOLEAN WeakHostReceive;
+  BOOLEAN UseAutomaticMetric;
+  BOOLEAN UseNeighborUnreachabilityDetection;   
+  BOOLEAN ManagedAddressConfigurationSupported;
+  BOOLEAN OtherStatefulConfigurationSupported;
+  BOOLEAN AdvertiseDefaultRoute;
+  INT RouterDiscoveryBehavior;
+  ULONG DadTransmits;
+  ULONG BaseReachableTime;
+  ULONG RetransmitTime;
+  ULONG PathMtuDiscoveryTimeout;
+  INT LinkLocalAddressBehavior;
+  ULONG LinkLocalAddressTimeout;
+  ULONG ZoneIndices[16];
+  ULONG SitePrefixLength;
+  ULONG Metric;
+  ULONG NlMtu;    
+  BOOLEAN Connected;
+  BOOLEAN SupportsWakeUpPatterns;   
+  BOOLEAN SupportsNeighborDiscovery;
+  BOOLEAN SupportsRouterDiscovery;
+  ULONG ReachableTime;
+  BYTE TransmitOffload;
+  BYTE ReceiveOffload; 
+  BOOLEAN DisableDefaultRoutes;
+};
+
+typedef DWORD (__stdcall *GETIPINTERFACEENTRY)
+  (struct MibIpInterfaceRow *Row);
+
+typedef DWORD (__stdcall *GETADAPTERSADDRESSES)
+  (ULONG Family, DWORD Flags, PVOID Reserved,
+   PIP_ADAPTER_ADDRESSES pAdapterAddresses, PULONG pOutBufLen);
+
 struct InterfaceInfo
 {
   unsigned int Index;
   int Mtu;
+  int Metric;
   unsigned int Addr;
   unsigned int Mask;
   unsigned int Broad;
@@ -134,11 +181,6 @@ static int IntNameToMiniIndex(int *MiniIndex, char *String)
 
 static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 {
-  typedef DWORD (*GETADAPTERSADDRESSES)(ULONG Family,
-                                        DWORD Flags,
-                                        PVOID Reserved,
-                                        PIP_ADAPTER_ADDRESSES pAdapterAddresses,
-                                        PULONG pOutBufLen);
   unsigned long BuffLen;
   unsigned long Res;
   IP_ADAPTER_ADDRESSES AdAddr[MAX_INTERFACES], *WalkerAddr;
@@ -202,6 +244,8 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   unsigned long Res;
   int TabIdx;
   IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
+  HMODULE Lib;
+  struct MibIpInterfaceRow Row;
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
@@ -259,6 +303,47 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   Info->Mtu -= (olsr_cnf->ip_version == AF_INET6) ?
     UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+
+  Lib = LoadLibrary("iphlpapi.dll");
+
+  if (Lib == NULL)
+  {
+    fprintf(stderr, "Cannot load iphlpapi.dll: %08lx\n", GetLastError());
+    return -1;
+  }
+
+  GETIPINTERFACEENTRY InterfaceEntry =
+    (GETIPINTERFACEENTRY)GetProcAddress(Lib, "GetIpInterfaceEntry");
+
+  if (InterfaceEntry == NULL)
+  {
+    OLSR_PRINTF(5, "Not running on Vista - setting interface metric to 0.\n");
+
+    Info->Metric = 0;
+  }
+
+  else
+  {
+    memset(&Row, 0, sizeof (struct MibIpInterfaceRow));
+
+    Row.Family = AF_INET;
+    Row.InterfaceIndex = Info->Index;
+
+    Res = InterfaceEntry(&Row);
+
+    if (Res != NO_ERROR)
+    {
+      fprintf(stderr, "GetIpInterfaceEntry() = %08lx", Res);
+      FreeLibrary(Lib);
+      return -1;
+    }
+
+    Info->Metric = Row.Metric;
+
+    OLSR_PRINTF(5, "Running on Vista - interface metric is %d.\n", Info->Metric);
+  }
+
+  FreeLibrary(Lib);
 
   BuffLen = sizeof (AdInfo);
 
@@ -357,7 +442,7 @@ static int IsWireless(char *IntName)
 
     CloseHandle(DevHand);
 
-    if (ErrNo == ERROR_GEN_FAILURE)
+    if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER)
     {
       OLSR_PRINTF(5, "OID not supported. Device probably not wireless.\n")
       return 0;
@@ -739,7 +824,7 @@ int chk_if_changed(struct olsr_if *IntConf)
       Int->int_metric = IntConf->cnf->weight.value;
 
     else
-      Int->int_metric = IsWlan;
+      Int->int_metric = Info.Metric;
 
     Res = 1;
   }
@@ -911,7 +996,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
     New->int_metric = IntConf->cnf->weight.value;
 
   else
-    New->int_metric = IsWlan;
+    New->int_metric = Info.Metric;
 
   New->olsr_seqnum = random() & 0xffff;
 
