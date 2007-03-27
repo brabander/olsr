@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.1 2007/01/31 12:38:26 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.2 2007/03/27 03:59:27 tlopatic Exp $
  */
 
 /*
@@ -50,7 +50,9 @@
  
 #include <sys/types.h>
 #include <sys/socket.h>
+#if !defined WIN32
 #include <sys/select.h>
+#endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
