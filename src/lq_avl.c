@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.4 2007/03/25 23:19:44 tlopatic Exp $
+ * $Id: lq_avl.c,v 1.5 2007/03/27 00:45:15 tlopatic Exp $
  */
 
 #include <stddef.h>
@@ -54,36 +54,37 @@ void avl_init(struct avl_tree *tree, int (*comp)(void *, void *))
   tree->comp = comp;
 }
 
-static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
+static struct avl_node *find_rec_ipv4(struct avl_node *node, void *key)
 {
-  if (*(unsigned int *)key < *(unsigned int *)node->key) {
-    if (node->left != NULL) {
-      return avl_find_rec_ipv4(node->left, key);
-    }
+  if (*(unsigned int *)key < *(unsigned int *)node->key)
+  {
+    if (node->left != NULL)
+      return find_rec_ipv4(node->left, key);
   }
-  else if (*(unsigned int *)key > *(unsigned int *)node->key) {
-    if (node->right != NULL) {
-      return avl_find_rec_ipv4(node->right, key);
-    }
+
+  else if (*(unsigned int *)key > *(unsigned int *)node->key)
+  {
+    if (node->right != NULL)
+      return find_rec_ipv4(node->right, key);
   }
+
   return node;
 }
 
-static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
-                                     int (*comp)(void *, void *))
+static struct avl_node *find_rec(struct avl_node *node, void *key,
+                                 int (*comp)(void *, void *))
 {
   int diff;
 
-  if (0 == comp) {
-    return avl_find_rec_ipv4(node, key);
-  }
+  if (0 == comp)
+    return find_rec_ipv4(node, key);
 
   diff = (*comp)(key, node->key);
 
   if (diff < 0)
   {
     if (node->left != NULL)
-      return avl_find_rec(node->left, key, comp);
+      return find_rec(node->left, key, comp);
 
     return node;
   }
@@ -91,7 +92,7 @@ static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
   if (diff > 0)
   {
     if (node->right != NULL)
-      return avl_find_rec(node->right, key, comp);
+      return find_rec(node->right, key, comp);
 
     return node;
   }
@@ -106,13 +107,16 @@ struct avl_node *avl_find(struct avl_tree *tree, void *key)
   if (tree->root == NULL)
     return NULL;
 
-  node = avl_find_rec(tree->root, key, tree->comp);
+  node = find_rec(tree->root, key, tree->comp);
 
-  if (0 == tree->comp) {
+  if (0 == tree->comp)
+  {
     if (0 != inline_avl_comp_ipv4(node->key, key))
       return NULL;
   }
-  else {
+
+  else
+  {
     if ((*tree->comp)(node->key, key) != 0)
       return NULL;
   }
@@ -253,17 +257,13 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
     return 0;
   }
 
-  node = avl_find_rec(tree->root, new->key, tree->comp);
+  node = find_rec(tree->root, new->key, tree->comp);
 
   if (0 == tree->comp)
-  {
     diff = inline_avl_comp_ipv4(new->key, node->key);
-  }
 
   else
-  {
     diff = (*tree->comp)(new->key, node->key);
-  }
 
   if (diff == 0)
     return -1;
@@ -543,3 +543,38 @@ void avl_delete(struct avl_tree *tree, struct avl_node *node)
   node->data = (void *)0xdeadbeef;
 }
 
+static struct avl_node *walk_init_rec(struct avl_node *node, struct avl_node *tail)
+{
+  if (node == NULL)
+    return tail;
+
+  tail = walk_init_rec(node->left, tail);
+
+  node->next = NULL;
+
+  if (tail != NULL)
+    tail->next = node;
+
+  tail = node;
+
+  tail = walk_init_rec(node->right, tail);
+
+  return tail;
+}
+
+struct avl_node *avl_walk_init(struct avl_tree *tree)
+{
+  struct avl_node *node = tree->root;
+
+  if (node == NULL)
+    return NULL;
+
+  walk_init_rec(node, NULL);
+
+  return local_min(node);
+}
+
+struct avl_node *avl_walk_next(struct avl_node *node)
+{
+  return node->next;
+}

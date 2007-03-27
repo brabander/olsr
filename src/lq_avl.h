@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.5 2007/03/25 23:19:44 tlopatic Exp $
+ * $Id: lq_avl.h,v 1.6 2007/03/27 00:45:15 tlopatic Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -49,6 +49,7 @@ struct avl_node
   struct avl_node *parent;
   struct avl_node *left;
   struct avl_node *right;
+  struct avl_node *next;
   void *key;
   void *data;
 };
@@ -63,6 +64,8 @@ void avl_init(struct avl_tree *, int (*)(void *, void *));
 struct avl_node *avl_find(struct avl_tree *, void *);
 int avl_insert(struct avl_tree *, struct avl_node *);
 void avl_delete(struct avl_tree *, struct avl_node *);
+struct avl_node *avl_walk_init(struct avl_tree *);
+struct avl_node *avl_walk_next(struct avl_node *);
 
 #define inline_avl_comp_ipv4(ip1, ip2) \
   (*(unsigned int *)ip1 == *(unsigned int *)ip2 ? 0 : \
