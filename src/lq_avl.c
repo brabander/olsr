@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.5 2007/03/27 00:45:15 tlopatic Exp $
+ * $Id: lq_avl.c,v 1.6 2007/03/27 19:37:13 tlopatic Exp $
  */
 
 #include <stddef.h>
@@ -241,6 +241,37 @@ static void post_insert(struct avl_tree *tree, struct avl_node *node)
   return;
 }
 
+static void insert_before(struct avl_node *pos_node, struct avl_node *node)
+{
+  if (pos_node->prev != NULL)
+    pos_node->prev->next = node;
+
+  node->prev = pos_node->prev;
+  node->next = pos_node;
+
+  pos_node->prev = node;
+}
+
+static void insert_after(struct avl_node *pos_node, struct avl_node *node)
+{
+  if (pos_node->next != NULL)
+    pos_node->next->prev = node;
+
+  node->prev = pos_node;
+  node->next = pos_node->next;
+
+  pos_node->next = node;
+}
+
+static void remove(struct avl_node *node)
+{
+  if (node->prev != NULL)
+    node->prev->next = node->next;
+
+  if (node->next != NULL)
+    node->next->prev = node->prev;
+}
+
 int avl_insert(struct avl_tree *tree, struct avl_node *new)
 {
   struct avl_node *node;
@@ -249,6 +280,9 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
   new->balance = 0;
   new->left = NULL;
   new->right = NULL;
+
+  new->next = NULL;
+  new->prev = NULL;
 
   if (tree->root == NULL)
   {
@@ -270,6 +304,8 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
 
   if (node->balance == 1)
   {
+    insert_before(node, new);
+
     node->balance = 0;
     new->parent = node;
     node->left = new;
@@ -278,6 +314,8 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
   
   if (node->balance == -1)
   {
+    insert_after(node, new);
+
     node->balance = 0;
     new->parent = node;
     node->right = new;
@@ -286,12 +324,16 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new)
 
   if (diff < 0)
   {
+    insert_before(node, new);
+
     node->balance = -1;
     new->parent = node;
     node->left = new;
     post_insert(tree, node);
     return 0;
   }
+
+  insert_after(node, new);
 
   node->balance = 1;
   new->parent = node;
@@ -532,6 +574,7 @@ static void delete_worker(struct avl_tree *tree, struct avl_node *node)
 void avl_delete(struct avl_tree *tree, struct avl_node *node)
 {
   delete_worker(tree, node);
+  remove(node);
 
   node->balance = 0xdeadbeef;
 
@@ -543,33 +586,12 @@ void avl_delete(struct avl_tree *tree, struct avl_node *node)
   node->data = (void *)0xdeadbeef;
 }
 
-static struct avl_node *walk_init_rec(struct avl_node *node, struct avl_node *tail)
-{
-  if (node == NULL)
-    return tail;
-
-  tail = walk_init_rec(node->left, tail);
-
-  node->next = NULL;
-
-  if (tail != NULL)
-    tail->next = node;
-
-  tail = node;
-
-  tail = walk_init_rec(node->right, tail);
-
-  return tail;
-}
-
-struct avl_node *avl_walk_init(struct avl_tree *tree)
+struct avl_node *avl_walk_first(struct avl_tree *tree)
 {
   struct avl_node *node = tree->root;
 
   if (node == NULL)
     return NULL;
-
-  walk_init_rec(node, NULL);
 
   return local_min(node);
 }
