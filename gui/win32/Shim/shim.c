@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: shim.c,v 1.4 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: shim.c,v 1.5 2007/03/27 03:01:08 tlopatic Exp $
  */
 
 #include <windows.h>

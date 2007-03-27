@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog1.h,v 1.5 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyDialog1.h,v 1.6 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined(AFX_MYDIALOG1_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_)

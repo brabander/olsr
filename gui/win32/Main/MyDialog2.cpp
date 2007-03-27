@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.cpp,v 1.8 2005/03/02 00:13:23 tlopatic Exp $
+ * $Id: MyDialog2.cpp,v 1.9 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -86,6 +86,7 @@ void MyDialog2::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RADIO2, m_EtxRadio2);
 	DDX_Control(pDX, IDC_RADIO1, m_EtxRadio1);
 	DDX_Control(pDX, IDC_EDIT14, m_EtxWindowSize);
+	DDX_Control(pDX, IDC_CHECK5, m_FishEyeCheck);
 	DDX_Control(pDX, IDC_CHECK4, m_EtxCheck);
 	DDX_Control(pDX, IDC_CHECK3, m_Ipv6Check);
 	DDX_Control(pDX, IDC_CHECK2, m_InternetCheck);
@@ -218,6 +219,7 @@ void MyDialog2::OnEtxCheckWorker()
 	m_EtxWindowSize.EnableWindow(EnaDis);
 	m_EtxRadio1.EnableWindow(EnaDis);
 	m_EtxRadio2.EnableWindow(EnaDis);
+	m_FishEyeCheck.EnableWindow(EnaDis);
 }
 
 void MyDialog2::OnEtxCheck()
@@ -318,6 +320,8 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_HystThresholdLow.SetWindowText(Conv);
 
 	OnHystCheck();
+
+	m_FishEyeCheck.SetCheck(Conf->lq_fish > 0);
 
 	m_EtxCheck.SetCheck(Conf->lq_level > 0);
 
@@ -529,6 +533,12 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	else
 		Conf->lq_level = 2;
+
+	if (!m_FishEyeCheck.GetCheck())
+		Conf->lq_fish = 0;
+
+	else
+		Conf->lq_fish = 1;
 
 	m_EtxWindowSize.GetWindowText(Conv);
 	Conf->lq_wsize = atoi(Conv);

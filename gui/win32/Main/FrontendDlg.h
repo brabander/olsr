@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: FrontendDlg.h,v 1.6 2005/01/17 11:52:36 tlopatic Exp $
+ * $Id: FrontendDlg.h,v 1.7 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined(AFX_FRONTENDDLG_H__7D68FBC0_7448_479B_81F0_3FBBDE291395__INCLUDED_)

@@ -1,7 +1,7 @@
 #
 # Default configuration for the GUI
 #
-# $Id: LQ-Default.olsr,v 1.1 2005/03/31 18:20:02 tlopatic Exp $
+# $Id: LQ-Default.olsr,v 1.2 2007/03/27 03:01:06 tlopatic Exp $
 #
 
 #
@@ -19,6 +19,15 @@ DebugLevel		0
 #
 
 LinkQualityLevel	2
+
+#
+# Enable the fish eye algorithm
+#
+# 0 - no
+# 1 - yes
+#
+
+LinkQualityFishEye	1
 
 #
 # Windows size for packet loss calculation

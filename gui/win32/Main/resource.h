@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by Frontend.rc
 //
 #define IDD_FRONTEND_DIALOG             102
@@ -38,6 +38,7 @@
 #define IDC_EDIT10                      1020
 #define IDC_EDIT11                      1021
 #define IDC_EDIT8                       1022
+#define IDC_CHECK5                      1022
 #define IDC_EDIT12                      1023
 #define IDC_EDIT13                      1024
 #define IDC_LIST4                       1025

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: FrontendDlg.cpp,v 1.10 2005/03/30 21:29:05 tlopatic Exp $
+ * $Id: FrontendDlg.cpp,v 1.11 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #include "stdafx.h"

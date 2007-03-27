@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Frontend.cpp,v 1.7 2005/01/17 11:52:35 tlopatic Exp $
+ * $Id: Frontend.cpp,v 1.8 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #include "stdafx.h"
@@ -95,12 +95,6 @@ static int SetEnableRedirKey(unsigned long New)
 BOOL CFrontendApp::InitInstance()
 {
 	int Res;
-
-#ifdef _AFXDLL
-	Enable3dControls();
-#else
-	Enable3dControlsStatic();
-#endif
 
 	CCommandLineInfo CmdLineInfo;
 	ParseCommandLine(CmdLineInfo);

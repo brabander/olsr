@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyEdit.h,v 1.3 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MyEdit.h,v 1.4 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined(AFX_MYEDIT_H__951EC391_AFE3_428F_865D_24CA55C68C7C__INCLUDED_)

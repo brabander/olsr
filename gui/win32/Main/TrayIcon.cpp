@@ -119,7 +119,7 @@ void TrayIcon::setTrayAppearance( bool start, unsigned int res_id, const char* m
 	notifyIconData.uCallbackMessage = 123456;
 	notifyIconData.uID = TRAYICONID; 
 	notifyIconData.hIcon = (HICON)LoadIcon( hInst, MAKEINTRESOURCE( res_id ) );  
-	strcpy( notifyIconData.szTip, message ); 
+	strcpy_s( notifyIconData.szTip, sizeof (notifyIconData.szTip), message ); 
 	
 	if( start )
 		Shell_NotifyIcon( NIM_ADD, &notifyIconData );

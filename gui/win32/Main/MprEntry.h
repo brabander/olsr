@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MprEntry.h,v 1.3 2004/11/21 01:21:10 tlopatic Exp $
+ * $Id: MprEntry.h,v 1.4 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined TL_MPRENTRY_H

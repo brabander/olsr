@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog2.h,v 1.8 2005/03/02 00:13:23 tlopatic Exp $
+ * $Id: MyDialog2.h,v 1.9 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined(AFX_MYDIALOG2_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_)
@@ -51,6 +51,7 @@
 #define MAKELIB
 #define OLSR_PLUGIN
 #include <olsr_cfg.h>
+#include "afxwin.h"
 
 class MyDialog2 : public CDialog
 {
@@ -79,6 +80,7 @@ public:
 	CButton	m_Ipv6Check;
 	CButton	m_InternetCheck;
 	CButton	m_HystCheck;
+	CButton m_FishEyeCheck;
 	MyEdit	m_HystThresholdHigh;
 	MyEdit	m_HystThresholdLow;
 	MyEdit	m_HystScaling;

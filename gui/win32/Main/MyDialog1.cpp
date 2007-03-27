@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyDialog1.cpp,v 1.6 2004/11/24 16:46:21 tlopatic Exp $
+ * $Id: MyDialog1.cpp,v 1.7 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #include "stdafx.h"
