@@ -25,8 +25,8 @@ endif
 OS_LIB_PTHREAD =
 OS_LIB_DYNLOAD =
 
-olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
-		gui/win32/Shim/Release/Shim.exe \
+olsr-$(VERS).zip:	gui/win32/release/Main.exe \
+		gui/win32/release/Shim.exe \
 		olsrd.exe \
 		olsr_switch.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
@@ -40,20 +40,18 @@ olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Main/RFC-Default.olsr \
 		gui/win32/Main/LQ-Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
-		lib/nameservice/olsrd_nameservice.dll \
 		lib/httpinfo/olsrd_httpinfo.dll
 		$(STRIP) olsrd.exe
 		$(STRIP) olsr_switch.exe
 		$(STRIP) src/cfgparser/olsrd_cfgparser.dll
 		$(STRIP) lib/dot_draw/olsrd_dot_draw.dll
-		$(STRIP) lib/nameservice/olsrd_nameservice.dll
 		$(STRIP) lib/httpinfo/olsrd_httpinfo.dll
 		rm -rf $(TEMP)/olsr-$(VERS)
 		rm -f $(TEMP)/olsr-$(VERS).zip
 		rm -f olsr-$(VERS).zip
 		mkdir $(TEMP)/olsr-$(VERS)
-		cp gui/win32/Main/Release/Switch.exe $(TEMP)/olsr-$(VERS)
-		cp gui/win32/Shim/Release/Shim.exe $(TEMP)/olsr-$(VERS)
+		cp gui/win32/release/Main.exe $(TEMP)/olsr-$(VERS)/Switch.exe
+		cp gui/win32/release/Shim.exe $(TEMP)/olsr-$(VERS)
 		cp olsrd.exe $(TEMP)/olsr-$(VERS)
 		cp olsr_switch.exe $(TEMP)/olsr-$(VERS)
 		cp src/cfgparser/olsrd_cfgparser.dll $(TEMP)/olsr-$(VERS)
@@ -67,16 +65,15 @@ olsr-$(VERS).zip:	gui/win32/Main/Release/Switch.exe \
 		cp gui/win32/Main/RFC-Default.olsr $(TEMP)/olsr-$(VERS)
 		cp gui/win32/Main/LQ-Default.olsr $(TEMP)/olsr-$(VERS)/Default.olsr
 		cp lib/dot_draw/olsrd_dot_draw.dll $(TEMP)/olsr-$(VERS)
-		cp lib/nameservice/olsrd_nameservice.dll $(TEMP)/olsr-$(VERS)
 		cp lib/httpinfo/olsrd_httpinfo.dll $(TEMP)/olsr-$(VERS)
-		cd $(TEMP); echo y | cacls olsr-$(VERS) /T /G Everyone:F
-		cd $(TEMP); zip -q -r olsr-$(VERS).zip olsr-$(VERS)
+		echo y | cacls $(TEMP)\olsr-$(VERS) /T /G Everyone:F
+		cd "$(TEMP)"; zip -q -r olsr-$(VERS).zip olsr-$(VERS)
 		cp $(TEMP)/olsr-$(VERS).zip .
 		rm -rf $(TEMP)/olsr-$(VERS)
 		rm -f $(TEMP)/olsr-$(VERS).zip
 
-olsr-$(VERS)-setup.exe:	gui/win32/Main/Release/Switch.exe \
-		gui/win32/Shim/Release/Shim.exe \
+olsr-$(VERS)-setup.exe:	gui/win32/release/Main.exe \
+		gui/win32/release/Shim.exe \
 		olsrd.exe \
 		olsr_switch.exe \
 		src/cfgparser/olsrd_cfgparser.dll \
@@ -90,7 +87,6 @@ olsr-$(VERS)-setup.exe:	gui/win32/Main/Release/Switch.exe \
 		gui/win32/Main/RFC-Default.olsr \
 		gui/win32/Main/LQ-Default.olsr \
 		lib/dot_draw/olsrd_dot_draw.dll \
-		lib/nameservice/olsrd_nameservice.dll \
 		lib/httpinfo/olsrd_httpinfo.dll \
 		gui/win32/Inst/installer.nsi
 		$(STRIP) olsrd.exe

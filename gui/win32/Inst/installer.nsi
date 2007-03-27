@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.15 2007/03/27 03:02:44 tlopatic Exp $
+;  $Id: installer.nsi,v 1.16 2007/03/27 03:58:31 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -69,8 +69,8 @@ Section "Program Files"
 
         SetOutPath $INSTDIR
 
-        File ..\Main\Release\Switch.exe
-        File ..\Shim\Release\Shim.exe
+        File /oname=Switch.exe ..\release\Main.exe
+        File ..\release\Shim.exe
         File ..\..\..\olsrd.exe
         File ..\..\..\olsr_switch.exe
         File ..\..\..\src\cfgparser\olsrd_cfgparser.dll
@@ -82,7 +82,6 @@ Section "Program Files"
         File /oname=olsrd.conf.rfc ..\..\..\files\olsrd.conf.win32.rfc
         File /oname=olsrd.conf.lq ..\..\..\files\olsrd.conf.win32.lq
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
-        File ..\..\..\lib\nameservice\olsrd_nameservice.dll
         File ..\..\..\lib\httpinfo\olsrd_httpinfo.dll
 
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org DisplayName olsr.org
