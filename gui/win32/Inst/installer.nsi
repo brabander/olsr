@@ -36,7 +36,7 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.14 2005/12/29 21:26:31 tlopatic Exp $
+;  $Id: installer.nsi,v 1.15 2007/03/27 03:02:44 tlopatic Exp $
 ;
 
 Name olsr.org
@@ -55,7 +55,7 @@ UninstPage uninstConfirm
 UninstPage instfiles
 
 Function .onInit
-        MessageBox MB_YESNO "This will install olsr.org 0.4.10 on your computer. Continue?" IDYES NoAbort
+        MessageBox MB_YESNO "This will install olsr.org 0.5.0 on your computer. Continue?" IDYES NoAbort
         Abort
 NoAbort:
 FunctionEnd
