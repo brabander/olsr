@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.5 2007/02/04 22:37:36 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.6 2007/03/27 03:05:21 tlopatic Exp $
  */
 
 
@@ -193,6 +193,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 
   fprintf(fd, "# Link quality level\n# 0 = do not use link quality\n# 1 = use link quality for MPR selection\n# 2 = use link quality for MPR selection and routing\n\n");
   fprintf(fd, "LinkQualityLevel\t%d\n\n", cnf->lq_level);
+
+  fprintf(fd, "# Fish Eye algorithm\n# 0 = do not use fish eye\n# 1 = use fish eye\n\n");
+  fprintf(fd, "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
 
   fprintf(fd, "# Link quality window size\n\n");
   fprintf(fd, "LinkQualityWinSize\t%d\n\n", cnf->lq_wsize);

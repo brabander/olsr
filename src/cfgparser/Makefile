@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.21 2005/12/29 19:48:43 tlopatic Exp $
+# $Id: Makefile,v 1.22 2007/03/27 03:05:21 tlopatic Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -69,9 +69,13 @@ else
 # build lib per default
 
 ifeq (${OS}, osx)
-LDFLAGS += -dynamiclib -single_module
+LDFLAGS +=	-dynamiclib -single_module
 else
 LDFLAGS +=	-shared -Wl,-soname,$(LIBNAME)
+endif
+
+ifeq (${OS}, win32)
+LDFLAGS +=	-Wl,--out-implib=libolsrd_cfgparser.a -Wl,--export-all-symbols
 endif
 
 CFLAGS +=	-DMAKELIB
