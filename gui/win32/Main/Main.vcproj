@@ -166,6 +166,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -361,15 +362,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\LQ-Default.olsr"
-			>
-		</File>
-		<File
 			RelativePath=".\olsrd_cfgparser.lib"
 			>
 		</File>
 		<File
-			RelativePath=".\RFC-Default.olsr"
+			RelativePath=".\trustInfo.manifest"
 			>
 		</File>
 	</Files>
