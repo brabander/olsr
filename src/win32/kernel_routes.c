@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.17 2007/03/27 11:08:08 tlopatic Exp $
+ * $Id: kernel_routes.c,v 1.18 2007/03/28 12:07:05 tlopatic Exp $
  */
 
 #include <stdio.h>
@@ -85,9 +85,10 @@ int olsr_ioctl_add_route(struct rt_entry *Dest)
 
   Res = SetIpForwardEntry(&Row);
 
-  if (Res != NO_ERROR && Res != ERROR_NOT_FOUND)
+  if (Res != NO_ERROR)
   {
-    fprintf(stderr, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+    if (Res != ERROR_NOT_FOUND)
+      fprintf(stderr, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     Res = CreateIpForwardEntry(&Row);
   }
