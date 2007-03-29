@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.33 2007/03/26 15:33:44 tlopatic Exp $
+ * $Id: ifnet.c,v 1.34 2007/03/29 16:34:39 tlopatic Exp $
  */
 
 #include "interfaces.h"
@@ -119,7 +119,7 @@ void ListInterfaces(void);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
 void RemoveInterface(struct olsr_if *IntConf);
 
-#define MAX_INTERFACES 25
+#define MAX_INTERFACES 100
 
 int __stdcall SignalHandler(unsigned long Signal);
 
