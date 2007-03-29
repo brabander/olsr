@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.44 2007/02/10 17:36:51 bernd67 Exp $
+ * $Id: lq_route.c,v 1.45 2007/03/29 00:05:50 tlopatic Exp $
  */
 
 #include "defs.h"
@@ -108,7 +108,7 @@ static void add_vertex(struct avl_tree *vertex_tree, union olsr_ip_addr *addr,
     avl_init(&vert->edge_tree, avl_comp);
     list_init(&vert->edge_list);
 
-    avl_insert(vertex_tree, &vert->tree_node);
+    avl_insert(vertex_tree, &vert->tree_node, 0);
   }
 }
 
@@ -159,7 +159,7 @@ static void add_edge(struct avl_tree *vertex_tree,
     edge->dest = dvert;
     edge->etx = etx;
 
-    avl_insert(&svert->edge_tree, &edge->tree_node);
+    avl_insert(&svert->edge_tree, &edge->tree_node, 0);
     list_add_tail(&svert->edge_list, &edge->node);
   }
 
@@ -179,7 +179,7 @@ static void add_edge(struct avl_tree *vertex_tree,
     edge->dest = svert;
     edge->etx = etx;
 
-    avl_insert(&dvert->edge_tree, &edge->tree_node);
+    avl_insert(&dvert->edge_tree, &edge->tree_node, 0);
     list_add_tail(&dvert->edge_list, &edge->node);
   }
 }
