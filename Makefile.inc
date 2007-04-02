@@ -1,5 +1,5 @@
 # programs
-CCACHE =        $(shell sh -c "type -path ccache")
+CCACHE ?=       $(shell sh -c "type -path ccache")
 CC ?= 		$(CCACHE) gcc
 STRIP ?=	strip
 BISON ?=	bison
