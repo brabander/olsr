@@ -20,9 +20,14 @@ INCLUDES =	-Isrc -I$(TOPDIR)/src
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
-CFLAGS +=	-Wall -Wmissing-prototypes -Wstrict-prototypes \
-		-Wmissing-declarations -Wsign-compare
-CFLAGS +=	-O2 -g
+CFLAGS +=	-Wall
+CFLAGS +=	-Wmissing-prototypes
+CFLAGS +=	-Wstrict-prototypes
+CFLAGS +=	-Wmissing-declarations
+CFLAGS +=	-Wsign-compare
+CFLAGS +=	-O2
+CFLAGS +=	-g
+CFLAGS +=	-Werror
 endif
 
 ifdef OLSRD_PLUGIN
