@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.12 2005/06/02 15:09:37 br1 Exp $
+ * $Id: olsrd_plugin.c,v 1.13 2007/04/02 22:23:09 bernd67 Exp $
  */
 
 /*
@@ -51,6 +51,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#include "olsr.h"
 #include "olsrd_plugin.h"
 #include "olsrd_dot_draw.h"
 
@@ -116,14 +117,17 @@ olsrd_plugin_register_param(char *key, char *value)
 {
   if(!strcmp(key, "port"))
     {
-     ipc_port = atoi(value);
-     printf("(DOT DRAW) listening on port: %d\n", ipc_port);
+      ipc_port = atoi(value);
+      olsr_printf(0, "(DOT DRAW) listening on port: %d\n", ipc_port);
+      return 1;
     }
 
   if(!strcmp(key, "accept"))
     {
-	inet_aton(value, &ipc_accept_ip);
-	printf("(DOT DRAW) accept only: %s\n", inet_ntoa(ipc_accept_ip));
+      inet_aton(value, &ipc_accept_ip);
+      olsr_printf(0, "(DOT DRAW) accept only: %s\n", inet_ntoa(ipc_accept_ip));
+      return 1;
     }
+  olsr_printf(0, "(DOT DRAW) ignored: %s=\"%s\"\n", key, value);
   return 1;
 }
