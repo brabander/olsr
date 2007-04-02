@@ -35,9 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.78 2007/04/02 09:40:48 tlopatic Exp $
+# $Id: Makefile,v 1.79 2007/04/02 10:07:44 bernd67 Exp $
 
-VERS =		0.5.0
+VERS =		0.5.1pre
 
 CFLAGS +=	-DVERSION=\"$(VERS)\"
 
