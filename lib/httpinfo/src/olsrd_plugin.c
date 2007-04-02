@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.13 2007/02/04 22:37:36 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.14 2007/04/02 22:22:26 bernd67 Exp $
  */
 
 /*
@@ -49,16 +49,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+
 #include "olsrd_httpinfo.h"
 
+
 int http_port = 0;
+int resolve_ip_addresses = 0;
 
 static void __attribute__ ((constructor)) 
 my_init(void);
 
 static void __attribute__ ((destructor)) 
 my_fini(void);
-
 
 /*
  * Defines the version of the plugin interface that is used
@@ -81,7 +85,7 @@ my_init()
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
-  
+
   return;
 }
 
@@ -166,6 +170,15 @@ olsrd_plugin_register_param(char *key, char *value)
       return 1;
       
     }
-
+  if(!strcasecmp(key, "resolve"))
+    {
+        if (!strcasecmp (value, "yes")) {
+            resolve_ip_addresses = 1;
+        } else if (!strcasecmp (value, "no")) {
+            resolve_ip_addresses = 0;
+        } else {
+            return 0;
+        }
+    }
   return 1;
 }

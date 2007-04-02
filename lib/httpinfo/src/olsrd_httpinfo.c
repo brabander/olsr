@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.61 2007/02/04 22:37:36 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.62 2007/04/02 22:22:25 bernd67 Exp $
  */
 
 /*
@@ -49,6 +49,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#include <netdb.h>
 
 #include "olsr.h"
 #include "olsr_cfg.h"
@@ -705,7 +706,66 @@ build_frame(char *title,
   return size;
 }
 
+static int
+build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr);
+static int
+build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr)
+{
+  int size = 0;
+  if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
+    size += sprintf(&buf[size],
+                    "<a href=\"http://%s:%d/all\">",
+                    ipstr,
+                    http_port);
+  }
+  size += sprintf(&buf[size], "%s", ipstr);
+  if (maskstr) {
+    size += sprintf(&buf[size], "/%s", maskstr);
+  }
+  if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
+    size += sprintf(&buf[size], "</a>");
+  }
+  return size;
+}
 
+static int
+build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
+static int
+build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask)
+{
+  int size = 0;
+  char maskbuf[32];
+  char *maskstr;
+  const struct hostent * const hp = resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) : NULL;
+  if (mask != NULL) {
+    if (olsr_cnf->ip_version == AF_INET) {
+      if (mask->v4 == ~0U) {
+        maskstr = NULL;
+      } else {
+        struct in_addr in;
+        in.s_addr = mask->v4;
+        snprintf(maskbuf, sizeof(maskbuf), "%s", inet_ntoa(in));
+        maskstr = maskbuf;
+      }
+    } else {
+      snprintf(maskbuf, sizeof(maskbuf), "%d", mask->v6);
+      maskstr = maskbuf;
+    }
+  } else {
+    maskstr =  NULL;
+  }
+  size += sprintf(&buf[size], "<td%s>", resolve_ip_addresses && hp ? "" : " colspan=\"2\"");
+  size += build_ip_txt(&buf[size], bufsize, want_link, olsr_ip_to_string(ipaddr), maskstr);
+  if (hp) {
+    size += sprintf(&buf[size], "</td><td>(");
+    size += build_ip_txt(&buf[size], bufsize, want_link, hp->h_name, NULL);
+    size += sprintf(&buf[size], ")");
+  }
+  size += sprintf(&buf[size], "</td>");
+  return size;
+}
+#define build_ipaddr_with_link(buf, bufsize, ipaddr, mask) build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (mask))
+#define build_ipaddr_no_link(buf, bufsize, ipaddr, mask)   build_ipaddr_link((buf), (bufsize), OLSR_FALSE, (ipaddr), (mask))
 
 int
 build_routes_body(char *buf, olsr_u32_t bufsize)
@@ -715,7 +775,8 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 
   size += sprintf(&buf[size], "<h2>OLSR routes in kernel</h2>\n");
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination</th><th>Gateway</th><th>Metric</th>");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th%s>Destination</th><th>Gateway</th><th>Metric</th>",
+                  resolve_ip_addresses ? " colspan=\"2\"" : "");
   if (olsr_cnf->lq_level > 0)
     size += sprintf(&buf[size], "<th>ETX</th>");
   size += sprintf(&buf[size], "<th>Interface</th><th>Type</th></tr>\n");
@@ -727,19 +788,13 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &routingtable[index];
 	  routes = routes->next)
 	{
-	  size += sprintf(&buf[size],
-                         "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
-                         "<td><a href=\"http://%s:%d/all\">%s</a></td>"
-                         "<td>%d</td>",
-                         olsr_ip_to_string(&routes->rt_dst),
-                         http_port,
-                         olsr_ip_to_string(&routes->rt_dst),
-                         olsr_ip_to_string(&routes->rt_router),
-                         http_port,
-                         olsr_ip_to_string(&routes->rt_router),
-                         routes->rt_metric);
+          size += sprintf(&buf[size], "<tr>");
+	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_dst, NULL);
+	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_router, NULL);
+
+	  size += sprintf(&buf[size], "<td align=\"right\">%d</td>", routes->rt_metric);
           if (olsr_cnf->lq_level > 0)
-	    size += sprintf(&buf[size], "<td>%.2f</td>", routes->rt_etx);
+            size += sprintf(&buf[size], "<td align=\"right\">%.2f</td>", routes->rt_etx);
 	  size += sprintf(&buf[size],
                          "<td>%s</td>"
                          "<td>HOST</td></tr>\n",
@@ -754,17 +809,14 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &hna_routes[index];
 	  routes = routes->next)
 	{
+          size += sprintf(&buf[size], "<tr>");
+	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_dst, &routes->rt_mask);
+	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_router, NULL);
 	  size += sprintf(&buf[size],
-                         "<tr><td>%s</td>"
-                         "<td><a href=\"http://%s:%d/all\">%s</a></td>"
-                         "<td>%d</td>",
-                         olsr_ip_to_string(&routes->rt_dst),
-                         olsr_ip_to_string(&routes->rt_router),
-                         http_port,
-                         olsr_ip_to_string(&routes->rt_router),
+                         "<td align=\"right\">%d</td>",
                          routes->rt_metric);
           if (olsr_cnf->lq_level > 0)
-	    size += sprintf(&buf[size], "<td>%.2f</td>", routes->rt_etx);
+	    size += sprintf(&buf[size], "<td align=\"right\">%.2f</td>", routes->rt_etx);
 	  size += sprintf(&buf[size],
                          "<td>%s</td>"
                          "<td>HNA</td></tr>\n",
@@ -949,8 +1001,8 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 	  }
 	
 	size += sprintf(&buf[size], "</table>\n");
-      }
-    else if((olsr_cnf->ip_version == AF_INET6) && (olsr_cnf->hna6_entries))
+      } 
+   else if((olsr_cnf->ip_version == AF_INET6) && (olsr_cnf->hna6_entries))
       {
 	struct hna6_entry *hna6;
 	
@@ -982,7 +1034,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index, thop_cnt;
 
   size += sprintf(&buf[size], "<h2>Links</h2>\n");
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>remote IP</th><th>Hysteresis</th>\n");
+  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
   if (olsr_cnf->lq_level > 0)
     size += sprintf(&buf[size], "<th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th>\n");
   size += sprintf(&buf[size], "</tr>\n");
@@ -991,23 +1043,20 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   link = link_set;
     while(link)
       {
+        size += sprintf(&buf[size], "<tr>");
+        size += build_ipaddr_no_link(&buf[size], bufsize, &link->local_iface_addr, NULL);
+        size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, NULL);
 	size += sprintf(&buf[size],
-                       "<tr><td>%s</td>"
-                       "<td><a href=\"http://%s:%d/all\">%s</a></td>"
-                       "<td>%0.2f</td>",
-                       olsr_ip_to_string(&link->local_iface_addr),
-                       olsr_ip_to_string(&link->neighbor_iface_addr),
-                       http_port,
-                       olsr_ip_to_string(&link->neighbor_iface_addr),
+                       "<td align=\"right\">%0.2f</td>",
                        link->L_link_quality);
         if (olsr_cnf->lq_level > 0)
           {
 	    size += sprintf(&buf[size],
-                           "<td>%0.2f</td>"
+                           "<td align=\"right\">%0.2f</td>"
                            "<td>%d</td>"
                            "<td>%d</td>"
-                           "<td>%0.2f</td>"
-                           "<td>%0.2f</td></tr>\n",
+                           "<td align=\"right\">%0.2f</td>"
+                           "<td align=\"right\">%0.2f</td></tr>\n",
                            link->loss_link_quality,
                            link->lost_packets, 
                            link->total_packets,
@@ -1030,15 +1079,13 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh != &neighbortable[index];
 	  neigh = neigh->next)
 	{
+          size += sprintf(&buf[size], "<tr>");
+          size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, NULL);
 	  size += sprintf(&buf[size], 
-			  "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
 			  "<td>%s</td>"
 			  "<td>%s</td>"
 			  "<td>%s</td>"
 			  "<td>%d</td>", 
-			  olsr_ip_to_string(&neigh->neighbor_main_addr),
-                          http_port,
-			  olsr_ip_to_string(&neigh->neighbor_main_addr),
 			  (neigh->status == SYM) ? "YES" : "NO",
 			  neigh->is_mpr ? "YES" : "NO",
 			  olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
@@ -1053,7 +1100,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	      list_2 != &neigh->neighbor_2_list;
 	      list_2 = list_2->next)
 	    {
-	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+              size += sprintf(&buf[size], "<option>%s</option>", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
 	      thop_cnt ++;
 	    }
 	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", thop_cnt);
@@ -1077,7 +1124,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last hop IP</th>");
+  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last Hop IP</th>");
   if (olsr_cnf->lq_level > 0)
     size += sprintf(&buf[size], "<th>LQ</th><th>ILQ</th><th>ETX</th>");
   size += sprintf(&buf[size], "</tr>\n");
@@ -1094,24 +1141,19 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-	      size += sprintf(&buf[size],
-                             "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>"
-                             "<td><a href=\"http://%s:%d/all\">%s</a></td>",
-                             olsr_ip_to_string(&dst_entry->T_dest_addr),
-                             http_port,
-                             olsr_ip_to_string(&dst_entry->T_dest_addr),
-                             olsr_ip_to_string(&entry->T_last_addr), 
-                             http_port,
-                             olsr_ip_to_string(&entry->T_last_addr));
+              size += sprintf(&buf[size], "<tr>");
+              size += build_ipaddr_with_link(&buf[size], bufsize, &dst_entry->T_dest_addr, NULL);
+              size += build_ipaddr_with_link(&buf[size], bufsize, &entry->T_last_addr, NULL);
               if (olsr_cnf->lq_level > 0)
                 {
+                  const double d = dst_entry->link_quality * dst_entry->inverse_link_quality;
 	          size += sprintf(&buf[size],
-                                 "<td>%0.2f</td>"
-                                 "<td>%0.2f</td>"
-                                 "<td>%0.2f</td>\n",
+                                 "<td align=\"right\">%0.2f</td>"
+                                 "<td align=\"right\">%0.2f</td>"
+                                 "<td align=\"right\">%0.2f</td>\n",
                                  dst_entry->link_quality,
                                  dst_entry->inverse_link_quality,
-                                 (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
+                                 d ? 1.0 / d : 0.0);
                 }
 	      size += sprintf(&buf[size], "</tr>\n");
 
@@ -1152,14 +1194,11 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-	      size += sprintf(&buf[size], "<tr><td>%s</td>", 
-			      olsr_ip_to_string(&tmp_net->A_network_addr));
+              size += sprintf(&buf[size], "<tr>");
+              size += build_ipaddr_no_link(&buf[size], bufsize, &tmp_net->A_network_addr, NULL);
 	      size += sprintf(&buf[size], "<td>%s</td>",
 			      olsr_netmask_to_string(&tmp_net->A_netmask));
-	      size += sprintf(&buf[size], "<td><a href=\"http://%s:%d/all\">%s</a></td></tr>\n",
-                              olsr_ip_to_string(&tmp_hna->A_gateway_addr),
-                              http_port,
-                              olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+              size += build_ipaddr_with_link(&buf[size], bufsize, &tmp_hna->A_gateway_addr, NULL);
 	      tmp_net = tmp_net->next;
 	    }
 	      
@@ -1189,10 +1228,8 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
       entry = mid_set[index].next;
       while(entry != &mid_set[index])
 	{
-	  size += sprintf(&buf[size], "<tr><td><a href=\"http://%s:%d/all\">%s</a></td>\n",
-	                  olsr_ip_to_string(&entry->main_addr),
-                          http_port,
-	                  olsr_ip_to_string(&entry->main_addr));
+          size += sprintf(&buf[size], "<tr>");
+          size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, NULL);
 	  size += sprintf(&buf[size], "<td><select>\n<option>IP ADDRESS</option>\n");
 
 	  alias = entry->aliases;
