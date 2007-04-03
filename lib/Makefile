@@ -12,4 +12,4 @@ clean: $(SUBDIRS)
 install: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+	$(MAKE) OS=$(OS) -C $@ $(MAKECMDGOALS)
