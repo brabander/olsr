@@ -49,7 +49,9 @@ HDRS +=		$(wildcard *.h)
 all: default_target
 
 # OS detection
-OS =		$(shell sh $(TOPDIR)/make/guess_os.sh)
+ifeq ($(OS),)
+OS :=		$(shell sh $(TOPDIR)/make/guess_os.sh)
+endif
 ifeq ($(OS),UNKNOWN)
 all: help
 else
