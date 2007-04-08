@@ -27,7 +27,7 @@ CFLAGS +=	-Wmissing-declarations
 CFLAGS +=	-Wsign-compare
 CFLAGS +=	-O2
 CFLAGS +=	-g
-CFLAGS +=	-Werror
+#CFLAGS +=	-Werror
 endif
 
 ifdef OLSRD_PLUGIN
