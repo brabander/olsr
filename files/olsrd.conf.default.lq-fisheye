@@ -286,7 +286,7 @@ Interface "rausb0"
     MidInterval	5.0
 
     # MID validity time
-    MidValidityTime	100.0
+    MidValidityTime	300.0
 
     # HNA interval in seconds(float)
     HnaInterval	5.0
