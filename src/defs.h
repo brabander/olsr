@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.56 2007/04/02 09:40:48 tlopatic Exp $
+ * $Id: defs.h,v 1.57 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -74,9 +74,10 @@
 #define MIN_PACKET_SIZE(ver)  (int)(sizeof(olsr_u8_t) * ((ver == AF_INET) ? 4 : 7))
 /* Debug helper macro */
 #ifdef DEBUG
-#define olsr_debug(lvl,format,args...) \
+#define olsr_debug(lvl,format,args...) do {                         \
    OLSR_PRINTF(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
-   OLSR_PRINTF(lvl, format, ##args);
+   OLSR_PRINTF(lvl, format, ##args); \
+  } while (0)
 #endif
 
 extern FILE *debug_handle;
@@ -101,6 +102,8 @@ extern FILE *debug_handle;
         ((int)((s1) - now_times) < 0)
 
 
+#define ARRAYSIZE(x) (sizeof(x)/sizeof(*(x)))
+
 /*
  * Queueing macros
  */
@@ -117,6 +120,8 @@ extern FILE *debug_handle;
 	elem->prev->next = elem->next; \
 	elem->next->prev = elem->prev
 
+
+#define CLOSE(fd)  do { close(fd); (fd) = -1;} while (0)
 
 /*
  * Global olsrd configuragtion
@@ -146,9 +151,6 @@ shutdown_ipc(void);
 
 int
 ipc_output(struct olsr *);
-
-int
-ipc_send_net_info(void);
 
 int
 ipc_route_send_rtentry(union olsr_ip_addr*, union olsr_ip_addr *, int, int, char *);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.50 2007/02/04 22:47:45 bernd67 Exp $
+ * $Id: olsr.c,v 1.51 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 /**
@@ -88,7 +88,7 @@ static olsr_u16_t message_seqno;
  *Initialize the message sequence number as a random value
  */
 void
-init_msg_seqno()
+init_msg_seqno(void)
 {
   message_seqno = random() & 0xFFFF;
 }
@@ -98,8 +98,8 @@ init_msg_seqno()
  *
  *@return the seqno
  */
-inline olsr_u16_t
-get_msg_seqno()
+olsr_u16_t
+get_msg_seqno(void)
 {
   return message_seqno++;
 }
@@ -129,9 +129,8 @@ register_pcf(int (*f)(int, int, int))
  *@return 0
  */
 void
-olsr_process_changes()
+olsr_process_changes(void)
 {
-
   struct pcf *tmp_pc_list;
 
 #ifdef DEBUG
@@ -255,9 +254,8 @@ olsr_process_changes()
  *Also initalizes other variables
  */
 void
-olsr_init_tables()
-{
-  
+olsr_init_tables(void)
+{  
   changes_topology = OLSR_FALSE;
   changes_neighborhood = OLSR_FALSE;
   changes_hna = OLSR_FALSE;
@@ -290,14 +288,8 @@ olsr_init_tables()
   olsr_init_mid_set();
 
   /* Initialize HNA set */
-  olsr_init_hna_set();
-  
+  olsr_init_hna_set();  
 }
-
-
-
-
-
 
 /**
  *Check if a message is to be forwarded and forward
@@ -331,11 +323,12 @@ olsr_forward_message(union olsr_message *m,
     }
 
   /* Lookup sender address */
-  if(!(src = mid_lookup_main_addr(from_addr)))
+  src = mid_lookup_main_addr(from_addr);
+  if(!src)
     src = from_addr;
 
-
-  if(NULL == (neighbor=olsr_lookup_neighbor_table(src)))
+  neighbor=olsr_lookup_neighbor_table(src);
+  if(!neighbor)
     return 0;
 
   if(neighbor->status != SYM)
@@ -354,7 +347,6 @@ olsr_forward_message(union olsr_message *m,
       return 0;
     }
 
-
   /* Treat TTL hopcnt */
   if(olsr_cnf->ip_version == AF_INET)
     {
@@ -369,14 +361,10 @@ olsr_forward_message(union olsr_message *m,
       m->v6.ttl--; 
     }
 
-
-
   /* Update dup forwarded */
   olsr_set_dup_forward(originator, seqno);
 
   /* Update packet data */
-
-
   msgsize = ntohs(m->v4.olsr_msgsize);
 
   /* looping trough interfaces */
@@ -399,10 +387,8 @@ olsr_forward_message(union olsr_message *m,
 		  OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize)
 		  olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
 		}
-
 	    }
 	}
-      
       else
 	{
 	  /* No forwarding pending */
@@ -415,9 +401,7 @@ olsr_forward_message(union olsr_message *m,
 	    }
 	}
     }
-
   return 1;
-
 }
 
 
@@ -431,13 +415,10 @@ set_buffer_timer(struct interface *ifn)
   jitter *= olsr_cnf->max_jitter;
 
   ifn->fwdtimer = GET_TIMESTAMP(jitter*1000);
-
 }
 
-
-
 void
-olsr_init_willingness()
+olsr_init_willingness(void)
 {
   if(olsr_cnf->willingness_auto)
     olsr_register_scheduler_event(&olsr_update_willingness, 
@@ -445,11 +426,9 @@ olsr_init_willingness()
 }
 
 void
-olsr_update_willingness(void *foo)
+olsr_update_willingness(void *foo __attribute__((unused)))
 {
-  int tmp_will;
-
-  tmp_will = olsr_cnf->willingness;
+  int tmp_will = olsr_cnf->willingness;
 
   /* Re-calculate willingness */
   olsr_cnf->willingness = olsr_calculate_willingness();
@@ -470,7 +449,7 @@ olsr_update_willingness(void *foo)
  */
 
 olsr_u8_t
-olsr_calculate_willingness()
+olsr_calculate_willingness(void)
 {
   struct olsr_apm_info ainfo;
 
@@ -624,17 +603,12 @@ olsr_malloc(size_t size, const char *id)
 int
 olsr_printf(int loglevel, char *format, ...)
 {
-  va_list arglist;
-
   if((loglevel <= olsr_cnf->debug_level) && debug_handle)
     {
+      va_list arglist;
       va_start(arglist, format);
-      
       vfprintf(debug_handle, format, arglist);
-      
       va_end(arglist);
     }
-
-
   return 0;
 }

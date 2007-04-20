@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.7 2007/02/10 19:59:51 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.8 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -93,14 +93,14 @@ olsr_netmask_to_prefix(union olsr_ip_addr *);
 char *
 sockaddr_to_string(struct sockaddr *);
 
-char *
-ip_to_string(olsr_u32_t *);
+const char *
+ip_to_string(const olsr_u32_t *);
 
-char *
-ip6_to_string(struct in6_addr *);
+const char *
+ip6_to_string(const struct in6_addr *);
 
-char *
-olsr_ip_to_string(union olsr_ip_addr *);
+const char *
+olsr_ip_to_string(const union olsr_ip_addr *);
 
 int
 add_ptf(packet_transform_function);

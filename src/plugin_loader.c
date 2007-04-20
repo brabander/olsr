@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.23 2005/05/29 12:47:45 br1 Exp $
+ * $Id: plugin_loader.c,v 1.24 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include "plugin_loader.h"
@@ -60,22 +60,17 @@ static struct olsr_plugin *olsr_plugins;
  *@return the number of plugins loaded
  */
 int
-olsr_load_plugins()
+olsr_load_plugins(void)
 {
-  struct plugin_entry *entry;
-  int loaded;
-
-  entry = olsr_cnf->plugins;
-  loaded = 0;
-
+  struct plugin_entry *entry = olsr_cnf->plugins;
+  int loaded = 0;
   OLSR_PRINTF(1, "Loading plugins...\n\n")
-
   while(entry)
     {  
       if(olsr_load_dl(entry->name, entry->params) < 0)
 	OLSR_PRINTF(1, "-- PLUGIN LOADING FAILED! --\n\n")
       else
-	loaded ++;
+	loaded++;
 
       entry = entry->next;
     }
@@ -207,23 +202,20 @@ olsr_load_dl(char *libname, struct plugin_param *params)
 void
 init_olsr_plugin(struct olsr_plugin *entry)
 {
-  struct plugin_param *params = entry->params;
-  int retval;
-
   if(entry->register_param)
     {
+      struct plugin_param *params;
       OLSR_PRINTF(1, "Sending parameters...\n")
-      while(params)
+        for(params = entry->params;params;params = params->next)
         {
+          int retval = entry->register_param(params->key, params->value);
           OLSR_PRINTF(1, "\"%s\"/\"%s\"... ", params->key, params->value)
-          if((retval = entry->register_param(params->key, params->value)) < 0)
+          if(retval < 0)
             {
               fprintf(stderr, "\nFatal error in plugin parameter \"%s\"/\"%s\"\n", params->key, params->value);
               exit(EXIT_FAILURE);
             }
           OLSR_PRINTF(1, "%s\n", retval == 0 ? "FAILED" : "OK")
-
-          params = params->next;
         }
     }
     
@@ -236,15 +228,11 @@ init_olsr_plugin(struct olsr_plugin *entry)
  *Close all loaded plugins
  */
 void
-olsr_close_plugins()
+olsr_close_plugins(void)
 {
   struct olsr_plugin *entry;
 
   OLSR_PRINTF(1, "Closing plugins...\n")
-  for(entry = olsr_plugins; 
-      entry != NULL ; 
-      entry = entry->next)
-    {
+  for(entry = olsr_plugins; entry != NULL; entry = entry->next)
       dlclose(entry->dlhandle);
-    }
 }

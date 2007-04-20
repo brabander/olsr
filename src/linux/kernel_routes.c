@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.20 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.21 2007/04/20 13:46:05 bernd67 Exp $
  */
 
 
@@ -346,10 +346,8 @@ olsr_ioctl_del_route6(struct rt_entry *destination)
 
 
 int
-delete_all_inet_gws()
-{
-  struct rtentry kernel_route;
-  
+delete_all_inet_gws(void)
+{  
   int s;
   char buf[BUFSIZ], *cp, *cplim;
   struct ifconf ifc;
@@ -375,10 +373,10 @@ delete_all_inet_gws()
     }
 
   ifr = ifc.ifc_req;
-#define size(p) (sizeof (p))
   cplim = buf + ifc.ifc_len; /*skip over if's with big ifr_addr's */
-  for (cp = buf; cp < cplim;cp += sizeof (ifr->ifr_name) + size(ifr->ifr_addr)) 
+  for (cp = buf; cp < cplim;cp += sizeof (ifr->ifr_name) + sizeof(ifr->ifr_addr)) 
     {
+      struct rtentry kernel_route;
       ifr = (struct ifreq *)cp;
       
       

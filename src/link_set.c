@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.66 2007/02/10 19:27:32 bernd67 Exp $
+ * $Id: link_set.c,v 1.67 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -79,19 +79,19 @@ get_neighbor_status(union olsr_ip_addr *);
 
 
 clock_t 
-get_hold_time_neighbor()
+get_hold_time_neighbor(void)
 {
   return hold_time_neighbor;
 }
 
 struct link_entry *
-get_link_set()
+get_link_set(void)
 {
   return link_set;
 }
 
 void
-olsr_init_link_set()
+olsr_init_link_set(void)
 {
 
   /* Timers */
@@ -819,7 +819,7 @@ check_link_status(struct hello_message *message, struct interface *in_if)
  *
  */
 static void
-olsr_time_out_link_set()
+olsr_time_out_link_set(void)
 {
 
   struct link_entry *tmp_link_set, *last_link_entry;
@@ -896,7 +896,7 @@ olsr_time_out_link_set()
  *@return nada
  */
 static void
-olsr_time_out_hysteresis()
+olsr_time_out_hysteresis(void)
 {
   struct link_entry *tmp_link_set;
 
@@ -1138,7 +1138,7 @@ void olsr_update_packet_loss(union olsr_ip_addr *rem, struct interface *loc,
   entry->loss_timeout = GET_TIMESTAMP(entry->loss_hello_int * 1500.0);
 }
 
-static void olsr_time_out_packet_loss()
+static void olsr_time_out_packet_loss(void)
 {
   struct link_entry *walker;
 
@@ -1167,7 +1167,7 @@ static void olsr_time_out_packet_loss()
     }
 }
 
-void olsr_update_dijkstra_link_qualities()
+void olsr_update_dijkstra_link_qualities(void)
 {
   struct link_entry *walker;
 

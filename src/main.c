@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.93 2007/04/20 10:38:01 bernd67 Exp $
+ * $Id: main.c,v 1.94 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -69,14 +69,14 @@ olsr_bool olsr_win32_end_request = OLSR_FALSE;
 olsr_bool olsr_win32_end_flag = OLSR_FALSE;
 #else
 static void
-olsr_shutdown(int);
+olsr_shutdown(int) __attribute__((noreturn));
 #endif
 
 /*
  * Local function prototypes
  */
 void
-olsr_reconfigure(int);
+olsr_reconfigure(int) __attribute__((noreturn));
 
 static void
 print_usage(void);
@@ -407,9 +407,11 @@ main(int argc, char *argv[])
   /* Starting scheduler */
   scheduler();
 
+  /* Stop the compiler from complaining */
+  (void)copyright_string;
+
   /* Like we're ever going to reach this ;-) */
   return 1;
-
 } /* main */
 
 
@@ -421,7 +423,7 @@ main(int argc, char *argv[])
  */
 #ifndef WIN32
 void
-olsr_reconfigure(int signal)
+olsr_reconfigure(int signal __attribute__((unused)))
 {
   if(!fork())
     {
@@ -502,18 +504,19 @@ olsr_shutdown(int signal)
  * Print the command line usage
  */
 static void
-print_usage()
+print_usage(void)
 {
 
-  fprintf(stderr, "An error occured somewhere between your keyboard and your chair!\n"); 
-  fprintf(stderr, "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n");
-  fprintf(stderr, "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"); 
-  fprintf(stderr, "  [-lql <LQ level>] [-lqw <LQ winsize>]\n"); 
-  fprintf(stderr, "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n");
-  fprintf(stderr, "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n");
-  fprintf(stderr, "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n");
-  fprintf(stderr, "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>] \n"); 
-  fprintf(stderr, "  [-lql <LQ level>] [-lqw <LQ winsize>]\n");
+  fprintf(stderr,
+          "An error occured somwhere between your keyboard and your chair!\n"
+          "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
+          "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
+          "  [-lql <LQ level>] [-lqw <LQ winsize>]\n"
+          "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
+          "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
+          "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
+          "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
+          "  [-lql <LQ level>] [-lqw <LQ winsize>]\n");
 }
 
 

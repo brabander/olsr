@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.32 2007/02/04 23:36:35 bernd67 Exp $
+ * $Id: net.c,v 1.33 2007/04/20 13:46:05 bernd67 Exp $
  */
 
 
@@ -78,7 +78,6 @@ bind_socket_to_device(int sock, char *dev_name)
    */
   OLSR_PRINTF(3, "Binding socket %d to device %s\n", sock, dev_name)
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
-
 }
 
 
@@ -98,20 +97,9 @@ int
 enable_ip_forwarding(int version)
 {
   FILE *proc_fwd;
-  char procfile[FILENAME_MAX];
-
-  if(version == AF_INET)
-    {
-      strncpy(procfile, "/proc/sys/net/ipv4/ip_forward", FILENAME_MAX);
-    }
-  else
-    if(version == AF_INET6)
-      {
-	strncpy(procfile, "/proc/sys/net/ipv6/conf/all/forwarding", FILENAME_MAX);
-      }
-    else
-      return -1;
-
+  const char * const procfile = version == AF_INET
+      ? "/proc/sys/net/ipv4/ip_forward"
+      : "/proc/sys/net/ipv6/conf/all/forwarding";
 
   if ((proc_fwd=fopen(procfile, "r"))==NULL)
     {
@@ -126,47 +114,39 @@ enable_ip_forwarding(int version)
       return 0;
     }
   
+  orig_fwd_state = fgetc(proc_fwd);
+  fclose(proc_fwd);
+  if(orig_fwd_state == '1')
+    {
+      OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n")
+    }
   else
     {
-      orig_fwd_state = fgetc(proc_fwd);
-      fclose(proc_fwd);
-      if(orig_fwd_state == '1')
-	{
-	  OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n")
-	}
+      if ((proc_fwd=fopen(procfile, "w"))==NULL)
+        {
+          fprintf(stderr, "Could not open %s for writing!\n", procfile);
+          fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that IP forwarding is enabeled!\n\n");
+          sleep(3);
+          return 0;
+        }
       else
-	{
-	  if ((proc_fwd=fopen(procfile, "w"))==NULL)
-	    {
-	      fprintf(stderr, "Could not open %s for writing!\n", procfile);
-	      fprintf(stderr, "I will continue(in 3 sec) - but you should mannually ensure that IP forwarding is enabeled!\n\n");
-	      sleep(3);
-	      return 0;
-	    }
-	  else
-	    {
-	      syslog(LOG_INFO, "Writing \"1\" to %s\n", procfile);
-	      fputs("1", proc_fwd);
-	    }
-	  fclose(proc_fwd);
-
-	}
+        {
+          syslog(LOG_INFO, "Writing \"1\" to %s\n", procfile);
+          fputs("1", proc_fwd);
+        }
+      fclose(proc_fwd);
     }
-  return 1;
-      
+  return 1;      
 }
-
 
 int
 disable_redirects_global(int version)
 {
   FILE *proc_redirect;
-  char procfile[FILENAME_MAX];
+  const char * const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
 
   if(version == AF_INET6)
     return -1;
-
-  strcpy(procfile, "/proc/sys/net/ipv4/conf/all/send_redirects");
 
   if((proc_redirect = fopen(procfile, "r")) == NULL)
     {
@@ -175,16 +155,11 @@ disable_redirects_global(int version)
       sleep(3);
       return -1;
     }
-  else
-    {
-      orig_global_redirect_state = fgetc(proc_redirect);
-      fclose(proc_redirect);
-    }
+  orig_global_redirect_state = fgetc(proc_redirect);
+  fclose(proc_redirect);
 
   if(orig_global_redirect_state == '0')
-    {
       return 0;
-    }
 
   if ((proc_redirect = fopen(procfile, "w"))==NULL)
     {
@@ -193,16 +168,11 @@ disable_redirects_global(int version)
       sleep(3);
       return 0;
     }
-  else
-    {
-      syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
-      fputs("0", proc_redirect);
-    }
-  fclose(proc_redirect);
-  
+  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
+  fputs("0", proc_redirect);
+  fclose(proc_redirect);  
   return 1;
 }
-
 
 /**
  *
@@ -218,22 +188,17 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
     return -1;
 
   /* Generate the procfile name */
-  sprintf(procfile, REDIRECT_PROC, if_name);
+  snprintf(procfile, sizeof(procfile), REDIRECT_PROC, if_name);
 
 
   if((proc_redirect = fopen(procfile, "r")) == NULL)
     {
-      fprintf(stderr, "WARNING! Could not open the %s file to check/disable ICMP redirects!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that ICMP redirects are disabled!\n\n", procfile);
-      
+      fprintf(stderr, "WARNING! Could not open the %s file to check/disable ICMP redirects!\nAre you using the procfile filesystem?\nDoes your system support IPv4?\nI will continue(in 3 sec) - but you should mannually ensure that ICMP redirects are disabled!\n\n", procfile);      
       sleep(3);
       return 0;
     }
-  else
-    {
-      iface->nic_state.redirect = fgetc(proc_redirect);
-      fclose(proc_redirect);
-      
-    }
+  iface->nic_state.redirect = fgetc(proc_redirect);
+  fclose(proc_redirect);      
 
   if ((proc_redirect = fopen(procfile, "w"))==NULL)
     {
@@ -242,17 +207,11 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
       sleep(3);
       return 0;
     }
-  else
-    {
-      syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
-      fputs("0", proc_redirect);
-    }
+  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
+  fputs("0", proc_redirect);
   fclose(proc_redirect);
-
   return 1;
 }
-
-
 
 /**
  *
@@ -267,10 +226,8 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
   if(version == AF_INET6)
     return -1;
 
-
   /* Generate the procfile name */
   sprintf(procfile, SPOOF_PROC, if_name);
-
 
   if((proc_spoof = fopen(procfile, "r")) == NULL)
     {
@@ -279,12 +236,8 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
       sleep(3);
       return 0;
     }
-  else
-    {
-      iface->nic_state.spoof = fgetc(proc_spoof);
-      fclose(proc_spoof);
-      
-    }
+  iface->nic_state.spoof = fgetc(proc_spoof);
+  fclose(proc_spoof);
 
   if ((proc_spoof = fopen(procfile, "w")) == NULL)
     {
@@ -293,27 +246,18 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
       sleep(3);
       return 0;
     }
-  else
-    {
-      syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
-      fputs("0", proc_spoof);
-    }
+  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
+  fputs("0", proc_spoof);
   fclose(proc_spoof);
-
   return 1;
 }
-
-
 
 /**
  *Resets the spoof filter and ICMP redirect settings
  */
-
 int
 restore_settings(int version)
 {
-  FILE *proc_fd;
-  char procfile[FILENAME_MAX];
   struct interface *ifs;
 
   OLSR_PRINTF(1, "Restoring network state\n")
@@ -321,14 +265,10 @@ restore_settings(int version)
   /* Restore IP forwarding to "off" */
   if(orig_fwd_state == '0')
     {
-      if(version == AF_INET)
-	{
-	  strcpy(procfile, "/proc/sys/net/ipv4/ip_forward");
-	}
-      else if(version == AF_INET6)
-	{
-	  strcpy(procfile, "/proc/sys/net/ipv6/conf/all/forwarding");
-	}
+      const char * const procfile = version == AF_INET
+        ? "/proc/sys/net/ipv4/ip_forward"
+        : "/proc/sys/net/ipv6/conf/all/forwarding";
+      FILE *proc_fd;
 
       if ((proc_fd = fopen(procfile, "w")) == NULL)
 	{
@@ -340,7 +280,6 @@ restore_settings(int version)
 	  fputc(orig_fwd_state, proc_fd);
 	  fclose(proc_fd);
 	}
-
     }
 
   /* Restore global ICMP redirect setting */
@@ -348,7 +287,8 @@ restore_settings(int version)
     {
       if(version == AF_INET)
 	{
-	  strcpy(procfile, "/proc/sys/net/ipv4/conf/all/send_redirects");
+	  const char * const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
+          FILE *proc_fd;
 
 	  if ((proc_fd = fopen(procfile, "w")) == NULL)
 	    {
@@ -363,24 +303,23 @@ restore_settings(int version)
 	}
     }
 
-
   if(version == AF_INET6)
     return 0;
 
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
+      char procfile[FILENAME_MAX];
+      FILE *proc_fd;
       /* Discard host-emulation interfaces */
       if(ifs->is_hcif)
 	continue;
       /* ICMP redirects */
       
       /* Generate the procfile name */
-      sprintf(procfile, REDIRECT_PROC, ifs->int_name);
+      snprintf(procfile, sizeof(procfile), REDIRECT_PROC, ifs->int_name);
       
       if ((proc_fd = fopen(procfile, "w")) == NULL)
-	{
 	  fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-	}
       else
 	{
 	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.redirect);
@@ -388,17 +327,13 @@ restore_settings(int version)
 	  fputc(ifs->nic_state.redirect, proc_fd);
 	  fclose(proc_fd);
 	}
-
       
       /* Spoof filter */
       
       /* Generate the procfile name */
       sprintf(procfile, SPOOF_PROC, ifs->int_name);
-
       if ((proc_fd = fopen(procfile, "w")) == NULL)
-	{
 	  fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
-	}
       else
 	{
 	  syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.spoof);
@@ -406,12 +341,9 @@ restore_settings(int version)
 	  fputc(ifs->nic_state.spoof, proc_fd);
 	  fclose(proc_fd);
 	}
-
     }
   return 1;
-
 }
-
 
 /**
  *Creates a nonblocking broadcast socket.
@@ -424,20 +356,18 @@ gethemusocket(struct sockaddr_in *pin)
   int sock, on = 1;
 
   OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
-
-
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     {
       perror("hcsocket");
       syslog(LOG_ERR, "hcsocket: %m");
-      return (-1);
+      return -1;
     }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
       close(sock);
-      return (-1);
+      return -1;
     }
   /* connect to PORT on HOST */
   if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0) 
@@ -446,13 +376,13 @@ gethemusocket(struct sockaddr_in *pin)
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       printf("connection refused\n");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   printf("OK\n");
 
   /* Keep TCP socket blocking */  
-  return (sock);
+  return sock;
 }
 
 
@@ -467,16 +397,12 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
   struct sockaddr_in *sin=(struct sockaddr_in *)sa;
   int sock, on = 1;
 
-
-
   if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
     {
       perror("socket");
       syslog(LOG_ERR, "socket: %m");
-      return (-1);
+      return -1;
     }
-
-
 
 #ifdef SO_BROADCAST
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof (on)) < 0)
@@ -484,7 +410,7 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
       perror("setsockopt");
       syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
       close(sock);
-      return (-1);
+      return -1;
     }
 #endif
 
@@ -492,17 +418,13 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
     {
       perror("SO_REUSEADDR failed");
       close(sock);
-      return (-1);
+      return -1;
     }
 
-
-
 #ifdef SO_RCVBUF
-
   for (on = bufspace; ; on -= 1024) 
     {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		     &on, sizeof (on)) == 0)
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof (on)) == 0)
 	break;
       if (on <= 8*1024) 
 	{
@@ -511,10 +433,7 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
 	  break;
 	}
     }
-
-
 #endif
-
 
   /*
    * WHEN USING KERNEL 2.6 THIS MUST HAPPEN PRIOR TO THE PORT BINDING!!!!
@@ -529,23 +448,21 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
       return -1;
     }
 
-
   if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
     {
       perror("bind");
       syslog(LOG_ERR, "bind: %m");
       close(sock);
-      return (-1);
+      return -1;
     }
-
   /*
-   *One should probably fetch the flags first
+   *FIXME: One should probably fetch the flags first
    *using F_GETFL....
    */
   if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
     syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
 
-  return (sock);
+  return sock;
 }
 
 
@@ -558,9 +475,6 @@ int
 getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
 {
   int sock, on = 1;
-
-
-
   if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) 
     {
       perror("socket");
@@ -589,14 +503,10 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
   */
   //#endif
 
-
-
-
 #ifdef SO_RCVBUF
   for (on = bufspace; ; on -= 1024) 
     {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		     &on, sizeof (on)) == 0)
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof (on)) == 0)
 	break;
       if (on <= 8*1024) 
 	{
@@ -605,8 +515,6 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
 	  break;
 	}
     }
-
-
 #endif
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
@@ -615,7 +523,6 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       close(sock);
       return (-1);
     }
-
 
   /*
    * WHEN USING KERNEL 2.6 THIS MUST HAPPEN PRIOR TO THE PORT BINDING!!!!
@@ -630,7 +537,6 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       return -1;
     }
 
-
   if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
     {
       perror("bind");
@@ -638,7 +544,6 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       close(sock);
       return (-1);
     }
-
   /*
    *One should probably fetch the flags first
    *using F_GETFL....
@@ -646,11 +551,8 @@ getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
   if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
     syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
 
-
-
-  return (sock);
+  return sock;
 }
-
 
 int
 join_mcast(struct interface *ifs, int sock)
@@ -700,9 +602,8 @@ join_mcast(struct interface *ifs, int sock)
     {
       perror("Join multicast send");
       return -1;
-    }
+    }  
 
-  
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 
 		IPV6_MULTICAST_IF, 
@@ -719,13 +620,10 @@ join_mcast(struct interface *ifs, int sock)
   return 0;
 }
 
-
-
 /*
  *From net-tools lib/interface.c
  *
  */
-
 int
 get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 {
@@ -762,8 +660,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 	    }
 	}
       fclose(f);
-    }
-  
+    }  
   return 0;
 }
 
@@ -771,7 +668,6 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 /**
  * Wrapper for sendto(2)
  */
-
 ssize_t
 olsr_sendto(int s, 
 	    const void *buf, 
@@ -822,7 +718,7 @@ olsr_select(int nfds,
 }
 
 int
-check_wireless_interface(char *ifname)
+check_wireless_interface(char * ifname)
 {
   struct ifreq ifr;
 

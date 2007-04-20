@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.5 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: olsr_types.h,v 1.6 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 /*
@@ -92,6 +92,9 @@ typedef int             olsr_32_t;
 
 union olsr_ip_addr
 {
+  /*
+  struct in_addr v4;
+  */
   olsr_u32_t v4;
   olsr_u8_t v4x[4];
   struct in6_addr v6;

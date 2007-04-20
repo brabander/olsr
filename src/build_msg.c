@@ -36,9 +36,8 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.33 2006/12/14 11:29:19 bernd67 Exp $
+ * $Id: build_msg.c,v 1.34 2007/04/20 13:46:04 bernd67 Exp $
  */
-
 
 #include "defs.h"
 #include "olsr.h"
@@ -113,7 +112,7 @@ set_empty_tc_timer(clock_t empty_tc_new)
  * empty TC messages
  */
 clock_t
-get_empty_tc_timer()
+get_empty_tc_timer(void)
 {
   return send_empty_tc;
 }

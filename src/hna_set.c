@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.17 2005/05/29 12:47:45 br1 Exp $
+ * $Id: hna_set.c,v 1.18 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -52,7 +52,7 @@ size_t netmask_size;
  *Initialize the HNA set
  */
 int
-olsr_init_hna_set()
+olsr_init_hna_set(void)
 {
 
   int index;
@@ -265,7 +265,7 @@ olsr_update_hna_entry(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna
  *@return nada
  */
 void
-olsr_time_out_hna_set(void *foo)
+olsr_time_out_hna_set(void *foo __attribute__((unused)))
 {
   int index;
 
@@ -319,7 +319,7 @@ olsr_time_out_hna_set(void *foo)
  *@return nada
  */
 void
-olsr_print_hna_set()
+olsr_print_hna_set(void)
 {
   int index;
 

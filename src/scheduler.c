@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.37 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: scheduler.c,v 1.38 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -77,7 +77,7 @@ signal_link_changes(olsr_bool val)
 }
 
 static void 
-trigger_dijkstra(void *dummy)
+trigger_dijkstra(void *foo __attribute__((unused)))
 {
   OLSR_PRINTF(3, "Triggering Dijkstra\n");
 
@@ -98,7 +98,7 @@ trigger_dijkstra(void *dummy)
  */
 
 void
-scheduler()
+scheduler(void)
 {
   struct timespec remainder_spec;
   struct timespec sleeptime_spec;
@@ -138,7 +138,6 @@ scheduler()
   /* Main scheduler event loop */
   for(;;)
     {
-
       /* Update now_times */
       now_times = times(&tms_buf);
 
@@ -314,7 +313,7 @@ olsr_register_scheduler_event(void (*event_function)(void *),
 
 /*
  *
- *@param initial how long utnil the first generation
+ *@param initial how long until the first generation
  *@param trigger pointer to a boolean indicating that
  *this function should be triggered immediatley
  */
@@ -322,7 +321,7 @@ int
 olsr_remove_scheduler_event(void (*event_function)(void *), 
 			    void *par,
 			    float interval, 
-			    float initial, 
+			    float initial __attribute__((unused)), 
 			    olsr_u8_t *trigger)
 {
   struct event_entry *entry, *prev;

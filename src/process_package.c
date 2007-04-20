@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.38 2007/02/10 19:27:32 bernd67 Exp $
+ * $Id: process_package.c,v 1.39 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -60,7 +60,7 @@
  *Initializing the parser functions we are using
  */
 void
-olsr_init_package_process()
+olsr_init_package_process(void)
 {
   if (olsr_cnf->lq_level == 0)
     {
@@ -81,21 +81,19 @@ void
 olsr_hello_tap(struct hello_message *message, struct interface *in_if,
                union olsr_ip_addr *from_addr)
 {
-  struct link_entry         *link;
   struct neighbor_entry     *neighbor;
-  struct hello_neighbor *walker;
-  double saved_lq;
-  double rel_lq;
 
   /*
    * Update link status
    */
-  link = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
+  struct link_entry         *link = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
 
   if (olsr_cnf->lq_level > 0)
     {
+      double saved_lq;
+      double rel_lq;
+      struct hello_neighbor *walker;
       // just in case our neighbor has changed its HELLO interval
-
       olsr_update_packet_loss_hello_int(link, message->htime);
 
       // find the input interface in the list of neighbor interfaces

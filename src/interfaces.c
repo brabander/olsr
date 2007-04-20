@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.29 2006/04/17 18:31:09 kattemat Exp $
+ * $Id: interfaces.c,v 1.30 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -72,7 +72,7 @@ static struct ifchgf *ifchgf_list;
  *@return the number of interfaces configured
  */
 int
-ifinit()
+ifinit(void)
 {
   struct olsr_if *tmp_if;
 
@@ -123,7 +123,7 @@ ifinit()
 
 
 olsr_u32_t
-get_if_property_id()
+get_if_property_id(void)
 {
   return if_property_id++;
 }

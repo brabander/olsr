@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.23 2005/05/29 12:47:45 br1 Exp $
+ * $Id: socket_parser.c,v 1.24 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -157,11 +157,10 @@ remove_olsr_socket(int fd, void(*pf)(int))
 
 
 void
-poll_sockets()
+poll_sockets(void)
 {
   int n;
   struct olsr_socket_entry *olsr_sockets;
-  static struct tms tms_buf;
 
   /* If there are no registered sockets we
    * do not call select(2)
@@ -172,11 +171,10 @@ poll_sockets()
   FD_ZERO(&ibits);
   
   /* Adding file-descriptors to FD set */
-  olsr_sockets = olsr_socket_entries;
-  while(olsr_sockets)
+  
+  for(olsr_sockets = olsr_socket_entries; olsr_sockets; olsr_sockets = olsr_sockets->next)
     {
-      FD_SET(olsr_sockets->fd, &ibits);
-      olsr_sockets = olsr_sockets->next;
+      FD_SET(olsr_sockets->fd, &ibits);      
     }
       
   /* Runnig select on the FD set */
@@ -197,17 +195,12 @@ poll_sockets()
 
   /* Update time since this is much used by the parsing functions */
   gettimeofday(&now, NULL);      
-  now_times = times(&tms_buf);
+  now_times = times(NULL);
 
-  olsr_sockets = olsr_socket_entries;
-  while(olsr_sockets)
+  for(olsr_sockets = olsr_socket_entries;olsr_sockets;olsr_sockets = olsr_sockets->next)
     {
       if(FD_ISSET(olsr_sockets->fd, &ibits))
-	{
 	  olsr_sockets->process_function(olsr_sockets->fd);
-	}
-      olsr_sockets = olsr_sockets->next;
-    }
-  	
+    }  	
 }
 

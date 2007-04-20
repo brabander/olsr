@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.15 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: mpr_selector_set.c,v 1.16 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -55,7 +55,7 @@ static struct mpr_selector mprs_list;
  */
 
 int
-olsr_init_mprs_set()
+olsr_init_mprs_set(void)
 {
   OLSR_PRINTF(5, "MPRS: Init\n")
   /* Initial values */
@@ -65,20 +65,19 @@ olsr_init_mprs_set()
   
   mprs_list.next = &mprs_list;
   mprs_list.prev = &mprs_list;
-  
 
   return 1;
 }
 
 
 olsr_u16_t 
-get_local_ansn()
+get_local_ansn(void)
 {
   return ansn;
 }
 
 void
-increase_local_ansn()
+increase_local_ansn(void)
 {
   ansn++;
 }
@@ -88,7 +87,7 @@ increase_local_ansn()
  * neighbors. If the list is empty we are not MPR.
  */
 olsr_bool
-olsr_is_mpr()
+olsr_is_mpr(void)
 {
     return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
 }
@@ -195,25 +194,18 @@ olsr_update_mprs_set(union olsr_ip_addr *addr, float vtime)
   return retval;
 }
 
-
-
-
-
 /**
  *Time out MPR selector entries
  *
  *@return nada
  */
 void
-olsr_time_out_mprs_set()
+olsr_time_out_mprs_set(void)
 {
-  struct mpr_selector *mprs;
-
-  mprs = mprs_list.next;
+  struct mpr_selector *mprs = mprs_list.next;
 
   while(mprs != &mprs_list)
     {
-
       if(TIMED_OUT(mprs->MS_time))
 	{
 	  /* Dequeue */
@@ -231,27 +223,20 @@ olsr_time_out_mprs_set()
       else
 	mprs = mprs->next;
     }
-
 }
-
-
 
 /**
  *Print the current MPR selector set to STDOUT
  */
 void
-olsr_print_mprs_set()
+olsr_print_mprs_set(void)
 {
   struct mpr_selector *mprs;
-
-
-  mprs = mprs_list.next;
   OLSR_PRINTF(1, "MPR SELECTORS: ")
 
-  while(mprs != &mprs_list)
+    for(mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next)
     {
       OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&mprs->MS_main_addr))
-      mprs = mprs->next;
     }
   OLSR_PRINTF(1, "\n")
 }

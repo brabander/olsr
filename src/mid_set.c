@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.17 2007/02/10 19:27:32 bernd67 Exp $
+ * $Id: mid_set.c,v 1.18 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -60,7 +60,7 @@ struct mid_entry *mid_lookup_entry_bymain(union olsr_ip_addr *adr);
  */
 
 int
-olsr_init_mid_set()
+olsr_init_mid_set(void)
 {
   int index;
 
@@ -461,7 +461,7 @@ olsr_prune_aliases(union olsr_ip_addr *m_addr, struct mid_alias *declared_aliase
  *@return nada
  */
 void
-olsr_time_out_mid_set(void *foo)
+olsr_time_out_mid_set(void *foo __attribute__((unused)))
 {
   int index;
 
@@ -527,9 +527,8 @@ mid_delete_node(struct mid_entry *entry)
  *For debuging purposes
  */
 void
-olsr_print_mid_set()
+olsr_print_mid_set(void)
 {
-
   int index;
 
   OLSR_PRINTF(1, "mid set: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec)
@@ -538,17 +537,14 @@ olsr_print_mid_set()
     {
       struct mid_entry *tmp_list = mid_set[index].next;
       /*Traverse MID list*/
-      for(tmp_list = mid_set[index].next;
-	  tmp_list != &mid_set[index];
-	  tmp_list = tmp_list->next)
+      for(tmp_list = mid_set[index].next; tmp_list != &mid_set[index]; tmp_list = tmp_list->next)
 	{
-	  struct mid_address *tmp_addr = tmp_list->aliases;
-
+	  struct mid_address *tmp_addr;
+          
 	  OLSR_PRINTF(1, "%s: ", olsr_ip_to_string(&tmp_list->main_addr))
-	  while(tmp_addr)
+          for(tmp_addr = tmp_list->aliases;tmp_addr;tmp_addr = tmp_addr->next_alias)
 	    {
 	      OLSR_PRINTF(1, " %s ", olsr_ip_to_string(&tmp_addr->alias))
-	      tmp_addr = tmp_addr->next_alias;
 	    }
 	  OLSR_PRINTF(1, "\n")	  
 	}

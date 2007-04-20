@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.20 2007/04/20 10:33:08 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.21 2007/04/20 13:46:02 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -104,7 +104,7 @@ static struct rt_entry *host_lookup_routing_table(union olsr_ip_addr *);
  * do initialization
  */
 void
-name_constructor() 
+name_constructor(void) 
 {
 	int i;
 	
@@ -257,7 +257,7 @@ add_name_to_list(struct name_entry *my_list, char *value, int type, const union 
  *   - register_olsr_data() then then finally calls this function
  */
 int
-name_init()
+name_init(void)
 {
 	struct name_entry *name;
 	union olsr_ip_addr ipz;
@@ -390,7 +390,7 @@ remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
  * XXX: should I delete the hosts/services/resolv.conf files on exit?
  */
 void
-name_destructor()
+name_destructor(void)
 {
 	olsr_printf(2, "NAME PLUGIN: exit. cleaning up...\n");
 	
@@ -412,15 +412,13 @@ void
 free_all_list_entries(struct db_entry **this_db_list) 
 {
 	int i;
-	struct db_entry **tmp;
-	struct db_entry *to_delete;
 	
 	for(i = 0; i < HASHSIZE; i++)
 	{
-		tmp = &list[i];
+        struct db_entry **tmp = &this_db_list[i];
 		while(*tmp != NULL)
 		{
-			to_delete = *tmp;
+            struct db_entry *to_delete = *tmp;
 			*tmp = (*tmp)->next;
 			free_name_entry_list(&to_delete->names);
 			free(to_delete);
@@ -440,7 +438,7 @@ free_all_list_entries(struct db_entry **this_db_list)
  * and write changes to file
  */
 void
-olsr_timeout()
+olsr_timeout(void)
 {
     timeout_old_names(list, &name_table_changed);
     timeout_old_names(forwarder_list, &forwarder_table_changed);
@@ -488,7 +486,7 @@ timeout_old_names(struct db_entry **this_list, olsr_bool *this_table_changed)
  * Scheduled event: generate and send NAME packet
  */
 void
-olsr_event(void *foo)
+olsr_event(void *foo __attribute__((unused)))
 {
 	union olsr_message *message = (union olsr_message*)buffer;
 	struct interface *ifn;
@@ -833,7 +831,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator, struct db_entry **this_l
  * write names to a file in /etc/hosts compatible format
  */
 void
-write_hosts_file()
+write_hosts_file(void)
 {
 	int hash;
 	struct name_entry *name;
@@ -914,7 +912,7 @@ write_hosts_file()
  * http://me.olsr:80|tcp|my little homepage
  */
 void
-write_services_file()
+write_services_file(void)
 {
 	int hash;
 	struct name_entry *name;
@@ -972,7 +970,7 @@ write_services_file()
  * best means the 3 with the best etx value in routing table
  */
 void
-write_resolv_file()
+write_resolv_file(void)
 {
 	int hash;
 	struct name_entry *name, *tmp_dns, *last_dns, *dnslist = NULL;

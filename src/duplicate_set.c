@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.13 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: duplicate_set.c,v 1.14 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 
@@ -57,7 +57,7 @@ static float dup_hold_time = DUP_HOLD_TIME;
  *@return nada
  */
 void
-olsr_init_duplicate_table()
+olsr_init_duplicate_table(void)
 {
   int i;
 
@@ -225,7 +225,7 @@ olsr_del_dup_entry(struct dup_entry *entry)
 
 
 void
-olsr_time_out_duplicate_table(void *foo)
+olsr_time_out_duplicate_table(void *foo __attribute__((unused)))
 {
   int i;
 
@@ -344,14 +344,8 @@ olsr_set_dup_forward(union olsr_ip_addr *originator,
   return 1;
 }
 
-
-
-
-
-
-
 void
-olsr_print_duplicate_table()
+olsr_print_duplicate_table(void)
 {
   int i;
 
@@ -370,6 +364,6 @@ olsr_print_duplicate_table()
 	  tmp_dup_table = tmp_dup_table->next;
 	}
     }
-printf("\n");
+  printf("\n");
 
 }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.46 2007/03/14 14:01:14 bernd67 Exp $
+ * $Id: ifnet.c,v 1.47 2007/04/20 13:46:05 bernd67 Exp $
  */
 
 
@@ -72,7 +72,7 @@ int bufspace = 127*1024;	/* max. input buffer size to request */
 
 
 int
-set_flag(char *ifname, short flag)
+set_flag(char *ifname, short flag __attribute__((unused)))
 {
   struct ifreq ifr;
 
@@ -108,7 +108,7 @@ set_flag(char *ifname, short flag)
 
 
 void
-check_interface_updates(void *foo)
+check_interface_updates(void *foo __attribute__((unused)))
 {
   struct olsr_if *tmp_if;
 

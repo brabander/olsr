@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.32 2007/01/31 12:36:50 bernd67 Exp $
+ * $Id: parser.c,v 1.33 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -87,7 +87,7 @@ parser_set_disp_pack_in(olsr_bool val)
  *@return nada
  */
 void
-olsr_init_parser()
+olsr_init_parser(void)
 {
   OLSR_PRINTF(3, "Initializing parser...\n")
 

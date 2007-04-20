@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.2 2007/03/27 03:59:27 tlopatic Exp $
+ * $Id: olsrd_txtinfo.c,v 1.3 2007/04/20 13:46:04 bernd67 Exp $
  */
 
 /*
@@ -101,21 +101,21 @@ send_info(int neighonly);
 static void
 ipc_action(int);
 
-static void inline
+static void
 ipc_print_neigh_link(void);
 
-static void inline
+static void
 ipc_print_routes(void);
 
-static void inline
+static void
 ipc_print_topology(void);
 
-static void inline
+static void
 ipc_print_hna(void);
 
 #define TXT_IPC_BUFSIZE 256
 static int 
-ipc_sendf(const char* format, ...);
+ipc_sendf(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
 /**
  *Do initialization here
@@ -124,7 +124,7 @@ ipc_sendf(const char* format, ...);
  *function in uolsrd_plugin.c
  */
 int
-olsrd_plugin_init()
+olsrd_plugin_init(void)
 {
   /* Initial IPC value */
   ipc_open = 0;
@@ -139,7 +139,7 @@ olsrd_plugin_init()
  * destructor - called at unload
  */
 void
-olsr_plugin_exit()
+olsr_plugin_exit(void)
 {
   if(ipc_open)
     close(ipc_socket);
@@ -148,7 +148,7 @@ olsr_plugin_exit()
 
 
 static int
-plugin_ipc_init()
+plugin_ipc_init(void)
 {
   struct sockaddr_in sin;
   olsr_u32_t yes = 1;
@@ -280,7 +280,7 @@ ipc_action(int fd)
   }
 }
 
-static void inline
+static void
 ipc_print_neigh_link(void)
 {
   struct neighbor_entry *neigh;
@@ -339,7 +339,7 @@ ipc_print_neigh_link(void)
 }
 
 
-static void inline
+static void
 ipc_print_routes(void)
 {
   int size = 0, index;
@@ -383,7 +383,7 @@ ipc_print_routes(void)
 
 }
 
-static void inline
+static void
 ipc_print_topology(void)
 {
   olsr_u8_t index;
@@ -420,7 +420,7 @@ ipc_print_topology(void)
   ipc_sendf("\n");
 }
 
-static void inline
+static void
 ipc_print_hna(void)
 {
   int size;
