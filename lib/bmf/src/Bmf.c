@@ -35,7 +35,7 @@
  * Description: Multicast forwarding functions
  * Created    : 29 Jun 2006
  *
- * $Id: Bmf.c,v 1.2 2007/02/10 17:05:55 bernd67 Exp $ 
+ * $Id: Bmf.c,v 1.3 2007/04/20 14:06:17 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 #define _MULTI_THREADED
@@ -1183,7 +1183,7 @@ static void DoBmf(void)
  * Return     : none
  * Data Used  : BmfThreadRunning
  * ------------------------------------------------------------------------- */
-static void BmfSignalHandler(int signo)
+static void BmfSignalHandler(int signo __attribute__((unused)))
 {
   BmfThreadRunning = 0;
 }
@@ -1198,7 +1198,7 @@ static void BmfSignalHandler(int signo)
  * Notes      : Another thread can gracefully stop this thread by sending
  *              a SIGALRM signal.
  * ------------------------------------------------------------------------- */
-static void* BmfRun(void* useless)
+static void* BmfRun(void* useless __attribute__((unused)))
 {
   /* Mask all signals except SIGALRM */
   sigset_t blockedSigs;
@@ -1306,7 +1306,7 @@ int InitBmf(struct interface* skipThisIntf)
  * Return     : none
  * Data Used  : BmfThreadRunning, BmfThread
  * ------------------------------------------------------------------------- */
-void CloseBmf()
+void CloseBmf(void)
 {
   /* Signal BmfThread to exit */
   if (pthread_kill(BmfThread, SIGALRM) != 0)

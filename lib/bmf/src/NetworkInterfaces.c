@@ -35,7 +35,7 @@
  * Description: Functions to open and close sockets
  * Created    : 29 Jun 2006
  *
- * $Id: NetworkInterfaces.c,v 1.3 2007/02/11 11:51:56 bernd67 Exp $ 
+ * $Id: NetworkInterfaces.c,v 1.4 2007/04/20 14:06:17 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 #include "NetworkInterfaces.h"
@@ -1074,7 +1074,7 @@ void AddInterface(struct interface* newIntf)
  *              was started.
  * ------------------------------------------------------------------------- */
 
-void CloseBmfNetworkInterfaces()
+void CloseBmfNetworkInterfaces(void)
 {
   int nClosed = 0;
   

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.62 2007/04/02 22:22:25 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.63 2007/04/20 14:06:18 bernd67 Exp $
  */
 
 /*
@@ -132,10 +132,10 @@ struct dynamic_file_entry
 static int
 get_http_socket(int);
 
-int
-build_tabs(char *, int);
+static int
+build_tabs(char *, olsr_u32_t, int);
 
-void
+static void
 parse_http_request(int);
 
 int
@@ -181,8 +181,13 @@ sockaddr_to_string(struct sockaddr *);
 olsr_bool
 check_allowed_ip(union olsr_ip_addr *);
 
-static char *
-get_copyright_string(void);
+
+static int
+build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr);
+static int
+build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
+
+static ssize_t writen(int fd, const void *buf, size_t count);
 
 static struct timeval start_time;
 static struct http_stats stats;
@@ -190,14 +195,15 @@ static int client_sockets[MAX_CLIENTS];
 static int curr_clients;
 static int http_socket;
 
-int netsprintf(char *str, const char* format, ...);
+#if 0
+int netsprintf(char *str, const char* format, ...) __attribute__((format(printf, 2, 3)));
 static int netsprintf_direct = 0;
 static int netsprintf_error = 0;
 #define sprintf netsprintf
 #define NETDIRECT
+#endif
 
-
-struct tab_entry tab_entries[] =
+static const struct tab_entry tab_entries[] =
   {
     {"Configuration", "config", build_config_body, OLSR_TRUE},
     {"Routes", "routes", build_routes_body, OLSR_TRUE},
@@ -208,10 +214,10 @@ struct tab_entry tab_entries[] =
 #endif
     {"About", "about", build_about_body, OLSR_TRUE},
     {"FOO", "cfgfile", build_cfgfile_body, OLSR_FALSE},
-    {NULL, NULL, NULL}
+    {NULL, NULL, NULL, OLSR_FALSE}
   };
 
-struct static_bin_file_entry static_bin_files[] =
+static const struct static_bin_file_entry static_bin_files[] =
   {
     {"favicon.ico", favicon_ico, 1406/*favicon_ico_len*/},
     {"logo.gif", logo_gif, 2801/*logo_gif_len*/},
@@ -219,14 +225,14 @@ struct static_bin_file_entry static_bin_files[] =
     {NULL, NULL, 0}
   };
 
-struct static_txt_file_entry static_txt_files[] =
+static const struct static_txt_file_entry static_txt_files[] =
   {
     {"httpinfo.css", httpinfo_css},
     {NULL, NULL}
   };
 
 
-struct dynamic_file_entry dynamic_files[] =
+static const struct dynamic_file_entry dynamic_files[] =
   {
 #ifdef ADMIN_INTERFACE
     {"set_values", process_set_values},
@@ -241,9 +247,9 @@ struct dynamic_file_entry dynamic_files[] =
  *function in uolsrd_plugin.c
  */
 int
-olsrd_plugin_init()
+olsrd_plugin_init(void)
 {
-  get_copyright_string();
+  (void)copyright_string;
   /* Get start time */
   gettimeofday(&start_time, NULL);
 
@@ -404,7 +410,7 @@ parse_http_request(int fd)
 	      printf("Dynamic read %d bytes\n", param_size);
 	      
 	      //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
-	      size += dynamic_files[i].process_data_cb(req, param_size, &body[size], HTML_BUFSIZE - size);
+	      size += dynamic_files[i].process_data_cb(req, param_size, &body[size], HTML_BUFSIZE-size);
 	      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);  
 	      goto send_http_data;
 	    }
@@ -492,12 +498,12 @@ parse_http_request(int fd)
 	      y++;
 	    }
 	  
-	  size += build_tabs(&body[size], i);
+	  size += build_tabs(&body[size], sizeof(body)-size, i);
 	  size += build_frame("Current Routes", 
 			      "routes", 
 			      FRAMEWIDTH, 
 			      &body[size], 
-			      HTML_BUFSIZE - size, 
+			      sizeof(body)-size, 
 			      tab_entries[i].build_body_cb);
 	  
 	  stats.ok_hits++;
@@ -534,14 +540,14 @@ parse_http_request(int fd)
 
  send_http_data:
   
-  r = send(client_sockets[curr_clients], req, c, 0);   
+  r = writen(client_sockets[curr_clients], req, c);   
   if(r < 0)
     {
       olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
     }
 
-  r = send(client_sockets[curr_clients], body, size, 0);
+  r = writen(client_sockets[curr_clients], body, size);
   if(r < 0)
     {
       olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
@@ -558,85 +564,72 @@ parse_http_request(int fd)
 int
 build_http_header(http_header_type type, 
 		  olsr_bool is_html, 
-		  olsr_u32_t size, 
+		  olsr_u32_t msgsize, 
 		  char *buf, 
 		  olsr_u32_t bufsize)
 {
   time_t currtime;
-  char timestr[45];
-  char tmp[30];
+  const char *h;
+  int size;
 
-  memset(buf, 0, bufsize);
-
-  switch(type)
-    {
-    case(HTTP_BAD_REQ):
-      memcpy(buf, HTTP_400, strlen(HTTP_400));
+  switch(type) {
+  case(HTTP_BAD_REQ):
+      h = HTTP_400;
       break;
-    case(HTTP_BAD_FILE):
-      memcpy(buf, HTTP_404, strlen(HTTP_404));
+  case(HTTP_BAD_FILE):
+      h = HTTP_404;
       break;
-    default:
+  default:
       /* Defaults to OK */
-      memcpy(buf, HTTP_200, strlen(HTTP_200));
+      h = HTTP_200;
       break;
-    }
-
+  }
+  size = snprintf(buf, bufsize, "%s", h);
 
   /* Date */
-  if(time(&currtime))
-    {
-      strftime(timestr, 45, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", localtime(&currtime));
-      strcat(buf, timestr);
-    }
+  time(&currtime);
+  size += strftime(&buf[size], bufsize-size, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", localtime(&currtime));
   
   /* Server version */
-  strcat(buf, "Server: " PLUGIN_NAME " " PLUGIN_VERSION " " HTTP_VERSION "\r\n");
+  size += snprintf(&buf[size], bufsize-size, "Server: %s %s %s\r\n", PLUGIN_NAME, PLUGIN_VERSION, HTTP_VERSION);
 
   /* connection-type */
-  strcat(buf,"Connection: closed\r\n");
+  size += snprintf(&buf[size], bufsize-size, "Connection: closed\r\n");
 
   /* MIME type */
-  if(is_html)
-    strcat(buf, "Content-type: text/html\r\n");
-  else
-    strcat(buf, "Content-type: text/plain\r\n");
+  size += snprintf(&buf[size], bufsize-size, "Content-type: text/%s\r\n", is_html ? "html" : "plain");
 
   /* Content length */
-  if(size > 0)
-    {
-      snprintf(tmp, sizeof(tmp), "Content-length: %i\r\n", size);
-      strcat(buf, tmp);
-    }
-
+  if(msgsize > 0) {
+      size += snprintf(&buf[size], bufsize-size, "Content-length: %i\r\n", msgsize);
+  }
 
   /* Cache-control 
    * No caching dynamic pages
    */
-  strcat(buf, "Cache-Control: no-cache\r\n");
+  size += snprintf(&buf[size], bufsize-size, "Cache-Control: no-cache\r\n");
 
-  if(!is_html)
-    strcat(buf, "Accept-Ranges: bytes\r\n");
-
+  if(!is_html) {
+    size += snprintf(&buf[size], bufsize-size, "Accept-Ranges: bytes\r\n");
+  }
   /* End header */
-  strcat(buf, "\r\n");
+  size += snprintf(&buf[size], bufsize-size, "\r\n");
   
   olsr_printf(1, "HEADER:\n%s", buf);
 
-  return strlen(buf);
-
+  return size;
 }
 
 
 
 int 
-build_tabs(char *buf, int active)
+build_tabs(char *buf, const olsr_u32_t bufsize, int active)
 {
   int size = 0, i = 0, tabs = 0;
 
   while(strcmp(html_tabs[i], "<!-- TAB ELEMENTS -->"))
     {
-      size += sprintf(&buf[size], html_tabs[i]);
+      size += snprintf(&buf[size], bufsize-size, html_tabs[i]);
       i++;
     }
 
@@ -648,13 +641,13 @@ build_tabs(char *buf, int active)
 	continue;
 
       if(tabs == active)
-	size += sprintf(&buf[size], 
+	size += snprintf(&buf[size], bufsize-size, 
 			html_tabs[i], 
 			tab_entries[tabs].filename, 
 			ACTIVE_TAB, 
 			tab_entries[tabs].tab_label);
       else
-	size += sprintf(&buf[size], 
+	size += snprintf(&buf[size], bufsize-size, 
 			html_tabs[i], 
 			tab_entries[tabs].filename, 
 			" ", 
@@ -664,7 +657,7 @@ build_tabs(char *buf, int active)
   i++;      
   while(html_tabs[i])
     {
-      size += sprintf(&buf[size], html_tabs[i]);
+      size += snprintf(&buf[size], bufsize-size, html_tabs[i]);
       i++;
     }
   
@@ -676,7 +669,7 @@ build_tabs(char *buf, int active)
  * destructor - called at unload
  */
 void
-olsr_plugin_exit()
+olsr_plugin_exit(void)
 {
   if(http_socket)
     close(http_socket);
@@ -684,9 +677,9 @@ olsr_plugin_exit()
 
 
 static int
-build_frame(char *title, 
-	    char *link, 
-	    int width,
+build_frame(char *title __attribute__((unused)), 
+	    char *link __attribute__((unused)), 
+	    int width __attribute__((unused)),
 	    char *buf,
 	    olsr_u32_t bufsize, 
 	    int(*frame_body_cb)(char *, olsr_u32_t))
@@ -696,9 +689,9 @@ build_frame(char *title,
   while(http_frame[i])
     {
       if(!strcmp(http_frame[i], "<!-- BODY -->"))
-	size += frame_body_cb(&buf[size], bufsize - size);
+	size += frame_body_cb(&buf[size], bufsize-size);
       else
-	size += sprintf(&buf[size], http_frame[i]);      
+	size += snprintf(&buf[size], bufsize-size, http_frame[i]);      
 
       i++;
     }
@@ -707,29 +700,26 @@ build_frame(char *title,
 }
 
 static int
-build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr);
-static int
 build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr)
 {
   int size = 0;
   if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
-    size += sprintf(&buf[size],
-                    "<a href=\"http://%s:%d/all\">",
-                    ipstr,
-                    http_port);
+    size += snprintf(&buf[size],
+                     bufsize-size,
+                     "<a href=\"http://%s:%d/all\">",
+                     ipstr,
+                     http_port);
   }
-  size += sprintf(&buf[size], "%s", ipstr);
+  size += snprintf(&buf[size], bufsize-size, "%s", ipstr);
   if (maskstr) {
-    size += sprintf(&buf[size], "/%s", maskstr);
+    size += snprintf(&buf[size], bufsize-size, "/%s", maskstr);
   }
   if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
-    size += sprintf(&buf[size], "</a>");
+    size += snprintf(&buf[size], bufsize-size, "</a>");
   }
   return size;
 }
 
-static int
-build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
 static int
 build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask)
 {
@@ -754,14 +744,14 @@ build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link
   } else {
     maskstr =  NULL;
   }
-  size += sprintf(&buf[size], "<td%s>", resolve_ip_addresses && hp ? "" : " colspan=\"2\"");
-  size += build_ip_txt(&buf[size], bufsize, want_link, olsr_ip_to_string(ipaddr), maskstr);
+  size += snprintf(&buf[size], bufsize-size, "<td%s>", resolve_ip_addresses && hp ? "" : " colspan=\"2\"");
+  size += build_ip_txt(&buf[size], bufsize-size, want_link, olsr_ip_to_string(ipaddr), maskstr);
   if (hp) {
-    size += sprintf(&buf[size], "</td><td>(");
-    size += build_ip_txt(&buf[size], bufsize, want_link, hp->h_name, NULL);
-    size += sprintf(&buf[size], ")");
+    size += snprintf(&buf[size], bufsize-size, "</td><td>(");
+    size += build_ip_txt(&buf[size], bufsize-size, want_link, hp->h_name, NULL);
+    size += snprintf(&buf[size], bufsize-size, ")");
   }
-  size += sprintf(&buf[size], "</td>");
+  size += snprintf(&buf[size], bufsize-size, "</td>");
   return size;
 }
 #define build_ipaddr_with_link(buf, bufsize, ipaddr, mask) build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (mask))
@@ -773,13 +763,13 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index;
   struct rt_entry *routes;
 
-  size += sprintf(&buf[size], "<h2>OLSR routes in kernel</h2>\n");
+  size += snprintf(&buf[size], bufsize-size, "<h2>OLSR routes in kernel</h2>\n");
 
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th%s>Destination</th><th>Gateway</th><th>Metric</th>",
+  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th%s>Destination</th><th>Gateway</th><th>Metric</th>",
                   resolve_ip_addresses ? " colspan=\"2\"" : "");
   if (olsr_cnf->lq_level > 0)
-    size += sprintf(&buf[size], "<th>ETX</th>");
-  size += sprintf(&buf[size], "<th>Interface</th><th>Type</th></tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "<th>ETX</th>");
+  size += snprintf(&buf[size], bufsize-size, "<th>Interface</th><th>Type</th></tr>\n");
 
   /* Neighbors */
   for(index = 0;index < HASHSIZE;index++)
@@ -788,14 +778,14 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &routingtable[index];
 	  routes = routes->next)
 	{
-          size += sprintf(&buf[size], "<tr>");
-	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_dst, NULL);
-	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_router, NULL);
+          size += snprintf(&buf[size], bufsize-size, "<tr>");
+	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_dst, NULL);
+	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_router, NULL);
 
-	  size += sprintf(&buf[size], "<td align=\"right\">%d</td>", routes->rt_metric);
+	  size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%d</td>", routes->rt_metric);
           if (olsr_cnf->lq_level > 0)
-            size += sprintf(&buf[size], "<td align=\"right\">%.2f</td>", routes->rt_etx);
-	  size += sprintf(&buf[size],
+            size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%.2f</td>", routes->rt_etx);
+	  size += snprintf(&buf[size], bufsize-size,
                          "<td>%s</td>"
                          "<td>HOST</td></tr>\n",
                          routes->rt_if->int_name);
@@ -809,22 +799,22 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 	  routes != &hna_routes[index];
 	  routes = routes->next)
 	{
-          size += sprintf(&buf[size], "<tr>");
-	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_dst, &routes->rt_mask);
-	  size += build_ipaddr_with_link(&buf[size], bufsize - size, &routes->rt_router, NULL);
-	  size += sprintf(&buf[size],
+          size += snprintf(&buf[size], bufsize-size, "<tr>");
+	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_dst, &routes->rt_mask);
+	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_router, NULL);
+	  size += snprintf(&buf[size], bufsize-size,
                          "<td align=\"right\">%d</td>",
                          routes->rt_metric);
           if (olsr_cnf->lq_level > 0)
-	    size += sprintf(&buf[size], "<td align=\"right\">%.2f</td>", routes->rt_etx);
-	  size += sprintf(&buf[size],
+	    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%.2f</td>", routes->rt_etx);
+	  size += snprintf(&buf[size], bufsize-size,
                          "<td>%s</td>"
                          "<td>HNA</td></tr>\n",
                          routes->rt_if->int_name);
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
   return size;
 }
@@ -854,169 +844,169 @@ build_config_body(char *buf, olsr_u32_t bufsize)
     strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", localtime(&currtime));
 
 
-    size += sprintf(&buf[size], "OS: %s\n<br>", OS);
+    size += snprintf(&buf[size], bufsize-size, "OS: %s\n<br>", OS);
 
-    size += sprintf(&buf[size], "%s\n", systime);
+    size += snprintf(&buf[size], bufsize-size, "%s\n", systime);
 
     if(days)
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i><br>\n", days, hours, mins, (int)uptime.tv_sec);
+      size += snprintf(&buf[size], bufsize-size, "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i><br>\n", days, hours, mins, (int)uptime.tv_sec);
     else
-      size += sprintf(&buf[size], "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
+      size += snprintf(&buf[size], bufsize-size, "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
 
-    size += sprintf(&buf[size], "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+    size += snprintf(&buf[size], bufsize-size, "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
 
-    size += sprintf(&buf[size], "Click <a href=\"/cfgfile\">here</a> to <i>generate a configuration file for this node</i>.\n");
+    size += snprintf(&buf[size], bufsize-size, "Click <a href=\"/cfgfile\">here</a> to <i>generate a configuration file for this node</i>.\n");
 
-    size += sprintf(&buf[size], "<h2>Variables</h2>\n");
+    size += snprintf(&buf[size], bufsize-size, "<h2>Variables</h2>\n");
 
-    size += sprintf(&buf[size], "<table width=\"100%%\" border=0>\n<tr>");
+    size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=0>\n<tr>");
 
-    size += sprintf(&buf[size], "<td>Main address: <b>%s</b></td>\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+    size += snprintf(&buf[size], bufsize-size, "<td>Main address: <b>%s</b></td>\n", olsr_ip_to_string(&olsr_cnf->main_addr));
     
-    size += sprintf(&buf[size], "<td>IP version: %d</td>\n", olsr_cnf->ip_version == AF_INET ? 4 : 6);
+    size += snprintf(&buf[size], bufsize-size, "<td>IP version: %d</td>\n", olsr_cnf->ip_version == AF_INET ? 4 : 6);
 
-    size += sprintf(&buf[size], "<td>Debug level: %d</td>\n", olsr_cnf->debug_level);
+    size += snprintf(&buf[size], bufsize-size, "<td>Debug level: %d</td>\n", olsr_cnf->debug_level);
 
-    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
-    size += sprintf(&buf[size], "<td>Pollrate: %0.2f</td>\n", olsr_cnf->pollrate);
-    size += sprintf(&buf[size], "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
-    size += sprintf(&buf[size], "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
+    size += snprintf(&buf[size], bufsize-size, "<td>Pollrate: %0.2f</td>\n", olsr_cnf->pollrate);
+    size += snprintf(&buf[size], bufsize-size, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
+    size += snprintf(&buf[size], bufsize-size, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
 
 
-    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
-    size += sprintf(&buf[size], "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
+    size += snprintf(&buf[size], bufsize-size, "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
 
-    size += sprintf(&buf[size], "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
+    size += snprintf(&buf[size], bufsize-size, "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
 
-    size += sprintf(&buf[size], "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
+    size += snprintf(&buf[size], bufsize-size, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
     
-    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
     if (olsr_cnf->lq_level == 0)
       {
-        size += sprintf(&buf[size], "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
+        size += snprintf(&buf[size], bufsize-size, "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
 	if (olsr_cnf->use_hysteresis)
           {
-            size += sprintf(&buf[size], "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
-            size += sprintf(&buf[size], "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
+            size += snprintf(&buf[size], bufsize-size, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
+            size += snprintf(&buf[size], bufsize-size, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
           }
       }
 
-    size += sprintf(&buf[size], "</tr>\n<tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
-    size += sprintf(&buf[size], "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
+    size += snprintf(&buf[size], bufsize-size, "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
     if (olsr_cnf->lq_level)
       {
-        size += sprintf(&buf[size], "<td>LQ level: %d</td>\n", olsr_cnf->lq_level);
-        size += sprintf(&buf[size], "<td>LQ winsize: %d</td>\n", olsr_cnf->lq_wsize);
+        size += snprintf(&buf[size], bufsize-size, "<td>LQ level: %d</td>\n", olsr_cnf->lq_level);
+        size += snprintf(&buf[size], bufsize-size, "<td>LQ winsize: %d</td>\n", olsr_cnf->lq_wsize);
       }
 
-    size += sprintf(&buf[size], "</tr></table>\n");
+    size += snprintf(&buf[size], bufsize-size, "</tr></table>\n");
 
-    size += sprintf(&buf[size], "<h2>Interfaces</h2>\n");
+    size += snprintf(&buf[size], bufsize-size, "<h2>Interfaces</h2>\n");
 
 
-    size += sprintf(&buf[size], "<table width=\"100%%\" border=0>\n");
+    size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=0>\n");
 
 
     for(ifs = olsr_cnf->interfaces; ifs; ifs = ifs->next)
       {
 	struct interface *rifs = ifs->interf;
 
-	size += sprintf(&buf[size], "<tr><th colspan=3>%s</th>\n", ifs->name);
+	size += snprintf(&buf[size], bufsize-size, "<tr><th colspan=3>%s</th>\n", ifs->name);
 	if(!rifs)
 	  {
-	    size += sprintf(&buf[size], "<tr><td colspan=3>Status: DOWN</td></tr>\n");
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td colspan=3>Status: DOWN</td></tr>\n");
 	    continue;
 	  }
 	
 	if(olsr_cnf->ip_version == AF_INET)
 	  {
-	    size += sprintf(&buf[size], "<tr><td>IP: %s</td>\n", 
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>IP: %s</td>\n", 
 			    sockaddr_to_string(&rifs->int_addr));
-	    size += sprintf(&buf[size], "<td>MASK: %s</td>\n", 
+	    size += snprintf(&buf[size], bufsize-size, "<td>MASK: %s</td>\n", 
 			    sockaddr_to_string(&rifs->int_netmask));
-	    size += sprintf(&buf[size], "<td>BCAST: %s</td></tr>\n",
+	    size += snprintf(&buf[size], bufsize-size, "<td>BCAST: %s</td></tr>\n",
 			    sockaddr_to_string(&rifs->int_broadaddr));
-	    size += sprintf(&buf[size], "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
-	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
-	    size += sprintf(&buf[size], "<td>STATUS: UP</td></tr>\n");
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
+	    size += snprintf(&buf[size], bufsize-size, "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
+	    size += snprintf(&buf[size], bufsize-size, "<td>STATUS: UP</td></tr>\n");
 	  }
 	else
 	  {
-	    size += sprintf(&buf[size], "<tr><td>IP: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_addr.sin6_addr));
-	    size += sprintf(&buf[size], "<td>MCAST: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_multaddr.sin6_addr));
-	    size += sprintf(&buf[size], "<td></td></tr>\n");
-	    size += sprintf(&buf[size], "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
-	    size += sprintf(&buf[size], "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
-	    size += sprintf(&buf[size], "<td>STATUS: UP</td></tr>\n");
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>IP: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_addr.sin6_addr));
+	    size += snprintf(&buf[size], bufsize-size, "<td>MCAST: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_multaddr.sin6_addr));
+	    size += snprintf(&buf[size], bufsize-size, "<td></td></tr>\n");
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
+	    size += snprintf(&buf[size], bufsize-size, "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
+	    size += snprintf(&buf[size], bufsize-size, "<td>STATUS: UP</td></tr>\n");
 	  }	    
       }
 
-    size += sprintf(&buf[size], "</table>\n");
+    size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
     if(olsr_cnf->allow_no_interfaces)
-      size += sprintf(&buf[size], "<i>Olsrd is configured to run even if no interfaces are available</i><br>\n");
+      size += snprintf(&buf[size], bufsize-size, "<i>Olsrd is configured to run even if no interfaces are available</i><br>\n");
     else
-      size += sprintf(&buf[size], "<i>Olsrd is configured to halt if no interfaces are available</i><br>\n");
+      size += snprintf(&buf[size], bufsize-size, "<i>Olsrd is configured to halt if no interfaces are available</i><br>\n");
 
-    size += sprintf(&buf[size], "<h2>Plugins</h2>\n");
+    size += snprintf(&buf[size], bufsize-size, "<h2>Plugins</h2>\n");
 
-    size += sprintf(&buf[size], "<table width=\"100%%\" border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=0><tr><th>Name</th><th>Parameters</th></tr>\n");
 
     for(pentry = olsr_cnf->plugins; pentry; pentry = pentry->next)
       {
-	size += sprintf(&buf[size], "<tr><td>%s</td>\n", pentry->name);
+	size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td>\n", pentry->name);
 
-	size += sprintf(&buf[size], "<td><select>\n");
-	size += sprintf(&buf[size], "<option>KEY, VALUE</option>\n");
+	size += snprintf(&buf[size], bufsize-size, "<td><select>\n");
+	size += snprintf(&buf[size], bufsize-size, "<option>KEY, VALUE</option>\n");
 
 	for(pparam = pentry->params; pparam; pparam = pparam->next)
 	  {
-	    size += sprintf(&buf[size], "<option>\"%s\", \"%s\"</option>\n",
+	    size += snprintf(&buf[size], bufsize-size, "<option>\"%s\", \"%s\"</option>\n",
 			    pparam->key,
 			    pparam->value);
 	  }
-	size += sprintf(&buf[size], "</select></td></tr>\n");
+	size += snprintf(&buf[size], bufsize-size, "</select></td></tr>\n");
 
       }
 
-    size += sprintf(&buf[size], "</table>\n");
+    size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
 
     if((olsr_cnf->ip_version == AF_INET) && (olsr_cnf->hna4_entries))
       {
 	struct hna4_entry *hna4;
 	
-	size += sprintf(&buf[size], "<h2>Announced HNA entries</h2>\n");
-	size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
+	size += snprintf(&buf[size], bufsize-size, "<h2>Announced HNA entries</h2>\n");
+	size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
 	
 	for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
 	  {
-	    size += sprintf(&buf[size], "<tr><td>%s</td><td>%s</td></tr>\n", 
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td><td>%s</td></tr>\n", 
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->net),
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask));
 	  }
 	
-	size += sprintf(&buf[size], "</table>\n");
+	size += snprintf(&buf[size], bufsize-size, "</table>\n");
       } 
    else if((olsr_cnf->ip_version == AF_INET6) && (olsr_cnf->hna6_entries))
       {
 	struct hna6_entry *hna6;
 	
-	size += sprintf(&buf[size], "<h2>Announced HNA entries</h2>\n");
-	size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Prefix length</th></tr>\n");
+	size += snprintf(&buf[size], bufsize-size, "<h2>Announced HNA entries</h2>\n");
+	size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Prefix length</th></tr>\n");
 	
 	for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
 	  {
-	    size += sprintf(&buf[size], "<tr><td>%s</td><td>%d</td></tr>\n", 
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td><td>%d</td></tr>\n", 
 			    olsr_ip_to_string((union olsr_ip_addr *)&hna6->net),
 			    hna6->prefix_len);
 	  }
 	
-	size += sprintf(&buf[size], "</table>\n");
+	size += snprintf(&buf[size], bufsize-size, "</table>\n");
       }
     
 
@@ -1033,25 +1023,25 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
   struct link_entry *link = NULL;
   int size = 0, index, thop_cnt;
 
-  size += sprintf(&buf[size], "<h2>Links</h2>\n");
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
+  size += snprintf(&buf[size], bufsize-size, "<h2>Links</h2>\n");
+  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
   if (olsr_cnf->lq_level > 0)
-    size += sprintf(&buf[size], "<th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th>\n");
-  size += sprintf(&buf[size], "</tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "<th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th>\n");
+  size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
   /* Link set */
   link = link_set;
     while(link)
       {
-        size += sprintf(&buf[size], "<tr>");
+        size += snprintf(&buf[size], bufsize-size, "<tr>");
         size += build_ipaddr_no_link(&buf[size], bufsize, &link->local_iface_addr, NULL);
         size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, NULL);
-	size += sprintf(&buf[size],
+	size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">%0.2f</td>",
                        link->L_link_quality);
         if (olsr_cnf->lq_level > 0)
           {
-	    size += sprintf(&buf[size],
+	    size += snprintf(&buf[size], bufsize-size,
                            "<td align=\"right\">%0.2f</td>"
                            "<td>%d</td>"
                            "<td>%d</td>"
@@ -1063,15 +1053,15 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
                            link->neigh_link_quality, 
                            (link->loss_link_quality * link->neigh_link_quality) ? 1.0 / (link->loss_link_quality * link->neigh_link_quality) : 0.0);
           }
-	size += sprintf(&buf[size], "</tr>\n");
+	size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
 	link = link->next;
       }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
-  size += sprintf(&buf[size], "<h2>Neighbors</h2>\n");
-  size += sprintf(&buf[size], "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
+  size += snprintf(&buf[size], bufsize-size, "<h2>Neighbors</h2>\n");
+  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>IP address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n");
   /* Neighbors */
   for(index=0;index<HASHSIZE;index++)
     {
@@ -1079,9 +1069,9 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh != &neighbortable[index];
 	  neigh = neigh->next)
 	{
-          size += sprintf(&buf[size], "<tr>");
+          size += snprintf(&buf[size], bufsize-size, "<tr>");
           size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, NULL);
-	  size += sprintf(&buf[size], 
+	  size += snprintf(&buf[size], bufsize-size, 
 			  "<td>%s</td>"
 			  "<td>%s</td>"
 			  "<td>%s</td>"
@@ -1091,8 +1081,8 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 			  olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
 			  neigh->willingness);
 
-	  size += sprintf(&buf[size], "<td><select>\n");
-	  size += sprintf(&buf[size], "<option>IP ADDRESS</option>\n");
+	  size += snprintf(&buf[size], bufsize-size, "<td><select>\n");
+	  size += snprintf(&buf[size], bufsize-size, "<option>IP ADDRESS</option>\n");
 
 	  thop_cnt = 0;
 
@@ -1100,15 +1090,15 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 	      list_2 != &neigh->neighbor_2_list;
 	      list_2 = list_2->next)
 	    {
-              size += sprintf(&buf[size], "<option>%s</option>", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+              size += snprintf(&buf[size], bufsize-size, "<option>%s</option>", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
 	      thop_cnt ++;
 	    }
-	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", thop_cnt);
+	  size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", thop_cnt);
 
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
   return size;
 }
@@ -1124,10 +1114,10 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
   struct topo_dst *dst_entry;
 
 
-  size += sprintf(&buf[size], "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last Hop IP</th>");
+  size += snprintf(&buf[size], bufsize-size, "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last Hop IP</th>");
   if (olsr_cnf->lq_level > 0)
-    size += sprintf(&buf[size], "<th>LQ</th><th>ILQ</th><th>ETX</th>");
-  size += sprintf(&buf[size], "</tr>\n");
+    size += snprintf(&buf[size], bufsize-size, "<th>LQ</th><th>ILQ</th><th>ETX</th>");
+  size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
 
   /* Topology */  
@@ -1141,13 +1131,13 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	  dst_entry = entry->destinations.next;
 	  while(dst_entry != &entry->destinations)
 	    {
-              size += sprintf(&buf[size], "<tr>");
+              size += snprintf(&buf[size], bufsize-size, "<tr>");
               size += build_ipaddr_with_link(&buf[size], bufsize, &dst_entry->T_dest_addr, NULL);
               size += build_ipaddr_with_link(&buf[size], bufsize, &entry->T_last_addr, NULL);
               if (olsr_cnf->lq_level > 0)
                 {
                   const double d = dst_entry->link_quality * dst_entry->inverse_link_quality;
-	          size += sprintf(&buf[size],
+	          size += snprintf(&buf[size], bufsize-size,
                                  "<td align=\"right\">%0.2f</td>"
                                  "<td align=\"right\">%0.2f</td>"
                                  "<td align=\"right\">%0.2f</td>\n",
@@ -1155,7 +1145,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
                                  dst_entry->inverse_link_quality,
                                  d ? 1.0 / d : 0.0);
                 }
-	      size += sprintf(&buf[size], "</tr>\n");
+	      size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
 	      dst_entry = dst_entry->next;
 	    }
@@ -1163,7 +1153,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
   return size;
 }
@@ -1180,7 +1170,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 
   size = 0;
 
-  size += sprintf(&buf[size], "<h2>HNA entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
+  size += snprintf(&buf[size], bufsize-size, "<h2>HNA entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
 
   /* HNA entries */
   for(index=0;index<HASHSIZE;index++)
@@ -1194,9 +1184,9 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	      
 	  while(tmp_net != &tmp_hna->networks)
 	    {
-              size += sprintf(&buf[size], "<tr>");
+              size += snprintf(&buf[size], bufsize-size, "<tr>");
               size += build_ipaddr_no_link(&buf[size], bufsize, &tmp_net->A_network_addr, NULL);
-	      size += sprintf(&buf[size], "<td>%s</td>",
+	      size += snprintf(&buf[size], bufsize-size, "<td>%s</td>",
 			      olsr_netmask_to_string(&tmp_net->A_netmask));
               size += build_ipaddr_with_link(&buf[size], bufsize, &tmp_hna->A_gateway_addr, NULL);
 	      tmp_net = tmp_net->next;
@@ -1206,7 +1196,7 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
   return size;
 }
@@ -1215,40 +1205,37 @@ build_hna_body(char *buf, olsr_u32_t bufsize)
 int
 build_mid_body(char *buf, olsr_u32_t bufsize)
 {
-  int size = 0, mid_cnt;
+  int size = 0;
   olsr_u8_t index;
-  struct mid_entry *entry;
-  struct mid_address *alias;
 
-  size += sprintf(&buf[size], "<h2>MID entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
+  size += snprintf(&buf[size], bufsize-size, "<h2>MID entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Main Address</th><th>Aliases</th></tr>\n");
   
   /* MID */  
-  for(index=0;index<HASHSIZE;index++)
+  for(index = 0;index < HASHSIZE; index++)
     {
-      entry = mid_set[index].next;
+      struct mid_entry *entry = mid_set[index].next;
       while(entry != &mid_set[index])
 	{
-          size += sprintf(&buf[size], "<tr>");
+          int mid_cnt;
+          struct mid_address *alias;
+          size += snprintf(&buf[size], bufsize-size, "<tr>");
           size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, NULL);
-	  size += sprintf(&buf[size], "<td><select>\n<option>IP ADDRESS</option>\n");
+	  size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
 
 	  alias = entry->aliases;
 	  mid_cnt = 0;
 	  while(alias)
 	    {
-	      size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&alias->alias));
-	      mid_cnt ++;
+	      size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&alias->alias));
+	      mid_cnt++;
 	      alias = alias->next_alias;
 	    }
-	  size += sprintf(&buf[size], "</select> (%d)</td></tr>\n", mid_cnt);
+	  size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", mid_cnt);
 	  entry = entry->next;
 	}
     }
 
-  size += sprintf(&buf[size], "</table>\n");
-
-
-
+  size += snprintf(&buf[size], bufsize-size, "</table>\n");
   return size;
 }
 
@@ -1258,10 +1245,10 @@ build_nodes_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
 
-  size += build_neigh_body(buf, bufsize);
-  size += build_topo_body(&buf[size], bufsize - size);
-  size += build_hna_body(&buf[size], bufsize - size);
-  size += build_mid_body(&buf[size], bufsize - size);
+  size += build_neigh_body(&buf[size], bufsize-size);
+  size += build_topo_body(&buf[size], bufsize-size);
+  size += build_hna_body(&buf[size], bufsize-size);
+  size += build_mid_body(&buf[size], bufsize-size);
 
   return size;
 }
@@ -1271,12 +1258,12 @@ build_all_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
 
-  size += build_config_body(&buf[size], bufsize);
-  size += build_routes_body(&buf[size], bufsize - size);
-  size += build_neigh_body(&buf[size], bufsize);
-  size += build_topo_body(&buf[size], bufsize - size);
-  size += build_hna_body(&buf[size], bufsize - size);
-  size += build_mid_body(&buf[size], bufsize - size);
+  size += build_config_body(&buf[size], bufsize-size);
+  size += build_routes_body(&buf[size], bufsize-size);
+  size += build_neigh_body(&buf[size], bufsize-size);
+  size += build_topo_body(&buf[size], bufsize-size);
+  size += build_hna_body(&buf[size], bufsize-size);
+  size += build_mid_body(&buf[size], bufsize-size);
 
   return size;
 }
@@ -1287,11 +1274,10 @@ build_about_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0, i = 0;
 
-  while(about_frame[i])
-    {
-      size += sprintf(&buf[size], about_frame[i]);
+  while(about_frame[i]) {
+      size += snprintf(&buf[size], bufsize-size, about_frame[i]);
       i++;
-    }
+  }
   return size;
 }
 
@@ -1300,36 +1286,33 @@ build_cfgfile_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0, i = 0;
 
-  while(cfgfile_body[i] && strcmp(cfgfile_body[i], "<!-- CFGFILE -->"))
-    {
-      size += sprintf(&buf[size], cfgfile_body[i]);
+  while(cfgfile_body[i] && strcmp(cfgfile_body[i], "<!-- CFGFILE -->")) {
+      size += snprintf(&buf[size], bufsize-size, cfgfile_body[i]);
       i++;
-    }
+  }
 
 #ifdef NETDIRECT
-    {
+  {
         /* Hack to make netdirect stuff work with
            olsrd_write_cnf_buf
         */
         char tmpBuf[10000];
         size = olsrd_write_cnf_buf(olsr_cnf, tmpBuf, 10000);
-        sprintf(&buf[size], tmpBuf);
-    }
+        snprintf(&buf[size], bufsize-size, tmpBuf);
+  }
 #else
-  size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize - size);
+  size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize-size);
 #endif
   
-  if(size < 0)
-    {
+  if(size < 0) {
       size = sprintf(&buf[0], "ERROR GENERATING CONFIGFILE!\n");
-    }
+  }
 
   i++;
-  while(cfgfile_body[i])
-    {
-      size += sprintf(&buf[size], cfgfile_body[i]);
+  while(cfgfile_body[i]) {
+      size += snprintf(&buf[size], bufsize-size, cfgfile_body[i]);
       i++;
-    }
+  }
   printf("RETURNING %d\n", size);
   return size;
 }
@@ -1371,35 +1354,21 @@ char *
 olsr_netmask_to_string(union hna_netmask *mask)
 {
   char *ret;
-  struct in_addr in;
-  static char netmask[5];
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
+  if(olsr_cnf->ip_version == AF_INET) {
+      struct in_addr in;
       in.s_addr = mask->v4;
       ret = inet_ntoa(in);
-      return ret;
-
-    }
-  else
-    {
+  } else {
+      static char netmask[5];
       /* IPv6 */
       snprintf(netmask, sizeof(netmask), "%d", mask->v6);
-      return netmask;
-    }
-
+      ret = netmask;
+  }
   return ret;
 }
 
 
-
-
-static char *
-get_copyright_string()
-{
-  return copyright_string;
-}
-
+#if 0
 /*
  * In a bigger mesh, there are probs with the fixed
  * bufsize. Because the Content-Length header is
@@ -1424,4 +1393,24 @@ int netsprintf(char *str, const char* format, ...)
 		return 0;
 	}
 	return rv;
+}
+#endif
+
+static ssize_t writen(int fd, const void *buf, size_t count)
+{
+    size_t bytes_left = count;
+    const char *p = buf;
+    while (bytes_left > 0) {
+        const ssize_t written = write(fd, p, bytes_left);
+        if (written == -1)  { /* error */
+            if (errno == EINTR ) {
+                continue;
+            }
+            return -1;
+        }
+        /* We wrote something */
+        bytes_left -= written;
+        p += written;
+    }
+    return count;
 }

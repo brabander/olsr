@@ -35,7 +35,7 @@
  * Description: IP packet characterization functions
  * Created    : 29 Jun 2006
  *
- * $Id: Address.c,v 1.2 2007/02/10 17:05:55 bernd67 Exp $ 
+ * $Id: Address.c,v 1.3 2007/04/20 14:06:17 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
  
 #include "Address.h"
@@ -128,7 +128,7 @@ int IsLocalBroadcast(union olsr_ip_addr* destIp, struct sockaddr* broadAddr)
  * Data Used  : none
  * Assumption : len >= IP_HDR_OFFSET + GetIpHeaderLength(ethPkt)
  * ------------------------------------------------------------------------- */
-int IsOlsrOrBmfPacket(struct TBmfInterface* intf, unsigned char* ethPkt, size_t len)
+int IsOlsrOrBmfPacket(struct TBmfInterface* intf __attribute__((unused)), unsigned char* ethPkt, size_t len)
 {
   struct ip* ipData;
   unsigned int ipHeaderLen;

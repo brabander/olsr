@@ -36,7 +36,7 @@
  *              multicast IP packets.
  * Created    : 29 Jun 2006
  *
- * $Id: PacketHistory.c,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * $Id: PacketHistory.c,v 1.3 2007/04/20 14:06:18 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 #include "PacketHistory.h"
@@ -209,7 +209,7 @@ u_int16_t Hash16(u_int32_t hash32)
  * Return     : none
  * Data Used  : PacketHistory
  * ------------------------------------------------------------------------- */
-void InitPacketHistory()
+void InitPacketHistory(void)
 {
   memset(PacketHistory, 0, sizeof(PacketHistory));
   GenerateCrc32Table();
@@ -277,7 +277,7 @@ int CheckAndMarkRecentPacket(u_int16_t hash16)
  * Return     : none
  * Data Used  : PacketHistory
  * ------------------------------------------------------------------------- */
-void PrunePacketHistory(void* useless)
+void PrunePacketHistory(void* useless __attribute__((unused)))
 {
   uint i;
   for (i = 0; i < HISTORY_TABLE_SIZE; i++)

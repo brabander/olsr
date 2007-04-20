@@ -35,7 +35,7 @@
  * Description: Interface to the OLSRD plugin system
  * Created    : 29 Jun 2006
  *
- * $Id: olsrd_plugin.c,v 1.2 2007/02/10 17:05:56 bernd67 Exp $ 
+ * $Id: olsrd_plugin.c,v 1.3 2007/04/20 14:06:18 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 /* System includes */
@@ -66,7 +66,7 @@ void olsr_plugin_exit(void);
  * Notes      : Called by main OLSRD (olsr_load_dl) to check plugin interface
  *              version
  * ------------------------------------------------------------------------- */
-int olsrd_plugin_interface_version()
+int olsrd_plugin_interface_version(void)
 {
   return OLSRD_PLUGIN_INTERFACE_VERSION;
 }
@@ -80,7 +80,7 @@ int olsrd_plugin_interface_version()
  * Data Used  : olsr_cnf
  * Notes      : Called by main OLSRD (init_olsr_plugin) to initialize plugin
  * ------------------------------------------------------------------------- */
-int olsrd_plugin_init()
+int olsrd_plugin_init(void)
 {
   /* Check validity */
   if (olsr_cnf->ip_version != AF_INET)
@@ -110,7 +110,7 @@ int olsrd_plugin_init()
  * Data Used  : none
  * Notes      : Called by my_fini() at unload of shared object
  * ------------------------------------------------------------------------- */
-void olsr_plugin_exit()
+void olsr_plugin_exit(void)
 {
   CloseBmf();
 }
@@ -141,7 +141,7 @@ int olsrd_plugin_register_param(char* key, char* value)
  * Data Used  : none
  * Notes      : Called at load of shared object
  * ------------------------------------------------------------------------- */
-static void my_init()
+static void my_init(void)
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
@@ -158,7 +158,7 @@ static void my_init()
  * Data Used  : none
  * Notes      : Called at unload of shared object
  * ------------------------------------------------------------------------- */
-static void my_fini()
+static void my_fini(void)
 {
   olsr_plugin_exit();
 }
