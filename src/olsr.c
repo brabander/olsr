@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.51 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: olsr.c,v 1.52 2007/04/20 14:23:10 bernd67 Exp $
  */
 
 /**
@@ -99,7 +99,7 @@ init_msg_seqno(void)
  *@return the seqno
  */
 olsr_u16_t
-get_msg_seqno(void)
+get_msg_seqno()
 {
   return message_seqno++;
 }
