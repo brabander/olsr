@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.19 2007/04/19 22:21:34 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.20 2007/04/20 10:33:08 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -187,7 +187,7 @@ olsrd_plugin_register_param(char *key, char *value)
 		if (strlen(value) == 0) {
             my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, NULL);
             olsr_printf(1,"\nNAME PLUGIN: parameter dns-server: (main address)");
-        } else if (inet_pton(olsr_cnf->ip_version, value, &ip) == 1) {
+        } else if (inet_pton(olsr_cnf->ip_version, value, &ip) > 0) {
             my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, &ip);
             olsr_printf(1,"\nNAME PLUGIN: parameter dns-server: (%s)", value);
         } else {
@@ -208,7 +208,7 @@ olsrd_plugin_register_param(char *key, char *value)
 		// assume this is an IP address and hostname
 		union olsr_ip_addr ip;
 		
-		if (inet_pton(olsr_cnf->ip_version, key, &ip) == 1) {
+		if (inet_pton(olsr_cnf->ip_version, key, &ip) > 0) {
 			// the IP is validated later
             my_names = add_name_to_list(my_names, value, NAME_HOST, &ip);
 			olsr_printf(1,"\nNAME PLUGIN: parameter name %s (%s)", value, key);
@@ -1280,7 +1280,7 @@ allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip
     }
     
     //ip in service-line is allowed 
-    if (inet_pton(olsr_cnf->ip_version, hostname_or_ip, &olsr_ip) == 1) {
+    if (inet_pton(olsr_cnf->ip_version, hostname_or_ip, &olsr_ip) > 0) {
         if (allowed_ip(&olsr_ip)) {
             olsr_printf(2, "NAME PLUGIN: ip %s in service %s is OK\n", olsr_ip_to_string(&olsr_ip), service_line);
             free(hostname_or_ip);
