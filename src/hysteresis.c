@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.18 2007/02/10 19:27:32 bernd67 Exp $
+ * $Id: hysteresis.c,v 1.19 2007/04/20 14:23:41 bernd67 Exp $
  */
 
 
@@ -51,7 +51,7 @@
 #define hhigh    olsr_cnf->hysteresis_param.thr_high
 #define hlow     olsr_cnf->hysteresis_param.thr_low
 
-inline float
+float
 olsr_hyst_calc_stability(float old_quality)
 {
   return (((1 - hscaling) * old_quality) + hscaling);
@@ -59,7 +59,7 @@ olsr_hyst_calc_stability(float old_quality)
 
 
 
-inline float
+float
 olsr_hyst_calc_instability(float old_quality)
 {
   return ((1 - hscaling) * old_quality);

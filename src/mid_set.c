@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.18 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: mid_set.c,v 1.19 2007/04/20 14:23:41 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -327,7 +327,7 @@ mid_lookup_entry_bymain(union olsr_ip_addr *adr)
  *
  *@return a linked list of addresses structs
  */
-inline struct mid_address *
+struct mid_address *
 mid_lookup_aliases(union olsr_ip_addr *adr)
 {
   struct mid_entry *tmp = mid_lookup_entry_bymain(adr);
