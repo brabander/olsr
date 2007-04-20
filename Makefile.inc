@@ -21,10 +21,22 @@ INCLUDES =	-Isrc -I$(TOPDIR)/src
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
 CFLAGS +=	-Wall
+CFLAGS +=	-Wextra
 CFLAGS +=	-Wmissing-prototypes
 CFLAGS +=	-Wstrict-prototypes
 CFLAGS +=	-Wmissing-declarations
 CFLAGS +=	-Wsign-compare
+CFLAGS +=	-Waggregate-return
+CFLAGS +=	-Wold-style-definition
+CFLAGS +=	-Wmissing-noreturn
+CFLAGS +=	-Wmissing-format-attribute
+CFLAGS +=	-Wno-multichar
+CFLAGS +=	-Wno-deprecated-declarations
+#CFLAGS +=	-Wredundant-decls
+CFLAGS +=	-Wnested-externs
+#CFLAGS +=	-Wunreachable-code
+CFLAGS +=	-Winline
+CFLAGS +=	-Wdisabled-optimization
 CFLAGS +=	-O2
 CFLAGS +=	-g
 #CFLAGS +=	-Werror
