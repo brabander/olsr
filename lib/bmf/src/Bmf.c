@@ -35,7 +35,7 @@
  * Description: Multicast forwarding functions
  * Created    : 29 Jun 2006
  *
- * $Id: Bmf.c,v 1.3 2007/04/20 14:06:17 bernd67 Exp $ 
+ * $Id: Bmf.c,v 1.4 2007/04/20 14:58:35 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 #define _MULTI_THREADED
@@ -195,10 +195,10 @@ static void BmfPacketCaptured(
   COPY_IP(&srcIp, &ipData->ip_src);
   OLSR_PRINTF(
     9,
-    "%s: %s pkt of %d bytes captured on %s interface \"%s\": %s->%s\n",
+    "%s: %s pkt of %ld bytes captured on %s interface \"%s\": %s->%s\n",
     PLUGIN_NAME_SHORT,
     sllPkttype == PACKET_OUTGOING ? "outgoing" : "incoming",
-    ethPktLen,
+    (long)ethPktLen,
     isFromOlsrIntf ? "OLSR" : "non-OLSR",
     intf->ifName,
     olsr_ip_to_string(&srcIp),
@@ -542,9 +542,9 @@ static void BmfEncapsulatedPacketReceived(
 
   OLSR_PRINTF(
     9,
-    "%s: encapsulated pkt of %d bytes incoming on \"%s\": %s->",
+    "%s: encapsulated pkt of %ld bytes incoming on \"%s\": %s->",
     PLUGIN_NAME_SHORT,
-    ethPktLen,
+    (long)ethPktLen,
     intf->ifName,
     inet_ntoa(ipData->ip_src));
   OLSR_PRINTF(
@@ -805,9 +805,9 @@ static void BmfTunPacketCaptured(
   COPY_IP(&srcIp, &ipData->ip_src);
   OLSR_PRINTF(
     9,
-    "%s: outgoing pkt of %d bytes captured on tuntap interface \"%s\": %s->%s\n",
+    "%s: outgoing pkt of %ld bytes captured on tuntap interface \"%s\": %s->%s\n",
     PLUGIN_NAME_SHORT,
-    ethPktLen,
+    (long)ethPktLen,
     EtherTunTapIfName,
     olsr_ip_to_string(&srcIp),
     olsr_ip_to_string(&destIp));
