@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.19 2007/02/10 19:59:51 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.20 2007/04/20 10:38:01 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -113,7 +113,7 @@ init_net(void)
       /* IPv4 */
       for(i = 0; deny_ipv4_defaults[i] != NULL; i++)
 	{
-	  if(inet_pton(olsr_cnf->ip_version, deny_ipv4_defaults[i], &addr) < 0)
+	  if(inet_pton(olsr_cnf->ip_version, deny_ipv4_defaults[i], &addr) <= 0)
 	    {
 	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
 		      deny_ipv4_defaults[i]);
@@ -127,7 +127,7 @@ init_net(void)
       /* IPv6 */
       for(i = 0; deny_ipv6_defaults[i] != NULL; i++)
 	{
-	  if(inet_pton(olsr_cnf->ip_version, deny_ipv6_defaults[i], &addr) < 0)
+	  if(inet_pton(olsr_cnf->ip_version, deny_ipv6_defaults[i], &addr) <= 0)
 	    {
 	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
 		      deny_ipv6_defaults[i]);

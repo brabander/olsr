@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.92 2007/02/24 11:54:24 kattemat Exp $
+ * $Id: main.c,v 1.93 2007/04/20 10:38:01 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -789,7 +789,7 @@ olsr_process_arguments(int argc, char *argv[],
 	  struct in6_addr in6;
 	  NEXT_ARG;
           CHECK_ARGC;
-	  if(inet_pton(AF_INET6, *argv, &in6) < 0)
+	  if(inet_pton(AF_INET6, *argv, &in6) <= 0)
 	    {
 	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
 	      exit(EXIT_FAILURE);
@@ -810,7 +810,7 @@ olsr_process_arguments(int argc, char *argv[],
       
 	  NEXT_ARG;
           CHECK_ARGC;
-	  if(inet_pton(AF_INET, *argv, &in) < 0)
+	  if(inet_pton(AF_INET, *argv, &in) <= 0)
 	    {
 	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
 	      exit(EXIT_FAILURE);
