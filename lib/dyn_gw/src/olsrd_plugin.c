@@ -37,10 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.13 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.14 2007/04/20 14:19:44 bernd67 Exp $
  */
 
 #include "olsrd_plugin.h"
+#include "olsrd_dyn_gw.h"
 #include <stdio.h>
 
 #define PLUGIN_NAME    "OLSRD dynamic gateway plugin"
