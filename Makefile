@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.80 2007/04/03 09:53:41 bernd67 Exp $
+# $Id: Makefile,v 1.81 2007/04/20 14:04:30 bernd67 Exp $
 
 VERS =		0.5.1pre
 
@@ -81,8 +81,7 @@ clean:
 
 uberclean:	clean clean_libs
 		-rm -f $(TAGFILE)
-		-rm -f src/*.[od~] 
-		-rm -f src/linux/*.[od~] src/unix/*.[od~] src/win32/*.[od~] src/bsd/*.[od~]
+		find . \( -name '*.[od]' -o -name '*~'\) -print | xargs -r rm -f
 		$(MAKECMD) -C $(CFGDIR) uberclean
 		$(MAKECMD) -C $(SWITCHDIR) clean
 
