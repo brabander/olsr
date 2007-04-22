@@ -35,14 +35,14 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.82 2007/04/22 17:25:17 bernd67 Exp $
+# $Id: Makefile,v 1.83 2007/04/22 21:33:33 bernd67 Exp $
 
 VERS =		0.5.1pre
 
-CFLAGS +=	-DVERSION=\"$(VERS)\"
-
 TOPDIR = .
 include Makefile.inc
+
+CFLAGS +=	-DVERSION=\"$(VERS)\"
 
 MAKECMD = $(MAKE) OS=$(OS)
 
