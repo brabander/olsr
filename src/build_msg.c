@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.34 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: build_msg.c,v 1.35 2007/04/22 20:25:48 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -603,7 +603,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
-  struct tcmsg *tc;
+  struct olsr_tcmsg *tc;
   struct neigh_info *mprsaddr; 
   olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 
@@ -729,7 +729,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
   olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
-  struct tcmsg6 *tc6;
+  struct olsr_tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
   olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
 

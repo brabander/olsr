@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.19 2005/05/28 16:01:14 kattemat Exp $
+ * $Id: rebuild_packet.c,v 1.20 2007/04/22 20:25:48 bernd67 Exp $
  */
 
 
@@ -479,7 +479,7 @@ tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
-      struct tcmsg *tc;
+      struct olsr_tcmsg *tc;
       struct neigh_info *mprsaddr, *maddr;
 
       tc = &m->v4.message.tc;
@@ -520,7 +520,7 @@ tc_chgestruct(struct tc_message *tmsg, union olsr_message *m, union olsr_ip_addr
   else
     {
       /* IPv6 */
-      struct tcmsg6 *tc6;
+      struct olsr_tcmsg6 *tc6;
       struct neigh_info6 *mprsaddr6, *maddr6;
 
       tc6 = &m->v6.message.tc;
