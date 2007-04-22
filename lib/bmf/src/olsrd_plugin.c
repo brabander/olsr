@@ -35,12 +35,11 @@
  * Description: Interface to the OLSRD plugin system
  * Created    : 29 Jun 2006
  *
- * $Id: olsrd_plugin.c,v 1.3 2007/04/20 14:06:18 bernd67 Exp $ 
  * ------------------------------------------------------------------------- */
 
 /* System includes */
 #include <assert.h> /* assert() */
-#include <stdio.h>
+#include <stddef.h> /* NULL */
 
 /* OLSRD includes */
 #include "olsrd_plugin.h"
