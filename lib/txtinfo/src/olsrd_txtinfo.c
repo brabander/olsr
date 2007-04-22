@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.3 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.4 2007/04/22 19:54:31 bernd67 Exp $
  */
 
 /*
@@ -112,6 +112,9 @@ ipc_print_topology(void);
 
 static void
 ipc_print_hna(void);
+
+static void
+ipc_print_mid(void);
 
 #define TXT_IPC_BUFSIZE 256
 static int 
@@ -485,6 +488,46 @@ ipc_print_hna(void)
 
 }
 
+static void
+ipc_print_mid(void)
+{
+    olsr_u8_t index;
+    unsigned short is_first;
+    struct mid_entry *entry;
+    struct mid_address *alias;
+
+    ipc_sendf("Table: MID\nIP\tAliases\n");
+
+    /* MID */
+    for( index = 0; index < HASHSIZE; index++ )
+    {
+        entry = mid_set[index].next;
+
+        while( entry != &mid_set[index] )
+        {
+            ipc_sendf( olsr_ip_to_string( &entry->main_addr ) );
+            alias = entry->aliases;
+            is_first = 1;
+
+            while( alias )
+            {
+                ipc_sendf( "%s%s",
+                    ( is_first ? "\t" : ";" ),
+                    olsr_ip_to_string( &alias->alias )
+                );
+
+                alias = alias->next_alias;
+                is_first = 0;
+            }
+
+            entry = entry->next;
+            ipc_sendf("\n");
+        }
+    }
+
+	ipc_sendf("\n");
+}
+
 
 static void 
 send_info(int neighonly)
@@ -504,6 +547,9 @@ send_info(int neighonly)
 	
  	/* hna */
 	if (!neighonly) ipc_print_hna();
+
+ 	/* mid */
+	if (!neighonly) ipc_print_mid();
 
 	/* routes */
 	if (!neighonly) ipc_print_routes();
