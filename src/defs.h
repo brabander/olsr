@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.57 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: defs.h,v 1.58 2007/04/25 22:08:07 bernd67 Exp $
  */
 
 
@@ -59,50 +59,46 @@
 #include "net_olsr.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr_cfg.h"
 
-#define SOFTWARE_VERSION "olsr.org - " VERSION
-#define OLSRD_VERSION_DATE "       *** " SOFTWARE_VERSION " (" __DATE__ ") ***\n"
+#define SOFTWARE_VERSION	"olsr.org - " VERSION
+#define OLSRD_VERSION_DATE	"       *** " SOFTWARE_VERSION " (" __DATE__ ") ***\n"
 
 #ifndef OLSRD_GLOBAL_CONF_FILE
-#define OLSRD_CONF_FILE_NAME "olsrd.conf"
-#define OLSRD_GLOBAL_CONF_FILE "/etc/" OLSRD_CONF_FILE_NAME
+#define OLSRD_CONF_FILE_NAME	"olsrd.conf"
+#define OLSRD_GLOBAL_CONF_FILE	"/etc/" OLSRD_CONF_FILE_NAME
 #endif
 
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#define MIN_PACKET_SIZE(ver)  (int)(sizeof(olsr_u8_t) * ((ver == AF_INET) ? 4 : 7))
+#define MIN_PACKET_SIZE(ver)	((int)(sizeof(olsr_u8_t) * (((ver) == AF_INET) ? 4 : 7)))
 /* Debug helper macro */
 #ifdef DEBUG
-#define olsr_debug(lvl,format,args...) do {                         \
-   OLSR_PRINTF(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
-   OLSR_PRINTF(lvl, format, ##args); \
+#define olsr_debug(lvl, format, args...) do {                           \
+    OLSR_PRINTF(lvl, "%s (%s:%d): ", __func__, __FILE__, __LINE__);     \
+    OLSR_PRINTF(lvl, (format), ##args);                                 \
   } while (0)
 #endif
 
 extern FILE *debug_handle;
 
 #ifdef NODEBUG
-#define OLSR_PRINTF(lvl, format, args...) \
-   { }
+#define OLSR_PRINTF(lvl, format, args...) do { } while(0)
 #else
-#define OLSR_PRINTF(lvl, format, args...) \
-   { \
-     if((olsr_cnf->debug_level >= lvl) && debug_handle) \
-        fprintf(debug_handle, format, ##args); \
-   }
+#define OLSR_PRINTF(lvl, format, args...) do {                  \
+    if((olsr_cnf->debug_level >= (lvl)) && debug_handle)          \
+      fprintf(debug_handle, (format), ##args);                    \
+  } while (0)
 #endif
 
 /* Provides a timestamp s1 milliseconds in the future
    according to system ticks returned by times(2) */
-#define GET_TIMESTAMP(s1) \
-        (now_times + ((s1) / olsr_cnf->system_tick_divider))
+#define GET_TIMESTAMP(s1)	(now_times + ((s1) / olsr_cnf->system_tick_divider))
 
-#define TIMED_OUT(s1) \
-        ((int)((s1) - now_times) < 0)
+#define TIMED_OUT(s1)	((int)((s1) - now_times) < 0)
 
 
-#define ARRAYSIZE(x) (sizeof(x)/sizeof(*(x)))
+#define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
 
 /*
  * Queueing macros
@@ -110,18 +106,20 @@ extern FILE *debug_handle;
 
 /* First "argument" is NOT a pointer! */
 
-#define QUEUE_ELEM(pre, new) \
-        pre.next->prev = new; \
-        new->next = pre.next; \
-        new->prev = &pre; \
-        pre.next = new
+#define QUEUE_ELEM(pre, new) do { \
+    pre.next->prev = new;         \
+    new->next = pre.next;         \
+    new->prev = &pre;             \
+    pre.next = new;               \
+  } while (0)
 
-#define DEQUEUE_ELEM(elem) \
-	elem->prev->next = elem->next; \
-	elem->next->prev = elem->prev
+#define DEQUEUE_ELEM(elem) do { \
+    elem->prev->next = elem->next;     \
+    elem->next->prev = elem->prev;     \
+  } while (0)
 
 
-#define CLOSE(fd)  do { close(fd); (fd) = -1;} while (0)
+#define CLOSE(fd)  do { close(fd); (fd) = -1; } while (0)
 
 /*
  * Global olsrd configuragtion

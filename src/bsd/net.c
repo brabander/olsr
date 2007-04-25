@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.32 2007/03/14 14:01:13 bernd67 Exp $
+ * $Id: net.c,v 1.33 2007/04/25 22:08:17 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -524,7 +524,7 @@ join_mcast(struct interface *ifs, int sock)
     }
 
 
-  OLSR_PRINTF(3, "OK\n")
+  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 
@@ -639,7 +639,7 @@ olsr_sendto(int s,
   context = libnet_init(LIBNET_LINK, iface->int_name, errbuf);
   if (context == NULL)
     {
-      OLSR_PRINTF (1, "libnet init: %s\n", libnet_geterror (context))
+      OLSR_PRINTF (1, "libnet init: %s\n", libnet_geterror (context));
       return (0);
     }
 
@@ -659,7 +659,7 @@ olsr_sendto(int s,
 			      udp_tag);				/* pblock */
   if (udp_tag == -1)
     {
-      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (context))
+      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (context));
 	return (0);
     }
 
@@ -678,7 +678,7 @@ olsr_sendto(int s,
 			      ip_tag);				/* pblock */
   if (ip_tag == -1)
     {
-      OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (context))
+      OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (context));
       return (0);
     }
 
@@ -691,14 +691,14 @@ olsr_sendto(int s,
 				     ether_tag);  		/* pblock tag */
   if (ether_tag == -1)
     {
-      OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (context))
+      OLSR_PRINTF (1, "libnet ethernet header: %s\n", libnet_geterror (context));
       return (0);
     }
  
   status = libnet_write (context);
   if (status == -1)
     {
-      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (context))
+      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (context));
       return (0);
     }
 
@@ -863,11 +863,11 @@ calculate_if_metric(char *ifname)
 
       if(ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
 	{
-	  OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name)
+	  OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
 	  return WEIGHT_ETHERNET_DEFAULT;
 	}
 
-      OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status)
+      OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
 #endif
       return WEIGHT_ETHERNET_DEFAULT;
     }

@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.21 2007/04/20 13:46:02 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.22 2007/04/25 22:08:06 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -529,10 +529,10 @@ olsr_event(void *foo __attribute__((unused)))
 			message->v6.olsr_msgsize = htons(namesize);
 		}
 		
-		if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
+		if(net_outbuffer_push(ifn, message, namesize) != namesize ) {
 			/* send data and try again */
 			net_output(ifn);
-			if(net_outbuffer_push(ifn, (olsr_u8_t *)message, namesize) != namesize ) {
+			if(net_outbuffer_push(ifn, message, namesize) != namesize ) {
 				olsr_printf(1, "NAME PLUGIN: could not send on interface: %s\n", ifn->int_name);
 			}
 		}

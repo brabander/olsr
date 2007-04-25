@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.31 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: neighbor_table.c,v 1.32 2007/04/25 22:08:09 bernd67 Exp $
  */
 
 
@@ -467,16 +467,16 @@ olsr_print_neighbor_table(void)
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              (int)now.tv_usec/10000)
+              (int)now.tv_usec/10000);
 
   if (olsr_cnf->ip_version == AF_INET)
     {
-      OLSR_PRINTF(1, "IP address       LQ     NLQ    SYM   MPR   MPRS  will\n")
+      OLSR_PRINTF(1, "IP address       LQ     NLQ    SYM   MPR   MPRS  will\n");
       fstr = "%-15s  %5.3f  %5.3f  %s  %s  %s  %d\n";
     }
   else
     {
-      OLSR_PRINTF(1, "IP address                               LQ     NLQ    SYM   MPR   MPRS  will\n")
+      OLSR_PRINTF(1, "IP address                               LQ     NLQ    SYM   MPR   MPRS  will\n");
       fstr = "%-39s  %5.3f  %5.3f  %s  %s  %s  %d\n";
     }
 
@@ -496,7 +496,7 @@ olsr_print_neighbor_table(void)
                           (neigh->status == SYM) ? "YES " : "NO  ",
                           neigh->is_mpr ? "YES " : "NO  ", 
                           olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
-                          neigh->willingness)
+                          neigh->willingness);
             }
         }
     }

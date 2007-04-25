@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.21 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.22 2007/04/25 22:08:09 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -249,7 +249,7 @@ net_output_pending(struct interface *ifp)
  *  success
  */
 int
-net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
+net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t size)
 {
   if((ifp->netbuf.pending + size) > ifp->netbuf.maxsize)
     return 0;
@@ -273,7 +273,7 @@ net_outbuffer_push(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
  *  success
  */
 int
-net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t size)
+net_outbuffer_push_reserved(struct interface *ifp, const void *data, const olsr_u16_t size)
 {
   if((ifp->netbuf.pending + size) > (ifp->netbuf.maxsize + ifp->netbuf.reserved))
     return 0;
@@ -293,7 +293,7 @@ net_outbuffer_push_reserved(struct interface *ifp, olsr_u8_t *data, olsr_u16_t s
  * @return the number of bytes available in the buffer or
  */
 int
-net_outbuffer_bytes_left(struct interface *ifp)
+net_outbuffer_bytes_left(const struct interface *ifp)
 {
   return ifp->netbuf.maxsize - ifp->netbuf.pending;
 }
@@ -505,7 +505,7 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
     }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(adr))
+  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(adr));
 #endif
 
   return 1;
@@ -544,7 +544,7 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
     }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(adr), prefix)
+  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(adr), prefix);
 #endif
 
   return prefix;
@@ -649,7 +649,7 @@ olsr_add_invalid_address(union olsr_ip_addr *adr)
 
   deny_entries = new_entry;
 
-  OLSR_PRINTF(1, "Added %s to IP deny set\n", olsr_ip_to_string(&new_entry->addr))
+  OLSR_PRINTF(1, "Added %s to IP deny set\n", olsr_ip_to_string(&new_entry->addr));
   return;
 }
 
@@ -672,7 +672,7 @@ olsr_validate_address(union olsr_ip_addr *adr)
       if(COMP_IP(adr, &deny_entry->addr))
 	{
 	  OLSR_PRINTF(1, "Validation of address %s failed!\n",
-		      olsr_ip_to_string(adr))
+		      olsr_ip_to_string(adr));
 	  return OLSR_FALSE;
 	}
 

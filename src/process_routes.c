@@ -39,7 +39,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.31 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: process_routes.c,v 1.32 2007/04/25 22:08:13 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -317,24 +317,26 @@ olsr_delete_all_kernel_routes(void)
   struct destination_n *delete_kernel_list;
   struct destination_n *tmp;
 
-  OLSR_PRINTF(1, "Deleting all routes...\n")
+  OLSR_PRINTF(1, "Deleting all routes...\n");
+
   delete_kernel_list = olsr_build_update_list(hna_routes, old_hna);
-  OLSR_PRINTF(1, "HNA list:\n")
+
+  OLSR_PRINTF(1, "HNA list:\n");
   for(tmp = delete_kernel_list;tmp;tmp = tmp->next)
     {
       union olsr_ip_addr *tmp_addr = &tmp->destination->rt_dst;
-      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr))
+      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr));
     }
 
   olsr_delete_routes_from_kernel(delete_kernel_list);
 
   delete_kernel_list = olsr_build_update_list(routingtable,old_routes);
 
-  OLSR_PRINTF(1, "Route list:\n")
+  OLSR_PRINTF(1, "Route list:\n");
   for(tmp = delete_kernel_list;tmp;tmp = tmp->next)
     {
       union olsr_ip_addr *tmp_addr = &tmp->destination->rt_dst;
-      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr))      
+      OLSR_PRINTF(1, "Dest: %s\n", olsr_ip_to_string(tmp_addr));
     }
   olsr_delete_routes_from_kernel(delete_kernel_list);
   return 1;
@@ -353,7 +355,7 @@ olsr_update_kernel_routes(void)
   struct destination_n *delete_kernel_list;
   struct destination_n *add_kernel_list;
 
-  OLSR_PRINTF(3, "Updating kernel routes...\n")
+  OLSR_PRINTF(3, "Updating kernel routes...\n");
   delete_kernel_list = olsr_build_update_list(old_routes, routingtable);
   add_kernel_list = olsr_build_update_list(routingtable, old_routes);
 
@@ -375,7 +377,7 @@ olsr_update_kernel_hna_routes(void)
   struct destination_n *delete_kernel_list;
   struct destination_n *add_kernel_list;
 
-  OLSR_PRINTF(3, "Updating kernel HNA routes...\n")
+  OLSR_PRINTF(3, "Updating kernel HNA routes...\n");
 
   delete_kernel_list = olsr_build_update_list(old_hna, hna_routes);
   add_kernel_list = olsr_build_update_list(hna_routes, old_hna);
@@ -448,7 +450,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "%s highest metric %d\n",
-	      __func__, metric_counter)
+	      __func__, metric_counter);
 #endif
  
   while(delete_kernel_list!=NULL)
@@ -478,7 +480,7 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 #ifdef DEBUG
 		  OLSR_PRINTF(3, "Deleting route to %s hopcount %d\n",
 			      olsr_ip_to_string(&destination_ptr->destination->rt_dst),
-			      destination_ptr->destination->rt_metric)
+			      destination_ptr->destination->rt_metric);
 #endif
 		    if(!olsr_cnf->host_emul)
 		      {
@@ -489,8 +491,9 @@ olsr_delete_routes_from_kernel(struct destination_n *delete_kernel_list)
 			
 			if(error < 0)
 			  {
-			    OLSR_PRINTF(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), strerror(errno))
-			      olsr_syslog(OLSR_LOG_ERR, "Delete route:%m");
+                            const char * const err_msg = strerror(errno);
+			    OLSR_PRINTF(1, "Delete route(%s):%s\n", olsr_ip_to_string(&destination_ptr->destination->rt_dst), err_msg);
+                            olsr_syslog(OLSR_LOG_ERR, "Delete route:%s", err_msg);
 			  }
 		    }
 		  
@@ -563,7 +566,7 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 #ifdef DEBUG
 	      OLSR_PRINTF(3, "Adding route to %s hopcount %d\n",
 			  olsr_ip_to_string(&destination_kernel->destination->rt_dst),
-			  destination_kernel->destination->rt_metric)
+			  destination_kernel->destination->rt_metric);
 #endif
 			  
 		if(!olsr_cnf->host_emul)
@@ -575,8 +578,9 @@ olsr_add_routes_in_kernel(struct destination_n *add_kernel_list)
 		    
 		    if(error < 0)
 		      {
-			OLSR_PRINTF(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), strerror(errno))
-			  olsr_syslog(OLSR_LOG_ERR, "Add route:%m");
+                        const char * const err_msg = strerror(errno);
+			OLSR_PRINTF(1, "Add route(%s): %s\n", olsr_ip_to_string(&destination_kernel->destination->rt_dst), err_msg);
+                        olsr_syslog(OLSR_LOG_ERR, "Add route:%s", err_msg);
 		      }
 		  }
 

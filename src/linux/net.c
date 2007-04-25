@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.33 2007/04/20 13:46:05 bernd67 Exp $
+ * $Id: net.c,v 1.34 2007/04/25 22:08:18 bernd67 Exp $
  */
 
 
@@ -76,7 +76,7 @@ bind_socket_to_device(int sock, char *dev_name)
   /*
    *Bind to device using the SO_BINDTODEVICE flag
    */
-  OLSR_PRINTF(3, "Binding socket %d to device %s\n", sock, dev_name)
+  OLSR_PRINTF(3, "Binding socket %d to device %s\n", sock, dev_name);
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
 }
 
@@ -118,7 +118,7 @@ enable_ip_forwarding(int version)
   fclose(proc_fwd);
   if(orig_fwd_state == '1')
     {
-      OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n")
+      OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n");
     }
   else
     {
@@ -260,7 +260,7 @@ restore_settings(int version)
 {
   struct interface *ifs;
 
-  OLSR_PRINTF(1, "Restoring network state\n")
+  OLSR_PRINTF(1, "Restoring network state\n");
 
   /* Restore IP forwarding to "off" */
   if(orig_fwd_state == '0')
@@ -565,7 +565,7 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_interface = ifs->if_index;
 
 #if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr))
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 
@@ -616,7 +616,7 @@ join_mcast(struct interface *ifs, int sock)
     }
 
 
-  OLSR_PRINTF(3, "OK\n")
+  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 
@@ -645,13 +645,13 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 	      sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
 		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	      OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6)
-	      OLSR_PRINTF(5, "\tScope: %d\n", scope)
+	      OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
+	      OLSR_PRINTF(5, "\tScope: %d\n", scope);
 	      if(scope == scope_in)
 		{
 		  OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n",
 			      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-			      addr6p[4], addr6p[5], addr6p[6], addr6p[7])
+			      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
 		  inet_pton(AF_INET6,addr6,&tmp_sockaddr6);
 		  memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));	  
 		  fclose(f);
@@ -780,11 +780,11 @@ calculate_if_metric(char *ifname)
       /* Get bit rate */
       if(ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0)
 	{
-	  OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname)
+          OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
 	  return WEIGHT_WLAN_11MB;
 	}
       
-      OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue)
+      OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
 
       //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
       //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
@@ -804,23 +804,23 @@ calculate_if_metric(char *ifname)
       if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
 	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno))
+		      ifr.ifr_name, strerror(errno));
 	return WEIGHT_ETHERNET_DEFAULT;
       }
 
       mii->reg_num = MII_BMCR;
       if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
 	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno))
+		    strerror(errno));
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       bmcr = mii->val_out;
 
 
-      OLSR_PRINTF(1, "%s: ", ifr.ifr_name)
+      OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
       OLSR_PRINTF(1, "%s Mbit, %s duplex\n",
 		  (bmcr & MII_BMCR_100MBIT) ? "100" : "10",
-		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half")
+		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
     
       is_if_link_up(ifname);
 
@@ -854,19 +854,19 @@ is_if_link_up(char *ifname)
       if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
 	if (errno != ENODEV)
 	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno))
+		      ifr.ifr_name, strerror(errno));
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       mii->reg_num = MII_BMSR;
       if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
 	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno))
+		    strerror(errno));
 	return WEIGHT_ETHERNET_DEFAULT;
       }
       bmsr = mii->val_out;
 
-      OLSR_PRINTF(1, "%s: ", ifr.ifr_name)
-      OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ")
+      OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
+      OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
     
       return (bmsr & MII_BMSR_LINK_VALID);
 

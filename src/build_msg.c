@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.35 2007/04/22 20:25:48 bernd67 Exp $
+ * $Id: build_msg.c,v 1.36 2007/04/25 22:08:07 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -136,7 +136,7 @@ olsr_bool
 queue_hello(struct hello_message *message, struct interface *ifp)
 {
 #ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building HELLO on %s\n-------------------\n", ifp->int_name)
+  OLSR_PRINTF(BMSG_DBGLVL, "Building HELLO on %s\n-------------------\n", ifp->int_name);
 #endif
 
   switch(olsr_cnf->ip_version)
@@ -167,7 +167,7 @@ olsr_bool
 queue_tc(struct tc_message *message, struct interface *ifp)           
 {
 #ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building TC on %s\n-------------------\n", ifp->int_name)
+  OLSR_PRINTF(BMSG_DBGLVL, "Building TC on %s\n-------------------\n", ifp->int_name);
 #endif
 
   switch(olsr_cnf->ip_version)
@@ -193,7 +193,7 @@ olsr_bool
 queue_mid(struct interface *ifp)
 {
 #ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building MID on %s\n-------------------\n", ifp->int_name)
+  OLSR_PRINTF(BMSG_DBGLVL, "Building MID on %s\n-------------------\n", ifp->int_name);
 #endif
 
   switch(olsr_cnf->ip_version)
@@ -218,7 +218,7 @@ olsr_bool
 queue_hna(struct interface *ifp)
 {
 #ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building HNA on %s\n-------------------\n", ifp->int_name)
+  OLSR_PRINTF(BMSG_DBGLVL, "Building HNA on %s\n-------------------\n", ifp->int_name);
 #endif
 
   switch(olsr_cnf->ip_version)
@@ -241,7 +241,7 @@ check_buffspace(int msgsize, int buffsize, char *type)
 {
   if(msgsize > buffsize)
     {
-      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize)
+      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
       olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
       olsr_exit(__func__, EXIT_FAILURE);
     }
@@ -334,8 +334,8 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 		continue;
 
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address))
-	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i)
+	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address));
+	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i);
 #endif		  
 	      /*
 	       * If there is not enough room left 
@@ -354,7 +354,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 		  if(curr_size > OLSR_HELLO_IPV4_HDRSIZE)
 		    {
 #ifdef DEBUG
-		      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+		      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 		      /* Complete the headers */
 		      m->v4.seqno = htons(get_msg_seqno());
@@ -498,8 +498,8 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 		continue;
 
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address))
-	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i)
+	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address));
+	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i);
 #endif		  
 
 
@@ -520,7 +520,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 		  if(curr_size > OLSR_HELLO_IPV6_HDRSIZE)
 		    {
 #ifdef DEBUG
-		      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+		      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 		      /* Complete the headers */
 		      m->v6.seqno = htons(get_msg_seqno());
@@ -651,7 +651,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
 	  if(curr_size > OLSR_TC_IPV4_HDRSIZE)
 	    {
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 
 	      m->v4.olsr_msgsize = htons(curr_size);
@@ -674,7 +674,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
       found = OLSR_TRUE;
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
-		      olsr_ip_to_string(&mprs->address))
+		      olsr_ip_to_string(&mprs->address));
 #endif 
       COPY_IP(&mprsaddr->addr, &mprs->address);
 
@@ -696,7 +696,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
       if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
 	{
 	  if(!TIMED_OUT(send_empty_tc))
-	    OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times, (int)((send_empty_tc) - now_times))
+	    OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times, (int)((send_empty_tc) - now_times));
 
 	  m->v4.olsr_msgsize = htons(curr_size);
 	  m->v4.seqno = htons(get_msg_seqno());
@@ -776,7 +776,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 	  if(curr_size > OLSR_TC_IPV6_HDRSIZE)
 	    {
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 	      m->v6.olsr_msgsize = htons(curr_size);
 	      m->v6.seqno = htons(get_msg_seqno());
@@ -795,7 +795,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
       found = OLSR_TRUE;
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
-		      olsr_ip_to_string(&mprs->address))
+		      olsr_ip_to_string(&mprs->address));
 #endif
       COPY_IP(&mprsaddr6->addr, &mprs->address);
       curr_size += olsr_cnf->ipsize;
@@ -815,7 +815,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
     {
       if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
 	{
-	  OLSR_PRINTF(1, "TC: Sending empty package\n")
+	  OLSR_PRINTF(1, "TC: Sending empty package\n");
 	    
 	  m->v6.olsr_msgsize = htons(curr_size);
 	  m->v6.seqno = htons(get_msg_seqno());
@@ -889,7 +889,7 @@ serialize_mid4(struct interface *ifp)
 	      if(curr_size > OLSR_MID_IPV4_HDRSIZE)
 		{
 #ifdef DEBUG
-		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 		  /* set size */
 		  m->v4.olsr_msgsize = htons(curr_size);
@@ -906,7 +906,7 @@ serialize_mid4(struct interface *ifp)
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n", 
 		      olsr_ip_to_string(&ifs->ip_addr), 
-		      ifs->int_name)
+		      ifs->int_name);
 #endif
 	  
 	  COPY_IP(&addrs->addr, &ifs->ip_addr);
@@ -988,7 +988,7 @@ serialize_mid6(struct interface *ifp)
 	      if(curr_size > OLSR_MID_IPV6_HDRSIZE)
 		{
 #ifdef DEBUG
-		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 		  /* set size */
 		  m->v6.olsr_msgsize = htons(curr_size);
@@ -1005,7 +1005,7 @@ serialize_mid6(struct interface *ifp)
 #ifdef DEBUG
 		  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n", 
 			      olsr_ip_to_string(&ifs->ip_addr), 
-			      ifs->int_name)
+			      ifs->int_name);
 #endif
 
 	  COPY_IP(&addrs6->addr, &ifs->ip_addr);
@@ -1079,7 +1079,7 @@ serialize_hna4(struct interface *ifp)
 	  if(curr_size > OLSR_HNA_IPV4_HDRSIZE)
 	    {
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 	      m->v4.seqno = htons(get_msg_seqno());
 	      m->v4.olsr_msgsize = htons(curr_size);
@@ -1094,7 +1094,7 @@ serialize_hna4(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s/%s\n", 
 		  olsr_ip_to_string(&h->net),
-		  olsr_ip_to_string(&h->netmask))
+		  olsr_ip_to_string(&h->netmask));
 #endif
       COPY_IP(&pair->addr, &h->net);
       COPY_IP(&pair->netmask, &h->netmask);
@@ -1169,7 +1169,7 @@ serialize_hna6(struct interface *ifp)
 	  if(curr_size > OLSR_HNA_IPV6_HDRSIZE)
 	    {
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize)
+	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif
 	      m->v6.seqno = htons(get_msg_seqno());
 	      m->v6.olsr_msgsize = htons(curr_size);
@@ -1184,7 +1184,7 @@ serialize_hna6(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s/%d\n", 
 		  olsr_ip_to_string(&h->net),
-		  h->prefix_len)
+		  h->prefix_len);
 #endif
       COPY_IP(&pair6->addr, &h->net);
       olsr_prefix_to_netmask(&tmp_netmask, h->prefix_len);

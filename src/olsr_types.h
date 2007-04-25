@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.6 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: olsr_types.h,v 1.7 2007/04/25 22:08:09 bernd67 Exp $
  */
 
 /*
@@ -50,11 +50,10 @@
 /* types */
 #include <sys/types.h>
 
-typedef enum
-{
+typedef enum {
     OLSR_FALSE = 0,
     OLSR_TRUE
-}olsr_bool;
+} olsr_bool;
 
 #if defined linux || defined __MacOSX__
 

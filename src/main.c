@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.94 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: main.c,v 1.95 2007/04/25 22:08:09 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
     {
       if(apm_init() < 0)
 	{
-	  OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT)
+	  OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
 	  olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
@@ -312,19 +312,19 @@ main(int argc, char *argv[])
 	{
 	  olsr_cnf->willingness = olsr_calculate_willingness();
 
-	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int)
+	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
 	}
     }
 
   /* Set ipsize */
   if(olsr_cnf->ip_version == AF_INET6)
     {
-      OLSR_PRINTF(1, "Using IP version 6\n")
+      OLSR_PRINTF(1, "Using IP version 6\n");
       olsr_cnf->ipsize = sizeof(struct in6_addr);
     }
   else
     {
-      OLSR_PRINTF(1, "Using IP version 4\n")
+      OLSR_PRINTF(1, "Using IP version 4\n");
       olsr_cnf->ipsize = sizeof(olsr_u32_t);
     }
 
@@ -380,7 +380,7 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&olsr_cnf->main_addr))
+  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&olsr_cnf->main_addr));
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", SOFTWARE_VERSION);
@@ -469,7 +469,7 @@ olsr_shutdown(int signal)
 
   olsr_delete_all_kernel_routes();
 
-  OLSR_PRINTF(1, "Closing sockets...\n")
+  OLSR_PRINTF(1, "Closing sockets...\n");
 
   /* front-end IPC socket */
   if(olsr_cnf->open_ipc)
@@ -495,7 +495,7 @@ olsr_shutdown(int signal)
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", SOFTWARE_VERSION);
 
-  OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION)
+  OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", SOFTWARE_VERSION);
 
   exit(olsr_cnf->exit_value);
 }

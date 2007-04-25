@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.23 2007/04/20 13:46:05 bernd67 Exp $
+# $Id: Makefile,v 1.24 2007/04/25 22:08:17 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -90,13 +90,12 @@ $(NAME):	$(OBJS)
 		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
 
 oscan.c:	oscan.lex Makefile
-		$(FLEX) -Cem -ooscan.c oscan.lex
-		mv oscan.c oscan.c-tmp && \
-			sed	-e '/^static/s/yy_get_next_buffer[\(][\)]/yy_get_next_buffer(void)/' \
-				-e '/^static/s/yy_get_previous_state[\(][\)]/yy_get_previous_state(void)/' \
-				-e '/^static/s/input[\(][\)]/input(void)/' \
-				-e '/^static  *void  *yy_fatal_error/s/^\(.*)\)\();\)$$/\1 __attribute__((noreturn)) \2/' \
-				< oscan.c-tmp >oscan.c
+		$(FLEX) -Cem -ooscan.c-tmp oscan.lex
+		sed	-e '/^static/s/yy_get_next_buffer[\(][\)]/yy_get_next_buffer(void)/' \
+			-e '/^static/s/yy_get_previous_state[\(][\)]/yy_get_previous_state(void)/' \
+			-e '/^static/s/input[\(][\)]/input(void)/' \
+			-e '/^static  *void  *yy_fatal_error/s/^\(.*)\)\();\)$$/\1 __attribute__((noreturn)) \2/' \
+			< oscan.c-tmp >oscan.c
 		$(RM) oscan.c-tmp
 
 oparse.c:	oparse.y olsrd_conf.h Makefile
@@ -111,7 +110,7 @@ install:
 		/sbin/ldconfig -n $(LIBDIR)
 
 clean:
-		rm -f *.[od~]
+		rm -f *.[od~] oscan.c oparse.[ch]
 		rm -f $(LIBNAME)
 		rm -f $(BINNAME)
 		$(RM) oparse.c-tmp

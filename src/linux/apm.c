@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.17 2007/04/20 13:46:05 bernd67 Exp $
+ * $Id: apm.c,v 1.18 2007/04/25 22:08:17 bernd67 Exp $
  */
 
 /*
@@ -128,7 +128,7 @@ apm_init(void)
   struct olsr_apm_info ainfo;
 
   method = -1;
-  OLSR_PRINTF(3, "Initializing APM\n")
+  OLSR_PRINTF(3, "Initializing APM\n");
 
   if(((fd_index = acpi_probe()) >= 0) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
@@ -148,7 +148,7 @@ apm_printinfo(struct olsr_apm_info *ainfo)
   OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
 	      ainfo->ac_line_status,
 	      ainfo->battery_percentage,
-	      ainfo->battery_time_left)
+	      ainfo->battery_time_left);
 }
 
 

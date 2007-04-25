@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.24 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: socket_parser.c,v 1.25 2007/04/25 22:08:17 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -81,7 +81,7 @@ add_olsr_socket(int fd, void(*pf)(int))
       fprintf(stderr, "Bogus socket entry - not registering...\n");
       return;
     }
-  OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd)
+  OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd);
 
   new_entry = olsr_malloc(sizeof(struct olsr_socket_entry), "Socket entry");
 
@@ -114,7 +114,7 @@ remove_olsr_socket(int fd, void(*pf)(int))
       olsr_syslog(OLSR_LOG_ERR, "Bogus socket entry - not processing...\n");
       return 0;
     }
-  OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd)
+  OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd);
 
   entry = olsr_socket_entries;
   prev_entry = NULL;
@@ -185,11 +185,11 @@ poll_sockets(void)
   /* Did somethig go wrong? */
   if (n < 0) 
     {
-      if(errno == EINTR)
-	return;
-
-      olsr_syslog(OLSR_LOG_ERR, "select: %m");
-      OLSR_PRINTF(1, "Error select: %s", strerror(errno))
+      if(errno != EINTR) {
+        const char * const err_msg = strerror(errno);
+        olsr_syslog(OLSR_LOG_ERR, "select: %s", err_msg);
+        OLSR_PRINTF(1, "Error select: %s", err_msg);
+      }
       return;
     }
 
