@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.11 2007/04/25 22:08:18 bernd67 Exp $
+ * $Id: apm.c,v 1.12 2007/04/25 22:19:00 bernd67 Exp $
  */
 
 #include "apm.h"
@@ -48,7 +48,7 @@
 #include <windows.h>
 #undef interface
 
-int apm_init()
+int apm_init(void)
 {
   struct olsr_apm_info ApmInfo;
 
