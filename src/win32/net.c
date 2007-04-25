@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.21 2007/04/25 22:08:18 bernd67 Exp $
+ * $Id: net.c,v 1.22 2007/04/25 22:24:09 bernd67 Exp $
  */
 
 #if defined WINCE
@@ -97,7 +97,7 @@ gethemusocket(struct sockaddr_in *pin)
   return (sock);
 }
 
-int getsocket(struct sockaddr *Addr, int BuffSize, char *Int)
+int getsocket(struct sockaddr *Addr, int BuffSize, char *Int __attribute__((unused)))
 {
   int Sock;
   int On = 1;
@@ -148,7 +148,7 @@ int getsocket(struct sockaddr *Addr, int BuffSize, char *Int)
   return Sock;
 }
 
-int getsocket6(struct sockaddr_in6 *Addr, int BuffSize, char *Int)
+int getsocket6(struct sockaddr_in6 *Addr, int BuffSize, char *Int __attribute__((unused)))
 {
   int Sock;
   int On = 1;
@@ -421,7 +421,7 @@ ssize_t
 olsr_recvfrom(int  s, 
 	      void *buf, 
 	      size_t len, 
-	      int flags, 
+	      int flags __attribute__((unused)), 
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {

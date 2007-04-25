@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.35 2007/04/25 22:08:18 bernd67 Exp $
+ * $Id: ifnet.c,v 1.36 2007/04/25 22:21:17 bernd67 Exp $
  */
 
 #include "interfaces.h"
@@ -113,7 +113,7 @@ struct InterfaceInfo
 
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
-int inet_pton(int af, char *src, void *dst);
+int inet_pton(int af, const char *src, void *dst);
 
 void ListInterfaces(void);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
@@ -123,7 +123,7 @@ void RemoveInterface(struct olsr_if *IntConf);
 
 int __stdcall SignalHandler(unsigned long Signal);
 
-static unsigned long __stdcall SignalHandlerWrapper(void *Dummy)
+static unsigned long __stdcall SignalHandlerWrapper(void *Dummy __attribute__((unused)))
 {
   SignalHandler(0);
   return 0;
@@ -932,7 +932,7 @@ int chk_if_changed(struct olsr_if *IntConf)
   return Res;
 }
 
-int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
+int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 {
   struct InterfaceInfo Info;
   struct interface *New;
@@ -1099,7 +1099,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel)
   return 1;
 }
 
-void check_interface_updates(void *dummy)
+void check_interface_updates(void *dummy __attribute__((unused)))
 {
   struct olsr_if *IntConf;
 
