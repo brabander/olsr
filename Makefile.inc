@@ -18,16 +18,22 @@ EXENAME ?= olsrd
 
 INCLUDES =	-Isrc -I$(TOPDIR)/src 
 
+GCC_VERSION := $(shell v=$$($(CC) -dumpversion); echo $${v//./ })
+
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
 CFLAGS +=	-Wall
+# gcc-3.3.5 on Debian sarge doesn't know the following warnings
+ifneq ("$(GCC_VERSION)","3 3 5")
 CFLAGS +=	-Wextra
+CFLAGS +=	-Wold-style-definition
+CFLAGS +=	-Wdeclaration-after-statement
+endif
 CFLAGS +=	-Wmissing-prototypes
 CFLAGS +=	-Wstrict-prototypes
 CFLAGS +=	-Wmissing-declarations
 CFLAGS +=	-Wsign-compare
 CFLAGS +=	-Waggregate-return
-CFLAGS +=	-Wold-style-definition
 CFLAGS +=	-Wmissing-noreturn
 CFLAGS +=	-Wmissing-format-attribute
 CFLAGS +=	-Wno-multichar
