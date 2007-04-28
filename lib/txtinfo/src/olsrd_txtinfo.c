@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.4 2007/04/22 19:54:31 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.5 2007/04/28 19:58:49 bernd67 Exp $
  */
 
 /*
@@ -242,6 +242,10 @@ ipc_action(int fd)
     }
   else
     {
+      fd_set rfds;
+      struct timeval tv = {0,0};
+      int neighonly = 0;
+
       addr = inet_ntoa(pin.sin_addr);
       if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
 	{
@@ -257,11 +261,8 @@ ipc_action(int fd)
 #endif
       
       /* purge read buffer to prevent blocking on linux*/
-      fd_set rfds;
       FD_ZERO(&rfds);
       FD_SET(ipc_connection, &rfds);
-      struct timeval tv = {0,0};
-      int neighonly = 0;
       if(select(ipc_connection+1, &rfds, NULL, NULL, &tv)) {
         char requ[128];
         ssize_t s = recv(ipc_connection, &requ, sizeof(requ), 0);
@@ -430,13 +431,14 @@ ipc_print_hna(void)
   olsr_u8_t index;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
+  struct hna4_entry *hna4;
+  struct hna6_entry *hna6;
 
   size = 0;
 
   ipc_sendf("Table: HNA\nNetwork\tNetmask\tGateway\n");
 
   /* Announced HNA entries */
-	struct hna4_entry *hna4;
 	for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
 	  {
 			ipc_sendf("%s\t%s\t%s\n",
@@ -444,7 +446,6 @@ ipc_print_hna(void)
 			  olsr_ip_to_string(&hna4->netmask),
 				olsr_ip_to_string(&olsr_cnf->main_addr));
 	  }
-	struct hna6_entry *hna6;
 	for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
 	  {
 			ipc_sendf("%s\t%d\t%s\n",

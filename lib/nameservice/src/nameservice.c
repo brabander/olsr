@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.22 2007/04/25 22:08:06 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.23 2007/04/28 19:58:49 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -261,14 +261,13 @@ name_init(void)
 {
 	struct name_entry *name;
 	union olsr_ip_addr ipz;
-
-	memset(&ipz, 0, sizeof(ipz));
-
     int ret;
+
     //regex string for validating the hostnames
     char *regex_name = "^[[:alnum:]_.-]+$";
     //regex string for the service line
     char *regex_service = olsr_malloc(256*sizeof(char) + strlen(my_suffix), "new *char from name_init for regex_service");
+	memset(&ipz, 0, sizeof(ipz));
 
     //compile the regex from the string
 	if ((ret = regcomp(&regex_t_name, regex_name , REG_EXTENDED)) != 0)
@@ -677,9 +676,9 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 	struct name_entry *tmp;
 	struct name_entry *already_saved_name_entries;
     char *name = (char*)from_packet + sizeof(struct name);
-	olsr_printf(4, "\nNAME PLUGIN: decapsulating received name, service or forwarder \n");
     int type_of_from_packet = ntohs(from_packet->type);
     unsigned int len_of_name = ntohs(from_packet->len);
+	olsr_printf(4, "\nNAME PLUGIN: decapsulating received name, service or forwarder \n");
     
     // don't insert the received entry again, if it has already been inserted in the hash table. 
     // Instead only the validity time is set in insert_new_name_in_list function, which calls this one
