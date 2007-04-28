@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.52 2007/04/20 13:46:05 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.53 2007/04/28 20:46:32 bernd67 Exp $
  */
 
 
@@ -731,6 +731,4 @@ void win32_stdio_hack(unsigned int handle)
   // setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 }
-#else
-void win32_stdio_hack(unsigned int handle __attribute__((unused))) {}
 #endif
