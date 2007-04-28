@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.63 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.64 2007/04/28 20:51:05 bernd67 Exp $
  */
 
 /*
@@ -691,7 +691,7 @@ build_frame(char *title __attribute__((unused)),
       if(!strcmp(http_frame[i], "<!-- BODY -->"))
 	size += frame_body_cb(&buf[size], bufsize-size);
       else
-	size += snprintf(&buf[size], bufsize-size, http_frame[i]);      
+	size += snprintf(&buf[size], bufsize-size, "%s", http_frame[i]);      
 
       i++;
     }
