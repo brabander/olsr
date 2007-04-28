@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.4 2007/04/20 13:46:02 bernd67 Exp $
+ * $Id: olsrd_pgraph.c,v 1.5 2007/04/28 20:48:57 bernd67 Exp $
  */
 
 /*
@@ -56,10 +56,10 @@
 #define close(x) closesocket(x)
 #endif
 
-int ipc_socket;
-int ipc_open;
-int ipc_connection;
-int ipc_socket_up;
+static int ipc_socket;
+static int ipc_open;
+static int ipc_connection;
+static int ipc_socket_up;
 
 static void
 ipc_print_neigh_link(struct neighbor_entry *neighbor);
