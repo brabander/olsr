@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.33 2007/04/25 22:08:17 bernd67 Exp $
+ * $Id: net.c,v 1.34 2007/04/28 19:51:16 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -58,6 +58,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp_var.h>
 #include <netinet/icmp6.h>
+#include <sys/uio.h>
 #endif
 
 #ifdef __FreeBSD__
