@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.58 2007/04/25 22:08:07 bernd67 Exp $
+ * $Id: defs.h,v 1.59 2007/04/28 20:45:06 bernd67 Exp $
  */
 
 
@@ -141,8 +141,10 @@ extern struct tm *nowtm;		/* current idea of time (in tm) */
 int
 ipc_init(void);
 
+#if 0
 int
 ipc_input(int);
+#endif
 
 int
 shutdown_ipc(void);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.30 2007/04/25 22:08:08 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.31 2007/04/28 20:45:06 bernd67 Exp $
  */
 
 /*
@@ -202,6 +202,7 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
   return OLSR_FALSE;
 }
 
+#if 0
 /**
  *Read input from the IPC socket. Not in use.
  *
@@ -212,7 +213,6 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
 int
 ipc_input(int sock __attribute__((unused)))
 {
-  /*
   union 
   {
     char	buf[MAXPACKETSIZE+1];
@@ -225,10 +225,9 @@ ipc_input(int sock __attribute__((unused)))
       perror("recv");
       exit(1);
     }
-*/
   return 1;
 }
-
+#endif
 
 /**
  *Sends a olsr packet on the IPC socket.
