@@ -43,7 +43,7 @@ WARNINGS +=	-Wnested-externs
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-WARNINGS +=	-Werror
+#WARNINGS +=	-Werror
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
