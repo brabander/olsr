@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.36 2007/04/25 22:21:17 bernd67 Exp $
+ * $Id: ifnet.c,v 1.37 2007/05/01 21:50:41 bernd67 Exp $
  */
 
 #include "interfaces.h"
@@ -246,6 +246,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
   HMODULE Lib;
   struct MibIpInterfaceRow Row;
+  GETIPINTERFACEENTRY InterfaceEntry;
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
@@ -312,8 +313,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
     return -1;
   }
 
-  GETIPINTERFACEENTRY InterfaceEntry =
-    (GETIPINTERFACEENTRY)GetProcAddress(Lib, "GetIpInterfaceEntry");
+  InterfaceEntry = (GETIPINTERFACEENTRY)GetProcAddress(Lib, "GetIpInterfaceEntry");
 
   if (InterfaceEntry == NULL)
   {
