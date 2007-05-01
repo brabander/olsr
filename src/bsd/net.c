@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.34 2007/04/28 19:51:16 bernd67 Exp $
+ * $Id: net.c,v 1.35 2007/05/01 20:13:50 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -58,6 +58,8 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp_var.h>
 #include <netinet/icmp6.h>
+#include <netinet6/in6_var.h> /* For struct in6_ifreq */
+#include <ifaddrs.h>
 #include <sys/uio.h>
 #endif
 
@@ -98,7 +100,7 @@ static int gateway;
 static int set_sysctl_int(char *name, int new)
 {
   int old;
-#if __MacOSX__
+#if __MacOSX__ || __OpenBSD__
   size_t len = sizeof (old);
 #else
   unsigned int len = sizeof (old);
