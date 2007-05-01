@@ -26,7 +26,6 @@ INCLUDES =	-Isrc -I$(TOPDIR)/src
 ifndef CFLAGS
 ifndef WARNINGS
 WARNINGS +=	-Wall
-# gcc-3.3.5 on Debian sarge doesn't know the following warnings
 WARNINGS +=	-Wextra
 WARNINGS +=	-Wold-style-definition
 WARNINGS +=	-Wdeclaration-after-statement
