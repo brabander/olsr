@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.83 2007/04/22 21:33:33 bernd67 Exp $
+# $Id: Makefile,v 1.84 2007/05/01 21:36:50 bernd67 Exp $
 
 VERS =		0.5.1pre
 
@@ -44,7 +44,7 @@ include Makefile.inc
 
 CFLAGS +=	-DVERSION=\"$(VERS)\"
 
-MAKECMD = $(MAKE) OS=$(OS)
+MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)"
 
 LIBS +=		$(OS_LIB_DYNLOAD)
 

@@ -1,6 +1,10 @@
 # programs
 CCACHE ?=       $(shell sh -c "type -path ccache")
+ifeq ($(origin CC),default)
+CC = 		$(CCACHE) gcc
+else
 CC ?= 		$(CCACHE) gcc
+endif
 STRIP ?=	strip
 BISON ?=	bison
 FLEX ?=		flex
@@ -18,34 +22,34 @@ EXENAME ?= olsrd
 
 INCLUDES =	-Isrc -I$(TOPDIR)/src 
 
-GCC_VERSION := $(shell v=$$($(CC) -dumpversion); echo $${v//./ })
-
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
-CFLAGS +=	-Wall
+ifndef WARNINGS
+WARNINGS +=	-Wall
 # gcc-3.3.5 on Debian sarge doesn't know the following warnings
-ifneq ("$(GCC_VERSION)","3 3 5")
-CFLAGS +=	-Wextra
-CFLAGS +=	-Wold-style-definition
-CFLAGS +=	-Wdeclaration-after-statement
+WARNINGS +=	-Wextra
+WARNINGS +=	-Wold-style-definition
+WARNINGS +=	-Wdeclaration-after-statement
+WARNINGS +=	-Wmissing-prototypes
+WARNINGS +=	-Wstrict-prototypes
+WARNINGS +=	-Wmissing-declarations
+WARNINGS +=	-Wsign-compare
+WARNINGS +=	-Waggregate-return
+WARNINGS +=	-Wmissing-noreturn
+WARNINGS +=	-Wmissing-format-attribute
+WARNINGS +=	-Wno-multichar
+WARNINGS +=	-Wno-deprecated-declarations
+#WARNINGS +=	-Wredundant-decls
+WARNINGS +=	-Wnested-externs
+#WARNINGS +=	-Wunreachable-code
+WARNINGS +=	-Winline
+WARNINGS +=	-Wdisabled-optimization
+WARNINGS +=	-Werror
+WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
-CFLAGS +=	-Wmissing-prototypes
-CFLAGS +=	-Wstrict-prototypes
-CFLAGS +=	-Wmissing-declarations
-CFLAGS +=	-Wsign-compare
-CFLAGS +=	-Waggregate-return
-CFLAGS +=	-Wmissing-noreturn
-CFLAGS +=	-Wmissing-format-attribute
-CFLAGS +=	-Wno-multichar
-CFLAGS +=	-Wno-deprecated-declarations
-#CFLAGS +=	-Wredundant-decls
-CFLAGS +=	-Wnested-externs
-#CFLAGS +=	-Wunreachable-code
-CFLAGS +=	-Winline
-CFLAGS +=	-Wdisabled-optimization
+CFLAGS +=	$(WARNINGS)
 CFLAGS +=	-O2
 CFLAGS +=	-g
-#CFLAGS +=	-Werror
 endif
 
 ifdef OLSRD_PLUGIN

@@ -1,0 +1,32 @@
+#!/bin/bash --norc
+#
+# We expect warning options for gcc as argumenst and return the ones which are accepted
+# by the given gcc.
+#
+# $Id: gcc-warnings,v 1.1 2007/05/01 21:36:50 bernd67 Exp $
+
+set -ue
+#set -vx
+
+OPTS=""
+for param; do
+    case "$param" in
+    -W?*) OPTS="$OPTS $param";;
+    *)    echo "Ignoring $param" >&2
+    esac
+done
+
+while read error; do 
+    case "$error" in
+    *error:\ unrecognized\ option*) opt="${error#*\`}"
+                                    opt="${opt%\'*}"
+                                    OPTS="${OPTS//$opt/}"
+                                    ;;
+    esac
+done < <(cat <<EOF | $CC $OPTS -E - 2>&1 >/dev/null
+    int main(void) {
+        return 0;
+    }
+    EOF)
+echo $OPTS
+exit 0
