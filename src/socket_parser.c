@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.25 2007/04/25 22:08:17 bernd67 Exp $
+ * $Id: socket_parser.c,v 1.26 2007/05/02 08:07:11 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -161,6 +161,8 @@ poll_sockets(void)
 {
   int n;
   struct olsr_socket_entry *olsr_sockets;
+  /* Global buffer for times(2) calls. Do not remopve since at least OpenBSD needs it. */
+  struct tms tms_buf;
 
   /* If there are no registered sockets we
    * do not call select(2)
@@ -194,8 +196,8 @@ poll_sockets(void)
     }
 
   /* Update time since this is much used by the parsing functions */
-  gettimeofday(&now, NULL);      
-  now_times = times(NULL);
+  gettimeofday(&now, NULL);
+  now_times = times(&tms_buf);
 
   for(olsr_sockets = olsr_socket_entries;olsr_sockets;olsr_sockets = olsr_sockets->next)
     {
