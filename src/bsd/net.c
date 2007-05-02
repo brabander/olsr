@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.35 2007/05/01 20:13:50 bernd67 Exp $
+ * $Id: net.c,v 1.36 2007/05/02 07:41:20 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -489,7 +489,7 @@ join_mcast(struct interface *ifs, int sock)
   COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr))
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
@@ -545,7 +545,7 @@ int get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 
   if (getifaddrs(&ifap) != 0)
     {
-      OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n")
+      OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n");
       return 0;
     }
 
