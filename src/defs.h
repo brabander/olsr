@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.59 2007/04/28 20:45:06 bernd67 Exp $
+ * $Id: defs.h,v 1.60 2007/05/02 08:06:28 bernd67 Exp $
  */
 
 
@@ -129,8 +129,8 @@ extern struct olsrd_config *olsr_cnf;
 
 /* Timer data */
 extern clock_t now_times;              /* current idea of times(2) reported uptime */
-extern struct timeval now;		/* current idea of time */
-extern struct tm *nowtm;		/* current idea of time (in tm) */
+extern struct timeval now;	       /* current idea of time */
+extern struct tm *nowtm;	       /* current idea of time (in tm) */
 
 /*
  *IPC functions
