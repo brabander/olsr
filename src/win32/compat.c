@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.12 2005/03/21 02:17:36 tlopatic Exp $
+ * $Id: compat.c,v 1.13 2007/05/08 23:05:58 bernd67 Exp $
  */
 
 /*
@@ -100,7 +100,7 @@ int nanosleep(struct timespec *Req, struct timespec *Rem)
   return 0;
 }
 
-void gettimeofday(struct timeval *TVal, void *TZone)
+void gettimeofday(struct timeval *TVal, void *TZone __attribute__((unused)))
 {
   SYSTEMTIME SysTime;
   FILETIME FileTime;
@@ -118,7 +118,7 @@ void gettimeofday(struct timeval *TVal, void *TZone)
   TVal->tv_usec = (unsigned int)(Ticks % 10000000) / 10;
 }
 
-long times(struct tms *Dummy)
+long times(struct tms *Dummy __attribute__((unused)))
 {
   return (long)GetTickCount();
 }
@@ -165,7 +165,7 @@ void WinSockPError(char *Str)
 
 // XXX - not thread-safe, which is okay for our purposes
  
-void *dlopen(char *Name, int Flags)
+void *dlopen(char *Name, int Flags __attribute__((unused)))
 {
 #if !defined WINCE
   return (void *)LoadLibrary(Name);
