@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.34 2007/04/25 22:08:10 bernd67 Exp $
+ * $Id: parser.c,v 1.35 2007/05/08 23:34:52 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -474,7 +474,7 @@ olsr_input_hostemu(int fd)
     return;
       
   /* Extract size */
-  if((cc = recv(fd, &pcklen, 2, MSG_PEEK)) != 2)
+  if((cc = recv(fd, (void *)&pcklen, 2, MSG_PEEK)) != 2) /* Win needs a cast */
     {
       if(cc <= 0)
 	{
