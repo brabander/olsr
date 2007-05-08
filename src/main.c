@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.95 2007/04/25 22:08:09 bernd67 Exp $
+ * $Id: main.c,v 1.96 2007/05/08 23:10:37 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -62,7 +62,7 @@ struct olsrd_config *olsr_cnf;  /* The global configuration */
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall SignalHandler(unsigned long signal);
+int __stdcall SignalHandler(unsigned long signal) __attribute__((noreturn));
 void ListInterfaces(void);
 void DisableIcmpRedirects(void);
 olsr_bool olsr_win32_end_request = OLSR_FALSE;
@@ -105,16 +105,16 @@ main(int argc, char *argv[])
   char conf_file_name[FILENAME_MAX];
   struct tms tms_buf;
 
+#ifdef WIN32
+  WSADATA WsaData;
+  int len;
+#endif
+
   /* Stop the compiler from complaining */
   (void)copyright_string;
 
   debug_handle = stdout;
   olsr_argv = argv;
-
-#ifdef WIN32
-  WSADATA WsaData;
-  int len;
-#endif
 
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
