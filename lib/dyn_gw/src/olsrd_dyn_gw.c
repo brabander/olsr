@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.20 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.21 2007/05/08 23:49:00 bernd67 Exp $
  */
 
 /*
@@ -432,7 +432,7 @@ static unsigned long __stdcall ThreadWrapper(void *Para)
   return 0;
 }
 
-int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg)
+int pthread_create(HANDLE *Hand, void *Attr __attribute__((unused)), void *(*Func)(void *), void *Arg)
 {
   struct ThreadPara *Para;
   unsigned long ThreadId;
@@ -453,7 +453,7 @@ int pthread_create(HANDLE *Hand, void *Attr, void *(*Func)(void *), void *Arg)
   return 0;
 }
 
-int pthread_kill(HANDLE Hand, int Sig)
+int pthread_kill(HANDLE Hand, int Sig __attribute__((unused)))
 {
   if (!TerminateThread(Hand, 0))
     return -1;
@@ -461,7 +461,7 @@ int pthread_kill(HANDLE Hand, int Sig)
   return 0;
 }
 
-int pthread_mutex_init(HANDLE *Hand, void *Attr)
+int pthread_mutex_init(HANDLE *Hand, void *Attr __attribute__((unused)))
 {
   *Hand = CreateMutex(NULL, FALSE, NULL);
 
