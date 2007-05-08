@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.13 2007/05/08 23:05:58 bernd67 Exp $
+ * $Id: compat.c,v 1.14 2007/05/08 23:18:55 bernd67 Exp $
  */
 
 /*
@@ -363,7 +363,7 @@ static int inet_pton6(const char *src, unsigned char *dst)
   return (1);
 }
 
-int inet_pton(int af, char *src, void *dst)
+int inet_pton(int af, const char *src, void *dst)
 {
   switch (af)
   {
@@ -477,7 +477,7 @@ static char *inet_ntop6(const unsigned char *src, char *dst, int size)
   return strcpy(dst, tmp);
 }
 
-char *inet_ntop(int af, void *src, char *dst, int size)
+char *inet_ntop(int af, const void *src, char *dst, int size)
 {
   switch (af)
   {
