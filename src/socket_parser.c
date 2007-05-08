@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.26 2007/05/02 08:07:11 bernd67 Exp $
+ * $Id: socket_parser.c,v 1.27 2007/05/08 23:43:17 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -59,9 +59,6 @@
 struct olsr_socket_entry *olsr_socket_entries;
 
 static int hfd = 0;
-
-static struct timeval tvp = {0, 0};
-static fd_set ibits;
 
 /**
  * Add a socket and handler to the socketset
@@ -163,6 +160,9 @@ poll_sockets(void)
   struct olsr_socket_entry *olsr_sockets;
   /* Global buffer for times(2) calls. Do not remopve since at least OpenBSD needs it. */
   struct tms tms_buf;
+  fd_set ibits;
+  struct timeval tvp = {0, 0};
+
 
   /* If there are no registered sockets we
    * do not call select(2)
@@ -176,7 +176,7 @@ poll_sockets(void)
   
   for(olsr_sockets = olsr_socket_entries; olsr_sockets; olsr_sockets = olsr_sockets->next)
     {
-      FD_SET(olsr_sockets->fd, &ibits);      
+      FD_SET((unsigned int)olsr_sockets->fd, &ibits); /* And we cast here since we get a warning on Win32 */    
     }
       
   /* Runnig select on the FD set */
