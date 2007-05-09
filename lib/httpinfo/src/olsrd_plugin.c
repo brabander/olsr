@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.15 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.16 2007/05/09 00:22:47 bernd67 Exp $
  */
 
 /*
@@ -50,7 +50,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#ifndef WIN32
 #include <arpa/nameser.h>
+#endif
 
 #include "olsrd_httpinfo.h"
 

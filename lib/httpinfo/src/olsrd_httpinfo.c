@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.64 2007/04/28 20:51:05 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.65 2007/05/09 00:22:47 bernd67 Exp $
  */
 
 /*
@@ -49,7 +49,9 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#ifndef WIN32
 #include <netdb.h>
+#endif
 
 #include "olsr.h"
 #include "olsr_cfg.h"
@@ -726,7 +728,12 @@ build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link
   int size = 0;
   char maskbuf[32];
   char *maskstr;
-  const struct hostent * const hp = resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) : NULL;
+  const struct hostent * const hp =
+#ifndef WIN32
+                                    resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) :
+#else
+                                        NULL;
+#endif
   if (mask != NULL) {
     if (olsr_cnf->ip_version == AF_INET) {
       if (mask->v4 == ~0U) {
