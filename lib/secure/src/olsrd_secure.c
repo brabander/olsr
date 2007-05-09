@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.23 2007/04/25 22:08:07 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.24 2007/05/09 17:29:53 bernd67 Exp $
  */
 
 
@@ -752,7 +752,7 @@ parse_cres(char *in_msg)
       return 0;
     }
 
-  olsr_printf(3, "[ENC]Challenge: 0x%x\n", ntohl(msg->challenge));
+  olsr_printf(3, "[ENC]Challenge: 0x%lx\n", ntohl(msg->challenge));
 
   /* Check signature */
 
@@ -979,7 +979,7 @@ parse_challenge(char *in_msg)
 	}
     }
 
-  olsr_printf(3, "[ENC]Challenge: 0x%x\n", ntohl(msg->challenge));
+  olsr_printf(3, "[ENC]Challenge: 0x%lx\n", ntohl(msg->challenge));
 
   /* Check signature */
 

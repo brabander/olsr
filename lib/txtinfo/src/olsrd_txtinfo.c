@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.5 2007/04/28 19:58:49 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.6 2007/05/09 17:29:53 bernd67 Exp $
  */
 
 /*
@@ -262,10 +262,10 @@ ipc_action(int fd)
       
       /* purge read buffer to prevent blocking on linux*/
       FD_ZERO(&rfds);
-      FD_SET(ipc_connection, &rfds);
+      FD_SET((unsigned int)ipc_connection, &rfds); /* Win32 needs the cast here */
       if(select(ipc_connection+1, &rfds, NULL, NULL, &tv)) {
         char requ[128];
-        ssize_t s = recv(ipc_connection, &requ, sizeof(requ), 0);
+        ssize_t s = recv(ipc_connection, (void*)&requ, sizeof(requ), 0); /* Win32 needs the cast here */
         if (0 < s) {
           requ[s] = 0;
           /* To print out neighbours only on the Freifunk Status
