@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.65 2007/05/09 00:22:47 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.66 2007/05/09 17:37:09 bernd67 Exp $
  */
 
 /*
@@ -731,9 +731,8 @@ build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link
   const struct hostent * const hp =
 #ifndef WIN32
                                     resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) :
-#else
-                                        NULL;
 #endif
+                                        NULL;
   if (mask != NULL) {
     if (olsr_cnf->ip_version == AF_INET) {
       if (mask->v4 == ~0U) {
