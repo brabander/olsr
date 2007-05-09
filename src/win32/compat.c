@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.14 2007/05/08 23:18:55 bernd67 Exp $
+ * $Id: compat.c,v 1.15 2007/05/09 00:30:04 bernd67 Exp $
  */
 
 /*
@@ -521,4 +521,20 @@ int isatty(int fd)
 #else
   return 0;
 #endif
+}
+
+#define CHUNK_SIZE 512
+
+/* and we emulate a real write(2) syscall using send() */
+ssize_t write(int fd, const void *buf, size_t count)
+{
+  size_t written = 0;
+  while (written < count) {
+    ssize_t rc = send(fd, buf+written, min(count-written, CHUNK_SIZE), 0);
+    if (rc <= 0) {
+      break;
+    }
+    written += rc;
+  }
+  return written;
 }
