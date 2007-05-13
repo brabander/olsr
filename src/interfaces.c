@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.31 2007/04/25 22:08:08 bernd67 Exp $
+ * $Id: interfaces.c,v 1.32 2007/05/13 22:23:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -342,7 +342,6 @@ queue_if(char *name, int hemu)
   interf_n->cnf = NULL;
   interf_n->interf = NULL;
   interf_n->configured = 0;
-  interf_n->index = olsr_cnf->ifcnt++;
 
   interf_n->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.22 2007/04/25 22:08:09 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.23 2007/05/13 22:23:55 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -458,7 +458,7 @@ net_output(struct interface *ifp)
 	{
 	  perror("sendto(v6)");
 	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
-	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_nr);
+	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_index);
 	  fprintf(stderr, "To: %s (size: %d)\n", ip6_to_string(&sin6->sin6_addr), (int)sizeof(*sin6));
 	  fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
 	  retval = -1;

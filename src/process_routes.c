@@ -39,7 +39,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.32 2007/04/25 22:08:13 bernd67 Exp $
+ * $Id: process_routes.c,v 1.33 2007/05/13 22:23:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -247,7 +247,7 @@ olsr_find_up_route(struct rt_entry *dst, struct rt_entry *table)
       //printf("vs %s hc: %d ... ", olsr_ip_to_string(&destination->rt_dst), destination->rt_metric);      
       if (COMP_IP(&destination->rt_dst, &dst->rt_dst) &&
 	  COMP_IP(&destination->rt_router, &dst->rt_router) &&
-	  (destination->rt_if->if_nr == dst->rt_if->if_nr))
+	  (destination->rt_if->if_index == dst->rt_if->if_index))
 	{
 	  if(destination->rt_metric == dst->rt_metric)
 	    {
