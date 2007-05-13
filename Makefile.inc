@@ -70,6 +70,9 @@ HDRS +=		$(wildcard *.h)
 all: default_target
 
 # OS detection
+ifeq ($(OS),Windows_NT)
+OS = win32
+endif
 ifeq ($(OS),)
 OS :=		$(shell sh $(TOPDIR)/make/guess_os.sh)
 endif
