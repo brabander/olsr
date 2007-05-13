@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.22 2007/04/20 13:46:05 bernd67 Exp $
+ * $Id: oscan.lex,v 1.23 2007/05/13 21:49:59 bernd67 Exp $
  */
 
 
@@ -70,10 +70,10 @@ void yyset_debug(int);
 int yylex_destroy(void);
 int yylex(void);
 
-struct conf_token *
+static struct conf_token *
 get_conf_token(void);
 
-struct conf_token *
+static struct conf_token *
 get_conf_token(void)
 {
   struct conf_token *t = malloc(sizeof(struct conf_token));
@@ -132,11 +132,6 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 \} {
   yylval = NULL;
   return TOK_CLOSE;
-}
-
-\; {
-  yylval = NULL;
-  return TOK_SEMI;
 }
 
 \"[^\"]*\" {
@@ -294,11 +289,6 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "LoadPlugin" {
   yylval = NULL;
   return TOK_PLUGIN;
-}
-
-"PlName" {
-  yylval = NULL;
-  return TOK_PLNAME;
 }
 
 "PlParam" {
