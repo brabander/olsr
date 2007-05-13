@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.25 2007/04/27 11:32:27 bernd67 Exp $
+# $Id: Makefile,v 1.26 2007/05/13 22:02:57 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -93,6 +93,7 @@ oscan.c:	oscan.lex Makefile
 		$(FLEX) -Cem -ooscan.c-tmp oscan.lex
 		sed	-e '/^static/s/yy_get_next_buffer[\(][\)]/yy_get_next_buffer(void)/' \
 			-e '/^static/s/yy_get_previous_state[\(][\)]/yy_get_previous_state(void)/' \
+			-e '/^static/s/yygrowstack[\(][\)]/yygrowstack(void)/' \
 			-e '/^static/s/input[\(][\)]/input(void)/' \
 			-e '/^static  *void  *yy_fatal_error/s/^\(.*)\);$$/\1 __attribute__((noreturn));/' \
 			< oscan.c-tmp >oscan.c
