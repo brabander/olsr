@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.66 2007/05/09 17:37:09 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.67 2007/05/17 11:25:27 bernd67 Exp $
  */
 
 /*
@@ -89,11 +89,11 @@ static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, A
 
 #define MAX_CLIENTS 3
 
-#define MAX_HTTPREQ_SIZE 1024 * 10
+#define MAX_HTTPREQ_SIZE (1024 * 10)
 
 #define DEFAULT_TCP_PORT 1978
 
-#define HTML_BUFSIZE 1024*75
+#define HTML_BUFSIZE (1024 * 200)
 
 #define FRAMEWIDTH 800
 
@@ -412,7 +412,7 @@ parse_http_request(int fd)
 	      printf("Dynamic read %d bytes\n", param_size);
 	      
 	      //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
-	      size += dynamic_files[i].process_data_cb(req, param_size, &body[size], HTML_BUFSIZE-size);
+	      size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
 	      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, MAX_HTTPREQ_SIZE);  
 	      goto send_http_data;
 	    }
