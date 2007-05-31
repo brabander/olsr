@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.21 2005/11/22 10:12:30 tlopatic Exp $
+ * $Id: ohs_cmd.c,v 1.22 2007/05/31 00:14:53 ipo23 Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -214,7 +214,8 @@ ohs_cmd_olsrd(char *args)
   /* Set arguments */
   else if(!strncmp(tok_buf, "seta", strlen("seta")))
     {
-
+	printf("Error - NOT IMPLEMENTED YET\n");
+	return 1;
     }
   /* Show settings */
   else if(!strncmp(tok_buf, "show", strlen("show")))
