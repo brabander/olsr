@@ -3,7 +3,7 @@
 # We expect warning options for gcc as argumenst and return the ones which are accepted
 # by the given gcc.
 #
-# $Id: gcc-warnings,v 1.1 2007/05/01 21:36:50 bernd67 Exp $
+# $Id: gcc-warnings,v 1.2 2007/06/27 20:20:57 bernd67 Exp $
 
 set -ue
 #set -vx
@@ -23,7 +23,7 @@ while read error; do
                                     OPTS="${OPTS//$opt/}"
                                     ;;
     esac
-done < <(cat <<EOF | $CC $OPTS -E - 2>&1 >/dev/null
+done < <($CC $OPTS -E - 2>&1 >/dev/null <<EOF
     int main(void) {
         return 0;
     }
