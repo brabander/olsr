@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.23 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.24 2007/07/01 01:17:38 ipo23 Exp $
  */
 
 /*
@@ -274,7 +274,7 @@ ipc_action(int fd __attribute__((unused)))
       char *addr = inet_ntoa(pin.sin_addr);
       if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
 	{
-	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
+	  olsr_printf(0, "Front end-connection from foregin host(%s) not allowed!\n", addr);
 	  close(ipc_connection);
           ipc_connection = -1;
 	}

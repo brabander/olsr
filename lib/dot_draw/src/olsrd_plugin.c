@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.14 2007/04/20 14:06:18 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.15 2007/07/01 01:17:38 ipo23 Exp $
  */
 
 /*
@@ -115,14 +115,14 @@ olsrd_plugin_interface_version(void)
 int
 olsrd_plugin_register_param(char *key, char *value)
 {
-  if(!strcmp(key, "port"))
+  if(!strcmp(key, "Port"))
     {
       ipc_port = atoi(value);
       olsr_printf(0, "(DOT DRAW) listening on port: %d\n", ipc_port);
       return 1;
     }
 
-  if(!strcmp(key, "accept"))
+  if(!strcmp(key, "Accept"))
     {
       inet_aton(value, &ipc_accept_ip);
       olsr_printf(0, "(DOT DRAW) accept only: %s\n", inet_ntoa(ipc_accept_ip));
