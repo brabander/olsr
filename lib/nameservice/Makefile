@@ -35,11 +35,11 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.11 2007/05/09 17:30:42 bernd67 Exp $
+# $Id: Makefile,v 1.12 2007/07/02 10:59:12 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_nameservice
-PLUGIN_VER =	0.2
+PLUGIN_VER =	0.3
 
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc

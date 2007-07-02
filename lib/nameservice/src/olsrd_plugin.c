@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.12 2007/04/20 13:46:02 bernd67 Exp $ */
+/* $Id: olsrd_plugin.c,v 1.13 2007/07/02 10:59:12 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for olsr.org olsrd
@@ -42,8 +42,8 @@
 #include "nameservice.h"
 
 #define PLUGIN_NAME    "OLSRD nameservice plugin"
-#define PLUGIN_VERSION "0.2"
-#define PLUGIN_AUTHOR   "Bruno Randolf"
+#define PLUGIN_VERSION "0.3"
+#define PLUGIN_AUTHOR   "Bruno Randolf, Jens Nachtigall, Sven-Ola"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION
 
 

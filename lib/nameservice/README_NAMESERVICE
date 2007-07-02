@@ -69,6 +69,37 @@ PlParam "timeout" "SEC"
 	validity time for received NAME messages in seconds.
 	(default: 3600 - 1 hour)
 
+PlParam "lat" "12.123"
+	Float: Decimal latitude for this node to be flooded in the mesh
+
+PlParam "lon" "12.123"
+	Float: Decimal longitude for this node to be flooded in the mesh
+
+PlParam "latlon-file" "/var/run/latlon.js"
+	Filename to write Javascript statements to. Default is "latlon.js"
+	(either /var/run or windows directory). This file is written, if
+	the "lat" and "lon" parameters are set. It has this format:
+
+	/* One or more mid-aliases of multihomed nodes */
+	Mid('fromip','toip');
+
+	/* One special Node() entry for this node
+	 * defhna means: This node announces hna 0.0.0.0/0
+	 * defroute means: The current neighbour IP for 0.0.0.0/0
+	 */
+	Self('mainip',lat,lon,defhna?1:0,'defroute','name');
+
+	/* One or more node entires for other nodes */
+	Node('mainip',lat,lon,this-node-defhna?1:0,'defroute','name');
+
+	/* One or more links between nodes */
+	Link('fromip','toip',lq,nlq,etx);
+
+PlParam "latlon-infile" "name-of-input.txt"
+	Filename to read lat/lon positions from. Meant to be used
+	by a walking GPS receiver. Just write comma separated decimal
+	latitude and longitude to this file. Will overwrite the
+	"lat" and "lon" parameters during runtime.
 
 ---------------------------------------------------------------------
 SAMPLE CONFIG
@@ -122,4 +153,4 @@ TODO
   * or make dynamic DNS updates for bind?
 
 ---------------------------------------------------------------------
-EOF / 20.04.2005
+EOF / 30.06.2007
