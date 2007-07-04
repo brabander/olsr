@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.h,v 1.15 2005/05/29 12:47:45 br1 Exp $
+ * $Id: plugin_loader.h,v 1.16 2007/07/04 01:52:35 ipo23 Exp $
  */
 
 #ifndef _OLSR_PLUGIN_LOADER
@@ -49,7 +49,6 @@
 
 #ifndef OLSR_PLUGIN
 
-#define MAX_LIBS 10
 
 struct olsr_plugin
 {
