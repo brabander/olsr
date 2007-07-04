@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.25 2007/04/25 22:08:13 bernd67 Exp $
+ * $Id: plugin_loader.c,v 1.26 2007/07/04 01:50:45 ipo23 Exp $
  */
 
 #include "plugin_loader.h"
@@ -64,13 +64,14 @@ olsr_load_plugins(void)
 {
   struct plugin_entry *entry = olsr_cnf->plugins;
   int loaded = 0;
-  OLSR_PRINTF(1, "Loading plugins...\n\n");
+  OLSR_PRINTF(0, "Loading plugins...\n\n");
   while(entry)
     {  
       if(olsr_load_dl(entry->name, entry->params) < 0)
-	OLSR_PRINTF(1, "-- PLUGIN LOADING FAILED! --\n\n");
-      else
+	OLSR_PRINTF(0, "PLUGIN %s LOADING FAILED! --\n\n", entry->name);
+      else {
 	loaded++;
+      }
 
       entry = entry->next;
     }
@@ -93,11 +94,11 @@ olsr_load_dl(char *libname, struct plugin_param *params)
   int (*get_interface_version)(void);
   int *interface_version;
 
-  OLSR_PRINTF(1, "---------- Plugin loader ----------\nLibrary: %s\n", libname);
+  OLSR_PRINTF(0, "---------- Plugin loader ----------\nLibrary: %s\n", libname);
 
-  if((new_entry.dlhandle = dlopen(libname, RTLD_NOW)) == NULL)
+  if(NULL == (new_entry.dlhandle = dlopen(libname, RTLD_NOW)))
     {
-      OLSR_PRINTF(1, "DL loading failed: \"%s\"!\n", dlerror());
+      OLSR_PRINTF(0, "DL loading failed: \"%s\"!\n", dlerror());
       return -1;
     }
 
@@ -111,7 +112,7 @@ olsr_load_dl(char *libname, struct plugin_param *params)
           OLSR_PRINTF(1, "trying v1 detection... ");
           if((interface_version = dlsym(new_entry.dlhandle, "plugin_interface_version")) == NULL)
             {
-              OLSR_PRINTF(1, "FAILED: \"%s\"\n", dlerror());
+              OLSR_PRINTF(0, "FAILED: \"%s\"\n", dlerror());
               dlclose(new_entry.dlhandle);
               return -1;
             }
@@ -129,13 +130,13 @@ olsr_load_dl(char *libname, struct plugin_param *params)
     {
       new_entry.plugin_interface_version = get_interface_version();
     }
-  OLSR_PRINTF(1, " %d - OK\n", new_entry.plugin_interface_version);
+  OLSR_PRINTF(0, " %d - OK\n", new_entry.plugin_interface_version);
   
   if ( new_entry.plugin_interface_version < 4 ) 
     {
       /* old plugin interface */
    
-      OLSR_PRINTF(1, "\nWARNING: YOU ARE USING AN OLD DEPRECATED PLUGIN INTERFACE! DETECTED VERSION %d CURRENT VERSION %d\nPLEASE UPGRADE YOUR PLUGIN!\nWILL CONTINUE IN 5 SECONDS...\n\n", new_entry.plugin_interface_version, OLSRD_PLUGIN_INTERFACE_VERSION);
+      OLSR_PRINTF(0, "\nWARNING: YOU ARE USING AN OLD DEPRECATED PLUGIN INTERFACE! DETECTED VERSION %d CURRENT VERSION %d\nPLEASE UPGRADE YOUR PLUGIN!\nWILL CONTINUE IN 5 SECONDS...\n\n", new_entry.plugin_interface_version, OLSRD_PLUGIN_INTERFACE_VERSION);
       
       sleep(5);
       dlclose(new_entry.dlhandle);
@@ -147,7 +148,7 @@ olsr_load_dl(char *libname, struct plugin_param *params)
       
       if ( new_entry.plugin_interface_version != OLSRD_PLUGIN_INTERFACE_VERSION ) 
         {
-          OLSR_PRINTF(1, "\n\nWARNING: VERSION MISSMATCH! DETECTED %d CURRENT VERSION %d\nTHIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\nWILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(), OLSRD_PLUGIN_INTERFACE_VERSION);
+          OLSR_PRINTF(0, "\n\nWARNING: VERSION MISSMATCH! DETECTED %d CURRENT VERSION %d\nTHIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\nWILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(), OLSRD_PLUGIN_INTERFACE_VERSION);
           sleep(5);
         }
    
@@ -183,7 +184,7 @@ olsr_load_dl(char *libname, struct plugin_param *params)
   entry->next = olsr_plugins;
   olsr_plugins = entry;
 
-  OLSR_PRINTF(1, "---------- LIBRARY LOADED ----------\n\n");
+  OLSR_PRINTF(0, "---------- LIBRARY LOADED ----------\n\n");
 
   return 0;
 }
@@ -193,7 +194,7 @@ olsr_load_dl(char *libname, struct plugin_param *params)
  *Initialize a loaded plugin
  *This includes sending information
  *from olsrd to the plugin and
- *register the functions from the flugin with olsrd
+ *register the functions from the plugin with olsrd
  *
  *@param entry the plugin to initialize
  *
@@ -206,7 +207,7 @@ init_olsr_plugin(struct olsr_plugin *entry)
     {
       struct plugin_param *params;
       OLSR_PRINTF(1, "Sending parameters...\n");
-        for(params = entry->params;params;params = params->next)
+        for(params = entry->params; params; params = params->next)
         {
           int retval = entry->register_param(params->key, params->value);
           OLSR_PRINTF(1, "\"%s\"/\"%s\"... ", params->key, params->value);
