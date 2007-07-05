@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.23 2007/05/13 22:23:55 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.24 2007/07/05 22:43:47 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -615,6 +615,10 @@ olsr_ip_to_string(const union olsr_ip_addr *addr)
   static int index = 0;
   static char buff[4][INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN];
   const char *ret;
+
+  if (!addr) {
+      return "null";
+  }
   
   if(olsr_cnf->ip_version == AF_INET)
     {
