@@ -35,9 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.85 2007/07/05 22:45:39 bernd67 Exp $
+# $Id: Makefile,v 1.86 2007/07/05 23:12:43 bernd67 Exp $
 
-VERS =		0.5.1
+VERS =		0.5.2pre
 
 TOPDIR = .
 include Makefile.inc
