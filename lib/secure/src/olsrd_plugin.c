@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.11 2007/04/20 13:46:03 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.12 2007/07/15 17:51:22 bernd67 Exp $
  */
 
 
@@ -48,6 +48,7 @@
 #define PLUGIN_VERSION "0.5"
 #define PLUGIN_AUTHOR   "Andreas Tønnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
+#define PLUGIN_INTERFACE_VERSION 4
 
 
 static void __attribute__ ((constructor)) 
@@ -65,7 +66,7 @@ my_fini(void);
 int 
 olsrd_plugin_interface_version(void)
 {
-  return OLSRD_PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 
