@@ -1,7 +1,13 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.63 2007/07/05 23:12:43 bernd67 Exp $
+$Id: CHANGELOG,v 1.64 2007/07/15 21:09:42 bernd67 Exp $
 
 0.5.2 ---------------------------------------------------------------------
+
+PLUGIN CLEANUP
+Plugins handle parameters quite individually (case-sensitive vs case-insensitive,
+different parsing functions for the same values, etc.). Plugin Interface version 5
+now exports a table of { parameter-name, parsing-function, addr-of-storage } and
+it's size. Common functions should be shared.
 
 0.5.1 ---------------------------------------------------------------------
 
