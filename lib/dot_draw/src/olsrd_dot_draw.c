@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.24 2007/07/01 01:17:38 ipo23 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.25 2007/07/15 19:29:37 bernd67 Exp $
  */
 
 /*
@@ -236,9 +236,8 @@ plugin_ipc_init(void)
 	  return 0;
 	}
 
-
       /* Register with olsrd */
-      printf("Adding socket with olsrd\n");
+      //printf("Adding socket with olsrd\n");
       add_olsr_socket(ipc_socket, &ipc_action);
       ipc_socket_up = 1;
     }
