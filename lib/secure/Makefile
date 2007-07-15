@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.16 2005/05/25 13:50:22 br1 Exp $
+# $Id: Makefile,v 1.17 2007/07/15 21:47:17 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_secure
@@ -51,7 +51,7 @@ endif
 
 default_target: $(PLUGIN_FULLNAME)
 
-$(PLUGIN_FULLNAME): $(OBJS)
+$(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 install:	$(PLUGIN_FULLNAME)
