@@ -50,6 +50,8 @@
 #include "Bmf.h" /* InitBmf(), CloseBmf(), RegisterBmfParameter() */
 #include "PacketHistory.h" /* InitPacketHistory() */
 
+#define PLUGIN_INTERFACE_VERSION 4
+
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
 
@@ -67,7 +69,7 @@ void olsr_plugin_exit(void);
  * ------------------------------------------------------------------------- */
 int olsrd_plugin_interface_version(void)
 {
-  return OLSRD_PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 /* -------------------------------------------------------------------------
