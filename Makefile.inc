@@ -61,6 +61,9 @@ else
 LDFLAGS +=	-Wl,-export-dynamic 
 endif
 
+# options to save space on small systems
+DEFINES +=      -DSUPPORT_OLD_PLUGIN_VERSIONS=1
+
 # search sources and headers in current dir and in src/
 SRCS =		$(wildcard src/*.c)
 SRCS +=		$(wildcard *.c)
