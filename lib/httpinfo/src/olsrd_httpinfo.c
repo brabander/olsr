@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.70 2007/07/15 20:59:06 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.71 2007/07/15 21:09:37 bernd67 Exp $
  */
 
 /*
@@ -49,7 +49,9 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
-#ifndef WIN32
+#ifdef WIN32
+#include <io.h>
+#else
 #include <netdb.h>
 #endif
 
