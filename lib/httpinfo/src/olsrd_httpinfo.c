@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.69 2007/07/15 19:29:38 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.70 2007/07/15 20:59:06 bernd67 Exp $
  */
 
 /*
@@ -164,7 +164,7 @@ static int check_allowed_ip(const struct allowed_net * const allowed_nets, const
 
 static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr);
 
-static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
+static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
 
 static char *olsr_netmask_to_string(union hna_netmask *);
 
@@ -697,7 +697,7 @@ static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool wan
   return size;
 }
 
-static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask)
+static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask)
 {
   int size = 0;
   char maskbuf[32];
@@ -724,18 +724,38 @@ static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_boo
   } else {
     maskstr =  NULL;
   }
-  size += snprintf(&buf[size], bufsize-size, "<td%s>", resolve_ip_addresses && hp ? "" : " colspan=\"2\"");
+  size += snprintf(&buf[size], bufsize-size, "<td>");
   size += build_ip_txt(&buf[size], bufsize-size, want_link, olsr_ip_to_string(ipaddr), maskstr);
-  if (hp) {
-    size += snprintf(&buf[size], bufsize-size, "</td><td>(");
-    size += build_ip_txt(&buf[size], bufsize-size, want_link, hp->h_name, NULL);
-    size += snprintf(&buf[size], bufsize-size, ")");
-  }
   size += snprintf(&buf[size], bufsize-size, "</td>");
+  if (resolve_ip_addresses) {
+    if (hp) {
+      size += snprintf(&buf[size], bufsize-size, "<td>(");
+      size += build_ip_txt(&buf[size], bufsize-size, want_link, hp->h_name, NULL);
+      size += snprintf(&buf[size], bufsize-size, ")</td>");
+    } else {
+      size += snprintf(&buf[size], bufsize-size, "<td/>");
+    }
+  }
   return size;
 }
 #define build_ipaddr_with_link(buf, bufsize, ipaddr, mask) build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (mask))
 #define build_ipaddr_no_link(buf, bufsize, ipaddr, mask)   build_ipaddr_link((buf), (bufsize), OLSR_FALSE, (ipaddr), (mask))
+
+
+static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * const route, const char * const title, const int print_netmask)
+{
+  int size = 0;
+  size += snprintf(&buf[size], bufsize-size, "<tr>");
+  size += build_ipaddr_with_link(&buf[size], bufsize-size, &route->rt_dst, print_netmask ? &route->rt_mask : NULL);
+  size += build_ipaddr_with_link(&buf[size], bufsize-size, &route->rt_router, NULL);
+
+  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%d</td>", route->rt_metric);
+  if (olsr_cnf->lq_level > 0) {
+    size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%.2f</td>", route->rt_etx);
+  }
+  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%s</td><td>%s</td></tr>\n", route->rt_if->int_name, title);
+  return size;
+}
 
 static int build_routes_body(char *buf, olsr_u32_t bufsize)
 {
@@ -744,54 +764,25 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
 
   size += snprintf(&buf[size], bufsize-size, "<h2>OLSR routes in kernel</h2>\n");
 
-  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th%s>Destination</th><th>Gateway</th><th>Metric</th>",
+  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th%1$s>Destination</th><th%1$s>Gateway</th><th>Metric</th>",
                   resolve_ip_addresses ? " colspan=\"2\"" : "");
   if (olsr_cnf->lq_level > 0)
     size += snprintf(&buf[size], bufsize-size, "<th>ETX</th>");
   size += snprintf(&buf[size], bufsize-size, "<th>Interface</th><th>Type</th></tr>\n");
 
   /* Neighbors */
-  for(index = 0;index < HASHSIZE;index++)
-    {
-      for(routes = routingtable[index].next;
-	  routes != &routingtable[index];
-	  routes = routes->next)
-	{
-          size += snprintf(&buf[size], bufsize-size, "<tr>");
-	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_dst, NULL);
-	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_router, NULL);
-
-	  size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%d</td>", routes->rt_metric);
-          if (olsr_cnf->lq_level > 0)
-            size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%.2f</td>", routes->rt_etx);
-	  size += snprintf(&buf[size], bufsize-size,
-                         "<td>%s</td>"
-                         "<td>HOST</td></tr>\n",
-                         routes->rt_if->int_name);
-	}
+  for(index = 0;index < HASHSIZE;index++) {
+    for(routes = routingtable[index].next; routes != &routingtable[index]; routes = routes->next) {
+      size += build_route(&buf[size], bufsize-size, routes, "HOST", OLSR_FALSE);
     }
+  }
 
   /* HNA */
-  for(index = 0;index < HASHSIZE;index++)
-    {
-      for(routes = hna_routes[index].next;
-	  routes != &hna_routes[index];
-	  routes = routes->next)
-	{
-          size += snprintf(&buf[size], bufsize-size, "<tr>");
-	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_dst, &routes->rt_mask);
-	  size += build_ipaddr_with_link(&buf[size], bufsize-size, &routes->rt_router, NULL);
-	  size += snprintf(&buf[size], bufsize-size,
-                         "<td align=\"right\">%d</td>",
-                         routes->rt_metric);
-          if (olsr_cnf->lq_level > 0)
-	    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%.2f</td>", routes->rt_etx);
-	  size += snprintf(&buf[size], bufsize-size,
-                         "<td>%s</td>"
-                         "<td>HNA</td></tr>\n",
-                         routes->rt_if->int_name);
-	}
+  for(index = 0;index < HASHSIZE;index++) {
+    for(routes = hna_routes[index].next; routes != &hna_routes[index];routes = routes->next) {
+      size += build_route(&buf[size], bufsize-size, routes, "HNA", OLSR_TRUE);
     }
+  }
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
