@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.12 2007/07/02 10:59:12 bernd67 Exp $
+# $Id: Makefile,v 1.13 2007/07/15 17:52:16 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_nameservice
