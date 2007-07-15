@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.13 2007/07/15 17:52:16 bernd67 Exp $
+# $Id: Makefile,v 1.14 2007/07/15 21:50:45 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_nameservice
@@ -50,7 +50,7 @@ default_target install clean:
 else
 default_target: $(PLUGIN_FULLNAME)
 
-$(PLUGIN_FULLNAME): $(OBJS)
+$(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 install:	$(PLUGIN_FULLNAME)
