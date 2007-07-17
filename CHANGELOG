@@ -1,7 +1,10 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.64 2007/07/15 21:09:42 bernd67 Exp $
+$Id: CHANGELOG,v 1.65 2007/07/17 09:52:01 bernd67 Exp $
 
 0.5.2 ---------------------------------------------------------------------
+
+URGENT BUG FIX
+Sven-Ole Tuecke found a serious bug of the class "show stopper" and sent a patch.
 
 PLUGIN CLEANUP
 Plugins handle parameters quite individually (case-sensitive vs case-insensitive,
