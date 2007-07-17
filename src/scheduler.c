@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.39 2007/04/25 22:08:16 bernd67 Exp $
+ * $Id: scheduler.c,v 1.40 2007/07/17 09:28:15 bernd67 Exp $
  */
 
 
@@ -118,7 +118,7 @@ scheduler(void)
 
   struct interface *ifn;
 
-  /* Global buffer for times(2) calls */
+  /* Global buffer for times(2) calls. Do not remove - at least OpenBSD needs it. */
   struct tms tms_buf;
  
   link_changes = OLSR_FALSE;
