@@ -51,6 +51,9 @@ CFLAGS +=	-O2
 CFLAGS +=	-g
 endif
 
+# we have plugins with the old interface
+CFLAGS += -DUPPORT_OLD_PLUGIN_VERSIONS=1
+
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
 CFLAGS +=	-DOLSR_PLUGIN
