@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.1 2007/07/15 17:46:46 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.2 2007/07/20 12:25:56 bernd67 Exp $
  */
 
 #include "plugin_util.h"
@@ -56,7 +56,7 @@ int set_plugin_port(const char *value, void *data)
         return 1;
     }
     if (data != NULL) {
-        unsigned int *v = data;
+        int *v = data;
         *v = port;
         OLSR_PRINTF(1, "%s port number %u\n", "Got", port);
     } else {
