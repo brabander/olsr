@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.16 2007/07/15 19:29:37 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.17 2007/07/23 12:58:38 bernd67 Exp $
  */
 
 /*
@@ -60,11 +60,11 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
-struct in_addr ipc_accept_ip;
+union olsr_ip_addr ipc_accept_ip;
 int ipc_port;
 
-static void my_init(void) __attribute__ ((constructor)) ;
-static void my_fini(void) __attribute__ ((destructor));
+static void my_init(void) __attribute__((constructor));
+static void my_fini(void) __attribute__((destructor));
 
 
 /**
@@ -77,7 +77,7 @@ static void my_init(void)
 
     /* defaults for parameters */
     ipc_port = 2004;
-    ipc_accept_ip.s_addr = htonl(INADDR_LOOPBACK);
+    ipc_accept_ip.v4 = htonl(INADDR_LOOPBACK);
 }
 
 
