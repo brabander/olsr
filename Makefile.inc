@@ -51,9 +51,6 @@ CFLAGS +=	-O2
 CFLAGS +=	-g
 endif
 
-# we have plugins with the old interface
-CFLAGS += -DUPPORT_OLD_PLUGIN_VERSIONS=1
-
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
 CFLAGS +=	-DOLSR_PLUGIN
@@ -64,8 +61,12 @@ else
 LDFLAGS +=	-Wl,-export-dynamic 
 endif
 
+###################################
+#
 # options to save space on small systems
-DEFINES +=      -DSUPPORT_OLD_PLUGIN_VERSIONS=1
+
+# we have plugins with the old interface
+CFLAGS +=       -DSUPPORT_OLD_PLUGIN_VERSIONS=1
 
 # search sources and headers in current dir and in src/
 SRCS =		$(wildcard src/*.c)
