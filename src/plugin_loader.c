@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.27 2007/07/15 19:29:37 bernd67 Exp $
+ * $Id: plugin_loader.c,v 1.28 2007/07/26 20:58:19 bernd67 Exp $
  */
 
 #include "plugin_loader.h"
@@ -94,7 +94,7 @@ int olsr_load_dl(char *libname, struct plugin_param *params)
     plugin->dlhandle = dlopen(libname, RTLD_NOW);
     if(plugin->dlhandle == NULL) {
         const int save_errno = errno;
-        OLSR_PRINTF(1, "DL loading failed: \"%s\"!\n", dlerror());
+        OLSR_PRINTF(0, "DL loading failed: \"%s\"!\n", dlerror());
         free(plugin);
         errno = save_errno;
         return -1;
