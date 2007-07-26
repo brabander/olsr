@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.17 2007/07/15 21:47:17 bernd67 Exp $
+# $Id: Makefile,v 1.18 2007/07/26 17:34:54 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_secure
@@ -45,8 +45,8 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 ifdef USE_OPENSSL
-CFLAGS += -DUSE_OPENSSL
-LIBS += -lssl -lcrypto
+CPPFLAGS +=	-DUSE_OPENSSL
+LIBS +=		-lssl -lcrypto
 endif
 
 default_target: $(PLUGIN_FULLNAME)

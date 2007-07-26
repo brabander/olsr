@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.22 2007/07/15 21:50:45 bernd67 Exp $
+# $Id: Makefile,v 1.23 2007/07/26 17:34:54 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_httpinfo
@@ -45,7 +45,7 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 ifdef ADMIN_INTERFACE
-	CFLAGS += -DADMIN_INTERFACE
+CPPFLAGS +=	-DADMIN_INTERFACE
 endif
 
 OBJS += $(TOPDIR)/src/cfgparser/cfgfile_gen.o

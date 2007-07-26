@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.26 2007/05/13 22:02:57 bernd67 Exp $
+# $Id: Makefile,v 1.27 2007/07/26 17:34:54 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -48,7 +48,7 @@ ifeq ($(OS), win32)
 
 LIBNAME ?=	olsrd_cfgparser.dll
 BINNAME ?=	olsrd_cfgparser.exe
-CFLAGS +=	-DWIN32_STDIO_HACK
+CPPFLAGS +=	-DWIN32_STDIO_HACK
 OBJS +=		../win32/compat.o
 
 else
@@ -61,7 +61,7 @@ endif
 
 ifdef MAKEBIN
 
-CFLAGS +=	-DMAKEBIN 
+CPPFLAGS +=	-DMAKEBIN 
 NAME =		$(BINNAME)
 
 else 
@@ -78,7 +78,7 @@ ifeq (${OS}, win32)
 LDFLAGS +=	-Wl,--out-implib=libolsrd_cfgparser.a -Wl,--export-all-symbols
 endif
 
-CFLAGS +=	-DMAKELIB
+CPPFLAGS +=	-DMAKELIB
 NAME =		$(LIBNAME)
 
 endif

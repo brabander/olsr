@@ -35,19 +35,19 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.6 2007/07/15 21:50:46 bernd67 Exp $
+# $Id: Makefile,v 1.7 2007/07/26 17:34:54 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_quagga
 PLUGIN_VER =	0.2.2
 
-#CFLAGS +=-DMY_DEBUG 
-CFLAGS += -g
-CFLAGS +=-DUSE_UNIX_DOMAIN_SOCKET
+#CPPFLAGS +=	-DMY_DEBUG 
+CFLAGS +=	-g
+CPPFLAGS +=	-DUSE_UNIX_DOMAIN_SOCKET
 
 #uncomment the following line only if you are sure what you're doing, it will 
 #probably break things! 
-# CFLAGS +=-DZEBRA_HEADER_MARKER=255 
+#CPPFLAGS +=	-DZEBRA_HEADER_MARKER=255 
 
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc

@@ -35,14 +35,16 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.87 2007/07/17 13:13:08 bernd67 Exp $
+# $Id: Makefile,v 1.88 2007/07/26 17:34:53 bernd67 Exp $
 
 VERS =		0.5.3pre
+
+all:
 
 TOPDIR = .
 include Makefile.inc
 
-CFLAGS +=	-DVERSION=\"$(VERS)\"
+CPPFLAGS +=	-DVERSION=\"$(VERS)\"
 
 MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)"
 
@@ -72,7 +74,7 @@ switch:
 $(CFGOBJS):
 		$(MAKECMD) -C $(CFGDIR)
 
-.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all
+.PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all 
 
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe
@@ -83,7 +85,6 @@ uberclean:	clean clean_libs
 		-rm -f $(TAGFILE)
 		find . \( -name '*.[od]' -o -name '*~' \) -print | xargs -r rm -f
 		$(MAKECMD) -C $(CFGDIR) uberclean
-		$(MAKECMD) -C $(SWITCHDIR) clean
 
 install: install_olsrd
 

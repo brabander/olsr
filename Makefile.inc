@@ -20,7 +20,7 @@ MANDIR  ?= $(DESTDIR)/usr/share/man
 CFGFILE ?= $(ETCDIR)/olsrd.conf
 EXENAME ?= olsrd
 
-INCLUDES =	-Isrc -I$(TOPDIR)/src 
+CPPFLAGS =	-Isrc -I$(TOPDIR)/src 
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
@@ -53,7 +53,7 @@ endif
 
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
-CFLAGS +=	-DOLSR_PLUGIN
+CPPFLAGS +=	-DOLSR_PLUGIN
 LDFLAGS +=	-shared -Wl,-soname,$(PLUGIN_NAME)
 LDFLAGS +=	-Wl,--version-script=version-script.txt 
 else
@@ -66,22 +66,20 @@ endif
 # options to save space on small systems
 
 # we have plugins with the old interface
-CFLAGS +=       -DSUPPORT_OLD_PLUGIN_VERSIONS=1
+CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
 
 # search sources and headers in current dir and in src/
-SRCS =		$(wildcard src/*.c)
-SRCS +=		$(wildcard *.c)
-HDRS =		$(wildcard src/*.h)
-HDRS +=		$(wildcard *.h)
+SRCS +=		$(wildcard src/*.c *.c)
+HDRS +=		$(wildcard src/*.h *.h)
 
 all: default_target
 
 # OS detection
 ifeq ($(OS),Windows_NT)
-OS = win32
+OS := win32
 endif
 ifeq ($(OS),)
-OS :=		$(shell sh $(TOPDIR)/make/guess_os.sh)
+OS := $(shell sh $(TOPDIR)/make/guess_os.sh)
 endif
 ifeq ($(OS),UNKNOWN)
 all: help
@@ -92,21 +90,29 @@ all: default_target
 endif
 
 # one object for each source file
-OBJS +=		$(patsubst %.c,%.o,$(SRCS))
+OBJS +=		$(SRCS:%.c=%.o)
 
 # debugging or non-debugging flags
 ifdef DEBUG
-CFLAGS +=	-DDEBUG
+CPPFLAGS +=	-DDEBUG
 endif
 ifdef NODEBUG
-CFLAGS +=	-DNODEBUG
+CPPFLAGS +=	-DNODEBUG
 endif
 
-# let gcc generate dependency information (*.d)
-CFLAGS +=	-MD
+# fully automatic and working dependency generation
+%.d: %.c
+	@$(CC) -M $(CPPFLAGS) "$<" | sed -e '1s|\($(*F)\)\.o[ :]*|$(*D)/\1.o $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc \\\n  |g' >"$@"
 
 # we always need the includes and defines
-CFLAGS += $(INCLUDES) $(DEFINES)
+# for legacy since now
+CPPFLAGS += $(INCLUDES) $(DEFINES)
+ifneq ($(INCLUDES),)
+$(warning Use CPPFLAGS instead of INCLUDES for -I)
+endif
+ifneq ($(DEFINES),)
+$(warning Use CPPFLAGS instead of DEFINES for -D)
+endif
 
 TAGFILE ?=	src/TAGS
 
