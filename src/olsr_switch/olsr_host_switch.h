@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.8 2005/06/04 21:07:33 kattemat Exp $
+ * $Id: olsr_host_switch.h,v 1.9 2007/07/28 12:53:15 bernd67 Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -59,10 +59,9 @@
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall ohs_close(unsigned long signal);
+int __stdcall ohs_close(unsigned long signal) __attribute__((noreturn));
 #else
-void
-ohs_close(int);
+void ohs_close(int) __attribute__((noreturn));
 #endif
 
 struct ohs_ip_link

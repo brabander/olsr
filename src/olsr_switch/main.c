@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.24 2007/04/20 14:23:41 bernd67 Exp $
+ * $Id: main.c,v 1.25 2007/07/28 12:53:15 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -127,10 +127,10 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
 
 #ifdef WIN32
 int __stdcall
-ohs_close(unsigned long signal)
+ohs_close(unsigned long signal __attribut__((unused)))
 #else
 void
-ohs_close(int signal)
+ohs_close(int signal __attribute__((unused)))
 #endif
 {
   printf("OHS: exit\n");
@@ -311,7 +311,7 @@ ohs_route_data(struct ohs_connection *oc)
 }
 
 static int
-ohs_init_connect_sockets()
+ohs_init_connect_sockets(void)
 {
   olsr_u32_t yes = 1;
   struct sockaddr_in sin;
@@ -358,7 +358,7 @@ ohs_init_connect_sockets()
 
 
 static int
-ohs_configure()
+ohs_configure(void)
 {
 
   return 1;
@@ -395,7 +395,7 @@ static void read_handler(struct ohs_connection *con)
 }
 
 static void
-ohs_listen_loop()
+ohs_listen_loop(void)
 {
 #if !defined WIN32
   int n;
@@ -534,7 +534,7 @@ ohs_listen_loop()
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
 
 #ifdef WIN32

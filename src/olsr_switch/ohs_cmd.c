@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.22 2007/05/31 00:14:53 ipo23 Exp $
+ * $Id: ohs_cmd.c,v 1.23 2007/07/28 12:53:15 bernd67 Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -536,13 +536,12 @@ ohs_cmd_log(char *args)
 }
 
 int
-ohs_cmd_exit(char *args)
+ohs_cmd_exit(char *args __attribute__((unused)))
 {
 
   printf("Exitting... bye-bye!\n");
 
   ohs_close(0);
-  return 0;
 }
 
 void
