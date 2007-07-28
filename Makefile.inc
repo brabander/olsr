@@ -1,9 +1,9 @@
 # programs
 CCACHE ?=       $(shell sh -c "type -path ccache")
 ifeq ($(origin CC),default)
-CC = 		$(CCACHE) gcc
+CC = 		$(CCACHE) gcc4
 else
-CC ?= 		$(CCACHE) gcc
+CC ?= 		$(CCACHE) gcc4
 endif
 STRIP ?=	strip
 BISON ?=	bison
@@ -33,7 +33,7 @@ WARNINGS +=	-Wmissing-prototypes
 WARNINGS +=	-Wstrict-prototypes
 WARNINGS +=	-Wmissing-declarations
 WARNINGS +=	-Wsign-compare
-WARNINGS +=	-Waggregate-return
+#WARNINGS +=	-Waggregate-return
 WARNINGS +=	-Wmissing-noreturn
 WARNINGS +=	-Wmissing-format-attribute
 WARNINGS +=	-Wno-multichar
@@ -43,13 +43,14 @@ WARNINGS +=	-Wnested-externs
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-#WARNINGS +=	-Werror
+WARNINGS +=	-Werror
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
-CFLAGS +=	-O2
+CFLAGS +=	-Os
 CFLAGS +=	-g
 endif
+CFLAGS +=	-fmudflapth
 
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
@@ -60,6 +61,7 @@ else
 # c and ld flags for main
 LDFLAGS +=	-Wl,-export-dynamic 
 endif
+LDFLAGS += 	-lmudflap
 
 ###################################
 #

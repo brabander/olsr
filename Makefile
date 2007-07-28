@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.88 2007/07/26 17:34:53 bernd67 Exp $
+# $Id: Makefile,v 1.89 2007/07/28 12:59:38 bernd67 Exp $
 
 VERS =		0.5.3pre
 
@@ -79,12 +79,12 @@ $(CFGOBJS):
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) olsrd olsrd.exe
 		$(MAKECMD) -C $(CFGDIR) clean
-		$(MAKECMD) -C $(SWITCHDIR) clean
 
 uberclean:	clean clean_libs
 		-rm -f $(TAGFILE)
 		find . \( -name '*.[od]' -o -name '*~' \) -print | xargs -r rm -f
 		$(MAKECMD) -C $(CFGDIR) uberclean
+		$(MAKECMD) -C $(SWITCHDIR) clean
 
 install: install_olsrd
 
@@ -181,6 +181,6 @@ quagga:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
 
-build_all:	cfgparser olsrd libs
+build_all:	cfgparser olsrd libs switch
 install_all:	install install_libs
 clean_all:	uberclean clean_libs
