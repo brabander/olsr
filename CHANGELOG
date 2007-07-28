@@ -1,11 +1,22 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.66 2007/07/23 13:04:01 bernd67 Exp $
+$Id: CHANGELOG,v 1.67 2007/07/28 13:45:29 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
 URGENT BUG FIX
 Ignacio García Pérez <iggarpe@terra.es> found a serious bug in the dot-draw
 plugin and identified it's source.
+
+DEPENDENCIES FIXED
+The dependencies (*.d files) are now properly generated and used. Nd they also
+dependen on the Makefile in the current directory and the Makefile.inc so that
+changes there also lead to new compilation.
+Remeber: We support "ccache" so install it to save lot of meaningkless recompiles
+if nothing (as seen by the real C compiler, i.e. the C preprocessor) has changed.
+
+CLEANUPS
+- olsr_switch does no longer generate warnings
+- olsr_switch is also built with "build_all" and cleaned with "uberclean"
 
 0.5.2 ---------------------------------------------------------------------
 
