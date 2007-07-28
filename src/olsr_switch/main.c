@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.25 2007/07/28 12:53:15 bernd67 Exp $
+ * $Id: main.c,v 1.26 2007/07/28 12:55:49 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -127,7 +127,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
 
 #ifdef WIN32
 int __stdcall
-ohs_close(unsigned long signal __attribut__((unused)))
+ohs_close(unsigned long signal __attribute__((unused)))
 #else
 void
 ohs_close(int signal __attribute__((unused)))
