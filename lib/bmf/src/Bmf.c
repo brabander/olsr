@@ -1451,19 +1451,22 @@ void CloseBmf(void)
     RestoreSpoofFilter();
   }
 
-  /* Signal BmfThread to exit */
-  /* Strangely enough, all running threads receive the SIGALRM signal. But only the
-   * BMF thread is affected by this signal, having specified a handler for this
-   * signal in its thread entry function BmfRun(...). */
-  if (pthread_kill(BmfThread, SIGALRM) != 0)
+  if (BmfThreadRunning)
   {
-    BmfPError("pthread_kill() error");
-  }
+    /* Signal BmfThread to exit */
+    /* Strangely enough, all running threads receive the SIGALRM signal. But only the
+     * BMF thread is affected by this signal, having specified a handler for this
+     * signal in its thread entry function BmfRun(...). */
+    if (pthread_kill(BmfThread, SIGALRM) != 0)
+    {
+      BmfPError("pthread_kill() error");
+    }
 
-  /* Wait for BmfThread to acknowledge */
-  if (pthread_join(BmfThread, NULL) != 0)
-  {
-    BmfPError("pthread_join() error");
+    /* Wait for BmfThread to acknowledge */
+    if (pthread_join(BmfThread, NULL) != 0)
+    {
+      BmfPError("pthread_join() error");
+    }
   }
 
   /* Clean up after the BmfThread has been killed */

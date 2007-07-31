@@ -1,11 +1,17 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.67 2007/07/28 13:45:29 bernd67 Exp $
+$Id: CHANGELOG,v 1.68 2007/07/31 12:02:18 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
 URGENT BUG FIX
 Ignacio García Pérez <iggarpe@terra.es> found a serious bug in the dot-draw
 plugin and identified it's source.
+
+BUG FIX
+The bmf plugin wanted to kill a not-started thread and this causes a segmentation
+violation. This happens if the old plugin interface support is not compiled in
+and one uses - or more asccurate: wants to use - the bmf plugin which uses that
+ATM. Thanks to Cedric Krier <ced@ced.homedns.org> for reporting this.
 
 DEPENDENCIES FIXED
 The dependencies (*.d files) are now properly generated and used. Nd they also
