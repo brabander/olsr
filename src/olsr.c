@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.55 2007/07/05 22:43:47 bernd67 Exp $
+ * $Id: olsr.c,v 1.56 2007/08/01 16:22:57 bernd67 Exp $
  */
 
 /**
@@ -263,7 +263,7 @@ olsr_init_tables(void)
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
-    avl_comp_default = 0;
+    avl_comp_default = NULL;
   } else {
     avl_comp_default = avl_comp_ipv6;
   }
