@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.26 2007/07/28 12:55:49 bernd67 Exp $
+ * $Id: main.c,v 1.27 2007/08/01 16:28:30 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -112,7 +112,7 @@ olsr_ip_to_string(union olsr_ip_addr *addr)
   else
     {
       /* IPv6 */
-      ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
+      ret = inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
     }
 
   strncpy(buff[index], ret, 100);
