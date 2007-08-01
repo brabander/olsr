@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.28 2007/07/26 20:58:19 bernd67 Exp $
+ * $Id: plugin_loader.c,v 1.29 2007/08/01 16:16:05 bernd67 Exp $
  */
 
 #include "plugin_loader.h"
@@ -84,7 +84,7 @@ void olsr_load_plugins(void)
  *
  *@return negative on error
  */
-int olsr_load_dl(char *libname, struct plugin_param *params)
+static int olsr_load_dl(char *libname, struct plugin_param *params)
 {
     struct olsr_plugin *plugin = olsr_malloc(sizeof(struct olsr_plugin), "Plugin entry");
     int rv;
@@ -237,7 +237,7 @@ static int olsr_add_dl(struct olsr_plugin *plugin)
  *
  *@return -1 if there was an error
  */
-int init_olsr_plugin(struct olsr_plugin *entry)
+static int init_olsr_plugin(struct olsr_plugin *entry)
 {
     int rv = 0;
     struct plugin_param *params;
