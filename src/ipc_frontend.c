@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.31 2007/04/28 20:45:06 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.32 2007/08/01 16:19:48 bernd67 Exp $
  */
 
 /*
@@ -67,6 +67,7 @@ WinSockPError(char *);
 
 static int ipc_sock = -1;
 static int ipc_conn = -1;
+static int ipc_active = OLSR_FALSE;
 
 static int
 ipc_send_all_routes(int fd);
