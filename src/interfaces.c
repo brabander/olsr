@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.32 2007/05/13 22:23:55 bernd67 Exp $
+ * $Id: interfaces.c,v 1.33 2007/08/02 21:51:40 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -226,7 +226,7 @@ run_ifchg_cbs(struct interface *ifp, int flag)
  */
 
 struct interface *
-if_ifwithaddr(union olsr_ip_addr *addr)
+if_ifwithaddr(const union olsr_ip_addr * const addr)
 {
   struct interface *ifp;
 
