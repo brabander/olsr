@@ -1,5 +1,7 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.73 2007/08/02 20:57:21 bernd67 Exp $
+$Id: CHANGELOG,v 1.74 2007/08/02 21:42:40 bernd67 Exp $
+
+0.5.4 ---------------------------------------------------------------------
 
 0.5.3 ---------------------------------------------------------------------
 
@@ -14,7 +16,7 @@ and one uses - or more asccurate: wants to use - the bmf plugin which uses that
 ATM. Thanks to Cedric Krier <ced@ced.homedns.org> for reporting this.
 
 DEPENDENCIES FIXED
-The dependencies (*.d files) are now properly generated and used. Nd they also
+The dependencies (*.d files) are now properly generated and used. And they also
 dependen on the Makefile in the current directory and the Makefile.inc so that
 changes there also lead to new compilation.
 Remember: We support "ccache" so install it to save lot of meaningless recompiles
