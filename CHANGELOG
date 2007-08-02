@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.69 2007/08/02 12:19:57 bernd67 Exp $
+$Id: CHANGELOG,v 1.70 2007/08/02 12:34:53 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
@@ -28,6 +28,8 @@ CLEANUPS
 - olsr_switch does no longer generate warnings
 - olsr_switch is also built with "build_all" and cleaned with "uberclean"
 - More "const" all over the place.
+- More "static" for local functions and variables.
+- Killed an unnecessary "static" variable.
 
 0.5.2 ---------------------------------------------------------------------
 
