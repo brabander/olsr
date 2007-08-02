@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.10 2007/07/05 22:43:46 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.11 2007/08/02 22:00:46 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -53,7 +53,7 @@
  * dummy comparison pointer
  * set to zero for a fast inline ipv4 comparison
  */
-int (*avl_comp_default)(void *, void *) = 0;
+int (*avl_comp_default)(void *, void *) = NULL;
 
 int avl_comp_ipv4(void *ip1, void *ip2)
 {
