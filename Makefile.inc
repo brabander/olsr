@@ -140,8 +140,10 @@ help:
 	@echo '************************************'
 	@echo
 
+ifeq ($(filter clean% %clean, $(MAKECMDGOALS)),)
 # include dependencies
 -include $(SRCS:%.c=%.d)
+endif
 
 # Local Variables:
 # mode: makefile
