@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.26 2007/07/15 21:47:17 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.27 2007/08/02 14:37:09 bernd67 Exp $
  */
 
 
@@ -257,7 +257,7 @@ ipc_send(char *data __attribute__((unused)), int size __attribute__((unused)))
 #endif
 
 /* XXX - ToDo */
-int
+static int
 ifchange(struct interface *ifn, int action)
 {
 
@@ -290,7 +290,7 @@ ifchange(struct interface *ifn, int action)
 }
 
 
-void
+static void
 packet_parser(int fd)
 {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
@@ -407,7 +407,7 @@ packet_parser(int fd)
  * are signed in the message.
  *
  */
-int
+static int
 check_auth(char *pck, int *size __attribute__((unused)))
 {
 
@@ -1166,7 +1166,7 @@ send_cres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in, 
  * message.
  *
  */
-int
+static int
 send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 {
   struct r_respmsg rrmsg;
@@ -1236,7 +1236,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 
 
 
-struct stamp *
+static struct stamp *
 lookup_timestamp_entry(union olsr_ip_addr *adr)
 {
   olsr_u32_t hash;
@@ -1306,7 +1306,7 @@ timeout_timestamps(void* foo __attribute__((unused)))
 
 
 
-int
+static int
 read_key_from_file(char *file)
 {
   FILE *kf;
