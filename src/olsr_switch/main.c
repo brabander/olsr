@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.27 2007/08/01 16:28:30 bernd67 Exp $
+ * $Id: main.c,v 1.28 2007/08/02 10:20:25 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -96,12 +96,12 @@ ohs_configure(void);
 static void
 ohs_listen_loop(void);
 
-char *
-olsr_ip_to_string(union olsr_ip_addr *addr)
+const char *
+olsr_ip_to_string(const union olsr_ip_addr *addr)
 {
   static int index = 0;
   static char buff[4][100];
-  char *ret;
+  const char *ret;
   struct in_addr in;
   
   if(ip_version == AF_INET)
