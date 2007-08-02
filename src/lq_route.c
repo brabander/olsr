@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.47 2007/07/05 22:43:46 bernd67 Exp $
+ * $Id: lq_route.c,v 1.48 2007/08/02 22:07:19 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -433,7 +433,6 @@ olsr_calculate_lq_routing_table (void)
   struct tc_entry *tcsrc;
   struct topo_dst *tcdst;
   struct olsr_spf_vertex *vert, *myself;
-  struct link_entry *link;
   struct neighbor_entry *neigh;
   struct mid_address *mid_walker;
   float etx;
@@ -525,15 +524,15 @@ olsr_calculate_lq_routing_table (void)
          neigh = neigh->next)
       if (neigh->status == SYM)
       {
-        link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+        struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
 
-	if(!link)
+	if(!lnk)
 	  continue;
 
-        if (link->loss_link_quality2 >= MIN_LINK_QUALITY &&
-            link->neigh_link_quality2 >= MIN_LINK_QUALITY)
+        if (lnk->loss_link_quality2 >= MIN_LINK_QUALITY &&
+            lnk->neigh_link_quality2 >= MIN_LINK_QUALITY)
           {
-            etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
+            etx = 1.0 / (lnk->loss_link_quality2 * lnk->neigh_link_quality2);
 
             olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr, &olsr_cnf->main_addr, etx);
           }
@@ -606,7 +605,7 @@ olsr_calculate_lq_routing_table (void)
   for (tree_node = avl_walk_first(&path_tree);
        tree_node != NULL;
        tree_node = avl_walk_next(tree_node)) {
-
+    struct link_entry *lnk;
     vert = tree_node->data;
 
     if (!vert->next_hop) {
@@ -616,17 +615,17 @@ olsr_calculate_lq_routing_table (void)
 
     // find the best link to the one-hop neighbour
 
-    link = get_best_link_to_neighbor(vert->next_hop);
+    lnk = get_best_link_to_neighbor(vert->next_hop);
 
     // we may see NULL here, if the one-hop neighbour is not in the
     // link and neighbour sets any longer, but we have derived an edge
     // between us and the one-hop neighbour from the TC set
 
-    if (link != NULL)
+    if (lnk != NULL)
     {
       // find the interface for the found link
-      inter = link->if_name ? if_ifwithname(link->if_name) : 
-              if_ifwithaddr(&link->local_iface_addr);
+      inter = lnk->if_name ? if_ifwithname(lnk->if_name) : 
+              if_ifwithaddr(&lnk->local_iface_addr);
 
       // we may see NULL here if the interface is down, but we have
       // links that haven't timed out, yet
@@ -640,7 +639,7 @@ olsr_calculate_lq_routing_table (void)
         // destination node
 
         if (olsr_lookup_routing_table(&vert->addr) == NULL)
-          olsr_insert_routing_table(&vert->addr, &link->neighbor_iface_addr,
+          olsr_insert_routing_table(&vert->addr, &lnk->neighbor_iface_addr,
                                     inter, vert->hops, vert->path_etx);
 
         // route addition, case B - add routes to the remaining interfaces
@@ -650,7 +649,7 @@ olsr_calculate_lq_routing_table (void)
              mid_walker = mid_walker->next_alias)
           if (olsr_lookup_routing_table(&mid_walker->alias) == NULL)
             olsr_insert_routing_table(&mid_walker->alias,
-                                      &link->neighbor_iface_addr, inter, vert->hops, 
+                                      &lnk->neighbor_iface_addr, inter, vert->hops, 
                                       vert->path_etx);
 
         // XXX - we used to use olsr_lookup_routing_table() only here, but
@@ -663,9 +662,9 @@ olsr_calculate_lq_routing_table (void)
         // router - e.g. in case the router's not the main address and it's
         // MID entry has timed out
 
-        if (olsr_lookup_routing_table(&link->neighbor_iface_addr) == NULL)
-          olsr_insert_routing_table(&link->neighbor_iface_addr,
-                                    &link->neighbor_iface_addr, inter, 1,
+        if (olsr_lookup_routing_table(&lnk->neighbor_iface_addr) == NULL)
+          olsr_insert_routing_table(&lnk->neighbor_iface_addr,
+                                    &lnk->neighbor_iface_addr, inter, 1,
                                     vert->path_etx);
       }
     }
