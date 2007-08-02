@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.70 2007/08/02 12:34:53 bernd67 Exp $
+$Id: CHANGELOG,v 1.71 2007/08/02 19:59:15 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
@@ -21,8 +21,7 @@ Remeber: We support "ccache" so install it to save lot of meaningkless recompile
 if nothing (as seen by the real C compiler, i.e. the C preprocessor) has changed.
 
 BUILD FIX
-Linux/Alpha and Linux/HPPA need "-fPIC" also for the cfgparser library. This was
-fixed for Debian packages for 0.4.10 but apparetnly didn't make it into the CVS.
+Linux/IA64 and Linux/HPPA also need "-fPIC".
 
 CLEANUPS
 - olsr_switch does no longer generate warnings

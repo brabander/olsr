@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.28 2007/08/02 11:56:53 bernd67 Exp $
+# $Id: Makefile,v 1.29 2007/08/02 19:59:15 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -55,7 +55,6 @@ else
 
 LIBNAME ?=	olsrd_cfgparser.so.0.1
 BINNAME ?=	olsrd_cfgparser
-CFLAGS += -fPIC
 endif
 
 
@@ -71,7 +70,7 @@ else
 ifeq (${OS}, osx)
 LDFLAGS +=	-dynamiclib -single_module
 else
-LDFLAGS +=	-fPIC -shared -Wl,-soname,$(LIBNAME)
+LDFLAGS +=	-shared -Wl,-soname,$(LIBNAME)
 endif
 
 ifeq (${OS}, win32)
