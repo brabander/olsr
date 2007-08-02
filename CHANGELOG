@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.72 2007/08/02 20:06:47 bernd67 Exp $
+$Id: CHANGELOG,v 1.73 2007/08/02 20:57:21 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
@@ -17,8 +17,9 @@ DEPENDENCIES FIXED
 The dependencies (*.d files) are now properly generated and used. Nd they also
 dependen on the Makefile in the current directory and the Makefile.inc so that
 changes there also lead to new compilation.
-Remeber: We support "ccache" so install it to save lot of meaningkless recompiles
-if nothing (as seen by the real C compiler, i.e. the C preprocessor) has changed.
+Remember: We support "ccache" so install it to save lot of meaningless recompiles
+if nothing (as seen by the real C compiler, i.e. after the C preprocessor) has
+changed.
 
 BUILD FIX
 Linux/IA64 and Linux/HPPA also need "-fPIC".
