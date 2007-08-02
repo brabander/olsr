@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.71 2007/08/02 19:59:15 bernd67 Exp $
+$Id: CHANGELOG,v 1.72 2007/08/02 20:06:47 bernd67 Exp $
 
 0.5.3 ---------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ latitude/longitude support is now in the nameservice plugin done by
 Sven-Ola Tuecke <mail2news@commando.de>
 
 added the spf refactoring patch from  Hannes Gredler <hannes@gredler.at> whicht saves
-a noteworthy amount of CPU time. To quite him:
+a noteworthy amount of CPU time. To quote him:
 ----  snip  ----
 1. use of an AVL tree as a min-heap implementation
 
