@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hashing.c,v 1.15 2007/08/02 14:47:26 bernd67 Exp $
+ * $Id: hashing.c,v 1.16 2007/08/02 21:59:59 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -58,7 +58,7 @@ olsr_u32_t olsr_hashing(const union olsr_ip_addr * address)
         hash = v4x[0] ^ v4x[1] ^ v4x[2] ^ v4x[3];
     } else {
         /* IPv6 */
-        const char * const tmp = (char *)&address->v6;
+        const char * const tmp = (const char *)&address->v6;
         hash = ntohl(*tmp);
     }
     return hash & HASHMASK;
