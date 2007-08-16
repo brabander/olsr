@@ -28,15 +28,15 @@ PlParam "redistribute" "<protocol>"
 
 PlParam "ExportRoutes" "<only/both>"
 	exportes olsr-routes to quagga or to both, quagga and kernel
-	no routes are exportet if not set.
+	no routes are exported to quagga (normal behaviour) if not set.
 
 PlParam "LocalPref" "true"
-        sets the zebra SELECTED-flag on the routes exported to zebra
+        sets the Zebra SELECTED-flag on the routes exported to zebra
 	which means these routes are prefered in any case.
 
 PlParam "Distance" "0-255"
-        allowes to set Administrative distance to routes exported 
-	to zebra.
+        allowes to set the administrative distance to routes exported 
+	to Zebra.
 	
 ---------------------------------------------------------------------
 SAMPLE CONFIG
