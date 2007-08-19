@@ -17,8 +17,9 @@ ETCDIR  ?= $(DESTDIR)/etc
 LIBDIR  ?= $(DESTDIR)/usr/lib
 DOCDIR  ?= $(DESTDIR)/usr/share/doc
 MANDIR  ?= $(DESTDIR)/usr/share/man
-CFGFILE ?= $(ETCDIR)/olsrd.conf
 EXENAME ?= olsrd
+CFGNAME ?= $(EXENAME).conf
+CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 
 CPPFLAGS =	-Isrc -I$(TOPDIR)/src 
 
