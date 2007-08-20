@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.26 2007/08/19 23:00:22 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.27 2007/08/20 18:46:03 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -521,14 +521,12 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
  * @return the prefix length
  */
 olsr_u16_t
-olsr_netmask_to_prefix(union olsr_ip_addr *adr)
+olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
-  olsr_u16_t prefix;
-  int i, tmp;
+  int i;
+  olsr_u16_t prefix = 0;
 
-  prefix = 0;
-
-  for(i = 0; i < 16; i++)
+  for (i = 0; i < 16; i++)
     {
       if(adr->v6.s6_addr[i] == 0xff)
 	{
@@ -536,6 +534,7 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
 	}
       else
 	{
+          int tmp;
 	  for(tmp = adr->v6.s6_addr[i];
 	      tmp > 0;
 	      tmp = (tmp << 1) & 0xff)
@@ -562,12 +561,10 @@ olsr_netmask_to_prefix(union olsr_ip_addr *adr)
  *@return a char pointer to the string containing the IP
  */
 char *
-sockaddr_to_string(struct sockaddr *address_to_convert)
+sockaddr_to_string(const struct sockaddr *address_to_convert)
 {
-  struct sockaddr_in           *address;
-  
-  address=(struct sockaddr_in *)address_to_convert; 
-  return(inet_ntoa(address->sin_addr));
+  const struct sockaddr_in *address = (const struct sockaddr_in *)address_to_convert; 
+  return inet_ntoa(address->sin_addr);
   
 }
 
@@ -642,7 +639,7 @@ olsr_ip_to_string(const union olsr_ip_addr *addr)
 
 
 void
-olsr_add_invalid_address(union olsr_ip_addr *adr)
+olsr_add_invalid_address(const union olsr_ip_addr *adr)
 {
   struct deny_address_entry *new_entry;
 
@@ -667,9 +664,9 @@ olsr_add_invalid_address(union olsr_ip_addr *adr)
  *@return a char pointer to the string containing the IP
  */
 olsr_bool
-olsr_validate_address(union olsr_ip_addr *adr)
+olsr_validate_address(const union olsr_ip_addr *adr)
 {
-  struct deny_address_entry *deny_entry = deny_entries;
+  const struct deny_address_entry *deny_entry = deny_entries;
 
   while(deny_entry)
     {
