@@ -103,7 +103,7 @@ endif
 
 # fully automatic and working dependency generation
 %.d: %.c
-	@$(CC) -M $(CPPFLAGS) "$<" | sed -e '1s|\($(*F)\)\.o[ :]*|$(*D)/\1.o $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc \\\n  |g' >"$@"
+	@$(CC) -M $(CPPFLAGS) "$<" | sed -e '1s|\($(*F)\)\.o[ :]*|$(*D)/\1.o $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc |g' >"$@"
 
 # we always need the includes and defines
 # for legacy since now
