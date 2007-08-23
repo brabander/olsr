@@ -35,11 +35,9 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.92 2007/08/19 20:47:09 bernd67 Exp $
+# $Id: Makefile,v 1.93 2007/08/23 09:12:55 bernd67 Exp $
 
 VERS =		0.5.4pre
-
-all:
 
 TOPDIR = .
 include Makefile.inc
@@ -78,6 +76,9 @@ $(CFGOBJS):
 
 clean:
 		-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe
+ifeq ($(OS), win32)
+		-rm -f libolsrd.a
+endif
 		$(MAKECMD) -C $(CFGDIR) clean
 
 uberclean:	clean clean_libs
@@ -181,6 +182,6 @@ quagga:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
 
-build_all:	cfgparser libs $(EXENAME) switch
+build_all:	all cfgparser $(EXENAME) switch libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs
