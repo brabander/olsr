@@ -73,8 +73,6 @@ CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
 SRCS +=		$(wildcard src/*.c *.c)
 HDRS +=		$(wildcard src/*.h *.h)
 
-all: default_target
-
 # OS detection
 ifeq ($(OS),Windows_NT)
 OS := win32
@@ -86,8 +84,8 @@ ifeq ($(OS),UNKNOWN)
 all: help
 else
 # include OS specifics
-include $(TOPDIR)/make/Makefile.$(OS)
 all: default_target
+include $(TOPDIR)/make/Makefile.$(OS)
 endif
 
 # one object for each source file
