@@ -30,7 +30,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.24 2007/07/02 10:59:12 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.25 2007/08/23 21:01:56 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -325,9 +325,9 @@ name_init(void)
 	//regex_service = "^[[:alnum:]]+://(([[:alnum:]_.-]+.olsr)|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}))
 	//                 :    port              /path      |(tcp OR udp) |short description
 	//                 :[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$";
-	strcat (strcat (strcat(regex_service, "^[[:alnum:]]+://(([[:alnum:]_.-]+"),
-		my_suffix),
-		")|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3})):[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$");
+    strcpy(regex_service, "^[[:alnum:]]+://(([[:alnum:]_.-]+");
+    strcat(regex_service, my_suffix);
+	strcat(regex_service, ")|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3})):[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$");
 
 	/* #1: call regcomp() to compile the regex */
 	if ((ret = regcomp(&regex_t_service, regex_service , REG_EXTENDED )) != 0)
