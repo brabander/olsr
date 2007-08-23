@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.50 2007/08/23 21:04:33 bernd67 Exp $
+ * $Id: ifnet.c,v 1.51 2007/08/23 21:20:02 bernd67 Exp $
  */
 
 
@@ -705,8 +705,8 @@ add_hemu_if(struct olsr_if *iface)
 }
 
 static char basenamestr[32];
-static char* if_basename(const char* name);
-static char* if_basename(const char* name)
+static const char* if_basename(const char* name);
+static const char* if_basename(const char* name)
 {
 	char *p = strchr(name, ':');
 	if (NULL == p || p - name >= (int)(sizeof(basenamestr) / sizeof(basenamestr[0]) - 1)) {
