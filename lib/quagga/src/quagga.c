@@ -60,8 +60,8 @@ static struct {
 
 
 /* prototypes intern */
-static char *try_read (ssize_t *);
-static char* zebra_route_packet (struct ipv4_route r, ssize_t *);
+static unsigned char *try_read (ssize_t *);
+static unsigned char* zebra_route_packet (struct ipv4_route r, ssize_t *);
 static int parse_interface_add (unsigned char *, size_t);
 static int parse_interface_delete (unsigned char *, size_t);
 static int parse_interface_up (unsigned char *, size_t);
@@ -241,7 +241,7 @@ static void zebra_connect (void) {
 /* Sends a command to zebra, command is 
    the command defined in zebra.h, options is the packet-payload, 
    optlen the length, of the payload */
-char zebra_send_command (unsigned char command, char * options, int optlen) {
+unsigned char zebra_send_command (unsigned char command, unsigned char * options, int optlen) {
 
 #ifdef ZEBRA_HEADER_MARKER
   char *p = olsr_malloc (optlen + 6, "zebra_send_command");
@@ -295,11 +295,11 @@ char zebra_send_command (unsigned char command, char * options, int optlen) {
 
 /* Creates a Route-Packet-Payload, needs address, netmask, nexthop, 
    distance, and a pointer of an size_t */
-static char* zebra_route_packet (struct ipv4_route r, ssize_t *optlen) {
+static unsigned char* zebra_route_packet (struct ipv4_route r, ssize_t *optlen) {
 
   int count;
 
-  char *cmdopt, *t;
+  unsigned char *cmdopt, *t;
   *optlen = 4; // first: type, flags, message, prefixlen
   *optlen += r.prefixlen / 8 + (r.prefixlen % 8 ? 1 : 0); // + prefix
   if (r.message & ZAPI_MESSAGE_NEXTHOP)
@@ -363,7 +363,7 @@ static char* zebra_route_packet (struct ipv4_route r, ssize_t *optlen) {
 /* adds a route to zebra-daemon */
 int zebra_add_v4_route (struct ipv4_route r) {
   
-  char *cmdopt;
+  unsigned char *cmdopt;
   ssize_t optlen;
   int retval;
 
@@ -378,7 +378,7 @@ int zebra_add_v4_route (struct ipv4_route r) {
 /* deletes a route from the zebra-daemon */
 int zebra_delete_v4_route (struct ipv4_route r) {
   
-  char *cmdopt;
+  unsigned char *cmdopt;
   ssize_t optlen;
   int retval;
 
@@ -394,7 +394,7 @@ int zebra_delete_v4_route (struct ipv4_route r) {
 
 /* Check wether there is data from zebra aviable */
 void zebra_check (void* foo) {
-  char *data, *f;
+  unsigned char *data, *f;
   ssize_t len, ret;
 
   if (!(zebra.status & STATUS_CONNECTED)) {
@@ -418,7 +418,7 @@ void zebra_check (void* foo) {
 
 // tries to read a packet from zebra_socket
 // if there is something to read - make sure to read whole packages
-static char *try_read (ssize_t *len) {
+static unsigned char *try_read (ssize_t *len) {
   unsigned char *buf = NULL;
   ssize_t ret = 0, bsize = 0;
   uint16_t length = 0, l = 0;

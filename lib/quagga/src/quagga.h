@@ -53,7 +53,7 @@ struct ipv4_route {
 
 void init_zebra (void);
 void zebra_cleanup (void);
-char zebra_send_command (unsigned char, char *, int );
+unsigned char zebra_send_command (unsigned char, unsigned char *, int );
 int zebra_add_v4_route (struct ipv4_route r);
 int zebra_delete_v4_route (struct ipv4_route r);
 void zebra_check (void*);

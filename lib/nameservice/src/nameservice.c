@@ -2,6 +2,7 @@
  * Copyright (c) 2006, Jens Nachtigall <nachtigall@web.de>
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
  * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2007, Sven-Ola <sven-ola@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -30,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.25 2007/08/23 21:01:56 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.26 2007/08/25 19:48:42 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -56,6 +57,7 @@
 #include "mid_set.h"
 #include "link_set.h"
 
+#include "plugin_util.h"
 #include "nameservice.h"
 #include "olsrd_copy.h"
 #include "compat.h"
@@ -166,93 +168,102 @@ name_constructor(void)
 }
 
 
-/**
- * called for all plugin parameters
- */
-int
-olsrd_plugin_register_param(char *key, char *value)
+static int set_nameservice_server(const char *value, void *data, unsigned int addon)
 {
-	if(!strcmp(key, "interval")) {
-		my_interval = atoi(value);
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter interval: %d\n", my_interval);
+	union olsr_ip_addr ip;
+	struct name_entry **v = data;
+	if (0 == strlen(value))
+	{
+		*v = add_name_to_list(*v, "", addon, NULL);
+                OLSR_PRINTF(1, "%s got %s (main address)\n", "Got", value);
+		return 0;
 	}
-	else if(!strcmp(key, "timeout")) {
-		my_timeout = atof(value);
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter timeout: %f\n", my_timeout);
-	} 
-	else if(!strcmp(key, "hosts-file")) {
-		strncpy( my_hosts_file, value, MAX_FILE );
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter filename: %s\n", my_hosts_file);
+	else if (0 < inet_pton(olsr_cnf->ip_version, value, &ip))
+	{
+		*v = add_name_to_list(*v, "", addon, &ip);
+                OLSR_PRINTF(1, "%s got %s\n", "Got", value);
+		return 0;
 	}
-	else if(!strcmp(key, "resolv-file")) {
-		strncpy(my_resolv_file, value, MAX_FILE);
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter resolv file: %s\n", my_resolv_file);
+	else
+	{
+                OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
 	}
-	else if(!strcmp(key, "suffix")) {
-		strncpy(my_suffix, value, MAX_SUFFIX);
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter suffix: %s\n", my_suffix);
-	}
-	else if(!strcmp(key, "add-hosts")) {
-		strncpy(my_add_hosts, value, MAX_FILE);
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter additional host: %s\n", my_add_hosts);
-	}
-	else if(!strcmp(key, "services-file")) {
-		strncpy(my_services_file, value, MAX_FILE);
-		OLSR_PRINTF(1,"\nNAME PLUGIN: parameter services-file: %s", my_services_file);
-	}
-	else if(!strcmp(key, "lat")) {
-		my_lat = atof(value);
-		OLSR_PRINTF(1,"\nNAME PLUGIN: parameter lat: %f\n", my_lat);
-	}
-	else if(!strcmp(key, "lon")) {
-		my_lon = atof(value);
-		OLSR_PRINTF(1,"\nNAME PLUGIN: parameter lon: %f\n", my_lon);
-	}
-	else if(!strcmp(key, "latlon-file")) {
-		strncpy( my_latlon_file, value, MAX_FILE );
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter latlon-file: %s\n", my_latlon_file);
-	}
-	else if(!strcmp(key, "latlon-infile")) {
-		strncpy( latlon_in_file, value, MAX_FILE );
-		OLSR_PRINTF(1, "\nNAME PLUGIN: parameter latlon-infile: %s\n", latlon_in_file);
-	}
-	else if(!strcmp(key, "dns-server")) {
-		union olsr_ip_addr ip;
-		if (strlen(value) == 0) {
-			my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, NULL);
-			OLSR_PRINTF(1,"\nNAME PLUGIN: parameter dns-server: (main address)");
-		} else if (inet_pton(olsr_cnf->ip_version, value, &ip) > 0) {
-			my_forwarders = add_name_to_list(my_forwarders, "", NAME_FORWARDER, &ip);
-			OLSR_PRINTF(1,"\nNAME PLUGIN: parameter dns-server: (%s)", value);
-		} else {
-			OLSR_PRINTF(1,"\nNAME PLUGIN: invalid parameter dns-server: %s ", value);
-		}
-	}
-	else if(!strcmp(key, "name")) {
-		// name for main address
-		my_names = add_name_to_list(my_names, value, NAME_HOST, NULL);
-		OLSR_PRINTF(1,"\nNAME PLUGIN: parameter name: %s (main address)", value);
-	}
-	else if(!strcmp(key, "service")) {
-		// name for main address
-		my_services = add_name_to_list(my_services, value, NAME_SERVICE, NULL);
-		OLSR_PRINTF(1,"\nNAME PLUGIN: parameter service: %s (main address)", value);
-	}
-	else {
-		// assume this is an IP address and hostname
-		union olsr_ip_addr ip;
-		
-		if (inet_pton(olsr_cnf->ip_version, key, &ip) > 0) {
-			// the IP is validated later
-			my_names = add_name_to_list(my_names, value, NAME_HOST, &ip);
-			OLSR_PRINTF(1,"\nNAME PLUGIN: parameter name %s (%s)", value, key);
-		} 
-		else {
-			OLSR_PRINTF(1, "\nNAME PLUGIN: invalid IP %s for name %s!\n", key, value);
-		}
-	}
-
 	return 1;
+}
+
+static int set_nameservice_name(const char *value, void *data, unsigned int addon)
+{
+	struct name_entry **v = data;
+	if (0 < strlen(value))
+	{
+		*v = add_name_to_list(*v, (char*)value, addon, NULL);
+                OLSR_PRINTF(1, "%s got %s (main address)\n", "Got", value);
+		return 0;
+	}
+	else
+	{
+                OLSR_PRINTF(0, "Illegal name \"%s\"", value);
+	}
+	return 1;
+}
+
+static int set_nameservice_host(const char *value, void *data, unsigned int addon)
+{
+	union olsr_ip_addr ip;
+	struct name_entry **v = data;
+	if (0 < inet_pton(olsr_cnf->ip_version, (char*)addon, &ip))
+	{
+		// the IP is validated later
+		*v = add_name_to_list(*v, (char*)value, addon, &ip);
+                OLSR_PRINTF(1, "%s: %s got %s\n", "Got", (char*) addon, value);
+		return 0;
+	}
+	else
+	{
+                OLSR_PRINTF(0, "%s: Illegal IP address \"%s\"", (char*) addon, value);
+	}
+	return 1;
+}
+
+static int set_nameservice_float(const char *value, void *data, unsigned int addon)
+{
+    const float thefloat = atof(value);
+    if (addon) {}
+    if (data != NULL)
+    {
+        float *v = data;
+        *v = thefloat;
+        OLSR_PRINTF(1, "%s float %f\n", "Got", thefloat);
+    }
+    else
+    {
+        OLSR_PRINTF(0, "%s float %f\n", "Ignored", thefloat);
+    }
+    return 0;
+}
+
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+    { .name = "interval",      .set_plugin_parameter = &set_plugin_int,         .data = &my_interval },
+    { .name = "timeout",       .set_plugin_parameter = &set_nameservice_float,  .data = &my_timeout },
+    { .name = "hosts-file",    .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,    .addon = sizeof(my_hosts_file) },
+    { .name = "resolv-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,   .addon = sizeof(my_resolv_file) },
+    { .name = "suffix",        .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,        .addon = sizeof(my_suffix) },
+    { .name = "add-hosts",     .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,     .addon = sizeof(my_add_hosts) },
+    { .name = "services-file", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file, .addon = sizeof(my_services_file) },
+    { .name = "lat",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lat },
+    { .name = "lon",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lon },
+    { .name = "latlon-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,   .addon = sizeof(my_latlon_file) },
+    { .name = "latlon-infile", .set_plugin_parameter = &set_plugin_string,      .data = &latlon_in_file,   .addon = sizeof(latlon_in_file) },
+    { .name = "dns-server",    .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,    .addon = NAME_FORWARDER },
+    { .name = "name",          .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,         .addon = NAME_HOST },
+    { .name = "service",       .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,      .addon = NAME_SERVICE },
+    { .name = "",              .set_plugin_parameter = &set_nameservice_host,   .data = &my_names,         .addon = NAME_HOST },
+};
+
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+{
+    *params = plugin_parameters;
+    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }
 
 
