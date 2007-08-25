@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.75 2007/08/19 23:12:18 bernd67 Exp $
+$Id: CHANGELOG,v 1.76 2007/08/25 19:51:14 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -27,6 +27,8 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
   the sender MAC and refreshes the ARP cache whith that. Should speedup
   especially in cases, if you initially try to use a longer routing path which normally
   triggers a "ARP-Lookup-Chain".
+- 106-olsrd-nameserviceparams.patch:
+  This patch converts more plugins to the new interface version.
 
 PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch
@@ -34,7 +36,7 @@ olsr_makefile_make_use_of_exename.patch
   in Makefile.
 
 CLEANUPS
-- paving the way to activate -Wshadow, much mor todo
+- paving the way to activate -Wshadow, much more to do
 - const-ify parameters here and there
 - use NULL for pointers (and not "0")
 - Killed "extern" declarations in (not generated) .c files
