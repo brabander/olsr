@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.27 2007/08/20 18:46:03 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.28 2007/08/28 20:10:16 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -102,40 +102,16 @@ net_set_disp_pack_out(olsr_bool val)
 void
 init_net(void)
 {
-  /* Block invalid addresses */
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      union olsr_ip_addr addr;
-      int i;
-      /* IPv4 */
-      for(i = 0; deny_ipv4_defaults[i] != NULL; i++)
-	{
-	  if(inet_pton(olsr_cnf->ip_version, deny_ipv4_defaults[i], &addr) <= 0)
-	    {
-	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
-		      deny_ipv4_defaults[i]);
-	      continue;
-	    }
-	  olsr_add_invalid_address(&addr);
-	}
+  const char * const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
+  
+  for (; *defaults != NULL; defaults++) {
+    union olsr_ip_addr addr;
+    if(inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
+      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n", *defaults);
+      continue;
     }
-  else 
-    {
-      union olsr_ip_addr addr;
-      int i;
-      /* IPv6 */
-      for(i = 0; deny_ipv6_defaults[i] != NULL; i++)
-	{
-	  if(inet_pton(olsr_cnf->ip_version, deny_ipv6_defaults[i], &addr) <= 0)
-	    {
-	      fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n",
-		      deny_ipv6_defaults[i]);
-	      continue;
-	    }
-	  olsr_add_invalid_address(&addr);
-	}
-
-    }
+    olsr_add_invalid_address(&addr);
+  }
 }
 
 /**
