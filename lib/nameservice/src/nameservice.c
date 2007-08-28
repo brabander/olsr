@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.26 2007/08/25 19:48:42 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.27 2007/08/28 20:45:17 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -613,12 +613,12 @@ olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *
 		
 	/* Fetch the message based on IP version */
 	if(olsr_cnf->ip_version == AF_INET) {
-		vtime = ME_TO_DOUBLE(m->v4.olsr_vtime);
+		vtime = me_to_double(m->v4.olsr_vtime);
 		size = ntohs(m->v4.olsr_msgsize);
 		namemessage = (struct namemsg*)&m->v4.message;
 	}
 	else {
-		vtime = ME_TO_DOUBLE(m->v6.olsr_vtime);
+		vtime = me_to_double(m->v6.olsr_vtime);
 		size = ntohs(m->v6.olsr_msgsize);
 		namemessage = (struct namemsg*)&m->v6.message;
 	}

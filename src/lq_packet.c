@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.25 2007/08/19 20:37:41 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.26 2007/08/28 20:45:17 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -69,7 +69,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   // initialize the static fields
 
   lq_hello->comm.type = LQ_HELLO_MESSAGE;
-  lq_hello->comm.vtime = ME_TO_DOUBLE(outif->valtimes.hello);
+  lq_hello->comm.vtime = me_to_double(outif->valtimes.hello);
   lq_hello->comm.size = 0;
 
   COPY_IP(&lq_hello->comm.orig, &olsr_cnf->main_addr);
@@ -160,7 +160,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   // initialize the static fields
 
   lq_tc->comm.type = LQ_TC_MESSAGE;
-  lq_tc->comm.vtime = ME_TO_DOUBLE(outif->valtimes.tc);
+  lq_tc->comm.vtime = me_to_double(outif->valtimes.tc);
   lq_tc->comm.size = 0;
 
   COPY_IP(&lq_tc->comm.orig, &olsr_cnf->main_addr);
@@ -579,7 +579,7 @@ static void *deserialize_common(struct olsr_common *comm, void *ser)
       olsr_head_v4 = (struct olsr_header_v4 *)ser;
 
       comm->type = olsr_head_v4->type;
-      comm->vtime = ME_TO_DOUBLE(olsr_head_v4->vtime);
+      comm->vtime = me_to_double(olsr_head_v4->vtime);
       comm->size = ntohs(olsr_head_v4->size);
 
       COPY_IP(&comm->orig, &olsr_head_v4->orig);
@@ -596,7 +596,7 @@ static void *deserialize_common(struct olsr_common *comm, void *ser)
   olsr_head_v6 = (struct olsr_header_v6 *)ser;
 
   comm->type = olsr_head_v6->type;
-  comm->vtime = ME_TO_DOUBLE(olsr_head_v6->vtime);
+  comm->vtime = me_to_double(olsr_head_v6->vtime);
   comm->size = ntohs(olsr_head_v6->size);
 
   COPY_IP(&comm->orig, &olsr_head_v6->orig);
@@ -629,7 +629,7 @@ deserialize_lq_hello(struct lq_hello_message *lq_hello, void *ser)
 
   limit = ((unsigned char *)ser) + lq_hello->comm.size;
 
-  lq_hello->htime = ME_TO_DOUBLE(head->htime);
+  lq_hello->htime = me_to_double(head->htime);
   lq_hello->will = head->will;
 
   lq_hello->neigh = NULL;

@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.76 2007/08/25 19:51:14 bernd67 Exp $
+$Id: CHANGELOG,v 1.77 2007/08/28 20:45:17 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -34,6 +34,14 @@ PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch
 - This patch makes sure that the EXENAME variable of Makefile.inc is used
   in Makefile.
+
+PATCH by Bernd Petrovitsch <bernd@firmix.at>
+- Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).
+  This saves code throughout the code even on i386 and will even more
+  on architectures without floating point units and "-msoft-float".
+- And the mathemathics in src/mantissa.h is reformulated to minimize
+  floating point operations to save CPU power - especially on embedded
+  devices.
 
 CLEANUPS
 - paving the way to activate -Wshadow, much more to do
