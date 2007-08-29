@@ -21,7 +21,7 @@ EXENAME ?= olsrd
 CFGNAME ?= $(EXENAME).conf
 CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 
-CPPFLAGS =	-Isrc -I$(TOPDIR)/src 
+CPPFLAGS =	-Isrc -I$(TOPDIR)/src
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
@@ -49,7 +49,11 @@ WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
 CFLAGS +=	-O2
-CFLAGS +=	-g
+#CFLAGS +=	-g
+CFLAGS +=	$(EXTRA_CFLAGS)
+
+# Must be specified along with -lpthread on linux
+CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
 endif
 
 ifdef OLSRD_PLUGIN
