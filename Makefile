@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.94 2007/08/29 21:46:25 bernd67 Exp $
+# $Id: Makefile,v 1.95 2007/08/29 22:26:11 bernd67 Exp $
 
 VERS =		0.5.4pre
 
@@ -53,11 +53,11 @@ ifeq ($(OS), win32)
 LDFLAGS +=	-Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols
 endif
 
-SWITCHDIR =     src/olsr_switch
+SWITCHDIR =	src/olsr_switch
 CFGDIR =	src/cfgparser
 CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
 CFGDEPS = 	$(wildcard $(CFGDIR)/*.[ch]) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
-TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard src/cfgparser/*.[ch] src/olsr_switch/*.[ch])
+TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
 default_target: cfgparser $(EXENAME)
 
