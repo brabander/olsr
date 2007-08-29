@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.78 2007/08/29 21:46:25 bernd67 Exp $
+$Id: CHANGELOG,v 1.79 2007/08/29 23:17:13 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -42,6 +42,13 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - And the mathemathics in src/mantissa.h is reformulated to minimize
   floating point operations to save CPU power - especially on embedded
   devices.
+- I rewrote the half of src/lq_packet.[ch] which deals with incoming
+  packets. This was triggered with performance output of gcc produced
+  by Sven-Ola Tuecke at CCCamp07.
+  This kills *lots* of (more than) superflous malloc()s and the same
+  number of (free()s). And it also kills some code and copying around of
+  data.
+
 - paving the way to activate -Wshadow, much more to do
 - const-ify parameters here and there
 - use NULL for pointers (and not "0")
