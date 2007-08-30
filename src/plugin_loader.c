@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.30 2007/08/25 19:48:42 bernd67 Exp $
+ * $Id: plugin_loader.c,v 1.31 2007/08/30 22:25:13 bernd67 Exp $
  */
 
 #include "plugin_loader.h"
@@ -211,7 +211,7 @@ static int olsr_add_dl(struct olsr_plugin *plugin)
 
         plugin->register_param = dlsym(plugin->dlhandle, "olsrd_plugin_register_param");
         if(plugin->register_param == NULL) {
-            OLSR_PRINTF(1, "FAILED: \"%s\"\n", dlerror());
+            OLSR_PRINTF(0, "FAILED: \"%s\"\n", dlerror());
             return -1;
         } else {
             OLSR_PRINTF(1, "OK\n");
