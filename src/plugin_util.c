@@ -37,18 +37,17 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.3 2007/08/25 19:48:42 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.4 2007/09/02 21:04:42 bernd67 Exp $
  */
 
 #include "plugin_util.h"
 #include "olsr.h"
 #include "defs.h"
 
-int set_plugin_port(const char *value, void *data, unsigned int addon)
+int set_plugin_port(const char *value, void *data, unsigned int addon __attribute__((unused)))
 {
     char *endptr;
     const unsigned int port = strtoul(value, &endptr, 0);
-    if (addon) {}
     if (*endptr != '\0' || endptr == value) {
         OLSR_PRINTF(0, "Illegal port number \"%s\"", value);
         return 1;
@@ -67,11 +66,10 @@ int set_plugin_port(const char *value, void *data, unsigned int addon)
     return 0;
 }
 
-int set_plugin_ipaddress(const char *value, void *data, unsigned int addon)
+int set_plugin_ipaddress(const char *value, void *data, unsigned int addon __attribute__((unused)))
 {
     char buf[INET6_ADDRSTRLEN];
     union olsr_ip_addr ip_addr;
-    if (addon) {}
     if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
         OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
         return 1;
@@ -88,10 +86,9 @@ int set_plugin_ipaddress(const char *value, void *data, unsigned int addon)
 }
 
 
-int set_boolean(const char *value, void *data, unsigned int addon)
+int set_boolean(const char *value, void *data, unsigned int addon __attribute__((unused)))
 {
     int *v = data;
-    if (addon) {}
     if (strcasecmp (value, "yes") == 0) {
         *v = 1;
     } else if (strcasecmp (value, "no") == 0) {
@@ -102,11 +99,10 @@ int set_boolean(const char *value, void *data, unsigned int addon)
     return 0;
 }
 
-int set_plugin_int(const char *value, void *data, unsigned int addon)
+int set_plugin_int(const char *value, void *data, unsigned int addon __attribute__((unused)))
 {
     char *endptr;
     const int theint = strtol(value, &endptr, 0);
-    if (addon) {}
     if (*endptr != '\0' || endptr == value) {
         OLSR_PRINTF(0, "Illegal int \"%s\"", value);
         return 1;
