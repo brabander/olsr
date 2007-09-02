@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.8 2007/04/20 13:46:03 bernd67 Exp $
+ * $Id: plugin.c,v 1.9 2007/09/02 22:17:00 bernd67 Exp $
  */
 
 #include <string.h>
@@ -50,6 +50,7 @@
 #include "http.h"
 #include "glua.h"
 #include "glua_ext.h"
+#include "olsrd_plugin.h"
 
 #include <defs.h>
 #include <olsr.h>
@@ -66,6 +67,8 @@
 #include <lq_route.h>
 #include <mpr_selector_set.h>
 #include <duplicate_set.h>
+
+#define PLUGIN_INTERFACE_VERSION 5
 
 #define MESSAGE_TYPE 129
 
@@ -462,7 +465,7 @@ static void serviceFunc(void)
 
 int olsrd_plugin_interface_version(void)
 {
-  return 4;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 int olsrd_plugin_init(void)
@@ -486,95 +489,23 @@ int olsrd_plugin_init(void)
   return 0;
 }
 
-int olsrd_plugin_register_param(char *name, char *value)
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+    { .name = "address",   .set_plugin_parameter = &httpSetAddress,   .data = NULL },
+    { .name = "port",      .set_plugin_parameter = &httpSetPort,      .data = NULL },
+    { .name = "rootdir",   .set_plugin_parameter = &httpSetRootDir,   .data = NULL },
+    { .name = "workdir",   .set_plugin_parameter = &httpSetWorkDir,   .data = NULL },
+    { .name = "indexfile", .set_plugin_parameter = &httpSetIndexFile, .data = NULL },
+    { .name = "user",      .set_plugin_parameter = &httpSetUser,      .data = NULL },
+    { .name = "password",  .set_plugin_parameter = &httpSetPassword,  .data = NULL },
+    { .name = "sesstime",  .set_plugin_parameter = &httpSetSessTime,  .data = NULL },
+    { .name = "pubdir",    .set_plugin_parameter = &httpSetPubDir,    .data = NULL },
+    { .name = "quantum",   .set_plugin_parameter = &httpSetQuantum,   .data = NULL },
+    { .name = "messtime",  .set_plugin_parameter = &httpSetMessTime,  .data = NULL },
+    { .name = "messlimit", .set_plugin_parameter = &httpSetMessLimit, .data = NULL },
+};
+
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-  if (strcmp(name, "address") == 0)
-  {
-    if (httpSetAddress(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "port") == 0)
-  {
-    if (httpSetPort(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "rootdir") == 0)
-  {
-    if (httpSetRootDir(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "workdir") == 0)
-  {
-    if (httpSetWorkDir(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "indexfile") == 0)
-  {
-    httpSetIndexFile(value);
-    return 1;
-  }
-
-  if (strcmp(name, "user") == 0)
-  {
-    httpSetUser(value);
-    return 1;
-  }
-
-  if (strcmp(name, "password") == 0)
-  {
-    httpSetPassword(value);
-    return 1;
-  }
-
-  if (strcmp(name, "sesstime") == 0)
-  {
-    if (httpSetSessTime(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "pubdir") == 0)
-  {
-    httpSetPubDir(value);
-    return 1;
-  }
-
-  if (strcmp(name, "quantum") == 0)
-  {
-    if (httpSetQuantum(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "messtime") == 0)
-  {
-    if (httpSetMessTime(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  if (strcmp(name, "messlimit") == 0)
-  {
-    if (httpSetMessLimit(value) < 0)
-      return 0;
-
-    return 1;
-  }
-
-  return 0;
+    *params = plugin_parameters;
+    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+ * $Id: http.h,v 1.2 2007/09/02 22:17:00 bernd67 Exp $
  */
 
 #define CHUNK_SIZE 1024
@@ -117,18 +117,18 @@ struct connInfo
 
 extern void httpInit(void);
 
-extern int httpSetAddress(const char *addrStr);
-extern int httpSetPort(const char *portStr);
-extern int httpSetRootDir(const char *rootDir);
-extern int httpSetWorkDir(const char *workDir);
-extern void httpSetIndexFile(const char *indexFile);
-extern void httpSetUser(const char *user);
-extern void httpSetPassword(const char *password);
-extern int httpSetSessTime(const char *timeStr);
-extern void httpSetPubDir(const char *pref);
-extern int httpSetQuantum(const char *quantumStr);
-extern int httpSetMessTime(const char *timeStr);
-extern int httpSetMessLimit(const char *limitStr);
+extern int httpSetAddress(const char *addrStr, void *data, unsigned int addon);
+extern int httpSetPort(const char *portStr, void *data, unsigned int addon);
+extern int httpSetRootDir(const char *rootDir, void *data, unsigned int addon);
+extern int httpSetWorkDir(const char *workDir, void *data, unsigned int addon);
+extern int httpSetIndexFile(const char *indexFile, void *data, unsigned int addon);
+extern int httpSetUser(const char *user, void *data, unsigned int addon);
+extern int httpSetPassword(const char *password, void *data, unsigned int addon);
+extern int httpSetSessTime(const char *timeStr, void *data, unsigned int addon);
+extern int httpSetPubDir(const char *pref, void *data, unsigned int addon);
+extern int httpSetQuantum(const char *quantumStr, void *data, unsigned int addon);
+extern int httpSetMessTime(const char *timeStr, void *data, unsigned int addon);
+extern int httpSetMessLimit(const char *limitStr, void *data, unsigned int addon);
 
 extern int httpSetup(void);
 extern int httpService(int freq);
