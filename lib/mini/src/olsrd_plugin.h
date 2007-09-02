@@ -46,9 +46,6 @@
 int
 olsrd_plugin_init(void);
 
-int
-olsrd_plugin_register_param(char *, char *);
-
 int 
 olsrd_plugin_interface_version(void);
 
