@@ -1,13 +1,89 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.79 2007/08/29 23:17:13 bernd67 Exp $
+$Id: CHANGELOG,v 1.80 2007/09/05 16:32:46 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
 QUAGGA
 updated to svn version 33
 
+PATCH by Hannes Gredler <hannes@gredler.at> which rewrites the route handling.
+To quote him:
+----  snip  ----
+change list:
+- get rid of separate routing tables for HNA and per-node routes, everything is
+  now unified in an AVL routing tree (&routingtree)
+
+- introduce walking macros (OLSR_FOR_ALL_RT_ENTRIES()) that hide the internal
+  structure of the RIB for making life of the plugin authors easier.
+
+- get rid of different SPF implementations for LQ and non-LQ code paths. a
+  non-LQ edge is simply substituted with a cost of 1.0
+
+- get rid of host masks - a new data type olsr_prefix is introduced which is
+  basically an ip address plus a prefix length.
+
+  do not install the metric in the kernel FIB - for the kernel its pointless
+  if the route gets installed with a metric of N or M.
+
+  we do not need to update the kernel FIB if we have hop count only changes
+  (for example if there is a reroute action further downstream)
+
+  the only things which triggers a kernel FIB route update is a next hop
+  change (a next hop is neighboring gateway router plus an interface).
+
+  all OLSR routes are installed with a metric of 2
+
+- separate between rt_entry and rt_path - the former is a route installed in the
+  kernel with an next hop. the latter is a candidate for best path selection
+  after SPF calculation has been done. in the rt_entry we keep a pointer to the
+  best_path and also to the next hop that was installed in the kernel FIB.
+
+  we always keep all originator of a route, if a route originator goes away we
+  can easy recompute the best path for the route.
+
+  the next hop in the rt_entry gets only updated upon a successful route_add
+  call - that way we always remember what next hop to delete.
+
+  stray routes should be history now.
+
+- tweak the linked list toolkit to operate on circular lists.
+
+- get rid of malloc calls for building the kernel update list. the list node is
+  now embedded in the rt_entry.
+
+- introduce three queues (add/chg/del) for kernel updates.
+
+- for neighbor route dependency tracking the neighbor routes are queued first or
+  last (depending on which queue you work on)
+
+- rework all the plugins which directly manipulate rt entries.
+
+- rework the plugins that read from the routing table (most notably nameserver,
+  httpinfo and quagga plugin)
+
+- lots of comments that explains the intentions and purpose of this code-piece.
+
+non RT related stuff:
+- use a list rather than a tree for storing the post-SPF results, which further
+  improves the raw-SPF runtime.
+
+- add display of SPF runtime (masked behind #ifdef SPF_PROFILING)
+----  snip  ----
+And Sven-Ola Tuecke <mail2news@commando.de> fixed an instability issue on interface
+up/down operations (see 102-olsrd-rt-refactoring-fixes.patch below).
+
 PATCHES by Sven-Ola Tuecke to be found on from
 http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
+- 102-olsrd-rt-refactoring-fixes.patch
+  Because you changed a lot of basics: It's time to handle a general
+  flaw in the routing system. Plase take a look at chk_if_changed(). This
+  will free() any "struct interface" pointer without warning at any time.
+  This is why it's possile to SEGV olsrd with a simple "ifdown xxx". 
+  The patch replaces the (maybe) invalid pointer with an index reference
+  "iif_index". You can always ask the OS for a name. Please note, that I do
+  not have a working BSD toolchain, so I've placed an #error in the IPv6
+  BSD-part where the author/porter has started to hack something funny.
+
 - 110-olsrd-double-wlancard-neigh-hack.patch:
   This is a hack for Nodes having to wifi cards with the same channel,
   bssid, IP-Range etc. If two nodes can see each other by means of two
@@ -25,8 +101,8 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
 - 140-olsrd-arprefreshed.patch:
   This is a new one. Opens a packet socket and listen to UDP(698), extract
   the sender MAC and refreshes the ARP cache whith that. Should speedup
-  especially in cases, if you initially try to use a longer routing path which normally
-  triggers a "ARP-Lookup-Chain".
+  especially in cases, if you initially try to use a longer routing path which
+  normally triggers a "ARP-Lookup-Chain".
 - 106-olsrd-nameserviceparams.patch:
   This patch converts more plugins to the new interface version.
 
@@ -114,8 +190,8 @@ Upgrade to olsr-bmf 1.5 from Erik Tromp <erik_tromp@hotmail.com>
 latitude/longitude support is now in the nameservice plugin done by
 Sven-Ola Tuecke <mail2news@commando.de>
 
-added the spf refactoring patch from  Hannes Gredler <hannes@gredler.at> whicht saves
-a noteworthy amount of CPU time. To quote him:
+added the spf refactoring patch from  Hannes Gredler <hannes@gredler.at> which
+saves a noteworthy amount of CPU time. To quote him:
 ----  snip  ----
 1. use of an AVL tree as a min-heap implementation
 
