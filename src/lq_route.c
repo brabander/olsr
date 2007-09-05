@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.48 2007/08/02 22:07:19 bernd67 Exp $
+ * $Id: lq_route.c,v 1.49 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -65,10 +65,10 @@ struct olsr_spf_vertex
 {
   struct avl_node tree_node; /* node keyed by ip address */
   struct avl_node cand_tree_node; /* node keyed by etx */
-  struct avl_node path_tree_node; /* node keyed by etx */
+  struct list_node path_list_node; /* SPF result list */
   union olsr_ip_addr addr;
   struct avl_tree edge_tree;
-  union olsr_ip_addr *next_hop; /* the gateway router */
+  struct link_entry *next_hop; /* the link to the 1st hop neighbor */
   float path_etx;
   olsr_u8_t hops;
 };
@@ -137,25 +137,26 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
 }
 
 /*
- * olsr_spf_add_path_tree
+ * olsr_spf_add_path_list
  *
- * Key an existing vertex to a path tree.
+ * Insert an SPF result at the end of the path list.
  */
 static void
-olsr_spf_add_path_tree (struct avl_tree *tree,
+olsr_spf_add_path_list (struct list_node *head,
+                        int *path_count,
                         struct olsr_spf_vertex *vert)
 {
-  vert->path_tree_node.key = &vert->path_etx;
-  vert->path_tree_node.data = vert;
+  vert->path_list_node.data = vert;
 
 #ifdef DEBUG
-  OLSR_PRINTF(1, "SPF: insert path %s, cost %f, via %s\n",
+  OLSR_PRINTF(1, "SPF: append path %s, cost %f, via %s\n",
               olsr_ip_to_string(&(vert->addr)),
               vert->path_etx,
-              olsr_ip_to_string(vert->next_hop));
+              olsr_ip_to_string(vert->next_hop ? &vert->next_hop->neighbor_iface_addr : NULL));
 #endif
 
-  avl_insert(tree, &vert->path_tree_node, 1);
+  list_add_before(head, &vert->path_list_node);
+  *path_count = *path_count + 1;
 }
 
 /*
@@ -197,7 +198,7 @@ olsr_spf_add_vertex (struct avl_tree *vertex_tree,
   return vert;
 }
 
-static void
+static struct olsr_spf_vertex *
 olsr_spf_add_edge (struct avl_tree *vertex_tree,
                    union olsr_ip_addr *src, union olsr_ip_addr *dst,
                    float etx)
@@ -214,7 +215,7 @@ olsr_spf_add_edge (struct avl_tree *vertex_tree,
   // source vertex does not exist
 
   if (node == NULL)
-    return;
+    return NULL;
 
   svert = node->data;
 
@@ -225,7 +226,7 @@ olsr_spf_add_edge (struct avl_tree *vertex_tree,
   // destination vertex does not exist
 
   if (node == NULL)
-    return;
+    return NULL;
 
   dvert = node->data;
 
@@ -262,6 +263,8 @@ olsr_spf_add_edge (struct avl_tree *vertex_tree,
 
     avl_insert(&dvert->edge_tree, &edge->tree_node, 0);
   }
+
+  return svert;
 }
 
 static void olsr_free_everything(struct avl_tree *vertex_tree)
@@ -383,7 +386,8 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct olsr_spf_vertex *vert)
                   olsr_ip_to_string(&(edge->dest->addr)),
                   olsr_etx_to_string(edge->dest->path_etx),
                   olsr_etx_to_string(new_etx),
-                  olsr_ip_to_string(vert->next_hop),
+                  olsr_ip_to_string(vert->next_hop ?
+                                    &vert->next_hop->neighbor_iface_addr : NULL),
                   edge->dest->hops);
 #endif
 
@@ -398,18 +402,20 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct olsr_spf_vertex *vert)
  *
  * Run the Dijkstra algorithm.
  * 
- * We are using two trees: the candidate and the path tree.
  * A node gets added to the candidate tree when one of its edges has
  * an overall better root path cost than the node itself.
  * The node with the shortest metric gets moved from the candidate to
- * the path tree every pass.
+ * the path list every pass.
  * The SPF computation is completed when there are no more nodes
  * on the candidate tree. 
  */ 
 static void
-olsr_spf_run_full (struct avl_tree *cand_tree, struct avl_tree *path_tree)
+olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
+                   int *path_count)
 {
   struct olsr_spf_vertex *vert;
+
+  *path_count = 0;
 
   while ((vert = olsr_spf_extract_best(cand_tree))) {
 
@@ -417,19 +423,19 @@ olsr_spf_run_full (struct avl_tree *cand_tree, struct avl_tree *path_tree)
 
     /*
      * move the best path from the candidate tree
-     * to the path tree.
+     * to the path list.
      */
     olsr_spf_del_cand_tree(cand_tree, vert);
-    olsr_spf_add_path_tree(path_tree, vert);
+    olsr_spf_add_path_list(path_list, path_count, vert);
   }
 }
 
 void
-olsr_calculate_lq_routing_table (void)
+olsr_calculate_routing_table (void)
 {
-  struct avl_tree vertex_tree, cand_tree, path_tree;
-  struct avl_node *tree_node;
-  int i;
+  struct avl_tree vertex_tree, cand_tree;
+  struct list_node path_list;
+  int i, plen, max_host_plen, path_count = 0;
   struct tc_entry *tcsrc;
   struct topo_dst *tcdst;
   struct olsr_spf_vertex *vert, *myself;
@@ -438,21 +444,25 @@ olsr_calculate_lq_routing_table (void)
   float etx;
   struct hna_entry *hna_gw;
   struct hna_net *hna;
-  struct rt_entry *gw_rt, *hna_rt, *head_rt;
   struct neighbor_2_entry *neigh2;
-#if 0
-  struct neighbor_list_entry *neigh_walker;
-#endif
   struct interface *inter;
+  struct link_entry *link;
 
-  if (olsr_cnf->ipsize != 4)
-    avl_comp_default = avl_comp_ipv6;
+#ifdef SPF_PROFILING
+  struct timeval t1, t2, t3, t4, t5, t6, spf_init, spf_run, route, kernel, cleanup, total;
+
+  gettimeofday(&t1, NULL);
+#endif
+
+  max_host_plen = olsr_host_rt_maxplen();
 
   // initialize the graph
 
   avl_init(&vertex_tree, avl_comp_default);
   avl_init(&cand_tree, avl_comp_etx);
-  avl_init(&path_tree, avl_comp_etx);
+  list_head_init(&path_list);
+
+  olsr_bump_routingtree_version();
 
   // add ourselves to the vertex and candidate tree
 
@@ -465,25 +475,11 @@ olsr_calculate_lq_routing_table (void)
   for (i = 0; i < HASHSIZE; i++)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next) {
-      if (neigh->status == SYM) {
 
-        vert = olsr_spf_add_vertex(&vertex_tree, &neigh->neighbor_main_addr,
-                                   INFINITE_ETX);
+      if (neigh->status != SYM)
+        continue;
 
-        /*
-         * Set the next-hop pointer to ourselves.
-         * During olsr_spf_relax() the next_hop pointer will be
-         * pulled up to the new candidate node.
-         * At the End of the SPF computation every reachable node has
-         * a pointer to its corresponding first hop router.
-         */
-        vert->next_hop = &vert->addr;
-
-        /*
-         * one hop neighbors are just one hop away.
-         */
-        vert->hops = 1;
-      }
+      olsr_spf_add_vertex(&vertex_tree, &neigh->neighbor_main_addr, INFINITE_ETX);
     }
 
   // add our two-hop neighbours
@@ -493,13 +489,7 @@ olsr_calculate_lq_routing_table (void)
          neigh2 != &two_hop_neighbortable[i];
          neigh2 = neigh2->next) {
 
-      vert = olsr_spf_add_vertex(&vertex_tree, &neigh2->neighbor_2_addr,
-                                 INFINITE_ETX);
-
-      /*
-       * two hop neighbors are two hops away.
-       */
-      vert->hops = 2;
+      olsr_spf_add_vertex(&vertex_tree, &neigh2->neighbor_2_addr, INFINITE_ETX);
     }
   // add remaining vertices
 
@@ -521,76 +511,64 @@ olsr_calculate_lq_routing_table (void)
 
   for (i = 0; i < HASHSIZE; i++)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
-         neigh = neigh->next)
-      if (neigh->status == SYM)
-      {
-        struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+         neigh = neigh->next) {
 
-	if(!lnk)
+      if (neigh->status == SYM) {
+
+        link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+	if (!link) {
 	  continue;
+        }
 
-        if (lnk->loss_link_quality2 >= MIN_LINK_QUALITY &&
-            lnk->neigh_link_quality2 >= MIN_LINK_QUALITY)
-          {
-            etx = 1.0 / (lnk->loss_link_quality2 * lnk->neigh_link_quality2);
+        if (olsr_cnf->lq_level < 2) {
+          /* for non-lq the etx is always 1.0 */
+          vert = olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr,
+                                   &olsr_cnf->main_addr, 1.0 );
+          vert->next_hop = link;
 
-            olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr, &olsr_cnf->main_addr, etx);
-          }
-      }
+        } else if (link->loss_link_quality2 >= MIN_LINK_QUALITY &&
+                   link->neigh_link_quality2 >= MIN_LINK_QUALITY) {
+            
+          etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
 
-// we now rely solely on TC messages for routes to our two-hop neighbours
-
-#if 0
-
-  // add edges between our neighbours and our two-hop neighbours
-
-  for (i = 0; i < HASHSIZE; i++)
-    for (neigh2 = two_hop_neighbortable[i].next;
-         neigh2 != &two_hop_neighbortable[i];
-         neigh2 = neigh2->next)
-      for (neigh_walker = neigh2->neighbor_2_nblist.next;
-           neigh_walker != &neigh2->neighbor_2_nblist;
-           neigh_walker = neigh_walker->next)
-      {
-        if (neigh_walker->second_hop_link_quality >=
-            MIN_LINK_QUALITY * MIN_LINK_QUALITY)
-        {
-          neigh = neigh_walker->neighbor;
-
-          etx = 1.0 / neigh_walker->second_hop_link_quality;
-
-          olsr_spf_add_edge(&vertex_tree, &neigh2->neighbor_2_addr,
-                   &neigh->neighbor_main_addr, etx);
+          vert = olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr,
+                                     &olsr_cnf->main_addr, etx);
+          vert->next_hop = link;
         }
       }
+    }
 
-#endif
-
-  // add remaining edges
+  /* add remaining edges from TC messages */
 
   for (i = 0; i < HASHSIZE; i++)
     for (tcsrc = tc_table[i].next; tcsrc != &tc_table[i]; tcsrc = tcsrc->next)
       for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
-           tcdst = tcdst->next)
-      {
-        if (tcdst->link_quality >= MIN_LINK_QUALITY &&
-            tcdst->inverse_link_quality >= MIN_LINK_QUALITY)
-          {
-            etx = 1.0 / (tcdst->link_quality * tcdst->inverse_link_quality);
+           tcdst = tcdst->next) {
 
-            olsr_spf_add_edge(&vertex_tree, &tcdst->T_dest_addr, &tcsrc->T_last_addr,
-                     etx);
-          }
+        if (olsr_cnf->lq_level < 2) {
+
+          /* for non-lq the etx is always 1.0 */
+          olsr_spf_add_edge(&vertex_tree, &tcdst->T_dest_addr,
+                            &tcsrc->T_last_addr, 1.0);
+
+        } else if (tcdst->link_quality >= MIN_LINK_QUALITY &&
+                   tcdst->inverse_link_quality >= MIN_LINK_QUALITY) {
+
+          etx = 1.0 / (tcdst->link_quality * tcdst->inverse_link_quality);
+
+          olsr_spf_add_edge(&vertex_tree, &tcdst->T_dest_addr,
+                            &tcsrc->T_last_addr, etx);
+        }
       }
+
+#ifdef SPF_PROFILING
+  gettimeofday(&t2, NULL);
+#endif
 
   /*
    * Run the SPF calculation.
    */
-  olsr_spf_run_full(&cand_tree, &path_tree);
-
-  // save the old routing table
-
-  olsr_move_route_table(routingtable, old_routes);
+  olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
   OLSR_PRINTF(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- DIJKSTRA\n\n",
               nowtm->tm_hour,
@@ -598,172 +576,99 @@ olsr_calculate_lq_routing_table (void)
               nowtm->tm_sec,
               (int)now.tv_usec/10000);
 
-  /*
-   * In the path tree we have all the reachable nodes
-   * in our topology sorted by etx metric.
-   */
-  for (tree_node = avl_walk_first(&path_tree);
-       tree_node != NULL;
-       tree_node = avl_walk_next(tree_node)) {
-    struct link_entry *lnk;
-    vert = tree_node->data;
+#ifdef SPF_PROFILING
+  gettimeofday(&t3, NULL);
+#endif
 
-    if (!vert->next_hop) {
+  olsr_fill_routing_table_with_neighbors();
+
+  /*
+   * In the path tree we have all the reachable nodes in our topology.
+   */
+  for (; !list_is_empty(&path_list); list_remove(path_list.next)) {
+
+    vert = path_list.next->data;
+    link = vert->next_hop;
+
+    if (!link) {
       OLSR_PRINTF(2, "%s no next-hop\n", olsr_ip_to_string(&vert->addr));
       continue;
     }
 
-    // find the best link to the one-hop neighbour
+    /* find the interface for the found link */
+    inter = link->if_name ? if_ifwithname(link->if_name)
+      : if_ifwithaddr(&link->local_iface_addr);
 
-    lnk = get_best_link_to_neighbor(vert->next_hop);
+    /* interface is up ? */
+    if (inter) {
 
-    // we may see NULL here, if the one-hop neighbour is not in the
-    // link and neighbour sets any longer, but we have derived an edge
-    // between us and the one-hop neighbour from the TC set
+      /* add a route to the main address of the destination node */
+      olsr_insert_routing_table(&vert->addr, max_host_plen, &vert->addr,
+                                &link->neighbor_iface_addr, inter,
+                                vert->hops, vert->path_etx);
 
-    if (lnk != NULL)
-    {
-      // find the interface for the found link
-      inter = lnk->if_name ? if_ifwithname(lnk->if_name) : 
-              if_ifwithaddr(&lnk->local_iface_addr);
+      /* add routes to the remaining interfaces of the destination node */
+      for (mid_walker = mid_lookup_aliases(&vert->addr);
+           mid_walker != NULL;
+           mid_walker = mid_walker->next_alias) {
 
-      // we may see NULL here if the interface is down, but we have
-      // links that haven't timed out, yet
+        olsr_insert_routing_table(&mid_walker->alias, max_host_plen, &vert->addr,
+                                  &link->neighbor_iface_addr, inter,
+                                  vert->hops, vert->path_etx);
+      }
 
-      if (inter != NULL)
-      {
-        // XXX - fix me: structurally prevent duplicates, don't test via
-        //       olsr_lookup_routing_table()
+      /* find the node's HNAs */
+      hna_gw = olsr_lookup_hna_gw(&vert->addr);
 
-        // route addition, case A - add a route to the main address of the
-        // destination node
+      /* node doesn't announce any HNAs */
+      if (!hna_gw) {
+        continue;
+      }
 
-        if (olsr_lookup_routing_table(&vert->addr) == NULL)
-          olsr_insert_routing_table(&vert->addr, &lnk->neighbor_iface_addr,
-                                    inter, vert->hops, vert->path_etx);
+      /* loop through the node's HNAs */
+      for (hna = hna_gw->networks.next;
+           hna != &hna_gw->networks;
+           hna = hna->next) {
 
-        // route addition, case B - add routes to the remaining interfaces
-        // of the destination node
-
-        for (mid_walker = mid_lookup_aliases(&vert->addr); mid_walker != NULL;
-             mid_walker = mid_walker->next_alias)
-          if (olsr_lookup_routing_table(&mid_walker->alias) == NULL)
-            olsr_insert_routing_table(&mid_walker->alias,
-                                      &lnk->neighbor_iface_addr, inter, vert->hops, 
-                                      vert->path_etx);
-
-        // XXX - we used to use olsr_lookup_routing_table() only here, but
-        //       this assumed that case A or case B had already happened for
-        //       this destination; if case A or case B happened after case C
-        //       for the same destination, we had duplicates, as cases A and
-        //       B would not test whether case C had already happened
-
-        // route addition, case C - make sure that we have a route to the
-        // router - e.g. in case the router's not the main address and it's
-        // MID entry has timed out
-
-        if (olsr_lookup_routing_table(&lnk->neighbor_iface_addr) == NULL)
-          olsr_insert_routing_table(&lnk->neighbor_iface_addr,
-                                    &lnk->neighbor_iface_addr, inter, 1,
-                                    vert->path_etx);
+        plen = olsr_get_hna_prefix_len(hna);
+        if (vert->path_etx != INFINITE_ETX)
+        olsr_insert_routing_table(&hna->A_network_addr, plen, &vert->addr,
+                                  &link->neighbor_iface_addr, inter,
+                                  vert->hops, vert->path_etx);
       }
     }
   }
 
-  // save the old HNA routing table
+#ifdef SPF_PROFILING
+  gettimeofday(&t4, NULL);
+#endif
 
-  olsr_move_route_table(hna_routes, old_hna);
+  /* move the route changes into the kernel */
 
-  // add HNA routes
+  olsr_update_kernel_routes();
 
-  /*
-   * In the path tree we have all the reachable nodes
-   * in our topology sorted by etx metric.
-   */
-  for (tree_node = avl_walk_first(&path_tree);
-       tree_node;
-       tree_node = avl_walk_next(tree_node)) {
+#ifdef SPF_PROFILING
+  gettimeofday(&t5, NULL);
+#endif
 
-    if (!(vert = tree_node->data)) {
-      break;
-    }
-
-    // find the node's HNAs
-
-    hna_gw = olsr_lookup_hna_gw(&vert->addr);
-
-    // node doesn't announce any HNAs
-
-    if (hna_gw == NULL)
-      continue;
-
-    // find route to the node
-
-    gw_rt = olsr_lookup_routing_table(&hna_gw->A_gateway_addr);
-
-    // maybe we haven't found a link or an interface for the gateway above
-    // and hence haven't added a route - skip the HNA in this case
-
-    if (gw_rt == NULL)
-      continue;
-
-    // loop through the node's HNAs
-
-    for (hna = hna_gw->networks.next; hna != &hna_gw->networks;
-         hna = hna->next)
-    {
-      // we already have a route via a previous (better) node
-
-      if (olsr_lookup_hna_routing_table(&hna->A_network_addr) != NULL)
-        continue;
-
-      // create route for the HNA
-
-      hna_rt = olsr_malloc(sizeof(struct rt_entry), "LQ HNA route entry");
-
-      // set HNA IP address and netmask
-
-      COPY_IP(&hna_rt->rt_dst, &hna->A_network_addr);
-      hna_rt->rt_mask = hna->A_netmask;
-
-      // copy remaining fields from the node's route
-
-      COPY_IP(&hna_rt->rt_router, &gw_rt->rt_router);
-      hna_rt->rt_metric = gw_rt->rt_metric;
-      hna_rt->rt_etx = gw_rt->rt_etx;
-      hna_rt->rt_if = gw_rt->rt_if;
-
-      // we're not a host route
-
-      hna_rt->rt_flags = RTF_UP | RTF_GATEWAY;
-
-      // find the correct list
-
-      head_rt = &hna_routes[olsr_hashing(&hna->A_network_addr)];
-
-      // enqueue
-
-      head_rt->next->prev = hna_rt;
-      hna_rt->next = head_rt->next;
-
-      head_rt->next = hna_rt;
-      hna_rt->prev = head_rt;
-    }
-  }
-
-  // free the graph
+  /* free the SPF graph */
 
   olsr_free_everything(&vertex_tree);
 
-  // move the route changes into the kernel
+#ifdef SPF_PROFILING
+  gettimeofday(&t6, NULL);
 
-  olsr_update_kernel_routes();
-  olsr_update_kernel_hna_routes();
-
-  // free the saved routing table
-
-  olsr_free_routing_table(old_routes);
-  olsr_free_routing_table(old_hna);
+  timersub(&t2, &t1, &spf_init);
+  timersub(&t3, &t2, &spf_run);
+  timersub(&t4, &t3, &route);
+  timersub(&t5, &t4, &kernel);
+  timersub(&t6, &t5, &cleanup);
+  timersub(&t6, &t1, &total);
+  olsr_printf(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern/cleanup): %d, %d, %d, %d, %d, %d\n",
+              path_count, routingtree.count,
+              (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec,
+              (int)route.tv_usec, (int)kernel.tv_usec,  (int)cleanup.tv_usec);
+#endif
 }
 
 /*

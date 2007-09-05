@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.h,v 1.8 2004/11/21 11:28:56 kattemat Exp $
+ * $Id: kernel_routes.h,v 1.9 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 
@@ -50,16 +50,16 @@
 
 
 int
-olsr_ioctl_add_route(struct rt_entry *destination);
+olsr_ioctl_add_route(struct rt_entry *);
 
 int
-olsr_ioctl_add_route6(struct rt_entry *destination);
+olsr_ioctl_add_route6(struct rt_entry *);
 
 int
-olsr_ioctl_del_route(struct rt_entry *destination);
+olsr_ioctl_del_route(struct rt_entry *);
 
 int
-olsr_ioctl_del_route6(struct rt_entry *destination);
+olsr_ioctl_del_route6(struct rt_entry *);
 
 
 int

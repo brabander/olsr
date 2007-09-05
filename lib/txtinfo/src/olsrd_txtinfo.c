@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.7 2007/07/15 19:29:37 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.8 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 /*
@@ -309,37 +309,26 @@ static void ipc_print_neigh_link(void)
 
 static void ipc_print_routes(void)
 {
-    int size = 0, index;
-    struct rt_entry *routes;
+    struct rt_entry *rt;
+    struct avl_node *rt_tree_node;
 
-    ipc_sendf("Table: Routes\nDestination\tGateway\tMetric\tETX\tInterface\tType\n");
+    ipc_sendf("Table: Routes\nDestination\tGateway\tMetric\tETX\tInterface\n");
 
-    /* Neighbors */
-    for(index = 0;index < HASHSIZE; index++) {
-        for(routes = routingtable[index].next;
-            routes != &routingtable[index];
-            routes = routes->next) {
-            size = 0;
-            ipc_sendf( "%s\t%s\t%d\t%.2f\t%s\tHOST\n",
-                       olsr_ip_to_string(&routes->rt_dst),
-                       olsr_ip_to_string(&routes->rt_router),
-                       routes->rt_metric,
-                       routes->rt_etx,
-                       routes->rt_if->int_name);
-	}
-    }
+    /* Walk the route table */
+    for (rt_tree_node = avl_walk_first(&routingtree);
+         rt_tree_node;
+         rt_tree_node = avl_walk_next(rt_tree_node)) {
 
-    /* HNA */
-    for(index = 0;index < HASHSIZE;index++) {
-        for(routes = hna_routes[index].next;
-            routes != &hna_routes[index];
-            routes = routes->next) {
-            ipc_sendf("%s\t%s\t%d\t%s\t\tHNA\n",
-                      olsr_ip_to_string(&routes->rt_dst),
-                      olsr_ip_to_string(&routes->rt_router),
-                      routes->rt_metric,
-                      routes->rt_if->int_name);
-	}
+        rt = rt_tree_node->data;
+
+        ipc_sendf( "%s/%d\t%s\t%d\t%.3f\t%s\t\n",
+                   olsr_ip_to_string(&rt->rt_dst.prefix),
+                   rt->rt_dst.prefix_len,
+                   olsr_ip_to_string(&rt->rt_best->rtp_nexthop.gateway),
+                   rt->rt_best->rtp_metric.hops,
+                   rt->rt_best->rtp_metric.etx,
+                   rt->rt_best->rtp_nexthop.iface->int_name);
+
     }
     ipc_sendf("\n");
 

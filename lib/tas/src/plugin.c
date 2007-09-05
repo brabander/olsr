@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.9 2007/09/02 22:17:00 bernd67 Exp $
+ * $Id: plugin.c,v 1.10 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 #include <string.h>
@@ -84,7 +84,6 @@ static struct neighbor_entry *neighTab = NULL;
 static struct mid_entry *midTab = NULL;
 static struct tc_entry *tcTab = NULL;
 static struct hna_entry *hnaTab = NULL;
-static struct rt_entry *routeTab = NULL;
 static struct olsrd_config *config = NULL;
 
 static int iterIndex;
@@ -221,26 +220,22 @@ void iterNeighTabInit(void)
 
 int iterRouteTabNext(char *buff, int len)
 {
+  struct avl_node *rt_tree_node;
+
   if (iterRouteTab == NULL)
     return -1;
 
   snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%d~",
-           rawIpAddrToString(&iterRouteTab->rt_dst, ipAddrLen),
-           rawIpAddrToString(&iterRouteTab->rt_router, ipAddrLen),
-           iterRouteTab->rt_if->int_name, iterRouteTab->rt_metric);
+           rawIpAddrToString(&iterRouteTab->rt_dst.prefix, ipAddrLen),
+           rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, ipAddrLen),
+           iterRouteTab->rt_best->rtp_nexthop.iface->int_name,
+           iterRouteTab->rt_best->rtp_metric.hops);
 
-  iterRouteTab = iterRouteTab->next;
-
-  if (iterRouteTab == &routeTab[iterIndex])
-  {
-    iterRouteTab = NULL;
-    
-    while (++iterIndex < HASHSIZE)
-      if (routeTab[iterIndex].next != &routeTab[iterIndex])
-      {
-        iterRouteTab = routeTab[iterIndex].next;
-        break;
-      }
+  rt_tree_node = avl_walk_next(&iterRouteTab->rt_tree_node);
+  if (rt_tree_node) {
+      iterRouteTab = rt_tree_node->data;
+  } else {
+      iterRouteTab = NULL;
   }
 
   return 0;
@@ -248,17 +243,10 @@ int iterRouteTabNext(char *buff, int len)
 
 void iterRouteTabInit(void)
 {
-  iterRouteTab = NULL;
+    avl_init(&routingtree, avl_comp_prefix_default);
+    routingtree_version = 0;
 
-  if (routeTab == NULL)
-    return;
-
-  for (iterIndex = 0; iterIndex < HASHSIZE; iterIndex++)
-    if (routeTab[iterIndex].next != &routeTab[iterIndex])
-    {
-      iterRouteTab = routeTab[iterIndex].next;
-      break;
-    }
+    iterRouteTab = (avl_walk_first(&routingtree)->data);
 }
 
 int iterTcTabNext(char *buff, int len)
@@ -478,7 +466,6 @@ int olsrd_plugin_init(void)
   midTab = mid_set;
   tcTab = tc_table;
   hnaTab = hna_set;
-  routeTab = routingtable;
   config = olsr_cnf;
 
   httpInit();

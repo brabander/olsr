@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.27 2007/08/28 20:45:17 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.28 2007/09/05 16:11:10 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -99,17 +99,14 @@ olsr_bool forwarder_table_changed = OLSR_TRUE;
 struct db_entry* latlon_list[HASHSIZE];
 olsr_bool latlon_table_changed = OLSR_TRUE;
 
-/* regualar expression to be matched by valid hostnames, compiled in name_init() */
+/* regular expression to be matched by valid hostnames, compiled in name_init() */
 regex_t regex_t_name;
 regmatch_t regmatch_t_name;
 
-/* regualar expression to be matched by valid service_lines, compiled in name_init() */
+/* regular expression to be matched by valid service_lines, compiled in name_init() */
 regex_t regex_t_service;
 int pmatch_service = 10;
 regmatch_t regmatch_t_service[10];
-
-static void free_routing_table_list(struct rt_entry **list) ;
-static struct rt_entry *host_lookup_routing_table(union olsr_ip_addr *);
 
 /**
  * do initialization
@@ -836,7 +833,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 
 
 /**
- * unpack the received message and delegate to the decapsilation function for each
+ * unpack the received message and delegate to the decapsulation function for each
  * name/service/forwarder entry in the message
  */
 void
@@ -1076,6 +1073,44 @@ write_services_file(void)
 }
 
 /**
+ * Sort the nameserver pointer array.
+ *
+ * fresh entries are at the beginning of the array and
+ * the best entry is at the end of the array.
+ */
+static void
+select_best_nameserver(struct rt_entry **rt)
+{
+    int nameserver_idx;
+    struct rt_entry *rt1, *rt2;
+
+    for (nameserver_idx = 0;
+         nameserver_idx < NAMESERVER_COUNT;
+         nameserver_idx++) {
+
+        rt1 = rt[nameserver_idx];
+        rt2 = rt[nameserver_idx+1];
+
+        /*
+         * compare the next two pointers in the array.
+         * if the second pointer is NULL then percolate it up.
+         */
+        if (!rt2 || olsr_cmp_rt(rt1, rt2)) {
+
+            /*
+             * first is better, swap the pointers.
+             */
+            OLSR_PRINTF(6, "NAME PLUGIN: nameserver %s, etx %.3f\n",
+                        olsr_ip_to_string(&rt1->rt_dst.prefix),
+                        rt1->rt_best->rtp_metric.etx);
+
+            rt[nameserver_idx] = rt2;
+            rt[nameserver_idx+1] = rt1;
+        }
+    }
+}
+
+/**
  * write the 3 best upstream DNS servers to resolv.conf file
  * best means the 3 with the best etx value in routing table
  */
@@ -1083,16 +1118,19 @@ void
 write_resolv_file(void)
 {
 	int hash;
-	struct name_entry *name, *tmp_dns, *last_dns, *dnslist = NULL;
+	struct name_entry *name;
 	struct db_entry *entry;
-	struct rt_entry *best_routes = NULL;
-	struct rt_entry *route, *tmp = NULL, *last;
+	struct rt_entry *route;
+    static struct rt_entry *nameserver_routes[NAMESERVER_COUNT+1];
 	FILE* resolv;
 	int i=0;
 	time_t currtime;
-	
+
 	if (!forwarder_table_changed || my_forwarders != NULL || my_resolv_file[0] == '\0')
 		return;
+
+    /* clear the array of 3+1 nameserver routes */
+    memset(nameserver_routes, 0, sizeof(nameserver_routes));
 
 	for (hash = 0; hash < HASHSIZE; hash++) 
 	{
@@ -1100,71 +1138,30 @@ write_resolv_file(void)
 		{
 			for (name = entry->names; name != NULL; name = name->next) 
 			{
-				
-				/* find the nearest one */
-				route = host_lookup_routing_table(&name->ip);
+
+				route = olsr_lookup_routing_table(&name->ip);
+
+                OLSR_PRINTF(6, "NAME PLUGIN: check route for nameserver %s %s",
+							olsr_ip_to_string(&name->ip),
+                            route ? "suceeded" : "failed");
+
 				if (route==NULL) // it's possible that route is not present yet
 					continue;
-				
-				if (best_routes == NULL || route->rt_etx < best_routes->rt_etx) {
-					OLSR_PRINTF(6, "NAME PLUGIN: best nameserver %s\n",
-						olsr_ip_to_string(&name->ip));
-					if (best_routes!=NULL)
-						OLSR_PRINTF(6, "NAME PLUGIN: better than %f (%s)\n",
-							best_routes->rt_etx,
-							olsr_ip_to_string(&best_routes->rt_dst));
-					
-					tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
-					memcpy(&tmp->rt_dst, &route->rt_dst, olsr_cnf->ipsize);
-					tmp->rt_etx = route->rt_etx;
-					tmp->next = best_routes;
-					best_routes = tmp;
-					tmp_dns = olsr_malloc(sizeof(struct name_entry), "write_resolv name_entry");
-					COPY_IP(&tmp_dns->ip, &name->ip);
-					tmp_dns->type = name->type;
-					tmp_dns->len = 0;
-					tmp_dns->name = NULL;
-					tmp_dns->next = dnslist;
-					dnslist = tmp_dns;
-				} else {
-					// queue in etx order
-					last = best_routes;
-					last_dns = dnslist;
-					while ( last->next!=NULL && i<3 ) {
-						if (last->next->rt_etx > route->rt_etx)
-							break;
-						last = last->next;
-						last_dns = last_dns->next;
-						i++;
-					}
-					if (i<3) {
-						OLSR_PRINTF(6, "NAME PLUGIN: queue %f (%s)",
-							route->rt_etx,
-							olsr_ip_to_string(&name->ip));
-						OLSR_PRINTF(6, " after %f (%s)\n", 
-							last->rt_etx, olsr_ip_to_string(&last_dns->ip));
-						
-						tmp = olsr_malloc(sizeof(struct rt_entry), "new rt_entry");
-						memcpy(&tmp->rt_dst, &route->rt_dst, olsr_cnf->ipsize);
-						tmp->rt_etx = route->rt_etx;
-						tmp->next = last->next;
-						last->next = tmp;
 
-						tmp_dns = olsr_malloc(sizeof(struct name_entry), "write_resolv name_entry");
-						COPY_IP(&tmp_dns->ip, &name->ip);
-						tmp_dns->type = name->type;
-						tmp_dns->len = 0;
-						tmp_dns->name = NULL;
-						tmp_dns->next = last_dns->next;
-						last_dns->next = tmp_dns;
-					} else {
-						OLSR_PRINTF(6, "NAME PLUGIN: don't need more than 3 nameservers\n");
-					}
-				}
+                /* enqueue it on the head of list */
+                *nameserver_routes = route;
+                OLSR_PRINTF(6, "NAME PLUGIN: found nameserver %s, etx %.3f",
+							olsr_ip_to_string(&name->ip),
+                            route->rt_best->rtp_metric.etx);
+
+                /* find the closet one */
+                select_best_nameserver(nameserver_routes);
 			}
 		}
 	}
-	if (best_routes==NULL)
+
+    /* if there is no best route we are done */
+	if (nameserver_routes[NAMESERVER_COUNT]==NULL)
 		return;
 		 
 	/* write to file */
@@ -1176,15 +1173,21 @@ write_resolv_file(void)
 	}
 	fprintf(resolv, "### this file is overwritten regularly by olsrd\n");
 	fprintf(resolv, "### do not edit\n\n");
-	i=0;
-	for (tmp_dns=dnslist; tmp_dns!=NULL && i<3; tmp_dns=tmp_dns->next) {
-		OLSR_PRINTF(6, "NAME PLUGIN: nameserver %s\n", olsr_ip_to_string(&tmp_dns->ip));
-		fprintf(resolv, "nameserver %s\n", olsr_ip_to_string(&tmp_dns->ip));
-		i++;
-	}
-	free_name_entry_list(&dnslist);
-	if(tmp != NULL) {
-		free_routing_table_list(&tmp);
+
+	for (i = NAMESERVER_COUNT; i >= 0; i--) {
+
+        route = nameserver_routes[i];
+
+        OLSR_PRINTF(2, "NAME PLUGIN: nameserver_routes #%d %p\n", i, route);
+
+        if (!route) {
+            continue;
+        }
+
+		OLSR_PRINTF(2, "NAME PLUGIN: nameserver %s\n",
+                    olsr_ip_to_string(&route->rt_dst.prefix));
+		fprintf(resolv, "nameserver %s\n",
+                olsr_ip_to_string(&route->rt_dst.prefix));
 	}
 	if (time(&currtime)) {
 		fprintf(resolv, "\n### written by olsrd at %s", ctime(&currtime));
@@ -1207,23 +1210,6 @@ free_name_entry_list(struct name_entry **list)
 		*tmp = (*tmp)->next;
 		free( to_delete->name );
 		to_delete->name = NULL;
-		free( to_delete );
-		to_delete = NULL;
-	}
-}
-
-
-/**
- * completely free a list of rt_entries
- */
-static void 
-free_routing_table_list(struct rt_entry **list) 
-{
-	struct rt_entry **tmp = list;
-	struct rt_entry *to_delete;
-	while (*tmp != NULL) {
-		to_delete = *tmp;
-		*tmp = (*tmp)->next;
 		free( to_delete );
 		to_delete = NULL;
 	}
@@ -1290,51 +1276,6 @@ allowed_ip(union olsr_ip_addr *addr)
 		}
 	}
 	return OLSR_FALSE;
-}
-
-static struct rt_entry *
-host_lookup_routing_table(union olsr_ip_addr *dst)
-{
-	olsr_u32_t index;
-	union olsr_ip_addr tmp_ip, tmp_msk;
-	struct rt_entry *walker;
-
-	walker = olsr_lookup_routing_table(dst);
-	if (walker != NULL)
-		return walker;
-
-	for (index = 0; index < HASHSIZE; index++) {
-		for (walker = hna_routes[index].next;
-		   walker != &hna_routes[index]; walker = walker->next) {
-			if (COMP_IP(&walker->rt_dst, dst))
-				return walker;
-			if (olsr_cnf->ip_version == AF_INET) {
-				if ( walker->rt_mask.v4 != 0 &&
-				    (dst->v4 & walker->rt_mask.v4) ==
-				    walker->rt_dst.v4 ) {
-					OLSR_PRINTF(6, "MATCHED\n");
-					return walker;
-				}
-			} else {
-				int i;
-				
-				if ( walker->rt_mask.v6 == 0 )
-					continue;
-				olsr_prefix_to_netmask(&tmp_msk,
-					walker->rt_mask.v6);
-				for (i = 0; i < 16; i++) {
-					tmp_ip.v6.s6_addr[i] =
-						dst->v6.s6_addr[i] &
-						tmp_msk.v6.s6_addr[i];
-				}
-				if (COMP_IP(&tmp_ip, &walker->rt_dst)) {
-					OLSR_PRINTF(6, "MATCHED\n");
-					return walker;
-				}
-			}
-		}
-	}
-	return NULL;
 }
 
 /** check if name has the right syntax, i.e. it must adhere to a special regex 
@@ -1461,9 +1402,9 @@ void lookup_defhna_latlon(union olsr_ip_addr *ip)
 	struct rt_entry* rt_hna;
 	memset(ip, 0, sizeof(ip));
 	memset(&dest, 0, sizeof(dest));
-	if (NULL != (rt_hna = olsr_lookup_hna_routing_table(&dest)))
+	if (NULL != (rt_hna = olsr_lookup_routing_table(&dest)))
 	{
-		COPY_IP(ip, &rt_hna->rt_router);
+		COPY_IP(ip, &rt_hna->rt_best->rtp_nexthop.gateway);
 	}
 }
 

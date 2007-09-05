@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.h,v 1.4 2007/07/05 22:43:47 bernd67 Exp $
+ * $Id: lq_route.h,v 1.5 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 #ifndef _LQ_ROUTE_H
@@ -46,6 +46,6 @@
 #define ZERO_ETX 0.0
 #define MIN_LINK_QUALITY 0.01
 
-void olsr_calculate_lq_routing_table(void);
+void olsr_calculate_routing_table(void);
 
 #endif

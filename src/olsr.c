@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.56 2007/08/01 16:22:57 bernd67 Exp $
+ * $Id: olsr.c,v 1.57 2007/09/05 16:11:11 bernd67 Exp $
  */
 
 /**
@@ -172,38 +172,18 @@ olsr_process_changes(void)
           olsr_calculate_lq_mpr();
         }
 
-      if (olsr_cnf->lq_level < 2)
-        {
-          olsr_calculate_routing_table();
-          olsr_calculate_hna_routes();
-        }
+      olsr_calculate_routing_table();
+      olsr_calculate_hna_routes();
     }
   
-  else if (changes_topology)
+  else if (changes_topology || changes_hna)
     {
       /* calculate the routing table and HNA */
 
-      if (olsr_cnf->lq_level < 2)
-        {
-          olsr_calculate_routing_table();
-          olsr_calculate_hna_routes();
-        }
+        olsr_calculate_routing_table();
+        olsr_calculate_hna_routes();
     }
 
-  else if (changes_hna)
-    {
-      /* update HNA routes */
-
-      if (olsr_cnf->lq_level < 2)
-        {
-          olsr_calculate_hna_routes();
-        }
-    }
-  
-  if (olsr_cnf->lq_level >= 2)
-    {
-      olsr_calculate_lq_routing_table();
-    }
   
   if (olsr_cnf->debug_level > 0)
     {      
@@ -264,8 +244,10 @@ olsr_init_tables(void)
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
     avl_comp_default = NULL;
+    avl_comp_prefix_default = avl_comp_ipv4_prefix;
   } else {
     avl_comp_default = avl_comp_ipv6;
+    avl_comp_prefix_default = avl_comp_ipv6_prefix;
   }
 
   /* Initialize link set */
@@ -282,9 +264,6 @@ olsr_init_tables(void)
 
   /* Initialize two hop table */
   olsr_init_two_hop_table();
-
-  /* Initialize old route table */
-  olsr_init_old_table();
 
   /* Initialize topology */
   olsr_init_tc();

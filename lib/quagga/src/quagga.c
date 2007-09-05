@@ -163,13 +163,11 @@ void init_zebra (void) {
 
 void zebra_cleanup (void) {
   int i;
-  struct rt_entry *tmp;
   if (zebra.options & OPTION_EXPORT) {
-    for (i = 0; i < HASHSIZE; i++) {
-      for (tmp = routingtable[i].next; tmp != &routingtable[i]; tmp = tmp->next)
-	zebra_del_olsr_v4_route (tmp);     
-      for (tmp = hna_routes[i].next; tmp != &hna_routes[i]; tmp = tmp->next)
-	zebra_del_olsr_v4_route (tmp) ;   }
+    struct rt_entry *rt;
+    OLSR_FOR_ALL_RT_ENTRIES(rt) {
+        zebra_del_olsr_v4_route (rt);
+    } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
   }  
 
   for (i = 0; ZEBRA_ROUTE_MAX - 1; i++)
@@ -178,19 +176,16 @@ void zebra_cleanup (void) {
 
 
 static void zebra_reconnect (void) {
-  struct rt_entry *tmp;
   int i;
 
   zebra_connect();
   if (!zebra.status & STATUS_CONNECTED) return; // try again next time
 
   if (zebra.options & OPTION_EXPORT) {
-    for (i = 0; i < HASHSIZE; i++) {
-      for (tmp = routingtable[i].next; tmp != &routingtable[i]; tmp = tmp->next)
-	zebra_add_olsr_v4_route (tmp);     
-      for (tmp = hna_routes[i].next; tmp != &hna_routes[i]; tmp = tmp->next)
-	zebra_add_olsr_v4_route (tmp);
-    }
+    struct rt_entry *rt;
+    OLSR_FOR_ALL_RT_ENTRIES(rt) {
+        zebra_add_olsr_v4_route (rt);
+    } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
   }  
 
   for (i = 0; ZEBRA_ROUTE_MAX - 1; i++)
@@ -740,14 +735,15 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
   route.type = ZEBRA_ROUTE_OLSR; // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
-  route.prefixlen = masktoprefixlen (r->rt_mask.v4);
-  route.prefix = r->rt_dst.v4;
-  if ((r->rt_router.v4 == r->rt_dst.v4 && route.prefixlen == 32)){
+  route.prefixlen = r->rt_dst.prefix_len;
+  route.prefix = r->rt_dst.prefix.v4;
+  if ((r->rt_best->rtp_nexthop.gateway.v4 == r->rt_dst.prefix.v4 &&
+       route.prefixlen == 32)) {
     route.message |= ZAPI_MESSAGE_IFINDEX | ZAPI_MESSAGE_NEXTHOP;
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
 			       "zebra_add_olsr_v4_route");
-    *route.index = htonl(r->rt_if->if_index);
+    *route.index = htonl(r->rt_best->rtp_nexthop.iface->if_index);
     route.nexthops = olsr_malloc (sizeof route.nexthops->type +
 				  sizeof route.nexthops->payload,
 				  "zebra_add_olsr_v4_route");
@@ -762,10 +758,10 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
 				   sizeof route.nexthops->payload), 
 				   "zebra_add_olsr_v4_route");
     route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_router.v4;
+    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4;
   }
 
-  route.metric = r->rt_metric;
+  route.metric = r->rt_best->rtp_metric.hops;
   route.metric = htonl(route.metric);
 
   if (zebra.distance) {
@@ -785,14 +781,14 @@ int zebra_del_olsr_v4_route (struct rt_entry *r) {
   route.type = ZEBRA_ROUTE_OLSR; // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
-  route.prefixlen = masktoprefixlen (r->rt_mask.v4);
-  route.prefix = r->rt_dst.v4;
-  if ((r->rt_router.v4 == r->rt_dst.v4 && route.prefixlen == 32)){
+  route.prefixlen = r->rt_dst.prefix_len;
+  route.prefix = r->rt_dst.prefix.v4;
+  if ((r->rt_best->rtp_nexthop.gateway.v4 == r->rt_dst.prefix.v4 && route.prefixlen == 32)){
     route.message |= ZAPI_MESSAGE_IFINDEX;
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
 			       "zebra_add_olsr_v4_route");
-    *route.index = htonl (r->rt_if->if_index);
+    *route.index = htonl (r->rt_best->rtp_nexthop.iface->if_index);
     route.nexthops = olsr_malloc (sizeof route.nexthops->type +
 				  sizeof route.nexthops->payload,
 				  "zebra_add_olsr_v4_route");
@@ -807,9 +803,9 @@ int zebra_del_olsr_v4_route (struct rt_entry *r) {
 				   sizeof route.nexthops->payload), 
 				  "zebra_add_olsr_v4_route");
     route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_router.v4;
+    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4;
   }
-  route.metric = r->rt_metric;
+  route.metric = r->rt_best->rtp_metric.hops;
   route.metric = htonl (route.metric);
   
   if (zebra.distance) {

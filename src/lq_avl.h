@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.9 2007/07/05 22:43:46 bernd67 Exp $
+ * $Id: lq_avl.h,v 1.10 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -59,8 +59,14 @@ struct avl_node
 struct avl_tree
 {
   struct avl_node *root;
+  struct avl_node *first;
+  struct avl_node *last;
+  unsigned int count;
   int (*comp)(void *, void *);
 };
+
+#define AVL_DUP    1
+#define AVL_DUP_NO 0
 
 void avl_init(struct avl_tree *, int (*)(void *, void *));
 struct avl_node *avl_find(struct avl_tree *, void *);
@@ -72,6 +78,7 @@ struct avl_node *avl_walk_next(struct avl_node *);
 struct avl_node *avl_walk_prev(struct avl_node *);
 
 extern int (*avl_comp_default)(void *, void *);
+extern int (*avl_comp_prefix_default)(void *, void *);
 extern int avl_comp_ipv4(void *, void *);
 extern int avl_comp_ipv6(void *, void *);
 

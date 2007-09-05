@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.10 2007/08/20 18:46:03 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.11 2007/09/05 16:11:11 bernd67 Exp $
  */
 
 
@@ -89,6 +89,9 @@ olsr_prefix_to_netmask(union olsr_ip_addr *, olsr_u16_t);
 
 olsr_u16_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *);
+
+int
+olsr_host_rt_maxplen(void);
 
 char *
 sockaddr_to_string(const struct sockaddr *);

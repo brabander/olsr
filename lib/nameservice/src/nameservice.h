@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.12 2007/07/02 10:59:12 bernd67 Exp $ */
+/* $Id: nameservice.h,v 1.13 2007/09/05 16:11:10 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -60,6 +60,7 @@
 #define PARSER_TYPE		MESSAGE_TYPE
 #define EMISSION_INTERVAL	120 /* two minutes */
 #define NAME_VALID_TIME		1800 /* half one hour */
+#define NAMESERVER_COUNT        3
 
 #define NAME_PROTOCOL_VERSION	1
 

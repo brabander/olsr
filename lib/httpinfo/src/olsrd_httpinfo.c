@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.71 2007/07/15 21:09:37 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.72 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 /*
@@ -150,8 +150,6 @@ static int build_neigh_body(char *, olsr_u32_t);
 
 static int build_topo_body(char *, olsr_u32_t);
 
-static int build_hna_body(char *, olsr_u32_t);
-
 static int build_mid_body(char *, olsr_u32_t);
 
 static int build_nodes_body(char *, olsr_u32_t);
@@ -164,11 +162,12 @@ static int build_cfgfile_body(char *, olsr_u32_t);
 
 static int check_allowed_ip(const struct allowed_net * const allowed_nets, const union olsr_ip_addr * const addr);
 
-static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr);
+static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link,
+                        const union olsr_ip_addr * const ipaddr, const int prefix_len);
 
-static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask);
-
-static char *olsr_netmask_to_string(union hna_netmask *);
+static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link,
+                             const union olsr_ip_addr * const ipaddr,
+                             const int prefix_len);
 
 static ssize_t writen(int fd, const void *buf, size_t count);
 
@@ -679,60 +678,52 @@ static int build_frame(char *title __attribute__((unused)),
   return size;
 }
 
-static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char * const ipstr, const char  * const maskstr)
+static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link,
+                        const union olsr_ip_addr * const ipaddr, const int prefix_len)
 {
   int size = 0;
-  if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
+  if (want_link && prefix_len == -1) { /* Print the link only if there is no prefix_len */
     size += snprintf(&buf[size],
                      bufsize-size,
                      "<a href=\"http://%s:%d/all\">",
-                     ipstr,
+                     olsr_ip_to_string(ipaddr),
                      http_port);
   }
-  size += snprintf(&buf[size], bufsize-size, "%s", ipstr);
-  if (maskstr) {
-    size += snprintf(&buf[size], bufsize-size, "/%s", maskstr);
+
+  /* print ip address or ip prefix ? */
+  if (prefix_len == -1) {
+      size += snprintf(&buf[size], bufsize-size, "%s", olsr_ip_to_string(ipaddr));
+  } else {
+      size += snprintf(&buf[size], bufsize-size, "%s/%d", olsr_ip_to_string(ipaddr),
+                       prefix_len);
   }
-  if (want_link && maskstr == NULL) { /* Print the link only if there is not netmask */
+  
+  if (want_link && prefix_len == -1) { /* Print the link only if there is no prefix_len */
     size += snprintf(&buf[size], bufsize-size, "</a>");
   }
   return size;
 }
 
-static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr * const ipaddr, const union hna_netmask * const mask)
+static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize,
+                             const olsr_bool want_link,
+                             const union olsr_ip_addr * const ipaddr,
+                             const int prefix_len)
 {
   int size = 0;
-  char maskbuf[32];
-  char *maskstr;
   const struct hostent * const hp =
 #ifndef WIN32
-                                    resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) :
+      resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) :
 #endif
-                                        NULL;
-  if (mask != NULL) {
-    if (olsr_cnf->ip_version == AF_INET) {
-      if (mask->v4 == ~0U) {
-        maskstr = NULL;
-      } else {
-        struct in_addr in;
-        in.s_addr = mask->v4;
-        snprintf(maskbuf, sizeof(maskbuf), "%s", inet_ntoa(in));
-        maskstr = maskbuf;
-      }
-    } else {
-      snprintf(maskbuf, sizeof(maskbuf), "%d", mask->v6);
-      maskstr = maskbuf;
-    }
-  } else {
-    maskstr =  NULL;
-  }
+      NULL;
+
   size += snprintf(&buf[size], bufsize-size, "<td>");
-  size += build_ip_txt(&buf[size], bufsize-size, want_link, olsr_ip_to_string(ipaddr), maskstr);
+  size += build_ip_txt(&buf[size], bufsize-size, want_link, ipaddr, prefix_len);
   size += snprintf(&buf[size], bufsize-size, "</td>");
+
   if (resolve_ip_addresses) {
     if (hp) {
       size += snprintf(&buf[size], bufsize-size, "<td>(");
-      size += build_ip_txt(&buf[size], bufsize-size, want_link, hp->h_name, NULL);
+      size += snprintf(&buf[size], bufsize-size, "%s", hp->h_name);
       size += snprintf(&buf[size], bufsize-size, ")</td>");
     } else {
       size += snprintf(&buf[size], bufsize-size, "<td/>");
@@ -740,51 +731,48 @@ static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_boo
   }
   return size;
 }
-#define build_ipaddr_with_link(buf, bufsize, ipaddr, mask) build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (mask))
-#define build_ipaddr_no_link(buf, bufsize, ipaddr, mask)   build_ipaddr_link((buf), (bufsize), OLSR_FALSE, (ipaddr), (mask))
 
+#define build_ipaddr_with_link(buf, bufsize, ipaddr, plen) \
+          build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (plen))
+#define build_ipaddr_no_link(buf, bufsize, ipaddr, plen) \
+          build_ipaddr_link((buf), (bufsize), OLSR_FALSE, (ipaddr), (plen))
 
-static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * const route, const char * const title, const int print_netmask)
+static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt)
 {
   int size = 0;
-  size += snprintf(&buf[size], bufsize-size, "<tr>");
-  size += build_ipaddr_with_link(&buf[size], bufsize-size, &route->rt_dst, print_netmask ? &route->rt_mask : NULL);
-  size += build_ipaddr_with_link(&buf[size], bufsize-size, &route->rt_router, NULL);
 
-  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%d</td>", route->rt_metric);
-  if (olsr_cnf->lq_level > 0) {
-    size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%.2f</td>", route->rt_etx);
-  }
-  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%s</td><td>%s</td></tr>\n", route->rt_if->int_name, title);
+  size += snprintf(&buf[size], bufsize-size, "<tr>");
+  size += build_ipaddr_with_link(&buf[size], bufsize-size, &rt->rt_dst.prefix,
+                                 rt->rt_dst.prefix_len);
+  size += build_ipaddr_with_link(&buf[size], bufsize-size,
+                                 &rt->rt_best->rtp_nexthop.gateway, -1);
+
+  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%d</td>",
+                   rt->rt_best->rtp_metric.hops);
+  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%.3f</td>",
+                     rt->rt_best->rtp_metric.etx);
+  size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%s</td></tr>\n",
+                   rt->rt_best->rtp_nexthop.iface->int_name);
   return size;
 }
 
 static int build_routes_body(char *buf, olsr_u32_t bufsize)
 {
-  int size = 0, index;
-  struct rt_entry *routes;
+  int size = 0;
+  struct rt_entry *rt;
 
   size += snprintf(&buf[size], bufsize-size, "<h2>OLSR routes in kernel</h2>\n");
 
   size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th%1$s>Destination</th><th%1$s>Gateway</th><th>Metric</th>",
                   resolve_ip_addresses ? " colspan=\"2\"" : "");
-  if (olsr_cnf->lq_level > 0)
-    size += snprintf(&buf[size], bufsize-size, "<th>ETX</th>");
-  size += snprintf(&buf[size], bufsize-size, "<th>Interface</th><th>Type</th></tr>\n");
 
-  /* Neighbors */
-  for(index = 0;index < HASHSIZE;index++) {
-    for(routes = routingtable[index].next; routes != &routingtable[index]; routes = routes->next) {
-      size += build_route(&buf[size], bufsize-size, routes, "HOST", OLSR_FALSE);
-    }
-  }
+  size += snprintf(&buf[size], bufsize-size, "<th>ETX</th>");
+  size += snprintf(&buf[size], bufsize-size, "<th>Interface</th></tr>\n");
 
-  /* HNA */
-  for(index = 0;index < HASHSIZE;index++) {
-    for(routes = hna_routes[index].next; routes != &hna_routes[index];routes = routes->next) {
-      size += build_route(&buf[size], bufsize-size, routes, "HNA", OLSR_TRUE);
-    }
-  }
+  /* Walk the route table */
+  OLSR_FOR_ALL_RT_ENTRIES(rt) {
+      size += build_route(&buf[size], bufsize-size, rt);
+  } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
@@ -1004,8 +992,8 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
     while(link)
       {
         size += snprintf(&buf[size], bufsize-size, "<tr>");
-        size += build_ipaddr_no_link(&buf[size], bufsize, &link->local_iface_addr, NULL);
-        size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, NULL);
+        size += build_ipaddr_no_link(&buf[size], bufsize, &link->local_iface_addr, -1);
+        size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
 	size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">%0.2f</td>",
                        link->L_link_quality);
@@ -1040,7 +1028,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 	  neigh = neigh->next)
 	{
           size += snprintf(&buf[size], bufsize-size, "<tr>");
-          size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, NULL);
+          size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, -1);
 	  size += snprintf(&buf[size], bufsize-size, 
 			  "<td>%s</td>"
 			  "<td>%s</td>"
@@ -1099,8 +1087,8 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
 	  while(dst_entry != &entry->destinations)
 	    {
               size += snprintf(&buf[size], bufsize-size, "<tr>");
-              size += build_ipaddr_with_link(&buf[size], bufsize, &dst_entry->T_dest_addr, NULL);
-              size += build_ipaddr_with_link(&buf[size], bufsize, &entry->T_last_addr, NULL);
+              size += build_ipaddr_with_link(&buf[size], bufsize, &dst_entry->T_dest_addr, -1);
+              size += build_ipaddr_with_link(&buf[size], bufsize, &entry->T_last_addr, -1);
               if (olsr_cnf->lq_level > 0)
                 {
                   const double d = dst_entry->link_quality * dst_entry->inverse_link_quality;
@@ -1125,47 +1113,6 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   return size;
 }
 
-static int build_hna_body(char *buf, olsr_u32_t bufsize)
-{
-  int size;
-  olsr_u8_t index;
-  struct hna_entry *tmp_hna;
-  struct hna_net *tmp_net;
-
-  size = 0;
-
-  size += snprintf(&buf[size], bufsize-size, "<h2>HNA entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th><th>Gateway</th></tr>\n");
-
-  /* HNA entries */
-  for(index=0;index<HASHSIZE;index++)
-    {
-      tmp_hna = hna_set[index].next;
-      /* Check all entrys */
-      while(tmp_hna != &hna_set[index])
-	{
-	  /* Check all networks */
-	  tmp_net = tmp_hna->networks.next;
-	      
-	  while(tmp_net != &tmp_hna->networks)
-	    {
-              size += snprintf(&buf[size], bufsize-size, "<tr>");
-              size += build_ipaddr_no_link(&buf[size], bufsize, &tmp_net->A_network_addr, NULL);
-	      size += snprintf(&buf[size], bufsize-size, "<td>%s</td>",
-			      olsr_netmask_to_string(&tmp_net->A_netmask));
-              size += build_ipaddr_with_link(&buf[size], bufsize, &tmp_hna->A_gateway_addr, NULL);
-	      tmp_net = tmp_net->next;
-	    }
-	      
-	  tmp_hna = tmp_hna->next;
-	}
-    }
-
-  size += snprintf(&buf[size], bufsize-size, "</table>\n");
-
-  return size;
-}
-
-
 static int build_mid_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
@@ -1182,7 +1129,7 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
           int mid_cnt;
           struct mid_address *alias;
           size += snprintf(&buf[size], bufsize-size, "<tr>");
-          size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, NULL);
+          size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, -1);
 	  size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
 
 	  alias = entry->aliases;
@@ -1209,7 +1156,6 @@ static int build_nodes_body(char *buf, olsr_u32_t bufsize)
 
   size += build_neigh_body(&buf[size], bufsize-size);
   size += build_topo_body(&buf[size], bufsize-size);
-  size += build_hna_body(&buf[size], bufsize-size);
   size += build_mid_body(&buf[size], bufsize-size);
 
   return size;
@@ -1223,7 +1169,6 @@ static int build_all_body(char *buf, olsr_u32_t bufsize)
   size += build_routes_body(&buf[size], bufsize-size);
   size += build_neigh_body(&buf[size], bufsize-size);
   size += build_topo_body(&buf[size], bufsize-size);
-  size += build_hna_body(&buf[size], bufsize-size);
   size += build_mid_body(&buf[size], bufsize-size);
 
   return size;
@@ -1287,26 +1232,6 @@ static int check_allowed_ip(const struct allowed_net * const allowed_nets, const
     return 0;
 }
 
-
-
-/**
- *This function is just as bad as the previous one :-(
- */
-static char *olsr_netmask_to_string(union hna_netmask *mask)
-{
-  char *ret;
-  if(olsr_cnf->ip_version == AF_INET) {
-      struct in_addr in;
-      in.s_addr = mask->v4;
-      ret = inet_ntoa(in);
-  } else {
-      static char netmask[5];
-      /* IPv6 */
-      snprintf(netmask, sizeof(netmask), "%d", mask->v6);
-      ret = netmask;
-  }
-  return ret;
-}
 
 
 #if 0

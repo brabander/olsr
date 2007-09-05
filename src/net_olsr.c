@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.28 2007/08/28 20:10:16 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.29 2007/09/05 16:11:11 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -499,10 +499,12 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
 olsr_u16_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
-  int i;
   olsr_u16_t prefix = 0;
+  unsigned int i;
 
-  for (i = 0; i < 16; i++)
+  prefix = 0;
+
+  for(i = 0; i < olsr_cnf->ipsize; i++)
     {
       if(adr->v6.s6_addr[i] == 0xff)
 	{
@@ -525,6 +527,22 @@ olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
   return prefix;
 }
 
+/**
+ * olsr_host_rt_maxplen
+ *
+ * @return the maxium prefix length based wether v4 or v6 is configured 
+ */
+int
+olsr_host_rt_maxplen(void)
+{
+  if(olsr_cnf->ip_version == AF_INET) {
+    /* IPv4 */
+    return 32;
+  } else {
+    /* IPv6 */
+    return 128;
+  }
+}
 
 
 /**
@@ -658,3 +676,9 @@ olsr_validate_address(const union olsr_ip_addr *adr)
 
   return OLSR_TRUE;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */
