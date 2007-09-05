@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.19 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: routing_table.h,v 1.20 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -65,10 +65,16 @@ struct rt_metric
 };
 
 /* a nexthop is a pointer to a gateway router plus an interface */
-struct rt_nexthop
+struct rt_nexthop_soll_weg
 {
   union olsr_ip_addr    gateway; /* gateway router */
   struct interface      *iface; /* outgoing interface */
+};
+
+struct rt_nexthop
+{
+  union olsr_ip_addr    gateway; /* gateway router */
+  int                   iif_index; /* outgoung interface index */
 };
 
 /*
@@ -168,7 +174,7 @@ struct rt_path *
 olsr_insert_routing_table(union olsr_ip_addr *, int,
                           union olsr_ip_addr *,
                           union olsr_ip_addr *,
-                          struct interface *, int, float);
+                          int, int, float);
 
 struct rt_entry *
 olsr_lookup_routing_table(union olsr_ip_addr *);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.72 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.73 2007/09/05 16:17:35 bernd67 Exp $
  */
 
 /*
@@ -752,7 +752,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
   size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%.3f</td>",
                      rt->rt_best->rtp_metric.etx);
   size += snprintf(&buf[size], bufsize-size, "<td align=\"center\">%s</td></tr>\n",
-                   rt->rt_best->rtp_nexthop.iface->int_name);
+                   if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   return size;
 }
 

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.10 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: plugin.c,v 1.11 2007/09/05 16:17:35 bernd67 Exp $
  */
 
 #include <string.h>
@@ -228,7 +228,7 @@ int iterRouteTabNext(char *buff, int len)
   snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%d~",
            rawIpAddrToString(&iterRouteTab->rt_dst.prefix, ipAddrLen),
            rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, ipAddrLen),
-           iterRouteTab->rt_best->rtp_nexthop.iface->int_name,
+           if_ifwithindex_name(iterRouteTab->rt_best->rtp_nexthop.iif_index),
            iterRouteTab->rt_best->rtp_metric.hops);
 
   rt_tree_node = avl_walk_next(&iterRouteTab->rt_tree_node);

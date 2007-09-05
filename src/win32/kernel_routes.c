@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.21 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.22 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #include <stdio.h>
@@ -79,7 +79,7 @@ int olsr_ioctl_add_route(struct rt_entry *rt)
 
   Row.dwForwardPolicy = 0;
   Row.dwForwardNextHop = rt->rt_best->rtp_nexthop.gateway.v4;
-  Row.dwForwardIfIndex = rt->rt_best->rtp_nexthop.iface->if_index;
+  Row.dwForwardIfIndex = rt->rt_best->rtp_nexthop.iif_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4 == rt->rt_best->rtp_nexthop.gateway.v4) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
@@ -118,7 +118,7 @@ int olsr_ioctl_add_route(struct rt_entry *rt)
   if(olsr_cnf->open_ipc) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
         rt->rt_best->rtp_metric.hops, 1,
-        rt->rt_best->rtp_nexthop.iface->int_name);
+        if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_name));
   }
 
   return 0;
@@ -158,7 +158,7 @@ int olsr_ioctl_del_route(struct rt_entry *rt)
 
   Row.dwForwardPolicy = 0;
   Row.dwForwardNextHop = rt->rt_nexthop.gateway.v4;
-  Row.dwForwardIfIndex = rt->rt_nexthop.iface->if_index;
+  Row.dwForwardIfIndex = rt->rt_nexthop.iif_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4 == rt->rt_nexthop.gateway.v4) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT

@@ -743,7 +743,7 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
 			       "zebra_add_olsr_v4_route");
-    *route.index = htonl(r->rt_best->rtp_nexthop.iface->if_index);
+    *route.index = htonl(r->rt_best->rtp_nexthop.iif_index);
     route.nexthops = olsr_malloc (sizeof route.nexthops->type +
 				  sizeof route.nexthops->payload,
 				  "zebra_add_olsr_v4_route");
@@ -788,7 +788,7 @@ int zebra_del_olsr_v4_route (struct rt_entry *r) {
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
 			       "zebra_add_olsr_v4_route");
-    *route.index = htonl (r->rt_best->rtp_nexthop.iface->if_index);
+    *route.index = htonl (r->rt_best->rtp_nexthop.iif_index);
     route.nexthops = olsr_malloc (sizeof route.nexthops->type +
 				  sizeof route.nexthops->payload,
 				  "zebra_add_olsr_v4_route");

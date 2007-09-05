@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.34 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.35 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 /*
@@ -338,7 +338,6 @@ static int
 ipc_send_all_routes(int fd)
 {
   struct rt_entry  *rt;
-  struct interface *ifn;
   struct ipcmsg packet;
   char *tmp;
   
@@ -348,8 +347,6 @@ ipc_send_all_routes(int fd)
   
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
 
-    ifn = rt->rt_nexthop.iface;
-	  
     memset(&packet, 0, sizeof(struct ipcmsg));
     packet.size = htons(IPC_PACK_SIZE);
     packet.msgtype = ROUTE_IPC;
@@ -361,10 +358,7 @@ ipc_send_all_routes(int fd)
 
     COPY_IP(&packet.gateway_addr, &rt->rt_nexthop.gateway);
 
-    if(ifn)
-      memcpy(&packet.device[0], ifn->int_name, 4);
-    else
-      memset(&packet.device[0], 0, 4);
+    memcpy(&packet.device[0], if_ifwithindex_name(rt->rt_nexthop.iif_index), 4);
 
     tmp = (char *) &packet;
   

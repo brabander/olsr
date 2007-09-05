@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.8 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.9 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 /*
@@ -327,7 +327,7 @@ static void ipc_print_routes(void)
                    olsr_ip_to_string(&rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
                    rt->rt_best->rtp_metric.etx,
-                   rt->rt_best->rtp_nexthop.iface->int_name);
+                   if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
 
     }
     ipc_sendf("\n");

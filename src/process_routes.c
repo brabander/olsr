@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.35 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: process_routes.c,v 1.36 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -507,9 +507,9 @@ olsr_update_kernel_routes(void)
     /* nexthop change ? */
     if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop)) {
 
-      if (!rt->rt_nexthop.iface) {
+      if (0 > rt->rt_nexthop.iif_index) {
 
-        /* fresh routes do have NULL pointers in the nexthop fields. */
+        /* fresh routes do have an interface index of -1. */
         olsr_enqueue_rt(&add_kernel_list, rt);
       } else { 
 

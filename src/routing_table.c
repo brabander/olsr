@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.29 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: routing_table.c,v 1.30 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -188,7 +188,7 @@ olsr_lookup_routing_table(union olsr_ip_addr *dst)
  */
 static void
 olsr_update_routing_entry(struct rt_path *rtp, union olsr_ip_addr *gateway,
-                          struct interface *iface, int metric, float etx)
+                          int iif_index, int metric, float etx)
 {
 
   rtp->rtp_version = routingtree_version;
@@ -197,7 +197,7 @@ olsr_update_routing_entry(struct rt_path *rtp, union olsr_ip_addr *gateway,
   rtp->rtp_nexthop.gateway = *gateway;
 
   /* interface */
-  rtp->rtp_nexthop.iface = iface;
+  rtp->rtp_nexthop.iif_index = iif_index;
 
   /* etx */
   rtp->rtp_metric.hops = metric;
@@ -225,6 +225,9 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   }
 
   memset(rt, 0, sizeof(struct rt_entry));
+  
+  /* Mark this entry as fresh (see process_routes.c:512) */
+  rt->rt_nexthop.iif_index = -1;
 
   /* set key and backpointer prior to tree insertion */
   rt->rt_dst = *prefix;
@@ -279,7 +282,7 @@ olsr_bool
 olsr_nh_change(struct rt_nexthop *nh1, struct rt_nexthop *nh2)
 {
   if ((!COMP_IP(&nh1->gateway, &nh2->gateway)) ||
-      (nh1->iface != nh2->iface)) {
+      (nh1->iif_index != nh2->iif_index)) {
     return OLSR_TRUE;
   }
   return OLSR_FALSE;
@@ -400,7 +403,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
                           int plen,
                           union olsr_ip_addr *originator,
 			  union olsr_ip_addr *gateway,
-			  struct interface *iface, 
+			  int iif_index,
 			  int metric,
 			  float etx)
 {
@@ -456,7 +459,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
   }
 
   /* update the version field and relevant parameters */
-  olsr_update_routing_entry(rtp, gateway, iface, metric, etx);
+  olsr_update_routing_entry(rtp, gateway, iif_index, metric, etx);
 
   return rtp;
 }
@@ -563,13 +566,13 @@ olsr_fill_routing_table_with_neighbors(void)
               olsr_insert_routing_table(&link->neighbor_iface_addr, max_host_plen,
                                         &link->neighbor->neighbor_main_addr,
                                         &link->neighbor_iface_addr,
-                                        iface, 1, etx);
+                                        iface->if_index, 1, etx);
 
               /* this is the nexthop route that all routes will be tracking */
               olsr_insert_routing_table(&addrs2->alias, max_host_plen,
                                         &link->neighbor->neighbor_main_addr,
                                         &link->neighbor_iface_addr,
-                                        iface, 1, etx);
+                                        iface->if_index, 1, etx);
             }
           }
         }
@@ -617,7 +620,7 @@ olsr_calculate_hna_routes(void)
         olsr_insert_routing_table(&tmp_net->A_network_addr, plen,
                                   &tmp_hna->A_gateway_addr,
                                   &rt->rt_best->rtp_nexthop.gateway,
-                                  rt->rt_best->rtp_nexthop.iface,
+                                  rt->rt_best->rtp_nexthop.iif_index,
                                   rt->rt_best->rtp_metric.hops,
                                   rt->rt_best->rtp_metric.etx);
 
@@ -668,7 +671,7 @@ olsr_print_routing_table(struct avl_tree *tree)
              rtp->rtp_metric.etx,
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&rtp->rtp_nexthop.gateway),
-             rtp->rtp_nexthop.iface->int_name,
+             if_ifwithindex_name(rt->rt_nexthop.iif_index),
              rtp->rtp_version);
     
     }

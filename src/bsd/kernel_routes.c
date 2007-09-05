@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.12 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.13 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 
@@ -128,12 +128,12 @@ static int add_del_route(struct rt_entry *rt, int add)
 
     for (awalker = addrs; awalker != NULL; awalker = awalker->ifa_next)
       if (awalker->ifa_addr->sa_family == AF_LINK &&
-          strcmp(awalker->ifa_name, nexthop->iface->int_name) == 0)
+          strcmp(awalker->ifa_name, if_ifwithindex_name(nexthop->iif_index)) == 0)
         break;
 
     if (awalker == NULL)
     {
-      fprintf(stderr, "interface %s not found\n", nexthop->iface->int_name);
+      fprintf(stderr, "interface %s not found\n", if_ifwithindex_name(nexthop->iif_index));
       freeifaddrs(addrs);
       return -1;
     }
@@ -231,7 +231,14 @@ static int add_del_route6(struct rt_entry *rt, int add)
 
   else
   {
-    memcpy(&sin6.sin6_addr.s6_addr, &nexthop->iface->int6_addr.sin6_addr.s6_addr,
+    // Sven-Ola: This looks really ugly (please compar to IPv4 above)
+    struct interface* iface = if_ifwithindex(nexthop->iif_index);
+    if (NULL == iface)
+    {
+      fprintf(stderr, "interface %s not found\n", if_ifwithindex_name(nexthop->iif_index));
+      return -1;
+    }
+    memcpy(&sin6.sin6_addr.s6_addr, &iface->int6_addr.sin6_addr.s6_addr,
       sizeof(struct in6_addr));
 
     memcpy(walker, &sin6, sizeof (sin6));
@@ -249,8 +256,8 @@ static int add_del_route6(struct rt_entry *rt, int add)
 
   if ((rtm->rtm_flags & RTF_GATEWAY) != 0)
   {
-    strcpy(&sdl.sdl_data[0], nexthop->iface->int_name);
-    sdl.sdl_nlen = (u_char)strlen(nexthop->iface->int_name);
+    strcpy(&sdl.sdl_data[0], if_ifwithindex_name(nexthop->iif_index));
+    sdl.sdl_nlen = (u_char)strlen((char*)&sdl.sdl_data[0]);
     memcpy(walker, &sdl, sizeof (sdl));
     walker += step_dl;
     rtm->rtm_addrs |= RTA_IFP;

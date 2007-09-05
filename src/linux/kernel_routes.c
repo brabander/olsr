@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.24 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.25 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 
@@ -91,7 +91,7 @@ olsr_ioctl_add_route(struct rt_entry *rt)
   /*
    * Set interface
    */
-  kernel_route.rt_dev = rt->rt_best->rtp_nexthop.iface->int_name;
+  kernel_route.rt_dev = if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index);
 
   /* delete existing default route before ? */
   if((olsr_cnf->del_gws) &&
@@ -108,7 +108,7 @@ olsr_ioctl_add_route(struct rt_entry *rt)
      */
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
                            rt->rt_best->rtp_metric.hops, 1,
-                           rt->rt_best->rtp_nexthop.iface->int_name);
+                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   }
 
   return rslt;
@@ -144,7 +144,7 @@ olsr_ioctl_add_route6(struct rt_entry *rt)
   /*
    * set interface
    */
-  kernel_route.rtmsg_ifindex = rt->rt_best->rtp_nexthop.iface->if_index;
+  kernel_route.rtmsg_ifindex = rt->rt_best->rtp_nexthop.iif_index;
   
   /* XXX delete 0/0 route before ? */
 
@@ -155,7 +155,7 @@ olsr_ioctl_add_route6(struct rt_entry *rt)
      */
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway, 
                            rt->rt_best->rtp_metric.hops, 1,
-                           rt->rt_best->rtp_nexthop.iface->int_name);
+                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   }
 
   return rslt;

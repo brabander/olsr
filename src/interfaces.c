@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.33 2007/08/02 21:51:40 bernd67 Exp $
+ * $Id: interfaces.c,v 1.34 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -306,6 +306,49 @@ if_ifwithname(const char *if_name)
     }
   
   return NULL;
+}
+
+
+/**
+ *Find the interface with a given interface index.
+ *
+ *@param iif_index of the interface to find.
+ *
+ *@return return the interface struct representing the interface
+ *that matched the iif_index.
+ */
+struct interface *
+if_ifwithindex(int if_index)
+{
+  struct interface *ifp = ifnet;
+  while (ifp) 
+    {
+      if (ifp->if_index == if_index)
+        return ifp;
+      ifp = ifp->int_next;
+    }
+  return NULL;
+}
+
+
+/**
+ *Get an interface name for a given interface index
+ *
+ *@param iif_index of the interface to find.
+ *
+ *@return "" or interface name.
+ */
+char *
+if_ifwithindex_name(int if_index)
+{
+  struct interface *ifp = ifnet;
+  while (ifp) 
+    {
+      if (ifp->if_index == if_index)
+        return ifp->int_name;
+      ifp = ifp->int_next;
+    }
+  return "void";
 }
 
 

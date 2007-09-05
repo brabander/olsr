@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.49 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: lq_route.c,v 1.50 2007/09/05 16:17:36 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -604,7 +604,7 @@ olsr_calculate_routing_table (void)
 
       /* add a route to the main address of the destination node */
       olsr_insert_routing_table(&vert->addr, max_host_plen, &vert->addr,
-                                &link->neighbor_iface_addr, inter,
+                                &link->neighbor_iface_addr, inter->if_index,
                                 vert->hops, vert->path_etx);
 
       /* add routes to the remaining interfaces of the destination node */
@@ -613,7 +613,7 @@ olsr_calculate_routing_table (void)
            mid_walker = mid_walker->next_alias) {
 
         olsr_insert_routing_table(&mid_walker->alias, max_host_plen, &vert->addr,
-                                  &link->neighbor_iface_addr, inter,
+                                  &link->neighbor_iface_addr, inter->if_index,
                                   vert->hops, vert->path_etx);
       }
 
@@ -633,7 +633,7 @@ olsr_calculate_routing_table (void)
         plen = olsr_get_hna_prefix_len(hna);
         if (vert->path_etx != INFINITE_ETX)
         olsr_insert_routing_table(&hna->A_network_addr, plen, &vert->addr,
-                                  &link->neighbor_iface_addr, inter,
+                                  &link->neighbor_iface_addr, inter->if_index,
                                   vert->hops, vert->path_etx);
       }
     }
