@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.12 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.13 2007/09/05 16:30:50 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -478,6 +478,7 @@ static struct avl_node *avl_local_min(struct avl_node *node)
   return node;
 }
 
+#if 0
 static struct avl_node *avl_local_max(struct avl_node *node)
 {
   while (node->right != NULL)
@@ -485,6 +486,7 @@ static struct avl_node *avl_local_max(struct avl_node *node)
 
   return node;
 }
+#endif
 
 static void avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
 {
