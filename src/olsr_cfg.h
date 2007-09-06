@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.31 2007/05/13 22:23:55 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.32 2007/09/06 12:08:28 bernd67 Exp $
  */
 
 
@@ -45,7 +45,7 @@
 
 #include "olsr_types.h"
 
-/* Default valuse not declared in olsr_protocol.h */
+/* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
 #define DEF_NICCHGPOLLRT    2.5
 #define DEF_WILL_AUTO       OLSR_TRUE
@@ -58,7 +58,7 @@
 #define DEF_LQ_FISH         0
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
-#define DEF_LQ_WSIZE        10
+#define DEF_LQ_WSIZE        12
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
 
 /* Bounds */
