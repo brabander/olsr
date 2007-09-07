@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.36 2007/05/02 07:41:20 bernd67 Exp $
+ * $Id: net.c,v 1.37 2007/09/07 08:53:36 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -71,8 +71,6 @@
 #ifndef FBSD_NO_80211
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
-#include <dev/wi/if_wavelan_ieee.h>
-#include <dev/wi/if_wireg.h>
 #endif
 #endif
 
@@ -557,7 +555,7 @@ int get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 	  sin6 = (const struct sockaddr_in6 *)ifa->ifa_addr;
 	  if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
 	    continue;
-	  strncpy(ifr6.ifr_name, ifname, sizeof(ifname));
+	  strncpy(ifr6.ifr_name, ifname, sizeof(ifr6.ifr_name));
 	  if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0)
 	    {
 	      OLSR_PRINTF(3, "socket(AF_INET6,SOCK_DGRAM)");
@@ -826,19 +824,16 @@ int
 check_wireless_interface(char *ifname)
 {
 #if defined __FreeBSD__ &&  !defined FBSD_NO_80211
-  struct wi_req	wreq;
-  struct ifreq ifr;
+/* From FreeBSD ifconfig/ifieee80211.c ieee80211_status() */
+  struct ieee80211req ireq;
+  u_int8_t data[32];
 
-  memset((char *)&wreq, 0, sizeof(wreq));
-  memset((char *)&ifr, 0, sizeof(ifr));
-
-  wreq.wi_len = WI_MAX_DATALEN;
-  wreq.wi_type = WI_RID_IFACE_STATS;
-
-  strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-  ifr.ifr_data = (caddr_t)&wreq;
-
-  return (ioctl(olsr_cnf->ioctl_s, SIOCGWAVELAN, &ifr) >= 0) ? 1 : 0;
+  memset(&ireq, 0, sizeof(ireq));
+  strlcpy(ireq.i_name, ifname, sizeof(ireq.i_name));
+  ireq.i_data = &data;
+  ireq.i_type = IEEE80211_IOC_SSID;
+  ireq.i_val = -1;
+  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
 #else
   return 0;
 #endif
