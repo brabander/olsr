@@ -1,5 +1,5 @@
 # programs
-CCACHE ?=       $(shell bash -c "type -path ccache")
+CCACHE ?=       $(shell which ccache 2> /dev/null)
 ifeq ($(origin CC),default)
 CC = 		$(CCACHE) gcc
 else
