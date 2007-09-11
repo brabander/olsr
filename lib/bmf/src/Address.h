@@ -47,7 +47,7 @@ struct TBmfInterface;
 
 extern int EnableLocalBroadcast;
 
-int DoLocalBroadcast(const char* enable);
+int DoLocalBroadcast(const char* enable, void* data);
 int IsMulticast(union olsr_ip_addr* ipAddress);
 int IsOlsrOrBmfPacket(unsigned char* ipPacket);
 

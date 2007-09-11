@@ -1,10 +1,13 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.82 2007/09/07 09:07:25 bernd67 Exp $
+$Id: CHANGELOG,v 1.83 2007/09/11 23:08:19 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
-QUAGGA
-updated to svn version 33
+QUAGGA by Immo 'FaUl' Wehrenberg <immo.olsr@do.bundessicherheitsministerium.de>
+- updated to svn version 33
+
+BMF PLUGIN by Erik Tromp <erik_tromp@hotmail.com>
+- updated to 1.5.1
 
 PATCH by Hannes Gredler <hannes@gredler.at> which rewrites the route handling.
 To quote him:

@@ -120,10 +120,10 @@ extern int CapturePacketsOnOlsrInterfaces;
 enum TBmfMechanism { BM_BROADCAST = 0, BM_UNICAST_PROMISCUOUS };
 extern enum TBmfMechanism BmfMechanism;
 
-int SetBmfInterfaceName(const char* ifname);
-int SetBmfInterfaceIp(const char* ip);
-int SetCapturePacketsOnOlsrInterfaces(const char* enable);
-int SetBmfMechanism(const char* mechanism);
+int SetBmfInterfaceName(const char* ifname, void* data);
+int SetBmfInterfaceIp(const char* ip, void* data);
+int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data);
+int SetBmfMechanism(const char* mechanism, void* data);
 int DeactivateSpoofFilter(void);
 void RestoreSpoofFilter(void);
 
@@ -132,7 +132,8 @@ struct TBestNeighbors
   struct link_entry* links[2];
 };
 
-struct TBestNeighbors GetBestTwoNeighbors(
+void GetBestTwoNeighbors(
+  struct TBestNeighbors* result,
   struct TBmfInterface* intf,
   union olsr_ip_addr* source,
   union olsr_ip_addr* forwardedBy,
@@ -142,7 +143,7 @@ struct TBestNeighbors GetBestTwoNeighbors(
 int CreateBmfNetworkInterfaces(struct interface* skipThisIntf);
 void AddInterface(struct interface* newIntf);
 void CloseBmfNetworkInterfaces(void);
-int AddNonOlsrBmfIf(const char* ifName);
+int AddNonOlsrBmfIf(const char* ifName, void* data);
 int IsNonOlsrBmfIf(const char* ifName);
 void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* broadAddr);
 void AddMulticastRoute(void);
