@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.70 2007/08/19 20:37:41 bernd67 Exp $
+ * $Id: link_set.c,v 1.71 2007/09/11 23:49:02 bernd67 Exp $
  */
 
 
@@ -69,7 +69,7 @@ olsr_time_out_hysteresis(void);
 static void olsr_time_out_packet_loss(void);
 
 static struct link_entry *
-add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double, struct interface *);
+add_link_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double, struct interface *);
 
 static void
 olsr_time_out_link_set(void);
@@ -458,7 +458,7 @@ del_if_link_entries(union olsr_ip_addr *int_addr)
  */
 
 static struct link_entry *
-add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, double vtime, double htime, struct interface *local_if)
+add_link_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, double vtime, double htime, struct interface *local_if)
 {
   struct link_entry *tmp_link_set, *new_link;
   struct neighbor_entry *neighbor;
@@ -669,7 +669,7 @@ lookup_link_entry(union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, s
 
 /**
  *Update a link entry. This is the "main entrypoint" in
- *the link-sensing. This function is calles from the HELLO
+ *the link-sensing. This function is called from the HELLO
  *parser function.
  *It makes sure a entry is updated or created.
  *
@@ -689,7 +689,7 @@ update_link_entry(union olsr_ip_addr *local,
   struct link_entry *entry;
 
   /* Add if not registered */
-  entry = add_new_entry(local, remote, &message->source_addr, message->vtime, message->htime, in_if);
+  entry = add_link_entry(local, remote, &message->source_addr, message->vtime, message->htime, in_if);
 
   /* Update ASYM_time */
   //printf("Vtime is %f\n", message->vtime);
