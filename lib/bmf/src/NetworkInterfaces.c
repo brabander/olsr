@@ -122,11 +122,12 @@ int CapturePacketsOnOlsrInterfaces = 0;
  *              EtherTunTap interface
  * Input      : ifname - network interface name (e.g. "mybmf0")
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : EtherTunTapIfName
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceName(const char* ifname, void* data)
+int SetBmfInterfaceName(const char* ifname, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
   strncpy(EtherTunTapIfName, ifname, IFNAMSIZ - 1);
   EtherTunTapIfName[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
@@ -139,12 +140,13 @@ int SetBmfInterfaceName(const char* ifname, void* data)
  *              ("10.255.255.253/30") of the EtherTunTap interface
  * Input      : ip - IP address string, followed by '/' and prefix length
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : EtherTunTapIp, EtherTunTapIpMask, EtherTunTapIpBroadcast,
  *              TunTapIpOverruled
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceIp(const char* ip, void* data)
+int SetBmfInterfaceIp(const char* ip, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
 #define IPV4_MAX_ADDRLEN 16
 #define IPV4_MAX_PREFIXLEN 32
@@ -209,11 +211,12 @@ int SetBmfInterfaceIp(const char* ip, void* data)
  *              capturing of packets on OLSR-enabled interfaces.
  * Input      : enable - either "yes" or "no"
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data)
+int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
   if (strcmp(enable, "yes") == 0)
   {
@@ -236,11 +239,12 @@ int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data)
  *              BM_UNICAST_PROMISCUOUS.
  * Input      : mechanism - either "Broadcast" or "UnicastPromiscuous"
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetBmfMechanism(const char* mechanism, void* data)
+int SetBmfMechanism(const char* mechanism, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
   if (strcmp(mechanism, "Broadcast") == 0)
   {
@@ -1760,11 +1764,12 @@ static int nNonOlsrIfs = 0;
  *              network interfaces
  * Input      : ifName - network interface (e.g. "eth0")
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int AddNonOlsrBmfIf(const char* ifName, void* data)
+int AddNonOlsrBmfIf(const char* ifName, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
   assert(ifName != NULL);
 

@@ -63,11 +63,12 @@ int EnableLocalBroadcast = 1;
  *              flooding of local broadcast packets
  * Input      : enable - either "yes" or "no"
  *              data - not used
+ *              addon - not used
  * Output     : none
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int DoLocalBroadcast(const char* enable, void* data)
+int DoLocalBroadcast(const char* enable, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
 {
   if (strcmp(enable, "yes") == 0)
   {
