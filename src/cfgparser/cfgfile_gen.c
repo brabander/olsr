@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.6 2007/03/27 03:05:21 tlopatic Exp $
+ * $Id: cfgfile_gen.c,v 1.7 2007/09/12 14:06:19 bernd67 Exp $
  */
 
 
@@ -381,7 +381,9 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
   struct in_addr in4;
 
+#if 0
   printf("\n\n\n\nolsrd_write_cnf_buf bufsize  %d\n\n\n\n\n", bufsize);
+#endif
   if(buf == NULL || bufsize < MAX_LINESIZE)
     {
       return -1;

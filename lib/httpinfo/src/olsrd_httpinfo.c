@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.73 2007/09/05 16:17:35 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.74 2007/09/12 14:08:00 bernd67 Exp $
  */
 
 /*
@@ -1217,7 +1217,9 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
       size += snprintf(&buf[size], bufsize-size, cfgfile_body[i]);
       i++;
   }
+#if 0
   printf("RETURNING %d\n", size);
+#endif
   return size;
 }
 
