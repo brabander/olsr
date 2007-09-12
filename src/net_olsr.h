@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.11 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.12 2007/09/12 23:40:14 bernd67 Exp $
  */
 
 
@@ -45,6 +45,7 @@
 #define _NET_OLSR
 
 #include "defs.h"
+#include "interfaces.h"
 #include "process_routes.h"
 #include <arpa/inet.h>
 #include <net/if.h>
