@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.16 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: tc_set.h,v 1.17 2007/09/13 22:43:15 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -131,7 +131,7 @@ char *olsr_tc_edge_to_string(struct tc_edge_entry *);
 struct tc_edge_entry *olsr_lookup_tc_edge(struct tc_entry *,
                                           union olsr_ip_addr *);
 struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *,
-                                             union olsr_ip_addr *, u_int16_t,
+                                             union olsr_ip_addr *, olsr_u16_t,
                                              unsigned int, float, float);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 void olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);

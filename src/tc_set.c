@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.28 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: tc_set.c,v 1.29 2007/09/13 22:43:15 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -234,7 +234,7 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
  */
 struct tc_edge_entry *
 olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
-                       u_int16_t ansn, unsigned int vtime,
+                       olsr_u16_t ansn, unsigned int vtime,
                        float link_quality, float neigh_link_quality)
 {
   struct tc_entry *tc_neighbor;
