@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.24 2007/05/17 20:35:16 bernd67 Exp $
+ * $Id: oscan.lex,v 1.25 2007/09/13 16:08:13 bernd67 Exp $
  */
 
 
@@ -297,6 +297,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "TosValue" {
     yylval = NULL;
     return TOK_TOS;
+}
+
+"RtTable" {
+  yylval = NULL;
+  return TOK_RTTABLE;
 }
 
 "Willingness" {

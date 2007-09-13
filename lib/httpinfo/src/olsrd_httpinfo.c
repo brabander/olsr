@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.75 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.76 2007/09/13 16:08:12 bernd67 Exp $
  */
 
 /*
@@ -838,6 +838,8 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
 
     size += snprintf(&buf[size], bufsize-size, "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
+
+    size += sprintf(&buf[size], "<td>RtTable: 0x%04x</td>\n", olsr_cnf->rttable);
 
     size += snprintf(&buf[size], bufsize-size, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
     

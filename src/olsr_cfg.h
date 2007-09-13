@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.32 2007/09/06 12:08:28 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.33 2007/09/13 16:08:13 bernd67 Exp $
  */
 
 
@@ -44,6 +44,12 @@
 #define _OLSRD_CFGPARSER_H
 
 #include "olsr_types.h"
+
+#if defined linux
+#  define LINUX_POLICY_ROUTING 1
+#else
+#  define LINUX_POLICY_ROUTING 0
+#endif
 
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
@@ -200,6 +206,7 @@ struct olsrd_config
   int                      ip_version;
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;
+  olsr_u8_t                rttable;
   olsr_bool                willingness_auto;
   olsr_u8_t                willingness;
   int                      ipc_connections;
@@ -234,7 +241,11 @@ struct olsrd_config
   float                    max_tc_vtime;
 
   int                      ioctl_s;              /* Socket used for ioctl calls */
+#if LINUX_POLICY_ROUTING
+  int                      rtnl_s;               /* Socket used for rtnetlink messages */
+#else
   int                      rts;                  /* Socket used for route changes on BSDs */
+#endif
 };
 
 #if defined __cplusplus

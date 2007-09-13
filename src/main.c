@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.97 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: main.c,v 1.98 2007/09/13 16:08:13 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -54,6 +54,12 @@
 #include "apm.h"
 #include "net_os.h"
 #include "build_msg.h"
+
+#if LINUX_POLICY_ROUTING
+#include <linux/types.h>
+#include <linux/rtnetlink.h>
+#include <fcntl.h>
+#endif
 
 /* Global stuff externed in defs.h */
 FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
@@ -264,6 +270,15 @@ main(int argc, char *argv[])
       olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
       olsr_exit(__func__, 0);
     }
+
+#if LINUX_POLICY_ROUTING
+  if ((olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)) < 0) 
+    {
+      olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
+      olsr_exit(__func__, 0);
+    }
+  fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+#endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   if ((olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
@@ -486,6 +501,10 @@ olsr_shutdown(int signal)
 
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);
+
+#if LINUX_POLICY_ROUTING
+  close(olsr_cnf->rtnl_s);
+#endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */

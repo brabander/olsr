@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.7 2007/09/12 14:06:19 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.8 2007/09/13 16:08:13 bernd67 Exp $
  */
 
 
@@ -122,6 +122,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   /* TOS */
   fprintf(fd, "# TOS(type of service) to use. Default is 16\n\n");
   fprintf(fd, "TosValue\t%d\n\n", cnf->tos);
+
+  /* RtTable */
+  fprintf(fd, "# Policy Routing Table to use. Default is 254\n\n");
+  fprintf(fd, "RtTable\t%d\n\n", cnf->rttable);
 
   /* Willingness */
   fprintf(fd, "# The fixed willingness to use(0-7)\n# If not set willingness will be calculated\n# dynammically based on battery/power status\n\n");
@@ -433,6 +437,10 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   /* TOS */
   WRITE_TO_BUF("# TOS(type of service) to use. Default is 16\n\n")
   WRITE_TO_BUF("TosValue\t%d\n\n", cnf->tos)
+
+  /* RtTable */
+  WRITE_TO_BUF("# Policy Routing Tableto use. Default is 254\n\n")
+  WRITE_TO_BUF("RtTable\t%d\n\n", cnf->rttable)
 
   /* Willingness */
   WRITE_TO_BUF("# The fixed willingness to use(0-7)\n# If not set willingness will be calculated\n# dynammically based on battery/power status\n\n")

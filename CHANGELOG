@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.85 2007/09/13 15:31:58 bernd67 Exp $
+$Id: CHANGELOG,v 1.86 2007/09/13 16:08:12 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ To quote him (more):
   load of the route calculation path between 60%-80%.
 ----  snip  ----
 
-PATCHES by Sven-Ola Tuecke to be found on from
+PATCHES by Sven-Ola Tuecke <mail2news@commando.de> to be found on from
 http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
 - 102-olsrd-rt-refactoring-fixes.patch
   Because you changed a lot of basics: It's time to handle a general
@@ -121,11 +121,22 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
   normally triggers a "ARP-Lookup-Chain".
 - 106-olsrd-nameserviceparams.patch:
   This patch converts more plugins to the new interface version.
+- 104-olsrd-policy-routing.patch
+  Reworked this one to discard GPL helper functions. Also checked IPv6 and
+  re-included the IPC hookup. The patch adds a "RtTable [number]" for
+  /etc/olsrd.conf which is simply the Linux
+  policy routing table to use. Defaults to 254 (== main). 
+  This patch was modified/clenaed up by <bernd@firmix.at> to use "#if"
+  instead of "#ifdef" as it's more robust against typos.
 
 PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch
 - This patch makes sure that the EXENAME variable of Makefile.inc is used
   in Makefile.
+
+PATCHES by John Hay <jhay@meraka.org.za>
+- update to new FreeBSD WLAN API
+- do not require /bin/bash, use /bin/sh
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).
@@ -141,10 +152,8 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   number of (free()s). And it also kills some code and copying around of
   data.
 
-PATCHES by John Hay <jhay@meraka.org.za>
-- update to new FreeBSD WLAN API
-- do not require /bin/bash, use /bin/sh
-
+- converted the dyn_gw plugin to plugin interface version 5 (which leaves
+  the quagga plugion as the last with the old one).
 - paving the way to activate -Wshadow, much more to do
 - const-ify parameters here and there
 - use NULL for pointers (and not "0")
