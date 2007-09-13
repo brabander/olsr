@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.74 2007/09/12 14:08:00 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.75 2007/09/13 15:31:59 bernd67 Exp $
  */
 
 /*
@@ -1064,49 +1064,35 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 static int build_topo_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
-  olsr_u8_t index;
-  struct tc_entry *entry;
-  struct topo_dst *dst_entry;
-
+  struct tc_entry *tc;
+  struct tc_edge_entry *tc_edge;
 
   size += snprintf(&buf[size], bufsize-size, "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last Hop IP</th>");
   if (olsr_cnf->lq_level > 0)
     size += snprintf(&buf[size], bufsize-size, "<th>LQ</th><th>ILQ</th><th>ETX</th>");
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
 
-  /* Topology */  
-  for(index=0;index<HASHSIZE;index++)
-    {
-      /* For all TC entries */
-      entry = tc_table[index].next;
-      while(entry != &tc_table[index])
-	{
-	  /* For all destination entries of that TC entry */
-	  dst_entry = entry->destinations.next;
-	  while(dst_entry != &entry->destinations)
-	    {
-              size += snprintf(&buf[size], bufsize-size, "<tr>");
-              size += build_ipaddr_with_link(&buf[size], bufsize, &dst_entry->T_dest_addr, -1);
-              size += build_ipaddr_with_link(&buf[size], bufsize, &entry->T_last_addr, -1);
-              if (olsr_cnf->lq_level > 0)
-                {
-                  const double d = dst_entry->link_quality * dst_entry->inverse_link_quality;
-	          size += snprintf(&buf[size], bufsize-size,
-                                 "<td align=\"right\">%0.2f</td>"
-                                 "<td align=\"right\">%0.2f</td>"
-                                 "<td align=\"right\">%0.2f</td>\n",
-                                 dst_entry->link_quality,
-                                 dst_entry->inverse_link_quality,
-                                 d ? 1.0 / d : 0.0);
-                }
-	      size += snprintf(&buf[size], bufsize-size, "</tr>\n");
+          size += snprintf(&buf[size], bufsize-size, "<tr>");
+          size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
+          size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
+          if (olsr_cnf->lq_level > 0)
+          {
+              const double d = tc_edge->link_quality * tc_edge->inverse_link_quality;
+              size += snprintf(&buf[size], bufsize-size,
+                               "<td align=\"right\">%0.2f</td>"
+                               "<td align=\"right\">%0.2f</td>"
+                               "<td align=\"right\">%0.2f</td>\n",
+                               tc_edge->link_quality,
+                               tc_edge->inverse_link_quality,
+                               d ? 1.0 / d : 0.0);
+          }
+          size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
-	      dst_entry = dst_entry->next;
-	    }
-	  entry = entry->next;
-	}
-    }
+      } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 

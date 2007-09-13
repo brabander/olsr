@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.28 2007/09/05 16:11:10 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.29 2007/09/13 15:31:59 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -1440,6 +1440,8 @@ write_latlon_file(void)
 	FILE* js;
 	struct olsr_if *ifs;
 	union olsr_ip_addr ip;
+    struct tc_entry *tc;
+    struct tc_edge_entry *tc_edge;
 
 	if (!latlon_table_changed) return;
 	OLSR_PRINTF(2, "NAME PLUGIN: writing latlon file\n");
@@ -1511,27 +1513,21 @@ write_latlon_file(void)
 			}
 		}
 	}
-	for (hash = 0; hash < HASHSIZE; hash++) 
-	{
-		struct tc_entry *entry = tc_table[hash].next;
-		while(entry != &tc_table[hash])
-		{
-			struct topo_dst *dst_entry = entry->destinations.next;
-			while(dst_entry != &entry->destinations)
-			{
-				fprintf(js, "Link('%s','%s',%f,%f,%f);\n", 
-					olsr_ip_to_string(&dst_entry->T_dest_addr),
-					olsr_ip_to_string(&entry->T_last_addr), 
-					dst_entry->link_quality,
-					dst_entry->inverse_link_quality,
-					(dst_entry->link_quality * dst_entry->inverse_link_quality) ?
-						1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) :
-						0.0);
-				dst_entry = dst_entry->next;
-			}
-			entry = entry->next;
-		}
-	}
+
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+        OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+
+            fprintf(js, "Link('%s','%s',%f,%f,%f);\n", 
+					olsr_ip_to_string(&tc_edge->T_dest_addr),
+					olsr_ip_to_string(&tc->addr), 
+					tc_edge->link_quality,
+					tc_edge->inverse_link_quality,
+					(tc_edge->link_quality * tc_edge->inverse_link_quality) ?
+                    1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality) :
+                    0.0);
+
+        } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
 	fclose(js);
 	latlon_table_changed = OLSR_FALSE;

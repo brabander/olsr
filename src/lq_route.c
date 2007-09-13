@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.50 2007/09/05 16:17:36 bernd67 Exp $
+ * $Id: lq_route.c,v 1.51 2007/09/13 15:31:59 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -53,25 +53,6 @@
 #include "lq_list.h"
 #include "lq_avl.h"
 #include "lq_route.h"
-
-struct olsr_spf_edge
-{
-  struct avl_node tree_node;
-  struct olsr_spf_vertex *dest;
-  float etx;
-};
-
-struct olsr_spf_vertex
-{
-  struct avl_node tree_node; /* node keyed by ip address */
-  struct avl_node cand_tree_node; /* node keyed by etx */
-  struct list_node path_list_node; /* SPF result list */
-  union olsr_ip_addr addr;
-  struct avl_tree edge_tree;
-  struct link_entry *next_hop; /* the link to the 1st hop neighbor */
-  float path_etx;
-  olsr_u8_t hops;
-};
 
 /*
  * avl_comp_etx
@@ -103,7 +84,7 @@ avl_comp_etx (void *etx1, void *etx2)
  */
 static void
 olsr_spf_add_cand_tree (struct avl_tree *tree,
-                        struct olsr_spf_vertex *vert)
+                        struct tc_entry *vert)
 {
   vert->cand_tree_node.key = &vert->path_etx;
   vert->cand_tree_node.data = vert;
@@ -114,7 +95,7 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
               vert->path_etx);
 #endif
 
-  avl_insert(tree, &vert->cand_tree_node, 1);
+  avl_insert(tree, &vert->cand_tree_node, AVL_DUP);
 }
 
 /*
@@ -124,7 +105,7 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
  */
 static void
 olsr_spf_del_cand_tree (struct avl_tree *tree,
-                        struct olsr_spf_vertex *vert)
+                        struct tc_entry *vert)
 {
 
 #ifdef DEBUG
@@ -144,7 +125,7 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
 static void
 olsr_spf_add_path_list (struct list_node *head,
                         int *path_count,
-                        struct olsr_spf_vertex *vert)
+                        struct tc_entry *vert)
 {
   vert->path_list_node.data = vert;
 
@@ -160,149 +141,11 @@ olsr_spf_add_path_list (struct list_node *head,
 }
 
 /*
- * olsr_spf_add_vertex
- *
- * Add a node to the tree of all nodes in the network.
- */
-static struct olsr_spf_vertex *
-olsr_spf_add_vertex (struct avl_tree *vertex_tree,
-                     union olsr_ip_addr *addr, float path_etx)
-{
-  struct avl_node *node;
-  struct olsr_spf_vertex *vert;
-
-  // see whether this destination is already in our tree
-
-  node = avl_find(vertex_tree, addr);
-
-  if (node) {
-    return node->data;
-  }
-
-  // if it's not in our list, add it
-
-  vert = olsr_malloc(sizeof (struct olsr_spf_vertex), "Dijkstra vertex");
-
-  vert->tree_node.data = vert;
-  vert->tree_node.key = &vert->addr;
-
-  COPY_IP(&vert->addr, addr);
-    
-  vert->path_etx = path_etx;
-  vert->next_hop = NULL;
-  vert->hops = 0;
-
-  avl_init(&vert->edge_tree, avl_comp_default);
-
-  avl_insert(vertex_tree, &vert->tree_node, 0);
-  return vert;
-}
-
-static struct olsr_spf_vertex *
-olsr_spf_add_edge (struct avl_tree *vertex_tree,
-                   union olsr_ip_addr *src, union olsr_ip_addr *dst,
-                   float etx)
-{
-  struct avl_node *node;
-  struct olsr_spf_vertex *svert;
-  struct olsr_spf_vertex *dvert;
-  struct olsr_spf_edge *edge;
-
-  // source lookup
-
-  node = avl_find(vertex_tree, src);
-
-  // source vertex does not exist
-
-  if (node == NULL)
-    return NULL;
-
-  svert = node->data;
-
-  // destination lookup
-
-  node = avl_find(vertex_tree, dst);
-
-  // destination vertex does not exist
-
-  if (node == NULL)
-    return NULL;
-
-  dvert = node->data;
-
-  // check for existing forward edge
-
-  if (avl_find(&svert->edge_tree, dst) == NULL)
-  {
-    // add forward edge
-
-    edge = olsr_malloc(sizeof (struct olsr_spf_vertex), "Dijkstra forward edge");
-
-    edge->tree_node.data = edge;
-    edge->tree_node.key = &dvert->addr;
-
-    edge->dest = dvert;
-    edge->etx = etx;
-
-    avl_insert(&svert->edge_tree, &edge->tree_node, 0);
-  }
-
-  // check for existing inverse edge
-
-  if (avl_find(&dvert->edge_tree, src) == NULL)
-  {
-    // add inverse edge
-
-    edge = olsr_malloc(sizeof (struct olsr_spf_vertex), "Dijkstra inverse edge");
-
-    edge->tree_node.data = edge;
-    edge->tree_node.key = &svert->addr;
-
-    edge->dest = svert;
-    edge->etx = etx;
-
-    avl_insert(&dvert->edge_tree, &edge->tree_node, 0);
-  }
-
-  return svert;
-}
-
-static void olsr_free_everything(struct avl_tree *vertex_tree)
-{
-  struct avl_node *vert_node;
-  struct avl_node *edge_node;
-  struct olsr_spf_vertex *vert;
-  struct olsr_spf_edge *edge;
-
-  vert_node = avl_walk_first(vertex_tree);
-
-  // loop through all vertices
-
-  while (vert_node)
-  {
-    vert = vert_node->data;
-    edge_node = avl_walk_first(&vert->edge_tree);
-
-    // loop through all edges of the current vertex
-
-    while (edge_node != NULL)
-    {
-      edge = edge_node->data;
-      edge_node = avl_walk_next(edge_node);
-      free(edge);
-    }
-
-    vert_node = avl_walk_next(vert_node);
-    free(vert);
-  }
-}
-
-/*
  * olsr_spf_extract_best
  *
  * return the node with the minimum pathcost.
  */
-static struct olsr_spf_vertex *
+static struct tc_entry *
 olsr_spf_extract_best (struct avl_tree *tree)
 {
   struct avl_node *node;
@@ -313,8 +156,7 @@ olsr_spf_extract_best (struct avl_tree *tree)
 }
 
 
-#ifdef DEBUG
-static char *olsr_etx_to_string(float etx)
+char *olsr_etx_to_string(float etx)
 {
   static char buff[20];
 
@@ -324,7 +166,6 @@ static char *olsr_etx_to_string(float etx)
   snprintf(buff, 20, "%.6f", etx);
   return buff;
 }
-#endif
 
 
 /*
@@ -335,9 +176,10 @@ static char *olsr_etx_to_string(float etx)
  * path cost is better.
  */
 static void
-olsr_spf_relax (struct avl_tree *cand_tree, struct olsr_spf_vertex *vert)
+olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *vert)
 {
-  struct olsr_spf_edge *edge;
+  struct tc_entry *new_vert;
+  struct tc_edge_entry *tc_edge;
   struct avl_node *edge_node;
   float new_etx;
 
@@ -347,53 +189,77 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct olsr_spf_vertex *vert)
               vert->path_etx);
 #endif
 
-  edge_node = avl_walk_first(&vert->edge_tree);
+  /*
+   * loop through all edges of this vertex.
+   */
+  for (edge_node = avl_walk_first(&vert->edge_tree);
+       edge_node;
+       edge_node = avl_walk_next(edge_node)) {
 
-  // loop through all edges of this vertex
+    tc_edge = edge_node->data;
 
-  while (edge_node != NULL)
-  {
-    edge = edge_node->data;
+    /*
+     * We are not interested in dead-end or dying edges.
+     */
+    if (!tc_edge->edge_inv || (tc_edge->flags & OLSR_TC_EDGE_DOWN)) {
+#ifdef DEBUG
+      OLSR_PRINTF(1, "SPF:   ignoring edge %s\n",
+                  olsr_ip_to_string(&tc_edge->T_dest_addr));
+      if (tc_edge->flags & OLSR_TC_EDGE_DOWN) {
+        OLSR_PRINTF(1, "SPF:     edge down\n");
+      }
+      if (!tc_edge->edge_inv) {
+        OLSR_PRINTF(1, "SPF:     no inverse edge\n");
+      }
+#endif
+      continue;
+    }
 
-    // total quality of the path through this vertex to the
-    // destination of this edge
+    /*
+     * total quality of the path through this vertex
+     * to the destination of this edge
+     */
+    new_etx = vert->path_etx + tc_edge->etx;
 
-    new_etx = vert->path_etx + edge->etx;
+#ifdef DEBUG
+      OLSR_PRINTF(1, "SPF:   exploring edge %s, cost %s\n",
+                  olsr_ip_to_string(&(tc_edge->T_dest_addr)),
+                  olsr_etx_to_string(new_vert->path_etx));
+#endif
 
-    // if it's better than the current path quality of this
-    // edge's destination, then we've found a better path to
-    // this destination
+      /* 
+       * if it's better than the current path quality of this edge's
+       * destination node, then we've found a better path to this node.
+       */
+    new_vert = tc_edge->edge_inv->tc;
+    if (new_etx < new_vert->path_etx) {
 
-    if (new_etx < edge->dest->path_etx)
-    {
       /* if this node has been on the candidate tree delete it */
-      if (edge->dest->path_etx != INFINITE_ETX) {
-        olsr_spf_del_cand_tree(cand_tree, edge->dest);
+      if (new_vert->path_etx != INFINITE_ETX) {
+        olsr_spf_del_cand_tree(cand_tree, new_vert);
       }
 
       /* re-insert on candidate tree with the better metric */
-      edge->dest->path_etx = new_etx;
-      olsr_spf_add_cand_tree(cand_tree, edge->dest);
+      new_vert->path_etx = new_etx;
+      olsr_spf_add_cand_tree(cand_tree, new_vert);
 
       /* pull-up the next-hop and bump the hop count */
       if (vert->next_hop) {
-        edge->dest->next_hop = vert->next_hop;
+        new_vert->next_hop = vert->next_hop;
       }
-      edge->dest->hops = vert->hops + 1;
+      new_vert->hops = vert->hops + 1;
 
 #ifdef DEBUG
       OLSR_PRINTF(1, "SPF:   better path to %s, cost %s -> %s, via %s, hops %u\n",
-                  olsr_ip_to_string(&(edge->dest->addr)),
-                  olsr_etx_to_string(edge->dest->path_etx),
+                  olsr_ip_to_string(&new_vert->addr),
+                  olsr_etx_to_string(new_vert->path_etx),
                   olsr_etx_to_string(new_etx),
                   olsr_ip_to_string(vert->next_hop ?
                                     &vert->next_hop->neighbor_iface_addr : NULL),
-                  edge->dest->hops);
+                  new_vert->->hops);
 #endif
 
     }
-
-    edge_node = avl_walk_next(edge_node);
   }
 }
 
@@ -413,7 +279,7 @@ static void
 olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
                    int *path_count)
 {
-  struct olsr_spf_vertex *vert;
+  struct tc_entry *vert;
 
   *path_count = 0;
 
@@ -433,133 +299,90 @@ olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
 void
 olsr_calculate_routing_table (void)
 {
-  struct avl_tree vertex_tree, cand_tree;
+  struct avl_tree cand_tree;
   struct list_node path_list;
   int i, plen, max_host_plen, path_count = 0;
-  struct tc_entry *tcsrc;
-  struct topo_dst *tcdst;
-  struct olsr_spf_vertex *vert, *myself;
+  struct tc_entry *tc;
+  struct tc_edge_entry *tc_edge;
+  struct tc_entry *vert;
   struct neighbor_entry *neigh;
   struct mid_address *mid_walker;
-  float etx;
   struct hna_entry *hna_gw;
   struct hna_net *hna;
-  struct neighbor_2_entry *neigh2;
   struct interface *inter;
   struct link_entry *link;
 
 #ifdef SPF_PROFILING
-  struct timeval t1, t2, t3, t4, t5, t6, spf_init, spf_run, route, kernel, cleanup, total;
+  struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
 
   gettimeofday(&t1, NULL);
 #endif
 
   max_host_plen = olsr_host_rt_maxplen();
 
-  // initialize the graph
-
-  avl_init(&vertex_tree, avl_comp_default);
+  /*
+   * Prepare the candidate tree and result list.
+   */
   avl_init(&cand_tree, avl_comp_etx);
   list_head_init(&path_list);
-
   olsr_bump_routingtree_version();
 
-  // add ourselves to the vertex and candidate tree
-
-  myself = olsr_spf_add_vertex(&vertex_tree, &olsr_cnf->main_addr, ZERO_ETX);
-  olsr_spf_add_cand_tree(&cand_tree, myself);
+  /*
+   * Initialize vertices in the lsdb.
+   */
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    tc->next_hop = NULL;
+    tc->path_etx = INFINITE_ETX;
+    tc->hops = 0;
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   /*
-   * Add our neighbours.
+   * zero ourselves and add us to the candidate tree.
    */
-  for (i = 0; i < HASHSIZE; i++)
-    for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
-         neigh = neigh->next) {
+  tc_myself->path_etx = ZERO_ETX;
+  olsr_spf_add_cand_tree(&cand_tree, tc_myself);
 
-      if (neigh->status != SYM)
-        continue;
-
-      olsr_spf_add_vertex(&vertex_tree, &neigh->neighbor_main_addr, INFINITE_ETX);
-    }
-
-  // add our two-hop neighbours
-
-  for (i = 0; i < HASHSIZE; i++)
-    for (neigh2 = two_hop_neighbortable[i].next;
-         neigh2 != &two_hop_neighbortable[i];
-         neigh2 = neigh2->next) {
-
-      olsr_spf_add_vertex(&vertex_tree, &neigh2->neighbor_2_addr, INFINITE_ETX);
-    }
-  // add remaining vertices
-
-  for (i = 0; i < HASHSIZE; i++)
-    for (tcsrc = tc_table[i].next; tcsrc != &tc_table[i]; tcsrc = tcsrc->next)
-    {
-      // add source
-
-      olsr_spf_add_vertex(&vertex_tree, &tcsrc->T_last_addr, INFINITE_ETX);
-
-      // add destinations of this source
-
-      for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
-           tcdst = tcdst->next)
-        olsr_spf_add_vertex(&vertex_tree, &tcdst->T_dest_addr, INFINITE_ETX);
-    }
-
-  // add edges to and from our neighbours
-
+  /*
+   * add edges to and from our neighbours.
+   */
   for (i = 0; i < HASHSIZE; i++)
     for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
          neigh = neigh->next) {
 
       if (neigh->status == SYM) {
 
+        tc_edge = olsr_lookup_tc_edge(tc_myself, &neigh->neighbor_main_addr);
         link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
 	if (!link) {
+
+          /*
+           * If there is no best link to this neighbor
+           * and we had an edge before then flush the edge.
+           */
+          if (tc_edge) {
+            olsr_delete_tc_edge_entry(tc_edge);
+          }
 	  continue;
         }
 
-        if (olsr_cnf->lq_level < 2) {
-          /* for non-lq the etx is always 1.0 */
-          vert = olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr,
-                                   &olsr_cnf->main_addr, 1.0 );
-          vert->next_hop = link;
-
-        } else if (link->loss_link_quality2 >= MIN_LINK_QUALITY &&
-                   link->neigh_link_quality2 >= MIN_LINK_QUALITY) {
-            
-          etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
-
-          vert = olsr_spf_add_edge(&vertex_tree, &neigh->neighbor_main_addr,
-                                     &olsr_cnf->main_addr, etx);
-          vert->next_hop = link;
+        /*
+         * Set the next-hops of our neighbors. 
+         */
+        if (!tc_edge) {
+          tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,
+                                           0, link->last_htime,
+                                           link->loss_link_quality2,
+                                           link->neigh_link_quality2);
+        } else {
+          tc_edge->link_quality = link->loss_link_quality2;
+          tc_edge->inverse_link_quality = link->neigh_link_quality2;
+          olsr_calc_tc_edge_entry_etx(tc_edge);
+        }
+        if (tc_edge->edge_inv) {
+          tc_edge->edge_inv->tc->next_hop = link;
         }
       }
     }
-
-  /* add remaining edges from TC messages */
-
-  for (i = 0; i < HASHSIZE; i++)
-    for (tcsrc = tc_table[i].next; tcsrc != &tc_table[i]; tcsrc = tcsrc->next)
-      for (tcdst = tcsrc->destinations.next; tcdst != &tcsrc->destinations;
-           tcdst = tcdst->next) {
-
-        if (olsr_cnf->lq_level < 2) {
-
-          /* for non-lq the etx is always 1.0 */
-          olsr_spf_add_edge(&vertex_tree, &tcdst->T_dest_addr,
-                            &tcsrc->T_last_addr, 1.0);
-
-        } else if (tcdst->link_quality >= MIN_LINK_QUALITY &&
-                   tcdst->inverse_link_quality >= MIN_LINK_QUALITY) {
-
-          etx = 1.0 / (tcdst->link_quality * tcdst->inverse_link_quality);
-
-          olsr_spf_add_edge(&vertex_tree, &tcdst->T_dest_addr,
-                            &tcsrc->T_last_addr, etx);
-        }
-      }
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);
@@ -651,23 +474,17 @@ olsr_calculate_routing_table (void)
   gettimeofday(&t5, NULL);
 #endif
 
-  /* free the SPF graph */
-
-  olsr_free_everything(&vertex_tree);
-
 #ifdef SPF_PROFILING
-  gettimeofday(&t6, NULL);
-
   timersub(&t2, &t1, &spf_init);
   timersub(&t3, &t2, &spf_run);
   timersub(&t4, &t3, &route);
   timersub(&t5, &t4, &kernel);
-  timersub(&t6, &t5, &cleanup);
-  timersub(&t6, &t1, &total);
-  olsr_printf(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern/cleanup): %d, %d, %d, %d, %d, %d\n",
+  timersub(&t5, &t1, &total);
+  olsr_printf(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): "
+              "%d, %d, %d, %d, %d\n",
               path_count, routingtree.count,
               (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec,
-              (int)route.tv_usec, (int)kernel.tv_usec,  (int)cleanup.tv_usec);
+              (int)route.tv_usec, (int)kernel.tv_usec);
 #endif
 }
 

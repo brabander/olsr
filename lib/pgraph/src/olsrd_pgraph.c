@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.7 2007/08/30 22:49:12 bernd67 Exp $
+ * $Id: olsrd_pgraph.c,v 1.8 2007/09/13 15:31:59 bernd67 Exp $
  */
 
 /*
@@ -145,7 +145,7 @@ static struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
 
 static void ipc_print_neigh_link(struct neighbor_entry *neighbor);
 
-static void ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry);
+static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry);
 
 #if 0
 static void ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
@@ -321,8 +321,8 @@ static int pcf_event(int changes_neighborhood,
   int res;
   olsr_u8_t index;
   struct neighbor_entry *neighbor_table_tmp;
-  struct tc_entry *entry;
-  struct topo_dst *dst_entry;
+  struct tc_entry *tc;
+  struct tc_edge_entry *tc_edge;
 
   res = 0;
 
@@ -346,22 +346,11 @@ static int pcf_event(int changes_neighborhood,
 	}
 
       /* Topology */  
-      for(index=0;index<HASHSIZE;index++)
-	{
-	  /* For all TC entries */
-	  entry = tc_table[index].next;
-	  while(entry != &tc_table[index])
-	    {
-	      /* For all destination entries of that TC entry */
-	      dst_entry = entry->destinations.next;
-	      while(dst_entry != &entry->destinations)
-		{
-		  ipc_print_tc_link(entry, dst_entry);
-		  dst_entry = dst_entry->next;
-		}
-	      entry = entry->next;
-	    }
-	}
+      OLSR_FOR_ALL_TC_ENTRIES(tc) {
+          OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+              ipc_print_tc_link(tc, tc_edge);
+          } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+      } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
       ipc_send(" end ", strlen(" end "));
 
@@ -410,7 +399,7 @@ static double calc_etx(double loss, double neigh_loss)
 }
 #endif
 
-static void ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry)
+static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 {
   char buf[256];
   int len;
@@ -418,7 +407,7 @@ static void ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry
   const char* adr;
 //  double etx = calc_etx( dst_entry->link_quality, dst_entry->inverse_link_quality );
 
-  main_adr = olsr_ip_to_string(&entry->T_last_addr);
+  main_adr = olsr_ip_to_string(&entry->addr);
   adr = olsr_ip_to_string(&dst_entry->T_dest_addr);
   len = sprintf( buf, "add link %s %s\n", main_adr, adr );
   ipc_send(buf, len);

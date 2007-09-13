@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.11 2007/09/05 16:17:35 bernd67 Exp $
+ * $Id: plugin.c,v 1.12 2007/09/13 15:31:59 bernd67 Exp $
  */
 
 #include <string.h>
@@ -82,7 +82,6 @@ static union olsr_ip_addr *mainAddr;
 static struct interface *intTab = NULL;
 static struct neighbor_entry *neighTab = NULL;
 static struct mid_entry *midTab = NULL;
-static struct tc_entry *tcTab = NULL;
 static struct hna_entry *hnaTab = NULL;
 static struct olsrd_config *config = NULL;
 
@@ -243,38 +242,40 @@ int iterRouteTabNext(char *buff, int len)
 
 void iterRouteTabInit(void)
 {
-    avl_init(&routingtree, avl_comp_prefix_default);
-    routingtree_version = 0;
+  struct avl_node *node;
 
-    iterRouteTab = (avl_walk_first(&routingtree)->data);
+  avl_init(&routingtree, avl_comp_prefix_default);
+  routingtree_version = 0;
+
+  node = avl_walk_first(&routingtree);
+  iterRouteTab = node ? node->data : NULL;
+
 }
 
 int iterTcTabNext(char *buff, int len)
 {
   int res;
   int i;
-  struct topo_dst *dest;
+  struct tc_edge_entry *tc_edge;
   
   if (iterTcTab == NULL)
     return -1;
 
   res = snprintf(buff, len,
                  "main~%s~[~destinations~",
-                 rawIpAddrToString(&iterTcTab->T_last_addr, ipAddrLen));
-
-  i = 0;
+                 rawIpAddrToString(&iterTcTab->addr, ipAddrLen));
 
   len -= res;
   buff += res;
 
   len -= 2;
+  i = 0;
 
-  for (dest = iterTcTab->destinations.next; dest != &iterTcTab->destinations;
-       dest = dest->next)
-  {
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(iterTcTab, tc_edge) {
+
     res = snprintf(buff, len, "[~%d~address~%s~etx~%f~]~", i,
-                   rawIpAddrToString(&dest->T_dest_addr, ipAddrLen),
-                   lqToEtx(dest->link_quality, dest->inverse_link_quality));
+                   rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
+                   lqToEtx(tc_edge->link_quality, tc_edge->inverse_link_quality));
 
     if (res < len)
       buff += res;
@@ -285,40 +286,23 @@ int iterTcTabNext(char *buff, int len)
       break;
 
     i++;
-  }
-
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(iterTcTab, tc_edge);
+  
   strcpy(buff, "]~");
 
-  iterTcTab = iterTcTab->next;
-
-  if (iterTcTab == &tcTab[iterIndex])
-  {
-    iterTcTab = NULL;
-    
-    while (++iterIndex < HASHSIZE)
-      if (tcTab[iterIndex].next != &tcTab[iterIndex])
-      {
-        iterTcTab = tcTab[iterIndex].next;
-        break;
-      }
-  }
+  iterTcTab = olsr_getnext_tc_entry(iterTcTab);
 
   return 0;
 }
 
 void iterTcTabInit(void)
 {
-  iterTcTab = NULL;
+  struct avl_node *node;
+  
+  avl_init(&tc_tree, avl_comp_prefix_default);
 
-  if (tcTab == NULL)
-    return;
-
-  for (iterIndex = 0; iterIndex < HASHSIZE; iterIndex++)
-    if (tcTab[iterIndex].next != &tcTab[iterIndex])
-    {
-      iterTcTab = tcTab[iterIndex].next;
-      break;
-    }
+  node = avl_walk_first(&tc_tree);
+  iterTcTab = node ? node->data : NULL;
 }
 
 static void parserFunc(union olsr_message *msg, struct interface *inInt,
@@ -464,7 +448,6 @@ int olsrd_plugin_init(void)
   intTab = ifnet;
   neighTab = neighbortable;
   midTab = mid_set;
-  tcTab = tc_table;
   hnaTab = hna_set;
   config = olsr_cnf;
 
@@ -496,3 +479,9 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
     *params = plugin_parameters;
     *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

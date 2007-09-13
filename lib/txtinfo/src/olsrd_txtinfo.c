@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.9 2007/09/05 16:17:36 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.10 2007/09/13 15:31:59 bernd67 Exp $
  */
 
 /*
@@ -336,32 +336,24 @@ static void ipc_print_routes(void)
 
 static void ipc_print_topology(void)
 {
-    int index;
-    struct tc_entry *entry;
-    struct topo_dst *dst_entry;
+    struct tc_entry *tc;
+    struct tc_edge_entry *tc_edge;
 
     ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLQ\tILQ\tETX\n");
 
     /* Topology */  
-    for(index = 0; index < HASHSIZE; index++) {
-        /* For all TC entries */
-        entry = tc_table[index].next;
-        while(entry != &tc_table[index]) {
-            /* For all destination entries of that TC entry */
-            dst_entry = entry->destinations.next;
-            while(dst_entry != &entry->destinations) {
-                ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%0.2f\n", 
-                           olsr_ip_to_string(&dst_entry->T_dest_addr),
-                           olsr_ip_to_string(&entry->T_last_addr), 
-                           dst_entry->link_quality,
-                           dst_entry->inverse_link_quality,
-                           (dst_entry->link_quality * dst_entry->inverse_link_quality) ? 1.0 / (dst_entry->link_quality * dst_entry->inverse_link_quality) : 0.0);
-		
-                dst_entry = dst_entry->next;
-	    }
-            entry = entry->next;
-	}
-    }
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+        OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+            ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%0.2f\n", 
+                       olsr_ip_to_string(&tc_edge->T_dest_addr),
+                       olsr_ip_to_string(&tc->addr), 
+                       tc_edge->link_quality,
+                       tc_edge->inverse_link_quality,
+                       (tc_edge->link_quality * tc_edge->inverse_link_quality) ? 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality) : 0.0);
+
+        } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+
     ipc_sendf("\n");
 }
 

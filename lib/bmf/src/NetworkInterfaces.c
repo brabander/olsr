@@ -862,16 +862,16 @@ void GetBestTwoNeighbors(
         tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
         if (tcLastHop != NULL)
         {
-          struct topo_dst* tcDest;
+          struct tc_edge_entry* tc_edge;
 
-          /* TODO: olsr_tc_lookup_dst() is not thread-safe. */
-          tcDest = olsr_tc_lookup_dst(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
+          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
+          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
 
-          if (tcDest != NULL)
+          if (tc_edge != NULL)
           {
             float tcEtx = CalcEtx(
-              tcDest->link_quality,
-              tcDest->inverse_link_quality);
+              tc_edge->link_quality,
+              tc_edge->inverse_link_quality);
 
             if (previousLinkEtx + currEtx > tcEtx)
             {

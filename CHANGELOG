@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.84 2007/09/11 23:22:38 bernd67 Exp $
+$Id: CHANGELOG,v 1.85 2007/09/13 15:31:58 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -76,6 +76,17 @@ non RT related stuff:
 ----  snip  ----
 And Sven-Ola Tuecke <mail2news@commando.de> fixed an instability issue on interface
 up/down operations (see 102-olsrd-rt-refactoring-fixes.patch below).
+
+PATCH by Hannes Gredler <hannes@gredler.at> which "consolidates
+the link-state database and the spf-calculation in order
+to calculate routes more efficiently".
+To quote him (more):
+----  snip  ----
+- use the link-state (tc) database for SPF calculations rather than
+  replicating the notion of vertices and edges for a SPF run.
+  this heavily reduces malloc() calls and shrinks the total CPU
+  load of the route calculation path between 60%-80%.
+----  snip  ----
 
 PATCHES by Sven-Ola Tuecke to be found on from
 http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
