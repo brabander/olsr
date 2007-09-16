@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.71 2007/09/11 23:49:02 bernd67 Exp $
+ * $Id: link_set.c,v 1.72 2007/09/16 21:45:25 bernd67 Exp $
  */
 
 
@@ -1045,7 +1045,7 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
   entry->loss_link_quality =
     (float)(entry->total_packets - entry->lost_packets) /
     (float)(entry->loss_window_size < (2 * 4) ? entry->loss_window_size: 
-    4 * ((entry->loss_window_size / 4 - 1) * entry->total_packets + entry->loss_window_size) / entry->loss_window_size);
+    4 * (((float)entry->loss_window_size / 4 - 1) * entry->total_packets + entry->loss_window_size) / entry->loss_window_size);
     
   // multiply the calculated link quality with the user-specified multiplier
 

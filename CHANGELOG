@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.86 2007/09/13 16:08:12 bernd67 Exp $
+$Id: CHANGELOG,v 1.87 2007/09/16 21:45:25 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -137,6 +137,9 @@ olsr_makefile_make_use_of_exename.patch
 PATCHES by John Hay <jhay@meraka.org.za>
 - update to new FreeBSD WLAN API
 - do not require /bin/bash, use /bin/sh
+
+PATCH by Andreas Jacobs <jacobs@i4.informatik.rwth-aachen.de>
+- fix the loss link quality calculation for "windows size % 4 != 0"
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).
