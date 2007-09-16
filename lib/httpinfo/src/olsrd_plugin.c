@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.18 2007/08/25 19:48:42 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.19 2007/09/16 22:14:08 bernd67 Exp $
  */
 
 /*
@@ -106,7 +106,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "port",   .set_plugin_parameter = &set_plugin_port,      .data = &http_port },
     { .name = "host",   .set_plugin_parameter = &add_plugin_ipaddr,    .data = &allowed_nets },
     { .name = "net",    .set_plugin_parameter = &add_plugin_ipnet,     .data = &allowed_nets },
-    { .name = "resolve",.set_plugin_parameter = &set_boolean,          .data = &resolve_ip_addresses },
+    { .name = "resolve",.set_plugin_parameter = &set_plugin_boolean,          .data = &resolve_ip_addresses },
 };
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)

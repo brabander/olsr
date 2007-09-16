@@ -28,7 +28,7 @@
  *
  */
 
-/* $Id: plugin_util.h,v 1.2 2007/08/25 19:48:42 bernd67 Exp $ */
+/* $Id: plugin_util.h,v 1.3 2007/09/16 22:14:08 bernd67 Exp $ */
 
 /*
  * Example plugin for olsrd.org OLSR daemon
@@ -38,12 +38,14 @@
 #ifndef _OLSRD_PLUGIN_UTIL
 #define _OLSRD_PLUGIN_UTIL
 
+#include "olsrd_plugin.h"
+
 /* Common/utility functions for plugins */
-int set_plugin_port(const char *value, void *data, unsigned int);
-int set_plugin_ipaddress(const char *value, void *data, unsigned int);
-int set_boolean(const char *value, void *data, unsigned int);
-int set_plugin_int(const char *value, void *data, unsigned int);
-int set_plugin_string(const char *value, void *data, unsigned int);
+set_plugin_parameter set_plugin_port;
+set_plugin_parameter set_plugin_ipaddress;
+set_plugin_parameter set_plugin_boolean;
+set_plugin_parameter set_plugin_int;
+set_plugin_parameter set_plugin_string;
 
 
 #endif

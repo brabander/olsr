@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.4 2007/09/02 21:04:42 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.5 2007/09/16 22:14:08 bernd67 Exp $
  */
 
 #include "plugin_util.h"
@@ -86,12 +86,12 @@ int set_plugin_ipaddress(const char *value, void *data, unsigned int addon __att
 }
 
 
-int set_boolean(const char *value, void *data, unsigned int addon __attribute__((unused)))
+int set_plugin_boolean(const char *value, void *data, unsigned int addon __attribute__((unused)))
 {
     int *v = data;
-    if (strcasecmp (value, "yes") == 0) {
+    if (strcasecmp (value, "yes") == 0 || strcasecmp (value, "true") == 0) {
         *v = 1;
-    } else if (strcasecmp (value, "no") == 0) {
+    } else if (strcasecmp (value, "no") == 0 || strcasecmp (value, "false") == 0) {
         *v = 0;
     } else {
         return 1;
