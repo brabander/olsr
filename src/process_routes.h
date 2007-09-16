@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.h,v 1.11 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: process_routes.h,v 1.12 2007/09/16 21:14:25 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -85,6 +85,6 @@ int
 olsr_delete_all_kernel_routes(void);
 
 olsr_u8_t
-olsr_rt_flags(struct rt_entry *);
+olsr_rt_flags(const struct rt_entry *);
 
 #endif

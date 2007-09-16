@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.36 2007/09/05 16:17:36 bernd67 Exp $
+ * $Id: process_routes.c,v 1.37 2007/09/16 21:14:25 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -77,14 +77,14 @@ struct list_node del_kernel_list;
  *
  */
 olsr_u8_t
-olsr_rt_flags(struct rt_entry *rt)
+olsr_rt_flags(const struct rt_entry *rt)
 {
-  struct rt_nexthop *nh;
+  const struct rt_nexthop *nh;
   olsr_u8_t flags;
 
   flags = (RTF_UP);
 
-  if (rt->rt_dst.prefix_len == olsr_host_rt_maxplen()) {
+  if (rt->rt_dst.prefix_len == olsr_cnf->maxplen) {
     flags |= RTF_HOST;
   }
 
@@ -263,7 +263,7 @@ olsr_delete_all_kernel_routes(void)
 static void
 olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
 {
-  struct rt_nexthop *nh;
+  const struct rt_nexthop *nh;
 
   /* if this node is already on some changelist we are done */
   if (list_node_on_list(&rt->rt_change_node)) {
