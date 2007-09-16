@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.29 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.30 2007/09/16 21:20:16 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -525,23 +525,6 @@ olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 #endif
 
   return prefix;
-}
-
-/**
- * olsr_host_rt_maxplen
- *
- * @return the maxium prefix length based wether v4 or v6 is configured 
- */
-int
-olsr_host_rt_maxplen(void)
-{
-  if(olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    return 32;
-  } else {
-    /* IPv6 */
-    return 128;
-  }
 }
 
 

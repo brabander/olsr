@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.21 2007/09/12 23:40:47 bernd67 Exp $
+ * $Id: routing_table.h,v 1.22 2007/09/16 21:20:17 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -162,7 +162,7 @@ char *olsr_rt_to_string(struct rt_entry *);
 char *olsr_rtp_to_string(struct rt_path *);
 void olsr_print_routing_table(struct avl_tree *);
 
-struct rt_nexthop * olsr_get_nh(struct rt_entry *);
+const struct rt_nexthop * olsr_get_nh(const struct rt_entry *);
 
 struct rt_path *
 olsr_insert_routing_table(union olsr_ip_addr *, int,
@@ -171,7 +171,7 @@ olsr_insert_routing_table(union olsr_ip_addr *, int,
                           int, int, float);
 
 struct rt_entry *
-olsr_lookup_routing_table(union olsr_ip_addr *);
+olsr_lookup_routing_table(const union olsr_ip_addr *);
 
 
 #endif

@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.51 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: lq_route.c,v 1.52 2007/09/16 21:20:07 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -301,7 +301,7 @@ olsr_calculate_routing_table (void)
 {
   struct avl_tree cand_tree;
   struct list_node path_list;
-  int i, plen, max_host_plen, path_count = 0;
+  int i, plen, path_count = 0;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
   struct tc_entry *vert;
@@ -317,8 +317,6 @@ olsr_calculate_routing_table (void)
 
   gettimeofday(&t1, NULL);
 #endif
-
-  max_host_plen = olsr_host_rt_maxplen();
 
   /*
    * Prepare the candidate tree and result list.
@@ -426,7 +424,7 @@ olsr_calculate_routing_table (void)
     if (inter) {
 
       /* add a route to the main address of the destination node */
-      olsr_insert_routing_table(&vert->addr, max_host_plen, &vert->addr,
+      olsr_insert_routing_table(&vert->addr, olsr_cnf->maxplen, &vert->addr,
                                 &link->neighbor_iface_addr, inter->if_index,
                                 vert->hops, vert->path_etx);
 
@@ -435,7 +433,7 @@ olsr_calculate_routing_table (void)
            mid_walker != NULL;
            mid_walker = mid_walker->next_alias) {
 
-        olsr_insert_routing_table(&mid_walker->alias, max_host_plen, &vert->addr,
+        olsr_insert_routing_table(&mid_walker->alias, olsr_cnf->maxplen, &vert->addr,
                                   &link->neighbor_iface_addr, inter->if_index,
                                   vert->hops, vert->path_etx);
       }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.76 2007/09/13 16:08:12 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.77 2007/09/16 21:20:07 bernd67 Exp $
  */
 
 /*
@@ -87,7 +87,7 @@
 #define OS "Undefined"
 #endif
 
-static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 #define MAX_CLIENTS 3
 
@@ -95,7 +95,7 @@ static char copyright_string[] = "olsr.org HTTPINFO plugin Copyright (c) 2004, A
 
 #define DEFAULT_TCP_PORT 1978
 
-#define HTML_BUFSIZE (1024 * 400)
+#define HTML_BUFSIZE (1024 * 4000)
 
 #define FRAMEWIDTH 800
 
@@ -231,7 +231,6 @@ static const struct dynamic_file_entry dynamic_files[] =
 int
 olsrd_plugin_init(void)
 {
-  (void)copyright_string;
   /* Get start time */
   gettimeofday(&start_time, NULL);
 
@@ -678,16 +677,26 @@ static int build_frame(char *title __attribute__((unused)),
   return size;
 }
 
-static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link,
-                        const union olsr_ip_addr * const ipaddr, const int prefix_len)
+static int fmt_href(char *buf,
+                    const olsr_u32_t bufsize,
+                    const union olsr_ip_addr * const ipaddr)
+{
+  return snprintf(buf, bufsize,
+                  "<a href=\"http://%s:%d/all\">",
+                  olsr_ip_to_string(ipaddr),
+                  http_port);
+
+}
+
+static int build_ip_txt(char *buf,
+                        const olsr_u32_t bufsize,
+                        const olsr_bool print_link,
+                        const union olsr_ip_addr * const ipaddr,
+                        const int prefix_len)
 {
   int size = 0;
-  if (want_link && prefix_len == -1) { /* Print the link only if there is no prefix_len */
-    size += snprintf(&buf[size],
-                     bufsize-size,
-                     "<a href=\"http://%s:%d/all\">",
-                     olsr_ip_to_string(ipaddr),
-                     http_port);
+  if (print_link) { /* Print the link only if there is no prefix_len */
+    size += fmt_href(&buf[size], bufsize-size, ipaddr);
   }
 
   /* print ip address or ip prefix ? */
@@ -698,7 +707,7 @@ static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool wan
                        prefix_len);
   }
   
-  if (want_link && prefix_len == -1) { /* Print the link only if there is no prefix_len */
+  if (print_link) { /* Print the link only if there is no prefix_len */
     size += snprintf(&buf[size], bufsize-size, "</a>");
   }
   return size;
@@ -715,15 +724,22 @@ static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize,
       resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize, olsr_cnf->ip_version) :
 #endif
       NULL;
+  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen);
 
   size += snprintf(&buf[size], bufsize-size, "<td>");
-  size += build_ip_txt(&buf[size], bufsize-size, want_link, ipaddr, prefix_len);
+  size += build_ip_txt(&buf[size], bufsize-size, print_link, ipaddr, prefix_len);
   size += snprintf(&buf[size], bufsize-size, "</td>");
 
   if (resolve_ip_addresses) {
     if (hp) {
       size += snprintf(&buf[size], bufsize-size, "<td>(");
+      if (print_link) {
+        size += fmt_href(&buf[size], bufsize-size, ipaddr);
+      }
       size += snprintf(&buf[size], bufsize-size, "%s", hp->h_name);
+      if (print_link) {
+        size += snprintf(&buf[size], bufsize-size, "</a>");
+      }
       size += snprintf(&buf[size], bufsize-size, ")</td>");
     } else {
       size += snprintf(&buf[size], bufsize-size, "<td/>");
@@ -781,40 +797,45 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
 
 static int build_config_body(char *buf, olsr_u32_t bufsize)
 {
-    char systime[100];
-    time_t currtime;
     int size = 0;
     struct olsr_if *ifs;
     struct plugin_entry *pentry;
     struct plugin_param *pparam;
-    struct timeval now, uptime;
-    int hours, mins, days;
 
-    gettimeofday(&now, NULL);
-    timersub(&now, &start_time, &uptime);
-    days = uptime.tv_sec/86400;
-    uptime.tv_sec -= days*86400;
-    hours = uptime.tv_sec/3600;
-    uptime.tv_sec -= hours*3600;
-    mins = uptime.tv_sec/60;
-    uptime.tv_sec -= mins*60;
-
-    time(&currtime);
-    strftime(systime, 100, "System time: <i>%a, %d %b %Y %H:%M:%S</i><br>", localtime(&currtime));
-
-
+    size += snprintf(&buf[size], bufsize-size, "Version: %s (built on %s on %s)\n<br>", olsrd_version, build_date, build_host);
     size += snprintf(&buf[size], bufsize-size, "OS: %s\n<br>", OS);
 
-    size += snprintf(&buf[size], bufsize-size, "%s\n", systime);
+    { 
+      time_t currtime = time(NULL);
+      int rc = strftime(&buf[size], bufsize-size, "System time: <em>%a, %d %b %Y %H:%M:%S</em><br>", localtime(&currtime));
+      if (rc > 0) {
+        size += rc;
+      }
+    }
 
-    if(days)
-      size += snprintf(&buf[size], bufsize-size, "Olsrd uptime: <i>%d day(s) %02d hours %02d minutes %02d seconds</i><br>\n", days, hours, mins, (int)uptime.tv_sec);
-    else
-      size += snprintf(&buf[size], bufsize-size, "Olsrd uptime: <i>%02d hours %02d minutes %02d seconds</i><br>\n", hours, mins, (int)uptime.tv_sec);
+    {
+      struct timeval now, uptime;
+      int hours, mins, days;
+      gettimeofday(&now, NULL);
+      timersub(&now, &start_time, &uptime);
 
-    size += snprintf(&buf[size], bufsize-size, "HTTP stats(ok/dyn/error/illegal): <i>%d/%d/%d/%d</i><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+      days = uptime.tv_sec/86400;
+      uptime.tv_sec %= 86400;
+      hours = uptime.tv_sec/3600;
+      uptime.tv_sec %= 3600;
+      mins = uptime.tv_sec/60;
+      uptime.tv_sec %= 60;
 
-    size += snprintf(&buf[size], bufsize-size, "Click <a href=\"/cfgfile\">here</a> to <i>generate a configuration file for this node</i>.\n");
+      size += snprintf(&buf[size], bufsize-size, "Olsrd uptime: <em>");
+      if (days) {
+        size += snprintf(&buf[size], bufsize-size, "%d day(s) ", days);
+      }
+      size += snprintf(&buf[size], bufsize-size, "%02d hours %02d minutes %02d seconds</em><br/>\n", hours, mins, (int)uptime.tv_sec);
+    }
+
+    size += snprintf(&buf[size], bufsize-size, "HTTP stats(ok/dyn/error/illegal): <em>%d/%d/%d/%d</em><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+
+    size += snprintf(&buf[size], bufsize-size, "Click <a href=\"/cfgfile\">here</a> to <em>generate a configuration file for this node</em>.\n");
 
     size += snprintf(&buf[size], bufsize-size, "<h2>Variables</h2>\n");
 
@@ -909,9 +930,9 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
     if(olsr_cnf->allow_no_interfaces)
-      size += snprintf(&buf[size], bufsize-size, "<i>Olsrd is configured to run even if no interfaces are available</i><br>\n");
+      size += snprintf(&buf[size], bufsize-size, "<em>Olsrd is configured to run even if no interfaces are available</em><br>\n");
     else
-      size += snprintf(&buf[size], bufsize-size, "<i>Olsrd is configured to halt if no interfaces are available</i><br>\n");
+      size += snprintf(&buf[size], bufsize-size, "<em>Olsrd is configured to halt if no interfaces are available</em><br>\n");
 
     size += snprintf(&buf[size], bufsize-size, "<h2>Plugins</h2>\n");
 
@@ -1165,13 +1186,7 @@ static int build_all_body(char *buf, olsr_u32_t bufsize)
 
 static int build_about_body(char *buf, olsr_u32_t bufsize)
 {
-  int size = 0, i = 0;
-
-  while(about_frame[i]) {
-      size += snprintf(&buf[size], bufsize-size, about_frame[i]);
-      i++;
-  }
-  return size;
+  return snprintf(buf, bufsize, about_frame, build_date, build_host);
 }
 
 static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)

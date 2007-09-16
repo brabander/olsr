@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.30 2007/09/05 16:17:36 bernd67 Exp $
+ * $Id: routing_table.c,v 1.31 2007/09/16 21:20:17 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -168,13 +168,13 @@ olsr_init_routing_table(void)
  * representing the route entry.
  */
 struct rt_entry *
-olsr_lookup_routing_table(union olsr_ip_addr *dst)
+olsr_lookup_routing_table(const union olsr_ip_addr *dst)
 {
   struct avl_node *rt_tree_node;
   struct olsr_ip_prefix prefix;
 
   COPY_IP(&prefix, dst);
-  prefix.prefix_len = olsr_host_rt_maxplen();
+  prefix.prefix_len = olsr_cnf->maxplen;
 
   rt_tree_node = avl_find(&routingtree, &prefix);
 
@@ -292,8 +292,8 @@ olsr_nh_change(struct rt_nexthop *nh1, struct rt_nexthop *nh2)
  * depending on the operation (add/chg/del) the nexthop
  * field from the route entry or best route path shall be used.
  */
-struct rt_nexthop *
-olsr_get_nh(struct rt_entry *rt)
+const struct rt_nexthop *
+olsr_get_nh(const struct rt_entry *rt)
 {
 
   if(rt->rt_best) {
@@ -514,14 +514,12 @@ olsr_rtp_to_string(struct rt_path *rtp)
 int
 olsr_fill_routing_table_with_neighbors(void)
 {
-  int index, max_host_plen;
+  int index;
   float etx;
 
 #ifdef DEBUG
   OLSR_PRINTF(7, "FILL ROUTING TABLE WITH NEIGHBORS\n");
 #endif
-
-  max_host_plen = olsr_host_rt_maxplen();
 
   for (index=0;index<HASHSIZE;index++) {
 
@@ -563,13 +561,13 @@ olsr_fill_routing_table_with_neighbors(void)
             if (iface) {
 
               /* neighbor main IP address */
-              olsr_insert_routing_table(&link->neighbor_iface_addr, max_host_plen,
+              olsr_insert_routing_table(&link->neighbor_iface_addr, olsr_cnf->maxplen,
                                         &link->neighbor->neighbor_main_addr,
                                         &link->neighbor_iface_addr,
                                         iface->if_index, 1, etx);
 
               /* this is the nexthop route that all routes will be tracking */
-              olsr_insert_routing_table(&addrs2->alias, max_host_plen,
+              olsr_insert_routing_table(&addrs2->alias, olsr_cnf->maxplen,
                                         &link->neighbor->neighbor_main_addr,
                                         &link->neighbor_iface_addr,
                                         iface->if_index, 1, etx);

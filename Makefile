@@ -35,14 +35,12 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.96 2007/09/13 22:50:28 bernd67 Exp $
+# $Id: Makefile,v 1.97 2007/09/16 21:20:06 bernd67 Exp $
 
 VERS =		0.5.4rc1
 
 TOPDIR = .
 include Makefile.inc
-
-CPPFLAGS +=	-DVERSION=\"$(VERS)\"
 
 # pass generated variables to save time
 MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)"
@@ -61,7 +59,7 @@ TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
 default_target: cfgparser $(EXENAME)
 
-$(EXENAME):	$(OBJS) $(CFGOBJS)
+$(EXENAME):	$(OBJS) $(CFGOBJS) src/builddata.o
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(CFGOBJS) $(LIBS)
 
 cfgparser:	$(CFGDEPS)
@@ -73,10 +71,20 @@ switch:
 $(CFGOBJS):
 		$(MAKECMD) -C $(CFGDIR)
 
+# generate it always
+.PHONY: src/builddata.c
+src/builddata.c:
+	@$(RM) "$@"
+	@echo "#include \"defs.h\"" >> "$@" 
+	@echo "const char olsrd_version[] = \"olsr.org - $(VERS)\";" >> "$@" 
+	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
+	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
+
+
 .PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all 
 
 clean:
-		-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe
+		-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c
 ifeq ($(OS), win32)
 		-rm -f libolsrd.a
 endif

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.57 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: olsr.c,v 1.58 2007/09/16 21:20:16 bernd67 Exp $
  */
 
 /**
@@ -156,7 +156,7 @@ olsr_process_changes(void)
   if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
   {
       clear_console();
-      printf("%s", OLSRD_VERSION_DATE);
+      printf("       *** %s (%s on %s) ***\n", olsrd_version, build_date, build_host);
   }
 
   if (changes_neighborhood)
