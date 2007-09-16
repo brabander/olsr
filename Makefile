@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.97 2007/09/16 21:20:06 bernd67 Exp $
+# $Id: Makefile,v 1.98 2007/09/16 21:50:17 bernd67 Exp $
 
 VERS =		0.5.4rc1
 
@@ -60,7 +60,7 @@ TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 default_target: cfgparser $(EXENAME)
 
 $(EXENAME):	$(OBJS) $(CFGOBJS) src/builddata.o
-		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(CFGOBJS) $(LIBS)
+		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 cfgparser:	$(CFGDEPS)
 		$(MAKECMD) -C $(CFGDIR)
