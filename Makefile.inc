@@ -41,6 +41,7 @@ WARNINGS +=	-Wno-multichar
 WARNINGS +=	-Wno-deprecated-declarations
 #WARNINGS +=	-Wredundant-decls
 WARNINGS +=	-Wnested-externs
+# Alas, htons() triggers this so we can't seriously activate it.
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
