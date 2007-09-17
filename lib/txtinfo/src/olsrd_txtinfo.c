@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.10 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.11 2007/09/17 22:08:01 bernd67 Exp $
  */
 
 /*
@@ -237,7 +237,7 @@ static void ipc_action(int fd)
     /* purge read buffer to prevent blocking on linux*/
     FD_ZERO(&rfds);
     FD_SET((unsigned int)ipc_connection, &rfds); /* Win32 needs the cast here */
-    if(select(ipc_connection+1, &rfds, NULL, NULL, &tv)) {
+    if(0 <= select(ipc_connection+1, &rfds, NULL, NULL, &tv)) {
         char requ[128];
         ssize_t s = recv(ipc_connection, (void*)&requ, sizeof(requ), 0); /* Win32 needs the cast here */
         if (0 < s) {
