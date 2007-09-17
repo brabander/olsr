@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.27 2007/09/17 22:55:40 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.28 2007/09/17 22:57:41 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -50,6 +50,7 @@ static int delete_all_inet_gws(void);
 #else /* !LINUX_POLICY_ROUTING */
 
 #include <assert.h>
+#include <linux/types.h>
 #include <linux/rtnetlink.h>
 
 struct olsr_rtreq
