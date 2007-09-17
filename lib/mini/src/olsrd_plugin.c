@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.c,v 1.4 2007/09/02 21:37:49 bernd67 Exp $ */
+/* $Id: olsrd_plugin.c,v 1.5 2007/09/17 21:57:05 bernd67 Exp $ */
 
  /*
  * Example plugin for olsrd.org OLSR daemon
@@ -62,7 +62,7 @@ int olsrd_plugin_interface_version(void)
 }
 
 
-static int set_plugin_test(const char *value, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+static int set_plugin_test(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
     printf("\n*** MINI: parameter test: %s\n", value);
     return 0;

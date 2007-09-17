@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.22 2007/09/13 15:41:12 bernd67 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.23 2007/09/17 21:57:05 bernd67 Exp $
  */
 
 /*
@@ -135,7 +135,7 @@ olsr_event_doing_hna(void *);
 /**
  * read config file parameters
  */
-static int set_plugin_double(const char *value, void *data, unsigned int addon __attribute__((unused)))
+static int set_plugin_double(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     char *endptr;
     const double d = strtod(value, &endptr);
@@ -153,7 +153,7 @@ static int set_plugin_double(const char *value, void *data, unsigned int addon _
     return 0;
 }
 
-static int set_plugin_ping(const char *value, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+static int set_plugin_ping(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
     union olsr_ip_addr foo_addr;
 
@@ -176,7 +176,7 @@ static int set_plugin_ping(const char *value, void *data __attribute__((unused))
     return 0;
 }
 
-static int set_plugin_hna(const char *value, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+static int set_plugin_hna(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
     union olsr_ip_addr temp_net;
     union olsr_ip_addr temp_netmask;

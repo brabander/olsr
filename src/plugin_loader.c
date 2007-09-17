@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_loader.c,v 1.31 2007/08/30 22:25:13 bernd67 Exp $
+ * $Id: plugin_loader.c,v 1.32 2007/09/17 21:57:06 bernd67 Exp $
  */
 
 #include "plugin_loader.h"
@@ -254,7 +254,7 @@ static int init_olsr_plugin(struct olsr_plugin *entry)
                 {
                     /* we have found it! */
                     rc = entry->plugin_parameters[i].set_plugin_parameter(params->value, entry->plugin_parameters[i].data,
-                        0 == entry->plugin_parameters[i].name[0] ? (unsigned int)params->key : entry->plugin_parameters[i].addon);
+                        0 == entry->plugin_parameters[i].name[0] ? (set_plugin_parameter_addon)params->key : entry->plugin_parameters[i].addon);
                     if (rc != 0) {
                         fprintf(stderr, "\nFatal error in plugin parameter \"%s\"/\"%s\"\n", params->key, params->value);
                         rv = -1;

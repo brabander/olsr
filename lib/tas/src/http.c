@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.6 2007/09/02 22:17:00 bernd67 Exp $
+ * $Id: http.c,v 1.7 2007/09/17 21:57:06 bernd67 Exp $
  */
 
 #include "link.h"
@@ -447,7 +447,7 @@ void httpInit(void)
   getRandomBytes(cookieStruct.key, 16);
 }
 
-int httpSetAddress(const char *addrStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetAddress(const char *addrStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   if (parseIpAddr(&confAddr, addrStr) < 0)
   {
@@ -458,7 +458,7 @@ int httpSetAddress(const char *addrStr, void *data __attribute__((unused)), unsi
   return 0;
 }
 
-int httpSetPort(const char *portStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetPort(const char *portStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   unsigned int port;
 
@@ -479,7 +479,7 @@ int httpSetPort(const char *portStr, void *data __attribute__((unused)), unsigne
   return 0;
 }
 
-int httpSetRootDir(const char *rootDir, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetRootDir(const char *rootDir, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   if (checkAbsPath(rootDir) < 0)
   {
@@ -491,7 +491,7 @@ int httpSetRootDir(const char *rootDir, void *data __attribute__((unused)), unsi
   return 0;
 }
 
-int httpSetWorkDir(const char *workDir, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetWorkDir(const char *workDir, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   if (checkAbsPath(workDir) < 0)
   {
@@ -503,25 +503,25 @@ int httpSetWorkDir(const char *workDir, void *data __attribute__((unused)), unsi
   return 0;
 }
 
-int httpSetIndexFile(const char *indexFile, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetIndexFile(const char *indexFile, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   confIndexFile = myStrdup(indexFile);
   return 0;
 }
 
-int httpSetUser(const char *user, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetUser(const char *user, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   confUser = myStrdup(user);
   return 0;
 }
 
-int httpSetPassword(const char *password, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetPassword(const char *password, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   confPassword = myStrdup(password);
   return 0;
 }
 
-int httpSetSessTime(const char *timeStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetSessTime(const char *timeStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   unsigned int time;
 
@@ -542,13 +542,13 @@ int httpSetSessTime(const char *timeStr, void *data __attribute__((unused)), uns
   return 0;
 }
 
-int httpSetPubDir(const char *pubDir, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetPubDir(const char *pubDir, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   confPubDir = myStrdup(pubDir);
   return 0;
 }
 
-int httpSetQuantum(const char *quantumStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetQuantum(const char *quantumStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   unsigned int quantum;
 
@@ -569,7 +569,7 @@ int httpSetQuantum(const char *quantumStr, void *data __attribute__((unused)), u
   return 0;
 }
 
-int httpSetMessTime(const char *timeStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetMessTime(const char *timeStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   unsigned int time;
 
@@ -590,7 +590,7 @@ int httpSetMessTime(const char *timeStr, void *data __attribute__((unused)), uns
   return 0;
 }
 
-int httpSetMessLimit(const char *limitStr, void *data __attribute__((unused)), unsigned int addon __attribute__((unused)))
+int httpSetMessLimit(const char *limitStr, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
   unsigned int limit;
 

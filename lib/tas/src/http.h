@@ -37,8 +37,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.h,v 1.2 2007/09/02 22:17:00 bernd67 Exp $
+ * $Id: http.h,v 1.3 2007/09/17 21:57:06 bernd67 Exp $
  */
+
+#include "olsrd_plugin.h" /* union set_plugin_parameter_addon */
 
 #define CHUNK_SIZE 1024
 
@@ -117,18 +119,18 @@ struct connInfo
 
 extern void httpInit(void);
 
-extern int httpSetAddress(const char *addrStr, void *data, unsigned int addon);
-extern int httpSetPort(const char *portStr, void *data, unsigned int addon);
-extern int httpSetRootDir(const char *rootDir, void *data, unsigned int addon);
-extern int httpSetWorkDir(const char *workDir, void *data, unsigned int addon);
-extern int httpSetIndexFile(const char *indexFile, void *data, unsigned int addon);
-extern int httpSetUser(const char *user, void *data, unsigned int addon);
-extern int httpSetPassword(const char *password, void *data, unsigned int addon);
-extern int httpSetSessTime(const char *timeStr, void *data, unsigned int addon);
-extern int httpSetPubDir(const char *pref, void *data, unsigned int addon);
-extern int httpSetQuantum(const char *quantumStr, void *data, unsigned int addon);
-extern int httpSetMessTime(const char *timeStr, void *data, unsigned int addon);
-extern int httpSetMessLimit(const char *limitStr, void *data, unsigned int addon);
+extern int httpSetAddress(const char *addrStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPort(const char *portStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetRootDir(const char *rootDir, void *data, set_plugin_parameter_addon addon);
+extern int httpSetWorkDir(const char *workDir, void *data, set_plugin_parameter_addon addon);
+extern int httpSetIndexFile(const char *indexFile, void *data, set_plugin_parameter_addon addon);
+extern int httpSetUser(const char *user, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPassword(const char *password, void *data, set_plugin_parameter_addon addon);
+extern int httpSetSessTime(const char *timeStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPubDir(const char *pref, void *data, set_plugin_parameter_addon addon);
+extern int httpSetQuantum(const char *quantumStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetMessTime(const char *timeStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetMessLimit(const char *limitStr, void *data, set_plugin_parameter_addon addon);
 
 extern int httpSetup(void);
 extern int httpService(int freq);

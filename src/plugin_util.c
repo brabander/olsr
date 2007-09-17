@@ -37,14 +37,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.5 2007/09/16 22:14:08 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.6 2007/09/17 21:57:06 bernd67 Exp $
  */
 
 #include "plugin_util.h"
 #include "olsr.h"
 #include "defs.h"
 
-int set_plugin_port(const char *value, void *data, unsigned int addon __attribute__((unused)))
+int set_plugin_port(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     char *endptr;
     const unsigned int port = strtoul(value, &endptr, 0);
@@ -66,7 +66,7 @@ int set_plugin_port(const char *value, void *data, unsigned int addon __attribut
     return 0;
 }
 
-int set_plugin_ipaddress(const char *value, void *data, unsigned int addon __attribute__((unused)))
+int set_plugin_ipaddress(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     char buf[INET6_ADDRSTRLEN];
     union olsr_ip_addr ip_addr;
@@ -86,7 +86,7 @@ int set_plugin_ipaddress(const char *value, void *data, unsigned int addon __att
 }
 
 
-int set_plugin_boolean(const char *value, void *data, unsigned int addon __attribute__((unused)))
+int set_plugin_boolean(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     int *v = data;
     if (strcasecmp (value, "yes") == 0 || strcasecmp (value, "true") == 0) {
@@ -99,7 +99,7 @@ int set_plugin_boolean(const char *value, void *data, unsigned int addon __attri
     return 0;
 }
 
-int set_plugin_int(const char *value, void *data, unsigned int addon __attribute__((unused)))
+int set_plugin_int(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     char *endptr;
     const int theint = strtol(value, &endptr, 0);
@@ -117,11 +117,11 @@ int set_plugin_int(const char *value, void *data, unsigned int addon __attribute
     return 0;
 }
 
-int set_plugin_string(const char *value, void *data, unsigned int addon)
+int set_plugin_string(const char *value, void *data, set_plugin_parameter_addon addon)
 {
     if (data != NULL) {
         char *v = data;
-        if (strlen(value) >= addon) {
+        if (strlen(value) >= addon.ui) {
             OLSR_PRINTF(0, "String too long \"%s\"", value);
             return 1;
         }

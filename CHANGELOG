@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.87 2007/09/16 21:45:25 bernd67 Exp $
+$Id: CHANGELOG,v 1.88 2007/09/17 21:57:05 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -128,6 +128,8 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
   policy routing table to use. Defaults to 254 (== main). 
   This patch was modified/clenaed up by <bernd@firmix.at> to use "#if"
   instead of "#ifdef" as it's more robust against typos.
+- 115-olsrd-nameserviceparamfix.patch and 116-olsrd-fix-pluginparam-addons.patch
+  fixing the compilation warning on 64bit
 
 PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch
@@ -154,6 +156,8 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   This kills *lots* of (more than) superflous malloc()s and the same
   number of (free()s). And it also kills some code and copying around of
   data.
+- Make it compile without warning with flex-2.5.33 (to be found on Fedora 7
+  and Gentoo in Sep-2007) again.
 
 - converted the dyn_gw plugin to plugin interface version 5 (which leaves
   the quagga plugion as the last with the old one).

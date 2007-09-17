@@ -45,6 +45,7 @@
 
 /* OLSR includes */
 #include "olsr_types.h" /* olsr_ip_addr */
+#include "olsrd_plugin.h" /* union set_plugin_parameter_addon */
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */
@@ -120,10 +121,10 @@ extern int CapturePacketsOnOlsrInterfaces;
 enum TBmfMechanism { BM_BROADCAST = 0, BM_UNICAST_PROMISCUOUS };
 extern enum TBmfMechanism BmfMechanism;
 
-int SetBmfInterfaceName(const char* ifname, void* data, unsigned int addon);
-int SetBmfInterfaceIp(const char* ip, void* data, unsigned int addon);
-int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data, unsigned int addon);
-int SetBmfMechanism(const char* mechanism, void* data, unsigned int addon);
+int SetBmfInterfaceName(const char* ifname, void* data, set_plugin_parameter_addon addon);
+int SetBmfInterfaceIp(const char* ip, void* data, set_plugin_parameter_addon addon);
+int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data, set_plugin_parameter_addon addon);
+int SetBmfMechanism(const char* mechanism, void* data, set_plugin_parameter_addon addon);
 int DeactivateSpoofFilter(void);
 void RestoreSpoofFilter(void);
 
@@ -143,7 +144,7 @@ void GetBestTwoNeighbors(
 int CreateBmfNetworkInterfaces(struct interface* skipThisIntf);
 void AddInterface(struct interface* newIntf);
 void CloseBmfNetworkInterfaces(void);
-int AddNonOlsrBmfIf(const char* ifName, void* data, unsigned int addon);
+int AddNonOlsrBmfIf(const char* ifName, void* data, set_plugin_parameter_addon addon);
 int IsNonOlsrBmfIf(const char* ifName);
 void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* broadAddr);
 void AddMulticastRoute(void);

@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.29 2007/09/13 15:31:59 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.30 2007/09/17 21:57:05 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -165,19 +165,19 @@ name_constructor(void)
 }
 
 
-static int set_nameservice_server(const char *value, void *data, unsigned int addon)
+static int set_nameservice_server(const char *value, void *data, set_plugin_parameter_addon addon)
 {
 	union olsr_ip_addr ip;
 	struct name_entry **v = data;
 	if (0 == strlen(value))
 	{
-		*v = add_name_to_list(*v, "", addon, NULL);
+		*v = add_name_to_list(*v, "", addon.ui, NULL);
                 OLSR_PRINTF(1, "%s got %s (main address)\n", "Got", value);
 		return 0;
 	}
 	else if (0 < inet_pton(olsr_cnf->ip_version, value, &ip))
 	{
-		*v = add_name_to_list(*v, "", addon, &ip);
+		*v = add_name_to_list(*v, "", addon.ui, &ip);
                 OLSR_PRINTF(1, "%s got %s\n", "Got", value);
 		return 0;
 	}
@@ -188,12 +188,12 @@ static int set_nameservice_server(const char *value, void *data, unsigned int ad
 	return 1;
 }
 
-static int set_nameservice_name(const char *value, void *data, unsigned int addon)
+static int set_nameservice_name(const char *value, void *data, set_plugin_parameter_addon addon)
 {
 	struct name_entry **v = data;
 	if (0 < strlen(value))
 	{
-		*v = add_name_to_list(*v, (char*)value, addon, NULL);
+		*v = add_name_to_list(*v, (char*)value, addon.ui, NULL);
                 OLSR_PRINTF(1, "%s got %s (main address)\n", "Got", value);
 		return 0;
 	}
@@ -204,28 +204,27 @@ static int set_nameservice_name(const char *value, void *data, unsigned int addo
 	return 1;
 }
 
-static int set_nameservice_host(const char *value, void *data, unsigned int addon)
+static int set_nameservice_host(const char *value, void *data, set_plugin_parameter_addon addon)
 {
 	union olsr_ip_addr ip;
 	struct name_entry **v = data;
-	if (0 < inet_pton(olsr_cnf->ip_version, (char*)addon, &ip))
+	if (0 < inet_pton(olsr_cnf->ip_version, addon.pc, &ip))
 	{
 		// the IP is validated later
-		*v = add_name_to_list(*v, (char*)value, addon, &ip);
-                OLSR_PRINTF(1, "%s: %s got %s\n", "Got", (char*) addon, value);
+		*v = add_name_to_list(*v, (char*)value, NAME_HOST, &ip);
+                OLSR_PRINTF(1, "%s: %s got %s\n", "Got", addon.pc, value);
 		return 0;
 	}
 	else
 	{
-                OLSR_PRINTF(0, "%s: Illegal IP address \"%s\"", (char*) addon, value);
+                OLSR_PRINTF(0, "%s: Illegal IP address \"%s\"", addon.pc, value);
 	}
 	return 1;
 }
 
-static int set_nameservice_float(const char *value, void *data, unsigned int addon)
+static int set_nameservice_float(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     const float thefloat = atof(value);
-    if (addon) {}
     if (data != NULL)
     {
         float *v = data;
@@ -242,19 +241,19 @@ static int set_nameservice_float(const char *value, void *data, unsigned int add
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "interval",      .set_plugin_parameter = &set_plugin_int,         .data = &my_interval },
     { .name = "timeout",       .set_plugin_parameter = &set_nameservice_float,  .data = &my_timeout },
-    { .name = "hosts-file",    .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,    .addon = sizeof(my_hosts_file) },
-    { .name = "resolv-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,   .addon = sizeof(my_resolv_file) },
-    { .name = "suffix",        .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,        .addon = sizeof(my_suffix) },
-    { .name = "add-hosts",     .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,     .addon = sizeof(my_add_hosts) },
-    { .name = "services-file", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file, .addon = sizeof(my_services_file) },
+    { .name = "hosts-file",    .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,    .addon = {sizeof(my_hosts_file)} },
+    { .name = "resolv-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,   .addon = {sizeof(my_resolv_file)} },
+    { .name = "suffix",        .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,        .addon = {sizeof(my_suffix)} },
+    { .name = "add-hosts",     .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,     .addon = {sizeof(my_add_hosts)} },
+    { .name = "services-file", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file, .addon = {sizeof(my_services_file)} },
     { .name = "lat",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lat },
     { .name = "lon",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lon },
-    { .name = "latlon-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,   .addon = sizeof(my_latlon_file) },
-    { .name = "latlon-infile", .set_plugin_parameter = &set_plugin_string,      .data = &latlon_in_file,   .addon = sizeof(latlon_in_file) },
-    { .name = "dns-server",    .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,    .addon = NAME_FORWARDER },
-    { .name = "name",          .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,         .addon = NAME_HOST },
-    { .name = "service",       .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,      .addon = NAME_SERVICE },
-    { .name = "",              .set_plugin_parameter = &set_nameservice_host,   .data = &my_names,         .addon = NAME_HOST },
+    { .name = "latlon-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,   .addon = {sizeof(my_latlon_file)} },
+    { .name = "latlon-infile", .set_plugin_parameter = &set_plugin_string,      .data = &latlon_in_file,   .addon = {sizeof(latlon_in_file)} },
+    { .name = "dns-server",    .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,    .addon = {NAME_FORWARDER} },
+    { .name = "name",          .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,         .addon = {NAME_HOST} },
+    { .name = "service",       .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,      .addon = {NAME_SERVICE} },
+    { .name = "",              .set_plugin_parameter = &set_nameservice_host,   .data = &my_names },
 };
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
@@ -1443,7 +1442,9 @@ write_latlon_file(void)
     struct tc_entry *tc;
     struct tc_edge_entry *tc_edge;
 
-	if (!latlon_table_changed) return;
+	if (!my_names || !latlon_table_changed) {
+        return;
+    }
 	OLSR_PRINTF(2, "NAME PLUGIN: writing latlon file\n");
 
 	js = fopen( my_latlon_file, "w" );

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.19 2007/09/16 22:14:08 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.20 2007/09/17 21:57:05 bernd67 Exp $
  */
 
 /*
@@ -64,8 +64,8 @@ struct allowed_net *allowed_nets = NULL;
 static void my_init(void) __attribute__ ((constructor));
 static void my_fini(void) __attribute__ ((destructor));
 
-static int add_plugin_ipnet(const char *value, void *data, unsigned int);
-static int add_plugin_ipaddr(const char *value, void *data, unsigned int);
+static int add_plugin_ipnet(const char *value, void *data, set_plugin_parameter_addon);
+static int add_plugin_ipaddr(const char *value, void *data, set_plugin_parameter_addon);
 
 static int insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net **allowed_nets);
 
@@ -140,10 +140,9 @@ static int insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct a
     return 0;
 }
 
-static int add_plugin_ipnet(const char *value, void *data, unsigned int addon)
+static int add_plugin_ipnet(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
     char sz_net[100], sz_mask[100]; /* IPv6 in the future */
-    if (addon) {}
 
     if(sscanf(value, "%99s %99s", sz_net, sz_mask) != 2) {
         olsr_printf(1, "(HTTPINFO) Error parsing net param \"%s\"!\n", value);
@@ -152,9 +151,8 @@ static int add_plugin_ipnet(const char *value, void *data, unsigned int addon)
     return insert_plugin_ipnet(sz_net, sz_mask, data);
 }
 
-static int add_plugin_ipaddr(const char *value, void *data, unsigned int addon)
+static int add_plugin_ipaddr(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {
-    if (addon) {}
     return insert_plugin_ipnet(value, "255.255.255.255", data);
 }
 

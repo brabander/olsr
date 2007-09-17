@@ -127,7 +127,7 @@ int CapturePacketsOnOlsrInterfaces = 0;
  * Return     : success (0) or fail (1)
  * Data Used  : EtherTunTapIfName
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceName(const char* ifname, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
+int SetBmfInterfaceName(const char* ifname, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
 {
   strncpy(EtherTunTapIfName, ifname, IFNAMSIZ - 1);
   EtherTunTapIfName[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
@@ -146,7 +146,7 @@ int SetBmfInterfaceName(const char* ifname, void* data __attribute__((unused)), 
  * Data Used  : EtherTunTapIp, EtherTunTapIpMask, EtherTunTapIpBroadcast,
  *              TunTapIpOverruled
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceIp(const char* ip, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
+int SetBmfInterfaceIp(const char* ip, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
 {
 #define IPV4_MAX_ADDRLEN 16
 #define IPV4_MAX_PREFIXLEN 32
@@ -216,7 +216,7 @@ int SetBmfInterfaceIp(const char* ip, void* data __attribute__((unused)), unsign
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
+int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
 {
   if (strcmp(enable, "yes") == 0)
   {
@@ -244,7 +244,7 @@ int SetCapturePacketsOnOlsrInterfaces(const char* enable, void* data __attribute
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetBmfMechanism(const char* mechanism, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
+int SetBmfMechanism(const char* mechanism, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
 {
   if (strcmp(mechanism, "Broadcast") == 0)
   {
@@ -1769,7 +1769,7 @@ static int nNonOlsrIfs = 0;
  * Return     : success (0) or fail (1)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int AddNonOlsrBmfIf(const char* ifName, void* data __attribute__((unused)), unsigned int addon  __attribute__((unused)))
+int AddNonOlsrBmfIf(const char* ifName, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
 {
   assert(ifName != NULL);
 
