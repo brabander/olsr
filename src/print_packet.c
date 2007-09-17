@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.11 2007/08/28 20:45:17 bernd67 Exp $
+ * $Id: print_packet.c,v 1.12 2007/09/17 22:14:07 bernd67 Exp $
  */
 
 #include "print_packet.h"
@@ -339,7 +339,7 @@ print_olsr_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
       fprintf(handle, "    +LQ: %d, ", *data);
       data += 1;
       fprintf(handle, "RLQ: %d\n", *data);
-      data += 2;
+      data += 3;
       remsize -= (olsr_cnf->ipsize + 4);
     }
 

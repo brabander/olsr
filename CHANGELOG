@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.89 2007/09/17 22:06:40 bernd67 Exp $
+$Id: CHANGELOG,v 1.90 2007/09/17 22:14:07 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -128,9 +128,10 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
   policy routing table to use. Defaults to 254 (== main). 
   This patch was modified/clenaed up by <bernd@firmix.at> to use "#if"
   instead of "#ifdef" as it's more robust against typos.
-- 112-olsrd-nameservice-fixemptyname.patch, 115-olsrd-nameserviceparamfix.patch
-  and 116-olsrd-fix-pluginparam-addons.patch fixing the compilation warning on
-  64bit.
+- 110-olsrd-fixpacketprint.patch, 112-olsrd-nameservice-fixemptyname.patch,
+  113-olsrd-txtinfo-fixhttpget.patch, 115-olsrd-nameserviceparamfix.patch
+  and 116-olsrd-fix-pluginparam-addons.patch fixing the compilation warning
+  on 64bit.
 
 PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch
