@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.30 2007/09/17 21:57:05 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.31 2007/09/17 22:24:22 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -379,7 +379,7 @@ name_init(void)
 
 	/* register functions with olsrd */
 	olsr_parser_add_function(&olsr_parser, PARSER_TYPE, 1);
-	olsr_register_timeout_function(&olsr_timeout);
+	olsr_register_timeout_function(&olsr_timeout, OLSR_TRUE);
 	olsr_register_scheduler_event(&olsr_event, NULL, my_interval, 0, NULL);
 
 	return 1;
@@ -481,18 +481,35 @@ free_all_list_entries(struct db_entry **this_db_list)
  * time out old list entries
  * and write changes to file
  */
+
+static int timeout_roundrobin = 0;
+
 void
 olsr_timeout(void)
 {
-	timeout_old_names(list, &name_table_changed);
-	timeout_old_names(forwarder_list, &forwarder_table_changed);
-	timeout_old_names(service_list, &service_table_changed);
-	timeout_old_names(latlon_list, &latlon_table_changed);
-
-	write_resolv_file();
-	write_hosts_file();
-	write_services_file();
-	write_latlon_file();
+	switch(timeout_roundrobin++)
+	{
+		case 0:
+			timeout_old_names(list, &name_table_changed);
+			timeout_old_names(forwarder_list, &forwarder_table_changed);
+			timeout_old_names(service_list, &service_table_changed);
+			timeout_old_names(latlon_list, &latlon_table_changed);
+			break;
+		case 1:
+			write_resolv_file(); // if forwarder_table_changed
+			break;
+		case 2:
+			write_hosts_file(); // if name_table_changed
+			break;
+		case 3:
+			write_services_file(); // if service_table_changed
+			break;
+		case 4:
+			write_latlon_file(); // latlon_table_changed
+			break;
+		default:
+			timeout_roundrobin = 0;
+	} // switch
 }
 
 void

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.29 2007/09/13 22:43:15 bernd67 Exp $
+ * $Id: tc_set.c,v 1.30 2007/09/17 22:24:22 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -60,7 +60,7 @@ olsr_init_tc(void)
 {
   OLSR_PRINTF(5, "TC: init topo\n");
 
-  olsr_register_timeout_function(&olsr_time_out_tc_set);
+  olsr_register_timeout_function(&olsr_time_out_tc_set, OLSR_TRUE);
 
   avl_init(&tc_tree, avl_comp_default);
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.99 2007/09/16 21:20:16 bernd67 Exp $
+ * $Id: main.c,v 1.100 2007/09/17 22:24:22 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -419,7 +419,7 @@ main(int argc, char *argv[])
 #endif
 
   /* Register socket poll event */
-  olsr_register_timeout_function(&poll_sockets);
+  olsr_register_timeout_function(&poll_sockets, OLSR_FALSE);
 
   /* Starting scheduler */
   scheduler();

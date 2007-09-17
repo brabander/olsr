@@ -97,7 +97,6 @@ int olsrd_plugin_init() {
     return 1;
   }
 
-  //  olsr_register_timeout_function(&olsr_timeout);
   olsr_register_scheduler_event(&zebra_check, NULL, 1, 0, NULL);
   return 0;
 }

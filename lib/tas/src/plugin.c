@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.12 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: plugin.c,v 1.13 2007/09/17 22:24:22 bernd67 Exp $
  */
 
 #include <string.h>
@@ -453,7 +453,7 @@ int olsrd_plugin_init(void)
 
   httpInit();
   
-  olsr_register_timeout_function(serviceFunc);
+  olsr_register_timeout_function(serviceFunc, OLSR_FALSE);
   olsr_parser_add_function(parserFunc, MESSAGE_TYPE, 1);
 
   return 0;

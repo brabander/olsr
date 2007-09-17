@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.21 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: hna_set.c,v 1.22 2007/09/17 22:24:22 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -69,7 +69,7 @@ olsr_init_hna_set(void)
   /* Since the holdingtime is assumed to be rather large for 
    * HNA entries, the timeoutfunction is only ran once every second
    */
-  olsr_register_scheduler_event(&olsr_time_out_hna_set, NULL, 1, 0, NULL);
+  olsr_register_scheduler_event_dijkstra(&olsr_time_out_hna_set, NULL, 1, 0, NULL);
 
   for(idx=0;idx<HASHSIZE;idx++)
     {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.72 2007/09/16 21:45:25 bernd67 Exp $
+ * $Id: link_set.c,v 1.73 2007/09/17 22:24:22 bernd67 Exp $
  */
 
 
@@ -97,15 +97,15 @@ olsr_init_link_set(void)
   /* Timers */
   hold_time_neighbor = (NEIGHB_HOLD_TIME*1000) / olsr_cnf->system_tick_divider;
 
-  olsr_register_timeout_function(&olsr_time_out_link_set);
+  olsr_register_timeout_function(&olsr_time_out_link_set, OLSR_TRUE);
   if(olsr_cnf->use_hysteresis)
     {
-      olsr_register_timeout_function(&olsr_time_out_hysteresis);
+      olsr_register_timeout_function(&olsr_time_out_hysteresis, OLSR_TRUE);
     }
 
   if (olsr_cnf->lq_level > 0)
     {
-      olsr_register_timeout_function(&olsr_time_out_packet_loss);
+      olsr_register_timeout_function(&olsr_time_out_packet_loss, OLSR_TRUE);
     }
 }
 
