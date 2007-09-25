@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.10 2007/09/05 16:11:10 bernd67 Exp $
+ * $Id: lq_avl.h,v 1.11 2007/09/25 13:47:36 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -52,8 +52,8 @@ struct avl_node
   struct avl_node *prev;
   void *key;
   void *data;
-  char balance;
-  char leader;
+  signed char balance;
+  unsigned char leader;
 };
 
 struct avl_tree
@@ -83,8 +83,8 @@ extern int avl_comp_ipv4(void *, void *);
 extern int avl_comp_ipv6(void *, void *);
 
 #define inline_avl_comp_ipv4(ip1, ip2) \
-  (*(unsigned int *)ip1 == *(unsigned int *)ip2 ? 0 : \
-  *(unsigned int *)ip1 < *(unsigned int *)ip2 ? -1 : +1)
+  (*(unsigned int *)(ip1) == *(unsigned int *)(ip2) ? 0 :       \
+   *(unsigned int *)(ip1) < *(unsigned int *)(ip2) ? -1 : +1)
 
 #endif
 
