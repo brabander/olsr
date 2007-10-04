@@ -33,10 +33,8 @@
 
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
-static void redist_hna (void);
 
-
-int olsrd_plugin_interface_version() {
+int olsrd_plugin_interface_version(void) {
   return PLUGIN_INTERFACE_VERSION;
 }
 
@@ -91,7 +89,7 @@ int olsrd_plugin_register_param(char *key, char *value) {
 }
 
 
-int olsrd_plugin_init() {
+int olsrd_plugin_init(void) {
   if(olsr_cnf->ip_version != AF_INET) {
     fputs("see the source - ipv6 so far not supported\n" ,stderr);
     return 1;
