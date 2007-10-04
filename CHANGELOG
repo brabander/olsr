@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.93 2007/10/04 22:27:31 bernd67 Exp $
+$Id: CHANGELOG,v 1.94 2007/10/04 22:29:51 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -148,6 +148,9 @@ PATCHES by John Hay <jhay@meraka.org.za>
 
 PATCH by Andreas Jacobs <jacobs@i4.informatik.rwth-aachen.de>
 - fix the loss link quality calculation for "windows size % 4 != 0"
+
+PATCH by Acinonyx <acinonyxs@yahoo.gr>
+- Bug fix: include $(TOPDIR)/Makefile.inc at the begin in the Quagga plugin
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).
