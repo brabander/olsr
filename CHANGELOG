@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.92 2007/09/17 22:27:24 bernd67 Exp $
+$Id: CHANGELOG,v 1.93 2007/10/04 22:27:31 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -142,6 +142,9 @@ olsr_makefile_make_use_of_exename.patch
 PATCHES by John Hay <jhay@meraka.org.za>
 - update to new FreeBSD WLAN API
 - do not require /bin/bash, use /bin/sh
+- Fixed alignment so that olsrd runs on FreeBSD/arm
+- allow more interface in an IPv6 subnet on FreeBSD
+- use PREFIX and DESTDIR as all the other Makefile.$OS also for FreeBSD
 
 PATCH by Andreas Jacobs <jacobs@i4.informatik.rwth-aachen.de>
 - fix the loss link quality calculation for "windows size % 4 != 0"

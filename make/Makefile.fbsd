@@ -2,12 +2,12 @@
 # FREEBSD SPECIFIC CONFIGURATION
 #
 
-DESTDIR ?= /usr/local
-SBINDIR = $(DESTDIR)/sbin
-ETCDIR = $(DESTDIR)/etc
-LIBDIR = $(DESTDIR)/lib
-DOCDIR = $(DESTDIR)/share/doc
-MANDIR = $(DESTDIR)/man
+PREFIX ?= /usr/local
+SBINDIR = $(PREFIX)/sbin
+ETCDIR = $(PREFIX)/etc
+LIBDIR = $(PREFIX)/lib
+DOCDIR = $(PREFIX)/share/doc
+MANDIR = $(PREFIX)/man
 
 SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
@@ -22,8 +22,8 @@ endif
 
 ifdef LIBNET
 
-CPPFLAGS +=	-DSPOOF -I$(DESTDIR)/include
-LIBS +=		-L$(DESTDIR)/lib -lnet
+CPPFLAGS +=	-DSPOOF -I$(PREFIX)/include
+LIBS +=		-L$(PREFIX)/lib -lnet
 
 endif
 

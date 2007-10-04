@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.37 2007/09/07 08:53:36 bernd67 Exp $
+ * $Id: net.c,v 1.38 2007/10/04 22:27:31 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -727,6 +727,10 @@ olsr_recvfrom(int  s,
 {
   struct msghdr mhdr;
   struct iovec iov;
+  union {
+	struct cmsghdr cmsg;
+  	unsigned char chdr[4096];
+  } cmu;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
   struct sockaddr_in *sin = (struct sockaddr_in *) from; //XXX
@@ -736,20 +740,19 @@ olsr_recvfrom(int  s,
   struct interface *ifc;
   char addrstr[INET6_ADDRSTRLEN];
   char iname[IFNAMSIZ];
-  unsigned char chdr[4096];
   int count;
 
-  bzero(&mhdr, sizeof(mhdr));
-  bzero(&iov, sizeof(iov));
+  memset(&mhdr, 0, sizeof(mhdr));
+  memset(&iov, 0, sizeof(iov));
 
   mhdr.msg_name = (caddr_t) from;
   mhdr.msg_namelen = *fromlen;
   mhdr.msg_iov = &iov;
   mhdr.msg_iovlen = 1;
-  mhdr.msg_control = (caddr_t) chdr;
-  mhdr.msg_controllen = sizeof (chdr);
+  mhdr.msg_control = (caddr_t) &cmu;
+  mhdr.msg_controllen = sizeof (cmu);
 
-  iov.iov_len = MAXMESSAGESIZE;
+  iov.iov_len = len;
   iov.iov_base = buf;
 
   count = recvmsg (s, &mhdr, MSG_DONTWAIT);
@@ -775,9 +778,9 @@ olsr_recvfrom(int  s,
     }
   else
     {
-      cm = (struct cmsghdr *) chdr;
+      cm = &cmu.cmsg;
       sdl = (struct sockaddr_dl *) CMSG_DATA (cm);
-      bzero (iname, sizeof (iname));
+      memset (iname, 0, sizeof (iname));
       memcpy (iname, sdl->sdl_data, sdl->sdl_nlen);
     }
 

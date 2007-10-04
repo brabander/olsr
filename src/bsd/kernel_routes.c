@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.13 2007/09/05 16:17:36 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.14 2007/10/04 22:27:31 bernd67 Exp $
  */
 
 
@@ -223,6 +223,14 @@ static int add_del_route6(struct rt_entry *rt, int add)
   {
     memcpy(&sin6.sin6_addr.s6_addr, &nexthop->gateway.v6, sizeof(struct in6_addr));
 
+    memset(&sin6.sin6_addr.s6_addr, 0, 8);
+    sin6.sin6_addr.s6_addr[0] = 0xfe;
+    sin6.sin6_addr.s6_addr[1] = 0x80;
+    sin6.sin6_scope_id = nexthop->iif_index;
+#ifdef __KAME__
+    *(u_int16_t *)&sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
+    sin6.sin6_scope_id = 0;
+#endif
     memcpy(walker, &sin6, sizeof (sin6));
     walker += step;
   }
@@ -231,19 +239,19 @@ static int add_del_route6(struct rt_entry *rt, int add)
 
   else
   {
-    // Sven-Ola: This looks really ugly (please compar to IPv4 above)
-    struct interface* iface = if_ifwithindex(nexthop->iif_index);
-    if (NULL == iface)
-    {
-      fprintf(stderr, "interface %s not found\n", if_ifwithindex_name(nexthop->iif_index));
-      return -1;
-    }
-    memcpy(&sin6.sin6_addr.s6_addr, &iface->int6_addr.sin6_addr.s6_addr,
-      sizeof(struct in6_addr));
+    memcpy(&sin6.sin6_addr.s6_addr,  &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
+    memset(&sin6.sin6_addr.s6_addr, 0, 8);
+    sin6.sin6_addr.s6_addr[0] = 0xfe;
+    sin6.sin6_addr.s6_addr[1] = 0x80;
+    sin6.sin6_scope_id = nexthop->iif_index;
+#ifdef __KAME__
+    *(u_int16_t *)&sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
+    sin6.sin6_scope_id = 0;
+#endif
 
     memcpy(walker, &sin6, sizeof (sin6));
     walker += step;
-    rtm->rtm_flags |= RTF_LLINFO;
+    rtm->rtm_flags |= RTF_GATEWAY;
   }
 
   if ((rtm->rtm_flags & RTF_HOST) == 0)
@@ -254,21 +262,40 @@ static int add_del_route6(struct rt_entry *rt, int add)
     rtm->rtm_addrs |= RTA_NETMASK;
   }
 
-  if ((rtm->rtm_flags & RTF_GATEWAY) != 0)
-  {
-    strcpy(&sdl.sdl_data[0], if_ifwithindex_name(nexthop->iif_index));
-    sdl.sdl_nlen = (u_char)strlen((char*)&sdl.sdl_data[0]);
-    memcpy(walker, &sdl, sizeof (sdl));
-    walker += step_dl;
-    rtm->rtm_addrs |= RTA_IFP;
-  }
-
   rtm->rtm_msglen = (unsigned short)(walker - buff);
 
   len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
-
-  if (len < rtm->rtm_msglen)
+  if (len < 0 && !(errno == EEXIST || errno == ESRCH))
     fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
+
+  /* If we get an EEXIST error while adding, delete and retry. */
+  if (len < 0 && errno == EEXIST && rtm->rtm_type == RTM_ADD) {
+    struct rt_msghdr *drtm;
+    unsigned char dbuff[512];
+
+    memset(dbuff, 0, sizeof (dbuff));
+    drtm = (struct rt_msghdr *)dbuff;
+    drtm->rtm_version = RTM_VERSION;
+    drtm->rtm_type = RTM_DELETE;
+    drtm->rtm_addrs = RTA_DST;
+    drtm->rtm_index = 0;
+    drtm->rtm_flags = olsr_rt_flags(rt);
+    drtm->rtm_seq = ++seq;
+
+    walker = dbuff + sizeof (struct rt_msghdr);
+    memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6,
+	sizeof(struct in6_addr));
+    memcpy(walker, &sin6, sizeof (sin6));
+    walker += step;
+    drtm->rtm_msglen = (unsigned short)(walker - dbuff);
+    len = write(olsr_cnf->rts, dbuff, drtm->rtm_msglen);
+    if (len < 0)
+      fprintf(stderr, "cannot delete route: %s\n", strerror(errno));
+    rtm->rtm_seq = ++seq;
+    len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
+    if (len < 0)
+      fprintf(stderr, "still cannot add route: %s\n", strerror(errno));
+  }
 
   return 0;
 }
