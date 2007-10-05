@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.94 2007/10/04 22:29:51 bernd67 Exp $
+$Id: CHANGELOG,v 1.95 2007/10/05 08:06:12 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -151,6 +151,10 @@ PATCH by Andreas Jacobs <jacobs@i4.informatik.rwth-aachen.de>
 
 PATCH by Acinonyx <acinonyxs@yahoo.gr>
 - Bug fix: include $(TOPDIR)/Makefile.inc at the begin in the Quagga plugin
+
+PATCH by David Cornejo <dcornejo@gmail.com>
+- fixed an "+=" of an uninitialized variable (detected with/by the
+  scan.coverty.com).
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).
