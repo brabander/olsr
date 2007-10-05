@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.95 2007/10/05 08:06:12 bernd67 Exp $
+$Id: CHANGELOG,v 1.96 2007/10/05 08:39:14 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -155,6 +155,9 @@ PATCH by Acinonyx <acinonyxs@yahoo.gr>
 PATCH by David Cornejo <dcornejo@gmail.com>
 - fixed an "+=" of an uninitialized variable (detected with/by the
   scan.coverty.com).
+
+BUG erported by Aaron Kaplan <aaron@lo-res.org>
+- BSD-xargs doesn't know "-r".
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Made a function from the ME_TO_DOUBLE() macro (in src/mantissa.h).

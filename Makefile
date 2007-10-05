@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.98 2007/09/16 21:50:17 bernd67 Exp $
+# $Id: Makefile,v 1.99 2007/10/05 08:39:12 bernd67 Exp $
 
 VERS =		0.5.4rc1
 
@@ -92,7 +92,8 @@ endif
 
 uberclean:	clean clean_libs
 		-rm -f $(TAGFILE)
-		find . \( -name '*.[od]' -o -name '*~' \) -print | xargs -r rm -f
+		# BSD-xargs has no "--no-run-if-empty" aka "-r"
+		find . \( -name '*.[od]' -o -name '*~' \) -print0 | xargs -0 rm -f
 		$(MAKECMD) -C $(CFGDIR) uberclean
 		$(MAKECMD) -C $(SWITCHDIR) clean
 
