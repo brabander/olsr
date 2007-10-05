@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.31 2007/09/17 22:24:22 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.32 2007/10/05 20:24:47 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -63,9 +63,6 @@
 #include "compat.h"
 
 
-/* send buffer: huge */
-static char buffer[10240];
-
 /* config parameters */
 static char my_hosts_file[MAX_FILE + 1];
 static char my_add_hosts[MAX_FILE + 1];
@@ -76,7 +73,7 @@ static char my_resolv_file[MAX_FILE +1];
 static char my_services_file[MAX_FILE + 1];
 static char latlon_in_file[MAX_FILE + 1];
 static char my_latlon_file[MAX_FILE + 1];
-float my_lat = 0.0, my_lon = 0.0;
+static float my_lat = 0.0, my_lon = 0.0;
 
 /* the databases (using hashing)
  * for hostnames, service_lines and dns-servers
@@ -84,29 +81,29 @@ float my_lat = 0.0, my_lon = 0.0;
  * my own hostnames, service_lines and dns-servers
  * are store in a linked list (without hashing)
  * */
-struct db_entry* list[HASHSIZE];
-struct name_entry *my_names = NULL;
-olsr_bool name_table_changed = OLSR_TRUE;
+static struct db_entry* list[HASHSIZE];
+static struct name_entry *my_names = NULL;
+static olsr_bool name_table_changed = OLSR_TRUE;
 
-struct db_entry* service_list[HASHSIZE];
-struct name_entry *my_services = NULL;
-olsr_bool service_table_changed = OLSR_TRUE;
+static struct db_entry* service_list[HASHSIZE];
+static struct name_entry *my_services = NULL;
+static olsr_bool service_table_changed = OLSR_TRUE;
 
-struct db_entry* forwarder_list[HASHSIZE];
-struct name_entry *my_forwarders = NULL;
-olsr_bool forwarder_table_changed = OLSR_TRUE;
+static struct db_entry* forwarder_list[HASHSIZE];
+static struct name_entry *my_forwarders = NULL;
+static olsr_bool forwarder_table_changed = OLSR_TRUE;
 
-struct db_entry* latlon_list[HASHSIZE];
-olsr_bool latlon_table_changed = OLSR_TRUE;
+static struct db_entry* latlon_list[HASHSIZE];
+static olsr_bool latlon_table_changed = OLSR_TRUE;
 
 /* regular expression to be matched by valid hostnames, compiled in name_init() */
-regex_t regex_t_name;
-regmatch_t regmatch_t_name;
+static regex_t regex_t_name;
+static regmatch_t regmatch_t_name;
 
 /* regular expression to be matched by valid service_lines, compiled in name_init() */
-regex_t regex_t_service;
-int pmatch_service = 10;
-regmatch_t regmatch_t_service[10];
+static regex_t regex_t_service;
+static int pmatch_service = 10;
+static regmatch_t regmatch_t_service[10];
 
 /**
  * do initialization
@@ -268,7 +265,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
  * to the front of my_list
  */
 struct name_entry* 
-add_name_to_list(struct name_entry *my_list, char *value, int type, const union olsr_ip_addr *ip) 
+add_name_to_list(struct name_entry *my_list, const char *value, int type, const union olsr_ip_addr *ip) 
 {
 	struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry add_name_to_list");
 	tmp->name = strndup( value, MAX_NAME );
@@ -551,7 +548,9 @@ timeout_old_names(struct db_entry **this_list, olsr_bool *this_table_changed)
 void
 olsr_event(void *foo __attribute__((unused)))
 {
-	union olsr_message *message = (union olsr_message*)buffer;
+    /* send buffer: huge */
+    char buffer[10240];
+    union olsr_message *message = (union olsr_message *)buffer;
 	struct interface *ifn;
 	int namesize;
 
