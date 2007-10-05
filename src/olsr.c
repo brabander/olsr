@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.58 2007/09/16 21:20:16 bernd67 Exp $
+ * $Id: olsr.c,v 1.59 2007/10/05 20:57:53 bernd67 Exp $
  */
 
 /**
@@ -394,14 +394,9 @@ olsr_forward_message(union olsr_message *m,
 
 void
 set_buffer_timer(struct interface *ifn)
-{
-  float jitter;
-      
+{      
   /* Set timer */
-  jitter = (float) random()/RAND_MAX;
-  jitter *= olsr_cnf->max_jitter;
-
-  ifn->fwdtimer = GET_TIMESTAMP(jitter*1000);
+  ifn->fwdtimer = GET_TIMESTAMP(random() * olsr_cnf->max_jitter * 1000 / RAND_MAX);
 }
 
 void
@@ -485,7 +480,7 @@ olsr_msgtype_to_string(olsr_u8_t msgtype)
       break;
     }
 
-  snprintf(type, 20, "UNKNOWN(%d)", msgtype);
+  snprintf(type, sizeof(type), "UNKNOWN(%d)", msgtype);
   return type;
 }
 
@@ -511,7 +506,7 @@ olsr_link_to_string(olsr_u8_t linktype)
       break;
     }
 
-  snprintf(type, 20, "UNKNOWN(%d)", linktype);
+  snprintf(type, sizeof(type), "UNKNOWN(%d)", linktype);
   return type;
 }
 
@@ -533,7 +528,7 @@ olsr_status_to_string(olsr_u8_t status)
       break;
     }
 
-  snprintf(type, 20, "UNKNOWN(%d)", status);
+  snprintf(type, sizeof(type), "UNKNOWN(%d)", status);
   return type;
 }
 
@@ -569,9 +564,8 @@ olsr_exit(const char *msg, int val)
 void *
 olsr_malloc(size_t size, const char *id)
 {
-  void *ptr;
-
-  if((ptr = malloc(size)) == 0) 
+  void *ptr = malloc(size);
+  if(ptr == 0) 
     {
       const char * const err_msg = strerror(errno);
       OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
