@@ -396,7 +396,7 @@ int zebra_delete_v4_route (struct ipv4_route r) {
 
 
 /* Check wether there is data from zebra aviable */
-void zebra_check (void* foo) {
+void zebra_check (void* foo __attribute__((unused))) {
   unsigned char *data, *f;
   ssize_t len, ret;
 
@@ -494,7 +494,7 @@ int zebra_parse_packet (unsigned char *packet, ssize_t maxlen) {
   length = ntohs (length);
   
   if (maxlen < length) {
-    olsr_printf (1, "(QUAGGA) maxlen = %d, packet_length = %d\n", maxlen, length);
+    olsr_printf (1, "(QUAGGA) maxlen = %lu, packet_length = %d\n", (unsigned long)maxlen, length);
     olsr_exit ("(QUAGGA) programmer is an idiot", EXIT_FAILURE);
   }
 
@@ -524,38 +524,38 @@ int zebra_parse_packet (unsigned char *packet, ssize_t maxlen) {
 }
 
 
-static int parse_interface_add (unsigned char *opt, size_t len) {
+static int parse_interface_add (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   //todo
   return 0;
 }
 
 
-static int parse_interface_delete (unsigned char *opt, size_t len) {
+static int parse_interface_delete (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   //todo
   return 0;
 }
 
 
-static int parse_interface_address_add (unsigned char *opt, size_t len) {
+static int parse_interface_address_add (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   
   //todo
   return 0;
 }
 
-static int parse_interface_up (unsigned char *opt, size_t len) {
+static int parse_interface_up (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   
   //todo
   return 0;
 }
 
-static int parse_interface_down (unsigned char *opt, size_t len) {
+static int parse_interface_down (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   
   //todo
   return 0;
 }
 
 
-static int parse_interface_address_delete (unsigned char *opt, size_t  len) {
+static int parse_interface_address_delete (unsigned char *opt __attribute__((unused)), size_t  len __attribute__((unused))) {
   //todo
   return 0;
 }
@@ -644,7 +644,7 @@ static int ipv4_route_delete (unsigned char *opt, size_t len) {
   
 }
 
-static int parse_ipv6_route_add (unsigned char *opt, size_t len) {
+static int parse_ipv6_route_add (unsigned char *opt __attribute__((unused)), size_t len __attribute__((unused))) {
   //todo
   return 0;
 }
