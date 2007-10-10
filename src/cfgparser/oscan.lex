@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.26 2007/10/04 23:06:10 bernd67 Exp $
+ * $Id: oscan.lex,v 1.27 2007/10/10 20:44:34 bernd67 Exp $
  */
 
 
@@ -91,7 +91,7 @@ static struct conf_token *get_string_token(const char * const s, const size_t n)
     if (rv != NULL) {
         rv->string = malloc(n+1);
         if (rv->string == NULL) {
-            fprintf(stderr, "Cannot allocate %d bytes for string token data.\n", n+1);
+          fprintf(stderr, "Cannot allocate %lu bytes for string token data.\n", (unsigned long)(n+1)); /* size_t on 64bit */
             free(rv);
             return NULL;
         }
