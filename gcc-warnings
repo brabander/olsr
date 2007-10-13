@@ -3,7 +3,7 @@
 # We expect warning options for gcc as argumenst and return the ones which are accepted
 # by the given gcc.
 #
-# $Id: gcc-warnings,v 1.3 2007/09/07 09:07:25 bernd67 Exp $
+# $Id: gcc-warnings,v 1.4 2007/10/13 14:51:32 bernd67 Exp $
 
 set -ue
 #set -vx
@@ -11,7 +11,7 @@ set -ue
 OPTS=""
 for param; do
     case "$param" in
-    -W?*) OPTS="$OPTS $param";;
+    -[fW]?*) OPTS="$OPTS $param";;
     *)    echo "Ignoring $param" >&2
     esac
 done

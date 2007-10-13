@@ -46,16 +46,16 @@ WARNINGS +=	-Wnested-externs
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
 #WARNINGS +=	-Werror
+WARNINGS +=	-finline-functions-called-once
+WARNINGS +=	-fearly-inlining
+# we have small inline functions in src/lq_route.c which should always be inlined
+WARNINGS +=	-finline-limit=50
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
 CFLAGS +=	-O2
 #CFLAGS +=	-g
 CFLAGS +=	$(EXTRA_CFLAGS)
-CFLAGS +=	-finline-functions-called-once
-CFLAGS +=	-fearly-inlining
-# we have small inline functions in src/lq_route.c which should always be inlined
-CFLAGS +=	-finline-limit=50
 
 # Must be specified along with -lpthread on linux
 CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
