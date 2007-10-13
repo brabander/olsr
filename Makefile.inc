@@ -55,7 +55,7 @@ CFLAGS +=	$(EXTRA_CFLAGS)
 CFLAGS +=	-finline-functions-called-once
 CFLAGS +=	-fearly-inlining
 # we have small inline functions in src/lq_route.c which should always be inlined
-CFLAGS +=	-finline-limit=40
+CFLAGS +=	-finline-limit=50
 
 # Must be specified along with -lpthread on linux
 CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
