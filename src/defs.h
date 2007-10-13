@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.63 2007/09/16 21:20:07 bernd67 Exp $
+ * $Id: defs.h,v 1.64 2007/10/13 12:31:04 bernd67 Exp $
  */
 
 
@@ -158,8 +158,5 @@ shutdown_ipc(void);
 
 int
 ipc_output(struct olsr *);
-
-int
-ipc_route_send_rtentry(union olsr_ip_addr*, union olsr_ip_addr *, int, int, char *);
 
 #endif

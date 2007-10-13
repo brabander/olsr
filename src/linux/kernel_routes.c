@@ -37,10 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.28 2007/09/17 22:57:41 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.29 2007/10/13 12:31:04 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
+#include "ipc_frontend.h"
 
 #if !LINUX_POLICY_ROUTING
 #include "log.h"
