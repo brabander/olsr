@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.77 2007/09/16 21:20:07 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.78 2007/10/13 12:04:57 bernd67 Exp $
  */
 
 /*
@@ -779,8 +779,10 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
 
   size += snprintf(&buf[size], bufsize-size, "<h2>OLSR routes in kernel</h2>\n");
 
-  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th%1$s>Destination</th><th%1$s>Gateway</th><th>Metric</th>",
-                  resolve_ip_addresses ? " colspan=\"2\"" : "");
+  size += snprintf(&buf[size], bufsize-size,
+                   "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\">"
+                   "<tr><th%1$s>Destination</th><th%1$s>Gateway</th><th>Metric</th>",
+                   resolve_ip_addresses ? " colspan=\"2\"" : "");
 
   size += snprintf(&buf[size], bufsize-size, "<th>ETX</th>");
   size += snprintf(&buf[size], bufsize-size, "<th>Interface</th></tr>\n");
@@ -958,11 +960,11 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
 
+    size += snprintf(&buf[size], bufsize-size, "<h2>Announced HNA entries</h2>\n");
     if((olsr_cnf->ip_version == AF_INET) && (olsr_cnf->hna4_entries))
       {
 	struct hna4_entry *hna4;
 	
-	size += snprintf(&buf[size], bufsize-size, "<h2>Announced HNA entries</h2>\n");
 	size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Netmask</th></tr>\n");
 	
 	for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
@@ -978,7 +980,6 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
       {
 	struct hna6_entry *hna6;
 	
-	size += snprintf(&buf[size], bufsize-size, "<h2>Announced HNA entries</h2>\n");
 	size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Network</th><th>Prefix length</th></tr>\n");
 	
 	for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
@@ -1005,7 +1006,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   int size = 0, index, thop_cnt;
 
   size += snprintf(&buf[size], bufsize-size, "<h2>Links</h2>\n");
-  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
+  size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\"><tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
   if (olsr_cnf->lq_level > 0)
     size += snprintf(&buf[size], bufsize-size, "<th>LinkQuality</th><th>lost</th><th>total</th><th>NLQ</th><th>ETX</th>\n");
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
@@ -1015,7 +1016,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
     while(link)
       {
         size += snprintf(&buf[size], bufsize-size, "<tr>");
-        size += build_ipaddr_no_link(&buf[size], bufsize, &link->local_iface_addr, -1);
+        size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
         size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
 	size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">%0.2f</td>",
@@ -1090,7 +1091,11 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
 
-  size += snprintf(&buf[size], bufsize-size, "<h2>Topology entries</h2>\n<table width=\"100%%\" BORDER=0 CELLSPACING=0 CELLPADDING=0 ALIGN=center><tr><th>Destination IP</th><th>Last Hop IP</th>");
+  size += snprintf(&buf[size], bufsize-size,
+                   "<h2>Topology entries</h2>\n"
+                   "<table width=\"100%%\" border=\"0 cellspacing=\"0\" cellpadding=\"0\" align=center>\n"
+                   "<tr><th%1$s>Destination IP</th><th%1$s>Last Hop IP</th>",
+                   resolve_ip_addresses ? " colspan=\"2\"" : "");
   if (olsr_cnf->lq_level > 0)
     size += snprintf(&buf[size], bufsize-size, "<th>LQ</th><th>ILQ</th><th>ETX</th>");
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");

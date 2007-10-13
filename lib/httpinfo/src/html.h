@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.8 2007/09/16 21:20:07 bernd67 Exp $
+ * $Id: html.h,v 1.9 2007/10/13 12:04:10 bernd67 Exp $
  */
 
 /*
@@ -102,7 +102,6 @@ static const char *http_ok_head[] =
   "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%\">",
   "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>",
   "</tr>",
-  "<p>",
   "</table>",
   "<!-- END HEAD -->\n\n",
   NULL
@@ -132,7 +131,7 @@ static const char *http_ok_tail[] =
     "<p><center>\n",
     "(C)2005 Andreas T&oslash;nnesen<br/>\n",
     "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n",
-    "</center>\n",
+    "</center></p>\n",
     "</div>\n",
     "</body></html>\n",
     NULL
