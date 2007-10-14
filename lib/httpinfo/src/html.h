@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.9 2007/10/13 12:04:10 bernd67 Exp $
+ * $Id: html.h,v 1.10 2007/10/14 22:46:03 bernd67 Exp $
  */
 
 /*
@@ -84,58 +84,48 @@ static const char *httpinfo_css[] =
 
 
 
-static const char *http_ok_head[] =
-{
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n",
-  "<HEAD>\n",
-  "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n",
-  "<TITLE>olsr.org httpinfo plugin</TITLE>\n",
-  "<link rel=\"icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n",
-  "<link rel=\"shortcut icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n",
-  "<link rel=\"stylesheet\" type=\"text/css\" href=\"httpinfo.css\">\n",
-  "</HEAD>\n",
-  "<body bgcolor=\"#ffffff\" text=\"#000000\">\n",
+static const char * const http_ok_head =
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
+  "<HEAD>\n"
+  "<META http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n"
+  "<TITLE>olsr.org httpinfo plugin</TITLE>\n"
+  "<link rel=\"icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n"
+  "<link rel=\"shortcut icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n"
+  "<link rel=\"stylesheet\" type=\"text/css\" href=\"httpinfo.css\">\n"
+  "</HEAD>\n"
+  "<body bgcolor=\"#ffffff\" text=\"#000000\">\n"
   "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"800\">"
-  "<tbody><tr bgcolor=\"#ffffff\">",
-  "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%\">",
-  "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>",
-  "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%\">",
-  "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>",
-  "</tr>",
-  "</table>",
-  "<!-- END HEAD -->\n\n",
-  NULL
-};
+  "<tbody><tr bgcolor=\"#ffffff\">"
+  "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%\">"
+  "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>"
+  "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%\">"
+  "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>"
+  "</tr>"
+  "</tbody>"
+  "</table>"
+  "<!-- END HEAD -->\n\n";
 
 
 
-static const char *html_tabs[] =
-{
-  "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"800\">\n",
-  "<tr bgcolor=\"#ffffff\"><td>\n",
-  "<ul id=\"tabnav\">\n",
-  "<!-- TAB ELEMENTS -->",
-  "<li><a href=\"%s\" %s>%s</a></li>\n",
-  "</ul>\n",
-  "</td></tr>\n",
-  "<tr><td>\n",
-  NULL
-};
+static const char * const html_tabs_prolog =
+  "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"800\">\n"
+  "<tr bgcolor=\"#ffffff\"><td>\n"
+  "<ul id=\"tabnav\">\n";
 
+static const char * const html_tabs_epilog =
+  "</ul>\n"
+  "</td></tr>\n"
+  "<tr><td>\n";
 
-
-static const char *http_ok_tail[] =
-{
-    "\n<!-- START TAIL -->\n\n",
-    "<div id=\"footer\">\n\n",
-    "<p><center>\n",
-    "(C)2005 Andreas T&oslash;nnesen<br/>\n",
-    "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n",
-    "</center></p>\n",
-    "</div>\n",
-    "</body></html>\n",
-    NULL
-};
+static const char * const http_ok_tail =
+  "<!-- START TAIL -->\n"
+  "<div id=\"footer\">\n\n"
+  "<p><center>\n"
+  "(C)2005 Andreas T&oslash;nnesen<br/>\n"
+  "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n"
+  "</center></p>\n"
+  "</div>\n"
+  "</body></html>\n";
 
 static const char *cfgfile_body[] =
 {
@@ -192,16 +182,5 @@ static const char about_frame[] =
     "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br/>\n"
     "Official olsrd homepage: <a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br/>\n"
 };
-
-
-
-static const char *http_frame[] =
-{
-  "<div id=\"maintable\">\n",
-  "<!-- BODY -->",
-  "</div>\n",
-  NULL
-};
-
 
 #endif
