@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.11 2007/09/17 22:08:01 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.12 2007/10/14 14:11:11 bernd67 Exp $
  */
 
 /*
@@ -143,11 +143,14 @@ void olsr_plugin_exit(void)
 static int
 plugin_ipc_init(void)
 {
-    struct sockaddr_in sin;
+    struct sockaddr_storage sst;
+    struct sockaddr_in *sin;
+    struct sockaddr_in6 *sin6;
     olsr_u32_t yes = 1;
+    socklen_t addrlen;
 
     /* Init ipc socket */
-    if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    if ((ipc_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0)) == -1) {
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) socket()=%s\n", strerror(errno));
 #endif
@@ -169,13 +172,29 @@ plugin_ipc_init(void)
         /* Bind the socket */
 
         /* complete the socket structure */
-        memset(&sin, 0, sizeof(sin));
-        sin.sin_family = AF_INET;
-        sin.sin_addr.s_addr = INADDR_ANY;
-        sin.sin_port = htons(ipc_port);
+        memset(&sst, 0, sizeof(sst));
+        if (olsr_cnf->ip_version == AF_INET) {
+           sin = (struct sockaddr_in *)&sst;
+           sin->sin_family = AF_INET;
+           addrlen = sizeof(struct sockaddr_in);
+#ifdef SIN6_LEN
+           sin->sin_len = addrlen;
+#endif
+           sin->sin_addr.s_addr = INADDR_ANY;
+           sin->sin_port = htons(ipc_port);
+        } else {
+           sin6 = (struct sockaddr_in6 *)&sst;
+           sin6->sin6_family = AF_INET6;
+           addrlen = sizeof(struct sockaddr_in6);
+#ifdef SIN6_LEN
+           sin6->sin6_len = addrlen;
+#endif
+           sin6->sin6_addr = in6addr_any;
+           sin6->sin6_port = htons(ipc_port);
+        }
       
         /* bind the socket to the port number */
-        if (bind(ipc_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
+        if (bind(ipc_socket, (struct sockaddr *) &sst, addrlen) == -1) {
 #ifndef NODEBUG
             olsr_printf(1, "(TXTINFO) bind()=%s\n", strerror(errno));
 #endif
@@ -204,13 +223,15 @@ plugin_ipc_init(void)
 
 static void ipc_action(int fd)
 {
-    struct sockaddr_in pin;
-    char *addr;  
+    struct sockaddr_storage pin;
+    struct sockaddr_in *sin4;
+    struct sockaddr_in6 *sin6;
+    char addr[INET6_ADDRSTRLEN];
     fd_set rfds;
     struct timeval tv;
     int neighonly = 0;
 
-    socklen_t addrlen = sizeof(struct sockaddr_in);
+    socklen_t addrlen = sizeof(struct sockaddr_storage);
 
     if(ipc_open)
         return;
@@ -223,11 +244,28 @@ static void ipc_action(int fd)
     }
 
     tv.tv_sec = tv.tv_usec = 0;
-    addr = inet_ntoa(pin.sin_addr);
-    if (ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.v4)) {
-        olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-        close(ipc_connection);
-        return;
+    if (olsr_cnf->ip_version == AF_INET) {
+        sin4 = (struct sockaddr_in *)&pin;
+        if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr,
+           INET6_ADDRSTRLEN) == NULL)
+             addr[0] = '\0';
+        if (!COMP_IP(&sin4->sin_addr, &ipc_accept_ip.v4)) {
+            olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+            close(ipc_connection);
+            return;
+        }
+    } else {
+        sin6 = (struct sockaddr_in6 *)&pin;
+        if (inet_ntop(olsr_cnf->ip_version, &sin6->sin6_addr, addr,
+           INET6_ADDRSTRLEN) == NULL)
+             addr[0] = '\0';
+       /* Use in6addr_any (::) in olsr.conf to allow anybody. */
+        if (!COMP_IP(&in6addr_any, &ipc_accept_ip.v6) &&
+           !COMP_IP(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
+            olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+            close(ipc_connection);
+            return;
+        }
     }
     ipc_open = 1;
 #ifndef NODEBUG

@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.96 2007/10/05 08:39:14 bernd67 Exp $
+$Id: CHANGELOG,v 1.97 2007/10/14 14:11:11 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -145,6 +145,7 @@ PATCHES by John Hay <jhay@meraka.org.za>
 - Fixed alignment so that olsrd runs on FreeBSD/arm
 - allow more interface in an IPv6 subnet on FreeBSD
 - use PREFIX and DESTDIR as all the other Makefile.$OS also for FreeBSD
+- make txtinfo plugin work with IPv6
 
 PATCH by Andreas Jacobs <jacobs@i4.informatik.rwth-aachen.de>
 - fix the loss link quality calculation for "windows size % 4 != 0"
