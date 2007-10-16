@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.98 2007/10/16 09:54:43 bernd67 Exp $
+$Id: CHANGELOG,v 1.99 2007/10/16 10:01:29 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -138,6 +138,10 @@ http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/
   115-olsrd-nameserviceparamfix.patch and
   116-olsrd-fix-pluginparam-addons.patch fixing the compilation warning
   on 64bit and lots of other improvements.
+- "Save the fish" patch: Avoid forwarding of packets with too low TTL. This
+  kills lots of packet forwarding storms.
+  NB: The oneliner was applied by hand by BP and formatted to look (in BPs O)
+  more readable.
 
 PATCH by Arnd Hannemann <hannemann@i4.informatik.rwth-aachen.de>
 olsr_makefile_make_use_of_exename.patch

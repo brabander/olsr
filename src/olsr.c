@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.59 2007/10/05 20:57:53 bernd67 Exp $
+ * $Id: olsr.c,v 1.60 2007/10/16 10:01:29 bernd67 Exp $
  */
 
 /**
@@ -299,8 +299,11 @@ olsr_forward_message(union olsr_message *m,
   struct neighbor_entry *neighbor;
   int msgsize;
   struct interface *ifn;
+  const int ttl = olsr_cnf->ip_version == AF_INET ? m->v4.ttl : m->v6.ttl;
 
-
+  if (ttl < 2) {
+    return 0;
+  }
   if(!olsr_check_dup_table_fwd(originator, seqno, &in_if->ip_addr))
     {
 #ifdef DEBUG
