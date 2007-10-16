@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.31 2007/09/16 21:20:17 bernd67 Exp $
+ * $Id: routing_table.c,v 1.32 2007/10/16 09:54:43 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -505,81 +505,6 @@ olsr_rtp_to_string(struct rt_path *rtp)
 
   return buff;
 }
-
-/**
- *Insert all the one hop neighbors in the routing table.
- *
- *@return
- */
-int
-olsr_fill_routing_table_with_neighbors(void)
-{
-  int index;
-  float etx;
-
-#ifdef DEBUG
-  OLSR_PRINTF(7, "FILL ROUTING TABLE WITH NEIGHBORS\n");
-#endif
-
-  for (index=0;index<HASHSIZE;index++) {
-
-    struct neighbor_entry *neighbor;
-
-    for(neighbor = neighbortable[index].next;
-        neighbor != &neighbortable[index];
-        neighbor=neighbor->next) {
-
-      if (neighbor->status == SYM) {
-
-        static struct mid_address addrs;
-        struct mid_address *addrs2;
-
-        /*
-         * Insert all the neighbors addresses
-         */
-        COPY_IP(&addrs.alias, &neighbor->neighbor_main_addr);
-        addrs.next_alias = mid_lookup_aliases(&neighbor->neighbor_main_addr);
-
-        for (addrs2 = &addrs; addrs2; addrs2 = addrs2->next_alias) {
-
-          struct link_entry *link;
-
-          link = get_best_link_to_neighbor(&addrs2->alias);
-
-#ifdef DEBUG
-          OLSR_PRINTF(7, "(ROUTE)Adding neighbor %s\n", olsr_ip_to_string(&addrs.alias));
-#endif
-          if (link) {
-
-            struct interface *iface;
-
-            iface = link->if_name ? if_ifwithname(link->if_name) :
-              if_ifwithaddr(&link->local_iface_addr);
-
-            etx = 1.0 / (link->loss_link_quality2 * link->neigh_link_quality2);
-
-            if (iface) {
-
-              /* neighbor main IP address */
-              olsr_insert_routing_table(&link->neighbor_iface_addr, olsr_cnf->maxplen,
-                                        &link->neighbor->neighbor_main_addr,
-                                        &link->neighbor_iface_addr,
-                                        iface->if_index, 1, etx);
-
-              /* this is the nexthop route that all routes will be tracking */
-              olsr_insert_routing_table(&addrs2->alias, olsr_cnf->maxplen,
-                                        &link->neighbor->neighbor_main_addr,
-                                        &link->neighbor_iface_addr,
-                                        iface->if_index, 1, etx);
-            }
-          }
-        }
-      }
-    }
-  }
-  return 1;
-}
-
 
 /**
  *Calculate the HNA routes

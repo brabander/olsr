@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * LSDB rewrite (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.30 2007/09/17 22:24:22 bernd67 Exp $
+ * $Id: tc_set.c,v 1.31 2007/10/16 09:54:43 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -69,6 +69,39 @@ olsr_init_tc(void)
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
   return 1;
+}
+
+/**
+ * The main ip address has changed.
+ * Do the needful.
+ */
+void
+olsr_change_myself_tc(void)
+{
+  struct tc_edge_entry *tc_edge;
+
+  if (tc_myself) {
+
+    /*
+     * Check if there was a change.
+     */
+    if (COMP_IP(&tc_myself->addr, &olsr_cnf->main_addr)) {
+      return;
+    }
+
+    /*
+     * Flush all edges. This causes our own tc_entry to vanish.
+     */
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, tc_edge) {
+      olsr_delete_tc_edge_entry(tc_edge);
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, tc_edge);
+  }
+
+  /*
+   * The old entry for ourselves is gone, generate a new one and trigger SPF.
+   */
+  tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
+  changes_topology = OLSR_TRUE;
 }
 
 /**
@@ -395,7 +428,7 @@ olsr_tc_delete_mprs(struct tc_entry *tc, struct tc_message *msg)
        * which causes an edge delete followed by an edge add.
        * If the edge gets refreshed in subsequent packets then we have
        * avoided a two edge transistion.
-       * If the edge really went away then after the garbace collection
+       * If the edge really went away then after the garbage collection
        * timer has expired olsr_time_out_tc_set() will do the needful.
        */
       tc_edge->flags |= OLSR_TC_EDGE_DOWN;

@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.52 2007/09/16 21:20:07 bernd67 Exp $
+ * $Id: lq_route.c,v 1.53 2007/10/16 09:54:43 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -337,6 +337,7 @@ olsr_calculate_routing_table (void)
   /*
    * zero ourselves and add us to the candidate tree.
    */
+  olsr_change_myself_tc();
   tc_myself->path_etx = ZERO_ETX;
   olsr_spf_add_cand_tree(&cand_tree, tc_myself);
 
@@ -400,8 +401,6 @@ olsr_calculate_routing_table (void)
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);
 #endif
-
-  olsr_fill_routing_table_with_neighbors();
 
   /*
    * In the path tree we have all the reachable nodes in our topology.

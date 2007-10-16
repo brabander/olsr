@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * LSDB rewrite (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.17 2007/09/13 22:43:15 bernd67 Exp $
+ * $Id: tc_set.h,v 1.18 2007/10/16 09:54:44 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -116,6 +116,7 @@ extern struct avl_tree tc_tree;
 extern struct tc_entry *tc_myself;
 
 int olsr_init_tc(void);
+void olsr_change_myself_tc(void);
 int olsr_tc_delete_mprs(struct tc_entry *, struct tc_message *);
 int olsr_tc_update_mprs(struct tc_entry *, struct tc_message *);
 int olsr_print_tc_table(void);

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.22 2007/09/16 21:20:17 bernd67 Exp $
+ * $Id: routing_table.h,v 1.23 2007/10/16 09:54:43 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -157,7 +157,6 @@ olsr_bool olsr_nh_change(struct rt_nexthop *, struct rt_nexthop *);
 olsr_bool olsr_cmp_rt(struct rt_entry *, struct rt_entry *);
 
 void olsr_calculate_hna_routes(void);
-int olsr_fill_routing_table_with_neighbors(void);
 char *olsr_rt_to_string(struct rt_entry *);
 char *olsr_rtp_to_string(struct rt_path *);
 void olsr_print_routing_table(struct avl_tree *);
