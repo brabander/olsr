@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.31 2007/10/16 09:54:43 bernd67 Exp $
+ * $Id: tc_set.c,v 1.32 2007/10/17 07:30:34 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -188,6 +188,7 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
   if (!tc) {
     return NULL;
   }
+  memset(tc, 0, sizeof(struct tc_entry));
 
   /* Fill entry */
   COPY_IP(&tc->addr, adr);
