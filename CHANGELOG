@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.99 2007/10/16 10:01:29 bernd67 Exp $
+$Id: CHANGELOG,v 1.100 2007/10/17 10:22:49 bernd67 Exp $
 
 0.5.4 ---------------------------------------------------------------------
 
@@ -80,7 +80,8 @@ non RT related stuff:
   olsr_fill_routing_table_with_neighbors() function.
 ----  snip  ----
 And Sven-Ola Tuecke <mail2news@commando.de> fixed an instability issue on interface
-up/down operations (see 102-olsrd-rt-refactoring-fixes.patch below).
+up/down operations (see 102-olsrd-rt-refactoring-fixes.patch below) and a missing
+initialization.
 
 PATCH by Hannes Gredler <hannes@gredler.at> which "consolidates
 the link-state database and the spf-calculation in order
