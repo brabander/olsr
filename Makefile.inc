@@ -2,11 +2,14 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.36 2007/10/20 19:27:33 bernd67 Exp $
+# $Id: Makefile.inc,v 1.37 2007/10/20 20:23:12 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
 DEBUG ?= 0
+
+# compile OLSR_PRINTF out
+NO_DEBUG_MESSAGES ?= 0
 
 # the optimize option to be set for gcc
 OPTIMIZE ?= -O2
@@ -148,6 +151,8 @@ CPPFLAGS +=	-DDEBUG
 CFLAGS +=	-g
 else
 CPPFLAGS +=	-DNDEBUG
+endif
+ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
 endif
 
