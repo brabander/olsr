@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.54 2007/10/20 12:59:08 bernd67 Exp $
+ * $Id: lq_route.c,v 1.55 2007/10/20 15:16:32 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -185,7 +185,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *vert)
 
 #ifdef DEBUG
   OLSR_PRINTF(1, "SPF: exploring node %s, cost %f\n",
-              olsr_ip_to_string(&(vert->addr)),
+              olsr_ip_to_string(&vert->addr),
               vert->path_etx);
 #endif
 
@@ -224,7 +224,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *vert)
 #ifdef DEBUG
       OLSR_PRINTF(1, "SPF:   exploring edge %s, cost %s\n",
                   olsr_ip_to_string(&(tc_edge->T_dest_addr)),
-                  olsr_etx_to_string(new_vert->path_etx));
+                  olsr_etx_to_string(new_etx));
 #endif
 
       /* 
