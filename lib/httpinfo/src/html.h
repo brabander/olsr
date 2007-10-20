@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: html.h,v 1.10 2007/10/14 22:46:03 bernd67 Exp $
+ * $Id: html.h,v 1.11 2007/10/20 20:41:04 bernd67 Exp $
  */
 
 /*
@@ -119,11 +119,11 @@ static const char * const html_tabs_epilog =
 
 static const char * const http_ok_tail =
   "<!-- START TAIL -->\n"
-  "<div id=\"footer\">\n\n"
-  "<p><center>\n"
+  "<div id=\"footer\">\n"
+  "<center>\n"
   "(C)2005 Andreas T&oslash;nnesen<br/>\n"
   "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n"
-  "</center></p>\n"
+  "</center>\n"
   "</div>\n"
   "</body></html>\n";
 
