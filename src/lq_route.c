@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.53 2007/10/16 09:54:43 bernd67 Exp $
+ * $Id: lq_route.c,v 1.54 2007/10/20 12:59:08 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -256,7 +256,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *vert)
                   olsr_etx_to_string(new_etx),
                   olsr_ip_to_string(vert->next_hop ?
                                     &vert->next_hop->neighbor_iface_addr : NULL),
-                  new_vert->->hops);
+                  new_vert->hops);
 #endif
 
     }

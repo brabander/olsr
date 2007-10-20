@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.51 2007/08/23 21:20:02 bernd67 Exp $
+ * $Id: ifnet.c,v 1.52 2007/10/20 12:59:08 bernd67 Exp $
  */
 
 
@@ -128,7 +128,7 @@ check_interface_updates(void *foo __attribute__((unused)))
         {
 #ifdef DEBUG
           /* Don't check this interface */
-          OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name)
+          OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name);
 #endif
           continue;
         }
