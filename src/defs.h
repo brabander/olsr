@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.64 2007/10/13 12:31:04 bernd67 Exp $
+ * $Id: defs.h,v 1.65 2007/10/20 21:07:24 bernd67 Exp $
  */
 
 
@@ -101,6 +101,12 @@ extern FILE *debug_handle;
 
 
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
+#ifndef MAX
+#define MAX(x,y)	((x) > (y) ? (x) : (y))
+#endif
+#ifndef MIN
+#define MIN(x,y)	((x) < (y) ? (x) : (y))
+#endif
 
 /*
  * Queueing macros
