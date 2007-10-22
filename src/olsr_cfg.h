@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.34 2007/09/16 21:20:17 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.35 2007/10/22 21:02:49 bernd67 Exp $
  */
 
 
@@ -280,12 +280,6 @@ get_default_if_config(void);
 
 struct olsrd_config *
 olsrd_get_default_cnf(void);
-
-void *
-olsrd_cnf_malloc(unsigned int);
-
-void
-olsrd_cnf_free(void *);
 
 #if defined __cplusplus
 }

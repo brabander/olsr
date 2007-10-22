@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.55 2007/09/13 16:08:13 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.56 2007/10/22 21:02:49 bernd67 Exp $
  */
 
 
@@ -693,16 +693,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  h6 = h6->next;
 	}
     }
-}
-
-void *olsrd_cnf_malloc(unsigned int len)
-{
-  return malloc(len);
-}
-
-void olsrd_cnf_free(void *addr)
-{
-  free(addr);
 }
 
 #if defined WIN32_STDIO_HACK
