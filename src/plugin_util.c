@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.6 2007/09/17 21:57:06 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.7 2007/10/24 13:45:00 bernd67 Exp $
  */
 
 #include "plugin_util.h"
@@ -121,7 +121,7 @@ int set_plugin_string(const char *value, void *data, set_plugin_parameter_addon 
 {
     if (data != NULL) {
         char *v = data;
-        if (strlen(value) >= addon.ui) {
+        if ((unsigned)strlen(value) >= addon.ui) {
             OLSR_PRINTF(0, "String too long \"%s\"", value);
             return 1;
         }
