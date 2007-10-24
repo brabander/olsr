@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.56 2007/10/22 21:02:49 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.57 2007/10/24 13:46:36 bernd67 Exp $
  */
 
 
@@ -50,12 +50,13 @@
 #include <arpa/inet.h>
 
 #include "olsrd_conf.h"
+#include "olsr_cfg.h"
 
 
 extern FILE *yyin;
 extern int yyparse(void);
 
-static char copyright_string[] = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 #ifdef MAKEBIN
 
@@ -100,70 +101,55 @@ main(int argc, char *argv[])
 struct olsrd_config *
 olsrd_parse_cnf(const char *filename)
 {
-  struct olsr_if *in, *new_ifqueue, *in_tmp;
+  struct olsr_if *in, *new_ifqueue;
+  int rc;
 
-  /* Stop the compiler from complaining */
-  (void)strlen(copyright_string);
-
-  cnf = malloc(sizeof(struct olsrd_config));
-  if (cnf == NULL)
-    {
-      fprintf(stderr, "Out of memory %s\n", __func__);
-      return NULL;
-    }
+  struct olsrd_config *cnf = malloc(sizeof(struct olsrd_config));
+  if (cnf == NULL) {
+    fprintf(stderr, "Out of memory %s\n", __func__);
+    return NULL;
+  }
 
   set_default_cnf(cnf);
 
   printf("Parsing file: \"%s\"\n", filename);
 
   yyin = fopen(filename, "r");
-  
-  if (yyin == NULL)
-    {
-      fprintf(stderr, "Cannot open configuration file '%s': %s.\n",
-	      filename, strerror(errno));
-      free(cnf);
-      return NULL;
-    }
+  if (yyin == NULL) {
+    fprintf(stderr, "Cannot open configuration file '%s': %s.\n",
+            filename, strerror(errno));
+    free(cnf);
+    return NULL;
+  }
 
   current_line = 1;
-
-  if (yyparse() != 0)
-    {
-      fclose(yyin);
-      olsrd_free_cnf(cnf);
-      return NULL;
-    }
-  
+  rc = yyparse();
   fclose(yyin);
+  if (rc != 0) {
+    olsrd_free_cnf(cnf);
+    return NULL;
+  }
 
   /* Reverse the queue (added by user request) */
   in = cnf->interfaces;
   new_ifqueue = NULL;
 
-  while(in)
-    {
-      in_tmp = in; 
-      in = in->next;
+  while(in) {
+    struct olsr_if *in_tmp = in; 
+    in = in->next;
 
-      in_tmp->next = new_ifqueue;
-      new_ifqueue = in_tmp;
-    }
+    in_tmp->next = new_ifqueue;
+    new_ifqueue = in_tmp;
+  }
 
   cnf->interfaces = new_ifqueue;
 
-  in = cnf->interfaces;
-
-  while(in)
-    {
+  for (in = cnf->interfaces; in != NULL; in = in->next) {
       /* set various stuff */
       in->configured = OLSR_FALSE;
       in->interf = NULL;
       in->host_emul = OLSR_FALSE;
-      in = in->next;
-    }
-
-
+  }
   return cnf;
 }
 
