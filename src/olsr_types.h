@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.9 2007/09/05 16:11:11 bernd67 Exp $
+ * $Id: olsr_types.h,v 1.10 2007/10/24 13:51:11 bernd67 Exp $
  */
 
 /*
@@ -48,39 +48,22 @@
 #define	_OLSR_TYPES_H
 
 /* types */
-#include <sys/types.h>
+#include <inttypes.h>
+
 
 typedef enum {
     OLSR_FALSE = 0,
     OLSR_TRUE
 } olsr_bool;
 
-#if defined linux || defined __MacOSX__
+#if defined linux || defined __MacOSX__ || defined WIN32 || defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
+typedef uint8_t         olsr_u8_t;
+typedef uint16_t        olsr_u16_t;
+typedef uint32_t        olsr_u32_t;
 typedef int8_t          olsr_8_t;
 typedef int16_t         olsr_16_t;
 typedef int32_t         olsr_32_t;
-
-#elif defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
-
-typedef	uint8_t		olsr_u8_t;
-typedef uint16_t       	olsr_u16_t;
-typedef uint32_t       	olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
-
-#elif defined WIN32
-
-typedef unsigned char   olsr_u8_t;
-typedef unsigned short  olsr_u16_t;
-typedef unsigned int    olsr_u32_t;
-typedef char            olsr_8_t;
-typedef short           olsr_16_t;
-typedef int             olsr_32_t;
 
 #else
 #       error "Unsupported system"
