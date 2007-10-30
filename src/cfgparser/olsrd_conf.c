@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.57 2007/10/24 13:46:36 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.58 2007/10/30 09:19:22 bernd67 Exp $
  */
 
 
@@ -57,6 +57,9 @@ extern FILE *yyin;
 extern int yyparse(void);
 
 static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+
+int current_line;
+struct olsrd_config *cnf;
 
 #ifdef MAKEBIN
 
@@ -104,7 +107,8 @@ olsrd_parse_cnf(const char *filename)
   struct olsr_if *in, *new_ifqueue;
   int rc;
 
-  struct olsrd_config *cnf = malloc(sizeof(struct olsrd_config));
+  /* Initialize the global varibles - oparse.y needs it there */
+  cnf = malloc(sizeof(struct olsrd_config));
   if (cnf == NULL) {
     fprintf(stderr, "Out of memory %s\n", __func__);
     return NULL;

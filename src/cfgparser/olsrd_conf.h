@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.h,v 1.13 2007/04/28 20:46:32 bernd67 Exp $
+ * $Id: olsrd_conf.h,v 1.14 2007/10/30 09:19:22 bernd67 Exp $
  */
 
 
@@ -49,9 +49,9 @@
 #define PARSER_VERSION "0.1.2"
 
 
-int current_line;
+extern int current_line;
 
-struct olsrd_config *cnf;
+extern struct olsrd_config *cnf;
 
 struct conf_token
 {
