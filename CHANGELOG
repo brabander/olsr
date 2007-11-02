@@ -1,7 +1,9 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.101 2007/10/20 11:55:23 bernd67 Exp $
+$Id: CHANGELOG,v 1.102 2007/11/02 09:38:56 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
+
+BUGFIX by Hannes Gredler <hannes@gredler.at> fixing not deleted tc entry.
 
 0.5.4 ---------------------------------------------------------------------
 

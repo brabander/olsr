@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.32 2007/10/17 07:30:34 bernd67 Exp $
+ * $Id: tc_set.c,v 1.33 2007/11/02 09:38:55 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -90,11 +90,12 @@ olsr_change_myself_tc(void)
     }
 
     /*
-     * Flush all edges. This causes our own tc_entry to vanish.
+     * Flush all edges and our own tc_entry.
      */
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, tc_edge) {
       olsr_delete_tc_edge_entry(tc_edge);
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, tc_edge);
+    olsr_delete_tc_entry(tc_myself);
   }
 
   /*
@@ -110,7 +111,7 @@ olsr_change_myself_tc(void)
  * @param entry the TC entry to delete
  *
  */
-static void
+void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
 
