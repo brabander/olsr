@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.104 2007/11/02 10:16:39 bernd67 Exp $
+$Id: CHANGELOG,v 1.105 2007/11/02 10:57:30 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -16,6 +16,8 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   * OpenBSD'd `sed` is pretty conservative and doesn't understand 's|re|sub|'.
     So we fall back to the old 's/re/sub/' and quote all '/' and '.' correctly
     (which was the main reason to use '|').
+    And while I'm at it: Remove the useless $(CCACHE) from the $(CC) for
+    dependency generation and beautify (read: "$(strip)") $(CPPFLAGS).
   * OpenBSD needs an explicit "#include <sys/types.h>" before
     "#include <netinet/in.h>".
 
