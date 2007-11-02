@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.10 2007/10/24 13:51:11 bernd67 Exp $
+ * $Id: olsr_types.h,v 1.11 2007/11/02 10:16:39 bernd67 Exp $
  */
 
 /*
@@ -69,6 +69,8 @@ typedef int32_t         olsr_32_t;
 #       error "Unsupported system"
 #endif
 
+/* OpenBSD wants this here */
+#include <sys/types.h>
 /* IPv6 address format in6_addr */
 #include <netinet/in.h>
 
@@ -92,6 +94,5 @@ union hna_netmask
   olsr_u32_t v4;
   olsr_u16_t v6;
 };
-
 
 #endif

@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.37 2007/10/20 20:23:12 bernd67 Exp $
+# $Id: Makefile.inc,v 1.38 2007/11/02 10:16:39 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -156,9 +156,11 @@ ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
 endif
 
+quote = $(subst .,\.,$(subst /,\/,$1))
+
 # fully automatic and working dependency generation
 %.d: %.c
-	@$(CC) -M $(CPPFLAGS) "$<" | sed -e '1s|\($(*F)\)\.o[ :]*|$(*D)/\1.o $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc |g' >"$@"
+	$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
 
 # we always need the includes and defines
 # for legacy since now

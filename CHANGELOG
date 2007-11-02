@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.103 2007/11/02 10:11:43 bernd67 Exp $
+$Id: CHANGELOG,v 1.104 2007/11/02 10:16:39 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -11,6 +11,13 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   It makes much more sense as - to the best of my(bernd's) knowledge - all
   larger networks uses the LQ extensions. And new customers should better
   be pushed in that direction.
+- with the help of Patrick McCarty <mccartyp@gmail.com>, we got olsr to build
+  on OpenBSD again:
+  * OpenBSD'd `sed` is pretty conservative and doesn't understand 's|re|sub|'.
+    So we fall back to the old 's/re/sub/' and quote all '/' and '.' correctly
+    (which was the main reason to use '|').
+  * OpenBSD needs an explicit "#include <sys/types.h>" before
+    "#include <netinet/in.h>".
 
 0.5.4 ---------------------------------------------------------------------
 
