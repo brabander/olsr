@@ -1,5 +1,5 @@
 # The olsr.org Optimized Link-State Routing daemon(olsrd)
-# Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+# Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.101 2007/10/20 11:55:23 bernd67 Exp $
+# $Id: Makefile,v 1.102 2007/11/02 10:11:43 bernd67 Exp $
 
 VERS =		0.5.5pre
 
@@ -108,11 +108,14 @@ install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
 		@echo $(EXENAME) uses the configfile $(CFGFILE)
 		@echo a default configfile. A sample RFC-compliance aimed
-		@echo configfile can be installed. Note that a LQ-based configfile
+		@echo configfile can be found in olsrd.conf.default.rfc.
+		@echo However none of the larger OLSRD using networks use that
+		@echo so install a configfile with activated link quality exstensions
+		@echo per default.
 		@echo can be found at files/olsrd.conf.default.lq
 		@echo ==========================================================
 		mkdir -p $(ETCDIR)
-		-cp -i files/olsrd.conf.default.rfc $(CFGFILE)
+		-cp -i files/olsrd.conf.default.lq $(CFGFILE)
 		@echo -------------------------------------------
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
