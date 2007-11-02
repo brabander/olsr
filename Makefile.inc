@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.39 2007/11/02 15:37:09 bernd67 Exp $
+# $Id: Makefile.inc,v 1.40 2007/11/02 22:00:26 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -156,6 +156,7 @@ ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
 endif
 
+# a make function to quote "/" and "."
 quote = $(subst .,\.,$(subst /,\/,$1))
 
 # fully automatic and working dependency generation
