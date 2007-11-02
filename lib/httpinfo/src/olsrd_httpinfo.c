@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.80 2007/10/14 22:46:03 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.81 2007/11/02 20:58:07 bernd67 Exp $
  */
 
 /*
@@ -980,16 +980,16 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 	size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%0.2f</td>", link->L_link_quality);
         if (olsr_cnf->lq_level > 0) {
 	    size += snprintf(&buf[size], bufsize-size,
-                           "<td align=\"right\">%0.2f</td>"
-                           "<td>%d</td>"
-                           "<td>%d</td>"
-                           "<td align=\"right\">%0.2f</td>"
-                           "<td align=\"right\">%0.2f</td></tr>\n",
-                           link->loss_link_quality,
-                           link->lost_packets, 
-                           link->total_packets,
-                           link->neigh_link_quality, 
-                           (link->loss_link_quality * link->neigh_link_quality) ? 1.0 / (link->loss_link_quality * link->neigh_link_quality) : 0.0);
+                             "<td align=\"right\">%0.2f</td>"
+                             "<td>%d</td>"
+                             "<td>%d</td>"
+                             "<td align=\"right\">%0.2f</td>"
+                             "<td align=\"right\">%0.2f</td></tr>\n",
+                             link->loss_link_quality,
+                             link->lost_packets, 
+                             link->total_packets,
+                             link->neigh_link_quality, 
+                             olsr_calc_link_etx(link));
         }
 	size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
@@ -1061,14 +1061,13 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
           if (olsr_cnf->lq_level > 0) {
-              const double d = tc_edge->link_quality * tc_edge->inverse_link_quality;
               size += snprintf(&buf[size], bufsize-size,
                                "<td align=\"right\">%0.2f</td>"
                                "<td align=\"right\">%0.2f</td>"
                                "<td align=\"right\">%0.2f</td>\n",
                                tc_edge->link_quality,
                                tc_edge->inverse_link_quality,
-                               d ? 1.0 / d : 0.0);
+                               olsr_calc_tc_etx(tc_edge));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 

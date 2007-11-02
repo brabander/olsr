@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.106 2007/11/02 15:51:46 bernd67 Exp $
+$Id: CHANGELOG,v 1.107 2007/11/02 20:58:06 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -32,6 +32,9 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
     their use to allow gcc to inline if only used once.
   It remains ugly - God knows why there are that so many useless
   type-casts.
+- Some minor and trivial cleanup: Added two functions to calculate the ETX
+  value from a struct tc_edge_entry and a struct link_entry, respectively.
+  And use them everywhere.
 
 0.5.4 ---------------------------------------------------------------------
 

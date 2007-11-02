@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.33 2007/11/02 09:38:55 bernd67 Exp $
+ * $Id: tc_set.c,v 1.34 2007/11/02 20:58:06 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -252,12 +252,11 @@ olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int timer)
 void
 olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 {
-  if (tc_edge->link_quality >= MIN_LINK_QUALITY &&
-      tc_edge->inverse_link_quality >= MIN_LINK_QUALITY) {
-        
-    tc_edge->etx = 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
-  } else {
+  if (tc_edge->link_quality < MIN_LINK_QUALITY &&
+      tc_edge->inverse_link_quality < MIN_LINK_QUALITY) {
     tc_edge->etx = INFINITE_ETX;
+  } else {
+    tc_edge->etx = 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
   }
 }
 
@@ -616,7 +615,6 @@ olsr_print_tc_table(void)
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
   char *fstr;
-  float etx;
   
   OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
               nowtm->tm_hour,
@@ -637,22 +635,24 @@ olsr_print_tc_table(void)
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-
-      if (tc_edge->link_quality < MIN_LINK_QUALITY ||
-          tc_edge->inverse_link_quality < MIN_LINK_QUALITY) {
-        etx = 0.0;
-      } else {
-        etx = 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
-      }
-
       OLSR_PRINTF(1, fstr, olsr_ip_to_string(&tc->addr),
                   olsr_ip_to_string(&tc_edge->T_dest_addr),
-                  tc_edge->link_quality, tc_edge->inverse_link_quality, etx);
+                  tc_edge->link_quality,
+                  tc_edge->inverse_link_quality,
+                  olsr_calc_tc_etx(tc_edge));
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   return 1;
+}
+
+float olsr_calc_tc_etx(const struct tc_edge_entry *tc_edge)
+{
+  return tc_edge->link_quality < MIN_LINK_QUALITY ||
+         tc_edge->inverse_link_quality < MIN_LINK_QUALITY
+             ? 0.0
+             : 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
 }
 
 /*

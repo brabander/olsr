@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.75 2007/10/21 20:09:09 bernd67 Exp $
+ * $Id: link_set.c,v 1.76 2007/11/02 20:58:06 bernd67 Exp $
  */
 
 
@@ -1184,3 +1184,10 @@ void olsr_update_dijkstra_link_qualities(void)
   }
 }
 
+float olsr_calc_link_etx(const struct link_entry *link)
+{
+  return link->loss_link_quality < MIN_LINK_QUALITY ||
+         link->neigh_link_quality < MIN_LINK_QUALITY
+             ? 0.0
+             : 1.0 / (link->loss_link_quality * link->neigh_link_quality);
+}

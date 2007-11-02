@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.13 2007/09/17 22:24:22 bernd67 Exp $
+ * $Id: plugin.c,v 1.14 2007/11/02 20:58:07 bernd67 Exp $
  */
 
 #include <string.h>
@@ -103,15 +103,6 @@ static void __attribute__((constructor)) banner(void)
   printf("Tiny Application Server 0.1 by olsr.org\n");
 }
 
-static double lqToEtx(double lq, double nlq)
-{
-  if (lq < MIN_LINK_QUALITY || nlq < MIN_LINK_QUALITY)
-    return 0.0;
-
-  else
-    return 1.0 / (lq * nlq);
-}
-
 int iterLinkTabNext(char *buff, int len)
 {
   double etx;
@@ -119,8 +110,7 @@ int iterLinkTabNext(char *buff, int len)
   if (iterLinkTab == NULL)
     return -1;
 
-  etx = lqToEtx(iterLinkTab->loss_link_quality,
-                iterLinkTab->neigh_link_quality);
+  etx = olsr_calc_link_etx(iterLinkTab);
 
   snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~lq~%f~nlq~%f~etx~%f~",
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
@@ -275,7 +265,7 @@ int iterTcTabNext(char *buff, int len)
 
     res = snprintf(buff, len, "[~%d~address~%s~etx~%f~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   lqToEtx(tc_edge->link_quality, tc_edge->inverse_link_quality));
+                   olsr_calc_tc_etx(tc_edge));
 
     if (res < len)
       buff += res;

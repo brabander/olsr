@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.8 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: olsrd_pgraph.c,v 1.9 2007/11/02 20:58:07 bernd67 Exp $
  */
 
 /*
@@ -184,7 +184,7 @@ static void ipc_print_neigh_link(struct neighbor_entry *neighbor)
 //      link_set = link; // for olsr_neighbor_best_link    
 //      link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
 //      if (link) {
-//        etx = calc_etx( link->loss_link_quality, link->neigh_link_quality);
+//        etx = olsr_calc_etx(link);
 //      }
 //    }
 //  }
@@ -405,7 +405,7 @@ static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_
   int len;
   const char* main_adr;
   const char* adr;
-//  double etx = calc_etx( dst_entry->link_quality, dst_entry->inverse_link_quality );
+//  double etx = olsr_calc_tc_etx(dst_entry);
 
   main_adr = olsr_ip_to_string(&entry->addr);
   adr = olsr_ip_to_string(&dst_entry->T_dest_addr);

@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.32 2007/10/05 20:24:47 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.33 2007/11/02 20:58:07 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -1539,9 +1539,7 @@ write_latlon_file(void)
 					olsr_ip_to_string(&tc->addr), 
 					tc_edge->link_quality,
 					tc_edge->inverse_link_quality,
-					(tc_edge->link_quality * tc_edge->inverse_link_quality) ?
-                    1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality) :
-                    0.0);
+                    olsr_calc_tc_etx(tc_edge));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);

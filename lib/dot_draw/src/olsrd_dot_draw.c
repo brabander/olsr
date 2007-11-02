@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.27 2007/09/13 15:31:58 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.28 2007/11/02 20:58:07 bernd67 Exp $
  */
 
 /*
@@ -113,9 +113,6 @@ ipc_send(const char *, int);
 static int
 ipc_send_str(const char *);
 
-static double 
-calc_etx(double, double);
-
 
 /**
  *Do initialization here
@@ -172,7 +169,7 @@ ipc_print_neigh_link(struct neighbor_entry *neighbor)
   else {   
       link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
       if (link) {
-        etx = calc_etx( link->loss_link_quality, link->neigh_link_quality);
+        etx = olsr_calc_link_etx(link);
       }
   }
     
@@ -365,30 +362,15 @@ pcf_event(int changes_neighborhood,
 }
 
 
-#define MIN_LINK_QUALITY 0.01
-static double 
-calc_etx(double loss, double neigh_loss) 
-{
-  if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
-    return 0.0;
-  else
-    return 1.0 / (loss * neigh_loss);
-}
-
-
 static void
 ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 {
   char buf[256];
-  const char* adr;
-  double etx = calc_etx( dst_entry->link_quality, dst_entry->inverse_link_quality );
 
-  adr = olsr_ip_to_string(&entry->addr);
-  sprintf( buf, "\"%s\" -> ", adr );
+  sprintf( buf, "\"%s\" -> ", olsr_ip_to_string(&entry->addr));
   ipc_send_str(buf);
   
-  adr = olsr_ip_to_string(&dst_entry->T_dest_addr);
-  sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", adr, etx );
+  sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", olsr_ip_to_string(&dst_entry->T_dest_addr), olsr_calc_tc_etx(dst_entry));
   ipc_send_str(buf);
 }
 

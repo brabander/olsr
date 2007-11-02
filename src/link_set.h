@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.32 2007/10/05 20:10:24 bernd67 Exp $
+ * $Id: link_set.h,v 1.33 2007/11/02 20:58:06 bernd67 Exp $
  */
 
 
@@ -149,5 +149,7 @@ olsr_print_link_set(void);
 
 void
 olsr_update_dijkstra_link_qualities(void);
+
+float olsr_calc_link_etx(const struct link_entry *);
 
 #endif
