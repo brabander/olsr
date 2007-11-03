@@ -1,9 +1,12 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.108 2007/11/03 22:56:07 bernd67 Exp $
+$Id: CHANGELOG,v 1.109 2007/11/03 23:11:40 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
 BUGFIX by Hannes Gredler <hannes@gredler.at> fixing not deleted tc entry.
+
+PATCH by John Hay <jhay@meraka.org.za>:
+- also printout our own HNAs in the dotdraw plugin.
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Jens Nachtigall <nachtigall@web.de> suggested (and reminded) to use

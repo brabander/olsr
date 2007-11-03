@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.28 2007/11/02 20:58:07 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.29 2007/11/03 23:11:40 bernd67 Exp $
  */
 
 /*
@@ -298,6 +298,9 @@ pcf_event(int changes_neighborhood,
   struct tc_edge_entry *tc_edge;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
+  struct hna4_entry *hna4;
+  struct hna6_entry *hna6;
+  union hna_netmask hna_msk;
 
   res = 0;
 
@@ -348,6 +351,31 @@ pcf_event(int changes_neighborhood,
 	    }
 	}
 
+      /* Local HNA entries */
+      if (olsr_cnf->ip_version == AF_INET)
+       {
+       hna4 = olsr_cnf->hna4_entries;
+       while(hna4)
+        {
+         hna_msk.v4 = hna4->netmask.v4;
+         ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
+                       &hna4->net,
+                       &hna_msk);
+         hna4 = hna4->next;
+        }
+       }
+      else
+       {
+       hna6 = olsr_cnf->hna6_entries;
+       while(hna6)
+        {
+         hna_msk.v6 = hna6->prefix_len;
+         ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
+                       &hna6->net,
+                       &hna_msk);
+         hna6 = hna6->next;
+        }
+      }
 
       ipc_send_str("}\n\n");
 
@@ -360,7 +388,6 @@ pcf_event(int changes_neighborhood,
 
   return res;
 }
-
 
 static void
 ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
