@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.100 2007/09/17 22:24:22 bernd67 Exp $
+ * $Id: main.c,v 1.101 2007/11/03 23:21:27 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -209,7 +209,7 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  if((olsr_cnf = olsrd_parse_cnf(conf_file_name)) == NULL)
+  if(olsrd_parse_cnf(conf_file_name))
     {
       printf("Using default config values(no configfile)\n");
       olsr_cnf = olsrd_get_default_cnf();

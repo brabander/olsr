@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.35 2007/10/22 21:02:49 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.36 2007/11/03 23:21:27 bernd67 Exp $
  */
 
 
@@ -257,7 +257,7 @@ extern "C" {
  * Interface to parser
  */
 
-struct olsrd_config *
+int
 olsrd_parse_cnf(const char *);
 
 int

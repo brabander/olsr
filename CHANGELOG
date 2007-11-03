@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.109 2007/11/03 23:11:40 bernd67 Exp $
+$Id: CHANGELOG,v 1.110 2007/11/03 23:21:28 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -40,6 +40,11 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   And use them everywhere.
 - added http://meshcube.org/nylon/utils/olsr-topology-view.pl into
   lib/httpinfo/misc as suggested by Jens Nachtigall <nachtigall@web.de>
+- Killed "struct olsrd_config *cnf" in src/cfgparser/olsrd_conf.h and replaced
+  it's usage with "olsr_cnf" from src/defs.h.
+  Serious cleanup: olsrd_get_default_cnf() does no longer initialize the global
+  "cnf" variable" but uses a local one which is returned as before. And
+  olsrd_parse_cnf() does no longer return the global variable it is working on.
 
 0.5.4 ---------------------------------------------------------------------
 

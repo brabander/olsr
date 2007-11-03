@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.58 2007/10/30 09:19:22 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.59 2007/11/03 23:21:27 bernd67 Exp $
  */
 
 
@@ -51,6 +51,7 @@
 
 #include "olsrd_conf.h"
 #include "olsr_cfg.h"
+#include "defs.h"
 
 
 extern FILE *yyin;
@@ -59,7 +60,6 @@ extern int yyparse(void);
 static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 int current_line;
-struct olsrd_config *cnf;
 
 #ifdef MAKEBIN
 
@@ -101,20 +101,20 @@ main(int argc, char *argv[])
 
 #endif
 
-struct olsrd_config *
+int
 olsrd_parse_cnf(const char *filename)
 {
   struct olsr_if *in, *new_ifqueue;
   int rc;
 
   /* Initialize the global varibles - oparse.y needs it there */
-  cnf = malloc(sizeof(struct olsrd_config));
-  if (cnf == NULL) {
+  olsr_cnf = malloc(sizeof(*olsr_cnf));
+  if (olsr_cnf == NULL) {
     fprintf(stderr, "Out of memory %s\n", __func__);
-    return NULL;
+    return 1;
   }
 
-  set_default_cnf(cnf);
+  set_default_cnf(olsr_cnf);
 
   printf("Parsing file: \"%s\"\n", filename);
 
@@ -122,20 +122,22 @@ olsrd_parse_cnf(const char *filename)
   if (yyin == NULL) {
     fprintf(stderr, "Cannot open configuration file '%s': %s.\n",
             filename, strerror(errno));
-    free(cnf);
-    return NULL;
+    olsrd_free_cnf(olsr_cnf);
+    olsr_cnf = NULL;
+    return 1;
   }
 
   current_line = 1;
   rc = yyparse();
   fclose(yyin);
   if (rc != 0) {
-    olsrd_free_cnf(cnf);
-    return NULL;
+    olsrd_free_cnf(olsr_cnf);
+    olsr_cnf = NULL;
+    return 1;
   }
 
   /* Reverse the queue (added by user request) */
-  in = cnf->interfaces;
+  in = olsr_cnf->interfaces;
   new_ifqueue = NULL;
 
   while(in) {
@@ -146,15 +148,15 @@ olsrd_parse_cnf(const char *filename)
     new_ifqueue = in_tmp;
   }
 
-  cnf->interfaces = new_ifqueue;
+  olsr_cnf->interfaces = new_ifqueue;
 
-  for (in = cnf->interfaces; in != NULL; in = in->next) {
+  for (in = olsr_cnf->interfaces; in != NULL; in = in->next) {
       /* set various stuff */
       in->configured = OLSR_FALSE;
       in->interf = NULL;
       in->host_emul = OLSR_FALSE;
   }
-  return cnf;
+  return 0;
 }
 
 
@@ -410,16 +412,14 @@ olsrd_free_cnf(struct olsrd_config *cnf)
 struct olsrd_config *
 olsrd_get_default_cnf(void)
 {
-  cnf = malloc(sizeof(struct olsrd_config));
-  if (cnf == NULL)
-    {
-      fprintf(stderr, "Out of memory %s\n", __func__);
-      return NULL;
-    }
+  struct olsrd_config *c = malloc(sizeof(struct olsrd_config));
+  if (c == NULL) {
+    fprintf(stderr, "Out of memory %s\n", __func__);
+    return NULL;
+  }
 
-  set_default_cnf(cnf);
-
-  return cnf;
+  set_default_cnf(c);
+  return c;
 }
 
 
@@ -428,7 +428,7 @@ olsrd_get_default_cnf(void)
 void
 set_default_cnf(struct olsrd_config *cnf)
 {
-    memset(cnf, 0, sizeof(struct olsrd_config));
+    memset(cnf, 0, sizeof(*cnf));
     
     cnf->debug_level = DEF_DEBUGLVL;
     cnf->no_fork = OLSR_FALSE;
@@ -477,24 +477,23 @@ set_default_cnf(struct olsrd_config *cnf)
 struct if_config_options *
 get_default_if_config(void)
 {
-  struct if_config_options *io = malloc(sizeof(struct if_config_options));
   struct in6_addr in6;
+  struct if_config_options *io = malloc(sizeof(*io));
 
-  if(io == NULL)
-    {
-      fprintf(stderr, "Out of memory %s\n", __func__);
-      return NULL;
-    }
+  if(io == NULL) {
+    fprintf(stderr, "Out of memory %s\n", __func__);
+    return NULL;
+  }
 
-  memset(io, 0, sizeof(struct if_config_options));
+  memset(io, 0, sizeof(*io));
 
   io->ipv6_addrtype = 1; /* XXX - FixMe */
 
   inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6);
-  memcpy(&io->ipv6_multi_site.v6, &in6, sizeof(struct in6_addr));
+  io->ipv6_multi_site.v6 = in6;
 
   inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6);
-  memcpy(&io->ipv6_multi_glbl.v6, &in6, sizeof(struct in6_addr));
+  io->ipv6_multi_glbl.v6 = in6;
 
   io->lq_mult = NULL;
 

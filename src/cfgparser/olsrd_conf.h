@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.h,v 1.14 2007/10/30 09:19:22 bernd67 Exp $
+ * $Id: olsrd_conf.h,v 1.15 2007/11/03 23:21:27 bernd67 Exp $
  */
 
 
@@ -50,8 +50,6 @@
 
 
 extern int current_line;
-
-extern struct olsrd_config *cnf;
 
 struct conf_token
 {
