@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.107 2007/11/02 20:58:06 bernd67 Exp $
+$Id: CHANGELOG,v 1.108 2007/11/03 22:56:07 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -35,6 +35,8 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Some minor and trivial cleanup: Added two functions to calculate the ETX
   value from a struct tc_edge_entry and a struct link_entry, respectively.
   And use them everywhere.
+- added http://meshcube.org/nylon/utils/olsr-topology-view.pl into
+  lib/httpinfo/misc as suggested by Jens Nachtigall <nachtigall@web.de>
 
 0.5.4 ---------------------------------------------------------------------
 
