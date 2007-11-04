@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.102 2007/11/02 10:11:43 bernd67 Exp $
+# $Id: Makefile,v 1.103 2007/11/04 19:07:43 bernd67 Exp $
 
 VERS =		0.5.5pre
 
@@ -53,23 +53,17 @@ endif
 
 SWITCHDIR =	src/olsr_switch
 CFGDIR =	src/cfgparser
-CFGOBJS = 	$(CFGDIR)/oscan.o $(CFGDIR)/oparse.o $(CFGDIR)/olsrd_conf.o
-CFGDEPS = 	$(wildcard $(CFGDIR)/*.[ch]) $(CFGDIR)/oparse.y $(CFGDIR)/oscan.lex
+include $(CFGDIR)/local.mk
 TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
+.PHONY: default_target cfgparser switch
 default_target: cfgparser $(EXENAME)
 
-$(EXENAME):	$(OBJS) $(CFGOBJS) src/builddata.o
+$(EXENAME):	$(OBJS) src/builddata.o
 		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-cfgparser:	$(CFGDEPS)
-		$(MAKECMD) -C $(CFGDIR)
-
 switch:		
-		$(MAKECMD) -C $(SWITCHDIR)
-
-$(CFGOBJS):
-		$(MAKECMD) -C $(CFGDIR)
+	$(MAKECMD) -C $(SWITCHDIR)
 
 # generate it always
 .PHONY: src/builddata.c
@@ -84,18 +78,16 @@ src/builddata.c:
 .PHONY: help libs clean_libs libs_clean clean uberclean install_libs libs_install install_bin install_olsrd install build_all install_all clean_all 
 
 clean:
-		-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c
+	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
 ifeq ($(OS), win32)
-		-rm -f libolsrd.a
+	-rm -f libolsrd.a
 endif
-		$(MAKECMD) -C $(CFGDIR) clean
 
 uberclean:	clean clean_libs
-		-rm -f $(TAGFILE)
-		# BSD-xargs has no "--no-run-if-empty" aka "-r"
-		find . \( -name '*.[od]' -o -name '*~' \) -print0 | xargs -0 rm -f
-		$(MAKECMD) -C $(CFGDIR) uberclean
-		$(MAKECMD) -C $(SWITCHDIR) clean
+	-rm -f $(TAGFILE)
+#	BSD-xargs has no "--no-run-if-empty" aka "-r"
+	find . \( -name '*.[od]' -o -name '*~' \) -print0 | xargs -0 rm -f
+	$(MAKECMD) -C $(SWITCHDIR) clean
 
 install: install_olsrd
 
@@ -154,14 +146,17 @@ httpinfo:
 
 tas:
 		$(MAKECMD) -C lib/tas clean
+		$(MAKECMD) -C lib/tas
 		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
 
 dot_draw:
 		$(MAKECMD) -C lib/dot_draw clean
+		$(MAKECMD) -C lib/dot_draw
 		$(MAKECMD) -C lib/dot_draw DESTDIR=$(DESTDIR) install
 
 nameservice:
 		$(MAKECMD) -C lib/nameservice clean
+		$(MAKECMD) -C lib/nameservice
 		$(MAKECMD) -C lib/nameservice DESTDIR=$(DESTDIR) install
 
 dyn_gw:
@@ -195,6 +190,6 @@ quagga:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
 
-build_all:	all cfgparser $(EXENAME) switch libs
+build_all:	all $(EXENAME) switch libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs

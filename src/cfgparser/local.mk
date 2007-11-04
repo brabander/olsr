@@ -36,68 +36,43 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.31 2007/11/04 19:07:43 bernd67 Exp $
+# $Id: local.mk,v 1.1 2007/11/04 19:07:43 bernd67 Exp $
 
-TOPDIR=../..
-include $(TOPDIR)/Makefile.inc
+# avoid the $(if) everywhere
+C=$(if $(CFGDIR),$(CFGDIR)/)
 
-# delete the variables from above
-SRCS =
-HDRS =
+# add the variables as we may have others already there
+SRCS += $(foreach file,olsrd_conf oparse oscan cfgfile_gen,$(C)$(file).c)
+OBJS += $(foreach file,olsrd_conf oparse oscan cfgfile_gen,$(C)$(file).o)
+HDRS += $(foreach file,olsrd_conf oparse,$(C)$(file).h)
 
-include local.mk
+$(C)oscan.c: $(C)oscan.lex $(C)Makefile
+	$(FLEX) -Cem -o"$@-tmp" "$<"
+	sed	-e '/^static/s/yy_get_next_buffer[\(][\)]/yy_get_next_buffer(void)/' \
+		-e '/^static/s/yy_get_previous_state[\(][\)]/yy_get_previous_state(void)/' \
+		-e '/^static/s/yygrowstack[\(][\)]/yygrowstack(void)/' \
+		-e '/^static/s/input[\(][\)]/input(void)/' \
+		-e '/^static  *void  *yy_fatal_error/s/^\(.*)\);$$/\1 __attribute__((noreturn));/' \
+		-e 's/register //' \
+		-e '/^#line/s/$(call quote,$@-tmp)/$(call quote,$@)/' \
+		< "$@-tmp" >"$@"
+	$(RM) "$@-tmp"
 
-ifeq ($(OS), win32)
+# we need a dependency to generate oparse before we compile oscan.c
+$(C)oscan.o: $(C)oparse.c
+$(C)oscan.o: CFLAGS := $(filter-out -Wunreachable-code -Wsign-compare,$(CFLAGS)) -Wno-sign-compare
+# we need potentially another -I directory
+$(C)oscan.o: CPPFLAGS += $(if $(CFGDIR),-I$(CFGDIR))
 
-LIBNAME ?=	olsrd_cfgparser.dll
-BINNAME ?=	olsrd_cfgparser.exe
-CPPFLAGS +=	-DWIN32_STDIO_HACK
-OBJS +=		../win32/compat.o
+$(C)oparse.c: $(C)oparse.y $(C)olsrd_conf.h $(C)Makefile
+	$(BISON) -d -o "$@-tmp" "$<"
+	sed	-e 's/register //' \
+		-e '/^#line/s/$(call quote,$@-tmp)/$(call quote,$@)/' \
+		< "$@-tmp" >"$@"
+	mv "$(subst .c,.h,$@-tmp)" "$(subst .c,.h,$@)"
+	$(RM) "$@-tmp" "$(subst .c,.h,$@-tmp)"
 
-else
+$(C)oparse.o: CFLAGS := $(filter-out -Wunreachable-code,$(CFLAGS))
 
-LIBNAME ?=	olsrd_cfgparser.so.0.1
-BINNAME ?=	olsrd_cfgparser
-endif
-
-
-ifdef MAKEBIN
-
-CPPFLAGS +=	-DMAKEBIN 
-NAME =		$(BINNAME)
-
-else 
-
-# build lib per default
-
-ifeq (${OS}, osx)
-LDFLAGS +=	-dynamiclib -single_module
-else
-LDFLAGS +=	-shared -Wl,-soname,$(LIBNAME)
-endif
-
-ifeq (${OS}, win32)
-LDFLAGS +=	-Wl,--out-implib=libolsrd_cfgparser.a -Wl,--export-all-symbols
-endif
-
-CPPFLAGS +=	-DMAKELIB
-NAME =		$(LIBNAME)
-
-endif
-
-.PHONY: install clean uberclean
-
-# Targets
-default_target: $(NAME)
-
-$(NAME):	$(OBJS)
-		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
-
-install:
-		install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
-		/sbin/ldconfig -n $(LIBDIR)
-
-clean:
-		rm -f *.[od~] $(LIBNAME) $(BINNAME) $(TMPFILES)
-
-uberclean:	clean
+# and a few files to be cleaned
+TMPFILES += $(foreach pat,oscan.c oparse.c oparse.h,$(C)$(pat) $(C)$(pat)-tmp)
