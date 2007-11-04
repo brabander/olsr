@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.34 2007/11/02 20:58:06 bernd67 Exp $
+ * $Id: tc_set.c,v 1.35 2007/11/04 17:52:13 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -609,42 +609,32 @@ olsr_time_out_tc_set(void)
 /**
  * Print the topology table to stdout
  */
-int
+void
 olsr_print_tc_table(void)
 {
+#ifndef NODEBUG
+  /* The whole function makes no sense without it. */
   struct tc_entry *tc;
-  struct tc_edge_entry *tc_edge;
-  char *fstr;
-  
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-              (int)now.tv_usec / 10000);
+  const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  if (olsr_cnf->ip_version == AF_INET)
-    {
-      OLSR_PRINTF(1, "Source IP addr   Dest IP addr     LQ     ILQ    ETX\n");
-      fstr = "%-15s  %-15s  %5.3f  %5.3f  %.2f\n";
-    }
-  else
-    {
-      OLSR_PRINTF(1, "Source IP addr                Dest IP addr                    LQ     ILQ    ETX\n");
-      fstr = "%-30s%-30s  %5.3f  %5.3f  %.2f\n";
-    }
+  OLSR_PRINTF(1,
+              "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n"
+              "%-*s %-*s %-5s  %-5s  %s\n",
+              nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
+              ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-      OLSR_PRINTF(1, fstr, olsr_ip_to_string(&tc->addr),
-                  olsr_ip_to_string(&tc_edge->T_dest_addr),
+      OLSR_PRINTF(1, "%-*s %-*s  %5.3f  %5.3f  %.2f\n",
+                  ipwidth, olsr_ip_to_string(&tc->addr),
+                  ipwidth, olsr_ip_to_string(&tc_edge->T_dest_addr),
                   tc_edge->link_quality,
                   tc_edge->inverse_link_quality,
                   olsr_calc_tc_etx(tc_edge));
-
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-
-  return 1;
+#endif
 }
 
 float olsr_calc_tc_etx(const struct tc_edge_entry *tc_edge)

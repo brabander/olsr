@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.20 2007/11/02 20:58:06 bernd67 Exp $
+ * $Id: tc_set.h,v 1.21 2007/11/04 17:52:13 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -67,12 +67,12 @@ struct tc_edge_entry
   float              inverse_link_quality;
 };
 
-#define OLSR_TC_EDGE_DOWN (1 <<  0) /* this edge is down */
+#define OLSR_TC_EDGE_DOWN (1 << 0) /* this edge is down */
 
 /*
  * Garbage collection time for downed edges
  */
-#define OLSR_TC_EDGE_GC_TIME 15*1000 /* milliseconds */
+#define OLSR_TC_EDGE_GC_TIME (15*1000) /* milliseconds */
 
 struct tc_entry
 {
@@ -119,7 +119,7 @@ int olsr_init_tc(void);
 void olsr_change_myself_tc(void);
 int olsr_tc_delete_mprs(struct tc_entry *, struct tc_message *);
 int olsr_tc_update_mprs(struct tc_entry *, struct tc_message *);
-int olsr_print_tc_table(void);
+void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
 
 /* tc_entry manipulation */
