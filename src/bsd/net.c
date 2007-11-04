@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.38 2007/10/04 22:27:31 bernd67 Exp $
+ * $Id: net.c,v 1.39 2007/11/04 18:57:17 kattemat Exp $
  */
 
 #include "defs.h"
@@ -61,6 +61,8 @@
 #include <netinet6/in6_var.h> /* For struct in6_ifreq */
 #include <ifaddrs.h>
 #include <sys/uio.h>
+#include <net80211/ieee80211.h>
+#include <net80211/ieee80211_ioctl.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -837,6 +839,11 @@ check_wireless_interface(char *ifname)
   ireq.i_type = IEEE80211_IOC_SSID;
   ireq.i_val = -1;
   return (ioctl(olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
+#elif defined __OpenBSD__
+  struct ieee80211_nodereq nr;
+  bzero(&nr, sizeof(nr));
+  strlcpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
+  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >=0) ? 1: 0;
 #else
   return 0;
 #endif
