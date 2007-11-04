@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.40 2007/11/02 22:00:26 bernd67 Exp $
+# $Id: Makefile.inc,v 1.41 2007/11/04 15:27:50 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -200,8 +200,8 @@ help:
 	@echo
 
 ifeq ($(filter clean% %clean, $(MAKECMDGOALS)),)
-# include dependencies
--include $(SRCS:%.c=%.d)
+# include dependencies - we don't need any dependency for a everytime generated files
+-include $(filter-out src/builddata.%,$(SRCS:%.c=%.d))
 endif
 
 # Local Variables:
