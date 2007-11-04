@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.103 2007/11/04 19:07:43 bernd67 Exp $
+# $Id: Makefile,v 1.104 2007/11/04 23:34:57 bernd67 Exp $
 
 VERS =		0.5.5pre
 
@@ -56,8 +56,8 @@ CFGDIR =	src/cfgparser
 include $(CFGDIR)/local.mk
 TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
-.PHONY: default_target cfgparser switch
-default_target: cfgparser $(EXENAME)
+.PHONY: default_target switch
+default_target: $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
 		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
