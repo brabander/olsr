@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.13 2007/11/02 20:58:07 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.14 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 /*
@@ -401,25 +401,29 @@ static void ipc_print_hna(void)
     olsr_u8_t index;
     struct hna_entry *tmp_hna;
     struct hna_net *tmp_net;
-    struct hna4_entry *hna4;
-    struct hna6_entry *hna6;
+    struct local_hna_entry *hna;
 
     size = 0;
 
     ipc_sendf("Table: HNA\nNetwork\tNetmask\tGateway\n");
 
     /* Announced HNA entries */
-    for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next) {
-        ipc_sendf("%s\t%s\t%s\n",
-                  olsr_ip_to_string(&hna4->net),
-                  olsr_ip_to_string(&hna4->netmask),
-                  olsr_ip_to_string(&olsr_cnf->main_addr));
-    }
-    for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next) {
-        ipc_sendf("%s\t%d\t%s\n",
-                  olsr_ip_to_string(&hna6->net),
-                  hna6->prefix_len,
-                  olsr_ip_to_string(&olsr_cnf->main_addr));
+    if (olsr_cnf->ip_version == AF_INET) {
+        for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+            union olsr_ip_addr netmask;
+            olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
+            ipc_sendf("%s\t%s\t%s\n",
+                      olsr_ip_to_string(&hna->net.prefix),
+                      olsr_ip_to_string(&netmask),
+                      olsr_ip_to_string(&olsr_cnf->main_addr));
+        }
+    } else {
+        for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+            ipc_sendf("%s\t%d\t%s\n",
+                      olsr_ip_to_string(&hna->net.prefix),
+                      hna->net.prefix_len,
+                      olsr_ip_to_string(&olsr_cnf->main_addr));
+        }
     }
 
     /* HNA entries */

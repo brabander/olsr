@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.33 2007/11/02 20:58:07 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.34 2007/11/05 15:32:55 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -1238,10 +1238,9 @@ free_name_entry_list(struct name_entry **list)
  * or inside a HNA which we have configured 
  */
 olsr_bool
-allowed_ip(union olsr_ip_addr *addr)
+allowed_ip(const union olsr_ip_addr *addr)
 {
-	struct hna4_entry *hna4;
-	struct hna6_entry *hna6;
+	struct local_hna_entry *hna;
 	struct interface *iface;
 	union olsr_ip_addr tmp_ip, tmp_msk;
 	
@@ -1257,34 +1256,35 @@ allowed_ip(union olsr_ip_addr *addr)
 	}
 	
 	if (olsr_cnf->ip_version == AF_INET) {
-		for (hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
+		for (hna = olsr_cnf->hna_entries; hna; hna = hna->next)
 		{
-			OLSR_PRINTF(6, "HNA %s/%s\n", 
-				olsr_ip_to_string(&hna4->net),
-				olsr_ip_to_string(&hna4->netmask));
-	
-			if ( hna4->netmask.v4 != 0 &&
-			    (addr->v4 & hna4->netmask.v4) == hna4->net.v4 ) {
+            union olsr_ip_addr netmask;
+			OLSR_PRINTF(6, "HNA %s/%d\n", 
+				olsr_ip_to_string(&hna->net.prefix),
+				hna->net.prefix_len);
+			if ( hna->net.prefix_len == 0 )
+				continue;
+
+            olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
+			if ((addr->v4 & netmask.v4) == hna->net.prefix.v4) {
 				OLSR_PRINTF(6, "MATCHED\n");
 				return OLSR_TRUE;
 			}
 		}
 	} else {
-		int i;
-
-		for (hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
+		for (hna = olsr_cnf->hna_entries; hna; hna = hna->next)
 		{
+			int i;
 			OLSR_PRINTF(6, "HNA %s/%d\n", 
-				olsr_ip_to_string(&hna6->net),
-				hna6->prefix_len);
-			if ( hna6->prefix_len == 0 )
+				olsr_ip_to_string(&hna->net.prefix),
+				hna->net.prefix_len);
+			if ( hna->net.prefix_len == 0 )
 				continue;
-			olsr_prefix_to_netmask(&tmp_msk, hna6->prefix_len);
+			olsr_prefix_to_netmask(&tmp_msk, hna->net.prefix_len);
 			for (i = 0; i < 16; i++) {
-				tmp_ip.v6.s6_addr[i] = addr->v6.s6_addr[i] &
-					tmp_msk.v6.s6_addr[i];
+				tmp_ip.v6.s6_addr[i] = addr->v6.s6_addr[i] & tmp_msk.v6.s6_addr[i];
 			}
-			if (COMP_IP(&tmp_ip, &hna6->net)) {
+			if (COMP_IP(&tmp_ip, &hna->net)) {
 				OLSR_PRINTF(6, "MATCHED\n");
 				return OLSR_TRUE;
 			}
@@ -1298,7 +1298,7 @@ allowed_ip(union olsr_ip_addr *addr)
  * necessary to avaid names like "0.0.0.0 google.de\n etc"
  */
 olsr_bool
-is_name_wellformed(char *name) {
+is_name_wellformed(const char *name) {
 	return regexec(&regex_t_name, name, 1, &regmatch_t_name, 0) == 0 ;
 }
 
@@ -1308,7 +1308,7 @@ is_name_wellformed(char *name) {
  * or ip whithin the service is allowed
  */
 olsr_bool
-allowed_service(char *service_line)
+allowed_service(const char *service_line)
 {
 	/* the call of is_service_wellformed generates the submatches stored in regmatch_t_service
 	 * these are then used by allowed_hostname_or_ip_in_service
@@ -1323,7 +1323,7 @@ allowed_service(char *service_line)
 }
 
 olsr_bool
-allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip_match) 
+allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip_match) 
 {
 	char *hostname_or_ip;
 	union olsr_ip_addr olsr_ip;
@@ -1366,7 +1366,7 @@ allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip
  * which is given in the regex regex_t_service
  */
 olsr_bool
-is_service_wellformed(char *service_line)
+is_service_wellformed(const char *service_line)
 {
 	return regexec(&regex_t_service, service_line, pmatch_service, regmatch_t_service, 0) == 0;
 }
@@ -1375,7 +1375,7 @@ is_service_wellformed(char *service_line)
  * check if the latlot matches the syntax 
  */
 olsr_bool
-is_latlon_wellformed(char *latlon_line)
+is_latlon_wellformed(const char *latlon_line)
 {
 	int hna = -1;
 	float a = 0.0, b = 0.0;
@@ -1388,24 +1388,14 @@ is_latlon_wellformed(char *latlon_line)
  */
 olsr_bool get_isdefhna_latlon(void)
 {
-	olsr_bool ret = OLSR_FALSE;
-	if (AF_INET == olsr_cnf->ip_version)
+    struct local_hna_entry *hna;
+    for(hna = olsr_cnf->hna_entries; hna; hna = hna->next)
 	{
-		struct hna4_entry *hna4;
-		for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
-		{
-			if (0 == hna4->netmask.v4) ret = OLSR_TRUE;
-		}
+		if (0 == hna->net.prefix_len) {
+            return OLSR_TRUE;
+        }
 	}
-	else
-	{
-		struct hna6_entry *hna6;
-		for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
-		{
-			if (0 == hna6->prefix_len) ret = OLSR_TRUE;
-		}
-	}
-	return ret;
+	return OLSR_FALSE;
 }
 
 /**

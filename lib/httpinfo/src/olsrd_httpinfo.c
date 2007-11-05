@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.81 2007/11/02 20:58:07 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.82 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 /*
@@ -843,15 +843,10 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
         size += snprintf(&buf[size], bufsize-size, "<td>LQ level: %d</td>\n", olsr_cnf->lq_level);
         size += snprintf(&buf[size], bufsize-size, "<td>LQ winsize: %d</td>\n", olsr_cnf->lq_wsize);
       }
-
     size += snprintf(&buf[size], bufsize-size, "</tr></table>\n");
 
     size += snprintf(&buf[size], bufsize-size, "<h2>Interfaces</h2>\n");
-
-
     size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\">\n");
-
-
     for(ifs = olsr_cnf->interfaces; ifs; ifs = ifs->next)
       {
 	struct interface *rifs = ifs->interf;
@@ -865,90 +860,69 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 	
 	if(olsr_cnf->ip_version == AF_INET)
 	  {
-	    size += snprintf(&buf[size], bufsize-size, "<tr><td>IP: %s</td>\n", 
-			    sockaddr_to_string(&rifs->int_addr));
-	    size += snprintf(&buf[size], bufsize-size, "<td>MASK: %s</td>\n", 
-			    sockaddr_to_string(&rifs->int_netmask));
-	    size += snprintf(&buf[size], bufsize-size, "<td>BCAST: %s</td></tr>\n",
-			    sockaddr_to_string(&rifs->int_broadaddr));
-	    size += snprintf(&buf[size], bufsize-size, "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
-	    size += snprintf(&buf[size], bufsize-size, "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
-	    size += snprintf(&buf[size], bufsize-size, "<td>STATUS: UP</td></tr>\n");
+	    size += snprintf(&buf[size], bufsize-size, "<tr><td>IP: %s</td>\n", sockaddr_to_string(&rifs->int_addr));
+	    size += snprintf(&buf[size], bufsize-size, "<td>MASK: %s</td>\n", sockaddr_to_string(&rifs->int_netmask));
+	    size += snprintf(&buf[size], bufsize-size, "<td>BCAST: %s</td></tr>\n", sockaddr_to_string(&rifs->int_broadaddr));
 	  }
 	else
 	  {
 	    size += snprintf(&buf[size], bufsize-size, "<tr><td>IP: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_addr.sin6_addr));
 	    size += snprintf(&buf[size], bufsize-size, "<td>MCAST: %s</td>\n", olsr_ip_to_string((union olsr_ip_addr *)&rifs->int6_multaddr.sin6_addr));
 	    size += snprintf(&buf[size], bufsize-size, "<td></td></tr>\n");
-	    size += snprintf(&buf[size], bufsize-size, "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
-	    size += snprintf(&buf[size], bufsize-size, "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
-	    size += snprintf(&buf[size], bufsize-size, "<td>STATUS: UP</td></tr>\n");
 	  }	    
+        size += snprintf(&buf[size], bufsize-size, "<tr><td>MTU: %d</td>\n", rifs->int_mtu);
+        size += snprintf(&buf[size], bufsize-size, "<td>WLAN: %s</td>\n", rifs->is_wireless ? "Yes" : "No");
+        size += snprintf(&buf[size], bufsize-size, "<td>STATUS: UP</td></tr>\n");
       }
-
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
-    if(olsr_cnf->allow_no_interfaces)
-      size += snprintf(&buf[size], bufsize-size, "<em>Olsrd is configured to run even if no interfaces are available</em><br>\n");
-    else
-      size += snprintf(&buf[size], bufsize-size, "<em>Olsrd is configured to halt if no interfaces are available</em><br>\n");
+    size += snprintf(&buf[size], bufsize-size,
+                     "<em>Olsrd is configured to %s if no interfaces are available</em><br>\n",
+                     olsr_cnf->allow_no_interfaces ? "run even" : "halt");
 
     size += snprintf(&buf[size], bufsize-size, "<h2>Plugins</h2>\n");
-
     size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\"><tr><th>Name</th><th>Parameters</th></tr>\n");
-
     for(pentry = olsr_cnf->plugins; pentry; pentry = pentry->next)
       {
-	size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td>\n", pentry->name);
-
-	size += snprintf(&buf[size], bufsize-size, "<td><select>\n");
-	size += snprintf(&buf[size], bufsize-size, "<option>KEY, VALUE</option>\n");
+	size += snprintf(&buf[size], bufsize-size,
+                         "<tr><td>%s</td>\n"
+                         "<td><select>\n"
+                         "<option>KEY, VALUE</option>\n",
+                         pentry->name);
 
 	for(pparam = pentry->params; pparam; pparam = pparam->next)
 	  {
-	    size += snprintf(&buf[size], bufsize-size, "<option>\"%s\", \"%s\"</option>\n",
-			    pparam->key,
-			    pparam->value);
+	    size += snprintf(&buf[size], bufsize-size, "<option>\"%s\", \"%s\"</option>\n", pparam->key, pparam->value);
 	  }
 	size += snprintf(&buf[size], bufsize-size, "</select></td></tr>\n");
 
       }
-
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
     size += section_title(&buf[size], bufsize-size, "Announced HNA entries");
-
-    if((olsr_cnf->ip_version == AF_INET) && (olsr_cnf->hna4_entries))
-      {
-	struct hna4_entry *hna4;
-	
-	size += snprintf(&buf[size], bufsize-size,
-                         "<tr><th>Network</th><th>Netmask</th></tr>\n");
-	
-	for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)
-	  {
-	    size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td><td>%s</td></tr>\n", 
-			    olsr_ip_to_string(&hna4->net),
-			    olsr_ip_to_string(&hna4->netmask));
-	  }
-      } 
-   else if((olsr_cnf->ip_version == AF_INET6) && (olsr_cnf->hna6_entries))
-      {
-	struct hna6_entry *hna6;
-	
-	size += snprintf(&buf[size], bufsize-size,
-                         "<tr><th>Network</th><th>Prefix length</th></tr>\n");
-	
-	for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next)
-	  {
-	    size += snprintf(&buf[size], bufsize-size, "<tr><td>%s</td><td>%d</td></tr>\n", 
-			    olsr_ip_to_string(&hna6->net),
-			    hna6->prefix_len);
-	  }
-	
+    if(olsr_cnf->hna_entries) {
+      struct local_hna_entry *hna;
+      if(olsr_cnf->ip_version == AF_INET) {
+	size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th><th>Netmask</th></tr>\n");
+	for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+            union olsr_ip_addr netmask;
+            olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
+	    size += snprintf(&buf[size], bufsize-size,
+                             "<tr><td>%s</td><td>%s</td></tr>\n", 
+			    olsr_ip_to_string(&hna->net.prefix),
+			    olsr_ip_to_string(&netmask));
+        }
+      } else {
+	size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th><th>Prefix length</th></tr>\n");
+	for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+          size += snprintf(&buf[size], bufsize-size,
+                           "<tr><td>%s</td><td>%d</td></tr>\n", 
+                           olsr_ip_to_string(&hna->net.prefix),
+                           hna->net.prefix_len);
+        }
       }
+    }
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
-
     return size;
 }
 

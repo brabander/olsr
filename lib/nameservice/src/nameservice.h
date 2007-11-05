@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.14 2007/10/05 20:24:47 bernd67 Exp $ */
+/* $Id: nameservice.h,v 1.15 2007/11/05 15:32:55 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -138,7 +138,7 @@ void
 insert_new_name_in_list(union olsr_ip_addr *originator, struct db_entry **this_list, struct name *from_packet, olsr_bool *this_table_changed, double vtime);
 
 olsr_bool
-allowed_hostname_or_ip_in_service(char *service_line, regmatch_t *hostname_or_ip);
+allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip);
 
 void
 update_name_entry(union olsr_ip_addr *, struct namemsg *, int, double);
@@ -159,22 +159,22 @@ void
 free_name_entry_list(struct name_entry **list);
 
 olsr_bool
-allowed_ip(union olsr_ip_addr *addr);
+allowed_ip(const union olsr_ip_addr *addr);
 
 olsr_bool
-allowed_service(char *service_line);
+allowed_service(const char *service_line);
 
 olsr_bool
-is_name_wellformed(char *service_line);
+is_name_wellformed(const char *service_line);
 
 olsr_bool
-is_service_wellformed(char *service_line);
+is_service_wellformed(const char *service_line);
 
 olsr_bool
-is_service_wellformed(char *service_line);
+is_service_wellformed(const char *service_line);
 
 olsr_bool
-is_latlon_wellformed(char *latlon_line);
+is_latlon_wellformed(const char *latlon_line);
 
 olsr_bool
 get_isdefhna_latlon(void);

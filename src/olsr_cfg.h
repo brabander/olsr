@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.36 2007/11/03 23:21:27 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 
@@ -146,18 +146,10 @@ struct olsr_if
   struct olsr_if           *next;
 };
 
-struct hna4_entry
+struct local_hna_entry
 {
-  union olsr_ip_addr       net;
-  union olsr_ip_addr       netmask;
-  struct hna4_entry        *next;
-};
-
-struct hna6_entry
-{
-  union olsr_ip_addr       net;
-  olsr_u16_t               prefix_len;
-  struct hna6_entry        *next;
+  struct olsr_ip_prefix    net;
+  struct local_hna_entry  *next;
 };
 
 struct hyst_param
@@ -224,8 +216,7 @@ struct olsrd_config
   olsr_u8_t                lq_dlimit;
   float                    lq_dinter;
   struct plugin_entry      *plugins;
-  struct hna4_entry        *hna4_entries;
-  struct hna6_entry        *hna6_entries;
+  struct local_hna_entry   *hna_entries;
   struct ipc_host          *ipc_hosts;
   struct ipc_net           *ipc_nets;
   struct olsr_if           *interfaces;

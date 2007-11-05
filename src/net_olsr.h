@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.13 2007/09/16 21:20:16 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.14 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 
@@ -102,6 +102,9 @@ ip6_to_string(const struct in6_addr *);
 
 const char *
 olsr_ip_to_string(const union olsr_ip_addr *);
+
+const char *
+olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);
 
 int
 add_ptf(packet_transform_function);

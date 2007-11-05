@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.10 2007/10/20 20:41:04 bernd67 Exp $
+ * $Id: admin_interface.c,v 1.11 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 /*
@@ -77,8 +77,8 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
   size += snprintf(&buf[size], bufsize-size, admin_basic_setting_string,
 		  "TOS:", "tos", 6, "TBD");
 
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n");
-  size += snprintf(&buf[size], bufsize-size, "<tr>\n");
+  size += snprintf(&buf[size], bufsize-size, "</tr>\n"
+                                             "<tr>\n");
 
   size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
 		  "TC redundancy:", "tc_redundancy", 1, olsr_cnf->tc_redundancy);
@@ -120,28 +120,26 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
   
   size += snprintf(&buf[size], bufsize-size, admin_frame_mid);
 
-  if(olsr_cnf->ip_version == AF_INET) {
-    struct hna4_entry *hna4;      
-    for(hna4 = olsr_cnf->hna4_entries; hna4; hna4 = hna4->next)	{
-      const char * const net = olsr_ip_to_string((union olsr_ip_addr *)&hna4->net);
-      const char * const mask = olsr_ip_to_string((union olsr_ip_addr *)&hna4->netmask);
-      size += snprintf(&buf[size], bufsize-size,
-                       "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%s\" class=\"input_checkbox\"></td><td>%s</td><td>%s</td></tr>\n", 
-                       net,
-                       mask,
-                       net,
-                       mask);
-    }
-  } else {
-    struct hna6_entry *hna6;
-    for(hna6 = olsr_cnf->hna6_entries; hna6; hna6 = hna6->next) {
-      const char * const net = olsr_ip_to_string((union olsr_ip_addr *)&hna6->net);
-      size += snprintf(&buf[size], bufsize-size,
-                       "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%d\" class=\"input_checkbox\"></td><td>%s</td><td>%d</td></tr>\n", 
-                       net,
-                       hna6->prefix_len,
-                       net,
-                       hna6->prefix_len);
+  if(olsr_cnf->hna_entries) {
+    if(olsr_cnf->ip_version == AF_INET) {
+      struct local_hna_entry *hna;
+      
+      for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+        union olsr_ip_addr netmask;
+        olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
+        size += snprintf(&buf[size], bufsize-size,
+                         "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%1$s*%2$s\" class=\"input_checkbox\"></td><td>%1$s</td><td>%2$s</td></tr>\n",
+                         olsr_ip_to_string(&hna->net.prefix),
+                         olsr_ip_to_string(&netmask));
+      }
+    } else {
+      struct local_hna_entry *hna;
+      for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+        size += snprintf(&buf[size], bufsize-size,
+                         "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%1$s*%2$d\" class=\"input_checkbox\"></td><td>%1$s</td><td>%2$d</td></tr>\n",
+                         olsr_ip_to_string(&hna->net.prefix),
+                         hna->net.prefix_len);
+      }
     }
   }
   size += snprintf(&buf[size], bufsize-size, admin_frame_epilog);

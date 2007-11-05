@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.55 2007/10/20 15:16:32 bernd67 Exp $
+ * $Id: lq_route.c,v 1.56 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -133,7 +133,7 @@ olsr_spf_add_path_list (struct list_node *head,
   OLSR_PRINTF(1, "SPF: append path %s, cost %f, via %s\n",
               olsr_ip_to_string(&(vert->addr)),
               vert->path_etx,
-              olsr_ip_to_string(vert->next_hop ? &vert->next_hop->neighbor_iface_addr : NULL));
+              vert->next_hop ? olsr_ip_to_string(&vert->next_hop->neighbor_iface_addr) : "-");
 #endif
 
   list_add_before(head, &vert->path_list_node);
@@ -148,9 +148,7 @@ olsr_spf_add_path_list (struct list_node *head,
 static struct tc_entry *
 olsr_spf_extract_best (struct avl_tree *tree)
 {
-  struct avl_node *node;
-
-  node = avl_walk_first(tree);
+  struct avl_node *node = avl_walk_first(tree);
 
   return (node ? node->data :  NULL);
 }
@@ -163,7 +161,7 @@ char *olsr_etx_to_string(float etx)
   if (etx == INFINITE_ETX)
     return "INF";
 
-  snprintf(buff, 20, "%.6f", etx);
+  snprintf(buff, sizeof(buff), "%.6f", etx);
   return buff;
 }
 

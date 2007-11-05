@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.59 2007/11/03 23:21:27 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.60 2007/11/05 15:32:54 bernd67 Exp $
  */
 
 
@@ -360,24 +360,16 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 void
 olsrd_free_cnf(struct olsrd_config *cnf)
 {
-  struct hna4_entry        *h4d, *h4 = cnf->hna4_entries;
-  struct hna6_entry        *h6d, *h6 = cnf->hna6_entries;
+  struct local_hna_entry   *hd,   *h = cnf->hna_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
   struct olsr_lq_mult      *mult, *next_mult;
   
-  while(h4)
+  while(h)
     {
-      h4d = h4;
-      h4 = h4->next;
-      free(h4d);
-    }
-
-  while(h6)
-    {
-      h6d = h6;
-      h6 = h6->next;
-      free(h6d);
+      hd = h;
+      h = h->next;
+      free(hd);
     }
 
   while(in)
@@ -521,8 +513,7 @@ get_default_if_config(void)
 void
 olsrd_print_cnf(struct olsrd_config *cnf)
 {
-  struct hna4_entry        *h4 = cnf->hna4_entries;
-  struct hna6_entry        *h6 = cnf->hna6_entries;
+  struct local_hna_entry   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
   struct ipc_host          *ih = cnf->ipc_hosts;
@@ -647,41 +638,29 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     }
 
   /* Hysteresis */
-  if(cnf->use_hysteresis)
-    {
-      printf("Using hysteresis:\n");
-      printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
-      printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
-    }
-  else
+  if(cnf->use_hysteresis) {
+    printf("Using hysteresis:\n");
+    printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
+    printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
+  } else {
     printf("Not using hysteresis\n");
+  }
 
-  /* HNA IPv4 */
-  if(h4)
-    {
-
-      printf("HNA4 entries:\n");
-      while(h4)
-	{
-	  in4.s_addr = h4->net.v4;
-	  printf("\t%s/", inet_ntoa(in4));
-	  in4.s_addr = h4->netmask.v4;
-	  printf("%s\n", inet_ntoa(in4));
-
-	  h4 = h4->next;
-	}
+  /* HNA IPv4 and IPv6 */
+  if(h) {
+    printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
+    while(h) {
+      printf("\t%s/", olsr_ip_to_string(&h->net.prefix));
+      if (cnf->ip_version == AF_INET) {
+        union olsr_ip_addr ip;
+        olsr_prefix_to_netmask(&ip, h->net.prefix_len);
+        printf("%s\n", olsr_ip_to_string(&ip));
+      } else {
+        printf("%d\n", h->net.prefix_len);
+      }
+      h = h->next;
     }
-
-  /* HNA IPv6 */
-  if(h6)
-    {
-      printf("HNA6 entries:\n");
-      while(h6)
-	{
-	  printf("\t%s/%d\n", (char *)inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
-	  h6 = h6->next;
-	}
-    }
+  }
 }
 
 #if defined WIN32_STDIO_HACK

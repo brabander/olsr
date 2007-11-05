@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.14 2007/10/15 20:58:33 bernd67 Exp $
+ * $Id: local_hna_set.c,v 1.15 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -46,56 +46,53 @@
 void
 add_local_hna4_entry(const union olsr_ip_addr *net, const union olsr_ip_addr *mask)
 {
-  struct hna4_entry *new_entry;
-
-  new_entry = olsr_malloc(sizeof(struct hna4_entry), "Add local HNA entry 4");
+  struct local_hna_entry *new_entry = olsr_malloc(sizeof(struct local_hna_entry), "Add local HNA entry 4");
   
-  new_entry->net.v4 = net->v4;
-  new_entry->netmask.v4 = mask->v4;
+  new_entry->net.prefix.v4 = net->v4;
+  new_entry->net.prefix_len = olsr_netmask_to_prefix(mask);
 
   /* Queue */
-  new_entry->next = olsr_cnf->hna4_entries;
-  olsr_cnf->hna4_entries = new_entry;
+  new_entry->next = olsr_cnf->hna_entries;
+  olsr_cnf->hna_entries = new_entry;
 }
 
 
 void
 add_local_hna6_entry(const union olsr_ip_addr *net, const olsr_u16_t prefix_len)
 {
-  struct hna6_entry *new_entry;
-
-  new_entry = olsr_malloc(sizeof(struct hna6_entry), "Add local HNA entry 6");
+  struct local_hna_entry *new_entry = olsr_malloc(sizeof(struct local_hna_entry), "Add local HNA entry 6");
   
   memcpy(&new_entry->net, net, sizeof(struct in6_addr));
-  new_entry->prefix_len = prefix_len;
+  new_entry->net.prefix_len = prefix_len;
 
   /* Queue */
-  new_entry->next = olsr_cnf->hna6_entries;
-  olsr_cnf->hna6_entries = new_entry;
+  new_entry->next = olsr_cnf->hna_entries;
+  olsr_cnf->hna_entries = new_entry;
 }
 
 
 int
 remove_local_hna4_entry(const union olsr_ip_addr *net, const union olsr_ip_addr *mask)
 {
-  struct hna4_entry *h4 = olsr_cnf->hna4_entries, *h4prev = NULL;
+  struct local_hna_entry *h = olsr_cnf->hna_entries, *prev = NULL;
+  const olsr_u16_t prefix_len = olsr_netmask_to_prefix(mask);
 
-  while(h4)
+  while(h)
     {
-      if((net->v4 == h4->net.v4) && 
-	 (mask->v4 == h4->netmask.v4))
+      if((net->v4 == h->net.prefix.v4) && 
+	 (mask->v4 == prefix_len))
 	{
 	  /* Dequeue */
-	  if(h4prev == NULL)
-	    olsr_cnf->hna4_entries = h4->next;
+	  if(prev == NULL)
+	    olsr_cnf->hna_entries = h->next;
 	  else
-	    h4prev->next = h4->next;
+	    prev->next = h->next;
 
-	  free(h4);
+	  free(h);
 	  return 1;
 	}
-      h4prev = h4;
-      h4 = h4->next;
+      prev = h;
+      h = h->next;
     }
 
   return 0;
@@ -106,40 +103,41 @@ remove_local_hna4_entry(const union olsr_ip_addr *net, const union olsr_ip_addr 
 int
 remove_local_hna6_entry(const union olsr_ip_addr *net, const olsr_u16_t prefix_len)
 {
-  struct hna6_entry *h6, *h6prev = NULL;
+  struct local_hna_entry *h = olsr_cnf->hna_entries, *prev = NULL;
 
-  for(h6 = olsr_cnf->hna6_entries; h6; h6 = h6->next)
+  while (h)
     {
-      if((memcmp(net, &h6->net, olsr_cnf->ipsize) == 0) && 
-	 (prefix_len == h6->prefix_len))
+      if((memcmp(net, &h->net.prefix, olsr_cnf->ipsize) == 0) && 
+	 (prefix_len == h->net.prefix_len))
 	{
 	  /* Dequeue */
-	  if(h6prev == NULL)
-	    olsr_cnf->hna6_entries = h6->next;
+	  if (prev == NULL)
+	    olsr_cnf->hna_entries = h->next;
 	  else
-	    h6prev->next = h6->next;
-
-	  free(h6);
+	    prev->next = h->next;
+	  free(h);
 	  return 1;
 	}
-      h6prev = h6;
+      prev = h;
+      h = h->next;
     }
   return 0;
 }
 
-struct hna4_entry *
+struct local_hna_entry *
 find_local_hna4_entry(const union olsr_ip_addr *net, const olsr_u32_t mask)
 {
-  struct hna4_entry *h4 = olsr_cnf->hna4_entries;
-
-  while(h4)
+  struct local_hna_entry *h = olsr_cnf->hna_entries;
+  const union olsr_ip_addr ip_addr = { .v4 = mask };
+  const olsr_u16_t prefix_len = olsr_netmask_to_prefix(&ip_addr);
+  while(h)
     {
-      if((net->v4 == h4->net.v4) && 
-	 (mask == h4->netmask.v4))
+      if((net->v4 == h->net.prefix.v4) && 
+	 (prefix_len == h->net.prefix_len))
 	{
-	  return h4;
+	  return h;
 	}
-      h4 = h4->next;
+      h = h->next;
     }
 
   return NULL;
@@ -147,19 +145,18 @@ find_local_hna4_entry(const union olsr_ip_addr *net, const olsr_u32_t mask)
 
 
 
-struct hna6_entry *
+struct local_hna_entry *
 find_local_hna6_entry(const union olsr_ip_addr *net, const olsr_u16_t prefix_len)
 {
-  struct hna6_entry *h6 = olsr_cnf->hna6_entries;
-
-  while(h6)
+  struct local_hna_entry *h = olsr_cnf->hna_entries;
+  while(h)
     {
-      if((memcmp(net, &h6->net, olsr_cnf->ipsize) == 0) && 
-	 (prefix_len == h6->prefix_len))
+      if((memcmp(net, &h->net.prefix, olsr_cnf->ipsize) == 0) && 
+	 (prefix_len == h->net.prefix_len))
 	{
-	  return h6;
+	  return h;
 	}
-      h6 = h6->next;
+      h = h->next;
     }
 
   return NULL;
@@ -173,10 +170,10 @@ check_inet_gw(void)
 {
   if(olsr_cnf->ip_version == AF_INET)
     {
-      struct hna4_entry *h4;
-      for(h4 = olsr_cnf->hna4_entries; h4; h4 = h4->next)
+      struct local_hna_entry *h;
+      for(h = olsr_cnf->hna_entries; h != NULL; h = h->next)
 	{
-	  if(h4->netmask.v4 == 0 && h4->net.v4 == 0)
+	  if(h->net.prefix_len == 0 && h->net.prefix.v4 == 0)
 	    return 1;
 	}
     }

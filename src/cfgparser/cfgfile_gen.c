@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.9 2007/10/15 21:01:17 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.10 2007/11/05 15:32:54 bernd67 Exp $
  */
 
 
@@ -48,13 +48,13 @@
 #include <arpa/inet.h>
 
 #include "olsrd_conf.h"
+#include "net_olsr.h"
 
 
 int
 olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 {
-  struct hna4_entry        *h4 = cnf->hna4_entries;
-  struct hna6_entry        *h6 = cnf->hna6_entries;
+  struct local_hna_entry   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
   struct plugin_param      *pp;
@@ -83,33 +83,22 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Debug level(0-9)\n# If set to 0 the daemon runs in the background\n\nDebugLevel\t%d\n\n", cnf->debug_level);
 
   /* IP version */
-  if(cnf->ip_version == AF_INET6)
-    fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t6\n\n");
-  else
-    fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t4\n\n");
-
+  fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
   /* HNA IPv4 */
-  fprintf(fd, "# HNA IPv4 routes\n# syntax: netaddr netmask\n\nHna4\n{\n");
-  while(h4)
+  fprintf(fd, "# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna1$d\n{\n", cnf->ip_version == AF_INET ? 4 : 6);
+  while(h)
     {
-      in4.s_addr = h4->net.v4;
-      fprintf(fd, "    %s ", inet_ntoa(in4));
-      in4.s_addr = h4->netmask.v4;
-      fprintf(fd, "%s\n", inet_ntoa(in4));
-      h4 = h4->next;
+      fprintf(fd, "    %s ", olsr_ip_to_string(&h->net.prefix));
+      if (cnf->ip_version == AF_INET) {
+          union olsr_ip_addr ip_addr;
+          olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+          fprintf(fd, "%s\n", olsr_ip_to_string(&ip_addr));
+      } else {
+          fprintf(fd, "%d\n", h->net.prefix_len);
+      }
+      h = h->next;
     }
-  fprintf(fd, "}\n\n");
-
-
-  /* HNA IPv6 */
-  fprintf(fd, "# HNA IPv6 routes\n# syntax: netaddr prefix\n\nHna6\n{\n");
-  while(h6)
-    {
-      fprintf(fd, "    %s/%d\n", (char *)inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
-      h6 = h6->next;
-    }
-
   fprintf(fd, "}\n\n");
 
   /* No interfaces */
@@ -372,8 +361,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 int
 olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 {
-  struct hna4_entry        *h4 = cnf->hna4_entries;
-  struct hna6_entry        *h6 = cnf->hna6_entries;
+  struct local_hna_entry   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
   struct plugin_param      *pp;
@@ -400,32 +388,22 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   WRITE_TO_BUF("# Debug level(0-9)\n# If set to 0 the daemon runs in the background\n\nDebugLevel\t%d\n\n", cnf->debug_level);
 
   /* IP version */
-  if(cnf->ip_version == AF_INET6)
-      WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t6\n\n");
-  else
-      WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t4\n\n");
+  WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
   /* HNA IPv4 */
-  WRITE_TO_BUF("# HNA IPv4 routes\n# syntax: netaddr netmask\n\nHna4\n{\n");
-  while(h4)
+  WRITE_TO_BUF("# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna%1$d\n{\n", cnf->ip_version == AF_INET ? 4 : 6);
+  while(h)
     {
-      in4.s_addr = h4->net.v4;
-      WRITE_TO_BUF("    %s ", inet_ntoa(in4));
-      in4.s_addr = h4->netmask.v4;
-      WRITE_TO_BUF("%s\n", inet_ntoa(in4));
-      h4 = h4->next;
+      WRITE_TO_BUF("    %s ", olsr_ip_to_string(&h->net.prefix));
+      if (cnf->ip_version == AF_INET) {
+          union olsr_ip_addr ip_addr;
+          olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+          WRITE_TO_BUF("%s\n", olsr_ip_to_string(&ip_addr));
+      } else {
+          WRITE_TO_BUF("%d\n", h->net.prefix_len);
+      }
+      h = h->next;
     }
-  WRITE_TO_BUF("}\n\n");
-
-
-  /* HNA IPv6 */
-  WRITE_TO_BUF("# HNA IPv6 routes\n# syntax: netaddr prefix\n\nHna6\n{\n");
-  while(h6)
-    {
-      WRITE_TO_BUF("    %s/%d\n", (char *)inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
-      h6 = h6->next;
-    }
-
   WRITE_TO_BUF("}\n\n");
 
   /* No interfaces */

@@ -11,7 +11,7 @@
  *
  * * Redistributions of source code must retain the above copyright 
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
+ * * Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in 
  *   the documentation and/or other materials provided with the 
  *   distribution.
@@ -23,7 +23,7 @@
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
  * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.35 2007/11/03 23:21:27 bernd67 Exp $
+ * $Id: oparse.y,v 1.36 2007/11/05 15:32:54 bernd67 Exp $
  */
 
 
@@ -697,8 +697,9 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
 
 ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
 {
-  struct hna4_entry *h = malloc(sizeof(*h));
+  struct local_hna_entry *h = malloc(sizeof(*h));
   struct in_addr in;
+  union olsr_ip_addr ip_addr;
 
   PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%s\n", $1->string, $2->string);
 
@@ -713,17 +714,20 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
       fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
       return -1;
     }
-  h->net.v4 = in.s_addr;
+  h->net.prefix.v4 = in.s_addr;
   if(inet_aton($2->string, &in) == 0)
     {
-      fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+      fprintf(stderr, "ihna4entry: Failed converting IP netmask %s\n", $2->string);
       return -1;
     }
-  h->netmask.v4 = in.s_addr;
-  h->net.v4 &= h->netmask.v4;
+  ip_addr.v4 = in.s_addr;
+  h->net.prefix_len = olsr_netmask_to_prefix(&ip_addr);
+  /* Do we really want to following? */
+  h->net.prefix.v4 &= in.s_addr;
+
   /* Queue */
-  h->next = olsr_cnf->hna4_entries;
-  olsr_cnf->hna4_entries = h;
+  h->next = olsr_cnf->hna_entries;
+  olsr_cnf->hna_entries = h;
 
   free($1->string);
   free($1);
@@ -735,8 +739,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
 
 ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 {
-  struct hna6_entry *h = malloc(sizeof(*h));
-  struct in6_addr in6;
+  struct local_hna_entry *h = malloc(sizeof(*h));
 
   PARSER_DEBUG_PRINTF("HNA IPv6 entry: %s/%d\n", $1->string, $2->integer);
 
@@ -746,12 +749,11 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
       YYABORT;
     }
 
-  if(inet_pton(AF_INET6, $1->string, &in6) < 0)
+  if(inet_pton(AF_INET6, $1->string, &h->net.prefix.v6) < 0)
     {
       fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", $1->string);
       return -1;
     }
-  h->net.v6 = in6;
 
   if($2->integer > 128)
     {
@@ -759,10 +761,11 @@ ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
       return -1;
     }
 
-  h->prefix_len = $2->integer;
+  h->net.prefix_len = $2->integer;
+
   /* Queue */
-  h->next = olsr_cnf->hna6_entries;
-  olsr_cnf->hna6_entries = h;
+  h->next = olsr_cnf->hna_entries;
+  olsr_cnf->hna_entries = h;
 
   free($1->string);
   free($1);

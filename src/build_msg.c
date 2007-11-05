@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.36 2007/04/25 22:08:07 bernd67 Exp $
+ * $Id: build_msg.c,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -1040,7 +1040,7 @@ serialize_hna4(struct interface *ifp)
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
-  struct hna4_entry *h = olsr_cnf->hna4_entries;
+  struct local_hna_entry *h = olsr_cnf->hna_entries;
 
   /* No hna nets */
   if((olsr_cnf->ip_version != AF_INET) || (!ifp) || h == NULL)
@@ -1073,6 +1073,7 @@ serialize_hna4(struct interface *ifp)
   
   while(h)
     {
+      union olsr_ip_addr ip_addr;
       if((curr_size + (2 * olsr_cnf->ipsize)) > remainsize)
 	{
 	  /* Only add HNA message if it contains data */
@@ -1092,12 +1093,11 @@ serialize_hna4(struct interface *ifp)
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
 #ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s/%s\n", 
-		  olsr_ip_to_string(&h->net),
-		  olsr_ip_to_string(&h->netmask));
+      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      COPY_IP(&pair->addr, &h->net);
-      COPY_IP(&pair->netmask, &h->netmask);
+      COPY_IP(&pair->addr, &h->net.prefix);
+      olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+      pair->addr = ip_addr.v4;
       pair++;
       curr_size += (2 * olsr_cnf->ipsize);
       h = h->next;
@@ -1130,7 +1130,7 @@ serialize_hna6(struct interface *ifp)
   union olsr_message *m;
   struct hnapair6 *pair6;
   union olsr_ip_addr tmp_netmask;
-  struct hna6_entry *h = olsr_cnf->hna6_entries;
+  struct local_hna_entry *h = olsr_cnf->hna_entries;
   
   /* No hna nets */
   if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || h == NULL)
@@ -1182,12 +1182,10 @@ serialize_hna6(struct interface *ifp)
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
 #ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s/%d\n", 
-		  olsr_ip_to_string(&h->net),
-		  h->prefix_len);
+      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      COPY_IP(&pair6->addr, &h->net);
-      olsr_prefix_to_netmask(&tmp_netmask, h->prefix_len);
+      COPY_IP(&pair6->addr, &h->net.prefix);
+      olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
       COPY_IP(&pair6->netmask, &tmp_netmask);
       pair6++;
       curr_size += (2 * olsr_cnf->ipsize);

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.29 2007/11/03 23:11:40 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.30 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 /*
@@ -89,7 +89,7 @@ static int
 plugin_ipc_init(void);
 
 static char*
-olsr_netmask_to_string(union hna_netmask *mask);
+olsr_netmask_to_string(const union hna_netmask *mask);
 
 /* Event function to register with the sceduler */
 static int
@@ -99,13 +99,13 @@ static void
 ipc_action(int);
 
 static void
-ipc_print_neigh_link(struct neighbor_entry *neighbor);
+ipc_print_neigh_link(const struct neighbor_entry *neighbor);
 
 static void
-ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry);
+ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry);
 
 static void
-ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
+ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *, const union hna_netmask *);
 
 static int
 ipc_send(const char *, int);
@@ -150,7 +150,7 @@ olsr_plugin_exit(void)
 
 
 static void
-ipc_print_neigh_link(struct neighbor_entry *neighbor)
+ipc_print_neigh_link(const struct neighbor_entry *neighbor)
 {
   char buf[256];
   const char* adr;
@@ -296,11 +296,6 @@ pcf_event(int changes_neighborhood,
   struct neighbor_entry *neighbor_table_tmp;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
-  struct hna_entry *tmp_hna;
-  struct hna_net *tmp_net;
-  struct hna4_entry *hna4;
-  struct hna6_entry *hna6;
-  union hna_netmask hna_msk;
 
   res = 0;
 
@@ -330,51 +325,43 @@ pcf_event(int changes_neighborhood,
       } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
       /* HNA entries */
-      for(index=0;index<HASHSIZE;index++)
-	{
-	  tmp_hna = hna_set[index].next;
+      for(index=0;index<HASHSIZE;index++) {
+          struct hna_entry *tmp_hna;
 	  /* Check all entrys */
-	  while(tmp_hna != &hna_set[index])
-	    {
+	  for (tmp_hna = hna_set[index].next; tmp_hna != &hna_set[index]; tmp_hna = tmp_hna->next) {
 	      /* Check all networks */
-	      tmp_net = tmp_hna->networks.next;
-	      
-	      while(tmp_net != &tmp_hna->networks)
-		{
+              struct hna_net *tmp_net;
+	      for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
 		  ipc_print_net(&tmp_hna->A_gateway_addr, 
 				&tmp_net->A_network_addr, 
 				&tmp_net->A_netmask);
-		  tmp_net = tmp_net->next;
-		}
-	      
-	      tmp_hna = tmp_hna->next;
-	    }
-	}
+              }
+          }
+      }
 
       /* Local HNA entries */
-      if (olsr_cnf->ip_version == AF_INET)
-       {
-       hna4 = olsr_cnf->hna4_entries;
-       while(hna4)
-        {
-         hna_msk.v4 = hna4->netmask.v4;
-         ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
-                       &hna4->net,
-                       &hna_msk);
-         hna4 = hna4->next;
-        }
-       }
-      else
-       {
-       hna6 = olsr_cnf->hna6_entries;
-       while(hna6)
-        {
-         hna_msk.v6 = hna6->prefix_len;
-         ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
-                       &hna6->net,
-                       &hna_msk);
-         hna6 = hna6->next;
-        }
+      if (olsr_cnf->ip_version == AF_INET) {
+          struct local_hna_entry *hna;
+          for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+              union olsr_ip_addr netmask;
+              union hna_netmask hna_msk;
+              //hna_msk.v4 = hna4->netmask.v4;
+              olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
+              hna_msk.v4 = netmask.v4;
+              ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
+                            &hna->net.prefix,
+                            &hna_msk);
+              
+          }
+      } else {
+          struct local_hna_entry *hna;
+          for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+              union hna_netmask hna_msk;
+              hna_msk.v6 = hna->net.prefix_len;
+              ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
+                            &hna->net.prefix,
+                            &hna_msk);
+          }
       }
 
       ipc_send_str("}\n\n");
@@ -390,7 +377,7 @@ pcf_event(int changes_neighborhood,
 }
 
 static void
-ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
+ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
 {
   char buf[256];
 
@@ -403,7 +390,7 @@ ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 
 
 static void
-ipc_print_net(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna_netmask *mask)
+ipc_print_net(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, const union hna_netmask *mask)
 {
   const char *adr;
 
@@ -459,23 +446,19 @@ ipc_send(const char *data, int size)
 }
 
 static char*
-olsr_netmask_to_string(union hna_netmask *mask)
+olsr_netmask_to_string(const union hna_netmask *mask)
 {
   char *ret;
   struct in_addr in;
 
-  if(olsr_cnf->ip_version == AF_INET)
-    {
+  if(olsr_cnf->ip_version == AF_INET) {
       in.s_addr = mask->v4;
       ret = inet_ntoa(in);
-    }
-  else
-    {
+  } else {
       /* IPv6 */
       static char netmask[5];
       sprintf(netmask, "%d", mask->v6);
       ret = netmask;
-    }
-
+  }
   return ret;
 }

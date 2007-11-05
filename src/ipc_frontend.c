@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.36 2007/10/13 12:31:04 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 /*
@@ -408,21 +408,7 @@ ipc_send_net_info(int fd)
   net_msg->mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
   
   /* HNAs */
-  if(olsr_cnf->ip_version == AF_INET6)
-    {
-      if(olsr_cnf->hna6_entries == NULL)
-	net_msg->hnas = 0;
-      else
-	net_msg->hnas = 1;
-    }
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      if(olsr_cnf->hna4_entries == NULL)
-	net_msg->hnas = 0;
-      else
-	net_msg->hnas = 1;
-    }
+  net_msg->hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
 
   /* Different values */
   /* Temporary fixes */
@@ -433,10 +419,7 @@ ipc_send_net_info(int fd)
   net_msg->neigh_hold = 0;//htons((olsr_u16_t)neighbor_hold_time);
   net_msg->topology_hold = 0;//htons((olsr_u16_t)topology_hold_time);
 
-  if(olsr_cnf->ip_version == AF_INET)
-    net_msg->ipv6 = 0;
-  else
-    net_msg->ipv6 = 1;
+  net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
  
   /* Main addr */
   COPY_IP(&net_msg->main_addr, &olsr_cnf->main_addr);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.30 2007/09/16 21:20:16 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.31 2007/11/05 15:32:55 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -462,23 +462,23 @@ net_output(struct interface *ifp)
  * @returns 1 on success 0 on failure
  */
 int
-olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u16_t prefix)
+olsr_prefix_to_netmask(union olsr_ip_addr *adr, const olsr_u16_t prefix)
 {
-  int p, i;
+  int p;
+  olsr_u8_t *a;
 
-  if(adr == NULL)
+  if(adr == NULL) {
     return 0;
+  }
 
-  p = prefix;
-  i = 0;
-
-  memset(adr, 0, olsr_cnf->ipsize);
-
-  for(;p > 0; p -= 8)
-    {
-      adr->v6.s6_addr[i] = (p < 8) ? 0xff ^ (0xff >> p) : 0xff;
-      i++;
-    }
+  a = adr->v6.s6_addr;
+  for (p = prefix; p > 8; p -= 8) {
+    *a++ = 0xff;
+  }
+  *a++ = 0xff << p;
+  while (a < adr->v6.s6_addr+olsr_cnf->ipsize) {
+    *a++ = 0;
+  }
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(adr));
@@ -501,24 +501,14 @@ olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
   olsr_u16_t prefix = 0;
   unsigned int i;
+  olsr_u8_t tmp;
 
-  prefix = 0;
-
-  for(i = 0; i < olsr_cnf->ipsize; i++)
-    {
-      if(adr->v6.s6_addr[i] == 0xff)
-	{
-	  prefix += 8;
-	}
-      else
-	{
-          int tmp;
-	  for(tmp = adr->v6.s6_addr[i];
-	      tmp > 0;
-	      tmp = (tmp << 1) & 0xff)
-	    prefix++;
-	}
-    }
+  for (i = 0; i < olsr_cnf->ipsize && adr->v6.s6_addr[i] == 0xff; i++) {
+    prefix += 8;
+  }
+  for (tmp = adr->v6.s6_addr[i]; tmp > 0; tmp <<= 1) {
+    prefix++;
+  }
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(adr), prefix);
@@ -561,7 +551,7 @@ ip_to_string(const olsr_u32_t *address)
 {
   struct in_addr in;
   in.s_addr=*address;
-  return(inet_ntoa(in));
+  return inet_ntoa(in);
   
 }
 
@@ -582,36 +572,56 @@ ip6_to_string(const struct in6_addr *addr6)
   return inet_ntop(AF_INET6, addr6, ipv6_buf, sizeof(ipv6_buf));
 }
 
-
 const char *
 olsr_ip_to_string(const union olsr_ip_addr *addr)
 {
   static int idx = 0;
-  static char buff[4][INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN];
+  static char buff[4][MAX(INET6_ADDRSTRLEN,INET_ADDRSTRLEN)];
   const char *ret;
 
   if (!addr) {
       return "null";
   }
   
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-#if 0
-      struct in_addr in;
-      in.s_addr = addr->v4;
-      ret = inet_ntop(AF_INET, &in, buff[idx], sizeof(buff[idx]));
-#else
-      ret = inet_ntop(AF_INET, &addr->v4, buff[idx], sizeof(buff[idx]));
-#endif
-    }
-  else
-    {
-      /* IPv6 */
-      ret = inet_ntop(AF_INET6, &addr->v6, buff[idx], sizeof(buff[idx]));
-    }
+  if(olsr_cnf->ip_version == AF_INET) {
+    ret = inet_ntop(AF_INET, &addr->v4, buff[idx], sizeof(buff[idx]));
+  } else {
+    /* IPv6 */
+    ret = inet_ntop(AF_INET6, &addr->v6, buff[idx], sizeof(buff[idx]));
+  }
   idx = (idx + 1) & 3;
 
   return ret;
+}
+
+const char *
+olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
+{
+  /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
+  static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
+  const char *rv;
+
+  if (prefix == NULL) {
+      return "null";
+  }
+  
+  if(olsr_cnf->ip_version == AF_INET) {
+    int len;
+    union olsr_ip_addr netmask;
+    rv = inet_ntop(AF_INET, &prefix->prefix.v4, buf, sizeof(buf));
+    len = strlen(buf);
+    buf[len++] = '/';
+    olsr_prefix_to_netmask(&netmask, prefix->prefix_len);
+    inet_ntop(AF_INET, &netmask.v4, buf+len, sizeof(buf)-len);
+  } else {
+    int len;
+    /* IPv6 */
+    rv = inet_ntop(AF_INET6, &prefix->prefix.v6, buf, sizeof(buf));
+    len = strlen(buf);
+    buf[len++] = '/';
+    snprintf(buf+len, sizeof(buf)-len, "/%d", prefix->prefix_len);
+  }
+  return rv;
 }
 
 
@@ -645,17 +655,15 @@ olsr_validate_address(const union olsr_ip_addr *adr)
 {
   const struct deny_address_entry *deny_entry = deny_entries;
 
-  while(deny_entry)
-    {
-      if(COMP_IP(adr, &deny_entry->addr))
-	{
-	  OLSR_PRINTF(1, "Validation of address %s failed!\n",
-		      olsr_ip_to_string(adr));
-	  return OLSR_FALSE;
-	}
-
-      deny_entry = deny_entry->next;
+  while (deny_entry) {
+    if (COMP_IP(adr, &deny_entry->addr)) {
+      OLSR_PRINTF(1, "Validation of address %s failed!\n",
+                  olsr_ip_to_string(adr));
+      return OLSR_FALSE;
     }
+
+    deny_entry = deny_entry->next;
+  }
 
   return OLSR_TRUE;
 }
