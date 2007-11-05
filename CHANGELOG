@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.110 2007/11/03 23:21:28 bernd67 Exp $
+$Id: CHANGELOG,v 1.111 2007/11/05 15:34:37 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -45,6 +45,13 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   Serious cleanup: olsrd_get_default_cnf() does no longer initialize the global
   "cnf" variable" but uses a local one which is returned as before. And
   olsrd_parse_cnf() does no longer return the global variable it is working on.
+- Merged "struct hna4_entry" and "struct hna6_entry" into
+  "struct local_hna_entry" (as "struct hna_entry" is a different thing)
+  Both have almost the same data (IP address + netmask/prefix) so we use
+  the quite new "struct olsr_ip_prefix" to store it.
+  Also merged the "hna4" and "hna6" pointer in "struct olsr_config" -
+  look at the global "olsr_cnf->ip_version".
+- added a olsr_ip_prefix_to_string() function
 
 0.5.4 ---------------------------------------------------------------------
 
