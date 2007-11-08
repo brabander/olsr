@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.22 2007/04/25 22:24:09 bernd67 Exp $
+ * $Id: net.c,v 1.23 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 #if defined WINCE
@@ -54,6 +54,7 @@
 #include <stdlib.h>
 #include "defs.h"
 #include "net_os.h"
+#include "net_olsr.h"
 
 #if defined WINCE
 #define WIDE_STRING(s) L##s
@@ -337,13 +338,14 @@ void DisableIcmpRedirects(void)
 int join_mcast(struct interface *Nic, int Sock)
 {
   /* See linux/in6.h */
-
+  struct ipaddr_str buf;
   struct ipv6_mreq McastReq;
 
-  COPY_IP(&McastReq.ipv6mr_multiaddr, &Nic->int6_multaddr.sin6_addr);
+  //COPY_IP(&McastReq.ipv6mr_multiaddr, &Nic->int6_multaddr.sin6_addr);
+  McastReq.ipv6mr_multiaddr = Nic->int6_multaddr.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string((union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(Sock, 
 		IPPROTO_IPV6, 

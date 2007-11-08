@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.24 2007/11/08 22:47:39 bernd67 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.25 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 /*
@@ -388,7 +388,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
 
     fclose(fp);      
     if(retval == 0){
-      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", net->v4.s_addr, mask->v4.s_addr);
+      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask->v4.s_addr);
     }  
     return retval;
 }

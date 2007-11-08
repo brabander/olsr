@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.29 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: main.c,v 1.30 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -170,7 +170,7 @@ ohs_init_new_connection(int s)
   /* Get "fake IP" */
   for (i = 0; i < 20; i++)
   {
-    if (recv(oc->socket, &new_addr, sizeof(new_addr), 0) == 4)
+    if (recv(oc->socket, (void *)&new_addr, sizeof(new_addr), 0) == 4)
       break;
 
 #if defined WIN32

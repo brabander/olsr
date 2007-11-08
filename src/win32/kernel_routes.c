@@ -36,14 +36,15 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.23 2007/09/05 22:17:26 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.24 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 #include <stdio.h>
 #include "net/route.h"
 
 #include "kernel_routes.h"
-#include "defs.h"
+#include "net_olsr.h"
+#include "ipc_frontend.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>
@@ -69,19 +70,19 @@ int olsr_ioctl_add_route(struct rt_entry *rt)
 
   memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
 
-  Row.dwForwardDest = rt->rt_dst.prefix.v4;
+  Row.dwForwardDest = rt->rt_dst.prefix.v4.s_addr;
 
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
   } else {
-      Row.dwForwardMask = mask.v4;
+      Row.dwForwardMask = mask.v4.s_addr;
   }
 
   Row.dwForwardPolicy = 0;
-  Row.dwForwardNextHop = rt->rt_best->rtp_nexthop.gateway.v4;
+  Row.dwForwardNextHop = rt->rt_best->rtp_nexthop.gateway.v4.s_addr;
   Row.dwForwardIfIndex = rt->rt_best->rtp_nexthop.iif_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
-  Row.dwForwardType = (rt->rt_dst.prefix.v4 == rt->rt_best->rtp_nexthop.gateway.v4) ? 3 : 4;
+  Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_best->rtp_nexthop.gateway.v4.s_addr) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
@@ -146,21 +147,19 @@ int olsr_ioctl_del_route(struct rt_entry *rt)
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
-  memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
+  memset(&Row, 0, sizeof (Row));
 
-  Row.dwForwardDest = rt->rt_dst.prefix.v4;
+  Row.dwForwardDest = rt->rt_dst.prefix.v4.s_addr;
 
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
-  } else {
-      Row.dwForwardMask = mask.v4;
   }
-
+  Row.dwForwardMask = mask.v4.s_addr;
   Row.dwForwardPolicy = 0;
-  Row.dwForwardNextHop = rt->rt_nexthop.gateway.v4;
+  Row.dwForwardNextHop = rt->rt_nexthop.gateway.v4.s_addr;
   Row.dwForwardIfIndex = rt->rt_nexthop.iif_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
-  Row.dwForwardType = (rt->rt_dst.prefix.v4 == rt->rt_nexthop.gateway.v4) ? 3 : 4;
+  Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_nexthop.gateway.v4.s_addr) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;

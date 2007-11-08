@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.39 2007/11/08 22:47:43 bernd67 Exp $
+ * $Id: ifnet.c,v 1.40 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 #include "interfaces.h"
@@ -50,9 +50,12 @@
 #include "scheduler.h"
 #include "mantissa.h"
 #include "lq_packet.h"
+#include "net_olsr.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
+
+#include <arpa/inet.h>
 
 struct MibIpInterfaceRow
 {
@@ -544,8 +547,10 @@ void RemoveInterface(struct olsr_if *IntConf)
 
     else
     {
-      COPY_IP(&olsr_cnf->main_addr, &ifnet->ip_addr);
-      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+      struct ipaddr_str buf;
+      //COPY_IP(&olsr_cnf->main_addr, &ifnet->ip_addr);
+      olsr_cnf->main_addr = ifnet->ip_addr;
+      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
   }
 
@@ -603,6 +608,7 @@ int add_hemu_if(struct olsr_if *iface)
   struct interface *ifp;
   union olsr_ip_addr null_addr;
   olsr_u32_t addr[4];
+  struct ipaddr_str buf;
 
   if(!iface->host_emul)
     return -1;
@@ -622,7 +628,7 @@ int add_hemu_if(struct olsr_if *iface)
 
   OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
 
-  OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&iface->hemu_ip));
+  OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
 
   OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
@@ -632,8 +638,9 @@ int add_hemu_if(struct olsr_if *iface)
   memset(&null_addr, 0, olsr_cnf->ipsize);
   if(ipequal(&null_addr, &olsr_cnf->main_addr))
     {
-      COPY_IP(&olsr_cnf->main_addr, &iface->hemu_ip);
-      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+      //COPY_IP(&olsr_cnf->main_addr, &iface->hemu_ip);
+      olsr_cnf->main_addr = iface->hemu_ip;
+      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
@@ -776,6 +783,7 @@ int add_hemu_if(struct olsr_if *iface)
 
 int chk_if_changed(struct olsr_if *IntConf)
 {
+  struct ipaddr_str buf;
   struct interface *Int;
   struct InterfaceInfo Info;
   int Res;
@@ -836,18 +844,18 @@ int chk_if_changed(struct olsr_if *IntConf)
     Res = 1;
   }
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_addr)->sin_addr.s_addr;
-  NewVal.v4 = Info.Addr;
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_addr)->sin_addr;
+  NewVal.v4.s_addr = Info.Addr;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4 != OldVal.v4)
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
     OLSR_PRINTF(1, "\tAddress change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     Int->ip_addr.v4 = NewVal.v4;
 
@@ -855,9 +863,9 @@ int chk_if_changed(struct olsr_if *IntConf)
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
-    AddrIn->sin_addr.s_addr = NewVal.v4;
+    AddrIn->sin_addr = NewVal.v4;
 
-    if (olsr_cnf->main_addr.v4 == OldVal.v4)
+    if (olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr)
     {
       OLSR_PRINTF(1, "\tMain address change.\n");
 
@@ -870,24 +878,24 @@ int chk_if_changed(struct olsr_if *IntConf)
   else
     OLSR_PRINTF(3, "\tNo address change.\n");
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr.s_addr;
-  NewVal.v4 = Info.Mask;
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr;
+  NewVal.v4.s_addr = Info.Mask;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4 != OldVal.v4)
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
     OLSR_PRINTF(1, "\tNetmask change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     AddrIn = (struct sockaddr_in *)&Int->int_netmask;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
-    AddrIn->sin_addr.s_addr = NewVal.v4;
+    AddrIn->sin_addr = NewVal.v4;
 
     Res = 1;
   }
@@ -895,24 +903,24 @@ int chk_if_changed(struct olsr_if *IntConf)
   else
     OLSR_PRINTF(3, "\tNo netmask change.\n");
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_broadaddr)->sin_addr.s_addr;
-  NewVal.v4 = Info.Broad;
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_broadaddr)->sin_addr;
+  NewVal.v4.s_addr = Info.Broad;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&NewVal));
+  OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4 != OldVal.v4)
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
     OLSR_PRINTF(1, "\tBroadcast address change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&NewVal));
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     AddrIn = (struct sockaddr_in *)&Int->int_broadaddr;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
-    AddrIn->sin_addr.s_addr = NewVal.v4;
+    AddrIn->sin_addr = NewVal.v4;
 
     Res = 1;
   }
@@ -928,6 +936,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
 int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 {
+  struct ipaddr_str buf;
   struct InterfaceInfo Info;
   struct interface *New;
   union olsr_ip_addr NullAddr;
@@ -965,8 +974,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Broad;
 
-  if (IntConf->cnf->ipv4_broadcast.v4 != 0)
-    AddrIn->sin_addr.s_addr = IntConf->cnf->ipv4_broadcast.v4;
+  if (IntConf->cnf->ipv4_broadcast.v4.s_addr != 0)
+    AddrIn->sin_addr = IntConf->cnf->ipv4_broadcast.v4;
 
   New->int_flags = 0;
 
@@ -998,20 +1007,18 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
               IntConf->name, New->if_index);
       
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr_to_string(&New->int_addr));
-  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr_to_string(&New->int_netmask));
-  OLSR_PRINTF(1, "\tBroadcast address: %s\n",
-              sockaddr_to_string(&New->int_broadaddr));
+  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_addr));
+  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_netmask));
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_broadaddr));
 
-  New->ip_addr.v4 =
-    ((struct sockaddr_in *)&New->int_addr)->sin_addr.s_addr;
+  New->ip_addr.v4 = New->int_addr.sin_addr;
       
   New->if_index = Info.Index;
 
   OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
 
   AddrSockAddr = addrsock.sin_addr.s_addr;
-  addrsock.sin_addr.s_addr = New->ip_addr.v4;
+  addrsock.sin_addr = New->ip_addr.v4;
 
   New->olsr_socket = getsocket((struct sockaddr *)&addrsock,
                                127 * 1024, New->int_name);
@@ -1036,8 +1043,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   
   if(ipequal(&NullAddr, &olsr_cnf->main_addr))
   {
-    COPY_IP(&olsr_cnf->main_addr, &New->ip_addr);
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+    //COPY_IP(&olsr_cnf->main_addr, &New->ip_addr);
+    olsr_cnf->main_addr = New->ip_addr;
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
   }
 
   net_add_buffer(New);
