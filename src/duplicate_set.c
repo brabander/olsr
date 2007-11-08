@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.17 2007/10/21 20:15:51 bernd67 Exp $
+ * $Id: duplicate_set.c,v 1.18 2007/11/08 15:34:11 bernd67 Exp $
  */
 
 
@@ -48,8 +48,6 @@
 
 /* The duplicate table */
 static struct dup_entry dup_set[HASHSIZE];
-
-static float dup_hold_time = DUP_HOLD_TIME;
 
 /**
  *Initialize the duplicate table entrys
@@ -102,7 +100,7 @@ olsr_add_dup_entry(const union olsr_ip_addr *originator, const olsr_u16_t seqno)
   /* Seqno */
   new_dup_entry->seqno = seqno;
   /* Set timer */
-  new_dup_entry->timer = GET_TIMESTAMP(dup_hold_time*1000);
+  new_dup_entry->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
   /* Interfaces */
   new_dup_entry->ifaces = NULL;
   /* Forwarded */
@@ -292,7 +290,7 @@ olsr_update_dup_entry(const union olsr_ip_addr *originator,
   tmp_dup_table->ifaces = new_iface;
   
   /* Set timer */
-  tmp_dup_table->timer = GET_TIMESTAMP(dup_hold_time*1000);
+  tmp_dup_table->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
   
   return 1;
 }
@@ -331,7 +329,7 @@ olsr_set_dup_forward(const union olsr_ip_addr *originator,
   tmp_dup_table->forwarded = 1;
   
   /* Set timer */
-  tmp_dup_table->timer = GET_TIMESTAMP(dup_hold_time*1000);
+  tmp_dup_table->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
   
   return 1;
 }
