@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.83 2007/11/08 22:47:40 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.84 2007/11/08 23:33:54 bernd67 Exp $
  */
 
 /*
@@ -710,10 +710,12 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
   struct rt_entry *rt;
+  const char *s = resolve_ip_addresses ? " colspan=\"2\"" : "";
   size += section_title(&buf[size], bufsize-size, "OLSR Routes in Kernel");
   size += snprintf(&buf[size], bufsize-size,
-                   "<tr><th%1$s>Destination</th><th%1$s>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th></tr>\n",
-                  resolve_ip_addresses ? " colspan=\"2\"" : "");
+                   "<tr><th%s>Destination</th><th%s>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th></tr>\n",
+                   s,
+                   s);
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
