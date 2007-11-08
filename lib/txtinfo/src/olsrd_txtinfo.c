@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.14 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.15 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 /*
@@ -75,6 +75,7 @@
 #include "mid_set.h"
 #include "link_set.h"
 #include "socket_parser.h"
+#include "net_olsr.h"
 
 #include "olsrd_txtinfo.h"
 #include "olsrd_plugin.h"
@@ -249,7 +250,7 @@ static void ipc_action(int fd)
         if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr,
            INET6_ADDRSTRLEN) == NULL)
              addr[0] = '\0';
-        if (!COMP_IP(&sin4->sin_addr, &ipc_accept_ip.v4)) {
+        if (!ip4equal(&sin4->sin_addr, &ipc_accept_ip.v4)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             close(ipc_connection);
             return;
@@ -260,8 +261,8 @@ static void ipc_action(int fd)
            INET6_ADDRSTRLEN) == NULL)
              addr[0] = '\0';
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-        if (!COMP_IP(&in6addr_any, &ipc_accept_ip.v6) &&
-           !COMP_IP(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
+        if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
+           !ip6equal(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             close(ipc_connection);
             return;
@@ -296,6 +297,7 @@ static void ipc_action(int fd)
 
 static void ipc_print_neigh_link(void)
 {
+    struct ipaddr_str buf;
     struct neighbor_entry *neigh;
     struct neighbor_2_list_entry *list_2;
     struct link_entry *link = NULL;
@@ -307,8 +309,8 @@ static void ipc_print_neigh_link(void)
     link = link_set;
     while(link)	{
 	ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%d\t%d\t%0.2f\t%0.2f\t\n",
-                   olsr_ip_to_string(&link->local_iface_addr),
-                   olsr_ip_to_string(&link->neighbor_iface_addr),
+                   olsr_ip_to_string(&buf, &link->local_iface_addr),
+                   olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
                    link->L_link_quality, 
                    link->loss_link_quality,
                    link->lost_packets, 
@@ -325,7 +327,7 @@ static void ipc_print_neigh_link(void)
             neigh != &neighbortable[index];
             neigh = neigh->next) {
             ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
-                      olsr_ip_to_string(&neigh->neighbor_main_addr),
+                      olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
                       (neigh->status == SYM) ? "YES" : "NO",
                       neigh->is_mpr ? "YES" : "NO",
                       olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
@@ -336,7 +338,7 @@ static void ipc_print_neigh_link(void)
                 list_2 != &neigh->neighbor_2_list;
                 list_2 = list_2->next)
                 {
-                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&list_2->neighbor_2->neighbor_2_addr));
+                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf, &list_2->neighbor_2->neighbor_2_addr));
                     thop_cnt ++;
                 }
             ipc_sendf("%d\n", thop_cnt);
@@ -347,6 +349,7 @@ static void ipc_print_neigh_link(void)
 
 static void ipc_print_routes(void)
 {
+    struct ipaddr_str buf;
     struct rt_entry *rt;
     struct avl_node *rt_tree_node;
 
@@ -360,13 +363,12 @@ static void ipc_print_routes(void)
         rt = rt_tree_node->data;
 
         ipc_sendf( "%s/%d\t%s\t%d\t%.3f\t%s\t\n",
-                   olsr_ip_to_string(&rt->rt_dst.prefix),
+                   olsr_ip_to_string(&buf, &rt->rt_dst.prefix),
                    rt->rt_dst.prefix_len,
-                   olsr_ip_to_string(&rt->rt_best->rtp_nexthop.gateway),
+                   olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
                    rt->rt_best->rtp_metric.etx,
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-
     }
     ipc_sendf("\n");
 
@@ -375,16 +377,17 @@ static void ipc_print_routes(void)
 static void ipc_print_topology(void)
 {
     struct tc_entry *tc;
-    struct tc_edge_entry *tc_edge;
-
+    
     ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLQ\tILQ\tETX\n");
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
+        struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+            struct ipaddr_str dstbuf, addrbuf;
             ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%0.2f\n", 
-                       olsr_ip_to_string(&tc_edge->T_dest_addr),
-                       olsr_ip_to_string(&tc->addr), 
+                       olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+                       olsr_ip_to_string(&addrbuf, &tc->addr), 
                        tc_edge->link_quality,
                        tc_edge->inverse_link_quality,
                        olsr_calc_tc_etx(tc_edge));
@@ -398,9 +401,7 @@ static void ipc_print_topology(void)
 static void ipc_print_hna(void)
 {
     int size;
-    olsr_u8_t index;
-    struct hna_entry *tmp_hna;
-    struct hna_net *tmp_net;
+    int index;
     struct local_hna_entry *hna;
 
     size = 0;
@@ -409,51 +410,51 @@ static void ipc_print_hna(void)
 
     /* Announced HNA entries */
     if (olsr_cnf->ip_version == AF_INET) {
-        for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+        for(hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+            struct ipaddr_str addrbuf, maskbuf, mainaddrbuf;
             union olsr_ip_addr netmask;
             olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
             ipc_sendf("%s\t%s\t%s\n",
-                      olsr_ip_to_string(&hna->net.prefix),
-                      olsr_ip_to_string(&netmask),
-                      olsr_ip_to_string(&olsr_cnf->main_addr));
+                      olsr_ip_to_string(&addrbuf, &hna->net.prefix),
+                      olsr_ip_to_string(&maskbuf, &netmask),
+                      olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
         }
     } else {
-        for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+        for(hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+            struct ipaddr_str addrbuf, mainaddrbuf;
             ipc_sendf("%s\t%d\t%s\n",
-                      olsr_ip_to_string(&hna->net.prefix),
+                      olsr_ip_to_string(&addrbuf, &hna->net.prefix),
                       hna->net.prefix_len,
-                      olsr_ip_to_string(&olsr_cnf->main_addr));
+                      olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
         }
     }
 
     /* HNA entries */
     for(index = 0; index < HASHSIZE; index++) {
-        tmp_hna = hna_set[index].next;
+        struct hna_entry *tmp_hna;
         /* Check all entrys */
-        while(tmp_hna != &hna_set[index]) {
+        for (tmp_hna = hna_set[index].next; tmp_hna != &hna_set[index]; tmp_hna = tmp_hna->next) {
             /* Check all networks */
-            tmp_net = tmp_hna->networks.next;
-	      
-            while(tmp_net != &tmp_hna->networks) {
-		if (AF_INET == olsr_cnf->ip_version) {
+            struct hna_net *tmp_net;
+            for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
+		if (olsr_cnf->ip_version == AF_INET) {
+                    struct ipaddr_str addrbuf, maskbuf, mainaddrbuf;
+                    const union olsr_ip_addr netmask = { .v4 = { .s_addr = tmp_net->A_netmask.v4 } };
                     ipc_sendf("%s\t%s\t%s\n",
-                              olsr_ip_to_string(&tmp_net->A_network_addr),
-                              olsr_ip_to_string((union olsr_ip_addr *)&tmp_net->A_netmask.v4),
-                              olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+                              olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
+                              olsr_ip_to_string(&maskbuf, &netmask),
+                              olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
 		} else {
+                    struct ipaddr_str addrbuf, mainaddrbuf;
                     ipc_sendf("%s\t%d\t%s\n",
-                              olsr_ip_to_string(&tmp_net->A_network_addr),
+                              olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
                               tmp_net->A_netmask.v6,
-                              olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+                              olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
 		}
-                tmp_net = tmp_net->next;
-	    }
-	      
-            tmp_hna = tmp_hna->next;
+	    }            
 	}
     }
     ipc_sendf("\n");
-
 }
 
 static void ipc_print_mid(void)
@@ -470,14 +471,15 @@ static void ipc_print_mid(void)
         entry = mid_set[index].next;
         
         while( entry != &mid_set[index] ) {
-            ipc_sendf( olsr_ip_to_string( &entry->main_addr ) );
+            struct ipaddr_str buf;
+            ipc_sendf( olsr_ip_to_string(&buf,  &entry->main_addr ) );
             alias = entry->aliases;
             is_first = 1;
 
             while( alias ) {
                 ipc_sendf( "%s%s",
                            ( is_first ? "\t" : ";" ),
-                           olsr_ip_to_string( &alias->alias )
+                           olsr_ip_to_string(&buf,  &alias->alias )
                            );
 
                 alias = alias->next_alias;

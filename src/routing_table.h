@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.23 2007/10/16 09:54:43 bernd67 Exp $
+ * $Id: routing_table.h,v 1.24 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -149,8 +149,8 @@ olsr_init_routing_table(void);
 
 unsigned int olsr_bump_routingtree_version(void);
 
-int avl_comp_ipv4_prefix (void *, void *);
-int avl_comp_ipv6_prefix (void *, void *);
+int avl_comp_ipv4_prefix (const void *, const void *);
+int avl_comp_ipv6_prefix (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
 olsr_bool olsr_nh_change(struct rt_nexthop *, struct rt_nexthop *);

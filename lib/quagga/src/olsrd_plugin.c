@@ -25,6 +25,7 @@
 #include "defs.h"
 #include "quagga.h"
 #include "kernel_routes.h"
+#include "net_olsr.h"
 
 #define PLUGIN_NAME    "OLSRD quagga plugin"
 #define PLUGIN_VERSION "0.2.2"

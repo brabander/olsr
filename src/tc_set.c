@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.35 2007/11/04 17:52:13 bernd67 Exp $
+ * $Id: tc_set.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -45,7 +45,9 @@
 #include "scheduler.h"
 #include "lq_route.h"
 #include "lq_avl.h"
-#include "assert.h"
+#include "net_olsr.h"
+
+#include <assert.h>
 
 /* Root of the link state database */
 struct avl_tree tc_tree;
@@ -55,7 +57,7 @@ struct tc_entry *tc_myself; /* Shortcut to ourselves */
  * Initialize the topology set
  *
  */
-int
+void
 olsr_init_tc(void)
 {
   OLSR_PRINTF(5, "TC: init topo\n");
@@ -68,7 +70,6 @@ olsr_init_tc(void)
    * Add a TC entry for ourselves.
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
-  return 1;
 }
 
 /**
@@ -81,11 +82,10 @@ olsr_change_myself_tc(void)
   struct tc_edge_entry *tc_edge;
 
   if (tc_myself) {
-
     /*
      * Check if there was a change.
      */
-    if (COMP_IP(&tc_myself->addr, &olsr_cnf->main_addr)) {
+    if (ipequal(&tc_myself->addr, &olsr_cnf->main_addr)) {
       return;
     }
 
@@ -114,9 +114,9 @@ olsr_change_myself_tc(void)
 void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
-
 #if 0
-  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&tc->addr));
+  struct ipaddr_str buf;
+  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(%buf, &tc->addr));
 #endif
 
   /* The edgetree must be empty before */
@@ -159,9 +159,7 @@ olsr_lookup_tc_entry(union olsr_ip_addr *adr)
 struct tc_entry *
 olsr_getnext_tc_entry(struct tc_entry *tc)
 {
-  struct avl_node *node;
-
-  node = avl_walk_next(&tc->vertex_node);
+  struct avl_node *node = avl_walk_next(&tc->vertex_node);
 
   if (node) {
     return node->data;
@@ -180,9 +178,9 @@ struct tc_entry *
 olsr_add_tc_entry(union olsr_ip_addr *adr)
 {
   struct tc_entry *tc;
-
 #if 0
-  OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(adr));
+  struct ipaddr_str buf;
+  OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 #endif
 
   tc = olsr_malloc(sizeof(struct tc_entry), "add TC entry");
@@ -192,7 +190,8 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
   memset(tc, 0, sizeof(struct tc_entry));
 
   /* Fill entry */
-  COPY_IP(&tc->addr, adr);
+  //COPY_IP(&tc->addr, adr);
+  tc->addr = *adr;
   tc->vertex_node.data = tc;
   tc->vertex_node.key = &tc->addr;
 
@@ -215,20 +214,19 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
 char *
 olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 {
-  struct tc_entry *tc;
-  static char buff[128];
+  static char buf[128];
+  struct ipaddr_str addrbuf, dstbuf;
+  struct tc_entry *tc = tc_edge->tc;
 
-  tc = tc_edge->tc;
-
-  snprintf(buff, sizeof(buff),
+  snprintf(buf, sizeof(buf),
            "%s > %s, lq %.3f, inv-lq %.3f, etx %.3f",
-           olsr_ip_to_string(&tc->addr),
-           olsr_ip_to_string(&tc_edge->T_dest_addr),
+           olsr_ip_to_string(&addrbuf, &tc->addr),
+           olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
            tc_edge->link_quality,
            tc_edge->inverse_link_quality,
            tc_edge->etx);
 
-  return buff;
+  return buf;
 }
 
 /**
@@ -281,17 +279,16 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
   memset(tc_edge, 0, sizeof(struct tc_edge_entry));
 
   /* Fill entry */
-  COPY_IP(&tc_edge->T_dest_addr, addr);
+  //COPY_IP(&tc_edge->T_dest_addr, addr);
+  tc_edge->T_dest_addr = *addr;
   olsr_set_tc_edge_timer(tc_edge, vtime*1000);
   tc_edge->T_seq = ansn;
   tc_edge->edge_node.data = tc_edge;
   tc_edge->edge_node.key = &tc_edge->T_dest_addr;
 
   if (olsr_cnf->lq_level > 0) {
-
     tc_edge->link_quality = neigh_link_quality;
     tc_edge->inverse_link_quality = link_quality;
-
   } else {
 
     /*
@@ -322,7 +319,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    */
   tc_neighbor = olsr_lookup_tc_entry(&tc_edge->T_dest_addr);
   if (tc_neighbor) {
-
 #if 0
     OLSR_PRINTF(1, "TC:   found neighbor tc_entry %s\n",
                 olsr_ip_to_string(&tc_neighbor->addr));
@@ -330,7 +326,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 
     tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
     if (tc_edge_inv) {
-
 #if 0
       OLSR_PRINTF(1, "TC:   found inverse edge for %s\n",
                   olsr_ip_to_string(&tc_edge_inv->T_dest_addr));
@@ -410,18 +405,14 @@ int
 olsr_tc_delete_mprs(struct tc_entry *tc, struct tc_message *msg)
 {
   struct tc_edge_entry *tc_edge;
-  int retval;
+  int retval = 0;
 
 #if 0
   OLSR_PRINTF(5, "TC: deleting MPRS\n");
 #endif
 
-  retval = 0;
-
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-
     if (SEQNO_GREATER_THAN(msg->ansn, tc_edge->T_seq)) {
-
       /*
        * Do not delete the edge now, just mark the edge as down.
        * Downed edges will be ignored by the SPF computation.
@@ -590,20 +581,19 @@ void
 olsr_time_out_tc_set(void)
 {
   struct tc_entry *tc;
-  struct tc_edge_entry *tc_edge;
 
-  OLSR_FOR_ALL_TC_ENTRIES(tc)
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-
-    /*
-     * Delete outdated edges.
-     */
-    if(TIMED_OUT(tc_edge->T_time)) {
-      olsr_delete_tc_edge_entry(tc_edge);
-      changes_topology = OLSR_TRUE;
-    }
-  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  OLSR_FOR_ALL_TC_ENTRIES_END(tc)
+      /*
+       * Delete outdated edges.
+       */
+      if(TIMED_OUT(tc_edge->T_time)) {
+        olsr_delete_tc_edge_entry(tc_edge);
+        changes_topology = OLSR_TRUE;
+      }
+    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
 }
 
 /**
@@ -626,9 +616,10 @@ olsr_print_tc_table(void)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+      struct ipaddr_str addrbuf, dstaddrbuf;
       OLSR_PRINTF(1, "%-*s %-*s  %5.3f  %5.3f  %.2f\n",
-                  ipwidth, olsr_ip_to_string(&tc->addr),
-                  ipwidth, olsr_ip_to_string(&tc_edge->T_dest_addr),
+                  ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
+                  ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
                   tc_edge->link_quality,
                   tc_edge->inverse_link_quality,
                   olsr_calc_tc_etx(tc_edge));

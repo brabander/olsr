@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.15 2007/08/02 21:50:22 bernd67 Exp $
+ * $Id: mid_set.h,v 1.16 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -44,6 +44,7 @@
 #define _OLSR_MID
 
 #include "olsr_types.h"
+#include "hashing.h"
 
 
 struct mid_address

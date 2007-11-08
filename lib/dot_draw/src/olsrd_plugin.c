@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.17 2007/07/23 12:58:38 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.18 2007/11/08 22:47:39 bernd67 Exp $
  */
 
 /*
@@ -77,7 +77,7 @@ static void my_init(void)
 
     /* defaults for parameters */
     ipc_port = 2004;
-    ipc_accept_ip.v4 = htonl(INADDR_LOOPBACK);
+    ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
 }
 
 

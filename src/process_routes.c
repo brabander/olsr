@@ -40,15 +40,15 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.37 2007/09/16 21:14:25 bernd67 Exp $
+ * $Id: process_routes.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
 #include "olsr.h"
 #include "log.h"
 #include "kernel_routes.h"
-#include <assert.h>
 #include "lq_avl.h"
+#include "net_olsr.h"
 
 #ifdef WIN32
 #undef strerror
@@ -90,7 +90,7 @@ olsr_rt_flags(const struct rt_entry *rt)
 
   nh = olsr_get_nh(rt);
 
-  if(!COMP_IP(&rt->rt_dst.prefix, &nh->gateway)) {
+  if(!ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
     flags |= RTF_GATEWAY;
   }
 
@@ -278,7 +278,7 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
    */
   nh = olsr_get_nh(rt);
 
-  if (COMP_IP(&rt->rt_dst.prefix, &nh->gateway)) {
+  if (ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
     list_add_after(head_node, &rt->rt_change_node);
   } else {
     list_add_before(head_node, &rt->rt_change_node);

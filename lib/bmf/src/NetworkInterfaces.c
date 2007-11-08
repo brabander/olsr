@@ -63,6 +63,7 @@
 #include "link_set.h" /* get_link_set() */
 #include "lq_route.h" /* MIN_LINK_QUALITY */
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_tc_lookup_dst() */
+#include "net_olsr.h" /* ipequal */
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */
@@ -437,10 +438,13 @@ void GetBestTwoNeighbors(
     /* TODO: get_link_set() is not thread-safe! */
     for (walker = get_link_set(); walker != NULL; walker = walker->next) 
     {
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
       union olsr_ip_addr* neighborMainIp;
 
       /* Consider only links from the specified interface */
-      if (! COMP_IP(&intf->intAddr, &walker->local_iface_addr))
+      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
       {
         continue; /* for */
       }
@@ -450,43 +454,52 @@ void GetBestTwoNeighbors(
         "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
-        olsr_ip_to_string(&walker->neighbor_iface_addr));
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
       neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
 
       /* Consider only neighbors with an IP address that differs from the
        * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && COMP_IP(neighborMainIp, MainAddressOf(source)))
+      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
       {
+#ifndef NODEBUG
+        struct ipaddr_str buf;
+#endif
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedBy)))
+      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
       {
+#ifndef NODEBUG
+        struct ipaddr_str buf;
+#endif
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedTo)))
+      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
       {
+#ifndef NODEBUG
+        struct ipaddr_str buf;
+#endif
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -537,7 +550,7 @@ void GetBestTwoNeighbors(
       struct tc_entry* tcLastHop;
 
       /* Consider only links from the specified interface */
-      if (! COMP_IP(&intf->intAddr, &walker->local_iface_addr))
+      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
       {
         continue; /* for */
       }
@@ -553,7 +566,7 @@ void GetBestTwoNeighbors(
 
       /* Consider only neighbors with an IP address that differs from the
        * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && COMP_IP(neighborMainIp, MainAddressOf(source)))
+      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
       {
         OLSR_PRINTF(
           9,
@@ -565,7 +578,7 @@ void GetBestTwoNeighbors(
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedBy)))
+      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
       {
         OLSR_PRINTF(
           9,
@@ -577,7 +590,7 @@ void GetBestTwoNeighbors(
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedTo)))
+      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
       {
         OLSR_PRINTF(
           9,
@@ -724,13 +737,16 @@ void GetBestTwoNeighbors(
     /* TODO: get_link_set() is not thread-safe! */
     for (walker = get_link_set(); walker != NULL; walker = walker->next) 
     {
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
       union olsr_ip_addr* neighborMainIp;
       struct link_entry* bestLinkToNeighbor;
       struct tc_entry* tcLastHop;
       float currEtx;
  
       /* Consider only links from the specified interface */
-      if (! COMP_IP(&intf->intAddr, &walker->local_iface_addr))
+      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
       {
         continue; /* for */
       }
@@ -740,43 +756,43 @@ void GetBestTwoNeighbors(
         "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
-        olsr_ip_to_string(&walker->neighbor_iface_addr));
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
       neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
 
       /* Consider only neighbors with an IP address that differs from the
        * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && COMP_IP(neighborMainIp, MainAddressOf(source)))
+      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
       {
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedBy)))
+      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
       {
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
 
       /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && COMP_IP(neighborMainIp, MainAddressOf(forwardedTo)))
+      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
       {
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -794,7 +810,7 @@ void GetBestTwoNeighbors(
           9,
           "%s: ----> Not forwarding to %s: link is timing out\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -804,7 +820,7 @@ void GetBestTwoNeighbors(
         9,
         "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
         PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&walker->neighbor_iface_addr),
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         currEtx);
 
       /* If the candidate neighbor is best reached via another interface, then skip 
@@ -817,38 +833,46 @@ void GetBestTwoNeighbors(
       {
         if (bestLinkToNeighbor == NULL)
         {
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+#endif
           OLSR_PRINTF(
             9,
             "%s: ----> Not forwarding to %s: no link found\n",
             PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&walker->neighbor_iface_addr));
+            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
         }
         else
         {
+#ifndef NODEBUG
           struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-
+          struct ipaddr_str buf;
+#endif
           OLSR_PRINTF(
             9,
             "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
             PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&walker->neighbor_iface_addr),
+            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
             CalcEtx(
               bestLinkToNeighbor->loss_link_quality,
               bestLinkToNeighbor->neigh_link_quality));
         }
-
+        
         continue; /* for */
       }
 
       if (forwardedBy != NULL)
       {
+#ifndef NODEBUG
+        struct ipaddr_str forwardedByBuf, niaBuf;
+#endif
         OLSR_PRINTF(
           9,
           "%s: ----> 2-hop path from %s via me to %s will cost ETX %5.2f\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(forwardedBy),
-          olsr_ip_to_string(&walker->neighbor_iface_addr),
+          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
+          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
           previousLinkEtx + currEtx);
       }
 
@@ -875,13 +899,17 @@ void GetBestTwoNeighbors(
 
             if (previousLinkEtx + currEtx > tcEtx)
             {
+#ifndef NODEBUG
+              struct ipaddr_str neighbor_iface_buf, forw_buf;
+              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+#endif
               OLSR_PRINTF(
                 9,
                 "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
                 PLUGIN_NAME_SHORT,
-                olsr_ip_to_string(&walker->neighbor_iface_addr),
-                olsr_ip_to_string(forwardedBy),
-                olsr_ip_to_string(&walker->neighbor_iface_addr),
+                neighbor_iface_buf.buf,
+                olsr_ip_to_string(&forw_buf, forwardedBy),
+                neighbor_iface_buf.buf,
                 tcEtx);
 
               continue; /* for */
@@ -921,6 +949,9 @@ void GetBestTwoNeighbors(
   }
   else
   {
+#ifndef NODEBUG
+    struct ipaddr_str buf;
+#endif
     OLSR_PRINTF(
       9,
       "%s: ----> Best neighbor%s to forward to on \"%s\": ",
@@ -931,14 +962,14 @@ void GetBestTwoNeighbors(
     OLSR_PRINTF(
       9,
       "%s",
-      olsr_ip_to_string(&result->links[0]->neighbor_iface_addr));
+      olsr_ip_to_string(&buf, &result->links[0]->neighbor_iface_addr));
 
     if (result->links[1] != NULL)
     {
       OLSR_PRINTF(
         9,
         ", %s",
-        olsr_ip_to_string(&result->links[1]->neighbor_iface_addr));
+        olsr_ip_to_string(&buf, &result->links[1]->neighbor_iface_addr));
     } /* if */
 
     OLSR_PRINTF(9, "\n");
@@ -1237,7 +1268,7 @@ static int CreateLocalEtherTunTap(void)
 
       if (bmfIf->olsrIntf != NULL)
       {
-        EtherTunTapIp = ntohl(bmfIf->intAddr.v4);
+        EtherTunTapIp = ntohl(bmfIf->intAddr.v4.s_addr);
         EtherTunTapIpBroadcast = EtherTunTapIp;
       }
     }
@@ -1326,8 +1357,8 @@ static int CreateLocalEtherTunTap(void)
     union olsr_ip_addr temp_net;
     union olsr_ip_addr temp_netmask;
 
-    temp_net.v4 = htonl(EtherTunTapIp);
-    temp_netmask.v4 = htonl(0xFFFFFFFF);
+    temp_net.v4.s_addr = htonl(EtherTunTapIp);
+    temp_netmask.v4.s_addr = htonl(0xFFFFFFFF);
     add_local_hna4_entry(&temp_net, &temp_netmask);
   }
 
@@ -1439,8 +1470,10 @@ static int CreateInterface(
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
-    COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr.s_addr);
-    COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr.s_addr);
+    //COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr.s_addr);
+    newIf->intAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr;
+    //COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr.s_addr);
+    newIf->broadAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr;
   }
   else
   {
@@ -1452,12 +1485,13 @@ static int CreateInterface(
     {
       BmfPError("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
 
-      newIf->intAddr.v4 = inet_addr("0.0.0.0");
+      newIf->intAddr.v4.s_addr = inet_addr("0.0.0.0");
 	  }
 	  else
 	  {
       /* Downcast to correct sockaddr subtype */
-      COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr);
+      //COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr);
+      newIf->intAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
     }
 
     /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
@@ -1468,12 +1502,13 @@ static int CreateInterface(
     {
       BmfPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
 
-      newIf->broadAddr.v4 = inet_addr("0.0.0.0");
+      newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
 	  }
 	  else
 	  {
       /* Downcast to correct sockaddr subtype */
-      COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr);
+      //COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr);
+      newIf->broadAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr;
     }
   }
 
@@ -1589,7 +1624,8 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
     }
 
     /* ...find the OLSR interface structure, if any */
-    COPY_IP(&ipAddr, &((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr.s_addr);
+    //COPY_IP(&ipAddr, &((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr.s_addr);
+    ipAddr.v4 =  ((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr;
     olsrIntf = if_ifwithaddr(&ipAddr);
 
     if (skipThisIntf != NULL && olsrIntf == skipThisIntf)
@@ -1831,7 +1867,8 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
   assert(ipPacket != NULL && broadAddr != NULL);
 
   iph = (struct iphdr*) ipPacket;
-  COPY_IP(&destIp, &iph->daddr);
+  //COPY_IP(&destIp, &iph->daddr);
+  destIp.v4.s_addr = iph->daddr;
   if (! IsMulticast(&destIp))
   {
     u_int32_t origDaddr, newDaddr;
@@ -1839,7 +1876,8 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 
     origDaddr = ntohl(iph->daddr);
 
-    COPY_IP(&iph->daddr, broadAddr);
+    //COPY_IP(&iph->daddr, broadAddr);
+    iph->daddr = broadAddr->v4.s_addr;
     newDaddr = ntohl(iph->daddr);
 
     /* Re-calculate IP header checksum for new destination */

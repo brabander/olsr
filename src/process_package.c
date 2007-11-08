@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.42 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: process_package.c,v 1.43 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -54,6 +54,7 @@
 #include "rebuild_packet.h"
 #include "scheduler.h"
 #include "local_hna_set.h"
+#include "net_olsr.h"
 
 
 /**
@@ -78,8 +79,9 @@ olsr_init_package_process(void)
 }
 
 void
-olsr_hello_tap(struct hello_message *message, struct interface *in_if,
-               union olsr_ip_addr *from_addr)
+olsr_hello_tap(struct hello_message *message,
+               struct interface *in_if,
+               const union olsr_ip_addr *from_addr)
 {
   struct neighbor_entry     *neighbor;
 
@@ -99,7 +101,7 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
       // find the input interface in the list of neighbor interfaces
 
       for (walker = message->neighbors; walker != NULL; walker = walker->next)
-        if (COMP_IP(&walker->address, &in_if->ip_addr))
+        if (ipequal(&walker->address, &in_if->ip_addr))
           break;
 
       // the current reference link quality
@@ -167,8 +169,11 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
   /* Check willingness */
   if(neighbor->willingness != message->willingness)
     {
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
       OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
-		  olsr_ip_to_string(&neighbor->neighbor_main_addr),
+		  olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr),
 		  neighbor->willingness,
 		  message->willingness);
       /*
@@ -200,7 +205,9 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if,
  */
 
 void
-olsr_process_received_hello(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
+olsr_process_received_hello(union olsr_message *m,
+                            struct interface *in_if,
+                            union olsr_ip_addr *from_addr)
 {
   struct hello_message      message;
 
@@ -216,9 +223,14 @@ olsr_process_received_hello(union olsr_message *m, struct interface *in_if, unio
 }
 
 void
-olsr_tc_tap(struct tc_message *message, struct interface *in_if,
-            union olsr_ip_addr *from_addr, union olsr_message *m)
+olsr_tc_tap(struct tc_message *message,
+            struct interface *in_if,
+            union olsr_ip_addr *from_addr,
+            union olsr_message *m)
 {
+#ifndef NODEBUG
+  struct ipaddr_str                buf;
+#endif
   struct tc_mpr_addr              *mpr;
   struct tc_entry                 *tc_last;
 
@@ -229,7 +241,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
     }
 
   OLSR_PRINTF(3, "Processing TC from %s, seq 0x%04x\n",
-              olsr_ip_to_string(&message->originator), message->ansn);
+              olsr_ip_to_string(&buf, &message->originator), message->ansn);
 
   /*
    *      If the sender interface (NB: not originator) of this message
@@ -240,7 +252,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
       OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
-                  olsr_ip_to_string(from_addr));
+                  olsr_ip_to_string(&buf, from_addr));
       olsr_free_tc_packet(message);
       return;
     }
@@ -252,7 +264,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
 
       while(mpr!=NULL)
         {
-          OLSR_PRINTF(3, "%s:", olsr_ip_to_string(&mpr->address));
+          OLSR_PRINTF(3, "%s:", olsr_ip_to_string(&buf, &mpr->address));
           mpr=mpr->next;
         }
 
@@ -290,7 +302,7 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
       else
         {
           OLSR_PRINTF(3, "Dropping empty TC from %s\n",
-                      olsr_ip_to_string(&message->originator));
+                      olsr_ip_to_string(&buf, &message->originator));
         }
     }
 
@@ -318,7 +330,9 @@ olsr_tc_tap(struct tc_message *message, struct interface *in_if,
  *@return 0 on success
  */
 void
-olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
+olsr_process_received_tc(union olsr_message *m,
+                         struct interface *in_if,
+                         union olsr_ip_addr *from_addr)
 { 
   struct tc_message               message;
 
@@ -348,8 +362,13 @@ olsr_process_received_tc(union olsr_message *m, struct interface *in_if, union o
  */
 
 void
-olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
+olsr_process_received_mid(union olsr_message *m,
+                          struct interface *in_if,
+                          union olsr_ip_addr *from_addr)
 {
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct mid_alias *tmp_adr;
   struct mid_message message;
 
@@ -368,7 +387,7 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
     }
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&message.mid_origaddr));
+  OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
 #endif
   tmp_adr = message.mid_addr;
 
@@ -380,7 +399,10 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
 
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
-      OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
+      OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
       olsr_free_mid_packet(&message);
       return;
     }
@@ -392,8 +414,11 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
     {
       if(!mid_lookup_main_addr(&tmp_adr->alias_addr))
 	{
-	  OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&message.mid_origaddr));
-	  OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&tmp_adr->alias_addr));
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+#endif
+	  OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
+	  OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
 	  insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, (float)message.vtime);
 	}
 
@@ -428,7 +453,9 @@ olsr_process_received_mid(union olsr_message *m, struct interface *in_if, union 
  */
 
 void
-olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
+olsr_process_received_hna(union olsr_message *m,
+                          struct interface *in_if,
+                          union olsr_ip_addr *from_addr)
 {
   struct hna_net_addr  *hna_tmp;
   struct  hna_message message;
@@ -460,7 +487,10 @@ olsr_process_received_hna(union olsr_message *m, struct interface *in_if, union 
    */
   if(check_neighbor_link(from_addr) != SYM_LINK)
     {
-      OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(from_addr));
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
+      OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
       olsr_free_hna_packet(&message);
       return;
     }
@@ -510,6 +540,9 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
       message_neighbors != NULL;
       message_neighbors = message_neighbors->next)
     {
+#if !defined(NODEBUG) && defined(DEBUG)
+      struct ipaddr_str buf;
+#endif
       union olsr_ip_addr      *neigh_addr;
       struct neighbor_2_entry *two_hop_neighbor;
 
@@ -525,16 +558,18 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
       /* Get the main address */
       neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
 
-      if (neigh_addr != NULL)
-        COPY_IP(&message_neighbors->address, neigh_addr);
-      
+      if (neigh_addr != NULL) {
+        //COPY_IP(&message_neighbors->address, neigh_addr);
+        message_neighbors->address = *neigh_addr;
+      }
+
       if(((message_neighbors->status == SYM_NEIGH) ||
           (message_neighbors->status == MPR_NEIGH)))
         {
 	  struct neighbor_2_list_entry *two_hop_neighbor_yet =
             olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
 #ifdef DEBUG
-          OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&message_neighbors->address));
+          OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
           if (two_hop_neighbor_yet != NULL)
             {
@@ -576,14 +611,13 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 #ifdef DEBUG
                   OLSR_PRINTF(5, 
 			      "Adding 2 hop neighbor %s\n\n", 
-			      olsr_ip_to_string(&message_neighbors->address));
+			      olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
                   changes_neighborhood = OLSR_TRUE;
                   changes_topology = OLSR_TRUE;
 
                   two_hop_neighbor =
-                    olsr_malloc(sizeof(struct neighbor_2_entry),
-                                "Process HELLO");
+                    olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
 		  
                   two_hop_neighbor->neighbor_2_nblist.next =
                     &two_hop_neighbor->neighbor_2_nblist;
@@ -593,13 +627,12 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
 
                   two_hop_neighbor->neighbor_2_pointer = 0;
 		  
-                  COPY_IP(&two_hop_neighbor->neighbor_2_addr,
-                          &message_neighbors->address);
+                  //COPY_IP(&two_hop_neighbor->neighbor_2_addr,&message_neighbors->address);
+                  two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
 
                   olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
 
-                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor,
-                                              (float)message->vtime);
+                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime);
                 }
               else
                 {
@@ -609,8 +642,7 @@ olsr_process_message_neighbors(struct neighbor_entry *neighbor,
                   changes_neighborhood = OLSR_TRUE;
                   changes_topology = OLSR_TRUE;
 		  
-                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor,
-                                              (float)message->vtime); 
+                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime); 
                 }
             }
         }
@@ -845,20 +877,18 @@ int
 olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
 {
   
-  struct hello_neighbor  *neighbors;
-
-  neighbors=message->neighbors;
+  struct hello_neighbor  *neighbors = message->neighbors;
   
   while(neighbors!=NULL)
     {  
-      //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&neighbors->address));
-      //printf("against %s\n",olsr_ip_to_string(&main_addr));
+      //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&buf, &neighbors->address));
+      //printf("against %s\n",olsr_ip_to_string(&buf, &main_addr));
 
 
     if(olsr_cnf->ip_version == AF_INET)
       {	
 	/* IPv4 */  
-	if(COMP_IP(&neighbors->address, &in_if->ip_addr))
+	if(ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4))
 	  {
 	    //printf("ok");
 	    if((neighbors->link == SYM_LINK) && (neighbors->status == MPR_NEIGH))
@@ -870,7 +900,7 @@ olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
     else
       {	
 	/* IPv6 */  
-	if(COMP_IP(&neighbors->address, &in_if->int6_addr.sin6_addr))
+	if(ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr))
 	  {
 	    //printf("ok");
 	    if((neighbors->link == SYM_LINK) && (neighbors->status == MPR_NEIGH))

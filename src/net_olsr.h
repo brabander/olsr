@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.14 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.15 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -47,10 +47,34 @@
 #include "defs.h"
 #include "interfaces.h"
 #include "process_routes.h"
+
 #include <arpa/inet.h>
 #include <net/if.h>
 
 typedef int (*packet_transform_function)(olsr_u8_t *, int *);
+
+struct ipaddr_str {
+    char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
+};
+
+/*
+ * Macros for comparing and copying IP addresses
+ */
+#define INLINE inline __attribute__((always_inline))
+static INLINE int ip4cmp(const struct in_addr *a, const struct in_addr *b) { return ntohl(a->s_addr) - ntohl(b->s_addr); }
+static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { return a->s_addr == b->s_addr; }
+
+static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
+static INLINE int ip6equal(const struct in6_addr *a, const struct in6_addr *b) { return ip6cmp(a, b) == 0; }
+
+int ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b);
+static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipcmp(a, b) == 0; }
+
+/* Do not use this - this is as evil as the COPY_IP() macro was and only used in
+ * source which also needs cleanups.
+ */
+static INLINE void genipcopy(void *dst, const void *src) { memcpy(dst, src, olsr_cnf->ipsize); }
+
 
 void
 net_set_disp_pack_out(olsr_bool);
@@ -68,7 +92,7 @@ int
 net_outbuffer_bytes_left(const struct interface *);
 
 olsr_u16_t
-net_output_pending(struct interface *);
+net_output_pending(const struct interface *);
 
 int
 net_reserve_bufspace(struct interface *, int);
@@ -86,22 +110,25 @@ int
 net_sendroute(struct rt_entry *, struct sockaddr *);
 
 int
-olsr_prefix_to_netmask(union olsr_ip_addr *, olsr_u16_t);
+olsr_prefix_to_netmask(union olsr_ip_addr *, const olsr_u16_t);
 
 olsr_u16_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *);
 
-char *
-sockaddr_to_string(const struct sockaddr *);
+const char *
+sockaddr_to_string(struct ipaddr_str * const , const struct sockaddr *);
 
 const char *
-ip_to_string(const olsr_u32_t *);
+ip4_to_string(struct ipaddr_str * const buf, const struct in_addr);
 
 const char *
-ip6_to_string(const struct in6_addr *);
+ip6_to_string(struct ipaddr_str * const buf, const struct in6_addr * const addr6);
 
 const char *
-olsr_ip_to_string(const union olsr_ip_addr *);
+olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *);
+
+const char *
+sockaddr_to_string(struct ipaddr_str * const buf, const struct sockaddr *);
 
 const char *
 olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);

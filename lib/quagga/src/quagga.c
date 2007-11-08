@@ -690,8 +690,8 @@ int add_hna4_route (struct ipv4_route r) {
   dump_ipv4_route(r, "add_hna4_route");
 #endif
 
-  mask.v4 = prefixlentomask(r.prefixlen);
-  net.v4 = r.prefix;
+  mask.v4.s_addr = prefixlentomask(r.prefixlen);
+  net.v4.s_addr = r.prefix;
 
   add_local_hna4_entry(&net, &mask);
   free_ipv4_route(r);
@@ -706,8 +706,8 @@ int delete_hna4_route (struct ipv4_route r) {
   dump_ipv4_route(r, "delete_hna4_route");
 #endif
 
-  mask.v4 = prefixlentomask(r.prefixlen);
-  net.v4 = r.prefix;
+  mask.v4.s_addr = prefixlentomask(r.prefixlen);
+  net.v4.s_addr = r.prefix;
 
   remove_local_hna4_entry(&net, &mask) ? 0 : -1;
   free_ipv4_route(r);
@@ -744,9 +744,9 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
   route.type = ZEBRA_ROUTE_OLSR; // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
-  route.prefixlen =(r->rt_dst.prefix_len);
-  route.prefix = r->rt_dst.prefix.v4;
-  if ((r->rt_best->rtp_nexthop.gateway.v4 == r->rt_dst.prefix.v4 && 
+  route.prefixlen = r->rt_dst.prefix_len;
+  route.prefix = r->rt_dst.prefix.v4.s_addr;
+  if ((r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
        route.prefixlen == 32)) {
     route.message |= ZAPI_MESSAGE_IFINDEX | ZAPI_MESSAGE_NEXTHOP;
     route.ind_num = 1;
@@ -767,7 +767,7 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
 				   sizeof route.nexthops->payload), 
 				   "zebra_add_olsr_v4_route");
     route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4;
+    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
   }
 
   route.metric = r->rt_best->rtp_metric.hops;
@@ -791,8 +791,8 @@ int zebra_del_olsr_v4_route (struct rt_entry *r) {
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
   route.prefixlen = r->rt_dst.prefix_len;
-  route.prefix = r->rt_dst.prefix.v4;
-  if ((r->rt_best->rtp_nexthop.gateway.v4 == r->rt_dst.prefix.v4 && 
+  route.prefix = r->rt_dst.prefix.v4.s_addr;
+  if ((r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
        route.prefixlen == 32)){
     route.message |= ZAPI_MESSAGE_IFINDEX;
     route.ind_num = 1;
@@ -813,7 +813,7 @@ int zebra_del_olsr_v4_route (struct rt_entry *r) {
 				   sizeof route.nexthops->payload), 
 				  "zebra_add_olsr_v4_route");
     route.nexthops->type = ZEBRA_NEXTHOP_IPV4;
-    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4;
+    route.nexthops->payload.v4 = r->rt_best->rtp_nexthop.gateway.v4.s_addr;
   }
   route.metric = r->rt_best->rtp_metric.hops;
   route.metric = htonl (route.metric);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.60 2007/10/16 10:01:29 bernd67 Exp $
+ * $Id: olsr.c,v 1.61 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 /**
@@ -61,6 +61,7 @@
 #include "log.h"
 #include "lq_packet.h"
 #include "lq_avl.h"
+#include "net_olsr.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -332,7 +333,10 @@ olsr_forward_message(union olsr_message *m,
   if(olsr_lookup_mprs_set(src) == NULL)
     {
 #ifdef DEBUG
-      OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(src));
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
+      OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(&buf, src));
 #endif
       return 0;
     }

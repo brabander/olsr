@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.101 2007/11/03 23:21:27 bernd67 Exp $
+ * $Id: main.c,v 1.102 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -54,6 +54,7 @@
 #include "apm.h"
 #include "net_os.h"
 #include "build_msg.h"
+#include "net_olsr.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
@@ -109,7 +110,9 @@ main(int argc, char *argv[])
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct tms tms_buf;
-
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+#endif
 #ifdef WIN32
   WSADATA WsaData;
   int len;
@@ -148,11 +151,9 @@ main(int argc, char *argv[])
   olsr_openlog("olsrd");
 
   /* Get initial timestep */
-  nowtm = NULL;
-  while (nowtm == NULL)
-    {
-      nowtm = localtime((time_t *)&now.tv_sec);
-    }
+  do {
+    nowtm = localtime(&now.tv_sec);
+  } while (nowtm == NULL);
     
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
 	 olsrd_version, 
@@ -397,7 +398,7 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
-  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);
@@ -413,8 +414,12 @@ main(int argc, char *argv[])
 #endif
 #else
   signal(SIGHUP, olsr_reconfigure);  
-  signal(SIGINT, olsr_shutdown);  
-  signal(SIGTERM, olsr_shutdown);  
+  signal(SIGINT,  olsr_shutdown);
+  signal(SIGQUIT, olsr_shutdown);
+  signal(SIGILL,  olsr_shutdown);
+  signal(SIGABRT, olsr_shutdown);
+  signal(SIGSEGV, olsr_shutdown);
+  signal(SIGTERM, olsr_shutdown);
   signal(SIGPIPE, SIG_IGN);
 #endif
 
@@ -466,7 +471,7 @@ int __stdcall
 SignalHandler(unsigned long signal)
 #else
 static void
-olsr_shutdown(int signal)
+olsr_shutdown(int signal __attribute__((unused)))
 #endif
 {
   struct interface *ifn;

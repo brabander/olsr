@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.20 2007/09/17 21:57:05 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.21 2007/11/08 22:47:40 bernd67 Exp $
  */
 
 /*
@@ -117,15 +117,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 
 static int insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct allowed_net **allowed_nets)
 {
-    struct in_addr net, mask;
     struct allowed_net *an;
-
-    if(inet_aton(sz_net, &net) == 0) {
-	return 1;
-    }
-    if(inet_aton(sz_mask, &mask) == 0) {
-	return 1;
-    }
 
     an = olsr_malloc(sizeof(*an), __func__);
     if (an == NULL) {
@@ -133,8 +125,11 @@ static int insert_plugin_ipnet(const char *sz_net, const char *sz_mask, struct a
         exit(0);
     }
 
-    an->net.v4  = net.s_addr;
-    an->mask.v4 = mask.s_addr;
+    if(inet_aton(sz_net, &an->net.v4) == 0 || 
+       inet_aton(sz_mask, &an->mask.v4) == 0) {
+        free(an);
+	return 1;
+    }
     an->next = *allowed_nets;
     *allowed_nets = an;
     return 0;

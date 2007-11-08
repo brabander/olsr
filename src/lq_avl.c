@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.13 2007/09/05 16:30:50 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.14 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -55,21 +55,20 @@
  * if avl_comp_default is set to zero, a fast
  * inline ipv4 comparison will be executed.
  */
-int (*avl_comp_default)(void *, void *) = NULL;
-int (*avl_comp_prefix_default)(void *, void *);
+int (*avl_comp_default)(const void *, const void *) = NULL;
+int (*avl_comp_prefix_default)(const void *, const void *);
 
-int avl_comp_ipv4(void *ip1, void *ip2)
+int avl_comp_ipv4(const void *ip1, const void *ip2)
 {
-    return(*(unsigned int *)ip1 == *(unsigned int *)ip2 ? 0 : \
-           *(unsigned int *)ip1 < *(unsigned int *)ip2 ? -1 : +1);
+  return inline_avl_comp_ipv4(ip1, ip2);
 }
 
-int avl_comp_ipv6(void *ip1, void *ip2)
+int avl_comp_ipv6(const void *ip1, const void *ip2)
 {
   return memcmp(ip1, ip2, 16);
 }
 
-void avl_init(struct avl_tree *tree, int (*comp)(void *, void *))
+void avl_init(struct avl_tree *tree, int (*comp)(const void *, const void *))
 {
   tree->root = NULL;
   tree->first = NULL;
@@ -78,9 +77,9 @@ void avl_init(struct avl_tree *tree, int (*comp)(void *, void *))
   tree->comp = comp;
 }
 
-static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
+static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, const void *key)
 {
-  if (*(unsigned int *)key < *(unsigned int *)node->key)
+  if (*(const unsigned int *)key < *(const unsigned int *)node->key)
   {
     if (node->left != NULL)
       return avl_find_rec_ipv4(node->left, key);
@@ -95,8 +94,8 @@ static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, void *key)
   return node;
 }
 
-static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
-                                     int (*comp)(void *, void *))
+static struct avl_node *avl_find_rec(struct avl_node *node, const void *key,
+                                     int (*comp)(const void *, const void *))
 {
   int diff;
 
@@ -124,7 +123,7 @@ static struct avl_node *avl_find_rec(struct avl_node *node, void *key,
   return node;
 }
 
-struct avl_node *avl_find(struct avl_tree *tree, void *key)
+struct avl_node *avl_find(struct avl_tree *tree, const void *key)
 {
   struct avl_node *node;
 

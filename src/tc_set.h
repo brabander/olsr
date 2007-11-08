@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.21 2007/11/04 17:52:13 bernd67 Exp $
+ * $Id: tc_set.h,v 1.22 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -45,6 +45,8 @@
 
 #include "defs.h"
 #include "packet.h"
+#include "lq_avl.h"
+#include "lq_list.h"
 
 /*
  * This file holds the definitions for the link state database.
@@ -115,7 +117,7 @@ struct tc_entry
 extern struct avl_tree tc_tree;
 extern struct tc_entry *tc_myself;
 
-int olsr_init_tc(void);
+void olsr_init_tc(void);
 void olsr_change_myself_tc(void);
 int olsr_tc_delete_mprs(struct tc_entry *, struct tc_message *);
 int olsr_tc_update_mprs(struct tc_entry *, struct tc_message *);

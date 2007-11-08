@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.14 2007/11/02 20:58:07 bernd67 Exp $
+ * $Id: plugin.c,v 1.15 2007/11/08 22:47:40 bernd67 Exp $
  */
 
 #include <string.h>
@@ -51,6 +51,7 @@
 #include "glua.h"
 #include "glua_ext.h"
 #include "olsrd_plugin.h"
+#include "net_olsr.h"
 
 #include <defs.h>
 #include <olsr.h>

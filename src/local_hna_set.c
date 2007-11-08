@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: local_hna_set.c,v 1.15 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: local_hna_set.c,v 1.16 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
 #include "local_hna_set.h"
 #include "olsr.h"
+#include "net_olsr.h"
 
 void
 add_local_hna4_entry(const union olsr_ip_addr *net, const union olsr_ip_addr *mask)
@@ -79,8 +80,8 @@ remove_local_hna4_entry(const union olsr_ip_addr *net, const union olsr_ip_addr 
 
   while(h)
     {
-      if((net->v4 == h->net.prefix.v4) && 
-	 (mask->v4 == prefix_len))
+      if((net->v4.s_addr == h->net.prefix.v4.s_addr) && 
+	 (mask->v4.s_addr == prefix_len))
 	{
 	  /* Dequeue */
 	  if(prev == NULL)
@@ -128,11 +129,11 @@ struct local_hna_entry *
 find_local_hna4_entry(const union olsr_ip_addr *net, const olsr_u32_t mask)
 {
   struct local_hna_entry *h = olsr_cnf->hna_entries;
-  const union olsr_ip_addr ip_addr = { .v4 = mask };
+  const union olsr_ip_addr ip_addr = { .v4 = { .s_addr = mask } };
   const olsr_u16_t prefix_len = olsr_netmask_to_prefix(&ip_addr);
   while(h)
     {
-      if((net->v4 == h->net.prefix.v4) && 
+      if((net->v4.s_addr == h->net.prefix.v4.s_addr) && 
 	 (prefix_len == h->net.prefix_len))
 	{
 	  return h;
@@ -173,7 +174,7 @@ check_inet_gw(void)
       struct local_hna_entry *h;
       for(h = olsr_cnf->hna_entries; h != NULL; h = h->next)
 	{
-	  if(h->net.prefix_len == 0 && h->net.prefix.v4 == 0)
+	  if(h->net.prefix_len == 0 && h->net.prefix.v4.s_addr == 0)
 	    return 1;
 	}
     }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_protocol.h,v 1.22 2007/04/22 20:25:48 bernd67 Exp $
+ * $Id: olsr_protocol.h,v 1.23 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 /*
@@ -48,6 +48,9 @@
 #define	_PROTOCOLS_OLSR_H
 
 #include "olsr_types.h"
+#include "olsr_cfg.h"
+
+#include <string.h>
 
 /* Port for OLSR to use */
 
@@ -183,16 +186,6 @@
 #define EXTRACT_STATUS(link_code) ((link_code & 0xC)>>2)
 
 #define EXTRACT_LINK(link_code) (link_code & 0x3)
-
-
-/*
- * Macros for comparing and copying IP addresses
- */
-
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, olsr_cnf->ipsize))
-
-#define COPY_IP(to, from) memcpy(to, from, olsr_cnf->ipsize)
-
 
 
 /***********************************************

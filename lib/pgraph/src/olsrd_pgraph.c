@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.9 2007/11/02 20:58:07 bernd67 Exp $
+ * $Id: olsrd_pgraph.c,v 1.10 2007/11/08 22:47:40 bernd67 Exp $
  */
 
 /*
@@ -48,6 +48,7 @@
 #include "socket_parser.h"
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
+#include "net_olsr.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -98,7 +99,7 @@ my_init(void)
   /* defaults for parameters */
   ipc_port = 2004;
   if (olsr_cnf->ip_version == AF_INET) {
-    ipc_accept_ip.v4 = htonl(INADDR_LOOPBACK);
+    ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
   } else {
     ipc_accept_ip.v6 = in6addr_loopback;
   }
@@ -162,15 +163,15 @@ static void ipc_print_neigh_link(struct neighbor_entry *neighbor)
 {
   char buf[256];
   int len;
-  const char* main_adr;
-  const char* adr;
+  struct ipaddr_str main_adr, adr;
 //  double etx=0.0;
 //  char* style = "solid";
 //  struct link_entry* link;
 
-  main_adr = olsr_ip_to_string(&olsr_cnf->main_addr);
-  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
-  len = sprintf( buf, "add link %s %s\n", main_adr, adr );
+  len = sprintf(buf,
+                "add link %s %s\n",
+                olsr_ip_to_string(&main_adr, &olsr_cnf->main_addr),
+                olsr_ip_to_string(&adr, &neighbor->neighbor_main_addr));
   ipc_send(buf, len);
   
 //  if (neighbor->status == 0) { // non SYM
@@ -291,6 +292,7 @@ static void ipc_action(int fd __attribute__((unused)))
     }
   else
     {
+      struct ipaddr_str main_addr;
       addr = inet_ntoa(pin.sin_addr);
 /*
       if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
@@ -303,7 +305,7 @@ static void ipc_action(int fd __attribute__((unused)))
 	{
 */
 	  olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n",addr);
-          len = sprintf(buf, "add node %s\n", olsr_ip_to_string(&olsr_cnf->main_addr));
+          len = sprintf(buf, "add node %s\n", olsr_ip_to_string(&main_addr, &olsr_cnf->main_addr));
   	  ipc_send(buf, len);
 	  pcf_event(1, 1, 1);
 //	}
@@ -403,13 +405,12 @@ static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_
 {
   char buf[256];
   int len;
-  const char* main_adr;
-  const char* adr;
+  struct ipaddr_str main_adr, adr;
 //  double etx = olsr_calc_tc_etx(dst_entry);
 
-  main_adr = olsr_ip_to_string(&entry->addr);
-  adr = olsr_ip_to_string(&dst_entry->T_dest_addr);
-  len = sprintf( buf, "add link %s %s\n", main_adr, adr );
+  len = sprintf( buf, "add link %s %s\n",
+                 olsr_ip_to_string(&main_adr, &entry->addr),
+                 olsr_ip_to_string(&adr, &dst_entry->T_dest_addr));
   ipc_send(buf, len);
 }
 
@@ -476,7 +477,7 @@ static struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
   {
     // check whether it's a link to the requested neighbor and
     // whether the link's quality is better than what we have
-    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr))
+    if(ipequal(main, &walker->neighbor->neighbor_main_addr))
     {
       curr = walker->loss_link_quality * walker->neigh_link_quality;
 

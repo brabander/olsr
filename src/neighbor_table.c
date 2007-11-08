@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.34 2007/09/17 22:24:22 bernd67 Exp $
+ * $Id: neighbor_table.c,v 1.35 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -50,6 +50,7 @@
 #include "scheduler.h"
 #include "link_set.h"
 #include "mpr_selector_set.h"
+#include "net_olsr.h"
 
 
 struct neighbor_entry neighbortable[HASHSIZE];
@@ -90,7 +91,7 @@ olsr_delete_neighbor_2_pointer(struct neighbor_entry *neighbor, union olsr_ip_ad
 
   while(entry != &neighbor->neighbor_2_list)
     {      
-      if(COMP_IP(&entry->neighbor_2->neighbor_2_addr, address))
+      if(ipequal(&entry->neighbor_2->neighbor_2_addr, address))
 	{
 	  /* Dequeue */
 	  DEQUEUE_ELEM(entry);
@@ -125,7 +126,7 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
       entry = entry->next)
     {
       
-      if(COMP_IP(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address))
+      if(ipequal(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address))
 	return entry;
       
     }
@@ -162,7 +163,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
    */
   while(entry != &neighbortable[hash])
     {
-      if(COMP_IP(&entry->neighbor_main_addr, neighbor_addr))
+      if(ipequal(&entry->neighbor_main_addr, neighbor_addr))
 	break;
       
       entry = entry->next;
@@ -232,7 +233,7 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
       new_neigh != &neighbortable[hash];
       new_neigh = new_neigh->next)
     {
-      if(COMP_IP(&new_neigh->neighbor_main_addr, main_addr))
+      if(ipequal(&new_neigh->neighbor_main_addr, main_addr))
 	return new_neigh;
     }
   
@@ -241,7 +242,8 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
   new_neigh = olsr_malloc(sizeof(struct neighbor_entry), "New neighbor entry");
   
   /* Set address, willingness and status */
-  COPY_IP(&new_neigh->neighbor_main_addr, main_addr);
+  //COPY_IP(&new_neigh->neighbor_main_addr, main_addr);
+  new_neigh->neighbor_main_addr = *main_addr;
   new_neigh->willingness = WILL_NEVER;
   new_neigh->status = NOT_SYM;
 
@@ -295,13 +297,13 @@ olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
   struct neighbor_entry  *entry;
   olsr_u32_t             hash = olsr_hashing(dst);
   
-  //printf("\nLookup %s\n", olsr_ip_to_string(dst));
+  //printf("\nLookup %s\n", olsr_ip_to_string(&buf, dst));
   for(entry = neighbortable[hash].next;
       entry != &neighbortable[hash];
       entry = entry->next)
     {
-      //printf("Checking %s\n", olsr_ip_to_string(&entry->neighbor_main_addr));
-      if(COMP_IP(&entry->neighbor_main_addr, dst))
+      //printf("Checking %s\n", olsr_ip_to_string(&buf, &entry->neighbor_main_addr));
+      if(ipequal(&entry->neighbor_main_addr, dst))
 	return entry;
       
     }
@@ -431,44 +433,40 @@ olsr_time_out_neighborhood_tables(void)
 void
 olsr_print_neighbor_table(void)
 {
-  int i;
-  char *fstr;
-
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n",
+#ifdef NODEBUG
+  /* The whole function doesn't do anything else. */
+#ifndef NODEBUG
+  const int iplen = olsr_cnf->ip_version == AF_INET ?  15 : 39;
+#endif
+  int idx;
+  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
+              "%*s  LQ     NLQ    SYM   MPR   MPRS  will\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
-              (int)now.tv_usec/10000);
+              (int)now.tv_usec/10000,
+              iplen,
+              "IP address");
 
-  if (olsr_cnf->ip_version == AF_INET)
-    {
-      OLSR_PRINTF(1, "IP address       LQ     NLQ    SYM   MPR   MPRS  will\n");
-      fstr = "%-15s  %5.3f  %5.3f  %s  %s  %s  %d\n";
+  for (idx = 0; idx < HASHSIZE; idx++) {
+    struct neighbor_entry *neigh;
+    for(neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
+      struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+      if(lnk) {
+#ifndef NODEBUG
+        struct ipaddr_str buf;
+#endif
+        OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %s  %s  %s  %d\n",
+                    iplen,
+                    olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                    lnk->loss_link_quality,
+                    lnk->neigh_link_quality,
+                    neigh->status == SYM ? "YES " : "NO  ",
+                    neigh->is_mpr ? "YES " : "NO  ", 
+                    olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
+                    neigh->willingness);
+      }
     }
-  else
-    {
-      OLSR_PRINTF(1, "IP address                               LQ     NLQ    SYM   MPR   MPRS  will\n");
-      fstr = "%-39s  %5.3f  %5.3f  %s  %s  %s  %d\n";
-    }
-
-  for (i = 0; i < HASHSIZE; i++)
-    {
-      struct neighbor_entry *neigh;
-      for(neigh = neighbortable[i].next; neigh != &neighbortable[i]; neigh = neigh->next)
-	{
-	  struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-	  if(lnk)
-            {
-              const double best_lq = lnk->neigh_link_quality;
-              const double inv_best_lq = lnk->loss_link_quality;
-
-              OLSR_PRINTF(1, fstr, olsr_ip_to_string(&neigh->neighbor_main_addr),
-                          inv_best_lq, best_lq,
-                          (neigh->status == SYM) ? "YES " : "NO  ",
-                          neigh->is_mpr ? "YES " : "NO  ", 
-                          olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
-                          neigh->willingness);
-            }
-        }
-    }
+  }
+#endif
 }

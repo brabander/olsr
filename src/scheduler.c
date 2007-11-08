@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.43 2007/09/17 22:24:22 bernd67 Exp $
+ * $Id: scheduler.c,v 1.44 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -51,6 +51,7 @@
 #include "mpr.h"
 #include "olsr.h"
 #include "build_msg.h"
+#include "net_olsr.h"
 
 /* Timer data, global. Externed in defs.h */
 clock_t now_times;              /* current idea of times(2) reported uptime */
@@ -93,33 +94,15 @@ trigger_dijkstra(void *foo __attribute__((unused)))
 void
 scheduler(void)
 {
-  struct timespec remainder_spec;
-  struct timespec sleeptime_spec;
-
-  /*
-   *Used to calculate sleep time
-   */
-  clock_t end_of_loop;
-  struct timeval time_used;
   struct timeval interval;
-  struct timeval sleeptime_val;
-
   olsr_u32_t interval_usec;
 
-  struct event_entry *entry;
-  struct timeout_entry *time_out_entry;
-
-  struct interface *ifn;
-
-  /* Global buffer for times(2) calls. Do not remove - at least OpenBSD needs it. */
-  struct tms tms_buf;
- 
   link_changes = OLSR_FALSE;
 
   if(olsr_cnf->lq_level > 1 && olsr_cnf->lq_dinter > 0.0)
     olsr_register_scheduler_event(trigger_dijkstra, NULL, olsr_cnf->lq_dinter, 0, NULL);
 
-  interval_usec = (olsr_u32_t)(olsr_cnf->pollrate * 1000000);
+  interval_usec = olsr_cnf->pollrate * 1000000;
 
   interval.tv_sec = interval_usec / 1000000;
   interval.tv_usec = interval_usec % 1000000;
@@ -130,33 +113,34 @@ scheduler(void)
   /* Main scheduler event loop */
   for(;;)
     {
+      /*
+       * Used to calculate sleep time
+       */
+      clock_t end_of_loop;
+      struct timeval time_used;
+      struct event_entry *entry;
+      struct timeout_entry *time_out_entry;
+      struct interface *ifn;
+
+      /* Global buffer for times(2) calls. Do not remove - at least OpenBSD needs it. */
+      struct tms tms_buf;
+ 
       /* Update now_times */
       now_times = times(&tms_buf);
 
       /* Update the global timestamp - kept for plugin compat */
       gettimeofday(&now, NULL);
-      nowtm = localtime((time_t *)&now.tv_sec);
+      do {
+          nowtm = localtime(&now.tv_sec);
+      } while (nowtm == NULL);
 
-      while (nowtm == NULL)
-	{
-	  nowtm = localtime((time_t *)&now.tv_sec);
-	}
-
-
-      /* Run timout functions (before packet generation) */
-
-      time_out_entry = timeout_functions;
-      
-      while(time_out_entry)
-	{
+      /* Run timeout functions (before packet generation) */      
+      for (time_out_entry = timeout_functions; time_out_entry != NULL; time_out_entry = time_out_entry->next) {
 	  time_out_entry->function();
-	  time_out_entry = time_out_entry->next;
-	}
+      }
 
-      /* Update */
-      
+      /* Update */      
       olsr_process_changes();
-
 
       /* Check for changes in topology */
       if(link_changes)
@@ -168,38 +152,31 @@ scheduler(void)
 
 
       /* Check scheduled events */
-      entry = event_functions;
-
+      
       /* UPDATED - resets timer upon triggered execution */
-      while(entry)
+      for (entry = event_functions; entry != NULL; entry = entry->next)
 	{
 	  entry->since_last += olsr_cnf->pollrate;
 
 	  /* Timed out */
-	  if((entry->since_last > entry->interval) ||
-	     /* Triggered */
-	     ((entry->trigger != NULL) &&
-	      (*(entry->trigger) == 1)))
-	    {
+	  if ((entry->since_last > entry->interval) ||
+              /* Triggered */
+              ((entry->trigger != NULL) && (*entry->trigger == 1))
+              ) {
 	      /* Run scheduled function */
 	      entry->function(entry->param);
 
 	      /* Set jitter */
-	      entry->since_last = (float) random()/RAND_MAX;
-	      entry->since_last *= olsr_cnf->max_jitter;
+	      entry->since_last = (float)(random() / RAND_MAX) * olsr_cnf->max_jitter;
 	      
 	      /* Reset trigger */
-	      if(entry->trigger != NULL)
-		*(entry->trigger) = 0;
-	      
+	      if(entry->trigger != NULL) {
+		*entry->trigger = 0;
+              }
+
 	      //OLSR_PRINTF(3, "Since_last jitter: %0.2f\n", entry->since_last);
-
 	    }
-
-	  entry = entry->next;
 	}
-
-
 
       /* looping trough interfaces and emmittin pending data */
       for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
@@ -219,6 +196,9 @@ scheduler(void)
 
       if(timercmp(&time_used, &interval, <))
 	{
+          struct timespec remainder_spec;
+          struct timespec sleeptime_spec;
+          struct timeval sleeptime_val;
 	  timersub(&interval, &time_used, &sleeptime_val);
 	  
 	  // printf("sleeptime_val = %u.%06u\n",

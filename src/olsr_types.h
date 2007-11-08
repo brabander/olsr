@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_types.h,v 1.11 2007/11/02 10:16:39 bernd67 Exp $
+ * $Id: olsr_types.h,v 1.12 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 /*
@@ -74,23 +74,17 @@ typedef int32_t         olsr_32_t;
 /* IPv6 address format in6_addr */
 #include <netinet/in.h>
 
-union olsr_ip_addr
-{
-  /*
+union olsr_ip_addr {
   struct in_addr v4;
-  */
-  olsr_u32_t v4;
   struct in6_addr v6;
 };
 
-struct olsr_ip_prefix
-{
+struct olsr_ip_prefix {
   union olsr_ip_addr prefix;
   olsr_u8_t prefix_len;
 };
 
-union hna_netmask
-{
+union hna_netmask {
   olsr_u32_t v4;
   olsr_u16_t v6;
 };

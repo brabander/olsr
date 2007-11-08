@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.32 2007/10/16 09:54:43 bernd67 Exp $
+ * $Id: routing_table.c,v 1.33 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -50,7 +50,9 @@
 #include "routing_table.h"
 #include "lq_avl.h"
 #include "lq_route.h"
-#include "assert.h"
+#include "net_olsr.h"
+
+#include <assert.h>
 
 struct avl_tree routingtree;
 unsigned int routingtree_version;
@@ -80,18 +82,16 @@ olsr_bump_routingtree_version(void)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv4_prefix (void *prefix1, void *prefix2)
+avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
 {       
-  struct olsr_ip_prefix *pfx1, *pfx2;
-
-  pfx1 = prefix1;
-  pfx2 = prefix2;
+  const struct olsr_ip_prefix *pfx1 = prefix1;
+  const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  if (pfx1->prefix.v4 < pfx2->prefix.v4) {
+  if (pfx1->prefix.v4.s_addr < pfx2->prefix.v4.s_addr) {
     return -1;
   }
-  if (pfx1->prefix.v4 > pfx2->prefix.v4) {
+  if (pfx1->prefix.v4.s_addr > pfx2->prefix.v4.s_addr) {
     return +1;
   }
 
@@ -117,13 +117,11 @@ avl_comp_ipv4_prefix (void *prefix1, void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv6_prefix (void *prefix1, void *prefix2)
+avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 {       
-  struct olsr_ip_prefix *pfx1, *pfx2;
   int res;
-
-  pfx1 = prefix1;
-  pfx2 = prefix2;
+  const struct olsr_ip_prefix *pfx1 = prefix1;
+  const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
   res = memcmp(&pfx1->prefix.v6, &pfx2->prefix.v6, 16);
@@ -173,7 +171,7 @@ olsr_lookup_routing_table(const union olsr_ip_addr *dst)
   struct avl_node *rt_tree_node;
   struct olsr_ip_prefix prefix;
 
-  COPY_IP(&prefix, dst);
+  prefix.prefix = *dst;
   prefix.prefix_len = olsr_cnf->maxplen;
 
   rt_tree_node = avl_find(&routingtree, &prefix);
@@ -260,7 +258,8 @@ olsr_alloc_rt_path(struct rt_entry *rt,
 
   memset(rtp, 0, sizeof(struct rt_path));
 
-  COPY_IP(&rtp->rtp_originator, originator);
+  //COPY_IP(&rtp->rtp_originator, originator);
+  rtp->rtp_originator = *originator;
 
   /* set key and backpointer prior to tree insertion */
   rtp->rtp_tree_node.key = &rtp->rtp_originator;
@@ -281,7 +280,7 @@ olsr_alloc_rt_path(struct rt_entry *rt,
 olsr_bool
 olsr_nh_change(struct rt_nexthop *nh1, struct rt_nexthop *nh2)
 {
-  if ((!COMP_IP(&nh1->gateway, &nh2->gateway)) ||
+  if (!ipequal(&nh1->gateway, &nh2->gateway) ||
       (nh1->iif_index != nh2->iif_index)) {
     return OLSR_TRUE;
   }
@@ -361,9 +360,7 @@ olsr_rt_best(struct rt_entry *rt)
   /* grab the first entry */
   node = avl_walk_first(&rt->rt_path_tree);
 
-  if (!node) {
-    assert(0); /* should not happen */
-  }
+  assert(node != 0); /* should not happen */
 
   rt->rt_best = node->data;
 
@@ -471,12 +468,13 @@ char *
 olsr_rt_to_string(struct rt_entry *rt)
 {
   static char buff[128];
+  struct ipaddr_str prefixstr, gwstr;
 
   snprintf(buff, sizeof(buff),
            "%s/%u via %s",
-           olsr_ip_to_string(&rt->rt_dst.prefix),
+           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
-           olsr_ip_to_string(&rt->rt_nexthop.gateway));
+           olsr_ip_to_string(&gwstr, &rt->rt_nexthop.gateway));
 
   return buff;
 }
@@ -487,18 +485,17 @@ olsr_rt_to_string(struct rt_entry *rt)
 char *
 olsr_rtp_to_string(struct rt_path *rtp)
 {
-  struct rt_entry *rt;
   static char buff[128];
-
-  rt = rtp->rtp_rt;
+  struct ipaddr_str prefixstr, origstr, gwstr;
+  struct rt_entry *rt = rtp->rtp_rt;
 
   snprintf(buff, sizeof(buff),
            "%s/%u from %s via %s, "
            "etx %.3f, metric %u, v %u",
-           olsr_ip_to_string(&rt->rt_dst.prefix),
+           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
-           olsr_ip_to_string(&rtp->rtp_originator),
-           olsr_ip_to_string(&rtp->rtp_nexthop.gateway),
+           olsr_ip_to_string(&origstr, &rtp->rtp_originator),
+           olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
            rtp->rtp_metric.etx,
            rtp->rtp_metric.hops,
            rtp->rtp_version);
@@ -562,41 +559,37 @@ olsr_calculate_hna_routes(void)
 void
 olsr_print_routing_table(struct avl_tree *tree)
 {
-  struct rt_entry *rt;
-  struct rt_path *rtp;
-
-  struct avl_node *rt_tree_node, *rtp_tree_node;
+  struct avl_node *rt_tree_node;
 
   printf("ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first(tree);
        rt_tree_node;
        rt_tree_node = avl_walk_next(rt_tree_node)) {
-
-    rt = rt_tree_node->data;
+    struct avl_node *rtp_tree_node;
+    struct ipaddr_str prefixstr, origstr, gwstr;
+    struct rt_entry * const rt = rt_tree_node->data;
 
     /* first the route entry */
     printf("%s/%u, via %s, best-originator %s\n",
-           olsr_ip_to_string(&rt->rt_dst.prefix),
+           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
-           olsr_ip_to_string(&rt->rt_nexthop.gateway),
-           olsr_ip_to_string(&rt->rt_best->rtp_originator));
+           olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
+           olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
 
     /* walk the per-originator path tree of routes */
     for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
          rtp_tree_node;
          rtp_tree_node = avl_walk_next(rtp_tree_node)) {
 
-      rtp = rtp_tree_node->data;
-
+      const struct rt_path * const rtp = rtp_tree_node->data;
       printf("\tfrom %s, etx %.3f, metric %u, via %s, %s, v %u\n",
-             olsr_ip_to_string(&rtp->rtp_originator),
+             olsr_ip_to_string(&origstr, &rtp->rtp_originator),
              rtp->rtp_metric.etx,
              rtp->rtp_metric.hops,
-             olsr_ip_to_string(&rtp->rtp_nexthop.gateway),
+             olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),
-             rtp->rtp_version);
-    
+             rtp->rtp_version);    
     }
   }
 }

@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.23 2007/10/21 20:37:58 bernd67 Exp $
+ * $Id: hna_set.c,v 1.24 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
 #include "olsr.h"
 #include "scheduler.h"
+#include "net_olsr.h"
 
 
 struct hna_entry hna_set[HASHSIZE];
@@ -111,7 +112,7 @@ olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, c
       tmp_net != nets;
       tmp_net = tmp_net->next)
     { 
-      if(COMP_IP(&tmp_net->A_network_addr, net) &&
+      if(ipequal(&tmp_net->A_network_addr, net) &&
 	 (memcmp(&tmp_net->A_netmask, mask, netmask_size) == 0))
 	return tmp_net;
     }
@@ -141,7 +142,7 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
       tmp_hna != &hna_set[hash];
       tmp_hna = tmp_hna->next)
     {
-      if(COMP_IP(&tmp_hna->A_gateway_addr, gw))
+      if(ipequal(&tmp_hna->A_gateway_addr, gw))
 	return tmp_hna;
     }
   
@@ -167,7 +168,8 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
   new_entry = olsr_malloc(sizeof(struct hna_entry), "New HNA entry");
 
   /* Fill struct */
-  COPY_IP(&new_entry->A_gateway_addr, addr);
+  //COPY_IP(&new_entry->A_gateway_addr, addr);
+  new_entry->A_gateway_addr = *addr;
 
   /* Link nets */
   new_entry->networks.next = &new_entry->networks;
@@ -204,8 +206,10 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, const 
   struct hna_net *new_net = olsr_malloc(sizeof(struct hna_net), "Add HNA net");
   
   /* Fill struct */
-  COPY_IP(&new_net->A_network_addr, net);
-  memcpy(&new_net->A_netmask, mask, netmask_size);
+  //COPY_IP(&new_net->A_network_addr, net);
+  new_net->A_network_addr = *net;
+  //memcpy(&new_net->A_netmask, mask, netmask_size);
+  new_net->A_netmask = *mask;
 
   /* Queue */
   hna_gw->networks.next->prev = new_net;
@@ -322,6 +326,8 @@ olsr_time_out_hna_set(void *foo __attribute__((unused)))
 void
 olsr_print_hna_set(void)
 {
+#ifdef NODEBUG
+  /* The whole function doesn't do anything else. */
   int idx;
 
   OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
@@ -348,14 +354,22 @@ olsr_print_hna_set(void)
 	    {
 	      if(olsr_cnf->ip_version == AF_INET)
 		{
-		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string(&tmp_net->A_network_addr));
-		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&tmp_net->A_netmask.v4));
-		  OLSR_PRINTF(1, "%-15s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+#ifndef NODEBUG
+                  struct ipaddr_str buf;
+#endif
+                  struct in_addr a;
+		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string(&buf, &tmp_net->A_network_addr));
+                  a.s_addr = tmp_net->A_netmask.v4; /* Ugly! */
+		  OLSR_PRINTF(1, "%-15s ", ip4_to_string(&buf, a));
+		  OLSR_PRINTF(1, "%-15s\n", olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
 		}
 	      else
 		{
-		  OLSR_PRINTF(1, "%-27s/%d", olsr_ip_to_string(&tmp_net->A_network_addr), tmp_net->A_netmask.v6);
-		  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&tmp_hna->A_gateway_addr));
+#ifndef NODEBUG
+                  struct ipaddr_str buf;
+#endif
+		  OLSR_PRINTF(1, "%-27s/%d", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->A_netmask.v6);
+		  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
 		}
 
 	      tmp_net = tmp_net->next;
@@ -363,7 +377,7 @@ olsr_print_hna_set(void)
 	  tmp_hna = tmp_hna->next;
 	}
     }
-
+#endif
 }
 
 /*

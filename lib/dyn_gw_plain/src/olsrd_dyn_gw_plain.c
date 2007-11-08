@@ -83,8 +83,8 @@ olsrd_plugin_init(void)
 {
   printf("OLSRD dyn_gw_plain plugin by Sven-Ola\n");
   
-  gw_net.v4 = INET_NET;
-  gw_netmask.v4 = INET_PREFIX;
+  gw_net.v4.s_addr = INET_NET;
+  gw_netmask.v4.s_addr = INET_PREFIX;
 
   has_inet_gateway = 0;
   
@@ -147,8 +147,8 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 	if(//(iflags & RTF_GATEWAY) &&
 	   (iflags & RTF_UP) &&
 	   (metric == 0) &&
-	   (netmask == mask->v4) && 
-	   (dest_addr == net->v4))
+	   (netmask == mask->v4.s_addr) && 
+	   (dest_addr == net->v4.s_addr))
 	  {
             olsr_printf(DEBUGLEV, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
             retval=1;

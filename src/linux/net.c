@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.34 2007/04/25 22:08:18 bernd67 Exp $
+ * $Id: net.c,v 1.35 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 
@@ -48,6 +48,7 @@
 #include "../defs.h"
 #include "../net_os.h"
 #include "../parser.h"
+#include "../net_olsr.h"
 
 
 /*
@@ -558,14 +559,16 @@ int
 join_mcast(struct interface *ifs, int sock)
 {
   /* See linux/in6.h */
-
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+#endif
   struct ipv6_mreq mcastreq;
 
-  COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
+  mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
 #if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(sock, 
 		IPPROTO_IPV6, 

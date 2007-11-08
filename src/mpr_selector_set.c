@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.19 2007/10/21 20:55:11 bernd67 Exp $
+ * $Id: mpr_selector_set.c,v 1.20 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -44,6 +44,7 @@
 #include "mpr_selector_set.h"
 #include "olsr.h"
 #include "scheduler.h"
+#include "net_olsr.h"
 
 static olsr_u16_t ansn;
 
@@ -101,14 +102,18 @@ olsr_is_mpr(void)
 struct mpr_selector *
 olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
 {
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+#endif
   struct mpr_selector *new_entry;
 
-  OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(addr));
+  OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
 
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
 
   /* Fill struct */
-  COPY_IP(&new_entry->MS_main_addr, addr);
+  //COPY_IP(&new_entry->MS_main_addr, addr);
+  new_entry->MS_main_addr = *addr;
   new_entry->MS_time = GET_TIMESTAMP(vtime*1000);
 
   /* Queue */
@@ -142,7 +147,7 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
   //OLSR_PRINTF(1, "MPRS: Lookup....");
 
   for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
-    if(COMP_IP(&mprs->MS_main_addr, addr)) {
+    if(ipequal(&mprs->MS_main_addr, addr)) {
       //OLSR_PRINTF(1, "MATCH\n");
       return mprs;
     }
@@ -164,9 +169,12 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
 int
 olsr_update_mprs_set(const union olsr_ip_addr *addr, float vtime)
 {
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+#endif
   struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
 
-  OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(addr));
+  OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
 
   if(mprs == NULL) {
     olsr_add_mpr_selector(addr, vtime);
@@ -192,9 +200,12 @@ olsr_time_out_mprs_set(void)
 	{
 	  /* Dequeue */
 	  struct mpr_selector *mprs_to_delete = mprs;
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+#endif
 	  mprs = mprs->next;
 
-	  OLSR_PRINTF(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&mprs_to_delete->MS_main_addr));
+	  OLSR_PRINTF(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&buf, &mprs_to_delete->MS_main_addr));
 
 	  DEQUEUE_ELEM(mprs_to_delete);
 
@@ -215,8 +226,11 @@ olsr_print_mprs_set(void)
 {
   struct mpr_selector *mprs;
   OLSR_PRINTF(1, "MPR SELECTORS: ");
-  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
-    OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&mprs->MS_main_addr));
+  for(mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
+#ifndef NODEBUG
+    struct ipaddr_str buf;
+#endif
+    OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
   }
   OLSR_PRINTF(1, "\n");
 }

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.28 2007/08/02 10:20:25 bernd67 Exp $
+ * $Id: main.c,v 1.29 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -76,7 +76,6 @@ struct ohs_connection *ohs_conns;
 
 static int ip_version;
 int ipsize;
-static char ipv6_buf[100]; /* for address coversion */
 
 olsr_u32_t logbits;
 
@@ -99,28 +98,13 @@ ohs_listen_loop(void);
 const char *
 olsr_ip_to_string(const union olsr_ip_addr *addr)
 {
-  static int index = 0;
   static char buff[4][100];
-  const char *ret;
-  struct in_addr in;
-  
-  if(ip_version == AF_INET)
-    {
-      in.s_addr=addr->v4;
-      ret = inet_ntoa(in);
-    }
-  else
-    {
-      /* IPv6 */
-      ret = inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
-    }
-
-  strncpy(buff[index], ret, 100);
-
-  ret = buff[index];
-
+  static int index = 0;
+  const char *ret = inet_ntop(ip_version,
+                              ip_version == AF_INET ? (const void *)&addr->v4 : (const void *)&addr->v6,
+                              buff[index],
+                              sizeof(buff[index]));
   index = (index + 1) & 3;
-
   return ret;
 }
 
@@ -141,7 +125,7 @@ ohs_close(int signal __attribute__((unused)))
 }
 
 struct ohs_connection *
-get_client_by_addr(union olsr_ip_addr *adr)
+get_client_by_addr(const union olsr_ip_addr *adr)
 {
   struct ohs_connection *oc = ohs_conns;
 
@@ -159,7 +143,7 @@ static int
 ohs_init_new_connection(int s)
 {
   struct ohs_connection *oc;
-  olsr_u8_t new_addr[4];
+  olsr_u32_t new_addr;
   int i;
 
   if(logbits & LOG_CONNECT)
@@ -186,7 +170,7 @@ ohs_init_new_connection(int s)
   /* Get "fake IP" */
   for (i = 0; i < 20; i++)
   {
-    if (recv(oc->socket, new_addr, 4, 0) == 4)
+    if (recv(oc->socket, &new_addr, sizeof(new_addr), 0) == 4)
       break;
 
 #if defined WIN32
@@ -200,8 +184,7 @@ ohs_init_new_connection(int s)
     return -1;
   }
 
-  memcpy(&oc->ip_addr, new_addr, 4);
-  oc->ip_addr.v4 = ntohl(oc->ip_addr.v4);
+  oc->ip_addr.v4.s_addr = ntohl(new_addr);
   if(logbits & LOG_CONNECT)
     printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
 
@@ -276,7 +259,7 @@ ohs_route_data(struct ohs_connection *oc)
     return -1;
 
   if(logbits & LOG_FORWARD)
-    printf("Received %d bytes from %s\n", (int)len, olsr_ip_to_string(&oc->ip_addr));
+    printf("Received %ld bytes from %s\n", (long)len, olsr_ip_to_string(&oc->ip_addr));
 
   /* Loop trough clients */
   for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)

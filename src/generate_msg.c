@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: generate_msg.c,v 1.25 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: generate_msg.c,v 1.26 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "generate_msg.h"
@@ -56,6 +56,7 @@
 #include "neighbor_table.h"
 #include "link_set.h"
 #include "two_hop_neighbor_table.h"
+#include "net_olsr.h"
 
 
 static char pulsedata[] = {'\\', '|', '/', '-'};

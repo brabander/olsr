@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.29 2007/10/13 12:31:04 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.30 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -104,7 +104,7 @@ static int olsr_netlink_route(struct rt_entry *rt, olsr_u8_t family, olsr_u8_t r
 
 	if (AF_INET == family)
 	{
-		if (rt->rt_dst.prefix.v4 != nexthop->gateway.v4)
+		if (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr)
 		{
 			olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
 			req.r.rtm_scope = RT_SCOPE_UNIVERSE;
@@ -190,16 +190,15 @@ olsr_ioctl_add_route(struct rt_entry *rt)
   ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
   ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
 
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr =
-    rt->rt_dst.prefix.v4;
+  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr = rt->rt_dst.prefix.v4;
 
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
   }
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = mask.v4;
+  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr = mask.v4;
 
-  if (rt->rt_dst.prefix.v4 != rt->rt_best->rtp_nexthop.gateway.v4) {
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr.s_addr =
+  if (rt->rt_dst.prefix.v4.s_addr != rt->rt_best->rtp_nexthop.gateway.v4.s_addr) {
+    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr =
       rt->rt_best->rtp_nexthop.gateway.v4;
   }
 
@@ -213,7 +212,7 @@ olsr_ioctl_add_route(struct rt_entry *rt)
 
   /* delete existing default route before ? */
   if((olsr_cnf->del_gws) &&
-     (rt->rt_dst.prefix.v4 == INADDR_ANY) &&
+     (rt->rt_dst.prefix.v4.s_addr == INADDR_ANY) &&
      (rt->rt_dst.prefix_len == INADDR_ANY)) {
     delete_all_inet_gws();
     olsr_cnf->del_gws = OLSR_FALSE;
@@ -263,10 +262,12 @@ olsr_ioctl_add_route6(struct rt_entry *rt)
 
   memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
 
-  COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
+  //COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
+  kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
 
-  COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
+  //COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
+  kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
   kernel_route.rtmsg_metric = RT_METRIC_DEFAULT;
@@ -320,18 +321,16 @@ olsr_ioctl_del_route(struct rt_entry *rt)
   ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
   ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
 
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr =
-    rt->rt_dst.prefix.v4;
+  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr = rt->rt_dst.prefix.v4;
 
-  if (rt->rt_dst.prefix.v4 != rt->rt_nexthop.gateway.v4) {
-    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr.s_addr =
-      rt->rt_nexthop.gateway.v4;
+  if (rt->rt_dst.prefix.v4.s_addr != rt->rt_nexthop.gateway.v4.s_addr) {
+    ((struct sockaddr_in *)&kernel_route.rt_gateway)->sin_addr = rt->rt_nexthop.gateway.v4;
   }
 
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
   } else {
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = mask.v4;
+    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr = mask.v4;
   }
 
   kernel_route.rt_flags = olsr_rt_flags(rt);
@@ -384,10 +383,13 @@ olsr_ioctl_del_route6(struct rt_entry *rt)
 #if !LINUX_POLICY_ROUTING
   memset(&kernel_route,0,sizeof(struct in6_rtmsg));
 
-  COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
+
+  //COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
+  kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
 
-  COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
+  //COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
+  kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
   kernel_route.rtmsg_metric = RT_METRIC_DEFAULT;

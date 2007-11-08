@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.19 2007/10/24 13:44:26 bernd67 Exp $
+ * $Id: apm.c,v 1.20 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 /*
@@ -140,7 +140,7 @@ apm_init(void)
 
 
 void
-apm_printinfo(struct olsr_apm_info *ainfo)
+apm_printinfo(struct olsr_apm_info *ainfo __attribute__((unused)))
 {
   OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
 	      ainfo->ac_line_status,
@@ -152,15 +152,11 @@ apm_printinfo(struct olsr_apm_info *ainfo)
 int
 apm_read(struct olsr_apm_info *ainfo)
 {
-  switch(method)
-    {
-    case(USE_APM):
-      return apm_read_apm(ainfo);
-    case(USE_ACPI):
-      return apm_read_acpi(ainfo);
-    default:
-      break;
-    }
+  switch(method) {
+  case USE_APM:  return apm_read_apm(ainfo);
+  case USE_ACPI: return apm_read_acpi(ainfo);
+  default:       break;
+  }
   return 0;
 }
 

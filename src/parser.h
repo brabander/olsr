@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.h,v 1.11 2006/01/07 08:16:20 kattemat Exp $
+ * $Id: parser.h,v 1.12 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -48,11 +48,13 @@
 
 #define PROMISCUOUS 0xffffffff
 
+typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
+
 struct parse_function_entry
 {
   olsr_u32_t type;       /* If set to PROMISCUOUS all messages will be received */
   int caller_forwarding; /* If set to 0 this entry is not registered as forwarding packets */
-  void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *);
+  parse_function *function;
   struct parse_function_entry *next;
 };
 
@@ -72,10 +74,10 @@ void
 olsr_input_hostemu(int);
 
 void
-olsr_parser_add_function(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t, int);
+olsr_parser_add_function(parse_function, olsr_u32_t, int);
 
 int
-olsr_parser_remove_function(void (*)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t, int);
+olsr_parser_remove_function(parse_function, olsr_u32_t, int);
 
 void
 parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);

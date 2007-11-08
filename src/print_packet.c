@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.12 2007/09/17 22:14:07 bernd67 Exp $
+ * $Id: print_packet.c,v 1.13 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "print_packet.h"
@@ -44,6 +44,8 @@
 #include "defs.h"
 #include "olsr.h"
 #include "lq_packet.h"
+#include "net_olsr.h"
+
 
 static void
 print_messagedump(FILE *, olsr_u8_t *, olsr_16_t);
@@ -73,10 +75,11 @@ print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
 {
   olsr_16_t remainsize = size - OLSR_HEADERSIZE;
   union olsr_message *msg;
+  struct ipaddr_str buf;
 
   /* Print packet header (no IP4/6 difference) */
   fprintf(handle, "  ============== OLSR PACKET ==============\n   source: %s\n   length: %d bytes\n   seqno: %d\n\n",
-	  from_addr ? olsr_ip_to_string(from_addr) : "UNKNOWN",
+	  from_addr ? olsr_ip_to_string(&buf, from_addr) : "UNKNOWN",
 	  ntohs(pkt->v4.olsr_packlen), ntohs(pkt->v4.olsr_seqno));
 
   /* Check size */
@@ -102,10 +105,11 @@ print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
 olsr_8_t
 print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 {
+  struct ipaddr_str buf;
 
   fprintf(handle, "   ------------ OLSR MESSAGE ------------\n");
   fprintf(handle, "    Sender main addr: %s\n", 
-	  olsr_ip_to_string((union olsr_ip_addr *)&msg->v4.originator));
+	  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->v4.originator));
   fprintf(handle, "    Type: %s, size: %d, vtime: %0.2f\n", 
 	  olsr_msgtype_to_string(msg->v4.olsr_msgtype), 
 	  ntohs(msg->v4.olsr_msgsize),
@@ -218,8 +222,8 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4])
 	    {
-
-	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+              struct ipaddr_str buf;
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	    }
 	}
 
@@ -245,7 +249,8 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size); 
 	       haddr++)
 	    {
-	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+              struct ipaddr_str buf;
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	    }
 	}
 
@@ -285,8 +290,9 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8])
 	    {
+              struct ipaddr_str buf;
 	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
-	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
 	}
@@ -313,8 +319,9 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; 
 	       haddr++)
 	    {
+              struct ipaddr_str buf;
 	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
-	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(haddr));
+	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
 	}
@@ -334,7 +341,8 @@ print_olsr_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
   while(remsize)
     {
-      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      struct ipaddr_str buf;
+      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *) data));
       data += olsr_cnf->ipsize;
       fprintf(handle, "    +LQ: %d, ", *data);
       data += 1;
@@ -358,7 +366,8 @@ print_olsr_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
   while(remsize)
     {
-      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      struct ipaddr_str buf;
+      fprintf(handle, "    +Neighbor: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *) data));
       data += olsr_cnf->ipsize;
 
       remsize -= olsr_cnf->ipsize;
@@ -374,9 +383,10 @@ print_hnamsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
   while(remsize)
     {
-      fprintf(handle, "    +Network: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      struct ipaddr_str buf;
+      fprintf(handle, "    +Network: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *) data));
       data += olsr_cnf->ipsize;
-      fprintf(handle, "    +Netmask: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      fprintf(handle, "    +Netmask: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *) data));
       data += olsr_cnf->ipsize;
 
       remsize -= (olsr_cnf->ipsize*2);
@@ -391,7 +401,8 @@ print_midmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
   while(remsize)
     {
-      fprintf(handle, "    +Alias: %s\n", olsr_ip_to_string((union olsr_ip_addr *) data));
+      struct ipaddr_str buf;
+      fprintf(handle, "    +Alias: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *) data));
       data += olsr_cnf->ipsize;
       remsize -= olsr_cnf->ipsize;
     }

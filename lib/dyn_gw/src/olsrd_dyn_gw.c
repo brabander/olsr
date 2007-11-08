@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.23 2007/09/17 21:57:05 bernd67 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.24 2007/11/08 22:47:39 bernd67 Exp $
  */
 
 /*
@@ -165,8 +165,8 @@ static int set_plugin_ping(const char *value, void *data __attribute__((unused))
     if (the_hna_list == NULL){
         union olsr_ip_addr temp_net;
         union olsr_ip_addr temp_netmask;
-        temp_net.v4 = INET_NET;
-        temp_netmask.v4 = INET_PREFIX;
+        temp_net.v4.s_addr = INET_NET;
+        temp_netmask.v4.s_addr = INET_PREFIX;
         the_hna_list = add_to_hna_list(the_hna_list, &temp_net, &temp_netmask);
         if (the_hna_list == NULL) {
             return 1;
@@ -364,10 +364,10 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
 
         if( (iflags & RTF_UP) &&
             (metric == 0) &&
-            (netmask == mask->v4) && 
-            (dest_addr == net->v4))
+            (netmask == mask->v4.s_addr) && 
+            (dest_addr == net->v4.s_addr))
           {
-            if ( ((mask->v4==INET_PREFIX)&&(net->v4==INET_NET))&&(!(iflags & RTF_GATEWAY)))
+            if ( ((mask->v4.s_addr == INET_PREFIX)&&(net->v4.s_addr == INET_NET))&&(!(iflags & RTF_GATEWAY)))
               {
                 fclose(fp);  
                 return retval;
@@ -388,7 +388,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
 
     fclose(fp);      
     if(retval == 0){
-      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", net->v4,mask->v4);
+      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", net->v4.s_addr, mask->v4.s_addr);
     }  
     return retval;
 }

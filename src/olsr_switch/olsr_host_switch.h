@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.10 2007/08/02 10:20:25 bernd67 Exp $
+ * $Id: olsr_host_switch.h,v 1.11 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH
@@ -105,7 +105,7 @@ const char *
 olsr_ip_to_string(const union olsr_ip_addr *);
 
 struct ohs_connection *
-get_client_by_addr(union olsr_ip_addr *);
+get_client_by_addr(const union olsr_ip_addr *);
 
 int
 ohs_delete_connection(struct ohs_connection *);

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.65 2007/10/20 21:07:24 bernd67 Exp $
+ * $Id: defs.h,v 1.66 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -56,7 +56,6 @@
 #include <time.h>
 
 #include "olsr_protocol.h"
-#include "net_olsr.h" /* IPaddr -> string conversions is used by everyone */
 #include "olsr_cfg.h"
 
 extern const char olsrd_version[];
@@ -87,7 +86,7 @@ extern FILE *debug_handle;
 #ifdef NODEBUG
 #define OLSR_PRINTF(lvl, format, args...) do { } while(0)
 #else
-#define OLSR_PRINTF(lvl, format, args...) do {                  \
+#define OLSR_PRINTF(lvl, format, args...) do {                    \
     if((olsr_cnf->debug_level >= (lvl)) && debug_handle)          \
       fprintf(debug_handle, (format), ##args);                    \
   } while (0)

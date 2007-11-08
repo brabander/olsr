@@ -46,7 +46,7 @@
 #include <netinet/udp.h> /* struct udphdr */
 
 /* OLSRD includes */
-#include "defs.h" /* COMP_IP */
+#include "defs.h" /* ipequal */
 
 /* Plugin includes */
 #include "Bmf.h" /* BMF_ENCAP_PORT */
@@ -97,7 +97,7 @@ int IsMulticast(union olsr_ip_addr* ipAddress)
 {
   assert(ipAddress != NULL);
 
-  return (ntohl(ipAddress->v4) & 0xF0000000) == 0xE0000000;
+  return (ntohl(ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
 }
 
 /* -------------------------------------------------------------------------

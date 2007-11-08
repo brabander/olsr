@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.43 2007/10/13 12:09:11 bernd67 Exp $
+ * $Id: interfaces.h,v 1.44 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -121,14 +121,14 @@ struct olsr_netbuf
 
 /**
  *A struct containing all necessary information about each
- *interface participating in the OLSD routing
+ *interface participating in the OLSRD routing
  */
 struct interface 
 {
   /* IP version 4 */
-  struct	sockaddr int_addr;		/* address */
-  struct	sockaddr int_netmask;		/* netmask */
-  struct	sockaddr int_broadaddr;         /* broadcast address */
+  struct	sockaddr_in int_addr;		/* address */
+  struct	sockaddr_in int_netmask;		/* netmask */
+  struct	sockaddr_in int_broadaddr;         /* broadcast address */
   /* IP version 6 */
   struct        sockaddr_in6 int6_addr;         /* Address */
   struct        sockaddr_in6 int6_multaddr;     /* Multicast */

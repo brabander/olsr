@@ -37,12 +37,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.7 2007/10/24 13:45:00 bernd67 Exp $
+ * $Id: plugin_util.c,v 1.8 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "plugin_util.h"
 #include "olsr.h"
 #include "defs.h"
+
+#include <arpa/inet.h>
 
 int set_plugin_port(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
 {

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: build_msg.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -45,6 +45,7 @@
 #include "build_msg.h"
 #include "local_hna_set.h"
 #include "mantissa.h"
+#include "net_olsr.h"
 
 #define BMSG_DBGLVL 5
 
@@ -297,7 +298,8 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.olsr_msgtype = HELLO_MESSAGE;
   /* Set source(main) addr */
-  COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
 
   m->v4.olsr_vtime = ifp->valtimes.hello;
 
@@ -319,6 +321,9 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
       /* Link statuses */
       for(j = 0; j <= MAX_LINK; j++)
 	{
+#if !defined(NODEBUG) && defined(DEBUG)
+          struct ipaddr_str buf;
+#endif
 
 	  /* HYSTERESIS - Not adding neighbors with link type HIDE */
 	  
@@ -334,9 +339,9 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 		continue;
 
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address));
+	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&buf, &nb->address));
 	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i);
-#endif		  
+#endif
 	      /*
 	       * If there is not enough room left 
 	       * for the data in the outputbuffer
@@ -390,7 +395,8 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 		  curr_size += 4; /* HELLO type section header */
 		}
 	      
-	      COPY_IP(haddr, &nb->address);
+	      //COPY_IP(haddr, &nb->address);
+	      *haddr = nb->address;
 	      
 	      /* Point to next address */
 	      haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4];
@@ -468,7 +474,8 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
   m->v6.ttl = message->ttl;
   m->v6.hopcnt = 0;
   /* Set source(main) addr */
-  COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
+  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
+  m->v6.originator = olsr_cnf->main_addr.v6;
   m->v6.olsr_msgtype = HELLO_MESSAGE;
 
   m->v6.olsr_vtime = ifp->valtimes.hello;
@@ -487,6 +494,9 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
     {
       for(j = 0; j <= MAX_LINK; j++)
 	{
+#if !defined(NODEBUG) && defined(DEBUG)
+          struct ipaddr_str buf;
+#endif
 	  first_entry = OLSR_TRUE;
 	  	  
 	  /*
@@ -498,9 +508,9 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 		continue;
 
 #ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&nb->address));
+	      OLSR_PRINTF(BMSG_DBGLVL, "\t%s - ", olsr_ip_to_string(&buf, &nb->address));
 	      OLSR_PRINTF(BMSG_DBGLVL, "L:%d N:%d\n", j, i);
-#endif		  
+#endif
 
 
 	      /*
@@ -555,7 +565,8 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 		  curr_size += 4; /* HELLO type section header */
 		}
 		  
-	      COPY_IP(haddr, &nb->address);
+	      //COPY_IP(haddr, &nb->address);
+	      *haddr = nb->address;
 		  
 	      /* Point to next address */
 	      haddr++;
@@ -599,7 +610,9 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 static olsr_bool
 serialize_tc4(struct tc_message *message, struct interface *ifp)           
 {
-
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
@@ -633,7 +646,8 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   m->v4.olsr_msgtype = TC_MESSAGE;
   m->v4.hopcnt = message->hop_count;
   m->v4.ttl = message->ttl;
-  COPY_IP(&m->v4.originator, &message->originator);
+  //COPY_IP(&m->v4.originator, &message->originator);
+  m->v4.originator = message->originator.v4.s_addr;
 
   /* Fill TC header */
   tc->ansn = htons(message->ansn);
@@ -674,10 +688,10 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
       found = OLSR_TRUE;
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
-		      olsr_ip_to_string(&mprs->address));
+		      olsr_ip_to_string(&buf, &mprs->address));
 #endif 
-      COPY_IP(&mprsaddr->addr, &mprs->address);
-
+      //COPY_IP(&mprsaddr->addr, &mprs->address);
+      mprsaddr->addr = mprs->address.v4.s_addr;
       curr_size += olsr_cnf->ipsize;
       mprsaddr++;
     }
@@ -725,7 +739,9 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
 static olsr_bool
 serialize_tc6(struct tc_message *message, struct interface *ifp)           
 {
-
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   olsr_u16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
@@ -758,7 +774,8 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
   m->v6.olsr_msgtype = TC_MESSAGE;
   m->v6.hopcnt = message->hop_count;
   m->v6.ttl = message->ttl;
-  COPY_IP(&m->v6.originator, &message->originator);
+  //COPY_IP(&m->v6.originator, &message->originator);
+  m->v6.originator = message->originator.v6;
 
   /* Fill TC header */
   tc6->ansn = htons(message->ansn);
@@ -795,9 +812,10 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
       found = OLSR_TRUE;
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
-		      olsr_ip_to_string(&mprs->address));
+		      olsr_ip_to_string(&buf, &mprs->address));
 #endif
-      COPY_IP(&mprsaddr6->addr, &mprs->address);
+      //COPY_IP(&mprsaddr6->addr, &mprs->address);
+      mprsaddr6->addr = mprs->address.v6;
       curr_size += olsr_cnf->ipsize;
 
       mprsaddr6++;
@@ -871,7 +889,8 @@ serialize_mid4(struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   /* Set main(first) address */
-  COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
   m->v4.olsr_msgtype = MID_MESSAGE;
   m->v4.olsr_vtime = ifp->valtimes.mid;
  
@@ -880,8 +899,11 @@ serialize_mid4(struct interface *ifp)
   /* Don't add the main address... it's already there */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
-      if(!COMP_IP(&olsr_cnf->main_addr, &ifs->ip_addr))
+      if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
 	{
+#if !defined(NODEBUG) && defined(DEBUG)
+          struct ipaddr_str buf;
+#endif
 
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {
@@ -905,11 +927,12 @@ serialize_mid4(struct interface *ifp)
 	    }
 #ifdef DEBUG
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n", 
-		      olsr_ip_to_string(&ifs->ip_addr), 
+		      olsr_ip_to_string(&buf, &ifs->ip_addr), 
 		      ifs->int_name);
 #endif
 	  
-	  COPY_IP(&addrs->addr, &ifs->ip_addr);
+	  //COPY_IP(&addrs->addr, &ifs->ip_addr);
+          addrs->addr = ifs->ip_addr.v4.s_addr;
 	  addrs++;
 	  curr_size += olsr_cnf->ipsize;
 	}
@@ -972,16 +995,19 @@ serialize_mid6(struct interface *ifp)
   m->v6.olsr_msgtype = MID_MESSAGE;
   m->v6.olsr_vtime = ifp->valtimes.mid;
   /* Set main(first) address */
-  COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
-   
+  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
+  m->v6.originator = olsr_cnf->main_addr.v6;
 
   addrs6 = m->v6.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
   for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
     {
-      if(!COMP_IP(&olsr_cnf->main_addr, &ifs->ip_addr))
+      if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
 	{
+#if !defined(NODEBUG) && defined(DEBUG)
+          struct ipaddr_str buf;
+#endif
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {
 	      /* Only add MID message if it contains data */
@@ -1004,11 +1030,12 @@ serialize_mid6(struct interface *ifp)
 	    }
 #ifdef DEBUG
 		  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n", 
-			      olsr_ip_to_string(&ifs->ip_addr), 
+			      olsr_ip_to_string(&buf, &ifs->ip_addr), 
 			      ifs->int_name);
 #endif
 
-	  COPY_IP(&addrs6->addr, &ifs->ip_addr);
+          //COPY_IP(&addrs6->addr, &ifs->ip_addr);
+          addrs6->addr = ifs->ip_addr.v6;
 	  addrs6++;
 	  curr_size += olsr_cnf->ipsize;
 	}
@@ -1062,7 +1089,8 @@ serialize_hna4(struct interface *ifp)
   
   
   /* Fill header */
-  COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
+  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
@@ -1095,9 +1123,11 @@ serialize_hna4(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      COPY_IP(&pair->addr, &h->net.prefix);
+      //COPY_IP(&pair->addr, &h->net);
+      pair->addr = h->net.prefix.v4.s_addr;
+      //COPY_IP(&pair->netmask, &h->netmask);
       olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
-      pair->addr = ip_addr.v4;
+      pair->netmask = ip_addr.v4.s_addr;
       pair++;
       curr_size += (2 * olsr_cnf->ipsize);
       h = h->next;
@@ -1111,9 +1141,6 @@ serialize_hna4(struct interface *ifp)
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return OLSR_FALSE;
 }
-
-
-
 
 
 /**
@@ -1152,7 +1179,8 @@ serialize_hna6(struct interface *ifp)
   m = (union olsr_message *)msg_buffer;   
 
   /* Fill header */
-  COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
+  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
+  m->v6.originator = olsr_cnf->main_addr.v6;
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = HNA_MESSAGE;
@@ -1184,9 +1212,11 @@ serialize_hna6(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      COPY_IP(&pair6->addr, &h->net.prefix);
+      //COPY_IP(&pair6->addr, &h->net);
+      pair6->addr = h->net.prefix.v6;
+      //COPY_IP(&pair6->netmask, &tmp_netmask);
       olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
-      COPY_IP(&pair6->netmask, &tmp_netmask);
+      pair6->netmask = tmp_netmask.v6;
       pair6++;
       curr_size += (2 * olsr_cnf->ipsize);
       h = h->next;

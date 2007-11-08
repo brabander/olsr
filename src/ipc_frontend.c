@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 /*
@@ -53,6 +53,7 @@
 #include "parser.h"
 #include "socket_parser.h"
 #include "local_hna_set.h"
+#include "net_olsr.h"
 
 #ifdef WIN32
 #define close(x) closesocket(x)
@@ -176,18 +177,18 @@ ipc_accept(int fd)
 }
 
 olsr_bool
-ipc_check_allowed_ip(union olsr_ip_addr *addr)
+ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 {
   struct ipc_host *ipch = olsr_cnf->ipc_hosts;
   struct ipc_net *ipcn = olsr_cnf->ipc_nets;
 
-  if(addr->v4 == ntohl(INADDR_LOOPBACK))
+  if(addr->v4.s_addr == ntohl(INADDR_LOOPBACK))
     return OLSR_TRUE;
 
   /* check hosts */
   while(ipch)
     {
-      if(addr->v4 == ipch->host.v4)
+        if(ipequal(addr, &ipch->host))
 	return OLSR_TRUE;
       ipch = ipch->next;
     }
@@ -195,7 +196,7 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
   /* check nets */
   while(ipcn)
     {
-      if((addr->v4 & ipcn->mask.v4) == (ipcn->net.v4 & ipcn->mask.v4))
+      if((addr->v4.s_addr & ipcn->mask.v4.s_addr) == (ipcn->net.v4.s_addr & ipcn->mask.v4.s_addr))
 	return OLSR_TRUE;
       ipcn = ipcn->next;
     }
@@ -217,7 +218,7 @@ ipc_input(int sock __attribute__((unused)))
   union 
   {
     char	buf[MAXPACKETSIZE+1];
-    struct	olsr olsr;
+    struct olsr	olsr;
   } inbuf;
 
 
@@ -270,8 +271,11 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
  *@return negative on error
  */
 int
-ipc_route_send_rtentry(union olsr_ip_addr *dst, union olsr_ip_addr *gw,
-                       int met, int add, const char *int_name)
+ipc_route_send_rtentry(union olsr_ip_addr *dst,
+                       union olsr_ip_addr *gw,
+                       int met,
+                       int add,
+                       const char *int_name)
 {
   struct ipcmsg packet;
   char *tmp;
@@ -287,13 +291,15 @@ ipc_route_send_rtentry(union olsr_ip_addr *dst, union olsr_ip_addr *gw,
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
 
-  COPY_IP(&packet.target_addr, dst);
+  //COPY_IP(&packet.target_addr, dst);
+  packet.target_addr = *dst;
 
   packet.add = add;
   if(add && gw)
     {
       packet.metric = met;
-      COPY_IP(&packet.gateway_addr, gw);
+      //COPY_IP(&packet.gateway_addr, gw);
+      packet.gateway_addr = *gw;
     }
 
   if(int_name != NULL)
@@ -351,12 +357,14 @@ ipc_send_all_routes(int fd)
     packet.size = htons(IPC_PACK_SIZE);
     packet.msgtype = ROUTE_IPC;
 	  
-    COPY_IP(&packet.target_addr, &rt->rt_dst.prefix);
-	  
+    //COPY_IP(&packet.target_addr, &rt->rt_dst.prefix);
+    packet.target_addr = rt->rt_dst.prefix;
+
     packet.add = 1;
     packet.metric = (olsr_u8_t)(rt->rt_best->rtp_metric.hops);
 
-    COPY_IP(&packet.gateway_addr, &rt->rt_nexthop.gateway);
+    //COPY_IP(&packet.gateway_addr, &rt->rt_nexthop.gateway);
+    packet.gateway_addr = rt->rt_nexthop.gateway;
 
     memcpy(&packet.device[0], if_ifwithindex_name(rt->rt_nexthop.iif_index), 4);
 
@@ -422,8 +430,8 @@ ipc_send_net_info(int fd)
   net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
  
   /* Main addr */
-  COPY_IP(&net_msg->main_addr, &olsr_cnf->main_addr);
-
+  //COPY_IP(&net_msg->main_addr, &olsr_cnf->main_addr);
+  net_msg->main_addr = olsr_cnf->main_addr;
 
   /*
   printf("\t");

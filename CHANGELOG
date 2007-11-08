@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.111 2007/11/05 15:34:37 bernd67 Exp $
+$Id: CHANGELOG,v 1.112 2007/11/08 22:47:39 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -52,6 +52,48 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   Also merged the "hna4" and "hna6" pointer in "struct olsr_config" -
   look at the global "olsr_cnf->ip_version".
 - added a olsr_ip_prefix_to_string() function
+- .h file cleanup: def.h does not longer include net_olsr.h because it 
+  doesn't needs it.
+- more type safety: the macros COPY_IP() and COMP_IP are gone and replaced
+  with "=" or similar "normal" C operations. There are also now the inline
+  functions ip4cmp() and ip4equal() to work on "struct in_addr", ip6cmp()
+  and ip6equal() to work on "struct in6_addr" and ipcmp() and ip6equal()
+  to work on "union olsr_ip_addr".
+  Most (or even more precise: almost all) uses of COPY_IP() and COMP_IP()
+  are in "if (olsr_cnf->ip_version) { ... } else { ... }" anyway to
+  there is no reson to copy an IPv4 address effectively with
+  "memcpy(&dst, &src, 4)" or compare with memcmp(&a, &b, 4)" wher the
+  always "4" is stored in a variable inhibiting compiler optimization.
+  There is also the deprecated function genipcopy() mimicking the old
+  typeless COPY_IP() macro for the last few places where a cleanup is
+  needed anyways.
+  There also lots of old macros left over (commented out of course) until
+  we are confident that everything works. And then I will kill them too.
+- Fixed the misleading definition of "v4" in "struct olsr_ip_addr" fom
+  "olsr_u32_t" (in network-byteorder!) to "struct in_addr". Lots of
+  temporary variables to call inet_ntoa()/inet_ptoa() vanished .....
+- We have now ip4_to_string(), ip6_to_string() and olsr_ip_to_string()
+  to print a "struct in_addr", "struct in6_addr" and "union olsr_ip_addr"
+  into a string buffer.
+- cleanup: olsr_ip_to_string() and similar non-reentrant functions now must
+  get a target buffer. To ease that, there is the "struct ipaddr_str"
+  which is large enough for all of them (read: for an IPv6 address). This
+  also removes the cyclic buffer there.
+  All of these function return a "const char *" which can be directly used
+  for printf(3) and friends.
+- const'ified more functions
+- converted the source to UTF-8.
+- "struct sig_msg" uses an olsr_u8_t for a byte array (and not "char")
+- force the few inline function to always be inlined.
+- #ifdef the body of the olsr_print_hna_set() and olsr_print_neighbor_table()
+  if nothing is done
+- declare "int_addr", "int_netmask" and "int_broadaddr" in "struct interface"
+  as "struct sockaddr_in" since it is that what we actually want there (and
+  it is similar to the IPv6 code).
+- use "inline_avl_comp_ipv4()" in "avl_comp_ipv4()"
+- clean up the routes on more signals. Basically we want to do this on all
+  signals which terminate the program.
+- killed a superflous global buffer in src/main.c
 
 0.5.4 ---------------------------------------------------------------------
 

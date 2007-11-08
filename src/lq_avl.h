@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.11 2007/09/25 13:47:36 bernd67 Exp $
+ * $Id: lq_avl.h,v 1.12 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -62,14 +62,14 @@ struct avl_tree
   struct avl_node *first;
   struct avl_node *last;
   unsigned int count;
-  int (*comp)(void *, void *);
+  int (*comp)(const void *, const void *);
 };
 
 #define AVL_DUP    1
 #define AVL_DUP_NO 0
 
-void avl_init(struct avl_tree *, int (*)(void *, void *));
-struct avl_node *avl_find(struct avl_tree *, void *);
+void avl_init(struct avl_tree *, int (*)(const void *, const void *));
+struct avl_node *avl_find(struct avl_tree *, const void *);
 int avl_insert(struct avl_tree *, struct avl_node *, int);
 void avl_delete(struct avl_tree *, struct avl_node *);
 struct avl_node *avl_walk_first(struct avl_tree *);
@@ -77,10 +77,10 @@ struct avl_node *avl_walk_last(struct avl_tree *);
 struct avl_node *avl_walk_next(struct avl_node *);
 struct avl_node *avl_walk_prev(struct avl_node *);
 
-extern int (*avl_comp_default)(void *, void *);
-extern int (*avl_comp_prefix_default)(void *, void *);
-extern int avl_comp_ipv4(void *, void *);
-extern int avl_comp_ipv6(void *, void *);
+extern int (*avl_comp_default)(const void *, const void *);
+extern int (*avl_comp_prefix_default)(const void *, const void *);
+extern int avl_comp_ipv4(const void *, const void *);
+extern int avl_comp_ipv6(const void *, const void *);
 
 #define inline_avl_comp_ipv4(ip1, ip2) \
   (*(unsigned int *)(ip1) == *(unsigned int *)(ip2) ? 0 :       \

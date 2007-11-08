@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.h,v 1.12 2005/02/20 18:52:18 kattemat Exp $
+ * $Id: process_package.h,v 1.13 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -51,7 +51,7 @@ void
 olsr_init_package_process(void);
 
 void
-olsr_hello_tap(struct hello_message *, struct interface *, union olsr_ip_addr *);
+olsr_hello_tap(struct hello_message *, struct interface *, const union olsr_ip_addr *);
 
 void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);

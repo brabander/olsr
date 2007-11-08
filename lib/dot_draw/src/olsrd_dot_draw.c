@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.30 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.31 2007/11/08 22:47:39 bernd67 Exp $
  */
 
 /*
@@ -67,6 +67,7 @@
 #include "mid_set.h"
 #include "link_set.h"
 #include "socket_parser.h"
+#include "net_olsr.h"
 
 #include "olsrd_dot_draw.h"
 #include "olsrd_plugin.h"
@@ -153,15 +154,13 @@ static void
 ipc_print_neigh_link(const struct neighbor_entry *neighbor)
 {
   char buf[256];
-  const char* adr;
+  struct ipaddr_str strbuf;
   double etx = 0.0;
   char* style = "solid";
   struct link_entry* link;
-  adr = olsr_ip_to_string(&olsr_cnf->main_addr);
-  sprintf( buf, "\"%s\" -> ", adr );
+
+  sprintf( buf, "\"%s\" -> ", olsr_ip_to_string(&strbuf, &olsr_cnf->main_addr));
   ipc_send_str(buf);
-  
-  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
   
   if (neighbor->status == 0) { // non SYM
   	style = "dashed";
@@ -173,11 +172,11 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
       }
   }
     
-  sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", adr, etx, style );
+  sprintf( buf, "\"%s\"[label=\"%.2f\", style=%s];\n", olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr), etx, style );
   ipc_send_str(buf);
   
-   if (neighbor->is_mpr) {
-	sprintf( buf, "\"%s\"[shape=box];\n", adr );
+  if (neighbor->is_mpr) {
+	sprintf( buf, "\"%s\"[shape=box];\n", buf);
   	ipc_send_str(buf);
   }
 }
@@ -267,7 +266,7 @@ ipc_action(int fd __attribute__((unused)))
     }
   else
     {
-      if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.v4))
+        if(!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4))
 	{
 	  olsr_printf(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
 	  close(ipc_connection);
@@ -292,7 +291,7 @@ pcf_event(int changes_neighborhood,
 	  int changes_hna)
 {
   int res;
-  olsr_u8_t index;
+  int index;
   struct neighbor_entry *neighbor_table_tmp;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
@@ -307,8 +306,7 @@ pcf_event(int changes_neighborhood,
 
       /* Neighbors */
       for(index=0;index<HASHSIZE;index++)
-	{
-	  
+	{	  
 	  for(neighbor_table_tmp = neighbortable[index].next;
 	      neighbor_table_tmp != &neighbortable[index];
 	      neighbor_table_tmp = neighbor_table_tmp->next)
@@ -347,7 +345,7 @@ pcf_event(int changes_neighborhood,
               union hna_netmask hna_msk;
               //hna_msk.v4 = hna4->netmask.v4;
               olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
-              hna_msk.v4 = netmask.v4;
+              hna_msk.v4 = netmask.v4.s_addr;
               ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
                             &hna->net.prefix,
                             &hna_msk);
@@ -370,21 +368,22 @@ pcf_event(int changes_neighborhood,
     }
 
 
-  if(!ipc_socket_up)
+  if (!ipc_socket_up) {
     plugin_ipc_init();
-
+  }
   return res;
 }
 
 static void
 ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
 {
-  char buf[256];
+  char buf[512];
+  struct ipaddr_str strbuf1, strbuf2;
 
-  sprintf( buf, "\"%s\" -> ", olsr_ip_to_string(&entry->addr));
-  ipc_send_str(buf);
-  
-  sprintf( buf, "\"%s\"[label=\"%.2f\"];\n", olsr_ip_to_string(&dst_entry->T_dest_addr), olsr_calc_tc_etx(dst_entry));
+  sprintf( buf, "\"%s\" -> \"%s\"[label=\"%.2f\"];\n",
+           olsr_ip_to_string(&strbuf1, &entry->addr),
+           olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
+           olsr_calc_tc_etx(dst_entry));
   ipc_send_str(buf);
 }
 
@@ -392,26 +391,19 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
 static void
 ipc_print_net(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, const union hna_netmask *mask)
 {
-  const char *adr;
+  char buf[512];
+  struct ipaddr_str gwbuf, netbuf;
 
-  adr = olsr_ip_to_string(gw);
-  ipc_send_str("\"");
-  ipc_send_str(adr);
-  ipc_send_str("\" -> \"");
-  adr = olsr_ip_to_string(net);
-  ipc_send_str(adr);
-  ipc_send_str("/");
-  adr = olsr_netmask_to_string(mask);
-  ipc_send_str(adr);
-  ipc_send_str("\"[label=\"HNA\"];\n");
-  ipc_send_str("\"");
-  adr = olsr_ip_to_string(net);
-  ipc_send_str(adr);
-  ipc_send_str("/");
-  adr = olsr_netmask_to_string(mask);
-  ipc_send_str(adr);
-  ipc_send_str("\"");
-  ipc_send_str("[shape=diamond];\n");
+  sprintf( buf, "\"%s\" -> \"%s/%s\"[label=\"HNA\"];\n",
+           olsr_ip_to_string(&gwbuf, gw),
+           olsr_ip_to_string(&netbuf, net),
+           olsr_netmask_to_string(mask));
+  ipc_send_str(buf);
+
+  sprintf( buf,"\"%s/%s\"[shape=diamond];\n",
+           olsr_ip_to_string(&netbuf, net),
+           olsr_netmask_to_string(mask));
+  ipc_send_str(buf);
 }
 
 static int

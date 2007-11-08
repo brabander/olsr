@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.76 2007/11/02 20:58:06 bernd67 Exp $
+ * $Id: link_set.c,v 1.77 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 
@@ -53,6 +53,7 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "lq_route.h"
+#include "net_olsr.h"
 
 
 static clock_t hold_time_neighbor;
@@ -144,8 +145,9 @@ lookup_link_status(const struct link_entry *entry)
       */
       if(entry->L_link_pending == 1)
 	{
-#ifdef DEBUG
-	  OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&entry->neighbor_iface_addr));
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+	  OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
 #endif
 	  return HIDE_LINK;
 	}
@@ -261,7 +263,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   {
     // if this is not a link to the neighour in question, skip
 
-    if (!COMP_IP(&walker->neighbor->neighbor_main_addr, main_addr))
+    if (!ipequal(&walker->neighbor->neighbor_main_addr, main_addr))
       continue;
 
     // handle the non-LQ, RFC-compliant case
@@ -283,7 +285,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
       if ((tmp_if->int_metric < curr_metric) ||
           // use the requested remote interface address as a tie-breaker
           ((tmp_if->int_metric == curr_metric) && 
-           COMP_IP(&walker->local_iface_addr, remote)))
+           ipequal(&walker->local_iface_addr, remote)))
       {
         // memorize the interface's metric
 
@@ -314,7 +316,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
 	      
       if((tmp_lq > curr_lq) ||
          // use the requested remote interface address as a tie-breaker
-         ((tmp_lq == curr_lq) && COMP_IP(&walker->local_iface_addr, remote)))
+         ((tmp_lq == curr_lq) && ipequal(&walker->local_iface_addr, remote)))
       {
         // memorize the link quality
 
@@ -367,8 +369,8 @@ static void set_loss_link_multiplier(struct link_entry *entry)
     // use the default multiplier only if there isn't any entry that
     // has a matching IP address
 
-    if ((COMP_IP(&mult->addr, &null_addr) && val < 0.0) ||
-        COMP_IP(&mult->addr, &entry->neighbor_iface_addr))
+    if ((ipequal(&mult->addr, &null_addr) && val < 0.0) ||
+        ipequal(&mult->addr, &entry->neighbor_iface_addr))
       val = mult->val;
   }
 
@@ -402,7 +404,7 @@ del_if_link_entries(const union olsr_ip_addr *int_addr)
   while(tmp_link_set)
     {
 
-      if(COMP_IP(int_addr, &tmp_link_set->local_iface_addr))
+      if(ipequal(int_addr, &tmp_link_set->local_iface_addr))
         {
           if(last_link_entry != NULL)
             {
@@ -477,7 +479,12 @@ add_link_entry(const union olsr_ip_addr *local,
    */
 
 #ifdef DEBUG
-  OLSR_PRINTF(1, "Adding %s=>%s to link set\n", olsr_ip_to_string(local), olsr_ip_to_string(remote));
+  {
+#ifndef NODEBUG
+    struct ipaddr_str localbuf, rembuf;
+#endif
+    OLSR_PRINTF(1, "Adding %s=>%s to link set\n", olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf, remote));
+  }
 #endif
 
   /* a new tuple is created with... */
@@ -499,9 +506,11 @@ add_link_entry(const union olsr_ip_addr *local,
    * which received the HELLO message
    */
   //printf("\tLocal IF: %s\n", olsr_ip_to_string(local));
-  COPY_IP(&new_link->local_iface_addr, local);
+  //COPY_IP(&new_link->local_iface_addr, local);
+  new_link->local_iface_addr = *local;
   /* L_neighbor_iface_addr = Source Address */
-  COPY_IP(&new_link->neighbor_iface_addr, remote);
+  //COPY_IP(&new_link->neighbor_iface_addr, remote);
+  new_link->neighbor_iface_addr = *remote;
 
   /* L_SYM_time            = current time - 1 (expired) */
   new_link->SYM_time = now_times - 1;
@@ -563,12 +572,16 @@ add_link_entry(const union olsr_ip_addr *local,
    */
 
   /* Neighbor MUST exist! */
-  if(NULL == (neighbor = olsr_lookup_neighbor_table(remote_main)))
+  neighbor = olsr_lookup_neighbor_table(remote_main);
+  if(neighbor == NULL)
     {
-      neighbor = olsr_insert_neighbor_table(remote_main);
 #ifdef DEBUG
-      OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(remote_main));
+#ifndef NODEBUG
+      struct ipaddr_str buf;
 #endif
+      OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(&buf, remote_main));
+#endif
+      neighbor = olsr_insert_neighbor_table(remote_main);
     }
 
   /* Copy the main address - make sure this is done every time
@@ -585,7 +598,7 @@ add_link_entry(const union olsr_ip_addr *local,
 
   new_link->neighbor = neighbor;
 
-  if(!COMP_IP(remote, remote_main))
+  if(!ipequal(remote, remote_main))
     {
       /* Add MID alias if not already registered */
       /* This is kind of sketchy... and not specified
@@ -625,7 +638,7 @@ check_neighbor_link(const union olsr_ip_addr *int_addr)
 
   while(tmp_link_set)
     {
-      if(COMP_IP(int_addr, &tmp_link_set->neighbor_iface_addr))
+      if(ipequal(int_addr, &tmp_link_set->neighbor_iface_addr))
 	return lookup_link_status(tmp_link_set);
       tmp_link_set = tmp_link_set->next;
     }
@@ -651,13 +664,13 @@ lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *re
 
   while(tmp_link_set)
     {
-      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr) &&
+      if(ipequal(remote, &tmp_link_set->neighbor_iface_addr) &&
 	 (tmp_link_set->if_name
           ? !strcmp(tmp_link_set->if_name, local->int_name)
-          : COMP_IP(&local->ip_addr, &tmp_link_set->local_iface_addr)
+          : ipequal(&local->ip_addr, &tmp_link_set->local_iface_addr)
           ) &&
          /* check the remote-main address only if there is one given */
-         (remote_main == NULL || COMP_IP(remote_main, &tmp_link_set->neighbor->neighbor_main_addr))
+         (remote_main == NULL || ipequal(remote_main, &tmp_link_set->neighbor->neighbor_main_addr))
          )
 	return tmp_link_set;
       tmp_link_set = tmp_link_set->next;
@@ -810,7 +823,7 @@ check_link_status(const struct hello_message *message, const struct interface *i
        * Note: If a neigh has 2 cards we can reach, the neigh
        * will send a Hello with the same IP mentined twice
        */
-      if(COMP_IP(&neighbors->address, &in_if->ip_addr))
+      if(ipequal(&neighbors->address, &in_if->ip_addr))
         {
 	  //printf("ok");
 	  ret = neighbors->link;
@@ -922,8 +935,11 @@ olsr_time_out_hysteresis(void)
     {
       if(TIMED_OUT(tmp_link_set->hello_timeout))
 	{
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+#endif
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
-	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
+	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&buf, &tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
 	  /* Update hello_timeout - NO SLACK THIS TIME */
 	  tmp_link_set->hello_timeout = GET_TIMESTAMP(tmp_link_set->last_htime*1000);
 	  /* Recalculate status */
@@ -953,7 +969,7 @@ void olsr_print_link_set(void)
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
+  OLSR_PRINTF(0, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
               nowtm->tm_hour,
               nowtm->tm_min,
               nowtm->tm_sec,
@@ -962,6 +978,7 @@ void olsr_print_link_set(void)
 
   for (walker = link_set; walker != NULL; walker = walker->next)
   {
+    struct ipaddr_str buf;
     float etx;
 
     if (walker->loss_link_quality < MIN_LINK_QUALITY || walker->neigh_link_quality < MIN_LINK_QUALITY)
@@ -970,7 +987,7 @@ void olsr_print_link_set(void)
       etx = 1.0 / (walker->loss_link_quality * walker->neigh_link_quality);
 
     OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n",
-                addrsize, olsr_ip_to_string(&walker->neighbor_iface_addr),
+                addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
                 walker->L_link_quality,
                 walker->loss_link_quality,
 		walker->lost_packets,

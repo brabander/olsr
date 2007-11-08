@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.60 2007/11/05 15:32:54 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.61 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 
@@ -52,6 +52,7 @@
 #include "olsrd_conf.h"
 #include "olsr_cfg.h"
 #include "defs.h"
+#include "net_olsr.h"
 
 
 extern FILE *yyin;
@@ -520,7 +521,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   struct ipc_net           *ie = cnf->ipc_nets;
   struct olsr_lq_mult      *mult;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
-  struct in_addr in4;
 
   printf(" *** olsrd configuration ***\n");
 
@@ -544,17 +544,14 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   while(ih)
     {
-      in4.s_addr = ih->host.v4;
-      printf("\tHost %s\n", inet_ntoa(in4));
+      printf("\tHost %s\n", inet_ntoa(ih->host.v4));
       ih = ih->next;
     }
   
   while(ie)
     {
-      in4.s_addr = ie->net.v4;
-      printf("\tNet %s/", inet_ntoa(in4));
-      in4.s_addr = ie->mask.v4;
-      printf("%s\n", inet_ntoa(in4));
+      printf("\tNet %s/", inet_ntoa(ie->net.v4));
+      printf("%s\n", inet_ntoa(ie->mask.v4));
       ie = ie->next;
     }
 
@@ -585,10 +582,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	{
 	  printf(" dev: \"%s\"\n", in->name);
 	  
-	  if(in->cnf->ipv4_broadcast.v4)
+	  if(in->cnf->ipv4_broadcast.v4.s_addr)
 	    {
-	      in4.s_addr = in->cnf->ipv4_broadcast.v4;
-	      printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in4));
+	      printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in->cnf->ipv4_broadcast.v4));
 	    }
 	  else
 	    {
@@ -599,8 +595,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  
 	  //union olsr_ip_addr       ipv6_multi_site;
 	  //union olsr_ip_addr       ipv6_multi_glbl;
-	  printf("\tIPv6 multicast site/glbl : %s", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
-	  printf("/%s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  printf("\tIPv6 multicast site/glbl : %s", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  printf("/%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  
 	  printf("\tHELLO emission/validity  : %0.2f/%0.2f\n", in->cnf->hello_params.emission_interval, in->cnf->hello_params.validity_time);
 	  printf("\tTC emission/validity     : %0.2f/%0.2f\n", in->cnf->tc_params.emission_interval, in->cnf->tc_params.validity_time);
@@ -609,11 +605,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  
           for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next)
           {
-            inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
-                      sizeof (ipv6_buf));
-
-            printf("\tLinkQualityMult          : %s %0.2f\n",
-                   ipv6_buf, mult->val);
+            printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), mult->val);
           }
 
           printf("\tAutodetetc changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");
@@ -646,19 +638,45 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("Not using hysteresis\n");
   }
 
+#if 0
+  /* HNA IPv4 */
+  if(h4)
+    {
+
+      printf("HNA4 entries:\n");
+      while(h4)
+	{
+	  printf("\t%s/", inet_ntoa(h4->net.v4));
+	  printf("%s\n", inet_ntoa(h4->netmask.v4));
+	  h4 = h4->next;
+	}
+    }
+
+  /* HNA IPv6 */
+  if(h6)
+    {
+      printf("HNA6 entries:\n");
+      while(h6)
+	{
+	  printf("\t%s/%d\n", inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
+	  h6 = h6->next;
+	}
+#else
   /* HNA IPv4 and IPv6 */
   if(h) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
     while(h) {
-      printf("\t%s/", olsr_ip_to_string(&h->net.prefix));
+      struct ipaddr_str buf;
+      printf("\t%s/", olsr_ip_to_string(&buf, &h->net.prefix));
       if (cnf->ip_version == AF_INET) {
         union olsr_ip_addr ip;
         olsr_prefix_to_netmask(&ip, h->net.prefix_len);
-        printf("%s\n", olsr_ip_to_string(&ip));
+        printf("%s\n", olsr_ip_to_string(&buf, &ip));
       } else {
         printf("%d\n", h->net.prefix_len);
       }
       h = h->next;
+#endif
     }
   }
 }

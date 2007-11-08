@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.35 2007/10/13 12:09:11 bernd67 Exp $
+ * $Id: interfaces.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -44,6 +44,7 @@
 #include "ifnet.h"
 #include "scheduler.h"
 #include "olsr.h"
+#include "net_olsr.h"
 
 static olsr_u32_t if_property_id;
 
@@ -226,7 +227,7 @@ run_ifchg_cbs(struct interface *ifp, int flag)
  */
 
 struct interface *
-if_ifwithaddr(const union olsr_ip_addr * const addr)
+if_ifwithaddr(const union olsr_ip_addr *addr)
 {
   struct interface *ifp;
 
@@ -241,7 +242,7 @@ if_ifwithaddr(const union olsr_ip_addr * const addr)
 	  //printf("Checking: %s == ", inet_ntoa(((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
 	  //printf("%s\n", olsr_ip_to_string(addr));
 
-	  if (COMP_IP(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, addr))
+	  if (((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr == addr->v4.s_addr)
 	      return ifp;
 	}
       else
@@ -249,7 +250,7 @@ if_ifwithaddr(const union olsr_ip_addr * const addr)
 	  /* IPv6 */
 	  //printf("Checking %s ", olsr_ip_to_string((union olsr_ip_addr *)&ifp->int6_addr.sin6_addr));
 	  //printf("== %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in6 *)addr)->sin6_addr));
-	  if (COMP_IP(&ifp->int6_addr.sin6_addr, addr))
+          if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6))
 	    return ifp;
 	}
     }

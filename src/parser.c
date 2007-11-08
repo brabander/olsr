@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.35 2007/05/08 23:34:52 bernd67 Exp $
+ * $Id: parser.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -51,6 +51,7 @@
 #include "net_os.h"
 #include "log.h"
 #include "print_packet.h"
+#include "net_olsr.h"
 
 #ifdef WIN32
 #undef EWOULDBLOCK
@@ -97,7 +98,7 @@ olsr_init_parser(void)
 }
 
 void
-olsr_parser_add_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t type, int forwarding)
+olsr_parser_add_function(parse_function *function, olsr_u32_t type, int forwarding)
 {
   struct parse_function_entry *new_entry;
 
@@ -121,7 +122,7 @@ olsr_parser_add_function(void (*function)(union olsr_message *, struct interface
 
 
 int
-olsr_parser_remove_function(void (*function)(union olsr_message *, struct interface *, union olsr_ip_addr *), olsr_u32_t type, int forwarding)
+olsr_parser_remove_function(parse_function *function, olsr_u32_t type, int forwarding)
 {
   struct parse_function_entry *entry, *prev;
 
@@ -181,14 +182,15 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   if (ntohs(olsr->olsr_packlen) != size)
     {
+      struct ipaddr_str buf;
       OLSR_PRINTF(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
 	    
       olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
-	     olsr_ip_to_string(from_addr));
+	     olsr_ip_to_string(&buf, from_addr));
       return;
     }
 
-  //printf("Message from %s\n\n", olsr_ip_to_string(from_addr)); 
+  //printf("Message from %s\n\n", olsr_ip_to_string(&buf, from_addr)); 
       
   /* Display packet */
   if(disp_pack_in)
@@ -244,11 +246,12 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       /* Check size of message */
       if(count < 0)
 	{
+          struct ipaddr_str buf;
 	  OLSR_PRINTF(1, "packet length error in  packet received from %s!",
-		      olsr_ip_to_string(from_addr));
+		      olsr_ip_to_string(&buf, from_addr));
 
 	  olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
-		 olsr_ip_to_string(from_addr));
+		 olsr_ip_to_string(&buf, from_addr));
 	  break;
 	}
 
@@ -259,9 +262,12 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv4 */
 	  if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0)
 	    {
+#ifndef NODEBUG
+              struct ipaddr_str buf;
+#endif
 	      OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
-			  olsr_ip_to_string(from_addr));
+			  olsr_ip_to_string(&buf, from_addr));
 	      continue;
 	    }
 	}
@@ -270,9 +276,12 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  /* IPv6 */
 	  if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0) 
 	    {
+#ifndef NODEBUG
+              struct ipaddr_str buf;
+#endif
 	      OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n", 
 			  m->v4.olsr_msgtype,
-			  olsr_ip_to_string(from_addr));
+			  olsr_ip_to_string(&buf, from_addr));
 	      continue;
 	    }
 	}
@@ -286,7 +295,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
        */
 
       /* Should be the same for IPv4 and IPv6 */
-      if(COMP_IP(&m->v4.originator, &olsr_cnf->main_addr))
+      if(m->v4.originator == olsr_cnf->main_addr.v4.s_addr)
 	{
 #ifdef DEBUG
 	  OLSR_PRINTF(3, "Not processing message originating from us!\n");
@@ -318,15 +327,18 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       /* UNKNOWN PACKETTYPE */
       if(processed == 0)
 	{
+#ifndef NODEBUG
+          struct ipaddr_str buf;
+#endif
 	  unk_chgestruct(&unkpacket, m);
 	  
 	  OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
 		      m->v4.olsr_msgtype,
 		      size,
-		      olsr_ip_to_string(&unkpacket.originator));
+		      olsr_ip_to_string(&buf, &unkpacket.originator));
 
 	  /* Forward message */
-	  if(!COMP_IP(&unkpacket.originator, &olsr_cnf->main_addr))
+	  if(!ipequal(&unkpacket.originator, &olsr_cnf->main_addr))
 	    {	      
 	      /* Forward */
 	      olsr_forward_message(m, 
@@ -357,16 +369,20 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 void
 olsr_input(int fd)
 {
-  /* sockaddr_in6 is bigger than sockaddr !!!! */
-  struct sockaddr_storage from;
-  socklen_t fromlen;
-  int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   cpu_overload_exit = 0;
   
   for (;;) 
     {
+#if !defined(NODEBUG) && defined(DEBUG)
+      struct ipaddr_str buf;
+#endif
+      /* sockaddr_in6 is bigger than sockaddr !!!! */
+      struct sockaddr_storage from;
+      socklen_t fromlen;
+      int cc;
+
       if (32 < ++cpu_overload_exit)
       {
         OLSR_PRINTF(1, "CPU overload detected, ending olsr_input() loop\n");
@@ -374,7 +390,6 @@ olsr_input(int fd)
       }
       
       fromlen = sizeof(struct sockaddr_storage);
-
       cc = olsr_recvfrom(fd, 
 			 inbuf, 
 			 sizeof (inbuf), 
@@ -391,21 +406,22 @@ olsr_input(int fd)
 	    }
 	  break;
 	}
-
       if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 sender address */
-	  COPY_IP(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr);
+	  //COPY_IP(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr);
+	  from_addr.v4 = ((struct sockaddr_in *)&from)->sin_addr;
 	}
       else
 	{
 	  /* IPv6 sender address */
-	  COPY_IP(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr);
+	  //COPY_IP(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr);
+	  from_addr.v6 = ((struct sockaddr_in6 *)&from)->sin6_addr;
 	}
       
       
 #ifdef DEBUG
-      OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
+      OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
 #endif
 	
 	if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof (struct sockaddr_in)))
@@ -419,11 +435,12 @@ olsr_input(int fd)
       
       if((olsr_in_if = if_ifwithsock(fd)) == NULL)
 	{
+          struct ipaddr_str buf;
 	  OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-		      olsr_ip_to_string(&from_addr),
+		      olsr_ip_to_string(&buf, &from_addr),
 		      cc);
 	  olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-		 olsr_ip_to_string(&from_addr),
+		 olsr_ip_to_string(&buf, &from_addr),
 		 cc);
 	  return ;
 	}
@@ -455,7 +472,6 @@ olsr_input_hostemu(int fd)
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
   socklen_t fromlen;
-  int cc;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   olsr_u16_t pcklen;
@@ -463,10 +479,12 @@ olsr_input_hostemu(int fd)
   /* Host emulator receives IP address first to emulate
      direct link */
 
-  if((cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0)) != (int)olsr_cnf->ipsize)
+  int cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
+  if(cc != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
-      COPY_IP(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator);
+      //COPY_IP(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator);
+      memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);
     }
 
   /* are we talking to ourselves? */
@@ -517,11 +535,12 @@ olsr_input_hostemu(int fd)
 
   if((olsr_in_if = if_ifwithsock(fd)) == NULL)
     {
+      struct ipaddr_str buf;
       OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-		  olsr_ip_to_string(&from_addr),
+		  olsr_ip_to_string(&buf, &from_addr),
 		  cc);
       olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-                  olsr_ip_to_string(&from_addr),
+                  olsr_ip_to_string(&buf, &from_addr),
                   cc);
       return;
     }
