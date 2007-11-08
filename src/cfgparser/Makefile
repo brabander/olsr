@@ -36,7 +36,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.31 2007/11/04 19:07:43 bernd67 Exp $
+# $Id: Makefile,v 1.32 2007/11/08 22:17:08 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc
@@ -91,7 +91,7 @@ endif
 default_target: $(NAME)
 
 $(NAME):	$(OBJS)
-		$(CC) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBS)
+		$(CC) $(LDFLAGS) -o "$@" $^ $(LIBS)
 
 install:
 		install -D -m 755 $(NAME) $(LIBDIR)/$(NAME)
