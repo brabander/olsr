@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.43 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: process_package.c,v 1.44 2007/11/09 00:11:01 bernd67 Exp $
  */
 
 
@@ -234,63 +234,52 @@ olsr_tc_tap(struct tc_message *message,
   struct tc_mpr_addr              *mpr;
   struct tc_entry                 *tc_last;
 
-  if(!olsr_check_dup_table_proc(&message->originator, 
-                                message->packet_seq_number))
-    {
-      goto forward;
-    }
+  if (olsr_check_dup_table_proc(&message->originator, 
+                               message->packet_seq_number)) {
+    OLSR_PRINTF(3, "Processing TC from %s, seq 0x%04x\n",
+                olsr_ip_to_string(&buf, &message->originator), message->ansn);
 
-  OLSR_PRINTF(3, "Processing TC from %s, seq 0x%04x\n",
-              olsr_ip_to_string(&buf, &message->originator), message->ansn);
+    /*
+     *      If the sender interface (NB: not originator) of this message
+     *      is not in the symmetric 1-hop neighborhood of this node, the
+     *      message MUST be discarded.
+     */
 
-  /*
-   *      If the sender interface (NB: not originator) of this message
-   *      is not in the symmetric 1-hop neighborhood of this node, the
-   *      message MUST be discarded.
-   */
-
-  if(check_neighbor_link(from_addr) != SYM_LINK)
-    {
+    if (check_neighbor_link(from_addr) != SYM_LINK) {
       OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
                   olsr_ip_to_string(&buf, from_addr));
       olsr_free_tc_packet(message);
       return;
     }
 
-  if(olsr_cnf->debug_level > 2)
-    {
+    if (olsr_cnf->debug_level > 2) {
       mpr = message->multipoint_relay_selector_address;
       OLSR_PRINTF(3, "mpr_selector_list:[");
 
-      while(mpr!=NULL)
-        {
+      while (mpr != NULL) {
           OLSR_PRINTF(3, "%s:", olsr_ip_to_string(&buf, &mpr->address));
           mpr=mpr->next;
-        }
+      }
 
       OLSR_PRINTF(3, "]\n");
     }
 
-  tc_last = olsr_lookup_tc_entry(&message->originator);
+    tc_last = olsr_lookup_tc_entry(&message->originator);
    
-  if(tc_last != NULL)
-    {
+    if(tc_last != NULL) {
       /* Update entry */
 
       /* Delete destinations with lower ANSN */
-      if(olsr_tc_delete_mprs(tc_last, message))
+      if(olsr_tc_delete_mprs(tc_last, message)) {
         changes_topology = OLSR_TRUE; 
-
+      }
       /* Update destinations */
-      if(olsr_tc_update_mprs(tc_last, message))
+      if(olsr_tc_update_mprs(tc_last, message)) {
         changes_topology = OLSR_TRUE;
-    }
-
-  else
-    {
+      }
+    } else {
       /*if message is empty then skip it */
-      if(message->multipoint_relay_selector_address != NULL)
-        {
+      if (message->multipoint_relay_selector_address != NULL) {
           /* New entry */
           tc_last = olsr_add_tc_entry(&message->originator);      
 	  
@@ -298,18 +287,16 @@ olsr_tc_tap(struct tc_message *message,
           olsr_tc_update_mprs(tc_last, message);
 	  
           changes_topology = OLSR_TRUE;
-        }
-      else
-        {
-          OLSR_PRINTF(3, "Dropping empty TC from %s\n",
-                      olsr_ip_to_string(&buf, &message->originator));
-        }
+      } else {
+        OLSR_PRINTF(3, "Dropping empty TC from %s\n",
+                    olsr_ip_to_string(&buf, &message->originator));
+      }
     }
 
   /* Process changes */
   //olsr_process_changes();
 
- forward:
+  }
 
   olsr_forward_message(m, 
                        &message->originator, 
@@ -318,8 +305,6 @@ olsr_tc_tap(struct tc_message *message,
                        from_addr);
 
   olsr_free_tc_packet(message);
-
-  return;
 }
 
 /**
@@ -347,11 +332,6 @@ olsr_process_received_tc(union olsr_message *m,
   olsr_tc_tap(&message, in_if, from_addr, m);
 }
 
-
-
-
-
-
 /**
  *Process a received(and parsed) MID message
  *For every address check if there is a topology node
@@ -374,31 +354,26 @@ olsr_process_received_mid(union olsr_message *m,
 
   mid_chgestruct(&message, m);
 
-  if(!olsr_validate_address(&message.mid_origaddr))
-    {
-      olsr_free_mid_packet(&message);
-      return;
-    }
+  if (!olsr_validate_address(&message.mid_origaddr)) {
+    olsr_free_mid_packet(&message);
+    return;
+  }
 
-  if(!olsr_check_dup_table_proc(&message.mid_origaddr, 
-				message.mid_seqno))
-    {
-      goto forward;
-    }
+  if (olsr_check_dup_table_proc(&message.mid_origaddr, 
+                                message.mid_seqno)) {
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
+    OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
 #endif
-  tmp_adr = message.mid_addr;
+    tmp_adr = message.mid_addr;
 
-  /*
-   *      If the sender interface (NB: not originator) of this message
-   *      is not in the symmetric 1-hop neighborhood of this node, the
-   *      message MUST be discarded.
-   */
+    /*
+     *      If the sender interface (NB: not originator) of this message
+     *      is not in the symmetric 1-hop neighborhood of this node, the
+     *      message MUST be discarded.
+     */
 
-  if(check_neighbor_link(from_addr) != SYM_LINK)
-    {
+    if(check_neighbor_link(from_addr) != SYM_LINK) {
 #ifndef NODEBUG
       struct ipaddr_str buf;
 #endif
@@ -407,40 +382,31 @@ olsr_process_received_mid(union olsr_message *m,
       return;
     }
 
-  /* Update the timeout of the MID */
-  olsr_update_mid_table(&message.mid_origaddr, (float)message.vtime);
+    /* Update the timeout of the MID */
+    olsr_update_mid_table(&message.mid_origaddr, (float)message.vtime);
 
-  while(tmp_adr)
-    {
-      if(!mid_lookup_main_addr(&tmp_adr->alias_addr))
-	{
+    while (tmp_adr) {
+      if (!mid_lookup_main_addr(&tmp_adr->alias_addr)){
 #ifndef NODEBUG
-          struct ipaddr_str buf;
+        struct ipaddr_str buf;
 #endif
-	  OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
-	  OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
-	  insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, (float)message.vtime);
-	}
-
-
+        OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
+        OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
+        insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, (float)message.vtime);
+      }
       tmp_adr = tmp_adr->next;
     } 
   
-  olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
+    olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
+  }
 
- forward:  
   olsr_forward_message(m, 
 		       &message.mid_origaddr, 
 		       message.mid_seqno, 
 		       in_if,
 		       from_addr);
   olsr_free_mid_packet(&message);
-
-  return;
 }
-
-
-
 
 
 /**
@@ -466,27 +432,22 @@ olsr_process_received_hna(union olsr_message *m,
 
   hna_chgestruct(&message, m);
 
-  if(!olsr_validate_address(&message.originator))
-    {
-      olsr_free_hna_packet(&message);
-      return;
-    }
+  if(!olsr_validate_address(&message.originator)) {
+    olsr_free_hna_packet(&message);
+    return;
+  }
 
-  if(!olsr_check_dup_table_proc(&message.originator, 
-				message.packet_seq_number))
-    {
-      goto forward;
-    }
+  if (olsr_check_dup_table_proc(&message.originator, 
+                                message.packet_seq_number)) {
 
-  hna_tmp = message.hna_net;
+    hna_tmp = message.hna_net;
 
-  /*
-   *      If the sender interface (NB: not originator) of this message
-   *      is not in the symmetric 1-hop neighborhood of this node, the
-   *      message MUST be discarded.
-   */
-  if(check_neighbor_link(from_addr) != SYM_LINK)
-    {
+    /*
+     *      If the sender interface (NB: not originator) of this message
+     *      is not in the symmetric 1-hop neighborhood of this node, the
+     *      message MUST be discarded.
+     */
+    if(check_neighbor_link(from_addr) != SYM_LINK) {
 #ifndef NODEBUG
       struct ipaddr_str buf;
 #endif
@@ -495,34 +456,24 @@ olsr_process_received_hna(union olsr_message *m,
       return;
     }
 
-  while(hna_tmp)
-    {
+    while (hna_tmp) {
       /* Don't add an HNA entry that we are advertising ourselves. */
       if (!find_local_hna4_entry(&hna_tmp->net, hna_tmp->netmask.v4) &&
-          !find_local_hna6_entry(&hna_tmp->net, hna_tmp->netmask.v6))
-        {
-          olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime);
-        } 
+          !find_local_hna6_entry(&hna_tmp->net, hna_tmp->netmask.v6)) {
+        olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime);
+      }
 
       hna_tmp = hna_tmp->next;
     }
+  }
 
- forward:
   olsr_forward_message(m, 
 		       &message.originator, 
 		       message.packet_seq_number, 
 		       in_if,
 		       from_addr);
   olsr_free_hna_packet(&message);
-
-  return;
 }
-
-
-
-
-
-
 
 /**
  *Processes an list of neighbors from an incoming HELLO message.
