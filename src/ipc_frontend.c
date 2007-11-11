@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.39 2007/11/11 22:59:29 bernd67 Exp $
  */
 
 /*
@@ -271,8 +271,8 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
  *@return negative on error
  */
 int
-ipc_route_send_rtentry(union olsr_ip_addr *dst,
-                       union olsr_ip_addr *gw,
+ipc_route_send_rtentry(const union olsr_ip_addr *dst,
+                       const union olsr_ip_addr *gw,
                        int met,
                        int add,
                        const char *int_name)
