@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.84 2007/11/08 23:33:54 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.85 2007/11/11 22:00:39 bernd67 Exp $
  */
 
 /*
@@ -311,7 +311,8 @@ parse_http_request(int fd)
   curr_clients++;
 
   addrlen = sizeof(struct sockaddr_in);
-  if ((client_sockets[curr_clients] = accept(fd, (struct sockaddr *)  &pin, &addrlen)) == -1) {
+  client_sockets[curr_clients] = accept(fd, (struct sockaddr *)  &pin, &addrlen);
+  if (client_sockets[curr_clients] == -1) {
     olsr_printf(1, "(HTTPINFO) accept: %s\n", strerror(errno));
     goto close_connection;
   }
@@ -630,7 +631,7 @@ static int build_ip_txt(char *buf,
 
   size += snprintf(&buf[size], bufsize-size, "%s", ipaddrstr);
   /* print ip address or ip prefix ? */
-  if (prefix_len != -1) {
+  if (prefix_len != -1 && prefix_len != olsr_cnf->maxplen) {
       size += snprintf(&buf[size], bufsize-size, "/%d", prefix_len);
   }
   
@@ -692,7 +693,8 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
                                  &rt->rt_dst.prefix,
                                  rt->rt_dst.prefix_len);
   size += build_ipaddr_with_link(&buf[size], bufsize-size,
-                                 &rt->rt_best->rtp_nexthop.gateway, -1);
+                                 &rt->rt_best->rtp_nexthop.gateway,
+                                 -1);
 
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"center\">%d</td>",
