@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.61 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: olsr.c,v 1.62 2007/11/11 22:56:34 bernd67 Exp $
  */
 
 /**
@@ -221,9 +221,6 @@ olsr_process_changes(void)
   changes_topology = OLSR_FALSE;
   changes_hna = OLSR_FALSE;
   changes_force = OLSR_FALSE;
-
-
-  return;
 }
 
 
