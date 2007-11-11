@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.30 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.31 2007/11/11 23:10:23 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -61,7 +61,7 @@ struct olsr_rtreq
 	char			buf[512];
 };
 
-static void olsr_netlink_addreq(struct olsr_rtreq *req, int type, void *data, int len)
+static void olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *data, int len)
 {
 	struct rtattr *rta = (struct rtattr*)(((char*)req) + NLMSG_ALIGN(req->n.nlmsg_len));
 	req->n.nlmsg_len = NLMSG_ALIGN(req->n.nlmsg_len) + RTA_LENGTH(len);
@@ -71,7 +71,7 @@ static void olsr_netlink_addreq(struct olsr_rtreq *req, int type, void *data, in
 	memcpy(RTA_DATA(rta), data, len);
 }
 
-static int olsr_netlink_route(struct rt_entry *rt, olsr_u8_t family, olsr_u8_t rttable, __u16 cmd)
+static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_u8_t rttable, __u16 cmd)
 {
 	int ret = 0;
 	struct olsr_rtreq req;
@@ -88,7 +88,7 @@ static int olsr_netlink_route(struct rt_entry *rt, olsr_u8_t family, olsr_u8_t r
 		0
 	};
 	olsr_u32_t metric = 1;
-	struct rt_nexthop* nexthop = (RTM_NEWROUTE == cmd) ?
+	const struct rt_nexthop* nexthop = (RTM_NEWROUTE == cmd) ?
 		&rt->rt_best->rtp_nexthop : &rt->rt_nexthop;
 
 	memset(&req, 0, sizeof(req));
@@ -173,7 +173,7 @@ static int olsr_netlink_route(struct rt_entry *rt, olsr_u8_t family, olsr_u8_t r
  * @return negative on error
  */
 int
-olsr_ioctl_add_route(struct rt_entry *rt)
+olsr_ioctl_add_route(const struct rt_entry *rt)
 {
 #if !LINUX_POLICY_ROUTING
   struct rtentry kernel_route;
@@ -252,7 +252,7 @@ olsr_ioctl_add_route(struct rt_entry *rt)
  *@return negative on error
  */
 int
-olsr_ioctl_add_route6(struct rt_entry *rt)
+olsr_ioctl_add_route6(const struct rt_entry *rt)
 {
 #if !LINUX_POLICY_ROUTING
   struct in6_rtmsg kernel_route;
@@ -304,7 +304,7 @@ olsr_ioctl_add_route6(struct rt_entry *rt)
  *@return negative on error
  */
 int
-olsr_ioctl_del_route(struct rt_entry *rt)
+olsr_ioctl_del_route(const struct rt_entry *rt)
 {
 #if !LINUX_POLICY_ROUTING
   struct rtentry kernel_route;
@@ -371,7 +371,7 @@ olsr_ioctl_del_route(struct rt_entry *rt)
  *@return negative on error
  */
 int
-olsr_ioctl_del_route6(struct rt_entry *rt)
+olsr_ioctl_del_route6(const struct rt_entry *rt)
 {
 #if !LINUX_POLICY_ROUTING
   struct in6_rtmsg kernel_route;

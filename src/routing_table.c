@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.33 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: routing_table.c,v 1.34 2007/11/11 23:10:24 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -68,7 +68,7 @@ unsigned int routingtree_version;
 unsigned int
 olsr_bump_routingtree_version(void)
 {
-  return(routingtree_version++);
+  return routingtree_version++;
 }
 
 /**
@@ -86,12 +86,14 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
 {       
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
+  const olsr_u32_t addr1 = ntohl(pfx1->prefix.v4.s_addr);
+  const olsr_u32_t addr2 = ntohl(pfx2->prefix.v4.s_addr);
 
   /* prefix */
-  if (pfx1->prefix.v4.s_addr < pfx2->prefix.v4.s_addr) {
+  if (addr1 < addr2) {
     return -1;
   }
-  if (pfx1->prefix.v4.s_addr > pfx2->prefix.v4.s_addr) {
+  if (addr1 > addr2) {
     return +1;
   }
 
@@ -142,19 +144,12 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 /**
  * Initialize the routingtree and kernel change queues.
  */
-int
+void
 olsr_init_routing_table(void)
 {
   /* the routing tree */
   avl_init(&routingtree, avl_comp_prefix_default);
   routingtree_version = 0;
-
-  /* the add/chg/del kernel queues */
-  list_head_init(&add_kernel_list);
-  list_head_init(&chg_kernel_list);
-  list_head_init(&del_kernel_list);
-
-  return 1;
 }
 
 /**
@@ -176,7 +171,7 @@ olsr_lookup_routing_table(const union olsr_ip_addr *dst)
 
   rt_tree_node = avl_find(&routingtree, &prefix);
 
-  return (rt_tree_node ? rt_tree_node->data : NULL);
+  return rt_tree_node ? rt_tree_node->data : NULL;
 }
 
 /**
@@ -214,15 +209,12 @@ olsr_update_routing_entry(struct rt_path *rtp, union olsr_ip_addr *gateway,
 static struct rt_entry *
 olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
 {
-  struct rt_entry *rt;
-
-  rt = olsr_malloc(sizeof(struct rt_entry), __FUNCTION__);
-
+  struct rt_entry *rt = olsr_malloc(sizeof(struct rt_entry), __FUNCTION__);
   if (!rt) {
     return NULL;
   }
 
-  memset(rt, 0, sizeof(struct rt_entry));
+  memset(rt, 0, sizeof(*rt));
   
   /* Mark this entry as fresh (see process_routes.c:512) */
   rt->rt_nexthop.iif_index = -1;
@@ -248,15 +240,13 @@ static struct rt_path *
 olsr_alloc_rt_path(struct rt_entry *rt,
                    union olsr_ip_addr *originator)
 {
-  struct rt_path *rtp;
-
-  rtp = olsr_malloc(sizeof(struct rt_path), __FUNCTION__);
+  struct rt_path *rtp = olsr_malloc(sizeof(struct rt_path), __FUNCTION__);
 
   if (!rtp) {
     return NULL;
   }
 
-  memset(rtp, 0, sizeof(struct rt_path));
+  memset(rtp, 0, sizeof(*rtp));
 
   //COPY_IP(&rtp->rtp_originator, originator);
   rtp->rtp_originator = *originator;
@@ -278,7 +268,7 @@ olsr_alloc_rt_path(struct rt_entry *rt,
  * Check if there is an interface or gateway change.
  */
 olsr_bool
-olsr_nh_change(struct rt_nexthop *nh1, struct rt_nexthop *nh2)
+olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2)
 {
   if (!ipequal(&nh1->gateway, &nh2->gateway) ||
       (nh1->iif_index != nh2->iif_index)) {
@@ -312,7 +302,7 @@ olsr_get_nh(const struct rt_entry *rt)
  * than the second one, FALSE otherwise.
  */
 static olsr_bool
-olsr_cmp_rtp(struct rt_path *rtp1, struct rt_path *rtp2)
+olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2)
 {
    /* etx comes first */
     if (rtp1->rtp_metric.etx < rtp2->rtp_metric.etx) {
@@ -342,9 +332,9 @@ olsr_cmp_rtp(struct rt_path *rtp1, struct rt_path *rtp2)
  * than the second one, FALSE otherwise.
  */
 olsr_bool
-olsr_cmp_rt(struct rt_entry *rt1, struct rt_entry *rt2)
+olsr_cmp_rt(const struct rt_entry *rt1, const struct rt_entry *rt2)
 {
-  return(olsr_cmp_rtp(rt1->rt_best, rt2->rt_best));
+  return olsr_cmp_rtp(rt1->rt_best, rt2->rt_best);
 }
 
 /**
@@ -354,11 +344,8 @@ olsr_cmp_rt(struct rt_entry *rt1, struct rt_entry *rt2)
 void
 olsr_rt_best(struct rt_entry *rt)
 {
-  struct rt_path *rtp;
-  struct avl_node *node;
-
   /* grab the first entry */
-  node = avl_walk_first(&rt->rt_path_tree);
+  struct avl_node *node = avl_walk_first(&rt->rt_path_tree);
 
   assert(node != 0); /* should not happen */
 
@@ -366,8 +353,7 @@ olsr_rt_best(struct rt_entry *rt)
 
   /* walk all remaining originator entries */
   while ((node = avl_walk_next(node))) {
-
-    rtp = node->data;
+    struct rt_path *rtp = node->data;
 
     if (olsr_cmp_rtp(rtp, rt->rt_best)) {
       rt->rt_best = rtp;
@@ -465,7 +451,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
  * format a route entry into a buffer
  */
 char *
-olsr_rt_to_string(struct rt_entry *rt)
+olsr_rt_to_string(const struct rt_entry *rt)
 {
   static char buff[128];
   struct ipaddr_str prefixstr, gwstr;
@@ -483,7 +469,7 @@ olsr_rt_to_string(struct rt_entry *rt)
  * format a route path into a buffer
  */
 char *
-olsr_rtp_to_string(struct rt_path *rtp)
+olsr_rtp_to_string(const struct rt_path *rtp)
 {
   static char buff[128];
   struct ipaddr_str prefixstr, origstr, gwstr;
@@ -510,40 +496,31 @@ olsr_rtp_to_string(struct rt_path *rtp)
 void
 olsr_calculate_hna_routes(void)
 {
-  int index, plen;
-  struct rt_entry *rt;
+  int idx;
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Calculating HNA routes\n");
 #endif
 
-  for(index=0;index<HASHSIZE;index++)
-  {
+  for (idx = 0; idx < HASHSIZE; idx++) {
     struct hna_entry *tmp_hna;
     /* All entries */
-    for(tmp_hna = hna_set[index].next;
-        tmp_hna != &hna_set[index];
-        tmp_hna = tmp_hna->next)
-    {
+    for (tmp_hna = hna_set[idx].next; tmp_hna != &hna_set[idx]; tmp_hna = tmp_hna->next) {
       struct hna_net *tmp_net;
       /* All networks */
-      for(tmp_net = tmp_hna->networks.next;
-          tmp_net != &tmp_hna->networks;
-          tmp_net = tmp_net->next) {
-
+      for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
         /* If no route to gateway - skip */
-        if((rt = olsr_lookup_routing_table(&tmp_hna->A_gateway_addr)) == NULL)
-          continue;
-
-        /* update if better */
-        plen = olsr_get_hna_prefix_len(tmp_net);
-        olsr_insert_routing_table(&tmp_net->A_network_addr, plen,
-                                  &tmp_hna->A_gateway_addr,
-                                  &rt->rt_best->rtp_nexthop.gateway,
-                                  rt->rt_best->rtp_nexthop.iif_index,
-                                  rt->rt_best->rtp_metric.hops,
-                                  rt->rt_best->rtp_metric.etx);
-
+        struct rt_entry *rt = olsr_lookup_routing_table(&tmp_hna->A_gateway_addr);
+        if (rt != NULL) {
+          /* update if better */
+          olsr_insert_routing_table(&tmp_net->A_network_addr,
+                                    olsr_get_hna_prefix_len(tmp_net),
+                                    &tmp_hna->A_gateway_addr,
+                                    &rt->rt_best->rtp_nexthop.gateway,
+                                    rt->rt_best->rtp_nexthop.iif_index,
+                                    rt->rt_best->rtp_metric.hops,
+                                    rt->rt_best->rtp_metric.etx);
+        }
       }
     }
   }
@@ -557,18 +534,18 @@ olsr_calculate_hna_routes(void)
  *
  */
 void
-olsr_print_routing_table(struct avl_tree *tree)
+olsr_print_routing_table(const struct avl_tree *tree)
 {
-  struct avl_node *rt_tree_node;
+  const struct avl_node *rt_tree_node;
 
   printf("ROUTING TABLE\n");
 
-  for (rt_tree_node = avl_walk_first(tree);
-       rt_tree_node;
-       rt_tree_node = avl_walk_next(rt_tree_node)) {
-    struct avl_node *rtp_tree_node;
+  for (rt_tree_node = avl_walk_first_c(tree);
+       rt_tree_node != NULL;
+       rt_tree_node = avl_walk_next_c(rt_tree_node)) {
+    const struct avl_node *rtp_tree_node;
     struct ipaddr_str prefixstr, origstr, gwstr;
-    struct rt_entry * const rt = rt_tree_node->data;
+    const struct rt_entry * const rt = rt_tree_node->data;
 
     /* first the route entry */
     printf("%s/%u, via %s, best-originator %s\n",
@@ -578,10 +555,9 @@ olsr_print_routing_table(struct avl_tree *tree)
            olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
 
     /* walk the per-originator path tree of routes */
-    for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
-         rtp_tree_node;
-         rtp_tree_node = avl_walk_next(rtp_tree_node)) {
-
+    for (rtp_tree_node = avl_walk_first_c(&rt->rt_path_tree);
+         rtp_tree_node != NULL;
+         rtp_tree_node = avl_walk_next_c(rtp_tree_node)) {
       const struct rt_path * const rtp = rtp_tree_node->data;
       printf("\tfrom %s, etx %.3f, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),

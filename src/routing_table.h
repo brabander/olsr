@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.24 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: routing_table.h,v 1.25 2007/11/11 23:10:24 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE
@@ -144,7 +144,7 @@ union olsr_kernel_route
 extern struct avl_tree routingtree;
 extern unsigned int routingtree_version;
 
-int
+void
 olsr_init_routing_table(void);
 
 unsigned int olsr_bump_routingtree_version(void);
@@ -153,13 +153,13 @@ int avl_comp_ipv4_prefix (const void *, const void *);
 int avl_comp_ipv6_prefix (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
-olsr_bool olsr_nh_change(struct rt_nexthop *, struct rt_nexthop *);
-olsr_bool olsr_cmp_rt(struct rt_entry *, struct rt_entry *);
+olsr_bool olsr_nh_change(const struct rt_nexthop *, const struct rt_nexthop *);
+olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
 
 void olsr_calculate_hna_routes(void);
-char *olsr_rt_to_string(struct rt_entry *);
-char *olsr_rtp_to_string(struct rt_path *);
-void olsr_print_routing_table(struct avl_tree *);
+char *olsr_rt_to_string(const struct rt_entry *);
+char *olsr_rtp_to_string(const struct rt_path *);
+void olsr_print_routing_table(const struct avl_tree *);
 
 const struct rt_nexthop * olsr_get_nh(const struct rt_entry *);
 

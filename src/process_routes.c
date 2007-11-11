@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: process_routes.c,v 1.39 2007/11/11 23:10:25 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -58,7 +58,7 @@
 struct export_route_entry
 {
   olsr_u8_t type;       /* AF_INET/AF_INET6 */
-  int (*function)(struct rt_entry*);
+  export_route_function function;
   struct export_route_entry *next;
 };
 
@@ -66,9 +66,10 @@ struct export_route_entry
 static struct export_route_entry *add_routes;
 static struct export_route_entry *del_routes;
 
-struct list_node add_kernel_list;
-struct list_node chg_kernel_list;
-struct list_node del_kernel_list;
+static struct list_node add_kernel_list;
+static struct list_node chg_kernel_list;
+static struct list_node del_kernel_list;
+
 
 /**
  *
@@ -80,9 +81,7 @@ olsr_u8_t
 olsr_rt_flags(const struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
-  olsr_u8_t flags;
-
-  flags = (RTF_UP);
+  olsr_u8_t flags = RTF_UP;
 
   if (rt->rt_dst.prefix_len == olsr_cnf->maxplen) {
     flags |= RTF_HOST;
@@ -97,143 +96,85 @@ olsr_rt_flags(const struct rt_entry *rt)
   return flags;
 }
 
-void 
-olsr_addroute_add_function(int (*function)(struct rt_entry*), olsr_u8_t type) 
+
+static void 
+olsr_route_add_function(struct export_route_entry **routes, export_route_function function, olsr_u8_t type)
 {
-  struct export_route_entry *tmp;
-  tmp = olsr_malloc(sizeof *tmp, "olsr_addroute_add_function");
+  struct export_route_entry *tmp = olsr_malloc(sizeof(*tmp), __func__);
   tmp->type = type;
   tmp->function = function;
-  tmp->next = add_routes;
-  add_routes = tmp;
+  tmp->next = *routes;
+  *routes = tmp;
 }
 
 void 
-olsr_delroute_add_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+olsr_addroute_add_function(export_route_function function, olsr_u8_t type)
 {
-  struct export_route_entry *tmp;
-  tmp = olsr_malloc(sizeof *tmp, "olsr_delroute_add_function");
-  tmp->type = type;
-  tmp->function = function;
-  tmp->next = del_routes;
-  del_routes = tmp;
+  olsr_route_add_function(&add_routes, function, type);
 }
 
+void 
+olsr_delroute_add_function(export_route_function function, olsr_u8_t type)
+{
+  olsr_route_add_function(&del_routes, function, type);
+}
+
+
+static int
+olsr_route_remove_function(struct export_route_entry **routes, export_route_function function, olsr_u8_t type)
+{
+  struct export_route_entry *tmp, *prev;
+  for (tmp = *routes, prev = NULL; tmp != NULL; prev = tmp, tmp = tmp->next) {
+    if (function == tmp->function && type == tmp->type) {
+      if (prev == NULL) { /* i.e. tmp == *routes */
+        *routes = (*routes)->next;
+      } else {
+        prev->next = tmp->next;
+      }
+      free(tmp);
+      return 1; 
+    }
+  }
+  return 0;
+}
 
 int 
-olsr_addroute_remove_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+olsr_addroute_remove_function(export_route_function function, olsr_u8_t type)
 {
-  struct export_route_entry *tmp, *prev = NULL /* Make compiler happy */; 
-  tmp = add_routes;
-  while (tmp) 
-    {
-      if (function == tmp->function && type == tmp->type) 
-	{
-	  if (tmp == add_routes) 
-	    {
-	      add_routes = add_routes->next;
-	      free (tmp);
-	      return 1;
-	    }
-	  else 
-	    {
-	      prev->next = tmp->next;
-	      free (tmp);
-	      return 1;
-	    }
-	}
-      prev = tmp;
-      tmp = tmp->next;
-    }
-  return 0;
+  return olsr_route_remove_function(&add_routes, function, type);
 }
 
 int
-olsr_delroute_remove_function(int (*function) (struct rt_entry*), olsr_u8_t type)
+olsr_delroute_remove_function(export_route_function function, olsr_u8_t type)
 {
-  struct export_route_entry *tmp, *prev = NULL /* Make compiler happy */;
-  tmp = del_routes;
-  while (tmp) 
-    {
-      if (function == tmp->function && type == tmp->type) 
-	{
-	  if (tmp == del_routes) 
-	    {
-	      del_routes = del_routes->next;
-	      free (tmp);
-	      return 1;
-	    }
-	  else 
-	    {
-	      prev->next = tmp->next;
-	      free (tmp);
-	      return 1; 
-	    }
-	}
-      prev = tmp;
-      tmp = tmp->next;
-    }
-  return 0;
+  return olsr_route_remove_function(&del_routes, function, type);
 }
+
 
 void 
 olsr_init_export_route(void)
 {
+  /* the add/chg/del kernel queues */
+  list_head_init(&add_kernel_list);
+  list_head_init(&chg_kernel_list);
+  list_head_init(&del_kernel_list);
+
   olsr_addroute_add_function(&olsr_ioctl_add_route, AF_INET);
   olsr_addroute_add_function(&olsr_ioctl_add_route6, AF_INET6);
   olsr_delroute_add_function(&olsr_ioctl_del_route, AF_INET);
   olsr_delroute_add_function(&olsr_ioctl_del_route6, AF_INET6);
 }
 
-int
-olsr_export_add_route (struct rt_entry *rt) 
+static int
+olsr_export_route(struct export_route_entry *routes, const struct rt_entry *rt, int ip_version)
 {
   int retval = 0;
   struct export_route_entry *tmp;
-  for (tmp = add_routes; tmp; tmp = tmp->next)
-    {
-      if (tmp->type == AF_INET)
-	retval = tmp->function(rt);
+  for (tmp = routes; tmp != NULL; tmp = tmp->next) {
+    if (tmp->type == ip_version) {
+      retval = tmp->function(rt);
     }
-  return retval;
-}
-
-int
-olsr_export_add_route6 (struct rt_entry *rt) 
-{
-  int retval = 0;
-  struct export_route_entry *tmp;
-  for (tmp = add_routes; tmp; tmp = tmp->next)
-    {
-      if (tmp->type == AF_INET6)
-	retval = tmp->function(rt);
-    }
-  return retval;
-}
-
-int
-olsr_export_del_route (struct rt_entry *rt) 
-{
-  int retval = 0;
-  struct export_route_entry *tmp;
-  for (tmp = del_routes; tmp; tmp = tmp->next)
-    {
-      if (tmp->type == AF_INET)
-	retval = tmp->function(rt);
-    }
-  return retval;
-}
-
-int
-olsr_export_del_route6 (struct rt_entry *rt) 
-{
-  int retval = 0;
-  struct export_route_entry *tmp;
-  for (tmp = del_routes; tmp; tmp = tmp->next)
-    {
-      if (tmp->type == AF_INET6)
-	retval = tmp->function(rt);
-    }
+  }
   return retval;
 }
 
@@ -246,15 +187,13 @@ olsr_export_del_route6 (struct rt_entry *rt)
  *
  *@return 1
  */
-int
+void
 olsr_delete_all_kernel_routes(void)
 { 
   OLSR_PRINTF(1, "Deleting all routes...\n");
 
   olsr_bump_routingtree_version();
   olsr_update_kernel_routes();
-
-  return 1;
 }
 
 /**
@@ -293,15 +232,8 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
 static void
 olsr_delete_kernel_route(struct rt_entry *rt)
 {
-  olsr_16_t error;		  
-
   if(!olsr_cnf->host_emul) {
-
-    if(olsr_cnf->ip_version == AF_INET) {
-      error = olsr_export_del_route(rt);
-    } else {
-      error = olsr_export_del_route6(rt);
-    }
+    olsr_16_t error = olsr_export_route(del_routes, rt, olsr_cnf->ip_version);
 
     if(error < 0) {
       const char * const err_msg = strerror(errno);
@@ -323,16 +255,10 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 static void
 olsr_add_kernel_route(struct rt_entry *rt)
 {
-  olsr_16_t error;		  
 
   if(!olsr_cnf->host_emul) {
+    olsr_16_t error = olsr_export_route(add_routes, rt, olsr_cnf->ip_version);
 
-    if(olsr_cnf->ip_version == AF_INET) {
-      error = olsr_export_add_route(rt);
-    } else {
-      error = olsr_export_add_route6(rt);
-    }
-    
     if(error < 0) {
       const char * const err_msg = strerror(errno);
       OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n",
@@ -359,11 +285,8 @@ olsr_add_kernel_route(struct rt_entry *rt)
 static void
 olsr_add_kernel_routes(struct list_node *head_node)
 {
-  struct rt_entry *rt;
-
   while (!list_is_empty(head_node)) {
-
-    rt = head_node->next->data;
+    struct rt_entry *rt = head_node->next->data;
     olsr_add_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -380,7 +303,6 @@ olsr_add_kernel_routes(struct list_node *head_node)
 static void
 olsr_chg_kernel_routes(struct list_node *head_node)
 {
-  struct rt_entry *rt;
   struct list_node *node;
 
   if (list_is_empty(head_node)) {
@@ -393,8 +315,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * such that nexthop routes are deleted last.
    */
   for (node = head_node->prev; head_node != node; node = node->prev) {
-
-    rt = node->data;
+    struct rt_entry *rt = node->data;
     olsr_delete_kernel_route(rt);
   }
 
@@ -404,8 +325,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * such that nexthop routes are added first.
    */
   while (!list_is_empty(head_node)) {
-
-    rt = head_node->next->data;
+    struct rt_entry *rt = head_node->next->data;
     olsr_add_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -422,11 +342,8 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 static void
 olsr_del_kernel_routes(struct list_node *head_node)
 {
-  struct rt_entry *rt;
-
   while (!list_is_empty(head_node)) {
-
-    rt = head_node->prev->data;
+    struct rt_entry *rt = head_node->prev->data;
     olsr_delete_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -446,7 +363,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
   struct avl_node *rtp_tree_node, *next_rtp_tree_node;
 
   for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
-       rtp_tree_node;
+       rtp_tree_node != NULL;
        rtp_tree_node = next_rtp_tree_node) {
 
     /*

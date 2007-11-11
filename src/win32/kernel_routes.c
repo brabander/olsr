@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.24 2007/11/08 23:23:13 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.25 2007/11/11 23:10:22 bernd67 Exp $
  */
 
 #include <stdio.h>
@@ -60,7 +60,7 @@ char *StrError(unsigned int ErrNo);
  *
  *@return negative on error
  */
-int olsr_ioctl_add_route(struct rt_entry *rt)
+int olsr_ioctl_add_route(const struct rt_entry *rt)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
@@ -127,7 +127,7 @@ int olsr_ioctl_add_route(struct rt_entry *rt)
 
 // XXX - to be implemented
 
-int olsr_ioctl_add_route6(struct rt_entry *rt __attribute__((unused)))
+int olsr_ioctl_add_route6(const struct rt_entry *rt __attribute__((unused)))
 {
   return 0;
 }
@@ -139,7 +139,7 @@ int olsr_ioctl_add_route6(struct rt_entry *rt __attribute__((unused)))
  *
  *@return negative on error
  */
-int olsr_ioctl_del_route(struct rt_entry *rt)
+int olsr_ioctl_del_route(const struct rt_entry *rt)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
@@ -194,7 +194,7 @@ int olsr_ioctl_del_route(struct rt_entry *rt)
 
 // XXX - to be implemented
 
-int olsr_ioctl_del_route6(struct rt_entry *rt __attribute__((unused)))
+int olsr_ioctl_del_route6(const struct rt_entry *rt __attribute__((unused)))
 {
   return 0;
 }

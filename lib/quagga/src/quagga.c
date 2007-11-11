@@ -26,8 +26,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <quagga/zebra.h>
-#include "quagga.h"
 
+#include "quagga.h"
 #include "olsr.h"
 #include "log.h"
 #include "defs.h"
@@ -364,7 +364,7 @@ static unsigned char* zebra_route_packet (struct ipv4_route r,
 
 
 /* adds a route to zebra-daemon */
-int zebra_add_v4_route (struct ipv4_route r) {
+int zebra_add_v4_route (const struct ipv4_route r) {
   
   unsigned char *cmdopt;
   ssize_t optlen;
@@ -736,7 +736,7 @@ static uint8_t masktoprefixlen (uint32_t mask) {
 }
 */
 
-int zebra_add_olsr_v4_route (struct rt_entry *r) {
+int zebra_add_olsr_v4_route (const struct rt_entry *r) {
   
   struct ipv4_route route;
   int retval;
@@ -783,7 +783,7 @@ int zebra_add_olsr_v4_route (struct rt_entry *r) {
   return retval;
 }
 
-int zebra_del_olsr_v4_route (struct rt_entry *r) {
+int zebra_del_olsr_v4_route (const struct rt_entry *r) {
   
   struct ipv4_route route;
   int retval;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.14 2007/10/04 22:27:31 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.15 2007/11/11 23:10:24 bernd67 Exp $
  */
 
 
@@ -49,7 +49,7 @@
 
 static unsigned int seq = 0;
 
-static int add_del_route(struct rt_entry *rt, int add)
+static int add_del_route(const struct rt_entry *rt, int add)
 {
   struct rt_msghdr *rtm;
   unsigned char buff[512];
@@ -164,17 +164,17 @@ static int add_del_route(struct rt_entry *rt, int add)
   return 0;
 }
 
-int olsr_ioctl_add_route(struct rt_entry *rt)
+int olsr_ioctl_add_route(const struct rt_entry *rt)
 {
   return add_del_route(rt, 1);
 }
 
-int olsr_ioctl_del_route(struct rt_entry *rt)
+int olsr_ioctl_del_route(const struct rt_entry *rt)
 {
   return add_del_route(rt, 0);
 }
 
-static int add_del_route6(struct rt_entry *rt, int add)
+static int add_del_route6(const struct rt_entry *rt, int add)
 {
   struct rt_msghdr *rtm;
   unsigned char buff[512];
@@ -300,12 +300,12 @@ static int add_del_route6(struct rt_entry *rt, int add)
   return 0;
 }
 
-int olsr_ioctl_add_route6(struct rt_entry *rt)
+int olsr_ioctl_add_route6(const struct rt_entry *rt)
 {
   return add_del_route6(rt, 1);
 }
 
-int olsr_ioctl_del_route6(struct rt_entry *rt)
+int olsr_ioctl_del_route6(const struct rt_entry *rt)
 {
   return add_del_route6(rt, 0);
 }
