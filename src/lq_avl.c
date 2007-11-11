@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.14 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.15 2007/11/11 22:55:17 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -55,8 +55,8 @@
  * if avl_comp_default is set to zero, a fast
  * inline ipv4 comparison will be executed.
  */
-int (*avl_comp_default)(const void *, const void *) = NULL;
-int (*avl_comp_prefix_default)(const void *, const void *);
+avl_tree_comp avl_comp_default = NULL;
+avl_tree_comp avl_comp_prefix_default;
 
 int avl_comp_ipv4(const void *ip1, const void *ip2)
 {
@@ -68,7 +68,7 @@ int avl_comp_ipv6(const void *ip1, const void *ip2)
   return memcmp(ip1, ip2, 16);
 }
 
-void avl_init(struct avl_tree *tree, int (*comp)(const void *, const void *))
+void avl_init(struct avl_tree *tree, avl_tree_comp comp)
 {
   tree->root = NULL;
   tree->first = NULL;
@@ -95,11 +95,11 @@ static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, const void *key
 }
 
 static struct avl_node *avl_find_rec(struct avl_node *node, const void *key,
-                                     int (*comp)(const void *, const void *))
+                                     avl_tree_comp comp)
 {
   int diff;
 
-  if (0 == comp)
+  if (NULL == comp)
     return avl_find_rec_ipv4(node, key);
 
   diff = (*comp)(key, node->key);
@@ -132,7 +132,7 @@ struct avl_node *avl_find(struct avl_tree *tree, const void *key)
 
   node = avl_find_rec(tree->root, key, tree->comp);
 
-  if (0 == tree->comp)
+  if (NULL == tree->comp)
   {
     if (0 != inline_avl_comp_ipv4(node->key, key))
       return NULL;
@@ -213,9 +213,9 @@ static void avl_rotate_left(struct avl_tree *tree, struct avl_node *node)
 
 static void post_insert(struct avl_tree *tree, struct avl_node *node)
 {
-  struct avl_node *parent;
+  struct avl_node *parent = node->parent;
 
-  if ((parent = node->parent) == NULL)
+  if (parent == NULL)
     return;
 
   if (node == parent->left)
@@ -261,7 +261,6 @@ static void post_insert(struct avl_tree *tree, struct avl_node *node)
 
   avl_rotate_right(tree, node);
   avl_rotate_left(tree, node->parent->parent);
-  return;
 }
 
 static void avl_insert_before(struct avl_tree *tree, struct avl_node *pos_node,
@@ -344,7 +343,7 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates
   while (last->next != NULL && last->next->leader == 0)
     last = last->next;
 
-  if (0 == tree->comp)
+  if (NULL == tree->comp)
     diff = inline_avl_comp_ipv4(new->key, node->key);
 
   else
@@ -688,26 +687,6 @@ void avl_delete(struct avl_tree *tree, struct avl_node *node)
   }
 
   avl_remove(tree, node);
-}
-
-struct avl_node *avl_walk_first(struct avl_tree *tree)
-{
-  return tree->first;
-}
-
-struct avl_node *avl_walk_last(struct avl_tree *tree)
-{
-  return tree->last;
-}
-
-struct avl_node *avl_walk_next(struct avl_node *node)
-{
-  return node->next;
-}
-
-struct avl_node *avl_walk_prev(struct avl_node *node)
-{
-  return node->prev;
 }
 
 /*
