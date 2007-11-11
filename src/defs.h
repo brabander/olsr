@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.66 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: defs.h,v 1.67 2007/11/11 22:51:54 bernd67 Exp $
  */
 
 
@@ -106,6 +106,8 @@ extern FILE *debug_handle;
 #ifndef MIN
 #define MIN(x,y)	((x) < (y) ? (x) : (y))
 #endif
+
+#define INLINE inline __attribute__((always_inline))
 
 /*
  * Queueing macros
