@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.112 2007/11/08 22:47:39 bernd67 Exp $
+$Id: CHANGELOG,v 1.113 2007/11/11 23:25:29 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -90,10 +90,33 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - declare "int_addr", "int_netmask" and "int_broadaddr" in "struct interface"
   as "struct sockaddr_in" since it is that what we actually want there (and
   it is similar to the IPv6 code).
+- updated the olsrd.conf.default.lq-fisheye to the Debian-deliverd version
+  after recent discussions olsr-dev@olsr.org
 - use "inline_avl_comp_ipv4()" in "avl_comp_ipv4()"
 - clean up the routes on more signals. Basically we want to do this on all
   signals which terminate the program.
 - killed a superflous global buffer in src/main.c
+- made inline functions from avl_walk_{first,last,next,prev} and created
+  "const" versions of it. inline_avl_comp_ipv4() is now also an inline function
+  (and not a macro)
+- created a typedef's for various function pointers - much easier to read.
+- cleanup: compare tree->comp (adn other pointers)) to NULL (and not 0)
+- killed superflous "return"s at the end of void functions
+- const'ified more parameters in many more functions in the .h and
+  .c files
+- init-functions with constant or ignored return values are "void"
+- created a typedef fro the callback in "struct export_route_entry"
+  and using it!
+- moved the initialization of the {add,chg,del}_kernel_list variables
+  into process_routes.c. So they are now "static" there.
+- olsr_export_{add,del}_route{,6} are now static in process_routes.c
+  since they are not used elsewhere.
+- olsr_addroute_add_function() and olsr_deldroute_add_function() were
+  almost identical - made one function out of it.
+  Same for olsr_addroute_del_function() and olsr_deldroute_del_function().
+- fixed the sort order in avl_comp_ipv4_prefix(): We compare now the IPv4
+  values in host byte order (and not network byte order). So the route
+  list in the e.g. httpinfo plugin is now nicely sorted.
 
 0.5.4 ---------------------------------------------------------------------
 
