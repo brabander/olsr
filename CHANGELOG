@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.113 2007/11/11 23:25:29 bernd67 Exp $
+$Id: CHANGELOG,v 1.114 2007/11/12 00:12:15 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -117,6 +117,13 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - fixed the sort order in avl_comp_ipv4_prefix(): We compare now the IPv4
   values in host byte order (and not network byte order). So the route
   list in the e.g. httpinfo plugin is now nicely sorted.
+- fixed and improved the `gcc-warnings` script:
+  * support older gcc's (as on Debian/Sarge) as they have slightly different
+    error messages
+  * removed superflous lines
+  * replaced the call of `sed` with shell built-in features fixing syntax
+    errors on Debian/Sarge
+  * set all locale-relevant variables to "C" (just to be sure)
 
 0.5.4 ---------------------------------------------------------------------
 

@@ -3,10 +3,13 @@
 # We expect warning options for gcc as argumenst and return the ones which are accepted
 # by the given gcc.
 #
-# $Id: gcc-warnings,v 1.5 2007/11/04 18:45:30 bernd67 Exp $
+# $Id: gcc-warnings,v 1.6 2007/11/12 00:12:15 bernd67 Exp $
 
 set -ue
 #set -vx
+
+# make sure we do not use some locale ....
+export LANG=C LC_ALL=C LC_COLLATE=C LC_CTYPE=C LC_MESSAGES=C LC_NUMERIC=C
 
 OPTS=""
 for param; do
@@ -27,12 +30,15 @@ EOF
 parsetest() {
     while read error; do 
        case "$error" in
-       *error:\ unrecognized\ *option*)
-                                       opt="${error#*\`}"
-                                       opt="${opt%\'*}"
+       *error:\ unrecognized\ *option\ \"*)
                                        opt="${error#*\"}"
                                        opt="${opt%\"*}"
-                                       OPTS=`echo $OPTS | sed -e s/$opt//g`
+                                       OPTS="${OPTS//$opt}"
+                                       ;;
+       *error:\ unrecognized\ *option\ \`*)
+                                       opt="${error#*\`}"
+                                       opt="${opt%\'*}"
+                                       OPTS="${OPTS//$opt}"
                                        ;;
        esac
     done
