@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.34 2007/11/11 23:10:24 bernd67 Exp $
+ * $Id: routing_table.c,v 1.35 2007/11/14 11:03:52 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -403,6 +403,13 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
   }
 
   /*
+   * No bogus prefix lengths.
+   */
+  if (plen > olsr_cnf->maxplen) {
+    return NULL;
+  }
+  
+  /*
    * first check if there is a route_entry for the prefix.
    */
   prefix.prefix = *dst;
@@ -538,7 +545,9 @@ olsr_print_routing_table(const struct avl_tree *tree)
 {
   const struct avl_node *rt_tree_node;
 
+#ifdef DEBUG
   printf("ROUTING TABLE\n");
+#endif
 
   for (rt_tree_node = avl_walk_first_c(tree);
        rt_tree_node != NULL;
