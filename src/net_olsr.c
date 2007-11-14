@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.32 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.33 2007/11/14 11:01:03 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -497,25 +497,35 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, const olsr_u16_t prefix)
 olsr_u16_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
-#endif
   olsr_u16_t prefix = 0;
-  olsr_u8_t tmp;
   const olsr_u8_t * const a_end = adr->v6.s6_addr+olsr_cnf->ipsize;
   const olsr_u8_t *a;
 
   for (a = adr->v6.s6_addr; a < a_end && *a == 0xff; a++) {
     prefix += 8;
   }
-  for (tmp = *a; tmp > 0; tmp <<= 1) {
-    prefix++;
+  if (a < a_end) {
+    /* handle the last byte */
+    switch (*a) {
+    case   0: prefix += 0; break;
+    case 128: prefix += 1; break;
+    case 192: prefix += 2; break;
+    case 224: prefix += 3; break;
+    case 240: prefix += 4; break;
+    case 248: prefix += 5; break;
+    case 252: prefix += 6; break;
+    case 254: prefix += 7; break;
+    case 255: prefix += 8; break; /* Shouldn't happen */
+    default:
+      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, olsr_ip_to_string(&buf, adr));    
+      prefix = USHRT_MAX;
+      break;
+    }
   }
-
 #ifdef DEBUG
   OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(&buf, adr), prefix);
 #endif
-
   return prefix;
 }
 
