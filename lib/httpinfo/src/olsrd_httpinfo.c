@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.85 2007/11/11 22:00:39 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.86 2007/11/15 00:35:32 bernd67 Exp $
  */
 
 /*
@@ -65,7 +65,6 @@
 
 #include "olsrd_httpinfo.h"
 #include "admin_interface.h"
-#include "html.h"
 #include "gfx.h"
 
 #ifdef OS
@@ -97,11 +96,44 @@ static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plug
 
 #define HTML_BUFSIZE (1024 * 4000)
 
-#define FRAMEWIDTH 800
+#define FRAMEWIDTH (resolve_ip_addresses ? 900 : 800)
 
 #define FILENREQ_MATCH(req, filename) \
         !strcmp(req, filename) || \
         (strlen(req) && !strcmp(&req[1], filename))
+
+static const char httpinfo_css[] =
+  "#A {text-decoration: none}\n"
+  "TH{text-align: left}\n"
+  "H1, H3, TD, TH {font-family: Helvetica; font-size: 80%}\n"
+  "h2\n {\nfont-family: Helvetica;\n font-size: 14px;text-align: center;\n"
+  "line-height: 16px;\ntext-decoration: none;\nborder: 1px solid #ccc;\n"
+  "margin: 5px;\nbackground: #ececec;\n}\n"
+  "hr\n{\nborder: none;\npadding: 1px;\nbackground: url(grayline.gif) repeat-x bottom;\n}\n"
+  "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n"
+  "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n"
+  "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n"
+  "#hdr\n{\nfont-size: 14px;\ntext-align: center;\nline-height: 16px;\n"
+  "text-decoration: none;\nborder: 1px solid #ccc;\n"
+  "margin: 5px;\nbackground: #ececec;\n}\n"
+  "#container\n{\nwidth: 1000px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n"
+  "#tabnav\n{\nheight: 20px;\nmargin: 0;\npadding-left: 10px;\n"
+  "background: url(grayline.gif) repeat-x bottom;\n}\n"
+  "#tabnav li\n{\nmargin: 0;\npadding: 0;\ndisplay: inline;\nlist-style-type: none;\n}\n"
+  "#tabnav a:link, #tabnav a:visited\n{\nfloat: left;\nbackground: #ececec;\n"
+  "font-size: 12px;\nline-height: 14px;\nfont-weight: bold;\npadding: 2px 10px 2px 10px;\n"
+  "margin-right: 4px;\nborder: 1px solid #ccc;\ntext-decoration: none;\ncolor: #777;\n}\n"
+  "#tabnav a:link.active, #tabnav a:visited.active\n{\nborder-bottom: 1px solid #fff;\n"
+  "background: #ffffff;\ncolor: #000;\n}\n"
+  "#tabnav a:hover\n{\nbackground: #777777;\ncolor: #ffffff;\n}\n"
+  ".input_text\n{\nbackground: #E5E5E5;\nmargin-left: 5px; margin-top: 0px;\n"
+  "text-align: left;\n\nwidth: 100px;\npadding: 0px;\ncolor: #000000;\n"
+  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
+  "border: 1px solid #ccc;\n}\n" 
+  ".input_button\n{\nbackground: #B5D1EE;\nmargin-left: 5px;\nmargin-top: 0px;\n"
+  "text-align: center;\nwidth: 120px;\npadding: 0px;\ncolor: #000000;\n"
+  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
+  "border: 1px solid #000;\n}\n";
 
 struct tab_entry
 {
@@ -121,7 +153,7 @@ struct static_bin_file_entry
 struct static_txt_file_entry
 {
   char *filename;
-  const char **data;
+  const char *data;
 };
 
 struct dynamic_file_entry
@@ -198,9 +230,15 @@ static const struct tab_entry tab_entries[] = {
 };
 
 static const struct static_bin_file_entry static_bin_files[] = {
+#if 0
     {"favicon.ico", favicon_ico, 1406/*favicon_ico_len*/},
     {"logo.gif", logo_gif, 2801/*logo_gif_len*/},
     {"grayline.gif", grayline_gif, 43/*grayline_gif_len*/},
+#else
+    {"favicon.ico", favicon_ico, sizeof(favicon_ico)},
+    {"logo.gif", logo_gif, sizeof(logo_gif)},
+    {"grayline.gif", grayline_gif, sizeof(grayline_gif)},
+#endif
     {NULL, NULL, 0}
 };
 
@@ -384,13 +422,11 @@ parse_http_request(int fd)
     c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, sizeof(req));
   } else if (!strcmp(req_type, "GET")) {
     int i = 0;
-    int y = 0;
 
-    while (static_bin_files[i].filename)	{
+    for (i = 0; static_bin_files[i].filename; i++) {
         if (FILENREQ_MATCH(filename, static_bin_files[i].filename)) {
 	    break;
         }
-        i++;
     }
       
     if (static_bin_files[i].filename) {
@@ -411,11 +447,7 @@ parse_http_request(int fd)
       
     if (static_txt_files[i].filename) {
       stats.ok_hits++;
-      y = 0;
-      while (static_txt_files[i].data[y]) {
-        size += snprintf(&body[size], sizeof(body)-size, static_txt_files[i].data[y]);
-        y++;
-      }
+      size += snprintf(&body[size], sizeof(body)-size, "%s", static_txt_files[i].data);
       c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));  
       goto send_http_data;
     }
@@ -441,7 +473,26 @@ parse_http_request(int fd)
       netsprintf_error = 0;
       netsprintf_direct = 1;
 #endif
-      size += snprintf(&body[size], sizeof(body)-size, "%s", http_ok_head);
+      size += snprintf(&body[size], sizeof(body)-size,
+                       "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
+                       "<head>\n"
+                       "<meta http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n"
+                       "<title>olsr.org httpinfo plugin</title>\n"
+                       "<link rel=\"icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n"
+                       "<link rel=\"shortcut icon\" href=\"favicon.ico\" type=\"image/x-icon\">\n"
+                       "<link rel=\"stylesheet\" type=\"text/css\" href=\"httpinfo.css\">\n"
+                       "</head>\n"
+                       "<body bgcolor=\"#ffffff\" text=\"#000000\">\n"
+                       "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"%d\">\n"
+                       "<tbody><tr bgcolor=\"#ffffff\">\n"
+                       "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%%\">\n"
+                       "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>\n"
+                       "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%%\">\n"
+                       "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>\n"
+                       "</tr>\n"
+                       "</tbody>\n"
+                       "</table>\n",
+                       FRAMEWIDTH);
 	  
       size += build_tabs(&body[size], sizeof(body)-size, i);
       size += build_frame(&body[size], 
@@ -453,7 +504,16 @@ parse_http_request(int fd)
 	  
       stats.ok_hits++;
 
-      size += snprintf(&body[size], sizeof(body)-size, http_ok_tail);
+      size += snprintf(&body[size], sizeof(body)-size,
+                       "</table>\n"
+                       "<div id=\"footer\">\n"
+                       "<center>\n"
+                       "(C)2005 Andreas T&oslash;nnesen<br/>\n"
+                       "<a href=\"http://www.olsr.org/\">http://www.olsr.org</a>\n"
+                       "</center>\n"
+                       "</div>\n"
+                       "</body>\n"
+                       "</html>\n");
 	  
 #ifdef NETDIRECT
       netsprintf_direct = 1;
@@ -561,7 +621,11 @@ static int build_tabs(char *buf, const olsr_u32_t bufsize, int active)
 {
   int size = 0, tabs = 0;
 
-  size += snprintf(&buf[size], bufsize-size, html_tabs_prolog);
+  size += snprintf(&buf[size], bufsize-size,
+                   "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"%d\">\n"
+                   "<tr bgcolor=\"#ffffff\"><td>\n"
+                   "<ul id=\"tabnav\">\n",
+                   FRAMEWIDTH);
   for (tabs = 0; tab_entries[tabs].tab_label; tabs++) {
     if (!tab_entries[tabs].display_tab) {
       continue;
@@ -572,7 +636,10 @@ static int build_tabs(char *buf, const olsr_u32_t bufsize, int active)
                      tabs == active ? " class=\"active\"" : "",
                      tab_entries[tabs].tab_label);
   }
-  size += snprintf(&buf[size], bufsize-size, html_tabs_epilog);
+  size += snprintf(&buf[size], bufsize-size,
+                   "</ul>\n"
+                   "</td></tr>\n"
+                   "<tr><td>\n");
   return size;
 }
 
@@ -700,7 +767,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
                    "<td align=\"center\">%d</td>",
                    rt->rt_best->rtp_metric.hops);
   size += snprintf(&buf[size], bufsize-size,
-                   "<td align=\"center\">%.3f</td>",
+                   "<td align=\"right\">%.3f</td>",
                    rt->rt_best->rtp_metric.etx);
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"center\">%s</td></tr>\n",
@@ -712,12 +779,9 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
   struct rt_entry *rt;
-  const char *s = resolve_ip_addresses ? " colspan=\"2\"" : "";
+  const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
   size += section_title(&buf[size], bufsize-size, "OLSR Routes in Kernel");
-  size += snprintf(&buf[size], bufsize-size,
-                   "<tr><th%s>Destination</th><th%s>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th></tr>\n",
-                   s,
-                   s);
+  size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination</th><th align=\"center\"%s>Gateway</th><th>Metric</th><th align=\"right\">ETX</th><th>Interface</th></tr>\n", colspan, colspan);
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
@@ -795,21 +859,21 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 
     size += snprintf(&buf[size], bufsize-size, "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
 
-    size += snprintf(&buf[size], bufsize-size, "<td>RtTable: 0x%04x</td>\n", olsr_cnf->rttable);
+    size += snprintf(&buf[size], bufsize-size, "<td>RtTable: 0x%04x/%d</td>\n", olsr_cnf->rttable, olsr_cnf->rttable);
 
     size += snprintf(&buf[size], bufsize-size, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
     
     size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
-    if (olsr_cnf->lq_level == 0)
-      {
-        size += snprintf(&buf[size], bufsize-size, "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
-	if (olsr_cnf->use_hysteresis)
-          {
-            size += snprintf(&buf[size], bufsize-size, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
-            size += snprintf(&buf[size], bufsize-size, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
-          }
+    if (olsr_cnf->lq_level == 0) {
+      size += snprintf(&buf[size], bufsize-size, "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
+      if (olsr_cnf->use_hysteresis) {
+        size += snprintf(&buf[size], bufsize-size, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
+        size += snprintf(&buf[size], bufsize-size, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
       }
+    } else {
+      size += snprintf(&buf[size], bufsize-size, "<td></td>\n");
+    }
 
     size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
@@ -913,6 +977,8 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
                            hna->net.prefix_len);
         }
       }
+    } else {
+      size += snprintf(&buf[size], bufsize-size, "<tr><td></td></tr>\n");
     }
     size += snprintf(&buf[size], bufsize-size, "</table>\n");
     return size;
@@ -925,14 +991,15 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   struct neighbor_entry *neigh;
   struct link_entry *link = NULL;
   int size = 0, idx;
+  const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   size += section_title(&buf[size], bufsize-size, "Links");
 
   size += snprintf(&buf[size], bufsize-size,
-                   "<tr><th>Local IP</th><th>Remote IP</th><th>Hysteresis</th>\n");
+                   "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th><th align=\"right\">Hysteresis</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
     size += snprintf(&buf[size], bufsize-size,
-                     "<th align=\"right\">LinkQuality</th><th>lost</th><th>total</th><th align=\"right\">NLQ</th><th align=\"right\">ETX</th>\n");
+                     "<th align=\"right\">LinkQuality</th><th>lost</th><th>total</th><th align=\"right\">NLQ</th><th align=\"right\">ETX</th>");
   }
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
@@ -948,7 +1015,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                        "<td>%d</td>"
                        "<td>%d</td>"
                        "<td align=\"right\">%0.2f</td>"
-                       "<td align=\"right\">%0.2f</td></tr>\n",
+                       "<td align=\"right\">%0.2f</td>\n",
                        link->loss_link_quality,
                        link->lost_packets, 
                        link->total_packets,
@@ -962,7 +1029,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 
   size += section_title(&buf[size], bufsize-size, "Neighbors");
   size += snprintf(&buf[size], bufsize-size, 
-                   "<tr><th>IP address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n");
+                   "<tr><th align=\"center\"%s>IP Address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
   /* Neighbors */
   for (idx = 0; idx < HASHSIZE; idx++) {
     for (neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
@@ -983,11 +1050,10 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
       size += snprintf(&buf[size], bufsize-size, "<td><select>\n"
                        "<option>IP ADDRESS</option>\n");
 
-      thop_cnt = 0;
-      for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
+      
+      for (list_2 = neigh->neighbor_2_list.next, thop_cnt = 0; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next, thop_cnt++) {
         struct ipaddr_str strbuf;
         size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
-        thop_cnt++;
       }
       size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", thop_cnt);
     }
@@ -1000,9 +1066,10 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
   struct tc_entry *tc;
+  const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   size += section_title(&buf[size], bufsize-size, "Topology Entries");
-  size += snprintf(&buf[size], bufsize-size, "<tr><th>Destination IP</th><th>Last Hop IP</th>");
+  size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination IP</th><th align=\"center\"%s>Last Hop IP</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
     size += snprintf(&buf[size], bufsize-size, "<th align=\"right\">LQ</th><th align=\"right\">ILQ</th><th align=\"right\">ETX</th>");
   }
@@ -1011,7 +1078,6 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
       struct tc_edge_entry *tc_edge;
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-
           size += snprintf(&buf[size], bufsize-size, "<tr>");
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
@@ -1038,10 +1104,11 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
   int idx;
+  const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   size += section_title(&buf[size], bufsize-size, "MID Entries");
   size += snprintf(&buf[size], bufsize-size,
-                   "<tr><th>Main Address</th><th>Aliases</th></tr>\n");
+                   "<tr><th align=\"center\"%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
   
   /* MID */  
   for (idx = 0; idx < HASHSIZE; idx++) {
@@ -1053,11 +1120,9 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
       size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, -1);
       size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
       
-      mid_cnt = 0;
-      for (alias = entry->aliases; alias != NULL; alias = alias->next_alias) {
+      for (mid_cnt = 0, alias = entry->aliases; alias != NULL; alias = alias->next_alias, mid_cnt++) {
         struct ipaddr_str strbuf;
         size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &alias->alias));
-        mid_cnt++;
       }
       size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", mid_cnt);
     }
@@ -1095,17 +1160,59 @@ static int build_all_body(char *buf, olsr_u32_t bufsize)
 
 static int build_about_body(char *buf, olsr_u32_t bufsize)
 {
-  return snprintf(buf, bufsize, about_frame, build_date, build_host);
+  return snprintf(buf, bufsize,
+                  "<strong>" PLUGIN_NAME " version " PLUGIN_VERSION "</strong><br/>\n"
+                  "by Andreas T&oslash;nnesen (C)2005.<br/>\n"
+                  "Compiled "
+#ifdef ADMIN_INTERFACE
+                           "<em>with experimental admin interface</em> "
+#endif
+                                                                      "%s at %s<hr/>\n"
+                  "This plugin implements a HTTP server that supplies\n"
+                  "the client with various dynamic web pages representing\n"
+                  "the current olsrd status.<br/>The different pages include:\n"
+                  "<ul>\n<li><strong>Configuration</strong> - This page displays information\n"
+                  "about the current olsrd configuration. This includes various\n"
+                  "olsr settings such as IP version, MID/TC redundancy, hysteresis\n"
+                  "etc. Information about the current status of the interfaces on\n"
+                  "which olsrd is configured to run is also displayed. Loaded olsrd\n"
+                  "plugins are shown with their plugin parameters. Finally all local\n"
+                  "HNA entries are shown. These are the networks that the local host\n"
+                  "will anounce itself as a gateway to.</li>\n"
+                  "<li><strong>Routes</strong> - This page displays all routes currently set in\n"
+                  "the kernel <em>by olsrd</em>. The type of route is also displayed(host\n"
+                  "or HNA).</li>\n"
+                  "<li><strong>Links/Topology</strong> - This page displays all information about\n"
+                  "links, neighbors, topology, MID and HNA entries.</li>\n"
+                  "<li><strong>All</strong> - Here all the previous pages are displayed as one.\n"
+                  "This is to make all information available as easy as possible(for example\n"
+                  "for a script) and using as few resources as possible.</li>\n"
+#ifdef ADMIN_INTERFACE
+                  "<li><strong>Admin</strong> - This page is highly experimental(and unsecure)!\n"
+                  "As of now it is not working at all but it provides a impression of\n"
+                  "the future possibilities of httpinfo. This is to be a interface to\n"
+                  "changing olsrd settings in realtime. These settings include various\n"
+                  "\"basic\" settings and local HNA settings.</li>\n"
+#endif
+                  "<li><strong>About</strong> - this help page.</li>\n</ul>"
+                  "<hr/>\n"
+                  "Send questions or comments to\n"
+                  "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or\n"
+                  "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br/>\n"
+                  "Official olsrd homepage: <a href=\"http://www.olsr.org/\">http://www.olsr.org</a><br/>\n",
+                  build_date, build_host);
 }
 
 static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
 {
-  int size = 0, i = 0;
+  int size = 0;
 
-  while (cfgfile_body[i] && strcmp(cfgfile_body[i], "<!-- CFGFILE -->")) {
-      size += snprintf(&buf[size], bufsize-size, cfgfile_body[i]);
-      i++;
-  }
+  size += snprintf(&buf[size], bufsize-size,
+                   "\n\n"
+                   "<strong>This is a automatically generated configuration\n"
+                   "file based on the current olsrd configuration of this node.<br/>\n"
+                   "<hr/>\n"
+                   "<pre>\n");
 
 #ifdef NETDIRECT
   {
@@ -1124,11 +1231,8 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
     size = snprintf(buf, size, "ERROR GENERATING CONFIGFILE!\n");
   }
 
-  i++;
-  while (cfgfile_body[i]) {
-      size += snprintf(&buf[size], bufsize-size, cfgfile_body[i]);
-      i++;
-  }
+  size += snprintf(&buf[size], bufsize-size, "</pre>\n<hr/>\n");
+
 #if 0
   printf("RETURNING %d\n", size);
 #endif
