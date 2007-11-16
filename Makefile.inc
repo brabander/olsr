@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.42 2007/11/16 19:12:55 bernd67 Exp $
+# $Id: Makefile.inc,v 1.43 2007/11/16 19:14:33 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -72,6 +72,7 @@ WARNINGS +=	-Wmissing-noreturn
 WARNINGS +=	-Wmissing-format-attribute
 WARNINGS +=	-Wno-multichar
 WARNINGS +=	-Wno-deprecated-declarations
+WARNINGS +=	-Wendif-labels
 WARNINGS +=	-Wwrite-strings
 #WARNINGS +=	-Wredundant-decls
 ifeq ($(MUDFLAP),0)
