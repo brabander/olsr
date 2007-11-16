@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: interfaces.c,v 1.37 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -356,7 +356,7 @@ if_ifwithindex_name(const int if_index)
  *@return nada
  */
 struct olsr_if *
-queue_if(char *name, int hemu)
+queue_if(const char *name, int hemu)
 {
   struct olsr_if *interf_n = olsr_cnf->interfaces;
 

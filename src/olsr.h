@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.h,v 1.26 2007/04/20 13:46:04 bernd67 Exp $
+ * $Id: olsr.h,v 1.27 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 
@@ -101,6 +101,6 @@ void *
 olsr_malloc(size_t, const char *);
 
 int
-olsr_printf(int, char *, ...) __attribute__((format(printf,2,3)));
+olsr_printf(int, const char *, ...) __attribute__((format(printf,2,3)));
 
 #endif

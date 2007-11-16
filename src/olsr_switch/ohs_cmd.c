@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.24 2007/07/28 12:58:23 bernd67 Exp $
+ * $Id: ohs_cmd.c,v 1.25 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "olsr_host_switch.h"
@@ -62,7 +62,7 @@ static char tok_buf[TOK_BUF_SIZE];
 static char olsrd_path[FILENAME_MAX];
 
 static int
-get_next_token(char *src, char *dst, size_t buflen)
+get_next_token(const char *src, char *dst, size_t buflen)
 {
   int i = 0, j = 0;
 
@@ -88,7 +88,7 @@ get_next_token(char *src, char *dst, size_t buflen)
 }
 
 int
-ohs_set_olsrd_path(char *path)
+ohs_set_olsrd_path(const char *path)
 {
   strncpy(olsrd_path, path, FILENAME_MAX);
   return 0;
@@ -103,9 +103,9 @@ ohs_cmd_olsrd(char *args __attribute__((unused)))
 }
 #else
 int
-ohs_cmd_olsrd(char *args)
+ohs_cmd_olsrd(const char *args)
 {
-  char *olsrd_args[MAX_OLSRD_ARGS];
+  const char *olsrd_args[MAX_OLSRD_ARGS];
   struct in_addr iaddr;
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
@@ -152,7 +152,7 @@ ohs_cmd_olsrd(char *args)
       if(fork())
 	return 1;
 
-      if(execve(olsrd_path, olsrd_args, NULL) < 0)
+      if(execve(olsrd_path, (char * const *)olsrd_args, NULL) < 0)
 	{
 	  printf("Error executing olsrd: %s\n", strerror(errno));
 	  exit(1);
@@ -236,7 +236,7 @@ ohs_cmd_olsrd(char *args)
 #endif
 
 int
-ohs_cmd_link(char *args)
+ohs_cmd_link(const char *args)
 {
   olsr_u8_t bi = 0, wildc_src = 0, wildc_dst = 0;
   struct ohs_connection *src, *dst;
@@ -390,7 +390,7 @@ ohs_cmd_link(char *args)
 }
 
 int
-ohs_cmd_list(char *args)
+ohs_cmd_list(const char *args)
 {
   struct ohs_connection *oc = ohs_conns;
 
@@ -439,7 +439,7 @@ ohs_cmd_list(char *args)
 }
 
 int
-ohs_cmd_help(char *args)
+ohs_cmd_help(const char *args)
 {
   int i;
 
@@ -479,7 +479,7 @@ ohs_cmd_help(char *args)
 }
 
 int
-ohs_cmd_log(char *args)
+ohs_cmd_log(const char *args)
 {
   olsr_u8_t set = 0;
 
@@ -540,7 +540,7 @@ ohs_cmd_log(char *args)
 }
 
 int
-ohs_cmd_exit(char *args __attribute__((unused)))
+ohs_cmd_exit(const char *args __attribute__((unused)))
 {
 
   printf("Exitting... bye-bye!\n");

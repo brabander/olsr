@@ -84,7 +84,7 @@ static int BmfThreadRunning = 0;
  * Return     : none
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-void BmfPError(char* format, ...)
+void BmfPError(const char* format, ...)
 {
 #define MAX_STR_DESC 255
   char* strErr = strerror(errno);

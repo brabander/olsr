@@ -1212,7 +1212,7 @@ static int CreateEncapsulateSocket(const char* ifName)
  * ------------------------------------------------------------------------- */
 static int CreateLocalEtherTunTap(void)
 {
-  static char* deviceName = "/dev/net/tun";
+  static const char deviceName[] = "/dev/net/tun";
   struct ifreq ifreq;
   int etfd;
   int ioctlSkfd;

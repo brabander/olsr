@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.35 2007/11/08 22:47:40 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.36 2007/11/16 19:12:55 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -302,7 +302,7 @@ name_init(void)
 	int ret;
 
 	//regex string for validating the hostnames
-	char *regex_name = "^[[:alnum:]_.-]+$";
+	const char *regex_name = "^[[:alnum:]_.-]+$";
 	//regex string for the service line
 	char *regex_service = olsr_malloc(256*sizeof(char) + strlen(my_suffix), "new *char from name_init for regex_service");
 	memset(&ipz, 0, sizeof(ipz));
@@ -1455,7 +1455,7 @@ void lookup_defhna_latlon(union olsr_ip_addr *ip)
 /**
  * lookup a nodes name
  */
-char*
+const char*
 lookup_name_latlon(union olsr_ip_addr *ip)
 {
 	int hash;

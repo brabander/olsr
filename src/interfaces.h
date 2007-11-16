@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.44 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: interfaces.h,v 1.45 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 
@@ -218,7 +218,7 @@ const char *
 if_ifwithindex_name(const int if_index);
 
 struct olsr_if *
-queue_if(char *, int);
+queue_if(const char *, int);
 
 int
 add_ifchgf(int (*f)(struct interface *, int));

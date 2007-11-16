@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.37 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: oparse.y,v 1.38 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 
@@ -65,7 +65,7 @@
 
 #define YYSTYPE struct conf_token *
 
-void yyerror(char *);
+void yyerror(const char *);
 int yylex(void);
 
 static int ifs_in_curr_cfg = 0;
@@ -964,7 +964,7 @@ vcomment:       TOK_COMMENT
 
 %%
 
-void yyerror (char *string)
+void yyerror (const char *string)
 {
   fprintf(stderr, "Config line %d: %s\n", current_line, string);
 }

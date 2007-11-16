@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.h,v 1.3 2007/09/17 21:57:06 bernd67 Exp $
+ * $Id: http.h,v 1.4 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "olsrd_plugin.h" /* union set_plugin_parameter_addon */
@@ -106,7 +106,7 @@ struct connInfo
   char *para;
   char *proto;
 
-  char *contType;
+  const char *contType;
   int contLen;
 
   struct sessInfo *newSess;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.h,v 1.6 2007/09/13 15:31:59 bernd67 Exp $
+ * $Id: lq_route.h,v 1.7 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #ifndef _LQ_ROUTE_H
@@ -47,6 +47,6 @@
 #define MIN_LINK_QUALITY 0.01
 
 void olsr_calculate_routing_table(void);
-char *olsr_etx_to_string(float);
+const char *olsr_etx_to_string(float);
 
 #endif

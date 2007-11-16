@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.86 2007/11/15 00:35:32 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.87 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 /*
@@ -135,30 +135,32 @@ static const char httpinfo_css[] =
   "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
   "border: 1px solid #000;\n}\n";
 
+typedef int(*build_body_callback)(char *, olsr_u32_t);
+
 struct tab_entry
 {
-  char *tab_label;
-  char *filename;
-  int(*build_body_cb)(char *, olsr_u32_t);
+  const char *tab_label;
+  const char *filename;
+  build_body_callback build_body_cb;
   olsr_bool display_tab;
 };
 
 struct static_bin_file_entry
 {
-  char *filename;
+  const char *filename;
   unsigned char *data;
   unsigned int data_size;
 };
 
 struct static_txt_file_entry
 {
-  char *filename;
+  const char *filename;
   const char *data;
 };
 
 struct dynamic_file_entry
 {
-  char *filename;
+  const char *filename;
   int(*process_data_cb)(char *, olsr_u32_t, char *, olsr_u32_t);
 };
 
@@ -170,7 +172,7 @@ static void parse_http_request(int);
 
 static int build_http_header(http_header_type, olsr_bool, olsr_u32_t, char *, olsr_u32_t);
 
-static int build_frame(char *, olsr_u32_t, char *, char *, int, int(*frame_body_cb)(char *, olsr_u32_t));
+static int build_frame(char *, olsr_u32_t, const char *, const char *, int, build_body_callback frame_body_cb);
 
 static int build_routes_body(char *, olsr_u32_t);
 
@@ -665,10 +667,10 @@ static int section_title(char *buf, olsr_u32_t bufsize, const char *title)
 
 static int build_frame(char *buf,
                        olsr_u32_t bufsize,
-                       char *title __attribute__((unused)), 
-                       char *link __attribute__((unused)), 
+                       const char *title __attribute__((unused)), 
+                       const char *link __attribute__((unused)), 
                        int width __attribute__((unused)),
-                       int(*frame_body_cb)(char *, olsr_u32_t))
+                       build_body_callback frame_body_cb)
 {
   int size = 0;
   size += snprintf(&buf[size], bufsize-size, "<div id=\"maintable\">\n");

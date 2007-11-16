@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.62 2007/11/11 22:56:34 bernd67 Exp $
+ * $Id: olsr.c,v 1.63 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 /**
@@ -587,7 +587,7 @@ olsr_malloc(size_t size, const char *id)
  */
 
 int
-olsr_printf(int loglevel, char *format, ...)
+olsr_printf(int loglevel, const char *format, ...)
 {
   if((loglevel <= olsr_cnf->debug_level) && debug_handle)
     {

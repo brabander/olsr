@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: commands.h,v 1.8 2007/05/31 00:16:52 ipo23 Exp $
+ * $Id: commands.h,v 1.9 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 
@@ -47,7 +47,7 @@
 #include "ohs_cmd.h"
 
 
-static struct ohs_command ohs_commands[] =
+static const struct ohs_command ohs_commands[] =
   {
     { "help", "help",
       "Help on shell commands",

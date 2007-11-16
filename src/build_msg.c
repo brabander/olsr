@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.38 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: build_msg.c,v 1.39 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -238,7 +238,7 @@ queue_hna(struct interface *ifp)
 
 
 static void
-check_buffspace(int msgsize, int buffsize, char *type)
+check_buffspace(int msgsize, int buffsize, const char *type)
 {
   if(msgsize > buffsize)
     {

@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.57 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: lq_route.c,v 1.58 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -164,13 +164,13 @@ olsr_spf_extract_best (struct avl_tree *tree)
 }
 
 
-char *olsr_etx_to_string(float etx)
+const char *olsr_etx_to_string(float etx)
 {
   static char buff[20];
 
-  if (etx == INFINITE_ETX)
+  if (etx == INFINITE_ETX) {
     return "INF";
-
+  }
   snprintf(buff, sizeof(buff), "%.6f", etx);
   return buff;
 }

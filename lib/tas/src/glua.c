@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.c,v 1.4 2007/04/20 13:46:03 bernd67 Exp $
+ * $Id: glua.c,v 1.5 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "lua/lua.h"
@@ -347,6 +347,7 @@ static int tasSetContentType(lua_State *lua)
 {
   struct connInfo *info;
   const char *contType;
+  char *s;
 
   lua_pushlightuserdata(lua, (void *)&infoKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
@@ -355,8 +356,8 @@ static int tasSetContentType(lua_State *lua)
 
   contType = luaL_checkstring(lua, 1);
 
-  info->contType = allocBuff(info, strlen(contType) + 1);
-  strcpy(info->contType, contType);
+  s = allocBuff(info, strlen(contType) + 1);
+  strcpy(s, contType);
 
   return 0;
 }

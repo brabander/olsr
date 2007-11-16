@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.31 2007/11/08 22:47:39 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.32 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 /*
@@ -156,7 +156,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   char buf[256];
   struct ipaddr_str strbuf;
   double etx = 0.0;
-  char* style = "solid";
+  const char* style = "solid";
   struct link_entry* link;
 
   sprintf( buf, "\"%s\" -> ", olsr_ip_to_string(&strbuf, &olsr_cnf->main_addr));

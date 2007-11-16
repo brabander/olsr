@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.15 2007/11/05 15:32:55 bernd67 Exp $ */
+/* $Id: nameservice.h,v 1.16 2007/11/16 19:12:55 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -182,7 +182,7 @@ get_isdefhna_latlon(void);
 void
 lookup_defhna_latlon(union olsr_ip_addr *ip);
 
-char*
+const char*
 lookup_name_latlon(union olsr_ip_addr *ip);
 
 void
