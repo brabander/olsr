@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.h,v 1.9 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: rebuild_packet.h,v 1.10 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 
@@ -59,8 +59,5 @@ unk_chgestruct(struct unknown_message *, const union olsr_message *);
 
 void
 hello_chgestruct(struct hello_message *, const union olsr_message *);
-
-void
-tc_chgestruct(struct tc_message *, const union olsr_message *, const union olsr_ip_addr *);
 
 #endif

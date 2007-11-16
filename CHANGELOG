@@ -1,11 +1,13 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.115 2007/11/14 11:08:05 bernd67 Exp $
+$Id: CHANGELOG,v 1.116 2007/11/16 21:43:55 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
-BUGFIX by Hannes Gredler <hannes@gredler.at>
+BUGFIXES and PATCHES by Hannes Gredler <hannes@gredler.at>
 - fix not deleted tc entry.
 - avoid setting routes with an invalid/impossible netmask.
+- refactoring of TC parsing to kill another pile of malloc()/free()s
+  saving (again) code and especially run.time performance.
 
 PATCH by John Hay <jhay@meraka.org.za>:
 - also printout our own HNAs in the dotdraw plugin.

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.44 2007/11/09 00:11:01 bernd67 Exp $
+ * $Id: process_package.c,v 1.45 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 
@@ -66,12 +66,12 @@ olsr_init_package_process(void)
   if (olsr_cnf->lq_level == 0)
     {
       olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
-      olsr_parser_add_function(&olsr_process_received_tc, TC_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE, 1);
     }
   else
     {
       olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
-      olsr_parser_add_function(&olsr_input_lq_tc, LQ_TC_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE, 1);
     }
 
   olsr_parser_add_function(&olsr_process_received_mid, MID_MESSAGE, 1);
@@ -220,116 +220,6 @@ olsr_process_received_hello(union olsr_message *m,
     }
 
   olsr_hello_tap(&message, in_if, from_addr);
-}
-
-void
-olsr_tc_tap(struct tc_message *message,
-            struct interface *in_if,
-            union olsr_ip_addr *from_addr,
-            union olsr_message *m)
-{
-#ifndef NODEBUG
-  struct ipaddr_str                buf;
-#endif
-  struct tc_mpr_addr              *mpr;
-  struct tc_entry                 *tc_last;
-
-  if (olsr_check_dup_table_proc(&message->originator, 
-                               message->packet_seq_number)) {
-    OLSR_PRINTF(3, "Processing TC from %s, seq 0x%04x\n",
-                olsr_ip_to_string(&buf, &message->originator), message->ansn);
-
-    /*
-     *      If the sender interface (NB: not originator) of this message
-     *      is not in the symmetric 1-hop neighborhood of this node, the
-     *      message MUST be discarded.
-     */
-
-    if (check_neighbor_link(from_addr) != SYM_LINK) {
-      OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
-                  olsr_ip_to_string(&buf, from_addr));
-      olsr_free_tc_packet(message);
-      return;
-    }
-
-    if (olsr_cnf->debug_level > 2) {
-      mpr = message->multipoint_relay_selector_address;
-      OLSR_PRINTF(3, "mpr_selector_list:[");
-
-      while (mpr != NULL) {
-          OLSR_PRINTF(3, "%s:", olsr_ip_to_string(&buf, &mpr->address));
-          mpr=mpr->next;
-      }
-
-      OLSR_PRINTF(3, "]\n");
-    }
-
-    tc_last = olsr_lookup_tc_entry(&message->originator);
-   
-    if(tc_last != NULL) {
-      /* Update entry */
-
-      /* Delete destinations with lower ANSN */
-      if(olsr_tc_delete_mprs(tc_last, message)) {
-        changes_topology = OLSR_TRUE; 
-      }
-      /* Update destinations */
-      if(olsr_tc_update_mprs(tc_last, message)) {
-        changes_topology = OLSR_TRUE;
-      }
-    } else {
-      /*if message is empty then skip it */
-      if (message->multipoint_relay_selector_address != NULL) {
-          /* New entry */
-          tc_last = olsr_add_tc_entry(&message->originator);      
-	  
-          /* Update destinations */
-          olsr_tc_update_mprs(tc_last, message);
-	  
-          changes_topology = OLSR_TRUE;
-      } else {
-        OLSR_PRINTF(3, "Dropping empty TC from %s\n",
-                    olsr_ip_to_string(&buf, &message->originator));
-      }
-    }
-
-  /* Process changes */
-  //olsr_process_changes();
-
-  }
-
-  olsr_forward_message(m, 
-                       &message->originator, 
-                       message->packet_seq_number, 
-                       in_if,
-                       from_addr);
-
-  olsr_free_tc_packet(message);
-}
-
-/**
- *Process a received TopologyControl message
- *
- *
- *@param m the incoming OLSR message
- *@return 0 on success
- */
-void
-olsr_process_received_tc(union olsr_message *m,
-                         struct interface *in_if,
-                         union olsr_ip_addr *from_addr)
-{ 
-  struct tc_message               message;
-
-  tc_chgestruct(&message, m, from_addr);
-
-  if(!olsr_validate_address(&message.source_addr))
-    {
-      olsr_free_tc_packet(&message);
-      return;
-    }
-
-  olsr_tc_tap(&message, in_if, from_addr, m);
 }
 
 /**

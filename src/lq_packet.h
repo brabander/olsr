@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.h,v 1.8 2007/08/29 22:57:17 bernd67 Exp $
+ * $Id: lq_packet.h,v 1.9 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 #ifndef _OLSR_LQ_PACKET_H
@@ -44,6 +44,7 @@
 
 #include "olsr_types.h"
 #include "packet.h"
+#include "mantissa.h"
 
 #define LQ_HELLO_MESSAGE      201
 #define LQ_TC_MESSAGE         202
@@ -140,15 +141,40 @@ struct lq_tc_header
   olsr_u16_t reserved;
 };
 
+static INLINE void        pkt_get_u8(const olsr_u8_t **p, olsr_u8_t  *var)         { *var =       *(olsr_u8_t *)(*p);   *p += sizeof(olsr_u8_t); }
+static INLINE void       pkt_get_u16(const olsr_u8_t **p, olsr_u16_t *var)         { *var = ntohs(*(olsr_u16_t *)(*p)); *p += sizeof(olsr_u16_t); }
+static INLINE void       pkt_get_u32(const olsr_u8_t **p, olsr_u32_t *var)         { *var = ntohl(*(olsr_u32_t *)(p));  *p += sizeof(olsr_u32_t); }
+static INLINE void        pkt_get_s8(const olsr_u8_t **p, olsr_8_t  *var)          { *var =       *(olsr_8_t *)(*p);    *p += sizeof(olsr_8_t); }
+static INLINE void       pkt_get_s16(const olsr_u8_t **p, olsr_16_t *var)          { *var = ntohs(*(olsr_16_t *)(*p));  *p += sizeof(olsr_16_t); }
+static INLINE void       pkt_get_s32(const olsr_u8_t **p, olsr_32_t *var)          { *var = ntohl(*(olsr_32_t *)(*p));  *p += sizeof(olsr_32_t); }
+static INLINE void    pkt_get_double(const olsr_u8_t **p, double *var)             { *var = me_to_double(**p);          *p += sizeof(olsr_u8_t); }
+static INLINE void pkt_get_ipaddress(const olsr_u8_t **p, union olsr_ip_addr *var) { memcpy(var, *p, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
+static INLINE void        pkt_get_lq(const olsr_u8_t **p, double *var)             { *var = (double)**p / 255.0;        *p += sizeof(olsr_u8_t); }
+
+static INLINE void        pkt_ignore_u8(const olsr_u8_t **p) { *p += sizeof(olsr_u8_t); }
+static INLINE void       pkt_ignore_u16(const olsr_u8_t **p) { *p += sizeof(olsr_u16_t); }
+static INLINE void       pkt_ignore_u32(const olsr_u8_t **p) { *p += sizeof(olsr_u32_t); }
+static INLINE void        pkt_ignore_s8(const olsr_u8_t **p) { *p += sizeof(olsr_8_t); }
+static INLINE void       pkt_ignore_s16(const olsr_u8_t **p) { *p += sizeof(olsr_16_t); }
+static INLINE void       pkt_ignore_s32(const olsr_u8_t **p) { *p += sizeof(olsr_32_t); }
+static INLINE void pkt_ignore_ipaddress(const olsr_u8_t **p) { *p += olsr_cnf->ipsize; }
+
+static INLINE void        pkt_put_u8(olsr_u8_t **p, const olsr_u8_t  var)         { *(olsr_u8_t *)(*p)  = var;        *p += sizeof(olsr_u8_t); }
+static INLINE void       pkt_put_u16(olsr_u8_t **p, const olsr_u16_t var)         { *(olsr_u16_t *)(*p) = htons(var); *p += sizeof(olsr_u16_t); }
+static INLINE void       pkt_put_u32(olsr_u8_t **p, const olsr_u32_t var)         { *(olsr_u32_t *)(*p) = htonl(var); *p += sizeof(olsr_u32_t); }
+static INLINE void        pkt_put_s8(olsr_u8_t **p, const olsr_8_t  var)          { *(olsr_8_t *)(*p)   = var;        *p += sizeof(olsr_8_t); }
+static INLINE void       pkt_put_s16(olsr_u8_t **p, const olsr_16_t var)          { *(olsr_16_t *)(*p)  = htons(var); *p += sizeof(olsr_16_t); }
+static INLINE void       pkt_put_s32(olsr_u8_t **p, const olsr_32_t var)          { *(olsr_32_t *)(*p)  = htonl(var); *p += sizeof(olsr_32_t); }
+static INLINE void    pkt_put_double(olsr_u8_t **p, const double var)             { **p = double_to_me(var);          *p += sizeof(olsr_u8_t); }
+static INLINE void pkt_put_ipaddress(olsr_u8_t **p, const union olsr_ip_addr var) { memcpy(*p, &var, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
+static INLINE void        pkt_put_lq(olsr_u8_t **p, const double var)             { **p  = var * 255.0;               *p += sizeof(olsr_u8_t); }
+
 void olsr_output_lq_hello(void *para);
 
 void olsr_output_lq_tc(void *para);
 
 void olsr_input_lq_hello(union olsr_message *ser, struct interface *inif,
                          union olsr_ip_addr *from);
-
-void olsr_input_lq_tc(union olsr_message *ser, struct interface *inif,
-                      union olsr_ip_addr *from);
 
 extern olsr_bool lq_tc_pending;
 

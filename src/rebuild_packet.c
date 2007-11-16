@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.23 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: rebuild_packet.c,v 1.24 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 
@@ -458,111 +458,6 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
 	      nb->next = hmsg->neighbors;
 	      hmsg->neighbors = nb;
 	    }
-	}
-
-    }
-
-}
-
-
-/**
- *Process/rebuild TC message. Converts the OLSR
- *packet to the internal tc_message format.
- *@param tmsg the tc_message struct in wich infomation
- *is to be put.
- *@param m the entire OLSR message revieved.
- *@param from a sockaddr struct describing the 1 hop sender
- *@return negative on error
- */
-
-void
-tc_chgestruct(struct tc_message *tmsg, const union olsr_message *m, const union olsr_ip_addr *from_addr)
-{
-  struct tc_mpr_addr *mprs;
-
-  tmsg->multipoint_relay_selector_address = NULL;
-
-  if ((!m) || (m->v4.olsr_msgtype != TC_MESSAGE))
-    return;
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IPv4 */
-      const struct olsr_tcmsg *tc = &m->v4.message.tc;
-      const struct neigh_info *mprsaddr = tc->neigh;
-      const struct neigh_info *maddr;
-      const union olsr_ip_addr * const tmp_addr = mid_lookup_main_addr(from_addr);
-
-      if(tmp_addr == NULL) {
-        //COPY_IP(&tmsg->source_addr, from_addr);
-        tmsg->source_addr = *from_addr;
-      } else {
-        //COPY_IP(&tmsg->source_addr, tmp_addr);
-        tmsg->source_addr = *tmp_addr;
-      }
-
-      /* Get vtime */
-      tmsg->vtime = me_to_double(m->v4.olsr_vtime);
-
-      OLSR_PRINTF(3, "Got TC vtime: %f\n", tmsg->vtime);
-
-      //COPY_IP(&tmsg->originator, &m->v4.originator);
-      tmsg->originator.v4.s_addr = m->v4.originator;
-      tmsg->packet_seq_number = ntohs(m->v4.seqno);
-      tmsg->hop_count =  m->v4.hopcnt;
-      tmsg->ansn =  ntohs(tc->ansn);
-
-      //printf("TC from %s seqno %d\n", olsr_ip_to_string(&buf, &tmsg->originator), tmsg->packet_seq_number);
-
-      for (maddr = mprsaddr; (char *)maddr < ((char *)m + (ntohs(m->v4.olsr_msgsize))); maddr++)
-	{
-	  
-	  mprs = olsr_malloc(sizeof(struct tc_mpr_addr), "TC chgestruct");
-
-	  //COPY_IP(&mprs->address, &maddr->addr);
-	  mprs->address.v4.s_addr = maddr->addr;
-	  mprs->next = tmsg->multipoint_relay_selector_address;
-	  tmsg->multipoint_relay_selector_address = mprs;
-	}
-    }
-  else
-    {
-      /* IPv6 */
-      const struct neigh_info6 *maddr6;
-      const struct olsr_tcmsg6 *tc6 = &m->v6.message.tc;
-      const struct neigh_info6 *mprsaddr6 = tc6->neigh;
-      const union olsr_ip_addr * const tmp_addr = mid_lookup_main_addr(from_addr);
-
-      if(tmp_addr == NULL) {
-        //COPY_IP(&tmsg->source_addr, from_addr);
-        tmsg->source_addr = *from_addr;
-      } else {
-        //COPY_IP(&tmsg->source_addr, tmp_addr);
-        tmsg->source_addr = *tmp_addr;
-      }
-
-      /* Check if sender is symmetric neighbor here !! */
-      
-      /* Get vtime */
-      tmsg->vtime = me_to_double(m->v6.olsr_vtime);
-
-      OLSR_PRINTF(3, "Got TC vtime: %f\n", tmsg->vtime);
-
-      //COPY_IP(&tmsg->originator, &m->v6.originator);
-      tmsg->originator.v6 = m->v6.originator;
-      tmsg->packet_seq_number = ntohs(m->v6.seqno);
-      tmsg->hop_count =  m->v6.hopcnt;
-      tmsg->ansn =  ntohs(tc6->ansn);
-
-      for (maddr6 = mprsaddr6; (char *)maddr6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); maddr6++)
-	{
-	  
-	  mprs = olsr_malloc(sizeof(struct tc_mpr_addr), "TC chgestruct 2");
-
-	  //COPY_IP(&mprs->address, &maddr6->addr);
-          mprs->address.v6 = maddr6->addr;
-	  mprs->next = tmsg->multipoint_relay_selector_address;
-	  tmsg->multipoint_relay_selector_address = mprs;
 	}
 
     }

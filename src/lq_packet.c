@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.29 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.30 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -61,36 +61,6 @@
 olsr_bool lq_tc_pending = OLSR_FALSE;
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
-
-static INLINE void        pkt_get_u8(const olsr_u8_t **p, olsr_u8_t  *var)         { *var =       *(olsr_u8_t *)(*p);   *p += sizeof(olsr_u8_t); }
-static INLINE void       pkt_get_u16(const olsr_u8_t **p, olsr_u16_t *var)         { *var = ntohs(*(olsr_u16_t *)(*p)); *p += sizeof(olsr_u16_t); }
-static INLINE void       pkt_get_u32(const olsr_u8_t **p, olsr_u32_t *var)         { *var = ntohl(*(olsr_u32_t *)(p));  *p += sizeof(olsr_u32_t); }
-static INLINE void        pkt_get_s8(const olsr_u8_t **p, olsr_8_t  *var)          { *var =       *(olsr_8_t *)(*p);    *p += sizeof(olsr_8_t); }
-static INLINE void       pkt_get_s16(const olsr_u8_t **p, olsr_16_t *var)          { *var = ntohs(*(olsr_16_t *)(*p));  *p += sizeof(olsr_16_t); }
-static INLINE void       pkt_get_s32(const olsr_u8_t **p, olsr_32_t *var)          { *var = ntohl(*(olsr_32_t *)(*p));  *p += sizeof(olsr_32_t); }
-static INLINE void    pkt_get_double(const olsr_u8_t **p, double *var)             { *var = me_to_double(**p);          *p += sizeof(olsr_u8_t); }
-static INLINE void pkt_get_ipaddress(const olsr_u8_t **p, union olsr_ip_addr *var) { memcpy(var, *p, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
-static INLINE void        pkt_get_lq(const olsr_u8_t **p, double *var)             { *var = (double)**p / 255.0;        *p += sizeof(olsr_u8_t); }
-
-static INLINE void        pkt_ignore_u8(const olsr_u8_t **p) { *p += sizeof(olsr_u8_t); }
-static INLINE void       pkt_ignore_u16(const olsr_u8_t **p) { *p += sizeof(olsr_u16_t); }
-static INLINE void       pkt_ignore_u32(const olsr_u8_t **p) { *p += sizeof(olsr_u32_t); }
-static INLINE void        pkt_ignore_s8(const olsr_u8_t **p) { *p += sizeof(olsr_8_t); }
-static INLINE void       pkt_ignore_s16(const olsr_u8_t **p) { *p += sizeof(olsr_16_t); }
-static INLINE void       pkt_ignore_s32(const olsr_u8_t **p) { *p += sizeof(olsr_32_t); }
-static INLINE void pkt_ignore_ipaddress(const olsr_u8_t **p) { *p += olsr_cnf->ipsize; }
-
-static INLINE void        pkt_put_u8(olsr_u8_t **p, const olsr_u8_t  var)         { *(olsr_u8_t *)(*p)  = var;        *p += sizeof(olsr_u8_t); }
-static INLINE void       pkt_put_u16(olsr_u8_t **p, const olsr_u16_t var)         { *(olsr_u16_t *)(*p) = htons(var); *p += sizeof(olsr_u16_t); }
-static INLINE void       pkt_put_u32(olsr_u8_t **p, const olsr_u32_t var)         { *(olsr_u32_t *)(*p) = htonl(var); *p += sizeof(olsr_u32_t); }
-static INLINE void        pkt_put_s8(olsr_u8_t **p, const olsr_8_t  var)          { *(olsr_8_t *)(*p)   = var;        *p += sizeof(olsr_8_t); }
-static INLINE void       pkt_put_s16(olsr_u8_t **p, const olsr_16_t var)          { *(olsr_16_t *)(*p)  = htons(var); *p += sizeof(olsr_16_t); }
-static INLINE void       pkt_put_s32(olsr_u8_t **p, const olsr_32_t var)          { *(olsr_32_t *)(*p)  = htonl(var); *p += sizeof(olsr_32_t); }
-static INLINE void    pkt_put_double(olsr_u8_t **p, const double var)             { **p = double_to_me(var);          *p += sizeof(olsr_u8_t); }
-static INLINE void pkt_put_ipaddress(olsr_u8_t **p, const union olsr_ip_addr var) { memcpy(*p, &var, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
-static INLINE void        pkt_put_lq(olsr_u8_t **p, const double var)             { **p  = var * 255.0;               *p += sizeof(olsr_u8_t); }
-
-
 
 static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
@@ -641,77 +611,6 @@ deserialize_lq_hello(struct hello_message *hello,
     return 0;
 }
 
-static int
-deserialize_lq_tc(struct tc_message *tc,
-                  const void *ser,
-                  union olsr_ip_addr *from)
-{
-    const union olsr_ip_addr *addr;
-    olsr_u8_t type;
-    olsr_u16_t size;
-    const unsigned char *limit;
-
-    // convert received packet from transmission format into internal format
-    const unsigned char *curr = ser;
-    pkt_get_u8(&curr, &type);
-    if (type != LQ_TC_MESSAGE) {
-        /* No need to do anything more */
-        return 1;
-    }
-    pkt_get_double(&curr, &tc->vtime);
-    pkt_get_u16(&curr, &size);
-    // Sven-Ola: Check the message source addr
-    if (!olsr_validate_address((const union olsr_ip_addr *)curr)) {
-        /* No need to do anything more */
-        return 1;
-    }
-    pkt_get_ipaddress(&curr, &tc->originator);
-
-    addr = mid_lookup_main_addr(from);
-    if (addr == NULL) {
-        addr = from;
-    }
-    // Sven-Ola: Check the message source addr
-    if (!olsr_validate_address(addr)) {
-        return 1;
-    }
-    //COPY_IP(&tc->source_addr, addr);
-    tc->source_addr = *addr;
-
-    pkt_get_u8(&curr, &tc->ttl);
-    pkt_get_u8(&curr, &tc->hop_count);
-    pkt_get_u16(&curr, &tc->packet_seq_number);
-    pkt_get_u16(&curr, &tc->ansn);
-    pkt_ignore_u16(&curr);
-
-    tc->multipoint_relay_selector_address = NULL;
-    limit = ser + size;
-    while (curr < limit) {
-        struct tc_mpr_addr *neigh;
-
-        if (!olsr_validate_address((const union olsr_ip_addr *)curr)) {
-            /* Ignore the same amount as below  */
-            pkt_ignore_ipaddress(&curr);
-            pkt_ignore_u8(&curr);
-            pkt_ignore_u8(&curr);
-            pkt_ignore_u16(&curr);
-            continue;
-        }
-
-        neigh = olsr_malloc(sizeof (struct tc_mpr_addr), "LQ_TC deserialization");
-
-        pkt_get_ipaddress(&curr, &neigh->address);
-
-        pkt_get_lq(&curr, &neigh->link_quality);
-        pkt_get_lq(&curr, &neigh->neigh_link_quality);
-        pkt_ignore_u16(&curr);
-
-        neigh->next = tc->multipoint_relay_selector_address;
-        tc->multipoint_relay_selector_address = neigh;
-    }
-    return 0;
-}
-
 void
 olsr_output_lq_hello(void *para)
 {
@@ -797,20 +696,4 @@ olsr_input_lq_hello(union olsr_message *ser,
     return;
   }
   olsr_hello_tap(&hello, inif, from);
-}
-
-void
-olsr_input_lq_tc(union olsr_message *ser,
-                 struct interface *inif,
-                 union olsr_ip_addr *from)
-{
-  struct tc_message tc;
-
-  if (ser == NULL) {
-    return;
-  }
-  if (deserialize_lq_tc(&tc, ser, from) != 0) {
-    return;
-  }
-  olsr_tc_tap(&tc, inif, from, ser);
 }

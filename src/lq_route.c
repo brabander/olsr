@@ -38,8 +38,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.58 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: lq_route.c,v 1.59 2007/11/16 21:43:55 bernd67 Exp $
  */
+
+#define SPF_PROFILING 1
 
 #include "defs.h"
 #include "olsr.h"
@@ -489,7 +491,7 @@ olsr_calculate_routing_table (void)
   timersub(&t4, &t3, &route);
   timersub(&t5, &t4, &kernel);
   timersub(&t5, &t1, &total);
-  olsr_printf(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): "
+  OLSR_PRINTF(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): "
               "%d, %d, %d, %d, %d\n",
               path_count, routingtree.count,
               (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec,

@@ -37,14 +37,17 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: tc_set.c,v 1.37 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 #include "tc_set.h"
+#include "mid_set.h"
+#include "link_set.h"
 #include "olsr.h"
 #include "scheduler.h"
 #include "lq_route.h"
 #include "lq_avl.h"
+#include "lq_packet.h"
 #include "net_olsr.h"
 
 #include <assert.h>
@@ -279,7 +282,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
   memset(tc_edge, 0, sizeof(struct tc_edge_entry));
 
   /* Fill entry */
-  //COPY_IP(&tc_edge->T_dest_addr, addr);
   tc_edge->T_dest_addr = *addr;
   olsr_set_tc_edge_timer(tc_edge, vtime*1000);
   tc_edge->T_seq = ansn;
@@ -394,15 +396,14 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
 
 /**
- * Delete all destinations that have a
- * lower ANSN than the one in the message
+ * Delete all destinations that have a lower ANSN.
  *
  * @param tc the entry to delete edges from
- * @param msg the message to fetch the ANSN from
+ * @param ansn the advertised neighbor set sequence number
  * @return 1 if any destinations were deleted 0 if not
  */
-int
-olsr_tc_delete_mprs(struct tc_entry *tc, struct tc_message *msg)
+static int
+olsr_delete_outdated_tc_edges(struct tc_entry *tc, olsr_u16_t ansn)
 {
   struct tc_edge_entry *tc_edge;
   int retval = 0;
@@ -412,7 +413,7 @@ olsr_tc_delete_mprs(struct tc_entry *tc, struct tc_message *msg)
 #endif
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    if (SEQNO_GREATER_THAN(msg->ansn, tc_edge->T_seq)) {
+    if (SEQNO_GREATER_THAN(ansn, tc_edge->T_seq)) {
       /*
        * Do not delete the edge now, just mark the edge as down.
        * Downed edges will be ignored by the SPF computation.
@@ -455,93 +456,102 @@ olsr_etx_significant_change(float etx1, float etx2)
 }
 
 /**
- * Update the destinations registered on an entry.
- * Creates new dest-entries if not registered.
- * Bases update on a receivied TC message
+ * Update an edge registered on an entry.
+ * Creates new edge-entries if not registered.
+ * Bases update on a received TC message
  *
  * @param entry the TC entry to check
- * @msg the TC message to update by
+ * @pkt the TC edge entry in the packet
  * @return 1 if entries are added 0 if not
  */
-int
-olsr_tc_update_mprs(struct tc_entry *tc, struct tc_message *msg)
+static int
+olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
+                    olsr_u8_t type, const unsigned char **curr)
 {
-  struct tc_mpr_addr *mprs;
   struct tc_edge_entry *tc_edge;
+  double link_quality, neigh_link_quality;
+  union olsr_ip_addr neighbor;
   int edge_change;
-
-#if 0
-  OLSR_PRINTF(1, "TC: update MPRS\n");
-#endif
 
   edge_change = 0;
 
-  mprs = msg->multipoint_relay_selector_address;
-  
-  /* Add all the MPRs */
+  /*
+   * Fetch the per-edge data
+   * LQ messages also contain LQ data.
+   */
+  pkt_get_ipaddress(curr, &neighbor);
 
-  while (mprs) {
+  if (type == LQ_TC_MESSAGE) {
+    pkt_get_lq(curr, &link_quality);
+    pkt_get_lq(curr, &neigh_link_quality);
+    pkt_ignore_u16(curr);
+  } else {
+    link_quality = 1.0;
+    neigh_link_quality = 1.0;
+  }
 
-    /* First check if we know this edge */
-    tc_edge = olsr_lookup_tc_edge(tc, &mprs->address);
+  /* First check if we know this edge */
+  tc_edge = olsr_lookup_tc_edge(tc, &neighbor);
 
-    if(!tc_edge) {
+  if(!tc_edge) {
       
-      /*
-       * Yet unknown - create it.
-       */
-      olsr_add_tc_edge_entry(tc, &mprs->address, msg->ansn,
-                             (unsigned int )msg->vtime,
-                             mprs->link_quality, mprs->neigh_link_quality);
-      edge_change = 1;
+    /*
+     * Yet unknown - create it.
+     * Check if the address is allowed.
+     */
+    if (!olsr_validate_address(&neighbor)) {
+      return 0;
+    }
 
-    } else {
+    olsr_add_tc_edge_entry(tc, &neighbor, ansn, vtime_s,
+                           link_quality, neigh_link_quality);
+    edge_change = 1;
 
-      /*
-       * We know this edge - Update entry.
-       */
-      olsr_set_tc_edge_timer(tc_edge, msg->vtime*1000);
-      tc_edge->T_seq = msg->ansn;
+  } else {
 
-      /*
-       * Clear the (possibly set) down flag.
-       */
-      tc_edge->flags &= ~OLSR_TC_EDGE_DOWN;
+    /*
+     * We know this edge - Update entry.
+     */
+    olsr_set_tc_edge_timer(tc_edge, vtime_s*1000);
+    tc_edge->T_seq = ansn;
 
-      /*
-       * Determine if the etx change is meaningful enough
-       * in order to trigger a SPF calculation.
-       */
-      if (olsr_etx_significant_change(tc_edge->link_quality,
-                                      mprs->neigh_link_quality)) {
+    /*
+     * Clear the (possibly set) down flag.
+     */
+    tc_edge->flags &= ~OLSR_TC_EDGE_DOWN;
 
-        if (msg->hop_count <= olsr_cnf->lq_dlimit)
-          edge_change = 1;
-      }
-      tc_edge->link_quality = mprs->neigh_link_quality;
+    /*
+     * Determine if the etx change is meaningful enough
+     * in order to trigger a SPF calculation.
+     */
+    if (olsr_etx_significant_change(tc_edge->link_quality,
+                                    neigh_link_quality)) {
 
-      if (olsr_etx_significant_change(tc_edge->inverse_link_quality,
-                                      mprs->link_quality)) {
+      if (tc->msg_hops <= olsr_cnf->lq_dlimit)
+        edge_change = 1;
+    }
+    tc_edge->link_quality = neigh_link_quality;
 
-        if (msg->hop_count <= olsr_cnf->lq_dlimit)
-          edge_change = 1;
-      }
-      tc_edge->inverse_link_quality = mprs->link_quality;
+    if (olsr_etx_significant_change(tc_edge->inverse_link_quality,
+                                    link_quality)) {
 
-      /*
-       * Update the etx.
-       */
-      olsr_calc_tc_edge_entry_etx(tc_edge);
+      if (tc->msg_hops <= olsr_cnf->lq_dlimit)
+        edge_change = 1;
+    }
+    tc_edge->inverse_link_quality = link_quality;
+
+    /*
+     * Update the etx.
+     */
+    olsr_calc_tc_edge_entry_etx(tc_edge);
 
 #if 0
-      if (edge_change) {          
-        OLSR_PRINTF(1, "TC:   chg edge entry %s\n",
-                    olsr_tc_edge_to_string(tc_edge));
-      }
+    if (edge_change) {          
+      OLSR_PRINTF(1, "TC:   chg edge entry %s\n",
+                  olsr_tc_edge_to_string(tc_edge));
+    }
 #endif
 
-    }
-    mprs = mprs->next;
   }
 
   return edge_change;
@@ -634,6 +644,135 @@ float olsr_calc_tc_etx(const struct tc_edge_entry *tc_edge)
          tc_edge->inverse_link_quality < MIN_LINK_QUALITY
              ? 0.0
              : 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
+}
+
+/*
+ * Process an incoming TC or TC_LQ message.
+ *
+ * If the message is interesting enough, update our edges for it,
+ * trigger SPF and finally flood it to all our 2way neighbors.
+ *
+ * The order for extracting data off the message does matter, 
+ * as every call to pkt_get increases the packet offset and
+ * hence the spot we are looking at.
+ */
+void
+olsr_input_tc(union olsr_message *msg, struct interface *input_if,
+              union olsr_ip_addr *from_addr)
+{
+#ifndef NODEBUG 
+  struct ipaddr_str buf;
+#endif
+  olsr_u16_t size, msg_seq, ansn;
+  olsr_u8_t type, ttl, msg_hops;
+  double vtime;
+  unsigned int vtime_s;
+  union olsr_ip_addr originator;
+  union olsr_ip_addr *main_addr;
+  const unsigned char *limit, *curr;
+  struct tc_entry *tc;
+
+  curr = (void *)msg;
+  if (!msg) {
+    return;
+  }
+
+  /* We are only interested in TC message types. */
+  pkt_get_u8(&curr, &type);
+  if ((type != LQ_TC_MESSAGE) && (type != TC_MESSAGE)) {
+    return;
+  }
+
+  pkt_get_double(&curr, &vtime);
+  vtime_s = (unsigned int)vtime;
+  pkt_get_u16(&curr, &size);
+
+  pkt_get_ipaddress(&curr, &originator);
+
+  /* Copy header values */
+  pkt_get_u8(&curr, &ttl);
+  pkt_get_u8(&curr, &msg_hops);
+  pkt_get_u16(&curr, &msg_seq);
+  pkt_get_u16(&curr, &ansn);
+  pkt_ignore_u16(&curr);
+
+  /*
+   * Check if we know this guy and if we already know what he has to say.
+   */
+  tc = olsr_lookup_tc_entry(&originator);
+  if (tc) {
+    if (!SEQNO_GREATER_THAN(msg_seq, tc->msg_seq)) {
+      return;
+    }
+  }
+
+  /* Check the sender address. */
+  if (!olsr_validate_address(&originator)) {
+    return;
+  }
+
+  /* Check the main address. */
+  main_addr = mid_lookup_main_addr(from_addr);
+  if (!main_addr) {
+    main_addr = from_addr;
+  }
+  if (!olsr_validate_address(main_addr)) {
+    return;
+  }
+
+  /*
+   * Generate an new tc_entry in the lsdb and store the sequence number.
+   */
+  if (!tc) {
+    tc = olsr_add_tc_entry(&originator);
+    tc->msg_seq = msg_seq;
+  }
+
+  OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
+              olsr_ip_to_string(&buf, &originator), ansn);
+
+  /*
+   * If the sender interface (NB: not originator) of this message
+   * is not in the symmetric 1-hop neighborhood of this node, the
+   * message MUST be discarded.
+   */
+  if (check_neighbor_link(from_addr) != SYM_LINK) {
+    OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
+                olsr_ip_to_string(&buf, from_addr));
+    return;
+  }
+
+  /*
+   * Update the tc entry.
+   */
+  tc->msg_hops = msg_hops;
+  tc->msg_seq = msg_seq;
+
+  /*
+   * Now walk the edge advertisements contained in the packet.
+   * Play some efficiency games here, like checking first
+   * if the edge exists in order to avoid address validation.
+   */
+  limit = (void *)msg + size;
+  while (curr < limit) {
+    if (olsr_tc_update_edge(tc, vtime_s, ansn, type, &curr)) {
+      changes_topology = OLSR_TRUE;
+    }
+  }
+
+  /*
+   * Do the edge garbage collection at the end in order
+   * to avoid malloc() churn.
+   */
+  if (olsr_delete_outdated_tc_edges(tc, ansn)) {
+    changes_topology = OLSR_TRUE;
+  }
+
+  /*
+   * Last, flood the message to our other neighbors.
+   */
+  olsr_forward_message(msg, &originator, msg_seq, input_if, from_addr);
+  return;
 }
 
 /*

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.22 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: tc_set.h,v 1.23 2007/11/16 21:43:55 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -62,7 +62,7 @@ struct tc_edge_entry
   struct tc_edge_entry *edge_inv; /* shortcut, used during SPF calculation */
   struct tc_entry    *tc; /* backpointer to owning tc entry */
   clock_t            T_time; /* expiration timer, timer_node key */
-  olsr_u16_t         T_seq; /* sequence number */
+  olsr_u16_t         T_seq; /* sequence number of the advertised neighbor set */
   olsr_u16_t         flags; /* misc flags */
   float              etx; /* metric used for SPF calculation */
   float              link_quality;
@@ -85,6 +85,8 @@ struct tc_entry
   struct avl_tree    edge_tree; /* subtree for edges */
   struct link_entry *next_hop; /* SPF calculated link to the 1st hop neighbor */
   float              path_etx; /* SPF calculated distance, cand_tree_node key */
+  olsr_u16_t         msg_seq; /* sequence number of the tc message */
+  olsr_u8_t          msg_hops; /* hopcount as per the tc message */
   olsr_u8_t          hops; /* SPF calculated hopcount */
 };
 
@@ -119,10 +121,12 @@ extern struct tc_entry *tc_myself;
 
 void olsr_init_tc(void);
 void olsr_change_myself_tc(void);
-int olsr_tc_delete_mprs(struct tc_entry *, struct tc_message *);
-int olsr_tc_update_mprs(struct tc_entry *, struct tc_message *);
 void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
+
+/* tc msg input parser */
+void olsr_input_tc(union olsr_message *, struct interface *,
+                   union olsr_ip_addr *from);
 
 /* tc_entry manipulation */
 struct tc_entry *olsr_lookup_tc_entry(union olsr_ip_addr *);
