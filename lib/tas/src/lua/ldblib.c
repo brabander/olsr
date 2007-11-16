@@ -1,5 +1,5 @@
 /*
-** $Id: ldblib.c,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
+** $Id: ldblib.c,v 1.2 2007/11/16 19:34:26 bernd67 Exp $
 ** Interface from Lua to its debug API
 ** See Copyright Notice in lua.h
 */
@@ -36,7 +36,7 @@ static int getinfo (lua_State *L) {
   lua_Debug ar;
   const char *options = luaL_optstring(L, 2, "flnSu");
   if (lua_isnumber(L, 1)) {
-    if (!lua_getstack(L, (int)(lua_tonumber(L, 1)), &ar)) {
+    if (!lua_getstack(L, lua_tonumber(L, 1), &ar)) {
       lua_pushnil(L);  /* level out of range */
       return 1;
     }
@@ -203,7 +203,7 @@ static int gethook (lua_State *L) {
     lua_rawget(L, LUA_REGISTRYINDEX);   /* get hook */
   }
   lua_pushstring(L, unmakemask(mask, buff));
-  lua_pushnumber(L, (lua_Number)lua_gethookcount(L));
+  lua_pushnumber(L, lua_gethookcount(L));
   return 3;
 }
 

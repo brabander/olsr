@@ -1,5 +1,5 @@
 /*
-** $Id: lstrlib.c,v 1.1 2005/04/12 17:17:27 tlopatic Exp $
+** $Id: lstrlib.c,v 1.2 2007/11/16 19:34:26 bernd67 Exp $
 ** Standard library for string operations and pattern-matching
 ** See Copyright Notice in lua.h
 */
@@ -517,11 +517,12 @@ static int gfind_aux (lua_State *L) {
   const char *s = lua_tostring(L, lua_upvalueindex(1));
   size_t ls = lua_strlen(L, lua_upvalueindex(1));
   const char *p = lua_tostring(L, lua_upvalueindex(2));
+  unsigned int idx3 = lua_tonumber(L, lua_upvalueindex(3));
   const char *src;
   ms.L = L;
   ms.src_init = s;
   ms.src_end = s+ls;
-  for (src = s + (size_t)lua_tonumber(L, lua_upvalueindex(3));
+  for (src = s + idx3;
        src <= ms.src_end;
        src++) {
     const char *e;
@@ -704,7 +705,8 @@ static int str_format (lua_State *L) {
           break;
         }
         case 'o':  case 'u':  case 'x':  case 'X': {
-          sprintf(buff, form, (unsigned int)(luaL_checknumber(L, arg)));
+          const unsigned int n = luaL_checknumber(L, arg);
+          sprintf(buff, form, n);
           break;
         }
         case 'e':  case 'E': case 'f':

@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.h,v 1.2 2007/04/20 13:46:03 bernd67 Exp $
+** $Id: lauxlib.h,v 1.3 2007/11/16 19:34:26 bernd67 Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -70,14 +70,14 @@ LUALIB_API int luaL_loadbuffer (lua_State *L, const char *buff, size_t sz,
 ** ===============================================================
 */
 
-#define luaL_argcheck(L, cond,numarg,extramsg) if (!(cond)) \
-                                               luaL_argerror(L, numarg,extramsg)
-#define luaL_checkstring(L,n)	(luaL_checklstring(L, (n), NULL))
-#define luaL_optstring(L,n,d)	(luaL_optlstring(L, (n), (d), NULL))
-#define luaL_checkint(L,n)	((int)luaL_checknumber(L, n))
-#define luaL_checklong(L,n)	((long)luaL_checknumber(L, n))
-#define luaL_optint(L,n,d)	((int)luaL_optnumber(L, n,(lua_Number)(d)))
-#define luaL_optlong(L,n,d)	((long)luaL_optnumber(L, n,(lua_Number)(d)))
+#define luaL_argcheck(L, cond,numarg,extramsg) do { if (!(cond))         \
+            luaL_argerror(L, numarg,extramsg); } while (0)
+#define luaL_checkstring(L,n)	luaL_checklstring(L, (n), NULL)
+#define luaL_optstring(L,n,d)	luaL_optlstring(L, (n), (d), NULL)
+#define luaL_checkint(L,n)	luaL_checknumber(L, n)
+#define luaL_checklong(L,n)	luaL_checknumber(L, n)
+#define luaL_optint(L,n,d)	luaL_optnumber(L, n,(lua_Number)(d))
+#define luaL_optlong(L,n,d)	luaL_optnumber(L, n,(lua_Number)(d))
 
 
 /*

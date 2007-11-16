@@ -1,5 +1,5 @@
 /*
-** $Id: liolib.c,v 1.2 2007/04/20 13:46:03 bernd67 Exp $
+** $Id: liolib.c,v 1.3 2007/11/16 19:34:26 bernd67 Exp $
 ** Standard I/O (and system) library
 ** See Copyright Notice in lua.h
 */
@@ -374,7 +374,7 @@ static int g_read (lua_State *L, FILE *f, int first) {
     success = 1;
     for (n = first; nargs-- && success; n++) {
       if (lua_type(L, n) == LUA_TNUMBER) {
-        size_t l = (size_t)lua_tonumber(L, n);
+        size_t l = lua_tonumber(L, n);
         success = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
       }
       else {
@@ -583,7 +583,7 @@ static int io_getenv (lua_State *L) {
 
 
 static int io_clock (lua_State *L) {
-  lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
+  lua_pushnumber(L, clock()/(lua_Number)CLOCKS_PER_SEC);
   return 1;
 }
 
@@ -623,7 +623,7 @@ static int getfield (lua_State *L, const char *key, int d) {
   lua_pushstring(L, key);
   lua_gettable(L, -2);
   if (lua_isnumber(L, -1))
-    res = (int)(lua_tonumber(L, -1));
+    res = lua_tonumber(L, -1);
   else {
     if (d == -2)
       return luaL_error(L, "field `%s' missing in date table", key);
@@ -636,7 +636,7 @@ static int getfield (lua_State *L, const char *key, int d) {
 
 static int io_date (lua_State *L) {
   const char *s = luaL_optstring(L, 1, "%c");
-  time_t t = (time_t)(luaL_optnumber(L, 2, -1));
+  time_t t = luaL_optnumber(L, 2, -1);
   struct tm *stm;
   if (t == (time_t)(-1))  /* no time given? */
     t = time(NULL);  /* use current time */
@@ -697,8 +697,8 @@ static int io_time (lua_State *L) {
 
 
 static int io_difftime (lua_State *L) {
-  lua_pushnumber(L, difftime((time_t)(luaL_checknumber(L, 1)),
-                             (time_t)(luaL_optnumber(L, 2, 0))));
+  lua_pushnumber(L, difftime(luaL_checknumber(L, 1),
+                             luaL_optnumber(L, 2, 0)));
   return 1;
 }
 
