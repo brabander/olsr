@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.30 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.31 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -588,10 +588,10 @@ deserialize_lq_hello(struct hello_message *hello,
     hello->neighbors = NULL;
     limit = ser + size;
     while (curr < limit) {
-        struct lq_hello_info_header *info_head = (struct lq_hello_info_header *)curr;
+        const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
         const unsigned char *limit2 = curr + ntohs(info_head->size);
 
-        curr = (unsigned char *)(info_head + 1);      
+        curr = (const unsigned char *)(info_head + 1);      
         while (curr < limit2) {
             struct hello_neighbor *neigh = olsr_malloc(sizeof (struct hello_neighbor),
                                                        "LQ_HELLO deserialization");

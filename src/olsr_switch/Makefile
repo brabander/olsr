@@ -11,6 +11,8 @@ endif
 default_target:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $(TOPDIR)/$(BINNAME) $(OBJS) $(LIBS) $(OS_LIB_PTHREAD)
 
+ohs_cmd.o: CFLAGS += -Wno-cast-qual
+
 clean:
 	rm -f *.[od]
 	rm -f *~

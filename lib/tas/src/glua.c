@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.c,v 1.5 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: glua.c,v 1.6 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "lua/lua.h"
@@ -294,7 +294,7 @@ static int tasWrite(lua_State *lua)
   int i;
   struct connInfo *info;
 
-  lua_pushlightuserdata(lua, (void *)&infoKey);
+  lua_pushlightuserdata(lua, &infoKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
 
   info = lua_touserdata(lua, -1);
@@ -313,7 +313,7 @@ static int tasWrite(lua_State *lua)
     if (strConv == NULL)
       return luaL_error(lua, "cannot convert value to string");
 
-    writeBuff(&info->write[2], (unsigned char *)strConv, strlen(strConv));
+    writeBuff(&info->write[2], (const unsigned char *)strConv, strlen(strConv));
 
     lua_pop(lua, 1);
   }
@@ -326,7 +326,7 @@ static int tasAddHeaderLine(lua_State *lua)
   struct connInfo *info;
   char *line;
 
-  lua_pushlightuserdata(lua, (void *)&infoKey);
+  lua_pushlightuserdata(lua, &infoKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
 
   info = lua_touserdata(lua, -1);
@@ -335,8 +335,8 @@ static int tasAddHeaderLine(lua_State *lua)
 
   chomp(line, strlen(line));
 
-  writeBuff(&info->write[1], (unsigned char *)line, strlen(line));
-  writeBuff(&info->write[1], (unsigned char *)"\r\n", 2);
+  writeBuff(&info->write[1], (const unsigned char *)line, strlen(line));
+  writeBuff(&info->write[1], (const unsigned char *)"\r\n", 2);
 
   freeMem(line);
 
@@ -349,7 +349,7 @@ static int tasSetContentType(lua_State *lua)
   const char *contType;
   char *s;
 
-  lua_pushlightuserdata(lua, (void *)&infoKey);
+  lua_pushlightuserdata(lua, &infoKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
 
   info = lua_touserdata(lua, -1);
@@ -366,7 +366,7 @@ static int tasKeepState(lua_State *lua)
 {
   int *keepFlag;
 
-  lua_pushlightuserdata(lua, (void *)&keepFlagKey);
+  lua_pushlightuserdata(lua, &keepFlagKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
 
   keepFlag = lua_touserdata(lua, -1);
@@ -381,7 +381,7 @@ static int tasGetParameters(lua_State *lua)
   int i;
   char **argList;
 
-  lua_pushlightuserdata(lua, (void *)&argListKey);
+  lua_pushlightuserdata(lua, &argListKey);
   lua_gettable(lua, LUA_REGISTRYINDEX);
 
   argList = lua_touserdata(lua, -1);
@@ -448,16 +448,16 @@ int runLua(char **errMsg, struct connInfo *info, const char *workDir,
   else
     lua = *session;
 
-  lua_pushlightuserdata(lua, (void *)&infoKey);
-  lua_pushlightuserdata(lua, (void *)info);
+  lua_pushlightuserdata(lua, &infoKey);
+  lua_pushlightuserdata(lua, info);
   lua_settable(lua, LUA_REGISTRYINDEX);
     
-  lua_pushlightuserdata(lua, (void *)&argListKey);
-  lua_pushlightuserdata(lua, (void *)argList);
+  lua_pushlightuserdata(lua, &argListKey);
+  lua_pushlightuserdata(lua, argList);
   lua_settable(lua, LUA_REGISTRYINDEX);
     
-  lua_pushlightuserdata(lua, (void *)&keepFlagKey);
-  lua_pushlightuserdata(lua, (void *)&keepFlag);
+  lua_pushlightuserdata(lua, &keepFlagKey);
+  lua_pushlightuserdata(lua, &keepFlag);
   lua_settable(lua, LUA_REGISTRYINDEX);
 
   res = luaL_loadfile(lua, lexPath);

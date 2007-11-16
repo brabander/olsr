@@ -1,5 +1,5 @@
 /*
-** $Id: lapi.c,v 1.2 2007/04/20 13:46:03 bernd67 Exp $
+** $Id: lapi.c,v 1.3 2007/11/16 22:56:54 bernd67 Exp $
 ** Lua API
 ** See Copyright Notice in lua.h
 */
@@ -467,9 +467,9 @@ LUA_API void lua_pushboolean (lua_State *L, int b) {
 }
 
 
-LUA_API void lua_pushlightuserdata (lua_State *L, void *p) {
+LUA_API void lua_pushlightuserdata (lua_State *L, const void *p) {
   lua_lock(L);
-  setpvalue(L->top, p);
+  setpvalue(L->top, (void *)p);
   api_incr_top(L);
   lua_unlock(L);
 }

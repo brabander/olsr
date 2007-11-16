@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.24 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: rebuild_packet.c,v 1.25 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 
@@ -138,7 +138,7 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
 	  
 	  //COPY_IP(&hna_pairs->net, &haddr6->addr);
 	  hna_pairs->net.v6 = haddr6->addr;
-	  hna_pairs->netmask.v6 = olsr_netmask_to_prefix((union olsr_ip_addr *)&haddr6->netmask);
+	  hna_pairs->netmask.v6 = olsr_netmask_to_prefix((const union olsr_ip_addr *)&haddr6->netmask);
 
 	  hna_pairs->next = tmp_pairs;
 	  
@@ -361,7 +361,7 @@ unk_chgestruct(struct unknown_message *umsg, const union olsr_message *m)
 void
 hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
 {
-  union olsr_ip_addr *hadr;
+  const union olsr_ip_addr *hadr;
   struct hello_neighbor *nb;
   
   hmsg->neighbors = NULL;
@@ -391,13 +391,13 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
       OLSR_PRINTF(3, "Got HELLO vtime: %f htime: %f\n", hmsg->vtime, hmsg->htime);
 
       for (hinf = m->v4.message.hello.hell_info; 
-	   (char *)hinf < ((char *)m + (ntohs(m->v4.olsr_msgsize))); 
-	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
+	   (const char *)hinf < ((const char *)m + (ntohs(m->v4.olsr_msgsize))); 
+	   hinf = (const struct hellinfo *)((const char *)hinf + ntohs(hinf->size)))
 	{
 	  
-	  for (hadr = (union olsr_ip_addr  *)&hinf->neigh_addr; 
-	       (char *)hadr < (char *)hinf + ntohs(hinf->size); 
-	       hadr = (union olsr_ip_addr *)&hadr->v6.s6_addr[4])
+	  for (hadr = (const union olsr_ip_addr  *)&hinf->neigh_addr; 
+	       (const char *)hadr < (const char *)hinf + ntohs(hinf->size); 
+	       hadr = (const union olsr_ip_addr *)&hadr->v6.s6_addr[4])
 	    {
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "HELLO chgestruct");
 
@@ -438,12 +438,12 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
 
 
       for (hinf6 = m->v6.message.hello.hell_info; 
-	   (char *)hinf6 < ((char *)m + (ntohs(m->v6.olsr_msgsize))); 
-	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
+	   (const char *)hinf6 < ((const char *)m + (ntohs(m->v6.olsr_msgsize))); 
+	   hinf6 = (const struct hellinfo6 *)((const char *)hinf6 + ntohs(hinf6->size)))
 	{
 
-	  for (hadr = (union olsr_ip_addr *)hinf6->neigh_addr; 
-	       (char *)hadr < (char *)hinf6 + ntohs(hinf6->size); 
+	  for (hadr = (const union olsr_ip_addr *)hinf6->neigh_addr; 
+	       (const char *)hadr < (const char *)hinf6 + ntohs(hinf6->size); 
 	       hadr++)
 	    {
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "OLSR chgestruct 2");

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.15 2007/11/11 22:55:17 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.16 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -85,7 +85,7 @@ static struct avl_node *avl_find_rec_ipv4(struct avl_node *node, const void *key
       return avl_find_rec_ipv4(node->left, key);
   }
 
-  else if (*(unsigned int *)key > *(unsigned int *)node->key)
+  else if (*(const unsigned int *)key > *(const unsigned int *)node->key)
   {
     if (node->right != NULL)
       return avl_find_rec_ipv4(node->right, key);

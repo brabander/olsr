@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.24 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: hna_set.c,v 1.25 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -85,7 +85,7 @@ int
 olsr_get_hna_prefix_len(const struct hna_net *hna)
 {
   if (olsr_cnf->ip_version == AF_INET) {
-    return olsr_netmask_to_prefix((union olsr_ip_addr *)&hna->A_netmask.v4);
+    return olsr_netmask_to_prefix((const union olsr_ip_addr *)&hna->A_netmask.v4);
   } else {
     return hna->A_netmask.v6;
   }

@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.59 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: lq_route.c,v 1.60 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #define SPF_PROFILING 1
@@ -69,11 +69,11 @@
 static int
 avl_comp_etx (const void *etx1, const void *etx2)
 {       
-  if (*(float *)etx1 < *(float *)etx2) {
+  if (*(const float *)etx1 < *(const float *)etx2) {
     return -1;
   }
 
-  if (*(float *)etx1 > *(float *)etx2) {
+  if (*(const float *)etx1 > *(const float *)etx2) {
     return +1;
   }
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.11 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.12 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 
@@ -244,9 +244,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	    fprintf(fd, "    Ip6AddrType \tglobal\n\n");
 	  
 	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using site-local addresses.\n    # If not defined, ff05::15 is used\n");
-	  fprintf(fd, "    Ip6MulticastSite\t%s\n\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  fprintf(fd, "    Ip6MulticastSite\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
-	  fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  
 	  
           fprintf(fd, "    # Olsrd can autodetect changes in\n    # interface configurations. Enabled by default\n    # turn off to save CPU.\n    AutoDetectChanges: %s\n", in->cnf->autodetect_chg ? "yes" : "no");
@@ -545,11 +545,11 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 
           if(first)
 	    WRITE_TO_BUF("    # IPv6 multicast address to use when\n    # using site-local addresses.\n    # If not defined, ff05::15 is used\n");
-	  WRITE_TO_BUF("    Ip6MulticastSite\t%s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  WRITE_TO_BUF("    Ip6MulticastSite\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
           if(first) WRITE_TO_BUF("\n");
           if(first)
 	    WRITE_TO_BUF("    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
-	  WRITE_TO_BUF("    Ip6MulticastGlobal\t%s\n", (char *)inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
+	  WRITE_TO_BUF("    Ip6MulticastGlobal\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
           if(first) WRITE_TO_BUF("\n");
 	  
 	  

@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.36 2007/11/16 19:12:55 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.37 2007/11/16 22:56:54 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -190,7 +190,7 @@ static int set_nameservice_name(const char *value, void *data, set_plugin_parame
 	struct name_entry **v = data;
 	if (0 < strlen(value))
 	{
-		*v = add_name_to_list(*v, (char*)value, addon.ui, NULL);
+		*v = add_name_to_list(*v, value, addon.ui, NULL);
 		OLSR_PRINTF(1, "%s got %s (main address)\n", "Got", value);
 		return 0;
 	}
@@ -208,7 +208,7 @@ static int set_nameservice_host(const char *value, void *data, set_plugin_parame
 	if (0 < inet_pton(olsr_cnf->ip_version, addon.pc, &ip))
 	{
 		// the IP is validated later
-		*v = add_name_to_list(*v, (char*)value, NAME_HOST, &ip);
+		*v = add_name_to_list(*v, value, NAME_HOST, &ip);
 		OLSR_PRINTF(1, "%s: %s got %s\n", "Got", addon.pc, value);
 		return 0;
 	}

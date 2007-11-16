@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.8 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: http.c,v 1.9 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "link.h"
@@ -864,7 +864,7 @@ static char *getToken(char **point)
 
 static void writeBuffString(struct inOutBuff *write, const char *string)
 {
-  writeBuff(write, (unsigned char *)string, strlen(string));
+  writeBuff(write, (const unsigned char *)string, strlen(string));
 }
 
 static int cookieToSession(unsigned int *sessId, char *cookie)
@@ -948,13 +948,13 @@ static void printBuff(struct inOutBuff *buff, const char *form, ...)
       i++;
 
     if (i > start)
-      writeBuff(buff, (unsigned char *)(form + start), i - start);
+      writeBuff(buff, (const unsigned char *)(form + start), i - start);
 
     if (form[i] == 0)
       break;
 
     if (form[i + 1] == '%')
-      writeBuff(buff, (unsigned char *)"%", 1);
+      writeBuff(buff, (const unsigned char *)"%", 1);
 
     else if (form[i + 1] == 's')
     {

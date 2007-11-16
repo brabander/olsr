@@ -1,5 +1,5 @@
 # The olsr.org Optimized Link-State Routing daemon(olsrd)
-# Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+# Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.5 2007/07/15 21:50:46 bernd67 Exp $
+# $Id: Makefile,v 1.6 2007/11/16 22:56:54 bernd67 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_tas
@@ -62,6 +62,9 @@ default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+
+# this is not nice but there is no nicer solution
+src/lua/lapi.o src/lua/ltable.o:  CFLAGS += -Wno-cast-qual
 
 install:	$(PLUGIN_FULLNAME)
 		$(STRIP) $(PLUGIN_FULLNAME)

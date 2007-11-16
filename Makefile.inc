@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.44 2007/11/16 19:34:26 bernd67 Exp $
+# $Id: Makefile.inc,v 1.45 2007/11/16 22:56:53 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -75,6 +75,10 @@ WARNINGS +=	-Wno-deprecated-declarations
 WARNINGS +=	-Wendif-labels
 WARNINGS +=	-Wwrite-strings
 WARNINGS +=	-Wbad-function-cast
+#WARNINGS +=	-Wpointer-arith
+WARNINGS +=	-Wcast-qual
+#WARNINGS +=	-Wcast-align
+#WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls
 ifeq ($(MUDFLAP),0)
 # work around a bug in gcc-4.*

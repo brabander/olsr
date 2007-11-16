@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.29 2007/11/08 22:47:40 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.30 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 
@@ -139,7 +139,7 @@ static struct interface *olsr_in_if;
 #if 0
 static void olsr_event(void);
 #endif
-static int send_challenge(union olsr_ip_addr *);
+static int send_challenge(const union olsr_ip_addr *);
 static int ifchange(struct interface *, int);
 static int send_cres(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u32_t, struct stamp *);
 static int send_rres(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u32_t);
@@ -154,8 +154,8 @@ static int add_signature(olsr_u8_t *, int*);
 static int validate_packet(const char *, int*);
 static void packet_parser(int);
 static void timeout_timestamps(void*);
-static int check_timestamp(union olsr_ip_addr *, time_t);
-static struct stamp *lookup_timestamp_entry(union olsr_ip_addr *);
+static int check_timestamp(const union olsr_ip_addr *, time_t);
+static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
 static int read_key_from_file(const char *);
 
 /**
@@ -527,7 +527,7 @@ validate_packet(const char *pck, int *size)
 {
   int packetsize;
   olsr_u8_t sha1_hash[SIGNATURE_SIZE];
-  struct s_olsrmsg *sig;
+  const struct s_olsrmsg *sig;
   time_t rec_time;
 
 #ifdef DEBUG
@@ -542,7 +542,7 @@ validate_packet(const char *pck, int *size)
   if(packetsize < 4)
     return 0;
 
-  sig = (struct s_olsrmsg *)&pck[packetsize];
+  sig = (const struct s_olsrmsg *)&pck[packetsize];
 
   //olsr_printf(1, "Size: %d\n", packetsize);
 
@@ -639,11 +639,11 @@ validate_packet(const char *pck, int *size)
   /* Check timestamp */
   rec_time = ntohl(sig->sig.timestamp);
 
-  if(!check_timestamp((union olsr_ip_addr *)&sig->originator, rec_time))
+  if(!check_timestamp((const union olsr_ip_addr *)&sig->originator, rec_time))
     {
       struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Timestamp missmatch in packet from %s!\n",
-		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&sig->originator));
+		  olsr_ip_to_string(&buf, (const union olsr_ip_addr *)&sig->originator));
       return 0;
     }
 
@@ -656,7 +656,7 @@ validate_packet(const char *pck, int *size)
 
 
 int
-check_timestamp(union olsr_ip_addr *originator, time_t tstamp)
+check_timestamp(const union olsr_ip_addr *originator, time_t tstamp)
 {
   struct stamp *entry;
   int diff;
@@ -711,7 +711,7 @@ check_timestamp(union olsr_ip_addr *originator, time_t tstamp)
  */
 
 int
-send_challenge(union olsr_ip_addr *new_host)
+send_challenge(const union olsr_ip_addr *new_host)
 {
   struct challengemsg cmsg;
   struct stamp *entry;
@@ -836,7 +836,7 @@ parse_cres(char *in_msg)
 
 
   /* Now to check the digest from the emitted challenge */
-  if((entry = lookup_timestamp_entry((union olsr_ip_addr *)&msg->originator)) == NULL)
+  if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Received challenge-response from non-registered node %s!\n",
@@ -939,7 +939,7 @@ parse_rres(char *in_msg)
 
 
   /* Now to check the digest from the emitted challenge */
-  if((entry = lookup_timestamp_entry((union olsr_ip_addr *)&msg->originator)) == NULL)
+  if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Received response-response from non-registered node %s!\n",
@@ -1013,7 +1013,7 @@ parse_challenge(char *in_msg)
     }
 
   /* Create entry if not registered */
-  if((entry = lookup_timestamp_entry((union olsr_ip_addr *)&msg->originator)) == NULL)
+  if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       entry = malloc(sizeof(struct stamp));
       memcpy(&entry->addr, &msg->originator, olsr_cnf->ipsize);
@@ -1251,7 +1251,7 @@ send_rres(union olsr_ip_addr *to, union olsr_ip_addr *from, olsr_u32_t chal_in)
 
 
 static struct stamp *
-lookup_timestamp_entry(union olsr_ip_addr *adr)
+lookup_timestamp_entry(const union olsr_ip_addr *adr)
 {
   olsr_u32_t hash;
   struct stamp *entry;
