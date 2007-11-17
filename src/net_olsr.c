@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.33 2007/11/14 11:01:03 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.34 2007/11/17 00:05:54 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -497,7 +497,9 @@ olsr_prefix_to_netmask(union olsr_ip_addr *adr, const olsr_u16_t prefix)
 olsr_u16_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
+#ifndef NODEBUG
   struct ipaddr_str buf;
+#endif
   olsr_u16_t prefix = 0;
   const olsr_u8_t * const a_end = adr->v6.s6_addr+olsr_cnf->ipsize;
   const olsr_u8_t *a;
