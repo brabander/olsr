@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.17 2005/05/29 12:47:45 br1 Exp $
+ * $Id: packet.h,v 1.18 2007/11/18 21:58:32 bernd67 Exp $
  */
 
 #ifndef _OLSR_PACKET
@@ -112,8 +112,7 @@ struct hna_message
   union olsr_ip_addr   originator;
   olsr_u16_t           packet_seq_number;
   olsr_u8_t            hop_count;
-  olsr_u8_t            hna_ttl;
-  struct hna_net_addr  *hna_net;
+  struct hna_net_addr *hna_net;
 };
 
 
