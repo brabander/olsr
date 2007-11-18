@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.16 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: lq_avl.c,v 1.17 2007/11/18 20:35:59 bernd67 Exp $
  */
 
 #include <stddef.h>
@@ -45,9 +45,7 @@
 #include <string.h>
 
 #include "lq_avl.h"
-
-#define AVLMAX(x, y) ((x > y) ? x : y)
-#define AVLMIN(x, y) ((x < y) ? x : y)
+#include "net_olsr.h"
 
 /*
  * default comparison pointers 
@@ -60,12 +58,12 @@ avl_tree_comp avl_comp_prefix_default;
 
 int avl_comp_ipv4(const void *ip1, const void *ip2)
 {
-  return inline_avl_comp_ipv4(ip1, ip2);
+  return ip4cmp(ip1, ip2);
 }
 
 int avl_comp_ipv6(const void *ip1, const void *ip2)
 {
-  return memcmp(ip1, ip2, 16);
+  return ip6cmp(ip1, ip2);
 }
 
 void avl_init(struct avl_tree *tree, avl_tree_comp comp)
@@ -134,7 +132,7 @@ struct avl_node *avl_find(struct avl_tree *tree, const void *key)
 
   if (NULL == tree->comp)
   {
-    if (0 != inline_avl_comp_ipv4(node->key, key))
+    if (0 != ip4cmp(node->key, key))
       return NULL;
   }
 
@@ -175,8 +173,8 @@ static void avl_rotate_right(struct avl_tree *tree, struct avl_node *node)
   if (node->left != NULL)
     node->left->parent = node;
 
-  node->balance += 1 - AVLMIN(left->balance, 0);
-  left->balance += 1 + AVLMAX(node->balance, 0);
+  node->balance += 1 - MIN(left->balance, 0);
+  left->balance += 1 + MAX(node->balance, 0);
 }
 
 static void avl_rotate_left(struct avl_tree *tree, struct avl_node *node)
@@ -207,8 +205,8 @@ static void avl_rotate_left(struct avl_tree *tree, struct avl_node *node)
   if (node->right != NULL)
     node->right->parent = node;
 
-  node->balance -= 1 + AVLMAX(right->balance, 0);
-  right->balance -= 1 - AVLMIN(node->balance, 0);
+  node->balance -= 1 + MAX(right->balance, 0);
+  right->balance -= 1 - MIN(node->balance, 0);
 }
 
 static void post_insert(struct avl_tree *tree, struct avl_node *node)
@@ -344,7 +342,7 @@ int avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates
     last = last->next;
 
   if (NULL == tree->comp)
-    diff = inline_avl_comp_ipv4(new->key, node->key);
+    diff = ip4cmp(new->key, node->key);
 
   else
     diff = (*tree->comp)(new->key, node->key);

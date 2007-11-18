@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.13 2007/11/11 22:55:16 bernd67 Exp $
+ * $Id: lq_avl.h,v 1.14 2007/11/18 20:35:59 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H
@@ -91,10 +91,6 @@ extern avl_tree_comp avl_comp_default;
 extern avl_tree_comp avl_comp_prefix_default;
 extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
-
-static INLINE int inline_avl_comp_ipv4(const void *_ip1, const void *_ip2) {
-  const unsigned int *ip1 = _ip1, *ip2 = _ip2;
-  return *ip1 == *ip2 ? 0 : *ip1 < *ip2 ? -1 : +1; }
 
 #endif
 
