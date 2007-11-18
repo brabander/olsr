@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.116 2007/11/16 21:43:55 bernd67 Exp $
+$Id: CHANGELOG,v 1.117 2007/11/18 20:39:09 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -128,6 +128,13 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   * replaced the call of `sed` with shell built-in features fixing syntax
     errors on Debian/Sarge
   * set all locale-relevant variables to "C" (just to be sure)
+- consolidated ip{4,6,}{cmp,equal}: all are nwo inline functions using only
+  the minimal necessary operations. Thanks to Hannes Gredler
+  <hannes@gedler.at> and Sven-Ola Tuecke <mail2news@commando.de> for pointing
+  that out and suggesting the `inline`, respectively.
+  use ip{4,}cmp in lq_avl.[ch] to resue the code. inline_avl_comp_ipv4
+  is superflous now (and replaced by ip4cmp) and use the global MIN and MAX
+  macro instead of AVLMIN and AVLMAX
 
 0.5.4 ---------------------------------------------------------------------
 
