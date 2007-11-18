@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.45 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: process_package.c,v 1.46 2007/11/18 22:28:35 bernd67 Exp $
  */
 
 
@@ -55,6 +55,366 @@
 #include "scheduler.h"
 #include "local_hna_set.h"
 #include "net_olsr.h"
+
+static void process_message_neighbors(struct neighbor_entry *, const struct hello_message *);
+
+static void linking_this_2_entries(struct neighbor_entry *, struct neighbor_2_entry *, float);
+
+static int lookup_mpr_status(const struct hello_message *, const struct interface *);
+
+
+/**
+ *Processes an list of neighbors from an incoming HELLO message.
+ *@param neighbor the neighbor who sent the message.
+ *@param message the HELLO message
+ *@return nada
+ */
+static void
+process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_message *message)
+{
+  struct hello_neighbor        *message_neighbors;
+
+  for(message_neighbors = message->neighbors;
+      message_neighbors != NULL;
+      message_neighbors = message_neighbors->next)
+    {
+#if !defined(NODEBUG) && defined(DEBUG)
+      struct ipaddr_str buf;
+#endif
+      union olsr_ip_addr      *neigh_addr;
+      struct neighbor_2_entry *two_hop_neighbor;
+
+      /*
+       *check all interfaces
+       *so that we don't add ourselves to the
+       *2 hop list
+       *IMPORTANT!
+       */
+      if(if_ifwithaddr(&message_neighbors->address) != NULL)
+        continue;
+
+      /* Get the main address */
+      neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
+
+      if (neigh_addr != NULL) {
+        //COPY_IP(&message_neighbors->address, neigh_addr);
+        message_neighbors->address = *neigh_addr;
+      }
+
+      if(((message_neighbors->status == SYM_NEIGH) ||
+          (message_neighbors->status == MPR_NEIGH)))
+        {
+	  struct neighbor_2_list_entry *two_hop_neighbor_yet =
+            olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+#ifdef DEBUG
+          OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
+#endif
+          if (two_hop_neighbor_yet != NULL)
+            {
+              /* Updating the holding time for this neighbor */
+              two_hop_neighbor_yet->neighbor_2_timer = GET_TIMESTAMP(message->vtime*1000);
+              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
+
+              // For link quality OLSR, reset the path link quality here.
+              // The path link quality will be calculated in the second pass, below.
+              // Keep the saved_path_link_quality for reference.
+
+              if (olsr_cnf->lq_level > 0)
+                {
+                  // loop through the one-hop neighbors that see this
+                  // 'two_hop_neighbor'
+
+                  struct neighbor_list_entry *walker;
+
+                  for (walker = two_hop_neighbor->neighbor_2_nblist.next;
+                       walker != &two_hop_neighbor->neighbor_2_nblist;
+                       walker = walker->next)
+                    {
+                      // have we found the one-hop neighbor that sent the
+                      // HELLO message that we're current processing?
+
+                      if (walker->neighbor == neighbor)
+                        {
+                          walker->path_link_quality = 0.0;
+                        }
+                    }
+                }
+            }
+          else
+            {
+              two_hop_neighbor =
+                olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
+              if (two_hop_neighbor == NULL)
+                {
+#ifdef DEBUG
+                  OLSR_PRINTF(5, 
+			      "Adding 2 hop neighbor %s\n\n", 
+			      olsr_ip_to_string(&buf, &message_neighbors->address));
+#endif
+                  changes_neighborhood = OLSR_TRUE;
+                  changes_topology = OLSR_TRUE;
+
+                  two_hop_neighbor =
+                    olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
+		  
+                  two_hop_neighbor->neighbor_2_nblist.next =
+                    &two_hop_neighbor->neighbor_2_nblist;
+
+                  two_hop_neighbor->neighbor_2_nblist.prev =
+                    &two_hop_neighbor->neighbor_2_nblist;
+
+                  two_hop_neighbor->neighbor_2_pointer = 0;
+		  
+                  //COPY_IP(&two_hop_neighbor->neighbor_2_addr,&message_neighbors->address);
+                  two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
+
+                  olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
+
+                  linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
+                }
+              else
+                {
+                  /*
+                    linking to this two_hop_neighbor entry
+                  */	
+                  changes_neighborhood = OLSR_TRUE;
+                  changes_topology = OLSR_TRUE;
+		  
+                  linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime); 
+                }
+            }
+        }
+    }
+
+  // Separate, second and third pass for link quality OLSR
+
+  if (olsr_cnf->lq_level > 0)
+    {
+      struct link_entry *lnk =
+        get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+
+      if(!lnk)
+	return;
+
+      // Second pass for link quality OLSR: calculate the best 2-hop
+      // path costs to all the 2-hop neighbors indicated in the
+      // HELLO message. Since the same 2-hop neighbor may be listed
+      // more than once in the same HELLO message (each at a possibly
+      // different quality) we want to select only the best one, not just
+      // the last one listed in the HELLO message.
+
+      for(message_neighbors = message->neighbors;
+          message_neighbors != NULL;
+          message_neighbors = message_neighbors->next)
+        {
+          if(if_ifwithaddr(&message_neighbors->address) != NULL)
+            continue;
+
+          if(((message_neighbors->status == SYM_NEIGH) ||
+              (message_neighbors->status == MPR_NEIGH)))
+            {
+              struct neighbor_list_entry *walker;
+              struct neighbor_2_entry *two_hop_neighbor;
+              struct neighbor_2_list_entry *two_hop_neighbor_yet =
+                olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+
+              if(!two_hop_neighbor_yet)
+                continue;
+
+              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
+
+              // loop through the one-hop neighbors that see this
+              // 'two_hop_neighbor'
+
+              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
+                   walker != &two_hop_neighbor->neighbor_2_nblist;
+                   walker = walker->next)
+                {
+                  // have we found the one-hop neighbor that sent the
+                  // HELLO message that we're current processing?
+
+                  if (walker->neighbor == neighbor)
+                    {
+                      double new_second_hop_link_quality, new_path_link_quality;
+
+                      // path link quality = link quality between us
+                      // and our one-hop neighbor x link quality between
+                      // our one-hop neighbor and the two-hop neighbor
+
+                      // let's compare this to ETX:
+
+                      // 1 / LQ1 + 1 / LQ2 < 1 / LQ3 + 1 / LQ4 <=>
+                      // LQ1 * LQ2 > LQ3 * LQ4
+
+                      // so comparing path link quality values with ">" is
+                      // equivalent to comparing ETX values with "<"
+
+                      // the link quality between the 1-hop neighbour and the
+                      // 2-hop neighbour
+
+                      new_second_hop_link_quality = 
+                        message_neighbors->link_quality *
+                        message_neighbors->neigh_link_quality;
+
+                      // the total quality for the route
+                      // "us --- 1-hop --- 2-hop"
+
+                      new_path_link_quality =
+                        new_second_hop_link_quality *
+                        lnk->loss_link_quality * lnk->neigh_link_quality;
+
+                      // Only copy the link quality if it is better than what we have
+                      // for this 2-hop neighbor
+                      if (new_path_link_quality > walker->path_link_quality)
+                        {
+                          walker->second_hop_link_quality = new_second_hop_link_quality;
+                          walker->path_link_quality = new_path_link_quality;
+                        }
+                    }
+                }
+            }
+        }
+
+      // Third pass for link quality OLSR: check if the 2-hop path qualities have
+      // actually changed. If so, signal this through the 'changes_neighborhood'
+      // and 'changes_topology' booleans. Keep a 'saved_path_link_quality' for
+      // later reference.
+      for(message_neighbors = message->neighbors;
+          message_neighbors != NULL;
+          message_neighbors = message_neighbors->next)
+        {
+          if(if_ifwithaddr(&message_neighbors->address) != NULL)
+            continue;
+
+          if(((message_neighbors->status == SYM_NEIGH) ||
+              (message_neighbors->status == MPR_NEIGH)))
+            {
+              struct neighbor_list_entry *walker;
+              struct neighbor_2_entry *two_hop_neighbor;
+              struct neighbor_2_list_entry *two_hop_neighbor_yet =
+                olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+
+              if(!two_hop_neighbor_yet)
+                continue;
+
+              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
+
+              // loop through the one-hop neighbors that see this
+              // 'two_hop_neighbor'
+
+              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
+                   walker != &two_hop_neighbor->neighbor_2_nblist;
+                   walker = walker->next)
+                {
+                  // have we found the one-hop neighbor that sent the
+                  // HELLO message that we're current processing?
+
+                  if (walker->neighbor == neighbor)
+                    {
+                      double saved_lq, rel_lq;
+
+                      // saved previous total link quality
+
+                      saved_lq = walker->saved_path_link_quality;
+
+                      if (saved_lq == 0.0)
+                        saved_lq = -1.0;
+
+                      // if the link cost has changed by more than 10
+                      // percent, signal
+
+                      rel_lq = walker->path_link_quality / saved_lq;
+
+                      if (rel_lq > 1.1 || rel_lq < 0.9)
+                        {
+                          walker->saved_path_link_quality =
+                            walker->path_link_quality;
+
+                          if (olsr_cnf->lq_dlimit > 0)
+                          {
+                            changes_neighborhood = OLSR_TRUE;
+                            changes_topology = OLSR_TRUE;
+                          }
+
+                          else
+                            OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ *Links a one-hop neighbor with a 2-hop neighbor.
+ *
+ *@param neighbor the 1-hop neighbor
+ *@param two_hop_neighbor the 2-hop neighbor
+ *@return nada
+ */
+static void
+linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, float vtime)
+{
+  struct neighbor_list_entry    *list_of_1_neighbors = olsr_malloc(sizeof(struct neighbor_list_entry), "Link entries 1");
+  struct neighbor_2_list_entry  *list_of_2_neighbors = olsr_malloc(sizeof(struct neighbor_2_list_entry), "Link entries 2");
+
+  list_of_1_neighbors->neighbor = neighbor;
+
+  list_of_1_neighbors->path_link_quality = 0.0;
+  list_of_1_neighbors->saved_path_link_quality = 0.0;
+  list_of_1_neighbors->second_hop_link_quality = 0.0;
+
+  /* Queue */
+  two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
+  list_of_1_neighbors->next = two_hop_neighbor->neighbor_2_nblist.next;
+
+  two_hop_neighbor->neighbor_2_nblist.next = list_of_1_neighbors;
+  list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
+  list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
+  
+  list_of_2_neighbors->neighbor_2_timer = GET_TIMESTAMP(vtime*1000);
+
+  /* Queue */
+  neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;
+  list_of_2_neighbors->next = neighbor->neighbor_2_list.next;
+  neighbor->neighbor_2_list.next = list_of_2_neighbors;
+  list_of_2_neighbors->prev = &neighbor->neighbor_2_list;
+  
+  /*increment the pointer counter*/
+  two_hop_neighbor->neighbor_2_pointer++;
+}
+
+/**
+ *Check if a hello message states this node as a MPR.
+ *
+ *@param message the message to check
+ *@param n_link the buffer to put the link status in
+ *@param n_status the buffer to put the status in
+ *
+ *@return 1 if we are selected as MPR 0 if not
+ */
+static int
+lookup_mpr_status(const struct hello_message *message, const struct interface *in_if)
+{  
+  struct hello_neighbor  *neighbors; 
+  for (neighbors = message->neighbors; neighbors != NULL; neighbors = neighbors->next) {
+    //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&buf, &neighbors->address));
+    //printf("against %s\n",olsr_ip_to_string(&buf, &main_addr));
+
+    if (olsr_cnf->ip_version == AF_INET
+              ? /* IPv4 */ ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
+              : /* IPv6 */ ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
+      //printf("ok");
+      if (neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH) {
+        return 1;
+      }
+      break;
+    }
+  }
+  /* Not found */
+  return 0;
+}
 
 
 /**
@@ -160,7 +520,7 @@ olsr_hello_tap(struct hello_message *message,
     }
 
   /* Check if we are chosen as MPR */
-  if(olsr_lookup_mpr_status(message, in_if))
+  if(lookup_mpr_status(message, in_if))
     /* source_addr is always the main addr of a node! */
     olsr_update_mprs_set(&message->source_addr, message->vtime);
 
@@ -187,7 +547,7 @@ olsr_hello_tap(struct hello_message *message,
 
   /* Don't register neighbors of neighbors that announces WILL_NEVER */
   if(neighbor->willingness != WILL_NEVER)
-    olsr_process_message_neighbors(neighbor, message);
+    process_message_neighbors(neighbor, message);
 
   /* Process changes immedeatly in case of MPR updates */
   olsr_process_changes();
@@ -363,397 +723,4 @@ olsr_process_received_hna(union olsr_message *m,
 		       in_if,
 		       from_addr);
   olsr_free_hna_packet(&message);
-}
-
-/**
- *Processes an list of neighbors from an incoming HELLO message.
- *@param neighbor the neighbor who sent the message.
- *@param message the HELLO message
- *@return nada
- */
-void
-olsr_process_message_neighbors(struct neighbor_entry *neighbor,
-                               struct hello_message *message)
-{
-  struct hello_neighbor        *message_neighbors;
-
-  for(message_neighbors = message->neighbors;
-      message_neighbors != NULL;
-      message_neighbors = message_neighbors->next)
-    {
-#if !defined(NODEBUG) && defined(DEBUG)
-      struct ipaddr_str buf;
-#endif
-      union olsr_ip_addr      *neigh_addr;
-      struct neighbor_2_entry *two_hop_neighbor;
-
-      /*
-       *check all interfaces
-       *so that we don't add ourselves to the
-       *2 hop list
-       *IMPORTANT!
-       */
-      if(if_ifwithaddr(&message_neighbors->address) != NULL)
-        continue;
-
-      /* Get the main address */
-      neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
-
-      if (neigh_addr != NULL) {
-        //COPY_IP(&message_neighbors->address, neigh_addr);
-        message_neighbors->address = *neigh_addr;
-      }
-
-      if(((message_neighbors->status == SYM_NEIGH) ||
-          (message_neighbors->status == MPR_NEIGH)))
-        {
-	  struct neighbor_2_list_entry *two_hop_neighbor_yet =
-            olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
-#ifdef DEBUG
-          OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
-#endif
-          if (two_hop_neighbor_yet != NULL)
-            {
-              /* Updating the holding time for this neighbor */
-              two_hop_neighbor_yet->neighbor_2_timer = GET_TIMESTAMP(message->vtime*1000);
-              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
-
-              // For link quality OLSR, reset the path link quality here.
-              // The path link quality will be calculated in the second pass, below.
-              // Keep the saved_path_link_quality for reference.
-
-              if (olsr_cnf->lq_level > 0)
-                {
-                  // loop through the one-hop neighbors that see this
-                  // 'two_hop_neighbor'
-
-                  struct neighbor_list_entry *walker;
-
-                  for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-                       walker != &two_hop_neighbor->neighbor_2_nblist;
-                       walker = walker->next)
-                    {
-                      // have we found the one-hop neighbor that sent the
-                      // HELLO message that we're current processing?
-
-                      if (walker->neighbor == neighbor)
-                        {
-                          walker->path_link_quality = 0.0;
-                        }
-                    }
-                }
-            }
-          else
-            {
-              two_hop_neighbor =
-                olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
-              if (two_hop_neighbor == NULL)
-                {
-#ifdef DEBUG
-                  OLSR_PRINTF(5, 
-			      "Adding 2 hop neighbor %s\n\n", 
-			      olsr_ip_to_string(&buf, &message_neighbors->address));
-#endif
-                  changes_neighborhood = OLSR_TRUE;
-                  changes_topology = OLSR_TRUE;
-
-                  two_hop_neighbor =
-                    olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
-		  
-                  two_hop_neighbor->neighbor_2_nblist.next =
-                    &two_hop_neighbor->neighbor_2_nblist;
-
-                  two_hop_neighbor->neighbor_2_nblist.prev =
-                    &two_hop_neighbor->neighbor_2_nblist;
-
-                  two_hop_neighbor->neighbor_2_pointer = 0;
-		  
-                  //COPY_IP(&two_hop_neighbor->neighbor_2_addr,&message_neighbors->address);
-                  two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
-
-                  olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
-
-                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime);
-                }
-              else
-                {
-                  /*
-                    linking to this two_hop_neighbor entry
-                  */	
-                  changes_neighborhood = OLSR_TRUE;
-                  changes_topology = OLSR_TRUE;
-		  
-                  olsr_linking_this_2_entries(neighbor, two_hop_neighbor, (float)message->vtime); 
-                }
-            }
-        }
-    }
-
-  // Separate, second and third pass for link quality OLSR
-
-  if (olsr_cnf->lq_level > 0)
-    {
-      struct link_entry *lnk =
-        get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
-
-      if(!lnk)
-	return;
-
-      // Second pass for link quality OLSR: calculate the best 2-hop
-      // path costs to all the 2-hop neighbors indicated in the
-      // HELLO message. Since the same 2-hop neighbor may be listed
-      // more than once in the same HELLO message (each at a possibly
-      // different quality) we want to select only the best one, not just
-      // the last one listed in the HELLO message.
-
-      for(message_neighbors = message->neighbors;
-          message_neighbors != NULL;
-          message_neighbors = message_neighbors->next)
-        {
-          if(if_ifwithaddr(&message_neighbors->address) != NULL)
-            continue;
-
-          if(((message_neighbors->status == SYM_NEIGH) ||
-              (message_neighbors->status == MPR_NEIGH)))
-            {
-              struct neighbor_list_entry *walker;
-              struct neighbor_2_entry *two_hop_neighbor;
-              struct neighbor_2_list_entry *two_hop_neighbor_yet =
-                olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
-
-              if(!two_hop_neighbor_yet)
-                continue;
-
-              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
-
-              // loop through the one-hop neighbors that see this
-              // 'two_hop_neighbor'
-
-              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-                   walker != &two_hop_neighbor->neighbor_2_nblist;
-                   walker = walker->next)
-                {
-                  // have we found the one-hop neighbor that sent the
-                  // HELLO message that we're current processing?
-
-                  if (walker->neighbor == neighbor)
-                    {
-                      double new_second_hop_link_quality, new_path_link_quality;
-
-                      // path link quality = link quality between us
-                      // and our one-hop neighbor x link quality between
-                      // our one-hop neighbor and the two-hop neighbor
-
-                      // let's compare this to ETX:
-
-                      // 1 / LQ1 + 1 / LQ2 < 1 / LQ3 + 1 / LQ4 <=>
-                      // LQ1 * LQ2 > LQ3 * LQ4
-
-                      // so comparing path link quality values with ">" is
-                      // equivalent to comparing ETX values with "<"
-
-                      // the link quality between the 1-hop neighbour and the
-                      // 2-hop neighbour
-
-                      new_second_hop_link_quality = 
-                        message_neighbors->link_quality *
-                        message_neighbors->neigh_link_quality;
-
-                      // the total quality for the route
-                      // "us --- 1-hop --- 2-hop"
-
-                      new_path_link_quality =
-                        new_second_hop_link_quality *
-                        lnk->loss_link_quality * lnk->neigh_link_quality;
-
-                      // Only copy the link quality if it is better than what we have
-                      // for this 2-hop neighbor
-                      if (new_path_link_quality > walker->path_link_quality)
-                        {
-                          walker->second_hop_link_quality = new_second_hop_link_quality;
-                          walker->path_link_quality = new_path_link_quality;
-                        }
-                    }
-                }
-            }
-        }
-
-      // Third pass for link quality OLSR: check if the 2-hop path qualities have
-      // actually changed. If so, signal this through the 'changes_neighborhood'
-      // and 'changes_topology' booleans. Keep a 'saved_path_link_quality' for
-      // later reference.
-      for(message_neighbors = message->neighbors;
-          message_neighbors != NULL;
-          message_neighbors = message_neighbors->next)
-        {
-          if(if_ifwithaddr(&message_neighbors->address) != NULL)
-            continue;
-
-          if(((message_neighbors->status == SYM_NEIGH) ||
-              (message_neighbors->status == MPR_NEIGH)))
-            {
-              struct neighbor_list_entry *walker;
-              struct neighbor_2_entry *two_hop_neighbor;
-              struct neighbor_2_list_entry *two_hop_neighbor_yet =
-                olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
-
-              if(!two_hop_neighbor_yet)
-                continue;
-
-              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
-
-              // loop through the one-hop neighbors that see this
-              // 'two_hop_neighbor'
-
-              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-                   walker != &two_hop_neighbor->neighbor_2_nblist;
-                   walker = walker->next)
-                {
-                  // have we found the one-hop neighbor that sent the
-                  // HELLO message that we're current processing?
-
-                  if (walker->neighbor == neighbor)
-                    {
-                      double saved_lq, rel_lq;
-
-                      // saved previous total link quality
-
-                      saved_lq = walker->saved_path_link_quality;
-
-                      if (saved_lq == 0.0)
-                        saved_lq = -1.0;
-
-                      // if the link cost has changed by more than 10
-                      // percent, signal
-
-                      rel_lq = walker->path_link_quality / saved_lq;
-
-                      if (rel_lq > 1.1 || rel_lq < 0.9)
-                        {
-                          walker->saved_path_link_quality =
-                            walker->path_link_quality;
-
-                          if (olsr_cnf->lq_dlimit > 0)
-                          {
-                            changes_neighborhood = OLSR_TRUE;
-                            changes_topology = OLSR_TRUE;
-                          }
-
-                          else
-                            OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-/**
- *Links a one-hop neighbor with a 2-hop neighbor.
- *
- *@param neighbor the 1-hop neighbor
- *@param two_hop_neighbor the 2-hop neighbor
- *@return nada
- */
-void
-olsr_linking_this_2_entries(struct neighbor_entry *neighbor,struct neighbor_2_entry *two_hop_neighbor, float vtime)
-{
-  struct neighbor_list_entry    *list_of_1_neighbors;
-  struct neighbor_2_list_entry  *list_of_2_neighbors;
-
-  list_of_1_neighbors = olsr_malloc(sizeof(struct neighbor_list_entry), "Link entries 1");
-
-  list_of_2_neighbors = olsr_malloc(sizeof(struct neighbor_2_list_entry), "Link entries 2");
-
-  list_of_1_neighbors->neighbor = neighbor;
-
-  list_of_1_neighbors->path_link_quality = 0.0;
-  list_of_1_neighbors->saved_path_link_quality = 0.0;
-  list_of_1_neighbors->second_hop_link_quality = 0.0;
-
-  /* Queue */
-  two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
-  list_of_1_neighbors->next = two_hop_neighbor->neighbor_2_nblist.next;
-  two_hop_neighbor->neighbor_2_nblist.next = list_of_1_neighbors;
-  list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
-
-
-  list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
-  
-  list_of_2_neighbors->neighbor_2_timer = GET_TIMESTAMP(vtime*1000);
-
-  /* Queue */
-  neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;
-  list_of_2_neighbors->next = neighbor->neighbor_2_list.next;
-  neighbor->neighbor_2_list.next = list_of_2_neighbors;
-  list_of_2_neighbors->prev = &neighbor->neighbor_2_list;
-  
-  /*increment the pointer counter*/
-  two_hop_neighbor->neighbor_2_pointer++;
-}
-
-
-
-
-
-
-/**
- *Check if a hello message states this node as a MPR.
- *
- *@param message the message to check
- *@param n_link the buffer to put the link status in
- *@param n_status the buffer to put the status in
- *
- *@return 1 if we are selected as MPR 0 if not
- */
-int
-olsr_lookup_mpr_status(struct hello_message *message, struct interface *in_if)
-{
-  
-  struct hello_neighbor  *neighbors = message->neighbors;
-  
-  while(neighbors!=NULL)
-    {  
-      //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&buf, &neighbors->address));
-      //printf("against %s\n",olsr_ip_to_string(&buf, &main_addr));
-
-
-    if(olsr_cnf->ip_version == AF_INET)
-      {	
-	/* IPv4 */  
-	if(ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4))
-	  {
-	    //printf("ok");
-	    if((neighbors->link == SYM_LINK) && (neighbors->status == MPR_NEIGH))
-	      return 1;
-	    
-	    return 0;
-	  }
-      }
-    else
-      {	
-	/* IPv6 */  
-	if(ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr))
-	  {
-	    //printf("ok");
-	    if((neighbors->link == SYM_LINK) && (neighbors->status == MPR_NEIGH))
-	      return 1;
-	    
-	    return 0;
-	  }
-      }
- 
-      neighbors = neighbors->next; 
-    }
-
-  /* Not found */
-  return 0;
 }

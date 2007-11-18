@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.h,v 1.14 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: process_package.h,v 1.15 2007/11/18 22:28:35 bernd67 Exp $
  */
 
 
@@ -61,14 +61,5 @@ olsr_process_received_mid(union olsr_message *, struct interface *, union olsr_i
 
 void
 olsr_process_received_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-void
-olsr_process_message_neighbors(struct neighbor_entry *,struct hello_message *);
-
-void
-olsr_linking_this_2_entries(struct neighbor_entry *,struct neighbor_2_entry *, float);
-
-int
-olsr_lookup_mpr_status(struct hello_message *, struct interface *);
 
 #endif
