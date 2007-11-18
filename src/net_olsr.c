@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.34 2007/11/17 00:05:54 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.35 2007/11/18 20:01:08 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -643,14 +643,6 @@ olsr_validate_address(const union olsr_ip_addr *adr)
     }
   }
   return OLSR_TRUE;
-}
-
-
-int ipcmp(const union olsr_ip_addr * const a, const union olsr_ip_addr * const b)
-{
-    return  olsr_cnf->ip_version == AF_INET
-        ? ip4cmp(&a->v4, &b->v4)
-        : ip6cmp(&a->v6, &b->v6);
 }
 
 /*

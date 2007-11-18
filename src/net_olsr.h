@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.16 2007/11/11 22:51:54 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.17 2007/11/18 20:01:08 bernd67 Exp $
  */
 
 
@@ -66,8 +66,10 @@ static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { r
 static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
 static INLINE int ip6equal(const struct in6_addr *a, const struct in6_addr *b) { return ip6cmp(a, b) == 0; }
 
-int ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b);
-static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipcmp(a, b) == 0; }
+#if 0
+static INLINE int ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6); }
+#endif
+static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6); }
 
 /* Do not use this - this is as evil as the COPY_IP() macro was and only used in
  * source which also needs cleanups.
