@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.45 2007/11/16 22:56:53 bernd67 Exp $
+# $Id: Makefile.inc,v 1.46 2007/11/19 14:35:10 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -122,6 +122,9 @@ ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
 endif
 LIBS +=		$(OS_LIB_PTHREAD)
+
+# extra options from the outside
+CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 
 ###################################
 #
