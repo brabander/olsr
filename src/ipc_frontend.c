@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.39 2007/11/11 22:59:29 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.40 2007/11/20 23:20:23 bernd67 Exp $
  */
 
 /*
@@ -62,7 +62,7 @@ void
 WinSockPError(char *);
 #endif
 
-#ifndef linux
+#ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
 
