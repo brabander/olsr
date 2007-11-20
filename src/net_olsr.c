@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.35 2007/11/18 20:01:08 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.36 2007/11/20 23:16:17 bernd67 Exp $
  */
 
 #include "net_olsr.h"
@@ -49,6 +49,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <limits.h>
 
 static olsr_bool disp_pack_out = OLSR_FALSE;
 
