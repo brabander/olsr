@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.102 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: main.c,v 1.103 2007/11/20 23:19:08 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -95,9 +95,11 @@ olsr_process_arguments(int, char *[],
 		       struct olsrd_config *, 
 		       struct if_config_options *);
 
+#ifndef WIN32
 static char **olsr_argv;
+#endif
 
-static char copyright_string[] = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
 
 /**
@@ -118,12 +120,10 @@ main(int argc, char *argv[])
   int len;
 #endif
 
-  /* Stop the compiler from complaining */
-  (void)copyright_string;
-
   debug_handle = stdout;
+#ifndef WIN32
   olsr_argv = argv;
-
+#endif
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
@@ -144,15 +144,14 @@ main(int argc, char *argv[])
     }
 #endif
 
-  /* Grab initial timestamp */
-  now_times = times(&tms_buf);
-
   /* Open syslog */
   olsr_openlog("olsrd");
 
-  /* Get initial timestep */
+  /* Grab initial timestamp */
+  now_times = times(&tms_buf);
   do {
-    nowtm = localtime(&now.tv_sec);
+    time_t t = now.tv_sec;
+    nowtm = localtime(&t);
   } while (nowtm == NULL);
     
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
@@ -215,11 +214,12 @@ main(int argc, char *argv[])
       printf("Using default config values(no configfile)\n");
       olsr_cnf = olsrd_get_default_cnf();
     }
-  if((default_ifcnf = get_default_if_config()) == NULL)
-    {
-      fprintf(stderr, "No default ifconfig found!\n");
-      exit(EXIT_FAILURE);
-    }
+
+  default_ifcnf = get_default_if_config();
+  if (default_ifcnf == NULL) {
+    fprintf(stderr, "No default ifconfig found!\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Initialize tick resolution */
 #ifndef WIN32
@@ -384,15 +384,13 @@ main(int argc, char *argv[])
 
   /* daemon mode */
 #ifndef WIN32
-  if((olsr_cnf->debug_level == 0) && (!olsr_cnf->no_fork))
-    {
-      printf("%s detaching from the current process...\n", olsrd_version);
-      if(daemon(0, 0) < 0)
-	{
-	  printf("daemon(3) failed: %s\n", strerror(errno));
-	  exit(EXIT_FAILURE);
-	}
+  if(olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
+    printf("%s detaching from the current process...\n", olsrd_version);
+    if (daemon(0, 0) < 0) {
+      printf("daemon(3) failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
     }
+  }
 #endif
 
   /* Load plugins */
@@ -428,9 +426,6 @@ main(int argc, char *argv[])
 
   /* Starting scheduler */
   scheduler();
-
-  /* Stop the compiler from complaining */
-  (void)copyright_string;
 
   /* Like we're ever going to reach this ;-) */
   return 1;
@@ -572,17 +567,16 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 }
 
 
-#define NEXT_ARG argv++;argc--
-#define CHECK_ARGC if(!argc) { \
+#define NEXT_ARG do { argv++;argc--; } while (0)
+#define CHECK_ARGC do { if(!argc) { \
       if((argc - 1) == 1){ \
       fprintf(stderr, "Error parsing command line options!\n"); \
-      olsr_exit(__func__, EXIT_FAILURE); \
       } else { \
       argv--; \
       fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
-      olsr_exit(__func__, EXIT_FAILURE); \
      } \
-     }
+     olsr_exit(__func__, EXIT_FAILURE); \
+     } } while (0)
 
 /**
  * Process command line arguments passed to olsrd
