@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.61 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.62 2007/11/22 11:43:36 bernd67 Exp $
  */
 
 
@@ -427,6 +427,8 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->no_fork = OLSR_FALSE;
     cnf->host_emul = OLSR_FALSE;
     cnf->ip_version  = AF_INET;
+    cnf->ipsize = sizeof(struct in_addr);
+    cnf->maxplen = 32;
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;
     cnf->rttable = 254;

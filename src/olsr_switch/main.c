@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.31 2007/11/08 23:54:28 bernd67 Exp $
+ * $Id: main.c,v 1.32 2007/11/22 11:43:35 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -544,7 +544,7 @@ main(void)
 
   logbits = LOG_DEFAULT;
   ip_version = AF_INET;
-  ipsize = 4;
+  ipsize = sizeof(struct in_addr);
 
   srand((unsigned int)time(NULL));
 

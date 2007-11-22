@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.38 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: oparse.y,v 1.39 2007/11/22 11:43:36 bernd67 Exp $
  */
 
 
@@ -651,8 +651,12 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
 {
   if ($2->integer == 4) {
     olsr_cnf->ip_version = AF_INET;
+    olsr_cnf->ipsize = sizeof(struct in_addr);
+    olsr_cnf->maxplen = 32;
   } else if ($2->integer == 6) {
     olsr_cnf->ip_version = AF_INET6;
+    olsr_cnf->ipsize = sizeof(struct in6_addr);
+    olsr_cnf->maxplen = 128;
   } else {
     fprintf(stderr, "IPversion must be 4 or 6!\n");
     YYABORT;

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.103 2007/11/20 23:19:08 bernd67 Exp $
+ * $Id: main.c,v 1.104 2007/11/22 11:43:36 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -330,20 +330,6 @@ main(int argc, char *argv[])
 
 	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
 	}
-    }
-
-  /* Set ipsize */
-  if(olsr_cnf->ip_version == AF_INET6)
-    {
-      OLSR_PRINTF(1, "Using IP version %d\n", 6);
-      olsr_cnf->ipsize = sizeof(struct in6_addr);
-      olsr_cnf->maxplen = 128;
-    }
-  else
-    {
-      OLSR_PRINTF(1, "Using IP version %d\n", 4);
-      olsr_cnf->ipsize = sizeof(struct in_addr);
-      olsr_cnf->maxplen = 32;
     }
 
   /* Initialize net */
