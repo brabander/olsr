@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.37 2007/11/05 15:32:55 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.38 2007/11/23 23:40:43 bernd67 Exp $
  */
 
 
@@ -223,7 +223,7 @@ struct olsrd_config
 
   /* Stuff set by olsrd */
   size_t                   ipsize;               /* Size of address */
-  olsr_8_t                 maxplen;              /* maximum prefix len */
+  olsr_u8_t                maxplen;              /* maximum prefix len */
   olsr_u16_t               system_tick_divider;  /* Tick resolution */
   olsr_bool                del_gws;              /* Delete InternetGWs at startup */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
