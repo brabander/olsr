@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.46 2007/11/25 21:38:13 bernd67 Exp $
+ * $Id: interfaces.h,v 1.47 2007/11/25 21:41:05 bernd67 Exp $
  */
 
 
@@ -72,8 +72,8 @@
 
 #define MAX_IF_METRIC           100
 
-
-enum olsr_if_wieght
+#if 0
+enum olsr_if_weight
   {
     WEIGHT_LOWEST = 0,
     WEIGHT_LOW,
@@ -91,6 +91,7 @@ enum olsr_if_wieght
     WEIGHT_HIGH,              /* Max                  */
     WEIGHT_HIGHEST = WEIGHT_HIGH
   };
+#endif
 
 struct if_gen_property
 {
