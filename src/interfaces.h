@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.47 2007/11/25 21:41:05 bernd67 Exp $
+ * $Id: interfaces.h,v 1.48 2007/11/25 22:02:33 bernd67 Exp $
  */
 
 
@@ -142,8 +142,16 @@ struct interface
   int	        int_flags;			/* see below */
   int           if_index;                       /* Kernels index of this interface */
   int           is_wireless;                    /* wireless interface or not*/
-  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
   char	        *int_name;			/* from kernel if structure */
+  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+#ifdef linux
+/* Struct used to store original redirect/ingress setting */
+  struct nic_state
+  {
+    char redirect; /* The original state of icmp redirect */
+    char spoof; /* The original state of the IP spoof filter */
+  } nic_state;
+#endif
 
   float         hello_etime;
   struct        vtimes valtimes;
@@ -155,15 +163,6 @@ struct interface
   struct        if_gen_property *gen_properties;/* Generic interface properties */
   
   int           ttl_index; /* index in TTL array for fish-eye */
-
-#ifdef linux
-/* Struct uesd to store original redirect/ingress setting */
-  struct nic_state
-  {
-    char redirect; /* The original state of icmp redirect */
-    char spoof; /* The original state of the IP spoof filter */
-  } nic_state;
-#endif
 
   struct	interface *int_next;
 };
