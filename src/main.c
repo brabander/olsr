@@ -36,12 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.104 2007/11/22 11:43:36 bernd67 Exp $
+ * $Id: main.c,v 1.105 2007/11/25 13:08:54 bernd67 Exp $
  */
 
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 #include "defs.h"
 #include "olsr.h"
@@ -119,6 +120,14 @@ main(int argc, char *argv[])
   WSADATA WsaData;
   int len;
 #endif
+
+  /* paranoia checks */
+  assert(sizeof(olsr_u8_t) == 1);
+  assert(sizeof(olsr_u16_t) == 2);
+  assert(sizeof(olsr_u32_t) == 4);
+  assert(sizeof(olsr_8_t) == 1);
+  assert(sizeof(olsr_16_t) == 2);
+  assert(sizeof(olsr_32_t) == 4);
 
   debug_handle = stdout;
 #ifndef WIN32
