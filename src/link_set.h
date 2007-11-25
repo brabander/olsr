@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.34 2007/11/25 21:38:13 bernd67 Exp $
+ * $Id: link_set.h,v 1.35 2007/11/25 21:40:35 bernd67 Exp $
  */
 
 
@@ -87,7 +87,7 @@ struct link_entry
   unsigned int lost_packets;
   unsigned int total_packets;
 
-  double loss_link_quality
+  double loss_link_quality;
   double loss_link_quality2;
   double loss_link_multiplier;
 
