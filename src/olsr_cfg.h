@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.38 2007/11/23 23:40:43 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.39 2007/11/25 21:38:13 bernd67 Exp $
  */
 
 
@@ -199,37 +199,37 @@ struct olsrd_config
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;
   olsr_u8_t                rttable;
-  olsr_bool                willingness_auto;
   olsr_u8_t                willingness;
+  olsr_bool                willingness_auto;
   int                      ipc_connections;
   olsr_bool                open_ipc;
   olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
-  float                    pollrate;
-  float                    nic_chgs_pollrate;
-  olsr_u8_t                tc_redundancy;
-  olsr_u8_t                mpr_coverage;
-  olsr_bool                clear_screen;
-  olsr_u8_t                lq_level;
-  olsr_u32_t               lq_wsize;
-  olsr_u8_t                lq_fish;
-  olsr_u8_t                lq_dlimit;
-  float                    lq_dinter;
   struct plugin_entry      *plugins;
   struct local_hna_entry   *hna_entries;
   struct ipc_host          *ipc_hosts;
   struct ipc_net           *ipc_nets;
   struct olsr_if           *interfaces;
+  float                    pollrate;
+  float                    nic_chgs_pollrate;
+  olsr_bool                clear_screen;
+  olsr_u8_t                tc_redundancy;
+  olsr_u8_t                mpr_coverage;
+  olsr_u8_t                lq_level;
+  olsr_u8_t                lq_fish;
+  float                    lq_dinter;
+  olsr_u32_t               lq_wsize;
+  olsr_u8_t                lq_dlimit;
 
   /* Stuff set by olsrd */
-  size_t                   ipsize;               /* Size of address */
-  olsr_u8_t                maxplen;              /* maximum prefix len */
   olsr_u16_t               system_tick_divider;  /* Tick resolution */
+  olsr_u8_t                maxplen;              /* maximum prefix len */
+  size_t                   ipsize;               /* Size of address */
   olsr_bool                del_gws;              /* Delete InternetGWs at startup */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
   float                    will_int;
   float                    max_jitter;
-  int                      exit_value; /* Global return value for process termination */
+  int                      exit_value;           /* Global return value for process termination */
   float                    max_tc_vtime;
 
   int                      ioctl_s;              /* Socket used for ioctl calls */

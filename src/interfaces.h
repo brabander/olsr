@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.45 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: interfaces.h,v 1.46 2007/11/25 21:38:13 bernd67 Exp $
  */
 
 
@@ -139,10 +139,10 @@ struct interface
   int	        int_metric;			/* metric of interface */
   int           int_mtu;                        /* MTU of interface */
   int	        int_flags;			/* see below */
-  char	        *int_name;			/* from kernel if structure */
   int           if_index;                       /* Kernels index of this interface */
   int           is_wireless;                    /* wireless interface or not*/
   olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+  char	        *int_name;			/* from kernel if structure */
 
   float         hello_etime;
   struct        vtimes valtimes;

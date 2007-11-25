@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.33 2007/11/02 20:58:06 bernd67 Exp $
+ * $Id: link_set.h,v 1.34 2007/11/25 21:38:13 bernd67 Exp $
  */
 
 
@@ -61,6 +61,7 @@ struct link_entry
   clock_t time;
   struct neighbor_entry *neighbor;
   olsr_u8_t prev_status;
+
   /*
    *Hysteresis
    */
@@ -86,7 +87,8 @@ struct link_entry
   unsigned int lost_packets;
   unsigned int total_packets;
 
-  double loss_link_quality, loss_link_quality2;
+  double loss_link_quality
+  double loss_link_quality2;
   double loss_link_multiplier;
 
   unsigned int loss_index;

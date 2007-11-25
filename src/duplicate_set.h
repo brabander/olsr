@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.h,v 1.11 2007/10/21 20:15:51 bernd67 Exp $
+ * $Id: duplicate_set.h,v 1.12 2007/11/25 21:38:13 bernd67 Exp $
  */
 
 #ifndef _OLSR_DUP_TABLE
@@ -50,9 +50,9 @@ struct dup_entry
 {
   union olsr_ip_addr     addr;      /* IP address of originator */
   olsr_u16_t             seqno;     /* Seqno of message */
+  olsr_u8_t              forwarded; /* If this message was forwarded or not */
   clock_t                timer;	    /* Holding time */
   struct dup_iface       *ifaces;   /* Interfaces this message was recieved on */
-  olsr_u8_t              forwarded; /* If this message was forwarded or not */
   struct dup_entry       *next;     /* Next entry */
   struct dup_entry       *prev;     /* Prev entry */
 };
