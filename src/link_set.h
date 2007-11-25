@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.35 2007/11/25 21:40:35 bernd67 Exp $
+ * $Id: link_set.h,v 1.36 2007/11/25 22:08:57 bernd67 Exp $
  */
 
 
@@ -70,19 +70,18 @@ struct link_entry
   clock_t L_LOST_LINK_time;
   clock_t hello_timeout; /* When we should receive a new HELLO */
   double last_htime;
-  olsr_u16_t olsr_seqno;
   olsr_bool olsr_seqno_valid;
+  olsr_u16_t olsr_seqno;
 
   /*
    * packet loss
    */
-
-  double loss_hello_int;
-  clock_t loss_timeout;
-
   olsr_u16_t loss_seqno;
   int loss_seqno_valid;
   int loss_missed_hellos;
+
+  double loss_hello_int;
+  clock_t loss_timeout;
 
   unsigned int lost_packets;
   unsigned int total_packets;
