@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.17 2007/11/18 20:01:08 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.18 2007/11/25 21:23:29 bernd67 Exp $
  */
 
 
@@ -60,7 +60,7 @@ struct ipaddr_str {
 /*
  * Macros for comparing and copying IP addresses
  */
-static INLINE int ip4cmp(const struct in_addr *a, const struct in_addr *b) { return ntohl(a->s_addr) - ntohl(b->s_addr); }
+static INLINE int ip4cmp(const struct in_addr *a, const struct in_addr *b) { return a->s_addr > b->s_addr ? +1 : a->s_addr < b->s_addr ? -1 : 0; }
 static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { return a->s_addr == b->s_addr; }
 
 static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
