@@ -36,13 +36,15 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.15 2007/11/11 23:10:24 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.16 2007/11/27 13:39:22 bernd67 Exp $
  */
 
 
 #include "kernel_routes.h"
 #include "olsr.h"
 #include "defs.h"
+#include "process_routes.h"
+#include "net_olsr.h"
 
 #include <net/if_dl.h>
 #include <ifaddrs.h>
@@ -58,7 +60,7 @@ static int add_del_route(const struct rt_entry *rt, int add)
   struct sockaddr_dl *sdl;
   struct ifaddrs *addrs;
   struct ifaddrs *awalker;
-  struct rt_nexthop *nexthop;
+  const struct rt_nexthop *nexthop;
   union olsr_ip_addr mask;
   int step, step2;
   int len;
@@ -101,7 +103,7 @@ static int add_del_route(const struct rt_entry *rt, int add)
 
   walker = buff + sizeof (struct rt_msghdr);
 
-  sin.sin_addr.s_addr = rt->rt_dst.prefix.v4;
+  sin.sin_addr = rt->rt_dst.prefix.v4;
 
   memcpy(walker, &sin, sizeof (sin));
   walker += step;
@@ -149,7 +151,7 @@ static int add_del_route(const struct rt_entry *rt, int add)
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
   }
-  sin.sin_addr.s_addr = mask.v4;
+  sin.sin_addr = mask.v4;
 
   memcpy(walker, &sin, sizeof (sin));
   walker += step;
@@ -181,7 +183,7 @@ static int add_del_route6(const struct rt_entry *rt, int add)
   unsigned char *walker;
   struct sockaddr_in6 sin6;
   struct sockaddr_dl sdl;
-  struct rt_nexthop *nexthop;
+  const struct rt_nexthop *nexthop;
   int step, step_dl;
   int len;
 
