@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.16 2007/11/27 13:39:22 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.17 2007/11/28 10:09:03 bernd67 Exp $
  */
 
 
@@ -111,7 +111,7 @@ static int add_del_route(const struct rt_entry *rt, int add)
   nexthop = olsr_get_nh(rt);
   if ((flags & RTF_GATEWAY) != 0)
   {
-    sin.sin_addr.s_addr = nexthop->gateway.v4;
+    sin.sin_addr = nexthop->gateway.v4;
 
     memcpy(walker, &sin, sizeof (sin));
     walker += step;
