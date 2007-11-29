@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.41 2007/11/29 18:10:11 bernd67 Exp $
+ * $Id: build_msg.c,v 1.42 2007/11/29 22:59:50 bernd67 Exp $
  */
 
 #include "build_msg.h"
@@ -60,6 +60,8 @@
 #define OLSR_HNA_IPV4_HDRSIZE      OLSR_IPV4_HDRSIZE
 #define OLSR_HNA_IPV6_HDRSIZE      OLSR_IPV6_HDRSIZE
 
+static void
+check_buffspace(int msgsize, int buffsize, const char *type);
 
 /* All these functions share this buffer */
 
@@ -241,8 +243,8 @@ check_buffspace(int msgsize, int buffsize, const char *type)
 {
   if(msgsize > buffsize)
     {
-      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
-      olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
+      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%u)!\n", type, msgsize, buffsize);
+      olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%u)!\n", type, msgsize, buffsize);
       olsr_exit(__func__, EXIT_FAILURE);
     }
 }

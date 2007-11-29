@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.39 2007/11/29 18:10:17 bernd67 Exp $
+ * $Id: tc_set.c,v 1.40 2007/11/29 22:59:51 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -753,7 +753,7 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
    * Play some efficiency games here, like checking first
    * if the edge exists in order to avoid address validation.
    */
-  limit = (void *)msg + size;
+  limit = (unsigned char *)msg + size;
   while (curr < limit) {
     if (olsr_tc_update_edge(tc, vtime_s, ansn, type, &curr)) {
       changes_topology = OLSR_TRUE;

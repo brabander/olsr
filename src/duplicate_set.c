@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.21 2007/11/29 18:10:11 bernd67 Exp $
+ * $Id: duplicate_set.c,v 1.22 2007/11/29 22:59:50 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -63,7 +63,7 @@ olsr_init_duplicate_table(void)
   /* Since the holdingtime is rather large for duplicate
    * entries the timeoutfunction is only ran every 2 seconds
    */
-  olsr_register_scheduler_event_dijkstra(&olsr_time_out_duplicate_table, NULL, 2, 0, NULL);
+  olsr_register_scheduler_event_dijkstra(&olsr_time_out_duplicate_table, NULL, 2.0, 0.0, NULL);
   
   for(i = 0; i < HASHSIZE; i++)
     {

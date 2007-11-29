@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.37 2007/11/29 18:10:17 bernd67 Exp $
+ * $Id: routing_table.c,v 1.38 2007/11/29 22:59:51 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -122,12 +122,11 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
 int
 avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 {       
-  int res;
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  res = memcmp(&pfx1->prefix.v6, &pfx2->prefix.v6, 16);
+  int res = ip6cmp(&pfx1->prefix.v6, &pfx2->prefix.v6);
   if (res != 0) {
     return res;
   } 
@@ -352,7 +351,7 @@ olsr_rt_best(struct rt_entry *rt)
   rt->rt_best = node->data;
 
   /* walk all remaining originator entries */
-  while ((node = avl_walk_next(node))) {
+  while ((node = avl_walk_next(node)) != NULL) {
     struct rt_path *rtp = node->data;
 
     if (olsr_cmp_rtp(rtp, rt->rt_best)) {

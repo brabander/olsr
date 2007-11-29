@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.34 2007/11/29 18:10:13 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.35 2007/11/29 22:59:50 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -579,7 +579,7 @@ deserialize_lq_hello(struct hello_message *hello,
     pkt_get_u8(&curr, &hello->willingness);
 
     hello->neighbors = NULL;
-    limit = ser + size;
+    limit = ((const unsigned char *)ser) + size;
     while (curr < limit) {
         const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
         const unsigned char *limit2 = curr + ntohs(info_head->size);
