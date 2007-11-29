@@ -36,9 +36,8 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.27 2007/11/29 18:10:17 bernd67 Exp $
+ * $Id: rebuild_packet.c,v 1.28 2007/11/29 23:03:07 bernd67 Exp $
  */
-
 
 #include "rebuild_packet.h"
 #include "ipcalc.h"
@@ -47,118 +46,6 @@
 #include "mid_set.h"
 #include "mantissa.h"
 #include "net_olsr.h"
-
-/**
- *Process/rebuild HNA message. Converts the OLSR
- *packet to the internal hna_message format.
- *@param hmsg the hna_message struct in wich infomation
- *is to be put.
- *@param m the entire OLSR message revieved.
- *@return negative on error
- */
-
-void
-hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
-{
-  struct hna_net_addr *hna_pairs, *tmp_pairs;
-  int no_pairs, i;
-
-  /*Check if everyting is ok*/
-  if ((!m) || (m->v4.olsr_msgtype != HNA_MESSAGE))
-    return;
-  
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IPv4 */
-      const struct hnapair *haddr = m->v4.message.hna.hna_net;
-
-      /*
-       * How many HNA pairs?
-       * nextmsg contains size of
-       * the addresses + 12 bytes(nextmessage, from address and the header)
-       */
-      no_pairs = (ntohs(m->v4.olsr_msgsize) - 12) / 8;
-      
-      hmsg->originator.v4.s_addr = m->v4.originator;
-
-      hmsg->packet_seq_number = ntohs(m->v4.seqno);
-      hmsg->hop_count =  m->v4.hopcnt;
-
-      //printf("HNA from %s\n\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&hmsg->originator));
-
-      /* Get vtime */
-      hmsg->vtime = me_to_double(m->v4.olsr_vtime);
-
-      tmp_pairs = NULL;
-      hna_pairs = NULL;
-
-      for(i = 0; i < no_pairs; i++) {	  
-	  hna_pairs = olsr_malloc(sizeof(struct hna_net_addr), "HNA chgestruct");
-	  
-          hna_pairs->net.v4.s_addr = haddr->addr;
-          hna_pairs->prefixlen = olsr_netmask4_to_prefix(&haddr->netmask);
-
-	  hna_pairs->next = tmp_pairs;	  
-	  tmp_pairs = hna_pairs;
-	  haddr++;
-	}
-    }
-  else
-    {
-      /* IPv6 */
-      const struct hnapair6 *haddr6 = m->v6.message.hna.hna_net;
-
-      /*
-       * How many HNA pairs?
-       * nextmsg contains size of
-       * the addresses + 12 bytes(nextmessage, from address and the header)
-       */
-      no_pairs = (ntohs(m->v6.olsr_msgsize) - 24) / 32; /* NB 32 not 8 */
-      
-      hmsg->originator.v6 = m->v6.originator;
-      hmsg->packet_seq_number = ntohs(m->v6.seqno);
-      hmsg->hop_count =  m->v6.hopcnt;
-      
-      /* Get vtime */
-      hmsg->vtime = me_to_double(m->v6.olsr_vtime);
-      
-      tmp_pairs = NULL;
-      hna_pairs = NULL;
-      
-      for(i = 0; i < no_pairs; i++)
-	{
-	  
-	  hna_pairs = olsr_malloc(sizeof(struct hna_net_addr), "HNA chgestruct 2");	  
-	  
-	  hna_pairs->net.v6 = haddr6->addr;
-          hna_pairs->prefixlen = olsr_netmask6_to_prefix(&haddr6->netmask);
-
-	  hna_pairs->next = tmp_pairs;
-	  
-	  tmp_pairs = hna_pairs;
-	  haddr6++;	  
-	}
-    }      
-
-  /* 
-     tmp_pairs = hna_pairs;
-	 
-     while(tmp_pairs)
-     {
-     printf("\t net: %s ", ip_to_string(&tmp_pairs->net));
-     printf("\t mask: %s\n", ip_to_string(&tmp_pairs->netmask));
-     tmp_pairs = tmp_pairs->next;
-     }
-     printf("\n");
-  */
-
-
-
-  hmsg->hna_net = hna_pairs;
- 
-}
-
 
 /**
  *Process/rebuild MID message. Converts the OLSR

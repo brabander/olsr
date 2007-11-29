@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.28 2007/11/29 18:10:16 bernd67 Exp $
+ * $Id: packet.c,v 1.29 2007/11/29 23:03:07 bernd67 Exp $
  */
 
 
@@ -437,32 +437,6 @@ olsr_build_tc_packet(struct tc_message *message)
 
   return 0;
 }
-
-
-/**
- *Free the memory allocated for a HNA packet.
- *
- *@param message the pointer to the packet to erase
- *
- *@return nada
- */
-
-void
-olsr_free_hna_packet(struct hna_message *message)
-{
-  struct hna_net_addr  *hna_tmp, *hna_tmp2;
-
-  hna_tmp = message->hna_net;
-
-  while(hna_tmp)
-    {
-      hna_tmp2 = hna_tmp;
-      hna_tmp = hna_tmp->next;
-      free(hna_tmp2);
-    }
-}
-
-
 
 /**
  *Free the memory allocated for a MID packet.

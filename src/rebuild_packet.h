@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.h,v 1.10 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: rebuild_packet.h,v 1.11 2007/11/29 23:03:07 bernd67 Exp $
  */
 
 
@@ -47,9 +47,6 @@
 
 #include "olsr_protocol.h"
 #include "packet.h"
-
-void
-hna_chgestruct(struct hna_message *, const union olsr_message *);
 
 void
 mid_chgestruct(struct mid_message *, const union olsr_message *);

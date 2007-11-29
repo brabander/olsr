@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.19 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: packet.h,v 1.20 2007/11/29 23:03:07 bernd67 Exp $
  */
 
 #ifndef _OLSR_PACKET
@@ -90,33 +90,6 @@ struct tc_message
 };
 
 /*
- *HNA message format:
- *NET
- *NETMASK
- *NET
- *NETMASK
- *......
- */
-
-struct hna_net_addr
-{
-  union olsr_ip_addr  net;
-  olsr_u8_t           prefixlen;
-  struct hna_net_addr *next;
-};
-
-
-struct hna_message
-{
-  double               vtime;
-  union olsr_ip_addr   originator;
-  olsr_u16_t           packet_seq_number;
-  olsr_u8_t            hop_count;
-  struct hna_net_addr *hna_net;
-};
-
-
-/*
  *MID messages - format:
  *
  *ADDR
@@ -165,8 +138,5 @@ olsr_build_tc_packet(struct tc_message *);
 
 void
 olsr_free_mid_packet(struct mid_message *);
-
-void
-olsr_free_hna_packet(struct hna_message *);
 
 #endif
