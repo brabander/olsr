@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2003 Andreas TÃ¸nnesen (andreto@ifi.uio.no)
  *
  * This file is part of the UniK OLSR daemon.
  *
