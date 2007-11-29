@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.33 2007/11/16 19:52:09 bernd67 Exp $
+ * $Id: olsrd_dot_draw.c,v 1.34 2007/11/29 00:34:22 bernd67 Exp $
  */
 
 /*
@@ -331,7 +331,7 @@ pcf_event(int changes_neighborhood,
       } else {
         hna_msk.v6 = hna->net.prefix_len;
       }
-      ipc_print_net(&olsr_cnf->interfaces->interf->ip_addr,
+      ipc_print_net(&olsr_cnf->main_addr,
                     &hna->net.prefix,
                     &hna_msk);
     }
