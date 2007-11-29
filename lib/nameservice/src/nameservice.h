@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.16 2007/11/16 19:12:55 bernd67 Exp $ */
+/* $Id: nameservice.h,v 1.17 2007/11/29 00:26:16 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd
@@ -47,6 +47,8 @@
 
 #include "olsrd_plugin.h"
 #include "nameservice_msg.h"
+#include "hashing.h"
+#include "mapwrite.h"
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
 #define PLUGIN_VERSION	"0.3"
@@ -103,6 +105,9 @@ struct db_entry
 	struct db_entry		*next;		/* linked list */
 };
 
+extern struct name_entry *my_names;
+extern struct db_entry* latlon_list[HASHSIZE];
+extern float my_lat, my_lon;
 
 /* Timeout function to register with the sceduler */
 void
