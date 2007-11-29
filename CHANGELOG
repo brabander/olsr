@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.120 2007/11/29 17:14:41 bernd67 Exp $
+$Id: CHANGELOG,v 1.121 2007/11/29 22:40:11 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -150,6 +150,8 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - killed netmasks from the IPv4 part of the code and use the prefixlen there
   (similar to thte IPv6 part). Manymore details on
   http://lists.olsr.org/pipermail/olsr-dev/2007-November/001464.html
+- removed the superflous "open_ipc" field from the "struct olsrd_config" as
+  it contains only the equivalent of "olsr_cnf->debug_level > 1".
 
 0.5.4 ---------------------------------------------------------------------
 
