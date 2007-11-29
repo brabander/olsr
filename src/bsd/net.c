@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.41 2007/11/29 17:09:16 bernd67 Exp $
+ * $Id: net.c,v 1.42 2007/11/29 18:20:45 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -97,7 +97,7 @@ static int ignore_redir;
 static int send_redir;
 static int gateway;
 
-static int set_sysctl_int(char *name, int new)
+static int set_sysctl_int(const char *name, int new)
 {
   int old;
 #if __MacOSX__ || __OpenBSD__
@@ -154,16 +154,13 @@ static int set_sysctl_int(char *name, int new)
 
 int enable_ip_forwarding(int version)
 {
-  const char *name = version == AF_INET
-    ? "net.inet.ip.forwarding"
-      : "net.inet6.ip6.forwarding";
+  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   gateway = set_sysctl_int(name, 1);
-  if (gateway < 0)
-    {
-      fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually. Continuing in 3 seconds...\n");
-      sleep(3);
-    }
+  if (gateway < 0) {
+    fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually. Continuing in 3 seconds...\n");
+    sleep(3);
+  }
 
   return 1;
 }
@@ -225,7 +222,7 @@ disable_redirects_global(int version)
   return 1;
 }
 
-int disable_redirects(const char *if_name, struct interface *iface, int version)
+int disable_redirects(const char *if_name __attribute__((unused)), struct interface *iface __attribute__((unused)), int version __attribute__((unused)))
 {
   // this function gets called for each interface olsrd uses; however,
   // FreeBSD can only globally control ICMP redirects, and not on a
@@ -234,55 +231,32 @@ int disable_redirects(const char *if_name, struct interface *iface, int version)
   return 1;
 }
 
-int deactivate_spoof(const char *if_name, struct interface *iface, int version)
+int deactivate_spoof(const char *if_name __attribute__((unused)), struct interface *iface __attribute__((unused)), int version __attribute__((unused)))
 {
   return 1;
 }
 
 int restore_settings(int version)
 {
-  const char *name;
-
   // reset IP forwarding
-
-  if (version == AF_INET)
-    name = "net.inet.ip.forwarding";
-  else
-    name = "net.inet6.ip6.forwarding";
+  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   set_sysctl_int(name, gateway);
 
   // reset incoming ICMP redirects
 
 #ifdef __OpenBSD__
-  if (version == AF_INET)
-    name = "net.inet.icmp.rediraccept";
-  else
-    name = "net.inet6.icmp6.rediraccept";
-
+  name = version == AF_INET ? "net.inet.icmp.rediraccept"   : "net.inet6.icmp6.rediraccept";
 #elif defined __FreeBSD__ || defined __MacOSX__
-  if (version == AF_INET)
-    name = "net.inet.icmp.drop_redirect";
-  else
-    name = "net.inet6.icmp6.rediraccept";
+  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
 #else
-  if (version == AF_INET)
-    name = "net.inet.icmp.drop_redirect";
-  else
-    name = "net.inet6.icmp6.drop_redirect";
+  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
 #endif
-
   set_sysctl_int(name, ignore_redir);
 
   // reset outgoing ICMP redirects
-
-  if (version == AF_INET)
-    name = "net.inet.ip.redirect";
-  else
-    name = "net.inet6.ip6.redirect";
-
+  name = version == AF_INET ? "net.inet.ip.redirect" : "net.inet6.ip6.redirect";
   set_sysctl_int(name, send_redir);
-
   return 1;
 }
 
@@ -470,13 +444,13 @@ int
 join_mcast(struct interface *ifs, int sock)
 {
   /* See netinet6/in6.h */
-
+  struct ipaddr_str addrstr;
   struct ipv6_mreq mcastreq;
 
-  mcastreq.ipv6mr_multiaddr=ifs->int6_multaddr.sin6_addr;
+  mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
@@ -777,11 +751,8 @@ olsr_recvfrom(int  s,
 
   sin6 = (struct sockaddr_in6 *)from;
   OLSR_PRINTF (4, "%d bytes from %s, socket associated %s really received on %s\n",
-	       count,
-	       (olsr_cnf->ip_version == AF_INET6) ?
-		 inet_ntop(AF_INET6, (char *)&sin6->sin6_addr, addrstr,
-				     INET6_ADDRSTRLEN):
-	         inet_ntoa (sin->sin_addr),
+	       count,	       
+               inet_ntop(olsr_cnf->ip_version, olsr_cnf->ip_version == AF_INET6 ? (char *)&sin6->sin6_addr : (char *)&sin->sin_addr, addrstr, sizeof(addrstr)):
 	       ifc->int_name,
 	       iname);
 
