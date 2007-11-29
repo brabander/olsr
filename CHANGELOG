@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.118 2007/11/29 00:07:36 bernd67 Exp $
+$Id: CHANGELOG,v 1.119 2007/11/29 00:50:38 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -14,6 +14,14 @@ PATCH by John Hay <jhay@meraka.org.za>:
 
 PATCH by Patrick McCarty <mccartyp@gmail.com>:
 - fixed compile errors in the BSD port
+
+PATCHES by Sven-Ola Tuecke <mail2news@commando.de>:
+- 102-olsrd-cvs-fixes.patch: use different buffers in the same printf()
+- 103-olsrd-rt-exportroute-cleanup.patch: avoid a malloc()ed list of functions
+- 132-save-the-fish.patch: really save the fish and avoid to forward invalid
+  messages from older olsrd versions
+- 138-olsrd-fixdotdraw.patch: fix the dot_draw plugin
+(all to be found on http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/)
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Jens Nachtigall <nachtigall@web.de> suggested (and reminded) to use
@@ -138,6 +146,9 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   use ip{4,}cmp in lq_avl.[ch] to resue the code. inline_avl_comp_ipv4
   is superflous now (and replaced by ip4cmp) and use the global MIN and MAX
   macro instead of AVLMIN and AVLMAX
+- killed netmasks from the IPv4 part of the code and use the prefixlen there
+  (similar to thte IPv6 part). Manymore details on
+  http://lists.olsr.org/pipermail/olsr-dev/2007-November/001464.html
 
 0.5.4 ---------------------------------------------------------------------
 
