@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.49 2007/11/29 23:03:07 bernd67 Exp $
+ * $Id: process_package.c,v 1.50 2007/11/29 23:40:08 bernd67 Exp $
  */
 
 #include "process_package.h"
@@ -707,7 +707,7 @@ olsr_process_received_hna(union olsr_message *m,
   pkt_get_u16(&curr, &olsr_msgsize);
   hnasize = olsr_msgsize - (olsr_cnf->ip_version == AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message));
   if (hnasize < 0) {
-    OLSR_PRINTF(0, "message size %d too small (at least %d)!\n", olsr_msgsize, (olsr_cnf->ip_version == AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message)));
+    OLSR_PRINTF(0, "message size %d too small (at least %lu)!\n", olsr_msgsize, (unsigned long)(olsr_cnf->ip_version == AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message)));
     return;
   }
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
