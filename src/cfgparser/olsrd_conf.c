@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.63 2007/11/29 00:49:40 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.64 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 
@@ -436,7 +436,6 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->rttable = 254;
     cnf->willingness_auto = DEF_WILL_AUTO;
     cnf->ipc_connections = DEF_IPC_CONNECTIONS;
-    cnf->open_ipc = cnf->ipc_connections ? OLSR_TRUE : OLSR_FALSE;
 
     cnf->use_hysteresis = DEF_USE_HYST;
     cnf->hysteresis_param.scaling = HYST_SCALING;

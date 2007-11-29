@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.25 2007/11/11 23:10:22 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.26 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 #include <stdio.h>
@@ -116,7 +116,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   /*
    * Send IPC route update message
    */
-  if(olsr_cnf->open_ipc) {
+  if (olsr_cnf->ipc_connections > 0) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
         rt->rt_best->rtp_metric.hops, 1,
         if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -185,7 +185,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   /*
    * Send IPC route update message
    */
-  if(olsr_cnf->open_ipc) {
+  if (olsr_cnf->ipc_connections > 0) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0 , 0, NULL);
   }
 

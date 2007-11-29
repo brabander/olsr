@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.42 2007/11/29 18:10:12 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.43 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 /*
@@ -270,7 +270,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   struct ipcmsg packet;
   char *tmp;
 
-  if (!olsr_cnf->open_ipc) {
+  if (olsr_cnf->ipc_connections <= 0) {
     return -1;
   }
 

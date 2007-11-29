@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.106 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: main.c,v 1.107 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -265,9 +265,9 @@ main(int argc, char *argv[])
   /*
    * Print configuration 
    */
-  if(olsr_cnf->debug_level > 1)
+  if(olsr_cnf->debug_level > 1) {
     olsrd_print_cnf(olsr_cnf);
-
+  }
 #ifndef WIN32
   /* Disable redirects globally */
   disable_redirects_global(olsr_cnf->ip_version);
@@ -276,28 +276,27 @@ main(int argc, char *argv[])
   /*
    *socket for icotl calls
    */
-  if ((olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0)) < 0) 
-
-    {
-      olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
-      olsr_exit(__func__, 0);
-    }
+  olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
+  if (olsr_cnf->ioctl_s < 0) {
+    olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
+    olsr_exit(__func__, 0);
+  }
 
 #if LINUX_POLICY_ROUTING
-  if ((olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)) < 0) 
-    {
-      olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
-      olsr_exit(__func__, 0);
-    }
+  olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+  if (olsr_cnf->rtnl_s < 0) {
+    olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
+    olsr_exit(__func__, 0);
+  }
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
 #endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-  if ((olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0)) < 0)
-    {
-      olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
-      olsr_exit(__func__, 0);
-    }
+  olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
+  if (olsr_cnf->rts < 0) {
+    olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
+    olsr_exit(__func__, 0);
+  }
 #endif
 
   /* Init empty TC timer */
@@ -372,9 +371,9 @@ main(int argc, char *argv[])
 
   /* Initialize the IPC socket */
 
-  if(olsr_cnf->open_ipc)
+  if (olsr_cnf->ipc_connections > 0) {
       ipc_init();
-
+  }
   /* Initialisation of different tables to be used.*/
   olsr_init_tables();
 
@@ -485,8 +484,9 @@ olsr_shutdown(int signal __attribute__((unused)))
   OLSR_PRINTF(1, "Closing sockets...\n");
 
   /* front-end IPC socket */
-  if(olsr_cnf->open_ipc)
+  if (olsr_cnf->ipc_connections > 0) {
     shutdown_ipc();
+  }
 
   /* OLSR sockets */
   for (ifn = ifnet; ifn; ifn = ifn->int_next) 
@@ -796,7 +796,6 @@ olsr_process_arguments(int argc, char *argv[],
       if (strcmp(*argv, "-ipc") == 0) 
 	{
 	  cnf->ipc_connections = 1;
-	  cnf->open_ipc = OLSR_TRUE;
 	  continue;
 	}
 

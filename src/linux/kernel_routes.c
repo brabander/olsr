@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.32 2007/11/29 18:10:17 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.33 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -151,7 +151,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 				h = NLMSG_NEXT(h, ret);
 			}
 		}
-		if (0 <= ret && olsr_cnf->open_ipc)
+		if (0 <= ret && olsr_cnf->ipc_connections > 0)
 		{
 			ipc_route_send_rtentry(
 				&rt->rt_dst.prefix,

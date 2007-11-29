@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.40 2007/11/29 00:49:40 bernd67 Exp $
+ * $Id: oparse.y,v 1.41 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 
@@ -323,7 +323,6 @@ plstmt:     plparam
 imaxipc: TOK_MAXIPC TOK_INTEGER
 {
   olsr_cnf->ipc_connections = $2->integer;
-  olsr_cnf->open_ipc = olsr_cnf->ipc_connections ? OLSR_TRUE : OLSR_FALSE;
   free($2);
 }
 ;

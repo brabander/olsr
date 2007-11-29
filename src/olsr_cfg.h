@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.41 2007/11/29 15:47:26 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.42 2007/11/29 22:21:26 bernd67 Exp $
  */
 
 
@@ -192,7 +192,6 @@ struct olsrd_config
   olsr_u8_t                willingness;
   olsr_bool                willingness_auto;
   int                      ipc_connections;
-  olsr_bool                open_ipc;
   olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
   struct plugin_entry      *plugins;
@@ -224,7 +223,9 @@ struct olsrd_config
   int                      ioctl_s;              /* Socket used for ioctl calls */
 #if LINUX_POLICY_ROUTING
   int                      rtnl_s;               /* Socket used for rtnetlink messages */
-#else
+#endif
+
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   int                      rts;                  /* Socket used for route changes on BSDs */
 #endif
 };
