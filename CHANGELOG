@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.117 2007/11/18 20:39:09 bernd67 Exp $
+$Id: CHANGELOG,v 1.118 2007/11/29 00:07:36 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -11,6 +11,9 @@ BUGFIXES and PATCHES by Hannes Gredler <hannes@gredler.at>
 
 PATCH by John Hay <jhay@meraka.org.za>:
 - also printout our own HNAs in the dotdraw plugin.
+
+PATCH by Patrick McCarty <mccartyp@gmail.com>:
+- fixed compile errors in the BSD port
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Jens Nachtigall <nachtigall@web.de> suggested (and reminded) to use

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.39 2007/11/04 18:57:17 kattemat Exp $
+ * $Id: net.c,v 1.40 2007/11/29 00:07:37 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -154,16 +154,11 @@ static int set_sysctl_int(char *name, int new)
 
 int enable_ip_forwarding(int version)
 {
-  char *name;
-
-  if (olsr_cnf->ip_version == AF_INET)
-    name = "net.inet.ip.forwarding";
-
-  else
-    name = "net.inet6.ip6.forwarding";
+  const char *name = version == AF_INET
+    ? "net.inet.ip.forwarding"
+      : "net.inet6.ip6.forwarding";
 
   gateway = set_sysctl_int(name, 1);
-
   if (gateway < 0)
     {
       fprintf(stderr, "Cannot enable IP forwarding. Please enable IP forwarding manually. Continuing in 3 seconds...\n");
@@ -176,20 +171,19 @@ int enable_ip_forwarding(int version)
 int
 disable_redirects_global(int version)
 {
-  char *name;
+  const char *name;
 
   // do not accept ICMP redirects
 
 #ifdef __OpenBSD__
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.icmp.rediraccept";
-
   else
     name = "net.inet6.icmp6.rediraccept";
 
   ignore_redir = set_sysctl_int(name, 0);
 #elif defined __FreeBSD__ || defined __MacOSX__
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
   {
     name = "net.inet.icmp.drop_redirect";
     ignore_redir = set_sysctl_int(name, 1);
@@ -200,9 +194,8 @@ disable_redirects_global(int version)
     ignore_redir = set_sysctl_int(name, 0);
   }
 #else
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
-
   else
     name = "net.inet6.icmp6.drop_redirect";
 
@@ -217,14 +210,12 @@ disable_redirects_global(int version)
 
   // do not send ICMP redirects
 
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.ip.redirect";
-
   else
     name = "net.inet6.ip6.redirect";
 
   send_redir = set_sysctl_int(name, 0);
-
   if (send_redir < 0)
     {
       fprintf(stderr, "Cannot disable outgoing ICMP redirect messages. Please disable them manually. Continuing in 3 seconds...\n");
@@ -250,13 +241,12 @@ int deactivate_spoof(const char *if_name, struct interface *iface, int version)
 
 int restore_settings(int version)
 {
-  char *name;
+  const char *name;
 
   // reset IP forwarding
 
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.ip.forwarding";
-
   else
     name = "net.inet6.ip6.forwarding";
 
@@ -265,21 +255,19 @@ int restore_settings(int version)
   // reset incoming ICMP redirects
 
 #ifdef __OpenBSD__
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.icmp.rediraccept";
   else
     name = "net.inet6.icmp6.rediraccept";
 
 #elif defined __FreeBSD__ || defined __MacOSX__
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
-
   else
     name = "net.inet6.icmp6.rediraccept";
 #else
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
-
   else
     name = "net.inet6.icmp6.drop_redirect";
 #endif
@@ -288,9 +276,8 @@ int restore_settings(int version)
 
   // reset outgoing ICMP redirects
 
-  if (olsr_cnf->ip_version == AF_INET)
+  if (version == AF_INET)
     name = "net.inet.ip.redirect";
-
   else
     name = "net.inet6.ip6.redirect";
 
@@ -489,7 +476,7 @@ join_mcast(struct interface *ifs, int sock)
   COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...",	ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
+  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
