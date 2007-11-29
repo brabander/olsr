@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.36 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: parser.c,v 1.37 2007/11/29 00:24:00 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -256,6 +256,16 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	}
 
 
+#if 0
+      /*
+       * Sven-Ola: This code leads to flooding our meshes with invalid /
+       * overdue messages if lq_fish is enabled (which is true since 2005)
+       * because there was no "do not forward"-check in olsr.c. If a message
+       * (yes: ttl=0 is invalid) is received, we should say: Welcome message,
+       * let us evaluate! But: if TTL < 2 or TTL + hopcount is higher than
+       * plausible, we should not forward. See olsr.c:olsr_forward_message()
+       */
+       
       /* Treat TTL hopcnt */
       if(olsr_cnf->ip_version == AF_INET)
 	{
@@ -285,6 +295,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	      continue;
 	    }
 	}
+#endif
 
       /*RFC 3626 section 3.4:
        *  2    If the time to live of the message is less than or equal to

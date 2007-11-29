@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.31 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.32 2007/11/29 00:24:00 bernd67 Exp $
  */
 
 #include "olsr_protocol.h"
@@ -149,7 +149,7 @@ static void
 create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 {
   int i;
-  static int ttl_list[] = { 1, 2, 1, 4, 1, 2, 1, 8, 1, 2, 1, 4, 1, 2, 1, MAX_TTL-1, 0};
+  static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL};
 
   // remember that we have generated an LQ TC message; this is
   // checked in net_output()
@@ -171,9 +171,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     if (outif->ttl_index >= (int)(sizeof(ttl_list) / sizeof(ttl_list[0])))
       outif->ttl_index = 0;
     
-    if (ttl_list[outif->ttl_index] == 0)
-      outif->ttl_index = 0;
-  
     lq_tc->comm.ttl = ttl_list[outif->ttl_index++];
 
     OLSR_PRINTF(3, "Creating LQ TC with TTL %d.\n", lq_tc->comm.ttl);

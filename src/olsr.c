@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.63 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: olsr.c,v 1.64 2007/11/29 00:24:00 bernd67 Exp $
  */
 
 /**
@@ -297,11 +297,21 @@ olsr_forward_message(union olsr_message *m,
   struct neighbor_entry *neighbor;
   int msgsize;
   struct interface *ifn;
-  const int ttl = olsr_cnf->ip_version == AF_INET ? m->v4.ttl : m->v6.ttl;
 
-  if (ttl < 2) {
-    return 0;
+  /*
+   * Sven-Ola: We should not flood the mesh with overdue messages. Because
+   * of a bug in parser.c:parse_packet, we have a lot of messages because
+   * all older olsrd's have lq_fish enabled.
+   */
+  if (AF_INET == olsr_cnf->ip_version)
+  {
+    if (2 > m->v4.ttl || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl) return 0;
   }
+  else
+  {
+    if (2 > m->v6.ttl || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl) return 0;
+  }
+
   if(!olsr_check_dup_table_fwd(originator, seqno, &in_if->ip_addr))
     {
 #ifdef DEBUG
