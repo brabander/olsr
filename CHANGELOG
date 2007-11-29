@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.119 2007/11/29 00:50:38 bernd67 Exp $
+$Id: CHANGELOG,v 1.120 2007/11/29 17:14:41 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -20,6 +20,7 @@ PATCHES by Sven-Ola Tuecke <mail2news@commando.de>:
 - 103-olsrd-rt-exportroute-cleanup.patch: avoid a malloc()ed list of functions
 - 132-save-the-fish.patch: really save the fish and avoid to forward invalid
   messages from older olsrd versions
+- 135-georss-map-for-nameservice.patch: fixes and extensions for the namesaervice plugin
 - 138-olsrd-fixdotdraw.patch: fix the dot_draw plugin
 (all to be found on http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/)
 
