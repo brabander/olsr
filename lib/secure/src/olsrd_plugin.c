@@ -3,7 +3,7 @@
  * Secure OLSR plugin
  * http://www.olsr.org
  *
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or 
@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_plugin.c,v 1.15 2007/09/17 21:57:05 bernd67 Exp $
+ * $Id: olsrd_plugin.c,v 1.16 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 
@@ -46,7 +46,7 @@
 
 #define PLUGIN_NAME    "OLSRD signature plugin"
 #define PLUGIN_VERSION "0.5"
-#define PLUGIN_AUTHOR   "Andreas Tønnesen"
+#define PLUGIN_AUTHOR   "Andreas TÃ¸nnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 

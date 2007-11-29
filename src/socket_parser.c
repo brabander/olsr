@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket_parser.c,v 1.28 2007/08/01 16:18:30 bernd67 Exp $
+ * $Id: socket_parser.c,v 1.29 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 #include <unistd.h>

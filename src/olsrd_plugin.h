@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_plugin.h,v 1.6 2007/09/17 21:57:06 bernd67 Exp $ */
+/* $Id: olsrd_plugin.h,v 1.7 2007/11/29 18:09:11 bernd67 Exp $ */
 
 /*
  * Example plugin for olsrd.org OLSR daemon

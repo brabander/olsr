@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: nameservice_msg.h,v 1.8 2007/07/02 10:59:12 bernd67 Exp $ */
+/* $Id: nameservice_msg.h,v 1.9 2007/11/29 18:09:10 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd

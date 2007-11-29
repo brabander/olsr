@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_copy.h,v 1.5 2005/05/29 12:47:42 br1 Exp $ */
+/* $Id: olsrd_copy.h,v 1.6 2007/11/29 18:09:10 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd

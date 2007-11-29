@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007, Sven-Ola Tuecke <sven-ola-aet-gmx.de>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -29,7 +29,7 @@
  *
  */
 
-/* $Id: olsrd_arprefresh.h,v 1.1 2007/08/19 20:37:41 bernd67 Exp $ */
+/* $Id: olsrd_arprefresh.h,v 1.2 2007/11/29 18:09:10 bernd67 Exp $ */
 
 #ifndef _OLSRD_ARPREFRESH
 #define _OLSRD_ARPREFRESH

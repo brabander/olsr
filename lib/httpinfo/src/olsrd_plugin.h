@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.h,v 1.23 2007/07/15 19:29:38 bernd67 Exp $
+ * $Id: olsrd_plugin.h,v 1.24 2007/11/29 18:09:10 bernd67 Exp $
  */
 
 /*
@@ -68,7 +68,7 @@
 
 #define PLUGIN_NAME    "Httpinfo olsrd plugin"
 #define PLUGIN_VERSION "0.1"
-#define PLUGIN_AUTHOR   "Andreas Tønnesen"
+#define PLUGIN_AUTHOR   "Andreas TÃ¸nnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
