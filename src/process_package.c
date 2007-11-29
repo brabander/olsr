@@ -36,12 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.46 2007/11/18 22:28:35 bernd67 Exp $
+ * $Id: process_package.c,v 1.47 2007/11/29 00:49:39 bernd67 Exp $
  */
 
-
-#include "defs.h"
 #include "process_package.h"
+#include "ipcalc.h"
+#include "defs.h"
 #include "lq_packet.h"
 #include "hysteresis.h"
 #include "two_hop_neighbor_table.h"
@@ -53,8 +53,8 @@
 #include "duplicate_set.h"
 #include "rebuild_packet.h"
 #include "scheduler.h"
-#include "local_hna_set.h"
 #include "net_olsr.h"
+
 
 static void process_message_neighbors(struct neighbor_entry *, const struct hello_message *);
 
@@ -708,9 +708,8 @@ olsr_process_received_hna(union olsr_message *m,
 
     while (hna_tmp) {
       /* Don't add an HNA entry that we are advertising ourselves. */
-      if (!find_local_hna4_entry(&hna_tmp->net, hna_tmp->netmask.v4) &&
-          !find_local_hna6_entry(&hna_tmp->net, hna_tmp->netmask.v6)) {
-        olsr_update_hna_entry(&message.originator, &hna_tmp->net, &hna_tmp->netmask, (float)message.vtime);
+      if (!ip_prefix_list_find(olsr_cnf->hna_entries, &hna_tmp->net, hna_tmp->prefixlen)) {
+        olsr_update_hna_entry(&message.originator, &hna_tmp->net, hna_tmp->prefixlen, message.vtime);
       }
 
       hna_tmp = hna_tmp->next;

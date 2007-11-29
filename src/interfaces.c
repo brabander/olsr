@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.37 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: interfaces.c,v 1.38 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -45,6 +45,7 @@
 #include "scheduler.h"
 #include "olsr.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 static olsr_u32_t if_property_id;
 

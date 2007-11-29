@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.39 2007/11/29 00:26:16 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.40 2007/11/29 00:49:41 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -46,6 +46,7 @@
 #include <regex.h>
 
 #include "olsr.h"
+#include "ipcalc.h"
 #include "net_olsr.h"
 #include "routing_table.h"
 #include "mantissa.h"
@@ -1277,7 +1278,7 @@ free_name_entry_list(struct name_entry **list)
 olsr_bool
 allowed_ip(const union olsr_ip_addr *addr)
 {
-	struct local_hna_entry *hna;
+	struct ip_prefix_list *hna;
 	struct interface *iface;
 	union olsr_ip_addr tmp_ip, tmp_msk;
 #ifndef NODEBUG
@@ -1430,7 +1431,7 @@ is_latlon_wellformed(const char *latlon_line)
  */
 olsr_bool get_isdefhna_latlon(void)
 {
-	struct local_hna_entry *hna;
+	struct ip_prefix_list *hna;
 	for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next){
 		if (hna->net.prefix_len == 0) {
 			return OLSR_TRUE;

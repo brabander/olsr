@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hysteresis.c,v 1.22 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: hysteresis.c,v 1.23 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 
@@ -47,6 +47,7 @@
 #include "defs.h"
 #include "olsr.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 #define hscaling olsr_cnf->hysteresis_param.scaling
 #define hhigh    olsr_cnf->hysteresis_param.thr_high

@@ -38,11 +38,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.60 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: lq_route.c,v 1.61 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 #define SPF_PROFILING 1
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
 #include "tc_set.h"
@@ -312,7 +313,7 @@ olsr_calculate_routing_table (void)
 {
   struct avl_tree cand_tree;
   struct list_node path_list;
-  int i, plen, path_count = 0;
+  int i, path_count = 0;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
   struct tc_entry *vert;
@@ -463,12 +464,11 @@ olsr_calculate_routing_table (void)
       for (hna = hna_gw->networks.next;
            hna != &hna_gw->networks;
            hna = hna->next) {
-
-        plen = olsr_get_hna_prefix_len(hna);
-        if (vert->path_etx != INFINITE_ETX)
-        olsr_insert_routing_table(&hna->A_network_addr, plen, &vert->addr,
-                                  &link->neighbor_iface_addr, inter->if_index,
-                                  vert->hops, vert->path_etx);
+        if (vert->path_etx != INFINITE_ETX) {
+          olsr_insert_routing_table(&hna->A_network_addr, hna->prefixlen, &vert->addr,
+                                    &link->neighbor_iface_addr, inter->if_index,
+                                    vert->hops, vert->path_etx);
+        }
       }
     }
   }

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.77 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: link_set.c,v 1.78 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 
@@ -54,6 +54,7 @@
 #include "scheduler.h"
 #include "lq_route.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 
 static clock_t hold_time_neighbor;

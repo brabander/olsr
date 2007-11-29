@@ -58,8 +58,8 @@
 
 /* OLSRD includes */
 #include "olsr.h" /* olsr_printf() */
+#include "ipcalc.h"
 #include "defs.h" /* olsr_cnf */
-#include "local_hna_set.h" /* add_local_hna4_entry() */
 #include "link_set.h" /* get_link_set() */
 #include "lq_route.h" /* MIN_LINK_QUALITY */
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_tc_lookup_dst() */
@@ -1355,11 +1355,9 @@ static int CreateLocalEtherTunTap(void)
   if (TunTapIpOverruled != 0)
   {
     union olsr_ip_addr temp_net;
-    union olsr_ip_addr temp_netmask;
 
     temp_net.v4.s_addr = htonl(EtherTunTapIp);
-    temp_netmask.v4.s_addr = htonl(0xFFFFFFFF);
-    add_local_hna4_entry(&temp_net, &temp_netmask);
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &temp_net, 32);
   }
 
   close(ioctlSkfd);

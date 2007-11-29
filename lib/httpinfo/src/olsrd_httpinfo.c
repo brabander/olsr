@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.87 2007/11/16 19:12:55 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.88 2007/11/29 00:49:41 bernd67 Exp $
  */
 
 /*
@@ -62,6 +62,7 @@
 #include "net_olsr.h"
 #include "link_set.h"
 #include "socket_parser.h"
+#include "ipcalc.h"
 
 #include "olsrd_httpinfo.h"
 #include "admin_interface.h"
@@ -232,15 +233,9 @@ static const struct tab_entry tab_entries[] = {
 };
 
 static const struct static_bin_file_entry static_bin_files[] = {
-#if 0
-    {"favicon.ico", favicon_ico, 1406/*favicon_ico_len*/},
-    {"logo.gif", logo_gif, 2801/*logo_gif_len*/},
-    {"grayline.gif", grayline_gif, 43/*grayline_gif_len*/},
-#else
-    {"favicon.ico", favicon_ico, sizeof(favicon_ico)},
-    {"logo.gif", logo_gif, sizeof(logo_gif)},
+    {"favicon.ico",  favicon_ico, sizeof(favicon_ico)},
+    {"logo.gif",     logo_gif, sizeof(logo_gif)},
     {"grayline.gif", grayline_gif, sizeof(grayline_gif)},
-#endif
     {NULL, NULL, 0}
 };
 
@@ -258,32 +253,6 @@ static const struct dynamic_file_entry dynamic_files[] =
     {NULL, NULL}
   };
 
-/**
- *Do initialization here
- *
- *This function is called by the my_init
- *function in uolsrd_plugin.c
- */
-int
-olsrd_plugin_init(void)
-{
-  /* Get start time */
-  gettimeofday(&start_time, NULL);
-
-  curr_clients = 0;
-  /* set up HTTP socket */
-  http_socket = get_http_socket(http_port != 0 ? http_port :  DEFAULT_TCP_PORT);
-
-  if (http_socket < 0) {
-    fprintf(stderr, "(HTTPINFO) could not initialize HTTP socket\n");
-    exit(0);
-  }
-
-  /* Register socket */
-  add_olsr_socket(http_socket, &parse_http_request);
-
-  return 1;
-}
 
 static int
 get_http_socket(int port)
@@ -329,6 +298,32 @@ get_http_socket(int port)
   return s;
 }
 
+/**
+ *Do initialization here
+ *
+ *This function is called by the my_init
+ *function in uolsrd_plugin.c
+ */
+int
+olsrd_plugin_init(void)
+{
+  /* Get start time */
+  gettimeofday(&start_time, NULL);
+
+  curr_clients = 0;
+  /* set up HTTP socket */
+  http_socket = get_http_socket(http_port != 0 ? http_port :  DEFAULT_TCP_PORT);
+
+  if (http_socket < 0) {
+    fprintf(stderr, "(HTTPINFO) could not initialize HTTP socket\n");
+    exit(0);
+  }
+
+  /* Register socket */
+  add_olsr_socket(http_socket, &parse_http_request);
+
+  return 1;
+}
 
 /* Non reentrant - but we are not multithreaded anyway */
 void
@@ -488,9 +483,9 @@ parse_http_request(int fd)
                        "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"%d\">\n"
                        "<tbody><tr bgcolor=\"#ffffff\">\n"
                        "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%%\">\n"
-                       "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;olsr.org OLSR daemon</font></td>\n"
+                       "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;<a href=\"http://www.olsr.org/\">olsr.org OLSR daemon</a></font></td>\n"
                        "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%%\">\n"
-                       "<img src=\"/logo.gif\" alt=\"olsrd logo\"></td>\n"
+                       "<a href=\"http://www.olsr.org/\"><img border=\"0\" src=\"/logo.gif\" alt=\"olsrd logo\"></a></td>\n"
                        "</tr>\n"
                        "</tbody>\n"
                        "</table>\n",
@@ -652,8 +647,8 @@ static int build_tabs(char *buf, const olsr_u32_t bufsize, int active)
 void
 olsr_plugin_exit(void)
 {
-  if (http_socket) {
-    close(http_socket);
+  if (http_socket >= 0) {
+    CLOSE(http_socket);
   }
 }
 
@@ -865,21 +860,18 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 
     size += snprintf(&buf[size], bufsize-size, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
     
-    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
     if (olsr_cnf->lq_level == 0) {
-      size += snprintf(&buf[size], bufsize-size, "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
+      size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n"
+                                                  "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
       if (olsr_cnf->use_hysteresis) {
         size += snprintf(&buf[size], bufsize-size, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
         size += snprintf(&buf[size], bufsize-size, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
       }
-    } else {
-      size += snprintf(&buf[size], bufsize-size, "<td></td>\n");
     }
 
-    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
-
-    size += snprintf(&buf[size], bufsize-size, "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
+    size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n"
+                                               "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
     if (olsr_cnf->lq_level) {
       size += snprintf(&buf[size], bufsize-size,
                        "<td>LQ level: %d</td>\n"
@@ -957,7 +949,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 
     size += section_title(&buf[size], bufsize-size, "Announced HNA entries");
     if (olsr_cnf->hna_entries) {
-      struct local_hna_entry *hna;
+      struct ip_prefix_list *hna;
       if (olsr_cnf->ip_version == AF_INET) {
 	size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th><th>Netmask</th></tr>\n");
 	for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {

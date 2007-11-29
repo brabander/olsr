@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.105 2007/11/25 13:08:54 bernd67 Exp $
+ * $Id: main.c,v 1.106 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 #include <unistd.h>
@@ -44,6 +44,7 @@
 #include <sys/stat.h>
 #include <assert.h>
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
 #include "log.h"

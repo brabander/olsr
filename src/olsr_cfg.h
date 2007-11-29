@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ?Â¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.39 2007/11/25 21:38:13 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.40 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 
@@ -146,10 +146,10 @@ struct olsr_if
   struct olsr_if           *next;
 };
 
-struct local_hna_entry
+struct ip_prefix_list
 {
   struct olsr_ip_prefix    net;
-  struct local_hna_entry  *next;
+  struct ip_prefix_list    *next;
 };
 
 struct hyst_param
@@ -173,18 +173,6 @@ struct plugin_entry
   struct plugin_entry      *next;
 };
 
-struct ipc_host
-{
-  union olsr_ip_addr       host;
-  struct ipc_host          *next;
-};
-
-struct ipc_net
-{
-  union olsr_ip_addr       net;
-  union olsr_ip_addr       mask;
-  struct ipc_net           *next;
-};
 
 /*
  * The config struct
@@ -206,9 +194,8 @@ struct olsrd_config
   olsr_bool                use_hysteresis;
   struct hyst_param        hysteresis_param;
   struct plugin_entry      *plugins;
-  struct local_hna_entry   *hna_entries;
-  struct ipc_host          *ipc_hosts;
-  struct ipc_net           *ipc_nets;
+  struct ip_prefix_list    *hna_entries;
+  struct ip_prefix_list    *ipc_nets;
   struct olsr_if           *interfaces;
   float                    pollrate;
   float                    nic_chgs_pollrate;
@@ -243,6 +230,18 @@ struct olsrd_config
 #if defined __cplusplus
 extern "C" {
 #endif
+
+
+/*
+ * List functions
+ */
+
+void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, olsr_u8_t);
+
+int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, olsr_u8_t);
+
+struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, olsr_u8_t prefix_len);
+
 
 /*
  * Interface to parser

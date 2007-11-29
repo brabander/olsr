@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.c,v 1.10 2007/11/08 22:47:40 bernd67 Exp $
+ * $Id: olsrd_pgraph.c,v 1.11 2007/11/29 00:49:42 bernd67 Exp $
  */
 
 /*
@@ -45,6 +45,7 @@
  */
 
 #include "olsrd_pgraph.h"
+#include "ipcalc.h"
 #include "socket_parser.h"
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
@@ -140,17 +141,9 @@ static int pcf_event(int, int, int);
 
 static void ipc_action(int);
 
-#if 0
-static struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main);
-#endif
-
 static void ipc_print_neigh_link(struct neighbor_entry *neighbor);
 
 static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry);
-
-#if 0
-static void ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
-#endif
 
 static int ipc_send(const char *, int);
 
@@ -390,17 +383,6 @@ static int pcf_event(int changes_neighborhood,
   return res;
 }
 
-#if 0
-#define MIN_LINK_QUALITY 0.01
-static double calc_etx(double loss, double neigh_loss) 
-{
-  if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
-    return 0.0;
-  else
-    return 1.0 / (loss * neigh_loss);
-}
-#endif
-
 static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 {
   char buf[256];
@@ -413,34 +395,6 @@ static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_
                  olsr_ip_to_string(&adr, &dst_entry->T_dest_addr));
   ipc_send(buf, len);
 }
-
-#if 0
-static void
-ipc_print_net(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna_netmask *mask)
-{
-  const char *adr;
-
-  adr = olsr_ip_to_string(gw);
-  ipc_send("\"", 1);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\" -> \"", strlen("\" -> \""));
-  adr = olsr_ip_to_string(net);
-  ipc_send(adr, strlen(adr));
-  ipc_send("/", 1);
-  adr = olsr_netmask_to_string(mask);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"[label=\"HNA\"];\n", strlen("\"[label=\"HNA\"];\n"));
-  ipc_send("\"", 1);
-  adr = olsr_ip_to_string(net);
-  ipc_send(adr, strlen(adr));
-  ipc_send("/", 1);
-  adr = olsr_netmask_to_string(mask);
-  ipc_send(adr, strlen(adr));
-  ipc_send("\"", 1);
-  ipc_send("[shape=diamond];\n", strlen("[shape=diamond];\n"));
-}
-#endif
-
 
 static int ipc_send(const char *data, int size)
 {
@@ -462,33 +416,3 @@ static int ipc_send(const char *data, int size)
 
   return 1;
 }
-
-#if 0
-static struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
-{
-  struct link_entry *walker;
-  double best = 0.0;
-  double curr;
-  struct link_entry *res = NULL;
-
-  // loop through all links
-
-  for (walker = link_set; walker != NULL; walker = walker->next)
-  {
-    // check whether it's a link to the requested neighbor and
-    // whether the link's quality is better than what we have
-    if(ipequal(main, &walker->neighbor->neighbor_main_addr))
-    {
-      curr = walker->loss_link_quality * walker->neigh_link_quality;
-
-      if (curr >= best)
-      {
-        best = curr;
-        res = walker;
-      }
-    }
-  }
-
-  return res;
-}
-#endif

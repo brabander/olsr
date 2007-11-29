@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.20 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: mpr_selector_set.c,v 1.21 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "mpr_selector_set.h"
 #include "olsr.h"

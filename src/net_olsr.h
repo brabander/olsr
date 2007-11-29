@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.h,v 1.18 2007/11/25 21:23:29 bernd67 Exp $
+ * $Id: net_olsr.h,v 1.19 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 
@@ -44,7 +44,7 @@
 #ifndef _NET_OLSR
 #define _NET_OLSR
 
-#include "defs.h"
+#include "olsr_types.h"
 #include "interfaces.h"
 #include "process_routes.h"
 
@@ -52,30 +52,6 @@
 #include <net/if.h>
 
 typedef int (*packet_transform_function)(olsr_u8_t *, int *);
-
-struct ipaddr_str {
-    char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
-};
-
-/*
- * Macros for comparing and copying IP addresses
- */
-static INLINE int ip4cmp(const struct in_addr *a, const struct in_addr *b) { return a->s_addr > b->s_addr ? +1 : a->s_addr < b->s_addr ? -1 : 0; }
-static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { return a->s_addr == b->s_addr; }
-
-static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
-static INLINE int ip6equal(const struct in6_addr *a, const struct in6_addr *b) { return ip6cmp(a, b) == 0; }
-
-#if 0
-static INLINE int ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6); }
-#endif
-static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6); }
-
-/* Do not use this - this is as evil as the COPY_IP() macro was and only used in
- * source which also needs cleanups.
- */
-static INLINE void genipcopy(void *dst, const void *src) { memcpy(dst, src, olsr_cnf->ipsize); }
-
 
 void
 net_set_disp_pack_out(olsr_bool);
@@ -109,30 +85,6 @@ net_output(struct interface *);
 
 int
 net_sendroute(struct rt_entry *, struct sockaddr *);
-
-int
-olsr_prefix_to_netmask(union olsr_ip_addr *, const olsr_u16_t);
-
-olsr_u16_t
-olsr_netmask_to_prefix(const union olsr_ip_addr *);
-
-const char *
-sockaddr_to_string(struct ipaddr_str * const , const struct sockaddr *);
-
-const char *
-ip4_to_string(struct ipaddr_str * const buf, const struct in_addr);
-
-const char *
-ip6_to_string(struct ipaddr_str * const buf, const struct in6_addr * const addr6);
-
-const char *
-olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *);
-
-const char *
-sockaddr_to_string(struct ipaddr_str * const buf, const struct sockaddr *);
-
-const char *
-olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);
 
 int
 add_ptf(packet_transform_function);

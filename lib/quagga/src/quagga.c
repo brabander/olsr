@@ -31,7 +31,6 @@
 #include "olsr.h"
 #include "log.h"
 #include "defs.h"
-#include "local_hna_set.h"
 #include "routing_table.h"
 
 #ifdef USE_UNIX_DOMAIN_SOCKET
@@ -76,7 +75,6 @@ static int parse_ipv6_route_add (unsigned char*, size_t);
 static void zebra_reconnect (void);
 static void zebra_connect (void);
 
-static uint32_t prefixlentomask (uint8_t);
 static void free_ipv4_route (struct ipv4_route);
 /* 
 static void update_olsr_zebra_routes (struct ipv4_route*, struct ipv4_route*);
@@ -672,44 +670,31 @@ int zebra_disable_redistribute (unsigned char type) {
 
 }
   
-static uint32_t prefixlentomask (uint8_t prefix) {
-  uint32_t mask = 0;
-
-  if (prefix) {
-    mask = 0xffffffff<<(32-prefix);
-    mask = ntohl(mask);
-  }
-
-  return mask;
-}
-
 int add_hna4_route (struct ipv4_route r) {
-  union olsr_ip_addr net, mask;
+  union olsr_ip_addr net;
   
 #ifdef MY_DEBUG
   dump_ipv4_route(r, "add_hna4_route");
 #endif
 
-  mask.v4.s_addr = prefixlentomask(r.prefixlen);
   net.v4.s_addr = r.prefix;
 
-  add_local_hna4_entry(&net, &mask);
+  ip_prefix_list_add(&olsr_cnf->hna_entries, &net, r.prefixlen);
   free_ipv4_route(r);
   return 0;
 }
 
 int delete_hna4_route (struct ipv4_route r) {
 
-  union olsr_ip_addr net, mask;
+  union olsr_ip_addr net;
 
 #ifdef MY_DEBUG
   dump_ipv4_route(r, "delete_hna4_route");
 #endif
 
-  mask.v4.s_addr = prefixlentomask(r.prefixlen);
   net.v4.s_addr = r.prefix;
 
-  remove_local_hna4_entry(&net, &mask) ? 0 : -1;
+  ip_prefix_list_remove(&olsr_cnf->hna_entries, &net, r.prefixlen) ? 0 : -1;
   free_ipv4_route(r);
   return 0;
 

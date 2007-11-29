@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.16 2007/11/29 00:10:17 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.17 2007/11/29 00:49:42 bernd67 Exp $
  */
 
 /*
@@ -65,6 +65,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "ipcalc.h"
 #include "olsr.h"
 #include "olsr_types.h"
 #include "neighbor_table.h"
@@ -402,7 +403,7 @@ static void ipc_print_hna(void)
 {
     int size;
     int index;
-    struct local_hna_entry *hna;
+    struct ip_prefix_list *hna;
 
     size = 0;
 
@@ -437,21 +438,12 @@ static void ipc_print_hna(void)
             /* Check all networks */
             struct hna_net *tmp_net;
             for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
-		if (olsr_cnf->ip_version == AF_INET) {
-                    struct ipaddr_str addrbuf, maskbuf, mainaddrbuf;
-                    const union olsr_ip_addr netmask = { .v4 = { .s_addr = tmp_net->A_netmask.v4 } };
-                    ipc_sendf("%s\t%s\t%s\n",
-                              olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
-                              olsr_ip_to_string(&maskbuf, &netmask),
-                              olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
-		} else {
-                    struct ipaddr_str addrbuf, mainaddrbuf;
-                    ipc_sendf("%s\t%d\t%s\n",
-                              olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
-                              tmp_net->A_netmask.v6,
-                              olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
-		}
-	    }            
+                struct ipaddr_str addrbuf, mainaddrbuf;
+                ipc_sendf("%s\t%d\t%s\n",
+                          olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
+                          tmp_net->prefixlen,
+                          olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+            }
 	}
     }
     ipc_sendf("\n");

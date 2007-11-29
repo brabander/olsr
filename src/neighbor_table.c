@@ -36,11 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.35 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: neighbor_table.c,v 1.36 2007/11/29 00:49:38 bernd67 Exp $
  */
 
-
-
+#include "ipcalc.h"
 #include "defs.h"
 #include "two_hop_neighbor_table.h"
 #include "mid_set.h"

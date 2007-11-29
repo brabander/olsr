@@ -36,12 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.19 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: duplicate_set.c,v 1.20 2007/11/29 00:49:38 bernd67 Exp $
  */
 
-
-
-#include "defs.h"
+#include "ipcalc.h"
 #include "duplicate_set.h"
 #include "scheduler.h"
 #include "olsr.h"

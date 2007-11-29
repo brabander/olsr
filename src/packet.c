@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.26 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: packet.c,v 1.27 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "link_set.h"
 #include "mpr_selector_set.h"

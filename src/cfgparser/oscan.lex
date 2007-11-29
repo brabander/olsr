@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.27 2007/10/10 20:44:34 bernd67 Exp $
+ * $Id: oscan.lex,v 1.28 2007/11/29 00:49:40 bernd67 Exp $
  */
 
 
@@ -164,6 +164,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_COMMENT;
 }
 
+\/ {
+    yylval = NULL;
+    return TOK_SLASH;
+}
+
 \{ {
     yylval = NULL;
     return TOK_OPEN;
@@ -199,7 +204,6 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     }
     return TOK_IP4_ADDR;
 }
-
 {IPV6ADDR} {
     yylval = get_string_token(yytext, yyleng + 1);
     if (yylval == NULL) {

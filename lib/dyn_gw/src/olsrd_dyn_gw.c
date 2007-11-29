@@ -37,11 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.26 2007/11/08 23:53:43 bernd67 Exp $
+ * $Id: olsrd_dyn_gw.c,v 1.27 2007/11/29 00:49:40 bernd67 Exp $
  */
 
 /*
- * -Threaded ping code added by Jens Nachitgall
+ * -Threaded ping code added by Jens Nachtigall
  * -HNA4 checking by bjoern riemer
  */
 
@@ -51,8 +51,8 @@
 #include "olsrd_dyn_gw.h"
 #include "scheduler.h"
 #include "olsr.h"
-#include "local_hna_set.h"
 #include "defs.h"
+#include "ipcalc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -105,7 +105,7 @@ add_to_ping_list(const char *, struct ping_list *);
 
 struct hna_list {
   union olsr_ip_addr hna_net;
-  union olsr_ip_addr hna_netmask;
+  olsr_u8_t hna_prefixlen;
   struct ping_list *ping_hosts;
   int hna_added;
   int probe_ok;
@@ -115,7 +115,7 @@ struct hna_list {
 static struct hna_list *
 	add_to_hna_list(struct hna_list *,
 				union olsr_ip_addr *hna_net,
-				union olsr_ip_addr *hna_netmask );
+				olsr_u8_t hna_prefixlen );
 
 struct hna_list *the_hna_list = NULL;
 
@@ -123,7 +123,7 @@ static void
 looped_checks(void *) __attribute__((noreturn));
 
 static int
-check_gw(union olsr_ip_addr *, union olsr_ip_addr *,struct ping_list *);
+check_gw(union olsr_ip_addr *, olsr_u8_t,struct ping_list *);
 
 static int
 ping_is_possible(struct ping_list *);
@@ -167,7 +167,7 @@ static int set_plugin_ping(const char *value, void *data __attribute__((unused))
         union olsr_ip_addr temp_netmask;
         temp_net.v4.s_addr = INET_NET;
         temp_netmask.v4.s_addr = INET_PREFIX;
-        the_hna_list = add_to_hna_list(the_hna_list, &temp_net, &temp_netmask);
+        the_hna_list = add_to_hna_list(the_hna_list, &temp_net, olsr_netmask_to_prefix(&temp_netmask));
         if (the_hna_list == NULL) {
             return 1;
         }
@@ -204,7 +204,7 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
 
     //printf("/%s(%08x)\n",inet_ntoa(foo_addr),foo_addr.s_addr);
     //printf("%s():got->%s/%s\n",__func__,olsr_ip_to_string((union olsr_ip_addr *)&));
-    the_hna_list = add_to_hna_list(the_hna_list, &temp_net, &temp_netmask);
+    the_hna_list = add_to_hna_list(the_hna_list, &temp_net, olsr_netmask_to_prefix(&temp_netmask));
     if (the_hna_list != NULL) {
         return 1;
     }
@@ -269,7 +269,7 @@ olsr_event_doing_hna(void *foo __attribute__((unused)))
 	/*
   if (has_available_gw == 1 && gw_already_added == 0) {
     olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
-    add_local_hna4_entry(&gw_net, &gw_netmask);
+    add_local_hna_entry(&gw_net, &gw_netmask);
     gw_already_added = 1;
   } else if ((has_available_gw == 0) && (gw_already_added == 1)) {
     // Remove all local Inet HNA entries /
@@ -282,10 +282,10 @@ olsr_event_doing_hna(void *foo __attribute__((unused)))
 	for(li=the_hna_list; li; li=li->next){
 		if((li->probe_ok==1)&&(li->hna_added==0)){
 			olsr_printf(1, "Adding OLSR local HNA entry\n");
-			add_local_hna4_entry(&li->hna_net, &li->hna_netmask);
+			ip_prefix_list_add(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen);
 			li->hna_added=1;
 		}else if((li->probe_ok==0)&&(li->hna_added==1)){
-			while(remove_local_hna4_entry(&li->hna_net, &li->hna_netmask)) {
+			while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen)) {
 				olsr_printf(1, "Removing OLSR local HNA entry\n");
 			}
 			li->hna_added=0;
@@ -311,7 +311,7 @@ looped_checks(void *foo __attribute__((unused)))
 
     for(li = the_hna_list; li; li = li->next){
       /* check for gw in table entry and if Ping IPs are given also do pings */
-      li->probe_ok = check_gw(&li->hna_net,&li->hna_netmask,li->ping_hosts);
+      li->probe_ok = check_gw(&li->hna_net,li->hna_prefixlen,li->ping_hosts);
       //has_available_gw = check_gw(&gw_net, &gw_netmask);
     }
 
@@ -324,13 +324,14 @@ looped_checks(void *foo __attribute__((unused)))
 
 
 static int
-check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *the_ping_list)
+check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_ping_list)
 {
     char buf[1024], iface[16];
     olsr_u32_t gate_addr, dest_addr, netmask;
     unsigned int iflags;
     int metric, refcnt, use;
     int retval = 0;
+    union olsr_ip_addr mask;
 
     FILE *fp = fopen(PROCENTRY_ROUTE, "r");
     if (!fp) 
@@ -340,6 +341,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
 	return -1;
       }    
 
+    olsr_prefix_to_netmask(&mask, prefixlen);
     /*
     olsr_printf(1, "Genmask         Destination     Gateway         "
                 "Flags Metric Ref    Use Iface\n");
@@ -364,10 +366,10 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
 
         if( (iflags & RTF_UP) &&
             (metric == 0) &&
-            (netmask == mask->v4.s_addr) && 
+            (netmask == mask.v4.s_addr) && 
             (dest_addr == net->v4.s_addr))
           {
-            if ( ((mask->v4.s_addr == INET_PREFIX)&&(net->v4.s_addr == INET_NET))&&(!(iflags & RTF_GATEWAY)))
+            if ( ((mask.v4.s_addr == INET_PREFIX)&&(net->v4.s_addr == INET_NET))&&(!(iflags & RTF_GATEWAY)))
               {
                 fclose(fp);  
                 return retval;
@@ -389,7 +391,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask, struct ping_list *th
     fclose(fp);      
     if(retval == 0){
       /* And we cast here since we get warnings on Win32 */
-      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask->v4.s_addr);
+      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
     }  
     return retval;
 }
@@ -429,7 +431,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
 
 
 static struct hna_list *
-add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, union olsr_ip_addr *hna_netmask )
+add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, olsr_u8_t hna_prefixlen )
 {
   struct hna_list *new = malloc(sizeof(struct hna_list));
   if(new == NULL)
@@ -440,7 +442,7 @@ add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, union 
   //memcpy(&new->hna_net,hna_net,sizeof(union hna_net));
   //memcpy(&new->hna_netmask,hna_netmask,sizeof(union hna_netmask));
   new->hna_net.v4=hna_net->v4;
-  new->hna_netmask.v4=hna_netmask->v4;
+  new->hna_prefixlen=hna_prefixlen;
   new->hna_added=0;
   new->probe_ok=0;
   new->ping_hosts=NULL;

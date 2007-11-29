@@ -40,9 +40,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.40 2007/11/29 00:18:53 bernd67 Exp $
+ * $Id: process_routes.c,v 1.41 2007/11/29 00:49:39 bernd67 Exp $
  */
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
 #include "log.h"
@@ -166,12 +167,10 @@ olsr_delete_kernel_route(struct rt_entry *rt)
 
     if(error < 0) {
       const char * const err_msg = strerror(errno);
+      const char * const routestr = olsr_rt_to_string(rt);
+      OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
 
-      OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n",
-                  olsr_rt_to_string(rt), err_msg);
-
-      olsr_syslog(OLSR_LOG_ERR, "Delete route: %s", err_msg);
-
+      olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
     }
   }
 }
@@ -191,10 +190,10 @@ olsr_add_kernel_route(struct rt_entry *rt)
 
     if(error < 0) {
       const char * const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n",
-                  olsr_rtp_to_string(rt->rt_best), err_msg);
+      const char * const routestr = olsr_rtp_to_string(rt->rt_best);
+      OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
 
-      olsr_syslog(OLSR_LOG_ERR, "Add route: %s", err_msg);
+      olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
     } else {
 
       /* route addition has suceeded */

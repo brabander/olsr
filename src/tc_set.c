@@ -37,10 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.37 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: tc_set.c,v 1.38 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 #include "tc_set.h"
+#include "ipcalc.h"
 #include "mid_set.h"
 #include "link_set.h"
 #include "olsr.h"

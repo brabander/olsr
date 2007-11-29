@@ -38,9 +38,14 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.39 2007/11/22 11:43:36 bernd67 Exp $
+ * $Id: oparse.y,v 1.40 2007/11/29 00:49:40 bernd67 Exp $
  */
 
+
+#include "olsrd_conf.h"
+#include "../defs.h"
+#include "../ipcalc.h"
+#include "../net_olsr.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -50,10 +55,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-
-#include "olsrd_conf.h"
-#include "../defs.h"
-#include "../net_olsr.h"
 
 #define PARSER_DEBUG 0
 
@@ -71,6 +72,7 @@ int yylex(void);
 static int ifs_in_curr_cfg = 0;
 
 static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg);
+static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg);
 
 static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 {
@@ -87,7 +89,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
   memset(&addr, 0, sizeof(addr));
 
   if (ip_addr_arg != NULL &&
-     inet_pton(olsr_cnf->ip_version, ip_addr_arg->string, &addr) < 0) {
+     inet_pton(olsr_cnf->ip_version, ip_addr_arg->string, &addr) <= 0) {
     fprintf(stderr, "Cannot parse IP address %s.\n", ip_addr_arg->string);
     return -1;
   }
@@ -119,8 +121,35 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
 
   return 0;
 }
+
+static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
+{
+  union olsr_ip_addr ipaddr;
+  PARSER_DEBUG_PRINTF("HNA IPv6 entry: %s/%d\n", ipaddr_arg->string, prefixlen_arg->integer);
+
+  if(inet_pton(AF_INET6, ipaddr_arg->string, &ipaddr) <= 0) {
+    fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", ipaddr_arg->string);
+    return 1;
+  }
+
+  if (prefixlen_arg->integer > 128) {
+    fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", prefixlen_arg->integer);
+    return 1;
+  }
+
+  /* Queue */
+  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefixlen_arg->integer);
+
+  free(ipaddr_arg->string);
+  free(ipaddr_arg);
+  free(prefixlen_arg);
+
+  return 0;
+}
+
 %}
 
+%token TOK_SLASH
 %token TOK_OPEN
 %token TOK_CLOSE
 
@@ -301,50 +330,65 @@ imaxipc: TOK_MAXIPC TOK_INTEGER
 
 ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
 {
-  struct ipc_host *ipch = malloc(sizeof(struct ipc_host));
-
+  union olsr_ip_addr ipaddr;
   PARSER_DEBUG_PRINTF("\tIPC host: %s\n", $2->string);
   
-  if (inet_aton($2->string, &ipch->host.v4) == 0) {
+  if (inet_aton($2->string, &ipaddr.v4) == 0) {
     fprintf(stderr, "Failed converting IP address IPC %s\n", $2->string);
-    free(ipch);
-    return -1;
+    YYABORT;
   }
 
-  ipch->next = olsr_cnf->ipc_hosts;
-  olsr_cnf->ipc_hosts = ipch;
+  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_cnf->maxplen);
 
   free($2->string);
   free($2);
-
 }
 ;
 
 ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
 {
-  struct ipc_net *ipcn = malloc(sizeof(struct ipc_net));
+  union olsr_ip_addr ipaddr, netmask;
+
   PARSER_DEBUG_PRINTF("\tIPC net: %s/%s\n", $2->string, $3->string);
   
-  if (inet_aton($2->string, &ipcn->net.v4) == 0) {
+  if (inet_pton(AF_INET, $2->string, &ipaddr.v4) == 0) {
     fprintf(stderr, "Failed converting IP net IPC %s\n", $2->string);
-    free(ipcn);
-    return -1;
+    YYABORT;
   }
 
-  if (inet_aton($3->string, &ipcn->mask.v4) == 0) {
+  if (inet_pton(AF_INET, $3->string, &netmask.v4) == 0) {
     fprintf(stderr, "Failed converting IP mask IPC %s\n", $3->string);
-    free(ipcn);
-    return -1;
+    YYABORT;
   }
 
-  ipcn->next = olsr_cnf->ipc_nets;
-  olsr_cnf->ipc_nets = ipcn;
+  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
 
   free($2->string);
   free($2);
   free($3->string);
   free($3);
+}
+        |       TOK_NETLABEL TOK_IP4_ADDR TOK_SLASH TOK_INTEGER
+{
+  union olsr_ip_addr ipaddr;
 
+  PARSER_DEBUG_PRINTF("\tIPC net: %s/%s\n", $2->string, $3->string);
+  
+  if (inet_pton(AF_INET, $2->string, &ipaddr.v4) == 0) {
+    fprintf(stderr, "Failed converting IP net IPC %s\n", $2->string);
+    YYABORT;
+  }
+
+  if ($4->integer > olsr_cnf->maxplen) {
+    fprintf(stderr, "ipcnet: Prefix len %u > %d is not allowed!\n", $4->integer, olsr_cnf->maxplen);
+    YYABORT;
+  }
+
+  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, $4->integer);
+
+  free($2->string);
+  free($2);
+  free($4);
 }
 ;
 
@@ -377,7 +421,7 @@ isetip4br: TOK_IP4BROADCAST TOK_IP4_ADDR
 
   if (inet_aton($2->string, &in) == 0) {
     fprintf(stderr, "isetip4br: Failed converting IP address %s\n", $2->string);
-    return -1;
+    YYABORT;
   }
 
   while (ifcnt) {
@@ -425,9 +469,9 @@ isetip6mults: TOK_IP6MULTISITE TOK_IP6_ADDR
 
   PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", $2->string);
 
-  if (inet_pton(AF_INET6, $2->string, &in6) < 0) {
+  if (inet_pton(AF_INET6, $2->string, &in6) <= 0) {
     fprintf(stderr, "isetip6mults: Failed converting IP address %s\n", $2->string);
-    return -1;
+    YYABORT;
   }
 
   while (ifcnt) {
@@ -451,9 +495,9 @@ isetip6multg: TOK_IP6MULTIGLOBAL TOK_IP6_ADDR
 
   PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", $2->string);
 
-  if (inet_pton(AF_INET6, $2->string, &in6) < 0) {
+  if (inet_pton(AF_INET6, $2->string, &in6) <= 0) {
     fprintf(stderr, "isetip6multg: Failed converting IP address %s\n", $2->string);
-    return -1;
+    YYABORT;
   }
 
   while (ifcnt) {
@@ -667,77 +711,77 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
 }
 ;
 
-
 ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
 {
-  struct local_hna_entry *h = malloc(sizeof(*h));
-  union olsr_ip_addr netmask;
+  union olsr_ip_addr ipaddr, netmask;
 
   PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%s\n", $1->string, $2->string);
 
-  if (h == NULL) {
-    fprintf(stderr, "Out of memory(HNA4)\n");
+  if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
+    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+    YYABORT;
+  }
+  if (inet_pton(AF_INET, $2->string, &netmask.v4) <= 0) {
+    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
     YYABORT;
   }
 
-  if (inet_aton($1->string, &h->net.prefix.v4) == 0) {
-    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
-    free(h);
-    return -1;
+  /* check that the given IP address is actually a network address */
+  if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+    fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
+    YYABORT;
   }
-  if (inet_aton($2->string, &netmask.v4) == 0) {
-    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
-    free(h);
-    return -1;
-  }
-  h->net.prefix_len = olsr_netmask_to_prefix(&netmask);
-  h->net.prefix.v4.s_addr &= netmask.v4.s_addr;
 
   /* Queue */
-  h->next = olsr_cnf->hna_entries;
-  olsr_cnf->hna_entries = h;
+  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
 
   free($1->string);
   free($1);
   free($2->string);
   free($2);
+}
+        |       TOK_IP4_ADDR TOK_SLASH TOK_INTEGER
+{
+  union olsr_ip_addr ipaddr, netmask;
 
+  PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%d\n", $1->string, $3->integer);
+
+  if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
+    fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
+    YYABORT;
+  }
+  if ($3->integer > olsr_cnf->maxplen) {
+    fprintf(stderr, "ihna4entry: Prefix len %u > %d is not allowed!\n", $3->integer, olsr_cnf->maxplen);
+    YYABORT;
+  }
+
+  /* check that the given IP address is actually a network address */
+  olsr_prefix_to_netmask(&netmask, $3->integer);
+  if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+    fprintf(stderr, "ihna4entry: The ipaddress \"%s\" is not a network address!\n", $1->string);
+    YYABORT;
+  }
+
+  /* Queue */
+  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, $3->integer);
+
+  free($1->string);
+  free($1);
+  free($3);
 }
 ;
 
 ihna6entry:     TOK_IP6_ADDR TOK_INTEGER
 {
-  struct local_hna_entry *h = malloc(sizeof(*h));
-
-  PARSER_DEBUG_PRINTF("HNA IPv6 entry: %s/%d\n", $1->string, $2->integer);
-
-  if (h == NULL) {
-    fprintf(stderr, "Out of memory(HNA6)\n");
+  if (add_ipv6_addr($1, $2)) {
     YYABORT;
   }
-
-  if(inet_pton(AF_INET6, $1->string, &h->net.prefix.v6) < 0)
-    {
-      fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", $1->string);
-      return -1;
-    }
-
-  if ($2->integer > 128) {
-    fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", $2->integer);
-    free(h);
-    return -1;
+}
+        |       TOK_IP6_ADDR TOK_SLASH TOK_INTEGER
+{
+  if (add_ipv6_addr($1, $3)) {
+    YYABORT;
   }
-
-  h->net.prefix_len = $2->integer;
-
-  /* Queue */
-  h->next = olsr_cnf->hna_entries;
-  olsr_cnf->hna_entries = h;
-
-  free($1->string);
-  free($1);
-  free($2);
-
 }
 ;
 

@@ -38,9 +38,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.32 2007/11/29 00:24:00 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.33 2007/11/29 00:49:38 bernd67 Exp $
  */
 
+#include "ipcalc.h"
 #include "olsr_protocol.h"
 #include "defs.h"
 #include "lq_packet.h"

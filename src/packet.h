@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.h,v 1.18 2007/11/18 21:58:32 bernd67 Exp $
+ * $Id: packet.h,v 1.19 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 #ifndef _OLSR_PACKET
@@ -101,7 +101,7 @@ struct tc_message
 struct hna_net_addr
 {
   union olsr_ip_addr  net;
-  union hna_netmask   netmask; /* IPv4 netmask */
+  olsr_u8_t           prefixlen;
   struct hna_net_addr *next;
 };
 

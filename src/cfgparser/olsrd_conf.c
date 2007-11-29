@@ -36,9 +36,16 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.62 2007/11/22 11:43:36 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.63 2007/11/29 00:49:40 bernd67 Exp $
  */
 
+
+#include "olsrd_conf.h"
+#include "ipcalc.h"
+#include "olsr_cfg.h"
+#include "defs.h"
+#include "net_olsr.h"
+#include "olsr.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -48,11 +55,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#include "olsrd_conf.h"
-#include "olsr_cfg.h"
-#include "defs.h"
-#include "net_olsr.h"
 
 
 extern FILE *yyin;
@@ -361,7 +363,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 void
 olsrd_free_cnf(struct olsrd_config *cnf)
 {
-  struct local_hna_entry   *hd,   *h = cnf->hna_entries;
+  struct ip_prefix_list   *hd,   *h = cnf->hna_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
   struct olsr_lq_mult      *mult, *next_mult;
@@ -516,11 +518,10 @@ get_default_if_config(void)
 void
 olsrd_print_cnf(struct olsrd_config *cnf)
 {
-  struct local_hna_entry   *h  = cnf->hna_entries;
+  struct ip_prefix_list   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
   struct plugin_entry      *pe = cnf->plugins;
-  struct ipc_host          *ih = cnf->ipc_hosts;
-  struct ipc_net           *ie = cnf->ipc_nets;
+  struct ip_prefix_list    *ie = cnf->ipc_nets;
   struct olsr_lq_mult      *mult;
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
 
@@ -543,17 +544,14 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("Willingness      : %d\n", cnf->willingness);
 
   printf("IPC connections  : %d\n", cnf->ipc_connections);
-
-  while(ih)
-    {
-      printf("\tHost %s\n", inet_ntoa(ih->host.v4));
-      ih = ih->next;
-    }
-  
   while(ie)
     {
-      printf("\tNet %s/", inet_ntoa(ie->net.v4));
-      printf("%s\n", inet_ntoa(ie->mask.v4));
+      struct ipaddr_str strbuf;
+      if (ie->net.prefix_len == olsr_cnf->maxplen) {
+          printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+      } else {
+          printf("\tNet %s/%d\n", olsr_ip_to_string(&strbuf, &ie->net.prefix), ie->net.prefix_len);
+      }
       ie = ie->next;
     }
 
@@ -640,30 +638,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("Not using hysteresis\n");
   }
 
-#if 0
-  /* HNA IPv4 */
-  if(h4)
-    {
-
-      printf("HNA4 entries:\n");
-      while(h4)
-	{
-	  printf("\t%s/", inet_ntoa(h4->net.v4));
-	  printf("%s\n", inet_ntoa(h4->netmask.v4));
-	  h4 = h4->next;
-	}
-    }
-
-  /* HNA IPv6 */
-  if(h6)
-    {
-      printf("HNA6 entries:\n");
-      while(h6)
-	{
-	  printf("\t%s/%d\n", inet_ntop(AF_INET6, &h6->net.v6, ipv6_buf, sizeof(ipv6_buf)), h6->prefix_len);
-	  h6 = h6->next;
-	}
-#else
   /* HNA IPv4 and IPv6 */
   if(h) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
@@ -678,7 +652,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
         printf("%d\n", h->net.prefix_len);
       }
       h = h->next;
-#endif
     }
   }
 }
@@ -715,3 +688,53 @@ void win32_stdio_hack(unsigned int handle)
   setbuf(stderr, NULL);
 }
 #endif
+
+void ip_prefix_list_add(struct ip_prefix_list **list,
+                        const union olsr_ip_addr *net,
+                        olsr_u8_t prefix_len)
+{
+  struct ip_prefix_list *new_entry = olsr_malloc(sizeof(*new_entry), "Add local HNA entry");
+  
+  new_entry->net.prefix = *net;
+  new_entry->net.prefix_len = prefix_len;
+
+  /* Queue */
+  new_entry->next = *list;
+  *list = new_entry;
+}
+
+int ip_prefix_list_remove(struct ip_prefix_list **list,
+                          const union olsr_ip_addr *net,
+                          olsr_u8_t prefix_len)
+{
+  struct ip_prefix_list *h = *list, *prev = NULL;
+
+  while (h != NULL) {
+    if (ipequal(net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
+      /* Dequeue */
+      if (prev == NULL) {
+        *list = h->next;
+      } else {
+        prev->next = h->next;
+      }
+      free(h);
+      return 1;
+    }
+    prev = h;
+    h = h->next;
+  }
+  return 0;
+}
+
+struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
+                                           const union olsr_ip_addr *net,
+                                           olsr_u8_t prefix_len)
+{
+  struct ip_prefix_list *h;
+  for (h = list; h != NULL; h = h->next) {
+    if (prefix_len == h->net.prefix_len && ipequal(net, &h->net.prefix)) {
+      return h;
+    }
+  }
+  return NULL;
+}

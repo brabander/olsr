@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.30 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.31 2007/11/29 00:49:42 bernd67 Exp $
  */
 
 
@@ -54,6 +54,7 @@
 #include <signal.h>
 
 #include "defs.h"
+#include "ipcalc.h"
 #include "olsr.h"
 #include "socket_parser.h"
 #include "parser.h"

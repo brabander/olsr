@@ -37,9 +37,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.35 2007/11/14 11:03:52 bernd67 Exp $
+ * $Id: routing_table.c,v 1.36 2007/11/29 00:49:39 bernd67 Exp $
  */
 
+#include "routing_table.h"
+#include "ipcalc.h"
 #include "defs.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"
@@ -47,7 +49,6 @@
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "link_set.h"
-#include "routing_table.h"
 #include "lq_avl.h"
 #include "lq_route.h"
 #include "net_olsr.h"
@@ -521,7 +522,7 @@ olsr_calculate_hna_routes(void)
         if (rt != NULL) {
           /* update if better */
           olsr_insert_routing_table(&tmp_net->A_network_addr,
-                                    olsr_get_hna_prefix_len(tmp_net),
+                                    tmp_net->prefixlen,
                                     &tmp_hna->A_gateway_addr,
                                     &rt->rt_best->rtp_nexthop.gateway,
                                     rt->rt_best->rtp_nexthop.iif_index,

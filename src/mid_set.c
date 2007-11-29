@@ -36,9 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.24 2007/11/29 00:10:17 bernd67 Exp $
+ * $Id: mid_set.c,v 1.25 2007/11/29 00:49:38 bernd67 Exp $
  */
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "two_hop_neighbor_table.h"
 #include "mid_set.h"

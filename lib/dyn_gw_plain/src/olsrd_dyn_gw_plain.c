@@ -37,11 +37,12 @@
  * the copyright holders.
  */
 
-#include "olsr_types.h"
 #include "olsrd_dyn_gw_plain.h"
+#include "olsr_types.h"
+#include "ipcalc.h"
 #include "scheduler.h"
 #include "olsr.h"
-#include "local_hna_set.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -89,7 +90,7 @@ olsrd_plugin_init(void)
   has_inet_gateway = 0;
   
   /* Remove all local Inet HNA entries */
-  while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
+  while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask))) {
     olsr_printf(DEBUGLEV, "HNA Internet gateway deleted\n");
   }
 
@@ -175,12 +176,12 @@ void olsr_event(void* foo __attribute__((unused)))
   int res = check_gw(&gw_net, &gw_netmask);
   if (1 == res && 0 == has_inet_gateway) {
     olsr_printf(DEBUGLEV, "Adding OLSR local HNA entry for Internet\n");
-    add_local_hna4_entry(&gw_net, &gw_netmask);
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask));
     has_inet_gateway = 1;
   }
   else if (0 == res && 1 == has_inet_gateway) {
     /* Remove all local Inet HNA entries */
-    while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
+    while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask))) {
       olsr_printf(DEBUGLEV, "Removing OLSR local HNA entry for Internet\n");
     }
     has_inet_gateway = 0;

@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_olsr.c,v 1.36 2007/11/20 23:16:17 bernd67 Exp $
+ * $Id: net_olsr.c,v 1.37 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 #include "net_olsr.h"
+#include "ipcalc.h"
 #include "log.h"
 #include "olsr.h"
 #include "net_os.h"
@@ -447,172 +448,6 @@ net_output(struct interface *ifp)
 
   return retval;
 }
-
-
-/**
- * Create a IPv4 or IPv6 netmask based on a prefix length
- *
- * @param allocated address to build the netmask in
- * @param prefix the prefix length
- *
- * @returns 1 on success 0 on failure
- */
-int
-olsr_prefix_to_netmask(union olsr_ip_addr *adr, const olsr_u16_t prefix)
-{
-#if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
-#endif
-  int p;
-  const olsr_u8_t * const a_end = adr->v6.s6_addr+olsr_cnf->ipsize;
-  olsr_u8_t *a;
-
-  if (adr == NULL) {
-    return 0;
-  }
-
-  a = adr->v6.s6_addr;
-  for (p = prefix; a < a_end && p > 8; p -= 8) {
-    *a++ = 0xff;
-  }
-  *a++ = 0xff << (8 - p);
-  while (a < a_end) {
-    *a++ = 0;
-  }
-
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(&buf, adr));
-#endif
-  return 1;
-}
-
-
-
-/**
- * Calculate prefix length based on a netmask
- *
- * @param adr the address to use to calculate the prefix length
- *
- * @return the prefix length
- */
-olsr_u16_t
-olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
-{
-#ifndef NODEBUG
-  struct ipaddr_str buf;
-#endif
-  olsr_u16_t prefix = 0;
-  const olsr_u8_t * const a_end = adr->v6.s6_addr+olsr_cnf->ipsize;
-  const olsr_u8_t *a;
-
-  for (a = adr->v6.s6_addr; a < a_end && *a == 0xff; a++) {
-    prefix += 8;
-  }
-  if (a < a_end) {
-    /* handle the last byte */
-    switch (*a) {
-    case   0: prefix += 0; break;
-    case 128: prefix += 1; break;
-    case 192: prefix += 2; break;
-    case 224: prefix += 3; break;
-    case 240: prefix += 4; break;
-    case 248: prefix += 5; break;
-    case 252: prefix += 6; break;
-    case 254: prefix += 7; break;
-    case 255: prefix += 8; break; /* Shouldn't happen */
-    default:
-      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, olsr_ip_to_string(&buf, adr));    
-      prefix = USHRT_MAX;
-      break;
-    }
-  }
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(&buf, adr), prefix);
-#endif
-  return prefix;
-}
-
-/**
- *Converts a sockaddr struct to a string representing
- *the IP address from the sockaddr struct
- *
- *@param address_to_convert the sockaddr struct to "convert"
- *@return a char pointer to the string containing the IP
- */
-const char *
-sockaddr_to_string(struct ipaddr_str * const buf, const struct sockaddr * const addr)
-{
-    const struct sockaddr_in * const addr4 = (const struct sockaddr_in *)addr;
-    return ip4_to_string(buf, addr4->sin_addr);
-}
-
-/**
- *Converts the 32bit olsr_u32_t datatype to
- *a char array.
- *
- *@param address the olsr_u32_t to "convert"
- *@return a char pointer to the string containing the IP
- */
-const char *
-ip4_to_string(struct ipaddr_str * const buf, const struct in_addr addr4)
-{
-    return inet_ntop(AF_INET, &addr4, buf->buf, sizeof(buf->buf));
-}
-
-/**
- *Converts the 32bit olsr_u32_t datatype to
- *a char array.
- *
- *@param addr6 the address to "convert"
- *@return a char pointer to the string containing the IP
- */
-const char *
-ip6_to_string(struct ipaddr_str * const buf, const struct in6_addr * const addr6)
-{
-  return inet_ntop(AF_INET6, addr6, buf->buf, sizeof(buf->buf));
-}
-
-const char *
-olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr)
-{
-#if 0
-    if (!addr) {
-        return "null";
-    }
-#endif
-    return inet_ntop(olsr_cnf->ip_version, addr, buf->buf, sizeof(buf->buf));
-}
-
-const char *
-olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
-{
-  /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
-  static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
-  const char *rv;
-
-  if (prefix == NULL) {
-      return "null";
-  }
-  
-  if(olsr_cnf->ip_version == AF_INET) {
-    int len;
-    union olsr_ip_addr netmask;
-    rv = inet_ntop(AF_INET, &prefix->prefix.v4, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    olsr_prefix_to_netmask(&netmask, prefix->prefix_len);
-    inet_ntop(AF_INET, &netmask.v4, buf+len, sizeof(buf)-len);
-  } else {
-    int len;
-    /* IPv6 */
-    rv = inet_ntop(AF_INET6, &prefix->prefix.v6, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    snprintf(buf+len, sizeof(buf)-len, "/%d", prefix->prefix_len);
-  }
-  return rv;
-}
-
 
 void
 olsr_add_invalid_address(const union olsr_ip_addr *adr)

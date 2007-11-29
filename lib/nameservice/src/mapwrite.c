@@ -28,7 +28,7 @@
  *
  */
 
-/* $Id: mapwrite.c,v 1.1 2007/11/29 00:26:16 bernd67 Exp $ */
+/* $Id: mapwrite.c,v 1.2 2007/11/29 00:49:41 bernd67 Exp $ */
  
 #include <stdio.h>
 #include <string.h>
@@ -43,7 +43,7 @@
 #include "nameservice.h"
 #include "mid_set.h"
 #include "tc_set.h"
-#include "net_olsr.h"
+#include "ipcalc.h"
 #include "mapwrite.h"
 
 static char my_latlon_str[48];

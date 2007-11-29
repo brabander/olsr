@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.35 2007/11/08 22:47:42 bernd67 Exp $
+ * $Id: net.c,v 1.36 2007/11/29 00:49:40 bernd67 Exp $
  */
 
 
@@ -45,6 +45,7 @@
  */
 
 #include "net.h"
+#include "../ipcalc.h"
 #include "../defs.h"
 #include "../net_os.h"
 #include "../parser.h"

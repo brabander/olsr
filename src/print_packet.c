@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.c,v 1.13 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: print_packet.c,v 1.14 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 #include "print_packet.h"
+#include "ipcalc.h"
 #include "mantissa.h"
 #include "defs.h"
 #include "olsr.h"

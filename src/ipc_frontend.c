@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.40 2007/11/20 23:20:23 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.41 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 /*
@@ -52,8 +52,8 @@
 #include "log.h"
 #include "parser.h"
 #include "socket_parser.h"
-#include "local_hna_set.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 #ifdef WIN32
 #define close(x) closesocket(x)
@@ -179,27 +179,18 @@ ipc_accept(int fd)
 olsr_bool
 ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 {
-  struct ipc_host *ipch = olsr_cnf->ipc_hosts;
-  struct ipc_net *ipcn = olsr_cnf->ipc_nets;
+  struct ip_prefix_list *ipcn;
 
-  if(addr->v4.s_addr == ntohl(INADDR_LOOPBACK))
+  if(addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
     return OLSR_TRUE;
-
-  /* check hosts */
-  while(ipch)
-    {
-        if(ipequal(addr, &ipch->host))
-	return OLSR_TRUE;
-      ipch = ipch->next;
-    }
+  }
 
   /* check nets */
-  while(ipcn)
-    {
-      if((addr->v4.s_addr & ipcn->mask.v4.s_addr) == (ipcn->net.v4.s_addr & ipcn->mask.v4.s_addr))
-	return OLSR_TRUE;
-      ipcn = ipcn->next;
+  for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
+    if (ip_in_net(addr, &ipcn->net)) { 
+      return OLSR_TRUE;
     }
+  }
 
   return OLSR_FALSE;
 }
@@ -255,7 +246,6 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
     {
       OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
       CLOSE(ipc_conn);
-      //olsr_cnf->open_ipc = 0;
       ipc_active = OLSR_FALSE;
     }
 }
@@ -280,13 +270,13 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   struct ipcmsg packet;
   char *tmp;
 
-  if(!olsr_cnf->open_ipc) {
+  if (!olsr_cnf->open_ipc) {
     return -1;
   }
 
-  if(!ipc_active)
+  if (!ipc_active) {
     return 0;
-
+  }
   memset(&packet, 0, sizeof(struct ipcmsg));
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
@@ -330,7 +320,6 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
       OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
       CLOSE(ipc_conn);
 
-      //olsr_cnf->open_ipc = 0;
       ipc_active = OLSR_FALSE;
       return -1;
     }
@@ -455,7 +444,6 @@ ipc_send_net_info(int fd)
     {
       OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n");
       CLOSE(ipc_conn);
-      //olsr_cnf->open_ipc = 0;
       return -1;
     }
 

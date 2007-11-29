@@ -36,9 +36,10 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.25 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: hna_set.c,v 1.26 2007/11/29 00:49:38 bernd67 Exp $
  */
 
+#include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
 #include "scheduler.h"
@@ -46,8 +47,6 @@
 
 
 struct hna_entry hna_set[HASHSIZE];
-static size_t netmask_size;
-
 
 /**
  *Initialize the HNA set
@@ -55,17 +54,7 @@ static size_t netmask_size;
 int
 olsr_init_hna_set(void)
 {
-
   int idx;
-
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      netmask_size = sizeof(olsr_u32_t);
-    }
-  else
-    {
-      netmask_size = sizeof(olsr_u16_t);
-    }
 
   /* Since the holdingtime is assumed to be rather large for 
    * HNA entries, the timeoutfunction is only ran once every second
@@ -81,17 +70,6 @@ olsr_init_hna_set(void)
   return 1;
 }
 
-int
-olsr_get_hna_prefix_len(const struct hna_net *hna)
-{
-  if (olsr_cnf->ip_version == AF_INET) {
-    return olsr_netmask_to_prefix((const union olsr_ip_addr *)&hna->A_netmask.v4);
-  } else {
-    return hna->A_netmask.v6;
-  }
-}
-
-
 /**
  *Lookup a network entry in a networkentry list
  *
@@ -102,21 +80,15 @@ olsr_get_hna_prefix_len(const struct hna_net *hna)
  *@return the localted entry or NULL of not found
  */
 struct hna_net *
-olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, const union hna_netmask *mask)
+olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
 {
-  struct hna_net *tmp_net;
-
-
+  struct hna_net *tmp;
   /* Loop trough entrys */
-  for(tmp_net = nets->next;
-      tmp_net != nets;
-      tmp_net = tmp_net->next)
-    { 
-      if(ipequal(&tmp_net->A_network_addr, net) &&
-	 (memcmp(&tmp_net->A_netmask, mask, netmask_size) == 0))
-	return tmp_net;
+  for (tmp = nets->next; tmp != nets; tmp = tmp->next) { 
+    if (tmp->prefixlen == prefixlen && ipequal(&tmp->A_network_addr, net)) {
+      return tmp;
     }
-  
+  }
   /* Not found */
   return NULL;
 }
@@ -200,7 +172,7 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
  *@return the newly created entry
  */
 struct hna_net *
-olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, const union hna_netmask *mask)
+olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
 {
   /* Add the net */
   struct hna_net *new_net = olsr_malloc(sizeof(struct hna_net), "Add HNA net");
@@ -209,7 +181,7 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, const 
   //COPY_IP(&new_net->A_network_addr, net);
   new_net->A_network_addr = *net;
   //memcpy(&new_net->A_netmask, mask, netmask_size);
-  new_net->A_netmask = *mask;
+  new_net->prefixlen = prefixlen;
 
   /* Queue */
   hna_gw->networks.next->prev = new_net;
@@ -237,25 +209,24 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, const 
  *@return nada
  */
 void
-olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, const union hna_netmask *mask, const float vtime)
+olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen, const float vtime)
 {
-  struct hna_entry *gw_entry;
+  struct hna_entry *gw_entry = olsr_lookup_hna_gw(gw);
   struct hna_net *net_entry;
 
-  if((gw_entry = olsr_lookup_hna_gw(gw)) == NULL)
+  if (gw_entry == NULL) {
     /* Need to add the entry */
     gw_entry = olsr_add_hna_entry(gw);
-  
-  if((net_entry = olsr_lookup_hna_net(&gw_entry->networks, net, mask)) == NULL)
-    {
-      /* Need to add the net */
-      net_entry = olsr_add_hna_net(gw_entry, net, mask);
-      changes_hna = OLSR_TRUE;
-    }
+  }
+  net_entry = olsr_lookup_hna_net(&gw_entry->networks, net, prefixlen);
+  if (net_entry == NULL)  {
+    /* Need to add the net */
+    net_entry = olsr_add_hna_net(gw_entry, net, prefixlen);
+    changes_hna = OLSR_TRUE;
+  }
 
   /* Update holdingtime */
   net_entry->A_time = GET_TIMESTAMP(vtime*1000);
-
 }
 
 

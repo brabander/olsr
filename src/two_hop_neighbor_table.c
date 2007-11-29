@@ -36,13 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.c,v 1.20 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: two_hop_neighbor_table.c,v 1.21 2007/11/29 00:49:39 bernd67 Exp $
  */
 
-
-
-#include "defs.h"
 #include "two_hop_neighbor_table.h"
+#include "ipcalc.h"
+#include "defs.h"
 #include "mid_set.h"
 #include "neighbor_table.h"
 #include "net_olsr.h"

@@ -36,11 +36,12 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.25 2007/11/16 22:56:54 bernd67 Exp $
+ * $Id: rebuild_packet.c,v 1.26 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 
 #include "rebuild_packet.h"
+#include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
 #include "mid_set.h"
@@ -93,17 +94,15 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
       tmp_pairs = NULL;
       hna_pairs = NULL;
 
-      for(i = 0; i < no_pairs; i++)
-	{	  
+      for(i = 0; i < no_pairs; i++) {	  
 	  hna_pairs = olsr_malloc(sizeof(struct hna_net_addr), "HNA chgestruct");
 	  
 	  //COPY_IP(&hna_pairs->net, &haddr->addr);
           hna_pairs->net.v4.s_addr = haddr->addr;
 	  //COPY_IP(&hna_pairs->netmask, &haddr->netmask);
-          hna_pairs->netmask.v4 = haddr->netmask;
+          hna_pairs->prefixlen = olsr_netmask4_to_prefix(&haddr->netmask);
 
-	  hna_pairs->next = tmp_pairs;
-	  
+	  hna_pairs->next = tmp_pairs;	  
 	  tmp_pairs = hna_pairs;
 	  haddr++;
 	}
@@ -138,7 +137,7 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
 	  
 	  //COPY_IP(&hna_pairs->net, &haddr6->addr);
 	  hna_pairs->net.v6 = haddr6->addr;
-	  hna_pairs->netmask.v6 = olsr_netmask_to_prefix((const union olsr_ip_addr *)&haddr6->netmask);
+          hna_pairs->prefixlen = olsr_netmask6_to_prefix(&haddr6->netmask);
 
 	  hna_pairs->next = tmp_pairs;
 	  

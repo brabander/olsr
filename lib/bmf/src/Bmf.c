@@ -57,6 +57,7 @@
 
 /* OLSRD includes */
 #include "defs.h" /* olsr_cnf, OLSR_PRINTF */
+#include "ipcalc.h"
 #include "olsr.h" /* olsr_printf */
 #include "scheduler.h" /* olsr_register_scheduler_event */
 #include "mid_set.h" /* mid_lookup_main_addr() */

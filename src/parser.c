@@ -36,10 +36,11 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.37 2007/11/29 00:24:00 bernd67 Exp $
+ * $Id: parser.c,v 1.38 2007/11/29 00:49:39 bernd67 Exp $
  */
 
 #include "parser.h"
+#include "ipcalc.h"
 #include "defs.h"
 #include "process_package.h"
 #include "mantissa.h"
