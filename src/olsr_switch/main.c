@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.32 2007/11/22 11:43:35 bernd67 Exp $
+ * $Id: main.c,v 1.33 2007/11/29 17:07:15 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -92,8 +92,13 @@ ohs_init_connect_sockets(void);
 static int
 ohs_configure(void);
 
+#if !defined WIN32
+static void
+ohs_listen_loop(void) __attribute__((noreturn));
+#else
 static void
 ohs_listen_loop(void);
+#endif
 
 const char *
 olsr_ip_to_string(const union olsr_ip_addr *addr)
