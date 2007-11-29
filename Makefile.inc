@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.46 2007/11/19 14:35:10 bernd67 Exp $
+# $Id: Makefile.inc,v 1.47 2007/11/29 23:03:48 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -75,8 +75,11 @@ WARNINGS +=	-Wno-deprecated-declarations
 WARNINGS +=	-Wendif-labels
 WARNINGS +=	-Wwrite-strings
 WARNINGS +=	-Wbad-function-cast
-#WARNINGS +=	-Wpointer-arith
+WARNINGS +=	-Wpointer-arith
 WARNINGS +=	-Wcast-qual
+# the following 5 do not work yet
+#WARNINGS +=	-Wshadow
+#WARNINGS +=	-Wpointer-arith
 #WARNINGS +=	-Wcast-align
 #WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls
