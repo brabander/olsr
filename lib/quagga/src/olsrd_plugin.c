@@ -41,6 +41,8 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 
+static export_route_function orig_addroute_function;
+static export_route_function orig_delroute_function;
 
 int olsrd_plugin_interface_version (void) {
   return PLUGIN_INTERFACE_VERSION;
@@ -80,17 +82,17 @@ static int set_exportroutes (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   if (!strcmp(value, "only")) {
-    if (!olsr_addroute_remove_function(&olsr_ioctl_add_route, AF_INET))
-      puts ("AIII, could not remove the kernel route exporter");
-    if (!olsr_delroute_remove_function(&olsr_ioctl_del_route, AF_INET))
-      puts ("AIII, could not remove the kernel route deleter");
-    olsr_addroute_add_function(&zebra_add_olsr_v4_route, AF_INET);
-    olsr_delroute_add_function(&zebra_del_olsr_v4_route, AF_INET);
+    orig_addroute_function = NULL;
+    orig_delroute_function = NULL;
+    olsr_addroute_function = zebra_add_olsr_v4_route;
+    olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
   }
   else if (!strcmp(value, "additional")) {
-    olsr_addroute_add_function(&zebra_add_olsr_v4_route, AF_INET);
-    olsr_delroute_add_function(&zebra_del_olsr_v4_route, AF_INET);
+    orig_addroute_function = olsr_addroute_function;
+    orig_delroute_function = olsr_delroute_function;
+    olsr_addroute_function = zebra_add_olsr_v4_route;
+    olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
   }
   else zebra_export_routes(0);
