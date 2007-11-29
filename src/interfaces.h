@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.48 2007/11/25 22:02:33 bernd67 Exp $
+ * $Id: interfaces.h,v 1.49 2007/11/29 17:09:16 bernd67 Exp $
  */
 
 
@@ -72,26 +72,21 @@
 
 #define MAX_IF_METRIC           100
 
-#if 0
-enum olsr_if_weight
-  {
-    WEIGHT_LOWEST = 0,
-    WEIGHT_LOW,
-    WEIGHT_ETHERNET_1GBP,     /* Ethernet 1Gb+        */
-    WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb         */
-    WEIGHT_ETHERNET_100MB,    /* Ethernet 100Mb       */
-    WEIGHT_ETHERNET_10MB,     /* Ethernet 10Mb        */
-    WEIGHT_ETHERNET_DEFAULT,  /* Ethernet unknown rate*/
-    WEIGHT_WLAN_HIGH,         /* >54Mb WLAN           */
-    WEIGHT_WLAN_54MB,         /* 54Mb 802.11g         */
-    WEIGHT_WLAN_11MB,         /* 11Mb 802.11b         */
-    WEIGHT_WLAN_LOW,          /* <11Mb WLAN           */
-    WEIGHT_WLAN_DEFAULT,      /* WLAN unknown rate    */
-    WEIGHT_SERIAL,            /* Serial device        */
-    WEIGHT_HIGH,              /* Max                  */
-    WEIGHT_HIGHEST = WEIGHT_HIGH
-  };
-#endif
+#define WEIGHT_LOWEST           0       /* No weight            */
+#define WEIGHT_LOW              1       /* Low                  */
+#define WEIGHT_ETHERNET_1GBP    2       /* Ethernet 1Gb+        */
+#define WEIGHT_ETHERNET_1GB     4       /* Ethernet 1Gb         */
+#define WEIGHT_ETHERNET_100MB   8       /* Ethernet 100Mb       */
+#define WEIGHT_ETHERNET_10MB    16      /* Ethernet 10Mb        */
+#define WEIGHT_ETHERNET_DEFAULT 32      /* Ethernet unknown rate*/
+#define WEIGHT_WLAN_HIGH        64      /* >54Mb WLAN           */
+#define WEIGHT_WLAN_54MB        128     /* 54Mb 802.11g         */
+#define WEIGHT_WLAN_11MB        256     /* 11Mb 802.11b         */
+#define WEIGHT_WLAN_LOW         512     /* <11Mb WLAN           */
+#define WEIGHT_WLAN_DEFAULT     1024    /* WLAN unknown rate    */
+#define WEIGHT_SERIAL           2048    /* Serial device        */
+#define WEIGHT_HIGH             4096    /* High                 */
+#define WEIGHT_HIGHEST          8192    /* Really high          */
 
 struct if_gen_property
 {

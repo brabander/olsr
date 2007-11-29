@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.40 2007/11/29 00:07:37 bernd67 Exp $
+ * $Id: net.c,v 1.41 2007/11/29 17:09:16 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -473,7 +473,7 @@ join_mcast(struct interface *ifs, int sock)
 
   struct ipv6_mreq mcastreq;
 
-  COPY_IP(&mcastreq.ipv6mr_multiaddr, &ifs->int6_multaddr.sin6_addr);
+  mcastreq.ipv6mr_multiaddr=ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
   OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, olsr_ip_to_string((union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
