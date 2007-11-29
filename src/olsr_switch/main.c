@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.33 2007/11/29 17:07:15 bernd67 Exp $
+ * $Id: main.c,v 1.34 2007/11/29 17:56:57 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */
@@ -45,6 +45,8 @@
 #include "olsr_host_switch.h"
 #include "link_rules.h"
 #include "ohs_cmd.h"
+#include "ipcalc.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -74,8 +76,10 @@ static olsr_u8_t data_buffer[OHS_BUFSIZE];
 
 struct ohs_connection *ohs_conns;
 
-static int ip_version;
-int ipsize;
+//static int ip_version;
+//int ipsize;
+static struct olsrd_config olsr_cnf_data;
+struct olsrd_config *olsr_cnf = &olsr_cnf_data;
 
 olsr_u32_t logbits;
 
@@ -100,20 +104,6 @@ static void
 ohs_listen_loop(void);
 #endif
 
-const char *
-olsr_ip_to_string(const union olsr_ip_addr *addr)
-{
-  static char buff[4][100];
-  static int index = 0;
-  const char *ret = inet_ntop(ip_version,
-                              ip_version == AF_INET ? (const void *)&addr->v4 : (const void *)&addr->v6,
-                              buff[index],
-                              sizeof(buff[index]));
-  index = (index + 1) & 3;
-  return ret;
-}
-
-
 #ifdef WIN32
 int __stdcall
 ohs_close(unsigned long signal __attribute__((unused)))
@@ -132,14 +122,12 @@ ohs_close(int signal __attribute__((unused)))
 struct ohs_connection *
 get_client_by_addr(const union olsr_ip_addr *adr)
 {
-  struct ohs_connection *oc = ohs_conns;
-
-  while(oc)
-    {
-      if(COMP_IP(adr, &oc->ip_addr))
+  struct ohs_connection *oc;
+  for (oc = ohs_conns; oc != NULL; oc = oc->next) {
+    if (ipequal(adr, &oc->ip_addr)) {
         return oc;
-      oc = oc->next;
     }
+  }
   return NULL;
 }
 
@@ -148,21 +136,18 @@ static int
 ohs_init_new_connection(int s)
 {
   struct ohs_connection *oc;
-  olsr_u32_t new_addr;
   int i;
 
-  if(logbits & LOG_CONNECT)
+  if(logbits & LOG_CONNECT) {
     printf("ohs_init_new_connection\n");
-
+  }
   /* Create new client node */
-  oc = malloc(sizeof(struct ohs_connection));
-  if(!oc)
+  oc = calloc(1, sizeof(struct ohs_connection));
+  if (!oc) {
     OHS_OUT_OF_MEMORY("New connection");
-
-  memset(oc, 0, sizeof(oc));
+  }
 
   oc->socket = s;
-
   oc->links = NULL;
   oc->rx = 0;
   oc->tx = 0;
@@ -173,82 +158,73 @@ ohs_init_new_connection(int s)
   // re-try for 2 seconds on Windows; shouldn't harm Linux et al.
 
   /* Get "fake IP" */
-  for (i = 0; i < 20; i++)
-  {
+  for (i = 0; i < 20; i++) {
     /* Win32 needs that cast. */
-    if (recv(oc->socket, (void *)&new_addr, sizeof(new_addr), 0) == 4)
+      if (recv(oc->socket, (void *)&oc->ip_addr, olsr_cnf->ipsize, 0) == (int)olsr_cnf->ipsize) {
       break;
-
+    }
 #if defined WIN32
     Sleep(100);
 #endif
   }
 
-  if (i == 20)
-  {
+  if (i == 20) {
     printf("Failed to fetch IP address! (%s)\n", strerror(errno));
     return -1;
   }
 
-  oc->ip_addr.v4.s_addr = ntohl(new_addr);
-  if(logbits & LOG_CONNECT)
-    printf("IP: %s\n", olsr_ip_to_string(&oc->ip_addr));
-
-  if(get_client_by_addr(&oc->ip_addr))
-    {
-      if(logbits & LOG_CONNECT)
-	printf("IP: %s DUPLICATE! Disconecting client!\n", olsr_ip_to_string(&oc->ip_addr));
-
-      close(s);
-      return -1;
+  if (logbits & LOG_CONNECT) {
+    struct ipaddr_str addrstr;
+    printf("IP: %s\n", olsr_ip_to_string(&addrstr, &oc->ip_addr));
+  }
+  if (get_client_by_addr(&oc->ip_addr)) {
+    if (logbits & LOG_CONNECT) {
+      struct ipaddr_str addrstr;
+      printf("IP: %s DUPLICATE! Disconecting client!\n", olsr_ip_to_string(&addrstr, &oc->ip_addr));
     }
+    close(s);
+    free(oc);
+    return -1;
+  }
 
   /* Queue */
   oc->next = ohs_conns;
   ohs_conns = oc;
-
   return 1;
 }
 
 int
 ohs_delete_connection(struct ohs_connection *oc)
 {
-
-  if(!oc)
+  if (!oc) {
     return -1;
-
+  }
   /* Close the socket */
   close(oc->socket);
 
-  if(logbits & LOG_CONNECT)
-    printf("Removing entry %s\n", olsr_ip_to_string(&oc->ip_addr));
+  if(logbits & LOG_CONNECT) {
+    struct ipaddr_str addrstr;
+    printf("Removing entry %s\n", olsr_ip_to_string(&addrstr, &oc->ip_addr));
+  }
   /* De-queue */
-  if(oc == ohs_conns)
-    {
-      ohs_conns = ohs_conns->next;
-    }
-  else
-    {
-      struct ohs_connection *curr_entry, *prev_entry;
-      curr_entry = ohs_conns->next;
-      prev_entry = ohs_conns;
+  if(oc == ohs_conns) {
+    ohs_conns = ohs_conns->next;
+  } else {
+    struct ohs_connection *curr_entry = ohs_conns->next;
+    struct ohs_connection *prev_entry = ohs_conns;
       
-      while(curr_entry)
-	{
-	  if(curr_entry == oc)
-	    {
-	      prev_entry->next = curr_entry->next;
-	      break;
-	    }
-	  prev_entry = curr_entry;
-	  curr_entry = curr_entry->next;
-	}
+    while (curr_entry != NULL) {
+      if(curr_entry == oc) {
+        prev_entry->next = curr_entry->next;
+        break;
+      }
+      prev_entry = curr_entry;
+      curr_entry = curr_entry->next;
     }
-
+  }
   ohs_delete_all_related_links(oc);
-  /* Free */
-  free(oc);
 
+  free(oc);
   return 0;
 }
 
@@ -264,38 +240,38 @@ ohs_route_data(struct ohs_connection *oc)
   if((len = recv(oc->socket, data_buffer, OHS_BUFSIZE, 0)) <= 0)
     return -1;
 
-  if(logbits & LOG_FORWARD)
-    printf("Received %ld bytes from %s\n", (long)len, olsr_ip_to_string(&oc->ip_addr));
-
+  if(logbits & LOG_FORWARD) {
+    struct ipaddr_str addrstr;
+    printf("Received %ld bytes from %s\n", (long)len, olsr_ip_to_string(&addrstr, &oc->ip_addr));
+  }
   /* Loop trough clients */
-  for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next)
-    {
-      /* Check that the link is active open */
-      if(ohs_check_link(oc, &ohs_cs->ip_addr) &&
-	 oc->socket != ohs_cs->socket)
-	{
-	  ssize_t sent;
+  for(ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next) {
+    /* Check that the link is active open */
+    if(ohs_check_link(oc, &ohs_cs->ip_addr) &&
+       oc->socket != ohs_cs->socket) {
+      ssize_t sent;
 
-	  /* Send link addr */
-	  if(send(ohs_cs->socket, oc->ip_addr.v6.s6_addr, ipsize, 0) != ipsize)
-	    {
-	      printf("Error sending link address!\n");
-	    }
-	  /* Send data */
-	  if(logbits & LOG_FORWARD)
-	    printf("Sending %d bytes %s=>%s\n", (int)len, 
-		   olsr_ip_to_string(&oc->ip_addr),
-		   olsr_ip_to_string(&ohs_cs->ip_addr));
+      /* Send link addr */
+      if (send(ohs_cs->socket, (const void *)&oc->ip_addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize) {
+          printf("Error sending link address!\n");
+      }
+      /* Send data */
+      if (logbits & LOG_FORWARD) {
+          struct ipaddr_str addrstr, addrstr2;
+          printf("Sending %d bytes %s=>%s\n",
+                 (int)len,
+                 olsr_ip_to_string(&addrstr, &oc->ip_addr),
+                 olsr_ip_to_string(&addrstr2, &ohs_cs->ip_addr));
+      }
 
-	  if((sent = send(ohs_cs->socket, data_buffer, len, 0)) != len)
-	    {
-	      printf("Error sending(buf %d != sent %d)\n", (int)len, (int)sent);
-	    }
-	  ohs_cs->rx++;
-	  cnt++;
-	}
+      sent = send(ohs_cs->socket, data_buffer, len, 0);
+      if(sent != len) {
+        printf("Error sending(buf %d != sent %d)\n", (int)len, (int)sent);
+      }
+      ohs_cs->rx++;
+      cnt++;
     }
-
+  }
   return cnt;
 }
 
@@ -548,8 +524,8 @@ main(void)
   printf("olsrd host-switch daemon version %s starting\n", OHS_VERSION);
 
   logbits = LOG_DEFAULT;
-  ip_version = AF_INET;
-  ipsize = sizeof(struct in_addr);
+  olsr_cnf->ip_version = AF_INET;
+  olsr_cnf->ipsize = sizeof(struct in_addr);
 
   srand((unsigned int)time(NULL));
 

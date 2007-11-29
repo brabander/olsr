@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.h,v 1.4 2005/06/03 06:12:23 kattemat Exp $
+ * $Id: link_rules.h,v 1.5 2007/11/29 17:56:57 bernd67 Exp $
  */
 
 

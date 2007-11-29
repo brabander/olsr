@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,11 +36,13 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.6 2005/06/03 06:12:23 kattemat Exp $
+ * $Id: link_rules.c,v 1.7 2007/11/29 17:56:57 bernd67 Exp $
  */
 
 #include "link_rules.h"
 #include "olsr_host_switch.h"
+#include "ipcalc.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -48,43 +50,33 @@
 int
 ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
 {
-  struct ohs_ip_link *links = oc->links;
-
-  while(links)
-    {
-      if(COMP_IP(&links->dst, dst))
-	{
-          int r;
-
-          if(links->quality == 0)
-            {
-              if(logbits & LOG_LINK)
-                printf("%s -> %s Q: %d\n", 
-                   olsr_ip_to_string(&oc->ip_addr),
-                   olsr_ip_to_string(dst),
-                   links->quality);
-
-              return 0;
-            }
-
-          r = 1 + (int)((100.0*rand())/(RAND_MAX + 1.0));
-
-          if(logbits & LOG_LINK)
-            printf("%s -> %s Q: %d R: %d\n", 
-                   olsr_ip_to_string(&oc->ip_addr),
-                   olsr_ip_to_string(dst),
-                   links->quality, r);
-
-          /* Random - based on quality */
-          if(links->quality > r)
-            return 0;
-          else
-            return 1;
-	}
-
-      links = links->next;
+  struct ohs_ip_link *links;
+  for (links = oc->links; links != NULL; links = links->next) {
+    int r;
+    if (!ipequal(&links->dst, dst)) {
+        continue;
+    }
+    if (links->quality == 0) {
+      if (logbits & LOG_LINK) {
+        struct ipaddr_str addrstr, dststr;
+        printf("%s -> %s Q: %d\n", 
+               olsr_ip_to_string(&addrstr, &oc->ip_addr),
+               olsr_ip_to_string(&dststr, dst),
+               links->quality);
+      }
+      return 0;
     }
 
+    r = 1 + (int)(100.0 / (RAND_MAX + 1.0) * rand());
+
+    if (logbits & LOG_LINK) {
+      struct ipaddr_str addrstr, dststr;
+      printf("%s -> %s Q: %d R: %d\n",  olsr_ip_to_string(&addrstr, &oc->ip_addr),
+             olsr_ip_to_string(&dststr, dst), links->quality, r);
+    }
+    /* Random - based on quality */
+    return links->quality > r ? 0 : 1;
+  }
   return 1;
 }
 
@@ -122,7 +114,7 @@ add_link(struct ohs_connection *src, struct ohs_connection *dst)
   /* Queue */
   link->next = src->links;
   src->links = link;
-  COPY_IP(&link->dst, &dst->ip_addr);
+  link->dst = dst->ip_addr;
   src->linkcnt++;
 
   return link;
@@ -157,17 +149,11 @@ remove_link(struct ohs_connection *oc, struct ohs_ip_link *lnk)
 struct ohs_ip_link *
 get_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
 {
-  struct ohs_ip_link *links = oc->links;
-
-  while(links)
-    {
-      if(COMP_IP(&links->dst, dst))
-	{
-	  return links;
-	}
-
-      links = links->next;
+  struct ohs_ip_link *links;
+  for (links = oc->links; links != NULL; links = links->next) {
+    if (ipequal(&links->dst, dst)) {
+        return links;
     }
-
+  }
   return NULL;
 }
