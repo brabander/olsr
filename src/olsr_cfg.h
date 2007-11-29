@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.40 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.41 2007/11/29 15:47:26 bernd67 Exp $
  */
 
 
@@ -45,10 +45,12 @@
 
 #include "olsr_types.h"
 
+#ifndef LINUX_POLICY_ROUTING
 #if defined linux
 #  define LINUX_POLICY_ROUTING 1
 #else
 #  define LINUX_POLICY_ROUTING 0
+#endif
 #endif
 
 /* Default values not declared in olsr_protocol.h */
