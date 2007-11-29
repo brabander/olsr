@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.13 2007/11/29 00:49:41 bernd67 Exp $
+ * $Id: admin_interface.c,v 1.14 2007/11/29 01:38:36 bernd67 Exp $
  */
 
 /*
@@ -184,7 +184,7 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
 int
 process_param(char *key, char *value)
 {
-  static olsr_u32_t curr_hna_net;
+  static union olsr_ip_addr curr_hna_net;
   static olsr_bool curr_hna_ok = OLSR_FALSE;
 
   if(!strcmp(key, "debug_level"))
@@ -306,35 +306,35 @@ process_param(char *key, char *value)
 
   if(!strcmp(key, "hna_new_net"))
     {
-      struct in_addr in;
-
-      if(inet_aton(value, &in) == 0)
+      if(inet_pton(olsr_cnf->ipsize, value, &curr_hna_net.v4) == 0)
 	{
 	  fprintf(stderr, "Failed converting new HNA net %s\n", value);
 	  return -1;
 	}
       curr_hna_ok = OLSR_TRUE;
-      curr_hna_net = in.s_addr;
       return 1;
     }
 
   if(!strcmp(key, "hna_new_netmask"))
     {
       struct in_addr in;
+      olsr_u8_t prefixlen;
 
       if(!curr_hna_ok)
 	return -1;
 
       curr_hna_ok = OLSR_FALSE;
 
-      if(inet_aton(value, &in) == 0)
-	{
-	  fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
-	  return -1;
-	}
-      add_local_hna4_entry((union olsr_ip_addr *)&curr_hna_net,
-			   (union olsr_ip_addr *)&in.s_addr);
-      
+      if(inet_aton(value, &in) == 0) {
+        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        return -1;
+      }
+      prefixlen = netmask_to_prefix((olsr_u8_t *)&in, olsr_cnf->ipsize);
+      if(prefixlen == UCHAR_MAX) {
+        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        return -1;
+      }
+      ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
       return 1;
     }
 
@@ -343,10 +343,11 @@ process_param(char *key, char *value)
       struct in_addr net, mask;
       char ip_net[16], ip_mask[16];
       int seperator = 0;
+      olsr_u8_t prefixlen;
 
-      while(key[7 + seperator] != '*')
+      while(key[7 + seperator] != '*') {
 	seperator++;
-
+      }
       strncpy(ip_net, &key[7], seperator);
       ip_net[seperator] = 0;
       strncpy(ip_mask, &key[7 + seperator + 1], 16);
@@ -358,15 +359,16 @@ process_param(char *key, char *value)
 	  return -1;
 	}
 
-      if(inet_aton(ip_mask, &mask) == 0)
-	{
-	  fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
-	  return -1;
-	}
-
-      remove_local_hna4_entry((union olsr_ip_addr *)&net.s_addr,
-			      (union olsr_ip_addr *)&mask.s_addr);
-
+      if(inet_aton(ip_mask, &mask) == 0) {
+        fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
+        return -1;
+      }
+      prefixlen = netmask_to_prefix((olsr_u8_t *)&mask, olsr_cnf->ipsize);
+      if(prefixlen == UCHAR_MAX) {
+        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        return -1;
+      }
+      ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
       return 1;
     }
 
