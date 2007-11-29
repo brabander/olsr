@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.38 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: parser.c,v 1.39 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 #include "parser.h"
@@ -421,13 +421,11 @@ olsr_input(int fd)
       if(olsr_cnf->ip_version == AF_INET)
 	{
 	  /* IPv4 sender address */
-	  //COPY_IP(&from_addr, &((struct sockaddr_in *)&from)->sin_addr.s_addr);
 	  from_addr.v4 = ((struct sockaddr_in *)&from)->sin_addr;
 	}
       else
 	{
 	  /* IPv6 sender address */
-	  //COPY_IP(&from_addr, &((struct sockaddr_in6 *)&from)->sin6_addr);
 	  from_addr.v6 = ((struct sockaddr_in6 *)&from)->sin6_addr;
 	}
       
@@ -495,7 +493,6 @@ olsr_input_hostemu(int fd)
   if(cc != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
-      //COPY_IP(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator);
       memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);
     }
 

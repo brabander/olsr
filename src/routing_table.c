@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.36 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: routing_table.c,v 1.37 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -249,7 +249,6 @@ olsr_alloc_rt_path(struct rt_entry *rt,
 
   memset(rtp, 0, sizeof(*rtp));
 
-  //COPY_IP(&rtp->rtp_originator, originator);
   rtp->rtp_originator = *originator;
 
   /* set key and backpointer prior to tree insertion */

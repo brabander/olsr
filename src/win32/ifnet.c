@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.40 2007/11/08 23:23:13 bernd67 Exp $
+ * $Id: ifnet.c,v 1.41 2007/11/29 18:10:18 bernd67 Exp $
  */
 
 #include "interfaces.h"
@@ -548,7 +548,6 @@ void RemoveInterface(struct olsr_if *IntConf)
     else
     {
       struct ipaddr_str buf;
-      //COPY_IP(&olsr_cnf->main_addr, &ifnet->ip_addr);
       olsr_cnf->main_addr = ifnet->ip_addr;
       OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
@@ -638,7 +637,6 @@ int add_hemu_if(struct olsr_if *iface)
   memset(&null_addr, 0, olsr_cnf->ipsize);
   if(ipequal(&null_addr, &olsr_cnf->main_addr))
     {
-      //COPY_IP(&olsr_cnf->main_addr, &iface->hemu_ip);
       olsr_cnf->main_addr = iface->hemu_ip;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
@@ -1043,7 +1041,6 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   
   if(ipequal(&NullAddr, &olsr_cnf->main_addr))
   {
-    //COPY_IP(&olsr_cnf->main_addr, &New->ip_addr);
     olsr_cnf->main_addr = New->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
   }

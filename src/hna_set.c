@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.27 2007/11/29 01:29:53 bernd67 Exp $
+ * $Id: hna_set.c,v 1.28 2007/11/29 18:10:12 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -140,7 +140,6 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
   new_entry = olsr_malloc(sizeof(struct hna_entry), "New HNA entry");
 
   /* Fill struct */
-  //COPY_IP(&new_entry->A_gateway_addr, addr);
   new_entry->A_gateway_addr = *addr;
 
   /* Link nets */
@@ -178,7 +177,6 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u
   struct hna_net *new_net = olsr_malloc(sizeof(struct hna_net), "Add HNA net");
   
   /* Fill struct */
-  //COPY_IP(&new_net->A_network_addr, net);
   new_net->A_network_addr = *net;
   //memcpy(&new_net->A_netmask, mask, netmask_size);
   new_net->prefixlen = prefixlen;

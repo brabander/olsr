@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.40 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: build_msg.c,v 1.41 2007/11/29 18:10:11 bernd67 Exp $
  */
 
 #include "build_msg.h"
@@ -297,7 +297,6 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.olsr_msgtype = HELLO_MESSAGE;
   /* Set source(main) addr */
-  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
   m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
 
   m->v4.olsr_vtime = ifp->valtimes.hello;
@@ -394,7 +393,6 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
 		  curr_size += 4; /* HELLO type section header */
 		}
 	      
-	      //COPY_IP(haddr, &nb->address);
 	      *haddr = nb->address;
 	      
 	      /* Point to next address */
@@ -473,7 +471,6 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
   m->v6.ttl = message->ttl;
   m->v6.hopcnt = 0;
   /* Set source(main) addr */
-  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
   m->v6.originator = olsr_cnf->main_addr.v6;
   m->v6.olsr_msgtype = HELLO_MESSAGE;
 
@@ -564,7 +561,6 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 		  curr_size += 4; /* HELLO type section header */
 		}
 		  
-	      //COPY_IP(haddr, &nb->address);
 	      *haddr = nb->address;
 		  
 	      /* Point to next address */
@@ -645,7 +641,6 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   m->v4.olsr_msgtype = TC_MESSAGE;
   m->v4.hopcnt = message->hop_count;
   m->v4.ttl = message->ttl;
-  //COPY_IP(&m->v4.originator, &message->originator);
   m->v4.originator = message->originator.v4.s_addr;
 
   /* Fill TC header */
@@ -689,7 +684,6 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
 		      olsr_ip_to_string(&buf, &mprs->address));
 #endif 
-      //COPY_IP(&mprsaddr->addr, &mprs->address);
       mprsaddr->addr = mprs->address.v4.s_addr;
       curr_size += olsr_cnf->ipsize;
       mprsaddr++;
@@ -773,7 +767,6 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
   m->v6.olsr_msgtype = TC_MESSAGE;
   m->v6.hopcnt = message->hop_count;
   m->v6.ttl = message->ttl;
-  //COPY_IP(&m->v6.originator, &message->originator);
   m->v6.originator = message->originator.v6;
 
   /* Fill TC header */
@@ -813,7 +806,6 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", 
 		      olsr_ip_to_string(&buf, &mprs->address));
 #endif
-      //COPY_IP(&mprsaddr6->addr, &mprs->address);
       mprsaddr6->addr = mprs->address.v6;
       curr_size += olsr_cnf->ipsize;
 
@@ -888,7 +880,6 @@ serialize_mid4(struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   /* Set main(first) address */
-  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
   m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
   m->v4.olsr_msgtype = MID_MESSAGE;
   m->v4.olsr_vtime = ifp->valtimes.mid;
@@ -930,7 +921,6 @@ serialize_mid4(struct interface *ifp)
 		      ifs->int_name);
 #endif
 	  
-	  //COPY_IP(&addrs->addr, &ifs->ip_addr);
           addrs->addr = ifs->ip_addr.v4.s_addr;
 	  addrs++;
 	  curr_size += olsr_cnf->ipsize;
@@ -994,7 +984,6 @@ serialize_mid6(struct interface *ifp)
   m->v6.olsr_msgtype = MID_MESSAGE;
   m->v6.olsr_vtime = ifp->valtimes.mid;
   /* Set main(first) address */
-  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
   m->v6.originator = olsr_cnf->main_addr.v6;
 
   addrs6 = m->v6.message.mid.mid_addr;
@@ -1033,7 +1022,6 @@ serialize_mid6(struct interface *ifp)
 			      ifs->int_name);
 #endif
 
-          //COPY_IP(&addrs6->addr, &ifs->ip_addr);
           addrs6->addr = ifs->ip_addr.v6;
 	  addrs6++;
 	  curr_size += olsr_cnf->ipsize;
@@ -1096,7 +1084,6 @@ serialize_hna4(struct interface *ifp)
   
   
   /* Fill header */
-  //COPY_IP(&m->v4.originator, &olsr_cnf->main_addr);
   m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
@@ -1129,9 +1116,7 @@ serialize_hna4(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      //COPY_IP(&pair->addr, &h->net);
       pair->addr = h->net.prefix.v4.s_addr;
-      //COPY_IP(&pair->netmask, &h->netmask);
       olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
       pair->netmask = ip_addr.v4.s_addr;
       pair++;
@@ -1184,7 +1169,6 @@ serialize_hna6(struct interface *ifp)
   m = (union olsr_message *)msg_buffer;   
 
   /* Fill header */
-  //COPY_IP(&m->v6.originator, &olsr_cnf->main_addr);
   m->v6.originator = olsr_cnf->main_addr.v6;
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
@@ -1217,9 +1201,7 @@ serialize_hna6(struct interface *ifp)
 #ifdef DEBUG
       OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
 #endif
-      //COPY_IP(&pair6->addr, &h->net);
       pair6->addr = h->net.prefix.v6;
-      //COPY_IP(&pair6->netmask, &tmp_netmask);
       olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
       pair6->netmask = tmp_netmask.v6;
       pair6++;

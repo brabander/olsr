@@ -1468,9 +1468,7 @@ static int CreateInterface(
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
-    //COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr.s_addr);
     newIf->intAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr;
-    //COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr.s_addr);
     newIf->broadAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr;
   }
   else
@@ -1488,7 +1486,6 @@ static int CreateInterface(
 	  else
 	  {
       /* Downcast to correct sockaddr subtype */
-      //COPY_IP(&newIf->intAddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr);
       newIf->intAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
     }
 
@@ -1505,7 +1502,6 @@ static int CreateInterface(
 	  else
 	  {
       /* Downcast to correct sockaddr subtype */
-      //COPY_IP(&newIf->broadAddr, &((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr);
       newIf->broadAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr;
     }
   }
@@ -1622,7 +1618,6 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
     }
 
     /* ...find the OLSR interface structure, if any */
-    //COPY_IP(&ipAddr, &((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr.s_addr);
     ipAddr.v4 =  ((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr;
     olsrIntf = if_ifwithaddr(&ipAddr);
 
@@ -1865,7 +1860,6 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
   assert(ipPacket != NULL && broadAddr != NULL);
 
   iph = (struct iphdr*) ipPacket;
-  //COPY_IP(&destIp, &iph->daddr);
   destIp.v4.s_addr = iph->daddr;
   if (! IsMulticast(&destIp))
   {
@@ -1874,7 +1868,6 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 
     origDaddr = ntohl(iph->daddr);
 
-    //COPY_IP(&iph->daddr, broadAddr);
     iph->daddr = broadAddr->v4.s_addr;
     newDaddr = ntohl(iph->daddr);
 

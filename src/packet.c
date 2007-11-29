@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.27 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: packet.c,v 1.28 2007/11/29 18:10:16 bernd67 Exp $
  */
 
 
@@ -111,7 +111,6 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   /* Set TTL */
 
   message->ttl = 1;  
-  //COPY_IP(&message->source_addr, &olsr_cnf->main_addr);
   message->source_addr = olsr_cnf->main_addr;
 
 #ifdef DEBUG
@@ -190,11 +189,9 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 	}
   
       /* Set the remote interface address */
-      //COPY_IP(&message_neighbor->address, &links->neighbor_iface_addr);
       message_neighbor->address = links->neighbor_iface_addr;
       
       /* Set the main address */
-      //COPY_IP(&message_neighbor->main_address, &links->neighbor->neighbor_main_addr);
       message_neighbor->main_address = links->neighbor->neighbor_main_addr;
 #ifdef DEBUG
       OLSR_PRINTF(5, "Added: %s -  status %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
@@ -293,10 +290,8 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 	      }
 	    
 
-	    //COPY_IP(&message_neighbor->address, &neighbor->neighbor_main_addr);
 	    message_neighbor->address = neighbor->neighbor_main_addr;
 
-	    //COPY_IP(&message_neighbor->main_address, &neighbor->neighbor_main_addr);
 	    message_neighbor->main_address = neighbor->neighbor_main_addr;
 #ifdef DEBUG
 	    OLSR_PRINTF(5, "Added: %s -  status  %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
@@ -358,9 +353,7 @@ olsr_build_tc_packet(struct tc_message *message)
   message->ttl = MAX_TTL;
   message->ansn = get_local_ansn();
 
-  //COPY_IP(&message->originator, &olsr_cnf->main_addr);
   message->originator = olsr_cnf->main_addr;
-  //COPY_IP(&message->source_addr, &olsr_cnf->main_addr);
   message->source_addr = olsr_cnf->main_addr;
   
 
@@ -382,7 +375,6 @@ olsr_build_tc_packet(struct tc_message *message)
 		//printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
 		message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC");
 		
-		//COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		message_mpr->address = entry->neighbor_main_addr;
 		message_mpr->next = message->multipoint_relay_selector_address;
 		message->multipoint_relay_selector_address = message_mpr;
@@ -399,7 +391,6 @@ olsr_build_tc_packet(struct tc_message *message)
 		    //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
 		    message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC 2");
 		    
-		    //COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->address = entry->neighbor_main_addr;
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;
@@ -415,7 +406,6 @@ olsr_build_tc_packet(struct tc_message *message)
 		    //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
 		    message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC 3");
 		    
-		    //COPY_IP(&message_mpr->address, &entry->neighbor_main_addr);
 		    message_mpr->address = entry->neighbor_main_addr;
 		    message_mpr->next = message->multipoint_relay_selector_address;
 		    message->multipoint_relay_selector_address = message_mpr;

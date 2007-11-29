@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.23 2007/11/08 23:23:13 bernd67 Exp $
+ * $Id: net.c,v 1.24 2007/11/29 18:10:18 bernd67 Exp $
  */
 
 #if defined WINCE
@@ -341,7 +341,6 @@ int join_mcast(struct interface *Nic, int Sock)
   struct ipaddr_str buf;
   struct ipv6_mreq McastReq;
 
-  //COPY_IP(&McastReq.ipv6mr_multiaddr, &Nic->int6_multaddr.sin6_addr);
   McastReq.ipv6mr_multiaddr = Nic->int6_multaddr.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 

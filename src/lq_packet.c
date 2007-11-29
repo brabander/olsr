@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.33 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.34 2007/11/29 18:10:13 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -74,7 +74,6 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   lq_hello->comm.vtime = me_to_double(outif->valtimes.hello);
   lq_hello->comm.size = 0;
 
-  //COPY_IP(&lq_hello->comm.orig, &olsr_cnf->main_addr);
   lq_hello->comm.orig = olsr_cnf->main_addr;
 
   lq_hello->comm.ttl = 1;
@@ -120,7 +119,6 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   
       // set the entry's neighbour interface address
 
-      //COPY_IP(&neigh->addr, &walker->neighbor_iface_addr);
       neigh->addr = walker->neighbor_iface_addr;
       
       // queue the neighbour entry
@@ -163,7 +161,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   lq_tc->comm.vtime = me_to_double(outif->valtimes.tc);
   lq_tc->comm.size = 0;
 
-  //COPY_IP(&lq_tc->comm.orig, &olsr_cnf->main_addr);
   lq_tc->comm.orig = olsr_cnf->main_addr;
 
   if (olsr_cnf->lq_fish > 0)
@@ -183,7 +180,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   lq_tc->comm.hops = 0;
   lq_tc->comm.seqno = get_msg_seqno();
 
-  //COPY_IP(&lq_tc->from, &olsr_cnf->main_addr);
   lq_tc->from = olsr_cnf->main_addr;
 
   lq_tc->ansn = get_local_ansn();
@@ -221,7 +217,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
           // set the entry's main address
 
-          //COPY_IP(&neigh->address, &walker->neighbor_main_addr);
           neigh->address = walker->neighbor_main_addr;
 
           // set the entry's link quality

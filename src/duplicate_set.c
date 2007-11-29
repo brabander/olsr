@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.c,v 1.20 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: duplicate_set.c,v 1.21 2007/11/29 18:10:11 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -95,7 +95,6 @@ olsr_add_dup_entry(const union olsr_ip_addr *originator, const olsr_u16_t seqno)
   new_dup_entry = olsr_malloc(sizeof(struct dup_entry), "New dup entry");
 
   /* Address */
-  //COPY_IP(&new_dup_entry->addr, originator);
   new_dup_entry->addr = *originator;
   /* Seqno */
   new_dup_entry->seqno = seqno;
@@ -288,7 +287,6 @@ olsr_update_dup_entry(const union olsr_ip_addr *originator,
   
   new_iface = olsr_malloc(sizeof(struct dup_iface), "New dup iface");
 
-  //COPY_IP(&new_iface->addr, iface);
   new_iface->addr = *iface;
   new_iface->next = tmp_dup_table->ifaces;
   tmp_dup_table->ifaces = new_iface;

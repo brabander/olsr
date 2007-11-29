@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.54 2007/11/29 00:49:40 bernd67 Exp $
+ * $Id: ifnet.c,v 1.55 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 
@@ -457,7 +457,6 @@ chk_if_changed(struct olsr_if *iface)
       else
 	{
           struct ipaddr_str buf;
-	  //COPY_IP(&olsr_cnf->main_addr, &ifnet->ip_addr);
 	  olsr_cnf->main_addr = ifnet->ip_addr;
 	  OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 	  olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -572,7 +571,6 @@ add_hemu_if(struct olsr_if *iface)
   memset(&null_addr, 0, olsr_cnf->ipsize);
   if(ipequal(&null_addr, &olsr_cnf->main_addr))
     {
-      //COPY_IP(&olsr_cnf->main_addr, &iface->hemu_ip);
       olsr_cnf->main_addr = iface->hemu_ip;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 	olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -1030,7 +1028,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   if(ipequal(&null_addr, &olsr_cnf->main_addr))
     {
       struct ipaddr_str buf;
-      //COPY_IP(&olsr_cnf->main_addr, &ifp->ip_addr);
       olsr_cnf->main_addr = ifp->ip_addr;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));

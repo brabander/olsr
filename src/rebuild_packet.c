@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: rebuild_packet.c,v 1.26 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: rebuild_packet.c,v 1.27 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 
@@ -80,7 +80,6 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
        */
       no_pairs = (ntohs(m->v4.olsr_msgsize) - 12) / 8;
       
-      //COPY_IP(&hmsg->originator, &m->v4.originator);
       hmsg->originator.v4.s_addr = m->v4.originator;
 
       hmsg->packet_seq_number = ntohs(m->v4.seqno);
@@ -97,9 +96,7 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
       for(i = 0; i < no_pairs; i++) {	  
 	  hna_pairs = olsr_malloc(sizeof(struct hna_net_addr), "HNA chgestruct");
 	  
-	  //COPY_IP(&hna_pairs->net, &haddr->addr);
           hna_pairs->net.v4.s_addr = haddr->addr;
-	  //COPY_IP(&hna_pairs->netmask, &haddr->netmask);
           hna_pairs->prefixlen = olsr_netmask4_to_prefix(&haddr->netmask);
 
 	  hna_pairs->next = tmp_pairs;	  
@@ -119,7 +116,6 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
        */
       no_pairs = (ntohs(m->v6.olsr_msgsize) - 24) / 32; /* NB 32 not 8 */
       
-      //COPY_IP(&hmsg->originator, &m->v6.originator);
       hmsg->originator.v6 = m->v6.originator;
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
       hmsg->hop_count =  m->v6.hopcnt;
@@ -135,7 +131,6 @@ hna_chgestruct(struct hna_message *hmsg, const union olsr_message *m)
 	  
 	  hna_pairs = olsr_malloc(sizeof(struct hna_net_addr), "HNA chgestruct 2");	  
 	  
-	  //COPY_IP(&hna_pairs->net, &haddr6->addr);
 	  hna_pairs->net.v6 = haddr6->addr;
           hna_pairs->prefixlen = olsr_netmask6_to_prefix(&haddr6->netmask);
 
@@ -199,9 +194,7 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
       no_aliases =  ((ntohs(m->v4.olsr_msgsize) - 12) / 4);
 
       //printf("Aliases: %d\n", no_aliases);
-      //COPY_IP(&mmsg->mid_origaddr, &m->v4.originator);
       mmsg->mid_origaddr.v4.s_addr = m->v4.originator;
-      //COPY_IP(&mmsg->addr, &m->v4.originator);
       mmsg->addr.v4.s_addr = m->v4.originator;
       /*seq number*/
       mmsg->mid_seqno = ntohs(m->v4.seqno);
@@ -217,7 +210,6 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
 	{
 	  alias = olsr_malloc(sizeof(struct mid_alias), "MID chgestruct");
 	  
-	  //COPY_IP(&alias->alias_addr, &maddr->addr);
           alias->alias_addr.v4.s_addr = maddr->addr;
 	  alias->next = mmsg->mid_addr;
 	  mmsg->mid_addr = alias;
@@ -253,9 +245,7 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
       no_aliases =  ((ntohs(m->v6.olsr_msgsize) - 12) / 16); /* NB 16 */
 
       //printf("Aliases: %d\n", no_aliases);
-      //COPY_IP(&mmsg->mid_origaddr, &m->v6.originator);
       mmsg->mid_origaddr.v6 = m->v6.originator;
-      //COPY_IP(&mmsg->addr, &m->v6.originator);
       mmsg->addr.v6 = m->v6.originator;
       /*seq number*/
       mmsg->mid_seqno = ntohs(m->v6.seqno);
@@ -271,7 +261,6 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
 	  alias = olsr_malloc(sizeof(struct mid_alias), "MID chgestruct 2");
 	  
 	  //printf("Adding alias: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&maddr6->addr));
-	  //COPY_IP(&alias->alias_addr, &maddr6->addr);
 	  alias->alias_addr.v6 = maddr6->addr;
 	  alias->next = mmsg->mid_addr;
 	  mmsg->mid_addr = alias;
@@ -325,7 +314,6 @@ unk_chgestruct(struct unknown_message *umsg, const union olsr_message *m)
     {
       /* IPv4 */
       /* address */
-      //COPY_IP(&umsg->originator, &m->v4.originator);
       umsg->originator.v4.s_addr = m->v4.originator;
       /*seq number*/
       umsg->seqno = ntohs(m->v4.seqno);
@@ -336,7 +324,6 @@ unk_chgestruct(struct unknown_message *umsg, const union olsr_message *m)
     {
       /* IPv6 */
       /* address */
-      //COPY_IP(&umsg->originator, &m->v6.originator);
       umsg->originator.v6 = m->v6.originator;
       /*seq number*/
       umsg->seqno = ntohs(m->v6.seqno);
@@ -373,7 +360,6 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
       const struct hellinfo *hinf;
 
       /* IPv4 */
-      //COPY_IP(&hmsg->source_addr, &m->v4.originator);
       hmsg->source_addr.v4.s_addr = m->v4.originator;
       hmsg->packet_seq_number = ntohs(m->v4.seqno);
 
@@ -400,7 +386,6 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
 	    {
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "HELLO chgestruct");
 
-	      //COPY_IP(&nb->address, hadr);
 	      nb->address = *hadr;
 
 	      /* Fetch link and status */
@@ -419,7 +404,6 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
       const struct hellinfo6 *hinf6;
 
       /* IPv6 */
-      //COPY_IP(&hmsg->source_addr, &m->v6.originator);
       hmsg->source_addr.v6 = m->v6.originator;
       //printf("parsing HELLO from %s\n", olsr_ip_to_string(&buf, &hmsg->source_addr));
       hmsg->packet_seq_number = ntohs(m->v6.seqno);
@@ -447,7 +431,6 @@ hello_chgestruct(struct hello_message *hmsg, const union olsr_message *m)
 	    {
 	      nb = olsr_malloc(sizeof (struct hello_neighbor), "OLSR chgestruct 2");
 
-	      //COPY_IP(&nb->address, hadr);
 	      nb->address = *hadr;
 
 	      /* Fetch link and status */

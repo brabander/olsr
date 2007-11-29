@@ -179,7 +179,6 @@ static void EncapsulateAndForwardPacket(
   forwardTo.sin_port = htons(BMF_ENCAP_PORT);
 
   /* Start by filling in the local broadcast address */
-  //COPY_IP(&forwardTo.sin_addr.s_addr, &intf->broadAddr);
   forwardTo.sin_addr = intf->broadAddr.v4;
 
   /* - If the BMF mechanism is BM_UNICAST_PROMISCUOUS, always send just one
@@ -202,7 +201,6 @@ static void EncapsulateAndForwardPacket(
   {
     if (BmfMechanism == BM_UNICAST_PROMISCUOUS || nPossibleNeighbors <= 2)
     {
-      //COPY_IP(&forwardTo.sin_addr.s_addr, &bestNeighborLinks.links[i]->neighbor_iface_addr);
       forwardTo.sin_addr = bestNeighborLinks.links[i]->neighbor_iface_addr.v4;
     }
 
@@ -271,7 +269,6 @@ static void BmfPacketCaptured(
 #endif
   ipHeader = GetIpHeader(encapsulationUdpData);
 
-  //COPY_IP(&dst, &ipHeader->ip_dst);
   dst.v4 = ipHeader->ip_dst;
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
@@ -303,7 +300,6 @@ static void BmfPacketCaptured(
   /* Retrieve the length of the captured packet */
   ipPacketLen = GetIpTotalLength(ipPacket);
 
-  //COPY_IP(&src, &ipHeader->ip_src);
   src.v4 = ipHeader->ip_src;
 
   OLSR_PRINTF(
@@ -609,9 +605,7 @@ static void BmfEncapsulationPacketReceived(
   ipPacketLen = GetIpTotalLength(ipPacket);
   ipHeader = GetIpHeader(encapsulationUdpData);
 
-  //COPY_IP(&mcSrc, &ipHeader->ip_src);
   mcSrc.v4 = ipHeader->ip_src;
-  //COPY_IP(&mcDst, &ipHeader->ip_dst);
   mcDst.v4 = ipHeader->ip_dst;
 
   /* Increase counter */
@@ -796,7 +790,6 @@ static void BmfEncapsulationPacketReceived(
 
       /* Compose destination of encapsulation packet.
        * Start by filling in the local broadcast address. */
-      //COPY_IP(&forwardTo.sin_addr.s_addr, &walker->broadAddr);
       forwardTo.sin_addr = walker->broadAddr.v4;
 
       /* - If the BMF mechanism is BM_UNICAST_PROMISCUOUS, always send just one
@@ -821,7 +814,6 @@ static void BmfEncapsulationPacketReceived(
         {
           /* For unicast, overwrite the local broadcast address which was filled in
            * above */
-          //COPY_IP(&forwardTo.sin_addr.s_addr, &bestNeighborLinks.links[i]->neighbor_iface_addr);
           forwardTo.sin_addr = bestNeighborLinks.links[i]->neighbor_iface_addr.v4;
         }
 
@@ -901,7 +893,6 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
   ipHeader = GetIpHeader(encapsulationUdpData);
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
-  //COPY_IP(&dstIp, &ipHeader->ip_dst);
   dstIp.v4 = ipHeader->ip_dst;
 
   broadAddr.v4.s_addr = htonl(EtherTunTapIpBroadcast);
@@ -915,7 +906,6 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
     return;
   }
 
-  //COPY_IP(&srcIp, &ipHeader->ip_src);
   srcIp.v4 = ipHeader->ip_src;
 
   OLSR_PRINTF(
@@ -1200,9 +1190,7 @@ static void DoBmf(void)
           continue; /* for */
         }
 
-        //COPY_IP(&forwardedBy, &ipHeader->ip_src);
         forwardedBy.v4 = ipHeader->ip_src;
-        //COPY_IP(&forwardedTo, &ipHeader->ip_dst);
         forwardedTo.v4 = ipHeader->ip_dst;
         BmfEncapsulationPacketReceived(
           walker,
@@ -1244,7 +1232,6 @@ static void DoBmf(void)
           continue; /* for */
         } /* if (nBytes < 0) */
 
-        //COPY_IP(&forwardedBy, &from.sin_addr.s_addr);
         forwardedBy.v4 = from.sin_addr;
 
         /* Check if the number of received bytes is large enough for a minimal BMF

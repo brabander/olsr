@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.78 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: link_set.c,v 1.79 2007/11/29 18:10:13 bernd67 Exp $
  */
 
 
@@ -507,10 +507,8 @@ add_link_entry(const union olsr_ip_addr *local,
    * which received the HELLO message
    */
   //printf("\tLocal IF: %s\n", olsr_ip_to_string(local));
-  //COPY_IP(&new_link->local_iface_addr, local);
   new_link->local_iface_addr = *local;
   /* L_neighbor_iface_addr = Source Address */
-  //COPY_IP(&new_link->neighbor_iface_addr, remote);
   new_link->neighbor_iface_addr = *remote;
 
   /* L_SYM_time            = current time - 1 (expired) */
@@ -585,20 +583,8 @@ add_link_entry(const union olsr_ip_addr *local,
       neighbor = olsr_insert_neighbor_table(remote_main);
     }
 
-  /* Copy the main address - make sure this is done every time
-   * as neighbors might change main address */
-  /* Erik Tromp - OOPS! Don't do this! Neighbor entries are hashed through their
-   * neighbor_main_addr field, and when that field is changed, their position
-   * in the hash table is no longer correct, so that the function
-   * olsr_lookup_neighbor_table() can no longer find the neighbor
-   * entry. */
-  /*COPY_IP(&neighbor->neighbor_main_addr, remote_main);*/
-
   neighbor->linkcount++;
-
-
   new_link->neighbor = neighbor;
-
   if(!ipequal(remote, remote_main))
     {
       /* Add MID alias if not already registered */

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.c,v 1.47 2007/11/29 00:49:39 bernd67 Exp $
+ * $Id: process_package.c,v 1.48 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 #include "process_package.h"
@@ -97,7 +97,6 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
       neigh_addr = mid_lookup_main_addr(&message_neighbors->address);
 
       if (neigh_addr != NULL) {
-        //COPY_IP(&message_neighbors->address, neigh_addr);
         message_neighbors->address = *neigh_addr;
       }
 
@@ -165,7 +164,6 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                   two_hop_neighbor->neighbor_2_pointer = 0;
 		  
-                  //COPY_IP(&two_hop_neighbor->neighbor_2_addr,&message_neighbors->address);
                   two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
 
                   olsr_insert_two_hop_neighbor_table(two_hop_neighbor);

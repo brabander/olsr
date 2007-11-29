@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.c,v 1.36 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: neighbor_table.c,v 1.37 2007/11/29 18:10:14 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -241,7 +241,6 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
   new_neigh = olsr_malloc(sizeof(struct neighbor_entry), "New neighbor entry");
   
   /* Set address, willingness and status */
-  //COPY_IP(&new_neigh->neighbor_main_addr, main_addr);
   new_neigh->neighbor_main_addr = *main_addr;
   new_neigh->willingness = WILL_NEVER;
   new_neigh->status = NOT_SYM;

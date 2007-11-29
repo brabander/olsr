@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.41 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: ipc_frontend.c,v 1.42 2007/11/29 18:10:12 bernd67 Exp $
  */
 
 /*
@@ -281,14 +281,12 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
 
-  //COPY_IP(&packet.target_addr, dst);
   packet.target_addr = *dst;
 
   packet.add = add;
   if(add && gw)
     {
       packet.metric = met;
-      //COPY_IP(&packet.gateway_addr, gw);
       packet.gateway_addr = *gw;
     }
 
@@ -346,13 +344,11 @@ ipc_send_all_routes(int fd)
     packet.size = htons(IPC_PACK_SIZE);
     packet.msgtype = ROUTE_IPC;
 	  
-    //COPY_IP(&packet.target_addr, &rt->rt_dst.prefix);
     packet.target_addr = rt->rt_dst.prefix;
 
     packet.add = 1;
     packet.metric = (olsr_u8_t)(rt->rt_best->rtp_metric.hops);
 
-    //COPY_IP(&packet.gateway_addr, &rt->rt_nexthop.gateway);
     packet.gateway_addr = rt->rt_nexthop.gateway;
 
     memcpy(&packet.device[0], if_ifwithindex_name(rt->rt_nexthop.iif_index), 4);
@@ -419,7 +415,6 @@ ipc_send_net_info(int fd)
   net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
  
   /* Main addr */
-  //COPY_IP(&net_msg->main_addr, &olsr_cnf->main_addr);
   net_msg->main_addr = olsr_cnf->main_addr;
 
   /*

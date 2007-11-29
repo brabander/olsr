@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.21 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: mpr_selector_set.c,v 1.22 2007/11/29 18:10:13 bernd67 Exp $
  */
 
 
@@ -113,7 +113,6 @@ olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
 
   /* Fill struct */
-  //COPY_IP(&new_entry->MS_main_addr, addr);
   new_entry->MS_main_addr = *addr;
   new_entry->MS_time = GET_TIMESTAMP(vtime*1000);
 

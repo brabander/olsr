@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.25 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: mid_set.c,v 1.26 2007/11/29 18:10:13 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -143,7 +143,6 @@ insert_mid_tuple(const union olsr_ip_addr *m_addr, struct mid_address *alias, fl
       tmp->aliases = alias;
       alias->main_entry = tmp;
       QUEUE_ELEM(reverse_mid_set[alias_hash], alias);
-      //COPY_IP(&tmp->main_addr, m_addr);
       tmp->main_addr = *m_addr;
       tmp->ass_timer = GET_TIMESTAMP(vtime*1000);
       /* Queue */
@@ -234,7 +233,6 @@ insert_mid_alias(const union olsr_ip_addr *main_add, const union olsr_ip_addr *a
   OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(&buf1, alias));
   OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf1, main_add));
 
-  //COPY_IP(&adr->alias, alias);
   adr->alias = *alias;
   adr->next_alias = NULL;
   

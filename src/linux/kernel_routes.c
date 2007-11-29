@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.31 2007/11/11 23:10:23 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.32 2007/11/29 18:10:17 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -262,11 +262,9 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
 
   memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
 
-  //COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
   kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
 
-  //COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
@@ -384,11 +382,9 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   memset(&kernel_route,0,sizeof(struct in6_rtmsg));
 
 
-  //COPY_IP(&kernel_route.rtmsg_dst, &rt->rt_dst.prefix);
   kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
 
-  //COPY_IP(&kernel_route.rtmsg_gateway, &rt->rt_best->rtp_nexthop.gateway);
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
