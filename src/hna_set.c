@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.26 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: hna_set.c,v 1.27 2007/11/29 01:29:53 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -328,10 +328,8 @@ olsr_print_hna_set(void)
 #ifndef NODEBUG
                   struct ipaddr_str buf;
 #endif
-                  struct in_addr a;
 		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string(&buf, &tmp_net->A_network_addr));
-                  a.s_addr = tmp_net->A_netmask.v4; /* Ugly! */
-		  OLSR_PRINTF(1, "%-15s ", ip4_to_string(&buf, a));
+		  OLSR_PRINTF(1, "%-15d ", tmp_net->prefix_len);
 		  OLSR_PRINTF(1, "%-15s\n", olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
 		}
 	      else
