@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.37 2007/11/16 22:56:54 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.38 2007/11/29 00:10:17 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd
@@ -829,10 +829,13 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 			}
 			if (!ipequal(&already_saved_name_entries->ip, &from_packet->ip))
 			{
+#ifndef NODEBUG
+				struct ipaddr_str strbuf2, strbuf3;
+#endif
 				OLSR_PRINTF(4, "NAME PLUGIN: updating ip %s -> %s (%s)\n",
 					olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip),
-					olsr_ip_to_string(&strbuf, &from_packet->ip),
-					olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip));
+					olsr_ip_to_string(&strbuf2, &from_packet->ip),
+					olsr_ip_to_string(&strbuf3, &already_saved_name_entries->ip));
 				memcpy(&already_saved_name_entries->ip, &from_packet->ip, olsr_cnf->ipsize);
 				*this_table_changed = OLSR_TRUE;
 			}
@@ -1484,7 +1487,7 @@ write_latlon_file(void)
 	FILE* js;
 	struct olsr_if *ifs;
 	union olsr_ip_addr ip;
-	struct ipaddr_str strbuf;
+	struct ipaddr_str strbuf1, strbuf2;
 	struct tc_entry *tc;
 	struct tc_edge_entry *tc_edge;
 
@@ -1506,13 +1509,12 @@ write_latlon_file(void)
 		{
 			if (olsr_cnf->ip_version == AF_INET)
 			{
-				struct ipaddr_str strbuf;
 				/*
 				 * Didn't find a good sample to grab a simple
 				 * olsr_ip_addr from a given interface. Sven-Ola
 				 */
-				const char* p = olsr_ip_to_string(&strbuf, &olsr_cnf->main_addr);
-				const char* q = ip4_to_string(&strbuf, ifs->interf->int_addr.sin_addr);
+				const char* p = olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr);
+				const char* q = ip4_to_string(&strbuf1, ifs->interf->int_addr.sin_addr);
 				if (0 != strcmp(p, q))
 				{
 					fprintf(js, "Mid('%s','%s');\n", p, q);
@@ -1520,10 +1522,9 @@ write_latlon_file(void)
 			}
 			else if (!(ipequal(&olsr_cnf->main_addr, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr)))
 			{
-				struct ipaddr_str strbuf;
 				fprintf(js, "Mid('%s','%s');\n",
-					olsr_ip_to_string(&strbuf, &olsr_cnf->main_addr),
-					olsr_ip_to_string(&strbuf, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr));
+					olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+					olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr));
 			}
 		}
 	}
@@ -1537,16 +1538,16 @@ write_latlon_file(void)
 			while(alias)
 			{
 				fprintf(js, "Mid('%s','%s');\n",
-						olsr_ip_to_string(&strbuf, &entry->main_addr),
-						olsr_ip_to_string(&strbuf, &alias->alias));
+						olsr_ip_to_string(&strbuf1, &entry->main_addr),
+						olsr_ip_to_string(&strbuf2, &alias->alias));
 				alias = alias->next_alias;
 			}
 			entry = entry->next;
 		}
 	}
 	lookup_defhna_latlon(&ip);
-	fprintf(js, "Self('%s',%f,%f,%d,'%s','%s');\n", olsr_ip_to_string(&strbuf, &olsr_cnf->main_addr),
-			my_lat, my_lon, get_isdefhna_latlon(), olsr_ip_to_string(&strbuf, &ip), my_names->name);
+	fprintf(js, "Self('%s',%f,%f,%d,'%s','%s');\n", olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+			my_lat, my_lon, get_isdefhna_latlon(), olsr_ip_to_string(&strbuf2, &ip), my_names->name);
 	for (hash = 0; hash < HASHSIZE; hash++) 
 	{
 		struct db_entry *entry;
@@ -1556,8 +1557,8 @@ write_latlon_file(void)
 			for (name = entry->names; name != NULL; name = name->next) 
 			{
 				fprintf(js, "Node('%s',%s,'%s','%s');\n",
-					olsr_ip_to_string(&strbuf, &entry->originator),
-					name->name, olsr_ip_to_string(&strbuf, &name->ip),
+					olsr_ip_to_string(&strbuf1, &entry->originator),
+					name->name, olsr_ip_to_string(&strbuf2, &name->ip),
 					lookup_name_latlon(&entry->originator));
 			}
 		}
@@ -1565,10 +1566,9 @@ write_latlon_file(void)
 
 	OLSR_FOR_ALL_TC_ENTRIES(tc) {
 		OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-			struct ipaddr_str dstbuf, addrbuf;
 			fprintf(js, "Link('%s','%s',%f,%f,%f);\n", 
-					olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-					olsr_ip_to_string(&addrbuf, &tc->addr), 
+					olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
+					olsr_ip_to_string(&strbuf2, &tc->addr), 
 					tc_edge->link_quality,
 					tc_edge->inverse_link_quality,
 					olsr_calc_tc_etx(tc_edge));

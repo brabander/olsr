@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.23 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: mid_set.c,v 1.24 2007/11/29 00:10:17 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -226,12 +226,12 @@ insert_mid_alias(const union olsr_ip_addr *main_add, const union olsr_ip_addr *a
   struct mid_entry *me_old;
   int ne_ref_rp_count;
 #ifndef NODEBUG
-  struct ipaddr_str buf;
+  struct ipaddr_str buf1, buf2;
 #endif
   struct mid_address *adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
   
-  OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(&buf, alias));
-  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf, main_add));
+  OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(&buf1, alias));
+  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf1, main_add));
 
   //COPY_IP(&adr->alias, alias);
   adr->alias = *alias;
@@ -242,7 +242,7 @@ insert_mid_alias(const union olsr_ip_addr *main_add, const union olsr_ip_addr *a
   // neighbortable and link_set will be created by way of this mid entry.
   ne_old = olsr_lookup_neighbor_table_alias(alias);
   if (ne_old != NULL) {
-     OLSR_PRINTF(2, "Remote main address change detected. Mangling neighbortable to replace %s with %s.\n", olsr_ip_to_string(&buf, alias), olsr_ip_to_string(&buf, main_add));
+     OLSR_PRINTF(2, "Remote main address change detected. Mangling neighbortable to replace %s with %s.\n", olsr_ip_to_string(&buf1, alias), olsr_ip_to_string(&buf2, main_add));
      olsr_delete_neighbor_table(alias);
      ne_new = olsr_insert_neighbor_table(main_add);
      // adjust pointers to neighbortable-entry in link_set

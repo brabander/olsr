@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.15 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: olsrd_txtinfo.c,v 1.16 2007/11/29 00:10:17 bernd67 Exp $
  */
 
 /*
@@ -297,7 +297,7 @@ static void ipc_action(int fd)
 
 static void ipc_print_neigh_link(void)
 {
-    struct ipaddr_str buf;
+    struct ipaddr_str buf1, buf2;
     struct neighbor_entry *neigh;
     struct neighbor_2_list_entry *list_2;
     struct link_entry *link = NULL;
@@ -309,8 +309,8 @@ static void ipc_print_neigh_link(void)
     link = link_set;
     while(link)	{
 	ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%d\t%d\t%0.2f\t%0.2f\t\n",
-                   olsr_ip_to_string(&buf, &link->local_iface_addr),
-                   olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
+                   olsr_ip_to_string(&buf1, &link->local_iface_addr),
+                   olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
                    link->L_link_quality, 
                    link->loss_link_quality,
                    link->lost_packets, 
@@ -327,7 +327,7 @@ static void ipc_print_neigh_link(void)
             neigh != &neighbortable[index];
             neigh = neigh->next) {
             ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
-                      olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                      olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
                       (neigh->status == SYM) ? "YES" : "NO",
                       neigh->is_mpr ? "YES" : "NO",
                       olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
@@ -338,7 +338,7 @@ static void ipc_print_neigh_link(void)
                 list_2 != &neigh->neighbor_2_list;
                 list_2 = list_2->next)
                 {
-                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf, &list_2->neighbor_2->neighbor_2_addr));
+                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
                     thop_cnt ++;
                 }
             ipc_sendf("%d\n", thop_cnt);
@@ -349,7 +349,7 @@ static void ipc_print_neigh_link(void)
 
 static void ipc_print_routes(void)
 {
-    struct ipaddr_str buf;
+    struct ipaddr_str buf1, buf2;
     struct rt_entry *rt;
     struct avl_node *rt_tree_node;
 
@@ -363,9 +363,9 @@ static void ipc_print_routes(void)
         rt = rt_tree_node->data;
 
         ipc_sendf( "%s/%d\t%s\t%d\t%.3f\t%s\t\n",
-                   olsr_ip_to_string(&buf, &rt->rt_dst.prefix),
+                   olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
                    rt->rt_dst.prefix_len,
-                   olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
+                   olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
                    rt->rt_best->rtp_metric.etx,
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
