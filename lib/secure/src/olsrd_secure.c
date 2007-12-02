@@ -3,7 +3,7 @@
  * Secure OLSR plugin
  * http://www.olsr.org
  *
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or 
@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: olsrd_secure.c,v 1.31 2007/11/29 00:49:42 bernd67 Exp $
+ * $Id: olsrd_secure.c,v 1.32 2007/12/02 19:00:30 bernd67 Exp $
  */
 
 

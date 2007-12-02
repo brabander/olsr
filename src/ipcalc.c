@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2007, Bernd Petrovitsch <berndæfirmix.at>
+ * Copyright (c) 2007, Bernd Petrovitsch <berndÃ¦firmix.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipcalc.c,v 1.1 2007/11/29 00:49:38 bernd67 Exp $
+ * $Id: ipcalc.c,v 1.2 2007/12/02 19:00:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2006, Jens Nachtigall <nachtigall@web.de>
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto-at-olsr.org)
  * Copyright (c) 2007, Sven-Ola <sven-ola@gmx.de>
  * All rights reserved.
  *
@@ -31,7 +31,7 @@
  *
  */
 
-/* $Id: nameservice.c,v 1.40 2007/11/29 00:49:41 bernd67 Exp $ */
+/* $Id: nameservice.c,v 1.41 2007/12/02 19:00:29 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd

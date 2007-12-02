@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * Copyright (c) 2007, Sven-Ola for the policy routing stuff
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.33 2007/11/29 22:21:26 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.34 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 #include "kernel_routes.h"

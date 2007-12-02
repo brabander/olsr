@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.c,v 1.64 2007/11/29 22:21:26 bernd67 Exp $
+ * $Id: olsrd_conf.c,v 1.65 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 
@@ -60,7 +60,7 @@
 extern FILE *yyin;
 extern int yyparse(void);
 
-static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org) All rights reserved.";
 
 int current_line;
 

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2003, Andreas Tønnesen (andreto@olsr.org)
+ * Copyright (c) 2003, Andreas TÃ¸nnesen (andreto@olsr.org)
  *               2004, Thomas Lopatic (thomas@lopatic.de)
  *               2006, for some fixups, sven-ola(gmx.de)
  * All rights reserved.
@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.c,v 1.35 2007/11/29 22:59:50 bernd67 Exp $
+ * $Id: lq_packet.c,v 1.36 2007/12/02 19:00:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"
