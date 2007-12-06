@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.c,v 1.23 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: mpr_selector_set.c,v 1.24 2007/12/06 20:25:47 bernd67 Exp $
  */
 
 
@@ -82,6 +82,7 @@ increase_local_ansn(void)
   ansn++;
 }
 
+#if 0
 /**
  * Check if we(this node) is selected as a MPR by any
  * neighbors. If the list is empty we are not MPR.
@@ -91,6 +92,7 @@ olsr_is_mpr(void)
 {
     return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
 }
+#endif
 
 /**
  *Add a MPR selector to the MPR selector set
@@ -218,6 +220,7 @@ olsr_time_out_mprs_set(void)
     }
 }
 
+#if 0
 /**
  *Print the current MPR selector set to STDOUT
  */
@@ -234,3 +237,5 @@ olsr_print_mprs_set(void)
   }
   OLSR_PRINTF(1, "\n");
 }
+#endif
+

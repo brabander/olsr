@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.14 2007/10/21 20:55:11 bernd67 Exp $
+ * $Id: mpr_selector_set.h,v 1.15 2007/12/06 20:25:47 bernd67 Exp $
  */
 
 
@@ -53,8 +53,10 @@ struct mpr_selector
 };
 
 
+#if 0
 olsr_bool
 olsr_is_mpr(void);
+#endif
 
 olsr_u16_t
 get_local_ansn(void);
@@ -81,8 +83,9 @@ olsr_update_mprs_set(const union olsr_ip_addr *, float);
 void
 olsr_time_out_mprs_set(void);
 
-
+#if 0
 void
 olsr_print_mprs_set(void);
+#endif
 
 #endif
