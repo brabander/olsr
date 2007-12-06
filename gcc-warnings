@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# We expect warning options for gcc as argumenst and return the ones which are accepted
-# by the given gcc.
+# We expect warning options for gcc as arguments and return the ones which are
+# accepted by the given gcc.
 #
-# $Id: gcc-warnings,v 1.6 2007/11/12 00:12:15 bernd67 Exp $
+# $Id: gcc-warnings,v 1.7 2007/12/06 18:17:35 bernd67 Exp $
 
 set -ue
 #set -vx
@@ -20,7 +20,7 @@ for param; do
 done
 
 testcompile() {
-    $CC $OPTS -E - 2>&1 <<- EOF
+    $CC $OPTS -x c - 2>&1 <<- EOF
        int main(void) {
            return 0;
        }
@@ -29,17 +29,17 @@ EOF
 
 parsetest() {
     while read error; do 
-       case "$error" in
-       *error:\ unrecognized\ *option\ \"*)
-                                       opt="${error#*\"}"
-                                       opt="${opt%\"*}"
-                                       OPTS="${OPTS//$opt}"
-                                       ;;
-       *error:\ unrecognized\ *option\ \`*)
-                                       opt="${error#*\`}"
-                                       opt="${opt%\'*}"
-                                       OPTS="${OPTS//$opt}"
-                                       ;;
+        case "$error" in
+        *:\ unrecognized\ *option\ \"*)
+            opt="${error#*\"}"
+            opt="${opt%\"*}"
+            OPTS="${OPTS//$opt}"
+            ;;
+        *:\ unrecognized\ *option\ \`*)
+            opt="${error#*\`}"
+            opt="${opt%\'*}"
+            OPTS="${OPTS//$opt}"
+            ;;
        esac
     done
     echo $OPTS
