@@ -36,18 +36,28 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.43 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: net.c,v 1.44 2007/12/06 21:01:14 bernd67 Exp $
  */
 
-#include "defs.h"
-#include "net_os.h"
-#include "parser.h" /* dnc: needed for call to packet_parser() */
-#include "net.h"
+#include "../defs.h"
+#include "../net_os.h"
+#include "../parser.h" /* dnc: needed for call to packet_parser() */
+#include "../olsr_protocol.h"
 
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <syslog.h>
+#include <netinet/in.h>
 #include <net/if.h>
 
 #ifdef __NetBSD__
-#include <sys/param.h>
 #include <net/if_ether.h>
 #endif
 
@@ -305,51 +315,51 @@ gethemusocket(struct sockaddr_in *pin)
 
 
 int
-getsocket(struct sockaddr *sa, int bufspace, char *int_name)
+getsocket(int bufspace, char *int_name)
 {
-  struct sockaddr_in *sin = (struct sockaddr_in *)sa;
-  int sock, on = 1;
-
-  if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
+  struct sockaddr_in sin;
+  int on;
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) 
     {
       perror("socket");
       syslog(LOG_ERR, "socket: %m");
-      return (-1);
+      return -1;
     }
 
+  on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof (on)) < 0)
     {
       perror("setsockopt");
       syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEPORT failed");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, &on, sizeof(on)) < 0) 
     {
       perror("IP_RECVIF failed");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   for (on = bufspace; ; on -= 1024) 
     {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		     &on, sizeof (on)) == 0)
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof (on)) == 0)
 	break;
       if (on <= 8*1024) 
 	{
@@ -359,36 +369,45 @@ getsocket(struct sockaddr *sa, int bufspace, char *int_name)
 	}
     }
 
-  if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
+  memset(&sin, 0, sizeof (sin));
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(OLSRPORT);
+  sin.sin_addr.s_addr = INADDR_ANY;
+  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) 
     {
       perror("bind");
       syslog(LOG_ERR, "bind: %m");
       close(sock);
-      return (-1);
+      return -1;
     }
 
-  if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
-    syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-
+  on = fcntl(sock, F_GETFL);
+  if (on == -1) {
+      syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
+  } else {
+      if (fcntl(sock, F_SETFL, on|O_NONBLOCK) == -1) {
+          syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+      }
+  }
   return (sock);
 }
 
 int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
 {
-  int sock, on = 1;
+  int on;
+  int sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
-  if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) 
+  if (sock < 0) 
     {
       perror("socket");
       syslog(LOG_ERR, "socket: %m");
-      return (-1);
+      return -1;
     }
 
   for (on = bufspace; ; on -= 1024) 
     {
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		     &on, sizeof (on)) == 0)
-	break;
+      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof (on)) == 0)
+          break;
       if (on <= 8*1024) 
 	{
 	  perror("setsockopt");
@@ -401,27 +420,30 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
     {
       perror("SO_REUSEADDR failed");
       close(sock);
-      return (-1);
+      return -1;
     }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEPORT failed");
-      return (-1);
+      close(sock);
+      return -1;
     }
 
 #ifdef IPV6_RECVPKTINFO
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)) < 0)
     {
       perror("IPV6_RECVPKTINFO failed");
-      return (-1);
+      close(sock);
+      return -1;
     }
 #elif defined IPV6_PKTINFO
-    if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, &on, sizeof(on)) < 0)
-      {
-	perror("IPV6_PKTINFO failed");
-	return (-1);
-      }
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, &on, sizeof(on)) < 0)
+    {
+      perror("IPV6_PKTINFO failed");
+      close(sock);
+      return -1;
+    }
 #endif
 
   if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
@@ -429,13 +451,18 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
       perror("bind");
       syslog(LOG_ERR, "bind: %m");
       close(sock);
-      return (-1);
+      return -1;
     }
 
-  if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
-    syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-
-  return (sock);
+  on = fcntl(sock, F_GETFL);
+  if (on == -1) {
+      syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
+  } else {
+      if (fcntl(sock, F_SETFL, on|O_NONBLOCK) == -1) {
+          syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+      }
+  }
+  return sock;
 }
 
 
