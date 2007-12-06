@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# We expect warning options for gcc as arguments and return the ones which are
+# accepted by the given gcc.
+#
+# $Id: ld-warnings,v 1.1 2007/12/06 20:10:19 bernd67 Exp $
+
+set -ue
+#set -vx
+
+# make sure we do not use some locale ....
+export LANG=C LC_ALL=C LC_COLLATE=C LC_CTYPE=C LC_MESSAGES=C LC_NUMERIC=C
+
+OPTS=""
+for param; do
+    case "$param" in
+    -[fWm]?*) OPTS="$OPTS $param";;
+    *)        echo "Ignoring $param" >&2
+    esac
+done
+
+testcompile() {
+    $CC $OPTS -x c - 2>&1 <<- EOF
+       int main(void) {
+           return 0;
+       }
+EOF
+}
+
+parsetest() {
+    while read error; do 
+        case "$error" in
+        *ld:\ unrecognized\ *option\ \'*)
+            opt="${error#*\'}"
+            opt="${opt%\'*}"
+            OPTS="${OPTS//-Wl,$opt}"
+            ;;
+       esac
+    done
+    echo $OPTS
+}
+
+testcompile | parsetest
+
+exit 0
