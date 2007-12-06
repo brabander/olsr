@@ -35,7 +35,7 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.104 2007/11/04 23:34:57 bernd67 Exp $
+# $Id: Makefile,v 1.105 2007/12/06 20:12:47 bernd67 Exp $
 
 VERS =		0.5.5pre
 
@@ -45,10 +45,11 @@ include Makefile.inc
 # pass generated variables to save time
 MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)"
 
-LIBS +=		$(OS_LIB_DYNLOAD) $(OS_LIB_PTHREAD)
+LIBS +=		$(OS_LIB_DYNLOAD)
 
 ifeq ($(OS), win32)
-LDFLAGS +=	-Wl,--out-implib=libolsrd.a -Wl,--export-all-symbols
+LDFLAGS +=	-Wl,--out-implib=libolsrd.a
+LDFLAGS +=	-Wl,--export-all-symbols
 endif
 
 SWITCHDIR =	src/olsr_switch
@@ -190,6 +191,6 @@ quagga:
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
 
-build_all:	all $(EXENAME) switch libs
+build_all:	all switch libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs
