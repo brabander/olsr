@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.14 2007/11/29 18:09:11 bernd67 Exp $
+ * $Id: net_os.h,v 1.15 2007/12/06 20:41:51 bernd67 Exp $
  */
 
 
@@ -51,8 +51,10 @@
 #ifndef _OLSR_NET_OS_H
 #define _OLSR_NET_OS_H
 
-/* OS dependent functions */
+#include "olsr_types.h"
+#include "interfaces.h"
 
+/* OS dependent functions */
 ssize_t
 olsr_sendto(int, 
 	    const void *, 
@@ -101,10 +103,10 @@ int
 gethemusocket(struct sockaddr_in *);
 
 int  
-getsocket(struct sockaddr *, int, char *);
+getsocket(int, char *);
 
 int  
-getsocket6(struct sockaddr_in6 *, int, char *);
+getsocket6(int, char *);
 
 int
 get_ipv6_address(char *, struct sockaddr_in6 *, int);
