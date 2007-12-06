@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.47 2007/11/29 23:03:48 bernd67 Exp $
+# $Id: Makefile.inc,v 1.48 2007/12/06 20:13:56 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -77,7 +77,7 @@ WARNINGS +=	-Wwrite-strings
 WARNINGS +=	-Wbad-function-cast
 WARNINGS +=	-Wpointer-arith
 WARNINGS +=	-Wcast-qual
-# the following 5 do not work yet
+# the following 5 do not work yet and need more work on it
 #WARNINGS +=	-Wshadow
 #WARNINGS +=	-Wpointer-arith
 #WARNINGS +=	-Wcast-align
@@ -99,6 +99,14 @@ WARNINGS +=	-fomit-framepointers
 endif
 # we have small inline functions in src/lq_route.c which should always be inlined
 WARNINGS +=	-finline-limit=50
+# These tell gcc to put each function and global variable in a separate section.
+# The linker can than remove all unreferenced section. But in the olsrd binary
+# unused doesn't imply unused at all since the function may be used by plugins,
+# e.g. the ones in src/plugin_utils.c.
+# So we can use that featuer at most to identify unused functions and remove them
+# from the source by hand.
+#WARNINGS +=	-ffunction-sections
+#WARNINGS +=	-fdata-sections
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
@@ -121,6 +129,12 @@ else
 # c and ld flags for main
 LDFLAGS +=	-Wl,-export-dynamic 
 endif
+# LDFLAGS for all 
+LDFLAGS +=	-Wl,--warn-common
+# See above at "-ffunction-sections" for an explanation (and why it is disabled).
+#LDOPTS +=	-Wl,--gc-sections
+#LDOPTS +=	-Wl,--print-gc-sections
+#LDFLAGS +=	$(shell CC="$(CC)" $(TOPDIR)/ld-warnings $(LDOPTS))
 ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
 endif
