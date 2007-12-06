@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.56 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: ifnet.c,v 1.57 2007/12/06 21:12:55 bernd67 Exp $
  */
 
 
@@ -960,7 +960,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
        *on what interface the message is transmitted
        */
       
-      ifp->olsr_socket = getsocket((struct sockaddr *)&addrsock, bufspace, ifp->int_name);
+      ifp->olsr_socket = getsocket(bufspace, ifp->int_name);
       
       if (ifp->olsr_socket < 0)
 	{
@@ -982,7 +982,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
        *on what interface the message is transmitted
        */
       
-      ifp->olsr_socket = getsocket6(&addrsock6, bufspace, ifp->int_name);
+      ifp->olsr_socket = getsocket6(bufspace, ifp->int_name);
       
       join_mcast(ifp, ifp->olsr_socket);
       

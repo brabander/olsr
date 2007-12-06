@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.24 2007/11/29 18:10:18 bernd67 Exp $
+ * $Id: net.c,v 1.25 2007/12/06 21:12:55 bernd67 Exp $
  */
 
 #if defined WINCE
@@ -98,14 +98,12 @@ gethemusocket(struct sockaddr_in *pin)
   return (sock);
 }
 
-int getsocket(struct sockaddr *Addr, int BuffSize, char *Int __attribute__((unused)))
+int getsocket(int BuffSize, char *Int __attribute__((unused)))
 {
-  int Sock;
+  struct sockaddr_in Addr;
   int On = 1;
   unsigned long Len;
-
-  Sock = socket(AF_INET, SOCK_DGRAM, 0);
-
+  int Sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (Sock < 0)
   {
     WinSockPError("getsocket/socket()");
@@ -132,7 +130,11 @@ int getsocket(struct sockaddr *Addr, int BuffSize, char *Int __attribute__((unus
   if (BuffSize <= 8192) 
     fprintf(stderr, "Cannot set IPv4 socket receive buffer.\n");
 
-  if (bind(Sock, Addr, sizeof (struct sockaddr_in)) < 0)
+  memset(&Addr, 0, sizeof (Addr));
+  Addr.sin_family = AF_INET;
+  Addr.sin_port = htons(OLSRPORT);
+  Addr.sin_addr.s_addr = INADDR_ANY;
+  if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
   {
     WinSockPError("getsocket/bind()");
     closesocket(Sock);
@@ -149,13 +151,11 @@ int getsocket(struct sockaddr *Addr, int BuffSize, char *Int __attribute__((unus
   return Sock;
 }
 
-int getsocket6(struct sockaddr_in6 *Addr, int BuffSize, char *Int __attribute__((unused)))
+int getsocket6(int BuffSize, char *Int __attribute__((unused)))
 {
-  int Sock;
+  struct sockaddr_in6 Addr;
   int On = 1;
-
-  Sock = socket(AF_INET6, SOCK_DGRAM, 0);
-
+  int Sock = socket(AF_INET6, SOCK_DGRAM, 0);
   if (Sock < 0)
   {
     WinSockPError("getsocket6/socket()");
@@ -182,7 +182,11 @@ int getsocket6(struct sockaddr_in6 *Addr, int BuffSize, char *Int __attribute__(
   if (BuffSize <= 8192) 
     fprintf(stderr, "Cannot set IPv6 socket receive buffer.\n");
 
-  if (bind(Sock, (struct sockaddr *)Addr, sizeof (struct sockaddr_in6)) < 0)
+  memset(&Addr6, 0, sizeof (Addr6));
+  Addr6.sin6_family = AF_INET6;
+  Addr6.sin6_port = htons(OLSRPORT);
+  //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
+  if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
   {
     WinSockPError("getsocket6/bind()");
     closesocket(Sock);

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas TÃÂ¸nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.49 2007/11/29 17:09:16 bernd67 Exp $
+ * $Id: interfaces.h,v 1.50 2007/12/06 21:12:56 bernd67 Exp $
  */
 
 
@@ -174,25 +174,8 @@ struct interface
 /* The interface linked-list */
 extern struct interface *ifnet;
 
-/* Datastructures to use when creating new sockets */
-extern struct sockaddr_in addrsock;
-extern struct sockaddr_in6 addrsock6;
-
-
 int
 ifinit(void);
-
-olsr_u32_t
-get_if_property_id(void);
-
-olsr_bool
-add_if_geninfo(struct interface *, void *, olsr_u32_t);
-
-void *
-get_if_geninfo(struct interface *, olsr_u32_t);
-
-void *
-del_if_geninfo(struct interface *, olsr_u32_t);
 
 void
 run_ifchg_cbs(struct interface *, int);
@@ -205,9 +188,6 @@ if_ifwithaddr(const union olsr_ip_addr *);
 
 struct interface *
 if_ifwithname(const char *);
-
-struct interface *
-if_ifwithindex(const int if_index);
 
 const char *
 if_ifwithindex_name(const int if_index);

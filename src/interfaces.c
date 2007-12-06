@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.39 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: interfaces.c,v 1.40 2007/12/06 21:12:56 bernd67 Exp $
  */
 
 #include "defs.h"
@@ -47,14 +47,10 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 
-static olsr_u32_t if_property_id;
+static struct interface *if_ifwithindex(const int if_index);
 
 /* The interface linked-list */
 struct interface *ifnet;
-
-/* Datastructures to use when creating new sockets */
-struct sockaddr_in addrsock;
-struct sockaddr_in6 addrsock6;
 
 
 /* Ifchange functions */
@@ -82,27 +78,6 @@ ifinit(void)
   /* Initial values */
   ifnet = NULL;
 
-  /*
-   *Initializing addrsock struct to be
-   *used on all the sockets
-   */
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IP version 4 */
-      memset(&addrsock, 0, sizeof (addrsock));
-      addrsock.sin_family = AF_INET;
-      addrsock.sin_port = htons(OLSRPORT);
-      (addrsock.sin_addr).s_addr = INADDR_ANY;
-    }
-  else
-    {
-      /* IP version 6 */
-      memset(&addrsock6, 0, sizeof (addrsock6));
-      addrsock6.sin6_family = AF_INET6;
-      addrsock6.sin6_port = htons(OLSRPORT);
-      //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
-    }
-
   OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n");
     /* Run trough all interfaces immedeatly */
     for(tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next)
@@ -122,88 +97,6 @@ ifinit(void)
 
   return (ifnet == NULL) ? 0 : 1;
 }
-
-
-olsr_u32_t
-get_if_property_id(void)
-{
-  return if_property_id++;
-}
-
-olsr_bool
-add_if_geninfo(struct interface *ifp, void *data, olsr_u32_t owner_id)
-{
-  struct if_gen_property *igp;
-
-  if(get_if_geninfo(ifp, owner_id) != NULL)
-    return OLSR_FALSE;
-
-  igp = olsr_malloc(sizeof(struct if_gen_property), __func__);
-
-  igp->owner_id = owner_id;
-  igp->data = data;
-
-  /* queue */
-  igp->next = ifp->gen_properties;
-  ifp->gen_properties = igp;
-
-  return OLSR_TRUE;
-}
-
-void *
-get_if_geninfo(struct interface *ifp, olsr_u32_t owner_id)
-{
-  struct if_gen_property *igp_list = ifp->gen_properties;
-
-
-  while(igp_list)
-    {
-      if(igp_list->owner_id == owner_id)
-	return igp_list->data;
-
-      igp_list = igp_list->next;
-    }
-
-  return NULL;
-}
-
-void *
-del_if_geninfo(struct interface *ifp, olsr_u32_t owner_id)
-{
-  void *data = NULL;
-  struct if_gen_property *igp_list = ifp->gen_properties;
-  struct if_gen_property *igp_prev = NULL;
-
-
-  while(igp_list)
-    {
-      if(igp_list->owner_id == owner_id)
-	break;
-
-      igp_prev = igp_list;
-      igp_list = igp_list->next;
-    }
-
-  /* Not found */
-  if(igp_list == NULL)
-    return NULL;
-
-  /* Dequeue */
-  if(igp_prev == NULL)
-    {
-      /* First elem */
-      ifp->gen_properties = igp_list->next;
-    }
-  else
-    {
-      igp_prev->next = igp_list->next;
-    }
-  data = igp_list->data;
-  free(igp_list);
-
-  return data;
-}
-
 
 void
 run_ifchg_cbs(struct interface *ifp, int flag)
@@ -296,20 +189,16 @@ if_ifwithsock(int fd)
 struct interface *
 if_ifwithname(const char *if_name)
 {
-  struct interface *ifp;
-  ifp = ifnet;
-
-  while (ifp) 
-    {
-      /* good ol' strcmp should be sufficcient here */
-      if (!strcmp(ifp->int_name, if_name))
-	return ifp;
-      ifp = ifp->int_next;
+  struct interface *ifp = ifnet;
+  while (ifp) {
+    /* good ol' strcmp should be sufficcient here */
+    if (strcmp(ifp->int_name, if_name) == 0) {
+      return ifp;
     }
-  
+    ifp = ifp->int_next;
+  }
   return NULL;
 }
-
 
 /**
  *Find the interface with a given interface index.
@@ -319,19 +208,18 @@ if_ifwithname(const char *if_name)
  *@return return the interface struct representing the interface
  *that matched the iif_index.
  */
-struct interface *
+static struct interface *
 if_ifwithindex(const int if_index)
 {
   struct interface *ifp = ifnet;
-  while (ifp) 
-    {
-      if (ifp->if_index == if_index)
-        return ifp;
+  while (ifp != NULL) {
+      if (ifp->if_index == if_index) {
+          return ifp;
+      }
       ifp = ifp->int_next;
-    }
+  }
   return NULL;
 }
-
 
 /**
  *Get an interface name for a given interface index
