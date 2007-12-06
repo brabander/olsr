@@ -3,7 +3,7 @@
 # We expect warning options for gcc as arguments and return the ones which are
 # accepted by the given gcc.
 #
-# $Id: gcc-warnings,v 1.7 2007/12/06 18:17:35 bernd67 Exp $
+# $Id: gcc-warnings,v 1.8 2007/12/06 22:07:29 bernd67 Exp $
 
 set -ue
 #set -vx
@@ -20,7 +20,7 @@ for param; do
 done
 
 testcompile() {
-    $CC $OPTS -x c - 2>&1 <<- EOF
+    $CC $OPTS -x c -o /dev/null - 2>&1 <<- EOF
        int main(void) {
            return 0;
        }
