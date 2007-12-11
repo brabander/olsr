@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.121 2007/11/29 22:40:11 bernd67 Exp $
+$Id: CHANGELOG,v 1.122 2007/12/11 17:20:06 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -23,6 +23,7 @@ PATCHES by Sven-Ola Tuecke <mail2news@commando.de>:
 - 135-georss-map-for-nameservice.patch: fixes and extensions for the namesaervice plugin
 - 138-olsrd-fixdotdraw.patch: fix the dot_draw plugin
 (all to be found on http://download-master.berlin.freifunk.net/sven-ola/nylon/packages/olsrd/files/)
+- Replaced "which" with a /bin/sh script snippet
 
 PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
 - Jens Nachtigall <nachtigall@web.de> suggested (and reminded) to use
@@ -152,6 +153,10 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   http://lists.olsr.org/pipermail/olsr-dev/2007-November/001464.html
 - removed the superflous "open_ipc" field from the "struct olsrd_config" as
   it contains only the equivalent of "olsr_cnf->debug_level > 1".
+- inspired by Sven-Ola Tuecke: avoid a bash'ism (i.e. "OPTS="${OPTS//$opt}") in
+  gcc-warnings and ld-warnings. But we do not replace it with `sed` (since it
+  costs a fork(2) and an exec(3)) but also with shell code which doesn't use
+  any external program.
 
 0.5.4 ---------------------------------------------------------------------
 
