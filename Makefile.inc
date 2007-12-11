@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.48 2007/12/06 20:13:56 bernd67 Exp $
+# $Id: Makefile.inc,v 1.49 2007/12/11 17:16:03 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -25,7 +25,7 @@ MUDFLAP ?= 0
 #
 
 # programs
-CCACHE ?=       $(shell which ccache 2> /dev/null)
+CCACHE ?=       $(shell IFS=:; for i in $$PATH;do test -x "$$i/ccache" && echo "$$i/ccache" && break; done)
 ifeq ($(origin CC),default)
 CC = 		$(CCACHE) gcc
 else
@@ -91,11 +91,11 @@ endif
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-#WARNINGS +=	-Werror
+#nnnWARNINGS +=	-Werror
 WARNINGS +=	-finline-functions-called-once
 WARNINGS +=	-fearly-inlining
 ifeq ($(DEBUG),0)
-WARNINGS +=	-fomit-framepointers
+WARNINGS +=	-fomit-frame-pointer
 endif
 # we have small inline functions in src/lq_route.c which should always be inlined
 WARNINGS +=	-finline-limit=50
@@ -123,7 +123,8 @@ endif
 ifdef OLSRD_PLUGIN
 # c and ld flags for libraries (plugins)
 CPPFLAGS +=	-DOLSR_PLUGIN
-LDFLAGS +=	-shared -Wl,-soname,$(PLUGIN_NAME)
+LDFLAGS +=	-shared
+LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
 LDFLAGS +=	-Wl,--version-script=version-script.txt 
 else
 # c and ld flags for main

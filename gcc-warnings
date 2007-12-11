@@ -3,7 +3,7 @@
 # We expect warning options for gcc as arguments and return the ones which are
 # accepted by the given gcc.
 #
-# $Id: gcc-warnings,v 1.8 2007/12/06 22:07:29 bernd67 Exp $
+# $Id: gcc-warnings,v 1.9 2007/12/11 17:16:03 bernd67 Exp $
 
 set -ue
 #set -vx
@@ -33,14 +33,24 @@ parsetest() {
         *:\ unrecognized\ *option\ \"*)
             opt="${error#*\"}"
             opt="${opt%\"*}"
-            OPTS="${OPTS//$opt}"
             ;;
         *:\ unrecognized\ *option\ \`*)
             opt="${error#*\`}"
             opt="${opt%\'*}"
-            OPTS="${OPTS//$opt}"
+            ;;
+        *) continue
             ;;
        esac
+       # if we come here, we have in $opt the option to remove. and
+       # we remove all instances. And we save agoinst leading "-"
+       NEW_OPTS=""
+       for o in $OPTS; do
+           case "$o" in
+               $opt) : echo "Removed $o" >&2;;
+               *)    NEW_OPTS="$NEW_OPTS $o";;
+           esac
+       done
+       OPTS="$NEW_OPTS"
     done
     echo $OPTS
 }
