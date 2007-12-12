@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: admin_interface.c,v 1.16 2007/12/12 22:06:24 bernd67 Exp $
+ * $Id: admin_interface.c,v 1.17 2007/12/12 22:49:04 bernd67 Exp $
  */
 
 /*
@@ -155,9 +155,12 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
     struct ip_prefix_list *hna;
     for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
       struct ipaddr_str netbuf;
+      olsr_ip_to_string(&netbuf, &hna->net.prefix);
       size += snprintf(&buf[size], bufsize-size,
-                       "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%1$s*%2$d\" class=\"input_checkbox\"></td><td>%1$s</td><td>%2$d</td></tr>\n",
-                       olsr_ip_to_string(&netbuf, &hna->net.prefix),
+                       "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%d\" class=\"input_checkbox\"></td><td>%s</td><td>%d</td></tr>\n",
+                       netbuf.buf,
+                       hna->net.prefix_len,
+                       netbuf.buf,
                        hna->net.prefix_len);
     }
   }
