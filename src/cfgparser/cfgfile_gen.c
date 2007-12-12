@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.16 2007/12/12 22:39:36 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.17 2007/12/12 22:47:04 bernd67 Exp $
  */
 
 #include "olsrd_conf.h"
@@ -83,7 +83,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   /* IP version */
   fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
-  /* IP version */
+  /* FIB Metric */
   fprintf(fd, "# FIBMetric (\"%s\" or \"%s\")\n\nFIBMetric\t\"%s\"\n\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
 
   /* HNA IPv4/IPv6 */
@@ -369,7 +369,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   /* IP version */
   WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
-  /* IP version */
+  /* FIB Metric */
   WRITE_TO_BUF("# FIBMetric (\"%s\" or \"%s\")\n\nFIBMetric\t\"%s\"\n\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
 
   /* HNA IPv4/IPv6 */
