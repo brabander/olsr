@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.28 2007/11/29 00:49:40 bernd67 Exp $
+ * $Id: oscan.lex,v 1.29 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 
@@ -321,6 +321,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
 "IpcConnect" {
     yylval = NULL;
     return TOK_IPCCON;
+}
+
+"FIBMetric" {
+    yylval = NULL;
+    return TOK_FIBMETRIC;
 }
 
 "UseHysteresis" {

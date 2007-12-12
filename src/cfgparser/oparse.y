@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.42 2007/12/12 21:50:40 bernd67 Exp $
+ * $Id: oparse.y,v 1.43 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 
@@ -176,6 +176,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_RTTABLE
 %token TOK_WILLINGNESS
 %token TOK_IPCCON
+%token TOK_FIBMETRIC
 %token TOK_USEHYST
 %token TOK_HYSTSCALE
 %token TOK_HYSTUPPER
@@ -226,6 +227,7 @@ conf:
 
 stmt:       idebug
           | iipversion
+          | fibmetric
           | bnoint
           | atos
           | arttable
@@ -711,6 +713,23 @@ iipversion:    TOK_IPVERSION TOK_INTEGER
   }
 
   PARSER_DEBUG_PRINTF("IpVersion: %d\n", $2->integer);
+  free($2);
+}
+;
+
+fibmetric:    TOK_FIBMETRIC TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("FIBMetric: %d\n", $2->string);
+  if (strcmp($2->string, CFG_FIBM_FLAT) == 0) {
+      olsr_cnf->flat_fib_metric = OLSR_TRUE;
+  } else if (strcmp($2->string, CFG_FIBM_CORRECT) == 0) {
+      olsr_cnf->flat_fib_metric = OLSR_FALSE;
+  } else {
+    fprintf(stderr, "FIBMetric must be \"%s\" or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT);
+    YYABORT;
+  }
+  free($1);
+  free($2->string);
   free($2);
 }
 ;

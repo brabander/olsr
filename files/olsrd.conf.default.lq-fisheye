@@ -16,6 +16,13 @@
 
 DebugLevel	0
 
+# IP version to use (4 or 6)
+
+IpVersion	4
+
+# FIBMetric ("flat" or "correct")
+
+FIBMetric "flat"
 
 # Interfaces and their rules
 # Omitted options will be set to the
@@ -127,10 +134,6 @@ LinkQualityFishEye 1
 # (on slower embedded hardware with more than 100 nodes use something like 9 sec)
 # 
 LinkQualityDijkstraLimit 3 3.0
-
-# IP version to use (4 or 6)
-
-IpVersion	4
 
 # Clear the screen each time the internal state changes
 

@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.15 2007/12/12 22:05:53 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.16 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 #include "olsrd_conf.h"
@@ -82,6 +82,9 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 
   /* IP version */
   fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
+
+  /* IP version */
+  fprintf(fd, "# FIBMetric (\"%s\" or \"%s\")\n\nFIBMetric\t\"%s\"\n\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
 
   /* HNA IPv4/IPv6 */
   fprintf(fd, "# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
@@ -191,7 +194,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
           pp = pe->params;
           while(pp)
             {
-              fprintf(fd, "    PlParam \"%s\" \"%s\"\n", pp->key, pp->value);
+              fprintf(fd, "    PlParam \"%s\"\t\"%s\"\n", pp->key, pp->value);
               pp = pp->next;
             }
 	  fprintf(fd, "}\n");
@@ -366,6 +369,9 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   /* IP version */
   WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
+  /* IP version */
+  WRITE_TO_BUF("# FIBMetric (\"%s\" or \"%s\")\n\nFIBMetric\t\"%s\"\n\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
+
   /* HNA IPv4/IPv6 */
   WRITE_TO_BUF("# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna%1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
@@ -469,7 +475,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
           pp = pe->params;
           while(pp)
             {
-              WRITE_TO_BUF("    PlParam \"%s\" \"%s\"\n", pp->key, pp->value);
+              WRITE_TO_BUF("    PlParam \"%s\"\t\"%s\"\n", pp->key, pp->value);
               pp = pp->next;
             }
 	  WRITE_TO_BUF("}\n");

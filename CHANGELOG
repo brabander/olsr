@@ -1,5 +1,5 @@
 This file states changes as of version 0.2.4:
-$Id: CHANGELOG,v 1.123 2007/12/12 21:57:56 bernd67 Exp $
+$Id: CHANGELOG,v 1.124 2007/12/12 22:39:36 bernd67 Exp $
 
 0.5.5 ---------------------------------------------------------------------
 
@@ -162,6 +162,7 @@ PATCHES and CLEANUPS by Bernd Petrovitsch <bernd@firmix.at>
   gcc-warnings and ld-warnings. But we do not replace it with `sed` (since it
   costs a fork(2) and an exec(3)) but also with shell code which doesn't use
   any external program.
+- added configuration file support for "flat fib metrics".
 
 0.5.4 ---------------------------------------------------------------------
 

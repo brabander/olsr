@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.43 2007/12/12 21:57:27 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.44 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 
@@ -94,6 +94,10 @@
 #define MIN_LQ_LEVEL        0
 #define MAX_LQ_WSIZE        128
 #define MIN_LQ_WSIZE        3
+
+/* Option values */
+#define CFG_FIBM_FLAT		"flat"
+#define CFG_FIBM_CORRECT	"correct"
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U

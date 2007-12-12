@@ -20,6 +20,10 @@ DebugLevel	2
 
 IpVersion	4
 
+# FIBMetric ("flat" or "correct")
+
+FIBMetric "flat"
+
 # Clear the screen each time the internal state changes
 
 ClearScreen     yes

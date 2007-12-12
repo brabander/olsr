@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.90 2007/12/12 22:06:24 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.91 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 /*
@@ -130,7 +130,7 @@ static const char httpinfo_css[] =
   ".input_text\n{\nbackground: #E5E5E5;\nmargin-left: 5px; margin-top: 0px;\n"
   "text-align: left;\n\nwidth: 100px;\npadding: 0px;\ncolor: #000000;\n"
   "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
-  "border: 1px solid #ccc;\n}\n" 
+  "border: 1px solid #ccc;\n}\n"
   ".input_button\n{\nbackground: #B5D1EE;\nmargin-left: 5px;\nmargin-top: 0px;\n"
   "text-align: center;\nwidth: 120px;\npadding: 0px;\ncolor: #000000;\n"
   "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
@@ -274,20 +274,20 @@ get_http_socket(int port)
   }
 
   /* Bind the socket */
-  
+
   /* complete the socket structure */
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr = INADDR_ANY;
   sin.sin_port = htons(port);
-  
+
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
     olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
     close(s);
     return -1;
   }
-      
+
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
     olsr_printf(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
@@ -331,7 +331,7 @@ parse_http_request(int fd)
 {
   struct sockaddr_in pin;
   socklen_t addrlen;
-  char *addr;  
+  char *addr;
   char req[MAX_HTTPREQ_SIZE];
   static char body[HTML_BUFSIZE];
   char req_type[11];
@@ -354,7 +354,7 @@ parse_http_request(int fd)
 
   if (!check_allowed_ip(allowed_nets, (union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
     struct ipaddr_str strbuf;
-    olsr_printf(0, "HTTP request from non-allowed host %s!\n", 
+    olsr_printf(0, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, (union olsr_ip_addr *)&pin.sin_addr.s_addr));
     close(client_sockets[curr_clients]);
   }
@@ -371,13 +371,13 @@ parse_http_request(int fd)
 	 (c > 1 && !strcmp(&req[c-2], "\n\n")))
           break;
   }
-  
+
   if (r < 0) {
     olsr_printf(1, "(HTTPINFO) Failed to recieve data from client!\n");
     stats.err_hits++;
     goto close_connection;
   }
-  
+
   /* Get the request */
   if (sscanf(req, "%10s %250s %10s\n", req_type, filename, http_version) != 3) {
     /* Try without HTTP version */
@@ -404,10 +404,10 @@ parse_http_request(int fd)
 
             req[param_size] = '\0';
             printf("Dynamic read %d bytes\n", param_size);
-	      
+	
             //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
             size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
-            c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));  
+            c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
             goto send_http_data;
         }
         i++;
@@ -425,12 +425,12 @@ parse_http_request(int fd)
 	    break;
         }
     }
-      
+
     if (static_bin_files[i].filename) {
       stats.ok_hits++;
       memcpy(body, static_bin_files[i].data, static_bin_files[i].data_size);
       size = static_bin_files[i].data_size;
-      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));  
+      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));
       goto send_http_data;
     }
 
@@ -441,11 +441,11 @@ parse_http_request(int fd)
       }
       i++;
     }
-      
+
     if (static_txt_files[i].filename) {
       stats.ok_hits++;
       size += snprintf(&body[size], sizeof(body)-size, "%s", static_txt_files[i].data);
-      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));  
+      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));
       goto send_http_data;
     }
 
@@ -462,7 +462,7 @@ parse_http_request(int fd)
     if (tab_entries[i].filename) {
 #ifdef NETDIRECT
       c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
-      r = send(client_sockets[curr_clients], req, c, 0);   
+      r = send(client_sockets[curr_clients], req, c, 0);
       if (r < 0) {
         olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
         goto close_connection;
@@ -490,15 +490,15 @@ parse_http_request(int fd)
                        "</tbody>\n"
                        "</table>\n",
                        FRAMEWIDTH);
-	  
+	
       size += build_tabs(&body[size], sizeof(body)-size, i);
-      size += build_frame(&body[size], 
-                          sizeof(body)-size, 
-                          "Current Routes", 
-                          "routes", 
-                          FRAMEWIDTH, 
+      size += build_frame(&body[size],
+                          sizeof(body)-size,
+                          "Current Routes",
+                          "routes",
+                          FRAMEWIDTH,
                           tab_entries[i].build_body_cb);
-	  
+	
       stats.ok_hits++;
 
       size += snprintf(&body[size], sizeof(body)-size,
@@ -511,7 +511,7 @@ parse_http_request(int fd)
                        "</div>\n"
                        "</body>\n"
                        "</html>\n");
-	  
+	
 #ifdef NETDIRECT
       netsprintf_direct = 1;
       goto close_connection;
@@ -520,8 +520,8 @@ parse_http_request(int fd)
       goto send_http_data;
 #endif
     }
-      
-      
+
+
     stats.ill_hits++;
     strcpy(body, HTTP_404_MSG);
     c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, sizeof(req));
@@ -533,8 +533,8 @@ parse_http_request(int fd)
   }
 
  send_http_data:
-  
-  r = writen(client_sockets[curr_clients], req, c);   
+
+  r = writen(client_sockets[curr_clients], req, c);
   if (r < 0) {
       olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
@@ -554,10 +554,10 @@ parse_http_request(int fd)
 
 
 int
-build_http_header(http_header_type type, 
-		  olsr_bool is_html, 
-		  olsr_u32_t msgsize, 
-		  char *buf, 
+build_http_header(http_header_type type,
+		  olsr_bool is_html,
+		  olsr_u32_t msgsize,
+		  char *buf,
 		  olsr_u32_t bufsize)
 {
   time_t currtime;
@@ -581,7 +581,7 @@ build_http_header(http_header_type type,
   /* Date */
   time(&currtime);
   size += strftime(&buf[size], bufsize-size, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", localtime(&currtime));
-  
+
   /* Server version */
   size += snprintf(&buf[size], bufsize-size, "Server: %s %s %s\r\n", PLUGIN_NAME, PLUGIN_VERSION, HTTP_VERSION);
 
@@ -596,7 +596,7 @@ build_http_header(http_header_type type,
       size += snprintf(&buf[size], bufsize-size, "Content-length: %i\r\n", msgsize);
   }
 
-  /* Cache-control 
+  /* Cache-control
    * No caching dynamic pages
    */
   size += snprintf(&buf[size], bufsize-size, "Cache-Control: no-cache\r\n");
@@ -606,7 +606,7 @@ build_http_header(http_header_type type,
   }
   /* End header */
   size += snprintf(&buf[size], bufsize-size, "\r\n");
-  
+
   olsr_printf(1, "HEADER:\n%s", buf);
 
   return size;
@@ -627,9 +627,9 @@ static int build_tabs(char *buf, const olsr_u32_t bufsize, int active)
     if (!tab_entries[tabs].display_tab) {
       continue;
     }
-    size += snprintf(&buf[size], bufsize-size, 
+    size += snprintf(&buf[size], bufsize-size,
                      "<li><a href=\"%s\"%s>%s</a></li>\n",
-                     tab_entries[tabs].filename, 
+                     tab_entries[tabs].filename,
                      tabs == active ? " class=\"active\"" : "",
                      tab_entries[tabs].tab_label);
   }
@@ -662,14 +662,14 @@ static int section_title(char *buf, olsr_u32_t bufsize, const char *title)
 
 static int build_frame(char *buf,
                        olsr_u32_t bufsize,
-                       const char *title __attribute__((unused)), 
-                       const char *link __attribute__((unused)), 
+                       const char *title __attribute__((unused)),
+                       const char *link __attribute__((unused)),
                        int width __attribute__((unused)),
                        build_body_callback frame_body_cb)
 {
   int size = 0;
   size += snprintf(&buf[size], bufsize-size, "<div id=\"maintable\">\n");
-  size += frame_body_cb(&buf[size], bufsize-size);  
+  size += frame_body_cb(&buf[size], bufsize-size);
   size += snprintf(&buf[size], bufsize-size, "</div>\n");
   return size;
 }
@@ -698,7 +698,7 @@ static int build_ip_txt(char *buf,
   if (prefix_len != -1 && prefix_len != olsr_cnf->maxplen) {
       size += snprintf(&buf[size], bufsize-size, "/%d", prefix_len);
   }
-  
+
   if (print_link) { /* Print the link only if there is no prefix_len */
     size += snprintf(&buf[size], bufsize-size, "</a>");
   }
@@ -801,7 +801,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "Version: %s (built on %s on %s)\n<br>", olsrd_version, build_date, build_host);
     size += snprintf(&buf[size], bufsize-size, "OS: %s\n<br>", OS);
 
-    { 
+    {
       const time_t currtime = time(NULL);
       const int rc = strftime(&buf[size], bufsize-size, "System time: <em>%a, %d %b %Y %H:%M:%S</em><br>", localtime(&currtime));
       if (rc > 0) {
@@ -838,10 +838,9 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "<table width=\"100%%\" border=\"0\">\n<tr>");
 
     size += snprintf(&buf[size], bufsize-size, "<td>Main address: <strong>%s</strong></td>\n", olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    
     size += snprintf(&buf[size], bufsize-size, "<td>IP version: %d</td>\n", olsr_cnf->ip_version == AF_INET ? 4 : 6);
-
     size += snprintf(&buf[size], bufsize-size, "<td>Debug level: %d</td>\n", olsr_cnf->debug_level);
+    size += snprintf(&buf[size], bufsize-size, "<td>FIB Metrics: %s</td>\n", olsr_cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
 
     size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
@@ -849,17 +848,12 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
     size += snprintf(&buf[size], bufsize-size, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
 
-
     size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
     size += snprintf(&buf[size], bufsize-size, "<td>Fisheye: %s</td>\n", olsr_cnf->lq_fish ? "Enabled" : "Disabled");
-
     size += snprintf(&buf[size], bufsize-size, "<td>TOS: 0x%04x</td>\n", olsr_cnf->tos);
-
     size += snprintf(&buf[size], bufsize-size, "<td>RtTable: 0x%04x/%d</td>\n", olsr_cnf->rttable, olsr_cnf->rttable);
-
     size += snprintf(&buf[size], bufsize-size, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
-    
 
     if (olsr_cnf->lq_level == 0) {
       size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n"
@@ -912,7 +906,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
                            "</tr>\n",
                            ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr),
                            ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
-        }	    
+        }	
         size += snprintf(&buf[size], bufsize-size,
                          "<tr>\n"
                          "<td>MTU: %d</td>\n"
@@ -954,7 +948,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
       for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
         struct ipaddr_str netbuf;
         size += snprintf(&buf[size], bufsize-size,
-                         "<tr><td>%s/%d</td></tr>\n", 
+                         "<tr><td>%s/%d</td></tr>\n",
                          olsr_ip_to_string(&netbuf, &hna->net.prefix),
                          hna->net.prefix_len);
       }
@@ -984,7 +978,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   }
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
-  /* Link set */  
+  /* Link set */
   for (link = link_set; link != NULL; link = link->next) {
     size += snprintf(&buf[size], bufsize-size, "<tr>");
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
@@ -998,9 +992,9 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                        "<td align=\"right\">%0.2f</td>"
                        "<td align=\"right\">%0.2f</td>\n",
                        link->loss_link_quality,
-                       link->lost_packets, 
+                       link->lost_packets,
                        link->total_packets,
-                       link->neigh_link_quality, 
+                       link->neigh_link_quality,
                        olsr_calc_link_etx(link));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
@@ -1009,7 +1003,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
   size += section_title(&buf[size], bufsize-size, "Neighbors");
-  size += snprintf(&buf[size], bufsize-size, 
+  size += snprintf(&buf[size], bufsize-size,
                    "<tr><th align=\"center\"%s>IP Address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
   /* Neighbors */
   for (idx = 0; idx < HASHSIZE; idx++) {
@@ -1018,11 +1012,11 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
       int thop_cnt;
       size += snprintf(&buf[size], bufsize-size, "<tr>");
       size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, -1);
-      size += snprintf(&buf[size], bufsize-size, 
+      size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"center\">%s</td>"
                        "<td align=\"center\">%s</td>"
                        "<td align=\"center\">%s</td>"
-                       "<td align=\"center\">%d</td>", 
+                       "<td align=\"center\">%d</td>",
                        (neigh->status == SYM) ? "YES" : "NO",
                        neigh->is_mpr ? "YES" : "NO",
                        olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
@@ -1031,7 +1025,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
       size += snprintf(&buf[size], bufsize-size, "<td><select>\n"
                        "<option>IP ADDRESS</option>\n");
 
-      
+
       for (list_2 = neigh->neighbor_2_list.next, thop_cnt = 0; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next, thop_cnt++) {
         struct ipaddr_str strbuf;
         size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
@@ -1090,8 +1084,8 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
   size += section_title(&buf[size], bufsize-size, "MID Entries");
   size += snprintf(&buf[size], bufsize-size,
                    "<tr><th align=\"center\"%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
-  
-  /* MID */  
+
+  /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
     struct mid_entry *entry;
     for (entry = mid_set[idx].next; entry != &mid_set[idx]; entry = entry->next) {
@@ -1100,7 +1094,7 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
       size += snprintf(&buf[size], bufsize-size, "<tr>");
       size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, -1);
       size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
-      
+
       for (mid_cnt = 0, alias = entry->aliases; alias != NULL; alias = alias->next_alias, mid_cnt++) {
         struct ipaddr_str strbuf;
         size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &alias->alias));
@@ -1207,7 +1201,7 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
 #else
   size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize-size);
 #endif
-  
+
   if (size < 0) {
     size = snprintf(buf, size, "ERROR GENERATING CONFIGFILE!\n");
   }
@@ -1240,7 +1234,7 @@ static int check_allowed_ip(const struct allowed_net * const allowed_nets, const
  * optional, the sprintf() is changed to a more
  * scalable solution here.
  */
- 
+
 int netsprintf(char *str, const char* format, ...)
 {
 	va_list arg;
