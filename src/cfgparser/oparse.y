@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.41 2007/11/29 22:21:26 bernd67 Exp $
+ * $Id: oparse.y,v 1.42 2007/12/12 21:50:40 bernd67 Exp $
  */
 
 
@@ -126,6 +126,11 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 {
   union olsr_ip_addr ipaddr;
   PARSER_DEBUG_PRINTF("HNA IPv6 entry: %s/%d\n", ipaddr_arg->string, prefixlen_arg->integer);
+
+  if (olsr_cnf->ip_version != AF_INET6) {
+    fprintf(stderr, "IPv6 addresses can only be used if \"IpVersion\" == 6\n");
+    return 1;
+  }
 
   if(inet_pton(AF_INET6, ipaddr_arg->string, &ipaddr) <= 0) {
     fprintf(stderr, "ihna6entry: Failed converting IP address %s\n", ipaddr_arg->string);
@@ -715,6 +720,11 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   union olsr_ip_addr ipaddr, netmask;
 
   PARSER_DEBUG_PRINTF("HNA IPv4 entry: %s/%s\n", $1->string, $2->string);
+
+  if (olsr_cnf->ip_version != AF_INET) {
+    fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4\n");
+    YYABORT;
+  }
 
   if (inet_pton(AF_INET, $1->string, &ipaddr.v4) <= 0) {
     fprintf(stderr, "ihna4entry: Failed converting IP address %s\n", $1->string);
