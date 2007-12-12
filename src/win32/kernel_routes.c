@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.26 2007/11/29 22:21:26 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.27 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include <stdio.h>
@@ -86,7 +86,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = RT_METRIC_DEFAULT;
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;
@@ -163,7 +163,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = RT_METRIC_DEFAULT;
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_metric.hops);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;

@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.c,v 1.40 2007/11/29 22:59:51 bernd67 Exp $
+ * $Id: tc_set.c,v 1.41 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "tc_set.h"
@@ -123,8 +123,13 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(%buf, &tc->addr));
 #endif
 
-  /* The edgetree must be empty before */
-  assert(!tc->edge_tree.count);
+  /*
+   * Delete the rt_path for ourselves.
+   */
+  olsr_delete_routing_table(&tc->addr, olsr_cnf->maxplen, &tc->addr);
+
+  /* The edgetree and prefix tree must be empty before */
+  assert(!tc->edge_tree.count && !tc->prefix_tree.count);
 
   avl_delete(&tc_tree, &tc->vertex_node);
   free(tc);
@@ -181,9 +186,12 @@ olsr_getnext_tc_entry(struct tc_entry *tc)
 struct tc_entry *
 olsr_add_tc_entry(union olsr_ip_addr *adr)
 {
-  struct tc_entry *tc;
-#if 0
+#if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
+#endif
+  struct tc_entry *tc;
+
+#ifdef DEBUG
   OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 #endif
 
@@ -204,10 +212,31 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
   avl_insert(&tc_tree, &tc->vertex_node, AVL_DUP_NO);
 
   /*
-   * Initialize subtree for further edges to come.
+   * Initialize subtrees for edges and prefixes.
    */
   avl_init(&tc->edge_tree, avl_comp_default);
+  avl_init(&tc->prefix_tree, avl_comp_prefix_default);
 
+  /*
+   * Add a rt_path for ourselves.
+   */
+  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr,
+                            OLSR_RT_ORIGIN_INT);
+
+  return tc;
+}
+
+/*
+ * Lookup a tc entry. Creates one if it does not exist yet.
+ */
+struct tc_entry *
+olsr_locate_tc_entry(union olsr_ip_addr *adr)
+{
+  struct tc_entry *tc;
+
+  if (!(tc = olsr_lookup_tc_entry(adr))) {
+    return olsr_add_tc_entry(adr);
+  }
   return tc;
 }
 
@@ -239,7 +268,7 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
  * it does also the correct insertion and sorting in the timer tree.
  * The timer param is a relative timer expressed in milliseconds.
  */
-static void
+void
 olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int timer)
 {
   tc_edge->T_time = GET_TIMESTAMP(timer);
@@ -272,6 +301,9 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
                        olsr_u16_t ansn, unsigned int vtime,
                        float link_quality, float neigh_link_quality)
 {
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct tc_entry *tc_neighbor;
   struct tc_edge_entry *tc_edge, *tc_edge_inv;
 
@@ -311,7 +343,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    */
   tc_edge->tc = tc;
 
-#if 0
+#ifdef DEBUG
   OLSR_PRINTF(1, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 #endif
 
@@ -321,16 +353,16 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    */
   tc_neighbor = olsr_lookup_tc_entry(&tc_edge->T_dest_addr);
   if (tc_neighbor) {
-#if 0
+#ifdef DEBUG
     OLSR_PRINTF(1, "TC:   found neighbor tc_entry %s\n",
-                olsr_ip_to_string(&tc_neighbor->addr));
+                olsr_ip_to_string(&buf, &tc_neighbor->addr));
 #endif
 
     tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
     if (tc_edge_inv) {
-#if 0
+#ifdef DEBUG
       OLSR_PRINTF(1, "TC:   found inverse edge for %s\n",
-                  olsr_ip_to_string(&tc_edge_inv->T_dest_addr));
+                  olsr_ip_to_string(&buf, &tc_edge_inv->T_dest_addr));
 #endif
 
       /*
@@ -363,7 +395,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge_inv;
 
-#if 0
+#ifdef DEBUG
   OLSR_PRINTF(1, "TC: del edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 #endif
 
@@ -379,9 +411,10 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   }
 
   /*
-   * Delete the tc_entry if the last edge is gone.
+   * Delete the tc_entry if the last edge and last prefix is gone.
    */
-  if (!tc_edge->tc->edge_tree.count) {
+  if (!tc_edge->tc->edge_tree.count &&
+      !tc_edge->tc->prefix_tree.count) {
 
     /*
      * Only remove remote tc entries.
@@ -545,7 +578,7 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
      */
     olsr_calc_tc_edge_entry_etx(tc_edge);
 
-#if 0
+#if DEBUG
     if (edge_change) {          
       OLSR_PRINTF(1, "TC:   chg edge entry %s\n",
                   olsr_tc_edge_to_string(tc_edge));

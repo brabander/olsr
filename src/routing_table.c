@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.38 2007/11/29 22:59:51 bernd67 Exp $
+ * $Id: routing_table.c,v 1.39 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -55,7 +55,13 @@
 
 #include <assert.h>
 
+/* Root of our RIB */
 struct avl_tree routingtree;
+
+/*
+ * Keep a version number for detecting outdated elements
+ * in the per rt_entry rt_path subtree.
+ */
 unsigned int routingtree_version;
 
 /**
@@ -122,11 +128,12 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
 int
 avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 {       
+  int res;
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  int res = ip6cmp(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  res = memcmp(&pfx1->prefix.v6, &pfx2->prefix.v6, 16);
   if (res != 0) {
     return res;
   } 
@@ -175,32 +182,24 @@ olsr_lookup_routing_table(const union olsr_ip_addr *dst)
 }
 
 /**
- * Update the fields in an routing entry.
- * Depending on the update mask update either the old,
- * the new or both arrays for gateway/interface/etx/hopcount.
+ * Update gateway/interface/etx/hopcount and the version for a route path.
  */
-static void
-olsr_update_routing_entry(struct rt_path *rtp, union olsr_ip_addr *gateway,
-                          int iif_index, int metric, float etx)
+void
+olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc,
+                    struct link_entry *link)
 {
 
   rtp->rtp_version = routingtree_version;
 
   /* gateway */
-  rtp->rtp_nexthop.gateway = *gateway;
+  rtp->rtp_nexthop.gateway = link->neighbor_iface_addr;
 
   /* interface */
-  rtp->rtp_nexthop.iif_index = iif_index;
+  rtp->rtp_nexthop.iif_index = link->inter->if_index;
 
-  /* etx */
-  rtp->rtp_metric.hops = metric;
-  if (etx < 0.0) {
-    /* non-LQ case */
-    rtp->rtp_metric.etx = (float)metric;
-  } else {
-    /* LQ case */
-    rtp->rtp_metric.etx = etx;
-  }
+  /* metric/etx */
+  rtp->rtp_metric.hops = tc->hops;
+  rtp->rtp_metric.etx = tc->path_etx;
 }
 
 /**
@@ -232,13 +231,12 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   return rt;
 }
 
-
 /**
  * Alloc and key a new rt_path.
  */
 static struct rt_path *
-olsr_alloc_rt_path(struct rt_entry *rt,
-                   union olsr_ip_addr *originator)
+olsr_alloc_rt_path(struct tc_entry *tc,
+                   struct olsr_ip_prefix *prefix, olsr_u8_t origin)
 {
   struct rt_path *rtp = olsr_malloc(sizeof(struct rt_path), __FUNCTION__);
 
@@ -248,20 +246,107 @@ olsr_alloc_rt_path(struct rt_entry *rt,
 
   memset(rtp, 0, sizeof(*rtp));
 
-  rtp->rtp_originator = *originator;
+  rtp->rtp_dst = *prefix;
 
   /* set key and backpointer prior to tree insertion */
-  rtp->rtp_tree_node.key = &rtp->rtp_originator;
-  rtp->rtp_tree_node.data = rtp;
+  rtp->rtp_prefix_tree_node.key = &rtp->rtp_dst;
+  rtp->rtp_prefix_tree_node.data = rtp;
 
-  /* insert to the route entry originator tree */
-  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
+  /* insert to the tc prefix tree */
+  avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, AVL_DUP_NO);
 
-  /* backlink to the owning route entry */
-  rtp->rtp_rt = rt;
+  /* backlink to the owning tc entry */
+  rtp->rtp_tc = tc;
+
+  /* store the origin of the route */
+  rtp->rtp_origin = origin;
 
   return rtp;
 }
+
+/**
+ * Create a route entry for a given rt_path and
+ * insert it into the global RIB tree.
+ */
+void
+olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
+                    struct link_entry *link)
+{
+  struct rt_entry *rt;
+  struct avl_node *node;
+
+  /*
+   * no unreachable routes please.
+   */
+  if (tc->path_etx >= INFINITE_ETX) {
+    return;
+  }
+
+  /*
+   * No bogus prefix lengths.
+   */
+  if (rtp->rtp_dst.prefix_len > olsr_cnf->maxplen) {
+    return;
+  }
+
+  /*
+   * first check if there is a route_entry for the prefix.
+   */
+  node = avl_find(&routingtree, &rtp->rtp_dst);
+
+  if (!node) {
+
+    /* no route entry yet */
+    rt = olsr_alloc_rt_entry(&rtp->rtp_dst);
+
+    if (!rt) {
+      return;
+    }
+
+    /* Now insert the rt_path to the owning rt_entry tree */
+
+    rtp->rtp_originator = tc->addr;
+
+    /* set key and backpointer prior to tree insertion */
+    rtp->rtp_tree_node.key = &rtp->rtp_originator;
+    rtp->rtp_tree_node.data = rtp;
+
+    /* insert to the route entry originator tree */
+    avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
+
+    /* backlink to the owning route entry */
+    rtp->rtp_rt = rt;
+
+  } else {
+    rt = node->data;
+  }
+
+  /* update the version field and relevant parameters */
+  olsr_update_rt_path(rtp, tc, link);
+}
+
+/**
+ * Unlink and free a rt_path.
+ */
+static void
+olsr_free_rt_path(struct rt_path *rtp)
+{
+
+  /* remove from the originator tree */
+  if (rtp->rtp_rt) {
+    avl_delete(&rtp->rtp_rt->rt_path_tree, &rtp->rtp_tree_node);
+    rtp->rtp_rt = NULL;
+  }
+
+  /* remove from the tc prefix tree */
+  if (rtp->rtp_tc) {
+    avl_delete(&rtp->rtp_tc->prefix_tree, &rtp->rtp_prefix_tree_node);
+    rtp->rtp_tc = NULL;
+  }
+
+  free(rtp);
+}
+
 
 /**
  * Check if there is an interface or gateway change.
@@ -274,6 +359,31 @@ olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2)
     return OLSR_TRUE;
   }
   return OLSR_FALSE;
+}
+
+/**
+ * Check if there is a hopcount change.
+ */
+olsr_bool
+olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2)
+{
+  return (met1->hops != met2->hops);
+}
+
+/**
+ * Depending if flat_metric is configured and the kernel fib operation
+ * return the hopcount metric of a route.
+ * For adds this is the metric of best rour after olsr_rt_best() election,
+ * for deletes this is the metric of the route that got stored in the rt_entry,
+ * during route installation.
+ */
+olsr_u8_t
+olsr_fib_metric(const struct rt_metric *met)
+{
+  if (!olsr_cnf->flat_fib_metric) {
+    return met->hops;
+  }
+  return RT_METRIC_DEFAULT;
 }
 
 /**
@@ -351,7 +461,7 @@ olsr_rt_best(struct rt_entry *rt)
   rt->rt_best = node->data;
 
   /* walk all remaining originator entries */
-  while ((node = avl_walk_next(node)) != NULL) {
+  while ((node = avl_walk_next(node))) {
     struct rt_path *rtp = node->data;
 
     if (olsr_cmp_rtp(rtp, rt->rt_best)) {
@@ -361,45 +471,30 @@ olsr_rt_best(struct rt_entry *rt)
 }
 
 /**
- * Insert/Update a route entry into the routing table.
+ * Insert a prefix into the prefix tree hanging off a lsdb (tc) entry.
  *
- * Check is the route exisits and depending if this is a
- * new version of the RIB do a full inplace update.
- * If there is already a route from this table version then 
- * check if the new route is better.
- *
- * For exisiting routes only interface or gateway router changes
- * do trigger a kernel change.
+ * Check if the candidate route (we call this a rt_path) is known,
+ * if not create it.
+ * Upon post-SPF processing (if the node is reachable) the prefix
+ * will be finally inserted into the global RIB.
  *
  *@param dst the destination
  *@param plen the prefix length
- *@param gateway the next-hop router
- *@param iface the next-hop interface
- *@param metric the hopcount
- *@param etx the LQ extension metric
+ *@param originator the originating router
  *
- *@return the new rt_entry struct
+ *@return the new rt_path struct
  */
 struct rt_path *
-olsr_insert_routing_table(union olsr_ip_addr *dst, 
-                          int plen,
-                          union olsr_ip_addr *originator,
-			  union olsr_ip_addr *gateway,
-			  int iif_index,
-			  int metric,
-			  float etx)
+olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
+                          union olsr_ip_addr *originator, int origin)
 {
-  struct rt_entry *rt;
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct tc_entry *tc;
   struct rt_path *rtp;
   struct avl_node *node;
   struct olsr_ip_prefix prefix;
-
-  /*
-   * no unreachable routes please.
-   */
-  if (etx >= INFINITE_ETX) {
-    return NULL;
-  }
 
   /*
    * No bogus prefix lengths.
@@ -407,50 +502,95 @@ olsr_insert_routing_table(union olsr_ip_addr *dst,
   if (plen > olsr_cnf->maxplen) {
     return NULL;
   }
+
+  OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n",
+              olsr_ip_to_string(&buf, dst), plen,
+              olsr_ip_to_string(&buf, originator));
+
+  /*
+   * For internal routes the tc_entry must already exist.
+   * For all other routes we may create it as an edgeless
+   * hookup point. If so he tc_entry has no edges it will not
+   * be explored during SPF run.
+   */
+  tc = olsr_locate_tc_entry(originator);
   
   /*
-   * first check if there is a route_entry for the prefix.
+   * first check if there is a rt_path for the prefix.
    */
   prefix.prefix = *dst;
   prefix.prefix_len = plen;
 
-  node = avl_find(&routingtree, &prefix);
+  node = avl_find(&tc->prefix_tree, &prefix);
 
   if (!node) {
 
-    /* no route entry yet */
-    rt = olsr_alloc_rt_entry(&prefix);
-
-    if (!rt) {
-      return NULL;
-    }
-
-  } else {
-    rt = node->data;
-  }
-
-  /*
-   * next check if the route path from this originator is known
-   */
-  node = avl_find(&rt->rt_path_tree, originator);
-
-  if (!node) {
-
-    /* no route path from this originator yet */
-    rtp = olsr_alloc_rt_path(rt, originator);
+    /* no rt_path for this prefix yet */
+    rtp = olsr_alloc_rt_path(tc, &prefix, origin);
 
     if (!rtp) {
       return NULL;
     }
 
+    /* overload the hna change bit for flagging a prefix change */
+    changes_hna = OLSR_TRUE;
+
   } else {
     rtp = node->data;
   }
 
-  /* update the version field and relevant parameters */
-  olsr_update_routing_entry(rtp, gateway, iif_index, metric, etx);
-
   return rtp;
+}
+
+/**
+ * Delete a prefix from the prefix tree hanging off a lsdb (tc) entry.
+ */
+void
+olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
+                          union olsr_ip_addr *originator)
+{
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+
+  struct tc_entry *tc;
+  struct rt_path *rtp;
+  struct avl_node *node;
+  struct olsr_ip_prefix prefix;
+
+  /*
+   * No bogus prefix lengths.
+   */
+  if (plen > olsr_cnf->maxplen) {
+    return;
+  }
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n",
+              olsr_ip_to_string(&buf, dst), plen,
+              olsr_ip_to_string(&buf, originator));
+#endif
+
+  tc = olsr_lookup_tc_entry(originator);
+  if (!tc) {
+    return;
+  }
+
+  /*
+   * Grab the rt_path for the prefix.
+   */
+  prefix.prefix = *dst;
+  prefix.prefix_len = plen;
+
+  node = avl_find(&tc->prefix_tree, &prefix);
+
+  if (node) {
+    rtp = node->data;
+    olsr_free_rt_path(rtp);
+
+    /* overload the hna change bit for flagging a prefix change */
+    changes_hna = OLSR_TRUE;
+  }
 }
 
 /**
@@ -493,46 +633,6 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            rtp->rtp_version);
 
   return buff;
-}
-
-/**
- *Calculate the HNA routes
- *
- */
-void
-olsr_calculate_hna_routes(void)
-{
-  int idx;
-
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Calculating HNA routes\n");
-#endif
-
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    struct hna_entry *tmp_hna;
-    /* All entries */
-    for (tmp_hna = hna_set[idx].next; tmp_hna != &hna_set[idx]; tmp_hna = tmp_hna->next) {
-      struct hna_net *tmp_net;
-      /* All networks */
-      for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
-        /* If no route to gateway - skip */
-        struct rt_entry *rt = olsr_lookup_routing_table(&tmp_hna->A_gateway_addr);
-        if (rt != NULL) {
-          /* update if better */
-          olsr_insert_routing_table(&tmp_net->A_network_addr,
-                                    tmp_net->prefixlen,
-                                    &tmp_hna->A_gateway_addr,
-                                    &rt->rt_best->rtp_nexthop.gateway,
-                                    rt->rt_best->rtp_nexthop.iif_index,
-                                    rt->rt_best->rtp_metric.hops,
-                                    rt->rt_best->rtp_metric.etx);
-        }
-      }
-    }
-  }
-
-  /* Update kernel */
-  olsr_update_kernel_routes();
 }
 
 /**

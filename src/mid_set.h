@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.16 2007/11/08 22:47:41 bernd67 Exp $
+ * $Id: mid_set.h,v 1.17 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 
@@ -51,7 +51,6 @@ struct mid_address
 {
   union olsr_ip_addr  alias;
   struct mid_entry   *main_entry;
-
   struct mid_address *next_alias;
 
   /* These are for the reverse list */
@@ -81,16 +80,19 @@ int
 olsr_init_mid_set(void);
 
 void 
-insert_mid_tuple(const union olsr_ip_addr *, struct mid_address *, float);
+insert_mid_tuple(union olsr_ip_addr *, struct mid_address *, float);
 
 void
-insert_mid_alias(const union olsr_ip_addr *, const union olsr_ip_addr *, float);
+insert_mid_alias(union olsr_ip_addr *, const union olsr_ip_addr *, float);
 
 union olsr_ip_addr *
 mid_lookup_main_addr(const union olsr_ip_addr *);
 
 struct mid_address *
 mid_lookup_aliases(const union olsr_ip_addr *);
+
+struct mid_entry *
+mid_lookup_entry_bymain(const union olsr_ip_addr *);
 
 void
 olsr_print_mid_set(void);
@@ -108,3 +110,9 @@ int
 mid_delete_node(struct mid_entry *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

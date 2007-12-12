@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.34 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: kernel_routes.c,v 1.35 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "kernel_routes.h"
@@ -87,9 +87,11 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		0,
 		0
 	};
-	olsr_u32_t metric = 1;
+        olsr_u32_t metric = RT_METRIC_DEFAULT;
 	const struct rt_nexthop* nexthop = (RTM_NEWROUTE == cmd) ?
 		&rt->rt_best->rtp_nexthop : &rt->rt_nexthop;
+	const struct rt_metric* met = (RTM_NEWROUTE == cmd) ?
+		&rt->rt_best->rtp_metric : &rt->rt_metric;
 
 	memset(&req, 0, sizeof(req));
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
@@ -108,7 +110,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		{
 			olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
 			req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-			metric = RT_METRIC_DEFAULT;
+			metric = olsr_fib_metric(met);
 		}
 		olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
 	}
@@ -118,7 +120,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		{
 			olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
 			req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-			metric = RT_METRIC_DEFAULT;
+			metric = olsr_fib_metric(met);
 		}
 		olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
 	}
@@ -203,7 +205,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
   }
 
   kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = RT_METRIC_DEFAULT;
+  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
 
   /*
    * Set interface
@@ -268,7 +270,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = RT_METRIC_DEFAULT;
+  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
   
   /*
    * set interface
@@ -332,7 +334,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
   }
 
   kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = RT_METRIC_DEFAULT;
+  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_metric.hops);
 
   /*
    * Set interface
@@ -388,7 +390,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = RT_METRIC_DEFAULT;
+  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
 
   if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route) >= 0)) {
 

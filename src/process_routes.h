@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.h,v 1.15 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: process_routes.h,v 1.16 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #ifndef _OLSR_PROCESS_RT
@@ -52,16 +52,10 @@ extern export_route_function olsr_addroute6_function;
 extern export_route_function olsr_delroute_function;
 extern export_route_function olsr_delroute6_function;
 
-void
-olsr_init_export_route(void);
-
-void
-olsr_update_kernel_routes(void);
-
-void
-olsr_delete_all_kernel_routes(void);
-
-olsr_u8_t
-olsr_rt_flags(const struct rt_entry *);
+void olsr_init_export_route(void);
+void olsr_update_rib_routes(void);
+void olsr_update_kernel_routes(void);
+void olsr_delete_all_kernel_routes(void);
+olsr_u8_t olsr_rt_flags(const struct rt_entry *);
 
 #endif

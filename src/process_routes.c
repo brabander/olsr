@@ -40,7 +40,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.c,v 1.42 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: process_routes.c,v 1.43 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -50,6 +50,7 @@
 #include "kernel_routes.h"
 #include "lq_avl.h"
 #include "net_olsr.h"
+#include "tc_set.h"
 
 #ifdef WIN32
 #undef strerror
@@ -111,8 +112,8 @@ olsr_init_export_route(void)
  *Deletes all OLSR routes
  *
  * This is extremely simple - Just increment the version of the
- * tree and then olsr_update_kernel_routes() will see
- * all routes in the tree as outdated and flush it.
+ * tree and then olsr_update_rib_routes() will see all routes in the tree
+ * as outdated and olsr_update_kernel_routes() will finally flush it.
  *
  *@return 1
  */
@@ -122,6 +123,7 @@ olsr_delete_all_kernel_routes(void)
   OLSR_PRINTF(1, "Deleting all routes...\n");
 
   olsr_bump_routingtree_version();
+  olsr_update_rib_routes();
   olsr_update_kernel_routes();
 }
 
@@ -198,8 +200,9 @@ olsr_add_kernel_route(struct rt_entry *rt)
 
       /* route addition has suceeded */
 
-      /* save the nexthop in the route entry */
+      /* save the nexthop and metric in the route entry */
       rt->rt_nexthop = rt->rt_best->rtp_nexthop;
+      rt->rt_metric = rt->rt_best->rtp_metric;
     }
   }
 }
@@ -282,7 +285,8 @@ olsr_del_kernel_routes(struct list_node *head_node)
 
 /**
  * Check the version number of all route paths hanging off a route entry.
- * If a route does not match the current routing tree number, delete it.
+ * If a route does not match the current routing tree number, remove it
+ * from the global originator tree for that rt_entry.
  * Reset the best route pointer.
  */
 static void
@@ -310,7 +314,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
 
       /* remove from the originator tree */
       avl_delete(&rt->rt_path_tree, rtp_tree_node);
-      free(rtp);
+      rtp->rtp_rt = NULL;
     }
   }
 
@@ -322,10 +326,10 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
  * Walk all the routes, remove outdated routes and run
  * best path selection on the remaining set.
  * Finally compare the nexthop of the route head and the best
- * path and enqueue a add/chg operation.
+ * path and enqueue an add/chg operation.
  */
 void
-olsr_update_kernel_routes(void)
+olsr_update_rib_routes(void)
 {
   struct rt_entry *rt;
 
@@ -350,8 +354,10 @@ olsr_update_kernel_routes(void)
     /* run best route election */
     olsr_rt_best(rt);
 
-    /* nexthop change ? */
-    if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop)) {
+    /* nexthop or hopcount change ? */
+    if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop) ||
+        (!olsr_cnf->flat_fib_metric &&
+         olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
       if (0 > rt->rt_nexthop.iif_index) {
 
@@ -364,6 +370,14 @@ olsr_update_kernel_routes(void)
       }
     }
   } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+}
+
+/**
+ * Propagate the accumulated changes from the last rib update to the kernel.
+ */
+void
+olsr_update_kernel_routes(void)
+{
 
   /* delete unreachable routes */
   olsr_del_kernel_routes(&del_kernel_list);

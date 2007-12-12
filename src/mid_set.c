@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.27 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: mid_set.c,v 1.28 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -47,6 +47,7 @@
 #include "scheduler.h"
 #include "neighbor_table.h"
 #include "link_set.h"
+#include "tc_set.h"
 #include "packet.h" /* struct mid_alias */
 #include "net_olsr.h"
 
@@ -98,7 +99,7 @@ olsr_init_mid_set(void)
  */
 
 void 
-insert_mid_tuple(const union olsr_ip_addr *m_addr, struct mid_address *alias, float vtime)
+insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vtime)
 {
   struct mid_entry *tmp;
   struct mid_address *tmp_adr;
@@ -125,6 +126,12 @@ insert_mid_tuple(const union olsr_ip_addr *m_addr, struct mid_address *alias, fl
       return;
     }
 
+  /*
+   * Add a rt_path for the alias.
+   */
+  olsr_insert_routing_table(&alias->alias, olsr_cnf->maxplen, m_addr,
+                            OLSR_RT_ORIGIN_MID);
+
   /*If the address was registered*/ 
   if(tmp != &mid_set[hash])
     {
@@ -139,6 +146,7 @@ insert_mid_tuple(const union olsr_ip_addr *m_addr, struct mid_address *alias, fl
     {
       /*Create new node*/
       tmp = olsr_malloc(sizeof(struct mid_entry), "MID new alias");
+      memset(tmp, 0, sizeof(struct mid_entry));
 
       tmp->aliases = alias;
       alias->main_entry = tmp;
@@ -220,7 +228,7 @@ insert_mid_tuple(const union olsr_ip_addr *m_addr, struct mid_address *alias, fl
  *@return nada
  */
 void
-insert_mid_alias(const union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, float vtime)
+insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, float vtime)
 {
   struct neighbor_entry *ne_old, *ne_new;
   struct mid_entry *me_old;
@@ -228,10 +236,13 @@ insert_mid_alias(const union olsr_ip_addr *main_add, const union olsr_ip_addr *a
 #ifndef NODEBUG
   struct ipaddr_str buf1, buf2;
 #endif
-  struct mid_address *adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
+  struct mid_address *adr;
   
   OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(&buf1, alias));
   OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf1, main_add));
+
+  adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
+  memset(adr, 0, sizeof(struct mid_address));
 
   adr->alias = *alias;
   adr->next_alias = NULL;
@@ -445,6 +456,12 @@ olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_
 
           /* Remove from hash table */
           DEQUEUE_ELEM(current_alias);
+
+          /*
+           * Delete the rt_path for the alias.
+           */
+          olsr_delete_routing_table(&current_alias->alias, olsr_cnf->maxplen,
+                                    &entry->main_addr);
  
           free(current_alias);
 
@@ -511,22 +528,30 @@ olsr_time_out_mid_set(void *foo __attribute__((unused)))
  *@return 1
  */
 int
-mid_delete_node(struct mid_entry *entry)
+mid_delete_node(struct mid_entry *mid)
 {
   struct mid_address *aliases;
 
   /* Free aliases */
-  aliases = entry->aliases;
+  aliases = mid->aliases;
   while(aliases)
     {
       struct mid_address *tmp_aliases = aliases;
       aliases = aliases->next_alias;
       DEQUEUE_ELEM(tmp_aliases);
+
+
+      /*
+       * Delete the rt_path for the alias.
+       */
+      olsr_delete_routing_table(&tmp_aliases->alias, olsr_cnf->maxplen,
+                                &mid->main_addr);
+
       free(tmp_aliases);
     }
   /* Dequeue */
-  DEQUEUE_ELEM(entry);
-  free(entry);
+  DEQUEUE_ELEM(mid);
+  free(mid);
   
   return 0;
 }
@@ -564,7 +589,8 @@ olsr_print_mid_set(void)
 
 }
 
-
-
-
-
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

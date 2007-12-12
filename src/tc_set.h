@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.23 2007/11/16 21:43:55 bernd67 Exp $
+ * $Id: tc_set.h,v 1.24 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET
@@ -83,7 +83,8 @@ struct tc_entry
   struct list_node   path_list_node; /* SPF result list */
   union olsr_ip_addr addr; /* vertex_node key */
   struct avl_tree    edge_tree; /* subtree for edges */
-  struct link_entry *next_hop; /* SPF calculated link to the 1st hop neighbor */
+  struct avl_tree    prefix_tree; /* subtree for prefixes */
+  struct link_entry  *next_hop; /* SPF calculated link to the 1st hop neighbor */
   float              path_etx; /* SPF calculated distance, cand_tree_node key */
   olsr_u16_t         msg_seq; /* sequence number of the tc message */
   olsr_u8_t          msg_hops; /* hopcount as per the tc message */
@@ -91,7 +92,7 @@ struct tc_entry
 };
 
 /*
- * macros for traversing the vertices and edges in the link state database.
+ * macros for traversing vertices, edges and prefixes in the link state database.
  * it is recommended to use this because it hides all the internal
  * datastructure from the callers.
  *
@@ -130,6 +131,7 @@ void olsr_input_tc(union olsr_message *, struct interface *,
 
 /* tc_entry manipulation */
 struct tc_entry *olsr_lookup_tc_entry(union olsr_ip_addr *);
+struct tc_entry *olsr_locate_tc_entry(union olsr_ip_addr *);
 struct tc_entry *olsr_add_tc_entry(union olsr_ip_addr *);
 struct tc_entry *olsr_getnext_tc_entry(struct tc_entry *);
 
@@ -144,6 +146,7 @@ void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 void olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 float olsr_calc_tc_etx(const struct tc_edge_entry *);
+void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 
 #endif
 

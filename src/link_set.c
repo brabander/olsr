@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.c,v 1.80 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: link_set.c,v 1.81 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 
@@ -502,6 +502,9 @@ add_link_entry(const union olsr_ip_addr *local,
     } else 
       new_link->if_name = NULL;
 
+  /* shortcut to interface. XXX refcount */
+  new_link->inter = local_if;
+
   /*
    * L_local_iface_addr = Address of the interface
    * which received the HELLO message
@@ -699,6 +702,7 @@ update_link_entry(const union olsr_ip_addr *local,
   /* Update ASYM_time */
   //printf("Vtime is %f\n", message->vtime);
   /* L_ASYM_time = current time + validity time */
+  entry->vtime = message->vtime;
   entry->ASYM_time = GET_TIMESTAMP(message->vtime*1000);
   
   entry->prev_status = check_link_status(message, in_if);

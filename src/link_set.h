@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_set.h,v 1.36 2007/11/25 22:08:57 bernd67 Exp $
+ * $Id: link_set.h,v 1.37 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 
@@ -55,10 +55,12 @@ struct link_entry
 {
   union olsr_ip_addr local_iface_addr;
   union olsr_ip_addr neighbor_iface_addr;
+  const struct interface *inter;
   char *if_name;
   clock_t SYM_time;
   clock_t ASYM_time;
   clock_t time;
+  unsigned int vtime;
   struct neighbor_entry *neighbor;
   olsr_u8_t prev_status;
 
@@ -154,3 +156,9 @@ olsr_update_dijkstra_link_qualities(void);
 float olsr_calc_link_etx(const struct link_entry *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

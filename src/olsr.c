@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr.c,v 1.65 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: olsr.c,v 1.66 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 /**
@@ -160,31 +160,18 @@ olsr_process_changes(void)
       printf("       *** %s (%s on %s) ***\n", olsrd_version, build_date, build_host);
   }
 
-  if (changes_neighborhood)
-    {
-      /* Calculate new mprs, HNA and routing table */
-      if (olsr_cnf->lq_level < 1)
-        {
-          olsr_calculate_mpr();
-        }
-
-      else
-        {
-          olsr_calculate_lq_mpr();
-        }
-
-      olsr_calculate_routing_table();
-      olsr_calculate_hna_routes();
+  if (changes_neighborhood) {
+    if (olsr_cnf->lq_level < 1) {
+      olsr_calculate_mpr();
+    } else {
+      olsr_calculate_lq_mpr();
     }
-  
-  else if (changes_topology || changes_hna)
-    {
-      /* calculate the routing table and HNA */
+  }
 
-        olsr_calculate_routing_table();
-        olsr_calculate_hna_routes();
-    }
-
+  /* calculate the routing table */
+  if (changes_neighborhood || changes_topology || changes_hna) {
+    olsr_calculate_routing_table();
+  }
   
   if (olsr_cnf->debug_level > 0)
     {      
@@ -201,11 +188,13 @@ olsr_process_changes(void)
               olsr_print_hna_set();
             }
         }
-      
+
+#if 1     
       olsr_print_link_set();
       olsr_print_neighbor_table();
       olsr_print_two_hop_neighbor_table();
       olsr_print_tc_table();
+#endif
     }
 
   for(tmp_pc_list = pcf_list; 
@@ -608,3 +597,9 @@ olsr_printf(int loglevel, const char *format, ...)
     }
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

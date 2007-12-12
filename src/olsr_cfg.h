@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_cfg.h,v 1.42 2007/11/29 22:21:26 bernd67 Exp $
+ * $Id: olsr_cfg.h,v 1.43 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 
@@ -62,6 +62,7 @@
 #define DEF_DEBUGLVL        1
 #define DEF_IPC_CONNECTIONS 0
 #define DEF_USE_HYST        OLSR_FALSE
+#define DEF_FLAT_FIB_METRIC OLSR_TRUE
 #define DEF_LQ_LEVEL        2
 #define DEF_LQ_FISH         0
 #define DEF_LQ_DIJK_LIMIT   255
@@ -193,6 +194,7 @@ struct olsrd_config
   olsr_bool                willingness_auto;
   int                      ipc_connections;
   olsr_bool                use_hysteresis;
+  olsr_bool                flat_fib_metric;
   struct hyst_param        hysteresis_param;
   struct plugin_entry      *plugins;
   struct ip_prefix_list    *hna_entries;
@@ -279,3 +281,9 @@ olsrd_get_default_cnf(void);
 #endif
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

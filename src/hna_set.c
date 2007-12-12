@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: hna_set.c,v 1.29 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: hna_set.c,v 1.30 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -44,6 +44,7 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "net_olsr.h"
+#include "tc_set.h"
 
 
 struct hna_entry hna_set[HASHSIZE];
@@ -106,9 +107,11 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
 {
   struct hna_entry *tmp_hna;
   olsr_u32_t hash = olsr_hashing(gw);
-  
-  //OLSR_PRINTF(5, "TC: lookup entry\n");
 
+#if 0
+  OLSR_PRINTF(5, "HNA: lookup entry\n");
+#endif
+  
   /* Check for registered entry */
   for(tmp_hna = hna_set[hash].next;
       tmp_hna != &hna_set[hash];
@@ -177,8 +180,8 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u
   struct hna_net *new_net = olsr_malloc(sizeof(struct hna_net), "Add HNA net");
   
   /* Fill struct */
+  memset(new_net, 0, sizeof(struct hna_net));
   new_net->A_network_addr = *net;
-  //memcpy(&new_net->A_netmask, mask, netmask_size);
   new_net->prefixlen = prefixlen;
 
   /* Queue */
@@ -186,6 +189,14 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u
   new_net->next = hna_gw->networks.next;
   hna_gw->networks.next = new_net;
   new_net->prev = &hna_gw->networks;
+
+  /*
+   * Add the rt_path for the entry.
+   */
+  olsr_insert_routing_table(&new_net->A_network_addr,
+                            new_net->prefixlen,
+                            &hna_gw->A_gateway_addr,
+                            OLSR_RT_ORIGIN_HNA);
 
   return new_net;
 }
@@ -259,6 +270,13 @@ olsr_time_out_hna_set(void *foo __attribute__((unused)))
 		  struct hna_net *net_to_delete = tmp_net;
 		  tmp_net = tmp_net->next;
 		  DEQUEUE_ELEM(net_to_delete);
+
+                  /*
+                   * Delete the rt_path for the entry.
+                   */
+                  olsr_delete_routing_table(&net_to_delete->A_network_addr,
+                                            net_to_delete->prefixlen,
+                                            &tmp_hna->A_gateway_addr);
 		  free(net_to_delete);
 		  changes_hna = OLSR_TRUE;
 		}
