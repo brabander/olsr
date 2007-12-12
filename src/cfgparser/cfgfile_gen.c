@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.14 2007/12/02 19:00:28 bernd67 Exp $
+ * $Id: cfgfile_gen.c,v 1.15 2007/12/12 22:05:53 bernd67 Exp $
  */
 
 #include "olsrd_conf.h"
@@ -83,7 +83,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   /* IP version */
   fprintf(fd, "# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
-  /* HNA IPv4 */
+  /* HNA IPv4/IPv6 */
   fprintf(fd, "# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
     struct ipaddr_str strbuf;
@@ -286,12 +286,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	    {
 	      while (mult != NULL)
 		{
-		  inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
-			    sizeof (ipv6_buf));
-		  
-		  fprintf(fd, "    LinkQualityMult\t%s %0.2f\n",
-			  ipv6_buf, mult->val);
-		  
+		  fprintf(fd, "    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)), mult->val);
 		  mult = mult->next;
 		}
 	    }
@@ -371,18 +366,11 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   /* IP version */
   WRITE_TO_BUF("# IP version to use (4 or 6)\n\nIpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
-  /* HNA IPv4 and IPv6 */
+  /* HNA IPv4/IPv6 */
   WRITE_TO_BUF("# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna%1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
     struct ipaddr_str strbuf;
-    WRITE_TO_BUF("    %s ", olsr_ip_to_string(&strbuf, &h->net.prefix));
-    if (cnf->ip_version == AF_INET) {
-      union olsr_ip_addr ip_addr;
-      olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
-      WRITE_TO_BUF("%s\n", olsr_ip_to_string(&strbuf, &ip_addr));
-    } else {
-      WRITE_TO_BUF("%d\n", h->net.prefix_len);
-    }
+    WRITE_TO_BUF("    %s/%d\n", olsr_ip_to_string(&strbuf, &h->net.prefix), h->net.prefix_len);
     h = h->next;
   }
   WRITE_TO_BUF("}\n\n");
@@ -587,11 +575,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 	    {
 	      while (mult != NULL)
 		{
-		  inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf,
-			    sizeof (ipv6_buf));
-		  
-		  WRITE_TO_BUF("    LinkQualityMult\t%s %0.2f\n", ipv6_buf, mult->val);
-		  
+		  WRITE_TO_BUF("    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), mult->val);
 		  mult = mult->next;
 		}
 	    }
