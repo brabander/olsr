@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.c,v 1.89 2007/12/02 19:00:29 bernd67 Exp $
+ * $Id: olsrd_httpinfo.c,v 1.90 2007/12/12 22:06:24 bernd67 Exp $
  */
 
 /*
@@ -950,26 +950,13 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     size += section_title(&buf[size], bufsize-size, "Announced HNA entries");
     if (olsr_cnf->hna_entries) {
       struct ip_prefix_list *hna;
-      if (olsr_cnf->ip_version == AF_INET) {
-	size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th><th>Netmask</th></tr>\n");
-	for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
-          union olsr_ip_addr netmask;
-          struct ipaddr_str netbuf, maskbuf;
-          olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
-          size += snprintf(&buf[size], bufsize-size,
-                           "<tr><td>%s</td><td>%s</td></tr>\n", 
-                           olsr_ip_to_string(&netbuf, &hna->net.prefix),
-                           olsr_ip_to_string(&maskbuf, &netmask));
-        }
-      } else {
-	size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th><th>Prefix length</th></tr>\n");
-	for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
-          struct ipaddr_str netbuf;
-          size += snprintf(&buf[size], bufsize-size,
-                           "<tr><td>%s</td><td>%d</td></tr>\n", 
-                           olsr_ip_to_string(&netbuf, &hna->net.prefix),
-                           hna->net.prefix_len);
-        }
+      size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th></tr>\n");
+      for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+        struct ipaddr_str netbuf;
+        size += snprintf(&buf[size], bufsize-size,
+                         "<tr><td>%s/%d</td></tr>\n", 
+                         olsr_ip_to_string(&netbuf, &hna->net.prefix),
+                         hna->net.prefix_len);
       }
     } else {
       size += snprintf(&buf[size], bufsize-size, "<tr><td></td></tr>\n");
