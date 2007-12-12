@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.62 2007/12/12 21:57:27 bernd67 Exp $
+ * $Id: lq_route.c,v 1.63 2007/12/12 22:03:37 bernd67 Exp $
  */
 
 #define SPF_PROFILING 0
@@ -442,6 +442,7 @@ olsr_calculate_routing_table (void)
        * does not contain a next-hop.
        */
       if (tc != tc_myself) {
+        struct ipaddr_str buf;
         OLSR_PRINTF(1, "SPF: %s no next-hop\n", olsr_ip_to_string(&buf, &tc->addr));
       }
       continue;
