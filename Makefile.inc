@@ -2,7 +2,7 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.49 2007/12/11 17:16:03 bernd67 Exp $
+# $Id: Makefile.inc,v 1.50 2007/12/12 09:39:50 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0
@@ -91,13 +91,13 @@ endif
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-#nnnWARNINGS +=	-Werror
+#WARNINGS +=	-Werror
 WARNINGS +=	-finline-functions-called-once
 WARNINGS +=	-fearly-inlining
 ifeq ($(DEBUG),0)
 WARNINGS +=	-fomit-frame-pointer
 endif
-# we have small inline functions in src/lq_route.c which should always be inlined
+# we have small inline functions in src/lq_route.h which should always be inlined
 WARNINGS +=	-finline-limit=50
 # These tell gcc to put each function and global variable in a separate section.
 # The linker can than remove all unreferenced section. But in the olsrd binary
