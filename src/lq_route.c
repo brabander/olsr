@@ -38,7 +38,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.64 2007/12/12 23:38:52 bernd67 Exp $
+ * $Id: lq_route.c,v 1.65 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #define SPF_PROFILING 0
@@ -311,10 +311,6 @@ olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
 void
 olsr_calculate_routing_table (void)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
-#endif
-
   struct avl_tree cand_tree;
   struct avl_node *rtp_tree_node;
   struct list_node path_list; /* head of the path_list */
@@ -436,17 +432,18 @@ olsr_calculate_routing_table (void)
     link = tc->next_hop;
 
     if (!link) {
-
+#ifdef DEBUG
       /*
        * Supress the error msg when our own tc_entry
        * does not contain a next-hop.
        */
       if (tc != tc_myself) {
-#if !defined(NODEBUG)
+#ifndef NODEBUG
         struct ipaddr_str buf;
 #endif
         OLSR_PRINTF(1, "SPF: %s no next-hop\n", olsr_ip_to_string(&buf, &tc->addr));
       }
+#endif
       continue;
     }
 

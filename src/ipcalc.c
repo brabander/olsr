@@ -36,7 +36,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipcalc.c,v 1.2 2007/12/02 19:00:27 bernd67 Exp $
+ * $Id: ipcalc.c,v 1.3 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #include "ipcalc.h"
@@ -63,7 +63,7 @@ prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefix, olsr_ip_to_string(&buf, adr));
+  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefixlen, inet_ntop(olsr_cnf->ip_version, a, buf.buf, sizeof(buf.buf)));
 #endif
   return 1;
 }

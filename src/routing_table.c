@@ -37,7 +37,7 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.40 2007/12/12 22:04:08 bernd67 Exp $
+ * $Id: routing_table.c,v 1.41 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #include "routing_table.h"
@@ -488,7 +488,7 @@ struct rt_path *
 olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
                           union olsr_ip_addr *originator, int origin)
 {
-#if !defined(NODEBUG)
+#if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str dstbuf, origbuf;
 #endif
   struct tc_entry *tc;
@@ -503,9 +503,11 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
     return NULL;
   }
 
+#ifdef DEBUG
   OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n",
               olsr_ip_to_string(&dstbuf, dst), plen,
               olsr_ip_to_string(&origbuf, originator));
+#endif
 
   /*
    * For internal routes the tc_entry must already exist.
