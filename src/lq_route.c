@@ -38,6 +38,16 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
+ * Implementation of Dijkstras algorithm. Initially all nodes
+ * are initialized to infinite cost. First we put ourselves
+ * on the heap of reachable nodes. Our heap implementation
+ * is based on an AVL tree which gives interesting performance
+ * characteristics for the frequent operations of minimum key
+ * extraction and re-keying. Next all neighbors of a node are
+ * explored and put on the heap if the cost of reaching them is
+ * better than reaching the current candidate node.
+ * The SPF calculation is terminated if there are no more nodes
+ * on the heap.
  */
 
 #define SPF_PROFILING 0
