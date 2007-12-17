@@ -36,7 +36,6 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.32 2007/11/08 22:17:08 bernd67 Exp $
 
 TOPDIR=../..
 include $(TOPDIR)/Makefile.inc

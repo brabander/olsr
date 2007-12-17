@@ -28,7 +28,6 @@
  *
  */
 
-/* $Id: mapwrite.c,v 1.2 2007/11/29 00:49:41 bernd67 Exp $ */
  
 #include <stdio.h>
 #include <string.h>

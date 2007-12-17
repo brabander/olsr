@@ -2,7 +2,6 @@
 #
 # Highlevel configuration options for all
 #
-# $Id: Makefile.inc,v 1.50 2007/12/12 09:39:50 bernd67 Exp $
 #
 
 # activate debugging with 1 or deactivate with 0

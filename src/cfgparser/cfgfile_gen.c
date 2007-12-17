@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: cfgfile_gen.c,v 1.17 2007/12/12 22:47:04 bernd67 Exp $
  */
 
 #include "olsrd_conf.h"

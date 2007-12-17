@@ -36,7 +36,6 @@
 ;  to the project. For more information see the website or contact
 ;  the copyright holders.
 ;
-;  $Id: installer.nsi,v 1.16 2007/03/27 03:58:31 tlopatic Exp $
 ;
 
 Name olsr.org

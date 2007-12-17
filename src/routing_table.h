@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.h,v 1.26 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #ifndef _OLSR_ROUTING_TABLE

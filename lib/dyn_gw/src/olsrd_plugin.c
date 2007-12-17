@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_plugin.c,v 1.16 2007/11/29 18:09:10 bernd67 Exp $
  */
 
 #include "olsrd_plugin.h"

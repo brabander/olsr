@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.h,v 1.2 2005/04/13 22:53:13 tlopatic Exp $
  */
 
 extern void sendMessage(const char *service, const char *string);

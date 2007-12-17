@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.c,v 1.13 2007/08/02 22:07:19 bernd67 Exp $
  */
 
 #include "defs.h"

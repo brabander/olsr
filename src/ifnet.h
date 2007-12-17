@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.h,v 1.12 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 /* Network interface configuration interface.

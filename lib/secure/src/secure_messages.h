@@ -33,7 +33,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: secure_messages.h,v 1.4 2007/11/08 22:47:40 bernd67 Exp $
  */
 
 

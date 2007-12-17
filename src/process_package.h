@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_package.h,v 1.15 2007/11/18 22:28:35 bernd67 Exp $
  */
 
 

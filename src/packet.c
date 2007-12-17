@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: packet.c,v 1.30 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 

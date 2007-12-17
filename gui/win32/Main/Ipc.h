@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: Ipc.h,v 1.6 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined TL_IPC_H

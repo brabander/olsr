@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.5 2007/11/27 13:35:06 bernd67 Exp $
  */
 
 #include "apm.h"

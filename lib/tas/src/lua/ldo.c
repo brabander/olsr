@@ -1,5 +1,4 @@
 /*
-** $Id: ldo.c,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
 ** Stack and Call structure of Lua
 ** See Copyright Notice in lua.h
 */

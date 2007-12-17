@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.c,v 1.18 2007/11/29 00:49:38 bernd67 Exp $
  */
 
 #include <stddef.h>

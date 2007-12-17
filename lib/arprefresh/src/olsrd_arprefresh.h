@@ -29,7 +29,6 @@
  *
  */
 
-/* $Id: olsrd_arprefresh.h,v 1.2 2007/11/29 18:09:10 bernd67 Exp $ */
 
 #ifndef _OLSRD_ARPREFRESH
 #define _OLSRD_ARPREFRESH

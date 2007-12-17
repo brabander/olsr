@@ -29,7 +29,6 @@
  *
  */
 
-/* $Id: olsrd_arprefresh.c,v 1.2 2007/11/29 18:09:10 bernd67 Exp $ */
 
 /*
  * Plugin to refresh the local ARP cache from received OLSR broadcasts

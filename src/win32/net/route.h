@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: route.h,v 1.6 2004/11/21 01:21:10 tlopatic Exp $
  */
 
 #if !defined TL_NET_ROUTE_H_INCLUDED

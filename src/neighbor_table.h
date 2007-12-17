@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: neighbor_table.h,v 1.16 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 

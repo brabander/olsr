@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: log.h,v 1.7 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 /* 

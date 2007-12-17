@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.h,v 1.50 2007/12/06 21:12:56 bernd67 Exp $
  */
 
 

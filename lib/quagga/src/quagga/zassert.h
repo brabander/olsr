@@ -1,5 +1,4 @@
 /*
- * $Id: zassert.h,v 1.1 2007/01/31 12:38:26 bernd67 Exp $
  */
 
 #ifndef _QUAGGA_ASSERT_H

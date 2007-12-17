@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: test.c,v 1.4 2007/09/17 21:57:05 bernd67 Exp $
  */
 
 #include "src/link.h"

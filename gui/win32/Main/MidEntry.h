@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MidEntry.h,v 1.4 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined TL_MIDENTRY_H

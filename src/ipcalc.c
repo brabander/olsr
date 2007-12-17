@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipcalc.c,v 1.3 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #include "ipcalc.h"

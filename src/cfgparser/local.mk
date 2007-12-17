@@ -36,7 +36,6 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: local.mk,v 1.1 2007/11/04 19:07:43 bernd67 Exp $
 
 # avoid the $(if) everywhere
 C=$(if $(CFGDIR),$(CFGDIR)/)

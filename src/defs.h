@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: defs.h,v 1.67 2007/11/11 22:51:54 bernd67 Exp $
  */
 
 

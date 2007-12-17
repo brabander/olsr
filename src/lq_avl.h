@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_avl.h,v 1.14 2007/11/18 20:35:59 bernd67 Exp $
  */
 
 #ifndef _LQ_AVL_H

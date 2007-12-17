@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: build_msg.c,v 1.43 2007/12/02 19:00:27 bernd67 Exp $
  */
 
 #include "build_msg.h"

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: unistd.h,v 1.7 2007/05/13 23:44:24 tlopatic Exp $
  */
 
 #if !defined TL_UNISTD_H_INCLUDED

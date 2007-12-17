@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: interfaces.c,v 1.40 2007/12/06 21:12:56 bernd67 Exp $
  */
 
 #include "defs.h"

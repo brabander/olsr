@@ -29,7 +29,6 @@
  *
  */
 
-/* $Id: nameservice.h,v 1.18 2007/12/02 19:00:29 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd

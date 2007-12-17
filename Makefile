@@ -35,7 +35,6 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.105 2007/12/06 20:12:47 bernd67 Exp $
 
 VERS =		0.5.5pre
 

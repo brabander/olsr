@@ -38,7 +38,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oscan.lex,v 1.29 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.58 2007/12/06 21:46:07 bernd67 Exp $
  */
 
 

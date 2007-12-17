@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_list.c,v 1.6 2007/09/05 16:11:10 bernd67 Exp $
  */
 
 #include <stdlib.h>

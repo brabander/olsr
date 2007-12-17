@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: process_routes.h,v 1.16 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #ifndef _OLSR_PROCESS_RT

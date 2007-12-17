@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.h,v 1.17 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 

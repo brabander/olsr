@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_pgraph.h,v 1.4 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 /*

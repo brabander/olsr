@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.h,v 1.4 2007/11/16 19:12:55 bernd67 Exp $
  */
 
 #include "olsrd_plugin.h" /* union set_plugin_parameter_addon */

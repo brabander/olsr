@@ -28,7 +28,6 @@
  *
  */
 
-/* $Id: plugin_util.h,v 1.3 2007/09/16 22:14:08 bernd67 Exp $ */
 
 /*
  * Example plugin for olsrd.org OLSR daemon

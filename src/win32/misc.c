@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.4 2005/03/21 02:17:37 tlopatic Exp $
  */
 
 #define WIN32_LEAN_AND_MEAN

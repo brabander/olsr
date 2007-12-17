@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: print_packet.h,v 1.2 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 #ifndef _PRINT_PACKET

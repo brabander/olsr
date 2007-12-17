@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: tc_set.h,v 1.24 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #ifndef _OLSR_TOP_SET

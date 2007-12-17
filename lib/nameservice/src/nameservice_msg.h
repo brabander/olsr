@@ -29,7 +29,6 @@
  *
  */
 
-/* $Id: nameservice_msg.h,v 1.9 2007/11/29 18:09:10 bernd67 Exp $ */
 
 /*
  * Dynamic linked library for UniK OLSRd

@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin.c,v 1.15 2007/11/08 22:47:40 bernd67 Exp $
  */
 
 #include <string.h>

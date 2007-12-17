@@ -1,5 +1,4 @@
 /*
-** $Id: lapi.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
 ** Auxiliary functions from Lua API
 ** See Copyright Notice in lua.h
 */

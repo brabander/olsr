@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: os_unix.h,v 1.3 2005/05/29 12:47:44 br1 Exp $
  */
 
 #if defined linux

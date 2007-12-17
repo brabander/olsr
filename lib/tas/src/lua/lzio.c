@@ -1,5 +1,4 @@
 /*
-** $Id: lzio.c,v 1.1 2005/04/12 17:17:35 tlopatic Exp $
 ** a generic input stream interface
 ** See Copyright Notice in lua.h
 */

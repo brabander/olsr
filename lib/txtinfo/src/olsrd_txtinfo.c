@@ -40,7 +40,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.c,v 1.18 2007/12/02 19:00:30 bernd67 Exp $
  */
 
 /*

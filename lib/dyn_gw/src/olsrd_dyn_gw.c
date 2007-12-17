@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dyn_gw.c,v 1.28 2007/12/02 19:00:29 bernd67 Exp $
  */
 
 /*

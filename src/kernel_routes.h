@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.h,v 1.11 2007/11/11 23:10:25 bernd67 Exp $
  */
 
 #ifndef _OLSR_KERNEL_RT

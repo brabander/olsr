@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.44 2007/12/06 21:01:14 bernd67 Exp $
  */
 
 #include "../defs.h"

@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.c,v 1.6 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "lua/lua.h"

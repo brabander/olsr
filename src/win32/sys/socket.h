@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: socket.h,v 1.4 2004/11/21 01:21:10 tlopatic Exp $
  */
 
 #if !defined TL_SYS_SOCKET_H_INCLUDED

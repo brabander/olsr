@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ipc_frontend.c,v 1.44 2007/12/02 19:00:27 bernd67 Exp $
  */
 
 /*

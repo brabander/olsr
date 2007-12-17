@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ifnet.c,v 1.41 2007/11/29 18:10:18 bernd67 Exp $
  */
 
 #include "interfaces.h"

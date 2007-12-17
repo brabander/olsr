@@ -3,7 +3,6 @@
 # We expect warning options for gcc as arguments and return the ones which are
 # accepted by the given gcc.
 #
-# $Id: gcc-warnings,v 1.9 2007/12/11 17:16:03 bernd67 Exp $
 
 set -ue
 #set -vx

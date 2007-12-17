@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: gfx.h,v 1.4 2007/11/15 00:35:32 bernd67 Exp $
  */
 
 /*

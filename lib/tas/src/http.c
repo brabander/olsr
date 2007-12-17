@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: http.c,v 1.9 2007/11/16 22:56:54 bernd67 Exp $
  */
 
 #include "link.h"

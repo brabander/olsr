@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_mpr.h,v 1.2 2004/11/21 11:28:56 kattemat Exp $
  */
 
 #ifndef _OLSR_LQ_MPR

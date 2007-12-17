@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.25 2007/12/06 21:12:55 bernd67 Exp $
  */
 
 #if defined WINCE

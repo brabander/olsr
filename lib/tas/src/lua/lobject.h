@@ -1,5 +1,4 @@
 /*
-** $Id: lobject.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
 */

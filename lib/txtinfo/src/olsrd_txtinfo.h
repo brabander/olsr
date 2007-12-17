@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_txtinfo.h,v 1.3 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 /*

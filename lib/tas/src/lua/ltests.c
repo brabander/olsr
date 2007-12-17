@@ -1,5 +1,4 @@
 /*
-** $Id: ltests.c,v 1.1 2005/04/12 17:17:27 tlopatic Exp $
 ** Internal Module for Debugging of the Lua Implementation
 ** See Copyright Notice in lua.h
 */

@@ -1,5 +1,4 @@
 /*
-** $Id: ltm.h,v 1.1 2005/04/12 17:17:27 tlopatic Exp $
 ** Tag methods
 ** See Copyright Notice in lua.h
 */

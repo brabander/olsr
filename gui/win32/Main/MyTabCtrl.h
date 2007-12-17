@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: MyTabCtrl.h,v 1.6 2007/03/27 03:01:06 tlopatic Exp $
  */
 
 #if !defined(AFX_MYTABCTRL_H__D443FF52_C52D_4C89_AB4B_19B09687EBAE__INCLUDED_)

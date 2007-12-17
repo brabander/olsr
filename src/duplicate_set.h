@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: duplicate_set.h,v 1.12 2007/11/25 21:38:13 bernd67 Exp $
  */
 
 #ifndef _OLSR_DUP_TABLE

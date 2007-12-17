@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.c,v 1.6 2007/08/02 21:58:43 bernd67 Exp $
  */
 
 

@@ -1,5 +1,4 @@
 /*
-** $Id: lcode.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
 ** Code generator for Lua
 ** See Copyright Notice in lua.h
 */

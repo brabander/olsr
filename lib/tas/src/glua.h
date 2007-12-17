@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: glua.h,v 1.1 2005/04/12 17:17:25 tlopatic Exp $
  */
 
 extern int lspToLua(const char *rootDir, const char *lspFileName,

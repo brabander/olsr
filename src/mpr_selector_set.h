@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mpr_selector_set.h,v 1.15 2007/12/06 20:25:47 bernd67 Exp $
  */
 
 

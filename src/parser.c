@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: parser.c,v 1.40 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 #include "parser.h"

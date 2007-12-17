@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: kernel_routes.c,v 1.17 2007/11/28 10:09:03 bernd67 Exp $
  */
 
 

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: time.h,v 1.7 2005/03/21 02:17:37 tlopatic Exp $
  */
 
 #if !defined TL_SYS_TIME_H_INCLUDED

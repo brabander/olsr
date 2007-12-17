@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_layer.c,v 1.15 2007/11/29 18:09:11 bernd67 Exp $
  */
 
 

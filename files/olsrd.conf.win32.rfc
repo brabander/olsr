@@ -6,7 +6,6 @@
 # without the GUI. If you use the GUI, then you do not need this
 # file. In this case look at Default.olsr instead.
 #
-# $Id: olsrd.conf.win32.rfc,v 1.3 2007/09/06 11:43:42 bernd67 Exp $
 #
 
 #

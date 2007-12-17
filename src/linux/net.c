@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net.c,v 1.38 2007/12/06 20:43:15 bernd67 Exp $
  */
 
 

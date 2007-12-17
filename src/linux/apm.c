@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: apm.c,v 1.20 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 /*

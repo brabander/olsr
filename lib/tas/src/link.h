@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link.h,v 1.1 2005/04/12 17:17:26 tlopatic Exp $
  */
 
 #define FLAG_READ 1

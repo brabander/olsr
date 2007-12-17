@@ -38,7 +38,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_route.c,v 1.65 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #define SPF_PROFILING 0

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_httpinfo.h,v 1.33 2007/11/29 18:09:10 bernd67 Exp $
  */
 
 /*

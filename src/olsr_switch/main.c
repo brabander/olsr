@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: main.c,v 1.35 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 /* olsrd host-switch daemon */

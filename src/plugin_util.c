@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: plugin_util.c,v 1.8 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 #include "plugin_util.h"

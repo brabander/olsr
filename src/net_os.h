@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: net_os.h,v 1.15 2007/12/06 20:41:51 bernd67 Exp $
  */
 
 

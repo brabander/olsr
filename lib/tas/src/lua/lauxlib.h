@@ -1,5 +1,4 @@
 /*
-** $Id: lauxlib.h,v 1.3 2007/11/16 19:34:26 bernd67 Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */

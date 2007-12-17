@@ -29,7 +29,6 @@
  *
  */
  
-/* $Id: olsrd_copy.c,v 1.5 2007/11/29 18:09:10 bernd67 Exp $ */
  
 /*
  * Dynamic linked library for UniK OLSRd

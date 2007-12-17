@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: scheduler.c,v 1.44 2007/11/08 22:47:41 bernd67 Exp $
  */
 
 

@@ -1,5 +1,4 @@
 /*
-** $Id: lopcodes.c,v 1.1 2005/04/12 17:17:27 tlopatic Exp $
 ** extracted automatically from lopcodes.h by mkprint.lua
 ** DO NOT EDIT
 ** See Copyright Notice in lua.h

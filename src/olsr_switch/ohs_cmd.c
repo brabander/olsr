@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: ohs_cmd.c,v 1.26 2007/11/29 17:56:57 bernd67 Exp $
  */
 
 #include "olsr_host_switch.h"

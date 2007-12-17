@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsr_host_switch.h,v 1.13 2007/12/02 19:00:28 bernd67 Exp $
  */
 
 #ifndef _OLSR_HOST_SWITCH

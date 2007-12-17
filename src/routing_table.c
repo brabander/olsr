@@ -37,7 +37,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: routing_table.c,v 1.41 2007/12/13 11:34:35 bernd67 Exp $
  */
 
 #include "routing_table.h"

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: in.h,v 1.6 2004/11/21 01:21:10 tlopatic Exp $
  */
 
 #if !defined TL_NETINET_IN_H_INCLUDED

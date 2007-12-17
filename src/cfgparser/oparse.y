@@ -38,7 +38,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: oparse.y,v 1.43 2007/12/12 22:39:36 bernd67 Exp $
  */
 
 

@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: inet.h,v 1.8 2007/07/15 21:09:38 bernd67 Exp $
  */
 
 #if !defined TL_ARPA_INET_H_INCLUDED

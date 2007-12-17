@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: compat.c,v 1.17 2007/11/08 23:23:13 bernd67 Exp $
  */
 
 /*

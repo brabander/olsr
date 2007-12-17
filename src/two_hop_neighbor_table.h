@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: two_hop_neighbor_table.h,v 1.15 2007/11/08 22:47:42 bernd67 Exp $
  */
 
 

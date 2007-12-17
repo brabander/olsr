@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: mid_set.c,v 1.28 2007/12/12 21:57:27 bernd67 Exp $
  */
 
 #include "ipcalc.h"

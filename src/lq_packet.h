@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: lq_packet.h,v 1.11 2007/11/29 23:03:07 bernd67 Exp $
  */
 
 #ifndef _OLSR_LQ_PACKET_H

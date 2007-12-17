@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_conf.h,v 1.15 2007/11/03 23:21:27 bernd67 Exp $
  */
 
 

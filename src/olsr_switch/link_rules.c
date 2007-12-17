@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: link_rules.c,v 1.7 2007/11/29 17:56:57 bernd67 Exp $
  */
 
 #include "link_rules.h"

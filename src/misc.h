@@ -36,7 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: misc.h,v 1.3 2005/02/20 18:52:18 kattemat Exp $
  */
 
 #ifndef _OLSR_MISC_H

@@ -28,7 +28,6 @@
  *
  */
 
-/* $Id: mapwrite.h,v 1.1 2007/11/29 00:26:16 bernd67 Exp $ */
  
 #ifndef _MAPWRITE_H
 #define _MAPWRITE_H
