@@ -1,0 +1,11 @@
+syntax: glob
+*.o
+*.d
+*.diff
+*.~
+olsrd
+src/builddata.c
+src/cfgparser/oparse.c
+src/cfgparser/oparse.h
+src/cfgparser/oscan.c
+lib/*/*so.*.*
