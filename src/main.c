@@ -63,10 +63,6 @@
 #include <fcntl.h>
 #endif
 
-/* Global stuff externed in defs.h */
-FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
-struct olsrd_config *olsr_cnf;  /* The global configuration */
-
 #ifdef WIN32
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signal) __attribute__((noreturn));
@@ -218,7 +214,7 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  if(olsrd_parse_cnf(conf_file_name))
+  if(NULL == (olsr_cnf = olsrd_parse_cnf(conf_file_name)))
     {
       printf("Using default config values(no configfile)\n");
       olsr_cnf = olsrd_get_default_cnf();

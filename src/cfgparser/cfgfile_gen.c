@@ -86,10 +86,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# FIBMetric (\"%s\" or \"%s\")\n\nFIBMetric\t\"%s\"\n\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, cnf->flat_fib_metric ? CFG_FIBM_FLAT : CFG_FIBM_CORRECT);
 
   /* HNA IPv4/IPv6 */
-  fprintf(fd, "# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
+  fprintf(fd, "# HNA IPv%d routes\n# syntax: netaddr/prefix\n\nHna%d {\n", cnf->ip_version == AF_INET ? 4 : 6, cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
     struct ipaddr_str strbuf;
-    fprintf(fd, "    %s/%d", olsr_ip_to_string(&strbuf, &h->net.prefix), h->net.prefix_len);
+    fprintf(fd, "    %s/%d\n", olsr_ip_to_string(&strbuf, &h->net.prefix), h->net.prefix_len);
     h = h->next;
   }
   fprintf(fd, "}\n\n");

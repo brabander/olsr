@@ -61,11 +61,4 @@ struct conf_token
 void
 set_default_cnf(struct olsrd_config *);
 
-#if defined WIN32_STDIO_HACK
-void 
-win32_stdio_hack(unsigned int);
-#else
-#define win32_stdio_hack(handle) do { } while(0)
-#endif
-
 #endif

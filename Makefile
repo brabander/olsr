@@ -62,6 +62,9 @@ default_target: $(EXENAME)
 $(EXENAME):	$(OBJS) src/builddata.o
 		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+cfgparser:	$(CFGDEPS)
+		$(MAKE) -C $(CFGDIR)
+
 switch:		
 	$(MAKECMD) -C $(SWITCHDIR)
 

@@ -58,7 +58,7 @@
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
 void 
-WinSockPError(char *);
+WinSockPError(const char *);
 #endif
 
 #ifndef MSG_NOSIGNAL

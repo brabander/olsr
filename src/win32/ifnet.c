@@ -38,6 +38,7 @@
  *
  */
 
+#include <winsock2.h>
 #include "interfaces.h"
 #include "olsr.h"
 #include "parser.h"
@@ -55,6 +56,9 @@
 #include <iprtrmib.h>
 
 #include <arpa/inet.h>
+
+#define BUFSPACE  (127*1024)	/* max. input buffer size to request */
+
 
 struct MibIpInterfaceRow
 {
@@ -139,7 +143,7 @@ static void CallSignalHandler(void)
 
 static void MiniIndexToIntName(char *String, int MiniIndex)
 {
-  char *HexDigits = "0123456789abcdef";
+  const char *HexDigits = "0123456789abcdef";
 
   String[0] = 'i';
   String[1] = 'f';
@@ -152,7 +156,7 @@ static void MiniIndexToIntName(char *String, int MiniIndex)
 
 static int IntNameToMiniIndex(int *MiniIndex, char *String)
 {
-  char *HexDigits = "0123456789abcdef";
+  const char *HexDigits = "0123456789abcdef";
   int i, k;
   char ch;
 
@@ -937,7 +941,6 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   struct InterfaceInfo Info;
   struct interface *New;
   union olsr_ip_addr NullAddr;
-  unsigned int AddrSockAddr;
   int IsWlan;
   struct sockaddr_in *AddrIn;
   
@@ -1004,9 +1007,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
               IntConf->name, New->if_index);
       
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_addr));
-  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_netmask));
-  OLSR_PRINTF(1, "\tBroadcast address: %s\n", sockaddr_to_string(&buf, (const struct sockaddr*)&New->int_broadaddr));
+  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_addr));
+  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_netmask));
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_broadaddr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
       
@@ -1014,14 +1017,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
 
-  AddrSockAddr = addrsock.sin_addr.s_addr;
-  addrsock.sin_addr = New->ip_addr.v4;
-
-  New->olsr_socket = getsocket((struct sockaddr *)&addrsock,
-                               127 * 1024, New->int_name);
+  New->olsr_socket = getsocket(BUFSPACE, New->int_name);
       
-  addrsock.sin_addr.s_addr = AddrSockAddr;
-
   if (New->olsr_socket < 0)
   {
     fprintf(stderr, "Could not initialize socket... exiting!\n\n");

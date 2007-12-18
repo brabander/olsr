@@ -43,6 +43,7 @@
 
 #include "kernel_routes.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 #include "ipc_frontend.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -85,7 +86,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_best->rtp_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;
@@ -162,7 +163,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_metric.hops);
+  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;

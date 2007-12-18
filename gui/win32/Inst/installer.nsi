@@ -54,7 +54,7 @@ UninstPage uninstConfirm
 UninstPage instfiles
 
 Function .onInit
-        MessageBox MB_YESNO "This will install olsr.org 0.5.0 on your computer. Continue?" IDYES NoAbort
+        MessageBox MB_YESNO "This will install olsr.org 0.5.4 on your computer. Continue?" IDYES NoAbort
         Abort
 NoAbort:
 FunctionEnd
@@ -68,20 +68,23 @@ Section "Program Files"
 
         SetOutPath $INSTDIR
 
-        File /oname=Switch.exe ..\release\Main.exe
-        File ..\release\Shim.exe
+        File ..\Main\release\Switch.exe
+        File ..\Shim\release\Shim.exe
         File ..\..\..\olsrd.exe
-        File ..\..\..\olsr_switch.exe
         File ..\..\..\src\cfgparser\olsrd_cfgparser.dll
         File /oname=README.txt ..\..\..\README
         File /oname=README-LQ.html ..\..\..\README-Link-Quality.html
         File /oname=README-Fish-Eye.txt ..\..\..\README-Link-Quality-Fish-Eye.txt
         File ..\..\..\README-Olsr-Switch.html
         File linux-manual.txt
-        File /oname=olsrd.conf.rfc ..\..\..\files\olsrd.conf.win32.rfc
-        File /oname=olsrd.conf.lq ..\..\..\files\olsrd.conf.win32.lq
+        File ..\Main\RFC-Default.olsr
+        File ..\Main\LQ-Default.olsr
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
         File ..\..\..\lib\httpinfo\olsrd_httpinfo.dll
+        File ..\..\..\lib\mini\olsrd_mini.dll
+        File ..\..\..\lib\pgraph\olsrd_pgraph.dll
+        File ..\..\..\lib\secure\olsrd_secure.dll
+        File ..\..\..\lib\txtinfo\olsrd_txtinfo.dll
 
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org DisplayName olsr.org
         WriteRegStr HKLM Software\Microsoft\Windows\CurrentVersion\Uninstall\olsr.org UninstallString $INSTDIR\uninstall.exe
@@ -171,8 +174,11 @@ Section "Uninstall"
 	Delete $INSTDIR\olsrd.conf.rfc
 	Delete $INSTDIR\olsrd.conf.lq
         Delete $INSTDIR\olsrd_dot_draw.dll
-        Delete $INSTDIR\olsrd_nameservice.dll
         Delete $INSTDIR\olsrd_httpinfo.dll
+        Delete $INSTDIR\olsrd_mini.dll
+        Delete $INSTDIR\olsrd_pgraph.dll
+        Delete $INSTDIR\olsrd_secure.dll
+        Delete $INSTDIR\olsrd_txtinfo.dll
         Delete $INSTDIR\uninstall.exe
 
         RMDir $INSTDIR

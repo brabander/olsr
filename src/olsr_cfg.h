@@ -255,7 +255,7 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union 
  * Interface to parser
  */
 
-int
+struct olsrd_config *
 olsrd_parse_cnf(const char *);
 
 int
@@ -278,6 +278,17 @@ get_default_if_config(void);
 
 struct olsrd_config *
 olsrd_get_default_cnf(void);
+
+#if defined WIN32
+void 
+win32_stdio_hack(unsigned int);
+
+void*
+win32_olsrd_malloc(size_t size);
+
+void
+win32_olsrd_free(void* ptr);
+#endif
 
 #if defined __cplusplus
 }

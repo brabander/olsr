@@ -47,7 +47,16 @@
 #define	_OLSR_TYPES_H
 
 /* types */
+#ifdef _MSC_VER
+typedef unsigned char   uint8_t;
+typedef unsigned short  uint16_t;
+typedef unsigned int    uint32_t;
+typedef char            int8_t;
+typedef short           int16_t;
+typedef int             int32_t;
+#else
 #include <inttypes.h>
+#endif
 
 
 typedef enum {
@@ -71,7 +80,9 @@ typedef int32_t         olsr_32_t;
 /* OpenBSD wants this here */
 #include <sys/types.h>
 /* IPv6 address format in6_addr */
+#ifndef _MSC_VER
 #include <netinet/in.h>
+#endif
 
 
 union olsr_ip_addr {

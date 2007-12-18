@@ -57,7 +57,7 @@ static olsr_bool disp_pack_out = OLSR_FALSE;
 #ifdef WIN32
 #define perror(x) WinSockPError(x)
 void
-WinSockPError(char *);
+WinSockPError(const char *);
 #endif
 
 

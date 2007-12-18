@@ -256,8 +256,6 @@ struct IoInfo
 
 extern "C" struct IoInfo *__pioinfo[];
 
-extern "C" void win32_stdio_hack(unsigned int handle);
-
 int CFrontendApp::RedirectStdHandles(void)
 {
 	SECURITY_ATTRIBUTES SecAttr;

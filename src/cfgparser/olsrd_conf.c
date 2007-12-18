@@ -63,6 +63,10 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 
 int current_line;
 
+/* Global stuff externed in defs.h */
+FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
+struct olsrd_config *olsr_cnf;  /* The global configuration */
+
 #ifdef MAKEBIN
 
 /* Build as standalone binary */
@@ -103,7 +107,7 @@ main(int argc, char *argv[])
 
 #endif
 
-int
+struct olsrd_config *
 olsrd_parse_cnf(const char *filename)
 {
   struct olsr_if *in, *new_ifqueue;
@@ -113,7 +117,7 @@ olsrd_parse_cnf(const char *filename)
   olsr_cnf = malloc(sizeof(*olsr_cnf));
   if (olsr_cnf == NULL) {
     fprintf(stderr, "Out of memory %s\n", __func__);
-    return 1;
+    return NULL;
   }
 
   set_default_cnf(olsr_cnf);
@@ -126,7 +130,7 @@ olsrd_parse_cnf(const char *filename)
             filename, strerror(errno));
     olsrd_free_cnf(olsr_cnf);
     olsr_cnf = NULL;
-    return 1;
+    return NULL;
   }
 
   current_line = 1;
@@ -135,7 +139,7 @@ olsrd_parse_cnf(const char *filename)
   if (rc != 0) {
     olsrd_free_cnf(olsr_cnf);
     olsr_cnf = NULL;
-    return 1;
+    return NULL;
   }
 
   /* Reverse the queue (added by user request) */
@@ -158,7 +162,7 @@ olsrd_parse_cnf(const char *filename)
       in->interf = NULL;
       in->host_emul = OLSR_FALSE;
   }
-  return 0;
+  return olsr_cnf;
 }
 
 
@@ -462,7 +466,9 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->ioctl_s = 0;
 #if LINUX_POLICY_ROUTING
     cnf->rtnl_s = 0;
-#else
+#endif
+
+#if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
     cnf->rts = 0;
 #endif
 }
@@ -499,7 +505,7 @@ get_default_if_config(void)
   io->ipv6_addrtype = 0; /* global */
 
   io->hello_params.emission_interval = HELLO_INTERVAL;
-  io->hello_params.validity_time = -1.0;
+  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
   io->tc_params.emission_interval = TC_INTERVAL;
   io->tc_params.validity_time = TOP_HOLD_TIME;
   io->mid_params.emission_interval = MID_INTERVAL;
@@ -655,7 +661,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   }
 }
 
-#if defined WIN32_STDIO_HACK
+#if defined WIN32
 struct ioinfo
 {
 	unsigned int handle;
@@ -686,13 +692,25 @@ void win32_stdio_hack(unsigned int handle)
   // setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 }
+
+void*
+win32_olsrd_malloc(size_t size)
+{
+	return malloc(size);
+}
+
+void
+win32_olsrd_free(void* ptr)
+{
+	free(ptr);
+}
 #endif
 
 void ip_prefix_list_add(struct ip_prefix_list **list,
                         const union olsr_ip_addr *net,
                         olsr_u8_t prefix_len)
 {
-  struct ip_prefix_list *new_entry = olsr_malloc(sizeof(*new_entry), "Add local HNA entry");
+  struct ip_prefix_list *new_entry = malloc(sizeof(*new_entry));
   
   new_entry->net.prefix = *net;
   new_entry->net.prefix_len = prefix_len;

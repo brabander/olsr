@@ -26,7 +26,15 @@ OS_LIB_PTHREAD =
 OS_CFLAG_PTHREAD =
 OS_LIB_DYNLOAD =
 
-olsr-$(VERS).zip:	gui/win32/release/Main.exe \
+win32lib: gui/win32/Main/olsrd_cfgparser.lib
+
+gui/win32/Main/olsrd_cfgparser.lib: cfgparser
+		@# Using the cygwin dlltool does not work (missing functions hooks)
+		@# dlltool --input-def src/cfgparser/olsrd_cfgparser.def --dllname src/cfgparser/olsrd_cfgparser.dll --output-lib $@
+		@# Use the Microsoft Lib Tool instead
+		lib /machine:i386 /def:src/cfgparser/olsrd_cfgparser.def /out:gui/win32/Main/olsrd_cfgparser.lib
+
+olsr-$(VERS).zip: gui/win32/release/Main.exe \
 		gui/win32/release/Shim.exe \
 		olsrd.exe \
 		olsr_switch.exe \

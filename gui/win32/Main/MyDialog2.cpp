@@ -232,7 +232,7 @@ void MyDialog2::OnEtxCheck()
 
 int MyDialog2::OpenConfigFile(CString PathName)
 {
-	struct hna4_entry *Hna4;
+	struct ip_prefix_list *Hna;
 	struct olsr_if *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	int NumInt = m_InterfaceList.GetItemCount();
@@ -334,8 +334,8 @@ int MyDialog2::OpenConfigFile(CString PathName)
 
 	m_InternetCheck.SetCheck(FALSE);
 
-	for (Hna4 = Conf->hna4_entries; Hna4 != NULL; Hna4 = Hna4->next)
-		if (Hna4->net.v4 == 0 && Hna4->netmask.v4 == 0 &&
+	for (Hna = Conf->hna_entries; Hna != NULL; Hna = Hna->next)
+		if (0 == Hna->net.prefix_len &&
 			m_InternetCheck.IsWindowEnabled())
 		m_InternetCheck.SetCheck(TRUE);
 
@@ -359,7 +359,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 		else
 			PrevInt->next = Int->next;
 
-		olsrd_cnf_free(Int);
+		win32_olsrd_free(Int);
 	}
 
 	return 0;
@@ -369,7 +369,7 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 {
 	struct olsr_if *Int;
 
-	Int = (struct olsr_if *)olsrd_cnf_malloc(sizeof (struct olsr_if));
+	Int = (struct olsr_if *)win32_olsrd_malloc(sizeof (struct olsr_if));
 
 	if (Int == NULL)
 	{
@@ -377,11 +377,11 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 		return NULL;
 	}
 
-	Int->name = (char *)olsrd_cnf_malloc(Name.GetLength() + 1);
+	Int->name = (char *)win32_olsrd_malloc(Name.GetLength() + 1);
 
 	if (Int->name == NULL)
 	{
-		olsrd_cnf_free(Int);
+		win32_olsrd_free(Int);
 
 		AfxMessageBox("Cannot allocate memory.");
 		return NULL;
@@ -390,7 +390,6 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 	::lstrcpy(Int->name, Name);
 
 	Int->config = NULL;
-	Int->index = 0;
 	Int->configured = OLSR_FALSE;
 	Int->interf = NULL;
 
@@ -407,12 +406,12 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	struct olsr_if *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	CString Conv;
-	struct hna4_entry *Hna4, *NewHna4, *PrevHna4;
+	struct ip_prefix_list *Hna, *NewHna, *PrevHna;
 	int NumInt = m_InterfaceList.GetItemCount();
 	int i;
 	CString IntName, IntName2;
-	struct ipc_host *IpcHost;
-	unsigned int Local;
+	struct ip_prefix_list *IpcHost;
+	union olsr_ip_addr Local;
 
 	PrevInt = NULL;
 
@@ -542,61 +541,68 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	m_EtxWindowSize.GetWindowText(Conv);
 	Conf->lq_wsize = atoi(Conv);
 
-	PrevHna4 = NULL;
+	PrevHna = NULL;
 
 	// check for a default gateway HNA4 entry
 
-	for (Hna4 = Conf->hna4_entries; Hna4 != NULL; Hna4 = Hna4->next)
+	for (Hna = Conf->hna_entries; Hna != NULL; Hna = Hna->next)
 	{
-		if (Hna4->net.v4 == 0 && Hna4->netmask.v4 == 0)
+		if (0 == Hna->net.prefix_len)
 			break;
 
-		PrevHna4 = Hna4;
+		PrevHna = Hna;
 	}
 
-	// add default gateway HNA4 entry
+	// add default gateway HNA entry
 
-	if (m_InternetCheck.GetCheck() && Hna4 == NULL)
+	if (m_InternetCheck.GetCheck() && Hna == NULL)
 	{
-		NewHna4 = (struct hna4_entry * )
-			olsrd_cnf_malloc(sizeof (struct hna4_entry));
+		NewHna = (struct ip_prefix_list * )
+			win32_olsrd_malloc(sizeof (struct ip_prefix_list));
 
-		if (NewHna4 == NULL)
+		if (NewHna == NULL)
 		{
 			AfxMessageBox("Cannot allocate memory.");
 			return -1;
 		}
 
-		NewHna4->net.v4 = 0;
-		NewHna4->netmask.v4 = 0;
+		memset(NewHna, 0, sizeof (struct ip_prefix_list));
 
-		NewHna4->next = Conf->hna4_entries;
-		Conf->hna4_entries = NewHna4;
+		NewHna->next = Conf->hna_entries;
+		Conf->hna_entries = NewHna;
 	}
 
 	// remove default gateway HNA4 entry
 
-	if (!m_InternetCheck.GetCheck() && Hna4 != NULL)
+	if (!m_InternetCheck.GetCheck() && Hna != NULL)
 	{
-		if (PrevHna4 == NULL)
-			Conf->hna4_entries = Hna4->next;
+		if (PrevHna == NULL)
+			Conf->hna_entries = Hna->next;
 
 		else
-			PrevHna4->next = Hna4->next;
+			PrevHna->next = Hna->next;
 
-		olsrd_cnf_free(Hna4);
+		win32_olsrd_free(Hna);
 	}
 
-	Local = inet_addr("127.0.0.1");
+	if (AF_INET == Conf->ip_version)
+	{
+		Local.v4.s_addr = ::inet_addr("127.0.0.1");
+	}
+	else
+	{
+		memset(&Local, 0, sizeof(Local));
+		Local.v6.u.Byte[15] = 1;
+	}
 
-	for (IpcHost = Conf->ipc_hosts; IpcHost != NULL; IpcHost = IpcHost->next)
-		if (IpcHost->host.v4 == Local)
+	for (IpcHost = Conf->ipc_nets; IpcHost != NULL; IpcHost = IpcHost->next)
+		if (0 == memcmp(&IpcHost->net.prefix, &Local, Conf->ipsize))
 			break;
 
 	if (IpcHost == NULL && Real == 0)
 	{
-		IpcHost = (struct ipc_host *)
-			olsrd_cnf_malloc(sizeof (struct ipc_host));
+		IpcHost = (struct ip_prefix_list *)
+			win32_olsrd_malloc(sizeof (struct ip_prefix_list));
 
 		if (IpcHost == NULL)
 		{
@@ -604,13 +610,13 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 			return -1;
 		}
 
-		IpcHost->host.v4 = Local;
+		IpcHost->net.prefix = Local;
+		IpcHost->net.prefix_len = (olsr_u8_t)Conf->ipsize;
 
-		IpcHost->next = Conf->ipc_hosts;
-		Conf->ipc_hosts = IpcHost;
+		IpcHost->next = Conf->ipc_nets;
+		Conf->ipc_nets = IpcHost;
 
 		Conf->ipc_connections++;
-		Conf->open_ipc = OLSR_TRUE;
 	}
 
 	// write configuration file

@@ -54,6 +54,7 @@
 #include "defs.h"
 #include "net_os.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 #if defined WINCE
 #define WIDE_STRING(s) L##s
@@ -61,8 +62,8 @@
 #define WIDE_STRING(s) s
 #endif
 
-void WinSockPError(char *Str);
-void PError(char *);
+void WinSockPError(const char *Str);
+void PError(const char *);
 
 void DisableIcmpRedirects(void);
 int disable_ip_forwarding(int Ver);
@@ -152,7 +153,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
 
 int getsocket6(int BuffSize, char *Int __attribute__((unused)))
 {
-  struct sockaddr_in6 Addr;
+  struct sockaddr_in6 Addr6;
   int On = 1;
   int Sock = socket(AF_INET6, SOCK_DGRAM, 0);
   if (Sock < 0)
@@ -185,7 +186,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   Addr6.sin6_family = AF_INET6;
   Addr6.sin6_port = htons(OLSRPORT);
   //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
-  if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
+  if (bind(Sock, (struct sockaddr *)&Addr6, sizeof (Addr6)) < 0)
   {
     WinSockPError("getsocket6/bind()");
     closesocket(Sock);

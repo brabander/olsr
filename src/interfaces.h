@@ -43,7 +43,12 @@
 #define _OLSR_INTERFACE
 
 #include <sys/types.h>
+#ifdef _MSC_VER
+#include <WS2tcpip.h>
+#undef interface
+#else
 #include <sys/socket.h>
+#endif
 #include <time.h>
 
 #include "olsr_types.h"
