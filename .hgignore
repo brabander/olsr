@@ -5,7 +5,7 @@ syntax: glob
 *.diff
 *.rej
 *.orig
-*.~
+*~
 TAGS
 olsrd
 src/builddata.c
