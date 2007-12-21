@@ -293,11 +293,12 @@ static void serialize_common(struct olsr_common *comm)
 static void
 serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 {
-  int rem, size, req;
+  static const int LINK_ORDER[] = {SYM_LINK, UNSPEC_LINK, ASYM_LINK, LOST_LINK};
+  int rem, size, req, expected_size = 0;
   struct lq_hello_info_header *info_head;
   struct lq_hello_neighbor *neigh;
   unsigned char *buff;
-  int is_first;
+  olsr_bool is_first;
   int i;
 
   // leave space for the OLSR header
@@ -325,15 +326,32 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   size = 0;
   rem = net_outbuffer_bytes_left(outif) - off;
 
-  // initially, we want to put at least an info header, an IP address,
-  // and the corresponding link quality into the message
+  /*
+   * Initially, we want to put the complete lq_hello into the message.
+   * For this flush the output buffer (if there are some bytes in).
+   * This is a hack/fix, which prevents message fragementation resulting
+   * in instable links. The ugly lq/genmsg code should be reworked anyhow.
+   */
+  if (0 < net_output_pending(outif)) {
+    for (i = 0; i <= MAX_NEIGH; i++) {
+      unsigned int j;
+      for(j = 0; j < sizeof(LINK_ORDER) / sizeof(LINK_ORDER[0]); j++) {
+        is_first = OLSR_TRUE;
+        for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next) {
+          if (0 == i && 0 == j) expected_size += olsr_cnf->ipsize + 4;
+          if (neigh->neigh_type == i && neigh->link_type == LINK_ORDER[j]) {
+            if (is_first) {
+              expected_size += sizeof(struct lq_hello_info_header);
+              is_first = OLSR_FALSE;
+            }
+          }
+        }
+      }
+    }
+  }
 
-  // force signed comparison
-
-  if (rem < (int)(sizeof (struct lq_hello_info_header) + olsr_cnf->ipsize + 4))
-  {
+  if (rem < expected_size) {
     net_output(outif);
-
     rem = net_outbuffer_bytes_left(outif) - off;
   }
 
@@ -343,11 +361,10 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   for (i = 0; i <= MAX_NEIGH; i++) 
     {
-      static const int LINK_ORDER[] = {SYM_LINK, UNSPEC_LINK, ASYM_LINK, LOST_LINK};
       unsigned int j;
       for(j = 0; j < sizeof(LINK_ORDER) / sizeof(LINK_ORDER[0]); j++)
         {
-          is_first = 1;
+          is_first = OLSR_TRUE;
 
           // loop through neighbors
 
@@ -364,7 +381,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
               // no, we also need space for an info header, as this is the
               // first neighbor with the current neighor type and link type
 
-              if (is_first != 0)
+              if (is_first)
                 req += sizeof (struct lq_hello_info_header);
 
               // we do not have enough space left
@@ -397,12 +414,12 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
                   // we need a new info header
 
-                  is_first = 1;
+                  is_first = OLSR_TRUE;
                 }
 
               // create a new info header
 
-              if (is_first != 0)
+              if (is_first)
                 {
                   info_head = (struct lq_hello_info_header *)(buff + size);
                   size += sizeof (struct lq_hello_info_header);
@@ -426,13 +443,13 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
               buff[size++] = 0;
               buff[size++] = 0;
 
-              is_first = 0;
+              is_first = OLSR_FALSE;
             }
 
           // finalize the info header, if there are any neighbors with the
           // current neighbor type and link type
 
-          if (is_first == 0)
+          if (!is_first)
             info_head->size = ntohs(buff + size - (unsigned char *)info_head);
         }
     }
@@ -451,7 +468,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 static void
 serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 {
-  int off, rem, size;
+  int off, rem, size, expected_size = 0;
   struct lq_tc_header *head;
   struct tc_mpr_addr *neigh;
   unsigned char *buff;
@@ -481,15 +498,20 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   size = 0;
   rem = net_outbuffer_bytes_left(outif) - off;
 
-  // initially, we want to put at least an IP address and the corresponding
-  // link quality into the message
+  /*
+   * Initially, we want to put the complete lq_tc into the message.
+   * For this flush the output buffer (if there are some bytes in).
+   * This is a hack/fix, which prevents message fragementation resulting
+   * in instable links. The ugly lq/genmsg code should be reworked anyhow.
+   */
+  if (0 < net_output_pending(outif)) {
+    for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next) {
+      expected_size += olsr_cnf->ipsize + 4;
+    }
+  }
 
-  // force signed comparison
-
-  if (rem < (int)(olsr_cnf->ipsize + 4))
-  {
+  if (rem < expected_size) {
     net_output(outif);
-
     rem = net_outbuffer_bytes_left(outif) - off;
   }
 
