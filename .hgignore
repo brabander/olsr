@@ -3,7 +3,10 @@ syntax: glob
 *.a
 *.d
 *.diff
+*.rej
+*.orig
 *.~
+TAGS
 olsrd
 src/builddata.c
 src/cfgparser/oparse.c
