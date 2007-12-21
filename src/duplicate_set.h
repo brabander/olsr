@@ -81,9 +81,6 @@ olsr_del_dup_entry(struct dup_entry *);
 void
 olsr_print_duplicate_table(void);
 
-struct dup_entry *
-olsr_add_dup_entry(const union olsr_ip_addr *, const olsr_u16_t);
-
 int
 olsr_update_dup_entry(const union olsr_ip_addr *, const olsr_u16_t, const union olsr_ip_addr *);
 

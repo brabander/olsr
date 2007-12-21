@@ -81,7 +81,7 @@ olsr_init_duplicate_table(void)
  *
  *@return positive on success
  */
-struct dup_entry *
+static struct dup_entry *
 olsr_add_dup_entry(const union olsr_ip_addr *originator, const olsr_u16_t seqno)
 {
   olsr_u32_t hash;

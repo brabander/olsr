@@ -44,6 +44,7 @@
 #include "mid_set.h"
 #include "link_set.h"
 #include "olsr.h"
+#include "duplicate_set.h"
 #include "scheduler.h"
 #include "lq_route.h"
 #include "lq_avl.h"
@@ -732,11 +733,22 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
    * Check if we know this guy and if we already know what he has to say.
    */
   tc = olsr_lookup_tc_entry(&originator);
+#if 0
+  /* Sven-Ola: Looks like a bad idea. During olsrd startup, its seqno
+   * is initialized using random(). We have a good chance to wait for
+   * hours until TC messages are forwarded for a node if olsrd is re-
+   * started while there are still tc_entries in RAM.
+   */
   if (tc) {
     if (!SEQNO_GREATER_THAN(msg_seq, tc->msg_seq)) {
       return;
     }
   }
+#else
+  if(!olsr_check_dup_table_proc(&originator, msg_seq)) {
+      goto forward;
+  }
+#endif
 
   /* Check the sender address. */
   if (!olsr_validate_address(&originator)) {
@@ -803,6 +815,9 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
   /*
    * Last, flood the message to our other neighbors.
    */
+
+forward:
+
   olsr_forward_message(msg, &originator, msg_seq, input_if, from_addr);
   return;
 }
