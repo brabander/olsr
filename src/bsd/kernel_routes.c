@@ -44,6 +44,7 @@
 #include "defs.h"
 #include "process_routes.h"
 #include "net_olsr.h"
+#include "ipcalc.h"
 
 #include <net/if_dl.h>
 #include <ifaddrs.h>

@@ -40,6 +40,7 @@
 
 #include "../defs.h"
 #include "../net_os.h"
+#include "../ipcalc.h"
 #include "../parser.h" /* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
 
@@ -391,8 +392,9 @@ getsocket(int bufspace, char *int_name)
   return (sock);
 }
 
-int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
+int getsocket6(int bufspace, char *int_name)
 {
+  struct sockaddr_in6 sin;
   int on;
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
@@ -445,7 +447,10 @@ int getsocket6(struct sockaddr_in6 *sin, int bufspace, char *int_name)
     }
 #endif
 
-  if (bind(sock, (struct sockaddr *)sin, sizeof (*sin)) < 0) 
+  memset(&sin, 0, sizeof(sin));
+  sin.sin6_family = AF_INET6;
+  sin.sin6_port = htons(OLSRPORT);
+  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0)
     {
       perror("bind");
       syslog(LOG_ERR, "bind: %m");
@@ -778,7 +783,8 @@ olsr_recvfrom(int  s,
   sin6 = (struct sockaddr_in6 *)from;
   OLSR_PRINTF (4, "%d bytes from %s, socket associated %s really received on %s\n",
 	       count,	       
-               inet_ntop(olsr_cnf->ip_version, olsr_cnf->ip_version == AF_INET6 ? (char *)&sin6->sin6_addr : (char *)&sin->sin_addr, addrstr, sizeof(addrstr)):
+               inet_ntop(olsr_cnf->ip_version, olsr_cnf->ip_version == AF_INET6 ?
+                         (char *)&sin6->sin6_addr : (char *)&sin->sin_addr, addrstr, sizeof(addrstr)),
 	       ifc->int_name,
 	       iname);
 
