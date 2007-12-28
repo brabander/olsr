@@ -476,6 +476,7 @@ olsr_validate_address(const union olsr_ip_addr *adr)
       OLSR_PRINTF(1, "Validation of address %s failed!\n", olsr_ip_to_string(&buf, adr));
       return OLSR_FALSE;
     }
+    if (deny_entry == (struct deny_address_entry *)&olsr_cnf->main_addr) break;
   }
   return OLSR_TRUE;
 }

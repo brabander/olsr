@@ -583,12 +583,6 @@ deserialize_lq_hello(struct hello_message *hello,
     }
     pkt_get_double(&curr, &hello->vtime);
     pkt_get_u16(&curr, &size);
-
-    // Sven-Ola: Check the message source addr
-    if (!olsr_validate_address((const union olsr_ip_addr *)curr)) {
-        /* No need to do anything more */
-        return 1;
-    }
     pkt_get_ipaddress(&curr, &hello->source_addr);
 
     pkt_get_u8(&curr, &hello->ttl);

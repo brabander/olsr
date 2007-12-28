@@ -701,7 +701,6 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
   double vtime;
   unsigned int vtime_s;
   union olsr_ip_addr originator;
-  union olsr_ip_addr *main_addr;
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
 
@@ -749,20 +748,6 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
       goto forward;
   }
 #endif
-
-  /* Check the sender address. */
-  if (!olsr_validate_address(&originator)) {
-    return;
-  }
-
-  /* Check the main address. */
-  main_addr = mid_lookup_main_addr(from_addr);
-  if (!main_addr) {
-    main_addr = from_addr;
-  }
-  if (!olsr_validate_address(main_addr)) {
-    return;
-  }
 
   /*
    * Generate an new tc_entry in the lsdb and store the sequence number.

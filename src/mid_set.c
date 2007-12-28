@@ -236,6 +236,7 @@ insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, 
   struct ipaddr_str buf1, buf2;
 #endif
   struct mid_address *adr;
+  if (!olsr_validate_address(alias)) return;
   
   OLSR_PRINTF(1, "Inserting alias %s for ", olsr_ip_to_string(&buf1, alias));
   OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf1, main_add));

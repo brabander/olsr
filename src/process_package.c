@@ -571,12 +571,6 @@ olsr_process_received_hello(union olsr_message *m,
 
   hello_chgestruct(&message, m);
 
-  if(!olsr_validate_address(&message.source_addr))
-    {
-      olsr_free_hello_packet(&message);
-      return;
-    }
-
   olsr_hello_tap(&message, in_if, from_addr);
 }
 
@@ -718,10 +712,6 @@ olsr_process_received_hna(union olsr_message *m,
   /* validate originator */
   pkt_get_ipaddress(&curr, &originator);
   //printf("HNA from %s\n\n", olsr_ip_to_string(&buf, &originator));
-  if (!olsr_validate_address(&originator)) {
-    OLSR_PRINTF(0, "invalid address!\n");
-    return;
-  }
 
   /* ttl */
   pkt_ignore_u8(&curr);
