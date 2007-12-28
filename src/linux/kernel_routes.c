@@ -86,11 +86,10 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		0,
 		0
 	};
-        olsr_u32_t metric = RT_METRIC_DEFAULT;
+	olsr_u32_t metric = FIBM_FLAT != olsr_cnf->fib_metric ? (RTM_NEWROUTE == cmd ?
+		rt->rt_best->rtp_metric.hops : rt->rt_metric.hops): RT_METRIC_DEFAULT;
 	const struct rt_nexthop* nexthop = (RTM_NEWROUTE == cmd) ?
 		&rt->rt_best->rtp_nexthop : &rt->rt_nexthop;
-	const struct rt_metric* met = (RTM_NEWROUTE == cmd) ?
-		&rt->rt_best->rtp_metric : &rt->rt_metric;
 
 	memset(&req, 0, sizeof(req));
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
@@ -109,7 +108,6 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		{
 			olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
 			req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-			metric = olsr_fib_metric(met);
 		}
 		olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
 	}
@@ -119,12 +117,13 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 		{
 			olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
 			req.r.rtm_scope = RT_SCOPE_UNIVERSE;
-			metric = olsr_fib_metric(met);
 		}
 		olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
 	}
-	//!!!olsr_netlink_addreq(&req, RTA_PRIORITY, &rt->rt_best->rtp_metric.hops, sizeof(rt->rt_best->rtp_metric.hops));
-	olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
+	if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd)
+	{
+		olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
+	}
 	olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
 	iov.iov_base = &req.n;
 	iov.iov_len = req.n.nlmsg_len;

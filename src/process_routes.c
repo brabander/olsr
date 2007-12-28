@@ -355,7 +355,7 @@ olsr_update_rib_routes(void)
 
     /* nexthop or hopcount change ? */
     if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop) ||
-        (!olsr_cnf->flat_fib_metric &&
+        (FIBM_CORRECT == olsr_cnf->fib_metric &&
          olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
       if (0 > rt->rt_nexthop.iif_index) {

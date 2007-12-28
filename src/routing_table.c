@@ -379,7 +379,7 @@ olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2)
 olsr_u8_t
 olsr_fib_metric(const struct rt_metric *met)
 {
-  if (!olsr_cnf->flat_fib_metric) {
+  if (FIBM_CORRECT == olsr_cnf->fib_metric) {
     return met->hops;
   }
   return RT_METRIC_DEFAULT;

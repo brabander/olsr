@@ -720,11 +720,13 @@ fibmetric:    TOK_FIBMETRIC TOK_STRING
 {
   PARSER_DEBUG_PRINTF("FIBMetric: %d\n", $2->string);
   if (strcmp($2->string, CFG_FIBM_FLAT) == 0) {
-      olsr_cnf->flat_fib_metric = OLSR_TRUE;
+      olsr_cnf->fib_metric = FIBM_FLAT;
   } else if (strcmp($2->string, CFG_FIBM_CORRECT) == 0) {
-      olsr_cnf->flat_fib_metric = OLSR_FALSE;
+      olsr_cnf->fib_metric = FIBM_CORRECT;
+  } else if (strcmp($2->string, CFG_FIBM_APPROX) == 0) {
+      olsr_cnf->fib_metric = FIBM_APPROX;
   } else {
-    fprintf(stderr, "FIBMetric must be \"%s\" or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT);
+    fprintf(stderr, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
     YYABORT;
   }
   free($1);

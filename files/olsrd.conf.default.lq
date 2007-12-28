@@ -20,7 +20,7 @@ DebugLevel	2
 
 IpVersion	4
 
-# FIBMetric ("flat" or "correct")
+# FIBMetric ("flat", "correct", or "approx")
 
 FIBMetric "flat"
 

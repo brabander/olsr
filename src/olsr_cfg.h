@@ -61,7 +61,7 @@
 #define DEF_DEBUGLVL        1
 #define DEF_IPC_CONNECTIONS 0
 #define DEF_USE_HYST        OLSR_FALSE
-#define DEF_FLAT_FIB_METRIC OLSR_TRUE
+#define DEF_FIB_METRIC      FIBM_FLAT
 #define DEF_LQ_LEVEL        2
 #define DEF_LQ_FISH         0
 #define DEF_LQ_DIJK_LIMIT   255
@@ -95,8 +95,9 @@
 #define MIN_LQ_WSIZE        3
 
 /* Option values */
-#define CFG_FIBM_FLAT		"flat"
-#define CFG_FIBM_CORRECT	"correct"
+#define CFG_FIBM_FLAT          "flat"
+#define CFG_FIBM_CORRECT       "correct"
+#define CFG_FIBM_APPROX        "approx"
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
@@ -180,6 +181,12 @@ struct plugin_entry
 };
 
 
+typedef enum {
+  FIBM_FLAT,
+  FIBM_CORRECT,
+  FIBM_APPROX
+} olsr_fib_metric_options;
+
 /*
  * The config struct
  */
@@ -197,7 +204,7 @@ struct olsrd_config
   olsr_bool                willingness_auto;
   int                      ipc_connections;
   olsr_bool                use_hysteresis;
-  olsr_bool                flat_fib_metric;
+  olsr_fib_metric_options  fib_metric;
   struct hyst_param        hysteresis_param;
   struct plugin_entry      *plugins;
   struct ip_prefix_list    *hna_entries;
