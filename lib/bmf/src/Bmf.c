@@ -56,6 +56,7 @@
 #include <netinet/udp.h> /* struct udphdr */
 
 /* OLSRD includes */
+#include "plugin_util.h" /* set_plugin_int */
 #include "defs.h" /* olsr_cnf, OLSR_PRINTF */
 #include "ipcalc.h"
 #include "olsr.h" /* olsr_printf */
@@ -73,6 +74,11 @@
 
 static pthread_t BmfThread;
 static int BmfThreadRunning = 0;
+
+/* unicast/broadcast fan out limit */
+int FanOutLimit = 2;
+
+int BroadcastRetransmitCount = 1;
 
 /* -------------------------------------------------------------------------
  * Function   : BmfPError
@@ -152,15 +158,17 @@ static void EncapsulateAndForwardPacket(
 
   /* The next destination(s) */
   struct TBestNeighbors bestNeighborLinks;
-  int nPossibleNeighbors;
-  struct sockaddr_in forwardTo; /* Next destination of encapsulation packet */
+  struct link_entry* bestNeighbor;
 
+  int nPossibleNeighbors = 0;
+  struct sockaddr_in forwardTo; /* Next destination of encapsulation packet */
   int nPacketsToSend;
-  int nBytesWritten;
+  int sendUnicast; /* 0 = send broadcast; 1 = send unicast */
+
   int i;
 
-  /* Retrieve at most two best neigbors to forward the packet to */
-  GetBestTwoNeighbors(&bestNeighborLinks, intf, NULL, NULL, NULL, &nPossibleNeighbors);
+  /* Find at most 'FanOutLimit' best neigbors to forward the packet to */
+  FindNeighbors(&bestNeighborLinks, &bestNeighbor, intf, NULL, NULL, NULL, &nPossibleNeighbors);
 
   if (nPossibleNeighbors <= 0)
   {
@@ -178,29 +186,47 @@ static void EncapsulateAndForwardPacket(
   forwardTo.sin_family = AF_INET;
   forwardTo.sin_port = htons(BMF_ENCAP_PORT);
 
-  /* Start by filling in the local broadcast address */
+  /* Start by filling in the local broadcast address. This may be overwritten later. */
   forwardTo.sin_addr = intf->broadAddr.v4;
 
   /* - If the BMF mechanism is BM_UNICAST_PROMISCUOUS, always send just one
-   *   packet (to the best neighbor).
-   * - If the BMF mechanism is BM_BROADCAST,
-   *   - send one unicast packet if there is one possible neighbor,
-   *   - send two unicast packets if there are two possible neighbors, and
-   *   - only if there are more than two possible neighbors, then send an
-   *     (WLAN-air-expensive, less reliable) broadcast packet. */
-  if (BmfMechanism == BM_UNICAST_PROMISCUOUS || nPossibleNeighbors < 2)
+   *   unicast packet (to the best neighbor).
+   * - But if the BMF mechanism is BM_BROADCAST,
+   *   - send 'nPossibleNeighbors' unicast packets if there are up to
+   *     'FanOutLimit' possible neighbors,
+   *   - if there are more than 'FanOutLimit' possible neighbors, then
+   *     send a (WLAN-air-expensive, less reliable) broadcast packet. */
+  if (BmfMechanism == BM_UNICAST_PROMISCUOUS)
   {
+    /* One unicast packet to the best neighbor */
     nPacketsToSend = 1;
+    sendUnicast = 1;
+    bestNeighborLinks.links[0] = bestNeighbor;
   }
-  else /* BmfMechanism == BM_BROADCAST && nPossibleNeighbors >= 2 */
+  else /* BmfMechanism == BM_BROADCAST */
   {
-    nPacketsToSend = 2;
-  }
+    if (nPossibleNeighbors <= FanOutLimit)
+    {
+      /* 'nPossibleNeighbors' unicast packets */
+      nPacketsToSend = nPossibleNeighbors;
+      sendUnicast = 1;
+    }
+    else /* nPossibleNeighbors > FanOutLimit */
+    {
+      /* One broadcast packet, possibly retransmitted as specified in the
+       * 'BroadcastRetransmitCount' plugin parameter */
+      nPacketsToSend = BroadcastRetransmitCount;
+      sendUnicast = 0;
+    } /* if */
+  } /* if */
 
   for (i = 0; i < nPacketsToSend; i++)
   {
-    if (BmfMechanism == BM_UNICAST_PROMISCUOUS || nPossibleNeighbors <= 2)
+    int nBytesWritten;
+
+    if (sendUnicast == 1)
     {
+      /* For unicast, overwrite the local broadcast address which was filled in above */
       forwardTo.sin_addr = bestNeighborLinks.links[i]->neighbor_iface_addr.v4;
     }
 
@@ -284,8 +310,13 @@ static void BmfPacketCaptured(
 
   ipPacket = GetIpPacket(encapsulationUdpData);
 
-  /* Don't forward fragments of IP packets. Also, don't forward OLSR packets (UDP
-   * port 698) and BMF encapsulated packets */
+  /* Don't forward fragments of IP packets: there is no way to distinguish fragments
+   * of BMF encapsulation packets from other fragments.
+   * Well yes, there is the IP-ID, which can be kept in a list to relate a fragment
+   * to earlier sent BMF packets, but... sometimes the second fragment comes in earlier
+   * than the first fragment, so that the list is not yet up to date and the second
+   * fragment is not recognized as a BMF packet.
+   * Also, don't forward OLSR packets (UDP port 698) and BMF encapsulated packets */
   if (IsIpFragment(ipPacket) || IsOlsrOrBmfPacket(ipPacket))
   {
     return;
@@ -763,14 +794,16 @@ static void BmfEncapsulationPacketReceived(
     else if (iAmMpr)
     {
       struct TBestNeighbors bestNeighborLinks;
+      struct link_entry* bestNeighbor;
       int nPossibleNeighbors;
-      int nBytesWritten;
       int nPacketsToSend;
+      int sendUnicast; /* 0 = send broadcast; 1 = send unicast */
       int i;
 
       /* Retrieve at most two best neigbors to forward the packet to */
-      GetBestTwoNeighbors(
+      FindNeighbors(
         &bestNeighborLinks,
+        &bestNeighbor,
         walker,
         &mcSrc,
         forwardedBy,
@@ -789,31 +822,47 @@ static void BmfEncapsulationPacketReceived(
       }
 
       /* Compose destination of encapsulation packet.
-       * Start by filling in the local broadcast address. */
+       * Start by filling in the local broadcast address. This may be overwritten later. */
       forwardTo.sin_addr = walker->broadAddr.v4;
 
       /* - If the BMF mechanism is BM_UNICAST_PROMISCUOUS, always send just one
-       *   packet (to the best neighbor). Other neighbors listen promiscuously.
-       * - If the BMF mechanism is BM_BROADCAST,
-       *   - send one unicast packet if there is one possible neighbor,
-       *   - send two unicast packets if there are two possible neighbors, and
-       *   - only if there are more than two possible neighbors, then send an
-       *     (WLAN-air-expensive, less reliable) broadcast packet. */
-      if (BmfMechanism == BM_UNICAST_PROMISCUOUS || nPossibleNeighbors < 2)
+       *   unicast packet (to the best neighbor).
+       * - But if the BMF mechanism is BM_BROADCAST,
+       *   - send 'nPossibleNeighbors' unicast packets if there are up to
+       *     'FanOutLimit' possible neighbors,
+       *   - if there are more than 'FanOutLimit' possible neighbors, then
+       *     send a (WLAN-air-expensive, less reliable) broadcast packet. */
+      if (BmfMechanism == BM_UNICAST_PROMISCUOUS)
       {
+        /* One unicast packet to the best neighbor */
         nPacketsToSend = 1;
+        sendUnicast = 1;
+        bestNeighborLinks.links[0] = bestNeighbor;
       }
-      else /* BmfMechanism == BM_BROADCAST && nPossibleNeighbors >= 2 */
+      else /* BmfMechanism == BM_BROADCAST */
       {
-        nPacketsToSend = 2;
-      }
+        if (nPossibleNeighbors <= FanOutLimit)
+        {
+          /* 'nPossibleNeighbors' unicast packets */
+          nPacketsToSend = nPossibleNeighbors;
+          sendUnicast = 1;
+        }
+        else /* nPossibleNeighbors > FanOutLimit */
+        {
+          /* One broadcast packet, possibly retransmitted as specified in the
+           * 'BroadcastRetransmitCount' plugin parameter */
+          nPacketsToSend = BroadcastRetransmitCount;
+          sendUnicast = 0;
+        } /* if */
+      } /* if */
 
       for (i = 0; i < nPacketsToSend; i++)
       {
-        if (BmfMechanism == BM_UNICAST_PROMISCUOUS || nPossibleNeighbors <= 2)
-        {
-          /* For unicast, overwrite the local broadcast address which was filled in
-           * above */
+        int nBytesWritten;
+
+        if (sendUnicast)
+        {    
+          /* For unicast, overwrite the local broadcast address which was filled in above */
           forwardTo.sin_addr = bestNeighborLinks.links[i]->neighbor_iface_addr.v4;
         }
 
@@ -892,10 +941,10 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
   ipPacketLen = GetIpTotalLength(ipPacket);
   ipHeader = GetIpHeader(encapsulationUdpData);
 
-  /* Only forward multicast packets. If configured, also forward local broadcast packets */
   dstIp.v4 = ipHeader->ip_dst;
-
   broadAddr.v4.s_addr = htonl(EtherTunTapIpBroadcast);
+
+  /* Only forward multicast packets. If configured, also forward local broadcast packets */
   if (IsMulticast(&dstIp) ||
       (EnableLocalBroadcast != 0 && ipequal(&dstIp, &broadAddr)))
   {
@@ -1413,6 +1462,33 @@ int InterfaceChange(struct interface* interf, int action)
 
   return 0;
 } /* InterfaceChange */
+
+
+/* -------------------------------------------------------------------------
+ * Function   : SetFanOutLimit
+ * Description: Overrule the default fan out limit value (2)
+ * Input      : value - fan out limit value (1...MAX_UNICAST_NEIGHBORS)
+ *              data - not used
+ *              addon - not used
+ * Output     : none
+ * Return     : success (0) or fail (1)
+ * Data Used  : FanOutLimit
+ * ------------------------------------------------------------------------- */
+int SetFanOutLimit(
+  const char* value,
+  void* data __attribute__((unused)),
+  set_plugin_parameter_addon addon __attribute__((unused)))
+{
+  if (set_plugin_int(value, &FanOutLimit, addon) == 0)
+  {
+    /* Extra check if within range */
+    if (FanOutLimit >= 1 && FanOutLimit <= MAX_UNICAST_NEIGHBORS)
+    {
+      return 0;
+    }
+  }
+  return 1;
+}
 
 /* -------------------------------------------------------------------------
  * Function   : InitBmf

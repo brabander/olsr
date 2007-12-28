@@ -43,11 +43,12 @@
 
 /* OLSRD includes */
 #include "olsrd_plugin.h"
+#include "plugin_util.h"
 #include "defs.h" /* olsr_u8_t, olsr_cnf */
 #include "scheduler.h" /* olsr_register_scheduler_event */
 
 /* BMF includes */
-#include "Bmf.h" /* InitBmf(), CloseBmf(), RegisterBmfParameter() */
+#include "Bmf.h" /* InitBmf(), CloseBmf() */
 #include "PacketHistory.h" /* InitPacketHistory() */
 #include "NetworkInterfaces.h" /* AddNonOlsrBmfIf(), SetBmfInterfaceIp(), ... */
 #include "Address.h" /* DoLocalBroadcast() */
@@ -123,6 +124,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "BmfInterfaceIp", .set_plugin_parameter = &SetBmfInterfaceIp, .data = NULL },
     { .name = "CapturePacketsOnOlsrInterfaces", .set_plugin_parameter = &SetCapturePacketsOnOlsrInterfaces, .data = NULL },
     { .name = "BmfMechanism", .set_plugin_parameter = &SetBmfMechanism, .data = NULL },
+    { .name = "FanOutLimit", .set_plugin_parameter = &SetFanOutLimit, .data = NULL },
+    { .name = "BroadcastRetransmitCount", .set_plugin_parameter = &set_plugin_int, .data = &BroadcastRetransmitCount},
 };
 
 /* -------------------------------------------------------------------------

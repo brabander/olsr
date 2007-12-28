@@ -1,6 +1,6 @@
 BASIC MULTICAST FORWARDING PLUGIN FOR OLSRD
 by Erik Tromp (erik.tromp@nl.thalesgroup.com, erik_tromp@hotmail.com)
-Version 1.5.1
+Version 1.5.2
 
 1. Introduction
 ---------------
@@ -17,14 +17,14 @@ in the past 3-6 seconds are forwarded.
 2. How to build and install
 ---------------------------
 
-Download the olsr-bmf-v1.5.1.tar.gz file and save it into your OLSRD
+Download the olsr-bmf-v1.5.2.tar.gz file and save it into your OLSRD
 base install directory.
 
 Change directory (cd) to your OLSRD base install directory.
 
 At the command prompt, type:
 
-  tar -zxvf ./olsr-bmf-v1.5.1.tar.gz
+  tar -zxvf ./olsr-bmf-v1.5.2.tar.gz
 
 then type:
 
@@ -47,7 +47,7 @@ Set permissions, e.g.:
 To configure BMF in OLSR, you must edit the file /etc/olsrd.conf
 to load the BMF plugin. For example, add the following lines:
 
-  LoadPlugin "olsrd_bmf.so.1.5.1"
+  LoadPlugin "olsrd_bmf.so.1.5.2"
   {
     # No PlParam entries required for basic operation
   }
@@ -64,8 +64,8 @@ olsrd daemon by entering at the shell prompt:
 Look at the output; it should list the BMF plugin, e.g.:
 
   ---------- Plugin loader ----------
-  Library: olsrd_bmf.so.1.5.1
-  OLSRD Basic Multicast Forwarding plugin 1.5.1 (Sep  4 2007 11:13:43)
+  Library: olsrd_bmf.so.1.5.2
+  OLSRD Basic Multicast Forwarding plugin 1.5.2 (Dec  7 2007 09:08:19)
     (C) Thales Communications Huizen, Netherlands
     Erik Tromp (erik.tromp@nl.thalesgroup.com)
   Checking plugin interface version...  4 - OK
@@ -190,7 +190,7 @@ the /etc/olsrd.conf file.
 The following gives an overview of all plugin parameters that can be
 configured:
 
-  LoadPlugin "olsrd_bmf.so.1.5.1"
+  LoadPlugin "olsrd_bmf.so.1.5.2"
   {
     # Specify the name of the BMF network interface.
     # Defaults to "bmf0".
@@ -226,6 +226,19 @@ configured:
     # on which unicast packets are usually sent at a much higher bit rate
     # than broadcast packets (which are sent at a basic bit rate).
     PlParam "BmfMechanism" "UnicastPromiscuous"
+
+    # The number of times BMF will transmit the same packet whenever it decides
+    # to use broadcast to forward a packet. Defaults to 1. Not used if
+    # "BmfMechanism" is set to "UnicastPromiscuous".
+    PlParam "BroadcastRetransmitCount" "2"
+
+    # If the number of neighbors to forward to is less than or equal to the
+    # FanOutLimit, then packets to be relayed will be sent via unicast.
+    # If the number is greater than the FanOutLimit the packet goes out
+    # as broadcast. Legal values are 1...10. See MAX_UNICAST_NEIGHBORS
+    # as defined in NetworkInterfaces.h . Defaults to 2. Not used if
+    # "BmfMechanism" is set to "UnicastPromiscuous".
+    PlParam "FanOutLimit" "4"
 
     # List of non-OLSR interfaces to include
     PlParam     "NonOlsrIf"  "eth2"
@@ -331,7 +344,7 @@ want to forward multicast and local-broadcast IP packets, specify these
 interfaces one by one as "NonOlsrIf" parameters in the BMF plugin section
 of /etc/olsrd.conf. For example:
 
-  LoadPlugin "olsrd_bmf.so.1.5.1"
+  LoadPlugin "olsrd_bmf.so.1.5.2"
   {
     # Non-OLSR interfaces to participate in the multicast flooding
     PlParam     "NonOlsrIf"  "eth2"
@@ -389,7 +402,7 @@ Therefore, override the default IP address and prefix length of
 the BMF network interface, by editing the /etc/olsrd.conf file.
 For example:
 
-  LoadPlugin "olsrd_bmf.so.1.5.1"
+  LoadPlugin "olsrd_bmf.so.1.5.2"
   {
       PlParam "BmfInterfaceIp" "10.10.10.4/24"
   }
@@ -442,13 +455,15 @@ output interface 0 (Oifs 0, "eth0"). The ":1" behind the Oifs numbers
 indicates the TTL thresholds, in this case packets with TTL value 1
 or less will not be forwarded.
 
-When you are connecting an OLSR-BMF network to another multicast network
-(e.g. a DVMRP network), you might be surprised that, when you ping the
-all-routers multicast address 224.0.0.1 from within the OLSR network,
-only the OLSR hosts respond. This is, however, compliant behaviour:
+Note that when you are connecting an OLSR-BMF network to another multicast
+network (e.g. a DVMRP-mrouted network), you might be surprised that, when
+you ping the all-routers multicast address 224.0.0.1 from within the OLSR
+network, only the OLSR hosts respond. This is, however, compliant behaviour:
 packets with their destination IP address in the range 224.0.0.0 -
 224.0.0.255 are not routed by normal multicast protocols (i.e. their
-TTL is implicitly assumed to be 1).
+TTL is implicitly assumed to be 1). It doesn't mean that multicast is
+not working; if your application uses a multicast address outisde the
+range 224.0.0.0 - 224.0.0.255, it should work.
 
 
 9. Common problems, FAQ
@@ -524,6 +539,14 @@ the BMF network interface, either by specifying the interface name itself
 
 10. Version history
 -------------------
+
+7 December 2007: Version 1.5.2
+
+* Fixed a bug that would cause BMF to always send encapsulated broadcast
+  packets twice --> thanks to Frank Renwick and Joseph Giovatto for finding
+  this bug :-)
+* Added the plugin parameters "BroadcastRetransmitCount" and "FanOutLimit";
+  thanks to Frank and Joe for the idea.
 
 3 September 2007: Version 1.5.1
 

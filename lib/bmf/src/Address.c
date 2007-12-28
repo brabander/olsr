@@ -68,7 +68,10 @@ int EnableLocalBroadcast = 1;
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int DoLocalBroadcast(const char* enable, void* data __attribute__((unused)), set_plugin_parameter_addon addon  __attribute__((unused)))
+int DoLocalBroadcast(
+  const char* enable,
+  void* data __attribute__((unused)),
+  set_plugin_parameter_addon addon __attribute__((unused)))
 {
   if (strcmp(enable, "yes") == 0)
   {

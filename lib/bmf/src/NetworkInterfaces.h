@@ -128,13 +128,15 @@ int SetBmfMechanism(const char* mechanism, void* data, set_plugin_parameter_addo
 int DeactivateSpoofFilter(void);
 void RestoreSpoofFilter(void);
 
+#define MAX_UNICAST_NEIGHBORS 10
 struct TBestNeighbors
 {
-  struct link_entry* links[2];
+  struct link_entry* links[MAX_UNICAST_NEIGHBORS];
 };
 
-void GetBestTwoNeighbors(
-  struct TBestNeighbors* result,
+void FindNeighbors(
+  struct TBestNeighbors* neighbors,
+  struct link_entry** bestNeighbor,
   struct TBmfInterface* intf,
   union olsr_ip_addr* source,
   union olsr_ip_addr* forwardedBy,

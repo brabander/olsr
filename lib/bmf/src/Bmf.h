@@ -40,10 +40,12 @@
  *
  * ------------------------------------------------------------------------- */
 
+#include "olsrd_plugin.h" /* union set_plugin_parameter_addon */ 
+
 /* BMF plugin data */
 #define PLUGIN_NAME "OLSRD Basic Multicast Forwarding (BMF) plugin"
 #define PLUGIN_NAME_SHORT "OLSRD BMF"
-#define PLUGIN_VERSION "1.5.1 (" __DATE__ " " __TIME__ ")"
+#define PLUGIN_VERSION "1.5.2 (" __DATE__ " " __TIME__ ")"
 #define PLUGIN_COPYRIGHT "  (C) Thales Communications Huizen, Netherlands"
 #define PLUGIN_AUTHOR "  Erik Tromp (eriktromp@users.sourceforge.net)"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION "\n" PLUGIN_COPYRIGHT "\n" PLUGIN_AUTHOR
@@ -55,11 +57,14 @@
 /* Forward declaration of OLSR interface type */
 struct interface;
 
+extern int FanOutLimit;
+extern int BroadcastRetransmitCount;
+
 void BmfPError(const char* format, ...) __attribute__((format(printf, 1, 2)));
 union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip);
 int InterfaceChange(struct interface* interf, int action);
+int SetFanOutLimit(const char* value, void* data, set_plugin_parameter_addon addon);
 int InitBmf(struct interface* skipThisIntf);
 void CloseBmf(void);
-int RegisterBmfParameter(char* key, char* value);
 
 #endif /* _BMF_BMF_H */
