@@ -115,6 +115,11 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
       else if (walker->neighbor->status == NOT_SYM)
         neigh->neigh_type = NOT_NEIGH;
+        
+      else {
+        OLSR_PRINTF(0, "Error: neigh_type undefined");
+        neigh->neigh_type = NOT_NEIGH;
+      }
   
       // set the entry's neighbour interface address
 
@@ -225,6 +230,11 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
             neigh->link_quality = lnk->loss_link_quality;
             neigh->neigh_link_quality = lnk->neigh_link_quality;
           }
+          else {
+            OLSR_PRINTF(0, "Error: link_qualtiy undefined");
+            neigh->link_quality = 0.0;
+            neigh->neigh_link_quality = 0.0;
+          }          
 
           // queue the neighbour entry
 
