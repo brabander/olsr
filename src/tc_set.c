@@ -120,7 +120,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 {
 #if 0
   struct ipaddr_str buf;
-  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(%buf, &tc->addr));
+  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 #endif
 
   /*
