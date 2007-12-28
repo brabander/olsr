@@ -302,23 +302,23 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
       return;
     }
 
-    /* Now insert the rt_path to the owning rt_entry tree */
-
-    rtp->rtp_originator = tc->addr;
-
-    /* set key and backpointer prior to tree insertion */
-    rtp->rtp_tree_node.key = &rtp->rtp_originator;
-    rtp->rtp_tree_node.data = rtp;
-
-    /* insert to the route entry originator tree */
-    avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
-
-    /* backlink to the owning route entry */
-    rtp->rtp_rt = rt;
-
   } else {
     rt = node->data;
   }
+
+
+  /* Now insert the rt_path to the owning rt_entry tree */
+  rtp->rtp_originator = tc->addr;
+
+  /* set key and backpointer prior to tree insertion */
+  rtp->rtp_tree_node.key = &rtp->rtp_originator;
+  rtp->rtp_tree_node.data = rtp;
+
+  /* insert to the route entry originator tree */
+  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
+
+  /* backlink to the owning route entry */
+  rtp->rtp_rt = rt;
 
   /* update the version field and relevant parameters */
   olsr_update_rt_path(rtp, tc, link);
