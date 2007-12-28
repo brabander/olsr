@@ -243,7 +243,6 @@ process_param(char *key, char *value)
       if((fval < 0.0) || (fval > 1.0))
 	return -1;
 
-      printf("HYST SCALING: %f\n", fval);
       olsr_cnf->hysteresis_param.scaling = fval;
       return 1;
     }
@@ -374,8 +373,6 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
   int val_start, key_start;
   olsr_u32_t i;
 
-  printf("Dynamic Data: %s\n", data);
-
   size += sprintf(buf, "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
 
   key_start = 0;
@@ -399,8 +396,6 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
 	      return -1;
 	    }
 
-	  printf("Key: %s\nValue: %s\n", 
-		 &data[key_start], &data[val_start]);
 	  key_start = i + 1;
 	}
     }  
@@ -411,9 +406,6 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
 		      &data[key_start], &data[val_start]);
       return -1;
     }
-
-  printf("Key: %s\nValue: %s\n", 
-	 &data[key_start], &data[val_start]);
 
   size += snprintf(&buf[size], bufsize-size, "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n</body>\n</html>\n");
   size += snprintf(&buf[size], bufsize-size, "\n</body>\n</html>\n");
