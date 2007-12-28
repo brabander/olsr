@@ -935,6 +935,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     }
   
   ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
+  
+  ifp->immediate_send_tc = (iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval);
 
   iface->configured = 1;
   iface->interf = ifp;

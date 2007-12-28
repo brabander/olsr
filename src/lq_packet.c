@@ -638,7 +638,7 @@ olsr_output_lq_hello(void *para)
   // destroy internal format
   destroy_lq_hello(&lq_hello);
 
-  if(net_output_pending(outif)) {
+  if(net_output_pending(outif) && (!outif->immediate_send_tc || TIMED_OUT(outif->fwdtimer))) {
     net_output(outif);
   }
 }
@@ -685,7 +685,7 @@ olsr_output_lq_tc(void *para)
 
   destroy_lq_tc(&lq_tc);
 
-  if(net_output_pending(outif) && TIMED_OUT(outif->fwdtimer)) {
+  if(net_output_pending(outif) && (outif->immediate_send_tc || TIMED_OUT(outif->fwdtimer))) {
     set_buffer_timer(outif);
   }
 }

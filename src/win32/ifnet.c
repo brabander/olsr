@@ -954,6 +954,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
     return 0;
 
   New = olsr_malloc(sizeof (struct interface), "Interface 1");
+
+  New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
+
   New->gen_properties = NULL;
 
   AddrIn = (struct sockaddr_in *)&New->int_addr;

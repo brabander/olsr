@@ -562,43 +562,43 @@ olsr_event(void *foo __attribute__((unused)))
 	struct interface *ifn;
 	int namesize;
 
+	/* fill message */
+	if(olsr_cnf->ip_version == AF_INET)
+	{
+		/* IPv4 */
+		message->v4.olsr_msgtype = MESSAGE_TYPE;
+		message->v4.olsr_vtime = double_to_me(my_timeout);
+		memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+		message->v4.ttl = MAX_TTL;
+		message->v4.hopcnt = 0;
+		message->v4.seqno = htons(get_msg_seqno());
+
+		namesize = encap_namemsg((struct namemsg*)&message->v4.message);
+		namesize = namesize + sizeof(struct olsrmsg);
+
+		message->v4.olsr_msgsize = htons(namesize);
+	}
+	else
+	{
+		/* IPv6 */
+		message->v6.olsr_msgtype = MESSAGE_TYPE;
+		message->v6.olsr_vtime = double_to_me(my_timeout);
+		memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+		message->v6.ttl = MAX_TTL;
+		message->v6.hopcnt = 0;
+		message->v6.seqno = htons(get_msg_seqno());
+
+		namesize = encap_namemsg((struct namemsg*)&message->v6.message);
+		namesize = namesize + sizeof(struct olsrmsg6);
+		
+		message->v6.olsr_msgsize = htons(namesize);
+	}
+
 	/* looping trough interfaces */
 	for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
 	{
 		OLSR_PRINTF(3, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
-		/* fill message */
-		if(olsr_cnf->ip_version == AF_INET)
-		{
-			/* IPv4 */
-			message->v4.olsr_msgtype = MESSAGE_TYPE;
-			message->v4.olsr_vtime = double_to_me(my_timeout);
-			memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
-			message->v4.ttl = MAX_TTL;
-			message->v4.hopcnt = 0;
-			message->v4.seqno = htons(get_msg_seqno());
-			
-			namesize = encap_namemsg((struct namemsg*)&message->v4.message);
-			namesize = namesize + sizeof(struct olsrmsg);
-			
-			message->v4.olsr_msgsize = htons(namesize);
-		}
-		else
-		{
-			/* IPv6 */
-			message->v6.olsr_msgtype = MESSAGE_TYPE;
-			message->v6.olsr_vtime = double_to_me(my_timeout);
-			memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
-			message->v6.ttl = MAX_TTL;
-			message->v6.hopcnt = 0;
-			message->v6.seqno = htons(get_msg_seqno());
-			
-			namesize = encap_namemsg((struct namemsg*)&message->v6.message);
-			namesize = namesize + sizeof(struct olsrmsg6);
-			
-			message->v6.olsr_msgsize = htons(namesize);
-		}
-		
 		if(net_outbuffer_push(ifn, message, namesize) != namesize ) {
 			/* send data and try again */
 			net_output(ifn);
