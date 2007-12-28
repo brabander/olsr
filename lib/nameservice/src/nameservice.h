@@ -69,6 +69,10 @@
 #define MAX_FILE 255
 #define MAX_SUFFIX 63
 
+#define MID_ENTRIES 1
+#define MID_MAXLEN 16
+#define MID_PREFIX "mid%i."
+
 /**
  * a linked list of name_entry
  * if type is NAME_HOST, name is a hostname and ip its IP addr
