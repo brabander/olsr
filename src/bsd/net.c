@@ -315,7 +315,7 @@ gethemusocket(struct sockaddr_in *pin)
 
 
 int
-getsocket(int bufspace, char *int_name)
+getsocket(int bufspace, char *int_name __attribute__((unused)))
 {
   struct sockaddr_in sin;
   int on;
@@ -392,7 +392,7 @@ getsocket(int bufspace, char *int_name)
   return (sock);
 }
 
-int getsocket6(int bufspace, char *int_name)
+int getsocket6(int bufspace, char *int_name __attribute__((unused)))
 {
   struct sockaddr_in6 sin;
   int on;
@@ -498,8 +498,7 @@ join_mcast(struct interface *ifs, int sock)
 		IPPROTO_IPV6, 
 		IPV6_ADD_MEMBERSHIP, 
 		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
-     < 0)
+		sizeof(struct ipv6_mreq)) < 0)
 #endif 
     {
       perror("Join multicast send");
@@ -511,8 +510,7 @@ join_mcast(struct interface *ifs, int sock)
 		IPPROTO_IPV6, 
 		IPV6_MULTICAST_IF, 
 		(char *)&mcastreq.ipv6mr_interface, 
-		sizeof(mcastreq.ipv6mr_interface)) 
-     < 0)
+		sizeof(mcastreq.ipv6mr_interface)) < 0)
     {
       perror("Set multicast if");
       return -1;
@@ -610,7 +608,7 @@ ssize_t
 olsr_sendto(int s, 
 	    const void *buf, 
 	    size_t len, 
-	    int flags, 
+	    int flags __attribute__((unused)), 
 	    const struct sockaddr *to, 
 	    socklen_t tolen)
 {
@@ -715,7 +713,7 @@ ssize_t
 olsr_recvfrom(int  s, 
 	      void *buf, 
 	      size_t len, 
-	      int flags, 
+	      int flags __attribute__((unused)), 
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {
@@ -835,6 +833,7 @@ check_wireless_interface(char *ifname)
   strlcpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
   return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >=0) ? 1: 0;
 #else
+  ifname = NULL; /* squelsh compiler warning */
   return 0;
 #endif
 }
