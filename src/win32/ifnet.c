@@ -1004,7 +1004,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   New->olsr_seqnum = random() & 0xffff;
 
-  New->ttl_index = 0;
+  New->ttl_index = -32; /* For the first 32 TC's, fish-eye is disabled */
     
   OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n",
               IntConf->name, New->if_index);

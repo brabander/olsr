@@ -906,7 +906,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   ifs.int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
-  ifs.ttl_index = 0;
+  ifs.ttl_index = -32; /* For the first 32 TC's, fish-eye is disabled */
 
   /* Set up buffer */
   net_add_buffer(&ifs);
