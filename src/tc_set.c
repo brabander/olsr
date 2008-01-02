@@ -44,7 +44,6 @@
 #include "mid_set.h"
 #include "link_set.h"
 #include "olsr.h"
-#include "duplicate_set.h"
 #include "scheduler.h"
 #include "lq_route.h"
 #include "lq_avl.h"
@@ -53,9 +52,115 @@
 
 #include <assert.h>
 
+/* Sven-Ola 2007-Dec: These four constants include an assumption
+ * on how long a typical olsrd mesh memorizes (TC) messages in the
+ * RAM of all nodes and how many neighbour changes between TC msgs.
+ * In Berlin, we encounter hop values up to 70 which means that
+ * messages may live up to ~15 minutes cycling between nodes and
+ * obviously breaking out of the timeout_dup() jail. It may be more
+ * correct to dynamically adapt those constants, e.g. by using the
+ * max hop number (denotes size-of-mesh) in some form or maybe
+ * a factor indicating how many (old) versions of olsrd are on.
+ */
+
+/* Value window for ansn, identifies old messages to be ignored */
+#define TC_ANSN_WINDOW 256
+/* Value window for seqno, identifies old messages to be ignored */
+#define TC_SEQNO_WINDOW 1024
+
+/* Enlarges the value window for upcoming ansn/seqno to be accepted */
+#define TC_ANSN_WINDOW_MULT 4
+/* Enlarges the value window for upcoming ansn/seqno to be accepted */
+#define TC_SEQNO_WINDOW_MULT 8
+
+static olsr_bool
+inrangelo(int beg, int end, olsr_u16_t seq)
+{
+  if (beg < 0)
+  {
+    if (seq >= (olsr_u16_t)beg || seq < end) return OLSR_TRUE;
+  }
+  else if (end >= 0x10000)
+  {
+    if (seq >= beg || seq < (olsr_u16_t)end) return OLSR_TRUE;
+  }
+  else if (seq >= beg && seq < end)
+  {
+    return OLSR_TRUE;
+  }
+  return OLSR_FALSE;
+}
+
+static olsr_bool
+inrangehi(int beg, int end, olsr_u16_t seq)
+{
+  if (beg < 0)
+  {
+    if (seq > (olsr_u16_t)beg || seq <= end) return OLSR_TRUE;
+  }
+  else if (end >= 0x10000)
+  {
+    if (seq > beg || seq <= (olsr_u16_t)end) return OLSR_TRUE;
+  }
+  else if (seq > beg && seq <= end)
+  {
+    return OLSR_TRUE;
+  }
+  return OLSR_FALSE;
+}
+
 /* Root of the link state database */
 struct avl_tree tc_tree;
 struct tc_entry *tc_myself; /* Shortcut to ourselves */
+
+/**
+ * Add a new tc_entry to the tc tree
+ *
+ * @param (last)adr address of the entry
+ * @return a pointer to the created entry
+ */
+static struct tc_entry *
+olsr_add_tc_entry(union olsr_ip_addr *adr)
+{
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct tc_entry *tc;
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
+#endif
+
+  tc = olsr_malloc(sizeof(struct tc_entry), "add TC entry");
+  if (!tc) {
+    return NULL;
+  }
+  memset(tc, 0, sizeof(struct tc_entry));
+
+  /* Fill entry */
+  tc->addr = *adr;
+  tc->vertex_node.data = tc;
+  tc->vertex_node.key = &tc->addr;
+
+  /*
+   * Insert into the global tc tree.
+   */
+  avl_insert(&tc_tree, &tc->vertex_node, AVL_DUP_NO);
+
+  /*
+   * Initialize subtrees for edges and prefixes.
+   */
+  avl_init(&tc->edge_tree, avl_comp_default);
+  avl_init(&tc->prefix_tree, avl_comp_prefix_default);
+
+  /*
+   * Add a rt_path for ourselves.
+   */
+  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr,
+                            OLSR_RT_ORIGIN_INT);
+
+  return tc;
+}
 
 /**
  * Initialize the topology set
@@ -157,73 +262,6 @@ olsr_lookup_tc_entry(union olsr_ip_addr *adr)
   }
 
   return NULL;
-}
-
-/**
- * Grab the next topology entry.
- *
- * @param adr the address to look for
- * @return the entry found or NULL
- */
-struct tc_entry *
-olsr_getnext_tc_entry(struct tc_entry *tc)
-{
-  struct avl_node *node = avl_walk_next(&tc->vertex_node);
-
-  if (node) {
-    return node->data;
-  }
-
-  return NULL;
-}
-
-/**
- * Add a new tc_entry to the tc tree
- *
- * @param (last)adr address of the entry
- * @return a pointer to the created entry
- */
-struct tc_entry *
-olsr_add_tc_entry(union olsr_ip_addr *adr)
-{
-#if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
-#endif
-  struct tc_entry *tc;
-
-#ifdef DEBUG
-  OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
-#endif
-
-  tc = olsr_malloc(sizeof(struct tc_entry), "add TC entry");
-  if (!tc) {
-    return NULL;
-  }
-  memset(tc, 0, sizeof(struct tc_entry));
-
-  /* Fill entry */
-  tc->addr = *adr;
-  tc->vertex_node.data = tc;
-  tc->vertex_node.key = &tc->addr;
-
-  /*
-   * Insert into the global tc tree.
-   */
-  avl_insert(&tc_tree, &tc->vertex_node, AVL_DUP_NO);
-
-  /*
-   * Initialize subtrees for edges and prefixes.
-   */
-  avl_init(&tc->edge_tree, avl_comp_default);
-  avl_init(&tc->prefix_tree, avl_comp_prefix_default);
-
-  /*
-   * Add a rt_path for ourselves.
-   */
-  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr,
-                            OLSR_RT_ORIGIN_INT);
-
-  return tc;
 }
 
 /*
@@ -728,38 +766,50 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
   pkt_get_u16(&curr, &ansn);
   pkt_ignore_u16(&curr);
 
-  /*
-   * Check if we know this guy and if we already know what he has to say.
-   */
   tc = olsr_lookup_tc_entry(&originator);
-#if 0
-  /* Sven-Ola: Looks like a bad idea. During olsrd startup, its seqno
-   * is initialized using random(). We have a good chance to wait for
-   * hours until TC messages are forwarded for a node if olsrd is re-
-   * started while there are still tc_entries in RAM.
-   */
-  if (tc) {
-    if (!SEQNO_GREATER_THAN(msg_seq, tc->msg_seq)) {
-      return;
+  
+  if (tc && 0 != tc->edge_tree.count) {
+    if (inrangehi((int)tc->msg_seq - TC_SEQNO_WINDOW, tc->msg_seq, msg_seq) &&
+        inrangehi((int)tc->ansn - TC_ANSN_WINDOW, tc->ansn, ansn))
+    {
+      /*
+       * Ignore already seen seq/ansn values (small window for mesh memory)
+       */
+      if (tc->msg_seq == msg_seq) return;
+      if (tc->ignored++ < 32) return;
+      OLSR_PRINTF(1, "Ignored to much LQTC's for %s, restarting\n", olsr_ip_to_string(&buf, &originator));
+    }
+    else if (!inrangehi(tc->msg_seq, (int)tc->msg_seq + TC_SEQNO_WINDOW * TC_SEQNO_WINDOW_MULT, msg_seq) ||
+             !inrangelo(tc->ansn, (int)tc->ansn + TC_ANSN_WINDOW * TC_ANSN_WINDOW_MULT, ansn))
+    {
+      /*
+       * Only accept future seq/ansn values (large window for node reconnects)
+       * Restart in all other cases. Ignore a single stray message.
+       */
+      if (!tc->err_seq_valid)
+      {
+        tc->err_seq = msg_seq;
+        tc->err_seq_valid = OLSR_TRUE;
+      }
+      if (tc->err_seq == msg_seq) return;
+      OLSR_PRINTF(2, "Detected node restart for %s\n", olsr_ip_to_string(&buf, &originator));
     }
   }
-#else
-  if(!olsr_check_dup_table_proc(&originator, msg_seq)) {
-      goto forward;
-  }
-#endif
 
   /*
    * Generate an new tc_entry in the lsdb and store the sequence number.
    */
-  if (!tc) {
-    tc = olsr_add_tc_entry(&originator);
-    tc->msg_seq = msg_seq;
-  }
+  if (!tc) tc = olsr_add_tc_entry(&originator);
 
-  OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
-              olsr_ip_to_string(&buf, &originator), ansn);
-
+  /*
+   * Update the tc entry.
+   */
+  tc->msg_hops = msg_hops;
+  tc->msg_seq = msg_seq;
+  tc->ansn = ansn;
+  tc->ignored = 0;
+  tc->err_seq_valid = OLSR_FALSE;
+  
   /*
    * If the sender interface (NB: not originator) of this message
    * is not in the symmetric 1-hop neighborhood of this node, the
@@ -771,11 +821,8 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
     return;
   }
 
-  /*
-   * Update the tc entry.
-   */
-  tc->msg_hops = msg_hops;
-  tc->msg_seq = msg_seq;
+  OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
+              olsr_ip_to_string(&buf, &originator), ansn);
 
   /*
    * Now walk the edge advertisements contained in the packet.
@@ -800,9 +847,6 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
   /*
    * Last, flood the message to our other neighbors.
    */
-
-forward:
-
   olsr_forward_message(msg, &originator, msg_seq, input_if, from_addr);
   return;
 }

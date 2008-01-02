@@ -242,6 +242,24 @@ void iterRouteTabInit(void)
 
 }
 
+/**
+ * Grab the next topology entry.
+ *
+ * @param adr the address to look for
+ * @return the entry found or NULL
+ */
+static struct tc_entry *
+tas_getnext_tc_entry(struct tc_entry *tc)
+{
+  struct avl_node *node = avl_walk_next(&tc->vertex_node);
+
+  if (node) {
+    return node->data;
+  }
+
+  return NULL;
+}
+
 int iterTcTabNext(char *buff, int len)
 {
   int res;
@@ -280,7 +298,7 @@ int iterTcTabNext(char *buff, int len)
   
   strcpy(buff, "]~");
 
-  iterTcTab = olsr_getnext_tc_entry(iterTcTab);
+  iterTcTab = tas_getnext_tc_entry(iterTcTab);
 
   return 0;
 }
