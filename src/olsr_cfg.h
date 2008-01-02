@@ -201,6 +201,7 @@ struct olsrd_config
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;
   olsr_u8_t                rttable;
+  olsr_u8_t                rttable_default;
   olsr_u8_t                willingness;
   olsr_bool                willingness_auto;
   int                      ipc_connections;

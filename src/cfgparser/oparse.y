@@ -173,6 +173,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_NOINT
 %token TOK_TOS
 %token TOK_RTTABLE
+%token TOK_RTTABLE_DEFAULT
 %token TOK_WILLINGNESS
 %token TOK_IPCCON
 %token TOK_FIBMETRIC
@@ -231,6 +232,7 @@ stmt:       idebug
           | bnoint
           | atos
           | arttable
+          | arttable_default
           | awillingness
           | busehyst
           | fhystscale
@@ -870,6 +872,14 @@ arttable: TOK_RTTABLE TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("RtTable: %d\n", $2->integer);
   olsr_cnf->rttable = $2->integer;
+  free($2);
+}
+;
+
+arttable_default: TOK_RTTABLE_DEFAULT TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", $2->integer);
+  olsr_cnf->rttable_default = $2->integer;
   free($2);
 }
 ;

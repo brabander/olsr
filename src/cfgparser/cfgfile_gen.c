@@ -110,6 +110,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Policy Routing Table to use. Default is 254\n\n");
   fprintf(fd, "RtTable\t\t%d\n\n", cnf->rttable);
 
+  /* RtTableDefault */
+  fprintf(fd, "# Policy Routing Table to use for the default Route. Default is 0 (Take the same table as specified by RtTable)\n\n");
+  fprintf(fd, "RtTableDefault\t\t%d\n\n", cnf->rttable_default);
+
   /* Willingness */
   fprintf(fd, "# The fixed willingness to use(0-7)\n# If not set willingness will be calculated\n# dynammically based on battery/power status\n\n");
   if(cnf->willingness_auto)

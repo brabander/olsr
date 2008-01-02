@@ -444,6 +444,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;
     cnf->rttable = 254;
+    cnf->rttable_default = 0;
     cnf->willingness_auto = DEF_WILL_AUTO;
     cnf->ipc_connections = DEF_IPC_CONNECTIONS;
     cnf->fib_metric = DEF_FIB_METRIC;
@@ -551,6 +552,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
   printf("RtTable          : 0x%02x\n", cnf->rttable);
+  printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
   if(cnf->willingness_auto)
     printf("Willingness      : AUTO\n");
   else
