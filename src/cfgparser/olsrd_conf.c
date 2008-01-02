@@ -291,6 +291,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+  /* NAT threshold value */
+  if(cnf->lq_level && (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0))
+    {
+      fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
+      return -1;
+    }
+
   if(in == NULL)
     {
       fprintf(stderr, "No interfaces configured!\n");
@@ -456,6 +463,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
     cnf->lq_dinter = DEF_LQ_DIJK_INTER;
     cnf->lq_wsize = DEF_LQ_WSIZE;
+    cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
 
     cnf->del_gws = OLSR_FALSE;
@@ -576,6 +584,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
 
   printf("LQ window size   : %d\n", cnf->lq_wsize);
+
+  printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 

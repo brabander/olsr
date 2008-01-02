@@ -383,6 +383,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_LQ_WSIZE;
 }
 
+"NatThreshold" {
+    yylval = NULL;
+    return TOK_LQ_NAT_THRESH;
+}
+
 "LinkQualityMult" {
     yylval = NULL;
     return TOK_LQ_MULT;

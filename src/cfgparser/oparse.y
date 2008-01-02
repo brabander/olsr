@@ -188,6 +188,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LQ_FISH
 %token TOK_LQ_DLIMIT
 %token TOK_LQ_WSIZE
+%token TOK_LQ_NAT_THRESH
 %token TOK_LQ_MULT
 %token TOK_CLEAR_SCREEN
 %token TOK_PLPARAM
@@ -242,6 +243,7 @@ stmt:       idebug
           | alq_level
           | alq_fish
           | alq_dlimit
+          | anat_thresh
           | alq_wsize
           | bclear_screen
           | vcomment
@@ -974,6 +976,14 @@ alq_wsize: TOK_LQ_WSIZE TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Link quality window size %d\n", $2->integer);
   olsr_cnf->lq_wsize = $2->integer;
+  free($2);
+}
+;
+
+anat_thresh: TOK_LQ_NAT_THRESH TOK_FLOAT
+{
+  PARSER_DEBUG_PRINTF("NAT threshold %0.2f\n", $2->floating);
+  olsr_cnf->lq_nat_thresh = $2->floating;
   free($2);
 }
 ;
