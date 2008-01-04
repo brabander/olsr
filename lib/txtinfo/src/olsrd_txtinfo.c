@@ -411,12 +411,10 @@ static void ipc_print_hna(void)
     /* Announced HNA entries */
     if (olsr_cnf->ip_version == AF_INET) {
         for(hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-            struct ipaddr_str addrbuf, maskbuf, mainaddrbuf;
-            union olsr_ip_addr netmask;
-            olsr_prefix_to_netmask(&netmask, hna->net.prefix_len);
-            ipc_sendf("%s\t%s\t%s\n",
+            struct ipaddr_str addrbuf, mainaddrbuf;
+            ipc_sendf("%s\t%d\t%s\n",
                       olsr_ip_to_string(&addrbuf, &hna->net.prefix),
-                      olsr_ip_to_string(&maskbuf, &netmask),
+                      hna->net.prefix_len,
                       olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
         }
     } else {
