@@ -88,6 +88,10 @@ struct tc_entry
   olsr_u16_t         msg_seq; /* sequence number of the tc message */
   olsr_u8_t          msg_hops; /* hopcount as per the tc message */
   olsr_u8_t          hops; /* SPF calculated hopcount */
+  olsr_u16_t         ansn; /* ANSN number of the tc message */
+  olsr_u16_t         ignored; /* how many TC messages ignored in a sequence (kindof emergency brake) */
+  olsr_u16_t         err_seq; /* sequence number of an unplausible TC */
+  olsr_bool          err_seq_valid; /* do we have an error (unplauible seq/ansn) */
 };
 
 /*
@@ -131,8 +135,6 @@ void olsr_input_tc(union olsr_message *, struct interface *,
 /* tc_entry manipulation */
 struct tc_entry *olsr_lookup_tc_entry(union olsr_ip_addr *);
 struct tc_entry *olsr_locate_tc_entry(union olsr_ip_addr *);
-struct tc_entry *olsr_add_tc_entry(union olsr_ip_addr *);
-struct tc_entry *olsr_getnext_tc_entry(struct tc_entry *);
 
 /* tc_edge_entry manipulation */
 char *olsr_tc_edge_to_string(struct tc_edge_entry *);

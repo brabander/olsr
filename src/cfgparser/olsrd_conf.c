@@ -291,6 +291,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+  /* NAT threshold value */
+  if(cnf->lq_level && (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0))
+    {
+      fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
+      return -1;
+    }
+
   if(in == NULL)
     {
       fprintf(stderr, "No interfaces configured!\n");
@@ -437,6 +444,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;
     cnf->rttable = 254;
+    cnf->rttable_default = 0;
     cnf->willingness_auto = DEF_WILL_AUTO;
     cnf->ipc_connections = DEF_IPC_CONNECTIONS;
     cnf->fib_metric = DEF_FIB_METRIC;
@@ -456,6 +464,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
     cnf->lq_dinter = DEF_LQ_DIJK_INTER;
     cnf->lq_wsize = DEF_LQ_WSIZE;
+    cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
 
     cnf->del_gws = OLSR_FALSE;
@@ -543,6 +552,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
   printf("RtTable          : 0x%02x\n", cnf->rttable);
+  printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
   if(cnf->willingness_auto)
     printf("Willingness      : AUTO\n");
   else
@@ -576,6 +586,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
 
   printf("LQ window size   : %d\n", cnf->lq_wsize);
+
+  printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 

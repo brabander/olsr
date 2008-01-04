@@ -66,6 +66,7 @@
 #define DEF_LQ_FISH         0
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
+#define DEF_LQ_NAT_THRESH   1.0
 #define DEF_LQ_WSIZE        12
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
 
@@ -200,6 +201,7 @@ struct olsrd_config
   olsr_bool                allow_no_interfaces;
   olsr_u16_t               tos;
   olsr_u8_t                rttable;
+  olsr_u8_t                rttable_default;
   olsr_u8_t                willingness;
   olsr_bool                willingness_auto;
   int                      ipc_connections;
@@ -240,6 +242,7 @@ struct olsrd_config
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   int                      rts;                  /* Socket used for route changes on BSDs */
 #endif
+  float                    lq_nat_thresh;
 };
 
 #if defined __cplusplus

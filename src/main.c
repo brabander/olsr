@@ -523,7 +523,7 @@ print_usage(void)
           "An error occured somwhere between your keyboard and your chair!\n"
           "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
           "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
-          "  [-lql <LQ level>] [-lqw <LQ winsize>]\n"
+          "  [-lql <LQ level>] [-lqw <LQ winsize>] [-lqnt <nat threshold>]\n"
           "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
           "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
           "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
@@ -664,6 +664,27 @@ olsr_process_arguments(int argc, char *argv[],
 	  continue;
 	}
       
+      /*
+       * Set NAT threshold
+       */
+      if (strcmp(*argv, "-lqnt") == 0) 
+	{
+	  float tmp_lq_nat_thresh;
+	  NEXT_ARG;
+          CHECK_ARGC;
+
+	  sscanf(*argv,"%f", &tmp_lq_nat_thresh);
+
+	  if(tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0)
+	    {
+	      printf("NAT threshold %f not allowed. Range [%f-%f]\n", 
+		     tmp_lq_nat_thresh, 0.1, 1.0);
+	      olsr_exit(__func__, EXIT_FAILURE);
+	    }
+	  olsr_cnf->lq_nat_thresh = tmp_lq_nat_thresh;
+	  continue;
+	}
+
       /*
        * Enable additional debugging information to be logged.
        */
