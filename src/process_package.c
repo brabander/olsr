@@ -414,6 +414,66 @@ lookup_mpr_status(const struct hello_message *message, const struct interface *i
   return 0;
 }
 
+static int deserialize_hello(struct hello_message *hello, const void *ser) {
+	const unsigned char *limit;
+	olsr_u8_t type;
+	olsr_u16_t size;
+	
+	const unsigned char *curr = ser;
+	pkt_get_u8(&curr, &type);
+	if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
+		/* No need to do anything more */
+		return 1;
+	}
+	pkt_get_double(&curr, &hello->vtime);
+	pkt_get_u16(&curr, &size);
+	pkt_get_ipaddress(&curr, &hello->source_addr);
+	
+	pkt_get_u8(&curr, &hello->ttl);
+	pkt_get_u8(&curr, &hello->hop_count);
+	pkt_get_u16(&curr, &hello->packet_seq_number);
+	pkt_ignore_u16(&curr);
+	
+	pkt_get_double(&curr, &hello->htime);
+	pkt_get_u8(&curr, &hello->willingness);
+	
+	hello->neighbors = NULL;
+	limit = ((const unsigned char *)ser) + size;
+	while (curr < limit) {
+		const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
+		const unsigned char *limit2 = curr + ntohs(info_head->size);
+		
+		curr = (const unsigned char *)(info_head + 1);
+		while (curr < limit2) {
+			struct hello_neighbor *neigh = olsr_malloc(sizeof(struct hello_neighbor), "HELLO deserialization");
+			pkt_get_ipaddress(&curr, &neigh->address);
+			
+			if (type == LQ_HELLO_MESSAGE) {
+				pkt_get_lq(&curr, &neigh->link_quality);
+				pkt_get_lq(&curr, &neigh->neigh_link_quality);
+				pkt_ignore_u16(&curr);
+			}
+			neigh->link = EXTRACT_LINK(info_head->link_code);
+			neigh->status = EXTRACT_STATUS(info_head->link_code);
+			
+			neigh->next = hello->neighbors;
+			hello->neighbors = neigh;
+		}
+	}
+	return 0;
+}
+
+void olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from) {
+	struct hello_message hello;
+	
+	if (ser == NULL) {
+		return;
+	}
+	if (deserialize_hello(&hello, ser) != 0) {
+		return;
+	}
+	olsr_hello_tap(&hello, inif, from);
+}
 
 /**
  *Initializing the parser functions we are using
@@ -423,12 +483,12 @@ olsr_init_package_process(void)
 {
   if (olsr_cnf->lq_level == 0)
     {
-      olsr_parser_add_function(&olsr_process_received_hello, HELLO_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE, 1);
       olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE, 1);
     }
   else
     {
-      olsr_parser_add_function(&olsr_input_lq_hello, LQ_HELLO_MESSAGE, 1);
+      olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE, 1);
       olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE, 1);
     }
 
@@ -553,25 +613,6 @@ olsr_hello_tap(struct hello_message *message,
   olsr_free_hello_packet(message);
 
   return;
-}
-
-/**
- *Processes a received HELLO message. 
- *
- *@param m the incoming OLSR message
- *@return 0 on sucess
- */
-
-void
-olsr_process_received_hello(union olsr_message *m,
-                            struct interface *in_if,
-                            union olsr_ip_addr *from_addr)
-{
-  struct hello_message      message;
-
-  hello_chgestruct(&message, m);
-
-  olsr_hello_tap(&message, in_if, from_addr);
 }
 
 /**
