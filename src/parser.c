@@ -309,8 +309,9 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       if(ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr) || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator))
         {
 #ifdef DEBUG
+	  struct ipaddr_str buf;
 	  OLSR_PRINTF(3, "Not processing message originating from %s!\n",
-	    olsr_ip_to_string((union olsr_ip_addr *)&m->v4.originator));
+	    olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));
 #endif
           continue;
         }
