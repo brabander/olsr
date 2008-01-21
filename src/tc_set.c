@@ -320,6 +320,14 @@ olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int timer)
 void
 olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 {
+
+  /*
+   * Some sanity check before recalculating the etx.
+   */
+  if (olsr_cnf->lq_level < 1) {
+    return;
+  }
+
   if (tc_edge->link_quality < MIN_LINK_QUALITY &&
       tc_edge->inverse_link_quality < MIN_LINK_QUALITY) {
     tc_edge->etx = INFINITE_ETX;
@@ -601,7 +609,14 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
       if (tc->msg_hops <= olsr_cnf->lq_dlimit)
         edge_change = 1;
     }
-    tc_edge->link_quality = neigh_link_quality;
+
+    /*
+     * Update link quality if configured. For hop-count only mode link quality
+     * remains at 1.0.
+     */
+    if (olsr_cnf->lq_level > 0) {
+      tc_edge->link_quality = neigh_link_quality;
+    }
 
     if (olsr_etx_significant_change(tc_edge->inverse_link_quality,
                                     link_quality)) {
@@ -609,7 +624,14 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
       if (tc->msg_hops <= olsr_cnf->lq_dlimit)
         edge_change = 1;
     }
-    tc_edge->inverse_link_quality = link_quality;
+
+    /*
+     * Update inverse link quality if configured. For hop-count only mode
+     * inverse link quality remains at 1.0.
+     */
+    if (olsr_cnf->lq_level > 0) {
+      tc_edge->inverse_link_quality = link_quality;
+    }
 
     /*
      * Update the etx.
