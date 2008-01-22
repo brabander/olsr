@@ -48,6 +48,7 @@
 
 /* To get ifreq */
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <net/if.h>
 
 #include "olsr_cfg.h"
