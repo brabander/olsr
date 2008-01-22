@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tï¿½nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -45,6 +45,9 @@
 #include "olsr_protocol.h"
 #include "packet.h"
 #include "neighbor_table.h"
+
+void
+olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
 
 void
 olsr_init_package_process(void);

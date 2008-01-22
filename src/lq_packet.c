@@ -576,59 +576,6 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   net_outbuffer_push(outif, msg_buffer, size + off);
 }
 
-
-static int
-deserialize_lq_hello(struct hello_message *hello,
-                     const void *ser)
-{
-    const unsigned char *limit;
-    olsr_u8_t type;
-    olsr_u16_t size;
-  
-    const unsigned char *curr = ser;
-    pkt_get_u8(&curr, &type);
-    if (type != LQ_HELLO_MESSAGE) {
-        /* No need to do anything more */
-        return 1;
-    }
-    pkt_get_double(&curr, &hello->vtime);
-    pkt_get_u16(&curr, &size);
-    pkt_get_ipaddress(&curr, &hello->source_addr);
-
-    pkt_get_u8(&curr, &hello->ttl);
-    pkt_get_u8(&curr, &hello->hop_count);
-    pkt_get_u16(&curr, &hello->packet_seq_number);
-    pkt_ignore_u16(&curr);
-
-    pkt_get_double(&curr, &hello->htime);
-    pkt_get_u8(&curr, &hello->willingness);
-
-    hello->neighbors = NULL;
-    limit = ((const unsigned char *)ser) + size;
-    while (curr < limit) {
-        const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
-        const unsigned char *limit2 = curr + ntohs(info_head->size);
-
-        curr = (const unsigned char *)(info_head + 1);      
-        while (curr < limit2) {
-            struct hello_neighbor *neigh = olsr_malloc(sizeof (struct hello_neighbor),
-                                                       "LQ_HELLO deserialization");
-            pkt_get_ipaddress(&curr, &neigh->address);
-
-            pkt_get_lq(&curr, &neigh->link_quality);
-            pkt_get_lq(&curr, &neigh->neigh_link_quality);
-            pkt_ignore_u16(&curr);
-
-            neigh->link   = EXTRACT_LINK(info_head->link_code);
-            neigh->status = EXTRACT_STATUS(info_head->link_code);
-
-            neigh->next = hello->neighbors;
-            hello->neighbors = neigh;
-        }
-    }
-    return 0;
-}
-
 void
 olsr_output_lq_hello(void *para)
 {
@@ -698,20 +645,4 @@ olsr_output_lq_tc(void *para)
   if(net_output_pending(outif) && (outif->immediate_send_tc || TIMED_OUT(outif->fwdtimer))) {
     set_buffer_timer(outif);
   }
-}
-
-void
-olsr_input_lq_hello(union olsr_message *ser,
-                    struct interface *inif,
-                    union olsr_ip_addr *from)
-{
-  struct hello_message hello;
-
-  if (ser == NULL) {
-    return;
-  }
-  if (deserialize_lq_hello(&hello, ser) != 0) {
-    return;
-  }
-  olsr_hello_tap(&hello, inif, from);
 }
