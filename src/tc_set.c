@@ -52,6 +52,10 @@
 
 #include <assert.h>
 
+/* Root of the link state database */
+struct avl_tree tc_tree;
+struct tc_entry *tc_myself; /* Shortcut to ourselves */
+
 /* Sven-Ola 2007-Dec: These four constants include an assumption
  * on how long a typical olsrd mesh memorizes (TC) messages in the
  * RAM of all nodes and how many neighbour changes between TC msgs.
@@ -74,44 +78,38 @@
 #define TC_SEQNO_WINDOW_MULT 8
 
 static olsr_bool
-inrangelo(int beg, int end, olsr_u16_t seq)
+olsr_seq_inrange_low(int beg, int end, olsr_u16_t seq)
 {
-  if (beg < 0)
-  {
-    if (seq >= (olsr_u16_t)beg || seq < end) return OLSR_TRUE;
-  }
-  else if (end >= 0x10000)
-  {
-    if (seq >= beg || seq < (olsr_u16_t)end) return OLSR_TRUE;
-  }
-  else if (seq >= beg && seq < end)
-  {
+  if (beg < 0) {
+    if (seq >= (olsr_u16_t)beg || seq < end) {
+      return OLSR_TRUE;
+    }
+  } else if (end >= 0x10000) {
+    if (seq >= beg || seq < (olsr_u16_t)end) {
+      return OLSR_TRUE;
+    }
+  } else if (seq >= beg && seq < end) {
     return OLSR_TRUE;
   }
   return OLSR_FALSE;
 }
 
 static olsr_bool
-inrangehi(int beg, int end, olsr_u16_t seq)
+olsr_seq_inrange_high(int beg, int end, olsr_u16_t seq)
 {
-  if (beg < 0)
-  {
-    if (seq > (olsr_u16_t)beg || seq <= end) return OLSR_TRUE;
-  }
-  else if (end >= 0x10000)
-  {
-    if (seq > beg || seq <= (olsr_u16_t)end) return OLSR_TRUE;
-  }
-  else if (seq > beg && seq <= end)
-  {
+  if (beg < 0) {
+    if (seq > (olsr_u16_t)beg || seq <= end) {
+      return OLSR_TRUE;
+    }
+  } else if (end >= 0x10000) {
+    if (seq > beg || seq <= (olsr_u16_t)end) {
+      return OLSR_TRUE;
+    }
+  } else if (seq > beg && seq <= end) {
     return OLSR_TRUE;
   }
   return OLSR_FALSE;
 }
-
-/* Root of the link state database */
-struct avl_tree tc_tree;
-struct tc_entry *tc_myself; /* Shortcut to ourselves */
 
 /**
  * Add a new tc_entry to the tc tree
@@ -791,37 +789,56 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if,
   tc = olsr_lookup_tc_entry(&originator);
   
   if (tc && 0 != tc->edge_tree.count) {
-    if (inrangehi((int)tc->msg_seq - TC_SEQNO_WINDOW, tc->msg_seq, msg_seq) &&
-        inrangehi((int)tc->ansn - TC_ANSN_WINDOW, tc->ansn, ansn))
-    {
+    if (olsr_seq_inrange_high(
+          (int)tc->msg_seq - TC_SEQNO_WINDOW,
+          tc->msg_seq,
+          msg_seq) &&
+        olsr_seq_inrange_high(
+          (int)tc->ansn - TC_ANSN_WINDOW,
+          tc->ansn, ansn)) {
+
       /*
        * Ignore already seen seq/ansn values (small window for mesh memory)
        */
-      if (tc->msg_seq == msg_seq) return;
-      if (tc->ignored++ < 32) return;
-      OLSR_PRINTF(1, "Ignored to much LQTC's for %s, restarting\n", olsr_ip_to_string(&buf, &originator));
-    }
-    else if (!inrangehi(tc->msg_seq, (int)tc->msg_seq + TC_SEQNO_WINDOW * TC_SEQNO_WINDOW_MULT, msg_seq) ||
-             !inrangelo(tc->ansn, (int)tc->ansn + TC_ANSN_WINDOW * TC_ANSN_WINDOW_MULT, ansn))
-    {
+      if ((tc->msg_seq == msg_seq) || (tc->ignored++ < 32)) {
+        return;
+      }
+
+      OLSR_PRINTF(1, "Ignored to much LQTC's for %s, restarting\n",
+                  olsr_ip_to_string(&buf, &originator));
+
+    } else if (!olsr_seq_inrange_high(
+                 tc->msg_seq,
+                 (int)tc->msg_seq + TC_SEQNO_WINDOW * TC_SEQNO_WINDOW_MULT,
+                 msg_seq) ||
+               !olsr_seq_inrange_low(
+                 tc->ansn,
+                 (int)tc->ansn + TC_ANSN_WINDOW * TC_ANSN_WINDOW_MULT,
+                 ansn)) {
+
       /*
-       * Only accept future seq/ansn values (large window for node reconnects)
+       * Only accept future seq/ansn values (large window for node reconnects).
        * Restart in all other cases. Ignore a single stray message.
        */
-      if (!tc->err_seq_valid)
-      {
+      if (!tc->err_seq_valid) {
         tc->err_seq = msg_seq;
         tc->err_seq_valid = OLSR_TRUE;
       }
-      if (tc->err_seq == msg_seq) return;
-      OLSR_PRINTF(2, "Detected node restart for %s\n", olsr_ip_to_string(&buf, &originator));
+      if (tc->err_seq == msg_seq) {
+        return;
+      }
+
+      OLSR_PRINTF(2, "Detected node restart for %s\n",
+                  olsr_ip_to_string(&buf, &originator));
     }
   }
 
   /*
-   * Generate an new tc_entry in the lsdb and store the sequence number.
+   * Generate a new tc_entry in the lsdb and store the sequence number.
    */
-  if (!tc) tc = olsr_add_tc_entry(&originator);
+  if (!tc) {
+    tc = olsr_add_tc_entry(&originator);
+  }
 
   /*
    * Update the tc entry.
