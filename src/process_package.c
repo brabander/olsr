@@ -56,11 +56,14 @@
 
 #include <stddef.h>
 
-static void process_message_neighbors(struct neighbor_entry *, const struct hello_message *);
+static void process_message_neighbors(struct neighbor_entry *,
+                                      const struct hello_message *);
 
-static void linking_this_2_entries(struct neighbor_entry *, struct neighbor_2_entry *, float);
+static void linking_this_2_entries(struct neighbor_entry *,
+                                   struct neighbor_2_entry *, float);
 
-static int lookup_mpr_status(const struct hello_message *, const struct interface *);
+static olsr_bool lookup_mpr_status(const struct hello_message *,
+                                   const struct interface *);
 
 
 /**
@@ -384,34 +387,32 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
 }
 
 /**
- *Check if a hello message states this node as a MPR.
+ * Check if a hello message states this node as a MPR.
  *
- *@param message the message to check
- *@param n_link the buffer to put the link status in
- *@param n_status the buffer to put the status in
+ * @param message the message to check
+ * @param n_link the buffer to put the link status in
  *
  *@return 1 if we are selected as MPR 0 if not
  */
-static int
-lookup_mpr_status(const struct hello_message *message, const struct interface *in_if)
+static olsr_bool
+lookup_mpr_status(const struct hello_message *message,
+                  const struct interface *in_if)
 {  
   struct hello_neighbor  *neighbors; 
-  for (neighbors = message->neighbors; neighbors != NULL; neighbors = neighbors->next) {
-    //printf("(linkstatus)Checking %s ",olsr_ip_to_string(&buf, &neighbors->address));
-    //printf("against %s\n",olsr_ip_to_string(&buf, &main_addr));
 
+  for (neighbors = message->neighbors; neighbors; neighbors = neighbors->next) {
     if (olsr_cnf->ip_version == AF_INET
-              ? /* IPv4 */ ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
-              : /* IPv6 */ ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
-      //printf("ok");
+        ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
+        : ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
+
       if (neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH) {
-        return 1;
+        return OLSR_TRUE;
       }
       break;
     }
   }
   /* Not found */
-  return 0;
+  return OLSR_FALSE;
 }
 
 static int deserialize_hello(struct hello_message *hello, const void *ser) {
@@ -803,3 +804,9 @@ olsr_process_received_hna(union olsr_message *m,
                        in_if,
                        from_addr);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */
