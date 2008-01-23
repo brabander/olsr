@@ -36,7 +36,7 @@
 # the copyright holders.
 #
 
-VERS =		0.5.5pre
+VERS =		0.5.5rc1
 
 TOPDIR = .
 include Makefile.inc

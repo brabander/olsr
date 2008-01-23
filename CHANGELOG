@@ -2,6 +2,41 @@ This file states changes as of version 0.2.4:
 
 0.5.5 ---------------------------------------------------------------------
 
+BUGFIX from Dario Borriello <dario_bodj@hotmail.com>:
+- do not update LQ if not configured
+
+BUGFIX from Jo-Philipp Wich <freifunk@wwsnet.net:
+- fix olsr_ip_to_string() buffer quirk
+- fix txtinfo format quirks in HNA table
+- name-service plugin - write MID entries to hosts file
+
+PATCH by John Hay <jhay@meraka.org.za>:
+- compile clean on FreeBSD
+
+PATCHES from Henning Rogge <rogge@fgan.de>:
+- join LQ and non-LQ Hello execution paths
+
+PATCHES from otti <otti@wirdorange.org>:
+- rttable-default: configures a new policy routing table for the default route
+
+BUGFIXES and PATCHES by Sven-Ola Tuecke <mail2news@commando.de>:
+- lqtc-seqno: Optimize check for old seqno numbers in LQTC messages
+- lqnatthresh: maintain an advantage for the current (NAT) inet gw
+- fisheye-startup: Changed to MAX_TTL for the first 32 LQTCs
+- Added and removed files necessary for win32 compile
+- Fix for hg: do not remove anything in .hg with 'make uberclean'
+- 104-olsrd-verysmallfix
+- 105-fix-lq-buffer-quirks
+- 106-fix-seqnocheck
+- 110-bmf-v152
+- 121-olsrd-fib-metric-approx
+- 133-fix-lqneigh
+- 136-optimize-invalidip-check
+- 138-optimize-message-generation
+
+BUGFIX from Lorenz Shori <lorenz.schori@gmx.ch>:
+- Mac OSX compile fixes
+
 BUGFIXES and PATCHES by Hannes Gredler <hannes@gredler.at>
 - fix not deleted tc entry.
 - avoid setting routes with an invalid/impossible netmask.
@@ -12,6 +47,8 @@ BUGFIXES and PATCHES by Hannes Gredler <hannes@gredler.at>
   - add a FOR_ALL_HNA_RT_ENTRIES() macro for the snmp folks
     (or any parties who want to walk HNA entries).
   - add an olsr_cnf option 'flat_fib_metrics' which defaults to TRUE.
+- fix broken prefix insertion (regression of the RIB refactoring)
+- squelsh compiler warnings on Mac OSX
 
 PATCH by John Hay <jhay@meraka.org.za>:
 - also printout our own HNAs in the dotdraw plugin.
