@@ -49,7 +49,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>
 #include <iphlpapi.h>
-#undef interface
 
 char *StrError(unsigned int ErrNo);
 
@@ -65,6 +64,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
+  struct interface *iface = if_ifwithindex(rt->rt_best->rtp_nexthop.iif_index);
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 
@@ -86,7 +86,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_best->rtp_metric);
+  Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_best->rtp_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;
@@ -144,6 +144,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
+  struct interface *iface = if_ifwithindex(rt->rt_nexthop.iif_index);
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
@@ -163,7 +164,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
-  Row.dwForwardMetric1 = olsr_fib_metric(&rt->rt_metric);
+  Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_metric);
   Row.dwForwardMetric2 = -1;
   Row.dwForwardMetric3 = -1;
   Row.dwForwardMetric4 = -1;

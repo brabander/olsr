@@ -46,8 +46,6 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 
-static struct interface *if_ifwithindex(const int if_index);
-
 /* The interface linked-list */
 struct interface *ifnet;
 
@@ -207,7 +205,7 @@ if_ifwithname(const char *if_name)
  *@return return the interface struct representing the interface
  *that matched the iif_index.
  */
-static struct interface *
+struct interface *
 if_ifwithindex(const int if_index)
 {
   struct interface *ifp = ifnet;

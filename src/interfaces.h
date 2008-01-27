@@ -198,6 +198,9 @@ if_ifwithname(const char *);
 const char *
 if_ifwithindex_name(const int if_index);
 
+struct interface *
+if_ifwithindex(const int if_index);
+
 struct olsr_if *
 queue_if(const char *, int);
 
