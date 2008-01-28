@@ -361,6 +361,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 				   from_addr);
 	    }
 
+          /* Cancel loop here, otherwise olsrd just hangs forever at this point */
+          break;
 	}
 
     } /* for olsr_msg */ 
