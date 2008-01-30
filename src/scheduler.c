@@ -116,6 +116,7 @@ scheduler(void)
        * Used to calculate sleep time
        */
       clock_t end_of_loop;
+      clock_t milliseconds_used;
       struct timeval time_used;
       struct event_entry *entry;
       struct timeout_entry *time_out_entry;
@@ -188,8 +189,9 @@ scheduler(void)
       end_of_loop = times(&tms_buf);
 
       //printf("Tick diff: %d\n", end_of_loop - now_times);
-      time_used.tv_sec = ((end_of_loop - now_times) * olsr_cnf->system_tick_divider) / 1000;
-      time_used.tv_usec = ((end_of_loop - now_times) * olsr_cnf->system_tick_divider) % 1000;
+      milliseconds_used = (end_of_loop - now_times) * olsr_cnf->system_tick_divider;
+      time_used.tv_sec = milliseconds_used / 1000;
+      time_used.tv_usec = (milliseconds_used % 1000) * 1000;
 
       //printf("Time used: %d.%04d\n", time_used.tv_sec, time_used.tv_usec);
 
