@@ -50,8 +50,6 @@
  * on the heap.
  */
 
-#define SPF_PROFILING 0
-
 #include "ipcalc.h"
 #include "defs.h"
 #include "olsr.h"
