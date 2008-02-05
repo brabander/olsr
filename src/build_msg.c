@@ -975,7 +975,7 @@ serialize_mid6(struct interface *ifp)
       net_output(ifp);
       remainsize = net_outbuffer_bytes_left(ifp);
     }
-  check_buffspace(curr_size + olsr_cnf->ipsize, remainsize, "MID");
+  check_buffspace(curr_size, remainsize, "MID");
 
   m = (union olsr_message *)msg_buffer;
     
