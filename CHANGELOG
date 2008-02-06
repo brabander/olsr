@@ -2,6 +2,9 @@ This file states changes as of version 0.2.4:
 
 0.5.5 ---------------------------------------------------------------------
 
+BUGFIX from Andreas Jacobs <andjac@kawo1.rwth-aachen.de>:
+- calculate correct sleeptime
+
 BUGFIX from Dario Borriello <dario_bodj@hotmail.com>:
 - do not update LQ if not configured
 
@@ -9,9 +12,11 @@ BUGFIX from Jo-Philipp Wich <freifunk@wwsnet.net:
 - fix olsr_ip_to_string() buffer quirk
 - fix txtinfo format quirks in HNA table
 - name-service plugin - write MID entries to hosts file
+- avoid infinite loop in the message parser
 
 PATCH by John Hay <jhay@meraka.org.za>:
 - compile clean on FreeBSD
+- bugfix: do not account for IP headers when building MID6 messages
 
 PATCHES from Henning Rogge <rogge@fgan.de>:
 - join LQ and non-LQ Hello execution paths
@@ -20,6 +25,7 @@ PATCHES from otti <otti@wirdorange.org>:
 - rttable-default: configures a new policy routing table for the default route
 
 BUGFIXES and PATCHES by Sven-Ola Tuecke <mail2news@commando.de>:
+- Windows Vista: add interface metric to SPF computed metric
 - lqtc-seqno: Optimize check for old seqno numbers in LQTC messages
 - lqnatthresh: maintain an advantage for the current (NAT) inet gw
 - fisheye-startup: Changed to MAX_TTL for the first 32 LQTCs
