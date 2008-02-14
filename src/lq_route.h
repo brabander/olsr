@@ -41,11 +41,6 @@
 #ifndef _LQ_ROUTE_H
 #define _LQ_ROUTE_H
 
-#define INFINITE_ETX ((float)(1 << 30))
-#define ZERO_ETX 0.0
-#define MIN_LINK_QUALITY 0.01
-
 void olsr_calculate_routing_table(void);
-const char *olsr_etx_to_string(float);
 
 #endif

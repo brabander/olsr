@@ -51,7 +51,11 @@ void olsr_calculate_lq_mpr(void)
   struct neighbor_list_entry *walker;
   int i, k;
   struct neighbor_entry *neigh;
+#ifdef USE_FPM
+  fpm best, best_1hop;
+#else
   double best, best_1hop;
+#endif
   olsr_bool mpr_changes = OLSR_FALSE;
 
   for(i = 0; i < HASHSIZE; i++)
@@ -89,7 +93,11 @@ void olsr_calculate_lq_mpr(void)
            neigh2 != &two_hop_neighbortable[i];
            neigh2 = neigh2->next)
         {
+#ifdef USE_FPM
+          best_1hop = itofpm(-1);
+#else
           best_1hop = -1.0;
+#endif
 
           // check whether this 2-hop neighbour is also a neighbour
 
@@ -111,7 +119,11 @@ void olsr_calculate_lq_mpr(void)
 	      if (!lnk)
 		continue;
 
+#ifdef USE_FPM
+              best_1hop = fpmmul(lnk->loss_link_quality, lnk->neigh_link_quality);
+#else
               best_1hop = lnk->loss_link_quality * lnk->neigh_link_quality;
+#endif
 
               // see wether we find a better route via an MPR
 
@@ -145,7 +157,11 @@ void olsr_calculate_lq_mpr(void)
               // yet selected
 
               neigh = NULL;
+#ifdef USE_FPM
+              best = itofpm(-1);
+#else
               best = -1.0;
+#endif
 
               for (walker = neigh2->neighbor_2_nblist.next;
                    walker != &neigh2->neighbor_2_nblist;

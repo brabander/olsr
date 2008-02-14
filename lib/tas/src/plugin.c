@@ -105,19 +105,25 @@ static void __attribute__((constructor)) banner(void)
 
 int iterLinkTabNext(char *buff, int len)
 {
+#ifdef USE_FPM
+  fpm etx;
+#else
   double etx;
+#endif
 
   if (iterLinkTab == NULL)
     return -1;
 
   etx = olsr_calc_link_etx(iterLinkTab);
 
-  snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~lq~%f~nlq~%f~etx~%f~",
+  snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%s~lq~%s~nlq~%s~etx~%s~",
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
-           iterLinkTab->L_link_quality, iterLinkTab->loss_link_quality,
-           iterLinkTab->neigh_link_quality, etx);
+           olsr_etx_to_string(iterLinkTab->L_link_quality),
+           olsr_etx_to_string(iterLinkTab->loss_link_quality),
+           olsr_etx_to_string(iterLinkTab->neigh_link_quality),
+           olsr_etx_to_string(etx));
 
   iterLinkTab = iterLinkTab->next;
 
@@ -281,9 +287,9 @@ int iterTcTabNext(char *buff, int len)
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(iterTcTab, tc_edge) {
 
-    res = snprintf(buff, len, "[~%d~address~%s~etx~%f~]~", i,
+    res = snprintf(buff, len, "[~%d~address~%s~etx~%s~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   olsr_calc_tc_etx(tc_edge));
+                   olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
 
     if (res < len)
       buff += res;

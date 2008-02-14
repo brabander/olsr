@@ -42,14 +42,25 @@
 
 #include "link_set.h"
 
+#ifdef USE_FPM
+fpm
+olsr_hyst_calc_stability(fpm);
+#else
 float
-olsr_hyst_calc_stability(float);
+olsr_hyst_calc_stability
+(float);
+#endif
 
 int
 olsr_process_hysteresis(struct link_entry *);
 
+#ifdef USE_FPM
+fpm
+olsr_hyst_calc_instability(fpm);
+#else
 float
 olsr_hyst_calc_instability(float);
+#endif
 
 void
 olsr_update_hysteresis_hello(struct link_entry *, double);

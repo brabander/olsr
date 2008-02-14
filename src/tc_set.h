@@ -63,9 +63,15 @@ struct tc_edge_entry
   clock_t            T_time; /* expiration timer, timer_node key */
   olsr_u16_t         T_seq; /* sequence number of the advertised neighbor set */
   olsr_u16_t         flags; /* misc flags */
+#ifdef USE_FPM
+  fpm                etx; /* metric used for SPF calculation */
+  fpm                link_quality;
+  fpm                inverse_link_quality;
+#else
   float              etx; /* metric used for SPF calculation */
   float              link_quality;
   float              inverse_link_quality;
+#endif
 };
 
 #define OLSR_TC_EDGE_DOWN (1 << 0) /* this edge is down */
@@ -84,7 +90,11 @@ struct tc_entry
   struct avl_tree    edge_tree; /* subtree for edges */
   struct avl_tree    prefix_tree; /* subtree for prefixes */
   struct link_entry  *next_hop; /* SPF calculated link to the 1st hop neighbor */
+#ifdef USE_FPM
+  fpm                path_etx; /* SPF calculated distance, cand_tree_node key */
+#else
   float              path_etx; /* SPF calculated distance, cand_tree_node key */
+#endif
   olsr_u16_t         msg_seq; /* sequence number of the tc message */
   olsr_u8_t          msg_hops; /* hopcount as per the tc message */
   olsr_u8_t          hops; /* SPF calculated hopcount */
@@ -142,11 +152,22 @@ struct tc_edge_entry *olsr_lookup_tc_edge(struct tc_entry *,
                                           union olsr_ip_addr *);
 struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *,
                                              union olsr_ip_addr *, olsr_u16_t,
-                                             unsigned int, float, float);
+                                             unsigned int,
+#ifdef USE_FPM
+                                             fpm, fpm
+#else
+                                             float, float
+#endif
+                                             );
 void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 void olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
-float olsr_calc_tc_etx(const struct tc_edge_entry *);
+#ifdef USE_FPM
+fpm
+#else
+float
+#endif
+olsr_calc_tc_etx(const struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 
 #endif

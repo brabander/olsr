@@ -104,9 +104,9 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
   tc->cand_tree_node.data = tc;
 
 #ifdef DEBUG
-  OLSR_PRINTF(1, "SPF: insert candidate %s, cost %f\n",
+  OLSR_PRINTF(1, "SPF: insert candidate %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              tc->path_etx);
+              olsr_etx_to_string(tc->path_etx));
 #endif
 
   avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
@@ -126,9 +126,9 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
 #ifndef NODEBUG
   struct ipaddr_str buf;
 #endif
-  OLSR_PRINTF(1, "SPF: delete candidate %s, cost %f\n",
+  OLSR_PRINTF(1, "SPF: delete candidate %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              tc->path_etx);
+              olsr_etx_to_string(tc->path_etx));
 #endif
 
   avl_delete(tree, &tc->cand_tree_node);
@@ -149,10 +149,11 @@ olsr_spf_add_path_list (struct list_node *head, int *path_count,
   tc->path_list_node.data = tc;
 
 #ifdef DEBUG
-  OLSR_PRINTF(1, "SPF: append path %s, cost %f, via %s\n",
+  OLSR_PRINTF(1, "SPF: append path %s, cost %s, via %s\n",
               olsr_ip_to_string(&pathbuf, &tc->addr),
-              tc->path_etx,
-              tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
+              olsr_etx_to_string(tc->path_etx),
+              tc->next_hop ? olsr_ip_to_string(
+                &nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
 #endif
 
   list_add_before(head, &tc->path_list_node);
@@ -173,18 +174,6 @@ olsr_spf_extract_best (struct avl_tree *tree)
 }
 
 
-const char *olsr_etx_to_string(float etx)
-{
-  static char buff[20];
-
-  if (etx == INFINITE_ETX) {
-    return "INF";
-  }
-  snprintf(buff, sizeof(buff), "%.6f", etx);
-  return buff;
-}
-
-
 /*
  * olsr_spf_relax
  *
@@ -196,15 +185,19 @@ static void
 olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
 {
   struct avl_node *edge_node;
+#ifdef USE_FPM
+  fpm new_etx;
+#else
   float new_etx;
+#endif
 
 #ifdef DEBUG
 #ifndef NODEBUG
   struct ipaddr_str buf, nbuf;
 #endif
-  OLSR_PRINTF(1, "SPF: exploring node %s, cost %f\n",
+  OLSR_PRINTF(1, "SPF: exploring node %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              tc->path_etx);
+              olsr_etx_to_string(tc->path_etx));
 #endif
 
   /*
@@ -238,7 +231,12 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
      * total quality of the path through this vertex
      * to the destination of this edge
      */
+#ifdef USE_FPM
+    new_etx = INFINITE_ETX <= tc->path_etx || INFINITE_ETX <= tc_edge->etx
+      ? INFINITE_ETX : fpmadd(tc->path_etx, tc_edge->etx);
+#else
     new_etx = tc->path_etx + tc_edge->etx;
+#endif
 
 #ifdef DEBUG
       OLSR_PRINTF(1, "SPF:   exploring edge %s, cost %s\n",
@@ -274,7 +272,8 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
                   olsr_ip_to_string(&buf, &new_tc->addr),
                   olsr_etx_to_string(new_tc->path_etx),
                   olsr_etx_to_string(new_etx),
-                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
+                  tc->next_hop ? olsr_ip_to_string(
+                    &nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
                   new_tc->hops);
 #endif
 

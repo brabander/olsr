@@ -154,7 +154,11 @@ static void
 ipc_print_neigh_link(const struct neighbor_entry *neighbor)
 {
   struct ipaddr_str mainaddrstrbuf, strbuf;
+#ifdef USE_FPM
+  fpm etx = itofpm(0);
+#else
   double etx = 0.0;
+#endif
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
   struct link_entry* link;
@@ -169,10 +173,10 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
     style = "solid";
   }
     
-  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%.2f\", style=%s];\n",
+  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               etx,
+               olsr_etx_to_string(etx),
                style);
   
   if (neighbor->is_mpr) {
@@ -339,10 +343,10 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
 {
   struct ipaddr_str strbuf1, strbuf2;
 
-  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%.2f\"];\n",
+  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               olsr_calc_tc_etx(dst_entry));
+               olsr_etx_to_string(olsr_calc_tc_etx(dst_entry)));
 }
 
 

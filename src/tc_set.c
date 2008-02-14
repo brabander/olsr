@@ -287,12 +287,12 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
   struct tc_entry *tc = tc_edge->tc;
 
   snprintf(buf, sizeof(buf),
-           "%s > %s, lq %.3f, inv-lq %.3f, etx %.3f",
+           "%s > %s, lq %s, inv-lq %s, etx %s",
            olsr_ip_to_string(&addrbuf, &tc->addr),
            olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           tc_edge->link_quality,
-           tc_edge->inverse_link_quality,
-           tc_edge->etx);
+           olsr_etx_to_string(tc_edge->link_quality),
+           olsr_etx_to_string(tc_edge->inverse_link_quality),
+           olsr_etx_to_string(tc_edge->etx));
 
   return buf;
 }
@@ -326,11 +326,15 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
     return;
   }
 
-  if (tc_edge->link_quality < MIN_LINK_QUALITY &&
+  if (tc_edge->link_quality < MIN_LINK_QUALITY ||
       tc_edge->inverse_link_quality < MIN_LINK_QUALITY) {
     tc_edge->etx = INFINITE_ETX;
   } else {
+#ifdef USE_FPM
+    tc_edge->etx = fpmdiv(itofpm(1), fpmmul(tc_edge->link_quality, tc_edge->inverse_link_quality));
+#else
     tc_edge->etx = 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
+#endif
   }
 }
 
@@ -343,7 +347,12 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 struct tc_edge_entry *
 olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
                        olsr_u16_t ansn, unsigned int vtime,
-                       float link_quality, float neigh_link_quality)
+#ifdef USE_FPM
+                       fpm link_quality, fpm neigh_link_quality
+#else
+                       float link_quality, float neigh_link_quality
+#endif
+                       )
 {
 #if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
@@ -373,8 +382,13 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
      * Set the link quality to 1.0 to mimikry a hopcount alike
      * behaviour for nodes not supporting the LQ extensions.
      */
+#ifdef USE_FPM
+    tc_edge->link_quality = itofpm(1);
+    tc_edge->inverse_link_quality = itofpm(1);
+#else
     tc_edge->link_quality = 1.0;
     tc_edge->inverse_link_quality = 1.0;
+#endif
   }
 
   /*
@@ -386,10 +400,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    * Connect backpointer.
    */
   tc_edge->tc = tc;
-
-#ifdef DEBUG
-  OLSR_PRINTF(1, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
-#endif
 
   /*
    * Check if the neighboring router and the inverse edge is in the lsdb.
@@ -422,6 +432,10 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    * Update the etx.
    */
   olsr_calc_tc_edge_entry_etx(tc_edge);
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
+#endif
 
   return tc_edge;
 }
@@ -514,23 +528,43 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc, olsr_u16_t ansn)
  * Determine if a etx change was more than 10%
  * Need to know this for triggering a SPF calculation.
  */
+#ifdef USE_FPM
 static olsr_bool
-olsr_etx_significant_change(float etx1, float etx2)
+olsr_etx_significant_change(fpm etx1, fpm etx2)
 {
-  float rel_lq;
+  fpm rel_lq;
 
-  if (etx1 == 0.0 || etx2 == 0.0) {
+  if (etx1 == ZERO_ETX || etx2 == ZERO_ETX) {
     return OLSR_TRUE;
   }
 
-  rel_lq = etx1 / etx2;
+  rel_lq = fpmdiv(etx1, etx2);
 
-  if (rel_lq > 1.1 || rel_lq < 0.9) {
+  if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF) {
     return OLSR_TRUE;
   }
 
   return OLSR_FALSE;
 }
+#else
+static olsr_bool
+olsr_etx_significant_change(float etx1, float etx2)
+{
+  float rel_lq;
+
+  if (etx1 == ZERO_ETX || etx2 == ZERO_ETX) {
+    return OLSR_TRUE;
+  }
+
+  rel_lq = etx1 / etx2;
+
+  if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF) {
+    return OLSR_TRUE;
+  }
+
+  return OLSR_FALSE;
+}
+#endif
 
 /**
  * Update an edge registered on an entry.
@@ -546,7 +580,11 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
                     olsr_u8_t type, const unsigned char **curr)
 {
   struct tc_edge_entry *tc_edge;
+#ifdef USE_FPM
+  fpm link_quality, neigh_link_quality;
+#else
   double link_quality, neigh_link_quality;
+#endif
   union olsr_ip_addr neighbor;
   int edge_change;
 
@@ -563,8 +601,13 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
     pkt_get_lq(curr, &neigh_link_quality);
     pkt_ignore_u16(curr);
   } else {
+#ifdef USE_FPM
+    link_quality = itofpm(1);
+    neigh_link_quality = itofpm(1);
+#else
     link_quality = 1.0;
     neigh_link_quality = 1.0;
+#endif
   }
 
   /* First check if we know this edge */
@@ -718,23 +761,33 @@ olsr_print_tc_table(void)
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
-      OLSR_PRINTF(1, "%-*s %-*s  %5.3f  %5.3f  %.2f\n",
+      OLSR_PRINTF(1, "%-*s %-*s  %s  %s  %s\n",
                   ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                   ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
-                  tc_edge->link_quality,
-                  tc_edge->inverse_link_quality,
-                  olsr_calc_tc_etx(tc_edge));
+                  olsr_etx_to_string(tc_edge->link_quality),
+                  olsr_etx_to_string(tc_edge->inverse_link_quality),
+                  olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
 }
 
-float olsr_calc_tc_etx(const struct tc_edge_entry *tc_edge)
+#ifdef USE_FPM
+fpm
+#else
+float
+#endif
+olsr_calc_tc_etx(const struct tc_edge_entry *tc_edge)
 {
   return tc_edge->link_quality < MIN_LINK_QUALITY ||
          tc_edge->inverse_link_quality < MIN_LINK_QUALITY
+#ifdef USE_FPM
+             ? itofpm(0)
+             : fpmdiv(itofpm(1), fpmmul(tc_edge->link_quality, tc_edge->inverse_link_quality));
+#else
              ? 0.0
              : 1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality);
+#endif
 }
 
 /*

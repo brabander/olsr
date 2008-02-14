@@ -150,6 +150,9 @@ CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 # we have plugins with the old interface
 #CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
 
+# use the new fixed point math stuff
+CPPFLAGS +=     -DUSE_FPM
+
 # search sources and headers in current dir and in src/
 SRCS +=		$(wildcard src/*.c *.c)
 HDRS +=		$(wildcard src/*.h *.h)

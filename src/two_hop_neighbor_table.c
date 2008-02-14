@@ -262,9 +262,9 @@ olsr_print_two_hop_neighbor_table(void)
         } else {
           OLSR_PRINTF(1, "                 ");
         }
-        OLSR_PRINTF(1, "%-15s  %5.3f\n",
+        OLSR_PRINTF(1, "%-15s  %s\n",
                     olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                    entry->path_link_quality);
+                    olsr_etx_to_string(entry->path_link_quality));
       }
     }
   }

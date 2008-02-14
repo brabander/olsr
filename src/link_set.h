@@ -66,7 +66,11 @@ struct link_entry
   /*
    *Hysteresis
    */
+#ifdef USE_FPM
+  fpm L_link_quality;
+#else
   float L_link_quality;
+#endif
   int L_link_pending;
   clock_t L_LOST_LINK_time;
   clock_t hello_timeout; /* When we should receive a new HELLO */
@@ -87,18 +91,31 @@ struct link_entry
   unsigned int lost_packets;
   unsigned int total_packets;
 
+#ifdef USE_FPM
+  fpm loss_link_quality;
+  fpm loss_link_quality2;
+  fpm loss_link_multiplier;
+#else
   double loss_link_quality;
   double loss_link_quality2;
   double loss_link_multiplier;
+#endif
 
   unsigned int loss_index;
 
   unsigned char loss_bitmap[16];
 
+#ifdef USE_FPM
+  fpm neigh_link_quality, neigh_link_quality2;
+
+  fpm saved_loss_link_quality;
+  fpm saved_neigh_link_quality;
+#else
   double neigh_link_quality, neigh_link_quality2;
 
   double saved_loss_link_quality;
   double saved_neigh_link_quality;
+#endif
 
   struct link_entry *next;
 };
@@ -152,7 +169,12 @@ olsr_print_link_set(void);
 void
 olsr_update_dijkstra_link_qualities(void);
 
-float olsr_calc_link_etx(const struct link_entry *);
+#ifdef USE_FPM
+fpm
+#else
+float
+#endif
+olsr_calc_link_etx(const struct link_entry *);
 
 #endif
 

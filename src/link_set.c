@@ -241,7 +241,11 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   const union olsr_ip_addr *main_addr;
   struct link_entry *walker, *good_link, *backup_link;
   int curr_metric = MAX_IF_METRIC;
+#ifdef USE_FPM
+  fpm curr_lq = ftofpm(-1.0);
+#else
   float curr_lq = -1.0;
+#endif
   
   // main address lookup
 
@@ -305,12 +309,20 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
 
     else
     {
+#ifdef USE_FPM
+      fpm tmp_lq;
+#else
       float tmp_lq;
+#endif
 
       // calculate the bi-directional link quality - we select the link
       // with the best link quality
 
+#ifdef USE_FPM
+      tmp_lq = fpmmul(walker->loss_link_quality, walker->neigh_link_quality);
+#else
       tmp_lq = walker->loss_link_quality * walker->neigh_link_quality;
+#endif
 
       // is this link better than anything we had before?
 	      
@@ -344,7 +356,11 @@ static void set_loss_link_multiplier(struct link_entry *entry)
   struct interface *inter;
   struct olsr_if *cfg_inter;
   struct olsr_lq_mult *mult;
+#ifdef USE_FPM
+  fpm val = itofpm(-1);
+#else
   float val = -1.0;
+#endif
   union olsr_ip_addr null_addr;
 
   // find the interface for the link
@@ -369,15 +385,28 @@ static void set_loss_link_multiplier(struct link_entry *entry)
     // use the default multiplier only if there isn't any entry that
     // has a matching IP address
 
+#ifdef USE_FPM
+    if ((ipequal(&mult->addr, &null_addr) && val < itofpm(0)) ||
+#else
     if ((ipequal(&mult->addr, &null_addr) && val < 0.0) ||
+#endif
         ipequal(&mult->addr, &entry->neighbor_iface_addr))
+#ifdef USE_FPM
+      val = ftofpm(mult->val);
+#else
       val = mult->val;
+#endif
   }
 
   // if we have not found an entry, then use the default multiplier
 
+#ifdef USE_FPM
+  if (val < itofpm(0))
+    val = itofpm(1);
+#else
   if (val < 0)
     val = 1.0;
+#endif
 
   // store the multiplier
 
@@ -532,7 +561,11 @@ add_link_entry(const union olsr_ip_addr *local,
       new_link->olsr_seqno_valid = OLSR_FALSE;
     }
 
+#ifdef USE_FPM
+  new_link->L_link_quality = itofpm(0);
+#else
   new_link->L_link_quality = 0.0;
+#endif
 
   if (olsr_cnf->lq_level > 0)
     {
@@ -554,6 +587,16 @@ add_link_entry(const union olsr_ip_addr *local,
       set_loss_link_multiplier(new_link);
     }
 
+#ifdef USE_FPM
+  new_link->loss_link_quality = itofpm(0);
+  new_link->neigh_link_quality = itofpm(0);
+
+  new_link->loss_link_quality2 = itofpm(0);
+  new_link->neigh_link_quality2 = itofpm(0);
+
+  new_link->saved_loss_link_quality = itofpm(0);
+  new_link->saved_neigh_link_quality = itofpm(0);
+#else
   new_link->loss_link_quality = 0.0;
   new_link->neigh_link_quality = 0.0;
 
@@ -562,6 +605,7 @@ add_link_entry(const union olsr_ip_addr *local,
 
   new_link->saved_loss_link_quality = 0.0;
   new_link->saved_neigh_link_quality = 0.0;
+#endif
 
   /* Add to queue */
   new_link->next = link_set;
@@ -929,7 +973,9 @@ olsr_time_out_hysteresis(void)
           struct ipaddr_str buf;
 #endif
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
-	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n", olsr_ip_to_string(&buf, &tmp_link_set->neighbor_iface_addr), tmp_link_set->L_link_quality);
+	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %s\n",
+                      olsr_ip_to_string(&buf, &tmp_link_set->neighbor_iface_addr),
+                      olsr_etx_to_string(tmp_link_set->L_link_quality));
 	  /* Update hello_timeout - NO SLACK THIS TIME */
 	  tmp_link_set->hello_timeout = GET_TIMESTAMP(tmp_link_set->last_htime*1000);
 	  /* Recalculate status */
@@ -969,21 +1015,30 @@ void olsr_print_link_set(void)
   for (walker = link_set; walker != NULL; walker = walker->next)
   {
     struct ipaddr_str buf;
+#ifdef USE_FPM
+    fpm etx;
+
+    if (walker->loss_link_quality < MIN_LINK_QUALITY || walker->neigh_link_quality < MIN_LINK_QUALITY)
+      etx = itofpm(0);
+    else
+      etx = fpmdiv(itofpm(1), fpmmul(walker->loss_link_quality, walker->neigh_link_quality));
+#else
     float etx;
 
     if (walker->loss_link_quality < MIN_LINK_QUALITY || walker->neigh_link_quality < MIN_LINK_QUALITY)
       etx = 0.0;
     else
       etx = 1.0 / (walker->loss_link_quality * walker->neigh_link_quality);
+#endif
 
-    OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %-3d    %-3d    %5.3f  %.2f\n",
+    OLSR_PRINTF(1, "%-*s  %s  %s  %-3d    %-3d    %s  %s\n",
                 addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                walker->L_link_quality,
-                walker->loss_link_quality,
+                olsr_etx_to_string(walker->L_link_quality),
+                olsr_etx_to_string(walker->loss_link_quality),
 		walker->lost_packets,
                 walker->total_packets,
-		walker->neigh_link_quality,
-                etx);
+		olsr_etx_to_string(walker->neigh_link_quality),
+                olsr_etx_to_string(etx));
   }
 #endif
 }
@@ -992,7 +1047,11 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 {
   unsigned char mask = 1 << (entry->loss_index & 7);
   const int idx = entry->loss_index >> 3;
+#ifdef USE_FPM
+  fpm rel_lq, saved_lq;
+#else
   double rel_lq, saved_lq;
+#endif
 
   if (lost == 0)
     {
@@ -1040,28 +1099,51 @@ static void update_packet_loss_worker(struct link_entry *entry, int lost)
 
   saved_lq = entry->saved_loss_link_quality;
 
+#ifdef USE_FPM
+  if (saved_lq == itofpm(0))
+    saved_lq = itofpm(-1);
+#else
   if (saved_lq == 0.0)
     saved_lq = -1.0;
+#endif
 
   // calculate the new link quality
   //
   // start slowly: receive the first packet => link quality = 1 / n
   //               (n = window size)
+#ifdef USE_FPM
+  entry->loss_link_quality = fpmdiv(
+    itofpm(entry->total_packets - entry->lost_packets),
+    olsr_cnf->lq_wsize < (2 * 4) ? itofpm(olsr_cnf->lq_wsize):
+    fpmidiv(fpmimul(4,fpmadd(fpmmuli(fpmsub(fpmidiv(itofpm(olsr_cnf->lq_wsize),4),
+                                            itofpm(1)),(int)entry->total_packets),
+                             itofpm(olsr_cnf->lq_wsize))),
+            (olsr_32_t)olsr_cnf->lq_wsize));
+#else
   entry->loss_link_quality =
     (float)(entry->total_packets - entry->lost_packets) /
     (float)(olsr_cnf->lq_wsize < (2 * 4) ? olsr_cnf->lq_wsize: 
     4 * (((float)olsr_cnf->lq_wsize / 4 - 1) * entry->total_packets + olsr_cnf->lq_wsize) / olsr_cnf->lq_wsize);
+#endif
     
   // multiply the calculated link quality with the user-specified multiplier
 
+#ifdef USE_FPM
+  entry->loss_link_quality = fpmmul(entry->loss_link_quality, entry->loss_link_multiplier);
+#else
   entry->loss_link_quality *= entry->loss_link_multiplier;
+#endif
 
   // if the link quality has changed by more than 10 percent,
   // print the new link quality table
 
+#ifdef USE_FPM
+  rel_lq = fpmdiv(entry->loss_link_quality, saved_lq);
+#else
   rel_lq = entry->loss_link_quality / saved_lq;
+#endif
 
-  if (rel_lq > 1.1 || rel_lq < 0.9)
+  if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF)
     {
       entry->saved_loss_link_quality = entry->loss_link_quality;
 
@@ -1191,10 +1273,20 @@ void olsr_update_dijkstra_link_qualities(void)
   }
 }
 
-float olsr_calc_link_etx(const struct link_entry *link)
+#ifdef USE_FPM
+fpm
+#else
+float
+#endif
+olsr_calc_link_etx(const struct link_entry *link)
 {
   return link->loss_link_quality < MIN_LINK_QUALITY ||
          link->neigh_link_quality < MIN_LINK_QUALITY
+#ifdef USE_FPM
+             ? itofpm(0)
+             : fpmdiv(itofpm(1), fpmmul(link->loss_link_quality, link->neigh_link_quality));
+#else
              ? 0.0
              : 1.0 / (link->loss_link_quality * link->neigh_link_quality);
+#endif
 }

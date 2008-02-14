@@ -137,7 +137,11 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                       if (walker->neighbor == neighbor)
                         {
+#ifdef USE_FPM
+                          walker->path_link_quality = itofpm(0);
+#else
                           walker->path_link_quality = 0.0;
+#endif
                         }
                     }
                 }
@@ -236,7 +240,11 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                   if (walker->neighbor == neighbor)
                     {
+#ifdef USE_FPM
+                      fpm new_second_hop_link_quality, new_path_link_quality;
+#else
                       double new_second_hop_link_quality, new_path_link_quality;
+#endif
 
                       // path link quality = link quality between us
                       // and our one-hop neighbor x link quality between
@@ -253,16 +261,28 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                       // the link quality between the 1-hop neighbour and the
                       // 2-hop neighbour
 
+#ifdef USE_FPM
+                      new_second_hop_link_quality = 
+                        fpmmul(message_neighbors->link_quality,
+                               message_neighbors->neigh_link_quality);
+#else
                       new_second_hop_link_quality = 
                         message_neighbors->link_quality *
                         message_neighbors->neigh_link_quality;
+#endif
 
                       // the total quality for the route
                       // "us --- 1-hop --- 2-hop"
 
+#ifdef USE_FPM
+                      new_path_link_quality =
+                        fpmmul(new_second_hop_link_quality,
+                        fpmmul(lnk->loss_link_quality, lnk->neigh_link_quality));
+#else
                       new_path_link_quality =
                         new_second_hop_link_quality *
                         lnk->loss_link_quality * lnk->neigh_link_quality;
+#endif
 
                       // Only copy the link quality if it is better than what we have
                       // for this 2-hop neighbor
@@ -312,21 +332,34 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                   if (walker->neighbor == neighbor)
                     {
+#ifdef USE_FPM
+                      fpm saved_lq, rel_lq;
+#else
                       double saved_lq, rel_lq;
+#endif
 
                       // saved previous total link quality
 
                       saved_lq = walker->saved_path_link_quality;
 
+#ifdef USE_FPM
+                      if (saved_lq == itofpm(0))
+                        saved_lq = itofpm(-1);
+#else
                       if (saved_lq == 0.0)
                         saved_lq = -1.0;
+#endif
 
                       // if the link cost has changed by more than 10
                       // percent, signal
 
+#ifdef USE_FPM
+                      rel_lq = fpmdiv(walker->path_link_quality, saved_lq);
+#else
                       rel_lq = walker->path_link_quality / saved_lq;
+#endif
 
-                      if (rel_lq > 1.1 || rel_lq < 0.9)
+                      if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF)
                         {
                           walker->saved_path_link_quality =
                             walker->path_link_quality;
@@ -362,9 +395,15 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
 
   list_of_1_neighbors->neighbor = neighbor;
 
+#ifdef USE_FPM
+  list_of_1_neighbors->path_link_quality = itofpm(0);
+  list_of_1_neighbors->saved_path_link_quality = itofpm(0);
+  list_of_1_neighbors->second_hop_link_quality = itofpm(0);
+#else
   list_of_1_neighbors->path_link_quality = 0.0;
   list_of_1_neighbors->saved_path_link_quality = 0.0;
   list_of_1_neighbors->second_hop_link_quality = 0.0;
+#endif
 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
@@ -511,8 +550,13 @@ olsr_hello_tap(struct hello_message *message,
 
   if (olsr_cnf->lq_level > 0)
     {
+#ifdef USE_FPM
+      fpm saved_lq;
+      fpm rel_lq;
+#else
       double saved_lq;
       double rel_lq;
+#endif
       struct hello_neighbor *walker;
       // just in case our neighbor has changed its HELLO interval
       olsr_update_packet_loss_hello_int(lnk, message->htime);
@@ -527,8 +571,13 @@ olsr_hello_tap(struct hello_message *message,
 
       saved_lq = lnk->saved_neigh_link_quality;
 
+#ifdef USE_FPM
+      if (saved_lq == itofpm(0))
+        saved_lq = itofpm(-1);
+#else
       if (saved_lq == 0.0)
         saved_lq = -1.0;
+#endif
 
       // memorize our neighbour's idea of the link quality, so that we
       // know the link quality in both directions
@@ -537,14 +586,22 @@ olsr_hello_tap(struct hello_message *message,
         lnk->neigh_link_quality = walker->link_quality;
 
       else
+#ifdef USE_FPM
+        lnk->neigh_link_quality = itofpm(0);
+#else
         lnk->neigh_link_quality = 0.0;
+#endif
 
       // if the link quality has changed by more than 10 percent,
       // print the new link quality table
 
+#ifdef USE_FPM
+      rel_lq = fpmdiv(lnk->neigh_link_quality, saved_lq);
+#else
       rel_lq = lnk->neigh_link_quality / saved_lq;
+#endif
 
-      if (rel_lq > 1.1 || rel_lq < 0.9)
+      if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF)
         {
           lnk->saved_neigh_link_quality = lnk->neigh_link_quality;
 

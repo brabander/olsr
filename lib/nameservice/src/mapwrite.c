@@ -167,13 +167,12 @@ void mapwrite_work(FILE* fmap)
       /*
        * To speed up processing, Links with both positions are named PLink()
        */
-      if (0 > fprintf(fmap, "PLink('%s','%s',%f,%f,%f,%s,%s);\n", 
+      if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            tc_edge->link_quality,
-            tc_edge->inverse_link_quality,
-            (tc_edge->link_quality * tc_edge->inverse_link_quality) ?
-              1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality) : 0.0,
+            olsr_etx_to_string(tc_edge->link_quality),
+            olsr_etx_to_string(tc_edge->inverse_link_quality),
+            olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)),
             lla, llb))
       {
         return;
@@ -184,13 +183,12 @@ void mapwrite_work(FILE* fmap)
       /*
        * If one link end pos is unkown, only send Link()
        */
-      if (0 > fprintf(fmap, "Link('%s','%s',%f,%f,%f);\n", 
+      if (0 > fprintf(fmap, "Link('%s','%s',%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            tc_edge->link_quality,
-            tc_edge->inverse_link_quality,
-            (tc_edge->link_quality * tc_edge->inverse_link_quality) ?
-              1.0 / (tc_edge->link_quality * tc_edge->inverse_link_quality) : 0.0))
+            olsr_etx_to_string(tc_edge->link_quality),
+            olsr_etx_to_string(tc_edge->inverse_link_quality),
+            olsr_etx_to_string(olsr_calc_tc_etx(tc_edge))))
       {
         return;
       }

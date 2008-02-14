@@ -232,8 +232,13 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
           }
           else {
             OLSR_PRINTF(0, "Error: link_qualtiy undefined");
+#ifdef USE_FPM
+            neigh->link_quality = itofpm(0);
+            neigh->neigh_link_quality = itofpm(0);
+#else
             neigh->link_quality = 0.0;
             neigh->neigh_link_quality = 0.0;
+#endif
           }          
 
           // queue the neighbour entry
@@ -445,8 +450,13 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
               // add the corresponding link quality
 
+#ifdef USE_FPM
+              buff[size++] = fpmtoi(fpmmuli(neigh->link_quality, 255));
+              buff[size++] = fpmtoi(fpmmuli(neigh->neigh_link_quality, 255));
+#else
               buff[size++] = (unsigned char)(neigh->link_quality * 255);
               buff[size++] = (unsigned char)(neigh->neigh_link_quality * 255);
+#endif
 
               // pad
 
@@ -559,8 +569,13 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
       size += olsr_cnf->ipsize;
 
       // add the corresponding link quality
+#ifdef USE_FPM
+      buff[size++] = fpmtoi(fpmmuli(neigh->link_quality, 255));
+      buff[size++] = fpmtoi(fpmmuli(neigh->neigh_link_quality, 255));
+#else
       buff[size++] = (unsigned char)(neigh->link_quality * 255);
       buff[size++] = (unsigned char)(neigh->neigh_link_quality * 255);
+#endif
 
       // pad
       buff[size++] = 0;

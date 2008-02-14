@@ -94,8 +94,13 @@ struct lq_hello_neighbor
 {
   olsr_u8_t                link_type;
   olsr_u8_t                neigh_type;
+#ifdef USE_FPM
+  fpm                      link_quality;
+  fpm                      neigh_link_quality;
+#else
   double                   link_quality;
   double                   neigh_link_quality;
+#endif
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
 };
@@ -150,7 +155,11 @@ static INLINE void       pkt_get_s32(const olsr_u8_t **p, olsr_32_t *var)       
 static INLINE void    pkt_get_double(const olsr_u8_t **p, double *var)             { *var = me_to_double(**p);                       *p += sizeof(olsr_u8_t); }
 static INLINE void pkt_get_ipaddress(const olsr_u8_t **p, union olsr_ip_addr *var) { memcpy(var, *p, olsr_cnf->ipsize);              *p += olsr_cnf->ipsize; }
 static INLINE void pkt_get_prefixlen(const olsr_u8_t **p, olsr_u8_t *var)          { *var = netmask_to_prefix(*p, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
+#ifdef USE_FPM
+static INLINE void        pkt_get_lq(const olsr_u8_t **p, fpm *var)                { *var = fpmidiv(itofpm(**p), 255);               *p += sizeof(olsr_u8_t); }
+#else
 static INLINE void        pkt_get_lq(const olsr_u8_t **p, double *var)             { *var = (const double)**p / 255.0;               *p += sizeof(olsr_u8_t); }
+#endif
 
 static INLINE void        pkt_ignore_u8(const olsr_u8_t **p) { *p += sizeof(olsr_u8_t); }
 static INLINE void       pkt_ignore_u16(const olsr_u8_t **p) { *p += sizeof(olsr_u16_t); }

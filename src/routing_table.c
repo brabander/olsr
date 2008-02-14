@@ -426,10 +426,17 @@ olsr_get_nh(const struct rt_entry *rt)
 static olsr_bool
 olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struct rt_path *inetgw)
 {
+#ifdef USE_FPM
+    fpm etx1 = rtp1->rtp_metric.etx;
+    fpm etx2 = rtp2->rtp_metric.etx;
+    if (inetgw == rtp1) etx1 = fpmmul(etx1, ftofpm(olsr_cnf->lq_nat_thresh));
+    if (inetgw == rtp2) etx2 = fpmmul(etx2, ftofpm(olsr_cnf->lq_nat_thresh));
+#else
     float etx1 = rtp1->rtp_metric.etx;
     float etx2 = rtp2->rtp_metric.etx;
     if (inetgw == rtp1) etx1 *= olsr_cnf->lq_nat_thresh;
     if (inetgw == rtp2) etx2 *= olsr_cnf->lq_nat_thresh;
+#endif
 
     /* etx comes first */
     if (etx1 < etx2) {
@@ -647,12 +654,12 @@ olsr_rtp_to_string(const struct rt_path *rtp)
 
   snprintf(buff, sizeof(buff),
            "%s/%u from %s via %s, "
-           "etx %.3f, metric %u, v %u",
+           "etx %s, metric %u, v %u",
            olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
            olsr_ip_to_string(&origstr, &rtp->rtp_originator),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-           rtp->rtp_metric.etx,
+           olsr_etx_to_string(rtp->rtp_metric.etx),
            rtp->rtp_metric.hops,
            rtp->rtp_version);
 
@@ -691,9 +698,9 @@ olsr_print_routing_table(const struct avl_tree *tree)
          rtp_tree_node != NULL;
          rtp_tree_node = avl_walk_next_c(rtp_tree_node)) {
       const struct rt_path * const rtp = rtp_tree_node->data;
-      printf("\tfrom %s, etx %.3f, metric %u, via %s, %s, v %u\n",
+      printf("\tfrom %s, etx %s, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),
-             rtp->rtp_metric.etx,
+             olsr_etx_to_string(rtp->rtp_metric.etx),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),

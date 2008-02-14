@@ -48,23 +48,45 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 
+#ifdef USE_FPM
+#define hscaling ftofpm(olsr_cnf->hysteresis_param.scaling)
+#define hhigh    ftofpm(olsr_cnf->hysteresis_param.thr_high)
+#define hlow     ftofpm(olsr_cnf->hysteresis_param.thr_low)
+#else
 #define hscaling olsr_cnf->hysteresis_param.scaling
 #define hhigh    olsr_cnf->hysteresis_param.thr_high
 #define hlow     olsr_cnf->hysteresis_param.thr_low
+#endif
 
+#ifdef USE_FPM
+fpm
+olsr_hyst_calc_stability(fpm old_quality)
+{
+  return fpmadd(fpmmul(fpmsub(itofpm(1), hscaling), old_quality), hscaling);
+}
+#else
 float
 olsr_hyst_calc_stability(float old_quality)
 {
   return (((1 - hscaling) * old_quality) + hscaling);
 }
+#endif
 
 
 
+#ifdef USE_FPM
+fpm
+olsr_hyst_calc_instability(fpm old_quality)
+{
+  return fpmmul(fpmsub(itofpm(1), hscaling), old_quality);
+}
+#else
 float
 olsr_hyst_calc_instability(float old_quality)
 {
   return ((1 - hscaling) * old_quality);
 }
+#endif
 
 
 
@@ -182,7 +204,7 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, 
 #endif
       lnk->L_link_quality = olsr_hyst_calc_stability(lnk->L_link_quality);
 #ifdef DEBUG
-      OLSR_PRINTF(3, "HYST[%s]: %0.3f\n", olsr_ip_to_string(&buf, remote), lnk->L_link_quality);
+      OLSR_PRINTF(3, "HYST[%s]: %s\n", olsr_ip_to_string(&buf, remote), olsr_etx_to_string(lnk->L_link_quality));
 #endif
 
       /* 
@@ -198,10 +220,14 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, 
 	    {
 	      lnk->L_link_quality = olsr_hyst_calc_instability(lnk->L_link_quality);
 #ifdef DEBUG
-	      OLSR_PRINTF(5, "HYST[%s] PACKET LOSS! %0.3f\n",
-			  olsr_ip_to_string(&buf, remote), lnk->L_link_quality);
+	      OLSR_PRINTF(5, "HYST[%s] PACKET LOSS! %s\n",
+			  olsr_ip_to_string(&buf, remote), olsr_etx_to_string(lnk->L_link_quality));
 #endif
+#ifdef USE_FPM
+	      if(lnk->L_link_quality < ftofpm(olsr_cnf->hysteresis_param.thr_low))
+#else
 	      if(lnk->L_link_quality < olsr_cnf->hysteresis_param.thr_low)
+#endif
 		break;
 
 	      lnk->olsr_seqno++;

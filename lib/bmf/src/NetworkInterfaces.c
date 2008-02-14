@@ -402,10 +402,17 @@ void RestoreSpoofFilter(void)
  * ------------------------------------------------------------------------- */
 static float CalcEtx(float loss, float neigh_loss) 
 {
+#ifdef USE_FPM
+  if (loss < fpmtof(MIN_LINK_QUALITY) || neigh_loss < fpmtof(MIN_LINK_QUALITY))
+  {
+    return fpmtof(INFINITE_ETX);
+  }
+#else
   if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
   {
     return INFINITE_ETX;
   }
+#endif
   else
   {
     return 1.0 / (loss * neigh_loss);
@@ -742,8 +749,13 @@ void FindNeighbors(
 #else /* USING_THALES_LINK_COST_ROUTING */
         
     struct link_entry* walker;
+#ifdef USE_FPM
+    float previousLinkEtx = 2 * fpmtof(INFINITE_ETX);
+    float bestEtx = 2 * fpmtof(INFINITE_ETX);
+#else
     float previousLinkEtx = 2 * INFINITE_ETX;
     float bestEtx = 2 * INFINITE_ETX;
+#endif
 
     if (forwardedBy != NULL)
     {
@@ -753,8 +765,13 @@ void FindNeighbors(
       {
         previousLinkEtx =
           CalcEtx(
+#ifdef USE_FPM
+            fpmtof(bestLinkFromForwarder->loss_link_quality),
+            fpmtof(bestLinkFromForwarder->neigh_link_quality));
+#else
             bestLinkFromForwarder->loss_link_quality,
             bestLinkFromForwarder->neigh_link_quality);
+#endif
       }
     }
 
@@ -825,10 +842,19 @@ void FindNeighbors(
 
       /* Calculate the link quality (ETX) of the link to the found neighbor */
       currEtx = CalcEtx(
+#ifdef USE_FPM
+        fpmtof(walker->loss_link_quality),
+        fpmtof(walker->neigh_link_quality));
+#else
         walker->loss_link_quality,
         walker->neigh_link_quality);
+#endif
  
+#ifdef USE_FPM
+      if (currEtx >= fpmtof(INFINITE_ETX))
+#else
       if (currEtx >= INFINITE_ETX)
+#endif
       {
         OLSR_PRINTF(
           9,
@@ -879,8 +905,13 @@ void FindNeighbors(
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
             CalcEtx(
+#ifdef USE_FPM
+              fpmtof(bestLinkToNeighbor->loss_link_quality),
+              fpmtof(bestLinkToNeighbor->neigh_link_quality)));
+#else
               bestLinkToNeighbor->loss_link_quality,
               bestLinkToNeighbor->neigh_link_quality));
+#endif
         }
         
         continue; /* for */
@@ -918,8 +949,13 @@ void FindNeighbors(
           if (tc_edge != NULL)
           {
             float tcEtx = CalcEtx(
+#ifdef USE_FPM
+              fpmtof(tc_edge->link_quality),
+              fpmtof(tc_edge->inverse_link_quality));
+#else
               tc_edge->link_quality,
               tc_edge->inverse_link_quality);
+#endif
 
             if (previousLinkEtx + currEtx > tcEtx)
             {
