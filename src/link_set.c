@@ -242,7 +242,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   struct link_entry *walker, *good_link, *backup_link;
   int curr_metric = MAX_IF_METRIC;
 #ifdef USE_FPM
-  fpm curr_lq = ftofpm(-1.0);
+  fpm curr_lq = itofpm(-1);
 #else
   float curr_lq = -1.0;
 #endif

@@ -166,8 +166,8 @@ float etx
   }
   idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
 #ifdef USE_FPM
-  snprintf(ret[idx], sizeof(ret[0]), "%lld.%lld", (long long)((sfpm)etx >> FPM_BIT),
-           (long long)(100 * (ufpm) ((sfpm)(etx) & FPM_MSK) >> FPM_BIT));
+  snprintf(ret[idx], sizeof(ret[0]), "%ld.%ld", (sfpm)etx >> FPM_BIT,
+           100 * (ufpm)((sfpm)(etx) & FPM_MSK) >> FPM_BIT);
 #else
   snprintf(ret[idx], sizeof(ret[0]), "%.3f", etx);
 #endif
