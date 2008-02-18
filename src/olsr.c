@@ -555,25 +555,32 @@ olsr_exit(const char *msg, int val)
 
 
 /**
- *Wrapper for malloc(3) that does error-checking
+ * Wrapper for malloc(3) that does error-checking
  *
- *@param size the number of bytes to allocalte
- *@param caller a string identifying the caller for
- *use in error messaging
+ * @param size the number of bytes to allocalte
+ * @param caller a string identifying the caller for
+ * use in error messaging
  *
- *@return a void pointer to the memory allocated
+ * @return a void pointer to the memory allocated
  */
 void *
 olsr_malloc(size_t size, const char *id)
 {
-  void *ptr = malloc(size);
-  if(ptr == 0) 
-    {
+  void *ptr;
+
+  /*
+   * Not all the callers do a proper cleaning of memory.
+   * Clean it on behalf of those.
+   */
+  ptr = calloc(1, size);
+
+  if (!ptr) {
       const char * const err_msg = strerror(errno);
       OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
       olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
       olsr_exit(id, EXIT_FAILURE);
-    }
+  }
+
   return ptr;
 }
 
