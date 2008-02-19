@@ -143,7 +143,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 void
 olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 {
-  olsr_u32_t hash = olsr_hashing(&two_hop_neighbor->neighbor_2_addr);
+  olsr_u32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
 
   //printf("Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
 
@@ -165,7 +165,7 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
 {
 
   struct neighbor_2_entry  *neighbor_2;
-  olsr_u32_t               hash = olsr_hashing(dest);
+  olsr_u32_t               hash = olsr_ip_hashing(dest);
 
   //printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest));
   for(neighbor_2 = two_hop_neighbortable[hash].next;
@@ -209,7 +209,7 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
   olsr_u32_t               hash;
 
   //printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest));
-  hash = olsr_hashing(dest);
+  hash = olsr_ip_hashing(dest);
   
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];

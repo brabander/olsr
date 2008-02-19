@@ -107,6 +107,7 @@ MD5_checksum(const olsr_u8_t *data, const olsr_u16_t data_len, olsr_u8_t *hashbu
 #define OS "Undefined"
 #endif
 
+static struct timeval now;
 
 /* Timestamp node */
 struct stamp
@@ -198,7 +199,9 @@ secure_plugin_init(void)
   olsr_preprocessor_add_function(&secure_preprocessor);
   
   /* Register timeout - poll every 2 seconds */
-  olsr_register_scheduler_event(&timeout_timestamps, NULL, 2, 0 , NULL);
+  olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
+                   &timeout_timestamps, NULL, 0);
+
 
   return 1;
 }
@@ -641,7 +644,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   /* update validtime - not validated */
   entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
 
-  hash = olsr_hashing(new_host);
+  hash = olsr_ip_hashing(new_host);
   
   /* Queue */
   timestamps[hash].next->prev = entry;
@@ -883,7 +886,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
       entry = malloc(sizeof(struct stamp));
       memcpy(&entry->addr, &msg->originator, olsr_cnf->ipsize);
 
-      hash = olsr_hashing((union olsr_ip_addr *)&msg->originator);
+      hash = olsr_ip_hashing((union olsr_ip_addr *)&msg->originator);
   
       /* Queue */
       timestamps[hash].next->prev = entry;
@@ -1122,7 +1125,7 @@ lookup_timestamp_entry(const union olsr_ip_addr *adr)
   struct stamp *entry;
   struct ipaddr_str buf;
 
-  hash = olsr_hashing(adr);
+  hash = olsr_ip_hashing(adr);
 
   for(entry = timestamps[hash].next;
       entry != &timestamps[hash];
@@ -1154,6 +1157,8 @@ timeout_timestamps(void* foo __attribute__((unused)))
   struct stamp *entry_to_delete;
   int index;
 
+  /* Update our local timestamp */
+  gettimeofday(&now, NULL);
 
   for(index=0;index<HASHSIZE;index++)
     {

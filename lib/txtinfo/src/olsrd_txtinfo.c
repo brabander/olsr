@@ -306,8 +306,7 @@ static void ipc_print_neigh_link(void)
     ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkQuality\tlost\ttotal\tNLQ\tETX\n");
 
     /* Link set */
-    link = link_set;
-    while(link)	{
+    OLSR_FOR_ALL_LINK_ENTRIES(link) {
 	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
@@ -317,8 +316,8 @@ static void ipc_print_neigh_link(void)
                    link->total_packets,
                    olsr_etx_to_string(link->neigh_link_quality), 
                    olsr_etx_to_string(olsr_calc_link_etx(link)));
-        link = link->next;
-    }
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+
     ipc_sendf("\nTable: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWillingness\t2 Hop Neighbors\n");
 
     /* Neighbors */

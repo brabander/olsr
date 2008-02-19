@@ -65,6 +65,8 @@
 #include "lq_route.h"
 #include "net_olsr.h"
 
+struct timer_entry *spf_backoff_timer = NULL;
+
 /*
  * avl_comp_etx
  *
@@ -314,9 +316,21 @@ olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
   }
 }
 
-void
-olsr_calculate_routing_table (void)
+/**
+ * Callback for the SPF backoff timer.
+ */
+static void
+olsr_expire_spf_backoff(void *context __attribute__((unused)))
 {
+  spf_backoff_timer = NULL;
+}
+
+void
+olsr_calculate_routing_table (void *context __attribute__((unused)))
+{
+#ifdef SPF_PROFILING
+  struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
+#endif
   struct avl_tree cand_tree;
   struct avl_node *rtp_tree_node;
   struct list_node path_list; /* head of the path_list */
@@ -327,9 +341,16 @@ olsr_calculate_routing_table (void)
   struct neighbor_entry *neigh;
   struct link_entry *link;
 
-#ifdef SPF_PROFILING
-  struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
+  /* We are done if our backoff timer is running */
+  if (!spf_backoff_timer) {
+    spf_backoff_timer = 
+      olsr_start_timer(1000, 5, OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
+                       NULL, 0);
+  } else {
+    return;
+  }
 
+#ifdef SPF_PROFILING
   gettimeofday(&t1, NULL);
 #endif
 

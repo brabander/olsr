@@ -461,9 +461,7 @@ void FindNeighbors(
   {
     struct link_entry* walker;
 
-    /* TODO: get_link_set() is not thread-safe! */
-    for (walker = get_link_set(); walker != NULL; walker = walker->next) 
-    {
+    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 #ifndef NODEBUG
       struct ipaddr_str buf;
 #endif
@@ -550,7 +548,7 @@ void FindNeighbors(
       }
 
       *nPossibleNeighbors += 1;
-    } /* for */
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
   }
   /* handle the LQ case */
@@ -775,9 +773,7 @@ void FindNeighbors(
       }
     }
 
-    /* TODO: get_link_set() is not thread-safe! */
-    for (walker = get_link_set(); walker != NULL; walker = walker->next) 
-    {
+    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 #ifndef NODEBUG
       struct ipaddr_str buf;
 #endif
@@ -994,7 +990,7 @@ void FindNeighbors(
       }
 
       *nPossibleNeighbors += 1;
-    } /* for */
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
 #endif /* USING_THALES_LINK_COST_ROUTING */
 

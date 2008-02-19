@@ -116,90 +116,84 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   OLSR_PRINTF(5, "On link:\n");
 #endif
 
-  /* Get the links of this interface */
-  links = get_link_set();
-
-  while(links != NULL)
-    {      
+  /* Walk all links of this interface */
+  OLSR_FOR_ALL_LINK_ENTRIES(links) {
 #if !defined(NODEBUG) && defined(DEBUG)
-      struct ipaddr_str buf;
+    struct ipaddr_str buf;
 #endif
-      int lnk = lookup_link_status(links);
-      /* Update the status */
+    int lnk = lookup_link_status(links);
+    /* Update the status */
       
-      /* Check if this link tuple is registered on the outgoing interface */
-      if(!ipequal(&links->local_iface_addr, &outif->ip_addr))
-	{
-	  links = links->next;
-	  continue;
-	}
+    /* Check if this link tuple is registered on the outgoing interface */
+    if(!ipequal(&links->local_iface_addr, &outif->ip_addr)) {
+      continue;
+    }
 
-      message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO");
+    message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO");
       
 
-      /* Find the link status */
-      message_neighbor->link = lnk;
+    /* Find the link status */
+    message_neighbor->link = lnk;
 
+    /*
+     * Calculate neighbor status
+     */
+    /* 
+     * 2.1  If the main address, corresponding to
+     *      L_neighbor_iface_addr, is included in the MPR set:
+     *
+     *            Neighbor Type = MPR_NEIGH
+     */
+    if(links->neighbor->is_mpr)
+    {
+      message_neighbor->status = MPR_NEIGH;
+    }
+    /*
+     *  2.2  Otherwise, if the main address, corresponding to
+     *       L_neighbor_iface_addr, is included in the neighbor set:
+     */
+      
+    /* NOTE:
+     * It is garanteed to be included when come this far
+     * due to the extentions made in the link sensing
+     * regarding main addresses.
+     */
+    else
+    {
       /*
-       * Calculate neighbor status
-       */
-      /* 
-       * 2.1  If the main address, corresponding to
-       *      L_neighbor_iface_addr, is included in the MPR set:
+       *   2.2.1
+       *        if N_status == SYM
        *
-       *            Neighbor Type = MPR_NEIGH
+       *             Neighbor Type = SYM_NEIGH
        */
-      if(links->neighbor->is_mpr)
-	{
-	  message_neighbor->status = MPR_NEIGH;
-	}
+      if(links->neighbor->status == SYM)
+      {
+        message_neighbor->status = SYM_NEIGH;
+      }
       /*
-       *  2.2  Otherwise, if the main address, corresponding to
-       *       L_neighbor_iface_addr, is included in the neighbor set:
-       */
-      
-      /* NOTE:
-       * It is garanteed to be included when come this far
-       * due to the extentions made in the link sensing
-       * regarding main addresses.
+       *   2.2.2
+       *        Otherwise, if N_status == NOT_SYM
+       *             Neighbor Type = NOT_NEIGH
        */
       else
-	{
-	  /*
-	   *   2.2.1
-	   *        if N_status == SYM
-	   *
-	   *             Neighbor Type = SYM_NEIGH
-	   */
-	  if(links->neighbor->status == SYM)
-	    {
-	      message_neighbor->status = SYM_NEIGH;
-	    }
-	  /*
-	   *   2.2.2
-	   *        Otherwise, if N_status == NOT_SYM
-	   *             Neighbor Type = NOT_NEIGH
-	   */
-	  else
-	    if(links->neighbor->status == NOT_SYM)
-	      {
-		message_neighbor->status = NOT_NEIGH;
-	      }
-	}
-  
-      /* Set the remote interface address */
-      message_neighbor->address = links->neighbor_iface_addr;
-      
-      /* Set the main address */
-      message_neighbor->main_address = links->neighbor->neighbor_main_addr;
-#ifdef DEBUG
-      OLSR_PRINTF(5, "Added: %s -  status %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
-#endif
-      message_neighbor->next=message->neighbors;
-      message->neighbors=message_neighbor;	    
-      
-      links = links->next;
+        if(links->neighbor->status == NOT_SYM)
+        {
+          message_neighbor->status = NOT_NEIGH;
+        }
     }
+  
+    /* Set the remote interface address */
+    message_neighbor->address = links->neighbor_iface_addr;
+      
+    /* Set the main address */
+    message_neighbor->main_address = links->neighbor->neighbor_main_addr;
+#ifdef DEBUG
+    OLSR_PRINTF(5, "Added: %s -  status %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
+#endif
+    message_neighbor->next=message->neighbors;
+    message->neighbors=message_neighbor;	    
+      
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(links);
   
   /* Add the links */
 
@@ -299,7 +293,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 	    message->neighbors=message_neighbor;	    
 	  }
       }
-  
+
 
   return 0;
 }
@@ -459,3 +453,9 @@ olsr_free_mid_packet(struct mid_message *message)
       free(tmp_adr2);
     }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

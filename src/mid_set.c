@@ -68,11 +68,6 @@ olsr_init_mid_set(void)
 
   OLSR_PRINTF(5, "MID: init\n");
 
-  /* Since the holdingtime is assumed to be rather large for 
-   * MID entries, the timeoutfunction is only ran once every second
-   */
-  olsr_register_scheduler_event_dijkstra(&olsr_time_out_mid_set, NULL, 1, 0, NULL);
-
   for(idx=0;idx<HASHSIZE;idx++)
     {
       mid_set[idx].next = &mid_set[idx];
@@ -83,6 +78,43 @@ olsr_init_mid_set(void)
     }
 
   return 1;
+}
+
+/**
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_mid_entry(void *context)
+{
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct mid_entry *mid;
+
+  mid = (struct mid_entry *)context;
+  mid->mid_timer = NULL;
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "MID info for %s timed out.. deleting it\n",
+              olsr_ip_to_string(&buf, &mid->main_addr));
+#endif
+
+  mid_delete_node(mid);
+}
+
+
+/**
+ * Set the mid set expiration timer.
+ *
+ * all timer setting shall be done using this function.
+ * The timer param is a relative timer expressed in milliseconds.
+ */
+static void
+olsr_set_mid_timer(struct mid_entry *mid, unsigned int rel_timer)
+{
+
+  olsr_set_timer(&mid->mid_timer, rel_timer, OLSR_MID_JITTER,
+                 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entry, mid, 0);
 }
 
 
@@ -105,8 +137,8 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
   olsr_u32_t hash, alias_hash;
   union olsr_ip_addr *registered_m_addr;
 
-  hash = olsr_hashing(m_addr);
-  alias_hash = olsr_hashing(&alias->alias);
+  hash = olsr_ip_hashing(m_addr);
+  alias_hash = olsr_ip_hashing(&alias->alias);
 
   /* Check for registered entry */
   for(tmp = mid_set[hash].next;
@@ -139,7 +171,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
       alias->main_entry = tmp;
       QUEUE_ELEM(reverse_mid_set[alias_hash], alias);
       alias->next_alias = tmp_adr;
-      tmp->ass_timer = GET_TIMESTAMP(vtime*1000);
+      olsr_set_mid_timer(tmp, vtime * MSEC_PER_SEC);
     }
   else
     {
@@ -151,7 +183,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
       alias->main_entry = tmp;
       QUEUE_ELEM(reverse_mid_set[alias_hash], alias);
       tmp->main_addr = *m_addr;
-      tmp->ass_timer = GET_TIMESTAMP(vtime*1000);
+      olsr_set_mid_timer(tmp, vtime * MSEC_PER_SEC);
       /* Queue */
       QUEUE_ELEM(mid_set[hash], tmp);
     }
@@ -294,7 +326,7 @@ mid_lookup_main_addr(const union olsr_ip_addr *adr)
   olsr_u32_t hash;
   struct mid_address *tmp_list;
 
-  hash = olsr_hashing(adr);
+  hash = olsr_ip_hashing(adr);
   /*Traverse MID list*/
   for(tmp_list = reverse_mid_set[hash].next; 
       tmp_list != &reverse_mid_set[hash];
@@ -320,7 +352,7 @@ mid_lookup_entry_bymain(const union olsr_ip_addr *adr)
 
   //OLSR_PRINTF(1, "MID: lookup entry...");
 
-  hash = olsr_hashing(adr);
+  hash = olsr_ip_hashing(adr);
 
   /* Check all registered nodes...*/
   for(tmp_list = mid_set[hash].next;
@@ -365,7 +397,7 @@ olsr_update_mid_table(const union olsr_ip_addr *adr, float vtime)
   struct mid_entry *tmp_list = mid_set;
 
   OLSR_PRINTF(3, "MID: update %s\n", olsr_ip_to_string(&buf, adr));
-  hash = olsr_hashing(adr);
+  hash = olsr_ip_hashing(adr);
 
   /* Check all registered nodes...*/
   for(tmp_list = mid_set[hash].next;
@@ -376,7 +408,7 @@ olsr_update_mid_table(const union olsr_ip_addr *adr, float vtime)
       if(ipequal(&tmp_list->main_addr, adr))
 	{
 	  // printf("MID: Updating timer for node %s\n", olsr_ip_to_string(&buf, &tmp_list->main_addr));
-	  tmp_list->ass_timer = GET_TIMESTAMP(vtime*1000);
+          olsr_set_mid_timer(tmp_list, vtime * MSEC_PER_SEC);
 
 	  return 1;
 	}
@@ -402,7 +434,7 @@ olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_
   struct mid_address *previous_alias;
   struct mid_alias *save_declared_aliases = declared_aliases;
 
-  hash = olsr_hashing(m_addr);
+  hash = olsr_ip_hashing(m_addr);
 
   /* Check for registered entry */
   for(entry = mid_set[hash].next;
@@ -479,47 +511,6 @@ olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_
 }
 
 
-
-/**
- *Find timed out entries and delete them
- *
- *@return nada
- */
-void
-olsr_time_out_mid_set(void *foo __attribute__((unused)))
-{
-  int idx;
-
-  for(idx=0;idx<HASHSIZE;idx++)
-    {
-      struct mid_entry *tmp_list = mid_set[idx].next;
-      /*Traverse MID list*/
-      while(tmp_list != &mid_set[idx])
-	{
-	  /*Check if the entry is timed out*/
-	  if(TIMED_OUT(tmp_list->ass_timer))
-	    {
-#if !defined(NODEBUG) && defined(DEBUG)
-              struct ipaddr_str buf;
-#endif
-	      struct mid_entry *entry_to_delete = tmp_list;
-	      tmp_list = tmp_list->next;
-#ifdef DEBUG
-	      OLSR_PRINTF(1, "MID info for %s timed out.. deleting it\n",
-			  olsr_ip_to_string(&buf, &entry_to_delete->main_addr));
-#endif
-	      /*Delete it*/
-	      mid_delete_node(entry_to_delete);
-	    }
-	  else
-	      tmp_list = tmp_list->next;
-	}
-    }
-
-  return;
-}
-
-
 /*
  *Delete an entry
  *
@@ -549,6 +540,15 @@ mid_delete_node(struct mid_entry *mid)
 
       free(tmp_aliases);
     }
+
+  /*
+   * Kill any pending timers.
+   */
+  if (mid->mid_timer) {
+    olsr_stop_timer(mid->mid_timer);
+    mid->mid_timer = NULL;
+  }
+
   /* Dequeue */
   DEQUEUE_ELEM(mid);
   free(mid);
