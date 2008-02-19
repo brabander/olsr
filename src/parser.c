@@ -71,6 +71,7 @@
 unsigned int cpu_overload_exit = 0;
 
 struct parse_function_entry *parse_functions;
+struct preprocessor_function_entry *preprocessor_functions;
 
 static char inbuf[MAXMESSAGESIZE+1];
 
@@ -138,6 +139,59 @@ olsr_parser_remove_function(parse_function *function, olsr_u32_t type, int forwa
 	  if(entry == parse_functions)
 	    {
 	      parse_functions = entry->next;
+	    }
+	  else
+	    {
+	      prev->next = entry->next;
+	    }
+	  free(entry);
+	  return 1;
+	}
+
+      prev = entry;
+      entry = entry->next;
+    }
+
+  return 0;
+}
+
+void
+olsr_preprocessor_add_function(preprocessor_function *function)
+{
+  struct preprocessor_function_entry *new_entry;
+
+  OLSR_PRINTF(3, "Parser: registering preprocessor\n");
+ 
+
+  new_entry = olsr_malloc(sizeof(struct preprocessor_function_entry), "Register preprocessor function");
+
+  new_entry->function = function;
+
+  /* Queue */
+  new_entry->next = preprocessor_functions;
+  preprocessor_functions = new_entry;
+
+  OLSR_PRINTF(3, "Registered preprocessor function\n");
+
+}
+
+
+
+int
+olsr_preprocessor_remove_function(preprocessor_function *function)
+{
+  struct preprocessor_function_entry *entry, *prev;
+
+  entry = preprocessor_functions;
+  prev = NULL;
+
+  while(entry)
+    {
+      if(entry->function == function)
+	{
+	  if(entry == preprocessor_functions)
+	    {
+		  preprocessor_functions = entry->next;
 	    }
 	  else
 	    {
@@ -388,6 +442,9 @@ olsr_input(int fd)
 {
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
+  struct preprocessor_function_entry *entry;
+  char *packet;
+  
   cpu_overload_exit = 0;
   
   for (;;) 
@@ -460,12 +517,26 @@ olsr_input(int fd)
 	  return ;
 	}
 
+      // call preprocessors
+      entry = preprocessor_functions;
+      packet = &inbuf[0];
+      
+      while(entry)
+        {
+	      packet = entry->function(packet, olsr_in_if, &from_addr, &cc);
+	      // discard package ?
+	      if (packet == NULL) {
+	        return;
+	      }
+	      entry = entry->next;
+        }
+      
       /*
        * &from - sender
        * &inbuf.olsr 
        * cc - bytes read
        */
-      parse_packet((struct olsr *)inbuf, cc, olsr_in_if, &from_addr);
+      parse_packet((struct olsr *)packet, cc, olsr_in_if, &from_addr);
     
     }
 }
@@ -490,6 +561,8 @@ olsr_input_hostemu(int fd)
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   olsr_u16_t pcklen;
+  struct preprocessor_function_entry *entry;
+  char *packet;
 
   /* Host emulator receives IP address first to emulate
      direct link */
@@ -557,6 +630,20 @@ olsr_input_hostemu(int fd)
                   olsr_ip_to_string(&buf, &from_addr),
                   cc);
       return;
+    }
+  
+  // call preprocessors
+  entry = preprocessor_functions;
+  packet = &inbuf[0];
+  
+  while(entry)
+    {
+      packet = entry->function(packet, olsr_in_if, &from_addr, &cc);
+      // discard package ?
+      if (packet == NULL) {
+        return;
+      }
+      entry = entry->next;
     }
   
   /*
