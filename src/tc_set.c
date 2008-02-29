@@ -747,7 +747,7 @@ olsr_print_tc_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
-              "%-*s %-*s %-5s  %-5s  %s\n",
+              "%-*s %-*s %-5s  %-5s  %s %s\n",
               olsr_wallclock_string(),
               ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX", "UP");
 
