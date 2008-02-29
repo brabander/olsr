@@ -5,7 +5,9 @@ syntax: glob
 *.diff
 *.rej
 *.orig
+*.swp
 *~
+*.out.*
 TAGS
 olsrd
 olsr_switch

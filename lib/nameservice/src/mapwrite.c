@@ -54,16 +54,20 @@ static char* lookup_position_latlon(union olsr_ip_addr *ip)
 {
   int hash;
   struct db_entry *entry;
-  if (ipequal(ip, &olsr_cnf->main_addr))
-  {
+  struct list_node *list_head, *list_node;
+
+  if (ipequal(ip, &olsr_cnf->main_addr)) {
     return my_latlon_str;
   }
-  for (hash = 0; hash < HASHSIZE; hash++) 
-  {
-    for(entry = latlon_list[hash]; entry != NULL; entry = entry->next)
-    {
-      if (NULL != entry->names && ipequal(&entry->originator, ip))
-      {
+
+  for (hash = 0; hash < HASHSIZE; hash++) {
+      list_head = &latlon_list[hash];
+      for (list_node = list_head->next; list_node != list_head;
+           list_node = list_node->next) {
+
+          entry = list2db(list_node);
+
+      if (entry->names && ipequal(&entry->originator, ip)) {
         return entry->names->name;
       }
     }
@@ -143,8 +147,14 @@ void mapwrite_work(FILE* fmap)
   for (hash = 0; hash < HASHSIZE; hash++) 
   {
     struct db_entry *entry;
-    for(entry = latlon_list[hash]; entry != NULL; entry = entry->next)
-    {
+	struct list_node *list_head, *list_node;
+
+    list_head = &latlon_list[hash];
+    for (list_node = list_head->next; list_node != list_head;
+         list_node = list_node->next) {
+        
+      entry = list2db(list_node);
+
       if (NULL != entry->names)
       {
         if (0 > fprintf(fmap, "Node('%s',%s,'%s','%s');\n",
@@ -207,7 +217,7 @@ void mapwrite_work(FILE* fmap)
 static const char* the_fifoname = 0;
 static int fifopolltime = 0;
 
-static void mapwrite_poll(void)
+static void mapwrite_poll(void *context __attribute__((unused)))
 {
   fifopolltime++;
   if (0 == (fifopolltime & 7) && 0 != the_fifoname)
@@ -251,7 +261,7 @@ int mapwrite_init(const char* fifoname)
     else
     {
       the_fifoname = fifoname;
-      olsr_register_timeout_function(&mapwrite_poll, OLSR_FALSE);
+      olsr_start_timer(100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, 0);
     }
   }
   return OLSR_TRUE;

@@ -53,10 +53,13 @@ struct hna_net
 {
   union olsr_ip_addr A_network_addr;
   olsr_u8_t          prefixlen;
-  clock_t            A_time;
+  struct timer_entry *hna_net_timer;
+  struct hna_entry   *hna_gw; /* backpointer to the owning HNA entry */
   struct hna_net     *next;
   struct hna_net     *prev;
 };
+
+#define OLSR_HNA_NET_JITTER 5 /* percent */
 
 struct hna_entry
 {
@@ -95,3 +98,9 @@ void
 olsr_print_hna_set(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

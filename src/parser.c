@@ -422,8 +422,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	}
 
     } /* for olsr_msg */ 
-
-
 }
 
 
