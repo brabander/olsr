@@ -77,6 +77,15 @@
 static int
 avl_comp_etx (const void *etx1, const void *etx2)
 {       
+#ifdef USE_FPM
+  if (*(const sfpm *)etx1 < *(const sfpm *)etx2) {
+    return -1;
+  }
+
+  if (*(const sfpm *)etx1 > *(const sfpm *)etx2) {
+    return +1;
+  }
+#else
   if (*(const float *)etx1 < *(const float *)etx2) {
     return -1;
   }
@@ -84,6 +93,7 @@ avl_comp_etx (const void *etx1, const void *etx2)
   if (*(const float *)etx1 > *(const float *)etx2) {
     return +1;
   }
+#endif
 
   return 0;
 }
