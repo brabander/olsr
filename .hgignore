@@ -8,6 +8,7 @@ syntax: glob
 *~
 TAGS
 olsrd
+olsr_switch
 src/builddata.c
 src/cfgparser/oparse.c
 src/cfgparser/oparse.h
