@@ -746,10 +746,9 @@ olsr_print_tc_table(void)
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  OLSR_PRINTF(1,
-              "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n"
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
               "%-*s %-*s %-5s  %-5s  %s\n",
-              nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
+              olsr_wallclock_string(),
               ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {

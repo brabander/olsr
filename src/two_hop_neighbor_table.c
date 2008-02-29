@@ -44,6 +44,7 @@
 #include "mid_set.h"
 #include "neighbor_table.h"
 #include "net_olsr.h"
+#include "scheduler.h"
 
 
 struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
@@ -235,13 +236,10 @@ olsr_print_two_hop_neighbor_table(void)
 #ifndef NODEBUG
   /* The whole function makes no sense without it. */
   int i;
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.02%d ----------------------- TWO-HOP NEIGHBORS\n\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-              (int)now.tv_usec);
 
-  OLSR_PRINTF(1, "IP addr (2-hop)  IP addr (1-hop)  TLQ\n");
+  OLSR_PRINTF(1, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
+              "IP addr (2-hop)  IP addr (1-hop)  TLQ\n",
+              olsr_wallclock_string());
 
   for (i = 0; i < HASHSIZE; i++) {
     struct neighbor_2_entry *neigh2;

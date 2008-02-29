@@ -566,7 +566,8 @@ olsr_print_mid_set(void)
 {
   int idx;
 
-  OLSR_PRINTF(1, "mid set: %02d:%02d:%02d.%06lu\n",nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, now.tv_usec);
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- MID\n\n",
+              olsr_wallclock_string());
 
   for(idx=0;idx<HASHSIZE;idx++)
     {

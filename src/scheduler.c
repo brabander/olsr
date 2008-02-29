@@ -407,8 +407,40 @@ olsr_walk_timers(clock_t *last_run)
 
 
 /**
- * Format an relative system time string.
+ * Format an absolute wallclock system time string.
  * May be called upto 4 times in a single printf() statement.
+ * Displays microsecond resulution.
+ *
+ * @return buffer to a formatted system time string.
+ */
+const char*
+olsr_wallclock_string(void)
+{
+  static char buf[4][sizeof("00:00:00.000000")];
+  static int idx = 0;
+  char *ret;
+  struct timeval now;
+  int sec, usec;
+
+  ret = buf[idx];
+  idx = (idx+1) & 3;
+
+  gettimeofday(&now, NULL);
+
+  sec = (int)now.tv_sec;
+  usec = (int)now.tv_usec;
+
+  snprintf(ret, sizeof(buf), "%02u:%02u:%02u.%06u",
+           sec / 3600, (sec % 3600) / 60, sec % 60, usec);
+
+  return ret;
+}
+
+
+/**
+ * Format an relative non-wallclock system time string.
+ * May be called upto 4 times in a single printf() statement.
+ * Displays millisecond resolution.
  *
  * @param absolute time expressed in clockticks
  * @return buffer to a formatted system time string.
@@ -416,10 +448,10 @@ olsr_walk_timers(clock_t *last_run)
 const char*
 olsr_clock_string(clock_t clock)
 {
-  static char buf[4][32];
+  static char buf[4][sizeof("00:00:00.000")];
   static int idx = 0;
   char *ret;
-  unsigned int sec,msec;
+  unsigned int sec, msec;
 
   ret = buf[idx];
   idx = (idx+1) & 3;

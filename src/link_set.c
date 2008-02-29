@@ -491,9 +491,9 @@ olsr_expire_link_hello_timer(void *context)
 
   link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
 
-  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %0.3f\n",
+  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %s\n",
               olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-              link->L_link_quality);
+              olsr_etx_to_string(link->L_link_quality));
 
   /* Update hello_timeout - NO SLACK THIS TIME */
   olsr_change_timer(link->link_hello_timer, link->last_htime * MSEC_PER_SEC,
@@ -902,15 +902,13 @@ void olsr_print_link_set(void)
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  OLSR_PRINTF(0, "\n--- %02d:%02d:%02d.%02d ---------------------------------------------------- LINKS\n\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-              (int)now.tv_usec/10000U);
-  OLSR_PRINTF(1, "%-*s  %-6s %-6s %-6s %-6s %-6s %s\n", addrsize, "IP address", "hyst", "LQ", "lost", "total","NLQ", "ETX");
+  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- LINKS\n\n",
+              olsr_wallclock_string());
+  OLSR_PRINTF(1, "%-*s  %-6s %-6s %-6s %-6s %-6s %s\n", addrsize,
+              "IP address", "hyst", "LQ", "lost", "total","NLQ", "ETX");
 
-  for (walker = link_set; walker != NULL; walker = walker->next)
-  {
+  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
+
     struct ipaddr_str buf;
 #ifdef USE_FPM
     fpm etx;
@@ -936,7 +934,7 @@ void olsr_print_link_set(void)
                 walker->total_packets,
 		olsr_etx_to_string(walker->neigh_link_quality),
                 olsr_etx_to_string(etx));
-  }
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }
 

@@ -440,11 +440,8 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
    */
   olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
-  OLSR_PRINTF(2, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- DIJKSTRA\n\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-              (int)now.tv_usec/10000);
+  OLSR_PRINTF(2, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n",
+              olsr_wallclock_string());
 
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);

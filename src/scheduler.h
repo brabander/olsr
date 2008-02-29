@@ -98,7 +98,10 @@ struct timer_entry *olsr_start_timer(unsigned int, olsr_u8_t, olsr_bool,
                                      void (*)(void *), void *, olsr_cookie_t);
 void olsr_change_timer(struct timer_entry *, unsigned int, olsr_u8_t, olsr_bool);
 void olsr_stop_timer(struct timer_entry *);
+
+/* Printing timestamps */
 const char* olsr_clock_string(clock_t);
+const char* olsr_wallclock_string(void);
 
 /* Main scheduler loop */
 void olsr_scheduler(void) __attribute__((noreturn));

@@ -525,7 +525,7 @@ olsr_namesvc_delete_db_entry(struct db_entry *db)
 	struct ipaddr_str strbuf;
 #endif
 	OLSR_PRINTF(2, "NAME PLUGIN: %s timed out... deleting\n", 
-				olsr_ip_to_string(&strbuf, &to_delete->originator));
+				olsr_ip_to_string(&strbuf, &db->originator));
 
 	olsr_start_write_file_timer();
 	olsr_stop_timer(db->db_timer); /* stop timer if running */

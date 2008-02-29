@@ -204,6 +204,9 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u
 static void
 olsr_expire_hna_net_entry(void *context)
 {
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct hna_net *net_to_delete;
   struct hna_entry *hna_gw;
 
@@ -212,13 +215,10 @@ olsr_expire_hna_net_entry(void *context)
   hna_gw = net_to_delete->hna_gw;
 
 #ifdef DEBUG
-#ifndef NODEBUG
-  struct ipaddr_str buf;
-#endif
   OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", 
               olsr_ip_to_string(&buf, &net_to_delete->A_network_addr),
               net_to_delete->prefixlen,
-              &hna_gw->A_gateway_addr);
+              olsr_ip_to_string(&buf, &hna_gw->A_gateway_addr));
 #endif
 
   /*

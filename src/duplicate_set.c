@@ -72,15 +72,15 @@ olsr_init_duplicate_table(void)
 static void
 olsr_expire_dup_entry(void *context)
 {
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
   struct dup_entry *dup;
 
   dup = context;
   dup->timer = NULL;
 
 #ifdef DEBUG
-#ifndef NODEBUG
-  struct ipaddr_str buf;
-#endif
   OLSR_PRINTF(5, "DUP TIMEOUT[%s] s: %d\n", 
               olsr_ip_to_string(&buf, &dup->addr),
               dup->seqno);
