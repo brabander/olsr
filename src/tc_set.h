@@ -46,6 +46,7 @@
 #include "packet.h"
 #include "lq_avl.h"
 #include "lq_list.h"
+#include "scheduler.h"
 
 /*
  * This file holds the definitions for the link state database.
@@ -60,7 +61,7 @@ struct tc_edge_entry
   union olsr_ip_addr T_dest_addr; /* edge_node key */
   struct tc_edge_entry *edge_inv; /* shortcut, used during SPF calculation */
   struct tc_entry    *tc; /* backpointer to owning tc entry */
-  clock_t            T_time; /* expiration timer, timer_node key */
+  struct timer_entry *edge_timer; /* expiration timer */
   olsr_u16_t         T_seq; /* sequence number of the advertised neighbor set */
   olsr_u16_t         flags; /* misc flags */
 #ifdef USE_FPM
@@ -75,6 +76,7 @@ struct tc_edge_entry
 };
 
 #define OLSR_TC_EDGE_DOWN (1 << 0) /* this edge is down */
+#define OLSR_TC_EDGE_JITTER 5 /* percent */
 
 /*
  * Garbage collection time for downed edges

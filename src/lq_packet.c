@@ -86,50 +86,51 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   
   // loop through the link set
 
-  for (walker = get_link_set(); walker != NULL; walker = walker->next)
-    {
-      // allocate a neighbour entry
-      struct lq_hello_neighbor *neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
+  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
-      // a) this neighbor interface IS NOT visible via the output interface
-      if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
-        neigh->link_type = UNSPEC_LINK;
+    // allocate a neighbour entry
+    struct lq_hello_neighbor *neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
+
+    // a) this neighbor interface IS NOT visible via the output interface
+    if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
+      neigh->link_type = UNSPEC_LINK;
       
-      // b) this neighbor interface IS visible via the output interface
+    // b) this neighbor interface IS visible via the output interface
 
-      else
-        neigh->link_type = lookup_link_status(walker);
+    else
+      neigh->link_type = lookup_link_status(walker);
 
-      // set the entry's link quality
+    // set the entry's link quality
 
-      neigh->link_quality = walker->loss_link_quality;
-      neigh->neigh_link_quality = walker->neigh_link_quality;
+    neigh->link_quality = walker->loss_link_quality;
+    neigh->neigh_link_quality = walker->neigh_link_quality;
 
-      // set the entry's neighbour type
+    // set the entry's neighbour type
 
-      if(walker->neighbor->is_mpr)
-        neigh->neigh_type = MPR_NEIGH;
+    if(walker->neighbor->is_mpr)
+      neigh->neigh_type = MPR_NEIGH;
 
-      else if (walker->neighbor->status == SYM)
-        neigh->neigh_type = SYM_NEIGH;
+    else if (walker->neighbor->status == SYM)
+      neigh->neigh_type = SYM_NEIGH;
 
-      else if (walker->neighbor->status == NOT_SYM)
-        neigh->neigh_type = NOT_NEIGH;
+    else if (walker->neighbor->status == NOT_SYM)
+      neigh->neigh_type = NOT_NEIGH;
         
-      else {
-        OLSR_PRINTF(0, "Error: neigh_type undefined");
-        neigh->neigh_type = NOT_NEIGH;
-      }
-  
-      // set the entry's neighbour interface address
-
-      neigh->addr = walker->neighbor_iface_addr;
-      
-      // queue the neighbour entry
-
-      neigh->next = lq_hello->neigh;
-      lq_hello->neigh = neigh;
+    else {
+      OLSR_PRINTF(0, "Error: neigh_type undefined");
+      neigh->neigh_type = NOT_NEIGH;
     }
+  
+    // set the entry's neighbour interface address
+
+    neigh->addr = walker->neighbor_iface_addr;
+      
+    // queue the neighbour entry
+
+    neigh->next = lq_hello->neigh;
+    lq_hello->neigh = neigh;
+
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 }
 
 static void
@@ -661,3 +662,9 @@ olsr_output_lq_tc(void *para)
     set_buffer_timer(outif);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

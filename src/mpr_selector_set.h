@@ -46,11 +46,12 @@
 struct mpr_selector
 {
   union olsr_ip_addr  MS_main_addr;
-  clock_t             MS_time;
+  struct timer_entry  *MS_timer;
   struct mpr_selector *next;
   struct mpr_selector *prev;
 };
 
+#define OLSR_MPR_SEL_JITTER 5 /* percent */
 
 #if 0
 olsr_bool
@@ -88,3 +89,9 @@ olsr_print_mprs_set(void);
 #endif
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

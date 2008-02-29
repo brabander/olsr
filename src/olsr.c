@@ -169,7 +169,7 @@ olsr_process_changes(void)
 
   /* calculate the routing table */
   if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table();
+    olsr_calculate_routing_table(NULL);
   }
   
   if (olsr_cnf->debug_level > 0)
@@ -262,6 +262,12 @@ olsr_init_tables(void)
 
   /* Initialize HNA set */
   olsr_init_hna_set();  
+
+  /* Start periodic SPF and RIB recalculation */
+  if (olsr_cnf->lq_dinter > 0.0) {
+    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
+                     OLSR_TIMER_PERIODIC, &olsr_calculate_routing_table, NULL, 0);
+  }
 }
 
 /**
@@ -404,9 +410,14 @@ set_buffer_timer(struct interface *ifn)
 void
 olsr_init_willingness(void)
 {
-  if(olsr_cnf->willingness_auto)
-    olsr_register_scheduler_event(&olsr_update_willingness, 
-				  NULL, olsr_cnf->will_int, olsr_cnf->will_int, NULL);
+  if (olsr_cnf->willingness_auto) {
+
+    /* Run it first and then periodic. */
+    olsr_update_willingness(NULL);
+
+    olsr_start_timer((unsigned int)olsr_cnf->will_int * MSEC_PER_SEC, 5,
+                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, 0);
+  }
 }
 
 void

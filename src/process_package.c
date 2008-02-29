@@ -114,7 +114,10 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
           if (two_hop_neighbor_yet != NULL)
             {
               /* Updating the holding time for this neighbor */
-              two_hop_neighbor_yet->neighbor_2_timer = GET_TIMESTAMP(message->vtime*1000);
+              olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
+                             message->vtime * MSEC_PER_SEC, OLSR_NBR2_LIST_JITTER,
+                             OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
+                             two_hop_neighbor_yet, 0);
               two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
 
               // For link quality OLSR, reset the path link quality here.
@@ -412,8 +415,10 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   two_hop_neighbor->neighbor_2_nblist.next = list_of_1_neighbors;
   list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
+  list_of_2_neighbors->nbr2_nbr = neighbor; /* XXX refcount */
   
-  list_of_2_neighbors->neighbor_2_timer = GET_TIMESTAMP(vtime*1000);
+  olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime * MSEC_PER_SEC,
+                    OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
 
   /* Queue */
   neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;

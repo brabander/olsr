@@ -980,7 +980,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
   /* Link set */
-  for (link = link_set; link != NULL; link = link->next) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link) {
     size += snprintf(&buf[size], bufsize-size, "<tr>");
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
@@ -999,7 +999,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                        etxtoa(olsr_calc_link_etx(link)));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
-  }
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 

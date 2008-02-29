@@ -169,8 +169,6 @@ olsr_init_tc(void)
 {
   OLSR_PRINTF(5, "TC: init topo\n");
 
-  olsr_register_timeout_function(&olsr_time_out_tc_set, OLSR_TRUE);
-
   avl_init(&tc_tree, avl_comp_default);
 
   /*
@@ -189,6 +187,7 @@ olsr_change_myself_tc(void)
   struct tc_edge_entry *tc_edge;
 
   if (tc_myself) {
+
     /*
      * Check if there was a change.
      */
@@ -277,7 +276,7 @@ olsr_locate_tc_entry(union olsr_ip_addr *adr)
 }
 
 /**
- * format a tc_edge contents into a buffer
+ * Format tc_edge contents into a buffer.
  */
 char *
 olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
@@ -298,16 +297,30 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 }
 
 /**
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_tc_edge_entry(void *context)
+{
+  struct tc_edge_entry *tc_edge;
+
+  tc_edge = (struct tc_edge_entry *)context;
+  tc_edge->edge_timer = NULL;
+
+  olsr_delete_tc_edge_entry(tc_edge);
+}
+
+/**
  * Set the TC edge expiration timer.
  *
- * all timer setting shall be done using this function since
- * it does also the correct insertion and sorting in the timer tree.
+ * all timer setting shall be done using this function.
  * The timer param is a relative timer expressed in milliseconds.
  */
 void
-olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int timer)
+olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int rel_timer)
 {
-  tc_edge->T_time = GET_TIMESTAMP(timer);
+  olsr_set_timer(&tc_edge->edge_timer, rel_timer, OLSR_TC_EDGE_JITTER,
+                 OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_entry, tc_edge, 0);
 }
 
 /*
@@ -459,6 +472,12 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
   tc = tc_edge->tc;
   avl_delete(&tc->edge_tree, &tc_edge->edge_node);
+
+  /*
+   * Kill running timers.
+   */
+  olsr_stop_timer(tc_edge->edge_timer);
+  tc_edge->edge_timer = NULL;
 
   /*
    * Clear the backpointer of our inverse edge.
@@ -717,30 +736,6 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 }
 
 /**
- * Walk the timers and time out entries.
- *
- * @return nada
- */
-void
-olsr_time_out_tc_set(void)
-{
-  struct tc_entry *tc;
-
-  OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    struct tc_edge_entry *tc_edge;
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-      /*
-       * Delete outdated edges.
-       */
-      if(TIMED_OUT(tc_edge->T_time)) {
-        olsr_delete_tc_edge_entry(tc_edge);
-        changes_topology = OLSR_TRUE;
-      }
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc)
-}
-
-/**
  * Print the topology table to stdout
  */
 void
@@ -751,10 +746,9 @@ olsr_print_tc_table(void)
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  OLSR_PRINTF(1,
-              "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n"
-              "%-*s %-*s %-5s  %-5s  %s  %s\n",
-              nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
+              "%-*s %-*s %-5s  %-5s  %s\n",
+              olsr_wallclock_string(),
               ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX", "UP");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
