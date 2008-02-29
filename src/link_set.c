@@ -493,7 +493,7 @@ olsr_expire_link_hello_timer(void *context)
 
   OLSR_PRINTF(1, "HYST[%s] HELLO timeout %s\n",
               olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-              olsr_etx_to_string(link->L_link_quality));
+              etxtoa(link->L_link_quality));
 
   /* Update hello_timeout - NO SLACK THIS TIME */
   olsr_change_timer(link->link_hello_timer, link->last_htime * MSEC_PER_SEC,
