@@ -405,11 +405,54 @@ olsr_walk_timers(clock_t *last_run)
 
 }
 
+/**
+ * Returns the difference between gmt and local time in seconds.
+ * Use gmtime() and localtime() to keep things simple.
+ * 
+ * taken and slightly modified from www.tcpdump.org.
+ */
+static int
+olsr_get_timezone(void)
+{
+#define OLSR_TIMEZONE_UNINITIALIZED -1
+
+  static int time_diff = OLSR_TIMEZONE_UNINITIALIZED;
+  int dir;
+  struct tm *gmt, *loc;
+  struct tm sgmt;
+  time_t t;
+
+  if (time_diff != OLSR_TIMEZONE_UNINITIALIZED) {
+    return time_diff;
+  }
+
+  t = time(NULL);
+  gmt = &sgmt;
+  *gmt = *gmtime(&t);
+  loc = localtime(&t);
+
+  time_diff = (loc->tm_hour - gmt->tm_hour) * 60 * 60
+    + (loc->tm_min - gmt->tm_min) * 60;
+
+  /*
+   * If the year or julian day is different, we span 00:00 GMT
+   * and must add or subtract a day. Check the year first to
+   * avoid problems when the julian day wraps.
+   */
+  dir = loc->tm_year - gmt->tm_year;
+  if (!dir) {
+    dir = loc->tm_yday - gmt->tm_yday;
+  }
+
+  time_diff += dir * 24 * 60 * 60;
+
+  return (time_diff);
+}
 
 /**
  * Format an absolute wallclock system time string.
  * May be called upto 4 times in a single printf() statement.
- * Displays microsecond resulution.
+ * Displays microsecond resolution.
  *
  * @return buffer to a formatted system time string.
  */
@@ -427,11 +470,11 @@ olsr_wallclock_string(void)
 
   gettimeofday(&now, NULL);
 
-  sec = (int)now.tv_sec;
+  sec = (int)now.tv_sec + olsr_get_timezone();
   usec = (int)now.tv_usec;
 
   snprintf(ret, sizeof(buf), "%02u:%02u:%02u.%06u",
-           sec / 3600, (sec % 3600) / 60, sec % 60, usec);
+           (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
 
   return ret;
 }
