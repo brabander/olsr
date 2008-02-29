@@ -62,7 +62,7 @@
 #include "defs.h" /* olsr_cnf */
 #include "link_set.h" /* get_link_set() */
 #include "lq_route.h" /* MIN_LINK_QUALITY */
-#include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_tc_lookup_dst() */
+#include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
 #include "net_olsr.h" /* ipequal */
 
 /* Plugin includes */
@@ -575,6 +575,9 @@ void FindNeighbors(
     /* TODO: get_link_set() is not thread-safe! */
     for (walker = get_link_set(); walker != NULL; walker = walker->next) 
     {
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+#endif
       union olsr_ip_addr* neighborMainIp;
       struct link_entry* bestLinkToNeighbor;
       struct tc_entry* tcLastHop;
@@ -590,7 +593,7 @@ void FindNeighbors(
         "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
         PLUGIN_NAME_SHORT,
         intf->ifName,
-        olsr_ip_to_string(&walker->neighbor_iface_addr));
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
       neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
 
@@ -602,7 +605,7 @@ void FindNeighbors(
           9,
           "%s: ----> Not forwarding to %s: is source of pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -614,7 +617,7 @@ void FindNeighbors(
           9,
           "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -626,7 +629,7 @@ void FindNeighbors(
           9,
           "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -639,7 +642,7 @@ void FindNeighbors(
           9,
           "%s: ----> Not forwarding to %s: link is timing out\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&walker->neighbor_iface_addr));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
         continue; /* for */
       }
@@ -649,7 +652,7 @@ void FindNeighbors(
         9,
         "%s: ----> Forwarding pkt to %s will cost %5.2f\n",
         PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&walker->neighbor_iface_addr),
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         walker->link_cost);
 
       /* If the candidate neighbor is best reached via another interface, then skip 
@@ -666,7 +669,7 @@ void FindNeighbors(
             9,
             "%s: ----> Not forwarding to %s: no link found\n",
             PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&walker->neighbor_iface_addr));
+            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
         }
         else
         {
@@ -676,7 +679,7 @@ void FindNeighbors(
             9,
             "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
             PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&walker->neighbor_iface_addr),
+            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
             bestLinkToNeighbor->link_cost);
         }
@@ -686,12 +689,15 @@ void FindNeighbors(
 
       if (forwardedBy != NULL)
       {
+#ifndef NODEBUG
+        struct ipaddr_str forwardedByBuf, niaBuf;
+#endif
         OLSR_PRINTF(
           9,
           "%s: ----> 2-hop path from %s via me to %s will cost %5.2f\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(forwardedBy),
-          olsr_ip_to_string(&walker->neighbor_iface_addr),
+          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
+          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
           previousLinkCost + walker->link_cost);
       }
 
@@ -705,24 +711,31 @@ void FindNeighbors(
         tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
         if (tcLastHop != NULL)
         {
-          struct topo_dst* tcDest;
+          struct tc_edge_entry* tc_edge;
 
-          /* TODO: olsr_tc_lookup_dst() is not thread-safe. */
-          tcDest = olsr_tc_lookup_dst(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-
-          /* Rely on short-circuit boolean evaluation */
-          if (tcDest != NULL && previousLinkCost + walker->link_cost > tcDest->link_cost)
+          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
+          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
+          
+          /* We are not interested in dead-end or dying edges. */
+          if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
           {
-            OLSR_PRINTF(
-              9,
-              "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
-              PLUGIN_NAME_SHORT,
-              olsr_ip_to_string(&walker->neighbor_iface_addr),
-              olsr_ip_to_string(forwardedBy),
-              olsr_ip_to_string(&walker->neighbor_iface_addr),
-              tcDest->link_cost);
+            if (previousLinkCost + walker->link_cost > tc_edge->link_cost)
+            {
+#ifndef NODEBUG
+              struct ipaddr_str neighbor_iface_buf, forw_buf;
+              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+#endif
+              OLSR_PRINTF(
+                9,
+                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
+                PLUGIN_NAME_SHORT,
+                neighbor_iface_buf.buf,
+                olsr_ip_to_string(&forw_buf, forwardedBy),
+                neighbor_iface_buf.buf,
+                tc_edge->link_cost);
 
-            continue; /* for */
+              continue; /* for */
+            } /* if */
           } /* if */
         } /* if */
       } /* if */
@@ -913,7 +926,7 @@ void FindNeighbors(
               bestLinkToNeighbor->neigh_link_quality));
 #endif
         }
-        
+
         continue; /* for */
       }
 
@@ -946,7 +959,8 @@ void FindNeighbors(
           /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
           tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
 
-          if (tc_edge != NULL)
+          /* We are not interested in dead-end or dying edges. */
+          if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
           {
             float tcEtx = CalcEtx(
 #ifdef USE_FPM
@@ -1530,9 +1544,9 @@ static int CreateInterface(
       BmfPError("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
 
       newIf->intAddr.v4.s_addr = inet_addr("0.0.0.0");
-	  }
-	  else
-	  {
+    }
+    else
+    {
       /* Downcast to correct sockaddr subtype */
       newIf->intAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
     }
@@ -1546,9 +1560,9 @@ static int CreateInterface(
       BmfPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
 
       newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
-	  }
-	  else
-	  {
+    }
+    else
+    {
       /* Downcast to correct sockaddr subtype */
       newIf->broadAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr;
     }

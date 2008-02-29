@@ -753,20 +753,21 @@ olsr_print_tc_table(void)
 
   OLSR_PRINTF(1,
               "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- TOPOLOGY\n\n"
-              "%-*s %-*s %-5s  %-5s  %s\n",
+              "%-*s %-*s %-5s  %-5s  %s  %s\n",
               nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
-              ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX");
+              ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX", "UP");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
-      OLSR_PRINTF(1, "%-*s %-*s  %s  %s  %s\n",
+      OLSR_PRINTF(1, "%-*s %-*s  %s  %s  %s  %s\n",
                   ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                   ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
                   fpmtoa(tc_edge->link_quality),
                   fpmtoa(tc_edge->inverse_link_quality),
                   etxtoa(olsr_calc_tc_etx(tc_edge)),
+                  tc_edge->flags & OLSR_TC_EDGE_DOWN ? "DOWN" : "UP");
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
