@@ -42,6 +42,8 @@
 #ifndef _LQ_LIST_H
 #define _LQ_LIST_H
 
+#include "stddef.h"
+
 struct list_node
 {
   struct list_node *next;
@@ -58,6 +60,19 @@ void list_add_before(struct list_node *, struct list_node *);
 void list_add_after(struct list_node *, struct list_node *);
 
 void list_remove(struct list_node *);
+
+/*
+ * Macro to define an inline function to map from a list_node offset back to the
+ * base of the datastructure. This saves you from populating the data field.
+ */
+#define LISTNODE2STRUCT(funcname, structname, listnodename) \
+static inline structname * funcname (struct list_node *ptr)\
+{\
+  if (ptr) {\
+    return((structname *) (((olsr_u8_t *) ptr) - offsetof(structname, listnodename))); \
+  } \
+  return(NULL); \
+}
 
 #endif
 

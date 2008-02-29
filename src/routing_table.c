@@ -673,11 +673,11 @@ olsr_rtp_to_string(const struct rt_path *rtp)
 void
 olsr_print_routing_table(const struct avl_tree *tree)
 {
+#ifndef NODEBUG
+  /* The whole function makes no sense without it. */
   const struct avl_node *rt_tree_node;
 
-#ifdef DEBUG
-  printf("ROUTING TABLE\n");
-#endif
+  OLSR_PRINTF(6, "ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first_c(tree);
        rt_tree_node != NULL;
@@ -687,7 +687,7 @@ olsr_print_routing_table(const struct avl_tree *tree)
     const struct rt_entry * const rt = rt_tree_node->data;
 
     /* first the route entry */
-    printf("%s/%u, via %s, best-originator %s\n",
+    OLSR_PRINTF(6, "%s/%u, via %s, best-originator %s\n",
            olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
            olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
@@ -698,7 +698,7 @@ olsr_print_routing_table(const struct avl_tree *tree)
          rtp_tree_node != NULL;
          rtp_tree_node = avl_walk_next_c(rtp_tree_node)) {
       const struct rt_path * const rtp = rtp_tree_node->data;
-      printf("\tfrom %s, etx %s, metric %u, via %s, %s, v %u\n",
+      OLSR_PRINTF(6, "\tfrom %s, etx %s, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),
              etxtoa(rtp->rtp_metric.etx),
              rtp->rtp_metric.hops,
@@ -707,6 +707,8 @@ olsr_print_routing_table(const struct avl_tree *tree)
              rtp->rtp_version);    
     }
   }
+#endif
+  tree = NULL; /* squelch compiler warnings */
 }
 
 /*
