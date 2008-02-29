@@ -659,7 +659,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            rt->rt_dst.prefix_len,
            olsr_ip_to_string(&origstr, &rtp->rtp_originator),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-           olsr_etx_to_string(rtp->rtp_metric.etx),
+           etxtoa(rtp->rtp_metric.etx),
            rtp->rtp_metric.hops,
            rtp->rtp_version);
 
@@ -700,7 +700,7 @@ olsr_print_routing_table(const struct avl_tree *tree)
       const struct rt_path * const rtp = rtp_tree_node->data;
       printf("\tfrom %s, etx %s, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),
-             olsr_etx_to_string(rtp->rtp_metric.etx),
+             etxtoa(rtp->rtp_metric.etx),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),

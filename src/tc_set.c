@@ -290,9 +290,9 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
            "%s > %s, lq %s, inv-lq %s, etx %s",
            olsr_ip_to_string(&addrbuf, &tc->addr),
            olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           olsr_etx_to_string(tc_edge->link_quality),
-           olsr_etx_to_string(tc_edge->inverse_link_quality),
-           olsr_etx_to_string(tc_edge->etx));
+           fpmtoa(tc_edge->link_quality),
+           fpmtoa(tc_edge->inverse_link_quality),
+           etxtoa(tc_edge->etx));
 
   return buf;
 }
@@ -764,9 +764,9 @@ olsr_print_tc_table(void)
       OLSR_PRINTF(1, "%-*s %-*s  %s  %s  %s\n",
                   ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                   ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
-                  olsr_etx_to_string(tc_edge->link_quality),
-                  olsr_etx_to_string(tc_edge->inverse_link_quality),
-                  olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                  fpmtoa(tc_edge->link_quality),
+                  fpmtoa(tc_edge->inverse_link_quality),
+                  etxtoa(olsr_calc_tc_etx(tc_edge)),
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif

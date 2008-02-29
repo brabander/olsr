@@ -764,7 +764,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
                    rt->rt_best->rtp_metric.hops);
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"right\">%s</td>",
-                   olsr_etx_to_string(rt->rt_best->rtp_metric.etx));
+                   etxtoa(rt->rt_best->rtp_metric.etx));
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"center\">%s</td></tr>\n",
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -984,7 +984,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "<tr>");
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
-    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%s</td>", olsr_etx_to_string(link->L_link_quality));
+    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%s</td>", fpmtoa(link->L_link_quality));
     if (olsr_cnf->lq_level > 0) {
       size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">%s</td>"
@@ -992,11 +992,11 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                        "<td>%d</td>"
                        "<td align=\"right\">%s</td>"
                        "<td align=\"right\">%s</td>\n",
-                       olsr_etx_to_string(link->loss_link_quality),
+                       fpmtoa(link->loss_link_quality),
                        link->lost_packets,
                        link->total_packets,
-                       olsr_etx_to_string(link->neigh_link_quality),
-                       olsr_etx_to_string(olsr_calc_link_etx(link)));
+                       fpmtoa(link->neigh_link_quality),
+                       etxtoa(olsr_calc_link_etx(link)));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
   }
@@ -1062,9 +1062,9 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
                                "<td align=\"right\">%s</td>"
                                "<td align=\"right\">%s</td>"
                                "<td align=\"right\">%s</td>\n",
-                               olsr_etx_to_string(tc_edge->link_quality),
-                               olsr_etx_to_string(tc_edge->inverse_link_quality),
-                               olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                               fpmtoa(tc_edge->link_quality),
+                               fpmtoa(tc_edge->inverse_link_quality),
+                               etxtoa(olsr_calc_tc_etx(tc_edge)));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 

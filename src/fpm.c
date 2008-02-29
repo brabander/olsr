@@ -42,7 +42,9 @@
 #include <assert.h>
 #include "fpm.h"
 
-#if !defined(NDEBUG) && defined(USE_FPM)
+#ifdef USE_FPM
+
+#ifndef NDEBUG
 
 fpm itofpm(int i)
 {
@@ -148,31 +150,56 @@ fpm fpmldiv(fpm a, fpm b) {
 }
 #endif
 
-#endif /* !defined(NDEBUG) && defined(USE_FPM) */
+#endif /* !NDEBUG */
 
-const char *olsr_etx_to_string(
-#ifdef USE_FPM
-fpm etx
-#else
-float etx
-#endif
-)
+fpm atofpm(const char *s)
+{
+  float r = 0.0;
+  sscanf(s, "%f", &r);
+  return ftofpm(r);
+}
+
+const char *fpmtoa(fpm a)
 {
   static int idx = 0;
   static char ret[4][20];
 
-  if (etx >= INFINITE_ETX) {
-    return "INF";
-  }
   idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
-#ifdef USE_FPM
-  snprintf(ret[idx], sizeof(ret[0]), "%ld.%ld", (sfpm)etx >> FPM_BIT,
-           100 * (ufpm)((sfpm)(etx) & FPM_MSK) >> FPM_BIT);
-#else
-  snprintf(ret[idx], sizeof(ret[0]), "%.3f", etx);
-#endif
+  snprintf(ret[idx], sizeof(ret[0]), "%ld.%03ld", (sfpm)a >> FPM_BIT,
+    (1000 * ((sfpm)(a) & FPM_MSK) + (FPM_NUM / 2)) >> FPM_BIT);
   return ret[idx];
 }
+
+const char *etxtoa(fpm etx)
+{
+  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
+}
+
+#else /* USE_FPM */
+
+float atofpm(const char *s)
+{
+  float r = 0.0;
+  sscanf(s, "%f", &r);
+  return r;
+}
+
+const char *fpmtoa(float a)
+{
+  static int idx = 0;
+  static char ret[4][20];
+
+  idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
+  snprintf(ret[idx], sizeof(ret[0]), "%.3f", a);
+  return ret[idx];
+}
+
+const char *etxtoa(float etx)
+{
+  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
+}
+
+#endif /* USE_FPM */
 
 /*
  * Local Variables:

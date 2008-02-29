@@ -311,12 +311,12 @@ static void ipc_print_neigh_link(void)
 	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   olsr_etx_to_string(link->L_link_quality), 
-                   olsr_etx_to_string(link->loss_link_quality),
+                   fpmtoa(link->L_link_quality), 
+                   fpmtoa(link->loss_link_quality),
                    link->lost_packets, 
                    link->total_packets,
-                   olsr_etx_to_string(link->neigh_link_quality), 
-                   olsr_etx_to_string(olsr_calc_link_etx(link)));
+                   fpmtoa(link->neigh_link_quality), 
+                   etxtoa(olsr_calc_link_etx(link)));
         link = link->next;
     }
     ipc_sendf("\nTable: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWillingness\t2 Hop Neighbors\n");
@@ -367,7 +367,7 @@ static void ipc_print_routes(void)
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
-                   olsr_etx_to_string(rt->rt_best->rtp_metric.etx),
+                   etxtoa(rt->rt_best->rtp_metric.etx),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     }
     ipc_sendf("\n");
@@ -388,9 +388,9 @@ static void ipc_print_topology(void)
             ipc_sendf( "%s\t%s\t%s\t%s\t%s\n", 
                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       olsr_etx_to_string(tc_edge->link_quality),
-                       olsr_etx_to_string(tc_edge->inverse_link_quality),
-                       olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                       fpmtoa(tc_edge->link_quality),
+                       fpmtoa(tc_edge->inverse_link_quality),
+                       etxtoa(olsr_calc_tc_etx(tc_edge)));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);

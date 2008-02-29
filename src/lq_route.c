@@ -106,7 +106,7 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
 #ifdef DEBUG
   OLSR_PRINTF(1, "SPF: insert candidate %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              olsr_etx_to_string(tc->path_etx));
+              etxtoa(tc->path_etx));
 #endif
 
   avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
@@ -128,7 +128,7 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
 #endif
   OLSR_PRINTF(1, "SPF: delete candidate %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              olsr_etx_to_string(tc->path_etx));
+              etxtoa(tc->path_etx));
 #endif
 
   avl_delete(tree, &tc->cand_tree_node);
@@ -151,7 +151,7 @@ olsr_spf_add_path_list (struct list_node *head, int *path_count,
 #ifdef DEBUG
   OLSR_PRINTF(1, "SPF: append path %s, cost %s, via %s\n",
               olsr_ip_to_string(&pathbuf, &tc->addr),
-              olsr_etx_to_string(tc->path_etx),
+              etxtoa(tc->path_etx),
               tc->next_hop ? olsr_ip_to_string(
                 &nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
 #endif
@@ -197,7 +197,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
 #endif
   OLSR_PRINTF(1, "SPF: exploring node %s, cost %s\n",
               olsr_ip_to_string(&buf, &tc->addr),
-              olsr_etx_to_string(tc->path_etx));
+              etxtoa(tc->path_etx));
 #endif
 
   /*
@@ -241,7 +241,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
 #ifdef DEBUG
       OLSR_PRINTF(1, "SPF:   exploring edge %s, cost %s\n",
                   olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
-                  olsr_etx_to_string(new_etx));
+                  etxtoa(new_etx));
 #endif
 
       /* 
@@ -270,8 +270,8 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
 #ifdef DEBUG
       OLSR_PRINTF(1, "SPF:   better path to %s, cost %s -> %s, via %s, hops %u\n",
                   olsr_ip_to_string(&buf, &new_tc->addr),
-                  olsr_etx_to_string(new_tc->path_etx),
-                  olsr_etx_to_string(new_etx),
+                  etxtoa(new_tc->path_etx),
+                  etxtoa(new_etx),
                   tc->next_hop ? olsr_ip_to_string(
                     &nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
                   new_tc->hops);

@@ -176,7 +176,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               olsr_etx_to_string(etx),
+               etxtoa(etx),
                style);
   
   if (neighbor->is_mpr) {
@@ -347,7 +347,7 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               olsr_etx_to_string(olsr_calc_tc_etx(dst_entry)));
+               etxtoa(olsr_calc_tc_etx(dst_entry)));
 }
 
 

@@ -120,10 +120,10 @@ int iterLinkTabNext(char *buff, int len)
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
-           olsr_etx_to_string(iterLinkTab->L_link_quality),
-           olsr_etx_to_string(iterLinkTab->loss_link_quality),
-           olsr_etx_to_string(iterLinkTab->neigh_link_quality),
-           olsr_etx_to_string(etx));
+           fpmtoa(iterLinkTab->L_link_quality),
+           fpmtoa(iterLinkTab->loss_link_quality),
+           fpmtoa(iterLinkTab->neigh_link_quality),
+           etxtoa(etx));
 
   iterLinkTab = iterLinkTab->next;
 
@@ -289,7 +289,7 @@ int iterTcTabNext(char *buff, int len)
 
     res = snprintf(buff, len, "[~%d~address~%s~etx~%s~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                   etxtoa(olsr_calc_tc_etx(tc_edge)));
 
     if (res < len)
       buff += res;

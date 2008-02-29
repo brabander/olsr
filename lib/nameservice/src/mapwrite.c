@@ -170,9 +170,9 @@ void mapwrite_work(FILE* fmap)
       if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            olsr_etx_to_string(tc_edge->link_quality),
-            olsr_etx_to_string(tc_edge->inverse_link_quality),
-            olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)),
+            fpmtoa(tc_edge->link_quality),
+            fpmtoa(tc_edge->inverse_link_quality),
+            etxtoa(olsr_calc_tc_etx(tc_edge)),
             lla, llb))
       {
         return;
@@ -186,9 +186,9 @@ void mapwrite_work(FILE* fmap)
       if (0 > fprintf(fmap, "Link('%s','%s',%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            olsr_etx_to_string(tc_edge->link_quality),
-            olsr_etx_to_string(tc_edge->inverse_link_quality),
-            olsr_etx_to_string(olsr_calc_tc_etx(tc_edge))))
+            fpmtoa(tc_edge->link_quality),
+            fpmtoa(tc_edge->inverse_link_quality),
+            etxtoa(olsr_calc_tc_etx(tc_edge))))
       {
         return;
       }

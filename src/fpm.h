@@ -160,6 +160,10 @@ fpm fpmldiv(fpm a, fpm b);
 #define CEIL_LQDIFF ftofpm(1.1)
 #define FLOOR_LQDIFF ftofpm(0.9)
 
+fpm atofpm(const char *);
+const char *fpmtoa(fpm);
+const char *etxtoa(fpm);
+
 #else /* USE_FPM */
 
 #define INFINITE_ETX ((float)(1 << 30))
@@ -168,15 +172,11 @@ fpm fpmldiv(fpm a, fpm b);
 #define CEIL_LQDIFF 1.1
 #define FLOOR_LQDIFF 0.9
 
-#endif /* USE_FPM */
+float atofpm(const char *);
+const char *fpmtoa(float);
+const char *etxtoa(float);
 
-const char *olsr_etx_to_string(
-#ifdef USE_FPM
-fpm
-#else
-float
-#endif
-);
+#endif /* USE_FPM */
 
 #endif
 

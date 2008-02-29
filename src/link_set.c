@@ -975,7 +975,7 @@ olsr_time_out_hysteresis(void)
 	  tmp_link_set->L_link_quality = olsr_hyst_calc_instability(tmp_link_set->L_link_quality);
 	  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %s\n",
                       olsr_ip_to_string(&buf, &tmp_link_set->neighbor_iface_addr),
-                      olsr_etx_to_string(tmp_link_set->L_link_quality));
+                      fpmtoa(tmp_link_set->L_link_quality));
 	  /* Update hello_timeout - NO SLACK THIS TIME */
 	  tmp_link_set->hello_timeout = GET_TIMESTAMP(tmp_link_set->last_htime*1000);
 	  /* Recalculate status */
@@ -1033,12 +1033,12 @@ void olsr_print_link_set(void)
 
     OLSR_PRINTF(1, "%-*s  %s  %s  %-3d    %-3d    %s  %s\n",
                 addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                olsr_etx_to_string(walker->L_link_quality),
-                olsr_etx_to_string(walker->loss_link_quality),
+                fpmtoa(walker->L_link_quality),
+                fpmtoa(walker->loss_link_quality),
 		walker->lost_packets,
                 walker->total_packets,
-		olsr_etx_to_string(walker->neigh_link_quality),
-                olsr_etx_to_string(etx));
+		fpmtoa(walker->neigh_link_quality),
+                etxtoa(etx));
   }
 #endif
 }

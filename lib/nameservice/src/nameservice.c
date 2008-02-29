@@ -1198,7 +1198,7 @@ select_best_nameserver(struct rt_entry **rt)
 			 */
 			OLSR_PRINTF(6, "NAME PLUGIN: nameserver %s, etx %s\n",
 						olsr_ip_to_string(&strbuf, &rt1->rt_dst.prefix),
-						olsr_etx_to_string(rt1->rt_best->rtp_metric.etx));
+						etxtoa(rt1->rt_best->rtp_metric.etx));
 
 			rt[nameserver_idx] = rt2;
 			rt[nameserver_idx+1] = rt1;
@@ -1250,7 +1250,7 @@ write_resolv_file(void)
 				*nameserver_routes = route;
 				OLSR_PRINTF(6, "NAME PLUGIN: found nameserver %s, etx %s",
 							olsr_ip_to_string(&strbuf, &name->ip),
-							olsr_etx_to_string(route->rt_best->rtp_metric.etx));
+							etxtoa(route->rt_best->rtp_metric.etx));
 
 				/* find the closet one */
 				select_best_nameserver(nameserver_routes);
