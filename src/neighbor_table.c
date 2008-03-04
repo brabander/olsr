@@ -78,9 +78,6 @@ olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->neighbor_2;
 
-  nbr2->neighbor_2_pointer--;
-  olsr_delete_neighbor_pointer(nbr2, &nbr->neighbor_main_addr);
-	  
   if (nbr2->neighbor_2_pointer < 1) {
       DEQUEUE_ELEM(nbr2);
       free(nbr2);
@@ -201,6 +198,10 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
   while (two_hop_list != &entry->neighbor_2_list) {
       two_hop_to_delete = two_hop_list;
       two_hop_list = two_hop_list->next;
+
+      two_hop_to_delete->neighbor_2->neighbor_2_pointer--;
+      olsr_delete_neighbor_pointer(two_hop_to_delete->neighbor_2,
+                                   &entry->neighbor_main_addr);
 
       olsr_del_nbr2_list(two_hop_to_delete);
     }
@@ -372,9 +373,17 @@ void
 olsr_expire_nbr2_list(void *context)
 {
   struct neighbor_2_list_entry *nbr2_list;
+  struct neighbor_entry *nbr;
+  struct neighbor_2_entry *nbr2; 
 
   nbr2_list = (struct neighbor_2_list_entry *)context;
   nbr2_list->nbr2_list_timer = NULL;
+
+  nbr = nbr2_list->nbr2_nbr;
+  nbr2 = nbr2_list->neighbor_2;
+
+  nbr2->neighbor_2_pointer--;
+  olsr_delete_neighbor_pointer(nbr2, &nbr->neighbor_main_addr); 
 
   olsr_del_nbr2_list(nbr2_list);
 }
