@@ -66,6 +66,41 @@ olsr_init_neighbor_table(void)
     }
 }
 
+/**
+ * Unlink, delete and free a nbr2_list entry.
+ */
+static void
+olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
+{
+  struct neighbor_entry *nbr;
+  struct neighbor_2_entry *nbr2;
+
+  nbr = nbr2_list->nbr2_nbr;
+  nbr2 = nbr2_list->neighbor_2;
+
+  nbr2->neighbor_2_pointer--;
+  olsr_delete_neighbor_pointer(nbr2, &nbr->neighbor_main_addr);
+	  
+  if (nbr2->neighbor_2_pointer < 1) {
+      DEQUEUE_ELEM(nbr2);
+      free(nbr2);
+  }
+
+  /*
+   * Kill running timers.
+   */
+  olsr_stop_timer(nbr2_list->nbr2_list_timer);
+  nbr2_list->nbr2_list_timer = NULL;
+  
+  /* Dequeue */
+  DEQUEUE_ELEM(nbr2_list);
+  
+  free(nbr2_list);
+
+  /* Set flags to recalculate the MPR set and the routing table */
+  changes_neighborhood = OLSR_TRUE;
+  changes_topology = OLSR_TRUE;
+}
 
 /**
  * Delete a two hop neighbor from a neighbors two hop neighbor list.
@@ -83,23 +118,11 @@ olsr_delete_neighbor_2_pointer(struct neighbor_entry *neighbor, union olsr_ip_ad
   nbr2_list = neighbor->neighbor_2_list.next;
 
   while (nbr2_list != &neighbor->neighbor_2_list) {
-      if (ipequal(&nbr2_list->neighbor_2->neighbor_2_addr, address)) {
-
-          /*
-           * Kill running timers.
-           */
-          olsr_stop_timer(nbr2_list->nbr2_list_timer);
-          nbr2_list->nbr2_list_timer = NULL;
-
-	  /* Dequeue */
-	  DEQUEUE_ELEM(nbr2_list);
-
-	  /* Delete */
-	  free(nbr2_list);
-
-	  return 1;	  
-      }
-      nbr2_list = nbr2_list->next;      
+    if (ipequal(&nbr2_list->neighbor_2->neighbor_2_addr, address)) {
+      olsr_del_nbr2_list(nbr2_list);
+      return 1;	  
+    }
+    nbr2_list = nbr2_list->next;      
   }
   return 0;
 }
@@ -175,28 +198,11 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 
   two_hop_list = entry->neighbor_2_list.next;
 
-  while(two_hop_list != &entry->neighbor_2_list)
-    {
-      struct neighbor_2_entry *two_hop_entry = two_hop_list->neighbor_2;
-      
-      two_hop_entry->neighbor_2_pointer--;
-
-      olsr_delete_neighbor_pointer(two_hop_entry, &entry->neighbor_main_addr);
-
-      /* Delete entry if it has no more one hop neighbors pointing to it */
-      if(two_hop_entry->neighbor_2_pointer < 1)
-	{
-	  DEQUEUE_ELEM(two_hop_entry);
-
-	  free(two_hop_entry);
-	}
-
-
+  while (two_hop_list != &entry->neighbor_2_list) {
       two_hop_to_delete = two_hop_list;
       two_hop_list = two_hop_list->next;
-      /* Delete entry */
-      free(two_hop_to_delete);
-      
+
+      olsr_del_nbr2_list(two_hop_to_delete);
     }
 
 
@@ -366,31 +372,11 @@ void
 olsr_expire_nbr2_list(void *context)
 {
   struct neighbor_2_list_entry *nbr2_list;
-  struct neighbor_entry *nbr;
-  struct neighbor_2_entry *nbr2;
 
   nbr2_list = (struct neighbor_2_list_entry *)context;
   nbr2_list->nbr2_list_timer = NULL;
 
-  nbr = nbr2_list->nbr2_nbr;
-  nbr2 = nbr2_list->neighbor_2;
-
-  nbr2->neighbor_2_pointer--;
-  olsr_delete_neighbor_pointer(nbr2, &nbr->neighbor_main_addr);
-	  
-  if (nbr2->neighbor_2_pointer < 1) {
-      DEQUEUE_ELEM(nbr2); /* XXX replace with proper unlock function */
-      free(nbr2);
-  }
-	  
-  /* Dequeue */
-  DEQUEUE_ELEM(nbr2_list);
-	  
-  free(nbr2_list);
-
-  /* Set flags to recalculate the MPR set and the routing table */
-  changes_neighborhood = OLSR_TRUE;
-  changes_topology = OLSR_TRUE;
+  olsr_del_nbr2_list(nbr2_list);
 }
 
 
@@ -440,3 +426,9 @@ olsr_print_neighbor_table(void)
   }
 #endif
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */
