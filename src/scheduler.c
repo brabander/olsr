@@ -370,15 +370,24 @@ olsr_walk_timers(clock_t *last_run)
 
         if (timer->timer_period) {
 
-          /* For periodical timers, rehash the random number and restart */
-          timer->timer_random = random();
-          olsr_change_timer(timer, timer->timer_period, timer->timer_jitter_pct,
-                            OLSR_TIMER_PERIODIC);
+          /*
+           * Don't restart the periodic timer if the callback function has
+           * stopped the timer.
+           */
+          if (timer->timer_flags & OLSR_TIMER_RUNNING) {
+
+            /* For periodical timers, rehash the random number and restart */
+            timer->timer_random = random();
+            olsr_change_timer(timer, timer->timer_period,
+                              timer->timer_jitter_pct,
+                              OLSR_TIMER_PERIODIC);
+          }
+
         } else {
 
           /*
-           * Don't stop the timer if the callback function already has stopped
-           * the timer.
+           * Don't stop the singleshot timer if the callback function has
+           * stopped the timer.
            */
           if (timer->timer_flags & OLSR_TIMER_RUNNING) {
 
