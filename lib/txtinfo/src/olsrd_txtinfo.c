@@ -356,17 +356,17 @@ static void ipc_print_link(void)
     ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkQuality\tlost\ttotal\tNLQ\tETX\n");
 
     /* Link set */
-    FOR_ALL_LINK_ENTRIES(link) {
-	ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%d\t%d\t%0.2f\t%0.2f\t\n",
+    OLSR_FOR_ALL_LINK_ENTRIES(link) {
+	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   link->L_link_quality, 
-                   link->loss_link_quality,
+                   fpmtoa(link->L_link_quality), 
+                   fpmtoa(link->loss_link_quality),
                    link->lost_packets, 
                    link->total_packets,
-                   link->neigh_link_quality, 
-                   olsr_calc_link_etx(link));
-    } FOR_ALL_LINK_ENTRIES_END(link);
+                   fpmtoa(link->neigh_link_quality), 
+                   etxtoa(olsr_calc_link_etx(link)));
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
     ipc_sendf("\n");
 }
@@ -386,7 +386,7 @@ static void ipc_print_routes(void)
 
         rt = rt_tree_node->data;
 
-        ipc_sendf( "%s/%d\t%s\t%d\t%.3f\t%s\t\n",
+        ipc_sendf( "%s/%d\t%s\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
