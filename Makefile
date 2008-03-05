@@ -192,6 +192,10 @@ quagga:
 		$(MAKECMD) -C lib/quagga 
 		$(MAKECMD) -C lib/quagga DESTDIR=$(DESTDIR) install 
 
+txtinfo:
+		$(MAKECMD) -C lib/txtinfo clean
+		$(MAKECMD) -C lib/txtinfo 
+		$(MAKECMD) -C lib/txtinfo DESTDIR=$(DESTDIR) install 
 
 build_all:	all switch libs
 install_all:	install install_libs
