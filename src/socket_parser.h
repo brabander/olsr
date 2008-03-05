@@ -50,20 +50,11 @@ struct olsr_socket_entry
   struct olsr_socket_entry *next;
 };
 
-
 extern struct olsr_socket_entry *olsr_socket_entries;
+void olsr_poll_sockets(void);
 
-
-void
-add_olsr_socket(int, void(*)(int));
-
-int
-remove_olsr_socket(int, void(*)(int));
-
-void
-listen_loop(void);
-
-void
-poll_sockets(void);
+void add_olsr_socket(int, void(*)(int));
+int remove_olsr_socket(int, void(*)(int));
+void listen_loop(void);
 
 #endif

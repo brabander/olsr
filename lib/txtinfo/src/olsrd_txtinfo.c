@@ -356,19 +356,17 @@ static void ipc_print_link(void)
     ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkQuality\tlost\ttotal\tNLQ\tETX\n");
 
     /* Link set */
-    link = link_set;
-    while(link)	{
-	ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%d\t%d\t%0.2f\t%0.2f\t\n",
+    OLSR_FOR_ALL_LINK_ENTRIES(link) {
+	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   link->L_link_quality, 
-                   link->loss_link_quality,
+                   fpmtoa(link->L_link_quality), 
+                   fpmtoa(link->loss_link_quality),
                    link->lost_packets, 
                    link->total_packets,
-                   link->neigh_link_quality, 
-                   olsr_calc_link_etx(link));
-        link = link->next;
-    }
+                   fpmtoa(link->neigh_link_quality), 
+                   etxtoa(olsr_calc_link_etx(link)));
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
     ipc_sendf("\n");
 }
@@ -388,12 +386,12 @@ static void ipc_print_routes(void)
 
         rt = rt_tree_node->data;
 
-        ipc_sendf( "%s/%d\t%s\t%d\t%.3f\t%s\t\n",
+        ipc_sendf( "%s/%d\t%s\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
-                   rt->rt_best->rtp_metric.etx,
+                   etxtoa(rt->rt_best->rtp_metric.etx),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     }
     ipc_sendf("\n");
@@ -411,12 +409,12 @@ static void ipc_print_topology(void)
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
             struct ipaddr_str dstbuf, addrbuf;
-            ipc_sendf( "%s\t%s\t%0.2f\t%0.2f\t%0.2f\n", 
+            ipc_sendf( "%s\t%s\t%s\t%s\t%s\n", 
                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       tc_edge->link_quality,
-                       tc_edge->inverse_link_quality,
-                       olsr_calc_tc_etx(tc_edge));
+                       fpmtoa(tc_edge->link_quality),
+                       fpmtoa(tc_edge->inverse_link_quality),
+                       etxtoa(olsr_calc_tc_etx(tc_edge)));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);

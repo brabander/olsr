@@ -76,6 +76,13 @@
 #define MID_INTERVAL          TC_INTERVAL
 #define HNA_INTERVAL          TC_INTERVAL
 
+
+/* Emission Jitter */
+#define HELLO_JITTER         25 /* percent */
+#define HNA_JITTER           25 /* percent */
+#define MID_JITTER           25 /* percent */
+#define TC_JITTER            25 /* percent */
+
 /*
  *Holding Time
  */
@@ -434,3 +441,9 @@ union olsr_packet
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

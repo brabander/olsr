@@ -154,10 +154,6 @@ main(int argc, char *argv[])
 
   /* Grab initial timestamp */
   now_times = times(&tms_buf);
-  do {
-    time_t t = now.tv_sec;
-    nowtm = localtime(&t);
-  } while (nowtm == NULL);
     
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
 	 olsrd_version, 
@@ -232,6 +228,9 @@ main(int argc, char *argv[])
 #else
   olsr_cnf->system_tick_divider = 1;
 #endif
+
+  /* Initialize timers */
+  olsr_init_timers();
 
   /*
    * Process olsrd options.
@@ -357,12 +356,11 @@ main(int argc, char *argv[])
   /* Print heartbeat to stdout */
 
 #if !defined WINCE
-  if(olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO))
-    olsr_register_scheduler_event(&generate_stdout_pulse, NULL, STDOUT_PULSE_INT, 0, NULL);
+  if (olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO)) {
+    olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC,
+                     &generate_stdout_pulse, NULL, 0);
+  }
 #endif
-  
-  gettimeofday(&now, NULL);
-
 
   /* Initialize the IPC socket */
 
@@ -411,11 +409,10 @@ main(int argc, char *argv[])
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-  /* Register socket poll event */
-  olsr_register_timeout_function(&poll_sockets, OLSR_FALSE);
+  link_changes = OLSR_FALSE;
 
   /* Starting scheduler */
-  scheduler();
+  olsr_scheduler();
 
   /* Like we're ever going to reach this ;-) */
   return 1;
@@ -885,3 +882,9 @@ olsr_process_arguments(int argc, char *argv[],
     }
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

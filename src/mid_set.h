@@ -66,9 +66,10 @@ struct mid_entry
   struct mid_address *aliases;
   struct mid_entry   *prev;
   struct mid_entry   *next;
-  clock_t             ass_timer;  
+  struct timer_entry  *mid_timer;
 };
 
+#define OLSR_MID_JITTER 5 /* percent */
 
 extern struct mid_entry mid_set[HASHSIZE];
 extern struct mid_address reverse_mid_set[HASHSIZE];

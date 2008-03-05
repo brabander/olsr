@@ -50,11 +50,13 @@ struct dup_entry
   union olsr_ip_addr     addr;      /* IP address of originator */
   olsr_u16_t             seqno;     /* Seqno of message */
   olsr_u8_t              forwarded; /* If this message was forwarded or not */
-  clock_t                timer;	    /* Holding time */
+  struct timer_entry     *timer; /* Holding time */
   struct dup_iface       *ifaces;   /* Interfaces this message was recieved on */
   struct dup_entry       *next;     /* Next entry */
   struct dup_entry       *prev;     /* Prev entry */
 };
+
+#define OLSR_DUP_ENTRY_JITTER 5 /* percent */
 
 struct dup_iface
 {
@@ -91,3 +93,9 @@ int
 olsr_check_dup_forward(union olsr_ip_addr *, olsr_u16_t);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

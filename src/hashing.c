@@ -46,28 +46,25 @@
  * Hashing function. Creates a key based on
  * an 32-bit address.
  * @param address the address to hash
- * @return the hash(a value in the 0-31 range)
+ * @return the hash(a value in the (0 to HASHMASK-1) range)
  */
-olsr_u32_t olsr_hashing(const union olsr_ip_addr * address)
+olsr_u32_t olsr_ip_hashing(const union olsr_ip_addr * address)
 {
-    olsr_u32_t hash;
-    if(olsr_cnf->ip_version == AF_INET) {
-        /* IPv4 */  
-        const olsr_u8_t * const v4x = (const olsr_u8_t *)&address->v4;
-        hash = v4x[0] ^ v4x[1] ^ v4x[2] ^ v4x[3];
-    } else {
-        /* IPv6 */
-        const char * const tmp = (const char *)&address->v6;
-        hash = ntohl(*tmp);
-    }
-    return hash & HASHMASK;
+  olsr_u32_t hash;
+  if(olsr_cnf->ip_version == AF_INET) {
+    /* IPv4 */  
+    const olsr_u8_t * const v4x = (const olsr_u8_t *)&address->v4;
+    hash = v4x[0] ^ v4x[1] ^ v4x[2] ^ v4x[3];
+  } else {
+    /* IPv6 */
+    const char * const tmp = (const char *)&address->v6;
+    hash = ntohl(*tmp);
+  }
+  return hash & HASHMASK;
 }
 
 /*
  * Local Variables:
- * mode: c
- * style: linux
- * c-basic-offset: 4
- * indent-tabs-mode: nil
+ * c-basic-offset: 2
  * End:
  */
