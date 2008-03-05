@@ -62,6 +62,7 @@ clock_t now_times;  /* current idea of times(2) reported uptime */
 /* Hashed root of all timers */
 struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
 clock_t timer_last_run; /* remember the last timeslot walk */
+struct list_node *timer_walk_list_node = NULL; /* used for timeslot walk */
 
 /* Pool of timers to avoid malloc() churn */
 struct list_node free_timer_list;
@@ -324,7 +325,7 @@ void
 olsr_walk_timers(clock_t *last_run)
 {
   static struct timer_entry *timer;
-  struct list_node *timer_list_node, *timer_list_node_next, *timer_head_node;
+  struct list_node *timer_head_node;
   unsigned int timers_walked, timers_fired;
   unsigned int total_timers_walked, total_timers_fired;
   unsigned int wheel_slot_walks = 0;
@@ -347,13 +348,11 @@ olsr_walk_timers(clock_t *last_run)
     timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
 
     /* Walk all entries hanging off this hash bucket */
-    for (timer_list_node = timer_head_node->next;
-         timer_list_node != timer_head_node; /* circular list */
-         timer_list_node = timer_list_node_next) {
+    for (timer_walk_list_node = timer_head_node->next;
+         timer_walk_list_node != timer_head_node; /* circular list */
+         timer_walk_list_node = timer_walk_list_node->next) {
 
-      /* prefetch next node in case this node fires and we have to delete. */
-      timer_list_node_next = timer_list_node->next;
-      timer = list2timer(timer_list_node);
+      timer = list2timer(timer_walk_list_node);
 
       timers_walked++;
 
@@ -403,6 +402,11 @@ olsr_walk_timers(clock_t *last_run)
     /* Increment the time slot and wheel slot walk iteration */
     (*last_run)++;
     wheel_slot_walks++;
+
+    /*
+     * Mark the timer walk context unused.
+     */
+    timer_walk_list_node = NULL;
   }
 
 #ifdef DEBUG
@@ -569,6 +573,20 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   return timer;
 }
 
+/*
+ * Check if there is a timer walk in progress and advance the
+ * walking context if so. Keep in mind we are about to delete
+ * the timer from a list and this will destroy the walking context.
+ */
+
+static inline void
+olsr_update_timer_walk_ctx(struct timer_entry *timer)
+{
+  if (timer_walk_list_node == &timer->timer_list) {
+    timer_walk_list_node = timer_walk_list_node->next;
+  }
+}
+
 
 /**
  * Delete a timer.
@@ -590,6 +608,8 @@ olsr_stop_timer(struct timer_entry *timer)
               timer, olsr_clock_string(timer->timer_clock),
               timer->timer_cb_context);
 #endif
+
+  olsr_update_timer_walk_ctx(timer);
 
   /*
    * Carve out of the existing wheel_slot and return to the pool
@@ -629,6 +649,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
 
   timer->timer_clock = olsr_jitter(rel_time, jitter_pct, timer->timer_random);
   timer->timer_jitter_pct = jitter_pct;
+
+  olsr_update_timer_walk_ctx(timer);
 
   /*
    * Changes are easy: Remove timer from the exisiting timer_wheel slot
