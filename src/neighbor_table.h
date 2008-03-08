@@ -72,6 +72,15 @@ struct neighbor_entry
   struct neighbor_entry        *prev;
 };
 
+#define OLSR_FOR_ALL_NBR_ENTRIES(nbr) \
+{ \
+  int _idx; \
+  for (_idx = 0; _idx < HASHSIZE; _idx++) { \
+    for(nbr = neighbortable[_idx].next; \
+        nbr != &neighbortable[_idx]; \
+        nbr = nbr->next)
+#define OLSR_FOR_ALL_NBR_ENTRIES_END(nbr) }}
+
 
 /*
  * The neighbor table

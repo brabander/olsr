@@ -280,25 +280,21 @@ pcf_event(int changes_neighborhood,
 	  int changes_topology,
 	  int changes_hna)
 {
-  int res = 0;
-  if(changes_neighborhood || changes_topology || changes_hna) {
-    struct neighbor_entry *neighbor_table_tmp;
-    struct tc_entry *tc;
-    struct tc_edge_entry *tc_edge;
-    struct ip_prefix_list *hna;
-    int idx;
+  struct neighbor_entry *neighbor_table_tmp;
+  struct tc_entry *tc;
+  struct tc_edge_entry *tc_edge;
+  struct ip_prefix_list *hna;
+  int idx, res = 0;
+
+  if (changes_neighborhood || changes_topology || changes_hna) {
     
     /* Print tables to IPC socket */
     ipc_send_str("digraph topology\n{\n");
 
     /* Neighbors */
-    for (idx = 0; idx < HASHSIZE; idx++) {	  
-      for(neighbor_table_tmp = neighbortable[idx].next;
-          neighbor_table_tmp != &neighbortable[idx];
-          neighbor_table_tmp = neighbor_table_tmp->next){
-        ipc_print_neigh_link( neighbor_table_tmp );
-      }
-    }
+    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
+      ipc_print_neigh_link( neighbor_table_tmp );
+    } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -395,3 +391,9 @@ ipc_send_fmt(const char *format, ...)
     ipc_send(buf, len);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

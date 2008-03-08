@@ -344,12 +344,12 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
   struct avl_tree cand_tree;
   struct avl_node *rtp_tree_node;
   struct list_node path_list; /* head of the path_list */
-  int i, path_count = 0;
   struct tc_entry *tc;
   struct rt_path *rtp;
   struct tc_edge_entry *tc_edge;
   struct neighbor_entry *neigh;
   struct link_entry *link;
+  int path_count = 0;
 
   /* We are done if our backoff timer is running */
   if (!spf_backoff_timer) {
@@ -390,56 +390,54 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
   /*
    * add edges to and from our neighbours.
    */
-  for (i = 0; i < HASHSIZE; i++)
-    for (neigh = neighbortable[i].next; neigh != &neighbortable[i];
-         neigh = neigh->next) {
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
 
-      if (neigh->status == SYM) {
+    if (neigh->status == SYM) {
 
-        tc_edge = olsr_lookup_tc_edge(tc_myself, &neigh->neighbor_main_addr);
-        link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-	if (!link) {
-
-          /*
-           * If there is no best link to this neighbor
-           * and we had an edge before then flush the edge.
-           */
-          if (tc_edge) {
-            olsr_delete_tc_edge_entry(tc_edge);
-          }
-	  continue;
-        }
-
-        /* find the interface for the link */
-        if (link->if_name) {
-          link->inter = if_ifwithname(link->if_name);
-        } else {
-          link->inter = if_ifwithaddr(&link->local_iface_addr);
-        }
+      tc_edge = olsr_lookup_tc_edge(tc_myself, &neigh->neighbor_main_addr);
+      link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
+      if (!link) {
 
         /*
-         * Set the next-hops of our neighbors. 
+         * If there is no best link to this neighbor
+         * and we had an edge before then flush the edge.
          */
-        if (!tc_edge) {
-          tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,
-                                           0, link->vtime,
-                                           link->loss_link_quality2,
-                                           link->neigh_link_quality2);
-        } else {
+        if (tc_edge) {
+          olsr_delete_tc_edge_entry(tc_edge);
+        }
+        continue;
+      }
 
-          /*
-           * Update LQ and timers, such that the edge does not get deleted.
-           */
-          tc_edge->link_quality = link->loss_link_quality2;
-          tc_edge->inverse_link_quality = link->neigh_link_quality2;
-          olsr_set_tc_edge_timer(tc_edge, link->vtime*1000);
-          olsr_calc_tc_edge_entry_etx(tc_edge);
-        }
-        if (tc_edge->edge_inv) {
-          tc_edge->edge_inv->tc->next_hop = link;
-        }
+      /* find the interface for the link */
+      if (link->if_name) {
+        link->inter = if_ifwithname(link->if_name);
+      } else {
+        link->inter = if_ifwithaddr(&link->local_iface_addr);
+      }
+
+      /*
+       * Set the next-hops of our neighbors. 
+       */
+      if (!tc_edge) {
+        tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,
+                                         0, link->vtime,
+                                         link->loss_link_quality2,
+                                         link->neigh_link_quality2);
+      } else {
+
+        /*
+         * Update LQ and timers, such that the edge does not get deleted.
+         */
+        tc_edge->link_quality = link->loss_link_quality2;
+        tc_edge->inverse_link_quality = link->neigh_link_quality2;
+        olsr_set_tc_edge_timer(tc_edge, link->vtime*1000);
+        olsr_calc_tc_edge_entry_etx(tc_edge);
+      }
+      if (tc_edge->edge_inv) {
+        tc_edge->edge_inv->tc->next_hop = link;
       }
     }
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);

@@ -966,7 +966,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neigh;
   struct link_entry *link = NULL;
-  int size = 0, idx;
+  int size = 0;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   size += section_title(&buf[size], bufsize-size, "Links");
@@ -1007,33 +1007,36 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += snprintf(&buf[size], bufsize-size,
                    "<tr><th align=\"center\"%s>IP Address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
   /* Neighbors */
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    for (neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
-      struct neighbor_2_list_entry *list_2;
-      int thop_cnt;
-      size += snprintf(&buf[size], bufsize-size, "<tr>");
-      size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, -1);
-      size += snprintf(&buf[size], bufsize-size,
-                       "<td align=\"center\">%s</td>"
-                       "<td align=\"center\">%s</td>"
-                       "<td align=\"center\">%s</td>"
-                       "<td align=\"center\">%d</td>",
-                       (neigh->status == SYM) ? "YES" : "NO",
-                       neigh->is_mpr ? "YES" : "NO",
-                       olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                       neigh->willingness);
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
 
-      size += snprintf(&buf[size], bufsize-size, "<td><select>\n"
-                       "<option>IP ADDRESS</option>\n");
+    struct neighbor_2_list_entry *list_2;
+    int thop_cnt;
+    size += snprintf(&buf[size], bufsize-size, "<tr>");
+    size += build_ipaddr_with_link(&buf[size], bufsize, &neigh->neighbor_main_addr, -1);
+    size += snprintf(&buf[size], bufsize-size,
+                     "<td align=\"center\">%s</td>"
+                     "<td align=\"center\">%s</td>"
+                     "<td align=\"center\">%s</td>"
+                     "<td align=\"center\">%d</td>",
+                     (neigh->status == SYM) ? "YES" : "NO",
+                     neigh->is_mpr ? "YES" : "NO",
+                     olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+                     neigh->willingness);
+
+    size += snprintf(&buf[size], bufsize-size, "<td><select>\n"
+                     "<option>IP ADDRESS</option>\n");
 
 
-      for (list_2 = neigh->neighbor_2_list.next, thop_cnt = 0; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next, thop_cnt++) {
-        struct ipaddr_str strbuf;
-        size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
-      }
-      size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", thop_cnt);
+    for (list_2 = neigh->neighbor_2_list.next, thop_cnt = 0;
+         list_2 != &neigh->neighbor_2_list;
+         list_2 = list_2->next, thop_cnt++) {
+      struct ipaddr_str strbuf;
+      size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n",
+                       olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
     }
-  }
+    size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", thop_cnt);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
   return size;
 }
@@ -1274,3 +1277,9 @@ static ssize_t writen(int fd, const void *buf, size_t count)
     }
     return count;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

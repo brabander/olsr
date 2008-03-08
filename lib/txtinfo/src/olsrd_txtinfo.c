@@ -318,33 +318,29 @@ static void ipc_print_neigh(void)
     struct ipaddr_str buf1;
     struct neighbor_entry *neigh;
     struct neighbor_2_list_entry *list_2;
-    int index, thop_cnt;
+    int thop_cnt;
 
     ipc_sendf("\nTable: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWillingness\t2 Hop Neighbors\n");
 
     /* Neighbors */
-    for(index = 0; index < HASHSIZE; index++) {
-        for(neigh = neighbortable[index].next;
-            neigh != &neighbortable[index];
-            neigh = neigh->next) {
-            ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
-                      olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-                      (neigh->status == SYM) ? "YES" : "NO",
-                      neigh->is_mpr ? "YES" : "NO",
-                      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                      neigh->willingness);
-            thop_cnt = 0;
+    OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+        ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
+                  olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+                  (neigh->status == SYM) ? "YES" : "NO",
+                  neigh->is_mpr ? "YES" : "NO",
+                  olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+                  neigh->willingness);
+        thop_cnt = 0;
 
-            for(list_2 = neigh->neighbor_2_list.next;
-                list_2 != &neigh->neighbor_2_list;
-                list_2 = list_2->next)
-                {
-                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
-                    thop_cnt ++;
-                }
-            ipc_sendf("%d\n", thop_cnt);
-	}
-    }
+        for(list_2 = neigh->neighbor_2_list.next;
+            list_2 != &neigh->neighbor_2_list;
+            list_2 = list_2->next)
+        {
+            //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
+            thop_cnt ++;
+        }
+        ipc_sendf("%d\n", thop_cnt);
+    } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
     ipc_sendf("\n");
 }
 
