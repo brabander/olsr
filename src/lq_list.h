@@ -68,10 +68,10 @@ void list_remove(struct list_node *);
 #define LISTNODE2STRUCT(funcname, structname, listnodename) \
 static inline structname * funcname (struct list_node *ptr)\
 {\
-  if (ptr) {\
-    return((structname *) (((olsr_u8_t *) ptr) - offsetof(structname, listnodename))); \
-  } \
-  return(NULL); \
+  return( \
+    ptr ? \
+      (structname *) (((olsr_u8_t *) ptr) - offsetof(structname, listnodename)) : \
+      NULL); \
 }
 
 #endif
