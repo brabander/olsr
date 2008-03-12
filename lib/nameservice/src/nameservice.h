@@ -120,6 +120,7 @@ extern struct list_node latlon_list[HASHSIZE];
 extern float my_lat, my_lon;
 
 void olsr_expire_write_file_timer(void *);
+void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
 void

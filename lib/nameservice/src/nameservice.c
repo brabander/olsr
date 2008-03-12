@@ -100,6 +100,9 @@ static olsr_bool latlon_table_changed = OLSR_TRUE;
 /* backoff timer for writing changes into a file */
 struct timer_entry *write_file_timer = NULL;
 
+/* periodic message generation */
+struct timer_entry *msg_gen_timer = NULL;
+
 /* regular expression to be matched by valid hostnames, compiled in name_init() */
 static regex_t regex_t_name;
 static regmatch_t regmatch_t_name;
@@ -377,8 +380,9 @@ name_init(void)
 	olsr_parser_add_function(&olsr_parser, PARSER_TYPE, 1);
 
 	/* periodic message generation */
-	olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
-					 OLSR_TIMER_PERIODIC, &olsr_namesvc_gen, NULL, 0);
+	msg_gen_timer = olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
+									 OLSR_TIMER_PERIODIC, &olsr_namesvc_gen,
+									 NULL, 0);
 
 	mapwrite_init(my_latlon_file);
 
@@ -452,6 +456,9 @@ name_destructor(void)
 	free_all_list_entries(forwarder_list);
 	free_all_list_entries(latlon_list);
 
+	olsr_stop_timer(write_file_timer);
+	olsr_stop_timer(msg_gen_timer);
+
 	regfree(&regex_t_name);
 	regfree(&regex_t_service);
 	mapwrite_exit();
@@ -462,7 +469,7 @@ void
 free_all_list_entries(struct list_node *this_db_list) 
 {
 	struct db_entry *db;
-	struct list_node *list_head, *list_node;
+	struct list_node *list_head, *list_node, *list_node_next;
 
 	int i;
 	
@@ -472,12 +479,13 @@ free_all_list_entries(struct list_node *this_db_list)
 
 		for (list_node = list_head->next;
 			 list_node != list_head;
-			 list_node = list_node->next) {
+			 list_node = list_node_next) {
 
-			/* map list node to db_entry */
-			db = NULL;
-			free_name_entry_list(&db->names);
-			free(db);
+			/* prefetch next node before loosing context */
+			list_node_next = list_node->next;
+
+			db = list2db(list_node);
+			olsr_namesvc_delete_db_entry(db);
 		}
 	}
 }
@@ -518,7 +526,7 @@ olsr_start_write_file_timer(void)
 /*
  * Delete and unlink db_entry.
  */
-static void
+void
 olsr_namesvc_delete_db_entry(struct db_entry *db)
 {
 #ifndef NODEBUG
@@ -532,6 +540,7 @@ olsr_namesvc_delete_db_entry(struct db_entry *db)
 	
 	/* Delete */
 	free_name_entry_list(&db->names);
+	list_remove(&db->db_list);
 	free(db);
 }
 
