@@ -5,13 +5,13 @@
 #
 
 # activate debugging with 1 or deactivate with 0
-DEBUG ?= 0
+DEBUG ?= 1
 
 # compile OLSR_PRINTF out
 NO_DEBUG_MESSAGES ?= 0
 
 # the optimize option to be set for gcc
-OPTIMIZE ?= -O2
+OPTIMIZE ?= 
 
 # enable mudflap with 1 or deactivate with 0
 # you need a recent enough gcc and the libmudflap installed
@@ -178,7 +178,7 @@ OBJS +=		$(SRCS:%.c=%.o)
 # debugging or non-debugging flags
 ifeq ($(DEBUG),1)
 CPPFLAGS +=	-DDEBUG
-CFLAGS +=	-g
+CFLAGS +=	-ggdb
 else
 CPPFLAGS +=	-DNDEBUG
 endif

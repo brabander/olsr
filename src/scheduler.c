@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tï¿½nnesen(andreto@olsr.org)
  * Timer rewrite (c) 2008, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -359,7 +359,7 @@ olsr_walk_timers(clock_t *last_run)
       /* Ready to fire ? */
       if (TIMED_OUT(timer->timer_clock)) {
 
-        olsr_printf(3, "TIMER: fire timer %p, ctx %p, "
+        olsr_printf(10, "TIMER: fire timer %p, ctx %p, "
                     "cookie %u at clocktick %u\n",
                     timer, timer->timer_cb_context, timer->timer_cookie,
                     (unsigned int)(*last_run));
@@ -410,7 +410,7 @@ olsr_walk_timers(clock_t *last_run)
   }
 
 #ifdef DEBUG
-  olsr_printf(3, "TIMER: processed %4u/%u clockwheel slots, "
+  olsr_printf(10, "TIMER: processed %4u/%u clockwheel slots, "
               "timers walked %4u/%u, timers fired %u\n",
               wheel_slot_walks, TIMER_WHEEL_SLOTS,
               total_timers_walked, timers_running, total_timers_fired);
@@ -566,7 +566,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   timers_running++;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: start timer %p firing in %s, ctx %p\n",
+  OLSR_PRINTF(10, "TIMER: start timer %p firing in %s, ctx %p\n",
               timer, olsr_clock_string(timer->timer_clock), context);
 #endif
 
@@ -604,7 +604,7 @@ olsr_stop_timer(struct timer_entry *timer)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: stop timer %p firing in %s, ctx %p\n",
+  OLSR_PRINTF(10, "TIMER: stop timer %p firing in %s, ctx %p\n",
               timer, olsr_clock_string(timer->timer_clock),
               timer->timer_cb_context);
 #endif
@@ -661,7 +661,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
                   &timer->timer_list);
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: change timer %p, firing to %s, ctx %p\n",
+  OLSR_PRINTF(10, "TIMER: change timer %p, firing to %s, ctx %p\n",
               timer,
               olsr_clock_string(timer->timer_clock),
               timer->timer_cb_context);

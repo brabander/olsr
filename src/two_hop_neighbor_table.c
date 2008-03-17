@@ -262,7 +262,7 @@ olsr_print_two_hop_neighbor_table(void)
         }
         OLSR_PRINTF(1, "%-15s  %s\n",
                     olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                    fpmtoa(entry->path_link_quality));
+                    get_linkcost_text(entry->path_linkcost, OLSR_FALSE));
       }
     }
   }

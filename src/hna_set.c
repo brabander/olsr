@@ -205,7 +205,7 @@ static void
 olsr_expire_hna_net_entry(void *context)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
+  struct ipaddr_str buf1, buf2;
 #endif
   struct hna_net *net_to_delete;
   struct hna_entry *hna_gw;
@@ -216,9 +216,9 @@ olsr_expire_hna_net_entry(void *context)
 
 #ifdef DEBUG
   OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", 
-              olsr_ip_to_string(&buf, &net_to_delete->A_network_addr),
+              olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
               net_to_delete->prefixlen,
-              olsr_ip_to_string(&buf, &hna_gw->A_gateway_addr));
+              olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
 #endif
 
   /*
@@ -234,11 +234,6 @@ olsr_expire_hna_net_entry(void *context)
     DEQUEUE_ELEM(hna_gw);
     free(hna_gw);
   }
-
-  DEQUEUE_ELEM(net_to_delete);
-  free(net_to_delete);
-
-  changes_hna = OLSR_TRUE;
 }
 
 /**

@@ -76,6 +76,7 @@
 #include "link_set.h"
 #include "socket_parser.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 #include "olsrd_txtinfo.h"
 #include "olsrd_plugin.h"
@@ -349,19 +350,16 @@ static void ipc_print_link(void)
     struct ipaddr_str buf1, buf2;
     struct link_entry *link = NULL;
 
-    ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkQuality\tlost\ttotal\tNLQ\tETX\n");
+    ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkcost\n");
 
     /* Link set */
     OLSR_FOR_ALL_LINK_ENTRIES(link) {
-	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
+	ipc_sendf( "%s\t%s\t%0.2f\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   fpmtoa(link->L_link_quality), 
-                   fpmtoa(link->loss_link_quality),
-                   link->lost_packets, 
-                   link->total_packets,
-                   fpmtoa(link->neigh_link_quality), 
-                   etxtoa(olsr_calc_link_etx(link)));
+                   link->L_link_quality, 
+                   get_link_entry_text(link),
+                   get_linkcost_text(link->linkcost, OLSR_FALSE));
     } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
     ipc_sendf("\n");
@@ -387,7 +385,7 @@ static void ipc_print_routes(void)
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
-                   etxtoa(rt->rt_best->rtp_metric.etx),
+                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     }
     ipc_sendf("\n");
@@ -398,19 +396,18 @@ static void ipc_print_topology(void)
 {
     struct tc_entry *tc;
     
-    ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLQ\tILQ\tETX\n");
+    ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLinkcost\n");
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
             struct ipaddr_str dstbuf, addrbuf;
-            ipc_sendf( "%s\t%s\t%s\t%s\t%s\n", 
+            ipc_sendf( "%s\t%s\t%s\t%s\n", 
                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       fpmtoa(tc_edge->link_quality),
-                       fpmtoa(tc_edge->inverse_link_quality),
-                       etxtoa(olsr_calc_tc_etx(tc_edge)));
+                       get_tc_edge_entry_text(tc_edge),
+                       get_linkcost_text(tc_edge->cost, OLSR_FALSE));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);

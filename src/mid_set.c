@@ -177,7 +177,6 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, float vt
     {
       /*Create new node*/
       tmp = olsr_malloc(sizeof(struct mid_entry), "MID new alias");
-      memset(tmp, 0, sizeof(struct mid_entry));
 
       tmp->aliases = alias;
       alias->main_entry = tmp;
@@ -274,7 +273,6 @@ insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, 
   OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf1, main_add));
 
   adr = olsr_malloc(sizeof(struct mid_address), "Insert MID alias");
-  memset(adr, 0, sizeof(struct mid_address));
 
   adr->alias = *alias;
   adr->next_alias = NULL;

@@ -64,11 +64,7 @@
 /* a composite metric is used for path selection */
 struct rt_metric
 {
-#ifdef USE_FPM
-  fpm                   etx;
-#else
-  float                 etx;
-#endif
+  olsr_linkcost       cost;
   olsr_u32_t 	        hops;
 };
 

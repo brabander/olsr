@@ -154,11 +154,9 @@ olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
   OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
 
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
-
   /* Fill struct */
   new_entry->MS_main_addr = *addr;
   olsr_set_mpr_sel_timer(new_entry, vtime * MSEC_PER_SEC);
-
   /* Queue */
   QUEUE_ELEM(mprs_list, new_entry);
   /*

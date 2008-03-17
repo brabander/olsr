@@ -404,7 +404,7 @@ main(int argc, char *argv[])
   signal(SIGQUIT, olsr_shutdown);
   signal(SIGILL,  olsr_shutdown);
   signal(SIGABRT, olsr_shutdown);
-  signal(SIGSEGV, olsr_shutdown);
+//  signal(SIGSEGV, olsr_shutdown);
   signal(SIGTERM, olsr_shutdown);
   signal(SIGPIPE, SIG_IGN);
 #endif
