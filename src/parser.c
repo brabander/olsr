@@ -277,12 +277,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	}
     }
 
-  if (olsr_cnf->lq_level > 0)
-    {
-      olsr_update_packet_loss(from_addr, in_if,
-                              ntohs(olsr->olsr_seqno));
-    }
-  
   for ( ; count > 0; m = (union olsr_message *)((char *)m + (msgsize)))
     {
 
@@ -372,6 +366,19 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
           continue;
         }
 
+      /* check for message duplicates */
+      if (olsr_cnf->ip_version == AF_INET) {
+        /* IPv4 */
+        if (olsr_shall_process_message(&m->v4.originator, ntohs(m->v4.seqno)) == 0) {
+          continue;
+        }
+      }
+      else {
+        /* IPv6 */
+        if (olsr_shall_process_message(&m->v6.originator, ntohs(m->v6.seqno)) == 0) {
+          continue;
+        }
+      }
 
       //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
 
@@ -410,11 +417,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	  if(!ipequal(&unkpacket.originator, &olsr_cnf->main_addr))
 	    {	      
 	      /* Forward */
-	      olsr_forward_message(m, 
-				   &unkpacket.originator, 
-				   unkpacket.seqno, 
-				   in_if,
-				   from_addr);
+	      olsr_forward_message(m, from_addr);
 	    }
 
           /* Cancel loop here, otherwise olsrd just hangs forever at this point */
@@ -422,8 +425,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 	}
 
     } /* for olsr_msg */ 
-
-
 }
 
 

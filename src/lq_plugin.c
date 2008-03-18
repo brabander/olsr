@@ -1,0 +1,378 @@
+#include "tc_set.h"
+#include "link_set.h"
+#include "lq_route.h"
+#include "lq_packet.h"
+#include "packet.h"
+#include "olsr.h"
+
+#include "lq_plugin_default.h"
+#include "lq_plugin.h"
+
+/* Default lq plugin settings */
+struct lq_handler default_lq_handler = {
+		&default_calc_cost,
+		&default_calc_cost,
+		
+		&default_olsr_is_relevant_costchange,
+		
+		&default_packet_loss_worker,
+		&default_olsr_memorize_foreign_hello_lq,
+		&default_olsr_copy_link_lq_into_tc,
+    &default_olsr_clear_lq,
+    &default_olsr_clear_lq,
+		
+		&default_olsr_serialize_hello_lq_pair,
+		&default_olsr_serialize_tc_lq_pair,
+		&default_olsr_deserialize_hello_lq_pair,
+		&default_olsr_deserialize_tc_lq_pair,
+		
+		&default_olsr_print_lq,
+		&default_olsr_print_lq,
+		&default_olsr_print_cost, 
+		
+		sizeof(struct default_lq),
+		sizeof(struct default_lq)
+};
+
+struct lq_handler *active_lq_handler = &default_lq_handler;
+
+/*
+ * set_lq_handler
+ * 
+ * this function is used by routing metric plugins to activate their link
+ * quality handler
+ * 
+ * @param pointer to lq_handler structure
+ * @param name of the link quality handler for debug output
+ */
+void set_lq_handler(struct lq_handler *handler, char *name) {
+  if (handler) {
+    OLSR_PRINTF(1, "Activated lq_handler: %s\n", name);
+    active_lq_handler = handler;
+  }
+  else {
+    OLSR_PRINTF(1, "Activated lq_handler: default\n");
+    active_lq_handler = &default_lq_handler;
+  }
+}
+
+/*
+ * olsr_calc_tc_cost
+ * 
+ * this function calculates the linkcost of a tc_edge_entry
+ * 
+ * @param pointer to the tc_edge_entry
+ * @return linkcost
+ */
+olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *tc_edge)
+{
+  return active_lq_handler->calc_tc_cost(tc_edge->linkquality);
+}
+
+/*
+ * olsr_is_relevant_costchange
+ * 
+ * decides if the difference between two costs is relevant
+ * (for changing the route for example)
+ * 
+ * @param first linkcost value
+ * @param second linkcost value
+ * @return boolean
+ */
+olsr_bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
+  return active_lq_handler->is_relevant_costchange(c1, c2);
+}
+
+/*
+ * olsr_serialize_hello_lq_pair
+ * 
+ * this function converts the lq information of a lq_hello_neighbor into binary package
+ * format
+ * 
+ * @param pointer to binary buffer to write into
+ * @param pointer to lq_hello_neighbor
+ * @return number of bytes that have been written
+ */
+int olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh) {
+	return active_lq_handler->serialize_hello_lq(buff, neigh->linkquality);
+}
+
+/*
+ * olsr_deserialize_hello_lq_pair
+ * 
+ * this function reads the lq information of a binary package into a hello_neighbor
+ * It also initialize the cost variable of the hello_neighbor
+ * 
+ * @param pointer to the current buffer pointer
+ * @param pointer to hello_neighbor
+ */
+void olsr_deserialize_hello_lq_pair(const olsr_u8_t **curr, struct hello_neighbor *neigh) {
+	active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
+	neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
+}
+
+/*
+ * olsr_serialize_tc_lq_pair
+ * 
+ * this function converts the lq information of a olsr_serialize_tc_lq_pair
+ * into binary package format
+ * 
+ * @param pointer to binary buffer to write into
+ * @param pointer to olsr_serialize_tc_lq_pair
+ * @return number of bytes that have been written
+ */
+int olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh) {
+	return active_lq_handler->serialize_tc_lq(buff, neigh->linkquality);
+}
+
+/*
+ * olsr_deserialize_tc_lq_pair
+ * 
+ * this function reads the lq information of a binary package into a tc_edge_entry
+ * 
+ * @param pointer to the current buffer pointer
+ * @param pointer to tc_edge_entry
+ */
+void olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, struct tc_edge_entry *edge) {
+	active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
+}
+
+/*
+ * olsr_update_packet_loss_worker
+ * 
+ * this function is called every times a hello package for a certain link_entry
+ * is lost (timeout) or received. This way the lq-plugin can update the links link
+ * quality value.
+ * 
+ * @param pointer to link_entry
+ * @param OLSR_TRUE if hello package was lost
+ */
+void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
+{
+	olsr_linkcost lq;
+	lq = active_lq_handler->packet_loss_handler(entry->linkquality, lost);
+  
+	if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
+    entry->linkcost = lq;
+    
+    if (olsr_cnf->lq_dlimit > 0) {
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
+    }
+
+    else
+      OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
+    
+    // XXX - we should check whether we actually
+    // announce this neighbour
+    signal_link_changes(OLSR_TRUE);
+  }
+}
+
+/*
+ * olsr_memorize_foreign_hello_lq
+ * 
+ * this function is called to copy the link quality information from a received
+ * hello package into a link_entry.
+ * 
+ * @param pointer to link_entry
+ * @param pointer to hello_neighbor, if NULL the neighbor link quality information
+ * of the link entry has to be reset to "zero"
+ */
+void olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neighbor *foreign) {
+  if (foreign) {
+    active_lq_handler->memorize_foreign_hello(local->linkquality, foreign->linkquality);
+  }
+  else {
+    active_lq_handler->memorize_foreign_hello(local->linkquality, NULL);
+  }
+}
+
+/*
+ * get_link_entry_text
+ * 
+ * this function returns the text representation of a link_entry cost value.
+ * It's not thread save and should not be called twice with the same println
+ * value in the same context (a single printf command for example).
+ * 
+ * @param pointer to link_entry
+ * @return pointer to a buffer with the text representation
+ */
+char *get_link_entry_text(struct link_entry *entry) {
+  return active_lq_handler->print_hello_lq(entry->linkquality);
+}
+
+/*
+ * get_tc_edge_entry_text
+ * 
+ * this function returns the text representation of a tc_edge_entry cost value.
+ * It's not thread save and should not be called twice with the same println
+ * value in the same context (a single printf command for example).
+ * 
+ * @param pointer to tc_edge_entry
+ * @return pointer to a buffer with the text representation
+ */
+char *get_tc_edge_entry_text(struct tc_edge_entry *entry) {
+  return active_lq_handler->print_tc_lq(entry->linkquality);
+}
+
+const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route) {
+  static const char *infinite = "INFINITE";
+  
+  if (route) {
+    if (cost == ROUTE_COST_BROKEN) {
+      return infinite;
+    }
+  }
+  else {
+    if (cost >= LINK_COST_BROKEN) {
+      return infinite;
+    }
+  }
+  return active_lq_handler->print_cost(cost);
+}
+
+/*
+ * olsr_copy_hello_lq
+ * 
+ * this function copies the link quality information from a link_entry to a
+ * lq_hello_neighbor.
+ * 
+ * @param pointer to target lq_hello_neighbor
+ * @param pointer to source link_entry
+ */
+void olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source) {
+  memcpy(target->linkquality, source->linkquality, active_lq_handler->hello_lq_size);
+}
+
+/*
+ * olsr_copylq_link_entry_2_tc_mpr_addr
+ * 
+ * this function copies the link quality information from a link_entry to a
+ * tc_mpr_addr.
+ * 
+ * @param pointer to tc_mpr_addr
+ * @param pointer to link_entry
+ */
+void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source) {
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
+}
+
+/*
+ * olsr_copylq_link_entry_2_tc_edge_entry
+ * 
+ * this function copies the link quality information from a link_entry to a
+ * tc_edge_entry.
+ * 
+ * @param pointer to tc_edge_entry
+ * @param pointer to link_entry
+ */
+void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source) {
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
+}
+
+/*
+ * olsr_clear_tc_lq
+ * 
+ * this function resets the linkquality value of a tc_mpr_addr
+ * 
+ * @param pointer to tc_mpr_addr
+ */
+void olsr_clear_tc_lq(struct tc_mpr_addr *target) {
+  active_lq_handler->clear_tc(target->linkquality);
+}
+
+/*
+ * olsr_malloc_hello_neighbor
+ * 
+ * this function allocates memory for an hello_neighbor inclusive
+ * linkquality data.
+ * 
+ * @param id string for memory debugging
+ * 
+ * @return pointer to hello_neighbor
+ */
+struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id) {
+	struct hello_neighbor *h;
+	
+	h = olsr_malloc(sizeof(struct hello_neighbor) + active_lq_handler->hello_lq_size, id);
+	
+	active_lq_handler->clear_hello(h->linkquality);
+	return h;
+}
+
+/*
+ * olsr_malloc_tc_mpr_addr
+ * 
+ * this function allocates memory for an tc_mpr_addr inclusive
+ * linkquality data.
+ * 
+ * @param id string for memory debugging
+ * 
+ * @return pointer to tc_mpr_addr
+ */
+struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id) {
+  struct tc_mpr_addr *t;
+  
+   t = olsr_malloc(sizeof(struct tc_mpr_addr) + active_lq_handler->tc_lq_size, id);
+  
+  active_lq_handler->clear_tc(t->linkquality);
+  return t;
+}
+
+/*
+ * olsr_malloc_lq_hello_neighbor
+ * 
+ * this function allocates memory for an lq_hello_neighbor inclusive
+ * linkquality data.
+ * 
+ * @param id string for memory debugging
+ * 
+ * @return pointer to lq_hello_neighbor
+ */
+struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id) {
+  struct lq_hello_neighbor *h;
+  
+  h = olsr_malloc(sizeof(struct lq_hello_neighbor) + active_lq_handler->hello_lq_size, id);
+  
+  active_lq_handler->clear_hello(h->linkquality);
+  return h;
+}
+
+/*
+ * olsr_malloc_link_entry
+ * 
+ * this function allocates memory for an link_entry inclusive
+ * linkquality data.
+ * 
+ * @param id string for memory debugging
+ * 
+ * @return pointer to link_entry
+ */
+struct link_entry *olsr_malloc_link_entry(const char *id) {
+  struct link_entry *h;
+  
+  h =  olsr_malloc(sizeof(struct link_entry) + active_lq_handler->hello_lq_size, id);
+  
+  active_lq_handler->clear_hello(h->linkquality);
+  return h;
+}
+
+/*
+ * olsr_malloc_tc_edge_entry
+ * 
+ * this function allocates memory for an tc_edge_entry inclusive
+ * linkquality data.
+ * 
+ * @param id string for memory debugging
+ * 
+ * @return pointer to tc_edge_entry
+ */
+struct tc_edge_entry *olsr_malloc_tc_edge_entry(const char *id) {
+  struct tc_edge_entry *t;
+  
+  t = olsr_malloc(sizeof(struct tc_edge_entry) + active_lq_handler->tc_lq_size, id);
+  
+  active_lq_handler->clear_tc(t);
+  return t;
+}

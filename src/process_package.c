@@ -53,6 +53,7 @@
 #include "rebuild_packet.h"
 #include "scheduler.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 #include <stddef.h>
 
@@ -114,7 +115,10 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
           if (two_hop_neighbor_yet != NULL)
             {
               /* Updating the holding time for this neighbor */
-              two_hop_neighbor_yet->neighbor_2_timer = GET_TIMESTAMP(message->vtime*1000);
+              olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
+                             message->vtime * MSEC_PER_SEC, OLSR_NBR2_LIST_JITTER,
+                             OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
+                             two_hop_neighbor_yet, 0);
               two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
 
               // For link quality OLSR, reset the path link quality here.
@@ -137,11 +141,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                       if (walker->neighbor == neighbor)
                         {
-#ifdef USE_FPM
-                          walker->path_link_quality = itofpm(0);
-#else
-                          walker->path_link_quality = 0.0;
-#endif
+                          walker->path_linkcost = LINK_COST_BROKEN;
                         }
                     }
                 }
@@ -191,16 +191,20 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
         }
     }
 
-  // Separate, second and third pass for link quality OLSR
+  // Separate, second pass for link quality OLSR
 
   if (olsr_cnf->lq_level > 0)
     {
+	  olsr_linkcost first_hop_pathcost;
       struct link_entry *lnk =
         get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
 
       if(!lnk)
 	return;
 
+      // calculate first hop path quality
+      first_hop_pathcost = lnk->linkcost;
+      
       // Second pass for link quality OLSR: calculate the best 2-hop
       // path costs to all the 2-hop neighbors indicated in the
       // HELLO message. Since the same 2-hop neighbor may be listed
@@ -240,138 +244,39 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                   if (walker->neighbor == neighbor)
                     {
-#ifdef USE_FPM
-                      fpm new_second_hop_link_quality, new_path_link_quality;
-#else
-                      double new_second_hop_link_quality, new_path_link_quality;
-#endif
+                      olsr_linkcost new_second_hop_linkcost, new_path_linkcost;
 
-                      // path link quality = link quality between us
-                      // and our one-hop neighbor x link quality between
-                      // our one-hop neighbor and the two-hop neighbor
-
-                      // let's compare this to ETX:
-
-                      // 1 / LQ1 + 1 / LQ2 < 1 / LQ3 + 1 / LQ4 <=>
-                      // LQ1 * LQ2 > LQ3 * LQ4
-
-                      // so comparing path link quality values with ">" is
-                      // equivalent to comparing ETX values with "<"
-
-                      // the link quality between the 1-hop neighbour and the
+                      // the link cost between the 1-hop neighbour and the
                       // 2-hop neighbour
 
-#ifdef USE_FPM
-                      new_second_hop_link_quality = 
-                        fpmmul(message_neighbors->link_quality,
-                               message_neighbors->neigh_link_quality);
-#else
-                      new_second_hop_link_quality = 
-                        message_neighbors->link_quality *
-                        message_neighbors->neigh_link_quality;
-#endif
+                      new_second_hop_linkcost = message_neighbors->cost;
 
-                      // the total quality for the route
+                      // the total cost for the route
                       // "us --- 1-hop --- 2-hop"
 
-#ifdef USE_FPM
-                      new_path_link_quality =
-                        fpmmul(new_second_hop_link_quality,
-                        fpmmul(lnk->loss_link_quality, lnk->neigh_link_quality));
-#else
-                      new_path_link_quality =
-                        new_second_hop_link_quality *
-                        lnk->loss_link_quality * lnk->neigh_link_quality;
-#endif
+                      new_path_linkcost =
+                        first_hop_pathcost + new_second_hop_linkcost;
 
                       // Only copy the link quality if it is better than what we have
                       // for this 2-hop neighbor
-                      if (new_path_link_quality > walker->path_link_quality)
+                      if (new_path_linkcost < walker->path_linkcost)
                         {
-                          walker->second_hop_link_quality = new_second_hop_link_quality;
-                          walker->path_link_quality = new_path_link_quality;
-                        }
-                    }
-                }
-            }
-        }
+                          walker->second_hop_linkcost = new_second_hop_linkcost;
+                          walker->path_linkcost = new_path_linkcost;
+                          
+                          if (olsr_is_relevant_costchange(new_path_linkcost, walker->saved_path_linkcost))
+                            {
+                              walker->saved_path_linkcost = new_path_linkcost;
 
-      // Third pass for link quality OLSR: check if the 2-hop path qualities have
-      // actually changed. If so, signal this through the 'changes_neighborhood'
-      // and 'changes_topology' booleans. Keep a 'saved_path_link_quality' for
-      // later reference.
-      for(message_neighbors = message->neighbors;
-          message_neighbors != NULL;
-          message_neighbors = message_neighbors->next)
-        {
-          if(if_ifwithaddr(&message_neighbors->address) != NULL)
-            continue;
+                              if (olsr_cnf->lq_dlimit > 0)
+                              {
+                                changes_neighborhood = OLSR_TRUE;
+                                changes_topology = OLSR_TRUE;
+                              }
 
-          if(((message_neighbors->status == SYM_NEIGH) ||
-              (message_neighbors->status == MPR_NEIGH)))
-            {
-              struct neighbor_list_entry *walker;
-              struct neighbor_2_entry *two_hop_neighbor;
-              struct neighbor_2_list_entry *two_hop_neighbor_yet =
-                olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
-
-              if(!two_hop_neighbor_yet)
-                continue;
-
-              two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
-
-              // loop through the one-hop neighbors that see this
-              // 'two_hop_neighbor'
-
-              for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-                   walker != &two_hop_neighbor->neighbor_2_nblist;
-                   walker = walker->next)
-                {
-                  // have we found the one-hop neighbor that sent the
-                  // HELLO message that we're current processing?
-
-                  if (walker->neighbor == neighbor)
-                    {
-#ifdef USE_FPM
-                      fpm saved_lq, rel_lq;
-#else
-                      double saved_lq, rel_lq;
-#endif
-
-                      // saved previous total link quality
-
-                      saved_lq = walker->saved_path_link_quality;
-
-#ifdef USE_FPM
-                      if (saved_lq == itofpm(0))
-                        saved_lq = itofpm(-1);
-#else
-                      if (saved_lq == 0.0)
-                        saved_lq = -1.0;
-#endif
-
-                      // if the link cost has changed by more than 10
-                      // percent, signal
-
-#ifdef USE_FPM
-                      rel_lq = fpmdiv(walker->path_link_quality, saved_lq);
-#else
-                      rel_lq = walker->path_link_quality / saved_lq;
-#endif
-
-                      if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF)
-                        {
-                          walker->saved_path_link_quality =
-                            walker->path_link_quality;
-
-                          if (olsr_cnf->lq_dlimit > 0)
-                          {
-                            changes_neighborhood = OLSR_TRUE;
-                            changes_topology = OLSR_TRUE;
-                          }
-
-                          else
-                            OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
+                              else
+                                OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
+                            }
                         }
                     }
                 }
@@ -395,15 +300,9 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
 
   list_of_1_neighbors->neighbor = neighbor;
 
-#ifdef USE_FPM
-  list_of_1_neighbors->path_link_quality = itofpm(0);
-  list_of_1_neighbors->saved_path_link_quality = itofpm(0);
-  list_of_1_neighbors->second_hop_link_quality = itofpm(0);
-#else
-  list_of_1_neighbors->path_link_quality = 0.0;
-  list_of_1_neighbors->saved_path_link_quality = 0.0;
-  list_of_1_neighbors->second_hop_link_quality = 0.0;
-#endif
+  list_of_1_neighbors->path_linkcost = LINK_COST_BROKEN;
+  list_of_1_neighbors->saved_path_linkcost = LINK_COST_BROKEN;
+  list_of_1_neighbors->second_hop_linkcost = LINK_COST_BROKEN;
 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
@@ -412,8 +311,10 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   two_hop_neighbor->neighbor_2_nblist.next = list_of_1_neighbors;
   list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
+  list_of_2_neighbors->nbr2_nbr = neighbor; /* XXX refcount */
   
-  list_of_2_neighbors->neighbor_2_timer = GET_TIMESTAMP(vtime*1000);
+  olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime * MSEC_PER_SEC,
+                    OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
 
   /* Queue */
   neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;
@@ -485,13 +386,11 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 		
 		curr = (const unsigned char *)(info_head + 1);
 		while (curr < limit2) {
-			struct hello_neighbor *neigh = olsr_malloc(sizeof(struct hello_neighbor), "HELLO deserialization");
+			struct hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
 			pkt_get_ipaddress(&curr, &neigh->address);
 			
 			if (type == LQ_HELLO_MESSAGE) {
-				pkt_get_lq(&curr, &neigh->link_quality);
-				pkt_get_lq(&curr, &neigh->neigh_link_quality);
-				pkt_ignore_u16(&curr);
+				olsr_deserialize_hello_lq_pair(&curr, neigh);
 			}
 			neigh->link = EXTRACT_LINK(info_head->link_code);
 			neigh->status = EXTRACT_STATUS(info_head->link_code);
@@ -550,77 +449,21 @@ olsr_hello_tap(struct hello_message *message,
 
   if (olsr_cnf->lq_level > 0)
     {
-#ifdef USE_FPM
-      fpm saved_lq;
-      fpm rel_lq;
-#else
-      double saved_lq;
-      double rel_lq;
-#endif
       struct hello_neighbor *walker;
       // just in case our neighbor has changed its HELLO interval
       olsr_update_packet_loss_hello_int(lnk, message->htime);
 
       // find the input interface in the list of neighbor interfaces
-
       for (walker = message->neighbors; walker != NULL; walker = walker->next)
         if (ipequal(&walker->address, &in_if->ip_addr))
           break;
 
-      // the current reference link quality
-
-      saved_lq = lnk->saved_neigh_link_quality;
-
-#ifdef USE_FPM
-      if (saved_lq == itofpm(0))
-        saved_lq = itofpm(-1);
-#else
-      if (saved_lq == 0.0)
-        saved_lq = -1.0;
-#endif
-
       // memorize our neighbour's idea of the link quality, so that we
       // know the link quality in both directions
+      olsr_memorize_foreign_hello_lq(lnk, walker);
 
-      if (walker != NULL)
-        lnk->neigh_link_quality = walker->link_quality;
-
-      else
-#ifdef USE_FPM
-        lnk->neigh_link_quality = itofpm(0);
-#else
-        lnk->neigh_link_quality = 0.0;
-#endif
-
-      // if the link quality has changed by more than 10 percent,
-      // print the new link quality table
-
-#ifdef USE_FPM
-      rel_lq = fpmdiv(lnk->neigh_link_quality, saved_lq);
-#else
-      rel_lq = lnk->neigh_link_quality / saved_lq;
-#endif
-
-      if (rel_lq > CEIL_LQDIFF || rel_lq < FLOOR_LQDIFF)
-        {
-          lnk->saved_neigh_link_quality = lnk->neigh_link_quality;
-
-          if (olsr_cnf->lq_dlimit > 0)
-          {
-            changes_neighborhood = OLSR_TRUE;
-            changes_topology = OLSR_TRUE;
-          }
-
-          else
-            OLSR_PRINTF(3, "Skipping Dijkstra (2)\n");
-
-          // create a new ANSN
-
-          // XXX - we should check whether we actually
-          // announce this neighbour
-
-	  signal_link_changes(OLSR_TRUE);
-        }
+      // update packet loss for link quality calculation
+      olsr_update_packet_loss(lnk);
     }
   
   neighbor = lnk->neighbor;
@@ -700,9 +543,6 @@ olsr_process_received_mid(union olsr_message *m,
     return;
   }
 
-  if (olsr_check_dup_table_proc(&message.mid_origaddr, 
-                                message.mid_seqno)) {
-
 #ifdef DEBUG
     OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
 #endif
@@ -739,13 +579,8 @@ olsr_process_received_mid(union olsr_message *m,
     } 
   
     olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
-  }
 
-  olsr_forward_message(m, 
-		       &message.mid_origaddr, 
-		       message.mid_seqno, 
-		       in_if,
-		       from_addr);
+  olsr_forward_message(m, from_addr);
   olsr_free_mid_packet(&message);
 }
 
@@ -821,7 +656,6 @@ olsr_process_received_hna(union olsr_message *m,
   /* seqno */
   pkt_get_u16(&curr, &packet_seq_number);
 
-  if (olsr_check_dup_table_proc(&originator, packet_seq_number)) {
     /*
      *      If the sender interface (NB: not originator) of this message
      *      is not in the symmetric 1-hop neighborhood of this node, the
@@ -846,20 +680,17 @@ olsr_process_received_hna(union olsr_message *m,
       if (entry == NULL) {
         /* only update if it's not from us */
         olsr_update_hna_entry(&originator, &net, prefixlen, vtime);
+      }
+    }
 #else
     while (hna_tmp) {
       /* Don't add an HNA entry that we are advertising ourselves. */
       if (!ip_prefix_list_find(olsr_cnf->hna_entries, &hna_tmp->net, hna_tmp->prefixlen)) {
         olsr_update_hna_entry(&message.originator, &hna_tmp->net, hna_tmp->prefixlen, message.vtime);
-#endif
       }
     }
-  }
-  olsr_forward_message(m, 
-                       &originator, 
-                       packet_seq_number, 
-                       in_if,
-                       from_addr);
+#endif
+  olsr_forward_message(m, from_addr);
 }
 
 /*

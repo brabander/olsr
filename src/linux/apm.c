@@ -149,6 +149,8 @@ apm_printinfo(struct olsr_apm_info *ainfo)
 	      ainfo->ac_line_status,
 	      ainfo->battery_percentage,
 	      ainfo->battery_time_left);
+
+  ainfo = NULL; /* squelch compiler warnings */
 }
 
 

@@ -46,7 +46,9 @@
 #ifndef _LINK_SET_H
 #define _LINK_SET_H
 
+#include "lq_plugin.h"
 #include "packet.h"
+#include "lq_list.h"
 
 #define MID_ALIAS_HACK_VTIME  10.0
 
@@ -56,9 +58,9 @@ struct link_entry
   union olsr_ip_addr neighbor_iface_addr;
   const struct interface *inter;
   char *if_name;
-  clock_t SYM_time;
+  struct timer_entry *link_timer;
+  struct timer_entry *link_sym_timer;
   clock_t ASYM_time;
-  clock_t time;
   unsigned int vtime;
   struct neighbor_entry *neighbor;
   olsr_u8_t prev_status;
@@ -66,14 +68,10 @@ struct link_entry
   /*
    *Hysteresis
    */
-#ifdef USE_FPM
-  fpm L_link_quality;
-#else
   float L_link_quality;
-#endif
   int L_link_pending;
   clock_t L_LOST_LINK_time;
-  clock_t hello_timeout; /* When we should receive a new HELLO */
+  struct timer_entry *link_hello_timer; /* When we should receive a new HELLO */
   double last_htime;
   olsr_bool olsr_seqno_valid;
   olsr_u16_t olsr_seqno;
@@ -81,62 +79,50 @@ struct link_entry
   /*
    * packet loss
    */
-  olsr_u16_t loss_seqno;
-  int loss_seqno_valid;
-  int loss_missed_hellos;
-
   double loss_hello_int;
-  clock_t loss_timeout;
+  struct timer_entry *link_loss_timer;
 
-  unsigned int lost_packets;
-  unsigned int total_packets;
+  float loss_link_multiplier; // user defined multiplies for link quality
+  
+  // cost of this link
+  olsr_linkcost linkcost;
 
-#ifdef USE_FPM
-  fpm loss_link_quality;
-  fpm loss_link_quality2;
-  fpm loss_link_multiplier;
-#else
-  double loss_link_quality;
-  double loss_link_quality2;
-  double loss_link_multiplier;
-#endif
-
-  unsigned int loss_index;
-
-  unsigned char loss_bitmap[16];
-
-#ifdef USE_FPM
-  fpm neigh_link_quality, neigh_link_quality2;
-
-  fpm saved_loss_link_quality;
-  fpm saved_neigh_link_quality;
-#else
-  double neigh_link_quality, neigh_link_quality2;
-
-  double saved_loss_link_quality;
-  double saved_neigh_link_quality;
-#endif
-
-  struct link_entry *next;
+  struct list_node link_list; /* double linked list of all link entries */
+  char                  linkquality[0];
 };
 
+/* inline to recast from link_list back to link_entry */
+LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 
-extern struct link_entry *link_set;
+#define OLSR_LINK_JITTER       5 /* percent */
+#define OLSR_LINK_HELLO_JITTER 0 /* percent jitter */
+#define OLSR_LINK_SYM_JITTER   0 /* percent jitter */
+#define OLSR_LINK_LOSS_JITTER  0 /* percent jitter */
 
+/* deletion safe macro for link entry traversal */
+#define OLSR_FOR_ALL_LINK_ENTRIES(link) \
+{ \
+  struct list_node *link_head_node, *link_node, *next_link_node; \
+  link_head_node = &link_entry_head; \
+  for (link_node = link_head_node->next; \
+    link_node != link_head_node; link_node = next_link_node) { \
+    next_link_node = link_node->next; \
+    link = list2link(link_node);
+#define OLSR_FOR_ALL_LINK_ENTRIES_END(link) }}
+
+/* Externals */
+extern struct list_node link_entry_head;
+extern olsr_bool link_changes;
 
 /* Function prototypes */
 
-struct link_entry *
-get_link_set(void);
+void olsr_set_link_timer(struct link_entry *, unsigned int );
+void olsr_init_link_set(void);
+void olsr_delete_link_entry_by_ip(const union olsr_ip_addr *);
+void olsr_expire_link_hello_timer(void *);
+void olsr_update_packet_loss_worker(struct link_entry *, olsr_bool);
+void signal_link_changes(olsr_bool); /* XXX ugly */
 
-clock_t 
-get_hold_time_neighbor(void);
-
-void
-olsr_init_link_set(void);
-
-void
-del_if_link_entries(const union olsr_ip_addr *);
 
 struct link_entry *
 get_best_link_to_neighbor(const union olsr_ip_addr *);
@@ -161,20 +147,10 @@ void
 olsr_update_packet_loss_hello_int(struct link_entry *, double);
 
 void 
-olsr_update_packet_loss(const union olsr_ip_addr *, const struct interface *, olsr_u16_t);
+olsr_update_packet_loss(struct link_entry *entry);
 
 void 
 olsr_print_link_set(void);
-
-void
-olsr_update_dijkstra_link_qualities(void);
-
-#ifdef USE_FPM
-fpm
-#else
-float
-#endif
-olsr_calc_link_etx(const struct link_entry *);
 
 #endif
 

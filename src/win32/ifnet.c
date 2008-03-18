@@ -556,35 +556,13 @@ void RemoveInterface(struct olsr_if *IntConf)
     }
   }
 
-  if (olsr_cnf->lq_level == 0)
-    {
-      olsr_remove_scheduler_event(&generate_hello, Int,
-                                  IntConf->cnf->hello_params.emission_interval,
-                                  0, NULL);
-
-      olsr_remove_scheduler_event(&generate_tc, Int,
-                                  IntConf->cnf->tc_params.emission_interval,
-                                  0, NULL);
-    }
-
-  else
-    {
-      olsr_remove_scheduler_event(&olsr_output_lq_hello, Int,
-                                  IntConf->cnf->hello_params.emission_interval,
-                                  0, NULL);
-
-      olsr_remove_scheduler_event(&olsr_output_lq_tc, Int,
-                                  IntConf->cnf->tc_params.emission_interval,
-                                  0, NULL);
-    }
-
-  olsr_remove_scheduler_event(&generate_mid, Int,
-                              IntConf->cnf->mid_params.emission_interval,
-                              0, NULL);
-
-  olsr_remove_scheduler_event(&generate_hna, Int,
-                              IntConf->cnf->hna_params.emission_interval,
-                              0, NULL);
+  /*
+   * Deregister functions for periodic message generation 
+   */
+  olsr_stop_timer(Int->hello_gen_timer);
+  olsr_stop_timer(Int->tc_gen_timer);
+  olsr_stop_timer(Int->mid_gen_timer);
+  olsr_stop_timer(Int->hna_gen_timer);
 
   net_remove_buffer(Int);
 
@@ -723,51 +701,25 @@ int add_hemu_if(struct olsr_if *iface)
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu);
 
-
-  if (olsr_cnf->lq_level == 0)
-    {
-      olsr_register_scheduler_event(&generate_hello, 
-                                    ifp, 
-                                    iface->cnf->hello_params.emission_interval, 
-                                    0, 
-                                    NULL);
-      olsr_register_scheduler_event(&generate_tc, 
-                                    ifp, 
-                                    iface->cnf->tc_params.emission_interval,
-                                    0, 
-                                    NULL);
-    }
-
-  else
-    {
-      olsr_register_scheduler_event(&olsr_output_lq_hello, 
-                                    ifp, 
-                                    iface->cnf->hello_params.emission_interval, 
-                                    0, 
-                                    NULL);
-      olsr_register_scheduler_event(&olsr_output_lq_tc, 
-                                    ifp, 
-                                    iface->cnf->tc_params.emission_interval,
-                                    0, 
-                                    NULL);
-    }
-
-  olsr_register_scheduler_event(&generate_mid, 
-				ifp, 
-				iface->cnf->mid_params.emission_interval,
-				0, 
-				NULL);
-  olsr_register_scheduler_event(&generate_hna, 
-				ifp, 
-				iface->cnf->hna_params.emission_interval,
-				0, 
-				NULL);
-
-  /* Recalculate max jitter */
-
-  if((olsr_cnf->max_jitter == 0) || 
-     ((iface->cnf->hello_params.emission_interval / 4) < olsr_cnf->max_jitter))
-    olsr_cnf->max_jitter = iface->cnf->hello_params.emission_interval / 4;
+  /*
+   * Register functions for periodic message generation 
+   */
+  ifp->hello_gen_timer =
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
+                     ifp, 0);
+  ifp->tc_gen_timer =
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
+                     TC_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
+                     ifp, 0);
+  ifp->mid_gen_timer =
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, 0);
+  ifp->hna_gen_timer =
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, 0);
 
   /* Recalculate max topology hold time */
   if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
@@ -1046,39 +998,25 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   net_add_buffer(New);
 
-  if (olsr_cnf->lq_level == 0)
-  {
-    olsr_register_scheduler_event(&generate_hello, New,
-                                  IntConf->cnf->hello_params.emission_interval,
-                                  0, NULL);
-
-    olsr_register_scheduler_event(&generate_tc, New,
-                                  IntConf->cnf->tc_params.emission_interval,
-                                  0, NULL);
-  }
-
-  else
-  {
-    olsr_register_scheduler_event(&olsr_output_lq_hello, New,
-                                  IntConf->cnf->hello_params.emission_interval,
-                                  0, NULL);
-
-    olsr_register_scheduler_event(&olsr_output_lq_tc, New,
-                                  IntConf->cnf->tc_params.emission_interval,
-                                  0, NULL);
-  }
-
-  olsr_register_scheduler_event(&generate_mid, New,
-                                IntConf->cnf->mid_params.emission_interval,
-                                0, NULL);
-
-  olsr_register_scheduler_event(&generate_hna, New,
-                                IntConf->cnf->hna_params.emission_interval,
-                                0, NULL);
-
-  if(olsr_cnf->max_jitter == 0 ||
-     IntConf->cnf->hello_params.emission_interval / 4 < olsr_cnf->max_jitter)
-    olsr_cnf->max_jitter = IntConf->cnf->hello_params.emission_interval / 4;
+  /*
+   * Register functions for periodic message generation 
+   */
+  New->hello_gen_timer =
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
+                     HELLO_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
+                     New, 0);
+  New->tc_gen_timer =
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
+                     TC_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
+                     New, 0);
+  New->mid_gen_timer =
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, 0);
+  New->hna_gen_timer =
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, 0);
 
   if(olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;

@@ -169,7 +169,7 @@ olsr_process_changes(void)
 
   /* calculate the routing table */
   if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table();
+    olsr_calculate_routing_table(NULL);
   }
   
   if (olsr_cnf->debug_level > 0)
@@ -239,9 +239,6 @@ olsr_init_tables(void)
   /* Initialize link set */
   olsr_init_link_set();
 
-  /* Initialize duplicate table */
-  olsr_init_duplicate_table();
-
   /* Initialize neighbor table */
   olsr_init_neighbor_table();
 
@@ -262,6 +259,12 @@ olsr_init_tables(void)
 
   /* Initialize HNA set */
   olsr_init_hna_set();  
+
+  /* Start periodic SPF and RIB recalculation */
+  if (olsr_cnf->lq_dinter > 0.0) {
+    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
+                     OLSR_TIMER_PERIODIC, &olsr_calculate_routing_table, NULL, 0);
+  }
 }
 
 /**
@@ -276,9 +279,6 @@ olsr_init_tables(void)
  */
 int
 olsr_forward_message(union olsr_message *m, 
-		     union olsr_ip_addr *originator, 
-		     olsr_u16_t seqno,
-		     struct interface *in_if, 
 		     union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
@@ -300,14 +300,6 @@ olsr_forward_message(union olsr_message *m,
     if (2 > m->v6.ttl || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl) return 0;
   }
 
-  if(!olsr_check_dup_table_fwd(originator, seqno, &in_if->ip_addr))
-    {
-#ifdef DEBUG
-      OLSR_PRINTF(3, "Message already forwarded!\n");
-#endif
-      return 0;
-    }
-
   /* Lookup sender address */
   src = mid_lookup_main_addr(from_addr);
   if(!src)
@@ -320,10 +312,6 @@ olsr_forward_message(union olsr_message *m,
   if(neighbor->status != SYM)
     return 0;
 
-  /* Update duplicate table interface */
-  olsr_update_dup_entry(originator, seqno, &in_if->ip_addr);
-
-  
   /* Check MPR */
   if(olsr_lookup_mprs_set(src) == NULL)
     {
@@ -349,9 +337,6 @@ olsr_forward_message(union olsr_message *m,
       m->v6.hopcnt++;
       m->v6.ttl--; 
     }
-
-  /* Update dup forwarded */
-  olsr_set_dup_forward(originator, seqno);
 
   /* Update packet data */
   msgsize = ntohs(m->v4.olsr_msgsize);
@@ -404,9 +389,14 @@ set_buffer_timer(struct interface *ifn)
 void
 olsr_init_willingness(void)
 {
-  if(olsr_cnf->willingness_auto)
-    olsr_register_scheduler_event(&olsr_update_willingness, 
-				  NULL, olsr_cnf->will_int, olsr_cnf->will_int, NULL);
+  if (olsr_cnf->willingness_auto) {
+
+    /* Run it first and then periodic. */
+    olsr_update_willingness(NULL);
+
+    olsr_start_timer((unsigned int)olsr_cnf->will_int * MSEC_PER_SEC, 5,
+                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, 0);
+  }
 }
 
 void

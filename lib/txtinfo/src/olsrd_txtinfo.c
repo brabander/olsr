@@ -76,6 +76,7 @@
 #include "link_set.h"
 #include "socket_parser.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 #include "olsrd_txtinfo.h"
 #include "olsrd_plugin.h"
@@ -95,11 +96,13 @@ static int ipc_socket_up;
 /* IPC initialization function */
 static int plugin_ipc_init(void);
 
-static void  send_info(int neighonly);
+static void send_info(int send_what);
 
 static void ipc_action(int);
 
-static void ipc_print_neigh_link(void);
+static void ipc_print_neigh(void);
+
+static void ipc_print_link(void);
 
 static void ipc_print_routes(void);
 
@@ -110,6 +113,16 @@ static void ipc_print_hna(void);
 static void ipc_print_mid(void);
 
 #define TXT_IPC_BUFSIZE 256
+
+#define SIW_ALL 0
+#define SIW_NEIGH 1
+#define SIW_LINK 2
+#define SIW_ROUTE 3
+#define SIW_HNA 4
+#define SIW_MID 5
+#define SIW_TOPO 6
+#define SIW_NEIGHLINK 7
+
 static int ipc_sendf(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
 /**
@@ -230,7 +243,7 @@ static void ipc_action(int fd)
     char addr[INET6_ADDRSTRLEN];
     fd_set rfds;
     struct timeval tv;
-    int neighonly = 0;
+    int send_what = 0;
 
     socklen_t addrlen = sizeof(struct sockaddr_storage);
 
@@ -285,65 +298,70 @@ static void ipc_action(int fd)
              * page the normal output is somewhat lengthy. The
              * header parsing is sufficient for standard wget.
              */
-            neighonly = (0 != strstr(requ, "/neighbours"));
+            if (0 != strstr(requ, "/neighbours")) send_what=SIW_NEIGHLINK;
+            else if (0 != strstr(requ, "/neigh")) send_what=SIW_NEIGH;
+            else if (0 != strstr(requ, "/link")) send_what=SIW_LINK;
+            else if (0 != strstr(requ, "/route")) send_what=SIW_ROUTE;
+            else if (0 != strstr(requ, "/hna")) send_what=SIW_HNA;
+            else if (0 != strstr(requ, "/mid")) send_what=SIW_MID;
+            else if (0 != strstr(requ, "/topo")) send_what=SIW_TOPO;
         }
     }
 
-    send_info(neighonly);
+	send_info(send_what);
 	  
     close(ipc_connection);
     ipc_open = 0;
 }
 
-static void ipc_print_neigh_link(void)
+static void ipc_print_neigh(void)
 {
-    struct ipaddr_str buf1, buf2;
+    struct ipaddr_str buf1;
     struct neighbor_entry *neigh;
     struct neighbor_2_list_entry *list_2;
-    struct link_entry *link = NULL;
-    int index, thop_cnt;
+    int thop_cnt;
 
-    ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkQuality\tlost\ttotal\tNLQ\tETX\n");
-
-    /* Link set */
-    link = link_set;
-    while(link)	{
-	ipc_sendf( "%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\t\n",
-                   olsr_ip_to_string(&buf1, &link->local_iface_addr),
-                   olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   olsr_etx_to_string(link->L_link_quality), 
-                   olsr_etx_to_string(link->loss_link_quality),
-                   link->lost_packets, 
-                   link->total_packets,
-                   olsr_etx_to_string(link->neigh_link_quality), 
-                   olsr_etx_to_string(olsr_calc_link_etx(link)));
-        link = link->next;
-    }
     ipc_sendf("\nTable: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWillingness\t2 Hop Neighbors\n");
 
     /* Neighbors */
-    for(index = 0; index < HASHSIZE; index++) {
-        for(neigh = neighbortable[index].next;
-            neigh != &neighbortable[index];
-            neigh = neigh->next) {
-            ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
-                      olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-                      (neigh->status == SYM) ? "YES" : "NO",
-                      neigh->is_mpr ? "YES" : "NO",
-                      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                      neigh->willingness);
-            thop_cnt = 0;
+    OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+        ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
+                  olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+                  (neigh->status == SYM) ? "YES" : "NO",
+                  neigh->is_mpr ? "YES" : "NO",
+                  olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+                  neigh->willingness);
+        thop_cnt = 0;
 
-            for(list_2 = neigh->neighbor_2_list.next;
-                list_2 != &neigh->neighbor_2_list;
-                list_2 = list_2->next)
-                {
-                    //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
-                    thop_cnt ++;
-                }
-            ipc_sendf("%d\n", thop_cnt);
-	}
-    }
+        for(list_2 = neigh->neighbor_2_list.next;
+            list_2 != &neigh->neighbor_2_list;
+            list_2 = list_2->next)
+        {
+            //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
+            thop_cnt ++;
+        }
+        ipc_sendf("%d\n", thop_cnt);
+    } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+    ipc_sendf("\n");
+}
+
+static void ipc_print_link(void)
+{
+    struct ipaddr_str buf1, buf2;
+    struct link_entry *link = NULL;
+
+    ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkcost\n");
+
+    /* Link set */
+    OLSR_FOR_ALL_LINK_ENTRIES(link) {
+	ipc_sendf( "%s\t%s\t%0.2f\t%s\t%s\t\n",
+                   olsr_ip_to_string(&buf1, &link->local_iface_addr),
+                   olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
+                   link->L_link_quality, 
+                   get_link_entry_text(link),
+                   get_linkcost_text(link->linkcost, OLSR_FALSE));
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+
     ipc_sendf("\n");
 }
 
@@ -367,7 +385,7 @@ static void ipc_print_routes(void)
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
-                   olsr_etx_to_string(rt->rt_best->rtp_metric.etx),
+                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     }
     ipc_sendf("\n");
@@ -378,19 +396,18 @@ static void ipc_print_topology(void)
 {
     struct tc_entry *tc;
     
-    ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLQ\tILQ\tETX\n");
+    ipc_sendf("Table: Topology\nDestination IP\tLast hop IP\tLinkcost\n");
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
             struct ipaddr_str dstbuf, addrbuf;
-            ipc_sendf( "%s\t%s\t%s\t%s\t%s\n", 
+            ipc_sendf( "%s\t%s\t%s\t%s\n", 
                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       olsr_etx_to_string(tc_edge->link_quality),
-                       olsr_etx_to_string(tc_edge->inverse_link_quality),
-                       olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                       get_tc_edge_entry_text(tc_edge),
+                       get_linkcost_text(tc_edge->cost, OLSR_FALSE));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -482,7 +499,7 @@ static void ipc_print_mid(void)
 }
 
 
-static void  send_info(int neighonly)
+static void  send_info(int send_what)
 {
     /* Print minimal http header */
     ipc_sendf("HTTP/1.0 200 OK\n");
@@ -491,19 +508,21 @@ static void  send_info(int neighonly)
     /* Print tables to IPC socket */
 	
     /* links + Neighbors */
-    ipc_print_neigh_link();
+    if ((send_what==SIW_ALL)||(send_what==SIW_NEIGHLINK)||(send_what==SIW_LINK)) ipc_print_link();
+
+    if ((send_what==SIW_ALL)||(send_what==SIW_NEIGHLINK)||(send_what==SIW_NEIGH)) ipc_print_neigh();
 	
     /* topology */
-    if (!neighonly) ipc_print_topology();
+    if ((send_what==SIW_ALL)||(send_what==SIW_TOPO)) ipc_print_topology();
 	
     /* hna */
-    if (!neighonly) ipc_print_hna();
+    if ((send_what==SIW_ALL)||(send_what==SIW_HNA)) ipc_print_hna();
 
     /* mid */
-    if (!neighonly) ipc_print_mid();
+    if ((send_what==SIW_ALL)||(send_what==SIW_MID)) ipc_print_mid();
 
     /* routes */
-    if (!neighonly) ipc_print_routes();
+    if ((send_what==SIW_ALL)||(send_what==SIW_ROUTE)) ipc_print_routes();
 }
 
 /*

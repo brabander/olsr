@@ -69,6 +69,7 @@
 #include "link_set.h"
 #include "socket_parser.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 #include "olsrd_dot_draw.h"
 #include "olsrd_plugin.h"
@@ -154,11 +155,7 @@ static void
 ipc_print_neigh_link(const struct neighbor_entry *neighbor)
 {
   struct ipaddr_str mainaddrstrbuf, strbuf;
-#ifdef USE_FPM
-  fpm etx = itofpm(0);
-#else
-  double etx = 0.0;
-#endif
+  olsr_linkcost etx = 0.0;
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
   struct link_entry* link;
@@ -168,7 +165,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   } else {   
     link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
     if (link) {
-      etx = olsr_calc_link_etx(link);
+      etx = link->linkcost;
     }
     style = "solid";
   }
@@ -176,7 +173,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               olsr_etx_to_string(etx),
+               get_linkcost_text(etx, OLSR_FALSE),
                style);
   
   if (neighbor->is_mpr) {
@@ -269,6 +266,7 @@ ipc_action(int fd __attribute__((unused)))
   olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   close(ipc_connection); /* close connection after one output */
   pcf_event(1, 1, 1);
+  close(ipc_connection); // close connection after one output
 }
 
 
@@ -280,25 +278,21 @@ pcf_event(int changes_neighborhood,
 	  int changes_topology,
 	  int changes_hna)
 {
-  int res = 0;
-  if(changes_neighborhood || changes_topology || changes_hna) {
-    struct neighbor_entry *neighbor_table_tmp;
-    struct tc_entry *tc;
-    struct tc_edge_entry *tc_edge;
-    struct ip_prefix_list *hna;
-    int idx;
+  struct neighbor_entry *neighbor_table_tmp;
+  struct tc_entry *tc;
+  struct tc_edge_entry *tc_edge;
+  struct ip_prefix_list *hna;
+  int idx, res = 0;
+
+  if (changes_neighborhood || changes_topology || changes_hna) {
     
     /* Print tables to IPC socket */
     ipc_send_str("digraph topology\n{\n");
 
     /* Neighbors */
-    for (idx = 0; idx < HASHSIZE; idx++) {	  
-      for(neighbor_table_tmp = neighbortable[idx].next;
-          neighbor_table_tmp != &neighbortable[idx];
-          neighbor_table_tmp = neighbor_table_tmp->next){
-        ipc_print_neigh_link( neighbor_table_tmp );
-      }
-    }
+    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
+      ipc_print_neigh_link( neighbor_table_tmp );
+    } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -347,7 +341,7 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               olsr_etx_to_string(olsr_calc_tc_etx(dst_entry)));
+               get_linkcost_text(dst_entry->cost, OLSR_FALSE));
 }
 
 
@@ -395,3 +389,9 @@ ipc_send_fmt(const char *format, ...)
     ipc_send(buf, len);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

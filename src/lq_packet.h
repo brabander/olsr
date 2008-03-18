@@ -94,15 +94,9 @@ struct lq_hello_neighbor
 {
   olsr_u8_t                link_type;
   olsr_u8_t                neigh_type;
-#ifdef USE_FPM
-  fpm                      link_quality;
-  fpm                      neigh_link_quality;
-#else
-  double                   link_quality;
-  double                   neigh_link_quality;
-#endif
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
+  char                  linkquality[0];
 };
 
 struct lq_hello_message
@@ -155,11 +149,7 @@ static INLINE void       pkt_get_s32(const olsr_u8_t **p, olsr_32_t *var)       
 static INLINE void    pkt_get_double(const olsr_u8_t **p, double *var)             { *var = me_to_double(**p);                       *p += sizeof(olsr_u8_t); }
 static INLINE void pkt_get_ipaddress(const olsr_u8_t **p, union olsr_ip_addr *var) { memcpy(var, *p, olsr_cnf->ipsize);              *p += olsr_cnf->ipsize; }
 static INLINE void pkt_get_prefixlen(const olsr_u8_t **p, olsr_u8_t *var)          { *var = netmask_to_prefix(*p, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
-#ifdef USE_FPM
-static INLINE void        pkt_get_lq(const olsr_u8_t **p, fpm *var)                { *var = fpmidiv(itofpm(**p), 255);               *p += sizeof(olsr_u8_t); }
-#else
-static INLINE void        pkt_get_lq(const olsr_u8_t **p, double *var)             { *var = (const double)**p / 255.0;               *p += sizeof(olsr_u8_t); }
-#endif
+static INLINE void        pkt_get_lq(const olsr_u8_t **p, float *var)              { *var = (const float)**p / 255.0;               *p += sizeof(olsr_u8_t); }
 
 static INLINE void        pkt_ignore_u8(const olsr_u8_t **p) { *p += sizeof(olsr_u8_t); }
 static INLINE void       pkt_ignore_u16(const olsr_u8_t **p) { *p += sizeof(olsr_u16_t); }
@@ -179,7 +169,7 @@ static INLINE void       pkt_put_s32(olsr_u8_t **p, olsr_32_t var)              
 static INLINE void    pkt_put_double(olsr_u8_t **p, double var)                    { **p = double_to_me(var);            *p += sizeof(olsr_u8_t); }
 static INLINE void pkt_put_ipaddress(olsr_u8_t **p, const union olsr_ip_addr *var) { memcpy(*p, var, olsr_cnf->ipsize); *p += olsr_cnf->ipsize; }
 static INLINE void pkt_put_prefixlen(olsr_u8_t **p, olsr_u8_t var)                 { prefix_to_netmask(*p, olsr_cnf->ipsize, var); *p += olsr_cnf->ipsize; }
-static INLINE void        pkt_put_lq(olsr_u8_t **p, double var)                    { **p  = var * 255.0;                 *p += sizeof(olsr_u8_t); }
+static INLINE void        pkt_put_lq(olsr_u8_t **p, float var)                     { **p  = var * 255.0;                 *p += sizeof(olsr_u8_t); }
 
 void olsr_output_lq_hello(void *para);
 

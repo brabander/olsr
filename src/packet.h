@@ -43,22 +43,16 @@
 
 #include "olsr_protocol.h"
 #include "interfaces.h"
-#include "fpm.h"
 
 struct hello_neighbor
 {
   olsr_u8_t             status;
   olsr_u8_t             link;
-#ifdef USE_FPM
-  fpm                   link_quality;
-  fpm                   neigh_link_quality;
-#else
-  double                link_quality;
-  double                neigh_link_quality;
-#endif
   union olsr_ip_addr    main_address;
   union olsr_ip_addr    address;
   struct hello_neighbor *next;
+  olsr_linkcost         cost;
+  char                  linkquality[0];
 };
 
 struct hello_message
@@ -76,15 +70,9 @@ struct hello_message
 
 struct tc_mpr_addr
 {
-#ifdef USE_FPM
-  fpm                link_quality;
-  fpm                neigh_link_quality;
-#else
-  double             link_quality;
-  double             neigh_link_quality;
-#endif
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
+  char                  linkquality[0];
 };
 
 struct tc_message

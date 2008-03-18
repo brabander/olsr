@@ -130,3 +130,40 @@ double me_to_double(const olsr_u8_t me)
     const olsr_u8_t b = me & 0x0F;
     return ((16 + a) << b) * VTIME_SCALE_FACTOR / 16.0;
 }
+
+#if 0
+/*
+ * Since the original VTIME_SCALE_FACTOR simply divides
+ * values by 16 (equals >> 4), we can shorten calculations.
+ * For details refer to RFC 3626 (search for "mantissa").
+ */
+olsr_u8_t fpm_to_me(const fpm interval)
+{
+  olsr_u8_t a = 0, b = 0; /* Underflow defaults */
+  const unsigned int unscaled_interval = (sfpm)interval >> (FPM_BIT - 4);
+
+  while (unscaled_interval >= (1U << b)) b++;
+
+  if (0 < b) {
+    b--;
+    if (15 < b) {
+      a = 15; /* Overflow defaults */
+      b = 15;
+    }
+    else
+    {
+      assert(FPM_BIT >= 8);
+      a = ((sfpm)interval >> (FPM_BIT + b - 8)) - 16;
+    }
+  }
+  return (a << 4) | (b & 0x0F);
+}
+
+fpm me_to_fpm(const olsr_u8_t me)
+{
+  const olsr_u8_t a = me >> 4;
+  const olsr_u8_t b = me & 0x0F;
+  assert(FPM_BIT >= 8);
+  return (fpm)(((sfpm)a + 16) << (b + FPM_BIT - 8));
+}
+#endif
