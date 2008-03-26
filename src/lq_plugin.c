@@ -252,12 +252,24 @@ const char *get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *b
  * value in the same context (a single printf command for example).
  * 
  * @param pointer to tc_edge_entry
- * @return pointer to a buffer with the text representation
+ * @param pointer to buffer
+ * @return pointer to the buffer with the text representation
  */
 const char *get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer) {
   return active_lq_handler->print_tc_lq(entry->linkquality, buffer);
 }
 
+/*
+ * get_linkcost_text
+ * 
+ * This function transforms an olsr_linkcost value into it's text representation and copies
+ * the result into a buffer.
+ * 
+ * @param linkcost value
+ * @param true to transform the cost of a route, false for a link
+ * @param pointer to buffer
+ * @return pointer to buffer filled with text
+ */
 const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer) {
   static const char *infinite = "INFINITE";
   
