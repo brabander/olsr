@@ -42,9 +42,10 @@
 #define LQ_PLUGIN_DEFAULT_H_
 
 #include "olsr_types.h"
+#include "lq_plugin.h"
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
-#define LQ_PLUGIN_RELEVANT_COSTCHANGE 16
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE 8
 
 struct default_lq {
 	float lq, nlq;
@@ -65,7 +66,7 @@ void default_olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, void *lq);
 void default_olsr_copy_link_lq_into_tc(void *target, void *source);
 void default_olsr_clear_lq(void *target);
 
-char *default_olsr_print_lq(void *ptr);
-char *default_olsr_print_cost(olsr_linkcost cost);
+const char *default_olsr_print_lq(void *ptr, struct lqtextbuffer *buffer);
+const char *default_olsr_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 #endif /*LQ_PLUGIN_DEFAULT_H_*/

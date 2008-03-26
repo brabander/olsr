@@ -176,13 +176,15 @@ void mapwrite_work(FILE* fmap)
     char* llb = lookup_position_latlon(&tc_edge->T_dest_addr);
     if (NULL != lla && NULL != llb)
     {
+      struct lqtextbuffer lqbuffer;
+      
       /*
        * To speed up processing, Links with both positions are named PLink()
        */
       if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            get_linkcost_text(tc_edge->cost, OLSR_FALSE),
+            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer),
             lla, llb))
       {
         return;
@@ -190,13 +192,15 @@ void mapwrite_work(FILE* fmap)
     }
     else
     {
+      struct lqtextbuffer lqbuffer;
+      
       /*
        * If one link end pos is unkown, only send Link()
        */
       if (0 > fprintf(fmap, "Link('%s','%s',%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            get_linkcost_text(tc_edge->cost, OLSR_FALSE)))
+            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer)))
       {
         return;
       }

@@ -107,7 +107,8 @@ static void __attribute__((constructor)) banner(void)
 int iterLinkTabNext(char *buff, int len)
 {
   struct list_node *link_node;
-
+  struct lqtextbuffer lqbuffer;
+  
   if (iterLinkTab == NULL)
     return -1;
 
@@ -116,7 +117,7 @@ int iterLinkTabNext(char *buff, int len)
            rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
            iterLinkTab->L_link_quality,
-           get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE));
+           get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE, &lqbuffer));
 
 
   link_node = iterLinkTab->link_list.next;
@@ -277,6 +278,7 @@ int iterTcTabNext(char *buff, int len)
   int res;
   int i;
   struct tc_edge_entry *tc_edge;
+  struct lqtextbuffer lqbuffer;
   
   if (iterTcTab == NULL)
     return -1;
@@ -295,7 +297,7 @@ int iterTcTabNext(char *buff, int len)
 
     res = snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   get_linkcost_text(tc_edge->cost, OLSR_FALSE));
+                   get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
 
     if (res < len)
       buff += res;

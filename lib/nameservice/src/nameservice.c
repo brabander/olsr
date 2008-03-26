@@ -1227,13 +1227,14 @@ select_best_nameserver(struct rt_entry **rt)
 		if (!rt2 || olsr_cmp_rt(rt1, rt2)) {
 #ifndef NODEBUG
 			struct ipaddr_str strbuf;
+			struct lqtextbuffer lqbuffer;
 #endif
 			/*
 			 * first is better, swap the pointers.
 			 */
 			OLSR_PRINTF(6, "NAME PLUGIN: nameserver %s, cost %s\n",
 						olsr_ip_to_string(&strbuf, &rt1->rt_dst.prefix),
-						get_linkcost_text(rt1->rt_best->rtp_metric.cost, OLSR_TRUE));
+						get_linkcost_text(rt1->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
 
 			rt[nameserver_idx] = rt2;
 			rt[nameserver_idx+1] = rt1;
@@ -1274,6 +1275,7 @@ write_resolv_file(void)
 			for (name = entry->names; name != NULL; name = name->next) {
 #ifndef NODEBUG
 				struct ipaddr_str strbuf;
+				struct lqtextbuffer lqbuffer;
 #endif
 				route = olsr_lookup_routing_table(&name->ip);
 
@@ -1288,7 +1290,7 @@ write_resolv_file(void)
 				*nameserver_routes = route;
 				OLSR_PRINTF(6, "NAME PLUGIN: found nameserver %s, cost %s",
 							olsr_ip_to_string(&strbuf, &name->ip),
-							get_linkcost_text(route->rt_best->rtp_metric.cost, OLSR_TRUE));
+							get_linkcost_text(route->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
 
 				/* find the closet one */
 				select_best_nameserver(nameserver_routes);

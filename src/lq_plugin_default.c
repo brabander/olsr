@@ -139,16 +139,14 @@ void default_olsr_clear_lq(void *target) {
   memset(target, 0, sizeof(struct default_lq));
 }
 
-char *default_olsr_print_lq(void *ptr) {
-  static char output_buffer[16];
+const char *default_olsr_print_lq(void *ptr, struct lqtextbuffer *buffer) {
   struct default_lq *lq = ptr;
   
-  sprintf(output_buffer, "%2.3f/%2.3f", lq->lq, lq->nlq);
-  return output_buffer;
+  sprintf(buffer->buf, "%2.3f/%2.3f", lq->lq, lq->nlq);
+  return buffer->buf;
 }
 
-char *default_olsr_print_cost(olsr_linkcost cost) {
-  static char output_buffer[16];
-  sprintf(output_buffer, "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER);
-  return output_buffer;
+const char *default_olsr_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer) {
+  sprintf(buffer->buf, "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER);
+  return buffer->buf;
 }

@@ -222,14 +222,21 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
       continue;
     }
 
+    /* Set the entry's link quality */
+    lnk = get_best_link_to_neighbor(&walker->neighbor_main_addr);
+    if (!lnk) {
+      continue; // no link ?
+    }
+    
+    if (lnk->linkcost >= LINK_COST_BROKEN) {
+      continue; // don't advertise links with very low LQ
+    }
+    
     /* Allocate a neighbour entry. */
     neigh = olsr_malloc_tc_mpr_addr("Build LQ_TC");
 
     /* Set the entry's main address. */
     neigh->address = walker->neighbor_main_addr;
-
-    /* Set the entry's link quality */
-    lnk = get_best_link_to_neighbor(&neigh->address);
 
     if (lnk) {
       olsr_copylq_link_entry_2_tc_mpr_addr(neigh, lnk);

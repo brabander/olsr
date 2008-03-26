@@ -253,6 +253,7 @@ olsr_print_two_hop_neighbor_table(void)
            entry != &neigh2->neighbor_2_nblist;
            entry = entry->next) {
         struct ipaddr_str buf;
+        struct lqtextbuffer lqbuffer;
         if (first) {
           OLSR_PRINTF(1, "%-15s  ",
                       olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr));
@@ -262,7 +263,7 @@ olsr_print_two_hop_neighbor_table(void)
         }
         OLSR_PRINTF(1, "%-15s  %s\n",
                     olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                    get_linkcost_text(entry->path_linkcost, OLSR_FALSE));
+                    get_linkcost_text(entry->path_linkcost, OLSR_FALSE, &lqbuffer));
       }
     }
   }

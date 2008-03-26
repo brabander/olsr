@@ -839,11 +839,12 @@ void olsr_print_link_set(void)
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     struct ipaddr_str buf;
+    struct lqtextbuffer lqbuffer1, lqbuffer2;
     OLSR_PRINTF(1, "%-*s  %5.3f  %-13s %s\n",
                 addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
                 walker->L_link_quality,
-                get_link_entry_text(walker),
-                get_linkcost_text(walker->linkcost, OLSR_FALSE));
+                get_link_entry_text(walker, &lqbuffer1),
+                get_linkcost_text(walker->linkcost, OLSR_FALSE, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }

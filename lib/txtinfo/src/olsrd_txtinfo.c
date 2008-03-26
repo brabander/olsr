@@ -348,6 +348,8 @@ static void ipc_print_neigh(void)
 static void ipc_print_link(void)
 {
     struct ipaddr_str buf1, buf2;
+    struct lqtextbuffer lqbuffer1, lqbuffer2;
+
     struct link_entry *link = NULL;
 
     ipc_sendf("Table: Links\nLocal IP\tremote IP\tHysteresis\tLinkcost\n");
@@ -358,8 +360,8 @@ static void ipc_print_link(void)
                    olsr_ip_to_string(&buf1, &link->local_iface_addr),
                    olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
                    link->L_link_quality, 
-                   get_link_entry_text(link),
-                   get_linkcost_text(link->linkcost, OLSR_FALSE));
+                   get_link_entry_text(link, &lqbuffer1),
+                   get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
     } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
     ipc_sendf("\n");
@@ -370,7 +372,8 @@ static void ipc_print_routes(void)
     struct ipaddr_str buf1, buf2;
     struct rt_entry *rt;
     struct avl_node *rt_tree_node;
-
+    struct lqtextbuffer lqbuffer;
+    
     ipc_sendf("Table: Routes\nDestination\tGateway\tMetric\tETX\tInterface\n");
 
     /* Walk the route table */
@@ -385,7 +388,7 @@ static void ipc_print_routes(void)
                    rt->rt_dst.prefix_len,
                    olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
                    rt->rt_best->rtp_metric.hops,
-                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE),
+                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     }
     ipc_sendf("\n");
@@ -403,11 +406,12 @@ static void ipc_print_topology(void)
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
             struct ipaddr_str dstbuf, addrbuf;
+            struct lqtextbuffer lqbuffer1, lqbuffer2;
             ipc_sendf( "%s\t%s\t%s\t%s\n", 
                        olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       get_tc_edge_entry_text(tc_edge),
-                       get_linkcost_text(tc_edge->cost, OLSR_FALSE));
+                       get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                       get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);

@@ -47,9 +47,13 @@
 #include "lq_packet.h"
 #include "packet.h"
 
-#define LINK_COST_BROKEN 65535
+#define LINK_COST_BROKEN (1<<22)
 #define ROUTE_COST_BROKEN (0xffffffff)
 #define ZERO_ROUTE_COST 0
+
+struct lqtextbuffer {
+  char buf[16];
+};
 
 struct lq_handler {
   olsr_linkcost (*calc_hello_cost)(const void *lq);
@@ -69,15 +73,15 @@ struct lq_handler {
   void (*deserialize_hello_lq)(const olsr_u8_t **curr, void *lq);
   void (*deserialize_tc_lq)(const olsr_u8_t **curr, void *lq);
   
-  char *(*print_hello_lq)(void *ptr);
-  char *(*print_tc_lq)(void *ptr);
-  char *(*print_cost)(olsr_linkcost cost);
+  const char *(*print_hello_lq)(void *ptr, struct lqtextbuffer *buffer);
+  const char *(*print_tc_lq)(void *ptr, struct lqtextbuffer *buffer);
+  const char *(*print_cost)(olsr_linkcost cost, struct lqtextbuffer *buffer);
   
   size_t hello_lq_size;
   size_t tc_lq_size;
 };
 
-void set_lq_handler(struct lq_handler *handler, char *name);
+void set_lq_handler(struct lq_handler *handler, const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
 olsr_bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
@@ -90,9 +94,9 @@ void olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, struct tc_edge_entry *e
 void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost);
 void olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neighbor *foreign);
 
-char *get_link_entry_text(struct link_entry *entry);
-char *get_tc_edge_entry_text(struct tc_edge_entry *entry);
-const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route);
+const char *get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer);
+const char *get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer);
+const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer);
 
 void olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source);
 void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source);

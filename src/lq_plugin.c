@@ -44,6 +44,7 @@
 #include "lq_packet.h"
 #include "packet.h"
 #include "olsr.h"
+#include "two_hop_neighbor_table.h"
 
 #include "lq_plugin_default.h"
 #include "lq_plugin.h"
@@ -85,7 +86,7 @@ struct lq_handler *active_lq_handler = &default_lq_handler;
  * @param pointer to lq_handler structure
  * @param name of the link quality handler for debug output
  */
-void set_lq_handler(struct lq_handler *handler, char *name) {
+void set_lq_handler(struct lq_handler *handler, const char *name) {
   if (handler) {
     OLSR_PRINTF(1, "Activated lq_handler: %s\n", name);
     active_lq_handler = handler;
@@ -236,10 +237,11 @@ void olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neigh
  * value in the same context (a single printf command for example).
  * 
  * @param pointer to link_entry
+ * @param buffer for output
  * @return pointer to a buffer with the text representation
  */
-char *get_link_entry_text(struct link_entry *entry) {
-  return active_lq_handler->print_hello_lq(entry->linkquality);
+const char *get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer) {
+  return active_lq_handler->print_hello_lq(entry->linkquality, buffer);
 }
 
 /*
@@ -252,11 +254,11 @@ char *get_link_entry_text(struct link_entry *entry) {
  * @param pointer to tc_edge_entry
  * @return pointer to a buffer with the text representation
  */
-char *get_tc_edge_entry_text(struct tc_edge_entry *entry) {
-  return active_lq_handler->print_tc_lq(entry->linkquality);
+const char *get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer) {
+  return active_lq_handler->print_tc_lq(entry->linkquality, buffer);
 }
 
-const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route) {
+const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer) {
   static const char *infinite = "INFINITE";
   
   if (route) {
@@ -269,7 +271,7 @@ const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route) {
       return infinite;
     }
   }
-  return active_lq_handler->print_cost(cost);
+  return active_lq_handler->print_cost(cost, buffer);
 }
 
 /*

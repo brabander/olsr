@@ -644,7 +644,8 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   static char buff[128];
   struct ipaddr_str prefixstr, origstr, gwstr;
   struct rt_entry *rt = rtp->rtp_rt;
-
+  struct lqtextbuffer lqbuffer;
+  
   snprintf(buff, sizeof(buff),
            "%s/%u from %s via %s, "
            "cost %s, metric %u, v %u",
@@ -652,7 +653,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            rt->rt_dst.prefix_len,
            olsr_ip_to_string(&origstr, &rtp->rtp_originator),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-           get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE),
+           get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
            rtp->rtp_metric.hops,
            rtp->rtp_version);
 
@@ -669,7 +670,8 @@ olsr_print_routing_table(const struct avl_tree *tree)
 #ifndef NODEBUG
   /* The whole function makes no sense without it. */
   const struct avl_node *rt_tree_node;
-
+  struct lqtextbuffer lqbuffer;
+  
   OLSR_PRINTF(6, "ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first_c(tree);
@@ -693,7 +695,7 @@ olsr_print_routing_table(const struct avl_tree *tree)
       const struct rt_path * const rtp = rtp_tree_node->data;
       OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),
-             get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE),
+             get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),

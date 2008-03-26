@@ -26,7 +26,9 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
   struct duplicate_entry *entry;
   int diff;
   void *mainIp;
-  
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+#endif  
   // get main address
   mainIp = mid_lookup_main_addr(ip);
   if (mainIp == NULL) {
@@ -59,6 +61,7 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
       entry->array = 1;
       return 1;
     }
+    OLSR_PRINTF(9, "blocked %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
     return 0;
   }
   
@@ -67,11 +70,11 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
     olsr_u32_t bitmask = 1 << ((olsr_u32_t) (-diff));
     
     if ((entry->array & bitmask) != 0) {
-//      printf("blocked\n");
+      OLSR_PRINTF(9, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff, entry->array, olsr_ip_to_string(&buf, mainIp));
       return 0;
     }
     entry->array |= bitmask;
-//    printf("processed\n");
+    OLSR_PRINTF(9, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
     return 1;
   }
   else if (diff < 32) {
@@ -82,7 +85,7 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
   }
   entry->array |= 1;
   entry->seqnr = seqnr;
-//  printf("processed\n");
+  OLSR_PRINTF(9, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
   return 1;
 }
 

@@ -285,13 +285,14 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
   static char buf[128];
   struct ipaddr_str addrbuf, dstbuf;
   struct tc_entry *tc = tc_edge->tc;
-
+  struct lqtextbuffer lqbuffer1, lqbuffer2;
+  
   snprintf(buf, sizeof(buf),
            "%s > %s, cost (%6s) %s",
            olsr_ip_to_string(&addrbuf, &tc->addr),
            olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           get_tc_edge_entry_text(tc_edge),
-           get_linkcost_text(tc_edge->cost, OLSR_FALSE));
+           get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+           get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
   return buf;
 }
@@ -641,11 +642,12 @@ olsr_print_tc_table(void)
     struct tc_edge_entry *tc_edge;
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       struct ipaddr_str addrbuf, dstaddrbuf;
+      struct lqtextbuffer lqbuffer1, lqbuffer2;
       OLSR_PRINTF(1, "%-*s %-*s  (%-10s) %s\n",
                   ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                   ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
-                  get_tc_edge_entry_text(tc_edge),
-                  get_linkcost_text(tc_edge->cost, OLSR_FALSE));
+                  get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                  get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif

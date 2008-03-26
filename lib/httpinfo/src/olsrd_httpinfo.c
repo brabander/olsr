@@ -751,7 +751,8 @@ static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize,
 static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt)
 {
   int size = 0;
-
+  struct lqtextbuffer lqbuffer;
+  
   size += snprintf(&buf[size], bufsize-size, "<tr>");
   size += build_ipaddr_with_link(&buf[size], bufsize-size,
                                  &rt->rt_dst.prefix,
@@ -765,7 +766,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
                    rt->rt_best->rtp_metric.hops);
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"right\">%s</td>",
-                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE));
+                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"center\">%s</td></tr>\n",
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -987,10 +988,11 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
     size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%0.2f</td>", link->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
+      struct lqtextbuffer lqbuffer1, lqbuffer2;
       size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">(%s) %s</td>",
-                       get_link_entry_text(link),
-                       get_linkcost_text(link->linkcost, OLSR_FALSE));
+                       get_link_entry_text(link, &lqbuffer1),
+                       get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
@@ -1055,10 +1057,11 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
           if (olsr_cnf->lq_level > 0) {
+            struct lqtextbuffer lqbuffer1, lqbuffer2;
               size += snprintf(&buf[size], bufsize-size,
                                "<td align=\"right\">(%s) %s</td>\n",
-                               get_tc_edge_entry_text(tc_edge),
-                               get_linkcost_text(tc_edge->cost, OLSR_FALSE));
+                               get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                               get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
