@@ -293,6 +293,11 @@ main (int argc, char **argv)
   
   if (hubMode) {
     int x,y;
+
+    /*
+     * In hub mode the any-to-any loss factor is 1.0, which
+     * means we can skip reading a matrix file.
+     */
     for (y=0; y<deviceCount; y++) {
       for (x=0; x<deviceCount; x++) {
         if (x != y) {

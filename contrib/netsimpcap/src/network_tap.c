@@ -155,8 +155,10 @@ createTap (char *name, MacAddress *mac)
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
 	
 	
-  /* Specify the IFF_TAP flag for Ethernet packets.
-   * Specify IFF_NO_PI for not receiving extra meta packet information. */
+  /*
+   * Specify the IFF_TAP flag for Ethernet packets.
+   * Specify IFF_NO_PI for not receiving extra meta packet information.
+   */
   ifreq.ifr_flags = IFF_TAP;
   ifreq.ifr_flags |= IFF_NO_PI;
 	
@@ -201,7 +203,7 @@ createTap (char *name, MacAddress *mac)
     close(etfd);
     close(ioctlSkfd);
     return -1;
-  } /* if (ioctlres < 0) */
+  }
 	
 	
   /* Set the multicast flag on the interface */
