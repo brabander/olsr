@@ -188,7 +188,8 @@ int olsrd_plugin_init(void)
 		    0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter)))
 		{
 			/* Register the ARP refresh event */
-			olsr_register_scheduler_event(&olsr_arp_event, NULL, 2, 0, NULL);
+                        olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
+                                         &olsr_arp_event, NULL, 0);
 			ret = 1;
 		}
 		else

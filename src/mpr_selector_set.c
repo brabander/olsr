@@ -59,11 +59,10 @@ void
 olsr_init_mprs_set(void)
 {
   OLSR_PRINTF(5, "MPRS: Init\n");
+
   /* Initial values */
   ansn = 0;
 
-  olsr_register_timeout_function(&olsr_time_out_mprs_set, OLSR_TRUE);
-  
   mprs_list.next = &mprs_list;
   mprs_list.prev = &mprs_list;
 }
@@ -93,6 +92,49 @@ olsr_is_mpr(void)
 }
 #endif
 
+
+/**
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_mpr_sel_entry(void *context)
+{
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct mpr_selector *mpr_sel;
+
+  mpr_sel = (struct mpr_selector *)context;
+  mpr_sel->MS_timer = NULL;
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "MPRS: Timing out %st\n",
+              olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
+#endif
+
+  DEQUEUE_ELEM(mpr_sel);
+
+  /* Delete entry */
+  free(mpr_sel);
+  signal_link_changes(OLSR_TRUE);
+}
+
+
+/**
+ * Set the mpr selector expiration timer.
+ *
+ * all timer setting shall be done using this function.
+ * The timer param is a relative timer expressed in milliseconds.
+ */
+static void
+olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, unsigned int rel_timer)
+{
+
+  olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
+                 OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel, 0);
+}
+
+
 /**
  *Add a MPR selector to the MPR selector set
  *
@@ -115,7 +157,7 @@ olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
 
   /* Fill struct */
   new_entry->MS_main_addr = *addr;
-  new_entry->MS_time = GET_TIMESTAMP(vtime*1000);
+  olsr_set_mpr_sel_timer(new_entry, vtime * MSEC_PER_SEC);
 
   /* Queue */
   QUEUE_ELEM(mprs_list, new_entry);
@@ -182,42 +224,10 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, float vtime)
     signal_link_changes(OLSR_TRUE);
     return 1;
   }
-  mprs->MS_time = GET_TIMESTAMP(vtime*1000);
+  olsr_set_mpr_sel_timer(mprs, vtime * MSEC_PER_SEC);
   return 0;
 }
 
-/**
- *Time out MPR selector entries
- *
- *@return nada
- */
-void
-olsr_time_out_mprs_set(void)
-{
-  struct mpr_selector *mprs = mprs_list.next;
-
-  while(mprs != &mprs_list) {
-      if(TIMED_OUT(mprs->MS_time))
-	{
-	  /* Dequeue */
-	  struct mpr_selector *mprs_to_delete = mprs;
-#ifndef NODEBUG
-          struct ipaddr_str buf;
-#endif
-	  mprs = mprs->next;
-
-	  OLSR_PRINTF(1, "MPRS: Timing out %s\n", olsr_ip_to_string(&buf, &mprs_to_delete->MS_main_addr));
-
-	  DEQUEUE_ELEM(mprs_to_delete);
-
-	  /* Delete entry */
-	  free(mprs_to_delete);
-	  signal_link_changes(OLSR_TRUE);
-	}
-      else
-	mprs = mprs->next;
-    }
-}
 
 #if 0
 /**
@@ -238,3 +248,8 @@ olsr_print_mprs_set(void)
 }
 #endif
 
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

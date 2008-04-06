@@ -59,16 +59,34 @@ olsr_init_duplicate_table(void)
 
   OLSR_PRINTF(3, "Initializing duplicatetable - hashsize %d\n", HASHSIZE);
 
-  /* Since the holdingtime is rather large for duplicate
-   * entries the timeoutfunction is only ran every 2 seconds
-   */
-  olsr_register_scheduler_event_dijkstra(&olsr_time_out_duplicate_table, NULL, 2.0, 0.0, NULL);
-  
   for(i = 0; i < HASHSIZE; i++)
     {
       dup_set[i].next = &dup_set[i];
       dup_set[i].prev = &dup_set[i];
     }
+}
+
+/**
+ * Callback for the dup_entry timer.
+ */
+static void
+olsr_expire_dup_entry(void *context)
+{
+#if !defined(NODEBUG) && defined(DEBUG)
+  struct ipaddr_str buf;
+#endif
+  struct dup_entry *dup;
+
+  dup = context;
+  dup->timer = NULL;
+
+#ifdef DEBUG
+  OLSR_PRINTF(5, "DUP TIMEOUT[%s] s: %d\n", 
+              olsr_ip_to_string(&buf, &dup->addr),
+              dup->seqno);
+#endif
+
+  olsr_del_dup_entry(dup);
 }
 
 
@@ -98,7 +116,11 @@ olsr_add_dup_entry(const union olsr_ip_addr *originator, const olsr_u16_t seqno)
   /* Seqno */
   new_dup_entry->seqno = seqno;
   /* Set timer */
-  new_dup_entry->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
+  new_dup_entry->timer =
+    olsr_start_timer(DUP_HOLD_TIME * MSEC_PER_SEC, OLSR_DUP_ENTRY_JITTER,
+                     OLSR_TIMER_ONESHOT, &olsr_expire_dup_entry, new_dup_entry,
+                     0);
+
   /* Interfaces */
   new_dup_entry->ifaces = NULL;
   /* Forwarded */
@@ -106,12 +128,7 @@ olsr_add_dup_entry(const union olsr_ip_addr *originator, const olsr_u16_t seqno)
 
   /* Insert into set */
   QUEUE_ELEM(dup_set[hash], new_dup_entry);
-  /*
-  dup_set[hash].next->prev = new_dup_entry;
-  new_dup_entry->next = dup_set[hash].next;
-  dup_set[hash].next = new_dup_entry;
-  new_dup_entry->prev = &dup_set[hash];
-  */
+
   return new_dup_entry;
 }
 
@@ -212,45 +229,14 @@ olsr_del_dup_entry(struct dup_entry *entry)
 
   /* Dequeue */
   DEQUEUE_ELEM(entry);
+
+  /* Stop timer */
+  if (entry->timer) {
+    olsr_stop_timer(entry->timer);
+  }
+
   free(entry);
 }
-
-
-
-void
-olsr_time_out_duplicate_table(void *foo __attribute__((unused)))
-{
-  int i;
-
-  for(i = 0; i < HASHSIZE; i++)
-    {      
-      struct dup_entry *tmp_dup_table;
-      tmp_dup_table = dup_set[i].next;
-
-      while(tmp_dup_table != &dup_set[i])
-	{
-	  if(TIMED_OUT(tmp_dup_table->timer))
-	    {
-	      struct dup_entry *entry_to_delete = tmp_dup_table;
-#ifdef DEBUG
-#ifndef NODEBUG
-              struct ipaddr_str buf;
-#endif
-	      OLSR_PRINTF(5, "DUP TIMEOUT[%s] s: %d\n", 
-		          olsr_ip_to_string(&buf, &tmp_dup_table->addr),
-		          tmp_dup_table->seqno);
-#endif
-	      tmp_dup_table = tmp_dup_table->next;
-	      olsr_del_dup_entry(entry_to_delete);
-	    }
-	  else
-	    {
-	      tmp_dup_table = tmp_dup_table->next;
-	    }
-	}
-    }
-}
-
 
 int
 olsr_update_dup_entry(const union olsr_ip_addr *originator, 
@@ -277,10 +263,16 @@ olsr_update_dup_entry(const union olsr_ip_addr *originator,
 	}
     }
 
-  if(tmp_dup_table == &dup_set[hash])
+  if(tmp_dup_table == &dup_set[hash]) {
     /* Did not find entry - create it */
     tmp_dup_table = olsr_add_dup_entry(originator, seqno);
-  
+  } else {
+
+    /* Change timer */
+    olsr_change_timer(tmp_dup_table->timer, DUP_HOLD_TIME * MSEC_PER_SEC,
+                      OLSR_DUP_ENTRY_JITTER, OLSR_TIMER_ONESHOT);
+  }  
+
   /* 0 for now */
   tmp_dup_table->forwarded = 0;
   
@@ -289,9 +281,6 @@ olsr_update_dup_entry(const union olsr_ip_addr *originator,
   new_iface->addr = *iface;
   new_iface->next = tmp_dup_table->ifaces;
   tmp_dup_table->ifaces = new_iface;
-  
-  /* Set timer */
-  tmp_dup_table->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
   
   return 1;
 }
@@ -333,7 +322,8 @@ olsr_set_dup_forward(const union olsr_ip_addr *originator,
   tmp_dup_table->forwarded = 1;
   
   /* Set timer */
-  tmp_dup_table->timer = GET_TIMESTAMP(DUP_HOLD_TIME*1000);
+  olsr_change_timer(tmp_dup_table->timer, DUP_HOLD_TIME * MSEC_PER_SEC,
+                    OLSR_DUP_ENTRY_JITTER, OLSR_TIMER_ONESHOT);
   
   return 1;
 }
@@ -362,3 +352,9 @@ olsr_print_duplicate_table(void)
   printf("\n");
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

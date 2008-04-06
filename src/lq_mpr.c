@@ -58,32 +58,29 @@ void olsr_calculate_lq_mpr(void)
 #endif
   olsr_bool mpr_changes = OLSR_FALSE;
 
-  for(i = 0; i < HASHSIZE; i++)
-    {
-      for (neigh = neighbortable[i].next;
-           neigh != &neighbortable[i];
-           neigh = neigh->next)
-        { 
-          // memorize previous MPR status
+  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
 
-          neigh->was_mpr = neigh->is_mpr;
+    /* Memorize previous MPR status. */
 
-          // clear current MPR status
+    neigh->was_mpr = neigh->is_mpr;
 
-          neigh->is_mpr = OLSR_FALSE;
+    /* Clear current MPR status. */
 
-          // in this pass we are only interested in WILL_ALWAYS neighbours
+    neigh->is_mpr = OLSR_FALSE;
 
-          if(neigh->status == NOT_SYM ||
-             neigh->willingness != WILL_ALWAYS)
-            continue;
+    /* In this pass we are only interested in WILL_ALWAYS neighbours */
 
-          neigh->is_mpr = OLSR_TRUE;
-
-          if (neigh->is_mpr != neigh->was_mpr)
-            mpr_changes = OLSR_TRUE;
-        }
+    if (neigh->status == NOT_SYM || neigh->willingness != WILL_ALWAYS) {
+      continue;
     }
+
+    neigh->is_mpr = OLSR_TRUE;
+
+    if (neigh->is_mpr != neigh->was_mpr) {
+      mpr_changes = OLSR_TRUE;
+    }
+
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
 
   for(i = 0; i < HASHSIZE; i++)
     {
@@ -198,3 +195,9 @@ void olsr_calculate_lq_mpr(void)
   if (mpr_changes && olsr_cnf->tc_redundancy > 0)
     signal_link_changes(OLSR_TRUE);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

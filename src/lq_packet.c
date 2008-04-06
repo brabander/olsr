@@ -86,50 +86,51 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   
   // loop through the link set
 
-  for (walker = get_link_set(); walker != NULL; walker = walker->next)
-    {
-      // allocate a neighbour entry
-      struct lq_hello_neighbor *neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
+  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
-      // a) this neighbor interface IS NOT visible via the output interface
-      if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
-        neigh->link_type = UNSPEC_LINK;
+    // allocate a neighbour entry
+    struct lq_hello_neighbor *neigh = olsr_malloc(sizeof (struct lq_hello_neighbor), "Build LQ_HELLO");
+
+    // a) this neighbor interface IS NOT visible via the output interface
+    if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
+      neigh->link_type = UNSPEC_LINK;
       
-      // b) this neighbor interface IS visible via the output interface
+    // b) this neighbor interface IS visible via the output interface
 
-      else
-        neigh->link_type = lookup_link_status(walker);
+    else
+      neigh->link_type = lookup_link_status(walker);
 
-      // set the entry's link quality
+    // set the entry's link quality
 
-      neigh->link_quality = walker->loss_link_quality;
-      neigh->neigh_link_quality = walker->neigh_link_quality;
+    neigh->link_quality = walker->loss_link_quality;
+    neigh->neigh_link_quality = walker->neigh_link_quality;
 
-      // set the entry's neighbour type
+    // set the entry's neighbour type
 
-      if(walker->neighbor->is_mpr)
-        neigh->neigh_type = MPR_NEIGH;
+    if(walker->neighbor->is_mpr)
+      neigh->neigh_type = MPR_NEIGH;
 
-      else if (walker->neighbor->status == SYM)
-        neigh->neigh_type = SYM_NEIGH;
+    else if (walker->neighbor->status == SYM)
+      neigh->neigh_type = SYM_NEIGH;
 
-      else if (walker->neighbor->status == NOT_SYM)
-        neigh->neigh_type = NOT_NEIGH;
+    else if (walker->neighbor->status == NOT_SYM)
+      neigh->neigh_type = NOT_NEIGH;
         
-      else {
-        OLSR_PRINTF(0, "Error: neigh_type undefined");
-        neigh->neigh_type = NOT_NEIGH;
-      }
-  
-      // set the entry's neighbour interface address
-
-      neigh->addr = walker->neighbor_iface_addr;
-      
-      // queue the neighbour entry
-
-      neigh->next = lq_hello->neigh;
-      lq_hello->neigh = neigh;
+    else {
+      OLSR_PRINTF(0, "Error: neigh_type undefined");
+      neigh->neigh_type = NOT_NEIGH;
     }
+  
+    // set the entry's neighbour interface address
+
+    neigh->addr = walker->neighbor_iface_addr;
+      
+    // queue the neighbour entry
+
+    neigh->next = lq_hello->neigh;
+    lq_hello->neigh = neigh;
+
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 }
 
 static void
@@ -151,7 +152,9 @@ destroy_lq_hello(struct lq_hello_message *lq_hello)
 static void
 create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 {
-  int i;
+  struct link_entry *lnk;
+  struct neighbor_entry *walker;
+  struct tc_mpr_addr *neigh;
   static int ttl_list[] = { 2, 8, 2, 16, 2, 8, 2, MAX_TTL};
 
   // remember that we have generated an LQ TC message; this is
@@ -190,63 +193,67 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   lq_tc->neigh = NULL;
  
-  // loop through all neighbours
-  
-  for(i = 0; i < HASHSIZE; i++)
-    {
-      struct neighbor_entry *walker;
-      struct tc_mpr_addr    *neigh;
-      for(walker = neighbortable[i].next; walker != &neighbortable[i];
-          walker = walker->next)
-        {
-          struct link_entry *lnk;
-          // only consider symmetric neighbours
+  OLSR_FOR_ALL_NBR_ENTRIES(walker) {
 
-          if(walker->status != SYM)
-            continue;
-
-          // TC redundancy == 1: only consider MPRs and MPR selectors
-
-          if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr &&
-              olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
-            continue;
-
-          // TC redundancy == 0: only consider MPR selectors
-          if (olsr_cnf->tc_redundancy == 0 &&
-              olsr_lookup_mprs_set(&walker->neighbor_main_addr) == NULL)
-            continue;
-
-          // allocate a neighbour entry          
-          neigh = olsr_malloc(sizeof (struct tc_mpr_addr), "Build LQ_TC");
-
-          // set the entry's main address
-
-          neigh->address = walker->neighbor_main_addr;
-
-          // set the entry's link quality
-          lnk = get_best_link_to_neighbor(&neigh->address);
-
-          if (lnk) {
-            neigh->link_quality = lnk->loss_link_quality;
-            neigh->neigh_link_quality = lnk->neigh_link_quality;
-          }
-          else {
-            OLSR_PRINTF(0, "Error: link_qualtiy undefined");
-#ifdef USE_FPM
-            neigh->link_quality = itofpm(0);
-            neigh->neigh_link_quality = itofpm(0);
-#else
-            neigh->link_quality = 0.0;
-            neigh->neigh_link_quality = 0.0;
-#endif
-          }          
-
-          // queue the neighbour entry
-
-          neigh->next = lq_tc->neigh;
-          lq_tc->neigh = neigh;
-        }
+    /*
+     * TC redundancy 2
+     *
+     * Only consider symmetric neighbours.
+     */
+    if (walker->status != SYM) {
+      continue;
     }
+
+    /*
+     * TC redundancy 1
+     *
+     * Only consider MPRs and MPR selectors
+     */
+    if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr &&
+        !olsr_lookup_mprs_set(&walker->neighbor_main_addr)) {
+      continue;
+    }
+
+    /*
+     * TC redundancy 0
+     *
+     * Only consider MPR selectors
+     */
+    if (olsr_cnf->tc_redundancy == 0 &&
+        !olsr_lookup_mprs_set(&walker->neighbor_main_addr)) {
+      continue;
+    }
+
+    /* Allocate a neighbour entry. */
+    neigh = olsr_malloc(sizeof (struct tc_mpr_addr), "Build LQ_TC");
+
+    /* Set the entry's main address. */
+    neigh->address = walker->neighbor_main_addr;
+
+    /* Set the entry's link quality */
+    lnk = get_best_link_to_neighbor(&neigh->address);
+
+    if (lnk) {
+      neigh->link_quality = lnk->loss_link_quality;
+      neigh->neigh_link_quality = lnk->neigh_link_quality;
+    }
+
+    else {
+      OLSR_PRINTF(0, "Error: link_qualtiy undefined");
+#ifdef USE_FPM
+      neigh->link_quality = itofpm(0);
+      neigh->neigh_link_quality = itofpm(0);
+#else
+      neigh->link_quality = 0.0;
+      neigh->neigh_link_quality = 0.0;
+#endif
+    }          
+
+    /* Queue the neighbour entry. */
+    neigh->next = lq_tc->neigh;
+    lq_tc->neigh = neigh;
+
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(walker);
 }
 
 static void
@@ -661,3 +668,9 @@ olsr_output_lq_tc(void *para)
     set_buffer_timer(outif);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

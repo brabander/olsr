@@ -105,11 +105,12 @@ static void __attribute__((constructor)) banner(void)
 
 int iterLinkTabNext(char *buff, int len)
 {
+  struct list_node *link_node;
 #ifdef USE_FPM
   fpm etx;
 #else
   double etx;
-#endif
+ #endif
 
   if (iterLinkTab == NULL)
     return -1;
@@ -120,19 +121,32 @@ int iterLinkTabNext(char *buff, int len)
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
-           olsr_etx_to_string(iterLinkTab->L_link_quality),
-           olsr_etx_to_string(iterLinkTab->loss_link_quality),
-           olsr_etx_to_string(iterLinkTab->neigh_link_quality),
-           olsr_etx_to_string(etx));
+           fpmtoa(iterLinkTab->L_link_quality),
+           fpmtoa(iterLinkTab->loss_link_quality),
+           fpmtoa(iterLinkTab->neigh_link_quality),
+           etxtoa(etx));
 
-  iterLinkTab = iterLinkTab->next;
+
+  link_node = iterLinkTab->link_list.next;
+  if (link_node != &link_entry_head) {
+    iterLinkTab = list2link(link_node);
+  } else {
+    iterLinkTab = NULL;
+  }
 
   return 0;
 }
 
 void iterLinkTabInit(void)
 {
-  iterLinkTab = get_link_set();
+  struct list_node *link_node;
+
+  link_node = link_entry_head.next;
+  if (link_node != &link_entry_head) {
+    iterLinkTab = list2link(link_node);
+  } else {
+    iterLinkTab = NULL;
+  }
 }
 
 int iterNeighTabNext(char *buff, int len)
@@ -289,7 +303,7 @@ int iterTcTabNext(char *buff, int len)
 
     res = snprintf(buff, len, "[~%d~address~%s~etx~%s~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   olsr_etx_to_string(olsr_calc_tc_etx(tc_edge)));
+                   etxtoa(olsr_calc_tc_etx(tc_edge)));
 
     if (res < len)
       buff += res;
@@ -433,7 +447,7 @@ void sendMessage(const char *service, const char *string)
   }
 }
 
-static void serviceFunc(void)
+static void serviceFunc(void *context __attribute__((unused)))
 {
   static int up = 0;
 
@@ -467,7 +481,9 @@ int olsrd_plugin_init(void)
 
   httpInit();
   
-  olsr_register_timeout_function(serviceFunc, OLSR_FALSE);
+  olsr_start_timer(OLSR_TAS_SERVICE_INT, 0, OLSR_TIMER_PERIODIC,
+                   &serviceFunc, NULL, 0);
+
   olsr_parser_add_function(parserFunc, MESSAGE_TYPE, 1);
 
   return 0;
