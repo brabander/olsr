@@ -69,6 +69,14 @@ struct hna_entry
   struct hna_entry   *prev;
 };
 
+#define OLSR_FOR_ALL_HNA_ENTRIES(hna) \
+{ \
+  int _idx; \
+  for (_idx = 0; _idx < HASHSIZE; _idx++) { \
+    for(hna = hna_set[_idx].next; \
+        hna != &hna_set[_idx]; \
+        hna = hna->next)
+#define OLSR_FOR_ALL_HNA_ENTRIES_END(hna) }}
 
 extern struct hna_entry hna_set[HASHSIZE];
 

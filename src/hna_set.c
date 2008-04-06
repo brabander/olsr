@@ -49,18 +49,17 @@
 struct hna_entry hna_set[HASHSIZE];
 
 /**
- *Initialize the HNA set
+ * Initialize the HNA set
  */
 int
 olsr_init_hna_set(void)
 {
   int idx;
 
-  for(idx=0;idx<HASHSIZE;idx++)
-    {
-      hna_set[idx].next = &hna_set[idx];
-      hna_set[idx].prev = &hna_set[idx];
-    }
+  for(idx=0;idx<HASHSIZE;idx++) {
+    hna_set[idx].next = &hna_set[idx];
+    hna_set[idx].prev = &hna_set[idx];
+  }
 
   return 1;
 }
@@ -75,7 +74,8 @@ olsr_init_hna_set(void)
  *@return the localted entry or NULL of not found
  */
 struct hna_net *
-olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
+olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net,
+                    olsr_u8_t prefixlen)
 {
   struct hna_net *tmp;
   /* Loop trough entrys */
@@ -90,11 +90,10 @@ olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, o
 
 
 /**
- *Lookup a gateway entry
+ * Lookup a gateway entry
  *
- *@param gw the address of the gateway
- *
- *@return the located entry or NULL if not found
+ * @param gw the address of the gateway
+ * @return the located entry or NULL if not found
  */
 struct hna_entry *
 olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
@@ -105,15 +104,15 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
 #if 0
   OLSR_PRINTF(5, "HNA: lookup entry\n");
 #endif
-  
-  /* Check for registered entry */
+    /* Check for registered entry */
+
   for(tmp_hna = hna_set[hash].next;
       tmp_hna != &hna_set[hash];
-      tmp_hna = tmp_hna->next)
-    {
-      if(ipequal(&tmp_hna->A_gateway_addr, gw))
-	return tmp_hna;
+      tmp_hna = tmp_hna->next) {
+    if(ipequal(&tmp_hna->A_gateway_addr, gw)) {
+      return tmp_hna;
     }
+  }
   
   /* Not found */
   return NULL;
