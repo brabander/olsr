@@ -261,7 +261,7 @@ olsr_init_tables(void)
   olsr_init_hna_set();  
 
   /* Initialize Layer 1/2 database */
-  olsr_initialize_layer12();
+  // olsr_initialize_layer12();
   
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
