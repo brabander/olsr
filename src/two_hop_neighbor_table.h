@@ -44,7 +44,7 @@
 
 #include "defs.h"
 #include "hashing.h"
-#include "fpm.h"
+#include "lq_plugin.h"
 
 #define	NB2S_COVERED 	0x1		/* node has been covered by a MPR */
 
@@ -52,15 +52,9 @@
 struct neighbor_list_entry 
 {
   struct	neighbor_entry *neighbor;
-#ifdef USE_FPM
-  fpm           second_hop_link_quality;
-  fpm           path_link_quality;
-  fpm           saved_path_link_quality;
-#else
-  double        second_hop_link_quality;
-  double        path_link_quality;
-  double        saved_path_link_quality;
-#endif
+  olsr_linkcost second_hop_linkcost;
+  olsr_linkcost path_linkcost;
+  olsr_linkcost saved_path_linkcost;
   struct	neighbor_list_entry *next;
   struct	neighbor_list_entry *prev;
 };

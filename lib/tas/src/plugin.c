@@ -67,6 +67,7 @@
 #include <lq_route.h>
 #include <mpr_selector_set.h>
 #include <duplicate_set.h>
+#include <lq_plugin.h>
 
 #define PLUGIN_INTERFACE_VERSION 5
 
@@ -106,25 +107,17 @@ static void __attribute__((constructor)) banner(void)
 int iterLinkTabNext(char *buff, int len)
 {
   struct list_node *link_node;
-#ifdef USE_FPM
-  fpm etx;
-#else
-  double etx;
- #endif
-
+  struct lqtextbuffer lqbuffer;
+  
   if (iterLinkTab == NULL)
     return -1;
 
-  etx = olsr_calc_link_etx(iterLinkTab);
-
-  snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%s~lq~%s~nlq~%s~etx~%s~",
+  snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~cost~%s~",
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
-           fpmtoa(iterLinkTab->L_link_quality),
-           fpmtoa(iterLinkTab->loss_link_quality),
-           fpmtoa(iterLinkTab->neigh_link_quality),
-           etxtoa(etx));
+           iterLinkTab->L_link_quality,
+           get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE, &lqbuffer));
 
 
   link_node = iterLinkTab->link_list.next;
@@ -285,6 +278,7 @@ int iterTcTabNext(char *buff, int len)
   int res;
   int i;
   struct tc_edge_entry *tc_edge;
+  struct lqtextbuffer lqbuffer;
   
   if (iterTcTab == NULL)
     return -1;
@@ -301,9 +295,9 @@ int iterTcTabNext(char *buff, int len)
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(iterTcTab, tc_edge) {
 
-    res = snprintf(buff, len, "[~%d~address~%s~etx~%s~]~", i,
+    res = snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i,
                    rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-                   etxtoa(olsr_calc_tc_etx(tc_edge)));
+                   get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
 
     if (res < len)
       buff += res;
@@ -338,7 +332,6 @@ static void parserFunc(union olsr_message *msg, struct interface *inInt,
 {
   char *mess = (char *)msg;
   union olsr_ip_addr *orig = (union olsr_ip_addr *)(mess + 4);
-  unsigned short seqNo = (mess[ipAddrLen + 6] << 8) | mess[ipAddrLen + 7];
   int len = (mess[2] << 8) | mess[3];
   char *service, *string;
   int i;
@@ -358,8 +351,6 @@ static void parserFunc(union olsr_message *msg, struct interface *inInt,
     return;
   }
 
-  if (olsr_check_dup_table_proc(orig, seqNo) != 0)
-  {
     len -= ipAddrLen + 8;
     service = mess + ipAddrLen + 8;
 
@@ -389,9 +380,8 @@ static void parserFunc(union olsr_message *msg, struct interface *inInt,
     }
 
     httpAddTasMessage(service, string, rawIpAddrToString(orig, ipAddrLen));
-  }
 
-  olsr_forward_message(msg, orig, seqNo, inInt, neighIntAddr);
+  olsr_forward_message(msg, neighIntAddr);
 }
 
 void sendMessage(const char *service, const char *string)

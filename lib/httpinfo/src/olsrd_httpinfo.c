@@ -62,6 +62,7 @@
 #include "link_set.h"
 #include "socket_parser.h"
 #include "ipcalc.h"
+#include "lq_plugin.h"
 
 #include "olsrd_httpinfo.h"
 #include "admin_interface.h"
@@ -86,7 +87,7 @@
 #define OS "Undefined"
 #endif
 
-static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org) All rights reserved.";
 
 #define MAX_CLIENTS 3
 
@@ -750,7 +751,8 @@ static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize,
 static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt)
 {
   int size = 0;
-
+  struct lqtextbuffer lqbuffer;
+  
   size += snprintf(&buf[size], bufsize-size, "<tr>");
   size += build_ipaddr_with_link(&buf[size], bufsize-size,
                                  &rt->rt_dst.prefix,
@@ -764,7 +766,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
                    rt->rt_best->rtp_metric.hops);
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"right\">%s</td>",
-                   etxtoa(rt->rt_best->rtp_metric.etx));
+                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
   size += snprintf(&buf[size], bufsize-size,
                    "<td align=\"center\">%s</td></tr>\n",
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -975,7 +977,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                    "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th><th align=\"right\">Hysteresis</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
     size += snprintf(&buf[size], bufsize-size,
-                     "<th align=\"right\">LinkQuality</th><th>lost</th><th>total</th><th align=\"right\">NLQ</th><th align=\"right\">ETX</th>");
+                     "<th align=\"right\">LinkCost</th>");
   }
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
@@ -984,19 +986,13 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
     size += snprintf(&buf[size], bufsize-size, "<tr>");
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
     size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
-    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%s</td>", fpmtoa(link->L_link_quality));
+    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%0.2f</td>", link->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
+      struct lqtextbuffer lqbuffer1, lqbuffer2;
       size += snprintf(&buf[size], bufsize-size,
-                       "<td align=\"right\">%s</td>"
-                       "<td>%d</td>"
-                       "<td>%d</td>"
-                       "<td align=\"right\">%s</td>"
-                       "<td align=\"right\">%s</td>\n",
-                       fpmtoa(link->loss_link_quality),
-                       link->lost_packets,
-                       link->total_packets,
-                       fpmtoa(link->neigh_link_quality),
-                       etxtoa(olsr_calc_link_etx(link)));
+                       "<td align=\"right\">(%s) %s</td>",
+                       get_link_entry_text(link, &lqbuffer1),
+                       get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
@@ -1050,7 +1046,7 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   size += section_title(&buf[size], bufsize-size, "Topology Entries");
   size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination IP</th><th align=\"center\"%s>Last Hop IP</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
-    size += snprintf(&buf[size], bufsize-size, "<th align=\"right\">LQ</th><th align=\"right\">ILQ</th><th align=\"right\">ETX</th>");
+    size += snprintf(&buf[size], bufsize-size, "<th align=\"right\">Linkcost</th>");
   }
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
@@ -1061,13 +1057,11 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
           if (olsr_cnf->lq_level > 0) {
+            struct lqtextbuffer lqbuffer1, lqbuffer2;
               size += snprintf(&buf[size], bufsize-size,
-                               "<td align=\"right\">%s</td>"
-                               "<td align=\"right\">%s</td>"
-                               "<td align=\"right\">%s</td>\n",
-                               fpmtoa(tc_edge->link_quality),
-                               fpmtoa(tc_edge->inverse_link_quality),
-                               etxtoa(olsr_calc_tc_etx(tc_edge)));
+                               "<td align=\"right\">(%s) %s</td>\n",
+                               get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                               get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 

@@ -68,7 +68,7 @@ static int hfd = 0;
  *@param pf the processing function
  */
 void
-add_olsr_socket(int fd, void(*pf)(int))
+add_olsr_socket(int fd, void(*pf)(int fd))
 {
   struct olsr_socket_entry *new_entry;
 

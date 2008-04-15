@@ -64,9 +64,6 @@ get_msg_seqno(void);
 
 int
 olsr_forward_message(union olsr_message *, 
-		     union olsr_ip_addr *, 
-		     olsr_u16_t, 
-		     struct interface *, 
 		     union olsr_ip_addr *);
 
 void

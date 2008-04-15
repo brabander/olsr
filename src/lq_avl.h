@@ -42,7 +42,9 @@
 #ifndef _LQ_AVL_H
 #define _LQ_AVL_H
 
-#include "defs.h"
+/* must be declared here because of circular dependency through "defs.h" */
+
+#define INLINE inline __attribute__((always_inline))
 
 struct avl_node
 {
@@ -90,6 +92,7 @@ extern avl_tree_comp avl_comp_default;
 extern avl_tree_comp avl_comp_prefix_default;
 extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
+extern int avl_comp_mac(const void *, const void *);
 
 #endif
 

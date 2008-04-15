@@ -207,7 +207,7 @@ olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc,
 
   /* metric/etx */
   rtp->rtp_metric.hops = tc->hops;
-  rtp->rtp_metric.etx = tc->path_etx;
+  rtp->rtp_metric.cost = tc->path_cost;
 }
 
 /**
@@ -286,7 +286,7 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
   /*
    * no unreachable routes please.
    */
-  if (tc->path_etx >= INFINITE_ETX) {
+  if (tc->path_cost == ROUTE_COST_BROKEN) {
     return;
   }
 
@@ -426,17 +426,10 @@ olsr_get_nh(const struct rt_entry *rt)
 static olsr_bool
 olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struct rt_path *inetgw)
 {
-#ifdef USE_FPM
-    fpm etx1 = rtp1->rtp_metric.etx;
-    fpm etx2 = rtp2->rtp_metric.etx;
-    if (inetgw == rtp1) etx1 = fpmmul(etx1, ftofpm(olsr_cnf->lq_nat_thresh));
-    if (inetgw == rtp2) etx2 = fpmmul(etx2, ftofpm(olsr_cnf->lq_nat_thresh));
-#else
-    float etx1 = rtp1->rtp_metric.etx;
-    float etx2 = rtp2->rtp_metric.etx;
+    olsr_linkcost etx1 = rtp1->rtp_metric.cost;
+    olsr_linkcost etx2 = rtp2->rtp_metric.cost;
     if (inetgw == rtp1) etx1 *= olsr_cnf->lq_nat_thresh;
     if (inetgw == rtp2) etx2 *= olsr_cnf->lq_nat_thresh;
-#endif
 
     /* etx comes first */
     if (etx1 < etx2) {
@@ -651,15 +644,16 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   static char buff[128];
   struct ipaddr_str prefixstr, origstr, gwstr;
   struct rt_entry *rt = rtp->rtp_rt;
-
+  struct lqtextbuffer lqbuffer;
+  
   snprintf(buff, sizeof(buff),
            "%s/%u from %s via %s, "
-           "etx %s, metric %u, v %u",
+           "cost %s, metric %u, v %u",
            olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
            rt->rt_dst.prefix_len,
            olsr_ip_to_string(&origstr, &rtp->rtp_originator),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-           etxtoa(rtp->rtp_metric.etx),
+           get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
            rtp->rtp_metric.hops,
            rtp->rtp_version);
 
@@ -676,7 +670,8 @@ olsr_print_routing_table(const struct avl_tree *tree)
 #ifndef NODEBUG
   /* The whole function makes no sense without it. */
   const struct avl_node *rt_tree_node;
-
+  struct lqtextbuffer lqbuffer;
+  
   OLSR_PRINTF(6, "ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first_c(tree);
@@ -698,9 +693,9 @@ olsr_print_routing_table(const struct avl_tree *tree)
          rtp_tree_node != NULL;
          rtp_tree_node = avl_walk_next_c(rtp_tree_node)) {
       const struct rt_path * const rtp = rtp_tree_node->data;
-      OLSR_PRINTF(6, "\tfrom %s, etx %s, metric %u, via %s, %s, v %u\n",
+      OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator),
-             etxtoa(rtp->rtp_metric.etx),
+             get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),

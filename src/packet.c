@@ -48,6 +48,7 @@
 #include "neighbor_table.h"
 #include "build_msg.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 static olsr_bool sending_tc = OLSR_FALSE;
 
@@ -128,7 +129,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       continue;
     }
 
-    message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO");
+    message_neighbor = olsr_malloc_hello_neighbor("Build HELLO");
       
     /* Find the link status */
     message_neighbor->link = lnk;
@@ -219,7 +220,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       continue;
     }
 	    
-    message_neighbor = olsr_malloc(sizeof(struct hello_neighbor), "Build HELLO 2");
+    message_neighbor = olsr_malloc_hello_neighbor("Build HELLO 2");
 	    
     message_neighbor->link = UNSPEC_LINK;
 	    
@@ -341,7 +342,7 @@ olsr_build_tc_packet(struct tc_message *message)
     {
       /* 2 = Add all neighbors */
       //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
-      message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC");
+      message_mpr = olsr_malloc_tc_mpr_addr("Build TC");
 		
       message_mpr->address = entry->neighbor_main_addr;
       message_mpr->next = message->multipoint_relay_selector_address;
@@ -355,7 +356,7 @@ olsr_build_tc_packet(struct tc_message *message)
       if ((entry->is_mpr) ||
           (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL)) {
         //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
-        message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC 2");
+        message_mpr = olsr_malloc_tc_mpr_addr("Build TC 2");
 		    
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;
@@ -369,7 +370,7 @@ olsr_build_tc_packet(struct tc_message *message)
       /* 0 = Add only MPR selectors(default) */
       if (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL) {
         //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
-        message_mpr = olsr_malloc(sizeof(struct tc_mpr_addr), "Build TC 3");
+        message_mpr = olsr_malloc_tc_mpr_addr("Build TC 3");
 		    
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;

@@ -1,6 +1,5 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
  * All rights reserved.
  *
@@ -39,29 +38,40 @@
  *
  */
 
-#ifndef DUPLICATE_SET_H_
-#define DUPLICATE_SET_H_
+#ifndef LQ_ETX_FPM_
+#define LQ_ETX_FPM_
 
-#include "lq_avl.h"
-#include "olsr.h"
+#include "olsr_types.h"
+#include "fpm.h"
+#include "lq_plugin.h"
 
-struct duplicate_entry {
-  struct avl_node avl;
-  union olsr_ip_addr ip;
-  olsr_u16_t seqnr;
-  olsr_u16_t too_low_counter;
-  olsr_u32_t array;
+#define LQ_PLUGIN_LC_MULTIPLIER 1024
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE 16
+
+#define LQ_ETX_FPM_HANDLER_NAME "ETX metric with FPM"
+struct lq_etx_fpm {
+	fpm lq, nlq;
 };
 
-void olsr_init_duplicate_set(void);
-struct duplicate_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
-int olsr_shall_process_message(void *ip, olsr_u16_t seqnr);
-void olsr_print_duplicate_table(void);
+void set_lq_etx_fpm_alpha(fpm alpha);
+int init_lq_etx_fpm(void);
 
-#endif /*DUPLICATE_SET_H_*/
+olsr_linkcost lq_etx_fpm_calc_cost(const void *lq);
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * End:
- */
+olsr_bool lq_etx_fpm_olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
+
+olsr_linkcost lq_etx_fpm_packet_loss_worker(void *lq, olsr_bool lost);
+void lq_etx_fpm_olsr_memorize_foreign_hello_lq(void *local, void *foreign);
+
+int lq_etx_fpm_olsr_serialize_hello_lq_pair(unsigned char *buff, void *lq);
+void lq_etx_fpm_olsr_deserialize_hello_lq_pair(const olsr_u8_t **curr, void *lq);
+int lq_etx_fpm_olsr_serialize_tc_lq_pair(unsigned char *buff, void *lq);
+void lq_etx_fpm_olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, void *lq);
+
+void lq_etx_fpm_olsr_copy_link_lq_into_tc(void *target, void *source);
+void lq_etx_fpm_olsr_clear_lq(void *target);
+
+const char *lq_etx_fpm_olsr_print_lq(void *ptr, struct lqtextbuffer *buffer);
+const char *lq_etx_fpm_olsr_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
+
+#endif /*LQ_ETX_FPM_*/

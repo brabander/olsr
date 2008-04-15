@@ -46,7 +46,8 @@
 struct olsr_socket_entry
 {
   int fd;
-  void(*process_function)(int);
+  int arp_type;
+  void(*process_function)(int fd);
   struct olsr_socket_entry *next;
 };
 

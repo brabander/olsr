@@ -43,6 +43,8 @@
 #include "mid_set.h"
 #include "tc_set.h"
 #include "ipcalc.h"
+#include "lq_plugin.h"
+
 #include "mapwrite.h"
 
 static char my_latlon_str[48];
@@ -174,15 +176,15 @@ void mapwrite_work(FILE* fmap)
     char* llb = lookup_position_latlon(&tc_edge->T_dest_addr);
     if (NULL != lla && NULL != llb)
     {
+      struct lqtextbuffer lqbuffer;
+      
       /*
        * To speed up processing, Links with both positions are named PLink()
        */
-      if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s,%s);\n", 
+      if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            fpmtoa(tc_edge->link_quality),
-            fpmtoa(tc_edge->inverse_link_quality),
-            etxtoa(olsr_calc_tc_etx(tc_edge)),
+            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer),
             lla, llb))
       {
         return;
@@ -190,15 +192,15 @@ void mapwrite_work(FILE* fmap)
     }
     else
     {
+      struct lqtextbuffer lqbuffer;
+      
       /*
        * If one link end pos is unkown, only send Link()
        */
-      if (0 > fprintf(fmap, "Link('%s','%s',%s,%s,%s);\n", 
+      if (0 > fprintf(fmap, "Link('%s','%s',%s);\n", 
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
-            fpmtoa(tc_edge->link_quality),
-            fpmtoa(tc_edge->inverse_link_quality),
-            etxtoa(olsr_calc_tc_etx(tc_edge))))
+            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer)))
       {
         return;
       }

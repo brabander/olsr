@@ -98,4 +98,6 @@ struct olsr_ip_prefix {
   olsr_u8_t prefix_len;
 };
 
+typedef olsr_u32_t olsr_linkcost;
+
 #endif

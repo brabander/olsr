@@ -1,6 +1,5 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
  * All rights reserved.
  *
@@ -39,29 +38,84 @@
  *
  */
 
-#ifndef DUPLICATE_SET_H_
-#define DUPLICATE_SET_H_
+#include <stdio.h>
+#include <string.h>
 
-#include "lq_avl.h"
+#include "../../../src/olsrd_plugin.h"
+
+#include "lq_etx_fpm_plugin.h"
+#include "lq_etx_fpm.h"
 #include "olsr.h"
+#include "fpm.h"
 
-struct duplicate_entry {
-  struct avl_node avl;
-  union olsr_ip_addr ip;
-  olsr_u16_t seqnr;
-  olsr_u16_t too_low_counter;
-  olsr_u32_t array;
+#define PLUGIN_INTERFACE_VERSION 5
+
+ 
+/****************************************************************************
+ *                Functions that the plugin MUST provide                    *
+ ****************************************************************************/
+ 
+/**
+ * Plugin interface version
+ * Used by main olsrd to check plugin interface version
+ */
+int olsrd_plugin_interface_version(void)
+{
+    return PLUGIN_INTERFACE_VERSION;
+}
+
+
+static int set_alpha(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
+{
+    set_lq_etx_fpm_alpha(atofpm(value));
+    return 0;
+}
+
+/**
+ * Register parameters from config file
+ * Called for all plugin parameters
+ */
+static const struct olsrd_plugin_parameters plugin_parameters[] = {
+    { .name = "alpha",   .set_plugin_parameter = &set_alpha,      .data = NULL },
 };
 
-void olsr_init_duplicate_set(void);
-struct duplicate_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
-int olsr_shall_process_message(void *ip, olsr_u16_t seqnr);
-void olsr_print_duplicate_table(void);
-
-#endif /*DUPLICATE_SET_H_*/
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * End:
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+{
+    *params = plugin_parameters;
+    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+}
+/**
+ * Initialize plugin
+ * Called after all parameters are passed
  */
+int
+olsrd_plugin_init(void)
+{
+  return init_lq_etx_fpm();
+}
+
+
+/****************************************************************************
+ *       Optional private constructor and destructor functions              *
+ ****************************************************************************/
+
+/* attention: make static to avoid name clashes */
+
+static void my_init(void) __attribute__ ((constructor));
+static void my_fini(void) __attribute__ ((destructor));
+
+
+/**
+ * Optional Private Constructor
+ */
+static void my_init(void)
+{
+}
+
+
+/**
+ * Optional Private Destructor
+ */
+static void my_fini(void)
+{
+}

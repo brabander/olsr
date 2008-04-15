@@ -1,6 +1,5 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
  * All rights reserved.
  *
@@ -39,29 +38,20 @@
  *
  */
 
-#ifndef DUPLICATE_SET_H_
-#define DUPLICATE_SET_H_
+#ifndef LQ_ETX_FPM_PLUGIN_
+#define LQ_ETX_FPM_PLUGIN_
 
-#include "lq_avl.h"
-#include "olsr.h"
 
-struct duplicate_entry {
-  struct avl_node avl;
-  union olsr_ip_addr ip;
-  olsr_u16_t seqnr;
-  olsr_u16_t too_low_counter;
-  olsr_u32_t array;
-};
+/****************************************************************************
+ *                Functions that the plugin MUST provide                    *
+ ****************************************************************************/
 
-void olsr_init_duplicate_set(void);
-struct duplicate_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
-int olsr_shall_process_message(void *ip, olsr_u16_t seqnr);
-void olsr_print_duplicate_table(void);
 
-#endif /*DUPLICATE_SET_H_*/
+/* Initialization function */
+int
+olsrd_plugin_init(void);
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * End:
- */
+int 
+olsrd_plugin_interface_version(void);
+
+#endif

@@ -69,6 +69,7 @@
 #include "link_set.h"
 #include "socket_parser.h"
 #include "net_olsr.h"
+#include "lq_plugin.h"
 
 #include "olsrd_dot_draw.h"
 #include "olsrd_plugin.h"
@@ -154,21 +155,18 @@ static void
 ipc_print_neigh_link(const struct neighbor_entry *neighbor)
 {
   struct ipaddr_str mainaddrstrbuf, strbuf;
-#ifdef USE_FPM
-  fpm etx = itofpm(0);
-#else
-  double etx = 0.0;
-#endif
+  olsr_linkcost etx = 0.0;
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
   struct link_entry* link;
-
+  struct lqtextbuffer lqbuffer;
+  
   if (neighbor->status == 0) { // non SYM
     style = "dashed";
   } else {   
     link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
     if (link) {
-      etx = olsr_calc_link_etx(link);
+      etx = link->linkcost;
     }
     style = "solid";
   }
@@ -176,7 +174,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               etxtoa(etx),
+               get_linkcost_text(etx, OLSR_FALSE, &lqbuffer),
                style);
   
   if (neighbor->is_mpr) {
@@ -269,6 +267,7 @@ ipc_action(int fd __attribute__((unused)))
   olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   close(ipc_connection); /* close connection after one output */
   pcf_event(1, 1, 1);
+  close(ipc_connection); // close connection after one output
 }
 
 
@@ -339,11 +338,12 @@ static void
 ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
 {
   struct ipaddr_str strbuf1, strbuf2;
-
+  struct lqtextbuffer lqbuffer;
+  
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               etxtoa(olsr_calc_tc_etx(dst_entry)));
+               get_linkcost_text(dst_entry->cost, OLSR_FALSE, &lqbuffer));
 }
 
 

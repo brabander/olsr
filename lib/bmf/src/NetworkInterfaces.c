@@ -64,6 +64,7 @@
 #include "lq_route.h" /* MIN_LINK_QUALITY */
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
 #include "net_olsr.h" /* ipequal */
+#include "lq_plugin.h"
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */
@@ -388,37 +389,6 @@ void RestoreSpoofFilter(void)
     fclose(procSpoof);
   }
 } /* RestoreSpoofFilter */
-
-#ifndef USING_THALES_LINK_COST_ROUTING
-/* -------------------------------------------------------------------------
- * Function   : CalcEtx
- * Description: Calculate the Expected Transmission Count (ETX) value, based on
- *              link loss fraction and inverse link loss fraction
- * Input      : loss - link loss fraction
- *              neigh_loss - inverse link loss fraction 
- * Output     : none
- * Return     : the ETX value
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-static float CalcEtx(float loss, float neigh_loss) 
-{
-#ifdef USE_FPM
-  if (loss < fpmtof(MIN_LINK_QUALITY) || neigh_loss < fpmtof(MIN_LINK_QUALITY))
-  {
-    return fpmtof(INFINITE_ETX);
-  }
-#else
-  if (loss < MIN_LINK_QUALITY || neigh_loss < MIN_LINK_QUALITY)
-  {
-    return INFINITE_ETX;
-  }
-#endif
-  else
-  {
-    return 1.0 / (loss * neigh_loss);
-  }
-} /* CalcEtx */
-#endif /* USING_THALES_LINK_COST_ROUTING */
 
 /* -------------------------------------------------------------------------
  * Function   : FindNeighbors
@@ -760,13 +730,8 @@ void FindNeighbors(
 #else /* USING_THALES_LINK_COST_ROUTING */
         
     struct link_entry* walker;
-#ifdef USE_FPM
-    float previousLinkEtx = 2 * fpmtof(INFINITE_ETX);
-    float bestEtx = 2 * fpmtof(INFINITE_ETX);
-#else
-    float previousLinkEtx = 2 * INFINITE_ETX;
-    float bestEtx = 2 * INFINITE_ETX;
-#endif
+    olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
+    olsr_linkcost bestEtx = LINK_COST_BROKEN;
 
     if (forwardedBy != NULL)
     {
@@ -774,15 +739,7 @@ void FindNeighbors(
       struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
       if (bestLinkFromForwarder != NULL)
       {
-        previousLinkEtx =
-          CalcEtx(
-#ifdef USE_FPM
-            fpmtof(bestLinkFromForwarder->loss_link_quality),
-            fpmtof(bestLinkFromForwarder->neigh_link_quality));
-#else
-            bestLinkFromForwarder->loss_link_quality,
-            bestLinkFromForwarder->neigh_link_quality);
-#endif
+        previousLinkEtx = bestLinkFromForwarder->linkcost;
       }
     }
 
@@ -850,20 +807,9 @@ void FindNeighbors(
       /* Found a candidate neighbor to direct our packet to */
 
       /* Calculate the link quality (ETX) of the link to the found neighbor */
-      currEtx = CalcEtx(
-#ifdef USE_FPM
-        fpmtof(walker->loss_link_quality),
-        fpmtof(walker->neigh_link_quality));
-#else
-        walker->loss_link_quality,
-        walker->neigh_link_quality);
-#endif
+      currEtx = walker->linkcost;
  
-#ifdef USE_FPM
-      if (currEtx >= fpmtof(INFINITE_ETX))
-#else
-      if (currEtx >= INFINITE_ETX)
-#endif
+      if (currEtx < LINK_COST_BROKEN)
       {
         OLSR_PRINTF(
           9,
@@ -906,21 +852,15 @@ void FindNeighbors(
 #ifndef NODEBUG
           struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
           struct ipaddr_str buf;
+          struct lqtextbuffer lqbuffer;
 #endif
           OLSR_PRINTF(
             9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
+            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
-            CalcEtx(
-#ifdef USE_FPM
-              fpmtof(bestLinkToNeighbor->loss_link_quality),
-              fpmtof(bestLinkToNeighbor->neigh_link_quality)));
-#else
-              bestLinkToNeighbor->loss_link_quality,
-              bestLinkToNeighbor->neigh_link_quality));
-#endif
+            get_linkcost_text(bestLinkToNeighbor->linkcost, OLSR_FALSE, &lqbuffer));
         }
 
         continue; /* for */
@@ -930,14 +870,15 @@ void FindNeighbors(
       {
 #ifndef NODEBUG
         struct ipaddr_str forwardedByBuf, niaBuf;
+        struct lqtextbuffer lqbuffer;
 #endif
         OLSR_PRINTF(
           9,
-          "%s: ----> 2-hop path from %s via me to %s will cost ETX %5.2f\n",
+          "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&forwardedByBuf, forwardedBy),
           olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          previousLinkEtx + currEtx);
+          get_linkcost_text(previousLinkEtx + currEtx, OLSR_TRUE, &lqbuffer));
       }
 
       /* Check the topology table whether the 'forwardedBy' node is itself a direct
@@ -958,29 +899,23 @@ void FindNeighbors(
           /* We are not interested in dead-end or dying edges. */
           if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
           {
-            float tcEtx = CalcEtx(
-#ifdef USE_FPM
-              fpmtof(tc_edge->link_quality),
-              fpmtof(tc_edge->inverse_link_quality));
-#else
-              tc_edge->link_quality,
-              tc_edge->inverse_link_quality);
-#endif
+            olsr_linkcost tcEtx = tc_edge->cost;
 
             if (previousLinkEtx + currEtx > tcEtx)
             {
 #ifndef NODEBUG
               struct ipaddr_str neighbor_iface_buf, forw_buf;
+              struct lqtextbuffer lqbuffer;
               olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
 #endif
               OLSR_PRINTF(
                 9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
+                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
                 PLUGIN_NAME_SHORT,
                 neighbor_iface_buf.buf,
                 olsr_ip_to_string(&forw_buf, forwardedBy),
                 neighbor_iface_buf.buf,
-                tcEtx);
+                get_linkcost_text(tcEtx, OLSR_FALSE, &lqbuffer));
 
               continue; /* for */
             } /* if */
