@@ -39,68 +39,39 @@
  *
  */
 
-#include <stdlib.h>
-#include "lq_list.h"
+#ifndef _LIST_H
+#define _LIST_H
 
-/* init a circular list  */
-void list_head_init(struct list_node *node)
+#include "stddef.h"
+
+struct list_node
 {
-  node->prev = node;
-  node->next = node;
-}
+  struct list_node *next;
+  struct list_node *prev;
+  void *data;
+};
 
-void list_node_init(struct list_node *node)
-{
-  node->prev = NULL;
-  node->next = NULL;
-}
+void list_head_init(struct list_node *);
+void list_node_init(struct list_node *);
+int list_node_on_list(struct list_node *);
+int list_is_empty(struct list_node *);
 
-int list_node_on_list(struct list_node *node)
-{
-  if (node->prev || node->next) {
-    return 1;
-  }
+void list_add_before(struct list_node *, struct list_node *);
+void list_add_after(struct list_node *, struct list_node *);
 
-  return 0;
-}
-
-int list_is_empty(struct list_node *node)
-{
-  if (node->prev == node && node->next == node) {
-    return 1;
-  }
-
-  return 0;
-}
-
-void list_add_after(struct list_node *pos_node, struct list_node *new_node)
-{
-  new_node->next = pos_node->next;
-  new_node->prev = pos_node;
-
-  pos_node->next->prev = new_node;
-  pos_node->next = new_node;
-}
-
-void list_add_before(struct list_node *pos_node, struct list_node *new_node)
-{
-  new_node->prev = pos_node->prev;
-  new_node->next = pos_node;
-
-  pos_node->prev->next = new_node;
-  pos_node->prev = new_node;
-}
-
-void list_remove(struct list_node *del_node)
-{
-  del_node->next->prev = del_node->prev;
-  del_node->prev->next = del_node->next;
-
-  list_node_init(del_node);
-}
+void list_remove(struct list_node *);
 
 /*
- * Local Variables:
- * c-basic-offset: 2
- * End:
+ * Macro to define an inline function to map from a list_node offset back to the
+ * base of the datastructure. This saves you from populating the data field.
  */
+#define LISTNODE2STRUCT(funcname, structname, listnodename) \
+static inline structname * funcname (struct list_node *ptr)\
+{\
+  return( \
+    ptr ? \
+      (structname *) (((olsr_u8_t *) ptr) - offsetof(structname, listnodename)) : \
+      NULL); \
+}
+
+#endif /* _LQ_LIST */
