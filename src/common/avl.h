@@ -39,8 +39,8 @@
  *
  */
 
-#ifndef _LQ_AVL_H
-#define _LQ_AVL_H
+#ifndef _AVL_H
+#define _AVL_H
 
 /* must be declared here because of circular dependency through "defs.h" */
 
@@ -94,7 +94,7 @@ extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
 extern int avl_comp_mac(const void *, const void *);
 
-#endif
+#endif /* _AVL_H */
 
 /*
  * Local Variables:

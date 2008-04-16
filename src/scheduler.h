@@ -43,7 +43,7 @@
 #ifndef _OLSR_SCHEDULER
 #define _OLSR_SCHEDULER
 
-#include "lq_list.h"
+#include "common/list.h"
 
 #define TIMER_WHEEL_SLOTS 256
 #define TIMER_WHEEL_MASK (TIMER_WHEEL_SLOTS - 1)

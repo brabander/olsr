@@ -41,7 +41,7 @@
 
 #include "duplicate_set.h"
 #include "ipcalc.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "olsr.h"
 #include "mid_set.h"
 

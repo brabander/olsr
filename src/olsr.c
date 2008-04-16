@@ -59,7 +59,7 @@
 #include "neighbor_table.h"
 #include "log.h"
 #include "lq_packet.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "net_olsr.h"
 
 #include <stdarg.h>

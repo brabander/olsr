@@ -42,7 +42,7 @@
 #ifndef DUPLICATE_SET_H_
 #define DUPLICATE_SET_H_
 
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "olsr.h"
 
 struct duplicate_entry {

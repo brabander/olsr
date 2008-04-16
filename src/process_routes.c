@@ -47,7 +47,7 @@
 #include "olsr.h"
 #include "log.h"
 #include "kernel_routes.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "net_olsr.h"
 #include "tc_set.h"
 

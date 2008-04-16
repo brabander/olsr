@@ -43,7 +43,7 @@
 #include "olsr_types.h"
 #include "interfaces.h"
 #include "olsr_protocol.h"
-#include "lq_list.h"
+#include "common/list.h"
 
 #include "olsrd_plugin.h"
 #include "nameservice_msg.h"

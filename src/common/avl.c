@@ -44,7 +44,7 @@
 #include <string.h>
 
 #include "ipcalc.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "net_olsr.h"
 
 /*

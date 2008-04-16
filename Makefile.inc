@@ -154,8 +154,8 @@ CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 CPPFLAGS +=     -DUSE_FPM
 
 # search sources and headers in current dir and in src/
-SRCS +=		$(wildcard src/*.c *.c)
-HDRS +=		$(wildcard src/*.h *.h)
+SRCS +=		$(wildcard src/common/*.c src/*.c *.c)
+HDRS +=		$(wildcard src/common/*.h src/*.h *.h)
 
 # OS detection
 ifeq ($(OS),Windows_NT)

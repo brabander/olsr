@@ -44,8 +44,8 @@
 
 #include "defs.h"
 #include "packet.h"
-#include "lq_avl.h"
-#include "lq_list.h"
+#include "common/avl.h"
+#include "common/list.h"
 #include "scheduler.h"
 
 /*
