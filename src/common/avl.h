@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -46,8 +47,7 @@
 
 #define INLINE inline __attribute__((always_inline))
 
-struct avl_node
-{
+struct avl_node {
   struct avl_node *parent;
   struct avl_node *left;
   struct avl_node *right;
@@ -59,10 +59,9 @@ struct avl_node
   unsigned char leader;
 };
 
-typedef int (*avl_tree_comp)(const void *, const void *);
+typedef int (*avl_tree_comp) (const void *, const void *);
 
-struct avl_tree
-{
+struct avl_tree {
   struct avl_node *root;
   struct avl_node *first;
   struct avl_node *last;
@@ -78,15 +77,48 @@ struct avl_node *avl_find(struct avl_tree *, const void *);
 int avl_insert(struct avl_tree *, struct avl_node *, int);
 void avl_delete(struct avl_tree *, struct avl_node *);
 
-static INLINE struct avl_node *avl_walk_first(struct avl_tree *tree) { return tree->first; }
-static INLINE struct avl_node *avl_walk_last(struct avl_tree *tree) { return tree->last; }
-static INLINE struct avl_node *avl_walk_next(struct avl_node *node) { return node->next; }
-static INLINE struct avl_node *avl_walk_prev(struct avl_node *node) { return node->prev; }
+static INLINE struct avl_node *
+avl_walk_first(struct avl_tree *tree)
+{
+  return tree->first;
+}
+static INLINE struct avl_node *
+avl_walk_last(struct avl_tree *tree)
+{
+  return tree->last;
+}
+static INLINE struct avl_node *
+avl_walk_next(struct avl_node *node)
+{
+  return node->next;
+}
+static INLINE struct avl_node *
+avl_walk_prev(struct avl_node *node)
+{
+  return node->prev;
+}
+
 /* and const versions*/
-static INLINE const struct avl_node *avl_walk_first_c(const struct avl_tree *tree) { return tree->first; }
-static INLINE const struct avl_node *avl_walk_last_c(const struct avl_tree *tree) { return tree->last; }
-static INLINE const struct avl_node *avl_walk_next_c(const struct avl_node *node) { return node->next; }
-static INLINE const struct avl_node *avl_walk_prev_c(const struct avl_node *node) { return node->prev; }
+static INLINE const struct avl_node *
+avl_walk_first_c(const struct avl_tree *tree)
+{
+  return tree->first;
+}
+static INLINE const struct avl_node *
+avl_walk_last_c(const struct avl_tree *tree)
+{
+  return tree->last;
+}
+static INLINE const struct avl_node *
+avl_walk_next_c(const struct avl_node *node)
+{
+  return node->next;
+}
+static INLINE const struct avl_node *
+avl_walk_prev_c(const struct avl_node *node)
+{
+  return node->prev;
+}
 
 extern avl_tree_comp avl_comp_default;
 extern avl_tree_comp avl_comp_prefix_default;
