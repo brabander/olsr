@@ -62,10 +62,13 @@ olsr_linkcost default_calc_cost(const void *ptr) {
 int default_olsr_serialize_hello_lq_pair(unsigned char *buff, void *ptr) {
   struct default_lq *lq = ptr;
   
-  buff[0] = (unsigned char)(lq->lq * 255);
-  buff[1] = (unsigned char)(lq->nlq * 255);
-  buff[2] = (unsigned char)(0);
-  buff[3] = (unsigned char)(0);
+  olsr_u16_t lq_value = (olsr_u16_t)(lq->lq * 65535);
+  olsr_u16_t nlq_value = (olsr_u16_t)(lq->nlq * 65535);
+  
+  buff[0] = (unsigned char)(lq_value / 256);
+  buff[1] = (unsigned char)(nlq_value / 256);
+  buff[2] = (unsigned char)(lq_value & 255);
+  buff[3] = (unsigned char)(nlq_value & 255);
   
   return 4;
 }
@@ -73,9 +76,19 @@ int default_olsr_serialize_hello_lq_pair(unsigned char *buff, void *ptr) {
 void default_olsr_deserialize_hello_lq_pair(const olsr_u8_t **curr, void *ptr) {
   struct default_lq *lq = ptr;
   
-  pkt_get_lq(curr, &lq->lq);
-  pkt_get_lq(curr, &lq->nlq);
-  pkt_ignore_u16(curr);
+  olsr_u8_t lq_high, lq_low, nlq_high, nlq_low;
+  olsr_u16_t lq_value, nlq_value;
+  
+  pkt_get_u8(curr, &lq_high);
+  pkt_get_u8(curr, &nlq_high);
+  pkt_get_u8(curr, &lq_low);
+  pkt_get_u8(curr, &nlq_low);
+  
+  lq_value = 256 * (olsr_u16_t)lq_high + (olsr_u16_t)lq_low;
+  nlq_value = 256 * (olsr_u16_t)nlq_high + (olsr_u16_t)nlq_low;
+  
+  lq->lq = (float)lq_value / 65535.0;
+  lq->nlq = (float)nlq_value / 65535.0;
 }
 
 olsr_bool default_olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
@@ -88,10 +101,13 @@ olsr_bool default_olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2
 int default_olsr_serialize_tc_lq_pair(unsigned char *buff, void *ptr) {
   struct default_lq *lq = ptr;
   
-  buff[0] = (unsigned char)(lq->lq * 255);
-  buff[1] = (unsigned char)(lq->nlq * 255);
-  buff[2] = (unsigned char)(0);
-  buff[3] = (unsigned char)(0);
+  olsr_u16_t lq_value = (olsr_u16_t)(lq->lq * 65535);
+  olsr_u16_t nlq_value = (olsr_u16_t)(lq->nlq * 65535);
+  
+  buff[0] = (unsigned char)(lq_value / 256);
+  buff[1] = (unsigned char)(nlq_value / 256);
+  buff[2] = (unsigned char)(lq_value & 255);
+  buff[3] = (unsigned char)(nlq_value & 255);
   
   return 4;
 }
@@ -99,9 +115,19 @@ int default_olsr_serialize_tc_lq_pair(unsigned char *buff, void *ptr) {
 void default_olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, void *ptr) {
   struct default_lq *lq = ptr;
   
-  pkt_get_lq(curr, &lq->lq);
-  pkt_get_lq(curr, &lq->nlq);
-  pkt_ignore_u16(curr);
+  olsr_u8_t lq_high, lq_low, nlq_high, nlq_low;
+  olsr_u16_t lq_value, nlq_value;
+  
+  pkt_get_u8(curr, &lq_high);
+  pkt_get_u8(curr, &nlq_high);
+  pkt_get_u8(curr, &lq_low);
+  pkt_get_u8(curr, &nlq_low);
+  
+  lq_value = 256 * (olsr_u16_t)lq_high + (olsr_u16_t)lq_low;
+  nlq_value = 256 * (olsr_u16_t)nlq_high + (olsr_u16_t)nlq_low;
+  
+  lq->lq = (float)lq_value / 65535.0;
+  lq->nlq = (float)nlq_value / 65535.0;
 }
 
 olsr_linkcost default_packet_loss_worker(void *ptr, olsr_bool lost) {
