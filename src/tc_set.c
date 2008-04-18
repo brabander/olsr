@@ -634,9 +634,9 @@ olsr_print_tc_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
-              "%-*s %-*s %-5s  %-5s  %s %s\n",
+              "%-*s %-*s %-14s  %s\n",
               olsr_wallclock_string(),
-              ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "LQ", "ILQ", "ETX", "UP");
+              ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ", "ETX");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
@@ -645,7 +645,7 @@ olsr_print_tc_table(void)
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       
       if ((tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0) {
-        OLSR_PRINTF(1, "%-*s %-*s  (%-10s) %s\n",
+        OLSR_PRINTF(1, "%-*s %-*s %-14s  %s\n",
                     ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
                     ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
                     get_tc_edge_entry_text(tc_edge, &lqbuffer1),
