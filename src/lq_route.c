@@ -216,7 +216,8 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
     /*
      * We are not interested in dead-end or dying edges.
      */
-    if (!tc_edge->edge_inv || (tc_edge->flags & OLSR_TC_EDGE_DOWN)) {
+    if (!tc_edge->edge_inv ||
+        ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN)) {
 #ifdef DEBUG
       OLSR_PRINTF(2, "SPF:   ignoring edge %s\n",
                   olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
@@ -225,6 +226,8 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
       }
       if (!tc_edge->edge_inv) {
         OLSR_PRINTF(2, "SPF:     no inverse edge\n");
+      }  else if (tc_edge->edge_inv->flags & OLSR_TC_EDGE_DOWN){
+        OLSR_PRINTF(2, "SPF:     inverse edge down\n");
       }
 #endif
       continue;
