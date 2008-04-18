@@ -48,14 +48,19 @@
 
 olsr_linkcost default_calc_cost(const void *ptr) {
   const struct default_lq *lq = ptr;
+  olsr_linkcost cost;
   
-  float etx = (lq->lq < 0.1 || lq->nlq < 0.1 ? LINK_COST_BROKEN : 1.0/(lq->lq * lq->nlq));
-  olsr_linkcost cost = (olsr_linkcost)(etx  * LQ_PLUGIN_LC_MULTIPLIER);
+  if (lq->lq < 0.1 || lq->nlq < 0.1) {
+    return LINK_COST_BROKEN;
+  }
+  
+  cost = (olsr_linkcost)(1.0/(lq->lq * lq->nlq) * LQ_PLUGIN_LC_MULTIPLIER);
   
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
-  if (cost == 0)
+  if (cost == 0) {
     return 1;
+  }
   return cost;
 }
 
