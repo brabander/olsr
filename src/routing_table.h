@@ -49,8 +49,8 @@
 #include <net/route.h>
 #include "hna_set.h"
 #include "link_set.h"
-#include "lq_avl.h"
-#include "lq_list.h"
+#include "common/avl.h"
+#include "common/list.h"
 
 #define NETMASK_HOST 0xffffffff
 #define NETMASK_DEFAULT 0x0

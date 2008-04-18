@@ -39,65 +39,39 @@
  *
  */
 
-#ifndef _LQ_AVL_H
-#define _LQ_AVL_H
+#ifndef _LIST_H
+#define _LIST_H
 
-/* must be declared here because of circular dependency through "defs.h" */
+#include "stddef.h"
 
-#define INLINE inline __attribute__((always_inline))
-
-struct avl_node
+struct list_node
 {
-  struct avl_node *parent;
-  struct avl_node *left;
-  struct avl_node *right;
-  struct avl_node *next;
-  struct avl_node *prev;
-  void *key;
+  struct list_node *next;
+  struct list_node *prev;
   void *data;
-  signed char balance;
-  unsigned char leader;
 };
 
-typedef int (*avl_tree_comp)(const void *, const void *);
+void list_head_init(struct list_node *);
+void list_node_init(struct list_node *);
+int list_node_on_list(struct list_node *);
+int list_is_empty(struct list_node *);
 
-struct avl_tree
-{
-  struct avl_node *root;
-  struct avl_node *first;
-  struct avl_node *last;
-  unsigned int count;
-  avl_tree_comp comp;
-};
+void list_add_before(struct list_node *, struct list_node *);
+void list_add_after(struct list_node *, struct list_node *);
 
-#define AVL_DUP    1
-#define AVL_DUP_NO 0
-
-void avl_init(struct avl_tree *, avl_tree_comp);
-struct avl_node *avl_find(struct avl_tree *, const void *);
-int avl_insert(struct avl_tree *, struct avl_node *, int);
-void avl_delete(struct avl_tree *, struct avl_node *);
-
-static INLINE struct avl_node *avl_walk_first(struct avl_tree *tree) { return tree->first; }
-static INLINE struct avl_node *avl_walk_last(struct avl_tree *tree) { return tree->last; }
-static INLINE struct avl_node *avl_walk_next(struct avl_node *node) { return node->next; }
-static INLINE struct avl_node *avl_walk_prev(struct avl_node *node) { return node->prev; }
-/* and const versions*/
-static INLINE const struct avl_node *avl_walk_first_c(const struct avl_tree *tree) { return tree->first; }
-static INLINE const struct avl_node *avl_walk_last_c(const struct avl_tree *tree) { return tree->last; }
-static INLINE const struct avl_node *avl_walk_next_c(const struct avl_node *node) { return node->next; }
-static INLINE const struct avl_node *avl_walk_prev_c(const struct avl_node *node) { return node->prev; }
-
-extern avl_tree_comp avl_comp_default;
-extern avl_tree_comp avl_comp_prefix_default;
-extern int avl_comp_ipv4(const void *, const void *);
-extern int avl_comp_ipv6(const void *, const void *);
-extern int avl_comp_mac(const void *, const void *);
-
-#endif
+void list_remove(struct list_node *);
 
 /*
- * Local Variables:
- * c-basic-offset: 2
- * End:
+ * Macro to define an inline function to map from a list_node offset back to the
+ * base of the datastructure. This saves you from populating the data field.
  */
+#define LISTNODE2STRUCT(funcname, structname, listnodename) \
+static inline structname * funcname (struct list_node *ptr)\
+{\
+  return( \
+    ptr ? \
+      (structname *) (((olsr_u8_t *) ptr) - offsetof(structname, listnodename)) : \
+      NULL); \
+}
+
+#endif /* _LQ_LIST */

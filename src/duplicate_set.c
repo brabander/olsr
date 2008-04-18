@@ -1,6 +1,11 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
+<<<<<<< /home/rogge/develop/olsrd/olsrd-linkset-refactoring/src/duplicate_set.c
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
+=======
+ * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
+>>>>>>> /tmp/duplicate_set.c~other.bvK6d3
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -40,7 +45,7 @@
 
 #include "duplicate_set.h"
 #include "ipcalc.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "olsr.h"
 #include "mid_set.h"
 
@@ -130,5 +135,5 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
 }
 
 void olsr_print_duplicate_table(void) {
-  
+  /* XXX FIXME */
 }

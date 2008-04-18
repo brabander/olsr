@@ -48,7 +48,7 @@
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "link_set.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "lq_route.h"
 #include "net_olsr.h"
 

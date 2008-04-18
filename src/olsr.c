@@ -59,7 +59,7 @@
 #include "neighbor_table.h"
 #include "log.h"
 #include "lq_packet.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "net_olsr.h"
 
 #include <stdarg.h>
@@ -238,6 +238,9 @@ olsr_init_tables(void)
 
   /* Initialize link set */
   olsr_init_link_set();
+
+  /* Initialize duplicate table */
+  olsr_init_duplicate_set();
 
   /* Initialize neighbor table */
   olsr_init_neighbor_table();

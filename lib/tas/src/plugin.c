@@ -327,7 +327,8 @@ void iterTcTabInit(void)
   iterTcTab = node ? node->data : NULL;
 }
 
-static void parserFunc(union olsr_message *msg, struct interface *inInt,
+static void parserFunc(union olsr_message *msg,
+                       struct interface *inInt __attribute__((unused)),
                        union olsr_ip_addr *neighIntAddr)
 {
   char *mess = (char *)msg;

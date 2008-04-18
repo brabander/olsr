@@ -48,7 +48,7 @@
 
 #include "lq_plugin.h"
 #include "packet.h"
-#include "lq_list.h"
+#include "common/list.h"
 
 #define MID_ALIAS_HACK_VTIME  10.0
 

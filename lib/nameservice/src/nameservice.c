@@ -622,7 +622,9 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
  * Parse name olsr message of NAME type
  */
 void
-olsr_parser(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *ipaddr)
+olsr_parser(union olsr_message *m,
+			struct interface *in_if __attribute__((unused)),
+			union olsr_ip_addr *ipaddr)
 {
 	struct namemsg *namemessage;
 	union olsr_ip_addr originator;

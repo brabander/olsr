@@ -527,7 +527,7 @@ olsr_hello_tap(struct hello_message *message,
 
 void
 olsr_process_received_mid(union olsr_message *m,
-                          struct interface *in_if,
+                          struct interface *in_if __attribute__((unused)),
                           union olsr_ip_addr *from_addr)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
@@ -596,7 +596,7 @@ olsr_process_received_mid(union olsr_message *m,
 
 void
 olsr_process_received_hna(union olsr_message *m,
-                          struct interface *in_if,
+                          struct interface *in_if __attribute__((unused)),
                           union olsr_ip_addr *from_addr)
 {
 

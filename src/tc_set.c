@@ -46,7 +46,7 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "lq_route.h"
-#include "lq_avl.h"
+#include "common/avl.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
@@ -664,7 +664,8 @@ olsr_print_tc_table(void)
  * hence the spot we are looking at.
  */
 void
-olsr_input_tc(union olsr_message *msg, struct interface *input_if,
+olsr_input_tc(union olsr_message *msg,
+              struct interface *input_if __attribute__((unused)),
               union olsr_ip_addr *from_addr)
 {
 #ifndef NODEBUG 
