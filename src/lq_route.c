@@ -152,7 +152,6 @@ olsr_spf_add_path_list (struct list_node *head, int *path_count,
   struct ipaddr_str pathbuf, nbuf;
   struct lqtextbuffer lqbuffer;
 #endif
-  tc->path_list_node.data = tc;
 
 #ifdef DEBUG
   OLSR_PRINTF(2, "SPF: append path %s, cost %s, via %s\n",
@@ -444,7 +443,7 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
    */
   for (; !list_is_empty(&path_list); list_remove(path_list.next)) {
 
-    tc = path_list.next->data;
+    tc = pathlist2tc(path_list.next);
     link = tc->next_hop;
 
     if (!link) {

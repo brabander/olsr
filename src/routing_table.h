@@ -93,6 +93,8 @@ struct rt_entry
   struct list_node      rt_change_node; /* queue for kernel FIB add/chg/del */
 };
 
+LISTNODE2STRUCT(changelist2rt, struct rt_entry, rt_change_node);
+
 /*
  * For every received route a rt_path is added to the RIB.
  * Depending on the results of the SPF calculation we perform a

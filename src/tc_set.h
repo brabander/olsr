@@ -95,6 +95,8 @@ struct tc_entry
   olsr_bool          err_seq_valid; /* do we have an error (unplauible seq/ansn) */
 };
 
+LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
+
 /*
  * macros for traversing vertices, edges and prefixes in the link state database.
  * it is recommended to use this because it hides all the internal
