@@ -306,7 +306,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
      */
     next_rtp_tree_node = avl_walk_next(rtp_tree_node);
 
-    rtp = rtp_tree_node->data;
+    rtp = rtp_tree2rtp(rtp_tree_node);
 
     /*
      * check the version number which gets incremented on every SPF run.

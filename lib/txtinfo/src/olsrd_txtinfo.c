@@ -371,18 +371,12 @@ static void ipc_print_routes(void)
 {
     struct ipaddr_str buf1, buf2;
     struct rt_entry *rt;
-    struct avl_node *rt_tree_node;
     struct lqtextbuffer lqbuffer;
     
     ipc_sendf("Table: Routes\nDestination\tGateway\tMetric\tETX\tInterface\n");
 
     /* Walk the route table */
-    for (rt_tree_node = avl_walk_first(&routingtree);
-         rt_tree_node;
-         rt_tree_node = avl_walk_next(rt_tree_node)) {
-
-        rt = rt_tree_node->data;
-
+    OLSR_FOR_ALL_RT_ENTRIES(rt) {
         ipc_sendf( "%s/%d\t%s\t%d\t%s\t%s\t\n",
                    olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
                    rt->rt_dst.prefix_len,
@@ -390,7 +384,8 @@ static void ipc_print_routes(void)
                    rt->rt_best->rtp_metric.hops,
                    get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
                    if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-    }
+    } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+
     ipc_sendf("\n");
 
 }
@@ -422,7 +417,6 @@ static void ipc_print_topology(void)
 static void ipc_print_hna(void)
 {
     int size;
-    int index;
     struct ip_prefix_list *hna;
     struct hna_entry *tmp_hna;
     struct hna_net *tmp_net;

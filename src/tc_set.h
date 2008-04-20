@@ -68,6 +68,8 @@ struct tc_edge_entry
   char               linkquality[0];
 };
 
+AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
+
 #define OLSR_TC_EDGE_DOWN (1 << 0) /* this edge is down */
 #define OLSR_TC_EDGE_JITTER 5 /* percent */
 
@@ -95,6 +97,8 @@ struct tc_entry
   olsr_bool          err_seq_valid; /* do we have an error (unplauible seq/ansn) */
 };
 
+AVLNODE2STRUCT(vertex_tree2tc, struct tc_entry, vertex_node);
+AVLNODE2STRUCT(cand_tree2tc, struct tc_entry, cand_tree_node);
 LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
 
 /*
@@ -111,7 +115,7 @@ LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
   for (tc_tree_node = avl_walk_first(&tc_tree); \
     tc_tree_node; tc_tree_node = next_tc_tree_node) { \
     next_tc_tree_node = avl_walk_next(tc_tree_node); \
-    tc = tc_tree_node->data;
+    tc = vertex_tree2tc(tc_tree_node);
 #define OLSR_FOR_ALL_TC_ENTRIES_END(tc) }}
 
 #define OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) \
@@ -120,7 +124,7 @@ LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
   for (tc_edge_node = avl_walk_first(&tc->edge_tree); \
     tc_edge_node; tc_edge_node = next_tc_edge_node) { \
     next_tc_edge_node = avl_walk_next(tc_edge_node); \
-    tc_edge = tc_edge_node->data;
+    tc_edge = edge_tree2tc_edge(tc_edge_node);
 #define OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge) }}
 
 extern struct avl_tree tc_tree;

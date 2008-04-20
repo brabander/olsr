@@ -105,7 +105,6 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
   struct lqtextbuffer lqbuffer;
 #endif
   tc->cand_tree_node.key = &tc->path_cost;
-  tc->cand_tree_node.data = tc;
 
 #ifdef DEBUG
   OLSR_PRINTF(2, "SPF: insert candidate %s, cost %s\n",
@@ -175,7 +174,7 @@ olsr_spf_extract_best (struct avl_tree *tree)
 {
   struct avl_node *node = avl_walk_first(tree);
 
-  return (node ? node->data :  NULL);
+  return (node ? cand_tree2tc(node) :  NULL);
 }
 
 
@@ -210,7 +209,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
        edge_node = avl_walk_next(edge_node)) {
 
     struct tc_entry *new_tc;
-    struct tc_edge_entry *tc_edge = edge_node->data;
+    struct tc_edge_entry *tc_edge = edge_tree2tc_edge(edge_node);
 
     /*
      * We are not interested in dead-end or dying edges.
@@ -472,7 +471,7 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
          rtp_tree_node;
          rtp_tree_node = avl_walk_next(rtp_tree_node)) {
 
-      rtp = rtp_tree_node->data;
+      rtp = rtp_tree2rtp(rtp_tree_node);
 
       if (rtp->rtp_rt) {
 
