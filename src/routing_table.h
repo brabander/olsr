@@ -93,6 +93,9 @@ struct rt_entry
   struct list_node      rt_change_node; /* queue for kernel FIB add/chg/del */
 };
 
+AVLNODE2STRUCT(rt_tree2rt, struct rt_entry, rt_tree_node);
+LISTNODE2STRUCT(changelist2rt, struct rt_entry, rt_change_node);
+
 /*
  * For every received route a rt_path is added to the RIB.
  * Depending on the results of the SPF calculation we perform a
@@ -114,6 +117,9 @@ struct rt_path
   olsr_u32_t            rtp_version; /* for detection of outdated rt_paths */
   olsr_u8_t             rtp_origin; /* internal, MID or HNA */
 };
+
+AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
+AVLNODE2STRUCT(rtp_prefix_tree2rtp, struct rt_path, rtp_prefix_tree_node);
 
 /*
  * In olsrd we have three different route types.
@@ -146,7 +152,7 @@ enum olsr_rt_origin {
   for (rt_tree_node = avl_walk_first(&routingtree); \
     rt_tree_node; rt_tree_node = next_rt_tree_node) { \
     next_rt_tree_node = avl_walk_next(rt_tree_node); \
-    rt = rt_tree_node->data;
+    rt = rt_tree2rt(rt_tree_node);
 #define OLSR_FOR_ALL_RT_ENTRIES_END(rt) }}
 
 /*
@@ -167,7 +173,7 @@ enum olsr_rt_origin {
   for (rt_tree_node = avl_walk_first(&routingtree); \
     rt_tree_node; rt_tree_node = next_rt_tree_node) { \
     next_rt_tree_node = avl_walk_next(rt_tree_node); \
-    rt = rt_tree_node->data; \
+    rt = rt_tree2rt(rt_tree_node); \
     if (rt->rt_best->rtp_origin != OLSR_RT_ORIGIN_HNA) \
       continue; 
 #define OLSR_FOR_ALL_HNA_RT_ENTRIES_END(rt) }}
@@ -213,7 +219,7 @@ olsr_u8_t olsr_fib_metric(const struct rt_metric *);
 
 char *olsr_rt_to_string(const struct rt_entry *);
 char *olsr_rtp_to_string(const struct rt_path *);
-void olsr_print_routing_table(const struct avl_tree *);
+void olsr_print_routing_table(struct avl_tree *);
 
 const struct rt_nexthop * olsr_get_nh(const struct rt_entry *);
 

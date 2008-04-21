@@ -235,7 +235,7 @@ int iterRouteTabNext(char *buff, int len)
 
   rt_tree_node = avl_walk_next(&iterRouteTab->rt_tree_node);
   if (rt_tree_node) {
-      iterRouteTab = rt_tree_node->data;
+      iterRouteTab = rt_tree2rt(rt_tree_node);
   } else {
       iterRouteTab = NULL;
   }
@@ -251,7 +251,7 @@ void iterRouteTabInit(void)
   routingtree_version = 0;
 
   node = avl_walk_first(&routingtree);
-  iterRouteTab = node ? node->data : NULL;
+  iterRouteTab = node ? rt_tree2rt(node) : NULL;
 
 }
 
@@ -266,11 +266,7 @@ tas_getnext_tc_entry(struct tc_entry *tc)
 {
   struct avl_node *node = avl_walk_next(&tc->vertex_node);
 
-  if (node) {
-    return node->data;
-  }
-
-  return NULL;
+  return (node ? vertex_tree2tc(node) : NULL);
 }
 
 int iterTcTabNext(char *buff, int len)
@@ -321,10 +317,10 @@ void iterTcTabInit(void)
 {
   struct avl_node *node;
   
-  avl_init(&tc_tree, avl_comp_prefix_default);
+  avl_init(&tc_tree, avl_comp_default);
 
   node = avl_walk_first(&tc_tree);
-  iterTcTab = node ? node->data : NULL;
+  iterTcTab = (node ? vertex_tree2tc(node) : NULL);
 }
 
 static void parserFunc(union olsr_message *msg,

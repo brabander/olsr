@@ -138,7 +138,6 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
 
   /* Fill entry */
   tc->addr = *adr;
-  tc->vertex_node.data = tc;
   tc->vertex_node.key = &tc->addr;
 
   /*
@@ -255,11 +254,7 @@ olsr_lookup_tc_entry(union olsr_ip_addr *adr)
 
   node = avl_find(&tc_tree, adr);
 
-  if (node) {
-    return node->data;
-  }
-
-  return NULL;
+  return (node ? vertex_tree2tc(node) : NULL);
 }
 
 /*
@@ -373,7 +368,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
   tc_edge->T_dest_addr = *addr;
   olsr_set_tc_edge_timer(tc_edge, vtime*1000);
   tc_edge->T_seq = ansn;
-  tc_edge->edge_node.data = tc_edge;
   tc_edge->edge_node.key = &tc_edge->T_dest_addr;
   
   /*
@@ -615,11 +609,7 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 
   edge_node = avl_find(&tc->edge_tree, edge_addr);
 
-  if (edge_node) {
-    return edge_node->data;
-  }
-
-  return NULL;
+  return (edge_node ? edge_tree2tc_edge(edge_node) : NULL);
 }
 
 /**

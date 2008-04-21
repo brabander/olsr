@@ -139,8 +139,6 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
     return;
   }
 
-  rt->rt_change_node.data = rt;
-
   /*
    * For easier route dependency tracking we enqueue nexthop routes
    * at the head of the queue and non-nexthop routes at the tail of the queue.
@@ -216,8 +214,10 @@ olsr_add_kernel_route(struct rt_entry *rt)
 static void
 olsr_add_kernel_routes(struct list_node *head_node)
 {
+  struct rt_entry *rt;
+
   while (!list_is_empty(head_node)) {
-    struct rt_entry *rt = head_node->next->data;
+    rt = changelist2rt(head_node->next);
     olsr_add_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -234,6 +234,7 @@ olsr_add_kernel_routes(struct list_node *head_node)
 static void
 olsr_chg_kernel_routes(struct list_node *head_node)
 {
+  struct rt_entry *rt;
   struct list_node *node;
 
   if (list_is_empty(head_node)) {
@@ -246,7 +247,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * such that nexthop routes are deleted last.
    */
   for (node = head_node->prev; head_node != node; node = node->prev) {
-    struct rt_entry *rt = node->data;
+    rt = changelist2rt(node);
     olsr_delete_kernel_route(rt);
   }
 
@@ -256,7 +257,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    * such that nexthop routes are added first.
    */
   while (!list_is_empty(head_node)) {
-    struct rt_entry *rt = head_node->next->data;
+    rt = changelist2rt(head_node->next);
     olsr_add_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -273,8 +274,10 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 static void
 olsr_del_kernel_routes(struct list_node *head_node)
 {
+  struct rt_entry *rt;
+
   while (!list_is_empty(head_node)) {
-    struct rt_entry *rt = head_node->prev->data;
+    rt = changelist2rt(head_node->prev);
     olsr_delete_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
@@ -303,7 +306,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
      */
     next_rtp_tree_node = avl_walk_next(rtp_tree_node);
 
-    rtp = rtp_tree_node->data;
+    rtp = rtp_tree2rtp(rtp_tree_node);
 
     /*
      * check the version number which gets incremented on every SPF run.

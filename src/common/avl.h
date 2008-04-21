@@ -54,7 +54,6 @@ struct avl_node {
   struct avl_node *next;
   struct avl_node *prev;
   void *key;
-  void *data;
   signed char balance;
   unsigned char leader;
 };
@@ -125,6 +124,19 @@ extern avl_tree_comp avl_comp_prefix_default;
 extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
 extern int avl_comp_mac(const void *, const void *);
+
+/*
+ * Macro to define an inline function to map from a list_node offset back to the
+ * base of the datastructure. That way you save an extra data pointer.
+ */
+#define AVLNODE2STRUCT(funcname, structname, avlnodename) \
+static inline structname * funcname (struct avl_node *ptr)\
+{\
+  return( \
+    ptr ? \
+      (structname *) (((olsr_u8_t *) ptr) - offsetof(structname, avlnodename)) : \
+      NULL); \
+}
 
 #endif /* _AVL_H */
 

@@ -48,7 +48,6 @@ struct list_node
 {
   struct list_node *next;
   struct list_node *prev;
-  void *data;
 };
 
 void list_head_init(struct list_node *);
@@ -63,7 +62,7 @@ void list_remove(struct list_node *);
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the
- * base of the datastructure. This saves you from populating the data field.
+ * base of the datastructure. That way you save an extra data pointer.
  */
 #define LISTNODE2STRUCT(funcname, structname, listnodename) \
 static inline structname * funcname (struct list_node *ptr)\
