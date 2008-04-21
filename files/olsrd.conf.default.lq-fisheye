@@ -239,10 +239,10 @@ UseHysteresis	no
 
 LinkQualityLevel	2
 
-# Link quality window size
-# Defaults to 10
+# Link quality aging factor
+# Defaults to 0.05, smaller values mean larger LQ window size
+LinkQualityAging 0.1 
 
-LinkQualityWinSize	100
 
 # Polling rate in seconds(float). 
 # Default value 0.05 sec

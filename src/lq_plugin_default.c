@@ -135,17 +135,13 @@ void default_olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, void *ptr) {
   lq->nlq = (float)nlq_value / 65535.0;
 }
 
-olsr_linkcost default_packet_loss_worker(void *ptr, olsr_bool lost) {
+olsr_linkcost default_packet_loss_worker(struct link_entry *link, void *ptr, olsr_bool lost) {
   struct default_lq *tlq = ptr;
-  float alpha;
-  
-  // calculate exponental factor for the new link quality, could be directly done in configuration !
-  alpha = 1 / (float)(olsr_cnf->lq_wsize);
   
   // exponential moving average
-  tlq->lq *= (1 - alpha);
+  tlq->lq *= (1 - olsr_cnf->lq_aging);
   if (lost == 0) {
-    tlq->lq += alpha;
+    tlq->lq += (olsr_cnf->lq_aging * link->loss_link_multiplier / 65536);
   }
   return default_calc_cost(ptr);
 }

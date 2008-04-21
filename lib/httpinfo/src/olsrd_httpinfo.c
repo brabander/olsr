@@ -872,9 +872,9 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
     if (olsr_cnf->lq_level) {
       size += snprintf(&buf[size], bufsize-size,
                        "<td>LQ level: %d</td>\n"
-                       "<td>LQ winsize: %d</td>\n",
+                       "<td>LQ aging: %f</td>\n",
                        olsr_cnf->lq_level,
-                       olsr_cnf->lq_wsize);
+                       olsr_cnf->lq_aging);
     }
     size += snprintf(&buf[size], bufsize-size, "</tr></table>\n");
 

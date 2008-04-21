@@ -2,7 +2,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tï¿½nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -189,6 +189,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LQ_FISH
 %token TOK_LQ_DLIMIT
 %token TOK_LQ_WSIZE
+%token TOK_LQ_AGING
 %token TOK_LQ_NAT_THRESH
 %token TOK_LQ_MULT
 %token TOK_CLEAR_SCREEN
@@ -247,6 +248,7 @@ stmt:       idebug
           | alq_dlimit
           | anat_thresh
           | alq_wsize
+          | alq_aging
           | bclear_screen
           | vcomment
 ;
@@ -984,8 +986,14 @@ alq_dlimit: TOK_LQ_DLIMIT TOK_INTEGER TOK_FLOAT
 
 alq_wsize: TOK_LQ_WSIZE TOK_INTEGER
 {
-  PARSER_DEBUG_PRINTF("Link quality window size %d\n", $2->integer);
-  olsr_cnf->lq_wsize = $2->integer;
+  free($2);
+}
+;
+
+alq_aging: TOK_LQ_AGING TOK_FLOAT
+{
+  PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", $2->floating);
+  olsr_cnf->lq_aging = $2->floating;
   free($2);
 }
 ;

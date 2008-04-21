@@ -61,7 +61,7 @@ struct lq_handler {
   
   olsr_bool (*is_relevant_costchange)(olsr_linkcost c1, olsr_linkcost c2);
   
-  olsr_linkcost (*packet_loss_handler)(void *lq, olsr_bool lost);
+  olsr_linkcost (*packet_loss_handler)(struct link_entry *entry, void *lq, olsr_bool lost);
   
   void (*memorize_foreign_hello)(void *local, void *foreign);
   void (*copy_link_lq_into_tc)(void *target, void *source);

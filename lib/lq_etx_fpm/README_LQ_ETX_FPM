@@ -13,7 +13,6 @@ add in /etc/olsrd.conf:
 
 LoadPlugin "lq_etx_fpm.so.0.1"
 {
-    PlParam "alpha" "0.05"
 }
 
 

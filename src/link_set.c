@@ -350,7 +350,7 @@ static void set_loss_link_multiplier(struct link_entry *entry)
 
   // store the multiplier
 
-  entry->loss_link_multiplier = val;
+  entry->loss_link_multiplier = (olsr_u32_t)(val * 65536);
 }
 
 /*

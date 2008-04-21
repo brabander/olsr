@@ -75,18 +75,13 @@ struct lq_handler lq_etx_fpm_handler = {
 };
 
 fpm MINIMAL_LQ;
-fpm aging_factor1, aging_factor2;
-
-void set_lq_etx_fpm_alpha(fpm alpha) {
-  OLSR_PRINTF(3, "lq_etx_fpm: Set alpha to %s\n", fpmtoa(alpha));
-  aging_factor1 = alpha;
-  aging_factor2 = fpmsub(itofpm(1), alpha);
-}
+fpm aging_factor_new, aging_factor_old;
 
 int init_lq_etx_fpm(void) {
-  if (aging_factor1 == 0 && aging_factor2 == 0) {
-    OLSR_PRINTF(1, "Alpha factor for lq_etx_fgm not set !\n");
-    return 0; // error
+  aging_factor_new = ftofpm(olsr_cnf->lq_aging);
+  aging_factor_old = fpmsub(itofpm(1), aging_factor_new);
+  if (aging_factor_new == 0 && aging_factor_old == 0) {
+    aging_factor_new = 0;
   }
   
   MINIMAL_LQ = ftofpm(0.1);
@@ -166,13 +161,15 @@ void lq_etx_fpm_olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, void *ptr) {
   lq->nlq = fpmidiv(itofpm(valueNlq), 255);
 }
 
-olsr_linkcost lq_etx_fpm_packet_loss_worker(void *ptr, olsr_bool lost) {
+olsr_linkcost lq_etx_fpm_packet_loss_worker(struct link_entry *link, void *ptr, olsr_bool lost) {
   struct lq_etx_fpm *tlq = ptr;
   
+  fpm link_loss_factor = fpmdiv(itofpm(link->loss_link_multiplier), 65536);
+  
   // exponential moving average
-  tlq->lq = fpmmul(tlq->lq, aging_factor2);
+  tlq->lq = fpmmul(tlq->lq, aging_factor_old);
   if (lost == 0) {
-    tlq->lq = fpmadd(tlq->lq, aging_factor1);
+    tlq->lq = fpmadd(tlq->lq, fpmmul(aging_factor_new, link_loss_factor));
   }
   return lq_etx_fpm_calc_cost(ptr);
 }
