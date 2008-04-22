@@ -471,7 +471,7 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
          rtp_tree_node;
          rtp_tree_node = avl_walk_next(rtp_tree_node)) {
 
-      rtp = rtp_tree2rtp(rtp_tree_node);
+      rtp = rtp_prefix_tree2rtp(rtp_tree_node);
 
       if (rtp->rtp_rt) {
 
