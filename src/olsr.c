@@ -229,7 +229,7 @@ olsr_init_tables(void)
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
-    avl_comp_default = NULL;
+    avl_comp_default = avl_comp_ipv4;
     avl_comp_prefix_default = avl_comp_ipv4_prefix;
   } else {
     avl_comp_default = avl_comp_ipv6;

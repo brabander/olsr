@@ -124,7 +124,6 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
     neigh->addr = walker->neighbor_iface_addr;
       
     // queue the neighbour entry
-
     neigh->next = lq_hello->neigh;
     lq_hello->neigh = neigh;
 
@@ -243,8 +242,29 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     }
 
     /* Queue the neighbour entry. */
-    neigh->next = lq_tc->neigh;
-    lq_tc->neigh = neigh;
+
+    // TODO: ugly hack until neighbor table is ported to avl tree
+    
+    if (lq_tc->neigh == NULL || avl_comp_default(&lq_tc->neigh->address, &neigh->address) > 0) {
+      neigh->next = lq_tc->neigh;
+      lq_tc->neigh = neigh;
+    }
+    else {
+      struct tc_mpr_addr *last = lq_tc->neigh, *n = last->next;
+      
+      while (n) {
+        if (avl_comp_default(&n->address, &neigh->address) > 0) {
+          break;
+        }
+        last = n;
+        n = n->next;
+      }
+      neigh->next = n;
+      last->next = neigh;
+    }
+
+    // neigh->next = lq_tc->neigh;
+    // lq_tc->neigh = neigh;
 
   } OLSR_FOR_ALL_NBR_ENTRIES_END(walker);
 }
@@ -475,32 +495,30 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
 static olsr_u8_t
 calculate_border_flag(void *lower_border, void *higher_border) {
-	olsr_u32_t *lower = lower_border;
-	olsr_u32_t *higher = higher_border;
-	olsr_u32_t bitmask = 0x7fffffff;
+	olsr_u8_t *lower = lower_border;
+	olsr_u8_t *higher = higher_border;
+	olsr_u8_t bitmask;
+	olsr_u8_t part, bitpos;
 	
-	olsr_u32_t part, bitpos;
-	for (part = 0; part < olsr_cnf->ipsize/4; part ++) {
+	for (part = 0; part < olsr_cnf->ipsize; part ++) {
 		if (lower[part] != higher[part]) {
 			break;
 		}
 	}
 	
-	if (part == olsr_cnf->ipsize/4) { // same IPs ?
+	if (part == olsr_cnf->ipsize) { // same IPs ?
 		return 0;
 	}
 	
 	// look for first bit of difference
-	bitpos = 31;
-	for (bitpos = 31; bitpos > 0; bitpos--, bitmask >>= 1) {
+	bitmask = 0xfe;
+	for (bitpos = 0; bitpos < 8; bitpos++, bitmask <<= 1) {
 		if ((lower[part] & bitmask) == (higher[part] & bitmask)) {
 			break;
 		}
 	}
 	
-	if (olsr_cnf->ipsize > 4) { // ipv6 ?
-		bitpos += 32 * (olsr_cnf->ipsize/4 - part);
-	}
+  bitpos += 8 * (olsr_cnf->ipsize - part - 1);
 	return bitpos + 1;
 }
 
