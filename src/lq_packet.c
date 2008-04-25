@@ -77,7 +77,6 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   lq_hello->comm.ttl = 1;
   lq_hello->comm.hops = 0;
-  lq_hello->comm.seqno = get_msg_seqno();
 
   lq_hello->htime = outif->hello_etime;
   lq_hello->will = olsr_cnf->willingness;
@@ -183,7 +182,6 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     lq_tc->comm.ttl = MAX_TTL;
 
   lq_tc->comm.hops = 0;
-  lq_tc->comm.seqno = get_msg_seqno();
 
   lq_tc->from = olsr_cnf->main_addr;
 
@@ -286,7 +284,7 @@ static void serialize_common(struct olsr_common *comm)
 
       olsr_head_v4->ttl = comm->ttl;
       olsr_head_v4->hops = comm->hops;
-      olsr_head_v4->seqno = htons(comm->seqno);
+      olsr_head_v4->seqno = htons(get_msg_seqno());
     }
   else
     {
@@ -301,7 +299,7 @@ static void serialize_common(struct olsr_common *comm)
 
       olsr_head_v6->ttl = comm->ttl;
       olsr_head_v6->hops = comm->hops;
-      olsr_head_v6->seqno = htons(comm->seqno);
+      olsr_head_v6->seqno = htons(get_msg_seqno());
     }
 }
 
@@ -514,6 +512,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
    */
   if (0 < net_output_pending(outif)) {
     for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next) {
+      // TODO sizeof_tc_lq function required
       expected_size += olsr_cnf->ipsize + 4;
     }
   }
@@ -532,6 +531,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
       // force signed comparison
 
+    // TODO sizeof_tc_lq function required
       if ((int)(size + olsr_cnf->ipsize + 4) > rem)
         {
           // finalize the OLSR header
