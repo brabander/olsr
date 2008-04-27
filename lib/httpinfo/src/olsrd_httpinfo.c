@@ -1053,6 +1053,8 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
       struct tc_edge_entry *tc_edge;
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+      	if (tc_edge->edge_inv &&
+      	 ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN)==0)  {
           size += snprintf(&buf[size], bufsize-size, "<tr>");
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc_edge->T_dest_addr, -1);
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
@@ -1064,7 +1066,7 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
                                get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
-
+      	}
       } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
