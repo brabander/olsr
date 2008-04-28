@@ -51,28 +51,28 @@
 
 /* Default lq plugin settings */
 struct lq_handler default_lq_handler = {
-		&default_calc_cost,
-		&default_calc_cost,
+    &default_calc_cost,
+    &default_calc_cost,
 		
-		&default_olsr_is_relevant_costchange,
+    &default_olsr_is_relevant_costchange,
 		
-		&default_packet_loss_worker,
-		&default_olsr_memorize_foreign_hello_lq,
-		&default_olsr_copy_link_lq_into_tc,
+    &default_packet_loss_worker,
+    &default_olsr_memorize_foreign_hello_lq,
+    &default_olsr_copy_link_lq_into_tc,
     &default_olsr_clear_lq,
     &default_olsr_clear_lq,
 		
-		&default_olsr_serialize_hello_lq_pair,
-		&default_olsr_serialize_tc_lq_pair,
-		&default_olsr_deserialize_hello_lq_pair,
-		&default_olsr_deserialize_tc_lq_pair,
+    &default_olsr_serialize_hello_lq_pair,
+    &default_olsr_serialize_tc_lq_pair,
+    &default_olsr_deserialize_hello_lq_pair,
+    &default_olsr_deserialize_tc_lq_pair,
 		
-		&default_olsr_print_lq,
-		&default_olsr_print_lq,
-		&default_olsr_print_cost, 
+    &default_olsr_print_lq,
+    &default_olsr_print_lq,
+    &default_olsr_print_cost, 
 		
-		sizeof(struct default_lq),
-		sizeof(struct default_lq)
+    sizeof(struct default_lq),
+    sizeof(struct default_lq)
 };
 
 struct lq_handler *active_lq_handler = &default_lq_handler;
@@ -431,3 +431,9 @@ struct tc_edge_entry *olsr_malloc_tc_edge_entry(const char *id) {
   active_lq_handler->clear_tc(t);
   return t;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */
