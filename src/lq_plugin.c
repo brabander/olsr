@@ -90,11 +90,12 @@ void set_lq_handler(struct lq_handler *handler, const char *name) {
   if (handler) {
     OLSR_PRINTF(1, "Activated lq_handler: %s\n", name);
     active_lq_handler = handler;
-  }
-  else {
+  } else {
     OLSR_PRINTF(1, "Activated lq_handler: default\n");
     active_lq_handler = &default_lq_handler;
   }
+
+  name = NULL; /* squelch compiler warning */
 }
 
 /*
