@@ -185,10 +185,11 @@ olsr_init_tc(void)
   tc_edge_gc_timer_cookie = olsr_alloc_cookie("TC edge GC", OLSR_COOKIE_TYPE_TIMER);
   tc_validity_timer_cookie = olsr_alloc_cookie("TC validity", OLSR_COOKIE_TYPE_TIMER);
 
-  tc_edge_mem_cookie = olsr_alloc_cookie("TC edge", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_edge_mem_cookie, sizeof(struct tc_edge_entry));
+  tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge_entry", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tc_edge_mem_cookie, sizeof(struct tc_edge_entry) +
+    active_lq_handler->tc_lq_size);
 
-  tc_mem_cookie = olsr_alloc_cookie("TC", OLSR_COOKIE_TYPE_MEMORY);
+  tc_mem_cookie = olsr_alloc_cookie("tc_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_mem_cookie, sizeof(struct tc_entry));
 
   /*
@@ -422,7 +423,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
   struct tc_entry *tc_neighbor;
   struct tc_edge_entry *tc_edge, *tc_edge_inv;
 
-  tc_edge = olsr_malloc_tc_edge_entry("add TC edge");
+  tc_edge = olsr_cookie_malloc(tc_edge_mem_cookie);
   if (!tc_edge) {
     return NULL;
   }
@@ -511,7 +512,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
     tc_edge_inv->edge_inv = NULL;
   }
 
-  free(tc_edge);
+  olsr_cookie_free(tc_edge_mem_cookie, tc_edge);
 }
 
 
