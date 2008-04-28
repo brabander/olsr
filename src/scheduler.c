@@ -55,6 +55,7 @@
 #include "socket_parser.h"
 #include "lq_route.h"
 #include "link_set.h"
+#include "olsr_cookie.h"
 
 /* Timer data, global. Externed in defs.h */
 clock_t now_times;  /* current idea of times(2) reported uptime */
@@ -211,7 +212,7 @@ olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
   jitter_time = (jitter_time * factorial) / (RAND_MAX / jitter_time);
 
 #if 0
-  OLSR_PRINTF(1, "TIMER: jitter %u%% rel_time %u%% to %u\n",
+  OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %u%% to %u\n",
               rel_time, jitter_pct, rel_time - jitter_time);
 #endif
 
@@ -255,7 +256,7 @@ olsr_get_timer(void)
   memset(timer_block, 0, sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK); 
 
 #if 0
-  OLSR_PRINTF(1, "TIMER: alloc %u bytes chunk at %p\n",
+  OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
               sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK,
               timer_block);
 #endif
@@ -359,9 +360,10 @@ olsr_walk_timers(clock_t *last_run)
       /* Ready to fire ? */
       if (TIMED_OUT(timer->timer_clock)) {
 
-        olsr_printf(3, "TIMER: fire timer %p, ctx %p, "
-                    "cookie %u at clocktick %u\n",
-                    timer, timer->timer_cb_context, timer->timer_cookie,
+        OLSR_PRINTF(3, "TIMER: fire %s timer %p, ctx %p, "
+                    "at clocktick %u\n",
+                    olsr_cookie_name(timer->timer_cookie),
+                    timer, timer->timer_cb_context,
                     (unsigned int)(*last_run));
 
         /* This timer is expired, call into the provided callback function */
@@ -410,7 +412,7 @@ olsr_walk_timers(clock_t *last_run)
   }
 
 #ifdef DEBUG
-  olsr_printf(3, "TIMER: processed %4u/%u clockwheel slots, "
+  OLSR_PRINTF(3, "TIMER: processed %4u/%u clockwheel slots, "
               "timers walked %4u/%u, timers fired %u\n",
               wheel_slot_walks, TIMER_WHEEL_SLOTS,
               total_timers_walked, timers_running, total_timers_fired);
@@ -550,6 +552,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
 
   /* The cookie is used for debugging to traceback the originator */
   timer->timer_cookie = cookie;
+  olsr_cookie_usage_incr(cookie);
 
   /* Singleshot or periodical timer ? */
   if (periodical) {
@@ -566,7 +569,8 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   timers_running++;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: start timer %p firing in %s, ctx %p\n",
+  OLSR_PRINTF(3, "TIMER: start %s timer %p firing in %s, ctx %p\n",
+              olsr_cookie_name(timer->timer_cookie),
               timer, olsr_clock_string(timer->timer_clock), context);
 #endif
 
@@ -604,7 +608,8 @@ olsr_stop_timer(struct timer_entry *timer)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: stop timer %p firing in %s, ctx %p\n",
+  OLSR_PRINTF(3, "TIMER: stop %s timer %p firing in %s, ctx %p\n",
+              olsr_cookie_name(timer->timer_cookie),
               timer, olsr_clock_string(timer->timer_clock),
               timer->timer_cb_context);
 #endif
@@ -618,6 +623,7 @@ olsr_stop_timer(struct timer_entry *timer)
   list_remove(&timer->timer_list);
   list_add_before(&free_timer_list, &timer->timer_list);
   timer->timer_flags &= ~OLSR_TIMER_RUNNING;
+  olsr_cookie_usage_decr(timer->timer_cookie);
   timers_running--;
 }
 
@@ -661,8 +667,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
                   &timer->timer_list);
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: change timer %p, firing to %s, ctx %p\n",
-              timer,
+  OLSR_PRINTF(3, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
+              olsr_cookie_name(timer->timer_cookie), timer,
               olsr_clock_string(timer->timer_clock),
               timer->timer_cb_context);
 #endif
