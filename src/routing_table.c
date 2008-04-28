@@ -260,6 +260,7 @@ olsr_alloc_rt_path(struct tc_entry *tc,
 
   /* insert to the tc prefix tree */
   avl_insert(&tc->prefix_tree, &rtp->rtp_prefix_tree_node, AVL_DUP_NO);
+  olsr_lock_tc_entry(tc);
 
   /* backlink to the owning tc entry */
   rtp->rtp_tc = tc;
@@ -333,8 +334,8 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
 /**
  * Unlink and free a rt_path.
  */
-static void
-olsr_free_rt_path(struct rt_path *rtp)
+void
+olsr_delete_rt_path(struct rt_path *rtp)
 {
 
   /* remove from the originator tree */
@@ -346,6 +347,7 @@ olsr_free_rt_path(struct rt_path *rtp)
   /* remove from the tc prefix tree */
   if (rtp->rtp_tc) {
     avl_delete(&rtp->rtp_tc->prefix_tree, &rtp->rtp_prefix_tree_node);
+    olsr_unlock_tc_entry(rtp->rtp_tc);
     rtp->rtp_tc = NULL;
   }
 
@@ -529,9 +531,8 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
 #endif
 
   /*
-   * For internal routes the tc_entry must already exist.
-   * For all other routes we may create it as an edgeless
-   * hookup point. If so he tc_entry has no edges it will not
+   * For all routes we use the tc_entry as an hookup point.
+   * If the tc_entry is disconnected, i.e. has no edges it will not
    * be explored during SPF run.
    */
   tc = olsr_locate_tc_entry(originator);
@@ -607,7 +608,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
 
   if (node) {
     rtp = rtp_prefix_tree2rtp(node);
-    olsr_free_rt_path(rtp);
+    olsr_delete_rt_path(rtp);
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = OLSR_TRUE;

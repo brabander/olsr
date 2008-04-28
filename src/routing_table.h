@@ -228,6 +228,7 @@ struct rt_path *olsr_insert_routing_table(union olsr_ip_addr *, int, union olsr_
 void olsr_delete_routing_table(union olsr_ip_addr *, int, union olsr_ip_addr *);
 void olsr_insert_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_update_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
+void olsr_delete_rt_path(struct rt_path *);
 
 struct rt_entry *
 olsr_lookup_routing_table(const union olsr_ip_addr *);

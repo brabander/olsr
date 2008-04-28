@@ -50,6 +50,7 @@
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "olsr_cookie.h"
 
 #include <assert.h>
 
@@ -57,7 +58,14 @@
 struct avl_tree tc_tree;
 struct tc_entry *tc_myself; /* Shortcut to ourselves */
 
-/* Sven-Ola 2007-Dec: These four constants include an assumption
+/* Some cookies for stats keeping */
+struct olsr_cookie_info *tc_edge_gc_timer_cookie = NULL;
+struct olsr_cookie_info *tc_validity_timer_cookie = NULL;
+struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
+struct olsr_cookie_info *tc_mem_cookie = NULL;
+
+/*
+ * Sven-Ola 2007-Dec: These four constants include an assumption
  * on how long a typical olsrd mesh memorizes (TC) messages in the
  * RAM of all nodes and how many neighbour changes between TC msgs.
  * In Berlin, we encounter hop values up to 70 which means that
@@ -130,11 +138,10 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
   OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 #endif
 
-  tc = olsr_malloc(sizeof(struct tc_entry), "add TC entry");
+  tc = olsr_cookie_malloc(tc_mem_cookie);
   if (!tc) {
     return NULL;
   }
-  memset(tc, 0, sizeof(struct tc_entry));
 
   /* Fill entry */
   tc->addr = *adr;
@@ -144,6 +151,7 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
    * Insert into the global tc tree.
    */
   avl_insert(&tc_tree, &tc->vertex_node, AVL_DUP_NO);
+  olsr_lock_tc_entry(tc);
 
   /*
    * Initialize subtrees for edges and prefixes.
@@ -172,6 +180,18 @@ olsr_init_tc(void)
   avl_init(&tc_tree, avl_comp_default);
 
   /*
+   * Get some cookies for getting stats to ease troubleshooting.
+   */
+  tc_edge_gc_timer_cookie = olsr_alloc_cookie("TC edge GC", OLSR_COOKIE_TYPE_TIMER);
+  tc_validity_timer_cookie = olsr_alloc_cookie("TC validity", OLSR_COOKIE_TYPE_TIMER);
+
+  tc_edge_mem_cookie = olsr_alloc_cookie("TC edge", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tc_edge_mem_cookie, sizeof(struct tc_edge_entry));
+
+  tc_mem_cookie = olsr_alloc_cookie("TC", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tc_mem_cookie, sizeof(struct tc_entry));
+
+  /*
    * Add a TC entry for ourselves.
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
@@ -184,8 +204,6 @@ olsr_init_tc(void)
 void
 olsr_change_myself_tc(void)
 {
-  struct tc_edge_entry *tc_edge;
-
   if (tc_myself) {
 
     /*
@@ -196,11 +214,8 @@ olsr_change_myself_tc(void)
     }
 
     /*
-     * Flush all edges and our own tc_entry.
+     * Flush our own tc_entry.
      */
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc_myself, tc_edge) {
-      olsr_delete_tc_edge_entry(tc_edge);
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc_myself, tc_edge);
     olsr_delete_tc_entry(tc_myself);
   }
 
@@ -209,6 +224,31 @@ olsr_change_myself_tc(void)
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
   changes_topology = OLSR_TRUE;
+}
+
+/*
+ * Increment the reference counter.
+ */
+void
+olsr_lock_tc_entry(struct tc_entry *tc)
+{
+  tc->refcount++;
+}
+
+/*
+ * Unlock and free a tc_entry once all references are gone.
+ */
+void
+olsr_unlock_tc_entry(struct tc_entry *tc)
+{
+  if (--tc->refcount) {
+    return;
+  }
+
+  /*
+   * All references are gone.
+   */
+  olsr_cookie_free(tc_mem_cookie, tc);
 }
 
 /**
@@ -220,6 +260,8 @@ olsr_change_myself_tc(void)
 void
 olsr_delete_tc_entry(struct tc_entry *tc)
 {
+  struct tc_edge_entry *tc_edge;
+  struct rt_path *rtp;
 #if 0
   struct ipaddr_str buf;
   OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
@@ -231,10 +273,22 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   olsr_delete_routing_table(&tc->addr, olsr_cnf->maxplen, &tc->addr);
 
   /* The edgetree and prefix tree must be empty before */
-  assert(!tc->edge_tree.count && !tc->prefix_tree.count);
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+    olsr_delete_tc_edge_entry(tc_edge);
+  } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+
+  OLSR_FOR_ALL_PREFIX_ENTRIES(tc, rtp) {
+    olsr_delete_rt_path(rtp);
+  } OLSR_FOR_ALL_PREFIX_ENTRIES_END(tc, rtp);
+
+  /* Stop running timers */
+  olsr_stop_timer(tc->edge_gc_timer);
+  tc->edge_gc_timer = NULL;
+  olsr_stop_timer(tc->validity_timer);
+  tc->validity_timer = NULL;
 
   avl_delete(&tc_tree, &tc->vertex_node);
-  free(tc);
+  olsr_unlock_tc_entry(tc);
 }
 
 /**
@@ -294,29 +348,37 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 
 /**
  * Wrapper for the timer callback.
+ * A TC entry has not been refreshed in time.
+ * Remove it from the link-state database.
  */
 static void
-olsr_expire_tc_edge_entry(void *context)
+olsr_expire_tc_entry(void *context)
 {
-  struct tc_edge_entry *tc_edge;
+  struct tc_entry *tc;
 
-  tc_edge = (struct tc_edge_entry *)context;
-  tc_edge->edge_timer = NULL;
+  tc = (struct tc_entry *)context;
+  tc->validity_timer = NULL;
 
-  olsr_delete_tc_edge_entry(tc_edge);
+  olsr_delete_tc_entry(tc);
+  changes_topology = OLSR_TRUE;
 }
 
 /**
- * Set the TC edge expiration timer.
- *
- * all timer setting shall be done using this function.
- * The timer param is a relative timer expressed in milliseconds.
+ * Wrapper for the timer callback.
+ * Does the garbage collection of older ansn entries after no edge addition to
+ * the TC entry has happened for OLSR_TC_EDGE_GC_TIME.
  */
-void
-olsr_set_tc_edge_timer(struct tc_edge_entry *tc_edge, unsigned int rel_timer)
+static void
+olsr_expire_tc_edge_gc(void *context)
 {
-  olsr_set_timer(&tc_edge->edge_timer, rel_timer, OLSR_TC_EDGE_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_entry, tc_edge, 0);
+  struct tc_entry *tc;
+
+  tc = (struct tc_entry *)context;
+  tc->edge_gc_timer = NULL;
+
+  if (olsr_delete_outdated_tc_edges(tc)) {
+    changes_topology = OLSR_TRUE;
+  }
 }
 
 /*
@@ -330,6 +392,7 @@ olsr_bool
 olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 {
   olsr_linkcost old;
+
   /*
    * Some sanity check before recalculating the etx.
    */
@@ -351,7 +414,7 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
  */
 struct tc_edge_entry *
 olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
-                       olsr_u16_t ansn, unsigned int vtime)
+                       olsr_u16_t ansn)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
@@ -366,14 +429,14 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 
   /* Fill entry */
   tc_edge->T_dest_addr = *addr;
-  olsr_set_tc_edge_timer(tc_edge, vtime*1000);
-  tc_edge->T_seq = ansn;
+  tc_edge->ansn = ansn;
   tc_edge->edge_node.key = &tc_edge->T_dest_addr;
   
   /*
    * Insert into the edge tree.
    */
   avl_insert(&tc->edge_tree, &tc_edge->edge_node, AVL_DUP_NO);
+  olsr_lock_tc_entry(tc);
 
   /*
    * Connect backpointer.
@@ -438,12 +501,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 
   tc = tc_edge->tc;
   avl_delete(&tc->edge_tree, &tc_edge->edge_node);
-
-  /*
-   * Kill running timers.
-   */
-  olsr_stop_timer(tc_edge->edge_timer);
-  tc_edge->edge_timer = NULL;
+  olsr_unlock_tc_entry(tc);
 
   /*
    * Clear the backpointer of our inverse edge.
@@ -451,20 +509,6 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   tc_edge_inv = tc_edge->edge_inv;
   if (tc_edge_inv) {
     tc_edge_inv->edge_inv = NULL;
-  }
-
-  /*
-   * Delete the tc_entry if the last edge and last prefix is gone.
-   */
-  if (!tc_edge->tc->edge_tree.count &&
-      !tc_edge->tc->prefix_tree.count) {
-
-    /*
-     * Only remove remote tc entries.
-     */
-    if (tc_edge->tc != tc_myself) {
-      olsr_delete_tc_entry(tc_edge->tc);
-    }
   }
 
   free(tc_edge);
@@ -478,31 +522,20 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
  * @param ansn the advertised neighbor set sequence number
  * @return 1 if any destinations were deleted 0 if not
  */
-static int
-olsr_delete_outdated_tc_edges(struct tc_entry *tc, olsr_u16_t ansn)
+olsr_bool
+olsr_delete_outdated_tc_edges(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
-  int retval = 0;
+  olsr_bool retval = OLSR_FALSE;
 
 #if 0
-  OLSR_PRINTF(5, "TC: deleting MPRS\n");
+  OLSR_PRINTF(5, "TC: deleting outdated TC-edge entries\n");
 #endif
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    if (SEQNO_GREATER_THAN(ansn, tc_edge->T_seq)) {
-      /*
-       * Do not delete the edge now, just mark the edge as down.
-       * Downed edges will be ignored by the SPF computation.
-       * It could be that a TC message spans across multiple packets,
-       * which causes an edge delete followed by an edge add.
-       * If the edge gets refreshed in subsequent packets then we have
-       * avoided a two edge transistion.
-       * If the edge really went away then after the garbage collection
-       * timer has expired olsr_time_out_tc_set() will do the needful.
-       */
-      tc_edge->flags |= OLSR_TC_EDGE_DOWN;
-      olsr_set_tc_edge_timer(tc_edge, OLSR_TC_EDGE_GC_TIME);
-      retval = 1;
+    if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn)) {
+      olsr_delete_tc_edge_entry(tc_edge);
+      retval = OLSR_TRUE;
     }
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
 
@@ -519,7 +552,7 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc, olsr_u16_t ansn)
  * @return 1 if entries are added 0 if not
  */
 static int
-olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
+olsr_tc_update_edge(struct tc_entry *tc, olsr_u16_t ansn,
                     const unsigned char **curr)
 {
   struct tc_edge_entry *tc_edge;
@@ -546,22 +579,17 @@ olsr_tc_update_edge(struct tc_entry *tc, unsigned int vtime_s, olsr_u16_t ansn,
       return 0;
     }
 
-    tc_edge = olsr_add_tc_edge_entry(tc, &neighbor, ansn, vtime_s);
+    tc_edge = olsr_add_tc_edge_entry(tc, &neighbor, ansn);
     
     olsr_deserialize_tc_lq_pair(curr, tc_edge);
     edge_change = 1;
 
   } else {
+
     /*
      * We know this edge - Update entry.
      */
-    olsr_set_tc_edge_timer(tc_edge, vtime_s*1000);
-    tc_edge->T_seq = ansn;
-
-    /*
-     * Clear the (possibly set) down flag.
-     */
-    tc_edge->flags &= ~OLSR_TC_EDGE_DOWN;
+    tc_edge->ansn = ansn;
 
     /*
      * Update link quality if configured.
@@ -634,13 +662,12 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       
-      if (!(tc_edge->flags & OLSR_TC_EDGE_DOWN)) {
-        OLSR_PRINTF(1, "%-*s %-*s  (%-10s) %s\n",
-                    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
-                    ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
-                    get_tc_edge_entry_text(tc_edge, &lqbuffer1),
-                    get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
-      }
+      OLSR_PRINTF(1, "%-*s %-*s  (%-10s) %s\n",
+                  ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
+                  ipwidth, olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
+                  get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                  get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+      
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
@@ -775,23 +802,28 @@ olsr_input_tc(union olsr_message *msg,
 
   /*
    * Now walk the edge advertisements contained in the packet.
-   * Play some efficiency games here, like checking first
-   * if the edge exists in order to avoid address validation.
    */
   limit = (unsigned char *)msg + size;
   while (curr < limit) {
-    if (olsr_tc_update_edge(tc, vtime_s, ansn, &curr)) {
+    if (olsr_tc_update_edge(tc, ansn, &curr)) {
       changes_topology = OLSR_TRUE;
     }
   }
 
   /*
-   * Do the edge garbage collection at the end in order
-   * to avoid malloc() churn.
+   * Set or change the expiration timer accordingly.
    */
-  if (olsr_delete_outdated_tc_edges(tc, ansn)) {
-    changes_topology = OLSR_TRUE;
-  }
+  olsr_set_timer(&tc->validity_timer, vtime_s * MSEC_PER_SEC,
+                 OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT,
+                 &olsr_expire_tc_entry, tc, tc_validity_timer_cookie->ci_id);
+
+  /*
+   * Kick the the edge garbage collection timer. In the meantime hopefully
+   * all edges belonging to a multipart neighbor set will arrive.
+   */
+  olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
+                 OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT,
+                 &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie->ci_id);
 
   /*
    * Last, flood the message to our other neighbors.

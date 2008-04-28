@@ -896,9 +896,8 @@ void FindNeighbors(
           /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
           tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
 
-          /* We are not interested in dead-end or dying edges. */
-          if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
-          {
+          /* We are not interested in dead-end edges. */
+          if (tc_edge) {
             olsr_linkcost tcEtx = tc_edge->cost;
 
             if (previousLinkEtx + currEtx > tcEtx)

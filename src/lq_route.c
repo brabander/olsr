@@ -212,20 +212,14 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
     struct tc_edge_entry *tc_edge = edge_tree2tc_edge(edge_node);
 
     /*
-     * We are not interested in dead-end or dying edges.
+     * We are not interested in dead-end edges.
      */
-    if (!tc_edge->edge_inv ||
-        ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN)) {
+    if (!tc_edge->edge_inv) {
 #ifdef DEBUG
       OLSR_PRINTF(2, "SPF:   ignoring edge %s\n",
                   olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
-      if (tc_edge->flags & OLSR_TC_EDGE_DOWN) {
-        OLSR_PRINTF(2, "SPF:     edge down\n");
-      }
       if (!tc_edge->edge_inv) {
         OLSR_PRINTF(2, "SPF:     no inverse edge\n");
-      }  else if (tc_edge->edge_inv->flags & OLSR_TC_EDGE_DOWN){
-        OLSR_PRINTF(2, "SPF:     inverse edge down\n");
       }
 #endif
       continue;
@@ -238,15 +232,15 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
     new_cost = tc->path_cost + tc_edge->cost;
 
 #ifdef DEBUG
-      OLSR_PRINTF(2, "SPF:   exploring edge %s, cost %s\n",
-                  olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
-                  get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer));
+    OLSR_PRINTF(2, "SPF:   exploring edge %s, cost %s\n",
+                olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
+                get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer));
 #endif
 
-      /* 
-       * if it's better than the current path quality of this edge's
-       * destination node, then we've found a better path to this node.
-       */
+    /* 
+     * if it's better than the current path quality of this edge's
+     * destination node, then we've found a better path to this node.
+     */
     new_tc = tc_edge->edge_inv->tc;
 
     if (new_cost < new_tc->path_cost) {
@@ -406,13 +400,13 @@ olsr_calculate_routing_table (void *context __attribute__((unused)))
        */
       if (!tc_edge) {
         tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,
-                                         0, link->vtime);
+                                         0);
       } else {
+
         /*
          * Update LQ and timers, such that the edge does not get deleted.
          */
         olsr_copylq_link_entry_2_tc_edge_entry(tc_edge, link);
-        olsr_set_tc_edge_timer(tc_edge, link->vtime*1000);
         olsr_calc_tc_edge_entry_etx(tc_edge);
       }
       if (tc_edge->edge_inv) {
