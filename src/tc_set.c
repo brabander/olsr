@@ -520,7 +520,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
  * @param tc the entry to delete edges from
  * @return TRUE if any destinations were deleted, FALSE if not
  */
-static int
+olsr_bool
 olsr_delete_outdated_tc_edges(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
