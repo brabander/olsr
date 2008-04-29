@@ -814,7 +814,7 @@ olsr_input_tc(union olsr_message *msg,
     }
   }
 
-  // calculate real border ips
+  /* calculate real border ips */
   if (lower_border == 0 && upper_border == 0) {
     borderSet = 0;
   } else if (borderSet) {
