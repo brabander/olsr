@@ -82,7 +82,8 @@ struct link_entry
   double loss_hello_int;
   struct timer_entry *link_loss_timer;
 
-  float loss_link_multiplier; // user defined multiplies for link quality
+  // user defined multiplies for link quality, multiplied with 65536
+  olsr_u32_t loss_link_multiplier;
   
   // cost of this link
   olsr_linkcost linkcost;

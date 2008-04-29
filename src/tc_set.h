@@ -168,6 +168,7 @@ void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 olsr_bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
+// static olsr_bool olsr_etx_significant_change(float, float);
 
 #endif
 

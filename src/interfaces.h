@@ -118,7 +118,6 @@ struct olsr_netbuf
   int reserved;   /* Plugins can reserve space in buffers */
 };
 
-
 /**
  *A struct containing all necessary information about each
  *interface participating in the OLSRD routing
@@ -135,14 +134,16 @@ struct interface
   /* IP independent */
   union         olsr_ip_addr ip_addr;
   int           is_hcif;                        /* Is this a emulated host-client if? */
-  int           olsr_socket;                    /* The broadcast socket for this interface */
-  int	        int_metric;			/* metric of interface */
-  int           int_mtu;                        /* MTU of interface */
-  int	        int_flags;			/* see below */
-  int           if_index;                       /* Kernels index of this interface */
-  int           is_wireless;                    /* wireless interface or not*/
+  
+  int           olsr_socket;        /* The broadcast socket for this interface */
+  
+  int	          int_metric;			/* metric of interface */
+  int           int_mtu;        /* MTU of interface */
+  int	          int_flags;			/* see below */
+  int           if_index;       /* Kernels index of this interface */
+  int           is_wireless;    /* wireless interface or not*/
   char	        *int_name;			/* from kernel if structure */
-  olsr_u16_t    olsr_seqnum;                    /* Olsr message seqno */
+  olsr_u16_t    olsr_seqnum;    /* Olsr message seqno */
 
   /* Periodic message generation timers */
   struct timer_entry *hello_gen_timer;

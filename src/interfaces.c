@@ -335,7 +335,6 @@ del_ifchgf(int (*f)(struct interface *, int))
 
   return 0;
 }
-
 /*
  * Local Variables:
  * c-basic-offset: 2

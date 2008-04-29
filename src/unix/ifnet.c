@@ -622,6 +622,7 @@ add_hemu_if(struct olsr_if *iface)
   /*
    * Register functions for periodic message generation 
    */
+  
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC,

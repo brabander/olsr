@@ -182,8 +182,8 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Fish Eye algorithm\n# 0 = do not use fish eye\n# 1 = use fish eye\n\n");
   fprintf(fd, "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
 
-  fprintf(fd, "# Link quality window size\n\n");
-  fprintf(fd, "LinkQualityWinSize\t%d\n\n", cnf->lq_wsize);
+  fprintf(fd, "# Link quality aging factor\n\n");
+  fprintf(fd, "LinkQualityAging\t%f\n\n", cnf->lq_aging);
 
   fprintf(fd, "# NAT threshold\n\n");
   fprintf(fd, "NatThreshold\t%f\n\n", cnf->lq_nat_thresh);
@@ -466,8 +466,8 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   WRITE_TO_BUF("# Link quality level\n# 0 = do not use link quality\n# 1 = use link quality for MPR selection\n# 2 = use link quality for MPR selection and routing\n\n");
   WRITE_TO_BUF("LinkQualityLevel\t%d\n\n", cnf->lq_level);
 
-  WRITE_TO_BUF("# Link quality window size\n\n");
-  WRITE_TO_BUF("LinkQualityWinSize\t%d\n\n", cnf->lq_wsize);
+  WRITE_TO_BUF("# Link quality aging factor\n\n");
+  WRITE_TO_BUF("LinkQualityAging\t%f\n\n", cnf->lq_aging);
 
   WRITE_TO_BUF("# NAT threshold\n\n");
   WRITE_TO_BUF("NatThreshold\t%f\n\n", cnf->lq_nat_thresh);
