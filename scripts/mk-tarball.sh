@@ -44,11 +44,13 @@
 
 # first determine the tarball name
 NAME=`grep -E "^VERS" ../Makefile | sed 's/^VERS..../olsrd-/;s/ *$//'`
-echo "### creating $NAME.tgz in /tmp"
 mkdir /tmp/$NAME
 # sync the stuff to a working directory
 rsync -a ../ /tmp/$NAME/ --exclude=.hg* --delete
 cd /tmp/
+echo "### creating /tmp/$NAME.tgz"
 tar -czf /tmp/$NAME.tgz $NAME
+echo "### creating /tmp/$NAME.bz2"
+tar -cjf /tmp/$NAME.bz2 $NAME
 #clean up
 rm -rf /tmp/$NAME
