@@ -48,9 +48,9 @@ mkdir /tmp/$NAME
 # sync the stuff to a working directory
 rsync -a ../ /tmp/$NAME/ --exclude=.hg* --delete
 cd /tmp/
-echo "### creating /tmp/$NAME.tgz"
-tar -czf /tmp/$NAME.tgz $NAME
-echo "### creating /tmp/$NAME.bz2"
-tar -cjf /tmp/$NAME.bz2 $NAME
+echo "### creating /tmp/$NAME.tar.gz"
+tar -czf /tmp/$NAME.tar.gz $NAME
+echo "### creating /tmp/$NAME.tar.bz2"
+tar -cjf /tmp/$NAME.tar.bz2 $NAME
 #clean up
 rm -rf /tmp/$NAME
