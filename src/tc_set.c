@@ -541,6 +541,54 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc)
 }
 
 /**
+ * Delete all destinations that are inside the borders but
+ * not updated in the last tc.
+ *
+ * @param tc the entry to delete edges from
+ * @param ansn the advertised neighbor set sequence number
+ * @return 1 if any destinations were deleted 0 if not
+ */
+static int
+olsr_delete_revoked_tc_edges(struct tc_entry *tc, olsr_u16_t ansn,
+                              union olsr_ip_addr *lower_border,
+                              union olsr_ip_addr *upper_border)
+{
+  struct tc_edge_entry *tc_edge;
+  int retval = 0;
+
+#if 0
+  OLSR_PRINTF(5, "TC: deleting MPRS\n");
+#endif
+
+  olsr_bool passedLowerBorder = OLSR_FALSE;
+  
+  OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+    if (!passedLowerBorder) {
+      if (avl_comp_default(lower_border, &tc_edge->T_dest_addr) <= 0) {
+        passedLowerBorder = OLSR_TRUE;
+      }
+      else {
+        continue;
+      }
+    }
+    
+    if (passedLowerBorder) {
+      if (avl_comp_default(upper_border, &tc_edge->T_dest_addr) <= 0) {
+        break;
+      }
+    }
+
+    if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn)) {
+      olsr_delete_tc_edge_entry(tc_edge);
+      retval = 1;
+    }
+  }OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+
+  return retval;
+}
+
+
+/**
  * Update an edge registered on an entry.
  * Creates new edge-entries if not registered.
  * Bases update on a received TC message
@@ -668,6 +716,50 @@ olsr_print_tc_table(void)
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
+}
+
+/*
+ * calculate the border IPs of a tc edge set according to the border flags
+ *
+ * @param lower border flag
+ * @param pointer to lower border ip
+ * @param upper border flag
+ * @param pointer to upper border ip
+ * @result 1 if lower/upper border ip have been set 
+ */
+static int
+olsr_calculate_tc_border(olsr_u8_t lower_border, union olsr_ip_addr *lower_border_ip,
+    olsr_u8_t upper_border, union olsr_ip_addr *upper_border_ip) {
+  if (lower_border == 0 && upper_border == 0) {
+    return 0;
+  } 
+  if (lower_border == 0xff) {
+    memset(&lower_border_ip, 0, sizeof(lower_border_ip));
+  } else {
+    int i;
+    
+    lower_border--;
+    for (i=0; i<lower_border/8; i++) {
+      lower_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - i - 1] = 0;
+    }
+    lower_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - lower_border/8 - 1] &= (0xff << (lower_border & 7));
+    lower_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - lower_border/8 - 1] |= (1 << (lower_border & 7));
+  }
+
+  if (upper_border == 0xff) {
+    memset(&upper_border_ip, 0xff, sizeof(upper_border_ip));
+  } else {
+    int i;
+
+    upper_border--;
+
+    for (i=0; i<upper_border/8; i++) {
+      upper_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - i - 1] = 0;
+    }
+    upper_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - upper_border/8 - 1] &= (0xff << (upper_border & 7));
+    upper_border_ip->v6.in6_u.u6_addr8[olsr_cnf->ipsize - upper_border/8 - 1] |= (1 << (upper_border & 7));
+  }
+  return 1;
 }
 
 /*
@@ -815,38 +907,10 @@ olsr_input_tc(union olsr_message *msg,
   }
 
   /* calculate real border ips */
-  if (lower_border == 0 && upper_border == 0) {
-    borderSet = 0;
-  } else if (borderSet) {
-    if (lower_border == 0xff) {
-      memset(&lower_border_ip, 0, sizeof(lower_border_ip));
-    } else {
-      int i;
-
-      lower_border--;
-
-      for (i=0; i<lower_border/8; i++) {
-        lower_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - i - 1] = 0;
-      }
-      lower_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - lower_border/8 - 1] &= (0xff << (lower_border & 7));
-      lower_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - lower_border/8 - 1] |= (1 << (lower_border & 7));
-    }
-
-    if (upper_border == 0xff) {
-      memset(&upper_border_ip, 0xff, sizeof(upper_border_ip));
-    } else {
-      int i;
-
-      upper_border--;
-
-      for (i=0; i<upper_border/8; i++) {
-        upper_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - i - 1] = 0;
-      }
-      upper_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - upper_border/8 - 1] &= (0xff << (upper_border & 7));
-      upper_border_ip.v6.in6_u.u6_addr8[olsr_cnf->ipsize - upper_border/8 - 1] |= (1 << (upper_border & 7));
-    }
+  if (borderSet) {
+    borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip, upper_border, &upper_border_ip);
   }
-
+  
   /*
    * Set or change the expiration timer accordingly.
    */
@@ -854,14 +918,22 @@ olsr_input_tc(union olsr_message *msg,
                  OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT,
                  &olsr_expire_tc_entry, tc, tc_validity_timer_cookie->ci_id);
 
-  /*
-   * Kick the the edge garbage collection timer. In the meantime hopefully
-   * all edges belonging to a multipart neighbor set will arrive.
-   */
-  olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
+  if (borderSet) {
+    /*
+     * delete all old tc edges within borders
+     */
+    olsr_delete_revoked_tc_edges(tc, ansn, &lower_border_ip, &upper_border_ip);
+  }
+  else {
+    /*
+     * Kick the the edge garbage collection timer. In the meantime hopefully
+     * all edges belonging to a multipart neighbor set will arrive.
+     */
+    olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
                  OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT,
                  &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie->ci_id);
-
+  }
+  
   /*
    * Last, flood the message to our other neighbors.
    */
