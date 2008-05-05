@@ -731,8 +731,8 @@ int zebra_add_olsr_v4_route (const struct rt_entry *r) {
   route.flags = zebra.flags;
   route.prefixlen = r->rt_dst.prefix_len;
   route.prefix = r->rt_dst.prefix.v4.s_addr;
-  if ((r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
-       route.prefixlen == 32)) {
+  if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
+      route.prefixlen == 32) {
     route.message |= ZAPI_MESSAGE_IFINDEX | ZAPI_MESSAGE_NEXTHOP;
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
@@ -746,6 +746,8 @@ int zebra_add_olsr_v4_route (const struct rt_entry *r) {
   }
   else {
     route.message |= ZAPI_MESSAGE_NEXTHOP;
+    route.ind_num = 0;
+    route.index = NULL;
     route.nh_count = 1;
     route.nexthops = olsr_malloc (route.nh_count * 
 				  (sizeof route.nexthops->type + 
@@ -761,6 +763,8 @@ int zebra_add_olsr_v4_route (const struct rt_entry *r) {
   if (zebra.distance) {
     route.message |= ZAPI_MESSAGE_DISTANCE;
     route.distance = zebra.distance;
+  } else {
+    route.distance = 0;
   }
 
   retval = zebra_add_v4_route(route);
@@ -771,14 +775,14 @@ int zebra_add_olsr_v4_route (const struct rt_entry *r) {
 int zebra_del_olsr_v4_route (const struct rt_entry *r) {
   
   struct ipv4_route route;
-  int retval;
+  int retval;  
   route.type = ZEBRA_ROUTE_OLSR; // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
   route.prefixlen = r->rt_dst.prefix_len;
   route.prefix = r->rt_dst.prefix.v4.s_addr;
-  if ((r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
-       route.prefixlen == 32)){
+  if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr && 
+      route.prefixlen == 32) {
     route.message |= ZAPI_MESSAGE_IFINDEX;
     route.ind_num = 1;
     route.index = olsr_malloc (sizeof *route.index, 
@@ -792,6 +796,8 @@ int zebra_del_olsr_v4_route (const struct rt_entry *r) {
   }
   else {
     route.message |= ZAPI_MESSAGE_NEXTHOP;
+    route.ind_num = 0;
+    route.index = NULL;
     route.nh_count = 1;
     route.nexthops = olsr_malloc (route.nh_count * 
 				  (sizeof route.nexthops->type +
@@ -806,6 +812,8 @@ int zebra_del_olsr_v4_route (const struct rt_entry *r) {
   if (zebra.distance) {
     route.message |= ZAPI_MESSAGE_DISTANCE;
     route.distance = zebra.distance;
+  } else {
+    route.distance = 0;
   }
 
   retval = zebra_delete_v4_route(route);
