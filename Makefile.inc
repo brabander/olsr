@@ -128,6 +128,7 @@ LDFLAGS +=	-Wl,--version-script=version-script.txt
 else
 # c and ld flags for main
 LDFLAGS +=	-Wl,-export-dynamic 
+LDFLAGS +=	-Wl,-rpath,$(LIBDIR)
 endif
 # LDFLAGS for all 
 LDFLAGS +=	-Wl,--warn-common
