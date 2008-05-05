@@ -108,13 +108,12 @@ olsr_init_export_route(void)
 }
 
 /**
- *Deletes all OLSR routes
+ * Delete all OLSR routes.
  *
  * This is extremely simple - Just increment the version of the
  * tree and then olsr_update_rib_routes() will see all routes in the tree
  * as outdated and olsr_update_kernel_routes() will finally flush it.
  *
- *@return 1
  */
 void
 olsr_delete_all_kernel_routes(void)
