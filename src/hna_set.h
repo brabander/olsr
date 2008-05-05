@@ -100,9 +100,6 @@ void
 olsr_update_hna_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, olsr_u8_t, const float);
 
 void
-olsr_time_out_hna_set(void *);
-
-void
 olsr_print_hna_set(void);
 
 #endif
