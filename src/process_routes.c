@@ -50,6 +50,7 @@
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "tc_set.h"
+#include "olsr_cookie.h"
 
 #ifdef WIN32
 #undef strerror
@@ -280,7 +281,7 @@ olsr_del_kernel_routes(struct list_node *head_node)
     olsr_delete_kernel_route(rt);
 
     list_remove(&rt->rt_change_node);
-    free(rt);
+    olsr_cookie_free(rt_mem_cookie, rt);
   }
 }
 

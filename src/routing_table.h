@@ -49,6 +49,7 @@
 #include <net/route.h>
 #include "hna_set.h"
 #include "link_set.h"
+#include "olsr_cookie.h"
 #include "common/avl.h"
 #include "common/list.h"
 
@@ -202,6 +203,7 @@ union olsr_kernel_route
 
 extern struct avl_tree routingtree;
 extern unsigned int routingtree_version;
+extern struct olsr_cookie_info *rt_mem_cookie;
 
 void
 olsr_init_routing_table(void);
