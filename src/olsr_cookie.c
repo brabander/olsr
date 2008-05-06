@@ -88,6 +88,11 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
     ci->ci_name = strdup(cookie_name);
   }
 
+  /* Init the free list */
+  if (cookie_type == OLSR_COOKIE_TYPE_MEMORY) {
+    list_head_init(&ci->ci_free_list);
+  }
+
   return ci;
 }
 
@@ -183,18 +188,37 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 {
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
+  struct list_node *free_list_node;
+  olsr_bool reuse = OLSR_FALSE;
 
   /*
-   * Not all the callers do a proper cleaning of memory.
-   * Clean it on behalf of those.
+   * Check first if we have reusable memory.
    */
-  ptr = calloc(1, ci->ci_size + sizeof(struct olsr_cookie_mem_brand));
+  if (!ci->ci_free_list_usage) {
 
-  if (!ptr) {
-    const char *const err_msg = strerror(errno);
-    OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
-    olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
-    olsr_exit(ci->ci_name, EXIT_FAILURE);
+    /*
+     * No reusable memory block on the free_list.
+     */
+    ptr = calloc(1, ci->ci_size + sizeof(struct olsr_cookie_mem_brand));
+
+    if (!ptr) {
+      const char *const err_msg = strerror(errno);
+      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
+      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
+      olsr_exit(ci->ci_name, EXIT_FAILURE);
+    }
+  } else {
+
+    /*
+     * There is a memory block on the free list.
+     * Carve it out of the list, and clean.
+     */
+    free_list_node = ci->ci_free_list.next;
+    list_remove(free_list_node);
+    ptr = (void *)free_list_node;
+    memset(ptr, 0, ci->ci_size);
+    ci->ci_free_list_usage--;
+    reuse = OLSR_TRUE;
   }
 
   /*
@@ -211,8 +235,8 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   olsr_cookie_usage_incr(ci->ci_id);
 
 #if 1
-  olsr_printf(1, "MEMORY: alloc %s, %p, %u bytes\n",
-	      ci->ci_name, ptr, ci->ci_size);
+  olsr_printf(1, "MEMORY: alloc %s, %p, %u bytes%s\n",
+	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
 #endif
 
   return ptr;
@@ -226,6 +250,8 @@ void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct olsr_cookie_mem_brand *branding;
+  struct list_node *free_list_node;
+  olsr_bool reuse = OLSR_FALSE;
 
   branding = (struct olsr_cookie_mem_brand *)
     ((unsigned char *)ptr + ci->ci_size);
@@ -240,15 +266,36 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   /* Kill the brand */
   memset(branding, 0, sizeof(*branding));
 
+  /*
+   * Rather than freeing the memory right away, try to reuse at a later
+   * point. Keep at least ten percent of the active used blocks or at least
+   * ten blocks on the free list.
+   */
+  if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD) ||
+      (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
+
+    free_list_node = (struct list_node *)ptr;
+    list_node_init(free_list_node);
+    list_add_before(&ci->ci_free_list, free_list_node);
+    ci->ci_free_list_usage++;
+    reuse = OLSR_TRUE;
+
+  } else {
+
+    /*
+     * No interest in reusing memory.
+     */
+    free(ptr);
+  }
+
   /* Stats keeping */
   olsr_cookie_usage_decr(ci->ci_id);
 
 #if 1
-  olsr_printf(1, "MEMORY: free %s, %p, %u bytes\n",
-	      ci->ci_name, ptr, ci->ci_size);
+  olsr_printf(1, "MEMORY: free %s, %p, %u bytes%s\n",
+	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
 #endif
 
-  free(ptr);
 }
 
 /*

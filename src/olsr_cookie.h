@@ -39,6 +39,7 @@
  */
 
 #include "olsr_types.h"
+#include "common/list.h"
 
 #ifndef _OLSR_COOKIE_H
 #define _OLSR_COOKIE_H
@@ -63,8 +64,12 @@ struct olsr_cookie_info {
   olsr_cookie_type ci_type;	       /* Type of cookie */
   size_t ci_size;		       /* Fixed size for block allocations */
   unsigned int ci_usage;	       /* Stats, resource usage */
-  unsigned int ci_changes;             /* Stats, resource churn */
+  unsigned int ci_changes;	       /* Stats, resource churn */
+  struct list_node ci_free_list;       /* List head for recyclable blocks */
+  unsigned int ci_free_list_usage;     /* Length of free list */
 };
+
+#define COOKIE_FREE_LIST_THRESHOLD 10  /* Blocks / Percent  */
 
 /*
  * Small brand which gets appended on the end of every block allocation.
