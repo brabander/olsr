@@ -49,7 +49,7 @@
 #include "olsr.h"
 #include "link_set.h"
 #include "common/avl.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "net_olsr.h"
 
 #include <assert.h>

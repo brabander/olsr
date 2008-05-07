@@ -52,7 +52,7 @@
 #include "mid_set.h"
 #include "mpr.h"
 #include "lq_mpr.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "scheduler.h"
 #include "apm.h"
 #include "misc.h"

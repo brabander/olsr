@@ -53,7 +53,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "socket_parser.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "link_set.h"
 #include "olsr_cookie.h"
 

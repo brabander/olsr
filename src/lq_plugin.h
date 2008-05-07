@@ -43,7 +43,7 @@
 
 #include "tc_set.h"
 #include "link_set.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "lq_packet.h"
 #include "packet.h"
 

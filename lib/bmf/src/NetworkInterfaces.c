@@ -61,7 +61,6 @@
 #include "ipcalc.h"
 #include "defs.h" /* olsr_cnf */
 #include "link_set.h" /* get_link_set() */
-#include "lq_route.h" /* MIN_LINK_QUALITY */
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
 #include "net_olsr.h" /* ipequal */
 #include "lq_plugin.h"

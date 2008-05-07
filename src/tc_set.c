@@ -46,7 +46,7 @@
 #include "link_set.h"
 #include "olsr.h"
 #include "scheduler.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "common/avl.h"
 #include "lq_packet.h"
 #include "net_olsr.h"

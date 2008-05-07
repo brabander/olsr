@@ -64,7 +64,6 @@
 #include <hna_set.h>
 #include <routing_table.h>
 #include <olsr_protocol.h>
-#include <lq_route.h>
 #include <mpr_selector_set.h>
 #include <duplicate_set.h>
 #include <lq_plugin.h>

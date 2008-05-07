@@ -51,7 +51,7 @@
 #include "neighbor_table.h"
 #include "olsr.h"
 #include "scheduler.h"
-#include "lq_route.h"
+#include "olsr_spf.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
