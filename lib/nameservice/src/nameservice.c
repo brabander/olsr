@@ -43,6 +43,9 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <sys/stat.h>
+#include <signal.h>
+#include <fcntl.h>
 
 #include "olsr.h"
 #include "ipcalc.h"
@@ -65,12 +68,16 @@
 
 /* config parameters */
 static char my_hosts_file[MAX_FILE + 1];
+static char my_sighup_pid_file[MAX_FILE + 1];
+
 static char my_add_hosts[MAX_FILE + 1];
 static char my_suffix[MAX_SUFFIX];
 static int my_interval = EMISSION_INTERVAL;
 static double my_timeout = NAME_VALID_TIME;
 static char my_resolv_file[MAX_FILE +1];
 static char my_services_file[MAX_FILE + 1];
+static char my_name_change_script[MAX_FILE + 1];
+static char my_services_change_script[MAX_FILE + 1];
 static char latlon_in_file[MAX_FILE + 1];
 static char my_latlon_file[MAX_FILE + 1];
 float my_lat = 0.0, my_lon = 0.0;
@@ -145,12 +152,15 @@ name_constructor(void)
 	strcpy(my_hosts_file, "/var/run/hosts_olsr");
 	strcpy(my_services_file, "/var/run/services_olsr");
 	strcpy(my_resolv_file, "/var/run/resolvconf_olsr");
+	*my_sighup_pid_file = 0;
 #endif
 
 	my_suffix[0] = '\0';
 	my_add_hosts[0] = '\0';
 	my_latlon_file[0] = '\0';
 	latlon_in_file[0] = '\0';
+	my_name_change_script[0] = '\0';
+	my_services_change_script[0] = '\0';
 	
 	/* init the lists heads */
 	for(i = 0; i < HASHSIZE; i++) {
@@ -240,7 +250,10 @@ static int set_nameservice_float(const char *value, void *data, set_plugin_param
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "interval",      .set_plugin_parameter = &set_plugin_int,         .data = &my_interval },
     { .name = "timeout",       .set_plugin_parameter = &set_nameservice_float,  .data = &my_timeout },
+    { .name = "sighup-pid-file",.set_plugin_parameter = &set_plugin_string,      .data = &my_sighup_pid_file, .addon = {sizeof(my_sighup_pid_file)} },
     { .name = "hosts-file",    .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,    .addon = {sizeof(my_hosts_file)} },
+    { .name = "name-change-script", .set_plugin_parameter = &set_plugin_string,  .data = &my_name_change_script, .addon = {sizeof(my_name_change_script)} },
+    { .name = "services-change-script", .set_plugin_parameter = &set_plugin_string, .data = &my_services_change_script, .addon = {sizeof(my_services_change_script)} },
     { .name = "resolv-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,   .addon = {sizeof(my_resolv_file)} },
     { .name = "suffix",        .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,        .addon = {sizeof(my_suffix)} },
     { .name = "add-hosts",     .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,     .addon = {sizeof(my_add_hosts)} },
@@ -1008,6 +1021,51 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 	}
 }
 
+#ifndef WIN32
+static void
+send_sighup_to_pidfile(char * pid_file){
+	int fd;
+	int i=0;
+	int result;
+	pid_t ipid;
+	char line[20];
+	char * endptr;
+
+	fd = open(pid_file, O_RDONLY);
+	if (fd<0) {
+		OLSR_PRINTF(2, "NAME PLUGIN: can't open file %s\n", pid_file);
+		return;
+	}
+
+	while (i<19) {
+		result = read(fd, line+i, 19-i);
+		if (!result) { /* EOF */
+			break;
+		} else if (result>0) {
+			i += result;
+		} else if(errno!=EINTR && errno!=EAGAIN) {
+			OLSR_PRINTF(2, "NAME PLUGIN: can't read file %s\n", pid_file);
+			return;
+		}
+	}
+	line[i]=0;
+	close(fd);
+	ipid = strtol(line, &endptr, 0);
+	if (endptr==line) {
+		OLSR_PRINTF(2, "NAME PLUGIN: invalid pid at file %s\n", pid_file);
+		return;	
+	}
+
+	result=kill(ipid, SIGHUP);
+	if (result==0){
+		OLSR_PRINTF(2, "NAME PLUGIN: SIGHUP sent to pid %i\n", ipid);	
+	} else {
+		OLSR_PRINTF(2, "NAME PLUGIN: failed to send SIGHUP to pid %i\n", ipid);
+	}
+
+}
+#endif
+
 /**
  * write names to a file in /etc/hosts compatible format
  */
@@ -1131,7 +1189,22 @@ write_hosts_file(void)
 	}
 	  
 	fclose(hosts);
+
+#ifndef WIN32
+	if (*my_sighup_pid_file)
+		send_sighup_to_pidfile(my_sighup_pid_file);
+#endif
 	name_table_changed = OLSR_FALSE;
+
+	// Executes my_name_change_script after writing the hosts file
+        if (my_name_change_script[0] != '\0') {
+		if(system(my_name_change_script) != -1) {
+			OLSR_PRINTF(2, "NAME PLUGIN: Name changed, %s executed\n", my_name_change_script);
+		}
+		else {
+			OLSR_PRINTF(2, "NAME PLUGIN: WARNING! Failed to execute %s on hosts change\n", my_name_change_script);
+		}
+	}
 }
 
 
@@ -1201,6 +1274,16 @@ write_services_file(void)
 	  
 	fclose(services_file);
 	service_table_changed = OLSR_FALSE;
+	
+	// Executes my_services_change_script after writing the services file
+	if (my_services_change_script[0] != '\0') {
+		if(system(my_services_change_script) != -1) {
+			OLSR_PRINTF(2, "NAME PLUGIN: Service changed, %s executed\n", my_services_change_script);
+		}
+		else {
+			OLSR_PRINTF(2, "NAME PLUGIN: WARNING! Failed to execute %s on service change\n", my_services_change_script);
+		}
+	}
 }
 
 /**
