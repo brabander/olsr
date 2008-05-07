@@ -229,7 +229,7 @@ olsr_init_tables(void)
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
-    avl_comp_default = NULL;
+    avl_comp_default = avl_comp_ipv4;
     avl_comp_prefix_default = avl_comp_ipv4_prefix;
   } else {
     avl_comp_default = avl_comp_ipv6;
@@ -263,6 +263,9 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();  
 
+  /* Initialize Layer 1/2 database */
+  // olsr_initialize_layer12();
+  
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
     olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,

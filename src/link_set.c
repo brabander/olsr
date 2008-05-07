@@ -350,7 +350,7 @@ static void set_loss_link_multiplier(struct link_entry *entry)
 
   // store the multiplier
 
-  entry->loss_link_multiplier = val;
+  entry->loss_link_multiplier = (olsr_u32_t)(val * 65536);
 }
 
 /*
@@ -833,14 +833,14 @@ void olsr_print_link_set(void)
 
   OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- LINKS\n\n",
               olsr_wallclock_string());
-  OLSR_PRINTF(1, "%-*s  %-6s %-6s %-6s %-6s %-6s %s\n", addrsize,
-              "IP address", "hyst", "LQ", "lost", "total","NLQ", "ETX");
+  OLSR_PRINTF(1, "%-*s  %-6s %-14s %s\n", addrsize,
+              "IP address", "hyst", "      LQ      ", "ETX");
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
-    OLSR_PRINTF(1, "%-*s  %5.3f  %-13s %s\n",
+    OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n",
                 addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
                 walker->L_link_quality,
                 get_link_entry_text(walker, &lqbuffer1),

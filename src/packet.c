@@ -220,7 +220,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
       continue;
     }
 	    
-    message_neighbor = olsr_malloc_hello_neighbor("Build HELLO 2");
+	  message_neighbor = olsr_malloc_hello_neighbor("Build HELLO 2");
 	    
     message_neighbor->link = UNSPEC_LINK;
 	    
@@ -340,9 +340,9 @@ olsr_build_tc_packet(struct tc_message *message)
     switch (olsr_cnf->tc_redundancy) {
     case(2):
     {
-      /* 2 = Add all neighbors */
-      //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
-      message_mpr = olsr_malloc_tc_mpr_addr("Build TC");
+	  	/* 2 = Add all neighbors */
+  		//printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
+		  message_mpr = olsr_malloc_tc_mpr_addr("Build TC");
 		
       message_mpr->address = entry->neighbor_main_addr;
       message_mpr->next = message->multipoint_relay_selector_address;

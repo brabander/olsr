@@ -82,7 +82,8 @@ avl_init(struct avl_tree *tree, avl_tree_comp comp)
   tree->first = NULL;
   tree->last = NULL;
   tree->count = 0;
-  tree->comp = comp;
+  
+  tree->comp = comp == avl_comp_ipv4 ? NULL : comp;
 }
 
 static struct avl_node *

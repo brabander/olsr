@@ -192,7 +192,7 @@ void olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, struct tc_edge_entry *e
 void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
 {
 	olsr_linkcost lq;
-	lq = active_lq_handler->packet_loss_handler(entry->linkquality, lost);
+	lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
   
 	if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
     entry->linkcost = lq;

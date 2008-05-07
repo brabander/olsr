@@ -64,26 +64,13 @@ int olsrd_plugin_interface_version(void)
     return PLUGIN_INTERFACE_VERSION;
 }
 
-
-static int set_alpha(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    set_lq_etx_fpm_alpha(atofpm(value));
-    return 0;
-}
-
 /**
  * Register parameters from config file
  * Called for all plugin parameters
  */
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "alpha",   .set_plugin_parameter = &set_alpha,      .data = NULL },
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
-{
-    *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
-}
 /**
  * Initialize plugin
  * Called after all parameters are passed

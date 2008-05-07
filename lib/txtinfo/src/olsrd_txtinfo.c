@@ -400,6 +400,7 @@ static void ipc_print_topology(void)
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+        	if (tc_edge->edge_inv)  {
             struct ipaddr_str dstbuf, addrbuf;
             struct lqtextbuffer lqbuffer1, lqbuffer2;
             ipc_sendf( "%s\t%s\t%s\t%s\n", 
@@ -407,7 +408,7 @@ static void ipc_print_topology(void)
                        olsr_ip_to_string(&addrbuf, &tc->addr), 
                        get_tc_edge_entry_text(tc_edge, &lqbuffer1),
                        get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
-
+        	}
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 

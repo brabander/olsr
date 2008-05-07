@@ -53,14 +53,13 @@ struct lq_etx_fpm {
 	fpm lq, nlq;
 };
 
-void set_lq_etx_fpm_alpha(fpm alpha);
 int init_lq_etx_fpm(void);
 
 olsr_linkcost lq_etx_fpm_calc_cost(const void *lq);
 
 olsr_bool lq_etx_fpm_olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
-olsr_linkcost lq_etx_fpm_packet_loss_worker(void *lq, olsr_bool lost);
+olsr_linkcost lq_etx_fpm_packet_loss_worker(struct link_entry *link, void *lq, olsr_bool lost);
 void lq_etx_fpm_olsr_memorize_foreign_hello_lq(void *local, void *foreign);
 
 int lq_etx_fpm_olsr_serialize_hello_lq_pair(unsigned char *buff, void *lq);

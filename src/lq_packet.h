@@ -137,7 +137,8 @@ struct lq_tc_message
 struct lq_tc_header
 {
   olsr_u16_t ansn;
-  olsr_u16_t reserved;
+  olsr_u8_t lower_border;
+  olsr_u8_t upper_border;
 };
 
 static INLINE void        pkt_get_u8(const olsr_u8_t **p, olsr_u8_t  *var)         { *var =       *(const olsr_u8_t *)(*p);          *p += sizeof(olsr_u8_t); }

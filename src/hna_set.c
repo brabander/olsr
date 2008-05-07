@@ -233,11 +233,6 @@ olsr_expire_hna_net_entry(void *context)
     DEQUEUE_ELEM(hna_gw);
     free(hna_gw);
   }
-
-  DEQUEUE_ELEM(net_to_delete);
-  free(net_to_delete);
-
-  changes_hna = OLSR_TRUE;
 }
 
 /**

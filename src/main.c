@@ -404,7 +404,7 @@ main(int argc, char *argv[])
   signal(SIGQUIT, olsr_shutdown);
   signal(SIGILL,  olsr_shutdown);
   signal(SIGABRT, olsr_shutdown);
-  signal(SIGSEGV, olsr_shutdown);
+//  signal(SIGSEGV, olsr_shutdown);
   signal(SIGTERM, olsr_shutdown);
   signal(SIGPIPE, SIG_IGN);
 #endif
@@ -525,7 +525,7 @@ print_usage(void)
           "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
           "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
           "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
-          "  [-lql <LQ level>] [-lqw <LQ winsize>]\n");
+          "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n");
 }
 
 
@@ -643,21 +643,21 @@ olsr_process_arguments(int argc, char *argv[],
       /*
        * Set LQ winsize
        */
-      if (strcmp(*argv, "-lqw") == 0) 
+      if (strcmp(*argv, "-lqa") == 0) 
 	{
-	  int tmp_lq_wsize;
+	  float tmp_lq_aging;
 	  NEXT_ARG;
           CHECK_ARGC;
 	  
-	  sscanf(*argv, "%d", &tmp_lq_wsize);
+	  sscanf(*argv, "%f", &tmp_lq_aging);
 
-	  if(tmp_lq_wsize < MIN_LQ_WSIZE || tmp_lq_wsize > MAX_LQ_WSIZE)
+	  if(tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING)
 	    {
-	      printf("LQ winsize %d not allowed. Range [%d-%d]\n", 
-		     tmp_lq_wsize, MIN_LQ_WSIZE, MAX_LQ_WSIZE);
+	      printf("LQ aging factor %f not allowed. Range [%f-%f]\n", 
+		     tmp_lq_aging, MIN_LQ_AGING, MAX_LQ_AGING);
 	      olsr_exit(__func__, EXIT_FAILURE);
 	    }
-	  olsr_cnf->lq_wsize = tmp_lq_wsize;
+	  olsr_cnf->lq_aging = tmp_lq_aging;
 	  continue;
 	}
       

@@ -238,7 +238,7 @@ olsr_print_two_hop_neighbor_table(void)
   int i;
 
   OLSR_PRINTF(1, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
-              "IP addr (2-hop)  IP addr (1-hop)  TLQ\n",
+              "IP addr (2-hop)  IP addr (1-hop)  Total cost\n",
               olsr_wallclock_string());
 
   for (i = 0; i < HASHSIZE; i++) {
