@@ -265,9 +265,8 @@ ipc_action(int fd __attribute__((unused)))
     return;
   }
   olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
-  close(ipc_connection); /* close connection after one output */
   pcf_event(1, 1, 1);
-  close(ipc_connection); // close connection after one output
+  close(ipc_connection); /* close connection after one output */
 }
 
 
