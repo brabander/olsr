@@ -234,6 +234,12 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	}
     }
 
+  /* Check Link quality dijkstra limit */
+  if (olsr_cnf->lq_dinter < cnf->pollrate && olsr_cnf->lq_dlimit != 255) {
+  	fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
+  	return -1;
+  }
+  
   /* Pollrate */
 
   if(cnf->pollrate < MIN_POLLRATE ||
