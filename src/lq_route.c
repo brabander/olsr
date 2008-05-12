@@ -316,7 +316,7 @@ olsr_expire_spf_backoff(void *context __attribute__((unused)))
 }
 
 void
-olsr_calculate_routing_table (void *context __attribute__((unused)))
+olsr_calculate_routing_table (void)
 {
 #ifdef SPF_PROFILING
   struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;

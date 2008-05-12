@@ -169,7 +169,7 @@ olsr_process_changes(void)
 
   /* calculate the routing table */
   if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table(NULL);
+    olsr_calculate_routing_table();
   }
   
   if (olsr_cnf->debug_level > 0)
@@ -211,9 +211,20 @@ olsr_process_changes(void)
   changes_force = OLSR_FALSE;
 }
 
+/*
+ * Callback for the periodic route calculation.
+ */
+void
+olsr_trigger_forced_update(void *unused __attribute__((unused))) {
 
+  changes_force = OLSR_TRUE;
 
-
+  changes_neighborhood = OLSR_TRUE;
+  changes_topology = OLSR_TRUE;
+  changes_hna = OLSR_TRUE;
+  
+  olsr_process_changes();
+}
 
 /**
  *Initialize all the tables used(neighbor,
@@ -266,7 +277,7 @@ olsr_init_tables(void)
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
     olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
-                     OLSR_TIMER_PERIODIC, &olsr_calculate_routing_table, NULL, 0);
+                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, 0);
   }
 }
 

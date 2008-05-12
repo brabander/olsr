@@ -99,4 +99,7 @@ olsr_malloc(size_t, const char *);
 int
 olsr_printf(int, const char *, ...) __attribute__((format(printf,2,3)));
 
+void
+olsr_trigger_forced_update(void *);
+
 #endif
