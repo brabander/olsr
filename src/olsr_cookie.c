@@ -210,8 +210,8 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   /* Stats keeping */
   olsr_cookie_usage_incr(ci->ci_id);
 
-#if 1
-  olsr_printf(1, "MEMORY: alloc %s, %p, %u bytes\n",
+#if 0
+  OLSR_PRINTF(1, "MEMORY: alloc %s, %p, %u bytes\n",
 	      ci->ci_name, ptr, ci->ci_size);
 #endif
 
@@ -243,8 +243,8 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   /* Stats keeping */
   olsr_cookie_usage_decr(ci->ci_id);
 
-#if 1
-  olsr_printf(1, "MEMORY: free %s, %p, %u bytes\n",
+#if 0
+  OLSR_PRINTF(1, "MEMORY: free %s, %p, %u bytes\n",
 	      ci->ci_name, ptr, ci->ci_size);
 #endif
 
