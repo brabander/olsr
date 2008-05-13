@@ -502,6 +502,9 @@ olsr_shutdown(int signal __attribute__((unused)))
   close(olsr_cnf->rts);
 #endif
 
+  /* Free cookies and memory pools attached. */
+  olsr_delete_all_cookies();
+
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);

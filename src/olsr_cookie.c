@@ -102,6 +102,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 void
 olsr_free_cookie(struct olsr_cookie_info *ci)
 {
+  struct list_node *memory_list;
 
   /* Mark the cookie as unused */
   cookies[ci->ci_id] = NULL;
@@ -110,7 +111,34 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
   if (ci->ci_name) {
     free(ci->ci_name);
   }
+
+  /* Flush all the memory on the free list */
+  while (!list_is_empty(&ci->ci_free_list)) {
+    memory_list = ci->ci_free_list.next;
+    list_remove(memory_list);
+    free(memory_list);
+  }
+
   free(ci);
+}
+
+/*
+ * Flush all cookies. This is really only called upon shutdown.
+ */
+void
+olsr_delete_all_cookies(void)
+{
+  int ci_index;
+
+  /*
+   * Walk the full index range and kill 'em all.
+   */
+  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++) {
+    if (!cookies[ci_index]) {
+      continue;
+    }
+    olsr_free_cookie(cookies[ci_index]);
+  }
 }
 
 /*
