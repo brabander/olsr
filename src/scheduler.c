@@ -194,7 +194,7 @@ olsr_scheduler(void)
 static clock_t 
 olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
 {
-  unsigned int jitter_time, factorial;
+  unsigned int jitter_time;
 
   /*
    * No jitter or, jitter larger than 99% does not make sense.
@@ -208,12 +208,11 @@ olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
    * Play some tricks to avoid overflows with integer arithmetic.
    */
   jitter_time = (jitter_pct * rel_time) / 100;
-  factorial = random / (RAND_MAX / jitter_time);
-  jitter_time = (jitter_time * factorial) / (RAND_MAX / jitter_time);
+  jitter_time = random / (RAND_MAX / jitter_time);
 
 #if 0
-  OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %u%% to %u\n",
-              rel_time, jitter_pct, rel_time - jitter_time);
+  OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %ums to %ums\n",
+              jitter_pct, rel_time, rel_time - jitter_time);
 #endif
 
   return GET_TIMESTAMP(rel_time - jitter_time);
