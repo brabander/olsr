@@ -113,10 +113,12 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
   }
 
   /* Flush all the memory on the free list */
-  while (!list_is_empty(&ci->ci_free_list)) {
-    memory_list = ci->ci_free_list.next;
-    list_remove(memory_list);
-    free(memory_list);
+  if (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY) {
+    while (!list_is_empty(&ci->ci_free_list)) {
+      memory_list = ci->ci_free_list.next;
+      list_remove(memory_list);
+      free(memory_list);
+    }
   }
 
   free(ci);
