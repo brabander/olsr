@@ -254,7 +254,6 @@ olsr_get_timer(void)
   timer_block =
     olsr_malloc(sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK,
 		"timer chunk");
-  memset(timer_block, 0, sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK);
 
 #if 0
   OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
