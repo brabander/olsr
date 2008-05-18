@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
@@ -38,7 +39,6 @@
  *
  */
 
-
 /*
  * Link sensing database for the OLSR routing daemon
  */
@@ -59,22 +59,22 @@
 /* head node for all link sets */
 struct list_node link_entry_head;
 
-olsr_bool link_changes; /* is set if changes occur in MPRS set */ 
+olsr_bool link_changes;		       /* is set if changes occur in MPRS set */
 
 void
-signal_link_changes(olsr_bool val) /* XXX ugly */
-{
+signal_link_changes(olsr_bool val)
+{				/* XXX ugly */
   link_changes = val;
 }
 
-static int
-check_link_status(const struct hello_message *message, const struct interface *in_if);
-
-static struct link_entry *
-add_link_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, const union olsr_ip_addr *, double, double, const struct interface *);
-
-static int
-get_neighbor_status(const union olsr_ip_addr *);
+/* Prototypes. */
+static int check_link_status(const struct hello_message *message,
+                             const struct interface *in_if);
+static struct link_entry *add_link_entry(const union olsr_ip_addr *,
+					 const union olsr_ip_addr *,
+					 const union olsr_ip_addr *, double,
+					 double, const struct interface *);
+static int get_neighbor_status(const union olsr_ip_addr *);
 
 void
 olsr_init_link_set(void)
@@ -89,226 +89,208 @@ olsr_init_link_set(void)
  * Get the status of a link. The status is based upon different
  * timeouts in the link entry.
  *
- *@param remote address of the remote interface
- *
- *@return the link status of the link
+ * @param remote address of the remote interface
+ * @return the link status of the link
  */
 int
 lookup_link_status(const struct link_entry *entry)
 {
 
-  if(entry == NULL || list_is_empty(&link_entry_head)) {
+  if (entry == NULL || list_is_empty(&link_entry_head)) {
     return UNSPEC_LINK;
   }
 
   /*
    * Hysteresis
    */
-  if(olsr_cnf->use_hysteresis)
-    {
-      /*
-	if L_LOST_LINK_time is not expired, the link is advertised
-	with a link type of LOST_LINK.
-      */
+  if (olsr_cnf->use_hysteresis) {
 
-      if(!TIMED_OUT(entry->L_LOST_LINK_time))
-	return LOST_LINK;
-      /*
-	otherwise, if L_LOST_LINK_time is expired and L_link_pending
-	is set to "true", the link SHOULD NOT be advertised at all;
-      */
-      if(entry->L_link_pending == 1)
-	{
-#ifndef NODEBUG
-          struct ipaddr_str buf;
-	  OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
-#endif
-	  return HIDE_LINK;
-	}
-      /*
-	otherwise, if L_LOST_LINK_time is expired and L_link_pending
-	is set to "false", the link is advertised as described
-	previously in section 6.
-      */
+    /*
+     * if L_LOST_LINK_time is not expired, the link is advertised
+     * with a link type of LOST_LINK.
+     */
+
+    if (!TIMED_OUT(entry->L_LOST_LINK_time)) {
+      return LOST_LINK;
     }
+
+    /*
+     * otherwise, if L_LOST_LINK_time is expired and L_link_pending
+     * is set to "true", the link SHOULD NOT be advertised at all;
+     */
+    if (entry->L_link_pending == 1) {
+#ifndef NODEBUG
+      struct ipaddr_str buf;
+      OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n",
+		  olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
+#endif
+      return HIDE_LINK;
+    }
+
+    /*
+     * otherwise, if L_LOST_LINK_time is expired and L_link_pending
+     * is set to "false", the link is advertised as described
+     * previously in section 6.
+     */
+  }
 
   if (entry->link_sym_timer) {
     return SYM_LINK;
   }
 
-  if(!TIMED_OUT(entry->ASYM_time))
+  if (!TIMED_OUT(entry->ASYM_time)) {
     return ASYM_LINK;
+  }
 
   return LOST_LINK;
-
-
 }
 
 
 /**
- *Find the "best" link status to a
- *neighbor
+ * Find the "best" link status to a neighbor
  *
- *@param address the address to check for
- *
- *@return SYM_LINK if a symmetric link exists 0 if not
+ * @param address the address to check for
+ * @return SYM_LINK if a symmetric link exists 0 if not
  */
 static int
 get_neighbor_status(const union olsr_ip_addr *address)
 {
   const union olsr_ip_addr *main_addr;
-  struct interface   *ifs;
-
-  //printf("GET_NEIGHBOR_STATUS\n");
+  struct interface *ifs;
 
   /* Find main address */
-  if(!(main_addr = mid_lookup_main_addr(address)))
+  if (!(main_addr = mid_lookup_main_addr(address)))
     main_addr = address;
 
-  //printf("\tmain: %s\n", olsr_ip_to_string(main_addr));
-
   /* Loop trough local interfaces to check all possebilities */
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
-    {
-      struct mid_address   *aliases;
-      struct link_entry  *lnk = lookup_link_entry(main_addr, NULL, ifs);
+  for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+    struct mid_address *aliases;
+    struct link_entry *lnk = lookup_link_entry(main_addr, NULL, ifs);
 
-      //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
-      //printf("%s : ", olsr_ip_to_string(main_addr)); 
-      if(lnk != NULL)
-	{
-	  //printf("%d\n", lookup_link_status(link));
-	  if(lookup_link_status(lnk) == SYM_LINK)
-	    return SYM_LINK;
-	}
-      /* Get aliases */
-      for(aliases = mid_lookup_aliases(main_addr);
-	  aliases != NULL;
-	  aliases = aliases->next_alias)
-	{
-	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
-	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
-            lnk = lookup_link_entry(&aliases->alias, NULL, ifs);
-            if(lnk != NULL)
-	    {
-	      //printf("%d\n", lookup_link_status(link));
-
-	      if(lookup_link_status(lnk) == SYM_LINK)
-		return SYM_LINK;
-	    }
-	}
+    if (lnk != NULL) {
+      if (lookup_link_status(lnk) == SYM_LINK)
+	return SYM_LINK;
     }
-  
+
+    /* Get aliases */
+    for (aliases = mid_lookup_aliases(main_addr);
+	 aliases != NULL; aliases = aliases->next_alias) {
+
+      lnk = lookup_link_entry(&aliases->alias, NULL, ifs);
+      if (lnk && (lookup_link_status(lnk) == SYM_LINK)) {
+	  return SYM_LINK;
+      }
+    }
+  }
+
   return 0;
 }
 
 /**
  * Find best link to a neighbor
  */
-
 struct link_entry *
 get_best_link_to_neighbor(const union olsr_ip_addr *remote)
 {
   const union olsr_ip_addr *main_addr;
   struct link_entry *walker, *good_link, *backup_link;
+  struct interface *tmp_if;
   int curr_metric = MAX_IF_METRIC;
   olsr_linkcost curr_lcost = LINK_COST_BROKEN;
-  
-  // main address lookup
+  olsr_linkcost tmp_lc;
 
+  /* main address lookup */
   main_addr = mid_lookup_main_addr(remote);
 
-  // "remote" *already is* the main address
-
-  if (main_addr == NULL)
+  /* "remote" *already is* the main address */
+  if (!main_addr) {
     main_addr = remote;
+  }
 
-  // we haven't selected any links, yet
-
+  /* we haven't selected any links, yet */
   good_link = NULL;
   backup_link = NULL;
 
-  // loop through all links that we have
-
+  /* loop through all links that we have */
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     /* if this is not a link to the neighour in question, skip */
     if (!ipequal(&walker->neighbor->neighbor_main_addr, main_addr))
       continue;
 
-    // handle the non-LQ, RFC-compliant case
+    if (olsr_cnf->lq_level == 0) {
 
-    if (olsr_cnf->lq_level == 0)
-    {
-      struct interface *tmp_if;
+      /*
+       * handle the non-LQ, RFC-compliant case
+       */
 
-      // find the interface for the link - we select the link with the
-      // best local interface metric
+      /*
+       * find the interface for the link.
+       * we select the link with the best local interface metric.
+       */
       tmp_if = walker->if_name ? if_ifwithname(walker->if_name) :
-              if_ifwithaddr(&walker->local_iface_addr);
+	if_ifwithaddr(&walker->local_iface_addr);
 
-      if(!tmp_if)
+      if (!tmp_if) {
 	continue;
-
-      // is this interface better than anything we had before?
-
-      if ((tmp_if->int_metric < curr_metric) ||
-          // use the requested remote interface address as a tie-breaker
-          ((tmp_if->int_metric == curr_metric) && 
-           ipequal(&walker->local_iface_addr, remote)))
-      {
-        // memorize the interface's metric
-
-        curr_metric = tmp_if->int_metric;
-
-        // prefer symmetric links over asymmetric links
-
-        if (lookup_link_status(walker) == SYM_LINK)
-          good_link = walker;
-
-        else
-          backup_link = walker;
       }
-    }
 
-    // handle the LQ, non-RFC compliant case
+      /*
+       * is this interface better than anything we had before ?
+       * use the requested remote interface address as a tie-breaker
+       */
+      if ((tmp_if->int_metric < curr_metric) ||
+	  ((tmp_if->int_metric == curr_metric) &&
+	   ipequal(&walker->local_iface_addr, remote))) {
 
-    else
-    {
-      olsr_linkcost tmp_lc;
+	/* memorize the interface's metric */
+	curr_metric = tmp_if->int_metric;
 
-      // get the link cost
+	/* prefer symmetric links over asymmetric links */
+	if (lookup_link_status(walker) == SYM_LINK) {
+	  good_link = walker;
+        } else {
+	  backup_link = walker;
+        }
+      }
+    } else {
 
-      tmp_lc = walker->linkcost; 
+      /*
+       * handle the LQ, non-RFC compliant case.
+       */
 
-      // is this link better than anything we had before?
-	      
-      if((tmp_lc < curr_lcost) ||
-         // use the requested remote interface address as a tie-breaker
-         ((tmp_lc == curr_lcost) && ipequal(&walker->local_iface_addr, remote)))
-      {
-        // memorize the link quality
+      /* get the link cost */
+      tmp_lc = walker->linkcost;
 
-        curr_lcost = tmp_lc;
+      /*
+       * is this link better than anything we had before ?
+       * use the requested remote interface address as a tie-breaker.
+       */
+      if ((tmp_lc < curr_lcost) ||
+          ((tmp_lc == curr_lcost) &&
+           ipequal(&walker->local_iface_addr, remote))) {
 
-        // prefer symmetric links over asymmetric links
+	/* memorize the link quality */
+	curr_lcost = tmp_lc;
 
-        if(lookup_link_status(walker) == SYM_LINK)
-          good_link = walker;
-
-        else
-          backup_link = walker;
+	/* prefer symmetric links over asymmetric links */
+	if (lookup_link_status(walker) == SYM_LINK) {
+	  good_link = walker;
+        } else {
+	  backup_link = walker;
+        }
       }
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
-  // if we haven't found any symmetric links, try to return an
-  // asymmetric link
-
+  /*
+   * if we haven't found any symmetric links, try to return an asymmetric link.
+   */
   return good_link ? good_link : backup_link;
 }
 
-static void set_loss_link_multiplier(struct link_entry *entry)
+static void
+set_loss_link_multiplier(struct link_entry *entry)
 {
   struct interface *inter;
   struct olsr_if *cfg_inter;
@@ -316,41 +298,40 @@ static void set_loss_link_multiplier(struct link_entry *entry)
   float val = -1.0;
   union olsr_ip_addr null_addr;
 
-  // find the interface for the link
-
+  /* find the interface for the link */
   inter = if_ifwithaddr(&entry->local_iface_addr);
 
-  // find the interface configuration for the interface
-
-  for (cfg_inter = olsr_cnf->interfaces; cfg_inter != NULL;
-       cfg_inter = cfg_inter->next)
-    if (cfg_inter->interf == inter)
+  /* find the interface configuration for the interface */
+  for (cfg_inter = olsr_cnf->interfaces; cfg_inter;
+       cfg_inter = cfg_inter->next) {
+    if (cfg_inter->interf == inter) {
       break;
-
-  // create a null address for comparison
-
-  memset(&null_addr, 0, sizeof (union olsr_ip_addr));
-
-  // loop through the multiplier entries
-
-  for (mult = cfg_inter->cnf->lq_mult; mult != NULL; mult = mult->next)
-  {
-    // use the default multiplier only if there isn't any entry that
-    // has a matching IP address
-
-    if ((ipequal(&mult->addr, &null_addr) && val < 0.0) ||
-        ipequal(&mult->addr, &entry->neighbor_iface_addr))
-      val = mult->val;
+    }
   }
 
-  // if we have not found an entry, then use the default multiplier
+  /* create a null address for comparison */
+  memset(&null_addr, 0, sizeof(union olsr_ip_addr));
 
-  if (val < 0)
+  /* loop through the multiplier entries */
+  for (mult = cfg_inter->cnf->lq_mult; mult != NULL; mult = mult->next) {
+
+    /*
+     * use the default multiplier only if there isn't any entry that
+     * has a matching IP address.
+     */
+    if ((ipequal(&mult->addr, &null_addr) && val < 0.0) ||
+	ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
+      val = mult->val;
+    }
+  }
+
+  /* if we have not found an entry, then use the default multiplier */
+  if (val < 0) {
     val = 1.0;
+  }
 
-  // store the multiplier
-
-  entry->loss_link_multiplier = (olsr_u32_t)(val * 65536);
+  /* store the multiplier */
+  entry->loss_link_multiplier = (olsr_u32_t) (val * 65536);
 }
 
 /*
@@ -397,6 +378,7 @@ olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     if (ipequal(int_addr, &link->local_iface_addr)) {
       olsr_delete_link_entry(link);
+      break;
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
@@ -408,7 +390,7 @@ static void
 olsr_expire_link_loss_timer(void *context)
 {
   struct link_entry *link;
-  
+
   link = (struct link_entry *)context;
 
   /* count the lost packet */
@@ -416,7 +398,7 @@ olsr_expire_link_loss_timer(void *context)
 
   /* next timeout in 1.0 x htime */
   olsr_change_timer(link->link_loss_timer, link->loss_hello_int * MSEC_PER_SEC,
-                    OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
+		    OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
 }
 
 /**
@@ -428,15 +410,15 @@ olsr_expire_link_sym_timer(void *context)
   struct link_entry *link;
 
   link = (struct link_entry *)context;
-  link->link_sym_timer = NULL; /* be pedandic */
+  link->link_sym_timer = NULL;	/* be pedandic */
 
   if (link->prev_status != SYM_LINK) {
     return;
-  } 
+  }
 
   link->prev_status = lookup_link_status(link);
   update_neighbor_status(link->neighbor,
-                         get_neighbor_status(&link->neighbor_iface_addr));
+			 get_neighbor_status(&link->neighbor_iface_addr));
   changes_neighborhood = OLSR_TRUE;
 }
 
@@ -456,19 +438,19 @@ olsr_expire_link_hello_timer(void *context)
   link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
 
   OLSR_PRINTF(1, "HYST[%s] HELLO timeout %f\n",
-              olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-              link->L_link_quality);
+	      olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
+	      link->L_link_quality);
 
   /* Update hello_timeout - NO SLACK THIS TIME */
   olsr_change_timer(link->link_hello_timer, link->last_htime * MSEC_PER_SEC,
-                    OLSR_LINK_JITTER, OLSR_TIMER_PERIODIC);
+		    OLSR_LINK_JITTER, OLSR_TIMER_PERIODIC);
 
   /* Update hysteresis values */
   olsr_process_hysteresis(link);
-	  
+
   /* update neighbor status */
   update_neighbor_status(link->neighbor,
-                         get_neighbor_status(&link->neighbor_iface_addr));
+			 get_neighbor_status(&link->neighbor_iface_addr));
 
   /* Update seqno - not mentioned in the RFC... kind of a hack.. */
   link->olsr_seqno++;
@@ -483,7 +465,7 @@ olsr_expire_link_entry(void *context)
   struct link_entry *link;
 
   link = (struct link_entry *)context;
-  link->link_timer = NULL; /* be pedandic */
+  link->link_timer = NULL;	/* be pedandic */
 
   olsr_delete_link_entry(link);
 }
@@ -495,32 +477,32 @@ void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, 0);
+		 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, 0);
 }
 
 /**
- *Nothing mysterious here.
- *Adding a new link entry to the link set.
+ * Nothing mysterious here.
+ * Adding a new link entry to the link set.
  *
- *@param local the local IP address
- *@param remote the remote IP address
- *@param remote_main the remote nodes main address
- *@param vtime the validity time of the entry
- *@param htime the HELLO interval of the remote node
- *@param local_if the local interface
+ * @param local the local IP address
+ * @param remote the remote IP address
+ * @param remote_main the remote nodes main address
+ * @param vtime the validity time of the entry
+ * @param htime the HELLO interval of the remote node
+ * @param local_if the local interface
+ * @return the new link_entry
  */
-
 static struct link_entry *
 add_link_entry(const union olsr_ip_addr *local,
-               const union olsr_ip_addr *remote,
-               const union olsr_ip_addr *remote_main,
-               double vtime,
-               double htime,
-               const struct interface *local_if)
+	       const union olsr_ip_addr *remote,
+	       const union olsr_ip_addr *remote_main,
+	       double vtime, double htime, const struct interface *local_if)
 {
   struct link_entry *new_link;
   struct neighbor_entry *neighbor;
-  struct link_entry *tmp_link_set = lookup_link_entry(remote, remote_main, local_if);
+  struct link_entry *tmp_link_set;
+
+  tmp_link_set = lookup_link_entry(remote, remote_main, local_if);
   if (tmp_link_set) {
     return tmp_link_set;
   }
@@ -535,21 +517,23 @@ add_link_entry(const union olsr_ip_addr *local,
 #ifndef NODEBUG
     struct ipaddr_str localbuf, rembuf;
 #endif
-    OLSR_PRINTF(1, "Adding %s=>%s to link set\n", olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf, remote));
+    OLSR_PRINTF(1, "Adding %s=>%s to link set\n",
+		olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf,
+								       remote));
   }
 #endif
 
   /* a new tuple is created with... */
-
   new_link = olsr_malloc_link_entry("new link entry");
-  
+
   /* copy if_name, if it is defined */
-  if (local_if->int_name)
-    {
-      new_link->if_name = olsr_malloc(strlen(local_if->int_name)+1, "target of if_name in new link entry");
-      strcpy(new_link->if_name, local_if->int_name);
-    } else 
-      new_link->if_name = NULL;
+  if (local_if->int_name) {
+    new_link->if_name =
+      olsr_malloc(strlen(local_if->int_name) + 1,
+		  "target of if_name in new link entry");
+    strcpy(new_link->if_name, local_if->int_name);
+  } else
+    new_link->if_name = NULL;
 
   /* shortcut to interface. XXX refcount */
   new_link->inter = local_if;
@@ -558,8 +542,8 @@ add_link_entry(const union olsr_ip_addr *local,
    * L_local_iface_addr = Address of the interface
    * which received the HELLO message
    */
-  //printf("\tLocal IF: %s\n", olsr_ip_to_string(local));
   new_link->local_iface_addr = *local;
+
   /* L_neighbor_iface_addr = Source Address */
   new_link->neighbor_iface_addr = *remote;
 
@@ -569,28 +553,26 @@ add_link_entry(const union olsr_ip_addr *local,
   new_link->prev_status = ASYM_LINK;
 
   /* HYSTERESIS */
-  if(olsr_cnf->use_hysteresis)
-    {
-      new_link->L_link_pending = 1;
-      new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime*1000);
-      olsr_update_hysteresis_hello(new_link, htime);
-      new_link->last_htime = htime;
-      new_link->olsr_seqno = 0;
-      new_link->olsr_seqno_valid = OLSR_FALSE;
-    }
+  if (olsr_cnf->use_hysteresis) {
+    new_link->L_link_pending = 1;
+    new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime * 1000);
+    olsr_update_hysteresis_hello(new_link, htime);
+    new_link->last_htime = htime;
+    new_link->olsr_seqno = 0;
+    new_link->olsr_seqno_valid = OLSR_FALSE;
+  }
 
   new_link->L_link_quality = 0.0;
 
-  if (olsr_cnf->lq_level > 0)
-    {
-      new_link->loss_hello_int = htime;
+  if (olsr_cnf->lq_level > 0) {
+    new_link->loss_hello_int = htime;
 
-      olsr_set_timer(&new_link->link_loss_timer, htime * 1500,
-                     OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-                     &olsr_expire_link_loss_timer, new_link, 0);
+    olsr_set_timer(&new_link->link_loss_timer, htime * 1500,
+		   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+		   &olsr_expire_link_loss_timer, new_link, 0);
 
-      set_loss_link_multiplier(new_link);
-    }
+    set_loss_link_multiplier(new_link);
+  }
 
   new_link->linkcost = LINK_COST_BROKEN;
 
@@ -603,16 +585,16 @@ add_link_entry(const union olsr_ip_addr *local,
 
   /* Neighbor MUST exist! */
   neighbor = olsr_lookup_neighbor_table(remote_main);
-  if(neighbor == NULL)
-    {
+  if (!neighbor) {
 #ifdef DEBUG
 #ifndef NODEBUG
-      struct ipaddr_str buf;
+    struct ipaddr_str buf;
 #endif
-      OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(&buf, remote_main));
+    OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n",
+		olsr_ip_to_string(&buf, remote_main));
 #endif
-      neighbor = olsr_insert_neighbor_table(remote_main);
-    }
+    neighbor = olsr_insert_neighbor_table(remote_main);
+  }
 
   neighbor->linkcount++;
   new_link->neighbor = neighbor;
@@ -633,37 +615,37 @@ check_neighbor_link(const union olsr_ip_addr *int_addr)
   struct link_entry *link;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if (ipequal(int_addr, &link->neighbor_iface_addr))
+    if (ipequal(int_addr, &link->neighbor_iface_addr)) {
       return lookup_link_status(link);
+    }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   return UNSPEC_LINK;
 }
 
-
 /**
- *Lookup a link entry
+ * Lookup a link entry
  *
- *@param remote the remote interface address
- *@param remote_main the remote nodes main address
- *@param local the local interface address
- *
- *@return the link entry if found, NULL if not
+ * @param remote the remote interface address
+ * @param remote_main the remote nodes main address
+ * @param local the local interface address
+ * @return the link entry if found, NULL if not
  */
 struct link_entry *
 lookup_link_entry(const union olsr_ip_addr *remote,
-                  const union olsr_ip_addr *remote_main,
-                  const struct interface *local)
+		  const union olsr_ip_addr *remote_main,
+		  const struct interface *local)
 {
   struct link_entry *link;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if(ipequal(remote, &link->neighbor_iface_addr) &&
-       (link->if_name ? !strcmp(link->if_name, local->int_name)
-        : ipequal(&local->ip_addr, &link->local_iface_addr)) &&
+    if (ipequal(remote, &link->neighbor_iface_addr) &&
+	(link->if_name ? !strcmp(link->if_name, local->int_name)
+	 : ipequal(&local->ip_addr, &link->local_iface_addr)) &&
 
-       /* check the remote-main address only if there is one given */
-       (!remote_main || ipequal(remote_main, &link->neighbor->neighbor_main_addr))) {
+	/* check the remote-main address only if there is one given */
+	(!remote_main
+	 || ipequal(remote_main, &link->neighbor->neighbor_main_addr))) {
       return link;
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
@@ -671,99 +653,80 @@ lookup_link_entry(const union olsr_ip_addr *remote,
   return NULL;
 }
 
-
-
-
-
-
-
 /**
- *Update a link entry. This is the "main entrypoint" in
- *the link-sensing. This function is called from the HELLO
- *parser function.
- *It makes sure a entry is updated or created.
+ * Update a link entry. This is the "main entrypoint" in
+ * the link-sensing. This function is called from the HELLO
+ * parser function. It makes sure a entry is updated or created.
  *
- *@param local the local IP address
- *@param remote the remote IP address
- *@param message the HELLO message
- *@param in_if the interface on which this HELLO was received
- *
- *@return the link_entry struct describing this link entry
+ * @param local the local IP address
+ * @param remote the remote IP address
+ * @param message the HELLO message
+ * @param in_if the interface on which this HELLO was received
+ * @return the link_entry struct describing this link entry
  */
 struct link_entry *
-update_link_entry(const union olsr_ip_addr *local, 
-		  const union olsr_ip_addr *remote, 
-		  const struct hello_message *message, 
+update_link_entry(const union olsr_ip_addr *local,
+		  const union olsr_ip_addr *remote,
+		  const struct hello_message *message,
 		  const struct interface *in_if)
 {
   struct link_entry *entry;
 
   /* Add if not registered */
-  entry = add_link_entry(local, remote, &message->source_addr, message->vtime, message->htime, in_if);
+  entry =
+    add_link_entry(local, remote, &message->source_addr, message->vtime,
+		   message->htime, in_if);
 
   /* Update ASYM_time */
-  //printf("Vtime is %f\n", message->vtime);
-  /* L_ASYM_time = current time + validity time */
   entry->vtime = message->vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->vtime*1000);
-  
-  entry->prev_status = check_link_status(message, in_if);
-  
-  //printf("Status %d\n", status);
-  
-  switch(entry->prev_status)
-    {
-    case(LOST_LINK):
-      olsr_stop_timer(entry->link_sym_timer);
-      entry->link_sym_timer = NULL;
-      break;
-    case(SYM_LINK):
-    case(ASYM_LINK):
-      /* L_SYM_time = current time + validity time */
-      olsr_set_timer(&entry->link_sym_timer, message->vtime * MSEC_PER_SEC,
-                     OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
-                     &olsr_expire_link_sym_timer, entry, 0);
+  entry->ASYM_time = GET_TIMESTAMP(message->vtime * 1000);
 
-      /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-      olsr_set_link_timer(entry, (message->vtime + NEIGHB_HOLD_TIME) *
-                          MSEC_PER_SEC);
-      break;
-    default:;
-    }
+  entry->prev_status = check_link_status(message, in_if);
+
+  switch (entry->prev_status) {
+  case (LOST_LINK):
+    olsr_stop_timer(entry->link_sym_timer);
+    entry->link_sym_timer = NULL;
+    break;
+  case (SYM_LINK):
+  case (ASYM_LINK):
+
+    /* L_SYM_time = current time + validity time */
+    olsr_set_timer(&entry->link_sym_timer, message->vtime * MSEC_PER_SEC,
+		   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
+		   &olsr_expire_link_sym_timer, entry, 0);
+
+    /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
+    olsr_set_link_timer(entry, (message->vtime + NEIGHB_HOLD_TIME) *
+			MSEC_PER_SEC);
+    break;
+  default:;
+  }
 
   /* L_time = max(L_time, L_ASYM_time) */
-  if(entry->link_timer && (entry->link_timer->timer_clock < entry->ASYM_time)) {
+  if (entry->link_timer && (entry->link_timer->timer_clock < entry->ASYM_time)) {
     olsr_set_link_timer(entry, TIME_DUE(entry->ASYM_time));
   }
 
-
-  /*
-  printf("Updating link LOCAL: %s ", olsr_ip_to_string(local));
-  printf("REMOTE: %s\n", olsr_ip_to_string(remote));
-  printf("VTIME: %f ", message->vtime);
-  printf("STATUS: %d\n", status);
-  */
-
   /* Update hysteresis values */
-  if(olsr_cnf->use_hysteresis)
+  if (olsr_cnf->use_hysteresis)
     olsr_process_hysteresis(entry);
 
   /* Update neighbor */
   update_neighbor_status(entry->neighbor, get_neighbor_status(remote));
 
-  return entry;  
+  return entry;
 }
 
 
 /**
- * Fuction that updates all registered pointers to
+ * Function that updates all registered pointers to
  * one neighbor entry with another pointer
  * Used by MID updates.
  *
- *@old the pointer to replace
- *@new the pointer to use instead of "old"
- *
- *@return the number of entries updated
+ * @old the pointer to replace
+ * @new the pointer to use instead of "old"
+ * @return the number of entries updated
  */
 int
 replace_neighbor_link_set(const struct neighbor_entry *old,
@@ -775,7 +738,7 @@ replace_neighbor_link_set(const struct neighbor_entry *old,
   if (list_is_empty(&link_entry_head)) {
     return retval;
   }
-      
+
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
 
     if (link->neighbor == old) {
@@ -797,76 +760,78 @@ replace_neighbor_link_set(const struct neighbor_entry *old,
  *@return the link status
  */
 static int
-check_link_status(const struct hello_message *message, const struct interface *in_if)
+check_link_status(const struct hello_message *message,
+		  const struct interface *in_if)
 {
   int ret = UNSPEC_LINK;
-  struct hello_neighbor  *neighbors;
+  struct hello_neighbor *neighbors;
 
   neighbors = message->neighbors;
-  
-  while(neighbors!=NULL)
-    {
-      /*
-       * Note: If a neigh has 2 cards we can reach, the neigh
-       * will send a Hello with the same IP mentined twice
-       */
-      if(ipequal(&neighbors->address, &in_if->ip_addr))
-        {
-	  //printf("ok");
-	  ret = neighbors->link;
-	  if (SYM_LINK == ret) break;
-	}
+  while (neighbors) {
 
-      neighbors = neighbors->next; 
+    /*
+     * Note: If a neigh has 2 cards we can reach, the neigh
+     * will send a Hello with the same IP mentined twice
+     */
+    if (ipequal(&neighbors->address, &in_if->ip_addr)) {
+      ret = neighbors->link;
+      if (SYM_LINK == ret) {
+	break;
+      }
     }
-
+    neighbors = neighbors->next;
+  }
 
   return ret;
 }
 
-void olsr_print_link_set(void)
+void
+olsr_print_link_set(void)
 {
 #ifndef NODEBUG
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- LINKS\n\n",
-              olsr_wallclock_string());
-  OLSR_PRINTF(1, "%-*s  %-6s %-14s %s\n", addrsize,
-              "IP address", "hyst", "      LQ      ", "ETX");
+  OLSR_PRINTF(0,
+	      "\n--- %s ---------------------------------------------------- LINKS\n\n",
+	      olsr_wallclock_string());
+  OLSR_PRINTF(1, "%-*s  %-6s %-14s %s\n", addrsize, "IP address", "hyst",
+	      "      LQ      ", "ETX");
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
     OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n",
-                addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                walker->L_link_quality,
-                get_link_entry_text(walker, &lqbuffer1),
-                get_linkcost_text(walker->linkcost, OLSR_FALSE, &lqbuffer2));
+		addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
+		walker->L_link_quality,
+		get_link_entry_text(walker, &lqbuffer1),
+		get_linkcost_text(walker->linkcost, OLSR_FALSE, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }
 
-void olsr_update_packet_loss_hello_int(struct link_entry *entry,
-                                       double loss_hello_int)
+/*
+ * called for every LQ HELLO message.
+ * update the timeout with the htime value from the message
+ */
+void
+olsr_update_packet_loss_hello_int(struct link_entry *entry,
+				  double loss_hello_int)
 {
-  // called for every LQ HELLO message - update the timeout
-  // with the htime value from the message
-
   entry->loss_hello_int = loss_hello_int;
 }
 
-void olsr_update_packet_loss(struct link_entry *entry)
+void
+olsr_update_packet_loss(struct link_entry *entry)
 {
   olsr_update_packet_loss_worker(entry, OLSR_FALSE);
 
-  // timeout for the first lost packet is 1.5 x htime
-
+  /* timeout for the first lost packet is 1.5 x htime */
   olsr_set_timer(&entry->link_loss_timer, entry->loss_hello_int * 1500,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-                 &olsr_expire_link_loss_timer, entry, 0);
+		 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+		 &olsr_expire_link_loss_timer, entry, 0);
 }
 
 /*
