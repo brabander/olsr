@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
@@ -51,28 +52,28 @@
 
 /* Default lq plugin settings */
 struct lq_handler default_lq_handler = {
-    &default_calc_cost,
-    &default_calc_cost,
-		
-    &default_olsr_is_relevant_costchange,
-		
-    &default_packet_loss_worker,
-    &default_olsr_memorize_foreign_hello_lq,
-    &default_olsr_copy_link_lq_into_tc,
-    &default_olsr_clear_lq,
-    &default_olsr_clear_lq,
-		
-    &default_olsr_serialize_hello_lq_pair,
-    &default_olsr_serialize_tc_lq_pair,
-    &default_olsr_deserialize_hello_lq_pair,
-    &default_olsr_deserialize_tc_lq_pair,
-		
-    &default_olsr_print_lq,
-    &default_olsr_print_lq,
-    &default_olsr_print_cost, 
-		
-    sizeof(struct default_lq),
-    sizeof(struct default_lq)
+  &default_calc_cost,
+  &default_calc_cost,
+
+  &default_olsr_is_relevant_costchange,
+
+  &default_packet_loss_worker,
+  &default_olsr_memorize_foreign_hello_lq,
+  &default_olsr_copy_link_lq_into_tc,
+  &default_olsr_clear_lq,
+  &default_olsr_clear_lq,
+
+  &default_olsr_serialize_hello_lq_pair,
+  &default_olsr_serialize_tc_lq_pair,
+  &default_olsr_deserialize_hello_lq_pair,
+  &default_olsr_deserialize_tc_lq_pair,
+
+  &default_olsr_print_lq,
+  &default_olsr_print_lq,
+  &default_olsr_print_cost,
+
+  sizeof(struct default_lq),
+  sizeof(struct default_lq)
 };
 
 struct lq_handler *active_lq_handler = &default_lq_handler;
@@ -86,7 +87,9 @@ struct lq_handler *active_lq_handler = &default_lq_handler;
  * @param pointer to lq_handler structure
  * @param name of the link quality handler for debug output
  */
-void set_lq_handler(struct lq_handler *handler, const char *name) {
+void
+set_lq_handler(struct lq_handler *handler, const char *name)
+{
   if (handler) {
     OLSR_PRINTF(1, "Activated lq_handler: %s\n", name);
     active_lq_handler = handler;
@@ -95,7 +98,7 @@ void set_lq_handler(struct lq_handler *handler, const char *name) {
     active_lq_handler = &default_lq_handler;
   }
 
-  name = NULL; /* squelch compiler warning */
+  name = NULL;			/* squelch compiler warning */
 }
 
 /*
@@ -106,7 +109,8 @@ void set_lq_handler(struct lq_handler *handler, const char *name) {
  * @param pointer to the tc_edge_entry
  * @return linkcost
  */
-olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *tc_edge)
+olsr_linkcost
+olsr_calc_tc_cost(const struct tc_edge_entry *tc_edge)
 {
   return active_lq_handler->calc_tc_cost(tc_edge->linkquality);
 }
@@ -121,7 +125,9 @@ olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *tc_edge)
  * @param second linkcost value
  * @return boolean
  */
-olsr_bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
+olsr_bool
+olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
+{
   return active_lq_handler->is_relevant_costchange(c1, c2);
 }
 
@@ -135,8 +141,11 @@ olsr_bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
  * @param pointer to lq_hello_neighbor
  * @return number of bytes that have been written
  */
-int olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh) {
-	return active_lq_handler->serialize_hello_lq(buff, neigh->linkquality);
+int
+olsr_serialize_hello_lq_pair(unsigned char *buff,
+			     struct lq_hello_neighbor *neigh)
+{
+  return active_lq_handler->serialize_hello_lq(buff, neigh->linkquality);
 }
 
 /*
@@ -148,9 +157,12 @@ int olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *
  * @param pointer to the current buffer pointer
  * @param pointer to hello_neighbor
  */
-void olsr_deserialize_hello_lq_pair(const olsr_u8_t **curr, struct hello_neighbor *neigh) {
-	active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
-	neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
+void
+olsr_deserialize_hello_lq_pair(const olsr_u8_t ** curr,
+			       struct hello_neighbor *neigh)
+{
+  active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
+  neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
 }
 
 /*
@@ -163,8 +175,10 @@ void olsr_deserialize_hello_lq_pair(const olsr_u8_t **curr, struct hello_neighbo
  * @param pointer to olsr_serialize_tc_lq_pair
  * @return number of bytes that have been written
  */
-int olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh) {
-	return active_lq_handler->serialize_tc_lq(buff, neigh->linkquality);
+int
+olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
+{
+  return active_lq_handler->serialize_tc_lq(buff, neigh->linkquality);
 }
 
 /*
@@ -175,8 +189,10 @@ int olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh) {
  * @param pointer to the current buffer pointer
  * @param pointer to tc_edge_entry
  */
-void olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, struct tc_edge_entry *edge) {
-	active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
+void
+olsr_deserialize_tc_lq_pair(const olsr_u8_t ** curr, struct tc_edge_entry *edge)
+{
+  active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
 }
 
 /*
@@ -189,14 +205,15 @@ void olsr_deserialize_tc_lq_pair(const olsr_u8_t **curr, struct tc_edge_entry *e
  * @param pointer to link_entry
  * @param OLSR_TRUE if hello package was lost
  */
-void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
+void
+olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
 {
-	olsr_linkcost lq;
-	lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
-  
-	if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
+  olsr_linkcost lq;
+  lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
+
+  if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
     entry->linkcost = lq;
-    
+
     if (olsr_cnf->lq_dlimit > 0) {
       changes_neighborhood = OLSR_TRUE;
       changes_topology = OLSR_TRUE;
@@ -204,9 +221,8 @@ void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
 
     else
       OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
-    
-    // XXX - we should check whether we actually
-    // announce this neighbour
+
+    /* XXX - we should check whether we actually announce this neighbour */
     signal_link_changes(OLSR_TRUE);
   }
 }
@@ -221,11 +237,14 @@ void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
  * @param pointer to hello_neighbor, if NULL the neighbor link quality information
  * of the link entry has to be reset to "zero"
  */
-void olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neighbor *foreign) {
+void
+olsr_memorize_foreign_hello_lq(struct link_entry *local,
+			       struct hello_neighbor *foreign)
+{
   if (foreign) {
-    active_lq_handler->memorize_foreign_hello(local->linkquality, foreign->linkquality);
-  }
-  else {
+    active_lq_handler->memorize_foreign_hello(local->linkquality,
+					      foreign->linkquality);
+  } else {
     active_lq_handler->memorize_foreign_hello(local->linkquality, NULL);
   }
 }
@@ -241,7 +260,9 @@ void olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neigh
  * @param buffer for output
  * @return pointer to a buffer with the text representation
  */
-const char *get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer) {
+const char *
+get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer)
+{
   return active_lq_handler->print_hello_lq(entry->linkquality, buffer);
 }
 
@@ -256,7 +277,9 @@ const char *get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *b
  * @param pointer to buffer
  * @return pointer to the buffer with the text representation
  */
-const char *get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer) {
+const char *
+get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer)
+{
   return active_lq_handler->print_tc_lq(entry->linkquality, buffer);
 }
 
@@ -271,15 +294,17 @@ const char *get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuf
  * @param pointer to buffer
  * @return pointer to buffer filled with text
  */
-const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer) {
+const char *
+get_linkcost_text(olsr_linkcost cost, olsr_bool route,
+		  struct lqtextbuffer *buffer)
+{
   static const char *infinite = "INFINITE";
-  
+
   if (route) {
     if (cost == ROUTE_COST_BROKEN) {
       return infinite;
     }
-  }
-  else {
+  } else {
     if (cost >= LINK_COST_BROKEN) {
       return infinite;
     }
@@ -296,8 +321,11 @@ const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtext
  * @param pointer to target lq_hello_neighbor
  * @param pointer to source link_entry
  */
-void olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source) {
-  memcpy(target->linkquality, source->linkquality, active_lq_handler->hello_lq_size);
+void
+olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
+{
+  memcpy(target->linkquality, source->linkquality,
+	 active_lq_handler->hello_lq_size);
 }
 
 /*
@@ -309,8 +337,12 @@ void olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *sou
  * @param pointer to tc_mpr_addr
  * @param pointer to link_entry
  */
-void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source) {
-  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
+void
+olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target,
+				     struct link_entry *source)
+{
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality,
+					  source->linkquality);
 }
 
 /*
@@ -322,8 +354,12 @@ void olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct lin
  * @param pointer to tc_edge_entry
  * @param pointer to link_entry
  */
-void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source) {
-  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
+void
+olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
+				       struct link_entry *source)
+{
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality,
+					  source->linkquality);
 }
 
 /*
@@ -333,7 +369,9 @@ void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct
  * 
  * @param pointer to tc_mpr_addr
  */
-void olsr_clear_tc_lq(struct tc_mpr_addr *target) {
+void
+olsr_clear_tc_lq(struct tc_mpr_addr *target)
+{
   active_lq_handler->clear_tc(target->linkquality);
 }
 
@@ -347,13 +385,17 @@ void olsr_clear_tc_lq(struct tc_mpr_addr *target) {
  * 
  * @return pointer to hello_neighbor
  */
-struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id) {
-	struct hello_neighbor *h;
-	
-	h = olsr_malloc(sizeof(struct hello_neighbor) + active_lq_handler->hello_lq_size, id);
-	
-	active_lq_handler->clear_hello(h->linkquality);
-	return h;
+struct hello_neighbor *
+olsr_malloc_hello_neighbor(const char *id)
+{
+  struct hello_neighbor *h;
+
+  h =
+    olsr_malloc(sizeof(struct hello_neighbor) +
+		active_lq_handler->hello_lq_size, id);
+
+  active_lq_handler->clear_hello(h->linkquality);
+  return h;
 }
 
 /*
@@ -366,11 +408,14 @@ struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id) {
  * 
  * @return pointer to tc_mpr_addr
  */
-struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id) {
+struct tc_mpr_addr *
+olsr_malloc_tc_mpr_addr(const char *id)
+{
   struct tc_mpr_addr *t;
-  
-   t = olsr_malloc(sizeof(struct tc_mpr_addr) + active_lq_handler->tc_lq_size, id);
-  
+
+  t =
+    olsr_malloc(sizeof(struct tc_mpr_addr) + active_lq_handler->tc_lq_size, id);
+
   active_lq_handler->clear_tc(t->linkquality);
   return t;
 }
@@ -385,11 +430,15 @@ struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id) {
  * 
  * @return pointer to lq_hello_neighbor
  */
-struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id) {
+struct lq_hello_neighbor *
+olsr_malloc_lq_hello_neighbor(const char *id)
+{
   struct lq_hello_neighbor *h;
-  
-  h = olsr_malloc(sizeof(struct lq_hello_neighbor) + active_lq_handler->hello_lq_size, id);
-  
+
+  h =
+    olsr_malloc(sizeof(struct lq_hello_neighbor) +
+		active_lq_handler->hello_lq_size, id);
+
   active_lq_handler->clear_hello(h->linkquality);
   return h;
 }
@@ -404,11 +453,15 @@ struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id) {
  * 
  * @return pointer to link_entry
  */
-struct link_entry *olsr_malloc_link_entry(const char *id) {
+struct link_entry *
+olsr_malloc_link_entry(const char *id)
+{
   struct link_entry *h;
-  
-  h =  olsr_malloc(sizeof(struct link_entry) + active_lq_handler->hello_lq_size, id);
-  
+
+  h =
+    olsr_malloc(sizeof(struct link_entry) + active_lq_handler->hello_lq_size,
+		id);
+
   active_lq_handler->clear_hello(h->linkquality);
   return h;
 }
@@ -423,11 +476,15 @@ struct link_entry *olsr_malloc_link_entry(const char *id) {
  * 
  * @return pointer to tc_edge_entry
  */
-struct tc_edge_entry *olsr_malloc_tc_edge_entry(const char *id) {
+struct tc_edge_entry *
+olsr_malloc_tc_edge_entry(const char *id)
+{
   struct tc_edge_entry *t;
-  
-  t = olsr_malloc(sizeof(struct tc_edge_entry) + active_lq_handler->tc_lq_size, id);
-  
+
+  t =
+    olsr_malloc(sizeof(struct tc_edge_entry) + active_lq_handler->tc_lq_size,
+		id);
+
   active_lq_handler->clear_tc(t);
   return t;
 }
