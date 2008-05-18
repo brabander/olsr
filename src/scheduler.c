@@ -417,6 +417,11 @@ olsr_walk_timers(clock_t *last_run)
               total_timers_walked, timers_running, total_timers_fired);
 #endif
 
+  /*
+   * If the scheduler has slipped and we have walked all wheel slots,
+   * reset the last timer run.
+   */
+  *last_run = now_times;
 }
 
 /**
