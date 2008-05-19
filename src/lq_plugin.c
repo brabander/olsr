@@ -46,11 +46,32 @@
 #include "packet.h"
 #include "olsr.h"
 #include "two_hop_neighbor_table.h"
+#include "common/avl.h"
 
-#include "lq_plugin_default.h"
-#include "lq_plugin.h"
+#include "lq_plugin_default_float.h"
+#include "lq_plugin_default_fpm.h"
 
+struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
+
+int
+avl_strcasecmp(const void *str1, const void *str2)
+{
+  return strcasecmp(str1, str2);
+}
+
+
+void
+init_lq_handler_tree(void)
+{
+  avl_init(&lq_handler_tree, &avl_strcasecmp);
+  register_lq_handler(&lq_etx_float_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
+  register_lq_handler(&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
+  
+  if (activate_lq_handler(olsr_cnf->lq_algorithm)) {
+    activate_lq_handler(LQ_ALGORITHM_ETX_FPM_NAME);
+  }
+}
 
 /*
  * set_lq_handler
@@ -65,11 +86,35 @@ struct lq_handler *active_lq_handler = NULL;
  * @param name of the link quality handler for debug output
  */
 void
-set_lq_handler(struct lq_handler *handler, const __attribute__ ((unused)) char *name)
+register_lq_handler(struct lq_handler *handler, const char *name)
 {
-  OLSR_PRINTF(1, "Activated lq_handler: %s\n", name);
-  active_lq_handler = handler;
-  handler->initialize();
+  struct lq_handler_node *node;
+  
+  node = olsr_malloc(sizeof(struct lq_handler) + strlen(name) + 1, "olsr lq handler");
+  
+  strcpy(node->name, name);
+  node->node.key = node->name;
+  node->handler = handler;
+  
+  avl_insert(&lq_handler_tree, &node->node, OLSR_FALSE); 
+}
+
+int
+activate_lq_handler(const char *name)
+{
+  struct lq_handler_node *node;
+  
+  node = (struct lq_handler_node *) avl_find(&lq_handler_tree, name);
+  if (node == NULL) {
+    OLSR_PRINTF(1, "Error, unknown lq_handler '%s'\n", name);
+    return 1;
+  }
+  
+  OLSR_PRINTF(1, "Using '%s' algorithm for lq calculation.\n", name);
+  active_lq_handler = node->handler;
+  active_lq_handler->initialize();
+  
+  return 0;
 }
 
 /*

@@ -67,7 +67,7 @@
 #define DEF_LQ_DIJK_LIMIT   255
 #define DEF_LQ_DIJK_INTER   0.0
 #define DEF_LQ_NAT_THRESH   1.0
-#define DEF_LQ_AGING        0.05
+#define DEF_LQ_AGING        0.1
 #define DEF_CLEAR_SCREEN    OLSR_FALSE
 
 /* Bounds */
@@ -221,6 +221,7 @@ struct olsrd_config
   olsr_u8_t                lq_fish;
   float                    lq_dinter;
   float                    lq_aging;
+  char                     *lq_algorithm;
   olsr_u8_t                lq_dlimit;
 
   /* Stuff set by olsrd */

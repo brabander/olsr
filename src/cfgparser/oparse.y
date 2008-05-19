@@ -190,6 +190,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LQ_DLIMIT
 %token TOK_LQ_WSIZE
 %token TOK_LQ_AGING
+%token TOK_LQ_PLUGIN
 %token TOK_LQ_NAT_THRESH
 %token TOK_LQ_MULT
 %token TOK_CLEAR_SCREEN
@@ -244,6 +245,7 @@ stmt:       idebug
           | atcredundancy
           | amprcoverage
           | alq_level
+          | alq_plugin
           | alq_fish
           | alq_dlimit
           | anat_thresh
@@ -994,6 +996,14 @@ alq_aging: TOK_LQ_AGING TOK_FLOAT
 {
   PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", $2->floating);
   olsr_cnf->lq_aging = $2->floating;
+  free($2);
+}
+;
+
+alq_plugin: TOK_LQ_PLUGIN TOK_STRING
+{
+  olsr_cnf->lq_algorithm = $2->string;
+  PARSER_DEBUG_PRINTF("LQ Algorithm: %s\n", $2->string);
   free($2);
 }
 ;

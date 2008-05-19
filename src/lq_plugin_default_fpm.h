@@ -46,9 +46,9 @@
 #include "lq_plugin.h"
 
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
-#define LQ_PLUGIN_RELEVANT_COSTCHANGE 16
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM 16
 
-#define LQ_ETX_FPM_HANDLER_NAME "ETX metric with FPM"
+#define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 struct default_lq_fpm {
 	fpm lq, nlq;
 	olsr_u16_t quickstart;

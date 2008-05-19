@@ -470,6 +470,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
     cnf->lq_dinter = DEF_LQ_DIJK_INTER;
     cnf->lq_aging = DEF_LQ_AGING;
+    cnf->lq_algorithm = NULL;
     cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
     cnf->clear_screen = DEF_CLEAR_SCREEN;
 
@@ -593,6 +594,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("LQ aging factor  : %f\n", cnf->lq_aging);
 
+  printf("LQ algorithm name: %s\n", cnf->lq_algorithm ? cnf->lq_algorithm : "default");
+  
   printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");

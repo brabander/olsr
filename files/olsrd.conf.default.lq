@@ -128,8 +128,14 @@ UseHysteresis	no
 LinkQualityLevel	2
 
 # Link quality aging factor
-# Defaults to 0.05, smaller values mean larger LQ window size
-LinkQualityAging 0.1 
+# Defaults to 0.1, smaller values mean faster reaction to changing links
+
+#LinkQualityAging 0.1 
+
+# Link quality algorithm
+# Defaults to "etx_fpm" for fixpoint based etx algorithm
+
+#LinkQualityAlgorithm    "etx_fpm"
 
 # Polling rate in seconds(float). 
 # Default value 0.05 sec

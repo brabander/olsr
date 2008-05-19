@@ -45,7 +45,7 @@
 #include "lq_packet.h"
 #include "packet.h"
 #include "olsr.h"
-#include "lq_etx_fpm.h"
+#include "lq_plugin_default_fpm.h"
 #include "fpm.h"
 
 /* etx lq plugin (fpm version) settings */
@@ -132,9 +132,9 @@ void default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t **curr, void *ptr)
 
 olsr_bool default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2) {
   if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
+    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
   }
-  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
+  return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
 }
 
 int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr) {

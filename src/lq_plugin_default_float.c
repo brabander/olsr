@@ -44,10 +44,10 @@
 #include "lq_packet.h"
 #include "packet.h"
 #include "olsr.h"
-#include "lq_plugin_default.h"
+#include "lq_plugin_default_float.h"
 
 /* Default lq plugin settings */
-struct lq_handler default_lq_float_handler = {
+struct lq_handler lq_etx_float_handler = {
   &default_lq_initialize_float,
   
   &default_lq_calc_cost_float,

@@ -388,6 +388,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_LQ_AGING;
 }
 
+"LinkQualityAlgorithm" {
+    yylval = NULL;
+    return TOK_LQ_PLUGIN;
+}
+
 "LinkQualityWinSize" {
     yylval = NULL;
     return TOK_LQ_WSIZE;
