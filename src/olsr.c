@@ -61,6 +61,7 @@
 #include "lq_packet.h"
 #include "common/avl.h"
 #include "net_olsr.h"
+#include "lq_plugin_default.h"
 
 #include <stdarg.h>
 #include <signal.h>
@@ -244,6 +245,9 @@ olsr_init_tables(void)
     avl_comp_prefix_default = avl_comp_ipv6_prefix;
   }
 
+  /* Initialize default LQ plugin */
+  set_lq_handler(&default_lq_float_handler, DEFAULT_LQ_HANDLER_NAME);
+  
   /* Initialize link set */
   olsr_init_link_set();
 

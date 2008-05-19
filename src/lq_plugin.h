@@ -52,11 +52,18 @@
 #define ROUTE_COST_BROKEN (0xffffffff)
 #define ZERO_ROUTE_COST 0
 
+#define MINIMAL_USEFUL_LQ 0.1
+
+#define LQ_QUICKSTART_STEPS 12
+#define LQ_QUICKSTART_AGING 0.25
+
 struct lqtextbuffer {
   char buf[16];
 };
 
 struct lq_handler {
+  void (*initialize)(void);
+  
   olsr_linkcost(*calc_hello_cost) (const void *lq);
   olsr_linkcost(*calc_tc_cost) (const void *lq);
 

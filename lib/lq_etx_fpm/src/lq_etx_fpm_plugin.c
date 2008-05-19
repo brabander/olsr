@@ -64,6 +64,11 @@ int olsrd_plugin_interface_version(void)
     return PLUGIN_INTERFACE_VERSION;
 }
 
+int olsrd_plugin_init(void) {
+  set_lq_handler(&lq_etx_fpm_handler, LQ_ETX_FPM_HANDLER_NAME);
+  return 1;
+}
+
 /**
  * Register parameters from config file
  * Called for all plugin parameters
@@ -71,14 +76,10 @@ int olsrd_plugin_interface_version(void)
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
 };
 
-/**
- * Initialize plugin
- * Called after all parameters are passed
- */
-int
-olsrd_plugin_init(void)
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-  return init_lq_etx_fpm();
+    *params = plugin_parameters;
+    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }
 
 

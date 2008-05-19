@@ -43,6 +43,7 @@
 #include "fpm.h"
 
 #ifdef USE_FPM
+#undef NDEBUG
 
 #ifndef NDEBUG
 

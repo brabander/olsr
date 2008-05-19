@@ -48,9 +48,6 @@
 
 
 /* Initialization function */
-int
-olsrd_plugin_init(void);
-
 int 
 olsrd_plugin_interface_version(void);
 
