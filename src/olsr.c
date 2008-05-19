@@ -212,11 +212,13 @@ olsr_process_changes(void)
   changes_force = OLSR_FALSE;
 }
 
-
-
+/*
+ * Callback for the periodic route calculation.
+ */
 void
 olsr_trigger_forced_update(void *unused __attribute__((unused))) {
-	changes_force = OLSR_TRUE;
+
+  changes_force = OLSR_TRUE;
   changes_neighborhood = OLSR_TRUE;
   changes_topology = OLSR_TRUE;
   changes_hna = OLSR_TRUE;
@@ -275,8 +277,10 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();  
 
+#if 0
   /* Initialize Layer 1/2 database */
-  // olsr_initialize_layer12();
+  olsr_initialize_layer12();
+#endif
   
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
