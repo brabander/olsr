@@ -52,6 +52,7 @@
 #include <time.h>
 
 #include "olsr_types.h"
+#include "mantissa.h"
 
 #define _PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
 
@@ -160,7 +161,7 @@ struct interface
   } nic_state;
 #endif
 
-  float         hello_etime;
+  olsr_reltime  hello_etime;
   struct        vtimes valtimes;
 
   clock_t       fwdtimer;                       /* Timeout for OLSR forwarding on this if */

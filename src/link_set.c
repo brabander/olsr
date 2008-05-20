@@ -72,8 +72,8 @@ static int check_link_status(const struct hello_message *message,
                              const struct interface *in_if);
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
 					 const union olsr_ip_addr *,
-					 const union olsr_ip_addr *, double,
-					 double, const struct interface *);
+					 const union olsr_ip_addr *, olsr_reltime,
+					 olsr_reltime, const struct interface *);
 static int get_neighbor_status(const union olsr_ip_addr *);
 
 void
@@ -295,7 +295,7 @@ set_loss_link_multiplier(struct link_entry *entry)
   struct interface *inter;
   struct olsr_if *cfg_inter;
   struct olsr_lq_mult *mult;
-  float val = -1.0;
+  olsr_u32_t val = 0;
   union olsr_ip_addr null_addr;
 
   /* find the interface for the link */
@@ -321,17 +321,17 @@ set_loss_link_multiplier(struct link_entry *entry)
      */
     if ((ipequal(&mult->addr, &null_addr) && val < 0.0) ||
 	ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
-      val = mult->val;
+      val = mult->value;
     }
   }
 
   /* if we have not found an entry, then use the default multiplier */
-  if (val < 0) {
-    val = 1.0;
+  if (val == 0) {
+    val = 65536;
   }
 
   /* store the multiplier */
-  entry->loss_link_multiplier = (olsr_u32_t) (val * 65536);
+  entry->loss_link_multiplier = val;
 }
 
 /*
@@ -397,7 +397,7 @@ olsr_expire_link_loss_timer(void *context)
   olsr_update_packet_loss_worker(link, OLSR_TRUE);
 
   /* next timeout in 1.0 x htime */
-  olsr_change_timer(link->link_loss_timer, link->loss_hello_int * MSEC_PER_SEC,
+  olsr_change_timer(link->link_loss_timer, link->loss_helloint,
 		    OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
 }
 
@@ -442,7 +442,7 @@ olsr_expire_link_hello_timer(void *context)
 	      link->L_link_quality);
 
   /* Update hello_timeout - NO SLACK THIS TIME */
-  olsr_change_timer(link->link_hello_timer, link->last_htime * MSEC_PER_SEC,
+  olsr_change_timer(link->link_hello_timer, link->last_htime,
 		    OLSR_LINK_JITTER, OLSR_TIMER_PERIODIC);
 
   /* Update hysteresis values */
@@ -496,7 +496,7 @@ static struct link_entry *
 add_link_entry(const union olsr_ip_addr *local,
 	       const union olsr_ip_addr *remote,
 	       const union olsr_ip_addr *remote_main,
-	       double vtime, double htime, const struct interface *local_if)
+	       olsr_reltime vtime, olsr_reltime htime, const struct interface *local_if)
 {
   struct link_entry *new_link;
   struct neighbor_entry *neighbor;
@@ -548,14 +548,14 @@ add_link_entry(const union olsr_ip_addr *local,
   new_link->neighbor_iface_addr = *remote;
 
   /* L_time = current time + validity time */
-  olsr_set_link_timer(new_link, vtime * MSEC_PER_SEC);
+  olsr_set_link_timer(new_link, vtime);
 
   new_link->prev_status = ASYM_LINK;
 
   /* HYSTERESIS */
   if (olsr_cnf->use_hysteresis) {
     new_link->L_link_pending = 1;
-    new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime * 1000);
+    new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime);
     olsr_update_hysteresis_hello(new_link, htime);
     new_link->last_htime = htime;
     new_link->olsr_seqno = 0;
@@ -565,9 +565,9 @@ add_link_entry(const union olsr_ip_addr *local,
   new_link->L_link_quality = 0.0;
 
   if (olsr_cnf->lq_level > 0) {
-    new_link->loss_hello_int = htime;
+    new_link->loss_helloint = htime;
 
-    olsr_set_timer(&new_link->link_loss_timer, htime * 1500,
+    olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
 		   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
 		   &olsr_expire_link_loss_timer, new_link, 0);
 
@@ -679,7 +679,7 @@ update_link_entry(const union olsr_ip_addr *local,
 
   /* Update ASYM_time */
   entry->vtime = message->vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->vtime * 1000);
+  entry->ASYM_time = GET_TIMESTAMP(message->vtime);
 
   entry->prev_status = check_link_status(message, in_if);
 
@@ -692,12 +692,12 @@ update_link_entry(const union olsr_ip_addr *local,
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->vtime * MSEC_PER_SEC,
+    olsr_set_timer(&entry->link_sym_timer, message->vtime,
 		   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
 		   &olsr_expire_link_sym_timer, entry, 0);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-    olsr_set_link_timer(entry, (message->vtime + NEIGHB_HOLD_TIME) *
+    olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME *
 			MSEC_PER_SEC);
     break;
   default:;
@@ -818,9 +818,9 @@ olsr_print_link_set(void)
  */
 void
 olsr_update_packet_loss_hello_int(struct link_entry *entry,
-				  double loss_hello_int)
+				  olsr_reltime loss_hello_int)
 {
-  entry->loss_hello_int = loss_hello_int;
+  entry->loss_helloint = loss_hello_int;
 }
 
 void
@@ -829,7 +829,7 @@ olsr_update_packet_loss(struct link_entry *entry)
   olsr_update_packet_loss_worker(entry, OLSR_FALSE);
 
   /* timeout for the first lost packet is 1.5 x htime */
-  olsr_set_timer(&entry->link_loss_timer, entry->loss_hello_int * 1500,
+  olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint/2,
 		 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
 		 &olsr_expire_link_loss_timer, entry, 0);
 }

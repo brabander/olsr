@@ -588,7 +588,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 	{
 		/* IPv4 */
 		message->v4.olsr_msgtype = MESSAGE_TYPE;
-		message->v4.olsr_vtime = double_to_me(my_timeout);
+		message->v4.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
 		memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 		message->v4.ttl = MAX_TTL;
 		message->v4.hopcnt = 0;
@@ -603,7 +603,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 	{
 		/* IPv6 */
 		message->v6.olsr_msgtype = MESSAGE_TYPE;
-		message->v6.olsr_vtime = double_to_me(my_timeout);
+		message->v6.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
 		memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 		message->v6.ttl = MAX_TTL;
 		message->v6.hopcnt = 0;
@@ -641,7 +641,7 @@ olsr_parser(union olsr_message *m,
 {
 	struct namemsg *namemessage;
 	union olsr_ip_addr originator;
-	double vtime;
+	olsr_reltime vtime;
 	int size;
 	olsr_u16_t seqno;
 
@@ -656,12 +656,12 @@ olsr_parser(union olsr_message *m,
 		
 	/* Fetch the message based on IP version */
 	if(olsr_cnf->ip_version == AF_INET) {
-		vtime = me_to_double(m->v4.olsr_vtime);
+		vtime = me_to_reltime(m->v4.olsr_vtime);
 		size = ntohs(m->v4.olsr_msgsize);
 		namemessage = (struct namemsg*)&m->v4.message;
 	}
 	else {
-		vtime = me_to_double(m->v6.olsr_vtime);
+		vtime = me_to_reltime(m->v6.olsr_vtime);
 		size = ntohs(m->v6.olsr_msgsize);
 		namemessage = (struct namemsg*)&m->v6.message;
 	}
@@ -893,7 +893,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
  * name/service/forwarder entry in the message
  */
 void
-update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, double vtime)
+update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, olsr_reltime vtime)
 {
 #ifndef NODEBUG
 	struct ipaddr_str strbuf;
@@ -957,7 +957,7 @@ void
 insert_new_name_in_list(union olsr_ip_addr *originator,
 						struct list_node *this_list,
 						struct name *from_packet, olsr_bool *this_table_changed,
-						double vtime)
+						olsr_reltime vtime)
 {
 	int hash;
 	struct db_entry *entry;
@@ -985,7 +985,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 			//delegate to function for parsing the packet and linking it to entry->names
 			decap_namemsg(from_packet, &entry->names, this_table_changed);
 
-			olsr_set_timer(&entry->db_timer, vtime * MSEC_PER_SEC,
+			olsr_set_timer(&entry->db_timer, vtime,
 						   OLSR_NAMESVC_DB_JITTER, OLSR_TIMER_ONESHOT,
 						   &olsr_nameservice_expire_db_timer, entry, 0);
 
@@ -1007,7 +1007,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 		entry->originator = *originator;
 
-		olsr_set_timer(&entry->db_timer, vtime * MSEC_PER_SEC,
+		olsr_set_timer(&entry->db_timer, vtime,
 					   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_ONESHOT,
 					   &olsr_nameservice_expire_db_timer, entry, 0);
 

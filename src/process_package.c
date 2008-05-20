@@ -61,7 +61,7 @@ static void process_message_neighbors(struct neighbor_entry *,
                                       const struct hello_message *);
 
 static void linking_this_2_entries(struct neighbor_entry *,
-                                   struct neighbor_2_entry *, float);
+                                   struct neighbor_2_entry *, olsr_reltime);
 
 static olsr_bool lookup_mpr_status(const struct hello_message *,
                                    const struct interface *);
@@ -116,7 +116,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
             {
               /* Updating the holding time for this neighbor */
               olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
-                             message->vtime * MSEC_PER_SEC, OLSR_NBR2_LIST_JITTER,
+                             message->vtime, OLSR_NBR2_LIST_JITTER,
                              OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
                              two_hop_neighbor_yet, 0);
               two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
@@ -293,7 +293,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
  *@return nada
  */
 static void
-linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, float vtime)
+linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, olsr_reltime vtime)
 {
   struct neighbor_list_entry    *list_of_1_neighbors = olsr_malloc(sizeof(struct neighbor_list_entry), "Link entries 1");
   struct neighbor_2_list_entry  *list_of_2_neighbors = olsr_malloc(sizeof(struct neighbor_2_list_entry), "Link entries 2");
@@ -313,7 +313,7 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
   list_of_2_neighbors->nbr2_nbr = neighbor; /* XXX refcount */
   
-  olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime * MSEC_PER_SEC,
+  olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime,
                     OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
 
   /* Queue */
@@ -366,7 +366,7 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 		/* No need to do anything more */
 		return 1;
 	}
-	pkt_get_double(&curr, &hello->vtime);
+	pkt_get_reltime(&curr, &hello->vtime);
 	pkt_get_u16(&curr, &size);
 	pkt_get_ipaddress(&curr, &hello->source_addr);
 	
@@ -375,7 +375,7 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 	pkt_get_u16(&curr, &hello->packet_seq_number);
 	pkt_ignore_u16(&curr);
 	
-	pkt_get_double(&curr, &hello->htime);
+	pkt_get_reltime(&curr, &hello->htime);
 	pkt_get_u8(&curr, &hello->willingness);
 	
 	hello->neighbors = NULL;
@@ -564,7 +564,7 @@ olsr_process_received_mid(union olsr_message *m,
     }
 
     /* Update the timeout of the MID */
-    olsr_update_mid_table(&message.mid_origaddr, (float)message.vtime);
+    olsr_update_mid_table(&message.mid_origaddr, message.vtime);
 
     while (tmp_adr) {
       if (!mid_lookup_main_addr(&tmp_adr->alias_addr)){
@@ -573,7 +573,7 @@ olsr_process_received_mid(union olsr_message *m,
 #endif
         OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
         OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
-        insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, (float)message.vtime);
+        insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, message.vtime);
       }
       tmp_adr = tmp_adr->next;
     } 
@@ -601,7 +601,7 @@ olsr_process_received_hna(union olsr_message *m,
 {
 
   olsr_u8_t          olsr_msgtype;
-  double             vtime;
+  olsr_reltime       vtime;
   olsr_u16_t         olsr_msgsize;
   union olsr_ip_addr originator;
   //olsr_u8_t          ttl; unused
@@ -628,7 +628,7 @@ olsr_process_received_hna(union olsr_message *m,
     return;
   }
   /* Get vtime */
-  pkt_get_double(&curr, &vtime);
+  pkt_get_reltime(&curr, &vtime);
 
   /* olsr_msgsize */
   pkt_get_u16(&curr, &olsr_msgsize);

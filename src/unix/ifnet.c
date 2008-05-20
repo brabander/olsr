@@ -644,11 +644,11 @@ add_hemu_if(struct olsr_if *iface)
   if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
 
-  ifp->hello_etime = iface->cnf->hello_params.emission_interval;
-  ifp->valtimes.hello = double_to_me(iface->cnf->hello_params.validity_time);
-  ifp->valtimes.tc = double_to_me(iface->cnf->tc_params.validity_time);
-  ifp->valtimes.mid = double_to_me(iface->cnf->mid_params.validity_time);
-  ifp->valtimes.hna = double_to_me(iface->cnf->hna_params.validity_time);
+  ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
   return 1;
 }
@@ -995,11 +995,11 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval) {
     olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
   }
-  ifp->hello_etime = iface->cnf->hello_params.emission_interval;
-  ifp->valtimes.hello = double_to_me(iface->cnf->hello_params.validity_time);
-  ifp->valtimes.tc = double_to_me(iface->cnf->tc_params.validity_time);
-  ifp->valtimes.mid = double_to_me(iface->cnf->mid_params.validity_time);
-  ifp->valtimes.hna = double_to_me(iface->cnf->hna_params.validity_time);
+  ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
 
   /*

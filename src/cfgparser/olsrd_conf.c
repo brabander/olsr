@@ -631,7 +631,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 	  
           for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next)
           {
-            printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), mult->val);
+            printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), (float)(mult->value)/65536.0);
           }
 
           printf("\tAutodetetc changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");

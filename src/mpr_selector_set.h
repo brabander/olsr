@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tï¿½nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -42,6 +42,7 @@
 #ifndef _OLSR_MPRS_SET
 #define _OLSR_MPRS_SET
 
+#include "mantissa.h"
 
 struct mpr_selector
 {
@@ -69,7 +70,7 @@ olsr_init_mprs_set(void);
 
 
 struct mpr_selector *
-olsr_add_mpr_selector(const union olsr_ip_addr *, float);
+olsr_add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
 
 
 struct mpr_selector *
@@ -77,7 +78,7 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *);
 
 
 int
-olsr_update_mprs_set(const union olsr_ip_addr *, float);
+olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
 
 void

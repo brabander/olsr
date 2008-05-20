@@ -725,11 +725,11 @@ int add_hemu_if(struct olsr_if *iface)
   if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
 
-  ifp->hello_etime = iface->cnf->hello_params.emission_interval;
-  ifp->valtimes.hello = double_to_me(iface->cnf->hello_params.validity_time);
-  ifp->valtimes.tc = double_to_me(iface->cnf->tc_params.validity_time);
-  ifp->valtimes.mid = double_to_me(iface->cnf->mid_params.validity_time);
-  ifp->valtimes.hna = double_to_me(iface->cnf->hna_params.validity_time);
+  ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
   return 1;
 }
@@ -1021,12 +1021,11 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   if(olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
-  New->hello_etime = IntConf->cnf->hello_params.emission_interval;
-
-  New->valtimes.hello = double_to_me(IntConf->cnf->hello_params.validity_time);
-  New->valtimes.tc = double_to_me(IntConf->cnf->tc_params.validity_time);
-  New->valtimes.mid = double_to_me(IntConf->cnf->mid_params.validity_time);
-  New->valtimes.hna = double_to_me(IntConf->cnf->hna_params.validity_time);
+  New->hello_etime = (olsr_reltime)(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.tc = reltime_to_me(IntConf->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
   run_ifchg_cbs(New, IFCHG_IF_ADD);
 

@@ -49,6 +49,7 @@
 #include "lq_plugin.h"
 #include "packet.h"
 #include "common/list.h"
+#include "mantissa.h"
 
 #define MID_ALIAS_HACK_VTIME  10.0
 
@@ -60,7 +61,7 @@ struct link_entry {
   struct timer_entry *link_timer;
   struct timer_entry *link_sym_timer;
   clock_t ASYM_time;
-  unsigned int vtime;
+  olsr_reltime vtime;
   struct neighbor_entry *neighbor;
   olsr_u8_t prev_status;
 
@@ -71,14 +72,14 @@ struct link_entry {
   int L_link_pending;
   clock_t L_LOST_LINK_time;
   struct timer_entry *link_hello_timer;	/* When we should receive a new HELLO */
-  double last_htime;
+  olsr_reltime last_htime;
   olsr_bool olsr_seqno_valid;
   olsr_u16_t olsr_seqno;
 
   /*
    * packet loss
    */
-  double loss_hello_int;
+  olsr_reltime loss_helloint;
   struct timer_entry *link_loss_timer;
 
   /* user defined multiplies for link quality, multiplied with 65536 */
@@ -139,7 +140,7 @@ int check_neighbor_link(const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct neighbor_entry *,
 			    struct neighbor_entry *);
 int lookup_link_status(const struct link_entry *);
-void olsr_update_packet_loss_hello_int(struct link_entry *, double);
+void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
 void olsr_update_packet_loss(struct link_entry *entry);
 void olsr_print_link_set(void);
 

@@ -103,7 +103,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
     }
 
     mult->addr = addr;
-    mult->val = mult_arg->floating;
+    mult->value = (olsr_u32_t)(mult_arg->floating * 65536);
 
     mult->next = walker->cnf->lq_mult;
     walker->cnf->lq_mult = mult;

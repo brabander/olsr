@@ -70,7 +70,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   // initialize the static fields
 
   lq_hello->comm.type = LQ_HELLO_MESSAGE;
-  lq_hello->comm.vtime = me_to_double(outif->valtimes.hello);
+  lq_hello->comm.vtime = me_to_reltime(outif->valtimes.hello);
   lq_hello->comm.size = 0;
 
   lq_hello->comm.orig = olsr_cnf->main_addr;
@@ -161,7 +161,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   // initialize the static fields
 
   lq_tc->comm.type = LQ_TC_MESSAGE;
-  lq_tc->comm.vtime = me_to_double(outif->valtimes.tc);
+  lq_tc->comm.vtime = me_to_reltime(outif->valtimes.tc);
   lq_tc->comm.size = 0;
 
   lq_tc->comm.orig = olsr_cnf->main_addr;
@@ -297,7 +297,7 @@ static void serialize_common(struct olsr_common *comm)
       struct olsr_header_v4 *olsr_head_v4 = (struct olsr_header_v4 *)msg_buffer;
 
       olsr_head_v4->type = comm->type;
-      olsr_head_v4->vtime = double_to_me(comm->vtime);
+      olsr_head_v4->vtime = reltime_to_me(comm->vtime);
       olsr_head_v4->size = htons(comm->size);
 
       olsr_head_v4->orig = comm->orig.v4.s_addr;
@@ -312,7 +312,7 @@ static void serialize_common(struct olsr_common *comm)
       struct olsr_header_v6 *olsr_head_v6 = (struct olsr_header_v6 *)msg_buffer;
 
       olsr_head_v6->type = comm->type;
-      olsr_head_v6->vtime = double_to_me(comm->vtime);
+      olsr_head_v6->vtime = reltime_to_me(comm->vtime);
       olsr_head_v6->size = htons(comm->size);
 
       memcpy(&olsr_head_v6->orig, &comm->orig.v6.s6_addr, sizeof(olsr_head_v6->orig));
@@ -342,7 +342,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   struct lq_hello_header *head = (struct lq_hello_header *)(msg_buffer + off);
 
   head->reserved = 0;
-  head->htime = double_to_me(lq_hello->htime);
+  head->htime = reltime_to_me(lq_hello->htime);
   head->will = lq_hello->will; 
 
   // 'off' is the offset of the byte following the LQ_HELLO header

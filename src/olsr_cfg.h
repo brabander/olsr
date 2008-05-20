@@ -115,7 +115,7 @@ struct olsr_msg_params
 struct olsr_lq_mult
 {
   union olsr_ip_addr addr;
-  float val;
+  olsr_u32_t value;
   struct olsr_lq_mult *next;
 };
 

@@ -795,8 +795,7 @@ olsr_input_tc(union olsr_message *msg,
 #endif
   olsr_u16_t size, msg_seq, ansn;
   olsr_u8_t type, ttl, msg_hops, lower_border, upper_border;
-  double vtime;
-  unsigned int vtime_s;
+  olsr_reltime vtime;
   union olsr_ip_addr originator;
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
@@ -815,8 +814,7 @@ olsr_input_tc(union olsr_message *msg,
     return;
   }
 
-  pkt_get_double(&curr, &vtime);
-  vtime_s = (unsigned int)vtime;
+  pkt_get_reltime(&curr, &vtime);
   pkt_get_u16(&curr, &size);
 
   pkt_get_ipaddress(&curr, &originator);
@@ -933,7 +931,7 @@ olsr_input_tc(union olsr_message *msg,
   /*
    * Set or change the expiration timer accordingly.
    */
-  olsr_set_timer(&tc->validity_timer, vtime_s * MSEC_PER_SEC,
+  olsr_set_timer(&tc->validity_timer, vtime,
 		 OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT,
 		 &olsr_expire_tc_entry, tc, tc_validity_timer_cookie->ci_id);
 

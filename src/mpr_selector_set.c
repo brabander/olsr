@@ -127,7 +127,7 @@ olsr_expire_mpr_sel_entry(void *context)
  * The timer param is a relative timer expressed in milliseconds.
  */
 static void
-olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, unsigned int rel_timer)
+olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
 {
 
   olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
@@ -144,7 +144,7 @@ olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, unsigned int rel_timer)
  *@return a pointer to the new entry
  */
 struct mpr_selector *
-olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
+olsr_add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
 #ifndef NODEBUG
   struct ipaddr_str buf;
@@ -156,7 +156,7 @@ olsr_add_mpr_selector(const union olsr_ip_addr *addr, float vtime)
   new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
   /* Fill struct */
   new_entry->MS_main_addr = *addr;
-  olsr_set_mpr_sel_timer(new_entry, vtime * MSEC_PER_SEC);
+  olsr_set_mpr_sel_timer(new_entry, vtime);
   /* Queue */
   QUEUE_ELEM(mprs_list, new_entry);
   /*
@@ -208,7 +208,7 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
  *@return 1 if a new entry was added 0 if not
  */
 int
-olsr_update_mprs_set(const union olsr_ip_addr *addr, float vtime)
+olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
 #ifndef NODEBUG
   struct ipaddr_str buf;
@@ -222,7 +222,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, float vtime)
     signal_link_changes(OLSR_TRUE);
     return 1;
   }
-  olsr_set_mpr_sel_timer(mprs, vtime * MSEC_PER_SEC);
+  olsr_set_mpr_sel_timer(mprs, vtime);
   return 0;
 }
 

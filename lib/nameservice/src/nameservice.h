@@ -49,6 +49,7 @@
 #include "nameservice_msg.h"
 #include "hashing.h"
 #include "mapwrite.h"
+#include "mantissa.h"
 
 #define PLUGIN_NAME	"OLSRD nameservice plugin"
 #define PLUGIN_VERSION	"0.3"
@@ -146,13 +147,13 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 
 void
 insert_new_name_in_list(union olsr_ip_addr *, struct list_node *,
-                        struct name *, olsr_bool *, double);
+                        struct name *, olsr_bool *, olsr_reltime);
 
 olsr_bool
 allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip);
 
 void
-update_name_entry(union olsr_ip_addr *, struct namemsg *, int, double);
+update_name_entry(union olsr_ip_addr *, struct namemsg *, int, olsr_reltime);
 
 void
 write_hosts_file(void);

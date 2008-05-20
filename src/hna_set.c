@@ -250,7 +250,7 @@ olsr_expire_hna_net_entry(void *context)
  */
 void
 olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net,
-                      olsr_u8_t prefixlen, const float vtime)
+                      olsr_u8_t prefixlen, olsr_reltime vtime)
 {
   struct hna_entry *gw_entry = olsr_lookup_hna_gw(gw);
   struct hna_net *net_entry;
@@ -268,7 +268,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
     changes_hna = OLSR_TRUE;
   }
 
-  olsr_set_timer(&net_entry->hna_net_timer, vtime * MSEC_PER_SEC,
+  olsr_set_timer(&net_entry->hna_net_timer, vtime,
                  OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT,
                  &olsr_expire_hna_net_entry, net_entry, 0);
 }

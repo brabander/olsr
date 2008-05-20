@@ -296,7 +296,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	    {
 	      while (mult != NULL)
 		{
-		  fprintf(fd, "    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)), mult->val);
+		  fprintf(fd, "    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)), (float)(mult->value) / 65536.0);
 		  mult = mult->next;
 		}
 	    }
@@ -592,7 +592,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 	    {
 	      while (mult != NULL)
 		{
-		  WRITE_TO_BUF("    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), mult->val);
+		  WRITE_TO_BUF("    LinkQualityMult\t%s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), (float)(mult->value) / 65536.0);
 		  mult = mult->next;
 		}
 	    }

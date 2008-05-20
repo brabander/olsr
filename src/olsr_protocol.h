@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tï¿½nnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -92,12 +92,6 @@
 #define DUP_HOLD_TIME         30
 #define MID_HOLD_TIME         3 * MID_INTERVAL
 #define HNA_HOLD_TIME         3 * HNA_INTERVAL
-
-/*
- * Scaling factor
- */
-
-#define VTIME_SCALE_FACTOR    0.0625
 
 /*
  *Message Types

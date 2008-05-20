@@ -109,7 +109,7 @@ olsr_expire_mid_entry(void *context)
  * The timer param is a relative timer expressed in milliseconds.
  */
 static void
-olsr_set_mid_timer(struct mid_entry *mid, unsigned int rel_timer)
+olsr_set_mid_timer(struct mid_entry *mid, olsr_reltime rel_timer)
 {
 
   olsr_set_timer(&mid->mid_timer, rel_timer, OLSR_MID_JITTER,
@@ -129,7 +129,7 @@ olsr_set_mid_timer(struct mid_entry *mid, unsigned int rel_timer)
 
 void
 insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias,
-		 float vtime)
+		 olsr_reltime vtime)
 {
   struct mid_entry *tmp;
   struct mid_address *tmp_adr;
@@ -166,7 +166,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias,
     alias->main_entry = tmp;
     QUEUE_ELEM(reverse_mid_set[alias_hash], alias);
     alias->next_alias = tmp_adr;
-    olsr_set_mid_timer(tmp, vtime * MSEC_PER_SEC);
+    olsr_set_mid_timer(tmp, vtime);
   } else {
 
     /*Create new node */
@@ -176,7 +176,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias,
     alias->main_entry = tmp;
     QUEUE_ELEM(reverse_mid_set[alias_hash], alias);
     tmp->main_addr = *m_addr;
-    olsr_set_mid_timer(tmp, vtime * MSEC_PER_SEC);
+    olsr_set_mid_timer(tmp, vtime);
 
     /* Queue */
     QUEUE_ELEM(mid_set[hash], tmp);
@@ -251,7 +251,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias,
  */
 void
 insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias,
-		 float vtime)
+		 olsr_reltime vtime)
 {
   struct neighbor_entry *ne_old, *ne_new;
   struct mid_entry *me_old;
@@ -382,7 +382,7 @@ mid_lookup_aliases(const union olsr_ip_addr *adr)
  * @return 1 if the node was updated, 0 if not
  */
 int
-olsr_update_mid_table(const union olsr_ip_addr *adr, float vtime)
+olsr_update_mid_table(const union olsr_ip_addr *adr, olsr_reltime vtime)
 {
   olsr_u32_t hash;
 #ifndef NODEBUG
@@ -398,7 +398,7 @@ olsr_update_mid_table(const union olsr_ip_addr *adr, float vtime)
        tmp_list != &mid_set[hash]; tmp_list = tmp_list->next) {
     /*find match */
     if (ipequal(&tmp_list->main_addr, adr)) {
-      olsr_set_mid_timer(tmp_list, vtime * MSEC_PER_SEC);
+      olsr_set_mid_timer(tmp_list, vtime);
 
       return 1;
     }
@@ -528,8 +528,6 @@ olsr_delete_mid_entry(struct mid_entry *mid)
   /* Dequeue */
   DEQUEUE_ELEM(mid);
   free(mid);
-
-  return 0;
 }
 
 
