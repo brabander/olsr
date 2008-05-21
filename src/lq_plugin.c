@@ -103,6 +103,9 @@ int
 activate_lq_handler(const char *name)
 {
   struct lq_handler_node *node;
+  if (name == NULL) {
+    return 1;
+  }
   
   node = (struct lq_handler_node *) avl_find(&lq_handler_tree, name);
   if (node == NULL) {
