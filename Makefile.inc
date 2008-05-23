@@ -5,7 +5,7 @@
 #
 
 # activate debugging with 1 or deactivate with 0
-DEBUG ?= 1
+DEBUG ?= 0
 
 # compile OLSR_PRINTF out
 NO_DEBUG_MESSAGES ?= 1
