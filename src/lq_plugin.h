@@ -148,7 +148,6 @@ struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id);
 struct link_entry *olsr_malloc_link_entry(const char *id);
-struct tc_edge_entry *olsr_malloc_tc_edge_entry(const char *id);
 
 /* Externals. */
 extern struct lq_handler *active_lq_handler;

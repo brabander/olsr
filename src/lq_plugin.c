@@ -486,29 +486,6 @@ olsr_malloc_link_entry(const char *id)
 }
 
 /*
- * olsr_malloc_tc_edge_entry
- * 
- * this function allocates memory for an tc_edge_entry inclusive
- * linkquality data.
- * 
- * @param id string for memory debugging
- * 
- * @return pointer to tc_edge_entry
- */
-struct tc_edge_entry *
-olsr_malloc_tc_edge_entry(const char *id)
-{
-  struct tc_edge_entry *t;
-
-  t =
-    olsr_malloc(sizeof(struct tc_edge_entry) + active_lq_handler->tc_lq_size,
-		id);
-
-  active_lq_handler->clear_tc(t);
-  return t;
-}
-
-/*
  * Local Variables:
  * c-basic-offset: 2
  * End:
