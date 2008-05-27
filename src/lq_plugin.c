@@ -90,7 +90,7 @@ register_lq_handler(struct lq_handler *handler, const char *name)
 {
   struct lq_handler_node *node;
   
-  node = olsr_malloc(sizeof(struct lq_handler) + strlen(name) + 1, "olsr lq handler");
+  node = olsr_malloc(sizeof(*node) + strlen(name) + 1, "olsr lq handler");
   
   strcpy(node->name, name);
   node->node.key = node->name;
