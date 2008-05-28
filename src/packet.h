@@ -53,7 +53,7 @@ struct hello_neighbor
   union olsr_ip_addr    address;
   struct hello_neighbor *next;
   olsr_linkcost         cost;
-  char                  linkquality[0];
+  olsr_u32_t            linkquality[0];
 };
 
 struct hello_message
@@ -73,7 +73,7 @@ struct tc_mpr_addr
 {
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
-  char                  linkquality[0];
+  olsr_u32_t         linkquality[0];
 };
 
 struct tc_message

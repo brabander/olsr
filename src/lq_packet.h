@@ -96,7 +96,7 @@ struct lq_hello_neighbor
   olsr_u8_t                neigh_type;
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
-  char                  linkquality[0];
+  olsr_u32_t               linkquality[0];
 };
 
 struct lq_hello_message

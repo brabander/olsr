@@ -63,7 +63,7 @@ struct tc_edge_entry {
   struct tc_entry *tc;		       /* backpointer to owning tc entry */
   olsr_linkcost cost;		       /* metric used for SPF calculation */
   olsr_u16_t ansn;		       /* ansn of this edge, used for multipart msgs */
-  char linkquality[0];
+  olsr_u32_t linkquality[0];
 };
 
 AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
