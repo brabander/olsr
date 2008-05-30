@@ -8,7 +8,7 @@
 DEBUG ?= 0
 
 # compile OLSR_PRINTF out
-NO_DEBUG_MESSAGES ?= 1
+NO_DEBUG_MESSAGES ?= 0
 
 # the optimize option to be set for gcc
 OPTIMIZE ?= 
