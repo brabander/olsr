@@ -5,10 +5,10 @@
 #
 
 # activate debugging with 1 or deactivate with 0
-DEBUG ?= 0
+DEBUG ?= 1
 
 # compile OLSR_PRINTF out
-NO_DEBUG_MESSAGES ?= 1
+NO_DEBUG_MESSAGES ?= 0
 
 # the optimize option to be set for gcc
 OPTIMIZE ?= 
