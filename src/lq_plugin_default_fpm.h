@@ -50,7 +50,8 @@
 
 #define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 struct default_lq_fpm {
-	fpm lq, nlq;
+	olsr_u8_t valueLq;
+	olsr_u8_t valueNlq;
 	olsr_u16_t quickstart;
 };
 

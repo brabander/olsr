@@ -76,7 +76,6 @@ struct lq_handler lq_etx_fpm_handler = {
     sizeof(struct default_lq_fpm)
 };
 
-fpm minimal_lq;
 fpm aging_factor_new, aging_factor_old;
 fpm aging_quickstart_new, aging_quickstart_old;
 
@@ -86,19 +85,17 @@ void default_lq_initialize_fpm(void) {
   
   aging_quickstart_new = ftofpm(LQ_QUICKSTART_AGING);
   aging_quickstart_old = fpmsub(itofpm(1), aging_quickstart_new);
-  
-  minimal_lq = ftofpm(MINIMAL_USEFUL_LQ);
 }
 
 olsr_linkcost default_lq_calc_cost_fpm(const void *ptr) {
   const struct default_lq_fpm *lq = ptr;
   olsr_linkcost cost;
   
-  if (lq->lq < minimal_lq || lq->nlq < minimal_lq) {
+  if (lq->valueLq < (unsigned int)(255 * MINIMAL_USEFUL_LQ) || lq->valueNlq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)) {
     return LINK_COST_BROKEN;
   }
   
-  cost = fpmdiv(itofpm(1), fpmmul(lq->lq, lq->nlq));
+  cost = fpmidiv(itofpm(255 * 255), (int)lq->valueLq * (int)lq->valueNlq);
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
@@ -110,8 +107,8 @@ olsr_linkcost default_lq_calc_cost_fpm(const void *ptr) {
 int default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr) {
   struct default_lq_fpm *lq = ptr;
   
-  buff[0] = (unsigned char)fpmtoi(fpmmuli(lq->lq, 255));
-  buff[1] = (unsigned char)fpmtoi(fpmmuli(lq->nlq, 255));
+  buff[0] = (unsigned char)lq->valueLq;
+  buff[1] = (unsigned char)lq->valueNlq;
   buff[2] = (unsigned char)(0);
   buff[3] = (unsigned char)(0);
   
@@ -120,14 +117,10 @@ int default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr) {
 
 void default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t **curr, void *ptr) {
   struct default_lq_fpm *lq = ptr;
-  olsr_u8_t valueLq, valueNlq;
   
-  pkt_get_u8(curr, &valueLq);
-  pkt_get_u8(curr, &valueNlq);
+  pkt_get_u8(curr, &lq->valueLq);
+  pkt_get_u8(curr, &lq->valueNlq);
   pkt_ignore_u16(curr);
-  
-  lq->lq = fpmidiv(itofpm((int)valueLq), 255);
-  lq->nlq = fpmidiv(itofpm((int)valueNlq), 255);
 }
 
 olsr_bool default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2) {
@@ -140,8 +133,8 @@ olsr_bool default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost 
 int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr) {
   struct default_lq_fpm *lq = ptr;
   
-  buff[0] = (unsigned char)fpmtoi(fpmmuli(lq->lq, 255));
-  buff[1] = (unsigned char)fpmtoi(fpmmuli(lq->nlq, 255));
+  buff[0] = (unsigned char)lq->valueLq;
+  buff[1] = (unsigned char)lq->valueNlq;
   buff[2] = (unsigned char)(0);
   buff[3] = (unsigned char)(0);
   
@@ -150,14 +143,10 @@ int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr) {
 
 void default_lq_deserialize_tc_lq_pair_fpm(const olsr_u8_t **curr, void *ptr) {
   struct default_lq_fpm *lq = ptr;
-  olsr_u8_t valueLq, valueNlq;
   
-  pkt_get_u8(curr, &valueLq);
-  pkt_get_u8(curr, &valueNlq);
+  pkt_get_u8(curr, &lq->valueLq);
+  pkt_get_u8(curr, &lq->valueNlq);
   pkt_ignore_u16(curr);
-  
-  lq->lq = fpmidiv(itofpm(valueLq), 255);
-  lq->nlq = fpmidiv(itofpm(valueNlq), 255);
 }
 
 olsr_linkcost default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, olsr_bool lost) {
@@ -174,9 +163,9 @@ olsr_linkcost default_lq_packet_loss_worker_fpm(struct link_entry *link, void *p
   }
   
   // exponential moving average
-  tlq->lq = fpmmul(tlq->lq, alpha_old);
+  tlq->valueLq = fpmmul(tlq->valueLq, alpha_old);
   if (lost == 0) {
-    tlq->lq = fpmadd(tlq->lq, fpmmul(alpha_new, link_loss_factor));
+    tlq->valueLq += fpmtoi(fpmmuli(fpmmul(alpha_new, link_loss_factor), 255));
   }
   return default_lq_calc_cost_fpm(ptr);
 }
@@ -186,10 +175,10 @@ void default_lq_memorize_foreign_hello_fpm(void *ptrLocal, void *ptrForeign) {
   struct default_lq_fpm *foreign = ptrForeign;
   
   if (foreign) {
-    local->nlq = foreign->lq;
+    local->valueNlq = foreign->valueLq;
   }
   else {
-    local->nlq = itofpm(0);
+    local->valueNlq = 0;
   }
 }
 
@@ -204,7 +193,9 @@ void default_lq_clear_fpm(void *target) {
 const char *default_lq_print_fpm(void *ptr, struct lqtextbuffer *buffer) {
   struct default_lq_fpm *lq = ptr;
   
-  sprintf(buffer->buf, "%s/%s", fpmtoa(lq->lq), fpmtoa(lq->nlq));
+  sprintf(buffer->buf, "%s/%s",
+    fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)),
+    fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
   return buffer->buf;
 }
 
