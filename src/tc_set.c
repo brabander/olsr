@@ -724,6 +724,7 @@ olsr_print_tc_table(void)
 #endif
 }
 
+#ifdef CODE_IS_FIXED_ON_FBSD
 /*
  * calculate the border IPs of a tc edge set according to the border flags
  *
@@ -774,6 +775,7 @@ olsr_calculate_tc_border(olsr_u8_t lower_border,
   }
   return 1;
 }
+#endif
 
 /*
  * Process an incoming TC or TC_LQ message.
@@ -914,12 +916,15 @@ olsr_input_tc(union olsr_message *msg,
       changes_topology = OLSR_TRUE;
     }
 
+#ifdef CODE_IS_FIXED_ON_FBSD
     if (!borderSet) {
       borderSet = 1;
       memcpy(&lower_border_ip, &upper_border_ip, sizeof(lower_border_ip));
     }
+#endif
   }
 
+#ifdef CODE_IS_FIXED_ON_FBSD
   /*
    * Calculate real border IPs.
    */
@@ -927,6 +932,7 @@ olsr_input_tc(union olsr_message *msg,
     borderSet = olsr_calculate_tc_border(lower_border, &lower_border_ip,
 					 upper_border, &upper_border_ip);
   }
+#endif
 
   /*
    * Set or change the expiration timer accordingly.
