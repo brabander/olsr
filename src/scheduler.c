@@ -209,7 +209,7 @@ olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
    * Play some tricks to avoid overflows with integer arithmetic.
    */
   jitter_time = (jitter_pct * rel_time) / 100;
-  jitter_time = random / (RAND_MAX / jitter_time);
+  jitter_time = random / (1 + RAND_MAX / jitter_time);
 
 #if 0
   OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %ums to %ums\n",
