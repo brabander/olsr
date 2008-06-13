@@ -47,6 +47,7 @@
 
 
 struct hna_entry hna_set[HASHSIZE];
+struct olsr_cookie_info *hna_net_timer_cookie = NULL;
 
 /**
  * Initialize the HNA set
@@ -60,6 +61,9 @@ olsr_init_hna_set(void)
     hna_set[idx].next = &hna_set[idx];
     hna_set[idx].prev = &hna_set[idx];
   }
+
+  hna_net_timer_cookie =
+    olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
 
   return 1;
 }
@@ -252,14 +256,16 @@ void
 olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net,
                       olsr_u8_t prefixlen, olsr_reltime vtime)
 {
-  struct hna_entry *gw_entry = olsr_lookup_hna_gw(gw);
+  struct hna_entry *gw_entry;
   struct hna_net *net_entry;
 
-  if (gw_entry == NULL) {
+  gw_entry = olsr_lookup_hna_gw(gw);
+  if (!gw_entry) {
 
     /* Need to add the entry */
     gw_entry = olsr_add_hna_entry(gw);
   }
+
   net_entry = olsr_lookup_hna_net(&gw_entry->networks, net, prefixlen);
   if (net_entry == NULL)  {
 
@@ -270,7 +276,8 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
 
   olsr_set_timer(&net_entry->hna_net_timer, vtime,
                  OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT,
-                 &olsr_expire_hna_net_entry, net_entry, 0);
+                 &olsr_expire_hna_net_entry, net_entry,
+                 hna_net_timer_cookie);
 }
 
 
