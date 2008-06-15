@@ -277,7 +277,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
   olsr_set_timer(&net_entry->hna_net_timer, vtime,
                  OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT,
                  &olsr_expire_hna_net_entry, net_entry,
-                 hna_net_timer_cookie);
+                 hna_net_timer_cookie->ci_id);
 }
 
 
