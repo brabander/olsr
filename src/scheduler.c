@@ -360,9 +360,10 @@ olsr_walk_timers(clock_t * last_run)
       if (TIMED_OUT(timer->timer_clock)) {
 
 	OLSR_PRINTF(3, "TIMER: fire %s timer %p, ctx %p, "
-		    "at clocktick %u\n",
+		    "at clocktick %s\n",
 		    olsr_cookie_name(timer->timer_cookie),
-		    timer, timer->timer_cb_context, (unsigned int)(*last_run));
+		    timer, timer->timer_cb_context,
+                    olsr_clock_string((unsigned int)(*last_run)));
 
 	/* This timer is expired, call into the provided callback function */
 	timer->timer_cb(timer->timer_cb_context);
@@ -609,10 +610,9 @@ olsr_stop_timer(struct timer_entry *timer)
     return;
   }
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: stop %s timer %p firing in %s, ctx %p\n",
+  OLSR_PRINTF(3, "TIMER: stop %s timer %p, ctx %p\n",
 	      olsr_cookie_name(timer->timer_cookie),
-	      timer, olsr_clock_string(timer->timer_clock),
-	      timer->timer_cb_context);
+	      timer, timer->timer_cb_context);
 #endif
 
   olsr_update_timer_walk_ctx(timer);
