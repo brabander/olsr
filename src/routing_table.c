@@ -587,7 +587,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
                           union olsr_ip_addr *originator)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
+  struct ipaddr_str dstbuf, origbuf;
 #endif
 
   struct tc_entry *tc;
@@ -604,8 +604,8 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
 
 #ifdef DEBUG
   OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n",
-              olsr_ip_to_string(&buf, dst), plen,
-              olsr_ip_to_string(&buf, originator));
+              olsr_ip_to_string(&dstbuf, dst), plen,
+              olsr_ip_to_string(&origbuf, originator));
 #endif
 
   tc = olsr_lookup_tc_entry(originator);
