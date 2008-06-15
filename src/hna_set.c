@@ -48,6 +48,8 @@
 
 struct hna_entry hna_set[HASHSIZE];
 struct olsr_cookie_info *hna_net_timer_cookie = NULL;
+struct olsr_cookie_info *hna_entry_mem_cookie = NULL;
+struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 
 /**
  * Initialize the HNA set
@@ -64,6 +66,14 @@ olsr_init_hna_set(void)
 
   hna_net_timer_cookie =
     olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
+
+  hna_net_mem_cookie =
+    olsr_alloc_cookie("hna_net", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(hna_net_mem_cookie, sizeof(struct hna_net));
+
+  hna_entry_mem_cookie =
+    olsr_alloc_cookie("hna_entry", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(hna_entry_mem_cookie, sizeof(struct hna_entry));
 
   return 1;
 }
@@ -137,7 +147,7 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
   struct hna_entry *new_entry;
   olsr_u32_t hash;
 
-  new_entry = olsr_malloc(sizeof(struct hna_entry), "New HNA entry");
+  new_entry = olsr_cookie_malloc(hna_entry_mem_cookie);
 
   /* Fill struct */
   new_entry->A_gateway_addr = *addr;
@@ -174,7 +184,7 @@ struct hna_net *
 olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
 {
   /* Add the net */
-  struct hna_net *new_net = olsr_malloc(sizeof(struct hna_net), "Add HNA net");
+  struct hna_net *new_net = olsr_cookie_malloc(hna_net_mem_cookie);
   
   /* Fill struct */
   memset(new_net, 0, sizeof(struct hna_net));
@@ -235,8 +245,10 @@ olsr_expire_hna_net_entry(void *context)
   /* Delete hna_gw if empty */
   if (hna_gw->networks.next == &hna_gw->networks) {
     DEQUEUE_ELEM(hna_gw);
-    free(hna_gw);
+    olsr_cookie_free(hna_entry_mem_cookie, hna_gw);
   }
+
+  olsr_cookie_free(hna_net_mem_cookie, net_to_delete);
 }
 
 /**
