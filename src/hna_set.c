@@ -239,6 +239,7 @@ olsr_expire_hna_net_entry(void *context)
     olsr_cookie_free(hna_entry_mem_cookie, hna_gw);
   }
 
+  DEQUEUE_ELEM(net_to_delete);
   olsr_cookie_free(hna_net_mem_cookie, net_to_delete);
 }
 
