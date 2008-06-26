@@ -50,6 +50,7 @@
 
 #include "lq_plugin_default_float.h"
 #include "lq_plugin_default_fpm.h"
+#include "lq_plugin_default_ff.h"
 
 struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
@@ -67,7 +68,7 @@ init_lq_handler_tree(void)
   avl_init(&lq_handler_tree, &avl_strcasecmp);
   register_lq_handler(&lq_etx_float_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
   register_lq_handler(&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
-  
+  register_lq_handler(&lq_etx_ff_handler, LQ_ALGORITHM_ETX_FF_NAME);
   if (activate_lq_handler(olsr_cnf->lq_algorithm)) {
     activate_lq_handler(LQ_ALGORITHM_ETX_FPM_NAME);
   }

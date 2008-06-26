@@ -38,41 +38,48 @@
  *
  */
 
-#ifndef LQ_PLUGIN_DEFAULT_H_
-#define LQ_PLUGIN_DEFAULT_H_
+#ifndef LQ_ETX_FF_
+#define LQ_ETX_FF_
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
 
-#define LQ_ALGORITHM_ETX_FLOAT_NAME "etx_float"
-
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
-struct default_lq_float {
-  float lq, nlq;
-  olsr_u16_t quickstart;
+#define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
+
+#define LQ_FF_WINDOW 32
+#define LQ_FF_QUICKSTART_INIT 4
+
+struct default_lq_ff {
+	olsr_u8_t valueLq;
+	olsr_u8_t valueNlq;
+	olsr_u8_t windowSize, activePtr;
+	olsr_u16_t last_seq_nr;
+	olsr_u16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
 };
 
-void default_lq_initialize_float(void);
+void default_lq_initialize_ff(void);
 
-olsr_linkcost default_lq_calc_cost_float(const void *lq);
+olsr_linkcost default_lq_calc_cost_ff(const void *lq);
 
-olsr_bool default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2);
+olsr_bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2);
 
-olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void *lq, olsr_bool lost);
-void default_lq_memorize_foreign_hello_float(void *local, void *foreign);
+olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry *link, void *lq, olsr_bool lost);
+void default_lq_memorize_foreign_hello_ff(void *local, void *foreign);
 
-int default_lq_serialize_hello_lq_pair_float(unsigned char *buff, void *lq);
-void default_lq_deserialize_hello_lq_pair_float(const olsr_u8_t **curr, void *lq);
-int default_lq_serialize_tc_lq_pair_float(unsigned char *buff, void *lq);
-void default_lq_deserialize_tc_lq_pair_float(const olsr_u8_t **curr, void *lq);
+int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *lq);
+void default_lq_deserialize_hello_lq_pair_ff(const olsr_u8_t **curr, void *lq);
+int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *lq);
+void default_lq_deserialize_tc_lq_pair_ff(const olsr_u8_t **curr, void *lq);
 
-void default_lq_copy_link2tc_float(void *target, void *source);
-void default_lq_clear_float(void *target);
+void default_lq_copy_link2tc_ff(void *target, void *source);
+void default_lq_clear_ff(void *target);
 
-const char *default_lq_print_float(void *ptr, struct lqtextbuffer *buffer);
-const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer *buffer);
+const char *default_lq_print_ff(void *ptr, struct lqtextbuffer *buffer);
+const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
-extern struct lq_handler lq_etx_float_handler;
+extern struct lq_handler lq_etx_ff_handler;
 
-#endif /*LQ_PLUGIN_DEFAULT_H_*/
+#endif /*LQ_ETX_FF_*/

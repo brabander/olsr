@@ -42,13 +42,17 @@
 #define LQ_ETX_FPM_
 
 #include "olsr_types.h"
-#include "fpm.h"
 #include "lq_plugin.h"
 
-#define LQ_PLUGIN_LC_MULTIPLIER 1024
-#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM 16
+/* use only 1<<16 - 1 to allow the multiplication of two
+ * upscaled numbers between 0 and 1 */
+#define LQ_FPM_INTERNAL_MULTIPLIER 65535
+#define LQ_FPM_LINKCOST_MULTIPLIER 65535
+
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM 64
 
 #define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
+
 struct default_lq_fpm {
 	olsr_u8_t valueLq;
 	olsr_u8_t valueNlq;

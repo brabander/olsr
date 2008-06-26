@@ -327,7 +327,7 @@ set_loss_link_multiplier(struct link_entry *entry)
 
   /* if we have not found an entry, then use the default multiplier */
   if (val == 0) {
-    val = 65536;
+    val = LINK_LOSS_MULTIPLIER;
   }
 
   /* store the multiplier */
