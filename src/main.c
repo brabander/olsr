@@ -163,6 +163,8 @@ main(int argc, char *argv[])
   /* Using PID as random seed */
   srandom(getpid());
 
+  /* Init widely used statics */
+  memset(&all_zero, 0, sizeof(union olsr_ip_addr));
 
   /*
    * Set configfile name and

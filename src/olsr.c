@@ -85,6 +85,7 @@ struct pcf
 static struct pcf *pcf_list;
 
 static olsr_u16_t message_seqno;
+union olsr_ip_addr all_zero;
 
 /**
  *Initialize the message sequence number as a random value

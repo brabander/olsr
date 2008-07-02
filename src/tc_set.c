@@ -137,6 +137,13 @@ olsr_add_tc_entry(union olsr_ip_addr *adr)
 #endif
   struct tc_entry *tc;
 
+  /*
+   * Safety net against loss of the last main IP address.
+   */
+  if (ipequal(&olsr_cnf->main_addr, &all_zero)) {
+    return NULL;
+  }
+
 #ifdef DEBUG
   OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 #endif
