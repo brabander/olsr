@@ -100,10 +100,16 @@ net_set_disp_pack_out(olsr_bool val)
   disp_pack_out = val;
 }
 
+/*
+ * Converts each invalid IP-address from string to network byte order
+ * and adds it to the invalid list.
+ *
+ * TODO: rename function
+ */
 void
 init_net(void)
 {
-  const char * const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
+  const char * const *defaults = (olsr_cnf->ip_version == AF_INET) ? deny_ipv4_defaults : deny_ipv6_defaults;
   
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
@@ -116,7 +122,7 @@ init_net(void)
 }
 
 /**
- * Create a outputbuffer for the given interface. This
+ * Create an outputbuffer for the given interface. This
  * function will allocate the needed storage according 
  * to the MTU of the interface.
  *
@@ -439,14 +445,19 @@ net_output(struct interface *ifp)
   
   ifp->netbuf.pending = 0;
 
-  // if we've just transmitted a TC message, let Dijkstra use the current
-  // link qualities for the links to our neighbours
+  /*
+   * if we've just transmitted a TC message, let Dijkstra use the current
+   * link qualities for the links to our neighbours
+   */
 
   lq_tc_pending = OLSR_FALSE;
 
   return retval;
 }
 
+/*
+ * Adds the given IP-address to the invalid list. 
+ */
 void
 olsr_add_invalid_address(const union olsr_ip_addr *adr)
 {

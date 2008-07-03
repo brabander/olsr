@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 #endif
 
   /*
-   *socket for icotl calls
+   * socket for ioctl calls
    */
   olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
   if (olsr_cnf->ioctl_s < 0) {
@@ -287,6 +287,9 @@ main(int argc, char *argv[])
   fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
 #endif
 
+/*
+ * create routing socket
+ */
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts < 0) {

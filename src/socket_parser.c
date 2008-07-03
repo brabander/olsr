@@ -157,7 +157,7 @@ olsr_poll_sockets(void)
 {
   int n;
   struct olsr_socket_entry *olsr_sockets;
-  /* Global buffer for times(2) calls. Do not remopve since at least OpenBSD needs it. */
+  /* Global buffer for times(2) calls. Do not remove since at least OpenBSD needs it. */
   struct tms tms_buf;
   fd_set ibits;
   struct timeval tvp = {0, 0};

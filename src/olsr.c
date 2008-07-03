@@ -126,7 +126,7 @@ register_pcf(int (*f)(int, int, int))
 
 /**
  *Process changes in neighborhood or/and topology.
- *Re-calculates the neighborhooh/topology if there
+ *Re-calculates the neighborhood/topology if there
  *are any updates - then calls the right functions to
  *update the routing table.
  *@return 0
