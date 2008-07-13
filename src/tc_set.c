@@ -354,7 +354,7 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 	   "%s > %s, cost (%6s) %s",
 	   olsr_ip_to_string(&addrbuf, &tc->addr),
 	   olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-	   get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+	   get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 	   get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
   return buf;
@@ -723,7 +723,7 @@ olsr_print_tc_table(void)
 		  ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
 		  ipwidth, olsr_ip_to_string(&dstaddrbuf,
 					     &tc_edge->T_dest_addr),
-		  get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+		  get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 		  get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);

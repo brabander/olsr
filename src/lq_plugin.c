@@ -277,13 +277,14 @@ olsr_memorize_foreign_hello_lq(struct link_entry *local,
  * value in the same context (a single printf command for example).
  * 
  * @param pointer to link_entry
+ * @param char separator between LQ and NLQ 
  * @param buffer for output
  * @return pointer to a buffer with the text representation
  */
 const char *
-get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer)
+get_link_entry_text(struct link_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  return active_lq_handler->print_hello_lq(entry->linkquality, buffer);
+  return active_lq_handler->print_hello_lq(entry->linkquality, separator, buffer);
 }
 
 /*
@@ -294,13 +295,14 @@ get_link_entry_text(struct link_entry *entry, struct lqtextbuffer *buffer)
  * value in the same context (a single printf command for example).
  * 
  * @param pointer to tc_edge_entry
+ * @param char separator between LQ and NLQ 
  * @param pointer to buffer
  * @return pointer to the buffer with the text representation
  */
 const char *
-get_tc_edge_entry_text(struct tc_edge_entry *entry, struct lqtextbuffer *buffer)
+get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  return active_lq_handler->print_tc_lq(entry->linkquality, buffer);
+  return active_lq_handler->print_tc_lq(entry->linkquality, separator, buffer);
 }
 
 /*

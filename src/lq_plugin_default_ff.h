@@ -82,7 +82,7 @@ void default_lq_copy_link2tc_ff(void *target, void *source);
 void default_lq_clear_ff(void *target);
 void default_lq_clear_ff_hello(void *target);
 
-const char *default_lq_print_ff(void *ptr, struct lqtextbuffer *buffer);
+const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer);
 const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 extern struct lq_handler lq_etx_ff_handler;

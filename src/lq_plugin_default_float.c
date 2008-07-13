@@ -185,10 +185,13 @@ void default_lq_clear_float(void *target) {
   memset(target, 0, sizeof(struct default_lq_float));
 }
 
-const char *default_lq_print_float(void *ptr, struct lqtextbuffer *buffer) {
+const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_float *lq = ptr;
   
-  sprintf(buffer->buf, "%2.3f/%2.3f", lq->lq, lq->nlq);
+  sprintf(buffer->buf, "%2.3f%c%2.3f",
+      lq->lq,
+      separator,
+      lq->nlq);
   return buffer->buf;
 }
 

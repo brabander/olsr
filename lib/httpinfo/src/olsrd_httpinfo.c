@@ -991,7 +991,7 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">(%s) %s</td>",
-                       get_link_entry_text(link, &lqbuffer1),
+                       get_link_entry_text(link, '/', &lqbuffer1),
                        get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
@@ -1061,7 +1061,7 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
             struct lqtextbuffer lqbuffer1, lqbuffer2;
               size += snprintf(&buf[size], bufsize-size,
                                "<td align=\"right\">(%s) %s</td>\n",
-                               get_tc_edge_entry_text(tc_edge, &lqbuffer1),
+                               get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
                                get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");

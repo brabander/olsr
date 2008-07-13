@@ -256,10 +256,13 @@ void default_lq_clear_ff_hello(void *target) {
   }
 }
 
-const char *default_lq_print_ff(void *ptr, struct lqtextbuffer *buffer) {
+const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_ff *lq = ptr;
 
-  sprintf(buffer->buf, "%s/%s", fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)), fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
+  sprintf(buffer->buf, "%s%x%s",
+      fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)),
+      separator,
+      fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
   return buffer->buf;
 }
 
