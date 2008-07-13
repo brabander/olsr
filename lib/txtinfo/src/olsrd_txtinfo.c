@@ -321,7 +321,7 @@ static void ipc_print_neigh(void)
     struct neighbor_2_list_entry *list_2;
     int thop_cnt;
 
-    ipc_sendf("\nTable: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n");
+    ipc_sendf("Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n");
 
     /* Neighbors */
     OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
