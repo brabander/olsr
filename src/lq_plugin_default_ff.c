@@ -259,7 +259,7 @@ void default_lq_clear_ff_hello(void *target) {
 const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_ff *lq = ptr;
 
-  sprintf(buffer->buf, "%s%x%s",
+  sprintf(buffer->buf, "%s%c%s",
       fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)),
       separator,
       fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
