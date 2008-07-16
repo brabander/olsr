@@ -517,7 +517,7 @@ add_hemu_if(struct olsr_if *iface)
   ifp->int_name = olsr_malloc(strlen("hcif01") + 1, "Interface update 3");
   ifp->int_metric = 0;
 
-  strcpy(ifp->int_name, "hcif01");
+  strncpy(ifp->int_name, "hcif01", sizeof(ifp->int_name));
 
   OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
 
@@ -883,7 +883,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   ifp->gen_properties = NULL;
   ifp->int_name = olsr_malloc(strlen(ifr.ifr_name) + 1, "Interface update 3");
       
-  strcpy(ifp->int_name, if_basename(ifr.ifr_name));
+  strncpy(ifp->int_name, if_basename(ifr.ifr_name), sizeof(IFNAMSIZ));
   /* Segfaults if using strncpy(IFNAMSIZ) why oh why?? */
   ifp->int_next = ifnet;
   ifnet = ifp;

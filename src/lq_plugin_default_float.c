@@ -188,7 +188,7 @@ void default_lq_clear_float(void *target) {
 const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_float *lq = ptr;
   
-  sprintf(buffer->buf, "%2.3f%c%2.3f",
+  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f",
       lq->lq,
       separator,
       lq->nlq);
@@ -196,6 +196,8 @@ const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffe
 }
 
 const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer *buffer) {
-  sprintf(buffer->buf, "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER);
+  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER );
+	
+
   return buffer->buf;
 }

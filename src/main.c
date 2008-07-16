@@ -182,7 +182,7 @@ main(int argc, char *argv[])
   if (len == 0 || conf_file_name[len - 1] != '\\')
     conf_file_name[len++] = '\\';
   
-  strcpy(conf_file_name + len, "olsrd.conf");
+  strncpy(conf_file_name + len, "olsrd.conf", FILENAME_MAX);
 #else
   strncpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, FILENAME_MAX);
 #endif
