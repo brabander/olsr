@@ -908,7 +908,7 @@ olsr_input_tc(union olsr_message *msg,
   }
 
   OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
-	      olsr_ip_to_string(&buf, &originator), ansn);
+	      olsr_ip_to_string(&buf, &originator), tc->msg_seq);
 
   /*
    * Now walk the edge advertisements contained in the packet.
