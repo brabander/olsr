@@ -108,7 +108,7 @@ static void
 ipc_print_neigh_link(const struct neighbor_entry *neighbor);
 
 static void
-ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry);
+ipc_print_tc_link(const struct tc_entry *, const struct tc_edge_entry *);
 
 static void
 ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *, olsr_u8_t);
@@ -317,9 +317,9 @@ pcf_event(int changes_neighborhood,
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-        if (tc_edge->edge_inv &&
-          ((tc_edge->flags | tc_edge->edge_inv->flags) & OLSR_TC_EDGE_DOWN)==0) {
-        ipc_print_tc_link(tc, tc_edge);
+        if (tc_edge->edge_inv) {
+          ipc_print_tc_link(tc, tc_edge);
+        }
       } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
