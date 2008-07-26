@@ -501,7 +501,6 @@ add_link_entry(const union olsr_ip_addr *local,
   struct link_entry *new_link;
   struct neighbor_entry *neighbor;
   struct link_entry *tmp_link_set;
-  int ifnamelen=-1;
 
   tmp_link_set = lookup_link_entry(remote, remote_main, local_if);
   if (tmp_link_set) {
@@ -529,10 +528,10 @@ add_link_entry(const union olsr_ip_addr *local,
 
   /* copy if_name, if it is defined */
   if (local_if->int_name) {
-    ifnamelen = strlen(local_if->int_name)+1;
+    size_t name_size = strlen(local_if->int_name) + 1;
     new_link->if_name =
-      olsr_malloc(ifnamelen, "target of if_name in new link entry");
-    strncpy(new_link->if_name, local_if->int_name, ifnamelen);
+      olsr_malloc(name_size, "target of if_name in new link entry");
+    strscpy(new_link->if_name, local_if->int_name, name_size);
   } else
     new_link->if_name = NULL;
 

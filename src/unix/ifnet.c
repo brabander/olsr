@@ -75,7 +75,7 @@ set_flag(char *ifname, short flag __attribute__((unused)))
 {
   struct ifreq ifr;
 
-  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+  strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
   /* Get flags */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
@@ -84,7 +84,7 @@ set_flag(char *ifname, short flag __attribute__((unused)))
       return -1;
     }
 
-  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+  strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
   
   //printf("Setting flags for if \"%s\"\n", ifr.ifr_name);
 
@@ -178,7 +178,7 @@ chk_if_changed(struct olsr_if *iface)
     }
 
   memset(&ifr, 0, sizeof(struct ifreq));
-  strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);
+  strscpy(ifr.ifr_name, iface->name, sizeof(ifr.ifr_name));
 
 
   /* Get flags (and check if interface exists) */
@@ -502,6 +502,7 @@ add_hemu_if(struct olsr_if *iface)
   union olsr_ip_addr null_addr;
   olsr_u32_t addr[4];
   struct ipaddr_str buf;
+  size_t name_size;
 
   if(!iface->host_emul)
     return -1;
@@ -513,11 +514,12 @@ add_hemu_if(struct olsr_if *iface)
   iface->configured = OLSR_TRUE;
   iface->interf = ifp;
 
+  name_size = strlen("hcif01") + 1;
   ifp->is_hcif = OLSR_TRUE;
-  ifp->int_name = olsr_malloc(strlen("hcif01") + 1, "Interface update 3");
+  ifp->int_name = olsr_malloc(name_size, "Interface update 3");
   ifp->int_metric = 0;
 
-  strcpy(ifp->int_name, "hcif01");
+  strscpy(ifp->int_name, "hcif01", name_size);
 
   OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
 
@@ -680,6 +682,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   struct interface ifs, *ifp;
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
+  size_t name_size;
 #ifdef linux
   int precedence = IPTOS_PREC(olsr_cnf->tos);
   int tos_bits = IPTOS_TOS(olsr_cnf->tos);
@@ -690,7 +693,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   memset(&ifr, 0, sizeof(struct ifreq));
   memset(&ifs, 0, sizeof(struct interface));
-  strncpy(ifr.ifr_name, iface->name, IFNAMSIZ);
+  strscpy(ifr.ifr_name, iface->name, sizeof(ifr.ifr_name));
 
   OLSR_PRINTF(debuglvl, "Checking %s:\n", ifr.ifr_name);
 
@@ -880,9 +883,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   /* XXX bad code */
   memcpy(ifp, &ifs, sizeof(struct interface));
   
+  name_size = strlen(if_basename(ifr.ifr_name)) + 1;
   ifp->gen_properties = NULL;
-  ifp->int_name = olsr_malloc(strlen(if_basename(ifr.ifr_name)) + 1, "Interface update 3");
-  strcpy(ifp->int_name, if_basename(ifr.ifr_name));
+  ifp->int_name = olsr_malloc(name_size, "Interface update 3");
+  strscpy(ifp->int_name, if_basename(ifr.ifr_name), name_size);
   ifp->int_next = ifnet;
   ifnet = ifp;
 

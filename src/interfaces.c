@@ -242,6 +242,7 @@ struct olsr_if *
 queue_if(const char *name, int hemu)
 {
   struct olsr_if *interf_n = olsr_cnf->interfaces;
+  size_t name_size;
 
   //printf("Adding interface %s\n", name);
 
@@ -258,15 +259,15 @@ queue_if(const char *name, int hemu)
 
   interf_n = olsr_malloc(sizeof(struct olsr_if), "queue interface");
 
-  /* strlen () does not return length including terminating /0 */
-  interf_n->name = olsr_malloc(strlen(name) + 1, "queue interface name");
+  name_size = strlen(name) + 1;
+  interf_n->name = olsr_malloc(name_size, "queue interface name");
   interf_n->cnf = NULL;
   interf_n->interf = NULL;
   interf_n->configured = 0;
 
   interf_n->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
 
-  strncpy(interf_n->name, name, strlen(name) + 1);
+  strscpy(interf_n->name, name, name_size);
   interf_n->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = interf_n;
 

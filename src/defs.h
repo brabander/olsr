@@ -115,6 +115,35 @@ extern FILE *debug_handle;
 #define INLINE inline __attribute__((always_inline))
 
 /*
+ * A somewhat safe version of strncpy and strncat. Note, that
+ * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
+ * the BSD compiler prints out a warning if you use plain strcpy().
+ */
+ 
+static INLINE char *strscpy(char *dest, const char *src, size_t size)
+{
+	register size_t l = 0;
+#if !defined(NODEBUG) && defined(DEBUG)
+	if (sizeof(dest) == size) fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n", dest, src, size);
+	if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
+	if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
+#endif
+	if (NULL != dest && NULL != src)
+	{
+		/* src does not need to be null terminated */
+		if (0 < size--) while(l < size && 0 != src[l]) l++;
+		dest[l] = 0;
+	}
+	return strncpy(dest, src, l);
+}
+
+static INLINE char *strscat(char *dest, const char *src, size_t size)
+{
+	register size_t l = strlen(dest);
+	return strscpy(dest + l, src, size > l ? size - l : 0);
+}
+
+/*
  * Queueing macros
  */
 

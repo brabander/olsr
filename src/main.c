@@ -114,7 +114,7 @@ main(int argc, char *argv[])
 #endif
 #ifdef WIN32
   WSADATA WsaData;
-  int len;
+  size_t len;
 #endif
 
   /* paranoia checks */
@@ -182,9 +182,9 @@ main(int argc, char *argv[])
   if (len == 0 || conf_file_name[len - 1] != '\\')
     conf_file_name[len++] = '\\';
   
-  strncpy(conf_file_name + len, "olsrd.conf", FILENAME_MAX);
+  strscpy(conf_file_name + len, "olsrd.conf", sizeof(conf_file_name) - len);
 #else
-  strncpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, FILENAME_MAX);
+  strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
 
   if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) 
@@ -204,7 +204,7 @@ main(int argc, char *argv[])
 	  exit(EXIT_FAILURE);
 	}
 		 
-      strncpy(conf_file_name, argv[1], FILENAME_MAX);
+      strscpy(conf_file_name, argv[1], sizeof(conf_file_name));
       argv++; argc--;
 
     }

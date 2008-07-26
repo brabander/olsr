@@ -136,22 +136,22 @@ name_constructor(void)
 
 	len = strlen(my_hosts_file);
 	if (my_hosts_file[len - 1] != '\\')
-		my_hosts_file[len++] = '\\';
-	strcpy(my_hosts_file + len, "hosts_olsr");
+		strscat(my_hosts_file, "\\", sizeof(my_host_file));
+	strscat(my_hosts_file, "hosts_olsr", sizeof(my_host_file));
 	
 	len = strlen(my_services_file);
 	if (my_services_file[len - 1] != '\\')
-		my_services_file[len++] = '\\';
-	strcpy(my_services_file + len, "services_olsr");
+		strscat(my_services_file, "\\", sizeof(my_services_file));
+	strscat(my_services_file, "services_olsr", sizeof(my_services_file));
 
 	len = strlen(my_resolv_file);
 	if (my_resolv_file[len - 1] != '\\')
-		my_resolv_file[len++] = '\\';
-	strcpy(my_resolv_file + len, "resolvconf_olsr");
+		strscat(my_resolv_file, "\\", sizeof(my_resolv_file));
+	strscat(my_resolv_file, "resolvconf_olsr", sizeof(my_resolv_file));
 #else
-	strcpy(my_hosts_file, "/var/run/hosts_olsr");
-	strcpy(my_services_file, "/var/run/services_olsr");
-	strcpy(my_resolv_file, "/var/run/resolvconf_olsr");
+	strscpy(my_hosts_file, "/var/run/hosts_olsr", sizeof(my_hosts_file));
+	strscpy(my_services_file, "/var/run/services_olsr", sizeof(my_services_file));
+	strscpy(my_resolv_file, "/var/run/resolvconf_olsr", sizeof(my_resolv_file));
 	*my_sighup_pid_file = 0;
 #endif
 
@@ -317,7 +317,8 @@ name_init(void)
 	//regex string for validating the hostnames
 	const char *regex_name = "^[[:alnum:]_.-]+$";
 	//regex string for the service line
-	char *regex_service = olsr_malloc(256*sizeof(char) + strlen(my_suffix), "new *char from name_init for regex_service");
+	size_t regex_size = 256 * sizeof(char) + strlen(my_suffix);
+	char *regex_service = olsr_malloc(regex_size, "new *char from name_init for regex_service");
 	memset(&ipz, 0, sizeof(ipz));
 
 	//compile the regex from the string
@@ -342,9 +343,9 @@ name_init(void)
 	//regex_service = "^[[:alnum:]]+://(([[:alnum:]_.-]+.olsr)|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}))
 	//                 :    port              /path      |(tcp OR udp) |short description
 	//                 :[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$";
-    strcpy(regex_service, "^[[:alnum:]]+://(([[:alnum:]_.-]+");
-    strcat(regex_service, my_suffix);
-	strcat(regex_service, ")|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3})):[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$");
+	strscpy(regex_service, "^[[:alnum:]]+://(([[:alnum:]_.-]+", regex_size);
+	strscat(regex_service, my_suffix, regex_size);
+	strscat(regex_service, ")|([[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3})):[[:digit:]]+[[:alnum:]/?._=#-]*\\|(tcp|udp)\\|[^|[:cntrl:]]+$", regex_size);
 
 	/* #1: call regcomp() to compile the regex */
 	if ((ret = regcomp(&regex_t_service, regex_service , REG_EXTENDED )) != 0)
@@ -776,7 +777,7 @@ create_packet(struct name* to, struct name_entry *from)
 	to->len = htons(from->len);
 	to->ip = from->ip;
 	pos += sizeof(struct name);
-	strncpy(pos, from->name, from->len);
+	memcpy(pos, from->name, from->len);
 	pos += from->len;
 	for (k = from->len; (k & 3) != 0; k++)
 		*pos++ = '\0';
@@ -837,7 +838,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 					olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip));
 				free(already_saved_name_entries->name);
 				already_saved_name_entries->name = olsr_malloc(len_of_name + 1, "upd name_entry name");
-				strncpy(already_saved_name_entries->name, name, len_of_name);
+				strscpy(already_saved_name_entries->name, name, len_of_name + 1);
 
 				*this_table_changed = OLSR_TRUE;
 				olsr_start_write_file_timer();
@@ -869,10 +870,9 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 	tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");		
 	tmp->type = ntohs(from_packet->type);
 	tmp->len = len_of_name > MAX_NAME ? MAX_NAME : ntohs(from_packet->len);
-	tmp->name = olsr_malloc(tmp->len+1, "new name_entry name");
+	tmp->name = olsr_malloc(tmp->len + 1, "new name_entry name");
 	tmp->ip = from_packet->ip;
-	strncpy(tmp->name, name, tmp->len);
-	tmp->name[tmp->len] = '\0';
+	strscpy(tmp->name, name, tmp->len + 1);
 
 	OLSR_PRINTF(3, "\nNAME PLUGIN: create new name/service/forwarder entry %s (%s) [len=%d] [type=%d] in linked list\n", 
 		tmp->name, olsr_ip_to_string(&strbuf, &tmp->ip), tmp->len, tmp->type);

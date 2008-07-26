@@ -414,7 +414,7 @@ parse_http_request(int fd)
     }
 #endif
     /* We only support GET */
-    strcpy(body, HTTP_400_MSG);
+    strscpy(body, HTTP_400_MSG, sizeof(body));
     stats.ill_hits++;
     c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, sizeof(req));
   } else if (!strcmp(req_type, "GET")) {
@@ -523,11 +523,11 @@ parse_http_request(int fd)
 
 
     stats.ill_hits++;
-    strcpy(body, HTTP_404_MSG);
+    strscpy(body, HTTP_404_MSG, sizeof(body));
     c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, sizeof(req));
   } else {
     /* We only support GET */
-    strcpy(body, HTTP_400_MSG);
+    strscpy(body, HTTP_400_MSG, sizeof(body));
     stats.ill_hits++;
     c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, sizeof(req));
   }

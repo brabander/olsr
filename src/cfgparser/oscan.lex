@@ -88,14 +88,14 @@ static struct conf_token *get_string_token(const char * const s, const size_t n)
 {
     struct conf_token *rv = get_conf_token();
     if (rv != NULL) {
-        rv->string = malloc(n+1);
+        rv->string = malloc(n + 1);
         if (rv->string == NULL) {
-          fprintf(stderr, "Cannot allocate %lu bytes for string token data.\n", (unsigned long)(n+1)); /* size_t on 64bit */
+          fprintf(stderr, "Cannot allocate %lu bytes for string token data.\n", (unsigned long)n); /* size_t on 64bit */
             free(rv);
             return NULL;
         }
-        strncpy(rv->string, s, n);
-        rv->string[n] = '\0';
+        memcpy(rv->string, s, n);
+	rv->string[n] = '\0';
     }
     return rv;
 }

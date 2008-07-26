@@ -382,7 +382,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   Info->Broad = Info->Addr | ~Info->Mask;
 
-  strcpy(Info->Guid, Walker->AdapterName);
+  strscpy(Info->Guid, Walker->AdapterName, sizeof(Info->Guid));
 
   if ((IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED &&
       IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL) ||
@@ -422,7 +422,7 @@ static int IsWireless(char *IntName)
   DevName[2] = '.';
   DevName[3] = '\\';
 
-  strcpy(DevName + 4, Info.Guid);
+  strscpy(DevName + 4, Info.Guid, sizeof(DevName) - 4);
 
   OLSR_PRINTF(5, "Checking whether interface %s is wireless.\n", DevName);
 
@@ -591,6 +591,7 @@ int add_hemu_if(struct olsr_if *iface)
   union olsr_ip_addr null_addr;
   olsr_u32_t addr[4];
   struct ipaddr_str buf;
+  size_t name_size;
 
   if(!iface->host_emul)
     return -1;
@@ -602,11 +603,12 @@ int add_hemu_if(struct olsr_if *iface)
   iface->configured = OLSR_TRUE;
   iface->interf = ifp;
 
+  name_size = strlen("hcif01") + 1;
   ifp->is_hcif = OLSR_TRUE;
-  ifp->int_name = olsr_malloc(strlen("hcif01") + 1, "Interface update 3");
+  ifp->int_name = olsr_malloc(name_size, "Interface update 3");
   ifp->int_metric = 0;
 
-  strcpy(ifp->int_name, "hcif01");
+  strscpy(ifp->int_name, "hcif01", name_size);
 
   OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
 
@@ -897,6 +899,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   union olsr_ip_addr NullAddr;
   int IsWlan;
   struct sockaddr_in *AddrIn;
+  size_t name_size;
   
   if (olsr_cnf->ip_version == AF_INET6)
   {
@@ -940,8 +943,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   New->int_mtu = Info.Mtu;
 
-  New->int_name = olsr_malloc(strlen (IntConf->name) + 1, "Interface 2");
-  strcpy(New->int_name, IntConf->name);
+  name_size = strlen(IntConf->name) + 1;
+  New->int_name = olsr_malloc(name_size, "Interface 2");
+  strscpy(New->int_name, IntConf->name, name_size);
 
   IsWlan = IsWireless(IntConf->name);
 
