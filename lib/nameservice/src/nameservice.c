@@ -427,9 +427,7 @@ remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
 	}
 
 	if ( !valid  ) {
-#ifndef NODEBUG
 		struct ipaddr_str strbuf;
-#endif
 		OLSR_PRINTF(1, "NAME PLUGIN: invalid or malformed parameter %s (%s), fix your config!\n", my_list->name, olsr_ip_to_string(&strbuf, &my_list->ip));
 		next = my_list->next;
 		free(my_list->name);
@@ -438,9 +436,7 @@ remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
 		my_list = NULL;
 		return remove_nonvalid_names_from_list(next, type);
 	} else {
-#ifndef NODEBUG
 		struct ipaddr_str strbuf;
-#endif
 		OLSR_PRINTF(2, "NAME PLUGIN: validate parameter %s (%s) -> OK\n", my_list->name, olsr_ip_to_string(&strbuf, &my_list->ip));
 		my_list->next = remove_nonvalid_names_from_list(my_list->next, type);
 		return my_list;
@@ -541,9 +537,7 @@ olsr_start_write_file_timer(void)
 void
 olsr_namesvc_delete_db_entry(struct db_entry *db)
 {
-#ifndef NODEBUG
 	struct ipaddr_str strbuf;
-#endif
 	OLSR_PRINTF(2, "NAME PLUGIN: %s timed out... deleting\n", 
 				olsr_ip_to_string(&strbuf, &db->originator));
 
@@ -673,9 +667,7 @@ olsr_parser(union olsr_message *m,
 	/* Check that the neighbor this message was received from is symmetric. 
 	If not - back off*/
 	if(check_neighbor_link(ipaddr) != SYM_LINK) {
-#ifndef NODEBUG
 		struct ipaddr_str strbuf;
-#endif
 		OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
 		return;
 	}
@@ -768,9 +760,7 @@ create_packet(struct name* to, struct name_entry *from)
 {
 	char *pos = (char*) to;
 	int k;
-#ifndef NODEBUG
 	struct ipaddr_str strbuf;
-#endif
 	OLSR_PRINTF(3, "NAME PLUGIN: Announcing name %s (%s) %d\n", 
 		from->name, olsr_ip_to_string(&strbuf, &from->ip), from->len);
 	to->type = htons(from->type);
@@ -790,9 +780,7 @@ create_packet(struct name* to, struct name_entry *from)
 void
 decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_table_changed )
 {
-#ifndef NODEBUG
 	struct ipaddr_str strbuf;
-#endif
 	struct name_entry *tmp;
 	struct name_entry *already_saved_name_entries;
 	char *name = (char*)from_packet + sizeof(struct name);
@@ -845,9 +833,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 			}
 			if (!ipequal(&already_saved_name_entries->ip, &from_packet->ip))
 			{
-#ifndef NODEBUG
 				struct ipaddr_str strbuf2, strbuf3;
-#endif
 				OLSR_PRINTF(4, "NAME PLUGIN: updating ip %s -> %s (%s)\n",
 					olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip),
 					olsr_ip_to_string(&strbuf2, &from_packet->ip),
@@ -893,9 +879,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 void
 update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_size, olsr_reltime vtime)
 {
-#ifndef NODEBUG
 	struct ipaddr_str strbuf;
-#endif
 	char *pos, *end_pos;
 	struct name *from_packet; 
 	int i;
@@ -973,9 +957,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 		entry = list2db(list_node);
 
 		if (ipequal(originator, &entry->originator)) {
-#ifndef NODEBUG
 			struct ipaddr_str strbuf;
-#endif
 			// found
 			OLSR_PRINTF(4, "NAME PLUGIN: found entry for (%s) in its hash table\n",
 						olsr_ip_to_string(&strbuf, originator));
@@ -993,9 +975,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 	if (! entry_found)
 	{
-#ifndef NODEBUG
 		struct ipaddr_str strbuf;
-#endif
 		OLSR_PRINTF(3, "NAME PLUGIN: create new db entry for ip (%s) in hash table\n",
 					olsr_ip_to_string(&strbuf, originator));
 
@@ -1469,9 +1449,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 	struct ip_prefix_list *hna;
 	struct interface *iface;
 	union olsr_ip_addr tmp_ip, tmp_msk;
-#ifndef NODEBUG
 	struct ipaddr_str strbuf;
-#endif
 	
 	OLSR_PRINTF(6, "checking %s\n", olsr_ip_to_string(&strbuf, addr));
 	
@@ -1574,9 +1552,7 @@ allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *ho
 	//ip in service-line is allowed 
 	if (inet_pton(olsr_cnf->ip_version, hostname_or_ip, &olsr_ip) > 0) {
 		if (allowed_ip(&olsr_ip)) {
-#ifndef NODEBUG
 			struct ipaddr_str strbuf;
-#endif
 			OLSR_PRINTF(2, "NAME PLUGIN: ip %s in service %s is OK\n", olsr_ip_to_string(&strbuf, &olsr_ip), service_line);
 			free(hostname_or_ip);
 			hostname_or_ip = NULL;

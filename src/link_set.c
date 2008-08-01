@@ -428,9 +428,7 @@ olsr_expire_link_sym_timer(void *context)
 void
 olsr_expire_link_hello_timer(void *context)
 {
-#ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
   struct link_entry *link;
 
   link = (struct link_entry *)context;
@@ -514,9 +512,7 @@ add_link_entry(const union olsr_ip_addr *local,
 
 #ifdef DEBUG
   {
-#ifndef NODEBUG
     struct ipaddr_str localbuf, rembuf;
-#endif
     OLSR_PRINTF(1, "Adding %s=>%s to link set\n",
 		olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf,
 								       remote));
@@ -587,9 +583,7 @@ add_link_entry(const union olsr_ip_addr *local,
   neighbor = olsr_lookup_neighbor_table(remote_main);
   if (!neighbor) {
 #ifdef DEBUG
-#ifndef NODEBUG
     struct ipaddr_str buf;
-#endif
     OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n",
 		olsr_ip_to_string(&buf, remote_main));
 #endif

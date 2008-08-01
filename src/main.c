@@ -109,9 +109,7 @@ main(int argc, char *argv[])
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct tms tms_buf;
-#ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
 #ifdef WIN32
   WSADATA WsaData;
   size_t len;

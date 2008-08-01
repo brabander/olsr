@@ -327,9 +327,7 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
       /* IPv4 */
       if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0)
       {
-#ifndef NODEBUG
         struct ipaddr_str buf;
-#endif
         OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n",
             m->v4.olsr_msgtype,
             olsr_ip_to_string(&buf, from_addr));
@@ -341,9 +339,7 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
       /* IPv6 */
       if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0)
       {
-#ifndef NODEBUG
         struct ipaddr_str buf;
-#endif
         OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n",
             m->v4.olsr_msgtype,
             olsr_ip_to_string(&buf, from_addr));
@@ -363,7 +359,7 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
     /* Should be the same for IPv4 and IPv6 */
     if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr)
         || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
       struct ipaddr_str buf;
 #endif
 #ifdef DEBUG
@@ -404,9 +400,7 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
     
     /* UNKNOWN PACKETTYPE */
     if (processed == 0) {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       unk_chgestruct(&unkpacket, m);
       
       OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
@@ -444,7 +438,7 @@ void olsr_input(int fd) {
   cpu_overload_exit = 0;
   
   for (;;) {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
     struct ipaddr_str buf;
 #endif
     /* sockaddr_in6 is bigger than sockaddr !!!! */

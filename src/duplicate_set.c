@@ -89,9 +89,7 @@ int olsr_shall_process_message(void *ip, olsr_u16_t seqnr) {
   void *mainIp;
   clock_t valid_until;
 
-#ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
   // get main address
   mainIp = mid_lookup_main_addr(ip);
   if (mainIp == NULL) {

@@ -8,7 +8,7 @@
 DEBUG ?= 0
 
 # compile OLSR_PRINTF out
-NO_DEBUG_MESSAGES ?= 0
+NO_DEBUG_MESSAGES ?= 1
 
 # the optimize option to be set for gcc
 OPTIMIZE ?= 
@@ -185,6 +185,7 @@ CPPFLAGS +=	-DNDEBUG
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
+CPPFLAGS +=	-DUSED_FOR_DEBUG_ONLY='__attribute__((unused))'
 endif
 
 # a make function to quote "/" and "."

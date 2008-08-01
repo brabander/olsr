@@ -339,9 +339,7 @@ olsr_forward_message(union olsr_message *m,
   if(olsr_lookup_mprs_set(src) == NULL)
     {
 #ifdef DEBUG
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(&buf, src));
 #endif
       return 0;

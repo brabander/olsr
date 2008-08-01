@@ -82,7 +82,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
       message_neighbors != NULL;
       message_neighbors = message_neighbors->next)
     {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
       struct ipaddr_str buf;
 #endif
       union olsr_ip_addr      *neigh_addr;
@@ -500,9 +500,7 @@ olsr_hello_tap(struct hello_message *message,
   /* Check willingness */
   if(neighbor->willingness != message->willingness)
     {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
 		  olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr),
 		  neighbor->willingness,
@@ -542,7 +540,7 @@ olsr_process_received_mid(union olsr_message *m,
                           struct interface *in_if __attribute__((unused)),
                           union olsr_ip_addr *from_addr)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
   struct ipaddr_str buf;
 #endif
   struct mid_alias *tmp_adr;
@@ -567,9 +565,7 @@ olsr_process_received_mid(union olsr_message *m,
      */
 
     if(check_neighbor_link(from_addr) != SYM_LINK) {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
       olsr_free_mid_packet(&message);
       return;
@@ -580,9 +576,7 @@ olsr_process_received_mid(union olsr_message *m,
 
     while (tmp_adr) {
       if (!mid_lookup_main_addr(&tmp_adr->alias_addr)){
-#ifndef NODEBUG
         struct ipaddr_str buf;
-#endif
         OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
         OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
         insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, message.vtime);
@@ -673,9 +667,7 @@ olsr_process_received_hna(union olsr_message *m,
      *      message MUST be discarded.
      */
     if (check_neighbor_link(from_addr) != SYM_LINK) {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
       return;
     }

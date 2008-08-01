@@ -132,7 +132,7 @@ olsr_seq_inrange_high(int beg, int end, olsr_u16_t seq)
 static struct tc_entry *
 olsr_add_tc_entry(union olsr_ip_addr *adr)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc;
@@ -430,7 +430,7 @@ struct tc_edge_entry *
 olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 		       olsr_u16_t ansn)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc_neighbor;
@@ -797,9 +797,7 @@ olsr_input_tc(union olsr_message *msg,
 	      struct interface *input_if __attribute__ ((unused)),
 	      union olsr_ip_addr *from_addr)
 {
-#ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
   olsr_u16_t size, msg_seq, ansn;
   olsr_u8_t type, ttl, msg_hops, lower_border, upper_border;
   olsr_reltime vtime;

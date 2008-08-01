@@ -583,9 +583,7 @@ int
 join_mcast(struct interface *ifs, int sock)
 {
   /* See linux/in6.h */
-#ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
   struct ipv6_mreq mcastreq;
 
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;

@@ -259,7 +259,7 @@ chk_if_changed(struct olsr_if *iface)
   /* IP version 6 */
   if(olsr_cnf->ip_version == AF_INET6)
     {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
       struct ipaddr_str buf;
 #endif
       /* Get interface address */
@@ -281,9 +281,7 @@ chk_if_changed(struct olsr_if *iface)
 
       if(memcmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr, olsr_cnf->ipsize) != 0)
 	{
-#ifndef NODEBUG
           struct ipaddr_str buf;
-#endif
 	  OLSR_PRINTF(1, "New IP address for %s:\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
 	  OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
@@ -365,9 +363,7 @@ chk_if_changed(struct olsr_if *iface)
 		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, 
 		olsr_cnf->ipsize) != 0)
 	{
-#ifndef NODEBUG
           struct ipaddr_str buf;
-#endif
 	  /* New address */
 	  OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
@@ -393,9 +389,7 @@ chk_if_changed(struct olsr_if *iface)
 	  
 	  if(ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr)
 	    {
-#ifndef NODEBUG
               struct ipaddr_str buf;
-#endif
 	      /* New address */
 	      OLSR_PRINTF(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
 	      OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
@@ -744,9 +738,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   if(olsr_cnf->ip_version == AF_INET6)
     {
       /* Get interface address */
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       if(get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, iface->cnf->ipv6_addrtype) <= 0)
 	{
 	  if(iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL)
@@ -857,18 +849,14 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   if(olsr_cnf->ip_version == AF_INET)
     {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(1, "\tAddress:%s\n", ip4_to_string(&buf, ifs.int_addr.sin_addr));
       OLSR_PRINTF(1, "\tNetmask:%s\n", ip4_to_string(&buf, ifs.int_netmask.sin_addr));
       OLSR_PRINTF(1, "\tBroadcast address:%s\n", ip4_to_string(&buf, ifs.int_broadaddr.sin_addr));
     }
   else
     {
-#ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
       OLSR_PRINTF(1, "\tAddress: %s\n", ip6_to_string(&buf, &ifs.int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
     }

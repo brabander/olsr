@@ -461,9 +461,7 @@ olsr_calculate_routing_table (void)
        * does not contain a next-hop.
        */
       if (tc != tc_myself) {
-#ifndef NODEBUG
         struct ipaddr_str buf;
-#endif
         OLSR_PRINTF(2, "SPF: %s no next-hop\n", olsr_ip_to_string(&buf, &tc->addr));
       }
 #endif

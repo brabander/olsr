@@ -118,7 +118,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
   /* Walk all links of this interface */
   OLSR_FOR_ALL_LINK_ENTRIES(links) {
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
     struct ipaddr_str buf;
 #endif
     int lnk = lookup_link_status(links);
@@ -202,7 +202,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
   if (ifnet != NULL && ifnet->int_next != NULL)
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor) {
 
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifdef DEBUG
     struct ipaddr_str buf;
 #endif
     /* Check that the neighbor is not added yet */

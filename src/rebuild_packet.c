@@ -105,9 +105,7 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
       
       if(olsr_cnf->debug_level > 1)
 	{
-#ifndef NODEBUG
           struct ipaddr_str buf;
-#endif
 	  OLSR_PRINTF(3, "Alias list for %s: ", olsr_ip_to_string(&buf, &mmsg->mid_origaddr));
 	  OLSR_PRINTF(3, "%s", olsr_ip_to_string(&buf, &mmsg->addr));
 	  alias_tmp = mmsg->mid_addr;
@@ -157,9 +155,7 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
 
       if(olsr_cnf->debug_level > 1)
 	{
-#ifndef NODEBUG
           struct ipaddr_str buf;
-#endif
 	  OLSR_PRINTF(3, "Alias list for %s", ip6_to_string(&buf, &mmsg->mid_origaddr.v6));
 	  OLSR_PRINTF(3, "%s", ip6_to_string(&buf, &mmsg->addr.v6));
 
