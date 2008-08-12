@@ -635,11 +635,17 @@ lookup_link_entry(const union olsr_ip_addr *remote,
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     if (ipequal(remote, &link->neighbor_iface_addr) &&
 	(link->if_name ? !strcmp(link->if_name, local->int_name)
-	 : ipequal(&local->ip_addr, &link->local_iface_addr)) &&
-
-	/* check the remote-main address only if there is one given */
-	(!remote_main
-	 || ipequal(remote_main, &link->neighbor->neighbor_main_addr))) {
+	 : ipequal(&local->ip_addr, &link->local_iface_addr)))
+    {
+      /* check the remote-main address only if there is one given */
+      if (NULL != remote_main && !ipequal(remote_main, &link->neighbor->neighbor_main_addr))
+      {
+        /* Neighbor has changed it's main_addr, update */
+        struct ipaddr_str oldbuf, newbuf;
+        OLSR_PRINTF(1, "Neighbor changed main_ip, updating %s -> %s\n",
+          olsr_ip_to_string(&oldbuf, &link->neighbor->neighbor_main_addr), olsr_ip_to_string(&newbuf, remote_main));
+        link->neighbor->neighbor_main_addr = *remote_main;
+      }
       return link;
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
