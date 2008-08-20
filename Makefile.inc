@@ -185,7 +185,6 @@ CPPFLAGS +=	-DNDEBUG
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
-CPPFLAGS +=	-DUSED_FOR_DEBUG_ONLY='__attribute__((unused))'
 endif
 
 # a make function to quote "/" and "."
