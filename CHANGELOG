@@ -33,7 +33,7 @@ PATCHES and BUGFIXES from Sven-Ola Tuecke <sven-ola@gmx.de>:
   a great deal of CPU on embedded devices
 - fix for Link quality dijkstra limit
 
-PATCHES and BUGFIXES from Aaron Kablan <aaron@lo-res.org>:
+PATCHES and BUGFIXES from Aaron Kaplan <aaron@lo-res.org>:
 - fix openbsd warnings / compile errors about sprintf strcpy
 
 BUGFIX from Erik Tromp <erik_tromp@hotmail.com>:
@@ -50,6 +50,9 @@ PATCH from Hagen Paul Pfeifer <hagen@jauu.net>:
 
 PATCH from Andres Ambrois <andresambrois@gmail.com>:
 - nameservice plugin: add parameters for SIGHUPing other daemons, or calling scripts
+
+PATCH from Markus Kittenberger <Markus.Kittenberger@gmx.at>:
+- txtinfo plugin: add more http options
 
 0.5.5 ---------------------------------------------------------------------
 
