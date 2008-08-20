@@ -44,13 +44,19 @@
 
 # first determine the tarball name
 NAME=`grep -E "^VERS" ../Makefile | sed 's/^VERS..../olsrd-/;s/ *$//'`
+#empty the directory in case it exists already
+rm -rf /tmp/$NAME
 mkdir /tmp/$NAME
+# clean stuff up first
+cd ..;make uberclean
 # sync the stuff to a working directory
-rsync -a ../ /tmp/$NAME/ --exclude=.hg* --delete
+rsync -a . /tmp/$NAME/ --exclude=.hg* --delete
 cd /tmp/
 echo "### creating /tmp/$NAME.tar.gz"
 tar -czf /tmp/$NAME.tar.gz $NAME
+md5sum /tmp/$NAME.tar.gz
 echo "### creating /tmp/$NAME.tar.bz2"
 tar -cjf /tmp/$NAME.tar.bz2 $NAME
+md5sum /tmp/$NAME.tar.bz2
 #clean up
 rm -rf /tmp/$NAME
