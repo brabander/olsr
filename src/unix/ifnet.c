@@ -752,13 +752,14 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
       OLSR_PRINTF(debuglvl, "\tAddress: %s\n", ip6_to_string(&buf, &ifs.int6_addr.sin6_addr));
       
       /* Multicast */
+      memset (&ifs.int6_multaddr, 0, sizeof (ifs.int6_multaddr));
+      ifs.int6_multaddr.sin6_family   = AF_INET6;
+      ifs.int6_multaddr.sin6_flowinfo = htonl(0);
+      ifs.int6_multaddr.sin6_scope_id = if_nametoindex(ifr.ifr_name);
+      ifs.int6_multaddr.sin6_port     = htons(OLSRPORT);
       ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL) ? 
 	iface->cnf->ipv6_multi_site.v6 :
 	iface->cnf->ipv6_multi_glbl.v6;
-      /* Set address family */
-      ifs.int6_multaddr.sin6_family = AF_INET6;
-      /* Set port */
-      ifs.int6_multaddr.sin6_port = htons(OLSRPORT);
       
 #ifdef __MacOSX__
       ifs.int6_multaddr.sin6_scope_id = 0;
