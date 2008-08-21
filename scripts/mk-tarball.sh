@@ -50,7 +50,7 @@ mkdir /tmp/$NAME
 # clean stuff up first
 cd ..;make uberclean
 # sync the stuff to a working directory
-rsync -a . /tmp/$NAME/ --exclude=.hg* --delete
+rsync -a . /tmp/$NAME/ --exclude=.hg* --exclude=*.rej --delete
 cd /tmp/
 echo "### creating /tmp/$NAME.tar.gz"
 tar -czf /tmp/$NAME.tar.gz $NAME
