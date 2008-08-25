@@ -360,10 +360,11 @@ olsr_walk_timers(clock_t * last_run)
       if (TIMED_OUT(timer->timer_clock)) {
 
 	OLSR_PRINTF(3, "TIMER: fire %s timer %p, ctx %p, "
-		    "at clocktick %s\n",
+		    "at clocktick %u (%s)\n",
 		    olsr_cookie_name(timer->timer_cookie),
 		    timer, timer->timer_cb_context,
-                    olsr_clock_string((unsigned int)(*last_run)));
+                    (unsigned int)*last_run,
+                    olsr_wallclock_string());
 
 	/* This timer is expired, call into the provided callback function */
 	timer->timer_cb(timer->timer_cb_context);
