@@ -712,18 +712,20 @@ int add_hemu_if(struct olsr_if *iface)
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
-                     ifp, 0);
+                     ifp, hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
     olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
                      TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
-                     ifp, 0);
+                     ifp, tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
     olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, 0);
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp,
+                     mid_gen_timer_cookie->ci_id);
   ifp->hna_gen_timer =
     olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, 0);
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
+                     hna_gen_timer_cookie->ci_id);
 
   /* Recalculate max topology hold time */
   if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
@@ -1011,18 +1013,20 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
     olsr_start_timer(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
-                     New, 0);
+                     New, hello_gen_timer_cookie->ci_id);
   New->tc_gen_timer =
     olsr_start_timer(IntConf->cnf->tc_params.emission_interval * MSEC_PER_SEC,
                      TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
-                     New, 0);
+                     New, tc_gen_timer_cookie->ci_id);
   New->mid_gen_timer =
     olsr_start_timer(IntConf->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, 0);
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New,
+                     mid_gen_timer_cookie->ci_id);
   New->hna_gen_timer =
     olsr_start_timer(IntConf->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, 0);
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New,
+                     hna_gen_timer_cookie->ci_id);
 
   if(olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
