@@ -182,6 +182,12 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# Fish Eye algorithm\n# 0 = do not use fish eye\n# 1 = use fish eye\n\n");
   fprintf(fd, "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
 
+  if (NULL != cnf->lq_algorithm)
+  {
+    fprintf(fd, "# Link quality algorithm (if LinkQualityLevel > 0)\n# etx_fpm (hello loss, fixed point math)\n# etx_float (hello loss, floating point)\n# etx_ff (packet loss for freifunk compat)\n\n");
+    fprintf(fd, "LinkQualityAlgorithm\t\"%s\"\n\n", cnf->lq_algorithm);
+  }
+
   fprintf(fd, "# Link quality aging factor\n\n");
   fprintf(fd, "LinkQualityAging\t%f\n\n", cnf->lq_aging);
 
