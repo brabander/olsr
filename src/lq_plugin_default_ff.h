@@ -49,8 +49,8 @@
 
 #define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
 
-#define LQ_FF_WINDOW 32
-#define LQ_FF_QUICKSTART_INIT 4
+#define LQ_FF_WINDOW 256
+#define LQ_FF_QUICKSTART_INIT 8
 
 struct default_lq_ff {
   olsr_u8_t valueLq;
@@ -59,7 +59,7 @@ struct default_lq_ff {
 
 struct default_lq_ff_hello {
   struct default_lq_ff lq;
-	olsr_u8_t windowSize, activePtr;
+	olsr_u16_t windowSize, activePtr;
 	olsr_u16_t last_seq_nr;
 	olsr_u16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
 };
