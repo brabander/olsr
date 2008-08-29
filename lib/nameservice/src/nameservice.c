@@ -88,7 +88,7 @@ float my_lat = 0.0, my_lon = 0.0;
  * my own hostnames, service_lines and dns-servers
  * are store in a linked list (without hashing)
  * */
-static struct list_node list[HASHSIZE];
+static struct list_node name_list[HASHSIZE];
 struct name_entry *my_names = NULL;
 struct timer_entry *name_table_write = NULL;
 static olsr_bool name_table_changed = OLSR_TRUE;
@@ -164,7 +164,7 @@ name_constructor(void)
 	
 	/* init the lists heads */
 	for(i = 0; i < HASHSIZE; i++) {
-		list_head_init(&list[i]);
+		list_head_init(&name_list[i]);
 		list_head_init(&forwarder_list[i]);
 		list_head_init(&service_list[i]);
 		list_head_init(&latlon_list[i]);
@@ -459,7 +459,7 @@ name_destructor(void)
 	free_name_entry_list(&my_services);
 	free_name_entry_list(&my_forwarders);
 
-	free_all_list_entries(list);
+	free_all_list_entries(name_list);
 	free_all_list_entries(service_list);
 	free_all_list_entries(forwarder_list);
 	free_all_list_entries(latlon_list);
@@ -902,7 +902,7 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
 		
 		switch (ntohs(from_packet->type)) {
 			case NAME_HOST: 
-				insert_new_name_in_list(originator, list, from_packet,
+				insert_new_name_in_list(originator, name_list, from_packet,
 										&name_table_changed, vtime); 
 				break;
 			case NAME_FORWARDER:
@@ -1103,7 +1103,7 @@ write_hosts_file(void)
 	
 	// write received names
 	for (hash = 0; hash < HASHSIZE; hash++) {
-		list_head = &list[hash];
+		list_head = &name_list[hash];
 		for (list_node = list_head->next; list_node != list_head;
 			 list_node = list_node->next) {
 
@@ -1227,7 +1227,7 @@ write_services_file(void)
 	
 	// write received services
 	for (hash = 0; hash < HASHSIZE; hash++) {
-		list_head = &list[hash];
+		list_head = &service_list[hash];
 		for (list_node = list_head->next; list_node != list_head;
 			 list_node = list_node->next) {
 
@@ -1329,7 +1329,7 @@ write_resolv_file(void)
 	memset(nameserver_routes, 0, sizeof(nameserver_routes));
 
 	for (hash = 0; hash < HASHSIZE; hash++) {
-		list_head = &list[hash];
+		list_head = &forwarder_list[hash];
 		for (list_node = list_head->next; list_node != list_head;
 			 list_node = list_node->next) {
 
@@ -1634,7 +1634,7 @@ lookup_name_latlon(union olsr_ip_addr *ip)
 	struct name_entry *name;
 
 	for (hash = 0; hash < HASHSIZE; hash++) {
-		list_head = &list[hash];
+		list_head = &name_list[hash];
 		for (list_node = list_head->next; list_node != list_head;
 			 list_node = list_node->next) {
 
