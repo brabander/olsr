@@ -96,6 +96,23 @@ struct ipc_net_msg
   union olsr_ip_addr   main_addr;
 };
 
+/*
+ *IPC functions
+ *These are moved to a plugin soon
+ * soon... duh!
+ */
+
+int
+ipc_init(void);
+
+#if 0
+int
+ipc_input(int);
+#endif
+
+int
+shutdown_ipc(void);
+
 
 olsr_bool
 ipc_check_allowed_ip(const union olsr_ip_addr *);

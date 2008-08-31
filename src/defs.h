@@ -148,24 +148,4 @@ extern olsr_bool olsr_win32_end_request;
 extern olsr_bool olsr_win32_end_flag;
 #endif
 
-/*
- *IPC functions
- *These are moved to a plugin soon
- * soon... duh!
- */
-
-int
-ipc_init(void);
-
-#if 0
-int
-ipc_input(int);
-#endif
-
-int
-shutdown_ipc(void);
-
-int
-ipc_output(struct olsr *);
-
 #endif
