@@ -102,7 +102,7 @@ WARNINGS +=	-finline-limit=350
 # The linker can than remove all unreferenced section. But in the olsrd binary
 # unused doesn't imply unused at all since the function may be used by plugins,
 # e.g. the ones in src/plugin_utils.c.
-# So we can use that featuer at most to identify unused functions and remove them
+# So we can use that feature at most to identify unused functions and remove them
 # from the source by hand.
 #WARNINGS +=	-ffunction-sections
 #WARNINGS +=	-fdata-sections
