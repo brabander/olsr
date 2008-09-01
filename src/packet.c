@@ -389,7 +389,7 @@ olsr_build_tc_packet(struct tc_message *message)
     if (sending_tc) {
       /* Send empty TC */
       OLSR_PRINTF(3, "No more MPR selectors - will send empty TCs\n");
-      set_empty_tc_timer(GET_TIMESTAMP((olsr_cnf->max_tc_vtime*3)*1000));
+      set_empty_tc_timer(GET_TIMESTAMP((olsr_cnf->max_tc_vtime * 3) * MSEC_PER_SEC));
       sending_tc = OLSR_FALSE;
     }
   }
