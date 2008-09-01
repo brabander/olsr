@@ -404,7 +404,7 @@ void
 set_buffer_timer(struct interface *ifn)
 {      
   /* Set timer */
-  ifn->fwdtimer = GET_TIMESTAMP(random() * olsr_cnf->max_jitter * 1000 / RAND_MAX);
+  ifn->fwdtimer = GET_TIMESTAMP(random() * olsr_cnf->max_jitter * MSEC_PER_SEC / RAND_MAX);
 }
 
 void
