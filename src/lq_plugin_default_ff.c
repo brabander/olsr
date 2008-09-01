@@ -117,8 +117,7 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     struct default_lq_ff_hello *tlq = (struct default_lq_ff_hello *)link->linkquality;
     fpm ratio;
-    olsr_u16_t i;
-    olsr_u32_t received, lost;
+    olsr_u16_t i, received, lost;
 
     received = 0;
     lost = 0;
@@ -253,7 +252,7 @@ void default_lq_clear_ff_hello(void *target) {
   default_lq_clear_ff(&local->lq);
   local->windowSize = LQ_FF_QUICKSTART_INIT;
   for (i=0; i<LQ_FF_WINDOW; i++) {
-    local->lost[i] = 4;
+    local->lost[i] = 3;
   }
 }
 
