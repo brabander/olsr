@@ -178,6 +178,15 @@ extern olsr_bool olsr_win32_end_flag;
 #endif
 
 /*
+ * a wrapper around times(2). times(2) has the problem, that it may return -1
+ * in case of an err (e.g. EFAULT on the parameter) or immediately before an
+ * overrun (though it is not en error) just because the jiffies (or whatever
+ * the underlying kernel calls the smallest accountable time unit) are
+ * inherently "unsigned" (and always incremented).
+ */
+unsigned long olsr_times(void);
+
+/*
  *IPC functions
  *These are moved to a plugin soon
  * soon... duh!

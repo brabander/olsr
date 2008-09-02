@@ -78,12 +78,12 @@ unsigned int timers_running;
  * @return nada
  */
 static void
-olsr_scheduler_sleep(clock_t scheduler_runtime)
+olsr_scheduler_sleep(unsigned long scheduler_runtime)
 {
   struct timespec remainder_spec, sleeptime_spec;
   struct timeval sleeptime_val, time_used, next_interval;
   olsr_u32_t next_interval_usec;
-  clock_t milliseconds_used;
+  unsigned long milliseconds_used;
 
   /* Calculate next planned scheduler invocation */
   next_interval_usec = olsr_cnf->pollrate * USEC_PER_SEC;
@@ -118,7 +118,6 @@ olsr_scheduler_sleep(clock_t scheduler_runtime)
 void
 olsr_scheduler(void)
 {
-  struct tms tms_buf;		       /* Buffer for times(2) calls. */
   struct interface *ifn;
 
   OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n",
@@ -132,7 +131,7 @@ olsr_scheduler(void)
      * Update the global timestamp. We are using a non-wallclock timer here
      * to avoid any undesired side effects if the system clock changes.
      */
-    now_times = times(&tms_buf);
+    now_times = olsr_times();
 
     /* Read incoming data */
     olsr_poll_sockets();
@@ -158,7 +157,7 @@ olsr_scheduler(void)
     }
 
     /* We are done, sleep until the next scheduling interval. */
-    olsr_scheduler_sleep(times(&tms_buf) - now_times);
+    olsr_scheduler_sleep(olsr_times() - now_times);
 
 #if defined WIN32
     /* The Ctrl-C signal handler thread asks us to exit */
