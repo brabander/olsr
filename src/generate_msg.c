@@ -91,7 +91,6 @@ generate_tc(void *p)
 
   /* empty message ? */
   if (!tcpacket.multipoint_relay_selector_address) {
-    olsr_free_tc_packet(&tcpacket);
     return;
   }
 

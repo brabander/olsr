@@ -679,7 +679,6 @@ olsr_output_lq_tc(void *ctx)
 
   /* empty message ? */
   if (!lq_tc.neigh) {
-    destroy_lq_tc(&lq_tc);
     return;
   }
 
