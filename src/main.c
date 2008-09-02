@@ -108,7 +108,6 @@ main(int argc, char *argv[])
 {
   struct if_config_options *default_ifcnf;
   char conf_file_name[FILENAME_MAX];
-  struct tms tms_buf;
   struct ipaddr_str buf;
 #ifdef WIN32
   WSADATA WsaData;
@@ -151,7 +150,7 @@ main(int argc, char *argv[])
   olsr_openlog("olsrd");
 
   /* Grab initial timestamp */
-  now_times = times(&tms_buf);
+  now_times = olsr_times();
     
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
 	 olsrd_version, 
@@ -887,6 +886,20 @@ olsr_process_arguments(int argc, char *argv[],
       return -1;
     }
   return 0;
+}
+
+/*
+ * a wrapper around times(2). times(2) has the problem, that it may return -1
+ * in case of an err (e.g. EFAULT on the parameter) or immediately before an
+ * overrun (though it is not en error) just because the jiffies (or whatever
+ * the underlying kernel calls the smallest accountable time unit) are
+ * inherently "unsigned" (and always incremented).
+ */
+unsigned long olsr_times(void)
+{
+  struct tms tms_buf;
+  const long t = times(&tms_buf);
+  return t < 0 ? -errno : t;
 }
 
 /*
