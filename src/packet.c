@@ -50,8 +50,6 @@
 #include "net_olsr.h"
 #include "lq_plugin.h"
 
-static olsr_bool sending_tc = OLSR_FALSE;
-
 /**
  *Free the memory allocated for a HELLO packet.
  *
@@ -318,7 +316,6 @@ olsr_build_tc_packet(struct tc_message *message)
 {
   struct tc_mpr_addr     *message_mpr;
   struct neighbor_entry  *entry;
-  olsr_bool entry_added = OLSR_FALSE;
 
   message->multipoint_relay_selector_address=NULL;
   message->packet_seq_number=0;
@@ -347,7 +344,6 @@ olsr_build_tc_packet(struct tc_message *message)
       message_mpr->address = entry->neighbor_main_addr;
       message_mpr->next = message->multipoint_relay_selector_address;
       message->multipoint_relay_selector_address = message_mpr;
-      entry_added = OLSR_TRUE;		
       break;
     }
     case(1):
@@ -361,7 +357,6 @@ olsr_build_tc_packet(struct tc_message *message)
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;
         message->multipoint_relay_selector_address = message_mpr;
-        entry_added = OLSR_TRUE;
       }
       break;
     }
@@ -375,24 +370,12 @@ olsr_build_tc_packet(struct tc_message *message)
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;
         message->multipoint_relay_selector_address = message_mpr;
-        entry_added = OLSR_TRUE;
       }
       break;
     }		
 	  
     } /* Switch */
   } OLSR_FOR_ALL_NBR_ENTRIES_END(entry);
-
-  if (entry_added) {
-    sending_tc = OLSR_TRUE;
-  } else {
-    if (sending_tc) {
-      /* Send empty TC */
-      OLSR_PRINTF(3, "No more MPR selectors - will send empty TCs\n");
-      set_empty_tc_timer(GET_TIMESTAMP((olsr_cnf->max_tc_vtime * 3) * MSEC_PER_SEC));
-      sending_tc = OLSR_FALSE;
-    }
-  }
 
   return 0;
 }

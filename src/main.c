@@ -296,9 +296,6 @@ main(int argc, char *argv[])
   }
 #endif
 
-  /* Init empty TC timer */
-  set_empty_tc_timer(GET_TIMESTAMP(0));
-
   /*
    *enable ip forwarding on host
    */

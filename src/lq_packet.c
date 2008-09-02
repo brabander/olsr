@@ -655,61 +655,45 @@ olsr_output_lq_hello(void *para)
     if (outif->immediate_send_tc) {
       if (TIMED_OUT(outif->fwdtimer))
         set_buffer_timer(outif);
-    }
-    else {
+    } else {
       net_output(outif);
     }
   }
 }
 
+/**
+ * Callback for TC generation timer.
+ */
 void
-olsr_output_lq_tc(void *para)
+olsr_output_lq_tc(void *ctx)
 {
-  static int prev_empty = 1;
   struct lq_tc_message lq_tc;
-  struct interface *outif = para;
+  struct interface *outif = ctx;
 
   if (outif == NULL) {
     return;
   }
-  // create LQ_TC in internal format
 
+  /* create LQ_TC in internal format */
   create_lq_tc(&lq_tc, outif);
 
-  // a) the message is not empty
-
-  if (lq_tc.neigh != NULL) {
-      prev_empty = 0;
-      
-      // convert internal format into transmission format, send it
-      serialize_lq_tc(&lq_tc, outif);
-
-  // b) this is the first empty message
-  } else if (prev_empty == 0) {
-      // initialize timer
-
-      set_empty_tc_timer(GET_TIMESTAMP(olsr_cnf->max_tc_vtime * 3 * MSEC_PER_SEC));
-
-      prev_empty = 1;
-
-      // convert internal format into transmission format, send it
-
-      serialize_lq_tc(&lq_tc, outif);
-
-  // c) this is not the first empty message, send if timer hasn't fired
-  } else if (!TIMED_OUT(get_empty_tc_timer())) {
-      serialize_lq_tc(&lq_tc, outif);
+  /* empty message ? */
+  if (!lq_tc.neigh) {
+    destroy_lq_tc(&lq_tc);
+    return;
   }
-  // destroy internal format
 
+  /* convert internal format into transmission format, send it */
+  serialize_lq_tc(&lq_tc, outif);
+
+  /* destroy internal format */
   destroy_lq_tc(&lq_tc);
 
   if (net_output_pending(outif)) {
     if (!outif->immediate_send_tc) {
       if (TIMED_OUT(outif->fwdtimer))
         set_buffer_timer(outif);
-    }
-    else {
+    } else {
       net_output(outif);
     }
   }

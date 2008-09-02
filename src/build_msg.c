@@ -66,8 +66,6 @@ check_buffspace(int msgsize, int buffsize, const char *type);
 
 static olsr_u8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
-static clock_t send_empty_tc; /* TC empty message sending */
-
 /* Prototypes for internal functions */
 
 /* IPv4 */
@@ -97,26 +95,6 @@ serialize_mid6(struct interface *);
 
 static olsr_bool
 serialize_hna6(struct interface *);
-
-/**
- * Set the timer that controls the generation of
- * empty TC messages
- */
-void
-set_empty_tc_timer(clock_t empty_tc_new)
-{
-  send_empty_tc = empty_tc_new;
-}
-
-/**
- * Get the timer that controls the generation of
- * empty TC messages
- */
-clock_t
-get_empty_tc_timer(void)
-{
-  return send_empty_tc;
-}
 
 /**
  * Generate HELLO packet with the contents of the parameter "message".
@@ -699,21 +677,6 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
       net_outbuffer_push(ifp, msg_buffer, curr_size);
 
     }
-  else
-    {
-      if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
-	{
-	  if(!TIMED_OUT(send_empty_tc))
-	    OLSR_PRINTF(1, "TC: Sending empty package - (%d/%d/%d/%d)\n", partial_sent, (int)send_empty_tc, (int)now_times, (int)((send_empty_tc) - now_times));
-
-	  m->v4.olsr_msgsize = htons(curr_size);
-	  m->v4.seqno = htons(get_msg_seqno());
-
-	  net_outbuffer_push(ifp, msg_buffer, curr_size);
-
-	  found = OLSR_TRUE;
-	}
-    }
 
   return found;	
 }
@@ -820,20 +783,6 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 
       net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-    }
-  else
-    {
-      if((!partial_sent) && (!TIMED_OUT(send_empty_tc)))
-	{
-	  OLSR_PRINTF(1, "TC: Sending empty package\n");
-	    
-	  m->v6.olsr_msgsize = htons(curr_size);
-	  m->v6.seqno = htons(get_msg_seqno());
-
-	  net_outbuffer_push(ifp, msg_buffer, curr_size);
-
-	  found = OLSR_TRUE;
-	}
     }
 
   return found;	

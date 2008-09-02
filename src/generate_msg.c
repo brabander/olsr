@@ -78,6 +78,9 @@ generate_hello(void *p)
 
 }
 
+/**
+ * Callback for TC generation timer.
+ */
 void
 generate_tc(void *p)
 {
@@ -85,6 +88,12 @@ generate_tc(void *p)
   struct interface *ifn = (struct interface *)p;
 
   olsr_build_tc_packet(&tcpacket);
+
+  /* empty message ? */
+  if (!tcpacket.multipoint_relay_selector_address) {
+    olsr_free_tc_packet(&tcpacket);
+    return;
+  }
 
   if(queue_tc(&tcpacket, ifn) && TIMED_OUT(ifn->fwdtimer))
     {
