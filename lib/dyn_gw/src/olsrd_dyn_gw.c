@@ -133,20 +133,6 @@ olsr_event_doing_hna(void *);
 /**
  * read config file parameters
  */
-static int set_plugin_double(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    double d = 0.0;
-    sscanf(value, "%lf", &d);
-    if (data != NULL) {
-        double *v = data;
-        *v = d;
-        OLSR_PRINTF(1, "%s double %lf\n", "Got", d);
-    } else {
-        OLSR_PRINTF(0, "%s double %lf\n", "Ignored", d);
-    }
-    return 0;
-}
-
 static int set_plugin_ping(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
     union olsr_ip_addr foo_addr;
@@ -206,7 +192,7 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "interval", .set_plugin_parameter = &set_plugin_double, .data = &check_interval },
+    { .name = "interval", .set_plugin_parameter = &set_plugin_int, .data = &check_interval },
     { .name = "ping",     .set_plugin_parameter = &set_plugin_ping,   .data = NULL },
     { .name = "hna",      .set_plugin_parameter = &set_plugin_hna,    .data = NULL },
 };
