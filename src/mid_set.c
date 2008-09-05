@@ -289,7 +289,6 @@ olsr_update_mid_entry(union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
                       olsr_reltime vtime, olsr_u16_t mid_seqno)
 {
-  struct ipaddr_str buf1, buf2;
   struct mid_entry *alias;
 
   if (!olsr_validate_address(alias_addr)) {
