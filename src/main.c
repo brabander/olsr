@@ -56,6 +56,7 @@
 #include "net_os.h"
 #include "build_msg.h"
 #include "net_olsr.h"
+#include "ipc_frontend.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>
