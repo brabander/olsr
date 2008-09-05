@@ -168,7 +168,6 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
 	  OLSR_PRINTF(3, "\n");
 	}
     }
-
 }
 
 

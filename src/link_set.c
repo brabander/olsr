@@ -158,14 +158,20 @@ get_neighbor_status(const union olsr_ip_addr *address)
 {
   const union olsr_ip_addr *main_addr;
   struct interface *ifs;
+  struct tc_entry *tc;
 
   /* Find main address */
-  if (!(main_addr = mid_lookup_main_addr(address)))
+  if (!(main_addr = olsr_lookup_main_addr_by_alias(address)))
     main_addr = address;
+
+  /*
+   * Locate the hookup point.
+   */
+  tc = olsr_locate_tc_entry(main_addr);
 
   /* Loop trough local interfaces to check all possebilities */
   for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
-    struct mid_address *aliases;
+    struct mid_entry *aliases;
     struct link_entry *lnk = lookup_link_entry(main_addr, NULL, ifs);
 
     if (lnk != NULL) {
@@ -173,15 +179,14 @@ get_neighbor_status(const union olsr_ip_addr *address)
 	return SYM_LINK;
     }
 
-    /* Get aliases */
-    for (aliases = mid_lookup_aliases(main_addr);
-	 aliases != NULL; aliases = aliases->next_alias) {
+    /* Walk the aliases */
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, aliases) {
 
-      lnk = lookup_link_entry(&aliases->alias, NULL, ifs);
+      lnk = lookup_link_entry(&aliases->mid_alias_addr, NULL, ifs);
       if (lnk && (lookup_link_status(lnk) == SYM_LINK)) {
 	  return SYM_LINK;
       }
-    }
+    } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, aliases);
   }
 
   return 0;
@@ -201,7 +206,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   olsr_linkcost tmp_lc;
 
   /* main address lookup */
-  main_addr = mid_lookup_main_addr(remote);
+  main_addr = olsr_lookup_main_addr_by_alias(remote);
 
   /* "remote" *already is* the main address */
   if (!main_addr) {

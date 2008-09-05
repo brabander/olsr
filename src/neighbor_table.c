@@ -284,7 +284,7 @@ olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
   /*
    *Find main address of node
    */
-  union olsr_ip_addr *tmp_ip = mid_lookup_main_addr(dst);
+  union olsr_ip_addr *tmp_ip = olsr_lookup_main_addr_by_alias(dst);
   if(tmp_ip != NULL)
     dst = tmp_ip;
   return olsr_lookup_neighbor_table_alias(dst);

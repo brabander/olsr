@@ -466,36 +466,27 @@ static void ipc_print_hna(void)
 
 static void ipc_print_mid(void)
 {
-    int index;
     unsigned short is_first;
-    struct mid_entry *entry;
-    struct mid_address *alias;
+    struct tc_entry *tc;
+    struct mid_entry *alias;
 
     ipc_sendf("Table: MID\nIP address\tAliases\n");
 
-    /* MID */
-    for(index = 0; index < HASHSIZE; index++) {
-        entry = mid_set[index].next;
-        
-        while( entry != &mid_set[index] ) {
-            struct ipaddr_str buf;
-            ipc_sendf( olsr_ip_to_string(&buf,  &entry->main_addr ) );
-            alias = entry->aliases;
-            is_first = 1;
+    /* MID root is the TC entry */
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+        struct ipaddr_str buf;
+        ipc_sendf( olsr_ip_to_string(&buf,  &tc->addr ) );
+        is_first = 1;
 
-            while( alias ) {
-                ipc_sendf( "%s%s",
-                           ( is_first ? "\t" : ";" ),
-                           olsr_ip_to_string(&buf,  &alias->alias )
-                           );
+        OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+            ipc_sendf( "%s%s",
+                       ( is_first ? "\t" : ";" ),
+                       olsr_ip_to_string(&buf, &alias->mid_alias_addr));
 
-                alias = alias->next_alias;
-                is_first = 0;
-            }
-            entry = entry->next;
-            ipc_sendf("\n");
-        }
-    }
+            is_first = 0;
+        }  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+        ipc_sendf("\n");
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
     ipc_sendf("\n");
 }
 

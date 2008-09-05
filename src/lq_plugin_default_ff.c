@@ -85,7 +85,7 @@ static void default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, uni
   olsr_u32_t seq_diff;
 
   /* Find main address */
-  main_addr = mid_lookup_main_addr(from_addr);
+  main_addr = olsr_lookup_main_addr_by_alias(from_addr);
 
   /* Loopup link entry */
   lnk = lookup_link_entry(from_addr, main_addr, in_if);

@@ -76,6 +76,8 @@ struct tc_entry {
   struct list_node path_list_node;     /* SPF result list */
   struct avl_tree edge_tree;	       /* subtree for edges */
   struct avl_tree prefix_tree;	       /* subtree for prefixes */
+  struct avl_tree mid_tree;            /* subtree for MID entries */
+  struct timer_entry *mid_timer;       /* aging timer for MID advertisements */
   struct link_entry *next_hop;	       /* SPF calculated link to the 1st hop neighbor */
   struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
   struct timer_entry *validity_timer;  /* tc validity time */
@@ -152,8 +154,8 @@ void olsr_input_tc(union olsr_message *, struct interface *,
 		   union olsr_ip_addr *from);
 
 /* tc_entry manipulation */
-struct tc_entry *olsr_lookup_tc_entry(union olsr_ip_addr *);
-struct tc_entry *olsr_locate_tc_entry(union olsr_ip_addr *);
+struct tc_entry *olsr_lookup_tc_entry(const union olsr_ip_addr *);
+struct tc_entry *olsr_locate_tc_entry(const union olsr_ip_addr *);
 void olsr_lock_tc_entry(struct tc_entry *);
 void olsr_unlock_tc_entry(struct tc_entry *);
 

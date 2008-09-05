@@ -327,7 +327,7 @@ olsr_forward_message(union olsr_message *m,
   }
 
   /* Lookup sender address */
-  src = mid_lookup_main_addr(from_addr);
+  src = olsr_lookup_main_addr_by_alias(from_addr);
   if(!src)
     src = from_addr;
 

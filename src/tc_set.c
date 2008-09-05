@@ -130,7 +130,7 @@ olsr_seq_inrange_high(int beg, int end, olsr_u16_t seq)
  * @return a pointer to the created entry
  */
 static struct tc_entry *
-olsr_add_tc_entry(union olsr_ip_addr *adr)
+olsr_add_tc_entry(const union olsr_ip_addr *adr)
 {
 #ifdef DEBUG
   struct ipaddr_str buf;
@@ -312,7 +312,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
  * @return the entry found or NULL
  */
 struct tc_entry *
-olsr_lookup_tc_entry(union olsr_ip_addr *adr)
+olsr_lookup_tc_entry(const union olsr_ip_addr *adr)
 {
   struct avl_node *node;
 
@@ -329,7 +329,7 @@ olsr_lookup_tc_entry(union olsr_ip_addr *adr)
  * Lookup a tc entry. Creates one if it does not exist yet.
  */
 struct tc_entry *
-olsr_locate_tc_entry(union olsr_ip_addr *adr)
+olsr_locate_tc_entry(const union olsr_ip_addr *adr)
 {
   struct tc_entry *tc;
 

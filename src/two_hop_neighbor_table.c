@@ -168,6 +168,7 @@ struct neighbor_2_entry *
 olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
 {
 
+  struct tc_entry *tc;
   struct neighbor_2_entry  *neighbor_2;
   olsr_u32_t               hash = olsr_ip_hashing(dest);
 
@@ -176,20 +177,18 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next)
     {
-      struct mid_address *adr;
 
       /* printf("Checking %s\n", olsr_ip_to_string(&buf, dest)); */
       if (ipequal(&neighbor_2->neighbor_2_addr, dest))
 	return neighbor_2;
 
-      adr = mid_lookup_aliases(&neighbor_2->neighbor_2_addr);
-
-      while(adr)
-	{
-	  if(ipequal(&adr->alias, dest))
-	    return neighbor_2;
-	  adr = adr->next_alias;
-	} 
+      /*
+       * Locate the hookup point and check if this is a registered alias.
+       */
+      tc = olsr_locate_tc_entry(&neighbor_2->neighbor_2_addr);
+      if (olsr_lookup_tc_mid_entry(tc, dest)) {
+        return neighbor_2;
+      }
     }
 
   return NULL;
@@ -272,3 +271,9 @@ olsr_print_two_hop_neighbor_table(void)
   }
 #endif
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

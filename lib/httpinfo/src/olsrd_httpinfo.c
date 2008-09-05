@@ -1087,20 +1087,21 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
 
   /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
-    struct mid_entry *entry;
-    for (entry = mid_set[idx].next; entry != &mid_set[idx]; entry = entry->next) {
-      int mid_cnt;
-      struct mid_address *alias;
+    struct tc_entry *tc;
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+      struct mid_entry *alias;
       size += snprintf(&buf[size], bufsize-size, "<tr>");
-      size += build_ipaddr_with_link(&buf[size], bufsize, &entry->main_addr, -1);
+      size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
       size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
 
-      for (mid_cnt = 0, alias = entry->aliases; alias != NULL; alias = alias->next_alias, mid_cnt++) {
+      OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
         struct ipaddr_str strbuf;
-        size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &alias->alias));
-      }
-      size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n", mid_cnt);
-    }
+        size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n",
+                         olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
+      } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+      size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n",
+                       tc->mid_tree.count);
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
   }
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");

@@ -119,25 +119,17 @@ void mapwrite_work(FILE* fmap)
     }
   }
 
-  for (hash = 0; hash < HASHSIZE; hash++) 
-  {
-    struct mid_entry *entry = mid_set[hash].next;
-    while(entry != &mid_set[hash])
-    {
-      struct mid_address *alias = entry->aliases;
-      while(alias)
-      {
-        if (0 > fprintf(fmap, "Mid('%s','%s');\n",
-          olsr_ip_to_string(&strbuf1, &entry->main_addr),
-          olsr_ip_to_string(&strbuf2, &alias->alias)))
-        {
-          return;
-        }
-        alias = alias->next_alias;
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    struct mid_entry *alias;
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+      if (0 > fprintf(fmap, "Mid('%s','%s');\n",
+                      olsr_ip_to_string(&strbuf1, &tc->addr),
+                      olsr_ip_to_string(&strbuf2, &alias->mid_alias_addr))) {
+        return;
       }
-      entry = entry->next;
-    }
-  }
+    } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+
   lookup_defhna_latlon(&ip);
   sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
   if (0 > fprintf(fmap, "Self('%s',%s,'%s','%s');\n",
@@ -284,9 +276,6 @@ void mapwrite_exit(void)
 
 /*
  * Local Variables:
- * mode: c
- * c-indent-tabs-mode: t
- * c-basic-offset: 4
- * tab-width: 4
+ * c-basic-offset: 2
  * End:
  */

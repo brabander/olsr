@@ -521,8 +521,8 @@ olsr_rt_best(struct rt_entry *rt)
  *@return the new rt_path struct
  */
 struct rt_path *
-olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
-                          union olsr_ip_addr *originator, int origin)
+olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
+                          const union olsr_ip_addr *originator, int origin)
 {
 #ifdef DEBUG
   struct ipaddr_str dstbuf, origbuf;

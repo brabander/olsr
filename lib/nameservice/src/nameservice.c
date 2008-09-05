@@ -1062,7 +1062,8 @@ write_hosts_file(void)
 	time_t currtime;
 
 #ifdef MID_ENTRIES
-	struct mid_address *alias;
+	struct mid_entry *alias;
+	struct tc_entry *tc;
 #endif
 
 	if (!name_table_changed)
@@ -1127,13 +1128,11 @@ write_hosts_file(void)
 
 #ifdef MID_ENTRIES
 				// write mid entries
-				if( ( alias = mid_lookup_aliases( &name->ip ) ) != NULL )
-				{
+				if (( tc = olsr_lookup_tc_entry( &name->ip ) ) != NULL ) {
 					unsigned short mid_num = 1;
 					char	   mid_prefix[MID_MAXLEN];
 
-					while( alias != NULL )
-					{
+					OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
 						struct ipaddr_str midbuf;
 
 						// generate mid prefix
@@ -1141,7 +1140,7 @@ write_hosts_file(void)
 
 						OLSR_PRINTF(
 							6, "%s\t%s%s%s\t# %s (mid #%i)\n",
-							olsr_ip_to_string( &midbuf, &alias->alias ),
+							olsr_ip_to_string( &midbuf, &alias->mid_alias_addr ),
 							mid_prefix, name->name, my_suffix,
 							olsr_ip_to_string( &strbuf, &entry->originator ),
 							mid_num
@@ -1149,15 +1148,14 @@ write_hosts_file(void)
 
 						fprintf(
 							hosts, "%s\t%s%s%s\t# %s (mid #%i)\n",
-							olsr_ip_to_string( &midbuf, &alias->alias ),
+							olsr_ip_to_string( &midbuf, &alias->mid_alias_addr ),
 							mid_prefix, name->name, my_suffix,
 							olsr_ip_to_string( &strbuf, &entry->originator ),
 							mid_num
 							);
 
-						alias = alias->next_alias;
 						mid_num++;
-					}
+					} OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
 				}
 #endif
 			}

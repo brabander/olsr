@@ -43,47 +43,53 @@
 #define _OLSR_MID
 
 #include "olsr_types.h"
-#include "hashing.h"
-#include "mantissa.h"
+#include "common/avl.h"
 
-struct mid_address {
-  union olsr_ip_addr alias;
-  struct mid_entry *main_entry;
-  struct mid_address *next_alias;
-
-  /* These are for the reverse list */
-  struct mid_address *prev;
-  struct mid_address *next;
-};
-
-/*
- * Contains the main addr of a node and a list of aliases
- */
 struct mid_entry {
-  union olsr_ip_addr main_addr;
-  struct mid_address *aliases;
-  struct mid_entry *prev;
-  struct mid_entry *next;
-  struct timer_entry *mid_timer;
+  struct avl_node mid_tc_node;       /* node in the per-tc mid tree */
+  struct avl_node mid_node;             /* node in the global mid tree */
+  union olsr_ip_addr mid_alias_addr;    /* key for both trees */
+  struct tc_entry  *mid_tc;             /* backpointer to owning tc entry */
+  olsr_u16_t mid_seqno;                 /* msg seq number for change tracking */
 };
+
+AVLNODE2STRUCT(global_tree2mid, struct mid_entry, mid_node);
+AVLNODE2STRUCT(alias_tree2mid, struct mid_entry, mid_tc_node);
+
+#define OLSR_FOR_ALL_MID_ENTRIES(mid_alias) \
+{ \
+  struct avl_node *mid_alias_node, *next_mid_alias_node; \
+  for (mid_alias_node = avl_walk_first(&mid_tree); \
+    mid_alias_node; mid_alias_node = next_mid_alias_node) { \
+    next_mid_alias_node = avl_walk_next(mid_alias_node); \
+    mid_alias = reverse_tree2mid(mid_alias_node);
+#define OLSR_FOR_ALL_MID_ENTRIES_END(mid_alias) }}
+
+#define OLSR_FOR_ALL_TC_MID_ENTRIES(tc, mid_alias) \
+{ \
+  struct avl_node *mid_alias_node, *next_mid_alias_node; \
+  for (mid_alias_node = avl_walk_first(&tc->mid_tree); \
+    mid_alias_node; mid_alias_node = next_mid_alias_node) { \
+    next_mid_alias_node = avl_walk_next(mid_alias_node); \
+    mid_alias = alias_tree2mid(mid_alias_node);
+#define OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias) }}
 
 #define OLSR_MID_JITTER 5	/* percent */
 
-extern struct mid_entry mid_set[HASHSIZE];
-extern struct mid_address reverse_mid_set[HASHSIZE];
+extern struct avl_tree mid_tree;
 
 struct mid_alias;
 
-int olsr_init_mid_set(void);
-void insert_mid_tuple(union olsr_ip_addr *, struct mid_address *, olsr_reltime);
-void insert_mid_alias(union olsr_ip_addr *, const union olsr_ip_addr *, olsr_reltime);
-union olsr_ip_addr *mid_lookup_main_addr(const union olsr_ip_addr *);
-struct mid_address *mid_lookup_aliases(const union olsr_ip_addr *);
-struct mid_entry *mid_lookup_entry_bymain(const union olsr_ip_addr *);
+void olsr_init_mid_set(void);
+void olsr_update_mid_entry(union olsr_ip_addr *, const union olsr_ip_addr *,
+                           olsr_reltime, olsr_u16_t);
+union olsr_ip_addr *olsr_lookup_main_addr_by_alias(const union olsr_ip_addr *);
+struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
+struct mid_entry *olsr_lookup_tc_mid_entry(struct tc_entry *,
+                                               const union olsr_ip_addr *);
+void olsr_prune_mid_entries(const union olsr_ip_addr *, olsr_u16_t);
+void olsr_flush_mid_entries(struct tc_entry *);
 void olsr_print_mid_set(void);
-void olsr_prune_aliases(const union olsr_ip_addr *, struct mid_alias *);
-int olsr_update_mid_table(const union olsr_ip_addr *, olsr_reltime);
-void olsr_delete_mid_entry(struct mid_entry *);
 
 #endif
 

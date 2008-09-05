@@ -105,7 +105,7 @@ olsr_shall_process_message(void *ip, olsr_u16_t seqnr)
 
   struct ipaddr_str buf;
   // get main address
-  mainIp = mid_lookup_main_addr(ip);
+  mainIp = olsr_lookup_main_addr_by_alias(ip);
   if (mainIp == NULL) {
     mainIp = ip;
   }
