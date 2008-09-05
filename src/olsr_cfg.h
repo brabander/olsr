@@ -246,6 +246,12 @@ struct olsrd_config
   float                    lq_nat_thresh;
 };
 
+/*
+ * Global olsrd configuragtion
+ */
+extern struct olsrd_config *olsr_cnf;
+
+
 #if defined __cplusplus
 extern "C" {
 #endif

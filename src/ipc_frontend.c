@@ -54,6 +54,8 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 
+#include <stdlib.h>
+
 #ifdef WIN32
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)

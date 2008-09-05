@@ -65,6 +65,9 @@
 
 #include <stdarg.h>
 #include <signal.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 
 olsr_bool changes_topology;

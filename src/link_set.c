@@ -55,6 +55,7 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
+#include "common/string.h"
 
 /* head node for all link sets */
 struct list_node link_entry_head;

@@ -47,6 +47,7 @@
 #include "olsr.h"
 #include "two_hop_neighbor_table.h"
 #include "common/avl.h"
+#include "common/string.h"
 
 #include "lq_plugin_default_float.h"
 #include "lq_plugin_default_fpm.h"

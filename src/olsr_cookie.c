@@ -44,6 +44,9 @@
 #include "log.h"
 
 #include <assert.h>
+#include <errno.h>
+#include <stdlib.h>
+
 
 /* Root directory of the cookies we have in the system */
 static struct olsr_cookie_info *cookies[COOKIE_ID_MAX] = { 0 };
@@ -98,10 +101,8 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
   /* Mark the cookie as unused */
   cookies[ci->ci_id] = NULL;
 
-  /* Free name if set */
-  if (ci->ci_name) {
-    free(ci->ci_name);
-  }
+  /* Free name */
+  free(ci->ci_name);
 
   /* Flush all the memory on the free list */
   if (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY) {

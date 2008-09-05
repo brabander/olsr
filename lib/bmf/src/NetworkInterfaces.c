@@ -55,6 +55,7 @@
 #include <linux/if_tun.h> /* IFF_TAP */
 #include <netinet/ip.h> /* struct ip */
 #include <netinet/udp.h> /* SOL_UDP */
+#include <stdlib.h> /* atoi, malloc */
 
 /* OLSRD includes */
 #include "olsr.h" /* olsr_printf() */

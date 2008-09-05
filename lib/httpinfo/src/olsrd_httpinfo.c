@@ -63,6 +63,7 @@
 #include "socket_parser.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
+#include "common/string.h"
 
 #include "olsrd_httpinfo.h"
 #include "admin_interface.h"

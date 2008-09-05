@@ -38,24 +38,10 @@
  *
  */
 
-
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
 
-/* Common includes */
-#include <sys/time.h>
-#include <sys/times.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-
-#include "olsr_protocol.h"
-#include "olsr_cfg.h"
 
 extern const char olsrd_version[];
 extern const char build_date[]; 
@@ -70,7 +56,6 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(olsr_u8_t) * (((ver) == AF_INET) ? 4 : 7)))
 
 /* Debug helper macro */
 #ifdef DEBUG
@@ -91,19 +76,6 @@ extern FILE *debug_handle;
   } while (0)
 #endif
 
-/*
- * Provides a timestamp s1 milliseconds in the future according
- * to system ticks returned by times(2)
-*/
-#define GET_TIMESTAMP(s1)	(now_times + ((s1) / olsr_cnf->system_tick_divider))
-
-/* Compute the time in milliseconds when a timestamp will expire. */
-#define TIME_DUE(s1)   ((int)((s1) * olsr_cnf->system_tick_divider) - now_times)
-
-/* Returns TRUE if a timestamp is expired */
-#define TIMED_OUT(s1)	((int)((s1) - now_times) < 0)
-
-
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
 #ifndef MAX
 #define MAX(x,y)	((x) > (y) ? (x) : (y))
@@ -113,35 +85,6 @@ extern FILE *debug_handle;
 #endif
 
 #define INLINE inline __attribute__((always_inline))
-
-/*
- * A somewhat safe version of strncpy and strncat. Note, that
- * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
- * the BSD compiler prints out a warning if you use plain strcpy().
- */
- 
-static INLINE char *strscpy(char *dest, const char *src, size_t size)
-{
-	register size_t l = 0;
-#if !defined(NODEBUG) && defined(DEBUG)
-	if (sizeof(dest) == size) fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n", dest, src, size);
-	if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
-	if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
-#endif
-	if (NULL != dest && NULL != src)
-	{
-		/* src does not need to be null terminated */
-		if (0 < size--) while(l < size && 0 != src[l]) l++;
-		dest[l] = 0;
-	}
-	return strncpy(dest, src, l);
-}
-
-static INLINE char *strscat(char *dest, const char *src, size_t size)
-{
-	register size_t l = strlen(dest);
-	return strscpy(dest + l, src, size > l ? size - l : 0);
-}
 
 /*
  * Queueing macros
@@ -164,14 +107,6 @@ static INLINE char *strscat(char *dest, const char *src, size_t size)
 
 #define CLOSE(fd)  do { close(fd); (fd) = -1; } while (0)
 
-/*
- * Global olsrd configuragtion
- */
-extern struct olsrd_config *olsr_cnf;
-
-/* Timer data */
-extern clock_t now_times; /* current idea of times(2) reported uptime */
-
 #if defined WIN32
 extern olsr_bool olsr_win32_end_request;
 extern olsr_bool olsr_win32_end_flag;
@@ -187,3 +122,9 @@ extern olsr_bool olsr_win32_end_flag;
 unsigned long olsr_times(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

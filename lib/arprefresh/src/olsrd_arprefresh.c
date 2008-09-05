@@ -48,6 +48,8 @@
 #include <netpacket/packet.h>
 #include <linux/types.h>
 #include <linux/filter.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "olsrd_arprefresh.h"
 #include "kernel_routes.h"

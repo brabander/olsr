@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2008, Bernd Petrovitsch <bernd@firmix.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -38,74 +38,40 @@
  *
  */
 
+#include "common/string.h"
 
-#ifndef _OLSR_MSG_PARSER
-#define _OLSR_MSG_PARSER
+#include <string.h>
 
-#include "olsr_protocol.h"
-#include "packet.h"
-
-#define PROMISCUOUS 0xffffffff
-
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(olsr_u8_t) * (((ver) == AF_INET) ? 4 : 7)))
-
-typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-struct parse_function_entry
+/*
+ * A somewhat safe version of strncpy and strncat. Note, that
+ * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
+ * the BSD compiler prints out a warning if you use plain strcpy().
+ */
+char *strscpy(char *dest, const char *src, size_t size)
 {
-  olsr_u32_t type;       /* If set to PROMISCUOUS all messages will be received */
-  int caller_forwarding; /* If set to 0 this entry is not registered as forwarding packets */
-  parse_function *function;
-  struct parse_function_entry *next;
-};
-
-typedef char *preprocessor_function(char *packet, struct interface *, union olsr_ip_addr *, int *length);
-
-struct preprocessor_function_entry
-{
-  preprocessor_function *function;
-  struct preprocessor_function_entry *next;
-};
-
-typedef void packetparser_function(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr);
-
-struct packetparser_function_entry
-{
-  packetparser_function *function;
-  struct packetparser_function_entry *next;
-};
-
-void
-parser_set_disp_pack_in(olsr_bool);
-
-void
-olsr_init_parser(void);
-
-void 
-olsr_input(int);
-
-void
-olsr_input_hostemu(int);
-
-void
-olsr_parser_add_function(parse_function, olsr_u32_t, int);
-
-int
-olsr_parser_remove_function(parse_function, olsr_u32_t, int);
-
-void
-olsr_preprocessor_add_function(preprocessor_function);
-
-int
-olsr_preprocessor_remove_function(preprocessor_function);
-
-void
-olsr_packetparser_add_function(packetparser_function *function);
-
-int
-olsr_packetparser_remove_function(packetparser_function *function);
-
-void
-parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
-
+       register size_t l = 0;
+#if !defined(NODEBUG) && defined(DEBUG)
+       if (sizeof(dest) == size) fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n", dest, src, size);
+       if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
+       if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
 #endif
+       if (NULL != dest && NULL != src)
+       {
+               /* src does not need to be null terminated */
+               if (0 < size--) while(l < size && 0 != src[l]) l++;
+               dest[l] = 0;
+       }
+       return strncpy(dest, src, l);
+}
+
+char *strscat(char *dest, const char *src, size_t size)
+{
+  const size_t l = strlen(dest);
+  return strscpy(dest + l, src, size > l ? size - l : 0);
+}
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

@@ -42,6 +42,7 @@
 #include "kernel_routes.h"
 #include "ipc_frontend.h"
 
+
 #if !LINUX_POLICY_ROUTING
 #include "log.h"
 
@@ -50,6 +51,7 @@ static int delete_all_inet_gws(void);
 #else /* !LINUX_POLICY_ROUTING */
 
 #include <assert.h>
+#include <errno.h>
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 

@@ -41,12 +41,14 @@
 
 /* System includes */
 #include <stddef.h> /* NULL */
+#include <string.h> /* strcmp */
 #include <assert.h> /* assert() */
 #include <netinet/ip.h> /* struct ip */
 #include <netinet/udp.h> /* struct udphdr */
 
 /* OLSRD includes */
 #include "defs.h" /* ipequal */
+#include "olsr_protocol.h" /* OLSRPORT */
 
 /* Plugin includes */
 #include "Bmf.h" /* BMF_ENCAP_PORT */

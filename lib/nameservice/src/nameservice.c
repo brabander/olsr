@@ -46,6 +46,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "olsr.h"
 #include "ipcalc.h"
@@ -64,6 +65,7 @@
 #include "nameservice.h"
 #include "mapwrite.h"
 #include "compat.h"
+#include "common/string.h"
 
 
 /* config parameters */

@@ -52,6 +52,8 @@
 #include "tc_set.h"
 #include "olsr_cookie.h"
 
+#include <errno.h>
+
 #ifdef WIN32
 #undef strerror
 #define strerror(x) StrError(x)

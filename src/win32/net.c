@@ -51,6 +51,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+
 #include "defs.h"
 #include "net_os.h"
 #include "net_olsr.h"

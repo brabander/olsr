@@ -51,6 +51,8 @@
 #include "packet.h"		/* struct mid_alias */
 #include "net_olsr.h"
 
+#include <stdlib.h>
+
 
 struct mid_entry mid_set[HASHSIZE];
 struct mid_address reverse_mid_set[HASHSIZE];

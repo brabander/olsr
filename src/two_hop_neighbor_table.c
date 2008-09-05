@@ -46,6 +46,7 @@
 #include "net_olsr.h"
 #include "scheduler.h"
 
+#include <stdlib.h>
 
 struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
 

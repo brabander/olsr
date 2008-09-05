@@ -8,6 +8,9 @@ else
 BINNAME = olsr_switch
 endif
 
+COMMON_SRCS=$(wildcard $(TOPDIR)/src/common/*.c)
+OBJS += $(COMMON_SRCS:%.c=%.o)
+
 default_target:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $(TOPDIR)/$(BINNAME) $(OBJS) $(LIBS)
 
@@ -15,5 +18,5 @@ ohs_cmd.o: CFLAGS += -Wno-cast-qual
 
 clean:
 	rm -f *.[od]
-	rm -f *~
+	rm -f *~ .#* #*#
 	rm -f $(TOPDIR)/$(BINNAME)

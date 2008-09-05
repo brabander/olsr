@@ -38,7 +38,6 @@
  *
  */
 
-
 #include "ipcalc.h"
 #include "defs.h"
 #include "link_set.h"
@@ -49,6 +48,9 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+
+#include <stdlib.h>
+
 
 /**
  *Free the memory allocated for a HELLO packet.

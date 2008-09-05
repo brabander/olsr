@@ -47,6 +47,8 @@
 #include "scheduler.h"
 #include "net_olsr.h"
 
+#include <stdlib.h>
+
 /* Begin:
  * Prototypes for internal functions 
  */

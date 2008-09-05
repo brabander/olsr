@@ -26,12 +26,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "quagga.h"
 #include "olsr.h"
 #include "log.h"
 #include "defs.h"
 #include "routing_table.h"
+#include "common/string.h"
+
 
 #ifdef USE_UNIX_DOMAIN_SOCKET
 #include <sys/un.h>

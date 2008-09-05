@@ -38,13 +38,14 @@
  *
  */
 
-
 #include "ipcalc.h"
 #include "defs.h"
 #include "mpr_selector_set.h"
 #include "olsr.h"
 #include "scheduler.h"
 #include "net_olsr.h"
+
+#include <stdlib.h>
 
 static olsr_u16_t ansn;
 

@@ -44,6 +44,7 @@
 #include "commands.h"
 #include "link_rules.h"
 #include "ipcalc.h"
+#include "../common/string.h"
 
 #include <string.h>
 #include <stdlib.h>

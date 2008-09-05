@@ -45,6 +45,8 @@
 #include "mantissa.h"
 #include "net_olsr.h"
 
+#include <stdlib.h>
+
 #define BMSG_DBGLVL 5
 
 #define OLSR_IPV4_HDRSIZE          12

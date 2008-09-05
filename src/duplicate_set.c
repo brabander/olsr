@@ -47,6 +47,8 @@
 #include "scheduler.h"
 #include "mantissa.h"
 
+#include <stdlib.h>
+
 static void olsr_cleanup_duplicate_entry(void *unused);
 
 struct avl_tree duplicate_set;

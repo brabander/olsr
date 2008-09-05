@@ -50,6 +50,8 @@
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 
+#include <errno.h>
+
 char *StrError(unsigned int ErrNo);
 
 /**

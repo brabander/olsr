@@ -45,6 +45,9 @@
 #include "olsr.h"
 
 #include <dlfcn.h>
+#include <errno.h>
+#include <stdlib.h>
+
 
 /* Local functions */
 static int init_olsr_plugin(struct olsr_plugin *);

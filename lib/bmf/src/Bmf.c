@@ -54,6 +54,7 @@
 #include <signal.h> /* sigset_t, sigfillset(), sigdelset(), SIGINT */
 #include <netinet/ip.h> /* struct ip */
 #include <netinet/udp.h> /* struct udphdr */
+#include <unistd.h> /* close() */
 
 /* OLSRD includes */
 #include "plugin_util.h" /* set_plugin_int */

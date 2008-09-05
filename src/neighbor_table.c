@@ -50,6 +50,8 @@
 #include "mpr_selector_set.h"
 #include "net_olsr.h"
 
+#include <stdlib.h>
+
 
 struct neighbor_entry neighbortable[HASHSIZE];
 

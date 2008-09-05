@@ -56,6 +56,7 @@
 #include <syslog.h>
 #include <netinet/in.h>
 #include <net/if.h>
+#include <errno.h>
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>

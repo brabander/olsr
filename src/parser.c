@@ -53,6 +53,9 @@
 #include "print_packet.h"
 #include "net_olsr.h"
 
+#include <errno.h>
+#include <stdlib.h>
+
 #ifdef WIN32
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK

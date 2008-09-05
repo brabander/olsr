@@ -58,6 +58,8 @@
 #include "net_olsr.h"
 #include "lq_plugin.h"
 
+#include <stdlib.h>
+
 olsr_bool lq_tc_pending = OLSR_FALSE;
 
 static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];

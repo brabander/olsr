@@ -59,6 +59,7 @@
 #include "parser.h"
 #include "scheduler.h"
 #include "net_olsr.h"
+#include "common/string.h"
 
 #ifdef USE_OPENSSL
 /* OpenSSL stuff */

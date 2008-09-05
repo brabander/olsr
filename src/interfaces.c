@@ -45,6 +45,7 @@
 #include "olsr.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
+#include "common/string.h"
 
 /* The interface linked-list */
 struct interface *ifnet;

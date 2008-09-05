@@ -46,10 +46,12 @@
 #include <string.h> /* memset */
 #include <sys/types.h> /* u_int16_t, u_int32_t */
 #include <netinet/ip.h> /* struct iphdr */
+#include <stdlib.h> /* atoi, malloc */
 
 /* OLSRD includes */
 #include "defs.h" /* GET_TIMESTAMP, TIMED_OUT */
 #include "olsr.h" /* olsr_printf */
+#include "scheduler.h" /* now_times */
 
 /* Plugin includes */
 #include "Packet.h"

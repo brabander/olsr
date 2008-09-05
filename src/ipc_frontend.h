@@ -56,6 +56,9 @@
 #include <signal.h>
 
 #include "defs.h"
+#include "olsr_types.h"
+#include "olsr_protocol.h"
+#include "interfaces.h"
 
 #define IPC_PORT 1212
 #define IPC_PACK_SIZE 44 /* Size of the IPC_ROUTE packet */

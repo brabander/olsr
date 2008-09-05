@@ -53,6 +53,7 @@
 #include "olsrd_plugin.h"
 #include "olsrd_txtinfo.h"
 #include "defs.h"
+#include "olsr_cfg.h"
 
 
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"

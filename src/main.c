@@ -42,6 +42,8 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <errno.h>
+#include <sys/times.h>
 
 #include "ipcalc.h"
 #include "defs.h"
@@ -57,6 +59,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "ipc_frontend.h"
+#include "common/string.h"
 
 #if LINUX_POLICY_ROUTING
 #include <linux/types.h>

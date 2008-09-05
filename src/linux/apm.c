@@ -45,6 +45,8 @@
 
 #include "apm.h"
 #include "defs.h"
+#include "olsr_cfg.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

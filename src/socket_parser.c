@@ -39,11 +39,17 @@
  */
 
 #include <unistd.h>
+
 #include "socket_parser.h"
+#include "scheduler.h"
 #include "olsr.h"
 #include "defs.h"
 #include "log.h"
 #include "net_os.h"
+
+#include <errno.h>
+#include <stdlib.h>
+
 
 #ifdef WIN32
 #undef EINTR

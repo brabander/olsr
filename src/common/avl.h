@@ -43,11 +43,9 @@
 #ifndef _AVL_H
 #define _AVL_H
 
+#include "../defs.h"
+
 #include <stddef.h>
-
-/* must be declared here because of circular dependency through "defs.h" */
-
-#define INLINE inline __attribute__((always_inline))
 
 struct avl_node {
   struct avl_node *parent;

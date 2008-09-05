@@ -58,6 +58,8 @@
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
+#include "../common/string.h"
+
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -67,6 +69,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 

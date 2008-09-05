@@ -43,8 +43,10 @@
 
 #include "olsr_types.h"
 #include "defs.h"
+#include "olsr_cfg.h"
 
 #include <limits.h>
+#include <string.h>
 #include <arpa/inet.h>
 
 struct ipaddr_str {

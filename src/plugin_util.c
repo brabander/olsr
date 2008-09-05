@@ -42,6 +42,7 @@
 #include "plugin_util.h"
 #include "olsr.h"
 #include "defs.h"
+#include "common/string.h"
 
 #include <arpa/inet.h>
 

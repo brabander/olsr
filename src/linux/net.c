@@ -45,6 +45,8 @@
 
 #include "../net_os.h"
 #include "../ipcalc.h"
+#include "../common/string.h"
+#include "../olsr_protocol.h"
 
 #include <net/if.h>
 
@@ -54,6 +56,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <errno.h>
+#include <unistd.h>
 
 
 /* Redirect proc entry */

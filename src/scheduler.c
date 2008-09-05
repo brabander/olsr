@@ -57,7 +57,10 @@
 #include "link_set.h"
 #include "olsr_cookie.h"
 
-/* Timer data, global. Externed in defs.h */
+#include <stdlib.h>
+
+
+/* Timer data, global. Externed in scheduler.h */
 clock_t now_times;		       /* current idea of times(2) reported uptime */
 
 /* Hashed root of all timers */
