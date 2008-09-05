@@ -41,6 +41,9 @@
 #include "common/string.h"
 
 #include <string.h>
+#if !defined(NODEBUG) && defined(DEBUG)
+#include <stdio.h>
+#endif
 
 /*
  * A somewhat safe version of strncpy and strncat. Note, that
