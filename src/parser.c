@@ -63,6 +63,7 @@
 #define errno WSAGetLastError()
 #undef strerror
 #define strerror(x) StrError(x)
+extern char *StrError(unsigned int ErrNo);
 #endif
 
 /* Sven-Ola: On very slow devices used in huge networks

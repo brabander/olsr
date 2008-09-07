@@ -57,6 +57,7 @@
 #ifdef WIN32
 #undef strerror
 #define strerror(x) StrError(x)
+extern char *StrError(unsigned int ErrNo);
 #endif
 
 static struct list_node add_kernel_list;

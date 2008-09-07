@@ -59,6 +59,9 @@
 
 #include <stdlib.h>
 
+#ifdef WIN32
+#define random(x) rand(x)
+#endif
 
 /* Timer data, global. Externed in scheduler.h */
 clock_t now_times;		       /* current idea of times(2) reported uptime */

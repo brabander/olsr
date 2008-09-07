@@ -64,6 +64,7 @@
 #include <arpa/inet.h>
 
 #include "defs.h"
+#include "common/string.h"
 
 void PError(char *Str);
 void WinSockPError(char *Str);

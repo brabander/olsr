@@ -51,6 +51,7 @@
 #include "mantissa.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
+#include "common/string.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -917,7 +918,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
   if (olsr_cnf->max_jitter == 0)
   {
-    /* max_jitter determines the max time to store to-be-send-messages, correlated with random() */
+    /* max_jitter determines the max time to store to-be-send-messages, correlated with rand() */
     olsr_cnf->max_jitter = New->immediate_send_tc ? IntConf->cnf->tc_params.emission_interval : IntConf->cnf->hello_params.emission_interval;
   }
 
@@ -967,7 +968,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   else
     New->int_metric = Info.Metric;
 
-  New->olsr_seqnum = random() & 0xffff;
+  New->olsr_seqnum = rand() & 0xffff;
 
   New->ttl_index = -32; /* For the first 32 TC's, fish-eye is disabled */
     
