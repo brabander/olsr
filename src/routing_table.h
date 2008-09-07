@@ -208,22 +208,54 @@ extern struct olsr_cookie_info *rt_mem_cookie;
 void
 olsr_init_routing_table(void);
 
-unsigned int olsr_bump_routingtree_version(void);
+/**
+ * Bump the version number of the routing tree.
+ *
+ * After route-insertion compare the version number of the routes
+ * against the version number of the table.
+ * This is a lightweight detection if a node or prefix went away,
+ * rather than brute force old vs. new rt_entry comparision.
+ */
+static INLINE void olsr_bump_routingtree_version(void) { routingtree_version++; }
+
 
 int avl_comp_ipv4_prefix (const void *, const void *);
 int avl_comp_ipv6_prefix (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
-olsr_bool olsr_nh_change(const struct rt_nexthop *, const struct rt_nexthop *);
-olsr_bool olsr_hopcount_change(const struct rt_metric *, const struct rt_metric *);
+/**
+ * Check if there is an interface or gateway change.
+ */
+static INLINE olsr_bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
+    return !ipequal(&nh1->gateway, &nh2->gateway) || nh1->iif_index != nh2->iif_index;
+}
+
+/**
+ * Check if there is a hopcount change.
+ */
+static INLINE olsr_bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
+
 olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
+#if 0
 olsr_u8_t olsr_fib_metric(const struct rt_metric *);
+#endif
 
 char *olsr_rt_to_string(const struct rt_entry *);
 char *olsr_rtp_to_string(const struct rt_path *);
 void olsr_print_routing_table(struct avl_tree *);
 
-const struct rt_nexthop * olsr_get_nh(const struct rt_entry *);
+/**
+ * depending on the operation (add/chg/del) the nexthop
+ * field from the route entry or best route path shall be used.
+ */
+static INLINE const struct rt_nexthop *olsr_get_nh(const struct rt_entry *rt) {
+  return rt->rt_best != NULL
+    /* this is a route add/chg - grab nexthop from the best route. */
+    ? &rt->rt_best->rtp_nexthop
+    /* this is a route deletion - all routes are gone. */
+    : &rt->rt_nexthop;
+}
+
 
 /* rt_path manipulation */
 struct rt_path *olsr_insert_routing_table(const union olsr_ip_addr *, const int,

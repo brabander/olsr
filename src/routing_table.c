@@ -77,20 +77,6 @@ struct avl_tree routingtree;
 unsigned int routingtree_version;
 
 /**
- * Bump the version number of the routing tree.
- *
- * After route-insertion compare the version number of the routes
- * against the version number of the table.
- * This is a lightweight detection if a node or prefix went away,
- * rather than brute force old vs. new rt_entry comparision.
- */
-unsigned int
-olsr_bump_routingtree_version(void)
-{
-  return routingtree_version++;
-}
-
-/**
  * avl_comp_ipv4_prefix
  *
  * compare two ipv4 prefixes.
@@ -145,7 +131,7 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  res = memcmp(&pfx1->prefix.v6, &pfx2->prefix.v6, 16);
+  res = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
   if (res != 0) {
     return res;
   } 
@@ -374,29 +360,7 @@ olsr_delete_rt_path(struct rt_path *rtp)
   olsr_cookie_free(rtp_mem_cookie, rtp);
 }
 
-
-/**
- * Check if there is an interface or gateway change.
- */
-olsr_bool
-olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2)
-{
-  if (!ipequal(&nh1->gateway, &nh2->gateway) ||
-      (nh1->iif_index != nh2->iif_index)) {
-    return OLSR_TRUE;
-  }
-  return OLSR_FALSE;
-}
-
-/**
- * Check if there is a hopcount change.
- */
-olsr_bool
-olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2)
-{
-  return (met1->hops != met2->hops);
-}
-
+#if 0
 /**
  * Depending if flat_metric is configured and the kernel fib operation
  * return the hopcount metric of a route.
@@ -412,24 +376,7 @@ olsr_fib_metric(const struct rt_metric *met)
   }
   return RT_METRIC_DEFAULT;
 }
-
-/**
- * depending on the operation (add/chg/del) the nexthop
- * field from the route entry or best route path shall be used.
- */
-const struct rt_nexthop *
-olsr_get_nh(const struct rt_entry *rt)
-{
-
-  if(rt->rt_best) {
-
-    /* this is a route add/chg - grab nexthop from the best route. */
-    return &rt->rt_best->rtp_nexthop;
-  } 
-  
-  /* this is a route deletion - all routes are gone. */
-  return &rt->rt_nexthop;
-}
+#endif
 
 /**
  * compare two route paths.
@@ -458,8 +405,7 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
 
     /* originator (which is guaranteed to be unique) is final tie breaker */
     if ((rtp1->rtp_metric.hops == rtp2->rtp_metric.hops) &&
-        (memcmp(&rtp1->rtp_originator, &rtp2->rtp_originator,
-                olsr_cnf->ipsize) == -1)) {
+        (ipcmp(&rtp1->rtp_originator, &rtp2->rtp_originator) < 0)) {
       return OLSR_TRUE;
     }
 
@@ -475,7 +421,7 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
 olsr_bool
 olsr_cmp_rt(const struct rt_entry *rt1, const struct rt_entry *rt2)
 {
-  return olsr_cmp_rtp(rt1->rt_best, rt2->rt_best, NULL);
+    return olsr_cmp_rtp(rt1->rt_best, rt2->rt_best, NULL);
 }
 
 /**

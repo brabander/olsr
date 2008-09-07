@@ -39,39 +39,7 @@
  *
  */
 
-#include <stdlib.h>
 #include "common/list.h"
-
-/* init a circular list  */
-void list_head_init(struct list_node *node)
-{
-  node->prev = node;
-  node->next = node;
-}
-
-void list_node_init(struct list_node *node)
-{
-  node->prev = NULL;
-  node->next = NULL;
-}
-
-int list_node_on_list(struct list_node *node)
-{
-  if (node->prev || node->next) {
-    return 1;
-  }
-
-  return 0;
-}
-
-int list_is_empty(struct list_node *node)
-{
-  if (node->prev == node && node->next == node) {
-    return 1;
-  }
-
-  return 0;
-}
 
 void list_add_after(struct list_node *pos_node, struct list_node *new_node)
 {

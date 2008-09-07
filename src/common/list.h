@@ -42,7 +42,10 @@
 #ifndef _LIST_H
 #define _LIST_H
 
-#include "stddef.h"
+#include <stddef.h>
+#include <stdlib.h>
+
+#define INLINE inline __attribute__((always_inline))
 
 struct list_node
 {
@@ -50,10 +53,15 @@ struct list_node
   struct list_node *prev;
 };
 
-void list_head_init(struct list_node *);
-void list_node_init(struct list_node *);
-int list_node_on_list(struct list_node *);
-int list_is_empty(struct list_node *);
+/* init a circular list  */
+static INLINE void list_head_init(struct list_node *node) { node->prev = node->next = node; }
+/* clear a node  */
+static INLINE void list_node_init(struct list_node *node) { node->prev = node->next = NULL; }
+/* test if a node is on a list */
+static INLINE int list_node_on_list(const struct list_node *node) { return node->prev != NULL || node->next != NULL; }
+/* test if a list is empty */
+static INLINE int list_is_empty(const struct list_node *node) { return node->prev == node && node->next == node; }
+
 
 void list_add_before(struct list_node *, struct list_node *);
 void list_add_after(struct list_node *, struct list_node *);
@@ -65,7 +73,7 @@ void list_remove(struct list_node *);
  * base of the datastructure. That way you save an extra data pointer.
  */
 #define LISTNODE2STRUCT(funcname, structname, listnodename) \
-static inline structname * funcname (struct list_node *ptr)\
+static INLINE structname * funcname (struct list_node *ptr)\
 {\
   return( \
     ptr ? \
