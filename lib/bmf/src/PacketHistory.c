@@ -235,14 +235,14 @@ void InitPacketHistory(void)
  * ------------------------------------------------------------------------- */
 int CheckAndMarkRecentPacket(u_int32_t crc32)
 {
-  u_int32_t index;
+  u_int32_t idx;
   struct TDupEntry* walker;
   struct TDupEntry* newEntry;
 
-  index = Hash(crc32);
-  assert(index < HISTORY_HASH_SIZE);
+  idx = Hash(crc32);
+  assert(idx < HISTORY_HASH_SIZE);
 
-  for (walker = PacketHistory[index]; walker != NULL; walker = walker->next)
+  for (walker = PacketHistory[idx]; walker != NULL; walker = walker->next)
   {
     if (walker->crc32 == crc32)
     {
@@ -263,8 +263,8 @@ int CheckAndMarkRecentPacket(u_int32_t crc32)
     newEntry->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
 
     /* Add new entry at the front of the list */
-    newEntry->next = PacketHistory[index];
-    PacketHistory[index] = newEntry;
+    newEntry->next = PacketHistory[idx];
+    PacketHistory[idx] = newEntry;
   }
 
   return 0;

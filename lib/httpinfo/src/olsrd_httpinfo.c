@@ -258,7 +258,7 @@ static const struct dynamic_file_entry dynamic_files[] =
 static int
 get_http_socket(int port)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in addr;
   olsr_u32_t yes = 1;
 
   /* Init ipc socket */
@@ -277,13 +277,13 @@ get_http_socket(int port)
   /* Bind the socket */
 
   /* complete the socket structure */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = htons(port);
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_port = htons(port);
 
   /* bind the socket to the port number */
-  if (bind(s, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
+  if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
     olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
     close(s);
     return -1;
@@ -664,7 +664,7 @@ static int section_title(char *buf, olsr_u32_t bufsize, const char *title)
 static int build_frame(char *buf,
                        olsr_u32_t bufsize,
                        const char *title __attribute__((unused)),
-                       const char *link __attribute__((unused)),
+                       const char *lnk __attribute__((unused)),
                        int width __attribute__((unused)),
                        build_body_callback frame_body_cb)
 {
@@ -968,7 +968,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 static int build_neigh_body(char *buf, olsr_u32_t bufsize)
 {
   struct neighbor_entry *neigh;
-  struct link_entry *link = NULL;
+  struct link_entry *lnk;
   int size = 0;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
@@ -983,20 +983,20 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
   /* Link set */
-  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+  OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
     size += snprintf(&buf[size], bufsize-size, "<tr>");
-    size += build_ipaddr_with_link(&buf[size], bufsize, &link->local_iface_addr, -1);
-    size += build_ipaddr_with_link(&buf[size], bufsize, &link->neighbor_iface_addr, -1);
-    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%0.2f</td>", link->L_link_quality);
+    size += build_ipaddr_with_link(&buf[size], bufsize, &lnk->local_iface_addr, -1);
+    size += build_ipaddr_with_link(&buf[size], bufsize, &lnk->neighbor_iface_addr, -1);
+    size += snprintf(&buf[size], bufsize-size, "<td align=\"right\">%0.2f</td>", lnk->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       size += snprintf(&buf[size], bufsize-size,
                        "<td align=\"right\">(%s) %s</td>",
-                       get_link_entry_text(link, '/', &lqbuffer1),
-                       get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
+                       get_link_entry_text(lnk, '/', &lqbuffer1),
+                       get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2));
     }
     size += snprintf(&buf[size], bufsize-size, "</tr>\n");
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
 
@@ -1005,7 +1005,6 @@ static int build_neigh_body(char *buf, olsr_u32_t bufsize)
                    "<tr><th align=\"center\"%s>IP Address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-
     struct neighbor_2_list_entry *list_2;
     int thop_cnt;
     size += snprintf(&buf[size], bufsize-size, "<tr>");
@@ -1215,10 +1214,10 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
   return size;
 }
 
-static int check_allowed_ip(const struct allowed_net * const allowed_nets, const union olsr_ip_addr * const addr)
+static int check_allowed_ip(const struct allowed_net * const all_nets, const union olsr_ip_addr * const addr)
 {
     const struct allowed_net *alln;
-    for (alln = allowed_nets; alln != NULL; alln = alln->next) {
+    for (alln = all_nets; alln != NULL; alln = alln->next) {
         if ((addr->v4.s_addr & alln->mask.v4.s_addr) == (alln->net.v4.s_addr & alln->mask.v4.s_addr)) {
             return 1;
         }

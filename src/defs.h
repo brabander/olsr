@@ -88,6 +88,12 @@ extern FILE *debug_handle;
 
 #define INLINE inline __attribute__((always_inline))
 
+#if defined NODEBUG
+#define USED_ONLY_FOR_DEBUG
+#else
+#define USED_ONLY_FOR_DEBUG
+#endif 
+
 /*
  * Queueing macros
  */

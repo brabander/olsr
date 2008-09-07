@@ -158,8 +158,8 @@ static int
 plugin_ipc_init(void)
 {
     struct sockaddr_storage sst;
-    struct sockaddr_in *sin;
-    struct sockaddr_in6 *sin6;
+    struct sockaddr_in *addr;
+    struct sockaddr_in6 *addr6;
     olsr_u32_t yes = 1;
     socklen_t addrlen;
 
@@ -188,23 +188,23 @@ plugin_ipc_init(void)
         /* complete the socket structure */
         memset(&sst, 0, sizeof(sst));
         if (olsr_cnf->ip_version == AF_INET) {
-           sin = (struct sockaddr_in *)&sst;
-           sin->sin_family = AF_INET;
+           addr = (struct sockaddr_in *)&sst;
+           addr->sin_family = AF_INET;
            addrlen = sizeof(struct sockaddr_in);
 #ifdef SIN6_LEN
-           sin->sin_len = addrlen;
+           addr->sin_len = addrlen;
 #endif
-           sin->sin_addr.s_addr = INADDR_ANY;
-           sin->sin_port = htons(ipc_port);
+           addr->sin_addr.s_addr = INADDR_ANY;
+           addr->sin_port = htons(ipc_port);
         } else {
-           sin6 = (struct sockaddr_in6 *)&sst;
-           sin6->sin6_family = AF_INET6;
+           addr6 = (struct sockaddr_in6 *)&sst;
+           addr6->sin6_family = AF_INET6;
            addrlen = sizeof(struct sockaddr_in6);
 #ifdef SIN6_LEN
-           sin6->sin6_len = addrlen;
+           addr6->sin6_len = addrlen;
 #endif
-           sin6->sin6_addr = in6addr_any;
-           sin6->sin6_port = htons(ipc_port);
+           addr6->sin6_addr = in6addr_any;
+           addr6->sin6_port = htons(ipc_port);
         }
       
         /* bind the socket to the port number */
@@ -238,8 +238,8 @@ plugin_ipc_init(void)
 static void ipc_action(int fd)
 {
     struct sockaddr_storage pin;
-    struct sockaddr_in *sin4;
-    struct sockaddr_in6 *sin6;
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
     char addr[INET6_ADDRSTRLEN];
     fd_set rfds;
     struct timeval tv;
@@ -259,23 +259,23 @@ static void ipc_action(int fd)
 
     tv.tv_sec = tv.tv_usec = 0;
     if (olsr_cnf->ip_version == AF_INET) {
-        sin4 = (struct sockaddr_in *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &sin4->sin_addr, addr,
+        addr4 = (struct sockaddr_in *)&pin;
+        if (inet_ntop(olsr_cnf->ip_version, &addr4->sin_addr, addr,
            INET6_ADDRSTRLEN) == NULL)
              addr[0] = '\0';
-        if (!ip4equal(&sin4->sin_addr, &ipc_accept_ip.v4)) {
+        if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             close(ipc_connection);
             return;
         }
     } else {
-        sin6 = (struct sockaddr_in6 *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &sin6->sin6_addr, addr,
+        addr6 = (struct sockaddr_in6 *)&pin;
+        if (inet_ntop(olsr_cnf->ip_version, &addr6->sin6_addr, addr,
            INET6_ADDRSTRLEN) == NULL)
              addr[0] = '\0';
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
         if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
-           !ip6equal(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
+           !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             close(ipc_connection);
             return;
@@ -350,19 +350,19 @@ static void ipc_print_link(void)
     struct ipaddr_str buf1, buf2;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-    struct link_entry *link = NULL;
+    struct link_entry *lnk;
 
     ipc_sendf("Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
 
     /* Link set */
-    OLSR_FOR_ALL_LINK_ENTRIES(link) {
+    OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
 	ipc_sendf( "%s\t%s\t%0.2f\t%s\t%s\t\n",
-                   olsr_ip_to_string(&buf1, &link->local_iface_addr),
-                   olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-                   link->L_link_quality, 
-                   get_link_entry_text(link, '\t', &lqbuffer1),
-                   get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+                   olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
+                   olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
+                   lnk->L_link_quality, 
+                   get_link_entry_text(lnk, '\t', &lqbuffer1),
+                   get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2));
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
     ipc_sendf("\n");
 }
@@ -430,7 +430,6 @@ static void ipc_print_hna(void)
     /* Announced HNA entries */
     if (olsr_cnf->ip_version == AF_INET) {
         for(hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-            struct ipaddr_str addrbuf, mainaddrbuf;
             ipc_sendf("%s/%d\t%s\n",
                       olsr_ip_to_string(&addrbuf, &hna->net.prefix),
                       hna->net.prefix_len,
@@ -438,7 +437,6 @@ static void ipc_print_hna(void)
         }
     } else {
         for(hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-            struct ipaddr_str addrbuf, mainaddrbuf;
             ipc_sendf("%s/%d\t%s\n",
                       olsr_ip_to_string(&addrbuf, &hna->net.prefix),
                       hna->net.prefix_len,

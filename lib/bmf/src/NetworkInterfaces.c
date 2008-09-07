@@ -454,7 +454,6 @@ void FindNeighbors(
        * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
       if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
       {
-        struct ipaddr_str buf;
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is source of pkt\n",
@@ -467,7 +466,6 @@ void FindNeighbors(
       /* Rely on short-circuit boolean evaluation */
       if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
       {
-        struct ipaddr_str buf;
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
@@ -480,7 +478,6 @@ void FindNeighbors(
       /* Rely on short-circuit boolean evaluation */
       if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
       {
-        struct ipaddr_str buf;
         OLSR_PRINTF(
           9,
           "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
@@ -824,7 +821,6 @@ void FindNeighbors(
       {
         if (bestLinkToNeighbor == NULL)
         {
-          struct ipaddr_str buf;
           OLSR_PRINTF(
             9,
             "%s: ----> Not forwarding to %s: no link found\n",
@@ -835,7 +831,6 @@ void FindNeighbors(
         {
 #ifndef NODEBUG
           struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-          struct ipaddr_str buf;
           struct lqtextbuffer lqbuffer;
 #endif
           OLSR_PRINTF(

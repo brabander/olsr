@@ -707,7 +707,6 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   /* Now to check the digest from the emitted challenge */
   if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
-      struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Received challenge-response from non-registered node %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       return 0;
@@ -731,7 +730,6 @@ parse_cres(struct interface *olsr_if, char *in_msg)
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
-      struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Error in challenge signature from %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       
@@ -810,7 +808,6 @@ parse_rres(char *in_msg)
   /* Now to check the digest from the emitted challenge */
   if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
-      struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Received response-response from non-registered node %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       return 0;
@@ -834,7 +831,6 @@ parse_rres(char *in_msg)
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
-      struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Error in response signature from %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       
@@ -1156,16 +1152,16 @@ timeout_timestamps(void* foo __attribute__((unused)))
 {
   struct stamp *tmp_list;
   struct stamp *entry_to_delete;
-  int index;
+  int idx;
 
   /* Update our local timestamp */
   gettimeofday(&now, NULL);
 
-  for(index=0;index<HASHSIZE;index++)
+  for(idx=0;idx<HASHSIZE;idx++)
     {
-      tmp_list = timestamps[index].next;
+      tmp_list = timestamps[idx].next;
       /*Traverse MID list*/
-      while(tmp_list != &timestamps[index])
+      while(tmp_list != &timestamps[idx])
 	{
 	  /*Check if the entry is timed out*/
 	  if((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime)))
