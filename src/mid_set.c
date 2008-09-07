@@ -482,6 +482,83 @@ olsr_print_mid_set(void)
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 }
 
+/**
+ * Process an incoming MID message.
+ */
+void
+olsr_input_mid(union olsr_message *msg,
+               struct interface *input_if __attribute__ ((unused)),
+               union olsr_ip_addr *from_addr)
+{
+  struct ipaddr_str buf;
+  olsr_u16_t msg_size, msg_seq;
+  olsr_u8_t type, ttl, msg_hops;
+  const unsigned char *curr;
+  olsr_reltime vtime;
+  union olsr_ip_addr originator, alias;
+  int alias_count;
+
+  curr = (void *)msg;
+  if (!msg) {
+    return;
+  }
+
+  /* We are only interested in MID message types. */
+  pkt_get_u8(&curr, &type);
+  if (type != MID_MESSAGE) {
+    return;
+  }
+
+  pkt_get_reltime(&curr, &vtime);
+  pkt_get_u16(&curr, &msg_size);
+
+  pkt_get_ipaddress(&curr, &originator);
+
+  /* Copy header values */
+  pkt_get_u8(&curr, &ttl);
+  pkt_get_u8(&curr, &msg_hops);
+  pkt_get_u16(&curr, &msg_seq);
+
+  if (!olsr_validate_address(&originator)) {
+    return;
+  }
+
+  /*
+   * If the sender interface (NB: not originator) of this message
+   * is not in the symmetric 1-hop neighborhood of this node, the
+   * message MUST be discarded.
+   */
+  if (check_neighbor_link(from_addr) != SYM_LINK) {
+    OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n",
+		olsr_ip_to_string(&buf, from_addr));
+    return;
+  }
+
+  OLSR_PRINTF(1, "Processing MID from %s, seq 0x%04x\n",
+	      olsr_ip_to_string(&buf, &originator), msg_seq);
+
+  /*
+   * How many aliases ?
+   */
+  alias_count = (msg_size - 12) / olsr_cnf->ipsize;
+
+  /*
+   * Now walk the list of alias advertisments one by one.
+   */
+  while (alias_count) {
+    pkt_get_ipaddress(&curr, &alias);
+    olsr_update_mid_entry(&originator, &alias, vtime, msg_seq);
+    alias_count--;
+  }
+
+  /*
+   * Prune the aliases that did not get refreshed by this advertisment.
+   */
+  olsr_prune_mid_entries(&originator, msg_seq);
+
+  olsr_forward_message(msg, from_addr);
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2
