@@ -52,6 +52,7 @@
 
 #include "olsr_types.h"
 #include "interfaces.h"
+#include <sys/time.h>
 
 /* OS dependent functions */
 ssize_t

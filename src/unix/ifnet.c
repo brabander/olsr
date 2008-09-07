@@ -262,9 +262,8 @@ chk_if_changed(struct olsr_if *iface)
   /* IP version 6 */
   if(olsr_cnf->ip_version == AF_INET6)
     {
-#ifdef DEBUG
       struct ipaddr_str buf;
-#endif
+
       /* Get interface address */
       
       if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, iface->cnf->ipv6_addrtype) <= 0)

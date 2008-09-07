@@ -437,14 +437,12 @@ void olsr_input(int fd) {
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   struct preprocessor_function_entry *entry;
+  struct ipaddr_str buf;
   char *packet;
   
   cpu_overload_exit = 0;
   
   for (;;) {
-#ifdef DEBUG
-    struct ipaddr_str buf;
-#endif
     /* sockaddr_in6 is bigger than sockaddr !!!! */
     struct sockaddr_storage from;
     socklen_t fromlen;

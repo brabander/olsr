@@ -44,6 +44,7 @@
 #include "../ipcalc.h"
 #include "../parser.h"		/* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
+#include "../common/string.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
