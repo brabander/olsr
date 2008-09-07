@@ -442,9 +442,7 @@ void olsr_input(int fd) {
   cpu_overload_exit = 0;
   
   for (;;) {
-#ifdef DEBUG
     struct ipaddr_str buf;
-#endif
     /* sockaddr_in6 is bigger than sockaddr !!!! */
     struct sockaddr_storage from;
     socklen_t fromlen;
