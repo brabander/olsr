@@ -50,6 +50,7 @@
 #include <net/if_dl.h>
 #include <ifaddrs.h>
 #include <errno.h>
+#include <unistd.h>
 
 #ifdef _WRS_KERNEL
 #include <wrn/coreip/net/route.h>
