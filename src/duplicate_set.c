@@ -46,6 +46,7 @@
 #include "mid_set.h"
 #include "scheduler.h"
 #include "mantissa.h"
+#include "olsr_cookie.h"
 
 #include <stdlib.h>
 
@@ -54,6 +55,9 @@ static void olsr_cleanup_duplicate_entry(void *unused);
 struct avl_tree duplicate_set;
 struct timer_entry *duplicate_cleanup_timer;
 
+/* Some cookies for stats keeping */
+struct olsr_cookie_info *duplicate_timer_cookie = NULL;
+struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 
 void
 olsr_init_duplicate_set(void)
@@ -61,16 +65,28 @@ olsr_init_duplicate_set(void)
   avl_init(&duplicate_set,
 	   olsr_cnf->ip_version == AF_INET ? &avl_comp_ipv4 : &avl_comp_ipv6);
 
+  /*
+   * Get some cookies for getting stats to ease troubleshooting.
+   */
+  duplicate_timer_cookie =
+    olsr_alloc_cookie("Duplicate Set", OLSR_COOKIE_TYPE_TIMER);
+
+  duplicate_mem_cookie =
+    olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(duplicate_mem_cookie, sizeof(struct dup_entry));
+
+
   olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL,
 		 DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC,
-		 &olsr_cleanup_duplicate_entry, NULL, 0);
+		 &olsr_cleanup_duplicate_entry, NULL,
+                 duplicate_timer_cookie->ci_id);
 }
 
 struct dup_entry *
 olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr)
 {
   struct dup_entry *entry;
-  entry = olsr_malloc(sizeof(struct dup_entry), "New duplicate entry");
+  entry = olsr_cookie_malloc(duplicate_mem_cookie);
   if (entry != NULL) {
     memcpy(&entry->ip, ip,
 	   olsr_cnf->ip_version ==
@@ -90,7 +106,7 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
     if (TIMED_OUT(entry->valid_until)) {
       avl_delete(&duplicate_set, &entry->avl);
-      free(entry);
+      olsr_cookie_free(duplicate_mem_cookie, entry);
     }
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 }
