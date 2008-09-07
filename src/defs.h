@@ -41,6 +41,8 @@
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
 
+#include "olsr_types.h"
+
 #include <stdio.h>
 
 extern const char olsrd_version[];
