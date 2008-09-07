@@ -98,7 +98,7 @@ ohs_set_olsrd_path(const char *path)
 
 #ifdef WIN32
 int
-ohs_cmd_olsrd(char *args __attribute__((unused)))
+ohs_cmd_olsrd(const char *args __attribute__((unused)))
 {
   printf("olsrd command not available in windows version\nStart instances manually\n");
   return 0;
