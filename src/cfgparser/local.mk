@@ -59,9 +59,8 @@ $(C)oscan.c: $(C)oscan.lex $(C)Makefile
 
 # we need a dependency to generate oparse before we compile oscan.c
 $(C)oscan.o: $(C)oparse.c
-$(C)oscan.o: CFLAGS := $(filter-out -Wunreachable-code -Wsign-compare,$(CFLAGS)) -Wno-sign-compare
 # we need potentially another -I directory
-$(C)oscan.o: CPPFLAGS += $(if $(CFGDIR),-I$(CFGDIR))
+$(C)oscan.o: CPPFLAGS += $(if $(CFGDIR),-I$(CFGDIR)) -DYY_NO_INPUT
 
 $(C)oparse.c: $(C)oparse.y $(C)olsrd_conf.h $(C)Makefile
 	$(BISON) -d -o "$@-tmp" "$<"
@@ -70,8 +69,6 @@ $(C)oparse.c: $(C)oparse.y $(C)olsrd_conf.h $(C)Makefile
 		< "$@-tmp" >"$@"
 	mv "$(subst .c,.h,$@-tmp)" "$(subst .c,.h,$@)"
 	$(RM) "$@-tmp" "$(subst .c,.h,$@-tmp)"
-
-$(C)oparse.o: CFLAGS := $(filter-out -Wunreachable-code,$(CFLAGS))
 
 # and a few files to be cleaned
 TMPFILES += $(foreach pat,oscan.c oparse.c oparse.h,$(C)$(pat) $(C)$(pat)-tmp)

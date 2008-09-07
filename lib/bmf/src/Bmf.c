@@ -132,7 +132,7 @@ union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip)
   union olsr_ip_addr* result;
 
   /* TODO: mid_lookup_main_addr() is not thread-safe! */
-  result = mid_lookup_main_addr(ip);
+  result = olsr_lookup_main_addr_by_alias(ip);
   if (result == NULL)
   {
     result = ip;
