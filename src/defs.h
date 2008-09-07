@@ -114,7 +114,6 @@ extern olsr_bool olsr_win32_end_request;
 extern olsr_bool olsr_win32_end_flag;
 #endif
 
-<<<<<<< local
 /*
  * a wrapper around times(2). times(2) has the problem, that it may return -1
  * in case of an err (e.g. EFAULT on the parameter) or immediately before an
@@ -124,8 +123,6 @@ extern olsr_bool olsr_win32_end_flag;
  */
 unsigned long olsr_times(void);
 
-=======
->>>>>>> other
 #endif
 
 /*
