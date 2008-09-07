@@ -107,6 +107,7 @@ WARNINGS +=	-finline-limit=350
 # from the source by hand.
 #WARNINGS +=	-ffunction-sections
 #WARNINGS +=	-fdata-sections
+WARNINGS +=	$(EXTRA_WARNINGS)
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
 endif
 CFLAGS +=	$(WARNINGS)
