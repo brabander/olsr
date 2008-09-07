@@ -2,9 +2,6 @@
 # WINDOWS CE SPECIFIC CONFIGURATION
 #
 
-DESTDIR ?=
-LIBDIR =	$(DESTDIR)/usr/lib
-
 SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 

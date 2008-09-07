@@ -76,8 +76,8 @@ WARNINGS +=	-Wwrite-strings
 WARNINGS +=	-Wbad-function-cast
 WARNINGS +=	-Wpointer-arith
 WARNINGS +=	-Wcast-qual
-# the following 5 do not work yet and need more work on it
-#WARNINGS +=	-Wshadow
+WARNINGS +=	-Wshadow
+# the following 4 do not work yet and need more work on it
 #WARNINGS +=	-Wpointer-arith
 #WARNINGS +=	-Wcast-align
 #WARNINGS +=	-Wconversion

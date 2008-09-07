@@ -197,7 +197,7 @@ olsr_scheduler(void)
  * @return the absolute timer in system clock tick units
  */
 static clock_t
-olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
+olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val)
 {
   unsigned int jitter_time;
 
@@ -213,7 +213,7 @@ olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
    * Play some tricks to avoid overflows with integer arithmetic.
    */
   jitter_time = (jitter_pct * rel_time) / 100;
-  jitter_time = random / (1 + RAND_MAX / jitter_time);
+  jitter_time = random_val / (1 + RAND_MAX / jitter_time);
 
 #if 0
   OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %ums to %ums\n",
@@ -299,14 +299,14 @@ void
 olsr_init_timers(void)
 {
   struct list_node *timer_head_node;
-  int index;
+  int idx;
 
   OLSR_PRINTF(5, "TIMER: init timers\n");
 
   memset(timer_wheel, 0, sizeof(timer_wheel));
 
   timer_head_node = timer_wheel;
-  for (index = 0; index < TIMER_WHEEL_SLOTS; index++) {
+  for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(timer_head_node);
     timer_head_node++;
   }
@@ -539,7 +539,7 @@ olsr_wallclock_string(void)
  * @return buffer to a formatted system time string.
  */
 const char *
-olsr_clock_string(clock_t clock)
+olsr_clock_string(clock_t clk)
 {
   static char buf[4][sizeof("00:00:00.000")];
   static int idx = 0;
@@ -550,7 +550,7 @@ olsr_clock_string(clock_t clock)
   idx = (idx + 1) & 3;
 
   /* On most systems a clocktick is a 10ms quantity. */
-  msec = olsr_cnf->system_tick_divider * (unsigned int)(clock - now_times);
+  msec = olsr_cnf->system_tick_divider * (unsigned int)(clk - now_times);
   sec = msec / MSEC_PER_SEC;
 
   snprintf(ret, sizeof(buf) / 4, "%02u:%02u:%02u.%03u",

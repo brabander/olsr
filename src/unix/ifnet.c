@@ -284,7 +284,6 @@ chk_if_changed(struct olsr_if *iface)
 
       if(memcmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr, olsr_cnf->ipsize) != 0)
 	{
-          struct ipaddr_str buf;
 	  OLSR_PRINTF(1, "New IP address for %s:\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
 	  OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
@@ -366,7 +365,6 @@ chk_if_changed(struct olsr_if *iface)
 		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, 
 		olsr_cnf->ipsize) != 0)
 	{
-          struct ipaddr_str buf;
 	  /* New address */
 	  OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
@@ -392,7 +390,6 @@ chk_if_changed(struct olsr_if *iface)
 	  
 	  if(ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr)
 	    {
-              struct ipaddr_str buf;
 	      /* New address */
 	      OLSR_PRINTF(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
 	      OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));

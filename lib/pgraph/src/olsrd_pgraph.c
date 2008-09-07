@@ -308,9 +308,9 @@ static void ipc_action(int fd __attribute__((unused)))
 /**
  *Scheduled event
  */
-static int pcf_event(int changes_neighborhood,
-                     int changes_topology,
-                     int changes_hna __attribute__((unused)))
+static int pcf_event(int chgs_neighborhood,
+                     int chgs_topology,
+                     int chgs_hna __attribute__((unused)))
 {
   int res;
   struct neighbor_entry *neighbor_table_tmp;
@@ -319,7 +319,7 @@ static int pcf_event(int changes_neighborhood,
 
   res = 0;
 
-  if (changes_neighborhood || changes_topology) {
+  if (chgs_neighborhood || chgs_topology) {
     /* Print tables to IPC socket */
 
     //ipc_send("start ", strlen("start "));
