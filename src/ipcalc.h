@@ -51,7 +51,7 @@
 
 struct ipaddr_str {
     char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
-} __attribute__((unused));
+} USED_ONLY_FOR_DEBUG;
 
 /*
  * Macros for comparing and copying IP addresses
