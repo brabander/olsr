@@ -271,7 +271,11 @@ main(int argc, char *argv[])
 #endif
 
   /*
+<<<<<<< local
    * socket for ioctl calls
+=======
+   *socket for ioctl calls
+>>>>>>> other
    */
   olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
   if (olsr_cnf->ioctl_s < 0) {
