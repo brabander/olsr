@@ -194,7 +194,7 @@ static int build_about_body(char *, olsr_u32_t);
 
 static int build_cfgfile_body(char *, olsr_u32_t);
 
-static int check_allowed_ip(const struct allowed_net * const allowed_nets, const union olsr_ip_addr * const addr);
+static int check_allowed_ip(const struct allowed_net * const all_nets, const union olsr_ip_addr * const addr);
 
 static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link,
                         const char * const ipaddrstr, const int prefix_len);
