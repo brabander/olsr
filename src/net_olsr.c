@@ -461,13 +461,11 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
   struct filter_entry *filter;
 
   /*
-   * On the first call init the filter tree and
-   * add a filter entry for ourselves.
+   * On the first call init the filter tree.
    */
   if (first) {
       avl_init(&filter_tree, avl_comp_default);
       first = OLSR_FALSE;
-      olsr_add_invalid_address(&olsr_cnf->main_addr);
   }
 
   /*
