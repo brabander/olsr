@@ -60,13 +60,10 @@ void
 WinSockPError(const char *);
 #endif
 
-
-struct deny_address_entry
-{
-  union olsr_ip_addr        addr;
-  struct deny_address_entry *next;
-};
-
+/*
+ * Root of the filter set.
+ */
+static struct avl_tree filter_tree;
 
 /* Packet transform functions */
 
@@ -77,8 +74,6 @@ struct ptf
 };
 
 static struct ptf *ptf_list;
-
-static struct deny_address_entry *deny_entries;
 
 static const char * const deny_ipv4_defaults[] =
   {
@@ -459,30 +454,52 @@ net_output(struct interface *ifp)
  * Adds the given IP-address to the invalid list. 
  */
 void
-olsr_add_invalid_address(const union olsr_ip_addr *adr)
+olsr_add_invalid_address(const union olsr_ip_addr *addr)
 {
+  static olsr_bool first = OLSR_TRUE;
   struct ipaddr_str buf;
-  struct deny_address_entry *new_entry = olsr_malloc(sizeof(struct deny_address_entry), "Add deny address");
+  struct filter_entry *filter;
 
-  new_entry->addr = *adr;
-  new_entry->next = deny_entries;
-  deny_entries = new_entry;
-  OLSR_PRINTF(1, "Added %s to IP deny set\n", olsr_ip_to_string(&buf, &new_entry->addr));
+  /*
+   * On the first call init the filter tree and
+   * add a filter entry for ourselves.
+   */
+  if (first) {
+      avl_init(&filter_tree, avl_comp_default);
+      first = OLSR_FALSE;
+      olsr_add_invalid_address(&olsr_cnf->main_addr);
+  }
+
+  /*
+   * Check first if the address already exists.
+   */
+  if (!olsr_validate_address(addr)) {
+    return;
+  }
+
+  filter = olsr_malloc(sizeof(struct filter_entry), "Add filter address");
+
+  filter->filter_addr = *addr;
+  filter->filter_node.key = &filter->filter_addr;
+  avl_insert(&filter_tree, &filter->filter_node, AVL_DUP_NO);
+
+  OLSR_PRINTF(1, "Added %s to filter set\n",
+              olsr_ip_to_string(&buf, &filter->filter_addr));
 }
 
 
 olsr_bool
-olsr_validate_address(const union olsr_ip_addr *adr)
+olsr_validate_address(const union olsr_ip_addr *addr)
 {
-  const struct deny_address_entry *deny_entry;
+  struct ipaddr_str buf;
+  const struct filter_entry *filter;
 
-  for (deny_entry = deny_entries; deny_entry != NULL; deny_entry = deny_entry->next) {
-    if(ipequal(adr, &deny_entry->addr))	{
-      struct ipaddr_str buf;
-      OLSR_PRINTF(1, "Validation of address %s failed!\n", olsr_ip_to_string(&buf, adr));
-      return OLSR_FALSE;
-    }
-    if (deny_entry == (struct deny_address_entry *)&olsr_cnf->main_addr) break;
+  filter = filter_tree2filter(avl_find(&filter_tree, addr));
+                              
+  if (filter) {
+    OLSR_PRINTF(1, "Validation of address %s failed!\n",
+                olsr_ip_to_string(&buf, addr));
+    return OLSR_FALSE;
   }
   return OLSR_TRUE;
 }
