@@ -540,12 +540,24 @@ getsocket6(int bufspace, char *int_name)
     }
 #endif
 
+  on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) 
     {
       perror("SO_REUSEADDR failed");
       close(sock);
       return (-1);
     }
+
+  /*
+   * we are abusing "on" here. The value is 1 which is our intended
+   * hop limit value.
+   */
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &on, sizeof (on)) < 0) {
+    perror ("setsockopt");
+    close(sock);
+    return (-1);
+  }
+
 
   /*
    * WHEN USING KERNEL 2.6 THIS MUST HAPPEN PRIOR TO THE PORT BINDING!!!!
