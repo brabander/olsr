@@ -164,10 +164,11 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   olsr_lock_tc_entry(tc);
 
   /*
-   * Initialize subtrees for edges and prefixes.
+   * Initialize subtrees for edges, prefixes and MIDs.
    */
   avl_init(&tc->edge_tree, avl_comp_default);
   avl_init(&tc->prefix_tree, avl_comp_prefix_default);
+  avl_init(&tc->mid_tree, avl_comp_default);
 
   /*
    * Add a rt_path for ourselves.
