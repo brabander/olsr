@@ -148,7 +148,7 @@ static void
 olsr_expire_hna_net_entry(void *context)
 {
 #ifdef DEBUG
-  struct ipaddr_str buf1, buf2;
+  struct ipaddr_str buf;
 #endif
   struct hna_net *hna_net;
 
@@ -156,10 +156,9 @@ olsr_expire_hna_net_entry(void *context)
   hna_net->hna_net_timer = NULL; /* be pedandic */
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", 
-              olsr_ip_to_string(&buf1, &hna_net->A_network_addr),
-              hna_net->prefixlen,
-              olsr_ip_to_string(&buf2, &hna_net->hna_tc->addr));
+  OLSR_PRINTF(5, "HNA: timeout %s via hna-gw %s\n", 
+              olsr_ip_prefix_to_string(&hna_net->hna_prefix),
+              olsr_ip_to_string(&buf, &hna_net->hna_tc->addr));
 #endif
 
   olsr_delete_hna_net(hna_net);
