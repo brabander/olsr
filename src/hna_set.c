@@ -45,24 +45,17 @@
 #include "net_olsr.h"
 #include "tc_set.h"
 
-
-struct hna_entry hna_set[HASHSIZE];
+/* Some cookies for stats keeping */
 struct olsr_cookie_info *hna_net_timer_cookie = NULL;
-struct olsr_cookie_info *hna_entry_mem_cookie = NULL;
 struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 
 /**
  * Initialize the HNA set
  */
-int
+void
 olsr_init_hna_set(void)
 {
-  int idx;
-
-  for(idx=0;idx<HASHSIZE;idx++) {
-    hna_set[idx].next = &hna_set[idx];
-    hna_set[idx].prev = &hna_set[idx];
-  }
+  OLSR_PRINTF(5, "HNA: init\n");
 
   hna_net_timer_cookie =
     olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
@@ -70,136 +63,82 @@ olsr_init_hna_set(void)
   hna_net_mem_cookie =
     olsr_alloc_cookie("hna_net", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(hna_net_mem_cookie, sizeof(struct hna_net));
-
-  hna_entry_mem_cookie =
-    olsr_alloc_cookie("hna_entry", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(hna_entry_mem_cookie, sizeof(struct hna_entry));
-
-  return 1;
 }
 
 /**
- * Lookup a network entry in a networkentry list.
+ * Lookup a network entry in the HNA subtree.
  *
- * @param nets the network list to look in
- * @param net the network to look for
- * @param mask the netmask to look for
+ * @param tc the HNA hookup point
+ * @param prefic the prefix to look for
  *
  * @return the localized entry or NULL of not found
  */
-struct hna_net *
-olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net,
-                    olsr_u8_t prefixlen)
+static struct hna_net *
+olsr_lookup_hna_net(struct tc_entry *tc, struct olsr_ip_prefix *prefix)
 {
-  struct hna_net *tmp;
-
-  /* Loop trough entrys */
-  for (tmp = nets->next; tmp != nets; tmp = tmp->next) { 
-    if (tmp->prefixlen == prefixlen && ipequal(&tmp->A_network_addr, net)) {
-      return tmp;
-    }
-  }
-
-  /* Not found */
-  return NULL;
-}
-
-
-/**
- * Lookup a gateway entry
- *
- * @param gw the address of the gateway
- * @return the located entry or NULL if not found
- */
-struct hna_entry *
-olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
-{
-  struct hna_entry *tmp_hna;
-  olsr_u32_t hash = olsr_ip_hashing(gw);
-
-#if 0
-  OLSR_PRINTF(5, "HNA: lookup entry\n");
-#endif
-    /* Check for registered entry */
-
-  for(tmp_hna = hna_set[hash].next;
-      tmp_hna != &hna_set[hash];
-      tmp_hna = tmp_hna->next) {
-    if(ipequal(&tmp_hna->A_gateway_addr, gw)) {
-      return tmp_hna;
-    }
-  }
-  
-  /* Not found */
-  return NULL;
-}
-
-
-
-/**
- *Add a gatewayentry to the HNA set
- *
- *@param addr the address of the gateway
- *
- *@return the created entry
- */
-struct hna_entry *
-olsr_add_hna_entry(const union olsr_ip_addr *addr)
-{
-  struct hna_entry *new_entry;
-  olsr_u32_t hash;
-
-  new_entry = olsr_cookie_malloc(hna_entry_mem_cookie);
-
-  /* Fill struct */
-  new_entry->A_gateway_addr = *addr;
-
-  /* Link nets */
-  new_entry->networks.next = &new_entry->networks;
-  new_entry->networks.prev = &new_entry->networks;
-
-  /* queue */
-  hash = olsr_ip_hashing(addr);
-  
-  hna_set[hash].next->prev = new_entry;
-  new_entry->next = hna_set[hash].next;
-  hna_set[hash].next = new_entry;
-  new_entry->prev = &hna_set[hash];
-
-  return new_entry;
+  return (hna_tc_tree2hna(avl_find(&tc->hna_tree, prefix)));
 }
 
 /**
  * Adds a network entry to a HNA gateway.
  *
- * @param hna_gw the gateway entry to add the network to
- * @param net the networkaddress to add
- * @param mask the netmask
+ * @param tc the gateway entry to add the network to
+ * @param net the nework prefix to add
+ * @param prefixlen the prefix length
  *
  * @return the newly created entry
  */
-struct hna_net *
-olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net,
-                 olsr_u8_t prefixlen)
+static struct hna_net *
+olsr_add_hna_net(struct tc_entry *tc, struct olsr_ip_prefix *prefix)
 {
   /* Add the net */
   struct hna_net *new_net = olsr_cookie_malloc(hna_net_mem_cookie);
   
   /* Fill struct */
-  memset(new_net, 0, sizeof(struct hna_net));
-  new_net->A_network_addr = *net;
-  new_net->prefixlen = prefixlen;
+  new_net->hna_prefix = *prefix;
 
   /* Set backpointer */
-  new_net->hna_gw = hna_gw;
+  new_net->hna_tc = tc;
+  olsr_lock_tc_entry(tc);
 
-  /* Queue */
-  hna_gw->networks.next->prev = new_net;
-  new_net->next = hna_gw->networks.next;
-  hna_gw->networks.next = new_net;
-  new_net->prev = &hna_gw->networks;
+  /*
+   * Insert into the per-tc hna subtree.
+   */
+  new_net->hna_tc_node.key = &new_net->hna_prefix;
+  avl_insert(&tc->hna_tree, &new_net->hna_tc_node, AVL_DUP_NO);
 
   return new_net;
+}
+
+/**
+ * Delete a single HNA network.
+ * 
+ * @param hna_net the hna_net to delete.
+ */
+static void
+olsr_delete_hna_net(struct hna_net *hna_net)
+{
+  struct tc_entry *tc;
+
+  tc = hna_net->hna_tc;
+
+  /*
+   * Delete the rt_path for the hna_net.
+   */
+  olsr_delete_routing_table(&hna_net->hna_prefix.prefix,
+                            hna_net->hna_prefix.prefix_len,
+                            &tc->addr);
+
+  /*
+   * Remove from the per-tc tree.
+   */
+  avl_delete(&tc->hna_tree, &hna_net->hna_tc_node);
+
+  /*
+   * Unlock and free.
+   */
+  olsr_unlock_tc_entry(tc);
+  olsr_cookie_free(hna_net_mem_cookie, hna_net);
 }
 
 /**
@@ -211,36 +150,19 @@ olsr_expire_hna_net_entry(void *context)
 #ifdef DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
-  struct hna_net *net_to_delete;
-  struct hna_entry *hna_gw;
+  struct hna_net *hna_net;
 
-  net_to_delete = (struct hna_net *)context;
-  net_to_delete->hna_net_timer = NULL; /* be pedandic */
-  hna_gw = net_to_delete->hna_gw;
+  hna_net = (struct hna_net *)context;
+  hna_net->hna_net_timer = NULL; /* be pedandic */
 
 #ifdef DEBUG
   OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", 
-              olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
-              net_to_delete->prefixlen,
-              olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
+              olsr_ip_to_string(&buf1, &hna_net->A_network_addr),
+              hna_net->prefixlen,
+              olsr_ip_to_string(&buf2, &hna_net->hna_tc->addr));
 #endif
 
-  /*
-   * Delete the rt_path for the entry.
-   */
-  olsr_delete_routing_table(&net_to_delete->A_network_addr,
-                            net_to_delete->prefixlen,
-                            &hna_gw->A_gateway_addr);
-
-
-  /* Delete hna_gw if empty */
-  if (hna_gw->networks.next == &hna_gw->networks) {
-    DEQUEUE_ELEM(hna_gw);
-    olsr_cookie_free(hna_entry_mem_cookie, hna_gw);
-  }
-
-  DEQUEUE_ELEM(net_to_delete);
-  olsr_cookie_free(hna_net_mem_cookie, net_to_delete);
+  olsr_delete_hna_net(hna_net);
 }
 
 /**
@@ -260,30 +182,28 @@ void
 olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net,
                       olsr_u8_t prefixlen, olsr_reltime vtime)
 {
-  struct hna_entry *gw_entry;
+  struct tc_entry *tc;
   struct hna_net *net_entry;
+  struct olsr_ip_prefix prefix;
 
-  gw_entry = olsr_lookup_hna_gw(gw);
-  if (!gw_entry) {
+  tc = olsr_locate_tc_entry(gw);
 
-    /* Need to add the entry */
-    gw_entry = olsr_add_hna_entry(gw);
-  }
-
-  net_entry = olsr_lookup_hna_net(&gw_entry->networks, net, prefixlen);
-  if (net_entry == NULL)  {
+  prefix.prefix = *net;
+  prefix.prefix_len = prefixlen;
+  net_entry = olsr_lookup_hna_net(tc, &prefix);
+  if (net_entry == NULL) {
 
     /* Need to add the net */
-    net_entry = olsr_add_hna_net(gw_entry, net, prefixlen);
+    net_entry = olsr_add_hna_net(tc, &prefix);
     changes_hna = OLSR_TRUE;
   }
 
   /*
    * Add the rt_path for the entry.
    */
-  olsr_insert_routing_table(&net_entry->A_network_addr,
-                            net_entry->prefixlen,
-                            &gw_entry->A_gateway_addr,
+  olsr_insert_routing_table(&net_entry->hna_prefix.prefix,
+                            net_entry->hna_prefix.prefix_len,
+                            &tc->addr,
                             OLSR_RT_ORIGIN_HNA);
 
   /*
@@ -295,7 +215,6 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
                  hna_net_timer_cookie->ci_id);
 }
 
-
 /**
  * Print all HNA entries.
  *
@@ -305,52 +224,24 @@ void
 olsr_print_hna_set(void)
 {
 #ifdef NODEBUG
+  struct tc_entry *tc;
+  struct hna_net *hna_net;
+
   /* The whole function doesn't do anything else. */
-  int idx;
 
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-	      (int)now.tv_usec/10000);
-  
-  if(olsr_cnf->ip_version == AF_INET)
-    OLSR_PRINTF(1, "IP net          netmask         GW IP\n");
-  else
-    OLSR_PRINTF(1, "IP net/prefixlen               GW IP\n");
+  OLSR_PRINTF(1,
+	      "\n--- %s ------------------------------------------------- HNA\n\n",
+	      olsr_wallclock_string());
 
-  for(idx=0;idx<HASHSIZE;idx++)
-    {
-      struct hna_entry *tmp_hna = hna_set[idx].next;
-      /* Check all entrys */
-      while(tmp_hna != &hna_set[idx])
-	{
-	  /* Check all networks */
-	  struct hna_net *tmp_net = tmp_hna->networks.next;
-
-	  while(tmp_net != &tmp_hna->networks)
-	    {
-	      if(olsr_cnf->ip_version == AF_INET)
-		{
-                  struct ipaddr_str buf;
-		  OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string(&buf, &tmp_net->A_network_addr));
-		  OLSR_PRINTF(1, "%-15d ", tmp_net->prefix_len);
-		  OLSR_PRINTF(1, "%-15s\n", olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
-		}
-	      else
-		{
-                  struct ipaddr_str buf;
-		  OLSR_PRINTF(1, "%-27s/%d", olsr_ip_to_string(&buf, &tmp_net->A_network_addr), tmp_net->A_netmask.v6);
-		  OLSR_PRINTF(1, "%s\n", olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
-		}
-
-	      tmp_net = tmp_net->next;
-	    }
-	  tmp_hna = tmp_hna->next;
-	}
-    }
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    OLSR_PRINTF(1, "HNA-gw %s: ", olsr_ip_to_string(&buf, &tc->addr));
+    OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
+      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(hna_net->hna_prefix);
+                  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
+      OLSR_PRINTF(1, "\n");
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
-}
+  }
 
 /*
  * Local Variables:

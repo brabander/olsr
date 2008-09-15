@@ -81,7 +81,6 @@ static union olsr_ip_addr *mainAddr;
 
 static struct interface *intTab = NULL;
 static struct neighbor_entry *neighTab = NULL;
-static struct hna_entry *hnaTab = NULL;
 static struct olsrd_config *config = NULL;
 
 static int iterIndex;
@@ -460,7 +459,6 @@ int olsrd_plugin_init(void)
 
   intTab = ifnet;
   neighTab = neighbortable;
-  hnaTab = hna_set;
   config = olsr_cnf;
 
   httpInit();

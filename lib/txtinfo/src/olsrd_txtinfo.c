@@ -419,7 +419,7 @@ static void ipc_print_hna(void)
 {
     int size;
     struct ip_prefix_list *hna;
-    struct hna_entry *tmp_hna;
+    struct tc_entry *tc;
     struct hna_net *tmp_net;
     struct ipaddr_str addrbuf, mainaddrbuf;
 
@@ -445,19 +445,17 @@ static void ipc_print_hna(void)
     }
 
     /* HNA entries */
-    OLSR_FOR_ALL_HNA_ENTRIES(tmp_hna) {
-
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
         /* Check all networks */
-        for (tmp_net = tmp_hna->networks.next;
-             tmp_net != &tmp_hna->networks;
-             tmp_net = tmp_net->next) {
+        OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
 
             ipc_sendf("%s/%d\t%s\n",
-                      olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
-                      tmp_net->prefixlen,
-                      olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
-        }
-    } OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
+                      olsr_ip_to_string(&addrbuf, &tmp_net->hna_prefix.prefix),
+                      tmp_net->hna_prefix.prefix_len,
+                      olsr_ip_to_string(&mainaddrbuf, &tc->addr));
+
+        } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_net);
+    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     ipc_sendf("\n");
 }

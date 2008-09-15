@@ -299,7 +299,6 @@ pcf_event(int chgs_neighborhood,
   struct neighbor_entry *neighbor_table_tmp;
   struct tc_entry *tc;
   struct tc_edge_entry *tc_edge;
-  struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
   struct ip_prefix_list *hna;
   int res = 0;
@@ -324,17 +323,15 @@ pcf_event(int chgs_neighborhood,
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* HNA entries */
-    OLSR_FOR_ALL_HNA_ENTRIES(tmp_hna) {
-
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
       /* Check all networks */
-      for (tmp_net = tmp_hna->networks.next;
-           tmp_net != &tmp_hna->networks;
-           tmp_net = tmp_net->next) {
-        ipc_print_net(&tmp_hna->A_gateway_addr, 
-                      &tmp_net->A_network_addr, 
-                      tmp_net->prefixlen);
-      }
-    } OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
+      OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
+          ipc_print_net(&tc->addr, 
+                        &tmp_net->hna_prefix.prefix, 
+                        tmp_net->hna_prefix.prefix_len);
+        }
+      } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
+    OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
