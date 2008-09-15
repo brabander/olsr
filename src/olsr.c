@@ -595,7 +595,7 @@ olsr_malloc(size_t size, const char *id)
       olsr_exit(id, EXIT_FAILURE);
   }
 
-#if 1
+#if 0
   /* useful for debugging */
   olsr_printf(1, "MEMORY: alloc %s %p, %u bytes\n",
               id, ptr, size);
