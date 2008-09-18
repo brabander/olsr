@@ -52,6 +52,18 @@
 
 typedef int (*packet_transform_function)(olsr_u8_t *, int *);
 
+/*
+ * Used for filtering addresses.
+ */
+struct filter_entry
+{
+  struct avl_node filter_node;
+  union olsr_ip_addr filter_addr;
+};
+
+AVLNODE2STRUCT(filter_tree2filter, struct filter_entry, filter_node);
+
+
 void
 net_set_disp_pack_out(olsr_bool);
 

@@ -94,7 +94,6 @@ olsr_expire_mid_entries(void *context)
   struct tc_entry *tc;
 
   tc = (struct tc_entry *)context;
-  tc->mid_timer = NULL;
 
 #ifdef DEBUG
   OLSR_PRINTF(1, "MID aliases for %s timed out\n",

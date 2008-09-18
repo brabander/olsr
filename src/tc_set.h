@@ -77,6 +77,7 @@ struct tc_entry {
   struct avl_tree edge_tree;	       /* subtree for edges */
   struct avl_tree prefix_tree;	       /* subtree for prefixes */
   struct avl_tree mid_tree;            /* subtree for MID entries */
+  struct avl_tree hna_tree;            /* subtree for HNA entries */
   struct timer_entry *mid_timer;       /* aging timer for MID advertisements */
   struct link_entry *next_hop;	       /* SPF calculated link to the 1st hop neighbor */
   struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
