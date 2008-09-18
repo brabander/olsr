@@ -360,24 +360,6 @@ olsr_delete_rt_path(struct rt_path *rtp)
   olsr_cookie_free(rtp_mem_cookie, rtp);
 }
 
-#if 0
-/**
- * Depending if flat_metric is configured and the kernel fib operation
- * return the hopcount metric of a route.
- * For adds this is the metric of best rour after olsr_rt_best() election,
- * for deletes this is the metric of the route that got stored in the rt_entry,
- * during route installation.
- */
-olsr_u8_t
-olsr_fib_metric(const struct rt_metric *met)
-{
-  if (FIBM_CORRECT == olsr_cnf->fib_metric) {
-    return met->hops;
-  }
-  return RT_METRIC_DEFAULT;
-}
-#endif
-
 /**
  * compare two route paths.
  *
