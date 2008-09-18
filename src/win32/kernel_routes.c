@@ -45,6 +45,7 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "ipc_frontend.h"
+#include "routing_table.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <iprtrmib.h>
