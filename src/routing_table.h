@@ -236,8 +236,18 @@ static INLINE olsr_bool olsr_nh_change(const struct rt_nexthop *nh1, const struc
 static INLINE olsr_bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
 
 olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
-#if defined WIN32
-olsr_u8_t olsr_fib_metric(const struct rt_metric *);
+
+#if defined WIN32 || (defined LINUX && !defined LINUX_POLICY_ROUTING)
+/**
+ * Depending if flat_metric is configured and the kernel fib operation
+ * return the hopcount metric of a route.
+ * For adds this is the metric of best rour after olsr_rt_best() election,
+ * for deletes this is the metric of the route that got stored in the rt_entry,
+ * during route installation.
+ */
+static INLINE olsr_u8_t olsr_fib_metric(const struct rt_metric *met) {
+  return  FIBM_CORRECT == olsr_cnf->fib_metric ? met->hops : RT_METRIC_DEFAULT;
+}
 #endif
 
 char *olsr_rt_to_string(const struct rt_entry *);
