@@ -219,7 +219,7 @@ static OVERLAPPED RouterOver;
 int enable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int __stdcall (*EnableRouter)(HANDLE *Hand, OVERLAPPED *Over);
+  unsigned int __stdcall (*EnableRouterFunc)(HANDLE *Hand, OVERLAPPED *Over);
   HANDLE Hand;
 
   Ver = Ver;
@@ -229,10 +229,10 @@ int enable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  EnableRouter = (unsigned int __stdcall (*)(HANDLE *, OVERLAPPED *))
+  EnableRouterFunc = (unsigned int __stdcall (*)(HANDLE *, OVERLAPPED *))
     GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
 
-  if (EnableRouter == NULL)
+  if (EnableRouterFunc == NULL)
     return 0;
 
   memset(&RouterOver, 0, sizeof (OVERLAPPED));
@@ -245,7 +245,7 @@ int enable_ip_forwarding(int Ver)
     return -1;
   }
   
-  if (EnableRouter(&Hand, &RouterOver) != ERROR_IO_PENDING)
+  if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING)
   {
     PError("EnableRouter()");
     return -1;
@@ -259,7 +259,7 @@ int enable_ip_forwarding(int Ver)
 int disable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int  __stdcall (*UnenableRouter)(OVERLAPPED *Over,
+  unsigned int  __stdcall (*UnenableRouterFunc)(OVERLAPPED *Over,
                                             unsigned int *Count);
   unsigned int Count;
 
@@ -270,13 +270,13 @@ int disable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  UnenableRouter = (unsigned int __stdcall (*)(OVERLAPPED *, unsigned int *))
+  UnenableRouterFunc = (unsigned int __stdcall (*)(OVERLAPPED *, unsigned int *))
     GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
-  if (UnenableRouter == NULL)
+  if (UnenableRouterFunc == NULL)
     return 0;
 
-  if (UnenableRouter(&RouterOver, &Count) != NO_ERROR)
+  if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR)
   {
     PError("UnenableRouter()");
     return -1;

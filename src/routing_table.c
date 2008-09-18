@@ -360,7 +360,7 @@ olsr_delete_rt_path(struct rt_path *rtp)
   olsr_cookie_free(rtp_mem_cookie, rtp);
 }
 
-#if 0
+#if defined WIN32
 /**
  * Depending if flat_metric is configured and the kernel fib operation
  * return the hopcount metric of a route.
