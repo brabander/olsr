@@ -98,7 +98,7 @@ ifeq ($(DEBUG),0)
 WARNINGS +=	-fomit-frame-pointer
 endif
 # we have small inline functions in src/lq_route.h which should always be inlined
-WARNINGS +=	-finline-limit=450
+WARNINGS +=	-finline-limit=350
 # These tell gcc to put each function and global variable in a separate section.
 # The linker can than remove all unreferenced section. But in the olsrd binary
 # unused doesn't imply unused at all since the function may be used by plugins,
