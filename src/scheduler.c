@@ -126,7 +126,6 @@ olsr_scheduler(void)
 {
   OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n",
 	      olsr_cnf->pollrate);
-  OLSR_PRINTF(3, "Max jitter is %f\n\n", olsr_cnf->max_jitter);
 
   /* Main scheduler loop */
   for (;;) {

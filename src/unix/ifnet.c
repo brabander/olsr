@@ -872,11 +872,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   memcpy(ifp, &ifs, sizeof(struct interface));
   
   ifp->immediate_send_tc = (iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval);
-  if (olsr_cnf->max_jitter == 0)
-  {
-    /* max_jitter determines the max time to store to-be-send-messages, correlated with random() */
-    olsr_cnf->max_jitter = ifp->immediate_send_tc ? iface->cnf->tc_params.emission_interval : iface->cnf->hello_params.emission_interval;
-  }
 
   name_size = strlen(if_basename(ifr.ifr_name)) + 1;
   ifp->gen_properties = NULL;
