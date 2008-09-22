@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
@@ -52,9 +53,8 @@ struct interface *ifnet;
 
 
 /* Ifchange functions */
-struct ifchgf
-{
-  int (*function)(struct interface *, int);
+struct ifchgf {
+  int (*function) (struct interface *, int);
   struct ifchgf *next;
 };
 
@@ -70,11 +70,10 @@ struct olsr_cookie_info *hna_gen_timer_cookie = NULL;
 struct olsr_cookie_info *buffer_hold_timer_cookie = NULL;
 
 /**
- *Do initialization of various data needed for
- *network interface management.
- *This function also tries to set up the given interfaces.
+ * Do initialization of various data needed for network interface management.
+ * This function also tries to set up the given interfaces.
  *
- *@return the number of interfaces configured
+ * @return the number of interfaces configured
  */
 int
 ifinit(void)
@@ -102,20 +101,21 @@ ifinit(void)
     olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
 
   OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n");
-  /* Run trough all interfaces immedeatly */
+
+  /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
     if (!tmp_if->host_emul) {
-      if (!olsr_cnf->host_emul) /* XXX: TEMPORARY! */
-        chk_if_up(tmp_if, 1);	
+      if (!olsr_cnf->host_emul)	/* XXX: TEMPORARY! */
+	chk_if_up(tmp_if, 1);
     } else {
       add_hemu_if(tmp_if);
     }
   }
-  
+
   /* Kick a periodic timer for the network interface update function */
   olsr_start_timer((unsigned int)olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5,
-                   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
-                   interface_poll_timer_cookie->ci_id);
+		   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
+		   interface_poll_timer_cookie->ci_id);
 
   return (ifnet == NULL) ? 0 : 1;
 }
@@ -125,63 +125,53 @@ run_ifchg_cbs(struct interface *ifp, int flag)
 {
   struct ifchgf *tmp_ifchgf_list = ifchgf_list;
 
-  while(tmp_ifchgf_list != NULL)
-    {
-      tmp_ifchgf_list->function(ifp, flag);
-      tmp_ifchgf_list = tmp_ifchgf_list->next;
-    }
+  while (tmp_ifchgf_list != NULL) {
+    tmp_ifchgf_list->function(ifp, flag);
+    tmp_ifchgf_list = tmp_ifchgf_list->next;
+  }
 }
 
-
 /**
- *Find the local interface with a given address.
+ * Find the local interface with a given address.
  *
- *@param addr the address to check.
- *
- *@return the interface struct representing the interface
- *that matched the address.
+ * @param addr the address to check.
+ * @return the interface struct representing the interface
+ * that matched the address.
  */
-
 struct interface *
 if_ifwithaddr(const union olsr_ip_addr *addr)
 {
   struct interface *ifp;
 
-  if(!addr)
+  if (!addr)
     return NULL;
 
-  for (ifp = ifnet; ifp; ifp = ifp->int_next)
-    {
-      if(olsr_cnf->ip_version == AF_INET)
-	{
-	  /* IPv4 */
-	  //printf("Checking: %s == ", inet_ntoa(((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
-	  //printf("%s\n", olsr_ip_to_string(addr));
+  for (ifp = ifnet; ifp; ifp = ifp->int_next) {
+    if (olsr_cnf->ip_version == AF_INET) {
+      /* IPv4 */
+      //printf("Checking: %s == ", inet_ntoa(((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
+      //printf("%s\n", olsr_ip_to_string(addr));
 
-	  if (((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr == addr->v4.s_addr)
-	      return ifp;
-	}
-      else
-	{
-	  /* IPv6 */
-	  //printf("Checking %s ", olsr_ip_to_string((union olsr_ip_addr *)&ifp->int6_addr.sin6_addr));
-	  //printf("== %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in6 *)addr)->sin6_addr));
-          if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6))
-	    return ifp;
-	}
+      if (((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr ==
+	  addr->v4.s_addr)
+	return ifp;
+    } else {
+      /* IPv6 */
+      //printf("Checking %s ", olsr_ip_to_string((union olsr_ip_addr *)&ifp->int6_addr.sin6_addr));
+      //printf("== %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in6 *)addr)->sin6_addr));
+      if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6))
+	return ifp;
     }
+  }
   return NULL;
 }
 
-
-
 /**
- *Find the interface with a given number.
+ * Find the interface with a given number.
  *
- *@param nr the number of the interface to find.
- *
- *@return return the interface struct representing the interface
- *that matched the number.
+ * @param nr the number of the interface to find.
+ * @return return the interface struct representing the interface
+ * that matched the number.
  */
 struct interface *
 if_ifwithsock(int fd)
@@ -189,24 +179,22 @@ if_ifwithsock(int fd)
   struct interface *ifp;
   ifp = ifnet;
 
-  while (ifp) 
-    {
-      if (ifp->olsr_socket == fd)
-	return ifp;
-      ifp = ifp->int_next;
-    }
-  
+  while (ifp) {
+    if (ifp->olsr_socket == fd)
+      return ifp;
+    ifp = ifp->int_next;
+  }
+
   return NULL;
 }
 
 
 /**
- *Find the interface with a given label.
+ * Find the interface with a given label.
  *
- *@param if_name the label of the interface to find.
- *
- *@return return the interface struct representing the interface
- *that matched the label.
+ * @param if_name the label of the interface to find.
+ * @return return the interface struct representing the interface
+ * that matched the label.
  */
 struct interface *
 if_ifwithname(const char *if_name)
@@ -223,48 +211,45 @@ if_ifwithname(const char *if_name)
 }
 
 /**
- *Find the interface with a given interface index.
+ * Find the interface with a given interface index.
  *
- *@param iif_index of the interface to find.
- *
- *@return return the interface struct representing the interface
- *that matched the iif_index.
+ * @param iif_index of the interface to find.
+ * @return return the interface struct representing the interface
+ * that matched the iif_index.
  */
 struct interface *
 if_ifwithindex(const int if_index)
 {
   struct interface *ifp = ifnet;
   while (ifp != NULL) {
-      if (ifp->if_index == if_index) {
-          return ifp;
-      }
-      ifp = ifp->int_next;
+    if (ifp->if_index == if_index) {
+      return ifp;
+    }
+    ifp = ifp->int_next;
   }
   return NULL;
 }
 
 /**
- *Get an interface name for a given interface index
+ * Get an interface name for a given interface index
  *
- *@param iif_index of the interface to find.
- *
- *@return "" or interface name.
+ * @param iif_index of the interface to find.
+ * @return "" or interface name.
  */
 const char *
 if_ifwithindex_name(const int if_index)
 {
-  const struct interface * const ifp = if_ifwithindex(if_index);
+  const struct interface *const ifp = if_ifwithindex(if_index);
   return ifp == NULL ? "void" : ifp->int_name;
 }
 
 
 /**
- *Create a new interf_name struct using a given
- *name and insert it into the interface list.
+ * Create a new interf_name struct using a given
+ * name and insert it into the interface list.
  *
- *@param name the name of the interface.
- *
- *@return nada
+ * @param name the name of the interface.
+ * @return nada
  */
 struct olsr_if *
 queue_if(const char *name, int hemu)
@@ -275,15 +260,13 @@ queue_if(const char *name, int hemu)
   //printf("Adding interface %s\n", name);
 
   /* check if the inerfaces already exists */
-  while(interf_n != NULL)
-    {
-      if(memcmp(interf_n->name, name, strlen(name)) == 0)
-	{
-	  fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
-	  return NULL;
-	}
-      interf_n = interf_n->next;
+  while (interf_n != NULL) {
+    if (memcmp(interf_n->name, name, strlen(name)) == 0) {
+      fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
+      return NULL;
     }
+    interf_n = interf_n->next;
+  }
 
   interf_n = olsr_malloc(sizeof(struct olsr_if), "queue interface");
 
@@ -302,18 +285,12 @@ queue_if(const char *name, int hemu)
   return interf_n;
 }
 
-
-
 /**
- *Add an ifchange function. These functions are called on all (non-initial)
- *changes in the interface set.
- *
- *@param
- *
- *@return
+ * Add an ifchange function. These functions are called on all (non-initial)
+ * changes in the interface set.
  */
 int
-add_ifchgf(int (*f)(struct interface *, int))
+add_ifchgf(int (*f) (struct interface *, int))
 {
 
   struct ifchgf *new_ifchgf;
@@ -328,42 +305,36 @@ add_ifchgf(int (*f)(struct interface *, int))
   return 1;
 }
 
-
-
 /*
  * Remove an ifchange function
  */
 int
-del_ifchgf(int (*f)(struct interface *, int))
+del_ifchgf(int (*f) (struct interface *, int))
 {
   struct ifchgf *tmp_ifchgf, *prev;
 
   tmp_ifchgf = ifchgf_list;
   prev = NULL;
 
-  while(tmp_ifchgf)
-    {
-      if(tmp_ifchgf->function == f)
-	{
-	  /* Remove entry */
-	  if(prev == NULL)
-	    {
-	      ifchgf_list = tmp_ifchgf->next;
-	      free(tmp_ifchgf);
-	    }
-	  else
-	    {
-	      prev->next = tmp_ifchgf->next;
-	      free(tmp_ifchgf);
-	    }
-	  return 1;
-	}
-      prev = tmp_ifchgf;
-      tmp_ifchgf = tmp_ifchgf->next;
+  while (tmp_ifchgf) {
+    if (tmp_ifchgf->function == f) {
+      /* Remove entry */
+      if (prev == NULL) {
+	ifchgf_list = tmp_ifchgf->next;
+	free(tmp_ifchgf);
+      } else {
+	prev->next = tmp_ifchgf->next;
+	free(tmp_ifchgf);
+      }
+      return 1;
     }
+    prev = tmp_ifchgf;
+    tmp_ifchgf = tmp_ifchgf->next;
+  }
 
   return 0;
 }
+
 /*
  * Local Variables:
  * c-basic-offset: 2
