@@ -108,4 +108,7 @@ olsr_packetparser_remove_function(packetparser_function *function);
 void
 parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
 
+const unsigned char *
+olsr_parse_msg_hdr(union olsr_message *, struct olsrmsg_hdr *);
+
 #endif

@@ -82,7 +82,7 @@ struct mid_alias;
 
 /* MID msg input parser */
 void olsr_input_mid(union olsr_message *, struct interface *,
-                    union olsr_ip_addr *from);
+                    union olsr_ip_addr *);
 
 void olsr_init_mid_set(void);
 void olsr_update_mid_entry(union olsr_ip_addr *, const union olsr_ip_addr *,
