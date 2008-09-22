@@ -164,7 +164,7 @@ struct interface
   olsr_reltime  hello_etime;
   struct        vtimes valtimes;
 
-  clock_t       fwdtimer;                       /* Timeout for OLSR forwarding on this if */
+  struct timer_entry *buffer_hold_timer;/* Timer for message batching */
 
   struct olsr_netbuf netbuf;                    /* the buffer to construct the packet data */
 
@@ -177,6 +177,8 @@ struct interface
   struct	interface *int_next;
 };
 
+#define OLSR_BUFFER_HOLD_JITTER 25	/* percent */
+#define OLSR_BUFFER_HOLD_TIME 1000	/* milliseconds */
 
 #define OLSR_DEFAULT_MTU             1500
 
@@ -224,6 +226,7 @@ extern struct olsr_cookie_info *hello_gen_timer_cookie;
 extern struct olsr_cookie_info *tc_gen_timer_cookie;
 extern struct olsr_cookie_info *mid_gen_timer_cookie;
 extern struct olsr_cookie_info *hna_gen_timer_cookie;
+extern struct olsr_cookie_info *buffer_hold_timer_cookie;
 
 #endif
 

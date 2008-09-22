@@ -67,6 +67,7 @@ struct olsr_cookie_info *hello_gen_timer_cookie = NULL;
 struct olsr_cookie_info *tc_gen_timer_cookie = NULL;
 struct olsr_cookie_info *mid_gen_timer_cookie = NULL;
 struct olsr_cookie_info *hna_gen_timer_cookie = NULL;
+struct olsr_cookie_info *buffer_hold_timer_cookie = NULL;
 
 /**
  *Do initialization of various data needed for
@@ -88,6 +89,8 @@ ifinit(void)
    */
   interface_poll_timer_cookie =
     olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
+  buffer_hold_timer_cookie =
+    olsr_alloc_cookie("Buffer Hold", OLSR_COOKIE_TYPE_TIMER);
 
   hello_gen_timer_cookie =
     olsr_alloc_cookie("Hello Generation", OLSR_COOKIE_TYPE_TIMER);
