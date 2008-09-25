@@ -58,10 +58,4 @@ olsr_hello_tap(struct hello_message *, struct interface *, const union olsr_ip_a
 void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
-void
-olsr_process_received_mid(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-void
-olsr_process_received_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
 #endif

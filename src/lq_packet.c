@@ -655,8 +655,7 @@ olsr_output_lq_hello(void *para)
 
   if (net_output_pending(outif)) {
     if (outif->immediate_send_tc) {
-      if (TIMED_OUT(outif->fwdtimer))
-        set_buffer_timer(outif);
+      set_buffer_timer(outif);
     } else {
       net_output(outif);
     }
@@ -692,8 +691,7 @@ olsr_output_lq_tc(void *ctx)
 
   if (net_output_pending(outif)) {
     if (!outif->immediate_send_tc) {
-      if (TIMED_OUT(outif->fwdtimer))
-        set_buffer_timer(outif);
+      set_buffer_timer(outif);
     } else {
       net_output(outif);
     }

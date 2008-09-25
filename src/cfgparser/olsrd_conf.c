@@ -476,7 +476,6 @@ set_default_cnf(struct olsrd_config *cnf)
 
     cnf->del_gws = OLSR_FALSE;
     cnf->will_int = 10 * HELLO_INTERVAL;
-    cnf->max_jitter = 0.0;
     cnf->exit_value = EXIT_SUCCESS;
     cnf->max_tc_vtime = 0.0;
     cnf->ioctl_s = 0;

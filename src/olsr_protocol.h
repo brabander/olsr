@@ -374,6 +374,21 @@ struct olsrmsg
 } __attribute__ ((packed));
 
 /*
+ * Internal representation of the header.
+ * Used for some code sharing between message parsers.
+ */
+struct olsrmsg_hdr
+{
+  olsr_u8_t     type;
+  olsr_reltime  vtime;
+  olsr_u16_t    size;
+  union olsr_ip_addr originator;
+  olsr_u8_t     ttl;
+  olsr_u8_t     hopcnt;
+  olsr_u16_t    seqno;
+} __attribute__ ((packed));
+
+/*
  *IPv6
  */
 

@@ -94,10 +94,9 @@ generate_tc(void *p)
     return;
   }
 
-  if(queue_tc(&tcpacket, ifn) && TIMED_OUT(ifn->fwdtimer))
-    {
-      set_buffer_timer(ifn);
-    }
+  if (queue_tc(&tcpacket, ifn)) {
+    set_buffer_timer(ifn);
+  }
 
   olsr_free_tc_packet(&tcpacket);
 }
@@ -107,11 +106,9 @@ generate_mid(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(queue_mid(ifn) && TIMED_OUT(ifn->fwdtimer))
-    {
-      set_buffer_timer(ifn);
-    }
-
+  if (queue_mid(ifn)) {
+    set_buffer_timer(ifn);
+  }
 }
 
 
@@ -121,10 +118,9 @@ generate_hna(void *p)
 {
   struct interface *ifn = (struct interface *)p;
   
-  if(queue_hna(ifn) && TIMED_OUT(ifn->fwdtimer))
-    {
-      set_buffer_timer(ifn);
-    }
+  if (queue_hna(ifn)) {
+    set_buffer_timer(ifn);
+  }
 }
 
 
@@ -139,3 +135,9 @@ generate_stdout_pulse(void *foo __attribute__((unused)))
   printf("%c\r", pulsedata[pulse_state]);
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

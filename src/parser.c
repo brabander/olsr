@@ -225,6 +225,34 @@ int olsr_packetparser_remove_function(packetparser_function *function) {
 }
 
 /**
+ * Shared code to parse the message headers and validate the message originator.
+ */
+const unsigned char *
+olsr_parse_msg_hdr(union olsr_message *msg, struct olsrmsg_hdr *msg_hdr)
+{
+  const unsigned char *curr;
+
+  curr = (void *)msg;
+  if (!msg) {
+    return NULL;
+  }
+
+  pkt_get_u8(&curr, &msg_hdr->type);
+  pkt_get_reltime(&curr, &msg_hdr->vtime);
+  pkt_get_u16(&curr, &msg_hdr->size);
+  pkt_get_ipaddress(&curr, &msg_hdr->originator);
+  pkt_get_u8(&curr, &msg_hdr->ttl);
+  pkt_get_u8(&curr, &msg_hdr->hopcnt);
+  pkt_get_u16(&curr, &msg_hdr->seqno);
+
+  if (!olsr_validate_address(&msg_hdr->originator)) {
+    return NULL;
+  }
+
+  return curr;
+}
+
+/**
  *Process a newly received OLSR packet. Checks the type
  *and to the neccessary convertions and call the
  *corresponding functions to handle the information.
@@ -233,7 +261,6 @@ int olsr_packetparser_remove_function(packetparser_function *function) {
  *@param size the size of the message
  *@return nada
  */
-
 void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip_addr *from_addr) {
   union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
   struct unknown_message unkpacket;
@@ -433,7 +460,9 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
  *@param fd the filedescriptor that data should be read from.
  *@return nada
  */
-void olsr_input(int fd) {
+void
+olsr_input(int fd) {
+
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   struct preprocessor_function_entry *entry;
@@ -612,3 +641,8 @@ void olsr_input_hostemu(int fd) {
   
 }
 
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

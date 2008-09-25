@@ -42,11 +42,9 @@
 #ifndef _OLSR_HNA
 #define _OLSR_HNA
 
-#include "common/avl.h"
 #include "olsr_types.h"
-#include "mantissa.h"
-
-#include <time.h>
+#include "olsr_protocol.h"
+#include "common/avl.h"
 
 struct hna_net
 {
@@ -69,10 +67,13 @@ AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
     hna_net = hna_tc_tree2hna(hna_net_node);
 #define OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net) }}
 
+/* HNA msg input parser */
+void olsr_input_hna(union olsr_message *, struct interface *,
+                    union olsr_ip_addr *);
+
 void olsr_init_hna_set(void);
 void olsr_update_hna_entry(const union olsr_ip_addr *,
-                           const union olsr_ip_addr *,
-                           olsr_u8_t, olsr_reltime);
+                           const struct olsr_ip_prefix *, olsr_reltime);
 void olsr_print_hna_set(void);
 
 #endif

@@ -124,11 +124,8 @@ olsr_scheduler_sleep(unsigned long scheduler_runtime)
 void
 olsr_scheduler(void)
 {
-  struct interface *ifn;
-
   OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n",
 	      olsr_cnf->pollrate);
-  OLSR_PRINTF(3, "Max jitter is %f\n\n", olsr_cnf->max_jitter);
 
   /* Main scheduler loop */
   for (;;) {
@@ -142,7 +139,7 @@ olsr_scheduler(void)
     /* Read incoming data */
     olsr_poll_sockets();
 
-    /* Process timers (before packet generation) */
+    /* Process timers */
     olsr_walk_timers(&timer_last_run);
 
     /* Update */
@@ -153,13 +150,6 @@ olsr_scheduler(void)
       OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn());
       increase_local_ansn();
       link_changes = OLSR_FALSE;
-    }
-
-    /* looping trough interfaces and emmitting pending data */
-    for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-      if (net_output_pending(ifn) && TIMED_OUT(ifn->fwdtimer)) {
-	net_output(ifn);
-      }
     }
 
     /* We are done, sleep until the next scheduling interval. */

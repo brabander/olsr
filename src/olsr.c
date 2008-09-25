@@ -402,12 +402,62 @@ olsr_forward_message(union olsr_message *m,
   return 1;
 }
 
+/**
+ * Wrapper for the timer callback.
+ */
+static void
+olsr_expire_buffer_timer(void *context)
+{
+  struct interface *ifn;
 
+  ifn = (struct interface *)context;
+
+  /*
+   * Clear the pointer to indicate that this timer has
+   * been expired and needs to be restarted in case there
+   * will be another message queued in the future.
+   */
+  ifn->buffer_hold_timer = NULL;
+
+#ifdef DEBUG
+  OLSR_PRINTF(1, "Buffer Holdtimer for %s timed out\n", ifn->int_name);
+#endif
+
+  /*
+   * Do we have something to emit ?
+   */
+  if (!net_output_pending(ifn)) {
+    return;
+  }
+
+  net_output(ifn);
+}
+
+/*
+ * set_buffer_timer
+ *
+ * Kick a hold-down timer which defers building of a message.
+ * This has the desired effect that olsr messages get bigger.
+ */
 void
 set_buffer_timer(struct interface *ifn)
 {      
-  /* Set timer */
-  ifn->fwdtimer = GET_TIMESTAMP(random() * olsr_cnf->max_jitter * MSEC_PER_SEC / RAND_MAX);
+
+  /*
+   * Bail if there is already a timer running.
+   */
+  if (ifn->buffer_hold_timer) {
+    return;
+  }
+
+  /*
+   * This is the first message since the last time this interface has
+   * been drained. Flush the buffer in second or so.
+   */
+  ifn->buffer_hold_timer =
+    olsr_start_timer(OLSR_BUFFER_HOLD_TIME, OLSR_BUFFER_HOLD_JITTER,
+                     OLSR_TIMER_ONESHOT, &olsr_expire_buffer_timer, ifn,
+                     buffer_hold_timer_cookie->ci_id);
 }
 
 void

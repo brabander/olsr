@@ -231,7 +231,6 @@ struct olsrd_config
   olsr_bool                del_gws;              /* Delete InternetGWs at startup */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
   float                    will_int;
-  float                    max_jitter;
   int                      exit_value;           /* Global return value for process termination */
   float                    max_tc_vtime;
 

@@ -542,7 +542,7 @@ olsr_input_mid(union olsr_message *msg,
   alias_count = (msg_size - 12) / olsr_cnf->ipsize;
 
   /*
-   * Now walk the list of alias advertisments one by one.
+   * Now walk the list of alias advertisements one by one.
    */
   while (alias_count) {
     pkt_get_ipaddress(&curr, &alias);
