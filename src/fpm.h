@@ -160,11 +160,31 @@ fpm fpmldiv(fpm a, fpm b);
 #define CEIL_LQDIFF ftofpm(1.1)
 #define FLOOR_LQDIFF ftofpm(0.9)
 
-fpm atofpm(const char *);
-const char *fpmtoa(fpm);
-const char *etxtoa(fpm);
-
 #else /* USE_FPM */
+
+typedef float fpm;
+typedef float sfpm;
+
+#define itofpm(a) ((fpm)(a))
+#define ftofpm(a) ((fpm)(a))
+#define fpmtoi(a) ((int)(sfpm)(a))
+#define fpmtof(a) ((float)(sfpm)(a))
+
+#define fpmadd(a, b) ((fpm)((sfpm)(a) + (sfpm)(b)))
+#define fpmsub(a, b) ((fpm)((sfpm)(a) - (sfpm)(b)))
+#define fpmmul(a, b) ((fpm)((sfpm)(a) * (sfpm)(b)))
+#define fpmdiv(a, b) ((fpm)((sfpm)(a) / (sfpm)(b)))
+
+/*
+ * Special: first or second factor is an integer
+ */
+#define fpmimul(a, b) (fpm)((int)(a) * (sfpm)(b))
+#define fpmmuli(a, b) (fpm)((sfpm)(a) * (int)(b))
+
+/*
+ * Special: divisor is an integer
+ */
+#define fpmidiv(a, b) (fpm)((sfpm)(a) / (int)(b))
 
 #define INFINITE_ETX ((float)(1 << 30))
 #define ZERO_ETX 0.0
@@ -172,11 +192,12 @@ const char *etxtoa(fpm);
 #define CEIL_LQDIFF 1.1
 #define FLOOR_LQDIFF 0.9
 
-float atofpm(const char *);
-const char *fpmtoa(float);
-const char *etxtoa(float);
-
 #endif /* USE_FPM */
+
+fpm atofpm(const char *);
+const char *fpmtoa(fpm);
+const char *etxtoa(fpm);
+
 
 #endif
 
