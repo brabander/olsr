@@ -165,7 +165,7 @@ const char *fpmtoa(fpm a)
   static char ret[4][20];
 
   idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
-  snprintf(ret[idx], sizeof(ret[0]), "%ld.%03ld", (sfpm)a >> FPM_BIT,
+  snprintf(ret[idx], sizeof(ret[0]), "%d.%03d", (sfpm)a >> FPM_BIT,
     (1000 * ((sfpm)(a) & FPM_MSK) + (FPM_NUM / 2)) >> FPM_BIT);
   return ret[idx];
 }

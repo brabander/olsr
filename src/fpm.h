@@ -69,9 +69,9 @@ typedef unsigned long long ufpm;
 /*
  * The standard math should function with only 32 bits
  */
-typedef long fpm;
-typedef signed long sfpm;
-typedef unsigned long ufpm;
+typedef int fpm;
+typedef signed int sfpm;
+typedef unsigned int ufpm;
 #define FPM_BIT 10
  
 #endif
