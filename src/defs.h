@@ -89,7 +89,7 @@ extern FILE *debug_handle;
 #define INLINE inline __attribute__((always_inline))
 
 #if defined NODEBUG
-#define USED_ONLY_FOR_DEBUG
+#define USED_ONLY_FOR_DEBUG __attribute__((unused))
 #else
 #define USED_ONLY_FOR_DEBUG
 #endif 

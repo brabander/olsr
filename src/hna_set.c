@@ -38,6 +38,7 @@
  *
  */
 
+#include "hna_set.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "parser.h"
@@ -220,7 +221,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw,
 void
 olsr_print_hna_set(void)
 {
-#ifdef NODEBUG
+#ifndef NODEBUG
   struct tc_entry *tc;
   struct hna_net *hna_net;
 
@@ -231,13 +232,13 @@ olsr_print_hna_set(void)
 	      olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    struct ipaddr_str buf;
     OLSR_PRINTF(1, "HNA-gw %s: ", olsr_ip_to_string(&buf, &tc->addr));
     OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
-      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(hna_net->hna_prefix);
-                  } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
-      OLSR_PRINTF(1, "\n");
-    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-  }
+      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(&hna_net->hna_prefix));
+    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
+    OLSR_PRINTF(1, "\n");
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
 }
 
