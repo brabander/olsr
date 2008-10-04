@@ -42,13 +42,12 @@
 #ifndef _LIST_H
 #define _LIST_H
 
+#include "defs.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 
-#define INLINE inline __attribute__((always_inline))
-
-struct list_node
-{
+struct list_node {
   struct list_node *next;
   struct list_node *prev;
 };
