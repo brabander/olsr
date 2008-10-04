@@ -43,9 +43,6 @@
 
 #include "olsrd_plugin.h"
 #include "olsr_types.h"
-#include "olsr_cfg.h"
-
-#ifndef OLSR_PLUGIN
 
 /* all */
 typedef int (*plugin_init_func)(void);
@@ -86,7 +83,6 @@ void olsr_close_plugins(void);
 
 int olsr_plugin_io(int, void *, size_t);
 
-#endif
 #endif
 
 /*
