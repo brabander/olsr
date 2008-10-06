@@ -578,7 +578,8 @@ void olsr_input_hostemu(int fd) {
     return;
   
   /* Extract size */
-  if ((cc = recv(fd, (void *)&pcklen, 2, MSG_PEEK)) != 2) /* Win needs a cast */
+  cc = recv(fd, (void *)&pcklen, 2, MSG_PEEK);
+  if (cc != 2) /* Win needs a cast */
   {
     if (cc <= 0) {
       fprintf(stderr, "Lost olsr_switch connection - exit!\n");
@@ -586,14 +587,12 @@ void olsr_input_hostemu(int fd) {
     }
     fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
     return;
-  } else {
-    pcklen = ntohs(pcklen);
   }
+  pcklen = ntohs(pcklen);
   
   fromlen = sizeof(struct sockaddr_storage);
   
   cc = olsr_recvfrom(fd, inbuf, pcklen, 0, (struct sockaddr *)&from, &fromlen);
-  
   if (cc <= 0) {
     if (cc < 0 && errno != EWOULDBLOCK) {
       const char * const err_msg = strerror(errno);
@@ -608,7 +607,8 @@ void olsr_input_hostemu(int fd) {
     return;
   }
   
-  if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
+  olsr_in_if = if_ifwithsock(fd);
+  if (olsr_in_if == NULL) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
         olsr_ip_to_string(&buf, &from_addr),
