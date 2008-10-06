@@ -49,16 +49,15 @@
 #include "common/string.h"
 
 /* The interface linked-list */
-struct interface *ifnet;
-
+struct interface *ifnet = NULL;
 
 /* Ifchange functions */
 struct ifchgf {
-  int (*function) (struct interface *, int);
+  ifchg_cb_func function;
   struct ifchgf *next;
 };
 
-static struct ifchgf *ifchgf_list;
+static struct ifchgf *ifchgf_list = NULL;
 
 
 /* Some cookies for stats keeping */
@@ -81,7 +80,6 @@ ifinit(void)
   struct olsr_if *tmp_if;
 
   /* Initial values */
-  ifnet = NULL;
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
@@ -104,16 +102,17 @@ ifinit(void)
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
-    if (!tmp_if->host_emul) {
-      if (!olsr_cnf->host_emul)	/* XXX: TEMPORARY! */
-	chk_if_up(tmp_if, 1);
-    } else {
+    if (tmp_if->host_emul) {
       add_hemu_if(tmp_if);
+    } else {
+      if (!olsr_cnf->host_emul) {	/* XXX: TEMPORARY! */
+	chk_if_up(tmp_if, 1);
+      }
     }
   }
 
   /* Kick a periodic timer for the network interface update function */
-  olsr_start_timer((unsigned int)olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5,
+  olsr_start_timer(olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5,
 		   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
 		   interface_poll_timer_cookie->ci_id);
 
@@ -123,11 +122,9 @@ ifinit(void)
 void
 run_ifchg_cbs(struct interface *ifp, int flag)
 {
-  struct ifchgf *tmp_ifchgf_list = ifchgf_list;
-
-  while (tmp_ifchgf_list != NULL) {
-    tmp_ifchgf_list->function(ifp, flag);
-    tmp_ifchgf_list = tmp_ifchgf_list->next;
+  struct ifchgf *tmp;
+  for (tmp = ifchgf_list; tmp != NULL; tmp = tmp->next) {
+    tmp->function(ifp, flag);
   }
 }
 
@@ -142,25 +139,30 @@ struct interface *
 if_ifwithaddr(const union olsr_ip_addr *addr)
 {
   struct interface *ifp;
-
-  if (!addr)
+  if (!addr) {
     return NULL;
-
-  for (ifp = ifnet; ifp; ifp = ifp->int_next) {
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      //printf("Checking: %s == ", inet_ntoa(((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
-      //printf("%s\n", olsr_ip_to_string(addr));
-
-      if (((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr ==
-	  addr->v4.s_addr)
+  }
+  if (olsr_cnf->ip_version == AF_INET) {
+    /* IPv4 */
+    for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+/*
+      struct ipaddr_str ifbuf, addrbuf;
+      printf("Checking: %s == %s\n", ip4_to_string(&ifbuf, ifp->int_addr.sin_addr), olsr_ip_to_string(&addrbuf, addr));
+*/
+      if (ip4equal(&ifp->int_addr.sin_addr, &addr->v4)) {
 	return ifp;
-    } else {
-      /* IPv6 */
-      //printf("Checking %s ", olsr_ip_to_string((union olsr_ip_addr *)&ifp->int6_addr.sin6_addr));
-      //printf("== %s\n", olsr_ip_to_string((union olsr_ip_addr *)&((struct sockaddr_in6 *)addr)->sin6_addr));
-      if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6))
+      }
+    }
+  } else {
+    /* IPv6 */
+    for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+/*
+      struct ipaddr_str ifbuf, addrbuf;
+      printf("Checking %s == %s\n", ip6_to_string(&ifbuf, &ifp->int6_addr.sin6_addr), olsr_ip_to_string(&addrbuf, addr));
+*/
+      if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6)) {
 	return ifp;
+      }
     }
   }
   return NULL;
@@ -177,14 +179,11 @@ struct interface *
 if_ifwithsock(int fd)
 {
   struct interface *ifp;
-  ifp = ifnet;
-
-  while (ifp) {
-    if (ifp->olsr_socket == fd)
+  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+    if (ifp->olsr_socket == fd) {
       return ifp;
-    ifp = ifp->int_next;
+    }
   }
-
   return NULL;
 }
 
@@ -199,13 +198,12 @@ if_ifwithsock(int fd)
 struct interface *
 if_ifwithname(const char *if_name)
 {
-  struct interface *ifp = ifnet;
-  while (ifp) {
-    /* good ol' strcmp should be sufficcient here */
+  struct interface *ifp;
+  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+    /* good ol' strcmp should be sufficient here */
     if (strcmp(ifp->int_name, if_name) == 0) {
       return ifp;
     }
-    ifp = ifp->int_next;
   }
   return NULL;
 }
@@ -220,12 +218,11 @@ if_ifwithname(const char *if_name)
 struct interface *
 if_ifwithindex(const int if_index)
 {
-  struct interface *ifp = ifnet;
-  while (ifp != NULL) {
+  struct interface *ifp;
+  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
     if (ifp->if_index == if_index) {
       return ifp;
     }
-    ifp = ifp->int_next;
   }
   return NULL;
 }
@@ -254,84 +251,70 @@ if_ifwithindex_name(const int if_index)
 struct olsr_if *
 queue_if(const char *name, int hemu)
 {
-  struct olsr_if *interf_n = olsr_cnf->interfaces;
-  size_t name_size;
+  struct olsr_if *tmp;
 
   //printf("Adding interface %s\n", name);
 
   /* check if the inerfaces already exists */
-  while (interf_n != NULL) {
-    if (memcmp(interf_n->name, name, strlen(name)) == 0) {
+  for (tmp = olsr_cnf->interfaces; tmp != NULL; tmp = tmp->next) {
+    if (strcmp(tmp->name, name) == 0) {
       fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
       return NULL;
     }
-    interf_n = interf_n->next;
   }
 
-  interf_n = olsr_malloc(sizeof(struct olsr_if), "queue interface");
+  tmp = olsr_malloc(sizeof(*tmp), "queue interface");
 
-  name_size = strlen(name) + 1;
-  interf_n->name = olsr_malloc(name_size, "queue interface name");
-  interf_n->cnf = NULL;
-  interf_n->interf = NULL;
-  interf_n->configured = 0;
+  tmp->name = olsr_malloc(strlen(name) + 1, "queue interface name");
+  strcpy(tmp->name, name);
+  tmp->cnf = NULL;
+  tmp->interf = NULL;
+  tmp->configured = 0;
 
-  interf_n->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
+  tmp->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
 
-  strscpy(interf_n->name, name, name_size);
-  interf_n->next = olsr_cnf->interfaces;
-  olsr_cnf->interfaces = interf_n;
+  tmp->next = olsr_cnf->interfaces;
+  olsr_cnf->interfaces = tmp;
 
-  return interf_n;
+  return tmp;
 }
 
 /**
  * Add an ifchange function. These functions are called on all (non-initial)
  * changes in the interface set.
  */
-int
-add_ifchgf(int (*f) (struct interface *, int))
+void
+add_ifchgf(ifchg_cb_func f)
 {
+  struct ifchgf *tmp = olsr_malloc(sizeof(struct ifchgf), "Add ifchgfunction");
 
-  struct ifchgf *new_ifchgf;
-
-  new_ifchgf = olsr_malloc(sizeof(struct ifchgf), "Add ifchgfunction");
-
-  new_ifchgf->next = ifchgf_list;
-  new_ifchgf->function = f;
-
-  ifchgf_list = new_ifchgf;
-
-  return 1;
+  tmp->function = f;
+  tmp->next = ifchgf_list;
+  ifchgf_list = tmp;
 }
 
 /*
  * Remove an ifchange function
  */
 int
-del_ifchgf(int (*f) (struct interface *, int))
+del_ifchgf(ifchg_cb_func f)
 {
-  struct ifchgf *tmp_ifchgf, *prev;
+  struct ifchgf *tmp, *prev;
 
-  tmp_ifchgf = ifchgf_list;
-  prev = NULL;
-
-  while (tmp_ifchgf) {
-    if (tmp_ifchgf->function == f) {
+  for (tmp = ifchgf_list, prev = NULL;
+       tmp != NULL;
+       prev = tmp, tmp = tmp->next) {
+    if (tmp->function == f) {
       /* Remove entry */
       if (prev == NULL) {
-	ifchgf_list = tmp_ifchgf->next;
-	free(tmp_ifchgf);
+	ifchgf_list = tmp->next;
       } else {
-	prev->next = tmp_ifchgf->next;
-	free(tmp_ifchgf);
+	prev->next = tmp->next;
       }
+      free(tmp);
       return 1;
     }
-    prev = tmp_ifchgf;
-    tmp_ifchgf = tmp_ifchgf->next;
   }
-
   return 0;
 }
 

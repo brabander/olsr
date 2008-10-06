@@ -50,8 +50,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
+#include <errno.h>
 
-static olsr_bool disp_pack_out = OLSR_FALSE;
+olsr_bool disp_pack_out = OLSR_FALSE;
 
 
 #ifdef WIN32
@@ -67,53 +68,43 @@ static struct avl_tree filter_tree;
 
 /* Packet transform functions */
 
-struct ptf
-{
+struct ptf {
   packet_transform_function function;
   struct ptf *next;
 };
 
 static struct ptf *ptf_list;
 
-static const char * const deny_ipv4_defaults[] =
-  {
-    "0.0.0.0",
-    "127.0.0.1",
-    NULL
-  };
+static const char * const deny_ipv4_defaults[] = {
+  "0.0.0.0",
+  "127.0.0.1",
+  NULL
+};
 
-static const char * const deny_ipv6_defaults[] =
-  {
-    "0::0",
-    "0::1",
-    NULL
-  };
-
-void
-net_set_disp_pack_out(olsr_bool val)
-{
-  disp_pack_out = val;
-}
+static const char * const deny_ipv6_defaults[] = {
+  "0::0",
+  "0::1",
+  NULL
+};
 
 /*
  * Converts each invalid IP-address from string to network byte order
  * and adds it to the invalid list.
- *
- * TODO: rename function
  */
 void
 init_net(void)
 {
-  const char * const *defaults = (olsr_cnf->ip_version == AF_INET) ? deny_ipv4_defaults : deny_ipv6_defaults;
+  const char * const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
   
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
-    if(inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
+    if (inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
       fprintf(stderr, "Error converting fixed IP %s for deny rule!!\n", *defaults);
       continue;
     }
     olsr_add_invalid_address(&addr);
   }
+  avl_init(&filter_tree, avl_comp_default);
 }
 
 /**
@@ -159,20 +150,18 @@ net_add_buffer(struct interface *ifp)
  *
  * @return 0 on success, negative if no buffer is found
  */
-int
+void
 net_remove_buffer(struct interface *ifp)
 {
   /* Flush pending data */
-  if(ifp->netbuf.pending)
+  if (ifp->netbuf.pending != 0) {
     net_output(ifp);
-
+  }
   free(ifp->netbuf.buff);
   ifp->netbuf.buff = NULL;
-
-  return 0;
 }
 
-
+#if 0
 /**
  * Reserve space in a outputbuffer. This should only be needed
  * in very special cases. This will decrease the reported size
@@ -190,30 +179,15 @@ net_remove_buffer(struct interface *ifp)
 int
 net_reserve_bufspace(struct interface *ifp, int size)
 {
-  if(size > ifp->netbuf.maxsize)
+  if (size > ifp->netbuf.maxsize) {
     return -1;
-  
+  }
   ifp->netbuf.reserved = size;
   ifp->netbuf.maxsize -= size;
   
   return 0;
 }
-
-/**
- * Returns the number of bytes pending in the buffer. That
- * is the number of bytes added but not sent.
- *
- * @param ifp the interface corresponding to the buffer
- *
- * @return the number of bytes currently pending
- */
-olsr_u16_t
-net_output_pending(const struct interface *ifp)
-{
-  return ifp->netbuf.pending;
-}
-
-
+#endif
 
 /**
  * Add data to a buffer.
@@ -229,16 +203,16 @@ net_output_pending(const struct interface *ifp)
 int
 net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t size)
 {
-  if((ifp->netbuf.pending + size) > ifp->netbuf.maxsize)
+  if (ifp->netbuf.pending + size > ifp->netbuf.maxsize) {
     return 0;
-
+  }
   memcpy(&ifp->netbuf.buff[ifp->netbuf.pending + OLSR_HEADERSIZE], data, size);
   ifp->netbuf.pending += size;
 
   return size;
 }
 
-
+#if 0
 /**
  * Add data to the reserved part of a buffer
  *
@@ -253,29 +227,15 @@ net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t siz
 int
 net_outbuffer_push_reserved(struct interface *ifp, const void *data, const olsr_u16_t size)
 {
-  if((ifp->netbuf.pending + size) > (ifp->netbuf.maxsize + ifp->netbuf.reserved))
+  if (ifp->netbuf.pending + size > ifp->netbuf.maxsize + ifp->netbuf.reserved) {
     return 0;
-
+  }
   memcpy(&ifp->netbuf.buff[ifp->netbuf.pending + OLSR_HEADERSIZE], data, size);
   ifp->netbuf.pending += size;
 
   return size;
 }
-
-/**
- * Report the number of bytes currently available in the buffer
- * (not including possible reserved bytes)
- *
- * @param ifp the interface corresponding to the buffer
- *
- * @return the number of bytes available in the buffer or
- */
-int
-net_outbuffer_bytes_left(const struct interface *ifp)
-{
-  return ifp->netbuf.maxsize - ifp->netbuf.pending;
-}
-
+#endif
 
 /**
  * Add a packet transform function. Theese are functions
@@ -285,20 +245,14 @@ net_outbuffer_bytes_left(const struct interface *ifp)
  *
  * @returns 1
  */
-int
+void
 add_ptf(packet_transform_function f)
 {
+  struct ptf *new_ptf = olsr_malloc(sizeof(struct ptf), "Add PTF");
 
-  struct ptf *new_ptf;
-
-  new_ptf = olsr_malloc(sizeof(struct ptf), "Add PTF");
-
-  new_ptf->next = ptf_list;
   new_ptf->function = f;
-
+  new_ptf->next = ptf_list;
   ptf_list = new_ptf;
-
-  return 1;
 }
 
 /**
@@ -312,24 +266,21 @@ add_ptf(packet_transform_function f)
 int
 del_ptf(packet_transform_function f)
 {
-  struct ptf *prev = NULL;
-  struct ptf *tmp_ptf = ptf_list;
-  while(tmp_ptf)
-    {
-      if(tmp_ptf->function == f)
-	{
-	  /* Remove entry */
-	  if(prev == NULL)
-	      ptf_list = tmp_ptf->next;
-	  else
-	      prev->next = tmp_ptf->next;
-          free(tmp_ptf);
-	  return 1;
-	}
-      prev = tmp_ptf;
-      tmp_ptf = tmp_ptf->next;
+  struct ptf *prev, *tmp_ptf;
+  for (prev = NULL, tmp_ptf = ptf_list;
+       tmp_ptf != NULL;
+       prev = tmp_ptf, tmp_ptf = tmp_ptf->next) {
+    if (tmp_ptf->function == f) {
+      /* Remove entry */
+      if (prev == NULL) {
+	ptf_list = tmp_ptf->next;
+      } else {
+	prev->next = tmp_ptf->next;
+      }
+      free(tmp_ptf);
+      return 1;
     }
-
+  }
   return 0;
 }
 
@@ -343,14 +294,19 @@ del_ptf(packet_transform_function f)
 int
 net_output(struct interface *ifp)
 {
-  struct sockaddr_in *sin = NULL;
-  struct sockaddr_in6 *sin6 = NULL;
-  struct ptf *tmp_ptf_list;
+  union {
+    struct sockaddr sin;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
+  } dstaddr;
+  int dstaddr_size;
+  struct ptf *tmp_ptf;
   union olsr_packet *outmsg;
   int retval;
 
-  if(!ifp->netbuf.pending)
+  if (ifp->netbuf.pending == 0) {
     return 0;
+  }
 
   ifp->netbuf.pending += OLSR_HEADERSIZE;
 
@@ -362,81 +318,56 @@ net_output(struct interface *ifp)
   /* Set the packetlength */
   outmsg->v4.olsr_packlen = htons(ifp->netbuf.pending);
 
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      struct sockaddr_in dst;
-      /* IP version 4 */
-      sin = (struct sockaddr_in *)&ifp->int_broadaddr;
+  if (olsr_cnf->ip_version == AF_INET) {
+    /* IP version 4 */
 
-      /* Copy sin */
-      dst = *sin;
-      sin = &dst;
-
-      if (sin->sin_port == 0)
-	sin->sin_port = htons(OLSRPORT);
+    /* Copy sin */
+    dstaddr.sin4 = ifp->int_broadaddr;
+    if (dstaddr.sin4.sin_port == 0) {
+      dstaddr.sin4.sin_port = htons(OLSRPORT);
     }
-  else
-    {
-      struct sockaddr_in6 dst6;
-      /* IP version 6 */
-      sin6 = (struct sockaddr_in6 *)&ifp->int6_multaddr;
-      /* Copy sin */
-      dst6 = *sin6;
-      sin6 = &dst6;
-    }
+    dstaddr_size = sizeof(dstaddr.sin4);
+  } else {
+    /* IP version 6 */
+    /* Copy sin */
+    dstaddr.sin6 = ifp->int6_multaddr;
+   /* No port number???? */
+    dstaddr_size = sizeof(dstaddr.sin6);
+  }
 
   /*
-   *Call possible packet transform functions registered by plugins  
+   * Call possible packet transform functions registered by plugins  
    */
-  for (tmp_ptf_list = ptf_list; tmp_ptf_list != NULL; tmp_ptf_list = tmp_ptf_list->next)
-    {
-      tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
-    }
+  for (tmp_ptf = ptf_list; tmp_ptf != NULL; tmp_ptf = tmp_ptf->next) {
+    tmp_ptf->function(ifp->netbuf.buff, &ifp->netbuf.pending);
+  }
 
   /*
-   *if the -dispout option was given
-   *we print the content of the packets
+   * if the -dispout option was given
+   * we print the content of the packets
    */
-  if(disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, 
+  if (disp_pack_out) {
+    print_olsr_serialized_packet(stdout,
+				 (union olsr_packet *)ifp->netbuf.buff, 
 				 ifp->netbuf.pending, &ifp->ip_addr); 
-  
-  if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IP version 4 */
-      if(olsr_sendto(ifp->olsr_socket, 
-                     ifp->netbuf.buff, 
-		     ifp->netbuf.pending, 
-		     MSG_DONTROUTE, 
-		     (struct sockaddr *)sin, 
-		     sizeof (*sin))
-	 < 0)
-	{
-	  perror("sendto(v4)");
-	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
-	  retval = -1;
-	}
-    }
-  else
-    {
-      /* IP version 6 */
-      if(olsr_sendto(ifp->olsr_socket, 
-		     ifp->netbuf.buff,
-		     ifp->netbuf.pending, 
-		     MSG_DONTROUTE, 
-		     (struct sockaddr *)sin6, 
-		     sizeof (*sin6))
-	 < 0)
-	{
-          struct ipaddr_str buf;
-	  perror("sendto(v6)");
-	  olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");
-	  fprintf(stderr, "Socket: %d interface: %d\n", ifp->olsr_socket, ifp->if_index);
-	  fprintf(stderr, "To: %s (size: %u)\n", ip6_to_string(&buf, &sin6->sin6_addr), (unsigned int)sizeof(*sin6));
-	  fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
-	  retval = -1;
-	}
-    }
+  }
+  if (olsr_sendto(ifp->olsr_socket, 
+		  ifp->netbuf.buff, 
+		  ifp->netbuf.pending, 
+		  MSG_DONTROUTE, 
+		  &dstaddr.sin,
+		  dstaddr_size) < 0) {
+    char sabuf[1024];
+    struct ipaddr_str buf;
+    dstaddr.sin.sa_family = olsr_cnf->ip_version;
+    fprintf(stderr, "To: %s (size: %d)\n", sockaddr_to_string(sabuf, sizeof(sabuf), &dstaddr.sin, dstaddr_size), dstaddr_size);
+    fprintf(stderr, "To: %s (size: %d)\n", olsr_cnf->ip_version == AF_INET ? ip4_to_string(&buf, dstaddr.sin4.sin_addr) : ip6_to_string(&buf, &dstaddr.sin6.sin6_addr), dstaddr_size);
+    fprintf(stderr, "Socket: %d interface: %d/%s\n", ifp->olsr_socket, ifp->if_index, ifp->int_name);
+    fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
+
+    olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv%d: %s", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(errno));
+    retval = -1;
+  }
   
   ifp->netbuf.pending = 0;
 
@@ -446,7 +377,6 @@ net_output(struct interface *ifp)
    */
 
   lq_tc_pending = OLSR_FALSE;
-
   return retval;
 }
 
@@ -456,17 +386,8 @@ net_output(struct interface *ifp)
 void
 olsr_add_invalid_address(const union olsr_ip_addr *addr)
 {
-  static olsr_bool first = OLSR_TRUE;
   struct ipaddr_str buf;
   struct filter_entry *filter;
-
-  /*
-   * On the first call init the filter tree.
-   */
-  if (first) {
-      avl_init(&filter_tree, avl_comp_default);
-      first = OLSR_FALSE;
-  }
 
   /*
    * Check first if the address already exists.
@@ -489,12 +410,10 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
 olsr_bool
 olsr_validate_address(const union olsr_ip_addr *addr)
 {
-  struct ipaddr_str buf;
-  const struct filter_entry *filter;
-
-  filter = filter_tree2filter(avl_find(&filter_tree, addr));
+  const struct filter_entry *filter = filter_tree2filter(avl_find(&filter_tree, addr));
                               
   if (filter) {
+    struct ipaddr_str buf;
     OLSR_PRINTF(1, "Validation of address %s failed!\n",
                 olsr_ip_to_string(&buf, addr));
     return OLSR_FALSE;

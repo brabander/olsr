@@ -92,7 +92,10 @@ static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const
 
 const char *olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);
 
-static INLINE const char *sockaddr4_to_string(struct ipaddr_str * const buf, const struct sockaddr * const addr) { const struct sockaddr_in * const addr4 = (const struct sockaddr_in *)addr; return ip4_to_string(buf, addr4->sin_addr); }
+const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr);
 
+const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sockaddr * const addr);
+
+const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 
 #endif

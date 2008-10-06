@@ -159,6 +159,54 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
   return rv;
 }
 
+const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
+{
+  char addrbuf[INET6_ADDRSTRLEN];
+  const struct sockaddr_in * const sin4 = (const struct sockaddr_in *)addr;
+  snprintf(buf, bufsize,
+	   "IPv4/%s:%u",
+	   inet_ntop(AF_INET, &sin4->sin_addr, addrbuf, sizeof(addrbuf)),
+	   sin4->sin_port);
+  return buf;
+}
+
+const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
+{
+  char addrbuf[INET6_ADDRSTRLEN];
+  const struct sockaddr_in6 * const sin6 = (const struct sockaddr_in6 *)addr;
+  snprintf(buf, bufsize,
+	   "IPv6/[%s]:%u/%x/%x",
+	   inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, sizeof(addrbuf)),
+	   sin6->sin6_port,
+	   (unsigned)sin6->sin6_flowinfo,
+	   (unsigned)sin6->sin6_scope_id);
+  return buf;
+}
+
+const char *sockaddr_to_string(char * const buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize)
+{
+  switch (addr->sa_family) {
+  case AF_INET:
+    return sockaddr4_to_string(buf, bufsize, addr);
+  case AF_INET6:
+    return sockaddr6_to_string(buf, bufsize, addr);
+  default:
+    {
+      const int size = MIN(addrsize-sizeof(addr->sa_family), sizeof(addr->sa_data));
+      char sep = '/';
+      int i;
+      int len = snprintf(buf, bufsize, "%u", addr->sa_family);
+      for (i = 0; i < size; i++) {
+	len += snprintf(buf+len, bufsize-len, "%c%02x", sep, addr->sa_data[i]);
+	sep = ' ';
+      }
+    }
+    break;
+  }
+  return buf;
+}
+
+
 /*
  * Local Variables:
  * c-basic-offset: 2

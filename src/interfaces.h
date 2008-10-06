@@ -185,6 +185,9 @@ struct interface {
 /* The interface list head */
 extern struct interface *ifnet;
 
+typedef int (*ifchg_cb_func)(struct interface *, int);
+
+
 int ifinit(void);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
@@ -193,8 +196,8 @@ struct interface *if_ifwithname(const char *);
 const char *if_ifwithindex_name(const int if_index);
 struct interface *if_ifwithindex(const int if_index);
 struct olsr_if *queue_if(const char *, int);
-int add_ifchgf(int (*f) (struct interface *, int));
-int del_ifchgf(int (*f) (struct interface *, int));
+void add_ifchgf(ifchg_cb_func f);
+int del_ifchgf(ifchg_cb_func f);
 
 extern struct olsr_cookie_info *interface_poll_timer_cookie;
 extern struct olsr_cookie_info *hello_gen_timer_cookie;

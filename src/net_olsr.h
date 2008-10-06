@@ -55,8 +55,7 @@ typedef int (*packet_transform_function)(olsr_u8_t *, int *);
 /*
  * Used for filtering addresses.
  */
-struct filter_entry
-{
+struct filter_entry {
   struct avl_node filter_node;
   union olsr_ip_addr filter_addr;
 };
@@ -64,49 +63,60 @@ struct filter_entry
 AVLNODE2STRUCT(filter_tree2filter, struct filter_entry, filter_node);
 
 
-void
-net_set_disp_pack_out(olsr_bool);
+extern olsr_bool disp_pack_out;
 
-void
-init_net(void);
+static INLINE void net_set_disp_pack_out(olsr_bool val) { disp_pack_out = val; }
 
-int
-net_add_buffer(struct interface *);
+void init_net(void);
 
-int
-net_remove_buffer(struct interface *);
+int net_add_buffer(struct interface *);
 
-int
-net_outbuffer_bytes_left(const struct interface *);
+void net_remove_buffer(struct interface *);
 
-olsr_u16_t
-net_output_pending(const struct interface *);
+/**
+ * Report the number of bytes currently available in the buffer
+ * (not including possible reserved bytes)
+ *
+ * @param ifp the interface corresponding to the buffer
+ *
+ * @return the number of bytes available in the buffer or
+ */
+static INLINE int net_outbuffer_bytes_left(const struct interface *ifp) { return ifp->netbuf.maxsize - ifp->netbuf.pending; }
 
-int
-net_reserve_bufspace(struct interface *, int);
+/**
+ * Returns the number of bytes pending in the buffer. That
+ * is the number of bytes added but not sent.
+ *
+ * @param ifp the interface corresponding to the buffer
+ *
+ * @return the number of bytes currently pending
+ */
+static INLINE olsr_u16_t net_output_pending(const struct interface *ifp) { return ifp->netbuf.pending; }
 
-int
-net_outbuffer_push(struct interface *, const void *, const olsr_u16_t);
+#if 0
+int net_reserve_bufspace(struct interface *, int);
+#endif
 
-int
-net_outbuffer_push_reserved(struct interface *, const void *, const olsr_u16_t);
+int net_outbuffer_push(struct interface *, const void *, const olsr_u16_t);
 
-int
-net_output(struct interface *);
+#if 0
+int net_outbuffer_push_reserved(struct interface *, const void *, const olsr_u16_t);
+#endif
 
-int
-net_sendroute(struct rt_entry *, struct sockaddr *);
+int net_output(struct interface *);
 
-int
-add_ptf(packet_transform_function);
+void add_ptf(packet_transform_function);
 
-int
-del_ptf(packet_transform_function);
+int del_ptf(packet_transform_function);
 
-olsr_bool
-olsr_validate_address(const union olsr_ip_addr *);
+olsr_bool olsr_validate_address(const union olsr_ip_addr *);
 
-void
-olsr_add_invalid_address(const union olsr_ip_addr *);
+void olsr_add_invalid_address(const union olsr_ip_addr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

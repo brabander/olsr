@@ -308,15 +308,15 @@ chk_if_changed(struct olsr_if *iface)
   /* IP version 4 */
     {
       struct ipaddr_str buf;
+
       /* Check interface address (IPv4)*/
-      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) 
-	{
-	  OLSR_PRINTF(1, "\tCould not get address of interface - removing it\n");
-	  goto remove_interface;
-	}
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
+	OLSR_PRINTF(1, "\tCould not get address of interface - removing it\n");
+	goto remove_interface;
+      }
 
 #ifdef DEBUG
-      OLSR_PRINTF(3, "\tAddress:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
+      OLSR_PRINTF(3, "\tAddress:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
 #endif
 
       if(memcmp(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr,
@@ -326,7 +326,7 @@ chk_if_changed(struct olsr_if *iface)
 	  /* New address */
 	  OLSR_PRINTF(1, "IPv4 address changed for %s\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
-	  OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
+	  OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 
 	  ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
 
@@ -334,8 +334,8 @@ chk_if_changed(struct olsr_if *iface)
 		    &ifp->ip_addr,
 		    olsr_cnf->ipsize) == 0)
 	    {
-	      OLSR_PRINTF(1, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
-	      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
+	      OLSR_PRINTF(1, "New main address: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+	      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 	      memcpy(&olsr_cnf->main_addr, 
 		     &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		     olsr_cnf->ipsize);
@@ -356,7 +356,7 @@ chk_if_changed(struct olsr_if *iface)
 	}
 
 #ifdef DEBUG
-      OLSR_PRINTF(3, "\tNetmask:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_netmask));
+      OLSR_PRINTF(3, "\tNetmask:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr));
 #endif
 
       if(memcmp(&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr,
@@ -366,7 +366,7 @@ chk_if_changed(struct olsr_if *iface)
 	  /* New address */
 	  OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
 	  OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
-	  OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_netmask));
+	  OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr));
 
 	  ifp->int_netmask = *(struct sockaddr_in *)&ifr.ifr_netmask;
 
@@ -383,7 +383,7 @@ chk_if_changed(struct olsr_if *iface)
 	    }
 	  
 #ifdef DEBUG
-	  OLSR_PRINTF(3, "\tBroadcast address:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_broadaddr));
+	  OLSR_PRINTF(3, "\tBroadcast address:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr));
 #endif
 	  
 	  if(ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr)
@@ -391,7 +391,7 @@ chk_if_changed(struct olsr_if *iface)
 	      /* New address */
 	      OLSR_PRINTF(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
 	      OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
-	      OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_broadaddr));
+	      OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr));
 	      
 	      ifp->int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
 	      if_changes = 1;

@@ -971,9 +971,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
               IntConf->name, New->if_index);
       
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_addr));
-  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_netmask));
-  OLSR_PRINTF(1, "\tBroadcast address: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr*)&New->int_broadaddr));
+  OLSR_PRINTF(1, "\tAddress: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_addr)->sin_addr));
+  OLSR_PRINTF(1, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_broadaddr)->sin_addr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
       

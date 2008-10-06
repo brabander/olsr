@@ -168,9 +168,10 @@ main(int argc, char *argv[])
   
   len = strlen(conf_file_name);
   
-  if (len == 0 || conf_file_name[len - 1] != '\\')
+  if (len == 0 || conf_file_name[len - 1] != '\\') {
     conf_file_name[len++] = '\\';
-  
+  }
+
   strscpy(conf_file_name + len, "olsrd.conf", sizeof(conf_file_name) - len);
 #else
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
@@ -211,6 +212,9 @@ main(int argc, char *argv[])
 #else
   olsr_cnf->system_tick_divider = 1;
 #endif
+
+  /* Initialize net */
+  init_net();
 
   /* Initialize timers */
   olsr_init_timers();
@@ -308,9 +312,6 @@ main(int argc, char *argv[])
       OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
     }
   }
-
-  /* Initialize net */
-  init_net();
 
   /* Initializing networkinterfaces */
   if (!ifinit()) {
