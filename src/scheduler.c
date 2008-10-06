@@ -218,18 +218,19 @@ olsr_poll_sockets(void)
   default:	/* Update time since this is much used by the parsing functions */
     now_times = olsr_times();
     for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-      int rd, wr;
+      int f;
       if (entry->process_pollrate == NULL) {
 	continue;
       }
-      rd = (entry->flags & SP_PR_READ) != 0 && FD_ISSET(entry->fd, &ibits);
-      wr = (entry->flags & SP_PR_WRITE) != 0 && FD_ISSET(entry->fd, &obits);
-      if (rd && wr) {
-	entry->process_pollrate(entry->fd, entry->data, SP_PR_READ|SP_PR_WRITE);
-      } else if (wr) {
-	entry->process_pollrate(entry->fd, entry->data, SP_PR_READ);
-      } else if (rd) {
-	entry->process_pollrate(entry->fd, entry->data, SP_PR_WRITE);
+      f = 0;
+      if (FD_ISSET(entry->fd, &ibits)) {
+	f |= SP_PR_READ;
+      }
+      if (FD_ISSET(entry->fd, &obits)) {
+	f |= SP_PR_WRITE;
+      }
+      if (f != 0) {
+	entry->process_pollrate(entry->fd, entry->data, f);
       }
     }
     break;
@@ -426,8 +427,6 @@ olsr_init_timers(void)
   int idx;
 
   OLSR_PRINTF(5, "TIMER: init timers\n");
-
-  memset(timer_wheel, 0, sizeof(timer_wheel));
 
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
