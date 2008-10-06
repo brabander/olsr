@@ -68,36 +68,30 @@
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall SignalHandler(unsigned long signo) __attribute__((noreturn));
+int __stdcall SignalHandler(unsigned long signo);
 void ListInterfaces(void);
 void DisableIcmpRedirects(void);
-olsr_bool olsr_win32_end_request = OLSR_FALSE;
-olsr_bool olsr_win32_end_flag = OLSR_FALSE;
 #else
-static void
-olsr_shutdown(int) __attribute__((noreturn));
+static void signal_shutdown(int);
 #endif
+static void olsr_shutdown(void);
 
 /*
  * Local function prototypes
  */
-void
-olsr_reconfigure(int) __attribute__((noreturn));
-
-static void
-print_usage(void);
-
-static int
-set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
-
-static int
-olsr_process_arguments(int, char *[], 
-		       struct olsrd_config *, 
-		       struct if_config_options *);
-
 #ifndef WIN32
-static char **olsr_argv;
+static void signal_reconfigure(int);
 #endif
+
+static void print_usage(void);
+
+static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
+
+static int olsr_process_arguments(int, char *[], 
+				  struct olsrd_config *, 
+				  struct if_config_options *);
+
+volatile enum app_state app_state = STATE_RUNNING;
 
 static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
 
@@ -109,7 +103,7 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 int
 main(int argc, char *argv[])
 {
-  struct if_config_options *default_ifcnf;
+  struct if_config_options default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct ipaddr_str buf;
 #ifdef WIN32
@@ -126,27 +120,22 @@ main(int argc, char *argv[])
   assert(sizeof(olsr_32_t) == 4);
 
   debug_handle = stdout;
-#ifndef WIN32
-  olsr_argv = argv;
-#endif
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
 #ifndef WIN32
   /* Check if user is root */
-  if(geteuid())
-    {
-      fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
-      exit(EXIT_FAILURE);
-    }
+  if (geteuid()) {
+    fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
+    exit(EXIT_FAILURE);
+  }
 #else
   DisableIcmpRedirects();
 
-  if (WSAStartup(0x0202, &WsaData))
-    {
-      fprintf(stderr, "Could not initialize WinSock.\n");
-      olsr_exit(__func__, EXIT_FAILURE);
-    }
+  if (WSAStartup(0x0202, &WsaData)) {
+    fprintf(stderr, "Could not initialize WinSock.\n");
+    olsr_exit(__func__, EXIT_FAILURE);
+  }
 #endif
 
   /* Open syslog */
@@ -164,7 +153,7 @@ main(int argc, char *argv[])
   srandom(getpid());
 
   /* Init widely used statics */
-  memset(&all_zero, 0, sizeof(union olsr_ip_addr));
+  memset(&all_zero, 0, sizeof(all_zero));
 
   /*
    * Set configfile name and
@@ -187,42 +176,34 @@ main(int argc, char *argv[])
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
 
-  if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) 
-    {
-      struct stat statbuf;
+  if ((argc > 1) && (strcmp(argv[1], "-f") == 0)) {
+    struct stat statbuf;
 
-      argv++; argc--;
-      if(argc == 1)
-	{
-	  fprintf(stderr, "You must provide a filename when using the -f switch!\n");
-	  exit(EXIT_FAILURE);
-	}
-
-      if (stat(argv[1], &statbuf) < 0)
-	{
-	  fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
-	  exit(EXIT_FAILURE);
-	}
-		 
-      strscpy(conf_file_name, argv[1], sizeof(conf_file_name));
-      argv++; argc--;
-
+    argv++; argc--;
+    if (argc == 1) {
+      fprintf(stderr, "You must provide a filename when using the -f switch!\n");
+      exit(EXIT_FAILURE);
     }
+
+    if (stat(argv[1], &statbuf) < 0) {
+      fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+		 
+    strscpy(conf_file_name, argv[1], sizeof(conf_file_name));
+    argv++; argc--;
+  }
 
   /*
    * set up configuration prior to processing commandline options
    */
-  if(NULL == (olsr_cnf = olsrd_parse_cnf(conf_file_name)))
-    {
-      printf("Using default config values(no configfile)\n");
-      olsr_cnf = olsrd_get_default_cnf();
-    }
-
-  default_ifcnf = get_default_if_config();
-  if (default_ifcnf == NULL) {
-    fprintf(stderr, "No default ifconfig found!\n");
-    exit(EXIT_FAILURE);
+  olsr_cnf = olsrd_parse_cnf(conf_file_name);
+  if (olsr_cnf == NULL) {
+    printf("Using default config values(no configfile)\n");
+    olsr_cnf = olsrd_get_default_cnf();
   }
+
+  init_default_if_config(&default_ifcnf);
 
   /* Initialize tick resolution */
 #ifndef WIN32
@@ -237,8 +218,7 @@ main(int argc, char *argv[])
   /*
    * Process olsrd options.
    */
-  if(olsr_process_arguments(argc, argv, olsr_cnf, default_ifcnf) < 0)
-    {
+  if (olsr_process_arguments(argc, argv, olsr_cnf, &default_ifcnf) < 0) {
       print_usage();
       olsr_exit(__func__, EXIT_FAILURE);
     }
@@ -246,14 +226,10 @@ main(int argc, char *argv[])
   /*
    * Set configuration for command-line specified interfaces
    */
-  set_default_ifcnfs(olsr_cnf->interfaces, default_ifcnf);
-
-  /* free the default ifcnf */
-  free(default_ifcnf);
+  set_default_ifcnfs(olsr_cnf->interfaces, &default_ifcnf);
 
   /* Sanity check configuration */
-  if(olsrd_sanity_check_cnf(olsr_cnf) < 0)
-    {
+  if (olsrd_sanity_check_cnf(olsr_cnf) < 0) {
       fprintf(stderr, "Bad configuration!\n");
       olsr_exit(__func__, EXIT_FAILURE);      
     }
@@ -261,7 +237,7 @@ main(int argc, char *argv[])
   /*
    * Print configuration 
    */
-  if(olsr_cnf->debug_level > 1) {
+  if (olsr_cnf->debug_level > 1) {
     olsrd_print_cnf(olsr_cnf);
   }
 #ifndef WIN32
@@ -318,42 +294,34 @@ main(int argc, char *argv[])
   /*
    *Set up willingness/APM
    */
-  if(olsr_cnf->willingness_auto)
-    {
-      if(apm_init() < 0)
-	{
-	  OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+  if (olsr_cnf->willingness_auto) {
+    if(apm_init() < 0){
+      OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
-	  olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+      olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
-	  olsr_cnf->willingness_auto = 0;
-	  olsr_cnf->willingness = WILL_DEFAULT;
-	}
-      else
-	{
-	  olsr_cnf->willingness = olsr_calculate_willingness();
+      olsr_cnf->willingness_auto = 0;
+      olsr_cnf->willingness = WILL_DEFAULT;
+    } else {
+      olsr_cnf->willingness = olsr_calculate_willingness();
 
-	  OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
-	}
+      OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
     }
+  }
 
   /* Initialize net */
   init_net();
 
   /* Initializing networkinterfaces */
-  if(!ifinit())
-    {
-      if(olsr_cnf->allow_no_interfaces)
-	{
-	  fprintf(stderr, "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
-	  sleep(5);
-	}
-      else
-	{
-	  fprintf(stderr, "No interfaces detected!\nBailing out!\n");
-	  olsr_exit(__func__, EXIT_FAILURE);
-	}
+  if (!ifinit()) {
+    if(olsr_cnf->allow_no_interfaces) {
+      fprintf(stderr, "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
+      sleep(5);
+    } else {
+      fprintf(stderr, "No interfaces detected!\nBailing out!\n");
+      olsr_exit(__func__, EXIT_FAILURE);
     }
+  }
 
   /* Print heartbeat to stdout */
 
@@ -374,7 +342,7 @@ main(int argc, char *argv[])
 
   /* daemon mode */
 #ifndef WIN32
-  if(olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
+  if (olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
     printf("%s detaching from the current process...\n", olsrd_version);
     if (daemon(0, 0) < 0) {
       printf("daemon(3) failed: %s\n", strerror(errno));
@@ -401,14 +369,22 @@ main(int argc, char *argv[])
   SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
 #endif
 #else
-  signal(SIGHUP, olsr_reconfigure);  
-  signal(SIGINT,  olsr_shutdown);
-  signal(SIGQUIT, olsr_shutdown);
-  signal(SIGILL,  olsr_shutdown);
-  signal(SIGABRT, olsr_shutdown);
-//  signal(SIGSEGV, olsr_shutdown);
-  signal(SIGTERM, olsr_shutdown);
-  signal(SIGPIPE, SIG_IGN);
+  {
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    act.sa_handler = signal_reconfigure;
+    sigaction(SIGHUP, &act, NULL);
+    act.sa_handler = signal_shutdown;
+    sigaction(SIGINT,  &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
+    sigaction(SIGILL,  &act, NULL);
+    sigaction(SIGABRT, &act, NULL);
+//  sigaction(SIGSEGV, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &act, NULL);
+  }
 #endif
 
   link_changes = OLSR_FALSE;
@@ -416,32 +392,44 @@ main(int argc, char *argv[])
   /* Starting scheduler */
   olsr_scheduler();
 
-  /* Like we're ever going to reach this ;-) */
-  return 1;
+  switch (app_state) {
+  case STATE_RUNNING:
+    olsr_syslog(OLSR_LOG_ERR, "terminating and got \"running\"?");    
+    return 1;
+#ifndef WIN32
+  case STATE_RECONFIGURE:
+    if (!fork()) {
+      /* New process */
+      sleep(3);
+      printf("Restarting %s\n", argv[0]);
+      execv(argv[0], argv);
+    }
+    printf("RECONFIGURING!\n");
+    /* fall through */
+#endif
+  case STATE_SHUTDOWN:
+    olsr_shutdown();
+    break;
+  };
+
+  return olsr_cnf->exit_value;
 } /* main */
 
 
-
+#ifndef WIN32
 /**
- * Reconfigure olsrd. Currently kind of a hack...
+ * Request reconfiguration of olsrd.
  *
  *@param signal the signal that triggered this callback
  */
-#ifndef WIN32
-void
-olsr_reconfigure(int signo __attribute__((unused)))
+static void signal_reconfigure(int signo)
 {
-  if(!fork())
-    {
-      /* New process */
-      sleep(3);
-      printf("Restarting %s\n", olsr_argv[0]);
-      execv(olsr_argv[0], olsr_argv);
-    }
-  olsr_shutdown(0);
-
-  printf("RECONFIGURING!\n");
+  const int save_errno = errno;
+  olsr_syslog(OLSR_LOG_INFO, "Received signal %d - requesting reconfiguration", signo);
+  app_state = STATE_RECONFIGURE;
+  errno = save_errno;
 }
+
 #endif
 
 
@@ -451,27 +439,24 @@ olsr_reconfigure(int signo __attribute__((unused)))
  * @param signal the signal that triggered this call
  */
 #ifdef WIN32
-int __stdcall
-SignalHandler(unsigned long signo)
+int __stdcall SignalHandler(unsigned long signo)
 #else
-static void
-olsr_shutdown(int signo USED_ONLY_FOR_DEBUG)
+static void signal_shutdown(int signo)
 #endif
 {
-  struct interface *ifn;
-
-  OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signo);
-
+  const int save_errno = errno;
+  olsr_syslog(OLSR_LOG_INFO, "Received signal %d - requesting shutdown", (int)signo);
+  app_state = STATE_SHUTDOWN;
+  errno = save_errno;
 #ifdef WIN32
-  OLSR_PRINTF(1, "Waiting for the scheduler to stop.\n");
-
-  olsr_win32_end_request = TRUE;
-
-  while (!olsr_win32_end_flag)
-    Sleep(100);
-
-  OLSR_PRINTF(1, "Scheduler stopped.\n");
+  return 0;
 #endif
+}
+
+
+static void olsr_shutdown(void)
+{
+  struct interface *ifn;
 
   olsr_delete_all_kernel_routes();
 
@@ -483,9 +468,9 @@ olsr_shutdown(int signo USED_ONLY_FOR_DEBUG)
   }
 
   /* OLSR sockets */
-  for (ifn = ifnet; ifn; ifn = ifn->int_next) 
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
     close(ifn->olsr_socket);
-
+  }
   /* Closing plug-ins */
   olsr_close_plugins();
 
@@ -510,8 +495,6 @@ olsr_shutdown(int signo USED_ONLY_FOR_DEBUG)
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
-
-  exit(olsr_cnf->exit_value);
 }
 
 /**
@@ -546,30 +529,30 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 {
   int changes = 0;
 
-  while(ifs)
-    {
-      if(ifs->cnf == NULL)
-	{
-	  ifs->cnf = olsr_malloc(sizeof(struct if_config_options), "Set default config");
-	  *ifs->cnf = *cnf;
-	  changes++;
-	}
-      ifs = ifs->next;
+  while(ifs) {
+    if (ifs->cnf == NULL) {
+      ifs->cnf = olsr_malloc(sizeof(*ifs->cnf), "Set default config");
+      *ifs->cnf = *cnf;
+      changes++;
     }
+    ifs = ifs->next;
+  }
   return changes;
 }
 
 
-#define NEXT_ARG do { argv++;argc--; } while (0)
-#define CHECK_ARGC do { if(!argc) { \
-      if((argc - 1) == 1){ \
-      fprintf(stderr, "Error parsing command line options!\n"); \
-      } else { \
-      argv--; \
-      fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
-     } \
-     olsr_exit(__func__, EXIT_FAILURE); \
-     } } while (0)
+#define NEXT_ARG do { argv++; argc--; } while (0)
+#define CHECK_ARGC do {							\
+    if (!argc) {							\
+      if ((argc - 1) == 1) {						\
+	fprintf(stderr, "Error parsing command line options!\n");	\
+      } else {								\
+	argv--;								\
+	fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
+      }									\
+      olsr_exit(__func__, EXIT_FAILURE);				\
+    }									\
+  } while (0)
 
 /**
  * Process command line arguments passed to olsrd
@@ -580,311 +563,274 @@ olsr_process_arguments(int argc, char *argv[],
 		       struct olsrd_config *cnf, 
 		       struct if_config_options *ifcnf)
 {
-  while (argc > 1)
-    {
-      NEXT_ARG;
+  while (argc > 1) {
+    NEXT_ARG;
 #ifdef WIN32
       /*
        *Interface list
        */
-      if (strcmp(*argv, "-int") == 0)
-        {
-          ListInterfaces();
-          exit(0);
-        }
+    if (strcmp(*argv, "-int") == 0) {
+      ListInterfaces();
+      exit(0);
+    }
 #endif
 
-      /*
-       *Configfilename
-       */
-      if(strcmp(*argv, "-f") == 0) 
-	{
-	  fprintf(stderr, "Configfilename must ALWAYS be first argument!\n\n");
-	  olsr_exit(__func__, EXIT_FAILURE);
-	}
-
-      /*
-       *Use IP version 6
-       */
-      if(strcmp(*argv, "-ipv6") == 0) 
-	{
-	  cnf->ip_version = AF_INET6;
-	  continue;
-	}
-
-      /*
-       *Broadcast address
-       */
-      if(strcmp(*argv, "-bcast") == 0) 
-	{
-	  struct in_addr in;
-	  NEXT_ARG;
-          CHECK_ARGC;
-
-	  if (inet_aton(*argv, &in) == 0)
-	    {
-	      printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
-	      continue;
-	    }
-	  memcpy(&ifcnf->ipv4_broadcast.v4, &in.s_addr, sizeof(olsr_u32_t));  
-	  continue;
-	}
-
-      /*
-       * Set LQ level
-       */
-      if (strcmp(*argv, "-lql") == 0) 
-	{
-	  int tmp_lq_level;
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  
-	  /* Sanity checking is done later */
-	  sscanf(*argv, "%d", &tmp_lq_level);
-	  olsr_cnf->lq_level = tmp_lq_level;
-	  continue;
-	}
-
-      /*
-       * Set LQ winsize
-       */
-      if (strcmp(*argv, "-lqa") == 0) 
-	{
-	  float tmp_lq_aging;
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  
-	  sscanf(*argv, "%f", &tmp_lq_aging);
-
-	  if(tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING)
-	    {
-	      printf("LQ aging factor %f not allowed. Range [%f-%f]\n", 
-		     tmp_lq_aging, MIN_LQ_AGING, MAX_LQ_AGING);
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	  olsr_cnf->lq_aging = tmp_lq_aging;
-	  continue;
-	}
-      
-      /*
-       * Set NAT threshold
-       */
-      if (strcmp(*argv, "-lqnt") == 0) 
-	{
-	  float tmp_lq_nat_thresh;
-	  NEXT_ARG;
-          CHECK_ARGC;
-
-	  sscanf(*argv,"%f", &tmp_lq_nat_thresh);
-
-	  if(tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0)
-	    {
-	      printf("NAT threshold %f not allowed. Range [%f-%f]\n", 
-		     tmp_lq_nat_thresh, 0.1, 1.0);
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	  olsr_cnf->lq_nat_thresh = tmp_lq_nat_thresh;
-	  continue;
-	}
-
-      /*
-       * Enable additional debugging information to be logged.
-       */
-      if (strcmp(*argv, "-d") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-
-	  sscanf(*argv,"%d", &cnf->debug_level);
-	  continue;
-	}
-
-		
-      /*
-       * Interfaces to be used by olsrd.
-       */
-      if (strcmp(*argv, "-i") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-
-	  if(*argv[0] == '-')
-	    {
-	      fprintf(stderr, "You must provide an interface label!\n");
-	      olsr_exit(__func__, EXIT_FAILURE);
-	    }
-	  printf("Queuing if %s\n", *argv);
-	  queue_if(*argv, OLSR_FALSE);
-
-	  while((argc - 1) && (argv[1][0] != '-'))
-	    {
-	      NEXT_ARG;
-	      printf("Queuing if %s\n", *argv);
-	      queue_if(*argv, OLSR_FALSE);
-	    }
-
-	  continue;
-	}
-      /*
-       * Set the hello interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-hint") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  sscanf(*argv,"%f", &ifcnf->hello_params.emission_interval);
-          ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval * 3;
-	  continue;
-	}
-
-      /*
-       * Set the HNA interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-hnaint") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  sscanf(*argv,"%f", &ifcnf->hna_params.emission_interval);
-          ifcnf->hna_params.validity_time = ifcnf->hna_params.emission_interval * 3;
-	  continue;
-	}
-
-      /*
-       * Set the MID interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-midint") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  sscanf(*argv,"%f", &ifcnf->mid_params.emission_interval);
-          ifcnf->mid_params.validity_time = ifcnf->mid_params.emission_interval * 3;
-	  continue;
-	}
-
-      /*
-       * Set the tc interval to be used by olsrd.
-       * 
-       */
-      if (strcmp(*argv, "-tcint") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  sscanf(*argv,"%f", &ifcnf->tc_params.emission_interval);
-          ifcnf->tc_params.validity_time = ifcnf->tc_params.emission_interval * 3;
-	  continue;
-	}
-
-      /*
-       * Set the polling interval to be used by olsrd.
-       */
-      if (strcmp(*argv, "-T") == 0) 
-	{
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  sscanf(*argv,"%f",&cnf->pollrate);
-	  continue;
-	}
-
-
-      /*
-       * Should we display the contents of packages beeing sent?
-       */
-      if (strcmp(*argv, "-dispin") == 0) 
-	{
-	  parser_set_disp_pack_in(OLSR_TRUE);
-	  continue;
-	}
-
-      /*
-       * Should we display the contents of incoming packages?
-       */
-      if (strcmp(*argv, "-dispout") == 0) 
-	{
-	  net_set_disp_pack_out(OLSR_TRUE);
-	  continue;
-	}
-
-
-      /*
-       * Should we set up and send on a IPC socket for the front-end?
-       */
-      if (strcmp(*argv, "-ipc") == 0) 
-	{
-	  cnf->ipc_connections = 1;
-	  continue;
-	}
-
-      /*
-       * IPv6 multicast addr
-       */
-      if (strcmp(*argv, "-multi") == 0) 
-	{
-	  struct in6_addr in6;
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  if(inet_pton(AF_INET6, *argv, &in6) <= 0)
-	    {
-	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
-	      exit(EXIT_FAILURE);
-	    }
-
-	  memcpy(&ifcnf->ipv6_multi_glbl, &in6, sizeof(struct in6_addr));
-
-	  continue;
-	}
-
-      /*
-       * Host emulation
-       */
-      if (strcmp(*argv, "-hemu") == 0) 
-	{
-	  struct in_addr in;
-	  struct olsr_if *ifa;
-      
-	  NEXT_ARG;
-          CHECK_ARGC;
-	  if(inet_pton(AF_INET, *argv, &in) <= 0)
-	    {
-	      fprintf(stderr, "Failed converting IP address %s\n", *argv);
-	      exit(EXIT_FAILURE);
-	    }
-	  /* Add hemu interface */
-
-	  ifa = queue_if("hcif01", OLSR_TRUE);
-
-	  if(!ifa)
-	    continue;
-
-	  ifa->cnf = get_default_if_config();
-	  ifa->host_emul = OLSR_TRUE;
-	  memcpy(&ifa->hemu_ip, &in, sizeof(union olsr_ip_addr));
-	  cnf->host_emul = OLSR_TRUE;
-
-	  continue;
-	}
-
-
-      /*
-       * Delete possible default GWs
-       */
-      if (strcmp(*argv, "-delgw") == 0) 
-	{
-	  olsr_cnf->del_gws = OLSR_TRUE;
-	  continue;
-	}
-
-
-      if (strcmp(*argv, "-nofork") == 0) 
-	{
-	  cnf->no_fork = OLSR_TRUE;
-	  continue;
-	}
-
-      return -1;
+    /*
+     *Configfilename
+     */
+    if (strcmp(*argv, "-f") == 0) {
+      fprintf(stderr, "Configfilename must ALWAYS be first argument!\n\n");
+      olsr_exit(__func__, EXIT_FAILURE);
     }
+
+    /*
+     *Use IP version 6
+     */
+    if (strcmp(*argv, "-ipv6") == 0) {
+      cnf->ip_version = AF_INET6;
+      continue;
+    }
+
+    /*
+     *Broadcast address
+     */
+    if (strcmp(*argv, "-bcast") == 0) {
+      struct in_addr in;
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      if (inet_aton(*argv, &in) == 0) {
+	printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
+	continue;
+      }
+      ifcnf->ipv4_broadcast.v4 = in;
+      continue;
+    }
+
+    /*
+     * Set LQ level
+     */
+    if (strcmp(*argv, "-lql") == 0) {
+      int tmp_lq_level;
+      NEXT_ARG;
+      CHECK_ARGC;
+	  
+      /* Sanity checking is done later */
+      sscanf(*argv, "%d", &tmp_lq_level);
+      olsr_cnf->lq_level = tmp_lq_level;
+      continue;
+    }
+
+    /*
+     * Set LQ winsize
+     */
+    if (strcmp(*argv, "-lqa") == 0) {
+      float tmp_lq_aging;
+      NEXT_ARG;
+      CHECK_ARGC;
+	  
+      sscanf(*argv, "%f", &tmp_lq_aging);
+
+      if (tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING) {
+	printf("LQ aging factor %f not allowed. Range [%f-%f]\n", 
+	       tmp_lq_aging, MIN_LQ_AGING, MAX_LQ_AGING);
+	olsr_exit(__func__, EXIT_FAILURE);
+      }
+      olsr_cnf->lq_aging = tmp_lq_aging;
+      continue;
+    }
+      
+    /*
+     * Set NAT threshold
+     */
+    if (strcmp(*argv, "-lqnt") == 0) {
+      float tmp_lq_nat_thresh;
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      sscanf(*argv,"%f", &tmp_lq_nat_thresh);
+
+      if (tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0) {
+	printf("NAT threshold %f not allowed. Range [%f-%f]\n", 
+	       tmp_lq_nat_thresh, 0.1, 1.0);
+	olsr_exit(__func__, EXIT_FAILURE);
+      }
+      olsr_cnf->lq_nat_thresh = tmp_lq_nat_thresh;
+      continue;
+    }
+
+    /*
+     * Enable additional debugging information to be logged.
+     */
+    if (strcmp(*argv, "-d") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      sscanf(*argv,"%d", &cnf->debug_level);
+      continue;
+    }
+		
+    /*
+     * Interfaces to be used by olsrd.
+     */
+    if (strcmp(*argv, "-i") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      if (*argv[0] == '-') {
+	fprintf(stderr, "You must provide an interface label!\n");
+	olsr_exit(__func__, EXIT_FAILURE);
+      }
+      printf("Queuing if %s\n", *argv);
+      queue_if (*argv, OLSR_FALSE);
+
+      while ((argc - 1) && (argv[1][0] != '-')) {
+	NEXT_ARG;
+	printf("Queuing if %s\n", *argv);
+	queue_if (*argv, OLSR_FALSE);
+      }
+      continue;
+    }
+    
+    /*
+     * Set the hello interval to be used by olsrd.
+     * 
+     */
+    if (strcmp(*argv, "-hint") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+      sscanf(*argv,"%f", &ifcnf->hello_params.emission_interval);
+      ifcnf->hello_params.validity_time = ifcnf->hello_params.emission_interval * 3;
+      continue;
+    }
+
+    /*
+     * Set the HNA interval to be used by olsrd.
+     * 
+     */
+    if (strcmp(*argv, "-hnaint") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+      sscanf(*argv,"%f", &ifcnf->hna_params.emission_interval);
+      ifcnf->hna_params.validity_time = ifcnf->hna_params.emission_interval * 3;
+      continue;
+    }
+
+    /*
+     * Set the MID interval to be used by olsrd.
+     * 
+     */
+    if (strcmp(*argv, "-midint") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+      sscanf(*argv,"%f", &ifcnf->mid_params.emission_interval);
+      ifcnf->mid_params.validity_time = ifcnf->mid_params.emission_interval * 3;
+      continue;
+    }
+
+    /*
+     * Set the tc interval to be used by olsrd.
+     * 
+     */
+    if (strcmp(*argv, "-tcint") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+      sscanf(*argv,"%f", &ifcnf->tc_params.emission_interval);
+      ifcnf->tc_params.validity_time = ifcnf->tc_params.emission_interval * 3;
+      continue;
+    }
+
+    /*
+     * Set the polling interval to be used by olsrd.
+     */
+    if (strcmp(*argv, "-T") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+      sscanf(*argv,"%f",&cnf->pollrate);
+      continue;
+    }
+
+    /*
+     * Should we display the contents of packages beeing sent?
+     */
+    if (strcmp(*argv, "-dispin") == 0) {
+      parser_set_disp_pack_in(OLSR_TRUE);
+      continue;
+    }
+
+    /*
+     * Should we display the contents of incoming packages?
+     */
+    if (strcmp(*argv, "-dispout") == 0) {
+      net_set_disp_pack_out(OLSR_TRUE);
+      continue;
+    }
+
+    /*
+     * Should we set up and send on a IPC socket for the front-end?
+     */
+    if (strcmp(*argv, "-ipc") == 0) {
+      cnf->ipc_connections = 1;
+      continue;
+    }
+
+    /*
+     * IPv6 multicast addr
+     */
+    if (strcmp(*argv, "-multi") == 0) {
+      struct in6_addr in6;
+      NEXT_ARG;
+      CHECK_ARGC;
+      if (inet_pton(AF_INET6, *argv, &in6) <= 0) {
+	fprintf(stderr, "Failed converting IP address %s\n", *argv);
+	exit(EXIT_FAILURE);
+      }
+
+      ifcnf->ipv6_multi_glbl.v6 = in6;
+      continue;
+    }
+
+    /*
+     * Host emulation
+     */
+    if (strcmp(*argv, "-hemu") == 0) {
+      struct in_addr in;
+      struct olsr_if *ifa;
+      
+      NEXT_ARG;
+      CHECK_ARGC;
+      if (inet_pton(AF_INET, *argv, &in) <= 0) {
+	fprintf(stderr, "Failed converting IP address %s\n", *argv);
+	exit(EXIT_FAILURE);
+      }
+      /* Add hemu interface */
+
+      ifa = queue_if("hcif01", OLSR_TRUE);
+      if (!ifa) {
+	continue;
+      }
+      ifa->cnf = get_default_if_config();
+      ifa->host_emul = OLSR_TRUE;
+      ifa->hemu_ip.v4 = in;
+      cnf->host_emul = OLSR_TRUE;
+      continue;
+    }
+
+    /*
+     * Delete possible default GWs
+     */
+    if (strcmp(*argv, "-delgw") == 0) {
+      olsr_cnf->del_gws = OLSR_TRUE;
+      continue;
+    }
+
+    if (strcmp(*argv, "-nofork") == 0) {
+      cnf->no_fork = OLSR_TRUE;
+      continue;
+    }
+
+    return -1;
+  }
   return 0;
 }
 

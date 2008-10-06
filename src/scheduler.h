@@ -108,7 +108,7 @@ const char *olsr_clock_string(clock_t);
 const char *olsr_wallclock_string(void);
 
 /* Main scheduler loop */
-void olsr_scheduler(void) __attribute__ ((noreturn));
+void olsr_scheduler(void);
 
 /*
  * Provides a timestamp s1 milliseconds in the future according

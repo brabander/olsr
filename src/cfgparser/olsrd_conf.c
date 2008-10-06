@@ -488,19 +488,9 @@ set_default_cnf(struct olsrd_config *cnf)
 #endif
 }
 
-
-
-
-struct if_config_options *
-get_default_if_config(void)
+void init_default_if_config(struct if_config_options *io)
 {
   struct in6_addr in6;
-  struct if_config_options *io = malloc(sizeof(*io));
-
-  if(io == NULL) {
-    fprintf(stderr, "Out of memory %s\n", __func__);
-    return NULL;
-  }
 
   memset(io, 0, sizeof(*io));
 
@@ -528,11 +518,19 @@ get_default_if_config(void)
   io->hna_params.emission_interval = HNA_INTERVAL;
   io->hna_params.validity_time = HNA_HOLD_TIME;
   io->autodetect_chg = OLSR_TRUE;
-
-  return io;
-
 }
 
+struct if_config_options *get_default_if_config(void)
+{
+  struct if_config_options *io = malloc(sizeof(*io));
+
+  if(io == NULL) {
+    fprintf(stderr, "Out of memory %s\n", __func__);
+    return NULL;
+  }
+  init_default_if_config(io);
+  return io;
+}
 
 
 void

@@ -840,7 +840,6 @@ ifnick: TOK_STRING
   }
 
   in->cnf = get_default_if_config();
-
   if (in->cnf == NULL) {
     fprintf(stderr, "Out of memory(ADD IFRULE)\n");
     YYABORT;

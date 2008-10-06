@@ -290,7 +290,7 @@ olsr_scheduler(void)
 	      olsr_cnf->pollrate);
 
   /* Main scheduler loop */
-  for (;;) {
+  while (app_state == STATE_RUNNING) {
 
     /*
      * Update the global timestamp. We are using a non-wallclock timer here
@@ -316,27 +316,7 @@ olsr_scheduler(void)
 
     /* We are done, sleep until the next scheduling interval. */
     olsr_scheduler_sleep(olsr_times() - now_times);
-
-#if defined WIN32
-    /* The Ctrl-C signal handler thread asks us to exit */
-    if (olsr_win32_end_request) {
-      break;
-    }
-#endif
   }
-
-#if defined WIN32
-  /* Tell the Ctrl-C signal handler thread that we have exited */
-  olsr_win32_end_flag = TRUE;
-
-  /*
-   * The Ctrl-C signal handler thread will exit the process
-   * and hence also kill us.
-   */
-  while (1) {
-    Sleep(1000);		/* milliseconds */
-  }
-#endif
 }
 
 

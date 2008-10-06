@@ -115,10 +115,15 @@ extern FILE *debug_handle;
 
 #define CLOSE(fd)  do { close(fd); (fd) = -1; } while (0)
 
-#if defined WIN32
-extern olsr_bool olsr_win32_end_request;
-extern olsr_bool olsr_win32_end_flag;
+enum app_state {
+  STATE_RUNNING,
+  STATE_SHUTDOWN,
+#ifndef WIN32
+  STATE_RECONFIGURE,
 #endif
+};
+
+extern volatile enum app_state app_state;
 
 /*
  * a wrapper around times(2). times(2) has the problem, that it may return -1

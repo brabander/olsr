@@ -271,39 +271,30 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union 
  * Interface to parser
  */
 
-struct olsrd_config *
-olsrd_parse_cnf(const char *);
+struct olsrd_config *olsrd_parse_cnf(const char *);
 
-int
-olsrd_sanity_check_cnf(struct olsrd_config *);
+int olsrd_sanity_check_cnf(struct olsrd_config *);
 
-void
-olsrd_free_cnf(struct olsrd_config *);
+void olsrd_free_cnf(struct olsrd_config *);
 
-void
-olsrd_print_cnf(struct olsrd_config *);
+void olsrd_print_cnf(struct olsrd_config *);
 
-int
-olsrd_write_cnf(struct olsrd_config *, const char *);
+int olsrd_write_cnf(struct olsrd_config *, const char *);
 
-int
-olsrd_write_cnf_buf(struct olsrd_config *, char *, olsr_u32_t);
+int olsrd_write_cnf_buf(struct olsrd_config *, char *, olsr_u32_t);
 
-struct if_config_options *
-get_default_if_config(void);
+void init_default_if_config(struct if_config_options *);
 
-struct olsrd_config *
-olsrd_get_default_cnf(void);
+  struct if_config_options *get_default_if_config(void);
+
+struct olsrd_config *olsrd_get_default_cnf(void);
 
 #if defined WIN32
-void 
-win32_stdio_hack(unsigned int);
+void win32_stdio_hack(unsigned int);
 
-void*
-win32_olsrd_malloc(size_t size);
+void *win32_olsrd_malloc(size_t size);
 
-void
-win32_olsrd_free(void* ptr);
+void win32_olsrd_free(void *ptr);
 #endif
 
 #if defined __cplusplus
