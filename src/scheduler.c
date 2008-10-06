@@ -160,7 +160,7 @@ olsr_poll_sockets(void)
   fd_set ibits, obits;
   struct timeval tvp = { 0, 0 };
   int hfd = 0, fdsets = 0;
-  const char * err_msg;
+
   /* If there are no registered sockets we
    * do not call select(2)
    */
@@ -205,73 +205,135 @@ olsr_poll_sockets(void)
 		    &tvp);
   } while (n == -1 && (errno == EINTR || errno == EAGAIN));
 
-  switch (n) {
-  case 0:
-    break;
-
-  case -1:	/* Did somethig go wrong? */
-    err_msg = strerror(errno);
+  if (n == 0) {
+    return;
+  }
+  if (n == -1) {	/* Did somethig go wrong? */
+    const char * const err_msg = strerror(errno);
     olsr_syslog(OLSR_LOG_ERR, "select: %s", err_msg);
     OLSR_PRINTF(1, "Error select: %s", err_msg);
-    break;
+    return;
+  }
 
-  default:	/* Update time since this is much used by the parsing functions */
-    now_times = olsr_times();
+  /* Update time since this is much used by the parsing functions */
+  now_times = olsr_times();
+  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+    int f;
+    if (entry->process_pollrate == NULL) {
+      continue;
+    }
+    f = 0;
+    if (FD_ISSET(entry->fd, &ibits)) {
+      f |= SP_PR_READ;
+    }
+    if (FD_ISSET(entry->fd, &obits)) {
+      f |= SP_PR_WRITE;
+    }
+    if (f != 0) {
+      entry->process_pollrate(entry->fd, entry->data, f);
+    }
+  }
+}
+
+static void handle_fds(const unsigned long next_interval)
+{
+  struct timeval tvp;
+  unsigned long remaining;
+
+  /* If there are no registered sockets we
+   * do not call select(2)
+   */
+  if (olsr_socket_entries == NULL) {
+    return;
+  }
+
+  /* calculate the first timeout */
+  now_times = olsr_times();
+  if ((long)(next_interval - (unsigned long)now_times) < 0) {
+    /* we are already over the interval */
+    tvp.tv_sec = 0;
+    tvp.tv_usec = 0;
+  } else {
+    /* we need an absolute time - milliseconds */
+    remaining = (next_interval - now_times) * olsr_cnf->system_tick_divider;
+    tvp.tv_sec = remaining / MSEC_PER_SEC;
+    tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
+  }
+
+  /* do at least one select */
+  for (;;) {
+    struct olsr_socket_entry *entry;
+    fd_set ibits, obits;
+    int n, hfd = 0, fdsets = 0;
+    FD_ZERO(&ibits);
+    FD_ZERO(&obits);
+  
+    /* Adding file-descriptors to FD set */
     for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+      if (entry->process_pollrate == NULL) {
+	continue;
+      }
+      if ((entry->flags & SP_IMM_READ) != 0) {
+        fdsets |= SP_IMM_READ;
+        FD_SET((unsigned int)entry->fd, &ibits); /* And we cast here since we get a warning on Win32 */    
+      }
+      if ((entry->flags & SP_IMM_WRITE) != 0) {
+        fdsets |= SP_IMM_WRITE;
+        FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
+      }
+      if ((entry->flags & (SP_IMM_READ|SP_IMM_READ)) != 0) {
+	if (entry->fd >= hfd) {
+	  hfd = entry->fd + 1;
+	}
+      }
+    }
+    
+    do {
+      n = olsr_select(hfd,
+		      fdsets & SP_IMM_READ ? &ibits : NULL,
+		      fdsets & SP_IMM_WRITE ? &obits : NULL,
+		      NULL,
+		      &tvp);
+    } while (n == -1 && (errno == EINTR || errno == EAGAIN));
+
+    if (n == 0) { /* timeout! */
+      break;
+    }
+    if (n == -1) { /* Did somethig go wrong? */
+      olsr_syslog(OLSR_LOG_ERR, "select: %s", strerror(errno));
+      break;
+    }
+
+    /* Update time since this is much used by the parsing functions */
+    now_times = olsr_times();
+    for (entry = olsr_socket_entries; n > 0 && entry != NULL; entry = entry->next) {
       int f;
       if (entry->process_pollrate == NULL) {
 	continue;
       }
       f = 0;
       if (FD_ISSET(entry->fd, &ibits)) {
-	f |= SP_PR_READ;
+	f |= SP_IMM_READ;
+	n--;
       }
       if (FD_ISSET(entry->fd, &obits)) {
-	f |= SP_PR_WRITE;
+	f |= SP_IMM_WRITE;
+	n--;
       }
       if (f != 0) {
 	entry->process_pollrate(entry->fd, entry->data, f);
       }
     }
-    break;
-  }
-}
 
-
-/**
- * Sleep until the next scheduling interval.
- *
- * @param scheduler loop runtime in clock ticks.
- * @return nada
- */
-static void
-olsr_scheduler_sleep(unsigned long scheduler_runtime)
-{
-  struct timeval time_used, next_interval;
-  olsr_u32_t next_interval_usec;
-  unsigned long milliseconds_used;
-
-  /* Calculate next planned scheduler invocation */
-  next_interval_usec = olsr_cnf->pollrate * USEC_PER_SEC;
-  next_interval.tv_sec = next_interval_usec / USEC_PER_SEC;
-  next_interval.tv_usec = next_interval_usec % USEC_PER_SEC;
-
-  /* Determine used runtime */
-  milliseconds_used = scheduler_runtime * olsr_cnf->system_tick_divider;
-  time_used.tv_sec = milliseconds_used / MSEC_PER_SEC;
-  time_used.tv_usec = (milliseconds_used % MSEC_PER_SEC) * USEC_PER_MSEC;
-
-  if (timercmp(&time_used, &next_interval, <)) {
-    struct timeval sleeptime_val;
-    struct timespec remainder_spec, sleeptime_spec;
-
-    timersub(&next_interval, &time_used, &sleeptime_val);
-
-    sleeptime_spec.tv_sec = sleeptime_val.tv_sec;
-    sleeptime_spec.tv_nsec = sleeptime_val.tv_usec * NSEC_PER_USEC;
-
-    while (nanosleep(&sleeptime_spec, &remainder_spec) < 0)
-      sleeptime_spec = remainder_spec;
+    /* calculate the next timeout */
+    if ((long)(next_interval - (unsigned long)now_times) < 0) {
+      /* we are already over the interval */
+      break;
+    }
+    /* we need an absolute time - milliseconds */
+    remaining = (next_interval - now_times) * olsr_cnf->system_tick_divider;
+    tvp.tv_sec = remaining / MSEC_PER_SEC;
+    tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
   }
 }
 
@@ -292,12 +354,14 @@ olsr_scheduler(void)
 
   /* Main scheduler loop */
   while (app_state == STATE_RUNNING) {
+    clock_t next_interval;
 
     /*
      * Update the global timestamp. We are using a non-wallclock timer here
      * to avoid any undesired side effects if the system clock changes.
      */
     now_times = olsr_times();
+    next_interval = GET_TIMESTAMP(olsr_cnf->pollrate * MSEC_PER_SEC);
 
     /* Read incoming data */
     olsr_poll_sockets();
@@ -315,8 +379,8 @@ olsr_scheduler(void)
       link_changes = OLSR_FALSE;
     }
 
-    /* We are done, sleep until the next scheduling interval. */
-    olsr_scheduler_sleep(olsr_times() - now_times);
+    /* Read incoming data and handle it immediiately */
+    handle_fds(next_interval);
   }
 }
 

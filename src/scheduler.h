@@ -128,10 +128,10 @@ extern clock_t now_times; /* current idea of times(2) reported uptime */
 
 #define SP_PR_READ		0x01
 #define SP_PR_WRITE		0x02
-/*
+
 #define SP_IMM_READ		0x04
 #define SP_IMM_WRITE		0x08
-*/
+
 
 typedef void (*socket_handler_func)(int fd, void *data, unsigned int flags);
 
