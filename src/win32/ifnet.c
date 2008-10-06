@@ -573,7 +573,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   IntConf->interf = NULL;
 
   closesocket(Int->olsr_socket);
-  remove_olsr_socket(Int->olsr_socket, &olsr_input);
+  remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
 
   free(Int->int_name);
   free(Int);
@@ -704,7 +704,7 @@ int add_hemu_if(struct olsr_if *iface)
     }  
   
   /* Register socket */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu);
+  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu, NULL, NULL, SP_PR_READ);
 
   /*
    * Register functions for periodic message generation 
@@ -989,7 +989,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
     exit(1);
   }
 
-  add_olsr_socket(New->olsr_socket, &olsr_input);
+  add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
   New->int_next = ifnet;
   ifnet = New;

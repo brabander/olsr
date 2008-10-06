@@ -466,7 +466,7 @@ chk_if_changed(struct olsr_if *iface)
   iface->interf = NULL;
   /* Close olsr socket */
   close(ifp->olsr_socket);
-  remove_olsr_socket(ifp->olsr_socket, &olsr_input);
+  remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
 
   /* Free memory */
   free(ifp->int_name);
@@ -611,7 +611,7 @@ add_hemu_if(struct olsr_if *iface)
     }  
   
   /* Register socket */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu);
+  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu, NULL, NULL, SP_PR_READ);
 
 
   /*
@@ -929,7 +929,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   set_buffer_timer(ifp);
 
   /* Register socket */
-  add_olsr_socket(ifp->olsr_socket, &olsr_input);
+  add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
   
 #ifdef linux 
   /* Set TOS */

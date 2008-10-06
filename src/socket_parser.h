@@ -38,24 +38,32 @@
  *
  */
 
-
 #ifndef _OLSR_SOCKET_PARSER
 #define _OLSR_SOCKET_PARSER
 
-typedef void(*socket_handler_func)(int fd);
+#define SP_PR_READ		0x01
+#define SP_PR_WRITE		0x02
+/*
+#define SP_IMM_READ		0x04
+#define SP_IMM_WRITE		0x08
+*/
+
+typedef void (*socket_handler_func)(int fd, void *data, unsigned int flags);
 
 
 struct olsr_socket_entry {
   int fd;
-  socket_handler_func process_function;
+  socket_handler_func process_immediate;
+  socket_handler_func process_pollrate;
+  void *data;
+  unsigned int flags;
   struct olsr_socket_entry *next;
 };
 
-extern struct olsr_socket_entry *olsr_socket_entries;
 void olsr_poll_sockets(void);
 
-void add_olsr_socket(int, socket_handler_func);
-int remove_olsr_socket(int, socket_handler_func);
+void add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
+int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
 
 #endif
 

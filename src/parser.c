@@ -461,7 +461,7 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
  *@return nada
  */
 void
-olsr_input(int fd) {
+olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused))) {
 
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
@@ -554,7 +554,7 @@ olsr_input(int fd) {
  *@param fd the filedescriptor that data should be read from.
  *@return nada
  */
-void olsr_input_hostemu(int fd) {
+void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused))) {
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
   socklen_t fromlen;

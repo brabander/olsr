@@ -111,7 +111,7 @@ static int
 ipc_send_net_info(int fd);
 
 static void
-ipc_accept(int);
+ipc_accept(int, void *, unsigned int);
 
 #if 0
 static int
@@ -178,7 +178,7 @@ ipc_init(void)
   }
 
   /* Register the socket with the socket parser */
-  add_olsr_socket(ipc_sock, &ipc_accept);
+  add_olsr_socket(ipc_sock, &ipc_accept, NULL, NULL, SP_PR_READ);
 
   return ipc_sock;
 }
@@ -203,15 +203,13 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 }
 
 static void
-ipc_accept(int fd)
+ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
-  socklen_t addrlen;
   struct sockaddr_in pin;
   char *addr;  
+  socklen_t addrlen = sizeof (struct sockaddr_in);
 
-
-  addrlen = sizeof (struct sockaddr_in);
-  ipc_conn = accept(fd, (struct sockaddr *)  &pin, &addrlen);
+  ipc_conn = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (ipc_conn == -1)
     {
       perror("IPC accept");

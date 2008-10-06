@@ -82,10 +82,10 @@ void
 olsr_init_parser(void);
 
 void 
-olsr_input(int);
+olsr_input(int, void *, unsigned int);
 
 void
-olsr_input_hostemu(int);
+olsr_input_hostemu(int, void *, unsigned int);
 
 void
 olsr_parser_add_function(parse_function, olsr_u32_t, int);

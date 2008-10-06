@@ -166,7 +166,7 @@ static int get_http_socket(int);
 
 static int build_tabs(char *, olsr_u32_t, int);
 
-static void parse_http_request(int);
+static void parse_http_request(int, void *, unsigned int flags);
 
 static int build_http_header(http_header_type, olsr_bool, olsr_u32_t, char *, olsr_u32_t);
 
@@ -316,14 +316,14 @@ olsrd_plugin_init(void)
   }
 
   /* Register socket */
-  add_olsr_socket(http_socket, &parse_http_request);
+  add_olsr_socket(http_socket, &parse_http_request, NULL, NULL, SP_PR_READ);
 
   return 1;
 }
 
 /* Non reentrant - but we are not multithreaded anyway */
-void
-parse_http_request(int fd)
+static void
+parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
   struct sockaddr_in pin;
   socklen_t addrlen;

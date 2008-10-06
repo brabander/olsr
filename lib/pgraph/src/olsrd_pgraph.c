@@ -138,7 +138,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 /* Event function to register with the sceduler */
 static int pcf_event(int, int, int);
 
-static void ipc_action(int);
+static void ipc_action(int, void *, unsigned int);
 
 static void ipc_print_neigh_link(struct neighbor_entry *neighbor);
 
@@ -261,13 +261,13 @@ static int plugin_ipc_init(void)
 
 
       /* Register with olsrd */
-      add_olsr_socket(ipc_socket, &ipc_action);
+      add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
     }
 
   return 1;
 }
 
-static void ipc_action(int fd __attribute__((unused)))
+static void ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
   struct sockaddr_in pin;
   socklen_t addrlen;

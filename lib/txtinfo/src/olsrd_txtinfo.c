@@ -98,7 +98,7 @@ static int plugin_ipc_init(void);
 
 static void send_info(int send_what);
 
-static void ipc_action(int);
+static void ipc_action(int, void *, unsigned int);
 
 static void ipc_print_neigh(void);
 
@@ -224,7 +224,7 @@ plugin_ipc_init(void)
         }
 
         /* Register with olsrd */
-        add_olsr_socket(ipc_socket, &ipc_action);
+        add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
         
 #ifndef NODEBUG
         olsr_printf(2, "(TXTINFO) listening on port %d\n",ipc_port);
@@ -235,7 +235,7 @@ plugin_ipc_init(void)
 }
 
 
-static void ipc_action(int fd)
+static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
     struct sockaddr_storage pin;
     struct sockaddr_in *addr4;
