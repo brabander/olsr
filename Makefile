@@ -224,6 +224,11 @@ txtinfo:
 		$(MAKECMD) -C lib/txtinfo 
 		$(MAKECMD) -C lib/txtinfo DESTDIR=$(DESTDIR) install 
 
+arprefresh:
+		$(MAKECMD) -C lib/arprefresh clean
+		$(MAKECMD) -C lib/arprefresh
+		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
+
 build_all:	all switch libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs
