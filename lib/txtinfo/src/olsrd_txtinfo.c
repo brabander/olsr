@@ -74,7 +74,6 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "link_set.h"
-#include "socket_parser.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 

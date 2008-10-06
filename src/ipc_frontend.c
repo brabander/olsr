@@ -50,7 +50,7 @@
 #include "olsr.h"
 #include "log.h"
 #include "parser.h"
-#include "socket_parser.h"
+#include "scheduler.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 

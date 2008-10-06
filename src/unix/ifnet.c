@@ -50,7 +50,6 @@
 #include "olsr.h"
 #include "net_os.h"
 #include "net_olsr.h"
-#include "socket_parser.h"
 #include "parser.h"
 #include "scheduler.h"
 #include "generate_msg.h"

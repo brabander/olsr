@@ -125,6 +125,30 @@ void olsr_scheduler(void) __attribute__ ((noreturn));
 /* Timer data */
 extern clock_t now_times; /* current idea of times(2) reported uptime */
 
+
+#define SP_PR_READ		0x01
+#define SP_PR_WRITE		0x02
+/*
+#define SP_IMM_READ		0x04
+#define SP_IMM_WRITE		0x08
+*/
+
+typedef void (*socket_handler_func)(int fd, void *data, unsigned int flags);
+
+
+struct olsr_socket_entry {
+  int fd;
+  socket_handler_func process_immediate;
+  socket_handler_func process_pollrate;
+  void *data;
+  unsigned int flags;
+  struct olsr_socket_entry *next;
+};
+
+void add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
+int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
+
+
 #endif
 
 /*

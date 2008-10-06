@@ -60,7 +60,6 @@
 #include "olsr_protocol.h"
 #include "net_olsr.h"
 #include "link_set.h"
-#include "socket_parser.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
 #include "common/string.h"

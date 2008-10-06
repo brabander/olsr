@@ -45,7 +45,6 @@
 
 #include "olsrd_pgraph.h"
 #include "ipcalc.h"
-#include "socket_parser.h"
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 #include "net_olsr.h"
