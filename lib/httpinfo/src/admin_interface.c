@@ -43,15 +43,13 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
+#if ADMIN_INTERFACE
 
-#include "olsr.h"
-#include "olsrd_httpinfo.h"
-#include "olsr_cfg.h"
 #include "admin_interface.h"
-#include "net_olsr.h"
+#include "olsr_cfg.h"
 #include "ipcalc.h"
+#include "olsr.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -64,39 +62,16 @@ static const char admin_basic_setting_int[] = "<td><strong>%s</strong></td><td><
 static const char admin_basic_setting_float[] = "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%0.2f\"></td>\n";
 static const char admin_basic_setting_string[] = "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
 
-static const char admin_frame_prolog[] =
-    "<strong>Administrator interface</strong><hr>\n"
-    "<h2>Change basic settings</h2>\n"
-    "<form action=\"set_values\" method=\"post\">\n"
-    "<table width=\"100%%\">\n";
-
-static const char admin_frame_mid[] =
-    "</table>\n<br>\n"
-    "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
-    "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n"
-    "</form>\n"
-    "<h2>Add/remove local HNA entries</h2>\n"
-    "<form action=\"set_values\" method=\"post\">\n"
-    "<table width=\"100%%\"><tr><td><strong>Network:</strong></td>\n"
-    "<td><input type=\"text\" name=\"hna_new_net\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
-    "<td><strong>Netmask/Prefix:</strong></td>\n"
-    "<td><input type=\"text\" name=\"hna_new_netmask\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
-    "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n"
-    "</table><hr>\n"
-    "<form action=\"set_values\" method=\"post\">\n"
-    "<table width=\"100%%\">\n"
-  "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n";
-
-static const char admin_frame_epilog[] =
-    "</table>\n<br>\n"
-    "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n"
-    "</form>\n";
 
 int
 build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
 {
   int size = 0;
-  size += snprintf(&buf[size], bufsize-size, admin_frame_prolog);
+  size += snprintf(&buf[size], bufsize-size,
+		   "<strong>Administrator interface</strong><hr>\n"
+		   "<h2>Change basic settings</h2>\n"
+		   "<form action=\"set_values\" method=\"post\">\n"
+		   "<table width=\"100%%\">\n");
 
   size += snprintf(&buf[size], bufsize-size, "<tr>\n");
 
@@ -148,7 +123,22 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
                                              "<tr>\n");
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
   
-  size += snprintf(&buf[size], bufsize-size, admin_frame_mid);
+  size += snprintf(&buf[size], bufsize-size, 
+		   "</table>\n<br>\n"
+		   "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
+		   "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n"
+		   "</form>\n"
+		   "<h2>Add/remove local HNA entries</h2>\n"
+		   "<form action=\"set_values\" method=\"post\">\n"
+		   "<table width=\"100%%\"><tr><td><strong>Network:</strong></td>\n"
+		   "<td><input type=\"text\" name=\"hna_new_net\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
+		   "<td><strong>Netmask/Prefix:</strong></td>\n"
+		   "<td><input type=\"text\" name=\"hna_new_netmask\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
+		   "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n"
+		   "</table><hr>\n"
+		   "<form action=\"set_values\" method=\"post\">\n"
+		   "<table width=\"100%%\">\n"
+		   "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n");
 
   if(olsr_cnf->hna_entries) {
     struct ip_prefix_list *hna;
@@ -163,12 +153,13 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
                        hna->net.prefix_len);
     }
   }
-  size += snprintf(&buf[size], bufsize-size, admin_frame_epilog);
+  size += snprintf(&buf[size], bufsize-size,
+		   "</table>\n<br>\n"
+		   "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n"
+		   "</form>\n");
   return size;
 }
 
-
-#ifdef ADMIN_INTERFACE
 
 int
 process_param(char *key, char *value)
@@ -223,16 +214,6 @@ process_param(char *key, char *value)
 	return -1;
 
       olsr_cnf->lq_level = ival;
-      return 1;
-    }
-
-  if(!strcmp(key, "lq_wsize"))
-    {
-      int ival = atoi(value);
-      if((ival < 0) || (ival > 10))
-	return -1;
-
-      olsr_cnf->lq_wsize = ival;
       return 1;
     }
 

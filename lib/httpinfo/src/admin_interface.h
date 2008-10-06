@@ -42,8 +42,12 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
+#if ADMIN_INTERFACE
+
 #ifndef ADMIN_INTERFACE_H
 #define ADMIN_INTERFACE_H
+
+#include "olsr_types.h"
 
 int
 build_admin_body(char *, olsr_u32_t);
@@ -53,5 +57,7 @@ process_set_values(char*, olsr_u32_t, char *, olsr_u32_t);
 
 int
 process_param(char *, char *);
+
+#endif
 
 #endif

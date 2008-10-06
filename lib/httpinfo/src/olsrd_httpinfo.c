@@ -105,37 +105,33 @@ static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plug
         (strlen(req) && !strcmp(&req[1], filename))
 
 static const char httpinfo_css[] =
-  "#A {text-decoration: none}\n"
-  "TH{text-align: left}\n"
-  "H1, H3, TD, TH {font-family: Helvetica; font-size: 80%}\n"
-  "h2\n {\nfont-family: Helvetica;\n font-size: 14px;text-align: center;\n"
-  "line-height: 16px;\ntext-decoration: none;\nborder: 1px solid #ccc;\n"
-  "margin: 5px;\nbackground: #ececec;\n}\n"
-  "hr\n{\nborder: none;\npadding: 1px;\nbackground: url(grayline.gif) repeat-x bottom;\n}\n"
-  "#maintable\n{\nmargin: 0px;\npadding: 5px;\nborder-left: 1px solid #ccc;\n"
-  "border-right: 1px solid #ccc;\nborder-bottom: 1px solid #ccc;\n}\n"
-  "#footer\n{\nfont-size: 10px;\nline-height: 14px;\ntext-decoration: none;\ncolor: #666;\n}\n"
-  "#hdr\n{\nfont-size: 14px;\ntext-align: center;\nline-height: 16px;\n"
-  "text-decoration: none;\nborder: 1px solid #ccc;\n"
-  "margin: 5px;\nbackground: #ececec;\n}\n"
-  "#container\n{\nwidth: 1000px;\npadding: 30px;\nborder: 1px solid #ccc;\nbackground: #fff;\n}\n"
-  "#tabnav\n{\nheight: 20px;\nmargin: 0;\npadding-left: 10px;\n"
-  "background: url(grayline.gif) repeat-x bottom;\n}\n"
-  "#tabnav li\n{\nmargin: 0;\npadding: 0;\ndisplay: inline;\nlist-style-type: none;\n}\n"
-  "#tabnav a:link, #tabnav a:visited\n{\nfloat: left;\nbackground: #ececec;\n"
-  "font-size: 12px;\nline-height: 14px;\nfont-weight: bold;\npadding: 2px 10px 2px 10px;\n"
-  "margin-right: 4px;\nborder: 1px solid #ccc;\ntext-decoration: none;\ncolor: #777;\n}\n"
-  "#tabnav a:link.active, #tabnav a:visited.active\n{\nborder-bottom: 1px solid #fff;\n"
-  "background: #ffffff;\ncolor: #000;\n}\n"
-  "#tabnav a:hover\n{\nbackground: #777777;\ncolor: #ffffff;\n}\n"
-  ".input_text\n{\nbackground: #E5E5E5;\nmargin-left: 5px; margin-top: 0px;\n"
-  "text-align: left;\n\nwidth: 100px;\npadding: 0px;\ncolor: #000000;\n"
-  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
-  "border: 1px solid #ccc;\n}\n"
-  ".input_button\n{\nbackground: #B5D1EE;\nmargin-left: 5px;\nmargin-top: 0px;\n"
-  "text-align: center;\nwidth: 120px;\npadding: 0px;\ncolor: #000000;\n"
-  "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n"
-  "border: 1px solid #000;\n}\n";
+  "#A{text-decoration:none}\n"
+  "TH{text-align:left}\n"
+  "H1,H3,TD,TH{font-family:Helvetica;font-size:80%}\n"
+  "h2{font-family:Helvetica; font-size:14px;text-align:center;line-height:16px;"
+  "text-decoration:none;border:1px solid #ccc;margin:5px;background:#ececec;}\n"
+  "hr{border:none;padding:1px;background:url(grayline.gif) repeat-x bottom;}\n"
+  "#maintable{margin:0px;padding:5px;border-left:1px solid #ccc;"
+  "border-right:1px solid #ccc;border-bottom:1px solid #ccc;}\n"
+  "#footer{font-size:10px;line-height:14px;text-decoration:none;color:#666;}\n"
+  "#hdr{font-size:14px;text-align:center;line-height:16px;text-decoration:none;"
+  "border:1px solid #ccc;margin:5px;background:#ececec;}\n"
+  "#container{width:1000px;padding:30px;border:1px solid #ccc;background:#fff;}\n"
+  "#tabnav{height:20px;margin:0;padding-left:10px;"
+  "background:url(grayline.gif) repeat-x bottom;}\n"
+  "#tabnav li{margin:0;padding:0;display:inline;list-style-type:none;}\n"
+  "#tabnav a:link,#tabnav a:visited{float:left;background:#ececec;font-size:12px;"
+  "line-height:14px;font-weight:bold;padding:2px 10px 2px 10px;margin-right:4px;"
+  "border:1px solid #ccc;text-decoration:none;color:#777;}\n"
+  "#tabnav a:link.active,#tabnav a:visited.active{border-bottom:1px solid #fff;"
+  "background:#ffffff;color:#000;}\n"
+  "#tabnav a:hover{background:#777777;color:#ffffff;}\n"
+  ".input_text{background:#E5E5E5;margin-left:5px; margin-top:0px;text-align:left;"
+  "width:100px;padding:0px;color:#000;text-decoration:none;font-family:verdana;"
+  "font-size:12px;border:1px solid #ccc;}\n"
+  ".input_button{background:#B5D1EE;margin-left:5px;margin-top:0px;text-align:center;"
+  "width:120px;padding:0px;color:#000;text-decoration:none;font-family:verdana;"
+  "font-size:12px;border:1px solid #000;}\n";
 
 typedef int(*build_body_callback)(char *, olsr_u32_t);
 
@@ -225,7 +221,7 @@ static const struct tab_entry tab_entries[] = {
     {"Routes",         "routes",  build_routes_body,  OLSR_TRUE},
     {"Links/Topology", "nodes",   build_nodes_body,   OLSR_TRUE},
     {"All",            "all",     build_all_body,     OLSR_TRUE},
-#ifdef ADMIN_INTERFACE
+#if ADMIN_INTERFACE
     {"Admin",          "admin",   build_admin_body,   OLSR_TRUE},
 #endif
     {"About",          "about",   build_about_body,   OLSR_TRUE},
@@ -246,13 +242,12 @@ static const struct static_txt_file_entry static_txt_files[] = {
 };
 
 
-static const struct dynamic_file_entry dynamic_files[] =
-  {
-#ifdef ADMIN_INTERFACE
+static const struct dynamic_file_entry dynamic_files[] = {
+#if ADMIN_INTERFACE
     {"set_values", process_set_values},
 #endif
     {NULL, NULL}
-  };
+};
 
 
 static int
@@ -392,7 +387,7 @@ parse_http_request(int fd)
   olsr_printf(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
 
   if (!strcmp(req_type, "POST")) {
-#ifdef ADMIN_INTERFACE
+#if ADMIN_INTERFACE
     int i = 0;
     while (dynamic_files[i].filename) {
         printf("POST checking %s\n", dynamic_files[i].filename);
@@ -780,7 +775,7 @@ static int build_routes_body(char *buf, olsr_u32_t bufsize)
   struct rt_entry *rt;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
   size += section_title(&buf[size], bufsize-size, "OLSR Routes in Kernel");
-  size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination</th><th align=\"center\"%s>Gateway</th><th>Metric</th><th align=\"right\">ETX</th><th>Interface</th></tr>\n", colspan, colspan);
+  size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination</th><th align=\"center\"%s>Gateway</th><th align=\"right\">Metric</th><th align=\"right\">ETX</th><th align=\"right\">Interface</th></tr>\n", colspan, colspan);
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
@@ -1046,7 +1041,7 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
   size += section_title(&buf[size], bufsize-size, "Topology Entries");
   size += snprintf(&buf[size], bufsize-size, "<tr><th align=\"center\"%s>Destination IP</th><th align=\"center\"%s>Last Hop IP</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
-    size += snprintf(&buf[size], bufsize-size, "<th align=\"right\">Linkcost</th>");
+    size += snprintf(&buf[size], bufsize-size, "<th colspan=\"3\" align=\"right\">Linkcost</th>");
   }
   size += snprintf(&buf[size], bufsize-size, "</tr>\n");
 
@@ -1059,10 +1054,10 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
           size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
           if (olsr_cnf->lq_level > 0) {
             struct lqtextbuffer lqbuffer1, lqbuffer2;
-              size += snprintf(&buf[size], bufsize-size,
-                               "<td align=\"right\">(%s) %s</td>\n",
-                               get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
-                               get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+	    size += snprintf(&buf[size], bufsize-size,
+			     "<td align=\"right\">(%s)</td><td>&nbsp;</td><td align=\"left\">%s</td>\n",
+			     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
+			     get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
           }
           size += snprintf(&buf[size], bufsize-size, "</tr>\n");
       	}
@@ -1077,7 +1072,7 @@ static int build_topo_body(char *buf, olsr_u32_t bufsize)
 static int build_mid_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
-  int idx;
+  struct tc_entry *tc;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   size += section_title(&buf[size], bufsize-size, "MID Entries");
@@ -1085,23 +1080,20 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
                    "<tr><th align=\"center\"%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
 
   /* MID */
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    struct tc_entry *tc;
-    OLSR_FOR_ALL_TC_ENTRIES(tc) {
-      struct mid_entry *alias;
-      size += snprintf(&buf[size], bufsize-size, "<tr>");
-      size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
-      size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    struct mid_entry *alias;
+    size += snprintf(&buf[size], bufsize-size, "<tr>");
+    size += build_ipaddr_with_link(&buf[size], bufsize, &tc->addr, -1);
+    size += snprintf(&buf[size], bufsize-size, "<td><select>\n<option>IP ADDRESS</option>\n");
 
-      OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-        struct ipaddr_str strbuf;
-        size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n",
-                         olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
-      } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
-      size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n",
-                       tc->mid_tree.count);
-    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-  }
+    OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
+      struct ipaddr_str strbuf;
+      size += snprintf(&buf[size], bufsize-size, "<option>%s</option>\n",
+		       olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
+    } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+    size += snprintf(&buf[size], bufsize-size, "</select> (%d)</td></tr>\n",
+		     tc->mid_tree.count);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   size += snprintf(&buf[size], bufsize-size, "</table>\n");
   return size;
@@ -1111,24 +1103,18 @@ static int build_mid_body(char *buf, olsr_u32_t bufsize)
 static int build_nodes_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
-
   size += build_neigh_body(&buf[size], bufsize-size);
   size += build_topo_body(&buf[size], bufsize-size);
   size += build_mid_body(&buf[size], bufsize-size);
-
   return size;
 }
 
 static int build_all_body(char *buf, olsr_u32_t bufsize)
 {
   int size = 0;
-
   size += build_config_body(&buf[size], bufsize-size);
   size += build_routes_body(&buf[size], bufsize-size);
-  size += build_neigh_body(&buf[size], bufsize-size);
-  size += build_topo_body(&buf[size], bufsize-size);
-  size += build_mid_body(&buf[size], bufsize-size);
-
+  size += build_nodes_body(&buf[size], bufsize-size);
   return size;
 }
 
@@ -1139,7 +1125,7 @@ static int build_about_body(char *buf, olsr_u32_t bufsize)
                   "<strong>" PLUGIN_NAME " version " PLUGIN_VERSION "</strong><br/>\n"
                   "by Andreas T&oslash;nnesen (C)2005.<br/>\n"
                   "Compiled "
-#ifdef ADMIN_INTERFACE
+#if ADMIN_INTERFACE
                            "<em>with experimental admin interface</em> "
 #endif
                                                                       "%s at %s<hr/>\n"
@@ -1162,7 +1148,7 @@ static int build_about_body(char *buf, olsr_u32_t bufsize)
                   "<li><strong>All</strong> - Here all the previous pages are displayed as one.\n"
                   "This is to make all information available as easy as possible(for example\n"
                   "for a script) and using as few resources as possible.</li>\n"
-#ifdef ADMIN_INTERFACE
+#if ADMIN_INTERFACE
                   "<li><strong>Admin</strong> - This page is highly experimental(and unsecure)!\n"
                   "As of now it is not working at all but it provides a impression of\n"
                   "the future possibilities of httpinfo. This is to be a interface to\n"

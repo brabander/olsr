@@ -43,14 +43,21 @@ PLUGIN_VER =	0.1
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-ifdef ADMIN_INTERFACE
-CPPFLAGS +=	-DADMIN_INTERFACE
+ifeq ($(ADMIN_INTERFACE),1)
+CPPFLAGS +=	-DADMIN_INTERFACE=1
+else
+CPPFLAGS +=	-DADMIN_INTERFACE=0
+# we actually can ignore some files/targets
+SRCS:=$(filter-out src/admin_interface.c,$(SRCS))
+HDRS:=$(filter-out src/admin_interface.h,$(HDRS))
+ifeq ($(filter clean% %clean, $(MAKECMDGOALS)),)
+OBJS:=$(filter-out src/admin_interface.o,$(OBJS))
+endif
 endif
 
-OBJS += $(TOPDIR)/src/cfgparser/cfgfile_gen.o
 
 default_target: $(PLUGIN_FULLNAME)
-ifdef ADMIN_INTERFACE
+ifeq ($(ADMIN_INTERFACE),1)
 		@echo 'WARNING - BUILT WITH EXPERIMENTAL ADMIN INTERFACE!'
 endif
 
