@@ -67,15 +67,17 @@
 clock_t now_times;		       /* current idea of times(2) reported uptime */
 
 /* Hashed root of all timers */
-struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
-clock_t timer_last_run;		       /* remember the last timeslot walk */
+static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
+static clock_t timer_last_run;		       /* remember the last timeslot walk */
 
 /* Pool of timers to avoid malloc() churn */
-struct list_node free_timer_list;
+static struct list_node free_timer_list;
 
 /* Statistics */
-unsigned int timers_running;
+static unsigned int timers_running;
 
+static void olsr_walk_timers(clock_t *);
+static struct list_node *olsr_get_next_list_entry(struct list_node **prev_node, struct list_node *current_node);
 
 /**
  * Sleep until the next scheduling interval.
@@ -86,8 +88,7 @@ unsigned int timers_running;
 static void
 olsr_scheduler_sleep(unsigned long scheduler_runtime)
 {
-  struct timespec remainder_spec, sleeptime_spec;
-  struct timeval sleeptime_val, time_used, next_interval;
+  struct timeval time_used, next_interval;
   olsr_u32_t next_interval_usec;
   unsigned long milliseconds_used;
 
@@ -102,6 +103,9 @@ olsr_scheduler_sleep(unsigned long scheduler_runtime)
   time_used.tv_usec = (milliseconds_used % MSEC_PER_SEC) * USEC_PER_MSEC;
 
   if (timercmp(&time_used, &next_interval, <)) {
+    struct timeval sleeptime_val;
+    struct timespec remainder_spec, sleeptime_spec;
+
     timersub(&next_interval, &time_used, &sleeptime_val);
 
     sleeptime_spec.tv_sec = sleeptime_val.tv_sec;
@@ -223,46 +227,41 @@ olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val
 static struct timer_entry *
 olsr_get_timer(void)
 {
-  void *timer_block;
   struct timer_entry *timer;
-  struct list_node *timer_list_node;
-  unsigned int timer_index;
+  unsigned int idx;
 
   /*
    * If there is at least one timer in the pool then remove the first
    * element from the pool and recycle it.
    */
   if (!list_is_empty(&free_timer_list)) {
-    timer_list_node = free_timer_list.next;
+    struct list_node *timer_list_node = free_timer_list.next;
 
     /* carve it out of the pool, do not memset overwrite timer->timer_random */
     list_remove(timer_list_node);
-    timer = list2timer(timer_list_node);
-
-    return timer;
+    return list2timer(timer_list_node);
   }
 
   /*
    * Nothing in the pool, allocate a new chunk.
    */
-  timer_block =
-    olsr_malloc(sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK,
+  timer =
+    olsr_malloc(sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
 		"timer chunk");
 
 #if 0
   OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
-	      sizeof(struct timer_entry) * OLSR_TIMER_MEMORY_CHUNK,
-	      timer_block);
+	      sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
+	      timer);
 #endif
 
   /*
    * Slice the chunk up and put the future timer_entries in the free timer pool.
    */
-  timer = timer_block;
-  for (timer_index = 0; timer_index < OLSR_TIMER_MEMORY_CHUNK; timer_index++) {
+  for (idx = 0; idx < OLSR_TIMER_MEMORY_CHUNK; idx++) {
 
     /* Insert new timers at the tail of the free_timer list */
-    list_add_before(&free_timer_list, &timer->timer_list);
+    list_add_before(&free_timer_list, &timer[idx].timer_list);
 
     /* 
      * For performance reasons (read: frequent timer changes),
@@ -270,9 +269,7 @@ olsr_get_timer(void)
      * The random number only gets recomputed if a periodical timer fires,
      * such that a different jitter is applied for future firing.
      */
-    timer->timer_random = random();
-
-    timer++;
+    timer[idx].timer_random = random();
   }
 
   /*
@@ -288,17 +285,14 @@ olsr_get_timer(void)
 void
 olsr_init_timers(void)
 {
-  struct list_node *timer_head_node;
   int idx;
 
   OLSR_PRINTF(5, "TIMER: init timers\n");
 
   memset(timer_wheel, 0, sizeof(timer_wheel));
 
-  timer_head_node = timer_wheel;
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
-    list_head_init(timer_head_node);
-    timer_head_node++;
+    list_head_init(&timer_wheel[idx]);
   }
 
   /*
@@ -345,7 +339,7 @@ olsr_get_next_list_entry (struct list_node **prev_node,
  * Walk through the timer list and check if any timer is ready to fire.
  * Callback the provided function with the context pointer.
  */
-void
+static void
 olsr_walk_timers(clock_t * last_run)
 {
   static struct timer_entry *timer;
