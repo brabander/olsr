@@ -270,7 +270,7 @@ static void handle_fds(const unsigned long next_interval)
   
     /* Adding file-descriptors to FD set */
     for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-      if (entry->process_pollrate == NULL) {
+      if (entry->process_immediate == NULL) {
 	continue;
       }
       if ((entry->flags & SP_IMM_READ) != 0) {
@@ -306,22 +306,20 @@ static void handle_fds(const unsigned long next_interval)
 
     /* Update time since this is much used by the parsing functions */
     now_times = olsr_times();
-    for (entry = olsr_socket_entries; n > 0 && entry != NULL; entry = entry->next) {
+    for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
       int f;
-      if (entry->process_pollrate == NULL) {
+      if (entry->process_immediate == NULL) {
 	continue;
       }
       f = 0;
       if (FD_ISSET(entry->fd, &ibits)) {
 	f |= SP_IMM_READ;
-	n--;
       }
       if (FD_ISSET(entry->fd, &obits)) {
 	f |= SP_IMM_WRITE;
-	n--;
       }
       if (f != 0) {
-	entry->process_pollrate(entry->fd, entry->data, f);
+	entry->process_immediate(entry->fd, entry->data, f);
       }
     }
 
