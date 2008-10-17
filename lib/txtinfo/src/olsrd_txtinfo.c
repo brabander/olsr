@@ -88,14 +88,14 @@ static void ipc_print_mid(void);
 
 #define TXT_IPC_BUFSIZE 256
 
-#define SIW_ALL 0
-#define SIW_NEIGH 1
-#define SIW_LINK 2
-#define SIW_ROUTE 3
-#define SIW_HNA 4
-#define SIW_MID 5
-#define SIW_TOPO 6
-#define SIW_NEIGHLINK 7
+#define SIW_NEIGH	(1 << 0)
+#define SIW_LINK	(1 << 1)
+#define SIW_ROUTE	(1 << 2)
+#define SIW_HNA		(1 << 3)
+#define SIW_MID		(1 << 4)
+#define SIW_TOPO	(1 << 5)
+#define SIW_NEIGHLINK	(SIW_LINK|SIW_NEIGH)
+#define SIW_ALL		(SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
 
 static void ipc_sendf(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
@@ -245,7 +245,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     olsr_printf(2, "(TXTINFO) Connect from %s\n",addr);
 #endif
       
-    send_what = 0;
+    send_what = SIW_ALL;
     /* purge read buffer to prevent blocking on linux*/
     FD_ZERO(&rfds);
     FD_SET((unsigned int)ipc_connection, &rfds); /* Win32 needs the cast here */
@@ -430,27 +430,27 @@ static void ipc_print_mid(void)
 static void  send_info(int send_what)
 {
     /* Print minimal http header */
-    ipc_sendf("HTTP/1.0 200 OK\n");
-    ipc_sendf("Content-type: text/plain\n\n");
+    ipc_sendf("HTTP/1.0 200 OK\n"
+              "Content-type: text/plain\n\n");
 
     /* Print tables to IPC socket */
 	
     /* links + Neighbors */
-    if ((send_what==SIW_ALL)||(send_what==SIW_NEIGHLINK)||(send_what==SIW_LINK)) ipc_print_link();
+    if ((send_what & SIW_LINK) != 0) ipc_print_link();
 
-    if ((send_what==SIW_ALL)||(send_what==SIW_NEIGHLINK)||(send_what==SIW_NEIGH)) ipc_print_neigh();
+    if ((send_what & SIW_NEIGH) != 0) ipc_print_neigh();
 	
     /* topology */
-    if ((send_what==SIW_ALL)||(send_what==SIW_TOPO)) ipc_print_topology();
+    if ((send_what & SIW_TOPO) != 0) ipc_print_topology();
 	
     /* hna */
-    if ((send_what==SIW_ALL)||(send_what==SIW_HNA)) ipc_print_hna();
+    if ((send_what & SIW_HNA) != 0) ipc_print_hna();
 
     /* mid */
-    if ((send_what==SIW_ALL)||(send_what==SIW_MID)) ipc_print_mid();
+    if ((send_what & SIW_MID) != 0) ipc_print_mid();
 
     /* routes */
-    if ((send_what==SIW_ALL)||(send_what==SIW_ROUTE)) ipc_print_routes();
+    if ((send_what & SIW_ROUTE) != 0) ipc_print_routes();
 }
 
 /*
