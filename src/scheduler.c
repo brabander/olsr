@@ -98,6 +98,8 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
 {
   struct olsr_socket_entry *new_entry;
 
+  olsr_syslog(OLSR_LOG_ERR, "%s(): fd=%d, flags=%x", __func__, fd, flags);
+  
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not registering...", __func__);
     return;
@@ -130,6 +132,8 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
 {
   struct olsr_socket_entry *entry, *prev_entry;
 
+  olsr_syslog(OLSR_LOG_ERR, "%s(): fd=%d", __func__, fd);
+
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not processing...", __func__);
     return 0;
@@ -151,6 +155,27 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
   }
   return 0;
 }
+
+void enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
+{
+  struct olsr_socket_entry *entry;
+  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+      entry->flags |= flags;
+    }
+  }
+}
+
+void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
+{
+  struct olsr_socket_entry *entry;
+  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+      entry->flags &= ~flags;
+    }
+  }
+}
+
 
 static void
 olsr_poll_sockets(void)

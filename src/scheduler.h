@@ -147,6 +147,8 @@ struct olsr_socket_entry {
 
 void add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
+void enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 
 
 #endif
