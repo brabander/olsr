@@ -40,12 +40,12 @@ parsetest() {
         *) continue
             ;;
        esac
-       # if we come here, we have in $opt the option to remove. and
-       # we remove all instances. And we save agoinst leading "-"
+       # if we come here, we have in $opt the option to remove. And
+       # we remove all instances. And we save against leading "-"
        NEW_OPTS=""
        for o in $OPTS; do
            case "$o" in
-               $opt) : echo "Removed $o" >&2;;
+               $opt) echo "Removed $o" >&2;;
                *)    NEW_OPTS="$NEW_OPTS $o";;
            esac
        done

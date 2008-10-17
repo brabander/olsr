@@ -71,6 +71,9 @@ cfgparser:	$(CFGDEPS) src/builddata.o
 switch:		
 	$(MAKECMD) -C $(SWITCHDIR)
 
+show-ignored-warnings:
+	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
+
 # generate it always
 .PHONY: src/builddata.c
 src/builddata.c:

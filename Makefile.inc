@@ -58,57 +58,59 @@ endif
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
 ifndef WARNINGS
-WARNINGS +=	-Wall
-WARNINGS +=	-Wextra
-WARNINGS +=	-Wold-style-definition
-WARNINGS +=	-Wdeclaration-after-statement
-WARNINGS +=	-Wmissing-prototypes
-WARNINGS +=	-Wstrict-prototypes
-WARNINGS +=	-Wmissing-declarations
-WARNINGS +=	-Wsign-compare
-WARNINGS +=	-Waggregate-return
-WARNINGS +=	-Wmissing-noreturn
-WARNINGS +=	-Wmissing-format-attribute
-WARNINGS +=	-Wno-multichar
-WARNINGS +=	-Wno-deprecated-declarations
-WARNINGS +=	-Wendif-labels
-WARNINGS +=	-Wwrite-strings
-WARNINGS +=	-Wbad-function-cast
-WARNINGS +=	-Wpointer-arith
-WARNINGS +=	-Wcast-qual
-WARNINGS +=	-Wshadow
+ALL_WARNINGS +=	-Wall
+ALL_WARNINGS +=	-Wextra
+ALL_WARNINGS +=	-Wold-style-definition
+ALL_WARNINGS +=	-Wdeclaration-after-statement
+ALL_WARNINGS +=	-Wmissing-prototypes
+ALL_WARNINGS +=	-Wstrict-prototypes
+ALL_WARNINGS +=	-Wmissing-declarations
+ALL_WARNINGS +=	-Wsign-compare
+ALL_WARNINGS +=	-Waggregate-return
+ALL_WARNINGS +=	-Wmissing-noreturn
+ALL_WARNINGS +=	-Wmissing-format-attribute
+ALL_WARNINGS +=	-Wno-multichar
+ALL_WARNINGS +=	-Wno-deprecated-declarations
+ALL_WARNINGS +=	-Wendif-labels
+ALL_WARNINGS +=	-Wwrite-strings
+ALL_WARNINGS +=	-Wbad-function-cast
+ALL_WARNINGS +=	-Wpointer-arith
+ALL_WARNINGS +=	-Wcast-qual
+ALL_WARNINGS +=	-Wshadow
+ALL_WARNINGS +=	-Wformat-2
+ALL_WARNINGS +=	-Wsequence-point
 # the following 4 do not work yet and need more work on it
-#WARNINGS +=	-Wpointer-arith
-#WARNINGS +=	-Wcast-align
-#WARNINGS +=	-Wconversion
-#WARNINGS +=	-Wredundant-decls
+#ALL_WARNINGS +=	-Wpointer-arith
+#ALL_WARNINGS +=	-Wcast-align
+#ALL_WARNINGS +=	-Wconversion
+#ALL_WARNINGS +=	-Wredundant-decls
 ifeq ($(MUDFLAP),0)
 # work around a bug in gcc-4.*
-WARNINGS +=	-Wnested-externs
+ALL_WARNINGS +=	-Wnested-externs
 endif
 # Alas, htons() triggers this so we can't seriously activate it.
-#WARNINGS +=	-Wunreachable-code
-WARNINGS +=	-Winline
-WARNINGS +=	-Wdisabled-optimization
-#WARNINGS +=	-Werror
-WARNINGS +=	-finline-functions-called-once
-WARNINGS +=	-funit-at-a-time
-WARNINGS +=	-fearly-inlining
+#ALL_WARNINGS +=	-Wunreachable-code
+ALL_WARNINGS +=	-Winline
+ALL_WARNINGS +=	-Wdisabled-optimization
+#ALL_WARNINGS +=	-Werror
+ALL_WARNINGS +=	-finline-functions-called-once
+ALL_WARNINGS +=	-funit-at-a-time
+ALL_WARNINGS +=	-fearly-inlining
 ifeq ($(DEBUG),0)
-WARNINGS +=	-fomit-frame-pointer
+ALL_WARNINGS +=	-fomit-frame-pointer
 endif
 # we have small inline functions in src/lq_route.h which should always be inlined
-WARNINGS +=	-finline-limit=350
+ALL_WARNINGS +=	-finline-limit=350
 # These tell gcc to put each function and global variable in a separate section.
 # The linker can than remove all unreferenced section. But in the olsrd binary
 # unused doesn't imply unused at all since the function may be used by plugins,
 # e.g. the ones in src/plugin_utils.c.
 # So we can use that feature at most to identify unused functions and remove them
 # from the source by hand.
-#WARNINGS +=	-ffunction-sections
-#WARNINGS +=	-fdata-sections
-WARNINGS +=	$(EXTRA_WARNINGS)
-WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(WARNINGS))
+#ALL_WARNINGS +=	-ffunction-sections
+#ALL_WARNINGS +=	-fdata-sections
+ALL_WARNINGS +=	$(EXTRA_WARNINGS)
+WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
 endif
 CFLAGS +=	$(WARNINGS)
 CFLAGS +=	$(OPTIMIZE)
@@ -194,7 +196,7 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 
 # fully automatic and working dependency generation
 %.d: %.c
-	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
+	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(if $(TOPDIR),$(TOPDIR)/)Makefile.inc) /g' >"$@"
 
 # we always need the includes and defines
 # for legacy since now
