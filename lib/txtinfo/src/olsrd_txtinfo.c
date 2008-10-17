@@ -56,37 +56,64 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "routing_table.h"
+#include "log.h"
 
 #include <errno.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <fcntl.h>
+
+#include <sys/uio.h>
 
 #ifdef WIN32
 #define close(x) closesocket(x)
 #endif
 
 
+#define RESPCHUNK	4096
+struct ipc_conn {
+    int resplen;
+    int respsize;
+    int respstart;
+    char *resp;
+    int requlen;
+    char requ[256];
+};
+
 static int ipc_socket = -1;
-static int ipc_connection = -1;
 
 
-static void send_info(int send_what);
+static void conn_destroy(struct ipc_conn *conn);
+
+static int set_nonblocking(int);
 
 static void ipc_action(int, void *, unsigned int);
 
-static void ipc_print_neigh(void);
+static void ipc_http(int, void *, unsigned int);
 
-static void ipc_print_link(void);
+static void ipc_http_read(int, struct ipc_conn *);
 
-static void ipc_print_routes(void);
+static void ipc_http_read_dummy(int, struct ipc_conn *);
 
-static void ipc_print_topology(void);
+static void ipc_http_write(int, struct ipc_conn *);
 
-static void ipc_print_hna(void);
+static int send_info(struct ipc_conn *, int);
 
-static void ipc_print_mid(void);
+static int ipc_print_neigh(struct ipc_conn *);
 
-#define TXT_IPC_BUFSIZE 256
+static int ipc_print_link(struct ipc_conn *);
+
+static int ipc_print_routes(struct ipc_conn *);
+
+static int ipc_print_topology(struct ipc_conn *);
+
+static int ipc_print_hna(struct ipc_conn *);
+
+static int ipc_print_mid(struct ipc_conn *);
+
+static int ipc_sendf(struct ipc_conn *, const char *, ...) __attribute__((format(printf, 2, 3)));
+
+#define isprefix(str, pre) (strncmp((str), (pre), strlen(pre)) == 0)
 
 #define SIW_NEIGH	(1 << 0)
 #define SIW_LINK	(1 << 1)
@@ -97,15 +124,12 @@ static void ipc_print_mid(void);
 #define SIW_NEIGHLINK	(SIW_LINK|SIW_NEIGH)
 #define SIW_ALL		(SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
 
-static void ipc_sendf(const char* format, ...) __attribute__((format(printf, 1, 2)));
-
 /**
  * destructor - called at unload
  */
 void olsr_plugin_exit(void)
 {
     CLOSE(ipc_socket);
-    CLOSE(ipc_connection);
 }
 
 /**
@@ -187,170 +211,317 @@ olsrd_plugin_init(void)
     }
 
     /* Register with olsrd */
-    add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
-        
+    add_olsr_socket(ipc_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
+  
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) listening on port %d\n",ipc_port);
 #endif
     return 1;
 }
 
+/* destroy the connection */
+static void conn_destroy(struct ipc_conn *conn)
+{
+    free(conn->resp);
+    free(conn);
+}
 
+static void kill_connection(int fd, struct ipc_conn *conn)
+{
+    remove_olsr_socket(fd, NULL, &ipc_http);
+    close(fd);
+    conn_destroy(conn);
+}
+
+static int set_nonblocking(int fd)
+{
+    /* make the fd non-blocking */
+    int socket_flags = fcntl(fd, F_GETFL);
+    if (socket_flags < 0) {
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot get the socket flags: %s", strerror(errno));
+        return -1;
+    }
+    if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot set the socket flags: %s", strerror(errno));
+        return -1;
+    }
+    return 0;
+
+}
 static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
+    struct ipc_conn *conn;
     struct sockaddr_storage pin;
     char addr[INET6_ADDRSTRLEN];
-    fd_set rfds;
-    struct timeval tv;
-    int send_what;
-    socklen_t addrlen;
+    socklen_t addrlen = sizeof(pin);
+    int ipc_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
 
-    if (ipc_connection >= 0) {
-        return;
-    }
-    addrlen = sizeof(struct sockaddr_storage);
-    ipc_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
     if (ipc_connection == -1) {
+        /* this may well happen if the other side immediately closes the connection. */
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) accept()=%s\n", strerror(errno));
 #endif
         return;
     }
-
-    tv.tv_sec = tv.tv_usec = 0;
+    /* check if we want ot speak with it */
     if (olsr_cnf->ip_version == AF_INET) {
         const struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &addr4->sin_addr, addr,
-           INET6_ADDRSTRLEN) == NULL)
+        if (inet_ntop(olsr_cnf->ip_version, &addr4->sin_addr, addr, sizeof(addr)) == NULL) {
              addr[0] = '\0';
+        }
         if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(ipc_connection);
+            close(ipc_connection);
             return;
         }
     } else {
         const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &addr6->sin6_addr, addr,
-           INET6_ADDRSTRLEN) == NULL)
+        if (inet_ntop(olsr_cnf->ip_version, &addr6->sin6_addr, addr, sizeof(addr)) == NULL) {
              addr[0] = '\0';
+        }
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
         if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
            !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(ipc_connection);
+            close(ipc_connection);
             return;
         }
     }
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) Connect from %s\n",addr);
 #endif
-      
-    send_what = SIW_ALL;
-    /* purge read buffer to prevent blocking on linux*/
-    FD_ZERO(&rfds);
-    FD_SET((unsigned int)ipc_connection, &rfds); /* Win32 needs the cast here */
-    if (0 <= select(ipc_connection+1, &rfds, NULL, NULL, &tv)) {
-        char requ[128];
-        ssize_t s = recv(ipc_connection, (void*)&requ, sizeof(requ), 0); /* Win32 needs the cast here */
-        if (0 < s) {
-            requ[s] = 0;
-            /* To print out neighbours only on the Freifunk Status
-             * page the normal output is somewhat lengthy. The
-             * header parsing is sufficient for standard wget.
-             */
-            if (0 != strstr(requ, "/neighbours")) send_what=SIW_NEIGHLINK;
-            else if (0 != strstr(requ, "/neigh")) send_what=SIW_NEIGH;
-            else if (0 != strstr(requ, "/link")) send_what=SIW_LINK;
-            else if (0 != strstr(requ, "/route")) send_what=SIW_ROUTE;
-            else if (0 != strstr(requ, "/hna")) send_what=SIW_HNA;
-            else if (0 != strstr(requ, "/mid")) send_what=SIW_MID;
-            else if (0 != strstr(requ, "/topo")) send_what=SIW_TOPO;
-        }
+    
+    /* make the fd non-blocking */
+    if (set_nonblocking(fd) < 0) {
+        close(ipc_connection);
+        return;
     }
 
-    send_info(send_what);
-	  
-    CLOSE(ipc_connection);
+    conn = malloc(sizeof(*conn));
+    if (conn == NULL) {
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
+        close(ipc_connection);
+        return;
+    }
+    conn->requlen = 0;
+    *conn->requ = '\0';
+    conn->resplen = 0;
+    conn->respstart = 0;
+    conn->respsize = RESPCHUNK;
+    conn->resp = malloc(conn->respsize);
+    if (conn->resp == NULL) {
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
+        close(ipc_connection);
+        free(conn);
+        return;
+    }
+    *conn->resp = '\0';
+    add_olsr_socket(ipc_connection, NULL, &ipc_http, conn, SP_IMM_READ);
 }
 
-static void ipc_print_neigh(void)
+static void ipc_http_read_dummy(int fd, struct ipc_conn *conn)
 {
-    struct ipaddr_str buf1;
-    struct neighbor_entry *neigh;
-    struct neighbor_2_list_entry *list_2;
-    int thop_cnt;
+    /* just read dummy stuff */
+    ssize_t bytes_read;
+    char dummybuf[128];
+    do {
+        bytes_read = read(fd, dummybuf, sizeof(dummybuf));
+    } while (bytes_read > 0);
+    if (bytes_read == 0) {
+        /* EOF */
+        if (conn->respstart < conn->resplen && conn->resplen > 0) {
+            disable_olsr_socket(fd, NULL, &ipc_http, SP_IMM_READ);
+            conn->requlen = -1;
+            return;
+        }
+    } else if (errno == EINTR || errno == EAGAIN) {
+        /* ignore interrupted sys-calls */
+        return;
+    }
+    /* we had either an error or EOF and we are completely done */
+    kill_connection(fd, conn);
+}
 
-    ipc_sendf("Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n");
+static void ipc_http_read(int fd, struct ipc_conn *conn)
+{
+    int send_what;
+    const char *p;
+    ssize_t bytes_read = read(fd, conn->requ+conn->requlen, sizeof(conn->requ)-conn->requlen-1); /* leave space for a terminating '\0' */
+    if (bytes_read < 0) {
+        if (errno == EINTR || errno == EAGAIN) {
+            return;
+        }
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) read error: %s", strerror(errno));
+        kill_connection(fd, conn);
+        return;
+    }
+    conn->requlen += bytes_read;
+    conn->requ[conn->requlen] = '\0';
+
+    /* look if we have the necessary info. We get here somethign like "GET /path HTTP/1.0" */
+    p = strchr(conn->requ, '/');
+    if (p == NULL) {
+        /* we didn't get all. Wait for more data. */
+        return;
+    }
+    if (isprefix(p, "/neighbours")) send_what=SIW_NEIGHLINK;
+    else if (isprefix(p, "/neigh")) send_what=SIW_NEIGH;
+    else if (isprefix(p, "/link")) send_what=SIW_LINK;
+    else if (isprefix(p, "/route")) send_what=SIW_ROUTE;
+    else if (isprefix(p, "/hna")) send_what=SIW_HNA;
+    else if (isprefix(p, "/mid")) send_what=SIW_MID;
+    else if (isprefix(p, "/topo")) send_what=SIW_TOPO;    
+    else send_what = SIW_ALL;
+
+    if (send_info(conn, send_what) < 0) {
+        kill_connection(fd, conn);
+        return;
+    }
+    enable_olsr_socket(fd, NULL, &ipc_http, SP_IMM_WRITE);
+}
+
+static void ipc_http_write(int fd, struct ipc_conn *conn)
+{
+    ssize_t bytes_written = write(fd, conn->resp+conn->respstart, conn->resplen-conn->respstart);
+    if (bytes_written < 0) {
+        if (errno == EINTR || errno == EAGAIN) {
+            return;
+        }
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) write error: %s", strerror(errno));
+        kill_connection(fd, conn);
+        return;
+    }
+    conn->respstart += bytes_written;
+    if (conn->respstart >= conn->resplen) {
+        /* we are done. */
+        if (conn->requlen < 0) {
+            /* we are completely done. */
+            kill_connection(fd, conn);
+        } else if (shutdown(fd, SHUT_WR) < 0) {
+            kill_connection(fd, conn);
+        } else {
+            disable_olsr_socket(fd, NULL, &ipc_http, SP_IMM_WRITE);
+        }
+    }
+}
+
+static void ipc_http(int fd, void *data, unsigned int flags)
+{
+    struct ipc_conn *conn = data;
+    if ((flags & SP_IMM_READ) != 0) {
+        if (conn->resplen > 0) {
+            ipc_http_read_dummy(fd, conn);
+        } else {
+            ipc_http_read(fd, conn);
+        }
+    }
+    if ((flags & SP_IMM_WRITE) != 0) {
+        ipc_http_write(fd, conn);
+    }
+}
+    
+
+static int ipc_print_neigh(struct ipc_conn *conn)
+{
+    struct neighbor_entry *neigh;
+
+    if (ipc_sendf(conn, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n") < 0) {
+        return -1;
+    }
 
     /* Neighbors */
     OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-        ipc_sendf("%s\t%s\t%s\t%s\t%d\t", 
-                  olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-                  (neigh->status == SYM) ? "YES" : "NO",
-                  neigh->is_mpr ? "YES" : "NO",
-                  olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                  neigh->willingness);
-        thop_cnt = 0;
-
+        struct neighbor_2_list_entry *list_2;
+        struct ipaddr_str buf1;
+        int thop_cnt = 0;
         for (list_2 = neigh->neighbor_2_list.next;
              list_2 != &neigh->neighbor_2_list;
              list_2 = list_2->next) {
-            //size += sprintf(&buf[size], "<option>%s</option>\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
             thop_cnt++;
         }
-        ipc_sendf("%d\n", thop_cnt);
+        if (ipc_sendf(conn,
+                      "%s\t%s\t%s\t%s\t%d\t%d\n",
+                      olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+                      (neigh->status == SYM) ? "YES" : "NO",
+                      neigh->is_mpr ? "YES" : "NO",
+                      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+                      neigh->willingness,
+                      thop_cnt) < 0) {
+            return -1;
+        }
     } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-static void ipc_print_link(void)
+static int ipc_print_link(struct ipc_conn *conn)
 {
     struct link_entry *lnk;
 
-    ipc_sendf("Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
+    if (ipc_sendf(conn, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n") < 0) {
+        return -1;
+    }
 
     /* Link set */
     OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
         struct ipaddr_str buf1, buf2;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
-	ipc_sendf( "%s\t%s\t%0.2f\t%s\t%s\t\n",
-                   olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
-                   olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
-                   lnk->L_link_quality, 
-                   get_link_entry_text(lnk, '\t', &lqbuffer1),
-                   get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2));
+	if (ipc_sendf(conn,
+                      "%s\t%s\t%0.2f\t%s\t%s\t\n",
+                      olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
+                      olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
+                      lnk->L_link_quality, 
+                      get_link_entry_text(lnk, '\t', &lqbuffer1),
+                      get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2)) < 0) {
+            return -1;
+        }
     } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-static void ipc_print_routes(void)
+static int ipc_print_routes(struct ipc_conn *conn)
 {
     struct rt_entry *rt;
     
-    ipc_sendf("Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n");
+    if (ipc_sendf(conn, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n") < 0) {
+        return -1;
+    }
 
     /* Walk the route table */
     OLSR_FOR_ALL_RT_ENTRIES(rt) {
         struct ipaddr_str buf1, buf2;
         struct lqtextbuffer lqbuffer;
-        ipc_sendf( "%s/%d\t%s\t%d\t%s\t%s\t\n",
-                   olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
-                   rt->rt_dst.prefix_len,
-                   olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
-                   rt->rt_best->rtp_metric.hops,
-                   get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
-                   if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+        if (ipc_sendf(conn,
+                      "%s/%d\t%s\t%d\t%s\t%s\t\n",
+                      olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
+                      rt->rt_dst.prefix_len,
+                      olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
+                      rt->rt_best->rtp_metric.hops,
+                      get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
+                      if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index)) < 0) {
+            return -1;
+        }
     } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-static void ipc_print_topology(void)
+static int ipc_print_topology(struct ipc_conn *conn)
 {
     struct tc_entry *tc;
     
-    ipc_sendf("Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n");
+    if (ipc_sendf(conn, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n") < 0) {
+        return -1;
+    }
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -359,32 +530,43 @@ static void ipc_print_topology(void)
         	if (tc_edge->edge_inv)  {
             struct ipaddr_str dstbuf, addrbuf;
             struct lqtextbuffer lqbuffer1, lqbuffer2;
-            ipc_sendf( "%s\t%s\t%s\t%s\n", 
-                       olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-                       olsr_ip_to_string(&addrbuf, &tc->addr), 
-                       get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
-                       get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+            if (ipc_sendf(conn,
+                          "%s\t%s\t%s\t%s\n", 
+                          olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+                          olsr_ip_to_string(&addrbuf, &tc->addr), 
+                          get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
+                          get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2)) < 0) {
+                return -1;
+            }
         	}
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-static void ipc_print_hna(void)
+static int ipc_print_hna(struct ipc_conn *conn)
 {
     const struct ip_prefix_list *hna;
     struct tc_entry *tc;
     struct ipaddr_str addrbuf, mainaddrbuf;
 
-    ipc_sendf("Table: HNA\nDestination\tGateway\n");
+    if (ipc_sendf(conn, "Table: HNA\nDestination\tGateway\n") < 0) {
+        return -1;
+    }
 
     /* Announced HNA entries */
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-        ipc_sendf("%s/%d\t%s\n",
-                  olsr_ip_to_string(&addrbuf, &hna->net.prefix),
-                  hna->net.prefix_len,
-                  olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+        if (ipc_sendf(conn,
+                      "%s/%d\t%s\n",
+                      olsr_ip_to_string(&addrbuf, &hna->net.prefix),
+                      hna->net.prefix_len,
+                      olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr)) < 0) {
+            return -1;
+        }
     }
 
     /* HNA entries */
@@ -392,65 +574,97 @@ static void ipc_print_hna(void)
         struct hna_net *tmp_net;
         /* Check all networks */
         OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
-
-            ipc_sendf("%s/%d\t%s\n",
-                      olsr_ip_to_string(&addrbuf, &tmp_net->hna_prefix.prefix),
-                      tmp_net->hna_prefix.prefix_len,
-                      olsr_ip_to_string(&mainaddrbuf, &tc->addr));
-
+            if (ipc_sendf(conn,
+                          "%s/%d\t%s\n",
+                          olsr_ip_to_string(&addrbuf, &tmp_net->hna_prefix.prefix),
+                          tmp_net->hna_prefix.prefix_len,
+                          olsr_ip_to_string(&mainaddrbuf, &tc->addr)) < 0) {
+                return -1;
+            }
         } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_net);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-static void ipc_print_mid(void)
+static int ipc_print_mid(struct ipc_conn *conn)
 {
     struct tc_entry *tc;
 
-    ipc_sendf("Table: MID\nIP address\tAliases\n");
+    if (ipc_sendf(conn, "Table: MID\nIP address\tAliases\n") < 0) {
+        return -1;
+    }
 
     /* MID root is the TC entry */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
         struct ipaddr_str buf;
         struct mid_entry *alias;
         char sep = '\t';
-        ipc_sendf("%s",  olsr_ip_to_string(&buf,  &tc->addr ) );
+        if (ipc_sendf(conn, "%s",  olsr_ip_to_string(&buf,  &tc->addr)) < 0) {
+            return -1;
+        }
 
         OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-            ipc_sendf( "%c%s", sep, olsr_ip_to_string(&buf, &alias->mid_alias_addr));
+            if (ipc_sendf(conn, "%c%s", sep, olsr_ip_to_string(&buf, &alias->mid_alias_addr)) < 0) {
+                return -1;
+            }
             sep = ';';
         }  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
-        ipc_sendf("\n");
+        if (ipc_sendf(conn, "\n") < 0) {
+            return -1;
+        }
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-    ipc_sendf("\n");
+    if (ipc_sendf(conn, "\n") < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-
-static void  send_info(int send_what)
+static int send_info(struct ipc_conn *conn, int send_what)
 {
+    int rv;
+
     /* Print minimal http header */
-    ipc_sendf("HTTP/1.0 200 OK\n"
-              "Content-type: text/plain\n\n");
-
-    /* Print tables to IPC socket */
+    if (ipc_sendf(conn,
+                  "HTTP/1.0 200 OK\n"
+                  "Content-type: text/plain\n\n") < 0) {
+        return -1;
+    }
+ 
+     /* Print tables to IPC socket */
 	
-    /* links + Neighbors */
-    if ((send_what & SIW_LINK) != 0) ipc_print_link();
-
-    if ((send_what & SIW_NEIGH) != 0) ipc_print_neigh();
-	
-    /* topology */
-    if ((send_what & SIW_TOPO) != 0) ipc_print_topology();
-	
-    /* hna */
-    if ((send_what & SIW_HNA) != 0) ipc_print_hna();
-
-    /* mid */
-    if ((send_what & SIW_MID) != 0) ipc_print_mid();
-
-    /* routes */
-    if ((send_what & SIW_ROUTE) != 0) ipc_print_routes();
+    rv = 0;
+     /* links + Neighbors */
+    if ((send_what & (SIW_NEIGHLINK|SIW_LINK)) != 0) {
+        if (ipc_print_link(conn) < 0) {
+            rv = -1;
+        }
+    }
+    if ((send_what & (SIW_NEIGHLINK|SIW_NEIGH)) != 0) {
+        if (ipc_print_neigh(conn) < 0) {
+            rv = -1;
+        }
+    }
+     /* topology */
+    if ((send_what & SIW_TOPO) != 0) {
+        rv = ipc_print_topology(conn);
+    }
+     /* hna */
+    if ((send_what & SIW_HNA) != 0) {
+        rv = ipc_print_hna(conn);
+    }
+     /* mid */
+    if ((send_what & SIW_MID) != 0) {
+        rv = ipc_print_mid(conn);
+    }
+     /* routes */
+    if ((send_what & SIW_ROUTE) != 0) {
+        rv = ipc_print_routes(conn);
+    }
+    return rv;
 }
 
 /*
@@ -458,30 +672,34 @@ static void  send_info(int send_what)
  * bufsize. Because the Content-Length header is
  * optional, the sprintf() is changed to a more
  * scalable solution here.
- */
- 
-static void ipc_sendf(const char* format, ...)
+ */ 
+static int ipc_sendf(struct ipc_conn *conn, const char* format, ...)
 {
-    if (ipc_connection >= 0) {
-        char txtnetbuf[TXT_IPC_BUFSIZE];
-
-        va_list arg;
-        int rv;
+    va_list arg, arg2;
+    int rv;
 #if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__ || defined __MacOSX__
 #define flags 0
 #else
 #define flags MSG_NOSIGNAL
 #endif
-        va_start(arg, format);
-        rv = vsnprintf(txtnetbuf, sizeof(txtnetbuf), format, arg);
-        va_end(arg);
-        if (0 > send(ipc_connection, txtnetbuf, rv, flags)) {
-#ifndef NODEBUG
-            olsr_printf(1, "(TXTINFO) Failed sending data to client!\n");
-#endif
-            CLOSE(ipc_connection);
+    va_start(arg, format);
+    va_copy(arg2, arg);
+    rv = vsnprintf(conn->resp+conn->resplen, conn->respsize-conn->resplen, format, arg);
+    va_end(arg);
+    if (conn->resplen + rv >= conn->respsize) {
+        char *p;
+        conn->respsize += RESPCHUNK;
+        p = realloc(conn->resp, conn->respsize);
+        if (p == NULL) {
+            olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
+            return -1;
         }
+        conn->resp = p;
+        vsnprintf(conn->resp+conn->resplen, conn->respsize-conn->resplen, format, arg2);
     }
+    va_end(arg2);
+    conn->resplen += rv;
+    return 0;
 }
 
 /*
