@@ -193,12 +193,13 @@ olsr_fixup_mid_main_addr (union olsr_ip_addr *main_addr,
 
     /* Adjust pointers to neighbortable-entry in link_set */
     ne_ref_rp_count = replace_neighbor_link_set(nbr_old, nbr_new);
-    if (ne_ref_rp_count > 0)
 
 #ifdef DEBUG
+    if (ne_ref_rp_count > 0) {
       OLSR_PRINTF(2, "MID: Performed %d neighbortable-pointer replacements "
                   "(%p -> %p) in link_set.\n",
 		  ne_ref_rp_count, nbr_old, nbr_new);
+    }
 #endif
 
     mid_old = olsr_lookup_mid_entry(alias_addr);
