@@ -292,7 +292,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 #endif
     
     /* make the fd non-blocking */
-    if (set_nonblocking(fd) < 0) {
+    if (set_nonblocking(ipc_connection) < 0) {
         close(ipc_connection);
         return;
     }
