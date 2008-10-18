@@ -63,8 +63,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <sys/uio.h>
-
 #ifdef WIN32
 #define close(x) closesocket(x)
 #endif
