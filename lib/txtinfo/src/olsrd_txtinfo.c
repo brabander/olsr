@@ -64,7 +64,19 @@
 #include <fcntl.h>
 
 #ifdef WIN32
+#undef EWOULDBLOCK
+#undef EAGAIN
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#define EAGAIN WSAEWOULDBLOCK
+#undef errno
+#define errno WSAGetLastError()
+#undef SHUT_WR
+#define SHUT_WR SD_SEND
+#undef strerror
+#define strerror(x) StrError(x)
 #define close(x) closesocket(x)
+#define read(fd,buf,size) recv((fd), (buf), (size), 0)
+#define write(fd,buf,size) send((fd), (buf), (size), 0)
 #endif
 
 
@@ -234,6 +246,15 @@ static void kill_connection(int fd, struct ipc_conn *conn)
 static int set_nonblocking(int fd)
 {
     /* make the fd non-blocking */
+#ifdef WIN32
+    unsigned long flags = 1;
+    if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
+        const long int save_errno = errno;
+        olsr_printf(0, "(TXTINFO) ioctlsocket()=%ld/%s\n", save_errno, strerror(save_errno));
+        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot set the socket flags: %s", strerror(save_errno));
+        return -1;
+    }
+#else
     int socket_flags = fcntl(fd, F_GETFL);
     if (socket_flags < 0) {
         olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot get the socket flags: %s", strerror(errno));
@@ -243,9 +264,10 @@ static int set_nonblocking(int fd)
         olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot set the socket flags: %s", strerror(errno));
         return -1;
     }
+#endif
     return 0;
-
 }
+
 static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
     struct ipc_conn *conn;
