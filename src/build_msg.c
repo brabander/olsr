@@ -1046,6 +1046,9 @@ serialize_hna4(struct interface *ifp)
   pair = m->v4.message.hna.hna_net;
   
   for (; h != NULL; h = h->next) {
+#ifdef DEBUG
+      struct ipprefix_str prefixstr;
+#endif
       union olsr_ip_addr ip_addr;
       if((curr_size + (2 * olsr_cnf->ipsize)) > remainsize)
 	{
@@ -1066,7 +1069,7 @@ serialize_hna4(struct interface *ifp)
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
 #ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
+      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
 #endif
       pair->addr = h->net.prefix.v4.s_addr;
       olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
@@ -1132,6 +1135,9 @@ serialize_hna6(struct interface *ifp)
 
   while(h)
     {
+#ifdef DEBUG
+      struct ipprefix_str prefixstr;
+#endif
       if((curr_size + (2 * olsr_cnf->ipsize)) > remainsize)
 	{
 	  /* Only add HNA message if it contains data */
@@ -1151,7 +1157,7 @@ serialize_hna6(struct interface *ifp)
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
 #ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
+      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
 #endif
       pair6->addr = h->net.prefix.v6;
       olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);

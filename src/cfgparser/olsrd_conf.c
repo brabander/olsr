@@ -546,14 +546,16 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf(" *** olsrd configuration ***\n");
 
   printf("Debug Level      : %d\n", cnf->debug_level);
-  if(cnf->ip_version == AF_INET6)
+  if(cnf->ip_version == AF_INET6) {
     printf("IpVersion        : 6\n");
-  else
+  } else {
     printf("IpVersion        : 4\n");
-  if(cnf->allow_no_interfaces)
+  }
+  if(cnf->allow_no_interfaces) {
     printf("No interfaces    : ALLOWED\n");
-  else
+  } else {
     printf("No interfaces    : NOT ALLOWED\n");
+  }
   printf("TOS              : 0x%02x\n", cnf->tos);
   printf("RtTable          : 0x%02x\n", cnf->rttable);
   printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
@@ -563,16 +565,16 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     printf("Willingness      : %d\n", cnf->willingness);
 
   printf("IPC connections  : %d\n", cnf->ipc_connections);
-  while(ie)
-    {
+  while(ie) {
+    if (ie->net.prefix_len == olsr_cnf->maxplen) {
       struct ipaddr_str strbuf;
-      if (ie->net.prefix_len == olsr_cnf->maxplen) {
-          printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
-      } else {
-          printf("\tNet %s/%d\n", olsr_ip_to_string(&strbuf, &ie->net.prefix), ie->net.prefix_len);
-      }
-      ie = ie->next;
+      printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+    } else {
+      struct ipprefix_str prefixstr;
+      printf("\tNet %s\n", olsr_ip_prefix_to_string(&prefixstr, &ie->net));
     }
+    ie = ie->next;
+  }
 
 
   printf("Pollrate         : %0.2f\n", cnf->pollrate);
@@ -665,15 +667,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   if(h) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
     while(h) {
-      struct ipaddr_str buf;
-      printf("\t%s/", olsr_ip_to_string(&buf, &h->net.prefix));
-      if (cnf->ip_version == AF_INET) {
-        union olsr_ip_addr ip;
-        olsr_prefix_to_netmask(&ip, h->net.prefix_len);
-        printf("%s\n", olsr_ip_to_string(&buf, &ip));
-      } else {
-        printf("%d\n", h->net.prefix_len);
-      }
+      struct ipprefix_str prefixstr;
+      printf("\t%s/", olsr_ip_prefix_to_string(&prefixstr, &h->net));
       h = h->next;
     }
   }
@@ -773,3 +768,9 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
   }
   return NULL;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

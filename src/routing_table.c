@@ -565,12 +565,12 @@ char *
 olsr_rt_to_string(const struct rt_entry *rt)
 {
   static char buff[128];
-  struct ipaddr_str prefixstr, gwstr;
+  struct ipaddr_str gwstr;
+  struct ipprefix_str prefixstr;
 
   snprintf(buff, sizeof(buff),
-           "%s/%u via %s",
-           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-           rt->rt_dst.prefix_len,
+           "%s via %s",
+           olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
            olsr_ip_to_string(&gwstr, &rt->rt_nexthop.gateway));
 
   return buff;
@@ -583,15 +583,14 @@ char *
 olsr_rtp_to_string(const struct rt_path *rtp)
 {
   static char buff[128];
-  struct ipaddr_str prefixstr, origstr, gwstr;
-  struct rt_entry *rt = rtp->rtp_rt;
+  struct ipaddr_str origstr, gwstr;
   struct lqtextbuffer lqbuffer;
-  
+  struct ipprefix_str prefixstr;
+
   snprintf(buff, sizeof(buff),
-           "%s/%u from %s via %s, "
+           "%s from %s via %s, "
            "cost %s, metric %u, v %u",
-           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-           rt->rt_dst.prefix_len,
+           olsr_ip_prefix_to_string(&prefixstr, &rtp->rtp_rt->rt_dst),
            olsr_ip_to_string(&origstr, &rtp->rtp_originator),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
            get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
@@ -606,10 +605,10 @@ olsr_rtp_to_string(const struct rt_path *rtp)
  *
  */
 void
-olsr_print_routing_table(struct avl_tree *tree)
+olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
+#ifndef NODEBUG
   struct avl_node *rt_tree_node;
   struct lqtextbuffer lqbuffer;
   
@@ -619,13 +618,13 @@ olsr_print_routing_table(struct avl_tree *tree)
        rt_tree_node != NULL;
        rt_tree_node = avl_walk_next(rt_tree_node)) {
     struct avl_node *rtp_tree_node;
-    struct ipaddr_str prefixstr, origstr, gwstr;
+    struct ipaddr_str origstr, gwstr;
+    struct ipprefix_str prefixstr;
     struct rt_entry *rt = rt_tree2rt(rt_tree_node);
 
     /* first the route entry */
-    OLSR_PRINTF(6, "%s/%u, via %s, best-originator %s\n",
-           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-           rt->rt_dst.prefix_len,
+    OLSR_PRINTF(6, "%s, via %s, best-originator %s\n",
+           olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
            olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
            olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
 
@@ -644,7 +643,6 @@ olsr_print_routing_table(struct avl_tree *tree)
     }
   }
 #endif
-  tree = NULL; /* squelch compiler warnings */
 }
 
 /*

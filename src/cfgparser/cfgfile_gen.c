@@ -54,11 +54,11 @@ int
 olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 {
   struct ip_prefix_list   *h  = cnf->hna_entries;
-  struct olsr_if           *in = cnf->interfaces;
-  struct plugin_entry      *pe = cnf->plugins;
-  struct plugin_param      *pp;
-  struct ip_prefix_list    *ie = cnf->ipc_nets;
-  struct olsr_lq_mult      *mult;
+  struct olsr_if          *in = cnf->interfaces;
+  struct plugin_entry     *pe = cnf->plugins;
+  struct plugin_param     *pp;
+  struct ip_prefix_list   *ie = cnf->ipc_nets;
+  struct olsr_lq_mult     *mult;
 
   char ipv6_buf[100];             /* buffer for IPv6 inet_htop */
 
@@ -89,8 +89,8 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   /* HNA IPv4/IPv6 */
   fprintf(fd, "# HNA IPv%d routes\n# syntax: netaddr/prefix\n\nHna%d {\n", cnf->ip_version == AF_INET ? 4 : 6, cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
-    struct ipaddr_str strbuf;
-    fprintf(fd, "    %s/%d\n", olsr_ip_to_string(&strbuf, &h->net.prefix), h->net.prefix_len);
+    struct ipprefix_str strbuf;
+    fprintf(fd, "    %s\n", olsr_ip_prefix_to_string(&strbuf, &h->net));
     h = h->next;
   }
   fprintf(fd, "}\n\n");
@@ -126,16 +126,16 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "IpcConnect {\n");
   fprintf(fd, "    MaxConnections\t%d\n", cnf->ipc_connections);
 
-  while(ie)
-    {
+  while (ie) {
+    if (ie->net.prefix_len == olsr_cnf->maxplen) {
       struct ipaddr_str strbuf;
-      if (ie->net.prefix_len == olsr_cnf->maxplen) {
-          fprintf(fd, "    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
-      } else {
-          fprintf(fd, "    Net\t\t\t%s/%d\n", olsr_ip_to_string(&strbuf, &ie->net.prefix), ie->net.prefix_len);
-      }
-      ie = ie->next;
+      fprintf(fd, "    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+    } else {
+      struct ipprefix_str strbuf;
+      fprintf(fd, "    Net\t\t\t%s\n", olsr_ip_prefix_to_string(&strbuf, &ie->net));
     }
+    ie = ie->next;
+  }
 
   fprintf(fd, "}\n\n");
 
@@ -389,8 +389,8 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   /* HNA IPv4/IPv6 */
   WRITE_TO_BUF("# HNA IPv%1$d routes\n# syntax: netaddr netmask\n\nHna%1$d {\n", cnf->ip_version == AF_INET ? 4 : 6);
   while(h) {
-    struct ipaddr_str strbuf;
-    WRITE_TO_BUF("    %s/%d\n", olsr_ip_to_string(&strbuf, &h->net.prefix), h->net.prefix_len);
+    struct ipprefix_str strbuf;
+    WRITE_TO_BUF("    %s\n", olsr_ip_prefix_to_string(&strbuf, &h->net));
     h = h->next;
   }
   WRITE_TO_BUF("}\n\n");
@@ -421,20 +421,18 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   WRITE_TO_BUF("# Allow processes like the GUI front-end\n# to connect to the daemon.\n\n");
   WRITE_TO_BUF("IpcConnect {\n");
   WRITE_TO_BUF("    MaxConnections\t%d\n", cnf->ipc_connections);
-  while(ie)
-    {
+  while (ie) {
+    if (ie->net.prefix_len == olsr_cnf->maxplen) {
       struct ipaddr_str strbuf;
-      if (ie->net.prefix_len == olsr_cnf->maxplen) {
-          WRITE_TO_BUF("    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
-      } else {
-          WRITE_TO_BUF("    Net\t\t\t%s/%d\n", olsr_ip_to_string(&strbuf, &ie->net.prefix), ie->net.prefix_len);
-      }
-      ie = ie->next;
+      WRITE_TO_BUF("    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+    } else {
+      struct ipprefix_str strbuf;
+      WRITE_TO_BUF("    Net\t\t\t%s\n", olsr_ip_prefix_to_string(&strbuf, &ie->net));
     }
+    ie = ie->next;
+  }
 
   WRITE_TO_BUF("}\n\n");
-
-
 
   /* Hysteresis */
   WRITE_TO_BUF("# Hysteresis adds more robustness to the\n# link sensing.\n# Used by default. 'yes' or 'no'\n\n");
@@ -641,3 +639,8 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   return size;
 }
 
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

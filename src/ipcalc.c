@@ -104,30 +104,13 @@ netmask_to_prefix(const olsr_u8_t *adr, int len)
 }
 
 const char *
-olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
+olsr_ip_prefix_to_string(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix)
 {
-  /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
-  static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
-  const char *rv;
-
-  if(olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    int len;
-    union olsr_ip_addr netmask;
-    rv = inet_ntop(AF_INET, &prefix->prefix.v4, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    olsr_prefix_to_netmask(&netmask, prefix->prefix_len);
-    inet_ntop(AF_INET, &netmask.v4, buf+len, sizeof(buf)-len);
-  } else {
-    /* IPv6 */
-    int len;
-    rv = inet_ntop(AF_INET6, &prefix->prefix.v6, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    snprintf(buf+len, sizeof(buf)-len, "/%d", prefix->prefix_len);
-  }
-  return rv;
+  int len;
+  inet_ntop(olsr_cnf->ip_version, &prefix->prefix, buf->buf, sizeof(buf->buf));
+  len = strlen(buf->buf);
+  snprintf(buf->buf+len, sizeof(buf->buf)-len, "/%d", prefix->prefix_len);
+  return buf->buf;
 }
 
 

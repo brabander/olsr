@@ -515,13 +515,13 @@ static int ipc_print_routes(struct ipc_conn *conn)
 
     /* Walk the route table */
     OLSR_FOR_ALL_RT_ENTRIES(rt) {
-        struct ipaddr_str buf1, buf2;
+        struct ipaddr_str buf;
+        struct ipprefix_str prefixstr;
         struct lqtextbuffer lqbuffer;
         if (ipc_sendf(conn,
-                      "%s/%d\t%s\t%d\t%s\t%s\t\n",
-                      olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
-                      rt->rt_dst.prefix_len,
-                      olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
+                      "%s\t%s\t%d\t%s\t%s\t\n",
+                      olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
+                      olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
                       rt->rt_best->rtp_metric.hops,
                       get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
                       if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index)) < 0) {
@@ -572,7 +572,8 @@ static int ipc_print_hna(struct ipc_conn *conn)
 {
     const struct ip_prefix_list *hna;
     struct tc_entry *tc;
-    struct ipaddr_str addrbuf, mainaddrbuf;
+    struct ipaddr_str mainaddrbuf;
+    struct ipprefix_str addrbuf;
 
     if (ipc_sendf(conn, "Table: HNA\nDestination\tGateway\n") < 0) {
         return -1;
@@ -581,9 +582,8 @@ static int ipc_print_hna(struct ipc_conn *conn)
     /* Announced HNA entries */
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
         if (ipc_sendf(conn,
-                      "%s/%d\t%s\n",
-                      olsr_ip_to_string(&addrbuf, &hna->net.prefix),
-                      hna->net.prefix_len,
+                      "%s\t%s\n",
+                      olsr_ip_prefix_to_string(&addrbuf, &hna->net),
                       olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr)) < 0) {
             return -1;
         }
@@ -595,9 +595,8 @@ static int ipc_print_hna(struct ipc_conn *conn)
         /* Check all networks */
         OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
             if (ipc_sendf(conn,
-                          "%s/%d\t%s\n",
-                          olsr_ip_to_string(&addrbuf, &tmp_net->hna_prefix.prefix),
-                          tmp_net->hna_prefix.prefix_len,
+                          "%s\t%s\n",
+                          olsr_ip_prefix_to_string(&addrbuf, &tmp_net->hna_prefix),
                           olsr_ip_to_string(&mainaddrbuf, &tc->addr)) < 0) {
                 return -1;
             }

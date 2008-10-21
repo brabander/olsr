@@ -120,9 +120,7 @@ olsr_add_hna_net(struct tc_entry *tc, const struct olsr_ip_prefix *prefix)
 static void
 olsr_delete_hna_net(struct hna_net *hna_net)
 {
-  struct tc_entry *tc;
-
-  tc = hna_net->hna_tc;
+  struct tc_entry *tc = hna_net->hna_tc;
 
   /*
    * Delete the rt_path for the hna_net.
@@ -149,19 +147,17 @@ olsr_delete_hna_net(struct hna_net *hna_net)
 static void
 olsr_expire_hna_net_entry(void *context)
 {
+  struct hna_net *hna_net = context;
 #ifdef DEBUG
   struct ipaddr_str buf;
-#endif
-  struct hna_net *hna_net;
+  struct ipprefix_str prefixstr;
 
-  hna_net = (struct hna_net *)context;
-  hna_net->hna_net_timer = NULL; /* be pedandic */
-
-#ifdef DEBUG
   OLSR_PRINTF(5, "HNA: timeout %s via hna-gw %s\n", 
-              olsr_ip_prefix_to_string(&hna_net->hna_prefix),
+              olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix),
               olsr_ip_to_string(&buf, &hna_net->hna_tc->addr));
 #endif
+
+  hna_net->hna_net_timer = NULL; /* be pedandic */
 
   olsr_delete_hna_net(hna_net);
 }
@@ -181,16 +177,13 @@ olsr_expire_hna_net_entry(void *context)
  */
 void
 olsr_update_hna_entry(const union olsr_ip_addr *gw,
-                      const struct olsr_ip_prefix *prefix, olsr_reltime vtime)
+                      const struct olsr_ip_prefix *prefix,
+		      olsr_reltime vtime)
 {
-  struct tc_entry *tc;
-  struct hna_net *net_entry;
+  struct tc_entry *tc = olsr_locate_tc_entry(gw);
+  struct hna_net *net_entry = olsr_lookup_hna_net(tc, prefix);
 
-  tc = olsr_locate_tc_entry(gw);
-
-  net_entry = olsr_lookup_hna_net(tc, prefix);
   if (net_entry == NULL) {
-
     /* Need to add the net */
     net_entry = olsr_add_hna_net(tc, prefix);
     changes_hna = OLSR_TRUE;
@@ -221,11 +214,9 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw,
 void
 olsr_print_hna_set(void)
 {
+  /* The whole function doesn't do anything else. */
 #ifndef NODEBUG
   struct tc_entry *tc;
-  struct hna_net *hna_net;
-
-  /* The whole function doesn't do anything else. */
 
   OLSR_PRINTF(1,
 	      "\n--- %s ------------------------------------------------- HNA\n\n",
@@ -233,9 +224,11 @@ olsr_print_hna_set(void)
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct ipaddr_str buf;
+    struct hna_net *hna_net;
     OLSR_PRINTF(1, "HNA-gw %s: ", olsr_ip_to_string(&buf, &tc->addr));
     OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
-      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(&hna_net->hna_prefix));
+      struct ipprefix_str prefixstr;
+      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
     } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
     OLSR_PRINTF(1, "\n");
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -308,7 +301,6 @@ olsr_input_hna(union olsr_message *msg,
 
     if (!ip_prefix_list_find(olsr_cnf->hna_entries, &prefix.prefix,
                              prefix.prefix_len)) {
-
       /*
        * Only update if it's not from us.
        */

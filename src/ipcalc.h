@@ -50,7 +50,12 @@
 #include <arpa/inet.h>
 
 struct ipaddr_str {
-    char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
+  char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
+} USED_ONLY_FOR_DEBUG;
+
+struct ipprefix_str {
+  /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
+  char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + 2)];
 } USED_ONLY_FOR_DEBUG;
 
 /*
@@ -90,7 +95,7 @@ static INLINE const char *ip6_to_string(struct ipaddr_str * const buf, const str
 
 static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return inet_ntop(olsr_cnf->ip_version, addr, buf->buf, sizeof(buf->buf)); }
 
-const char *olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);
+const char *olsr_ip_prefix_to_string(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
 
 const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr);
 
@@ -99,3 +104,8 @@ const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sock
 const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 
 #endif
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

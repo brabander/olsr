@@ -944,11 +944,10 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
       struct ip_prefix_list *hna;
       size += snprintf(&buf[size], bufsize-size, "<tr><th>Network</th></tr>\n");
       for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
-        struct ipaddr_str netbuf;
+        struct ipprefix_str netbuf;
         size += snprintf(&buf[size], bufsize-size,
-                         "<tr><td>%s/%d</td></tr>\n",
-                         olsr_ip_to_string(&netbuf, &hna->net.prefix),
-                         hna->net.prefix_len);
+                         "<tr><td>%s</td></tr>\n",
+                         olsr_ip_prefix_to_string(&netbuf, &hna->net));
       }
     } else {
       size += snprintf(&buf[size], bufsize-size, "<tr><td></td></tr>\n");

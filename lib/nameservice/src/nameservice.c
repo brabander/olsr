@@ -1450,6 +1450,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 	struct interface *iface;
 	union olsr_ip_addr tmp_ip, tmp_msk;
 	struct ipaddr_str strbuf;
+	struct ipprefix_str prefixstr;
 	
 	OLSR_PRINTF(6, "checking %s\n", olsr_ip_to_string(&strbuf, addr));
 	
@@ -1465,9 +1466,8 @@ allowed_ip(const union olsr_ip_addr *addr)
 	if (olsr_cnf->ip_version == AF_INET) {
 		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
 			union olsr_ip_addr netmask;
-			OLSR_PRINTF(6, "HNA %s/%d\n", 
-						olsr_ip_to_string(&strbuf, &hna->net.prefix),
-						hna->net.prefix_len);
+			OLSR_PRINTF(6, "HNA %s\n", 
+						olsr_ip_prefix_to_string(&prefixstr, &hna->net));
 			if (hna->net.prefix_len == 0) {
 				continue;
 			}
@@ -1481,9 +1481,8 @@ allowed_ip(const union olsr_ip_addr *addr)
 		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next)
 		{
 			unsigned int i;
-			OLSR_PRINTF(6, "HNA %s/%d\n", 
-				olsr_ip_to_string(&strbuf, &hna->net.prefix),
-				hna->net.prefix_len);
+			OLSR_PRINTF(6, "HNA %s\n", 
+				olsr_ip_prefix_to_string(&prefixstr, &hna->net));
 			if ( hna->net.prefix_len == 0 )
 				continue;
 			olsr_prefix_to_netmask(&tmp_msk, hna->net.prefix_len);
