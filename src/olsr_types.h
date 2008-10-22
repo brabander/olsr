@@ -58,10 +58,20 @@ typedef int             int32_t;
 #include <inttypes.h>
 #endif
 
-typedef enum {
-    OLSR_FALSE = 0,
-    OLSR_TRUE
-} olsr_bool;
+#if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
+/* we have a C99 environment */
+#include <stdbool.h>
+#else
+/* we simulate a C99 environment */
+#define bool _Bool
+#define true 1
+#define false 0
+#define __bool_true_false_are_defined 1
+#endif
+/* we keep this to avoid touching the rest of the source so far */
+typedef bool olsr_bool;
+#define OLSR_TRUE  true 
+#define OLSR_FALSE false
 
 
 /* user defined cookies */
