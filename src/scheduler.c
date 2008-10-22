@@ -209,7 +209,7 @@ olsr_poll_sockets(void)
       fdsets |= SP_PR_WRITE;
       FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
     }
-    if ((entry->flags & (SP_PR_READ|SP_PR_READ)) != 0) {
+    if ((entry->flags & (SP_PR_READ|SP_PR_WRITE)) != 0) {
       if (entry->fd >= hfd) {
 	hfd = entry->fd + 1;
       }
@@ -306,7 +306,7 @@ static void handle_fds(const unsigned long next_interval)
         fdsets |= SP_IMM_WRITE;
         FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
       }
-      if ((entry->flags & (SP_IMM_READ|SP_IMM_READ)) != 0) {
+      if ((entry->flags & (SP_IMM_READ|SP_IMM_WRITE)) != 0) {
 	if (entry->fd >= hfd) {
 	  hfd = entry->fd + 1;
 	}
