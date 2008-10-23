@@ -113,14 +113,18 @@ void olsr_scheduler(void);
 /*
  * Provides a timestamp s1 milliseconds in the future according
  * to system ticks returned by times(2)
-*/
-#define GET_TIMESTAMP(s1)	(now_times + ((s1) / olsr_cnf->system_tick_divider))
+ * We cast the result of the division to clock_t. That serves two purposes:
+ * - it workarounds numeric underflows if the pollrate is <= 0.5
+ * - since we add "now_times" which is an integer, users (hopefully) expect
+ *   to get integeres as result (which is without the cast not guaranteed)
+ */
+#define GET_TIMESTAMP(s1)	(now_times + (clock_t)((s1) / olsr_cnf->system_tick_divider))
 
 /* Compute the time in milliseconds when a timestamp will expire. */
-#define TIME_DUE(s1)   ((int)((s1) * olsr_cnf->system_tick_divider) - now_times)
+#define TIME_DUE(s1)    ((long)((s1) * olsr_cnf->system_tick_divider) - now_times)
 
 /* Returns TRUE if a timestamp is expired */
-#define TIMED_OUT(s1)	((int)((s1) - now_times) < 0)
+#define TIMED_OUT(s1)	((long)((s1) - now_times) < 0)
 
 /* Timer data */
 extern clock_t now_times; /* current idea of times(2) reported uptime */
