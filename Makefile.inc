@@ -5,7 +5,7 @@
 #
 
 # activate debugging with 1 or deactivate with 0
-DEBUG ?= 0
+DEBUG ?= 1
 
 # compile OLSR_PRINTF out
 NO_DEBUG_MESSAGES ?= 0
@@ -156,7 +156,7 @@ CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 #CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
 
 # use the new fixed point math stuff
-CPPFLAGS +=     -DUSE_FPM
+#CPPFLAGS +=     -DUSE_FPM
 
 # search sources and headers in current dir and in src/
 SRCS +=		$(wildcard src/common/*.c src/*.c *.c)

@@ -47,7 +47,6 @@
 #include "olsr.h"
 #include "lq_plugin_default_ff.h"
 #include "parser.h"
-#include "fpm.h"
 #include "mid_set.h"
 #include "scheduler.h"
 
@@ -77,6 +76,15 @@ struct lq_handler lq_etx_ff_handler = {
     sizeof(struct default_lq_ff_hello),
     sizeof(struct default_lq_ff)
 };
+
+static char *default_lq_ff_linkcost2text(struct lqtextbuffer *buffer, olsr_linkcost cost) {
+	// must calculate
+	olsr_u32_t roundDown = cost >> 16;
+	olsr_u32_t fraction = ((cost & 0xffff) * 1000) >> 16;
+
+	sprintf(buffer->buf, "%u.%u", roundDown, fraction);
+	return buffer->buf;
+}
 
 static void default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr) {
   const union olsr_ip_addr *main_addr;
@@ -116,9 +124,17 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
   struct link_entry *link;
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     struct default_lq_ff_hello *tlq = (struct default_lq_ff_hello *)link->linkquality;
-    fpm ratio;
+    olsr_u32_t ratio;
     olsr_u16_t i, received, lost;
 
+#if !defined(NODEBUG) && defined(DEBUG)
+    struct ipaddr_str buf;
+    struct lqtextbuffer lqbuffer;
+
+    OLSR_PRINTF(3, "LQ-FF new entry for %s: rec: %u lost: %u",
+  		olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
+  		tlq->received[tlq->activePtr], tlq->lost[tlq->activePtr]);
+#endif
     received = 0;
     lost = 0;
 
@@ -131,22 +147,29 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
       lost += tlq->lost[i];
     }
 
+#if !defined(NODEBUG) && defined(DEBUG)
+    OLSR_PRINTF(3, " total-rec: %u total-lost: %u", received, lost);
+#endif
     /* calculate link quality */
     if (received + lost == 0) {
       tlq->lq.valueLq = 0;
     }
     else {
       // start with link-loss-factor
-      ratio = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
+      ratio = link->loss_link_multiplier;
 
       // calculate received/(received + loss) factor
-      ratio = fpmmuli(ratio, (int)received);
-      ratio = fpmidiv(ratio, (int)(received + lost));
-      ratio = fpmmuli(ratio, 255);
+      ratio = ratio * received;
+      ratio = ratio / (received + lost);
+      ratio = (ratio * 255) >> 16;
 
-      tlq->lq.valueLq = (olsr_u8_t)(fpmtoi(ratio));
+      tlq->lq.valueLq = (olsr_u8_t)(ratio);
     }
     link->linkcost = default_lq_calc_cost_ff(tlq);
+
+#if !defined(NODEBUG) && defined(DEBUG)
+    OLSR_PRINTF(3, " linkcost: %s\n", default_lq_ff_linkcost2text(&lqbuffer, link->linkcost));
+#endif
 
     // shift buffer
     tlq->activePtr = (tlq->activePtr + 1) % LQ_FF_WINDOW;
@@ -168,7 +191,7 @@ olsr_linkcost default_lq_calc_cost_ff(const void *ptr) {
     return LINK_COST_BROKEN;
   }
 
-  cost = fpmidiv(itofpm(255 * 255), (int)lq->valueLq * (int)lq->valueNlq);
+  cost = 65536 * lq->valueLq / 255 * lq->valueNlq / 255;
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
@@ -258,15 +281,29 @@ void default_lq_clear_ff_hello(void *target) {
 
 const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_ff *lq = ptr;
+  int i = 0;
 
-  snprintf(buffer->buf, sizeof(buffer->buf), "%s%c%s",
-      fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)),
-      separator,
-      fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
+  memset(buffer, 0, sizeof(struct lqtextbuffer));
+
+  if (lq->valueLq == 255) {
+  	strcpy(buffer->buf, "1.000");
+  	i += 5;
+  }
+  else {
+  	i = sprintf(buffer->buf, "0.%03ul", (lq->valueLq * 1000)/255);
+  }
+  buffer->buf[i++] = separator;
+
+  if (lq->valueNlq == 255) {
+  	strcpy(&buffer->buf[i], "1.000");
+  }
+  else {
+  	sprintf(&buffer->buf[i], "0.%03ul", (lq->valueNlq * 1000) / 255);
+  }
   return buffer->buf;
 }
 
 const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer) {
-  snprintf(buffer->buf, sizeof(buffer->buf), "%s", fpmtoa(cost));
+	default_lq_ff_linkcost2text(buffer, cost);
   return buffer->buf;
 }
