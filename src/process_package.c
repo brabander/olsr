@@ -367,65 +367,6 @@ lookup_mpr_status(const struct hello_message *message,
   return OLSR_FALSE;
 }
 
-static int deserialize_hello(struct hello_message *hello, const void *ser) {
-	const unsigned char *limit;
-	olsr_u8_t type;
-	olsr_u16_t size;
-	
-	const unsigned char *curr = ser;
-	pkt_get_u8(&curr, &type);
-	if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
-		/* No need to do anything more */
-		return 1;
-	}
-	pkt_get_reltime(&curr, &hello->vtime);
-	pkt_get_u16(&curr, &size);
-	pkt_get_ipaddress(&curr, &hello->source_addr);
-	
-	pkt_get_u8(&curr, &hello->ttl);
-	pkt_get_u8(&curr, &hello->hop_count);
-	pkt_get_u16(&curr, &hello->packet_seq_number);
-	pkt_ignore_u16(&curr);
-	
-	pkt_get_reltime(&curr, &hello->htime);
-	pkt_get_u8(&curr, &hello->willingness);
-	
-	hello->neighbors = NULL;
-	limit = ((const unsigned char *)ser) + size;
-	while (curr < limit) {
-		const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
-		const unsigned char *limit2 = curr + ntohs(info_head->size);
-		
-		curr = (const unsigned char *)(info_head + 1);
-		while (curr < limit2) {
-			struct hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
-			pkt_get_ipaddress(&curr, &neigh->address);
-			
-			if (type == LQ_HELLO_MESSAGE) {
-				olsr_deserialize_hello_lq_pair(&curr, neigh);
-			}
-			neigh->link = EXTRACT_LINK(info_head->link_code);
-			neigh->status = EXTRACT_STATUS(info_head->link_code);
-			
-			neigh->next = hello->neighbors;
-			hello->neighbors = neigh;
-		}
-	}
-	return 0;
-}
-
-void olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from) {
-	struct hello_message hello;
-	
-	if (ser == NULL) {
-		return;
-	}
-	if (deserialize_hello(&hello, ser) != 0) {
-		return;
-	}
-	olsr_hello_tap(&hello, inif, from);
-}
-
 /**
  * Initializing the parser functions we are using
  * For downwards compatibility reasons we also understand the non-LQ messages. 
@@ -441,85 +382,139 @@ olsr_init_package_process(void)
   olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE, 1);
 }
 
+static int
+deserialize_hello(struct hello_message *hello, const void *ser)
+{
+  const unsigned char *limit;
+  olsr_u8_t type;
+  olsr_u16_t size;
+
+  const unsigned char *curr = ser;
+  pkt_get_u8(&curr, &type);
+  if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
+    /* No need to do anything more */
+    return 1;
+  }
+  pkt_get_reltime(&curr, &hello->vtime);
+  pkt_get_u16(&curr, &size);
+  pkt_get_ipaddress(&curr, &hello->source_addr);
+
+  pkt_get_u8(&curr, &hello->ttl);
+  pkt_get_u8(&curr, &hello->hop_count);
+  pkt_get_u16(&curr, &hello->packet_seq_number);
+  pkt_ignore_u16(&curr);
+
+  pkt_get_reltime(&curr, &hello->htime);
+  pkt_get_u8(&curr, &hello->willingness);
+
+  hello->neighbors = NULL;
+  limit = ((const unsigned char *)ser) + size;
+  while (curr < limit) {
+    const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
+    const unsigned char *limit2 = curr + ntohs(info_head->size);
+
+    curr = (const unsigned char *)(info_head + 1);
+    while (curr < limit2) {
+      struct hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
+      pkt_get_ipaddress(&curr, &neigh->address);
+
+      if (type == LQ_HELLO_MESSAGE) {
+	olsr_deserialize_hello_lq_pair(&curr, neigh);
+      }
+      neigh->link = EXTRACT_LINK(info_head->link_code);
+      neigh->status = EXTRACT_STATUS(info_head->link_code);
+
+      neigh->next = hello->neighbors;
+      hello->neighbors = neigh;
+    }
+  }
+  return 0;
+}
+
+
 void
 olsr_hello_tap(struct hello_message *message,
                struct interface *in_if,
                const union olsr_ip_addr *from_addr)
 {
-  struct neighbor_entry     *neighbor;
-
   /*
    * Update link status
    */
   struct link_entry *lnk = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
 
-  if (olsr_cnf->lq_level > 0)
-    {
-      struct hello_neighbor *walker;
-      /* just in case our neighbor has changed its HELLO interval */
-      olsr_update_packet_loss_hello_int(lnk, message->htime);
+  if (olsr_cnf->lq_level > 0) {
+    struct hello_neighbor *walker;
+    /* just in case our neighbor has changed its HELLO interval */
+    olsr_update_packet_loss_hello_int(lnk, message->htime);
 
-      /* find the input interface in the list of neighbor interfaces */
-      for (walker = message->neighbors; walker != NULL; walker = walker->next)
-        if (ipequal(&walker->address, &in_if->ip_addr))
-          break;
-
-      // memorize our neighbour's idea of the link quality, so that we
-      // know the link quality in both directions
-      olsr_memorize_foreign_hello_lq(lnk, walker);
-
-      /* update packet loss for link quality calculation */
-      olsr_update_packet_loss(lnk);
+    /* find the input interface in the list of neighbor interfaces */
+    for (walker = message->neighbors; walker != NULL; walker = walker->next) {
+      if (ipequal(&walker->address, &in_if->ip_addr)) {
+	break;
+      }
     }
-  
-  neighbor = lnk->neighbor;
+
+    // memorize our neighbour's idea of the link quality, so that we
+    // know the link quality in both directions
+    olsr_memorize_foreign_hello_lq(lnk, walker);
+
+    /* update packet loss for link quality calculation */
+    olsr_update_packet_loss(lnk);
+  }
 
   /*
    * Hysteresis
    */
-  if(olsr_cnf->use_hysteresis)
-    {
-      /* Update HELLO timeout */
-      /* printf("MESSAGE HTIME: %f\n", message->htime);*/
-      olsr_update_hysteresis_hello(lnk, message->htime);
-    }
+  if(olsr_cnf->use_hysteresis) {
+    /* Update HELLO timeout */
+    /* printf("MESSAGE HTIME: %f\n", message->htime);*/
+    olsr_update_hysteresis_hello(lnk, message->htime);
+  }
 
   /* Check if we are chosen as MPR */
-  if(lookup_mpr_status(message, in_if))
+  if(lookup_mpr_status(message, in_if)) {
     /* source_addr is always the main addr of a node! */
     olsr_update_mprs_set(&message->source_addr, message->vtime);
-
-
+  }
 
   /* Check willingness */
-  if(neighbor->willingness != message->willingness)
-    {
-      struct ipaddr_str buf;
-      OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
-		  olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr),
-		  neighbor->willingness,
-		  message->willingness);
-      /*
-       *If willingness changed - recalculate
-       */
-      neighbor->willingness = message->willingness;
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
-    }
-
+  if(lnk->neighbor->willingness != message->willingness) {
+    struct ipaddr_str buf;
+    OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
+		olsr_ip_to_string(&buf, &lnk->neighbor->neighbor_main_addr),
+		lnk->neighbor->willingness,
+		message->willingness);
+    /*
+     *If willingness changed - recalculate
+     */
+    lnk->neighbor->willingness = message->willingness;
+    changes_neighborhood = OLSR_TRUE;
+    changes_topology = OLSR_TRUE;
+  }
 
   /* Don't register neighbors of neighbors that announces WILL_NEVER */
-  if(neighbor->willingness != WILL_NEVER)
-    process_message_neighbors(neighbor, message);
+  if(lnk->neighbor->willingness != WILL_NEVER) {
+    process_message_neighbors(lnk->neighbor, message);
+  }
 
   /* Process changes immedeatly in case of MPR updates */
   olsr_process_changes();
 
   olsr_free_hello_packet(message);
-
-  return;
 }
 
+
+void olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from) {
+  struct hello_message hello;
+	
+  if (msg == NULL) {
+    return;
+  }
+  if (deserialize_hello(&hello, msg) != 0) {
+    return;
+  }
+  olsr_hello_tap(&hello, inif, from);
+}
 
 /*
  * Local Variables:

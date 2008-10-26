@@ -62,6 +62,106 @@ static char pulsedata[] = {'\\', '|', '/', '-'};
 #define PULSE_MAX 4
 static olsr_u8_t pulse_state = 0;
 
+static void free_tc_packet(struct tc_message *);
+static void build_tc_packet(struct tc_message *);
+
+/**
+ *Free the memory allocated for a TC packet.
+ *
+ *@param message the pointer to the packet to erase
+ *
+ *@return nada
+ */
+static void 
+free_tc_packet(struct tc_message *message)
+{
+  struct tc_mpr_addr *mprs;
+
+  if(!message)
+    return;
+
+  mprs = message->multipoint_relay_selector_address;
+  while (mprs != NULL) {
+    struct tc_mpr_addr *prev_mprs = mprs;
+    mprs = mprs->next;
+    free(prev_mprs);
+  }
+}
+
+/**
+ *Build an internal TC package for this
+ *node.
+ *
+ *@param message the tc_message struct to fill with info
+ *@return 0
+ */
+static void
+build_tc_packet(struct tc_message *message)
+{
+  struct tc_mpr_addr     *message_mpr;
+  struct neighbor_entry  *entry;
+
+  message->multipoint_relay_selector_address=NULL;
+  message->packet_seq_number=0;
+ 
+  message->hop_count = 0;
+  message->ttl = MAX_TTL;
+  message->ansn = get_local_ansn();
+
+  message->originator = olsr_cnf->main_addr;
+  message->source_addr = olsr_cnf->main_addr;
+  
+
+  /* Loop trough all neighbors */  
+  OLSR_FOR_ALL_NBR_ENTRIES(entry) {
+    if (entry->status != SYM) {
+      continue;
+    }
+
+    switch (olsr_cnf->tc_redundancy) {
+    case 2:
+    {
+      /* 2 = Add all neighbors */
+      //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
+      message_mpr = olsr_malloc_tc_mpr_addr("Build TC");
+		
+      message_mpr->address = entry->neighbor_main_addr;
+      message_mpr->next = message->multipoint_relay_selector_address;
+      message->multipoint_relay_selector_address = message_mpr;
+      break;
+    }
+    case 1:
+    {
+      /* 1 = Add all MPR selectors and selected MPRs */
+      if ((entry->is_mpr) ||
+          (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL)) {
+        //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
+        message_mpr = olsr_malloc_tc_mpr_addr("Build TC 2");
+		    
+        message_mpr->address = entry->neighbor_main_addr;
+        message_mpr->next = message->multipoint_relay_selector_address;
+        message->multipoint_relay_selector_address = message_mpr;
+      }
+      break;
+    }
+    default:
+    {
+      /* 0 = Add only MPR selectors(default) */
+      if (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL) {
+        //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
+        message_mpr = olsr_malloc_tc_mpr_addr("Build TC 3");
+		    
+        message_mpr->address = entry->neighbor_main_addr;
+        message_mpr->next = message->multipoint_relay_selector_address;
+        message->multipoint_relay_selector_address = message_mpr;
+      }
+      break;
+    }		
+	  
+    } /* Switch */
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(entry);
+}
+
 
 void
 generate_hello(void *p)
@@ -71,9 +171,9 @@ generate_hello(void *p)
 
   olsr_build_hello_packet(&hellopacket, ifn);
       
-  if(queue_hello(&hellopacket, ifn))
+  if (queue_hello(&hellopacket, ifn)) {
     net_output(ifn);
-
+  }
   olsr_free_hello_packet(&hellopacket);
 
 }
@@ -87,7 +187,7 @@ generate_tc(void *p)
   struct tc_message tcpacket;
   struct interface *ifn = (struct interface *)p;
 
-  olsr_build_tc_packet(&tcpacket);
+  build_tc_packet(&tcpacket);
 
   /* empty message ? */
   if (!tcpacket.multipoint_relay_selector_address) {
@@ -98,7 +198,7 @@ generate_tc(void *p)
     set_buffer_timer(ifn);
   }
 
-  olsr_free_tc_packet(&tcpacket);
+  free_tc_packet(&tcpacket);
 }
 
 void
