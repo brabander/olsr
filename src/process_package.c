@@ -50,7 +50,6 @@
 #include "olsr.h"
 #include "parser.h"
 #include "duplicate_set.h"
-#include "rebuild_packet.h"
 #include "scheduler.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"

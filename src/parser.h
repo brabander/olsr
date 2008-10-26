@@ -109,6 +109,6 @@ void
 parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
 
 const unsigned char *
-olsr_parse_msg_hdr(union olsr_message *, struct olsrmsg_hdr *);
+olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
 
 #endif

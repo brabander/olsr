@@ -89,14 +89,6 @@ struct tc_message
 };
 
 
-struct unknown_message
-{
-  olsr_u16_t         seqno;
-  union olsr_ip_addr originator;
-  olsr_u8_t          type;
-};
-
-
 void
 olsr_free_hello_packet(struct hello_message *);
 
