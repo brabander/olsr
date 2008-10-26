@@ -1179,11 +1179,11 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
            olsrd_write_cnf_buf
         */
         char tmpBuf[10000];
-        size = olsrd_write_cnf_buf(olsr_cnf, tmpBuf, 10000);
+        size = olsrd_write_cnf_buf(olsr_cnf, OLSR_TRUE, tmpBuf, 10000);
         snprintf(&buf[size], bufsize-size, tmpBuf);
   }
 #else
-  size += olsrd_write_cnf_buf(olsr_cnf, &buf[size], bufsize-size);
+  size += olsrd_write_cnf_buf(olsr_cnf, OLSR_TRUE, &buf[size], bufsize-size);
 #endif
 
   if (size < 0) {

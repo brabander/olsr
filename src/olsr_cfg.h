@@ -281,7 +281,7 @@ void olsrd_print_cnf(const struct olsrd_config *);
 
 int olsrd_write_cnf(const struct olsrd_config *, const char *);
 
-int olsrd_write_cnf_buf(const struct olsrd_config *, char *, olsr_u32_t);
+  int olsrd_write_cnf_buf(const struct olsrd_config *, olsr_bool, char *, olsr_u32_t);
 
 void init_default_if_config(struct if_config_options *);
 
