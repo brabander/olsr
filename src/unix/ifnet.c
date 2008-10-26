@@ -464,8 +464,8 @@ chk_if_changed(struct olsr_if *iface)
   iface->configured = 0;
   iface->interf = NULL;
   /* Close olsr socket */
-  close(ifp->olsr_socket);
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
+  close(ifp->olsr_socket);
 
   /* Free memory */
   free(ifp->int_name);
@@ -487,8 +487,7 @@ chk_if_changed(struct olsr_if *iface)
  * Initializes the special interface used in
  * host-client emulation
  */
-int
-add_hemu_if(struct olsr_if *iface)
+int add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
   union olsr_ip_addr null_addr;

@@ -310,8 +310,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   Info->Index = IfTable->table[TabIdx].dwIndex;
   Info->Mtu = (int)IfTable->table[TabIdx].dwMtu;
 
-  Info->Mtu -= (olsr_cnf->ip_version == AF_INET6) ?
-    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  Info->Mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   Lib = LoadLibrary("iphlpapi.dll");
 
@@ -572,8 +571,8 @@ void RemoveInterface(struct olsr_if *IntConf)
   IntConf->configured = 0;
   IntConf->interf = NULL;
 
-  closesocket(Int->olsr_socket);
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
+  closesocket(Int->olsr_socket);
 
   free(Int->int_name);
   free(Int);
@@ -586,6 +585,10 @@ void RemoveInterface(struct olsr_if *IntConf)
   }
 }
 
+/**
+ * Initializes the special interface used in
+ * host-client emulation
+ */
 int add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
@@ -629,8 +632,7 @@ int add_hemu_if(struct olsr_if *iface)
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
 
-  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ?
-    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  ifp->int_mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   /* Set up buffer */
   net_add_buffer(ifp);
