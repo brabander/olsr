@@ -40,24 +40,14 @@
  *
  */
 
-#include "defs.h"
 #include "scheduler.h"
 #include "log.h"
-#include "tc_set.h"
 #include "link_set.h"
-#include "duplicate_set.h"
 #include "mpr_selector_set.h"
-#include "mid_set.h"
-#include "mpr.h"
 #include "olsr.h"
-#include "build_msg.h"
-#include "net_olsr.h"
-#include "olsr_spf.h"
-#include "link_set.h"
 #include "olsr_cookie.h"
 #include "net_os.h"
 
-#include <stdlib.h>
 #include <errno.h>
 
 #ifdef WIN32
@@ -77,11 +67,12 @@ static struct list_node free_timer_list;
 /* Statistics */
 static unsigned int timers_running;
 
-static void olsr_walk_timers(clock_t *);
-static struct list_node *olsr_get_next_list_entry(struct list_node **prev_node, struct list_node *current_node);
+static void walk_timers(clock_t *);
+static struct list_node *get_next_list_entry(struct list_node **prev_node, struct list_node *current_node);
 
-static void olsr_poll_sockets(void);
+static void poll_sockets(void);
 
+static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val);
 
 static struct olsr_socket_entry *olsr_socket_entries = NULL;
 
@@ -178,7 +169,7 @@ void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func 
 
 
 static void
-olsr_poll_sockets(void)
+poll_sockets(void)
 {
   int n;
   struct olsr_socket_entry *entry;
@@ -209,18 +200,11 @@ olsr_poll_sockets(void)
       fdsets |= SP_PR_WRITE;
       FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
     }
-    if ((entry->flags & (SP_PR_READ|SP_PR_WRITE)) != 0) {
-      if (entry->fd >= hfd) {
-	hfd = entry->fd + 1;
-      }
+    if ((entry->flags & (SP_PR_READ|SP_PR_WRITE)) != 0 && entry->fd >= hfd) {
+      hfd = entry->fd + 1;
     }
   }
 
-  if (hfd == 0) {
-    /* we didn't set anything - no need to continue */
-    return;
-  }
-      
   /* Running select on the FD set */
   do {
     n = olsr_select(hfd, 
@@ -228,12 +212,12 @@ olsr_poll_sockets(void)
 		    fdsets & SP_PR_WRITE ? &obits : NULL,
 		    NULL,
 		    &tvp);
-  } while (n == -1 && (errno == EINTR || errno == EAGAIN));
+  } while (n == -1 && errno == EINTR);
 
   if (n == 0) {
     return;
   }
-  if (n == -1) {	/* Did somethig go wrong? */
+  if (n == -1) {	/* Did something go wrong? */
     const char * const err_msg = strerror(errno);
     olsr_syslog(OLSR_LOG_ERR, "select: %s", err_msg);
     OLSR_PRINTF(1, "Error select: %s", err_msg);
@@ -243,19 +227,19 @@ olsr_poll_sockets(void)
   /* Update time since this is much used by the parsing functions */
   now_times = olsr_times();
   for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-    int f;
+    int flags;
     if (entry->process_pollrate == NULL) {
       continue;
     }
-    f = 0;
+    flags = 0;
     if (FD_ISSET(entry->fd, &ibits)) {
-      f |= SP_PR_READ;
+      flags |= SP_PR_READ;
     }
     if (FD_ISSET(entry->fd, &obits)) {
-      f |= SP_PR_WRITE;
+      flags |= SP_PR_WRITE;
     }
-    if (f != 0) {
-      entry->process_pollrate(entry->fd, entry->data, f);
+    if (flags != 0) {
+      entry->process_pollrate(entry->fd, entry->data, flags);
     }
   }
 }
@@ -265,22 +249,21 @@ static void handle_fds(const unsigned long next_interval)
   struct timeval tvp;
   unsigned long remaining;
 
-  /* If there are no registered sockets we
-   * do not call select(2)
-   */
-  if (olsr_socket_entries == NULL) {
-    return;
-  }
-
   /* calculate the first timeout */
   now_times = olsr_times();
-  if ((long)(next_interval - (unsigned long)now_times) < 0) {
+
+  remaining = next_interval - (unsigned long)now_times;
+  if ((long)remaining <= 0) {
     /* we are already over the interval */
+    if (olsr_socket_entries == NULL) {
+      /* If there are no registered sockets we do not call select(2) */
+      return;
+    }
     tvp.tv_sec = 0;
     tvp.tv_usec = 0;
   } else {
     /* we need an absolute time - milliseconds */
-    remaining = (next_interval - now_times) * olsr_cnf->system_tick_divider;
+    remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
   }
@@ -306,11 +289,14 @@ static void handle_fds(const unsigned long next_interval)
         fdsets |= SP_IMM_WRITE;
         FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
       }
-      if ((entry->flags & (SP_IMM_READ|SP_IMM_WRITE)) != 0) {
-	if (entry->fd >= hfd) {
-	  hfd = entry->fd + 1;
-	}
+      if ((entry->flags & (SP_IMM_READ|SP_IMM_WRITE)) != 0 && entry->fd >= hfd) {
+	hfd = entry->fd + 1;
       }
+    }
+
+    if (hfd == 0 && (long)remaining <= 0) {
+      /* we are over the interval and we have no fd's. Skip the select() etc. */
+      return;
     }
     
     do {
@@ -319,12 +305,12 @@ static void handle_fds(const unsigned long next_interval)
 		      fdsets & SP_IMM_WRITE ? &obits : NULL,
 		      NULL,
 		      &tvp);
-    } while (n == -1 && (errno == EINTR || errno == EAGAIN));
+    } while (n == -1 && errno == EINTR);
 
     if (n == 0) { /* timeout! */
       break;
     }
-    if (n == -1) { /* Did somethig go wrong? */
+    if (n == -1) { /* Did something go wrong? */
       olsr_syslog(OLSR_LOG_ERR, "select: %s", strerror(errno));
       break;
     }
@@ -332,29 +318,30 @@ static void handle_fds(const unsigned long next_interval)
     /* Update time since this is much used by the parsing functions */
     now_times = olsr_times();
     for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-      int f;
+      int flags;
       if (entry->process_immediate == NULL) {
 	continue;
       }
-      f = 0;
+      flags = 0;
       if (FD_ISSET(entry->fd, &ibits)) {
-	f |= SP_IMM_READ;
+	flags |= SP_IMM_READ;
       }
       if (FD_ISSET(entry->fd, &obits)) {
-	f |= SP_IMM_WRITE;
+	flags |= SP_IMM_WRITE;
       }
-      if (f != 0) {
-	entry->process_immediate(entry->fd, entry->data, f);
+      if (flags != 0) {
+	entry->process_immediate(entry->fd, entry->data, flags);
       }
     }
 
     /* calculate the next timeout */
-    if ((long)(next_interval - (unsigned long)now_times) < 0) {
+    remaining = next_interval - (unsigned long)now_times;
+    if ((long)remaining <= 0) {
       /* we are already over the interval */
       break;
     }
     /* we need an absolute time - milliseconds */
-    remaining = (next_interval - now_times) * olsr_cnf->system_tick_divider;
+    remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
   }
@@ -387,10 +374,10 @@ olsr_scheduler(void)
     next_interval = GET_TIMESTAMP(olsr_cnf->pollrate * MSEC_PER_SEC);
 
     /* Read incoming data */
-    olsr_poll_sockets();
+    poll_sockets();
 
     /* Process timers */
-    olsr_walk_timers(&timer_last_run);
+    walk_timers(&timer_last_run);
 
     /* Update */
     olsr_process_changes();
@@ -417,7 +404,7 @@ olsr_scheduler(void)
  * @return the absolute timer in system clock tick units
  */
 static clock_t
-olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val)
+calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val)
 {
   unsigned int jitter_time;
 
@@ -530,7 +517,7 @@ olsr_init_timers(void)
 }
 
 /*
- * olsr_get_next_list_entry
+ * get_next_list_entry
  *
  * Get the next list node in a hash bucket.
  * The listnode of the timer in may be subject to getting removed from
@@ -540,7 +527,7 @@ olsr_init_timers(void)
  * has been removed from the hash bucket and compute the next node.
  */
 static struct list_node *
-olsr_get_next_list_entry (struct list_node **prev_node,
+get_next_list_entry (struct list_node **prev_node,
                           struct list_node *current_node)
 {
   if ((*prev_node)->next == current_node) {
@@ -564,10 +551,8 @@ olsr_get_next_list_entry (struct list_node **prev_node,
  * Callback the provided function with the context pointer.
  */
 static void
-olsr_walk_timers(clock_t * last_run)
+walk_timers(clock_t * last_run)
 {
-  static struct timer_entry *timer;
-  struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
   unsigned int timers_walked, timers_fired;
   unsigned int total_timers_walked, total_timers_fired;
   unsigned int wheel_slot_walks = 0;
@@ -579,6 +564,7 @@ olsr_walk_timers(clock_t * last_run)
    */
   total_timers_walked = total_timers_fired = timers_walked = timers_fired = 0;
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+    struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
@@ -593,9 +579,9 @@ olsr_walk_timers(clock_t * last_run)
     /* Walk all entries hanging off this hash bucket */
     for (timer_walk_node = timer_head_node->next;
          timer_walk_node != timer_head_node; /* circular list */
-	 timer_walk_node = olsr_get_next_list_entry(&timer_walk_prev_node,
+	 timer_walk_node = get_next_list_entry(&timer_walk_prev_node,
                                                     timer_walk_node)) {
-
+      static struct timer_entry *timer;
       timer = list2timer(timer_walk_node);
 
       timers_walked++;
@@ -787,7 +773,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   timer = olsr_get_timer();
 
   /* Fill entry */
-  timer->timer_clock = olsr_jitter(rel_time, jitter_pct, timer->timer_random);
+  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
   timer->timer_cb = timer_cb_function;
   timer->timer_cb_context = context;
   timer->timer_jitter_pct = jitter_pct;
@@ -877,7 +863,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
     timer->timer_period = 0;
   }
 
-  timer->timer_clock = olsr_jitter(rel_time, jitter_pct, timer->timer_random);
+  timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
   timer->timer_jitter_pct = jitter_pct;
 
   /*
