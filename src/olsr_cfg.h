@@ -277,11 +277,11 @@ int olsrd_sanity_check_cnf(struct olsrd_config *);
 
 void olsrd_free_cnf(struct olsrd_config *);
 
-void olsrd_print_cnf(struct olsrd_config *);
+void olsrd_print_cnf(const struct olsrd_config *);
 
-int olsrd_write_cnf(struct olsrd_config *, const char *);
+int olsrd_write_cnf(const struct olsrd_config *, const char *);
 
-int olsrd_write_cnf_buf(struct olsrd_config *, char *, olsr_u32_t);
+int olsrd_write_cnf_buf(const struct olsrd_config *, char *, olsr_u32_t);
 
 void init_default_if_config(struct if_config_options *);
 

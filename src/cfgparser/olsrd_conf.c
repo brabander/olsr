@@ -534,7 +534,7 @@ struct if_config_options *get_default_if_config(void)
 
 
 void
-olsrd_print_cnf(struct olsrd_config *cnf)
+olsrd_print_cnf(const struct olsrd_config *cnf)
 {
   struct ip_prefix_list   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
