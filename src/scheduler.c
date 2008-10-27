@@ -89,8 +89,6 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
 {
   struct olsr_socket_entry *new_entry;
 
-  olsr_syslog(OLSR_LOG_ERR, "%s(): fd=%d, flags=%x", __func__, fd, flags);
-  
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not registering...", __func__);
     return;
@@ -122,8 +120,6 @@ int
 remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm)
 {
   struct olsr_socket_entry *entry, *prev_entry;
-
-  olsr_syslog(OLSR_LOG_ERR, "%s(): fd=%d", __func__, fd);
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not processing...", __func__);
