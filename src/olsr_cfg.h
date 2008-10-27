@@ -212,7 +212,7 @@ struct olsrd_config
   struct ip_prefix_list    *hna_entries;
   struct ip_prefix_list    *ipc_nets;
   struct olsr_if           *interfaces;
-  float                    pollrate;
+  olsr_u32_t               pollrate; /* in microseconds */
   float                    nic_chgs_pollrate;
   olsr_bool                clear_screen;
   olsr_u8_t                tc_redundancy;
@@ -285,9 +285,15 @@ int olsrd_write_cnf(const struct olsrd_config *, const char *);
 
 void init_default_if_config(struct if_config_options *);
 
-  struct if_config_options *get_default_if_config(void);
+struct if_config_options *get_default_if_config(void);
 
 struct olsrd_config *olsrd_get_default_cnf(void);
+
+int check_pollrate(float *pollrate);
+
+static inline float conv_pollrate_to_secs(olsr_u32_t p)   { return p / 1000000.0; }
+
+static inline olsr_u32_t conv_pollrate_to_microsecs(float p) { return p * 1000000; }
 
 #if defined WIN32
 void win32_stdio_hack(unsigned int);
@@ -296,6 +302,7 @@ void *win32_olsrd_malloc(size_t size);
 
 void win32_olsrd_free(void *ptr);
 #endif
+
 
 #if defined __cplusplus
 }

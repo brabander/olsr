@@ -359,8 +359,7 @@ static void handle_fds(const unsigned long next_interval)
 void
 olsr_scheduler(void)
 {
-  OLSR_PRINTF(1, "Scheduler started - polling every %0.2f seconds\n",
-	      olsr_cnf->pollrate);
+  OLSR_PRINTF(1, "Scheduler started - polling every %u microseconds\n", olsr_cnf->pollrate);
 
   /* Main scheduler loop */
   while (app_state == STATE_RUNNING) {
@@ -371,7 +370,7 @@ olsr_scheduler(void)
      * to avoid any undesired side effects if the system clock changes.
      */
     now_times = olsr_times();
-    next_interval = GET_TIMESTAMP(olsr_cnf->pollrate * MSEC_PER_SEC);
+    next_interval = GET_TIMESTAMP(olsr_cnf->pollrate / USEC_PER_MSEC);
 
     /* Read incoming data */
     poll_sockets();
