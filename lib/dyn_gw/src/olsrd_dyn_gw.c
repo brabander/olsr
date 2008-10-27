@@ -177,7 +177,7 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
     }
 
     //printf("GOT: %s(%08x)",inet_ntoa(foo_addr),foo_addr.s_addr);
-    if (inet_pton(olsr_cnf->ip_version, s_netaddr, &temp_netmask) <= 0) {
+    if (inet_pton(olsr_cnf->ip_version, s_mask, &temp_netmask) <= 0) {
         OLSR_PRINTF(0, "Illegal netmask \"%s\"", s_netaddr);
         return 1;
     }
@@ -185,7 +185,7 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
     //printf("/%s(%08x)\n",inet_ntoa(foo_addr),foo_addr.s_addr);
     //printf("%s():got->%s/%s\n",__func__,olsr_ip_to_string((union olsr_ip_addr *)&));
     the_hna_list = add_to_hna_list(the_hna_list, &temp_net, olsr_netmask_to_prefix(&temp_netmask));
-    if (the_hna_list != NULL) {
+    if (the_hna_list == NULL) {
         return 1;
     }
     return 0;
