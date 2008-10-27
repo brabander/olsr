@@ -174,6 +174,9 @@ check_pollrate(float *pollrate)
     fprintf(stderr, "Pollrate %0.2f is too large\n", *pollrate);
     return -1;
   }
+#ifdef WIN32
+#define sysconf(_SC_CLK_TCK) 1000
+#endif
   if (*pollrate < MIN_POLLRATE || *pollrate < 1.0/sysconf(_SC_CLK_TCK)) {
     fprintf(stderr, "Pollrate %0.2f is too small - setting it to %ld\n", *pollrate, sysconf(_SC_CLK_TCK));
     *pollrate = 1.0/sysconf(_SC_CLK_TCK);
