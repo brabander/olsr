@@ -1,0 +1,21 @@
+DebugLevel	2
+IpVersion	4
+FIBMetric "flat"
+ClearScreen     yes
+UseHysteresis	no
+LinkQualityLevel	2
+Pollrate	0.05
+TcRedundancy	2
+MprCoverage	3
+    
+Interface "hemu0"
+{
+    HelloInterval	2.0
+    HelloValidityTime	20.0
+    TcInterval		5.0
+    TcValidityTime	30.0
+    MidInterval		5.0
+    MidValidityTime	30.0
+    HnaInterval		5.0
+    HnaValidityTime	30.0
+}
