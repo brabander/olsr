@@ -316,10 +316,10 @@ chk_if_changed(struct olsr_if *iface)
       }
 
 #ifdef DEBUG
-      OLSR_PRINTF(3, "\tAddress:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifp->int_addr)->sin_addr));
+      OLSR_PRINTF(3, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
 #endif
 
-      if(memcmp(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr,
+      if(memcmp(&ifp->int_addr.sin_addr.s_addr,
 		&((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
 		olsr_cnf->ipsize) != 0)
 	{
@@ -359,7 +359,7 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(3, "\tNetmask:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr));
 #endif
 
-      if(memcmp(&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr,
+      if(memcmp(&ifp->int_netmask.sin_addr.s_addr,
 		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, 
 		olsr_cnf->ipsize) != 0)
 	{
@@ -550,7 +550,7 @@ int add_hemu_if(struct olsr_if *iface)
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
-      memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
+      memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
       
       /*
        *We create one socket for each interface and bind
@@ -793,7 +793,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
       if(iface->cnf->ipv4_broadcast.v4.s_addr)
 	{
 	  /* Specified broadcast */
-	  memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr, 
+	  memcpy(&ifs.int_broadaddr.sin_addr.s_addr, 
 		 &iface->cnf->ipv4_broadcast.v4, 
 		 sizeof(olsr_u32_t));
 	}
