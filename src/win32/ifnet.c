@@ -310,8 +310,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   Info->Index = IfTable->table[TabIdx].dwIndex;
   Info->Mtu = (int)IfTable->table[TabIdx].dwMtu;
 
-  Info->Mtu -= (olsr_cnf->ip_version == AF_INET6) ?
-    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  Info->Mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   Lib = LoadLibrary("iphlpapi.dll");
 
@@ -572,8 +571,8 @@ void RemoveInterface(struct olsr_if *IntConf)
   IntConf->configured = 0;
   IntConf->interf = NULL;
 
-  closesocket(Int->olsr_socket);
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
+  closesocket(Int->olsr_socket);
 
   free(Int->int_name);
   free(Int);
@@ -586,6 +585,10 @@ void RemoveInterface(struct olsr_if *IntConf)
   }
 }
 
+/**
+ * Initializes the special interface used in
+ * host-client emulation
+ */
 int add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
@@ -629,8 +632,7 @@ int add_hemu_if(struct olsr_if *iface)
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
 
-  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ?
-    UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  ifp->int_mtu -= olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   /* Set up buffer */
   net_add_buffer(ifp);
@@ -649,7 +651,7 @@ int add_hemu_if(struct olsr_if *iface)
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
-      memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
+      memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
       
       /*
        *We create one socket for each interface and bind
@@ -804,7 +806,7 @@ int chk_if_changed(struct olsr_if *IntConf)
     Res = 1;
   }
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_addr)->sin_addr;
+  OldVal.v4 = Int->int_addr.sin_addr;
   NewVal.v4.s_addr = Info.Addr;
 
 #ifdef DEBUG
@@ -819,7 +821,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
     Int->ip_addr.v4 = NewVal.v4;
 
-    AddrIn = (struct sockaddr_in *)&Int->int_addr;
+    AddrIn = &Int->int_addr;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
@@ -863,7 +865,7 @@ int chk_if_changed(struct olsr_if *IntConf)
   else
     OLSR_PRINTF(3, "\tNo netmask change.\n");
 
-  OldVal.v4 = ((struct sockaddr_in *)&Int->int_broadaddr)->sin_addr;
+  OldVal.v4 = Int->int_broadaddr.sin_addr;
   NewVal.v4.s_addr = Info.Broad;
 
 #ifdef DEBUG
@@ -876,7 +878,7 @@ int chk_if_changed(struct olsr_if *IntConf)
     OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
     OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
-    AddrIn = (struct sockaddr_in *)&Int->int_broadaddr;
+    AddrIn = &Int->int_broadaddr;
 
     AddrIn->sin_family = AF_INET;
     AddrIn->sin_port = 0;
@@ -919,7 +921,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   New->gen_properties = NULL;
 
-  AddrIn = (struct sockaddr_in *)&New->int_addr;
+  AddrIn = &New->int_addr;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
@@ -931,7 +933,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Mask;
 
-  AddrIn = (struct sockaddr_in *)&New->int_broadaddr;
+  AddrIn = &New->int_broadaddr;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
@@ -971,9 +973,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
               IntConf->name, New->if_index);
       
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF(1, "\tAddress: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_addr)->sin_addr));
+  OLSR_PRINTF(1, "\tAddress: %s\n", ip4_to_string(&buf, New->int_addr.sin_addr));
   OLSR_PRINTF(1, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
-  OLSR_PRINTF(1, "\tBroadcast address: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_broadaddr)->sin_addr));
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_broadaddr.sin_addr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
       

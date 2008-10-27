@@ -78,7 +78,7 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
   size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
 		  "Debug level:", "debug_level", 2, olsr_cnf->debug_level);
   size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
-		  "Pollrate:", "pollrate", 4, olsr_cnf->pollrate);
+		   "Pollrate:", "pollrate", 4, conv_pollrate_to_secs(olsr_cnf->pollrate));
   size += snprintf(&buf[size], bufsize-size, admin_basic_setting_string,
 		  "TOS:", "tos", 6, "TBD");
 
@@ -265,10 +265,10 @@ process_param(char *key, char *value)
     {
       float fval = 1.1;
       sscanf(value, "%f", &fval);
-      if((fval < 0.0) || (fval > 1.0))
+      if (check_pollrate(&fval) < 0) {
 	return -1;
-
-      olsr_cnf->pollrate = fval;
+      }
+      olsr_cnf->pollrate = conv_pollrate_to_microsecs(fval);
       return 1;
     }
 

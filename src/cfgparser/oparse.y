@@ -932,7 +932,10 @@ fhystlower: TOK_HYSTLOWER TOK_FLOAT
 fpollrate: TOK_POLLRATE TOK_FLOAT
 {
   PARSER_DEBUG_PRINTF("Pollrate %0.2f\n", $2->floating);
-  olsr_cnf->pollrate = $2->floating;
+  if (check_pollrate(&$2->floating) < 0) {
+    YYABORT;
+  }
+  olsr_cnf->pollrate = conv_pollrate_to_microsecs($2->floating);
   free($2);
 }
 ;

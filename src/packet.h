@@ -88,54 +88,11 @@ struct tc_message
   struct tc_mpr_addr  *multipoint_relay_selector_address;
 };
 
-/*
- *MID messages - format:
- *
- *ADDR
- *ADDR
- *ADDR
- *.....
- */
-
-struct mid_alias
-{
-  union olsr_ip_addr alias_addr;
-  struct mid_alias   *next;
-};
-
-struct mid_message
-{
-  olsr_reltime       vtime;
-  union olsr_ip_addr mid_origaddr;  /* originator's address */
-  olsr_u8_t          mid_hopcnt;    /* number of hops to destination */
-  olsr_u8_t          mid_ttl;       /* ttl */
-  olsr_u16_t         mid_seqno;     /* sequence number */
-  union olsr_ip_addr addr;          /* main address */
-  struct mid_alias   *mid_addr;     /* variable length */
-};
-
-
-struct unknown_message
-{
-  olsr_u16_t         seqno;
-  union olsr_ip_addr originator;
-  olsr_u8_t          type;
-};
-
 
 void
 olsr_free_hello_packet(struct hello_message *);
 
 int
 olsr_build_hello_packet(struct hello_message *, struct interface *);
-
-void 
-olsr_free_tc_packet(struct tc_message *);
-
-int
-olsr_build_tc_packet(struct tc_message *);
-
-void
-olsr_free_mid_packet(struct mid_message *);
 
 #endif

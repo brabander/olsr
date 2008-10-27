@@ -1437,8 +1437,8 @@ static int CreateInterface(
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
-    newIf->intAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr;
-    newIf->broadAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr;
+    newIf->intAddr.v4 = olsrIntf->int_addr.sin_addr;
+    newIf->broadAddr.v4 = olsrIntf->int_broadaddr.sin_addr;
   }
   else
   {

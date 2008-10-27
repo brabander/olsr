@@ -50,6 +50,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -167,6 +168,23 @@ olsrd_parse_cnf(const char *filename)
 
 
 int
+check_pollrate(float *pollrate)
+{
+  if (*pollrate > MAX_POLLRATE) {
+    fprintf(stderr, "Pollrate %0.2f is too large\n", *pollrate);
+    return -1;
+  }
+#ifdef WIN32
+#define sysconf(_SC_CLK_TCK) 1000
+#endif
+  if (*pollrate < MIN_POLLRATE || *pollrate < 1.0/sysconf(_SC_CLK_TCK)) {
+    fprintf(stderr, "Pollrate %0.2f is too small - setting it to %ld\n", *pollrate, sysconf(_SC_CLK_TCK));
+    *pollrate = 1.0/sysconf(_SC_CLK_TCK);
+  }
+  return 0;
+}
+
+int
 olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 {
   struct olsr_if           *in = cnf->interfaces;
@@ -235,22 +253,12 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
   /* Check Link quality dijkstra limit */
-  if (olsr_cnf->lq_dinter < cnf->pollrate && olsr_cnf->lq_dlimit != 255) {
+  if (olsr_cnf->lq_dinter < conv_pollrate_to_secs(cnf->pollrate) && olsr_cnf->lq_dlimit != 255) {
   	fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
   	return -1;
   }
   
-  /* Pollrate */
-
-  if(cnf->pollrate < MIN_POLLRATE ||
-     cnf->pollrate > MAX_POLLRATE)
-    {
-      fprintf(stderr, "Pollrate %0.2f is not allowed\n", cnf->pollrate);
-      return -1;
-    }
-
   /* NIC Changes Pollrate */
-
   if(cnf->nic_chgs_pollrate < MIN_NICCHGPOLLRT ||
      cnf->nic_chgs_pollrate > MAX_NICCHGPOLLRT)
     {
@@ -259,7 +267,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
   /* TC redundancy */
-
   if(//cnf->tc_redundancy < MIN_TC_REDUNDANCY ||
      cnf->tc_redundancy > MAX_TC_REDUNDANCY)
     {
@@ -283,7 +290,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
   /* Link quality level */
-
   if(cnf->lq_level > MAX_LQ_LEVEL)
     {
       fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
@@ -338,7 +344,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
           io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
       }
 
-      if(io->hello_params.emission_interval < cnf->pollrate ||
+      if(io->hello_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
 	 io->hello_params.emission_interval > io->hello_params.validity_time)
 	{
 	  fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval, io->hello_params.validity_time);
@@ -346,7 +352,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	}
 
       /* TC interval */
-      if(io->tc_params.emission_interval < cnf->pollrate ||
+      if(io->tc_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
 	 io->tc_params.emission_interval > io->tc_params.validity_time)
 	{
 	  fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f)\n", io->tc_params.emission_interval, io->tc_params.validity_time);
@@ -354,7 +360,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	}
 
       /* MID interval */
-      if(io->mid_params.emission_interval < cnf->pollrate ||
+      if(io->mid_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
 	 io->mid_params.emission_interval > io->mid_params.validity_time)
 	{
 	  fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval, io->mid_params.validity_time);
@@ -362,7 +368,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	}
 
       /* HNA interval */
-      if(io->hna_params.emission_interval < cnf->pollrate ||
+      if(io->hna_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
 	 io->hna_params.emission_interval > io->hna_params.validity_time)
 	{
 	  fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n", io->hna_params.emission_interval, io->hna_params.validity_time);
@@ -460,7 +466,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->hysteresis_param.thr_high = HYST_THRESHOLD_HIGH;
     cnf->hysteresis_param.thr_low = HYST_THRESHOLD_LOW;
 
-    cnf->pollrate = DEF_POLLRATE;
+    cnf->pollrate = conv_pollrate_to_microsecs(DEF_POLLRATE);
     cnf->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
 
     cnf->tc_redundancy = TC_REDUNDANCY;
@@ -534,7 +540,7 @@ struct if_config_options *get_default_if_config(void)
 
 
 void
-olsrd_print_cnf(struct olsrd_config *cnf)
+olsrd_print_cnf(const struct olsrd_config *cnf)
 {
   struct ip_prefix_list   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
@@ -577,7 +583,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   }
 
 
-  printf("Pollrate         : %0.2f\n", cnf->pollrate);
+  printf("Pollrate         : %0.2f\n", conv_pollrate_to_secs(cnf->pollrate));
 
   printf("NIC ChangPollrate: %0.2f\n", cnf->nic_chgs_pollrate);
 

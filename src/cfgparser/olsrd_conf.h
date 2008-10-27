@@ -50,8 +50,7 @@
 
 extern int current_line;
 
-struct conf_token
-{
+struct conf_token {
   olsr_u32_t integer;
   float      floating;
   olsr_bool  boolean;

@@ -234,7 +234,6 @@ main(int argc, char *argv[])
 
   /* Sanity check configuration */
   if (olsrd_sanity_check_cnf(olsr_cnf) < 0) {
-      fprintf(stderr, "Bad configuration!\n");
       olsr_exit(__func__, EXIT_FAILURE);      
     }
 
@@ -745,9 +744,14 @@ olsr_process_arguments(int argc, char *argv[],
      * Set the polling interval to be used by olsrd.
      */
     if (strcmp(*argv, "-T") == 0) {
+      float pollrate;
       NEXT_ARG;
       CHECK_ARGC;
-      sscanf(*argv,"%f",&cnf->pollrate);
+      sscanf(*argv,"%f", &pollrate);
+      if (check_pollrate(&pollrate) < 0) {
+	olsr_exit(__func__, EXIT_FAILURE);
+      }
+      cnf->pollrate = conv_pollrate_to_microsecs(pollrate);
       continue;
     }
 
