@@ -840,7 +840,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 
     size += snprintf(&buf[size], bufsize-size, "</tr>\n<tr>\n");
 
-    size += snprintf(&buf[size], bufsize-size, "<td>Pollrate: %0.2f</td>\n", olsr_cnf->pollrate);
+    size += snprintf(&buf[size], bufsize-size, "<td>Pollrate: %0.2f</td>\n", conv_pollrate_to_secs(olsr_cnf->pollrate));
     size += snprintf(&buf[size], bufsize-size, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
     size += snprintf(&buf[size], bufsize-size, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
     size += snprintf(&buf[size], bufsize-size, "<td>NAT threshold: %f</td>\n", olsr_cnf->lq_nat_thresh);

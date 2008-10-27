@@ -186,7 +186,7 @@ olsrd_write_cnf_buf(const struct olsrd_config *cnf, olsr_bool write_more_comment
 
   /* Pollrate */
   WRITE_TO_BUF("# Polling rate in seconds(float).\n# Auto uses default value 0.05 sec\n\n");
-  WRITE_TO_BUF("Pollrate\t%0.2f\n", cnf->pollrate);
+  WRITE_TO_BUF("Pollrate\t%0.2f\n", conv_pollrate_to_secs(cnf->pollrate));
 
   /* NIC Changes Pollrate */
   WRITE_TO_BUF("# Interval to poll network interfaces for configuration\n# changes. Defaults to 2.5 seconds\n");
