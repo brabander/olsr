@@ -76,12 +76,8 @@ int olsrd_plugin_interface_version(void);
 int olsrd_plugin_register_param(char *name, char *value);
 int olsrd_plugin_init(void);
 
-static int ipAddrLen;
-static union olsr_ip_addr *mainAddr;
-
 static struct interface *intTab = NULL;
 static struct neighbor_entry *neighTab = NULL;
-static struct olsrd_config *config = NULL;
 
 static int iterIndex;
 #if 0
@@ -110,9 +106,9 @@ int iterLinkTabNext(char *buff, int len)
     return -1;
 
   snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~cost~%s~",
-           rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
-           rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
-           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen),
+           rawIpAddrToString(&iterLinkTab->local_iface_addr, olsr_cnf->ipsize),
+           rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, olsr_cnf->ipsize),
+           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, olsr_cnf->ipsize),
            iterLinkTab->L_link_quality,
            get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE, &lqbuffer));
 
@@ -150,7 +146,7 @@ int iterNeighTabNext(char *buff, int len)
 
   res = snprintf(buff, len,
                  "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~",
-                 rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen),
+                 rawIpAddrToString(&iterNeighTab->neighbor_main_addr, olsr_cnf->ipsize),
                  iterNeighTab->status == SYM ? "true" : "false",
                  iterNeighTab->is_mpr != 0 ? "true" : "false",
                  olsr_lookup_mprs_set(&iterNeighTab->neighbor_main_addr) != NULL ?
@@ -170,7 +166,7 @@ int iterNeighTabNext(char *buff, int len)
   {
     res = snprintf(buff, len, "%d~%s~", i,
                    rawIpAddrToString(&neigh2->neighbor_2->neighbor_2_addr,
-                                     ipAddrLen));
+                                     olsr_cnf->ipsize));
 
     if (res < len)
       buff += res;
@@ -225,8 +221,8 @@ int iterRouteTabNext(char *buff, int len)
     return -1;
 
   snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%d~",
-           rawIpAddrToString(&iterRouteTab->rt_dst.prefix, ipAddrLen),
-           rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, ipAddrLen),
+           rawIpAddrToString(&iterRouteTab->rt_dst.prefix, olsr_cnf->ipsize),
+           rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, olsr_cnf->ipsize),
            if_ifwithindex_name(iterRouteTab->rt_best->rtp_nexthop.iif_index),
            iterRouteTab->rt_best->rtp_metric.hops);
 
@@ -278,7 +274,7 @@ int iterTcTabNext(char *buff, int len)
 
   res = snprintf(buff, len,
                  "main~%s~[~destinations~",
-                 rawIpAddrToString(&iterTcTab->addr, ipAddrLen));
+                 rawIpAddrToString(&iterTcTab->addr, olsr_cnf->ipsize));
 
   len -= res;
   buff += res;
@@ -289,7 +285,7 @@ int iterTcTabNext(char *buff, int len)
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(iterTcTab, tc_edge) {
 
     res = snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i,
-                   rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
+                   rawIpAddrToString(&tc_edge->T_dest_addr, olsr_cnf->ipsize),
                    get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
 
     if (res < len)
@@ -330,7 +326,7 @@ static void parserFunc(union olsr_message *msg,
   char *service, *string;
   int i;
 
-  if (memcmp(orig, mainAddr, ipAddrLen) == 0)
+  if (memcmp(orig, &olsr_cnf->main_addr, olsr_cnf->ipsize) == 0)
     return;
 
   if (check_neighbor_link(neighIntAddr) != SYM_LINK)
@@ -339,14 +335,14 @@ static void parserFunc(union olsr_message *msg,
     return;
   }
 
-  if (len < ipAddrLen + 8 + 2)
+  if (len < (int)olsr_cnf->ipsize + 8 + 2)
   {
     error("short TAS message received (%d bytes)\n", len);
     return;
   }
 
-    len -= ipAddrLen + 8;
-    service = mess + ipAddrLen + 8;
+    len -= olsr_cnf->ipsize + 8;
+    service = mess + olsr_cnf->ipsize + 8;
 
     for (i = 0; i < len && service[i] != 0; i++);
 
@@ -373,7 +369,7 @@ static void parserFunc(union olsr_message *msg,
       return;
     }
 
-    httpAddTasMessage(service, string, rawIpAddrToString(orig, ipAddrLen));
+    httpAddTasMessage(service, string, rawIpAddrToString(orig, olsr_cnf->ipsize));
 
   olsr_forward_message(msg, neighIntAddr);
 }
@@ -385,7 +381,7 @@ void sendMessage(const char *service, const char *string)
   unsigned short seqNo;
   struct interface *inter;
 
-  pad = len = ipAddrLen + 8 + strlen(service) + 1 + strlen(string) + 1;
+  pad = len = olsr_cnf->ipsize + 8 + strlen(service) + 1 + strlen(string) + 1;
 
   len = 1 + ((len - 1) | 3);
 
@@ -400,8 +396,8 @@ void sendMessage(const char *service, const char *string)
   *walker++ = (unsigned char)(len >> 8);
   *walker++ = (unsigned char)len;
 
-  memcpy(walker, mainAddr, ipAddrLen);
-  walker += ipAddrLen;
+  memcpy(walker, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  walker += olsr_cnf->ipsize;
 
   *walker++ = 255;
   *walker++ = 0;
@@ -444,7 +440,7 @@ static void serviceFunc(void *context __attribute__((unused)))
   }
 
   if (up != 0)
-    httpService((int)(1.0 / config->pollrate));
+    httpService((int)(1.0 / conv_pollrate_to_secs(olsr_cnf->pollrate)));
 }
 
 int olsrd_plugin_interface_version(void)
@@ -454,12 +450,8 @@ int olsrd_plugin_interface_version(void)
 
 int olsrd_plugin_init(void)
 {
-  ipAddrLen = olsr_cnf->ipsize;
-  mainAddr = &olsr_cnf->main_addr;
-
   intTab = ifnet;
   neighTab = neighbortable;
-  config = olsr_cnf;
 
   httpInit();
   
