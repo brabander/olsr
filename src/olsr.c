@@ -272,9 +272,6 @@ olsr_init_tables(void)
   /* Initialize topology */
   olsr_init_tc();
 
-  /* Initialize mpr selector table */
-  olsr_init_mprs_set();
-
   /* Initialize MID set */
   olsr_init_mid_set();
 

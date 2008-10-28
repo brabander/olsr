@@ -37,36 +37,21 @@
  * the copyright holders.
  *
  */
-
-#include "ipcalc.h"
-#include "defs.h"
 #include "mpr_selector_set.h"
+#include "link_set.h"
 #include "olsr.h"
 #include "scheduler.h"
-#include "net_olsr.h"
 
-#include <stdlib.h>
+#define OLSR_MPR_SEL_JITTER 5 /* percent */
 
-static olsr_u16_t ansn;
+
+static olsr_u16_t ansn = 0;
 
 /* MPR selector list */
-static struct mpr_selector mprs_list;
+static struct mpr_selector mprs_list = { .next = &mprs_list, .prev = &mprs_list };
 
-/**
- *Initialize MPR selector set
- */
-
-void
-olsr_init_mprs_set(void)
-{
-  OLSR_PRINTF(5, "MPRS: Init\n");
-
-  /* Initial values */
-  ansn = 0;
-
-  mprs_list.next = &mprs_list;
-  mprs_list.prev = &mprs_list;
-}
+static void add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
+static void olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer);
 
 
 olsr_u16_t 
@@ -89,7 +74,7 @@ increase_local_ansn(void)
 olsr_bool
 olsr_is_mpr(void)
 {
-    return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
+    return mprs_list.next == &mprs_list ? OLSR_FALSE : OLSR_TRUE;
 }
 #endif
 
@@ -100,18 +85,13 @@ olsr_is_mpr(void)
 static void
 olsr_expire_mpr_sel_entry(void *context)
 {
+  struct mpr_selector *mpr_sel = context;
 #ifdef DEBUG
   struct ipaddr_str buf;
-#endif
-  struct mpr_selector *mpr_sel;
-
-  mpr_sel = (struct mpr_selector *)context;
-  mpr_sel->MS_timer = NULL;
-
-#ifdef DEBUG
   OLSR_PRINTF(1, "MPRS: Timing out %st\n",
               olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
 #endif
+  mpr_sel->MS_timer = NULL;
 
   DEQUEUE_ELEM(mpr_sel);
 
@@ -119,7 +99,6 @@ olsr_expire_mpr_sel_entry(void *context)
   free(mpr_sel);
   signal_link_changes(OLSR_TRUE);
 }
-
 
 /**
  * Set the mpr selector expiration timer.
@@ -130,11 +109,9 @@ olsr_expire_mpr_sel_entry(void *context)
 static void
 olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
 {
-
   olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
                  OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel, 0);
 }
-
 
 /**
  *Add a MPR selector to the MPR selector set
@@ -144,50 +121,41 @@ olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
  *
  *@return a pointer to the new entry
  */
-struct mpr_selector *
-olsr_add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
+static void
+add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
   struct ipaddr_str buf;
-  struct mpr_selector *new_entry;
+  struct mpr_selector *new_entry = olsr_malloc(sizeof(*new_entry), "Add MPR selector");
 
   OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
 
-  new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
   /* Fill struct */
   new_entry->MS_main_addr = *addr;
   olsr_set_mpr_sel_timer(new_entry, vtime);
   /* Queue */
   QUEUE_ELEM(mprs_list, new_entry);
-  /*
-  new_entry->prev = &mprs_list;
-  new_entry->next = mprs_list.next;
-  mprs_list.next->prev = new_entry;
-  mprs_list.next = new_entry;
-  */
-  return new_entry;
 }
 
-
-
 /**
- *Lookup an entry in the MPR selector table
- *based on address
+ * Lookup an entry in the MPR selector table
+ * based on address
  *
- *@param addr the addres to check for
+ * @param addr the addres to check for
  *
- *@return a pointer to the entry or NULL
+ * @return a pointer to the entry or NULL
  */
 struct mpr_selector *
 olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
 {
   struct mpr_selector *mprs;
 
-  if(addr == NULL)
+  if (addr == NULL) {
     return NULL;
+  }
   //OLSR_PRINTF(1, "MPRS: Lookup....");
 
   for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
-    if(ipequal(&mprs->MS_main_addr, addr)) {
+    if (ipequal(&mprs->MS_main_addr, addr)) {
       //OLSR_PRINTF(1, "MATCH\n");
       return mprs;
     }
@@ -198,13 +166,13 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
 
 
 /**
- *Update a MPR selector entry or create an new
- *one if it does not exist
+ * Update a MPR selector entry or create an new
+ * one if it does not exist
  *
- *@param addr the address of the MPR selector
- *@param vtime tha validity time of the entry
+ * @param addr the address of the MPR selector
+ * @param vtime tha validity time of the entry
  *
- *@return 1 if a new entry was added 0 if not
+ * @return 1 if a new entry was added 0 if not
  */
 int
 olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
@@ -214,8 +182,8 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 
   OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
 
-  if(mprs == NULL) {
-    olsr_add_mpr_selector(addr, vtime);
+  if (mprs == NULL) {
+    add_mpr_selector(addr, vtime);
     signal_link_changes(OLSR_TRUE);
     return 1;
   }
@@ -233,7 +201,7 @@ olsr_print_mprs_set(void)
 {
   struct mpr_selector *mprs;
   OLSR_PRINTF(1, "MPR SELECTORS: ");
-  for(mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
+  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
   }
