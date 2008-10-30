@@ -147,6 +147,7 @@ LIBS +=		$(OS_LIB_PTHREAD)
 
 # extra options from the outside
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)
+LDFLAGS +=	$(EXTRA_LDFLAGS)
 
 ###################################
 #
