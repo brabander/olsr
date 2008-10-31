@@ -1168,8 +1168,8 @@ static int build_cfgfile_body(char *buf, olsr_u32_t bufsize)
 
   size += snprintf(&buf[size], bufsize-size,
                    "\n\n"
-                   "<strong>This is a automatically generated configuration\n"
-                   "file based on the current olsrd configuration of this node.<br/>\n"
+                   "<strong>This is an automatically generated configuration\n"
+                   "file based on the current olsrd configuration of this node.</strong><br/>\n"
                    "<hr/>\n"
                    "<pre>\n");
 
