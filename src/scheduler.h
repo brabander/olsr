@@ -154,6 +154,15 @@ int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf
 void enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 
+/*
+ * a wrapper around times(2). times(2) has the problem, that it may return -1
+ * in case of an err (e.g. EFAULT on the parameter) or immediately before an
+ * overrun (though it is not en error) just because the jiffies (or whatever
+ * the underlying kernel calls the smallest accountable time unit) are
+ * inherently "unsigned" (and always incremented).
+ */
+unsigned long olsr_times(void);
+
 
 #endif
 

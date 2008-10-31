@@ -494,6 +494,9 @@ olsr_init_timers(void)
 
   OLSR_PRINTF(5, "TIMER: init timers\n");
 
+  /* Grab initial timestamp */
+  now_times = olsr_times();
+    
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
   }
@@ -906,6 +909,21 @@ olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time,
     }
   }
 }
+
+/*
+ * a wrapper around times(2). times(2) has the problem, that it may return -1
+ * in case of an err (e.g. EFAULT on the parameter) or immediately before an
+ * overrun (though it is not en error) just because the jiffies (or whatever
+ * the underlying kernel calls the smallest accountable time unit) are
+ * inherently "unsigned" (and always incremented).
+ */
+unsigned long olsr_times(void)
+{
+  struct tms tms_buf;
+  const long t = times(&tms_buf);
+  return t < 0 ? -errno : t;
+}
+
 
 /*
  * Local Variables:

@@ -141,9 +141,9 @@ main(int argc, char *argv[])
   /* Open syslog */
   olsr_openlog("olsrd");
 
-  /* Grab initial timestamp */
-  now_times = olsr_times();
-    
+  /* Initialize timers and scheduler part */
+  olsr_init_timers();
+
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
 	 olsrd_version, 
 	 build_date,
@@ -215,9 +215,6 @@ main(int argc, char *argv[])
 
   /* Initialize net */
   init_net();
-
-  /* Initialize timers */
-  olsr_init_timers();
 
   /*
    * Process olsrd options.
@@ -837,20 +834,6 @@ olsr_process_arguments(int argc, char *argv[],
     return -1;
   }
   return 0;
-}
-
-/*
- * a wrapper around times(2). times(2) has the problem, that it may return -1
- * in case of an err (e.g. EFAULT on the parameter) or immediately before an
- * overrun (though it is not en error) just because the jiffies (or whatever
- * the underlying kernel calls the smallest accountable time unit) are
- * inherently "unsigned" (and always incremented).
- */
-unsigned long olsr_times(void)
-{
-  struct tms tms_buf;
-  const long t = times(&tms_buf);
-  return t < 0 ? -errno : t;
 }
 
 /*
