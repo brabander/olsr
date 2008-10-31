@@ -49,10 +49,7 @@
 #include "net_os.h"
 
 #include <errno.h>
-
-#ifdef WIN32
-#define random(x) rand(x)
-#endif
+#include <unistd.h>
 
 /* Timer data, global. Externed in scheduler.h */
 clock_t now_times;		       /* current idea of times(2) reported uptime */
