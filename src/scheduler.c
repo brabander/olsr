@@ -48,6 +48,8 @@
 #include "olsr_cookie.h"
 #include "net_os.h"
 
+#include <sys/times.h>
+
 #include <errno.h>
 #include <unistd.h>
 

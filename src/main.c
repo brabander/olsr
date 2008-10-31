@@ -43,7 +43,6 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
-#include <sys/times.h>
 
 #include "ipcalc.h"
 #include "defs.h"
