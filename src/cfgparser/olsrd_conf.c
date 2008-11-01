@@ -674,7 +674,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
     while(h) {
       struct ipprefix_str prefixstr;
-      printf("\t%s/", olsr_ip_prefix_to_string(&prefixstr, &h->net));
+      printf("\t%s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
       h = h->next;
     }
   }
