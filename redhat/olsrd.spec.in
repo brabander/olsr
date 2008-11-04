@@ -1,7 +1,7 @@
 Summary:   OLSR Daemon
 Name:      olsrd
-Version:   current
-Release:   1
+Version:   @VERSION@
+Release:   @RELEASE@
 License:   BSD
 Packager:  roarbr@tihlde.org
 Group:     System Environment/Daemons
@@ -107,7 +107,7 @@ EOF
 
 
 %build
-make %{?_smp_mflags}
+make %{?_smp_mflags} PREFIX=/usr
 make %{?_smp_mflags} libs
 
 %install
@@ -116,8 +116,8 @@ mkdir -p %{buildroot}/usr/sbin/
 mkdir -p %{buildroot}/usr/lib/
 mkdir -p %{buildroot}%{_initrddir}
 mkdir -p %{buildroot}/usr/share/man/man8
-make DESTDIR=%{buildroot} install
-make DESTDIR=%{buildroot} install_libs
+make PREFIX=/usr DESTDIR=%{buildroot} install
+make PREFIX=/usr DESTDIR=%{buildroot} install_libs
 %{__install} -m0755 olsrd.init %{buildroot}%{_initrddir}/olsrd
 
 

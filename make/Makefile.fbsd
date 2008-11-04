@@ -2,8 +2,8 @@
 # FREEBSD SPECIFIC CONFIGURATION
 #
 
-SRCS +=		$(wildcard src/bsd/*.c) $(wildcard src/unix/*.c)
-HDRS +=		$(wildcard src/bsd/*.h) $(wildcard src/unix/*.h)
+SRCS +=		$(wildcard src/bsd/*.c src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h src/unix/*.h)
 
 LIBS =
 
@@ -14,10 +14,8 @@ CPPFLAGS +=	-DFBSD_NO_80211=1
 endif
 
 ifdef LIBNET
-
 CPPFLAGS +=	-DSPOOF -I$(PREFIX)/include
 LIBS +=		-L$(PREFIX)/lib -lnet
-
 endif
 
 ifdef OLSRD_PLUGIN

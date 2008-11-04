@@ -40,20 +40,18 @@ FLEX ?=		flex
 TAGCMD ?=	etags
 
 # target directories and names
+PREFIX  ?= /usr/local
 DESTDIR ?=
-SBINDIR ?= $(DESTDIR)/usr/sbin
-ETCDIR  ?= $(DESTDIR)/etc
-LIBDIR  ?= $(DESTDIR)/usr/lib
-DOCDIR  ?= $(DESTDIR)/usr/share/doc
-MANDIR  ?= $(DESTDIR)/usr/share/man
+SBINDIR ?= $(DESTDIR)$(PREFIX)/sbin
+ETCDIR  ?= $(DESTDIR)$(subst /usr/etc,/etc,$(PREFIX)/etc)
+LIBDIR  ?= $(DESTDIR)$(PREFIX)/lib
+DOCDIR  ?= $(DESTDIR)$(PREFIX)/share/doc
+MANDIR  ?= $(DESTDIR)$(PREFIX)/share/man
 EXENAME ?= olsrd
 CFGNAME ?= $(EXENAME).conf
 CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 
-CPPFLAGS =	-Isrc
-ifneq ($(TOPDIR),.)
-CPPFLAGS +=	-I$(TOPDIR)/src
-endif
+CPPFLAGS =	$(filter-out -I./src,-Isrc -I$(TOPDIR)/src)
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
@@ -235,7 +233,7 @@ help:
 	@echo '************************************'
 	@echo
 
-ifeq ($(filter clean% %clean, $(MAKECMDGOALS)),)
+ifeq ($(filter clean% %clean rpm, $(MAKECMDGOALS)),)
 # include dependencies - we don't need any dependency for a everytime generated files
 -include $(filter-out src/builddata.%,$(SRCS:%.c=%.d))
 endif
