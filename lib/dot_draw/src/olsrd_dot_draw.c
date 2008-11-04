@@ -136,9 +136,6 @@ int olsrd_plugin_init(void)
   ipc_socket = -1;
   ipc_connection = -1;
 
-  /* Register the "ProcessChanges" function */
-  register_pcf(&pcf_event);
-
   plugin_ipc_init();
 
   return 1;
