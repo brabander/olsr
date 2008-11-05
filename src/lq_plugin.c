@@ -387,6 +387,7 @@ olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
 					  source->linkquality);
 }
 
+#if 0
 /*
  * olsr_clear_tc_lq
  * 
@@ -399,6 +400,7 @@ olsr_clear_tc_lq(struct tc_mpr_addr *target)
 {
   active_lq_handler->clear_tc(target->linkquality);
 }
+#endif
 
 /*
  * olsr_malloc_hello_neighbor
