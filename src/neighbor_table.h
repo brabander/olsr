@@ -62,9 +62,9 @@ struct neighbor_entry
   union olsr_ip_addr           neighbor_main_addr;
   olsr_u8_t                    status;
   olsr_u8_t                    willingness;
-  olsr_bool                    is_mpr;
-  olsr_bool                    was_mpr; /* Used to detect changes in MPR */
-  olsr_bool                    skip;
+  unsigned char                is_mpr:1;
+  unsigned char                was_mpr:1; /* Used to detect changes in MPR */
+  unsigned char                skip:1;
   int                          neighbor_2_nocov;
   int                          linkcount;
   struct neighbor_2_list_entry neighbor_2_list; 

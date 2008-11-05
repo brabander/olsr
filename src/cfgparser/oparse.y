@@ -337,6 +337,10 @@ plstmt:     plparam
 
 imaxipc: TOK_MAXIPC TOK_INTEGER
 {
+  if ($2->integer > 255) {
+    fprintf(stderr, "\"MaxConnections\" must be >= 0 and <= 255 (and not %d)\n", $2->integer);
+    YYABORT;
+  }
   olsr_cnf->ipc_connections = $2->integer;
   free($2);
 }
@@ -698,6 +702,10 @@ isetlqmult: TOK_LQ_MULT TOK_DEFAULT TOK_FLOAT
 
 idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 {
+  if ($2->integer > 127) {
+    fprintf(stderr, "\"DebugLevel\" must be >= 0 and <= 127 (and not %d)\n", $2->integer);
+    YYABORT;
+  }
   olsr_cnf->debug_level = $2->integer;
   PARSER_DEBUG_PRINTF("Debug level: %d\n", olsr_cnf->debug_level);
   free($2);

@@ -45,8 +45,7 @@
 #include "interfaces.h"
 #include "mantissa.h"
 
-struct hello_neighbor
-{
+struct hello_neighbor {
   olsr_u8_t             status;
   olsr_u8_t             link;
   union olsr_ip_addr    main_address;
@@ -56,8 +55,7 @@ struct hello_neighbor
   olsr_u32_t            linkquality[0];
 };
 
-struct hello_message
-{
+struct hello_message {
   olsr_reltime           vtime;
   olsr_reltime           htime;
   union olsr_ip_addr     source_addr;
@@ -69,15 +67,13 @@ struct hello_message
   
 };
 
-struct tc_mpr_addr
-{
+struct tc_mpr_addr {
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
   olsr_u32_t         linkquality[0];
 };
 
-struct tc_message
-{
+struct tc_message {
   olsr_reltime        vtime;
   union olsr_ip_addr  source_addr;
   union olsr_ip_addr  originator;

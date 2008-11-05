@@ -659,10 +659,12 @@ olsr_process_arguments(int argc, char *argv[],
      * Enable additional debugging information to be logged.
      */
     if (strcmp(*argv, "-d") == 0) {
+      int val;
       NEXT_ARG;
       CHECK_ARGC;
 
-      sscanf(*argv,"%d", &cnf->debug_level);
+      sscanf(*argv,"%d", &val);
+      cnf->debug_level = val;
       continue;
     }
 		

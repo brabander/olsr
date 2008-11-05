@@ -194,41 +194,42 @@ typedef enum {
 
 struct olsrd_config
 {
-  int                      debug_level;
-  olsr_bool                no_fork;
-  olsr_bool                host_emul;
-  int                      ip_version;
-  olsr_bool                allow_no_interfaces;
+ int                      ip_version;
+  size_t                   ipsize;               /* Size of address */
+  olsr_u8_t                maxplen;              /* maximum prefix len */
+  unsigned char            no_fork:1;
+  unsigned char            host_emul:1;
+  unsigned char            allow_no_interfaces:1;
+  unsigned char            willingness_auto:1;
+  unsigned char            use_hysteresis:1;
+  unsigned char            clear_screen:1;
+  unsigned char            del_gws:1;            /* Delete InternetGWs at startup */
   olsr_u16_t               tos;
   olsr_u8_t                rttable;
   olsr_u8_t                rttable_default;
-  olsr_u8_t                willingness;
-  olsr_bool                willingness_auto;
-  int                      ipc_connections;
-  olsr_bool                use_hysteresis;
+  olsr_u8_t                ipc_connections;
+  olsr_8_t                 debug_level;
   olsr_fib_metric_options  fib_metric;
   struct hyst_param        hysteresis_param;
-  struct plugin_entry      *plugins;
-  struct ip_prefix_list    *hna_entries;
-  struct ip_prefix_list    *ipc_nets;
-  struct olsr_if           *interfaces;
+  struct plugin_entry     *plugins;
+  struct ip_prefix_list   *hna_entries;
+  struct ip_prefix_list   *ipc_nets;
+  struct olsr_if          *interfaces;
+  //float                    pollrate;
   olsr_u32_t               pollrate; /* in microseconds */
   float                    nic_chgs_pollrate;
-  olsr_bool                clear_screen;
   olsr_u8_t                tc_redundancy;
   olsr_u8_t                mpr_coverage;
   olsr_u8_t                lq_level;
   olsr_u8_t                lq_fish;
   float                    lq_dinter;
   float                    lq_aging;
-  char                     *lq_algorithm;
+  char                    *lq_algorithm;
   olsr_u8_t                lq_dlimit;
+  olsr_u8_t                willingness;
 
   /* Stuff set by olsrd */
   olsr_u16_t               system_tick_divider;  /* Tick resolution */
-  olsr_u8_t                maxplen;              /* maximum prefix len */
-  size_t                   ipsize;               /* Size of address */
-  olsr_bool                del_gws;              /* Delete InternetGWs at startup */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
   float                    will_int;
   int                      exit_value;           /* Global return value for process termination */

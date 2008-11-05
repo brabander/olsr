@@ -73,8 +73,7 @@ WinSockPError(const char *);
  *at every route update. Both delete
  *and add
  */
-struct ipcmsg 
-{
+struct ipcmsg {
   olsr_u8_t          msgtype;
   olsr_u16_t         size;
   olsr_u8_t          metric;
@@ -85,8 +84,7 @@ struct ipcmsg
 };
 
 
-struct ipc_net_msg
-{
+struct ipc_net_msg {
   olsr_u8_t            msgtype;
   olsr_u16_t           size;
   olsr_u8_t            mids; /* No. of extra interfaces */
