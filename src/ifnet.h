@@ -53,8 +53,10 @@
 
 #include "olsr_cfg.h"
 
+#if 0
 int
 set_flag(char *, short);
+#endif
 
 void
 check_interface_updates(void *);
