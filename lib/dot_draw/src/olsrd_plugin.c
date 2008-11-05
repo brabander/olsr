@@ -41,16 +41,15 @@
 /*
  * Dynamic linked library for the olsr.org olsr daemon
  */
+#include "olsrd_dot_draw.h"
+#include "olsr.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-
-#include "olsr.h"
-#include "olsrd_plugin.h"
-#include "olsrd_dot_draw.h"
 
 
 #define PLUGIN_NAME    "OLSRD dot draw plugin"
