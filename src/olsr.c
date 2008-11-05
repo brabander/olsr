@@ -64,7 +64,6 @@
 #include "lq_plugin.h"
 
 #include <stdarg.h>
-#include <signal.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -610,8 +609,7 @@ olsr_exit(const char *msg, int val)
   olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
   fflush(stdout);
   olsr_cnf->exit_value = val;
-
-  raise(SIGTERM);
+  app_state = STATE_SHUTDOWN;
 }
 
 
