@@ -53,7 +53,6 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <time.h>
-#include <math.h>
 
 #include "olsr_types.h"
 #include "../../../src/olsrd_plugin.h"

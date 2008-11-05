@@ -50,7 +50,6 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <time.h>
-#include <math.h>
 #include <stdio.h>
 
 #include "olsr_types.h"
