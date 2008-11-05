@@ -592,7 +592,6 @@ void RemoveInterface(struct olsr_if *IntConf)
 int add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
-  union olsr_ip_addr null_addr;
   olsr_u32_t addr[4];
   struct ipaddr_str buf;
   size_t name_size;
@@ -623,8 +622,7 @@ int add_hemu_if(struct olsr_if *iface)
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  memset(&null_addr, 0, olsr_cnf->ipsize);
-  if(ipequal(&null_addr, &olsr_cnf->main_addr))
+  if(ipequal(&all_zero, &olsr_cnf->main_addr))
     {
       olsr_cnf->main_addr = iface->hemu_ip;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));

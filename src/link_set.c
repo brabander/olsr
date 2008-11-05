@@ -302,7 +302,6 @@ set_loss_link_multiplier(struct link_entry *entry)
   struct olsr_if *cfg_inter;
   struct olsr_lq_mult *mult;
   olsr_u32_t val = 0;
-  union olsr_ip_addr null_addr;
 
   /* find the interface for the link */
   inter = if_ifwithaddr(&entry->local_iface_addr);
@@ -315,17 +314,13 @@ set_loss_link_multiplier(struct link_entry *entry)
     }
   }
 
-  /* create a null address for comparison */
-  memset(&null_addr, 0, sizeof(union olsr_ip_addr));
-
   /* loop through the multiplier entries */
   for (mult = cfg_inter->cnf->lq_mult; mult != NULL; mult = mult->next) {
-
     /*
      * use the default multiplier only if there isn't any entry that
      * has a matching IP address.
      */
-    if ((val == 0 && ipequal(&mult->addr, &null_addr)) ||
+    if ((val == 0 && ipequal(&mult->addr, &all_zero)) ||
 	ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
       val = mult->value;
     }

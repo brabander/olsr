@@ -151,9 +151,6 @@ main(int argc, char *argv[])
   /* Using PID as random seed */
   srandom(getpid());
 
-  /* Init widely used statics */
-  memset(&all_zero, 0, sizeof(all_zero));
-
   /*
    * Set configfile name and
    * check if a configfile name was given as parameter

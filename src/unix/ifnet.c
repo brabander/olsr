@@ -72,9 +72,6 @@
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 
-/* global variables are automatically initialized with '\0' */
-static const union olsr_ip_addr null_addr;
-
 #if 0
 int
 set_flag(char *ifname, short flag __attribute__((unused)))
@@ -444,7 +441,7 @@ int add_hemu_if (struct olsr_if *iface)
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  if (ipequal(&null_addr, &olsr_cnf->main_addr)) {
+  if (ipequal(&all_zero, &olsr_cnf->main_addr)) {
     olsr_cnf->main_addr = iface->hemu_ip;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -807,7 +804,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   /*
    * Set main address if this is the only interface
    */
-  if (ipequal(&null_addr, &olsr_cnf->main_addr)) {
+  if (ipequal(&all_zero, &olsr_cnf->main_addr)) {
     struct ipaddr_str buf;
     olsr_cnf->main_addr = ifp->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));

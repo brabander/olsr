@@ -47,4 +47,7 @@
 #include <ws2tcpip.h>
 #undef interface
 
+#undef IN6ADDR_ANY_INIT
+#define IN6ADDR_ANY_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } }
+
 #endif
