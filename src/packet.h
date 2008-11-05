@@ -63,8 +63,7 @@ struct hello_message {
   olsr_u8_t              hop_count;
   olsr_u8_t              ttl;
   olsr_u8_t              willingness;
-  struct hello_neighbor  *neighbors;
-  
+  struct hello_neighbor  *neighbors;  
 };
 
 struct tc_mpr_addr {
