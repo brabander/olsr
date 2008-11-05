@@ -41,17 +41,9 @@
 #define _OLSR_HYSTERESIS
 
 #include "link_set.h"
-#include "mantissa.h"
-
-float
-olsr_hyst_calc_stability
-(float);
 
 int
 olsr_process_hysteresis(struct link_entry *);
-
-float
-olsr_hyst_calc_instability(float);
 
 void
 olsr_update_hysteresis_hello(struct link_entry *, olsr_reltime);
@@ -59,4 +51,14 @@ olsr_update_hysteresis_hello(struct link_entry *, olsr_reltime);
 void
 update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, olsr_u16_t);
 
+static inline float olsr_hyst_calc_stability(float old_quality) { return (((1 - olsr_cnf->hysteresis_param.scaling) * old_quality) + olsr_cnf->hysteresis_param.scaling); }
+
+static inline float olsr_hyst_calc_instability(float old_quality) { return ((1 - olsr_cnf->hysteresis_param.scaling) * old_quality); }
+
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */
