@@ -76,7 +76,7 @@ add_del_route(const struct rt_entry *rt, int add)
                                           routing socket */
   unsigned char buff[512];
   unsigned char *walker;	       /* points within the buffer */
-  struct sockaddr_in sin;	       /* internet style sockaddr */
+  struct sockaddr_in sin4;	       /* internet style sockaddr */
   struct sockaddr_dl *sdl;	       /* link level sockaddr */
   struct ifaddrs *addrs;
   struct ifaddrs *awalker;
@@ -93,10 +93,10 @@ add_del_route(const struct rt_entry *rt, int add)
   }
 
   memset(buff, 0, sizeof(buff));
-  memset(&sin, 0, sizeof(sin));
+  memset(&sin4, 0, sizeof(sin4));
 
-  sin.sin_len = sizeof(sin);
-  sin.sin_family = AF_INET;
+  sin4.sin_len = sizeof(sin4);
+  sin4.sin_family = AF_INET;
 
   sin_size = 1 + ((sizeof(struct sockaddr_in) - 1) | 3);
   sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
@@ -125,18 +125,18 @@ add_del_route(const struct rt_entry *rt, int add)
 
   rtm->rtm_addrs = RTA_DST;	/* part of the header */
 
-  sin.sin_addr = rt->rt_dst.prefix.v4;
-  OLSR_PRINTF(8, "\t- Destination of the route: %s\n", inet_ntoa(sin.sin_addr));
+  sin4.sin_addr = rt->rt_dst.prefix.v4;
+  OLSR_PRINTF(8, "\t- Destination of the route: %s\n", inet_ntoa(sin4.sin_addr));
 
   /* change proto or tos here */
 #ifdef CODE_IS_FIXED_ON_FBSD
   OLSR_PRINTF(8, "\t- Setting Protocol: 0\n");
-  ((struct sockaddr_rt *)(&sin))->srt_proto = 0;
+  ((struct sockaddr_rt *)(&sin4))->srt_proto = 0;
   OLSR_PRINTF(8, "\t- Setting TOS: 0\n");
-  ((struct sockaddr_rt *)(&sin))->srt_tos = 0;
+  ((struct sockaddr_rt *)(&sin4))->srt_tos = 0;
 #endif
 
-  memcpy(walker, &sin, sizeof(sin));
+  memcpy(walker, &sin4, sizeof(sin4));
   walker += sin_size;
 
   /**********************************************************************
@@ -148,12 +148,12 @@ add_del_route(const struct rt_entry *rt, int add)
     nexthop = olsr_get_nh(rt);
 
     if ((rtm->rtm_flags & RTF_GATEWAY)) {	/* GATEWAY */
-      sin.sin_addr = nexthop->gateway.v4;
+      sin4.sin_addr = nexthop->gateway.v4;
 
-      memcpy(walker, &sin, sizeof(sin));
+      memcpy(walker, &sin4, sizeof(sin4));
       walker += sin_size;
 
-      OLSR_PRINTF(8, "\t- Gateway of the route: %s\n", inet_ntoa(sin.sin_addr));
+      OLSR_PRINTF(8, "\t- Gateway of the route: %s\n", inet_ntoa(sin4.sin_addr));
     }
     /* NO GATEWAY - destination is directly reachable */
     else {
@@ -209,12 +209,12 @@ add_del_route(const struct rt_entry *rt, int add)
     if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
       return -1;
     }
-    sin.sin_addr = mask.v4;
+    sin4.sin_addr = mask.v4;
 
-    memcpy(walker, &sin, sizeof(sin));
+    memcpy(walker, &sin4, sizeof(sin4));
     walker += sin_size;
 
-    OLSR_PRINTF(8, "\t- Netmask of the route: %s\n", inet_ntoa(sin.sin_addr));
+    OLSR_PRINTF(8, "\t- Netmask of the route: %s\n", inet_ntoa(sin4.sin_addr));
   }
 
   /**********************************************************************

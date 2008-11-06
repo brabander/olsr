@@ -402,7 +402,7 @@ gethemusocket(struct sockaddr_in *pin)
 int
 getsocket(int bufspace, char *int_name)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sin4;
   int on;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
@@ -452,11 +452,11 @@ getsocket(int bufspace, char *int_name)
     return -1;
   }
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(OLSRPORT);
-  sin.sin_addr.s_addr = INADDR_ANY;
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+  memset(&sin4, 0, sizeof(sin4));
+  sin4.sin_family = AF_INET;
+  sin4.sin_port = htons(OLSRPORT);
+  sin4.sin_addr.s_addr = INADDR_ANY;
+  if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
     close(sock);
@@ -483,7 +483,7 @@ getsocket(int bufspace, char *int_name)
 int
 getsocket6(int bufspace, char *int_name)
 {
-  struct sockaddr_in6 sin;
+  struct sockaddr_in6 sin6;
   int on;
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
   if (sock < 0) {
@@ -556,11 +556,11 @@ getsocket6(int bufspace, char *int_name)
     return -1;
   }
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin6_family = AF_INET6;
-  sin.sin6_port = htons(OLSRPORT);
+  memset(&sin6, 0, sizeof(sin6));
+  sin6.sin6_family = AF_INET6;
+  sin6.sin6_port = htons(OLSRPORT);
   //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+  if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
     close(sock);

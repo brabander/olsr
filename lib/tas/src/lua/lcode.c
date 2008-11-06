@@ -415,25 +415,25 @@ int luaK_exp2RK (FuncState *fs, expdesc *e) {
 }
 
 
-void luaK_storevar (FuncState *fs, expdesc *var, expdesc *exp) {
+void luaK_storevar (FuncState *fs, expdesc *var, expdesc *exp_) {
   switch (var->k) {
     case VLOCAL: {
-      freeexp(fs, exp);
-      luaK_exp2reg(fs, exp, var->info);
+      freeexp(fs, exp_);
+      luaK_exp2reg(fs, exp_, var->info);
       return;
     }
     case VUPVAL: {
-      int e = luaK_exp2anyreg(fs, exp);
+      int e = luaK_exp2anyreg(fs, exp_);
       luaK_codeABC(fs, OP_SETUPVAL, e, var->info, 0);
       break;
     }
     case VGLOBAL: {
-      int e = luaK_exp2anyreg(fs, exp);
+      int e = luaK_exp2anyreg(fs, exp_);
       luaK_codeABx(fs, OP_SETGLOBAL, e, var->info);
       break;
     }
     case VINDEXED: {
-      int e = luaK_exp2RK(fs, exp);
+      int e = luaK_exp2RK(fs, exp_);
       luaK_codeABC(fs, OP_SETTABLE, var->info, var->aux, e);
       break;
     }
@@ -442,7 +442,7 @@ void luaK_storevar (FuncState *fs, expdesc *var, expdesc *exp) {
       break;
     }
   }
-  freeexp(fs, exp);
+  freeexp(fs, exp_);
 }
 
 

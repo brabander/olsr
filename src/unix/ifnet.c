@@ -433,9 +433,7 @@ int add_hemu_if (struct olsr_if *iface)
   strscpy(ifp->int_name, "hcif01", name_size);
 
   OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
-
   OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
-
   OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
   ifp->int_next = ifnet;
@@ -447,26 +445,21 @@ int add_hemu_if (struct olsr_if *iface)
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
   }
 
-  ifp->int_mtu = OLSR_DEFAULT_MTU;
-
-  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  ifp->int_mtu = OLSR_DEFAULT_MTU - (olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE);
 
   /* Set up buffer */
   net_add_buffer(ifp);
 
-
   if (olsr_cnf->ip_version == AF_INET) {
-    struct sockaddr_in sin;
+    struct sockaddr_in sin4;
  
-    memset(&sin, 0, sizeof(sin));
-
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port = htons(10150);
+    memset(&sin4, 0, sizeof(sin4));
+    sin4.sin_family = AF_INET;
+    sin4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin4.sin_port = htons(10150);
  
     /* IP version 4 */
     ifp->ip_addr.v4 = iface->hemu_ip.v4;
- 
     memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
     /*
@@ -475,7 +468,7 @@ int add_hemu_if (struct olsr_if *iface)
      * on what interface the message is transmitted
      */
 
-    ifp->olsr_socket = gethemusocket(&sin);
+    ifp->olsr_socket = gethemusocket(&sin4);
     if (ifp->olsr_socket < 0) {
       fprintf(stderr, "Could not initialize socket... exiting!\n\n");
       olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");

@@ -132,9 +132,8 @@ frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr 
 int
 ipc_init(void)
 {
-  //int flags;
-  struct   sockaddr_in sin;
-  int yes = 1;
+  struct sockaddr_in sin4;
+  int yes;
 
   /* Add parser function */
   olsr_parser_add_function(&frontend_msgparser, PROMISCUOUS, 0);
@@ -146,23 +145,24 @@ ipc_init(void)
     olsr_exit("IPC socket", EXIT_FAILURE);
   }
 
+  yes = 1;
   if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     perror("SO_REUSEADDR failed");
     return 0;
   }
 
   /* complete the socket structure */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = htons(IPC_PORT);
+  memset(&sin4, 0, sizeof(sin4));
+  sin4.sin_family = AF_INET;
+  sin4.sin_addr.s_addr = INADDR_ANY;
+  sin4.sin_port = htons(IPC_PORT);
 
   /* bind the socket to the port number */
-  if (bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
+  if (bind(ipc_sock, (struct sockaddr *)&sin4, sizeof(sin4)) == -1) {
     perror("IPC bind");
     OLSR_PRINTF(1, "Will retry in 10 seconds...\n");
     sleep(10);
-    if (bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
+    if (bind(ipc_sock, (struct sockaddr *)&sin4, sizeof(sin4)) == -1) {
       perror("IPC bind");
       olsr_exit("IPC bind", EXIT_FAILURE);
     }
@@ -208,29 +208,22 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
   socklen_t addrlen = sizeof (struct sockaddr_in);
 
   ipc_conn = accept(fd, (struct sockaddr *)&pin, &addrlen);
-  if (ipc_conn == -1)
-    {
-      perror("IPC accept");
-      olsr_exit("IPC accept", EXIT_FAILURE);
+  if (ipc_conn == -1) {
+    perror("IPC accept");
+    olsr_exit("IPC accept", EXIT_FAILURE);
+  } else {
+    OLSR_PRINTF(1, "Front end connected\n");
+    addr = inet_ntoa(pin.sin_addr);
+    if (ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
+      ipc_send_net_info(ipc_conn);
+      ipc_send_all_routes(ipc_conn);
+      OLSR_PRINTF(1, "Connection from %s\n",addr);
+    } else {
+      OLSR_PRINTF(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
+      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
+      CLOSE(ipc_conn);
     }
-  else
-    {
-      OLSR_PRINTF(1, "Front end connected\n");
-      addr = inet_ntoa(pin.sin_addr);
-      if (ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr))
-	{
-	  ipc_send_net_info(ipc_conn);
-	  ipc_send_all_routes(ipc_conn);
-	  OLSR_PRINTF(1, "Connection from %s\n",addr);
-	}
-      else
-	{
-	  OLSR_PRINTF(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	  olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
-	  CLOSE(ipc_conn);
-	}
-    }
-
+  }
 }
 
 #if 0
@@ -242,20 +235,17 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
  *@return 1
  */
 static int
-ipc_input(int sock __attribute__((unused)))
+ipc_input(int sock)
 {
-  union 
-  {
+  union {
     char	buf[MAXPACKETSIZE+1];
     struct olsr	olsr;
   } inbuf;
 
-
-  if (recv(sock, dir, sizeof(dir), 0) == -1) 
-    {
-      perror("recv");
-      exit(1);
-    }
+  if (recv(sock, dir, sizeof(dir), 0) == -1) {
+    perror("recv");
+    exit(1);
+  }
   return 1;
 }
 #endif
@@ -270,15 +260,13 @@ ipc_input(int sock __attribute__((unused)))
 static void
 frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__((unused)), union olsr_ip_addr *from_addr __attribute__((unused)))
 {
-  int size;
-
   if (ipc_conn < 0) {
     return;
   }
-
-  size = olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize);
-  
-  if (send(ipc_conn, (void *)msg, size, MSG_NOSIGNAL) < 0) {
+  if (send(ipc_conn,
+	   (void *)msg,
+	   olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize),
+	   MSG_NOSIGNAL) < 0) {
     OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
     CLOSE(ipc_conn);
   }
@@ -310,7 +298,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   if (ipc_conn < 0) {
     return 0;
   }
-  memset(&packet, 0, sizeof(struct ipcmsg));
+  memset(&packet, 0, sizeof(packet));
   packet.size = htons(IPC_PACK_SIZE);
   packet.msgtype = ROUTE_IPC;
 
@@ -344,7 +332,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   printf("\n");
   */
   
-  if (send(ipc_conn, (void *) &packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) { // MSG_NOSIGNAL to avoid sigpipe
+  if (send(ipc_conn, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) { // MSG_NOSIGNAL to avoid sigpipe
     OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
     CLOSE(ipc_conn);
     return -1;
@@ -374,7 +362,7 @@ ipc_send_all_routes(int fd)
     packet.target_addr = rt->rt_dst.prefix;
 
     packet.add = 1;
-    packet.metric = (olsr_u8_t)(rt->rt_best->rtp_metric.hops);
+    packet.metric = rt->rt_best->rtp_metric.hops;
 
     packet.gateway_addr = rt->rt_nexthop.gateway;
 

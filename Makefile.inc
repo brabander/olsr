@@ -77,9 +77,9 @@ ALL_WARNINGS +=	-Wcast-qual
 ALL_WARNINGS +=	-Wshadow
 ALL_WARNINGS +=	-Wformat-2
 ALL_WARNINGS +=	-Wsequence-point
-# the following 4 do not work yet and need more work on it
-#ALL_WARNINGS +=	-Wpointer-arith
-#ALL_WARNINGS +=	-Wcast-align
+ALL_WARNINGS +=	-Wpointer-arith
+ALL_WARNINGS +=	-Wcast-align
+# the following 2 do not work yet and need more work on it
 #ALL_WARNINGS +=	-Wconversion
 #ALL_WARNINGS +=	-Wredundant-decls
 ifeq ($(MUDFLAP),0)

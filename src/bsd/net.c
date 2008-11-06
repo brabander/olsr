@@ -347,7 +347,7 @@ gethemusocket(struct sockaddr_in *pin)
 int
 getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sin4;
   int on;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
@@ -392,11 +392,11 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
     }
   }
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(OLSRPORT);
-  sin.sin_addr.s_addr = INADDR_ANY;
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+  memset(&sin4, 0, sizeof(sin4));
+  sin4.sin_family = AF_INET;
+  sin4.sin_port = htons(OLSRPORT);
+  sin4.sin_addr.s_addr = INADDR_ANY;
+  if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
     close(sock);
@@ -417,7 +417,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 int
 getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
 {
-  struct sockaddr_in6 sin;
+  struct sockaddr_in6 sin6;
   int on;
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
@@ -463,10 +463,10 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   }
 #endif
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin6_family = AF_INET6;
-  sin.sin6_port = htons(OLSRPORT);
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+  memset(&sin6, 0, sizeof(sin6));
+  sin6.sin6_family = AF_INET6;
+  sin6.sin6_port = htons(OLSRPORT);
+  if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
     close(sock);
@@ -721,7 +721,7 @@ olsr_recvfrom(int s,
   } cmu;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
-  struct sockaddr_in *sin = (struct sockaddr_in *)from;
+  struct sockaddr_in *sin4 = (struct sockaddr_in *)from;
   struct sockaddr_in6 *sin6;
   struct in6_addr *iaddr6;
   struct in6_pktinfo *pkti;
@@ -774,7 +774,7 @@ olsr_recvfrom(int s,
 	      count, inet_ntop(olsr_cnf->ip_version,
 			       olsr_cnf->ip_version ==
 			       AF_INET6 ? (char *)&sin6->
-			       sin6_addr : (char *)&sin->sin_addr, addrstr,
+			       sin6_addr : (char *)&sin4->sin_addr, addrstr,
 			       sizeof(addrstr)), ifc->int_name, iname);
 
   if (strcmp(ifc->int_name, iname) != 0) {
