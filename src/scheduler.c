@@ -494,8 +494,6 @@ olsr_init_timers(void)
 {
   int idx;
 
-  OLSR_PRINTF(5, "TIMER: init timers\n");
-
   /* Grab initial timestamp */
   now_times = olsr_times();
     
