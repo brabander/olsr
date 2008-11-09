@@ -328,7 +328,6 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 {
   struct sockaddr_in pin;
   socklen_t addrlen;
-  char *addr;
   char req[MAX_HTTPREQ_SIZE];
   static char body[HTML_BUFSIZE];
   char req_type[11];
@@ -355,8 +354,6 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
                 olsr_ip_to_string(&strbuf, (union olsr_ip_addr *)&pin.sin_addr.s_addr));
     goto close_connection;
   }
-
-  addr = inet_ntoa(pin.sin_addr);
 
   memset(req, 0, sizeof(req));
   memset(body, 0, sizeof(body));
