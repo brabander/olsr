@@ -155,11 +155,13 @@ struct static_txt_file_entry
   const char *data;
 };
 
+#if ADMIN_INTERFACE
 struct dynamic_file_entry
 {
   const char *filename;
   int(*process_data_cb)(char *, olsr_u32_t, char *, olsr_u32_t);
 };
+#endif
 
 static int get_http_socket(int);
 
@@ -241,12 +243,12 @@ static const struct static_txt_file_entry static_txt_files[] = {
 };
 
 
-static const struct dynamic_file_entry dynamic_files[] = {
 #if ADMIN_INTERFACE
+static const struct dynamic_file_entry dynamic_files[] = {
     {"set_values", process_set_values},
-#endif
     {NULL, NULL}
 };
+#endif
 
 
 static int
