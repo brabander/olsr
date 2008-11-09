@@ -63,67 +63,66 @@ static const char admin_basic_setting_float[] = "<td><strong>%s</strong></td><td
 static const char admin_basic_setting_string[] = "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
 
 
-int
-build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
+void
+build_admin_body(struct autobuf *abuf)
 {
-  int size = 0;
-  size += snprintf(&buf[size], bufsize-size,
+  abuf_puts(abuf,
 		   "<strong>Administrator interface</strong><hr>\n"
 		   "<h2>Change basic settings</h2>\n"
 		   "<form action=\"set_values\" method=\"post\">\n"
 		   "<table width=\"100%%\">\n");
 
-  size += snprintf(&buf[size], bufsize-size, "<tr>\n");
+  abuf_puts(abuf, "<tr>\n");
 
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
+  abuf_appendf(abuf, admin_basic_setting_int,
 		  "Debug level:", "debug_level", 2, olsr_cnf->debug_level);
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
+  abuf_appendf(abuf, admin_basic_setting_float,
 		   "Pollrate:", "pollrate", 4, conv_pollrate_to_secs(olsr_cnf->pollrate));
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_string,
+  abuf_appendf(abuf, admin_basic_setting_string,
 		  "TOS:", "tos", 6, "TBD");
 
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n"
+  abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
 
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
+  abuf_appendf(abuf, admin_basic_setting_int,
 		  "TC redundancy:", "tc_redundancy", 1, olsr_cnf->tc_redundancy);
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
+  abuf_appendf(abuf, admin_basic_setting_int,
 		  "MPR coverage:", "mpr_coverage", 1, olsr_cnf->mpr_coverage);
-  size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
+  abuf_appendf(abuf, admin_basic_setting_int,
 		  "Willingness:", "willingness", 1, olsr_cnf->willingness);
 
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n"
+  abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
 
   if(olsr_cnf->use_hysteresis) {
-    size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
+    abuf_appendf(abuf, admin_basic_setting_float,
                      "Hyst scaling:", "hyst_scaling", 4, olsr_cnf->hysteresis_param.scaling);
 
-    size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
+    abuf_appendf(abuf, admin_basic_setting_float,
                      "Lower thr:", "hyst_lower", 4, olsr_cnf->hysteresis_param.thr_low);
-    size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
+    abuf_appendf(abuf, admin_basic_setting_float,
                      "Upper thr:", "hyst_upper", 4, olsr_cnf->hysteresis_param.thr_high);
   } else {
-    size += snprintf(&buf[size], bufsize-size, "<td>Hysteresis disabled</td>\n");
+    abuf_puts(abuf, "<td>Hysteresis disabled</td>\n");
   }
 
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n"
+  abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
   
   if(olsr_cnf->lq_level) {
-    size += snprintf(&buf[size], bufsize-size, admin_basic_setting_int,
+    abuf_appendf(abuf, admin_basic_setting_int,
                      "LQ level:", "lq_level", 1, olsr_cnf->lq_level);
-    size += snprintf(&buf[size], bufsize-size, admin_basic_setting_float,
+    abuf_appendf(abuf, admin_basic_setting_float,
                      "LQ aging:", "lq_aging", 2, olsr_cnf->lq_aging);
   } else {
-    size += snprintf(&buf[size], bufsize-size, "<td>LQ disabled</td>\n");
+    abuf_puts(abuf, "<td>LQ disabled</td>\n");
   }
 
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n"
+  abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
-  size += snprintf(&buf[size], bufsize-size, "</tr>\n");
+  abuf_puts(abuf, "</tr>\n");
   
-  size += snprintf(&buf[size], bufsize-size, 
+  abuf_puts(abuf, 
 		   "</table>\n<br>\n"
 		   "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
 		   "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n"
@@ -145,7 +144,7 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
     for(hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
       struct ipaddr_str netbuf;
       olsr_ip_to_string(&netbuf, &hna->net.prefix);
-      size += snprintf(&buf[size], bufsize-size,
+      abuf_appendf(abuf,
                        "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%d\" class=\"input_checkbox\"></td><td>%s</td><td>%d</td></tr>\n",
                        netbuf.buf,
                        hna->net.prefix_len,
@@ -153,11 +152,10 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__((unused)))
                        hna->net.prefix_len);
     }
   }
-  size += snprintf(&buf[size], bufsize-size,
+  abuf_puts(abuf,
 		   "</table>\n<br>\n"
 		   "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n"
 		   "</form>\n");
-  return size;
 }
 
 
@@ -348,49 +346,54 @@ process_param(char *key, char *value)
 }
 
 int
-process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsize __attribute__((unused)))
+process_set_values(char *data, olsr_u32_t data_size, struct autobuf *abuf)
 {
-  int size = 0;
-  int val_start, key_start;
+  int val_start = 0, key_start = 0;
   olsr_u32_t i;
 
-  size += sprintf(buf, "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
+  abuf_puts(abuf,
+	    "<html>\n"
+	    "<head><title>olsr.org httpinfo plugin</title></head>\n"
+	    "<body>\n");
 
-  key_start = 0;
-  val_start = 0;
+  for (i = 0; i < data_size; i++) {
+    switch (data[i]) {
+    case '=':
+      data[i] = '\0';
+      val_start = i + 1;
+      break;
 
-  for(i = 0; i < data_size; i++)
-    {
-      if(data[i] == '=')
-	{
-	  data[i] = '\0';
-	  val_start = i + 1;
-	}
+    case '&':
+      data[i] = '\0';
+      if (!process_param(&data[key_start], &data[val_start])) {
+	abuf_appendf(abuf,
+		     "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", 
+		     &data[key_start], &data[val_start]);
+	return -1;
+      }
 
-      if(data[i] == '&')
-	{
-	  data[i] = '\0';
-	  if(!process_param(&data[key_start], &data[val_start]))
-	    {
-	      size += snprintf(&buf[size], bufsize-size, "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", 
-			      &data[key_start], &data[val_start]);
-	      return -1;
-	    }
-
-	  key_start = i + 1;
-	}
-    }  
-
-  if(!process_param(&data[key_start], &data[val_start]))
-    {
-      size += snprintf(&buf[size], bufsize-size, "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", 
-		      &data[key_start], &data[val_start]);
-      return -1;
+      key_start = i + 1;
+      break;
     }
+  }  
 
-  size += snprintf(&buf[size], bufsize-size, "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n</body>\n</html>\n");
-  size += snprintf(&buf[size], bufsize-size, "\n</body>\n</html>\n");
+  if (!process_param(&data[key_start], &data[val_start])) {
+    abuf_appendf(abuf,
+		 "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", 
+		 &data[key_start], &data[val_start]);
+    return -1;
+  }
 
-  return size;
+  abuf_puts(abuf,
+	    "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n"
+	    "</body>\n"
+	    "</html>\n");
+  return 0;
 }
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

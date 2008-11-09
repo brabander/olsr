@@ -43,6 +43,7 @@
 #define _OLSRD_CFGPARSER_H
 
 #include "olsr_types.h"
+#include "common/autobuf.h"
 
 #ifndef LINUX_POLICY_ROUTING
 #if defined linux
@@ -282,7 +283,7 @@ void olsrd_print_cnf(const struct olsrd_config *);
 
 int olsrd_write_cnf(const struct olsrd_config *, const char *);
 
-  int olsrd_write_cnf_buf(const struct olsrd_config *, olsr_bool, char *, olsr_u32_t);
+void olsrd_write_cnf_buf(struct autobuf *, const struct olsrd_config *, olsr_bool);
 
 void init_default_if_config(struct if_config_options *);
 

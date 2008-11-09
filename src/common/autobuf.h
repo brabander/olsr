@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tønnesen(bernd@firmix.at)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -38,53 +38,26 @@
  *
  */
 
-/*
- * Dynamic linked library for the olsr.org olsr daemon
- */
+#ifndef _COMMON_AUTOBUF_H
+#define _COMMON_AUTOBUF_H
 
-#ifndef _OLSRD_HTTP_INFO
-#define _OLSRD_HTTP_INFO
+#include <stdarg.h>
+#include <time.h>
 
-#include "olsrd_plugin.h"
-#include "plugin_util.h"
-#include "common/autobuf.h"
-
-
-#define HTTP_VERSION "HTTP/1.1"
-
-/**Response types */
-#define HTTP_200 HTTP_VERSION " 200 OK\r\n"
-#define HTTP_400 HTTP_VERSION " 400 Bad Request\r\n"
-#define HTTP_404 HTTP_VERSION " 404 Not Found\r\n"
-
-
-#define HTTP_400_MSG "<html><h1>400 - ERROR</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
-#define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
-
-typedef int (*process_data_func)(char*, olsr_u32_t, struct autobuf *abuf);
-
-
-typedef enum {
-    HTTP_BAD_REQ,
-    HTTP_BAD_FILE,
-    HTTP_OK
-} http_header_type;
-
-
-struct http_stats {
-    olsr_u32_t ok_hits;
-    olsr_u32_t dyn_hits;
-    olsr_u32_t err_hits;
-    olsr_u32_t ill_hits;
+#define AUTOBUFCHUNK	4096
+struct autobuf {
+    int size;
+    int len;
+    char *buf;
 };
 
-/* Destructor function */
-void olsr_plugin_exit(void);
-void olsr_plugin_exit(void);
-
-#if 0
-extern int netsprintf(char *str, const char* format, ...);
-#endif
+int  abuf_init(struct autobuf *autobuf, int initial_size);
+void abuf_free(struct autobuf *autobuf);
+int  abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__((format(printf, 2, 0)));
+int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+int  abuf_puts(struct autobuf *autobuf, const char *s);
+int  abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *tm);
+int  abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len);
 
 #endif
 
