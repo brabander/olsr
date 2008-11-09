@@ -353,7 +353,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     struct ipaddr_str strbuf;
     olsr_printf(0, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, (union olsr_ip_addr *)&pin.sin_addr.s_addr));
-    close(client_sockets[curr_clients]);
+    goto close_connection;
   }
 
   addr = inet_ntoa(pin.sin_addr);
