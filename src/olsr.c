@@ -239,6 +239,9 @@ olsr_trigger_forced_update(void *unused __attribute__((unused))) {
 void
 olsr_init_tables(void)
 {  
+  /* Some cookies for stats keeping */
+  static struct olsr_cookie_info *periodic_spf_timer_cookie = NULL;
+
   changes_topology = OLSR_FALSE;
   changes_neighborhood = OLSR_FALSE;
   changes_hna = OLSR_FALSE;
@@ -286,8 +289,11 @@ olsr_init_tables(void)
   
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
+    periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF",
+                                                  OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
-                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, 0);
+                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL,
+                     periodic_spf_timer_cookie->ci_id);
   }
 }
 
@@ -461,13 +467,19 @@ set_buffer_timer(struct interface *ifn)
 void
 olsr_init_willingness(void)
 {
+  /* Some cookies for stats keeping */
+  static struct olsr_cookie_info *willingness_timer_cookie = NULL;
+
   if (olsr_cnf->willingness_auto) {
 
     /* Run it first and then periodic. */
     olsr_update_willingness(NULL);
 
+    willingness_timer_cookie = olsr_alloc_cookie("Update Willingness",
+                                                 OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer((unsigned int)olsr_cnf->will_int * MSEC_PER_SEC, 5,
-                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, 0);
+                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL,
+                     willingness_timer_cookie->ci_id);
   }
 }
 

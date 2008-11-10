@@ -56,6 +56,7 @@ static struct olsr_cookie_info *tc_edge_gc_timer_cookie = NULL;
 static struct olsr_cookie_info *tc_validity_timer_cookie = NULL;
 static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
 struct olsr_cookie_info *tc_mem_cookie = NULL;
+struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
 
 /*
  * Sven-Ola 2007-Dec: These four constants include an assumption
@@ -189,6 +190,8 @@ olsr_init_tc(void)
     olsr_alloc_cookie("TC edge GC", OLSR_COOKIE_TYPE_TIMER);
   tc_validity_timer_cookie =
     olsr_alloc_cookie("TC validity", OLSR_COOKIE_TYPE_TIMER);
+  spf_backoff_timer_cookie =
+    olsr_alloc_cookie("SPF backoff", OLSR_COOKIE_TYPE_TIMER);
 
   tc_edge_mem_cookie =
     olsr_alloc_cookie("tc_edge_entry", OLSR_COOKIE_TYPE_MEMORY);

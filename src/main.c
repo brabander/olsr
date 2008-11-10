@@ -102,6 +102,10 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 int
 main(int argc, char *argv[])
 {
+
+  /* Some cookies for stats keeping */
+  static struct olsr_cookie_info *pulse_timer_cookie = NULL;
+
   struct if_config_options default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct ipaddr_str buf;
@@ -320,8 +324,9 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO)) {
+    pulse_timer_cookie = olsr_alloc_cookie("Pulse", OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC,
-                     &generate_stdout_pulse, NULL, 0);
+                     &generate_stdout_pulse, NULL, pulse_timer_cookie->ci_id);
   }
 #endif
 

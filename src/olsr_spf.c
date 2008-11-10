@@ -62,7 +62,7 @@
 #include "hna_set.h"
 #include "common/list.h"
 #include "common/avl.h"
- #include "olsr_spf.h"
+#include "olsr_spf.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
 
@@ -334,8 +334,9 @@ olsr_calculate_routing_table (void)
   /* We are done if our backoff timer is running */
   if (!spf_backoff_timer) {
     spf_backoff_timer = 
-      olsr_start_timer(1000, 5, OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
-                       NULL, 0);
+      olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
+                       OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
+                       NULL, spf_backoff_timer_cookie->ci_id);
   } else {
     return;
   }

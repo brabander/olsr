@@ -60,6 +60,11 @@
 /* head node for all link sets */
 struct list_node link_entry_head;
 
+static struct olsr_cookie_info *link_dead_timer_cookie = NULL;
+static struct olsr_cookie_info *link_loss_timer_cookie = NULL;
+static struct olsr_cookie_info *link_sym_timer_cookie = NULL;
+
+
 olsr_bool link_changes;		       /* is set if changes occur in MPRS set */
 
 void
@@ -83,6 +88,14 @@ olsr_init_link_set(void)
 
   /* Init list head */
   list_head_init(&link_entry_head);
+
+  link_dead_timer_cookie =
+    olsr_alloc_cookie("Link dead", OLSR_COOKIE_TYPE_TIMER);
+  link_loss_timer_cookie =
+    olsr_alloc_cookie("Link loss", OLSR_COOKIE_TYPE_TIMER);
+  link_sym_timer_cookie =
+    olsr_alloc_cookie("Link SYM", OLSR_COOKIE_TYPE_TIMER);
+
 }
 
 
@@ -476,7 +489,8 @@ void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,
-		 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, 0);
+		 OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link,
+                 link_dead_timer_cookie->ci_id);
 }
 
 /**
@@ -566,7 +580,8 @@ add_link_entry(const union olsr_ip_addr *local,
 
     olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
 		   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-		   &olsr_expire_link_loss_timer, new_link, 0);
+		   &olsr_expire_link_loss_timer, new_link,
+                   link_loss_timer_cookie->ci_id);
 
     set_loss_link_multiplier(new_link);
   }
@@ -695,7 +710,8 @@ update_link_entry(const union olsr_ip_addr *local,
     /* L_SYM_time = current time + validity time */
     olsr_set_timer(&entry->link_sym_timer, message->vtime,
 		   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
-		   &olsr_expire_link_sym_timer, entry, 0);
+		   &olsr_expire_link_sym_timer, entry,
+                   link_sym_timer_cookie->ci_id);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
     olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME *
@@ -832,7 +848,8 @@ olsr_update_packet_loss(struct link_entry *entry)
   /* timeout for the first lost packet is 1.5 x htime */
   olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint/2,
 		 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-		 &olsr_expire_link_loss_timer, entry, 0);
+		 &olsr_expire_link_loss_timer, entry,
+                 link_loss_timer_cookie->ci_id);
 }
 
 /*
