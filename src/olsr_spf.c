@@ -50,23 +50,14 @@
  * on the heap.
  */
 
-#include "ipcalc.h"
-#include "defs.h"
-#include "olsr.h"
+#include "olsr_spf.h"
 #include "tc_set.h"
 #include "neighbor_table.h"
-#include "two_hop_neighbor_table.h"
-#include "link_set.h"
 #include "routing_table.h"
-#include "mid_set.h"
-#include "hna_set.h"
-#include "common/list.h"
-#include "common/avl.h"
-#include "olsr_spf.h"
-#include "net_olsr.h"
 #include "lq_plugin.h"
+#include "process_routes.h"
 
-struct timer_entry *spf_backoff_timer = NULL;
+static struct timer_entry *spf_backoff_timer = NULL;
 
 /*
  * avl_comp_etx
@@ -332,14 +323,13 @@ olsr_calculate_routing_table (void)
   int path_count = 0;
 
   /* We are done if our backoff timer is running */
-  if (!spf_backoff_timer) {
-    spf_backoff_timer = 
+  if (spf_backoff_timer) {
+    return;
+  }
+  spf_backoff_timer = 
       olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
                        NULL, spf_backoff_timer_cookie->ci_id);
-  } else {
-    return;
-  }
 
 #ifdef SPF_PROFILING
   gettimeofday(&t1, NULL);
