@@ -55,6 +55,8 @@
 
 struct neighbor_entry neighbortable[HASHSIZE];
 
+/* Some cookies for stats keeping */
+struct olsr_cookie_info *nbr2_list_timer_cookie = NULL;
 
 void
 olsr_init_neighbor_table(void)
@@ -66,6 +68,10 @@ olsr_init_neighbor_table(void)
       neighbortable[i].next = &neighbortable[i];
       neighbortable[i].prev = &neighbortable[i];
     }
+
+  nbr2_list_timer_cookie = olsr_alloc_cookie("2-Hop Neighbor List",
+                                             OLSR_COOKIE_TYPE_TIMER);
+
 }
 
 /**

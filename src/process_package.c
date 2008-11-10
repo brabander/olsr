@@ -110,7 +110,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
         olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
                        message->vtime, OLSR_NBR2_LIST_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
-                       two_hop_neighbor_yet, 0);
+                       two_hop_neighbor_yet, nbr2_list_timer_cookie->ci_id);
         two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
 
         /*
