@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tønnesen(bernd@firmix.at)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -38,56 +38,34 @@
  *
  */
 
-#ifndef _OLSR_PACKET
-#define _OLSR_PACKET
+#ifndef _COMMON_AUTOBUF_H
+#define _COMMON_AUTOBUF_H
 
-#include "olsr_protocol.h"
-#include "interfaces.h"
-#include "mantissa.h"
+#include <stdarg.h>
+#include <time.h>
 
-struct hello_neighbor {
-  olsr_u8_t             status;
-  olsr_u8_t             link;
-  union olsr_ip_addr    main_address;
-  union olsr_ip_addr    address;
-  struct hello_neighbor *next;
-  olsr_linkcost         cost;
-  olsr_u32_t            linkquality[0];
+#define AUTOBUFCHUNK	4096
+struct autobuf {
+    int size;
+    int len;
+    char *buf;
 };
 
-struct hello_message {
-  olsr_reltime           vtime;
-  olsr_reltime           htime;
-  union olsr_ip_addr     source_addr;
-  olsr_u16_t             packet_seq_number;
-  olsr_u8_t              hop_count;
-  olsr_u8_t              ttl;
-  olsr_u8_t              willingness;
-  struct hello_neighbor  *neighbors;  
-};
-
-struct tc_mpr_addr {
-  union olsr_ip_addr address;
-  struct tc_mpr_addr *next;
-  olsr_u32_t         linkquality[0];
-};
-
-struct tc_message {
-  olsr_reltime        vtime;
-  union olsr_ip_addr  source_addr;
-  union olsr_ip_addr  originator;
-  olsr_u16_t          packet_seq_number;
-  olsr_u8_t           hop_count;
-  olsr_u8_t           ttl;
-  olsr_u16_t          ansn;
-  struct tc_mpr_addr  *multipoint_relay_selector_address;
-};
-
-
-void
-olsr_free_hello_packet(struct hello_message *);
-
-int
-olsr_build_hello_packet(struct hello_message *, struct interface *);
+int  abuf_init(struct autobuf *autobuf, int initial_size);
+void abuf_free(struct autobuf *autobuf);
+int  abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__((format(printf, 2, 0)));
+int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+int  abuf_puts(struct autobuf *autobuf, const char *s);
+int  abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *tm);
+int  abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len);
 
 #endif
+
+/*
+ * Local Variables:
+ * mode: c
+ * style: linux
+ * c-basic-offset: 4
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -92,6 +92,8 @@ static struct neighbor_entry *iterNeighTab = NULL;
 static struct tc_entry *iterTcTab = NULL;
 static struct rt_entry *iterRouteTab = NULL;
 
+static struct olsr_cookie_info *service_timer_cookie;
+
 static void __attribute__((constructor)) banner(void)
 {
   printf("Tiny Application Server 0.1 by olsr.org\n");
@@ -452,11 +454,12 @@ int olsrd_plugin_init(void)
 {
   intTab = ifnet;
   neighTab = neighbortable;
+  service_timer_cookie  = olsr_alloc_cookie("Tas: service", OLSR_COOKIE_TYPE_TIMER);
 
   httpInit();
   
   olsr_start_timer(OLSR_TAS_SERVICE_INT, 0, OLSR_TIMER_PERIODIC,
-                   &serviceFunc, NULL, 0);
+                   &serviceFunc, NULL, service_timer_cookie->ci_id);
 
   olsr_parser_add_function(parserFunc, MESSAGE_TYPE, 1);
 

@@ -43,39 +43,23 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
+#include "olsrd_dot_draw.h"
+#include "olsr.h"
+#include "ipcalc.h"
+#include "neighbor_table.h"
+#include "tc_set.h"
+#include "hna_set.h"
+#include "link_set.h"
+
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
 #include <sockLib.h>
 #include <wrn/coreip/netinet/in.h>
 #else
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/time.h>
-#include <time.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
 #endif
-
-#include "olsr.h"
-#include "ipcalc.h"
-#include "olsr_types.h"
-#include "neighbor_table.h"
-#include "two_hop_neighbor_table.h"
-#include "tc_set.h"
-#include "hna_set.h"
-#include "mid_set.h"
-#include "link_set.h"
-#include "net_olsr.h"
-#include "lq_plugin.h"
-
-#include "olsrd_dot_draw.h"
-#include "olsrd_plugin.h"
 
 
 #ifdef WIN32
@@ -89,7 +73,6 @@ static int ipc_socket_up;
 #endif
 
 static int ipc_socket;
-static int ipc_connection;
 
 /* IPC initialization function */
 static int
@@ -97,27 +80,27 @@ plugin_ipc_init(void);
 
 /* Event function to register with the sceduler */
 static int
-pcf_event(int, int, int);
+pcf_event(int, int, int, int);
 
 static void
 ipc_action(int, void *, unsigned int);
 
 static void
-ipc_print_neigh_link(const struct neighbor_entry *neighbor);
+ipc_print_neigh_link(int, const struct neighbor_entry *neighbor);
 
 static void
-ipc_print_tc_link(const struct tc_entry *, const struct tc_edge_entry *);
+ipc_print_tc_link(int, const struct tc_entry *, const struct tc_edge_entry *);
 
 static void
-ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *, olsr_u8_t);
+ipc_print_net(int, const union olsr_ip_addr *, const struct olsr_ip_prefix *);
 
 static void
-ipc_send(const char *, int);
+ipc_send(int, const char *, int);
 
 static void
-ipc_send_fmt(const char *format, ...) __attribute__((format(printf,1,2)));
+ipc_send_fmt(int, const char *format, ...) __attribute__((format(printf,2,3)));
 
-#define ipc_send_str(data) ipc_send((data), strlen(data))
+#define ipc_send_str(fd, data) ipc_send((fd), (data), strlen(data))
 
 
 /**
@@ -134,10 +117,6 @@ int olsrd_plugin_init(void)
 {
   /* Initial IPC value */
   ipc_socket = -1;
-  ipc_connection = -1;
-
-  /* Register the "ProcessChanges" function */
-  register_pcf(&pcf_event);
 
   plugin_ipc_init();
 
@@ -154,9 +133,6 @@ void olsrd_dotdraw_exit(void)
 void olsr_plugin_exit(void)
 #endif
 {
-  if (ipc_connection != -1) {
-    CLOSE(ipc_connection);
-  }
   if (ipc_socket != -1) {
     CLOSE(ipc_socket);
   }
@@ -164,33 +140,33 @@ void olsr_plugin_exit(void)
 
 
 static void
-ipc_print_neigh_link(const struct neighbor_entry *neighbor)
+ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
 {
   struct ipaddr_str mainaddrstrbuf, strbuf;
   olsr_linkcost etx = 0.0;
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
-  struct link_entry* lnk;
   struct lqtextbuffer lqbuffer;
   
   if (neighbor->status == 0) { /* non SYM */
     style = "dashed";
   } else {   
-    lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+    const struct link_entry* lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
     if (lnk) {
       etx = lnk->linkcost;
     }
     style = "solid";
   }
     
-  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
+  ipc_send_fmt(ipc_connection,
+	       "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
                get_linkcost_text(etx, OLSR_FALSE, &lqbuffer),
                style);
   
   if (neighbor->is_mpr) {
-    ipc_send_fmt("\"%s\"[shape=box];\n", adr);
+    ipc_send_fmt(ipc_connection, "\"%s\"[shape=box];\n", adr);
   }
 }
 
@@ -263,12 +239,7 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
 {
   struct sockaddr_in pin;
   socklen_t addrlen = sizeof(struct sockaddr_in);
-
-  if (ipc_connection != -1) {
-    close(ipc_connection);
-  }
-  
-  ipc_connection = accept(ipc_socket, (struct sockaddr *)&pin, &addrlen);
+  int ipc_connection = accept(ipc_socket, (struct sockaddr *)&pin, &addrlen);
   if (ipc_connection == -1) {
     olsr_printf(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
     return;
@@ -276,12 +247,12 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
 #ifndef _WRS_KERNEL
   if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4)) {
     olsr_printf(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
-    CLOSE(ipc_connection);
+    close(ipc_connection);
     return;
   }
 #endif
   olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
-  pcf_event(1, 1, 1);
+  pcf_event(ipc_connection, 1, 1, 1);
   close(ipc_connection); /* close connection after one output */
 }
 
@@ -290,32 +261,32 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
  *Scheduled event
  */
 static int
-pcf_event(int chgs_neighborhood,
+pcf_event(int ipc_connection,
+	  int chgs_neighborhood,
 	  int chgs_topology,
 	  int chgs_hna)
 {
-  struct neighbor_entry *neighbor_table_tmp;
-  struct tc_entry *tc;
-  struct tc_edge_entry *tc_edge;
-  struct hna_net *tmp_net;
-  struct ip_prefix_list *hna;
   int res = 0;
 
   if (chgs_neighborhood || chgs_topology || chgs_hna) {
+    struct neighbor_entry *neighbor_table_tmp;
+    struct tc_entry *tc;
+    struct ip_prefix_list *hna;
     
     /* Print tables to IPC socket */
-    ipc_send_str("digraph topology\n{\n");
+    ipc_send_str(ipc_connection, "digraph topology\n{\n");
 
     /* Neighbors */
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
-      ipc_print_neigh_link( neighbor_table_tmp );
+      ipc_print_neigh_link(ipc_connection, neighbor_table_tmp );
     } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
 
     /* Topology */  
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
+      struct tc_edge_entry *tc_edge;
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
         if (tc_edge->edge_inv) {
-          ipc_print_tc_link(tc, tc_edge);
+          ipc_print_tc_link(ipc_connection, tc, tc_edge);
         }
       } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -323,21 +294,22 @@ pcf_event(int chgs_neighborhood,
     /* HNA entries */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
       /* Check all networks */
+      struct hna_net *tmp_net;
       OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
-          ipc_print_net(&tc->addr, 
-                        &tmp_net->hna_prefix.prefix, 
-                        tmp_net->hna_prefix.prefix_len);
+	ipc_print_net(ipc_connection,
+		      &tc->addr, 
+		      &tmp_net->hna_prefix);
         }
       } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
     OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      ipc_print_net(&olsr_cnf->main_addr,
-                    &hna->net.prefix,
-                    hna->net.prefix_len);
+      ipc_print_net(ipc_connection,
+		    &olsr_cnf->main_addr,
+                    &hna->net);
     }
-    ipc_send_str("}\n\n");
+    ipc_send_str(ipc_connection, "}\n\n");
 
     res = 1;
   }
@@ -349,12 +321,13 @@ pcf_event(int chgs_neighborhood,
 }
 
 static void
-ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
+ipc_print_tc_link(int ipc_connection, const struct tc_entry *entry, const struct tc_edge_entry *dst_entry)
 {
   struct ipaddr_str strbuf1, strbuf2;
   struct lqtextbuffer lqbuffer;
   
-  ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n",
+  ipc_send_fmt(ipc_connection,
+	       "\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
                get_linkcost_text(dst_entry->cost, OLSR_FALSE, &lqbuffer));
@@ -362,22 +335,22 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
 
 
 static void
-ipc_print_net(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
+ipc_print_net(int ipc_connection, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *net)
 {
-  struct ipaddr_str gwbuf, netbuf;
+  struct ipaddr_str gwbuf;
+  struct ipprefix_str netbuf;
 
-  ipc_send_fmt("\"%s\" -> \"%s/%d\"[label=\"HNA\"];\n",
+  ipc_send_fmt(ipc_connection,
+	       "\"%s\" -> \"%s\"[label=\"HNA\"];\n",
                olsr_ip_to_string(&gwbuf, gw),
-               olsr_ip_to_string(&netbuf, net),
-               prefixlen);
-
-  ipc_send_fmt("\"%s/%d\"[shape=diamond];\n",
-               olsr_ip_to_string(&netbuf, net),
-               prefixlen);
+	       olsr_ip_prefix_to_string(&netbuf, net));
+  ipc_send_fmt(ipc_connection,
+	       "\"%s\"[shape=diamond];\n",
+               netbuf.buf);
 }
 
 static void
-ipc_send(const char *data, int size)
+ipc_send(int ipc_connection, const char *data, int size)
 {
   if (ipc_connection != -1) {
 #if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__ || defined __MacOSX__ || \
@@ -388,13 +361,13 @@ defined _WRS_KERNEL
 #endif
     if (send(ipc_connection, data, size, FLAGS) == -1) {
       olsr_printf(1, "(DOT DRAW)IPC connection lost!\n");
-      CLOSE(ipc_connection);
+      close(ipc_connection);
     }
   }
 }
 
 static void
-ipc_send_fmt(const char *format, ...)
+ipc_send_fmt(int ipc_connection, const char *format, ...)
 {
   if (ipc_connection != -1) {
     char buf[4096];
@@ -403,7 +376,7 @@ ipc_send_fmt(const char *format, ...)
     va_start(arg, format);
     len = vsnprintf(buf, sizeof(buf), format, arg);
     va_end(arg);
-    ipc_send(buf, len);
+    ipc_send(ipc_connection, buf, len);
   }
 }
 

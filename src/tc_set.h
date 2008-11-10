@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
@@ -39,7 +38,6 @@
  * the copyright holders.
  *
  */
-
 #ifndef _OLSR_TOP_SET
 #define _OLSR_TOP_SET
 
@@ -48,6 +46,7 @@
 #include "common/avl.h"
 #include "common/list.h"
 #include "scheduler.h"
+#include "olsr_cookie.h"
 
 /*
  * This file holds the definitions for the link state database.
@@ -144,6 +143,8 @@ LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
 
 extern struct avl_tree tc_tree;
 extern struct tc_entry *tc_myself;
+extern struct olsr_cookie_info *tc_mem_cookie;
+extern struct olsr_cookie_info *spf_backoff_timer_cookie;
 
 void olsr_init_tc(void);
 void olsr_change_myself_tc(void);
@@ -157,11 +158,16 @@ void olsr_input_tc(union olsr_message *, struct interface *,
 /* tc_entry manipulation */
 struct tc_entry *olsr_lookup_tc_entry(const union olsr_ip_addr *);
 struct tc_entry *olsr_locate_tc_entry(const union olsr_ip_addr *);
-void olsr_lock_tc_entry(struct tc_entry *);
-void olsr_unlock_tc_entry(struct tc_entry *);
+/*
+ * Increment the reference counter.
+ */
+static INLINE void olsr_lock_tc_entry(struct tc_entry *tc) { tc->refcount++; }
+/*
+ * Unlock and free a tc_entry once all references are gone.
+ */
+static INLINE void olsr_unlock_tc_entry(struct tc_entry *tc) { if (--tc->refcount == 0) { /* All references are gone. */ olsr_cookie_free(tc_mem_cookie, tc); } }
 
 /* tc_edge_entry manipulation */
-olsr_bool olsr_delete_outdated_tc_edges(struct tc_entry *);
 char *olsr_tc_edge_to_string(struct tc_edge_entry *);
 struct tc_edge_entry *olsr_lookup_tc_edge(struct tc_entry *,
 					  union olsr_ip_addr *);
@@ -171,7 +177,6 @@ void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 olsr_bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
-// static olsr_bool olsr_etx_significant_change(float, float);
 
 #endif
 

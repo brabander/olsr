@@ -70,13 +70,13 @@ struct link_entry {
   /*
    * Hysteresis
    */
+  olsr_bool olsr_seqno_valid;
+  olsr_u16_t olsr_seqno;
   float L_link_quality;
   int L_link_pending;
   clock_t L_LOST_LINK_time;
   struct timer_entry *link_hello_timer;	/* When we should receive a new HELLO */
   olsr_reltime last_htime;
-  olsr_bool olsr_seqno_valid;
-  olsr_u16_t olsr_seqno;
 
   /*
    * packet loss

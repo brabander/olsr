@@ -118,6 +118,8 @@ struct InterfaceInfo
   char Guid[39];
 };
 
+static int chk_if_changed(struct olsr_if *);
+
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
 
@@ -592,7 +594,6 @@ void RemoveInterface(struct olsr_if *IntConf)
 int add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
-  union olsr_ip_addr null_addr;
   olsr_u32_t addr[4];
   struct ipaddr_str buf;
   size_t name_size;
@@ -623,8 +624,7 @@ int add_hemu_if(struct olsr_if *iface)
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  memset(&null_addr, 0, olsr_cnf->ipsize);
-  if(ipequal(&null_addr, &olsr_cnf->main_addr))
+  if(ipequal(&all_zero, &olsr_cnf->main_addr))
     {
       olsr_cnf->main_addr = iface->hemu_ip;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -640,13 +640,13 @@ int add_hemu_if(struct olsr_if *iface)
 
   if(olsr_cnf->ip_version == AF_INET)
     {
-      struct sockaddr_in sin;
+      struct sockaddr_in sin4;
 
-      memset(&sin, 0, sizeof(sin));
+      memset(&sin4, 0, sizeof(sin4));
 
-      sin.sin_family = AF_INET;
-      sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      sin.sin_port = htons(10150);
+      sin4.sin_family = AF_INET;
+      sin4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      sin4.sin_port = htons(10150);
  
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
@@ -659,7 +659,7 @@ int add_hemu_if(struct olsr_if *iface)
        *on what interface the message is transmitted
        */
       
-      ifp->olsr_socket = gethemusocket(&sin);
+      ifp->olsr_socket = gethemusocket(&sin4);
       
       if (ifp->olsr_socket < 0)
 	{
@@ -743,7 +743,7 @@ int add_hemu_if(struct olsr_if *iface)
   return 1;
 }
 
-int chk_if_changed(struct olsr_if *IntConf)
+static int chk_if_changed(struct olsr_if *IntConf)
 {
   struct ipaddr_str buf;
   struct interface *Int;

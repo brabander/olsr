@@ -37,7 +37,6 @@
  * the copyright holders.
  *
  */
-
 #include "two_hop_neighbor_table.h"
 #include "ipcalc.h"
 #include "defs.h"
@@ -49,7 +48,6 @@
 #include <stdlib.h>
 
 struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
-
 
 /**
  *Initialize 2 hop neighbor table
@@ -65,7 +63,6 @@ olsr_init_two_hop_table(void)
     }
 }
 
-
 /**
  *Remove a one hop neighbor from a two hop neighbors
  *one hop list.
@@ -76,7 +73,6 @@ olsr_init_two_hop_table(void)
  *
  *@return nada
  */
-
 void
 olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, const union olsr_ip_addr *address)
 {
@@ -99,8 +95,6 @@ olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, const union
 	}
     }
 }
-
-
 
 /**
  *Delete an entry from the two hop neighbor table.
@@ -133,8 +127,6 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
   free(two_hop_neighbor);
 }
 
-
-
 /**
  *Insert a new entry to the two hop neighbor table.
  *
@@ -155,7 +147,6 @@ olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
   QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
 }
 
-
 /**
  *Look up an entry in the two hop neighbor table.
  *
@@ -167,34 +158,29 @@ olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 struct neighbor_2_entry *
 olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
 {
-
-  struct tc_entry *tc;
   struct neighbor_2_entry  *neighbor_2;
   olsr_u32_t               hash = olsr_ip_hashing(dest);
 
   /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];
-      neighbor_2 = neighbor_2->next)
-    {
+      neighbor_2 = neighbor_2->next) {
+    struct tc_entry *tc;
 
-      /* printf("Checking %s\n", olsr_ip_to_string(&buf, dest)); */
-      if (ipequal(&neighbor_2->neighbor_2_addr, dest))
-	return neighbor_2;
-
-      /*
-       * Locate the hookup point and check if this is a registered alias.
-       */
-      tc = olsr_locate_tc_entry(&neighbor_2->neighbor_2_addr);
-      if (olsr_lookup_tc_mid_entry(tc, dest)) {
-        return neighbor_2;
-      }
+    /* printf("Checking %s\n", olsr_ip_to_string(&buf, dest)); */
+    if (ipequal(&neighbor_2->neighbor_2_addr, dest)) {
+      return neighbor_2;
     }
-
+    /*
+     * Locate the hookup point and check if this is a registered alias.
+     */
+    tc = olsr_locate_tc_entry(&neighbor_2->neighbor_2_addr);
+    if (olsr_lookup_tc_mid_entry(tc, dest)) {
+      return neighbor_2;
+    }
+  }
   return NULL;
 }
-
-
 
 /**
  *Look up an entry in the two hop neighbor table.
@@ -209,23 +195,17 @@ struct neighbor_2_entry *
 olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
 {
   struct neighbor_2_entry  *neighbor_2;
-  olsr_u32_t               hash;
+  olsr_u32_t               hash = olsr_ip_hashing(dest);
 
   /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
-  hash = olsr_ip_hashing(dest);
-  
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];
-      neighbor_2 = neighbor_2->next)
-    {
-      if (ipequal(&neighbor_2->neighbor_2_addr, dest))
-	return neighbor_2;
-    }
-
+      neighbor_2 = neighbor_2->next) {
+    if (ipequal(&neighbor_2->neighbor_2_addr, dest))
+      return neighbor_2;
+  }
   return NULL;
 }
-
-
 
 /**
  *Print the two hop neighbor table to STDOUT.

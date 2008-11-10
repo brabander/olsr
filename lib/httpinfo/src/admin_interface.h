@@ -48,12 +48,13 @@
 #define ADMIN_INTERFACE_H
 
 #include "olsr_types.h"
+#include "common/autobuf.h"
+
+void
+build_admin_body(struct autobuf *abuf);
 
 int
-build_admin_body(char *, olsr_u32_t);
-
-int
-process_set_values(char*, olsr_u32_t, char *, olsr_u32_t);
+process_set_values(char*, olsr_u32_t, struct autobuf *abuf);
 
 int
 process_param(char *, char *);
@@ -61,3 +62,9 @@ process_param(char *, char *);
 #endif
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * End:
+ */

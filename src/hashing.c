@@ -64,7 +64,7 @@
   c -= a; c -= b; c ^= (b>>15); \
 }
 
-static inline olsr_u32_t
+static INLINE olsr_u32_t
 jenkins_hash(const olsr_u8_t * k, olsr_u32_t length)
 {
   /* k: the key

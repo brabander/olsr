@@ -102,6 +102,10 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 int
 main(int argc, char *argv[])
 {
+
+  /* Some cookies for stats keeping */
+  static struct olsr_cookie_info *pulse_timer_cookie = NULL;
+
   struct if_config_options default_ifcnf;
   char conf_file_name[FILENAME_MAX];
   struct ipaddr_str buf;
@@ -150,9 +154,6 @@ main(int argc, char *argv[])
     
   /* Using PID as random seed */
   srandom(getpid());
-
-  /* Init widely used statics */
-  memset(&all_zero, 0, sizeof(all_zero));
 
   /*
    * Set configfile name and
@@ -323,8 +324,9 @@ main(int argc, char *argv[])
 
 #if !defined WINCE
   if (olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO)) {
+    pulse_timer_cookie = olsr_alloc_cookie("Pulse", OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC,
-                     &generate_stdout_pulse, NULL, 0);
+                     &generate_stdout_pulse, NULL, pulse_timer_cookie->ci_id);
   }
 #endif
 
@@ -540,7 +542,7 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 #define NEXT_ARG do { argv++; argc--; } while (0)
 #define CHECK_ARGC do {							\
     if (!argc) {							\
-      if ((argc - 1) == 1) {						\
+      if (argc == 2) {						\
 	fprintf(stderr, "Error parsing command line options!\n");	\
       } else {								\
 	argv--;								\
@@ -659,10 +661,12 @@ olsr_process_arguments(int argc, char *argv[],
      * Enable additional debugging information to be logged.
      */
     if (strcmp(*argv, "-d") == 0) {
+      int val;
       NEXT_ARG;
       CHECK_ARGC;
 
-      sscanf(*argv,"%d", &cnf->debug_level);
+      sscanf(*argv,"%d", &val);
+      cnf->debug_level = val;
       continue;
     }
 		
@@ -680,7 +684,7 @@ olsr_process_arguments(int argc, char *argv[],
       printf("Queuing if %s\n", *argv);
       queue_if (*argv, OLSR_FALSE);
 
-      while ((argc - 1) && (argv[1][0] != '-')) {
+      while (argc != 1 && (argv[1][0] != '-')) {
 	NEXT_ARG;
 	printf("Queuing if %s\n", *argv);
 	queue_if (*argv, OLSR_FALSE);

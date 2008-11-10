@@ -31,3 +31,7 @@ gui/win32/Main/Debug/
 gui/win32/Main/Release/
 gui/win32/Shim/Debug/
 gui/win32/Shim/Release/
+#*#
+.#*
+*.flc
+redhat/olsrd.spec

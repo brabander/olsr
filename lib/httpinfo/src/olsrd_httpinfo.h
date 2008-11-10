@@ -47,6 +47,7 @@
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
+#include "common/autobuf.h"
 
 
 #define HTTP_VERSION "HTTP/1.1"
@@ -59,6 +60,8 @@
 
 #define HTTP_400_MSG "<html><h1>400 - ERROR</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 #define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
+
+typedef int (*process_data_func)(char*, olsr_u32_t, struct autobuf *abuf);
 
 
 typedef enum {
@@ -74,8 +77,6 @@ struct http_stats {
     olsr_u32_t err_hits;
     olsr_u32_t ill_hits;
 };
-
-extern struct olsrd_config *olsr_cfg;
 
 /* Destructor function */
 void olsr_plugin_exit(void);

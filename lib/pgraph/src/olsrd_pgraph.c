@@ -211,7 +211,7 @@ int olsrd_plugin_init(void)
 
 static int plugin_ipc_init(void)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in sin4;
   olsr_u32_t yes = 1;
 
   /* Init ipc socket */
@@ -239,13 +239,13 @@ static int plugin_ipc_init(void)
       /* Bind the socket */
       
       /* complete the socket structure */
-      memset(&sin, 0, sizeof(sin));
-      sin.sin_family = AF_INET;
-      sin.sin_addr.s_addr = INADDR_ANY;
-      sin.sin_port = htons(ipc_port);
+      memset(&sin4, 0, sizeof(sin4));
+      sin4.sin_family = AF_INET;
+      sin4.sin_addr.s_addr = INADDR_ANY;
+      sin4.sin_port = htons(ipc_port);
       
       /* bind the socket to the port number */
-      if (bind(ipc_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+      if (bind(ipc_socket, (struct sockaddr *) &sin4, sizeof(sin4)) == -1) 
 	{
 	  olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
 	  return 0;

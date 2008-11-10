@@ -41,6 +41,9 @@
 #ifndef _OLSR_SPF_H
 #define _OLSR_SPF_H
 
+#define OLSR_SPF_BACKOFF_TIME  (1*1000) /* milliseconds */
+#define OLSR_SPF_BACKOFF_JITTER 5       /* percent */
+
 void olsr_calculate_routing_table(void);
 
 #endif

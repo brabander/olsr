@@ -278,7 +278,7 @@ static int
 ohs_init_connect_sockets(void)
 {
   olsr_u32_t yes = 1;
-  struct sockaddr_in sin;
+  struct sockaddr_in sin4;
 
   printf("Initiating socket TCP port %d\n", OHS_TCP_PORT);
 
@@ -297,13 +297,13 @@ ohs_init_connect_sockets(void)
     }
 
   /* complete the socket structure */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = htons(OHS_TCP_PORT);
+  memset(&sin4, 0, sizeof(sin4));
+  sin4.sin_family = AF_INET;
+  sin4.sin_addr.s_addr = INADDR_ANY;
+  sin4.sin_port = htons(OHS_TCP_PORT);
   
   /* bind the socket to the port number */
-  if (bind(srv_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+  if (bind(srv_socket, (struct sockaddr *) &sin4, sizeof(sin4)) == -1) 
     {
       printf("bind failed for socket: %s\n", strerror(errno));
       close(srv_socket);

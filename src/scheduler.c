@@ -494,8 +494,6 @@ olsr_init_timers(void)
 {
   int idx;
 
-  OLSR_PRINTF(5, "TIMER: init timers\n");
-
   /* Grab initial timestamp */
   now_times = olsr_times();
     
@@ -812,8 +810,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
 void
 olsr_stop_timer(struct timer_entry *timer)
 {
-
-  /* sanity check */
+  /* It's okay to get a NULL here */
   if (!timer) {
     return;
   }

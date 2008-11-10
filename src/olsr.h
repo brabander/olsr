@@ -50,7 +50,7 @@ extern olsr_bool changes_neighborhood;
 extern olsr_bool changes_hna;
 extern olsr_bool changes_force;
 
-extern union olsr_ip_addr all_zero;
+extern const union olsr_ip_addr all_zero;
 
 void
 register_pcf(int (*)(int, int, int));

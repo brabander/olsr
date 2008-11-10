@@ -357,15 +357,16 @@ net_output(struct interface *ifp)
 		  MSG_DONTROUTE, 
 		  &dstaddr.sin,
 		  dstaddr_size) < 0) {
+    const int save_errno = errno;
+#if 1
     char sabuf[1024];
-    struct ipaddr_str buf;
     dstaddr.sin.sa_family = olsr_cnf->ip_version;
+    fprintf(stderr, "OLSR: sendto IPv%d: %s\n", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
     fprintf(stderr, "To: %s (size: %d)\n", sockaddr_to_string(sabuf, sizeof(sabuf), &dstaddr.sin, dstaddr_size), dstaddr_size);
-    fprintf(stderr, "To: %s (size: %d)\n", olsr_cnf->ip_version == AF_INET ? ip4_to_string(&buf, dstaddr.sin4.sin_addr) : ip6_to_string(&buf, &dstaddr.sin6.sin6_addr), dstaddr_size);
     fprintf(stderr, "Socket: %d interface: %d/%s\n", ifp->olsr_socket, ifp->if_index, ifp->int_name);
     fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
-
-    olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv%d: %s", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(errno));
+#endif
+    olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv%d: %s", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
     retval = -1;
   }
   

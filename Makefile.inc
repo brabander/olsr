@@ -40,20 +40,18 @@ FLEX ?=		flex
 TAGCMD ?=	etags
 
 # target directories and names
+PREFIX  ?= /usr/local
 DESTDIR ?=
-SBINDIR ?= $(DESTDIR)/usr/sbin
-ETCDIR  ?= $(DESTDIR)/etc
-LIBDIR  ?= $(DESTDIR)/usr/lib
-DOCDIR  ?= $(DESTDIR)/usr/share/doc
-MANDIR  ?= $(DESTDIR)/usr/share/man
+SBINDIR ?= $(DESTDIR)$(PREFIX)/sbin
+ETCDIR  ?= $(DESTDIR)$(subst /usr/etc,/etc,$(PREFIX)/etc)
+LIBDIR  ?= $(DESTDIR)$(PREFIX)/lib
+DOCDIR  ?= $(DESTDIR)$(PREFIX)/share/doc
+MANDIR  ?= $(DESTDIR)$(PREFIX)/share/man
 EXENAME ?= olsrd
 CFGNAME ?= $(EXENAME).conf
 CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 
-CPPFLAGS =	-Isrc
-ifneq ($(TOPDIR),.)
-CPPFLAGS +=	-I$(TOPDIR)/src
-endif
+CPPFLAGS =	$(filter-out -I./src,-Isrc -I$(TOPDIR)/src)
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
@@ -79,9 +77,9 @@ ALL_WARNINGS +=	-Wcast-qual
 ALL_WARNINGS +=	-Wshadow
 ALL_WARNINGS +=	-Wformat-2
 ALL_WARNINGS +=	-Wsequence-point
-# the following 4 do not work yet and need more work on it
-#ALL_WARNINGS +=	-Wpointer-arith
-#ALL_WARNINGS +=	-Wcast-align
+ALL_WARNINGS +=	-Wpointer-arith
+ALL_WARNINGS +=	-Wcast-align
+# the following 2 do not work yet and need more work on it
 #ALL_WARNINGS +=	-Wconversion
 #ALL_WARNINGS +=	-Wredundant-decls
 ifeq ($(MUDFLAP),0)
@@ -109,12 +107,17 @@ ALL_WARNINGS +=	-finline-limit=350
 # from the source by hand.
 #ALL_WARNINGS +=	-ffunction-sections
 #ALL_WARNINGS +=	-fdata-sections
+ALL_WARNINGS +=	-Wstrict-overflow=5
 ALL_WARNINGS +=	$(EXTRA_WARNINGS)
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
 endif
 CFLAGS +=	$(WARNINGS)
 CFLAGS +=	$(OPTIMIZE)
 CFLAGS +=	$(EXTRA_CFLAGS)
+
+ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
+NO_STRICT_OVERFLOW = -Wstrict-overflow=0
+endif
 
 # Must be specified along with -lpthread on linux
 CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
@@ -199,6 +202,8 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 %.d: %.c
 	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(if $(TOPDIR),$(TOPDIR)/)Makefile.inc) /g' >"$@"
 
+src/common/autobuf.o src/mpr.o: CFLAGS += $(NO_STRICT_OVERFLOW)
+
 # we always need the includes and defines
 # for legacy since now
 CPPFLAGS += $(INCLUDES) $(DEFINES)
@@ -235,7 +240,7 @@ help:
 	@echo '************************************'
 	@echo
 
-ifeq ($(filter clean% %clean, $(MAKECMDGOALS)),)
+ifeq ($(filter clean% %clean rpm, $(MAKECMDGOALS)),)
 # include dependencies - we don't need any dependency for a everytime generated files
 -include $(filter-out src/builddata.%,$(SRCS:%.c=%.d))
 endif

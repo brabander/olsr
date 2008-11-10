@@ -179,8 +179,14 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
 }
 
 void default_lq_initialize_ff(void) {
+  /* Some cookies for stats keeping */
+  static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
+
   olsr_packetparser_add_function(&default_lq_parser_ff);
-  olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &default_lq_ff_timer, NULL, 0);
+  default_lq_ff_timer_cookie = olsr_alloc_cookie("Default Freifunk LQ",
+                                                 OLSR_COOKIE_TYPE_TIMER);
+  olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &default_lq_ff_timer, NULL,
+                   default_lq_ff_timer_cookie->ci_id);
 }
 
 olsr_linkcost default_lq_calc_cost_ff(const void *ptr) {

@@ -89,6 +89,7 @@ typedef struct
 
 static int arprefresh_sockfd = -1;
 static const int arprefresh_portnum = 698;
+static struct olsr_cookie_info *arp_event_timer_cookie;
 
 /**
  * Scheduled event to fetch gathered packets and update the ARP cache
@@ -158,6 +159,7 @@ static void olsr_arp_event(void* foo __attribute__((unused)))
 int olsrd_plugin_init(void)
 {
 	int ret = 0;
+	arp_event_timer_cookie  = olsr_alloc_cookie("Arprefresh: event", OLSR_COOKIE_TYPE_TIMER);
 	if (AF_INET == olsr_cnf->ip_version)
 	{
 		int flags;
@@ -191,7 +193,7 @@ int olsrd_plugin_init(void)
 		{
 			/* Register the ARP refresh event */
                         olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                                         &olsr_arp_event, NULL, 0);
+                                         &olsr_arp_event, NULL, arp_event_timer_cookie->ci_id);
 			ret = 1;
 		}
 		else

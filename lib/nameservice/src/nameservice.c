@@ -83,6 +83,9 @@ static char my_services_change_script[MAX_FILE + 1];
 static char latlon_in_file[MAX_FILE + 1];
 static char my_latlon_file[MAX_FILE + 1];
 float my_lat = 0.0, my_lon = 0.0;
+static struct olsr_cookie_info *msg_gen_timer_cookie;
+static struct olsr_cookie_info *write_file_timer_cookie;
+struct olsr_cookie_info *map_poll_timer_cookie;
 
 /* the databases (using hashing)
  * for hostnames, service_lines and dns-servers
@@ -92,7 +95,6 @@ float my_lat = 0.0, my_lon = 0.0;
  * */
 static struct list_node name_list[HASHSIZE];
 struct name_entry *my_names = NULL;
-struct timer_entry *name_table_write = NULL;
 static olsr_bool name_table_changed = OLSR_TRUE;
 
 static struct list_node service_list[HASHSIZE];
@@ -172,7 +174,9 @@ name_constructor(void)
 		list_head_init(&latlon_list[i]);
 	}
 	
-
+	msg_gen_timer_cookie = olsr_alloc_cookie("Nameservice: message gen", OLSR_COOKIE_TYPE_TIMER);
+	write_file_timer_cookie = olsr_alloc_cookie("Nameservice: write file", OLSR_COOKIE_TYPE_TIMER);
+	map_poll_timer_cookie = olsr_alloc_cookie("Nameservice: map poll", OLSR_COOKIE_TYPE_TIMER);
 }
 
 
@@ -396,7 +400,7 @@ name_init(void)
 	/* periodic message generation */
 	msg_gen_timer = olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
 									 OLSR_TIMER_PERIODIC, &olsr_namesvc_gen,
-									 NULL, 0);
+									 NULL, msg_gen_timer_cookie->ci_id);
 
 	mapwrite_init(my_latlon_file);
 
@@ -530,7 +534,7 @@ olsr_start_write_file_timer(void)
 	}
 
 	write_file_timer = olsr_start_timer(5 * MSEC_PER_SEC, 5, OLSR_TIMER_ONESHOT,
-										olsr_expire_write_file_timer, NULL, 0);
+										olsr_expire_write_file_timer, NULL, write_file_timer_cookie->ci_id);
 }
 
 /*

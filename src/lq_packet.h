@@ -51,11 +51,10 @@
 
 /* deserialized OLSR header */
 
-struct olsr_common
-{
+struct olsr_common {
   olsr_u8_t          type;
-  olsr_reltime       vtime;
   olsr_u16_t         size;
+  olsr_reltime       vtime;
   union olsr_ip_addr orig;
   olsr_u8_t          ttl;
   olsr_u8_t          hops;
@@ -64,8 +63,7 @@ struct olsr_common
 
 /* serialized IPv4 OLSR header */
 
-struct olsr_header_v4
-{
+struct olsr_header_v4 {
   olsr_u8_t  type;
   olsr_u8_t  vtime;
   olsr_u16_t size;
@@ -77,8 +75,7 @@ struct olsr_header_v4
 
 /* serialized IPv6 OLSR header */
 
-struct olsr_header_v6
-{
+struct olsr_header_v6 {
   olsr_u8_t     type;
   olsr_u8_t     vtime;
   olsr_u16_t    size;
@@ -90,8 +87,7 @@ struct olsr_header_v6
 
 /* deserialized LQ_HELLO */
 
-struct lq_hello_neighbor
-{
+struct lq_hello_neighbor {
   olsr_u8_t                link_type;
   olsr_u8_t                neigh_type;
   union olsr_ip_addr       addr;
@@ -99,8 +95,7 @@ struct lq_hello_neighbor
   olsr_u32_t               linkquality[0];
 };
 
-struct lq_hello_message
-{
+struct lq_hello_message {
   struct olsr_common       comm;
   olsr_reltime             htime;
   olsr_u8_t                will;
@@ -109,23 +104,20 @@ struct lq_hello_message
 
 /* serialized LQ_HELLO */
 
-struct lq_hello_info_header
-{
+struct lq_hello_info_header {
   olsr_u8_t  link_code;
   olsr_u8_t  reserved;
   olsr_u16_t size;
 };
 
-struct lq_hello_header
-{
+struct lq_hello_header {
   olsr_u16_t reserved;
   olsr_u8_t  htime;
   olsr_u8_t  will;
 };
 
 /* deserialized LQ_TC */
-struct lq_tc_message
-{
+struct lq_tc_message {
   struct olsr_common    comm;
   union olsr_ip_addr    from;
   olsr_u16_t            ansn;
@@ -134,8 +126,7 @@ struct lq_tc_message
 
 /* serialized LQ_TC */
 
-struct lq_tc_header
-{
+struct lq_tc_header {
   olsr_u16_t ansn;
   olsr_u8_t lower_border;
   olsr_u8_t upper_border;

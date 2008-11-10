@@ -134,12 +134,20 @@ install_olsrd:	install_bin
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
 
-rpm:
-		@$(RM) olsrd-current.tar.bz2
-		@echo "Creating olsrd-current.tar.bz2 ..."
-		@./list-excludes.sh | tar  --exclude-from=- --exclude="olsrd-current.tar.bz2" -C .. -cjf olsrd-current.tar.bz2 olsrd-current
-		@echo "Building RPMs..."
-		@rpmbuild -ta olsrd-current.tar.bz2
+RPMVER = $(patsubst pre-%,%pre,$(VERS))
+RPMDIR = ../olsrd-$(RPMVER)
+RPMRELEASE = $(shell hg tip | { read tag val && echo "$$val"; })
+redhat/olsrd.spec: redhat/olsrd.spec.in Makefile Makefile.inc
+	@sed -e 's/@VERSION@/$(RPMVER)/' -e 's/@RELEASE@/$(RPMRELEASE)/' < "$<" > "$@"
+
+rpm: redhat/olsrd.spec
+	@echo "Creating $(RPMDIR).tar.bz2 ..."
+	@hg archive --type "tar" "$(RPMDIR).tar"
+	@tar --file "$(RPMDIR).tar" --append "$<"
+	@echo "Building RPMs..."
+	@rpmbuild -ta "$(RPMDIR).tar"
+	@bzip2 --best --force "$(RPMDIR).tar"
+
 #
 # PLUGINS
 #
