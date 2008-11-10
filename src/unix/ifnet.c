@@ -72,6 +72,9 @@
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 
+static int chk_if_changed(struct olsr_if *);
+
+
 #if 0
 int
 set_flag(char *ifname, short flag __attribute__((unused)))
@@ -139,7 +142,7 @@ check_interface_updates(void *foo __attribute__((unused)))
  *
  *@param iface the olsr_if struct describing the interface
  */
-int
+static int
 chk_if_changed(struct olsr_if *iface)
 {
   struct ipaddr_str buf;

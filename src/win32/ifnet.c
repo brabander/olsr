@@ -118,6 +118,8 @@ struct InterfaceInfo
   char Guid[39];
 };
 
+static int chk_if_changed(struct olsr_if *);
+
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
 
@@ -741,7 +743,7 @@ int add_hemu_if(struct olsr_if *iface)
   return 1;
 }
 
-int chk_if_changed(struct olsr_if *IntConf)
+static int chk_if_changed(struct olsr_if *IntConf)
 {
   struct ipaddr_str buf;
   struct interface *Int;
