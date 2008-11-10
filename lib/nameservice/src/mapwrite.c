@@ -211,34 +211,29 @@ void mapwrite_work(FILE* fmap)
  */
  
 static const char* the_fifoname = 0;
-static int fifopolltime = 0;
 
 static void mapwrite_poll(void *context __attribute__((unused)))
 {
-  fifopolltime++;
-  if (0 == (fifopolltime & 7) && 0 != the_fifoname)
+  FILE * fout;
+  /* Non-blocking means: fail open if no pipe reader */
+  int fd = open(the_fifoname, O_WRONLY | O_NONBLOCK);
+  if (0 <= fd)
   {
-    FILE * fout;
-    /* Non-blocking means: fail open if no pipe reader */
-    int fd = open(the_fifoname, O_WRONLY | O_NONBLOCK);
-    if (0 <= fd)
+    /* 
+     * Change to blocking, otherwhise expect fprintf errors
+     */
+    fcntl(fd, F_SETFL, O_WRONLY);
+    fout = fdopen(fd, "w");
+    if (0 != fout)
     {
-      /* 
-       * Change to blocking, otherwhise expect fprintf errors
-       */
-      fcntl(fd, F_SETFL, O_WRONLY);
-      fout = fdopen(fd, "w");
-      if (0 != fout)
-      {
-        mapwrite_work(fout);
-        fclose(fout);
-        /* Give pipe reader cpu slot to detect EOF */
-        usleep(1);
-      }
-      else
-      {
-        close(fd);
-      }
+      mapwrite_work(fout);
+      fclose(fout);
+      /* Give pipe reader cpu slot to detect EOF */
+      usleep(1);
+    }
+    else
+    {
+      close(fd);
     }
   }
 }
@@ -256,8 +251,7 @@ int mapwrite_init(const char* fifoname)
     }
     else
     {
-      the_fifoname = fifoname;
-      olsr_start_timer(100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie->ci_id);
+      olsr_start_timer(800, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie->ci_id);
     }
   }
   return OLSR_TRUE;
