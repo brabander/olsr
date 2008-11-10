@@ -257,7 +257,7 @@ int mapwrite_init(const char* fifoname)
     else
     {
       the_fifoname = fifoname;
-      olsr_start_timer(100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, 0);
+      olsr_start_timer(100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie->ci_id);
     }
   }
   return OLSR_TRUE;

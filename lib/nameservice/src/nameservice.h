@@ -119,6 +119,7 @@ LISTNODE2STRUCT(list2db, struct db_entry, db_list);
 extern struct name_entry *my_names;
 extern struct list_node latlon_list[HASHSIZE];
 extern float my_lat, my_lon;
+extern struct olsr_cookie_info *map_poll_timer_cookie;
 
 void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
