@@ -542,7 +542,7 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
 #define NEXT_ARG do { argv++; argc--; } while (0)
 #define CHECK_ARGC do {							\
     if (!argc) {							\
-      if ((argc - 1) == 1) {						\
+      if (argc == 2) {						\
 	fprintf(stderr, "Error parsing command line options!\n");	\
       } else {								\
 	argv--;								\
@@ -684,7 +684,7 @@ olsr_process_arguments(int argc, char *argv[],
       printf("Queuing if %s\n", *argv);
       queue_if (*argv, OLSR_FALSE);
 
-      while ((argc - 1) && (argv[1][0] != '-')) {
+      while (argc != 1 && (argv[1][0] != '-')) {
 	NEXT_ARG;
 	printf("Queuing if %s\n", *argv);
 	queue_if (*argv, OLSR_FALSE);

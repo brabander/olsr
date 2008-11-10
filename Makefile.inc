@@ -107,6 +107,7 @@ ALL_WARNINGS +=	-finline-limit=350
 # from the source by hand.
 #ALL_WARNINGS +=	-ffunction-sections
 #ALL_WARNINGS +=	-fdata-sections
+ALL_WARNINGS +=	-Wstrict-overflow=5
 ALL_WARNINGS +=	$(EXTRA_WARNINGS)
 WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
 endif
@@ -196,6 +197,8 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 # fully automatic and working dependency generation
 %.d: %.c
 	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(if $(TOPDIR),$(TOPDIR)/)Makefile.inc) /g' >"$@"
+
+src/common/autobuf.o src/mpr.o: CPPFLAGS += -Wstrict-overflow=0
 
 # we always need the includes and defines
 # for legacy since now

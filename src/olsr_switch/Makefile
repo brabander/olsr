@@ -11,10 +11,13 @@ endif
 COMMON_SRCS=$(wildcard $(TOPDIR)/src/common/*.c)
 OBJS += $(COMMON_SRCS:%.c=%.o)
 
+
 default_target:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $(TOPDIR)/$(BINNAME) $(OBJS) $(LIBS)
 
 ohs_cmd.o: CFLAGS += -Wno-cast-qual
+
+main.o: CPPFLAGS += -Wstrict-overflow=0
 
 clean:
 	rm -f *.[od]

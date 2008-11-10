@@ -39,6 +39,7 @@
  */
 
 #include "common/autobuf.h"
+#include "defs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -57,7 +58,7 @@ int abuf_init(struct autobuf *autobuf, int initial_size)
         autobuf->buf = NULL;
         return 0;
     }
-    autobuf->size = ((initial_size + AUTOBUFCHUNK + 1) / AUTOBUFCHUNK) * AUTOBUFCHUNK;
+    autobuf->size = ROUND_UP_TO_POWER_OF_2(initial_size, AUTOBUFCHUNK);
     autobuf->buf = malloc(autobuf->size);
     if (autobuf->buf == NULL) {
         autobuf->size = 0;
@@ -79,9 +80,7 @@ static int autobuf_enlarge(struct autobuf *autobuf, int new_size)
 {
     if (new_size >= autobuf->size) {
         char *p;
-        do {
-            autobuf->size += AUTOBUFCHUNK;
-        } while (new_size >= autobuf->size);
+        autobuf->size = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
         p = realloc(autobuf->buf, autobuf->size);
         if (p == NULL) {
 #ifdef WIN32
@@ -103,6 +102,7 @@ int abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
     va_list ap2;
     va_copy(ap2, ap);
     rc = vsnprintf(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, ap);
+    va_end(ap);
     min_size = autobuf->len + rc;
     if (min_size >= autobuf->size) {
         if (autobuf_enlarge(autobuf, min_size) < 0) {
@@ -141,7 +141,7 @@ int abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *
 {
     int rc = strftime(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, tm);
     if (rc == 0) {
-        /* we had an error! Probably the buffer too small. */
+        /* we had an error! Probably the buffer too small. So we add some bytes. */
         if (autobuf_enlarge(autobuf, autobuf->size+AUTOBUFCHUNK) < 0) {
             autobuf->buf[autobuf->len] = '\0';
             return -1;

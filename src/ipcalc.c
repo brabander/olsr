@@ -47,19 +47,17 @@ prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
   struct ipaddr_str buf;
   const olsr_u8_t *a_start = a;
 #endif
-  int p;
-  const olsr_u8_t *a_end;
-
-  a_end = a+len;
-  for (p = prefixlen; a < a_end && p > 8; p -= 8) {
-    *a++ = 0xff;
+  int i;
+  const int end = MIN(len, prefixlen / 8);
+  for (i = 0; i < end; i++) {
+    a[i] = 0xff;
   }
-  if (a >= a_end) {
+  if (i >= len) {
     return 0;
   }
-  *a++ = 0xff << (8 - p);
-  while (a < a_end) {
-    *a++ = 0;
+  a[i++] = 0xff << (8 - (prefixlen % 8));
+  while (i < len) {
+    a[i++] = 0;
   }
 
 #ifdef DEBUG
