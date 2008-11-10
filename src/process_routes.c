@@ -42,15 +42,9 @@
  *
  */
 
-#include "ipcalc.h"
-#include "defs.h"
-#include "olsr.h"
+#include "process_routes.h"
 #include "log.h"
 #include "kernel_routes.h"
-#include "common/avl.h"
-#include "net_olsr.h"
-#include "tc_set.h"
-#include "olsr_cookie.h"
 
 #include <errno.h>
 
