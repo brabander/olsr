@@ -52,7 +52,7 @@ default_target: $(PLUGIN_FULLNAME)
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
-src/nameservice.o: CPPFLAGS += -Wstrict-overflow=0
+src/nameservice.o: CFLAGS += $(NO_STRICT_OVERFLOW)
 
 
 install:	$(PLUGIN_FULLNAME)

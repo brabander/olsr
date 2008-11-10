@@ -115,6 +115,10 @@ CFLAGS +=	$(WARNINGS)
 CFLAGS +=	$(OPTIMIZE)
 CFLAGS +=	$(EXTRA_CFLAGS)
 
+ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
+NO_STRICT_OVERFLOW = -Wstrict-overflow=0
+endif
+
 # Must be specified along with -lpthread on linux
 CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
 endif
@@ -198,7 +202,7 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 %.d: %.c
 	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(if $(TOPDIR),$(TOPDIR)/)Makefile.inc) /g' >"$@"
 
-src/common/autobuf.o src/mpr.o: CPPFLAGS += -Wstrict-overflow=0
+src/common/autobuf.o src/mpr.o: CFLAGS += $(NO_STRICT_OVERFLOW)
 
 # we always need the includes and defines
 # for legacy since now

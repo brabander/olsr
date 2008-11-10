@@ -17,7 +17,7 @@ default_target:	$(OBJS)
 
 ohs_cmd.o: CFLAGS += -Wno-cast-qual
 
-main.o: CPPFLAGS += -Wstrict-overflow=0
+main.o: CFLAGS += $(NO_STRICT_OVERFLOW)
 
 clean:
 	rm -f *.[od]

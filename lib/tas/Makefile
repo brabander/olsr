@@ -65,7 +65,7 @@ $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 # this is not nice but there is no nicer solution
 src/lua/lapi.o src/lua/ltable.o:  CFLAGS += -Wno-cast-qual
 
-src/plugin.o $(foreach f,lauxlib lcode ldblib ldebug ldo lgc lparser lstrlib lvm,src/lua/$(f).o): CPPFLAGS += -Wstrict-overflow=0
+src/plugin.o $(foreach f,lauxlib lcode ldblib ldebug ldo lgc lparser lstrlib lvm,src/lua/$(f).o): CFLAGS += $(NO_STRICT_OVERFLOW)
 
 install:	$(PLUGIN_FULLNAME)
 		$(STRIP) $(PLUGIN_FULLNAME)
