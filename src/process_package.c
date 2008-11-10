@@ -80,8 +80,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 #ifdef DEBUG
     struct ipaddr_str buf;
 #endif
-    union olsr_ip_addr      *neigh_addr;
-    struct neighbor_2_entry *two_hop_neighbor;
+    union olsr_ip_addr *neigh_addr;
 
     /*
      * check all interfaces
@@ -111,7 +110,6 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                        message->vtime, OLSR_NBR2_LIST_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
                        two_hop_neighbor_yet, nbr2_list_timer_cookie->ci_id);
-        two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
 
         /*
          * For link quality OLSR, reset the path link quality here.
@@ -124,9 +122,9 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
            * 'two_hop_neighbor'
            */
           struct neighbor_list_entry *walker;
-          for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-               walker != &two_hop_neighbor->neighbor_2_nblist;
-               walker = walker->next){
+          for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
+               walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist;
+               walker = walker->next) {
             /*
              * have we found the one-hop neighbor that sent the
              * HELLO message that we're current processing?
@@ -138,33 +136,26 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
           }
         }
       } else {
-        two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
+	struct neighbor_2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
         if (two_hop_neighbor == NULL) {
 #ifdef DEBUG
           OLSR_PRINTF(5,
                       "Adding 2 hop neighbor %s\n\n",
                       olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
-
           two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
-
-          two_hop_neighbor->neighbor_2_nblist.next =&two_hop_neighbor->neighbor_2_nblist;
-          two_hop_neighbor->neighbor_2_nblist.prev =&two_hop_neighbor->neighbor_2_nblist;
+          two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
+          two_hop_neighbor->neighbor_2_nblist.prev = &two_hop_neighbor->neighbor_2_nblist;
           two_hop_neighbor->neighbor_2_pointer = 0;
           two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
           olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
-          linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
-        } else {
-          /*
-            linking to this two_hop_neighbor entry
-          */
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
-
-          linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
         }
+	/*
+	 * linking to this two_hop_neighbor entry
+	 */
+	changes_neighborhood = OLSR_TRUE;
+	changes_topology = OLSR_TRUE;
+	linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
       }
     }
   }
