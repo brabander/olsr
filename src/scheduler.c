@@ -52,6 +52,7 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <assert.h>
 
 /* Timer data, global. Externed in scheduler.h */
 clock_t now_times;		       /* current idea of times(2) reported uptime */
@@ -765,6 +766,8 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
 {
   struct timer_entry *timer;
 
+  assert(cookie != 0); /* we want timer cookies everywhere */
+
   timer = olsr_get_timer();
 
   /* Fill entry */
@@ -814,11 +817,14 @@ olsr_stop_timer(struct timer_entry *timer)
   if (!timer) {
     return;
   }
+
 #ifdef DEBUG
   OLSR_PRINTF(3, "TIMER: stop %s timer %p, ctx %p\n",
 	      olsr_cookie_name(timer->timer_cookie),
 	      timer, timer->timer_cb_context);
 #endif
+
+  assert(timer->timer_cookie != 0); /* we want timer cookies everywhere */
 
   /*
    * Carve out of the existing wheel_slot and return to the pool
@@ -849,6 +855,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
   if (!timer) {
     return;
   }
+
+  assert(timer->timer_cookie != 0); /* we want timer cookies everywhere */
 
   /* Singleshot or periodical timer ? */
   if (periodical) {
@@ -887,8 +895,8 @@ olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time,
 	       olsr_u8_t jitter_pct, olsr_bool periodical,
 	       void (*timer_cb_function) (void *), void *context,
 	       olsr_cookie_t cookie)
-{
-
+{  
+  assert(cookie != 0); /* we want timer cookies everywhere */
   if (!*timer_ptr) {
 
     /* No timer running, kick it. */
