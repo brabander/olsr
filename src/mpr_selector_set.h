@@ -41,6 +41,7 @@
 #define _OLSR_MPRS_SET
 
 #include "mantissa.h"
+#include "defs.h"
 
 struct mpr_selector {
   union olsr_ip_addr  MS_main_addr;
@@ -49,6 +50,8 @@ struct mpr_selector {
   struct mpr_selector *prev;
 };
 
+extern olsr_u16_t ansn;
+
 #if 0
 olsr_bool
 olsr_is_mpr(void);
@@ -56,11 +59,9 @@ olsr_is_mpr(void);
 
 void olsr_init_mprs(void);
 
-olsr_u16_t
-get_local_ansn(void);
+static INLINE olsr_u16_t get_local_ansn(void) { return ansn; }
 
-void
-increase_local_ansn(void);
+static INLINE void increase_local_ansn(void) { ansn++; }
 
 struct mpr_selector *
 olsr_lookup_mprs_set(const union olsr_ip_addr *);

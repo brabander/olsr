@@ -40,12 +40,10 @@
 #include "mpr_selector_set.h"
 #include "link_set.h"
 #include "olsr.h"
-#include "scheduler.h"
 
 #define OLSR_MPR_SEL_JITTER 5 /* percent */
 
-
-static olsr_u16_t ansn = 0;
+olsr_u16_t ansn = 0;
 
 static struct olsr_cookie_info *mpr_sel_timer_cookie;
 
@@ -63,19 +61,6 @@ olsr_init_mprs(void)
    */
   mpr_sel_timer_cookie =
     olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
-}
-
-
-olsr_u16_t 
-get_local_ansn(void)
-{
-  return ansn;
-}
-
-void
-increase_local_ansn(void)
-{
-  ansn++;
 }
 
 #if 0
