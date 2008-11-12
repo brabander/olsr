@@ -54,6 +54,8 @@ olsr_bool
 olsr_is_mpr(void);
 #endif
 
+void olsr_init_mprs(void);
+
 olsr_u16_t
 get_local_ansn(void);
 

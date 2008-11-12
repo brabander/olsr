@@ -47,11 +47,23 @@
 
 static olsr_u16_t ansn = 0;
 
+static struct olsr_cookie_info *mpr_sel_timer_cookie;
+
 /* MPR selector list */
 static struct mpr_selector mprs_list = { .next = &mprs_list, .prev = &mprs_list };
 
 static void add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
 static void olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer);
+
+void
+olsr_init_mprs(void)
+{
+  /*
+   * Get some cookies for getting stats to ease troubleshooting.
+   */
+  mpr_sel_timer_cookie =
+    olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
+}
 
 
 olsr_u16_t 
@@ -110,7 +122,8 @@ static void
 olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
 {
   olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel, 0);
+                 OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel,
+		 mpr_sel_timer_cookie->ci_id);
 }
 
 /**

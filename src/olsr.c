@@ -282,6 +282,9 @@ olsr_init_tables(void)
   /* Initialize HNA set */
   olsr_init_hna_set();  
 
+  /* Initialize MPRS */
+  olsr_init_mprs();
+
 #if 0
   /* Initialize Layer 1/2 database */
   olsr_initialize_layer12();
