@@ -44,6 +44,8 @@ static set_plugin_parameter set_localpref;
 static export_route_function orig_addroute_function;
 static export_route_function orig_delroute_function;
 
+static struct olsr_cookie_info *zebra_check_timer_cookie;
+
 int olsrd_plugin_interface_version (void) {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -125,8 +127,10 @@ int olsrd_plugin_init(void) {
     return 1;
   }
 
+  zebra_check_timer_cookie = olsr_alloc_cookie("Quagga: Zebra Check", OLSR_COOKIE_TYPE_TIMER);
+
   olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &zebra_check, NULL, 0);
+                   &zebra_check, NULL, zebra_check_timer_cookie->ci_id);
 
   return 0;
 }
