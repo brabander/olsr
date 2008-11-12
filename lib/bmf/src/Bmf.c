@@ -61,7 +61,6 @@
 #include "defs.h" /* olsr_cnf, OLSR_PRINTF */
 #include "ipcalc.h"
 #include "olsr.h" /* olsr_printf */
-#include "scheduler.h" /* olsr_start_timer() */
 #include "mid_set.h" /* mid_lookup_main_addr() */
 #include "mpr_selector_set.h" /* olsr_lookup_mprs_set() */
 #include "link_set.h" /* get_best_link_to_neighbor() */
