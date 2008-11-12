@@ -85,6 +85,7 @@ static char my_latlon_file[MAX_FILE + 1];
 float my_lat = 0.0, my_lon = 0.0;
 static struct olsr_cookie_info *msg_gen_timer_cookie;
 static struct olsr_cookie_info *write_file_timer_cookie;
+static struct olsr_cookie_info *db_timer_cookie;
 struct olsr_cookie_info *map_poll_timer_cookie;
 
 /* the databases (using hashing)
@@ -176,6 +177,7 @@ name_constructor(void)
 	
 	msg_gen_timer_cookie = olsr_alloc_cookie("Nameservice: message gen", OLSR_COOKIE_TYPE_TIMER);
 	write_file_timer_cookie = olsr_alloc_cookie("Nameservice: write file", OLSR_COOKIE_TYPE_TIMER);
+	db_timer_cookie = olsr_alloc_cookie("Nameservice: DB", OLSR_COOKIE_TYPE_TIMER);
 	map_poll_timer_cookie = olsr_alloc_cookie("Nameservice: map poll", OLSR_COOKIE_TYPE_TIMER);
 }
 
@@ -562,9 +564,7 @@ olsr_namesvc_delete_db_entry(struct db_entry *db)
 static void
 olsr_nameservice_expire_db_timer(void *context)
 {
-  struct db_entry *db;
-
-  db = (struct db_entry *)context;
+  struct db_entry *db = context;
   db->db_timer = NULL; /* be pedandic */
 
   olsr_namesvc_delete_db_entry(db);
@@ -973,7 +973,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 			olsr_set_timer(&entry->db_timer, vtime,
 						   OLSR_NAMESVC_DB_JITTER, OLSR_TIMER_ONESHOT,
-						   &olsr_nameservice_expire_db_timer, entry, 0);
+						   &olsr_nameservice_expire_db_timer, entry, db_timer_cookie->ci_id);
 
 			entry_found = OLSR_TRUE;
 		}
@@ -993,7 +993,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 		olsr_set_timer(&entry->db_timer, vtime,
 					   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_ONESHOT,
-					   &olsr_nameservice_expire_db_timer, entry, 0);
+					   &olsr_nameservice_expire_db_timer, entry, db_timer_cookie->ci_id);
 
 		entry->names = NULL;
 
