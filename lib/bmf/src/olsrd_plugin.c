@@ -47,6 +47,7 @@
 #include "defs.h" /* olsr_u8_t, olsr_cnf */
 #include "scheduler.h" /* olsr_start_timer() */
 #include "olsr_cfg.h" /* olsr_cnf() */
+#include "olsr_cookie.h" /* olsr_alloc_cookie() */
 
 /* BMF includes */
 #include "Bmf.h" /* InitBmf(), CloseBmf() */
@@ -56,6 +57,8 @@
 
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
+
+static struct olsr_cookie_info *prune_packet_history_timer_cookie;
 
 void olsr_plugin_exit(void);
 
@@ -98,9 +101,12 @@ int olsrd_plugin_init(void)
   /* Register ifchange function */
   add_ifchgf(&InterfaceChange);
 
+  /* create the cookie */
+  prune_packet_history_timer_cookie = olsr_alloc_cookie("BMF: Prune Packet History", OLSR_COOKIE_TYPE_TIMER);
+
   /* Register the duplicate registration pruning process */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &PrunePacketHistory, NULL, 0);
+                   &PrunePacketHistory, NULL, prune_packet_history_timer_cookie->ci_id);
 
 
   return InitBmf(NULL);
