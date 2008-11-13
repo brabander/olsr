@@ -69,9 +69,6 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *);
 int
 olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
-void
-olsr_time_out_mprs_set(void);
-
 #if 0
 void
 olsr_print_mprs_set(void);
