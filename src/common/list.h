@@ -61,11 +61,28 @@ static INLINE int list_node_on_list(const struct list_node *node) { return node-
 /* test if a list is empty */
 static INLINE int list_is_empty(const struct list_node *node) { return node->prev == node && node->next == node; }
 
+static inline void list_add_after(struct list_node *pos_node, struct list_node *new_node) { \
+  new_node->next = pos_node->next; \
+  new_node->prev = pos_node; \
+ \
+  pos_node->next->prev = new_node; \
+  pos_node->next = new_node; \
+}
 
-void list_add_before(struct list_node *, struct list_node *);
-void list_add_after(struct list_node *, struct list_node *);
+static inline void list_add_before(struct list_node *pos_node, struct list_node *new_node) { \
+  new_node->prev = pos_node->prev; \
+  new_node->next = pos_node; \
+ \
+  pos_node->prev->next = new_node; \
+  pos_node->prev = new_node; \
+}
 
-void list_remove(struct list_node *);
+static inline void list_remove(struct list_node *del_node) { \
+  del_node->next->prev = del_node->prev; \
+  del_node->prev->next = del_node->next; \
+ \
+  list_node_init(del_node); \
+}
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the
