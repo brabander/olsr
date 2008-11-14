@@ -297,7 +297,7 @@ get_http_socket(int port)
  *Do initialization here
  *
  *This function is called by the my_init
- *function in uolsrd_plugin.c
+ *function in olsrd_plugin.c
  */
 int
 olsrd_plugin_init(void)
