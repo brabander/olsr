@@ -50,9 +50,6 @@ static struct olsr_cookie_info *mpr_sel_timer_cookie;
 /* MPR selector list */
 static struct list_node mprs_list_head;
 
-static void add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
-static void olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer);
-
 /* inline to recast from link_list back to link_entry */
 LISTNODE2STRUCT(list2mpr, struct mpr_selector, mprs_list);
 
@@ -115,43 +112,6 @@ olsr_expire_mpr_sel_entry(void *context)
 }
 
 /**
- * Set the mpr selector expiration timer.
- *
- * all timer setting shall be done using this function.
- * The timer param is a relative timer expressed in milliseconds.
- */
-static void
-olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
-{
-  olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel,
-		 mpr_sel_timer_cookie->ci_id);
-}
-
-/**
- *Add a MPR selector to the MPR selector set
- *
- *@param add address of the MPR selector
- *@param vtime validity time for the new entry
- *
- *@return a pointer to the new entry
- */
-static void
-add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
-{
-  struct ipaddr_str buf;
-  struct mpr_selector *new_entry = olsr_malloc(sizeof(*new_entry), "Add MPR selector");
-
-  OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
-
-  /* Fill struct */
-  new_entry->MS_main_addr = *addr;
-  olsr_set_mpr_sel_timer(new_entry, vtime);
-  /* Queue */
-  list_add_before(&mprs_list_head, &new_entry->mprs_list);
-}
-
-/**
  * Lookup an entry in the MPR selector table
  * based on address
  *
@@ -191,18 +151,35 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
 int
 olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
+  int rv;
   struct ipaddr_str buf;
   struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
 
-  OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
-
   if (mprs == NULL) {
-    add_mpr_selector(addr, vtime);
+    mprs = olsr_malloc(sizeof(*mprs), "Add MPR selector");
+
+    OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
+
+    /* Fill struct */
+    mprs->MS_main_addr = *addr;
+
+    /* Queue */
+    list_add_before(&mprs_list_head, &mprs->mprs_list);
+
     signal_link_changes(OLSR_TRUE);
-    return 1;
+    rv = 1;
+  } else {
+    OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
+    rv = 0;
   }
-  olsr_set_mpr_sel_timer(mprs, vtime);
-  return 0;
+  olsr_set_timer(&mprs->MS_timer,
+		 vtime,
+		 OLSR_MPR_SEL_JITTER,
+                 OLSR_TIMER_ONESHOT,
+		 &olsr_expire_mpr_sel_entry,
+		 mprs,
+		 mpr_sel_timer_cookie->ci_id);
+  return rv;
 }
 
 
