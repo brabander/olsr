@@ -48,14 +48,31 @@ olsr_u16_t ansn = 0;
 static struct olsr_cookie_info *mpr_sel_timer_cookie;
 
 /* MPR selector list */
-static struct mpr_selector mprs_list = { .next = &mprs_list, .prev = &mprs_list };
+static struct list_node mprs_list_head;
 
 static void add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
 static void olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer);
 
+/* inline to recast from link_list back to link_entry */
+LISTNODE2STRUCT(list2mpr, struct mpr_selector, mprs_list);
+
+#define FOR_ALL_MPRS_ENTRIES(elem)	\
+{ \
+  struct list_node *elem_node, *next_elem_node; \
+  for (elem_node = mprs_list_head.next;			 \
+       elem_node != &mprs_list_head; /* circular list */ \
+       elem_node = next_elem_node) { \
+    next_elem_node = elem_node->next; \
+    elem = list2mpr(elem_node);
+
+#define FOR_ALL_MPRS_ENTRIES_END(elem) }}
+
+
 void
 olsr_init_mprs(void)
 {
+  list_head_init(&mprs_list_head);
+
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
@@ -90,7 +107,7 @@ olsr_expire_mpr_sel_entry(void *context)
 #endif
   mpr_sel->MS_timer = NULL;
 
-  DEQUEUE_ELEM(mpr_sel);
+  list_remove(&mpr_sel->mprs_list);
 
   /* Delete entry */
   free(mpr_sel);
@@ -131,7 +148,7 @@ add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
   new_entry->MS_main_addr = *addr;
   olsr_set_mpr_sel_timer(new_entry, vtime);
   /* Queue */
-  QUEUE_ELEM(mprs_list, new_entry);
+  list_add_before(&mprs_list_head, &new_entry->mprs_list);
 }
 
 /**
@@ -151,13 +168,12 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
     return NULL;
   }
   //OLSR_PRINTF(1, "MPRS: Lookup....");
-
-  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
+  FOR_ALL_MPRS_ENTRIES(mprs) {
     if (ipequal(&mprs->MS_main_addr, addr)) {
       //OLSR_PRINTF(1, "MATCH\n");
       return mprs;
     }
-  }
+  } FOR_ALL_MPRS_ENTRIES_END(mprs);
   //OLSR_PRINTF(1, "NO MACH\n");
   return NULL;
 }
@@ -199,10 +215,10 @@ olsr_print_mprs_set(void)
 {
   struct mpr_selector *mprs;
   OLSR_PRINTF(1, "MPR SELECTORS: ");
-  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
+  FOR_ALL_MPRS_ENTRIES(mprs) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
-  }
+  } FOR_ALL_MPRS_ENTRIES_END(mprs);
   OLSR_PRINTF(1, "\n");
 }
 #endif

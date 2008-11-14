@@ -42,12 +42,12 @@
 
 #include "mantissa.h"
 #include "defs.h"
+#include "common/list.h"
 
 struct mpr_selector {
   union olsr_ip_addr  MS_main_addr;
   struct timer_entry  *MS_timer;
-  struct mpr_selector *next;
-  struct mpr_selector *prev;
+  struct list_node mprs_list;
 };
 
 extern olsr_u16_t ansn;
@@ -63,11 +63,9 @@ static INLINE olsr_u16_t get_local_ansn(void) { return ansn; }
 
 static INLINE void increase_local_ansn(void) { ansn++; }
 
-struct mpr_selector *
-olsr_lookup_mprs_set(const union olsr_ip_addr *);
+struct mpr_selector *olsr_lookup_mprs_set(const union olsr_ip_addr *);
 
-int
-olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
+int olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
 #if 0
 void
