@@ -55,8 +55,7 @@ static int delete_all_inet_gws(void);
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 
-struct olsr_rtreq
-{
+struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg    r;
   char            buf[512];
@@ -66,7 +65,7 @@ static void olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *da
 {
   struct rtattr *rta = (struct rtattr*)(((char*)req) + NLMSG_ALIGN(req->n.nlmsg_len));
   req->n.nlmsg_len = NLMSG_ALIGN(req->n.nlmsg_len) + RTA_LENGTH(len);
-  assert(req->n.nlmsg_len < sizeof(struct olsr_rtreq));
+  assert(req->n.nlmsg_len < sizeof(*req));
   rta->rta_type = type;
   rta->rta_len = RTA_LENGTH(len);
   memcpy(RTA_DATA(rta), data, len);
@@ -77,24 +76,27 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
   int ret = 0;
   struct olsr_rtreq req;
   struct iovec iov;
-  struct sockaddr_nl nladdr;
-  struct msghdr msg =
-  {
-    &nladdr,
-    sizeof(nladdr),
-    &iov,
-    1,
-    NULL,
-    0,
-    0
+  struct sockaddr_nl nladdr = { .nl_family = AF_NETLINK };
+  struct msghdr msg = {
+    .msg_name = &nladdr,
+    .msg_namelen = sizeof(nladdr),
+    .msg_iov = &iov,
+    .msg_iovlen = 1,
+    .msg_control = NULL,
+    .msg_controllen = 0,
+    .msg_flags = 0
   };
-  olsr_u32_t metric = FIBM_FLAT != olsr_cnf->fib_metric ? (RTM_NEWROUTE == cmd ?
-    rt->rt_best->rtp_metric.hops : rt->rt_metric.hops): RT_METRIC_DEFAULT;
-  const struct rt_nexthop* nexthop = (RTM_NEWROUTE == cmd) ?
-    &rt->rt_best->rtp_nexthop : &rt->rt_nexthop;
+  olsr_u32_t metric = FIBM_FLAT != olsr_cnf->fib_metric
+    ? (RTM_NEWROUTE == cmd
+       ? rt->rt_best->rtp_metric.hops
+       : rt->rt_metric.hops)
+    : RT_METRIC_DEFAULT;
+  const struct rt_nexthop* nexthop = RTM_NEWROUTE == cmd
+    ? &rt->rt_best->rtp_nexthop
+    : &rt->rt_nexthop;
 
   memset(&req, 0, sizeof(req));
-  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
+  req.n.nlmsg_len = NLMSG_LENGTH(sizeof(req.r));
   req.n.nlmsg_flags = NLM_F_REQUEST|NLM_F_CREATE|NLM_F_EXCL|NLM_F_ACK;
   req.n.nlmsg_type = cmd;
   req.r.rtm_family = family;
@@ -104,63 +106,55 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
   req.r.rtm_type = RTN_UNICAST;
   req.r.rtm_dst_len = rt->rt_dst.prefix_len;
 
-  if (AF_INET == family)
-  {
-    if (rt->rt_dst.prefix.v4.s_addr != nexthop->gateway.v4.s_addr)
-    {
+  if (AF_INET == family) {
+    if (!ip4equal(&rt->rt_dst.prefix.v4, &nexthop->gateway.v4)) {
       olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
       req.r.rtm_scope = RT_SCOPE_UNIVERSE;
     }
     olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
-  }
-  else
-  {
-    if (0 != memcmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6)))
-    {
+  } else {
+    if (!ip6equal(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6)) {
       olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
       req.r.rtm_scope = RT_SCOPE_UNIVERSE;
     }
     olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
   }
-  if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd)
-  {
+  if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd) {
     olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
   }
   olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
   iov.iov_base = &req.n;
   iov.iov_len = req.n.nlmsg_len;
-  memset(&nladdr, 0, sizeof(nladdr));
-  nladdr.nl_family = AF_NETLINK;
-  if (0 <= (ret = sendmsg(olsr_cnf->rtnl_s, &msg, 0)))
-  {
+  ret = sendmsg(olsr_cnf->rtnl_s, &msg, 0);
+  if (0 <= ret) {
     iov.iov_base = req.buf;
     iov.iov_len = sizeof(req.buf);
-    if (0 < (ret = recvmsg(olsr_cnf->rtnl_s, &msg, 0)))
-    {
+    ret = recvmsg(olsr_cnf->rtnl_s, &msg, 0);
+    if (0 < ret) {
       struct nlmsghdr* h = (struct nlmsghdr*)req.buf;
       while (NLMSG_OK(h, (unsigned int)ret)) {
-        if (NLMSG_DONE == h->nlmsg_type) break;
-        if (NLMSG_ERROR == h->nlmsg_type)
-        {
-          if (NLMSG_LENGTH(sizeof(struct nlmsgerr) <= h->nlmsg_len))
-          {
-            struct nlmsgerr *l_err = (struct nlmsgerr*)NLMSG_DATA(h);
+        if (NLMSG_DONE == h->nlmsg_type) {
+	  break;
+	}
+        if (NLMSG_ERROR == h->nlmsg_type) {
+          if (NLMSG_LENGTH(sizeof(struct nlmsgerr) <= h->nlmsg_len)) {
+            const struct nlmsgerr *l_err = (struct nlmsgerr*)NLMSG_DATA(h);
             errno = -l_err->error;
-            if (0 != errno) ret = -1;
+            if (0 != errno) {
+	      ret = -1;
+	    }
           }
           break;
         }
         h = NLMSG_NEXT(h, ret);
       }
     }
-    if (0 <= ret && olsr_cnf->ipc_connections > 0)
-    {
-      ipc_route_send_rtentry(
-        &rt->rt_dst.prefix,
-        &nexthop->gateway,
-        metric,
-        RTM_NEWROUTE == cmd,
-        if_ifwithindex_name(nexthop->iif_index));
+    if (0 <= ret && olsr_cnf->ipc_connections > 0) {
+      ipc_route_send_rtentry(&rt->rt_dst.prefix,
+			     &nexthop->gateway,
+			     metric,
+			     RTM_NEWROUTE == cmd,
+			     if_ifwithindex_name(nexthop->iif_index));
     }
   }
   return ret;
@@ -177,10 +171,12 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
 int
 olsr_ioctl_add_route(const struct rt_entry *rt)
 {
+  int rslt;
 #if !LINUX_POLICY_ROUTING
   struct rtentry kernel_route;
   union olsr_ip_addr mask;
-  int rslt;
+#else /* !LINUX_POLICY_ROUTING */
+  int rttable;
 #endif /* LINUX_POLICY_ROUTING */
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
@@ -220,17 +216,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
     olsr_cnf->del_gws = OLSR_FALSE;
   }
 
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route)) >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1,
-                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-  }
-
-  return rslt;
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route));
 #else /* !LINUX_POLICY_ROUTING */
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable)
   {
@@ -241,11 +227,21 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
      */
     olsr_netlink_route(rt, AF_INET, 253, RTM_NEWROUTE);
   }
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0)
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_NEWROUTE);
-  else
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable, RTM_NEWROUTE);
+  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
+    ? olsr_cnf->rttable_default
+    : olsr_cnf->rttable;
+  rslt = olsr_netlink_route(rt, AF_INET, rttable, RTM_NEWROUTE);
 #endif /* LINUX_POLICY_ROUTING */
+
+  if (rslt >= 0) {
+    /*
+     * Send IPC route update message
+     */
+    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
+                           rt->rt_best->rtp_metric.hops, 1,
+                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+  }
+  return rslt;
 }
 
 
@@ -259,13 +255,17 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 int
 olsr_ioctl_add_route6(const struct rt_entry *rt)
 {
+  int rslt;
 #if !LINUX_POLICY_ROUTING
   struct in6_rtmsg kernel_route;
-  int rslt;
+#else /* !LINUX_POLICY_ROUTING */
+  int rttable;
+#endif /* LINUX_POLICY_ROUTING */
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
 
-  memset(&kernel_route, 0, sizeof(struct in6_rtmsg));
+#if !LINUX_POLICY_ROUTING
+  memset(&kernel_route, 0, sizeof(kernel_route));
 
   kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
@@ -281,9 +281,15 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_ifindex = rt->rt_best->rtp_nexthop.iif_index;
   
   /* XXX delete 0/0 route before ? */
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route));
+#else /* !LINUX_POLICY_ROUTING */
+  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
+    ? olsr_cnf->rttable_default
+    : olsr_cnf->rttable;
+  rslt = olsr_netlink_route(rt, AF_INET6, rttable, RTM_NEWROUTE);
+#endif /* LINUX_POLICY_ROUTING */
 
-  if((rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route)) >= 0) {
-
+  if (rslt >= 0) {
     /*
      * Send IPC route update message
      */
@@ -293,12 +299,6 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   }
 
   return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0)
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable_default, RTM_NEWROUTE);
-  else
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable, RTM_NEWROUTE);
-#endif /* LINUX_POLICY_ROUTING */
 }
 
 
@@ -312,10 +312,12 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
 int
 olsr_ioctl_del_route(const struct rt_entry *rt)
 {
+  int rslt;
 #if !LINUX_POLICY_ROUTING
   struct rtentry kernel_route;
   union olsr_ip_addr mask;
-  int rslt;
+#else /* LINUX_POLICY_ROUTING */
+  int rttable;
 #endif /* LINUX_POLICY_ROUTING */
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
@@ -347,15 +349,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
    */
   kernel_route.rt_dev = NULL;
 
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route)) >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
-  return rslt;
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route);
 #else /* !LINUX_POLICY_ROUTING */
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable)
   {
@@ -364,11 +358,20 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
      */
     olsr_netlink_route(rt, AF_INET, 253, RTM_DELROUTE);
   }
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0 )
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable_default, RTM_DELROUTE);
-  else
-    return olsr_netlink_route(rt, AF_INET, olsr_cnf->rttable, RTM_DELROUTE);
+  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
+    ? olsr_cnf->rttable_default
+    : olsr_cnf->rttable;
+  rslt = olsr_netlink_route(rt, AF_INET, rttable, RTM_DELROUTE);
 #endif /* LINUX_POLICY_ROUTING */
+  if (rslt >= 0) {
+
+    /*
+     * Send IPC route update message
+     */
+    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
+  }
+
+  return rslt;
 }
 
 
@@ -382,16 +385,17 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
 int
 olsr_ioctl_del_route6(const struct rt_entry *rt)
 {
+  int rslt;
 #if !LINUX_POLICY_ROUTING
   struct in6_rtmsg kernel_route;
-  int rslt;
+#else /* LINUX_POLICY_ROUTING */
+  int rttable;
 #endif /* LINUX_POLICY_ROUTING */
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
 #if !LINUX_POLICY_ROUTING
-  memset(&kernel_route,0,sizeof(struct in6_rtmsg));
-
+  memset(&kernel_route, 0, sizeof(kernel_route));
 
   kernel_route.rtmsg_dst     = rt->rt_dst.prefix.v6;
   kernel_route.rtmsg_dst_len = rt->rt_dst.prefix_len;
@@ -401,7 +405,14 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
   kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
 
-  if ((rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route) >= 0)) {
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route);
+#else /* !LINUX_POLICY_ROUTING */
+  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
+    ? olsr_cnf->rttable_default
+    : olsr_cnf->rttable;
+  rslt = olsr_netlink_route(rt, AF_INET6, rttable, RTM_DELROUTE);
+#endif /* LINUX_POLICY_ROUTING */
+  if (rslt >= 0) {
 
     /*
      * Send IPC route update message
@@ -410,12 +421,6 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   }
 
   return rslt;
-#else /* !LINUX_POLICY_ROUTING */
-  if (0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0)
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable_default, RTM_DELROUTE);
-  else
-    return olsr_netlink_route(rt, AF_INET6, olsr_cnf->rttable, RTM_DELROUTE);
-#endif /* LINUX_POLICY_ROUTING */
 }
 
 #if !LINUX_POLICY_ROUTING
