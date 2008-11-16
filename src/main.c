@@ -57,6 +57,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "ipc_frontend.h"
+#include "misc.h"
 #include "common/string.h"
 
 #if LINUX_POLICY_ROUTING
@@ -260,7 +261,7 @@ main(int argc, char *argv[])
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
     olsr_exit(__func__, 0);
   }
-  fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+  set_nonblocking(olsr_cnf->rtnl_s);
 #endif
 
 /*

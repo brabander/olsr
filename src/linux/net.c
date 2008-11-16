@@ -47,6 +47,7 @@
 #include "../ipcalc.h"
 #include "../common/string.h"
 #include "../olsr_protocol.h"
+#include "../misc.h"
 
 #include <net/if.h>
 
@@ -463,14 +464,7 @@ getsocket(int bufspace, char *int_name)
     return -1;
   }
 
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on|O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-    }
-  }
+  set_nonblocking(sock);
   return sock;
 }
 
@@ -567,14 +561,7 @@ getsocket6(int bufspace, char *int_name)
     return (-1);
   }
 
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on|O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-    }
-  }
+  set_nonblocking(sock);
   return sock;
 }
 
