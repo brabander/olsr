@@ -45,6 +45,7 @@
 #include "../parser.h"		/* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
 #include "../common/string.h"
+#include "../misc.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -403,14 +404,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
     return -1;
   }
 
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-    }
-  }
+  set_nonblocking(sock);
   return (sock);
 }
 
@@ -473,14 +467,7 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
     return -1;
   }
 
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
-    }
-  }
+  set_nonblocking(sock);
   return sock;
 }
 
