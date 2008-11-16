@@ -549,8 +549,7 @@ get_next_list_entry (struct list_node **prev_node,
 static void
 walk_timers(clock_t * last_run)
 {
-  unsigned int timers_walked, timers_fired;
-  unsigned int total_timers_walked, total_timers_fired;
+  unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;
 
   /*
@@ -558,15 +557,10 @@ walk_timers(clock_t * last_run)
    * or check *all* the wheel slots, whatever is less work.
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
-  total_timers_walked = total_timers_fired = timers_walked = timers_fired = 0;
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
     struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
-
     /* keep some statistics */
-    total_timers_walked += timers_walked;
-    total_timers_fired += timers_fired;
-    timers_walked = 0;
-    timers_fired = 0;
+    unsigned int timers_walked = 0, timers_fired = 0;
 
     /* Get the hash slot for this clocktick */
     timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
@@ -625,6 +619,10 @@ walk_timers(clock_t * last_run)
 	timers_fired++;
       }
     }
+
+    /* keep some statistics */
+    total_timers_walked += timers_walked;
+    total_timers_fired += timers_fired;
 
     /* Increment the time slot and wheel slot walk iteration */
     (*last_run)++;
