@@ -101,7 +101,7 @@ void olsr_init_parser(void)
 void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int forwarding)
 {
   struct parse_function_entry *new_entry;
-  
+
   OLSR_PRINTF(3, "Parser: registering event for type %d\n", type);
 
   new_entry = olsr_malloc(sizeof(*new_entry), "Register parse function");
@@ -300,7 +300,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     if (count < 0) {
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "packet length error in  packet received from %s!",
-		  olsr_ip_to_string(&buf, from_addr));
+                  olsr_ip_to_string(&buf, from_addr));
 
       olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
       olsr_ip_to_string(&buf, from_addr));
@@ -323,8 +323,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0) {
         struct ipaddr_str buf;
         OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n",
-		    m->v4.olsr_msgtype,
-		    olsr_ip_to_string(&buf, from_addr));
+                    m->v4.olsr_msgtype,
+                    olsr_ip_to_string(&buf, from_addr));
         continue;
       }
     } else {
@@ -332,8 +332,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0) {
         struct ipaddr_str buf;
         OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n",
-		    m->v4.olsr_msgtype,
-		    olsr_ip_to_string(&buf, from_addr));
+                    m->v4.olsr_msgtype,
+                    olsr_ip_to_string(&buf, from_addr));
         continue;
       }
     }
@@ -353,7 +353,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
 #ifdef DEBUG
       struct ipaddr_str buf;
       OLSR_PRINTF(3, "Not processing message originating from %s!\n",
-		  olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));
+                  olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));
 #endif
       continue;
     }
@@ -380,7 +380,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
         entry->function(m, in_if, from_addr);
         if (entry->caller_forwarding) {
           processed = 1;
-	}
+        }
       }
     }
 
@@ -390,15 +390,15 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       //struct unknown_message unkpacket;
       struct ipaddr_str buf;
       if (olsr_cnf->ip_version == AF_INET) {
-	originator.v4.s_addr = m->v4.originator;
+        originator.v4.s_addr = m->v4.originator;
       } else {
-	originator.v6 = m->v6.originator;
+        originator.v6 = m->v6.originator;
       }
 
       OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
-		  m->v4.olsr_msgtype,
-		  size,
-		  olsr_ip_to_string(&buf, &originator));
+                  m->v4.olsr_msgtype,
+                  size,
+                  olsr_ip_to_string(&buf, &originator));
 
       /* Forward message */
       if (!ipequal(&originator, &olsr_cnf->main_addr)) {
@@ -464,13 +464,13 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     if (olsr_cnf->ip_version == AF_INET) {
       /* IPv4 sender address */
       if (fromlen != sizeof(struct sockaddr_in)) {
-	break;
+        break;
       }
       from_addr.v4 = ((struct sockaddr_in *)&from)->sin_addr;
     } else {
       /* IPv6 sender address */
       if (fromlen != sizeof(struct sockaddr_in6)) {
-	break;
+        break;
       }
       from_addr.v6 = ((struct sockaddr_in6 *)&from)->sin6_addr;
     }
@@ -483,11 +483,11 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     if (olsr_in_if == NULL) {
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-		  olsr_ip_to_string(&buf, &from_addr),
-		  cc);
+                  olsr_ip_to_string(&buf, &from_addr),
+                  cc);
       olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-		  olsr_ip_to_string(&buf, &from_addr),
-		  cc);
+                  olsr_ip_to_string(&buf, &from_addr),
+                  cc);
       return;
     }
 
@@ -576,11 +576,11 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   if (olsr_in_if == NULL) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-		olsr_ip_to_string(&buf, &from_addr),
-		cc);
+                olsr_ip_to_string(&buf, &from_addr),
+                cc);
     olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-		olsr_ip_to_string(&buf, &from_addr),
-		cc);
+                olsr_ip_to_string(&buf, &from_addr),
+                cc);
     return;
   }
 
