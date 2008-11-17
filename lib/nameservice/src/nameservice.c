@@ -473,7 +473,9 @@ name_destructor(void)
 	free_all_list_entries(latlon_list);
 
 	olsr_stop_timer(write_file_timer);
+	write_file_timer = NULL;
 	olsr_stop_timer(msg_gen_timer);
+	msg_gen_timer = NULL;
 
 	regfree(&regex_t_name);
 	regfree(&regex_t_service);
@@ -551,6 +553,7 @@ olsr_namesvc_delete_db_entry(struct db_entry *db)
 
 	olsr_start_write_file_timer();
 	olsr_stop_timer(db->db_timer); /* stop timer if running */
+	db->db_timer = NULL;
 	
 	/* Delete */
 	free_name_entry_list(&db->names);
