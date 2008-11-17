@@ -68,13 +68,24 @@ static struct list_node free_timer_list;
 static unsigned int timers_running;
 
 static void walk_timers(clock_t *);
-static struct list_node *get_next_list_entry(struct list_node **prev_node, struct list_node *current_node);
 
 static void poll_sockets(void);
 
 static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val);
 
 static struct olsr_socket_entry *olsr_socket_entries = NULL;
+
+#define FOR_ALL_TIMER_ENTRIES(head, elem)	\
+{ \
+  struct list_node *elem_node, *next_elem_node; \
+  for (elem_node = (head)->next;				 \
+       elem_node != (head); /* circular list */	 \
+       elem_node = next_elem_node) { \
+    next_elem_node = elem_node->next; \
+    elem = list2timer(elem_node);
+
+#define FOR_ALL_TIMER_ENTRIES_END(head, elem) }}
+
 
 /**
  * Add a socket and handler to the socketset
@@ -510,36 +521,6 @@ olsr_init_timers(void)
   timers_running = 0;
 }
 
-/*
- * get_next_list_entry
- *
- * Get the next list node in a hash bucket.
- * The listnode of the timer in may be subject to getting removed from
- * this timer bucket in olsr_change_timer() and olsr_stop_timer(), which
- * means that we can miss our walking context.
- * By caching the previous node we can figure out if the current node
- * has been removed from the hash bucket and compute the next node.
- */
-static struct list_node *
-get_next_list_entry (struct list_node **prev_node,
-                          struct list_node *current_node)
-{
-  if ((*prev_node)->next == current_node) {
-
-    /*
-     * No change in the list, normal traversal, update the previous node.
-     */
-    *prev_node = current_node;
-    return (current_node->next);
-  } else {
-
-    /*
-     * List change. Recompute the walking context.
-     */
-    return ((*prev_node)->next);
-  }
-}
-
 /**
  * Walk through the timer list and check if any timer is ready to fire.
  * Callback the provided function with the context pointer.
@@ -556,21 +537,15 @@ walk_timers(clock_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
-    struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
 
     /* Get the hash slot for this clocktick */
-    timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
-    timer_walk_prev_node = timer_head_node;
+    struct list_node * const timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
+    struct timer_entry *timer;
 
     /* Walk all entries hanging off this hash bucket */
-    for (timer_walk_node = timer_head_node->next;
-         timer_walk_node != timer_head_node; /* circular list */
-	 timer_walk_node = get_next_list_entry(&timer_walk_prev_node,
-                                                    timer_walk_node)) {
-      struct timer_entry *timer = list2timer(timer_walk_node);
-
+    FOR_ALL_TIMER_ENTRIES(timer_head_node, timer) {
       timers_walked++;
 
       /* Ready to fire ? */
@@ -605,7 +580,7 @@ walk_timers(clock_t * last_run)
 
 	timers_fired++;
       }
-    }
+    } FOR_ALL_TIMER_ENTRIES_END(timer_head_node, timer);
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
