@@ -151,7 +151,7 @@ static int insert_plugin_ipnet(sa_family_t ip_version, const char *sz_net, const
             prefix_len += 96;
         }
         else {
-            return 1;
+            return 0;
         }
     }
 
