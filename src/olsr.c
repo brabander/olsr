@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -148,12 +148,12 @@ olsr_process_changes(void)
   if(changes_hna)
     OLSR_PRINTF(3, "CHANGES IN HNA\n");
 #endif
-  
+
   if(!changes_force &&
      2 <= olsr_cnf->lq_level &&
      0 >= olsr_cnf->lq_dlimit)
     return;
-    
+
   if(!changes_neighborhood &&
      !changes_topology &&
      !changes_hna)
@@ -177,13 +177,13 @@ olsr_process_changes(void)
   if (changes_neighborhood || changes_topology || changes_hna) {
     olsr_calculate_routing_table();
   }
-  
+
   if (olsr_cnf->debug_level > 0)
-    {      
-      if (olsr_cnf->debug_level > 2) 
+    {
+      if (olsr_cnf->debug_level > 2)
         {
           olsr_print_mid_set();
-	  
+
           if (olsr_cnf->debug_level > 3)
             {
              if (olsr_cnf->debug_level > 8)
@@ -194,7 +194,7 @@ olsr_process_changes(void)
             }
         }
 
-#if 1     
+#if 1
       olsr_print_link_set();
       olsr_print_neighbor_table();
       olsr_print_two_hop_neighbor_table();
@@ -202,7 +202,7 @@ olsr_process_changes(void)
 #endif
     }
 
-  for(tmp_pc_list = pcf_list; 
+  for(tmp_pc_list = pcf_list;
       tmp_pc_list != NULL;
       tmp_pc_list = tmp_pc_list->next)
     {
@@ -227,7 +227,7 @@ olsr_trigger_forced_update(void *unused __attribute__((unused))) {
   changes_neighborhood = OLSR_TRUE;
   changes_topology = OLSR_TRUE;
   changes_hna = OLSR_TRUE;
-  
+
   olsr_process_changes();
 }
 
@@ -238,7 +238,7 @@ olsr_trigger_forced_update(void *unused __attribute__((unused))) {
  */
 void
 olsr_init_tables(void)
-{  
+{
   /* Some cookies for stats keeping */
   static struct olsr_cookie_info *periodic_spf_timer_cookie = NULL;
 
@@ -257,7 +257,7 @@ olsr_init_tables(void)
 
   /* Initialize lq plugin set */
   init_lq_handler_tree();
-  
+
   /* Initialize link set */
   olsr_init_link_set();
 
@@ -280,7 +280,7 @@ olsr_init_tables(void)
   olsr_init_mid_set();
 
   /* Initialize HNA set */
-  olsr_init_hna_set();  
+  olsr_init_hna_set();
 
   /* Initialize MPRS */
   olsr_init_mprs();
@@ -289,7 +289,7 @@ olsr_init_tables(void)
   /* Initialize Layer 1/2 database */
   olsr_initialize_layer12();
 #endif
-  
+
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
     periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF",
@@ -311,7 +311,7 @@ olsr_init_tables(void)
  *@returns positive if forwarded
  */
 int
-olsr_forward_message(union olsr_message *m, 
+olsr_forward_message(union olsr_message *m,
 		     union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
@@ -326,11 +326,11 @@ olsr_forward_message(union olsr_message *m,
    */
   if (AF_INET == olsr_cnf->ip_version)
   {
-    if (2 > m->v4.ttl || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl) return 0;
+    if (m->v4.ttl < 2 || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl) return 0;
   }
   else
   {
-    if (2 > m->v6.ttl || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl) return 0;
+    if (m->v6.ttl < 2|| 255 < (int)m->v6.hopcnt + (int)m->v6.ttl) return 0;
   }
 
   /* Lookup sender address */
@@ -355,26 +355,39 @@ olsr_forward_message(union olsr_message *m,
       return 0;
     }
 
+  /* check if we already forwarded this message */
+  if (AF_INET == olsr_cnf->ip_version)
+  {
+    if (olsr_message_is_duplicate(from_addr, m->v4.seqno, true)) {
+      return 0; /* it's a duplicate, forget about it */
+    }
+  }
+  else {
+    if (olsr_message_is_duplicate(from_addr, m->v6.seqno, true)) {
+      return 0; /* it's a duplicate, forget about it */
+    }
+  }
+
   /* Treat TTL hopcnt */
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       m->v4.hopcnt++;
-      m->v4.ttl--; 
+      m->v4.ttl--;
     }
   else
     {
       /* IPv6 */
       m->v6.hopcnt++;
-      m->v6.ttl--; 
+      m->v6.ttl--;
     }
 
   /* Update packet data */
   msgsize = ntohs(m->v4.olsr_msgsize);
 
   /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
-    { 
+  for (ifn = ifnet; ifn ; ifn = ifn->int_next)
+    {
       if(net_output_pending(ifn))
 	{
 	  /*
@@ -386,7 +399,7 @@ olsr_forward_message(union olsr_message *m,
 	      net_output(ifn);
 	      /* Buffer message */
 	      set_buffer_timer(ifn);
-	      
+
 	      if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
 		{
 		  OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
@@ -398,7 +411,7 @@ olsr_forward_message(union olsr_message *m,
 	{
 	  /* No forwarding pending */
 	  set_buffer_timer(ifn);
-	  
+
 	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
 	    {
 	      OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
@@ -448,7 +461,7 @@ olsr_expire_buffer_timer(void *context)
  */
 void
 set_buffer_timer(struct interface *ifn)
-{      
+{
 
   /*
    * Bail if there is already a timer running.
@@ -527,7 +540,7 @@ olsr_calculate_willingness(void)
   if(ainfo.ac_line_status == OLSR_AC_POWERED)
     return 6;
 
-  /* If battery powered 
+  /* If battery powered
    *
    * juice > 78% will: 3
    * 78% > juice > 26% will: 2

@@ -56,7 +56,7 @@ struct dup_entry {
   union olsr_ip_addr ip;
   olsr_u16_t seqnr;
   olsr_u16_t too_low_counter;
-  olsr_u32_t array;
+  olsr_u32_t processedArray, forwardedArray;
   clock_t valid_until;
 };
 
@@ -64,7 +64,7 @@ AVLNODE2STRUCT(duptree2dupentry, struct dup_entry, avl);
 
 void olsr_init_duplicate_set(void);
 struct dup_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
-int olsr_shall_process_message(void *ip, olsr_u16_t seqnr);
+int olsr_message_is_duplicate(void *ip, olsr_u16_t seqnr, bool forwarding);
 void olsr_print_duplicate_table(void);
 
 #define OLSR_FOR_ALL_DUP_ENTRIES(dup) \

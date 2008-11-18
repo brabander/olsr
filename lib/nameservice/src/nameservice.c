@@ -5,28 +5,28 @@
  * Copyright (c) 2007, Sven-Ola <sven-ola@gmx.de>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright notice, 
+ * * Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright notice, 
- *   this list of conditions and the following disclaimer in the documentation 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * * Neither the name of the UniK olsr daemon nor the names of its contributors 
- *   may be used to endorse or promote products derived from this software 
+ * * Neither the name of the UniK olsr daemon nor the names of its contributors
+ *   may be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
@@ -128,10 +128,10 @@ static regmatch_t regmatch_t_service[10];
  * do initialization
  */
 void
-name_constructor(void) 
+name_constructor(void)
 {
 	int i;
-	
+
 #ifdef WIN32
 	int len;
 
@@ -143,7 +143,7 @@ name_constructor(void)
 	if (my_hosts_file[len - 1] != '\\')
 		strscat(my_hosts_file, "\\", sizeof(my_host_file));
 	strscat(my_hosts_file, "hosts_olsr", sizeof(my_host_file));
-	
+
 	len = strlen(my_services_file);
 	if (my_services_file[len - 1] != '\\')
 		strscat(my_services_file, "\\", sizeof(my_services_file));
@@ -166,7 +166,7 @@ name_constructor(void)
 	latlon_in_file[0] = '\0';
 	my_name_change_script[0] = '\0';
 	my_services_change_script[0] = '\0';
-	
+
 	/* init the lists heads */
 	for(i = 0; i < HASHSIZE; i++) {
 		list_head_init(&name_list[i]);
@@ -174,7 +174,7 @@ name_constructor(void)
 		list_head_init(&service_list[i]);
 		list_head_init(&latlon_list[i]);
 	}
-	
+
 	msg_gen_timer_cookie = olsr_alloc_cookie("Nameservice: message gen", OLSR_COOKIE_TYPE_TIMER);
 	write_file_timer_cookie = olsr_alloc_cookie("Nameservice: write file", OLSR_COOKIE_TYPE_TIMER);
 	db_timer_cookie = olsr_alloc_cookie("Nameservice: DB", OLSR_COOKIE_TYPE_TIMER);
@@ -285,15 +285,15 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
  * queue the name/forwarder/service given in value
  * to the front of my_list
  */
-struct name_entry* 
-add_name_to_list(struct name_entry *my_list, const char *value, int type, const union olsr_ip_addr *ip) 
+struct name_entry*
+add_name_to_list(struct name_entry *my_list, const char *value, int type, const union olsr_ip_addr *ip)
 {
 	struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry add_name_to_list");
 	tmp->name = strndup( value, MAX_NAME );
 	tmp->len = strlen( tmp->name );
 	tmp->type = type;
 	// all IPs with value 0 will be set to main_addr later
-	if (ip==NULL) 
+	if (ip==NULL)
 		memset(&tmp->ip, 0, sizeof(tmp->ip));
 	else
 		tmp->ip = *ip;
@@ -305,10 +305,10 @@ add_name_to_list(struct name_entry *my_list, const char *value, int type, const 
 /**
  * last initialization
  *
- * we have to do this here because some things like main_addr 
+ * we have to do this here because some things like main_addr
  * or the dns suffix (for validation) are not known before
  *
- * this is beause of the order in which the plugin is initialized 
+ * this is beause of the order in which the plugin is initialized
  * by the plugin loader:
  *   - first the parameters are sent
  *   - then register_olsr_data() from olsrd_plugin.c is called
@@ -332,7 +332,7 @@ name_init(void)
 	//compile the regex from the string
 	if ((ret = regcomp(&regex_t_name, regex_name , REG_EXTENDED)) != 0)
 	{
-		/* #2: call regerror() if regcomp failed 
+		/* #2: call regerror() if regcomp failed
 		 * commented out, because only for debuggin needed
 		 *
 		int errmsgsz = regerror(ret, &regex_t_name, NULL, 0);
@@ -358,7 +358,7 @@ name_init(void)
 	/* #1: call regcomp() to compile the regex */
 	if ((ret = regcomp(&regex_t_service, regex_service , REG_EXTENDED )) != 0)
 	{
-		/* #2: call regerror() if regcomp failed 
+		/* #2: call regerror() if regcomp failed
 		 * commented out, because only for debuggin needed
 		 *
 		int errmsgsz = regerror(ret, &regex_t_service, NULL, 0);
@@ -397,7 +397,7 @@ name_init(void)
 
 
 	/* register functions with olsrd */
-	olsr_parser_add_function(&olsr_parser, PARSER_TYPE, 1);
+	olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
 
 	/* periodic message generation */
 	msg_gen_timer = olsr_start_timer(my_interval * MSEC_PER_SEC, EMISSION_JITTER,
@@ -411,17 +411,17 @@ name_init(void)
 
 
 struct name_entry*
-remove_nonvalid_names_from_list(struct name_entry *my_list, int type) 
+remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
 {
 	struct name_entry *next = my_list;
 	olsr_bool valid = OLSR_FALSE;
 	if (my_list == NULL) {
 		return NULL;
-	} 
+	}
 
 	switch (type) {
 		case NAME_HOST:
-			valid = is_name_wellformed(my_list->name) && allowed_ip(&my_list->ip); 
+			valid = is_name_wellformed(my_list->name) && allowed_ip(&my_list->ip);
 			break;
 		case NAME_FORWARDER:
 			valid = allowed_ip(&my_list->ip);
@@ -462,7 +462,7 @@ void
 name_destructor(void)
 {
 	OLSR_PRINTF(2, "NAME PLUGIN: exit. cleaning up...\n");
-	
+
 	free_name_entry_list(&my_names);
 	free_name_entry_list(&my_services);
 	free_name_entry_list(&my_forwarders);
@@ -481,14 +481,14 @@ name_destructor(void)
 }
 
 /* free all list entries */
-void 
-free_all_list_entries(struct list_node *this_db_list) 
+void
+free_all_list_entries(struct list_node *this_db_list)
 {
 	struct db_entry *db;
 	struct list_node *list_head, *list_node, *list_node_next;
 
 	int i;
-	
+
 	for (i = 0; i < HASHSIZE; i++) {
 
 		list_head = &this_db_list[i];
@@ -546,12 +546,12 @@ void
 olsr_namesvc_delete_db_entry(struct db_entry *db)
 {
 	struct ipaddr_str strbuf;
-	OLSR_PRINTF(2, "NAME PLUGIN: %s timed out... deleting\n", 
+	OLSR_PRINTF(2, "NAME PLUGIN: %s timed out... deleting\n",
 				olsr_ip_to_string(&strbuf, &db->originator));
 
 	olsr_start_write_file_timer();
 	olsr_stop_timer(db->db_timer); /* stop timer if running */
-	
+
 	/* Delete */
 	free_name_entry_list(&db->names);
 	list_remove(&db->db_list);
@@ -610,12 +610,12 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 
 		namesize = encap_namemsg((struct namemsg*)&message->v6.message);
 		namesize = namesize + sizeof(struct olsrmsg6);
-		
+
 		message->v6.olsr_msgsize = htons(namesize);
 	}
 
 	/* looping trough interfaces */
-	for (ifn = ifnet; ifn ; ifn = ifn->int_next) 
+	for (ifn = ifnet; ifn ; ifn = ifn->int_next)
 	{
 		OLSR_PRINTF(3, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
@@ -652,7 +652,7 @@ olsr_parser(union olsr_message *m,
 		memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
 		seqno = ntohs(m->v6.seqno);
 	}
-		
+
 	/* Fetch the message based on IP version */
 	if(olsr_cnf->ip_version == AF_INET) {
 		vtime = me_to_reltime(m->v4.olsr_vtime);
@@ -665,12 +665,12 @@ olsr_parser(union olsr_message *m,
 		namemessage = (struct namemsg*)&m->v6.message;
 	}
 
-	/* Check if message originated from this node. 
+	/* Check if message originated from this node.
 	If so - back off */
 	if(ipequal(&originator, &olsr_cnf->main_addr))
 		return;
 
-	/* Check that the neighbor this message was received from is symmetric. 
+	/* Check that the neighbor this message was received from is symmetric.
 	If not - back off*/
 	if(check_neighbor_link(ipaddr) != SYM_LINK) {
 		struct ipaddr_str strbuf;
@@ -679,14 +679,10 @@ olsr_parser(union olsr_message *m,
 	}
 
 	update_name_entry(&originator, namemessage, size, vtime);
-
-	/* Forward the message if nessecary
-	* default_fwd does all the work for us! */
-	olsr_forward_message(m, ipaddr);
 }
 
 /**
- * Encapsulate a name message into a packet. 
+ * Encapsulate a name message into a packet.
  *
  * It assumed that there is enough space in the buffer to do this!
  *
@@ -761,13 +757,13 @@ encap_namemsg(struct namemsg* msg)
  *
  * return the length of the name packet
  */
-char*  
+char*
 create_packet(struct name* to, struct name_entry *from)
 {
 	char *pos = (char*) to;
 	int k;
 	struct ipaddr_str strbuf;
-	OLSR_PRINTF(3, "NAME PLUGIN: Announcing name %s (%s) %d\n", 
+	OLSR_PRINTF(3, "NAME PLUGIN: Announcing name %s (%s) %d\n",
 		from->name, olsr_ip_to_string(&strbuf, &from->ip), from->len);
 	to->type = htons(from->type);
 	to->len = htons(from->len);
@@ -812,7 +808,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 		return;
 	}
 
-	// don't insert the received entry again, if it has already been inserted in the hash table. 
+	// don't insert the received entry again, if it has already been inserted in the hash table.
 	// Instead only the validity time is set in insert_new_name_in_list function, which calls this one
 	for (already_saved_name_entries = (*to); already_saved_name_entries != NULL ; already_saved_name_entries = already_saved_name_entries->next)
 	{
@@ -858,15 +854,15 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_
 		}
 	}
 
-	//if not yet known entry 
-	tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");		
+	//if not yet known entry
+	tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");
 	tmp->type = ntohs(from_packet->type);
 	tmp->len = len_of_name > MAX_NAME ? MAX_NAME : ntohs(from_packet->len);
 	tmp->name = olsr_malloc(tmp->len + 1, "new name_entry name");
 	tmp->ip = from_packet->ip;
 	strscpy(tmp->name, name, tmp->len + 1);
 
-	OLSR_PRINTF(3, "\nNAME PLUGIN: create new name/service/forwarder entry %s (%s) [len=%d] [type=%d] in linked list\n", 
+	OLSR_PRINTF(3, "\nNAME PLUGIN: create new name/service/forwarder entry %s (%s) [len=%d] [type=%d] in linked list\n",
 		tmp->name, olsr_ip_to_string(&strbuf, &tmp->ip), tmp->len, tmp->type);
 
 	*this_table_changed = OLSR_TRUE;
@@ -887,37 +883,37 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
 {
 	struct ipaddr_str strbuf;
 	char *pos, *end_pos;
-	struct name *from_packet; 
+	struct name *from_packet;
 	int i;
 
-	OLSR_PRINTF(3, "NAME PLUGIN: Received Message from %s\n", 
+	OLSR_PRINTF(3, "NAME PLUGIN: Received Message from %s\n",
 				olsr_ip_to_string(&strbuf, originator));
-	
+
 	if (ntohs(msg->version) != NAME_PROTOCOL_VERSION) {
 		OLSR_PRINTF(3, "NAME PLUGIN: ignoring wrong version %d\n", msg->version);
 		return;
 	}
-	
+
 	/* now add the names from the message */
 	pos = (char*)msg + sizeof(struct namemsg);
-	end_pos = pos + msg_size - sizeof(struct name*); // at least one struct name has to be left	
+	end_pos = pos + msg_size - sizeof(struct name*); // at least one struct name has to be left
 
-	for (i=ntohs(msg->nr_names); i > 0 && pos<end_pos; i--) 
+	for (i=ntohs(msg->nr_names); i > 0 && pos<end_pos; i--)
 	{
 		from_packet = (struct name*)pos;
-		
+
 		switch (ntohs(from_packet->type)) {
-			case NAME_HOST: 
+			case NAME_HOST:
 				insert_new_name_in_list(originator, name_list, from_packet,
-										&name_table_changed, vtime); 
+										&name_table_changed, vtime);
 				break;
 			case NAME_FORWARDER:
 				insert_new_name_in_list(originator, forwarder_list, from_packet,
-										&forwarder_table_changed, vtime); 
+										&forwarder_table_changed, vtime);
 				break;
 			case NAME_SERVICE:
 				insert_new_name_in_list(originator, service_list, from_packet,
-										&service_table_changed, vtime); 
+										&service_table_changed, vtime);
 				break;
 			case NAME_LATLON:
 				insert_new_name_in_list(originator, latlon_list, from_packet,
@@ -999,7 +995,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 		/* insert to the list */
 		list_add_before(&this_list[hash], &entry->db_list);
-		
+
 		//delegate to function for parsing the packet and linking it to entry->names
 		decap_namemsg(from_packet, &entry->names, this_table_changed);
 	}
@@ -1037,12 +1033,12 @@ send_sighup_to_pidfile(char * pid_file){
 	ipid = strtol(line, &endptr, 0);
 	if (endptr==line) {
 		OLSR_PRINTF(2, "NAME PLUGIN: invalid pid at file %s\n", pid_file);
-		return;	
+		return;
 	}
 
 	result=kill(ipid, SIGHUP);
 	if (result==0){
-		OLSR_PRINTF(2, "NAME PLUGIN: SIGHUP sent to pid %i\n", ipid);	
+		OLSR_PRINTF(2, "NAME PLUGIN: SIGHUP sent to pid %i\n", ipid);
 	} else {
 		OLSR_PRINTF(2, "NAME PLUGIN: failed to send SIGHUP to pid %i\n", ipid);
 	}
@@ -1080,13 +1076,13 @@ write_hosts_file(void)
 		OLSR_PRINTF(2, "NAME PLUGIN: cant write hosts file\n");
 		return;
 	}
-	
+
 	fprintf(hosts, "### this /etc/hosts file is overwritten regularly by olsrd\n");
 	fprintf(hosts, "### do not edit\n\n");
 
 	fprintf(hosts, "127.0.0.1\tlocalhost\n");
 	fprintf(hosts, "::1\t\tlocalhost\n\n");
-	
+
 	// copy content from additional hosts filename
 	if (my_add_hosts[0] != '\0') {
 		add_hosts = fopen( my_add_hosts, "r" );
@@ -1098,16 +1094,16 @@ write_hosts_file(void)
 			while ((c = getc(add_hosts)) != EOF)
 				putc(c, hosts);
 		}
-		fclose(add_hosts);		
+		fclose(add_hosts);
 		fprintf(hosts, "\n### olsr names ###\n\n");
 	}
-	
+
 	// write own names
 	for (name = my_names; name != NULL; name = name->next) {
 		struct ipaddr_str strbuf;
 		fprintf(hosts, "%s\t%s%s\t# myself\n", olsr_ip_to_string(&strbuf, &name->ip), name->name, my_suffix );
 	}
-	
+
 	// write received names
 	for (hash = 0; hash < HASHSIZE; hash++) {
 		list_head = &name_list[hash];
@@ -1169,7 +1165,7 @@ write_hosts_file(void)
 	if (time(&currtime)) {
 		fprintf(hosts, "\n### written by olsrd at %s", ctime(&currtime));
 	}
-	  
+
 	fclose(hosts);
 
 #ifndef WIN32
@@ -1219,16 +1215,16 @@ write_services_file(void)
 		OLSR_PRINTF(2, "NAME PLUGIN: cant write services_file file\n");
 		return;
 	}
-	
+
 	fprintf(services_file, "### this file is overwritten regularly by olsrd\n");
 	fprintf(services_file, "### do not edit\n\n");
 
-	
+
 	// write own services
 	for (name = my_services; name != NULL; name = name->next) {
 		fprintf(services_file, "%s\t# my own service\n", name->name);
 	}
-	
+
 	// write received services
 	for (hash = 0; hash < HASHSIZE; hash++) {
 		list_head = &service_list[hash];
@@ -1253,10 +1249,10 @@ write_services_file(void)
 	if (time(&currtime)) {
 		fprintf(services_file, "\n### written by olsrd at %s", ctime(&currtime));
 	}
-	  
+
 	fclose(services_file);
 	service_table_changed = OLSR_FALSE;
-	
+
 	// Executes my_services_change_script after writing the services file
 	if (my_services_change_script[0] != '\0') {
 		if(system(my_services_change_script) != -1) {
@@ -1368,7 +1364,7 @@ write_resolv_file(void)
 	/* if there is no best route we are done */
 	if (nameserver_routes[NAMESERVER_COUNT]==NULL)
 		return;
-		 
+
 	/* write to file */
 	OLSR_PRINTF(2, "NAME PLUGIN: try to write to resolv file\n");
 	resolv = fopen( my_resolv_file, "w" );
@@ -1406,8 +1402,8 @@ write_resolv_file(void)
 /**
  * completely free a list of name_entries
  */
-void 
-free_name_entry_list(struct name_entry **list) 
+void
+free_name_entry_list(struct name_entry **list)
 {
 	struct name_entry **tmp = list;
 	struct name_entry *to_delete;
@@ -1443,9 +1439,9 @@ free_name_entry_list(struct name_entry **list)
 
 /**
  * we only allow names for IP addresses which we are
- * responsible for: 
+ * responsible for:
  * so the IP must either be from one of the interfaces
- * or inside a HNA which we have configured 
+ * or inside a HNA which we have configured
  */
 olsr_bool
 allowed_ip(const union olsr_ip_addr *addr)
@@ -1455,9 +1451,9 @@ allowed_ip(const union olsr_ip_addr *addr)
 	union olsr_ip_addr tmp_ip, tmp_msk;
 	struct ipaddr_str strbuf;
 	struct ipprefix_str prefixstr;
-	
+
 	OLSR_PRINTF(6, "checking %s\n", olsr_ip_to_string(&strbuf, addr));
-	
+
 	for(iface = ifnet; iface; iface = iface->int_next)
 	{
 		OLSR_PRINTF(6, "interface %s\n", olsr_ip_to_string(&strbuf, &iface->ip_addr));
@@ -1466,11 +1462,11 @@ allowed_ip(const union olsr_ip_addr *addr)
 			return OLSR_TRUE;
 		}
 	}
-	
+
 	if (olsr_cnf->ip_version == AF_INET) {
 		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
 			union olsr_ip_addr netmask;
-			OLSR_PRINTF(6, "HNA %s\n", 
+			OLSR_PRINTF(6, "HNA %s\n",
 						olsr_ip_prefix_to_string(&prefixstr, &hna->net));
 			if (hna->net.prefix_len == 0) {
 				continue;
@@ -1485,7 +1481,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next)
 		{
 			unsigned int i;
-			OLSR_PRINTF(6, "HNA %s\n", 
+			OLSR_PRINTF(6, "HNA %s\n",
 				olsr_ip_prefix_to_string(&prefixstr, &hna->net));
 			if ( hna->net.prefix_len == 0 )
 				continue;
@@ -1502,7 +1498,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 	return OLSR_FALSE;
 }
 
-/** check if name has the right syntax, i.e. it must adhere to a special regex 
+/** check if name has the right syntax, i.e. it must adhere to a special regex
  * stored in regex_t_name
  * necessary to avaid names like "0.0.0.0 google.de\n etc"
  */
@@ -1513,7 +1509,7 @@ is_name_wellformed(const char *name) {
 
 
 /**
- * check if the service is in the right syntax and also that the hostname 
+ * check if the service is in the right syntax and also that the hostname
  * or ip whithin the service is allowed
  */
 olsr_bool
@@ -1526,20 +1522,20 @@ allowed_service(const char *service_line)
 		return OLSR_FALSE;
 	} else if (!allowed_hostname_or_ip_in_service(service_line, &(regmatch_t_service[1]))) {
 		return OLSR_FALSE;
-	} 
+	}
 
 	return OLSR_TRUE;
 }
 
 olsr_bool
-allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip_match) 
+allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip_match)
 {
 	char *hostname_or_ip;
 	union olsr_ip_addr olsr_ip;
 	struct name_entry *name;
 	if (hostname_or_ip_match->rm_so < 0 || hostname_or_ip_match->rm_eo < 0) {
 		return OLSR_FALSE;
-	} 
+	}
 
 	hostname_or_ip = strndup(&service_line[hostname_or_ip_match->rm_so], hostname_or_ip_match->rm_eo - hostname_or_ip_match->rm_so);
 	//hostname is one of the names, that I announce (i.e. one that i am allowed to announce)
@@ -1552,7 +1548,7 @@ allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *ho
 		}
 	}
 
-	//ip in service-line is allowed 
+	//ip in service-line is allowed
 	if (inet_pton(olsr_cnf->ip_version, hostname_or_ip, &olsr_ip) > 0) {
 		if (allowed_ip(&olsr_ip)) {
 			struct ipaddr_str strbuf;
@@ -1571,8 +1567,8 @@ allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *ho
 }
 
 /**
- * check if the service matches the syntax 
- * of "protocol://host:port/path|tcp_or_udp|a short description", 
+ * check if the service matches the syntax
+ * of "protocol://host:port/path|tcp_or_udp|a short description",
  * which is given in the regex regex_t_service
  */
 olsr_bool
@@ -1582,7 +1578,7 @@ is_service_wellformed(const char *service_line)
 }
 
 /**
- * check if the latlot matches the syntax 
+ * check if the latlot matches the syntax
  */
 olsr_bool
 is_latlon_wellformed(const char *latlon_line)
@@ -1659,9 +1655,9 @@ void
 write_latlon_file(void)
 {
   FILE* fmap;
-  
+
   if (!my_names || !latlon_table_changed) return;
-  
+
   OLSR_PRINTF(2, "NAME PLUGIN: writing latlon file\n");
 
   if (NULL == (fmap = fopen(my_latlon_file, "w"))) {
@@ -1669,7 +1665,7 @@ write_latlon_file(void)
     return;
   }
   fprintf(fmap, "/* This file is overwritten regularly by olsrd */\n");
-  mapwrite_work(fmap);  
+  mapwrite_work(fmap);
   fclose(fmap);
   latlon_table_changed = OLSR_FALSE;
 }

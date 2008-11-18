@@ -98,7 +98,7 @@ void olsr_init_parser(void)
   olsr_init_package_process();
 }
 
-void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int forwarding)
+void olsr_parser_add_function(parse_function *function, olsr_u32_t type)
 {
   struct parse_function_entry *new_entry;
 
@@ -108,7 +108,6 @@ void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int for
 
   new_entry->function = function;
   new_entry->type = type;
-  new_entry->caller_forwarding = forwarding;
 
   /* Queue */
   new_entry->next = parse_functions;
@@ -117,14 +116,14 @@ void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int for
   OLSR_PRINTF(3, "Register parse function: Added function for type %d\n", type);
 }
 
-int olsr_parser_remove_function(parse_function *function, olsr_u32_t type, int forwarding)
+int olsr_parser_remove_function(parse_function *function, olsr_u32_t type)
 {
   struct parse_function_entry *entry, *prev;
 
   for (entry = parse_functions, prev = NULL;
        entry != NULL;
        prev = entry, entry = entry->next) {
-    if ((entry->function == function) && (entry->type == type) && (entry->caller_forwarding == forwarding)) {
+    if ((entry->function == function) && (entry->type == type)) {
       if (entry == parse_functions) {
         parse_functions = entry->next;
       } else {
@@ -252,6 +251,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   int processed;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
+  bool isDuplicate;
   int count = size - ((char *)m - (char *)olsr);
 
   if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
@@ -359,31 +359,28 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     }
 
     /* check for message duplicates */
+    isDuplicate = false;
     if (olsr_cnf->ip_version == AF_INET) {
       /* IPv4 */
-      if (olsr_shall_process_message(&m->v4.originator, ntohs(m->v4.seqno)) == 0) {
-        continue;
-      }
+      isDuplicate = olsr_message_is_duplicate(&m->v4.originator, ntohs(m->v4.seqno), false);
     } else {
       /* IPv6 */
-      if (olsr_shall_process_message(&m->v6.originator, ntohs(m->v6.seqno)) == 0) {
-        continue;
-      }
+      isDuplicate = olsr_message_is_duplicate(&m->v6.originator, ntohs(m->v6.seqno), false);
     }
 
     //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
-    for (entry = parse_functions; entry != NULL; entry = entry->next) {
-      /* Should be the same for IPv4 and IPv6 */
+    if (!isDuplicate) {
+      processed = 0;
+      for (entry = parse_functions; entry != NULL; entry = entry->next) {
+        /* Should be the same for IPv4 and IPv6 */
 
-      /* Promiscuous or exact match */
-      if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-        entry->function(m, in_if, from_addr);
-        if (entry->caller_forwarding) {
+        /* Promiscuous or exact match */
+        if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
+          entry->function(m, in_if, from_addr);
           processed = 1;
         }
       }
     }
-
     /* UNKNOWN PACKETTYPE */
     if (processed == 0) {
       union olsr_ip_addr originator;
@@ -400,15 +397,12 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
                   size,
                   olsr_ip_to_string(&buf, &originator));
 
-      /* Forward message */
-      if (!ipequal(&originator, &olsr_cnf->main_addr)) {
-        /* Forward */
-        olsr_forward_message(m, from_addr);
-      }
-
       /* Cancel loop here, otherwise olsrd just hangs forever at this point */
       break;
     }
+
+    /* now call function to check for forwarding */
+    olsr_forward_message(m, from_addr);
   } /* for olsr_msg */
 }
 
