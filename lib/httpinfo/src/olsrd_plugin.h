@@ -81,7 +81,7 @@ struct allowed_net {
     struct allowed_net      *next;
 };
 
-extern struct allowed_net    *allowed_nets;
+extern struct ip_prefix_list *allowed_nets;
 
 
 /****************************************************************************
