@@ -66,7 +66,7 @@
 
 #define PLUGIN_NAME    "Httpinfo olsrd plugin"
 #define PLUGIN_VERSION "0.1"
-#define PLUGIN_AUTHOR   "Andreas Tønnesen"
+#define PLUGIN_AUTHOR   "Andreas TÃ¸nnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
