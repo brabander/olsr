@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas TÃ¸nnesen(andreto@olsr.org)
  * Timer rewrite (c) 2008, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -68,13 +68,24 @@ static struct list_node free_timer_list;
 static unsigned int timers_running;
 
 static void walk_timers(clock_t *);
-static struct list_node *get_next_list_entry(struct list_node **prev_node, struct list_node *current_node);
 
 static void poll_sockets(void);
 
 static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val);
 
 static struct olsr_socket_entry *olsr_socket_entries = NULL;
+
+#define FOR_ALL_TIMER_ENTRIES(head, elem)	\
+{ \
+  struct list_node *elem_node, *next_elem_node; \
+  for (elem_node = (head)->next;				 \
+       elem_node != (head); /* circular list */	 \
+       elem_node = next_elem_node) { \
+    next_elem_node = elem_node->next; \
+    elem = list2timer(elem_node);
+
+#define FOR_ALL_TIMER_ENTRIES_END(head, elem) }}
+
 
 /**
  * Add a socket and handler to the socketset
@@ -435,55 +446,53 @@ calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val
 static struct timer_entry *
 olsr_get_timer(void)
 {
-  struct timer_entry *timer;
-  unsigned int idx;
+  struct list_node *timer_list_node;
 
   /*
    * If there is at least one timer in the pool then remove the first
    * element from the pool and recycle it.
    */
-  if (!list_is_empty(&free_timer_list)) {
-    struct list_node *timer_list_node = free_timer_list.next;
-
-    /* carve it out of the pool, do not memset overwrite timer->timer_random */
-    list_remove(timer_list_node);
-    return list2timer(timer_list_node);
-  }
-
-  /*
-   * Nothing in the pool, allocate a new chunk.
-   */
-  timer =
-    olsr_malloc(sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
-		"timer chunk");
+  if (list_is_empty(&free_timer_list)) {
+    /*
+     * Nothing in the pool, allocate a new chunk.
+     */
+    unsigned int idx;
+    struct timer_entry *timer =
+      olsr_malloc(sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
+		  "timer chunk");
 
 #if 0
-  OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
-	      sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
-	      timer);
+    OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
+		sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
+		timer);
 #endif
 
-  /*
-   * Slice the chunk up and put the future timer_entries in the free timer pool.
-   */
-  for (idx = 0; idx < OLSR_TIMER_MEMORY_CHUNK; idx++) {
-
-    /* Insert new timers at the tail of the free_timer list */
-    list_add_before(&free_timer_list, &timer[idx].timer_list);
-
-    /* 
-     * For performance reasons (read: frequent timer changes),
-     * precompute a random number once per timer and reuse later.
-     * The random number only gets recomputed if a periodical timer fires,
-     * such that a different jitter is applied for future firing.
+    /*
+     * Slice the chunk up and put the future timer_entries in the free timer pool.
      */
-    timer[idx].timer_random = random();
+    for (idx = 0; idx < OLSR_TIMER_MEMORY_CHUNK; idx++) {
+
+      /* Insert new timers at the tail of the free_timer list */
+      list_add_before(&free_timer_list, &timer[idx].timer_list);
+
+      /* 
+       * For performance reasons (read: frequent timer changes),
+       * precompute a random number once per timer and reuse later.
+       * The random number only gets recomputed if a periodical timer fires,
+       * such that a different jitter is applied for future firing.
+       */
+      timer[idx].timer_random = random();
+    }
   }
 
   /*
-   * There are now timers in the pool, recurse once.
+   * There are now surely timers in the pool, return oen.
    */
-  return olsr_get_timer();
+  timer_list_node = free_timer_list.next;
+
+  /* carve it out of the pool, do not memset overwrite timer->timer_random */
+  list_remove(timer_list_node);
+  return list2timer(timer_list_node);
 }
 
 
@@ -512,36 +521,6 @@ olsr_init_timers(void)
   timers_running = 0;
 }
 
-/*
- * get_next_list_entry
- *
- * Get the next list node in a hash bucket.
- * The listnode of the timer in may be subject to getting removed from
- * this timer bucket in olsr_change_timer() and olsr_stop_timer(), which
- * means that we can miss our walking context.
- * By caching the previous node we can figure out if the current node
- * has been removed from the hash bucket and compute the next node.
- */
-static struct list_node *
-get_next_list_entry (struct list_node **prev_node,
-                          struct list_node *current_node)
-{
-  if ((*prev_node)->next == current_node) {
-
-    /*
-     * No change in the list, normal traversal, update the previous node.
-     */
-    *prev_node = current_node;
-    return (current_node->next);
-  } else {
-
-    /*
-     * List change. Recompute the walking context.
-     */
-    return ((*prev_node)->next);
-  }
-}
-
 /**
  * Walk through the timer list and check if any timer is ready to fire.
  * Callback the provided function with the context pointer.
@@ -558,22 +537,15 @@ walk_timers(clock_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
-    struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
 
     /* Get the hash slot for this clocktick */
-    timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
-    timer_walk_prev_node = timer_head_node;
+    struct list_node * const timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
+    struct timer_entry *timer;
 
     /* Walk all entries hanging off this hash bucket */
-    for (timer_walk_node = timer_head_node->next;
-         timer_walk_node != timer_head_node; /* circular list */
-	 timer_walk_node = get_next_list_entry(&timer_walk_prev_node,
-                                                    timer_walk_node)) {
-      static struct timer_entry *timer;
-      timer = list2timer(timer_walk_node);
-
+    FOR_ALL_TIMER_ENTRIES(timer_head_node, timer) {
       timers_walked++;
 
       /* Ready to fire ? */
@@ -589,28 +561,18 @@ walk_timers(clock_t * last_run)
 	/* This timer is expired, call into the provided callback function */
 	timer->timer_cb(timer->timer_cb_context);
 
-	if (timer->timer_period) {
-
+	/* Only act on actually running timers */
+	if (timer->timer_flags & OLSR_TIMER_RUNNING) {
 	  /*
 	   * Don't restart the periodic timer if the callback function has
 	   * stopped the timer.
 	   */
-	  if (timer->timer_flags & OLSR_TIMER_RUNNING) {
-
+	  if (timer->timer_period) {	    
 	    /* For periodical timers, rehash the random number and restart */
 	    timer->timer_random = random();
 	    olsr_change_timer(timer, timer->timer_period,
 			      timer->timer_jitter_pct, OLSR_TIMER_PERIODIC);
-	  }
-
-	} else {
-
-	  /*
-	   * Don't stop the singleshot timer if the callback function has
-	   * stopped the timer.
-	   */
-	  if (timer->timer_flags & OLSR_TIMER_RUNNING) {
-
+	  } else {
 	    /* Singleshot timers are stopped and returned to the pool */
 	    olsr_stop_timer(timer);
 	  }
@@ -618,7 +580,7 @@ walk_timers(clock_t * last_run)
 
 	timers_fired++;
       }
-    }
+    } FOR_ALL_TIMER_ENTRIES_END(timer_head_node, timer);
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
@@ -653,38 +615,29 @@ static int
 olsr_get_timezone(void)
 {
 #define OLSR_TIMEZONE_UNINITIALIZED -1
-
   static int time_diff = OLSR_TIMEZONE_UNINITIALIZED;
-  int dir;
-  struct tm *gmt, *loc;
-  struct tm sgmt;
-  time_t t;
+  if (time_diff == OLSR_TIMEZONE_UNINITIALIZED) {
+    int dir;
+    const time_t t = time(NULL);
+    const struct tm gmt = *gmtime(&t);
+    const struct tm *loc = localtime(&t);
 
-  if (time_diff != OLSR_TIMEZONE_UNINITIALIZED) {
-    return time_diff;
+    time_diff = (loc->tm_hour - gmt.tm_hour) * 60 * 60
+      + (loc->tm_min - gmt.tm_min) * 60;
+
+    /*
+     * If the year or julian day is different, we span 00:00 GMT
+     * and must add or subtract a day. Check the year first to
+     * avoid problems when the julian day wraps.
+     */
+    dir = loc->tm_year - gmt.tm_year;
+    if (!dir) {
+      dir = loc->tm_yday - gmt.tm_yday;
+    }
+
+    time_diff += dir * 24 * 60 * 60;
   }
-
-  t = time(NULL);
-  gmt = &sgmt;
-  *gmt = *gmtime(&t);
-  loc = localtime(&t);
-
-  time_diff = (loc->tm_hour - gmt->tm_hour) * 60 * 60
-    + (loc->tm_min - gmt->tm_min) * 60;
-
-  /*
-   * If the year or julian day is different, we span 00:00 GMT
-   * and must add or subtract a day. Check the year first to
-   * avoid problems when the julian day wraps.
-   */
-  dir = loc->tm_year - gmt->tm_year;
-  if (!dir) {
-    dir = loc->tm_yday - gmt->tm_yday;
-  }
-
-  time_diff += dir * 24 * 60 * 60;
-
-  return (time_diff);
+  return time_diff;
 }
 
 /**
@@ -697,24 +650,19 @@ olsr_get_timezone(void)
 const char *
 olsr_wallclock_string(void)
 {
-  static char buf[4][sizeof("00:00:00.000000")];
-  static int idx = 0;
-  char *ret;
+  static char buf[sizeof("00:00:00.000000")];
   struct timeval now;
   int sec, usec;
-
-  ret = buf[idx];
-  idx = (idx + 1) & 3;
 
   gettimeofday(&now, NULL);
 
   sec = (int)now.tv_sec + olsr_get_timezone();
   usec = (int)now.tv_usec;
 
-  snprintf(ret, sizeof(buf)/4, "%02u:%02u:%02u.%06u",
+  snprintf(buf, sizeof(buf), "%02u:%02u:%02u.%06u",
 	   (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
 
-  return ret;
+  return buf;
 }
 
 
@@ -729,22 +677,16 @@ olsr_wallclock_string(void)
 const char *
 olsr_clock_string(clock_t clk)
 {
-  static char buf[4][sizeof("00:00:00.000")];
-  static int idx = 0;
-  char *ret;
-  unsigned int sec, msec;
-
-  ret = buf[idx];
-  idx = (idx + 1) & 3;
+  static char buf[sizeof("00:00:00.000")];
 
   /* On most systems a clocktick is a 10ms quantity. */
-  msec = olsr_cnf->system_tick_divider * (unsigned int)(clk - now_times);
-  sec = msec / MSEC_PER_SEC;
+  unsigned int msec = olsr_cnf->system_tick_divider * (unsigned int)(clk - now_times);
+  unsigned int sec = msec / MSEC_PER_SEC;
 
-  snprintf(ret, sizeof(buf) / 4, "%02u:%02u:%02u.%03u",
+  snprintf(buf, sizeof(buf), "%02u:%02u:%02u.%03u",
 	   sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));
 
-  return ret;
+  return buf;
 }
 
 
@@ -758,9 +700,12 @@ olsr_clock_string(clock_t clk)
  * @return a pointer to the created entry
  */
 struct timer_entry *
-olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
-		 olsr_bool periodical, void (*timer_cb_function) (void *),
-		 void *context, olsr_cookie_t cookie)
+olsr_start_timer(unsigned int rel_time,
+		 olsr_u8_t jitter_pct,
+		 olsr_bool periodical,
+		 timer_cb_func cb_func,
+		 void *context,
+		 olsr_cookie_t cookie)
 {
   struct timer_entry *timer;
 
@@ -770,7 +715,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
 
   /* Fill entry */
   timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
-  timer->timer_cb = timer_cb_function;
+  timer->timer_cb = cb_func;
   timer->timer_cb_context = context;
   timer->timer_jitter_pct = jitter_pct;
   timer->timer_flags = OLSR_TIMER_RUNNING;
@@ -780,11 +725,7 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   olsr_cookie_usage_incr(cookie);
 
   /* Singleshot or periodical timer ? */
-  if (periodical) {
-    timer->timer_period = rel_time;
-  } else {
-    timer->timer_period = 0;
-  }
+  timer->timer_period = periodical ? rel_time : 0;
 
   /*
    * Now insert in the respective timer_wheel slot.
@@ -848,7 +789,6 @@ void
 olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
 		  olsr_u8_t jitter_pct, olsr_bool periodical)
 {
-
   /* Sanity check. */
   if (!timer) {
     return;
@@ -857,11 +797,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
   assert(timer->timer_cookie != 0); /* we want timer cookies everywhere */
 
   /* Singleshot or periodical timer ? */
-  if (periodical) {
-    timer->timer_period = rel_time;
-  } else {
-    timer->timer_period = 0;
-  }
+  timer->timer_period = periodical ? rel_time : 0;
 
   timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
   timer->timer_jitter_pct = jitter_pct;
@@ -889,26 +825,25 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
  * terminated.
  */
 void
-olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time,
-	       olsr_u8_t jitter_pct, olsr_bool periodical,
-	       void (*timer_cb_function) (void *), void *context,
+olsr_set_timer(struct timer_entry **timer_ptr,
+	       unsigned int rel_time,
+	       olsr_u8_t jitter_pct,
+	       olsr_bool periodical,
+	       timer_cb_func cb_func,
+	       void *context,
 	       olsr_cookie_t cookie)
 {  
   assert(cookie != 0); /* we want timer cookies everywhere */
   if (!*timer_ptr) {
-
     /* No timer running, kick it. */
     *timer_ptr = olsr_start_timer(rel_time, jitter_pct, periodical,
-				  timer_cb_function, context, cookie);
+				  cb_func, context, cookie);
   } else {
-
     if (!rel_time) {
-
       /* No good future time provided, kill it. */
       olsr_stop_timer(*timer_ptr);
       *timer_ptr = NULL;
     } else {
-
       /* Time is ok and timer is running, change it ! */
       olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
     }

@@ -989,7 +989,7 @@ create_main_window (void)
   gtk_widget_show (unik_logo);
 
 
-  gtk_label_set_text((GtkLabel *)about_label, "OLSRD-GUI by Andreas Tonnesen (andreto@ifi.uio.no)");
+  gtk_label_set_text((GtkLabel *)about_label, "OLSRD-GUI by Andreas Tønnesen (andreto@ifi.uio.no)");
 
 
   /*
