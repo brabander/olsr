@@ -102,7 +102,7 @@ static void DumpConstants(const Proto* f, DumpState* D)
  DumpInt(n=f->sizek,D);
  for (i=0; i<n; i++)
  {
-  const TObject* o=&f->k[i];
+  const TObject* o= &f->k[i];
   DumpByte(ttype(o),D);
   switch (ttype(o))
   {
