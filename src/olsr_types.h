@@ -63,7 +63,7 @@ typedef int             int32_t;
 #include <stdbool.h>
 #else
 /* we simulate a C99 environment */
-#ifndef WIN32
+#ifdef __GNUC__
 #define bool _Bool
 #define true 1
 #define false 0
