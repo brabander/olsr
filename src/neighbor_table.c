@@ -404,20 +404,14 @@ olsr_expire_nbr2_list(void *context)
 void
 olsr_print_neighbor_table(void)
 {
-#ifdef NODEBUG
-  /* The whole function doesn't do anything else. */
 #ifndef NODEBUG
-  const int iplen = olsr_cnf->ip_version == AF_INET ?  15 : 39;
-#endif
+  /* The whole function doesn't do anything else. */
+  const int ipwidth = olsr_cnf->ip_version == AF_INET ?  15 : 39;
   int idx;
-  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
-              "%*s  LQ     NLQ    SYM   MPR   MPRS  will\n",
-              nowtm->tm_hour,
-              nowtm->tm_min,
-              nowtm->tm_sec,
-              (int)now.tv_usec/10000,
-              iplen,
-              "IP address");
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
+              "%*s  LQ    SYM   MPR   MPRS  will\n",
+			  olsr_wallclock_string(),
+              ipwidth, "IP address");
 
   for (idx = 0; idx < HASHSIZE; idx++) {
     struct neighbor_entry *neigh;
@@ -425,11 +419,9 @@ olsr_print_neighbor_table(void)
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
       if(lnk) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %s  %s  %s  %d\n",
-                    iplen,
-                    olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
-                    lnk->loss_link_quality,
-                    lnk->neigh_link_quality,
+        OLSR_PRINTF(1, "%-*s  %5.3f  %s  %s  %s  %d\n",
+                    ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                    lnk->L_link_quality,
                     neigh->status == SYM ? "YES " : "NO  ",
                     neigh->is_mpr ? "YES " : "NO  ", 
                     olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
