@@ -54,12 +54,12 @@ struct autobuf {
 int  abuf_init(struct autobuf *autobuf, int initial_size);
 void abuf_free(struct autobuf *autobuf);
 int  abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap)
-#ifndef WIN32
+#ifdef __GNUC__
 __attribute__((format(printf, 2, 0)))
 #endif
 ;
 int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...)
-#ifndef WIN32
+#ifdef __GNUC__
 __attribute__((format(printf, 2, 3)))
 #endif
 ;

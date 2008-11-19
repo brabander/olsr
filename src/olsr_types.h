@@ -61,14 +61,12 @@ typedef int             int32_t;
 #if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
 /* we have a C99 environment */
 #include <stdbool.h>
-#else
+#elif defined __GNUC__
 /* we simulate a C99 environment */
-#ifndef WIN32
 #define bool _Bool
 #define true 1
 #define false 0
 #define __bool_true_false_are_defined 1
-#endif
 #endif
 /* we keep this to avoid touching the rest of the source so far */
 typedef bool olsr_bool;
