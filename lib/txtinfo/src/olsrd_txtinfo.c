@@ -361,7 +361,8 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
 
 static void ipc_http_write(int fd, struct ipc_conn *conn)
 {
-    ssize_t bytes_written = write(fd, conn->resp.buf+conn->respstart, conn->resp.len-conn->respstart);
+    ssize_t bytes_written = write(fd, conn->resp.buf+conn->respstart,
+      conn->resp.len-conn->respstart);
     if (bytes_written < 0) {
         if (errno == EINTR || errno == EAGAIN) {
             return;

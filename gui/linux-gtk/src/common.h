@@ -34,7 +34,6 @@
 #include <string.h>
 
 //#include "interface.h"
-#include "callbacks.h"
 //#include "types.h"
 #include "olsr_protocol.h"
 

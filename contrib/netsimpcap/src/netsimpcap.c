@@ -364,7 +364,8 @@ main (int argc, char **argv)
     
     for (i=0; i<deviceCount; i++) {
       if (FD_ISSET(deviceFD[i], &socketSet)) {
-        int error = pcap_dispatch(devices[i], -1, capture_callback, (u_char *)&i);
+        int error = pcap_dispatch(devices[i], -1, capture_callback,
+          (u_char *)&i);
         
         if (error == -1) {
           printf("Error during pcap_dispatch for device %s\n", argv[i + deviceIndex]);

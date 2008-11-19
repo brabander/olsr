@@ -138,7 +138,7 @@ static int insert_plugin_ipnet(sa_family_t ip_version, const char *sz_net, const
     } else {
         char *endptr;
         prefix_len = strtoul(sz_mask, &endptr, 10);
-        if(*endptr != '\0' || prefix_len < 0 || prefix_len > 128) {
+        if(*endptr != '\0' || prefix_len > 128) {
             return 1;
         }
     }
