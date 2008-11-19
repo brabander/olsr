@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2006, Jens Nachtigall <nachtigall@web.de>
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
  * Copyright (c) 2007, Sven-Ola <sven-ola@gmx.de>
  * All rights reserved.
  *
