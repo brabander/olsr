@@ -50,7 +50,7 @@ ifeq ($(OS), win32)
 
 LIBNAME ?=	olsrd_cfgparser.dll
 BINNAME ?=	olsrd_cfgparser.exe
-OBJS +=		../win32/compat.o ../ipcalc.o ../builddata.o
+OBJS +=		../win32/compat.o ../ipcalc.o ../builddata.o ../common/autobuf.o ../common/string.o
 
 else
 

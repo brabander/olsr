@@ -74,6 +74,8 @@ void clear_console(void)
 #endif
 }
 
+extern char *StrError(unsigned int ErrNo);
+
 int set_nonblocking(int fd)
 {
     /* make the fd non-blocking */

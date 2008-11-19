@@ -51,6 +51,10 @@
 #include <netinet/in.h>
 #ifndef WIN32
 #include <arpa/nameser.h>
+#else
+/* The -mno-cygwin prevent these defs. Otherwise we pull in cygwin1.dll */
+typedef uint32_t in_addr_t;
+typedef uint16_t sa_family_t;
 #endif
 
 #include "olsrd_httpinfo.h"

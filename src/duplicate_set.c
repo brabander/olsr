@@ -120,7 +120,7 @@ olsr_message_is_duplicate(void *ip, olsr_u16_t seqnr, bool forwarding)
   int diff;
   void *mainIp;
   clock_t valid_until;
-  u_int32_t *array;
+  olsr_u32_t *array;
   struct ipaddr_str buf;
 
   // get main address
