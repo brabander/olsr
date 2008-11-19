@@ -44,7 +44,10 @@
 
 
 #if !LINUX_POLICY_ROUTING
+#include <unistd.h>
 #include "log.h"
+#include "process_routes.h"
+#include "routing_table.h"
 
 static int delete_all_inet_gws(void);
 
@@ -201,7 +204,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
   }
 
   kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
+  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_best->rtp_metric);
 
   /*
    * Set interface
@@ -216,7 +219,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
     olsr_cnf->del_gws = OLSR_FALSE;
   }
 
-  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route));
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route);
 #else /* !LINUX_POLICY_ROUTING */
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable)
   {
@@ -273,7 +276,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
+  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric);
   
   /*
    * set interface
@@ -281,7 +284,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_ifindex = rt->rt_best->rtp_nexthop.iif_index;
   
   /* XXX delete 0/0 route before ? */
-  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route));
+  rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route);
 #else /* !LINUX_POLICY_ROUTING */
   rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
     ? olsr_cnf->rttable_default
@@ -342,7 +345,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
   }
 
   kernel_route.rt_flags = olsr_rt_flags(rt);
-  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_metric.hops);
+  kernel_route.rt_metric = olsr_fib_metric(&rt->rt_metric);
 
   /*
    * Set interface
@@ -403,7 +406,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   kernel_route.rtmsg_gateway = rt->rt_best->rtp_nexthop.gateway.v6;
 
   kernel_route.rtmsg_flags = olsr_rt_flags(rt);
-  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric.hops);
+  kernel_route.rtmsg_metric = olsr_fib_metric(&rt->rt_best->rtp_metric);
 
   rslt = ioctl(olsr_cnf->ioctl_s, SIOCDELRT, &kernel_route);
 #else /* !LINUX_POLICY_ROUTING */
