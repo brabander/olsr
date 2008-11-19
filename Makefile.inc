@@ -193,6 +193,7 @@ CPPFLAGS +=	-DNDEBUG
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
+OPTIMIZE = -Os
 endif
 
 # a make function to quote "/" and "."
