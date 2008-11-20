@@ -58,6 +58,10 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
+/* compiler-specific stuff */
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
 
 /* Debug helper macro */
 #ifdef DEBUG

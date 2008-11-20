@@ -53,16 +53,8 @@ struct autobuf {
 
 int  abuf_init(struct autobuf *autobuf, int initial_size);
 void abuf_free(struct autobuf *autobuf);
-int  abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap)
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 0)))
-#endif
-;
-int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...)
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-;
+int  abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__((format(printf, 2, 0)));
+int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 int  abuf_puts(struct autobuf *autobuf, const char *s);
 int  abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *tm);
 int  abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len);
