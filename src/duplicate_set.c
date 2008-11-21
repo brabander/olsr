@@ -114,7 +114,7 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
 }
 
 int
-olsr_message_is_duplicate(void *ip, olsr_u16_t seqnr, bool forwarding)
+olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
 {
   struct dup_entry *entry;
   int diff;
@@ -122,6 +122,17 @@ olsr_message_is_duplicate(void *ip, olsr_u16_t seqnr, bool forwarding)
   clock_t valid_until;
   olsr_u32_t *array;
   struct ipaddr_str buf;
+  u_int16_t seqnr;
+  void *ip;
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    seqnr = ntohs(m->v4.seqno);
+    ip = &m->v4.originator;
+  }
+  else {
+    seqnr = ntohs(m->v6.seqno);
+    ip = &m->v6.originator;
+  }
 
   // get main address
   mainIp = olsr_lookup_main_addr_by_alias(ip);
