@@ -431,5 +431,6 @@ olsr_print_neighbor_table (void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

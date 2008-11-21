@@ -1047,5 +1047,6 @@ olsr_input_tc (union olsr_message *msg, struct interface *input_if
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

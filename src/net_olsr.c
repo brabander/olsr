@@ -494,5 +494,6 @@ olsr_validate_address (const union olsr_ip_addr *adr)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

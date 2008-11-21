@@ -529,5 +529,6 @@ olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

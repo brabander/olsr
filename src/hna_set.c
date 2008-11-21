@@ -488,5 +488,6 @@ olsr_input_hna (union olsr_message *m, struct interface *in_if
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

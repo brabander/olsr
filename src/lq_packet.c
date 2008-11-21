@@ -782,5 +782,6 @@ olsr_output_lq_tc (void *para)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

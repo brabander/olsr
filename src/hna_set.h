@@ -107,5 +107,6 @@ void olsr_input_hna (union olsr_message *, struct interface *,
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

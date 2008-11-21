@@ -96,5 +96,6 @@ void olsr_input_mid (union olsr_message *, struct interface *,
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

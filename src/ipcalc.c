@@ -202,5 +202,6 @@ ip_in_net (const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

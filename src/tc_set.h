@@ -177,5 +177,6 @@ void olsr_set_tc_edge_timer (struct tc_edge_entry *, unsigned int);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

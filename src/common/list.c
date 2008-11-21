@@ -111,5 +111,6 @@ list_remove (struct list_node *del_node)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

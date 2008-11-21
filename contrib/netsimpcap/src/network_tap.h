@@ -35,5 +35,6 @@ int createTap (char *name, MacAddress * mac);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

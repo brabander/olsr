@@ -363,5 +363,6 @@ del_ifchgf (int (*f) (struct interface *, int))
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

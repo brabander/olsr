@@ -455,5 +455,6 @@ olsr_free_mid_packet (struct mid_message *message)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

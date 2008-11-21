@@ -620,5 +620,6 @@ olsr_print_mpr_set (void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

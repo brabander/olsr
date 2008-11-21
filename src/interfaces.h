@@ -216,5 +216,6 @@ extern struct olsr_cookie_info *hna_gen_timer_cookie;
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

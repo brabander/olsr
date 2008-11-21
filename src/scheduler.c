@@ -754,5 +754,6 @@ olsr_set_timer (struct timer_entry **timer_ptr, unsigned int rel_time,
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

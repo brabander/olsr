@@ -113,5 +113,6 @@ void olsr_scheduler (void) __attribute__ ((noreturn));
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

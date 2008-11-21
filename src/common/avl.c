@@ -715,5 +715,6 @@ avl_delete (struct avl_tree *tree, struct avl_node *node)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

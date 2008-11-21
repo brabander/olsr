@@ -119,5 +119,6 @@ int update_neighbor_status (struct neighbor_entry *, int);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

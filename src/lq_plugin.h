@@ -168,5 +168,6 @@ extern struct lq_handler *active_lq_handler;
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

@@ -759,5 +759,6 @@ olsr_print_routing_table (struct avl_tree *tree)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

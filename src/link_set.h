@@ -151,5 +151,6 @@ void olsr_print_link_set (void);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */
