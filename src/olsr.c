@@ -358,12 +358,12 @@ olsr_forward_message(union olsr_message *m,
   /* check if we already forwarded this message */
   if (AF_INET == olsr_cnf->ip_version)
   {
-    if (olsr_message_is_duplicate(from_addr, m->v4.seqno, true)) {
+    if (olsr_message_is_duplicate(from_addr, ntohs(m->v4.seqno), true)) {
       return 0; /* it's a duplicate, forget about it */
     }
   }
   else {
-    if (olsr_message_is_duplicate(from_addr, m->v6.seqno, true)) {
+    if (olsr_message_is_duplicate(from_addr, ntohs(m->v6.seqno), true)) {
       return 0; /* it's a duplicate, forget about it */
     }
   }
