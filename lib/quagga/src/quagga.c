@@ -866,6 +866,8 @@ zebra_add_olsr_v4_route (const struct rt_entry *r)
   struct ipv4_route route;
   int retval;
 
+  route.index = NULL;
+  route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;        // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
@@ -919,6 +921,8 @@ zebra_del_olsr_v4_route (const struct rt_entry *r)
 
   struct ipv4_route route;
   int retval;
+  route.index = NULL;
+  route.distance = 0;
   route.type = ZEBRA_ROUTE_OLSR;        // OLSR
   route.message = ZAPI_MESSAGE_METRIC;
   route.flags = zebra.flags;
