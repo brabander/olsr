@@ -33,9 +33,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//#include "interface.h"
-#include "callbacks.h"
-//#include "types.h"
 #include "olsr_protocol.h"
 
 #define olsrd_version "olsr.org GUI 0.2.7" 

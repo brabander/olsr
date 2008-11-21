@@ -359,7 +359,8 @@ void luaH_remove (Table *t, Node *e) {
     mp->next = e->next;  /* remove `e' from its list */
   }
   else {
-    if (e->next != NULL) ??
+#error The following line has an error in the original source.
+//    if (e->next != NULL) ??
   }
   lua_assert(ttisnil(gval(node)));
   setnilvalue(gkey(e));  /* clear node `e' */

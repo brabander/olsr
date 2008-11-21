@@ -161,7 +161,7 @@ static void LoadConstants (LoadState* S, Proto* f)
  f->sizek=n;
  for (i=0; i<n; i++)
  {
-  TObject* o=&f->k[i];
+  TObject* o= &f->k[i];
   int t=LoadByte(S);
   switch (t)
   {

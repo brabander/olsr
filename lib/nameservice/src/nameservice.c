@@ -280,7 +280,8 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 struct name_entry* 
 add_name_to_list(struct name_entry *my_list, const char *value, int type, const union olsr_ip_addr *ip) 
 {
-	struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry add_name_to_list");
+	struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry),
+		"new name_entry add_name_to_list");
 	tmp->name = strndup( value, MAX_NAME );
 	tmp->len = strlen( tmp->name );
 	tmp->type = type;

@@ -187,7 +187,7 @@ char zebra_send_command (unsigned char command, char * options, int optlen) {
     }
     else return -1;
     p = p+ret;
-  } while ((length =- ret));
+  } while ((length -= ret));
 
   return 0;
 }

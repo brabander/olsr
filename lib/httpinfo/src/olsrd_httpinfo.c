@@ -804,7 +804,9 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
 
     {
       const time_t currtime = time(NULL);
-      const int rc = strftime(&buf[size], bufsize-size, "System time: <em>%a, %d %b %Y %H:%M:%S</em><br>", localtime(&currtime));
+      const int rc = strftime(&buf[size], bufsize-size,
+        "System time: <em>%a, %d %b %Y %H:%M:%S</em><br>",
+        localtime(&currtime));
       if (rc > 0) {
         size += rc;
       }
