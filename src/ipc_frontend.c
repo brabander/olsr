@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -57,7 +57,7 @@
 #ifdef WIN32
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
-void 
+void
 WinSockPError(const char *);
 #endif
 
@@ -93,13 +93,13 @@ ipc_init(void)
   olsr_parser_add_function(&frontend_msgparser, PROMISCUOUS, 0);
 
   /* get an internet domain socket */
-  if ((ipc_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
+  if ((ipc_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
       perror("IPC socket");
       olsr_exit("IPC socket", EXIT_FAILURE);
     }
 
-  if(setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) 
+  if(setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0)
     {
       perror("SO_REUSEADDR failed");
       return 0;
@@ -112,12 +112,12 @@ ipc_init(void)
   sin.sin_port = htons(IPC_PORT);
 
   /* bind the socket to the port number */
-  if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+  if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
       perror("IPC bind");
       OLSR_PRINTF(1, "Will retry in 10 seconds...\n");
       sleep(10);
-      if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+      if(bind(ipc_sock, (struct sockaddr *) &sin, sizeof(sin)) == -1)
 	{
 	  perror("IPC bind");
 	  olsr_exit("IPC bind", EXIT_FAILURE);
@@ -126,7 +126,7 @@ ipc_init(void)
     }
 
   /* show that we are willing to listen */
-  if(listen(ipc_sock, olsr_cnf->ipc_connections) == -1) 
+  if(listen(ipc_sock, olsr_cnf->ipc_connections) == -1)
     {
       perror("IPC listen");
       olsr_exit("IPC listen", EXIT_FAILURE);
@@ -144,11 +144,11 @@ ipc_accept(int fd)
 {
   socklen_t addrlen;
   struct sockaddr_in pin;
-  char *addr;  
+  char *addr;
 
 
   addrlen = sizeof (struct sockaddr_in);
-  
+
   if ((ipc_conn = accept(fd, (struct sockaddr *)  &pin, &addrlen)) == -1)
     {
       perror("IPC accept");
@@ -186,7 +186,7 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 
   /* check nets */
   for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
-    if (ip_in_net(addr, &ipcn->net)) { 
+    if (ip_in_net(addr, &ipcn->net)) {
       return OLSR_TRUE;
     }
   }
@@ -205,14 +205,14 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 int
 ipc_input(int sock __attribute__((unused)))
 {
-  union 
+  union
   {
     char	buf[MAXPACKETSIZE+1];
     struct olsr	olsr;
   } inbuf;
 
 
-  if (recv(sock, dir, sizeof(dir), 0) == -1) 
+  if (recv(sock, dir, sizeof(dir), 0) == -1)
     {
       perror("recv");
       exit(1);
@@ -235,13 +235,13 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
 
   if(!ipc_active)
     return;
-  
+
   if(olsr_cnf->ip_version == AF_INET)
     size = ntohs(msg->v4.olsr_msgsize);
   else
     size = ntohs(msg->v6.olsr_msgsize);
-  
-  if (send(ipc_conn, (void *)msg, size, MSG_NOSIGNAL) < 0) 
+
+  if (send(ipc_conn, (void *)msg, size, MSG_NOSIGNAL) < 0)
     {
       OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
       CLOSE(ipc_conn);
@@ -308,10 +308,10 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
       x++;
       printf(" %03i", (u_char) tmp[i]);
     }
-  
+
   printf("\n");
   */
-  
+
   if (send(ipc_conn, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) // MSG_NOSIGNAL to avoid sigpipe
     {
       OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
@@ -332,17 +332,17 @@ ipc_send_all_routes(int fd)
   struct rt_entry  *rt;
   struct ipcmsg packet;
   char *tmp;
-  
+
 
   if(!ipc_active)
     return 0;
-  
+
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
 
     memset(&packet, 0, sizeof(struct ipcmsg));
     packet.size = htons(IPC_PACK_SIZE);
     packet.msgtype = ROUTE_IPC;
-	  
+
     packet.target_addr = rt->rt_dst.prefix;
 
     packet.add = 1;
@@ -353,7 +353,7 @@ ipc_send_all_routes(int fd)
     memcpy(&packet.device[0], if_ifwithindex_name(rt->rt_nexthop.iif_index), 4);
 
     tmp = (char *) &packet;
-  
+
     /* MSG_NOSIGNAL to avoid sigpipe */
     if (send(fd, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) {
       OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
@@ -380,25 +380,25 @@ ipc_send_net_info(int fd)
   struct ipc_net_msg *net_msg;
   //int x, i;
   char *msg;
-  
+
 
   net_msg = olsr_malloc(sizeof(struct ipc_net_msg), "send net info");
 
   msg = (char *)net_msg;
 
   OLSR_PRINTF(1, "Sending net-info to front end...\n");
-  
+
   memset(net_msg, 0, sizeof(struct ipc_net_msg));
-  
+
   /* Message size */
   net_msg->size = htons(sizeof(struct ipc_net_msg));
   /* Message type */
   net_msg->msgtype = NET_IPC;
-  
+
   /* MIDs */
   /* XXX fix IPC MIDcnt */
   net_msg->mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
-  
+
   /* HNAs */
   net_msg->hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
 
@@ -412,7 +412,7 @@ ipc_send_net_info(int fd)
   net_msg->topology_hold = 0;//htons((olsr_u16_t)topology_hold_time);
 
   net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
- 
+
   /* Main addr */
   net_msg->main_addr = olsr_cnf->main_addr;
 
@@ -429,12 +429,12 @@ ipc_send_net_info(int fd)
       x++;
       printf(" %03i", (u_char) msg[i]);
     }
-  
+
   printf("\n");
   */
 
 
-  if (send(fd, (char *)net_msg, sizeof(struct ipc_net_msg), MSG_NOSIGNAL) < 0) 
+  if (send(fd, (char *)net_msg, sizeof(struct ipc_net_msg), MSG_NOSIGNAL) < 0)
     {
       OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n");
       CLOSE(ipc_conn);
@@ -453,7 +453,7 @@ shutdown_ipc(void)
   OLSR_PRINTF(1, "Shutting down IPC...\n");
   CLOSE(ipc_sock);
   CLOSE(ipc_conn);
-  
+
   return 1;
 }
 

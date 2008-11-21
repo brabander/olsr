@@ -42,7 +42,7 @@ ipc_close()
 
   if(close(ipc_socket))
     return 1;
-  
+
   return 0;
 }
 
@@ -61,7 +61,7 @@ ipc_connect(struct sockaddr_in *pin)
   connected = 0;
 
   if(!ipc_socket)
-    if((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
+    if((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
       {
 	perror("socket");
 	exit(1);
@@ -70,19 +70,19 @@ ipc_connect(struct sockaddr_in *pin)
   printf("Attempting connect...");
 
   /* connect to PORT on HOST */
-  if (connect(ipc_socket,(struct sockaddr *) pin, sizeof(*pin)) < 0) 
+  if (connect(ipc_socket,(struct sockaddr *) pin, sizeof(*pin)) < 0)
     {
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       set_net_info_offline();
       printf("connection refused\n");
     }
-  else 
+  else
     {
       set_net_info("Connected!", FALSE);
       printf("Connected!!\n");
 
-      /* Setting socket non-blocking */  
-      
+      /* Setting socket non-blocking */
+
 #ifdef WIN32
       if (WSAIoctl(ipc_socket, FIONBIO, &On, sizeof (On), NULL, 0, &Len,
                    NULL, NULL) < 0)
@@ -96,19 +96,19 @@ ipc_connect(struct sockaddr_in *pin)
 	  fprintf(stderr,"Error getting socket flags!\n");
 	  exit(1);
 	}
-      
-      
+
+
       if (fcntl(ipc_socket, F_SETFL, flags | O_NONBLOCK) < 0)
 	{
 	  fprintf(stderr,"Error setting socket flags!\n");
 	  exit(1);
 	}
-#endif      
+#endif
       connected = 1;
-      
+
       return 1;
     }
-  
+
   return 0;
 
 }
@@ -121,7 +121,7 @@ ipc_read()
   int bytes, tmp_len;
   char *tmp;
   union olsr_message *msg;
-  union 
+  union
   {
     char	buf[BUFFSIZE+1];
     union	olsr_message olsr_msg;
@@ -142,13 +142,13 @@ ipc_read()
           connected = 0;
 	  close(ipc_socket);
         }
-     
+
       if(bytes > 0)
 	{
-	   
+
 	  tmp = (char *) &inbuf.olsr_msg;
-	
-	  /*    
+
+	  /*
 	  x = 0;
 	  printf("\n\t");
 	  for(i = 0; i < bytes;i++)
@@ -161,10 +161,10 @@ ipc_read()
 	      x++;
 	      printf(" %03i", (u_char) tmp[i]);
 	    }
-	  
+
 	  printf("\n\nBytes read: %d - msg_size: %d\n", bytes, ntohs(inbuf.olsr.v4.olsr_packlen));
 	  */
-	  
+
 	  msg = &inbuf.olsr_msg;
 
 	  /* There can be(there probably are!) several packets in the buffer */
@@ -203,7 +203,7 @@ ipc_read()
 		}
 	      //printf("\n");
 	    }
-	  
+
 	  /* Only one (or the last) message */
 	  ipc_evaluate_message(msg);
 
@@ -269,7 +269,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
     case TC_MESSAGE:
       if(!freeze_packets)
 	packet_list_add("TC", ip_to_string(originator), itoa_buf);
-      
+
       if(ipversion == AF_INET)
 	{
 	  process_tc(msgsize, vtime, originator, (union tc_message *)&olsr_in->v4.message.tc);
@@ -295,7 +295,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
 	  process_mid(msgsize, vtime, originator, (union mid_message *)&olsr_in->v6.message.mid);
 	  //printf("Recieved MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
 	}
-      
+
       break;
 
     case HNA_MESSAGE:
@@ -312,18 +312,18 @@ ipc_evaluate_message(union olsr_message *olsr_in)
 	  process_hna(msgsize, vtime, originator, (union hna_message *)&olsr_in->v6.message.hna);
 	  //printf("Recieved HNA packet\n");
 	}
-      
+
       break;
 
     case IPC_MESSAGE:
       //printf("Recieved IPC packet\n");
       ipc_pack = 1; /* Don't add to buffer */
-      ipc_eval_route_packet((struct routemsg *) olsr_in);      
+      ipc_eval_route_packet((struct routemsg *) olsr_in);
       break;
     case IPC_NET:
       //printf("Recieved IPC packet\n");
       ipc_pack = 1; /* Don't add to buffer */
-      ipc_eval_net_info((struct netmsg *) olsr_in);      
+      ipc_eval_net_info((struct netmsg *) olsr_in);
       break;
     default:
       if(!freeze_packets)
@@ -333,9 +333,9 @@ ipc_evaluate_message(union olsr_message *olsr_in)
 	  packet_list_add(unk_label, ip_to_string(originator), itoa_buf);
 	}
 	printf("Unknown packet type %d\n", type);
-      
+
     }
-  
+
   if(!freeze_packets && !ipc_pack)
     {
 	  add_packet_to_buffer(olsr_in, msgsize);
@@ -397,12 +397,12 @@ ipc_eval_route_packet(struct routemsg *msg)
   dev[4] = '\0';
   memset(&gw[0], 0, 16);
 
-  printf("Processing route packet\n"); 
+  printf("Processing route packet\n");
 
   memset(rt_ent.if_name, 0, MAX_IF_NAMESIZ);
-  
+
   /* Fill struct */
-  
+
   memcpy(&rt_ent.gw, &msg->gateway_addr, ipsize);
   memcpy(&rt_ent.dst, &msg->target_addr, ipsize);
   memcpy(rt_ent.if_name, msg->device, 4);
@@ -505,7 +505,7 @@ process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union h
 	   if(MPR)
 	  update_timer_mpr((union olsr_ip_addr *)&mprsinfo->addr, originator);
 	  */
-	  
+
 	  if(ipversion == AF_INET) /* Update MPRs */
 	    {
 	      if(type == MPR_NEIGH)
@@ -528,11 +528,11 @@ process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union h
 	  nsize = nsize - ipsize;
 	  //printf("Nsize: %d\n", nsize);
 	}
- 
+
       neigh = (struct hellinfo *) &neigh->neigh_addr[i];
       neigh6 = (struct hellinfo6 *) &neigh6->neigh_addr[i];
 
-      
+
     }
   //printf("DONE\n");
 
@@ -685,7 +685,7 @@ ip_to_string(union olsr_ip_addr *addr)
 {
   char *ret;
   struct in_addr in;
-  
+
   if(ipversion == AF_INET)
     {
       in.s_addr=addr->v4;

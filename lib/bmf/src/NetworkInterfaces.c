@@ -4,29 +4,29 @@
  * Written by Erik Tromp.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of Thales, BMF nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of Thales, BMF nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -328,7 +328,7 @@ int DeactivateSpoofFilter(void)
       "I will continue (in 3 sec) - but you should manually ensure that IP spoof\n"
       "filtering is disabled!\n\n",
       procFile);
-      
+
     sleep(3);
     return 0;
   }
@@ -394,7 +394,7 @@ void RestoreSpoofFilter(void)
  * Description: Find the neighbors on a network interface to forward a BMF
  *              packet to
  * Input      : intf - the network interface
- *              source - the source IP address of the BMF packet 
+ *              source - the source IP address of the BMF packet
  *              forwardedBy - the IP address of the node that forwarded the BMF
  *                packet
  *              forwardedTo - the IP address of the node to which the BMF packet
@@ -532,7 +532,7 @@ void FindNeighbors(
     }
 
     /* TODO: get_link_set() is not thread-safe! */
-    for (walker = get_link_set(); walker != NULL; walker = walker->next) 
+    for (walker = get_link_set(); walker != NULL; walker = walker->next)
     {
       struct ipaddr_str buf;
       union olsr_ip_addr* neighborMainIp;
@@ -612,7 +612,7 @@ void FindNeighbors(
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         walker->link_cost);
 
-      /* If the candidate neighbor is best reached via another interface, then skip 
+      /* If the candidate neighbor is best reached via another interface, then skip
        * the candidate neighbor; the candidate neighbor has been / will be selected via that
        * other interface.
        * TODO: get_best_link_to_neighbor() is not thread-safe. */
@@ -670,7 +670,7 @@ void FindNeighbors(
 
           /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
           tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-          
+
           /* We are not interested in dead-end or dying edges. */
           if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
           {
@@ -715,7 +715,7 @@ void FindNeighbors(
     } /* for */
 
 #else /* USING_THALES_LINK_COST_ROUTING */
-        
+
     struct link_entry* walker;
     olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
     olsr_linkcost bestEtx = LINK_COST_BROKEN;
@@ -736,7 +736,7 @@ void FindNeighbors(
       struct link_entry* bestLinkToNeighbor;
       struct tc_entry* tcLastHop;
       float currEtx;
- 
+
       /* Consider only links from the specified interface */
       if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
       {
@@ -793,7 +793,7 @@ void FindNeighbors(
 
       /* Calculate the link quality (ETX) of the link to the found neighbor */
       currEtx = walker->linkcost;
- 
+
       if (currEtx < LINK_COST_BROKEN)
       {
         OLSR_PRINTF(
@@ -813,7 +813,7 @@ void FindNeighbors(
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
         currEtx);
 
-      /* If the candidate neighbor is best reached via another interface, then skip 
+      /* If the candidate neighbor is best reached via another interface, then skip
        * the candidate neighbor; the candidate neighbor has been / will be selected via that
        * other interface.
        * TODO: get_best_link_to_neighbor() is not thread-safe. */
@@ -996,7 +996,7 @@ static int CreateCaptureSocket(const char* ifName)
     close(skfd);
     return -1;
   }
-   
+
   /* Bind the socket to the specified interface */
   memset(&bindTo, 0, sizeof(bindTo));
   bindTo.sll_family = AF_PACKET;
@@ -1004,7 +1004,7 @@ static int CreateCaptureSocket(const char* ifName)
   bindTo.sll_ifindex = ifIndex;
   memcpy(bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
   bindTo.sll_halen = IFHWADDRLEN;
-    
+
   if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
   {
     BmfPError("bind() error");
@@ -1080,7 +1080,7 @@ static int CreateListeningSocket(const char* ifName)
   bindTo.sll_ifindex = ifIndex;
   memcpy(bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
   bindTo.sll_halen = IFHWADDRLEN;
-    
+
   if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
   {
     BmfPError("bind() error");
@@ -1132,7 +1132,7 @@ static int CreateEncapsulateSocket(const char* ifName)
     close(skfd);
     return -1;
   }
-	
+
   /* Bind to the specific network interfaces indicated by ifName. */
   /* When using Kernel 2.6 this must happer prior to the port binding! */
   if (setsockopt(skfd, SOL_SOCKET, SO_BINDTODEVICE, ifName, strlen(ifName) + 1) < 0)
@@ -1147,8 +1147,8 @@ static int CreateEncapsulateSocket(const char* ifName)
   bindTo.sin_family = AF_INET;
   bindTo.sin_port = htons(BMF_ENCAP_PORT);
   bindTo.sin_addr.s_addr = htonl(INADDR_ANY);
-      
-  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0) 
+
+  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
   {
     BmfPError("bind() error");
     close(skfd);
@@ -1370,7 +1370,7 @@ static int CreateInterface(
 
   if (olsrIntf != NULL)
   {
-    /* On OLSR-enabled interfaces, create socket for encapsulating and forwarding 
+    /* On OLSR-enabled interfaces, create socket for encapsulating and forwarding
      * multicast packets */
     encapsulatingSkfd = CreateEncapsulateSocket(ifName);
     if (encapsulatingSkfd < 0)
@@ -1450,7 +1450,7 @@ static int CreateInterface(
     memset(&ifr, 0, sizeof(struct ifreq));
     strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
     ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFADDR, &ifr) < 0) 
+    if (ioctl(ioctlSkfd, SIOCGIFADDR, &ifr) < 0)
     {
       BmfPError("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
 
@@ -1466,7 +1466,7 @@ static int CreateInterface(
     memset(&ifr, 0, sizeof(struct ifreq));
     strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
     ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0) 
+    if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0)
     {
       BmfPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
 
@@ -1611,7 +1611,7 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
   } /* for (n = ...) */
 
   free(ifc.ifc_buf);
-  
+
   /* Create the BMF network interface */
   EtherTunTapFd = CreateLocalEtherTunTap();
   if (EtherTunTapFd >= 0)
@@ -1678,7 +1678,7 @@ void CloseBmfNetworkInterfaces(void)
 
   /* Close all opened sockets */
   struct TBmfInterface* nextBmfIf = BmfInterfaces;
-  while (nextBmfIf != NULL) 
+  while (nextBmfIf != NULL)
   {
     struct TBmfInterface* bmfIf = nextBmfIf;
     nextBmfIf = bmfIf->next;
@@ -1688,7 +1688,7 @@ void CloseBmfNetworkInterfaces(void)
       close(bmfIf->capturingSkfd);
       nClosed++;
     }
-    if (bmfIf->encapsulatingSkfd >= 0) 
+    if (bmfIf->encapsulatingSkfd >= 0)
     {
       close(bmfIf->encapsulatingSkfd);
       nClosed++;
@@ -1696,7 +1696,7 @@ void CloseBmfNetworkInterfaces(void)
 
     OLSR_PRINTF(
       7,
-      "%s: %s interface \"%s\": RX pkts %d (%d dups); TX pkts %d\n", 
+      "%s: %s interface \"%s\": RX pkts %d (%d dups); TX pkts %d\n",
       PLUGIN_NAME_SHORT,
       bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
       bmfIf->ifName,
@@ -1706,7 +1706,7 @@ void CloseBmfNetworkInterfaces(void)
 
     olsr_printf(
       1,
-      "%s: closed %s interface \"%s\"\n", 
+      "%s: closed %s interface \"%s\"\n",
       PLUGIN_NAME_SHORT,
       bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
       bmfIf->ifName);
@@ -1727,7 +1727,7 @@ void CloseBmfNetworkInterfaces(void)
 
     free(bmfIf);
   } /* while */
-  
+
   if (EtherTunTapFd >= 0)
   {
     close(EtherTunTapFd);

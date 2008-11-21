@@ -187,7 +187,7 @@ LUALIB_API int luaopen_loadlib (lua_State *L)
 * There is also an emulation package available.
 * http://www.faqs.org/faqs/aix-faq/part4/section-21.html
 *
-* HPUX 
+* HPUX
 * HPUX 11 has dlfcn. For HPUX 10 use shl_*.
 * http://www.geda.seul.org/mailinglist/geda-dev37/msg00094.html
 * http://www.stat.umn.edu/~luke/xls/projects/dlbasics/dlbasics.html

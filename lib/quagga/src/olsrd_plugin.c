@@ -1,7 +1,7 @@
 /***************************************************************************
  projekt              : olsrd-quagga
- file                 : olsrd_plugin.c  
- usage                : olsrd-plugin-handler-stuff 
+ file                 : olsrd_plugin.c
+ usage                : olsrd-plugin-handler-stuff
  copyright            : (C) 2006 by Immo 'FaUl' Wehrenberg
  e-mail               : immo@chaostreff-dortmund.de
  ***************************************************************************/
@@ -61,7 +61,7 @@ void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
   *size = sizeof plugin_parameters / sizeof *plugin_parameters;
 }
 
-static int set_redistribute (const char *value, 
+static int set_redistribute (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   const char *zebra_route_types[] = {"system","kernel","connect",
@@ -78,7 +78,7 @@ static int set_redistribute (const char *value,
   return 1;
 }
 
-static int set_exportroutes (const char *value, 
+static int set_exportroutes (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   if (!strcmp(value, "only")) {
@@ -99,7 +99,7 @@ static int set_exportroutes (const char *value,
   return 0;
 }
 
-static int set_distance(const char *value, void *data __attribute__((unused)), 
+static int set_distance(const char *value, void *data __attribute__((unused)),
 			set_plugin_parameter_addon addon __attribute__((unused))) {
   int distance;
 
@@ -108,8 +108,8 @@ static int set_distance(const char *value, void *data __attribute__((unused)),
   zebra_olsr_distance(distance);
   return 0;
 }
- 
-static int set_localpref(const char *value, void *data __attribute__((unused)), 
+
+static int set_localpref(const char *value, void *data __attribute__((unused)),
 			 set_plugin_parameter_addon addon __attribute__((unused))) {
   int b;
 

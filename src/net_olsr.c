@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -110,7 +110,7 @@ void
 init_net(void)
 {
   const char * const *defaults = (olsr_cnf->ip_version == AF_INET) ? deny_ipv4_defaults : deny_ipv6_defaults;
-  
+
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
     if(inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
@@ -123,14 +123,14 @@ init_net(void)
 
 /**
  * Create an outputbuffer for the given interface. This
- * function will allocate the needed storage according 
+ * function will allocate the needed storage according
  * to the MTU of the interface.
  *
  * @param ifp the interface to create a buffer for
  *
  * @return 0 on success, negative if a buffer already existed
  *  for the given interface
- */ 
+ */
 int
 net_add_buffer(struct interface *ifp)
 {
@@ -141,7 +141,7 @@ net_add_buffer(struct interface *ifp)
     free(ifp->netbuf.buff);
     ifp->netbuf.buff = NULL;
   }
-  
+
   if (ifp->netbuf.buff == NULL) {
     ifp->netbuf.buff = olsr_malloc(ifp->int_mtu, "add_netbuff");
   }
@@ -197,10 +197,10 @@ net_reserve_bufspace(struct interface *ifp, int size)
 {
   if(size > ifp->netbuf.maxsize)
     return -1;
-  
+
   ifp->netbuf.reserved = size;
   ifp->netbuf.maxsize -= size;
-  
+
   return 0;
 }
 
@@ -227,8 +227,8 @@ net_output_pending(const struct interface *ifp)
  * @param data a pointer to the data to add
  * @param size the number of byte to copy from data
  *
- * @return -1 if no buffer was found, 0 if there was not 
- *  enough room in buffer or the number of bytes added on 
+ * @return -1 if no buffer was found, 0 if there was not
+ *  enough room in buffer or the number of bytes added on
  *  success
  */
 int
@@ -251,8 +251,8 @@ net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t siz
  * @param data a pointer to the data to add
  * @param size the number of byte to copy from data
  *
- * @return -1 if no buffer was found, 0 if there was not 
- *  enough room in buffer or the number of bytes added on 
+ * @return -1 if no buffer was found, 0 if there was not
+ *  enough room in buffer or the number of bytes added on
  *  success
  */
 int
@@ -391,7 +391,7 @@ net_output(struct interface *ifp)
     }
 
   /*
-   *Call possible packet transform functions registered by plugins  
+   *Call possible packet transform functions registered by plugins
    */
   for (tmp_ptf_list = ptf_list; tmp_ptf_list != NULL; tmp_ptf_list = tmp_ptf_list->next)
     {
@@ -403,17 +403,17 @@ net_output(struct interface *ifp)
    *we print the content of the packets
    */
   if(disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, 
-				 ifp->netbuf.pending, &ifp->ip_addr); 
-  
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff,
+				 ifp->netbuf.pending, &ifp->ip_addr);
+
   if(olsr_cnf->ip_version == AF_INET)
     {
       /* IP version 4 */
-      if(olsr_sendto(ifp->olsr_socket, 
-                     ifp->netbuf.buff, 
-		     ifp->netbuf.pending, 
-		     MSG_DONTROUTE, 
-		     (struct sockaddr *)sin, 
+      if(olsr_sendto(ifp->olsr_socket,
+                     ifp->netbuf.buff,
+		     ifp->netbuf.pending,
+		     MSG_DONTROUTE,
+		     (struct sockaddr *)sin,
 		     sizeof (*sin))
 	 < 0)
 	{
@@ -425,11 +425,11 @@ net_output(struct interface *ifp)
   else
     {
       /* IP version 6 */
-      if(olsr_sendto(ifp->olsr_socket, 
+      if(olsr_sendto(ifp->olsr_socket,
 		     ifp->netbuf.buff,
-		     ifp->netbuf.pending, 
-		     MSG_DONTROUTE, 
-		     (struct sockaddr *)sin6, 
+		     ifp->netbuf.pending,
+		     MSG_DONTROUTE,
+		     (struct sockaddr *)sin6,
 		     sizeof (*sin6))
 	 < 0)
 	{
@@ -442,7 +442,7 @@ net_output(struct interface *ifp)
 	  retval = -1;
 	}
     }
-  
+
   ifp->netbuf.pending = 0;
 
   /*
@@ -456,7 +456,7 @@ net_output(struct interface *ifp)
 }
 
 /*
- * Adds the given IP-address to the invalid list. 
+ * Adds the given IP-address to the invalid list.
  */
 void
 olsr_add_invalid_address(const union olsr_ip_addr *adr)

@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -66,7 +66,7 @@ olsr_free_hello_packet(struct hello_message *message)
 
   if(!message)
     return;
-  
+
   nb = message->neighbors;
   while (nb) {
     struct hello_neighbor *prev_nb = nb;
@@ -97,7 +97,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
   message->neighbors=NULL;
   message->packet_seq_number=0;
-  
+
   //message->mpr_seq_number=neighbortable.neighbor_mpr_seq;
 
   /* Set willingness */
@@ -109,7 +109,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
   /* Set TTL */
 
-  message->ttl = 1;  
+  message->ttl = 1;
   message->source_addr = olsr_cnf->main_addr;
 
 #ifdef DEBUG
@@ -123,21 +123,21 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 #endif
     int lnk = lookup_link_status(links);
     /* Update the status */
-      
+
     /* Check if this link tuple is registered on the outgoing interface */
     if (!ipequal(&links->local_iface_addr, &outif->ip_addr)) {
       continue;
     }
 
     message_neighbor = olsr_malloc_hello_neighbor("Build HELLO");
-      
+
     /* Find the link status */
     message_neighbor->link = lnk;
 
     /*
      * Calculate neighbor status
      */
-    /* 
+    /*
      * 2.1  If the main address, corresponding to
      *      L_neighbor_iface_addr, is included in the MPR set:
      *
@@ -150,7 +150,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
      *  2.2  Otherwise, if the main address, corresponding to
      *       L_neighbor_iface_addr, is included in the neighbor set:
      */
-      
+
     /* NOTE:
      * It is garanteed to be included when come this far
      * due to the extentions made in the link sensing
@@ -177,20 +177,20 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
           message_neighbor->status = NOT_NEIGH;
         }
     }
-  
+
     /* Set the remote interface address */
     message_neighbor->address = links->neighbor_iface_addr;
-      
+
     /* Set the main address */
     message_neighbor->main_address = links->neighbor->neighbor_main_addr;
 #ifdef DEBUG
     OLSR_PRINTF(5, "Added: %s -  status %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
 #endif
     message_neighbor->next=message->neighbors;
-    message->neighbors=message_neighbor;	    
-      
+    message->neighbors=message_neighbor;
+
   } OLSR_FOR_ALL_LINK_ENTRIES_END(links);
-  
+
   /* Add the links */
 
 #ifdef DEBUG
@@ -198,7 +198,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 #endif
 
   /* Add the rest of the neighbors if running on multiple interfaces */
-  
+
   if (ifnet != NULL && ifnet->int_next != NULL)
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor) {
 
@@ -219,15 +219,15 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
     if (tmp_neigh) {
       continue;
     }
-	    
+
 	  message_neighbor = olsr_malloc_hello_neighbor("Build HELLO 2");
-	    
+
     message_neighbor->link = UNSPEC_LINK;
-	    
+
     /*
      * Calculate neighbor status
      */
-    /* 
+    /*
      * 2.1  If the main address, corresponding to
      *      L_neighbor_iface_addr, is included in the MPR set:
      *
@@ -240,7 +240,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
      *  2.2  Otherwise, if the main address, corresponding to
      *       L_neighbor_iface_addr, is included in the neighbor set:
      */
-	    
+
     /* NOTE:
      * It is garanteed to be included when come this far
      * due to the extentions made in the link sensing
@@ -264,10 +264,10 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
        *             Neighbor Type = NOT_NEIGH
        */
       else if (neighbor->status == NOT_SYM) {
-        message_neighbor->status = NOT_NEIGH;		      
+        message_neighbor->status = NOT_NEIGH;
       }
     }
-	    
+
 
     message_neighbor->address = neighbor->neighbor_main_addr;
     message_neighbor->main_address = neighbor->neighbor_main_addr;
@@ -275,8 +275,8 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
     OLSR_PRINTF(5, "Added: %s -  status  %d\n", olsr_ip_to_string(&buf, &message_neighbor->address), message_neighbor->status);
 #endif
     message_neighbor->next=message->neighbors;
-    message->neighbors=message_neighbor;	
-    
+    message->neighbors=message_neighbor;
+
   } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor);
 
   return 0;
@@ -290,7 +290,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
  *
  *@return nada
  */
-void 
+void
 olsr_free_tc_packet(struct tc_message *message)
 {
   struct tc_mpr_addr *mprs;
@@ -322,16 +322,16 @@ olsr_build_tc_packet(struct tc_message *message)
 
   message->multipoint_relay_selector_address=NULL;
   message->packet_seq_number=0;
- 
+
   message->hop_count = 0;
   message->ttl = MAX_TTL;
   message->ansn = get_local_ansn();
 
   message->originator = olsr_cnf->main_addr;
   message->source_addr = olsr_cnf->main_addr;
-  
 
-  /* Loop trough all neighbors */  
+
+  /* Loop trough all neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(entry) {
     if (entry->status != SYM) {
       continue;
@@ -343,11 +343,11 @@ olsr_build_tc_packet(struct tc_message *message)
 	  	/* 2 = Add all neighbors */
   		//printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
 		  message_mpr = olsr_malloc_tc_mpr_addr("Build TC");
-		
+
       message_mpr->address = entry->neighbor_main_addr;
       message_mpr->next = message->multipoint_relay_selector_address;
       message->multipoint_relay_selector_address = message_mpr;
-      entry_added = OLSR_TRUE;		
+      entry_added = OLSR_TRUE;
       break;
     }
     case(1):
@@ -357,7 +357,7 @@ olsr_build_tc_packet(struct tc_message *message)
           (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL)) {
         //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
         message_mpr = olsr_malloc_tc_mpr_addr("Build TC 2");
-		    
+
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;
         message->multipoint_relay_selector_address = message_mpr;
@@ -371,15 +371,15 @@ olsr_build_tc_packet(struct tc_message *message)
       if (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL) {
         //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
         message_mpr = olsr_malloc_tc_mpr_addr("Build TC 3");
-		    
+
         message_mpr->address = entry->neighbor_main_addr;
         message_mpr->next = message->multipoint_relay_selector_address;
         message->multipoint_relay_selector_address = message_mpr;
         entry_added = OLSR_TRUE;
       }
       break;
-    }		
-	  
+    }
+
     } /* Switch */
   } OLSR_FOR_ALL_NBR_ENTRIES_END(entry);
 

@@ -4,31 +4,31 @@
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -102,7 +102,7 @@ olsr_bump_routingtree_version(void)
  */
 int
 avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
-{       
+{
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
   const olsr_u32_t addr1 = ntohl(pfx1->prefix.v4.s_addr);
@@ -139,7 +139,7 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
  */
 int
 avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
-{       
+{
   int res;
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
@@ -148,7 +148,7 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
   res = memcmp(&pfx1->prefix.v6, &pfx2->prefix.v6, 16);
   if (res != 0) {
     return res;
-  } 
+  }
   /* prefix length */
   if (pfx1->prefix_len < pfx2->prefix_len) {
     return -1;
@@ -187,7 +187,7 @@ olsr_init_routing_table(void)
  *
  * @param dst the address of the entry
  *
- * @return a pointer to a rt_entry struct 
+ * @return a pointer to a rt_entry struct
  * representing the route entry.
  */
 struct rt_entry *
@@ -237,7 +237,7 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   }
 
   memset(rt, 0, sizeof(*rt));
-  
+
   /* Mark this entry as fresh (see process_routes.c:512) */
   rt->rt_nexthop.iif_index = -1;
 
@@ -425,8 +425,8 @@ olsr_get_nh(const struct rt_entry *rt)
 
     /* this is a route add/chg - grab nexthop from the best route. */
     return &rt->rt_best->rtp_nexthop;
-  } 
-  
+  }
+
   /* this is a route deletion - all routes are gone. */
   return &rt->rt_nexthop;
 }
@@ -545,7 +545,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen,
    * be explored during SPF run.
    */
   tc = olsr_locate_tc_entry(originator);
-  
+
   /*
    * first check if there is a rt_path for the prefix.
    */
@@ -658,7 +658,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   struct ipaddr_str prefixstr, origstr, gwstr;
   struct rt_entry *rt = rtp->rtp_rt;
   struct lqtextbuffer lqbuffer;
-  
+
   snprintf(buff, sizeof(buff),
            "%s/%u from %s via %s, "
            "cost %s, metric %u, v %u",
@@ -684,7 +684,7 @@ olsr_print_routing_table(struct avl_tree *tree)
   /* The whole function makes no sense without it. */
   struct avl_node *rt_tree_node;
   struct lqtextbuffer lqbuffer;
-  
+
   OLSR_PRINTF(6, "ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first(tree);
@@ -712,7 +712,7 @@ olsr_print_routing_table(struct avl_tree *tree)
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
              if_ifwithindex_name(rt->rt_nexthop.iif_index),
-             rtp->rtp_version);    
+             rtp->rtp_version);
     }
   }
 #endif

@@ -21,7 +21,7 @@
 ** a thread must also synchronize any write-access to its own stack.
 ** Unsynchronized accesses are allowed only when reading its own stack,
 ** or when reading immutable fields from global objects
-** (such as string values and udata values). 
+** (such as string values and udata values).
 */
 #ifndef lua_lock
 #define lua_lock(L)	((void) 0)

@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -94,7 +94,7 @@ olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net,
   struct hna_net *tmp;
 
   /* Loop trough entrys */
-  for (tmp = nets->next; tmp != nets; tmp = tmp->next) { 
+  for (tmp = nets->next; tmp != nets; tmp = tmp->next) {
     if (tmp->prefixlen == prefixlen && ipequal(&tmp->A_network_addr, net)) {
       return tmp;
     }
@@ -129,7 +129,7 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
       return tmp_hna;
     }
   }
-  
+
   /* Not found */
   return NULL;
 }
@@ -160,7 +160,7 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
 
   /* queue */
   hash = olsr_ip_hashing(addr);
-  
+
   hna_set[hash].next->prev = new_entry;
   new_entry->next = hna_set[hash].next;
   hna_set[hash].next = new_entry;
@@ -184,7 +184,7 @@ olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net,
 {
   /* Add the net */
   struct hna_net *new_net = olsr_cookie_malloc(hna_net_mem_cookie);
-  
+
   /* Fill struct */
   memset(new_net, 0, sizeof(struct hna_net));
   new_net->A_network_addr = *net;
@@ -219,7 +219,7 @@ olsr_expire_hna_net_entry(void *context)
   hna_gw = net_to_delete->hna_gw;
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", 
+  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n",
               olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
               net_to_delete->prefixlen,
               olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
@@ -246,7 +246,7 @@ olsr_expire_hna_net_entry(void *context)
 /**
  * Update a HNA entry. If it does not exist it
  * is created.
- * This is the only function that should be called 
+ * This is the only function that should be called
  * from outside concerning creation of HNA entries.
  *
  *@param gw address of the gateway
@@ -313,7 +313,7 @@ olsr_print_hna_set(void)
               nowtm->tm_min,
               nowtm->tm_sec,
 	      (int)now.tv_usec/10000);
-  
+
   if(olsr_cnf->ip_version == AF_INET)
     OLSR_PRINTF(1, "IP net          netmask         GW IP\n");
   else

@@ -3,31 +3,31 @@
  * Copyright (c) 2005, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -210,8 +210,8 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
     }
   fprintf(fd, "\n");
 
-  
-  
+
+
 
   /* Interfaces */
   fprintf(fd, "# Interfaces\n# Multiple interfaces with the same configuration\n# can shar the same config block. Just list the\n# interfaces(e.g. Interface \"eth0\" \"eth2\"\n\n");
@@ -222,7 +222,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	{
 	  fprintf(fd, "Interface \"%s\" {\n", in->name);
 	  fprintf(fd, "\n");
-      
+
 	  fprintf(fd, "    # IPv4 broadcast address to use. The\n    # one usefull example would be 255.255.255.255\n    # If not defined the broadcastaddress\n    # every card is configured with is used\n\n");
 
 
@@ -234,25 +234,25 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	    {
 	      fprintf(fd, "    #Ip4Broadcast\t255.255.255.255\n\n");
 	    }
-	  
-	  
+
+
 	  fprintf(fd, "    # IPv6 address scope to use.\n    # Must be 'site-local' or 'global'\n\n");
 	  if(in->cnf->ipv6_addrtype)
 	    fprintf(fd, "    Ip6AddrType \tsite-local\n\n");
 	  else
 	    fprintf(fd, "    Ip6AddrType \tglobal\n\n");
-	  
+
 	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using site-local addresses.\n    # If not defined, ff05::15 is used\n");
 	  fprintf(fd, "    Ip6MulticastSite\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  fprintf(fd, "    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
 	  fprintf(fd, "    Ip6MulticastGlobal\t%s\n\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
-	  
-	  
+
+
           fprintf(fd, "    # Olsrd can autodetect changes in\n    # interface configurations. Enabled by default\n    # turn off to save CPU.\n    AutoDetectChanges: %s\n", in->cnf->autodetect_chg ? "yes" : "no");
 
 	  fprintf(fd, "    # Emission and validity intervals.\n    # If not defined, RFC proposed values will\n    # in most cases be used.\n\n");
-	  
-	  
+
+
 	  if(in->cnf->hello_params.emission_interval != HELLO_INTERVAL)
 	    fprintf(fd, "    HelloInterval\t%0.2f\n", in->cnf->hello_params.emission_interval);
 	  else
@@ -282,10 +282,10 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	  else
 	    fprintf(fd, "    #HnaInterval\t%0.2f\n", in->cnf->hna_params.emission_interval);
 	  if(in->cnf->hna_params.validity_time != HNA_HOLD_TIME)
-	    fprintf(fd, "    HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
+	    fprintf(fd, "    HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);
 	  else
-	    fprintf(fd, "    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
-	  
+	    fprintf(fd, "    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);
+
           mult = in->cnf->lq_mult;
 
           if (mult == NULL)
@@ -321,7 +321,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
 	      fprintf(fd, "    #Weight\t 0\n\n");
 	    }
 
-	  
+
 	  fprintf(fd, "}\n\n");
 	  in = in->next;
 	}
@@ -495,8 +495,8 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
     }
   WRITE_TO_BUF("\n");
 
-  
-  
+
+
 
   /* Interfaces */
   WRITE_TO_BUF("# Interfaces\n# Multiple interfaces with the same configuration\n");
@@ -522,7 +522,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 	      if(first)
     	        WRITE_TO_BUF("    #Ip4Broadcast\t255.255.255.255\n");
 	    }
-	  
+
           if(first) WRITE_TO_BUF("\n");
 
           if(first)
@@ -542,12 +542,12 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 	    WRITE_TO_BUF("    # IPv6 multicast address to use when\n    # using global addresses\n    # If not defined, ff0e::1 is used\n");
 	  WRITE_TO_BUF("    Ip6MulticastGlobal\t%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
           if(first) WRITE_TO_BUF("\n");
-	  
-	  
+
+
           if(first)
             WRITE_TO_BUF("    # Emission and validity intervals.\n    # If not defined, RFC proposed values will\n    # in most cases be used.\n\n");
-	  
-	  
+
+
 	  if(in->cnf->hello_params.emission_interval != HELLO_INTERVAL)
 	    WRITE_TO_BUF("    HelloInterval\t%0.2f\n", in->cnf->hello_params.emission_interval);
           else if(first)
@@ -577,10 +577,10 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
           else if(first)
 	    WRITE_TO_BUF("    #HnaInterval\t%0.2f\n", in->cnf->hna_params.emission_interval);
 	  if(in->cnf->hna_params.validity_time != HNA_HOLD_TIME)
-	    WRITE_TO_BUF("    HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
+	    WRITE_TO_BUF("    HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);
           else if(first)
-	    WRITE_TO_BUF("    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);	  
-	  
+	    WRITE_TO_BUF("    #HnaValidityTime\t%0.2f\n", in->cnf->hna_params.validity_time);
+
           mult = in->cnf->lq_mult;
 
           if (mult == NULL)
@@ -621,7 +621,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
        	        WRITE_TO_BUF("    #Weight\t 0\n\n");
 	    }
 
-	  
+
 	  WRITE_TO_BUF("}\n\n");
 	  in = in->next;
 	  first = OLSR_FALSE;

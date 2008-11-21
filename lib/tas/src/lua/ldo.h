@@ -14,7 +14,7 @@
 
 /*
 ** macro to control inclusion of some hard tests on stack reallocation
-*/ 
+*/
 #ifndef HARDSTACKTESTS
 #define condhardstacktests(x)	{ /* empty */ }
 #else

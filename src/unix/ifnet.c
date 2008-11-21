@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -78,14 +78,14 @@ set_flag(char *ifname, short flag __attribute__((unused)))
   strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
   /* Get flags */
-  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0)
     {
       fprintf(stderr,"ioctl (get interface flags)");
       return -1;
     }
 
   strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-  
+
   //printf("Setting flags for if \"%s\"\n", ifr.ifr_name);
 
   if(!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)))
@@ -119,11 +119,11 @@ check_interface_updates(void *foo __attribute__((unused)))
     {
       if(tmp_if->host_emul)
 	continue;
-      
+
       if(olsr_cnf->host_emul) /* XXX: TEMPORARY! */
 	continue;
 
-      if(!tmp_if->cnf->autodetect_chg) 
+      if(!tmp_if->cnf->autodetect_chg)
         {
 #ifdef DEBUG
           /* Don't check this interface */
@@ -182,7 +182,7 @@ chk_if_changed(struct olsr_if *iface)
 
 
   /* Get flags (and check if interface exists) */
-  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0)
     {
       OLSR_PRINTF(3, "No such interface: %s\n", iface->name);
       goto remove_interface;
@@ -207,9 +207,9 @@ chk_if_changed(struct olsr_if *iface)
    */
 
   /* Check broadcast */
-  if ((olsr_cnf->ip_version == AF_INET) && 
-      !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */ 
-      (!(ifp->int_flags & IFF_BROADCAST))) 
+  if ((olsr_cnf->ip_version == AF_INET) &&
+      !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */
+      (!(ifp->int_flags & IFF_BROADCAST)))
     {
       OLSR_PRINTF(3, "\tNo broadcast - removing\n");
       goto remove_interface;
@@ -255,7 +255,7 @@ chk_if_changed(struct olsr_if *iface)
   /*
    * Now check if the IP has changed
    */
-  
+
   /* IP version 6 */
   if(olsr_cnf->ip_version == AF_INET6)
     {
@@ -263,18 +263,18 @@ chk_if_changed(struct olsr_if *iface)
       struct ipaddr_str buf;
 #endif
       /* Get interface address */
-      
+
       if(get_ipv6_address(ifr.ifr_name, &tmp_saddr6, iface->cnf->ipv6_addrtype) <= 0)
 	{
 	  if(iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL)
 	    OLSR_PRINTF(3, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
 	  else
 	    OLSR_PRINTF(3, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
-	  
-	  
+
+
 	  goto remove_interface;
 	}
-      
+
 #ifdef DEBUG
       OLSR_PRINTF(3, "\tAddress: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 #endif
@@ -299,7 +299,7 @@ chk_if_changed(struct olsr_if *iface)
 
 	  run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
 
-	  return 1;	  	  
+	  return 1;
 	}
       return 0;
 
@@ -309,7 +309,7 @@ chk_if_changed(struct olsr_if *iface)
     {
       struct ipaddr_str buf;
       /* Check interface address (IPv4)*/
-      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) 
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0)
 	{
 	  OLSR_PRINTF(1, "\tCould not get address of interface - removing it\n");
 	  goto remove_interface;
@@ -320,7 +320,7 @@ chk_if_changed(struct olsr_if *iface)
 #endif
 
       if(memcmp(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr,
-		&((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
+		&((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr,
 		olsr_cnf->ipsize) != 0)
 	{
 	  /* New address */
@@ -330,26 +330,26 @@ chk_if_changed(struct olsr_if *iface)
 
 	  ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
 
-	  if(memcmp(&olsr_cnf->main_addr, 
+	  if(memcmp(&olsr_cnf->main_addr,
 		    &ifp->ip_addr,
 		    olsr_cnf->ipsize) == 0)
 	    {
 	      OLSR_PRINTF(1, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
 	      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
-	      memcpy(&olsr_cnf->main_addr, 
-		     &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
+	      memcpy(&olsr_cnf->main_addr,
+		     &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr,
 		     olsr_cnf->ipsize);
 	    }
 
-	  memcpy(&ifp->ip_addr, 
-		 &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, 
+	  memcpy(&ifp->ip_addr,
+		 &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr,
 		 olsr_cnf->ipsize);
 
 	  if_changes = 1;
 	}
 
       /* Check netmask */
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0)
 	{
 	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	  goto remove_interface;
@@ -360,7 +360,7 @@ chk_if_changed(struct olsr_if *iface)
 #endif
 
       if(memcmp(&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr,
-		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, 
+		&((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr,
 		olsr_cnf->ipsize) != 0)
 	{
           struct ipaddr_str buf;
@@ -373,20 +373,20 @@ chk_if_changed(struct olsr_if *iface)
 
 	  if_changes = 1;
 	}
-      
+
       if(!iface->cnf->ipv4_broadcast.v4.s_addr)
 	{
-	  /* Check broadcast address */      
-	  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	  /* Check broadcast address */
+	  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0)
 	    {
 	      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	      goto remove_interface;
 	    }
-	  
+
 #ifdef DEBUG
 	  OLSR_PRINTF(3, "\tBroadcast address:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_broadaddr));
 #endif
-	  
+
 	  if(ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr.s_addr)
 	    {
               struct ipaddr_str buf;
@@ -394,10 +394,10 @@ chk_if_changed(struct olsr_if *iface)
 	      OLSR_PRINTF(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
 	      OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
 	      OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_broadaddr));
-	      
+
 	      ifp->int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
 	      if_changes = 1;
-	    }            
+	    }
 	}
     }
 
@@ -414,10 +414,10 @@ chk_if_changed(struct olsr_if *iface)
   olsr_delete_link_entry_by_ip(&ifp->ip_addr);
 
   /*
-   *Call possible ifchange functions registered by plugins  
+   *Call possible ifchange functions registered by plugins
    */
   run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
-  
+
   /* Dequeue */
   if(ifp == ifnet)
     {
@@ -456,7 +456,7 @@ chk_if_changed(struct olsr_if *iface)
     }
 
   /*
-   * Deregister functions for periodic message generation 
+   * Deregister functions for periodic message generation
    */
   olsr_stop_timer(ifp->hello_gen_timer);
   olsr_stop_timer(ifp->tc_gen_timer);
@@ -549,20 +549,20 @@ add_hemu_if(struct olsr_if *iface)
       sin.sin_family = AF_INET;
       sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
       sin.sin_port = htons(10150);
- 
+
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
       memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-      
+
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = gethemusocket(&sin);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -577,17 +577,17 @@ add_hemu_if(struct olsr_if *iface)
       /* IP version 6 */
       memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
-#if 0      
+#if 0
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = gethcsocket6(&addrsock6, BUFSPACE, ifp->int_name);
-      
+
       join_mcast(ifp, ifp->olsr_socket);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -595,7 +595,7 @@ add_hemu_if(struct olsr_if *iface)
 	  olsr_cnf->exit_value = EXIT_FAILURE;
 	  kill(getpid(), SIGINT);
 	}
-      
+
 #endif
     }
 
@@ -609,16 +609,16 @@ add_hemu_if(struct olsr_if *iface)
   if(send(ifp->olsr_socket, addr , olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error sending IP!");
-    }  
-  
+    }
+
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu);
 
 
   /*
-   * Register functions for periodic message generation 
+   * Register functions for periodic message generation
    */
-  
+
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC,
@@ -694,13 +694,13 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   OLSR_PRINTF(debuglvl, "Checking %s:\n", ifr.ifr_name);
 
   /* Get flags (and check if interface exists) */
-  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) 
+  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0)
     {
       OLSR_PRINTF(debuglvl, "\tNo such interface!\n");
       return 0;
     }
 
-  ifs.int_flags = ifr.ifr_flags;      
+  ifs.int_flags = ifr.ifr_flags;
 
 
   if ((ifs.int_flags & IFF_UP) == 0)
@@ -711,8 +711,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   /* Check broadcast */
   if ((olsr_cnf->ip_version == AF_INET) &&
-      !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */ 
-      (!(ifs.int_flags & IFF_BROADCAST))) 
+      !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */
+      (!(ifs.int_flags & IFF_BROADCAST)))
     {
       OLSR_PRINTF(debuglvl, "\tNo broadcast - skipping\n");
       return 0;
@@ -735,7 +735,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   else
     OLSR_PRINTF(debuglvl, "\tNot a wireless interface\n");
 
-  
+
   /* IP version 6 */
   if(olsr_cnf->ip_version == AF_INET6)
     {
@@ -747,84 +747,84 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 	    OLSR_PRINTF(debuglvl, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
 	  else
 	    OLSR_PRINTF(debuglvl, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
-	  
+
 	  return 0;
 	}
-      
+
       OLSR_PRINTF(debuglvl, "\tAddress: %s\n", ip6_to_string(&buf, &ifs.int6_addr.sin6_addr));
-      
+
       /* Multicast */
       memset (&ifs.int6_multaddr, 0, sizeof (ifs.int6_multaddr));
       ifs.int6_multaddr.sin6_family   = AF_INET6;
       ifs.int6_multaddr.sin6_flowinfo = htonl(0);
       ifs.int6_multaddr.sin6_scope_id = if_nametoindex(ifr.ifr_name);
       ifs.int6_multaddr.sin6_port     = htons(OLSRPORT);
-      ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL) ? 
+      ifs.int6_multaddr.sin6_addr = (iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL) ?
 	iface->cnf->ipv6_multi_site.v6 :
 	iface->cnf->ipv6_multi_glbl.v6;
-      
+
 #ifdef __MacOSX__
       ifs.int6_multaddr.sin6_scope_id = 0;
 #endif
 
       OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
-      
+
     }
   /* IP version 4 */
   else
     {
       /* Get interface address (IPv4)*/
-      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) 
+      if(ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0)
 	{
 	  OLSR_PRINTF(debuglvl, "\tCould not get address of interface - skipping it\n");
 	  return 0;
 	}
-      
+
       ifs.int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
-      
+
       /* Find netmask */
-      
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) 
+
+      if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0)
 	{
 	  olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get netmask)", ifr.ifr_name);
 	  return 0;
 	}
-      
+
       ifs.int_netmask = *(struct sockaddr_in *)&ifr.ifr_netmask;
-      
+
       /* Find broadcast address */
       if(iface->cnf->ipv4_broadcast.v4.s_addr)
 	{
 	  /* Specified broadcast */
-	  memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr, 
-		 &iface->cnf->ipv4_broadcast.v4, 
+	  memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr,
+		 &iface->cnf->ipv4_broadcast.v4,
 		 sizeof(olsr_u32_t));
 	}
       else
 	{
 	  /* Autodetect */
-	  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) 
+	  if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0)
 	    {
 	      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	      return 0;
 	    }
-	  
+
 	  ifs.int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
 	}
-      
+
       /* Deactivate IP spoof filter */
       deactivate_spoof(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
-      
+
       /* Disable ICMP redirects */
       disable_redirects(if_basename(ifr.ifr_name), &ifs, olsr_cnf->ip_version);
-      
+
     }
-  
-  
+
+
   /* Get interface index */
-  
+
   ifs.if_index = if_nametoindex(ifr.ifr_name);
-  
+
   /* Set interface metric */
   if(iface->cnf->weight.fixed)
     ifs.int_metric = iface->cnf->weight.value;
@@ -844,7 +844,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   /* Set up buffer */
   net_add_buffer(&ifs);
-	       
+
   OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
@@ -863,15 +863,15 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
       OLSR_PRINTF(1, "\tAddress: %s\n", ip6_to_string(&buf, &ifs.int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
     }
-  
+
   ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
-  
+
   iface->configured = 1;
   iface->interf = ifp;
 
   /* XXX bad code */
   memcpy(ifp, &ifs, sizeof(struct interface));
-  
+
   ifp->immediate_send_tc = (iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval);
   if (olsr_cnf->max_jitter == 0)
   {
@@ -895,9 +895,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = getsocket(BUFSPACE, ifp->int_name);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -911,17 +911,17 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     {
       /* IP version 6 */
       ifp->ip_addr.v6 =  ifp->int6_addr.sin6_addr;
-      
+
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = getsocket6(BUFSPACE, ifp->int_name);
-      
+
       join_mcast(ifp, ifp->olsr_socket);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -929,29 +929,29 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 	  olsr_cnf->exit_value = EXIT_FAILURE;
 	  kill(getpid(), SIGINT);
 	}
-      
+
     }
 
   set_buffer_timer(ifp);
 
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input);
-  
-#ifdef linux 
+
+#ifdef linux
   /* Set TOS */
-  
+
   if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&precedence, sizeof(precedence)) < 0)
     {
       perror("setsockopt(SO_PRIORITY)");
       olsr_syslog(OLSR_LOG_ERR, "OLSRD: setsockopt(SO_PRIORITY) error %m");
     }
-  if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char*)&tos_bits, sizeof(tos_bits)) < 0)    
+  if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char*)&tos_bits, sizeof(tos_bits)) < 0)
     {
       perror("setsockopt(IP_TOS)");
       olsr_syslog(OLSR_LOG_ERR, "setsockopt(IP_TOS) error %m");
     }
 #endif
-  
+
   /*
    *Initialize sequencenumber as a random 16bit value
    */
@@ -968,9 +968,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
-  
+
   /*
-   * Register functions for periodic message generation 
+   * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
@@ -1003,7 +1003,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
 
   /*
-   *Call possible ifchange functions registered by plugins  
+   *Call possible ifchange functions registered by plugins
    */
   run_ifchg_cbs(ifp, IFCHG_IF_ADD);
 

@@ -404,7 +404,7 @@ parse_http_request(int fd)
 
             req[param_size] = '\0';
             printf("Dynamic read %d bytes\n", param_size);
-	
+
             //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
             size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
             c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
@@ -490,7 +490,7 @@ parse_http_request(int fd)
                        "</tbody>\n"
                        "</table>\n",
                        FRAMEWIDTH);
-	
+
       size += build_tabs(&body[size], sizeof(body)-size, i);
       size += build_frame(&body[size],
                           sizeof(body)-size,
@@ -498,7 +498,7 @@ parse_http_request(int fd)
                           "routes",
                           FRAMEWIDTH,
                           tab_entries[i].build_body_cb);
-	
+
       stats.ok_hits++;
 
       size += snprintf(&body[size], sizeof(body)-size,
@@ -511,7 +511,7 @@ parse_http_request(int fd)
                        "</div>\n"
                        "</body>\n"
                        "</html>\n");
-	
+
 #ifdef NETDIRECT
       netsprintf_direct = 1;
       goto close_connection;
@@ -752,7 +752,7 @@ static int build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry * rt
 {
   int size = 0;
   struct lqtextbuffer lqbuffer;
-  
+
   size += snprintf(&buf[size], bufsize-size, "<tr>");
   size += build_ipaddr_with_link(&buf[size], bufsize-size,
                                  &rt->rt_dst.prefix,
@@ -911,7 +911,7 @@ static int build_config_body(char *buf, olsr_u32_t bufsize)
                            "</tr>\n",
                            ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr),
                            ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
-        }	
+        }
         size += snprintf(&buf[size], bufsize-size,
                          "<tr>\n"
                          "<td>MTU: %d</td>\n"

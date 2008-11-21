@@ -143,7 +143,7 @@ static void LoadUpvalues (LoadState* S, Proto* f)
 {
  int i,n;
  n=LoadInt(S);
- if (n!=0 && n!=f->nups) 
+ if (n!=0 && n!=f->nups)
   luaG_runerror(S->L,"bad nupvalues in %s: read %d; expected %d",
 		S->name,n,f->nups);
  f->upvalues=luaM_newvector(S->L,n,TString*);

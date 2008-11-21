@@ -4,31 +4,31 @@
  * Copyright (c) 2004, Thomas Lopatic (thomas@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -107,7 +107,7 @@ int iterLinkTabNext(char *buff, int len)
 {
   struct list_node *link_node;
   struct lqtextbuffer lqbuffer;
-  
+
   if (iterLinkTab == NULL)
     return -1;
 
@@ -146,7 +146,7 @@ int iterNeighTabNext(char *buff, int len)
   int res;
   int i;
   struct neighbor_2_list_entry *neigh2;
-  
+
   if (iterNeighTab == NULL)
     return -1;
 
@@ -192,7 +192,7 @@ int iterNeighTabNext(char *buff, int len)
   if (iterNeighTab == &neighTab[iterIndex])
   {
     iterNeighTab = NULL;
-    
+
     while (++iterIndex < HASHSIZE)
       if (neighTab[iterIndex].next != &neighTab[iterIndex])
       {
@@ -274,7 +274,7 @@ int iterTcTabNext(char *buff, int len)
   int i;
   struct tc_edge_entry *tc_edge;
   struct lqtextbuffer lqbuffer;
-  
+
   if (iterTcTab == NULL)
     return -1;
 
@@ -304,7 +304,7 @@ int iterTcTabNext(char *buff, int len)
 
     i++;
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(iterTcTab, tc_edge);
-  
+
   strcpy(buff, "]~");
 
   iterTcTab = tas_getnext_tc_entry(iterTcTab);
@@ -315,7 +315,7 @@ int iterTcTabNext(char *buff, int len)
 void iterTcTabInit(void)
 {
   struct avl_node *node;
-  
+
   avl_init(&tc_tree, avl_comp_default);
 
   node = avl_walk_first(&tc_tree);
@@ -466,7 +466,7 @@ int olsrd_plugin_init(void)
   config = olsr_cnf;
 
   httpInit();
-  
+
   olsr_start_timer(OLSR_TAS_SERVICE_INT, 0, OLSR_TIMER_PERIODIC,
                    &serviceFunc, NULL, 0);
 

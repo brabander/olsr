@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -205,7 +205,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 
 /**
  *Do initialization here
- * 
+ *
  *
  *This function is called by the my_init
  *function in uolsrd_plugin.c
@@ -215,14 +215,14 @@ int
 olsrd_plugin_init(void)
 {
   pthread_t ping_thread;
-  
+
   //gw_net.v4 = INET_NET;
   //gw_netmask.v4 = INET_PREFIX;
 
   //gw_already_added = 0;
   //has_available_gw = 0;
 
-  
+
   /* Remove all local Inet HNA entries */
   /*while(remove_local_hna4_entry(&gw_net, &gw_netmask))
   {
@@ -230,7 +230,7 @@ olsrd_plugin_init(void)
   }*/
 
   pthread_create(&ping_thread, NULL, (void *(*)(void *))looped_checks, NULL);
-  
+
   /* Register the GW check */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
                    &olsr_event_doing_hna, NULL, 0);
@@ -278,7 +278,7 @@ olsr_event_doing_hna(void *foo __attribute__((unused)))
 
 /**
  * the threaded function which happens within an endless loop,
- * reiterated every "Interval" sec (as given in the config or 
+ * reiterated every "Interval" sec (as given in the config or
  * the default value)
  */
 static void
@@ -315,12 +315,12 @@ check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_pin
     union olsr_ip_addr mask;
 
     FILE *fp = fopen(PROCENTRY_ROUTE, "r");
-    if (!fp) 
+    if (!fp)
       {
         perror(PROCENTRY_ROUTE);
         olsr_printf(1, "INET (IPv4) not configured in this system.\n");
 	return -1;
-      }    
+      }
 
     olsr_prefix_to_netmask(&mask, prefixlen);
     /*
@@ -328,7 +328,7 @@ check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_pin
                 "Flags Metric Ref    Use Iface\n");
     */
     while (fgets(buf, sizeof(buf), fp))
-      {	
+      {
 	int num = sscanf(buf, "%15s %128X %128X %X %d %d %d %128X \n",
                          iface, &dest_addr, &gate_addr,
                          &iflags, &refcnt, &use, &metric, &netmask);
@@ -347,38 +347,38 @@ check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_pin
 
         if( (iflags & RTF_UP) &&
             (metric == 0) &&
-            (netmask == mask.v4.s_addr) && 
+            (netmask == mask.v4.s_addr) &&
             (dest_addr == net->v4.s_addr))
           {
             if ( ((mask.v4.s_addr == INET_PREFIX)&&(net->v4.s_addr == INET_NET))&&(!(iflags & RTF_GATEWAY)))
               {
-                fclose(fp);  
+                fclose(fp);
                 return retval;
               }
             /* don't ping, if there was no "Ping" IP addr in the config file */
-            if (the_ping_list != NULL) {  
-              /*validate the found inet gw by pinging*/ 
+            if (the_ping_list != NULL) {
+              /*validate the found inet gw by pinging*/
               if (ping_is_possible(the_ping_list)) {
                 olsr_printf(1, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
-                retval=1;      
+                retval=1;
               }
             } else {
               olsr_printf(1, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
-              retval=1;      
+              retval=1;
             }
           }
       }
 
-    fclose(fp);      
+    fclose(fp);
     if(retval == 0){
       /* And we cast here since we get warnings on Win32 */
       olsr_printf(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
-    }  
+    }
     return retval;
 }
 
 static int
-ping_is_possible(struct ping_list *the_ping_list) 
+ping_is_possible(struct ping_list *the_ping_list)
 {
   struct ping_list *list;
   for(list = the_ping_list; list; list = list->next) {
@@ -387,7 +387,7 @@ ping_is_possible(struct ping_list *the_ping_list)
     olsr_printf(1, "\nDo ping on %s ...\n", list->ping_address);
     if (system(ping_command) == 0) {
       olsr_printf(1, "...OK\n\n");
-      return 1;      
+      return 1;
     }
     olsr_printf(1, "...FAILED\n\n");
   }
@@ -407,7 +407,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
   new->ping_address = strdup(ping_address);
   new->next = the_ping_list;
   return new;
-}    
+}
 
 
 
@@ -427,7 +427,7 @@ add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, olsr_u
   new->hna_added=0;
   new->probe_ok=0;
   new->ping_hosts=NULL;
-  new->next=list_root;  
+  new->next=list_root;
   return new;
 }
 
@@ -445,7 +445,7 @@ static unsigned long __stdcall ThreadWrapper(void *Para)
 
   Func = Cast->Func;
   Arg = Cast->Arg;
-  
+
   HeapFree(GetProcessHeap(), 0, Para);
 
   Func(Arg);

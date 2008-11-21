@@ -4,31 +4,31 @@
  * Copyright (c) 2005, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -211,7 +211,7 @@ ohs_delete_connection(struct ohs_connection *oc)
   } else {
     struct ohs_connection *curr_entry = ohs_conns->next;
     struct ohs_connection *prev_entry = ohs_conns;
-      
+
     while (curr_entry != NULL) {
       if(curr_entry == oc) {
         prev_entry->next = curr_entry->next;
@@ -288,8 +288,8 @@ ohs_init_connect_sockets(void)
       exit(0);
     }
 
-  if(setsockopt(srv_socket, SOL_SOCKET, SO_REUSEADDR, 
-		(char *)&yes, sizeof(yes)) < 0) 
+  if(setsockopt(srv_socket, SOL_SOCKET, SO_REUSEADDR,
+		(char *)&yes, sizeof(yes)) < 0)
     {
       printf("SO_REUSEADDR failed for socket: %s\n", strerror(errno));
       close(srv_socket);
@@ -301,17 +301,17 @@ ohs_init_connect_sockets(void)
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr = INADDR_ANY;
   sin.sin_port = htons(OHS_TCP_PORT);
-  
+
   /* bind the socket to the port number */
-  if (bind(srv_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1) 
+  if (bind(srv_socket, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
       printf("bind failed for socket: %s\n", strerror(errno));
       close(srv_socket);
       exit(0);
     }
-  
+
   /* show that we are willing to listen */
-  if (listen(srv_socket, 5) == -1) 
+  if (listen(srv_socket, 5) == -1)
     {
       printf("listen failed for socket: %s\n", strerror(errno));
       close(srv_socket);
@@ -333,7 +333,7 @@ static void accept_handler(void)
   struct sockaddr_in pin;
   socklen_t addrlen = sizeof(pin);
   int s;
-	  
+
   memset(&pin, 0 , sizeof(pin));
 
   if((s = accept(srv_socket, (struct sockaddr *)&pin, &addrlen)) < 0)
@@ -379,7 +379,7 @@ ohs_listen_loop(void)
       high = srv_socket;
       FD_SET(srv_socket, &ibits);
 
-      if(fn_stdin > high) 
+      if(fn_stdin > high)
 	high = fn_stdin;
 
       FD_SET(fn_stdin, &ibits);
@@ -389,26 +389,26 @@ ohs_listen_loop(void)
 	{
 	  if(ohs_cs->socket > high)
 	    high = ohs_cs->socket;
-      
+
 	  FD_SET(ohs_cs->socket, &ibits);
 	}
 
       /* block */
       n = select(high + 1, &ibits, 0, 0, NULL);
-      
+
       if(n == 0)
         continue;
 
       /* Did somethig go wrong? */
-      if (n < 0) 
+      if (n < 0)
 	{
 	  if(errno == EINTR)
 	    continue;
-	  
+
 	  printf("Error select: %s", strerror(errno));
           continue;
 	}
-      
+
       /* Check server socket */
       if(FD_ISSET(srv_socket, &ibits))
         accept_handler();
@@ -493,7 +493,7 @@ ohs_listen_loop(void)
       }
     }
   }
-  
+
 #endif
 }
 
@@ -513,8 +513,8 @@ main(void)
   SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
 
 #else
-  signal(SIGINT, ohs_close);  
-  signal(SIGTERM, ohs_close);  
+  signal(SIGINT, ohs_close);
+  signal(SIGTERM, ohs_close);
 
   /* Avoid zombie children */
   signal(SIGCHLD, SIG_IGN);

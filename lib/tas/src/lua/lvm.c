@@ -185,7 +185,7 @@ void luaV_settable (lua_State *L, const TObject *t, TObject *key, StkId val) {
       callTM(L, tm, t, key, val);
       return;
     }
-    t = tm;  /* else repeat with `tm' */ 
+    t = tm;  /* else repeat with `tm' */
   } while (++loop <= MAXTAGLOOP);
   luaG_runerror(L, "loop in settable");
 }

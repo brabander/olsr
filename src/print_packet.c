@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -70,7 +70,7 @@ print_hellomsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
 
 /* Entire packet */
 olsr_8_t
-print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt, 
+print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
 			     olsr_u16_t size, union olsr_ip_addr *from_addr)
 {
   olsr_16_t remainsize = size - OLSR_HEADERSIZE;
@@ -108,10 +108,10 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
   struct ipaddr_str buf;
 
   fprintf(handle, "   ------------ OLSR MESSAGE ------------\n");
-  fprintf(handle, "    Sender main addr: %s\n", 
+  fprintf(handle, "    Sender main addr: %s\n",
 	  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->v4.originator));
-  fprintf(handle, "    Type: %s, size: %d, vtime: %u ms\n", 
-	  olsr_msgtype_to_string(msg->v4.olsr_msgtype), 
+  fprintf(handle, "    Type: %s, size: %d, vtime: %u ms\n",
+	  olsr_msgtype_to_string(msg->v4.olsr_msgtype),
 	  ntohs(msg->v4.olsr_msgsize),
 	  me_to_reltime(msg->v4.olsr_vtime));
   fprintf(handle, "    TTL: %d, Hopcnt: %d, seqno: %d\n",
@@ -124,37 +124,37 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
       /* Print functions for individual messagetypes */
     case(MID_MESSAGE):
       print_midmsg(handle,
-		   (olsr_cnf->ip_version == AF_INET) ? 
+		   (olsr_cnf->ip_version == AF_INET) ?
 		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		   ntohs(msg->v4.olsr_msgsize));
       break;
     case(HNA_MESSAGE):
       print_hnamsg(handle,
-		   (olsr_cnf->ip_version == AF_INET) ? 
+		   (olsr_cnf->ip_version == AF_INET) ?
 		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		   ntohs(msg->v4.olsr_msgsize));
       break;
     case(TC_MESSAGE):
       print_olsr_tcmsg(handle,
-		  (olsr_cnf->ip_version == AF_INET) ? 
+		  (olsr_cnf->ip_version == AF_INET) ?
 		  (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		  ntohs(msg->v4.olsr_msgsize));
       break;
     case(LQ_TC_MESSAGE):
       print_olsr_tcmsg_lq(handle,
-		     (olsr_cnf->ip_version == AF_INET) ? 
+		     (olsr_cnf->ip_version == AF_INET) ?
 		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     case(HELLO_MESSAGE):
       print_hellomsg(handle,
-		     (olsr_cnf->ip_version == AF_INET) ? 
+		     (olsr_cnf->ip_version == AF_INET) ?
 		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     case(LQ_HELLO_MESSAGE):
       print_hellomsg_lq(handle,
-			(olsr_cnf->ip_version == AF_INET) ? 
+			(olsr_cnf->ip_version == AF_INET) ?
 			(olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
@@ -208,18 +208,18 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
       h = (struct hellomsg *)data;
 
-      for (hinf = h->hell_info; 
-	   (char *)hinf < ((char *)data + hellosize); 
+      for (hinf = h->hell_info;
+	   (char *)hinf < ((char *)data + hellosize);
 	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
 	{
 
-	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
-		  olsr_link_to_string(EXTRACT_LINK(hinf->link_code)), 
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
+		  olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
 		  olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)),
 		  ntohs(hinf->size));
 
-	  for (haddr = (union olsr_ip_addr  *)&hinf->neigh_addr; 
-	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
+	  for (haddr = (union olsr_ip_addr  *)&hinf->neigh_addr;
+	       (char *)haddr < (char *)hinf + ntohs(hinf->size);
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4])
 	    {
               struct ipaddr_str buf;
@@ -227,7 +227,7 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	    }
 	}
 
-      
+
     }
   else
     {
@@ -237,16 +237,16 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
       h6 = (struct hellomsg6 *)data;
 
-      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize)); 
+      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize));
 	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
 	{
-	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
-		  olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)), 
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
+		  olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
 		  olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)),
 		  ntohs(hinf6->size));
 
-	  for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; 
-	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size); 
+	  for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr;
+	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size);
 	       haddr++)
 	    {
               struct ipaddr_str buf;
@@ -276,18 +276,18 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
       h = (struct hellomsg *)data;
 
-      for (hinf = h->hell_info; 
-	   (char *)hinf < ((char *)data + hellosize); 
+      for (hinf = h->hell_info;
+	   (char *)hinf < ((char *)data + hellosize);
 	   hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size)))
 	{
 
-	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
-		  olsr_link_to_string(EXTRACT_LINK(hinf->link_code)), 
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
+		  olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
 		  olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)),
 		  ntohs(hinf->size));
 
-	  for (haddr = (union olsr_ip_addr  *)&hinf->neigh_addr; 
-	       (char *)haddr < (char *)hinf + ntohs(hinf->size); 
+	  for (haddr = (union olsr_ip_addr  *)&hinf->neigh_addr;
+	       (char *)haddr < (char *)hinf + ntohs(hinf->size);
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8])
 	    {
               struct ipaddr_str buf;
@@ -297,7 +297,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	    }
 	}
 
-      
+
     }
   else
     {
@@ -307,16 +307,16 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
       h6 = (struct hellomsg6 *)data;
 
-      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize)); 
+      for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize));
 	   hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size)))
 	{
-	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", 
-		  olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)), 
+	  fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
+		  olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
 		  olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)),
 		  ntohs(hinf6->size));
 
-	  for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; 
-	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; 
+	  for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr;
+	       (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4;
 	       haddr++)
 	    {
               struct ipaddr_str buf;
@@ -333,7 +333,7 @@ static void
 print_olsr_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
-  
+
   fprintf(handle, "    +ANSN: %d\n", htons(((struct olsr_tcmsg *)data)->ansn));
 
   data += 4;
@@ -358,7 +358,7 @@ static void
 print_olsr_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
-  
+
   fprintf(handle, "    +ANSN: %d\n", htons(((struct olsr_tcmsg *)data)->ansn));
 
   data += 4;

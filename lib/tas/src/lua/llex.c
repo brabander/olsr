@@ -62,7 +62,7 @@ void luaX_errorline (LexState *ls, const char *s, const char *token, int line) {
   lua_State *L = ls->L;
   char buff[MAXSRC];
   luaO_chunkid(buff, getstr(ls->source), MAXSRC);
-  luaO_pushfstring(L, "%s:%d: %s near `%s'", buff, line, s, token); 
+  luaO_pushfstring(L, "%s:%d: %s near `%s'", buff, line, s, token);
   luaD_throw(L, LUA_ERRSYNTAX);
 }
 

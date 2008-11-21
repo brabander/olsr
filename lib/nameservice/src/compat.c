@@ -15,7 +15,7 @@ strndup(const char *ptr, size_t size)
     len = size;
 
   ret = malloc(len + 1);
-  
+
   if(!ret)
     return NULL;
 

@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -176,7 +176,7 @@
 
 
 /*
- * Macros for creating and extracting the neighbor 
+ * Macros for creating and extracting the neighbor
  * and link type information from 8bit link_code
  * data as passed in HELLO messages
  */
@@ -200,7 +200,7 @@
 /*
  *Hello info
  */
-struct hellinfo 
+struct hellinfo
 {
   olsr_u8_t   link_code;
   olsr_u8_t   reserved;
@@ -208,7 +208,7 @@ struct hellinfo
   olsr_u32_t  neigh_addr[1]; /* neighbor IP address(es) */
 } __attribute__ ((packed));
 
-struct hellomsg 
+struct hellomsg
 {
   olsr_u16_t      reserved;
   olsr_u8_t       htime;
@@ -246,7 +246,7 @@ struct neigh_info
 } __attribute__ ((packed));
 
 
-struct olsr_tcmsg 
+struct olsr_tcmsg
 {
   olsr_u16_t        ansn;
   olsr_u16_t        reserved;
@@ -280,8 +280,8 @@ struct olsr_tcmsg6
  *Multiple Interface Declaration message
  */
 
-/* 
- * Defined as s struct for further expansion 
+/*
+ * Defined as s struct for further expansion
  * For example: do we want to tell what type of interface
  * is associated whit each address?
  */
@@ -291,7 +291,7 @@ struct midaddr
 } __attribute__ ((packed));
 
 
-struct midmsg 
+struct midmsg
 {
   struct midaddr mid_addr[1];
 } __attribute__ ((packed));
@@ -363,7 +363,7 @@ struct olsrmsg
   olsr_u8_t     hopcnt;
   olsr_u16_t    seqno;
 
-  union 
+  union
   {
     struct hellomsg hello;
     struct olsr_tcmsg    tc;
@@ -387,7 +387,7 @@ struct olsrmsg6
   olsr_u8_t        hopcnt;
   olsr_u16_t       seqno;
 
-  union 
+  union
   {
     struct hellomsg6 hello;
     struct olsr_tcmsg6    tc;
@@ -403,7 +403,7 @@ struct olsrmsg6
  * Generic OLSR packet
  */
 
-struct olsr 
+struct olsr
 {
   olsr_u16_t	  olsr_packlen;		/* packet length */
   olsr_u16_t	  olsr_seqno;

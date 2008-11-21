@@ -6,31 +6,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or 
- * without modification, are permitted provided that the following 
+ * Redistribution and use in source and binary forms, with or
+ * without modification, are permitted provided that the following
  * conditions are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsrd, olsr.org nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsrd, olsr.org nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
@@ -197,7 +197,7 @@ secure_plugin_init(void)
   add_ptf(&add_signature);
 
   olsr_preprocessor_add_function(&secure_preprocessor);
-  
+
   /* Register timeout - poll every 2 seconds */
   olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
                    &timeout_timestamps, NULL, 0);
@@ -246,7 +246,7 @@ secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr 
 {
   struct olsr *olsr = (struct olsr *)packet;
   struct ipaddr_str buf;
-  
+
   /*
    * Check for challenge/response messages
    */
@@ -322,16 +322,16 @@ add_signature(olsr_u8_t *pck, int *size)
 #ifdef DEBUG
   unsigned int i;
   int j;
-  const olsr_u8_t *sigmsg;                                                                                        
+  const olsr_u8_t *sigmsg;
 #endif
-  
+
   olsr_printf(2, "[ENC]Adding signature for packet size %d\n", *size);
   fflush(stdout);
-  
+
   msg = (struct s_olsrmsg *)&pck[*size];
   /* Update size */
   ((struct olsr*)pck)->olsr_packlen = htons(*size + sizeof(struct s_olsrmsg));
-  
+
   /* Fill packet header */
   msg->olsr_msgtype = MESSAGE_TYPE;
   msg->olsr_vtime = 0;
@@ -340,19 +340,19 @@ add_signature(olsr_u8_t *pck, int *size)
   msg->ttl = 1;
   msg->hopcnt = 0;
   msg->seqno = htons(get_msg_seqno());
-  
+
   /* Fill subheader */
   msg->sig.type = ONE_CHECKSUM;
   msg->sig.algorithm = SCHEME;
   memset(&msg->sig.reserved, 0, 2);
-  
+
   /* Add timestamp */
   msg->sig.timestamp = htonl(now.tv_sec);
   olsr_printf(3, "[ENC]timestamp: %ld\n", now.tv_sec);
-  
+
   /* Set the new size */
   *size += sizeof(struct s_olsrmsg);
-  
+
   {
   olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
@@ -360,10 +360,10 @@ add_signature(olsr_u8_t *pck, int *size)
   memcpy(checksum_cache, pck, *size - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[*size - SIGNATURE_SIZE], aes_key, KEYLENGTH);
-  
+
   /* Create the hash */
   CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + KEYLENGTH, &pck[*size - SIGNATURE_SIZE]);
-  } 
+  }
 
 #ifdef DEBUG
   olsr_printf(1, "Signature message:\n");
@@ -416,7 +416,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 
 #ifdef DEBUG
   olsr_printf(1, "Input message:\n");
-  
+
   j = 0;
   sigmsg = (const olsr_u8_t *)sig;
 
@@ -433,7 +433,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 #endif
 
   /* Sanity check first */
-  if((sig->olsr_msgtype != MESSAGE_TYPE) || 
+  if((sig->olsr_msgtype != MESSAGE_TYPE) ||
      (sig->olsr_vtime != 0) ||
      (sig->olsr_msgsize != ntohs(sizeof(struct s_olsrmsg))) ||
      (sig->ttl != 1) ||
@@ -452,7 +452,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 	case(SCHEME):
 	  goto one_checksum_SHA; /* Ahhh... fix this */
 	  break;
-	  
+
 	}
       break;
 
@@ -463,7 +463,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
   //olsr_printf(1, "Packet sane...\n");
 
  one_checksum_SHA:
- 
+
  {
   olsr_u8_t checksum_cache[512 + KEYLENGTH];
   /* Create packet + key cache */
@@ -478,7 +478,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 
 #ifdef DEBUG
   olsr_printf(1, "Recevied hash:\n");
-  
+
   sigmsg = (const olsr_u8_t *)sig->sig.signature;
 
   for(i = 0; i < SIGNATURE_SIZE; i++)
@@ -488,7 +488,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
   olsr_printf(1, "\n");
 
   olsr_printf(1, "Calculated hash:\n");
-  
+
   sigmsg = sha1_hash;
 
   for(i = 0; i < SIGNATURE_SIZE; i++)
@@ -618,11 +618,11 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   memcpy(&checksum_cache[sizeof(struct challengemsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   cmsg.signature);
   }
-  olsr_printf(3, "[ENC]Sending timestamp request to %s challenge 0x%x\n", 
+  olsr_printf(3, "[ENC]Sending timestamp request to %s challenge 0x%x\n",
 	      olsr_ip_to_string(&buf, new_host),
 	      challenge);
 
@@ -634,7 +634,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
 
   /* Create new entry */
   entry = malloc(sizeof(struct stamp));
-  
+
   entry->diff = 0;
   entry->validated = 0;
   entry->challenge = challenge;
@@ -645,7 +645,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   entry->conftime = GET_TIMESTAMP(EXCHANGE_HOLD_TIME * 1000);
 
   hash = olsr_ip_hashing(new_host);
-  
+
   /* Queue */
   timestamps[hash].next->prev = entry;
   entry->next = timestamps[hash].next;
@@ -687,13 +687,13 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   memcpy(checksum_cache, msg, sizeof(struct c_respmsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct c_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
-  
+
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   sha1_hash);
   }
-  
+
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
       olsr_printf(1, "[ENC]Signature missmatch in challenge-response!\n");
@@ -723,8 +723,8 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, olsr_cnf->ipsize);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
+  CHECKSUM(checksum_cache,
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize,
 	   sha1_hash);
   }
 
@@ -733,7 +733,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
       struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Error in challenge signature from %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
-      
+
       return 0;
     }
 
@@ -754,8 +754,8 @@ parse_cres(struct interface *olsr_if, char *in_msg)
 	      entry->diff);
 
   /* Send response-response */
-  send_rres(olsr_if, (union olsr_ip_addr *)&msg->originator, 
-	    (union olsr_ip_addr *)&msg->destination, 
+  send_rres(olsr_if, (union olsr_ip_addr *)&msg->originator,
+	    (union olsr_ip_addr *)&msg->destination,
 	    ntohl(msg->challenge));
 
   return 1;
@@ -790,13 +790,13 @@ parse_rres(char *in_msg)
   memcpy(checksum_cache, msg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct r_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
-  
+
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   sha1_hash);
   }
-  
+
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
       olsr_printf(1, "[ENC]Signature missmatch in response-response!\n");
@@ -826,8 +826,8 @@ parse_rres(char *in_msg)
   memcpy(&checksum_cache[sizeof(olsr_u32_t)], &msg->originator, olsr_cnf->ipsize);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
+  CHECKSUM(checksum_cache,
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize,
 	   sha1_hash);
   }
 
@@ -836,7 +836,7 @@ parse_rres(char *in_msg)
       struct ipaddr_str buf;
       olsr_printf(1, "[ENC]Error in response signature from %s!\n",
 		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
-      
+
       return 0;
     }
 
@@ -868,7 +868,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
   struct stamp *entry;
   olsr_u32_t hash;
   struct ipaddr_str buf;
-          
+
   msg = (struct challengemsg *)in_msg;
 
   olsr_printf(1, "[ENC]Challenge message received\n");
@@ -887,7 +887,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
       memcpy(&entry->addr, &msg->originator, olsr_cnf->ipsize);
 
       hash = olsr_ip_hashing((union olsr_ip_addr *)&msg->originator);
-  
+
       /* Queue */
       timestamps[hash].next->prev = entry;
       entry->next = timestamps[hash].next;
@@ -920,12 +920,12 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
   memcpy(checksum_cache, msg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
   /* Then the key */
   memcpy(&checksum_cache[sizeof(struct challengemsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
-  
+
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   sha1_hash);
-  }  
+  }
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
       olsr_printf(1, "[ENC]Signature missmatch in challenge!\n");
@@ -934,7 +934,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
 
   olsr_printf(3, "[ENC]Signature verified\n");
 
-  
+
   entry->diff = 0;
   entry->validated = 0;
 
@@ -943,8 +943,8 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
 
   /* Build and send response */
 
-  send_cres(olsr_if, (union olsr_ip_addr *)&msg->originator, 
-	    (union olsr_ip_addr *)&msg->destination, 
+  send_cres(olsr_if, (union olsr_ip_addr *)&msg->originator,
+	    (union olsr_ip_addr *)&msg->destination,
 	    ntohl(msg->challenge),
 	    entry);
 
@@ -1004,8 +1004,8 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, olsr_cnf->ipsize);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
+  CHECKSUM(checksum_cache,
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize,
 	   crmsg.res_sig);
   }
 
@@ -1020,12 +1020,12 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   memcpy(&checksum_cache[sizeof(struct c_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   crmsg.signature);
   }
 
-  olsr_printf(3, "[ENC]Sending challenge response to %s challenge 0x%x\n", 
+  olsr_printf(3, "[ENC]Sending challenge response to %s challenge 0x%x\n",
 	      olsr_ip_to_string(&buf, to),
 	      challenge);
 
@@ -1083,8 +1083,8 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   memcpy(&checksum_cache[sizeof(olsr_u32_t)], from, olsr_cnf->ipsize);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   sizeof(olsr_u32_t) + olsr_cnf->ipsize, 
+  CHECKSUM(checksum_cache,
+	   sizeof(olsr_u32_t) + olsr_cnf->ipsize,
 	   rrmsg.res_sig);
   }
 
@@ -1099,12 +1099,12 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   memcpy(&checksum_cache[sizeof(struct r_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
 
   /* Create the hash */
-  CHECKSUM(checksum_cache, 
-	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, 
+  CHECKSUM(checksum_cache,
+	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
 	   rrmsg.signature);
   }
 
-  olsr_printf(3, "[ENC]Sending response response to %s\n", 
+  olsr_printf(3, "[ENC]Sending response response to %s\n",
 	      olsr_ip_to_string(&buf, to));
 
   /* add to buffer */
@@ -1173,7 +1173,7 @@ timeout_timestamps(void* foo __attribute__((unused)))
 	      entry_to_delete = tmp_list;
 	      tmp_list = tmp_list->next;
 
-	      olsr_printf(1, "[ENC]timestamp info for %s timed out.. deleting it\n", 
+	      olsr_printf(1, "[ENC]timestamp info for %s timed out.. deleting it\n",
 			  olsr_ip_to_string(&buf, &entry_to_delete->addr));
 
 	      /*Delete it*/

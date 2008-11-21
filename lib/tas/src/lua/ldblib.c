@@ -77,7 +77,7 @@ static int getinfo (lua_State *L) {
   }
   return 1;  /* return table */
 }
-    
+
 
 static int getlocal (lua_State *L) {
   lua_Debug ar;
@@ -251,7 +251,7 @@ static int errorfb (lua_State *L) {
     if (ar.currentline > 0)
       lua_pushfstring(L, "%d:", ar.currentline);
     switch (*ar.namewhat) {
-      case 'g':  /* global */ 
+      case 'g':  /* global */
       case 'l':  /* local */
       case 'f':  /* field */
       case 'm':  /* method */

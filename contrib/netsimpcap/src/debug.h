@@ -1,7 +1,7 @@
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or

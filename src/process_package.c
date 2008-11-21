@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -159,8 +159,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
               if (two_hop_neighbor == NULL)
                 {
 #ifdef DEBUG
-                  OLSR_PRINTF(5, 
-			      "Adding 2 hop neighbor %s\n\n", 
+                  OLSR_PRINTF(5,
+			      "Adding 2 hop neighbor %s\n\n",
 			      olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
                   changes_neighborhood = OLSR_TRUE;
@@ -168,7 +168,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
                   two_hop_neighbor =
                     olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
-		  
+
                   two_hop_neighbor->neighbor_2_nblist.next =
                     &two_hop_neighbor->neighbor_2_nblist;
 
@@ -176,7 +176,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                     &two_hop_neighbor->neighbor_2_nblist;
 
                   two_hop_neighbor->neighbor_2_pointer = 0;
-		  
+
                   two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
 
                   olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
@@ -187,11 +187,11 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                 {
                   /*
                     linking to this two_hop_neighbor entry
-                  */	
+                  */
                   changes_neighborhood = OLSR_TRUE;
                   changes_topology = OLSR_TRUE;
-		  
-                  linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime); 
+
+                  linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
                 }
             }
         }
@@ -275,7 +275,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                         {
                           walker->second_hop_linkcost = new_second_hop_linkcost;
                           walker->path_linkcost = new_path_linkcost;
-                          
+
                           if (olsr_is_relevant_costchange(new_path_linkcost, walker->saved_path_linkcost))
                             {
                               walker->saved_path_linkcost = new_path_linkcost;
@@ -324,7 +324,7 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
   list_of_2_neighbors->nbr2_nbr = neighbor; /* XXX refcount */
-  
+
   olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime,
                     OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
 
@@ -333,7 +333,7 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   list_of_2_neighbors->next = neighbor->neighbor_2_list.next;
   neighbor->neighbor_2_list.next = list_of_2_neighbors;
   list_of_2_neighbors->prev = &neighbor->neighbor_2_list;
-  
+
   /*increment the pointer counter*/
   two_hop_neighbor->neighbor_2_pointer++;
 }
@@ -349,8 +349,8 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
 static olsr_bool
 lookup_mpr_status(const struct hello_message *message,
                   const struct interface *in_if)
-{  
-  struct hello_neighbor  *neighbors; 
+{
+  struct hello_neighbor  *neighbors;
 
   for (neighbors = message->neighbors; neighbors; neighbors = neighbors->next) {
     if (olsr_cnf->ip_version == AF_INET
@@ -371,7 +371,7 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 	const unsigned char *limit;
 	olsr_u8_t type;
 	olsr_u16_t size;
-	
+
 	const unsigned char *curr = ser;
 	pkt_get_u8(&curr, &type);
 	if (type != HELLO_MESSAGE && type != LQ_HELLO_MESSAGE) {
@@ -381,32 +381,32 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 	pkt_get_reltime(&curr, &hello->vtime);
 	pkt_get_u16(&curr, &size);
 	pkt_get_ipaddress(&curr, &hello->source_addr);
-	
+
 	pkt_get_u8(&curr, &hello->ttl);
 	pkt_get_u8(&curr, &hello->hop_count);
 	pkt_get_u16(&curr, &hello->packet_seq_number);
 	pkt_ignore_u16(&curr);
-	
+
 	pkt_get_reltime(&curr, &hello->htime);
 	pkt_get_u8(&curr, &hello->willingness);
-	
+
 	hello->neighbors = NULL;
 	limit = ((const unsigned char *)ser) + size;
 	while (curr < limit) {
 		const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
 		const unsigned char *limit2 = curr + ntohs(info_head->size);
-		
+
 		curr = (const unsigned char *)(info_head + 1);
 		while (curr < limit2) {
 			struct hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
 			pkt_get_ipaddress(&curr, &neigh->address);
-			
+
 			if (type == LQ_HELLO_MESSAGE) {
 				olsr_deserialize_hello_lq_pair(&curr, neigh);
 			}
 			neigh->link = EXTRACT_LINK(info_head->link_code);
 			neigh->status = EXTRACT_STATUS(info_head->link_code);
-			
+
 			neigh->next = hello->neighbors;
 			hello->neighbors = neigh;
 		}
@@ -416,7 +416,7 @@ static int deserialize_hello(struct hello_message *hello, const void *ser) {
 
 void olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from) {
 	struct hello_message hello;
-	
+
 	if (ser == NULL) {
 		return;
 	}
@@ -477,7 +477,7 @@ olsr_hello_tap(struct hello_message *message,
       /* update packet loss for link quality calculation */
       olsr_update_packet_loss(lnk);
     }
-  
+
   neighbor = lnk->neighbor;
 
   /*
@@ -501,7 +501,7 @@ olsr_hello_tap(struct hello_message *message,
   if(neighbor->willingness != message->willingness)
     {
       struct ipaddr_str buf;
-      OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", 
+      OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n",
 		  olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr),
 		  neighbor->willingness,
 		  message->willingness);
@@ -582,8 +582,8 @@ olsr_process_received_mid(union olsr_message *m,
         insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, message.vtime);
       }
       tmp_adr = tmp_adr->next;
-    } 
-  
+    }
+
     olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
 
   olsr_forward_message(m, from_addr);

@@ -5,31 +5,31 @@
  *               2006, for some fixups, sven-ola(gmx.de)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -82,7 +82,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   lq_hello->will = olsr_cnf->willingness;
 
   lq_hello->neigh = NULL;
-  
+
   // loop through the link set
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
@@ -93,7 +93,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
     // a) this neighbor interface IS NOT visible via the output interface
     if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
       neigh->link_type = UNSPEC_LINK;
-      
+
     // b) this neighbor interface IS visible via the output interface
 
     else
@@ -112,16 +112,16 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
     else if (walker->neighbor->status == NOT_SYM)
       neigh->neigh_type = NOT_NEIGH;
-        
+
     else {
       OLSR_PRINTF(0, "Error: neigh_type undefined");
       neigh->neigh_type = NOT_NEIGH;
     }
-  
+
     // set the entry's neighbour interface address
 
     neigh->addr = walker->neighbor_iface_addr;
-      
+
     // queue the neighbour entry
     neigh->next = lq_hello->neigh;
     lq_hello->neigh = neigh;
@@ -170,7 +170,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   {
     if (outif->ttl_index >= (int)(sizeof(ttl_list) / sizeof(ttl_list[0])))
       outif->ttl_index = 0;
-    
+
     lq_tc->comm.ttl = (0 <= outif->ttl_index ? ttl_list[outif->ttl_index] : MAX_TTL);
     outif->ttl_index++;
 
@@ -187,7 +187,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   lq_tc->ansn = get_local_ansn();
 
   lq_tc->neigh = NULL;
- 
+
   OLSR_FOR_ALL_NBR_ENTRIES(walker) {
 
     /*
@@ -224,11 +224,11 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     if (!lnk) {
       continue; // no link ?
     }
-    
+
     if (lnk->linkcost >= LINK_COST_BROKEN) {
       continue; // don't advertise links with very low LQ
     }
-    
+
     /* Allocate a neighbour entry. */
     neigh = olsr_malloc_tc_mpr_addr("Build LQ_TC");
 
@@ -242,14 +242,14 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     /* Queue the neighbour entry. */
 
     // TODO: ugly hack until neighbor table is ported to avl tree
-    
+
     if (lq_tc->neigh == NULL || avl_comp_default(&lq_tc->neigh->address, &neigh->address) > 0) {
       neigh->next = lq_tc->neigh;
       lq_tc->neigh = neigh;
     }
     else {
       struct tc_mpr_addr *last = lq_tc->neigh, *n = last->next;
-      
+
       while (n) {
         if (avl_comp_default(&n->address, &neigh->address) > 0) {
           break;
@@ -343,7 +343,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   head->reserved = 0;
   head->htime = reltime_to_me(lq_hello->htime);
-  head->will = lq_hello->will; 
+  head->will = lq_hello->will;
 
   // 'off' is the offset of the byte following the LQ_HELLO header
 
@@ -392,7 +392,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   // iterate through all neighbor types ('i') and all link types ('j')
 
-  for (i = 0; i <= MAX_NEIGH; i++) 
+  for (i = 0; i <= MAX_NEIGH; i++)
     {
       unsigned int j;
       for(j = 0; j < sizeof(LINK_ORDER) / sizeof(LINK_ORDER[0]); j++)
@@ -402,7 +402,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
           // loop through neighbors
 
           for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next)
-            {  
+            {
               if (neigh->neigh_type != i || neigh->link_type != LINK_ORDER[j])
                 continue;
 
@@ -433,7 +433,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
                   info_head->size =
                     ntohs(buff + size - (unsigned char *)info_head);
-			      
+
                   // output packet
 
                   net_outbuffer_push(outif, msg_buffer, size + off);
@@ -497,17 +497,17 @@ calculate_border_flag(void *lower_border, void *higher_border) {
 	olsr_u8_t *higher = higher_border;
 	olsr_u8_t bitmask;
 	olsr_u8_t part, bitpos;
-	
+
 	for (part = 0; part < olsr_cnf->ipsize; part ++) {
 		if (lower[part] != higher[part]) {
 			break;
 		}
 	}
-	
+
 	if (part == olsr_cnf->ipsize) { // same IPs ?
 		return 0;
 	}
-	
+
 	// look for first bit of difference
 	bitmask = 0xfe;
 	for (bitpos = 0; bitpos < 8; bitpos++, bitmask <<= 1) {
@@ -515,7 +515,7 @@ calculate_border_flag(void *lower_border, void *higher_border) {
 			break;
 		}
 	}
-	
+
   bitpos += 8 * (olsr_cnf->ipsize - part - 1);
 	return bitpos + 1;
 }
@@ -530,7 +530,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   union olsr_ip_addr *last_ip = NULL;
   olsr_u8_t left_border_flag = 0xff;
-  
+
   // leave space for the OLSR header
 
   off = common_size();
@@ -542,7 +542,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   head->ansn = htons(lq_tc->ansn);
   head->lower_border = 0;
   head->upper_border = 0;
-  
+
   // 'off' is the offset of the byte following the LQ_TC header
 
   off += sizeof (struct lq_tc_header);
@@ -578,7 +578,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   // loop through neighbors
 
   for (neigh = lq_tc->neigh; neigh != NULL; neigh = neigh->next)
-    {  
+    {
       // we need space for an IP address plus link quality
       // information
 
@@ -590,7 +590,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
       	  head->lower_border = left_border_flag;
       	  head->upper_border = calculate_border_flag(last_ip, &neigh->address);
       	  left_border_flag = head->upper_border;
-      	  
+
           // finalize the OLSR header
 
           lq_tc->comm.size = size + off;
@@ -611,10 +611,10 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
       // add the current neighbor's IP address
       genipcopy(buff + size, &neigh->address);
-      
+
       // remember last ip
       last_ip = (union olsr_ip_addr *)(buff+size);
-      
+
       size += olsr_cnf->ipsize;
 
       // add the corresponding link quality
@@ -680,7 +680,7 @@ olsr_output_lq_tc(void *para)
 
   if (lq_tc.neigh != NULL) {
       prev_empty = 0;
-      
+
       // convert internal format into transmission format, send it
       serialize_lq_tc(&lq_tc, outif);
 

@@ -68,15 +68,15 @@ void
 column_clicked_callback(GtkWidget *,gint);
 
 
-void 
+void
 connect_callback( GtkWidget *widget,
 		  gpointer   data );
 
-void 
+void
 packet_callback( GtkWidget *widget,
 		  gpointer   data );
 
-void 
+void
 packet_disp_callback( GtkWidget *widget,
 		  gpointer   data );
 

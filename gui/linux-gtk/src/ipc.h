@@ -48,7 +48,7 @@ int connected;
  *and add
  */
 
-struct routemsg 
+struct routemsg
 {
   olsr_u8_t      msgtype;
   olsr_u16_t     size;

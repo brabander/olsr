@@ -173,7 +173,7 @@ union olsr_ip_addr
 
 
 /*
- * Macros for creating and extracting the neighbor 
+ * Macros for creating and extracting the neighbor
  * and link type information from 8bit link_code
  * data as passed in HELLO messages
  */
@@ -197,7 +197,7 @@ union olsr_ip_addr
 /*
  *Hello info
  */
-struct hellinfo 
+struct hellinfo
 {
   olsr_u8_t   link_code;
   olsr_u8_t   reserved;
@@ -205,7 +205,7 @@ struct hellinfo
   olsr_u32_t  neigh_addr[1]; /* neighbor IP address(es) */
 };
 
-struct hellomsg 
+struct hellomsg
 {
   olsr_u16_t      reserved;
   olsr_u8_t       htime;
@@ -247,7 +247,7 @@ struct neigh_info
 };
 
 
-struct olsr_tcmsg 
+struct olsr_tcmsg
 {
   olsr_u16_t        ansn;
   olsr_u16_t        reserved;
@@ -280,8 +280,8 @@ struct olsr_tcmsg6
  *Multiple Interface Declaration message
  */
 
-/* 
- * Defined as s struct for further expansion 
+/*
+ * Defined as s struct for further expansion
  * For example: do we want to tell what type of interface
  * is associated whit each address?
  */
@@ -291,7 +291,7 @@ struct midaddr
 };
 
 
-struct midmsg 
+struct midmsg
 {
   struct midaddr mid_addr[1];
 };
@@ -363,7 +363,7 @@ struct olsrmsg
   olsr_u8_t     hopcnt;
   olsr_u16_t    seqno;
 
-  union 
+  union
   {
     struct hellomsg hello;
     struct olsr_tcmsg    tc;
@@ -387,7 +387,7 @@ struct olsrmsg6
   olsr_u8_t        hopcnt;
   olsr_u16_t       seqno;
 
-  union 
+  union
   {
     struct hellomsg6 hello;
     struct olsr_tcmsg6    tc;
@@ -403,7 +403,7 @@ struct olsrmsg6
  * Generic OLSR packet
  */
 
-struct olsr 
+struct olsr
 {
   olsr_u16_t	  olsr_packlen;		/* packet length */
   olsr_u16_t	  olsr_seqno;

@@ -1,7 +1,7 @@
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -48,7 +48,7 @@ char macBroadcast[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 /*
  * This function translates a mac address from string
  * to binary format.
- * 
+ *
  * @param pointer to source string
  * @param pointer to target mac adresee
  * @return 0 if successful, 1 for an error
@@ -58,9 +58,9 @@ readMac (char *value, MacAddress *target)
 {
   char buffer[13];
   int index = 0;
-  
+
   memset(buffer, 0, sizeof(buffer));
-  
+
   char c;
   while ((c = *value++)) {
     switch (c) {
@@ -95,14 +95,14 @@ readMac (char *value, MacAddress *target)
       break;
     }
   }
-  
+
   if(index < 12) {
     return 1;
   }
-  
+
   for (index = 5; index >= 0; index--) {
     buffer[index*2+2] = 0;
-    
+
     int value;
     sscanf(&buffer[index], "%x", &value);
     target->mac[index] = (char) value;
@@ -112,9 +112,9 @@ readMac (char *value, MacAddress *target)
 
 /*
  * closeTap
- * 
+ *
  * This function close a tap device
- * 
+ *
  * @param file destriptor of the tap device
  */
 void
@@ -125,10 +125,10 @@ closeTap (int fd)
 
 /*
  * createTap
- * 
+ *
  * This function creates a tap device, sets a mac address
  * and the broadcast address and activates the device
- * 
+ *
  * @param pointer to device name
  * @param pointer to mac address
  * @return file descriptor of tap device, -1 if an error
@@ -140,46 +140,46 @@ createTap (char *name, MacAddress *mac)
   static const char deviceName[] = "/dev/net/tun";
   int etfd;
   struct ifreq ifreq;
-	
+
   int ioctlSkfd;
   int ioctlres;
-	
+
   etfd = open(deviceName, O_RDWR);
   if (etfd < 0) {
     printf("Cannot open tap device!\n");
     return -1;
   }
-	
+
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-	
-	
+
+
   /*
    * Specify the IFF_TAP flag for Ethernet packets.
    * Specify IFF_NO_PI for not receiving extra meta packet information.
    */
   ifreq.ifr_flags = IFF_TAP;
   ifreq.ifr_flags |= IFF_NO_PI;
-	
+
   if (ioctl(etfd, TUNSETIFF, (void *)&ifreq) < 0) {
     close(etfd);
     printf("Cannot set tun device type!\n");
     return -1;
   }
-	
+
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
   ifreq.ifr_addr.sa_family = AF_INET;
-	
+
   ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
   if (ioctlSkfd < 0) {
     close(etfd);
     printf("Cannot open configuration socket!\n");
     return -1;
   }
-	
+
   /* Set hardware address */
   ifreq.ifr_addr.sa_family = ARPHRD_ETHER;
   memcpy(ifreq.ifr_addr.sa_data, mac, 6);
@@ -204,19 +204,19 @@ createTap (char *name, MacAddress *mac)
     close(ioctlSkfd);
     return -1;
   }
-	
-	
+
+
   /* Set the multicast flag on the interface */
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-	
+
   ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
   if (ioctlres >= 0) {
     ifreq.ifr_flags |= IFF_MULTICAST;
     ioctlres = ioctl(ioctlSkfd, SIOCSIFFLAGS, &ifreq);
   }
-	
+
   close(ioctlSkfd);
   return etfd;
 }
