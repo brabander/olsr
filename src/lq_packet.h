@@ -168,3 +168,10 @@ void olsr_output_lq_tc(void *para);
 extern olsr_bool lq_tc_pending;
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

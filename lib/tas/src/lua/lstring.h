@@ -30,3 +30,10 @@ TString *luaS_newlstr (lua_State *L, const char *str, size_t l);
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

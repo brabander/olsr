@@ -194,3 +194,10 @@ void olsr_event(void* foo __attribute__((unused)))
     has_inet_gateway = 0;
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

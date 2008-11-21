@@ -543,3 +543,10 @@ int write(int fd, const void *buf, unsigned int count)
   }
   return written;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

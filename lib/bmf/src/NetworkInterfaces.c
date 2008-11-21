@@ -1964,3 +1964,10 @@ void DeleteMulticastRoute(void)
     close(ioctlSkfd);
   } /* if */
 } /* DeleteMulticastRoute */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

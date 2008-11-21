@@ -103,3 +103,10 @@ process_mid(int, olsr_u8_t, union olsr_ip_addr *, union mid_message *);
 
 int
 process_hna(int, olsr_u8_t, union olsr_ip_addr *, union hna_message *);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

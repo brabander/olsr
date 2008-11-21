@@ -201,3 +201,10 @@ const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer 
 
   return buffer->buf;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

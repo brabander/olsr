@@ -105,3 +105,10 @@ const unsigned char *
 olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

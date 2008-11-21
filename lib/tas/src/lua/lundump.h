@@ -31,3 +31,10 @@ void luaU_print (const Proto* Main);
 #define	TEST_NUMBER	((lua_Number)3.14159265358979323846E7)
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

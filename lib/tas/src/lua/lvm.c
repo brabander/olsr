@@ -778,3 +778,10 @@ StkId luaV_execute (lua_State *L) {
 }
 
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

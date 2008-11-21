@@ -50,3 +50,10 @@ extern void iterNeighTabInit(void);
 extern int iterNeighTabNext(char *buff, int len);
 extern void iterTcTabInit(void);
 extern int iterTcTabNext(char *buff, int len);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

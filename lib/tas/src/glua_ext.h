@@ -49,3 +49,10 @@
 extern int tasOlsrSendMessage(lua_State *lua);
 extern int tasOlsrGetMessage(lua_State *lua);
 extern int tasOlsrGetInfo(lua_State *lua);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

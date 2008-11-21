@@ -35,3 +35,10 @@ ipc_timeout(gpointer);
 
 void
 shutdown_(int);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

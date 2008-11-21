@@ -383,3 +383,10 @@ acpi_probe(void)
   /* No battery found */
   return -1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

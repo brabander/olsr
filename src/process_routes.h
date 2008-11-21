@@ -58,3 +58,10 @@ void olsr_delete_all_kernel_routes(void);
 olsr_u8_t olsr_rt_flags(const struct rt_entry *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

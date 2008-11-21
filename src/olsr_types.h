@@ -111,3 +111,10 @@ struct olsr_ip_prefix {
 typedef olsr_u32_t olsr_linkcost;
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

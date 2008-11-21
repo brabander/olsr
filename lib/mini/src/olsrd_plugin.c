@@ -124,3 +124,10 @@ static void my_fini(void)
 {
     printf("*** MINI: destructor\n");
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

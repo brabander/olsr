@@ -58,3 +58,10 @@ extern char *intToString(char *buff, unsigned int val);
 extern int stringToInt(unsigned int *val, const char *buff);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

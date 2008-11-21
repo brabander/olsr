@@ -1068,3 +1068,10 @@ void check_interface_updates(void *dummy __attribute__((unused)))
       chk_if_up(IntConf, 3);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -91,3 +91,10 @@ node_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event, g
 
 void
 gui_shutdown(GtkObject *, gpointer);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

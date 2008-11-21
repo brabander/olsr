@@ -230,3 +230,10 @@ static void my_fini(void)
 		arprefresh_sockfd = -1;
 	}
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

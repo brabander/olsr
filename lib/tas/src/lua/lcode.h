@@ -71,3 +71,10 @@ void luaK_posfix (FuncState *fs, BinOpr op, expdesc *v1, expdesc *v2);
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

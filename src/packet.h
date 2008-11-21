@@ -91,3 +91,10 @@ int
 olsr_build_hello_packet(struct hello_message *, struct interface *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

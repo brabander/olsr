@@ -313,3 +313,10 @@ const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *bu
 	default_lq_ff_linkcost2text(buffer, cost);
   return buffer->buf;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

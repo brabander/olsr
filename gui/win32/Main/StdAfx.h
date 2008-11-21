@@ -28,3 +28,10 @@
 // Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
 
 #endif // !defined(AFX_STDAFX_H__D43BD17B_AEC0_43A5_9F3B_1DAA99152E38__INCLUDED_)
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

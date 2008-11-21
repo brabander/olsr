@@ -29,3 +29,10 @@ private:
 };
 
 #endif // TRAYICON_H_171149531
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

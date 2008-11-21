@@ -79,3 +79,10 @@ unsigned char* GetIpPacket(unsigned char* encapsulationUdpData);
 u_int16_t GetEncapsulationUdpDataLength(unsigned char* encapsulationUdpData);
 
 #endif /* _BMF_PACKET_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

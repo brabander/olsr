@@ -77,3 +77,10 @@ void secure_plugin_exit(void);
 int plugin_ipc_init(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -50,3 +50,10 @@ int
 olsrd_plugin_interface_version(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

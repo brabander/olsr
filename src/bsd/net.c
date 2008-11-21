@@ -837,3 +837,10 @@ calculate_if_metric(char *ifname)
     return WEIGHT_ETHERNET_DEFAULT;
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

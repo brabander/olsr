@@ -708,3 +708,10 @@ static void zebra_free_ipv4_route_table (struct ipv4_route *r) {
     r = n;
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

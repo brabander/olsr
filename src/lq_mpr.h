@@ -44,3 +44,10 @@
 void olsr_calculate_lq_mpr(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

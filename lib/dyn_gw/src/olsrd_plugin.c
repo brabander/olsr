@@ -78,3 +78,10 @@ my_init(void)
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

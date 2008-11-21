@@ -22,3 +22,10 @@ const char *luaF_getlocalname (const Proto *func, int local_number, int pc);
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

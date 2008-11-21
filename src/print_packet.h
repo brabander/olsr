@@ -52,3 +52,10 @@ olsr_8_t
 print_olsr_serialized_message(FILE *, union olsr_message *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

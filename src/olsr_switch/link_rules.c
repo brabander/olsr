@@ -156,3 +156,10 @@ get_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
   }
   return NULL;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

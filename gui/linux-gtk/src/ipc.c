@@ -719,3 +719,10 @@ gui_itoa(int i, char *buf)
   }
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

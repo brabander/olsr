@@ -1177,3 +1177,10 @@ serialize_hna6(struct interface *ifp)
   return OLSR_FALSE;
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

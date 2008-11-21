@@ -61,3 +61,10 @@ void
 set_default_cnf(struct olsrd_config *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

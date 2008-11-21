@@ -54,3 +54,10 @@ void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

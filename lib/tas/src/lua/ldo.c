@@ -468,3 +468,10 @@ int luaD_protectedparser (lua_State *L, ZIO *z, int bin) {
 }
 
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

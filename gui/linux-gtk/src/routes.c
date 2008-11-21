@@ -75,3 +75,10 @@ del_route_entry(struct route_entry *entry)
 
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

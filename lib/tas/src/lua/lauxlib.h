@@ -142,3 +142,10 @@ LUALIB_API int   lua_dobuffer (lua_State *L, const char *buff, size_t sz,
 #endif
 
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

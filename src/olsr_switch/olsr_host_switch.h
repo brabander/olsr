@@ -100,3 +100,10 @@ int
 ohs_delete_connection(struct ohs_connection *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */
