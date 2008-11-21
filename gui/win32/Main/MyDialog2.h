@@ -71,11 +71,11 @@ public:
   //{{AFX_DATA(MyDialog2)
   enum
   { IDD = IDD_DIALOG2 };
+  CComboBox m_LqAlgo;
   CComboBox m_TcRed;
   CEdit m_MprCov;
   CButton m_EtxRadio2;
   CButton m_EtxRadio1;
-  // CEdit        m_EtxWindowSize;
   CButton m_EtxCheck;
   CButton m_Ipv6Check;
   CButton m_InternetCheck;
@@ -117,7 +117,6 @@ protected:
   afx_msg void OnEtxCheck ();
   afx_msg void OnEtxRadio1 ();
   afx_msg void OnEtxRadio2 ();
-  afx_msg void OnKillfocusEtxWinSize ();
   //}}AFX_MSG
     DECLARE_MESSAGE_MAP () CFont EditFont;
 
