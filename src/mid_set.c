@@ -44,6 +44,7 @@
 #include "two_hop_neighbor_table.h"
 #include "mid_set.h"
 #include "olsr.h"
+#include "rebuild_packet.h"
 #include "scheduler.h"
 #include "neighbor_table.h"
 #include "link_set.h"
@@ -575,6 +576,78 @@ olsr_print_mid_set (void)
           OLSR_PRINTF (1, "\n");
         }
     }
+}
+
+/**
+ *Process a received(and parsed) MID message
+ *For every address check if there is a topology node
+ *registered with it and update its addresses.
+ *
+ *@param m the OLSR message received.
+ *@return 1 on success
+ */
+
+void
+olsr_input_mid (union olsr_message *m, struct interface *in_if
+                __attribute__ ((unused)), union olsr_ip_addr *from_addr)
+{
+#ifdef DEBUG
+  struct ipaddr_str buf;
+#endif
+  struct mid_alias *tmp_adr;
+  struct mid_message message;
+
+  mid_chgestruct (&message, m);
+
+  if (!olsr_validate_address (&message.mid_origaddr))
+    {
+      olsr_free_mid_packet (&message);
+      return;
+    }
+
+#ifdef DEBUG
+  OLSR_PRINTF (5, "Processing MID from %s...\n",
+               olsr_ip_to_string (&buf, &message.mid_origaddr));
+#endif
+  tmp_adr = message.mid_addr;
+
+  /*
+   *      If the sender interface (NB: not originator) of this message
+   *      is not in the symmetric 1-hop neighborhood of this node, the
+   *      message MUST be discarded.
+   */
+
+  if (check_neighbor_link (from_addr) != SYM_LINK)
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (2, "Received MID from NON SYM neighbor %s\n",
+                   olsr_ip_to_string (&buf, from_addr));
+      olsr_free_mid_packet (&message);
+      return;
+    }
+
+  /* Update the timeout of the MID */
+  olsr_update_mid_table (&message.mid_origaddr, message.vtime);
+
+  while (tmp_adr)
+    {
+      if (!mid_lookup_main_addr (&tmp_adr->alias_addr))
+        {
+          struct ipaddr_str buf;
+          OLSR_PRINTF (1, "MID new: (%s, ",
+                       olsr_ip_to_string (&buf, &message.mid_origaddr));
+          OLSR_PRINTF (1, "%s)\n",
+                       olsr_ip_to_string (&buf, &tmp_adr->alias_addr));
+          insert_mid_alias (&message.mid_origaddr, &tmp_adr->alias_addr,
+                            message.vtime);
+        }
+      tmp_adr = tmp_adr->next;
+    }
+
+  olsr_prune_aliases (&message.mid_origaddr, message.mid_addr);
+
+  olsr_forward_message (m, from_addr);
+  olsr_free_mid_packet (&message);
 }
 
 /*

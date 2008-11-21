@@ -360,6 +360,131 @@ olsr_print_hna_set (void)
 #endif
 }
 
+/**
+ *Process incoming HNA message.
+ *Forwards the message if that is to be done.
+ *
+ *@param m the incoming OLSR message
+ *the OLSR message.
+ *@return 1 on success
+ */
+
+void
+olsr_input_hna (union olsr_message *m, struct interface *in_if
+                __attribute__ ((unused)), union olsr_ip_addr *from_addr)
+{
+
+  olsr_u8_t olsr_msgtype;
+  olsr_reltime vtime;
+  olsr_u16_t olsr_msgsize;
+  union olsr_ip_addr originator;
+  olsr_u8_t hop_count;
+  olsr_u16_t packet_seq_number;
+
+  int hnasize;
+  const olsr_u8_t *curr, *curr_end;
+
+#ifdef DEBUG
+  OLSR_PRINTF (5, "Processing HNA\n");
+#endif
+
+  /* Check if everyting is ok */
+  if (!m)
+    {
+      return;
+    }
+  curr = (const olsr_u8_t *) m;
+
+  /* olsr_msgtype */
+  pkt_get_u8 (&curr, &olsr_msgtype);
+  if (olsr_msgtype != HNA_MESSAGE)
+    {
+      OLSR_PRINTF (0, "not a HNA message!\n");
+      return;
+    }
+  /* Get vtime */
+  pkt_get_reltime (&curr, &vtime);
+
+  /* olsr_msgsize */
+  pkt_get_u16 (&curr, &olsr_msgsize);
+  hnasize =
+    olsr_msgsize - (olsr_cnf->ip_version ==
+                    AF_INET ? offsetof (struct olsrmsg,
+                                        message) : offsetof (struct olsrmsg6,
+                                                             message));
+  if (hnasize < 0)
+    {
+      OLSR_PRINTF (0, "message size %d too small (at least %lu)!\n",
+                   olsr_msgsize,
+                   (unsigned long) (olsr_cnf->ip_version ==
+                                    AF_INET ? offsetof (struct olsrmsg,
+                                                        message) :
+                                    offsetof (struct olsrmsg6, message)));
+      return;
+    }
+  if ((hnasize % (2 * olsr_cnf->ipsize)) != 0)
+    {
+      OLSR_PRINTF (0, "Illegal message size %d!\n", olsr_msgsize);
+      return;
+    }
+  curr_end = (const olsr_u8_t *) m + olsr_msgsize;
+
+  /* validate originator */
+  pkt_get_ipaddress (&curr, &originator);
+  /*printf("HNA from %s\n\n", olsr_ip_to_string(&buf, &originator)); */
+
+  /* ttl */
+  pkt_ignore_u8 (&curr);
+
+  /* hopcnt */
+  pkt_get_u8 (&curr, &hop_count);
+
+  /* seqno */
+  pkt_get_u16 (&curr, &packet_seq_number);
+
+  /*
+   *      If the sender interface (NB: not originator) of this message
+   *      is not in the symmetric 1-hop neighborhood of this node, the
+   *      message MUST be discarded.
+   */
+  if (check_neighbor_link (from_addr) != SYM_LINK)
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (2, "Received HNA from NON SYM neighbor %s\n",
+                   olsr_ip_to_string (&buf, from_addr));
+      return;
+    }
+#if 1
+  while (curr < curr_end)
+    {
+      union olsr_ip_addr net;
+      olsr_u8_t prefixlen;
+      struct ip_prefix_list *entry;
+
+      pkt_get_ipaddress (&curr, &net);
+      pkt_get_prefixlen (&curr, &prefixlen);
+      entry = ip_prefix_list_find (olsr_cnf->hna_entries, &net, prefixlen);
+      if (entry == NULL)
+        {
+          /* only update if it's not from us */
+          olsr_update_hna_entry (&originator, &net, prefixlen, vtime);
+        }
+    }
+#else
+  while (hna_tmp)
+    {
+      /* Don't add an HNA entry that we are advertising ourselves. */
+      if (!ip_prefix_list_find
+          (olsr_cnf->hna_entries, &hna_tmp->net, hna_tmp->prefixlen))
+        {
+          olsr_update_hna_entry (&message.originator, &hna_tmp->net,
+                                 hna_tmp->prefixlen, message.vtime);
+        }
+    }
+#endif
+  olsr_forward_message (m, from_addr);
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

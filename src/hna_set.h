@@ -43,6 +43,7 @@
 
 #include "hashing.h"
 #include "olsr_types.h"
+#include "olsr_protocol.h"
 #include "mantissa.h"
 
 #include <time.h>
@@ -97,6 +98,9 @@ void olsr_update_hna_entry (const union olsr_ip_addr *,
                             olsr_reltime);
 
 void olsr_print_hna_set (void);
+
+void olsr_input_hna (union olsr_message *, struct interface *,
+                     union olsr_ip_addr *);
 
 #endif
 
