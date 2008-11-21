@@ -577,3 +577,10 @@ luaH_setnum (lua_State * L, Table * t, int key)
       return newkey (L, t, &k);
     }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

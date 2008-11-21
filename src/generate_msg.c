@@ -127,3 +127,10 @@ generate_stdout_pulse (void *foo __attribute__ ((unused)))
   printf ("%c\r", pulsedata[pulse_state]);
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

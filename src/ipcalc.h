@@ -166,3 +166,10 @@ sockaddr4_to_string (struct ipaddr_str *const buf,
 }
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

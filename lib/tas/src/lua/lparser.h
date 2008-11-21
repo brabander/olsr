@@ -66,3 +66,10 @@ typedef struct FuncState
 Proto *luaY_parser (lua_State * L, ZIO * z, Mbuffer * buff);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

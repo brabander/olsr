@@ -154,3 +154,10 @@ extern int httpGetTasMessage (const char *service, char **string,
 extern void writeBuff (struct inOutBuff *write, const unsigned char *data,
                        int dataLen);
 extern void *allocBuff (struct connInfo *info, int len);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

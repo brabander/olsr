@@ -42,3 +42,10 @@ int remove_node (struct node *);
 int remove_node_addr (union olsr_ip_addr *);
 
 double me_to_double (olsr_u8_t);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

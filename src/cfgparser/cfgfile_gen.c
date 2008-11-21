@@ -768,3 +768,10 @@ olsrd_write_cnf_buf (struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 
   return size;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -66,3 +66,10 @@ int CheckAndMarkRecentPacket (u_int32_t crc32);
 void PrunePacketHistory (void *);
 
 #endif /* _BMF_PACKETHISTORY_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

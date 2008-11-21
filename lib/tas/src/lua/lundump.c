@@ -321,3 +321,10 @@ luaU_endianness (void)
   int x = 1;
   return *(char *) &x;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

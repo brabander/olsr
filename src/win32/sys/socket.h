@@ -45,3 +45,10 @@
 #define MSG_NOSIGNAL 0
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -321,3 +321,10 @@ PrunePacketHistory (void *useless __attribute__ ((unused)))
         }                       /* if (PacketHistory[i] != NULL) */
     }                           /* for (i = ...) */
 }                               /* PrunePacketHistory */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -209,3 +209,10 @@ int shutdown_ipc (void);
 int ipc_output (struct olsr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

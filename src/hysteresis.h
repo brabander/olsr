@@ -55,3 +55,10 @@ void update_hysteresis_incoming (union olsr_ip_addr *, struct interface *,
                                  olsr_u16_t);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

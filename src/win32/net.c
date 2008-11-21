@@ -459,3 +459,10 @@ olsr_select (int nfds, fd_set * readfds, fd_set * writefds,
 {
   return select (nfds, readfds, writefds, exceptfds, timeout);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

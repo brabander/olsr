@@ -933,3 +933,10 @@ luaopen_string (lua_State * L)
   luaL_openlib (L, LUA_STRLIBNAME, strlib, 0);
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

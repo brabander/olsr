@@ -791,3 +791,10 @@ while (mask & (1 << ++prefixlen && prefixlen < 32); return prefixlen;}
        if (r->message & ZAPI_MESSAGE_IFINDEX) free (r->index); free (r);
        r = n;}
        }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -201,3 +201,10 @@ olsr_poll_sockets (void)
         olsr_sockets->process_function (olsr_sockets->fd);
     }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -189,3 +189,10 @@ my_fini (void)
 {
   olsr_plugin_exit ();
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

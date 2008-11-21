@@ -167,3 +167,10 @@ my_fini (void)
 {
   zebra_cleanup ();
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

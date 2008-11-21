@@ -48,3 +48,10 @@ void MD5Update (MD5_CTX *, const unsigned char *, const unsigned int);
 void MD5Final (unsigned char[16], MD5_CTX *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

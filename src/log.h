@@ -56,3 +56,10 @@ void olsr_syslog (int level, const char *format, ...)
   __attribute__ ((format (printf, 2, 3)));
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

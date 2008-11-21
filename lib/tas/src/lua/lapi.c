@@ -1019,3 +1019,10 @@ lua_setupvalue (lua_State * L, int funcindex, int n)
   lua_unlock (L);
   return name;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

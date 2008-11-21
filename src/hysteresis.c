@@ -201,3 +201,10 @@ update_hysteresis_incoming (union olsr_ip_addr *remote,
     }
   return;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

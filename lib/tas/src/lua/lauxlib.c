@@ -671,3 +671,10 @@ lua_dostring (lua_State * L, const char *str)
 }
 
 /* }====================================================== */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

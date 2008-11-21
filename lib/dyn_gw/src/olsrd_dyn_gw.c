@@ -551,3 +551,10 @@ pthread_mutex_unlock (HANDLE * Hand)
 }
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

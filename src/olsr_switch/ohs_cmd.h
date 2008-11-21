@@ -70,3 +70,10 @@ int ohs_cmd_log (const char *);
 int ohs_cmd_link (const char *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

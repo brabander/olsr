@@ -437,3 +437,10 @@ print_midmsg (FILE * handle, olsr_u8_t * data, olsr_16_t totsize)
       remsize -= olsr_cnf->ipsize;
     }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

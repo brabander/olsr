@@ -58,3 +58,10 @@ void generate_tc (void *);
 void generate_stdout_pulse (void *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

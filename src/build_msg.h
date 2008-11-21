@@ -58,3 +58,10 @@ olsr_bool queue_mid (struct interface *);
 olsr_bool queue_hna (struct interface *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

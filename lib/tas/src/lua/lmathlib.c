@@ -290,3 +290,10 @@ luaopen_math (lua_State * L)
   lua_settable (L, LUA_GLOBALSINDEX);
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

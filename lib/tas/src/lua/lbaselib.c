@@ -749,3 +749,10 @@ luaopen_base (lua_State * L)
   lua_setglobal (L, REQTAB);
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

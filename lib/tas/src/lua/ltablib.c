@@ -284,3 +284,10 @@ luaopen_table (lua_State * L)
   luaL_openlib (L, LUA_TABLIBNAME, tab_funcs, 0);
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

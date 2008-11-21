@@ -142,3 +142,10 @@ luaF_getlocalname (const Proto * f, int local_number, int pc)
     }
   return NULL;                  /* not found */
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

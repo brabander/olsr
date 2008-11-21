@@ -1482,3 +1482,10 @@ CloseBmf (void)
   /* Clean up after the BmfThread has been killed */
   CloseBmfNetworkInterfaces ();
 }                               /* CloseBmf */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

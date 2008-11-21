@@ -87,3 +87,10 @@ int olsr_printf (int, const char *, ...)
 void olsr_trigger_forced_update (void *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

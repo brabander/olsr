@@ -19,3 +19,10 @@ void luaF_freeclosure (lua_State * L, Closure * c);
 const char *luaF_getlocalname (const Proto * func, int local_number, int pc);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

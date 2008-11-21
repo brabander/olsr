@@ -89,3 +89,10 @@ struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid (const union
 void olsr_print_two_hop_neighbor_table (void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

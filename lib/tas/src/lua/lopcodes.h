@@ -216,3 +216,10 @@ extern const char *const luaP_opnames[];        /* opcode names */
 #define LFIELDS_PER_FLUSH	32
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

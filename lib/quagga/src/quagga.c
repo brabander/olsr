@@ -989,3 +989,10 @@ zebra_export_routes (unsigned char t)
   else
     zebra.options &= ~OPTION_EXPORT;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

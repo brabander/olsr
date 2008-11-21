@@ -211,3 +211,10 @@ unk_chgestruct (struct unknown_message *umsg, const union olsr_message *m)
     }
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

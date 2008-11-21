@@ -11,3 +11,10 @@
 void luaA_pushobject (lua_State * L, const TObject * o);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

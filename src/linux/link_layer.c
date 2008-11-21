@@ -395,3 +395,10 @@ iw_get_range_info (char *ifname, struct iw_range *range)
 }
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

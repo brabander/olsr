@@ -527,3 +527,10 @@ luaX_lex (LexState * LS, SemInfo * seminfo)
 }
 
 #undef next
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

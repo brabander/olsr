@@ -96,3 +96,10 @@ struct ohs_connection *get_client_by_addr (const union olsr_ip_addr *);
 int ohs_delete_connection (struct ohs_connection *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -55,3 +55,10 @@ int remove_link (struct ohs_connection *, struct ohs_ip_link *);
 int ohs_delete_all_related_links (struct ohs_connection *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

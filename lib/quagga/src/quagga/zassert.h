@@ -24,3 +24,10 @@ extern void _zlog_assert_failed (const char *assertion, const char *file,
 #define assert(EX) zassert(EX)
 
 #endif /* _QUAGGA_ASSERT_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

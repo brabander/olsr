@@ -95,3 +95,10 @@ const char *default_lq_print_cost_ff (olsr_linkcost cost,
 extern struct lq_handler lq_etx_ff_handler;
 
 #endif /*LQ_ETX_FF_ */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

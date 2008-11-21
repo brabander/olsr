@@ -1204,3 +1204,10 @@ set_net_info_connecting ()
 {
   gtk_label_set_text ((GtkLabel *) net_label, "Connecting...");
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

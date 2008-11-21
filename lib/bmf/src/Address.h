@@ -54,3 +54,10 @@ int IsMulticast (union olsr_ip_addr *ipAddress);
 int IsOlsrOrBmfPacket (unsigned char *ipPacket);
 
 #endif /* _BMF_ADDRESS_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

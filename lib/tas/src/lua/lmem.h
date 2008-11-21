@@ -38,3 +38,10 @@ void *luaM_growaux (lua_State * L, void *block, int *size, int size_elem,
                                     cast(lu_mem, n)*cast(lu_mem, sizeof(t)))))
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

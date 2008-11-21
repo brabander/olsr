@@ -324,3 +324,10 @@ default_lq_print_cost_ff (olsr_linkcost cost, struct lqtextbuffer *buffer)
   snprintf (buffer->buf, sizeof (buffer->buf), "%s", fpmtoa (cost));
   return buffer->buf;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

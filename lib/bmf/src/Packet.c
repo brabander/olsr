@@ -239,3 +239,10 @@ GetEncapsulationUdpDataLength (unsigned char *encapsulationUdpData)
   return GetIpTotalLength (GetIpPacket (encapsulationUdpData)) +
     ENCAP_HDR_LEN;
 }                               /* GetEncapsulationUdpDataLength */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

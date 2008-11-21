@@ -203,3 +203,10 @@ luaopen_loadlib (lua_State * L)
 * http://cvs.gnome.org/lxr/source/glib/gmodule/
 *
 */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -211,3 +211,10 @@ olsr_print_duplicate_table (void)
   } OLSR_FOR_ALL_DUP_ENTRIES_END (entry);
 #endif
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

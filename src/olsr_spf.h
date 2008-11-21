@@ -44,3 +44,10 @@
 void olsr_calculate_routing_table (void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

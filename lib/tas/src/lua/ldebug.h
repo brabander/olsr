@@ -29,3 +29,10 @@ void luaG_errormsg (lua_State * L) __attribute__ ((noreturn));
 int luaG_checkcode (const Proto * pt);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

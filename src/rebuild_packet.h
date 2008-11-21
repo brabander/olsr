@@ -51,3 +51,10 @@ void unk_chgestruct (struct unknown_message *, const union olsr_message *);
 void hello_chgestruct (struct hello_message *, const union olsr_message *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

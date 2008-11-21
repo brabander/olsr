@@ -52,3 +52,10 @@ int inet_pton (int af, const char *src, void *dst);
 char *inet_ntop (int af, const void *src, char *dst, int size);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

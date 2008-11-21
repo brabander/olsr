@@ -492,3 +492,10 @@ struct fifo
   (FIFO_EMPTY(F) ? NULL : ((struct fifo *)(F))->next)
 
 #endif /* _ZEBRA_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

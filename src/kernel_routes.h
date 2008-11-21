@@ -53,3 +53,10 @@ int olsr_ioctl_del_route (const struct rt_entry *);
 int olsr_ioctl_del_route6 (const struct rt_entry *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

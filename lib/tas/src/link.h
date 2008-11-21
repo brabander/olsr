@@ -41,3 +41,10 @@
 
 #define FLAG_READ 1
 #define FLAG_WRITE 2
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

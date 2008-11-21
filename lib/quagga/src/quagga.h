@@ -70,3 +70,10 @@ int zebra_del_olsr_v4_route (const struct rt_entry *);
 void zebra_olsr_localpref (void);
 void zebra_olsr_distance (unsigned char);
 void zebra_export_routes (unsigned char);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

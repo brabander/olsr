@@ -308,3 +308,10 @@ const char *luaO_pushfstring (lua_State * L, const char *fmt, ...);
 void luaO_chunkid (char *out, const char *source, int len);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

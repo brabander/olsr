@@ -46,3 +46,10 @@ extern int luaToLex (char **errMsg, const char *workDir,
 extern int runLua (char **errMsg, struct connInfo *info, const char *workDir,
                    const char *lexFileName, char **argList, void **session);
 extern void freeLuaSession (void *session);
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

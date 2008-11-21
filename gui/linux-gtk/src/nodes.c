@@ -702,3 +702,10 @@ me_to_double (olsr_u8_t me)
   return (double) (VTIME_SCALE_FACTOR * (1 + (double) a / 16) *
                    (double) pow (2, b));
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

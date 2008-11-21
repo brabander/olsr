@@ -60,3 +60,10 @@ int add_route_entry (struct route_entry *);
 int del_route_entry (struct route_entry *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

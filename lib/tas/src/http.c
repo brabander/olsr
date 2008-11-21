@@ -2052,3 +2052,10 @@ httpGetTasMessage (const char *service, char **string, char **from)
 
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

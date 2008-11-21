@@ -184,3 +184,10 @@ me_to_reltime (const olsr_u8_t me)
     }
   return ((16 + a) * 1000) >> (8 - b);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

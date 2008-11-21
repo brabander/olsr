@@ -653,3 +653,10 @@ ohs_parse_command (void)
     fflush (stdout);
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

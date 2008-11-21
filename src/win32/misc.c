@@ -72,3 +72,10 @@ clear_console (void)
   SetConsoleCursorPosition (Hand, Home);
 #endif
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

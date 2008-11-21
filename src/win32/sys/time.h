@@ -92,3 +92,10 @@ int nanosleep (struct timespec *Req, struct timespec *Rem);
 void gettimeofday (struct timeval *TVal, void *TZone);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

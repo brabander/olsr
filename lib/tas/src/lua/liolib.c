@@ -834,3 +834,10 @@ luaopen_io (lua_State * L)
   registerfile (L, stderr, "stderr", NULL);
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

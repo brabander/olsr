@@ -94,3 +94,10 @@ luaM_realloc (lua_State * L, void *block, lu_mem oldsize, lu_mem size)
     }
   return block;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

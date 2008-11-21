@@ -89,3 +89,10 @@ luaZ_openspace (lua_State * L, Mbuffer * buff, size_t n)
     }
   return buff->buffer;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

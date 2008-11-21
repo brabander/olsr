@@ -57,3 +57,10 @@ int check_gw (union olsr_ip_addr *net, union olsr_ip_addr *mask);
 void olsr_event (void *foo);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

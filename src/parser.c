@@ -724,3 +724,10 @@ olsr_input_hostemu (int fd)
   parse_packet ((struct olsr *) inbuf, cc, olsr_in_if, &from_addr);
 
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

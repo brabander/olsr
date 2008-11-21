@@ -51,3 +51,10 @@ void luaD_throw (lua_State * L, int errcode) __attribute__ ((noreturn));
 int luaD_rawrunprotected (lua_State * L, Pfunc f, void *ud);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

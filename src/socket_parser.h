@@ -57,3 +57,10 @@ int remove_olsr_socket (int, void (*)(int));
 void listen_loop (void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

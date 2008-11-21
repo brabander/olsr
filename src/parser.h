@@ -100,3 +100,10 @@ void parse_packet (struct olsr *, int, struct interface *,
                    union olsr_ip_addr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -302,3 +302,10 @@ void olsr_input_lq_hello (union olsr_message *ser, struct interface *inif,
 extern olsr_bool lq_tc_pending;
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

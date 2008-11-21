@@ -448,3 +448,10 @@ process_set_values (char *data, olsr_u32_t data_size, char *buf,
   return size;
 }
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

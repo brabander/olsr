@@ -71,3 +71,10 @@ void luaX_errorline (LexState * ls, const char *s, const char *token,
 const char *luaX_token2str (LexState * ls, int token);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -91,3 +91,10 @@ olsr_bool is_if_link_up (char *);
 int join_mcast (struct interface *, int);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

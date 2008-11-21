@@ -677,3 +677,10 @@ luaG_runerror (lua_State * L, const char *fmt, ...)
   va_end (argp);
   luaG_errormsg (L);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

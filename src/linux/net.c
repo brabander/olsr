@@ -912,3 +912,10 @@ calculate_if_metric (char *ifname)
   return check_wireless_interface (ifname);
 }
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -224,3 +224,10 @@ luaO_chunkid (char *out, const char *source, int bufflen)
         }
     }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

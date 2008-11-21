@@ -95,3 +95,10 @@ const lu_byte luaP_opmodes[NUM_OPCODES] = {
     , opmode (0, 0, 0, 0, 0, 0, iABC)   /* OP_CLOSE */
     , opmode (0, 0, 0, 0, 1, 0, iABx)   /* OP_CLOSURE */
 };
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

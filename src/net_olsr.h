@@ -82,3 +82,10 @@ olsr_bool olsr_validate_address (const union olsr_ip_addr *);
 void olsr_add_invalid_address (const union olsr_ip_addr *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

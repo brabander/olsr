@@ -52,3 +52,10 @@ int process_set_values (char *, olsr_u32_t, char *, olsr_u32_t);
 int process_param (char *, char *);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

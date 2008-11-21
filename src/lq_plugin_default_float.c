@@ -235,3 +235,10 @@ default_lq_print_cost_float (olsr_linkcost cost, struct lqtextbuffer *buffer)
 
   return buffer->buf;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

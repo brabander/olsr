@@ -511,3 +511,10 @@ freeLuaSession (void *session)
 {
   lua_close (session);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

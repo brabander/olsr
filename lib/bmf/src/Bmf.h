@@ -70,3 +70,10 @@ int InitBmf (struct interface *skipThisIntf);
 void CloseBmf (void);
 
 #endif /* _BMF_BMF_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */
