@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -55,7 +55,7 @@
 
 #define PLUGIN_NAME    "OLSRD dot draw plugin"
 #define PLUGIN_VERSION "0.3"
-#define PLUGIN_AUTHOR   "Andreas Tønnesen"
+#define PLUGIN_AUTHOR   "Andreas Tonnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
