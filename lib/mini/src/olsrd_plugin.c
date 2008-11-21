@@ -29,12 +29,10 @@
  *
  */
 
-
  /*
- * Example plugin for olsrd.org OLSR daemon
- * Only the bare minimum
- */
-
+  * Example plugin for olsrd.org OLSR daemon
+  * Only the bare minimum
+  */
 
 #include <stdio.h>
 #include <string.h>
@@ -46,7 +44,6 @@
 
 #define PLUGIN_INTERFACE_VERSION 5
 
-
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
@@ -55,16 +52,19 @@
  * Plugin interface version
  * Used by main olsrd to check plugin interface version
  */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version (void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
-
-static int set_plugin_test(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
+static int
+set_plugin_test (const char *value, void *data
+                 __attribute__ ((unused)), set_plugin_parameter_addon addon
+                 __attribute__ ((unused)))
 {
-    printf("\n*** MINI: parameter test: %s\n", value);
-    return 0;
+  printf ("\n*** MINI: parameter test: %s\n", value);
+  return 0;
 }
 
 /**
@@ -72,31 +72,31 @@ static int set_plugin_test(const char *value, void *data __attribute__((unused))
  * Called for all plugin parameters
  */
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "test",   .set_plugin_parameter = &set_plugin_test,      .data = NULL },
+  {.name = "test",.set_plugin_parameter = &set_plugin_test,.data = NULL},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
+                             int *size)
 {
-    *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+  *params = plugin_parameters;
+  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
 }
-
 
 /**
  * Initialize plugin
  * Called after all parameters are passed
  */
 int
-olsrd_plugin_init(void)
+olsrd_plugin_init (void)
 {
-	printf("*** MINI: plugin_init\n");
+  printf ("*** MINI: plugin_init\n");
 
-	/* call a function from main olsrd */
-	olsr_printf(2, "*** MINI: printed this with olsr_printf\n");
+  /* call a function from main olsrd */
+  olsr_printf (2, "*** MINI: printed this with olsr_printf\n");
 
-	return 1;
+  return 1;
 }
-
 
 /****************************************************************************
  *       Optional private constructor and destructor functions              *
@@ -104,23 +104,23 @@ olsrd_plugin_init(void)
 
 /* attention: make static to avoid name clashes */
 
-static void my_init(void) __attribute__ ((constructor));
-static void my_fini(void) __attribute__ ((destructor));
-
+static void my_init (void) __attribute__ ((constructor));
+static void my_fini (void) __attribute__ ((destructor));
 
 /**
  * Optional Private Constructor
  */
-static void my_init(void)
+static void
+my_init (void)
 {
-    printf("*** MINI: constructor\n");
+  printf ("*** MINI: constructor\n");
 }
-
 
 /**
  * Optional Private Destructor
  */
-static void my_fini(void)
+static void
+my_fini (void)
 {
-    printf("*** MINI: destructor\n");
+  printf ("*** MINI: destructor\n");
 }

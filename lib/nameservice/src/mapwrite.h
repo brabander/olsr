@@ -28,13 +28,12 @@
  *
  */
 
-
 #ifndef _MAPWRITE_H
 #define _MAPWRITE_H
 
-int mapwrite_init(const char* fifoname);
-void mapwrite_work(FILE* fmap);
-void mapwrite_exit(void);
+int mapwrite_init (const char *fifoname);
+void mapwrite_work (FILE * fmap);
+void mapwrite_exit (void);
 
 #endif /* _MAPWRITE_H */
 

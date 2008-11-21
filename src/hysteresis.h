@@ -43,20 +43,15 @@
 #include "link_set.h"
 #include "mantissa.h"
 
-float
-olsr_hyst_calc_stability
-(float);
+float olsr_hyst_calc_stability (float);
 
-int
-olsr_process_hysteresis(struct link_entry *);
+int olsr_process_hysteresis (struct link_entry *);
 
-float
-olsr_hyst_calc_instability(float);
+float olsr_hyst_calc_instability (float);
 
-void
-olsr_update_hysteresis_hello(struct link_entry *, olsr_reltime);
+void olsr_update_hysteresis_hello (struct link_entry *, olsr_reltime);
 
-void
-update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, olsr_u16_t);
+void update_hysteresis_incoming (union olsr_ip_addr *, struct interface *,
+                                 olsr_u16_t);
 
 #endif

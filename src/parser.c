@@ -74,11 +74,13 @@ struct parse_function_entry *parse_functions;
 struct preprocessor_function_entry *preprocessor_functions;
 struct packetparser_function_entry *packetparser_functions;
 
-static char inbuf[MAXMESSAGESIZE+1];
+static char inbuf[MAXMESSAGESIZE + 1];
 
 static olsr_bool disp_pack_in = OLSR_FALSE;
 
-void parser_set_disp_pack_in(olsr_bool val) {
+void
+parser_set_disp_pack_in (olsr_bool val)
+{
   disp_pack_in = val;
 }
 
@@ -87,20 +89,27 @@ void parser_set_disp_pack_in(olsr_bool val) {
  *
  *@return nada
  */
-void olsr_init_parser(void) {
-  OLSR_PRINTF(3, "Initializing parser...\n");
+void
+olsr_init_parser (void)
+{
+  OLSR_PRINTF (3, "Initializing parser...\n");
 
   /* Initialize the packet functions */
-  olsr_init_package_process();
+  olsr_init_package_process ();
 
 }
 
-void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int forwarding) {
+void
+olsr_parser_add_function (parse_function * function, olsr_u32_t type,
+                          int forwarding)
+{
   struct parse_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering event for type %d\n", type);
+  OLSR_PRINTF (3, "Parser: registering event for type %d\n", type);
 
-  new_entry = olsr_malloc(sizeof(struct parse_function_entry), "Register parse function");
+  new_entry =
+    olsr_malloc (sizeof (struct parse_function_entry),
+                 "Register parse function");
 
   new_entry->function = function;
   new_entry->type = type;
@@ -110,40 +119,54 @@ void olsr_parser_add_function(parse_function *function, olsr_u32_t type, int for
   new_entry->next = parse_functions;
   parse_functions = new_entry;
 
-  OLSR_PRINTF(3, "Register parse function: Added function for type %d\n", type);
+  OLSR_PRINTF (3, "Register parse function: Added function for type %d\n",
+               type);
 
 }
 
-int olsr_parser_remove_function(parse_function *function, olsr_u32_t type, int forwarding) {
+int
+olsr_parser_remove_function (parse_function * function, olsr_u32_t type,
+                             int forwarding)
+{
   struct parse_function_entry *entry, *prev;
 
   entry = parse_functions;
   prev = NULL;
 
-  while (entry) {
-    if ((entry->function == function) && (entry->type == type) && (entry->caller_forwarding == forwarding)) {
-      if (entry == parse_functions) {
-        parse_functions = entry->next;
-      } else {
-        prev->next = entry->next;
-      }
-      free(entry);
-      return 1;
-    }
+  while (entry)
+    {
+      if ((entry->function == function) && (entry->type == type)
+          && (entry->caller_forwarding == forwarding))
+        {
+          if (entry == parse_functions)
+            {
+              parse_functions = entry->next;
+            }
+          else
+            {
+              prev->next = entry->next;
+            }
+          free (entry);
+          return 1;
+        }
 
-    prev = entry;
-    entry = entry->next;
-  }
+      prev = entry;
+      entry = entry->next;
+    }
 
   return 0;
 }
 
-void olsr_preprocessor_add_function(preprocessor_function *function) {
+void
+olsr_preprocessor_add_function (preprocessor_function * function)
+{
   struct preprocessor_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering preprocessor\n");
+  OLSR_PRINTF (3, "Parser: registering preprocessor\n");
 
-  new_entry = olsr_malloc(sizeof(struct preprocessor_function_entry), "Register preprocessor function");
+  new_entry =
+    olsr_malloc (sizeof (struct preprocessor_function_entry),
+                 "Register preprocessor function");
 
   new_entry->function = function;
 
@@ -151,40 +174,51 @@ void olsr_preprocessor_add_function(preprocessor_function *function) {
   new_entry->next = preprocessor_functions;
   preprocessor_functions = new_entry;
 
-  OLSR_PRINTF(3, "Registered preprocessor function\n");
+  OLSR_PRINTF (3, "Registered preprocessor function\n");
 
 }
 
-int olsr_preprocessor_remove_function(preprocessor_function *function) {
+int
+olsr_preprocessor_remove_function (preprocessor_function * function)
+{
   struct preprocessor_function_entry *entry, *prev;
 
   entry = preprocessor_functions;
   prev = NULL;
 
-  while (entry) {
-    if (entry->function == function) {
-      if (entry == preprocessor_functions) {
-        preprocessor_functions = entry->next;
-      } else {
-        prev->next = entry->next;
-      }
-      free(entry);
-      return 1;
-    }
+  while (entry)
+    {
+      if (entry->function == function)
+        {
+          if (entry == preprocessor_functions)
+            {
+              preprocessor_functions = entry->next;
+            }
+          else
+            {
+              prev->next = entry->next;
+            }
+          free (entry);
+          return 1;
+        }
 
-    prev = entry;
-    entry = entry->next;
-  }
+      prev = entry;
+      entry = entry->next;
+    }
 
   return 0;
 }
 
-void olsr_packetparser_add_function(packetparser_function *function) {
+void
+olsr_packetparser_add_function (packetparser_function * function)
+{
   struct packetparser_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering packetparser\n");
+  OLSR_PRINTF (3, "Parser: registering packetparser\n");
 
-  new_entry = olsr_malloc(sizeof(struct packetparser_function_entry), "Register packetparser function");
+  new_entry =
+    olsr_malloc (sizeof (struct packetparser_function_entry),
+                 "Register packetparser function");
 
   new_entry->function = function;
 
@@ -192,30 +226,37 @@ void olsr_packetparser_add_function(packetparser_function *function) {
   new_entry->next = packetparser_functions;
   packetparser_functions = new_entry;
 
-  OLSR_PRINTF(3, "Registered packetparser  function\n");
+  OLSR_PRINTF (3, "Registered packetparser  function\n");
 
 }
 
-int olsr_packetparser_remove_function(packetparser_function *function) {
+int
+olsr_packetparser_remove_function (packetparser_function * function)
+{
   struct packetparser_function_entry *entry, *prev;
 
   entry = packetparser_functions;
   prev = NULL;
 
-  while (entry) {
-    if (entry->function == function) {
-      if (entry == packetparser_functions) {
-        packetparser_functions = entry->next;
-      } else {
-        prev->next = entry->next;
-      }
-      free(entry);
-      return 1;
-    }
+  while (entry)
+    {
+      if (entry->function == function)
+        {
+          if (entry == packetparser_functions)
+            {
+              packetparser_functions = entry->next;
+            }
+          else
+            {
+              prev->next = entry->next;
+            }
+          free (entry);
+          return 1;
+        }
 
-    prev = entry;
-    entry = entry->next;
-  }
+      prev = entry;
+      entry = entry->next;
+    }
 
   return 0;
 }
@@ -230,8 +271,11 @@ int olsr_packetparser_remove_function(packetparser_function *function) {
  *@return nada
  */
 
-void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip_addr *from_addr) {
-  union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
+void
+parse_packet (struct olsr *olsr, int size, struct interface *in_if,
+              union olsr_ip_addr *from_addr)
+{
+  union olsr_message *m = (union olsr_message *) olsr->olsr_msg;
   struct unknown_message unkpacket;
   int count;
   int msgsize;
@@ -239,186 +283,219 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
 
-  count = size - ((char *)m - (char *)olsr);
+  count = size - ((char *) m - (char *) olsr);
 
-  if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
+  if (count < MIN_PACKET_SIZE (olsr_cnf->ip_version))
     return;
 
-  if (ntohs(olsr->olsr_packlen) != size) {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
+  if (ntohs (olsr->olsr_packlen) != size)
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (1,
+                   "Size error detected in received packet.\nRecieved %d, in packet %d\n",
+                   size, ntohs (olsr->olsr_packlen));
 
-    olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
-    olsr_ip_to_string(&buf, from_addr));
-    return;
-  }
+      olsr_syslog (OLSR_LOG_ERR,
+                   " packet length error in  packet received from %s!",
+                   olsr_ip_to_string (&buf, from_addr));
+      return;
+    }
 
   // translate sequence number to host order
-  olsr->olsr_seqno = ntohs(olsr->olsr_seqno);
+  olsr->olsr_seqno = ntohs (olsr->olsr_seqno);
 
   // call packetparser
   packetparser = packetparser_functions;
-  while (packetparser) {
-    packetparser->function(olsr, in_if, from_addr);
-    packetparser = packetparser->next;
-  }
+  while (packetparser)
+    {
+      packetparser->function (olsr, in_if, from_addr);
+      packetparser = packetparser->next;
+    }
 
   //printf("Message from %s\n\n", olsr_ip_to_string(&buf, from_addr));
 
   /* Display packet */
   if (disp_pack_in)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
+    print_olsr_serialized_packet (stdout, (union olsr_packet *) olsr, size,
+                                  from_addr);
 
   if (olsr_cnf->ip_version == AF_INET)
-    msgsize = ntohs(m->v4.olsr_msgsize);
+    msgsize = ntohs (m->v4.olsr_msgsize);
   else
-    msgsize = ntohs(m->v6.olsr_msgsize);
+    msgsize = ntohs (m->v6.olsr_msgsize);
 
   /*
    * Hysteresis update - for every OLSR package
    */
-  if (olsr_cnf->use_hysteresis) {
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      update_hysteresis_incoming(from_addr, in_if, ntohs(olsr->olsr_seqno));
-    } else {
-      /* IPv6 */
-      update_hysteresis_incoming(from_addr, in_if, ntohs(olsr->olsr_seqno));
+  if (olsr_cnf->use_hysteresis)
+    {
+      if (olsr_cnf->ip_version == AF_INET)
+        {
+          /* IPv4 */
+          update_hysteresis_incoming (from_addr, in_if,
+                                      ntohs (olsr->olsr_seqno));
+        }
+      else
+        {
+          /* IPv6 */
+          update_hysteresis_incoming (from_addr, in_if,
+                                      ntohs (olsr->olsr_seqno));
+        }
     }
-  }
 
-  for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
+  for (; count > 0; m = (union olsr_message *) ((char *) m + (msgsize)))
+    {
 
-    processed = 0;
-    if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
-      break;
+      processed = 0;
+      if (count < MIN_PACKET_SIZE (olsr_cnf->ip_version))
+        break;
 
-    if (olsr_cnf->ip_version == AF_INET)
-      msgsize = ntohs(m->v4.olsr_msgsize);
-    else
-      msgsize = ntohs(m->v6.olsr_msgsize);
+      if (olsr_cnf->ip_version == AF_INET)
+        msgsize = ntohs (m->v4.olsr_msgsize);
+      else
+        msgsize = ntohs (m->v6.olsr_msgsize);
 
-    count -= msgsize;
+      count -= msgsize;
 
-    /* Check size of message */
-    if (count < 0) {
-      struct ipaddr_str buf;
-      OLSR_PRINTF(1, "packet length error in  packet received from %s!",
-          olsr_ip_to_string(&buf, from_addr));
+      /* Check size of message */
+      if (count < 0)
+        {
+          struct ipaddr_str buf;
+          OLSR_PRINTF (1, "packet length error in  packet received from %s!",
+                       olsr_ip_to_string (&buf, from_addr));
 
-      olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
-      olsr_ip_to_string(&buf, from_addr));
-      break;
-    }
+          olsr_syslog (OLSR_LOG_ERR,
+                       " packet length error in  packet received from %s!",
+                       olsr_ip_to_string (&buf, from_addr));
+          break;
+        }
 
 #if 0
-    /*
-     * Sven-Ola: This code leads to flooding our meshes with invalid /
-     * overdue messages if lq_fish is enabled (which is true since 2005)
-     * because there was no "do not forward"-check in olsr.c. If a message
-     * (yes: ttl=0 is invalid) is received, we should say: Welcome message,
-     * let us evaluate! But: if TTL < 2 or TTL + hopcount is higher than
-     * plausible, we should not forward. See olsr.c:olsr_forward_message()
-     */
+      /*
+       * Sven-Ola: This code leads to flooding our meshes with invalid /
+       * overdue messages if lq_fish is enabled (which is true since 2005)
+       * because there was no "do not forward"-check in olsr.c. If a message
+       * (yes: ttl=0 is invalid) is received, we should say: Welcome message,
+       * let us evaluate! But: if TTL < 2 or TTL + hopcount is higher than
+       * plausible, we should not forward. See olsr.c:olsr_forward_message()
+       */
 
-    /* Treat TTL hopcnt */
-    if(olsr_cnf->ip_version == AF_INET)
-    {
-      /* IPv4 */
-      if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0)
-      {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n",
-            m->v4.olsr_msgtype,
-            olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    }
-    else
-    {
-      /* IPv6 */
-      if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0)
-      {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n",
-            m->v4.olsr_msgtype,
-            olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    }
+      /* Treat TTL hopcnt */
+      if (olsr_cnf->ip_version == AF_INET)
+        {
+          /* IPv4 */
+          if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0)
+            {
+              struct ipaddr_str buf;
+              OLSR_PRINTF (2,
+                           "Dropping packet type %d from neigh %s with TTL 0\n",
+                           m->v4.olsr_msgtype, olsr_ip_to_string (&buf,
+                                                                  from_addr));
+              continue;
+            }
+        }
+      else
+        {
+          /* IPv6 */
+          if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0)
+            {
+              struct ipaddr_str buf;
+              OLSR_PRINTF (2, "Dropping packet type %d from %s with TTL 0\n",
+                           m->v4.olsr_msgtype, olsr_ip_to_string (&buf,
+                                                                  from_addr));
+              continue;
+            }
+        }
 #endif
 
-    /*RFC 3626 section 3.4:
-     *  2    If the time to live of the message is less than or equal to
-     *  '0' (zero), or if the message was sent by the receiving node
-     *  (i.e., the Originator Address of the message is the main
-     *  address of the receiving node): the message MUST silently be
-     *  dropped.
-     */
+      /*RFC 3626 section 3.4:
+       *  2    If the time to live of the message is less than or equal to
+       *  '0' (zero), or if the message was sent by the receiving node
+       *  (i.e., the Originator Address of the message is the main
+       *  address of the receiving node): the message MUST silently be
+       *  dropped.
+       */
 
-    /* Should be the same for IPv4 and IPv6 */
-    if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr)
-        || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
-#ifdef DEBUG
-      struct ipaddr_str buf;
-#endif
-#ifdef DEBUG
-      OLSR_PRINTF(3, "Not processing message originating from %s!\n",
-          olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));
-#endif
-      continue;
-    }
-
-    /* check for message duplicates */
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      if (olsr_shall_process_message(&m->v4.originator, ntohs(m->v4.seqno)) == 0) {
-        continue;
-      }
-    } else {
-      /* IPv6 */
-      if (olsr_shall_process_message(&m->v6.originator, ntohs(m->v6.seqno)) == 0) {
-        continue;
-      }
-    }
-
-    //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
-
-    entry = parse_functions;
-
-    while (entry) {
       /* Should be the same for IPv4 and IPv6 */
+      if (ipequal
+          ((union olsr_ip_addr *) &m->v4.originator, &olsr_cnf->main_addr)
+          || !olsr_validate_address ((union olsr_ip_addr *) &m->v4.
+                                     originator))
+        {
+#ifdef DEBUG
+          struct ipaddr_str buf;
+#endif
+#ifdef DEBUG
+          OLSR_PRINTF (3, "Not processing message originating from %s!\n",
+                       olsr_ip_to_string (&buf,
+                                          (union olsr_ip_addr *) &m->v4.
+                                          originator));
+#endif
+          continue;
+        }
 
-      /* Promiscuous or exact match */
-      if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-        entry->function(m, in_if, from_addr);
-        if (entry->caller_forwarding)
-          processed = 1;
-      }
-      entry = entry->next;
-    }
+      /* check for message duplicates */
+      if (olsr_cnf->ip_version == AF_INET)
+        {
+          /* IPv4 */
+          if (olsr_shall_process_message
+              (&m->v4.originator, ntohs (m->v4.seqno)) == 0)
+            {
+              continue;
+            }
+        }
+      else
+        {
+          /* IPv6 */
+          if (olsr_shall_process_message
+              (&m->v6.originator, ntohs (m->v6.seqno)) == 0)
+            {
+              continue;
+            }
+        }
 
-    /* UNKNOWN PACKETTYPE */
-    if (processed == 0) {
-      struct ipaddr_str buf;
-      unk_chgestruct(&unkpacket, m);
+      //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
 
-      OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
-          m->v4.olsr_msgtype,
-          size,
-          olsr_ip_to_string(&buf, &unkpacket.originator));
+      entry = parse_functions;
 
-      /* Forward message */
-      if (!ipequal(&unkpacket.originator, &olsr_cnf->main_addr)) {
-        /* Forward */
-        olsr_forward_message(m, from_addr);
-      }
+      while (entry)
+        {
+          /* Should be the same for IPv4 and IPv6 */
 
-      /* Cancel loop here, otherwise olsrd just hangs forever at this point */
-      break;
-    }
+          /* Promiscuous or exact match */
+          if ((entry->type == PROMISCUOUS)
+              || (entry->type == m->v4.olsr_msgtype))
+            {
+              entry->function (m, in_if, from_addr);
+              if (entry->caller_forwarding)
+                processed = 1;
+            }
+          entry = entry->next;
+        }
 
-  } /* for olsr_msg */
+      /* UNKNOWN PACKETTYPE */
+      if (processed == 0)
+        {
+          struct ipaddr_str buf;
+          unk_chgestruct (&unkpacket, m);
+
+          OLSR_PRINTF (3, "Unknown type: %d, size %d, from %s\n",
+                       m->v4.olsr_msgtype, size, olsr_ip_to_string (&buf,
+                                                                    &unkpacket.
+                                                                    originator));
+
+          /* Forward message */
+          if (!ipequal (&unkpacket.originator, &olsr_cnf->main_addr))
+            {
+              /* Forward */
+              olsr_forward_message (m, from_addr);
+            }
+
+          /* Cancel loop here, otherwise olsrd just hangs forever at this point */
+          break;
+        }
+
+    }                           /* for olsr_msg */
 }
 
 /**
@@ -429,7 +506,9 @@ void parse_packet(struct olsr *olsr, int size, struct interface *in_if, union ol
  *@param fd the filedescriptor that data should be read from.
  *@return nada
  */
-void olsr_input(int fd) {
+void
+olsr_input (int fd)
+{
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
   struct preprocessor_function_entry *entry;
@@ -437,83 +516,102 @@ void olsr_input(int fd) {
 
   cpu_overload_exit = 0;
 
-  for (;;) {
+  for (;;)
+    {
 #ifdef DEBUG
-    struct ipaddr_str buf;
-#endif
-    /* sockaddr_in6 is bigger than sockaddr !!!! */
-    struct sockaddr_storage from;
-    socklen_t fromlen;
-    int cc;
-
-    if (32 < ++cpu_overload_exit) {
-      OLSR_PRINTF(1, "CPU overload detected, ending olsr_input() loop\n");
-      break;
-    }
-
-    fromlen = sizeof(struct sockaddr_storage);
-    cc = olsr_recvfrom(fd, inbuf, sizeof (inbuf), 0, (struct sockaddr *)&from, &fromlen);
-
-    if (cc <= 0) {
-      if (cc < 0 && errno != EWOULDBLOCK) {
-        OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno));
-        olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
-      }
-      break;
-    }
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 sender address */
-      from_addr.v4 = ((struct sockaddr_in *)&from)->sin_addr;
-    } else {
-      /* IPv6 sender address */
-      from_addr.v6 = ((struct sockaddr_in6 *)&from)->sin6_addr;
-    }
-
-#ifdef DEBUG
-    OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
-#endif
-
-    if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof(struct sockaddr_in)))
-      break;
-    else if ((olsr_cnf->ip_version == AF_INET6) && (fromlen != sizeof(struct sockaddr_in6)))
-      break;
-
-    /* are we talking to ourselves? */
-    if (if_ifwithaddr(&from_addr) != NULL)
-      return;
-
-    if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
       struct ipaddr_str buf;
-      OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-          olsr_ip_to_string(&buf, &from_addr),
-          cc);
-      olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-      olsr_ip_to_string(&buf, &from_addr),
-      cc);
-      return;
-    }
+#endif
+      /* sockaddr_in6 is bigger than sockaddr !!!! */
+      struct sockaddr_storage from;
+      socklen_t fromlen;
+      int cc;
 
-    // call preprocessors
-    entry = preprocessor_functions;
-    packet = &inbuf[0];
+      if (32 < ++cpu_overload_exit)
+        {
+          OLSR_PRINTF (1,
+                       "CPU overload detected, ending olsr_input() loop\n");
+          break;
+        }
 
-    while (entry) {
-      packet = entry->function(packet, olsr_in_if, &from_addr, &cc);
-      // discard package ?
-      if (packet == NULL) {
+      fromlen = sizeof (struct sockaddr_storage);
+      cc =
+        olsr_recvfrom (fd, inbuf, sizeof (inbuf), 0,
+                       (struct sockaddr *) &from, &fromlen);
+
+      if (cc <= 0)
+        {
+          if (cc < 0 && errno != EWOULDBLOCK)
+            {
+              OLSR_PRINTF (1, "error recvfrom: %s", strerror (errno));
+              olsr_syslog (OLSR_LOG_ERR, "error recvfrom: %m");
+            }
+          break;
+        }
+      if (olsr_cnf->ip_version == AF_INET)
+        {
+          /* IPv4 sender address */
+          from_addr.v4 = ((struct sockaddr_in *) &from)->sin_addr;
+        }
+      else
+        {
+          /* IPv6 sender address */
+          from_addr.v6 = ((struct sockaddr_in6 *) &from)->sin6_addr;
+        }
+
+#ifdef DEBUG
+      OLSR_PRINTF (5, "Recieved a packet from %s\n",
+                   olsr_ip_to_string (&buf,
+                                      (union olsr_ip_addr *)
+                                      &((struct sockaddr_in *) &from)->
+                                      sin_addr.s_addr));
+#endif
+
+      if ((olsr_cnf->ip_version == AF_INET)
+          && (fromlen != sizeof (struct sockaddr_in)))
+        break;
+      else if ((olsr_cnf->ip_version == AF_INET6)
+               && (fromlen != sizeof (struct sockaddr_in6)))
+        break;
+
+      /* are we talking to ourselves? */
+      if (if_ifwithaddr (&from_addr) != NULL)
         return;
-      }
-      entry = entry->next;
+
+      if ((olsr_in_if = if_ifwithsock (fd)) == NULL)
+        {
+          struct ipaddr_str buf;
+          OLSR_PRINTF (1,
+                       "Could not find input interface for message from %s size %d\n",
+                       olsr_ip_to_string (&buf, &from_addr), cc);
+          olsr_syslog (OLSR_LOG_ERR,
+                       "Could not find input interface for message from %s size %d\n",
+                       olsr_ip_to_string (&buf, &from_addr), cc);
+          return;
+        }
+
+      // call preprocessors
+      entry = preprocessor_functions;
+      packet = &inbuf[0];
+
+      while (entry)
+        {
+          packet = entry->function (packet, olsr_in_if, &from_addr, &cc);
+          // discard package ?
+          if (packet == NULL)
+            {
+              return;
+            }
+          entry = entry->next;
+        }
+
+      /*
+       * &from - sender
+       * &inbuf.olsr
+       * cc - bytes read
+       */
+      parse_packet ((struct olsr *) packet, cc, olsr_in_if, &from_addr);
+
     }
-
-    /*
-     * &from - sender
-     * &inbuf.olsr
-     * cc - bytes read
-     */
-    parse_packet((struct olsr *)packet, cc, olsr_in_if, &from_addr);
-
-  }
 }
 
 /**
@@ -524,7 +622,9 @@ void olsr_input(int fd) {
  *@param fd the filedescriptor that data should be read from.
  *@return nada
  */
-void olsr_input_hostemu(int fd) {
+void
+olsr_input_hostemu (int fd)
+{
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
   socklen_t fromlen;
@@ -535,79 +635,92 @@ void olsr_input_hostemu(int fd) {
   char *packet;
 
   /* Host emulator receives IP address first to emulate
-   direct link */
+     direct link */
 
-  int cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
-  if (cc != (int)olsr_cnf->ipsize) {
-    fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
-    memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);
-  }
+  int cc = recv (fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
+  if (cc != (int) olsr_cnf->ipsize)
+    {
+      fprintf (stderr, "Error receiving host-client IP hook(%d) %s!\n", cc,
+               strerror (errno));
+      memcpy (&from_addr, &((struct olsr *) inbuf)->olsr_msg->originator,
+              olsr_cnf->ipsize);
+    }
 
   /* are we talking to ourselves? */
-  if (if_ifwithaddr(&from_addr) != NULL)
+  if (if_ifwithaddr (&from_addr) != NULL)
     return;
 
   /* Extract size */
-  if ((cc = recv(fd, (void *)&pcklen, 2, MSG_PEEK)) != 2) /* Win needs a cast */
-  {
-    if (cc <= 0) {
-      fprintf(stderr, "Lost olsr_switch connection - exit!\n");
-      olsr_exit(__func__, EXIT_FAILURE);
+  if ((cc = recv (fd, (void *) &pcklen, 2, MSG_PEEK)) != 2)     /* Win needs a cast */
+    {
+      if (cc <= 0)
+        {
+          fprintf (stderr, "Lost olsr_switch connection - exit!\n");
+          olsr_exit (__func__, EXIT_FAILURE);
+        }
+      fprintf (stderr, "[hust-emu] error extracting size(%d) %s!\n", cc,
+               strerror (errno));
+      return;
     }
-    fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
-    return;
-  } else {
-    pcklen = ntohs(pcklen);
-  }
-
-  fromlen = sizeof(struct sockaddr_storage);
-
-  cc = olsr_recvfrom(fd, inbuf, pcklen, 0, (struct sockaddr *)&from, &fromlen);
-
-  if (cc <= 0) {
-    if (cc < 0 && errno != EWOULDBLOCK) {
-      const char * const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "error recvfrom: %s", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %s", err_msg);
+  else
+    {
+      pcklen = ntohs (pcklen);
     }
-    return;
-  }
 
-  if (cc != pcklen) {
-    printf("Could not read whole packet(size %d, read %d)\n", pcklen, cc);
-    return;
-  }
+  fromlen = sizeof (struct sockaddr_storage);
 
-  if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-        olsr_ip_to_string(&buf, &from_addr),
-        cc);
-    olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
-    olsr_ip_to_string(&buf, &from_addr),
-    cc);
-    return;
-  }
+  cc =
+    olsr_recvfrom (fd, inbuf, pcklen, 0, (struct sockaddr *) &from, &fromlen);
+
+  if (cc <= 0)
+    {
+      if (cc < 0 && errno != EWOULDBLOCK)
+        {
+          const char *const err_msg = strerror (errno);
+          OLSR_PRINTF (1, "error recvfrom: %s", err_msg);
+          olsr_syslog (OLSR_LOG_ERR, "error recvfrom: %s", err_msg);
+        }
+      return;
+    }
+
+  if (cc != pcklen)
+    {
+      printf ("Could not read whole packet(size %d, read %d)\n", pcklen, cc);
+      return;
+    }
+
+  if ((olsr_in_if = if_ifwithsock (fd)) == NULL)
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (1,
+                   "Could not find input interface for message from %s size %d\n",
+                   olsr_ip_to_string (&buf, &from_addr), cc);
+      olsr_syslog (OLSR_LOG_ERR,
+                   "Could not find input interface for message from %s size %d\n",
+                   olsr_ip_to_string (&buf, &from_addr), cc);
+      return;
+    }
 
   // call preprocessors
   entry = preprocessor_functions;
   packet = &inbuf[0];
 
-  while (entry) {
-    packet = entry->function(packet, olsr_in_if, &from_addr, &cc);
-    // discard package ?
-    if (packet == NULL) {
-      return;
+  while (entry)
+    {
+      packet = entry->function (packet, olsr_in_if, &from_addr, &cc);
+      // discard package ?
+      if (packet == NULL)
+        {
+          return;
+        }
+      entry = entry->next;
     }
-    entry = entry->next;
-  }
 
   /*
    * &from - sender
    * &inbuf.olsr
    * cc - bytes read
    */
-  parse_packet((struct olsr *)inbuf, cc, olsr_in_if, &from_addr);
+  parse_packet ((struct olsr *) inbuf, cc, olsr_in_if, &from_addr);
 
 }
-

@@ -36,8 +36,6 @@ struct packnode
   struct packnode *next;
 };
 
-
-
 /*
  * Unions for IPv4 <-> IPv6 compability
  */
@@ -48,13 +46,11 @@ union hello_message
   struct hellomsg6 v6;
 };
 
-
 union tc_message
 {
   struct olsr_tcmsg v4;
   struct olsr_tcmsg6 v6;
 };
-
 
 union mid_message
 {
@@ -62,15 +58,10 @@ union mid_message
   struct midmsg6 v6;
 };
 
-
-
 union hna_message
 {
   struct hnamsg v4;
   struct hnamsg6 v6;
 };
-
-
-
 
 #endif

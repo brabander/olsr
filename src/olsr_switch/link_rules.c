@@ -47,50 +47,55 @@
 #include <stdio.h>
 
 int
-ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
+ohs_check_link (struct ohs_connection *oc, union olsr_ip_addr *dst)
 {
   struct ohs_ip_link *links;
-  for (links = oc->links; links != NULL; links = links->next) {
-    int r;
-    if (!ipequal(&links->dst, dst)) {
-        continue;
-    }
-    if (links->quality == 0) {
-      if (logbits & LOG_LINK) {
-        struct ipaddr_str addrstr, dststr;
-        printf("%s -> %s Q: %d\n",
-               olsr_ip_to_string(&addrstr, &oc->ip_addr),
-               olsr_ip_to_string(&dststr, dst),
-               links->quality);
-      }
-      return 0;
-    }
+  for (links = oc->links; links != NULL; links = links->next)
+    {
+      int r;
+      if (!ipequal (&links->dst, dst))
+        {
+          continue;
+        }
+      if (links->quality == 0)
+        {
+          if (logbits & LOG_LINK)
+            {
+              struct ipaddr_str addrstr, dststr;
+              printf ("%s -> %s Q: %d\n",
+                      olsr_ip_to_string (&addrstr, &oc->ip_addr),
+                      olsr_ip_to_string (&dststr, dst), links->quality);
+            }
+          return 0;
+        }
 
-    r = 1 + (int)(100.0 / (RAND_MAX + 1.0) * rand());
+      r = 1 + (int) (100.0 / (RAND_MAX + 1.0) * rand ());
 
-    if (logbits & LOG_LINK) {
-      struct ipaddr_str addrstr, dststr;
-      printf("%s -> %s Q: %d R: %d\n",  olsr_ip_to_string(&addrstr, &oc->ip_addr),
-             olsr_ip_to_string(&dststr, dst), links->quality, r);
+      if (logbits & LOG_LINK)
+        {
+          struct ipaddr_str addrstr, dststr;
+          printf ("%s -> %s Q: %d R: %d\n",
+                  olsr_ip_to_string (&addrstr, &oc->ip_addr),
+                  olsr_ip_to_string (&dststr, dst), links->quality, r);
+        }
+      /* Random - based on quality */
+      return links->quality > r ? 0 : 1;
     }
-    /* Random - based on quality */
-    return links->quality > r ? 0 : 1;
-  }
   return 1;
 }
 
 int
-ohs_delete_all_related_links(struct ohs_connection *oc)
+ohs_delete_all_related_links (struct ohs_connection *oc)
 {
   struct ohs_ip_link *links = oc->links;
   int cnt = 0;
 
-  /* Delete links from this node*/
-  while(links)
+  /* Delete links from this node */
+  while (links)
     {
       struct ohs_ip_link *tmp_link = links;
       links = links->next;
-      free(tmp_link);
+      free (tmp_link);
       cnt++;
     }
 
@@ -102,14 +107,14 @@ ohs_delete_all_related_links(struct ohs_connection *oc)
 }
 
 struct ohs_ip_link *
-add_link(struct ohs_connection *src, struct ohs_connection *dst)
+add_link (struct ohs_connection *src, struct ohs_connection *dst)
 {
   struct ohs_ip_link *link;
 
   /* Create new link */
-  link = malloc(sizeof(struct ohs_ip_link));
-  if(!link)
-    OHS_OUT_OF_MEMORY("New link");
+  link = malloc (sizeof (struct ohs_ip_link));
+  if (!link)
+    OHS_OUT_OF_MEMORY ("New link");
   /* Queue */
   link->next = src->links;
   src->links = link;
@@ -120,22 +125,22 @@ add_link(struct ohs_connection *src, struct ohs_connection *dst)
 }
 
 int
-remove_link(struct ohs_connection *oc, struct ohs_ip_link *lnk)
+remove_link (struct ohs_connection *oc, struct ohs_ip_link *lnk)
 {
   struct ohs_ip_link *links = oc->links;
   struct ohs_ip_link *prev_link = NULL;
 
-  while(links)
+  while (links)
     {
-      if(links == lnk)
+      if (links == lnk)
         {
           /* Remove */
-          if(prev_link)
+          if (prev_link)
             prev_link->next = links->next;
           else
             oc->links = links->next;
 
-          free(lnk);
+          free (lnk);
           oc->linkcnt--;
           return 1;
         }
@@ -146,13 +151,15 @@ remove_link(struct ohs_connection *oc, struct ohs_ip_link *lnk)
 }
 
 struct ohs_ip_link *
-get_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
+get_link (struct ohs_connection *oc, union olsr_ip_addr *dst)
 {
   struct ohs_ip_link *links;
-  for (links = oc->links; links != NULL; links = links->next) {
-    if (ipequal(&links->dst, dst)) {
-        return links;
+  for (links = oc->links; links != NULL; links = links->next)
+    {
+      if (ipequal (&links->dst, dst))
+        {
+          return links;
+        }
     }
-  }
   return NULL;
 }

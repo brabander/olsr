@@ -54,7 +54,9 @@
  *
  *@return a 8-bit mantissa/exponent product
  */
-olsr_u8_t reltime_to_me(const olsr_reltime interval) {
+olsr_u8_t
+reltime_to_me (const olsr_reltime interval)
+{
   olsr_u8_t a, b;
 
   /* It is sufficent to compare the integer part since we test on >=.
@@ -70,58 +72,67 @@ olsr_u8_t reltime_to_me(const olsr_reltime interval) {
    */
   const unsigned int unscaled_interval = interval / 125 * 2;
   b = 0;
-  while (unscaled_interval >= (1U << b)) {
-    b++;
-  }
-
-  if (b == 0) {
-    a = 1;
-    b = 0;
-  } else {
-    b--;
-    if (b > 15) {
-      a = 15;
-      b = 15;
-    } else {
-      /* And again some maths simplification from the former version:
-       *    a = 16 * ((double)interval / (VTIME_SCALE_FACTOR * (double)(1 << b)) - 1)
-       * Since interval is already double:
-       *    a = 16 * (interval / (VTIME_SCALE_FACTOR * (double)(1 << b)) - 1)
-       * first, we can get rid of parentheses and change the * to a /
-       *    a = 16 * (interval / VTIME_SCALE_FACTOR / (double)(1 << b) - 1)
-       * then we make an integer addition from the floating point addition
-       *    a = (int)(16.0 * interval / VTIME_SCALE_FACTOR / (double)(1 << b)) - 16
-       * and we loose an unnecessary cast
-       *    a = (int)(16.0 * interval / VTIME_SCALE_FACTOR / (1 << b)) - 16
-       *
-       * VTIME_SCALE_FACTOR = 1/16
-       *
-       * => a = (16 * interval(ms) / 1000 * 16 / (1 << b)) - 16
-       *      = (interval(ms) * 256 / 1000 / (1 << b)) - 16
-       *      = (interval(ms) * 32 / 125 / (1<<b)) - 16
-       *      = (interval(ms) - 16/32*125*(1<<b)) * 32 / 125 / (1<<b)
-       *      = (interval(ms) - 125*(1<<(b-1))) * 32 / 125 / (1<<b)
-       *
-       * 1. case: b >= 5
-       *      = (interval(ms) - (125 << (b-1))) / 125 / (1 << (b-5))
-       *      = (interval(ms) - (125 << (b-1))) / (125  << (b-5))
-       *
-       * 2. case: b <= 5
-       *      = (interval(ms) - (125 << (b-1))) / 125 * (1 << (5-b))
-       *      = (interval(ms) - (125 << (b-1))) * (1 << (5-b)) / 125
-       */
-
-      if (b >= 5) {
-        a = (interval - (125 << (b-1))) / (125 << (b-5));
-      }
-      else {
-        a = (interval - (125 << (b-1))) * (1 << (5-b)) / 125;
-      }
-
-      b += a >> 4;
-      a &= 0x0f;
+  while (unscaled_interval >= (1U << b))
+    {
+      b++;
     }
-  }
+
+  if (b == 0)
+    {
+      a = 1;
+      b = 0;
+    }
+  else
+    {
+      b--;
+      if (b > 15)
+        {
+          a = 15;
+          b = 15;
+        }
+      else
+        {
+          /* And again some maths simplification from the former version:
+           *    a = 16 * ((double)interval / (VTIME_SCALE_FACTOR * (double)(1 << b)) - 1)
+           * Since interval is already double:
+           *    a = 16 * (interval / (VTIME_SCALE_FACTOR * (double)(1 << b)) - 1)
+           * first, we can get rid of parentheses and change the * to a /
+           *    a = 16 * (interval / VTIME_SCALE_FACTOR / (double)(1 << b) - 1)
+           * then we make an integer addition from the floating point addition
+           *    a = (int)(16.0 * interval / VTIME_SCALE_FACTOR / (double)(1 << b)) - 16
+           * and we loose an unnecessary cast
+           *    a = (int)(16.0 * interval / VTIME_SCALE_FACTOR / (1 << b)) - 16
+           *
+           * VTIME_SCALE_FACTOR = 1/16
+           *
+           * => a = (16 * interval(ms) / 1000 * 16 / (1 << b)) - 16
+           *      = (interval(ms) * 256 / 1000 / (1 << b)) - 16
+           *      = (interval(ms) * 32 / 125 / (1<<b)) - 16
+           *      = (interval(ms) - 16/32*125*(1<<b)) * 32 / 125 / (1<<b)
+           *      = (interval(ms) - 125*(1<<(b-1))) * 32 / 125 / (1<<b)
+           *
+           * 1. case: b >= 5
+           *      = (interval(ms) - (125 << (b-1))) / 125 / (1 << (b-5))
+           *      = (interval(ms) - (125 << (b-1))) / (125  << (b-5))
+           *
+           * 2. case: b <= 5
+           *      = (interval(ms) - (125 << (b-1))) / 125 * (1 << (5-b))
+           *      = (interval(ms) - (125 << (b-1))) * (1 << (5-b)) / 125
+           */
+
+          if (b >= 5)
+            {
+              a = (interval - (125 << (b - 1))) / (125 << (b - 5));
+            }
+          else
+            {
+              a = (interval - (125 << (b - 1))) * (1 << (5 - b)) / 125;
+            }
+
+          b += a >> 4;
+          a &= 0x0f;
+        }
+    }
 
   return (a << 4) | (b & 0x0F);
 }
@@ -161,12 +172,15 @@ olsr_u8_t reltime_to_me(const olsr_reltime interval) {
  * 2. case: b <= 8
  *           = ((16 + a) * 1000) >> (8-b)
  */
-olsr_reltime me_to_reltime(const olsr_u8_t me) {
+olsr_reltime
+me_to_reltime (const olsr_u8_t me)
+{
   const olsr_u8_t a = me >> 4;
   const olsr_u8_t b = me & 0x0F;
 
-  if (b >= 8) {
-    return ((16 + a) << (b-8)) * 1000;
-  }
-  return ((16 + a) * 1000) >> (8-b);
+  if (b >= 8)
+    {
+      return ((16 + a) << (b - 8)) * 1000;
+    }
+  return ((16 + a) * 1000) >> (8 - b);
 }

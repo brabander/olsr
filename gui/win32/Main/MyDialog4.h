@@ -45,37 +45,36 @@
 #pragma once
 #endif
 
-class MyDialog4 : public CDialog
+class MyDialog4:public CDialog
 {
 public:
-	MyDialog4(CWnd* pParent = NULL);
+  MyDialog4 (CWnd * pParent = NULL);
 
-	BOOL Create(CWnd *Parent);
+  BOOL Create (CWnd * Parent);
 
-	void AddRoute(unsigned int, unsigned int, int, char *);
-	void DeleteRoute(unsigned int);
-	void ClearRoutes(void);
+  void AddRoute (unsigned int, unsigned int, int, char *);
+  void DeleteRoute (unsigned int);
+  void ClearRoutes (void);
 
-	//{{AFX_DATA(MyDialog4)
-	enum { IDD = IDD_DIALOG4 };
-	CListCtrl	m_RoutingTable;
-	//}}AFX_DATA
+  //{{AFX_DATA(MyDialog4)
+  enum
+  { IDD = IDD_DIALOG4 };
+  CListCtrl m_RoutingTable;
+  //}}AFX_DATA
 
-
-	//{{AFX_VIRTUAL(MyDialog4)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);
-	//}}AFX_VIRTUAL
+  //{{AFX_VIRTUAL(MyDialog4)
+protected:
+    virtual void DoDataExchange (CDataExchange * pDX);
+  //}}AFX_VIRTUAL
 
 protected:
 
-	//{{AFX_MSG(MyDialog4)
-	afx_msg void OnOK();
-	afx_msg void OnCancel();
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-};
+  //{{AFX_MSG(MyDialog4)
+    afx_msg void OnOK ();
+  afx_msg void OnCancel ();
+  virtual BOOL OnInitDialog ();
+  //}}AFX_MSG
+  DECLARE_MESSAGE_MAP ()};
 
 //{{AFX_INSERT_LOCATION}}
 

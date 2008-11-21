@@ -38,7 +38,6 @@
  *
  */
 
-
 #ifndef _OLSR_DEFS
 #define _OLSR_DEFS
 
@@ -66,7 +65,7 @@ extern const char build_host[];
 #define OLSRD_GLOBAL_CONF_FILE	"/etc/" OLSRD_CONF_FILE_NAME
 #endif
 
-#define	MAXMESSAGESIZE		1500	/* max broadcast size */
+#define	MAXMESSAGESIZE		1500    /* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
@@ -103,7 +102,6 @@ extern FILE *debug_handle;
 /* Returns TRUE if a timestamp is expired */
 #define TIMED_OUT(s1)	((int)((s1) - now_times) < 0)
 
-
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
 #ifndef MAX
 #define MAX(x,y)	((x) > (y) ? (x) : (y))
@@ -120,27 +118,36 @@ extern FILE *debug_handle;
  * the BSD compiler prints out a warning if you use plain strcpy().
  */
 
-static INLINE char *strscpy(char *dest, const char *src, size_t size)
+static INLINE char *
+strscpy (char *dest, const char *src, size_t size)
 {
-	register size_t l = 0;
+  register size_t l = 0;
 #if !defined(NODEBUG) && defined(DEBUG)
-	if (sizeof(dest) == size) fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n", dest, src, size);
-	if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
-	if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
+  if (sizeof (dest) == size)
+    fprintf (stderr,
+             "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n",
+             dest, src, size);
+  if (NULL == dest)
+    fprintf (stderr, "Warning: dest is NULL in strscpy!\n");
+  if (NULL == src)
+    fprintf (stderr, "Warning: src is NULL in strscpy!\n");
 #endif
-	if (NULL != dest && NULL != src)
-	{
-		/* src does not need to be null terminated */
-		if (0 < size--) while(l < size && 0 != src[l]) l++;
-		dest[l] = 0;
-	}
-	return strncpy(dest, src, l);
+  if (NULL != dest && NULL != src)
+    {
+      /* src does not need to be null terminated */
+      if (0 < size--)
+        while (l < size && 0 != src[l])
+          l++;
+      dest[l] = 0;
+    }
+  return strncpy (dest, src, l);
 }
 
-static INLINE char *strscat(char *dest, const char *src, size_t size)
+static INLINE char *
+strscat (char *dest, const char *src, size_t size)
 {
-	register size_t l = strlen(dest);
-	return strscpy(dest + l, src, size > l ? size - l : 0);
+  register size_t l = strlen (dest);
+  return strscpy (dest + l, src, size > l ? size - l : 0);
 }
 
 /*
@@ -161,7 +168,6 @@ static INLINE char *strscat(char *dest, const char *src, size_t size)
     (elem)->next->prev = (elem)->prev;     \
   } while (0)
 
-
 #define CLOSE(fd)  do { close(fd); (fd) = -1; } while (0)
 
 /*
@@ -170,7 +176,7 @@ static INLINE char *strscat(char *dest, const char *src, size_t size)
 extern struct olsrd_config *olsr_cnf;
 
 /* Timer data */
-extern clock_t now_times; /* current idea of times(2) reported uptime */
+extern clock_t now_times;       /* current idea of times(2) reported uptime */
 
 #if defined WIN32
 extern olsr_bool olsr_win32_end_request;
@@ -184,7 +190,7 @@ extern olsr_bool olsr_win32_end_flag;
  * the underlying kernel calls the smallest accountable time unit) are
  * inherently "unsigned" (and always incremented).
  */
-unsigned long olsr_times(void);
+unsigned long olsr_times (void);
 
 /*
  *IPC functions
@@ -192,18 +198,14 @@ unsigned long olsr_times(void);
  * soon... duh!
  */
 
-int
-ipc_init(void);
+int ipc_init (void);
 
 #if 0
-int
-ipc_input(int);
+int ipc_input (int);
 #endif
 
-int
-shutdown_ipc(void);
+int shutdown_ipc (void);
 
-int
-ipc_output(struct olsr *);
+int ipc_output (struct olsr *);
 
 #endif

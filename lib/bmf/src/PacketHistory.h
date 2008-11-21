@@ -42,8 +42,8 @@
  * ------------------------------------------------------------------------- */
 
 /* System includes */
-#include <sys/types.h> /* ssize_t */
-#include <sys/times.h> /* clock_t */
+#include <sys/types.h>          /* ssize_t */
+#include <sys/times.h>          /* clock_t */
 
 #define N_HASH_BITS 12
 #define HISTORY_HASH_SIZE (1 << N_HASH_BITS)
@@ -55,14 +55,14 @@ struct TDupEntry
 {
   u_int32_t crc32;
   clock_t timeOut;
-  struct TDupEntry* next;
+  struct TDupEntry *next;
 };
 
-void InitPacketHistory(void);
-u_int32_t PacketCrc32(unsigned char* ipPkt, ssize_t len);
-u_int32_t Hash(u_int32_t from32);
-void MarkRecentPacket(u_int32_t crc32);
-int CheckAndMarkRecentPacket(u_int32_t crc32);
-void PrunePacketHistory(void*);
+void InitPacketHistory (void);
+u_int32_t PacketCrc32 (unsigned char *ipPkt, ssize_t len);
+u_int32_t Hash (u_int32_t from32);
+void MarkRecentPacket (u_int32_t crc32);
+int CheckAndMarkRecentPacket (u_int32_t crc32);
+void PrunePacketHistory (void *);
 
 #endif /* _BMF_PACKETHISTORY_H */

@@ -48,33 +48,33 @@
 
 /* types */
 #ifdef _MSC_VER
-typedef unsigned char   uint8_t;
-typedef unsigned short  uint16_t;
-typedef unsigned int    uint32_t;
-typedef char            int8_t;
-typedef short           int16_t;
-typedef int             int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef char int8_t;
+typedef short int16_t;
+typedef int int32_t;
 #else
 #include <inttypes.h>
 #endif
 
-
-typedef enum {
-    OLSR_FALSE = 0,
-    OLSR_TRUE
+typedef enum
+{
+  OLSR_FALSE = 0,
+  OLSR_TRUE
 } olsr_bool;
 
 /* user defined cookies */
-typedef uint16_t        olsr_cookie_t;
+typedef uint16_t olsr_cookie_t;
 
 #if defined linux || defined __MacOSX__ || defined WIN32 || defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 
-typedef uint8_t         olsr_u8_t;
-typedef uint16_t        olsr_u16_t;
-typedef uint32_t        olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
+typedef uint8_t olsr_u8_t;
+typedef uint16_t olsr_u16_t;
+typedef uint32_t olsr_u32_t;
+typedef int8_t olsr_8_t;
+typedef int16_t olsr_16_t;
+typedef int32_t olsr_32_t;
 
 #else
 #       error "Unsupported system"
@@ -87,13 +87,14 @@ typedef int32_t         olsr_32_t;
 #include <netinet/in.h>
 #endif
 
-
-union olsr_ip_addr {
+union olsr_ip_addr
+{
   struct in_addr v4;
   struct in6_addr v6;
 };
 
-struct olsr_ip_prefix {
+struct olsr_ip_prefix
+{
   union olsr_ip_addr prefix;
   olsr_u8_t prefix_len;
 };

@@ -58,9 +58,9 @@
 #include "defs.h"
 
 #define IPC_PORT 1212
-#define IPC_PACK_SIZE 44 /* Size of the IPC_ROUTE packet */
-#define	ROUTE_IPC 11    /* IPC to front-end telling of route changes */
-#define NET_IPC 12      /* IPC to front end net-info */
+#define IPC_PACK_SIZE 44        /* Size of the IPC_ROUTE packet */
+#define	ROUTE_IPC 11            /* IPC to front-end telling of route changes */
+#define NET_IPC 12              /* IPC to front end net-info */
 
 /*
  *IPC message sent to the front-end
@@ -70,43 +70,40 @@
 
 struct ipcmsg
 {
-  olsr_u8_t          msgtype;
-  olsr_u16_t         size;
-  olsr_u8_t          metric;
-  olsr_u8_t          add;
+  olsr_u8_t msgtype;
+  olsr_u16_t size;
+  olsr_u8_t metric;
+  olsr_u8_t add;
   union olsr_ip_addr target_addr;
   union olsr_ip_addr gateway_addr;
-  char               device[4];
+  char device[4];
 };
-
 
 struct ipc_net_msg
 {
-  olsr_u8_t            msgtype;
-  olsr_u16_t           size;
-  olsr_u8_t            mids; /* No. of extra interfaces */
-  olsr_u8_t            hnas; /* No. of HNA nets */
-  olsr_u8_t            unused1;
-  olsr_u16_t           hello_int;
-  olsr_u16_t           hello_lan_int;
-  olsr_u16_t           tc_int;
-  olsr_u16_t           neigh_hold;
-  olsr_u16_t           topology_hold;
-  olsr_u8_t            ipv6;
-  union olsr_ip_addr   main_addr;
+  olsr_u8_t msgtype;
+  olsr_u16_t size;
+  olsr_u8_t mids;               /* No. of extra interfaces */
+  olsr_u8_t hnas;               /* No. of HNA nets */
+  olsr_u8_t unused1;
+  olsr_u16_t hello_int;
+  olsr_u16_t hello_lan_int;
+  olsr_u16_t tc_int;
+  olsr_u16_t neigh_hold;
+  olsr_u16_t topology_hold;
+  olsr_u8_t ipv6;
+  union olsr_ip_addr main_addr;
 };
 
+olsr_bool ipc_check_allowed_ip (const union olsr_ip_addr *);
 
-olsr_bool
-ipc_check_allowed_ip(const union olsr_ip_addr *);
+void ipc_accept (int);
 
-void
-ipc_accept(int);
+void frontend_msgparser (union olsr_message *, struct interface *,
+                         union olsr_ip_addr *);
 
-void
-frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-int
-ipc_route_send_rtentry(const union olsr_ip_addr *, const union olsr_ip_addr *, int, int, const char *);
+int ipc_route_send_rtentry (const union olsr_ip_addr *,
+                            const union olsr_ip_addr *, int, int,
+                            const char *);
 
 #endif

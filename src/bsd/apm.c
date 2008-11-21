@@ -43,16 +43,19 @@
 #include <stdio.h>
 #include <string.h>
 
-int apm_init(void)
+int
+apm_init (void)
 {
   return -1;
 }
 
-void apm_printinfo(struct olsr_apm_info *ApmInfo __attribute__((unused)))
+void
+apm_printinfo (struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
 }
 
-int apm_read(struct olsr_apm_info *ApmInfo __attribute__((unused)))
+int
+apm_read (struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
   return -1;
 }

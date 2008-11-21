@@ -42,7 +42,7 @@
 #include "../defs.h"
 #include "../net_os.h"
 #include "../ipcalc.h"
-#include "../parser.h"		/* dnc: needed for call to packet_parser() */
+#include "../parser.h"          /* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
 
 #include <sys/types.h>
@@ -70,7 +70,6 @@
 #include <sys/param.h>
 #endif
 
-
 #ifdef __NetBSD__
 #include <net/if_ether.h>
 #endif
@@ -82,7 +81,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp_var.h>
 #include <netinet/icmp6.h>
-#include <netinet6/in6_var.h>	/* For struct in6_ifreq */
+#include <netinet6/in6_var.h>   /* For struct in6_ifreq */
 #include <ifaddrs.h>
 #include <sys/uio.h>
 #include <net80211/ieee80211.h>
@@ -113,7 +112,7 @@
 #endif /* SPOOF */
 
 #if 0
-#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
+#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)    /* generic IF get op */
 #define SIOCGWAVELAN SIOCGIFGENERIC
 #endif
 
@@ -124,13 +123,13 @@ static int send_redir;
 static int gateway;
 
 static int
-set_sysctl_int(const char *name, int new)
+set_sysctl_int (const char *name, int new)
 {
   int old;
 #if __MacOSX__ || __OpenBSD__
-  size_t len = sizeof(old);
+  size_t len = sizeof (old);
 #else
-  unsigned int len = sizeof(old);
+  unsigned int len = sizeof (old);
 #endif
 
 #ifdef __OpenBSD__
@@ -142,28 +141,37 @@ set_sysctl_int(const char *name, int new)
   mib[2] = IPPROTO_IP;
   mib[3] = IPCTL_FORWARDING;
 
-  if (!strcmp(name, "net.inet6.ip6.forwarding")) {
-    mib[1] = PF_INET6;
-    mib[2] = IPPROTO_IPV6;
-  } else if (!strcmp(name, "net.inet.icmp.rediraccept")) {
-    mib[2] = IPPROTO_ICMP;
-    mib[3] = ICMPCTL_REDIRACCEPT;
-  } else if (!strcmp(name, "net.inet6.icmp6.rediraccept")) {
-    mib[2] = IPPROTO_ICMPV6;
-    mib[3] = ICMPV6CTL_REDIRACCEPT;
-  } else if (!strcmp(name, "net.inet.ip.redirect")) {
-    mib[3] = IPCTL_SENDREDIRECTS;
-  } else if (!strcmp(name, "net.inet6.ip6.redirect")) {
-    mib[1] = PF_INET6;
-    mib[2] = IPPROTO_IPV6;
-    mib[3] = IPCTL_SENDREDIRECTS;
-  }
+  if (!strcmp (name, "net.inet6.ip6.forwarding"))
+    {
+      mib[1] = PF_INET6;
+      mib[2] = IPPROTO_IPV6;
+    }
+  else if (!strcmp (name, "net.inet.icmp.rediraccept"))
+    {
+      mib[2] = IPPROTO_ICMP;
+      mib[3] = ICMPCTL_REDIRACCEPT;
+    }
+  else if (!strcmp (name, "net.inet6.icmp6.rediraccept"))
+    {
+      mib[2] = IPPROTO_ICMPV6;
+      mib[3] = ICMPV6CTL_REDIRACCEPT;
+    }
+  else if (!strcmp (name, "net.inet.ip.redirect"))
+    {
+      mib[3] = IPCTL_SENDREDIRECTS;
+    }
+  else if (!strcmp (name, "net.inet6.ip6.redirect"))
+    {
+      mib[1] = PF_INET6;
+      mib[2] = IPPROTO_IPV6;
+      mib[3] = IPCTL_SENDREDIRECTS;
+    }
 
-  if (sysctl(mib, 4, &old, &len, &new, sizeof(new)) < 0)
+  if (sysctl (mib, 4, &old, &len, &new, sizeof (new)) < 0)
     return -1;
 #else
 
-  if (sysctlbyname((const char *)name, &old, &len, &new, sizeof(new)) < 0)
+  if (sysctlbyname ((const char *) name, &old, &len, &new, sizeof (new)) < 0)
     return -1;
 #endif
 
@@ -171,24 +179,26 @@ set_sysctl_int(const char *name, int new)
 }
 
 int
-enable_ip_forwarding(int version)
+enable_ip_forwarding (int version)
 {
   const char *name =
-    version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+    version ==
+    AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
-  gateway = set_sysctl_int(name, 1);
-  if (gateway < 0) {
-    fprintf(stderr,
-	    "Cannot enable IP forwarding. Please enable IP forwarding manually."
-            " Continuing in 3 seconds...\n");
-    sleep(3);
-  }
+  gateway = set_sysctl_int (name, 1);
+  if (gateway < 0)
+    {
+      fprintf (stderr,
+               "Cannot enable IP forwarding. Please enable IP forwarding manually."
+               " Continuing in 3 seconds...\n");
+      sleep (3);
+    }
 
   return 1;
 }
 
 int
-disable_redirects_global(int version)
+disable_redirects_global (int version)
 {
   const char *name;
 
@@ -200,30 +210,34 @@ disable_redirects_global(int version)
   else
     name = "net.inet6.icmp6.rediraccept";
 
-  ignore_redir = set_sysctl_int(name, 0);
+  ignore_redir = set_sysctl_int (name, 0);
 #elif defined __FreeBSD__ || defined __MacOSX__
-  if (version == AF_INET) {
-    name = "net.inet.icmp.drop_redirect";
-    ignore_redir = set_sysctl_int(name, 1);
-  } else {
-    name = "net.inet6.icmp6.rediraccept";
-    ignore_redir = set_sysctl_int(name, 0);
-  }
+  if (version == AF_INET)
+    {
+      name = "net.inet.icmp.drop_redirect";
+      ignore_redir = set_sysctl_int (name, 1);
+    }
+  else
+    {
+      name = "net.inet6.icmp6.rediraccept";
+      ignore_redir = set_sysctl_int (name, 0);
+    }
 #else
   if (version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
   else
     name = "net.inet6.icmp6.drop_redirect";
 
-  ignore_redir = set_sysctl_int(name, 1);
+  ignore_redir = set_sysctl_int (name, 1);
 #endif
 
-  if (ignore_redir < 0) {
-    fprintf(stderr,
-	    "Cannot disable incoming ICMP redirect messages. "
-            "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
-  }
+  if (ignore_redir < 0)
+    {
+      fprintf (stderr,
+               "Cannot disable incoming ICMP redirect messages. "
+               "Please disable them manually. Continuing in 3 seconds...\n");
+      sleep (3);
+    }
 
   /* do not send ICMP redirects */
 
@@ -232,22 +246,23 @@ disable_redirects_global(int version)
   else
     name = "net.inet6.ip6.redirect";
 
-  send_redir = set_sysctl_int(name, 0);
-  if (send_redir < 0) {
-    fprintf(stderr,
-	    "Cannot disable outgoing ICMP redirect messages. "
-            "Please disable them manually. Continuing in 3 seconds...\n");
-    sleep(3);
-  }
+  send_redir = set_sysctl_int (name, 0);
+  if (send_redir < 0)
+    {
+      fprintf (stderr,
+               "Cannot disable outgoing ICMP redirect messages. "
+               "Please disable them manually. Continuing in 3 seconds...\n");
+      sleep (3);
+    }
 
   return 1;
 }
 
 int
-disable_redirects(const char *if_name
-		  __attribute__ ((unused)), struct interface *iface
-		  __attribute__ ((unused)), int version
-		  __attribute__ ((unused)))
+disable_redirects (const char *if_name
+                   __attribute__ ((unused)), struct interface *iface
+                   __attribute__ ((unused)), int version
+                   __attribute__ ((unused)))
 {
   /*
    *  this function gets called for each interface olsrd uses; however,
@@ -259,21 +274,23 @@ disable_redirects(const char *if_name
 }
 
 int
-deactivate_spoof(const char *if_name
-		 __attribute__ ((unused)), struct interface *iface
-		 __attribute__ ((unused)), int version __attribute__ ((unused)))
+deactivate_spoof (const char *if_name
+                  __attribute__ ((unused)), struct interface *iface
+                  __attribute__ ((unused)), int version
+                  __attribute__ ((unused)))
 {
   return 1;
 }
 
 int
-restore_settings(int version)
+restore_settings (int version)
 {
   /* reset IP forwarding */
   const char *name =
-    version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+    version ==
+    AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
-  set_sysctl_int(name, gateway);
+  set_sysctl_int (name, gateway);
 
   /* reset incoming ICMP redirects */
 
@@ -290,14 +307,14 @@ restore_settings(int version)
     version ==
     AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
 #endif
-  set_sysctl_int(name, ignore_redir);
+  set_sysctl_int (name, ignore_redir);
 
   /* reset outgoing ICMP redirects */
-  name = version == AF_INET ? "net.inet.ip.redirect" : "net.inet6.ip6.redirect";
-  set_sysctl_int(name, send_redir);
+  name =
+    version == AF_INET ? "net.inet.ip.redirect" : "net.inet6.ip6.redirect";
+  set_sysctl_int (name, send_redir);
   return 1;
 }
-
 
 /**
  *Creates a nonblocking broadcast socket.
@@ -305,184 +322,216 @@ restore_settings(int version)
  *@return the FD of the socket or -1 on error.
  */
 int
-gethemusocket(struct sockaddr_in *pin)
+gethemusocket (struct sockaddr_in *pin)
 {
   int sock, on = 1;
 
-  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+  OLSR_PRINTF (1, "       Connecting to switch daemon port 10150...");
 
+  if ((sock = socket (AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+      perror ("hcsocket");
+      syslog (LOG_ERR, "hcsocket: %m");
+      return (-1);
+    }
 
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("hcsocket");
-    syslog(LOG_ERR, "hcsocket: %m");
-    return (-1);
-  }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
-    close(sock);
-    return (-1);
-  }
+  if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("SO_REUSEADDR failed");
+      close (sock);
+      return (-1);
+    }
   /* connect to PORT on HOST */
-  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
-    printf("FAILED\n");
-    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
-    printf("connection refused\n");
-    close(sock);
-    return (-1);
-  }
+  if (connect (sock, (struct sockaddr *) pin, sizeof (*pin)) < 0)
+    {
+      printf ("FAILED\n");
+      fprintf (stderr, "Error connecting %d - %s\n", errno, strerror (errno));
+      printf ("connection refused\n");
+      close (sock);
+      return (-1);
+    }
 
-  printf("OK\n");
+  printf ("OK\n");
 
   /* Keep TCP socket blocking */
   return (sock);
 }
 
-
 int
-getsocket(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket (int bufspace, char *int_name __attribute__ ((unused)))
 {
   struct sockaddr_in sin;
   int on;
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return -1;
-  }
+  int sock = socket (AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0)
+    {
+      perror ("socket");
+      syslog (LOG_ERR, "socket: %m");
+      return -1;
+    }
 
   on = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on)) < 0) {
-    perror("setsockopt");
-    syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
-    close(sock);
-    return -1;
-  }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
-    close(sock);
-    return -1;
-  }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEPORT failed");
-    close(sock);
-    return -1;
-  }
-
-  if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, (char *)&on, sizeof(on)) < 0) {
-    perror("IP_RECVIF failed");
-    close(sock);
-    return -1;
-  }
-
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if (setsockopt (sock, SOL_SOCKET, SO_BROADCAST, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("setsockopt");
+      syslog (LOG_ERR, "setsockopt SO_BROADCAST: %m");
+      close (sock);
+      return -1;
     }
-  }
 
-  memset(&sin, 0, sizeof(sin));
+  if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("SO_REUSEADDR failed");
+      close (sock);
+      return -1;
+    }
+
+  if (setsockopt (sock, SOL_SOCKET, SO_REUSEPORT, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("SO_REUSEPORT failed");
+      close (sock);
+      return -1;
+    }
+
+  if (setsockopt (sock, IPPROTO_IP, IP_RECVIF, (char *) &on, sizeof (on)) < 0)
+    {
+      perror ("IP_RECVIF failed");
+      close (sock);
+      return -1;
+    }
+
+  for (on = bufspace;; on -= 1024)
+    {
+      if (setsockopt (sock, SOL_SOCKET, SO_RCVBUF, (char *) &on, sizeof (on))
+          == 0)
+        break;
+      if (on <= 8 * 1024)
+        {
+          perror ("setsockopt");
+          syslog (LOG_ERR, "setsockopt SO_RCVBUF: %m");
+          break;
+        }
+    }
+
+  memset (&sin, 0, sizeof (sin));
   sin.sin_family = AF_INET;
-  sin.sin_port = htons(OLSRPORT);
+  sin.sin_port = htons (OLSRPORT);
   sin.sin_addr.s_addr = INADDR_ANY;
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
-    close(sock);
-    return -1;
-  }
-
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+  if (bind (sock, (struct sockaddr *) &sin, sizeof (sin)) < 0)
+    {
+      perror ("bind");
+      syslog (LOG_ERR, "bind: %m");
+      close (sock);
+      return -1;
     }
-  }
+
+  on = fcntl (sock, F_GETFL);
+  if (on == -1)
+    {
+      syslog (LOG_ERR, "fcntl (F_GETFL): %m\n");
+    }
+  else
+    {
+      if (fcntl (sock, F_SETFL, on | O_NONBLOCK) == -1)
+        {
+          syslog (LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+        }
+    }
   return (sock);
 }
 
 int
-getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
+getsocket6 (int bufspace, char *int_name __attribute__ ((unused)))
 {
   struct sockaddr_in6 sin;
   int on;
-  int sock = socket(AF_INET6, SOCK_DGRAM, 0);
+  int sock = socket (AF_INET6, SOCK_DGRAM, 0);
 
-  if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return -1;
-  }
-
-  for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
-      break;
-    if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
-      break;
+  if (sock < 0)
+    {
+      perror ("socket");
+      syslog (LOG_ERR, "socket: %m");
+      return -1;
     }
-  }
 
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
-    close(sock);
-    return -1;
-  }
+  for (on = bufspace;; on -= 1024)
+    {
+      if (setsockopt (sock, SOL_SOCKET, SO_RCVBUF, (char *) &on, sizeof (on))
+          == 0)
+        break;
+      if (on <= 8 * 1024)
+        {
+          perror ("setsockopt");
+          syslog (LOG_ERR, "setsockopt SO_RCVBUF: %m");
+          break;
+        }
+    }
 
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEPORT failed");
-    close(sock);
-    return -1;
-  }
+  if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("SO_REUSEADDR failed");
+      close (sock);
+      return -1;
+    }
+
+  if (setsockopt (sock, SOL_SOCKET, SO_REUSEPORT, (char *) &on, sizeof (on)) <
+      0)
+    {
+      perror ("SO_REUSEPORT failed");
+      close (sock);
+      return -1;
+    }
 #ifdef IPV6_RECVPKTINFO
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, (char *)&on, sizeof(on))
-      < 0) {
-    perror("IPV6_RECVPKTINFO failed");
-    close(sock);
-    return -1;
-  }
+  if (setsockopt
+      (sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, (char *) &on, sizeof (on)) < 0)
+    {
+      perror ("IPV6_RECVPKTINFO failed");
+      close (sock);
+      return -1;
+    }
 #elif defined IPV6_PKTINFO
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on, sizeof(on)) < 0) {
-    perror("IPV6_PKTINFO failed");
-    close(sock);
-    return -1;
-  }
+  if (setsockopt (sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *) &on, sizeof (on))
+      < 0)
+    {
+      perror ("IPV6_PKTINFO failed");
+      close (sock);
+      return -1;
+    }
 #endif
 
-  memset(&sin, 0, sizeof(sin));
+  memset (&sin, 0, sizeof (sin));
   sin.sin6_family = AF_INET6;
-  sin.sin6_port = htons(OLSRPORT);
-  if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
-    close(sock);
-    return -1;
-  }
-
-  on = fcntl(sock, F_GETFL);
-  if (on == -1) {
-    syslog(LOG_ERR, "fcntl (F_GETFL): %m\n");
-  } else {
-    if (fcntl(sock, F_SETFL, on | O_NONBLOCK) == -1) {
-      syslog(LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+  sin.sin6_port = htons (OLSRPORT);
+  if (bind (sock, (struct sockaddr *) &sin, sizeof (sin)) < 0)
+    {
+      perror ("bind");
+      syslog (LOG_ERR, "bind: %m");
+      close (sock);
+      return -1;
     }
-  }
+
+  on = fcntl (sock, F_GETFL);
+  if (on == -1)
+    {
+      syslog (LOG_ERR, "fcntl (F_GETFL): %m\n");
+    }
+  else
+    {
+      if (fcntl (sock, F_SETFL, on | O_NONBLOCK) == -1)
+        {
+          syslog (LOG_ERR, "fcntl O_NONBLOCK: %m\n");
+        }
+    }
   return sock;
 }
 
-
-
 int
-join_mcast(struct interface *ifs, int sock)
+join_mcast (struct interface *ifs, int sock)
 {
   /* See netinet6/in6.h */
   struct ipaddr_str addrstr;
@@ -491,50 +540,43 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name,
-	      olsr_ip_to_string(&addrstr,
-				(union olsr_ip_addr *)&ifs->int6_multaddr.
-				sin6_addr));
+  OLSR_PRINTF (3, "Interface %s joining multicast %s...", ifs->int_name,
+               olsr_ip_to_string (&addrstr,
+                                  (union olsr_ip_addr *) &ifs->int6_multaddr.
+                                  sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
-      < 0)
+  if (setsockopt
+      (sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *) &mcastreq,
+       sizeof (struct ipv6_mreq)) < 0)
 #else /* rfc 2133, obsoleted */
   /* Join receiver group */
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_ADD_MEMBERSHIP,
-		 (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
+  if (setsockopt
+      (sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *) &mcastreq,
+       sizeof (struct ipv6_mreq)) < 0)
 #endif
-  {
-    perror("Join multicast send");
-    return -1;
-  }
+    {
+      perror ("Join multicast send");
+      return -1;
+    }
 
+  if (setsockopt
+      (sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+       (char *) &mcastreq.ipv6mr_interface,
+       sizeof (mcastreq.ipv6mr_interface)) < 0)
+    {
+      perror ("Set multicast if");
+      return -1;
+    }
 
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_MULTICAST_IF,
-		 (char *)&mcastreq.ipv6mr_interface,
-		 sizeof(mcastreq.ipv6mr_interface)) < 0) {
-    perror("Set multicast if");
-    return -1;
-  }
-
-
-  OLSR_PRINTF(3, "OK\n");
+  OLSR_PRINTF (3, "OK\n");
   return 0;
 }
 
-
-
-
 int
-get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
+get_ipv6_address (char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 {
   struct ifaddrs *ifap, *ifa;
   const struct sockaddr_in6 *sin6 = NULL;
@@ -543,56 +585,65 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
   int s6;
   u_int32_t flags6;
 
-  if (getifaddrs(&ifap) != 0) {
-    OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n");
-    return 0;
-  }
-
-  for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-    if ((ifa->ifa_addr->sa_family == AF_INET6) &&
-	(strcmp(ifa->ifa_name, ifname) == 0)) {
-      sin6 = (const struct sockaddr_in6 *)(ifa->ifa_addr);
-      if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
-	continue;
-      strscpy(ifr6.ifr_name, ifname, sizeof(ifr6.ifr_name));
-      if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-	OLSR_PRINTF(3, "socket(AF_INET6,SOCK_DGRAM)");
-	break;
-      }
-      ifr6.ifr_addr = *sin6;
-      if (ioctl(s6, SIOCGIFAFLAG_IN6, (int)&ifr6) < 0) {
-	OLSR_PRINTF(3, "ioctl(SIOCGIFAFLAG_IN6)");
-	close(s6);
-	break;
-      }
-      close(s6);
-      flags6 = ifr6.ifr_ifru.ifru_flags6;
-      if ((flags6 & IN6_IFF_ANYCAST) != 0)
-	continue;
-      if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)) {
-	if (scope_in) {
-	  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-	  found = 1;
-	  break;
-	}
-      } else {
-	if (scope_in == 0) {
-	  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-	  found = 1;
-	  break;
-	}
-      }
+  if (getifaddrs (&ifap) != 0)
+    {
+      OLSR_PRINTF (3, "get_ipv6_address: getifaddrs() failed.\n");
+      return 0;
     }
-  }
-  freeifaddrs(ifap);
+
+  for (ifa = ifap; ifa; ifa = ifa->ifa_next)
+    {
+      if ((ifa->ifa_addr->sa_family == AF_INET6)
+          && (strcmp (ifa->ifa_name, ifname) == 0))
+        {
+          sin6 = (const struct sockaddr_in6 *) (ifa->ifa_addr);
+          if (IN6_IS_ADDR_LINKLOCAL (&sin6->sin6_addr))
+            continue;
+          strscpy (ifr6.ifr_name, ifname, sizeof (ifr6.ifr_name));
+          if ((s6 = socket (AF_INET6, SOCK_DGRAM, 0)) < 0)
+            {
+              OLSR_PRINTF (3, "socket(AF_INET6,SOCK_DGRAM)");
+              break;
+            }
+          ifr6.ifr_addr = *sin6;
+          if (ioctl (s6, SIOCGIFAFLAG_IN6, (int) &ifr6) < 0)
+            {
+              OLSR_PRINTF (3, "ioctl(SIOCGIFAFLAG_IN6)");
+              close (s6);
+              break;
+            }
+          close (s6);
+          flags6 = ifr6.ifr_ifru.ifru_flags6;
+          if ((flags6 & IN6_IFF_ANYCAST) != 0)
+            continue;
+          if (IN6_IS_ADDR_SITELOCAL (&sin6->sin6_addr))
+            {
+              if (scope_in)
+                {
+                  memcpy (&saddr6->sin6_addr, &sin6->sin6_addr,
+                          sizeof (struct in6_addr));
+                  found = 1;
+                  break;
+                }
+            }
+          else
+            {
+              if (scope_in == 0)
+                {
+                  memcpy (&saddr6->sin6_addr, &sin6->sin6_addr,
+                          sizeof (struct in6_addr));
+                  found = 1;
+                  break;
+                }
+            }
+        }
+    }
+  freeifaddrs (ifap);
   if (found)
     return 1;
 
   return 0;
 }
-
-
-
 
 /**
  * Wrapper for sendto(2)
@@ -603,11 +654,9 @@ static u_int16_t ip_id = 0;
 #endif /* SPOOF */
 
 ssize_t
-olsr_sendto(int s,
-	    const void *buf,
-	    size_t len,
-	    int flags __attribute__ ((unused)),
-	    const struct sockaddr *to, socklen_t tolen)
+olsr_sendto (int s, const void *buf, size_t len, int flags
+             __attribute__ ((unused)), const struct sockaddr *to,
+             socklen_t tolen)
 {
 #ifdef SPOOF
   /* IPv4 for now! */
@@ -617,106 +666,110 @@ olsr_sendto(int s,
   libnet_ptag_t udp_tag, ip_tag, ether_tag;
   unsigned char enet_broadcast[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
   int status;
-  struct sockaddr_in *to_in = (struct sockaddr_in *)to;
+  struct sockaddr_in *to_in = (struct sockaddr_in *) to;
   u_int32_t destip;
   struct interface *iface;
 
   udp_tag = ip_tag = ether_tag = 0;
   destip = to_in->sin_addr.s_addr;
-  iface = if_ifwithsock(s);
+  iface = if_ifwithsock (s);
 
   /* initialize libnet */
-  context = libnet_init(LIBNET_LINK, iface->int_name, errbuf);
-  if (context == NULL) {
-    OLSR_PRINTF(1, "libnet init: %s\n", libnet_geterror(context));
-    return (0);
-  }
+  context = libnet_init (LIBNET_LINK, iface->int_name, errbuf);
+  if (context == NULL)
+    {
+      OLSR_PRINTF (1, "libnet init: %s\n", libnet_geterror (context));
+      return (0);
+    }
 
   /* initialize IP ID field if necessary */
-  if (ip_id == 0) {
-    ip_id = (u_int16_t) (arc4random() & 0xffff);
-  }
+  if (ip_id == 0)
+    {
+      ip_id = (u_int16_t) (arc4random () & 0xffff);
+    }
 
-  udp_tag = libnet_build_udp(698,	/* src port */
-			     698,	/* dest port */
-			     LIBNET_UDP_H + len,	/* length */
-			     0,	/* checksum */
-			     buf,	/* payload */
-			     len,	/* payload size */
-			     context,	/* context */
-			     udp_tag);	/* pblock */
-  if (udp_tag == -1) {
-    OLSR_PRINTF(1, "libnet UDP header: %s\n", libnet_geterror(context));
-    return (0);
-  }
+  udp_tag = libnet_build_udp (698,      /* src port */
+                              698,      /* dest port */
+                              LIBNET_UDP_H + len,       /* length */
+                              0,        /* checksum */
+                              buf,      /* payload */
+                              len,      /* payload size */
+                              context,  /* context */
+                              udp_tag); /* pblock */
+  if (udp_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet UDP header: %s\n", libnet_geterror (context));
+      return (0);
+    }
 
-  ip_tag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + len,	/* len */
-			     0,	/* TOS */
-			     ip_id++,	/* IP id */
-			     0,	/* IP frag */
-			     1,	/* IP TTL */
-			     IPPROTO_UDP,	/* protocol */
-			     0,	/* checksum */
-			     libnet_get_ipaddr4(context),	/* src IP */
-			     destip,	/* dest IP */
-			     NULL,	/* payload */
-			     0,	/* payload len */
-			     context,	/* context */
-			     ip_tag);	/* pblock */
-  if (ip_tag == -1) {
-    OLSR_PRINTF(1, "libnet IP header: %s\n", libnet_geterror(context));
-    return (0);
-  }
+  ip_tag = libnet_build_ipv4 (LIBNET_IPV4_H + LIBNET_UDP_H + len,       /* len */
+                              0,        /* TOS */
+                              ip_id++,  /* IP id */
+                              0,        /* IP frag */
+                              1,        /* IP TTL */
+                              IPPROTO_UDP,      /* protocol */
+                              0,        /* checksum */
+                              libnet_get_ipaddr4 (context),     /* src IP */
+                              destip,   /* dest IP */
+                              NULL,     /* payload */
+                              0,        /* payload len */
+                              context,  /* context */
+                              ip_tag);  /* pblock */
+  if (ip_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet IP header: %s\n", libnet_geterror (context));
+      return (0);
+    }
 
-  ether_tag = libnet_build_ethernet(enet_broadcast,	/* ethernet dest */
-				    libnet_get_hwaddr(context),	/* ethernet source */
-				    ETHERTYPE_IP,	/* protocol type */
-				    NULL,	/* payload */
-				    0,	/* payload size */
-				    context,	/* libnet handle */
-				    ether_tag);	/* pblock tag */
-  if (ether_tag == -1) {
-    OLSR_PRINTF(1, "libnet ethernet header: %s\n", libnet_geterror(context));
-    return (0);
-  }
+  ether_tag = libnet_build_ethernet (enet_broadcast,    /* ethernet dest */
+                                     libnet_get_hwaddr (context),       /* ethernet source */
+                                     ETHERTYPE_IP,      /* protocol type */
+                                     NULL,      /* payload */
+                                     0, /* payload size */
+                                     context,   /* libnet handle */
+                                     ether_tag);        /* pblock tag */
+  if (ether_tag == -1)
+    {
+      OLSR_PRINTF (1, "libnet ethernet header: %s\n",
+                   libnet_geterror (context));
+      return (0);
+    }
 
-  status = libnet_write(context);
-  if (status == -1) {
-    OLSR_PRINTF(1, "libnet packet write: %s\n", libnet_geterror(context));
-    return (0);
-  }
+  status = libnet_write (context);
+  if (status == -1)
+    {
+      OLSR_PRINTF (1, "libnet packet write: %s\n", libnet_geterror (context));
+      return (0);
+    }
 
-  libnet_destroy(context);
+  libnet_destroy (context);
 
   return (len);
 
 #else
-  return sendto(s, buf, len, flags, (const struct sockaddr *)to,
-		tolen);
+  return sendto (s, buf, len, flags, (const struct sockaddr *) to, tolen);
 #endif
 }
-
 
 /**
  * Wrapper for recvfrom(2)
  */
 
 ssize_t
-olsr_recvfrom(int s,
-	      void *buf,
-	      size_t len,
-	      int flags __attribute__ ((unused)),
-	      struct sockaddr *from, socklen_t * fromlen)
+olsr_recvfrom (int s, void *buf, size_t len, int flags
+               __attribute__ ((unused)), struct sockaddr *from,
+               socklen_t * fromlen)
 {
   struct msghdr mhdr;
   struct iovec iov;
-  union {
+  union
+  {
     struct cmsghdr cmsg;
     unsigned char chdr[4096];
   } cmu;
   struct cmsghdr *cm;
   struct sockaddr_dl *sdl;
-  struct sockaddr_in *sin = (struct sockaddr_in *)from;
+  struct sockaddr_in *sin = (struct sockaddr_in *) from;
   struct sockaddr_in6 *sin6;
   struct in6_addr *iaddr6;
   struct in6_pktinfo *pkti;
@@ -725,56 +778,63 @@ olsr_recvfrom(int s,
   char iname[IFNAMSIZ];
   int count;
 
-  memset(&mhdr, 0, sizeof(mhdr));
-  memset(&iov, 0, sizeof(iov));
+  memset (&mhdr, 0, sizeof (mhdr));
+  memset (&iov, 0, sizeof (iov));
 
   mhdr.msg_name = (caddr_t) from;
   mhdr.msg_namelen = *fromlen;
   mhdr.msg_iov = &iov;
   mhdr.msg_iovlen = 1;
   mhdr.msg_control = (caddr_t) & cmu;
-  mhdr.msg_controllen = sizeof(cmu);
+  mhdr.msg_controllen = sizeof (cmu);
 
   iov.iov_len = len;
   iov.iov_base = buf;
 
-  count = recvmsg(s, &mhdr, MSG_DONTWAIT);
-  if (count <= 0) {
-    return (count);
-  }
+  count = recvmsg (s, &mhdr, MSG_DONTWAIT);
+  if (count <= 0)
+    {
+      return (count);
+    }
 
   /* this needs to get communicated back to caller */
   *fromlen = mhdr.msg_namelen;
-  if (olsr_cnf->ip_version == AF_INET6) {
-    for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(&mhdr); cm;
-	 cm = (struct cmsghdr *)CMSG_NXTHDR(&mhdr, cm)) {
-      if (cm->cmsg_level == IPPROTO_IPV6 && cm->cmsg_type == IPV6_PKTINFO) {
-	pkti = (struct in6_pktinfo *)CMSG_DATA(cm);
-	iaddr6 = &pkti->ipi6_addr;
-	if_indextoname(pkti->ipi6_ifindex, iname);
-      }
+  if (olsr_cnf->ip_version == AF_INET6)
+    {
+      for (cm = (struct cmsghdr *) CMSG_FIRSTHDR (&mhdr); cm;
+           cm = (struct cmsghdr *) CMSG_NXTHDR (&mhdr, cm))
+        {
+          if (cm->cmsg_level == IPPROTO_IPV6 && cm->cmsg_type == IPV6_PKTINFO)
+            {
+              pkti = (struct in6_pktinfo *) CMSG_DATA (cm);
+              iaddr6 = &pkti->ipi6_addr;
+              if_indextoname (pkti->ipi6_ifindex, iname);
+            }
+        }
     }
-  } else {
-    cm = &cmu.cmsg;
-    sdl = (struct sockaddr_dl *)CMSG_DATA(cm);
-    memset(iname, 0, sizeof(iname));
-    memcpy(iname, sdl->sdl_data, sdl->sdl_nlen);
-  }
+  else
+    {
+      cm = &cmu.cmsg;
+      sdl = (struct sockaddr_dl *) CMSG_DATA (cm);
+      memset (iname, 0, sizeof (iname));
+      memcpy (iname, sdl->sdl_data, sdl->sdl_nlen);
+    }
 
-  ifc = if_ifwithsock(s);
+  ifc = if_ifwithsock (s);
 
-  sin6 = (struct sockaddr_in6 *)from;
-  OLSR_PRINTF(4,
-	      "%d bytes from %s, socket associated %s really received on %s\n",
-	      count, inet_ntop(olsr_cnf->ip_version,
-			       olsr_cnf->ip_version ==
-			       AF_INET6 ? (char *)&sin6->
-			       sin6_addr : (char *)&sin->sin_addr, addrstr,
-			       sizeof(addrstr)), ifc->int_name, iname);
+  sin6 = (struct sockaddr_in6 *) from;
+  OLSR_PRINTF (4,
+               "%d bytes from %s, socket associated %s really received on %s\n",
+               count, inet_ntop (olsr_cnf->ip_version,
+                                 olsr_cnf->ip_version ==
+                                 AF_INET6 ? (char *) &sin6->
+                                 sin6_addr : (char *) &sin->sin_addr, addrstr,
+                                 sizeof (addrstr)), ifc->int_name, iname);
 
-  if (strcmp(ifc->int_name, iname) != 0) {
-    return (0);
-  }
+  if (strcmp (ifc->int_name, iname) != 0)
+    {
+      return (0);
+    }
 
   return (count);
 }
@@ -784,16 +844,14 @@ olsr_recvfrom(int s,
  */
 
 int
-olsr_select(int nfds,
-	    fd_set * readfds,
-	    fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
+olsr_select (int nfds, fd_set * readfds, fd_set * writefds,
+             fd_set * exceptfds, struct timeval *timeout)
 {
-  return select(nfds, readfds, writefds, exceptfds, timeout);
+  return select (nfds, readfds, writefds, exceptfds, timeout);
 }
 
-
 int
-check_wireless_interface(char *ifname)
+check_wireless_interface (char *ifname)
 {
 #if defined __FreeBSD__ &&  !defined FBSD_NO_80211
 
@@ -801,19 +859,19 @@ check_wireless_interface(char *ifname)
   struct ieee80211req ireq;
   u_int8_t data[32];
 
-  memset(&ireq, 0, sizeof(ireq));
-  strlcpy(ireq.i_name, ifname, sizeof(ireq.i_name));
+  memset (&ireq, 0, sizeof (ireq));
+  strlcpy (ireq.i_name, ifname, sizeof (ireq.i_name));
   ireq.i_data = &data;
   ireq.i_type = IEEE80211_IOC_SSID;
   ireq.i_val = -1;
-  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
+  return (ioctl (olsr_cnf->ioctl_s, SIOCG80211, &ireq) >= 0) ? 1 : 0;
 #elif defined __OpenBSD__
   struct ieee80211_nodereq nr;
-  bzero(&nr, sizeof(nr));
-  strlcpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
-  return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >= 0) ? 1 : 0;
+  bzero (&nr, sizeof (nr));
+  strlcpy (nr.nr_ifname, ifname, sizeof (nr.nr_ifname));
+  return (ioctl (olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >= 0) ? 1 : 0;
 #else
-  ifname = NULL;		/* squelsh compiler warning */
+  ifname = NULL;                /* squelsh compiler warning */
   return 0;
 #endif
 }
@@ -821,27 +879,31 @@ check_wireless_interface(char *ifname)
 #include <sys/sockio.h>
 
 int
-calculate_if_metric(char *ifname)
+calculate_if_metric (char *ifname)
 {
-  if (check_wireless_interface(ifname)) {
-    /* Wireless */
-    return 1;
-  } else {
-    /* Ethernet */
+  if (check_wireless_interface (ifname))
+    {
+      /* Wireless */
+      return 1;
+    }
+  else
+    {
+      /* Ethernet */
 #if 0
-    /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
-    struct ifmediareq ifm;
+      /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
+      struct ifmediareq ifm;
 
-    memset(&ifm, 0, sizeof(ifm));
-    strlcpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
+      memset (&ifm, 0, sizeof (ifm));
+      strlcpy (ifm.ifm_name, ifname, sizeof (ifm.ifm_name));
 
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0) {
-      OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+      if (ioctl (olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0)
+        {
+          OLSR_PRINTF (1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+          return WEIGHT_ETHERNET_DEFAULT;
+        }
+
+      OLSR_PRINTF (1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
+#endif
       return WEIGHT_ETHERNET_DEFAULT;
     }
-
-    OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
-#endif
-    return WEIGHT_ETHERNET_DEFAULT;
-  }
 }

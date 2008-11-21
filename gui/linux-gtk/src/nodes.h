@@ -29,24 +29,16 @@
 #include <sys/time.h>
 //#include <time.h>
 
-
 struct timeval now;
 struct timeval hold_time_nodes; /* Timeout for all nodes */
 
 /* The node list */
 struct node nodes;
 
+struct node *insert_node (struct node *, olsr_u8_t);
 
-struct node *
-insert_node(struct node *, olsr_u8_t);
+int remove_node (struct node *);
 
+int remove_node_addr (union olsr_ip_addr *);
 
-int
-remove_node(struct node *);
-
-int
-remove_node_addr(union olsr_ip_addr *);
-
-double
-me_to_double(olsr_u8_t);
-
+double me_to_double (olsr_u8_t);

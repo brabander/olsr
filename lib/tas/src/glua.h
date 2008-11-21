@@ -39,10 +39,10 @@
  *
  */
 
-extern int lspToLua(const char *rootDir, const char *lspFileName,
-                    const char *workDir, const char *luaFileName);
-extern int luaToLex(char **errMsg, const char *workDir, const char *luaFileName,
-                    const char *lexFileName);
-extern int runLua(char **errMsg, struct connInfo *info, const char *workDir,
-                  const char *lexFileName, char **argList, void **session);
-extern void freeLuaSession(void *session);
+extern int lspToLua (const char *rootDir, const char *lspFileName,
+                     const char *workDir, const char *luaFileName);
+extern int luaToLex (char **errMsg, const char *workDir,
+                     const char *luaFileName, const char *lexFileName);
+extern int runLua (char **errMsg, struct connInfo *info, const char *workDir,
+                   const char *lexFileName, char **argList, void **session);
+extern void freeLuaSession (void *session);

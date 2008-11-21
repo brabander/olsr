@@ -66,7 +66,6 @@
 #include <stdarg.h>
 #include <signal.h>
 
-
 olsr_bool changes_topology;
 olsr_bool changes_neighborhood;
 olsr_bool changes_hna;
@@ -78,7 +77,7 @@ olsr_bool changes_force;
 
 struct pcf
 {
-  int (*function)(int, int, int);
+  int (*function) (int, int, int);
   struct pcf *next;
 };
 
@@ -91,9 +90,9 @@ union olsr_ip_addr all_zero;
  *Initialize the message sequence number as a random value
  */
 void
-init_msg_seqno(void)
+init_msg_seqno (void)
 {
-  message_seqno = random() & 0xFFFF;
+  message_seqno = random () & 0xFFFF;
 }
 
 /**
@@ -102,27 +101,25 @@ init_msg_seqno(void)
  *@return the seqno
  */
 olsr_u16_t
-get_msg_seqno(void)
+get_msg_seqno (void)
 {
   return message_seqno++;
 }
 
-
 void
-register_pcf(int (*f)(int, int, int))
+register_pcf (int (*f) (int, int, int))
 {
   struct pcf *new_pcf;
 
-  OLSR_PRINTF(1, "Registering pcf function\n");
+  OLSR_PRINTF (1, "Registering pcf function\n");
 
-  new_pcf = olsr_malloc(sizeof(struct pcf), "New PCF");
+  new_pcf = olsr_malloc (sizeof (struct pcf), "New PCF");
 
   new_pcf->function = f;
   new_pcf->next = pcf_list;
   pcf_list = new_pcf;
 
 }
-
 
 /**
  *Process changes in neighborhood or/and topology.
@@ -132,79 +129,79 @@ register_pcf(int (*f)(int, int, int))
  *@return 0
  */
 void
-olsr_process_changes(void)
+olsr_process_changes (void)
 {
   struct pcf *tmp_pc_list;
 
 #ifdef DEBUG
-  if(changes_neighborhood)
-    OLSR_PRINTF(3, "CHANGES IN NEIGHBORHOOD\n");
-  if(changes_topology)
-    OLSR_PRINTF(3, "CHANGES IN TOPOLOGY\n");
-  if(changes_hna)
-    OLSR_PRINTF(3, "CHANGES IN HNA\n");
+  if (changes_neighborhood)
+    OLSR_PRINTF (3, "CHANGES IN NEIGHBORHOOD\n");
+  if (changes_topology)
+    OLSR_PRINTF (3, "CHANGES IN TOPOLOGY\n");
+  if (changes_hna)
+    OLSR_PRINTF (3, "CHANGES IN HNA\n");
 #endif
 
-  if(!changes_force &&
-     2 <= olsr_cnf->lq_level &&
-     0 >= olsr_cnf->lq_dlimit)
+  if (!changes_force && 2 <= olsr_cnf->lq_level && 0 >= olsr_cnf->lq_dlimit)
     return;
 
-  if(!changes_neighborhood &&
-     !changes_topology &&
-     !changes_hna)
+  if (!changes_neighborhood && !changes_topology && !changes_hna)
     return;
 
-  if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
-  {
-      clear_console();
-      printf("       *** %s (%s on %s) ***\n", olsrd_version, build_date, build_host);
-  }
-
-  if (changes_neighborhood) {
-    if (olsr_cnf->lq_level < 1) {
-      olsr_calculate_mpr();
-    } else {
-      olsr_calculate_lq_mpr();
+  if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty (1))
+    {
+      clear_console ();
+      printf ("       *** %s (%s on %s) ***\n", olsrd_version, build_date,
+              build_host);
     }
-  }
+
+  if (changes_neighborhood)
+    {
+      if (olsr_cnf->lq_level < 1)
+        {
+          olsr_calculate_mpr ();
+        }
+      else
+        {
+          olsr_calculate_lq_mpr ();
+        }
+    }
 
   /* calculate the routing table */
-  if (changes_neighborhood || changes_topology || changes_hna) {
-    olsr_calculate_routing_table();
-  }
+  if (changes_neighborhood || changes_topology || changes_hna)
+    {
+      olsr_calculate_routing_table ();
+    }
 
   if (olsr_cnf->debug_level > 0)
     {
       if (olsr_cnf->debug_level > 2)
         {
-          olsr_print_mid_set();
+          olsr_print_mid_set ();
 
           if (olsr_cnf->debug_level > 3)
             {
-             if (olsr_cnf->debug_level > 8)
-               {
-                 olsr_print_duplicate_table();
-               }
-              olsr_print_hna_set();
+              if (olsr_cnf->debug_level > 8)
+                {
+                  olsr_print_duplicate_table ();
+                }
+              olsr_print_hna_set ();
             }
         }
 
 #if 1
-      olsr_print_link_set();
-      olsr_print_neighbor_table();
-      olsr_print_two_hop_neighbor_table();
-      olsr_print_tc_table();
+      olsr_print_link_set ();
+      olsr_print_neighbor_table ();
+      olsr_print_two_hop_neighbor_table ();
+      olsr_print_tc_table ();
 #endif
     }
 
-  for(tmp_pc_list = pcf_list;
-      tmp_pc_list != NULL;
-      tmp_pc_list = tmp_pc_list->next)
+  for (tmp_pc_list = pcf_list; tmp_pc_list != NULL;
+       tmp_pc_list = tmp_pc_list->next)
     {
-      tmp_pc_list->function(changes_neighborhood,
-			    changes_topology,
-			    changes_hna);
+      tmp_pc_list->function (changes_neighborhood, changes_topology,
+                             changes_hna);
     }
 
   changes_neighborhood = OLSR_FALSE;
@@ -217,14 +214,15 @@ olsr_process_changes(void)
  * Callback for the periodic route calculation.
  */
 void
-olsr_trigger_forced_update(void *unused __attribute__((unused))) {
+olsr_trigger_forced_update (void *unused __attribute__ ((unused)))
+{
 
   changes_force = OLSR_TRUE;
   changes_neighborhood = OLSR_TRUE;
   changes_topology = OLSR_TRUE;
   changes_hna = OLSR_TRUE;
 
-  olsr_process_changes();
+  olsr_process_changes ();
 }
 
 /**
@@ -233,61 +231,66 @@ olsr_trigger_forced_update(void *unused __attribute__((unused))) {
  *Also initalizes other variables
  */
 void
-olsr_init_tables(void)
+olsr_init_tables (void)
 {
   changes_topology = OLSR_FALSE;
   changes_neighborhood = OLSR_FALSE;
   changes_hna = OLSR_FALSE;
 
   /* Set avl tree comparator */
-  if (olsr_cnf->ipsize == 4) {
-    avl_comp_default = avl_comp_ipv4;
-    avl_comp_prefix_default = avl_comp_ipv4_prefix;
-  } else {
-    avl_comp_default = avl_comp_ipv6;
-    avl_comp_prefix_default = avl_comp_ipv6_prefix;
-  }
+  if (olsr_cnf->ipsize == 4)
+    {
+      avl_comp_default = avl_comp_ipv4;
+      avl_comp_prefix_default = avl_comp_ipv4_prefix;
+    }
+  else
+    {
+      avl_comp_default = avl_comp_ipv6;
+      avl_comp_prefix_default = avl_comp_ipv6_prefix;
+    }
 
   /* Initialize lq plugin set */
-  init_lq_handler_tree();
+  init_lq_handler_tree ();
 
   /* Initialize link set */
-  olsr_init_link_set();
+  olsr_init_link_set ();
 
   /* Initialize duplicate table */
-  olsr_init_duplicate_set();
+  olsr_init_duplicate_set ();
 
   /* Initialize neighbor table */
-  olsr_init_neighbor_table();
+  olsr_init_neighbor_table ();
 
   /* Initialize routing table */
-  olsr_init_routing_table();
+  olsr_init_routing_table ();
 
   /* Initialize two hop table */
-  olsr_init_two_hop_table();
+  olsr_init_two_hop_table ();
 
   /* Initialize topology */
-  olsr_init_tc();
+  olsr_init_tc ();
 
   /* Initialize mpr selector table */
-  olsr_init_mprs_set();
+  olsr_init_mprs_set ();
 
   /* Initialize MID set */
-  olsr_init_mid_set();
+  olsr_init_mid_set ();
 
   /* Initialize HNA set */
-  olsr_init_hna_set();
+  olsr_init_hna_set ();
 
 #if 0
   /* Initialize Layer 1/2 database */
-  olsr_initialize_layer12();
+  olsr_initialize_layer12 ();
 #endif
 
   /* Start periodic SPF and RIB recalculation */
-  if (olsr_cnf->lq_dinter > 0.0) {
-    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5,
-                     OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, 0);
-  }
+  if (olsr_cnf->lq_dinter > 0.0)
+    {
+      olsr_start_timer ((unsigned int) (olsr_cnf->lq_dinter * MSEC_PER_SEC),
+                        5, OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update,
+                        NULL, 0);
+    }
 }
 
 /**
@@ -301,8 +304,7 @@ olsr_init_tables(void)
  *@returns positive if forwarded
  */
 int
-olsr_forward_message(union olsr_message *m,
-		     union olsr_ip_addr *from_addr)
+olsr_forward_message (union olsr_message *m, union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
   struct neighbor_entry *neighbor;
@@ -315,38 +317,41 @@ olsr_forward_message(union olsr_message *m,
    * all older olsrd's have lq_fish enabled.
    */
   if (AF_INET == olsr_cnf->ip_version)
-  {
-    if (2 > m->v4.ttl || 255 < (int)m->v4.hopcnt + (int)m->v4.ttl) return 0;
-  }
+    {
+      if (2 > m->v4.ttl || 255 < (int) m->v4.hopcnt + (int) m->v4.ttl)
+        return 0;
+    }
   else
-  {
-    if (2 > m->v6.ttl || 255 < (int)m->v6.hopcnt + (int)m->v6.ttl) return 0;
-  }
+    {
+      if (2 > m->v6.ttl || 255 < (int) m->v6.hopcnt + (int) m->v6.ttl)
+        return 0;
+    }
 
   /* Lookup sender address */
-  src = mid_lookup_main_addr(from_addr);
-  if(!src)
+  src = mid_lookup_main_addr (from_addr);
+  if (!src)
     src = from_addr;
 
-  neighbor=olsr_lookup_neighbor_table(src);
-  if(!neighbor)
+  neighbor = olsr_lookup_neighbor_table (src);
+  if (!neighbor)
     return 0;
 
-  if(neighbor->status != SYM)
+  if (neighbor->status != SYM)
     return 0;
 
   /* Check MPR */
-  if(olsr_lookup_mprs_set(src) == NULL)
+  if (olsr_lookup_mprs_set (src) == NULL)
     {
 #ifdef DEBUG
       struct ipaddr_str buf;
-      OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(&buf, src));
+      OLSR_PRINTF (5, "Forward - sender %s not MPR selector\n",
+                   olsr_ip_to_string (&buf, src));
 #endif
       return 0;
     }
 
   /* Treat TTL hopcnt */
-  if(olsr_cnf->ip_version == AF_INET)
+  if (olsr_cnf->ip_version == AF_INET)
     {
       /* IPv4 */
       m->v4.hopcnt++;
@@ -360,80 +365,91 @@ olsr_forward_message(union olsr_message *m,
     }
 
   /* Update packet data */
-  msgsize = ntohs(m->v4.olsr_msgsize);
+  msgsize = ntohs (m->v4.olsr_msgsize);
 
   /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next)
+  for (ifn = ifnet; ifn; ifn = ifn->int_next)
     {
-      if(net_output_pending(ifn))
-	{
-	  /*
-	   * Check if message is to big to be piggybacked
-	   */
-	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-	    {
-	      /* Send */
-	      net_output(ifn);
-	      /* Buffer message */
-	      set_buffer_timer(ifn);
+      if (net_output_pending (ifn))
+        {
+          /*
+           * Check if message is to big to be piggybacked
+           */
+          if (net_outbuffer_push (ifn, m, msgsize) != msgsize)
+            {
+              /* Send */
+              net_output (ifn);
+              /* Buffer message */
+              set_buffer_timer (ifn);
 
-	      if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-		{
-		  OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
-		  olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
-		}
-	    }
-	}
+              if (net_outbuffer_push (ifn, m, msgsize) != msgsize)
+                {
+                  OLSR_PRINTF (1,
+                               "Received message to big to be forwarded in %s(%d bytes)!",
+                               ifn->int_name, msgsize);
+                  olsr_syslog (OLSR_LOG_ERR,
+                               "Received message to big to be forwarded on %s(%d bytes)!",
+                               ifn->int_name, msgsize);
+                }
+            }
+        }
       else
-	{
-	  /* No forwarding pending */
-	  set_buffer_timer(ifn);
+        {
+          /* No forwarding pending */
+          set_buffer_timer (ifn);
 
-	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-	    {
-	      OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
-	      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
-	    }
-	}
+          if (net_outbuffer_push (ifn, m, msgsize) != msgsize)
+            {
+              OLSR_PRINTF (1,
+                           "Received message to big to be forwarded in %s(%d bytes)!",
+                           ifn->int_name, msgsize);
+              olsr_syslog (OLSR_LOG_ERR,
+                           "Received message to big to be forwarded on %s(%d bytes)!",
+                           ifn->int_name, msgsize);
+            }
+        }
     }
   return 1;
 }
 
-
 void
-set_buffer_timer(struct interface *ifn)
+set_buffer_timer (struct interface *ifn)
 {
   /* Set timer */
-  ifn->fwdtimer = GET_TIMESTAMP(random() * olsr_cnf->max_jitter * MSEC_PER_SEC / RAND_MAX);
+  ifn->fwdtimer =
+    GET_TIMESTAMP (random () * olsr_cnf->max_jitter * MSEC_PER_SEC /
+                   RAND_MAX);
 }
 
 void
-olsr_init_willingness(void)
+olsr_init_willingness (void)
 {
-  if (olsr_cnf->willingness_auto) {
+  if (olsr_cnf->willingness_auto)
+    {
 
-    /* Run it first and then periodic. */
-    olsr_update_willingness(NULL);
+      /* Run it first and then periodic. */
+      olsr_update_willingness (NULL);
 
-    olsr_start_timer((unsigned int)olsr_cnf->will_int * MSEC_PER_SEC, 5,
-                     OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL, 0);
-  }
+      olsr_start_timer ((unsigned int) olsr_cnf->will_int * MSEC_PER_SEC, 5,
+                        OLSR_TIMER_PERIODIC, &olsr_update_willingness, NULL,
+                        0);
+    }
 }
 
 void
-olsr_update_willingness(void *foo __attribute__((unused)))
+olsr_update_willingness (void *foo __attribute__ ((unused)))
 {
   int tmp_will = olsr_cnf->willingness;
 
   /* Re-calculate willingness */
-  olsr_cnf->willingness = olsr_calculate_willingness();
+  olsr_cnf->willingness = olsr_calculate_willingness ();
 
-  if(tmp_will != olsr_cnf->willingness)
+  if (tmp_will != olsr_cnf->willingness)
     {
-      OLSR_PRINTF(1, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
+      OLSR_PRINTF (1, "Local willingness updated: old %d new %d\n", tmp_will,
+                   olsr_cnf->willingness);
     }
 }
-
 
 /**
  *Calculate this nodes willingness to act as a MPR
@@ -444,21 +460,21 @@ olsr_update_willingness(void *foo __attribute__((unused)))
  */
 
 olsr_u8_t
-olsr_calculate_willingness(void)
+olsr_calculate_willingness (void)
 {
   struct olsr_apm_info ainfo;
 
   /* If fixed willingness */
-  if(!olsr_cnf->willingness_auto)
+  if (!olsr_cnf->willingness_auto)
     return olsr_cnf->willingness;
 
-  if(apm_read(&ainfo) < 1)
+  if (apm_read (&ainfo) < 1)
     return WILL_DEFAULT;
 
-  apm_printinfo(&ainfo);
+  apm_printinfo (&ainfo);
 
   /* If AC powered */
-  if(ainfo.ac_line_status == OLSR_AC_POWERED)
+  if (ainfo.ac_line_status == OLSR_AC_POWERED)
     return 6;
 
   /* If battery powered
@@ -471,80 +487,77 @@ olsr_calculate_willingness(void)
 }
 
 const char *
-olsr_msgtype_to_string(olsr_u8_t msgtype)
+olsr_msgtype_to_string (olsr_u8_t msgtype)
 {
   static char type[20];
 
-  switch(msgtype)
+  switch (msgtype)
     {
-    case(HELLO_MESSAGE):
+    case (HELLO_MESSAGE):
       return "HELLO";
-    case(TC_MESSAGE):
+    case (TC_MESSAGE):
       return "TC";
-    case(MID_MESSAGE):
+    case (MID_MESSAGE):
       return "MID";
-    case(HNA_MESSAGE):
+    case (HNA_MESSAGE):
       return "HNA";
-    case(LQ_HELLO_MESSAGE):
-      return("LQ-HELLO");
-    case(LQ_TC_MESSAGE):
-      return("LQ-TC");
+    case (LQ_HELLO_MESSAGE):
+      return ("LQ-HELLO");
+    case (LQ_TC_MESSAGE):
+      return ("LQ-TC");
     default:
       break;
     }
 
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", msgtype);
+  snprintf (type, sizeof (type), "UNKNOWN(%d)", msgtype);
   return type;
 }
 
-
 const char *
-olsr_link_to_string(olsr_u8_t linktype)
+olsr_link_to_string (olsr_u8_t linktype)
 {
   static char type[20];
 
-  switch(linktype)
+  switch (linktype)
     {
-    case(UNSPEC_LINK):
+    case (UNSPEC_LINK):
       return "UNSPEC";
-    case(ASYM_LINK):
+    case (ASYM_LINK):
       return "ASYM";
-    case(SYM_LINK):
+    case (SYM_LINK):
       return "SYM";
-    case(LOST_LINK):
+    case (LOST_LINK):
       return "LOST";
-    case(HIDE_LINK):
+    case (HIDE_LINK):
       return "HIDE";
     default:
       break;
     }
 
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", linktype);
+  snprintf (type, sizeof (type), "UNKNOWN(%d)", linktype);
   return type;
 }
 
-
 const char *
-olsr_status_to_string(olsr_u8_t status)
+olsr_status_to_string (olsr_u8_t status)
 {
   static char type[20];
 
-  switch(status)
+  switch (status)
     {
-    case(NOT_NEIGH):
+    case (NOT_NEIGH):
       return "NOT NEIGH";
-    case(SYM_NEIGH):
+    case (SYM_NEIGH):
       return "NEIGHBOR";
-    case(MPR_NEIGH):
+    case (MPR_NEIGH):
       return "MPR";
     default:
       break;
     }
 
-  snprintf(type, sizeof(type), "UNKNOWN(%d)", status);
+  snprintf (type, sizeof (type), "UNKNOWN(%d)", status);
   return type;
 }
-
 
 /**
  *Termination function to be called whenever a error occures
@@ -554,16 +567,15 @@ olsr_status_to_string(olsr_u8_t status)
  */
 
 void
-olsr_exit(const char *msg, int val)
+olsr_exit (const char *msg, int val)
 {
-  OLSR_PRINTF(1, "OLSR EXIT: %s\n", msg);
-  olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
-  fflush(stdout);
+  OLSR_PRINTF (1, "OLSR EXIT: %s\n", msg);
+  olsr_syslog (OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
+  fflush (stdout);
   olsr_cnf->exit_value = val;
 
-  raise(SIGTERM);
+  raise (SIGTERM);
 }
-
 
 /**
  * Wrapper for malloc(3) that does error-checking
@@ -575,7 +587,7 @@ olsr_exit(const char *msg, int val)
  * @return a void pointer to the memory allocated
  */
 void *
-olsr_malloc(size_t size, const char *id)
+olsr_malloc (size_t size, const char *id)
 {
   void *ptr;
 
@@ -583,24 +595,23 @@ olsr_malloc(size_t size, const char *id)
    * Not all the callers do a proper cleaning of memory.
    * Clean it on behalf of those.
    */
-  ptr = calloc(1, size);
+  ptr = calloc (1, size);
 
-  if (!ptr) {
-      const char * const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
-      olsr_exit(id, EXIT_FAILURE);
-  }
+  if (!ptr)
+    {
+      const char *const err_msg = strerror (errno);
+      OLSR_PRINTF (1, "OUT OF MEMORY: %s\n", err_msg);
+      olsr_syslog (OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
+      olsr_exit (id, EXIT_FAILURE);
+    }
 
 #if 0
   /* useful for debugging */
-  olsr_printf(1, "MEMORY: alloc %s %p, %u bytes\n",
-              id, ptr, size);
+  olsr_printf (1, "MEMORY: alloc %s %p, %u bytes\n", id, ptr, size);
 #endif
 
   return ptr;
 }
-
 
 /**
  *Wrapper for printf that prints to a specific
@@ -609,14 +620,14 @@ olsr_malloc(size_t size, const char *id)
  */
 
 int
-olsr_printf(int loglevel, const char *format, ...)
+olsr_printf (int loglevel, const char *format, ...)
 {
-  if((loglevel <= olsr_cnf->debug_level) && debug_handle)
+  if ((loglevel <= olsr_cnf->debug_level) && debug_handle)
     {
       va_list arglist;
-      va_start(arglist, format);
-      vfprintf(debug_handle, format, arglist);
-      va_end(arglist);
+      va_start (arglist, format);
+      vfprintf (debug_handle, format, arglist);
+      va_end (arglist);
     }
   return 0;
 }

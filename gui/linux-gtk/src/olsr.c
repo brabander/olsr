@@ -21,5 +21,3 @@
  */
 
 #include "common.h"
-
-

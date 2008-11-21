@@ -50,21 +50,22 @@
 #define DUPLICATE_CLEANUP_JITTER 25
 #define DUPLICATE_VTIME 120000
 
-struct dup_entry {
+struct dup_entry
+{
   struct avl_node avl;
   union olsr_ip_addr ip;
   olsr_u16_t seqnr;
   olsr_u16_t too_low_counter;
   olsr_u32_t array;
-  clock_t    valid_until;
+  clock_t valid_until;
 };
 
-AVLNODE2STRUCT(duptree2dupentry, struct dup_entry , avl);
+AVLNODE2STRUCT (duptree2dupentry, struct dup_entry, avl);
 
-void olsr_init_duplicate_set(void);
-struct dup_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
-int olsr_shall_process_message(void *ip, olsr_u16_t seqnr);
-void olsr_print_duplicate_table(void);
+void olsr_init_duplicate_set (void);
+struct dup_entry *olsr_create_duplicate_entry (void *ip, olsr_u16_t seqnr);
+int olsr_shall_process_message (void *ip, olsr_u16_t seqnr);
+void olsr_print_duplicate_table (void);
 
 #define OLSR_FOR_ALL_DUP_ENTRIES(dup) \
 { \
@@ -75,7 +76,7 @@ void olsr_print_duplicate_table(void);
     dup = duptree2dupentry(dup_tree_node);
 #define OLSR_FOR_ALL_DUP_ENTRIES_END(dup) }}
 
-#endif /*DUPLICATE_SET_2_H_*/
+#endif /*DUPLICATE_SET_2_H_ */
 
 /*
  * Local Variables:

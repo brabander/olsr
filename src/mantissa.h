@@ -38,7 +38,6 @@
  *
  */
 
-
 #ifndef _OLSR_MANTISSA
 #define _OLSR_MANTISSA
 
@@ -60,8 +59,8 @@ typedef olsr_u32_t olsr_reltime;
  * me is the 8 bit mantissa/exponent value
  *
  */
-olsr_reltime me_to_reltime(const olsr_u8_t);
+olsr_reltime me_to_reltime (const olsr_u8_t);
 
-olsr_u8_t reltime_to_me(const olsr_reltime);
+olsr_u8_t reltime_to_me (const olsr_reltime);
 
 #endif

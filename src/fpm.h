@@ -49,7 +49,7 @@
  * Use this to find implicit number conversions when compiling
  * Note: comparing pointers is unsigned, so do not use to run.
  */
-typedef void* fpm;
+typedef void *fpm;
 typedef signed long sfpm;
 typedef unsigned long ufpm;
 #define FPM_BIT 12
@@ -134,22 +134,22 @@ typedef unsigned long ufpm;
 
 #else /* NDEBUG */
 
-fpm itofpm(int i);
-fpm ftofpm(float f);
-int fpmtoi(fpm a);
-float fpmtof(fpm a);
+fpm itofpm (int i);
+fpm ftofpm (float f);
+int fpmtoi (fpm a);
+float fpmtof (fpm a);
 
-fpm fpmadd(fpm a, fpm b);
-fpm fpmsub(fpm a, fpm b);
-fpm fpmmul(fpm a, fpm b);
-fpm fpmdiv(fpm a, fpm b);
-fpm fpmimul(int a, fpm b);
-fpm fpmmuli(fpm a, int b);
-fpm fpmidiv(fpm a, int b);
+fpm fpmadd (fpm a, fpm b);
+fpm fpmsub (fpm a, fpm b);
+fpm fpmmul (fpm a, fpm b);
+fpm fpmdiv (fpm a, fpm b);
+fpm fpmimul (int a, fpm b);
+fpm fpmmuli (fpm a, int b);
+fpm fpmidiv (fpm a, int b);
 
 #if 0
-fpm fpmlmul(fpm a, fpm b);
-fpm fpmldiv(fpm a, fpm b);
+fpm fpmlmul (fpm a, fpm b);
+fpm fpmldiv (fpm a, fpm b);
 #endif
 
 #endif /* NDEBUG */
@@ -160,9 +160,9 @@ fpm fpmldiv(fpm a, fpm b);
 #define CEIL_LQDIFF ftofpm(1.1)
 #define FLOOR_LQDIFF ftofpm(0.9)
 
-fpm atofpm(const char *);
-const char *fpmtoa(fpm);
-const char *etxtoa(fpm);
+fpm atofpm (const char *);
+const char *fpmtoa (fpm);
+const char *etxtoa (fpm);
 
 #else /* USE_FPM */
 
@@ -172,9 +172,9 @@ const char *etxtoa(fpm);
 #define CEIL_LQDIFF 1.1
 #define FLOOR_LQDIFF 0.9
 
-float atofpm(const char *);
-const char *fpmtoa(float);
-const char *etxtoa(float);
+float atofpm (const char *);
+const char *fpmtoa (float);
+const char *etxtoa (float);
 
 #endif /* USE_FPM */
 

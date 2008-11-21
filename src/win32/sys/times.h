@@ -47,6 +47,6 @@ struct tms
   int dummy;
 };
 
-long times(struct tms *);
+long times (struct tms *);
 
 #endif

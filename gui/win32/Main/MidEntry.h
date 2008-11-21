@@ -44,11 +44,11 @@
 class MidEntry
 {
 public:
-	unsigned int Addr;
-	unsigned __int64 Timeout;
+  unsigned int Addr;
+  unsigned __int64 Timeout;
 
-	class MidEntry &MidEntry::operator=(class MidEntry &);
-	BOOL MidEntry::operator==(const class MidEntry &) const;
+  class MidEntry & MidEntry::operator= (class MidEntry &);
+  BOOL MidEntry::operator== (const class MidEntry &) const;
 };
 
 #endif

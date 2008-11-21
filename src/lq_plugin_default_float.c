@@ -70,134 +70,168 @@ struct lq_handler lq_etx_float_handler = {
   &default_lq_print_float,
   &default_lq_print_cost_float,
 
-  sizeof(struct default_lq_float),
-  sizeof(struct default_lq_float)
+  sizeof (struct default_lq_float),
+  sizeof (struct default_lq_float)
 };
 
-void default_lq_initialize_float(void) {
+void
+default_lq_initialize_float (void)
+{
   return;
 }
 
-olsr_linkcost default_lq_calc_cost_float(const void *ptr) {
+olsr_linkcost
+default_lq_calc_cost_float (const void *ptr)
+{
   const struct default_lq_float *lq = ptr;
   olsr_linkcost cost;
 
-  if (lq->lq < MINIMAL_USEFUL_LQ || lq->nlq < MINIMAL_USEFUL_LQ) {
-    return LINK_COST_BROKEN;
-  }
+  if (lq->lq < MINIMAL_USEFUL_LQ || lq->nlq < MINIMAL_USEFUL_LQ)
+    {
+      return LINK_COST_BROKEN;
+    }
 
-  cost = (olsr_linkcost)(1.0/(lq->lq * lq->nlq) * LQ_PLUGIN_LC_MULTIPLIER);
+  cost = (olsr_linkcost) (1.0 / (lq->lq * lq->nlq) * LQ_PLUGIN_LC_MULTIPLIER);
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
-  if (cost == 0) {
-    return 1;
-  }
+  if (cost == 0)
+    {
+      return 1;
+    }
   return cost;
 }
 
-int default_lq_serialize_hello_lq_pair_float(unsigned char *buff, void *ptr) {
+int
+default_lq_serialize_hello_lq_pair_float (unsigned char *buff, void *ptr)
+{
   struct default_lq_float *lq = ptr;
 
-  buff[0] = (unsigned char)(lq->lq * 255);
-  buff[1] = (unsigned char)(lq->nlq * 255);
+  buff[0] = (unsigned char) (lq->lq * 255);
+  buff[1] = (unsigned char) (lq->nlq * 255);
   buff[2] = 0;
   buff[3] = 0;
 
   return 4;
 }
 
-void default_lq_deserialize_hello_lq_pair_float(const olsr_u8_t **curr, void *ptr) {
+void
+default_lq_deserialize_hello_lq_pair_float (const olsr_u8_t ** curr,
+                                            void *ptr)
+{
   struct default_lq_float *lq = ptr;
   olsr_u8_t lq_value, nlq_value;
 
-  pkt_get_u8(curr, &lq_value);
-  pkt_get_u8(curr, &nlq_value);
-  pkt_ignore_u16(curr);
+  pkt_get_u8 (curr, &lq_value);
+  pkt_get_u8 (curr, &nlq_value);
+  pkt_ignore_u16 (curr);
 
-  lq->lq = (float)lq_value / 255.0;
-  lq->nlq = (float)nlq_value / 255.0;
+  lq->lq = (float) lq_value / 255.0;
+  lq->nlq = (float) nlq_value / 255.0;
 }
 
-olsr_bool default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2) {
-  if (c1 > c2) {
-    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
-  }
+olsr_bool
+default_lq_is_relevant_costchange_float (olsr_linkcost c1, olsr_linkcost c2)
+{
+  if (c1 > c2)
+    {
+      return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
+    }
   return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
 }
 
-int default_lq_serialize_tc_lq_pair_float(unsigned char *buff, void *ptr) {
+int
+default_lq_serialize_tc_lq_pair_float (unsigned char *buff, void *ptr)
+{
   struct default_lq_float *lq = ptr;
 
-  buff[0] = (unsigned char)(lq->lq * 255);
-  buff[1] = (unsigned char)(lq->nlq * 255);
+  buff[0] = (unsigned char) (lq->lq * 255);
+  buff[1] = (unsigned char) (lq->nlq * 255);
   buff[2] = 0;
   buff[3] = 0;
 
   return 4;
 }
 
-void default_lq_deserialize_tc_lq_pair_float(const olsr_u8_t **curr, void *ptr) {
+void
+default_lq_deserialize_tc_lq_pair_float (const olsr_u8_t ** curr, void *ptr)
+{
   struct default_lq_float *lq = ptr;
   olsr_u8_t lq_value, nlq_value;
 
-  pkt_get_u8(curr, &lq_value);
-  pkt_get_u8(curr, &nlq_value);
-  pkt_ignore_u16(curr);
+  pkt_get_u8 (curr, &lq_value);
+  pkt_get_u8 (curr, &nlq_value);
+  pkt_ignore_u16 (curr);
 
-  lq->lq = (float)lq_value / 255.0;
-  lq->nlq = (float)nlq_value / 255.0;
+  lq->lq = (float) lq_value / 255.0;
+  lq->nlq = (float) nlq_value / 255.0;
 }
 
-olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void *ptr, olsr_bool lost) {
+olsr_linkcost
+default_lq_packet_loss_worker_float (struct link_entry *link, void *ptr,
+                                     olsr_bool lost)
+{
   struct default_lq_float *tlq = ptr;
   float alpha = olsr_cnf->lq_aging;
 
-  if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
-    alpha = LQ_QUICKSTART_AGING; /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
-    tlq->quickstart++;
-  }
+  if (tlq->quickstart < LQ_QUICKSTART_STEPS)
+    {
+      alpha = LQ_QUICKSTART_AGING;      /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
+      tlq->quickstart++;
+    }
   // exponential moving average
   tlq->lq *= (1 - alpha);
-  if (lost == 0) {
-    tlq->lq += (alpha * link->loss_link_multiplier / 65536);
-  }
-  return default_lq_calc_cost_float(ptr);
+  if (lost == 0)
+    {
+      tlq->lq += (alpha * link->loss_link_multiplier / 65536);
+    }
+  return default_lq_calc_cost_float (ptr);
 }
 
-void default_lq_memorize_foreign_hello_float(void *ptrLocal, void *ptrForeign) {
+void
+default_lq_memorize_foreign_hello_float (void *ptrLocal, void *ptrForeign)
+{
   struct default_lq_float *local = ptrLocal;
   struct default_lq_float *foreign = ptrForeign;
 
-  if (foreign) {
-    local->nlq = foreign->lq;
-  }
-  else {
-    local->nlq = 0;
-  }
+  if (foreign)
+    {
+      local->nlq = foreign->lq;
+    }
+  else
+    {
+      local->nlq = 0;
+    }
 }
 
-void default_lq_copy_link2tc_float(void *target, void *source) {
-  memcpy(target, source, sizeof(struct default_lq_float));
+void
+default_lq_copy_link2tc_float (void *target, void *source)
+{
+  memcpy (target, source, sizeof (struct default_lq_float));
 }
 
-void default_lq_clear_float(void *target) {
-  memset(target, 0, sizeof(struct default_lq_float));
+void
+default_lq_clear_float (void *target)
+{
+  memset (target, 0, sizeof (struct default_lq_float));
 }
 
-const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffer *buffer) {
+const char *
+default_lq_print_float (void *ptr, char separator,
+                        struct lqtextbuffer *buffer)
+{
   struct default_lq_float *lq = ptr;
 
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f",
-      lq->lq,
-      separator,
-      lq->nlq);
+  snprintf (buffer->buf, sizeof (struct lqtextbuffer), "%2.3f%c%2.3f", lq->lq,
+            separator, lq->nlq);
   return buffer->buf;
 }
 
-const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer *buffer) {
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER );
-
+const char *
+default_lq_print_cost_float (olsr_linkcost cost, struct lqtextbuffer *buffer)
+{
+  snprintf (buffer->buf, sizeof (struct lqtextbuffer), "%2.3f",
+            ((float) cost) / LQ_PLUGIN_LC_MULTIPLIER);
 
   return buffer->buf;
 }

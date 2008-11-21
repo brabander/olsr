@@ -44,11 +44,11 @@
 class MprEntry
 {
 public:
-	unsigned int Addr;
-	unsigned __int64 Timeout;
+  unsigned int Addr;
+  unsigned __int64 Timeout;
 
-	class MprEntry &MprEntry::operator=(class MprEntry &);
-	BOOL MprEntry::operator==(const class MprEntry &) const;
+  class MprEntry & MprEntry::operator= (class MprEntry &);
+  BOOL MprEntry::operator== (const class MprEntry &) const;
 };
 
 #endif

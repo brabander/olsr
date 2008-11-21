@@ -40,10 +40,13 @@
 
 #include "../log.h"
 
-void olsr_openlog(const char *Id __attribute__((unused)))
+void
+olsr_openlog (const char *Id __attribute__ ((unused)))
 {
 }
 
-void olsr_syslog(int Level __attribute__((unused)), const char *Format __attribute__((unused)), ...)
+void
+olsr_syslog (int Level __attribute__ ((unused)), const char *Format
+             __attribute__ ((unused)),...)
 {
 }

@@ -44,12 +44,12 @@
 class HnaEntry
 {
 public:
-	unsigned int Addr;
-	unsigned int Mask;
-	unsigned __int64 Timeout;
+  unsigned int Addr;
+  unsigned int Mask;
+  unsigned __int64 Timeout;
 
-	class HnaEntry &HnaEntry::operator=(class HnaEntry &);
-	BOOL HnaEntry::operator==(const class HnaEntry &) const;
+  class HnaEntry & HnaEntry::operator= (class HnaEntry &);
+  BOOL HnaEntry::operator== (const class HnaEntry &) const;
 };
 
 #endif

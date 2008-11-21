@@ -28,9 +28,9 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #ifdef SUNOS_5
 #define _XPG4_2
 #define __EXTENSIONS__
-typedef unsigned int    u_int32_t;
-typedef unsigned short  u_int16_t;
-typedef unsigned char   u_int8_t;
+typedef unsigned int u_int32_t;
+typedef unsigned short u_int16_t;
+typedef unsigned char u_int8_t;
 #endif /* SUNOS_5 */
 
 #ifndef HAVE_SOCKLEN_T
@@ -110,7 +110,6 @@ typedef int socklen_t;
 #endif /* !va_copy */
 #endif /* !C99 */
 
-
 #ifdef HAVE_LCAPS
 #include <sys/capability.h>
 #include <sys/prctl.h>
@@ -183,7 +182,6 @@ typedef int socklen_t;
 #include <netinet6/in.h>
 #endif /* HAVE_NETINET6_IN_H */
 
-
 #ifdef HAVE_NETINET6_IP6_H
 #include <netinet6/ip6.h>
 #endif /* HAVE_NETINET6_IP6_H */
@@ -226,10 +224,9 @@ typedef int socklen_t;
 /* Local includes: */
 #if !(defined(__GNUC__) || defined(VTYSH_EXTRACT_PL))
 #define __attribute__(x)
-#endif  /* !__GNUC__ || VTYSH_EXTRACT_PL */
+#endif /* !__GNUC__ || VTYSH_EXTRACT_PL */
 
 #include "zassert.h"
-
 
 #ifdef HAVE_BROKEN_CMSG_FIRSTHDR
 /* This bug is present in Solaris 8 and pre-patch Solaris 9 <sys/socket.h>;
@@ -245,8 +242,6 @@ typedef int socklen_t;
 #else /* HAVE_BROKEN_CMSG_FIRSTHDR */
 #define ZCMSG_FIRSTHDR(M) CMSG_FIRSTHDR(M)
 #endif /* HAVE_BROKEN_CMSG_FIRSTHDR */
-
-
 
 /*
  * RFC 3542 defines several macros for using struct cmsghdr.
@@ -273,14 +268,12 @@ typedef int socklen_t;
 #define CMSG_SPACE(l)       (_CMSG_DATA_ALIGN(sizeof(struct cmsghdr)) + \
                               _CMSG_HDR_ALIGN(l))
 #warning "assuming 4-byte alignment for CMSG_SPACE"
-#endif  /* CMSG_SPACE */
-
+#endif /* CMSG_SPACE */
 
 #ifndef CMSG_LEN
 #define CMSG_LEN(l)         (_CMSG_DATA_ALIGN(sizeof(struct cmsghdr)) + (l))
 #warning "assuming 4-byte alignment for CMSG_LEN"
 #endif /* CMSG_LEN */
-
 
 /*  The definition of struct in_pktinfo is missing in old version of
     GLIBC 2.1 (Redhat 6.1).  */
@@ -414,7 +407,7 @@ struct in_pktinfo
 #define ZEBRA_NEXTHOP_BLACKHOLE          9
 
 #ifndef INADDR_LOOPBACK
-#define	INADDR_LOOPBACK	0x7f000001	/* Internet address 127.0.0.1.  */
+#define	INADDR_LOOPBACK	0x7f000001      /* Internet address 127.0.0.1.  */
 #endif
 
 /* Address family numbers from RFC1700. */

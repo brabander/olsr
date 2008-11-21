@@ -52,9 +52,10 @@
 extern union olsr_ip_addr ipc_accept_ip;
 extern int ipc_port;
 
-int olsrd_plugin_interface_version(void);
-int olsrd_plugin_init(void);
-void olsr_plugin_exit(void);
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
+int olsrd_plugin_interface_version (void);
+int olsrd_plugin_init (void);
+void olsr_plugin_exit (void);
+void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
+                                  **params, int *size);
 
 #endif

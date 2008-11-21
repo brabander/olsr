@@ -41,7 +41,7 @@
 #include "ipcalc.h"
 
 int
-prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
+prefix_to_netmask (olsr_u8_t * a, int len, olsr_u8_t prefixlen)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
@@ -50,112 +50,152 @@ prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
   int p;
   const olsr_u8_t *a_end;
 
-  a_end = a+len;
-  for (p = prefixlen; a < a_end && p > 8; p -= 8) {
-    *a++ = 0xff;
-  }
-  if (a >= a_end) {
-    return 0;
-  }
+  a_end = a + len;
+  for (p = prefixlen; a < a_end && p > 8; p -= 8)
+    {
+      *a++ = 0xff;
+    }
+  if (a >= a_end)
+    {
+      return 0;
+    }
   *a++ = 0xff << (8 - p);
-  while (a < a_end) {
-    *a++ = 0;
-  }
+  while (a < a_end)
+    {
+      *a++ = 0;
+    }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefixlen, inet_ntop(olsr_cnf->ip_version, a_start, buf.buf, sizeof(buf.buf)));
+  OLSR_PRINTF (3, "Prefix %d = Netmask: %s\n", prefixlen,
+               inet_ntop (olsr_cnf->ip_version, a_start, buf.buf,
+                          sizeof (buf.buf)));
 #endif
   return 1;
 }
 
 olsr_u8_t
-netmask_to_prefix(const olsr_u8_t *adr, int len)
+netmask_to_prefix (const olsr_u8_t * adr, int len)
 {
   struct ipaddr_str buf;
-  const olsr_u8_t * const a_end = adr+len;
+  const olsr_u8_t *const a_end = adr + len;
   olsr_u16_t prefix = 0;
   const olsr_u8_t *a;
-  for (a = adr; a < a_end && *a == 0xff; a++) {
-    prefix += 8;
-  }
-  if (a < a_end) {
-    /* handle the last byte */
-    switch (*a) {
-    case   0: prefix += 0; break;
-    case 128: prefix += 1; break;
-    case 192: prefix += 2; break;
-    case 224: prefix += 3; break;
-    case 240: prefix += 4; break;
-    case 248: prefix += 5; break;
-    case 252: prefix += 6; break;
-    case 254: prefix += 7; break;
-    case 255: prefix += 8; break; /* Shouldn't happen */
-    default:
-      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, olsr_ip_to_string(&buf, (const union olsr_ip_addr *)adr));
-      prefix = UCHAR_MAX;
-      *(int *)0 = 0;
-      break;
+  for (a = adr; a < a_end && *a == 0xff; a++)
+    {
+      prefix += 8;
     }
-  }
+  if (a < a_end)
+    {
+      /* handle the last byte */
+      switch (*a)
+        {
+        case 0:
+          prefix += 0;
+          break;
+        case 128:
+          prefix += 1;
+          break;
+        case 192:
+          prefix += 2;
+          break;
+        case 224:
+          prefix += 3;
+          break;
+        case 240:
+          prefix += 4;
+          break;
+        case 248:
+          prefix += 5;
+          break;
+        case 252:
+          prefix += 6;
+          break;
+        case 254:
+          prefix += 7;
+          break;
+        case 255:
+          prefix += 8;
+          break;                /* Shouldn't happen */
+        default:
+          OLSR_PRINTF (0, "%s: Got bogus netmask %s\n", __func__,
+                       olsr_ip_to_string (&buf,
+                                          (const union olsr_ip_addr *) adr));
+          prefix = UCHAR_MAX;
+          *(int *) 0 = 0;
+          break;
+        }
+    }
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(&buf, (const union olsr_ip_addr *)adr), prefix);
+  OLSR_PRINTF (3, "Netmask: %s = Prefix %d\n",
+               olsr_ip_to_string (&buf, (const union olsr_ip_addr *) adr),
+               prefix);
 #endif
   return prefix;
 }
 
 const char *
-olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
+olsr_ip_prefix_to_string (const struct olsr_ip_prefix *prefix)
 {
   /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
-  static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
+  static char
+    buf[MAX
+        (INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
   const char *rv;
 
-  if(olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    int len;
-    union olsr_ip_addr netmask;
-    rv = inet_ntop(AF_INET, &prefix->prefix.v4, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    olsr_prefix_to_netmask(&netmask, prefix->prefix_len);
-    inet_ntop(AF_INET, &netmask.v4, buf+len, sizeof(buf)-len);
-  } else {
-    /* IPv6 */
-    int len;
-    rv = inet_ntop(AF_INET6, &prefix->prefix.v6, buf, sizeof(buf));
-    len = strlen(buf);
-    buf[len++] = '/';
-    snprintf(buf+len, sizeof(buf)-len, "/%d", prefix->prefix_len);
-  }
+  if (olsr_cnf->ip_version == AF_INET)
+    {
+      /* IPv4 */
+      int len;
+      union olsr_ip_addr netmask;
+      rv = inet_ntop (AF_INET, &prefix->prefix.v4, buf, sizeof (buf));
+      len = strlen (buf);
+      buf[len++] = '/';
+      olsr_prefix_to_netmask (&netmask, prefix->prefix_len);
+      inet_ntop (AF_INET, &netmask.v4, buf + len, sizeof (buf) - len);
+    }
+  else
+    {
+      /* IPv6 */
+      int len;
+      rv = inet_ntop (AF_INET6, &prefix->prefix.v6, buf, sizeof (buf));
+      len = strlen (buf);
+      buf[len++] = '/';
+      snprintf (buf + len, sizeof (buf) - len, "/%d", prefix->prefix_len);
+    }
   return rv;
 }
-
 
 /* see if the ipaddr is in the net. That is equivalent to the fact that the net part
  * of both are equal. So we must compare the first <prefixlen> bits.
  */
-int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
+int
+ip_in_net (const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
 {
   int rv;
-  if(olsr_cnf->ip_version == AF_INET) {
-    olsr_u32_t netmask = ~0 << (32 - net->prefix_len);
-    rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
-  } else {
-    /* IPv6 */
-    olsr_u32_t netmask;
-    const olsr_u32_t *i = (const olsr_u32_t *)&ipaddr->v6;
-    const olsr_u32_t *n = (const olsr_u32_t *)&net->prefix.v6;
-    unsigned int prefix_len;
-    for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
-      if (*i != *n) {
-        return OLSR_FALSE;
-      }
-      i++;
-      n++;
+  if (olsr_cnf->ip_version == AF_INET)
+    {
+      olsr_u32_t netmask = ~0 << (32 - net->prefix_len);
+      rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
     }
-    netmask = ~0 << (32 - prefix_len);
-    rv = (*i & netmask) == (*n & netmask);
-  }
+  else
+    {
+      /* IPv6 */
+      olsr_u32_t netmask;
+      const olsr_u32_t *i = (const olsr_u32_t *) &ipaddr->v6;
+      const olsr_u32_t *n = (const olsr_u32_t *) &net->prefix.v6;
+      unsigned int prefix_len;
+      for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32)
+        {
+          if (*i != *n)
+            {
+              return OLSR_FALSE;
+            }
+          i++;
+          n++;
+        }
+      netmask = ~0 << (32 - prefix_len);
+      rv = (*i & netmask) == (*n & netmask);
+    }
   return rv;
 }
 

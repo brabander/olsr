@@ -48,7 +48,7 @@ int debugMode = 0;
 
 int running;
 
-pcap_t* devices[128];
+pcap_t *devices[128];
 int deviceFD[128];
 int deviceCount;
 
@@ -67,7 +67,7 @@ u_int8_t mac_bc[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
  * to stop
  */
 static void
-signalHandler (int signo __attribute__((unused)))
+signalHandler (int signo __attribute__ ((unused)))
 {
   running = 0;
 }
@@ -84,57 +84,73 @@ calculateConnections (float *connMatrix, int socketcount, int drop)
 {
 
   /* calculating unicast/broadcast matrix */
-  connUni = malloc(sizeof(u_int32_t) * socketcount * socketcount);
-  memset(connUni, 0, sizeof(u_int32_t) * socketcount * socketcount);
-  connBC = malloc(sizeof(u_int32_t) * socketcount * socketcount);
-  memset(connBC, 0, sizeof(u_int32_t) * socketcount * socketcount);
+  connUni = malloc (sizeof (u_int32_t) * socketcount * socketcount);
+  memset (connUni, 0, sizeof (u_int32_t) * socketcount * socketcount);
+  connBC = malloc (sizeof (u_int32_t) * socketcount * socketcount);
+  memset (connBC, 0, sizeof (u_int32_t) * socketcount * socketcount);
 
   float broadcast, unicast;
   int i, j;
-  for (j=0; j<socketcount; j++) {
-    for (i=0; i<socketcount; i++) {
-      float prop = connMatrix[GRID(i, j, socketcount)];
-      if (drop) {
-        prop = 1.0 - prop;
-      }
-      broadcast = prop;
+  for (j = 0; j < socketcount; j++)
+    {
+      for (i = 0; i < socketcount; i++)
+        {
+          float prop = connMatrix[GRID (i, j, socketcount)];
+          if (drop)
+            {
+              prop = 1.0 - prop;
+            }
+          broadcast = prop;
 
-      /* IEEE 802.11 do (normally) up to 4 retransmissions for unicast.
-       * A unicast package is only lost if all of this 5 transmissions
-       * are lost.
-       */
-      prop = 1 - prop;
-      unicast = (1 - prop)*(1 + prop + prop*prop + prop*prop*prop + prop*prop*prop*prop);
+          /* IEEE 802.11 do (normally) up to 4 retransmissions for unicast.
+           * A unicast package is only lost if all of this 5 transmissions
+           * are lost.
+           */
+          prop = 1 - prop;
+          unicast =
+            (1 - prop) * (1 + prop + prop * prop + prop * prop * prop +
+                          prop * prop * prop * prop);
 
-      connBC[GRID(i, j, socketcount)] = (1<<24) * broadcast;
-      connUni[GRID(i, j, socketcount)] = (1<<24) * unicast;
-    }
-  }
-
-  if (debugMode) {
-    printf("Connection matrix for unicast:\n");
-    for (j=0; j<socketcount; j++) {
-      for (i=0; i<socketcount; i++) {
-        if (i>0) {
-          printf(" ");
+          connBC[GRID (i, j, socketcount)] = (1 << 24) * broadcast;
+          connUni[GRID (i, j, socketcount)] = (1 << 24) * unicast;
         }
-
-        printf("%1.2f", (float)connBC[GRID(i,j, socketcount)] / (float)(1<<24));
-      }
-      printf("\n");
     }
-    printf("\nConnectionmatrix for broadcast:\n");
-    for (j=0; j<socketcount; j++) {
-      for (i=0; i<socketcount; i++) {
-        if (i>0) {
-          printf(" ");
+
+  if (debugMode)
+    {
+      printf ("Connection matrix for unicast:\n");
+      for (j = 0; j < socketcount; j++)
+        {
+          for (i = 0; i < socketcount; i++)
+            {
+              if (i > 0)
+                {
+                  printf (" ");
+                }
+
+              printf ("%1.2f",
+                      (float) connBC[GRID (i, j, socketcount)] /
+                      (float) (1 << 24));
+            }
+          printf ("\n");
         }
+      printf ("\nConnectionmatrix for broadcast:\n");
+      for (j = 0; j < socketcount; j++)
+        {
+          for (i = 0; i < socketcount; i++)
+            {
+              if (i > 0)
+                {
+                  printf (" ");
+                }
 
-        printf("%1.2f", (float)connUni[GRID(i,j, socketcount)] / (float)(1<<24));
-      }
-      printf("\n");
+              printf ("%1.2f",
+                      (float) connUni[GRID (i, j, socketcount)] /
+                      (float) (1 << 24));
+            }
+          printf ("\n");
+        }
     }
-  }
 }
 
 /*
@@ -148,12 +164,14 @@ tap_callback (void)
 {
   int len, i;
 
-  len = read(tapFD, buffer, sizeof(buffer));
-  if (len > 0) {
-    for (i=0; i<deviceCount; i++) {
-      pcap_inject(devices[i], buffer, len);
+  len = read (tapFD, buffer, sizeof (buffer));
+  if (len > 0)
+    {
+      for (i = 0; i < deviceCount; i++)
+        {
+          pcap_inject (devices[i], buffer, len);
+        }
     }
-  }
 }
 
 /*
@@ -167,42 +185,51 @@ tap_callback (void)
  * See libpcap documentation for parameters
  */
 void
-capture_callback (u_char *args, const struct pcap_pkthdr* hdr, const u_char* packet)
+capture_callback (u_char * args, const struct pcap_pkthdr *hdr,
+                  const u_char * packet)
 {
-  int *index = (int *)args;
-  int unicast = memcmp(packet, mac_bc, 6) != 0;
+  int *index = (int *) args;
+  int unicast = memcmp (packet, mac_bc, 6) != 0;
 
   int i, len;
 
   len = hdr->len;
-  memcpy(buffer, packet, len);
+  memcpy (buffer, packet, len);
 
-  if (tapFD != -1) {
-    int send = 0;
-    while (send < len) {
-      int t = write(tapFD, &buffer[send], len - send);
-      if (t == -1) {
-        printf("Error while sending to tap device!\n");
-        break;
-      }
-      send += t;
-    }
-  }
-
-  for (i=0; i<deviceCount; i++) {
-    u_int32_t prop;
-    if (unicast) {
-      prop = connUni[GRID(*index, i, deviceCount)];
-    } else {
-      prop = connBC[GRID(*index, i, deviceCount)];
+  if (tapFD != -1)
+    {
+      int send = 0;
+      while (send < len)
+        {
+          int t = write (tapFD, &buffer[send], len - send);
+          if (t == -1)
+            {
+              printf ("Error while sending to tap device!\n");
+              break;
+            }
+          send += t;
+        }
     }
 
-    if (prop == 0 || prop < (rand() % (1<<24))) {
-      continue;
-    }
+  for (i = 0; i < deviceCount; i++)
+    {
+      u_int32_t prop;
+      if (unicast)
+        {
+          prop = connUni[GRID (*index, i, deviceCount)];
+        }
+      else
+        {
+          prop = connBC[GRID (*index, i, deviceCount)];
+        }
 
-    pcap_inject(devices[i], buffer, len);
-  }
+      if (prop == 0 || prop < (rand () % (1 << 24)))
+        {
+          continue;
+        }
+
+      pcap_inject (devices[i], buffer, len);
+    }
 }
 
 int
@@ -210,184 +237,235 @@ main (int argc, char **argv)
 {
   int i;
   int dropPropability = 0;
-  char *connectionFile= NULL;
+  char *connectionFile = NULL;
   int deviceIndex = -1;
   int hubMode = 0;
 
   MacAddress mac;
   char *tapname = NULL;
 
-  if (argc==1 || (argc == 2 && strcmp(argv[1], "--help")==0)) {
-    printf("%s: [-con <connectionfile>] [-hub] [-debug]"
-        " [-tap <devname> <mac>] [-drop] -dev <dev1> <dev2> <dev3>...\n", argv[0]);
-    return 0;
-  }
+  if (argc == 1 || (argc == 2 && strcmp (argv[1], "--help") == 0))
+    {
+      printf ("%s: [-con <connectionfile>] [-hub] [-debug]"
+              " [-tap <devname> <mac>] [-drop] -dev <dev1> <dev2> <dev3>...\n",
+              argv[0]);
+      return 0;
+    }
 
   deviceCount = 0;
   tapFD = -1;
 
-  for (i=1; i<argc; i++) {
-    if (strcmp(argv[i], "-con")==0 && i < argc-1) {
-      connectionFile = argv[i+1];
-      i++;
+  for (i = 1; i < argc; i++)
+    {
+      if (strcmp (argv[i], "-con") == 0 && i < argc - 1)
+        {
+          connectionFile = argv[i + 1];
+          i++;
+        }
+      if (strcmp (argv[i], "-drop") == 0)
+        {
+          dropPropability = 1;
+        }
+      if (strcmp (argv[i], "-dev") == 0)
+        {
+          deviceIndex = ++i;
+          while (i < argc && argv[i][0] != '-')
+            {
+              i++;
+              deviceCount++;
+            }
+          i--;                  /* to cancel the i++ in the for loop */
+        }
+      if (strcmp (argv[i], "-hub") == 0)
+        {
+          hubMode = 1;
+        }
+      if (strcmp (argv[i], "-tap") == 0 && i < argc - 2)
+        {
+          tapname = argv[++i];
+          readMac (argv[++i], &mac);
+        }
+      if (strcmp (argv[i], "-debug") == 0)
+        {
+          debugMode = 1;
+        }
     }
-    if (strcmp(argv[i], "-drop")==0) {
-      dropPropability = 1;
-    }
-    if (strcmp(argv[i], "-dev")==0) {
-      deviceIndex = ++i;
-      while (i < argc && argv[i][0] != '-') {
-        i++;
-        deviceCount++;
-      }
-      i--; /* to cancel the i++ in the for loop */
-    }
-    if (strcmp(argv[i], "-hub")==0) {
-      hubMode = 1;
-    }
-    if (strcmp(argv[i], "-tap")==0 && i < argc-2) {
-      tapname = argv[++i];
-      readMac(argv[++i], &mac);
-    }
-    if (strcmp(argv[i], "-debug")==0) {
-      debugMode = 1;
-    }
-  }
 
-  if (hubMode == 1 && connectionFile != NULL) {
-    printf("Error, you cannot set matrix file in hub mode.\n");
-    return 1;
-  }
-
-  if (connectionFile == NULL && hubMode == 0) {
-    printf("Error, netsim needs a matrix file for connections if not running in hub mode.\n");
-    return 1;
-  }
-
-  if (deviceIndex < 0) {
-    printf("Error, you must specify the devices the programm connects to.\n");
-    return 1;
-  }
-
-  if (deviceCount < 2) {
-    printf("Error, you need to bind at least two devices to the bridge.\n");
-    return 1;
-  }
-
-  if (tapname) {
-    tapFD = createTap(tapname, &mac);
-    if (tapFD==-1) {
-      printf("Error, cannot open tap device '%s'\n", tapname);
+  if (hubMode == 1 && connectionFile != NULL)
+    {
+      printf ("Error, you cannot set matrix file in hub mode.\n");
       return 1;
     }
 
-  }
+  if (connectionFile == NULL && hubMode == 0)
+    {
+      printf
+        ("Error, netsim needs a matrix file for connections if not running in hub mode.\n");
+      return 1;
+    }
+
+  if (deviceIndex < 0)
+    {
+      printf
+        ("Error, you must specify the devices the programm connects to.\n");
+      return 1;
+    }
+
+  if (deviceCount < 2)
+    {
+      printf
+        ("Error, you need to bind at least two devices to the bridge.\n");
+      return 1;
+    }
+
+  if (tapname)
+    {
+      tapFD = createTap (tapname, &mac);
+      if (tapFD == -1)
+        {
+          printf ("Error, cannot open tap device '%s'\n", tapname);
+          return 1;
+        }
+
+    }
   running = 1;
 
-  float *connMatrix = malloc(sizeof(float) * deviceCount * deviceCount);
-  if (!connMatrix) {
-    printf("Error, not enough memory for mac buffer!");
-    if (tapFD != -1)    closeTap(tapFD);
-    return 1;
-  }
-
-  if (hubMode) {
-    int x,y;
-
-    /*
-     * In hub mode the any-to-any loss factor is 1.0, which
-     * means we can skip reading a matrix file.
-     */
-    for (y=0; y<deviceCount; y++) {
-      for (x=0; x<deviceCount; x++) {
-        if (x != y) {
-          connMatrix[GRID(x,y,deviceCount)] = 1.0;
-        }
-      }
-    }
-  } else {
-    if (readConnectionMatrix(connMatrix, connectionFile, deviceCount)) {
-      printf("Error while reading matrix file\n");
-      free(connMatrix);
-      if (tapFD != -1)    closeTap(tapFD);
+  float *connMatrix = malloc (sizeof (float) * deviceCount * deviceCount);
+  if (!connMatrix)
+    {
+      printf ("Error, not enough memory for mac buffer!");
+      if (tapFD != -1)
+        closeTap (tapFD);
       return 1;
     }
-  }
-  calculateConnections(connMatrix, deviceCount, dropPropability);
-  free(connMatrix);
+
+  if (hubMode)
+    {
+      int x, y;
+
+      /*
+       * In hub mode the any-to-any loss factor is 1.0, which
+       * means we can skip reading a matrix file.
+       */
+      for (y = 0; y < deviceCount; y++)
+        {
+          for (x = 0; x < deviceCount; x++)
+            {
+              if (x != y)
+                {
+                  connMatrix[GRID (x, y, deviceCount)] = 1.0;
+                }
+            }
+        }
+    }
+  else
+    {
+      if (readConnectionMatrix (connMatrix, connectionFile, deviceCount))
+        {
+          printf ("Error while reading matrix file\n");
+          free (connMatrix);
+          if (tapFD != -1)
+            closeTap (tapFD);
+          return 1;
+        }
+    }
+  calculateConnections (connMatrix, deviceCount, dropPropability);
+  free (connMatrix);
 
   char errbuf[PCAP_ERRBUF_SIZE];
   int maxDeviceFD = 0;
 
-  if (tapFD != -1) {
-    maxDeviceFD = tapFD;
-  }
-  for (i=0; i<deviceCount; i++) {
-    devices[i] = pcap_open_live(argv[i + deviceIndex], BUFSIZ, 0, -1, errbuf);
-    deviceFD[i] = -1;
-    if (devices[i] == NULL) {
-      printf("Error, cannot open pcap for device '%s'.\n", argv[i + deviceIndex]);
-      running = 0;
-    } else {
-      deviceFD[i] = pcap_fileno(devices[i]);
-      if (deviceFD[i] > maxDeviceFD) {
-        maxDeviceFD = deviceFD[i];
-      }
+  if (tapFD != -1)
+    {
+      maxDeviceFD = tapFD;
     }
-  }
+  for (i = 0; i < deviceCount; i++)
+    {
+      devices[i] =
+        pcap_open_live (argv[i + deviceIndex], BUFSIZ, 0, -1, errbuf);
+      deviceFD[i] = -1;
+      if (devices[i] == NULL)
+        {
+          printf ("Error, cannot open pcap for device '%s'.\n",
+                  argv[i + deviceIndex]);
+          running = 0;
+        }
+      else
+        {
+          deviceFD[i] = pcap_fileno (devices[i]);
+          if (deviceFD[i] > maxDeviceFD)
+            {
+              maxDeviceFD = deviceFD[i];
+            }
+        }
+    }
 
   /* activate signal handling */
-  signal(SIGABRT, &signalHandler);
-  signal(SIGTERM, &signalHandler);
-  signal(SIGQUIT, &signalHandler);
-  signal(SIGINT, &signalHandler);
+  signal (SIGABRT, &signalHandler);
+  signal (SIGTERM, &signalHandler);
+  signal (SIGQUIT, &signalHandler);
+  signal (SIGINT, &signalHandler);
 
-  while (running) {
-    fd_set socketSet;
-    int socketsReady;
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
+  while (running)
+    {
+      fd_set socketSet;
+      int socketsReady;
+      struct timeval timeout;
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
 
-    FD_ZERO(&socketSet);
-    for (i=0; i<deviceCount; i++) {
-      FD_SET(deviceFD[i], &socketSet);
-    }
-    if (tapFD != -1) {
-      FD_SET(tapFD, &socketSet);
-    }
+      FD_ZERO (&socketSet);
+      for (i = 0; i < deviceCount; i++)
+        {
+          FD_SET (deviceFD[i], &socketSet);
+        }
+      if (tapFD != -1)
+        {
+          FD_SET (tapFD, &socketSet);
+        }
 
-    socketsReady = select(maxDeviceFD+1, &socketSet, (fd_set *) 0, (fd_set *) 0, &timeout);
-    if (socketsReady <= 0) {
-      break;
-    }
-
-    for (i=0; i<deviceCount; i++) {
-      if (FD_ISSET(deviceFD[i], &socketSet)) {
-        int error = pcap_dispatch(devices[i], -1, capture_callback,
-          (u_char *)&i);
-
-        if (error == -1) {
-          printf("Error during pcap_dispatch for device %s\n", argv[i + deviceIndex]);
-          running = 0;
+      socketsReady =
+        select (maxDeviceFD + 1, &socketSet, (fd_set *) 0, (fd_set *) 0,
+                &timeout);
+      if (socketsReady <= 0)
+        {
           break;
         }
-      }
-    }
-    if (tapFD != -1 && FD_ISSET(tapFD, &socketSet)) {
-      tap_callback();
-    }
-  }
 
-  for (i=0; i<deviceCount; i++) {
-    if (devices[i] != NULL) {
-      pcap_close(devices[i]);
-    }
-  }
-  free(connUni);
-  free(connBC);
+      for (i = 0; i < deviceCount; i++)
+        {
+          if (FD_ISSET (deviceFD[i], &socketSet))
+            {
+              int error = pcap_dispatch (devices[i], -1, capture_callback,
+                                         (u_char *) & i);
 
-  if (tapFD != -1)    closeTap(tapFD);
+              if (error == -1)
+                {
+                  printf ("Error during pcap_dispatch for device %s\n",
+                          argv[i + deviceIndex]);
+                  running = 0;
+                  break;
+                }
+            }
+        }
+      if (tapFD != -1 && FD_ISSET (tapFD, &socketSet))
+        {
+          tap_callback ();
+        }
+    }
+
+  for (i = 0; i < deviceCount; i++)
+    {
+      if (devices[i] != NULL)
+        {
+          pcap_close (devices[i]);
+        }
+    }
+  free (connUni);
+  free (connBC);
+
+  if (tapFD != -1)
+    closeTap (tapFD);
   return 0;
 }
 

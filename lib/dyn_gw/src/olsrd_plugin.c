@@ -49,13 +49,11 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
-
 /**
  * "Private" declarations
  */
 
-static void my_init(void) __attribute__ ((constructor));
-
+static void my_init (void) __attribute__ ((constructor));
 
 /*
  * Defines the version of the plugin interface that is used
@@ -63,18 +61,17 @@ static void my_init(void) __attribute__ ((constructor));
  * Do not alter unless you know what you are doing!
  */
 int
-olsrd_plugin_interface_version(void)
+olsrd_plugin_interface_version (void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
-
 
 /**
  *Constructor
  */
 void
-my_init(void)
+my_init (void)
 {
   /* Print plugin info to stdout */
-  printf("%s\n", MOD_DESC);
+  printf ("%s\n", MOD_DESC);
 }

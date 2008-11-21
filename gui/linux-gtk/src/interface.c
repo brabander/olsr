@@ -20,7 +20,6 @@
  *
  */
 
-
 #include "common.h"
 #include "interface.h"
 #include "pixmaps.h"
@@ -36,7 +35,7 @@ int node_list_size = 0;
 
 GtkWidget *main_window;
 
-GtkWidget*
+GtkWidget *
 create_main_window (void)
 {
   GtkWidget *notebook1;
@@ -107,21 +106,24 @@ create_main_window (void)
   main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_object_set_data (GTK_OBJECT (main_window), "main_window", main_window);
   gtk_window_set_title (GTK_WINDOW (main_window), (olsrd_version));
-  gtk_window_set_default_size(GTK_WINDOW (main_window), 600, 550);
-  gtk_signal_connect(GTK_OBJECT(main_window),
-		     "destroy",
-		     GTK_SIGNAL_FUNC(gui_shutdown),
-		     //GTK_SIGNAL_FUNC(gtk_main_quit),
-		     NULL);
-  gtk_window_set_position(GTK_WINDOW(main_window), GTK_WIN_POS_CENTER); /* Position window in center */
-  gtk_window_set_policy(GTK_WINDOW(main_window), FALSE, TRUE, TRUE); /* No user-resizing */
+  gtk_window_set_default_size (GTK_WINDOW (main_window), 600, 550);
+  gtk_signal_connect (GTK_OBJECT (main_window), "destroy",
+                      GTK_SIGNAL_FUNC (gui_shutdown),
+                      //GTK_SIGNAL_FUNC(gtk_main_quit),
+                      NULL);
+  gtk_window_set_position (GTK_WINDOW (main_window), GTK_WIN_POS_CENTER);       /* Position window in center */
+  gtk_window_set_policy (GTK_WINDOW (main_window), FALSE, TRUE, TRUE);  /* No user-resizing */
 
   /*
    *Initialize the pixmaps
    */
-  unik_logo_gdk = gdk_pixmap_colormap_create_from_xpm_d (NULL, gtk_widget_get_colormap(main_window), &mask, NULL, (gchar **)logo_xpm);
+  unik_logo_gdk =
+    gdk_pixmap_colormap_create_from_xpm_d (NULL,
+                                           gtk_widget_get_colormap
+                                           (main_window), &mask, NULL,
+                                           (gchar **) logo_xpm);
 
-  unik_logo = gtk_pixmap_new(unik_logo_gdk, mask);
+  unik_logo = gtk_pixmap_new (unik_logo_gdk, mask);
 
   /*
    *The notebook
@@ -134,8 +136,6 @@ create_main_window (void)
   gtk_widget_show (notebook1);
   gtk_container_add (GTK_CONTAINER (main_window), notebook1);
 
-
-
   /*
    *The first vbox
    */
@@ -147,9 +147,6 @@ create_main_window (void)
   //gtk_box_pack_start (GTK_BOX (hbox1), vbox1, TRUE, TRUE, 1);
   gtk_container_add (GTK_CONTAINER (notebook1), vbox1);
 
-
-
-
   /*
    *The nodes frame
    */
@@ -159,11 +156,8 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (frame3);
   gtk_box_pack_start (GTK_BOX (vbox1), frame3, TRUE, TRUE, 0);
-  gtk_widget_set_size_request(frame3, -1, 300);
+  gtk_widget_set_size_request (frame3, -1, 300);
   gtk_container_set_border_width (GTK_CONTAINER (frame3), 1);
-
-
-
 
   /*
    *The scrolled window to contain the node list
@@ -171,11 +165,13 @@ create_main_window (void)
 
   scrolledwindow1 = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (scrolledwindow1);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow1", scrolledwindow1,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow1",
+                            scrolledwindow1,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (scrolledwindow1);
   gtk_container_add (GTK_CONTAINER (frame3), scrolledwindow1);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow1),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
   //gtk_box_pack_start (GTK_BOX (frame3), scrolledwindow1, TRUE, TRUE, 0);
   //gtk_widget_set_usize (scrolledwindow1, -2, 332);
@@ -190,41 +186,43 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (node_list);
   gtk_container_add (GTK_CONTAINER (scrolledwindow1), node_list);
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 0, 150); /* IP */
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 0, 150);   /* IP */
   //gtk_clist_set_column_justification(GTK_CLIST(node_list), 0, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 1, 150); /* gateway */
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 1, 150);   /* gateway */
   //gtk_clist_set_column_justification(GTK_CLIST(node_list), 1, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 2, 50); /* hopcount */
-  gtk_clist_set_column_justification(GTK_CLIST(node_list), 2, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 3, 80); /* dev */
-  gtk_clist_set_column_justification(GTK_CLIST(node_list), 3, GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 2, 50);    /* hopcount */
+  gtk_clist_set_column_justification (GTK_CLIST (node_list), 2,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 3, 80);    /* dev */
+  gtk_clist_set_column_justification (GTK_CLIST (node_list), 3,
+                                      GTK_JUSTIFY_CENTER);
 
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 4, 70); /* timer */
-  gtk_clist_set_column_justification(GTK_CLIST(node_list), 4, GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 4, 70);    /* timer */
+  gtk_clist_set_column_justification (GTK_CLIST (node_list), 4,
+                                      GTK_JUSTIFY_CENTER);
   //gtk_clist_set_column_width (GTK_CLIST (node_list), 7, 100); /* last about */
   //gtk_clist_set_column_justification(GTK_CLIST(node_list), 7, GTK_JUSTIFY_CENTER);
 
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 5, 40); /* MID */
-  gtk_clist_set_column_justification(GTK_CLIST(node_list), 5, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (node_list), 6, 40); /* HNA */
-  gtk_clist_set_column_justification(GTK_CLIST(node_list), 6, GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 5, 40);    /* MID */
+  gtk_clist_set_column_justification (GTK_CLIST (node_list), 5,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (node_list), 6, 40);    /* HNA */
+  gtk_clist_set_column_justification (GTK_CLIST (node_list), 6,
+                                      GTK_JUSTIFY_CENTER);
 
   gtk_clist_column_titles_show (GTK_CLIST (node_list));
 
   /*
    *Row selection callback
    */
-  gtk_signal_connect(GTK_OBJECT(node_list), "select_row",
-		     GTK_SIGNAL_FUNC(selection_made),
-		     NULL);
+  gtk_signal_connect (GTK_OBJECT (node_list), "select_row",
+                      GTK_SIGNAL_FUNC (selection_made), NULL);
 
   /*
    *Column selection callback
    */
-  gtk_signal_connect(GTK_OBJECT(node_list),
-		     "click_column",
-		     GTK_SIGNAL_FUNC(column_clicked_callback),
-		     NULL);
+  gtk_signal_connect (GTK_OBJECT (node_list), "click_column",
+                      GTK_SIGNAL_FUNC (column_clicked_callback), NULL);
 
   node_label1 = gtk_label_new ("Dest");
   gtk_widget_ref (node_label1);
@@ -254,7 +252,6 @@ create_main_window (void)
   gtk_widget_show (node_label4);
   gtk_clist_set_column_widget (GTK_CLIST (node_list), 3, node_label4);
 
-
   node_label7 = gtk_label_new ("Timer");
   gtk_widget_ref (node_label7);
   gtk_object_set_data_full (GTK_OBJECT (main_window), "LMF", node_label7,
@@ -263,13 +260,13 @@ create_main_window (void)
   gtk_clist_set_column_widget (GTK_CLIST (node_list), 4, node_label7);
 
   /*
-  node_label8 = gtk_label_new ("LMA");
-  gtk_widget_ref (node_label8);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "LMA", node_label8,
-                            (GtkDestroyNotify) gtk_widget_unref);
-  gtk_widget_show (node_label8);
-  gtk_clist_set_column_widget (GTK_CLIST (node_list), 7, node_label8);
-  */
+     node_label8 = gtk_label_new ("LMA");
+     gtk_widget_ref (node_label8);
+     gtk_object_set_data_full (GTK_OBJECT (main_window), "LMA", node_label8,
+     (GtkDestroyNotify) gtk_widget_unref);
+     gtk_widget_show (node_label8);
+     gtk_clist_set_column_widget (GTK_CLIST (node_list), 7, node_label8);
+   */
 
   node_label8 = gtk_label_new ("MID");
   gtk_widget_ref (node_label8);
@@ -285,25 +282,15 @@ create_main_window (void)
   gtk_widget_show (node_label9);
   gtk_clist_set_column_widget (GTK_CLIST (node_list), 6, node_label9);
 
+  gtk_clist_column_titles_active (GTK_CLIST (node_list));
 
-
-  gtk_clist_column_titles_active(GTK_CLIST (node_list));
-
-
-  gtk_widget_show_now(node_list);
-
-
+  gtk_widget_show_now (node_list);
 
   /*
    *Row selection callback
    */
-  gtk_signal_connect(GTK_OBJECT(node_list), "select_row",
-		     GTK_SIGNAL_FUNC(node_selection),
-		     NULL);
-
-
-
-
+  gtk_signal_connect (GTK_OBJECT (node_list), "select_row",
+                      GTK_SIGNAL_FUNC (node_selection), NULL);
 
   /*
    *The first hbox
@@ -316,9 +303,7 @@ create_main_window (void)
   gtk_box_pack_start (GTK_BOX (vbox1), hbox1, FALSE, FALSE, 0);
   //gtk_container_add (GTK_CONTAINER (notebook1), hbox1);
   gtk_container_set_border_width (GTK_CONTAINER (hbox1), 4);
-  gtk_widget_set_size_request(hbox1, -1, 200);
-
-
+  gtk_widget_set_size_request (hbox1, -1, 200);
 
   /*
    *The net-info frame
@@ -332,7 +317,6 @@ create_main_window (void)
   //gtk_widget_set_size_request(frame4, 200, -1);
   gtk_container_set_border_width (GTK_CONTAINER (frame4), 1);
 
-
   /*
    *The net-info hbox
    */
@@ -343,13 +327,12 @@ create_main_window (void)
   gtk_widget_show (net_vbox);
   gtk_container_add (GTK_CONTAINER (frame4), net_vbox);
 
-
   /*
    *The net-info label field
    */
-  net_label = gtk_label_new(NULL);
+  net_label = gtk_label_new (NULL);
   gtk_widget_ref (net_label);
-  gtk_misc_set_alignment((GtkMisc *)net_label, 0, 0);
+  gtk_misc_set_alignment ((GtkMisc *) net_label, 0, 0);
   //gtk_label_set_justify((GtkLabel *)net_label,GTK_JUSTIFY_LEFT);
   gtk_object_set_data_full (GTK_OBJECT (main_window), "net_label", net_label,
                             (GtkDestroyNotify) gtk_widget_unref);
@@ -366,16 +349,15 @@ create_main_window (void)
 
   connect_button = gtk_button_new_with_label ("Connect to host");
   gtk_widget_ref (connect_button);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "connect_button", connect_button,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "connect_button",
+                            connect_button,
                             (GtkDestroyNotify) gtk_widget_unref);
   /* Connect the "clicked" signal of the button to our callback */
   gtk_signal_connect (GTK_OBJECT (connect_button), "clicked",
-		      GTK_SIGNAL_FUNC (connect_callback), NULL);
+                      GTK_SIGNAL_FUNC (connect_callback), NULL);
   gtk_widget_show (connect_button);
   gtk_box_pack_start (GTK_BOX (net_vbox), connect_button, FALSE, FALSE, 1);
   gtk_container_set_border_width (GTK_CONTAINER (connect_button), 5);
-
-
 
   /*
    *The node MPR info frame
@@ -394,14 +376,15 @@ create_main_window (void)
    */
   mpr_scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (mpr_scrolledwindow);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "mpr_scrolledwindow", mpr_scrolledwindow,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "mpr_scrolledwindow",
+                            mpr_scrolledwindow,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show (mpr_scrolledwindow);
   gtk_container_add (GTK_CONTAINER (mpr_frame), mpr_scrolledwindow);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mpr_scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mpr_scrolledwindow),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_container_set_border_width (GTK_CONTAINER (mpr_scrolledwindow), 3);
-
 
   /*
    *The node MID info frame
@@ -420,15 +403,15 @@ create_main_window (void)
    */
   mid_scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (mid_scrolledwindow);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "mid_scrolledwindow", mid_scrolledwindow,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "mid_scrolledwindow",
+                            mid_scrolledwindow,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show (mid_scrolledwindow);
   gtk_container_add (GTK_CONTAINER (mid_frame), mid_scrolledwindow);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mid_scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mid_scrolledwindow),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_container_set_border_width (GTK_CONTAINER (mid_scrolledwindow), 3);
-
-
 
   /*
    *The MPR list
@@ -439,9 +422,8 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (mpr_list);
   gtk_container_add (GTK_CONTAINER (mpr_scrolledwindow), mpr_list);
-  gtk_clist_set_column_width (GTK_CLIST (mpr_list), 0, 120); /* IP */
+  gtk_clist_set_column_width (GTK_CLIST (mpr_list), 0, 120);    /* IP */
   gtk_clist_column_titles_hide (GTK_CLIST (mpr_list));
-
 
   /*
    *The MID list
@@ -452,11 +434,8 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (mid_list);
   gtk_container_add (GTK_CONTAINER (mid_scrolledwindow), mid_list);
-  gtk_clist_set_column_width (GTK_CLIST (mid_list), 0, 120); /* IP */
+  gtk_clist_set_column_width (GTK_CLIST (mid_list), 0, 120);    /* IP */
   gtk_clist_column_titles_hide (GTK_CLIST (mid_list));
-
-
-
 
   /*
    *The node HNA info frame
@@ -470,21 +449,20 @@ create_main_window (void)
   //gtk_widget_set_size_request(mid_frame, 125, -1);
   gtk_container_set_border_width (GTK_CONTAINER (hna_frame), 1);
 
-
-
   /*
    *The HNA scrolled window
    */
   hna_scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (hna_scrolledwindow);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "hna_scrolledwindow", hna_scrolledwindow,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "hna_scrolledwindow",
+                            hna_scrolledwindow,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show (hna_scrolledwindow);
   gtk_container_add (GTK_CONTAINER (hna_frame), hna_scrolledwindow);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (hna_scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (hna_scrolledwindow),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_container_set_border_width (GTK_CONTAINER (hna_scrolledwindow), 3);
-
 
   /*
    *The HNA list
@@ -495,12 +473,8 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (hna_list);
   gtk_container_add (GTK_CONTAINER (hna_scrolledwindow), hna_list);
-  gtk_clist_set_column_width (GTK_CLIST (hna_list), 0, 120); /* IP */
+  gtk_clist_set_column_width (GTK_CLIST (hna_list), 0, 120);    /* IP */
   gtk_clist_column_titles_hide (GTK_CLIST (hna_list));
-
-
-
-
 
   /*
    *The "main" notebook page
@@ -510,9 +484,10 @@ create_main_window (void)
   gtk_object_set_data_full (GTK_OBJECT (main_window), "Main", Main,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (Main);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 0), Main);
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 0),
+                              Main);
 
   /*
    *The main hbox of the Packet page
@@ -525,7 +500,6 @@ create_main_window (void)
   gtk_widget_show (hbox2);
   gtk_container_add (GTK_CONTAINER (notebook1), hbox2);
 
-
   /*
    *The packet hbox
    */
@@ -536,8 +510,6 @@ create_main_window (void)
   gtk_widget_show (pack_vbox);
   gtk_box_pack_start (GTK_BOX (hbox2), pack_vbox, TRUE, TRUE, 0);
 
-
-
   /*
    *The packet frame
    */
@@ -547,25 +519,22 @@ create_main_window (void)
   gtk_object_set_data_full (GTK_OBJECT (main_window), "frame2", frame2,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (frame2);
-  gtk_box_pack_start (GTK_BOX (pack_vbox), frame2, TRUE, TRUE, 0); /* Do not expand */
-
+  gtk_box_pack_start (GTK_BOX (pack_vbox), frame2, TRUE, TRUE, 0);      /* Do not expand */
 
   /*
    *Packet list scrolled window
    */
   scrolledwindow4 = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (scrolledwindow4);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow4", scrolledwindow4,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow4",
+                            scrolledwindow4,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show (scrolledwindow4);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow4), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow4),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
   gtk_container_add (GTK_CONTAINER (frame2), scrolledwindow4);
-
-
-
-
 
   /*
    *The packet list
@@ -573,13 +542,13 @@ create_main_window (void)
 
   packet_list = gtk_clist_new (3);
   gtk_widget_ref (packet_list);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_list", packet_list,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_list",
+                            packet_list, (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (packet_list);
   gtk_container_add (GTK_CONTAINER (scrolledwindow4), packet_list);
-  gtk_clist_set_column_width (GTK_CLIST (packet_list), 0, 80); /* Type */
+  gtk_clist_set_column_width (GTK_CLIST (packet_list), 0, 80);  /* Type */
   gtk_clist_set_column_width (GTK_CLIST (packet_list), 1, 150); /* Origin IP */
-  gtk_clist_set_column_width (GTK_CLIST (packet_list), 2, 20); /* size */
+  gtk_clist_set_column_width (GTK_CLIST (packet_list), 2, 20);  /* size */
   gtk_clist_column_titles_show (GTK_CLIST (packet_list));
 
   label17 = gtk_label_new ("Type");
@@ -603,16 +572,11 @@ create_main_window (void)
   gtk_widget_show (label19);
   gtk_clist_set_column_widget (GTK_CLIST (packet_list), 2, label19);
 
-
-
   /*
    *Row selection callback
    */
-  gtk_signal_connect(GTK_OBJECT(packet_list), "select_row",
-		     GTK_SIGNAL_FUNC(packet_selection),
-		     NULL);
-
-
+  gtk_signal_connect (GTK_OBJECT (packet_list), "select_row",
+                      GTK_SIGNAL_FUNC (packet_selection), NULL);
 
   /*
    *The packet button
@@ -620,32 +584,26 @@ create_main_window (void)
 
   packet_button = gtk_button_new_with_label ("Grab packets");
   gtk_widget_ref (packet_button);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_button", packet_button,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_button",
+                            packet_button,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   /* Connect the "clicked" signal of the button to our callback */
   gtk_signal_connect (GTK_OBJECT (packet_button), "clicked",
-		      GTK_SIGNAL_FUNC (packet_callback), NULL);
+                      GTK_SIGNAL_FUNC (packet_callback), NULL);
   gtk_widget_show (packet_button);
   gtk_box_pack_start (GTK_BOX (pack_vbox), packet_button, FALSE, FALSE, 5);
-
-
-
-
-
 
   /*
    *The packet disp hbox
    */
   pack_disp_vbox = gtk_vbox_new (FALSE, 0);
   gtk_widget_ref (pack_disp_vbox);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "pack_disp_vbox", pack_disp_vbox,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "pack_disp_vbox",
+                            pack_disp_vbox,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (pack_disp_vbox);
   gtk_box_pack_start (GTK_BOX (hbox2), pack_disp_vbox, TRUE, TRUE, 0);
-
-
-
 
   /*
    *The packet disp frame
@@ -653,12 +611,10 @@ create_main_window (void)
 
   disp_frame = gtk_frame_new ("Packet content");
   gtk_widget_ref (disp_frame);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "disp_frame", disp_frame,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "disp_frame",
+                            disp_frame, (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (disp_frame);
-  gtk_box_pack_start (GTK_BOX (pack_disp_vbox), disp_frame, TRUE, TRUE, 0); /* Do not expand */
-
-
+  gtk_box_pack_start (GTK_BOX (pack_disp_vbox), disp_frame, TRUE, TRUE, 0);     /* Do not expand */
 
   /*
    *Scrolled window for the packet display
@@ -667,35 +623,40 @@ create_main_window (void)
 
   scrolledwindow3 = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (scrolledwindow3);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow3", scrolledwindow3,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "scrolledwindow3",
+                            scrolledwindow3,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (scrolledwindow3);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow3), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow3),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
   gtk_container_add (GTK_CONTAINER (disp_frame), scrolledwindow3);
 
   //gtk_box_pack_start (GTK_BOX (disp_frame), scrolledwindow3, TRUE, TRUE, 0);
-
 
   /*
    *The packet display list
    */
   packet_content_list = gtk_clist_new (4);
   gtk_widget_ref (packet_content_list);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_content_list", packet_content_list,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_content_list",
+                            packet_content_list,
                             (GtkDestroyNotify) gtk_widget_unref);
-
 
   gtk_widget_show (packet_content_list);
   gtk_container_add (GTK_CONTAINER (scrolledwindow3), packet_content_list);
-  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 0, 70); /* 0-7 */
-  gtk_clist_set_column_justification(GTK_CLIST (packet_content_list), 0, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 1, 70); /* 8-15 */
-  gtk_clist_set_column_justification(GTK_CLIST (packet_content_list), 1, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 2, 70); /* 16-23 */
-  gtk_clist_set_column_justification(GTK_CLIST (packet_content_list), 2, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 3, 70); /* 24-31 */
-  gtk_clist_set_column_justification(GTK_CLIST (packet_content_list), 3, GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 0, 70);  /* 0-7 */
+  gtk_clist_set_column_justification (GTK_CLIST (packet_content_list), 0,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 1, 70);  /* 8-15 */
+  gtk_clist_set_column_justification (GTK_CLIST (packet_content_list), 1,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 2, 70);  /* 16-23 */
+  gtk_clist_set_column_justification (GTK_CLIST (packet_content_list), 2,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (packet_content_list), 3, 70);  /* 24-31 */
+  gtk_clist_set_column_justification (GTK_CLIST (packet_content_list), 3,
+                                      GTK_JUSTIFY_CENTER);
   gtk_clist_column_titles_show (GTK_CLIST (packet_content_list));
 
   label13 = gtk_label_new ("0 - 7");
@@ -728,23 +689,22 @@ create_main_window (void)
 
   //gtk_clist_set_selection_mode(GTK_CLIST (packet_content_list), GTK_SELECTION_NONE); /* no selections */
 
-
-
   /*
    *The packet button
    */
 
   packet_disp_button = gtk_button_new_with_label ("Display hex");
   gtk_widget_ref (packet_disp_button);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_disp_button", packet_disp_button,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "packet_disp_button",
+                            packet_disp_button,
                             (GtkDestroyNotify) gtk_widget_unref);
 
   /* Connect the "clicked" signal of the button to our callback */
   gtk_signal_connect (GTK_OBJECT (packet_disp_button), "clicked",
-		      GTK_SIGNAL_FUNC (packet_disp_callback), NULL);
+                      GTK_SIGNAL_FUNC (packet_disp_callback), NULL);
   gtk_widget_show (packet_disp_button);
-  gtk_box_pack_start (GTK_BOX (pack_disp_vbox), packet_disp_button, FALSE, FALSE, 5);
-
+  gtk_box_pack_start (GTK_BOX (pack_disp_vbox), packet_disp_button, FALSE,
+                      FALSE, 5);
 
   /*
    *The "packets" notebook
@@ -752,29 +712,25 @@ create_main_window (void)
 
   label_packets = gtk_label_new ("Packets");
   gtk_widget_ref (label_packets);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "label_packets", label_packets,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "label_packets",
+                            label_packets,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (label_packets);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 1), label_packets);
-
-
-
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 1),
+                              label_packets);
 
   /*
    *The route hbox
    */
   route_hbox1 = gtk_hbox_new (FALSE, 0);
   gtk_widget_ref (route_hbox1);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_hbox1", route_hbox1,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_hbox1",
+                            route_hbox1, (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_hbox1);
   //gtk_box_pack_start (GTK_BOX (hbox1), vbox1, TRUE, TRUE, 1);
   gtk_container_add (GTK_CONTAINER (notebook1), route_hbox1);
-
-
-
 
   /*
    *The routes frame
@@ -782,15 +738,13 @@ create_main_window (void)
 
   route_frame = gtk_frame_new ("OLSR routes in kernel:");
   gtk_widget_ref (route_frame);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_frame", route_frame,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_frame",
+                            route_frame, (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_frame);
 
   //gtk_container_add (GTK_CONTAINER (notebook1), route_frame);
-  gtk_widget_set_size_request(route_frame, 200, -1);
-  gtk_box_pack_start (GTK_BOX (route_hbox1), route_frame, TRUE, TRUE, 0); /* Do not expand */
-
-
+  gtk_widget_set_size_request (route_frame, 200, -1);
+  gtk_box_pack_start (GTK_BOX (route_hbox1), route_frame, TRUE, TRUE, 0);       /* Do not expand */
 
   /*
    *Scrolled window for the packet display
@@ -799,67 +753,72 @@ create_main_window (void)
 
   route_scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
   gtk_widget_ref (route_scrolledwindow);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_scrolledwindow", route_scrolledwindow,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_scrolledwindow",
+                            route_scrolledwindow,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_scrolledwindow);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (route_scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (route_scrolledwindow),
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
   gtk_container_add (GTK_CONTAINER (route_frame), route_scrolledwindow);
 
   //gtk_box_pack_start (GTK_BOX (route_frame), scrolledwindow3, TRUE, TRUE, 0);
-
 
   /*
    *The routes display list
    */
   route_list = gtk_clist_new (4);
   gtk_widget_ref (route_list);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_list", route_list,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_list",
+                            route_list, (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show (route_list);
   gtk_container_add (GTK_CONTAINER (route_scrolledwindow), route_list);
-  gtk_clist_set_column_width (GTK_CLIST (route_list), 0, 120); /* dest */
+  gtk_clist_set_column_width (GTK_CLIST (route_list), 0, 120);  /* dest */
   //gtk_clist_set_column_justification(GTK_CLIST (route_list), 0, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (route_list), 1, 120); /* gw */
+  gtk_clist_set_column_width (GTK_CLIST (route_list), 1, 120);  /* gw */
   //gtk_clist_set_column_justification(GTK_CLIST (route_list), 1, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (route_list), 2, 50); /* weight */
-  gtk_clist_set_column_justification(GTK_CLIST (route_list), 2, GTK_JUSTIFY_CENTER);
-  gtk_clist_set_column_width (GTK_CLIST (route_list), 3, 70); /* interface */
-  gtk_clist_set_column_justification(GTK_CLIST (route_list), 3, GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (route_list), 2, 50);   /* weight */
+  gtk_clist_set_column_justification (GTK_CLIST (route_list), 2,
+                                      GTK_JUSTIFY_CENTER);
+  gtk_clist_set_column_width (GTK_CLIST (route_list), 3, 70);   /* interface */
+  gtk_clist_set_column_justification (GTK_CLIST (route_list), 3,
+                                      GTK_JUSTIFY_CENTER);
   gtk_clist_column_titles_show (GTK_CLIST (route_list));
 
   route_label1 = gtk_label_new ("Destination");
   gtk_widget_ref (route_label1);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label1", route_label1,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label1",
+                            route_label1,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_label1);
   gtk_clist_set_column_widget (GTK_CLIST (route_list), 0, route_label1);
 
   route_label2 = gtk_label_new ("Gateway");
   gtk_widget_ref (route_label2);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label2", route_label2,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label2",
+                            route_label2,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_label2);
   gtk_clist_set_column_widget (GTK_CLIST (route_list), 1, route_label2);
 
   route_label3 = gtk_label_new ("Weight");
   gtk_widget_ref (route_label3);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label3", route_label3,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label3",
+                            route_label3,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_label3);
   gtk_clist_set_column_widget (GTK_CLIST (route_list), 2, route_label3);
 
   route_label4 = gtk_label_new ("Interface");
   gtk_widget_ref (route_label4);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label4", route_label4,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_label4",
+                            route_label4,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_label4);
   gtk_clist_set_column_widget (GTK_CLIST (route_list), 3, route_label4);
 
   //gtk_clist_set_selection_mode(GTK_CLIST (route_list), GTK_SELECTION_NONE); /* no selections */
-
-
 
   /*
    *The routes stats frame
@@ -867,120 +826,108 @@ create_main_window (void)
 
   route_stats_frame = gtk_frame_new ("Stats:");
   gtk_widget_ref (route_stats_frame);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_stats_frame", route_stats_frame,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "route_stats_frame",
+                            route_stats_frame,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (route_stats_frame);
 
   //gtk_container_add (GTK_CONTAINER (notebook1), route_frame);
-  gtk_box_pack_start (GTK_BOX (route_hbox1), route_stats_frame, TRUE, TRUE, 1);
-
-
-
-
+  gtk_box_pack_start (GTK_BOX (route_hbox1), route_stats_frame, TRUE, TRUE,
+                      1);
 
   /*
    *The "routes" notebook
    */
   label_routes = gtk_label_new ("Routes");
   gtk_widget_ref (label_routes);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "label_routes", label_routes,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "label_routes",
+                            label_routes,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (label_routes);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 2), label_routes);
-
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 2),
+                              label_routes);
 
   empty1 = gtk_vbox_new (FALSE, 0);
   gtk_widget_show (empty1);
   gtk_container_add (GTK_CONTAINER (notebook1), empty1);
-
-
-
-
-
-
 
   /*
    *The "traffic" notebook
    */
   traffic_label = gtk_label_new ("Traffic");
   gtk_widget_ref (traffic_label);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "traffic_label", traffic_label,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "traffic_label",
+                            traffic_label,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (traffic_label);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 3), traffic_label);
-
-
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 3),
+                              traffic_label);
 
   /*
    *The settings hbox
    */
   settings_hbox1 = gtk_hbox_new (FALSE, 0);
   gtk_widget_ref (settings_hbox1);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "settings_hbox1", settings_hbox1,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "settings_hbox1",
+                            settings_hbox1,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (settings_hbox1);
   //gtk_box_pack_start (GTK_BOX (hbox1), vbox1, TRUE, TRUE, 1);
   gtk_container_add (GTK_CONTAINER (notebook1), settings_hbox1);
 
-
-
   /*
    *The settings-info label field
    */
-  info_label = gtk_label_new(NULL);
+  info_label = gtk_label_new (NULL);
   gtk_widget_ref (info_label);
-  gtk_misc_set_alignment((GtkMisc *)info_label, 0, 0);
+  gtk_misc_set_alignment ((GtkMisc *) info_label, 0, 0);
   //gtk_label_set_justify((GtkLabel *)net_label,GTK_JUSTIFY_LEFT);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "info_label", info_label,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "info_label",
+                            info_label, (GtkDestroyNotify) gtk_widget_unref);
 
   //set_net_info("Not connected...");
   gtk_widget_show (info_label);
   gtk_box_pack_start (GTK_BOX (settings_hbox1), info_label, TRUE, TRUE, 0);
-
 
   /*
    *The "settings" notebook
    */
   settings_label = gtk_label_new ("Settings");
   gtk_widget_ref (settings_label);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "settings_label", settings_label,
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "settings_label",
+                            settings_label,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (settings_label);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 4), settings_label);
-
-
-
-
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 4),
+                              settings_label);
 
   /*
    *The "about" hbox
    */
   about_hbox1 = gtk_hbox_new (FALSE, 0);
   gtk_widget_ref (about_hbox1);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "about_hbox1", about_hbox1,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "about_hbox1",
+                            about_hbox1, (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (about_hbox1);
   //gtk_box_pack_start (GTK_BOX (hbox1), vbox1, TRUE, TRUE, 1);
   gtk_container_add (GTK_CONTAINER (notebook1), about_hbox1);
   gtk_container_set_border_width (GTK_CONTAINER (about_hbox1), 10);
 
-
   /*
    *The about label field
    */
-  about_label = gtk_label_new(NULL);
+  about_label = gtk_label_new (NULL);
   gtk_widget_ref (about_label);
-  gtk_misc_set_alignment((GtkMisc *)about_label, 0, 0);
-  gtk_label_set_justify((GtkLabel *)about_label,GTK_JUSTIFY_CENTER);
-  gtk_object_set_data_full (GTK_OBJECT (main_window), "about_label", about_label,
-                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_misc_set_alignment ((GtkMisc *) about_label, 0, 0);
+  gtk_label_set_justify ((GtkLabel *) about_label, GTK_JUSTIFY_CENTER);
+  gtk_object_set_data_full (GTK_OBJECT (main_window), "about_label",
+                            about_label, (GtkDestroyNotify) gtk_widget_unref);
 
   //set_net_info("Not connected...");
   gtk_widget_show (about_label);
@@ -988,9 +935,8 @@ create_main_window (void)
   gtk_box_pack_start (GTK_BOX (about_hbox1), about_label, TRUE, TRUE, 0);
   gtk_widget_show (unik_logo);
 
-
-  gtk_label_set_text((GtkLabel *)about_label, "OLSRD-GUI by Andreas Tonnesen (andreto@ifi.uio.no)");
-
+  gtk_label_set_text ((GtkLabel *) about_label,
+                      "OLSRD-GUI by Andreas Tonnesen (andreto@ifi.uio.no)");
 
   /*
    *The "about" notebook
@@ -1000,176 +946,167 @@ create_main_window (void)
   gtk_object_set_data_full (GTK_OBJECT (main_window), "About", label3,
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (label3);
-  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 5), label3);
-
-
+  gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1),
+                              gtk_notebook_get_nth_page (GTK_NOTEBOOK
+                                                         (notebook1), 5),
+                              label3);
 
   return main_window;
 
 }
 
-
-
-
 /*
  *Add a node to the node list
  */
 void
-route_list_add(char *dest, char *gw, char *metric, char *dev)
+route_list_add (char *dest, char *gw, char *metric, char *dev)
 {
-  gchar *tmp[4] = {dest, gw, dev, metric};
+  gchar *tmp[4] = { dest, gw, dev, metric };
   route_list_size++;
 
-  gtk_clist_freeze(GTK_CLIST(route_list));
+  gtk_clist_freeze (GTK_CLIST (route_list));
 
-  gtk_clist_append(GTK_CLIST(route_list), tmp);
+  gtk_clist_append (GTK_CLIST (route_list), tmp);
 
-  gtk_clist_thaw(GTK_CLIST(route_list));
+  gtk_clist_thaw (GTK_CLIST (route_list));
 
 }
-
 
 /*
  *Update the entyr with IP 'addr'
  */
 void
-route_list_update(char *addr)
+route_list_update (char *addr)
 {
 
 }
-
 
 /*
  *Delete a node from the node list
  */
 int
-route_list_del(char *dest)
+route_list_del (char *dest)
 {
   int i = 0;
   char *ip;
 
-  gtk_clist_freeze(GTK_CLIST(route_list));
+  gtk_clist_freeze (GTK_CLIST (route_list));
 
-  for(i = 0; i < route_list_size; i++)
+  for (i = 0; i < route_list_size; i++)
     {
-      gtk_clist_get_text(GTK_CLIST(route_list), i, 0, (gchar **) &ip);
-      if(strcmp(dest, ip) == 0)
-	{
-	  //printf("Found %d\n", i);
-	  gtk_clist_remove(GTK_CLIST(route_list), i);
-	  route_list_size--;
-	  gtk_clist_thaw(GTK_CLIST(route_list));
-	  return 1;
-	}
+      gtk_clist_get_text (GTK_CLIST (route_list), i, 0, (gchar **) & ip);
+      if (strcmp (dest, ip) == 0)
+        {
+          //printf("Found %d\n", i);
+          gtk_clist_remove (GTK_CLIST (route_list), i);
+          route_list_size--;
+          gtk_clist_thaw (GTK_CLIST (route_list));
+          return 1;
+        }
     }
 
-  gtk_clist_thaw(GTK_CLIST(route_list));
+  gtk_clist_thaw (GTK_CLIST (route_list));
   return 0;
 }
-
-
 
 /*
  *Remove a node from the list
  */
 int
-remove_nodes_list(union olsr_ip_addr *node)
+remove_nodes_list (union olsr_ip_addr *node)
 {
   char *ip;
-  char *in_ip = ip_to_string(node);
+  char *in_ip = ip_to_string (node);
   int i;
 
-  for(i = 0; i < node_list_size; i++)
+  for (i = 0; i < node_list_size; i++)
     {
-      gtk_clist_get_text(GTK_CLIST(node_list), i, 0, (gchar **) &ip);
-      if(strcmp(in_ip, ip) == 0)
-	{
-	  //printf("Found entry!\n");
-	  gtk_clist_remove(GTK_CLIST(node_list), i);
-	  node_list_size--;
-	  return 1;
-	}
+      gtk_clist_get_text (GTK_CLIST (node_list), i, 0, (gchar **) & ip);
+      if (strcmp (in_ip, ip) == 0)
+        {
+          //printf("Found entry!\n");
+          gtk_clist_remove (GTK_CLIST (node_list), i);
+          node_list_size--;
+          return 1;
+        }
     }
 
   return 0;
 }
-
-
-
 
 /*
  *If the node passed as a parameter exists then
  *update it. If not add it to the list
  */
 void
-update_nodes_list(struct node *node)
+update_nodes_list (struct node *node)
 {
   int i = 0;
   char *ip;
   int found = 0;
   char *dest;
-  char *tmp[9] = {"","","","","","","","",""};
+  char *tmp[9] = { "", "", "", "", "", "", "", "", "" };
   char timer[20];
   struct tm *time_st;
   char itoa_buf[10];
 
-  if(memcmp(&node->addr, &main_addr, ipsize) == 0)
+  if (memcmp (&node->addr, &main_addr, ipsize) == 0)
     dest = "local";
   else
-    dest = ip_to_string(&node->addr);
+    dest = ip_to_string (&node->addr);
 
-  gtk_clist_freeze(GTK_CLIST(node_list));
+  gtk_clist_freeze (GTK_CLIST (node_list));
 
-  while((i < node_list_size) && !found)
+  while ((i < node_list_size) && !found)
     {
-      gtk_clist_get_text(GTK_CLIST(node_list), i, 0, (gchar **) &ip);
-      if(strcmp(dest, ip) == 0)
-	found = 1;
+      gtk_clist_get_text (GTK_CLIST (node_list), i, 0, (gchar **) & ip);
+      if (strcmp (dest, ip) == 0)
+        found = 1;
       i++;
     }
 
   /* Update node */
-  if(found)
+  if (found)
     {
-      i--; /* Go backt to the right row */
+      i--;                      /* Go backt to the right row */
       //printf("Updating %s\n\n", ip_to_string(&node->addr));
       /* don't update main addr */
       /* Gateway */
-      if(memcmp(&node->addr, &main_addr, ipsize) != 0)
-	{
-	  if(memcmp(&node->gw_addr, &null_addr, ipsize) != 0)
-	    gtk_clist_set_text(GTK_CLIST(node_list), i, 1, ip_to_string(&node->gw_addr));
-	  /* Weigth */
-	  if(node->hopcount != 0)
-	    {
-	      gui_itoa(node->hopcount, itoa_buf);
-	      gtk_clist_set_text(GTK_CLIST(node_list), i, 2, itoa_buf);
-	    }
-	  /* Device */
-	  gtk_clist_set_text(GTK_CLIST(node_list), i, 3, &node->dev[0]);
-	}
-
+      if (memcmp (&node->addr, &main_addr, ipsize) != 0)
+        {
+          if (memcmp (&node->gw_addr, &null_addr, ipsize) != 0)
+            gtk_clist_set_text (GTK_CLIST (node_list), i, 1,
+                                ip_to_string (&node->gw_addr));
+          /* Weigth */
+          if (node->hopcount != 0)
+            {
+              gui_itoa (node->hopcount, itoa_buf);
+              gtk_clist_set_text (GTK_CLIST (node_list), i, 2, itoa_buf);
+            }
+          /* Device */
+          gtk_clist_set_text (GTK_CLIST (node_list), i, 3, &node->dev[0]);
+        }
 
       /* Timer */
-      if(node->timer.tv_usec)
-      {
-	memset(&timer[0], 0, 20);
-	time_st = localtime((time_t *)&node->timer.tv_sec);
-	sprintf(&timer[0], "%02d:%02d:%02d", time_st->tm_hour, time_st->tm_min, time_st->tm_sec);
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 4, &timer[0]);
-      }
-
+      if (node->timer.tv_usec)
+        {
+          memset (&timer[0], 0, 20);
+          time_st = localtime ((time_t *) & node->timer.tv_sec);
+          sprintf (&timer[0], "%02d:%02d:%02d", time_st->tm_hour,
+                   time_st->tm_min, time_st->tm_sec);
+          gtk_clist_set_text (GTK_CLIST (node_list), i, 4, &timer[0]);
+        }
 
       /* MID */
-      if(node->mid.next != &node->mid)
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 5, "yes");
+      if (node->mid.next != &node->mid)
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 5, "yes");
       else
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 5, "no");
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 5, "no");
       /* HNA */
-      if(node->hna.next != &node->hna)
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "yes");
+      if (node->hna.next != &node->hna)
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 6, "yes");
       else
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "no");
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 6, "no");
 
     }
   /* Add new node */
@@ -1177,108 +1114,93 @@ update_nodes_list(struct node *node)
     {
       i = node_list_size;
       /* Create entry */
-      gtk_clist_insert(GTK_CLIST(node_list), i, tmp);
+      gtk_clist_insert (GTK_CLIST (node_list), i, tmp);
       /* Main address */
-      gtk_clist_set_text(GTK_CLIST(node_list), i, 0, dest);
-      if(memcmp(&node->addr, &main_addr, ipsize) == 0)
-	{
-	  if(memcmp(&node->gw_addr, &null_addr, ipsize) != 0)
-	    gtk_clist_set_text(GTK_CLIST(node_list), i, 1, ip_to_string(&node->gw_addr));
-	  /* Weigth */
-	  if(node->hopcount != 0)
-	    {
-	      gui_itoa(node->hopcount, itoa_buf);
-	      gtk_clist_set_text(GTK_CLIST(node_list), i, 2, itoa_buf);
-	    }
-	  /* Device */
-	  gtk_clist_set_text(GTK_CLIST(node_list), i, 3, &node->dev[0]);
-	}
+      gtk_clist_set_text (GTK_CLIST (node_list), i, 0, dest);
+      if (memcmp (&node->addr, &main_addr, ipsize) == 0)
+        {
+          if (memcmp (&node->gw_addr, &null_addr, ipsize) != 0)
+            gtk_clist_set_text (GTK_CLIST (node_list), i, 1,
+                                ip_to_string (&node->gw_addr));
+          /* Weigth */
+          if (node->hopcount != 0)
+            {
+              gui_itoa (node->hopcount, itoa_buf);
+              gtk_clist_set_text (GTK_CLIST (node_list), i, 2, itoa_buf);
+            }
+          /* Device */
+          gtk_clist_set_text (GTK_CLIST (node_list), i, 3, &node->dev[0]);
+        }
 
       /* MID */
-      if(node->mid.next != &node->mid)
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 5, "yes");
+      if (node->mid.next != &node->mid)
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 5, "yes");
       else
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 5, "no");
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 5, "no");
       /* HNA */
-      if(node->hna.next != &node->hna)
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "yes");
+      if (node->hna.next != &node->hna)
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 6, "yes");
       else
-	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "no");
+        gtk_clist_set_text (GTK_CLIST (node_list), i, 6, "no");
 
       node_list_size++;
     }
 
-  gtk_clist_thaw(GTK_CLIST(node_list));
-
+  gtk_clist_thaw (GTK_CLIST (node_list));
 
 }
-
-
-
 
 /*
  *Add a packet to the packet list
  */
 void
-packet_list_add(char *type, char *from, char *length)
+packet_list_add (char *type, char *from, char *length)
 {
-  gchar *nfo[3] = {type, from, length};
+  gchar *nfo[3] = { type, from, length };
 
   //if(!freeze_packets)
-    //{
-      if(packet_list_size >= MAXPACKS)
-	gtk_clist_remove(GTK_CLIST(packet_list), MAXPACKS-1);
-      else
-	packet_list_size++;
+  //{
+  if (packet_list_size >= MAXPACKS)
+    gtk_clist_remove (GTK_CLIST (packet_list), MAXPACKS - 1);
+  else
+    packet_list_size++;
 
-      gtk_clist_prepend(GTK_CLIST(packet_list), nfo );
+  gtk_clist_prepend (GTK_CLIST (packet_list), nfo);
 
-      //}
+  //}
 
 }
 
-
-
-
-
-
-
-
 void
-set_net_info(gchar *info, int disp_button)
+set_net_info (gchar * info, int disp_button)
 {
   gchar title[255];
 
-  memset(&title[0], 0, 255);
-  gtk_label_set_text((GtkLabel *)info_label, info);
-  gtk_label_set_text((GtkLabel *)net_label, "Connected");
+  memset (&title[0], 0, 255);
+  gtk_label_set_text ((GtkLabel *) info_label, info);
+  gtk_label_set_text ((GtkLabel *) net_label, "Connected");
 
-  strcat(title, olsrd_version);
-  strcat(title, " - ");
-  strcat(title, ip_to_string(&main_addr));
+  strcat (title, olsrd_version);
+  strcat (title, " - ");
+  strcat (title, ip_to_string (&main_addr));
 
   gtk_window_set_title (GTK_WINDOW (main_window), title);
 
-  if(disp_button)
-    gtk_widget_show(connect_button);
+  if (disp_button)
+    gtk_widget_show (connect_button);
   else
-    gtk_widget_hide(connect_button);
-}
-
-
-
-void
-set_net_info_offline()
-{
-  gtk_label_set_text((GtkLabel *)net_label, "Connection refused...");
-  gtk_widget_show(connect_button);
+    gtk_widget_hide (connect_button);
 }
 
 void
-set_net_info_connecting()
+set_net_info_offline ()
 {
-  gtk_label_set_text((GtkLabel *)net_label, "Connecting...");
+  gtk_label_set_text ((GtkLabel *) net_label, "Connection refused...");
+  gtk_widget_show (connect_button);
 }
 
-
-
+void
+set_net_info_connecting ()
+{
+  gtk_label_set_text ((GtkLabel *) net_label, "Connecting...");
+}

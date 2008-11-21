@@ -45,7 +45,6 @@
 #ifndef _OLSRD_PLUGIN_DEFS
 #define _OLSRD_PLUGIN_DEFS
 
-
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -76,25 +75,26 @@ extern int resolve_ip_addresses;
 
 /* Allowed hosts stuff */
 
-struct allowed_net {
-    union olsr_ip_addr       net;
-    union olsr_ip_addr       mask;
-    struct allowed_net      *next;
+struct allowed_net
+{
+  union olsr_ip_addr net;
+  union olsr_ip_addr mask;
+  struct allowed_net *next;
 };
 
-extern struct allowed_net    *allowed_nets;
-
+extern struct allowed_net *allowed_nets;
 
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
 
 /* Initialization function */
-int olsrd_plugin_init(void);
+int olsrd_plugin_init (void);
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
+void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
+                                  **params, int *size);
 
-int olsrd_plugin_interface_version(void);
+int olsrd_plugin_interface_version (void);
 
 #endif
 

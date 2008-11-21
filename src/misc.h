@@ -41,6 +41,6 @@
 #ifndef _OLSR_MISC_H
 #define _OLSR_MISC_H
 
-void clear_console(void);
+void clear_console (void);
 
 #endif

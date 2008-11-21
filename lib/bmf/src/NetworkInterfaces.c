@@ -40,39 +40,39 @@
 #include "NetworkInterfaces.h"
 
 /* System includes */
-#include <stddef.h> /* NULL */
-#include <syslog.h> /* syslog() */
-#include <string.h> /* strerror(), strchr(), strcmp() */
-#include <errno.h> /* errno */
-#include <unistd.h> /* close() */
-#include <sys/ioctl.h> /* ioctl() */
-#include <fcntl.h> /* fcntl() */
-#include <assert.h> /* assert() */
-#include <net/if.h> /* socket(), ifreq, if_indextoname(), if_nametoindex() */
-#include <netinet/in.h> /* htons() */
-#include <linux/if_ether.h> /* ETH_P_IP */
-#include <linux/if_packet.h> /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
-#include <linux/if_tun.h> /* IFF_TAP */
-#include <netinet/ip.h> /* struct ip */
-#include <netinet/udp.h> /* SOL_UDP */
+#include <stddef.h>             /* NULL */
+#include <syslog.h>             /* syslog() */
+#include <string.h>             /* strerror(), strchr(), strcmp() */
+#include <errno.h>              /* errno */
+#include <unistd.h>             /* close() */
+#include <sys/ioctl.h>          /* ioctl() */
+#include <fcntl.h>              /* fcntl() */
+#include <assert.h>             /* assert() */
+#include <net/if.h>             /* socket(), ifreq, if_indextoname(), if_nametoindex() */
+#include <netinet/in.h>         /* htons() */
+#include <linux/if_ether.h>     /* ETH_P_IP */
+#include <linux/if_packet.h>    /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
+#include <linux/if_tun.h>       /* IFF_TAP */
+#include <netinet/ip.h>         /* struct ip */
+#include <netinet/udp.h>        /* SOL_UDP */
 
 /* OLSRD includes */
-#include "olsr.h" /* olsr_printf() */
+#include "olsr.h"               /* olsr_printf() */
 #include "ipcalc.h"
-#include "defs.h" /* olsr_cnf */
-#include "link_set.h" /* get_link_set() */
-#include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
-#include "net_olsr.h" /* ipequal */
+#include "defs.h"               /* olsr_cnf */
+#include "link_set.h"           /* get_link_set() */
+#include "tc_set.h"             /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
+#include "net_olsr.h"           /* ipequal */
 #include "lq_plugin.h"
 
 /* Plugin includes */
-#include "Packet.h" /* IFHWADDRLEN */
-#include "Bmf.h" /* PLUGIN_NAME, MainAddressOf() */
-#include "Address.h" /* IsMulticast() */
+#include "Packet.h"             /* IFHWADDRLEN */
+#include "Bmf.h"                /* PLUGIN_NAME, MainAddressOf() */
+#include "Address.h"            /* IsMulticast() */
 
 /* List of network interface objects used by BMF plugin */
-struct TBmfInterface* BmfInterfaces = NULL;
-struct TBmfInterface* LastBmfInterface = NULL;
+struct TBmfInterface *BmfInterfaces = NULL;
+struct TBmfInterface *LastBmfInterface = NULL;
 
 /* Highest-numbered open socket file descriptor. To be used as first
  * parameter in calls to select(...). */
@@ -128,15 +128,16 @@ int CapturePacketsOnOlsrInterfaces = 0;
  * Return     : success (0) or fail (1)
  * Data Used  : EtherTunTapIfName
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceName(
-  const char* ifname,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+SetBmfInterfaceName (const char *ifname, void *data
+                     __attribute__ ((unused)),
+                     set_plugin_parameter_addon addon
+                     __attribute__ ((unused)))
 {
-  strncpy(EtherTunTapIfName, ifname, IFNAMSIZ - 1);
-  EtherTunTapIfName[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  strncpy (EtherTunTapIfName, ifname, IFNAMSIZ - 1);
+  EtherTunTapIfName[IFNAMSIZ - 1] = '\0';       /* Ensures null termination */
   return 0;
-} /* SetBmfInterfaceName */
+}                               /* SetBmfInterfaceName */
 
 /* -------------------------------------------------------------------------
  * Function   : SetBmfInterfaceIp
@@ -150,14 +151,14 @@ int SetBmfInterfaceName(
  * Data Used  : EtherTunTapIp, EtherTunTapIpMask, EtherTunTapIpBroadcast,
  *              TunTapIpOverruled
  * ------------------------------------------------------------------------- */
-int SetBmfInterfaceIp(
-  const char* ip,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+SetBmfInterfaceIp (const char *ip, void *data
+                   __attribute__ ((unused)), set_plugin_parameter_addon addon
+                   __attribute__ ((unused)))
 {
 #define IPV4_MAX_ADDRLEN 16
 #define IPV4_MAX_PREFIXLEN 32
-  char* slashAt;
+  char *slashAt;
   char ipAddr[IPV4_MAX_ADDRLEN];
   struct in_addr sinaddr;
   int prefixLen;
@@ -167,50 +168,50 @@ int SetBmfInterfaceIp(
    * file lib/prefix.c */
 
   /* Find slash inside string. */
-  slashAt = strchr(ip, '/');
+  slashAt = strchr (ip, '/');
 
   /* String doesn't contain slash. */
   if (slashAt == NULL || slashAt - ip >= IPV4_MAX_ADDRLEN)
-  {
-    /* No prefix length specified, or IP address too long */
-    return 1;
-  }
+    {
+      /* No prefix length specified, or IP address too long */
+      return 1;
+    }
 
-  strncpy(ipAddr, ip, slashAt - ip);
+  strncpy (ipAddr, ip, slashAt - ip);
   *(ipAddr + (slashAt - ip)) = '\0';
-  if (inet_aton(ipAddr, &sinaddr) == 0)
-  {
-    /* Invalid address passed */
-    return 1;
-  }
+  if (inet_aton (ipAddr, &sinaddr) == 0)
+    {
+      /* Invalid address passed */
+      return 1;
+    }
 
-  EtherTunTapIp = ntohl(sinaddr.s_addr);
+  EtherTunTapIp = ntohl (sinaddr.s_addr);
 
   /* Get prefix length. */
-  prefixLen = atoi(++slashAt);
+  prefixLen = atoi (++slashAt);
   if (prefixLen <= 0 || prefixLen > IPV4_MAX_PREFIXLEN)
-  {
-    return 1;
-  }
+    {
+      return 1;
+    }
 
   /* Compose IP subnet mask in host byte order */
   EtherTunTapIpMask = 0;
   for (i = 0; i < prefixLen; i++)
-  {
-    EtherTunTapIpMask |= (1 << (IPV4_MAX_PREFIXLEN - 1 - i));
-  }
+    {
+      EtherTunTapIpMask |= (1 << (IPV4_MAX_PREFIXLEN - 1 - i));
+    }
 
   /* Compose IP broadcast address in host byte order */
   EtherTunTapIpBroadcast = EtherTunTapIp;
   for (i = prefixLen; i < IPV4_MAX_PREFIXLEN; i++)
-  {
-    EtherTunTapIpBroadcast |= (1 << (IPV4_MAX_PREFIXLEN - 1 - i));
-  }
+    {
+      EtherTunTapIpBroadcast |= (1 << (IPV4_MAX_PREFIXLEN - 1 - i));
+    }
 
   TunTapIpOverruled = 1;
 
   return 0;
-} /* SetBmfInterfaceIp */
+}                               /* SetBmfInterfaceIp */
 
 /* -------------------------------------------------------------------------
  * Function   : SetCapturePacketsOnOlsrInterfaces
@@ -223,25 +224,26 @@ int SetBmfInterfaceIp(
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetCapturePacketsOnOlsrInterfaces(
-  const char* enable,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+SetCapturePacketsOnOlsrInterfaces (const char *enable, void *data
+                                   __attribute__ ((unused)),
+                                   set_plugin_parameter_addon addon
+                                   __attribute__ ((unused)))
 {
-  if (strcmp(enable, "yes") == 0)
-  {
-    CapturePacketsOnOlsrInterfaces = 1;
-    return 0;
-  }
-  else if (strcmp(enable, "no") == 0)
-  {
-    CapturePacketsOnOlsrInterfaces = 0;
-    return 0;
-  }
+  if (strcmp (enable, "yes") == 0)
+    {
+      CapturePacketsOnOlsrInterfaces = 1;
+      return 0;
+    }
+  else if (strcmp (enable, "no") == 0)
+    {
+      CapturePacketsOnOlsrInterfaces = 0;
+      return 0;
+    }
 
   /* Value not recognized */
   return 1;
-} /* SetCapturePacketsOnOlsrInterfaces */
+}                               /* SetCapturePacketsOnOlsrInterfaces */
 
 /* -------------------------------------------------------------------------
  * Function   : SetBmfMechanism
@@ -254,25 +256,25 @@ int SetCapturePacketsOnOlsrInterfaces(
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int SetBmfMechanism(
-  const char* mechanism,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+SetBmfMechanism (const char *mechanism, void *data
+                 __attribute__ ((unused)), set_plugin_parameter_addon addon
+                 __attribute__ ((unused)))
 {
-  if (strcmp(mechanism, "Broadcast") == 0)
-  {
-    BmfMechanism = BM_BROADCAST;
-    return 0;
-  }
-  else if (strcmp(mechanism, "UnicastPromiscuous") == 0)
-  {
-    BmfMechanism = BM_UNICAST_PROMISCUOUS;
-    return 0;
-  }
+  if (strcmp (mechanism, "Broadcast") == 0)
+    {
+      BmfMechanism = BM_BROADCAST;
+      return 0;
+    }
+  else if (strcmp (mechanism, "UnicastPromiscuous") == 0)
+    {
+      BmfMechanism = BM_UNICAST_PROMISCUOUS;
+      return 0;
+    }
 
   /* Value not recognized */
   return 1;
-} /* SetBmfMechanism */
+}                               /* SetBmfMechanism */
 
 /* -------------------------------------------------------------------------
  * Function   : AddDescriptorToInputSet
@@ -283,17 +285,18 @@ int SetBmfMechanism(
  * Data Used  : HighestSkfd, InputSet
  * Notes      : Keeps track of the highest-numbered descriptor
  * ------------------------------------------------------------------------- */
-static void AddDescriptorToInputSet(int skfd)
+static void
+AddDescriptorToInputSet (int skfd)
 {
   /* Keep the highest-numbered descriptor */
   if (skfd > HighestSkfd)
-  {
-    HighestSkfd = skfd;
-  }
+    {
+      HighestSkfd = skfd;
+    }
 
   /* Add descriptor to input set */
-  FD_SET(skfd, &InputSet);
-} /* AddDescriptorToInputSet */
+  FD_SET (skfd, &InputSet);
+}                               /* AddDescriptorToInputSet */
 
 /* To save the state of the IP spoof filter for the EtherTunTap interface */
 static char EthTapSpoofState = '1';
@@ -308,54 +311,53 @@ static char EthTapSpoofState = '1';
  * Data Used  : EtherTunTapIfName, EthTapSpoofState
  * Notes      : Saves the current filter state for later restoring
  * ------------------------------------------------------------------------- */
-int DeactivateSpoofFilter(void)
+int
+DeactivateSpoofFilter (void)
 {
-  FILE* procSpoof;
+  FILE *procSpoof;
   char procFile[FILENAME_MAX];
 
   /* Generate the procfile name */
-  sprintf(procFile, "/proc/sys/net/ipv4/conf/%s/rp_filter", EtherTunTapIfName);
+  sprintf (procFile, "/proc/sys/net/ipv4/conf/%s/rp_filter",
+           EtherTunTapIfName);
 
   /* Open procfile for reading */
-  procSpoof = fopen(procFile, "r");
+  procSpoof = fopen (procFile, "r");
   if (procSpoof == NULL)
-  {
-    fprintf(
-      stderr,
-      "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
-      "Are you using the procfile filesystem?\n"
-      "Does your system support IPv4?\n"
-      "I will continue (in 3 sec) - but you should manually ensure that IP spoof\n"
-      "filtering is disabled!\n\n",
-      procFile);
+    {
+      fprintf (stderr,
+               "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
+               "Are you using the procfile filesystem?\n"
+               "Does your system support IPv4?\n"
+               "I will continue (in 3 sec) - but you should manually ensure that IP spoof\n"
+               "filtering is disabled!\n\n", procFile);
 
-    sleep(3);
-    return 0;
-  }
+      sleep (3);
+      return 0;
+    }
 
-  EthTapSpoofState = fgetc(procSpoof);
-  fclose(procSpoof);
+  EthTapSpoofState = fgetc (procSpoof);
+  fclose (procSpoof);
 
   /* Open procfile for writing */
-  procSpoof = fopen(procFile, "w");
+  procSpoof = fopen (procFile, "w");
   if (procSpoof == NULL)
-  {
-    fprintf(stderr, "Could not open %s for writing!\n", procFile);
-    fprintf(
-      stderr,
-      "I will continue (in 3 sec) - but you should manually ensure that IP"
-      " spoof filtering is disabled!\n\n");
-    sleep(3);
-    return 0;
-  }
+    {
+      fprintf (stderr, "Could not open %s for writing!\n", procFile);
+      fprintf (stderr,
+               "I will continue (in 3 sec) - but you should manually ensure that IP"
+               " spoof filtering is disabled!\n\n");
+      sleep (3);
+      return 0;
+    }
 
-  syslog(LOG_INFO, "Writing \"0\" to %s", procFile);
-  fputs("0", procSpoof);
+  syslog (LOG_INFO, "Writing \"0\" to %s", procFile);
+  fputs ("0", procSpoof);
 
-  fclose(procSpoof);
+  fclose (procSpoof);
 
   return 1;
-} /* DeactivateSpoofFilter */
+}                               /* DeactivateSpoofFilter */
 
 /* -------------------------------------------------------------------------
  * Function   : RestoreSpoofFilter
@@ -366,28 +368,32 @@ int DeactivateSpoofFilter(void)
  * Return     : none
  * Data Used  : EtherTunTapIfName, EthTapSpoofState
  * ------------------------------------------------------------------------- */
-void RestoreSpoofFilter(void)
+void
+RestoreSpoofFilter (void)
 {
-  FILE* procSpoof;
+  FILE *procSpoof;
   char procFile[FILENAME_MAX];
 
   /* Generate the procfile name */
-  sprintf(procFile, "/proc/sys/net/ipv4/conf/%s/rp_filter", EtherTunTapIfName);
+  sprintf (procFile, "/proc/sys/net/ipv4/conf/%s/rp_filter",
+           EtherTunTapIfName);
 
   /* Open procfile for writing */
-  procSpoof = fopen(procFile, "w");
+  procSpoof = fopen (procFile, "w");
   if (procSpoof == NULL)
-  {
-    fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procFile);
-  }
+    {
+      fprintf (stderr,
+               "Could not open %s for writing!\nSettings not restored!\n",
+               procFile);
+    }
   else
-  {
-    syslog(LOG_INFO, "Resetting %s to %c\n", procFile, EthTapSpoofState);
+    {
+      syslog (LOG_INFO, "Resetting %s to %c\n", procFile, EthTapSpoofState);
 
-    fputc(EthTapSpoofState, procSpoof);
-    fclose(procSpoof);
-  }
-} /* RestoreSpoofFilter */
+      fputc (EthTapSpoofState, procSpoof);
+      fclose (procSpoof);
+    }
+}                               /* RestoreSpoofFilter */
 
 /* -------------------------------------------------------------------------
  * Function   : FindNeighbors
@@ -405,550 +411,572 @@ void RestoreSpoofFilter(void)
  *              nPossibleNeighbors - number of found possible neighbors
  * Data Used  : FanOutLimit
  * ------------------------------------------------------------------------- */
-void FindNeighbors(
-  struct TBestNeighbors* neighbors,
-  struct link_entry** bestNeighbor,
-  struct TBmfInterface* intf,
-  union olsr_ip_addr* source,
-  union olsr_ip_addr* forwardedBy,
-  union olsr_ip_addr* forwardedTo,
-  int* nPossibleNeighbors)
+void
+FindNeighbors (struct TBestNeighbors *neighbors,
+               struct link_entry **bestNeighbor, struct TBmfInterface *intf,
+               union olsr_ip_addr *source, union olsr_ip_addr *forwardedBy,
+               union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors)
 {
   int i;
 
   /* Initialize */
   *bestNeighbor = NULL;
   for (i = 0; i < MAX_UNICAST_NEIGHBORS; i++)
-  {
-    neighbors->links[i] = NULL;
-  }
+    {
+      neighbors->links[i] = NULL;
+    }
   *nPossibleNeighbors = 0;
 
   /* handle the non-LQ case */
 
   if (olsr_cnf->lq_level == 0)
-  {
-    struct link_entry* walker;
+    {
+      struct link_entry *walker;
 
-    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
-      OLSR_PRINTF(
-        8,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
-        PLUGIN_NAME_SHORT,
-        intf->ifName,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
-
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
+      OLSR_FOR_ALL_LINK_ENTRIES (walker)
       {
         struct ipaddr_str buf;
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
+        union olsr_ip_addr *neighborMainIp;
 
-        continue; /* for */
+        /* Consider only links from the specified interface */
+        if (!ipequal (&intf->intAddr, &walker->local_iface_addr))
+          {
+            continue;           /* for */
+          }
+
+        OLSR_PRINTF (8,
+                     "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+                     PLUGIN_NAME_SHORT, intf->ifName, olsr_ip_to_string (&buf,
+                                                                         &walker->
+                                                                         neighbor_iface_addr));
+
+        neighborMainIp = MainAddressOf (&walker->neighbor_iface_addr);
+
+        /* Consider only neighbors with an IP address that differs from the
+         * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
+        if (source != NULL
+            && ipequal (neighborMainIp, MainAddressOf (source)))
+          {
+            struct ipaddr_str buf;
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is source of pkt\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Rely on short-circuit boolean evaluation */
+        if (forwardedBy != NULL
+            && ipequal (neighborMainIp, MainAddressOf (forwardedBy)))
+          {
+            struct ipaddr_str buf;
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Rely on short-circuit boolean evaluation */
+        if (forwardedTo != NULL
+            && ipequal (neighborMainIp, MainAddressOf (forwardedTo)))
+          {
+            struct ipaddr_str buf;
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Found a candidate neighbor to direct our packet to */
+
+        /* In the non-LQ case, it is not possible to select neigbors
+         * by quality or cost. So just remember the first found link.
+         * TODO: come on, there must be something better than to simply
+         * select the first one found! */
+        if (*bestNeighbor == NULL)
+          {
+            *bestNeighbor = walker;
+          }
+
+        /* Fill the list with up to 'FanOutLimit' neighbors. If there
+         * are more neighbors, broadcast is used instead of unicast. In that
+         * case we do not need the list of neighbors. */
+        if (*nPossibleNeighbors < FanOutLimit)
+          {
+            neighbors->links[*nPossibleNeighbors] = walker;
+          }
+
+        *nPossibleNeighbors += 1;
       }
+      OLSR_FOR_ALL_LINK_ENTRIES_END (walker);
 
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      /* In the non-LQ case, it is not possible to select neigbors
-       * by quality or cost. So just remember the first found link.
-       * TODO: come on, there must be something better than to simply
-       * select the first one found! */
-      if (*bestNeighbor == NULL)
-      {
-        *bestNeighbor = walker;
-      }
-
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
-
-      *nPossibleNeighbors += 1;
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
-
-  }
+    }
   /* handle the LQ case */
   else
-  {
+    {
 #ifdef USING_THALES_LINK_COST_ROUTING
 
-    struct link_entry* walker;
-    float previousLinkCost = 2 * INFINITE_COST;
-    float bestLinkCost = 2 * INFINITE_COST;
-
-    if (forwardedBy != NULL)
-    {
-      /* Retrieve the cost of the link from 'forwardedBy' to myself */
-      struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
-      if (bestLinkFromForwarder != NULL)
-      {
-        previousLinkCost = bestLinkFromForwarder->link_cost;
-      }
-    }
-
-    /* TODO: get_link_set() is not thread-safe! */
-    for (walker = get_link_set(); walker != NULL; walker = walker->next)
-    {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-      struct link_entry* bestLinkToNeighbor;
-      struct tc_entry* tcLastHop;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
-      OLSR_PRINTF(
-        9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
-        PLUGIN_NAME_SHORT,
-        intf->ifName,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
-
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      if (walker->link_cost >= INFINITE_COST)
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
-      OLSR_PRINTF(
-        9,
-        "%s: ----> Forwarding pkt to %s will cost %5.2f\n",
-        PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-        walker->link_cost);
-
-      /* If the candidate neighbor is best reached via another interface, then skip
-       * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * TODO: get_best_link_to_neighbor() is not thread-safe. */
-      bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
-
-      if (walker != bestLinkToNeighbor)
-      {
-        if (bestLinkToNeighbor == NULL)
-        {
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: no link found\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-        }
-        else
-        {
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-            bestIntf->int_name,
-            bestLinkToNeighbor->link_cost);
-        }
-
-        continue; /* for */
-      }
+      struct link_entry *walker;
+      float previousLinkCost = 2 * INFINITE_COST;
+      float bestLinkCost = 2 * INFINITE_COST;
 
       if (forwardedBy != NULL)
-      {
-        struct ipaddr_str forwardedByBuf, niaBuf;
-        OLSR_PRINTF(
-          9,
-          "%s: ----> 2-hop path from %s via me to %s will cost %5.2f\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
-          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          previousLinkCost + walker->link_cost);
-      }
-
-      /* Check the topology table whether the 'forwardedBy' node is itself a direct
-       * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
-       * via myself. If so, we do not need to forward the BMF packet to the candidate
-       * neighbor, because the 'forwardedBy' node will forward the packet. */
-      if (forwardedBy != NULL)
-      {
-        /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
-        tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
-        if (tcLastHop != NULL)
         {
-          struct tc_edge_entry* tc_edge;
-
-          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
-          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-
-          /* We are not interested in dead-end or dying edges. */
-          if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
-          {
-            if (previousLinkCost + walker->link_cost > tc_edge->link_cost)
+          /* Retrieve the cost of the link from 'forwardedBy' to myself */
+          struct link_entry *bestLinkFromForwarder =
+            get_best_link_to_neighbor (forwardedBy);
+          if (bestLinkFromForwarder != NULL)
             {
+              previousLinkCost = bestLinkFromForwarder->link_cost;
+            }
+        }
+
+      /* TODO: get_link_set() is not thread-safe! */
+      for (walker = get_link_set (); walker != NULL; walker = walker->next)
+        {
+          struct ipaddr_str buf;
+          union olsr_ip_addr *neighborMainIp;
+          struct link_entry *bestLinkToNeighbor;
+          struct tc_entry *tcLastHop;
+
+          /* Consider only links from the specified interface */
+          if (!ipequal (&intf->intAddr, &walker->local_iface_addr))
+            {
+              continue;         /* for */
+            }
+
+          OLSR_PRINTF (9,
+                       "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+                       PLUGIN_NAME_SHORT, intf->ifName,
+                       olsr_ip_to_string (&buf,
+                                          &walker->neighbor_iface_addr));
+
+          neighborMainIp = MainAddressOf (&walker->neighbor_iface_addr);
+
+          /* Consider only neighbors with an IP address that differs from the
+           * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
+          if (source != NULL
+              && ipequal (neighborMainIp, MainAddressOf (source)))
+            {
+              OLSR_PRINTF (9,
+                           "%s: ----> Not forwarding to %s: is source of pkt\n",
+                           PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                 &walker->
+                                                                 neighbor_iface_addr));
+
+              continue;         /* for */
+            }
+
+          /* Rely on short-circuit boolean evaluation */
+          if (forwardedBy != NULL
+              && ipequal (neighborMainIp, MainAddressOf (forwardedBy)))
+            {
+              OLSR_PRINTF (9,
+                           "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+                           PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                 &walker->
+                                                                 neighbor_iface_addr));
+
+              continue;         /* for */
+            }
+
+          /* Rely on short-circuit boolean evaluation */
+          if (forwardedTo != NULL
+              && ipequal (neighborMainIp, MainAddressOf (forwardedTo)))
+            {
+              OLSR_PRINTF (9,
+                           "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+                           PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                 &walker->
+                                                                 neighbor_iface_addr));
+
+              continue;         /* for */
+            }
+
+          /* Found a candidate neighbor to direct our packet to */
+
+          if (walker->link_cost >= INFINITE_COST)
+            {
+              OLSR_PRINTF (9,
+                           "%s: ----> Not forwarding to %s: link is timing out\n",
+                           PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                 &walker->
+                                                                 neighbor_iface_addr));
+
+              continue;         /* for */
+            }
+
+          /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
+          OLSR_PRINTF (9, "%s: ----> Forwarding pkt to %s will cost %5.2f\n",
+                       PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                             &walker->
+                                                             neighbor_iface_addr),
+                       walker->link_cost);
+
+          /* If the candidate neighbor is best reached via another interface, then skip
+           * the candidate neighbor; the candidate neighbor has been / will be selected via that
+           * other interface.
+           * TODO: get_best_link_to_neighbor() is not thread-safe. */
+          bestLinkToNeighbor =
+            get_best_link_to_neighbor (&walker->neighbor_iface_addr);
+
+          if (walker != bestLinkToNeighbor)
+            {
+              if (bestLinkToNeighbor == NULL)
+                {
+                  OLSR_PRINTF (9,
+                               "%s: ----> Not forwarding to %s: no link found\n",
+                               PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                     &walker->
+                                                                     neighbor_iface_addr));
+                }
+              else
+                {
+                  struct interface *bestIntf =
+                    if_ifwithaddr (&bestLinkToNeighbor->local_iface_addr);
+
+                  OLSR_PRINTF (9,
+                               "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
+                               PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                     &walker->
+                                                                     neighbor_iface_addr),
+                               bestIntf->int_name,
+                               bestLinkToNeighbor->link_cost);
+                }
+
+              continue;         /* for */
+            }
+
+          if (forwardedBy != NULL)
+            {
+              struct ipaddr_str forwardedByBuf, niaBuf;
+              OLSR_PRINTF (9,
+                           "%s: ----> 2-hop path from %s via me to %s will cost %5.2f\n",
+                           PLUGIN_NAME_SHORT,
+                           olsr_ip_to_string (&forwardedByBuf, forwardedBy),
+                           olsr_ip_to_string (&niaBuf,
+                                              &walker->neighbor_iface_addr),
+                           previousLinkCost + walker->link_cost);
+            }
+
+          /* Check the topology table whether the 'forwardedBy' node is itself a direct
+           * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
+           * via myself. If so, we do not need to forward the BMF packet to the candidate
+           * neighbor, because the 'forwardedBy' node will forward the packet. */
+          if (forwardedBy != NULL)
+            {
+              /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
+              tcLastHop = olsr_lookup_tc_entry (MainAddressOf (forwardedBy));
+              if (tcLastHop != NULL)
+                {
+                  struct tc_edge_entry *tc_edge;
+
+                  /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
+                  tc_edge =
+                    olsr_lookup_tc_edge (tcLastHop,
+                                         MainAddressOf (&walker->
+                                                        neighbor_iface_addr));
+
+                  /* We are not interested in dead-end or dying edges. */
+                  if (tc_edge != NULL
+                      && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
+                    {
+                      if (previousLinkCost + walker->link_cost >
+                          tc_edge->link_cost)
+                        {
 #ifndef NODEBUG
-              struct ipaddr_str neighbor_iface_buf, forw_buf;
-              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+                          struct ipaddr_str neighbor_iface_buf, forw_buf;
+                          olsr_ip_to_string (&neighbor_iface_buf,
+                                             &walker->neighbor_iface_addr);
 #endif
-              OLSR_PRINTF(
-                9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
-                PLUGIN_NAME_SHORT,
-                neighbor_iface_buf.buf,
-                olsr_ip_to_string(&forw_buf, forwardedBy),
-                neighbor_iface_buf.buf,
-                tc_edge->link_cost);
+                          OLSR_PRINTF (9,
+                                       "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
+                                       PLUGIN_NAME_SHORT,
+                                       neighbor_iface_buf.buf,
+                                       olsr_ip_to_string (&forw_buf,
+                                                          forwardedBy),
+                                       neighbor_iface_buf.buf,
+                                       tc_edge->link_cost);
 
-              continue; /* for */
-            } /* if */
-          } /* if */
-        } /* if */
-      } /* if */
+                          continue;     /* for */
+                        }       /* if */
+                    }           /* if */
+                }               /* if */
+            }                   /* if */
 
-      /* Remember the best neighbor. If all are very bad, remember none. */
-      if (walker->link_cost < bestLinkCost)
-      {
-        *bestNeighbor = walker;
-        bestLinkCost = walker->link_cost;
-      }
+          /* Remember the best neighbor. If all are very bad, remember none. */
+          if (walker->link_cost < bestLinkCost)
+            {
+              *bestNeighbor = walker;
+              bestLinkCost = walker->link_cost;
+            }
 
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
+          /* Fill the list with up to 'FanOutLimit' neighbors. If there
+           * are more neighbors, broadcast is used instead of unicast. In that
+           * case we do not need the list of neighbors. */
+          if (*nPossibleNeighbors < FanOutLimit)
+            {
+              neighbors->links[*nPossibleNeighbors] = walker;
+            }
 
-      *nPossibleNeighbors += 1;
+          *nPossibleNeighbors += 1;
 
-    } /* for */
+        }                       /* for */
 
 #else /* USING_THALES_LINK_COST_ROUTING */
 
-    struct link_entry* walker;
-    olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
-    olsr_linkcost bestEtx = LINK_COST_BROKEN;
-
-    if (forwardedBy != NULL)
-    {
-      /* Retrieve the cost of the link from 'forwardedBy' to myself */
-      struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
-      if (bestLinkFromForwarder != NULL)
-      {
-        previousLinkEtx = bestLinkFromForwarder->linkcost;
-      }
-    }
-
-    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-      struct link_entry* bestLinkToNeighbor;
-      struct tc_entry* tcLastHop;
-      float currEtx;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
-      OLSR_PRINTF(
-        9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
-        PLUGIN_NAME_SHORT,
-        intf->ifName,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
-
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      /* Calculate the link quality (ETX) of the link to the found neighbor */
-      currEtx = walker->linkcost;
-
-      if (currEtx < LINK_COST_BROKEN)
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
-      OLSR_PRINTF(
-        9,
-        "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
-        PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-        currEtx);
-
-      /* If the candidate neighbor is best reached via another interface, then skip
-       * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * TODO: get_best_link_to_neighbor() is not thread-safe. */
-      bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
-
-      if (walker != bestLinkToNeighbor)
-      {
-        if (bestLinkToNeighbor == NULL)
-        {
-          struct ipaddr_str buf;
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: no link found\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-        }
-        else
-        {
-#ifndef NODEBUG
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-          struct ipaddr_str buf;
-          struct lqtextbuffer lqbuffer;
-#endif
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-            bestIntf->int_name,
-            get_linkcost_text(bestLinkToNeighbor->linkcost, OLSR_FALSE, &lqbuffer));
-        }
-
-        continue; /* for */
-      }
+      struct link_entry *walker;
+      olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
+      olsr_linkcost bestEtx = LINK_COST_BROKEN;
 
       if (forwardedBy != NULL)
-      {
-#ifndef NODEBUG
-        struct ipaddr_str forwardedByBuf, niaBuf;
-        struct lqtextbuffer lqbuffer;
-#endif
-        OLSR_PRINTF(
-          9,
-          "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
-          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          get_linkcost_text(previousLinkEtx + currEtx, OLSR_TRUE, &lqbuffer));
-      }
-
-      /* Check the topology table whether the 'forwardedBy' node is itself a direct
-       * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
-       * via myself. If so, we do not need to forward the BMF packet to the candidate
-       * neighbor, because the 'forwardedBy' node will forward the packet. */
-      if (forwardedBy != NULL)
-      {
-        /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
-        tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
-        if (tcLastHop != NULL)
         {
-          struct tc_edge_entry* tc_edge;
-
-          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
-          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-
-          /* We are not interested in dead-end edges. */
-          if (tc_edge) {
-            olsr_linkcost tcEtx = tc_edge->cost;
-
-            if (previousLinkEtx + currEtx > tcEtx)
+          /* Retrieve the cost of the link from 'forwardedBy' to myself */
+          struct link_entry *bestLinkFromForwarder =
+            get_best_link_to_neighbor (forwardedBy);
+          if (bestLinkFromForwarder != NULL)
             {
+              previousLinkEtx = bestLinkFromForwarder->linkcost;
+            }
+        }
+
+      OLSR_FOR_ALL_LINK_ENTRIES (walker)
+      {
+        struct ipaddr_str buf;
+        union olsr_ip_addr *neighborMainIp;
+        struct link_entry *bestLinkToNeighbor;
+        struct tc_entry *tcLastHop;
+        float currEtx;
+
+        /* Consider only links from the specified interface */
+        if (!ipequal (&intf->intAddr, &walker->local_iface_addr))
+          {
+            continue;           /* for */
+          }
+
+        OLSR_PRINTF (9,
+                     "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+                     PLUGIN_NAME_SHORT, intf->ifName, olsr_ip_to_string (&buf,
+                                                                         &walker->
+                                                                         neighbor_iface_addr));
+
+        neighborMainIp = MainAddressOf (&walker->neighbor_iface_addr);
+
+        /* Consider only neighbors with an IP address that differs from the
+         * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
+        if (source != NULL
+            && ipequal (neighborMainIp, MainAddressOf (source)))
+          {
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is source of pkt\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Rely on short-circuit boolean evaluation */
+        if (forwardedBy != NULL
+            && ipequal (neighborMainIp, MainAddressOf (forwardedBy)))
+          {
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Rely on short-circuit boolean evaluation */
+        if (forwardedTo != NULL
+            && ipequal (neighborMainIp, MainAddressOf (forwardedTo)))
+          {
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Found a candidate neighbor to direct our packet to */
+
+        /* Calculate the link quality (ETX) of the link to the found neighbor */
+        currEtx = walker->linkcost;
+
+        if (currEtx < LINK_COST_BROKEN)
+          {
+            OLSR_PRINTF (9,
+                         "%s: ----> Not forwarding to %s: link is timing out\n",
+                         PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                               &walker->
+                                                               neighbor_iface_addr));
+
+            continue;           /* for */
+          }
+
+        /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
+        OLSR_PRINTF (9,
+                     "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
+                     PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                           &walker->
+                                                           neighbor_iface_addr),
+                     currEtx);
+
+        /* If the candidate neighbor is best reached via another interface, then skip
+         * the candidate neighbor; the candidate neighbor has been / will be selected via that
+         * other interface.
+         * TODO: get_best_link_to_neighbor() is not thread-safe. */
+        bestLinkToNeighbor =
+          get_best_link_to_neighbor (&walker->neighbor_iface_addr);
+
+        if (walker != bestLinkToNeighbor)
+          {
+            if (bestLinkToNeighbor == NULL)
+              {
+                struct ipaddr_str buf;
+                OLSR_PRINTF (9,
+                             "%s: ----> Not forwarding to %s: no link found\n",
+                             PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                   &walker->
+                                                                   neighbor_iface_addr));
+              }
+            else
+              {
 #ifndef NODEBUG
-              struct ipaddr_str neighbor_iface_buf, forw_buf;
-              struct lqtextbuffer lqbuffer;
-              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+                struct interface *bestIntf =
+                  if_ifwithaddr (&bestLinkToNeighbor->local_iface_addr);
+                struct ipaddr_str buf;
+                struct lqtextbuffer lqbuffer;
 #endif
-              OLSR_PRINTF(
-                9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
-                PLUGIN_NAME_SHORT,
-                neighbor_iface_buf.buf,
-                olsr_ip_to_string(&forw_buf, forwardedBy),
-                neighbor_iface_buf.buf,
-                get_linkcost_text(tcEtx, OLSR_FALSE, &lqbuffer));
+                OLSR_PRINTF (9,
+                             "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
+                             PLUGIN_NAME_SHORT, olsr_ip_to_string (&buf,
+                                                                   &walker->
+                                                                   neighbor_iface_addr),
+                             bestIntf->int_name,
+                             get_linkcost_text (bestLinkToNeighbor->linkcost,
+                                                OLSR_FALSE, &lqbuffer));
+              }
 
-              continue; /* for */
-            } /* if */
-          } /* if */
-        } /* if */
-      } /* if */
+            continue;           /* for */
+          }
 
-      /* Remember the best neighbor. If all are very bad, remember none. */
-      if (currEtx < bestEtx)
-      {
-        *bestNeighbor = walker;
-        bestEtx = currEtx;
+        if (forwardedBy != NULL)
+          {
+#ifndef NODEBUG
+            struct ipaddr_str forwardedByBuf, niaBuf;
+            struct lqtextbuffer lqbuffer;
+#endif
+            OLSR_PRINTF (9,
+                         "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
+                         PLUGIN_NAME_SHORT,
+                         olsr_ip_to_string (&forwardedByBuf, forwardedBy),
+                         olsr_ip_to_string (&niaBuf,
+                                            &walker->neighbor_iface_addr),
+                         get_linkcost_text (previousLinkEtx + currEtx,
+                                            OLSR_TRUE, &lqbuffer));
+          }
+
+        /* Check the topology table whether the 'forwardedBy' node is itself a direct
+         * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
+         * via myself. If so, we do not need to forward the BMF packet to the candidate
+         * neighbor, because the 'forwardedBy' node will forward the packet. */
+        if (forwardedBy != NULL)
+          {
+            /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
+            tcLastHop = olsr_lookup_tc_entry (MainAddressOf (forwardedBy));
+            if (tcLastHop != NULL)
+              {
+                struct tc_edge_entry *tc_edge;
+
+                /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
+                tc_edge =
+                  olsr_lookup_tc_edge (tcLastHop,
+                                       MainAddressOf (&walker->
+                                                      neighbor_iface_addr));
+
+                /* We are not interested in dead-end edges. */
+                if (tc_edge)
+                  {
+                    olsr_linkcost tcEtx = tc_edge->cost;
+
+                    if (previousLinkEtx + currEtx > tcEtx)
+                      {
+#ifndef NODEBUG
+                        struct ipaddr_str neighbor_iface_buf, forw_buf;
+                        struct lqtextbuffer lqbuffer;
+                        olsr_ip_to_string (&neighbor_iface_buf,
+                                           &walker->neighbor_iface_addr);
+#endif
+                        OLSR_PRINTF (9,
+                                     "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
+                                     PLUGIN_NAME_SHORT,
+                                     neighbor_iface_buf.buf,
+                                     olsr_ip_to_string (&forw_buf,
+                                                        forwardedBy),
+                                     neighbor_iface_buf.buf,
+                                     get_linkcost_text (tcEtx, OLSR_FALSE,
+                                                        &lqbuffer));
+
+                        continue;       /* for */
+                      }         /* if */
+                  }             /* if */
+              }                 /* if */
+          }                     /* if */
+
+        /* Remember the best neighbor. If all are very bad, remember none. */
+        if (currEtx < bestEtx)
+          {
+            *bestNeighbor = walker;
+            bestEtx = currEtx;
+          }
+
+        /* Fill the list with up to 'FanOutLimit' neighbors. If there
+         * are more neighbors, broadcast is used instead of unicast. In that
+         * case we do not need the list of neighbors. */
+        if (*nPossibleNeighbors < FanOutLimit)
+          {
+            neighbors->links[*nPossibleNeighbors] = walker;
+          }
+
+        *nPossibleNeighbors += 1;
       }
-
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
-
-      *nPossibleNeighbors += 1;
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
+      OLSR_FOR_ALL_LINK_ENTRIES_END (walker);
 
 #endif /* USING_THALES_LINK_COST_ROUTING */
 
-  } /* if */
+    }                           /* if */
 
   /* Display the result of the neighbor search */
   if (*nPossibleNeighbors == 0)
-  {
-    OLSR_PRINTF(
-      9,
-      "%s: ----> No suitable neighbor found to forward to on \"%s\"\n",
-      PLUGIN_NAME_SHORT,
-      intf->ifName);
-  }
+    {
+      OLSR_PRINTF (9,
+                   "%s: ----> No suitable neighbor found to forward to on \"%s\"\n",
+                   PLUGIN_NAME_SHORT, intf->ifName);
+    }
   else
-  {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(
-      9,
-      "%s: ----> %d neighbors found on \"%s\"; best neighbor to forward to: %s\n",
-      PLUGIN_NAME_SHORT,
-      *nPossibleNeighbors,
-      intf->ifName,
-      olsr_ip_to_string(&buf, &(*bestNeighbor)->neighbor_iface_addr));
-  } /* if */
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (9,
+                   "%s: ----> %d neighbors found on \"%s\"; best neighbor to forward to: %s\n",
+                   PLUGIN_NAME_SHORT, *nPossibleNeighbors, intf->ifName,
+                   olsr_ip_to_string (&buf,
+                                      &(*bestNeighbor)->neighbor_iface_addr));
+    }                           /* if */
 
-} /* FindNeighbors */
+}                               /* FindNeighbors */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateCaptureSocket
@@ -960,70 +988,72 @@ void FindNeighbors(
  * Notes      : The socket is a cooked IP packet socket, bound to the specified
  *              network interface
  * ------------------------------------------------------------------------- */
-static int CreateCaptureSocket(const char* ifName)
+static int
+CreateCaptureSocket (const char *ifName)
 {
-  int ifIndex = if_nametoindex(ifName);
+  int ifIndex = if_nametoindex (ifName);
   struct packet_mreq mreq;
   struct ifreq req;
   struct sockaddr_ll bindTo;
 
   /* Open cooked IP packet socket */
-  int skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IP));
+  int skfd = socket (PF_PACKET, SOCK_DGRAM, htons (ETH_P_IP));
   if (skfd < 0)
-  {
-    BmfPError("socket(PF_PACKET) error");
-    return -1;
-  }
+    {
+      BmfPError ("socket(PF_PACKET) error");
+      return -1;
+    }
 
   /* Set interface to promiscuous mode */
-  memset(&mreq, 0, sizeof(struct packet_mreq));
+  memset (&mreq, 0, sizeof (struct packet_mreq));
   mreq.mr_ifindex = ifIndex;
   mreq.mr_type = PACKET_MR_PROMISC;
-  if (setsockopt(skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
-  {
-    BmfPError("setsockopt(PACKET_MR_PROMISC) error");
-    close(skfd);
-    return -1;
-  }
+  if (setsockopt
+      (skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof (mreq)) < 0)
+    {
+      BmfPError ("setsockopt(PACKET_MR_PROMISC) error");
+      close (skfd);
+      return -1;
+    }
 
   /* Get hardware (MAC) address */
-  memset(&req, 0, sizeof(struct ifreq));
-  strncpy(req.ifr_name, ifName, IFNAMSIZ - 1);
-  req.ifr_name[IFNAMSIZ-1] = '\0'; /* Ensures null termination */
-  if (ioctl(skfd, SIOCGIFHWADDR, &req) < 0)
-  {
-    BmfPError("error retrieving MAC address");
-    close(skfd);
-    return -1;
-  }
+  memset (&req, 0, sizeof (struct ifreq));
+  strncpy (req.ifr_name, ifName, IFNAMSIZ - 1);
+  req.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
+  if (ioctl (skfd, SIOCGIFHWADDR, &req) < 0)
+    {
+      BmfPError ("error retrieving MAC address");
+      close (skfd);
+      return -1;
+    }
 
   /* Bind the socket to the specified interface */
-  memset(&bindTo, 0, sizeof(bindTo));
+  memset (&bindTo, 0, sizeof (bindTo));
   bindTo.sll_family = AF_PACKET;
-  bindTo.sll_protocol = htons(ETH_P_IP);
+  bindTo.sll_protocol = htons (ETH_P_IP);
   bindTo.sll_ifindex = ifIndex;
-  memcpy(bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
+  memcpy (bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
   bindTo.sll_halen = IFHWADDRLEN;
 
-  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
-  {
-    BmfPError("bind() error");
-    close(skfd);
-    return -1;
-  }
+  if (bind (skfd, (struct sockaddr *) &bindTo, sizeof (bindTo)) < 0)
+    {
+      BmfPError ("bind() error");
+      close (skfd);
+      return -1;
+    }
 
   /* Set socket to blocking operation */
-  if (fcntl(skfd, F_SETFL, fcntl(skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
-  {
-    BmfPError("fcntl() error");
-    close(skfd);
-    return -1;
-  }
+  if (fcntl (skfd, F_SETFL, fcntl (skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
+    {
+      BmfPError ("fcntl() error");
+      close (skfd);
+      return -1;
+    }
 
-  AddDescriptorToInputSet(skfd);
+  AddDescriptorToInputSet (skfd);
 
   return skfd;
-} /* CreateCaptureSocket */
+}                               /* CreateCaptureSocket */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateListeningSocket
@@ -1036,70 +1066,72 @@ static int CreateCaptureSocket(const char* ifName)
  * Notes      : The socket is a cooked IP packet socket, bound to the specified
  *              network interface
  * ------------------------------------------------------------------------- */
-static int CreateListeningSocket(const char* ifName)
+static int
+CreateListeningSocket (const char *ifName)
 {
-  int ifIndex = if_nametoindex(ifName);
+  int ifIndex = if_nametoindex (ifName);
   struct packet_mreq mreq;
   struct ifreq req;
   struct sockaddr_ll bindTo;
 
   /* Open cooked IP packet socket */
-  int skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IP));
+  int skfd = socket (PF_PACKET, SOCK_DGRAM, htons (ETH_P_IP));
   if (skfd < 0)
-  {
-    BmfPError("socket(PF_PACKET) error");
-    return -1;
-  }
+    {
+      BmfPError ("socket(PF_PACKET) error");
+      return -1;
+    }
 
   /* Set interface to promiscuous mode */
-  memset(&mreq, 0, sizeof(struct packet_mreq));
+  memset (&mreq, 0, sizeof (struct packet_mreq));
   mreq.mr_ifindex = ifIndex;
   mreq.mr_type = PACKET_MR_PROMISC;
-  if (setsockopt(skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
-  {
-    BmfPError("setsockopt(PACKET_MR_PROMISC) error");
-    close(skfd);
-    return -1;
-  }
+  if (setsockopt
+      (skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof (mreq)) < 0)
+    {
+      BmfPError ("setsockopt(PACKET_MR_PROMISC) error");
+      close (skfd);
+      return -1;
+    }
 
   /* Get hardware (MAC) address */
-  memset(&req, 0, sizeof(struct ifreq));
-  strncpy(req.ifr_name, ifName, IFNAMSIZ - 1);
-  req.ifr_name[IFNAMSIZ-1] = '\0'; /* Ensures null termination */
-  if (ioctl(skfd, SIOCGIFHWADDR, &req) < 0)
-  {
-    BmfPError("error retrieving MAC address");
-    close(skfd);
-    return -1;
-  }
+  memset (&req, 0, sizeof (struct ifreq));
+  strncpy (req.ifr_name, ifName, IFNAMSIZ - 1);
+  req.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
+  if (ioctl (skfd, SIOCGIFHWADDR, &req) < 0)
+    {
+      BmfPError ("error retrieving MAC address");
+      close (skfd);
+      return -1;
+    }
 
   /* Bind the socket to the specified interface */
-  memset(&bindTo, 0, sizeof(bindTo));
+  memset (&bindTo, 0, sizeof (bindTo));
   bindTo.sll_family = AF_PACKET;
-  bindTo.sll_protocol = htons(ETH_P_IP);
+  bindTo.sll_protocol = htons (ETH_P_IP);
   bindTo.sll_ifindex = ifIndex;
-  memcpy(bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
+  memcpy (bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
   bindTo.sll_halen = IFHWADDRLEN;
 
-  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
-  {
-    BmfPError("bind() error");
-    close(skfd);
-    return -1;
-  }
+  if (bind (skfd, (struct sockaddr *) &bindTo, sizeof (bindTo)) < 0)
+    {
+      BmfPError ("bind() error");
+      close (skfd);
+      return -1;
+    }
 
   /* Set socket to blocking operation */
-  if (fcntl(skfd, F_SETFL, fcntl(skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
-  {
-    BmfPError("fcntl() error");
-    close(skfd);
-    return -1;
-  }
+  if (fcntl (skfd, F_SETFL, fcntl (skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
+    {
+      BmfPError ("fcntl() error");
+      close (skfd);
+      return -1;
+    }
 
-  AddDescriptorToInputSet(skfd);
+  AddDescriptorToInputSet (skfd);
 
   return skfd;
-} /* CreateListeningSocket */
+}                               /* CreateListeningSocket */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateEncapsulateSocket
@@ -1112,61 +1144,63 @@ static int CreateListeningSocket(const char* ifName)
  * Notes      : The socket is an UDP (datagram) over IP socket, bound to the
  *              specified network interface
  * ------------------------------------------------------------------------- */
-static int CreateEncapsulateSocket(const char* ifName)
+static int
+CreateEncapsulateSocket (const char *ifName)
 {
   int on = 1;
   struct sockaddr_in bindTo;
 
   /* Open UDP-IP socket */
-  int skfd = socket(PF_INET, SOCK_DGRAM, 0);
+  int skfd = socket (PF_INET, SOCK_DGRAM, 0);
   if (skfd < 0)
-  {
-    BmfPError("socket(PF_INET) error");
-    return -1;
-  }
+    {
+      BmfPError ("socket(PF_INET) error");
+      return -1;
+    }
 
   /* Enable sending to broadcast addresses */
-  if (setsockopt(skfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0)
-  {
-    BmfPError("setsockopt(SO_BROADCAST) error");
-    close(skfd);
-    return -1;
-  }
+  if (setsockopt (skfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof (on)) < 0)
+    {
+      BmfPError ("setsockopt(SO_BROADCAST) error");
+      close (skfd);
+      return -1;
+    }
 
   /* Bind to the specific network interfaces indicated by ifName. */
   /* When using Kernel 2.6 this must happer prior to the port binding! */
-  if (setsockopt(skfd, SOL_SOCKET, SO_BINDTODEVICE, ifName, strlen(ifName) + 1) < 0)
-  {
-    BmfPError("setsockopt(SO_BINDTODEVICE) error");
-    close(skfd);
-    return -1;
-  }
+  if (setsockopt
+      (skfd, SOL_SOCKET, SO_BINDTODEVICE, ifName, strlen (ifName) + 1) < 0)
+    {
+      BmfPError ("setsockopt(SO_BINDTODEVICE) error");
+      close (skfd);
+      return -1;
+    }
 
   /* Bind to BMF port */
-  memset(&bindTo, 0, sizeof(bindTo));
+  memset (&bindTo, 0, sizeof (bindTo));
   bindTo.sin_family = AF_INET;
-  bindTo.sin_port = htons(BMF_ENCAP_PORT);
-  bindTo.sin_addr.s_addr = htonl(INADDR_ANY);
+  bindTo.sin_port = htons (BMF_ENCAP_PORT);
+  bindTo.sin_addr.s_addr = htonl (INADDR_ANY);
 
-  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
-  {
-    BmfPError("bind() error");
-    close(skfd);
-    return -1;
-  }
+  if (bind (skfd, (struct sockaddr *) &bindTo, sizeof (bindTo)) < 0)
+    {
+      BmfPError ("bind() error");
+      close (skfd);
+      return -1;
+    }
 
   /* Set socket to blocking operation */
-  if (fcntl(skfd, F_SETFL, fcntl(skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
-  {
-    BmfPError("fcntl() error");
-    close(skfd);
-    return -1;
-  }
+  if (fcntl (skfd, F_SETFL, fcntl (skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
+    {
+      BmfPError ("fcntl() error");
+      close (skfd);
+      return -1;
+    }
 
-  AddDescriptorToInputSet(skfd);
+  AddDescriptorToInputSet (skfd);
 
   return skfd;
-} /* CreateEncapsulateSocket */
+}                               /* CreateEncapsulateSocket */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateLocalEtherTunTap
@@ -1183,7 +1217,8 @@ static int CreateEncapsulateSocket(const char* ifName)
  * Note       : Order dependency: call this function only if BmfInterfaces
  *              is filled with a list of network interfaces.
  * ------------------------------------------------------------------------- */
-static int CreateLocalEtherTunTap(void)
+static int
+CreateLocalEtherTunTap (void)
 {
   static const char deviceName[] = "/dev/net/tun";
   struct ifreq ifreq;
@@ -1191,152 +1226,160 @@ static int CreateLocalEtherTunTap(void)
   int ioctlSkfd;
   int ioctlres;
 
-  etfd = open(deviceName, O_RDWR | O_NONBLOCK);
+  etfd = open (deviceName, O_RDWR | O_NONBLOCK);
   if (etfd < 0)
-  {
-    BmfPError("error opening %s", deviceName);
-    return -1;
-  }
+    {
+      BmfPError ("error opening %s", deviceName);
+      return -1;
+    }
 
-  memset(&ifreq, 0, sizeof(ifreq));
-  strncpy(ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  memset (&ifreq, 0, sizeof (ifreq));
+  strncpy (ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
   /* Specify the IFF_TUN flag for IP packets.
    * Specify IFF_NO_PI for not receiving extra meta packet information. */
   ifreq.ifr_flags = IFF_TUN;
   ifreq.ifr_flags |= IFF_NO_PI;
 
-  if (ioctl(etfd, TUNSETIFF, (void *)&ifreq) < 0)
-  {
-    BmfPError("ioctl(TUNSETIFF) error on %s", deviceName);
-    close(etfd);
-    return -1;
-  }
+  if (ioctl (etfd, TUNSETIFF, (void *) &ifreq) < 0)
+    {
+      BmfPError ("ioctl(TUNSETIFF) error on %s", deviceName);
+      close (etfd);
+      return -1;
+    }
 
-  memset(&ifreq, 0, sizeof(ifreq));
-  strncpy(ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  memset (&ifreq, 0, sizeof (ifreq));
+  strncpy (ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
   ifreq.ifr_addr.sa_family = AF_INET;
 
-  ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
+  ioctlSkfd = socket (PF_INET, SOCK_DGRAM, 0);
   if (ioctlSkfd < 0)
-  {
-    BmfPError("socket(PF_INET) error on %s", deviceName);
-    close(etfd);
-    return -1;
-  }
+    {
+      BmfPError ("socket(PF_INET) error on %s", deviceName);
+      close (etfd);
+      return -1;
+    }
 
   /* Give the EtherTunTap interface an IP address.
    * The default IP address is the address of the first OLSR interface;
    * the default netmask is 255.255.255.255 . Having an all-ones netmask prevents
    * automatic entry of the BMF network interface in the routing table. */
   if (EtherTunTapIp == ETHERTUNTAPIPNOTSET)
-  {
-    struct TBmfInterface* nextBmfIf = BmfInterfaces;
-    while (nextBmfIf != NULL)
     {
-      struct TBmfInterface* bmfIf = nextBmfIf;
-      nextBmfIf = bmfIf->next;
+      struct TBmfInterface *nextBmfIf = BmfInterfaces;
+      while (nextBmfIf != NULL)
+        {
+          struct TBmfInterface *bmfIf = nextBmfIf;
+          nextBmfIf = bmfIf->next;
 
-      if (bmfIf->olsrIntf != NULL)
-      {
-        EtherTunTapIp = ntohl(bmfIf->intAddr.v4.s_addr);
-        EtherTunTapIpBroadcast = EtherTunTapIp;
-      }
+          if (bmfIf->olsrIntf != NULL)
+            {
+              EtherTunTapIp = ntohl (bmfIf->intAddr.v4.s_addr);
+              EtherTunTapIpBroadcast = EtherTunTapIp;
+            }
+        }
     }
-  }
 
   if (EtherTunTapIp == ETHERTUNTAPIPNOTSET)
-  {
-    /* No IP address configured for BMF network interface, and no OLSR interface found to
-     * copy IP address from. Fall back to default: 10.255.255.253 . */
-    EtherTunTapIp = ETHERTUNTAPDEFAULTIP;
-  }
-
-  ((struct sockaddr_in*)&ifreq.ifr_addr)->sin_addr.s_addr = htonl(EtherTunTapIp);
-  ioctlres = ioctl(ioctlSkfd, SIOCSIFADDR, &ifreq);
-  if (ioctlres >= 0)
-  {
-    /* Set net mask */
-    ((struct sockaddr_in*)&ifreq.ifr_netmask)->sin_addr.s_addr = htonl(EtherTunTapIpMask);
-    ioctlres = ioctl(ioctlSkfd, SIOCSIFNETMASK, &ifreq);
-    if (ioctlres >= 0)
     {
-      /* Set broadcast IP */
-      ((struct sockaddr_in*)&ifreq.ifr_broadaddr)->sin_addr.s_addr = htonl(EtherTunTapIpBroadcast);
-      ioctlres = ioctl(ioctlSkfd, SIOCSIFBRDADDR, &ifreq);
-      if (ioctlres >= 0)
-      {
-        /* Bring EtherTunTap interface up (if not already) */
-        ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
-        if (ioctlres >= 0)
-        {
-          ifreq.ifr_flags |= (IFF_UP | IFF_RUNNING | IFF_BROADCAST);
-          ioctlres = ioctl(ioctlSkfd, SIOCSIFFLAGS, &ifreq);
-        }
-      }
+      /* No IP address configured for BMF network interface, and no OLSR interface found to
+       * copy IP address from. Fall back to default: 10.255.255.253 . */
+      EtherTunTapIp = ETHERTUNTAPDEFAULTIP;
     }
-  }
+
+  ((struct sockaddr_in *) &ifreq.ifr_addr)->sin_addr.s_addr =
+    htonl (EtherTunTapIp);
+  ioctlres = ioctl (ioctlSkfd, SIOCSIFADDR, &ifreq);
+  if (ioctlres >= 0)
+    {
+      /* Set net mask */
+      ((struct sockaddr_in *) &ifreq.ifr_netmask)->sin_addr.s_addr =
+        htonl (EtherTunTapIpMask);
+      ioctlres = ioctl (ioctlSkfd, SIOCSIFNETMASK, &ifreq);
+      if (ioctlres >= 0)
+        {
+          /* Set broadcast IP */
+          ((struct sockaddr_in *) &ifreq.ifr_broadaddr)->sin_addr.s_addr =
+            htonl (EtherTunTapIpBroadcast);
+          ioctlres = ioctl (ioctlSkfd, SIOCSIFBRDADDR, &ifreq);
+          if (ioctlres >= 0)
+            {
+              /* Bring EtherTunTap interface up (if not already) */
+              ioctlres = ioctl (ioctlSkfd, SIOCGIFFLAGS, &ifreq);
+              if (ioctlres >= 0)
+                {
+                  ifreq.ifr_flags |= (IFF_UP | IFF_RUNNING | IFF_BROADCAST);
+                  ioctlres = ioctl (ioctlSkfd, SIOCSIFFLAGS, &ifreq);
+                }
+            }
+        }
+    }
 
   if (ioctlres < 0)
-  {
-    /* Any of the above ioctl() calls failed */
-    BmfPError("error bringing up EtherTunTap interface \"%s\"", EtherTunTapIfName);
+    {
+      /* Any of the above ioctl() calls failed */
+      BmfPError ("error bringing up EtherTunTap interface \"%s\"",
+                 EtherTunTapIfName);
 
-    close(etfd);
-    close(ioctlSkfd);
-    return -1;
-  } /* if (ioctlres < 0) */
+      close (etfd);
+      close (ioctlSkfd);
+      return -1;
+    }                           /* if (ioctlres < 0) */
 
   /* Set the multicast flag on the interface */
-  memset(&ifreq, 0, sizeof(ifreq));
-  strncpy(ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  memset (&ifreq, 0, sizeof (ifreq));
+  strncpy (ifreq.ifr_name, EtherTunTapIfName, IFNAMSIZ - 1);
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
-  ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
+  ioctlres = ioctl (ioctlSkfd, SIOCGIFFLAGS, &ifreq);
   if (ioctlres >= 0)
-  {
-    ifreq.ifr_flags |= IFF_MULTICAST;
-    ioctlres = ioctl(ioctlSkfd, SIOCSIFFLAGS, &ifreq);
-  }
+    {
+      ifreq.ifr_flags |= IFF_MULTICAST;
+      ioctlres = ioctl (ioctlSkfd, SIOCSIFFLAGS, &ifreq);
+    }
   if (ioctlres < 0)
-  {
-    /* Any of the two above ioctl() calls failed */
-    BmfPError("error setting multicast flag on EtherTunTap interface \"%s\"", EtherTunTapIfName);
+    {
+      /* Any of the two above ioctl() calls failed */
+      BmfPError
+        ("error setting multicast flag on EtherTunTap interface \"%s\"",
+         EtherTunTapIfName);
 
-    /* Continue anyway */
-  }
+      /* Continue anyway */
+    }
 
   /* Use ioctl to make the tuntap persistent. Otherwise it will disappear
    * when this program exits. That is not desirable, since a multicast
    * daemon (e.g. mrouted) may be using the tuntap interface. */
-  if (ioctl(etfd, TUNSETPERSIST, (void *)&ifreq) < 0)
-  {
-    BmfPError("error making EtherTunTap interface \"%s\" persistent", EtherTunTapIfName);
+  if (ioctl (etfd, TUNSETPERSIST, (void *) &ifreq) < 0)
+    {
+      BmfPError ("error making EtherTunTap interface \"%s\" persistent",
+                 EtherTunTapIfName);
 
-    /* Continue anyway */
-  }
+      /* Continue anyway */
+    }
 
-  OLSR_PRINTF(8, "%s: opened 1 socket on \"%s\"\n", PLUGIN_NAME_SHORT, EtherTunTapIfName);
+  OLSR_PRINTF (8, "%s: opened 1 socket on \"%s\"\n", PLUGIN_NAME_SHORT,
+               EtherTunTapIfName);
 
-  AddDescriptorToInputSet(etfd);
+  AddDescriptorToInputSet (etfd);
 
   /* If the user configured a specific IP address for the BMF network interface,
    * help the user and advertise the IP address of the BMF network interface
    * on the OLSR network via HNA */
   if (TunTapIpOverruled != 0)
-  {
-    union olsr_ip_addr temp_net;
+    {
+      union olsr_ip_addr temp_net;
 
-    temp_net.v4.s_addr = htonl(EtherTunTapIp);
-    ip_prefix_list_add(&olsr_cnf->hna_entries, &temp_net, 32);
-  }
+      temp_net.v4.s_addr = htonl (EtherTunTapIp);
+      ip_prefix_list_add (&olsr_cnf->hna_entries, &temp_net, 32);
+    }
 
-  close(ioctlSkfd);
+  close (ioctlSkfd);
 
   return etfd;
-} /* CreateLocalEtherTunTap */
+}                               /* CreateLocalEtherTunTap */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateInterface
@@ -1349,9 +1392,8 @@ static int CreateLocalEtherTunTap(void)
  * Return     : the number of opened sockets
  * Data Used  : BmfInterfaces, LastBmfInterface
  * ------------------------------------------------------------------------- */
-static int CreateInterface(
-  const char* ifName,
-  struct interface* olsrIntf)
+static int
+CreateInterface (const char *ifName, struct interface *olsrIntf)
 {
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
@@ -1359,128 +1401,133 @@ static int CreateInterface(
   int ioctlSkfd;
   struct ifreq ifr;
   int nOpened = 0;
-  struct TBmfInterface* newIf = malloc(sizeof(struct TBmfInterface));
+  struct TBmfInterface *newIf = malloc (sizeof (struct TBmfInterface));
 
-  assert(ifName != NULL);
+  assert (ifName != NULL);
 
   if (newIf == NULL)
-  {
-    return 0;
-  }
-
-  if (olsrIntf != NULL)
-  {
-    /* On OLSR-enabled interfaces, create socket for encapsulating and forwarding
-     * multicast packets */
-    encapsulatingSkfd = CreateEncapsulateSocket(ifName);
-    if (encapsulatingSkfd < 0)
     {
-      free(newIf);
       return 0;
     }
-    nOpened++;
-  }
+
+  if (olsrIntf != NULL)
+    {
+      /* On OLSR-enabled interfaces, create socket for encapsulating and forwarding
+       * multicast packets */
+      encapsulatingSkfd = CreateEncapsulateSocket (ifName);
+      if (encapsulatingSkfd < 0)
+        {
+          free (newIf);
+          return 0;
+        }
+      nOpened++;
+    }
 
   /* Create socket for capturing and sending of multicast packets on
    * non-OLSR interfaces, and on OLSR-interfaces if configured. */
   if ((olsrIntf == NULL) || (CapturePacketsOnOlsrInterfaces != 0))
-  {
-    capturingSkfd = CreateCaptureSocket(ifName);
-    if (capturingSkfd < 0)
     {
-      close(encapsulatingSkfd);
-      free(newIf);
-      return 0;
-    }
+      capturingSkfd = CreateCaptureSocket (ifName);
+      if (capturingSkfd < 0)
+        {
+          close (encapsulatingSkfd);
+          free (newIf);
+          return 0;
+        }
 
-    nOpened++;
-  }
+      nOpened++;
+    }
 
   /* Create promiscuous mode listening interface if BMF uses IP unicast
    * as underlying forwarding mechanism */
   if (BmfMechanism == BM_UNICAST_PROMISCUOUS)
-  {
-    listeningSkfd = CreateListeningSocket(ifName);
-    if (listeningSkfd < 0)
     {
-      close(listeningSkfd);
-      close(encapsulatingSkfd); /* no problem if 'encapsulatingSkfd' is -1 */
-      free(newIf);
-      return 0;
-    }
+      listeningSkfd = CreateListeningSocket (ifName);
+      if (listeningSkfd < 0)
+        {
+          close (listeningSkfd);
+          close (encapsulatingSkfd);    /* no problem if 'encapsulatingSkfd' is -1 */
+          free (newIf);
+          return 0;
+        }
 
-    nOpened++;
-  }
+      nOpened++;
+    }
 
   /* For ioctl operations on the network interface, use either capturingSkfd
    * or encapsulatingSkfd, whichever is available */
   ioctlSkfd = (capturingSkfd >= 0) ? capturingSkfd : encapsulatingSkfd;
 
   /* Retrieve the MAC address of the interface. */
-  memset(&ifr, 0, sizeof(struct ifreq));
-  strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-  ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-  if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0)
-  {
-    BmfPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
-    close(capturingSkfd);
-    close(encapsulatingSkfd);
-    free(newIf);
-    return 0;
-  }
+  memset (&ifr, 0, sizeof (struct ifreq));
+  strncpy (ifr.ifr_name, ifName, IFNAMSIZ - 1);
+  ifr.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
+  if (ioctl (ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0)
+    {
+      BmfPError ("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
+      close (capturingSkfd);
+      close (encapsulatingSkfd);
+      free (newIf);
+      return 0;
+    }
 
   /* Copy data into TBmfInterface object */
   newIf->capturingSkfd = capturingSkfd;
   newIf->encapsulatingSkfd = encapsulatingSkfd;
   newIf->listeningSkfd = listeningSkfd;
-  memcpy(newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
-  memcpy(newIf->ifName, ifName, IFNAMSIZ);
+  memcpy (newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
+  memcpy (newIf->ifName, ifName, IFNAMSIZ);
   newIf->olsrIntf = olsrIntf;
   if (olsrIntf != NULL)
-  {
-    /* For an OLSR-interface, copy the interface address and broadcast
-     * address from the OLSR interface object. Downcast to correct sockaddr
-     * subtype. */
-    newIf->intAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_addr)->sin_addr;
-    newIf->broadAddr.v4 = ((struct sockaddr_in *)&olsrIntf->int_broadaddr)->sin_addr;
-  }
+    {
+      /* For an OLSR-interface, copy the interface address and broadcast
+       * address from the OLSR interface object. Downcast to correct sockaddr
+       * subtype. */
+      newIf->intAddr.v4 =
+        ((struct sockaddr_in *) &olsrIntf->int_addr)->sin_addr;
+      newIf->broadAddr.v4 =
+        ((struct sockaddr_in *) &olsrIntf->int_broadaddr)->sin_addr;
+    }
   else
-  {
-    /* For a non-OLSR interface, retrieve the IP address ourselves */
-    memset(&ifr, 0, sizeof(struct ifreq));
-    strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-    ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFADDR, &ifr) < 0)
     {
-      BmfPError("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
+      /* For a non-OLSR interface, retrieve the IP address ourselves */
+      memset (&ifr, 0, sizeof (struct ifreq));
+      strncpy (ifr.ifr_name, ifName, IFNAMSIZ - 1);
+      ifr.ifr_name[IFNAMSIZ - 1] = '\0';        /* Ensures null termination */
+      if (ioctl (ioctlSkfd, SIOCGIFADDR, &ifr) < 0)
+        {
+          BmfPError ("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
 
-      newIf->intAddr.v4.s_addr = inet_addr("0.0.0.0");
-    }
-    else
-    {
-      /* Downcast to correct sockaddr subtype */
-      newIf->intAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
-    }
+          newIf->intAddr.v4.s_addr = inet_addr ("0.0.0.0");
+        }
+      else
+        {
+          /* Downcast to correct sockaddr subtype */
+          newIf->intAddr.v4 =
+            ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr;
+        }
 
-    /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
-    memset(&ifr, 0, sizeof(struct ifreq));
-    strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-    ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0)
-    {
-      BmfPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
+      /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
+      memset (&ifr, 0, sizeof (struct ifreq));
+      strncpy (ifr.ifr_name, ifName, IFNAMSIZ - 1);
+      ifr.ifr_name[IFNAMSIZ - 1] = '\0';        /* Ensures null termination */
+      if (ioctl (ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0)
+        {
+          BmfPError ("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"",
+                     ifName);
 
-      newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
+          newIf->broadAddr.v4.s_addr = inet_addr ("0.0.0.0");
+        }
+      else
+        {
+          /* Downcast to correct sockaddr subtype */
+          newIf->broadAddr.v4 =
+            ((struct sockaddr_in *) &ifr.ifr_broadaddr)->sin_addr;
+        }
     }
-    else
-    {
-      /* Downcast to correct sockaddr subtype */
-      newIf->broadAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr;
-    }
-  }
 
   /* Initialize fragment history table */
-  memset(&newIf->fragmentHistory, 0, sizeof(newIf->fragmentHistory));
+  memset (&newIf->fragmentHistory, 0, sizeof (newIf->fragmentHistory));
   newIf->nextFragmentHistoryEntry = 0;
 
   /* Reset counters */
@@ -1491,36 +1538,31 @@ static int CreateInterface(
   /* Add new TBmfInterface object to global list. OLSR interfaces are
    * added at the front of the list, non-OLSR interfaces at the back. */
   if (BmfInterfaces == NULL)
-  {
-    /* First TBmfInterface object in list */
-    BmfInterfaces = newIf;
-    LastBmfInterface = newIf;
-  }
+    {
+      /* First TBmfInterface object in list */
+      BmfInterfaces = newIf;
+      LastBmfInterface = newIf;
+    }
   else if (olsrIntf != NULL)
-  {
-    /* Add new TBmfInterface object at front of list */
-    newIf->next = BmfInterfaces;
-    BmfInterfaces = newIf;
-  }
+    {
+      /* Add new TBmfInterface object at front of list */
+      newIf->next = BmfInterfaces;
+      BmfInterfaces = newIf;
+    }
   else
-  {
-    /* Add new TBmfInterface object at back of list */
-    newIf->next = NULL;
-    LastBmfInterface->next= newIf;
-    LastBmfInterface = newIf;
-  }
+    {
+      /* Add new TBmfInterface object at back of list */
+      newIf->next = NULL;
+      LastBmfInterface->next = newIf;
+      LastBmfInterface = newIf;
+    }
 
-  OLSR_PRINTF(
-    8,
-    "%s: opened %d socket%s on %s interface \"%s\"\n",
-    PLUGIN_NAME_SHORT,
-    nOpened,
-    nOpened == 1 ? "" : "s",
-    olsrIntf != NULL ? "OLSR" : "non-OLSR",
-    ifName);
+  OLSR_PRINTF (8, "%s: opened %d socket%s on %s interface \"%s\"\n",
+               PLUGIN_NAME_SHORT, nOpened, nOpened == 1 ? "" : "s",
+               olsrIntf != NULL ? "OLSR" : "non-OLSR", ifName);
 
   return nOpened;
-} /* CreateInterface */
+}                               /* CreateInterface */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateBmfNetworkInterfaces
@@ -1531,104 +1573,106 @@ static int CreateInterface(
  * Return     : fail (-1) or success (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
+int
+CreateBmfNetworkInterfaces (struct interface *skipThisIntf)
 {
   int skfd;
   struct ifconf ifc;
   int numreqs = 30;
-  struct ifreq* ifr;
+  struct ifreq *ifr;
   int n;
   int nOpenedSockets = 0;
 
   /* Clear input descriptor set */
-  FD_ZERO(&InputSet);
+  FD_ZERO (&InputSet);
 
-  skfd = socket(PF_INET, SOCK_DGRAM, 0);
+  skfd = socket (PF_INET, SOCK_DGRAM, 0);
   if (skfd < 0)
-  {
-    BmfPError("no inet socket available to retrieve interface list");
-    return -1;
-  }
+    {
+      BmfPError ("no inet socket available to retrieve interface list");
+      return -1;
+    }
 
   /* Retrieve the network interface configuration list */
   ifc.ifc_buf = NULL;
   for (;;)
-  {
-    ifc.ifc_len = sizeof(struct ifreq) * numreqs;
-    ifc.ifc_buf = realloc(ifc.ifc_buf, ifc.ifc_len);
-
-    if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0)
     {
-      BmfPError("ioctl(SIOCGIFCONF) error");
+      ifc.ifc_len = sizeof (struct ifreq) * numreqs;
+      ifc.ifc_buf = realloc (ifc.ifc_buf, ifc.ifc_len);
 
-      close(skfd);
-      free(ifc.ifc_buf);
-      return -1;
-    }
-    if ((unsigned)ifc.ifc_len == sizeof(struct ifreq) * numreqs)
-    {
-      /* Assume it overflowed; double the space and try again */
-      numreqs *= 2;
-      assert(numreqs < 1024);
-      continue; /* for (;;) */
-    }
-    break; /* for (;;) */
-  } /* for (;;) */
+      if (ioctl (skfd, SIOCGIFCONF, &ifc) < 0)
+        {
+          BmfPError ("ioctl(SIOCGIFCONF) error");
 
-  close(skfd);
+          close (skfd);
+          free (ifc.ifc_buf);
+          return -1;
+        }
+      if ((unsigned) ifc.ifc_len == sizeof (struct ifreq) * numreqs)
+        {
+          /* Assume it overflowed; double the space and try again */
+          numreqs *= 2;
+          assert (numreqs < 1024);
+          continue;             /* for (;;) */
+        }
+      break;                    /* for (;;) */
+    }                           /* for (;;) */
+
+  close (skfd);
 
   /* For each item in the interface configuration list... */
   ifr = ifc.ifc_req;
-  for (n = ifc.ifc_len / sizeof(struct ifreq); --n >= 0; ifr++)
-  {
-    struct interface* olsrIntf;
-    union olsr_ip_addr ipAddr;
-
-    /* Skip the BMF network interface itself */
-    if (strncmp(ifr->ifr_name, EtherTunTapIfName, IFNAMSIZ) == 0)
+  for (n = ifc.ifc_len / sizeof (struct ifreq); --n >= 0; ifr++)
     {
-      continue; /* for (n = ...) */
-    }
+      struct interface *olsrIntf;
+      union olsr_ip_addr ipAddr;
 
-    /* ...find the OLSR interface structure, if any */
-    ipAddr.v4 =  ((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr;
-    olsrIntf = if_ifwithaddr(&ipAddr);
+      /* Skip the BMF network interface itself */
+      if (strncmp (ifr->ifr_name, EtherTunTapIfName, IFNAMSIZ) == 0)
+        {
+          continue;             /* for (n = ...) */
+        }
 
-    if (skipThisIntf != NULL && olsrIntf == skipThisIntf)
-    {
-      continue; /* for (n = ...) */
-    }
+      /* ...find the OLSR interface structure, if any */
+      ipAddr.v4 = ((struct sockaddr_in *) &ifr->ifr_addr)->sin_addr;
+      olsrIntf = if_ifwithaddr (&ipAddr);
 
-    if (olsrIntf == NULL && ! IsNonOlsrBmfIf(ifr->ifr_name))
-    {
-      /* Interface is neither OLSR interface, nor specified as non-OLSR BMF
-       * interface in the BMF plugin parameter list */
-      continue; /* for (n = ...) */
-    }
+      if (skipThisIntf != NULL && olsrIntf == skipThisIntf)
+        {
+          continue;             /* for (n = ...) */
+        }
 
-    nOpenedSockets += CreateInterface(ifr->ifr_name, olsrIntf);
+      if (olsrIntf == NULL && !IsNonOlsrBmfIf (ifr->ifr_name))
+        {
+          /* Interface is neither OLSR interface, nor specified as non-OLSR BMF
+           * interface in the BMF plugin parameter list */
+          continue;             /* for (n = ...) */
+        }
 
-  } /* for (n = ...) */
+      nOpenedSockets += CreateInterface (ifr->ifr_name, olsrIntf);
 
-  free(ifc.ifc_buf);
+    }                           /* for (n = ...) */
+
+  free (ifc.ifc_buf);
 
   /* Create the BMF network interface */
-  EtherTunTapFd = CreateLocalEtherTunTap();
+  EtherTunTapFd = CreateLocalEtherTunTap ();
   if (EtherTunTapFd >= 0)
-  {
-    nOpenedSockets++;
-  }
+    {
+      nOpenedSockets++;
+    }
 
   if (BmfInterfaces == NULL)
-  {
-    olsr_printf(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
-  }
+    {
+      olsr_printf (1, "%s: could not initialize any network interface\n",
+                   PLUGIN_NAME);
+    }
   else
-  {
-    olsr_printf(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
-  }
+    {
+      olsr_printf (1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
+    }
   return 0;
-} /* CreateBmfNetworkInterfaces */
+}                               /* CreateBmfNetworkInterfaces */
 
 /* -------------------------------------------------------------------------
  * Function   : AddInterface
@@ -1639,16 +1683,17 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
  * Return     : none
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-void AddInterface(struct interface* newIntf)
+void
+AddInterface (struct interface *newIntf)
 {
   int nOpened;
 
-  assert(newIntf != NULL);
+  assert (newIntf != NULL);
 
-  nOpened = CreateInterface(newIntf->int_name, newIntf);
+  nOpened = CreateInterface (newIntf->int_name, newIntf);
 
-  olsr_printf(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
-} /* AddInterface */
+  olsr_printf (1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
+}                               /* AddInterface */
 
 /* -------------------------------------------------------------------------
  * Function   : CloseBmfNetworkInterfaces
@@ -1666,7 +1711,8 @@ void AddInterface(struct interface* newIntf)
  *              Also restores the network state to the situation before BMF
  *              was started.
  * ------------------------------------------------------------------------- */
-void CloseBmfNetworkInterfaces(void)
+void
+CloseBmfNetworkInterfaces (void)
 {
   int nClosed = 0;
   u_int32_t totalOlsrBmfPacketsRx = 0;
@@ -1677,84 +1723,73 @@ void CloseBmfNetworkInterfaces(void)
   u_int32_t totalNonOlsrBmfPacketsTx = 0;
 
   /* Close all opened sockets */
-  struct TBmfInterface* nextBmfIf = BmfInterfaces;
+  struct TBmfInterface *nextBmfIf = BmfInterfaces;
   while (nextBmfIf != NULL)
-  {
-    struct TBmfInterface* bmfIf = nextBmfIf;
-    nextBmfIf = bmfIf->next;
-
-    if (bmfIf->capturingSkfd >= 0)
     {
-      close(bmfIf->capturingSkfd);
-      nClosed++;
-    }
-    if (bmfIf->encapsulatingSkfd >= 0)
-    {
-      close(bmfIf->encapsulatingSkfd);
-      nClosed++;
-    }
+      struct TBmfInterface *bmfIf = nextBmfIf;
+      nextBmfIf = bmfIf->next;
 
-    OLSR_PRINTF(
-      7,
-      "%s: %s interface \"%s\": RX pkts %d (%d dups); TX pkts %d\n",
-      PLUGIN_NAME_SHORT,
-      bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
-      bmfIf->ifName,
-      bmfIf->nBmfPacketsRx,
-      bmfIf->nBmfPacketsRxDup,
-      bmfIf->nBmfPacketsTx);
+      if (bmfIf->capturingSkfd >= 0)
+        {
+          close (bmfIf->capturingSkfd);
+          nClosed++;
+        }
+      if (bmfIf->encapsulatingSkfd >= 0)
+        {
+          close (bmfIf->encapsulatingSkfd);
+          nClosed++;
+        }
 
-    olsr_printf(
-      1,
-      "%s: closed %s interface \"%s\"\n",
-      PLUGIN_NAME_SHORT,
-      bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
-      bmfIf->ifName);
+      OLSR_PRINTF (7,
+                   "%s: %s interface \"%s\": RX pkts %d (%d dups); TX pkts %d\n",
+                   PLUGIN_NAME_SHORT,
+                   bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
+                   bmfIf->ifName, bmfIf->nBmfPacketsRx,
+                   bmfIf->nBmfPacketsRxDup, bmfIf->nBmfPacketsTx);
 
-    /* Add totals */
-    if (bmfIf->olsrIntf != NULL)
-    {
-      totalOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
-      totalOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
-      totalOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
-    }
-    else
-    {
-      totalNonOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
-      totalNonOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
-      totalNonOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
-    }
+      olsr_printf (1, "%s: closed %s interface \"%s\"\n", PLUGIN_NAME_SHORT,
+                   bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
+                   bmfIf->ifName);
 
-    free(bmfIf);
-  } /* while */
+      /* Add totals */
+      if (bmfIf->olsrIntf != NULL)
+        {
+          totalOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
+          totalOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
+          totalOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
+        }
+      else
+        {
+          totalNonOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
+          totalNonOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
+          totalNonOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
+        }
+
+      free (bmfIf);
+    }                           /* while */
 
   if (EtherTunTapFd >= 0)
-  {
-    close(EtherTunTapFd);
-    nClosed++;
+    {
+      close (EtherTunTapFd);
+      nClosed++;
 
-    OLSR_PRINTF(7, "%s: closed \"%s\"\n", PLUGIN_NAME_SHORT, EtherTunTapIfName);
-  }
+      OLSR_PRINTF (7, "%s: closed \"%s\"\n", PLUGIN_NAME_SHORT,
+                   EtherTunTapIfName);
+    }
 
   BmfInterfaces = NULL;
 
-  olsr_printf(1, "%s: closed %d sockets\n", PLUGIN_NAME_SHORT, nClosed);
+  olsr_printf (1, "%s: closed %d sockets\n", PLUGIN_NAME_SHORT, nClosed);
 
-  OLSR_PRINTF(
-    7,
-    "%s: Total all OLSR interfaces    : RX pkts %d (%d dups); TX pkts %d\n",
-    PLUGIN_NAME_SHORT,
-    totalOlsrBmfPacketsRx,
-    totalOlsrBmfPacketsRxDup,
-    totalOlsrBmfPacketsTx);
-  OLSR_PRINTF(
-    7,
-    "%s: Total all non-OLSR interfaces: RX pkts %d (%d dups); TX pkts %d\n",
-    PLUGIN_NAME_SHORT,
-    totalNonOlsrBmfPacketsRx,
-    totalNonOlsrBmfPacketsRxDup,
-    totalNonOlsrBmfPacketsTx);
-} /* CloseBmfNetworkInterfaces */
+  OLSR_PRINTF (7,
+               "%s: Total all OLSR interfaces    : RX pkts %d (%d dups); TX pkts %d\n",
+               PLUGIN_NAME_SHORT, totalOlsrBmfPacketsRx,
+               totalOlsrBmfPacketsRxDup, totalOlsrBmfPacketsTx);
+  OLSR_PRINTF (7,
+               "%s: Total all non-OLSR interfaces: RX pkts %d (%d dups); TX pkts %d\n",
+               PLUGIN_NAME_SHORT, totalNonOlsrBmfPacketsRx,
+               totalNonOlsrBmfPacketsRxDup, totalNonOlsrBmfPacketsTx);
+}                               /* CloseBmfNetworkInterfaces */
 
 #define MAX_NON_OLSR_IFS 32
 static char NonOlsrIfNames[MAX_NON_OLSR_IFS][IFNAMSIZ];
@@ -1771,28 +1806,26 @@ static int nNonOlsrIfs = 0;
  * Return     : success (0) or fail (1)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int AddNonOlsrBmfIf(
-  const char* ifName,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+AddNonOlsrBmfIf (const char *ifName, void *data
+                 __attribute__ ((unused)), set_plugin_parameter_addon addon
+                 __attribute__ ((unused)))
 {
-  assert(ifName != NULL);
+  assert (ifName != NULL);
 
   if (nNonOlsrIfs >= MAX_NON_OLSR_IFS)
-  {
-    olsr_printf(
-      1,
-      "%s: too many non-OLSR interfaces specified, maximum is %d\n",
-      PLUGIN_NAME,
-      MAX_NON_OLSR_IFS);
-    return 1;
-  }
+    {
+      olsr_printf (1,
+                   "%s: too many non-OLSR interfaces specified, maximum is %d\n",
+                   PLUGIN_NAME, MAX_NON_OLSR_IFS);
+      return 1;
+    }
 
-  strncpy(NonOlsrIfNames[nNonOlsrIfs], ifName, IFNAMSIZ - 1);
-  NonOlsrIfNames[nNonOlsrIfs][IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  strncpy (NonOlsrIfNames[nNonOlsrIfs], ifName, IFNAMSIZ - 1);
+  NonOlsrIfNames[nNonOlsrIfs][IFNAMSIZ - 1] = '\0';     /* Ensures null termination */
   nNonOlsrIfs++;
   return 0;
-} /* AddNonOlsrBmfIf */
+}                               /* AddNonOlsrBmfIf */
 
 /* -------------------------------------------------------------------------
  * Function   : IsNonOlsrBmfIf
@@ -1802,18 +1835,20 @@ int AddNonOlsrBmfIf(
  * Return     : true (1) or false (0)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int IsNonOlsrBmfIf(const char* ifName)
+int
+IsNonOlsrBmfIf (const char *ifName)
 {
   int i;
 
-  assert(ifName != NULL);
+  assert (ifName != NULL);
 
   for (i = 0; i < nNonOlsrIfs; i++)
-  {
-    if (strncmp(NonOlsrIfNames[i], ifName, IFNAMSIZ) == 0) return 1;
-  }
+    {
+      if (strncmp (NonOlsrIfNames[i], ifName, IFNAMSIZ) == 0)
+        return 1;
+    }
   return 0;
-} /* IsNonOlsrBmfIf */
+}                               /* IsNonOlsrBmfIf */
 
 /* -------------------------------------------------------------------------
  * Function   : CheckAndUpdateLocalBroadcast
@@ -1828,57 +1863,63 @@ int IsNonOlsrBmfIf(const char* ifName)
  * Data Used  : none
  * Notes      : See also RFC1141
  * ------------------------------------------------------------------------- */
-void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* broadAddr)
+void
+CheckAndUpdateLocalBroadcast (unsigned char *ipPacket,
+                              union olsr_ip_addr *broadAddr)
 {
-  struct iphdr* iph;
+  struct iphdr *iph;
   union olsr_ip_addr destIp;
 
-  assert(ipPacket != NULL && broadAddr != NULL);
+  assert (ipPacket != NULL && broadAddr != NULL);
 
-  iph = (struct iphdr*) ipPacket;
+  iph = (struct iphdr *) ipPacket;
   destIp.v4.s_addr = iph->daddr;
-  if (! IsMulticast(&destIp))
-  {
-    u_int32_t origDaddr, newDaddr;
-    u_int32_t check;
-
-    origDaddr = ntohl(iph->daddr);
-
-    iph->daddr = broadAddr->v4.s_addr;
-    newDaddr = ntohl(iph->daddr);
-
-    /* Re-calculate IP header checksum for new destination */
-    check = ntohs(iph->check);
-
-    check = ~ (~ check - ((origDaddr >> 16) & 0xFFFF) + ((newDaddr >> 16) & 0xFFFF));
-    check = ~ (~ check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
-
-    /* Add carry */
-    check = check + (check >> 16);
-
-    iph->check = htons(check);
-
-    if (iph->protocol == SOL_UDP)
+  if (!IsMulticast (&destIp))
     {
-      /* Re-calculate UDP/IP checksum for new destination */
+      u_int32_t origDaddr, newDaddr;
+      u_int32_t check;
 
-      int ipHeaderLen = GetIpHeaderLength(ipPacket);
-      struct udphdr* udph = (struct udphdr*) (ipPacket + ipHeaderLen);
+      origDaddr = ntohl (iph->daddr);
 
-      /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
+      iph->daddr = broadAddr->v4.s_addr;
+      newDaddr = ntohl (iph->daddr);
 
-      check = ntohs(udph->check);
+      /* Re-calculate IP header checksum for new destination */
+      check = ntohs (iph->check);
 
-      check = ~ (~ check - ((origDaddr >> 16) & 0xFFFF) + ((newDaddr >> 16) & 0xFFFF));
-      check = ~ (~ check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
+      check =
+        ~(~check - ((origDaddr >> 16) & 0xFFFF) +
+          ((newDaddr >> 16) & 0xFFFF));
+      check = ~(~check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
 
       /* Add carry */
       check = check + (check >> 16);
 
-      udph->check = htons(check);
-     } /* if */
-  } /* if */
-} /* CheckAndUpdateLocalBroadcast */
+      iph->check = htons (check);
+
+      if (iph->protocol == SOL_UDP)
+        {
+          /* Re-calculate UDP/IP checksum for new destination */
+
+          int ipHeaderLen = GetIpHeaderLength (ipPacket);
+          struct udphdr *udph = (struct udphdr *) (ipPacket + ipHeaderLen);
+
+          /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
+
+          check = ntohs (udph->check);
+
+          check =
+            ~(~check - ((origDaddr >> 16) & 0xFFFF) +
+              ((newDaddr >> 16) & 0xFFFF));
+          check = ~(~check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
+
+          /* Add carry */
+          check = check + (check >> 16);
+
+          udph->check = htons (check);
+        }                       /* if */
+    }                           /* if */
+}                               /* CheckAndUpdateLocalBroadcast */
 
 /* -------------------------------------------------------------------------
  * Function   : AddMulticastRoute
@@ -1889,39 +1930,44 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
  * Return     : none
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-void AddMulticastRoute(void)
+void
+AddMulticastRoute (void)
 {
   struct rtentry kernel_route;
-  int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
+  int ioctlSkfd = socket (PF_INET, SOCK_DGRAM, 0);
   if (ioctlSkfd < 0)
-  {
-    BmfPError("socket(PF_INET) error");
-    return;
-  }
+    {
+      BmfPError ("socket(PF_INET) error");
+      return;
+    }
 
-  memset(&kernel_route, 0, sizeof(struct rtentry));
+  memset (&kernel_route, 0, sizeof (struct rtentry));
 
-  ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
-  ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
-  ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
+  ((struct sockaddr_in *) &kernel_route.rt_dst)->sin_family = AF_INET;
+  ((struct sockaddr_in *) &kernel_route.rt_gateway)->sin_family = AF_INET;
+  ((struct sockaddr_in *) &kernel_route.rt_genmask)->sin_family = AF_INET;
 
   /* 224.0.0.0/4 */
-  ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
-  ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
+  ((struct sockaddr_in *) &kernel_route.rt_dst)->sin_addr.s_addr =
+    htonl (0xE0000000);
+  ((struct sockaddr_in *) &kernel_route.rt_genmask)->sin_addr.s_addr =
+    htonl (0xF0000000);
 
   kernel_route.rt_metric = 0;
   kernel_route.rt_flags = RTF_UP;
 
   kernel_route.rt_dev = EtherTunTapIfName;
 
-  if (ioctl(ioctlSkfd, SIOCADDRT, &kernel_route) < 0)
-  {
-    BmfPError("error setting multicast route via EtherTunTap interface \"%s\"", EtherTunTapIfName);
+  if (ioctl (ioctlSkfd, SIOCADDRT, &kernel_route) < 0)
+    {
+      BmfPError
+        ("error setting multicast route via EtherTunTap interface \"%s\"",
+         EtherTunTapIfName);
 
-    /* Continue anyway */
-  }
-  close(ioctlSkfd);
-} /* AddMulticastRoute */
+      /* Continue anyway */
+    }
+  close (ioctlSkfd);
+}                               /* AddMulticastRoute */
 
 /* -------------------------------------------------------------------------
  * Function   : DeleteMulticastRoute
@@ -1932,39 +1978,44 @@ void AddMulticastRoute(void)
  * Return     : none
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-void DeleteMulticastRoute(void)
+void
+DeleteMulticastRoute (void)
 {
   if (EtherTunTapIp != ETHERTUNTAPDEFAULTIP)
-  {
-    struct rtentry kernel_route;
-    int ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
-    if (ioctlSkfd < 0)
     {
-      BmfPError("socket(PF_INET) error");
-      return;
-    }
+      struct rtentry kernel_route;
+      int ioctlSkfd = socket (PF_INET, SOCK_DGRAM, 0);
+      if (ioctlSkfd < 0)
+        {
+          BmfPError ("socket(PF_INET) error");
+          return;
+        }
 
-    memset(&kernel_route, 0, sizeof(struct rtentry));
+      memset (&kernel_route, 0, sizeof (struct rtentry));
 
-    ((struct sockaddr_in*)&kernel_route.rt_dst)->sin_family = AF_INET;
-    ((struct sockaddr_in*)&kernel_route.rt_gateway)->sin_family = AF_INET;
-    ((struct sockaddr_in*)&kernel_route.rt_genmask)->sin_family = AF_INET;
+      ((struct sockaddr_in *) &kernel_route.rt_dst)->sin_family = AF_INET;
+      ((struct sockaddr_in *) &kernel_route.rt_gateway)->sin_family = AF_INET;
+      ((struct sockaddr_in *) &kernel_route.rt_genmask)->sin_family = AF_INET;
 
-    /* 224.0.0.0/4 */
-    ((struct sockaddr_in *)&kernel_route.rt_dst)->sin_addr.s_addr = htonl(0xE0000000);
-    ((struct sockaddr_in *)&kernel_route.rt_genmask)->sin_addr.s_addr = htonl(0xF0000000);
+      /* 224.0.0.0/4 */
+      ((struct sockaddr_in *) &kernel_route.rt_dst)->sin_addr.s_addr =
+        htonl (0xE0000000);
+      ((struct sockaddr_in *) &kernel_route.rt_genmask)->sin_addr.s_addr =
+        htonl (0xF0000000);
 
-    kernel_route.rt_metric = 0;
-    kernel_route.rt_flags = RTF_UP;
+      kernel_route.rt_metric = 0;
+      kernel_route.rt_flags = RTF_UP;
 
-    kernel_route.rt_dev = EtherTunTapIfName;
+      kernel_route.rt_dev = EtherTunTapIfName;
 
-    if (ioctl(ioctlSkfd, SIOCDELRT, &kernel_route) < 0)
-    {
-      BmfPError("error deleting multicast route via EtherTunTap interface \"%s\"", EtherTunTapIfName);
+      if (ioctl (ioctlSkfd, SIOCDELRT, &kernel_route) < 0)
+        {
+          BmfPError
+            ("error deleting multicast route via EtherTunTap interface \"%s\"",
+             EtherTunTapIfName);
 
-      /* Continue anyway */
-    }
-    close(ioctlSkfd);
-  } /* if */
-} /* DeleteMulticastRoute */
+          /* Continue anyway */
+        }
+      close (ioctlSkfd);
+    }                           /* if */
+}                               /* DeleteMulticastRoute */

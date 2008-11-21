@@ -47,37 +47,36 @@
 #include <stdarg.h>
 
 void
-olsr_openlog(const char *ident)
+olsr_openlog (const char *ident)
 {
-  openlog(ident, LOG_PID | LOG_ODELAY, LOG_DAEMON);
-  setlogmask(LOG_UPTO(LOG_INFO));
+  openlog (ident, LOG_PID | LOG_ODELAY, LOG_DAEMON);
+  setlogmask (LOG_UPTO (LOG_INFO));
 
   return;
 }
 
-
 void
-olsr_syslog(int level, const char *format, ...)
+olsr_syslog (int level, const char *format, ...)
 {
 
   int linux_level;
   va_list arglist;
 
-  switch(level)
+  switch (level)
     {
-    case(OLSR_LOG_INFO):
+    case (OLSR_LOG_INFO):
       linux_level = LOG_INFO;
       break;
-    case(OLSR_LOG_ERR):
+    case (OLSR_LOG_ERR):
       linux_level = LOG_ERR;
       break;
     default:
       return;
     }
 
-  va_start(arglist, format);
-  vsyslog(linux_level, format, arglist);
-  va_end(arglist);
+  va_start (arglist, format);
+  vsyslog (linux_level, format, arglist);
+  va_end (arglist);
 
   return;
 }

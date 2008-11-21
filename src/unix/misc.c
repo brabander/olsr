@@ -38,13 +38,13 @@
  *
  */
 
-
 #include <stdio.h>
 #include <unistd.h>
 #include "misc.h"
 #include "olsr_types.h"
 
-void clear_console(void)
+void
+clear_console (void)
 {
   static int len = -1;
   static char clear_buff[100];
@@ -52,21 +52,21 @@ void clear_console(void)
 
   if (len < 0)
     {
-      FILE *pip = popen("clear", "r");
-      for (len = 0; len < (int)sizeof(clear_buff); len++)
+      FILE *pip = popen ("clear", "r");
+      for (len = 0; len < (int) sizeof (clear_buff); len++)
         {
-          int c = fgetc(pip);
+          int c = fgetc (pip);
           if (c == EOF)
             break;
 
           clear_buff[len] = c;
         }
 
-      pclose(pip);
+      pclose (pip);
     }
 
   for (i = 0; i < len; i++)
-    fputc(clear_buff[i], stdout);
+    fputc (clear_buff[i], stdout);
 
-  fflush(stdout);
+  fflush (stdout);
 }

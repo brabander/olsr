@@ -42,7 +42,6 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -54,70 +53,76 @@
 #include "olsrd_txtinfo.h"
 #include "defs.h"
 
-
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"
 #define PLUGIN_VERSION "0.1"
 #define PLUGIN_AUTHOR   "Lorenz Schori"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
-
 union olsr_ip_addr ipc_accept_ip;
 int ipc_port;
 int nompr;
 
-static void my_init(void) __attribute__ ((constructor));
-static void my_fini(void) __attribute__ ((destructor));
+static void my_init (void) __attribute__ ((constructor));
+static void my_fini (void) __attribute__ ((destructor));
 
 /**
  *Constructor
  */
-static void my_init(void)
+static void
+my_init (void)
 {
-    /* Print plugin info to stdout */
-    printf("%s\n", MOD_DESC);
+  /* Print plugin info to stdout */
+  printf ("%s\n", MOD_DESC);
 
-    /* defaults for parameters */
-    ipc_port = 2006;
-    if (olsr_cnf->ip_version == AF_INET) {
-        ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
-    } else {
-        ipc_accept_ip.v6 = in6addr_loopback;
+  /* defaults for parameters */
+  ipc_port = 2006;
+  if (olsr_cnf->ip_version == AF_INET)
+    {
+      ipc_accept_ip.v4.s_addr = htonl (INADDR_LOOPBACK);
+    }
+  else
+    {
+      ipc_accept_ip.v6 = in6addr_loopback;
     }
 
-    /* highlite neighbours by default */
-    nompr = 0;
+  /* highlite neighbours by default */
+  nompr = 0;
 }
 
 /**
  *Destructor
  */
-static void my_fini(void)
+static void
+my_fini (void)
 {
-    /* Calls the destruction function
-     * olsr_plugin_exit()
-     * This function should be present in your
-     * sourcefile and all data destruction
-     * should happen there - NOT HERE!
-     */
-    olsr_plugin_exit();
+  /* Calls the destruction function
+   * olsr_plugin_exit()
+   * This function should be present in your
+   * sourcefile and all data destruction
+   * should happen there - NOT HERE!
+   */
+  olsr_plugin_exit ();
 }
 
-
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version (void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "port",   .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = "accept", .set_plugin_parameter = &set_plugin_ipaddress, .data = &ipc_accept_ip },
+  {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
+  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data =
+   &ipc_accept_ip},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
+                             int *size)
 {
-    *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+  *params = plugin_parameters;
+  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
 }
 
 /*

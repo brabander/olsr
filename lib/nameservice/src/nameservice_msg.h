@@ -29,7 +29,6 @@
  *
  */
 
-
 /*
  * Dynamic linked library for UniK OLSRd
  */
@@ -38,11 +37,12 @@
 #define _NAMESEVICE_MSG
 
 /* type of the packet of name_entry */
-typedef enum {
-	NAME_HOST = 0,
-	NAME_FORWARDER = 1,
-	NAME_SERVICE = 2,
-	NAME_LATLON = 3,
+typedef enum
+{
+  NAME_HOST = 0,
+  NAME_FORWARDER = 1,
+  NAME_SERVICE = 2,
+  NAME_LATLON = 3,
 } NAME_TYPE;
 
 /**
@@ -51,24 +51,23 @@ typedef enum {
  **/
 struct name
 {
-	olsr_u16_t		type;
-	olsr_u16_t		len;	// length of the name
-	// the ip of the hostname, or the ip of the dns-server
-	// ip is irrelevant for services
-	union olsr_ip_addr	ip;
-	/*
-	 * name or service is written in plain text after this struct and padded to 4 byte
-	 */
+  olsr_u16_t type;
+  olsr_u16_t len;               // length of the name
+  // the ip of the hostname, or the ip of the dns-server
+  // ip is irrelevant for services
+  union olsr_ip_addr ip;
+  /*
+   * name or service is written in plain text after this struct and padded to 4 byte
+   */
 };
-
 
 struct namemsg
 {
-	olsr_u16_t version;    // version number of the nameservice plugin
-	olsr_u16_t nr_names;   // number of following packets including names, forwarders or services
-	/*
-	 * at least one struct name following
-	 */
+  olsr_u16_t version;           // version number of the nameservice plugin
+  olsr_u16_t nr_names;          // number of following packets including names, forwarders or services
+  /*
+   * at least one struct name following
+   */
 };
 
 #endif

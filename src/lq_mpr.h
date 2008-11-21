@@ -41,6 +41,6 @@
 #ifndef _OLSR_LQ_MPR
 #define _OLSR_LQ_MPR
 
-void olsr_calculate_lq_mpr(void);
+void olsr_calculate_lq_mpr (void);
 
 #endif

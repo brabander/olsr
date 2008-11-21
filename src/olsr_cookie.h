@@ -44,9 +44,10 @@
 #ifndef _OLSR_COOKIE_H
 #define _OLSR_COOKIE_H
 
-#define COOKIE_ID_MAX  25	/* maximum number of cookies in the system */
+#define COOKIE_ID_MAX  25       /* maximum number of cookies in the system */
 
-typedef enum olsr_cookie_type_ {
+typedef enum olsr_cookie_type_
+{
   OLSR_COOKIE_TYPE_MIN,
   OLSR_COOKIE_TYPE_MEMORY,
   OLSR_COOKIE_TYPE_TIMER,
@@ -58,41 +59,42 @@ typedef enum olsr_cookie_type_ {
  * It is used for tracking resource usage in the system and also
  * for locating memory corruption.
  */
-struct olsr_cookie_info {
-  olsr_cookie_t ci_id;		       /* ID */
-  char *ci_name;		       /* Name */
-  olsr_cookie_type ci_type;	       /* Type of cookie */
-  size_t ci_size;		       /* Fixed size for block allocations */
-  unsigned int ci_usage;	       /* Stats, resource usage */
-  unsigned int ci_changes;	       /* Stats, resource churn */
-  struct list_node ci_free_list;       /* List head for recyclable blocks */
-  unsigned int ci_free_list_usage;     /* Length of free list */
+struct olsr_cookie_info
+{
+  olsr_cookie_t ci_id;          /* ID */
+  char *ci_name;                /* Name */
+  olsr_cookie_type ci_type;     /* Type of cookie */
+  size_t ci_size;               /* Fixed size for block allocations */
+  unsigned int ci_usage;        /* Stats, resource usage */
+  unsigned int ci_changes;      /* Stats, resource churn */
+  struct list_node ci_free_list;        /* List head for recyclable blocks */
+  unsigned int ci_free_list_usage;      /* Length of free list */
 };
 
-#define COOKIE_FREE_LIST_THRESHOLD 10  /* Blocks / Percent  */
+#define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 
 /*
  * Small brand which gets appended on the end of every block allocation.
  * Helps to detect memory corruption, like overruns, double frees.
  */
-struct olsr_cookie_mem_brand {
+struct olsr_cookie_mem_brand
+{
   char cmb_sig[6];
   olsr_cookie_t cmb_id;
 };
 
 /* Externals. */
-extern struct olsr_cookie_info *olsr_alloc_cookie(const char *,
-						  olsr_cookie_type);
-extern void olsr_free_cookie(struct olsr_cookie_info *);
-extern void olsr_delete_all_cookies(void);
-extern char *olsr_cookie_name(olsr_cookie_t);
-extern void olsr_cookie_set_memory_size(struct olsr_cookie_info *, size_t);
-extern void olsr_cookie_usage_incr(olsr_cookie_t);
-extern void olsr_cookie_usage_decr(olsr_cookie_t);
+extern struct olsr_cookie_info *olsr_alloc_cookie (const char *,
+                                                   olsr_cookie_type);
+extern void olsr_free_cookie (struct olsr_cookie_info *);
+extern void olsr_delete_all_cookies (void);
+extern char *olsr_cookie_name (olsr_cookie_t);
+extern void olsr_cookie_set_memory_size (struct olsr_cookie_info *, size_t);
+extern void olsr_cookie_usage_incr (olsr_cookie_t);
+extern void olsr_cookie_usage_decr (olsr_cookie_t);
 
-extern void *olsr_cookie_malloc(struct olsr_cookie_info *);
-extern void olsr_cookie_free(struct olsr_cookie_info *, void *);
-
+extern void *olsr_cookie_malloc (struct olsr_cookie_info *);
+extern void olsr_cookie_free (struct olsr_cookie_info *, void *);
 
 #endif /* _OLSR_COOKIE_H */
 

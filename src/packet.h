@@ -47,25 +47,25 @@
 
 struct hello_neighbor
 {
-  olsr_u8_t             status;
-  olsr_u8_t             link;
-  union olsr_ip_addr    main_address;
-  union olsr_ip_addr    address;
+  olsr_u8_t status;
+  olsr_u8_t link;
+  union olsr_ip_addr main_address;
+  union olsr_ip_addr address;
   struct hello_neighbor *next;
-  olsr_linkcost         cost;
-  olsr_u32_t            linkquality[0];
+  olsr_linkcost cost;
+  olsr_u32_t linkquality[0];
 };
 
 struct hello_message
 {
-  olsr_reltime           vtime;
-  olsr_reltime           htime;
-  union olsr_ip_addr     source_addr;
-  olsr_u16_t             packet_seq_number;
-  olsr_u8_t              hop_count;
-  olsr_u8_t              ttl;
-  olsr_u8_t              willingness;
-  struct hello_neighbor  *neighbors;
+  olsr_reltime vtime;
+  olsr_reltime htime;
+  union olsr_ip_addr source_addr;
+  olsr_u16_t packet_seq_number;
+  olsr_u8_t hop_count;
+  olsr_u8_t ttl;
+  olsr_u8_t willingness;
+  struct hello_neighbor *neighbors;
 
 };
 
@@ -73,19 +73,19 @@ struct tc_mpr_addr
 {
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
-  olsr_u32_t         linkquality[0];
+  olsr_u32_t linkquality[0];
 };
 
 struct tc_message
 {
-  olsr_reltime        vtime;
-  union olsr_ip_addr  source_addr;
-  union olsr_ip_addr  originator;
-  olsr_u16_t          packet_seq_number;
-  olsr_u8_t           hop_count;
-  olsr_u8_t           ttl;
-  olsr_u16_t          ansn;
-  struct tc_mpr_addr  *multipoint_relay_selector_address;
+  olsr_reltime vtime;
+  union olsr_ip_addr source_addr;
+  union olsr_ip_addr originator;
+  olsr_u16_t packet_seq_number;
+  olsr_u8_t hop_count;
+  olsr_u8_t ttl;
+  olsr_u16_t ansn;
+  struct tc_mpr_addr *multipoint_relay_selector_address;
 };
 
 /*
@@ -100,42 +100,35 @@ struct tc_message
 struct mid_alias
 {
   union olsr_ip_addr alias_addr;
-  struct mid_alias   *next;
+  struct mid_alias *next;
 };
 
 struct mid_message
 {
-  olsr_reltime       vtime;
-  union olsr_ip_addr mid_origaddr;  /* originator's address */
-  olsr_u8_t          mid_hopcnt;    /* number of hops to destination */
-  olsr_u8_t          mid_ttl;       /* ttl */
-  olsr_u16_t         mid_seqno;     /* sequence number */
-  union olsr_ip_addr addr;          /* main address */
-  struct mid_alias   *mid_addr;     /* variable length */
+  olsr_reltime vtime;
+  union olsr_ip_addr mid_origaddr;      /* originator's address */
+  olsr_u8_t mid_hopcnt;         /* number of hops to destination */
+  olsr_u8_t mid_ttl;            /* ttl */
+  olsr_u16_t mid_seqno;         /* sequence number */
+  union olsr_ip_addr addr;      /* main address */
+  struct mid_alias *mid_addr;   /* variable length */
 };
-
 
 struct unknown_message
 {
-  olsr_u16_t         seqno;
+  olsr_u16_t seqno;
   union olsr_ip_addr originator;
-  olsr_u8_t          type;
+  olsr_u8_t type;
 };
 
+void olsr_free_hello_packet (struct hello_message *);
 
-void
-olsr_free_hello_packet(struct hello_message *);
+int olsr_build_hello_packet (struct hello_message *, struct interface *);
 
-int
-olsr_build_hello_packet(struct hello_message *, struct interface *);
+void olsr_free_tc_packet (struct tc_message *);
 
-void
-olsr_free_tc_packet(struct tc_message *);
+int olsr_build_tc_packet (struct tc_message *);
 
-int
-olsr_build_tc_packet(struct tc_message *);
-
-void
-olsr_free_mid_packet(struct mid_message *);
+void olsr_free_mid_packet (struct mid_message *);
 
 #endif

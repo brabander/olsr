@@ -38,15 +38,11 @@
  *
  */
 
-
 #ifndef _OLSR_MPR
 #define _OLSR_MPR
 
-void
-olsr_calculate_mpr(void);
+void olsr_calculate_mpr (void);
 
-void
-olsr_print_mpr_set(void);
-
+void olsr_print_mpr_set (void);
 
 #endif

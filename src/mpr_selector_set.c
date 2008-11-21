@@ -38,7 +38,6 @@
  *
  */
 
-
 #include "ipcalc.h"
 #include "defs.h"
 #include "mpr_selector_set.h"
@@ -56,9 +55,9 @@ static struct mpr_selector mprs_list;
  */
 
 void
-olsr_init_mprs_set(void)
+olsr_init_mprs_set (void)
 {
-  OLSR_PRINTF(5, "MPRS: Init\n");
+  OLSR_PRINTF (5, "MPRS: Init\n");
 
   /* Initial values */
   ansn = 0;
@@ -67,15 +66,14 @@ olsr_init_mprs_set(void)
   mprs_list.prev = &mprs_list;
 }
 
-
 olsr_u16_t
-get_local_ansn(void)
+get_local_ansn (void)
 {
   return ansn;
 }
 
 void
-increase_local_ansn(void)
+increase_local_ansn (void)
 {
   ansn++;
 }
@@ -86,39 +84,37 @@ increase_local_ansn(void)
  * neighbors. If the list is empty we are not MPR.
  */
 olsr_bool
-olsr_is_mpr(void)
+olsr_is_mpr (void)
 {
-    return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
+  return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
 }
 #endif
-
 
 /**
  * Wrapper for the timer callback.
  */
 static void
-olsr_expire_mpr_sel_entry(void *context)
+olsr_expire_mpr_sel_entry (void *context)
 {
 #ifdef DEBUG
   struct ipaddr_str buf;
 #endif
   struct mpr_selector *mpr_sel;
 
-  mpr_sel = (struct mpr_selector *)context;
+  mpr_sel = (struct mpr_selector *) context;
   mpr_sel->MS_timer = NULL;
 
 #ifdef DEBUG
-  OLSR_PRINTF(1, "MPRS: Timing out %st\n",
-              olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
+  OLSR_PRINTF (1, "MPRS: Timing out %st\n",
+               olsr_ip_to_string (&buf, &mpr_sel->MS_main_addr));
 #endif
 
-  DEQUEUE_ELEM(mpr_sel);
+  DEQUEUE_ELEM (mpr_sel);
 
   /* Delete entry */
-  free(mpr_sel);
-  signal_link_changes(OLSR_TRUE);
+  free (mpr_sel);
+  signal_link_changes (OLSR_TRUE);
 }
-
 
 /**
  * Set the mpr selector expiration timer.
@@ -127,13 +123,12 @@ olsr_expire_mpr_sel_entry(void *context)
  * The timer param is a relative timer expressed in milliseconds.
  */
 static void
-olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
+olsr_set_mpr_sel_timer (struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
 {
 
-  olsr_set_timer(&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel, 0);
+  olsr_set_timer (&mpr_sel->MS_timer, rel_timer, OLSR_MPR_SEL_JITTER,
+                  OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mpr_sel, 0);
 }
-
 
 /**
  *Add a MPR selector to the MPR selector set
@@ -144,29 +139,27 @@ olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
  *@return a pointer to the new entry
  */
 struct mpr_selector *
-olsr_add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
+olsr_add_mpr_selector (const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
   struct ipaddr_str buf;
   struct mpr_selector *new_entry;
 
-  OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
+  OLSR_PRINTF (1, "MPRS: adding %s\n", olsr_ip_to_string (&buf, addr));
 
-  new_entry = olsr_malloc(sizeof(struct mpr_selector), "Add MPR selector");
+  new_entry = olsr_malloc (sizeof (struct mpr_selector), "Add MPR selector");
   /* Fill struct */
   new_entry->MS_main_addr = *addr;
-  olsr_set_mpr_sel_timer(new_entry, vtime);
+  olsr_set_mpr_sel_timer (new_entry, vtime);
   /* Queue */
-  QUEUE_ELEM(mprs_list, new_entry);
+  QUEUE_ELEM (mprs_list, new_entry);
   /*
-  new_entry->prev = &mprs_list;
-  new_entry->next = mprs_list.next;
-  mprs_list.next->prev = new_entry;
-  mprs_list.next = new_entry;
-  */
+     new_entry->prev = &mprs_list;
+     new_entry->next = mprs_list.next;
+     mprs_list.next->prev = new_entry;
+     mprs_list.next = new_entry;
+   */
   return new_entry;
 }
-
-
 
 /**
  *Lookup an entry in the MPR selector table
@@ -177,24 +170,25 @@ olsr_add_mpr_selector(const union olsr_ip_addr *addr, olsr_reltime vtime)
  *@return a pointer to the entry or NULL
  */
 struct mpr_selector *
-olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
+olsr_lookup_mprs_set (const union olsr_ip_addr *addr)
 {
   struct mpr_selector *mprs;
 
-  if(addr == NULL)
+  if (addr == NULL)
     return NULL;
   //OLSR_PRINTF(1, "MPRS: Lookup....");
 
-  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
-    if(ipequal(&mprs->MS_main_addr, addr)) {
-      //OLSR_PRINTF(1, "MATCH\n");
-      return mprs;
+  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next)
+    {
+      if (ipequal (&mprs->MS_main_addr, addr))
+        {
+          //OLSR_PRINTF(1, "MATCH\n");
+          return mprs;
+        }
     }
-  }
   //OLSR_PRINTF(1, "NO MACH\n");
   return NULL;
 }
-
 
 /**
  *Update a MPR selector entry or create an new
@@ -206,37 +200,38 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
  *@return 1 if a new entry was added 0 if not
  */
 int
-olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
+olsr_update_mprs_set (const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
   struct ipaddr_str buf;
-  struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
+  struct mpr_selector *mprs = olsr_lookup_mprs_set (addr);
 
-  OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
+  OLSR_PRINTF (5, "MPRS: Update %s\n", olsr_ip_to_string (&buf, addr));
 
-  if(mprs == NULL) {
-    olsr_add_mpr_selector(addr, vtime);
-    signal_link_changes(OLSR_TRUE);
-    return 1;
-  }
-  olsr_set_mpr_sel_timer(mprs, vtime);
+  if (mprs == NULL)
+    {
+      olsr_add_mpr_selector (addr, vtime);
+      signal_link_changes (OLSR_TRUE);
+      return 1;
+    }
+  olsr_set_mpr_sel_timer (mprs, vtime);
   return 0;
 }
-
 
 #if 0
 /**
  *Print the current MPR selector set to STDOUT
  */
 void
-olsr_print_mprs_set(void)
+olsr_print_mprs_set (void)
 {
   struct mpr_selector *mprs;
-  OLSR_PRINTF(1, "MPR SELECTORS: ");
-  for(mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next) {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
-  }
-  OLSR_PRINTF(1, "\n");
+  OLSR_PRINTF (1, "MPR SELECTORS: ");
+  for (mprs = mprs_list.next; mprs != &mprs_list; mprs = mprs->next)
+    {
+      struct ipaddr_str buf;
+      OLSR_PRINTF (1, "%s ", olsr_ip_to_string (&buf, &mprs->MS_main_addr));
+    }
+  OLSR_PRINTF (1, "\n");
 }
 #endif
 

@@ -50,15 +50,15 @@ struct list_node
   struct list_node *prev;
 };
 
-void list_head_init(struct list_node *);
-void list_node_init(struct list_node *);
-int list_node_on_list(struct list_node *);
-int list_is_empty(struct list_node *);
+void list_head_init (struct list_node *);
+void list_node_init (struct list_node *);
+int list_node_on_list (struct list_node *);
+int list_is_empty (struct list_node *);
 
-void list_add_before(struct list_node *, struct list_node *);
-void list_add_after(struct list_node *, struct list_node *);
+void list_add_before (struct list_node *, struct list_node *);
+void list_add_after (struct list_node *, struct list_node *);
 
-void list_remove(struct list_node *);
+void list_remove (struct list_node *);
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the

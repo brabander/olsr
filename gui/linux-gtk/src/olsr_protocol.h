@@ -40,19 +40,19 @@
 #include <sys/types.h>
 
 #ifdef WIN32
-typedef unsigned char   olsr_u8_t;
-typedef unsigned short  olsr_u16_t;
-typedef unsigned int    olsr_u32_t;
-typedef char            olsr_8_t;
-typedef short           olsr_16_t;
-typedef int             olsr_32_t;
+typedef unsigned char olsr_u8_t;
+typedef unsigned short olsr_u16_t;
+typedef unsigned int olsr_u32_t;
+typedef char olsr_8_t;
+typedef short olsr_16_t;
+typedef int olsr_32_t;
 #else
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
+typedef u_int8_t olsr_u8_t;
+typedef u_int16_t olsr_u16_t;
+typedef u_int32_t olsr_u32_t;
+typedef int8_t olsr_8_t;
+typedef int16_t olsr_16_t;
+typedef int32_t olsr_32_t;
 #endif
 
 /* IPv6 address format in6_addr */
@@ -63,7 +63,6 @@ union olsr_ip_addr
   olsr_u32_t v4;
   struct in6_addr v6;
 };
-
 
 /*
  *Emission Intervals
@@ -170,8 +169,6 @@ union olsr_ip_addr
         (((s1 > s2) && (s1 - s2 <= (MAXVALUE/2))) \
      || ((s2 > s1) && (s2 - s1 > (MAXVALUE/2))))
 
-
-
 /*
  * Macros for creating and extracting the neighbor
  * and link type information from 8bit link_code
@@ -184,11 +181,9 @@ union olsr_ip_addr
 
 #define EXTRACT_LINK(link_code) (link_code & 0x3)
 
-
 /***********************************************
  *           OLSR packet definitions           *
  ***********************************************/
-
 
 /*
  *The HELLO message
@@ -199,17 +194,17 @@ union olsr_ip_addr
  */
 struct hellinfo
 {
-  olsr_u8_t   link_code;
-  olsr_u8_t   reserved;
-  olsr_u16_t  size;
-  olsr_u32_t  neigh_addr[1]; /* neighbor IP address(es) */
+  olsr_u8_t link_code;
+  olsr_u8_t reserved;
+  olsr_u16_t size;
+  olsr_u32_t neigh_addr[1];     /* neighbor IP address(es) */
 };
 
 struct hellomsg
 {
-  olsr_u16_t      reserved;
-  olsr_u8_t       htime;
-  olsr_u8_t       willingness;
+  olsr_u16_t reserved;
+  olsr_u8_t htime;
+  olsr_u8_t willingness;
   struct hellinfo hell_info[1];
 };
 
@@ -219,23 +214,19 @@ struct hellomsg
 
 struct hellinfo6
 {
-  olsr_u8_t       link_code;
-  olsr_u8_t       reserved;
-  olsr_u16_t      size;
-  struct in6_addr neigh_addr[1]; /* neighbor IP address(es) */
+  olsr_u8_t link_code;
+  olsr_u8_t reserved;
+  olsr_u16_t size;
+  struct in6_addr neigh_addr[1];        /* neighbor IP address(es) */
 };
 
 struct hellomsg6
 {
-  olsr_u16_t         reserved;
-  olsr_u8_t          htime;
-  olsr_u8_t          willingness;
+  olsr_u16_t reserved;
+  olsr_u8_t htime;
+  olsr_u8_t willingness;
   struct hellinfo6 hell_info[1];
 };
-
-
-
-
 
 /*
  * Topology Control packet
@@ -243,17 +234,15 @@ struct hellomsg6
 
 struct neigh_info
 {
-  olsr_u32_t       addr;
+  olsr_u32_t addr;
 };
-
 
 struct olsr_tcmsg
 {
-  olsr_u16_t        ansn;
-  olsr_u16_t        reserved;
+  olsr_u16_t ansn;
+  olsr_u16_t reserved;
   struct neigh_info neigh[1];
 };
-
 
 /*
  *IPv6
@@ -261,20 +250,15 @@ struct olsr_tcmsg
 
 struct neigh_info6
 {
-  struct in6_addr      addr;
+  struct in6_addr addr;
 };
-
 
 struct olsr_tcmsg6
 {
-  olsr_u16_t           ansn;
-  olsr_u16_t           reserved;
+  olsr_u16_t ansn;
+  olsr_u16_t reserved;
   struct neigh_info6 neigh[1];
 };
-
-
-
-
 
 /*
  *Multiple Interface Declaration message
@@ -290,12 +274,10 @@ struct midaddr
   olsr_u32_t addr;
 };
 
-
 struct midmsg
 {
   struct midaddr mid_addr[1];
 };
-
 
 /*
  *IPv6
@@ -305,24 +287,18 @@ struct midaddr6
   struct in6_addr addr;
 };
 
-
 struct midmsg6
 {
   struct midaddr6 mid_addr[1];
 };
-
-
-
-
-
 
 /*
  * Host and Network Association message
  */
 struct hnapair
 {
-  olsr_u32_t   addr;
-  olsr_u32_t   netmask;
+  olsr_u32_t addr;
+  olsr_u32_t netmask;
 };
 
 struct hnamsg
@@ -336,8 +312,8 @@ struct hnamsg
 
 struct hnapair6
 {
-  struct in6_addr   addr;
-  struct in6_addr   netmask;
+  struct in6_addr addr;
+  struct in6_addr netmask;
 };
 
 struct hnamsg6
@@ -345,30 +321,26 @@ struct hnamsg6
   struct hnapair6 hna_net[1];
 };
 
-
-
-
-
 /*
  * OLSR message (several can exist in one OLSR packet)
  */
 
 struct olsrmsg
 {
-  olsr_u8_t     olsr_msgtype;
-  olsr_u8_t     olsr_vtime;
-  olsr_u16_t    olsr_msgsize;
-  olsr_u32_t    originator;
-  olsr_u8_t     ttl;
-  olsr_u8_t     hopcnt;
-  olsr_u16_t    seqno;
+  olsr_u8_t olsr_msgtype;
+  olsr_u8_t olsr_vtime;
+  olsr_u16_t olsr_msgsize;
+  olsr_u32_t originator;
+  olsr_u8_t ttl;
+  olsr_u8_t hopcnt;
+  olsr_u16_t seqno;
 
   union
   {
     struct hellomsg hello;
-    struct olsr_tcmsg    tc;
-    struct hnamsg   hna;
-    struct midmsg   mid;
+    struct olsr_tcmsg tc;
+    struct hnamsg hna;
+    struct midmsg mid;
   } message;
 
 };
@@ -379,25 +351,23 @@ struct olsrmsg
 
 struct olsrmsg6
 {
-  olsr_u8_t        olsr_msgtype;
-  olsr_u8_t        olsr_vtime;
-  olsr_u16_t       olsr_msgsize;
-  struct in6_addr  originator;
-  olsr_u8_t        ttl;
-  olsr_u8_t        hopcnt;
-  olsr_u16_t       seqno;
+  olsr_u8_t olsr_msgtype;
+  olsr_u8_t olsr_vtime;
+  olsr_u16_t olsr_msgsize;
+  struct in6_addr originator;
+  olsr_u8_t ttl;
+  olsr_u8_t hopcnt;
+  olsr_u16_t seqno;
 
   union
   {
     struct hellomsg6 hello;
-    struct olsr_tcmsg6    tc;
-    struct hnamsg6   hna;
-    struct midmsg6   mid;
+    struct olsr_tcmsg6 tc;
+    struct hnamsg6 hna;
+    struct midmsg6 mid;
   } message;
 
 };
-
-
 
 /*
  * Generic OLSR packet
@@ -405,19 +375,17 @@ struct olsrmsg6
 
 struct olsr
 {
-  olsr_u16_t	  olsr_packlen;		/* packet length */
-  olsr_u16_t	  olsr_seqno;
-  struct olsrmsg  olsr_msg[1];          /* variable messages */
+  olsr_u16_t olsr_packlen;      /* packet length */
+  olsr_u16_t olsr_seqno;
+  struct olsrmsg olsr_msg[1];   /* variable messages */
 };
-
 
 struct olsr6
 {
-  olsr_u16_t	    olsr_packlen;        /* packet length */
-  olsr_u16_t	    olsr_seqno;
-  struct olsrmsg6   olsr_msg[1];         /* variable messages */
+  olsr_u16_t olsr_packlen;      /* packet length */
+  olsr_u16_t olsr_seqno;
+  struct olsrmsg6 olsr_msg[1];  /* variable messages */
 };
-
 
 /* IPv4 <-> IPv6 compability */
 
@@ -432,6 +400,5 @@ union olsr_packet
   struct olsr v4;
   struct olsr6 v6;
 };
-
 
 #endif

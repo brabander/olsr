@@ -38,7 +38,6 @@
  *
  */
 
-
 #ifndef _OLSR_MSG_PARSER
 #define _OLSR_MSG_PARSER
 
@@ -47,17 +46,19 @@
 
 #define PROMISCUOUS 0xffffffff
 
-typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
+typedef void parse_function (union olsr_message *, struct interface *,
+                             union olsr_ip_addr *);
 
 struct parse_function_entry
 {
-  olsr_u32_t type;       /* If set to PROMISCUOUS all messages will be received */
-  int caller_forwarding; /* If set to 0 this entry is not registered as forwarding packets */
+  olsr_u32_t type;              /* If set to PROMISCUOUS all messages will be received */
+  int caller_forwarding;        /* If set to 0 this entry is not registered as forwarding packets */
   parse_function *function;
   struct parse_function_entry *next;
 };
 
-typedef char *preprocessor_function(char *packet, struct interface *, union olsr_ip_addr *, int *length);
+typedef char *preprocessor_function (char *packet, struct interface *,
+                                     union olsr_ip_addr *, int *length);
 
 struct preprocessor_function_entry
 {
@@ -65,7 +66,9 @@ struct preprocessor_function_entry
   struct preprocessor_function_entry *next;
 };
 
-typedef void packetparser_function(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr);
+typedef void packetparser_function (struct olsr *olsr,
+                                    struct interface *in_if,
+                                    union olsr_ip_addr *from_addr);
 
 struct packetparser_function_entry
 {
@@ -73,37 +76,27 @@ struct packetparser_function_entry
   struct packetparser_function_entry *next;
 };
 
-void
-parser_set_disp_pack_in(olsr_bool);
+void parser_set_disp_pack_in (olsr_bool);
 
-void
-olsr_init_parser(void);
+void olsr_init_parser (void);
 
-void
-olsr_input(int);
+void olsr_input (int);
 
-void
-olsr_input_hostemu(int);
+void olsr_input_hostemu (int);
 
-void
-olsr_parser_add_function(parse_function, olsr_u32_t, int);
+void olsr_parser_add_function (parse_function, olsr_u32_t, int);
 
-int
-olsr_parser_remove_function(parse_function, olsr_u32_t, int);
+int olsr_parser_remove_function (parse_function, olsr_u32_t, int);
 
-void
-olsr_preprocessor_add_function(preprocessor_function);
+void olsr_preprocessor_add_function (preprocessor_function);
 
-int
-olsr_preprocessor_remove_function(preprocessor_function);
+int olsr_preprocessor_remove_function (preprocessor_function);
 
-void
-olsr_packetparser_add_function(packetparser_function *function);
+void olsr_packetparser_add_function (packetparser_function * function);
 
-int
-olsr_packetparser_remove_function(packetparser_function *function);
+int olsr_packetparser_remove_function (packetparser_function * function);
 
-void
-parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
+void parse_packet (struct olsr *, int, struct interface *,
+                   union olsr_ip_addr *);
 
 #endif

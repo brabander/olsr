@@ -45,7 +45,6 @@
 
 #include "hashing.h"
 
-
 #define KEYFILE "/etc/olsrd.d/olsrd_secure_key"
 
 /* Schemes */
@@ -70,10 +69,10 @@ extern char aes_key[16];
 /* Seconds of slack allowed */
 #define SLACK 3
 
-int secure_plugin_init(void);
+int secure_plugin_init (void);
 
-void secure_plugin_exit(void);
+void secure_plugin_exit (void);
 
-int plugin_ipc_init(void);
+int plugin_ipc_init (void);
 
 #endif

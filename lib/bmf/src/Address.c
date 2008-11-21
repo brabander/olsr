@@ -40,17 +40,17 @@
 #include "Address.h"
 
 /* System includes */
-#include <stddef.h> /* NULL */
-#include <assert.h> /* assert() */
-#include <netinet/ip.h> /* struct ip */
-#include <netinet/udp.h> /* struct udphdr */
+#include <stddef.h>             /* NULL */
+#include <assert.h>             /* assert() */
+#include <netinet/ip.h>         /* struct ip */
+#include <netinet/udp.h>        /* struct udphdr */
 
 /* OLSRD includes */
-#include "defs.h" /* ipequal */
+#include "defs.h"               /* ipequal */
 
 /* Plugin includes */
-#include "Bmf.h" /* BMF_ENCAP_PORT */
-#include "NetworkInterfaces.h" /* TBmfInterface */
+#include "Bmf.h"                /* BMF_ENCAP_PORT */
+#include "NetworkInterfaces.h"  /* TBmfInterface */
 
 /* Whether or not to flood local broadcast packets (e.g. packets with IP
  * destination 192.168.1.255). May be overruled by setting the plugin
@@ -68,21 +68,21 @@ int EnableLocalBroadcast = 1;
  * Return     : success (0) or fail (1)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int DoLocalBroadcast(
-  const char* enable,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+DoLocalBroadcast (const char *enable, void *data
+                  __attribute__ ((unused)), set_plugin_parameter_addon addon
+                  __attribute__ ((unused)))
 {
-  if (strcmp(enable, "yes") == 0)
-  {
-    EnableLocalBroadcast = 1;
-    return 0;
-  }
-  else if (strcmp(enable, "no") == 0)
-  {
-    EnableLocalBroadcast = 0;
-    return 0;
-  }
+  if (strcmp (enable, "yes") == 0)
+    {
+      EnableLocalBroadcast = 1;
+      return 0;
+    }
+  else if (strcmp (enable, "no") == 0)
+    {
+      EnableLocalBroadcast = 0;
+      return 0;
+    }
 
   /* Value not recognized */
   return 1;
@@ -96,11 +96,12 @@ int DoLocalBroadcast(
  * Return     : true (1) or false (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int IsMulticast(union olsr_ip_addr* ipAddress)
+int
+IsMulticast (union olsr_ip_addr *ipAddress)
 {
-  assert(ipAddress != NULL);
+  assert (ipAddress != NULL);
 
-  return (ntohl(ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
+  return (ntohl (ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
 }
 
 /* -------------------------------------------------------------------------
@@ -111,44 +112,45 @@ int IsMulticast(union olsr_ip_addr* ipAddress)
  * Return     : true (1) or false (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int IsOlsrOrBmfPacket(unsigned char* ipPacket)
+int
+IsOlsrOrBmfPacket (unsigned char *ipPacket)
 {
-  struct ip* ipHeader;
+  struct ip *ipHeader;
   unsigned int ipHeaderLen;
-  struct udphdr* udpHeader;
+  struct udphdr *udpHeader;
   u_int16_t destPort;
 
-  assert(ipPacket != NULL);
+  assert (ipPacket != NULL);
 
   /* OLSR packets are UDP - port 698
    * OLSR-BMF packets are UDP - port 50698
    * OLSR-Autodetect probe packets are UDP - port 51698 */
 
   /* Check if UDP */
-  ipHeader = (struct ip*) ipPacket;
+  ipHeader = (struct ip *) ipPacket;
   if (ipHeader->ip_p != SOL_UDP)
-  {
-    /* Not UDP */
-    return 0;
-  }
+    {
+      /* Not UDP */
+      return 0;
+    }
 
   /* The total length must be at least large enough to store the UDP header */
-  ipHeaderLen = GetIpHeaderLength(ipPacket);
-  if (GetIpTotalLength(ipPacket) < ipHeaderLen + sizeof(struct udphdr))
-  {
-    /* Not long enough */
-    return 0;
-  }
+  ipHeaderLen = GetIpHeaderLength (ipPacket);
+  if (GetIpTotalLength (ipPacket) < ipHeaderLen + sizeof (struct udphdr))
+    {
+      /* Not long enough */
+      return 0;
+    }
 
   /* Go into the UDP header and check port number */
-  udpHeader = (struct udphdr*) (ipPacket + ipHeaderLen);
-  destPort = ntohs(udpHeader->dest);
+  udpHeader = (struct udphdr *) (ipPacket + ipHeaderLen);
+  destPort = ntohs (udpHeader->dest);
 
   if (destPort == OLSRPORT || destPort == BMF_ENCAP_PORT || destPort == 51698)
-      /* TODO: #define for 51698 */
-  {
-    return 1;
-  }
+    /* TODO: #define for 51698 */
+    {
+      return 1;
+    }
 
   return 0;
 }

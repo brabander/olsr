@@ -38,7 +38,6 @@
  *
  */
 
-
 #ifndef _OLSRD_CONF_H
 #define _OLSRD_CONF_H
 
@@ -47,18 +46,16 @@
 
 #define PARSER_VERSION "0.1.2"
 
-
 extern int current_line;
 
 struct conf_token
 {
   olsr_u32_t integer;
-  float      floating;
-  olsr_bool  boolean;
-  char       *string;
+  float floating;
+  olsr_bool boolean;
+  char *string;
 };
 
-void
-set_default_cnf(struct olsrd_config *);
+void set_default_cnf (struct olsrd_config *);
 
 #endif

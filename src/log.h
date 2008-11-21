@@ -50,11 +50,9 @@
 #define OLSR_LOG_INFO            1
 #define OLSR_LOG_ERR             2
 
-void
-olsr_openlog(const char *ident);
+void olsr_openlog (const char *ident);
 
-void
-olsr_syslog(int level, const char *format, ...) __attribute__((format(printf,2,3)));
-
+void olsr_syslog (int level, const char *format, ...)
+  __attribute__ ((format (printf, 2, 3)));
 
 #endif

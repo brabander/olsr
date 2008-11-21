@@ -48,43 +48,45 @@
 #ifndef OLSR_PLUGIN
 
 /* all */
-typedef int (*plugin_init_func)(void);
-typedef int (*get_interface_version_func)(void);
+typedef int (*plugin_init_func) (void);
+typedef int (*get_interface_version_func) (void);
 
 #if SUPPORT_OLD_PLUGIN_VERSIONS
 /* version 4 */
-typedef int (*register_param_func)(char *, char *);
+typedef int (*register_param_func) (char *, char *);
 #endif
 
 /* version 5 */
-typedef void (*get_plugin_parameters_func)(const struct olsrd_plugin_parameters **params, unsigned int *size);
+typedef void (*get_plugin_parameters_func) (const struct
+                                            olsrd_plugin_parameters ** params,
+                                            unsigned int *size);
 
+struct olsr_plugin
+{
+  /* The handle */
+  void *dlhandle;
 
-struct olsr_plugin {
-    /* The handle */
-    void *dlhandle;
-
-    struct plugin_param *params;
-    int plugin_interface_version;
+  struct plugin_param *params;
+  int plugin_interface_version;
 
 #if SUPPORT_OLD_PLUGIN_VERSIONS
-    /* version 4 */
-    register_param_func register_param;
+  /* version 4 */
+  register_param_func register_param;
 #endif
-    plugin_init_func plugin_init;
+  plugin_init_func plugin_init;
 
-    /* version 5 */
-    const struct olsrd_plugin_parameters *plugin_parameters;
-    unsigned int plugin_parameters_size;
+  /* version 5 */
+  const struct olsrd_plugin_parameters *plugin_parameters;
+  unsigned int plugin_parameters_size;
 
-    struct olsr_plugin *next;
+  struct olsr_plugin *next;
 };
 
-void olsr_load_plugins(void);
+void olsr_load_plugins (void);
 
-void olsr_close_plugins(void);
+void olsr_close_plugins (void);
 
-int olsr_plugin_io(int, void *, size_t);
+int olsr_plugin_io (int, void *, size_t);
 
 #endif
 #endif

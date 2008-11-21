@@ -29,7 +29,6 @@
  *
  */
 
-
 #ifndef _OLSRD_ARPREFRESH
 #define _OLSRD_ARPREFRESH
 
@@ -37,8 +36,9 @@
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 
-int olsrd_plugin_init(void);
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
-int olsrd_plugin_interface_version(void);
+int olsrd_plugin_init (void);
+void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
+                                  **params, int *size);
+int olsrd_plugin_interface_version (void);
 
 #endif

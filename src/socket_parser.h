@@ -38,24 +38,22 @@
  *
  */
 
-
 #ifndef _OLSR_SOCKET_PARSER
 #define _OLSR_SOCKET_PARSER
-
 
 struct olsr_socket_entry
 {
   int fd;
   int arp_type;
-  void(*process_function)(int fd);
+  void (*process_function) (int fd);
   struct olsr_socket_entry *next;
 };
 
 extern struct olsr_socket_entry *olsr_socket_entries;
-void olsr_poll_sockets(void);
+void olsr_poll_sockets (void);
 
-void add_olsr_socket(int, void(*)(int));
-int remove_olsr_socket(int, void(*)(int));
-void listen_loop(void);
+void add_olsr_socket (int, void (*)(int));
+int remove_olsr_socket (int, void (*)(int));
+void listen_loop (void);
 
 #endif

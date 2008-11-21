@@ -28,7 +28,6 @@
  *
  */
 
-
 /*
  * Example plugin for olsrd.org OLSR daemon
  * Only the bare minimum
@@ -45,7 +44,6 @@ set_plugin_parameter set_plugin_ipaddress;
 set_plugin_parameter set_plugin_boolean;
 set_plugin_parameter set_plugin_int;
 set_plugin_parameter set_plugin_string;
-
 
 #endif
 

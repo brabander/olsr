@@ -54,7 +54,6 @@
 #define strerror(x) StrError(x)
 #endif
 
-
 struct olsr_socket_entry *olsr_socket_entries;
 
 static int hfd = 0;
@@ -68,18 +67,18 @@ static int hfd = 0;
  *@param pf the processing function
  */
 void
-add_olsr_socket(int fd, void(*pf)(int fd))
+add_olsr_socket (int fd, void (*pf) (int fd))
 {
   struct olsr_socket_entry *new_entry;
 
-  if((fd == 0) || (pf == NULL))
+  if ((fd == 0) || (pf == NULL))
     {
-      fprintf(stderr, "Bogus socket entry - not registering...\n");
+      fprintf (stderr, "Bogus socket entry - not registering...\n");
       return;
     }
-  OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd);
+  OLSR_PRINTF (2, "Adding OLSR socket entry %d\n", fd);
 
-  new_entry = olsr_malloc(sizeof(struct olsr_socket_entry), "Socket entry");
+  new_entry = olsr_malloc (sizeof (struct olsr_socket_entry), "Socket entry");
 
   new_entry->fd = fd;
   new_entry->process_function = pf;
@@ -88,7 +87,7 @@ add_olsr_socket(int fd, void(*pf)(int fd))
   new_entry->next = olsr_socket_entries;
   olsr_socket_entries = new_entry;
 
-  if(fd + 1 > hfd)
+  if (fd + 1 > hfd)
     hfd = fd + 1;
 }
 
@@ -101,49 +100,49 @@ add_olsr_socket(int fd, void(*pf)(int fd))
  *@param pf the processing function
  */
 int
-remove_olsr_socket(int fd, void(*pf)(int))
+remove_olsr_socket (int fd, void (*pf) (int))
 {
   struct olsr_socket_entry *entry, *prev_entry;
 
-  if((fd == 0) || (pf == NULL))
+  if ((fd == 0) || (pf == NULL))
     {
-      olsr_syslog(OLSR_LOG_ERR, "Bogus socket entry - not processing...\n");
+      olsr_syslog (OLSR_LOG_ERR, "Bogus socket entry - not processing...\n");
       return 0;
     }
-  OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd);
+  OLSR_PRINTF (1, "Removing OLSR socket entry %d\n", fd);
 
   entry = olsr_socket_entries;
   prev_entry = NULL;
 
-  while(entry)
+  while (entry)
     {
-      if((entry->fd == fd) && (entry->process_function == pf))
-	{
-	  if(prev_entry == NULL)
-	    {
-	      olsr_socket_entries = entry->next;
-	      free(entry);
-	    }
-	  else
-	    {
-	      prev_entry->next = entry->next;
-	      free(entry);
-	    }
+      if ((entry->fd == fd) && (entry->process_function == pf))
+        {
+          if (prev_entry == NULL)
+            {
+              olsr_socket_entries = entry->next;
+              free (entry);
+            }
+          else
+            {
+              prev_entry->next = entry->next;
+              free (entry);
+            }
 
-	  if(hfd == fd + 1)
-	    {
-	      /* Re-calculate highest FD */
-	      entry = olsr_socket_entries;
-	      hfd = 0;
-	      while(entry)
-		{
-		  if(entry->fd + 1 > hfd)
-		    hfd = entry->fd + 1;
-		  entry = entry->next;
-		}
-	    }
-	  return 1;
-	}
+          if (hfd == fd + 1)
+            {
+              /* Re-calculate highest FD */
+              entry = olsr_socket_entries;
+              hfd = 0;
+              while (entry)
+                {
+                  if (entry->fd + 1 > hfd)
+                    hfd = entry->fd + 1;
+                  entry = entry->next;
+                }
+            }
+          return 1;
+        }
       prev_entry = entry;
       entry = entry->next;
     }
@@ -151,54 +150,54 @@ remove_olsr_socket(int fd, void(*pf)(int))
   return 0;
 }
 
-
 void
-olsr_poll_sockets(void)
+olsr_poll_sockets (void)
 {
   int n;
   struct olsr_socket_entry *olsr_sockets;
   fd_set ibits;
-  struct timeval tvp = {0, 0};
-
+  struct timeval tvp = { 0, 0 };
 
   /* If there are no registered sockets we
    * do not call select(2)
    */
-  if(hfd == 0)
+  if (hfd == 0)
     return;
 
-  FD_ZERO(&ibits);
+  FD_ZERO (&ibits);
 
   /* Adding file-descriptors to FD set */
 
-  for(olsr_sockets = olsr_socket_entries; olsr_sockets; olsr_sockets = olsr_sockets->next)
+  for (olsr_sockets = olsr_socket_entries; olsr_sockets;
+       olsr_sockets = olsr_sockets->next)
     {
-      FD_SET((unsigned int)olsr_sockets->fd, &ibits); /* And we cast here since we get a warning on Win32 */
+      FD_SET ((unsigned int) olsr_sockets->fd, &ibits); /* And we cast here since we get a warning on Win32 */
     }
 
   /* Runnig select on the FD set */
-  n = olsr_select(hfd, &ibits, NULL, NULL, &tvp);
+  n = olsr_select (hfd, &ibits, NULL, NULL, &tvp);
 
-  if(n == 0)
+  if (n == 0)
     return;
   /* Did somethig go wrong? */
   if (n < 0)
     {
-      if(errno != EINTR) {
-        const char * const err_msg = strerror(errno);
-        olsr_syslog(OLSR_LOG_ERR, "select: %s", err_msg);
-        OLSR_PRINTF(1, "Error select: %s", err_msg);
-      }
+      if (errno != EINTR)
+        {
+          const char *const err_msg = strerror (errno);
+          olsr_syslog (OLSR_LOG_ERR, "select: %s", err_msg);
+          OLSR_PRINTF (1, "Error select: %s", err_msg);
+        }
       return;
     }
 
   /* Update time since this is much used by the parsing functions */
-  now_times = olsr_times();
+  now_times = olsr_times ();
 
-  for(olsr_sockets = olsr_socket_entries;olsr_sockets;olsr_sockets = olsr_sockets->next)
+  for (olsr_sockets = olsr_socket_entries; olsr_sockets;
+       olsr_sockets = olsr_sockets->next)
     {
-      if(FD_ISSET(olsr_sockets->fd, &ibits))
-	  olsr_sockets->process_function(olsr_sockets->fd);
+      if (FD_ISSET (olsr_sockets->fd, &ibits))
+        olsr_sockets->process_function (olsr_sockets->fd);
     }
 }
-

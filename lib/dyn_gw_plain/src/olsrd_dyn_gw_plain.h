@@ -51,9 +51,9 @@
 union olsr_ip_addr gw_net;
 union olsr_ip_addr gw_netmask;
 
-int check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask);
+int check_gw (union olsr_ip_addr *net, union olsr_ip_addr *mask);
 
 /* Event function to register with the scheduler */
-void olsr_event(void* foo);
+void olsr_event (void *foo);
 
 #endif

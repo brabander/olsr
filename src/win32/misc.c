@@ -44,7 +44,8 @@
 
 #include <misc.h>
 
-void clear_console(void)
+void
+clear_console (void)
 {
 #if !defined WINCE
   HANDLE Hand;
@@ -52,24 +53,22 @@ void clear_console(void)
   unsigned long Written;
   static COORD Home = { 0, 0 };
 
-  Hand = GetStdHandle(STD_OUTPUT_HANDLE);
+  Hand = GetStdHandle (STD_OUTPUT_HANDLE);
 
   if (Hand == INVALID_HANDLE_VALUE)
     return;
 
-  if(!GetConsoleScreenBufferInfo(Hand, &Info))
+  if (!GetConsoleScreenBufferInfo (Hand, &Info))
     return;
 
-  if(!FillConsoleOutputCharacter(Hand, ' ',
-                                 Info.dwSize.X * Info.dwSize.Y, Home,
-                                 &Written))
+  if (!FillConsoleOutputCharacter
+      (Hand, ' ', Info.dwSize.X * Info.dwSize.Y, Home, &Written))
     return;
 
-  if(!FillConsoleOutputAttribute(Hand, Info.wAttributes,
-                                 Info.dwSize.X * Info.dwSize.Y, Home,
-                                 &Written))
+  if (!FillConsoleOutputAttribute
+      (Hand, Info.wAttributes, Info.dwSize.X * Info.dwSize.Y, Home, &Written))
     return;
 
-  SetConsoleCursorPosition(Hand, Home);
+  SetConsoleCursorPosition (Hand, Home);
 #endif
 }

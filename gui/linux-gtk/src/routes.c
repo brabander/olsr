@@ -20,7 +20,6 @@
  *
  */
 
-
 /*
  * Route entries are registered
  * separatly from the node set
@@ -31,9 +30,8 @@
 
 #include "routes.h"
 
-
 int
-init_route_entries()
+init_route_entries ()
 {
   route_count = 0;
 
@@ -43,16 +41,15 @@ init_route_entries()
   return 1;
 }
 
-
 int
-add_route_entry(struct route_entry *entry)
+add_route_entry (struct route_entry *entry)
 {
   struct route_entry *new_entry;
 
-  if((new_entry = malloc(sizeof(struct route_entry))) == 0)
+  if ((new_entry = malloc (sizeof (struct route_entry))) == 0)
     {
-      fprintf(stderr, "OUT OF MEMORY!\n");
-      exit(1);
+      fprintf (stderr, "OUT OF MEMORY!\n");
+      exit (1);
     }
 
   /* queue */
@@ -68,7 +65,7 @@ add_route_entry(struct route_entry *entry)
 }
 
 int
-del_route_entry(struct route_entry *entry)
+del_route_entry (struct route_entry *entry)
 {
 
   route_count--;

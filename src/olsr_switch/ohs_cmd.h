@@ -39,7 +39,6 @@
  *
  */
 
-
 #ifndef _OHS_CMD
 #define _OHS_CMD
 
@@ -51,31 +50,23 @@ struct ohs_command
   const char *syntax;
   const char *helptext_brief;
   const char *helptext_long;
-  int (*cmd_cb)(const char *);
+  int (*cmd_cb) (const char *);
 };
 
-int
-ohs_set_olsrd_path(const char *);
+int ohs_set_olsrd_path (const char *);
 
-void
-ohs_parse_command(void);
+void ohs_parse_command (void);
 
-int
-ohs_cmd_olsrd(const char *);
+int ohs_cmd_olsrd (const char *);
 
-int
-ohs_cmd_list(const char *);
+int ohs_cmd_list (const char *);
 
-int
-ohs_cmd_help(const char *);
+int ohs_cmd_help (const char *);
 
-int
-ohs_cmd_exit(const char *) __attribute__((noreturn));
+int ohs_cmd_exit (const char *) __attribute__ ((noreturn));
 
-int
-ohs_cmd_log(const char *);
+int ohs_cmd_log (const char *);
 
-int
-ohs_cmd_link(const char *);
+int ohs_cmd_link (const char *);
 
 #endif

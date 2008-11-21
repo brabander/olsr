@@ -38,7 +38,6 @@
  *
  */
 
-
 #ifndef _OLSR_PROCESS_PACKAGE
 #define _OLSR_PROCESS_PACKAGE
 
@@ -46,22 +45,21 @@
 #include "packet.h"
 #include "neighbor_table.h"
 
-void
-olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
+void olsr_input_hello (union olsr_message *ser, struct interface *inif,
+                       union olsr_ip_addr *from);
 
-void
-olsr_init_package_process(void);
+void olsr_init_package_process (void);
 
-void
-olsr_hello_tap(struct hello_message *, struct interface *, const union olsr_ip_addr *);
+void olsr_hello_tap (struct hello_message *, struct interface *,
+                     const union olsr_ip_addr *);
 
-void
-olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_process_received_hello (union olsr_message *, struct interface *,
+                                  union olsr_ip_addr *);
 
-void
-olsr_process_received_mid(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_process_received_mid (union olsr_message *, struct interface *,
+                                union olsr_ip_addr *);
 
-void
-olsr_process_received_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
+void olsr_process_received_hna (union olsr_message *, struct interface *,
+                                union olsr_ip_addr *);
 
 #endif

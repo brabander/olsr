@@ -38,14 +38,12 @@
  *
  */
 
-
 /*
  * This file defines the OS dependent network related functions
  * that MUST be available to olsrd.
  * The implementations of the functions should be found in
  * <OS>/net.c (e.g. linux/net.c)
  */
-
 
 #ifndef _OLSR_NET_OS_H
 #define _OLSR_NET_OS_H
@@ -54,72 +52,42 @@
 #include "interfaces.h"
 
 /* OS dependent functions */
-ssize_t
-olsr_sendto(int,
-	    const void *,
-	    size_t,
-	    int,
-	    const struct sockaddr *,
-	    socklen_t);
+ssize_t olsr_sendto (int, const void *, size_t, int, const struct sockaddr *,
+                     socklen_t);
 
-ssize_t
-olsr_recvfrom(int,
-	      void *,
-	      size_t,
-	      int,
-	      struct sockaddr *,
-	      socklen_t *);
+ssize_t olsr_recvfrom (int, void *, size_t, int, struct sockaddr *,
+                       socklen_t *);
 
-int
-olsr_select(int,
-	    fd_set *,
-	    fd_set *,
-	    fd_set *,
-	    struct timeval *);
+int olsr_select (int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
-int
-bind_socket_to_device(int, char *);
+int bind_socket_to_device (int, char *);
 
-int
-convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
+int convert_ip_to_mac (union olsr_ip_addr *, struct sockaddr *, char *);
 
-int
-disable_redirects(const char *, struct interface *, int);
+int disable_redirects (const char *, struct interface *, int);
 
-int
-disable_redirects_global(int);
+int disable_redirects_global (int);
 
-int
-deactivate_spoof(const char *, struct interface *, int);
+int deactivate_spoof (const char *, struct interface *, int);
 
-int
-restore_settings(int);
+int restore_settings (int);
 
-int
-enable_ip_forwarding(int);
+int enable_ip_forwarding (int);
 
-int
-gethemusocket(struct sockaddr_in *);
+int gethemusocket (struct sockaddr_in *);
 
-int
-getsocket(int, char *);
+int getsocket (int, char *);
 
-int
-getsocket6(int, char *);
+int getsocket6 (int, char *);
 
-int
-get_ipv6_address(char *, struct sockaddr_in6 *, int);
+int get_ipv6_address (char *, struct sockaddr_in6 *, int);
 
-int
-calculate_if_metric(char *);
+int calculate_if_metric (char *);
 
-int
-check_wireless_interface(char *);
+int check_wireless_interface (char *);
 
-olsr_bool
-is_if_link_up(char *);
+olsr_bool is_if_link_up (char *);
 
-int
-join_mcast(struct interface *, int);
+int join_mcast (struct interface *, int);
 
 #endif

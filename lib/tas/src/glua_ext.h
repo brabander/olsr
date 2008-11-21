@@ -46,6 +46,6 @@
   { "olsr_get_message", tasOlsrGetMessage }, \
   { "olsr_get_info", tasOlsrGetInfo },
 
-extern int tasOlsrSendMessage(lua_State *lua);
-extern int tasOlsrGetMessage(lua_State *lua);
-extern int tasOlsrGetInfo(lua_State *lua);
+extern int tasOlsrSendMessage (lua_State * lua);
+extern int tasOlsrGetMessage (lua_State * lua);
+extern int tasOlsrGetInfo (lua_State * lua);

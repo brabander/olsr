@@ -48,7 +48,6 @@
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 
-
 #define HTTP_VERSION "HTTP/1.1"
 
 /**Response types */
@@ -56,33 +55,32 @@
 #define HTTP_400 HTTP_VERSION " 400 Bad Request\r\n"
 #define HTTP_404 HTTP_VERSION " 404 Not Found\r\n"
 
-
 #define HTTP_400_MSG "<html><h1>400 - ERROR</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 #define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 
-
-typedef enum {
-    HTTP_BAD_REQ,
-    HTTP_BAD_FILE,
-    HTTP_OK
+typedef enum
+{
+  HTTP_BAD_REQ,
+  HTTP_BAD_FILE,
+  HTTP_OK
 } http_header_type;
 
-
-struct http_stats {
-    olsr_u32_t ok_hits;
-    olsr_u32_t dyn_hits;
-    olsr_u32_t err_hits;
-    olsr_u32_t ill_hits;
+struct http_stats
+{
+  olsr_u32_t ok_hits;
+  olsr_u32_t dyn_hits;
+  olsr_u32_t err_hits;
+  olsr_u32_t ill_hits;
 };
 
 extern struct olsrd_config *olsr_cfg;
 
 /* Destructor function */
-void olsr_plugin_exit(void);
-void olsr_plugin_exit(void);
+void olsr_plugin_exit (void);
+void olsr_plugin_exit (void);
 
 #if 0
-extern int netsprintf(char *str, const char* format, ...);
+extern int netsprintf (char *str, const char *format, ...);
 #endif
 
 #endif

@@ -53,7 +53,8 @@
 
 #include <string.h>
 
-static char *getToken(char **point)
+static char *
+getToken (char **point)
 {
   char *localPoint = *point;
   char *start;
@@ -73,171 +74,176 @@ static char *getToken(char **point)
   return start;
 }
 
-int tasOlsrSendMessage(lua_State *lua)
+int
+tasOlsrSendMessage (lua_State * lua)
 {
   const char *service;
   const char *string;
 
-  service = luaL_checkstring(lua, 1);
-  string = luaL_checkstring(lua, 2);
+  service = luaL_checkstring (lua, 1);
+  string = luaL_checkstring (lua, 2);
 
-  sendMessage(service, string);
-  httpAddTasMessage(service, string, "localhost");
+  sendMessage (service, string);
+  httpAddTasMessage (service, string, "localhost");
 
   return 0;
 }
 
-int tasOlsrGetMessage(lua_State *lua)
+int
+tasOlsrGetMessage (lua_State * lua)
 {
   const char *service;
   char *string;
   char *from;
 
-  service = luaL_checkstring(lua, 1);
+  service = luaL_checkstring (lua, 1);
 
-  if (httpGetTasMessage(service, &string, &from) < 0)
-  {
-    lua_pushnil(lua);
-    lua_pushnil(lua);
-  }
+  if (httpGetTasMessage (service, &string, &from) < 0)
+    {
+      lua_pushnil (lua);
+      lua_pushnil (lua);
+    }
 
   else
-  {
-    lua_pushstring(lua, string);
-    lua_pushstring(lua, from);
+    {
+      lua_pushstring (lua, string);
+      lua_pushstring (lua, from);
 
-    freeMem(string);
-    freeMem(from);
-  }
+      freeMem (string);
+      freeMem (from);
+    }
 
   return 2;
 }
 
-static void addSubTable(lua_State *lua, char **walker)
+static void
+addSubTable (lua_State * lua, char **walker)
 {
   char *token;
   unsigned int val;
 
-  token = getToken(walker);
+  token = getToken (walker);
 
   if (token == NULL)
-  {
-    error("premature end of buffer\n");
-    return;
-  }
+    {
+      error ("premature end of buffer\n");
+      return;
+    }
 
-  if (stringToInt(&val, token) < 0)
-    lua_pushstring(lua, token);
+  if (stringToInt (&val, token) < 0)
+    lua_pushstring (lua, token);
 
   else
-    lua_pushnumber(lua, val);
+    lua_pushnumber (lua, val);
 
-  lua_newtable(lua);
+  lua_newtable (lua);
 
   while (**walker != 0)
-  {
-    token = getToken(walker);
-
-    if (token == NULL)
     {
-      error("premature end of buffer\n");
-      return;
-    }
-
-    if (strcmp(token, "]") == 0)
-      return;
-
-    if (strcmp(token, "[") == 0)
-      addSubTable(lua, walker);
-
-    else
-    {
-      if (stringToInt(&val, token) < 0)
-        lua_pushstring(lua, token);
-
-      else
-        lua_pushnumber(lua, val);
-
-      token = getToken(walker);
+      token = getToken (walker);
 
       if (token == NULL)
-      {
-        error("premature end of buffer\n");
+        {
+          error ("premature end of buffer\n");
+          return;
+        }
+
+      if (strcmp (token, "]") == 0)
         return;
-      }
 
-      lua_pushstring(lua, token);
+      if (strcmp (token, "[") == 0)
+        addSubTable (lua, walker);
+
+      else
+        {
+          if (stringToInt (&val, token) < 0)
+            lua_pushstring (lua, token);
+
+          else
+            lua_pushnumber (lua, val);
+
+          token = getToken (walker);
+
+          if (token == NULL)
+            {
+              error ("premature end of buffer\n");
+              return;
+            }
+
+          lua_pushstring (lua, token);
+        }
+
+      lua_settable (lua, -3);
     }
-
-    lua_settable(lua, -3);
-  }
 }
 
-static void addTable(lua_State *lua, const char *name, void (*init)(void),
-                     int (*next)(char *buff, int len))
+static void
+addTable (lua_State * lua, const char *name, void (*init) (void),
+          int (*next) (char *buff, int len))
 {
   int i;
   char buff[1024], *walker, *token;
 
-  lua_pushstring(lua, name);
-  lua_newtable(lua);
+  lua_pushstring (lua, name);
+  lua_newtable (lua);
 
-  init();
+  init ();
 
   i = 0;
 
-  while (next(buff, sizeof (buff)) >= 0)
-  {
-    walker = buff;
-
-    lua_pushnumber(lua, i++);
-    lua_newtable(lua);
-
-    while (*walker != 0)
+  while (next (buff, sizeof (buff)) >= 0)
     {
-      token = getToken(&walker);
+      walker = buff;
 
-      if (token == NULL)
-      {
-        error("premature end of buffer\n");
-        return;
-      }
+      lua_pushnumber (lua, i++);
+      lua_newtable (lua);
 
-      if (strcmp(token, "[") == 0)
-        addSubTable(lua, &walker);
-
-      else
-      {
-        lua_pushstring(lua, token);
-
-        token = getToken(&walker);
-
-        if (token == NULL)
+      while (*walker != 0)
         {
-          error("premature end of buffer\n");
-          return;
+          token = getToken (&walker);
+
+          if (token == NULL)
+            {
+              error ("premature end of buffer\n");
+              return;
+            }
+
+          if (strcmp (token, "[") == 0)
+            addSubTable (lua, &walker);
+
+          else
+            {
+              lua_pushstring (lua, token);
+
+              token = getToken (&walker);
+
+              if (token == NULL)
+                {
+                  error ("premature end of buffer\n");
+                  return;
+                }
+
+              lua_pushstring (lua, token);
+            }
+
+          lua_settable (lua, -3);
         }
 
-        lua_pushstring(lua, token);
-      }
-
-      lua_settable(lua, -3);
+      lua_settable (lua, -3);
     }
 
-    lua_settable(lua, -3);
-  }
-
-  lua_settable(lua, -3);
+  lua_settable (lua, -3);
 }
 
-int tasOlsrGetInfo(lua_State *lua)
+int
+tasOlsrGetInfo (lua_State * lua)
 {
-  lua_newtable(lua);
+  lua_newtable (lua);
 
-  addTable(lua, "routes", iterRouteTabInit, iterRouteTabNext);
-  addTable(lua, "links", iterLinkTabInit, iterLinkTabNext);
-  addTable(lua, "neighbors", iterNeighTabInit, iterNeighTabNext);
-  addTable(lua, "topology", iterTcTabInit, iterTcTabNext);
+  addTable (lua, "routes", iterRouteTabInit, iterRouteTabNext);
+  addTable (lua, "links", iterLinkTabInit, iterLinkTabNext);
+  addTable (lua, "neighbors", iterNeighTabInit, iterNeighTabNext);
+  addTable (lua, "topology", iterTcTabInit, iterTcTabNext);
 
   return 1;
 }

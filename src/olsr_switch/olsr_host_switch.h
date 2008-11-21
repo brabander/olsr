@@ -53,27 +53,27 @@
 
 #ifdef WIN32
 #define close(x) closesocket(x)
-int __stdcall ohs_close(unsigned long signal) __attribute__((noreturn));
+int __stdcall ohs_close (unsigned long signal) __attribute__ ((noreturn));
 #else
-void ohs_close(int) __attribute__((noreturn));
+void ohs_close (int) __attribute__ ((noreturn));
 #endif
 
 struct ohs_ip_link
 {
-  union olsr_ip_addr   dst;
-  olsr_u8_t            quality; /* 0 - 100 */
-  struct ohs_ip_link   *next;
+  union olsr_ip_addr dst;
+  olsr_u8_t quality;            /* 0 - 100 */
+  struct ohs_ip_link *next;
 };
 
 struct ohs_connection
 {
-  union olsr_ip_addr     ip_addr;
-  int                    socket;
-  olsr_u32_t             rx;
-  olsr_u32_t             tx;
-  olsr_u32_t             linkcnt;
-  struct ohs_ip_link     *links;
-  struct ohs_connection  *next;
+  union olsr_ip_addr ip_addr;
+  int socket;
+  olsr_u32_t rx;
+  olsr_u32_t tx;
+  olsr_u32_t linkcnt;
+  struct ohs_ip_link *links;
+  struct ohs_connection *next;
 };
 
 extern olsr_u32_t logbits;
@@ -86,17 +86,13 @@ extern struct ohs_connection *ohs_conns;
 #define LOG_LINK    0x4
 
 #ifdef WIN32
-int __stdcall
-SignalHandler(unsigned long);
+int __stdcall SignalHandler (unsigned long);
 #else
-void
-ohs_close(int);
+void ohs_close (int);
 #endif
 
-struct ohs_connection *
-get_client_by_addr(const union olsr_ip_addr *);
+struct ohs_connection *get_client_by_addr (const union olsr_ip_addr *);
 
-int
-ohs_delete_connection(struct ohs_connection *);
+int ohs_delete_connection (struct ohs_connection *);
 
 #endif

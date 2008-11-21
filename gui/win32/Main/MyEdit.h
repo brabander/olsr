@@ -45,25 +45,24 @@
 #pragma once
 #endif
 
-class MyEdit : public CEdit
+class MyEdit:public CEdit
 {
 public:
 
-	MyEdit();
+  MyEdit ();
 
-	//{{AFX_VIRTUAL(MyEdit)
-	//}}AFX_VIRTUAL
+  //{{AFX_VIRTUAL(MyEdit)
+  //}}AFX_VIRTUAL
 
-	virtual ~MyEdit();
+  virtual ~ MyEdit ();
 
 protected:
-	//{{AFX_MSG(MyEdit)
-	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
-	afx_msg void OnKillFocus(CWnd* pNewWnd);
-	//}}AFX_MSG
+  //{{AFX_MSG(MyEdit)
+  afx_msg void OnChar (UINT nChar, UINT nRepCnt, UINT nFlags);
+  afx_msg void OnKillFocus (CWnd * pNewWnd);
+  //}}AFX_MSG
 
-	DECLARE_MESSAGE_MAP()
-};
+  DECLARE_MESSAGE_MAP ()};
 
 //{{AFX_INSERT_LOCATION}}
 

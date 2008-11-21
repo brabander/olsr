@@ -52,7 +52,7 @@ static struct olsr_cookie_info *cookies[COOKIE_ID_MAX] = { 0 };
  * Allocate a cookie for the next available cookie id.
  */
 struct olsr_cookie_info *
-olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
+olsr_alloc_cookie (const char *cookie_name, olsr_cookie_type cookie_type)
 {
   struct olsr_cookie_info *ci;
   int ci_index;
@@ -61,28 +61,32 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
    * Look for an unused index.
    * For ease of troubleshooting (non-zero patterns) we start at index 1.
    */
-  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++) {
-    if (!cookies[ci_index]) {
-      break;
+  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++)
+    {
+      if (!cookies[ci_index])
+        {
+          break;
+        }
     }
-  }
 
-  assert(ci_index < COOKIE_ID_MAX);	/* increase COOKIE_ID_MAX */
+  assert (ci_index < COOKIE_ID_MAX);    /* increase COOKIE_ID_MAX */
 
-  ci = calloc(1, sizeof(struct olsr_cookie_info));
+  ci = calloc (1, sizeof (struct olsr_cookie_info));
   cookies[ci_index] = ci;
 
   /* Now populate the cookie info */
   ci->ci_id = ci_index;
   ci->ci_type = cookie_type;
-  if (cookie_name) {
-    ci->ci_name = strdup(cookie_name);
-  }
+  if (cookie_name)
+    {
+      ci->ci_name = strdup (cookie_name);
+    }
 
   /* Init the free list */
-  if (cookie_type == OLSR_COOKIE_TYPE_MEMORY) {
-    list_head_init(&ci->ci_free_list);
-  }
+  if (cookie_type == OLSR_COOKIE_TYPE_MEMORY)
+    {
+      list_head_init (&ci->ci_free_list);
+    }
 
   return ci;
 }
@@ -91,7 +95,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
  * Free a cookie that is no longer being used.
  */
 void
-olsr_free_cookie(struct olsr_cookie_info *ci)
+olsr_free_cookie (struct olsr_cookie_info *ci)
 {
   struct list_node *memory_list;
 
@@ -99,39 +103,44 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
   cookies[ci->ci_id] = NULL;
 
   /* Free name if set */
-  if (ci->ci_name) {
-    free(ci->ci_name);
-  }
+  if (ci->ci_name)
+    {
+      free (ci->ci_name);
+    }
 
   /* Flush all the memory on the free list */
-  if (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY) {
-    while (!list_is_empty(&ci->ci_free_list)) {
-      memory_list = ci->ci_free_list.next;
-      list_remove(memory_list);
-      free(memory_list);
+  if (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY)
+    {
+      while (!list_is_empty (&ci->ci_free_list))
+        {
+          memory_list = ci->ci_free_list.next;
+          list_remove (memory_list);
+          free (memory_list);
+        }
     }
-  }
 
-  free(ci);
+  free (ci);
 }
 
 /*
  * Flush all cookies. This is really only called upon shutdown.
  */
 void
-olsr_delete_all_cookies(void)
+olsr_delete_all_cookies (void)
 {
   int ci_index;
 
   /*
    * Walk the full index range and kill 'em all.
    */
-  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++) {
-    if (!cookies[ci_index]) {
-      continue;
+  for (ci_index = 1; ci_index < COOKIE_ID_MAX; ci_index++)
+    {
+      if (!cookies[ci_index])
+        {
+          continue;
+        }
+      olsr_free_cookie (cookies[ci_index]);
     }
-    olsr_free_cookie(cookies[ci_index]);
-  }
 }
 
 /*
@@ -139,13 +148,14 @@ olsr_delete_all_cookies(void)
  * This is only allowed for memory cookies.
  */
 void
-olsr_cookie_set_memory_size(struct olsr_cookie_info *ci, size_t size)
+olsr_cookie_set_memory_size (struct olsr_cookie_info *ci, size_t size)
 {
-  if (!ci) {
-    return;
-  }
+  if (!ci)
+    {
+      return;
+    }
 
-  assert(ci->ci_type == OLSR_COOKIE_TYPE_MEMORY);
+  assert (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY);
   ci->ci_size = size;
 }
 
@@ -153,11 +163,12 @@ olsr_cookie_set_memory_size(struct olsr_cookie_info *ci, size_t size)
  * Basic sanity checking for a passed-in cookie-id.
  */
 static olsr_bool
-olsr_cookie_valid(olsr_cookie_t cookie_id)
+olsr_cookie_valid (olsr_cookie_t cookie_id)
 {
-  if ((cookie_id < COOKIE_ID_MAX) && cookies[cookie_id]) {
-    return OLSR_TRUE;
-  }
+  if ((cookie_id < COOKIE_ID_MAX) && cookies[cookie_id])
+    {
+      return OLSR_TRUE;
+    }
   return OLSR_FALSE;
 }
 
@@ -165,24 +176,26 @@ olsr_cookie_valid(olsr_cookie_t cookie_id)
  * Increment usage state for a given cookie.
  */
 void
-olsr_cookie_usage_incr(olsr_cookie_t cookie_id)
+olsr_cookie_usage_incr (olsr_cookie_t cookie_id)
 {
-  if (olsr_cookie_valid(cookie_id)) {
-    cookies[cookie_id]->ci_usage++;
-    cookies[cookie_id]->ci_changes++;
-  }
+  if (olsr_cookie_valid (cookie_id))
+    {
+      cookies[cookie_id]->ci_usage++;
+      cookies[cookie_id]->ci_changes++;
+    }
 }
 
 /*
  * Decrement usage state for a given cookie.
  */
 void
-olsr_cookie_usage_decr(olsr_cookie_t cookie_id)
+olsr_cookie_usage_decr (olsr_cookie_t cookie_id)
 {
-  if (olsr_cookie_valid(cookie_id)) {
-    cookies[cookie_id]->ci_usage--;
-    cookies[cookie_id]->ci_changes++;
-  }
+  if (olsr_cookie_valid (cookie_id))
+    {
+      cookies[cookie_id]->ci_usage--;
+      cookies[cookie_id]->ci_changes++;
+    }
 }
 
 /*
@@ -190,13 +203,14 @@ olsr_cookie_usage_decr(olsr_cookie_t cookie_id)
  * Mostly used for logging purposes.
  */
 char *
-olsr_cookie_name(olsr_cookie_t cookie_id)
+olsr_cookie_name (olsr_cookie_t cookie_id)
 {
   static char unknown[] = "unknown";
 
-  if (olsr_cookie_valid(cookie_id)) {
-    return (cookies[cookie_id])->ci_name;
-  }
+  if (olsr_cookie_valid (cookie_id))
+    {
+      return (cookies[cookie_id])->ci_name;
+    }
 
   return unknown;
 }
@@ -205,7 +219,7 @@ olsr_cookie_name(olsr_cookie_t cookie_id)
  * Allocate a fixed amount of memory based on a passed in cookie type.
  */
 void *
-olsr_cookie_malloc(struct olsr_cookie_info *ci)
+olsr_cookie_malloc (struct olsr_cookie_info *ci)
 {
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
@@ -215,49 +229,53 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   /*
    * Check first if we have reusable memory.
    */
-  if (!ci->ci_free_list_usage) {
+  if (!ci->ci_free_list_usage)
+    {
 
-    /*
-     * No reusable memory block on the free_list.
-     */
-    ptr = calloc(1, ci->ci_size + sizeof(struct olsr_cookie_mem_brand));
+      /*
+       * No reusable memory block on the free_list.
+       */
+      ptr = calloc (1, ci->ci_size + sizeof (struct olsr_cookie_mem_brand));
 
-    if (!ptr) {
-      const char *const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
-      olsr_exit(ci->ci_name, EXIT_FAILURE);
+      if (!ptr)
+        {
+          const char *const err_msg = strerror (errno);
+          OLSR_PRINTF (1, "OUT OF MEMORY: %s\n", err_msg);
+          olsr_syslog (OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
+          olsr_exit (ci->ci_name, EXIT_FAILURE);
+        }
     }
-  } else {
+  else
+    {
 
-    /*
-     * There is a memory block on the free list.
-     * Carve it out of the list, and clean.
-     */
-    free_list_node = ci->ci_free_list.next;
-    list_remove(free_list_node);
-    ptr = (void *)free_list_node;
-    memset(ptr, 0, ci->ci_size);
-    ci->ci_free_list_usage--;
-    reuse = OLSR_TRUE;
-  }
+      /*
+       * There is a memory block on the free list.
+       * Carve it out of the list, and clean.
+       */
+      free_list_node = ci->ci_free_list.next;
+      list_remove (free_list_node);
+      ptr = (void *) free_list_node;
+      memset (ptr, 0, ci->ci_size);
+      ci->ci_free_list_usage--;
+      reuse = OLSR_TRUE;
+    }
 
   /*
    * Now brand mark the end of the memory block with a short signature
    * indicating presence of a cookie. This will be checked against
    * When the block is freed to detect corruption.
    */
-  branding = (struct olsr_cookie_mem_brand *)
-    ((unsigned char *)ptr + ci->ci_size);
-  memcpy(&branding->cmb_sig, "cookie", 6);
+  branding =
+    (struct olsr_cookie_mem_brand *) ((unsigned char *) ptr + ci->ci_size);
+  memcpy (&branding->cmb_sig, "cookie", 6);
   branding->cmb_id = ci->ci_id;
 
   /* Stats keeping */
-  olsr_cookie_usage_incr(ci->ci_id);
+  olsr_cookie_usage_incr (ci->ci_id);
 
 #if 0
-  OLSR_PRINTF(1, "MEMORY: alloc %s, %p, %u bytes%s\n",
-	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
+  OLSR_PRINTF (1, "MEMORY: alloc %s, %p, %u bytes%s\n", ci->ci_name, ptr,
+               ci->ci_size, reuse ? ", reuse" : "");
 #endif
 
   return ptr;
@@ -268,53 +286,56 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
  * Run some corruption checks.
  */
 void
-olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
+olsr_cookie_free (struct olsr_cookie_info *ci, void *ptr)
 {
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
   olsr_bool reuse = OLSR_FALSE;
 
-  branding = (struct olsr_cookie_mem_brand *)
-    ((unsigned char *)ptr + ci->ci_size);
+  branding =
+    (struct olsr_cookie_mem_brand *) ((unsigned char *) ptr + ci->ci_size);
 
   /*
    * Verify if there has been a memory overrun, or
    * the wrong owner is trying to free this.
    */
-  assert(!memcmp(&branding->cmb_sig, "cookie", 6) &&
-	 branding->cmb_id == ci->ci_id);
+  assert (!memcmp (&branding->cmb_sig, "cookie", 6)
+          && branding->cmb_id == ci->ci_id);
 
   /* Kill the brand */
-  memset(branding, 0, sizeof(*branding));
+  memset (branding, 0, sizeof (*branding));
 
   /*
    * Rather than freeing the memory right away, try to reuse at a later
    * point. Keep at least ten percent of the active used blocks or at least
    * ten blocks on the free list.
    */
-  if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD) ||
-      (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
+  if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD)
+      || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD))
+    {
 
-    free_list_node = (struct list_node *)ptr;
-    list_node_init(free_list_node);
-    list_add_before(&ci->ci_free_list, free_list_node);
-    ci->ci_free_list_usage++;
-    reuse = OLSR_TRUE;
+      free_list_node = (struct list_node *) ptr;
+      list_node_init (free_list_node);
+      list_add_before (&ci->ci_free_list, free_list_node);
+      ci->ci_free_list_usage++;
+      reuse = OLSR_TRUE;
 
-  } else {
+    }
+  else
+    {
 
-    /*
-     * No interest in reusing memory.
-     */
-    free(ptr);
-  }
+      /*
+       * No interest in reusing memory.
+       */
+      free (ptr);
+    }
 
   /* Stats keeping */
-  olsr_cookie_usage_decr(ci->ci_id);
+  olsr_cookie_usage_decr (ci->ci_id);
 
 #if 0
-  OLSR_PRINTF(1, "MEMORY: free %s, %p, %u bytes%s\n",
-	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
+  OLSR_PRINTF (1, "MEMORY: free %s, %p, %u bytes%s\n", ci->ci_name, ptr,
+               ci->ci_size, reuse ? ", reuse" : "");
 #endif
 
 }

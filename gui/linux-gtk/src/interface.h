@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -33,7 +32,6 @@
 
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
-
 
 GtkWidget *net_label;
 GtkWidget *info_label;
@@ -49,45 +47,25 @@ GtkWidget *mpr_list;
 GtkWidget *hna_list;
 GtkWidget *route_list;
 
+void fill_clist (GtkCList *);
 
-void
-fill_clist(GtkCList *);
+void selection_made (GtkWidget * clist, gint row, gint column,
+                     GdkEventButton * event, gpointer data);
 
+void set_net_info_connecting ();
 
-void selection_made( GtkWidget      *clist,
-                     gint            row,
-                     gint            column,
-		     GdkEventButton *event,
-                     gpointer        data );
+void column_clicked_callback (GtkWidget *, gint);
 
+void connect_callback (GtkWidget * widget, gpointer data);
 
-void
-set_net_info_connecting();
+void packet_callback (GtkWidget * widget, gpointer data);
 
-void
-column_clicked_callback(GtkWidget *,gint);
+void packet_disp_callback (GtkWidget * widget, gpointer data);
 
+void packet_selection (GtkWidget * clist, gint row, gint column,
+                       GdkEventButton * event, gpointer data);
 
-void
-connect_callback( GtkWidget *widget,
-		  gpointer   data );
+void node_selection (GtkWidget * clist, gint row, gint column,
+                     GdkEventButton * event, gpointer data);
 
-void
-packet_callback( GtkWidget *widget,
-		  gpointer   data );
-
-void
-packet_disp_callback( GtkWidget *widget,
-		  gpointer   data );
-
-
-void
-packet_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event, gpointer data);
-
-
-void
-node_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event, gpointer data);
-
-
-void
-gui_shutdown(GtkObject *, gpointer);
+void gui_shutdown (GtkObject *, gpointer);

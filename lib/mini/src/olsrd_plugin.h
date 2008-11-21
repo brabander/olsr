@@ -36,17 +36,13 @@
 #ifndef _OLSRD_PLUGIN_MINI
 #define _OLSRD_PLUGIN_MINI
 
-
 /****************************************************************************
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
 
-
 /* Initialization function */
-int
-olsrd_plugin_init(void);
+int olsrd_plugin_init (void);
 
-int
-olsrd_plugin_interface_version(void);
+int olsrd_plugin_interface_version (void);
 
 #endif

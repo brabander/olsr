@@ -24,14 +24,8 @@
 
 int timeouts;
 
+int add_timeouts ();
 
-int
-add_timeouts();
+gint ipc_timeout (gpointer);
 
-
-gint
-ipc_timeout(gpointer);
-
-
-void
-shutdown_(int);
+void shutdown_ (int);

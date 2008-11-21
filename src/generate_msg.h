@@ -43,23 +43,18 @@
 
 #include "interfaces.h"
 
-#define STDOUT_PULSE_INT 600 /* msec */
+#define STDOUT_PULSE_INT 600    /* msec */
 
 /* Functions */
 
-void
-generate_hello(void *);
+void generate_hello (void *);
 
-void
-generate_mid(void *);
+void generate_mid (void *);
 
-void
-generate_hna(void *);
+void generate_hna (void *);
 
-void
-generate_tc(void *);
+void generate_tc (void *);
 
-void
-generate_stdout_pulse(void *);
+void generate_stdout_pulse (void *);
 
 #endif

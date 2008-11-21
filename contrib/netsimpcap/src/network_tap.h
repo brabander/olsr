@@ -21,15 +21,16 @@
 
 #include <linux/types.h>
 
-typedef struct MacAddress {
+typedef struct MacAddress
+{
   char mac[6];
 } MacAddress;
 
-int readMac(char *value, MacAddress *target);
-void closeTap(int fd);
-int createTap(char *name, MacAddress *mac);
+int readMac (char *value, MacAddress * target);
+void closeTap (int fd);
+int createTap (char *name, MacAddress * mac);
 
-#endif /*NETWORK_H_*/
+#endif /*NETWORK_H_ */
 
 /*
  * Local Variables:

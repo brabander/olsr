@@ -55,7 +55,8 @@
 
 #define LINK_LOSS_MULTIPLIER (1<<16)
 
-struct link_entry {
+struct link_entry
+{
   union olsr_ip_addr local_iface_addr;
   union olsr_ip_addr neighbor_iface_addr;
   const struct interface *inter;
@@ -73,7 +74,7 @@ struct link_entry {
   float L_link_quality;
   int L_link_pending;
   clock_t L_LOST_LINK_time;
-  struct timer_entry *link_hello_timer;	/* When we should receive a new HELLO */
+  struct timer_entry *link_hello_timer; /* When we should receive a new HELLO */
   olsr_reltime last_htime;
   olsr_bool olsr_seqno_valid;
   olsr_u16_t olsr_seqno;
@@ -90,17 +91,17 @@ struct link_entry {
   /* cost of this link */
   olsr_linkcost linkcost;
 
-  struct list_node link_list;	       /* double linked list of all link entries */
+  struct list_node link_list;   /* double linked list of all link entries */
   olsr_u32_t linkquality[0];
 };
 
 /* inline to recast from link_list back to link_entry */
-LISTNODE2STRUCT(list2link, struct link_entry, link_list);
+LISTNODE2STRUCT (list2link, struct link_entry, link_list);
 
-#define OLSR_LINK_JITTER       5	/* percent */
-#define OLSR_LINK_HELLO_JITTER 0	/* percent jitter */
-#define OLSR_LINK_SYM_JITTER   0	/* percent jitter */
-#define OLSR_LINK_LOSS_JITTER  0	/* percent jitter */
+#define OLSR_LINK_JITTER       5        /* percent */
+#define OLSR_LINK_HELLO_JITTER 0        /* percent jitter */
+#define OLSR_LINK_SYM_JITTER   0        /* percent jitter */
+#define OLSR_LINK_LOSS_JITTER  0        /* percent jitter */
 
 /* deletion safe macro for link entry traversal */
 #define OLSR_FOR_ALL_LINK_ENTRIES(link) \
@@ -119,32 +120,31 @@ extern olsr_bool link_changes;
 
 /* Function prototypes */
 
-void olsr_set_link_timer(struct link_entry *, unsigned int);
-void olsr_init_link_set(void);
-void olsr_delete_link_entry_by_ip(const union olsr_ip_addr *);
-void olsr_expire_link_hello_timer(void *);
-void olsr_update_packet_loss_worker(struct link_entry *, olsr_bool);
-void signal_link_changes(olsr_bool);   /* XXX ugly */
+void olsr_set_link_timer (struct link_entry *, unsigned int);
+void olsr_init_link_set (void);
+void olsr_delete_link_entry_by_ip (const union olsr_ip_addr *);
+void olsr_expire_link_hello_timer (void *);
+void olsr_update_packet_loss_worker (struct link_entry *, olsr_bool);
+void signal_link_changes (olsr_bool);   /* XXX ugly */
 
+struct link_entry *get_best_link_to_neighbor (const union olsr_ip_addr *);
 
-struct link_entry *get_best_link_to_neighbor(const union olsr_ip_addr *);
+struct link_entry *lookup_link_entry (const union olsr_ip_addr *,
+                                      const union olsr_ip_addr *remote_main,
+                                      const struct interface *);
 
-struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
-				     const union olsr_ip_addr *remote_main,
-				     const struct interface *);
+struct link_entry *update_link_entry (const union olsr_ip_addr *,
+                                      const union olsr_ip_addr *,
+                                      const struct hello_message *,
+                                      const struct interface *);
 
-struct link_entry *update_link_entry(const union olsr_ip_addr *,
-				     const union olsr_ip_addr *,
-				     const struct hello_message *,
-				     const struct interface *);
-
-int check_neighbor_link(const union olsr_ip_addr *);
-int replace_neighbor_link_set(const struct neighbor_entry *,
-			    struct neighbor_entry *);
-int lookup_link_status(const struct link_entry *);
-void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
-void olsr_update_packet_loss(struct link_entry *entry);
-void olsr_print_link_set(void);
+int check_neighbor_link (const union olsr_ip_addr *);
+int replace_neighbor_link_set (const struct neighbor_entry *,
+                               struct neighbor_entry *);
+int lookup_link_status (const struct link_entry *);
+void olsr_update_packet_loss_hello_int (struct link_entry *, olsr_reltime);
+void olsr_update_packet_loss (struct link_entry *entry);
+void olsr_print_link_set (void);
 
 #endif
 
