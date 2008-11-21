@@ -175,5 +175,6 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, 
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

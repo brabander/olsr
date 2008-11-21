@@ -590,5 +590,6 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

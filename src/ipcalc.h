@@ -107,5 +107,6 @@ const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * c
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

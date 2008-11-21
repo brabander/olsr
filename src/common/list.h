@@ -102,5 +102,6 @@ static INLINE structname * funcname (struct list_node *ptr)\
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

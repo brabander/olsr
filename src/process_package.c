@@ -457,5 +457,6 @@ void olsr_input_hello(union olsr_message *msg, struct interface *inif, union ols
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

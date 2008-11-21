@@ -778,5 +778,6 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

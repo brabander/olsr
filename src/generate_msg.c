@@ -204,5 +204,6 @@ generate_stdout_pulse(void *foo __attribute__((unused)))
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

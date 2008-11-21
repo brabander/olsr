@@ -81,5 +81,6 @@ void olsr_print_duplicate_table(void);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

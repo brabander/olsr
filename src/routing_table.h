@@ -284,5 +284,6 @@ olsr_lookup_routing_table(const union olsr_ip_addr *);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

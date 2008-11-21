@@ -692,5 +692,6 @@ olsr_printf(int loglevel, const char *format, ...)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

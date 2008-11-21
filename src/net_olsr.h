@@ -118,5 +118,6 @@ void olsr_add_invalid_address(const union olsr_ip_addr *);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

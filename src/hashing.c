@@ -155,5 +155,6 @@ olsr_ip_hashing(const union olsr_ip_addr *address)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

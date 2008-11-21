@@ -866,5 +866,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

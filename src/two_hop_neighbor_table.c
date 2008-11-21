@@ -255,5 +255,6 @@ olsr_print_two_hop_neighbor_table(void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

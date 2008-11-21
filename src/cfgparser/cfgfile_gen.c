@@ -373,5 +373,6 @@ olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, olsr_b
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

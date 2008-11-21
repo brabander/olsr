@@ -1281,5 +1281,6 @@ static ssize_t writen(int fd, const void *buf, size_t count)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

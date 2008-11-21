@@ -323,5 +323,6 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

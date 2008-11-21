@@ -60,5 +60,6 @@ static inline float olsr_hyst_calc_instability(float old_quality) { return ((1 -
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

@@ -855,5 +855,6 @@ olsr_update_packet_loss(struct link_entry *entry)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

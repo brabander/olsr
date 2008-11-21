@@ -191,5 +191,6 @@ const char *sockaddr_to_string(char * const buf, int bufsize, const struct socka
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

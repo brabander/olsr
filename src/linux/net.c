@@ -890,5 +890,6 @@ calculate_if_metric(char *ifname)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

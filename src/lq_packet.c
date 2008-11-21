@@ -701,5 +701,6 @@ olsr_output_lq_tc(void *ctx)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

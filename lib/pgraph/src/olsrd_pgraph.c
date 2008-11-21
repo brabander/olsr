@@ -408,5 +408,6 @@ static int ipc_send(const char *data, int size)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

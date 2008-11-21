@@ -383,5 +383,6 @@ ipc_send_fmt(int ipc_connection, const char *format, ...)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */
