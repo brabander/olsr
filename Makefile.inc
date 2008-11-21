@@ -180,11 +180,14 @@ OBJS +=		$(SRCS:%.c=%.o)
 ifeq ($(DEBUG),1)
 CPPFLAGS +=	-DDEBUG
 CFLAGS +=	-ggdb
+OPTIMIZE = -O0
 else
 CPPFLAGS +=	-DNDEBUG
+OPTIMIZE = -O2
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
+OPTIMIZE = -Os
 endif
 
 # a make function to quote "/" and "."
