@@ -277,7 +277,6 @@ parse_packet (struct olsr *olsr, int size, struct interface *in_if,
   int processed;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
-  olsr_bool isDuplicate;
   int count = size - ((char *) m - (char *) olsr);
 
   if (count < MIN_PACKET_SIZE (olsr_cnf->ip_version))
@@ -429,25 +428,10 @@ parse_packet (struct olsr *olsr, int size, struct interface *in_if,
           continue;
         }
 
-      /* check for message duplicates */
-      isDuplicate = OLSR_FALSE;
-      if (olsr_cnf->ip_version == AF_INET)
-        {
-          /* IPv4 */
-          isDuplicate =
-            olsr_message_is_duplicate (&m->v4.originator, ntohs (m->v4.seqno),
-                                       OLSR_FALSE);
-        }
-      else
-        {
-          /* IPv6 */
-          isDuplicate =
-            olsr_message_is_duplicate (&m->v6.originator, ntohs (m->v6.seqno),
-                                       OLSR_FALSE);
-        }
-
       //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
-      if (!isDuplicate)
+
+      /* check for message duplicates */
+      if (!olsr_message_is_duplicate (m, OLSR_FALSE))
         {
           processed = 0;
           for (entry = parse_functions; entry != NULL; entry = entry->next)

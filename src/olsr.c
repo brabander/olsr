@@ -298,8 +298,6 @@ olsr_init_tables (void)
  *it if necessary.
  *
  *@param m the OLSR message recieved
- *@param originator the originator of this message
- *@param seqno the seqno of the message
  *
  *@returns positive if forwarded
  */
@@ -351,21 +349,9 @@ olsr_forward_message (union olsr_message *m, union olsr_ip_addr *from_addr)
     }
 
   /* check if we already forwarded this message */
-  if (AF_INET == olsr_cnf->ip_version)
+  if (olsr_message_is_duplicate (m, OLSR_TRUE))
     {
-      if (olsr_message_is_duplicate
-          (from_addr, ntohs (m->v4.seqno), OLSR_TRUE))
-        {
-          return 0;             /* it's a duplicate, forget about it */
-        }
-    }
-  else
-    {
-      if (olsr_message_is_duplicate
-          (from_addr, ntohs (m->v6.seqno), OLSR_TRUE))
-        {
-          return 0;             /* it's a duplicate, forget about it */
-        }
+      return 0;                 /* it's a duplicate, forget about it */
     }
 
   /* Treat TTL hopcnt */
