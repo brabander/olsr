@@ -815,7 +815,7 @@ FindNeighbors (struct TBestNeighbors *neighbors,
         /* Calculate the link quality (ETX) of the link to the found neighbor */
         currEtx = walker->linkcost;
 
-        if (currEtx < LINK_COST_BROKEN)
+        if (currEtx >= LINK_COST_BROKEN)
           {
             OLSR_PRINTF (9,
                          "%s: ----> Not forwarding to %s: link is timing out\n",
