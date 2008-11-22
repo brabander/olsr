@@ -212,3 +212,10 @@ const char *default_lq_print_cost_fpm(olsr_linkcost cost, struct lqtextbuffer *b
   snprintf(buffer->buf, sizeof(buffer->buf), "%.3f", (float)(cost) / LQ_FPM_LINKCOST_MULTIPLIER);
   return buffer->buf;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

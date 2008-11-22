@@ -32,3 +32,10 @@ StkId luaV_execute (lua_State *L);
 void luaV_concat (lua_State *L, int total, int last);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

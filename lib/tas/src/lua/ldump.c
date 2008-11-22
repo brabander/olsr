@@ -102,7 +102,7 @@ static void DumpConstants(const Proto* f, DumpState* D)
  DumpInt(n=f->sizek,D);
  for (i=0; i<n; i++)
  {
-  const TObject* o=&f->k[i];
+  const TObject* o= &f->k[i];
   DumpByte(ttype(o),D);
   switch (ttype(o))
   {
@@ -167,3 +167,10 @@ void luaU_dump (lua_State* L, const Proto* Main, lua_Chunkwriter w, void* data)
  DumpFunction(Main,NULL,&D);
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

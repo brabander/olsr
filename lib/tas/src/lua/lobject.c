@@ -45,6 +45,7 @@ int luaO_int2fb (unsigned int x) {
 
 int luaO_log2 (unsigned int x) {
   static const lu_byte log_8[255] = {
+/* *INDENT-OFF* */
     0,
     1,1,
     2,2,2,2,
@@ -57,6 +58,7 @@ int luaO_log2 (unsigned int x) {
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+/* *INDENT-ON* */
   };
   if (x >= 0x00010000) {
     if (x >= 0x01000000) return log_8[((x>>24) & 0xff) - 1]+24;
@@ -192,3 +194,10 @@ void luaO_chunkid (char *out, const char *source, int bufflen) {
     }
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

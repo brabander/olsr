@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -80,10 +80,8 @@ olsr_init_neighbor_table(void)
 static void
 olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
 {
-  struct neighbor_entry *nbr;
   struct neighbor_2_entry *nbr2;
 
-  nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->neighbor_2;
 
   if (nbr2->neighbor_2_pointer < 1) {
@@ -445,5 +443,6 @@ olsr_print_neighbor_table(void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

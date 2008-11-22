@@ -496,5 +496,6 @@ olsr_malloc_link_entry(const char *id)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

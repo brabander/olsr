@@ -56,3 +56,10 @@ int apm_read(struct olsr_apm_info *ApmInfo __attribute__((unused)))
 {
   return -1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

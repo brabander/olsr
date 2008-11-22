@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * Timer rewrite (c) 2008, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -59,6 +59,8 @@
 #define NSEC_PER_USEC 1000
 #define USEC_PER_MSEC 1000
 
+typedef void (*timer_cb_func)(void *);	       /* callback function */
+
 /*
  * Our timer implementation is a based on individual timers arranged in
  * a double linked list hanging of hash containers called a timer wheel slot.
@@ -77,7 +79,7 @@ struct timer_entry {
   olsr_u8_t timer_jitter_pct;	       /* the jitter expressed in percent */
   olsr_u8_t timer_flags;	       /* misc flags */
   unsigned int timer_random;	       /* cache random() result for performance reasons */
-  void (*timer_cb) (void *);	       /* callback function */
+  timer_cb_func timer_cb;	       /* callback function */
   void *timer_cb_context;	       /* context pointer */
 };
 
@@ -96,11 +98,10 @@ LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 /* Timers */
 void olsr_init_timers(void);
 void olsr_set_timer(struct timer_entry **, unsigned int, olsr_u8_t, olsr_bool,
-		    void (*)(void *), void *, olsr_cookie_t);
+		    timer_cb_func, void *, olsr_cookie_t);
 struct timer_entry *olsr_start_timer(unsigned int, olsr_u8_t, olsr_bool,
-				     void (*)(void *), void *, olsr_cookie_t);
-void olsr_change_timer(struct timer_entry *, unsigned int, olsr_u8_t,
-		       olsr_bool);
+				     timer_cb_func, void *, olsr_cookie_t);
+void olsr_change_timer(struct timer_entry *, unsigned int, olsr_u8_t, olsr_bool);
 void olsr_stop_timer(struct timer_entry *);
 
 /* Printing timestamps */
@@ -169,5 +170,6 @@ unsigned long olsr_times(void);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

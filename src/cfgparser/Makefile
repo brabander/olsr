@@ -1,6 +1,6 @@
 
 # The olsr.org Optimized Link-State Routing daemon(olsrd)
-# Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+# Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -50,7 +50,7 @@ ifeq ($(OS), win32)
 
 LIBNAME ?=	olsrd_cfgparser.dll
 BINNAME ?=	olsrd_cfgparser.exe
-OBJS +=		../win32/compat.o ../ipcalc.o ../builddata.o
+OBJS +=		../win32/compat.o ../ipcalc.o ../builddata.o ../common/autobuf.o ../common/string.o
 
 else
 

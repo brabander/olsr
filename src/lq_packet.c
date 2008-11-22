@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2003, Andreas Tønnesen (andreto@olsr.org)
+ * Copyright (c) 2003, Andreas Tonnesen (andreto@olsr.org)
  *               2004, Thomas Lopatic (thomas@lopatic.de)
  *               2006, for some fixups, sven-ola(gmx.de)
  * All rights reserved.
@@ -701,5 +701,6 @@ olsr_output_lq_tc(void *ctx)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

@@ -119,13 +119,13 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
 {
   int rv;
   if(olsr_cnf->ip_version == AF_INET) {
-    olsr_u32_t netmask = ~0 << (32 - net->prefix_len);
+    olsr_u32_t netmask = ntohl(~0 << (32 - net->prefix_len));
     rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
   } else {
     /* IPv6 */
     olsr_u32_t netmask;
-    const olsr_u32_t *i = (const olsr_u32_t *)&ipaddr->v6;
-    const olsr_u32_t *n = (const olsr_u32_t *)&net->prefix.v6;
+    const olsr_u32_t *i = (const olsr_u32_t *)&ipaddr->v6.s6_addr;
+    const olsr_u32_t *n = (const olsr_u32_t *)&net->prefix.v6.s6_addr;
     unsigned int prefix_len;
     for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
       if (*i != *n) {
@@ -134,7 +134,7 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
       i++;
       n++;
     }
-    netmask = ~0 << (32 - prefix_len);
+    netmask = ntohl(~0 << (32 - prefix_len));
     rv = (*i & netmask) == (*n & netmask);
   }
   return rv;
@@ -191,5 +191,6 @@ const char *sockaddr_to_string(char * const buf, int bufsize, const struct socka
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

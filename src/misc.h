@@ -43,4 +43,13 @@
 
 void clear_console(void);
 
+int set_nonblocking(int fd);
+
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

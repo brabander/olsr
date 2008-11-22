@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -43,26 +43,18 @@
  * -HNA4 checking by bjoern riemer
  */
 
-#include <arpa/inet.h>
-
-#include "olsr_types.h"
 #include "olsrd_dyn_gw.h"
 #include "olsr.h"
 #include "defs.h"
 #include "ipcalc.h"
 #include "scheduler.h"
+#include "olsr_cookie.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/time.h>
 #include <net/route.h>
+#include <arpa/inet.h>
 #ifdef linux
 #include <linux/in_route.h>
 #endif
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
 #ifndef WIN32
 #include <pthread.h>
 #else
@@ -203,6 +195,8 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
     *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
 }
 
+static struct olsr_cookie_info *doing_hna_timer_cookie;
+
 /**
  *Do initialization here
  * 
@@ -231,9 +225,12 @@ olsrd_plugin_init(void)
 
   pthread_create(&ping_thread, NULL, (void *(*)(void *))looped_checks, NULL);
   
+  /* create the cookie */
+  doing_hna_timer_cookie = olsr_alloc_cookie("DynGW: Doing HNS", OLSR_COOKIE_TYPE_TIMER);
+
   /* Register the GW check */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &olsr_event_doing_hna, NULL, 0);
+                   &olsr_event_doing_hna, NULL, doing_hna_timer_cookie->ci_id);
 
   return 1;
 }
@@ -509,3 +506,10 @@ int pthread_mutex_unlock(HANDLE *Hand)
 }
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

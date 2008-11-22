@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -237,7 +237,7 @@ static INLINE olsr_bool olsr_hopcount_change(const struct rt_metric *met1, const
 
 olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
 
-#if defined WIN32 || (defined LINUX && !defined LINUX_POLICY_ROUTING)
+#if defined WIN32 || (defined linux && !LINUX_POLICY_ROUTING)
 /**
  * Depending if flat_metric is configured and the kernel fib operation
  * return the hopcount metric of a route.
@@ -284,5 +284,6 @@ olsr_lookup_routing_table(const union olsr_ip_addr *);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

@@ -41,3 +41,10 @@ void *luaM_growaux (lua_State *L, void *block, int *size, int size_elem,
 
 #endif
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
  *
  * This file is part of olsr.org.
  *
@@ -144,3 +144,10 @@ shutdown_(int signal)
   printf("BYE-BYE!\n");
   exit(signal);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

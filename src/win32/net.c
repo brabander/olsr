@@ -473,3 +473,10 @@ olsr_select(int nfds,
                 exceptfds,
                 timeout);
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

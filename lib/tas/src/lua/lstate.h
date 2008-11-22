@@ -192,3 +192,10 @@ void luaE_freethread (lua_State *L, lua_State *L1);
 
 #endif
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -1,7 +1,7 @@
 
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -544,3 +544,10 @@ main(void)
 
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

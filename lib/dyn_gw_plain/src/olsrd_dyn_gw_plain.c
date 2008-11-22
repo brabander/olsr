@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2006, Sven-Ola Tuecke <sven-ola-aet-gmx.de>
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -42,6 +42,7 @@
 #include "ipcalc.h"
 #include "scheduler.h"
 #include "olsr.h"
+#include "olsr_cookie.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +56,8 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 static int has_inet_gateway;
+static struct olsr_cookie_info *event_timer_cookie;
+
 
 /**
  * Plugin interface version
@@ -94,9 +97,12 @@ olsrd_plugin_init(void)
     olsr_printf(DEBUGLEV, "HNA Internet gateway deleted\n");
   }
 
+  /* create the cookie */
+  event_timer_cookie = olsr_alloc_cookie("DynGW Plain: Event", OLSR_COOKIE_TYPE_TIMER);
+
   /* Register the GW check */
   olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &olsr_event, NULL, 0);
+                   &olsr_event, NULL, event_timer_cookie->ci_id);
 
   return 1;
 }
@@ -188,3 +194,10 @@ void olsr_event(void* foo __attribute__((unused)))
     has_inet_gateway = 0;
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

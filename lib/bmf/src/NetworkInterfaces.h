@@ -153,3 +153,10 @@ void AddMulticastRoute(void);
 void DeleteMulticastRoute(void);
 
 #endif /* _BMF_NETWORKINTERFACES_H */
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

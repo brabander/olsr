@@ -359,7 +359,8 @@ void luaH_remove (Table *t, Node *e) {
     mp->next = e->next;  /* remove `e' from its list */
   }
   else {
-    if (e->next != NULL) ??
+#error The following line has an error in the original source.
+//    if (e->next != NULL) ??
   }
   lua_assert(ttisnil(gval(node)));
   setnilvalue(gkey(e));  /* clear node `e' */
@@ -506,3 +507,10 @@ TObject *luaH_setnum (lua_State *L, Table *t, int key) {
   }
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

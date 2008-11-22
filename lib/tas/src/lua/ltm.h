@@ -48,3 +48,10 @@ void luaT_init (lua_State *L);
 extern const char *const luaT_typenames[];
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -217,3 +217,10 @@ LUA_API void lua_close (lua_State *L) {
   close_state(L);
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

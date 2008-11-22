@@ -241,3 +241,10 @@ int tasOlsrGetInfo(lua_State *lua)
 
   return 1;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -42,15 +42,9 @@
  *
  */
 
-#include "ipcalc.h"
-#include "defs.h"
-#include "olsr.h"
+#include "process_routes.h"
 #include "log.h"
 #include "kernel_routes.h"
-#include "common/avl.h"
-#include "net_olsr.h"
-#include "tc_set.h"
-#include "olsr_cookie.h"
 
 #include <errno.h>
 
@@ -402,5 +396,6 @@ olsr_update_kernel_routes(void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

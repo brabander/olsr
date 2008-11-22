@@ -182,3 +182,10 @@ typedef unsigned long Instruction;
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

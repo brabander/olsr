@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -57,6 +57,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "ipc_frontend.h"
+#include "misc.h"
 #include "common/string.h"
 
 #if LINUX_POLICY_ROUTING
@@ -92,7 +93,7 @@ static int olsr_process_arguments(int, char *[],
 
 volatile enum app_state app_state = STATE_RUNNING;
 
-static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
 
 /**
@@ -260,7 +261,7 @@ main(int argc, char *argv[])
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
     olsr_exit(__func__, 0);
   }
-  fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+  set_nonblocking(olsr_cnf->rtnl_s);
 #endif
 
 /*
@@ -842,5 +843,6 @@ olsr_process_arguments(int argc, char *argv[],
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

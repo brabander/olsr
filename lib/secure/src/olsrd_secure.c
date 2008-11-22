@@ -3,7 +3,7 @@
  * Secure OLSR plugin
  * http://www.olsr.org
  *
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or 
@@ -156,13 +156,14 @@ static int check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
 static int read_key_from_file(const char *);
 
+static struct olsr_cookie_info *timeout_timestamps_timer_cookie;
+
 /**
  *Do initialization here
  *
  *This function is called by the my_init
  *function in uolsrd_plugin.c
  */
-
 int
 secure_plugin_init(void)
 {
@@ -198,10 +199,12 @@ secure_plugin_init(void)
 
   olsr_preprocessor_add_function(&secure_preprocessor);
   
+  /* create the cookie */
+  timeout_timestamps_timer_cookie = olsr_alloc_cookie("Secure: Timeout Timestamps", OLSR_COOKIE_TYPE_TIMER);
+
   /* Register timeout - poll every 2 seconds */
   olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &timeout_timestamps, NULL, 0);
-
+                   &timeout_timestamps, NULL, timeout_timestamps_timer_cookie->ci_id);
 
   return 1;
 }
@@ -1217,3 +1220,10 @@ read_key_from_file(const char *file)
   return 1;
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas T�nnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -58,6 +58,10 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
+/* compiler-specific stuff */
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
 
 /* Debug helper macro */
 #ifdef DEBUG
@@ -133,5 +137,6 @@ extern volatile enum app_state app_state;
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

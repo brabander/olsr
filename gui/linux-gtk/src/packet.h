@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
  *
  * This file is part of olsr.org.
  *
@@ -21,7 +21,7 @@
  */
 
 /*
- *Andreas Tønnesen (andreto@ifi.uio.no)
+ *Andreas Tonnesen (andreto@ifi.uio.no)
  *
  *The list of cached packets
  *
@@ -74,3 +74,10 @@ union hna_message
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

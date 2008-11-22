@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -79,7 +79,6 @@ struct http_stats {
 };
 
 /* Destructor function */
-void olsr_plugin_exit(void);
 void olsr_plugin_exit(void);
 
 #if 0

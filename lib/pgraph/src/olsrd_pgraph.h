@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  *                     includes code by Bruno Randolf
  * All rights reserved.
  *
@@ -74,3 +74,10 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 int olsrd_plugin_interface_version(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

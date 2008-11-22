@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
  *
  * This file is part of olsr.org.
  *
@@ -21,7 +21,7 @@
  */
 
 /*
- *Andreas Tønmnesen
+ *Andreas Tonnesen
  */
 
 #ifndef _OLSRD_FORNTEND_COMMON
@@ -34,7 +34,6 @@
 #include <string.h>
 
 //#include "interface.h"
-#include "callbacks.h"
 //#include "types.h"
 #include "olsr_protocol.h"
 
@@ -227,3 +226,10 @@ time_out_mprs(union olsr_ip_addr *);
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

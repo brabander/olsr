@@ -1,33 +1,33 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -60,7 +60,7 @@
 #ifdef WIN32
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
-void 
+void
 WinSockPError(const char *);
 #endif
 
@@ -136,7 +136,7 @@ ipc_init(void)
   int yes;
 
   /* Add parser function */
-  olsr_parser_add_function(&frontend_msgparser, PROMISCUOUS, 0);
+  olsr_parser_add_function(&frontend_msgparser, PROMISCUOUS);
 
   /* get an internet domain socket */
   ipc_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -192,7 +192,7 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 
   /* check nets */
   for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
-    if (ip_in_net(addr, &ipcn->net)) { 
+    if (ip_in_net(addr, &ipcn->net)) {
       return OLSR_TRUE;
     }
   }
@@ -204,7 +204,7 @@ static void
 ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
   struct sockaddr_in pin;
-  char *addr;  
+  char *addr;
   socklen_t addrlen = sizeof (struct sockaddr_in);
 
   ipc_conn = accept(fd, (struct sockaddr *)&pin, &addrlen);
@@ -328,10 +328,10 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
       x++;
       printf(" %03i", (u_char) tmp[i]);
     }
-  
+
   printf("\n");
   */
-  
+
   if (send(ipc_conn, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) { // MSG_NOSIGNAL to avoid sigpipe
     OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
     CLOSE(ipc_conn);
@@ -358,7 +358,7 @@ ipc_send_all_routes(int fd)
     memset(&packet, 0, sizeof(packet));
     packet.size = htons(IPC_PACK_SIZE);
     packet.msgtype = ROUTE_IPC;
-	  
+
     packet.target_addr = rt->rt_dst.prefix;
 
     packet.add = 1;
@@ -394,18 +394,18 @@ ipc_send_net_info(int fd)
   struct ipc_net_msg net_msg;
 
   OLSR_PRINTF(1, "Sending net-info to front end...\n");
-  
+
   memset(&net_msg, 0, sizeof(net_msg));
-  
+
   /* Message size */
   net_msg.size = htons(sizeof(net_msg));
   /* Message type */
   net_msg.msgtype = NET_IPC;
-  
+
   /* MIDs */
   /* XXX fix IPC MIDcnt */
   net_msg.mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
-  
+
   /* HNAs */
   net_msg.hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
 
@@ -419,7 +419,7 @@ ipc_send_net_info(int fd)
   net_msg.topology_hold = 0;//htons((olsr_u16_t)topology_hold_time);
 
   net_msg.ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
- 
+
   /* Main addr */
   net_msg.main_addr = olsr_cnf->main_addr;
 
@@ -436,7 +436,7 @@ ipc_send_net_info(int fd)
       x++;
       printf(" %03i", (u_char) msg[i]);
     }
-  
+
   printf("\n");
   */
 
@@ -461,5 +461,6 @@ shutdown_ipc(void)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

@@ -59,3 +59,10 @@ int getpid(void);
 int isatty(int fd);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

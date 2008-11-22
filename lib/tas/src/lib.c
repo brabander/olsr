@@ -134,3 +134,10 @@ int stringToInt(unsigned int *val, const char *buff)
 
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

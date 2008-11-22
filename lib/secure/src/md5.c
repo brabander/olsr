@@ -312,3 +312,10 @@ void MD5Final (unsigned char digest[16], MD5_CTX *context)
    */
   MD5_memset ((POINTER)context, 0, sizeof (*context));
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

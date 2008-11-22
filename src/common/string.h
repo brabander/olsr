@@ -52,5 +52,6 @@ char *strscat(char *dest, const char *src, size_t size);
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

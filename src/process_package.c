@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -249,11 +249,10 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 static void
 linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, olsr_reltime vtime)
 {
-  struct neighbor_list_entry    *list_of_1_neighbors = olsr_malloc(sizeof(*list_of_1_neighbors), "Link entries 1");
-  struct neighbor_2_list_entry  *list_of_2_neighbors = olsr_malloc(sizeof(*list_of_2_neighbors), "Link entries 2");
+  struct neighbor_list_entry   *list_of_1_neighbors = olsr_malloc(sizeof(*list_of_1_neighbors), "Link entries 1");
+  struct neighbor_2_list_entry *list_of_2_neighbors = olsr_malloc(sizeof(*list_of_2_neighbors), "Link entries 2");
 
   list_of_1_neighbors->neighbor = neighbor;
-
   list_of_1_neighbors->path_linkcost = LINK_COST_BROKEN;
   list_of_1_neighbors->saved_path_linkcost = LINK_COST_BROKEN;
   list_of_1_neighbors->second_hop_linkcost = LINK_COST_BROKEN;
@@ -261,14 +260,15 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
   /* Queue */
   two_hop_neighbor->neighbor_2_nblist.next->prev = list_of_1_neighbors;
   list_of_1_neighbors->next = two_hop_neighbor->neighbor_2_nblist.next;
-
   two_hop_neighbor->neighbor_2_nblist.next = list_of_1_neighbors;
   list_of_1_neighbors->prev = &two_hop_neighbor->neighbor_2_nblist;
+
   list_of_2_neighbors->neighbor_2 = two_hop_neighbor;
   list_of_2_neighbors->nbr2_nbr = neighbor; /* XXX refcount */
-
-  olsr_change_timer(list_of_2_neighbors->nbr2_list_timer, vtime,
-                    OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+  list_of_2_neighbors->nbr2_list_timer =
+    olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER,
+		     OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
+		     list_of_2_neighbors, nbr2_list_timer_cookie->ci_id);
 
   /* Queue */
   neighbor->neighbor_2_list.next->prev = list_of_2_neighbors;
@@ -312,12 +312,12 @@ lookup_mpr_status(const struct hello_message *message,
 void
 olsr_init_package_process(void)
 {
-  olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_mid, MID_MESSAGE, 1);
-  olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE, 1);
+  olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
+  olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
+  olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
+  olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE);
+  olsr_parser_add_function(&olsr_input_mid, MID_MESSAGE);
+  olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE);
 }
 
 static int
@@ -457,5 +457,6 @@ void olsr_input_hello(union olsr_message *msg, struct interface *inif, union ols
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

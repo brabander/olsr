@@ -10,9 +10,6 @@ DEBUG ?= 1
 # compile OLSR_PRINTF out
 NO_DEBUG_MESSAGES ?= 0
 
-# the optimize option to be set for gcc
-OPTIMIZE ?= 
-
 # enable mudflap with 1 or deactivate with 0
 # you need a recent enough gcc and the libmudflap installed
 MUDFLAP ?= 0
@@ -90,7 +87,7 @@ endif
 #ALL_WARNINGS +=	-Wunreachable-code
 ALL_WARNINGS +=	-Winline
 ALL_WARNINGS +=	-Wdisabled-optimization
-#ALL_WARNINGS +=	-Werror
+ALL_WARNINGS +=	-Werror
 ALL_WARNINGS +=	-finline-functions-called-once
 ALL_WARNINGS +=	-funit-at-a-time
 ALL_WARNINGS +=	-fearly-inlining
@@ -188,11 +185,14 @@ OBJS +=		$(SRCS:%.c=%.o)
 ifeq ($(DEBUG),1)
 CPPFLAGS +=	-DDEBUG
 CFLAGS +=	-ggdb
+OPTIMIZE ?=	-O0
 else
 CPPFLAGS +=	-DNDEBUG
+OPTIMIZE ?=	-O2
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
+OPTIMIZE ?=	-Os
 endif
 
 # a make function to quote "/" and "."

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007, Sven-Ola Tuecke <sven-ola-aet-gmx.de>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -42,3 +42,10 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 int olsrd_plugin_interface_version(void);
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

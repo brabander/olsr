@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007, Sven-Ola Tuecke <sven-ola-aet-gmx.de>
- * Copyright (c) 2004, Andreas Tønnesen(andreto-at-olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -54,6 +54,7 @@
 #include "olsrd_arprefresh.h"
 #include "kernel_routes.h"
 #include "scheduler.h"
+#include "misc.h"
 
 #undef ARPREFRESH_DEBUG
 #define PLUGIN_INTERFACE_VERSION 5
@@ -162,7 +163,6 @@ int olsrd_plugin_init(void)
 	arp_event_timer_cookie  = olsr_alloc_cookie("Arprefresh: event", OLSR_COOKIE_TYPE_TIMER);
 	if (AF_INET == olsr_cnf->ip_version)
 	{
-		int flags;
 		struct sock_fprog filter;
 		struct sock_filter BPF_code[]=
 		{
@@ -187,8 +187,7 @@ int olsrd_plugin_init(void)
 		filter.len = sizeof(BPF_code) / sizeof(BPF_code[0]);
 		filter.filter = BPF_code;
 		if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP))) &&
-		    0 <= (flags = fcntl(arprefresh_sockfd, F_GETFL)) &&
-		    0 <= fcntl(arprefresh_sockfd, F_SETFL, flags | O_NONBLOCK) &&
+		    0 <= set_nonblocking(arprefresh_sockfd) &&
 		    0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter)))
 		{
 			/* Register the ARP refresh event */
@@ -231,3 +230,10 @@ static void my_fini(void)
 		arprefresh_sockfd = -1;
 	}
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

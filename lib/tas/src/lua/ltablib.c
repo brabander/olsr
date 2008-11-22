@@ -247,3 +247,10 @@ LUALIB_API int luaopen_table (lua_State *L) {
   return 1;
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

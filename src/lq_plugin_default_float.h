@@ -76,3 +76,10 @@ const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer 
 extern struct lq_handler lq_etx_float_handler;
 
 #endif /*LQ_PLUGIN_DEFAULT_H_*/
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -8,3 +8,10 @@ int main (void) {
   while (!sleep (1)) zebra_check();
   return 0;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

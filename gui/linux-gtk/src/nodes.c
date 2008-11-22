@@ -1,6 +1,6 @@
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
- * Copyright (C) 2003 Andreas Tønnesen (andreto@ifi.uio.no)
+ * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
  *
  * This file is part of olsr.org.
  *
@@ -737,3 +737,10 @@ me_to_double(olsr_u8_t me)
   int b = me - a*16;
   return (double)(VTIME_SCALE_FACTOR*(1+(double)a/16)*(double)pow(2,b));
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

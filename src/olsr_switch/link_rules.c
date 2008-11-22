@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2005, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2005, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -156,3 +156,10 @@ get_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
   }
   return NULL;
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

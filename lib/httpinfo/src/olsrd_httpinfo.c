@@ -1,6 +1,6 @@
 /*
  * HTTP Info plugin for the olsr.org OLSR daemon
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@
 #define OS "Undefined"
 #endif
 
-static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org) All rights reserved.";
+static char copyright_string[] __attribute__((unused)) = "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
 #define MAX_CLIENTS 3
 
@@ -189,7 +189,7 @@ static void build_about_body(struct autobuf *abuf);
 
 static void build_cfgfile_body(struct autobuf *abuf);
 
-static int check_allowed_ip(const struct allowed_net * const all_nets, const union olsr_ip_addr * const addr);
+static olsr_bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr);
 
 static void build_ip_txt(struct autobuf *abuf, const olsr_bool want_link,
 			 const char * const ipaddrstr, const int prefix_len);
@@ -200,6 +200,12 @@ static void build_ipaddr_link(struct autobuf *abuf, const olsr_bool want_link,
 static void section_title(struct autobuf *abuf, const char *title);
 
 static ssize_t writen(int fd, const void *buf, size_t count);
+
+#define IN6ADDR_V4MAPPED_LOOPBACK_INIT \
+        { { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+              0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 } } }
+
+const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT;
 
 static struct timeval start_time;
 static struct http_stats stats;
@@ -252,41 +258,66 @@ static const struct dynamic_file_entry dynamic_files[] = {
 static int
 get_http_socket(int port)
 {
-  struct sockaddr_in addr;
+  struct sockaddr_storage sst;
   olsr_u32_t yes = 1;
+  socklen_t addrlen;
 
   /* Init ipc socket */
-  int s = socket(AF_INET, SOCK_STREAM, 0);
+  int s = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
   if (s == -1) {
+#ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO)socket %s\n", strerror(errno));
+#endif
     return -1;
   }
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
+#ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
-    close(s);
+#endif
+    CLOSE(s);
     return -1;
   }
 
   /* Bind the socket */
 
   /* complete the socket structure */
-  memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons(port);
+  memset(&sst, 0, sizeof(sst));
+  if (olsr_cnf->ip_version == AF_INET) {
+      struct sockaddr_in *addr4 = (struct sockaddr_in *)&sst;
+      addr4->sin_family = AF_INET;
+      addrlen = sizeof(*addr4);
+#ifdef SIN6_LEN
+      addr4->sin_len = addrlen;
+#endif
+      addr4->sin_addr.s_addr = INADDR_ANY;
+      addr4->sin_port = htons(port);
+  } else {
+      struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&sst;
+      addr6->sin6_family = AF_INET6;
+      addrlen = sizeof(*addr6);
+#ifdef SIN6_LEN
+      addr6->sin6_len = addrlen;
+#endif
+      addr6->sin6_addr = in6addr_any;
+      addr6->sin6_port = htons(port);
+  }
 
   /* bind the socket to the port number */
-  if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+  if (bind(s, (struct sockaddr *)&sst, addrlen) == -1) {
+#ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
-    close(s);
+#endif
+    CLOSE(s);
     return -1;
   }
 
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
+#ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
-    close(s);
+#endif
+    CLOSE(s);
     return -1;
   }
 
@@ -297,7 +328,7 @@ get_http_socket(int port)
  *Do initialization here
  *
  *This function is called by the my_init
- *function in uolsrd_plugin.c
+ *function in olsrd_plugin.c
  */
 int
 olsrd_plugin_init(void)
@@ -324,8 +355,9 @@ olsrd_plugin_init(void)
 static void
 parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
-  struct sockaddr_in pin;
+  struct sockaddr_storage pin;
   socklen_t addrlen;
+  const union olsr_ip_addr *ipaddr;
   char req[MAX_HTTPREQ_SIZE];
   //static char body[HTML_BUFSIZE];
   struct autobuf body, header;
@@ -335,6 +367,9 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   unsigned int c = 0;
   int r = 1 /*, size = 0 */;
 
+  abuf_init(&body, 0);
+  abuf_init(&header, 0);
+
   if (curr_clients >= MAX_CLIENTS) {
     return;
   }
@@ -343,21 +378,36 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   addrlen = sizeof(pin);
   client_sockets[curr_clients] = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (client_sockets[curr_clients] == -1) {
+#ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO) accept: %s\n", strerror(errno));
+#endif
     goto close_connection;
   }
 
-  if (!check_allowed_ip(allowed_nets, (union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
+  if(((struct sockaddr *)&pin)->sa_family != olsr_cnf->ip_version) {
+#ifndef NODEBUG
+    olsr_printf(1, "(HTTPINFO) Connection with wrong IP version?!\n");
+#endif
+    goto close_connection;
+  }
+
+  if(olsr_cnf->ip_version == AF_INET) {
+    const struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
+    ipaddr = (const union olsr_ip_addr *)&addr4->sin_addr;
+  } else {
+    const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
+    ipaddr = (const union olsr_ip_addr *)&addr6->sin6_addr;
+  }
+
+  if (!check_allowed_ip(allowed_nets, ipaddr)) {
     struct ipaddr_str strbuf;
     olsr_printf(0, "HTTP request from non-allowed host %s!\n",
-                olsr_ip_to_string(&strbuf, (union olsr_ip_addr *)&pin.sin_addr.s_addr));
+                olsr_ip_to_string(&strbuf, ipaddr));
     goto close_connection;
   }
 
   memset(req, 0, sizeof(req));
   //memset(body, 0, sizeof(body));
-  abuf_init(&body, 0);
-  abuf_init(&header, 0);
 
   while ((r = recv(client_sockets[curr_clients], &req[c], 1, 0)) > 0 && (c < sizeof(req)-1)) {
       c++;
@@ -1154,18 +1204,32 @@ static void build_cfgfile_body(struct autobuf *abuf)
 #endif
 }
 
-static int check_allowed_ip(const struct allowed_net * const all_nets, const union olsr_ip_addr * const addr)
+static olsr_bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr)
 {
-    const struct allowed_net *alln;
-    for (alln = all_nets; alln != NULL; alln = alln->next) {
-        if ((addr->v4.s_addr & alln->mask.v4.s_addr) == (alln->net.v4.s_addr & alln->mask.v4.s_addr)) {
-            return 1;
-        }
+  const struct ip_prefix_list *ipcn;
+
+  if (olsr_cnf->ip_version == AF_INET) {
+    if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
+      return OLSR_TRUE;
     }
-    return 0;
+  } else {
+    if(ip6equal(&addr->v6, &in6addr_loopback)) {
+      return OLSR_TRUE;
+    }
+    else if(ip6equal(&addr->v6, &in6addr_v4mapped_loopback)) {
+      return OLSR_TRUE;
+    }
+  }
+
+  /* check nets */
+  for (ipcn = all_nets; ipcn != NULL; ipcn = ipcn->next) {
+    if (ip_in_net(addr, &ipcn->net)) { 
+      return OLSR_TRUE;
+    }
+  }
+
+  return OLSR_FALSE;
 }
-
-
 
 #if 0
 /*
@@ -1217,5 +1281,6 @@ static ssize_t writen(int fd, const void *buf, size_t count)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

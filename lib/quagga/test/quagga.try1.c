@@ -187,7 +187,7 @@ char zebra_send_command (unsigned char command, char * options, int optlen) {
     }
     else return -1;
     p = p+ret;
-  } while ((length =- ret));
+  } while ((length -= ret));
 
   return 0;
 }
@@ -708,3 +708,10 @@ static void zebra_free_ipv4_route_table (struct ipv4_route *r) {
     r = n;
   }
 }
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -1,7 +1,7 @@
 
 /*
  * HTTP Info plugin for the olsr.org OLSR daemon
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -395,5 +395,6 @@ process_set_values(char *data, olsr_u32_t data_size, struct autobuf *abuf)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

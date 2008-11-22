@@ -38,11 +38,14 @@
  *
  */
 
+#include "misc.h"
+#include "log.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
-#include "misc.h"
-#include "olsr_types.h"
+#include <fcntl.h>
+#include <errno.h>
 
 void clear_console(void)
 {
@@ -50,23 +53,43 @@ void clear_console(void)
   static char clear_buff[100];
   int i;
 
-  if (len < 0)
-    {
-      FILE *pip = popen("clear", "r");
-      for (len = 0; len < (int)sizeof(clear_buff); len++)
-        {
-          int c = fgetc(pip);
-          if (c == EOF)
+  if (len < 0) {
+    FILE *pip = popen("clear", "r");
+    for (len = 0; len < (int)sizeof(clear_buff); len++) {
+      int c = fgetc(pip);
+      if (c == EOF) {
             break;
-
-          clear_buff[len] = c;
-        }
-
-      pclose(pip);
+      }
+      clear_buff[len] = c;
     }
 
-  for (i = 0; i < len; i++)
-    fputc(clear_buff[i], stdout);
+    pclose(pip);
+  }
 
+  for (i = 0; i < len; i++) {
+    fputc(clear_buff[i], stdout);
+  }
   fflush(stdout);
 }
+
+int set_nonblocking(int fd)
+{
+    /* make the fd non-blocking */
+    int socket_flags = fcntl(fd, F_GETFL);
+    if (socket_flags < 0) {
+        olsr_syslog(OLSR_LOG_ERR, "Cannot get the socket flags: %s", strerror(errno));
+        return -1;
+    }
+    if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
+        olsr_syslog(OLSR_LOG_ERR, "Cannot set the socket flags: %s", strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

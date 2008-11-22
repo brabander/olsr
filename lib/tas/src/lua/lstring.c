@@ -99,3 +99,10 @@ Udata *luaS_newudata (lua_State *L, size_t s) {
   return u;
 }
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -78,3 +78,10 @@ char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {
 }
 
 
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

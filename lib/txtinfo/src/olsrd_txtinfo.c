@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  *                     includes code by Bruno Randolf
  *                     includes code by Andreas Lopatic
  *                     includes code by Sven-Ola Tuecke
@@ -56,12 +56,12 @@
 #include "mid_set.h"
 #include "routing_table.h"
 #include "log.h"
+#include "misc.h"
 
 #include "common/autobuf.h"
 
-#include <errno.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <errno.h>
 
 #ifdef WIN32
 #undef EWOULDBLOCK
@@ -91,8 +91,6 @@ static int ipc_socket = -1;
 
 
 static void conn_destroy(struct ipc_conn *);
-
-static int set_nonblocking(int);
 
 static void ipc_action(int, void *, unsigned int);
 
@@ -238,31 +236,6 @@ static void kill_connection(int fd, struct ipc_conn *conn)
     conn_destroy(conn);
 }
 
-static int set_nonblocking(int fd)
-{
-    /* make the fd non-blocking */
-#ifdef WIN32
-    unsigned long flags = 1;
-    if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
-        const long int save_errno = errno;
-        olsr_printf(0, "(TXTINFO) ioctlsocket()=%ld/%s\n", save_errno, strerror(save_errno));
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot set the socket flags: %s", strerror(save_errno));
-        return -1;
-    }
-#else
-    int socket_flags = fcntl(fd, F_GETFL);
-    if (socket_flags < 0) {
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot get the socket flags: %s", strerror(errno));
-        return -1;
-    }
-    if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Cannot set the socket flags: %s", strerror(errno));
-        return -1;
-    }
-#endif
-    return 0;
-}
-
 static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
     struct ipc_conn *conn;
@@ -388,7 +361,8 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
 
 static void ipc_http_write(int fd, struct ipc_conn *conn)
 {
-    ssize_t bytes_written = write(fd, conn->resp.buf+conn->respstart, conn->resp.len-conn->respstart);
+    ssize_t bytes_written = write(fd, conn->resp.buf+conn->respstart,
+      conn->resp.len-conn->respstart);
     if (bytes_written < 0) {
         if (errno == EINTR || errno == EAGAIN) {
             return;

@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * RIB implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
@@ -648,5 +648,6 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
 /*
  * Local Variables:
  * c-basic-offset: 2
+ * indent-tabs-mode: nil
  * End:
  */

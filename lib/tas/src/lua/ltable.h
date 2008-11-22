@@ -28,3 +28,10 @@ Node *luaH_mainposition (const Table *t, const TObject *key);
 
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

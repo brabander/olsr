@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+ * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -61,7 +61,7 @@ typedef int             int32_t;
 #if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
 /* we have a C99 environment */
 #include <stdbool.h>
-#else
+#elif defined __GNUC__
 /* we simulate a C99 environment */
 #define bool _Bool
 #define true 1
@@ -111,3 +111,10 @@ struct olsr_ip_prefix {
 typedef olsr_u32_t olsr_linkcost;
 
 #endif
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */
