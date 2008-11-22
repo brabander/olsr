@@ -353,14 +353,16 @@ olsr_forward_message (union olsr_message *m, union olsr_ip_addr *from_addr)
   /* check if we already forwarded this message */
   if (AF_INET == olsr_cnf->ip_version)
     {
-      if (olsr_message_is_duplicate (from_addr, m->v4.seqno, OLSR_TRUE))
+      if (olsr_message_is_duplicate
+          (from_addr, ntohs (m->v4.seqno), OLSR_TRUE))
         {
           return 0;             /* it's a duplicate, forget about it */
         }
     }
   else
     {
-      if (olsr_message_is_duplicate (from_addr, m->v6.seqno, OLSR_TRUE))
+      if (olsr_message_is_duplicate
+          (from_addr, ntohs (m->v6.seqno), OLSR_TRUE))
         {
           return 0;             /* it's a duplicate, forget about it */
         }
