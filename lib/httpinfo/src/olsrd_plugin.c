@@ -128,7 +128,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 static int insert_plugin_ipnet(sa_family_t ip_version, const char *sz_net, const char *sz_mask, struct ip_prefix_list **all_nets)
 {
     union olsr_ip_addr net;
-    olsr_u8_t prefix_len;
+    int prefix_len;
     
     if (inet_pton(ip_version, sz_net, &net) <= 0) {
         return 1;

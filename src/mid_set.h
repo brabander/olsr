@@ -85,7 +85,7 @@ void olsr_input_mid(union olsr_message *, struct interface *,
                     union olsr_ip_addr *);
 
 void olsr_init_mid_set(void);
-void olsr_update_mid_entry(union olsr_ip_addr *, const union olsr_ip_addr *,
+void olsr_update_mid_entry(const union olsr_ip_addr *, const union olsr_ip_addr *,
                            olsr_reltime, olsr_u16_t);
 union olsr_ip_addr *olsr_lookup_main_addr_by_alias(const union olsr_ip_addr *);
 struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
