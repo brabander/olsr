@@ -1036,12 +1036,6 @@ olsr_input_tc (union olsr_message *msg, struct interface *input_if
                       &olsr_expire_tc_edge_gc, tc,
                       tc_edge_gc_timer_cookie->ci_id);
     }
-
-  /*
-   * Last, flood the message to our other neighbors.
-   */
-  olsr_forward_message (msg, from_addr);
-  return;
 }
 
 /*

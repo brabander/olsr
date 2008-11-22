@@ -398,8 +398,6 @@ parserFunc (union olsr_message *msg, struct interface *inInt
     }
 
   httpAddTasMessage (service, string, rawIpAddrToString (orig, ipAddrLen));
-
-  olsr_forward_message (msg, neighIntAddr);
 }
 
 void
@@ -496,7 +494,7 @@ olsrd_plugin_init (void)
   olsr_start_timer (OLSR_TAS_SERVICE_INT, 0, OLSR_TIMER_PERIODIC,
                     &serviceFunc, NULL, 0);
 
-  olsr_parser_add_function (parserFunc, MESSAGE_TYPE, 1);
+  olsr_parser_add_function (parserFunc, MESSAGE_TYPE);
 
   return 0;
 }

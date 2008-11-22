@@ -468,17 +468,17 @@ olsr_init_package_process (void)
 {
   if (olsr_cnf->lq_level == 0)
     {
-      olsr_parser_add_function (&olsr_input_hello, HELLO_MESSAGE, 1);
-      olsr_parser_add_function (&olsr_input_tc, TC_MESSAGE, 1);
+      olsr_parser_add_function (&olsr_input_hello, HELLO_MESSAGE);
+      olsr_parser_add_function (&olsr_input_tc, TC_MESSAGE);
     }
   else
     {
-      olsr_parser_add_function (&olsr_input_hello, LQ_HELLO_MESSAGE, 1);
-      olsr_parser_add_function (&olsr_input_tc, LQ_TC_MESSAGE, 1);
+      olsr_parser_add_function (&olsr_input_hello, LQ_HELLO_MESSAGE);
+      olsr_parser_add_function (&olsr_input_tc, LQ_TC_MESSAGE);
     }
 
-  olsr_parser_add_function (&olsr_input_mid, MID_MESSAGE, 1);
-  olsr_parser_add_function (&olsr_input_hna, HNA_MESSAGE, 1);
+  olsr_parser_add_function (&olsr_input_mid, MID_MESSAGE);
+  olsr_parser_add_function (&olsr_input_hna, HNA_MESSAGE);
 }
 
 void

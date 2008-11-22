@@ -318,12 +318,12 @@ olsr_forward_message (union olsr_message *m, union olsr_ip_addr *from_addr)
    */
   if (AF_INET == olsr_cnf->ip_version)
     {
-      if (2 > m->v4.ttl || 255 < (int) m->v4.hopcnt + (int) m->v4.ttl)
+      if (m->v4.ttl < 2 || 255 < (int) m->v4.hopcnt + (int) m->v4.ttl)
         return 0;
     }
   else
     {
-      if (2 > m->v6.ttl || 255 < (int) m->v6.hopcnt + (int) m->v6.ttl)
+      if (m->v6.ttl < 2 || 255 < (int) m->v6.hopcnt + (int) m->v6.ttl)
         return 0;
     }
 
@@ -348,6 +348,22 @@ olsr_forward_message (union olsr_message *m, union olsr_ip_addr *from_addr)
                    olsr_ip_to_string (&buf, src));
 #endif
       return 0;
+    }
+
+  /* check if we already forwarded this message */
+  if (AF_INET == olsr_cnf->ip_version)
+    {
+      if (olsr_message_is_duplicate (from_addr, m->v4.seqno, OLSR_TRUE))
+        {
+          return 0;             /* it's a duplicate, forget about it */
+        }
+    }
+  else
+    {
+      if (olsr_message_is_duplicate (from_addr, m->v6.seqno, OLSR_TRUE))
+        {
+          return 0;             /* it's a duplicate, forget about it */
+        }
     }
 
   /* Treat TTL hopcnt */

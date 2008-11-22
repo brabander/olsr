@@ -645,8 +645,6 @@ olsr_input_mid (union olsr_message *m, struct interface *in_if
     }
 
   olsr_prune_aliases (&message.mid_origaddr, message.mid_addr);
-
-  olsr_forward_message (m, from_addr);
   olsr_free_mid_packet (&message);
 }
 

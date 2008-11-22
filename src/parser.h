@@ -52,7 +52,6 @@ typedef void parse_function (union olsr_message *, struct interface *,
 struct parse_function_entry
 {
   olsr_u32_t type;              /* If set to PROMISCUOUS all messages will be received */
-  int caller_forwarding;        /* If set to 0 this entry is not registered as forwarding packets */
   parse_function *function;
   struct parse_function_entry *next;
 };
@@ -84,9 +83,9 @@ void olsr_input (int);
 
 void olsr_input_hostemu (int);
 
-void olsr_parser_add_function (parse_function, olsr_u32_t, int);
+void olsr_parser_add_function (parse_function, olsr_u32_t);
 
-int olsr_parser_remove_function (parse_function, olsr_u32_t, int);
+int olsr_parser_remove_function (parse_function, olsr_u32_t);
 
 void olsr_preprocessor_add_function (preprocessor_function);
 

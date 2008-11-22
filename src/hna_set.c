@@ -482,7 +482,6 @@ olsr_input_hna (union olsr_message *m, struct interface *in_if
         }
     }
 #endif
-  olsr_forward_message (m, from_addr);
 }
 
 /*

@@ -100,8 +100,7 @@ olsr_init_parser (void)
 }
 
 void
-olsr_parser_add_function (parse_function * function, olsr_u32_t type,
-                          int forwarding)
+olsr_parser_add_function (parse_function * function, olsr_u32_t type)
 {
   struct parse_function_entry *new_entry;
 
@@ -113,7 +112,6 @@ olsr_parser_add_function (parse_function * function, olsr_u32_t type,
 
   new_entry->function = function;
   new_entry->type = type;
-  new_entry->caller_forwarding = forwarding;
 
   /* Queue */
   new_entry->next = parse_functions;
@@ -125,8 +123,7 @@ olsr_parser_add_function (parse_function * function, olsr_u32_t type,
 }
 
 int
-olsr_parser_remove_function (parse_function * function, olsr_u32_t type,
-                             int forwarding)
+olsr_parser_remove_function (parse_function * function, olsr_u32_t type)
 {
   struct parse_function_entry *entry, *prev;
 
@@ -135,8 +132,7 @@ olsr_parser_remove_function (parse_function * function, olsr_u32_t type,
 
   while (entry)
     {
-      if ((entry->function == function) && (entry->type == type)
-          && (entry->caller_forwarding == forwarding))
+      if ((entry->function == function) && (entry->type == type))
         {
           if (entry == parse_functions)
             {
@@ -277,13 +273,12 @@ parse_packet (struct olsr *olsr, int size, struct interface *in_if,
 {
   union olsr_message *m = (union olsr_message *) olsr->olsr_msg;
   struct unknown_message unkpacket;
-  int count;
   int msgsize;
   int processed;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
-
-  count = size - ((char *) m - (char *) olsr);
+  olsr_bool isDuplicate;
+  int count = size - ((char *) m - (char *) olsr);
 
   if (count < MIN_PACKET_SIZE (olsr_cnf->ip_version))
     return;
@@ -435,44 +430,39 @@ parse_packet (struct olsr *olsr, int size, struct interface *in_if,
         }
 
       /* check for message duplicates */
+      isDuplicate = OLSR_FALSE;
       if (olsr_cnf->ip_version == AF_INET)
         {
           /* IPv4 */
-          if (olsr_shall_process_message
-              (&m->v4.originator, ntohs (m->v4.seqno)) == 0)
-            {
-              continue;
-            }
+          isDuplicate =
+            olsr_message_is_duplicate (&m->v4.originator, ntohs (m->v4.seqno),
+                                       OLSR_FALSE);
         }
       else
         {
           /* IPv6 */
-          if (olsr_shall_process_message
-              (&m->v6.originator, ntohs (m->v6.seqno)) == 0)
-            {
-              continue;
-            }
+          isDuplicate =
+            olsr_message_is_duplicate (&m->v6.originator, ntohs (m->v6.seqno),
+                                       OLSR_FALSE);
         }
 
       //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
-
-      entry = parse_functions;
-
-      while (entry)
+      if (!isDuplicate)
         {
-          /* Should be the same for IPv4 and IPv6 */
-
-          /* Promiscuous or exact match */
-          if ((entry->type == PROMISCUOUS)
-              || (entry->type == m->v4.olsr_msgtype))
+          processed = 0;
+          for (entry = parse_functions; entry != NULL; entry = entry->next)
             {
-              entry->function (m, in_if, from_addr);
-              if (entry->caller_forwarding)
-                processed = 1;
-            }
-          entry = entry->next;
-        }
+              /* Should be the same for IPv4 and IPv6 */
 
+              /* Promiscuous or exact match */
+              if ((entry->type == PROMISCUOUS)
+                  || (entry->type == m->v4.olsr_msgtype))
+                {
+                  entry->function (m, in_if, from_addr);
+                  processed = 1;
+                }
+            }
+        }
       /* UNKNOWN PACKETTYPE */
       if (processed == 0)
         {
@@ -484,17 +474,12 @@ parse_packet (struct olsr *olsr, int size, struct interface *in_if,
                                                                     &unkpacket.
                                                                     originator));
 
-          /* Forward message */
-          if (!ipequal (&unkpacket.originator, &olsr_cnf->main_addr))
-            {
-              /* Forward */
-              olsr_forward_message (m, from_addr);
-            }
-
           /* Cancel loop here, otherwise olsrd just hangs forever at this point */
           break;
         }
 
+      /* now call function to check for forwarding */
+      olsr_forward_message (m, from_addr);
     }                           /* for olsr_msg */
 }
 

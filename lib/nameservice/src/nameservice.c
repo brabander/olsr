@@ -459,7 +459,7 @@ name_init (void)
   my_services = remove_nonvalid_names_from_list (my_services, NAME_SERVICE);
 
   /* register functions with olsrd */
-  olsr_parser_add_function (&olsr_parser, PARSER_TYPE, 1);
+  olsr_parser_add_function (&olsr_parser, PARSER_TYPE);
 
   /* periodic message generation */
   msg_gen_timer =
@@ -761,10 +761,6 @@ olsr_parser (union olsr_message *m, struct interface *in_if
     }
 
   update_name_entry (&originator, namemessage, size, vtime);
-
-  /* Forward the message if nessecary
-   * default_fwd does all the work for us! */
-  olsr_forward_message (m, ipaddr);
 }
 
 /**

@@ -86,7 +86,7 @@ ipc_init (void)
   int yes = 1;
 
   /* Add parser function */
-  olsr_parser_add_function (&frontend_msgparser, PROMISCUOUS, 0);
+  olsr_parser_add_function (&frontend_msgparser, PROMISCUOUS);
 
   /* get an internet domain socket */
   if ((ipc_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1)
