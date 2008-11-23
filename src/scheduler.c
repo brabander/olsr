@@ -55,37 +55,22 @@
 #include <assert.h>
 
 /* Timer data, global. Externed in scheduler.h */
-clock_t now_times;		       /* current idea of times(2) reported uptime */
+clock_t now_times;		        /* current idea of times(2) reported uptime */
 
 /* Hashed root of all timers */
 static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
-static clock_t timer_last_run;		       /* remember the last timeslot walk */
+static clock_t timer_last_run;		/* remember the last timeslot walk */
 
-/* Pool of timers to avoid malloc() churn */
-static struct list_node free_timer_list;
-
-/* Statistics */
-static unsigned int timers_running;
-
-static void walk_timers(clock_t *);
-
-static void poll_sockets(void);
-
-static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val);
+/* Memory cookie for the block based memory manager */
+static struct olsr_cookie_info *timer_mem_cookie = NULL;
 
 static struct olsr_socket_entry *olsr_socket_entries = NULL;
 
-#define FOR_ALL_TIMER_ENTRIES(head, elem)	\
-{ \
-  struct list_node *elem_node, *next_elem_node; \
-  for (elem_node = (head)->next;				 \
-       elem_node != (head); /* circular list */	 \
-       elem_node = next_elem_node) { \
-    next_elem_node = elem_node->next; \
-    elem = list2timer(elem_node);
-
-#define FOR_ALL_TIMER_ENTRIES_END(head, elem) }}
-
+/* Prototypes */
+static void walk_timers(clock_t *);
+static void poll_sockets(void);
+static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct,
+                           unsigned int random_val);
 
 /**
  * Add a socket and handler to the socketset
@@ -173,7 +158,6 @@ void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func 
     }
   }
 }
-
 
 static void
 poll_sockets(void)
@@ -400,7 +384,6 @@ olsr_scheduler(void)
   }
 }
 
-
 /**
  * Decrement a relative timer by a random number range.
  *
@@ -436,66 +419,6 @@ calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val
   return GET_TIMESTAMP(rel_time - jitter_time);
 }
 
-
-/**
- * Allocate a timer_entry.
- * Do this first by checking if something is available in the free_timer_pool
- * If not then allocate a big chunk of memory and thread its elements up
- * to the free_timer_list.
- */
-static struct timer_entry *
-olsr_get_timer(void)
-{
-  struct list_node *timer_list_node;
-
-  /*
-   * If there is at least one timer in the pool then remove the first
-   * element from the pool and recycle it.
-   */
-  if (list_is_empty(&free_timer_list)) {
-    /*
-     * Nothing in the pool, allocate a new chunk.
-     */
-    unsigned int idx;
-    struct timer_entry *timer =
-      olsr_malloc(sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
-		  "timer chunk");
-
-#if 0
-    OLSR_PRINTF(3, "TIMER: alloc %u bytes chunk at %p\n",
-		sizeof(*timer) * OLSR_TIMER_MEMORY_CHUNK,
-		timer);
-#endif
-
-    /*
-     * Slice the chunk up and put the future timer_entries in the free timer pool.
-     */
-    for (idx = 0; idx < OLSR_TIMER_MEMORY_CHUNK; idx++) {
-
-      /* Insert new timers at the tail of the free_timer list */
-      list_add_before(&free_timer_list, &timer[idx].timer_list);
-
-      /* 
-       * For performance reasons (read: frequent timer changes),
-       * precompute a random number once per timer and reuse later.
-       * The random number only gets recomputed if a periodical timer fires,
-       * such that a different jitter is applied for future firing.
-       */
-      timer[idx].timer_random = random();
-    }
-  }
-
-  /*
-   * There are now surely timers in the pool, return oen.
-   */
-  timer_list_node = free_timer_list.next;
-
-  /* carve it out of the pool, do not memset overwrite timer->timer_random */
-  list_remove(timer_list_node);
-  return list2timer(timer_list_node);
-}
-
-
 /**
  * Init datastructures for maintaining timers.
  */
@@ -516,9 +439,11 @@ olsr_init_timers(void)
    */
   timer_last_run = now_times;
 
-  /* Timer memory pooling */
-  list_head_init(&free_timer_list);
-  timers_running = 0;
+  /* Allocate a cookie for the block based memeory manager. */
+  timer_mem_cookie =
+    olsr_alloc_cookie("timer_entry", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(timer_mem_cookie, sizeof(struct timer_entry));
+  olsr_cookie_set_memclear(timer_mem_cookie, OLSR_FALSE);
 }
 
 /**
@@ -573,7 +498,7 @@ walk_timers(clock_t * last_run)
 	    olsr_change_timer(timer, timer->timer_period,
 			      timer->timer_jitter_pct, OLSR_TIMER_PERIODIC);
 	  } else {
-	    /* Singleshot timers are stopped and returned to the pool */
+	    /* Singleshot timers are stopped */
 	    olsr_stop_timer(timer);
 	  }
 	}
@@ -595,7 +520,8 @@ walk_timers(clock_t * last_run)
   OLSR_PRINTF(3, "TIMER: processed %4u/%u clockwheel slots, "
 	      "timers walked %4u/%u, timers fired %u\n",
 	      wheel_slot_walks, TIMER_WHEEL_SLOTS,
-	      total_timers_walked, timers_running, total_timers_fired);
+	      total_timers_walked, timer_mem_cookie->ci_usage,
+              total_timers_fired);
 #endif
 
   /*
@@ -665,7 +591,6 @@ olsr_wallclock_string(void)
   return buf;
 }
 
-
 /**
  * Format an relative non-wallclock system time string.
  * May be called upto 4 times in a single printf() statement.
@@ -689,7 +614,6 @@ olsr_clock_string(clock_t clk)
   return buf;
 }
 
-
 /**
  * Start a new timer.
  *
@@ -711,7 +635,7 @@ olsr_start_timer(unsigned int rel_time,
 
   assert(cookie != 0); /* we want timer cookies everywhere */
 
-  timer = olsr_get_timer();
+  timer = olsr_cookie_malloc(timer_mem_cookie);
 
   /* Fill entry */
   timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
@@ -732,7 +656,6 @@ olsr_start_timer(unsigned int rel_time,
    */
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK],
 		  &timer->timer_list);
-  timers_running++;
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "TIMER: start %s timer %p firing in %s, ctx %p\n",
@@ -766,16 +689,14 @@ olsr_stop_timer(struct timer_entry *timer)
   assert(timer->timer_cookie != 0); /* we want timer cookies everywhere */
 
   /*
-   * Carve out of the existing wheel_slot and return to the pool
-   * rather than freeing for later reycling.
+   * Carve out of the existing wheel_slot and free.
    */
   list_remove(&timer->timer_list);
-  list_add_before(&free_timer_list, &timer->timer_list);
   timer->timer_flags &= ~OLSR_TIMER_RUNNING;
   olsr_cookie_usage_decr(timer->timer_cookie);
-  timers_running--;
-}
 
+  olsr_cookie_free(timer_mem_cookie, timer);
+}
 
 /**
  * Change a timer_entry.
@@ -816,7 +737,6 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
 	      olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
 #endif
 }
-
 
 /*
  * This is the one stop shop for all sort of timer manipulation.

@@ -72,7 +72,7 @@ typedef void (*timer_cb_func)(void *);	       /* callback function */
  * which causes the timer to run forever until manually stopped.
  */
 struct timer_entry {
-  struct list_node timer_list;	       /* memory pooling, or wheel membership */
+  struct list_node timer_list;	       /* Wheel membership */
   clock_t timer_clock;		       /* when timer shall fire (absolute time) */
   unsigned int timer_period;	       /* set for periodical timers (relative time) */
   olsr_cookie_t timer_cookie;	       /* used for diag stuff */
@@ -86,14 +86,22 @@ struct timer_entry {
 /* inline to recast from timer_list back to timer_entry */
 LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
+/* macro to walk all timers hanging off a bucket */
+#define FOR_ALL_TIMER_ENTRIES(head, elem)	\
+{ \
+  struct list_node *elem_node, *next_elem_node; \
+  for (elem_node = (head)->next;				 \
+       elem_node != (head); /* circular list */	 \
+       elem_node = next_elem_node) { \
+    next_elem_node = elem_node->next; \
+    elem = list2timer(elem_node);
+#define FOR_ALL_TIMER_ENTRIES_END(head, elem) }}
+
 #define OLSR_TIMER_ONESHOT    0	/* One shot timer */
 #define OLSR_TIMER_PERIODIC   1	/* Periodic timer */
 
 /* Timer flags */
 #define OLSR_TIMER_RUNNING  ( 1 << 0)	/* this timer is running */
-
-/* Memory pooling */
-#define OLSR_TIMER_MEMORY_CHUNK 100	/* timers per chunk */
 
 /* Timers */
 void olsr_init_timers(void);

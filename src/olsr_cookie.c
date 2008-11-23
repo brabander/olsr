@@ -163,7 +163,7 @@ olsr_cookie_set_memclear(struct olsr_cookie_info *ci, olsr_bool clear)
 
   assert(ci->ci_type == OLSR_COOKIE_TYPE_MEMORY);
 
-  if (clear) {
+  if (!clear) {
     ci->ci_flags |= COOKIE_NO_MEMCLEAR;
   } else {
     ci->ci_flags &= ~COOKIE_NO_MEMCLEAR;
