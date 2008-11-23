@@ -49,7 +49,8 @@ CFGNAME ?= $(EXENAME).conf
 CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 
 CPPFLAGS =	$(filter-out -I./src,-Isrc -I$(TOPDIR)/src)
-CPPFLAGS +=	-DETCDIR='"$(ETCDIR)"'
+CPPFLAGS +=	-DOLSRD_CONF_FILE_NAME='"$(CFGNAME)"'
+CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE='"$(CFGFILE)"'
 
 # add gcc warnings and optimizations if CFLAGS not set
 ifndef CFLAGS
