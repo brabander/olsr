@@ -250,8 +250,8 @@ ohs_route_data(struct ohs_connection *oc)
       /* Send data */
       if (logbits & LOG_FORWARD) {
         struct ipaddr_str addrstr, addrstr2;
-        printf("Sending %d bytes %s=>%s\n", (int)len,
-               olsr_ip_to_string(&addrstr, &oc->ip_addr), olsr_ip_to_string(&addrstr2, &ohs_cs->ip_addr));
+        printf("Sending %d bytes %s=>%s\n", (int)len, olsr_ip_to_string(&addrstr, &oc->ip_addr),
+               olsr_ip_to_string(&addrstr2, &ohs_cs->ip_addr));
       }
 
       sent = send(ohs_cs->socket, data_buffer, len, 0);

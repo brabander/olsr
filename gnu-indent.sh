@@ -27,9 +27,9 @@ sed -i 's///g;s/[	 ]\+$//' $(find -name "*.[ch]" -not -path "*/.hg*")
 
 addon=
 test "--cmp" = "$1" && {
-  # Note: --swallow-optional-blank-lines --ignore-newlines
-  #       to compare two manually formatted source trees.
-  addon=--swallow-optional-blank-lines --ignore-newlines
+  # Note: may help to compare two messy formatted source trees.
+  addon="--swallow-optional-blank-lines --ignore-newlines"
+  shift
 }
 indent $(cat ${0%/*}/src/.indent.pro) $addon $(find -name "*.[ch]" -not -path "*/.hg*")
 

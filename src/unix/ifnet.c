@@ -290,8 +290,8 @@ chk_if_changed(struct olsr_if *iface)
 #endif
 
     if (memcmp
-        (&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr,
-         &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize) != 0) {
+        (&((struct sockaddr_in *)&ifp->int_addr)->sin_addr.s_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr,
+         olsr_cnf->ipsize) != 0) {
       /* New address */
       OLSR_PRINTF(1, "IPv4 address changed for %s\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
@@ -321,8 +321,8 @@ chk_if_changed(struct olsr_if *iface)
 #endif
 
     if (memcmp
-        (&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr,
-         &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr, olsr_cnf->ipsize) != 0) {
+        (&((struct sockaddr_in *)&ifp->int_netmask)->sin_addr.s_addr, &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr,
+         olsr_cnf->ipsize) != 0) {
       struct ipaddr_str buf;
       /* New address */
       OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
@@ -555,19 +555,17 @@ add_hemu_if(struct olsr_if *iface)
    */
 
   ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval *
-                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
-    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
-    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp,
+                     mid_gen_timer_cookie->ci_id);
   ifp->hna_gen_timer =
-    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
+                     hna_gen_timer_cookie->ci_id);
 
   /* Recalculate max topology hold time */
   if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
@@ -873,19 +871,17 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
    * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval *
-                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
-    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
-    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp,
+                     mid_gen_timer_cookie->ci_id);
   ifp->hna_gen_timer =
-    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
+                     hna_gen_timer_cookie->ci_id);
 
   /* Recalculate max topology hold time */
   if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval) {

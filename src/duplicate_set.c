@@ -57,8 +57,8 @@ olsr_init_duplicate_set(void)
 {
   avl_init(&duplicate_set, olsr_cnf->ip_version == AF_INET ? &avl_comp_ipv4 : &avl_comp_ipv6);
 
-  olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL,
-                 DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC, &olsr_cleanup_duplicate_entry, NULL, 0);
+  olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL, DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC,
+                 &olsr_cleanup_duplicate_entry, NULL, 0);
 }
 
 struct dup_entry *
@@ -186,14 +186,11 @@ olsr_print_duplicate_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
   struct ipaddr_str addrbuf;
 
-  OLSR_PRINTF(1,
-              "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n"
-              "%-*s %8s %s\n", olsr_wallclock_string(), ipwidth, "Node IP", "DupArray", "VTime");
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n" "%-*s %8s %s\n",
+              olsr_wallclock_string(), ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
-    OLSR_PRINTF(1, "%-*s %08x %s\n", ipwidth,
-                olsr_ip_to_string(&addrbuf,
-                                  (union olsr_ip_addr *)(entry->avl.key)),
+    OLSR_PRINTF(1, "%-*s %08x %s\n", ipwidth, olsr_ip_to_string(&addrbuf, (union olsr_ip_addr *)(entry->avl.key)),
                 entry->processedArray, olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 #endif

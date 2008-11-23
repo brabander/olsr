@@ -12,7 +12,8 @@ public:
 
   static TrayIcon *getInstance() {
     return instance;
-  } enum status { CONNECTED, ON, OFF };
+  }
+  enum status { CONNECTED, ON, OFF };
 
   void setStatus(status con_status, const char *message);
 

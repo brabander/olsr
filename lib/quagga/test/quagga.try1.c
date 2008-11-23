@@ -347,8 +347,7 @@ zebra_parse_packet(char *packet, ssize_t maxlen)
 
   /* Array of functions */
   int (*foo[ZEBRA_MESSAGE_MAX]) (char *, size_t) = {
-  parse_interface_add, parse_interface_delete, parse_interface_address_add,
-      parse_interface_address_delete, parse_interface_up,
+  parse_interface_add, parse_interface_delete, parse_interface_address_add, parse_interface_address_delete, parse_interface_up,
       parse_interface_down, ipv4_route_add, ipv4_route_delete, parse_ipv6_route_add};
 
   puts("DEBUG: zebra_parse_packet");
@@ -717,8 +716,8 @@ while (mask & (1 << ++prefixlen && prefixlen < 32); return prefixlen;}
 
        static void zebra_free_ipv4_route_table(struct ipv4_route *r) {
        struct ipv4_route * n; if (!r) return; while ((n = r->next)) {
-       if (r->message & ZAPI_MESSAGE_NEXTHOP) free(r->nexthops);
-       if (r->message & ZAPI_MESSAGE_IFINDEX) free(r->index); free(r); r = n;}
+       if (r->message & ZAPI_MESSAGE_NEXTHOP) free(r->nexthops); if (r->message & ZAPI_MESSAGE_IFINDEX) free(r->index); free(r);
+       r = n;}
        }
 
 /*

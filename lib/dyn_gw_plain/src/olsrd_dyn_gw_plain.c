@@ -127,8 +127,8 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
    */
   while (fgets(buff, 1023, fp)) {
     num =
-      sscanf(buff, "%16s %128X %128X %X %d %d %d %128X \n", iface,
-             &dest_addr, &gate_addr, &iflags, &refcnt, &use, &metric, &netmask);
+      sscanf(buff, "%16s %128X %128X %X %d %d %d %128X \n", iface, &dest_addr, &gate_addr, &iflags, &refcnt, &use, &metric,
+             &netmask);
 
     if (num < 8) {
       continue;

@@ -67,22 +67,19 @@ static const char admin_basic_setting_string[] =
   "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%s\"></td>\n";
 
 static const char admin_frame_prolog[] =
-  "<strong>Administrator interface</strong><hr>\n"
-  "<h2>Change basic settings</h2>\n" "<form action=\"set_values\" method=\"post\">\n" "<table width=\"100%%\">\n";
+  "<strong>Administrator interface</strong><hr>\n" "<h2>Change basic settings</h2>\n"
+  "<form action=\"set_values\" method=\"post\">\n" "<table width=\"100%%\">\n";
 
 static const char admin_frame_mid[] =
-  "</table>\n<br>\n"
-  "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
-  "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n"
-  "</form>\n" "<h2>Add/remove local HNA entries</h2>\n"
-  "<form action=\"set_values\" method=\"post\">\n"
-  "<table width=\"100%%\"><tr><td><strong>Network:</strong></td>\n"
+  "</table>\n<br>\n" "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
+  "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n" "</form>\n" "<h2>Add/remove local HNA entries</h2>\n"
+  "<form action=\"set_values\" method=\"post\">\n" "<table width=\"100%%\"><tr><td><strong>Network:</strong></td>\n"
   "<td><input type=\"text\" name=\"hna_new_net\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
   "<td><strong>Netmask/Prefix:</strong></td>\n"
   "<td><input type=\"text\" name=\"hna_new_netmask\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
-  "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n"
-  "</table><hr>\n" "<form action=\"set_values\" method=\"post\">\n"
-  "<table width=\"100%%\">\n" "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n";
+  "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n" "</table><hr>\n"
+  "<form action=\"set_values\" method=\"post\">\n" "<table width=\"100%%\">\n"
+  "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n";
 
 static const char admin_frame_epilog[] =
   "</table>\n<br>\n" "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n" "</form>\n";
@@ -110,15 +107,15 @@ build_admin_body(char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
 
   if (olsr_cnf->use_hysteresis) {
     size +=
-      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
-               "Hyst scaling:", "hyst_scaling", 4, olsr_cnf->hysteresis_param.scaling);
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float, "Hyst scaling:", "hyst_scaling", 4,
+               olsr_cnf->hysteresis_param.scaling);
 
     size +=
-      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
-               "Lower thr:", "hyst_lower", 4, olsr_cnf->hysteresis_param.thr_low);
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float, "Lower thr:", "hyst_lower", 4,
+               olsr_cnf->hysteresis_param.thr_low);
     size +=
-      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
-               "Upper thr:", "hyst_upper", 4, olsr_cnf->hysteresis_param.thr_high);
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float, "Upper thr:", "hyst_upper", 4,
+               olsr_cnf->hysteresis_param.thr_high);
   } else {
     size += snprintf(&buf[size], bufsize - size, "<td>Hysteresis disabled</td>\n");
   }
@@ -357,8 +354,8 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
       data[i] = '\0';
       if (!process_param(&data[key_start], &data[val_start])) {
         size +=
-          snprintf(&buf[size], bufsize - size,
-                   "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", &data[key_start], &data[val_start]);
+          snprintf(&buf[size], bufsize - size, "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", &data[key_start],
+                   &data[val_start]);
         return -1;
       }
 
@@ -368,8 +365,8 @@ process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsi
 
   if (!process_param(&data[key_start], &data[val_start])) {
     size +=
-      snprintf(&buf[size], bufsize - size,
-               "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", &data[key_start], &data[val_start]);
+      snprintf(&buf[size], bufsize - size, "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", &data[key_start],
+               &data[val_start]);
     return -1;
   }
 

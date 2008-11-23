@@ -225,8 +225,8 @@ default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer)
 {
   struct default_lq_fpm *lq = ptr;
 
-  snprintf(buffer->buf, sizeof(buffer->buf), "%0.3f%c%0.3f",
-           (float)(lq->valueLq) / 255.0, separator, (float)(lq->valueNlq) / 255.0);
+  snprintf(buffer->buf, sizeof(buffer->buf), "%0.3f%c%0.3f", (float)(lq->valueLq) / 255.0, separator,
+           (float)(lq->valueNlq) / 255.0);
   return buffer->buf;
 }
 

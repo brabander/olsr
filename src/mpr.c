@@ -96,8 +96,8 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
 
   for (index = 0; index < HASHSIZE; index++) {
 
-    for (two_hop_neighbor = two_hop_neighbortable[index].next;
-         two_hop_neighbor != &two_hop_neighbortable[index]; two_hop_neighbor = two_hop_neighbor->next) {
+    for (two_hop_neighbor = two_hop_neighbortable[index].next; two_hop_neighbor != &two_hop_neighbortable[index];
+         two_hop_neighbor = two_hop_neighbor->next) {
 
       //two_hop_neighbor->neighbor_2_state=0;
       //two_hop_neighbor->mpr_covered_count = 0;
@@ -154,8 +154,8 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, olsr_u16_t * two_hop_co
 
   one_hop_neighbor->is_mpr = OLSR_TRUE; //NBS_MPR;
 
-  for (second_hop_entries = one_hop_neighbor->neighbor_2_list.next;
-       second_hop_entries != &one_hop_neighbor->neighbor_2_list; second_hop_entries = second_hop_entries->next) {
+  for (second_hop_entries = one_hop_neighbor->neighbor_2_list.next; second_hop_entries != &one_hop_neighbor->neighbor_2_list;
+       second_hop_entries = second_hop_entries->next) {
     dup_neighbor = olsr_lookup_neighbor_table(&second_hop_entries->neighbor_2->neighbor_2_addr);
 
     if ((dup_neighbor != NULL) && (dup_neighbor->status == SYM)) {
@@ -216,8 +216,7 @@ olsr_find_maximum_covered(int willingness)
   OLSR_FOR_ALL_NBR_ENTRIES(a_neighbor) {
 
 #if 0
-    printf("[%s] nocov: %d mpr: %d will: %d max: %d\n\n",
-           olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr),
+    printf("[%s] nocov: %d mpr: %d will: %d max: %d\n\n", olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr),
            a_neighbor->neighbor_2_nocov, a_neighbor->is_mpr, a_neighbor->willingness, maximum);
 #endif
 
@@ -251,8 +250,8 @@ olsr_clear_mprs(void)
     }
 
     /* Clear two hop neighbors coverage count/ */
-    for (two_hop_list = a_neighbor->neighbor_2_list.next;
-         two_hop_list != &a_neighbor->neighbor_2_list; two_hop_list = two_hop_list->next) {
+    for (two_hop_list = a_neighbor->neighbor_2_list.next; two_hop_list != &a_neighbor->neighbor_2_list;
+         two_hop_list = two_hop_list->next) {
       two_hop_list->neighbor_2->mpr_covered_count = 0;
     }
 
@@ -329,8 +328,8 @@ olsr_calculate_two_hop_neighbors(void)
       continue;
     }
 
-    for (twohop_neighbors = a_neighbor->neighbor_2_list.next;
-         twohop_neighbors != &a_neighbor->neighbor_2_list; twohop_neighbors = twohop_neighbors->next) {
+    for (twohop_neighbors = a_neighbor->neighbor_2_list.next; twohop_neighbors != &a_neighbor->neighbor_2_list;
+         twohop_neighbors = twohop_neighbors->next) {
 
       dup_neighbor = olsr_lookup_neighbor_table(&twohop_neighbors->neighbor_2->neighbor_2_addr);
 
@@ -486,8 +485,8 @@ olsr_optimize_mpr_set(void)
       if (a_neighbor->is_mpr) {
         remove = 1;
 
-        for (two_hop_list = a_neighbor->neighbor_2_list.next;
-             two_hop_list != &a_neighbor->neighbor_2_list; two_hop_list = two_hop_list->next) {
+        for (two_hop_list = a_neighbor->neighbor_2_list.next; two_hop_list != &a_neighbor->neighbor_2_list;
+             two_hop_list = two_hop_list->next) {
 
           dup_neighbor = olsr_lookup_neighbor_table(&two_hop_list->neighbor_2->neighbor_2_addr);
 

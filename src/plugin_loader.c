@@ -173,8 +173,8 @@ olsr_add_dl(struct olsr_plugin *plugin)
     /* old plugin interface */
     OLSR_PRINTF(0,
                 "\nWARNING: YOU ARE USING AN OLD DEPRECATED PLUGIN INTERFACE!\n"
-                "DETECTED VERSION %d AND THE CURRENT VERSION IS %d\n"
-                "PLEASE UPGRADE YOUR PLUGIN!\n", plugin_interface_version, MOST_RECENT_PLUGIN_INTERFACE_VERSION);
+                "DETECTED VERSION %d AND THE CURRENT VERSION IS %d\n" "PLEASE UPGRADE YOUR PLUGIN!\n", plugin_interface_version,
+                MOST_RECENT_PLUGIN_INTERFACE_VERSION);
 #if SUPPORT_OLD_PLUGIN_VERSIONS
     OLSR_PRINTF(0, "WILL CONTINUE IN 5 SECONDS...\n\n");
     sleep(5);
@@ -186,10 +186,9 @@ olsr_add_dl(struct olsr_plugin *plugin)
   /* new plugin interface */
   if (plugin_interface_version < LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION) {
     OLSR_PRINTF(0,
-                "\n\nWARNING: VERSION MISMATCH!\n"
-                "DETECTED %d AND LAST SUPPORTED VERSION IS %d\n"
-                "THIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\n"
-                "WILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(), LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION);
+                "\n\nWARNING: VERSION MISMATCH!\n" "DETECTED %d AND LAST SUPPORTED VERSION IS %d\n"
+                "THIS CAN CAUSE UNEXPECTED BEHAVIOUR AND CRASHES!\n" "WILL CONTINUE IN 5 SECONDS...\n\n", get_interface_version(),
+                LAST_SUPPORTED_PLUGIN_INTERFACE_VERSION);
     sleep(5);
   }
 #endif
@@ -257,10 +256,8 @@ init_olsr_plugin(struct olsr_plugin *entry)
             || 0 == strcasecmp(entry->plugin_parameters[i].name, params->key)) {
           /* we have found it! */
           rc =
-            entry->plugin_parameters[i].set_plugin_parameter(params->
-                                                             value,
-                                                             entry->
-                                                             plugin_parameters[i].data, 0 == entry->plugin_parameters[i].name[0]
+            entry->plugin_parameters[i].set_plugin_parameter(params->value, entry->plugin_parameters[i].data,
+                                                             0 == entry->plugin_parameters[i].name[0]
                                                              ? (set_plugin_parameter_addon)
                                                              params->key : entry->plugin_parameters[i].addon);
           if (rc != 0) {

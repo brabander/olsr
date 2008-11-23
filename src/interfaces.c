@@ -102,8 +102,8 @@ ifinit(void)
   }
 
   /* Kick a periodic timer for the network interface update function */
-  olsr_start_timer((unsigned int)olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC,
-                   5, OLSR_TIMER_PERIODIC, &check_interface_updates, NULL, interface_poll_timer_cookie->ci_id);
+  olsr_start_timer((unsigned int)olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5, OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
+                   interface_poll_timer_cookie->ci_id);
 
   return (ifnet == NULL) ? 0 : 1;
 }

@@ -268,8 +268,8 @@ olsr_init_tables(void)
 
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
-    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC),
-                     5, OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL, 0);
+    olsr_start_timer((unsigned int)(olsr_cnf->lq_dinter * MSEC_PER_SEC), 5, OLSR_TIMER_PERIODIC, &olsr_trigger_forced_update, NULL,
+                     0);
   }
 }
 

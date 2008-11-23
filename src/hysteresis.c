@@ -136,8 +136,8 @@ olsr_update_hysteresis_hello(struct link_entry *entry, olsr_reltime htime)
   struct ipaddr_str buf;
   OLSR_PRINTF(3, "HYST[%s]: HELLO update vtime %u ms\n", olsr_ip_to_string(&buf, &entry->neighbor_iface_addr), htime + htime / 2);
 
-  olsr_set_timer(&entry->link_hello_timer, htime + htime / 2,
-                 OLSR_LINK_HELLO_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_hello_timer, entry, 0);
+  olsr_set_timer(&entry->link_hello_timer, htime + htime / 2, OLSR_LINK_HELLO_JITTER, OLSR_TIMER_PERIODIC,
+                 &olsr_expire_link_hello_timer, entry, 0);
 
   return;
 }

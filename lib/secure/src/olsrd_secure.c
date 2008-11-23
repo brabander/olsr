@@ -662,8 +662,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   /* Now to check the digest from the emitted challenge */
   if ((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL) {
     struct ipaddr_str buf;
-    olsr_printf(1,
-                "[ENC]Received challenge-response from non-registered node %s!\n",
+    olsr_printf(1, "[ENC]Received challenge-response from non-registered node %s!\n",
                 olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
     return 0;
   }
@@ -700,8 +699,8 @@ parse_cres(struct interface *olsr_if, char *in_msg)
   /* update validtime - validated entry */
   entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
-  olsr_printf(1, "[ENC]%s registered with diff %d!\n",
-              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator), entry->diff);
+  olsr_printf(1, "[ENC]%s registered with diff %d!\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
+              entry->diff);
 
   /* Send response-response */
   send_rres(olsr_if, (union olsr_ip_addr *)&msg->originator, (union olsr_ip_addr *)&msg->destination, ntohl(msg->challenge));
@@ -751,8 +750,7 @@ parse_rres(char *in_msg)
   /* Now to check the digest from the emitted challenge */
   if ((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL) {
     struct ipaddr_str buf;
-    olsr_printf(1,
-                "[ENC]Received response-response from non-registered node %s!\n",
+    olsr_printf(1, "[ENC]Received response-response from non-registered node %s!\n",
                 olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
     return 0;
   }
@@ -789,8 +787,8 @@ parse_rres(char *in_msg)
   /* update validtime - validated entry */
   entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
-  olsr_printf(1, "[ENC]%s registered with diff %d!\n",
-              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator), entry->diff);
+  olsr_printf(1, "[ENC]%s registered with diff %d!\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
+              entry->diff);
 
   return 1;
 }

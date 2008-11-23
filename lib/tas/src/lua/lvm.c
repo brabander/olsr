@@ -464,8 +464,8 @@ retentry:                      /* entry point when returning to old functions */
     lua_assert(L->ci->state & CI_HASFRAME);
     lua_assert(base == L->ci->base);
     lua_assert(L->top <= L->stack + L->stacksize && L->top >= base);
-    lua_assert(L->top == L->ci->top || GET_OPCODE(i) == OP_CALL
-               || GET_OPCODE(i) == OP_TAILCALL || GET_OPCODE(i) == OP_RETURN || GET_OPCODE(i) == OP_SETLISTO);
+    lua_assert(L->top == L->ci->top || GET_OPCODE(i) == OP_CALL || GET_OPCODE(i) == OP_TAILCALL || GET_OPCODE(i) == OP_RETURN
+               || GET_OPCODE(i) == OP_SETLISTO);
     switch (GET_OPCODE(i)) {
     case OP_MOVE:
       {

@@ -238,8 +238,8 @@ disable_redirects_global(int version)
 }
 
 int
-disable_redirects(const char *if_name
-                  __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
+disable_redirects(const char *if_name __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version
+                  __attribute__ ((unused)))
 {
   /*
    *  this function gets called for each interface olsrd uses; however,
@@ -251,8 +251,8 @@ disable_redirects(const char *if_name
 }
 
 int
-deactivate_spoof(const char *if_name
-                 __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
+deactivate_spoof(const char *if_name __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version
+                 __attribute__ ((unused)))
 {
   return 1;
 }
@@ -714,12 +714,9 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
   ifc = if_ifwithsock(s);
 
   sin6 = (struct sockaddr_in6 *)from;
-  OLSR_PRINTF(4,
-              "%d bytes from %s, socket associated %s really received on %s\n",
-              count, inet_ntop(olsr_cnf->ip_version,
-                               olsr_cnf->ip_version ==
-                               AF_INET6 ? (char *)&sin6->
-                               sin6_addr : (char *)&sin->sin_addr, addrstr, sizeof(addrstr)), ifc->int_name, iname);
+  OLSR_PRINTF(4, "%d bytes from %s, socket associated %s really received on %s\n", count,
+              inet_ntop(olsr_cnf->ip_version, olsr_cnf->ip_version == AF_INET6 ? (char *)&sin6->sin6_addr : (char *)&sin->sin_addr,
+                        addrstr, sizeof(addrstr)), ifc->int_name, iname);
 
   if (strcmp(ifc->int_name, iname) != 0) {
     return (0);

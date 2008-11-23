@@ -98,16 +98,15 @@ mapwrite_work(FILE * fmap)
       if (olsr_cnf->ip_version == AF_INET) {
         if (!(ip4equal((struct in_addr *)&olsr_cnf->main_addr, &ifs->interf->int_addr.sin_addr))) {
           if (0 >
-              fprintf(fmap, "Mid('%s','%s');\n",
-                      olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)
-                                                                                           &ifs->interf->int_addr.sin_addr))) {
+              fprintf(fmap, "Mid('%s','%s');\n", olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+                      olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)
+                                        &ifs->interf->int_addr.sin_addr))) {
             return;
           }
         }
       } else if (!(ip6equal((struct in6_addr *)&olsr_cnf->main_addr, &ifs->interf->int6_addr.sin6_addr))) {
         if (0 >
-            fprintf(fmap, "Mid('%s','%s');\n",
-                    olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+            fprintf(fmap, "Mid('%s','%s');\n", olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
                     olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr))) {
           return;
         }
@@ -121,8 +120,8 @@ mapwrite_work(FILE * fmap)
       struct mid_address *alias = entry->aliases;
       while (alias) {
         if (0 >
-            fprintf(fmap, "Mid('%s','%s');\n",
-                    olsr_ip_to_string(&strbuf1, &entry->main_addr), olsr_ip_to_string(&strbuf2, &alias->alias))) {
+            fprintf(fmap, "Mid('%s','%s');\n", olsr_ip_to_string(&strbuf1, &entry->main_addr),
+                    olsr_ip_to_string(&strbuf2, &alias->alias))) {
           return;
         }
         alias = alias->next_alias;
@@ -133,8 +132,8 @@ mapwrite_work(FILE * fmap)
   lookup_defhna_latlon(&ip);
   sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
   if (0 >
-      fprintf(fmap, "Self('%s',%s,'%s','%s');\n",
-              olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str, olsr_ip_to_string(&strbuf2, &ip), my_names->name)) {
+      fprintf(fmap, "Self('%s',%s,'%s','%s');\n", olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str,
+              olsr_ip_to_string(&strbuf2, &ip), my_names->name)) {
     return;
   }
   for (hash = 0; hash < HASHSIZE; hash++) {
@@ -148,9 +147,8 @@ mapwrite_work(FILE * fmap)
 
       if (NULL != entry->names) {
         if (0 >
-            fprintf(fmap, "Node('%s',%s,'%s','%s');\n",
-                    olsr_ip_to_string(&strbuf1, &entry->originator),
-                    entry->names->name, olsr_ip_to_string(&strbuf2, &entry->names->ip), lookup_name_latlon(&entry->originator))) {
+            fprintf(fmap, "Node('%s',%s,'%s','%s');\n", olsr_ip_to_string(&strbuf1, &entry->originator), entry->names->name,
+                    olsr_ip_to_string(&strbuf2, &entry->names->ip), lookup_name_latlon(&entry->originator))) {
           return;
         }
       }
@@ -168,10 +166,8 @@ mapwrite_work(FILE * fmap)
          * To speed up processing, Links with both positions are named PLink()
          */
         if (0 >
-            fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s);\n",
-                    olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
-                    olsr_ip_to_string(&strbuf2, &tc->addr),
-                    get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
+            fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s);\n", olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
+                    olsr_ip_to_string(&strbuf2, &tc->addr), get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
                     get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer), lla, llb)) {
           return;
         }
@@ -182,10 +178,9 @@ mapwrite_work(FILE * fmap)
          * If one link end pos is unkown, only send Link()
          */
         if (0 >
-            fprintf(fmap, "Link('%s','%s',%s,%s);\n",
-                    olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
-                    olsr_ip_to_string(&strbuf2, &tc->addr),
-                    get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer))) {
+            fprintf(fmap, "Link('%s','%s',%s,%s);\n", olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
+                    olsr_ip_to_string(&strbuf2, &tc->addr), get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
+                    get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer))) {
           return;
         }
       }

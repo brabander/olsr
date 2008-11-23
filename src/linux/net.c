@@ -596,17 +596,16 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
 
   if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) {
     while (fscanf
-           (f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n",
-            addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
+           (f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
             addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
       if (!strcmp(devname, ifname)) {
-        sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s", addr6p[0], addr6p[1],
-                addr6p[2], addr6p[3], addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
+        sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5], addr6p[6],
+                addr6p[7]);
         OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
         OLSR_PRINTF(5, "\tScope: %d\n", scope);
         if (scope == scope_in) {
-          OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n",
-                      addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
+          OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n", addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5],
+                      addr6p[6], addr6p[7]);
           inet_pton(AF_INET6, addr6, &tmp_sockaddr6);
           memcpy(&saddr6->sin6_addr, &tmp_sockaddr6, sizeof(struct in6_addr));
           fclose(f);

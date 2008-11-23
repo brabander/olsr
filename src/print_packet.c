@@ -70,8 +70,7 @@ print_olsr_serialized_packet(FILE * handle, union olsr_packet *pkt, olsr_u16_t s
   struct ipaddr_str buf;
 
   /* Print packet header (no IP4/6 difference) */
-  fprintf(handle,
-          "  ============== OLSR PACKET ==============\n   source: %s\n   length: %d bytes\n   seqno: %d\n\n",
+  fprintf(handle, "  ============== OLSR PACKET ==============\n   source: %s\n   length: %d bytes\n   seqno: %d\n\n",
           from_addr ? olsr_ip_to_string(&buf, from_addr) : "UNKNOWN", ntohs(pkt->v4.olsr_packlen), ntohs(pkt->v4.olsr_seqno));
 
   /* Check size */
@@ -100,44 +99,38 @@ print_olsr_serialized_message(FILE * handle, union olsr_message * msg)
 
   fprintf(handle, "   ------------ OLSR MESSAGE ------------\n");
   fprintf(handle, "    Sender main addr: %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->v4.originator));
-  fprintf(handle, "    Type: %s, size: %d, vtime: %u ms\n",
-          olsr_msgtype_to_string(msg->v4.olsr_msgtype), ntohs(msg->v4.olsr_msgsize), me_to_reltime(msg->v4.olsr_vtime));
-  fprintf(handle, "    TTL: %d, Hopcnt: %d, seqno: %d\n",
-          (olsr_cnf->ip_version == AF_INET) ? msg->v4.ttl : msg->v6.ttl,
-          (olsr_cnf->ip_version ==
-           AF_INET) ? msg->v4.hopcnt : msg->v6.hopcnt, ntohs((olsr_cnf->ip_version == AF_INET) ? msg->v4.seqno : msg->v6.seqno));
+  fprintf(handle, "    Type: %s, size: %d, vtime: %u ms\n", olsr_msgtype_to_string(msg->v4.olsr_msgtype),
+          ntohs(msg->v4.olsr_msgsize), me_to_reltime(msg->v4.olsr_vtime));
+  fprintf(handle, "    TTL: %d, Hopcnt: %d, seqno: %d\n", (olsr_cnf->ip_version == AF_INET) ? msg->v4.ttl : msg->v6.ttl,
+          (olsr_cnf->ip_version == AF_INET) ? msg->v4.hopcnt : msg->v6.hopcnt,
+          ntohs((olsr_cnf->ip_version == AF_INET) ? msg->v4.seqno : msg->v6.seqno));
 
   switch (msg->v4.olsr_msgtype) {
     /* Print functions for individual messagetypes */
   case (MID_MESSAGE):
-    print_midmsg(handle,
-                 (olsr_cnf->ip_version ==
-                  AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+    print_midmsg(handle, (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                 ntohs(msg->v4.olsr_msgsize));
     break;
   case (HNA_MESSAGE):
-    print_hnamsg(handle,
-                 (olsr_cnf->ip_version ==
-                  AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+    print_hnamsg(handle, (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                 ntohs(msg->v4.olsr_msgsize));
     break;
   case (TC_MESSAGE):
-    print_olsr_tcmsg(handle,
-                     (olsr_cnf->ip_version ==
-                      AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+    print_olsr_tcmsg(handle, (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                     ntohs(msg->v4.olsr_msgsize));
     break;
   case (LQ_TC_MESSAGE):
     print_olsr_tcmsg_lq(handle,
-                        (olsr_cnf->ip_version ==
-                         AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+                        (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                        ntohs(msg->v4.olsr_msgsize));
     break;
   case (HELLO_MESSAGE):
-    print_hellomsg(handle,
-                   (olsr_cnf->ip_version ==
-                    AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+    print_hellomsg(handle, (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                   ntohs(msg->v4.olsr_msgsize));
     break;
   case (LQ_HELLO_MESSAGE):
-    print_hellomsg_lq(handle,
-                      (olsr_cnf->ip_version ==
-                       AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message, ntohs(msg->v4.olsr_msgsize));
+    print_hellomsg_lq(handle, (olsr_cnf->ip_version == AF_INET) ? (olsr_u8_t *) & msg->v4.message : (olsr_u8_t *) & msg->v6.message,
+                      ntohs(msg->v4.olsr_msgsize));
     break;
   default:
     print_messagedump(handle, (olsr_u8_t *) msg, ntohs(msg->v4.olsr_msgsize));
@@ -187,12 +180,11 @@ print_hellomsg(FILE * handle, olsr_u8_t * data, olsr_16_t totsize)
     for (hinf = h->hell_info; (char *)hinf < ((char *)data + hellosize);
          hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size))) {
 
-      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
-              olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
+      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)), ntohs(hinf->size));
 
-      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr;
-           (char *)haddr < (char *)hinf + ntohs(hinf->size); haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4]) {
+      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr; (char *)haddr < (char *)hinf + ntohs(hinf->size);
+           haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4]) {
         struct ipaddr_str buf;
         fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
       }
@@ -205,10 +197,9 @@ print_hellomsg(FILE * handle, olsr_u8_t * data, olsr_16_t totsize)
 
     h6 = (struct hellomsg6 *)data;
 
-    for (hinf6 = h6->hell_info;
-         (char *)hinf6 < ((char *)data + (hellosize)); hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size))) {
-      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
-              olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
+    for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize));
+         hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size))) {
+      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)), ntohs(hinf6->size));
 
       for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; (char *)haddr < (char *)hinf6 + ntohs(hinf6->size); haddr++) {
@@ -241,12 +232,11 @@ print_hellomsg_lq(FILE * handle, olsr_u8_t * data, olsr_16_t totsize)
     for (hinf = h->hell_info; (char *)hinf < ((char *)data + hellosize);
          hinf = (struct hellinfo *)((char *)hinf + ntohs(hinf->size))) {
 
-      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
-              olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
+      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)), ntohs(hinf->size));
 
-      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr;
-           (char *)haddr < (char *)hinf + ntohs(hinf->size); haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8]) {
+      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr; (char *)haddr < (char *)hinf + ntohs(hinf->size);
+           haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8]) {
         struct ipaddr_str buf;
         olsr_u8_t *quality = (olsr_u8_t *) haddr + olsr_cnf->ipsize;
         fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
@@ -261,10 +251,9 @@ print_hellomsg_lq(FILE * handle, olsr_u8_t * data, olsr_16_t totsize)
 
     h6 = (struct hellomsg6 *)data;
 
-    for (hinf6 = h6->hell_info;
-         (char *)hinf6 < ((char *)data + (hellosize)); hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size))) {
-      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n",
-              olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
+    for (hinf6 = h6->hell_info; (char *)hinf6 < ((char *)data + (hellosize));
+         hinf6 = (struct hellinfo6 *)((char *)hinf6 + ntohs(hinf6->size))) {
+      fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)), ntohs(hinf6->size));
 
       for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; haddr++) {

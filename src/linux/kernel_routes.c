@@ -145,8 +145,8 @@ olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_u8_t rttabl
       }
     }
     if (0 <= ret && olsr_cnf->ipc_connections > 0) {
-      ipc_route_send_rtentry(&rt->rt_dst.prefix, &nexthop->gateway,
-                             metric, RTM_NEWROUTE == cmd, if_ifwithindex_name(nexthop->iif_index));
+      ipc_route_send_rtentry(&rt->rt_dst.prefix, &nexthop->gateway, metric, RTM_NEWROUTE == cmd,
+                             if_ifwithindex_name(nexthop->iif_index));
     }
   }
   return ret;
@@ -209,9 +209,8 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
     /*
      * Send IPC route update message
      */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix,
-                           &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1, if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway, rt->rt_best->rtp_metric.hops, 1,
+                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   }
 
   return rslt;
@@ -269,9 +268,8 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
     /*
      * Send IPC route update message
      */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix,
-                           &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1, if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway, rt->rt_best->rtp_metric.hops, 1,
+                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   }
 
   return rslt;

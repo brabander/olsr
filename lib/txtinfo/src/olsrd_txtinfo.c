@@ -326,9 +326,7 @@ ipc_print_neigh(void)
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    ipc_sendf("%s\t%s\t%s\t%s\t%d\t",
-              olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-              (neigh->status == SYM) ? "YES" : "NO",
+    ipc_sendf("%s\t%s\t%s\t%s\t%d\t", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr), (neigh->status == SYM) ? "YES" : "NO",
               neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO", neigh->willingness);
     thop_cnt = 0;
 
@@ -354,11 +352,10 @@ ipc_print_link(void)
 
   /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    ipc_sendf("%s\t%s\t%0.2f\t%s\t%s\t\n",
-              olsr_ip_to_string(&buf1, &link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr),
-              link->L_link_quality, get_link_entry_text(link, '\t',
-                                                        &lqbuffer1), get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
+    ipc_sendf("%s\t%s\t%0.2f\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &link->local_iface_addr),
+              olsr_ip_to_string(&buf2, &link->neighbor_iface_addr), link->L_link_quality, get_link_entry_text(link, '\t',
+                                                                                                              &lqbuffer1),
+              get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
   ipc_sendf("\n");
@@ -375,14 +372,10 @@ ipc_print_routes(void)
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
-    ipc_sendf("%s/%d\t%s\t%d\t%s\t%s\t\n",
-              olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
-              rt->rt_dst.prefix_len, olsr_ip_to_string(&buf2,
-                                                       &rt->rt_best->
-                                                       rtp_nexthop.gateway),
-              rt->rt_best->rtp_metric.hops,
-              get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE,
-                                &lqbuffer), if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+    ipc_sendf("%s/%d\t%s\t%d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &rt->rt_dst.prefix), rt->rt_dst.prefix_len,
+              olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway), rt->rt_best->rtp_metric.hops,
+              get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
+              if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
   } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
   ipc_sendf("\n");
@@ -403,9 +396,7 @@ ipc_print_topology(void)
       if (tc_edge->edge_inv) {
         struct ipaddr_str dstbuf, addrbuf;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
-        ipc_sendf("%s\t%s\t%s\t%s\n",
-                  olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-                  olsr_ip_to_string(&addrbuf, &tc->addr),
+        ipc_sendf("%s\t%s\t%s\t%s\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr), olsr_ip_to_string(&addrbuf, &tc->addr),
                   get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
       }
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
@@ -431,16 +422,14 @@ ipc_print_hna(void)
   if (olsr_cnf->ip_version == AF_INET) {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
       struct ipaddr_str addrbuf, mainaddrbuf;
-      ipc_sendf("%s/%d\t%s\n",
-                olsr_ip_to_string(&addrbuf, &hna->net.prefix),
-                hna->net.prefix_len, olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+      ipc_sendf("%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &hna->net.prefix), hna->net.prefix_len,
+                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   } else {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
       struct ipaddr_str addrbuf, mainaddrbuf;
-      ipc_sendf("%s/%d\t%s\n",
-                olsr_ip_to_string(&addrbuf, &hna->net.prefix),
-                hna->net.prefix_len, olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+      ipc_sendf("%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &hna->net.prefix), hna->net.prefix_len,
+                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   }
 
@@ -450,9 +439,8 @@ ipc_print_hna(void)
     /* Check all networks */
     for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
 
-      ipc_sendf("%s/%d\t%s\n",
-                olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr),
-                tmp_net->prefixlen, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+      ipc_sendf("%s/%d\t%s\n", olsr_ip_to_string(&addrbuf, &tmp_net->A_network_addr), tmp_net->prefixlen,
+                olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
     }
   }
   OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);

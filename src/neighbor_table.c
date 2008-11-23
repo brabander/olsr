@@ -373,8 +373,8 @@ olsr_print_neighbor_table(void)
   int idx;
   OLSR_PRINTF(1,
               "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
-              "%*s  LQ     NLQ    SYM   MPR   MPRS  will\n", nowtm->tm_hour,
-              nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000, iplen, "IP address");
+              "%*s  LQ     NLQ    SYM   MPR   MPRS  will\n", nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
+              iplen, "IP address");
 
   for (idx = 0; idx < HASHSIZE; idx++) {
     struct neighbor_entry *neigh;
@@ -382,13 +382,10 @@ olsr_print_neighbor_table(void)
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
       if (lnk) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %s  %s  %s  %d\n", iplen,
-                    olsr_ip_to_string(&buf,
-                                      &neigh->neighbor_main_addr),
-                    lnk->loss_link_quality, lnk->neigh_link_quality,
-                    neigh->status == SYM ? "YES " : "NO  ",
-                    neigh->is_mpr ? "YES " : "NO  ",
-                    olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ", neigh->willingness);
+        OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %s  %s  %s  %d\n", iplen, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                    lnk->loss_link_quality, lnk->neigh_link_quality, neigh->status == SYM ? "YES " : "NO  ",
+                    neigh->is_mpr ? "YES " : "NO  ", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
+                    neigh->willingness);
       }
     }
   }

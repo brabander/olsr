@@ -107,8 +107,8 @@ olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
   tc->cand_tree_node.key = &tc->path_cost;
 
 #ifdef DEBUG
-  OLSR_PRINTF(2, "SPF: insert candidate %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
+  OLSR_PRINTF(2, "SPF: insert candidate %s, cost %s\n", olsr_ip_to_string(&buf, &tc->addr),
+              get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
 #endif
 
   avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
@@ -128,8 +128,8 @@ olsr_spf_del_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
   struct ipaddr_str buf;
   struct lqtextbuffer lqbuffer;
 #endif
-  OLSR_PRINTF(2, "SPF: delete candidate %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
+  OLSR_PRINTF(2, "SPF: delete candidate %s, cost %s\n", olsr_ip_to_string(&buf, &tc->addr),
+              get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
 #endif
 
   avl_delete(tree, &tc->cand_tree_node);
@@ -149,10 +149,10 @@ olsr_spf_add_path_list(struct list_node *head, int *path_count, struct tc_entry 
 #endif
 
 #ifdef DEBUG
-  OLSR_PRINTF(2, "SPF: append path %s, cost %s, via %s\n",
-              olsr_ip_to_string(&pathbuf, &tc->addr),
-              get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer),
-              tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
+  OLSR_PRINTF(2, "SPF: append path %s, cost %s, via %s\n", olsr_ip_to_string(&pathbuf, &tc->addr),
+              get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer), tc->next_hop ? olsr_ip_to_string(&nbuf,
+                                                                                                        &tc->next_hop->
+                                                                                                        neighbor_iface_addr) : "-");
 #endif
 
   list_add_before(head, &tc->path_list_node);
@@ -190,8 +190,8 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
   struct ipaddr_str buf, nbuf;
   struct lqtextbuffer lqbuffer;
 #endif
-  OLSR_PRINTF(2, "SPF: exploring node %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
+  OLSR_PRINTF(2, "SPF: exploring node %s, cost %s\n", olsr_ip_to_string(&buf, &tc->addr),
+              get_linkcost_text(tc->path_cost, OLSR_FALSE, &lqbuffer));
 #endif
 
   /*
@@ -222,8 +222,8 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
     new_cost = tc->path_cost + tc_edge->cost;
 
 #ifdef DEBUG
-    OLSR_PRINTF(2, "SPF:   exploring edge %s, cost %s\n",
-                olsr_ip_to_string(&buf, &tc_edge->T_dest_addr), get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer));
+    OLSR_PRINTF(2, "SPF:   exploring edge %s, cost %s\n", olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
+                get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer));
 #endif
 
     /*
@@ -250,11 +250,10 @@ olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
       new_tc->hops = tc->hops + 1;
 
 #ifdef DEBUG
-      OLSR_PRINTF(2,
-                  "SPF:   better path to %s, cost %s, via %s, hops %u\n",
-                  olsr_ip_to_string(&buf, &new_tc->addr),
-                  get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer),
-                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr)
+      OLSR_PRINTF(2, "SPF:   better path to %s, cost %s, via %s, hops %u\n", olsr_ip_to_string(&buf, &new_tc->addr),
+                  get_linkcost_text(new_cost, OLSR_TRUE, &lqbuffer), tc->next_hop ? olsr_ip_to_string(&nbuf,
+                                                                                                      &tc->next_hop->
+                                                                                                      neighbor_iface_addr)
                   : "<none>", new_tc->hops);
 #endif
 
@@ -503,10 +502,9 @@ olsr_calculate_routing_table(void)
   timersub(&t4, &t3, &route);
   timersub(&t5, &t4, &kernel);
   timersub(&t5, &t1, &total);
-  OLSR_PRINTF(1,
-              "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): "
-              "%d, %d, %d, %d, %d\n", path_count, routingtree.count,
-              (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec, (int)route.tv_usec, (int)kernel.tv_usec);
+  OLSR_PRINTF(1, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): " "%d, %d, %d, %d, %d\n", path_count,
+              routingtree.count, (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec, (int)route.tv_usec,
+              (int)kernel.tv_usec);
 #endif
 }
 

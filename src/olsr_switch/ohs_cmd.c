@@ -329,11 +329,8 @@ ohs_cmd_link(const char *args)
             inv_link->quality = qual;
           }
         }
-        printf("%s %sdirectional link(s) %s %c=> %s quality %d\n",
-               (qual == 100) ? "Removing" : "Setting",
-               bi ? "bi" : "uni", olsr_ip_to_string(&srcaddrstr,
-                                                    &src->ip_addr),
-               bi ? '<' : '=', olsr_ip_to_string(&dstaddrstr, &dst->ip_addr), qual);
+        printf("%s %sdirectional link(s) %s %c=> %s quality %d\n", (qual == 100) ? "Removing" : "Setting", bi ? "bi" : "uni",
+               olsr_ip_to_string(&srcaddrstr, &src->ip_addr), bi ? '<' : '=', olsr_ip_to_string(&dstaddrstr, &dst->ip_addr), qual);
       }
       if (wildc_dst) {
         dst = dst->next;
@@ -372,8 +369,8 @@ ohs_cmd_list(const char *args)
       struct ohs_ip_link *links = oc->links;
       while (links) {
         struct ipaddr_str addrstr, dststr;
-        printf("\t%s => %s Quality: %d\n",
-               olsr_ip_to_string(&addrstr, &oc->ip_addr), olsr_ip_to_string(&dststr, &links->dst), links->quality);
+        printf("\t%s => %s Quality: %d\n", olsr_ip_to_string(&addrstr, &oc->ip_addr), olsr_ip_to_string(&dststr, &links->dst),
+               links->quality);
 
         links = links->next;
       }

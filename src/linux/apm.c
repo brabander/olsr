@@ -134,9 +134,8 @@ apm_init(void)
 void
 apm_printinfo(struct olsr_apm_info *ainfo)
 {
-  OLSR_PRINTF(5,
-              "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
-              ainfo->ac_line_status, ainfo->battery_percentage, ainfo->battery_time_left);
+  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n", ainfo->ac_line_status,
+              ainfo->battery_percentage, ainfo->battery_time_left);
 
   ainfo = NULL;                 /* squelch compiler warnings */
 }
@@ -185,10 +184,9 @@ apm_read_apm(struct olsr_apm_info *ainfo)
   //printf("READ: %s\n", buffer);
 
   /* Get the info */
-  sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n", lainfo.driver_version,
-         &lainfo.apm_version_major, &lainfo.apm_version_minor,
-         &lainfo.apm_flags, &lainfo.ac_line_status, &lainfo.battery_status,
-         &lainfo.battery_flags, &lainfo.battery_percentage, &lainfo.battery_time, units);
+  sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n", lainfo.driver_version, &lainfo.apm_version_major, &lainfo.apm_version_minor,
+         &lainfo.apm_flags, &lainfo.ac_line_status, &lainfo.battery_status, &lainfo.battery_flags, &lainfo.battery_percentage,
+         &lainfo.battery_time, units);
 
   lainfo.using_minutes = strncmp(units, "min", 3) ? 0 : 1;
 

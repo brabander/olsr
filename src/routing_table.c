@@ -559,8 +559,8 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
       return NULL;
     }
 #ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n",
-                olsr_ip_to_string(&dstbuf, dst), plen, olsr_ip_to_string(&origbuf, originator));
+    OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n", olsr_ip_to_string(&dstbuf, dst), plen,
+                olsr_ip_to_string(&origbuf, originator));
 #endif
 
     /* overload the hna change bit for flagging a prefix change */
@@ -613,8 +613,8 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
     olsr_delete_rt_path(rtp);
 
 #ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n",
-                olsr_ip_to_string(&dstbuf, dst), plen, olsr_ip_to_string(&origbuf, originator));
+    OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n", olsr_ip_to_string(&dstbuf, dst), plen,
+                olsr_ip_to_string(&origbuf, originator));
 #endif
 
     /* overload the hna change bit for flagging a prefix change */
@@ -631,9 +631,8 @@ olsr_rt_to_string(const struct rt_entry *rt)
   static char buff[128];
   struct ipaddr_str prefixstr, gwstr;
 
-  snprintf(buff, sizeof(buff), "%s/%u via %s",
-           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-           rt->rt_dst.prefix_len, olsr_ip_to_string(&gwstr, &rt->rt_nexthop.gateway));
+  snprintf(buff, sizeof(buff), "%s/%u via %s", olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix), rt->rt_dst.prefix_len,
+           olsr_ip_to_string(&gwstr, &rt->rt_nexthop.gateway));
 
   return buff;
 }
@@ -649,13 +648,11 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   struct rt_entry *rt = rtp->rtp_rt;
   struct lqtextbuffer lqbuffer;
 
-  snprintf(buff, sizeof(buff),
-           "%s/%u from %s via %s, " "cost %s, metric %u, v %u",
-           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-           rt->rt_dst.prefix_len, olsr_ip_to_string(&origstr,
-                                                    &rtp->rtp_originator),
-           olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-           get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer), rtp->rtp_metric.hops, rtp->rtp_version);
+  snprintf(buff, sizeof(buff), "%s/%u from %s via %s, " "cost %s, metric %u, v %u",
+           olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix), rt->rt_dst.prefix_len, olsr_ip_to_string(&origstr,
+                                                                                                       &rtp->rtp_originator),
+           olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway), get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
+           rtp->rtp_metric.hops, rtp->rtp_version);
 
   return buff;
 }
@@ -680,20 +677,17 @@ olsr_print_routing_table(struct avl_tree *tree)
     struct rt_entry *rt = rt_tree2rt(rt_tree_node);
 
     /* first the route entry */
-    OLSR_PRINTF(6, "%s/%u, via %s, best-originator %s\n",
-                olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix),
-                rt->rt_dst.prefix_len, olsr_ip_to_string(&origstr,
-                                                         &rt->rt_nexthop.
-                                                         gateway), olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
+    OLSR_PRINTF(6, "%s/%u, via %s, best-originator %s\n", olsr_ip_to_string(&prefixstr, &rt->rt_dst.prefix), rt->rt_dst.prefix_len,
+                olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway), olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
 
     /* walk the per-originator path tree of routes */
     for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = avl_walk_next(rtp_tree_node)) {
       struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
-      OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, %s, v %u\n",
-                  olsr_ip_to_string(&origstr, &rtp->rtp_originator),
-                  get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE,
-                                    &lqbuffer), rtp->rtp_metric.hops,
-                  olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
+      OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, %s, v %u\n", olsr_ip_to_string(&origstr, &rtp->rtp_originator),
+                  get_linkcost_text(rtp->rtp_metric.cost, OLSR_TRUE, &lqbuffer), rtp->rtp_metric.hops, olsr_ip_to_string(&gwstr,
+                                                                                                                         &rtp->
+                                                                                                                         rtp_nexthop.
+                                                                                                                         gateway),
                   if_ifwithindex_name(rt->rt_nexthop.iif_index), rtp->rtp_version);
     }
   }

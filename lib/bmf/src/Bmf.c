@@ -169,9 +169,8 @@ EncapsulateAndForwardPacket(struct TBmfInterface *intf, unsigned char *encapsula
   FindNeighbors(&bestNeighborLinks, &bestNeighbor, intf, NULL, NULL, NULL, &nPossibleNeighbors);
 
   if (nPossibleNeighbors <= 0) {
-    OLSR_PRINTF(8,
-                "%s: --> not encap-forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
-                PLUGIN_NAME_SHORT, intf->ifName);
+    OLSR_PRINTF(8, "%s: --> not encap-forwarding on \"%s\": there is no neighbor that needs my retransmission\n", PLUGIN_NAME_SHORT,
+                intf->ifName);
     return;
   }
 
@@ -221,8 +220,8 @@ EncapsulateAndForwardPacket(struct TBmfInterface *intf, unsigned char *encapsula
 
     /* Forward the BMF packet via the encapsulation socket */
     nBytesWritten =
-      sendto(intf->encapsulatingSkfd, encapsulationUdpData, udpDataLen,
-             MSG_DONTROUTE, (struct sockaddr *)&forwardTo, sizeof(forwardTo));
+      sendto(intf->encapsulatingSkfd, encapsulationUdpData, udpDataLen, MSG_DONTROUTE, (struct sockaddr *)&forwardTo,
+             sizeof(forwardTo));
 
     /* Evaluate and display result */
     if (nBytesWritten != udpDataLen) {
@@ -231,9 +230,8 @@ EncapsulateAndForwardPacket(struct TBmfInterface *intf, unsigned char *encapsula
       /* Increase counter */
       intf->nBmfPacketsTx++;
 
-      OLSR_PRINTF(8,
-                  "%s: --> encapsulated and forwarded on \"%s\" to %s\n",
-                  PLUGIN_NAME_SHORT, intf->ifName, inet_ntoa(forwardTo.sin_addr));
+      OLSR_PRINTF(8, "%s: --> encapsulated and forwarded on \"%s\" to %s\n", PLUGIN_NAME_SHORT, intf->ifName,
+                  inet_ntoa(forwardTo.sin_addr));
     }                           /* if (nBytesWritten != udpDataLen) */
   }                             /* for */
 }                               /* EncapsulateAndForwardPacket */
@@ -304,11 +302,8 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
 
   src.v4 = ipHeader->ip_src;
 
-  OLSR_PRINTF(8,
-              "%s: %s pkt of %ld bytes captured on %s interface \"%s\": %s->%s\n",
-              PLUGIN_NAME_SHORT,
-              sllPkttype == PACKET_OUTGOING ? "outgoing" : "incoming",
-              (long)ipPacketLen, isFromOlsrIntf ? "OLSR" : "non-OLSR",
+  OLSR_PRINTF(8, "%s: %s pkt of %ld bytes captured on %s interface \"%s\": %s->%s\n", PLUGIN_NAME_SHORT,
+              sllPkttype == PACKET_OUTGOING ? "outgoing" : "incoming", (long)ipPacketLen, isFromOlsrIntf ? "OLSR" : "non-OLSR",
               intf->ifName, olsr_ip_to_string(&srcBuf, &src), olsr_ip_to_string(&dstBuf, &dst));
 
   /* Lookup main address of source in the MID table of OLSR */
@@ -399,14 +394,12 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
         /* Case 1.1 */
         {
           struct ipaddr_str buf;
-          OLSR_PRINTF(8,
-                      "%s: --> not encap-forwarding on \"%s\": I am not selected as MPR by neighbor %s\n",
-                      PLUGIN_NAME_SHORT, walker->ifName, olsr_ip_to_string(&buf, &src));
+          OLSR_PRINTF(8, "%s: --> not encap-forwarding on \"%s\": I am not selected as MPR by neighbor %s\n", PLUGIN_NAME_SHORT,
+                      walker->ifName, olsr_ip_to_string(&buf, &src));
         }
       } else if (sllPkttype == PACKET_OUTGOING && intf == walker) {
-        OLSR_PRINTF(8,
-                    "%s: --> not encap-forwarding on \"%s\": pkt was captured on that interface\n",
-                    PLUGIN_NAME_SHORT, walker->ifName);
+        OLSR_PRINTF(8, "%s: --> not encap-forwarding on \"%s\": pkt was captured on that interface\n", PLUGIN_NAME_SHORT,
+                    walker->ifName);
       } else {
         /* Case 1.2 and 1.3 */
         EncapsulateAndForwardPacket(walker, encapsulationUdpData);
@@ -518,9 +511,8 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
  * Data Used  : BmfInterfaces
  * ------------------------------------------------------------------------- */
 static void
-BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
-                               union olsr_ip_addr *forwardedBy,
-                               union olsr_ip_addr *forwardedTo, unsigned char *encapsulationUdpData)
+BmfEncapsulationPacketReceived(struct TBmfInterface *intf, union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo,
+                               unsigned char *encapsulationUdpData)
 {
   int iAmMpr;                          /* True (1) if I am selected as MPR by 'forwardedBy' */
   struct sockaddr_in forwardTo;        /* Next destination of encapsulation packet */
@@ -555,13 +547,10 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
   intf->nBmfPacketsRx++;
 
   /* Beware: not possible to call olsr_ip_to_string more than 4 times in same printf */
-  OLSR_PRINTF(8,
-              "%s: encapsulated pkt of %ld bytes incoming on \"%s\": %s->%s, forwarded by %s to %s\n",
-              PLUGIN_NAME_SHORT, (long)ipPacketLen, intf->ifName,
-              olsr_ip_to_string(&mcSrcBuf, &mcSrc),
-              olsr_ip_to_string(&mcDstBuf, &mcDst),
-              olsr_ip_to_string(&forwardedByBuf, forwardedBy),
-              forwardedTo != NULL ? olsr_ip_to_string(&forwardedToBuf, forwardedTo) : "me");
+  OLSR_PRINTF(8, "%s: encapsulated pkt of %ld bytes incoming on \"%s\": %s->%s, forwarded by %s to %s\n", PLUGIN_NAME_SHORT,
+              (long)ipPacketLen, intf->ifName, olsr_ip_to_string(&mcSrcBuf, &mcSrc), olsr_ip_to_string(&mcDstBuf, &mcDst),
+              olsr_ip_to_string(&forwardedByBuf, forwardedBy), forwardedTo != NULL ? olsr_ip_to_string(&forwardedToBuf,
+                                                                                                       forwardedTo) : "me");
 
   /* Get encapsulation header */
   encapsulationHdr = (struct TEncapHeader *)encapsulationUdpData;
@@ -606,7 +595,6 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
       OLSR_PRINTF(8, "%s: --> unpacked and delivered locally on \"%s\"\n", PLUGIN_NAME_SHORT, EtherTunTapIfName);
     }
   }
-
 
   /* if (EtherTunTapFd >= 0) */
   /* Check if I am MPR for the forwarder */
@@ -682,9 +670,8 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
       FindNeighbors(&bestNeighborLinks, &bestNeighbor, walker, &mcSrc, forwardedBy, forwardedTo, &nPossibleNeighbors);
 
       if (nPossibleNeighbors <= 0) {
-        OLSR_PRINTF(8,
-                    "%s: --> not forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
-                    PLUGIN_NAME_SHORT, walker->ifName);
+        OLSR_PRINTF(8, "%s: --> not forwarding on \"%s\": there is no neighbor that needs my retransmission\n", PLUGIN_NAME_SHORT,
+                    walker->ifName);
 
         continue;               /* for */
       }
@@ -730,8 +717,8 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
 
         /* Forward the BMF packet via the encapsulation socket */
         nBytesWritten =
-          sendto(walker->encapsulatingSkfd, encapsulationUdpData,
-                 encapsulationUdpDataLen, MSG_DONTROUTE, (struct sockaddr *)&forwardTo, sizeof(forwardTo));
+          sendto(walker->encapsulatingSkfd, encapsulationUdpData, encapsulationUdpDataLen, MSG_DONTROUTE,
+                 (struct sockaddr *)&forwardTo, sizeof(forwardTo));
 
         /* Evaluate and display result */
         if (nBytesWritten != encapsulationUdpDataLen) {
@@ -750,9 +737,8 @@ BmfEncapsulationPacketReceived(struct TBmfInterface *intf,
       struct ipaddr_str buf;
       /* 'walker' is an OLSR interface, but I am not selected as MPR. In that
        * case, don't forward. */
-      OLSR_PRINTF(8,
-                  "%s: --> not forwarding on \"%s\": I am not selected as MPR by %s\n",
-                  PLUGIN_NAME_SHORT, walker->ifName, olsr_ip_to_string(&buf, forwardedBy));
+      OLSR_PRINTF(8, "%s: --> not forwarding on \"%s\": I am not selected as MPR by %s\n", PLUGIN_NAME_SHORT, walker->ifName,
+                  olsr_ip_to_string(&buf, forwardedBy));
     }                           /* else */
   }                             /* for */
 }                               /* BmfEncapsulationPacketReceived */
@@ -798,10 +784,8 @@ BmfTunPacketCaptured(unsigned char *encapsulationUdpData)
 
   srcIp.v4 = ipHeader->ip_src;
 
-  OLSR_PRINTF(8,
-              "%s: outgoing pkt of %ld bytes captured on tuntap interface \"%s\": %s->%s\n",
-              PLUGIN_NAME_SHORT, (long)ipPacketLen, EtherTunTapIfName,
-              olsr_ip_to_string(&srcIpBuf, &srcIp), olsr_ip_to_string(&dstIpBuf, &dstIp));
+  OLSR_PRINTF(8, "%s: outgoing pkt of %ld bytes captured on tuntap interface \"%s\": %s->%s\n", PLUGIN_NAME_SHORT,
+              (long)ipPacketLen, EtherTunTapIfName, olsr_ip_to_string(&srcIpBuf, &srcIp), olsr_ip_to_string(&dstIpBuf, &dstIp));
 
   /* Calculate packet fingerprint */
   crc32 = PacketCrc32(ipPacket, ipPacketLen);
@@ -940,8 +924,8 @@ DoBmf(void)
           continue;             /* for */
         }
 
-        if (pktAddr.sll_pkttype == PACKET_OUTGOING
-            || pktAddr.sll_pkttype == PACKET_MULTICAST || pktAddr.sll_pkttype == PACKET_BROADCAST) {
+        if (pktAddr.sll_pkttype == PACKET_OUTGOING || pktAddr.sll_pkttype == PACKET_MULTICAST
+            || pktAddr.sll_pkttype == PACKET_BROADCAST) {
           /* A multicast or broadcast packet was captured */
 
           BmfPacketCaptured(walker, pktAddr.sll_pkttype, rxBuffer);
@@ -1012,16 +996,16 @@ DoBmf(void)
          * the same ethernet frame. */
         minimumLength = GetIpHeaderLength(rxBuffer) + sizeof(struct udphdr) + ENCAP_HDR_LEN + sizeof(struct ip);
         if (nBytes < minimumLength) {
-          olsr_printf(1,
-                      "%s: captured a too short encapsulation packet (%d bytes) on \"%s\"\n", PLUGIN_NAME, nBytes, walker->ifName);
+          olsr_printf(1, "%s: captured a too short encapsulation packet (%d bytes) on \"%s\"\n", PLUGIN_NAME, nBytes,
+                      walker->ifName);
 
           continue;             /* for */
         }
 
         forwardedBy.v4 = ipHeader->ip_src;
         forwardedTo.v4 = ipHeader->ip_dst;
-        BmfEncapsulationPacketReceived(walker, &forwardedBy,
-                                       &forwardedTo, rxBuffer + GetIpHeaderLength(rxBuffer) + sizeof(struct udphdr));
+        BmfEncapsulationPacketReceived(walker, &forwardedBy, &forwardedTo,
+                                       rxBuffer + GetIpHeaderLength(rxBuffer) + sizeof(struct udphdr));
 
       }                         /* if (skfd >= 0 && (FD_ISSET...)) */
     }                           /* for */
@@ -1057,9 +1041,8 @@ DoBmf(void)
         minimumLength = ENCAP_HDR_LEN + sizeof(struct ip);
         if (nBytes < minimumLength) {
           struct ipaddr_str buf;
-          olsr_printf(1,
-                      "%s: received a too short encapsulation packet (%d bytes) from %s on \"%s\"\n",
-                      PLUGIN_NAME, nBytes, olsr_ip_to_string(&buf, &forwardedBy), walker->ifName);
+          olsr_printf(1, "%s: received a too short encapsulation packet (%d bytes) from %s on \"%s\"\n", PLUGIN_NAME, nBytes,
+                      olsr_ip_to_string(&buf, &forwardedBy), walker->ifName);
 
           continue;             /* for */
         }

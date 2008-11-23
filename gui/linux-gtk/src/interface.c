@@ -569,8 +569,8 @@ create_main_window(void)
    */
   packet_content_list = gtk_clist_new(4);
   gtk_widget_ref(packet_content_list);
-  gtk_object_set_data_full(GTK_OBJECT(main_window), "packet_content_list",
-                           packet_content_list, (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full(GTK_OBJECT(main_window), "packet_content_list", packet_content_list,
+                           (GtkDestroyNotify) gtk_widget_unref);
 
   gtk_widget_show(packet_content_list);
   gtk_container_add(GTK_CONTAINER(scrolledwindow3), packet_content_list);
@@ -663,8 +663,8 @@ create_main_window(void)
 
   route_scrolledwindow = gtk_scrolled_window_new(NULL, NULL);
   gtk_widget_ref(route_scrolledwindow);
-  gtk_object_set_data_full(GTK_OBJECT(main_window), "route_scrolledwindow",
-                           route_scrolledwindow, (GtkDestroyNotify) gtk_widget_unref);
+  gtk_object_set_data_full(GTK_OBJECT(main_window), "route_scrolledwindow", route_scrolledwindow,
+                           (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show(route_scrolledwindow);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(route_scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 

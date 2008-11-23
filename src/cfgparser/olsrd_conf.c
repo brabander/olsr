@@ -195,9 +195,8 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
     if (cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low) {
-      fprintf(stderr,
-              "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n",
-              cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
+      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high,
+              cnf->hysteresis_param.thr_low);
       return -1;
     }
 
@@ -301,8 +300,8 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
     if (io->hello_params.emission_interval < cnf->pollrate || io->hello_params.emission_interval > io->hello_params.validity_time) {
-      fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n",
-              io->hello_params.emission_interval, io->hello_params.validity_time);
+      fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval,
+              io->hello_params.validity_time);
       return -1;
     }
 
@@ -314,15 +313,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
     /* MID interval */
     if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
-      fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n",
-              io->mid_params.emission_interval, io->mid_params.validity_time);
+      fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval,
+              io->mid_params.validity_time);
       return -1;
     }
 
     /* HNA interval */
     if (io->hna_params.emission_interval < cnf->pollrate || io->hna_params.emission_interval > io->hna_params.validity_time) {
-      fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n",
-              io->hna_params.emission_interval, io->hna_params.validity_time);
+      fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n", io->hna_params.emission_interval,
+              io->hna_params.validity_time);
       return -1;
     }
 
@@ -559,17 +558,17 @@ olsrd_print_cnf(struct olsrd_config *cnf)
       printf("\tIPv6 multicast site/glbl : %s", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
       printf("/%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
 
-      printf("\tHELLO emission/validity  : %0.2f/%0.2f\n",
-             in->cnf->hello_params.emission_interval, in->cnf->hello_params.validity_time);
+      printf("\tHELLO emission/validity  : %0.2f/%0.2f\n", in->cnf->hello_params.emission_interval,
+             in->cnf->hello_params.validity_time);
       printf("\tTC emission/validity     : %0.2f/%0.2f\n", in->cnf->tc_params.emission_interval, in->cnf->tc_params.validity_time);
-      printf("\tMID emission/validity    : %0.2f/%0.2f\n",
-             in->cnf->mid_params.emission_interval, in->cnf->mid_params.validity_time);
-      printf("\tHNA emission/validity    : %0.2f/%0.2f\n",
-             in->cnf->hna_params.emission_interval, in->cnf->hna_params.validity_time);
+      printf("\tMID emission/validity    : %0.2f/%0.2f\n", in->cnf->mid_params.emission_interval,
+             in->cnf->mid_params.validity_time);
+      printf("\tHNA emission/validity    : %0.2f/%0.2f\n", in->cnf->hna_params.emission_interval,
+             in->cnf->hna_params.validity_time);
 
       for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next) {
-        printf("\tLinkQualityMult          : %s %0.2f\n",
-               inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)), (float)(mult->value) / 65536.0);
+        printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)),
+               (float)(mult->value) / 65536.0);
       }
 
       printf("\tAutodetetc changes       : %s\n", in->cnf->autodetect_chg ? "yes" : "no");

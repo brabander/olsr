@@ -282,9 +282,8 @@ SetEnableRedirKey(unsigned long New)
   unsigned long Len;
   unsigned long Old;
 
-  if (RegOpenKeyEx
-      (HKEY_LOCAL_MACHINE,
-       "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ | KEY_WRITE, &Key) != ERROR_SUCCESS)
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ | KEY_WRITE, &Key) !=
+      ERROR_SUCCESS)
     return -1;
 
   Len = sizeof(Old);

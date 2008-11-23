@@ -320,13 +320,11 @@ poll_link_layer(void *foo)
         OLSR_PRINTF(1, ":%02x", (hwa[i].sa_data[j] % 0xffffff00));
       }
       if (!has_range)
-        OLSR_PRINTF(1,
-                    " : Quality:%d  Signal level:%d dBm  Noise level:%d dBm",
-                    qual[i].qual, qual[i].level - 0x100, qual[i].noise - 0x100);
+        OLSR_PRINTF(1, " : Quality:%d  Signal level:%d dBm  Noise level:%d dBm", qual[i].qual, qual[i].level - 0x100,
+                    qual[i].noise - 0x100);
       else
-        OLSR_PRINTF(1,
-                    " : Quality:%d/%d  Signal level:%d dBm  Noise level:%d dBm",
-                    qual[i].qual, range.max_qual.qual, qual[i].level - 0x100, qual[i].noise - 0x100);
+        OLSR_PRINTF(1, " : Quality:%d/%d  Signal level:%d dBm  Noise level:%d dBm", qual[i].qual, range.max_qual.qual,
+                    qual[i].level - 0x100, qual[i].noise - 0x100);
 
       OLSR_PRINTF(1, "\n");
 

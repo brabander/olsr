@@ -131,10 +131,9 @@ struct TBestNeighbors {
   struct link_entry *links[MAX_UNICAST_NEIGHBORS];
 };
 
-void FindNeighbors(struct TBestNeighbors *neighbors,
-                   struct link_entry **bestNeighbor,
-                   struct TBmfInterface *intf, union olsr_ip_addr *source,
-                   union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors);
+void FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor, struct TBmfInterface *intf,
+                   union olsr_ip_addr *source, union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo,
+                   int *nPossibleNeighbors);
 
 int CreateBmfNetworkInterfaces(struct interface *skipThisIntf);
 void AddInterface(struct interface *newIntf);

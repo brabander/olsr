@@ -322,16 +322,14 @@ ipc_eval_net_info(struct netmsg *msg)
     ipsize = sizeof(struct in_addr);
     sprintf(&info[0],
             "IP version 4\nMain address: %s\nMid addresses: %d\nHna addresses: %d\nHELLO interval: %d\nHELLO LAN interval: %d\nTC interval: %d\nNeighbor hold time: %d\nTopology hold: %d\n",
-            ip_to_string(&msg->main_addr), msg->mids, msg->hnas,
-            ntohs(msg->hello_int), ntohs(msg->hello_lan_int),
+            ip_to_string(&msg->main_addr), msg->mids, msg->hnas, ntohs(msg->hello_int), ntohs(msg->hello_lan_int),
             ntohs(msg->tc_int), ntohs(msg->neigh_hold), ntohs(msg->topology_hold));
   } else {
     ipversion = AF_INET6;
     ipsize = sizeof(struct in6_addr);
     sprintf(&info[0],
             "IP version 6\nMain address: %s\nMid addresses: %d\nHna addresses: %d\nHELLO interval: %d\nHELLO LAN interval: %d\nTC interval: %d\nNeighbor hold time: %d\nTopology hold: %d\n",
-            ip_to_string(&msg->main_addr), msg->mids, msg->hnas,
-            ntohs(msg->hello_int), ntohs(msg->hello_lan_int),
+            ip_to_string(&msg->main_addr), msg->mids, msg->hnas, ntohs(msg->hello_int), ntohs(msg->hello_lan_int),
             ntohs(msg->tc_int), ntohs(msg->neigh_hold), ntohs(msg->topology_hold));
   }
 

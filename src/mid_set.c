@@ -257,8 +257,7 @@ insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, 
    */
   ne_old = olsr_lookup_neighbor_table_alias(alias);
   if (ne_old != NULL) {
-    OLSR_PRINTF(2,
-                "Remote main address change detected. Mangling neighbortable to replace %s with %s.\n",
+    OLSR_PRINTF(2, "Remote main address change detected. Mangling neighbortable to replace %s with %s.\n",
                 olsr_ip_to_string(&buf1, alias), olsr_ip_to_string(&buf2, main_add));
     olsr_delete_neighbor_table(alias);
     ne_new = olsr_insert_neighbor_table(main_add);

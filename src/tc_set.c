@@ -344,10 +344,9 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
   struct tc_entry *tc = tc_edge->tc;
   struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-  snprintf(buf, sizeof(buf), "%s > %s, cost (%6s) %s",
-           olsr_ip_to_string(&addrbuf, &tc->addr),
-           olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-           get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+  snprintf(buf, sizeof(buf), "%s > %s, cost (%6s) %s", olsr_ip_to_string(&addrbuf, &tc->addr),
+           olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr), get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
+           get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
   return buf;
 }
@@ -552,8 +551,8 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc)
  * @return 1 if any destinations were deleted 0 if not
  */
 static int
-olsr_delete_revoked_tc_edges(struct tc_entry *tc, olsr_u16_t ansn,
-                             union olsr_ip_addr *lower_border, union olsr_ip_addr *upper_border)
+olsr_delete_revoked_tc_edges(struct tc_entry *tc, olsr_u16_t ansn, union olsr_ip_addr *lower_border,
+                             union olsr_ip_addr *upper_border)
 {
   struct tc_edge_entry *tc_edge;
   int retval = 0;
@@ -694,10 +693,8 @@ olsr_print_tc_table(void)
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  OLSR_PRINTF(1,
-              "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
-              "%-*s %-*s %-14s  %s\n", olsr_wallclock_string(), ipwidth,
-              "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ", "ETX");
+  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------- TOPOLOGY\n\n" "%-*s %-*s %-14s  %s\n",
+              olsr_wallclock_string(), ipwidth, "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ", "ETX");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     struct tc_edge_entry *tc_edge;
@@ -705,10 +702,9 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-      OLSR_PRINTF(1, "%-*s %-*s %-14s %s\n", ipwidth,
-                  olsr_ip_to_string(&addrbuf, &tc->addr), ipwidth,
-                  olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr),
-                  get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+      OLSR_PRINTF(1, "%-*s %-*s %-14s %s\n", ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr), ipwidth,
+                  olsr_ip_to_string(&dstaddrbuf, &tc_edge->T_dest_addr), get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
+                  get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -725,8 +721,8 @@ olsr_print_tc_table(void)
  * @result 1 if lower/upper border ip have been set
  */
 static int
-olsr_calculate_tc_border(olsr_u8_t lower_border,
-                         union olsr_ip_addr *lower_border_ip, olsr_u8_t upper_border, union olsr_ip_addr *upper_border_ip)
+olsr_calculate_tc_border(olsr_u8_t lower_border, union olsr_ip_addr *lower_border_ip, olsr_u8_t upper_border,
+                         union olsr_ip_addr *upper_border_ip)
 {
   if (lower_border == 0 && upper_border == 0) {
     return 0;
@@ -899,8 +895,8 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if __attribute__ 
   /*
    * Set or change the expiration timer accordingly.
    */
-  olsr_set_timer(&tc->validity_timer, vtime, OLSR_TC_VTIME_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc, tc_validity_timer_cookie->ci_id);
+  olsr_set_timer(&tc->validity_timer, vtime, OLSR_TC_VTIME_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_entry, tc,
+                 tc_validity_timer_cookie->ci_id);
 
   if (borderSet) {
 
@@ -914,8 +910,8 @@ olsr_input_tc(union olsr_message *msg, struct interface *input_if __attribute__ 
      * Kick the the edge garbage collection timer. In the meantime hopefully
      * all edges belonging to a multipart neighbor set will arrive.
      */
-    olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME,
-                   OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie->ci_id);
+    olsr_set_timer(&tc->edge_gc_timer, OLSR_TC_EDGE_GC_TIME, OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_tc_edge_gc,
+                   tc, tc_edge_gc_timer_cookie->ci_id);
   }
 }
 

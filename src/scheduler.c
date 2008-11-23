@@ -376,10 +376,7 @@ olsr_walk_timers(clock_t * last_run)
       /* Ready to fire ? */
       if (TIMED_OUT(timer->timer_clock)) {
 
-        OLSR_PRINTF(3,
-                    "TIMER: fire %s timer %p, ctx %p, "
-                    "at clocktick %u (%s)\n",
-                    olsr_cookie_name(timer->timer_cookie), timer,
+        OLSR_PRINTF(3, "TIMER: fire %s timer %p, ctx %p, " "at clocktick %u (%s)\n", olsr_cookie_name(timer->timer_cookie), timer,
                     timer->timer_cb_context, (unsigned int)*last_run, olsr_wallclock_string());
 
         /* This timer is expired, call into the provided callback function */
@@ -421,9 +418,7 @@ olsr_walk_timers(clock_t * last_run)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3,
-              "TIMER: processed %4u/%u clockwheel slots, "
-              "timers walked %4u/%u, timers fired %u\n", wheel_slot_walks,
+  OLSR_PRINTF(3, "TIMER: processed %4u/%u clockwheel slots, " "timers walked %4u/%u, timers fired %u\n", wheel_slot_walks,
               TIMER_WHEEL_SLOTS, total_timers_walked, timers_running, total_timers_fired);
 #endif
 
@@ -544,8 +539,8 @@ olsr_clock_string(clock_t clock)
  * @return a pointer to the created entry
  */
 struct timer_entry *
-olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
-                 olsr_bool periodical, void (*timer_cb_function) (void *), void *context, olsr_cookie_t cookie)
+olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct, olsr_bool periodical, void (*timer_cb_function) (void *),
+                 void *context, olsr_cookie_t cookie)
 {
   struct timer_entry *timer;
 
@@ -576,8 +571,8 @@ olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct,
   timers_running++;
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: start %s timer %p firing in %s, ctx %p\n",
-              olsr_cookie_name(timer->timer_cookie), timer, olsr_clock_string(timer->timer_clock), context);
+  OLSR_PRINTF(3, "TIMER: start %s timer %p firing in %s, ctx %p\n", olsr_cookie_name(timer->timer_cookie), timer,
+              olsr_clock_string(timer->timer_clock), context);
 #endif
 
   return timer;
@@ -647,8 +642,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, olsr_u8_t ji
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK], &timer->timer_list);
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
-              olsr_cookie_name(timer->timer_cookie), timer, olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
+  OLSR_PRINTF(3, "TIMER: change %s timer %p, firing to %s, ctx %p\n", olsr_cookie_name(timer->timer_cookie), timer,
+              olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
 #endif
 }
 
@@ -659,8 +654,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, olsr_u8_t ji
  * terminated.
  */
 void
-olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time,
-               olsr_u8_t jitter_pct, olsr_bool periodical, void (*timer_cb_function) (void *), void *context, olsr_cookie_t cookie)
+olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time, olsr_u8_t jitter_pct, olsr_bool periodical,
+               void (*timer_cb_function) (void *), void *context, olsr_cookie_t cookie)
 {
 
   if (!*timer_ptr) {

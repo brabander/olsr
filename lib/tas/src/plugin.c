@@ -115,10 +115,9 @@ iterLinkTabNext(char *buff, int len)
     return -1;
 
   snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~cost~%s~",
-           rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen),
-           rawIpAddrToString(&iterLinkTab->neighbor_iface_addr, ipAddrLen),
-           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr,
-                             ipAddrLen), iterLinkTab->L_link_quality,
+           rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen), rawIpAddrToString(&iterLinkTab->neighbor_iface_addr,
+                                                                                           ipAddrLen),
+           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen), iterLinkTab->L_link_quality,
            get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE, &lqbuffer));
 
   link_node = iterLinkTab->link_list.next;
@@ -155,11 +154,8 @@ iterNeighTabNext(char *buff, int len)
     return -1;
 
   res =
-    snprintf(buff, len,
-             "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~",
-             rawIpAddrToString(&iterNeighTab->neighbor_main_addr,
-                               ipAddrLen),
-             iterNeighTab->status == SYM ? "true" : "false",
+    snprintf(buff, len, "main~%s~symmetric~%s~mpr~%s~mprs~%s~willingness~%d~[~neighbors2~",
+             rawIpAddrToString(&iterNeighTab->neighbor_main_addr, ipAddrLen), iterNeighTab->status == SYM ? "true" : "false",
              iterNeighTab->is_mpr != 0 ? "true" : "false",
              olsr_lookup_mprs_set(&iterNeighTab->neighbor_main_addr) != NULL ? "true" : "false", iterNeighTab->willingness);
 
@@ -226,8 +222,7 @@ iterRouteTabNext(char *buff, int len)
 
   snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%d~",
            rawIpAddrToString(&iterRouteTab->rt_dst.prefix, ipAddrLen),
-           rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway,
-                             ipAddrLen),
+           rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, ipAddrLen),
            if_ifwithindex_name(iterRouteTab->rt_best->rtp_nexthop.iif_index), iterRouteTab->rt_best->rtp_metric.hops);
 
   rt_tree_node = avl_walk_next(&iterRouteTab->rt_tree_node);
@@ -289,8 +284,8 @@ iterTcTabNext(char *buff, int len)
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(iterTcTab, tc_edge) {
 
     res =
-      snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i,
-               rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
+      snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i, rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
+               get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
 
     if (res < len)
       buff += res;

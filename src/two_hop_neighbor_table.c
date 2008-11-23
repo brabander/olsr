@@ -215,9 +215,8 @@ olsr_print_two_hop_neighbor_table(void)
   /* The whole function makes no sense without it. */
   int i;
 
-  OLSR_PRINTF(1,
-              "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
-              "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
+  OLSR_PRINTF(1, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n" "IP addr (2-hop)  IP addr (1-hop)  Total cost\n",
+              olsr_wallclock_string());
 
   for (i = 0; i < HASHSIZE; i++) {
     struct neighbor_2_entry *neigh2;
@@ -234,10 +233,8 @@ olsr_print_two_hop_neighbor_table(void)
         } else {
           OLSR_PRINTF(1, "                 ");
         }
-        OLSR_PRINTF(1, "%-15s  %s\n",
-                    olsr_ip_to_string(&buf,
-                                      &entry->neighbor->
-                                      neighbor_main_addr), get_linkcost_text(entry->path_linkcost, OLSR_FALSE, &lqbuffer));
+        OLSR_PRINTF(1, "%-15s  %s\n", olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
+                    get_linkcost_text(entry->path_linkcost, OLSR_FALSE, &lqbuffer));
       }
     }
   }

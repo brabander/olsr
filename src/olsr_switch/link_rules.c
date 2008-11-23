@@ -68,8 +68,8 @@ ohs_check_link(struct ohs_connection *oc, union olsr_ip_addr *dst)
 
     if (logbits & LOG_LINK) {
       struct ipaddr_str addrstr, dststr;
-      printf("%s -> %s Q: %d R: %d\n",
-             olsr_ip_to_string(&addrstr, &oc->ip_addr), olsr_ip_to_string(&dststr, dst), links->quality, r);
+      printf("%s -> %s Q: %d R: %d\n", olsr_ip_to_string(&addrstr, &oc->ip_addr), olsr_ip_to_string(&dststr, dst), links->quality,
+             r);
     }
     /* Random - based on quality */
     return links->quality > r ? 0 : 1;

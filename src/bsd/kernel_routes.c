@@ -220,21 +220,17 @@ add_del_route(const struct rt_entry *rt, int add)
   OLSR_PRINTF(8, "\nWrote %d bytes to rts socket (FD=%d)\n", len, olsr_cnf->rts);
 
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
-    fprintf(stderr,
-            "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno, strerror(errno));
+    fprintf(stderr, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
+            strerror(errno));
   }
 
   OLSR_PRINTF(8,
-              "\nWriting the following information to routing socket (message header):"
-              "\n\trtm_msglen: %u" "\n\trtm_version: %u" "\n\trtm_type: %u"
-              "\n\trtm_index: %u" "\n\trtm_flags: 0x%x" "\n\trtm_addrs: %u"
-              "\n\trtm_pid: 0x%x" "\n\trtm_seq: %u" "\n\trtm_errno: 0x%x"
-              "\n\trtm_use %u" "\n\trtm_inits: %u\n",
-              (unsigned int)rtm->rtm_msglen,
-              (unsigned int)rtm->rtm_version, (unsigned int)rtm->rtm_type,
-              (unsigned int)rtm->rtm_index, (unsigned int)rtm->rtm_flags,
-              (unsigned int)rtm->rtm_addrs, (unsigned int)rtm->rtm_pid,
-              (unsigned int)rtm->rtm_seq, (unsigned int)rtm->rtm_errno, (unsigned int)rtm->rtm_use, (unsigned int)rtm->rtm_inits);
+              "\nWriting the following information to routing socket (message header):" "\n\trtm_msglen: %u" "\n\trtm_version: %u"
+              "\n\trtm_type: %u" "\n\trtm_index: %u" "\n\trtm_flags: 0x%x" "\n\trtm_addrs: %u" "\n\trtm_pid: 0x%x" "\n\trtm_seq: %u"
+              "\n\trtm_errno: 0x%x" "\n\trtm_use %u" "\n\trtm_inits: %u\n", (unsigned int)rtm->rtm_msglen,
+              (unsigned int)rtm->rtm_version, (unsigned int)rtm->rtm_type, (unsigned int)rtm->rtm_index,
+              (unsigned int)rtm->rtm_flags, (unsigned int)rtm->rtm_addrs, (unsigned int)rtm->rtm_pid, (unsigned int)rtm->rtm_seq,
+              (unsigned int)rtm->rtm_errno, (unsigned int)rtm->rtm_use, (unsigned int)rtm->rtm_inits);
 
   return 0;
 }

@@ -100,8 +100,8 @@ struct MibIpInterfaceRow {
 
 typedef DWORD(__stdcall * GETIPINTERFACEENTRY) (struct MibIpInterfaceRow * Row);
 
-typedef DWORD(__stdcall * GETADAPTERSADDRESSES) (ULONG Family, DWORD Flags,
-                                                 PVOID Reserved, PIP_ADAPTER_ADDRESSES pAdapterAddresses, PULONG pOutBufLen);
+typedef DWORD(__stdcall * GETADAPTERSADDRESSES) (ULONG Family, DWORD Flags, PVOID Reserved, PIP_ADAPTER_ADDRESSES pAdapterAddresses,
+                                                 PULONG pOutBufLen);
 
 struct InterfaceInfo {
   unsigned int Index;
@@ -662,19 +662,17 @@ add_hemu_if(struct olsr_if *iface)
    * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
-    olsr_start_timer(iface->cnf->hello_params.emission_interval *
-                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
-    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                     TC_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
-    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp,
+                     mid_gen_timer_cookie->ci_id);
   ifp->hna_gen_timer =
-    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
+                     hna_gen_timer_cookie->ci_id);
 
   /* Recalculate max topology hold time */
   if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
@@ -952,19 +950,17 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
    * Register functions for periodic message generation
    */
   New->hello_gen_timer =
-    olsr_start_timer(IntConf->cnf->hello_params.emission_interval *
-                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, New, hello_gen_timer_cookie->ci_id);
   New->tc_gen_timer =
-    olsr_start_timer(IntConf->cnf->tc_params.emission_interval *
-                     MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(IntConf->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, New, tc_gen_timer_cookie->ci_id);
   New->mid_gen_timer =
-    olsr_start_timer(IntConf->cnf->mid_params.emission_interval *
-                     MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New,
+                     mid_gen_timer_cookie->ci_id);
   New->hna_gen_timer =
-    olsr_start_timer(IntConf->cnf->hna_params.emission_interval *
-                     MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New,
+                     hna_gen_timer_cookie->ci_id);
 
   if (olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;

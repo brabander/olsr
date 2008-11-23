@@ -69,9 +69,8 @@ signal_link_changes(olsr_bool val)
 
 /* Prototypes. */
 static int check_link_status(const struct hello_message *message, const struct interface *in_if);
-static struct link_entry *add_link_entry(const union olsr_ip_addr *,
-                                         const union olsr_ip_addr *,
-                                         const union olsr_ip_addr *, olsr_reltime, olsr_reltime, const struct interface *);
+static struct link_entry *add_link_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, const union olsr_ip_addr *,
+                                         olsr_reltime, olsr_reltime, const struct interface *);
 static int get_neighbor_status(const union olsr_ip_addr *);
 
 void
@@ -478,9 +477,8 @@ olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
  * @return the new link_entry
  */
 static struct link_entry *
-add_link_entry(const union olsr_ip_addr *local,
-               const union olsr_ip_addr *remote,
-               const union olsr_ip_addr *remote_main, olsr_reltime vtime, olsr_reltime htime, const struct interface *local_if)
+add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote, const union olsr_ip_addr *remote_main,
+               olsr_reltime vtime, olsr_reltime htime, const struct interface *local_if)
 {
   struct link_entry *new_link;
   struct neighbor_entry *neighbor;
@@ -546,8 +544,8 @@ add_link_entry(const union olsr_ip_addr *local,
   if (olsr_cnf->lq_level > 0) {
     new_link->loss_helloint = htime;
 
-    olsr_set_timer(&new_link->link_loss_timer, htime + htime / 2,
-                   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, new_link, 0);
+    olsr_set_timer(&new_link->link_loss_timer, htime + htime / 2, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+                   &olsr_expire_link_loss_timer, new_link, 0);
 
     set_loss_link_multiplier(new_link);
   }
@@ -642,8 +640,8 @@ lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *re
  * @return the link_entry struct describing this link entry
  */
 struct link_entry *
-update_link_entry(const union olsr_ip_addr *local,
-                  const union olsr_ip_addr *remote, const struct hello_message *message, const struct interface *in_if)
+update_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote, const struct hello_message *message,
+                  const struct interface *in_if)
 {
   struct link_entry *entry;
 
@@ -665,8 +663,8 @@ update_link_entry(const union olsr_ip_addr *local,
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->vtime,
-                   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer, entry, 0);
+    olsr_set_timer(&entry->link_sym_timer, message->vtime, OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_sym_timer,
+                   entry, 0);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
     olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
@@ -768,11 +766,9 @@ olsr_print_link_set(void)
 
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
-    OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n", addrsize,
-                olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                walker->L_link_quality, get_link_entry_text(walker, '/',
-                                                            &lqbuffer1),
-                get_linkcost_text(walker->linkcost, OLSR_FALSE, &lqbuffer2));
+    OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n", addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
+                walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
+                                                                                                        OLSR_FALSE, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }
@@ -793,9 +789,8 @@ olsr_update_packet_loss(struct link_entry *entry)
   olsr_update_packet_loss_worker(entry, OLSR_FALSE);
 
   /* timeout for the first lost packet is 1.5 x htime */
-  olsr_set_timer(&entry->link_loss_timer,
-                 entry->loss_helloint + entry->loss_helloint / 2,
-                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, 0);
+  olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2, OLSR_LINK_LOSS_JITTER,
+                 OLSR_TIMER_PERIODIC, &olsr_expire_link_loss_timer, entry, 0);
 }
 
 /*

@@ -396,9 +396,8 @@ allocBuff(struct connInfo *info, int len)
   debug(DEBUG_CONNECTION, "%d bytes of buffer space requested\n", len);
 
   if (info->buff != NULL)
-    debug(DEBUG_CONNECTION,
-          "existing buffer, size = %d bytes, used = %d bytes, remaining = %d bytes\n",
-          info->buffTotal, info->buffUsed, info->buffTotal - info->buffUsed);
+    debug(DEBUG_CONNECTION, "existing buffer, size = %d bytes, used = %d bytes, remaining = %d bytes\n", info->buffTotal,
+          info->buffUsed, info->buffTotal - info->buffUsed);
 
   else
     debug(DEBUG_CONNECTION, "no existing buffer\n");
@@ -501,8 +500,8 @@ httpSetWorkDir(const char *workDir, void *data __attribute__ ((unused)), set_plu
 }
 
 int
-httpSetIndexFile(const char *indexFile, void *data
-                 __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+httpSetIndexFile(const char *indexFile, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon
+                 __attribute__ ((unused)))
 {
   confIndexFile = myStrdup(indexFile);
   return 0;
@@ -516,8 +515,8 @@ httpSetUser(const char *user, void *data __attribute__ ((unused)), set_plugin_pa
 }
 
 int
-httpSetPassword(const char *password, void *data
-                __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+httpSetPassword(const char *password, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon
+                __attribute__ ((unused)))
 {
   confPassword = myStrdup(password);
   return 0;
@@ -551,8 +550,8 @@ httpSetPubDir(const char *pubDir, void *data __attribute__ ((unused)), set_plugi
 }
 
 int
-httpSetQuantum(const char *quantumStr, void *data
-               __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+httpSetQuantum(const char *quantumStr, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon
+               __attribute__ ((unused)))
 {
   unsigned int quantum;
 
@@ -592,8 +591,8 @@ httpSetMessTime(const char *timeStr, void *data __attribute__ ((unused)), set_pl
 }
 
 int
-httpSetMessLimit(const char *limitStr, void *data
-                 __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+httpSetMessLimit(const char *limitStr, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon
+                 __attribute__ ((unused)))
 {
   unsigned int limit;
 
@@ -1033,8 +1032,8 @@ writeErrorMsg(struct connInfo *info, int errNo, char *errMsg)
   if (info->verb == NULL || strcmp(info->verb, "HEAD") != 0) {
     printBuff(&info->write[2], "<html>\r\n");
     printBuff(&info->write[2], "<head><title>Error %d: %s</title></head>\r\n", errNo, errNoToErrStr(errNo));
-    printBuff(&info->write[2], "<body>Error %d: %s (%s)</body>\r\n", errNo,
-              errNoToErrStr(errNo), (errMsg == NULL) ? "Unknown Reason" : errMsg);
+    printBuff(&info->write[2], "<body>Error %d: %s (%s)</body>\r\n", errNo, errNoToErrStr(errNo),
+              (errMsg == NULL) ? "Unknown Reason" : errMsg);
     printBuff(&info->write[2], "</html>\r\n");
 
     info->contLen = info->write[2].cont;
@@ -1123,12 +1122,12 @@ serviceConn(struct connInfo *info)
     tmp = getToken(&line);
     info->proto = getToken(&line);
 
-    debug(DEBUG_REQUEST, "verb = %s, uri = %s, protocol = %s\n",
-          (info->verb == NULL) ? "none" : info->verb, (tmp == NULL) ? "none" : tmp, (info->proto == NULL) ? "none" : info->proto);
+    debug(DEBUG_REQUEST, "verb = %s, uri = %s, protocol = %s\n", (info->verb == NULL) ? "none" : info->verb,
+          (tmp == NULL) ? "none" : tmp, (info->proto == NULL) ? "none" : info->proto);
 
     if (info->verb == NULL || tmp == NULL || info->proto == NULL) {
-      error("request without verb (%s), URI (%s), or protocol (%s)\n",
-            (info->verb == NULL) ? "none" : info->verb, (tmp == NULL) ? "none" : tmp, (info->proto == NULL) ? "none" : info->proto);
+      error("request without verb (%s), URI (%s), or protocol (%s)\n", (info->verb == NULL) ? "none" : info->verb,
+            (tmp == NULL) ? "none" : tmp, (info->proto == NULL) ? "none" : info->proto);
       writeError(info, 400);
       return 0;
     }
@@ -1738,8 +1737,8 @@ httpService(int freq)
   while (numTasMsg > 0 && confMessTime > 0 && timedOut(&firstTasMsg->time, confMessTime) >= 0) {
     tasMsg = firstTasMsg;
 
-    debug(DEBUG_MESSAGE,
-          "message timed out, service ='%s', string = '%s', from = %s\n", tasMsg->service, tasMsg->string, tasMsg->from);
+    debug(DEBUG_MESSAGE, "message timed out, service ='%s', string = '%s', from = %s\n", tasMsg->service, tasMsg->string,
+          tasMsg->from);
 
     firstTasMsg = firstTasMsg->next;
 

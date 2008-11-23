@@ -135,8 +135,8 @@ olsr_arp_event(void *foo __attribute__ ((unused)))
         int i;
         OLSR_PRINTF(0, "Refresh on %s, %s=", req.arp.arp_dev, inet_ntoa(*((struct in_addr *)&buf.ip.saddr)));
         for (i = 0; i < (ssize_t) sizeof(buf.eth.h_source); i++) {
-          OLSR_PRINTF(0, "%02x%s",
-                      ((unsigned char *)&buf.eth.h_source)[i], i < (ssize_t) sizeof(buf.eth.h_source) - 1 ? ":" : "\n");
+          OLSR_PRINTF(0, "%02x%s", ((unsigned char *)&buf.eth.h_source)[i],
+                      i < (ssize_t) sizeof(buf.eth.h_source) - 1 ? ":" : "\n");
         }
       }
 #endif

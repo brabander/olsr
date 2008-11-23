@@ -209,8 +209,7 @@ olsr_expire_hna_net_entry(void *context)
   hna_gw = net_to_delete->hna_gw;
 
 #ifdef DEBUG
-  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n",
-              olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
+  OLSR_PRINTF(5, "HNA: timeout %s/%u via hna-gw %s\n", olsr_ip_to_string(&buf1, &net_to_delete->A_network_addr),
               net_to_delete->prefixlen, olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
 #endif
 
@@ -271,8 +270,8 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
   /*
    * Start, or refresh the timer, whatever is appropriate.
    */
-  olsr_set_timer(&net_entry->hna_net_timer, vtime, OLSR_HNA_NET_JITTER,
-                 OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry, hna_net_timer_cookie->ci_id);
+  olsr_set_timer(&net_entry->hna_net_timer, vtime, OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry,
+                 hna_net_timer_cookie->ci_id);
 }
 
 /**
@@ -287,9 +286,8 @@ olsr_print_hna_set(void)
   /* The whole function doesn't do anything else. */
   int idx;
 
-  OLSR_PRINTF(1,
-              "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n",
-              nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000);
+  OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n", nowtm->tm_hour,
+              nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000);
 
   if (olsr_cnf->ip_version == AF_INET)
     OLSR_PRINTF(1, "IP net          netmask         GW IP\n");
@@ -370,8 +368,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   hnasize =
     olsr_msgsize - (olsr_cnf->ip_version == AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message));
   if (hnasize < 0) {
-    OLSR_PRINTF(0, "message size %d too small (at least %lu)!\n",
-                olsr_msgsize,
+    OLSR_PRINTF(0, "message size %d too small (at least %lu)!\n", olsr_msgsize,
                 (unsigned long)(olsr_cnf->ip_version ==
                                 AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message)));
     return;

@@ -151,8 +151,8 @@ StrError(unsigned int ErrNo)
 #else
   short WideMsg[1000];
 
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), WideMsg, sizeof(WideMsg) / 2, NULL);
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), WideMsg, sizeof(WideMsg) / 2,
+                NULL);
 
   if (WideCharToMultiByte(CP_ACP, 0, WideMsg, -1, Msg, sizeof(Msg), NULL, NULL) == 0)
     strscpy(Msg, "[cannot convert string]", sizeof(Msg));

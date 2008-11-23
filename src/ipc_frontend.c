@@ -211,8 +211,8 @@ ipc_input(int sock __attribute__ ((unused)))
  *@return negative on error
  */
 void
-frontend_msgparser(union olsr_message *msg, struct interface *in_if
-                   __attribute__ ((unused)), union olsr_ip_addr *from_addr __attribute__ ((unused)))
+frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr
+                   __attribute__ ((unused)))
 {
   int size;
 

@@ -389,16 +389,16 @@ net_output(struct interface *ifp)
 
   if (olsr_cnf->ip_version == AF_INET) {
     /* IP version 4 */
-    if (olsr_sendto
-        (ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof(*sin)) < 0) {
+    if (olsr_sendto(ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, (struct sockaddr *)sin, sizeof(*sin)) <
+        0) {
       perror("sendto(v4)");
       olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv4 %m");
       retval = -1;
     }
   } else {
     /* IP version 6 */
-    if (olsr_sendto
-        (ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof(*sin6)) < 0) {
+    if (olsr_sendto(ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, (struct sockaddr *)sin6, sizeof(*sin6))
+        < 0) {
       struct ipaddr_str buf;
       perror("sendto(v6)");
       olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv6 %m");

@@ -292,8 +292,8 @@ default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer)
 {
   struct default_lq_ff *lq = ptr;
 
-  snprintf(buffer->buf, sizeof(buffer->buf), "%s%c%s",
-           fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)), separator, fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
+  snprintf(buffer->buf, sizeof(buffer->buf), "%s%c%s", fpmtoa(fpmidiv(itofpm((int)lq->valueLq), 255)), separator,
+           fpmtoa(fpmidiv(itofpm((int)lq->valueNlq), 255)));
   return buffer->buf;
 }
 

@@ -130,8 +130,8 @@ struct link_entry *get_best_link_to_neighbor(const union olsr_ip_addr *);
 
 struct link_entry *lookup_link_entry(const union olsr_ip_addr *, const union olsr_ip_addr *remote_main, const struct interface *);
 
-struct link_entry *update_link_entry(const union olsr_ip_addr *,
-                                     const union olsr_ip_addr *, const struct hello_message *, const struct interface *);
+struct link_entry *update_link_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, const struct hello_message *,
+                                     const struct interface *);
 
 int check_neighbor_link(const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct neighbor_entry *, struct neighbor_entry *);

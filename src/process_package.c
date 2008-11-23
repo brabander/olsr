@@ -105,8 +105,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 #endif
       if (two_hop_neighbor_yet != NULL) {
         /* Updating the holding time for this neighbor */
-        olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
-                       message->vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list, two_hop_neighbor_yet, 0);
+        olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer, message->vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT,
+                       &olsr_expire_nbr2_list, two_hop_neighbor_yet, 0);
         two_hop_neighbor = two_hop_neighbor_yet->neighbor_2;
 
         /*
@@ -123,8 +123,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 
           struct neighbor_list_entry *walker;
 
-          for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-               walker != &two_hop_neighbor->neighbor_2_nblist; walker = walker->next) {
+          for (walker = two_hop_neighbor->neighbor_2_nblist.next; walker != &two_hop_neighbor->neighbor_2_nblist;
+               walker = walker->next) {
             /*
              * have we found the one-hop neighbor that sent the
              * HELLO message that we're current processing?
@@ -212,8 +212,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
          * 'two_hop_neighbor'
          */
 
-        for (walker = two_hop_neighbor->neighbor_2_nblist.next;
-             walker != &two_hop_neighbor->neighbor_2_nblist; walker = walker->next) {
+        for (walker = two_hop_neighbor->neighbor_2_nblist.next; walker != &two_hop_neighbor->neighbor_2_nblist;
+             walker = walker->next) {
           /*
            * have we found the one-hop neighbor that sent the
            * HELLO message that we're current processing?
@@ -312,8 +312,8 @@ lookup_mpr_status(const struct hello_message *message, const struct interface *i
 
   for (neighbors = message->neighbors; neighbors; neighbors = neighbors->next) {
     if (olsr_cnf->ip_version ==
-        AF_INET ? ip4equal(&neighbors->address.v4,
-                           &in_if->ip_addr.v4) : ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
+        AF_INET ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4) : ip6equal(&neighbors->address.v6,
+                                                                                  &in_if->int6_addr.sin6_addr)) {
 
       if (neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH) {
         return OLSR_TRUE;
@@ -453,8 +453,8 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if, const uni
   /* Check willingness */
   if (neighbor->willingness != message->willingness) {
     struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n",
-                olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr), neighbor->willingness, message->willingness);
+    OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n", olsr_ip_to_string(&buf, &neighbor->neighbor_main_addr),
+                neighbor->willingness, message->willingness);
     /*
      *If willingness changed - recalculate
      */

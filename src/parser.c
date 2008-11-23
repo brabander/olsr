@@ -337,8 +337,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       /* IPv4 */
       if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(2,
-                    "Dropping packet type %d from neigh %s with TTL 0\n", m->v4.olsr_msgtype, olsr_ip_to_string(&buf, from_addr));
+        OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n", m->v4.olsr_msgtype,
+                    olsr_ip_to_string(&buf, from_addr));
         continue;
       }
     } else {
@@ -392,8 +392,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       struct ipaddr_str buf;
       unk_chgestruct(&unkpacket, m);
 
-      OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
-                  m->v4.olsr_msgtype, size, olsr_ip_to_string(&buf, &unkpacket.originator));
+      OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n", m->v4.olsr_msgtype, size,
+                  olsr_ip_to_string(&buf, &unkpacket.originator));
 
       /* Cancel loop here, otherwise olsrd just hangs forever at this point */
       break;
@@ -473,8 +473,8 @@ olsr_input(int fd)
     if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr), cc);
-      olsr_syslog(OLSR_LOG_ERR,
-                  "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr), cc);
+      olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr),
+                  cc);
       return;
     }
     // call preprocessors
@@ -566,8 +566,8 @@ olsr_input_hostemu(int fd)
   if ((olsr_in_if = if_ifwithsock(fd)) == NULL) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr), cc);
-    olsr_syslog(OLSR_LOG_ERR,
-                "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr), cc);
+    olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n", olsr_ip_to_string(&buf, &from_addr),
+                cc);
     return;
   }
   // call preprocessors

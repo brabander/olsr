@@ -512,8 +512,7 @@ zebra_parse_packet(unsigned char *packet, ssize_t maxlen)
 
   /* Array of functions */
   int (*foo[ZEBRA_MESSAGE_MAX]) (unsigned char *, size_t) = {
-  parse_interface_add, parse_interface_delete, parse_interface_address_add,
-      parse_interface_address_delete, parse_interface_up,
+  parse_interface_add, parse_interface_delete, parse_interface_address_add, parse_interface_address_delete, parse_interface_up,
       parse_interface_down, ipv4_route_add, ipv4_route_delete, parse_ipv6_route_add};
 
   uint16_t length;
