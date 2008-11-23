@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
@@ -122,14 +121,13 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
   clock_t valid_until;
   olsr_u32_t *array;
   struct ipaddr_str buf;
-  u_int16_t seqnr;
+  olsr_u16_t seqnr;
   void *ip;
 
   if (olsr_cnf->ip_version == AF_INET) {
     seqnr = ntohs(m->v4.seqno);
     ip = &m->v4.originator;
-  }
-  else {
+  } else {
     seqnr = ntohs(m->v6.seqno);
     ip = &m->v6.originator;
   }
