@@ -443,7 +443,7 @@ olsr_init_timers(void)
   timer_mem_cookie =
     olsr_alloc_cookie("timer_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(timer_mem_cookie, sizeof(struct timer_entry));
-  olsr_cookie_set_memclear(timer_mem_cookie, OLSR_FALSE);
+  olsr_cookie_set_memory_clear(timer_mem_cookie, OLSR_FALSE);
 }
 
 /**

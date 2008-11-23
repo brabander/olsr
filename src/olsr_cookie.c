@@ -155,7 +155,7 @@ olsr_cookie_set_memory_size(struct olsr_cookie_info *ci, size_t size)
  * the free pool. This is only allowed for memory cookies.
  */
 void
-olsr_cookie_set_memclear(struct olsr_cookie_info *ci, olsr_bool clear)
+olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, olsr_bool clear)
 {
   if (!ci) {
     return;
@@ -176,7 +176,7 @@ olsr_cookie_set_memclear(struct olsr_cookie_info *ci, olsr_bool clear)
  * This is only allowed for memory cookies.
  */
 void
-olsr_cookie_set_mempoison(struct olsr_cookie_info *ci, olsr_bool poison)
+olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, olsr_bool poison)
 {
   if (!ci) {
     return;
