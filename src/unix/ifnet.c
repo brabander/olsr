@@ -272,7 +272,7 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(3, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
 #endif
 
-    if (ip4equal(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr)) {
+    if (!ip4equal(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr)) {
       /* New address */
       OLSR_PRINTF(1, "IPv4 address changed for %s\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
