@@ -162,7 +162,7 @@ main(int argc, char *argv[])
    */
 #ifdef WIN32
 #ifndef WINCE
-  GetWindowsDirectory(conf_file_name, FILENAME_MAX - 11);
+  GetWindowsDirectory(conf_file_name, sizeof(conf_file_name) - 1 - strlen(OLSRD_CONF_FILE_NAME));
 #else
   conf_file_name[0] = 0;
 #endif
@@ -173,7 +173,7 @@ main(int argc, char *argv[])
     conf_file_name[len++] = '\\';
   }
 
-  strscpy(conf_file_name + len, "olsrd.conf", sizeof(conf_file_name) - len);
+  strscpy(conf_file_name + len, OLSRD_CONF_FILE_NAME, sizeof(conf_file_name) - len);
 #else
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif
