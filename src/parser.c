@@ -380,8 +380,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
         /* Should be the same for IPv4 and IPv6 */
 
         /* Promiscuous or exact match */
-        if ((entry->type == PROMISCUOUS)
-            || (entry->type == m->v4.olsr_msgtype)) {
+        if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
           entry->function(m, in_if, from_addr);
           processed = 1;
         }
@@ -459,11 +458,9 @@ olsr_input(int fd)
                                                                     &((struct sockaddr_in *)&from)->sin_addr.s_addr));
 #endif
 
-    if ((olsr_cnf->ip_version == AF_INET)
-        && (fromlen != sizeof(struct sockaddr_in)))
+    if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof(struct sockaddr_in)))
       break;
-    else if ((olsr_cnf->ip_version == AF_INET6)
-             && (fromlen != sizeof(struct sockaddr_in6)))
+    else if ((olsr_cnf->ip_version == AF_INET6) && (fromlen != sizeof(struct sockaddr_in6)))
       break;
 
     /* are we talking to ourselves? */

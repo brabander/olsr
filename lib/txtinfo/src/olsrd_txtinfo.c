@@ -120,8 +120,7 @@ static void ipc_print_mid(void);
 #define SIW_TOPO 6
 #define SIW_NEIGHLINK 7
 
-static int ipc_sendf(const char *format, ...)
-  __attribute__ ((format(printf, 1, 2)));
+static int ipc_sendf(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
 
 /**
  *Do initialization here
@@ -267,8 +266,7 @@ ipc_action(int fd)
     if (inet_ntop(olsr_cnf->ip_version, &sin6->sin6_addr, addr, INET6_ADDRSTRLEN) == NULL)
       addr[0] = '\0';
     /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-    if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6)
-        && !ip6equal(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
+    if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) && !ip6equal(&sin6->sin6_addr, &ipc_accept_ip.v6)) {
       olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       close(ipc_connection);
       return;
@@ -491,12 +489,10 @@ send_info(int send_what)
   /* Print tables to IPC socket */
 
   /* links + Neighbors */
-  if ((send_what == SIW_ALL) || (send_what == SIW_NEIGHLINK)
-      || (send_what == SIW_LINK))
+  if ((send_what == SIW_ALL) || (send_what == SIW_NEIGHLINK) || (send_what == SIW_LINK))
     ipc_print_link();
 
-  if ((send_what == SIW_ALL) || (send_what == SIW_NEIGHLINK)
-      || (send_what == SIW_NEIGH))
+  if ((send_what == SIW_ALL) || (send_what == SIW_NEIGHLINK) || (send_what == SIW_NEIGH))
     ipc_print_neigh();
 
   /* topology */

@@ -282,8 +282,7 @@ add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_ad
   for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
     if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
       for (tmp_hna = tmp_nodes->hna.next; tmp_hna != &tmp_nodes->hna; tmp_hna = tmp_hna->next) {
-        if ((memcmp(&tmp_hna->net, net, ipsize) == 0)
-            && (memcmp(&tmp_hna->mask, mask, ipsize) == 0))
+        if ((memcmp(&tmp_hna->net, net, ipsize) == 0) && (memcmp(&tmp_hna->mask, mask, ipsize) == 0))
           return 0;
       }
 
@@ -488,8 +487,7 @@ find_node(char *ip)
   struct node *tmp_nodes;
 
   for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
-    if (strcmp(ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr), ip)
-        == 0)
+    if (strcmp(ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr), ip) == 0)
       return tmp_nodes;
   }
 

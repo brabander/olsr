@@ -271,8 +271,7 @@ BmfPacketCaptured(struct TBmfInterface *intf, unsigned char sllPkttype, unsigned
   dst.v4 = ipHeader->ip_dst;
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
-  if (IsMulticast(&dst)
-      || (EnableLocalBroadcast != 0 && ipequal(&dst, &intf->broadAddr))) {
+  if (IsMulticast(&dst) || (EnableLocalBroadcast != 0 && ipequal(&dst, &intf->broadAddr))) {
     /* continue */
   } else {
     return;
@@ -775,8 +774,7 @@ BmfTunPacketCaptured(unsigned char *encapsulationUdpData)
   broadAddr.v4.s_addr = htonl(EtherTunTapIpBroadcast);
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
-  if (IsMulticast(&dstIp)
-      || (EnableLocalBroadcast != 0 && ipequal(&dstIp, &broadAddr))) {
+  if (IsMulticast(&dstIp) || (EnableLocalBroadcast != 0 && ipequal(&dstIp, &broadAddr))) {
     /* continue */
   } else {
     return;

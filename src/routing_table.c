@@ -377,8 +377,7 @@ olsr_delete_rt_path(struct rt_path *rtp)
 olsr_bool
 olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2)
 {
-  if (!ipequal(&nh1->gateway, &nh2->gateway)
-      || (nh1->iif_index != nh2->iif_index)) {
+  if (!ipequal(&nh1->gateway, &nh2->gateway) || (nh1->iif_index != nh2->iif_index)) {
     return OLSR_TRUE;
   }
   return OLSR_FALSE;
@@ -455,8 +454,7 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
 
   /* originator (which is guaranteed to be unique) is final tie breaker */
   if ((rtp1->rtp_metric.hops == rtp2->rtp_metric.hops)
-      && (memcmp(&rtp1->rtp_originator, &rtp2->rtp_originator, olsr_cnf->ipsize)
-          == -1)) {
+      && (memcmp(&rtp1->rtp_originator, &rtp2->rtp_originator, olsr_cnf->ipsize) == -1)) {
     return OLSR_TRUE;
   }
 

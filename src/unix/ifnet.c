@@ -299,8 +299,7 @@ chk_if_changed(struct olsr_if *iface)
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
 
-      if (memcmp(&olsr_cnf->main_addr, &ifp->ip_addr, olsr_cnf->ipsize)
-          == 0) {
+      if (memcmp(&olsr_cnf->main_addr, &ifp->ip_addr, olsr_cnf->ipsize) == 0) {
         OLSR_PRINTF(1, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
         olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
         memcpy(&olsr_cnf->main_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize);

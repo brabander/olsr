@@ -252,8 +252,7 @@ init_olsr_plugin(struct olsr_plugin *entry)
       unsigned int i;
       int rc = 0;
       for (i = 0; i < entry->plugin_parameters_size; i++) {
-        if (0 == entry->plugin_parameters[i].name[0]
-            || 0 == strcasecmp(entry->plugin_parameters[i].name, params->key)) {
+        if (0 == entry->plugin_parameters[i].name[0] || 0 == strcasecmp(entry->plugin_parameters[i].name, params->key)) {
           /* we have found it! */
           rc =
             entry->plugin_parameters[i].set_plugin_parameter(params->value, entry->plugin_parameters[i].data,

@@ -352,8 +352,7 @@ olsr_build_tc_packet(struct tc_message *message)
     case (1):
       {
         /* 1 = Add all MPR selectors and selected MPRs */
-        if ((entry->is_mpr)
-            || (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL)) {
+        if ((entry->is_mpr) || (olsr_lookup_mprs_set(&entry->neighbor_main_addr) != NULL)) {
           //printf("\t%s\n", olsr_ip_to_string(&mprs->mpr_selector_addr));
           message_mpr = olsr_malloc_tc_mpr_addr("Build TC 2");
 

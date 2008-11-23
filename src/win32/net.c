@@ -249,8 +249,7 @@ disable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  UnenableRouter = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))
-    GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
+  UnenableRouter = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
   if (UnenableRouter == NULL)
     return 0;

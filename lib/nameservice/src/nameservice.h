@@ -131,8 +131,7 @@ int encap_namemsg(struct namemsg *);
 
 struct name_entry *add_name_to_list(struct name_entry *my_list, const char *value, int type, const union olsr_ip_addr *ip);
 
-struct name_entry *remove_nonvalid_names_from_list(struct name_entry
-                                                   *my_list, int type);
+struct name_entry *remove_nonvalid_names_from_list(struct name_entry *my_list, int type);
 
 void free_all_list_entries(struct list_node *);
 

@@ -77,12 +77,9 @@ void olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
 
 void olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);
 
-struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table(const union
-                                                            olsr_ip_addr *);
+struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union
-                                                                olsr_ip_addr
-                                                                *);
+struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *);
 
 void olsr_print_two_hop_neighbor_table(void);
 

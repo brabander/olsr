@@ -31,6 +31,6 @@ test "--cmp" = "$1" && {
   addon="--swallow-optional-blank-lines --ignore-newlines"
   shift
 }
-indent $(cat ${0%/*}/src/.indent.pro) $addon $(find -name "*.[ch]" -not -path "*/.hg*")
+indent $(cat ${0%/*}/src/.indent.pro) $addon $* $(find -name "*.[ch]" -not -path "*/.hg*")
 
 rm $(find -name "*~" -not -path "*/.hg*")

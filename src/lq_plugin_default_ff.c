@@ -172,8 +172,7 @@ default_lq_calc_cost_ff(const void *ptr)
   const struct default_lq_ff *lq = ptr;
   olsr_linkcost cost;
 
-  if (lq->valueLq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)
-      || lq->valueNlq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)) {
+  if (lq->valueLq < (unsigned int)(255 * MINIMAL_USEFUL_LQ) || lq->valueNlq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)) {
     return LINK_COST_BROKEN;
   }
 

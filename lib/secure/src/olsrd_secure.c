@@ -416,8 +416,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 
   /* Sanity check first */
   if ((sig->olsr_msgtype != MESSAGE_TYPE) || (sig->olsr_vtime != 0)
-      || (sig->olsr_msgsize != ntohs(sizeof(struct s_olsrmsg)))
-      || (sig->ttl != 1) || (sig->hopcnt != 0)) {
+      || (sig->olsr_msgsize != ntohs(sizeof(struct s_olsrmsg))) || (sig->ttl != 1) || (sig->hopcnt != 0)) {
     olsr_printf(1, "[ENC]Packet not sane!\n");
     return 0;
   }
@@ -1055,8 +1054,7 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
     /*Traverse MID list */
     while (tmp_list != &timestamps[index]) {
       /*Check if the entry is timed out */
-      if ((TIMED_OUT(tmp_list->valtime))
-          && (TIMED_OUT(tmp_list->conftime))) {
+      if ((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime))) {
         struct ipaddr_str buf;
         entry_to_delete = tmp_list;
         tmp_list = tmp_list->next;

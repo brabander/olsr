@@ -431,8 +431,7 @@ init:                          /* using goto's to optimize tail recursion */
             luaL_error(ms->L, "missing `[' after `%%f' in pattern");
           ep = luaI_classend(ms, p);    /* points to what is next */
           previous = (s == ms->src_init) ? '\0' : *(s - 1);
-          if (matchbracketclass(uchar(previous), p, ep - 1)
-              || !matchbracketclass(uchar(*s), p, ep - 1))
+          if (matchbracketclass(uchar(previous), p, ep - 1) || !matchbracketclass(uchar(*s), p, ep - 1))
             return NULL;
           p = ep;
           goto init;            /* else return match(ms, s, ep); */
@@ -675,8 +674,7 @@ str_gsub(lua_State * L)
   int n = 0;
   MatchState ms;
   luaL_Buffer b;
-  luaL_argcheck(L, lua_gettop(L) >= 3 && (lua_isstring(L, 3)
-                                          || lua_isfunction(L, 3)), 3, "string or function expected");
+  luaL_argcheck(L, lua_gettop(L) >= 3 && (lua_isstring(L, 3) || lua_isfunction(L, 3)), 3, "string or function expected");
   luaL_buffinit(L, &b);
   ms.L = L;
   ms.src_init = src;

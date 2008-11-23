@@ -119,8 +119,7 @@ apm_init(void)
   method = -1;
   OLSR_PRINTF(3, "Initializing APM\n");
 
-  if ((((fd_index = acpi_probe()) >= 0) || ac_power_on)
-      && apm_read_acpi(&ainfo))
+  if ((((fd_index = acpi_probe()) >= 0) || ac_power_on) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
   else if (apm_read_apm(&ainfo))
     method = USE_APM;

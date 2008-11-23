@@ -231,9 +231,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
        * is this interface better than anything we had before ?
        * use the requested remote interface address as a tie-breaker
        */
-      if ((tmp_if->int_metric < curr_metric)
-          || ((tmp_if->int_metric == curr_metric)
-              && ipequal(&walker->local_iface_addr, remote))) {
+      if ((tmp_if->int_metric < curr_metric) || ((tmp_if->int_metric == curr_metric) && ipequal(&walker->local_iface_addr, remote))) {
 
         /* memorize the interface's metric */
         curr_metric = tmp_if->int_metric;
@@ -258,9 +256,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
        * is this link better than anything we had before ?
        * use the requested remote interface address as a tie-breaker.
        */
-      if ((tmp_lc < curr_lcost)
-          || ((tmp_lc == curr_lcost)
-              && ipequal(&walker->local_iface_addr, remote))) {
+      if ((tmp_lc < curr_lcost) || ((tmp_lc == curr_lcost) && ipequal(&walker->local_iface_addr, remote))) {
 
         /* memorize the link quality */
         curr_lcost = tmp_lc;
@@ -311,8 +307,7 @@ set_loss_link_multiplier(struct link_entry *entry)
      * use the default multiplier only if there isn't any entry that
      * has a matching IP address.
      */
-    if ((ipequal(&mult->addr, &null_addr) && val < 0.0)
-        || ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
+    if ((ipequal(&mult->addr, &null_addr) && val < 0.0) || ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
       val = mult->value;
     }
   }

@@ -327,8 +327,7 @@ inet_pton6(const char *src, unsigned char *dst)
       continue;
     }
 
-    if (ch == '.' && ((tp + NS_INADDRSZ) <= endp)
-        && inet_pton4(curtok, tp) > 0) {
+    if (ch == '.' && ((tp + NS_INADDRSZ) <= endp) && inet_pton4(curtok, tp) > 0) {
       tp += NS_INADDRSZ;
       saw_xdigit = 0;
       break;

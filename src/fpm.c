@@ -103,10 +103,8 @@ fpm
 fpmmul(fpm a, fpm b)
 {
   fpm r;
-  assert((0 < (sfpm) a) != (0 < (sfpm) b)
-         || ((double)(sfpm) a) * ((double)(sfpm) b) <= (double)FPM_INT_MAX);
-  assert((0 < (sfpm) a) == (0 < (sfpm) b)
-         || ((double)(sfpm) a) * ((double)(sfpm) b) >= (double)FPM_INT_MIN);
+  assert((0 < (sfpm) a) != (0 < (sfpm) b) || ((double)(sfpm) a) * ((double)(sfpm) b) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < (sfpm) b) || ((double)(sfpm) a) * ((double)(sfpm) b) >= (double)FPM_INT_MIN);
   r = (fpm) fpmmul_def((sfpm) a, (sfpm) b);
   return r;
 }
@@ -115,8 +113,7 @@ fpm
 fpmdiv(fpm a, fpm b)
 {
   fpm r;
-  assert(FPM_INT_MIN <= ((long long)(sfpm) a << FPM_BIT)
-         && ((long long)(sfpm) a << FPM_BIT) <= FPM_INT_MAX);
+  assert(FPM_INT_MIN <= ((long long)(sfpm) a << FPM_BIT) && ((long long)(sfpm) a << FPM_BIT) <= FPM_INT_MAX);
   r = (fpm) fpmdiv_def((sfpm) a, (sfpm) b);
   return r;
 }
@@ -125,10 +122,8 @@ fpm
 fpmimul(int a, fpm b)
 {
   fpm r;
-  assert((0 < a) != (0 < (sfpm) b)
-         || ((double)a * (double)(sfpm) b) <= (double)FPM_INT_MAX);
-  assert((0 < a) == (0 < (sfpm) b)
-         || ((double)a * (double)(sfpm) b) >= (double)FPM_INT_MIN);
+  assert((0 < a) != (0 < (sfpm) b) || ((double)a * (double)(sfpm) b) <= (double)FPM_INT_MAX);
+  assert((0 < a) == (0 < (sfpm) b) || ((double)a * (double)(sfpm) b) >= (double)FPM_INT_MIN);
   r = (fpm) fpmimul_def(a, (sfpm) b);
   return r;
 }
@@ -137,10 +132,8 @@ fpm
 fpmmuli(fpm a, int b)
 {
   fpm r;
-  assert((0 < (sfpm) a) != (0 < b)
-         || ((double)(sfpm) a * (double)b) <= (double)FPM_INT_MAX);
-  assert((0 < (sfpm) a) == (0 < b)
-         || ((double)(sfpm) a * (double)b) >= (double)FPM_INT_MIN);
+  assert((0 < (sfpm) a) != (0 < b) || ((double)(sfpm) a * (double)b) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < b) || ((double)(sfpm) a * (double)b) >= (double)FPM_INT_MIN);
   r = (fpm) fpmmuli_def((sfpm) a, b);
   return r;
 }
@@ -158,10 +151,8 @@ fpm
 fpmlmul(fpm a, fpm b)
 {
   fpm r;
-  assert((0 < (sfpm) a) != (0 < (sfpm) b)
-         || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) <= (double)FPM_INT_MAX);
-  assert((0 < (sfpm) a) == (0 < (sfpm) b)
-         || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) >= (double)FPM_INT_MIN);
+  assert((0 < (sfpm) a) != (0 < (sfpm) b) || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < (sfpm) b) || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) >= (double)FPM_INT_MIN);
   r = (fpm) fpmlmul_def((sfpm) a, (sfpm) b);
   return r;
 }

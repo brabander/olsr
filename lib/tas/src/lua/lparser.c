@@ -43,8 +43,7 @@ typedef struct BlockCnt {
 */
 static void chunk(LexState * ls);
 static void expr(LexState * ls, expdesc * v);
-static void error_expected(LexState * ls, int token)
-  __attribute__ ((noreturn));
+static void error_expected(LexState * ls, int token) __attribute__ ((noreturn));
 
 static void
 next(LexState * ls)

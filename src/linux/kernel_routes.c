@@ -198,8 +198,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
   kernel_route.rt_dev = if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index);
 
   /* delete existing default route before ? */
-  if ((olsr_cnf->del_gws) && (rt->rt_dst.prefix.v4.s_addr == INADDR_ANY)
-      && (rt->rt_dst.prefix_len == INADDR_ANY)) {
+  if ((olsr_cnf->del_gws) && (rt->rt_dst.prefix.v4.s_addr == INADDR_ANY) && (rt->rt_dst.prefix_len == INADDR_ANY)) {
     delete_all_inet_gws();
     olsr_cnf->del_gws = OLSR_FALSE;
   }

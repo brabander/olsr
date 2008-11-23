@@ -201,8 +201,7 @@ static int curr_clients;
 static int http_socket;
 
 #if 0
-int netsprintf(char *str, const char *format, ...)
-  __attribute__ ((format(printf, 2, 3)));
+int netsprintf(char *str, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
 static int netsprintf_direct = 0;
 static int netsprintf_error = 0;
 #define sprintf netsprintf
@@ -357,8 +356,7 @@ parse_http_request(int fd)
   while ((r = recv(client_sockets[curr_clients], &req[c], 1, 0)) > 0 && (c < sizeof(req) - 1)) {
     c++;
 
-    if ((c > 3 && !strcmp(&req[c - 4], "\r\n\r\n"))
-        || (c > 1 && !strcmp(&req[c - 2], "\n\n")))
+    if ((c > 3 && !strcmp(&req[c - 4], "\r\n\r\n")) || (c > 1 && !strcmp(&req[c - 2], "\n\n")))
       break;
   }
 

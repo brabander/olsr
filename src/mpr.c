@@ -68,8 +68,7 @@ static int olsr_check_mpr_changes(void);
 
 static int olsr_chosen_mpr(struct neighbor_entry *, olsr_u16_t *);
 
-static struct neighbor_2_list_entry
- *olsr_find_2_hop_neighbors_with_1_link(int);
+static struct neighbor_2_list_entry *olsr_find_2_hop_neighbors_with_1_link(int);
 
 /* End:
  * Prototypes for internal functions
@@ -220,8 +219,7 @@ olsr_find_maximum_covered(int willingness)
            a_neighbor->neighbor_2_nocov, a_neighbor->is_mpr, a_neighbor->willingness, maximum);
 #endif
 
-    if ((!a_neighbor->is_mpr) && (a_neighbor->willingness == willingness)
-        && (maximum < a_neighbor->neighbor_2_nocov)) {
+    if ((!a_neighbor->is_mpr) && (a_neighbor->willingness == willingness) && (maximum < a_neighbor->neighbor_2_nocov)) {
 
       maximum = a_neighbor->neighbor_2_nocov;
       mpr_candidate = a_neighbor;
@@ -368,8 +366,7 @@ add_will_always_nodes(void)
 
   OLSR_FOR_ALL_NBR_ENTRIES(a_neighbor) {
     struct ipaddr_str buf;
-    if ((a_neighbor->status == NOT_SYM)
-        || (a_neighbor->willingness != WILL_ALWAYS)) {
+    if ((a_neighbor->status == NOT_SYM) || (a_neighbor->willingness != WILL_ALWAYS)) {
       continue;
     }
     olsr_chosen_mpr(a_neighbor, &count);
@@ -490,8 +487,7 @@ olsr_optimize_mpr_set(void)
 
           dup_neighbor = olsr_lookup_neighbor_table(&two_hop_list->neighbor_2->neighbor_2_addr);
 
-          if ((dup_neighbor != NULL)
-              && (dup_neighbor->status != NOT_SYM)) {
+          if ((dup_neighbor != NULL) && (dup_neighbor->status != NOT_SYM)) {
             continue;
           }
           //printf("\t[%s] coverage %d\n", olsr_ip_to_string(&buf, &two_hop_list->neighbor_2->neighbor_2_addr), two_hop_list->neighbor_2->mpr_covered_count);

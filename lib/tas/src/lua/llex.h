@@ -61,8 +61,7 @@ void luaX_init(lua_State * L);
 void luaX_setinput(lua_State * L, LexState * LS, ZIO * z, TString * source);
 int luaX_lex(LexState * LS, SemInfo * seminfo);
 void luaX_checklimit(LexState * ls, int val, int limit, const char *msg);
-void luaX_syntaxerror(LexState * ls, const char *s)
-  __attribute__ ((noreturn));
+void luaX_syntaxerror(LexState * ls, const char *s) __attribute__ ((noreturn));
 void luaX_errorline(LexState * ls, const char *s, const char *token, int line) __attribute__ ((noreturn));
 const char *luaX_token2str(LexState * ls, int token);
 

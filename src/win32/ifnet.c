@@ -160,8 +160,7 @@ IntNameToMiniIndex(int *MiniIndex, char *String)
   int i, k;
   char ch;
 
-  if ((String[0] != 'i' && String[0] != 'I')
-      || (String[1] != 'f' && String[1] != 'F'))
+  if ((String[0] != 'i' && String[0] != 'I') || (String[1] != 'f' && String[1] != 'F'))
     return -1;
 
   *MiniIndex = 0;
@@ -256,8 +255,7 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
     return -1;
   }
 
-  if ((Name[0] != 'i' && Name[0] != 'I')
-      || (Name[1] != 'f' && Name[1] != 'F')) {
+  if ((Name[0] != 'i' && Name[0] != 'I') || (Name[1] != 'f' && Name[1] != 'F')) {
     if (FriendlyNameToMiniIndex(&MiniIndex, Name) < 0) {
       fprintf(stderr, "No such interface: %s!\n", Name);
       return -1;

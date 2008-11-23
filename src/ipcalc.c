@@ -126,8 +126,7 @@ const char *
 olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix)
 {
   /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
-  static char
-    buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
+  static char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN)];
   const char *rv;
 
   if (olsr_cnf->ip_version == AF_INET) {

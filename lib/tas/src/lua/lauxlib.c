@@ -63,8 +63,7 @@ luaL_typerror(lua_State * L, int narg, const char *tname)
   luaL_argerror(L, narg, msg);
 }
 
-static void tag_error(lua_State * L, int narg, int tag)
-  __attribute__ ((noreturn));
+static void tag_error(lua_State * L, int narg, int tag) __attribute__ ((noreturn));
 static void
 tag_error(lua_State * L, int narg, int tag)
 {

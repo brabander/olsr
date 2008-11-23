@@ -449,8 +449,7 @@ retentry:                      /* entry point when returning to old functions */
   for (;;) {
     const Instruction i = *pc++;
     StkId base, ra;
-    if ((L->hookmask & (LUA_MASKLINE | LUA_MASKCOUNT))
-        && (--L->hookcount == 0 || L->hookmask & LUA_MASKLINE)) {
+    if ((L->hookmask & (LUA_MASKLINE | LUA_MASKCOUNT)) && (--L->hookcount == 0 || L->hookmask & LUA_MASKLINE)) {
       traceexec(L);
       if (L->ci->state & CI_YIELD) {    /* did hook yield? */
         L->ci->u.l.savedpc = pc - 1;
@@ -742,8 +741,7 @@ retentry:                      /* entry point when returning to old functions */
           return ra;            /* no: return */
         } else {                /* yes: continue its execution */
           int nresults;
-          lua_assert(ttisfunction(ci->base - 1)
-                     && (ci->state & CI_SAVEDPC));
+          lua_assert(ttisfunction(ci->base - 1) && (ci->state & CI_SAVEDPC));
           lua_assert(GET_OPCODE(*(ci->u.l.savedpc - 1)) == OP_CALL);
           nresults = GETARG_C(*(ci->u.l.savedpc - 1)) - 1;
           luaD_poscall(L, nresults, ra);

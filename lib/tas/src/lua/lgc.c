@@ -420,8 +420,7 @@ static void
 checkSizes(lua_State * L, size_t deadmem)
 {
   /* check size of string hash */
-  if (G(L)->strt.nuse < cast(ls_nstr, G(L)->strt.size / 4)
-      && G(L)->strt.size > MINSTRTABSIZE * 2)
+  if (G(L)->strt.nuse < cast(ls_nstr, G(L)->strt.size / 4) && G(L)->strt.size > MINSTRTABSIZE * 2)
     luaS_resize(L, G(L)->strt.size / 2);        /* table is too big */
   /* check size of buffer */
   if (luaZ_sizebuffer(&G(L)->buff) > LUA_MINBUFFER * 2) {       /* buffer too big? */

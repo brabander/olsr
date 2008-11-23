@@ -420,9 +420,7 @@ ohs_cmd_log(const char *args)
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
 
-  if (strlen(tok_buf)
-      && ((set = !strncmp(tok_buf, "set", strlen("set")))
-          || !strncmp(tok_buf, "unset", strlen("unset")))) {
+  if (strlen(tok_buf) && ((set = !strncmp(tok_buf, "set", strlen("set"))) || !strncmp(tok_buf, "unset", strlen("unset")))) {
     olsr_u32_t new_bit = 0;
 
     args += get_next_token(args, tok_buf, TOK_BUF_SIZE);

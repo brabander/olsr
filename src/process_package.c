@@ -97,8 +97,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
       message_neighbors->address = *neigh_addr;
     }
 
-    if (((message_neighbors->status == SYM_NEIGH)
-         || (message_neighbors->status == MPR_NEIGH))) {
+    if (((message_neighbors->status == SYM_NEIGH) || (message_neighbors->status == MPR_NEIGH))) {
       struct neighbor_2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
 #ifdef DEBUG
       OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
@@ -195,8 +194,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
       if (if_ifwithaddr(&message_neighbors->address) != NULL)
         continue;
 
-      if (((message_neighbors->status == SYM_NEIGH)
-           || (message_neighbors->status == MPR_NEIGH))) {
+      if (((message_neighbors->status == SYM_NEIGH) || (message_neighbors->status == MPR_NEIGH))) {
         struct neighbor_list_entry *walker;
         struct neighbor_2_entry *two_hop_neighbor;
         struct neighbor_2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor,

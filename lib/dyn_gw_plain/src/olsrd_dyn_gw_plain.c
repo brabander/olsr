@@ -145,8 +145,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
      */
 
     if (                        //(iflags & RTF_GATEWAY) &&
-         (iflags & RTF_UP) && (metric == 0) && (netmask == mask->v4.s_addr)
-         && (dest_addr == net->v4.s_addr)) {
+         (iflags & RTF_UP) && (metric == 0) && (netmask == mask->v4.s_addr) && (dest_addr == net->v4.s_addr)) {
       olsr_printf(DEBUGLEV, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
       retval = 1;
     }

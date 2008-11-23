@@ -92,8 +92,7 @@ struct olsrd_plugin_parameters {
 /**
  * Delivers the (address of the) table and the size of the parameter description
  */
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters
-                                 **params, int *size);
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
 
 #endif
 

@@ -327,10 +327,8 @@ check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_pin
        metric, refcnt, use, iface);
      */
 
-    if ((iflags & RTF_UP) && (metric == 0) && (netmask == mask.v4.s_addr)
-        && (dest_addr == net->v4.s_addr)) {
-      if (((mask.v4.s_addr == INET_PREFIX)
-           && (net->v4.s_addr == INET_NET)) && (!(iflags & RTF_GATEWAY))) {
+    if ((iflags & RTF_UP) && (metric == 0) && (netmask == mask.v4.s_addr) && (dest_addr == net->v4.s_addr)) {
+      if (((mask.v4.s_addr == INET_PREFIX) && (net->v4.s_addr == INET_NET)) && (!(iflags & RTF_GATEWAY))) {
         fclose(fp);
         return retval;
       }

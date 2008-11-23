@@ -109,8 +109,7 @@ static void ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *
 
 static void ipc_send(const char *, int);
 
-static void ipc_send_fmt(const char *format, ...)
-  __attribute__ ((format(printf, 1, 2)));
+static void ipc_send_fmt(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
 
 #define ipc_send_str(data) ipc_send((data), strlen(data))
 

@@ -516,8 +516,7 @@ static void
 invertjump(FuncState * fs, expdesc * e)
 {
   Instruction *pc = getjumpcontrol(fs, e->info);
-  lua_assert(testOpMode(GET_OPCODE(*pc), OpModeT)
-             && GET_OPCODE(*pc) != OP_TEST);
+  lua_assert(testOpMode(GET_OPCODE(*pc), OpModeT) && GET_OPCODE(*pc) != OP_TEST);
   SETARG_A(*pc, !(GETARG_A(*pc)));
 }
 

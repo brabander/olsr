@@ -1359,8 +1359,7 @@ serviceConn(struct connInfo *info)
 
       debug(DEBUG_REQUEST, "user = %s, password = %s\n", tmp2, tmp2 + i);
 
-      if ((confUser != NULL && strcmp(confUser, tmp2) != 0)
-          || (confPassword != NULL && strcmp(confPassword, tmp2 + i) != 0)) {
+      if ((confUser != NULL && strcmp(confUser, tmp2) != 0) || (confPassword != NULL && strcmp(confPassword, tmp2 + i) != 0)) {
         error("user authentication failed\n");
         writeError(info, 401);
         return 0;
@@ -1551,8 +1550,7 @@ serviceConn(struct connInfo *info)
       currSess = info->newSess;
     }
 
-    if (runLua(&errMsg, info, confWorkDir, tmp2, argList, &currSess->data)
-        < 0) {
+    if (runLua(&errMsg, info, confWorkDir, tmp2, argList, &currSess->data) < 0) {
       error("cannot run %s\n", tmp2);
 
       if (info->newSess != NULL) {
@@ -1701,8 +1699,7 @@ httpService(int freq)
 
   while (i < numConn) {
     if (((conn[i]->flags & FLAG_READ) != 0 && readConn(conn[i]) < 0)
-        || ((conn[i]->flags & FLAG_WRITE) != 0 && writeConn(conn[i]) < 0)
-        || serviceConn(conn[i]) < 0) {
+        || ((conn[i]->flags & FLAG_WRITE) != 0 && writeConn(conn[i]) < 0) || serviceConn(conn[i]) < 0) {
       closeFile(conn[i]->sockId);
 
       freeConnInfo(conn[i]);

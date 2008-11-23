@@ -190,8 +190,7 @@ listcode(lua_State * L)
 {
   int pc;
   Proto *p;
-  luaL_argcheck(L, lua_isfunction(L, 1)
-                && !lua_iscfunction(L, 1), 1, "Lua function expected");
+  luaL_argcheck(L, lua_isfunction(L, 1) && !lua_iscfunction(L, 1), 1, "Lua function expected");
   p = clvalue(func_at(L, 1))->l.p;
   lua_newtable(L);
   setnameval(L, "maxstack", p->maxstacksize);
@@ -210,8 +209,7 @@ listk(lua_State * L)
 {
   Proto *p;
   int i;
-  luaL_argcheck(L, lua_isfunction(L, 1)
-                && !lua_iscfunction(L, 1), 1, "Lua function expected");
+  luaL_argcheck(L, lua_isfunction(L, 1) && !lua_iscfunction(L, 1), 1, "Lua function expected");
   p = clvalue(func_at(L, 1))->l.p;
   lua_newtable(L);
   for (i = 0; i < p->sizek; i++) {
@@ -229,8 +227,7 @@ listlocals(lua_State * L)
   int pc = luaL_checkint(L, 2) - 1;
   int i = 0;
   const char *name;
-  luaL_argcheck(L, lua_isfunction(L, 1)
-                && !lua_iscfunction(L, 1), 1, "Lua function expected");
+  luaL_argcheck(L, lua_isfunction(L, 1) && !lua_iscfunction(L, 1), 1, "Lua function expected");
   p = clvalue(func_at(L, 1))->l.p;
   while ((name = luaF_getlocalname(p, ++i, pc)) != NULL)
     lua_pushstring(L, name);
@@ -310,8 +307,7 @@ table_query(lua_State * L)
     luaA_pushobject(L, &t->array[i]);
     lua_pushnil(L);
   } else if ((i -= t->sizearray) < sizenode(t)) {
-    if (!ttisnil(gval(gnode(t, i))) || ttisnil(gkey(gnode(t, i)))
-        || ttisnumber(gkey(gnode(t, i)))) {
+    if (!ttisnil(gval(gnode(t, i))) || ttisnil(gkey(gnode(t, i))) || ttisnumber(gkey(gnode(t, i)))) {
       luaA_pushobject(L, gkey(gnode(t, i)));
     } else
       lua_pushstring(L, "<undef>");

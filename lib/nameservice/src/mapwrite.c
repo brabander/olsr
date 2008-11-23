@@ -99,8 +99,7 @@ mapwrite_work(FILE * fmap)
         if (!(ip4equal((struct in_addr *)&olsr_cnf->main_addr, &ifs->interf->int_addr.sin_addr))) {
           if (0 >
               fprintf(fmap, "Mid('%s','%s');\n", olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
-                      olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)
-                                        &ifs->interf->int_addr.sin_addr))) {
+                      olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int_addr.sin_addr))) {
             return;
           }
         }

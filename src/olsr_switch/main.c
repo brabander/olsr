@@ -239,8 +239,7 @@ ohs_route_data(struct ohs_connection *oc)
   /* Loop trough clients */
   for (ohs_cs = ohs_conns; ohs_cs; ohs_cs = ohs_cs->next) {
     /* Check that the link is active open */
-    if (ohs_check_link(oc, &ohs_cs->ip_addr)
-        && oc->socket != ohs_cs->socket) {
+    if (ohs_check_link(oc, &ohs_cs->ip_addr) && oc->socket != ohs_cs->socket) {
       ssize_t sent;
 
       /* Send link addr */
@@ -425,8 +424,7 @@ ohs_listen_loop(void)
 
   while (1) {
     for (Walker = ohs_conns; Walker != NULL; Walker = Walker->next) {
-      if (WSAEventSelect(Walker->socket, Objects[1], FD_READ | FD_CLOSE)
-          == SOCKET_ERROR) {
+      if (WSAEventSelect(Walker->socket, Objects[1], FD_READ | FD_CLOSE) == SOCKET_ERROR) {
         fprintf(stderr, "WSAEventSelect failed (2): %s\n", strerror(errno));
         Sleep(1000);
         continue;

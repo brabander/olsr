@@ -50,10 +50,8 @@
 #define DEBUG_LUA 16
 #define DEBUG_QUANTUM 32
 
-extern void error(const char *form, ...)
-  __attribute__ ((format(printf, 1, 2)));
-extern void debug(int facility, const char *form, ...)
-  __attribute__ ((format(printf, 2, 3)));
+extern void error(const char *form, ...) __attribute__ ((format(printf, 1, 2)));
+extern void debug(int facility, const char *form, ...) __attribute__ ((format(printf, 2, 3)));
 extern char *strdupAdd(const char *string, int add);
 extern char *myStrdup(const char *string);
 extern void chomp(char *line, int len);

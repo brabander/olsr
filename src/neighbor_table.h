@@ -87,20 +87,15 @@ void olsr_init_neighbor_table(void);
 
 int olsr_delete_neighbor_2_pointer(struct neighbor_entry *, union olsr_ip_addr *);
 
-struct neighbor_2_list_entry *olsr_lookup_my_neighbors(const struct
-                                                       neighbor_entry *, const union
-                                                       olsr_ip_addr *);
+struct neighbor_2_list_entry *olsr_lookup_my_neighbors(const struct neighbor_entry *, const union olsr_ip_addr *);
 
 int olsr_delete_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *olsr_insert_neighbor_table(const union olsr_ip_addr
-                                                  *);
+struct neighbor_entry *olsr_insert_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr
-                                                  *);
+struct neighbor_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *olsr_lookup_neighbor_table_alias(const union
-                                                        olsr_ip_addr *);
+struct neighbor_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
 
 void olsr_time_out_two_hop_neighbors(struct neighbor_entry *);
 

@@ -1457,8 +1457,7 @@ allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t * h
   hostname_or_ip = strndup(&service_line[hostname_or_ip_match->rm_so], hostname_or_ip_match->rm_eo - hostname_or_ip_match->rm_so);
   //hostname is one of the names, that I announce (i.e. one that i am allowed to announce)
   for (name = my_names; name != NULL; name = name->next) {
-    if (strncmp(name->name, hostname_or_ip, name->len - strlen(my_suffix))
-        == 0) {
+    if (strncmp(name->name, hostname_or_ip, name->len - strlen(my_suffix)) == 0) {
       OLSR_PRINTF(4, "NAME PLUGIN: hostname %s in service %s is OK\n", hostname_or_ip, service_line);
       free(hostname_or_ip);
       hostname_or_ip = NULL;

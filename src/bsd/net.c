@@ -359,8 +359,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
   }
 
   for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on))
-        == 0)
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
       break;
     if (on <= 8 * 1024) {
       perror("setsockopt");
@@ -405,8 +404,7 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   }
 
   for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on))
-        == 0)
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
       break;
     if (on <= 8 * 1024) {
       perror("setsockopt");
@@ -433,8 +431,7 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
     return -1;
   }
 #elif defined IPV6_PKTINFO
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on, sizeof(on))
-      < 0) {
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on, sizeof(on)) < 0) {
     perror("IPV6_PKTINFO failed");
     close(sock);
     return -1;
@@ -513,8 +510,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
   }
 
   for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-    if ((ifa->ifa_addr->sa_family == AF_INET6)
-        && (strcmp(ifa->ifa_name, ifname) == 0)) {
+    if ((ifa->ifa_addr->sa_family == AF_INET6) && (strcmp(ifa->ifa_name, ifname) == 0)) {
       sin6 = (const struct sockaddr_in6 *)(ifa->ifa_addr);
       if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
         continue;
