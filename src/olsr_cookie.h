@@ -63,12 +63,18 @@ struct olsr_cookie_info {
   char *ci_name;		       /* Name */
   olsr_cookie_type ci_type;	       /* Type of cookie */
   size_t ci_size;		       /* Fixed size for block allocations */
+  unsigned int ci_flags;	       /* Misc. flags */
   unsigned int ci_usage;	       /* Stats, resource usage */
   unsigned int ci_changes;	       /* Stats, resource churn */
   struct list_node ci_free_list;       /* List head for recyclable blocks */
   unsigned int ci_free_list_usage;     /* Length of free list */
 };
 
+/* Cookie flags */
+#define COOKIE_NO_MEMCLEAR  ( 1 << 0)	/* Do not clear memory */
+#define COOKIE_MEMPOISON    ( 2 << 0)	/* Poison memory pattern */
+
+#define COOKIE_MEMPOISON_PATTERN  0xa6 /* Pattern to spoil memory */
 #define COOKIE_FREE_LIST_THRESHOLD 10  /* Blocks / Percent  */
 
 /*
@@ -87,6 +93,8 @@ extern void olsr_free_cookie(struct olsr_cookie_info *);
 extern void olsr_delete_all_cookies(void);
 extern char *olsr_cookie_name(olsr_cookie_t);
 extern void olsr_cookie_set_memory_size(struct olsr_cookie_info *, size_t);
+extern void olsr_cookie_set_memclear(struct olsr_cookie_info *, olsr_bool);
+extern void olsr_cookie_set_mempoison(struct olsr_cookie_info *, olsr_bool);
 extern void olsr_cookie_usage_incr(olsr_cookie_t);
 extern void olsr_cookie_usage_decr(olsr_cookie_t);
 
