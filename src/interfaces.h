@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -90,15 +91,13 @@
 #define WEIGHT_HIGH             4096    /* High                 */
 #define WEIGHT_HIGHEST          8192    /* Really high          */
 
-struct if_gen_property
-{
+struct if_gen_property {
   olsr_u32_t owner_id;
   void *data;
   struct if_gen_property *next;
 };
 
-struct vtimes
-{
+struct vtimes {
   olsr_u8_t hello;
   olsr_u8_t tc;
   olsr_u8_t mid;
@@ -107,41 +106,39 @@ struct vtimes
 
 /* Output buffer structure. This should actually be in net_olsr.h but we have circular references then.
  */
-struct olsr_netbuf
-{
-  olsr_u8_t *buff;              /* Pointer to the allocated buffer */
-  int bufsize;                  /* Size of the buffer */
-  int maxsize;                  /* Max bytes of payload that can be added to the buffer */
-  int pending;                  /* How much data is currently pending in the buffer */
-  int reserved;                 /* Plugins can reserve space in buffers */
+struct olsr_netbuf {
+  olsr_u8_t *buff;                     /* Pointer to the allocated buffer */
+  int bufsize;                         /* Size of the buffer */
+  int maxsize;                         /* Max bytes of payload that can be added to the buffer */
+  int pending;                         /* How much data is currently pending in the buffer */
+  int reserved;                        /* Plugins can reserve space in buffers */
 };
 
 /**
  *A struct containing all necessary information about each
  *interface participating in the OLSRD routing
  */
-struct interface
-{
+struct interface {
   /* IP version 4 */
-  struct sockaddr_in int_addr;  /* address */
-  struct sockaddr_in int_netmask;       /* netmask */
-  struct sockaddr_in int_broadaddr;     /* broadcast address */
+  struct sockaddr_in int_addr;         /* address */
+  struct sockaddr_in int_netmask;      /* netmask */
+  struct sockaddr_in int_broadaddr;    /* broadcast address */
   /* IP version 6 */
-  struct sockaddr_in6 int6_addr;        /* Address */
-  struct sockaddr_in6 int6_multaddr;    /* Multicast */
+  struct sockaddr_in6 int6_addr;       /* Address */
+  struct sockaddr_in6 int6_multaddr;   /* Multicast */
   /* IP independent */
   union olsr_ip_addr ip_addr;
-  int is_hcif;                  /* Is this a emulated host-client if? */
+  int is_hcif;                         /* Is this a emulated host-client if? */
 
-  int olsr_socket;              /* The broadcast socket for this interface */
+  int olsr_socket;                     /* The broadcast socket for this interface */
 
-  int int_metric;               /* metric of interface */
-  int int_mtu;                  /* MTU of interface */
-  int int_flags;                /* see below */
-  int if_index;                 /* Kernels index of this interface */
-  int is_wireless;              /* wireless interface or not */
-  char *int_name;               /* from kernel if structure */
-  olsr_u16_t olsr_seqnum;       /* Olsr message seqno */
+  int int_metric;                      /* metric of interface */
+  int int_mtu;                         /* MTU of interface */
+  int int_flags;                       /* see below */
+  int if_index;                        /* Kernels index of this interface */
+  int is_wireless;                     /* wireless interface or not */
+  char *int_name;                      /* from kernel if structure */
+  olsr_u16_t olsr_seqnum;              /* Olsr message seqno */
 
   /* Periodic message generation timers */
   struct timer_entry *hello_gen_timer;
@@ -150,26 +147,26 @@ struct interface
   struct timer_entry *tc_gen_timer;
 
 #ifdef linux
+
 /* Struct used to store original redirect/ingress setting */
-  struct nic_state
-  {
-    char redirect;              /* The original state of icmp redirect */
-    char spoof;                 /* The original state of the IP spoof filter */
+  struct nic_state {
+    char redirect;                     /* The original state of icmp redirect */
+    char spoof;                        /* The original state of the IP spoof filter */
   } nic_state;
 #endif
 
   olsr_reltime hello_etime;
   struct vtimes valtimes;
 
-  clock_t fwdtimer;             /* Timeout for OLSR forwarding on this if */
+  clock_t fwdtimer;                    /* Timeout for OLSR forwarding on this if */
 
-  struct olsr_netbuf netbuf;    /* the buffer to construct the packet data */
+  struct olsr_netbuf netbuf;           /* the buffer to construct the packet data */
 
   struct if_gen_property *gen_properties;       /* Generic interface properties */
 
-  int ttl_index;                /* index in TTL array for fish-eye */
+  int ttl_index;                       /* index in TTL array for fish-eye */
 
-  olsr_bool immediate_send_tc;  /* Hello's are sent immediately normally, this flag prefers to send TC's */
+  olsr_bool immediate_send_tc;         /* Hello's are sent immediately normally, this flag prefers to send TC's */
 
   struct interface *int_next;
 };
@@ -185,25 +182,25 @@ struct interface
 /* The interface linked-list */
 extern struct interface *ifnet;
 
-int ifinit (void);
+int ifinit(void);
 
-void run_ifchg_cbs (struct interface *, int);
+void run_ifchg_cbs(struct interface *, int);
 
-struct interface *if_ifwithsock (int);
+struct interface *if_ifwithsock(int);
 
-struct interface *if_ifwithaddr (const union olsr_ip_addr *);
+struct interface *if_ifwithaddr(const union olsr_ip_addr *);
 
-struct interface *if_ifwithname (const char *);
+struct interface *if_ifwithname(const char *);
 
-const char *if_ifwithindex_name (const int if_index);
+const char *if_ifwithindex_name(const int if_index);
 
-struct interface *if_ifwithindex (const int if_index);
+struct interface *if_ifwithindex(const int if_index);
 
-struct olsr_if *queue_if (const char *, int);
+struct olsr_if *queue_if(const char *, int);
 
-int add_ifchgf (int (*f) (struct interface *, int));
+int add_ifchgf(int (*f) (struct interface *, int));
 
-int del_ifchgf (int (*f) (struct interface *, int));
+int del_ifchgf(int (*f) (struct interface *, int));
 
 extern struct olsr_cookie_info *interface_poll_timer_cookie;
 extern struct olsr_cookie_info *hello_gen_timer_cookie;

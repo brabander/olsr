@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2007, Bernd Petrovitsch <berndæfirmix.at>
@@ -47,122 +48,111 @@
 #include <limits.h>
 #include <arpa/inet.h>
 
-struct ipaddr_str
-{
-  char buf[MAX (INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
+struct ipaddr_str {
+  char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
 } __attribute__ ((unused));
 
 /*
  * Macros for comparing and copying IP addresses
  */
 static INLINE int
-ip4cmp (const struct in_addr *a, const struct in_addr *b)
+ip4cmp(const struct in_addr *a, const struct in_addr *b)
 {
   return a->s_addr > b->s_addr ? +1 : a->s_addr < b->s_addr ? -1 : 0;
 }
 static INLINE int
-ip4equal (const struct in_addr *a, const struct in_addr *b)
+ip4equal(const struct in_addr *a, const struct in_addr *b)
 {
   return a->s_addr == b->s_addr;
 }
 
 static INLINE int
-ip6cmp (const struct in6_addr *a, const struct in6_addr *b)
+ip6cmp(const struct in6_addr *a, const struct in6_addr *b)
 {
-  return memcmp (a, b, sizeof (*a));
+  return memcmp(a, b, sizeof(*a));
 }
 static INLINE int
-ip6equal (const struct in6_addr *a, const struct in6_addr *b)
+ip6equal(const struct in6_addr *a, const struct in6_addr *b)
 {
-  return ip6cmp (a, b) == 0;
+  return ip6cmp(a, b) == 0;
 }
 
 #if 0
 static INLINE int
-ipcmp (const union olsr_ip_addr *a, const union olsr_ip_addr *b)
+ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b)
 {
-  return olsr_cnf->ip_version == AF_INET ? ip4cmp (&a->v4,
-                                                   &b->v4) : ip6cmp (&a->v6,
-                                                                     &b->v6);
+  return olsr_cnf->ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6);
 }
 #endif
 static INLINE int
-ipequal (const union olsr_ip_addr *a, const union olsr_ip_addr *b)
+ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b)
 {
-  return olsr_cnf->ip_version == AF_INET ? ip4equal (&a->v4,
-                                                     &b->v4) : ip6equal (&a->
-                                                                         v6,
-                                                                         &b->
-                                                                         v6);
+  return olsr_cnf->ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6);
 }
 
 /* Do not use this - this is as evil as the COPY_IP() macro was and only used in
  * source which also needs cleanups.
  */
 static INLINE void
-genipcopy (void *dst, const void *src)
+genipcopy(void *dst, const void *src)
 {
-  memcpy (dst, src, olsr_cnf->ipsize);
+  memcpy(dst, src, olsr_cnf->ipsize);
 }
 
-int ip_in_net (const union olsr_ip_addr *ipaddr,
-               const struct olsr_ip_prefix *net);
+int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
 
-int prefix_to_netmask (olsr_u8_t *, int, olsr_u8_t);
+int prefix_to_netmask(olsr_u8_t *, int, olsr_u8_t);
 
 static INLINE int
-olsr_prefix_to_netmask (union olsr_ip_addr *adr, olsr_u8_t prefixlen)
+olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u8_t prefixlen)
 {
-  return prefix_to_netmask (adr->v6.s6_addr, olsr_cnf->ipsize, prefixlen);
+  return prefix_to_netmask(adr->v6.s6_addr, olsr_cnf->ipsize, prefixlen);
 }
 
-olsr_u8_t netmask_to_prefix (const olsr_u8_t *, int);
+olsr_u8_t netmask_to_prefix(const olsr_u8_t *, int);
 
 static INLINE olsr_u8_t
-olsr_netmask_to_prefix (const union olsr_ip_addr *adr)
+olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
-  return netmask_to_prefix (adr->v6.s6_addr, olsr_cnf->ipsize);
+  return netmask_to_prefix(adr->v6.s6_addr, olsr_cnf->ipsize);
 }
 
 static INLINE olsr_u8_t
-olsr_netmask4_to_prefix (const olsr_u32_t * a)
+olsr_netmask4_to_prefix(const olsr_u32_t * a)
 {
-  return netmask_to_prefix ((const olsr_u8_t *) a, sizeof (*a));
+  return netmask_to_prefix((const olsr_u8_t *)a, sizeof(*a));
 }
 static INLINE olsr_u8_t
-olsr_netmask6_to_prefix (const struct in6_addr *a)
+olsr_netmask6_to_prefix(const struct in6_addr *a)
 {
-  return netmask_to_prefix ((const olsr_u8_t *) a, sizeof (*a));
+  return netmask_to_prefix((const olsr_u8_t *)a, sizeof(*a));
 }
 
 static INLINE const char *
-ip4_to_string (struct ipaddr_str *const buf, const struct in_addr addr4)
+ip4_to_string(struct ipaddr_str *const buf, const struct in_addr addr4)
 {
-  return inet_ntop (AF_INET, &addr4, buf->buf, sizeof (buf->buf));
+  return inet_ntop(AF_INET, &addr4, buf->buf, sizeof(buf->buf));
 }
 
 static INLINE const char *
-ip6_to_string (struct ipaddr_str *const buf,
-               const struct in6_addr *const addr6)
+ip6_to_string(struct ipaddr_str *const buf, const struct in6_addr *const addr6)
 {
-  return inet_ntop (AF_INET6, addr6, buf->buf, sizeof (buf->buf));
+  return inet_ntop(AF_INET6, addr6, buf->buf, sizeof(buf->buf));
 }
 
 static INLINE const char *
-olsr_ip_to_string (struct ipaddr_str *const buf,
-                   const union olsr_ip_addr *addr)
+olsr_ip_to_string(struct ipaddr_str *const buf, const union olsr_ip_addr *addr)
 {
-  return inet_ntop (olsr_cnf->ip_version, addr, buf->buf, sizeof (buf->buf));
+  return inet_ntop(olsr_cnf->ip_version, addr, buf->buf, sizeof(buf->buf));
 }
 
-const char *olsr_ip_prefix_to_string (const struct olsr_ip_prefix *prefix);
+const char *olsr_ip_prefix_to_string(const struct olsr_ip_prefix *prefix);
 
 static INLINE const char *
-sockaddr4_to_string (struct ipaddr_str *const buf,
-                     const struct sockaddr *const addr)
+sockaddr4_to_string(struct ipaddr_str *const buf, const struct sockaddr *const addr)
 {
-  const struct sockaddr_in *const addr4 = (const struct sockaddr_in *) addr;
-  return ip4_to_string (buf, addr4->sin_addr);
+  const struct sockaddr_in *const addr4 = (const struct sockaddr_in *)addr;
+  return ip4_to_string(buf, addr4->sin_addr);
 }
 
 #endif

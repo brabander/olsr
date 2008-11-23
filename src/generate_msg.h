@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -47,15 +48,15 @@
 
 /* Functions */
 
-void generate_hello (void *);
+void generate_hello(void *);
 
-void generate_mid (void *);
+void generate_mid(void *);
 
-void generate_hna (void *);
+void generate_hna(void *);
 
-void generate_tc (void *);
+void generate_tc(void *);
 
-void generate_stdout_pulse (void *);
+void generate_stdout_pulse(void *);
 
 #endif
 

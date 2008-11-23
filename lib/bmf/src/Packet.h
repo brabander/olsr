@@ -48,12 +48,11 @@
  * with a 8-bytes BMF header (struct TEncapHeader), followed by the
  * encapsulated Ethernet-IP packet itself */
 
-struct TEncapHeader
-{
+struct TEncapHeader {
   /* Use a standard Type-Length-Value (TLV) element */
   u_int8_t type;
   u_int8_t len;
-  u_int16_t reserved;           /* Always 0 */
+  u_int16_t reserved;                  /* Always 0 */
   u_int32_t crc32;
 } __attribute__ ((__packed__));
 
@@ -61,22 +60,21 @@ struct TEncapHeader
 #define BMF_ENCAP_TYPE 1
 #define BMF_ENCAP_LEN 6
 
-struct TSaveTtl
-{
+struct TSaveTtl {
   u_int8_t ttl;
   u_int16_t check;
 } __attribute__ ((__packed__));
 
-int IsIpFragment (unsigned char *ipPacket);
-u_int16_t GetIpTotalLength (unsigned char *ipPacket);
-unsigned int GetIpHeaderLength (unsigned char *ipPacket);
-u_int8_t GetTtl (unsigned char *ipPacket);
-void SaveTtlAndChecksum (unsigned char *ipPacket, struct TSaveTtl *sttl);
-void RestoreTtlAndChecksum (unsigned char *ipPacket, struct TSaveTtl *sttl);
-void DecreaseTtlAndUpdateHeaderChecksum (unsigned char *ipPacket);
-struct ip *GetIpHeader (unsigned char *encapsulationUdpData);
-unsigned char *GetIpPacket (unsigned char *encapsulationUdpData);
-u_int16_t GetEncapsulationUdpDataLength (unsigned char *encapsulationUdpData);
+int IsIpFragment(unsigned char *ipPacket);
+u_int16_t GetIpTotalLength(unsigned char *ipPacket);
+unsigned int GetIpHeaderLength(unsigned char *ipPacket);
+u_int8_t GetTtl(unsigned char *ipPacket);
+void SaveTtlAndChecksum(unsigned char *ipPacket, struct TSaveTtl *sttl);
+void RestoreTtlAndChecksum(unsigned char *ipPacket, struct TSaveTtl *sttl);
+void DecreaseTtlAndUpdateHeaderChecksum(unsigned char *ipPacket);
+struct ip *GetIpHeader(unsigned char *encapsulationUdpData);
+unsigned char *GetIpPacket(unsigned char *encapsulationUdpData);
+u_int16_t GetEncapsulationUdpDataLength(unsigned char *encapsulationUdpData);
 
 #endif /* _BMF_PACKET_H */
 

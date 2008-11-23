@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -44,43 +45,41 @@
 
 /* init a circular list  */
 void
-list_head_init (struct list_node *node)
+list_head_init(struct list_node *node)
 {
   node->prev = node;
   node->next = node;
 }
 
 void
-list_node_init (struct list_node *node)
+list_node_init(struct list_node *node)
 {
   node->prev = NULL;
   node->next = NULL;
 }
 
 int
-list_node_on_list (struct list_node *node)
+list_node_on_list(struct list_node *node)
 {
-  if (node->prev || node->next)
-    {
-      return 1;
-    }
+  if (node->prev || node->next) {
+    return 1;
+  }
 
   return 0;
 }
 
 int
-list_is_empty (struct list_node *node)
+list_is_empty(struct list_node *node)
 {
-  if (node->prev == node && node->next == node)
-    {
-      return 1;
-    }
+  if (node->prev == node && node->next == node) {
+    return 1;
+  }
 
   return 0;
 }
 
 void
-list_add_after (struct list_node *pos_node, struct list_node *new_node)
+list_add_after(struct list_node *pos_node, struct list_node *new_node)
 {
   new_node->next = pos_node->next;
   new_node->prev = pos_node;
@@ -90,7 +89,7 @@ list_add_after (struct list_node *pos_node, struct list_node *new_node)
 }
 
 void
-list_add_before (struct list_node *pos_node, struct list_node *new_node)
+list_add_before(struct list_node *pos_node, struct list_node *new_node)
 {
   new_node->prev = pos_node->prev;
   new_node->next = pos_node;
@@ -100,12 +99,12 @@ list_add_before (struct list_node *pos_node, struct list_node *new_node)
 }
 
 void
-list_remove (struct list_node *del_node)
+list_remove(struct list_node *del_node)
 {
   del_node->next->prev = del_node->prev;
   del_node->prev->next = del_node->next;
 
-  list_node_init (del_node);
+  list_node_init(del_node);
 }
 
 /*

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2007, Bernd Petrovitsch <bernd@firmix.at>
@@ -46,123 +47,95 @@
 #include <arpa/inet.h>
 
 int
-set_plugin_port (const char *value, void *data,
-                 set_plugin_parameter_addon addon __attribute__ ((unused)))
+set_plugin_port(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *endptr;
-  const unsigned int port = strtoul (value, &endptr, 0);
-  if (*endptr != '\0' || endptr == value)
-    {
-      OLSR_PRINTF (0, "Illegal port number \"%s\"", value);
-      return 1;
-    }
-  if (port > 65535)
-    {
-      OLSR_PRINTF (0, "Port number %u out of range", port);
-      return 1;
-    }
-  if (data != NULL)
-    {
-      int *v = data;
-      *v = port;
-      OLSR_PRINTF (1, "%s port number %u\n", "Got", port);
-    }
-  else
-    {
-      OLSR_PRINTF (0, "%s port number %u\n", "Ignored", port);
-    }
+  const unsigned int port = strtoul(value, &endptr, 0);
+  if (*endptr != '\0' || endptr == value) {
+    OLSR_PRINTF(0, "Illegal port number \"%s\"", value);
+    return 1;
+  }
+  if (port > 65535) {
+    OLSR_PRINTF(0, "Port number %u out of range", port);
+    return 1;
+  }
+  if (data != NULL) {
+    int *v = data;
+    *v = port;
+    OLSR_PRINTF(1, "%s port number %u\n", "Got", port);
+  } else {
+    OLSR_PRINTF(0, "%s port number %u\n", "Ignored", port);
+  }
   return 0;
 }
 
 int
-set_plugin_ipaddress (const char *value, void *data,
-                      set_plugin_parameter_addon addon
-                      __attribute__ ((unused)))
+set_plugin_ipaddress(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char buf[INET6_ADDRSTRLEN];
   union olsr_ip_addr ip_addr;
-  if (inet_pton (olsr_cnf->ip_version, value, &ip_addr) <= 0)
-    {
-      OLSR_PRINTF (0, "Illegal IP address \"%s\"", value);
-      return 1;
-    }
-  inet_ntop (olsr_cnf->ip_version, &ip_addr, buf, sizeof (buf));
-  if (data != NULL)
-    {
-      union olsr_ip_addr *v = data;
-      *v = ip_addr;
-      OLSR_PRINTF (1, "%s IP address %s\n", "Got", buf);
-    }
-  else
-    {
-      OLSR_PRINTF (0, "%s IP address %s\n", "Ignored", buf);
-    }
+  if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
+    OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
+    return 1;
+  }
+  inet_ntop(olsr_cnf->ip_version, &ip_addr, buf, sizeof(buf));
+  if (data != NULL) {
+    union olsr_ip_addr *v = data;
+    *v = ip_addr;
+    OLSR_PRINTF(1, "%s IP address %s\n", "Got", buf);
+  } else {
+    OLSR_PRINTF(0, "%s IP address %s\n", "Ignored", buf);
+  }
   return 0;
 }
 
 int
-set_plugin_boolean (const char *value, void *data,
-                    set_plugin_parameter_addon addon __attribute__ ((unused)))
+set_plugin_boolean(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   int *v = data;
-  if (strcasecmp (value, "yes") == 0 || strcasecmp (value, "true") == 0)
-    {
-      *v = 1;
-    }
-  else if (strcasecmp (value, "no") == 0 || strcasecmp (value, "false") == 0)
-    {
-      *v = 0;
-    }
-  else
-    {
-      return 1;
-    }
+  if (strcasecmp(value, "yes") == 0 || strcasecmp(value, "true") == 0) {
+    *v = 1;
+  } else if (strcasecmp(value, "no") == 0 || strcasecmp(value, "false") == 0) {
+    *v = 0;
+  } else {
+    return 1;
+  }
   return 0;
 }
 
 int
-set_plugin_int (const char *value, void *data,
-                set_plugin_parameter_addon addon __attribute__ ((unused)))
+set_plugin_int(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *endptr;
-  const int theint = strtol (value, &endptr, 0);
-  if (*endptr != '\0' || endptr == value)
-    {
-      OLSR_PRINTF (0, "Illegal int \"%s\"", value);
-      return 1;
-    }
-  if (data != NULL)
-    {
-      int *v = data;
-      *v = theint;
-      OLSR_PRINTF (1, "%s int %d\n", "Got", theint);
-    }
-  else
-    {
-      OLSR_PRINTF (0, "%s int %d\n", "Ignored", theint);
-    }
+  const int theint = strtol(value, &endptr, 0);
+  if (*endptr != '\0' || endptr == value) {
+    OLSR_PRINTF(0, "Illegal int \"%s\"", value);
+    return 1;
+  }
+  if (data != NULL) {
+    int *v = data;
+    *v = theint;
+    OLSR_PRINTF(1, "%s int %d\n", "Got", theint);
+  } else {
+    OLSR_PRINTF(0, "%s int %d\n", "Ignored", theint);
+  }
   return 0;
 }
 
 int
-set_plugin_string (const char *value, void *data,
-                   set_plugin_parameter_addon addon)
+set_plugin_string(const char *value, void *data, set_plugin_parameter_addon addon)
 {
-  if (data != NULL)
-    {
-      char *v = data;
-      if ((unsigned) strlen (value) >= addon.ui)
-        {
-          OLSR_PRINTF (0, "String too long \"%s\"", value);
-          return 1;
-        }
-      strscpy (v, value, addon.ui);
-      OLSR_PRINTF (1, "%s string %s\n", "Got", value);
+  if (data != NULL) {
+    char *v = data;
+    if ((unsigned)strlen(value) >= addon.ui) {
+      OLSR_PRINTF(0, "String too long \"%s\"", value);
+      return 1;
     }
-  else
-    {
-      OLSR_PRINTF (0, "%s string %s\n", "Ignored", value);
-    }
+    strscpy(v, value, addon.ui);
+    OLSR_PRINTF(1, "%s string %s\n", "Got", value);
+  } else {
+    OLSR_PRINTF(0, "%s string %s\n", "Ignored", value);
+  }
   return 0;
 }
 

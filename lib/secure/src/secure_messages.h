@@ -76,8 +76,7 @@ extern char keyfile[FILENAME_MAX + 1];
  *                            PACKET SECTION                                *
  ****************************************************************************/
 
-struct sig_msg
-{
+struct sig_msg {
   olsr_u8_t type;
   olsr_u8_t algorithm;
   olsr_u16_t reserved;
@@ -90,8 +89,7 @@ struct sig_msg
  * OLSR message (several can exist in one OLSR packet)
  */
 
-struct s_olsrmsg
-{
+struct s_olsrmsg {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -109,8 +107,7 @@ struct s_olsrmsg
  * Challenge response messages
  */
 
-struct challengemsg
-{
+struct challengemsg {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -126,8 +123,7 @@ struct challengemsg
 
 };
 
-struct c_respmsg
-{
+struct c_respmsg {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -145,8 +141,7 @@ struct c_respmsg
   olsr_u8_t signature[SIGSIZE];
 };
 
-struct r_respmsg
-{
+struct r_respmsg {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -167,8 +162,7 @@ struct r_respmsg
  *IPv6
  */
 
-struct s_olsrmsg6
-{
+struct s_olsrmsg6 {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -185,18 +179,16 @@ struct s_olsrmsg6
  * Generic OLSR packet - DO NOT ALTER
  */
 
-struct s_olsr
-{
-  olsr_u16_t olsr_packlen;      /* packet length */
+struct s_olsr {
+  olsr_u16_t olsr_packlen;             /* packet length */
   olsr_u16_t olsr_seqno;
-  struct s_olsrmsg olsr_msg[1]; /* variable messages */
+  struct s_olsrmsg olsr_msg[1];        /* variable messages */
 };
 
-struct s_olsr6
-{
-  olsr_u16_t olsr_packlen;      /* packet length */
+struct s_olsr6 {
+  olsr_u16_t olsr_packlen;             /* packet length */
   olsr_u16_t olsr_seqno;
-  struct s_olsrmsg6 olsr_msg[1];        /* variable messages */
+  struct s_olsrmsg6 olsr_msg[1];       /* variable messages */
 };
 
 #endif

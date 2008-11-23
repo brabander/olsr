@@ -1,3 +1,4 @@
+
 /*
  * HTTP Info plugin for the olsr.org OLSR daemon
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -45,11 +46,11 @@
 #ifndef ADMIN_INTERFACE_H
 #define ADMIN_INTERFACE_H
 
-int build_admin_body (char *, olsr_u32_t);
+int build_admin_body(char *, olsr_u32_t);
 
-int process_set_values (char *, olsr_u32_t, char *, olsr_u32_t);
+int process_set_values(char *, olsr_u32_t, char *, olsr_u32_t);
 
-int process_param (char *, char *);
+int process_param(char *, char *);
 
 #endif
 

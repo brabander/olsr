@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -47,9 +48,9 @@
 #include <ws2tcpip.h>
 #undef interface
 
-int inet_aton (const char *cp, struct in_addr *addr);
-int inet_pton (int af, const char *src, void *dst);
-char *inet_ntop (int af, const void *src, char *dst, int size);
+int inet_aton(const char *cp, struct in_addr *addr);
+int inet_pton(int af, const char *src, void *dst);
+char *inet_ntop(int af, const void *src, char *dst, int size);
 
 #endif
 

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2007, Bernd Petrovitsch <bernd@firmix.at>
  * All rights reserved.

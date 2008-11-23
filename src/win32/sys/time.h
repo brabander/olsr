@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -78,8 +79,7 @@
   while (0)
 
 #if !defined WINCE
-struct timespec
-{
+struct timespec {
   unsigned int tv_sec;
   unsigned int tv_nsec;
 };
@@ -87,9 +87,9 @@ struct timespec
 #include <time.h>
 #endif
 
-int nanosleep (struct timespec *Req, struct timespec *Rem);
+int nanosleep(struct timespec *Req, struct timespec *Rem);
 
-void gettimeofday (struct timeval *TVal, void *TZone);
+void gettimeofday(struct timeval *TVal, void *TZone);
 
 #endif
 

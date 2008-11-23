@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -63,68 +64,65 @@ static char pulsedata[] = { '\\', '|', '/', '-' };
 static olsr_u8_t pulse_state = 0;
 
 void
-generate_hello (void *p)
+generate_hello(void *p)
 {
   struct hello_message hellopacket;
-  struct interface *ifn = (struct interface *) p;
+  struct interface *ifn = (struct interface *)p;
 
-  olsr_build_hello_packet (&hellopacket, ifn);
+  olsr_build_hello_packet(&hellopacket, ifn);
 
-  if (queue_hello (&hellopacket, ifn))
-    net_output (ifn);
+  if (queue_hello(&hellopacket, ifn))
+    net_output(ifn);
 
-  olsr_free_hello_packet (&hellopacket);
+  olsr_free_hello_packet(&hellopacket);
 
 }
 
 void
-generate_tc (void *p)
+generate_tc(void *p)
 {
   struct tc_message tcpacket;
-  struct interface *ifn = (struct interface *) p;
+  struct interface *ifn = (struct interface *)p;
 
-  olsr_build_tc_packet (&tcpacket);
+  olsr_build_tc_packet(&tcpacket);
 
-  if (queue_tc (&tcpacket, ifn) && TIMED_OUT (ifn->fwdtimer))
-    {
-      set_buffer_timer (ifn);
-    }
+  if (queue_tc(&tcpacket, ifn) && TIMED_OUT(ifn->fwdtimer)) {
+    set_buffer_timer(ifn);
+  }
 
-  olsr_free_tc_packet (&tcpacket);
+  olsr_free_tc_packet(&tcpacket);
 }
 
 void
-generate_mid (void *p)
+generate_mid(void *p)
 {
-  struct interface *ifn = (struct interface *) p;
+  struct interface *ifn = (struct interface *)p;
 
-  if (queue_mid (ifn) && TIMED_OUT (ifn->fwdtimer))
-    {
-      set_buffer_timer (ifn);
-    }
+  if (queue_mid(ifn) && TIMED_OUT(ifn->fwdtimer)) {
+    set_buffer_timer(ifn);
+  }
 
 }
 
 void
-generate_hna (void *p)
+generate_hna(void *p)
 {
-  struct interface *ifn = (struct interface *) p;
+  struct interface *ifn = (struct interface *)p;
 
-  if (queue_hna (ifn) && TIMED_OUT (ifn->fwdtimer))
-    {
-      set_buffer_timer (ifn);
-    }
+  if (queue_hna(ifn) && TIMED_OUT(ifn->fwdtimer)) {
+    set_buffer_timer(ifn);
+  }
 }
 
 void
-generate_stdout_pulse (void *foo __attribute__ ((unused)))
+generate_stdout_pulse(void *foo __attribute__ ((unused)))
 {
   if (olsr_cnf->debug_level == 0)
     return;
 
   pulse_state = pulse_state == 3 ? 0 : pulse_state + 1;
 
-  printf ("%c\r", pulsedata[pulse_state]);
+  printf("%c\r", pulsedata[pulse_state]);
 
 }
 

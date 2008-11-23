@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -68,8 +69,7 @@
  *and add
  */
 
-struct ipcmsg
-{
+struct ipcmsg {
   olsr_u8_t msgtype;
   olsr_u16_t size;
   olsr_u8_t metric;
@@ -79,12 +79,11 @@ struct ipcmsg
   char device[4];
 };
 
-struct ipc_net_msg
-{
+struct ipc_net_msg {
   olsr_u8_t msgtype;
   olsr_u16_t size;
-  olsr_u8_t mids;               /* No. of extra interfaces */
-  olsr_u8_t hnas;               /* No. of HNA nets */
+  olsr_u8_t mids;                      /* No. of extra interfaces */
+  olsr_u8_t hnas;                      /* No. of HNA nets */
   olsr_u8_t unused1;
   olsr_u16_t hello_int;
   olsr_u16_t hello_lan_int;
@@ -95,16 +94,13 @@ struct ipc_net_msg
   union olsr_ip_addr main_addr;
 };
 
-olsr_bool ipc_check_allowed_ip (const union olsr_ip_addr *);
+olsr_bool ipc_check_allowed_ip(const union olsr_ip_addr *);
 
-void ipc_accept (int);
+void ipc_accept(int);
 
-void frontend_msgparser (union olsr_message *, struct interface *,
-                         union olsr_ip_addr *);
+void frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
-int ipc_route_send_rtentry (const union olsr_ip_addr *,
-                            const union olsr_ip_addr *, int, int,
-                            const char *);
+int ipc_route_send_rtentry(const union olsr_ip_addr *, const union olsr_ip_addr *, int, int, const char *);
 
 #endif
 

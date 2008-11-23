@@ -1,3 +1,4 @@
+
 /* Zebra common header.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002 Kunihiro Ishiguro
 
@@ -96,11 +97,13 @@ typedef int socklen_t;
 /* misc include group */
 #include <stdarg.h>
 #if !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
+
 /* Not C99; do we need to define va_copy? */
 #ifndef va_copy
 #ifdef __va_copy
 #define va_copy(DST,SRC) __va_copy(DST,SRC)
 #else
+
 /* Now we are desperate; this should work on many typical platforms.
    But this is slightly dangerous, because the standard does not require
    va_copy to be a macro. */
@@ -229,6 +232,7 @@ typedef int socklen_t;
 #include "zassert.h"
 
 #ifdef HAVE_BROKEN_CMSG_FIRSTHDR
+
 /* This bug is present in Solaris 8 and pre-patch Solaris 9 <sys/socket.h>;
    please refer to http://bugzilla.quagga.net/show_bug.cgi?id=142 */
 
@@ -278,8 +282,7 @@ typedef int socklen_t;
 /*  The definition of struct in_pktinfo is missing in old version of
     GLIBC 2.1 (Redhat 6.1).  */
 #if defined (GNU_LINUX) && ! defined (HAVE_INPKTINFO)
-struct in_pktinfo
-{
+struct in_pktinfo {
   int ipi_ifindex;
   struct in_addr ipi_spec_dst;
   struct in_addr ipi_addr;
@@ -453,8 +456,7 @@ typedef u_int16_t zebra_size_t;
 typedef u_int8_t zebra_command_t;
 
 /* FIFO -- first in first out structure and macros.  */
-struct fifo
-{
+struct fifo {
   struct fifo *next;
   struct fifo *prev;
 };

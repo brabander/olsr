@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -43,8 +44,7 @@
 
 #include "mantissa.h"
 
-struct mpr_selector
-{
+struct mpr_selector {
   union olsr_ip_addr MS_main_addr;
   struct timer_entry *MS_timer;
   struct mpr_selector *next;
@@ -54,26 +54,25 @@ struct mpr_selector
 #define OLSR_MPR_SEL_JITTER 5   /* percent */
 
 #if 0
-olsr_bool olsr_is_mpr (void);
+olsr_bool olsr_is_mpr(void);
 #endif
 
-olsr_u16_t get_local_ansn (void);
+olsr_u16_t get_local_ansn(void);
 
-void increase_local_ansn (void);
+void increase_local_ansn(void);
 
-void olsr_init_mprs_set (void);
+void olsr_init_mprs_set(void);
 
-struct mpr_selector *olsr_add_mpr_selector (const union olsr_ip_addr *,
-                                            olsr_reltime);
+struct mpr_selector *olsr_add_mpr_selector(const union olsr_ip_addr *, olsr_reltime);
 
-struct mpr_selector *olsr_lookup_mprs_set (const union olsr_ip_addr *);
+struct mpr_selector *olsr_lookup_mprs_set(const union olsr_ip_addr *);
 
-int olsr_update_mprs_set (const union olsr_ip_addr *, olsr_reltime);
+int olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
-void olsr_time_out_mprs_set (void);
+void olsr_time_out_mprs_set(void);
 
 #if 0
-void olsr_print_mprs_set (void);
+void olsr_print_mprs_set(void);
 #endif
 
 #endif

@@ -49,8 +49,7 @@
 
 #define INLINE inline __attribute__((always_inline))
 
-struct avl_node
-{
+struct avl_node {
   struct avl_node *parent;
   struct avl_node *left;
   struct avl_node *right;
@@ -63,8 +62,7 @@ struct avl_node
 
 typedef int (*avl_tree_comp) (const void *, const void *);
 
-struct avl_tree
-{
+struct avl_tree {
   struct avl_node *root;
   struct avl_node *first;
   struct avl_node *last;
@@ -75,59 +73,59 @@ struct avl_tree
 #define AVL_DUP    1
 #define AVL_DUP_NO 0
 
-void avl_init (struct avl_tree *, avl_tree_comp);
-struct avl_node *avl_find (struct avl_tree *, const void *);
-int avl_insert (struct avl_tree *, struct avl_node *, int);
-void avl_delete (struct avl_tree *, struct avl_node *);
+void avl_init(struct avl_tree *, avl_tree_comp);
+struct avl_node *avl_find(struct avl_tree *, const void *);
+int avl_insert(struct avl_tree *, struct avl_node *, int);
+void avl_delete(struct avl_tree *, struct avl_node *);
 
 static INLINE struct avl_node *
-avl_walk_first (struct avl_tree *tree)
+avl_walk_first(struct avl_tree *tree)
 {
   return tree->first;
 }
 static INLINE struct avl_node *
-avl_walk_last (struct avl_tree *tree)
+avl_walk_last(struct avl_tree *tree)
 {
   return tree->last;
 }
 static INLINE struct avl_node *
-avl_walk_next (struct avl_node *node)
+avl_walk_next(struct avl_node *node)
 {
   return node->next;
 }
 static INLINE struct avl_node *
-avl_walk_prev (struct avl_node *node)
+avl_walk_prev(struct avl_node *node)
 {
   return node->prev;
 }
 
 /* and const versions*/
 static INLINE const struct avl_node *
-avl_walk_first_c (const struct avl_tree *tree)
+avl_walk_first_c(const struct avl_tree *tree)
 {
   return tree->first;
 }
 static INLINE const struct avl_node *
-avl_walk_last_c (const struct avl_tree *tree)
+avl_walk_last_c(const struct avl_tree *tree)
 {
   return tree->last;
 }
 static INLINE const struct avl_node *
-avl_walk_next_c (const struct avl_node *node)
+avl_walk_next_c(const struct avl_node *node)
 {
   return node->next;
 }
 static INLINE const struct avl_node *
-avl_walk_prev_c (const struct avl_node *node)
+avl_walk_prev_c(const struct avl_node *node)
 {
   return node->prev;
 }
 
 extern avl_tree_comp avl_comp_default;
 extern avl_tree_comp avl_comp_prefix_default;
-extern int avl_comp_ipv4 (const void *, const void *);
-extern int avl_comp_ipv6 (const void *, const void *);
-extern int avl_comp_mac (const void *, const void *);
+extern int avl_comp_ipv4(const void *, const void *);
+extern int avl_comp_ipv6(const void *, const void *);
+extern int avl_comp_mac(const void *, const void *);
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the

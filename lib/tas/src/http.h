@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  *
@@ -43,14 +44,12 @@
 
 #define CHUNK_SIZE 1024
 
-struct chunk
-{
+struct chunk {
   struct chunk *next;
   unsigned char data[CHUNK_SIZE];
 };
 
-struct inOutBuff
-{
+struct inOutBuff {
   int off, len;
   int cont;
   struct chunk *first, *last;
@@ -58,14 +57,12 @@ struct inOutBuff
 
 #define BUFF_SIZE 1024
 
-struct workBuff
-{
+struct workBuff {
   struct workBuff *next;
   unsigned char *data;
 };
 
-struct httpHeader
-{
+struct httpHeader {
   struct httpHeader *next;
   char *name;
   char *value;
@@ -78,8 +75,7 @@ struct httpHeader
 #define STATE_LSP 4
 #define STATE_DRAIN 5
 
-struct connInfo
-{
+struct connInfo {
   struct fileId *sockId;
   struct ipAddr *addr;
 
@@ -116,44 +112,29 @@ struct connInfo
   char *authPass;
 };
 
-extern void httpInit (void);
+extern void httpInit(void);
 
-extern int httpSetAddress (const char *addrStr, void *data,
-                           set_plugin_parameter_addon addon);
-extern int httpSetPort (const char *portStr, void *data,
-                        set_plugin_parameter_addon addon);
-extern int httpSetRootDir (const char *rootDir, void *data,
-                           set_plugin_parameter_addon addon);
-extern int httpSetWorkDir (const char *workDir, void *data,
-                           set_plugin_parameter_addon addon);
-extern int httpSetIndexFile (const char *indexFile, void *data,
-                             set_plugin_parameter_addon addon);
-extern int httpSetUser (const char *user, void *data,
-                        set_plugin_parameter_addon addon);
-extern int httpSetPassword (const char *password, void *data,
-                            set_plugin_parameter_addon addon);
-extern int httpSetSessTime (const char *timeStr, void *data,
-                            set_plugin_parameter_addon addon);
-extern int httpSetPubDir (const char *pref, void *data,
-                          set_plugin_parameter_addon addon);
-extern int httpSetQuantum (const char *quantumStr, void *data,
-                           set_plugin_parameter_addon addon);
-extern int httpSetMessTime (const char *timeStr, void *data,
-                            set_plugin_parameter_addon addon);
-extern int httpSetMessLimit (const char *limitStr, void *data,
-                             set_plugin_parameter_addon addon);
+extern int httpSetAddress(const char *addrStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPort(const char *portStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetRootDir(const char *rootDir, void *data, set_plugin_parameter_addon addon);
+extern int httpSetWorkDir(const char *workDir, void *data, set_plugin_parameter_addon addon);
+extern int httpSetIndexFile(const char *indexFile, void *data, set_plugin_parameter_addon addon);
+extern int httpSetUser(const char *user, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPassword(const char *password, void *data, set_plugin_parameter_addon addon);
+extern int httpSetSessTime(const char *timeStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetPubDir(const char *pref, void *data, set_plugin_parameter_addon addon);
+extern int httpSetQuantum(const char *quantumStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetMessTime(const char *timeStr, void *data, set_plugin_parameter_addon addon);
+extern int httpSetMessLimit(const char *limitStr, void *data, set_plugin_parameter_addon addon);
 
-extern int httpSetup (void);
-extern int httpService (int freq);
-extern void httpShutdown (void);
-extern void httpAddTasMessage (const char *service, const char *string,
-                               const char *from);
-extern int httpGetTasMessage (const char *service, char **string,
-                              char **from);
+extern int httpSetup(void);
+extern int httpService(int freq);
+extern void httpShutdown(void);
+extern void httpAddTasMessage(const char *service, const char *string, const char *from);
+extern int httpGetTasMessage(const char *service, char **string, char **from);
 
-extern void writeBuff (struct inOutBuff *write, const unsigned char *data,
-                       int dataLen);
-extern void *allocBuff (struct connInfo *info, int len);
+extern void writeBuff(struct inOutBuff *write, const unsigned char *data, int dataLen);
+extern void *allocBuff(struct connInfo *info, int len);
 
 /*
  * Local Variables:

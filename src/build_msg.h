@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -45,17 +46,17 @@
 #include "olsr_protocol.h"
 #include <time.h>               /* For clock_t */
 
-void set_empty_tc_timer (clock_t);
+void set_empty_tc_timer(clock_t);
 
-clock_t get_empty_tc_timer (void);
+clock_t get_empty_tc_timer(void);
 
-olsr_bool queue_hello (struct hello_message *, struct interface *);
+olsr_bool queue_hello(struct hello_message *, struct interface *);
 
-olsr_bool queue_tc (struct tc_message *, struct interface *);
+olsr_bool queue_tc(struct tc_message *, struct interface *);
 
-olsr_bool queue_mid (struct interface *);
+olsr_bool queue_mid(struct interface *);
 
-olsr_bool queue_hna (struct interface *);
+olsr_bool queue_hna(struct interface *);
 
 #endif
 

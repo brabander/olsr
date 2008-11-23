@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -38,61 +39,55 @@ int no_packets = 0;
  *the cached packets
  */
 int
-add_packet_to_buffer (union olsr_message *p, int size)
+add_packet_to_buffer(union olsr_message *p, int size)
 {
   struct packnode *tmp;
   /* Should be the same for v4 and v6 */
 
   /* If this is the first packet */
-  if (!packets)
-    {
-      //printf("Adding first packet\n");
-      packets = malloc (sizeof (struct packnode));
-      packets->packet = malloc (size);
-      memcpy (packets->packet, p, size);
-      packets->next = NULL;
+  if (!packets) {
+    //printf("Adding first packet\n");
+    packets = malloc(sizeof(struct packnode));
+    packets->packet = malloc(size);
+    memcpy(packets->packet, p, size);
+    packets->next = NULL;
+    no_packets++;
+    return 1;
+  } else {
+    /* If the buffer is not full */
+    if (no_packets < MAXPACKS) {
+      //printf("Buffer not filled yet..\n");
+      tmp = packets;
+      packets = malloc(sizeof(struct packnode));
+      packets->packet = malloc(size);
+      memcpy(packets->packet, p, size);
+      packets->next = tmp;
       no_packets++;
       return 1;
     }
-  else
-    {
-      /* If the buffer is not full */
-      if (no_packets < MAXPACKS)
-        {
-          //printf("Buffer not filled yet..\n");
-          tmp = packets;
-          packets = malloc (sizeof (struct packnode));
-          packets->packet = malloc (size);
-          memcpy (packets->packet, p, size);
-          packets->next = tmp;
-          no_packets++;
-          return 1;
-        }
-      /* If buffer is full */
-      else
-        {
-          //printf("Buffer full - deleting...\n");
-          tmp = packets;
-          /* Find second last packet */
-          while (tmp->next->next)
-            {
-              tmp = tmp->next;
-            }
-          /* Delete last packet */
-          free (tmp->next->packet);
-          free (tmp->next);
-          tmp->next = NULL;
+    /* If buffer is full */
+    else {
+      //printf("Buffer full - deleting...\n");
+      tmp = packets;
+      /* Find second last packet */
+      while (tmp->next->next) {
+        tmp = tmp->next;
+      }
+      /* Delete last packet */
+      free(tmp->next->packet);
+      free(tmp->next);
+      tmp->next = NULL;
 
-          /*Add the new packet */
-          tmp = packets;
-          packets = malloc (sizeof (struct packnode));
-          packets->packet = malloc (size);
-          memcpy (packets->packet, p, size);
-          packets->next = tmp;
-          return 1;
-        }
-
+      /*Add the new packet */
+      tmp = packets;
+      packets = malloc(sizeof(struct packnode));
+      packets->packet = malloc(size);
+      memcpy(packets->packet, p, size);
+      packets->next = tmp;
+      return 1;
     }
+
+  }
   return 0;
 }
 
@@ -100,7 +95,7 @@ add_packet_to_buffer (union olsr_message *p, int size)
  *Get the packet with index 'index'
  */
 union olsr_message *
-get_packet (int index)
+get_packet(int index)
 {
   int i = 0;
   struct packnode *tmp;
@@ -113,11 +108,10 @@ get_packet (int index)
 
   tmp = packets;
 
-  while (i != index)
-    {
-      tmp = tmp->next;
-      i++;
-    }
+  while (i != index) {
+    tmp = tmp->next;
+    i++;
+  }
   return tmp->packet;
 
 }

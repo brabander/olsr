@@ -1,3 +1,4 @@
+
 /*
  * OLSR Basic Multicast Forwarding (BMF) plugin.
  * Copyright (c) 2005 - 2007, Thales Communications, Huizen, The Netherlands.
@@ -69,20 +70,15 @@ int EnableLocalBroadcast = 1;
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-DoLocalBroadcast (const char *enable, void *data
-                  __attribute__ ((unused)), set_plugin_parameter_addon addon
-                  __attribute__ ((unused)))
+DoLocalBroadcast(const char *enable, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
-  if (strcmp (enable, "yes") == 0)
-    {
-      EnableLocalBroadcast = 1;
-      return 0;
-    }
-  else if (strcmp (enable, "no") == 0)
-    {
-      EnableLocalBroadcast = 0;
-      return 0;
-    }
+  if (strcmp(enable, "yes") == 0) {
+    EnableLocalBroadcast = 1;
+    return 0;
+  } else if (strcmp(enable, "no") == 0) {
+    EnableLocalBroadcast = 0;
+    return 0;
+  }
 
   /* Value not recognized */
   return 1;
@@ -97,11 +93,11 @@ DoLocalBroadcast (const char *enable, void *data
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-IsMulticast (union olsr_ip_addr *ipAddress)
+IsMulticast(union olsr_ip_addr *ipAddress)
 {
-  assert (ipAddress != NULL);
+  assert(ipAddress != NULL);
 
-  return (ntohl (ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
+  return (ntohl(ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
 }
 
 /* -------------------------------------------------------------------------
@@ -113,44 +109,42 @@ IsMulticast (union olsr_ip_addr *ipAddress)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-IsOlsrOrBmfPacket (unsigned char *ipPacket)
+IsOlsrOrBmfPacket(unsigned char *ipPacket)
 {
   struct ip *ipHeader;
   unsigned int ipHeaderLen;
   struct udphdr *udpHeader;
   u_int16_t destPort;
 
-  assert (ipPacket != NULL);
+  assert(ipPacket != NULL);
 
   /* OLSR packets are UDP - port 698
    * OLSR-BMF packets are UDP - port 50698
    * OLSR-Autodetect probe packets are UDP - port 51698 */
 
   /* Check if UDP */
-  ipHeader = (struct ip *) ipPacket;
-  if (ipHeader->ip_p != SOL_UDP)
-    {
-      /* Not UDP */
-      return 0;
-    }
+  ipHeader = (struct ip *)ipPacket;
+  if (ipHeader->ip_p != SOL_UDP) {
+    /* Not UDP */
+    return 0;
+  }
 
   /* The total length must be at least large enough to store the UDP header */
-  ipHeaderLen = GetIpHeaderLength (ipPacket);
-  if (GetIpTotalLength (ipPacket) < ipHeaderLen + sizeof (struct udphdr))
-    {
-      /* Not long enough */
-      return 0;
-    }
+  ipHeaderLen = GetIpHeaderLength(ipPacket);
+  if (GetIpTotalLength(ipPacket) < ipHeaderLen + sizeof(struct udphdr)) {
+    /* Not long enough */
+    return 0;
+  }
 
   /* Go into the UDP header and check port number */
-  udpHeader = (struct udphdr *) (ipPacket + ipHeaderLen);
-  destPort = ntohs (udpHeader->dest);
+  udpHeader = (struct udphdr *)(ipPacket + ipHeaderLen);
+  destPort = ntohs(udpHeader->dest);
 
   if (destPort == OLSRPORT || destPort == BMF_ENCAP_PORT || destPort == 51698)
     /* TODO: #define for 51698 */
-    {
-      return 1;
-    }
+  {
+    return 1;
+  }
 
   return 0;
 }

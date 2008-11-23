@@ -44,8 +44,7 @@
 
 #include <stdio.h>
 
-struct ohs_command
-{
+struct ohs_command {
   const char *cmd;
   const char *syntax;
   const char *helptext_brief;
@@ -53,21 +52,21 @@ struct ohs_command
   int (*cmd_cb) (const char *);
 };
 
-int ohs_set_olsrd_path (const char *);
+int ohs_set_olsrd_path(const char *);
 
-void ohs_parse_command (void);
+void ohs_parse_command(void);
 
-int ohs_cmd_olsrd (const char *);
+int ohs_cmd_olsrd(const char *);
 
-int ohs_cmd_list (const char *);
+int ohs_cmd_list(const char *);
 
-int ohs_cmd_help (const char *);
+int ohs_cmd_help(const char *);
 
-int ohs_cmd_exit (const char *) __attribute__ ((noreturn));
+int ohs_cmd_exit(const char *) __attribute__ ((noreturn));
 
-int ohs_cmd_log (const char *);
+int ohs_cmd_log(const char *);
 
-int ohs_cmd_link (const char *);
+int ohs_cmd_link(const char *);
 
 #endif
 

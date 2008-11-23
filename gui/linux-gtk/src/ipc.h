@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -46,8 +47,7 @@ int connected;
  *and add
  */
 
-struct routemsg
-{
+struct routemsg {
   olsr_u8_t msgtype;
   olsr_u16_t size;
   olsr_u8_t metric;
@@ -57,12 +57,11 @@ struct routemsg
   char device[4];
 };
 
-struct netmsg
-{
+struct netmsg {
   olsr_u8_t msgtype;
   olsr_u16_t size;
-  olsr_u8_t mids;               /* No. of extra interfaces */
-  olsr_u8_t hnas;               /* No. of HNA nets */
+  olsr_u8_t mids;                      /* No. of extra interfaces */
+  olsr_u8_t hnas;                      /* No. of HNA nets */
   olsr_u8_t unused1;
   olsr_u16_t hello_int;
   olsr_u16_t hello_lan_int;
@@ -77,22 +76,21 @@ struct netmsg
  *Private functions
  */
 
-int ipc_get_socket ();
+int ipc_get_socket();
 
-int ipc_evaluate_message (union olsr_message *);
+int ipc_evaluate_message(union olsr_message *);
 
-int ipc_eval_route_packet (struct routemsg *);
+int ipc_eval_route_packet(struct routemsg *);
 
-int ipc_eval_net_info (struct netmsg *);
+int ipc_eval_net_info(struct netmsg *);
 
-int process_hello (int, olsr_u8_t, union olsr_ip_addr *,
-                   union hello_message *);
+int process_hello(int, olsr_u8_t, union olsr_ip_addr *, union hello_message *);
 
-int process_tc (int, olsr_u8_t, union olsr_ip_addr *, union tc_message *);
+int process_tc(int, olsr_u8_t, union olsr_ip_addr *, union tc_message *);
 
-int process_mid (int, olsr_u8_t, union olsr_ip_addr *, union mid_message *);
+int process_mid(int, olsr_u8_t, union olsr_ip_addr *, union mid_message *);
 
-int process_hna (int, olsr_u8_t, union olsr_ip_addr *, union hna_message *);
+int process_hna(int, olsr_u8_t, union olsr_ip_addr *, union hna_message *);
 
 /*
  * Local Variables:

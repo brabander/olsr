@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -119,35 +120,32 @@ extern FILE *debug_handle;
  */
 
 static INLINE char *
-strscpy (char *dest, const char *src, size_t size)
+strscpy(char *dest, const char *src, size_t size)
 {
   register size_t l = 0;
 #if !defined(NODEBUG) && defined(DEBUG)
-  if (sizeof (dest) == size)
-    fprintf (stderr,
-             "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n",
-             dest, src, size);
+  if (sizeof(dest) == size)
+    fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %d)!\n", dest, src, size);
   if (NULL == dest)
-    fprintf (stderr, "Warning: dest is NULL in strscpy!\n");
+    fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
   if (NULL == src)
-    fprintf (stderr, "Warning: src is NULL in strscpy!\n");
+    fprintf(stderr, "Warning: src is NULL in strscpy!\n");
 #endif
-  if (NULL != dest && NULL != src)
-    {
-      /* src does not need to be null terminated */
-      if (0 < size--)
-        while (l < size && 0 != src[l])
-          l++;
-      dest[l] = 0;
-    }
-  return strncpy (dest, src, l);
+  if (NULL != dest && NULL != src) {
+    /* src does not need to be null terminated */
+    if (0 < size--)
+      while (l < size && 0 != src[l])
+        l++;
+    dest[l] = 0;
+  }
+  return strncpy(dest, src, l);
 }
 
 static INLINE char *
-strscat (char *dest, const char *src, size_t size)
+strscat(char *dest, const char *src, size_t size)
 {
-  register size_t l = strlen (dest);
-  return strscpy (dest + l, src, size > l ? size - l : 0);
+  register size_t l = strlen(dest);
+  return strscpy(dest + l, src, size > l ? size - l : 0);
 }
 
 /*
@@ -176,7 +174,7 @@ strscat (char *dest, const char *src, size_t size)
 extern struct olsrd_config *olsr_cnf;
 
 /* Timer data */
-extern clock_t now_times;       /* current idea of times(2) reported uptime */
+extern clock_t now_times;              /* current idea of times(2) reported uptime */
 
 #if defined WIN32
 extern olsr_bool olsr_win32_end_request;
@@ -190,7 +188,7 @@ extern olsr_bool olsr_win32_end_flag;
  * the underlying kernel calls the smallest accountable time unit) are
  * inherently "unsigned" (and always incremented).
  */
-unsigned long olsr_times (void);
+unsigned long olsr_times(void);
 
 /*
  *IPC functions
@@ -198,15 +196,15 @@ unsigned long olsr_times (void);
  * soon... duh!
  */
 
-int ipc_init (void);
+int ipc_init(void);
 
 #if 0
-int ipc_input (int);
+int ipc_input(int);
 #endif
 
-int shutdown_ipc (void);
+int shutdown_ipc(void);
 
-int ipc_output (struct olsr *);
+int ipc_output(struct olsr *);
 
 #endif
 

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -58,15 +59,13 @@
 #define HTTP_400_MSG "<html><h1>400 - ERROR</h1><hr><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 #define HTTP_404_MSG "<html><h1>404 - ERROR, no such file</h1><hr>This server does not support file requests!<br><br><i>" PLUGIN_NAME " version " PLUGIN_VERSION  "</i></html>"
 
-typedef enum
-{
+typedef enum {
   HTTP_BAD_REQ,
   HTTP_BAD_FILE,
   HTTP_OK
 } http_header_type;
 
-struct http_stats
-{
+struct http_stats {
   olsr_u32_t ok_hits;
   olsr_u32_t dyn_hits;
   olsr_u32_t err_hits;
@@ -76,11 +75,11 @@ struct http_stats
 extern struct olsrd_config *olsr_cfg;
 
 /* Destructor function */
-void olsr_plugin_exit (void);
-void olsr_plugin_exit (void);
+void olsr_plugin_exit(void);
+void olsr_plugin_exit(void);
 
 #if 0
-extern int netsprintf (char *str, const char *format, ...);
+extern int netsprintf(char *str, const char *format, ...);
 #endif
 
 #endif

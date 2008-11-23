@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -59,8 +60,7 @@
 
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
 
-struct MibIpInterfaceRow
-{
+struct MibIpInterfaceRow {
   USHORT Family;
   ULONG64 InterfaceLuid;
   ULONG InterfaceIndex;
@@ -98,17 +98,12 @@ struct MibIpInterfaceRow
   BOOLEAN DisableDefaultRoutes;
 };
 
-typedef DWORD (__stdcall * GETIPINTERFACEENTRY) (struct MibIpInterfaceRow *
-                                                 Row);
+typedef DWORD(__stdcall * GETIPINTERFACEENTRY) (struct MibIpInterfaceRow * Row);
 
-typedef DWORD (__stdcall * GETADAPTERSADDRESSES) (ULONG Family, DWORD Flags,
-                                                  PVOID Reserved,
-                                                  PIP_ADAPTER_ADDRESSES
-                                                  pAdapterAddresses,
-                                                  PULONG pOutBufLen);
+typedef DWORD(__stdcall * GETADAPTERSADDRESSES) (ULONG Family, DWORD Flags,
+                                                 PVOID Reserved, PIP_ADAPTER_ADDRESSES pAdapterAddresses, PULONG pOutBufLen);
 
-struct InterfaceInfo
-{
+struct InterfaceInfo {
   unsigned int Index;
   int Mtu;
   int Metric;
@@ -118,34 +113,34 @@ struct InterfaceInfo
   char Guid[39];
 };
 
-void WinSockPError (char *);
-char *StrError (unsigned int ErrNo);
+void WinSockPError(char *);
+char *StrError(unsigned int ErrNo);
 
-void ListInterfaces (void);
-int GetIntInfo (struct InterfaceInfo *Info, char *Name);
-void RemoveInterface (struct olsr_if *IntConf);
+void ListInterfaces(void);
+int GetIntInfo(struct InterfaceInfo *Info, char *Name);
+void RemoveInterface(struct olsr_if *IntConf);
 
 #define MAX_INTERFACES 100
 
-int __stdcall SignalHandler (unsigned long Signal);
+int __stdcall SignalHandler(unsigned long Signal);
 
 static unsigned long __stdcall
-SignalHandlerWrapper (void *Dummy __attribute__ ((unused)))
+SignalHandlerWrapper(void *Dummy __attribute__ ((unused)))
 {
-  SignalHandler (0);
+  SignalHandler(0);
   return 0;
 }
 
 static void
-CallSignalHandler (void)
+CallSignalHandler(void)
 {
   unsigned long ThreadId;
 
-  CreateThread (NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
+  CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
 }
 
 static void
-MiniIndexToIntName (char *String, int MiniIndex)
+MiniIndexToIntName(char *String, int MiniIndex)
 {
   const char *HexDigits = "0123456789abcdef";
 
@@ -159,7 +154,7 @@ MiniIndexToIntName (char *String, int MiniIndex)
 }
 
 static int
-IntNameToMiniIndex (int *MiniIndex, char *String)
+IntNameToMiniIndex(int *MiniIndex, char *String)
 {
   const char *HexDigits = "0123456789abcdef";
   int i, k;
@@ -171,26 +166,25 @@ IntNameToMiniIndex (int *MiniIndex, char *String)
 
   *MiniIndex = 0;
 
-  for (i = 2; i < 4; i++)
-    {
-      ch = String[i];
+  for (i = 2; i < 4; i++) {
+    ch = String[i];
 
-      if (ch >= 'A' && ch <= 'F')
-        ch += 32;
+    if (ch >= 'A' && ch <= 'F')
+      ch += 32;
 
-      for (k = 0; k < 16 && ch != HexDigits[k]; k++);
+    for (k = 0; k < 16 && ch != HexDigits[k]; k++);
 
-      if (k == 16)
-        return -1;
+    if (k == 16)
+      return -1;
 
-      *MiniIndex = (*MiniIndex << 4) | k;
-    }
+    *MiniIndex = (*MiniIndex << 4) | k;
+  }
 
   return 0;
 }
 
 static int
-FriendlyNameToMiniIndex (int *MiniIndex, char *String)
+FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 {
   unsigned long BuffLen;
   unsigned long Res;
@@ -199,53 +193,44 @@ FriendlyNameToMiniIndex (int *MiniIndex, char *String)
   HMODULE h;
   GETADAPTERSADDRESSES pfGetAdaptersAddresses;
 
-  h = LoadLibrary ("iphlpapi.dll");
+  h = LoadLibrary("iphlpapi.dll");
 
-  if (h == NULL)
-    {
-      fprintf (stderr, "LoadLibrary() = %08lx", GetLastError ());
-      return -1;
-    }
+  if (h == NULL) {
+    fprintf(stderr, "LoadLibrary() = %08lx", GetLastError());
+    return -1;
+  }
 
-  pfGetAdaptersAddresses =
-    (GETADAPTERSADDRESSES) GetProcAddress (h, "GetAdaptersAddresses");
+  pfGetAdaptersAddresses = (GETADAPTERSADDRESSES) GetProcAddress(h, "GetAdaptersAddresses");
 
-  if (pfGetAdaptersAddresses == NULL)
-    {
-      fprintf (stderr,
-               "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n",
-               GetLastError ());
-      return -1;
-    }
+  if (pfGetAdaptersAddresses == NULL) {
+    fprintf(stderr, "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n", GetLastError());
+    return -1;
+  }
 
-  BuffLen = sizeof (AdAddr);
+  BuffLen = sizeof(AdAddr);
 
-  Res = pfGetAdaptersAddresses (AF_INET, 0, NULL, AdAddr, &BuffLen);
+  Res = pfGetAdaptersAddresses(AF_INET, 0, NULL, AdAddr, &BuffLen);
 
-  if (Res != NO_ERROR)
-    {
-      fprintf (stderr, "GetAdaptersAddresses() = %08lx", GetLastError ());
-      return -1;
-    }
+  if (Res != NO_ERROR) {
+    fprintf(stderr, "GetAdaptersAddresses() = %08lx", GetLastError());
+    return -1;
+  }
 
-  for (WalkerAddr = AdAddr; WalkerAddr != NULL; WalkerAddr = WalkerAddr->Next)
-    {
-      OLSR_PRINTF (5, "Index = %08x - ", (int) WalkerAddr->IfIndex);
+  for (WalkerAddr = AdAddr; WalkerAddr != NULL; WalkerAddr = WalkerAddr->Next) {
+    OLSR_PRINTF(5, "Index = %08x - ", (int)WalkerAddr->IfIndex);
 
-      wcstombs (FriendlyName, WalkerAddr->FriendlyName,
-                MAX_INTERFACE_NAME_LEN);
+    wcstombs(FriendlyName, WalkerAddr->FriendlyName, MAX_INTERFACE_NAME_LEN);
 
-      OLSR_PRINTF (5, "Friendly name = %s\n", FriendlyName);
+    OLSR_PRINTF(5, "Friendly name = %s\n", FriendlyName);
 
-      if (strncmp (FriendlyName, String, MAX_INTERFACE_NAME_LEN) == 0)
-        break;
-    }
+    if (strncmp(FriendlyName, String, MAX_INTERFACE_NAME_LEN) == 0)
+      break;
+  }
 
-  if (WalkerAddr == NULL)
-    {
-      fprintf (stderr, "No such interface: %s!\n", String);
-      return -1;
-    }
+  if (WalkerAddr == NULL) {
+    fprintf(stderr, "No such interface: %s!\n", String);
+    return -1;
+  }
 
   *MiniIndex = WalkerAddr->IfIndex & 255;
 
@@ -253,10 +238,10 @@ FriendlyNameToMiniIndex (int *MiniIndex, char *String)
 }
 
 int
-GetIntInfo (struct InterfaceInfo *Info, char *Name)
+GetIntInfo(struct InterfaceInfo *Info, char *Name)
 {
   int MiniIndex;
-  unsigned char Buff[MAX_INTERFACES * sizeof (MIB_IFROW) + 4];
+  unsigned char Buff[MAX_INTERFACES * sizeof(MIB_IFROW) + 4];
   MIB_IFTABLE *IfTable;
   unsigned long BuffLen;
   unsigned long Res;
@@ -266,145 +251,123 @@ GetIntInfo (struct InterfaceInfo *Info, char *Name)
   struct MibIpInterfaceRow Row;
   GETIPINTERFACEENTRY InterfaceEntry;
 
-  if (olsr_cnf->ip_version == AF_INET6)
-    {
-      fprintf (stderr, "IPv6 not supported by GetIntInfo()!\n");
-      return -1;
-    }
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv6 not supported by GetIntInfo()!\n");
+    return -1;
+  }
 
   if ((Name[0] != 'i' && Name[0] != 'I')
-      || (Name[1] != 'f' && Name[1] != 'F'))
-    {
-      if (FriendlyNameToMiniIndex (&MiniIndex, Name) < 0)
-        {
-          fprintf (stderr, "No such interface: %s!\n", Name);
-          return -1;
-        }
+      || (Name[1] != 'f' && Name[1] != 'F')) {
+    if (FriendlyNameToMiniIndex(&MiniIndex, Name) < 0) {
+      fprintf(stderr, "No such interface: %s!\n", Name);
+      return -1;
     }
+  }
 
-  else
-    {
-      if (IntNameToMiniIndex (&MiniIndex, Name) < 0)
-        {
-          fprintf (stderr, "No such interface: %s!\n", Name);
-          return -1;
-        }
+  else {
+    if (IntNameToMiniIndex(&MiniIndex, Name) < 0) {
+      fprintf(stderr, "No such interface: %s!\n", Name);
+      return -1;
     }
+  }
 
   IfTable = (MIB_IFTABLE *) Buff;
 
-  BuffLen = sizeof (Buff);
+  BuffLen = sizeof(Buff);
 
-  Res = GetIfTable (IfTable, &BuffLen, FALSE);
+  Res = GetIfTable(IfTable, &BuffLen, FALSE);
 
-  if (Res != NO_ERROR)
-    {
-      fprintf (stderr, "GetIfTable() = %08lx, %s", Res, StrError (Res));
-      return -1;
-    }
+  if (Res != NO_ERROR) {
+    fprintf(stderr, "GetIfTable() = %08lx, %s", Res, StrError(Res));
+    return -1;
+  }
 
-  for (TabIdx = 0; TabIdx < (int) IfTable->dwNumEntries; TabIdx++)
-    {
-      OLSR_PRINTF (5, "Index = %08x\n", (int) IfTable->table[TabIdx].dwIndex);
+  for (TabIdx = 0; TabIdx < (int)IfTable->dwNumEntries; TabIdx++) {
+    OLSR_PRINTF(5, "Index = %08x\n", (int)IfTable->table[TabIdx].dwIndex);
 
-      if ((int) (IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
-        break;
-    }
+    if ((int)(IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
+      break;
+  }
 
-  if (TabIdx == (int) IfTable->dwNumEntries)
-    {
-      fprintf (stderr, "No such interface: %s!\n", Name);
-      return -1;
-    }
+  if (TabIdx == (int)IfTable->dwNumEntries) {
+    fprintf(stderr, "No such interface: %s!\n", Name);
+    return -1;
+  }
 
   Info->Index = IfTable->table[TabIdx].dwIndex;
-  Info->Mtu = (int) IfTable->table[TabIdx].dwMtu;
+  Info->Mtu = (int)IfTable->table[TabIdx].dwMtu;
 
-  Info->Mtu -=
-    (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  Info->Mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
-  Lib = LoadLibrary ("iphlpapi.dll");
+  Lib = LoadLibrary("iphlpapi.dll");
 
-  if (Lib == NULL)
-    {
-      fprintf (stderr, "Cannot load iphlpapi.dll: %08lx\n", GetLastError ());
+  if (Lib == NULL) {
+    fprintf(stderr, "Cannot load iphlpapi.dll: %08lx\n", GetLastError());
+    return -1;
+  }
+
+  InterfaceEntry = (GETIPINTERFACEENTRY) GetProcAddress(Lib, "GetIpInterfaceEntry");
+
+  if (InterfaceEntry == NULL) {
+    OLSR_PRINTF(5, "Not running on Vista - setting interface metric to 0.\n");
+
+    Info->Metric = 0;
+  }
+
+  else {
+    memset(&Row, 0, sizeof(struct MibIpInterfaceRow));
+
+    Row.Family = AF_INET;
+    Row.InterfaceIndex = Info->Index;
+
+    Res = InterfaceEntry(&Row);
+
+    if (Res != NO_ERROR) {
+      fprintf(stderr, "GetIpInterfaceEntry() = %08lx", Res);
+      FreeLibrary(Lib);
       return -1;
     }
 
-  InterfaceEntry =
-    (GETIPINTERFACEENTRY) GetProcAddress (Lib, "GetIpInterfaceEntry");
+    Info->Metric = Row.Metric;
 
-  if (InterfaceEntry == NULL)
-    {
-      OLSR_PRINTF (5,
-                   "Not running on Vista - setting interface metric to 0.\n");
+    OLSR_PRINTF(5, "Running on Vista - interface metric is %d.\n", Info->Metric);
+  }
 
-      Info->Metric = 0;
-    }
+  FreeLibrary(Lib);
 
-  else
-    {
-      memset (&Row, 0, sizeof (struct MibIpInterfaceRow));
+  BuffLen = sizeof(AdInfo);
 
-      Row.Family = AF_INET;
-      Row.InterfaceIndex = Info->Index;
+  Res = GetAdaptersInfo(AdInfo, &BuffLen);
 
-      Res = InterfaceEntry (&Row);
+  if (Res != NO_ERROR) {
+    fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", GetLastError(), StrError(Res));
+    return -1;
+  }
 
-      if (Res != NO_ERROR)
-        {
-          fprintf (stderr, "GetIpInterfaceEntry() = %08lx", Res);
-          FreeLibrary (Lib);
-          return -1;
-        }
+  for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next) {
+    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index);
 
-      Info->Metric = Row.Metric;
+    if ((int)(Walker->Index & 255) == MiniIndex)
+      break;
+  }
 
-      OLSR_PRINTF (5, "Running on Vista - interface metric is %d.\n",
-                   Info->Metric);
-    }
+  if (Walker == NULL) {
+    fprintf(stderr, "No such interface: %s!\n", Name);
+    return -1;
+  }
 
-  FreeLibrary (Lib);
-
-  BuffLen = sizeof (AdInfo);
-
-  Res = GetAdaptersInfo (AdInfo, &BuffLen);
-
-  if (Res != NO_ERROR)
-    {
-      fprintf (stderr, "GetAdaptersInfo() = %08lx, %s", GetLastError (),
-               StrError (Res));
-      return -1;
-    }
-
-  for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
-    {
-      OLSR_PRINTF (5, "Index = %08x\n", (int) Walker->Index);
-
-      if ((int) (Walker->Index & 255) == MiniIndex)
-        break;
-    }
-
-  if (Walker == NULL)
-    {
-      fprintf (stderr, "No such interface: %s!\n", Name);
-      return -1;
-    }
-
-  inet_pton (AF_INET, Walker->IpAddressList.IpAddress.String, &Info->Addr);
-  inet_pton (AF_INET, Walker->IpAddressList.IpMask.String, &Info->Mask);
+  inet_pton(AF_INET, Walker->IpAddressList.IpAddress.String, &Info->Addr);
+  inet_pton(AF_INET, Walker->IpAddressList.IpMask.String, &Info->Mask);
 
   Info->Broad = Info->Addr | ~Info->Mask;
 
-  strscpy (Info->Guid, Walker->AdapterName, sizeof (Info->Guid));
+  strscpy(Info->Guid, Walker->AdapterName, sizeof(Info->Guid));
 
   if ((IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED
-       && IfTable->table[TabIdx].dwOperStatus !=
-       MIB_IF_OPER_STATUS_OPERATIONAL) || Info->Addr == 0)
-    {
-      OLSR_PRINTF (3, "Interface %s not up!\n", Name);
-      return -1;
-    }
+       && IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL) || Info->Addr == 0) {
+    OLSR_PRINTF(3, "Interface %s not up!\n", Name);
+    return -1;
+  }
 
   return 0;
 }
@@ -418,7 +381,7 @@ GetIntInfo (struct InterfaceInfo *Info, char *Name)
 #endif
 
 static int
-IsWireless (char *IntName)
+IsWireless(char *IntName)
 {
 #if !defined WINCE
   struct InterfaceInfo Info;
@@ -429,7 +392,7 @@ IsWireless (char *IntName)
   unsigned char OutBuff[100];
   unsigned long OutBytes;
 
-  if (GetIntInfo (&Info, IntName) < 0)
+  if (GetIntInfo(&Info, IntName) < 0)
     return -1;
 
   DevName[0] = '\\';
@@ -437,51 +400,42 @@ IsWireless (char *IntName)
   DevName[2] = '.';
   DevName[3] = '\\';
 
-  strscpy (DevName + 4, Info.Guid, sizeof (DevName) - 4);
+  strscpy(DevName + 4, Info.Guid, sizeof(DevName) - 4);
 
-  OLSR_PRINTF (5, "Checking whether interface %s is wireless.\n", DevName);
+  OLSR_PRINTF(5, "Checking whether interface %s is wireless.\n", DevName);
 
-  DevHand =
-    CreateFile (DevName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  DevHand = CreateFile(DevName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-  if (DevHand == INVALID_HANDLE_VALUE)
-    {
-      ErrNo = GetLastError ();
+  if (DevHand == INVALID_HANDLE_VALUE) {
+    ErrNo = GetLastError();
 
-      OLSR_PRINTF (5, "CreateFile() = %08x, %s\n", ErrNo, StrError (ErrNo));
-      return -1;
-    }
+    OLSR_PRINTF(5, "CreateFile() = %08x, %s\n", ErrNo, StrError(ErrNo));
+    return -1;
+  }
 
   Oid = OID_802_11_CONFIGURATION;
 
-  if (!DeviceIoControl
-      (DevHand, IOCTL_NDIS_QUERY_GLOBAL_STATS, &Oid, sizeof (Oid), OutBuff,
-       sizeof (OutBuff), &OutBytes, NULL))
-    {
-      ErrNo = GetLastError ();
+  if (!DeviceIoControl(DevHand, IOCTL_NDIS_QUERY_GLOBAL_STATS, &Oid, sizeof(Oid), OutBuff, sizeof(OutBuff), &OutBytes, NULL)) {
+    ErrNo = GetLastError();
 
-      CloseHandle (DevHand);
+    CloseHandle(DevHand);
 
-      if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER)
-        {
-          OLSR_PRINTF (5,
-                       "OID not supported. Device probably not wireless.\n");
-          return 0;
-        }
-
-      OLSR_PRINTF (5, "DeviceIoControl() = %08x, %s\n", ErrNo,
-                   StrError (ErrNo));
-      return -1;
+    if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER) {
+      OLSR_PRINTF(5, "OID not supported. Device probably not wireless.\n");
+      return 0;
     }
 
-  CloseHandle (DevHand);
+    OLSR_PRINTF(5, "DeviceIoControl() = %08x, %s\n", ErrNo, StrError(ErrNo));
+    return -1;
+  }
+
+  CloseHandle(DevHand);
 #endif
   return 1;
 }
 
 void
-ListInterfaces (void)
+ListInterfaces(void)
 {
   IP_ADAPTER_INFO AdInfo[MAX_INTERFACES], *Walker;
   unsigned long AdInfoLen;
@@ -490,122 +444,111 @@ ListInterfaces (void)
   unsigned long Res;
   int IsWlan;
 
-  if (olsr_cnf->ip_version == AF_INET6)
-    {
-      fprintf (stderr, "IPv6 not supported by ListInterfaces()!\n");
-      return;
-    }
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv6 not supported by ListInterfaces()!\n");
+    return;
+  }
 
-  AdInfoLen = sizeof (AdInfo);
+  AdInfoLen = sizeof(AdInfo);
 
-  Res = GetAdaptersInfo (AdInfo, &AdInfoLen);
+  Res = GetAdaptersInfo(AdInfo, &AdInfoLen);
 
-  if (Res == ERROR_NO_DATA)
-    {
-      printf ("No interfaces detected.\n");
-      return;
-    }
+  if (Res == ERROR_NO_DATA) {
+    printf("No interfaces detected.\n");
+    return;
+  }
 
-  if (Res != NO_ERROR)
-    {
-      fprintf (stderr, "GetAdaptersInfo() = %08lx, %s", Res, StrError (Res));
-      return;
-    }
+  if (Res != NO_ERROR) {
+    fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", Res, StrError(Res));
+    return;
+  }
 
-  for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
-    {
-      OLSR_PRINTF (5, "Index = %08x\n", (int) Walker->Index);
+  for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next) {
+    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index);
 
-      MiniIndexToIntName (IntName, Walker->Index);
+    MiniIndexToIntName(IntName, Walker->Index);
 
-      printf ("%s: ", IntName);
+    printf("%s: ", IntName);
 
-      IsWlan = IsWireless (IntName);
+    IsWlan = IsWireless(IntName);
 
-      if (IsWlan < 0)
-        printf ("?");
+    if (IsWlan < 0)
+      printf("?");
 
-      else if (IsWlan == 0)
-        printf ("-");
+    else if (IsWlan == 0)
+      printf("-");
 
-      else
-        printf ("+");
+    else
+      printf("+");
 
-      for (Walker2 = &Walker->IpAddressList; Walker2 != NULL;
-           Walker2 = Walker2->Next)
-        printf (" %s", Walker2->IpAddress.String);
+    for (Walker2 = &Walker->IpAddressList; Walker2 != NULL; Walker2 = Walker2->Next)
+      printf(" %s", Walker2->IpAddress.String);
 
-      printf ("\n");
-    }
+    printf("\n");
+  }
 }
 
 void
-RemoveInterface (struct olsr_if *IntConf)
+RemoveInterface(struct olsr_if *IntConf)
 {
   struct interface *Int, *Prev;
 
-  OLSR_PRINTF (1, "Removing interface %s.\n", IntConf->name);
+  OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
 
   Int = IntConf->interf;
 
-  run_ifchg_cbs (Int, IFCHG_IF_ADD);
+  run_ifchg_cbs(Int, IFCHG_IF_ADD);
 
   if (Int == ifnet)
     ifnet = Int->int_next;
 
-  else
-    {
-      for (Prev = ifnet; Prev->int_next != Int; Prev = Prev->int_next);
+  else {
+    for (Prev = ifnet; Prev->int_next != Int; Prev = Prev->int_next);
 
-      Prev->int_next = Int->int_next;
+    Prev->int_next = Int->int_next;
+  }
+
+  if (ipequal(&olsr_cnf->main_addr, &Int->ip_addr)) {
+    if (ifnet == NULL) {
+      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
+      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
     }
 
-  if (ipequal (&olsr_cnf->main_addr, &Int->ip_addr))
-    {
-      if (ifnet == NULL)
-        {
-          memset (&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-          OLSR_PRINTF (1, "Removed last interface. Cleared main address.\n");
-        }
-
-      else
-        {
-          struct ipaddr_str buf;
-          olsr_cnf->main_addr = ifnet->ip_addr;
-          OLSR_PRINTF (1, "New main address: %s.\n",
-                       olsr_ip_to_string (&buf, &olsr_cnf->main_addr));
-        }
+    else {
+      struct ipaddr_str buf;
+      olsr_cnf->main_addr = ifnet->ip_addr;
+      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
+  }
 
   /*
    * Deregister functions for periodic message generation
    */
-  olsr_stop_timer (Int->hello_gen_timer);
-  olsr_stop_timer (Int->tc_gen_timer);
-  olsr_stop_timer (Int->mid_gen_timer);
-  olsr_stop_timer (Int->hna_gen_timer);
+  olsr_stop_timer(Int->hello_gen_timer);
+  olsr_stop_timer(Int->tc_gen_timer);
+  olsr_stop_timer(Int->mid_gen_timer);
+  olsr_stop_timer(Int->hna_gen_timer);
 
-  net_remove_buffer (Int);
+  net_remove_buffer(Int);
 
   IntConf->configured = 0;
   IntConf->interf = NULL;
 
-  closesocket (Int->olsr_socket);
-  remove_olsr_socket (Int->olsr_socket, &olsr_input);
+  closesocket(Int->olsr_socket);
+  remove_olsr_socket(Int->olsr_socket, &olsr_input);
 
-  free (Int->int_name);
-  free (Int);
+  free(Int->int_name);
+  free(Int);
 
-  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
-    {
-      OLSR_PRINTF (1, "No more active interfaces - exiting.\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      CallSignalHandler ();
-    }
+  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces) {
+    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
+    olsr_cnf->exit_value = EXIT_FAILURE;
+    CallSignalHandler();
+  }
 }
 
 int
-add_hemu_if (struct olsr_if *iface)
+add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
   union olsr_ip_addr null_addr;
@@ -616,164 +559,138 @@ add_hemu_if (struct olsr_if *iface)
   if (!iface->host_emul)
     return -1;
 
-  ifp = olsr_malloc (sizeof (struct interface), "Interface update 2");
+  ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
 
-  memset (ifp, 0, sizeof (struct interface));
+  memset(ifp, 0, sizeof(struct interface));
 
   iface->configured = OLSR_TRUE;
   iface->interf = ifp;
 
-  name_size = strlen ("hcif01") + 1;
+  name_size = strlen("hcif01") + 1;
   ifp->is_hcif = OLSR_TRUE;
-  ifp->int_name = olsr_malloc (name_size, "Interface update 3");
+  ifp->int_name = olsr_malloc(name_size, "Interface update 3");
   ifp->int_metric = 0;
 
-  strscpy (ifp->int_name, "hcif01", name_size);
+  strscpy(ifp->int_name, "hcif01", name_size);
 
-  OLSR_PRINTF (1, "Adding %s(host emulation):\n", ifp->int_name);
+  OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
 
-  OLSR_PRINTF (1, "       Address:%s\n",
-               olsr_ip_to_string (&buf, &iface->hemu_ip));
+  OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
 
-  OLSR_PRINTF (1,
-               "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
+  OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
   ifp->int_next = ifnet;
   ifnet = ifp;
 
-  memset (&null_addr, 0, olsr_cnf->ipsize);
-  if (ipequal (&null_addr, &olsr_cnf->main_addr))
-    {
-      olsr_cnf->main_addr = iface->hemu_ip;
-      OLSR_PRINTF (1, "New main address: %s\n",
-                   olsr_ip_to_string (&buf, &olsr_cnf->main_addr));
-    }
+  memset(&null_addr, 0, olsr_cnf->ipsize);
+  if (ipequal(&null_addr, &olsr_cnf->main_addr)) {
+    olsr_cnf->main_addr = iface->hemu_ip;
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+  }
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
 
-  ifp->int_mtu -=
-    (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
+  ifp->int_mtu -= (olsr_cnf->ip_version == AF_INET6) ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE;
 
   /* Set up buffer */
-  net_add_buffer (ifp);
+  net_add_buffer(ifp);
 
-  if (olsr_cnf->ip_version == AF_INET)
-    {
-      struct sockaddr_in sin;
+  if (olsr_cnf->ip_version == AF_INET) {
+    struct sockaddr_in sin;
 
-      memset (&sin, 0, sizeof (sin));
+    memset(&sin, 0, sizeof(sin));
 
-      sin.sin_family = AF_INET;
-      sin.sin_addr.s_addr = htonl (INADDR_LOOPBACK);
-      sin.sin_port = htons (10150);
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin.sin_port = htons(10150);
 
-      /* IP version 4 */
-      ifp->ip_addr.v4 = iface->hemu_ip.v4;
+    /* IP version 4 */
+    ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
-      memcpy (&((struct sockaddr_in *) &ifp->int_addr)->sin_addr,
-              &iface->hemu_ip, olsr_cnf->ipsize);
+    memcpy(&((struct sockaddr_in *)&ifp->int_addr)->sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
-      /*
-       *We create one socket for each interface and bind
-       *the socket to it. This to ensure that we can control
-       *on what interface the message is transmitted
-       */
+    /*
+     *We create one socket for each interface and bind
+     *the socket to it. This to ensure that we can control
+     *on what interface the message is transmitted
+     */
 
-      ifp->olsr_socket = gethemusocket (&sin);
+    ifp->olsr_socket = gethemusocket(&sin);
 
-      if (ifp->olsr_socket < 0)
-        {
-          fprintf (stderr, "Could not initialize socket... exiting!\n\n");
-          exit (1);
-        }
-
+    if (ifp->olsr_socket < 0) {
+      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
+      exit(1);
     }
-  else
-    {
-      /* IP version 6 */
-      memcpy (&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
+
+  } else {
+    /* IP version 6 */
+    memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
 #if 0
-      /*
-       *We create one socket for each interface and bind
-       *the socket to it. This to ensure that we can control
-       *on what interface the message is transmitted
-       */
+    /*
+     *We create one socket for each interface and bind
+     *the socket to it. This to ensure that we can control
+     *on what interface the message is transmitted
+     */
 
-      ifp->olsr_socket = gethcsocket6 (&addrsock6, bufspace, ifp->int_name);
+    ifp->olsr_socket = gethcsocket6(&addrsock6, bufspace, ifp->int_name);
 
-      join_mcast (ifp, ifp->olsr_socket);
+    join_mcast(ifp, ifp->olsr_socket);
 
-      if (ifp->olsr_socket < 0)
-        {
-          fprintf (stderr, "Could not initialize socket... exiting!\n\n");
-          exit (1);
-        }
-
-#endif
+    if (ifp->olsr_socket < 0) {
+      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
+      exit(1);
     }
+#endif
+  }
 
   /* Send IP as first 4/16 bytes on socket */
-  memcpy (addr, iface->hemu_ip.v6.s6_addr, olsr_cnf->ipsize);
-  addr[0] = htonl (addr[0]);
-  addr[1] = htonl (addr[1]);
-  addr[2] = htonl (addr[2]);
-  addr[3] = htonl (addr[3]);
+  memcpy(addr, iface->hemu_ip.v6.s6_addr, olsr_cnf->ipsize);
+  addr[0] = htonl(addr[0]);
+  addr[1] = htonl(addr[1]);
+  addr[2] = htonl(addr[2]);
+  addr[3] = htonl(addr[3]);
 
-  if (send (ifp->olsr_socket, (char *) addr, olsr_cnf->ipsize, 0) !=
-      (int) olsr_cnf->ipsize)
-    {
-      fprintf (stderr, "Error sending IP!");
-    }
+  if (send(ifp->olsr_socket, (char *)addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize) {
+    fprintf(stderr, "Error sending IP!");
+  }
 
   /* Register socket */
-  add_olsr_socket (ifp->olsr_socket, &olsr_input_hostemu);
+  add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu);
 
   /*
    * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
-    olsr_start_timer (iface->cnf->hello_params.emission_interval *
-                      MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
-                      olsr_cnf->lq_level ==
-                      0 ? &generate_hello : &olsr_output_lq_hello, ifp,
-                      hello_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->hello_params.emission_interval *
+                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, ifp, hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
-    olsr_start_timer (iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
-                      TC_JITTER, OLSR_TIMER_PERIODIC,
-                      olsr_cnf->lq_level ==
-                      0 ? &generate_tc : &olsr_output_lq_tc, ifp,
-                      tc_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
+                     TC_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, ifp, tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
-    olsr_start_timer (iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
-                      MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp,
-                      mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC,
+                     MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, ifp, mid_gen_timer_cookie->ci_id);
   ifp->hna_gen_timer =
-    olsr_start_timer (iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
-                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
-                      hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC,
+                     HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp, hna_gen_timer_cookie->ci_id);
 
   /* Recalculate max topology hold time */
   if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
 
-  ifp->hello_etime =
-    (olsr_reltime) (iface->cnf->hello_params.emission_interval *
-                    MSEC_PER_SEC);
-  ifp->valtimes.hello =
-    reltime_to_me (iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.tc =
-    reltime_to_me (iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.mid =
-    reltime_to_me (iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  ifp->valtimes.hna =
-    reltime_to_me (iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
   return 1;
 }
 
 int
-chk_if_changed (struct olsr_if *IntConf)
+chk_if_changed(struct olsr_if *IntConf)
 {
   struct ipaddr_str buf;
   struct interface *Int;
@@ -783,153 +700,141 @@ chk_if_changed (struct olsr_if *IntConf)
   union olsr_ip_addr OldVal, NewVal;
   struct sockaddr_in *AddrIn;
 
-  if (olsr_cnf->ip_version == AF_INET6)
-    {
-      fprintf (stderr, "IPv6 not supported by chk_if_changed()!\n");
-      return 0;
-    }
-
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv6 not supported by chk_if_changed()!\n");
+    return 0;
+  }
 #ifdef DEBUG
-  OLSR_PRINTF (3, "Checking if %s is set down or changed\n", IntConf->name);
+  OLSR_PRINTF(3, "Checking if %s is set down or changed\n", IntConf->name);
 #endif
 
   Int = IntConf->interf;
 
-  if (GetIntInfo (&Info, IntConf->name) < 0)
-    {
-      RemoveInterface (IntConf);
-      return 1;
-    }
+  if (GetIntInfo(&Info, IntConf->name) < 0) {
+    RemoveInterface(IntConf);
+    return 1;
+  }
 
   Res = 0;
 
-  IsWlan = IsWireless (IntConf->name);
+  IsWlan = IsWireless(IntConf->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
 
-  if (Int->is_wireless != IsWlan)
-    {
-      OLSR_PRINTF (1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless,
-                   IsWlan);
+  if (Int->is_wireless != IsWlan) {
+    OLSR_PRINTF(1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
 
-      Int->is_wireless = IsWlan;
+    Int->is_wireless = IsWlan;
 
-      if (IntConf->cnf->weight.fixed)
-        Int->int_metric = IntConf->cnf->weight.value;
+    if (IntConf->cnf->weight.fixed)
+      Int->int_metric = IntConf->cnf->weight.value;
 
-      else
-        Int->int_metric = Info.Metric;
+    else
+      Int->int_metric = Info.Metric;
 
-      Res = 1;
-    }
+    Res = 1;
+  }
 
-  if (Int->int_mtu != Info.Mtu)
-    {
-      OLSR_PRINTF (1, "\tMTU change: %d -> %d.\n", (int) Int->int_mtu,
-                   Info.Mtu);
+  if (Int->int_mtu != Info.Mtu) {
+    OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu, Info.Mtu);
 
-      Int->int_mtu = Info.Mtu;
+    Int->int_mtu = Info.Mtu;
 
-      net_remove_buffer (Int);
-      net_add_buffer (Int);
+    net_remove_buffer(Int);
+    net_add_buffer(Int);
 
-      Res = 1;
-    }
+    Res = 1;
+  }
 
-  OldVal.v4 = ((struct sockaddr_in *) &Int->int_addr)->sin_addr;
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_addr)->sin_addr;
   NewVal.v4.s_addr = Info.Addr;
 
 #ifdef DEBUG
-  OLSR_PRINTF (3, "\tAddress: %s\n", olsr_ip_to_string (&buf, &NewVal));
+  OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
-    {
-      OLSR_PRINTF (1, "\tAddress change.\n");
-      OLSR_PRINTF (1, "\tOld: %s\n", olsr_ip_to_string (&buf, &OldVal));
-      OLSR_PRINTF (1, "\tNew: %s\n", olsr_ip_to_string (&buf, &NewVal));
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
+    OLSR_PRINTF(1, "\tAddress change.\n");
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
-      Int->ip_addr.v4 = NewVal.v4;
+    Int->ip_addr.v4 = NewVal.v4;
 
-      AddrIn = (struct sockaddr_in *) &Int->int_addr;
+    AddrIn = (struct sockaddr_in *)&Int->int_addr;
 
-      AddrIn->sin_family = AF_INET;
-      AddrIn->sin_port = 0;
-      AddrIn->sin_addr = NewVal.v4;
+    AddrIn->sin_family = AF_INET;
+    AddrIn->sin_port = 0;
+    AddrIn->sin_addr = NewVal.v4;
 
-      if (olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr)
-        {
-          OLSR_PRINTF (1, "\tMain address change.\n");
+    if (olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr) {
+      OLSR_PRINTF(1, "\tMain address change.\n");
 
-          olsr_cnf->main_addr.v4 = NewVal.v4;
-        }
-
-      Res = 1;
+      olsr_cnf->main_addr.v4 = NewVal.v4;
     }
 
-  else
-    OLSR_PRINTF (3, "\tNo address change.\n");
+    Res = 1;
+  }
 
-  OldVal.v4 = ((struct sockaddr_in *) &Int->int_netmask)->sin_addr;
+  else
+    OLSR_PRINTF(3, "\tNo address change.\n");
+
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr;
   NewVal.v4.s_addr = Info.Mask;
 
 #ifdef DEBUG
-  OLSR_PRINTF (3, "\tNetmask: %s\n", olsr_ip_to_string (&buf, &NewVal));
+  OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
-    {
-      OLSR_PRINTF (1, "\tNetmask change.\n");
-      OLSR_PRINTF (1, "\tOld: %s\n", olsr_ip_to_string (&buf, &OldVal));
-      OLSR_PRINTF (1, "\tNew: %s\n", olsr_ip_to_string (&buf, &NewVal));
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
+    OLSR_PRINTF(1, "\tNetmask change.\n");
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
-      AddrIn = (struct sockaddr_in *) &Int->int_netmask;
+    AddrIn = (struct sockaddr_in *)&Int->int_netmask;
 
-      AddrIn->sin_family = AF_INET;
-      AddrIn->sin_port = 0;
-      AddrIn->sin_addr = NewVal.v4;
+    AddrIn->sin_family = AF_INET;
+    AddrIn->sin_port = 0;
+    AddrIn->sin_addr = NewVal.v4;
 
-      Res = 1;
-    }
+    Res = 1;
+  }
 
   else
-    OLSR_PRINTF (3, "\tNo netmask change.\n");
+    OLSR_PRINTF(3, "\tNo netmask change.\n");
 
-  OldVal.v4 = ((struct sockaddr_in *) &Int->int_broadaddr)->sin_addr;
+  OldVal.v4 = ((struct sockaddr_in *)&Int->int_broadaddr)->sin_addr;
   NewVal.v4.s_addr = Info.Broad;
 
 #ifdef DEBUG
-  OLSR_PRINTF (3, "\tBroadcast address: %s\n",
-               olsr_ip_to_string (&buf, &NewVal));
+  OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
 #endif
 
-  if (NewVal.v4.s_addr != OldVal.v4.s_addr)
-    {
-      OLSR_PRINTF (1, "\tBroadcast address change.\n");
-      OLSR_PRINTF (1, "\tOld: %s\n", olsr_ip_to_string (&buf, &OldVal));
-      OLSR_PRINTF (1, "\tNew: %s\n", olsr_ip_to_string (&buf, &NewVal));
+  if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
+    OLSR_PRINTF(1, "\tBroadcast address change.\n");
+    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
-      AddrIn = (struct sockaddr_in *) &Int->int_broadaddr;
+    AddrIn = (struct sockaddr_in *)&Int->int_broadaddr;
 
-      AddrIn->sin_family = AF_INET;
-      AddrIn->sin_port = 0;
-      AddrIn->sin_addr = NewVal.v4;
+    AddrIn->sin_family = AF_INET;
+    AddrIn->sin_port = 0;
+    AddrIn->sin_addr = NewVal.v4;
 
-      Res = 1;
-    }
+    Res = 1;
+  }
 
   else
-    OLSR_PRINTF (3, "\tNo broadcast address change.\n");
+    OLSR_PRINTF(3, "\tNo broadcast address change.\n");
 
   if (Res != 0)
-    run_ifchg_cbs (Int, IFCHG_IF_UPDATE);
+    run_ifchg_cbs(Int, IFCHG_IF_UPDATE);
 
   return Res;
 }
 
 int
-chk_if_up (struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
+chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 {
   struct ipaddr_str buf;
   struct InterfaceInfo Info;
@@ -939,43 +844,38 @@ chk_if_up (struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   struct sockaddr_in *AddrIn;
   size_t name_size;
 
-  if (olsr_cnf->ip_version == AF_INET6)
-    {
-      fprintf (stderr, "IPv6 not supported by chk_if_up()!\n");
-      return 0;
-    }
+  if (olsr_cnf->ip_version == AF_INET6) {
+    fprintf(stderr, "IPv6 not supported by chk_if_up()!\n");
+    return 0;
+  }
 
-  if (GetIntInfo (&Info, IntConf->name) < 0)
+  if (GetIntInfo(&Info, IntConf->name) < 0)
     return 0;
 
-  New = olsr_malloc (sizeof (struct interface), "Interface 1");
+  New = olsr_malloc(sizeof(struct interface), "Interface 1");
 
-  New->immediate_send_tc =
-    (IntConf->cnf->tc_params.emission_interval <
-     IntConf->cnf->hello_params.emission_interval);
-  if (olsr_cnf->max_jitter == 0)
-    {
-      /* max_jitter determines the max time to store to-be-send-messages, correlated with random() */
-      olsr_cnf->max_jitter =
-        New->immediate_send_tc ? IntConf->cnf->tc_params.
-        emission_interval : IntConf->cnf->hello_params.emission_interval;
-    }
+  New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
+  if (olsr_cnf->max_jitter == 0) {
+    /* max_jitter determines the max time to store to-be-send-messages, correlated with random() */
+    olsr_cnf->max_jitter =
+      New->immediate_send_tc ? IntConf->cnf->tc_params.emission_interval : IntConf->cnf->hello_params.emission_interval;
+  }
 
   New->gen_properties = NULL;
 
-  AddrIn = (struct sockaddr_in *) &New->int_addr;
+  AddrIn = (struct sockaddr_in *)&New->int_addr;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Addr;
 
-  AddrIn = (struct sockaddr_in *) &New->int_netmask;
+  AddrIn = (struct sockaddr_in *)&New->int_netmask;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Mask;
 
-  AddrIn = (struct sockaddr_in *) &New->int_broadaddr;
+  AddrIn = (struct sockaddr_in *)&New->int_broadaddr;
 
   AddrIn->sin_family = AF_INET;
   AddrIn->sin_port = 0;
@@ -990,11 +890,11 @@ chk_if_up (struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->int_mtu = Info.Mtu;
 
-  name_size = strlen (IntConf->name) + 1;
-  New->int_name = olsr_malloc (name_size, "Interface 2");
-  strscpy (New->int_name, IntConf->name, name_size);
+  name_size = strlen(IntConf->name) + 1;
+  New->int_name = olsr_malloc(name_size, "Interface 2");
+  strscpy(New->int_name, IntConf->name, name_size);
 
-  IsWlan = IsWireless (IntConf->name);
+  IsWlan = IsWireless(IntConf->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
@@ -1007,42 +907,31 @@ chk_if_up (struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   else
     New->int_metric = Info.Metric;
 
-  New->olsr_seqnum = random () & 0xffff;
+  New->olsr_seqnum = random() & 0xffff;
 
   New->ttl_index = -32;         /* For the first 32 TC's, fish-eye is disabled */
 
-  OLSR_PRINTF (1, "\tInterface %s set up for use with index %d\n\n",
-               IntConf->name, New->if_index);
+  OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n", IntConf->name, New->if_index);
 
-  OLSR_PRINTF (1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF (1, "\tAddress: %s\n",
-               sockaddr4_to_string (&buf,
-                                    (const struct sockaddr *) &New->
-                                    int_addr));
-  OLSR_PRINTF (1, "\tNetmask: %s\n",
-               sockaddr4_to_string (&buf,
-                                    (const struct sockaddr *) &New->
-                                    int_netmask));
-  OLSR_PRINTF (1, "\tBroadcast address: %s\n",
-               sockaddr4_to_string (&buf,
-                                    (const struct sockaddr *) &New->
-                                    int_broadaddr));
+  OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
+  OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr *)&New->int_addr));
+  OLSR_PRINTF(1, "\tNetmask: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr *)&New->int_netmask));
+  OLSR_PRINTF(1, "\tBroadcast address: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr *)&New->int_broadaddr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
 
   New->if_index = Info.Index;
 
-  OLSR_PRINTF (3, "\tKernel index: %08x\n", New->if_index);
+  OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
 
-  New->olsr_socket = getsocket (BUFSPACE, New->int_name);
+  New->olsr_socket = getsocket(BUFSPACE, New->int_name);
 
-  if (New->olsr_socket < 0)
-    {
-      fprintf (stderr, "Could not initialize socket... exiting!\n\n");
-      exit (1);
-    }
+  if (New->olsr_socket < 0) {
+    fprintf(stderr, "Could not initialize socket... exiting!\n\n");
+    exit(1);
+  }
 
-  add_olsr_socket (New->olsr_socket, &olsr_input);
+  add_olsr_socket(New->olsr_socket, &olsr_input);
 
   New->int_next = ifnet;
   ifnet = New;
@@ -1050,85 +939,69 @@ chk_if_up (struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   IntConf->interf = New;
   IntConf->configured = 1;
 
-  memset (&NullAddr, 0, olsr_cnf->ipsize);
+  memset(&NullAddr, 0, olsr_cnf->ipsize);
 
-  if (ipequal (&NullAddr, &olsr_cnf->main_addr))
-    {
-      olsr_cnf->main_addr = New->ip_addr;
-      OLSR_PRINTF (1, "New main address: %s\n",
-                   olsr_ip_to_string (&buf, &olsr_cnf->main_addr));
-    }
+  if (ipequal(&NullAddr, &olsr_cnf->main_addr)) {
+    olsr_cnf->main_addr = New->ip_addr;
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+  }
 
-  net_add_buffer (New);
+  net_add_buffer(New);
 
   /*
    * Register functions for periodic message generation
    */
   New->hello_gen_timer =
-    olsr_start_timer (IntConf->cnf->hello_params.emission_interval *
-                      MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
-                      olsr_cnf->lq_level ==
-                      0 ? &generate_hello : &olsr_output_lq_hello, New,
-                      hello_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->hello_params.emission_interval *
+                     MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, New, hello_gen_timer_cookie->ci_id);
   New->tc_gen_timer =
-    olsr_start_timer (IntConf->cnf->tc_params.emission_interval *
-                      MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
-                      olsr_cnf->lq_level ==
-                      0 ? &generate_tc : &olsr_output_lq_tc, New,
-                      tc_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->tc_params.emission_interval *
+                     MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
+                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, New, tc_gen_timer_cookie->ci_id);
   New->mid_gen_timer =
-    olsr_start_timer (IntConf->cnf->mid_params.emission_interval *
-                      MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC,
-                      &generate_mid, New, mid_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->mid_params.emission_interval *
+                     MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New, mid_gen_timer_cookie->ci_id);
   New->hna_gen_timer =
-    olsr_start_timer (IntConf->cnf->hna_params.emission_interval *
-                      MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC,
-                      &generate_hna, New, hna_gen_timer_cookie->ci_id);
+    olsr_start_timer(IntConf->cnf->hna_params.emission_interval *
+                     MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New, hna_gen_timer_cookie->ci_id);
 
   if (olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
     olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
-  New->hello_etime =
-    (olsr_reltime) (IntConf->cnf->hello_params.emission_interval *
-                    MSEC_PER_SEC);
-  New->valtimes.hello =
-    reltime_to_me (IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.tc =
-    reltime_to_me (IntConf->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.mid =
-    reltime_to_me (IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.hna =
-    reltime_to_me (IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  New->hello_etime = (olsr_reltime) (IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.tc = reltime_to_me(IntConf->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
-  run_ifchg_cbs (New, IFCHG_IF_ADD);
+  run_ifchg_cbs(New, IFCHG_IF_ADD);
 
   return 1;
 }
 
 void
-check_interface_updates (void *dummy __attribute__ ((unused)))
+check_interface_updates(void *dummy __attribute__ ((unused)))
 {
   struct olsr_if *IntConf;
 
 #ifdef DEBUG
-  OLSR_PRINTF (3, "Checking for updates in the interface set\n");
+  OLSR_PRINTF(3, "Checking for updates in the interface set\n");
 #endif
 
-  for (IntConf = olsr_cnf->interfaces; IntConf != NULL;
-       IntConf = IntConf->next)
-    {
-      if (IntConf->host_emul)
-        continue;
+  for (IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next) {
+    if (IntConf->host_emul)
+      continue;
 
-      if (olsr_cnf->host_emul)  /* XXX: TEMPORARY! */
-        continue;
+    if (olsr_cnf->host_emul)    /* XXX: TEMPORARY! */
+      continue;
 
-      if (IntConf->configured)
-        chk_if_changed (IntConf);
+    if (IntConf->configured)
+      chk_if_changed(IntConf);
 
-      else
-        chk_if_up (IntConf, 3);
-    }
+    else
+      chk_if_up(IntConf, 3);
+  }
 }
 
 /*

@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -32,25 +33,22 @@
  * @return stripped string
  */
 char *
-stripString (char *str)
+stripString(char *str)
 {
 
   /* strip left whitespaces */
-  while (*str == ' ' || *str == '\t')
-    {
-      str++;
-    }
+  while (*str == ' ' || *str == '\t') {
+    str++;
+  }
 
   /* strip right whitespaces */
-  int i = strlen (str);
-  while (--i >= 0)
-    {
-      if (str[i] == ' ' || str[i] == '\r' || str[i] == '\n' || str[i] == '\t')
-        {
-          str[i] = 0;
-          break;
-        }
+  int i = strlen(str);
+  while (--i >= 0) {
+    if (str[i] == ' ' || str[i] == '\r' || str[i] == '\n' || str[i] == '\t') {
+      str[i] = 0;
+      break;
     }
+  }
 
   return str;
 }
@@ -67,45 +65,39 @@ stripString (char *str)
  * @return 0 if function was successfull, 1 if an error happened
  */
 int
-readConnectionMatrix (float *connectionMatrix, char *filename, int len)
+readConnectionMatrix(float *connectionMatrix, char *filename, int len)
 {
-  FILE *file = fopen (filename, "r");
-  if (!file)
-    {
-      return 1;
-    }
+  FILE *file = fopen(filename, "r");
+  if (!file) {
+    return 1;
+  }
 
   char buffer[1024];
-  while (fgets (buffer, 1024, file))
-    {
-      int from, to;
-      float propability;
+  while (fgets(buffer, 1024, file)) {
+    int from, to;
+    float propability;
 
-      char *line = stripString (buffer);
-      DPRINT ("%s\n", line);
+    char *line = stripString(buffer);
+    DPRINT("%s\n", line);
 
-      if (line[0] == '#' || line[0] == 0)
-        {
-          continue;
-        }
-
-      if (sscanf (line, "%d %d %f", &from, &to, &propability) != 3)
-        {
-          continue;
-        }
-
-      if (from < 0 || from >= len || to < 0 || to >= len || from == to)
-        {
-          continue;
-        }
-
-      connectionMatrix[GRID (from, to, len)] = propability;
-      if (connectionMatrix[GRID (to, from, len)] == 0)
-        {
-          connectionMatrix[GRID (to, from, len)] = propability;
-        }
+    if (line[0] == '#' || line[0] == 0) {
+      continue;
     }
-  fclose (file);
+
+    if (sscanf(line, "%d %d %f", &from, &to, &propability) != 3) {
+      continue;
+    }
+
+    if (from < 0 || from >= len || to < 0 || to >= len || from == to) {
+      continue;
+    }
+
+    connectionMatrix[GRID(from, to, len)] = propability;
+    if (connectionMatrix[GRID(to, from, len)] == 0) {
+      connectionMatrix[GRID(to, from, len)] = propability;
+    }
+  }
+  fclose(file);
   return 0;
 }
 

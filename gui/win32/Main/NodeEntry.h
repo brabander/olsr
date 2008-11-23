@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -45,8 +46,7 @@
 #include "MidEntry.h"
 #include "HnaEntry.h"
 
-class NodeEntry
-{
+class NodeEntry {
 public:
   unsigned int Addr;
   unsigned __int64 Timeout;
@@ -55,12 +55,12 @@ public:
     CList < class MidEntry, class MidEntry & >MidList;
     CList < class HnaEntry, class HnaEntry & >HnaList;
 
-  void AddMpr (unsigned int, unsigned __int64);
-  void AddMid (unsigned int, unsigned __int64);
-  void AddHna (unsigned int, unsigned int, unsigned __int64);
+  void AddMpr(unsigned int, unsigned __int64);
+  void AddMid(unsigned int, unsigned __int64);
+  void AddHna(unsigned int, unsigned int, unsigned __int64);
 
-  class NodeEntry & NodeEntry::operator= (class NodeEntry &);
-  BOOL NodeEntry::operator== (const class NodeEntry &) const;
+  class NodeEntry & NodeEntry::operator=(class NodeEntry &);
+  BOOL NodeEntry::operator==(const class NodeEntry &) const;
 };
 
 #endif

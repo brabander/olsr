@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -53,25 +54,24 @@
 
 class TrayIcon;
 
-class CFrontendApp:public CWinApp
-{
+class CFrontendApp:public CWinApp {
 public:
-  CFrontendApp ();
+  CFrontendApp();
 
-  int RedirectStdHandles (void);
-  unsigned int RedirectThreadFunc (void);
+  int RedirectStdHandles(void);
+  unsigned int RedirectThreadFunc(void);
 
   HANDLE OutRead;
   TrayIcon *tray_icon;
 
   //{{AFX_VIRTUAL(CFrontendApp)
 public:
-    virtual BOOL InitInstance ();
+    virtual BOOL InitInstance();
   //}}AFX_VIRTUAL
 
   //{{AFX_MSG(CFrontendApp)
   //}}AFX_MSG
-  DECLARE_MESSAGE_MAP ()};
+  DECLARE_MESSAGE_MAP()};
 
 //{{AFX_INSERT_LOCATION}}
 

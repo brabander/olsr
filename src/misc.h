@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -41,7 +42,7 @@
 #ifndef _OLSR_MISC_H
 #define _OLSR_MISC_H
 
-void clear_console (void);
+void clear_console(void);
 
 #endif
 

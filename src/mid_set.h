@@ -46,8 +46,7 @@
 #include "hashing.h"
 #include "mantissa.h"
 
-struct mid_address
-{
+struct mid_address {
   union olsr_ip_addr alias;
   struct mid_entry *main_entry;
   struct mid_address *next_alias;
@@ -60,8 +59,7 @@ struct mid_address
 /*
  * Contains the main addr of a node and a list of aliases
  */
-struct mid_entry
-{
+struct mid_entry {
   union olsr_ip_addr main_addr;
   struct mid_address *aliases;
   struct mid_entry *prev;
@@ -76,20 +74,17 @@ extern struct mid_address reverse_mid_set[HASHSIZE];
 
 struct mid_alias;
 
-int olsr_init_mid_set (void);
-void insert_mid_tuple (union olsr_ip_addr *, struct mid_address *,
-                       olsr_reltime);
-void insert_mid_alias (union olsr_ip_addr *, const union olsr_ip_addr *,
-                       olsr_reltime);
-union olsr_ip_addr *mid_lookup_main_addr (const union olsr_ip_addr *);
-struct mid_address *mid_lookup_aliases (const union olsr_ip_addr *);
-struct mid_entry *mid_lookup_entry_bymain (const union olsr_ip_addr *);
-void olsr_print_mid_set (void);
-void olsr_prune_aliases (const union olsr_ip_addr *, struct mid_alias *);
-int olsr_update_mid_table (const union olsr_ip_addr *, olsr_reltime);
-void olsr_delete_mid_entry (struct mid_entry *);
-void olsr_input_mid (union olsr_message *, struct interface *,
-                     union olsr_ip_addr *);
+int olsr_init_mid_set(void);
+void insert_mid_tuple(union olsr_ip_addr *, struct mid_address *, olsr_reltime);
+void insert_mid_alias(union olsr_ip_addr *, const union olsr_ip_addr *, olsr_reltime);
+union olsr_ip_addr *mid_lookup_main_addr(const union olsr_ip_addr *);
+struct mid_address *mid_lookup_aliases(const union olsr_ip_addr *);
+struct mid_entry *mid_lookup_entry_bymain(const union olsr_ip_addr *);
+void olsr_print_mid_set(void);
+void olsr_prune_aliases(const union olsr_ip_addr *, struct mid_alias *);
+int olsr_update_mid_table(const union olsr_ip_addr *, olsr_reltime);
+void olsr_delete_mid_entry(struct mid_entry *);
+void olsr_input_mid(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif
 

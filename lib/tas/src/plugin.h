@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  *
@@ -41,15 +42,15 @@
 
 #define OLSR_TAS_SERVICE_INT 100        /* msec */
 
-extern void sendMessage (const char *service, const char *string);
-extern void iterLinkTabInit (void);
-extern int iterLinkTabNext (char *buff, int len);
-extern void iterRouteTabInit (void);
-extern int iterRouteTabNext (char *buff, int len);
-extern void iterNeighTabInit (void);
-extern int iterNeighTabNext (char *buff, int len);
-extern void iterTcTabInit (void);
-extern int iterTcTabNext (char *buff, int len);
+extern void sendMessage(const char *service, const char *string);
+extern void iterLinkTabInit(void);
+extern int iterLinkTabNext(char *buff, int len);
+extern void iterRouteTabInit(void);
+extern int iterRouteTabNext(char *buff, int len);
+extern void iterNeighTabInit(void);
+extern int iterNeighTabNext(char *buff, int len);
+extern void iterTcTabInit(void);
+extern int iterTcTabNext(char *buff, int len);
 
 /*
  * Local Variables:

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -61,28 +62,28 @@
 union olsr_ip_addr ipc_accept_ip;
 int ipc_port;
 
-static void my_init (void) __attribute__ ((constructor));
-static void my_fini (void) __attribute__ ((destructor));
+static void my_init(void) __attribute__ ((constructor));
+static void my_fini(void) __attribute__ ((destructor));
 
 /**
  *Constructor
  */
 static void
-my_init (void)
+my_init(void)
 {
   /* Print plugin info to stdout */
-  printf ("%s\n", MOD_DESC);
+  printf("%s\n", MOD_DESC);
 
   /* defaults for parameters */
   ipc_port = 2004;
-  ipc_accept_ip.v4.s_addr = htonl (INADDR_LOOPBACK);
+  ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
 }
 
 /**
  *Destructor
  */
 static void
-my_fini (void)
+my_fini(void)
 {
   /* Calls the destruction function
    * olsr_plugin_exit()
@@ -90,27 +91,25 @@ my_fini (void)
    * sourcefile and all data destruction
    * should happen there - NOT HERE!
    */
-  olsr_plugin_exit ();
+  olsr_plugin_exit();
 }
 
 int
-olsrd_plugin_interface_version (void)
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
-  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data =
-   &ipc_accept_ip},
+  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data = &ipc_accept_ip},
 };
 
 void
-olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
-                             int *size)
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
   *params = plugin_parameters;
-  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
+  *size = sizeof(plugin_parameters) / sizeof(*plugin_parameters);
 }
 
 /*

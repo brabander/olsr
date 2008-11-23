@@ -64,21 +64,20 @@
  * For a periodic timer the timer_period field is set to non zero,
  * which causes the timer to run forever until manually stopped.
  */
-struct timer_entry
-{
-  struct list_node timer_list;  /* memory pooling, or wheel membership */
-  clock_t timer_clock;          /* when timer shall fire (absolute time) */
-  unsigned int timer_period;    /* set for periodical timers (relative time) */
-  olsr_cookie_t timer_cookie;   /* used for diag stuff */
-  olsr_u8_t timer_jitter_pct;   /* the jitter expressed in percent */
-  olsr_u8_t timer_flags;        /* misc flags */
-  unsigned int timer_random;    /* cache random() result for performance reasons */
-  void (*timer_cb) (void *);    /* callback function */
-  void *timer_cb_context;       /* context pointer */
+struct timer_entry {
+  struct list_node timer_list;         /* memory pooling, or wheel membership */
+  clock_t timer_clock;                 /* when timer shall fire (absolute time) */
+  unsigned int timer_period;           /* set for periodical timers (relative time) */
+  olsr_cookie_t timer_cookie;          /* used for diag stuff */
+  olsr_u8_t timer_jitter_pct;          /* the jitter expressed in percent */
+  olsr_u8_t timer_flags;               /* misc flags */
+  unsigned int timer_random;           /* cache random() result for performance reasons */
+  void (*timer_cb) (void *);           /* callback function */
+  void *timer_cb_context;              /* context pointer */
 };
 
 /* inline to recast from timer_list back to timer_entry */
-LISTNODE2STRUCT (list2timer, struct timer_entry, timer_list);
+LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
 #define OLSR_TIMER_ONESHOT    0 /* One shot timer */
 #define OLSR_TIMER_PERIODIC   1 /* Periodic timer */
@@ -90,23 +89,19 @@ LISTNODE2STRUCT (list2timer, struct timer_entry, timer_list);
 #define OLSR_TIMER_MEMORY_CHUNK 100     /* timers per chunk */
 
 /* Timers */
-void olsr_init_timers (void);
-void olsr_walk_timers (clock_t *);
-void olsr_set_timer (struct timer_entry **, unsigned int, olsr_u8_t,
-                     olsr_bool, void (*)(void *), void *, olsr_cookie_t);
-struct timer_entry *olsr_start_timer (unsigned int, olsr_u8_t, olsr_bool,
-                                      void (*)(void *), void *,
-                                      olsr_cookie_t);
-void olsr_change_timer (struct timer_entry *, unsigned int, olsr_u8_t,
-                        olsr_bool);
-void olsr_stop_timer (struct timer_entry *);
+void olsr_init_timers(void);
+void olsr_walk_timers(clock_t *);
+void olsr_set_timer(struct timer_entry **, unsigned int, olsr_u8_t, olsr_bool, void (*)(void *), void *, olsr_cookie_t);
+struct timer_entry *olsr_start_timer(unsigned int, olsr_u8_t, olsr_bool, void (*)(void *), void *, olsr_cookie_t);
+void olsr_change_timer(struct timer_entry *, unsigned int, olsr_u8_t, olsr_bool);
+void olsr_stop_timer(struct timer_entry *);
 
 /* Printing timestamps */
-const char *olsr_clock_string (clock_t);
-const char *olsr_wallclock_string (void);
+const char *olsr_clock_string(clock_t);
+const char *olsr_wallclock_string(void);
 
 /* Main scheduler loop */
-void olsr_scheduler (void) __attribute__ ((noreturn));
+void olsr_scheduler(void) __attribute__ ((noreturn));
 
 #endif
 

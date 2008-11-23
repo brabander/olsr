@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -52,15 +53,14 @@
 #include <olsr_cfg.h>
 #include "afxwin.h"
 
-class MyDialog2:public CDialog
-{
+class MyDialog2:public CDialog {
 public:
-  MyDialog2 (CWnd * pParent = NULL);
+  MyDialog2(CWnd * pParent = NULL);
 
-  BOOL Create (CWnd * Parent);
+  BOOL Create(CWnd * Parent);
 
-  int OpenConfigFile (CString);
-  int SaveConfigFile (CString, int);
+  int OpenConfigFile(CString);
+  int SaveConfigFile(CString, int);
 
   CStringArray *Interfaces;
   CStringArray *Addresses;
@@ -69,8 +69,7 @@ public:
   struct olsrd_config *Conf;
 
   //{{AFX_DATA(MyDialog2)
-  enum
-  { IDD = IDD_DIALOG2 };
+  enum { IDD = IDD_DIALOG2 };
   CComboBox m_LqAlgo;
   CComboBox m_TcRed;
   CEdit m_MprCov;
@@ -100,32 +99,32 @@ public:
 
   //{{AFX_VIRTUAL(MyDialog2)
 protected:
-    virtual void DoDataExchange (CDataExchange * pDX);
+    virtual void DoDataExchange(CDataExchange * pDX);
   //}}AFX_VIRTUAL
 
 protected:
 
   //{{AFX_MSG(MyDialog2)
-    afx_msg void OnOK ();
-  afx_msg void OnCancel ();
-  afx_msg void OnHScroll (UINT nSBCode, UINT nPos, CScrollBar * pScrollBar);
-  virtual BOOL OnInitDialog ();
-  afx_msg void OnHystCheck ();
-  afx_msg void OnOpenButton ();
-  afx_msg void OnSaveButton ();
-  afx_msg void OnResetButton ();
-  afx_msg void OnEtxCheck ();
-  afx_msg void OnEtxRadio1 ();
-  afx_msg void OnEtxRadio2 ();
+    afx_msg void OnOK();
+  afx_msg void OnCancel();
+  afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar * pScrollBar);
+  virtual BOOL OnInitDialog();
+  afx_msg void OnHystCheck();
+  afx_msg void OnOpenButton();
+  afx_msg void OnSaveButton();
+  afx_msg void OnResetButton();
+  afx_msg void OnEtxCheck();
+  afx_msg void OnEtxRadio1();
+  afx_msg void OnEtxRadio2();
   //}}AFX_MSG
-    DECLARE_MESSAGE_MAP () CFont EditFont;
+    DECLARE_MESSAGE_MAP() CFont EditFont;
 
   int DebugLevel;
-  void SetDebugLevel (int);
+  void SetDebugLevel(int);
 
-  void Reset (void);
+  void Reset(void);
 
-  void OnEtxCheckWorker (void);
+  void OnEtxCheckWorker(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

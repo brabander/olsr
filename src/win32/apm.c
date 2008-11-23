@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -48,43 +49,40 @@
 #undef interface
 
 int
-apm_init (void)
+apm_init(void)
 {
   struct olsr_apm_info ApmInfo;
 
-  OLSR_PRINTF (3, "Initializing APM\n");
+  OLSR_PRINTF(3, "Initializing APM\n");
 
-  if (apm_read (&ApmInfo) < 0)
+  if (apm_read(&ApmInfo) < 0)
     return -1;
 
-  apm_printinfo (&ApmInfo);
+  apm_printinfo(&ApmInfo);
 
   return 0;
 }
 
 void
-apm_printinfo (struct olsr_apm_info *ApmInfo)
+apm_printinfo(struct olsr_apm_info *ApmInfo)
 {
-  OLSR_PRINTF (5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
-               ApmInfo->ac_line_status, ApmInfo->battery_percentage);
+  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n", ApmInfo->ac_line_status, ApmInfo->battery_percentage);
 }
 
 int
-apm_read (struct olsr_apm_info *ApmInfo)
+apm_read(struct olsr_apm_info *ApmInfo)
 {
 #if !defined WINCE
   SYSTEM_POWER_STATUS PowerStat;
 
-  memset (ApmInfo, 0, sizeof (struct olsr_apm_info));
+  memset(ApmInfo, 0, sizeof(struct olsr_apm_info));
 
-  if (!GetSystemPowerStatus (&PowerStat))
+  if (!GetSystemPowerStatus(&PowerStat))
     return 0;
 
-  ApmInfo->ac_line_status =
-    (PowerStat.ACLineStatus == 1) ? OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
+  ApmInfo->ac_line_status = (PowerStat.ACLineStatus == 1) ? OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
 
-  ApmInfo->battery_percentage =
-    (PowerStat.BatteryLifePercent <= 100) ? PowerStat.BatteryLifePercent : 0;
+  ApmInfo->battery_percentage = (PowerStat.BatteryLifePercent <= 100) ? PowerStat.BatteryLifePercent : 0;
 
   return 1;
 #else

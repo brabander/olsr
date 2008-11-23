@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -44,19 +45,19 @@
 
 #define TL_UNISTD_H_INCLUDED
 
-void sleep (unsigned int Sec);
+void sleep(unsigned int Sec);
 
-void srandom (unsigned int Seed);
-unsigned int random (void);
+void srandom(unsigned int Seed);
+unsigned int random(void);
 
-char *StrError (unsigned int ErrNo);
+char *StrError(unsigned int ErrNo);
 
-int getpid (void);
+int getpid(void);
 
 #define IPTOS_TOS(x) ((x) & 0x1e)
 #define IPTOS_PREC(x) ((x) & 0xe0)
 
-int isatty (int fd);
+int isatty(int fd);
 
 #endif
 

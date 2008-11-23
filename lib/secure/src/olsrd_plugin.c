@@ -1,3 +1,4 @@
+
 /*
  * Secure OLSR plugin
  * http://www.olsr.org
@@ -45,8 +46,8 @@
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR
 #define PLUGIN_INTERFACE_VERSION 5
 
-static void my_init (void) __attribute__ ((constructor));
-static void my_fini (void) __attribute__ ((destructor));
+static void my_init(void) __attribute__ ((constructor));
+static void my_fini(void) __attribute__ ((destructor));
 
 /*
  * Defines the version of the plugin interface that is used
@@ -54,7 +55,7 @@ static void my_fini (void) __attribute__ ((destructor));
  * Do not alter unless you know what you are doing!
  */
 int
-olsrd_plugin_interface_version (void)
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -63,19 +64,19 @@ olsrd_plugin_interface_version (void)
  *Constructor
  */
 static void
-my_init (void)
+my_init(void)
 {
   /* Print plugin info to stdout */
   /* We cannot use olsr_printf yet! */
-  printf ("%s\n", MOD_DESC);
-  printf ("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n");
+  printf("%s\n", MOD_DESC);
+  printf("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n");
 }
 
 /**
  *Destructor
  */
 static void
-my_fini (void)
+my_fini(void)
 {
 
   /* Calls the destruction function
@@ -84,15 +85,14 @@ my_fini (void)
    * sourcefile and all data destruction
    * should happen there - NOT HERE!
    */
-  secure_plugin_exit ();
+  secure_plugin_exit();
 }
 
 static int
-store_string (const char *value, void *data, set_plugin_parameter_addon addon
-              __attribute__ ((unused)))
+store_string(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *str = data;
-  snprintf (str, FILENAME_MAX + 1, "%s", value);
+  snprintf(str, FILENAME_MAX + 1, "%s", value);
   return 0;
 }
 
@@ -101,15 +101,14 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 };
 
 void
-olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
-                             int *size)
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
   *params = plugin_parameters;
-  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
+  *size = sizeof(plugin_parameters) / sizeof(*plugin_parameters);
 }
 
 int
-olsrd_plugin_init (void)
+olsrd_plugin_init(void)
 {
   /* Calls the initialization function
    * olsr_plugin_init()
@@ -117,17 +116,15 @@ olsrd_plugin_init (void)
    * sourcefile and all data initialization
    * should happen there - NOT HERE!
    */
-  if (!secure_plugin_init ())
-    {
-      fprintf (stderr, "Could not initialize plugin!\n");
-      return 0;
-    }
+  if (!secure_plugin_init()) {
+    fprintf(stderr, "Could not initialize plugin!\n");
+    return 0;
+  }
 
-  if (!plugin_ipc_init ())
-    {
-      fprintf (stderr, "Could not initialize plugin IPC!\n");
-      return 0;
-    }
+  if (!plugin_ipc_init()) {
+    fprintf(stderr, "Could not initialize plugin IPC!\n");
+    return 0;
+  }
   return 1;
 
 }

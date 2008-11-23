@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -53,8 +54,7 @@
 
 #pragma pack(push, BeforeIpcMessages, 1)
 
-struct OlsrHeader
-{
+struct OlsrHeader {
   unsigned char Type;
   unsigned char VTime;
   unsigned short Size;
@@ -64,8 +64,7 @@ struct OlsrHeader
   unsigned short SeqNo;
 };
 
-struct OlsrHello
-{
+struct OlsrHello {
   struct OlsrHeader Header;
 
   unsigned short Reserved;
@@ -73,36 +72,31 @@ struct OlsrHello
   unsigned char Will;
 };
 
-struct OlsrHelloLink
-{
+struct OlsrHelloLink {
   unsigned char LinkCode;
   unsigned char Reserved;
   unsigned short Size;
 };
 
-struct OlsrTc
-{
+struct OlsrTc {
   struct OlsrHeader Header;
 
   unsigned short Ansn;
   unsigned short Reserved;
 };
 
-union IpcIpAddr
-{
+union IpcIpAddr {
   unsigned int v4;
   unsigned char v6[16];
 };
 
-struct IpcHeader
-{
+struct IpcHeader {
   unsigned char Type;
   unsigned char Reserved;
   unsigned short Size;
 };
 
-struct IpcRoute
-{
+struct IpcRoute {
   struct IpcHeader Header;
 
   unsigned char Metric;
@@ -113,8 +107,7 @@ struct IpcRoute
   char Int[4];
 };
 
-struct IpcConfig
-{
+struct IpcConfig {
   struct IpcHeader Header;
 
   unsigned char NumMid;

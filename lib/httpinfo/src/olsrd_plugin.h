@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -75,8 +76,7 @@ extern int resolve_ip_addresses;
 
 /* Allowed hosts stuff */
 
-struct allowed_net
-{
+struct allowed_net {
   union olsr_ip_addr net;
   union olsr_ip_addr mask;
   struct allowed_net *next;
@@ -89,12 +89,12 @@ extern struct allowed_net *allowed_nets;
  ****************************************************************************/
 
 /* Initialization function */
-int olsrd_plugin_init (void);
+int olsrd_plugin_init(void);
 
-void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
-                                  **params, int *size);
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters
+                                 **params, int *size);
 
-int olsrd_plugin_interface_version (void);
+int olsrd_plugin_interface_version(void);
 
 #endif
 

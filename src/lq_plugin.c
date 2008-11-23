@@ -58,22 +58,21 @@ struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
 
 int
-avl_strcasecmp (const void *str1, const void *str2)
+avl_strcasecmp(const void *str1, const void *str2)
 {
-  return strcasecmp (str1, str2);
+  return strcasecmp(str1, str2);
 }
 
 void
-init_lq_handler_tree (void)
+init_lq_handler_tree(void)
 {
-  avl_init (&lq_handler_tree, &avl_strcasecmp);
-  register_lq_handler (&lq_etx_float_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
-  register_lq_handler (&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
-  register_lq_handler (&lq_etx_ff_handler, LQ_ALGORITHM_ETX_FF_NAME);
-  if (activate_lq_handler (olsr_cnf->lq_algorithm))
-    {
-      activate_lq_handler (LQ_ALGORITHM_ETX_FPM_NAME);
-    }
+  avl_init(&lq_handler_tree, &avl_strcasecmp);
+  register_lq_handler(&lq_etx_float_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
+  register_lq_handler(&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
+  register_lq_handler(&lq_etx_ff_handler, LQ_ALGORITHM_ETX_FF_NAME);
+  if (activate_lq_handler(olsr_cnf->lq_algorithm)) {
+    activate_lq_handler(LQ_ALGORITHM_ETX_FPM_NAME);
+  }
 }
 
 /*
@@ -89,39 +88,37 @@ init_lq_handler_tree (void)
  * @param name of the link quality handler for debug output
  */
 void
-register_lq_handler (struct lq_handler *handler, const char *name)
+register_lq_handler(struct lq_handler *handler, const char *name)
 {
   struct lq_handler_node *node;
-  size_t name_size = sizeof (*node) + strlen (name) + 1;
+  size_t name_size = sizeof(*node) + strlen(name) + 1;
 
-  node = olsr_malloc (name_size, "olsr lq handler");
+  node = olsr_malloc(name_size, "olsr lq handler");
 
-  strscpy (node->name, name, name_size);
+  strscpy(node->name, name, name_size);
   node->node.key = node->name;
   node->handler = handler;
 
-  avl_insert (&lq_handler_tree, &node->node, OLSR_FALSE);
+  avl_insert(&lq_handler_tree, &node->node, OLSR_FALSE);
 }
 
 int
-activate_lq_handler (const char *name)
+activate_lq_handler(const char *name)
 {
   struct lq_handler_node *node;
-  if (name == NULL)
-    {
-      return 1;
-    }
+  if (name == NULL) {
+    return 1;
+  }
 
-  node = (struct lq_handler_node *) avl_find (&lq_handler_tree, name);
-  if (node == NULL)
-    {
-      OLSR_PRINTF (1, "Error, unknown lq_handler '%s'\n", name);
-      return 1;
-    }
+  node = (struct lq_handler_node *)avl_find(&lq_handler_tree, name);
+  if (node == NULL) {
+    OLSR_PRINTF(1, "Error, unknown lq_handler '%s'\n", name);
+    return 1;
+  }
 
-  OLSR_PRINTF (1, "Using '%s' algorithm for lq calculation.\n", name);
+  OLSR_PRINTF(1, "Using '%s' algorithm for lq calculation.\n", name);
   active_lq_handler = node->handler;
-  active_lq_handler->initialize ();
+  active_lq_handler->initialize();
 
   return 0;
 }
@@ -135,11 +132,10 @@ activate_lq_handler (const char *name)
  * @return linkcost
  */
 olsr_linkcost
-olsr_calc_tc_cost (const struct tc_edge_entry * tc_edge)
+olsr_calc_tc_cost(const struct tc_edge_entry * tc_edge)
 {
-  assert ((const char *) tc_edge + sizeof (*tc_edge) ==
-          (const char *) tc_edge->linkquality);
-  return active_lq_handler->calc_tc_cost (tc_edge->linkquality);
+  assert((const char *)tc_edge + sizeof(*tc_edge) == (const char *)tc_edge->linkquality);
+  return active_lq_handler->calc_tc_cost(tc_edge->linkquality);
 }
 
 /*
@@ -153,9 +149,9 @@ olsr_calc_tc_cost (const struct tc_edge_entry * tc_edge)
  * @return boolean
  */
 olsr_bool
-olsr_is_relevant_costchange (olsr_linkcost c1, olsr_linkcost c2)
+olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
 {
-  return active_lq_handler->is_relevant_costchange (c1, c2);
+  return active_lq_handler->is_relevant_costchange(c1, c2);
 }
 
 /*
@@ -169,12 +165,10 @@ olsr_is_relevant_costchange (olsr_linkcost c1, olsr_linkcost c2)
  * @return number of bytes that have been written
  */
 int
-olsr_serialize_hello_lq_pair (unsigned char *buff,
-                              struct lq_hello_neighbor *neigh)
+olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh)
 {
-  assert ((const char *) neigh + sizeof (*neigh) ==
-          (const char *) neigh->linkquality);
-  return active_lq_handler->serialize_hello_lq (buff, neigh->linkquality);
+  assert((const char *)neigh + sizeof(*neigh) == (const char *)neigh->linkquality);
+  return active_lq_handler->serialize_hello_lq(buff, neigh->linkquality);
 }
 
 /*
@@ -187,13 +181,11 @@ olsr_serialize_hello_lq_pair (unsigned char *buff,
  * @param pointer to hello_neighbor
  */
 void
-olsr_deserialize_hello_lq_pair (const olsr_u8_t ** curr,
-                                struct hello_neighbor *neigh)
+olsr_deserialize_hello_lq_pair(const olsr_u8_t ** curr, struct hello_neighbor *neigh)
 {
-  assert ((const char *) neigh + sizeof (*neigh) ==
-          (const char *) neigh->linkquality);
-  active_lq_handler->deserialize_hello_lq (curr, neigh->linkquality);
-  neigh->cost = active_lq_handler->calc_hello_cost (neigh->linkquality);
+  assert((const char *)neigh + sizeof(*neigh) == (const char *)neigh->linkquality);
+  active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
+  neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
 }
 
 /*
@@ -207,11 +199,10 @@ olsr_deserialize_hello_lq_pair (const olsr_u8_t ** curr,
  * @return number of bytes that have been written
  */
 int
-olsr_serialize_tc_lq_pair (unsigned char *buff, struct tc_mpr_addr *neigh)
+olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
 {
-  assert ((const char *) neigh + sizeof (*neigh) ==
-          (const char *) neigh->linkquality);
-  return active_lq_handler->serialize_tc_lq (buff, neigh->linkquality);
+  assert((const char *)neigh + sizeof(*neigh) == (const char *)neigh->linkquality);
+  return active_lq_handler->serialize_tc_lq(buff, neigh->linkquality);
 }
 
 /*
@@ -223,12 +214,10 @@ olsr_serialize_tc_lq_pair (unsigned char *buff, struct tc_mpr_addr *neigh)
  * @param pointer to tc_edge_entry
  */
 void
-olsr_deserialize_tc_lq_pair (const olsr_u8_t ** curr,
-                             struct tc_edge_entry *edge)
+olsr_deserialize_tc_lq_pair(const olsr_u8_t ** curr, struct tc_edge_entry *edge)
 {
-  assert ((const char *) edge + sizeof (*edge) ==
-          (const char *) edge->linkquality);
-  active_lq_handler->deserialize_tc_lq (curr, edge->linkquality);
+  assert((const char *)edge + sizeof(*edge) == (const char *)edge->linkquality);
+  active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
 }
 
 /*
@@ -242,30 +231,26 @@ olsr_deserialize_tc_lq_pair (const olsr_u8_t ** curr,
  * @param OLSR_TRUE if hello package was lost
  */
 void
-olsr_update_packet_loss_worker (struct link_entry *entry, olsr_bool lost)
+olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
 {
   olsr_linkcost lq;
-  assert ((const char *) entry + sizeof (*entry) ==
-          (const char *) entry->linkquality);
-  lq =
-    active_lq_handler->packet_loss_handler (entry, entry->linkquality, lost);
+  assert((const char *)entry + sizeof(*entry) == (const char *)entry->linkquality);
+  lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
 
-  if (olsr_is_relevant_costchange (lq, entry->linkcost))
-    {
-      entry->linkcost = lq;
+  if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
+    entry->linkcost = lq;
 
-      if (olsr_cnf->lq_dlimit > 0)
-        {
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
-        }
-
-      else
-        OLSR_PRINTF (3, "Skipping Dijkstra (1)\n");
-
-      /* XXX - we should check whether we actually announce this neighbour */
-      signal_link_changes (OLSR_TRUE);
+    if (olsr_cnf->lq_dlimit > 0) {
+      changes_neighborhood = OLSR_TRUE;
+      changes_topology = OLSR_TRUE;
     }
+
+    else
+      OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
+
+    /* XXX - we should check whether we actually announce this neighbour */
+    signal_link_changes(OLSR_TRUE);
+  }
 }
 
 /*
@@ -279,22 +264,15 @@ olsr_update_packet_loss_worker (struct link_entry *entry, olsr_bool lost)
  * of the link entry has to be reset to "zero"
  */
 void
-olsr_memorize_foreign_hello_lq (struct link_entry *local,
-                                struct hello_neighbor *foreign)
+olsr_memorize_foreign_hello_lq(struct link_entry *local, struct hello_neighbor *foreign)
 {
-  assert ((const char *) local + sizeof (*local) ==
-          (const char *) local->linkquality);
-  if (foreign)
-    {
-      assert ((const char *) foreign + sizeof (*foreign) ==
-              (const char *) foreign->linkquality);
-      active_lq_handler->memorize_foreign_hello (local->linkquality,
-                                                 foreign->linkquality);
-    }
-  else
-    {
-      active_lq_handler->memorize_foreign_hello (local->linkquality, NULL);
-    }
+  assert((const char *)local + sizeof(*local) == (const char *)local->linkquality);
+  if (foreign) {
+    assert((const char *)foreign + sizeof(*foreign) == (const char *)foreign->linkquality);
+    active_lq_handler->memorize_foreign_hello(local->linkquality, foreign->linkquality);
+  } else {
+    active_lq_handler->memorize_foreign_hello(local->linkquality, NULL);
+  }
 }
 
 /*
@@ -310,13 +288,10 @@ olsr_memorize_foreign_hello_lq (struct link_entry *local,
  * @return pointer to a buffer with the text representation
  */
 const char *
-get_link_entry_text (struct link_entry *entry, char separator,
-                     struct lqtextbuffer *buffer)
+get_link_entry_text(struct link_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  assert ((const char *) entry + sizeof (*entry) ==
-          (const char *) entry->linkquality);
-  return active_lq_handler->print_hello_lq (entry->linkquality, separator,
-                                            buffer);
+  assert((const char *)entry + sizeof(*entry) == (const char *)entry->linkquality);
+  return active_lq_handler->print_hello_lq(entry->linkquality, separator, buffer);
 }
 
 /*
@@ -332,13 +307,10 @@ get_link_entry_text (struct link_entry *entry, char separator,
  * @return pointer to the buffer with the text representation
  */
 const char *
-get_tc_edge_entry_text (struct tc_edge_entry *entry, char separator,
-                        struct lqtextbuffer *buffer)
+get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  assert ((const char *) entry + sizeof (*entry) ==
-          (const char *) entry->linkquality);
-  return active_lq_handler->print_tc_lq (entry->linkquality, separator,
-                                         buffer);
+  assert((const char *)entry + sizeof(*entry) == (const char *)entry->linkquality);
+  return active_lq_handler->print_tc_lq(entry->linkquality, separator, buffer);
 }
 
 /*
@@ -353,26 +325,20 @@ get_tc_edge_entry_text (struct tc_edge_entry *entry, char separator,
  * @return pointer to buffer filled with text
  */
 const char *
-get_linkcost_text (olsr_linkcost cost, olsr_bool route,
-                   struct lqtextbuffer *buffer)
+get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer)
 {
   static const char *infinite = "INFINITE";
 
-  if (route)
-    {
-      if (cost == ROUTE_COST_BROKEN)
-        {
-          return infinite;
-        }
+  if (route) {
+    if (cost == ROUTE_COST_BROKEN) {
+      return infinite;
     }
-  else
-    {
-      if (cost >= LINK_COST_BROKEN)
-        {
-          return infinite;
-        }
+  } else {
+    if (cost >= LINK_COST_BROKEN) {
+      return infinite;
     }
-  return active_lq_handler->print_cost (cost, buffer);
+  }
+  return active_lq_handler->print_cost(cost, buffer);
 }
 
 /*
@@ -385,15 +351,11 @@ get_linkcost_text (olsr_linkcost cost, olsr_bool route,
  * @param pointer to source link_entry
  */
 void
-olsr_copy_hello_lq (struct lq_hello_neighbor *target,
-                    struct link_entry *source)
+olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
 {
-  assert ((const char *) target + sizeof (*target) ==
-          (const char *) target->linkquality);
-  assert ((const char *) source + sizeof (*source) ==
-          (const char *) source->linkquality);
-  memcpy (target->linkquality, source->linkquality,
-          active_lq_handler->hello_lq_size);
+  assert((const char *)target + sizeof(*target) == (const char *)target->linkquality);
+  assert((const char *)source + sizeof(*source) == (const char *)source->linkquality);
+  memcpy(target->linkquality, source->linkquality, active_lq_handler->hello_lq_size);
 }
 
 /*
@@ -406,15 +368,11 @@ olsr_copy_hello_lq (struct lq_hello_neighbor *target,
  * @param pointer to link_entry
  */
 void
-olsr_copylq_link_entry_2_tc_mpr_addr (struct tc_mpr_addr *target,
-                                      struct link_entry *source)
+olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source)
 {
-  assert ((const char *) target + sizeof (*target) ==
-          (const char *) target->linkquality);
-  assert ((const char *) source + sizeof (*source) ==
-          (const char *) source->linkquality);
-  active_lq_handler->copy_link_lq_into_tc (target->linkquality,
-                                           source->linkquality);
+  assert((const char *)target + sizeof(*target) == (const char *)target->linkquality);
+  assert((const char *)source + sizeof(*source) == (const char *)source->linkquality);
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
 }
 
 /*
@@ -427,15 +385,11 @@ olsr_copylq_link_entry_2_tc_mpr_addr (struct tc_mpr_addr *target,
  * @param pointer to link_entry
  */
 void
-olsr_copylq_link_entry_2_tc_edge_entry (struct tc_edge_entry *target,
-                                        struct link_entry *source)
+olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source)
 {
-  assert ((const char *) target + sizeof (*target) ==
-          (const char *) target->linkquality);
-  assert ((const char *) source + sizeof (*source) ==
-          (const char *) source->linkquality);
-  active_lq_handler->copy_link_lq_into_tc (target->linkquality,
-                                           source->linkquality);
+  assert((const char *)target + sizeof(*target) == (const char *)target->linkquality);
+  assert((const char *)source + sizeof(*source) == (const char *)source->linkquality);
+  active_lq_handler->copy_link_lq_into_tc(target->linkquality, source->linkquality);
 }
 
 /*
@@ -446,11 +400,10 @@ olsr_copylq_link_entry_2_tc_edge_entry (struct tc_edge_entry *target,
  * @param pointer to tc_mpr_addr
  */
 void
-olsr_clear_tc_lq (struct tc_mpr_addr *target)
+olsr_clear_tc_lq(struct tc_mpr_addr *target)
 {
-  assert ((const char *) target + sizeof (*target) ==
-          (const char *) target->linkquality);
-  active_lq_handler->clear_tc (target->linkquality);
+  assert((const char *)target + sizeof(*target) == (const char *)target->linkquality);
+  active_lq_handler->clear_tc(target->linkquality);
 }
 
 /*
@@ -464,16 +417,14 @@ olsr_clear_tc_lq (struct tc_mpr_addr *target)
  * @return pointer to hello_neighbor
  */
 struct hello_neighbor *
-olsr_malloc_hello_neighbor (const char *id)
+olsr_malloc_hello_neighbor(const char *id)
 {
   struct hello_neighbor *h;
 
-  h =
-    olsr_malloc (sizeof (struct hello_neighbor) +
-                 active_lq_handler->hello_lq_size, id);
+  h = olsr_malloc(sizeof(struct hello_neighbor) + active_lq_handler->hello_lq_size, id);
 
-  assert ((const char *) h + sizeof (*h) == (const char *) h->linkquality);
-  active_lq_handler->clear_hello (h->linkquality);
+  assert((const char *)h + sizeof(*h) == (const char *)h->linkquality);
+  active_lq_handler->clear_hello(h->linkquality);
   return h;
 }
 
@@ -488,16 +439,14 @@ olsr_malloc_hello_neighbor (const char *id)
  * @return pointer to tc_mpr_addr
  */
 struct tc_mpr_addr *
-olsr_malloc_tc_mpr_addr (const char *id)
+olsr_malloc_tc_mpr_addr(const char *id)
 {
   struct tc_mpr_addr *t;
 
-  t =
-    olsr_malloc (sizeof (struct tc_mpr_addr) + active_lq_handler->tc_lq_size,
-                 id);
+  t = olsr_malloc(sizeof(struct tc_mpr_addr) + active_lq_handler->tc_lq_size, id);
 
-  assert ((const char *) t + sizeof (*t) == (const char *) t->linkquality);
-  active_lq_handler->clear_tc (t->linkquality);
+  assert((const char *)t + sizeof(*t) == (const char *)t->linkquality);
+  active_lq_handler->clear_tc(t->linkquality);
   return t;
 }
 
@@ -512,16 +461,14 @@ olsr_malloc_tc_mpr_addr (const char *id)
  * @return pointer to lq_hello_neighbor
  */
 struct lq_hello_neighbor *
-olsr_malloc_lq_hello_neighbor (const char *id)
+olsr_malloc_lq_hello_neighbor(const char *id)
 {
   struct lq_hello_neighbor *h;
 
-  h =
-    olsr_malloc (sizeof (struct lq_hello_neighbor) +
-                 active_lq_handler->hello_lq_size, id);
+  h = olsr_malloc(sizeof(struct lq_hello_neighbor) + active_lq_handler->hello_lq_size, id);
 
-  assert ((const char *) h + sizeof (*h) == (const char *) h->linkquality);
-  active_lq_handler->clear_hello (h->linkquality);
+  assert((const char *)h + sizeof(*h) == (const char *)h->linkquality);
+  active_lq_handler->clear_hello(h->linkquality);
   return h;
 }
 
@@ -536,16 +483,14 @@ olsr_malloc_lq_hello_neighbor (const char *id)
  * @return pointer to link_entry
  */
 struct link_entry *
-olsr_malloc_link_entry (const char *id)
+olsr_malloc_link_entry(const char *id)
 {
   struct link_entry *h;
 
-  h =
-    olsr_malloc (sizeof (struct link_entry) +
-                 active_lq_handler->hello_lq_size, id);
+  h = olsr_malloc(sizeof(struct link_entry) + active_lq_handler->hello_lq_size, id);
 
-  assert ((const char *) h + sizeof (*h) == (const char *) h->linkquality);
-  active_lq_handler->clear_hello (h->linkquality);
+  assert((const char *)h + sizeof(*h) == (const char *)h->linkquality);
+  active_lq_handler->clear_hello(h->linkquality);
   return h;
 }
 

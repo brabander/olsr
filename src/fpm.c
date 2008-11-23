@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008, Sven-Ola Tuecke (sven-ola@gmx.de)
@@ -47,135 +48,129 @@
 #ifndef NDEBUG
 
 fpm
-itofpm (int i)
+itofpm(int i)
 {
   fpm r;
-  assert (FPM_MIN <= i && i <= FPM_MAX);
-  r = (fpm) itofpm_def (i);
+  assert(FPM_MIN <= i && i <= FPM_MAX);
+  r = (fpm) itofpm_def(i);
   return r;
 }
 
 fpm
-ftofpm (float f)
+ftofpm(float f)
 {
   fpm r;
-  assert (FPM_MIN <= (sfpm) f && (sfpm) f <= FPM_MAX);
-  r = (fpm) (sfpm) ftofpm_def (f);
+  assert(FPM_MIN <= (sfpm) f && (sfpm) f <= FPM_MAX);
+  r = (fpm) (sfpm) ftofpm_def(f);
   return r;
 }
 
 int
-fpmtoi (fpm a)
+fpmtoi(fpm a)
 {
-  int r = fpmtoi_def ((sfpm) a);
+  int r = fpmtoi_def((sfpm) a);
   return r;
 }
 
 float
-fpmtof (fpm a)
+fpmtof(fpm a)
 {
-  float r = fpmtof_def ((sfpm) a);
+  float r = fpmtof_def((sfpm) a);
   return r;
 }
 
 fpm
-fpmadd (fpm a, fpm b)
+fpmadd(fpm a, fpm b)
 {
   fpm r;
-  assert (0 > (sfpm) a || 0 > (sfpm) b || FPM_INT_MAX - (sfpm) a >= (sfpm) b);
-  assert (0 <= (sfpm) a || 0 <= (sfpm) b
-          || (sfpm) a >= FPM_INT_MIN - (sfpm) b);
-  r = (fpm) fpmadd_def ((sfpm) a, (sfpm) b);
+  assert(0 > (sfpm) a || 0 > (sfpm) b || FPM_INT_MAX - (sfpm) a >= (sfpm) b);
+  assert(0 <= (sfpm) a || 0 <= (sfpm) b || (sfpm) a >= FPM_INT_MIN - (sfpm) b);
+  r = (fpm) fpmadd_def((sfpm) a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmsub (fpm a, fpm b)
+fpmsub(fpm a, fpm b)
 {
   fpm r;
-  assert (0 > (sfpm) a || 0 <= (sfpm) b || (sfpm) a < FPM_INT_MAX + (sfpm) b);
-  assert (0 <= (sfpm) a || 0 > (sfpm) b
-          || (sfpm) a >= FPM_INT_MIN + (sfpm) b);
-  r = (fpm) fpmsub_def ((sfpm) a, (sfpm) b);
+  assert(0 > (sfpm) a || 0 <= (sfpm) b || (sfpm) a < FPM_INT_MAX + (sfpm) b);
+  assert(0 <= (sfpm) a || 0 > (sfpm) b || (sfpm) a >= FPM_INT_MIN + (sfpm) b);
+  r = (fpm) fpmsub_def((sfpm) a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmmul (fpm a, fpm b)
+fpmmul(fpm a, fpm b)
 {
   fpm r;
-  assert ((0 < (sfpm) a) != (0 < (sfpm) b)
-          || ((double) (sfpm) a) * ((double) (sfpm) b) <=
-          (double) FPM_INT_MAX);
-  assert ((0 < (sfpm) a) == (0 < (sfpm) b)
-          || ((double) (sfpm) a) * ((double) (sfpm) b) >=
-          (double) FPM_INT_MIN);
-  r = (fpm) fpmmul_def ((sfpm) a, (sfpm) b);
+  assert((0 < (sfpm) a) != (0 < (sfpm) b)
+         || ((double)(sfpm) a) * ((double)(sfpm) b) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < (sfpm) b)
+         || ((double)(sfpm) a) * ((double)(sfpm) b) >= (double)FPM_INT_MIN);
+  r = (fpm) fpmmul_def((sfpm) a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmdiv (fpm a, fpm b)
+fpmdiv(fpm a, fpm b)
 {
   fpm r;
-  assert (FPM_INT_MIN <= ((long long) (sfpm) a << FPM_BIT)
-          && ((long long) (sfpm) a << FPM_BIT) <= FPM_INT_MAX);
-  r = (fpm) fpmdiv_def ((sfpm) a, (sfpm) b);
+  assert(FPM_INT_MIN <= ((long long)(sfpm) a << FPM_BIT)
+         && ((long long)(sfpm) a << FPM_BIT) <= FPM_INT_MAX);
+  r = (fpm) fpmdiv_def((sfpm) a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmimul (int a, fpm b)
+fpmimul(int a, fpm b)
 {
   fpm r;
-  assert ((0 < a) != (0 < (sfpm) b)
-          || ((double) a * (double) (sfpm) b) <= (double) FPM_INT_MAX);
-  assert ((0 < a) == (0 < (sfpm) b)
-          || ((double) a * (double) (sfpm) b) >= (double) FPM_INT_MIN);
-  r = (fpm) fpmimul_def (a, (sfpm) b);
+  assert((0 < a) != (0 < (sfpm) b)
+         || ((double)a * (double)(sfpm) b) <= (double)FPM_INT_MAX);
+  assert((0 < a) == (0 < (sfpm) b)
+         || ((double)a * (double)(sfpm) b) >= (double)FPM_INT_MIN);
+  r = (fpm) fpmimul_def(a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmmuli (fpm a, int b)
+fpmmuli(fpm a, int b)
 {
   fpm r;
-  assert ((0 < (sfpm) a) != (0 < b)
-          || ((double) (sfpm) a * (double) b) <= (double) FPM_INT_MAX);
-  assert ((0 < (sfpm) a) == (0 < b)
-          || ((double) (sfpm) a * (double) b) >= (double) FPM_INT_MIN);
-  r = (fpm) fpmmuli_def ((sfpm) a, b);
+  assert((0 < (sfpm) a) != (0 < b)
+         || ((double)(sfpm) a * (double)b) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < b)
+         || ((double)(sfpm) a * (double)b) >= (double)FPM_INT_MIN);
+  r = (fpm) fpmmuli_def((sfpm) a, b);
   return r;
 }
 
 fpm
-fpmidiv (fpm a, int b)
+fpmidiv(fpm a, int b)
 {
   fpm r;
-  r = (fpm) fpmidiv_def ((sfpm) a, b);
+  r = (fpm) fpmidiv_def((sfpm) a, b);
   return r;
 }
 
 #if 0
 fpm
-fpmlmul (fpm a, fpm b)
+fpmlmul(fpm a, fpm b)
 {
   fpm r;
-  assert ((0 < (sfpm) a) != (0 < (sfpm) b)
-          || ((double) (sfpm) a * (double) (sfpm) b / FPM_NUM) <=
-          (double) FPM_INT_MAX);
-  assert ((0 < (sfpm) a) == (0 < (sfpm) b)
-          || ((double) (sfpm) a * (double) (sfpm) b / FPM_NUM) >=
-          (double) FPM_INT_MIN);
-  r = (fpm) fpmlmul_def ((sfpm) a, (sfpm) b);
+  assert((0 < (sfpm) a) != (0 < (sfpm) b)
+         || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) <= (double)FPM_INT_MAX);
+  assert((0 < (sfpm) a) == (0 < (sfpm) b)
+         || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) >= (double)FPM_INT_MIN);
+  r = (fpm) fpmlmul_def((sfpm) a, (sfpm) b);
   return r;
 }
 
 fpm
-fpmldiv (fpm a, fpm b)
+fpmldiv(fpm a, fpm b)
 {
   fpm r;
-  r = (fpm) fpmldiv_def ((sfpm) a, (sfpm) b);
+  r = (fpm) fpmldiv_def((sfpm) a, (sfpm) b);
   return r;
 }
 #endif
@@ -183,56 +178,55 @@ fpmldiv (fpm a, fpm b)
 #endif /* !NDEBUG */
 
 fpm
-atofpm (const char *s)
+atofpm(const char *s)
 {
   float r = 0.0;
-  sscanf (s, "%f", &r);
-  return ftofpm (r);
+  sscanf(s, "%f", &r);
+  return ftofpm(r);
 }
 
 const char *
-fpmtoa (fpm a)
+fpmtoa(fpm a)
 {
   static int idx = 0;
   static char ret[4][20];
 
-  idx = (idx + 1) % (sizeof (ret) / sizeof (ret[0]));
-  snprintf (ret[idx], sizeof (ret[0]), "%ld.%03ld", (sfpm) a >> FPM_BIT,
-            (1000 * ((sfpm) (a) & FPM_MSK) + (FPM_NUM / 2)) >> FPM_BIT);
+  idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
+  snprintf(ret[idx], sizeof(ret[0]), "%ld.%03ld", (sfpm) a >> FPM_BIT, (1000 * ((sfpm) (a) & FPM_MSK) + (FPM_NUM / 2)) >> FPM_BIT);
   return ret[idx];
 }
 
 const char *
-etxtoa (fpm etx)
+etxtoa(fpm etx)
 {
-  return etx >= INFINITE_ETX ? "INF" : fpmtoa (etx);
+  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
 }
 
 #else /* USE_FPM */
 
 float
-atofpm (const char *s)
+atofpm(const char *s)
 {
   float r = 0.0;
-  sscanf (s, "%f", &r);
+  sscanf(s, "%f", &r);
   return r;
 }
 
 const char *
-fpmtoa (float a)
+fpmtoa(float a)
 {
   static int idx = 0;
   static char ret[4][20];
 
-  idx = (idx + 1) % (sizeof (ret) / sizeof (ret[0]));
-  snprintf (ret[idx], sizeof (ret[0]), "%.3f", a);
+  idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
+  snprintf(ret[idx], sizeof(ret[0]), "%.3f", a);
   return ret[idx];
 }
 
 const char *
-etxtoa (float etx)
+etxtoa(float etx)
 {
-  return etx >= INFINITE_ETX ? "INF" : fpmtoa (etx);
+  return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
 }
 
 #endif /* USE_FPM */

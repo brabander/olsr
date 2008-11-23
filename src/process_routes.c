@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -68,23 +69,21 @@ static struct list_node del_kernel_list;
  *
  */
 olsr_u8_t
-olsr_rt_flags (const struct rt_entry *rt)
+olsr_rt_flags(const struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
   olsr_u8_t flags = RTF_UP;
 
   /* destination is host */
-  if (rt->rt_dst.prefix_len == olsr_cnf->maxplen)
-    {
-      flags |= RTF_HOST;
-    }
+  if (rt->rt_dst.prefix_len == olsr_cnf->maxplen) {
+    flags |= RTF_HOST;
+  }
 
-  nh = olsr_get_nh (rt);
+  nh = olsr_get_nh(rt);
 
-  if (!ipequal (&rt->rt_dst.prefix, &nh->gateway))
-    {
-      flags |= RTF_GATEWAY;
-    }
+  if (!ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
+    flags |= RTF_GATEWAY;
+  }
 
   return flags;
 }
@@ -95,12 +94,12 @@ export_route_function olsr_delroute_function;
 export_route_function olsr_delroute6_function;
 
 void
-olsr_init_export_route (void)
+olsr_init_export_route(void)
 {
   /* the add/chg/del kernel queues */
-  list_head_init (&add_kernel_list);
-  list_head_init (&chg_kernel_list);
-  list_head_init (&del_kernel_list);
+  list_head_init(&add_kernel_list);
+  list_head_init(&chg_kernel_list);
+  list_head_init(&del_kernel_list);
 
   olsr_addroute_function = olsr_ioctl_add_route;
   olsr_addroute6_function = olsr_ioctl_add_route6;
@@ -117,43 +116,39 @@ olsr_init_export_route (void)
  *
  */
 void
-olsr_delete_all_kernel_routes (void)
+olsr_delete_all_kernel_routes(void)
 {
-  OLSR_PRINTF (1, "Deleting all routes...\n");
+  OLSR_PRINTF(1, "Deleting all routes...\n");
 
-  olsr_bump_routingtree_version ();
-  olsr_update_rib_routes ();
-  olsr_update_kernel_routes ();
+  olsr_bump_routingtree_version();
+  olsr_update_rib_routes();
+  olsr_update_kernel_routes();
 }
 
 /**
  * Enqueue a route on a kernel add/chg/del queue.
  */
 static void
-olsr_enqueue_rt (struct list_node *head_node, struct rt_entry *rt)
+olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
 
   /* if this node is already on some changelist we are done */
-  if (list_node_on_list (&rt->rt_change_node))
-    {
-      return;
-    }
+  if (list_node_on_list(&rt->rt_change_node)) {
+    return;
+  }
 
   /*
    * For easier route dependency tracking we enqueue nexthop routes
    * at the head of the queue and non-nexthop routes at the tail of the queue.
    */
-  nh = olsr_get_nh (rt);
+  nh = olsr_get_nh(rt);
 
-  if (ipequal (&rt->rt_dst.prefix, &nh->gateway))
-    {
-      list_add_after (head_node, &rt->rt_change_node);
-    }
-  else
-    {
-      list_add_before (head_node, &rt->rt_change_node);
-    }
+  if (ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
+    list_add_after(head_node, &rt->rt_change_node);
+  } else {
+    list_add_before(head_node, &rt->rt_change_node);
+  }
 }
 
 /**
@@ -162,24 +157,19 @@ olsr_enqueue_rt (struct list_node *head_node, struct rt_entry *rt)
  *@return nada
  */
 static void
-olsr_delete_kernel_route (struct rt_entry *rt)
+olsr_delete_kernel_route(struct rt_entry *rt)
 {
-  if (!olsr_cnf->host_emul)
-    {
-      olsr_16_t error =
-        olsr_cnf->ip_version ==
-        AF_INET ? olsr_delroute_function (rt) : olsr_delroute6_function (rt);
+  if (!olsr_cnf->host_emul) {
+    olsr_16_t error = olsr_cnf->ip_version == AF_INET ? olsr_delroute_function(rt) : olsr_delroute6_function(rt);
 
-      if (error < 0)
-        {
-          const char *const err_msg = strerror (errno);
-          const char *const routestr = olsr_rt_to_string (rt);
-          OLSR_PRINTF (1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
+    if (error < 0) {
+      const char *const err_msg = strerror(errno);
+      const char *const routestr = olsr_rt_to_string(rt);
+      OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
 
-          olsr_syslog (OLSR_LOG_ERR, "Delete route %s: %s", routestr,
-                       err_msg);
-        }
+      olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
     }
+  }
 }
 
 /**
@@ -188,34 +178,27 @@ olsr_delete_kernel_route (struct rt_entry *rt)
  *@return nada
  */
 static void
-olsr_add_kernel_route (struct rt_entry *rt)
+olsr_add_kernel_route(struct rt_entry *rt)
 {
 
-  if (!olsr_cnf->host_emul)
-    {
-      olsr_16_t error =
-        (olsr_cnf->ip_version ==
-         AF_INET) ? olsr_addroute_function (rt) :
-        olsr_addroute6_function (rt);
+  if (!olsr_cnf->host_emul) {
+    olsr_16_t error = (olsr_cnf->ip_version == AF_INET) ? olsr_addroute_function(rt) : olsr_addroute6_function(rt);
 
-      if (error < 0)
-        {
-          const char *const err_msg = strerror (errno);
-          const char *const routestr = olsr_rtp_to_string (rt->rt_best);
-          OLSR_PRINTF (1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
+    if (error < 0) {
+      const char *const err_msg = strerror(errno);
+      const char *const routestr = olsr_rtp_to_string(rt->rt_best);
+      OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
 
-          olsr_syslog (OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
-        }
-      else
-        {
+      olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
+    } else {
 
-          /* route addition has suceeded */
+      /* route addition has suceeded */
 
-          /* save the nexthop and metric in the route entry */
-          rt->rt_nexthop = rt->rt_best->rtp_nexthop;
-          rt->rt_metric = rt->rt_best->rtp_metric;
-        }
+      /* save the nexthop and metric in the route entry */
+      rt->rt_nexthop = rt->rt_best->rtp_nexthop;
+      rt->rt_metric = rt->rt_best->rtp_metric;
     }
+  }
 }
 
 /**
@@ -226,17 +209,16 @@ olsr_add_kernel_route (struct rt_entry *rt)
  * the queue needs to be traversed from head to tail.
  */
 static void
-olsr_add_kernel_routes (struct list_node *head_node)
+olsr_add_kernel_routes(struct list_node *head_node)
 {
   struct rt_entry *rt;
 
-  while (!list_is_empty (head_node))
-    {
-      rt = changelist2rt (head_node->next);
-      olsr_add_kernel_route (rt);
+  while (!list_is_empty(head_node)) {
+    rt = changelist2rt(head_node->next);
+    olsr_add_kernel_route(rt);
 
-      list_remove (&rt->rt_change_node);
-    }
+    list_remove(&rt->rt_change_node);
+  }
 }
 
 /**
@@ -247,39 +229,36 @@ olsr_add_kernel_routes (struct list_node *head_node)
  * the queue needs to be traversed from tail to head.
  */
 static void
-olsr_chg_kernel_routes (struct list_node *head_node)
+olsr_chg_kernel_routes(struct list_node *head_node)
 {
   struct rt_entry *rt;
   struct list_node *node;
 
-  if (list_is_empty (head_node))
-    {
-      return;
-    }
+  if (list_is_empty(head_node)) {
+    return;
+  }
 
   /*
    * First pass.
    * traverse from the end to the beginning of the list,
    * such that nexthop routes are deleted last.
    */
-  for (node = head_node->prev; head_node != node; node = node->prev)
-    {
-      rt = changelist2rt (node);
-      olsr_delete_kernel_route (rt);
-    }
+  for (node = head_node->prev; head_node != node; node = node->prev) {
+    rt = changelist2rt(node);
+    olsr_delete_kernel_route(rt);
+  }
 
   /*
    * Second pass.
    * Traverse from the beginning to the end of the list,
    * such that nexthop routes are added first.
    */
-  while (!list_is_empty (head_node))
-    {
-      rt = changelist2rt (head_node->next);
-      olsr_add_kernel_route (rt);
+  while (!list_is_empty(head_node)) {
+    rt = changelist2rt(head_node->next);
+    olsr_add_kernel_route(rt);
 
-      list_remove (&rt->rt_change_node);
-    }
+    list_remove(&rt->rt_change_node);
+  }
 }
 
 /**
@@ -290,18 +269,17 @@ olsr_chg_kernel_routes (struct list_node *head_node)
  * the queue needs to be traversed from tail to head.
  */
 static void
-olsr_del_kernel_routes (struct list_node *head_node)
+olsr_del_kernel_routes(struct list_node *head_node)
 {
   struct rt_entry *rt;
 
-  while (!list_is_empty (head_node))
-    {
-      rt = changelist2rt (head_node->prev);
-      olsr_delete_kernel_route (rt);
+  while (!list_is_empty(head_node)) {
+    rt = changelist2rt(head_node->prev);
+    olsr_delete_kernel_route(rt);
 
-      list_remove (&rt->rt_change_node);
-      olsr_cookie_free (rt_mem_cookie, rt);
-    }
+    list_remove(&rt->rt_change_node);
+    olsr_cookie_free(rt_mem_cookie, rt);
+  }
 }
 
 /**
@@ -311,34 +289,31 @@ olsr_del_kernel_routes (struct list_node *head_node)
  * Reset the best route pointer.
  */
 static void
-olsr_delete_outdated_routes (struct rt_entry *rt)
+olsr_delete_outdated_routes(struct rt_entry *rt)
 {
   struct rt_path *rtp;
   struct avl_node *rtp_tree_node, *next_rtp_tree_node;
 
-  for (rtp_tree_node = avl_walk_first (&rt->rt_path_tree);
-       rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node)
-    {
+  for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node) {
 
-      /*
-       * pre-fetch the next node before loosing context.
-       */
-      next_rtp_tree_node = avl_walk_next (rtp_tree_node);
+    /*
+     * pre-fetch the next node before loosing context.
+     */
+    next_rtp_tree_node = avl_walk_next(rtp_tree_node);
 
-      rtp = rtp_tree2rtp (rtp_tree_node);
+    rtp = rtp_tree2rtp(rtp_tree_node);
 
-      /*
-       * check the version number which gets incremented on every SPF run.
-       * comparing for unequalness avoids handling version number wraps.
-       */
-      if (routingtree_version != rtp->rtp_version)
-        {
+    /*
+     * check the version number which gets incremented on every SPF run.
+     * comparing for unequalness avoids handling version number wraps.
+     */
+    if (routingtree_version != rtp->rtp_version) {
 
-          /* remove from the originator tree */
-          avl_delete (&rt->rt_path_tree, rtp_tree_node);
-          rtp->rtp_rt = NULL;
-        }
+      /* remove from the originator tree */
+      avl_delete(&rt->rt_path_tree, rtp_tree_node);
+      rtp->rtp_rt = NULL;
     }
+  }
 
   /* safety measure against dangling pointers */
   rt->rt_best = NULL;
@@ -351,75 +326,67 @@ olsr_delete_outdated_routes (struct rt_entry *rt)
  * path and enqueue an add/chg operation.
  */
 void
-olsr_update_rib_routes (void)
+olsr_update_rib_routes(void)
 {
   struct rt_entry *rt;
 
-  OLSR_PRINTF (3, "Updating kernel routes...\n");
+  OLSR_PRINTF(3, "Updating kernel routes...\n");
 
   /* walk all routes in the RIB. */
 
-  OLSR_FOR_ALL_RT_ENTRIES (rt)
-  {
+  OLSR_FOR_ALL_RT_ENTRIES(rt) {
 
     /* eliminate first unused routes */
-    olsr_delete_outdated_routes (rt);
+    olsr_delete_outdated_routes(rt);
 
-    if (!rt->rt_path_tree.count)
-      {
+    if (!rt->rt_path_tree.count) {
 
-        /* oops, all routes are gone - flush the route head */
-        avl_delete (&routingtree, rt_tree_node);
+      /* oops, all routes are gone - flush the route head */
+      avl_delete(&routingtree, rt_tree_node);
 
-        olsr_enqueue_rt (&del_kernel_list, rt);
-        continue;
-      }
+      olsr_enqueue_rt(&del_kernel_list, rt);
+      continue;
+    }
 
     /* run best route election */
-    olsr_rt_best (rt);
+    olsr_rt_best(rt);
 
     /* nexthop or hopcount change ? */
-    if (olsr_nh_change (&rt->rt_best->rtp_nexthop, &rt->rt_nexthop)
-        || (FIBM_CORRECT == olsr_cnf->fib_metric
-            && olsr_hopcount_change (&rt->rt_best->rtp_metric,
-                                     &rt->rt_metric)))
-      {
+    if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop)
+        || (FIBM_CORRECT == olsr_cnf->fib_metric && olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
-        if (0 > rt->rt_nexthop.iif_index)
-          {
+      if (0 > rt->rt_nexthop.iif_index) {
 
-            /* fresh routes do have an interface index of -1. */
-            olsr_enqueue_rt (&add_kernel_list, rt);
-          }
-        else
-          {
+        /* fresh routes do have an interface index of -1. */
+        olsr_enqueue_rt(&add_kernel_list, rt);
+      } else {
 
-            /* this is a route change. */
-            olsr_enqueue_rt (&chg_kernel_list, rt);
-          }
+        /* this is a route change. */
+        olsr_enqueue_rt(&chg_kernel_list, rt);
       }
+    }
   }
-  OLSR_FOR_ALL_RT_ENTRIES_END (rt);
+  OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 }
 
 /**
  * Propagate the accumulated changes from the last rib update to the kernel.
  */
 void
-olsr_update_kernel_routes (void)
+olsr_update_kernel_routes(void)
 {
 
   /* delete unreachable routes */
-  olsr_del_kernel_routes (&del_kernel_list);
+  olsr_del_kernel_routes(&del_kernel_list);
 
   /* route changes */
-  olsr_chg_kernel_routes (&chg_kernel_list);
+  olsr_chg_kernel_routes(&chg_kernel_list);
 
   /* route additions */
-  olsr_add_kernel_routes (&add_kernel_list);
+  olsr_add_kernel_routes(&add_kernel_list);
 
 #if DEBUG
-  olsr_print_routing_table (&routingtree);
+  olsr_print_routing_table(&routingtree);
 #endif
 }
 

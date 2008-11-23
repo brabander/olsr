@@ -1,3 +1,4 @@
+
 /*
 ** Buffered streams
 ** See Copyright Notice in lua.h
@@ -18,18 +19,16 @@ typedef struct Zio ZIO;
 
 #define zname(z)	((z)->name)
 
-void luaZ_init (ZIO * z, lua_Chunkreader reader, void *data,
-                const char *name);
-size_t luaZ_read (ZIO * z, void *b, size_t n);  /* read next n bytes */
-int luaZ_lookahead (ZIO * z);
+void luaZ_init(ZIO * z, lua_Chunkreader reader, void *data, const char *name);
+size_t luaZ_read(ZIO * z, void *b, size_t n);   /* read next n bytes */
+int luaZ_lookahead(ZIO * z);
 
-typedef struct Mbuffer
-{
+typedef struct Mbuffer {
   char *buffer;
   size_t buffsize;
 } Mbuffer;
 
-char *luaZ_openspace (lua_State * L, Mbuffer * buff, size_t n);
+char *luaZ_openspace(lua_State * L, Mbuffer * buff, size_t n);
 
 #define luaZ_initbuffer(L, buff) ((buff)->buffer = NULL, (buff)->buffsize = 0)
 
@@ -44,16 +43,15 @@ char *luaZ_openspace (lua_State * L, Mbuffer * buff, size_t n);
 
 /* --------- Private Part ------------------ */
 
-struct Zio
-{
-  size_t n;                     /* bytes still unread */
-  const char *p;                /* current position in buffer */
+struct Zio {
+  size_t n;                            /* bytes still unread */
+  const char *p;                       /* current position in buffer */
   lua_Chunkreader reader;
-  void *data;                   /* additional data */
+  void *data;                          /* additional data */
   const char *name;
 };
 
-int luaZ_fill (ZIO * z);
+int luaZ_fill(ZIO * z);
 
 #endif
 

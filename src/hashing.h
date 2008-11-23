@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -46,7 +47,7 @@
 
 #include "olsr_types.h"
 
-olsr_u32_t olsr_ip_hashing (const union olsr_ip_addr *);
+olsr_u32_t olsr_ip_hashing(const union olsr_ip_addr *);
 
 #endif
 

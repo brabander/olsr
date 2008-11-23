@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -44,31 +45,29 @@
 #include "olsr_types.h"
 
 void
-clear_console (void)
+clear_console(void)
 {
   static int len = -1;
   static char clear_buff[100];
   int i;
 
-  if (len < 0)
-    {
-      FILE *pip = popen ("clear", "r");
-      for (len = 0; len < (int) sizeof (clear_buff); len++)
-        {
-          int c = fgetc (pip);
-          if (c == EOF)
-            break;
+  if (len < 0) {
+    FILE *pip = popen("clear", "r");
+    for (len = 0; len < (int)sizeof(clear_buff); len++) {
+      int c = fgetc(pip);
+      if (c == EOF)
+        break;
 
-          clear_buff[len] = c;
-        }
-
-      pclose (pip);
+      clear_buff[len] = c;
     }
 
-  for (i = 0; i < len; i++)
-    fputc (clear_buff[i], stdout);
+    pclose(pip);
+  }
 
-  fflush (stdout);
+  for (i = 0; i < len; i++)
+    fputc(clear_buff[i], stdout);
+
+  fflush(stdout);
 }
 
 /*

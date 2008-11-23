@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -194,16 +195,14 @@
 /*
  *Hello info
  */
-struct hellinfo
-{
+struct hellinfo {
   olsr_u8_t link_code;
   olsr_u8_t reserved;
   olsr_u16_t size;
-  olsr_u32_t neigh_addr[1];     /* neighbor IP address(es) */
+  olsr_u32_t neigh_addr[1];            /* neighbor IP address(es) */
 } __attribute__ ((packed));
 
-struct hellomsg
-{
+struct hellomsg {
   olsr_u16_t reserved;
   olsr_u8_t htime;
   olsr_u8_t willingness;
@@ -214,16 +213,14 @@ struct hellomsg
  *IPv6
  */
 
-struct hellinfo6
-{
+struct hellinfo6 {
   olsr_u8_t link_code;
   olsr_u8_t reserved;
   olsr_u16_t size;
-  struct in6_addr neigh_addr[1];        /* neighbor IP address(es) */
+  struct in6_addr neigh_addr[1];       /* neighbor IP address(es) */
 } __attribute__ ((packed));
 
-struct hellomsg6
-{
+struct hellomsg6 {
   olsr_u16_t reserved;
   olsr_u8_t htime;
   olsr_u8_t willingness;
@@ -234,13 +231,11 @@ struct hellomsg6
  * Topology Control packet
  */
 
-struct neigh_info
-{
+struct neigh_info {
   olsr_u32_t addr;
 } __attribute__ ((packed));
 
-struct olsr_tcmsg
-{
+struct olsr_tcmsg {
   olsr_u16_t ansn;
   olsr_u16_t reserved;
   struct neigh_info neigh[1];
@@ -250,13 +245,11 @@ struct olsr_tcmsg
  *IPv6
  */
 
-struct neigh_info6
-{
+struct neigh_info6 {
   struct in6_addr addr;
 } __attribute__ ((packed));
 
-struct olsr_tcmsg6
-{
+struct olsr_tcmsg6 {
   olsr_u16_t ansn;
   olsr_u16_t reserved;
   struct neigh_info6 neigh[1];
@@ -271,40 +264,34 @@ struct olsr_tcmsg6
  * For example: do we want to tell what type of interface
  * is associated whit each address?
  */
-struct midaddr
-{
+struct midaddr {
   olsr_u32_t addr;
 } __attribute__ ((packed));
 
-struct midmsg
-{
+struct midmsg {
   struct midaddr mid_addr[1];
 } __attribute__ ((packed));
 
 /*
  *IPv6
  */
-struct midaddr6
-{
+struct midaddr6 {
   struct in6_addr addr;
 } __attribute__ ((packed));
 
-struct midmsg6
-{
+struct midmsg6 {
   struct midaddr6 mid_addr[1];
 } __attribute__ ((packed));
 
 /*
  * Host and Network Association message
  */
-struct hnapair
-{
+struct hnapair {
   olsr_u32_t addr;
   olsr_u32_t netmask;
 } __attribute__ ((packed));
 
-struct hnamsg
-{
+struct hnamsg {
   struct hnapair hna_net[1];
 } __attribute__ ((packed));
 
@@ -312,14 +299,12 @@ struct hnamsg
  *IPv6
  */
 
-struct hnapair6
-{
+struct hnapair6 {
   struct in6_addr addr;
   struct in6_addr netmask;
 } __attribute__ ((packed));
 
-struct hnamsg6
-{
+struct hnamsg6 {
   struct hnapair6 hna_net[1];
 } __attribute__ ((packed));
 
@@ -327,8 +312,7 @@ struct hnamsg6
  * OLSR message (several can exist in one OLSR packet)
  */
 
-struct olsrmsg
-{
+struct olsrmsg {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -337,8 +321,7 @@ struct olsrmsg
   olsr_u8_t hopcnt;
   olsr_u16_t seqno;
 
-  union
-  {
+  union {
     struct hellomsg hello;
     struct olsr_tcmsg tc;
     struct hnamsg hna;
@@ -351,8 +334,7 @@ struct olsrmsg
  *IPv6
  */
 
-struct olsrmsg6
-{
+struct olsrmsg6 {
   olsr_u8_t olsr_msgtype;
   olsr_u8_t olsr_vtime;
   olsr_u16_t olsr_msgsize;
@@ -361,8 +343,7 @@ struct olsrmsg6
   olsr_u8_t hopcnt;
   olsr_u16_t seqno;
 
-  union
-  {
+  union {
     struct hellomsg6 hello;
     struct olsr_tcmsg6 tc;
     struct hnamsg6 hna;
@@ -375,30 +356,26 @@ struct olsrmsg6
  * Generic OLSR packet
  */
 
-struct olsr
-{
-  olsr_u16_t olsr_packlen;      /* packet length */
+struct olsr {
+  olsr_u16_t olsr_packlen;             /* packet length */
   olsr_u16_t olsr_seqno;
-  struct olsrmsg olsr_msg[1];   /* variable messages */
+  struct olsrmsg olsr_msg[1];          /* variable messages */
 } __attribute__ ((packed));
 
-struct olsr6
-{
-  olsr_u16_t olsr_packlen;      /* packet length */
+struct olsr6 {
+  olsr_u16_t olsr_packlen;             /* packet length */
   olsr_u16_t olsr_seqno;
-  struct olsrmsg6 olsr_msg[1];  /* variable messages */
+  struct olsrmsg6 olsr_msg[1];         /* variable messages */
 } __attribute__ ((packed));
 
 /* IPv4 <-> IPv6 compability */
 
-union olsr_message
-{
+union olsr_message {
   struct olsrmsg v4;
   struct olsrmsg6 v6;
 } __attribute__ ((packed));
 
-union olsr_packet
-{
+union olsr_packet {
   struct olsr v4;
   struct olsr6 v6;
 } __attribute__ ((packed));

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -44,18 +45,18 @@
 #include <string.h>
 
 int
-apm_init (void)
+apm_init(void)
 {
   return -1;
 }
 
 void
-apm_printinfo (struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
+apm_printinfo(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
 }
 
 int
-apm_read (struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
+apm_read(struct olsr_apm_info *ApmInfo __attribute__ ((unused)))
 {
   return -1;
 }

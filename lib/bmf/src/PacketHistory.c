@@ -1,3 +1,4 @@
+
 /*
  * OLSR Basic Multicast Forwarding (BMF) plugin.
  * Copyright (c) 2005 - 2007, Thales Communications, Huizen, The Netherlands.
@@ -59,6 +60,7 @@ static struct TDupEntry *PacketHistory[HISTORY_HASH_SIZE];
 #define CRC_UPTO_NBYTES 256
 
 #if 0
+
 /* -------------------------------------------------------------------------
  * Function   : CalcCrcCcitt
  * Description: Calculate 16-bits CRC according to CRC-CCITT specification
@@ -69,23 +71,22 @@ static struct TDupEntry *PacketHistory[HISTORY_HASH_SIZE];
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 static u_int16_t
-CalcCrcCcitt (unsigned char *buffer, ssize_t len)
+CalcCrcCcitt(unsigned char *buffer, ssize_t len)
 {
   /* Initial value of 0xFFFF should be 0x1D0F according to
    * www.joegeluso.com/software/articles/ccitt.htm */
   u_int16_t crc = 0xFFFF;
   int i;
 
-  assert (buffer != NULL);
+  assert(buffer != NULL);
 
-  for (i = 0; i < len; i++)
-    {
-      crc = (unsigned char) (crc >> 8) | (crc << 8);
-      crc ^= buffer[i];
-      crc ^= (unsigned char) (crc & 0xff) >> 4;
-      crc ^= (crc << 8) << 4;
-      crc ^= ((crc & 0xff) << 4) << 1;
-    }
+  for (i = 0; i < len; i++) {
+    crc = (unsigned char)(crc >> 8) | (crc << 8);
+    crc ^= buffer[i];
+    crc ^= (unsigned char)(crc & 0xff) >> 4;
+    crc ^= (crc << 8) << 4;
+    crc ^= ((crc & 0xff) << 4) << 1;
+  }
   return crc;
 }                               /* CalcCrcCcitt */
 #endif
@@ -104,26 +105,21 @@ CalcCrcCcitt (unsigned char *buffer, ssize_t len)
 static unsigned long CrcTable[256];
 
 static void
-GenerateCrc32Table (void)
+GenerateCrc32Table(void)
 {
   int i, j;
   u_int32_t crc;
-  for (i = 0; i < 256; i++)
-    {
-      crc = (u_int32_t) i;
-      for (j = 0; j < 8; j++)
-        {
-          if (crc & 1)
-            {
-              crc = (crc >> 1) ^ CRC32_POLYNOMIAL;
-            }
-          else
-            {
-              crc = (crc >> 1);
-            }
-        }
-      CrcTable[i] = crc;
-    }                           /* for */
+  for (i = 0; i < 256; i++) {
+    crc = (u_int32_t) i;
+    for (j = 0; j < 8; j++) {
+      if (crc & 1) {
+        crc = (crc >> 1) ^ CRC32_POLYNOMIAL;
+      } else {
+        crc = (crc >> 1);
+      }
+    }
+    CrcTable[i] = crc;
+  }                             /* for */
 }                               /* GenerateCrc32Table */
 
 /* -------------------------------------------------------------------------
@@ -136,15 +132,14 @@ GenerateCrc32Table (void)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 static u_int32_t
-CalcCrc32 (unsigned char *buffer, ssize_t len)
+CalcCrc32(unsigned char *buffer, ssize_t len)
 {
   int i, j;
   u_int32_t crc = 0xffffffffUL;
-  for (i = 0; i < len; i++)
-    {
-      j = ((int) (crc & 0xFF) ^ *buffer++);
-      crc = (crc >> 8) ^ CrcTable[j];
-    }
+  for (i = 0; i < len; i++) {
+    j = ((int)(crc & 0xFF) ^ *buffer++);
+    crc = (crc >> 8) ^ CrcTable[j];
+  }
   return crc ^ 0xffffffffUL;
 }                               /* CalcCrc32 */
 
@@ -158,13 +153,13 @@ CalcCrc32 (unsigned char *buffer, ssize_t len)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 u_int32_t
-PacketCrc32 (unsigned char *ipPacket, ssize_t len)
+PacketCrc32(unsigned char *ipPacket, ssize_t len)
 {
   struct TSaveTtl sttl;
   struct ip *ipHeader;
   u_int32_t result;
 
-  assert (ipPacket != NULL);
+  assert(ipPacket != NULL);
 
   /* Skip TTL: in a multi-homed OLSR-network, the same multicast packet
    * may enter the network multiple times, each copy differing only in its
@@ -175,21 +170,20 @@ PacketCrc32 (unsigned char *ipPacket, ssize_t len)
    *
    * Clip number of bytes over which CRC is calculated to prevent
    * long packets from possibly claiming too much CPU resources. */
-  assert (len > 0);
-  if (len > CRC_UPTO_NBYTES)
-    {
-      len = CRC_UPTO_NBYTES;
-    }
+  assert(len > 0);
+  if (len > CRC_UPTO_NBYTES) {
+    len = CRC_UPTO_NBYTES;
+  }
 
-  SaveTtlAndChecksum (ipPacket, &sttl);
+  SaveTtlAndChecksum(ipPacket, &sttl);
 
-  ipHeader = (struct ip *) ipPacket;
+  ipHeader = (struct ip *)ipPacket;
   ipHeader->ip_ttl = 0xFF;      /* fixed value of TTL for CRC-32 calculation */
   ipHeader->ip_sum = 0x5A5A;    /* fixed value of IP header checksum for CRC-32 calculation */
 
-  result = CalcCrc32 (ipPacket, len);
+  result = CalcCrc32(ipPacket, len);
 
-  RestoreTtlAndChecksum (ipPacket, &sttl);
+  RestoreTtlAndChecksum(ipPacket, &sttl);
   return result;
 }                               /* PacketCrc32 */
 
@@ -202,7 +196,7 @@ PacketCrc32 (unsigned char *ipPacket, ssize_t len)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 u_int32_t
-Hash (u_int32_t from32)
+Hash(u_int32_t from32)
 {
   return ((from32 >> N_HASH_BITS) + from32) & ((1 << N_HASH_BITS) - 1);
 }                               /* Hash */
@@ -216,16 +210,15 @@ Hash (u_int32_t from32)
  * Data Used  : PacketHistory
  * ------------------------------------------------------------------------- */
 void
-InitPacketHistory (void)
+InitPacketHistory(void)
 {
   int i;
 
-  GenerateCrc32Table ();
+  GenerateCrc32Table();
 
-  for (i = 0; i < HISTORY_HASH_SIZE; i++)
-    {
-      PacketHistory[i] = NULL;
-    }
+  for (i = 0; i < HISTORY_HASH_SIZE; i++) {
+    PacketHistory[i] = NULL;
+  }
 }                               /* InitPacketHistory */
 
 /* -------------------------------------------------------------------------
@@ -238,39 +231,36 @@ InitPacketHistory (void)
  * Data Used  : PacketHistory
  * ------------------------------------------------------------------------- */
 int
-CheckAndMarkRecentPacket (u_int32_t crc32)
+CheckAndMarkRecentPacket(u_int32_t crc32)
 {
   u_int32_t index;
   struct TDupEntry *walker;
   struct TDupEntry *newEntry;
 
-  index = Hash (crc32);
-  assert (index < HISTORY_HASH_SIZE);
+  index = Hash(crc32);
+  assert(index < HISTORY_HASH_SIZE);
 
-  for (walker = PacketHistory[index]; walker != NULL; walker = walker->next)
-    {
-      if (walker->crc32 == crc32)
-        {
-          /* Found duplicate entry */
+  for (walker = PacketHistory[index]; walker != NULL; walker = walker->next) {
+    if (walker->crc32 == crc32) {
+      /* Found duplicate entry */
 
-          /* Always mark as "seen recently": refresh time-out */
-          walker->timeOut = GET_TIMESTAMP (HISTORY_HOLD_TIME);
+      /* Always mark as "seen recently": refresh time-out */
+      walker->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
 
-          return 1;
-        }                       /* if */
-    }                           /* for */
+      return 1;
+    }                           /* if */
+  }                             /* for */
 
   /* No duplicate entry found: create one */
-  newEntry = malloc (sizeof (struct TDupEntry));
-  if (newEntry != NULL)
-    {
-      newEntry->crc32 = crc32;
-      newEntry->timeOut = GET_TIMESTAMP (HISTORY_HOLD_TIME);
+  newEntry = malloc(sizeof(struct TDupEntry));
+  if (newEntry != NULL) {
+    newEntry->crc32 = crc32;
+    newEntry->timeOut = GET_TIMESTAMP(HISTORY_HOLD_TIME);
 
-      /* Add new entry at the front of the list */
-      newEntry->next = PacketHistory[index];
-      PacketHistory[index] = newEntry;
-    }
+    /* Add new entry at the front of the list */
+    newEntry->next = PacketHistory[index];
+    PacketHistory[index] = newEntry;
+  }
 
   return 0;
 }                               /* CheckAndMarkRecentPacket */
@@ -284,42 +274,33 @@ CheckAndMarkRecentPacket (u_int32_t crc32)
  * Data Used  : PacketHistory
  * ------------------------------------------------------------------------- */
 void
-PrunePacketHistory (void *useless __attribute__ ((unused)))
+PrunePacketHistory(void *useless __attribute__ ((unused)))
 {
   uint i;
-  for (i = 0; i < HISTORY_HASH_SIZE; i++)
-    {
-      if (PacketHistory[i] != NULL)
-        {
-          struct TDupEntry *nextEntry = PacketHistory[i];
-          struct TDupEntry *prevEntry = NULL;
-          while (nextEntry != NULL)
-            {
-              struct TDupEntry *entry = nextEntry;
-              nextEntry = entry->next;
+  for (i = 0; i < HISTORY_HASH_SIZE; i++) {
+    if (PacketHistory[i] != NULL) {
+      struct TDupEntry *nextEntry = PacketHistory[i];
+      struct TDupEntry *prevEntry = NULL;
+      while (nextEntry != NULL) {
+        struct TDupEntry *entry = nextEntry;
+        nextEntry = entry->next;
 
-              if (TIMED_OUT (entry->timeOut))
-                {
-                  /* De-queue */
-                  if (prevEntry != NULL)
-                    {
-                      prevEntry->next = entry->next;
-                    }
-                  else
-                    {
-                      PacketHistory[i] = entry->next;
-                    }           /* if */
+        if (TIMED_OUT(entry->timeOut)) {
+          /* De-queue */
+          if (prevEntry != NULL) {
+            prevEntry->next = entry->next;
+          } else {
+            PacketHistory[i] = entry->next;
+          }                     /* if */
 
-                  /* De-allocate memory */
-                  free (entry);
-                }
-              else
-                {
-                  prevEntry = entry;
-                }               /* if */
-            }                   /* while */
-        }                       /* if (PacketHistory[i] != NULL) */
-    }                           /* for (i = ...) */
+          /* De-allocate memory */
+          free(entry);
+        } else {
+          prevEntry = entry;
+        }                       /* if */
+      }                         /* while */
+    }                           /* if (PacketHistory[i] != NULL) */
+  }                             /* for (i = ...) */
 }                               /* PrunePacketHistory */
 
 /*

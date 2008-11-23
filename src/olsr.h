@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -51,40 +52,40 @@ extern olsr_bool changes_force;
 
 extern union olsr_ip_addr all_zero;
 
-void register_pcf (int (*)(int, int, int));
+void register_pcf(int (*)(int, int, int));
 
-void olsr_process_changes (void);
+void olsr_process_changes(void);
 
-void init_msg_seqno (void);
+void init_msg_seqno(void);
 
-olsr_u16_t get_msg_seqno (void);
+olsr_u16_t get_msg_seqno(void);
 
-int olsr_forward_message (union olsr_message *, union olsr_ip_addr *);
+int olsr_forward_message(union olsr_message *, union olsr_ip_addr *);
 
-void set_buffer_timer (struct interface *);
+void set_buffer_timer(struct interface *);
 
-void olsr_init_tables (void);
+void olsr_init_tables(void);
 
-void olsr_init_willingness (void);
+void olsr_init_willingness(void);
 
-void olsr_update_willingness (void *);
+void olsr_update_willingness(void *);
 
-olsr_u8_t olsr_calculate_willingness (void);
+olsr_u8_t olsr_calculate_willingness(void);
 
-const char *olsr_msgtype_to_string (olsr_u8_t);
+const char *olsr_msgtype_to_string(olsr_u8_t);
 
-const char *olsr_link_to_string (olsr_u8_t);
+const char *olsr_link_to_string(olsr_u8_t);
 
-const char *olsr_status_to_string (olsr_u8_t);
+const char *olsr_status_to_string(olsr_u8_t);
 
-void olsr_exit (const char *, int);
+void olsr_exit(const char *, int);
 
-void *olsr_malloc (size_t, const char *);
+void *olsr_malloc(size_t, const char *);
 
-int olsr_printf (int, const char *, ...)
-  __attribute__ ((format (printf, 2, 3)));
+int olsr_printf(int, const char *, ...)
+  __attribute__ ((format(printf, 2, 3)));
 
-void olsr_trigger_forced_update (void *);
+void olsr_trigger_forced_update(void *);
 
 #endif
 

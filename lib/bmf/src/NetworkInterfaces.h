@@ -53,8 +53,7 @@
 /* Size of buffer in which packets are received */
 #define BMF_BUFFER_SIZE 2048
 
-struct TBmfInterface
-{
+struct TBmfInterface {
   /* File descriptor of raw packet socket, used for capturing multicast packets */
   int capturingSkfd;
 
@@ -81,8 +80,7 @@ struct TBmfInterface
   union olsr_ip_addr broadAddr;
 
 #define FRAGMENT_HISTORY_SIZE 10
-  struct TFragmentHistory
-  {
+  struct TFragmentHistory {
     u_int16_t ipId;
     u_int8_t ipProto;
     struct in_addr ipSrc;
@@ -118,43 +116,34 @@ extern u_int32_t EtherTunTapIpBroadcast;
 
 extern int CapturePacketsOnOlsrInterfaces;
 
-enum TBmfMechanism
-{ BM_BROADCAST = 0, BM_UNICAST_PROMISCUOUS };
+enum TBmfMechanism { BM_BROADCAST = 0, BM_UNICAST_PROMISCUOUS };
 extern enum TBmfMechanism BmfMechanism;
 
-int SetBmfInterfaceName (const char *ifname, void *data,
-                         set_plugin_parameter_addon addon);
-int SetBmfInterfaceIp (const char *ip, void *data,
-                       set_plugin_parameter_addon addon);
-int SetCapturePacketsOnOlsrInterfaces (const char *enable, void *data,
-                                       set_plugin_parameter_addon addon);
-int SetBmfMechanism (const char *mechanism, void *data,
-                     set_plugin_parameter_addon addon);
-int DeactivateSpoofFilter (void);
-void RestoreSpoofFilter (void);
+int SetBmfInterfaceName(const char *ifname, void *data, set_plugin_parameter_addon addon);
+int SetBmfInterfaceIp(const char *ip, void *data, set_plugin_parameter_addon addon);
+int SetCapturePacketsOnOlsrInterfaces(const char *enable, void *data, set_plugin_parameter_addon addon);
+int SetBmfMechanism(const char *mechanism, void *data, set_plugin_parameter_addon addon);
+int DeactivateSpoofFilter(void);
+void RestoreSpoofFilter(void);
 
 #define MAX_UNICAST_NEIGHBORS 10
-struct TBestNeighbors
-{
+struct TBestNeighbors {
   struct link_entry *links[MAX_UNICAST_NEIGHBORS];
 };
 
-void FindNeighbors (struct TBestNeighbors *neighbors,
-                    struct link_entry **bestNeighbor,
-                    struct TBmfInterface *intf, union olsr_ip_addr *source,
-                    union olsr_ip_addr *forwardedBy,
-                    union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors);
+void FindNeighbors(struct TBestNeighbors *neighbors,
+                   struct link_entry **bestNeighbor,
+                   struct TBmfInterface *intf, union olsr_ip_addr *source,
+                   union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors);
 
-int CreateBmfNetworkInterfaces (struct interface *skipThisIntf);
-void AddInterface (struct interface *newIntf);
-void CloseBmfNetworkInterfaces (void);
-int AddNonOlsrBmfIf (const char *ifName, void *data,
-                     set_plugin_parameter_addon addon);
-int IsNonOlsrBmfIf (const char *ifName);
-void CheckAndUpdateLocalBroadcast (unsigned char *ipPacket,
-                                   union olsr_ip_addr *broadAddr);
-void AddMulticastRoute (void);
-void DeleteMulticastRoute (void);
+int CreateBmfNetworkInterfaces(struct interface *skipThisIntf);
+void AddInterface(struct interface *newIntf);
+void CloseBmfNetworkInterfaces(void);
+int AddNonOlsrBmfIf(const char *ifName, void *data, set_plugin_parameter_addon addon);
+int IsNonOlsrBmfIf(const char *ifName);
+void CheckAndUpdateLocalBroadcast(unsigned char *ipPacket, union olsr_ip_addr *broadAddr);
+void AddMulticastRoute(void);
+void DeleteMulticastRoute(void);
 
 #endif /* _BMF_NETWORKINTERFACES_H */
 

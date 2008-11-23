@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -58,8 +59,7 @@ typedef int int32_t;
 #include <inttypes.h>
 #endif
 
-typedef enum
-{
+typedef enum {
   OLSR_FALSE = 0,
   OLSR_TRUE
 } olsr_bool;
@@ -82,19 +82,18 @@ typedef int32_t olsr_32_t;
 
 /* OpenBSD wants this here */
 #include <sys/types.h>
+
 /* IPv6 address format in6_addr */
 #ifndef _MSC_VER
 #include <netinet/in.h>
 #endif
 
-union olsr_ip_addr
-{
+union olsr_ip_addr {
   struct in_addr v4;
   struct in6_addr v6;
 };
 
-struct olsr_ip_prefix
-{
+struct olsr_ip_prefix {
   union olsr_ip_addr prefix;
   olsr_u8_t prefix_len;
 };

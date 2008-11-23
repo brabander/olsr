@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  *
@@ -54,90 +55,87 @@
 static unsigned int debugMask = 0;
 
 void
-error (const char *form, ...)
+error(const char *form, ...)
 {
   va_list args;
 
-  va_start (args, form);
-  vfprintf (stderr, form, args);
-  va_end (args);
+  va_start(args, form);
+  vfprintf(stderr, form, args);
+  va_end(args);
 }
 
 void
-debug (int facility, const char *form, ...)
+debug(int facility, const char *form, ...)
 {
   va_list args;
 
   if ((debugMask & facility) == 0)
     return;
 
-  va_start (args, form);
-  vfprintf (stderr, form, args);
-  va_end (args);
+  va_start(args, form);
+  vfprintf(stderr, form, args);
+  va_end(args);
 }
 
 char *
-strdupAdd (const char *string, int add)
+strdupAdd(const char *string, int add)
 {
-  char *res = allocMem (strlen (string) + 1 + add);
+  char *res = allocMem(strlen(string) + 1 + add);
 
-  strcpy (res, string);
+  strcpy(res, string);
   return res;
 }
 
 char *
-myStrdup (const char *string)
+myStrdup(const char *string)
 {
-  return strdupAdd (string, 0);
+  return strdupAdd(string, 0);
 }
 
 void
-chomp (char *line, int len)
+chomp(char *line, int len)
 {
-  while (len-- > 0)
-    {
-      if (line[len] != 10 && line[len] != 13)
-        break;
+  while (len-- > 0) {
+    if (line[len] != 10 && line[len] != 13)
+      break;
 
-      line[len] = 0;
-    }
+    line[len] = 0;
+  }
 }
 
 char *
-intToString (char *buff, unsigned int val)
+intToString(char *buff, unsigned int val)
 {
   int i;
 
   buff[9] = 0;
 
-  for (i = 8; i >= 0; i--)
-    {
-      buff[i] = (char) (val % 10 + '0');
+  for (i = 8; i >= 0; i--) {
+    buff[i] = (char)(val % 10 + '0');
 
-      val /= 10;
+    val /= 10;
 
-      if (val == 0)
-        break;
-    }
+    if (val == 0)
+      break;
+  }
 
   return buff + i;
 }
 
 int
-stringToInt (unsigned int *val, const char *buff)
+stringToInt(unsigned int *val, const char *buff)
 {
   *val = 0;
 
-  while (*buff != 0)
-    {
-      if (*buff < '0' || *buff > '9')
-        return -1;
+  while (*buff != 0) {
+    if (*buff < '0' || *buff > '9')
+      return -1;
 
-      else
-        *val = *val * 10 + *buff - '0';
+    else
+      *val = *val * 10 + *buff - '0';
 
-      buff++;
-    }
+    buff++;
+  }
 
   return 0;
 }

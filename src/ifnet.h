@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -53,15 +54,15 @@
 
 #include "olsr_cfg.h"
 
-int set_flag (char *, short);
+int set_flag(char *, short);
 
-void check_interface_updates (void *);
+void check_interface_updates(void *);
 
-int chk_if_changed (struct olsr_if *);
+int chk_if_changed(struct olsr_if *);
 
-int chk_if_up (struct olsr_if *, int);
+int chk_if_up(struct olsr_if *, int);
 
-int add_hemu_if (struct olsr_if *);
+int add_hemu_if(struct olsr_if *);
 
 #endif
 

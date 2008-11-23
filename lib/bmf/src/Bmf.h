@@ -60,14 +60,13 @@ struct interface;
 extern int FanOutLimit;
 extern int BroadcastRetransmitCount;
 
-void BmfPError (const char *format, ...)
-  __attribute__ ((format (printf, 1, 2)));
-union olsr_ip_addr *MainAddressOf (union olsr_ip_addr *ip);
-int InterfaceChange (struct interface *interf, int action);
-int SetFanOutLimit (const char *value, void *data,
-                    set_plugin_parameter_addon addon);
-int InitBmf (struct interface *skipThisIntf);
-void CloseBmf (void);
+void BmfPError(const char *format, ...)
+  __attribute__ ((format(printf, 1, 2)));
+union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
+int InterfaceChange(struct interface *interf, int action);
+int SetFanOutLimit(const char *value, void *data, set_plugin_parameter_addon addon);
+int InitBmf(struct interface *skipThisIntf);
+void CloseBmf(void);
 
 #endif /* _BMF_BMF_H */
 

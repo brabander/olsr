@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -41,13 +42,12 @@
 #include "../log.h"
 
 void
-olsr_openlog (const char *Id __attribute__ ((unused)))
+olsr_openlog(const char *Id __attribute__ ((unused)))
 {
 }
 
 void
-olsr_syslog (int Level __attribute__ ((unused)), const char *Format
-             __attribute__ ((unused)),...)
+olsr_syslog(int Level __attribute__ ((unused)), const char *Format __attribute__ ((unused)),...)
 {
 }
 

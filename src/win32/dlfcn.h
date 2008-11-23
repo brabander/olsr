@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -44,10 +45,10 @@
 
 #define RTLD_NOW 0
 
-void *dlopen (char *Name, int Flags);
-int dlclose (void *Handle);
-void *dlsym (void *Handle, const char *Name);
-char *dlerror (void);
+void *dlopen(char *Name, int Flags);
+int dlclose(void *Handle);
+void *dlsym(void *Handle, const char *Name);
+char *dlerror(void);
 
 #endif
 

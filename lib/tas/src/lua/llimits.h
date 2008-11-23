@@ -1,3 +1,4 @@
+
 /*
 ** Limits, basic types, and some other `installation-dependent' definitions
 ** See Copyright Notice in lua.h
@@ -15,11 +16,13 @@
 ** try to find number of bits in an integer
 */
 #ifndef BITS_INT
+
 /* avoid overflows in comparison */
 #if INT_MAX-20 < 32760
 #define	BITS_INT	16
 #else
 #if INT_MAX > 2147483640L
+
 /* machine has at least 32 bits */
 #define BITS_INT	32
 #else
@@ -37,10 +40,12 @@
 
 /* an unsigned integer to hold hash values */
 typedef unsigned long int lu_hash;
+
 /* its signed equivalent */
 typedef int ls_hash;
 
 /* an unsigned integer big enough to count the total memory used by Lua; */
+
 /* it should be at least as large as size_t */
 typedef unsigned long lu_mem;
 
@@ -65,8 +70,7 @@ typedef unsigned char lu_byte;
 
 /* type to ensure maximum alignment */
 #ifndef LUSER_ALIGNMENT_T
-typedef union
-{
+typedef union {
   double u;
   void *s;
   long l;

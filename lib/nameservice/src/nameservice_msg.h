@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
  * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
@@ -37,8 +38,7 @@
 #define _NAMESEVICE_MSG
 
 /* type of the packet of name_entry */
-typedef enum
-{
+typedef enum {
   NAME_HOST = 0,
   NAME_FORWARDER = 1,
   NAME_SERVICE = 2,
@@ -49,10 +49,9 @@ typedef enum
  * the name, forwarder or service entry as found in a packet within a
  * message
  **/
-struct name
-{
+struct name {
   olsr_u16_t type;
-  olsr_u16_t len;               // length of the name
+  olsr_u16_t len;                      // length of the name
   // the ip of the hostname, or the ip of the dns-server
   // ip is irrelevant for services
   union olsr_ip_addr ip;
@@ -61,10 +60,9 @@ struct name
    */
 };
 
-struct namemsg
-{
-  olsr_u16_t version;           // version number of the nameservice plugin
-  olsr_u16_t nr_names;          // number of following packets including names, forwarders or services
+struct namemsg {
+  olsr_u16_t version;                  // version number of the nameservice plugin
+  olsr_u16_t nr_names;                 // number of following packets including names, forwarders or services
   /*
    * at least one struct name following
    */

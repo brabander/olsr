@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -51,44 +52,42 @@
 #define PIPE_MODE_RUN 0
 #define PIPE_MODE_INT 1
 
-class CFrontendDlg:public CDialog
-{
+class CFrontendDlg:public CDialog {
 public:
-  CFrontendDlg (CWnd * pParent = NULL);
+  CFrontendDlg(CWnd * pParent = NULL);
 
   //{{AFX_DATA(CFrontendDlg)
-  enum
-  { IDD = IDD_FRONTEND_DIALOG };
+  enum { IDD = IDD_FRONTEND_DIALOG };
   CButton m_StopButton;
   CButton m_StartButton;
   MyTabCtrl m_TabCtrl;
   //}}AFX_DATA
 
-  unsigned int LogThreadFunc (void);
-  unsigned int NetThreadFunc (void);
+  unsigned int LogThreadFunc(void);
+  unsigned int NetThreadFunc(void);
 
   CString ConfigFile;
 protected:
 
   //{{AFX_VIRTUAL(CFrontendDlg)
-    virtual void DoDataExchange (CDataExchange * pDX);
+    virtual void DoDataExchange(CDataExchange * pDX);
   //}}AFX_VIRTUAL
 
 public:
   //{{AFX_MSG(CFrontendDlg)
-    virtual BOOL OnInitDialog ();
-  afx_msg void OnOK ();
-  afx_msg void OnCancel ();
-  afx_msg void OnStartButton ();
-  afx_msg void OnStopButton ();
-  afx_msg void OnExitButton ();
+    virtual BOOL OnInitDialog();
+  afx_msg void OnOK();
+  afx_msg void OnCancel();
+  afx_msg void OnStartButton();
+  afx_msg void OnStopButton();
+  afx_msg void OnExitButton();
   //}}AFX_MSG
 
 protected:
-    DECLARE_MESSAGE_MAP () int StartOlsrd (void);
-  int StopOlsrd (void);
+    DECLARE_MESSAGE_MAP() int StartOlsrd(void);
+  int StopOlsrd(void);
 
-  int GetInterfaces (void);
+  int GetInterfaces(void);
 
   HANDLE Event;
 
@@ -97,7 +96,7 @@ protected:
   SOCKET SockHand;
 
   int PipeMode;
-  int ExecutePipe (const char *, HANDLE *, HANDLE *, HANDLE *);
+  int ExecutePipe(const char *, HANDLE *, HANDLE *, HANDLE *);
 
   CWinThread *LogThread;
   CWinThread *NetThread;
@@ -109,21 +108,21 @@ protected:
   HANDLE OutRead, InWrite;
   HANDLE ShimProc;
 
-  void HandleIpcRoute (struct IpcRoute *);
-  void HandleIpcConfig (struct IpcConfig *);
-  void HandleOlsrHello (struct OlsrHello *, int);
-  void HandleOlsrTc (struct OlsrTc *, int);
-  void HandleOlsrMid (struct OlsrHeader *);
-  void HandleOlsrHna (struct OlsrHeader *);
+  void HandleIpcRoute(struct IpcRoute *);
+  void HandleIpcConfig(struct IpcConfig *);
+  void HandleOlsrHello(struct OlsrHello *, int);
+  void HandleOlsrTc(struct OlsrTc *, int);
+  void HandleOlsrMid(struct OlsrHeader *);
+  void HandleOlsrHna(struct OlsrHeader *);
 
-  void AddNode (unsigned int, unsigned int);
-  void AddMpr (unsigned int, unsigned int, unsigned int);
-  void AddMid (unsigned int, unsigned int, unsigned int);
-  void AddHna (unsigned int, unsigned int, unsigned int, unsigned int);
+  void AddNode(unsigned int, unsigned int);
+  void AddMpr(unsigned int, unsigned int, unsigned int);
+  void AddMid(unsigned int, unsigned int, unsigned int);
+  void AddHna(unsigned int, unsigned int, unsigned int, unsigned int);
 
     CList < class NodeEntry, class NodeEntry & >NodeList;
 
-  void Timeout (void);
+  void Timeout(void);
 
   unsigned __int64 Now;
 

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -42,12 +43,11 @@
 
 #define TL_SYS_TIMES_H_INCLUDED
 
-struct tms
-{
+struct tms {
   int dummy;
 };
 
-long times (struct tms *);
+long times(struct tms *);
 
 #endif
 

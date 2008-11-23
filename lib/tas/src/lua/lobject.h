@@ -1,3 +1,4 @@
+
 /*
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
@@ -32,16 +33,14 @@ typedef union GCObject GCObject;
 /*
 ** Common header in struct form
 */
-typedef struct GCheader
-{
+typedef struct GCheader {
   CommonHeader;
 } GCheader;
 
 /*
 ** Union of all Lua values
 */
-typedef union
-{
+typedef union {
   GCObject *gc;
   void *p;
   lua_Number n;
@@ -51,8 +50,7 @@ typedef union
 /*
 ** Lua values (or `tagged objects')
 */
-typedef struct lua_TObject
-{
+typedef struct lua_TObject {
   int tt;
   Value value;
 } TObject;
@@ -139,13 +137,17 @@ typedef struct lua_TObject
 
 /* from stack to (same) stack */
 #define setobjs2s	setobj
+
 /* to stack (not from same stack) */
 #define setobj2s	setobj
 #define setsvalue2s	setsvalue
+
 /* from table to same table */
 #define setobjt2t	setobj
+
 /* to table */
 #define setobj2t	setobj
+
 /* to new object */
 #define setobj2n	setobj
 #define setsvalue2n	setsvalue
@@ -154,16 +156,14 @@ typedef struct lua_TObject
 
 #define iscollectable(o)	(ttype(o) >= LUA_TSTRING)
 
-typedef TObject *StkId;         /* index to stack elements */
+typedef TObject *StkId;                /* index to stack elements */
 
 /*
 ** String headers for string table
 */
-typedef union TString
-{
-  L_Umaxalign dummy;            /* ensures maximum alignment for strings */
-  struct
-  {
+typedef union TString {
+  L_Umaxalign dummy;                   /* ensures maximum alignment for strings */
+  struct {
     CommonHeader;
     lu_byte reserved;
     lu_hash hash;
@@ -174,11 +174,9 @@ typedef union TString
 #define getstr(ts)	cast(const char *, (ts) + 1)
 #define svalue(o)       getstr(tsvalue(o))
 
-typedef union Udata
-{
-  L_Umaxalign dummy;            /* ensures maximum alignment for `local' udata */
-  struct
-  {
+typedef union Udata {
+  L_Umaxalign dummy;                   /* ensures maximum alignment for `local' udata */
+  struct {
     CommonHeader;
     struct Table *metatable;
     size_t len;
@@ -188,46 +186,43 @@ typedef union Udata
 /*
 ** Function Prototypes
 */
-typedef struct Proto
-{
+typedef struct Proto {
   CommonHeader;
-  TObject *k;                   /* constants used by the function */
+  TObject *k;                          /* constants used by the function */
   Instruction *code;
-  struct Proto **p;             /* functions defined inside the function */
-  int *lineinfo;                /* map from opcodes to source lines */
-  struct LocVar *locvars;       /* information about local variables */
-  TString **upvalues;           /* upvalue names */
+  struct Proto **p;                    /* functions defined inside the function */
+  int *lineinfo;                       /* map from opcodes to source lines */
+  struct LocVar *locvars;              /* information about local variables */
+  TString **upvalues;                  /* upvalue names */
   TString *source;
   int sizeupvalues;
-  int sizek;                    /* size of `k' */
+  int sizek;                           /* size of `k' */
   int sizecode;
   int sizelineinfo;
-  int sizep;                    /* size of `p' */
+  int sizep;                           /* size of `p' */
   int sizelocvars;
   int lineDefined;
   GCObject *gclist;
-  lu_byte nups;                 /* number of upvalues */
+  lu_byte nups;                        /* number of upvalues */
   lu_byte numparams;
   lu_byte is_vararg;
   lu_byte maxstacksize;
 } Proto;
 
-typedef struct LocVar
-{
+typedef struct LocVar {
   TString *varname;
-  int startpc;                  /* first point where variable is active */
-  int endpc;                    /* first point where variable is dead */
+  int startpc;                         /* first point where variable is active */
+  int endpc;                           /* first point where variable is dead */
 } LocVar;
 
 /*
 ** Upvalues
 */
 
-typedef struct UpVal
-{
+typedef struct UpVal {
   CommonHeader;
-  TObject *v;                   /* points to stack or to its own value */
-  TObject value;                /* the value (when closed) */
+  TObject *v;                          /* points to stack or to its own value */
+  TObject value;                       /* the value (when closed) */
 } UpVal;
 
 /*
@@ -237,23 +232,20 @@ typedef struct UpVal
 #define ClosureHeader \
 	CommonHeader; lu_byte isC; lu_byte nupvalues; GCObject *gclist
 
-typedef struct CClosure
-{
+typedef struct CClosure {
   ClosureHeader;
   lua_CFunction f;
   TObject upvalue[1];
 } CClosure;
 
-typedef struct LClosure
-{
+typedef struct LClosure {
   ClosureHeader;
   struct Proto *p;
-  TObject g;                    /* global table for this closure */
+  TObject g;                           /* global table for this closure */
   UpVal *upvals[1];
 } LClosure;
 
-typedef union Closure
-{
+typedef union Closure {
   CClosure c;
   LClosure l;
 } Closure;
@@ -265,24 +257,22 @@ typedef union Closure
 ** Tables
 */
 
-typedef struct Node
-{
+typedef struct Node {
   TObject i_key;
   TObject i_val;
-  struct Node *next;            /* for chaining */
+  struct Node *next;                   /* for chaining */
 } Node;
 
-typedef struct Table
-{
+typedef struct Table {
   CommonHeader;
-  lu_byte flags;                /* 1<<p means tagmethod(p) is not present */
-  lu_byte lsizenode;            /* log2 of size of `node' array */
+  lu_byte flags;                       /* 1<<p means tagmethod(p) is not present */
+  lu_byte lsizenode;                   /* log2 of size of `node' array */
   struct Table *metatable;
-  TObject *array;               /* array part */
+  TObject *array;                      /* array part */
   Node *node;
-  Node *firstfree;              /* this position is free; all positions after it are full */
+  Node *firstfree;                     /* this position is free; all positions after it are full */
   GCObject *gclist;
-  int sizearray;                /* size of `array' array */
+  int sizearray;                       /* size of `array' array */
 } Table;
 
 /*
@@ -296,16 +286,16 @@ typedef struct Table
 
 extern const TObject luaO_nilobject;
 
-int luaO_log2 (unsigned int x);
-int luaO_int2fb (unsigned int x);
+int luaO_log2(unsigned int x);
+int luaO_int2fb(unsigned int x);
 #define fb2int(x)	(((x) & 7) << ((x) >> 3))
 
-int luaO_rawequalObj (const TObject * t1, const TObject * t2);
-int luaO_str2d (const char *s, lua_Number * result);
+int luaO_rawequalObj(const TObject * t1, const TObject * t2);
+int luaO_str2d(const char *s, lua_Number * result);
 
-const char *luaO_pushvfstring (lua_State * L, const char *fmt, va_list argp);
-const char *luaO_pushfstring (lua_State * L, const char *fmt, ...);
-void luaO_chunkid (char *out, const char *source, int len);
+const char *luaO_pushvfstring(lua_State * L, const char *fmt, va_list argp);
+const char *luaO_pushfstring(lua_State * L, const char *fmt, ...);
+void luaO_chunkid(char *out, const char *source, int len);
 
 #endif
 

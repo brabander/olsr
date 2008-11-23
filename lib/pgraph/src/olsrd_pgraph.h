@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -69,10 +70,10 @@
 #include "mid_set.h"
 #include "link_set.h"
 
-void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
-                                  **params, int *size);
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters
+                                 **params, int *size);
 
-int olsrd_plugin_interface_version (void);
+int olsrd_plugin_interface_version(void);
 
 #endif
 

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
@@ -50,8 +51,7 @@
 #define DUPLICATE_CLEANUP_JITTER 25
 #define DUPLICATE_VTIME 120000
 
-struct dup_entry
-{
+struct dup_entry {
   struct avl_node avl;
   union olsr_ip_addr ip;
   olsr_u16_t seqnr;
@@ -60,12 +60,12 @@ struct dup_entry
   clock_t valid_until;
 };
 
-AVLNODE2STRUCT (duptree2dupentry, struct dup_entry, avl);
+AVLNODE2STRUCT(duptree2dupentry, struct dup_entry, avl);
 
-void olsr_init_duplicate_set (void);
-struct dup_entry *olsr_create_duplicate_entry (void *ip, olsr_u16_t seqnr);
-int olsr_message_is_duplicate (union olsr_message *m, olsr_bool forwarding);
-void olsr_print_duplicate_table (void);
+void olsr_init_duplicate_set(void);
+struct dup_entry *olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr);
+int olsr_message_is_duplicate(union olsr_message *m, olsr_bool forwarding);
+void olsr_print_duplicate_table(void);
 
 #define OLSR_FOR_ALL_DUP_ENTRIES(dup) \
 { \

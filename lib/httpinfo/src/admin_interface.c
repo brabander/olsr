@@ -68,9 +68,7 @@ static const char admin_basic_setting_string[] =
 
 static const char admin_frame_prolog[] =
   "<strong>Administrator interface</strong><hr>\n"
-  "<h2>Change basic settings</h2>\n"
-  "<form action=\"set_values\" method=\"post\">\n"
-  "<table width=\"100%%\">\n";
+  "<h2>Change basic settings</h2>\n" "<form action=\"set_values\" method=\"post\">\n" "<table width=\"100%%\">\n";
 
 static const char admin_frame_mid[] =
   "</table>\n<br>\n"
@@ -84,305 +82,250 @@ static const char admin_frame_mid[] =
   "<td><input type=\"text\" name=\"hna_new_netmask\" maxlength=\"16\" class=\"input_text\" value=\"0.0.0.0\"></td>\n"
   "<td><input type=\"submit\" value=\"Add entry\" class=\"input_button\"></td></form>\n"
   "</table><hr>\n" "<form action=\"set_values\" method=\"post\">\n"
-  "<table width=\"100%%\">\n"
-  "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n";
+  "<table width=\"100%%\">\n" "<tr><th width=50 halign=\"middle\">Delete</th><th>Network</th><th>Netmask</th></tr>\n";
 
 static const char admin_frame_epilog[] =
-  "</table>\n<br>\n"
-  "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n"
-  "</form>\n";
+  "</table>\n<br>\n" "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n" "</form>\n";
 
 int
-build_admin_body (char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
+build_admin_body(char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
 {
   int size = 0;
-  size += snprintf (&buf[size], bufsize - size, admin_frame_prolog);
+  size += snprintf(&buf[size], bufsize - size, admin_frame_prolog);
 
-  size += snprintf (&buf[size], bufsize - size, "<tr>\n");
+  size += snprintf(&buf[size], bufsize - size, "<tr>\n");
 
-  size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_int,
-              "Debug level:", "debug_level", 2, olsr_cnf->debug_level);
-  size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_float,
-              "Pollrate:", "pollrate", 4, olsr_cnf->pollrate);
-  size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_string, "TOS:",
-              "tos", 6, "TBD");
+  size += snprintf(&buf[size], bufsize - size, admin_basic_setting_int, "Debug level:", "debug_level", 2, olsr_cnf->debug_level);
+  size += snprintf(&buf[size], bufsize - size, admin_basic_setting_float, "Pollrate:", "pollrate", 4, olsr_cnf->pollrate);
+  size += snprintf(&buf[size], bufsize - size, admin_basic_setting_string, "TOS:", "tos", 6, "TBD");
 
-  size += snprintf (&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
+  size += snprintf(&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
 
   size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_int,
-              "TC redundancy:", "tc_redundancy", 1, olsr_cnf->tc_redundancy);
-  size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_int,
-              "MPR coverage:", "mpr_coverage", 1, olsr_cnf->mpr_coverage);
-  size +=
-    snprintf (&buf[size], bufsize - size, admin_basic_setting_int,
-              "Willingness:", "willingness", 1, olsr_cnf->willingness);
+    snprintf(&buf[size], bufsize - size, admin_basic_setting_int, "TC redundancy:", "tc_redundancy", 1, olsr_cnf->tc_redundancy);
+  size += snprintf(&buf[size], bufsize - size, admin_basic_setting_int, "MPR coverage:", "mpr_coverage", 1, olsr_cnf->mpr_coverage);
+  size += snprintf(&buf[size], bufsize - size, admin_basic_setting_int, "Willingness:", "willingness", 1, olsr_cnf->willingness);
 
-  size += snprintf (&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
+  size += snprintf(&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
 
-  if (olsr_cnf->use_hysteresis)
-    {
+  if (olsr_cnf->use_hysteresis) {
+    size +=
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
+               "Hyst scaling:", "hyst_scaling", 4, olsr_cnf->hysteresis_param.scaling);
+
+    size +=
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
+               "Lower thr:", "hyst_lower", 4, olsr_cnf->hysteresis_param.thr_low);
+    size +=
+      snprintf(&buf[size], bufsize - size, admin_basic_setting_float,
+               "Upper thr:", "hyst_upper", 4, olsr_cnf->hysteresis_param.thr_high);
+  } else {
+    size += snprintf(&buf[size], bufsize - size, "<td>Hysteresis disabled</td>\n");
+  }
+
+  size += snprintf(&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
+
+  if (olsr_cnf->lq_level) {
+    size += snprintf(&buf[size], bufsize - size, admin_basic_setting_int, "LQ level:", "lq_level", 1, olsr_cnf->lq_level);
+    size += snprintf(&buf[size], bufsize - size, admin_basic_setting_float, "LQ aging:", "lq_aging", 2, olsr_cnf->lq_aging);
+  } else {
+    size += snprintf(&buf[size], bufsize - size, "<td>LQ disabled</td>\n");
+  }
+
+  size += snprintf(&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
+  size += snprintf(&buf[size], bufsize - size, "</tr>\n");
+
+  size += snprintf(&buf[size], bufsize - size, admin_frame_mid);
+
+  if (olsr_cnf->hna_entries) {
+    struct ip_prefix_list *hna;
+    for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+      struct ipaddr_str netbuf;
+      olsr_ip_to_string(&netbuf, &hna->net.prefix);
       size +=
-        snprintf (&buf[size], bufsize - size, admin_basic_setting_float,
-                  "Hyst scaling:", "hyst_scaling", 4,
-                  olsr_cnf->hysteresis_param.scaling);
-
-      size +=
-        snprintf (&buf[size], bufsize - size, admin_basic_setting_float,
-                  "Lower thr:", "hyst_lower", 4,
-                  olsr_cnf->hysteresis_param.thr_low);
-      size +=
-        snprintf (&buf[size], bufsize - size, admin_basic_setting_float,
-                  "Upper thr:", "hyst_upper", 4,
-                  olsr_cnf->hysteresis_param.thr_high);
+        snprintf(&buf[size], bufsize - size,
+                 "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%d\" class=\"input_checkbox\"></td><td>%s</td><td>%d</td></tr>\n",
+                 netbuf.buf, hna->net.prefix_len, netbuf.buf, hna->net.prefix_len);
     }
-  else
-    {
-      size +=
-        snprintf (&buf[size], bufsize - size,
-                  "<td>Hysteresis disabled</td>\n");
-    }
-
-  size += snprintf (&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
-
-  if (olsr_cnf->lq_level)
-    {
-      size +=
-        snprintf (&buf[size], bufsize - size, admin_basic_setting_int,
-                  "LQ level:", "lq_level", 1, olsr_cnf->lq_level);
-      size +=
-        snprintf (&buf[size], bufsize - size, admin_basic_setting_float,
-                  "LQ aging:", "lq_aging", 2, olsr_cnf->lq_aging);
-    }
-  else
-    {
-      size += snprintf (&buf[size], bufsize - size, "<td>LQ disabled</td>\n");
-    }
-
-  size += snprintf (&buf[size], bufsize - size, "</tr>\n" "<tr>\n");
-  size += snprintf (&buf[size], bufsize - size, "</tr>\n");
-
-  size += snprintf (&buf[size], bufsize - size, admin_frame_mid);
-
-  if (olsr_cnf->hna_entries)
-    {
-      struct ip_prefix_list *hna;
-      for (hna = olsr_cnf->hna_entries; hna; hna = hna->next)
-        {
-          struct ipaddr_str netbuf;
-          olsr_ip_to_string (&netbuf, &hna->net.prefix);
-          size +=
-            snprintf (&buf[size], bufsize - size,
-                      "<tr><td halign=\"middle\"><input type=\"checkbox\" name=\"del_hna%s*%d\" class=\"input_checkbox\"></td><td>%s</td><td>%d</td></tr>\n",
-                      netbuf.buf, hna->net.prefix_len, netbuf.buf,
-                      hna->net.prefix_len);
-        }
-    }
-  size += snprintf (&buf[size], bufsize - size, admin_frame_epilog);
+  }
+  size += snprintf(&buf[size], bufsize - size, admin_frame_epilog);
   return size;
 }
 
 #ifdef ADMIN_INTERFACE
 
 int
-process_param (char *key, char *value)
+process_param(char *key, char *value)
 {
   static union olsr_ip_addr curr_hna_net;
   static olsr_bool curr_hna_ok = OLSR_FALSE;
 
-  if (!strcmp (key, "debug_level"))
-    {
-      int ival = atoi (value);
-      if ((ival < 0) || (ival > 9))
-        return -1;
+  if (!strcmp(key, "debug_level")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 9))
+      return -1;
 
-      olsr_cnf->debug_level = ival;
-      return 1;
+    olsr_cnf->debug_level = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "tc_redundancy")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 3))
+      return -1;
+
+    olsr_cnf->tc_redundancy = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "mpr_coverage")) {
+    int ival = atoi(value);
+    if (ival < 0)
+      return -1;
+
+    olsr_cnf->mpr_coverage = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "willingness")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 7))
+      return -1;
+
+    olsr_cnf->willingness = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "lq_level")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 2))
+      return -1;
+
+    olsr_cnf->lq_level = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "lq_wsize")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 10))
+      return -1;
+
+    olsr_cnf->lq_wsize = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "hyst_scaling")) {
+    float fval = 1.1;
+    sscanf(value, "%f", &fval);
+    if ((fval < 0.0) || (fval > 1.0))
+      return -1;
+
+    olsr_cnf->hysteresis_param.scaling = fval;
+    return 1;
+  }
+
+  if (!strcmp(key, "hyst_scaling")) {
+    float fval = 1.1;
+    sscanf(value, "%f", &fval);
+    if ((fval < 0.0) || (fval > 1.0))
+      return -1;
+
+    olsr_cnf->hysteresis_param.scaling = fval;
+    return 1;
+  }
+
+  if (!strcmp(key, "hyst_lower")) {
+    float fval = 1.1;
+    sscanf(value, "%f", &fval);
+    if ((fval < 0.0) || (fval > 1.0))
+      return -1;
+
+    olsr_cnf->hysteresis_param.thr_low = fval;
+    return 1;
+  }
+
+  if (!strcmp(key, "hyst_upper")) {
+    float fval = 1.1;
+    sscanf(value, "%f", &fval);
+    if ((fval < 0.0) || (fval > 1.0))
+      return -1;
+
+    olsr_cnf->hysteresis_param.thr_high = fval;
+    return 1;
+  }
+
+  if (!strcmp(key, "pollrate")) {
+    float fval = 1.1;
+    sscanf(value, "%f", &fval);
+    if ((fval < 0.0) || (fval > 1.0))
+      return -1;
+
+    olsr_cnf->pollrate = fval;
+    return 1;
+  }
+
+  if (!strcmp(key, "hna_new_net")) {
+    if (inet_pton(olsr_cnf->ipsize, value, &curr_hna_net.v4) == 0) {
+      fprintf(stderr, "Failed converting new HNA net %s\n", value);
+      return -1;
+    }
+    curr_hna_ok = OLSR_TRUE;
+    return 1;
+  }
+
+  if (!strcmp(key, "hna_new_netmask")) {
+    struct in_addr in;
+    olsr_u8_t prefixlen;
+
+    if (!curr_hna_ok)
+      return -1;
+
+    curr_hna_ok = OLSR_FALSE;
+
+    if (inet_aton(value, &in) == 0) {
+      fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+      return -1;
+    }
+    prefixlen = netmask_to_prefix((olsr_u8_t *) & in, olsr_cnf->ipsize);
+    if (prefixlen == UCHAR_MAX) {
+      fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+      return -1;
+    }
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
+    return 1;
+  }
+
+  if (!strncmp(key, "del_hna", 7) && !strcmp(value, "on")) {
+    struct in_addr net, mask;
+    char ip_net[16], ip_mask[16];
+    int seperator = 0;
+    olsr_u8_t prefixlen;
+
+    while (key[7 + seperator] != '*') {
+      seperator++;
+    }
+    memcpy(ip_net, &key[7], seperator);
+    ip_net[seperator] = 0;
+    memcpy(ip_mask, &key[7 + seperator + 1], 16);
+    olsr_printf(1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
+
+    if (inet_aton(ip_net, &net) == 0) {
+      fprintf(stderr, "Failed converting HNA net %s for deletion\n", ip_net);
+      return -1;
     }
 
-  if (!strcmp (key, "tc_redundancy"))
-    {
-      int ival = atoi (value);
-      if ((ival < 0) || (ival > 3))
-        return -1;
-
-      olsr_cnf->tc_redundancy = ival;
-      return 1;
+    if (inet_aton(ip_mask, &mask) == 0) {
+      fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
+      return -1;
     }
-
-  if (!strcmp (key, "mpr_coverage"))
-    {
-      int ival = atoi (value);
-      if (ival < 0)
-        return -1;
-
-      olsr_cnf->mpr_coverage = ival;
-      return 1;
+    prefixlen = netmask_to_prefix((olsr_u8_t *) & mask, olsr_cnf->ipsize);
+    if (prefixlen == UCHAR_MAX) {
+      fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+      return -1;
     }
-
-  if (!strcmp (key, "willingness"))
-    {
-      int ival = atoi (value);
-      if ((ival < 0) || (ival > 7))
-        return -1;
-
-      olsr_cnf->willingness = ival;
-      return 1;
-    }
-
-  if (!strcmp (key, "lq_level"))
-    {
-      int ival = atoi (value);
-      if ((ival < 0) || (ival > 2))
-        return -1;
-
-      olsr_cnf->lq_level = ival;
-      return 1;
-    }
-
-  if (!strcmp (key, "lq_wsize"))
-    {
-      int ival = atoi (value);
-      if ((ival < 0) || (ival > 10))
-        return -1;
-
-      olsr_cnf->lq_wsize = ival;
-      return 1;
-    }
-
-  if (!strcmp (key, "hyst_scaling"))
-    {
-      float fval = 1.1;
-      sscanf (value, "%f", &fval);
-      if ((fval < 0.0) || (fval > 1.0))
-        return -1;
-
-      olsr_cnf->hysteresis_param.scaling = fval;
-      return 1;
-    }
-
-  if (!strcmp (key, "hyst_scaling"))
-    {
-      float fval = 1.1;
-      sscanf (value, "%f", &fval);
-      if ((fval < 0.0) || (fval > 1.0))
-        return -1;
-
-      olsr_cnf->hysteresis_param.scaling = fval;
-      return 1;
-    }
-
-  if (!strcmp (key, "hyst_lower"))
-    {
-      float fval = 1.1;
-      sscanf (value, "%f", &fval);
-      if ((fval < 0.0) || (fval > 1.0))
-        return -1;
-
-      olsr_cnf->hysteresis_param.thr_low = fval;
-      return 1;
-    }
-
-  if (!strcmp (key, "hyst_upper"))
-    {
-      float fval = 1.1;
-      sscanf (value, "%f", &fval);
-      if ((fval < 0.0) || (fval > 1.0))
-        return -1;
-
-      olsr_cnf->hysteresis_param.thr_high = fval;
-      return 1;
-    }
-
-  if (!strcmp (key, "pollrate"))
-    {
-      float fval = 1.1;
-      sscanf (value, "%f", &fval);
-      if ((fval < 0.0) || (fval > 1.0))
-        return -1;
-
-      olsr_cnf->pollrate = fval;
-      return 1;
-    }
-
-  if (!strcmp (key, "hna_new_net"))
-    {
-      if (inet_pton (olsr_cnf->ipsize, value, &curr_hna_net.v4) == 0)
-        {
-          fprintf (stderr, "Failed converting new HNA net %s\n", value);
-          return -1;
-        }
-      curr_hna_ok = OLSR_TRUE;
-      return 1;
-    }
-
-  if (!strcmp (key, "hna_new_netmask"))
-    {
-      struct in_addr in;
-      olsr_u8_t prefixlen;
-
-      if (!curr_hna_ok)
-        return -1;
-
-      curr_hna_ok = OLSR_FALSE;
-
-      if (inet_aton (value, &in) == 0)
-        {
-          fprintf (stderr, "Failed converting new HNA netmask %s\n", value);
-          return -1;
-        }
-      prefixlen = netmask_to_prefix ((olsr_u8_t *) & in, olsr_cnf->ipsize);
-      if (prefixlen == UCHAR_MAX)
-        {
-          fprintf (stderr, "Failed converting new HNA netmask %s\n", value);
-          return -1;
-        }
-      ip_prefix_list_add (&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
-      return 1;
-    }
-
-  if (!strncmp (key, "del_hna", 7) && !strcmp (value, "on"))
-    {
-      struct in_addr net, mask;
-      char ip_net[16], ip_mask[16];
-      int seperator = 0;
-      olsr_u8_t prefixlen;
-
-      while (key[7 + seperator] != '*')
-        {
-          seperator++;
-        }
-      memcpy (ip_net, &key[7], seperator);
-      ip_net[seperator] = 0;
-      memcpy (ip_mask, &key[7 + seperator + 1], 16);
-      olsr_printf (1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
-
-      if (inet_aton (ip_net, &net) == 0)
-        {
-          fprintf (stderr, "Failed converting HNA net %s for deletion\n",
-                   ip_net);
-          return -1;
-        }
-
-      if (inet_aton (ip_mask, &mask) == 0)
-        {
-          fprintf (stderr, "Failed converting HNA netmask %s for deletion\n",
-                   ip_mask);
-          return -1;
-        }
-      prefixlen = netmask_to_prefix ((olsr_u8_t *) & mask, olsr_cnf->ipsize);
-      if (prefixlen == UCHAR_MAX)
-        {
-          fprintf (stderr, "Failed converting new HNA netmask %s\n", value);
-          return -1;
-        }
-      ip_prefix_list_add (&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
-      return 1;
-    }
+    ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
+    return 1;
+  }
 
   return 0;
 #if 0
@@ -393,57 +336,47 @@ process_param (char *key, char *value)
 }
 
 int
-process_set_values (char *data, olsr_u32_t data_size, char *buf,
-                    olsr_u32_t bufsize __attribute__ ((unused)))
+process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
 {
   int size = 0;
   int val_start, key_start;
   olsr_u32_t i;
 
-  size +=
-    sprintf (buf,
-             "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
+  size += sprintf(buf, "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
 
   key_start = 0;
   val_start = 0;
 
-  for (i = 0; i < data_size; i++)
-    {
-      if (data[i] == '=')
-        {
-          data[i] = '\0';
-          val_start = i + 1;
-        }
-
-      if (data[i] == '&')
-        {
-          data[i] = '\0';
-          if (!process_param (&data[key_start], &data[val_start]))
-            {
-              size +=
-                snprintf (&buf[size], bufsize - size,
-                          "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n",
-                          &data[key_start], &data[val_start]);
-              return -1;
-            }
-
-          key_start = i + 1;
-        }
+  for (i = 0; i < data_size; i++) {
+    if (data[i] == '=') {
+      data[i] = '\0';
+      val_start = i + 1;
     }
 
-  if (!process_param (&data[key_start], &data[val_start]))
-    {
-      size +=
-        snprintf (&buf[size], bufsize - size,
-                  "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n",
-                  &data[key_start], &data[val_start]);
-      return -1;
+    if (data[i] == '&') {
+      data[i] = '\0';
+      if (!process_param(&data[key_start], &data[val_start])) {
+        size +=
+          snprintf(&buf[size], bufsize - size,
+                   "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", &data[key_start], &data[val_start]);
+        return -1;
+      }
+
+      key_start = i + 1;
     }
+  }
+
+  if (!process_param(&data[key_start], &data[val_start])) {
+    size +=
+      snprintf(&buf[size], bufsize - size,
+               "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", &data[key_start], &data[val_start]);
+    return -1;
+  }
 
   size +=
-    snprintf (&buf[size], bufsize - size,
-              "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n</body>\n</html>\n");
-  size += snprintf (&buf[size], bufsize - size, "\n</body>\n</html>\n");
+    snprintf(&buf[size], bufsize - size,
+             "<h2>UPDATE SUCESSFULL!</h2><br>Press BACK and RELOAD in your browser to return to the plugin<br>\n</body>\n</html>\n");
+  size += snprintf(&buf[size], bufsize - size, "\n</body>\n</html>\n");
 
   return size;
 }

@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -54,64 +55,59 @@ char macBroadcast[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
  * @return 0 if successful, 1 for an error
  */
 int
-readMac (char *value, MacAddress * target)
+readMac(char *value, MacAddress * target)
 {
   char buffer[13];
   int index = 0;
 
-  memset (buffer, 0, sizeof (buffer));
+  memset(buffer, 0, sizeof(buffer));
 
   char c;
-  while ((c = *value++))
-    {
-      switch (c)
-        {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case 'a':
-        case 'A':
-        case 'b':
-        case 'B':
-        case 'c':
-        case 'C':
-        case 'd':
-        case 'D':
-        case 'e':
-        case 'E':
-        case 'f':
-        case 'F':
-          if (index > 11)
-            {
-              return 1;
-            }
-          buffer[index++] = c;
-          break;
-        default:
-          break;
-        }
+  while ((c = *value++)) {
+    switch (c) {
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    case 'a':
+    case 'A':
+    case 'b':
+    case 'B':
+    case 'c':
+    case 'C':
+    case 'd':
+    case 'D':
+    case 'e':
+    case 'E':
+    case 'f':
+    case 'F':
+      if (index > 11) {
+        return 1;
+      }
+      buffer[index++] = c;
+      break;
+    default:
+      break;
     }
+  }
 
-  if (index < 12)
-    {
-      return 1;
-    }
+  if (index < 12) {
+    return 1;
+  }
 
-  for (index = 5; index >= 0; index--)
-    {
-      buffer[index * 2 + 2] = 0;
+  for (index = 5; index >= 0; index--) {
+    buffer[index * 2 + 2] = 0;
 
-      int value;
-      sscanf (&buffer[index], "%x", &value);
-      target->mac[index] = (char) value;
-    }
+    int value;
+    sscanf(&buffer[index], "%x", &value);
+    target->mac[index] = (char)value;
+  }
   return 0;
 }
 
@@ -123,9 +119,9 @@ readMac (char *value, MacAddress * target)
  * @param file destriptor of the tap device
  */
 void
-closeTap (int fd)
+closeTap(int fd)
 {
-  close (fd);
+  close(fd);
 }
 
 /*
@@ -140,7 +136,7 @@ closeTap (int fd)
  * happened
  */
 int
-createTap (char *name, MacAddress * mac)
+createTap(char *name, MacAddress * mac)
 {
   static const char deviceName[] = "/dev/net/tun";
   int etfd;
@@ -149,15 +145,14 @@ createTap (char *name, MacAddress * mac)
   int ioctlSkfd;
   int ioctlres;
 
-  etfd = open (deviceName, O_RDWR);
-  if (etfd < 0)
-    {
-      printf ("Cannot open tap device!\n");
-      return -1;
-    }
+  etfd = open(deviceName, O_RDWR);
+  if (etfd < 0) {
+    printf("Cannot open tap device!\n");
+    return -1;
+  }
 
-  memset (&ifreq, 0, sizeof (ifreq));
-  strncpy (ifreq.ifr_name, name, IFNAMSIZ - 1);
+  memset(&ifreq, 0, sizeof(ifreq));
+  strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
   /*
@@ -167,69 +162,61 @@ createTap (char *name, MacAddress * mac)
   ifreq.ifr_flags = IFF_TAP;
   ifreq.ifr_flags |= IFF_NO_PI;
 
-  if (ioctl (etfd, TUNSETIFF, (void *) &ifreq) < 0)
-    {
-      close (etfd);
-      printf ("Cannot set tun device type!\n");
-      return -1;
-    }
+  if (ioctl(etfd, TUNSETIFF, (void *)&ifreq) < 0) {
+    close(etfd);
+    printf("Cannot set tun device type!\n");
+    return -1;
+  }
 
-  memset (&ifreq, 0, sizeof (ifreq));
-  strncpy (ifreq.ifr_name, name, IFNAMSIZ - 1);
+  memset(&ifreq, 0, sizeof(ifreq));
+  strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
   ifreq.ifr_addr.sa_family = AF_INET;
 
-  ioctlSkfd = socket (PF_INET, SOCK_DGRAM, 0);
-  if (ioctlSkfd < 0)
-    {
-      close (etfd);
-      printf ("Cannot open configuration socket!\n");
-      return -1;
-    }
+  ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
+  if (ioctlSkfd < 0) {
+    close(etfd);
+    printf("Cannot open configuration socket!\n");
+    return -1;
+  }
 
   /* Set hardware address */
   ifreq.ifr_addr.sa_family = ARPHRD_ETHER;
-  memcpy (ifreq.ifr_addr.sa_data, mac, 6);
-  ioctlres = ioctl (ioctlSkfd, SIOCSIFHWADDR, &ifreq);
-  if (ioctlres >= 0)
-    {
-      /* Set hardware broadcast */
-      memcpy (ifreq.ifr_addr.sa_data, macBroadcast, 6);
-      ioctlres = ioctl (ioctlSkfd, SIOCSIFHWBROADCAST, &ifreq);
-      if (ioctlres >= 0)
-        {
-          /* Bring EtherTunTap interface up (if not already) */
-          ifreq.ifr_addr.sa_family = AF_INET;
-          ioctlres = ioctl (ioctlSkfd, SIOCGIFFLAGS, &ifreq);
-          if (ioctlres >= 0)
-            {
-              ifreq.ifr_flags |= (IFF_UP | IFF_RUNNING | IFF_BROADCAST);
-              ioctlres = ioctl (ioctlSkfd, SIOCSIFFLAGS, &ifreq);
-            }
-        }
+  memcpy(ifreq.ifr_addr.sa_data, mac, 6);
+  ioctlres = ioctl(ioctlSkfd, SIOCSIFHWADDR, &ifreq);
+  if (ioctlres >= 0) {
+    /* Set hardware broadcast */
+    memcpy(ifreq.ifr_addr.sa_data, macBroadcast, 6);
+    ioctlres = ioctl(ioctlSkfd, SIOCSIFHWBROADCAST, &ifreq);
+    if (ioctlres >= 0) {
+      /* Bring EtherTunTap interface up (if not already) */
+      ifreq.ifr_addr.sa_family = AF_INET;
+      ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
+      if (ioctlres >= 0) {
+        ifreq.ifr_flags |= (IFF_UP | IFF_RUNNING | IFF_BROADCAST);
+        ioctlres = ioctl(ioctlSkfd, SIOCSIFFLAGS, &ifreq);
+      }
     }
-  if (ioctlres < 0)
-    {
-      printf ("Configuration of tun device failed! (%d %s)\n", errno,
-              strerror (errno));
-      close (etfd);
-      close (ioctlSkfd);
-      return -1;
-    }
+  }
+  if (ioctlres < 0) {
+    printf("Configuration of tun device failed! (%d %s)\n", errno, strerror(errno));
+    close(etfd);
+    close(ioctlSkfd);
+    return -1;
+  }
 
   /* Set the multicast flag on the interface */
-  memset (&ifreq, 0, sizeof (ifreq));
-  strncpy (ifreq.ifr_name, name, IFNAMSIZ - 1);
+  memset(&ifreq, 0, sizeof(ifreq));
+  strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
   ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
-  ioctlres = ioctl (ioctlSkfd, SIOCGIFFLAGS, &ifreq);
-  if (ioctlres >= 0)
-    {
-      ifreq.ifr_flags |= IFF_MULTICAST;
-      ioctlres = ioctl (ioctlSkfd, SIOCSIFFLAGS, &ifreq);
-    }
+  ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
+  if (ioctlres >= 0) {
+    ifreq.ifr_flags |= IFF_MULTICAST;
+    ioctlres = ioctl(ioctlSkfd, SIOCSIFFLAGS, &ifreq);
+  }
 
-  close (ioctlSkfd);
+  close(ioctlSkfd);
   return etfd;
 }
 

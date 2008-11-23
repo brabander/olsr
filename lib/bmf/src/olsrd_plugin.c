@@ -1,3 +1,4 @@
+
 /*
  * OLSR Basic Multicast Forwarding (BMF) plugin.
  * Copyright (c) 2005 - 2007, Thales Communications, Huizen, The Netherlands.
@@ -53,10 +54,10 @@
 #include "NetworkInterfaces.h"  /* AddNonOlsrBmfIf(), SetBmfInterfaceIp(), ... */
 #include "Address.h"            /* DoLocalBroadcast() */
 
-static void __attribute__ ((constructor)) my_init (void);
-static void __attribute__ ((destructor)) my_fini (void);
+static void __attribute__ ((constructor)) my_init(void);
+static void __attribute__ ((destructor)) my_fini(void);
 
-void olsr_plugin_exit (void);
+void olsr_plugin_exit(void);
 
 /* -------------------------------------------------------------------------
  * Function   : olsrd_plugin_interface_version
@@ -69,7 +70,7 @@ void olsr_plugin_exit (void);
  *              version
  * ------------------------------------------------------------------------- */
 int
-olsrd_plugin_interface_version (void)
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -84,26 +85,24 @@ olsrd_plugin_interface_version (void)
  * Notes      : Called by main OLSRD (init_olsr_plugin) to initialize plugin
  * ------------------------------------------------------------------------- */
 int
-olsrd_plugin_init (void)
+olsrd_plugin_init(void)
 {
   /* Check validity */
-  if (olsr_cnf->ip_version != AF_INET)
-    {
-      fprintf (stderr, PLUGIN_NAME ": This plugin only supports IPv4!\n");
-      return 0;
-    }
+  if (olsr_cnf->ip_version != AF_INET) {
+    fprintf(stderr, PLUGIN_NAME ": This plugin only supports IPv4!\n");
+    return 0;
+  }
 
   /* Clear the packet history */
-  InitPacketHistory ();
+  InitPacketHistory();
 
   /* Register ifchange function */
-  add_ifchgf (&InterfaceChange);
+  add_ifchgf(&InterfaceChange);
 
   /* Register the duplicate registration pruning process */
-  olsr_start_timer (3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                    &PrunePacketHistory, NULL, 0);
+  olsr_start_timer(3 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &PrunePacketHistory, NULL, 0);
 
-  return InitBmf (NULL);
+  return InitBmf(NULL);
 }
 
 /* -------------------------------------------------------------------------
@@ -116,27 +115,20 @@ olsrd_plugin_init (void)
  * Notes      : Called by my_fini() at unload of shared object
  * ------------------------------------------------------------------------- */
 void
-olsr_plugin_exit (void)
+olsr_plugin_exit(void)
 {
-  CloseBmf ();
+  CloseBmf();
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "NonOlsrIf",.set_plugin_parameter = &AddNonOlsrBmfIf,.data = NULL},
-  {.name = "DoLocalBroadcast",.set_plugin_parameter =
-   &DoLocalBroadcast,.data = NULL},
-  {.name = "BmfInterface",.set_plugin_parameter = &SetBmfInterfaceName,.data =
-   NULL},
-  {.name = "BmfInterfaceIp",.set_plugin_parameter = &SetBmfInterfaceIp,.data =
-   NULL},
-  {.name = "CapturePacketsOnOlsrInterfaces",.set_plugin_parameter =
-   &SetCapturePacketsOnOlsrInterfaces,.data = NULL},
-  {.name = "BmfMechanism",.set_plugin_parameter = &SetBmfMechanism,.data =
-   NULL},
-  {.name = "FanOutLimit",.set_plugin_parameter = &SetFanOutLimit,.data =
-   NULL},
-  {.name = "BroadcastRetransmitCount",.set_plugin_parameter =
-   &set_plugin_int,.data = &BroadcastRetransmitCount},
+  {.name = "DoLocalBroadcast",.set_plugin_parameter = &DoLocalBroadcast,.data = NULL},
+  {.name = "BmfInterface",.set_plugin_parameter = &SetBmfInterfaceName,.data = NULL},
+  {.name = "BmfInterfaceIp",.set_plugin_parameter = &SetBmfInterfaceIp,.data = NULL},
+  {.name = "CapturePacketsOnOlsrInterfaces",.set_plugin_parameter = &SetCapturePacketsOnOlsrInterfaces,.data = NULL},
+  {.name = "BmfMechanism",.set_plugin_parameter = &SetBmfMechanism,.data = NULL},
+  {.name = "FanOutLimit",.set_plugin_parameter = &SetFanOutLimit,.data = NULL},
+  {.name = "BroadcastRetransmitCount",.set_plugin_parameter = &set_plugin_int,.data = &BroadcastRetransmitCount},
 };
 
 /* -------------------------------------------------------------------------
@@ -150,11 +142,10 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
  * Notes      : Called by main OLSR (init_olsr_plugin) for all plugins
  * ------------------------------------------------------------------------- */
 void
-olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
-                             int *size)
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
   *params = plugin_parameters;
-  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
+  *size = sizeof(plugin_parameters) / sizeof(*plugin_parameters);
 }
 
 /* -------------------------------------------------------------------------
@@ -167,10 +158,10 @@ olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
  * Notes      : Called at load of shared object
  * ------------------------------------------------------------------------- */
 static void
-my_init (void)
+my_init(void)
 {
   /* Print plugin info to stdout */
-  printf ("%s\n", MOD_DESC);
+  printf("%s\n", MOD_DESC);
 
   return;
 }
@@ -185,9 +176,9 @@ my_init (void)
  * Notes      : Called at unload of shared object
  * ------------------------------------------------------------------------- */
 static void
-my_fini (void)
+my_fini(void)
 {
-  olsr_plugin_exit ();
+  olsr_plugin_exit();
 }
 
 /*

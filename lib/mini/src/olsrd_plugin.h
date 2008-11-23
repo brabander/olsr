@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
  * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
@@ -41,9 +42,9 @@
  ****************************************************************************/
 
 /* Initialization function */
-int olsrd_plugin_init (void);
+int olsrd_plugin_init(void);
 
-int olsrd_plugin_interface_version (void);
+int olsrd_plugin_interface_version(void);
 
 #endif
 

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
@@ -52,45 +53,38 @@
 #define LQ_FF_WINDOW 32
 #define LQ_FF_QUICKSTART_INIT 4
 
-struct default_lq_ff
-{
+struct default_lq_ff {
   olsr_u8_t valueLq;
   olsr_u8_t valueNlq;
 };
 
-struct default_lq_ff_hello
-{
+struct default_lq_ff_hello {
   struct default_lq_ff lq;
   olsr_u8_t windowSize, activePtr;
   olsr_u16_t last_seq_nr;
   olsr_u16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
 };
 
-void default_lq_initialize_ff (void);
+void default_lq_initialize_ff(void);
 
-olsr_linkcost default_lq_calc_cost_ff (const void *lq);
+olsr_linkcost default_lq_calc_cost_ff(const void *lq);
 
-olsr_bool default_lq_is_relevant_costchange_ff (olsr_linkcost c1,
-                                                olsr_linkcost c2);
+olsr_bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2);
 
-olsr_linkcost default_lq_packet_loss_worker_ff (struct link_entry *link,
-                                                void *lq, olsr_bool lost);
-void default_lq_memorize_foreign_hello_ff (void *local, void *foreign);
+olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry *link, void *lq, olsr_bool lost);
+void default_lq_memorize_foreign_hello_ff(void *local, void *foreign);
 
-int default_lq_serialize_hello_lq_pair_ff (unsigned char *buff, void *lq);
-void default_lq_deserialize_hello_lq_pair_ff (const olsr_u8_t ** curr,
-                                              void *lq);
-int default_lq_serialize_tc_lq_pair_ff (unsigned char *buff, void *lq);
-void default_lq_deserialize_tc_lq_pair_ff (const olsr_u8_t ** curr, void *lq);
+int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *lq);
+void default_lq_deserialize_hello_lq_pair_ff(const olsr_u8_t ** curr, void *lq);
+int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *lq);
+void default_lq_deserialize_tc_lq_pair_ff(const olsr_u8_t ** curr, void *lq);
 
-void default_lq_copy_link2tc_ff (void *target, void *source);
-void default_lq_clear_ff (void *target);
-void default_lq_clear_ff_hello (void *target);
+void default_lq_copy_link2tc_ff(void *target, void *source);
+void default_lq_clear_ff(void *target);
+void default_lq_clear_ff_hello(void *target);
 
-const char *default_lq_print_ff (void *ptr, char separator,
-                                 struct lqtextbuffer *buffer);
-const char *default_lq_print_cost_ff (olsr_linkcost cost,
-                                      struct lqtextbuffer *buffer);
+const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer);
+const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 extern struct lq_handler lq_etx_ff_handler;
 

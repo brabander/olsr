@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2007, Sven-Ola <sven-ola-aet-gmx.de>
  * All rights reserved.
@@ -52,32 +53,27 @@ static char my_latlon_str[48];
  * lookup a nodes position
  */
 static char *
-lookup_position_latlon (union olsr_ip_addr *ip)
+lookup_position_latlon(union olsr_ip_addr *ip)
 {
   int hash;
   struct db_entry *entry;
   struct list_node *list_head, *list_node;
 
-  if (ipequal (ip, &olsr_cnf->main_addr))
-    {
-      return my_latlon_str;
+  if (ipequal(ip, &olsr_cnf->main_addr)) {
+    return my_latlon_str;
+  }
+
+  for (hash = 0; hash < HASHSIZE; hash++) {
+    list_head = &latlon_list[hash];
+    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
+
+      entry = list2db(list_node);
+
+      if (entry->names && ipequal(&entry->originator, ip)) {
+        return entry->names->name;
+      }
     }
-
-  for (hash = 0; hash < HASHSIZE; hash++)
-    {
-      list_head = &latlon_list[hash];
-      for (list_node = list_head->next; list_node != list_head;
-           list_node = list_node->next)
-        {
-
-          entry = list2db (list_node);
-
-          if (entry->names && ipequal (&entry->originator, ip))
-            {
-              return entry->names->name;
-            }
-        }
-    }
+  }
   return NULL;
 }
 
@@ -85,7 +81,7 @@ lookup_position_latlon (union olsr_ip_addr *ip)
  * write latlon positions to a file
  */
 void
-mapwrite_work (FILE * fmap)
+mapwrite_work(FILE * fmap)
 {
   int hash;
   struct olsr_if *ifs;
@@ -97,153 +93,106 @@ mapwrite_work (FILE * fmap)
   if (!my_names || !fmap)
     return;
 
-  for (ifs = olsr_cnf->interfaces; ifs; ifs = ifs->next)
-    {
-      if (0 != ifs->interf)
-        {
-          if (olsr_cnf->ip_version == AF_INET)
-            {
-              if (!
-                  (ip4equal
-                   ((struct in_addr *) &olsr_cnf->main_addr,
-                    &ifs->interf->int_addr.sin_addr)))
-                {
-                  if (0 >
-                      fprintf (fmap, "Mid('%s','%s');\n",
-                               olsr_ip_to_string (&strbuf1,
-                                                  &olsr_cnf->main_addr),
-                               olsr_ip_to_string (&strbuf2,
-                                                  (union olsr_ip_addr *)
-                                                  &ifs->interf->int_addr.
-                                                  sin_addr)))
-                    {
-                      return;
-                    }
-                }
-            }
-          else
-            if (!
-                (ip6equal
-                 ((struct in6_addr *) &olsr_cnf->main_addr,
-                  &ifs->interf->int6_addr.sin6_addr)))
-            {
-              if (0 >
-                  fprintf (fmap, "Mid('%s','%s');\n",
-                           olsr_ip_to_string (&strbuf1, &olsr_cnf->main_addr),
-                           olsr_ip_to_string (&strbuf2,
-                                              (union olsr_ip_addr *) &ifs->
-                                              interf->int6_addr.sin6_addr)))
-                {
-                  return;
-                }
-            }
-        }
-    }
-
-  for (hash = 0; hash < HASHSIZE; hash++)
-    {
-      struct mid_entry *entry = mid_set[hash].next;
-      while (entry != &mid_set[hash])
-        {
-          struct mid_address *alias = entry->aliases;
-          while (alias)
-            {
-              if (0 >
-                  fprintf (fmap, "Mid('%s','%s');\n",
-                           olsr_ip_to_string (&strbuf1, &entry->main_addr),
-                           olsr_ip_to_string (&strbuf2, &alias->alias)))
-                {
-                  return;
-                }
-              alias = alias->next_alias;
-            }
-          entry = entry->next;
-        }
-    }
-  lookup_defhna_latlon (&ip);
-  sprintf (my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon ());
-  if (0 >
-      fprintf (fmap, "Self('%s',%s,'%s','%s');\n",
-               olsr_ip_to_string (&strbuf1, &olsr_cnf->main_addr),
-               my_latlon_str, olsr_ip_to_string (&strbuf2, &ip),
-               my_names->name))
-    {
-      return;
-    }
-  for (hash = 0; hash < HASHSIZE; hash++)
-    {
-      struct db_entry *entry;
-      struct list_node *list_head, *list_node;
-
-      list_head = &latlon_list[hash];
-      for (list_node = list_head->next; list_node != list_head;
-           list_node = list_node->next)
-        {
-
-          entry = list2db (list_node);
-
-          if (NULL != entry->names)
-            {
-              if (0 >
-                  fprintf (fmap, "Node('%s',%s,'%s','%s');\n",
-                           olsr_ip_to_string (&strbuf1, &entry->originator),
-                           entry->names->name, olsr_ip_to_string (&strbuf2,
-                                                                  &entry->
-                                                                  names->ip),
-                           lookup_name_latlon (&entry->originator)))
-                {
-                  return;
-                }
-            }
-        }
-    }
-
-  OLSR_FOR_ALL_TC_ENTRIES (tc)
-  {
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES (tc, tc_edge)
-    {
-      char *lla = lookup_position_latlon (&tc->addr);
-      char *llb = lookup_position_latlon (&tc_edge->T_dest_addr);
-      if (NULL != lla && NULL != llb)
-        {
-          struct lqtextbuffer lqbuffer, lqbuffer2;
-
-          /*
-           * To speed up processing, Links with both positions are named PLink()
-           */
+  for (ifs = olsr_cnf->interfaces; ifs; ifs = ifs->next) {
+    if (0 != ifs->interf) {
+      if (olsr_cnf->ip_version == AF_INET) {
+        if (!(ip4equal((struct in_addr *)&olsr_cnf->main_addr, &ifs->interf->int_addr.sin_addr))) {
           if (0 >
-              fprintf (fmap, "PLink('%s','%s',%s,%s,%s,%s);\n",
-                       olsr_ip_to_string (&strbuf1, &tc_edge->T_dest_addr),
-                       olsr_ip_to_string (&strbuf2, &tc->addr),
-                       get_tc_edge_entry_text (tc_edge, ',', &lqbuffer2),
-                       get_linkcost_text (tc_edge->cost, OLSR_FALSE,
-                                          &lqbuffer), lla, llb))
-            {
-              return;
-            }
+              fprintf(fmap, "Mid('%s','%s');\n",
+                      olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)
+                                                                                           &ifs->interf->int_addr.sin_addr))) {
+            return;
+          }
         }
-      else
-        {
-          struct lqtextbuffer lqbuffer, lqbuffer2;
-
-          /*
-           * If one link end pos is unkown, only send Link()
-           */
-          if (0 >
-              fprintf (fmap, "Link('%s','%s',%s,%s);\n",
-                       olsr_ip_to_string (&strbuf1, &tc_edge->T_dest_addr),
-                       olsr_ip_to_string (&strbuf2, &tc->addr),
-                       get_tc_edge_entry_text (tc_edge, ',', &lqbuffer2),
-                       get_linkcost_text (tc_edge->cost, OLSR_FALSE,
-                                          &lqbuffer)))
-            {
-              return;
-            }
+      } else if (!(ip6equal((struct in6_addr *)&olsr_cnf->main_addr, &ifs->interf->int6_addr.sin6_addr))) {
+        if (0 >
+            fprintf(fmap, "Mid('%s','%s');\n",
+                    olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+                    olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr))) {
+          return;
         }
+      }
     }
-    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END (tc, tc_edge);
   }
-  OLSR_FOR_ALL_TC_ENTRIES_END (tc);
+
+  for (hash = 0; hash < HASHSIZE; hash++) {
+    struct mid_entry *entry = mid_set[hash].next;
+    while (entry != &mid_set[hash]) {
+      struct mid_address *alias = entry->aliases;
+      while (alias) {
+        if (0 >
+            fprintf(fmap, "Mid('%s','%s');\n",
+                    olsr_ip_to_string(&strbuf1, &entry->main_addr), olsr_ip_to_string(&strbuf2, &alias->alias))) {
+          return;
+        }
+        alias = alias->next_alias;
+      }
+      entry = entry->next;
+    }
+  }
+  lookup_defhna_latlon(&ip);
+  sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
+  if (0 >
+      fprintf(fmap, "Self('%s',%s,'%s','%s');\n",
+              olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str, olsr_ip_to_string(&strbuf2, &ip), my_names->name)) {
+    return;
+  }
+  for (hash = 0; hash < HASHSIZE; hash++) {
+    struct db_entry *entry;
+    struct list_node *list_head, *list_node;
+
+    list_head = &latlon_list[hash];
+    for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
+
+      entry = list2db(list_node);
+
+      if (NULL != entry->names) {
+        if (0 >
+            fprintf(fmap, "Node('%s',%s,'%s','%s');\n",
+                    olsr_ip_to_string(&strbuf1, &entry->originator),
+                    entry->names->name, olsr_ip_to_string(&strbuf2, &entry->names->ip), lookup_name_latlon(&entry->originator))) {
+          return;
+        }
+      }
+    }
+  }
+
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+      char *lla = lookup_position_latlon(&tc->addr);
+      char *llb = lookup_position_latlon(&tc_edge->T_dest_addr);
+      if (NULL != lla && NULL != llb) {
+        struct lqtextbuffer lqbuffer, lqbuffer2;
+
+        /*
+         * To speed up processing, Links with both positions are named PLink()
+         */
+        if (0 >
+            fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s);\n",
+                    olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
+                    olsr_ip_to_string(&strbuf2, &tc->addr),
+                    get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
+                    get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer), lla, llb)) {
+          return;
+        }
+      } else {
+        struct lqtextbuffer lqbuffer, lqbuffer2;
+
+        /*
+         * If one link end pos is unkown, only send Link()
+         */
+        if (0 >
+            fprintf(fmap, "Link('%s','%s',%s,%s);\n",
+                    olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
+                    olsr_ip_to_string(&strbuf2, &tc->addr),
+                    get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer))) {
+          return;
+        }
+      }
+    }
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  }
+  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 }
 
 #ifndef WIN32
@@ -257,67 +206,56 @@ static const char *the_fifoname = 0;
 static int fifopolltime = 0;
 
 static void
-mapwrite_poll (void *context __attribute__ ((unused)))
+mapwrite_poll(void *context __attribute__ ((unused)))
 {
   fifopolltime++;
-  if (0 == (fifopolltime & 7) && 0 != the_fifoname)
-    {
-      FILE *fout;
-      /* Non-blocking means: fail open if no pipe reader */
-      int fd = open (the_fifoname, O_WRONLY | O_NONBLOCK);
-      if (0 <= fd)
-        {
-          /*
-           * Change to blocking, otherwhise expect fprintf errors
-           */
-          fcntl (fd, F_SETFL, O_WRONLY);
-          fout = fdopen (fd, "w");
-          if (0 != fout)
-            {
-              mapwrite_work (fout);
-              fclose (fout);
-              /* Give pipe reader cpu slot to detect EOF */
-              usleep (1);
-            }
-          else
-            {
-              close (fd);
-            }
-        }
+  if (0 == (fifopolltime & 7) && 0 != the_fifoname) {
+    FILE *fout;
+    /* Non-blocking means: fail open if no pipe reader */
+    int fd = open(the_fifoname, O_WRONLY | O_NONBLOCK);
+    if (0 <= fd) {
+      /*
+       * Change to blocking, otherwhise expect fprintf errors
+       */
+      fcntl(fd, F_SETFL, O_WRONLY);
+      fout = fdopen(fd, "w");
+      if (0 != fout) {
+        mapwrite_work(fout);
+        fclose(fout);
+        /* Give pipe reader cpu slot to detect EOF */
+        usleep(1);
+      } else {
+        close(fd);
+      }
     }
+  }
 }
 
 int
-mapwrite_init (const char *fifoname)
+mapwrite_init(const char *fifoname)
 {
   the_fifoname = fifoname;
-  if (0 != fifoname && 0 != *fifoname)
-    {
-      unlink (fifoname);
-      if (0 > mkfifo (fifoname, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH))
-        {
-          OLSR_PRINTF (1, "mkfifo(%s): %s", fifoname, strerror (errno));
-          return OLSR_FALSE;
-        }
-      else
-        {
-          the_fifoname = fifoname;
-          olsr_start_timer (100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL,
-                            0);
-        }
+  if (0 != fifoname && 0 != *fifoname) {
+    unlink(fifoname);
+    if (0 > mkfifo(fifoname, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH)) {
+      OLSR_PRINTF(1, "mkfifo(%s): %s", fifoname, strerror(errno));
+      return OLSR_FALSE;
+    } else {
+      the_fifoname = fifoname;
+      olsr_start_timer(100, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, 0);
     }
+  }
   return OLSR_TRUE;
 }
 
 void
-mapwrite_exit (void)
+mapwrite_exit(void)
 {
-  if (0 != the_fifoname)
-    {
-      unlink (the_fifoname);
-      /* Ignore any Error */
-      the_fifoname = 0;
-    }
+  if (0 != the_fifoname) {
+    unlink(the_fifoname);
+    /* Ignore any Error */
+    the_fifoname = 0;
+  }
 }
 #endif
 

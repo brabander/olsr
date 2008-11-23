@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -71,9 +72,9 @@ static int ipc_port;
 static int ipc_socket;
 static int ipc_connection;
 
-void my_init (void) __attribute__ ((constructor));
+void my_init(void) __attribute__ ((constructor));
 
-void my_fini (void) __attribute__ ((destructor));
+void my_fini(void) __attribute__ ((destructor));
 
 /*
  * Defines the version of the plugin interface that is used
@@ -81,7 +82,7 @@ void my_fini (void) __attribute__ ((destructor));
  * Do not alter unless you know what you are doing!
  */
 int
-olsrd_plugin_interface_version (void)
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -90,21 +91,18 @@ olsrd_plugin_interface_version (void)
  *Constructor
  */
 void
-my_init (void)
+my_init(void)
 {
   /* Print plugin info to stdout */
-  printf ("%s\n", MOD_DESC);
+  printf("%s\n", MOD_DESC);
 
   /* defaults for parameters */
   ipc_port = 2004;
-  if (olsr_cnf->ip_version == AF_INET)
-    {
-      ipc_accept_ip.v4.s_addr = htonl (INADDR_LOOPBACK);
-    }
-  else
-    {
-      ipc_accept_ip.v6 = in6addr_loopback;
-    }
+  if (olsr_cnf->ip_version == AF_INET) {
+    ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
+  } else {
+    ipc_accept_ip.v6 = in6addr_loopback;
+  }
   ipc_socket = -1;
   ipc_connection = -1;
 }
@@ -113,53 +111,48 @@ my_init (void)
  *Destructor
  */
 void
-my_fini (void)
+my_fini(void)
 {
-  if (ipc_socket >= 0)
-    {
-      close (ipc_socket);
-      ipc_socket = -1;
-    }
-  if (ipc_connection >= 0)
-    {
-      close (ipc_connection);
-      ipc_connection = -1;
-    }
+  if (ipc_socket >= 0) {
+    close(ipc_socket);
+    ipc_socket = -1;
+  }
+  if (ipc_connection >= 0) {
+    close(ipc_connection);
+    ipc_connection = -1;
+  }
 
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
-  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data =
-   &ipc_accept_ip},
+  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data = &ipc_accept_ip},
 };
 
 void
-olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
-                             int *size)
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
   *params = plugin_parameters;
-  *size = sizeof (plugin_parameters) / sizeof (*plugin_parameters);
+  *size = sizeof(plugin_parameters) / sizeof(*plugin_parameters);
 }
 
 /* Event function to register with the sceduler */
-static int pcf_event (int, int, int);
+static int pcf_event(int, int, int);
 
-static void ipc_action (int);
+static void ipc_action(int);
 
-static void ipc_print_neigh_link (struct neighbor_entry *neighbor);
+static void ipc_print_neigh_link(struct neighbor_entry *neighbor);
 
-static void ipc_print_tc_link (struct tc_entry *entry,
-                               struct tc_edge_entry *dst_entry);
+static void ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry);
 
-static int ipc_send (const char *, int);
+static int ipc_send(const char *, int);
 
-static void ipc_print_neigh_link (struct neighbor_entry *);
+static void ipc_print_neigh_link(struct neighbor_entry *);
 
-static int plugin_ipc_init (void);
+static int plugin_ipc_init(void);
 
 static void
-ipc_print_neigh_link (struct neighbor_entry *neighbor)
+ipc_print_neigh_link(struct neighbor_entry *neighbor)
 {
   char buf[256];
   int len;
@@ -169,10 +162,9 @@ ipc_print_neigh_link (struct neighbor_entry *neighbor)
 //  struct link_entry* link;
 
   len =
-    sprintf (buf, "add link %s %s\n",
-             olsr_ip_to_string (&main_adr, &olsr_cnf->main_addr),
-             olsr_ip_to_string (&adr, &neighbor->neighbor_main_addr));
-  ipc_send (buf, len);
+    sprintf(buf, "add link %s %s\n",
+            olsr_ip_to_string(&main_adr, &olsr_cnf->main_addr), olsr_ip_to_string(&adr, &neighbor->neighbor_main_addr));
+  ipc_send(buf, len);
 
 //  if (neighbor->status == 0) { // non SYM
 //      style = "dashed";
@@ -207,81 +199,69 @@ ipc_print_neigh_link (struct neighbor_entry *neighbor)
  *function in uolsrd_plugin.c
  */
 int
-olsrd_plugin_init (void)
+olsrd_plugin_init(void)
 {
 
   /* Initial IPC value */
   ipc_socket = -1;
 
   /* Register the "ProcessChanges" function */
-  register_pcf (&pcf_event);
+  register_pcf(&pcf_event);
 
   return 1;
 }
 
 static int
-plugin_ipc_init (void)
+plugin_ipc_init(void)
 {
   struct sockaddr_in sin;
   olsr_u32_t yes = 1;
 
   /* Init ipc socket */
-  if ((ipc_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-      olsr_printf (1, "(DOT DRAW)IPC socket %s\n", strerror (errno));
+  if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    olsr_printf(1, "(DOT DRAW)IPC socket %s\n", strerror(errno));
+    return 0;
+  } else {
+    if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
+      perror("SO_REUSEADDR failed");
       return 0;
     }
-  else
-    {
-      if (setsockopt
-          (ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *) &yes,
-           sizeof (yes)) < 0)
-        {
-          perror ("SO_REUSEADDR failed");
-          return 0;
-        }
-
 #ifdef __FreeBSD__
-      if (setsockopt
-          (ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *) &yes,
-           sizeof (yes)) < 0)
-        {
-          perror ("SO_NOSIGPIPE failed");
-          return 0;
-        }
+    if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
+      perror("SO_NOSIGPIPE failed");
+      return 0;
+    }
 #endif
 
-      /* Bind the socket */
+    /* Bind the socket */
 
-      /* complete the socket structure */
-      memset (&sin, 0, sizeof (sin));
-      sin.sin_family = AF_INET;
-      sin.sin_addr.s_addr = INADDR_ANY;
-      sin.sin_port = htons (ipc_port);
+    /* complete the socket structure */
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = INADDR_ANY;
+    sin.sin_port = htons(ipc_port);
 
-      /* bind the socket to the port number */
-      if (bind (ipc_socket, (struct sockaddr *) &sin, sizeof (sin)) == -1)
-        {
-          olsr_printf (1, "(DOT DRAW)IPC bind %s\n", strerror (errno));
-          return 0;
-        }
-
-      /* show that we are willing to listen */
-      if (listen (ipc_socket, 1) == -1)
-        {
-          olsr_printf (1, "(DOT DRAW)IPC listen %s\n", strerror (errno));
-          return 0;
-        }
-
-      /* Register with olsrd */
-      add_olsr_socket (ipc_socket, &ipc_action);
+    /* bind the socket to the port number */
+    if (bind(ipc_socket, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+      olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
+      return 0;
     }
+
+    /* show that we are willing to listen */
+    if (listen(ipc_socket, 1) == -1) {
+      olsr_printf(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
+      return 0;
+    }
+
+    /* Register with olsrd */
+    add_olsr_socket(ipc_socket, &ipc_action);
+  }
 
   return 1;
 }
 
 static void
-ipc_action (int fd __attribute__ ((unused)))
+ipc_action(int fd __attribute__ ((unused)))
 {
   struct sockaddr_in pin;
   socklen_t addrlen;
@@ -289,18 +269,15 @@ ipc_action (int fd __attribute__ ((unused)))
   char buf[256];
   int len;
 
-  addrlen = sizeof (struct sockaddr_in);
+  addrlen = sizeof(struct sockaddr_in);
 
-  if ((ipc_connection =
-       accept (ipc_socket, (struct sockaddr *) &pin, &addrlen)) == -1)
-    {
-      olsr_printf (1, "(DOT DRAW)IPC accept: %s\n", strerror (errno));
-      exit (1);
-    }
-  else
-    {
-      struct ipaddr_str main_addr;
-      addr = inet_ntoa (pin.sin_addr);
+  if ((ipc_connection = accept(ipc_socket, (struct sockaddr *)&pin, &addrlen)) == -1) {
+    olsr_printf(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
+    exit(1);
+  } else {
+    struct ipaddr_str main_addr;
+    addr = inet_ntoa(pin.sin_addr);
+
 /*
       if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
 	{
@@ -311,14 +288,12 @@ ipc_action (int fd __attribute__ ((unused)))
       else
 	{
 */
-      olsr_printf (1, "(DOT DRAW)IPC: Connection from %s\n", addr);
-      len =
-        sprintf (buf, "add node %s\n",
-                 olsr_ip_to_string (&main_addr, &olsr_cnf->main_addr));
-      ipc_send (buf, len);
-      pcf_event (1, 1, 1);
+    olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", addr);
+    len = sprintf(buf, "add node %s\n", olsr_ip_to_string(&main_addr, &olsr_cnf->main_addr));
+    ipc_send(buf, len);
+    pcf_event(1, 1, 1);
 //      }
-    }
+  }
 
 }
 
@@ -326,8 +301,7 @@ ipc_action (int fd __attribute__ ((unused)))
  *Scheduled event
  */
 static int
-pcf_event (int changes_neighborhood, int changes_topology, int changes_hna
-           __attribute__ ((unused)))
+pcf_event(int changes_neighborhood, int changes_topology, int changes_hna __attribute__ ((unused)))
 {
   int res;
   struct neighbor_entry *neighbor_table_tmp;
@@ -336,33 +310,29 @@ pcf_event (int changes_neighborhood, int changes_topology, int changes_hna
 
   res = 0;
 
-  if (changes_neighborhood || changes_topology)
-    {
-      /* Print tables to IPC socket */
+  if (changes_neighborhood || changes_topology) {
+    /* Print tables to IPC socket */
 
-      //ipc_send("start ", strlen("start "));
+    //ipc_send("start ", strlen("start "));
 
-      /* Neighbors */
-      OLSR_FOR_ALL_NBR_ENTRIES (neighbor_table_tmp)
-      {
-        ipc_print_neigh_link (neighbor_table_tmp);
+    /* Neighbors */
+    OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
+      ipc_print_neigh_link(neighbor_table_tmp);
+    }
+    OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
+
+    /* Topology */
+    OLSR_FOR_ALL_TC_ENTRIES(tc) {
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
+        ipc_print_tc_link(tc, tc_edge);
       }
-      OLSR_FOR_ALL_NBR_ENTRIES_END (neighbor_table_tmp);
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+    }
+    OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-      /* Topology */
-      OLSR_FOR_ALL_TC_ENTRIES (tc)
-      {
-        OLSR_FOR_ALL_TC_EDGE_ENTRIES (tc, tc_edge)
-        {
-          ipc_print_tc_link (tc, tc_edge);
-        }
-        OLSR_FOR_ALL_TC_EDGE_ENTRIES_END (tc, tc_edge);
-      }
-      OLSR_FOR_ALL_TC_ENTRIES_END (tc);
+    ipc_send(" end ", strlen(" end "));
 
-      ipc_send (" end ", strlen (" end "));
-
-      /* HNA entries */
+    /* HNA entries */
 //      for(index=0;index<HASHSIZE;index++)
 //      {
 //        tmp_hna = hna_set[index].next;
@@ -386,19 +356,18 @@ pcf_event (int changes_neighborhood, int changes_topology, int changes_hna
 
 //      ipc_send("}\n\n", strlen("}\n\n"));
 
-      res = 1;
-    }
+    res = 1;
+  }
 
-  if (ipc_socket == -1)
-    {
-      plugin_ipc_init ();
-    }
+  if (ipc_socket == -1) {
+    plugin_ipc_init();
+  }
 
   return res;
 }
 
 static void
-ipc_print_tc_link (struct tc_entry *entry, struct tc_edge_entry *dst_entry)
+ipc_print_tc_link(struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 {
   char buf[256];
   int len;
@@ -406,14 +375,12 @@ ipc_print_tc_link (struct tc_entry *entry, struct tc_edge_entry *dst_entry)
 //  double etx = olsr_calc_tc_etx(dst_entry);
 
   len =
-    sprintf (buf, "add link %s %s\n",
-             olsr_ip_to_string (&main_adr, &entry->addr),
-             olsr_ip_to_string (&adr, &dst_entry->T_dest_addr));
-  ipc_send (buf, len);
+    sprintf(buf, "add link %s %s\n", olsr_ip_to_string(&main_adr, &entry->addr), olsr_ip_to_string(&adr, &dst_entry->T_dest_addr));
+  ipc_send(buf, len);
 }
 
 static int
-ipc_send (const char *data, int size)
+ipc_send(const char *data, int size)
 {
   if (ipc_connection == -1)
     return 0;
@@ -423,13 +390,12 @@ ipc_send (const char *data, int size)
 #else
 #define FLAG MSG_NOSIGNAL
 #endif
-  if (send (ipc_connection, data, size, FLAG) < 0)
-    {
-      olsr_printf (1, "(DOT DRAW)IPC connection lost!\n");
-      close (ipc_connection);
-      ipc_connection = -1;
-      return -1;
-    }
+  if (send(ipc_connection, data, size, FLAG) < 0) {
+    olsr_printf(1, "(DOT DRAW)IPC connection lost!\n");
+    close(ipc_connection);
+    ipc_connection = -1;
+    return -1;
+  }
 
   return 1;
 }

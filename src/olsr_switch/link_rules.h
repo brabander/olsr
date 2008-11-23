@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2005, Andreas Tonnesen(andreto@olsr.org)
@@ -43,16 +44,15 @@
 
 #include "olsr_types.h"
 #include "olsr_host_switch.h"
-int ohs_check_link (struct ohs_connection *, union olsr_ip_addr *);
+int ohs_check_link(struct ohs_connection *, union olsr_ip_addr *);
 
-struct ohs_ip_link *get_link (struct ohs_connection *, union olsr_ip_addr *);
+struct ohs_ip_link *get_link(struct ohs_connection *, union olsr_ip_addr *);
 
-struct ohs_ip_link *add_link (struct ohs_connection *,
-                              struct ohs_connection *);
+struct ohs_ip_link *add_link(struct ohs_connection *, struct ohs_connection *);
 
-int remove_link (struct ohs_connection *, struct ohs_ip_link *);
+int remove_link(struct ohs_connection *, struct ohs_ip_link *);
 
-int ohs_delete_all_related_links (struct ohs_connection *);
+int ohs_delete_all_related_links(struct ohs_connection *);
 
 #endif
 

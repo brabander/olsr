@@ -1,3 +1,4 @@
+
 /*
 ** Auxiliary functions from Lua API
 ** See Copyright Notice in lua.h
@@ -8,7 +9,7 @@
 
 #include "lobject.h"
 
-void luaA_pushobject (lua_State * L, const TObject * o);
+void luaA_pushobject(lua_State * L, const TObject * o);
 
 #endif
 

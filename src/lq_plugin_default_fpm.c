@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
@@ -71,40 +72,35 @@ struct lq_handler lq_etx_fpm_handler = {
   &default_lq_print_fpm,
   &default_lq_print_cost_fpm,
 
-  sizeof (struct default_lq_fpm),
-  sizeof (struct default_lq_fpm)
+  sizeof(struct default_lq_fpm),
+  sizeof(struct default_lq_fpm)
 };
 
 olsr_u32_t aging_factor_new, aging_factor_old;
 olsr_u32_t aging_quickstart_new, aging_quickstart_old;
 
 void
-default_lq_initialize_fpm (void)
+default_lq_initialize_fpm(void)
 {
-  aging_factor_new =
-    (olsr_u32_t) (olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
+  aging_factor_new = (olsr_u32_t) (olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_factor_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_factor_new;
 
-  aging_quickstart_new =
-    (olsr_u32_t) (LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
+  aging_quickstart_new = (olsr_u32_t) (LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_quickstart_new;
 }
 
 olsr_linkcost
-default_lq_calc_cost_fpm (const void *ptr)
+default_lq_calc_cost_fpm(const void *ptr)
 {
   const struct default_lq_fpm *lq = ptr;
   olsr_linkcost cost;
 
-  if (lq->valueLq < (unsigned int) (255 * MINIMAL_USEFUL_LQ)
-      || lq->valueNlq < (unsigned int) (255 * MINIMAL_USEFUL_LQ))
-    {
-      return LINK_COST_BROKEN;
-    }
+  if (lq->valueLq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)
+      || lq->valueNlq < (unsigned int)(255 * MINIMAL_USEFUL_LQ)) {
+    return LINK_COST_BROKEN;
+  }
 
-  cost =
-    LQ_FPM_LINKCOST_MULTIPLIER * 255 / (int) lq->valueLq * 255 /
-    (int) lq->valueNlq;
+  cost = LQ_FPM_LINKCOST_MULTIPLIER * 255 / (int)lq->valueLq * 255 / (int)lq->valueNlq;
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
@@ -114,64 +110,62 @@ default_lq_calc_cost_fpm (const void *ptr)
 }
 
 int
-default_lq_serialize_hello_lq_pair_fpm (unsigned char *buff, void *ptr)
+default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
-  buff[0] = (unsigned char) lq->valueLq;
-  buff[1] = (unsigned char) lq->valueNlq;
-  buff[2] = (unsigned char) (0);
-  buff[3] = (unsigned char) (0);
+  buff[0] = (unsigned char)lq->valueLq;
+  buff[1] = (unsigned char)lq->valueNlq;
+  buff[2] = (unsigned char)(0);
+  buff[3] = (unsigned char)(0);
 
   return 4;
 }
 
 void
-default_lq_deserialize_hello_lq_pair_fpm (const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
-  pkt_get_u8 (curr, &lq->valueLq);
-  pkt_get_u8 (curr, &lq->valueNlq);
-  pkt_ignore_u16 (curr);
+  pkt_get_u8(curr, &lq->valueLq);
+  pkt_get_u8(curr, &lq->valueNlq);
+  pkt_ignore_u16(curr);
 }
 
 olsr_bool
-default_lq_is_relevant_costchange_fpm (olsr_linkcost c1, olsr_linkcost c2)
+default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2)
 {
-  if (c1 > c2)
-    {
-      return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
-    }
+  if (c1 > c2) {
+    return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
+  }
   return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FPM;
 }
 
 int
-default_lq_serialize_tc_lq_pair_fpm (unsigned char *buff, void *ptr)
+default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
-  buff[0] = (unsigned char) lq->valueLq;
-  buff[1] = (unsigned char) lq->valueNlq;
-  buff[2] = (unsigned char) (0);
-  buff[3] = (unsigned char) (0);
+  buff[0] = (unsigned char)lq->valueLq;
+  buff[1] = (unsigned char)lq->valueNlq;
+  buff[2] = (unsigned char)(0);
+  buff[3] = (unsigned char)(0);
 
   return 4;
 }
 
 void
-default_lq_deserialize_tc_lq_pair_fpm (const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_tc_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
-  pkt_get_u8 (curr, &lq->valueLq);
-  pkt_get_u8 (curr, &lq->valueNlq);
-  pkt_ignore_u16 (curr);
+  pkt_get_u8(curr, &lq->valueLq);
+  pkt_get_u8(curr, &lq->valueNlq);
+  pkt_ignore_u16(curr);
 }
 
 olsr_linkcost
-default_lq_packet_loss_worker_fpm (struct link_entry *link, void *ptr,
-                                   olsr_bool lost)
+default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, olsr_bool lost)
 {
   struct default_lq_fpm *tlq = ptr;
   olsr_u32_t alpha_old = aging_factor_old;
@@ -180,80 +174,66 @@ default_lq_packet_loss_worker_fpm (struct link_entry *link, void *ptr,
   olsr_u32_t value;
   // fpm link_loss_factor = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
 
-  if (tlq->quickstart < LQ_QUICKSTART_STEPS)
-    {
-      alpha_new = aging_quickstart_new;
-      alpha_old = aging_quickstart_old;
-      tlq->quickstart++;
-    }
-
+  if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
+    alpha_new = aging_quickstart_new;
+    alpha_old = aging_quickstart_old;
+    tlq->quickstart++;
+  }
   // exponential moving average
   value = (olsr_u32_t) (tlq->valueLq) * LQ_FPM_INTERNAL_MULTIPLIER / 255;
 
-  value =
-    (value * alpha_old + LQ_FPM_INTERNAL_MULTIPLIER -
-     1) / LQ_FPM_INTERNAL_MULTIPLIER;
+  value = (value * alpha_old + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
-  if (!lost)
-    {
-      olsr_u32_t ratio;
+  if (!lost) {
+    olsr_u32_t ratio;
 
-      ratio =
-        (alpha_new * link->loss_link_multiplier + LINK_LOSS_MULTIPLIER -
-         1) / LINK_LOSS_MULTIPLIER;
-      value += ratio;
-    }
-  tlq->valueLq =
-    (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER -
-     1) / LQ_FPM_INTERNAL_MULTIPLIER;
+    ratio = (alpha_new * link->loss_link_multiplier + LINK_LOSS_MULTIPLIER - 1) / LINK_LOSS_MULTIPLIER;
+    value += ratio;
+  }
+  tlq->valueLq = (value * 255 + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
-  return default_lq_calc_cost_fpm (ptr);
+  return default_lq_calc_cost_fpm(ptr);
 }
 
 void
-default_lq_memorize_foreign_hello_fpm (void *ptrLocal, void *ptrForeign)
+default_lq_memorize_foreign_hello_fpm(void *ptrLocal, void *ptrForeign)
 {
   struct default_lq_fpm *local = ptrLocal;
   struct default_lq_fpm *foreign = ptrForeign;
 
-  if (foreign)
-    {
-      local->valueNlq = foreign->valueLq;
-    }
-  else
-    {
-      local->valueNlq = 0;
-    }
+  if (foreign) {
+    local->valueNlq = foreign->valueLq;
+  } else {
+    local->valueNlq = 0;
+  }
 }
 
 void
-default_lq_copy_link2tc_fpm (void *target, void *source)
+default_lq_copy_link2tc_fpm(void *target, void *source)
 {
-  memcpy (target, source, sizeof (struct default_lq_fpm));
+  memcpy(target, source, sizeof(struct default_lq_fpm));
 }
 
 void
-default_lq_clear_fpm (void *target)
+default_lq_clear_fpm(void *target)
 {
-  memset (target, 0, sizeof (struct default_lq_fpm));
+  memset(target, 0, sizeof(struct default_lq_fpm));
 }
 
 const char *
-default_lq_print_fpm (void *ptr, char separator, struct lqtextbuffer *buffer)
+default_lq_print_fpm(void *ptr, char separator, struct lqtextbuffer *buffer)
 {
   struct default_lq_fpm *lq = ptr;
 
-  snprintf (buffer->buf, sizeof (buffer->buf), "%0.3f%c%0.3f",
-            (float) (lq->valueLq) / 255.0, separator,
-            (float) (lq->valueNlq) / 255.0);
+  snprintf(buffer->buf, sizeof(buffer->buf), "%0.3f%c%0.3f",
+           (float)(lq->valueLq) / 255.0, separator, (float)(lq->valueNlq) / 255.0);
   return buffer->buf;
 }
 
 const char *
-default_lq_print_cost_fpm (olsr_linkcost cost, struct lqtextbuffer *buffer)
+default_lq_print_cost_fpm(olsr_linkcost cost, struct lqtextbuffer *buffer)
 {
-  snprintf (buffer->buf, sizeof (buffer->buf), "%.3f",
-            (float) (cost) / LQ_FPM_LINKCOST_MULTIPLIER);
+  snprintf(buffer->buf, sizeof(buffer->buf), "%.3f", (float)(cost) / LQ_FPM_LINKCOST_MULTIPLIER);
   return buffer->buf;
 }
 

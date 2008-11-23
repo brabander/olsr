@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2005, Bruno Randolf <bruno.randolf@4g-systems.biz>
  * Copyright (c) 2004, Andreas Tonnesen(andreto-at-olsr.org)
@@ -45,6 +46,7 @@
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
 #if 1
+
 /* We hide them from the compiler here to allow the plugins itself to declare them
  * as they also implement them if we activate -Wredundant-decls.
  * Normally we leave it seen so that we enforce a check by the compiler if they are
@@ -55,34 +57,32 @@
  * Plugin interface version
  * Used by main olsrd to check plugin interface version
  */
-int olsrd_plugin_interface_version (void);
+int olsrd_plugin_interface_version(void);
 
 /**
  * Initialize plugin
  * Called after all parameters are passed
  */
-int olsrd_plugin_init (void);
+int olsrd_plugin_init(void);
 
 /* Interface version 4 */
+
 /**
  * Register parameters from config file
  * Called for all plugin parameters
  */
-int olsrd_plugin_register_param (char *key, char *value);
+int olsrd_plugin_register_param(char *key, char *value);
 
 /* Interface version 5 */
 
-typedef union
-{
+typedef union {
   unsigned int ui;
   char *pc;
 } set_plugin_parameter_addon;
 
-typedef int set_plugin_parameter (const char *value, void *data,
-                                  set_plugin_parameter_addon addon);
+typedef int set_plugin_parameter(const char *value, void *data, set_plugin_parameter_addon addon);
 
-struct olsrd_plugin_parameters
-{
+struct olsrd_plugin_parameters {
   const char *name;
   set_plugin_parameter *set_plugin_parameter;
   void *data;
@@ -92,8 +92,8 @@ struct olsrd_plugin_parameters
 /**
  * Delivers the (address of the) table and the size of the parameter description
  */
-void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters
-                                  **params, int *size);
+void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters
+                                 **params, int *size);
 
 #endif
 

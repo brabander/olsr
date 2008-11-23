@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-char *strndup (const char *ptr, size_t size);
+char *strndup(const char *ptr, size_t size);
 
 #endif
 

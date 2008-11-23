@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -41,7 +42,7 @@
 #ifndef _OLSR_SPF_H
 #define _OLSR_SPF_H
 
-void olsr_calculate_routing_table (void);
+void olsr_calculate_routing_table(void);
 
 #endif
 
