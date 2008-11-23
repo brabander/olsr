@@ -160,43 +160,6 @@ mid_chgestruct(struct mid_message *mmsg, const union olsr_message *m)
 
 }
 
-/**
- *Process/rebuild a message of unknown type. Converts the OLSR
- *packet to the internal unknown_message format.
- *@param umsg the unknown_message struct in wich infomation
- *is to be put.
- *@param m the entire OLSR message revieved.
- *@return negative on error
- */
-
-void
-unk_chgestruct(struct unknown_message *umsg, const union olsr_message *m)
-{
-
-  /* Checking if everything is ok */
-  if (!m)
-    return;
-
-  if (olsr_cnf->ip_version == AF_INET) {
-    /* IPv4 */
-    /* address */
-    umsg->originator.v4.s_addr = m->v4.originator;
-    /*seq number */
-    umsg->seqno = ntohs(m->v4.seqno);
-    /* type */
-    umsg->type = m->v4.olsr_msgtype;
-  } else {
-    /* IPv6 */
-    /* address */
-    umsg->originator.v6 = m->v6.originator;
-    /*seq number */
-    umsg->seqno = ntohs(m->v6.seqno);
-    /* type */
-    umsg->type = m->v4.olsr_msgtype;
-  }
-
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2

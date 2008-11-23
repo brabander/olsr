@@ -277,7 +277,8 @@ olsr_init_tables(void)
  *Check if a message is to be forwarded and forward
  *it if necessary.
  *
- *@param m the OLSR message recieved
+ *@param m the OLSR message to be forwarded
+ *@param neighbour we received message from
  *
  *@returns positive if forwarded
  */
@@ -323,9 +324,8 @@ olsr_forward_message(union olsr_message *m, union olsr_ip_addr *from_addr)
     return 0;
   }
 
-  /* check if we already forwarded this message */
   if (olsr_message_is_duplicate(m, OLSR_TRUE)) {
-    return 0;                   /* it's a duplicate, forget about it */
+    return 0;
   }
 
   /* Treat TTL hopcnt */

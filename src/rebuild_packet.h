@@ -47,8 +47,6 @@
 
 void mid_chgestruct(struct mid_message *, const union olsr_message *);
 
-void unk_chgestruct(struct unknown_message *, const union olsr_message *);
-
 void hello_chgestruct(struct hello_message *, const union olsr_message *);
 
 #endif

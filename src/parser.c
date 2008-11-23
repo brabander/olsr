@@ -250,12 +250,12 @@ void
 parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip_addr *from_addr)
 {
   union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
-  struct unknown_message unkpacket;
+  int count;
   int msgsize;
-  int processed;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
-  int count = size - ((char *)m - (char *)olsr);
+
+  count = size - ((char *)m - (char *)olsr);
 
   if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
     return;
@@ -303,7 +303,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 
   for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
 
-    processed = 0;
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
       break;
 
@@ -322,34 +321,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!", olsr_ip_to_string(&buf, from_addr));
       break;
     }
-#if 0
-    /*
-     * Sven-Ola: This code leads to flooding our meshes with invalid /
-     * overdue messages if lq_fish is enabled (which is true since 2005)
-     * because there was no "do not forward"-check in olsr.c. If a message
-     * (yes: ttl=0 is invalid) is received, we should say: Welcome message,
-     * let us evaluate! But: if TTL < 2 or TTL + hopcount is higher than
-     * plausible, we should not forward. See olsr.c:olsr_forward_message()
-     */
-
-    /* Treat TTL hopcnt */
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0) {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n", m->v4.olsr_msgtype,
-                    olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    } else {
-      /* IPv6 */
-      if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0) {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n", m->v4.olsr_msgtype, olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    }
-#endif
 
     /*RFC 3626 section 3.4:
      *  2    If the time to live of the message is less than or equal to
@@ -371,35 +342,29 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 #endif
       continue;
     }
-    //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
 
     /* check for message duplicates */
-    if (!olsr_message_is_duplicate(m, OLSR_FALSE)) {
-      processed = 0;
-      for (entry = parse_functions; entry != NULL; entry = entry->next) {
-        /* Should be the same for IPv4 and IPv6 */
+    if (olsr_message_is_duplicate(m, OLSR_FALSE))
+      continue;
 
-        /* Promiscuous or exact match */
-        if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-          entry->function(m, in_if, from_addr);
-          processed = 1;
-        }
+    entry = parse_functions;
+    while (entry) {
+      /* Should be the same for IPv4 and IPv6 */
+
+      /* Promiscuous or exact match */
+      if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
+        entry->function(m, in_if, from_addr);
       }
+      entry = entry->next;
     }
-    /* UNKNOWN PACKETTYPE */
-    if (processed == 0) {
-      struct ipaddr_str buf;
-      unk_chgestruct(&unkpacket, m);
 
-      OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n", m->v4.olsr_msgtype, size,
-                  olsr_ip_to_string(&buf, &unkpacket.originator));
-
-      /* Cancel loop here, otherwise olsrd just hangs forever at this point */
+    switch (olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgtype : m->v6.olsr_msgtype) {
+    case HELLO_MESSAGE:
+    case LQ_HELLO_MESSAGE:
       break;
+    default:
+      olsr_forward_message(m, from_addr);
     }
-
-    /* now call function to check for forwarding */
-    olsr_forward_message(m, from_addr);
   }                             /* for olsr_msg */
 }
 
@@ -454,8 +419,8 @@ olsr_input(int fd)
     }
 
 #ifdef DEBUG
-    OLSR_PRINTF(5, "Recieved a packet from %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)
-                                                                    &((struct sockaddr_in *)&from)->sin_addr.s_addr));
+    OLSR_PRINTF(5, "Recieved a packet from %s\n",
+                olsr_ip_to_string(&buf, (union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
 #endif
 
     if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof(struct sockaddr_in)))
