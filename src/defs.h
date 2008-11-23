@@ -51,7 +51,7 @@ extern const char build_host[];
 
 #ifndef OLSRD_GLOBAL_CONF_FILE
 #define OLSRD_CONF_FILE_NAME	"olsrd.conf"
-#define OLSRD_GLOBAL_CONF_FILE	"/etc/" OLSRD_CONF_FILE_NAME
+#define OLSRD_GLOBAL_CONF_FILE	ETCDIR "/" OLSRD_CONF_FILE_NAME
 #endif
 
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
