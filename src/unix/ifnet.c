@@ -300,7 +300,7 @@ chk_if_changed(struct olsr_if *iface)
     OLSR_PRINTF(3, "\tNetmask:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr));
 #endif
 
-    if (ip4equal(&ifp->int_netmask.sin_addr, &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr)) {
+    if (!ip4equal(&ifp->int_netmask.sin_addr, &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr)) {
       /* New address */
       OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
