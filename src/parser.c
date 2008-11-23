@@ -387,6 +387,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
                   m->v4.olsr_msgtype,
                   size,
                   olsr_ip_to_string(&buf, &originator));
+      /* forward the unknown package if necessary */
+      olsr_forward_message(m, from_addr);
 
       /* Cancel loop here, otherwise olsrd just hangs forever at this point */
       break;
