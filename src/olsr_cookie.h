@@ -93,8 +93,8 @@ extern void olsr_free_cookie(struct olsr_cookie_info *);
 extern void olsr_delete_all_cookies(void);
 extern char *olsr_cookie_name(olsr_cookie_t);
 extern void olsr_cookie_set_memory_size(struct olsr_cookie_info *, size_t);
-extern void olsr_cookie_set_memclear(struct olsr_cookie_info *, olsr_bool);
-extern void olsr_cookie_set_mempoison(struct olsr_cookie_info *, olsr_bool);
+extern void olsr_cookie_set_memory_clear(struct olsr_cookie_info *, olsr_bool);
+extern void olsr_cookie_set_memory_poison(struct olsr_cookie_info *, olsr_bool);
 extern void olsr_cookie_usage_incr(olsr_cookie_t);
 extern void olsr_cookie_usage_decr(olsr_cookie_t);
 
