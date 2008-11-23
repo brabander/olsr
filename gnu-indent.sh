@@ -16,7 +16,7 @@ test -x $PWD/${0##*/} || {
 Warning: about to change all files below current working dir
 $PWD
 ************************************************************
-Proceeed (y/N)
+Proceed (y/N)
 EOF
   read l
   test "y" = "$l" || exit 1
@@ -24,5 +24,13 @@ EOF
 
 sed -i 's/Andreas T.\{1,6\}nnesen/Andreas Tonnesen/g;s/Andreas Tønnesen/Andreas Tonnesen/g;s/Andreas TÃ¸nmnesen/Andreas Tonnesen/' $(find -type f -not -path "*/.hg*" -not -name ${0##*/})
 sed -i 's///g;s/[	 ]\+$//' $(find -name "*.[ch]" -not -path "*/.hg*")
-indent -sob -nhnl -nut $(find -name "*.[ch]" -not -path "*/.hg*")
+
+addon=
+test "--cmp" = "$1" && {
+  # Note: --swallow-optional-blank-lines --ignore-newlines
+  #       to compare two manually formatted source trees.
+  addon=--swallow-optional-blank-lines --ignore-newlines
+}
+indent $(cat ${0%/*}/src/.indent.pro) $addon $(find -name "*.[ch]" -not -path "*/.hg*")
+
 rm $(find -name "*~" -not -path "*/.hg*")
