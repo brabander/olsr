@@ -136,10 +136,6 @@ olsr_message_is_duplicate(union olsr_message *m, olsr_bool update)
 
   diff = (int)seqnr - (int)(entry->seqnr);
 
-  printf ("sot-dup2: diff=%d, e.seqnr=%d, e.valid=%d, e.array=%x, e.toolow=%d\n",
-          diff, entry->seqnr, (int) entry->valid_until, entry->array,
-          entry->too_low_counter);
-
   // update timestamp
   if (valid_until > entry->valid_until) {
     entry->valid_until = valid_until;
