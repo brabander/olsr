@@ -305,35 +305,6 @@ olsr_init_timers(void)
   timers_running = 0;
 }
 
-/*
- * olsr_get_next_list_entry
- *
- * Get the next list node in a hash bucket.
- * The listnode of the timer in may be subject to getting removed from
- * this timer bucket in olsr_change_timer() and olsr_stop_timer(), which
- * means that we can miss our walking context.
- * By caching the previous node we can figure out if the current node
- * has been removed from the hash bucket and compute the next node.
- */
-static struct list_node *
-olsr_get_next_list_entry(struct list_node **prev_node, struct list_node *current_node)
-{
-  if ((*prev_node)->next == current_node) {
-
-    /*
-     * No change in the list, normal traversal, update the previous node.
-     */
-    *prev_node = current_node;
-    return (current_node->next);
-  } else {
-
-    /*
-     * List change. Recompute the walking context.
-     */
-    return ((*prev_node)->next);
-  }
-}
-
 /**
  * Walk through the timer list and check if any timer is ready to fire.
  * Callback the provided function with the context pointer.
@@ -342,7 +313,8 @@ void
 olsr_walk_timers(clock_t * last_run)
 {
   static struct timer_entry *timer;
-  struct list_node *timer_head_node, *timer_walk_node, *timer_walk_prev_node;
+  struct list_node *timer_head_node;
+  struct list_node *timer_node, tmp_head_node;
   unsigned int timers_walked, timers_fired;
   unsigned int total_timers_walked, total_timers_fired;
   unsigned int wheel_slot_walks = 0;
@@ -363,14 +335,21 @@ olsr_walk_timers(clock_t * last_run)
 
     /* Get the hash slot for this clocktick */
     timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
-    timer_walk_prev_node = timer_head_node;
 
     /* Walk all entries hanging off this hash bucket */
-    for (timer_walk_node = timer_head_node->next; timer_walk_node != timer_head_node;   /* circular list */
-         timer_walk_node = olsr_get_next_list_entry(&timer_walk_prev_node, timer_walk_node)) {
+    list_head_init(&tmp_head_node);
+    for (timer_node = timer_head_node->next;
+         timer_node != timer_head_node;   /* circular list */
+         timer_node = timer_head_node->next) {
 
-      timer = list2timer(timer_walk_node);
-
+      /*
+       * Dequeue and insert to a temporary list.
+       * We do this to avoid loosing our walking context when
+       * multiple timers fire.
+       */
+      list_remove(timer_node);
+      list_add_after(&tmp_head_node, timer_node);
+      timer = list2timer(timer_node);
       timers_walked++;
 
       /* Ready to fire ? */
@@ -411,6 +390,12 @@ olsr_walk_timers(clock_t * last_run)
         timers_fired++;
       }
     }
+
+    /*
+     * Now mount the temporary list back to the old bucket.
+     */
+    list_add_after(timer_head_node, &tmp_head_node);
+    list_remove(&tmp_head_node);
 
     /* Increment the time slot and wheel slot walk iteration */
     (*last_run)++;
