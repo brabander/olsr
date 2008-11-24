@@ -455,6 +455,7 @@ walk_timers(clock_t * last_run)
 {
   unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;
+  struct list_node *timer_node, tmp_head_node;
 
   /*
    * Check the required wheel slots since the last time a timer walk was invoked,
@@ -470,7 +471,19 @@ walk_timers(clock_t * last_run)
     struct timer_entry *timer;
 
     /* Walk all entries hanging off this hash bucket */
-    FOR_ALL_TIMER_ENTRIES(timer_head_node, timer) {
+    list_head_init(&tmp_head_node);
+    for (timer_node = timer_head_node->next;
+         timer_node != timer_head_node; /* circular list */
+         timer_node = timer_head_node->next) {
+
+      /*
+       * Dequeue and insert to a temporary list.
+       * We do this to avoid loosing our walking context when
+       * multiple timers fire.
+       */
+      list_remove(timer_node);
+      list_add_after(&tmp_head_node, timer_node);
+      timer = list2timer(timer_node);
       timers_walked++;
 
       /* Ready to fire ? */
@@ -505,7 +518,13 @@ walk_timers(clock_t * last_run)
 
 	timers_fired++;
       }
-    } FOR_ALL_TIMER_ENTRIES_END(timer_head_node, timer);
+    }
+
+    /*
+     * Now mount the temporary list back to the old bucket.
+     */
+    list_add_after(timer_head_node, &tmp_head_node);
+    list_remove(&tmp_head_node);
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
