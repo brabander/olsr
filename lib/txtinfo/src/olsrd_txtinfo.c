@@ -87,7 +87,7 @@ struct ipc_conn {
     char requ[256];
 };
 
-static int ipc_socket = -1;
+static int listen_socket = -1;
 
 
 static void conn_destroy(struct ipc_conn *);
@@ -132,7 +132,7 @@ static int ipc_print_mid(struct ipc_conn *);
  */
 void olsr_plugin_exit(void)
 {
-    CLOSE(ipc_socket);
+    CLOSE(listen_socket);
 }
 
 /**
@@ -149,25 +149,25 @@ olsrd_plugin_init(void)
     socklen_t addrlen;
 
     /* Init ipc socket */
-    ipc_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
-    if (ipc_socket == -1) {
+    listen_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
+    if (listen_socket == -1) {
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) socket()=%s\n", strerror(errno));
 #endif
         return 0;
     }
-    if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
+    if (setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
 #endif
-        CLOSE(ipc_socket);
+        CLOSE(listen_socket);
         return 0;
     }
 
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
-    if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
+    if (setsockopt(listen_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
         perror("SO_REUSEADDR failed");
-        CLOSE(ipc_socket);
+        CLOSE(listen_socket);
         return 0;
     }
 #endif
@@ -196,25 +196,25 @@ olsrd_plugin_init(void)
     }
       
     /* bind the socket to the port number */
-    if (bind(ipc_socket, (struct sockaddr *)&sst, addrlen) == -1) {
+    if (bind(listen_socket, (struct sockaddr *)&sst, addrlen) == -1) {
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) bind()=%s\n", strerror(errno));
 #endif
-        CLOSE(ipc_socket);
+        CLOSE(listen_socket);
         return 0;
     }
 
     /* show that we are willing to listen */
-    if (listen(ipc_socket, 1) == -1) {
+    if (listen(listen_socket, 1) == -1) {
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) listen()=%s\n", strerror(errno));
 #endif
-        CLOSE(ipc_socket);
+        CLOSE(listen_socket);
         return 0;
     }
 
     /* Register with olsrd */
-    add_olsr_socket(ipc_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
+    add_olsr_socket(listen_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
   
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) listening on port %d\n",ipc_port);
@@ -242,9 +242,9 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     struct sockaddr_storage pin;
     char addr[INET6_ADDRSTRLEN];
     socklen_t addrlen = sizeof(pin);
-    int ipc_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
+    int http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
 
-    if (ipc_connection == -1) {
+    if (http_connection == -1) {
         /* this may well happen if the other side immediately closes the connection. */
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) accept()=%s\n", strerror(errno));
@@ -259,7 +259,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
         }
         if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(ipc_connection);
+            CLOSE(http_connection);
             return;
         }
     } else {
@@ -271,7 +271,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
         if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
            !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(ipc_connection);
+            CLOSE(http_connection);
             return;
         }
     }
@@ -280,22 +280,22 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 #endif
     
     /* make the fd non-blocking */
-    if (set_nonblocking(ipc_connection) < 0) {
-        CLOSE(ipc_connection);
+    if (set_nonblocking(http_connection) < 0) {
+        CLOSE(http_connection);
         return;
     }
 
     conn = malloc(sizeof(*conn));
     if (conn == NULL) {
         olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
-        CLOSE(ipc_connection);
+        CLOSE(http_connection);
         return;
     }
     conn->requlen = 0;
     *conn->requ = '\0';
     conn->respstart = 0;
     abuf_init(&conn->resp, 1000);
-    add_olsr_socket(ipc_connection, NULL, &ipc_http, conn, SP_IMM_READ);
+    add_olsr_socket(http_connection, NULL, &ipc_http, conn, SP_IMM_READ);
 }
 
 static void ipc_http_read_dummy(int fd, struct ipc_conn *conn)
