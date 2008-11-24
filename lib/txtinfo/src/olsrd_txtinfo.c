@@ -225,7 +225,7 @@ olsrd_plugin_init(void)
 /* destroy the connection */
 static void conn_destroy(struct ipc_conn *conn)
 {
-    free(conn->resp.buf);
+    abuf_free(&conn->resp);
     free(conn);
 }
 
