@@ -8,3 +8,4 @@
 --declaration-comment-column40
 --line-length132
 --procnames-start-lines
+--no-tabs
