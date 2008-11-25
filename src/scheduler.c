@@ -473,7 +473,7 @@ walk_timers(clock_t * last_run)
     /* Walk all entries hanging off this hash bucket */
     list_head_init(&tmp_head_node);
     for (timer_node = timer_head_node->next;
-         timer_node != timer_head_node; /* circular list */
+         !list_is_empty(timer_head_node);
          timer_node = timer_head_node->next) {
 
       /*
@@ -521,10 +521,9 @@ walk_timers(clock_t * last_run)
     }
 
     /*
-     * Now mount the temporary list back to the old bucket.
+     * Now merge the temporary list back to the old bucket.
      */
-    list_add_after(timer_head_node, &tmp_head_node);
-    list_remove(&tmp_head_node);
+    list_merge(timer_head_node, &tmp_head_node);
 
     /* keep some statistics */
     total_timers_walked += timers_walked;
@@ -655,6 +654,13 @@ olsr_start_timer(unsigned int rel_time,
   assert(cookie != 0); /* we want timer cookies everywhere */
 
   timer = olsr_cookie_malloc(timer_mem_cookie);
+
+  /*
+   * Compute random numbers only once.
+   */
+  if (!timer->timer_random) {
+    timer->timer_random = random();
+  }
 
   /* Fill entry */
   timer->timer_clock = calc_jitter(rel_time, jitter_pct, timer->timer_random);
