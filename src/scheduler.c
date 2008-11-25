@@ -339,7 +339,7 @@ olsr_walk_timers(clock_t * last_run)
     /* Walk all entries hanging off this hash bucket */
     list_head_init(&tmp_head_node);
     for (timer_node = timer_head_node->next;
-         timer_node != timer_head_node;   /* circular list */
+         !list_is_empty(timer_head_node);
          timer_node = timer_head_node->next) {
 
       /*
@@ -392,10 +392,9 @@ olsr_walk_timers(clock_t * last_run)
     }
 
     /*
-     * Now mount the temporary list back to the old bucket.
+     * Now merge the temporary list back to the old bucket.
      */
-    list_add_after(timer_head_node, &tmp_head_node);
-    list_remove(&tmp_head_node);
+    list_merge(timer_head_node, &tmp_head_node);
 
     /* Increment the time slot and wheel slot walk iteration */
     (*last_run)++;

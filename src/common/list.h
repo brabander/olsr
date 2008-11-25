@@ -61,6 +61,21 @@ void list_add_after(struct list_node *, struct list_node *);
 void list_remove(struct list_node *);
 
 /*
+ * Merge elements of list_head2 at the end of list_head1.
+ * list_head2 will be left empty.
+ */
+static inline void list_merge(struct list_node *list_head1, struct list_node *list_head2) \
+{ \
+  if (!list_is_empty(list_head2)) {  \
+     list_head1->next->prev = list_head2->prev; \
+     list_head2->prev->next = list_head1->next; \
+     list_head1->next = list_head2->next; \
+     list_head2->next->prev = list_head1; \
+     list_head2->next = list_head2->prev = list_head2; \
+  } \
+}
+
+/*
  * Macro to define an inline function to map from a list_node offset back to the
  * base of the datastructure. That way you save an extra data pointer.
  */
