@@ -53,15 +53,23 @@ struct list_node {
 };
 
 /* init a circular list  */
-static INLINE void list_head_init(struct list_node *node) { node->prev = node->next = node; }
-/* clear a node  */
-static INLINE void list_node_init(struct list_node *node) { node->prev = node->next = NULL; }
-/* test if a node is on a list */
-static INLINE int list_node_on_list(const struct list_node *node) { return node->prev != NULL || node->next != NULL; }
-/* test if a list is empty */
-static INLINE int list_is_empty(const struct list_node *node) { return node->prev == node && node->next == node; }
+static INLINE void list_head_init(struct list_node *node) \
+{ node->prev = node->next = node; }
 
-static inline void list_add_after(struct list_node *pos_node, struct list_node *new_node) { \
+/* clear a node  */
+static INLINE void list_node_init(struct list_node *node) \
+{ node->prev = node->next = NULL; }
+
+/* test if a node is on a list */
+static INLINE int list_node_on_list(const struct list_node *node) \
+{ return node->prev != NULL || node->next != NULL; }
+
+/* test if a list is empty */
+static INLINE int list_is_empty(const struct list_node *node) \
+{ return node->prev == node && node->next == node; }
+
+/* Insert at the top of the list */
+static INLINE void list_add_after(struct list_node *pos_node, struct list_node *new_node) { \
   new_node->next = pos_node->next; \
   new_node->prev = pos_node; \
  \
@@ -69,7 +77,8 @@ static inline void list_add_after(struct list_node *pos_node, struct list_node *
   pos_node->next = new_node; \
 }
 
-static inline void list_add_before(struct list_node *pos_node, struct list_node *new_node) { \
+/* Insert at the tail of the list */
+static INLINE void list_add_before(struct list_node *pos_node, struct list_node *new_node) { \
   new_node->prev = pos_node->prev; \
   new_node->next = pos_node; \
  \
@@ -77,7 +86,7 @@ static inline void list_add_before(struct list_node *pos_node, struct list_node 
   pos_node->prev = new_node; \
 }
 
-static inline void list_remove(struct list_node *del_node) { \
+static INLINE void list_remove(struct list_node *del_node) { \
   del_node->next->prev = del_node->prev; \
   del_node->prev->next = del_node->next; \
  \
@@ -88,7 +97,7 @@ static inline void list_remove(struct list_node *del_node) { \
  * Merge elements of list_head2 at the end of list_head1.
  * list_head2 will be left empty.
  */
-static inline void list_merge(struct list_node *list_head1, struct list_node *list_head2) \
+static INLINE void list_merge(struct list_node *list_head1, struct list_node *list_head2) \
 { \
   if (!list_is_empty(list_head2)) {  \
      list_head1->next->prev = list_head2->prev; \
