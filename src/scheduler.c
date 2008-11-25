@@ -455,7 +455,6 @@ walk_timers(clock_t * last_run)
 {
   unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;
-  struct list_node *timer_node, tmp_head_node;
 
   /*
    * Check the required wheel slots since the last time a timer walk was invoked,
@@ -463,18 +462,21 @@ walk_timers(clock_t * last_run)
    * The latter is meant as a safety belt if the scheduler falls behind.
    */
   while ((*last_run <= now_times) && (wheel_slot_walks < TIMER_WHEEL_SLOTS)) {
+    struct list_node tmp_head_node;
     /* keep some statistics */
     unsigned int timers_walked = 0, timers_fired = 0;
 
     /* Get the hash slot for this clocktick */
     struct list_node * const timer_head_node = &timer_wheel[*last_run & TIMER_WHEEL_MASK];
-    struct timer_entry *timer;
 
-    /* Walk all entries hanging off this hash bucket */
+    /* Walk all entries hanging off this hash bucket. We treat this basically as a stack
+     * so that we always know if and where the next element is.
+     */
     list_head_init(&tmp_head_node);
-    for (timer_node = timer_head_node->next;
-         !list_is_empty(timer_head_node);
-         timer_node = timer_head_node->next) {
+    while (!list_is_empty(timer_head_node)) {
+      /* the top element */
+      struct list_node * const timer_node = timer_head_node->next;
+      struct timer_entry * const timer = list2timer(timer_node);
 
       /*
        * Dequeue and insert to a temporary list.
@@ -483,7 +485,6 @@ walk_timers(clock_t * last_run)
        */
       list_remove(timer_node);
       list_add_after(&tmp_head_node, timer_node);
-      timer = list2timer(timer_node);
       timers_walked++;
 
       /* Ready to fire ? */
