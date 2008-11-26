@@ -98,7 +98,7 @@ olsr_message_is_duplicate(union olsr_message *m)
   void *mainIp;
   clock_t valid_until;
   struct ipaddr_str buf;
-  u_int16_t seqnr;
+  olsr_u16_t seqnr;
   void *ip;
 
   if (olsr_cnf->ip_version == AF_INET) {
