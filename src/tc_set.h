@@ -152,7 +152,7 @@ void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
 
 /* tc msg input parser */
-void olsr_input_tc(union olsr_message *, struct interface *,
+olsr_bool olsr_input_tc(union olsr_message *, struct interface *,
 		   union olsr_ip_addr *from);
 
 /* tc_entry manipulation */

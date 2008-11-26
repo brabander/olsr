@@ -312,9 +312,14 @@ lookup_mpr_status(const struct hello_message *message,
 void
 olsr_init_package_process(void)
 {
-  olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
-  olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
-  olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
+  if (olsr_cnf->lq_level == 0) {
+    olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
+    olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
+  }
+  else {
+    olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
+    olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
+  }
   olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE);
   olsr_parser_add_function(&olsr_input_mid, MID_MESSAGE);
   olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE);
@@ -441,17 +446,20 @@ hello_tap(struct hello_message *message,
   olsr_free_hello_packet(message);
 }
 
-void olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
+olsr_bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
 {
   struct hello_message hello;
 
   if (msg == NULL) {
-    return;
+    return OLSR_FALSE;
   }
   if (deserialize_hello(&hello, msg) != 0) {
-    return;
+    return OLSR_FALSE;
   }
   hello_tap(&hello, inif, from);
+
+  /* Do not forward hello messages */
+  return OLSR_FALSE;
 }
 
 /*

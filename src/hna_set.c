@@ -239,7 +239,7 @@ olsr_print_hna_set(void)
  * Process incoming HNA message.
  * Forwards the message if that is to be done.
  */
-void
+olsr_bool
 olsr_input_hna(union olsr_message *msg,
                struct interface *in_if __attribute__((unused)),
                union olsr_ip_addr *from_addr)
@@ -251,12 +251,12 @@ olsr_input_hna(union olsr_message *msg,
   int hnasize;
 
   if (!(curr = olsr_parse_msg_hdr(msg, &msg_hdr))) {
-    return;
+    return OLSR_FALSE;
   }
 
   /* We are only interested in HNA message types. */
   if (msg_hdr.type != HNA_MESSAGE) {
-    return;
+    return OLSR_FALSE;
   }
 
   hnasize = msg_hdr.size - (olsr_cnf->ip_version == AF_INET ?
@@ -268,12 +268,12 @@ olsr_input_hna(union olsr_message *msg,
                 (unsigned long)(olsr_cnf->ip_version == AF_INET ?
                                 offsetof(struct olsrmsg, message) :
                                 offsetof(struct olsrmsg6, message)));
-    return;
+    return OLSR_FALSE;
   }
 
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
     OLSR_PRINTF(0, "HNA message size %d illegal!\n", msg_hdr.size);
-    return;
+    return OLSR_FALSE;
   }
 
   /*
@@ -284,7 +284,7 @@ olsr_input_hna(union olsr_message *msg,
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n",
                 olsr_ip_to_string(&buf, from_addr));
-    return;
+    return OLSR_FALSE;
   }
 
   OLSR_PRINTF(1, "Processing HNA from %s, seq 0x%04x\n",
@@ -307,6 +307,8 @@ olsr_input_hna(union olsr_message *msg,
       olsr_update_hna_entry(&msg_hdr.originator, &prefix, msg_hdr.vtime);
     }
   }
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /*

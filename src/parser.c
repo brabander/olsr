@@ -248,7 +248,6 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
 {
   union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
   int msgsize;
-  int processed;
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
   int count = size - ((char *)m - (char *)olsr);
@@ -287,7 +286,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   }
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {
-    processed = 0;
+    olsr_bool forward = OLSR_TRUE;
+    
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
       break;
     }
@@ -305,38 +305,6 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       olsr_ip_to_string(&buf, from_addr));
       break;
     }
-
-#if 0
-    /*
-     * Sven-Ola: This code leads to flooding our meshes with invalid /
-     * overdue messages if lq_fish is enabled (which is true since 2005)
-     * because there was no "do not forward"-check in olsr.c. If a message
-     * (yes: ttl=0 is invalid) is received, we should say: Welcome message,
-     * let us evaluate! But: if TTL < 2 or TTL + hopcount is higher than
-     * plausible, we should not forward. See olsr.c:olsr_forward_message()
-     */
-
-    /* Treat TTL hopcnt */
-    if(olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      if (m->v4.ttl <= 0 && olsr_cnf->lq_fish == 0) {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from neigh %s with TTL 0\n",
-                    m->v4.olsr_msgtype,
-                    olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    } else {
-      /* IPv6 */
-      if (m->v6.ttl <= 0 && olsr_cnf->lq_fish == 0) {
-        struct ipaddr_str buf;
-        OLSR_PRINTF(2, "Dropping packet type %d from %s with TTL 0\n",
-                    m->v4.olsr_msgtype,
-                    olsr_ip_to_string(&buf, from_addr));
-        continue;
-      }
-    }
-#endif
 
     /*RFC 3626 section 3.4:
      *  2    If the time to live of the message is less than or equal to
@@ -357,45 +325,18 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       continue;
     }
 
-    //printf("MESSAGETYPE: %d\n", m->v4.olsr_msgtype);
-
-    /* check for message duplicates */
-    if (!olsr_message_is_duplicate(m, false)) {
-      processed = 0;
-      for (entry = parse_functions; entry != NULL; entry = entry->next) {
-        /* Should be the same for IPv4 and IPv6 */
-
-        /* Promiscuous or exact match */
-        if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-          entry->function(m, in_if, from_addr);
-          processed = 1;
-        }
+    for (entry = parse_functions; entry != NULL; entry = entry->next) {
+      /* Should be the same for IPv4 and IPv6 */
+      /* Promiscuous or exact match */
+      if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
+        if (!entry->function(m, in_if, from_addr))
+          forward = OLSR_FALSE;
       }
     }
-    /* UNKNOWN PACKETTYPE */
-    if (processed == 0) {
-      union olsr_ip_addr originator;
-      //struct unknown_message unkpacket;
-      struct ipaddr_str buf;
-      if (olsr_cnf->ip_version == AF_INET) {
-        originator.v4.s_addr = m->v4.originator;
-      } else {
-        originator.v6 = m->v6.originator;
-      }
 
-      OLSR_PRINTF(3, "Unknown type: %d, size %d, from %s\n",
-                  m->v4.olsr_msgtype,
-                  size,
-                  olsr_ip_to_string(&buf, &originator));
-      /* forward the unknown package if necessary */
+    if (forward) {
       olsr_forward_message(m, from_addr);
-
-      /* Cancel loop here, otherwise olsrd just hangs forever at this point */
-      break;
     }
-
-    /* now call function to check for forwarding */
-    olsr_forward_message(m, from_addr);
   } /* for olsr_msg */
 }
 

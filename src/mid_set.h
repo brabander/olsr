@@ -81,7 +81,7 @@ extern struct avl_tree mid_tree;
 struct mid_alias;
 
 /* MID msg input parser */
-void olsr_input_mid(union olsr_message *, struct interface *,
+olsr_bool olsr_input_mid(union olsr_message *, struct interface *,
                     union olsr_ip_addr *);
 
 void olsr_init_mid_set(void);

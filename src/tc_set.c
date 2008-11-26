@@ -742,7 +742,7 @@ olsr_calculate_tc_border(olsr_u8_t lower_border,
  * as every call to pkt_get increases the packet offset and
  * hence the spot we are looking at.
  */
-void
+olsr_bool
 olsr_input_tc(union olsr_message *msg,
 	      struct interface *input_if __attribute__ ((unused)),
 	      union olsr_ip_addr *from_addr)
@@ -760,13 +760,13 @@ olsr_input_tc(union olsr_message *msg,
 
   curr = (void *)msg;
   if (!msg) {
-    return;
+    return OLSR_FALSE;
   }
 
   /* We are only interested in TC message types. */
   pkt_get_u8(&curr, &type);
   if ((type != LQ_TC_MESSAGE) && (type != TC_MESSAGE)) {
-    return;
+    return OLSR_FALSE;
   }
 
   pkt_get_reltime(&curr, &vtime);
@@ -796,7 +796,7 @@ olsr_input_tc(union olsr_message *msg,
        * Ignore already seen seq/ansn values (small window for mesh memory)
        */
       if ((tc->msg_seq == msg_seq) || (tc->ignored++ < 32)) {
-	return;
+	return OLSR_FALSE;
       }
 
       OLSR_PRINTF(1, "Ignored to much LQTC's for %s, restarting\n",
@@ -820,7 +820,7 @@ olsr_input_tc(union olsr_message *msg,
 	tc->err_seq_valid = OLSR_TRUE;
       }
       if (tc->err_seq == msg_seq) {
-	return;
+	return OLSR_FALSE;
       }
 
       OLSR_PRINTF(2, "Detected node restart for %s\n",
@@ -852,7 +852,7 @@ olsr_input_tc(union olsr_message *msg,
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
 		olsr_ip_to_string(&buf, from_addr));
-    return;
+    return OLSR_FALSE;
   }
 
   OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
@@ -906,6 +906,9 @@ olsr_input_tc(union olsr_message *msg,
 		   OLSR_TC_EDGE_GC_JITTER, OLSR_TIMER_ONESHOT,
 		   &olsr_expire_tc_edge_gc, tc, tc_edge_gc_timer_cookie->ci_id);
   }
+
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /*

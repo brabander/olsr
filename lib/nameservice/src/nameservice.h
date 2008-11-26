@@ -125,7 +125,7 @@ void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
-void
+olsr_bool
 olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 /* callback for periodic timer */

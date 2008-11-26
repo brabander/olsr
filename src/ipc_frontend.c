@@ -119,7 +119,7 @@ ipc_input(int);
 static olsr_bool
 ipc_check_allowed_ip(const union olsr_ip_addr *);
 
-static void
+static olsr_bool
 frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 
@@ -255,13 +255,13 @@ ipc_input(int sock)
  *
  *@param olsr the olsr struct representing the packet
  *
- *@return negative on error
+ *@return true for not preventing forwarding
  */
-static void
+static olsr_bool
 frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__((unused)), union olsr_ip_addr *from_addr __attribute__((unused)))
 {
   if (ipc_conn < 0) {
-    return;
+    return OLSR_TRUE;
   }
   if (send(ipc_conn,
 	   (void *)msg,
@@ -270,6 +270,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
     OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
     CLOSE(ipc_conn);
   }
+  return OLSR_TRUE;
 }
 
 

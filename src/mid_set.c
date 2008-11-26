@@ -478,7 +478,7 @@ olsr_print_mid_set(void)
 /**
  * Process an incoming MID message.
  */
-void
+olsr_bool
 olsr_input_mid(union olsr_message *msg,
                struct interface *input_if __attribute__ ((unused)),
                union olsr_ip_addr *from_addr)
@@ -493,13 +493,13 @@ olsr_input_mid(union olsr_message *msg,
 
   curr = (void *)msg;
   if (!msg) {
-    return;
+    return OLSR_FALSE;
   }
 
   /* We are only interested in MID message types. */
   pkt_get_u8(&curr, &type);
   if (type != MID_MESSAGE) {
-    return;
+    return OLSR_FALSE;
   }
 
   pkt_get_reltime(&curr, &vtime);
@@ -513,7 +513,7 @@ olsr_input_mid(union olsr_message *msg,
   pkt_get_u16(&curr, &msg_seq);
 
   if (!olsr_validate_address(&originator)) {
-    return;
+    return OLSR_FALSE;
   }
 
   /*
@@ -524,7 +524,7 @@ olsr_input_mid(union olsr_message *msg,
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n",
 		olsr_ip_to_string(&buf, from_addr));
-    return;
+    return OLSR_FALSE;
   }
 
   OLSR_PRINTF(1, "Processing MID from %s, seq 0x%04x\n",
@@ -548,6 +548,9 @@ olsr_input_mid(union olsr_message *msg,
    * Prune the aliases that did not get refreshed by this advertisment.
    */
   olsr_prune_mid_entries(&originator, msg_seq);
+
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /*

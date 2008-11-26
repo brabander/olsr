@@ -82,7 +82,7 @@ olsr_init_duplicate_set(void)
 }
 
 struct dup_entry *
-olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr)
+olsr_create_duplicate_entry(union olsr_ip_addr *ip, olsr_u16_t seqnr)
 {
   struct dup_entry *entry;
   entry = olsr_cookie_malloc(duplicate_mem_cookie);
@@ -93,8 +93,7 @@ olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr)
     entry->seqnr = seqnr;
     entry->too_low_counter = 0;
     entry->avl.key = &entry->ip;
-    entry->forwardedArray = 0;
-    entry->processedArray = 0;
+    entry->array = 0;
   }
   return entry;
 }
@@ -113,23 +112,22 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
 }
 
 int
-olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
+olsr_message_is_duplicate(union olsr_message *m)
 {
   struct dup_entry *entry;
   int diff;
-  void *mainIp;
+  union olsr_ip_addr *mainIp;
   clock_t valid_until;
-  olsr_u32_t *array;
   struct ipaddr_str buf;
   olsr_u16_t seqnr;
-  void *ip;
+  union olsr_ip_addr *ip;
 
   if (olsr_cnf->ip_version == AF_INET) {
     seqnr = ntohs(m->v4.seqno);
-    ip = &m->v4.originator;
+    ip = (union olsr_ip_addr *)&m->v4.originator;
   } else {
     seqnr = ntohs(m->v6.seqno);
-    ip = &m->v6.originator;
+    ip = (union olsr_ip_addr *)&m->v6.originator;
   }
 
   // get main address
@@ -161,7 +159,6 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
     diff -= (1 << 16);
   }
 
-  array = forwarding ? &entry->forwardedArray : &entry->processedArray;
   if (diff < -31) {
     entry->too_low_counter++;
 
@@ -169,7 +166,7 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
     if (entry->too_low_counter > 16) {
       entry->too_low_counter = 0;
       entry->seqnr = seqnr;
-      *array = 1;
+      entry->array = 1;
       return false; /* start with a new sequence number, so NO duplicate */
     }
     OLSR_PRINTF(9, "blocked %x from %s\n", seqnr,
@@ -181,20 +178,20 @@ olsr_message_is_duplicate(union olsr_message *m, bool forwarding)
   if (diff <= 0) {
     olsr_u32_t bitmask = 1 << ((olsr_u32_t) (-diff));
 
-    if (((*array) & bitmask) != 0) {
+    if ((entry->array & bitmask) != 0) {
       OLSR_PRINTF(9, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff,
-          *array, olsr_ip_to_string(&buf, mainIp));
+          entry->array, olsr_ip_to_string(&buf, mainIp));
       return true; /* duplicate ! */
     }
-    *array |= bitmask;
+    entry->array |= bitmask;
     OLSR_PRINTF(9, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
     return false; /* no duplicate */
   } else if (diff < 32) {
-    *array <<= (olsr_u32_t) diff;
+    entry->array <<= (olsr_u32_t) diff;
   } else {
-    *array = 0;
+    entry->array = 0;
   }
-  *array |= 1;
+  entry->array |= 1;
   entry->seqnr = seqnr;
   OLSR_PRINTF(9, "processed %x from %s\n", seqnr,
 	      olsr_ip_to_string(&buf, mainIp));
@@ -220,7 +217,7 @@ olsr_print_duplicate_table(void)
 		ipwidth, olsr_ip_to_string(&addrbuf,
 					   (union olsr_ip_addr *)(entry->avl.
 								  key)),
-		entry->processedArray, olsr_clock_string(entry->valid_until));
+		entry->array, olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 #endif
 }
