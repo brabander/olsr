@@ -85,7 +85,12 @@ extern FILE *debug_handle;
 #define MIN(x,y)	((x) < (y) ? (x) : (y))
 #endif
 
+/* we actually want the below #define. But to easily check for "errors" because of
+ * too large inline functions, we want to have just "inline" there.
+ */
+#ifndef INLINE
 #define INLINE inline __attribute__((always_inline))
+#endif 
 
 #if defined NODEBUG
 #define USED_ONLY_FOR_DEBUG __attribute__((unused))
