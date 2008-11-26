@@ -78,7 +78,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
     *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+    *size = ARRAYSIZE(plugin_parameters);
 }
 
 typedef struct
@@ -184,7 +184,7 @@ int olsrd_plugin_init(void)
 			{ 0x6, 0, 0, sizeof(arprefresh_buf) },
 			{ 0x6, 0, 0, 0x00000000 }
 		};
-		filter.len = sizeof(BPF_code) / sizeof(BPF_code[0]);
+		filter.len = ARRAYSIZE(BPF_code);
 		filter.filter = BPF_code;
 		if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP))) &&
 		    0 <= set_nonblocking(arprefresh_sockfd) &&

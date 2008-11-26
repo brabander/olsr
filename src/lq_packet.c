@@ -170,7 +170,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   if (olsr_cnf->lq_fish > 0)
   {
-    if (outif->ttl_index >= (int)(sizeof(ttl_list) / sizeof(ttl_list[0])))
+    if (outif->ttl_index >= (int)(ARRAYSIZE(ttl_list)))
       outif->ttl_index = 0;
     
     lq_tc->comm.ttl = (0 <= outif->ttl_index ? ttl_list[outif->ttl_index] : MAX_TTL);
@@ -370,7 +370,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   if (0 < net_output_pending(outif)) {
     for (i = 0; i <= MAX_NEIGH; i++) {
       unsigned int j;
-      for(j = 0; j < sizeof(LINK_ORDER) / sizeof(LINK_ORDER[0]); j++) {
+      for(j = 0; j < ARRAYSIZE(LINK_ORDER); j++) {
         is_first = OLSR_TRUE;
         for (neigh = lq_hello->neigh; neigh != NULL; neigh = neigh->next) {
           if (0 == i && 0 == j) expected_size += olsr_cnf->ipsize + 4;
@@ -397,7 +397,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   for (i = 0; i <= MAX_NEIGH; i++) 
     {
       unsigned int j;
-      for(j = 0; j < sizeof(LINK_ORDER) / sizeof(LINK_ORDER[0]); j++)
+      for(j = 0; j < ARRAYSIZE(LINK_ORDER); j++)
         {
           is_first = OLSR_TRUE;
 

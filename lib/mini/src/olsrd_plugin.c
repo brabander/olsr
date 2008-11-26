@@ -36,13 +36,14 @@
  */
 
 
-#include <stdio.h>
-#include <string.h>
+#include "olsrd_plugin.h"
+#include "olsr.h"
+#include "defs.h"
 
 #include "../../../src/olsrd_plugin.h"
 
-#include "olsrd_plugin.h"
-#include "olsr.h"
+#include <stdio.h>
+#include <string.h>
 
 #define PLUGIN_INTERFACE_VERSION 5
 
@@ -78,7 +79,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
     *params = plugin_parameters;
-    *size = sizeof(plugin_parameters)/sizeof(*plugin_parameters);
+    *size = ARRAYSIZE(plugin_parameters);
 }
 
 

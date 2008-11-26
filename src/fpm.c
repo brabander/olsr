@@ -38,9 +38,11 @@
  *
  */
 
+#include "fpm.h"
+#include "defs.h"
+
 #include <stdio.h>
 #include <assert.h>
-#include "fpm.h"
 
 #ifdef USE_FPM
 
@@ -164,7 +166,7 @@ const char *fpmtoa(fpm a)
   static int idx = 0;
   static char ret[4][20];
 
-  idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
+  idx = (idx + 1) % (ARRAYSIZE(ret));
   snprintf(ret[idx], sizeof(ret[0]), "%d.%03d", (sfpm)a >> FPM_BIT,
     (1000 * ((sfpm)(a) & FPM_MSK) + (FPM_NUM / 2)) >> FPM_BIT);
   return ret[idx];
@@ -189,7 +191,7 @@ const char *fpmtoa(float a)
   static int idx = 0;
   static char ret[4][20];
 
-  idx = (idx + 1) % (sizeof(ret) / sizeof(ret[0]));
+  idx = (idx + 1) % (ARRAYSIZE(ret));
   snprintf(ret[idx], sizeof(ret[0]), "%.3f", a);
   return ret[idx];
 }

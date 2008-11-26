@@ -60,7 +60,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 void olsrd_get_plugin_parameters (const struct olsrd_plugin_parameters **params,
 				  int *size) {
   *params = plugin_parameters;
-  *size = sizeof plugin_parameters / sizeof *plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 static int set_redistribute (const char *value, 
