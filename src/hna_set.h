@@ -94,7 +94,7 @@ void olsr_update_hna_entry(const union olsr_ip_addr *, const union olsr_ip_addr 
 
 void olsr_print_hna_set(void);
 
-void olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
+olsr_bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif
 

@@ -330,7 +330,7 @@ olsr_print_hna_set(void)
  *@return 1 on success
  */
 
-void
+olsr_bool
 olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
 
@@ -350,7 +350,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   /* Check if everyting is ok */
   if (!m) {
-    return;
+    return OLSR_FALSE;
   }
   curr = (const olsr_u8_t *)m;
 
@@ -358,7 +358,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   pkt_get_u8(&curr, &olsr_msgtype);
   if (olsr_msgtype != HNA_MESSAGE) {
     OLSR_PRINTF(0, "not a HNA message!\n");
-    return;
+    return OLSR_FALSE;
   }
   /* Get vtime */
   pkt_get_reltime(&curr, &vtime);
@@ -371,11 +371,11 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     OLSR_PRINTF(0, "message size %d too small (at least %lu)!\n", olsr_msgsize,
                 (unsigned long)(olsr_cnf->ip_version ==
                                 AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message)));
-    return;
+    return OLSR_FALSE;
   }
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
     OLSR_PRINTF(0, "Illegal message size %d!\n", olsr_msgsize);
-    return;
+    return OLSR_FALSE;
   }
   curr_end = (const olsr_u8_t *)m + olsr_msgsize;
 
@@ -400,7 +400,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return;
+    return OLSR_FALSE;
   }
 #if 1
   while (curr < curr_end) {
@@ -424,6 +424,8 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     }
   }
 #endif
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /*

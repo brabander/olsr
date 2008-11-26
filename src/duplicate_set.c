@@ -91,9 +91,9 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
 }
 
 int
-olsr_message_is_duplicate(union olsr_message *m, olsr_bool update)
+olsr_message_is_duplicate(union olsr_message *m)
 {
-  struct dup_entry *entry, tmp_entry;
+  struct dup_entry *entry;
   int diff;
   void *mainIp;
   clock_t valid_until;
@@ -119,19 +119,12 @@ olsr_message_is_duplicate(union olsr_message *m, olsr_bool update)
 
   entry = (struct dup_entry *)avl_find(&duplicate_set, ip);
   if (entry == NULL) {
-    if (!update) {
-      entry = olsr_create_duplicate_entry(ip, seqnr);
-      if (entry != NULL) {
-        avl_insert(&duplicate_set, &entry->avl, 0);
-        entry->valid_until = valid_until;
-      }
+    entry = olsr_create_duplicate_entry(ip, seqnr);
+    if (entry != NULL) {
+      avl_insert(&duplicate_set, &entry->avl, 0);
+      entry->valid_until = valid_until;
     }
     return OLSR_FALSE;          // okay, we process this package
-  }
-  
-  if (!update) {
-    tmp_entry = *entry;
-    entry = &tmp_entry;
   }
 
   diff = (int)seqnr - (int)(entry->seqnr);

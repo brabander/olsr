@@ -208,16 +208,16 @@ ipc_input(int sock __attribute__ ((unused)))
  *
  *@param olsr the olsr struct representing the packet
  *
- *@return negative on error
+ *@return true for not preventing forwarding
  */
-void
-frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr
+olsr_bool
+frontend_msgparser(union olsr_message * msg, struct interface * in_if __attribute__ ((unused)), union olsr_ip_addr * from_addr
                    __attribute__ ((unused)))
 {
   int size;
 
   if (!ipc_active)
-    return;
+    return OLSR_TRUE;
 
   if (olsr_cnf->ip_version == AF_INET)
     size = ntohs(msg->v4.olsr_msgsize);
@@ -229,6 +229,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
     CLOSE(ipc_conn);
     ipc_active = OLSR_FALSE;
   }
+  return OLSR_TRUE;
 }
 
 /**

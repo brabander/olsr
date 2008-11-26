@@ -372,18 +372,21 @@ deserialize_hello(struct hello_message *hello, const void *ser)
   return 0;
 }
 
-void
-olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from)
+olsr_bool
+olsr_input_hello(union olsr_message * ser, struct interface * inif, union olsr_ip_addr * from)
 {
   struct hello_message hello;
 
   if (ser == NULL) {
-    return;
+    return OLSR_FALSE;
   }
   if (deserialize_hello(&hello, ser) != 0) {
-    return;
+    return OLSR_FALSE;
   }
   olsr_hello_tap(&hello, inif, from);
+
+  /* Do not forward hello messages */
+  return OLSR_FALSE;
 }
 
 /**

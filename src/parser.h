@@ -47,7 +47,8 @@
 
 #define PROMISCUOUS 0xffffffff
 
-typedef void parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
+/* Function returns false if the message should not be forwarded */
+typedef olsr_bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 struct parse_function_entry {
   olsr_u32_t type;                     /* If set to PROMISCUOUS all messages will be received */

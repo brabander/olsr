@@ -525,7 +525,7 @@ olsr_print_mid_set(void)
  *@return 1 on success
  */
 
-void
+olsr_bool
 olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
 #ifdef DEBUG
@@ -538,7 +538,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   if (!olsr_validate_address(&message.mid_origaddr)) {
     olsr_free_mid_packet(&message);
-    return;
+    return OLSR_FALSE;
   }
 #ifdef DEBUG
   OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
@@ -555,7 +555,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
     struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     olsr_free_mid_packet(&message);
-    return;
+    return OLSR_FALSE;
   }
 
   /* Update the timeout of the MID */
@@ -573,6 +573,9 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   olsr_prune_aliases(&message.mid_origaddr, message.mid_addr);
   olsr_free_mid_packet(&message);
+
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /*

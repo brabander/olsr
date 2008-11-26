@@ -302,6 +302,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
   }
 
   for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
+    olsr_bool forward = OLSR_TRUE;
 
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version))
       break;
@@ -343,26 +344,19 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       continue;
     }
 
-    /* check for message duplicates */
-    if (olsr_message_is_duplicate(m, OLSR_FALSE))
-      continue;
-
     entry = parse_functions;
     while (entry) {
       /* Should be the same for IPv4 and IPv6 */
 
       /* Promiscuous or exact match */
       if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-        entry->function(m, in_if, from_addr);
+        if (!entry->function(m, in_if, from_addr))
+          forward = OLSR_FALSE;
       }
       entry = entry->next;
     }
 
-    switch (olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgtype : m->v6.olsr_msgtype) {
-    case HELLO_MESSAGE:
-    case LQ_HELLO_MESSAGE:
-      break;
-    default:
+    if (forward) {
       olsr_forward_message(m, from_addr);
     }
   }                             /* for olsr_msg */

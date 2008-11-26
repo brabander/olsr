@@ -338,9 +338,7 @@ olsr_walk_timers(clock_t * last_run)
 
     /* Walk all entries hanging off this hash bucket */
     list_head_init(&tmp_head_node);
-    for (timer_node = timer_head_node->next;
-         !list_is_empty(timer_head_node);
-         timer_node = timer_head_node->next) {
+    for (timer_node = timer_head_node->next; !list_is_empty(timer_head_node); timer_node = timer_head_node->next) {
 
       /*
        * Dequeue and insert to a temporary list.

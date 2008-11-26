@@ -629,7 +629,7 @@ olsr_namesvc_gen(void *foo __attribute__ ((unused)))
 /**
  * Parse name olsr message of NAME type
  */
-void
+olsr_bool
 olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr)
 {
   struct namemsg *namemessage;
@@ -661,17 +661,20 @@ olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unuse
   /* Check if message originated from this node.
      If so - back off */
   if (ipequal(&originator, &olsr_cnf->main_addr))
-    return;
+    return OLSR_FALSE;
 
   /* Check that the neighbor this message was received from is symmetric.
      If not - back off */
   if (check_neighbor_link(ipaddr) != SYM_LINK) {
     struct ipaddr_str strbuf;
     OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
-    return;
+    return OLSR_FALSE;
   }
 
   update_name_entry(&originator, namemessage, size, vtime);
+
+  /* Forward the message */
+  return OLSR_TRUE;
 }
 
 /**

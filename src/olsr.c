@@ -324,7 +324,7 @@ olsr_forward_message(union olsr_message *m, union olsr_ip_addr *from_addr)
     return 0;
   }
 
-  if (olsr_message_is_duplicate(m, OLSR_TRUE)) {
+  if (olsr_message_is_duplicate(m)) {
     return 0;
   }
 
