@@ -231,9 +231,17 @@ chk_if_changed(struct olsr_if *iface)
   /* IP version 6 */
   if (olsr_cnf->ip_version == AF_INET6) {
     struct sockaddr_in6 tmp_saddr6;
+
     /* Get interface address */
     if (get_ipv6_address(ifr.ifr_name, &tmp_saddr6, iface->cnf->ipv6_addrtype) <= 0) {
-      OLSR_PRINTF(3, "\tCould not find %s IPv6 address for %s\n", iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL ? "site-local" : "global", ifr.ifr_name);
+      if (iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL)
+         OLSR_PRINTF(1, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
+      else if(iface->cnf->ipv6_addrtype == OLSR_IP6T_UNIQUELOCAL)
+         OLSR_PRINTF(1, "\tCould not find unique-local IPv6 address for %s\n", ifr.ifr_name);
+      else if(iface->cnf->ipv6_addrtype == OLSR_IP6T_GLOBAL)
+         OLSR_PRINTF(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
+      else
+         OLSR_PRINTF(1, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
       goto remove_interface;
     }
       
@@ -631,8 +639,33 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   if (olsr_cnf->ip_version == AF_INET6) {
     /* Get interface address */
     struct ipaddr_str buf;
-    if (get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, iface->cnf->ipv6_addrtype) <= 0) {
-      OLSR_PRINTF(debuglvl, "\tCould not find %s IPv6 address for %s\n", iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL ? "site-local" : "global", ifr.ifr_name);
+    int result;
+
+    if (iface->cnf->ipv6_addrtype == OLSR_IP6T_AUTO) {
+      if ((result = get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, OLSR_IP6T_SITELOCAL)) > 0) {
+        iface->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
+      } else {
+        if ((result = get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, OLSR_IP6T_UNIQUELOCAL)) > 0) {
+          iface->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
+        } else {
+          if ((result = get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, OLSR_IP6T_GLOBAL)) > 0) {
+            iface->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
+          }
+        }
+      }
+    } else {
+      result = get_ipv6_address(ifr.ifr_name, &ifs.int6_addr, iface->cnf->ipv6_addrtype);
+    }
+
+    if(result <= 0) {
+      if (iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL)
+         OLSR_PRINTF(1, "\tCould not find site-local IPv6 address for %s\n", ifr.ifr_name);
+      else if(iface->cnf->ipv6_addrtype == OLSR_IP6T_UNIQUELOCAL)
+         OLSR_PRINTF(1, "\tCould not find unique-local IPv6 address for %s\n", ifr.ifr_name);
+      else if(iface->cnf->ipv6_addrtype == OLSR_IP6T_GLOBAL)
+         OLSR_PRINTF(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
+      else
+         OLSR_PRINTF(1, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
       return 0;
     }
 
@@ -644,7 +677,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     ifs.int6_multaddr.sin6_flowinfo = htonl(0);
     ifs.int6_multaddr.sin6_scope_id = if_nametoindex(ifr.ifr_name);
     ifs.int6_multaddr.sin6_port     = htons(OLSRPORT);
-    ifs.int6_multaddr.sin6_addr = iface->cnf->ipv6_addrtype == IPV6_ADDR_SITELOCAL
+    ifs.int6_multaddr.sin6_addr = iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL
         ? iface->cnf->ipv6_multi_site.v6
         : iface->cnf->ipv6_multi_glbl.v6;
 

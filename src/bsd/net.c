@@ -562,17 +562,19 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int scope_in)
       if ((flags6 & IN6_IFF_ANYCAST) != 0)
 	continue;
       if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)) {
-	if (scope_in) {
-	  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-	  found = 1;
-	  break;
-	}
+        if (addrtype6 == OLSR_IP6T_SITELOCAL) found = 1;
       } else {
-	if (scope_in == 0) {
-	  memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
-	  found = 1;
-	  break;
-	}
+        if (addrtype6 == OLSR_IP6T_GLOBAL &&
+            (sin6->sin6_addr->s6_addr[0] != 0xfc &&
+             sin6->sin6_addr->s6_addr[0] != 0xfd)) found = 1;
+      }
+      else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL &&
+               (sin6->sin6_addr->s6_addr[0] == 0xfc ||
+                sin6->sin6_addr->s6_addr[0] == 0xfd)) found = 1;
+      }
+      if (found) {
+        memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
+        break;
       }
     }
   }

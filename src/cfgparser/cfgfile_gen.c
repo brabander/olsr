@@ -87,6 +87,7 @@ void
 olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, olsr_bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];             /* buffer for IPv6 inet_ntop */
+  const char *s;
 
   abuf_appendf(abuf, "#\n"
                      "# Configuration file for %s\n"
@@ -294,10 +295,14 @@ olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, olsr_b
       }
           
       if (first) {
-        abuf_appendf(abuf, "\n    # IPv6 address scope to use.\n"
-                           "    # Must be 'site-local' or 'global'\n\n");
+        abuf_appendf(abuf, "\n    # IPv6 address type to use.\n"
+                           "    # Must be 'auto', 'site-local', 'unique-local' or 'global'\n\n");
       }
-      abuf_appendf(abuf, "    Ip6AddrType \t%s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
+      if (in->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL) s = CFG_IP6T_SITELOCAL;
+      else if(in->cnf->ipv6_addrtype == OLSR_IP6T_UNIQUELOCAL) s = CFG_IP6T_UNIQUELOCAL;
+      else if(in->cnf->ipv6_addrtype == OLSR_IP6T_GLOBAL) s = CFG_IP6T_GLOBAL;
+      else s = CFG_IP6T_AUTO;
+      abuf_appendf(abuf, "    Ip6AddrType\t%s\n\n", s);
 
       if (first) {
         abuf_appendf(abuf, "\n"

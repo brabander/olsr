@@ -459,20 +459,11 @@ isetip6addrt: TOK_IP6ADDRTYPE TOK_IP6TYPE
   int ifcnt = ifs_in_curr_cfg;
   struct olsr_if *ifs = olsr_cnf->interfaces;
 
-  if ($2->boolean) {
-    while (ifcnt) {
-      ifs->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
-	  
-      ifs = ifs->next;
-      ifcnt--;
-    }
-  } else {
-    while (ifcnt) {
-      ifs->cnf->ipv6_addrtype = 0;
-	  
-      ifs = ifs->next;
-      ifcnt--;
-    }
+  while (ifcnt) {
+    ifs->cnf->ipv6_addrtype = $2->integer;
+
+    ifs = ifs->next;
+    ifcnt--;
   }
 
   free($2);

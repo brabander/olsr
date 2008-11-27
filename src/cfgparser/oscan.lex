@@ -100,13 +100,18 @@ static struct conf_token *get_string_token(const char * const s, const size_t n)
     return rv;
 }
 
-static struct conf_token *get_integer_token(const char * const s)
+static struct conf_token *_get_integer_token(olsr_32_t i)
 {
     struct conf_token *rv = get_conf_token();
     if (rv != NULL) {
-        rv->integer = strtol(s, NULL, 0);
+        rv->integer = i;
     }
     return rv;
+}
+
+static struct conf_token *get_integer_token(const char * const s)
+{
+    return _get_integer_token(strtol(s, NULL, 0));
 }
 
 static struct conf_token *get_floating_token(const char * const s)
@@ -233,13 +238,23 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_BOOLEAN;
 }
 
+"auto" {
+    yylval = _get_integer_token(OLSR_IP6T_AUTO);
+    return TOK_IP6TYPE;
+}
+
 "site-local" {
-    yylval = get_boolean_token(OLSR_TRUE);
+    yylval = _get_integer_token(OLSR_IP6T_SITELOCAL);
+    return TOK_IP6TYPE;
+}
+
+"unique-local" {
+    yylval = _get_integer_token(OLSR_IP6T_UNIQUELOCAL);
     return TOK_IP6TYPE;
 }
 
 "global" {
-    yylval = get_boolean_token(OLSR_FALSE);
+    yylval = _get_integer_token(OLSR_IP6T_GLOBAL);
     return TOK_IP6TYPE;
 }
 

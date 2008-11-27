@@ -101,6 +101,20 @@
 #define CFG_FIBM_CORRECT       "correct"
 #define CFG_FIBM_APPROX        "approx"
 
+#define CFG_IP6T_AUTO          "auto"
+#define CFG_IP6T_SITELOCAL     "site-local"
+#define CFG_IP6T_UNIQUELOCAL   "unique-local"
+#define CFG_IP6T_GLOBAL        "global"
+
+#define OLSR_IP6T_AUTO         0
+#define OLSR_IP6T_SITELOCAL    1
+#define OLSR_IP6T_UNIQUELOCAL  2
+#define OLSR_IP6T_GLOBAL       3
+
+#ifndef IPV6_ADDR_GLOBAL
+#define IPV6_ADDR_GLOBAL       0x0000U
+#endif
+
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
 #endif
