@@ -47,7 +47,7 @@
 
 #include "olsr_types.h"
 
-olsr_u32_t olsr_ip_hashing(const union olsr_ip_addr *);
+uint32_t olsr_ip_hashing(const union olsr_ip_addr *);
 
 #endif
 

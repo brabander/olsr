@@ -54,8 +54,8 @@
  *
  *@return a 8-bit mantissa/exponent product
  */
-olsr_u8_t reltime_to_me(const olsr_reltime interval) {
-  olsr_u8_t a, b;
+uint8_t reltime_to_me(const olsr_reltime interval) {
+  uint8_t a, b;
   
   /* It is sufficent to compare the integer part since we test on >=.
    * So we have now only a floating point division and the rest of the loop
@@ -161,9 +161,9 @@ olsr_u8_t reltime_to_me(const olsr_reltime interval) {
  * 2. case: b <= 8
  *           = ((16 + a) * 1000) >> (8-b)
  */
-olsr_reltime me_to_reltime(const olsr_u8_t me) {
-  const olsr_u8_t a = me >> 4;
-  const olsr_u8_t b = me & 0x0F;
+olsr_reltime me_to_reltime(const uint8_t me) {
+  const uint8_t a = me >> 4;
+  const uint8_t b = me & 0x0F;
   
   if (b >= 8) {
     return ((16 + a) << (b-8)) * 1000;

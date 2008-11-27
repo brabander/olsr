@@ -66,7 +66,7 @@
 struct rt_metric
 {
   olsr_linkcost       cost;
-  olsr_u32_t 	        hops;
+  uint32_t 	        hops;
 };
 
 /* a nexthop is a pointer to a gateway router plus an interface */
@@ -115,8 +115,8 @@ struct rt_path
   union olsr_ip_addr    rtp_originator; /* originator of the route */
   struct avl_node       rtp_prefix_tree_node; /* tc entry rtp node */
   struct olsr_ip_prefix rtp_dst; /* the prefix */
-  olsr_u32_t            rtp_version; /* for detection of outdated rt_paths */
-  olsr_u8_t             rtp_origin; /* internal, MID or HNA */
+  uint32_t            rtp_version; /* for detection of outdated rt_paths */
+  uint8_t             rtp_origin; /* internal, MID or HNA */
 };
 
 AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
@@ -189,14 +189,14 @@ union olsr_kernel_route
   {
     struct sockaddr rt_dst;
     struct sockaddr rt_gateway;
-    olsr_u32_t metric;
+    uint32_t metric;
   } v4;
 
   struct
   {
     struct in6_addr rtmsg_dst;
     struct in6_addr rtmsg_gateway;
-    olsr_u32_t rtmsg_metric;
+    uint32_t rtmsg_metric;
   } v6;
 };
 
@@ -226,16 +226,16 @@ void olsr_rt_best(struct rt_entry *);
 /**
  * Check if there is an interface or gateway change.
  */
-static INLINE olsr_bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
+static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
     return !ipequal(&nh1->gateway, &nh2->gateway) || nh1->iif_index != nh2->iif_index;
 }
 
 /**
  * Check if there is a hopcount change.
  */
-static INLINE olsr_bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
+static INLINE bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
 
-olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
+bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
 
 #if defined WIN32 || (defined linux && !LINUX_POLICY_ROUTING)
 /**
@@ -245,7 +245,7 @@ olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
  * for deletes this is the metric of the route that got stored in the rt_entry,
  * during route installation.
  */
-static INLINE olsr_u8_t olsr_fib_metric(const struct rt_metric *met) {
+static INLINE uint8_t olsr_fib_metric(const struct rt_metric *met) {
   return  FIBM_CORRECT == olsr_cnf->fib_metric ? met->hops : RT_METRIC_DEFAULT;
 }
 #endif

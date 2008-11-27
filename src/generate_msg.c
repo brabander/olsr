@@ -53,7 +53,7 @@
 #include "net_olsr.h"
 
 static char pulsedata[] = "\\|/-";
-static olsr_u8_t pulse_state = 0;
+static uint8_t pulse_state = 0;
 
 static void free_tc_packet(struct tc_message *);
 static void build_tc_packet(struct tc_message *);

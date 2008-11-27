@@ -56,7 +56,7 @@ static void linking_this_2_entries(struct neighbor_entry *,
                                    struct neighbor_2_entry *,
                                    olsr_reltime);
 
-static olsr_bool lookup_mpr_status(const struct hello_message *,
+static bool lookup_mpr_status(const struct hello_message *,
                                    const struct interface *);
 
 static void hello_tap(struct hello_message *, struct interface *,
@@ -153,8 +153,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 	/*
 	 * linking to this two_hop_neighbor entry
 	 */
-	changes_neighborhood = OLSR_TRUE;
-	changes_topology = OLSR_TRUE;
+	changes_neighborhood = true;
+	changes_topology = true;
 	linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
       }
     }
@@ -225,8 +225,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                 walker->saved_path_linkcost = new_path_linkcost;
 
                 if (olsr_cnf->lq_dlimit > 0) {
-                  changes_neighborhood = OLSR_TRUE;
-                  changes_topology = OLSR_TRUE;
+                  changes_neighborhood = true;
+                  changes_topology = true;
                 } else {
                   OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
                 }
@@ -288,7 +288,7 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
  *
  * @return 1 if we are selected as MPR 0 if not
  */
-static olsr_bool
+static bool
 lookup_mpr_status(const struct hello_message *message,
                   const struct interface *in_if)
 {
@@ -298,11 +298,11 @@ lookup_mpr_status(const struct hello_message *message,
     if (olsr_cnf->ip_version == AF_INET
         ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
         : ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
-      return neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH ? OLSR_TRUE : OLSR_FALSE;
+      return neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH ? true : false;
     }
   }
   /* Not found */
-  return OLSR_FALSE;
+  return false;
 }
 
 /**
@@ -329,8 +329,8 @@ static int
 deserialize_hello(struct hello_message *hello, const void *ser)
 {
   const unsigned char *limit;
-  olsr_u8_t type;
-  olsr_u16_t size;
+  uint8_t type;
+  uint16_t size;
 
   const unsigned char *curr = ser;
   pkt_get_u8(&curr, &type);
@@ -431,8 +431,8 @@ hello_tap(struct hello_message *message,
      *If willingness changed - recalculate
      */
     lnk->neighbor->willingness = message->willingness;
-    changes_neighborhood = OLSR_TRUE;
-    changes_topology = OLSR_TRUE;
+    changes_neighborhood = true;
+    changes_topology = true;
   }
 
   /* Don't register neighbors of neighbors that announces WILL_NEVER */
@@ -446,20 +446,20 @@ hello_tap(struct hello_message *message,
   olsr_free_hello_packet(message);
 }
 
-olsr_bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
+bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
 {
   struct hello_message hello;
 
   if (msg == NULL) {
-    return OLSR_FALSE;
+    return false;
   }
   if (deserialize_hello(&hello, msg) != 0) {
-    return OLSR_FALSE;
+    return false;
   }
   hello_tap(&hello, inif, from);
 
   /* Do not forward hello messages */
-  return OLSR_FALSE;
+  return false;
 }
 
 /*

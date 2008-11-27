@@ -45,10 +45,10 @@
 #include "olsr_protocol.h"
 #include "interfaces.h"
 
-extern olsr_bool changes_topology;
-extern olsr_bool changes_neighborhood;
-extern olsr_bool changes_hna;
-extern olsr_bool changes_force;
+extern bool changes_topology;
+extern bool changes_neighborhood;
+extern bool changes_hna;
+extern bool changes_force;
 
 extern const union olsr_ip_addr all_zero;
 
@@ -61,7 +61,7 @@ olsr_process_changes(void);
 void
 init_msg_seqno(void);
 
-olsr_u16_t
+uint16_t
 get_msg_seqno(void);
 
 int
@@ -80,17 +80,17 @@ olsr_init_willingness(void);
 void
 olsr_update_willingness(void *);
 
-olsr_u8_t
+uint8_t
 olsr_calculate_willingness(void);
 
 const char *
-olsr_msgtype_to_string(olsr_u8_t);
+olsr_msgtype_to_string(uint8_t);
 
 const char *
-olsr_link_to_string(olsr_u8_t);
+olsr_link_to_string(uint8_t);
 
 const char *
-olsr_status_to_string(olsr_u8_t);
+olsr_status_to_string(uint8_t);
 
 void
 olsr_exit(const char *, int);

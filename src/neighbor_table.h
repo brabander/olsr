@@ -60,8 +60,8 @@ struct neighbor_2_list_entry
 struct neighbor_entry
 {
   union olsr_ip_addr           neighbor_main_addr;
-  olsr_u8_t                    status;
-  olsr_u8_t                    willingness;
+  uint8_t                    status;
+  uint8_t                    willingness;
   unsigned char                is_mpr:1;
   unsigned char                was_mpr:1; /* Used to detect changes in MPR */
   unsigned char                skip:1;

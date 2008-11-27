@@ -104,7 +104,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
     }
 
     mult->addr = addr;
-    mult->value = (olsr_u32_t)(mult_arg->floating * LINK_LOSS_MULTIPLIER);
+    mult->value = (uint32_t)(mult_arg->floating * LINK_LOSS_MULTIPLIER);
 
     mult->next = walker->cnf->lq_mult;
     walker->cnf->lq_mult = mult;
@@ -419,7 +419,7 @@ iifweight:       TOK_IFWEIGHT TOK_INTEGER
 
   while (ifcnt) {
     ifs->cnf->weight.value = $2->integer;
-    ifs->cnf->weight.fixed = OLSR_TRUE;
+    ifs->cnf->weight.fixed = true;
 
     ifs = ifs->next;
     ifcnt--;
@@ -890,7 +890,7 @@ arttable_default: TOK_RTTABLE_DEFAULT TOK_INTEGER
 awillingness: TOK_WILLINGNESS TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Willingness: %d\n", $2->integer);
-  olsr_cnf->willingness_auto = OLSR_FALSE;
+  olsr_cnf->willingness_auto = false;
   olsr_cnf->willingness = $2->integer;
   free($2);
 }

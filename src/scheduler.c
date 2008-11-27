@@ -69,7 +69,7 @@ static struct olsr_socket_entry *olsr_socket_entries = NULL;
 /* Prototypes */
 static void walk_timers(clock_t *);
 static void poll_sockets(void);
-static clock_t calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct,
+static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
                            unsigned int random_val);
 
 /**
@@ -376,7 +376,7 @@ olsr_scheduler(void)
     if (link_changes) {
       OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn());
       increase_local_ansn();
-      link_changes = OLSR_FALSE;
+      link_changes = false;
     }
 
     /* Read incoming data and handle it immediiately */
@@ -393,7 +393,7 @@ olsr_scheduler(void)
  * @return the absolute timer in system clock tick units
  */
 static clock_t
-calc_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random_val)
+calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
 {
   unsigned int jitter_time;
 
@@ -443,7 +443,7 @@ olsr_init_timers(void)
   timer_mem_cookie =
     olsr_alloc_cookie("timer_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(timer_mem_cookie, sizeof(struct timer_entry));
-  olsr_cookie_set_memory_clear(timer_mem_cookie, OLSR_FALSE);
+  olsr_cookie_set_memory_clear(timer_mem_cookie, false);
 }
 
 /**
@@ -644,8 +644,8 @@ olsr_clock_string(clock_t clk)
  */
 struct timer_entry *
 olsr_start_timer(unsigned int rel_time,
-		 olsr_u8_t jitter_pct,
-		 olsr_bool periodical,
+		 uint8_t jitter_pct,
+		 bool periodical,
 		 timer_cb_func cb_func,
 		 void *context,
 		 olsr_cookie_t cookie)
@@ -734,7 +734,7 @@ olsr_stop_timer(struct timer_entry *timer)
  */
 void
 olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
-		  olsr_u8_t jitter_pct, olsr_bool periodical)
+		  uint8_t jitter_pct, bool periodical)
 {
   /* Sanity check. */
   if (!timer) {
@@ -773,8 +773,8 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
 void
 olsr_set_timer(struct timer_entry **timer_ptr,
 	       unsigned int rel_time,
-	       olsr_u8_t jitter_pct,
-	       olsr_bool periodical,
+	       uint8_t jitter_pct,
+	       bool periodical,
 	       timer_cb_func cb_func,
 	       void *context,
 	       olsr_cookie_t cookie)

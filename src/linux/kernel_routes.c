@@ -74,7 +74,7 @@ static void olsr_netlink_addreq(struct olsr_rtreq *req, int type, const void *da
   memcpy(RTA_DATA(rta), data, len);
 }
 
-static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_u8_t rttable, __u16 cmd)
+static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t rttable, __u16 cmd)
 {
   int ret = 0;
   struct olsr_rtreq req;
@@ -89,7 +89,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, olsr_u8_t family, olsr_
     .msg_controllen = 0,
     .msg_flags = 0
   };
-  olsr_u32_t metric = FIBM_FLAT != olsr_cnf->fib_metric
+  uint32_t metric = FIBM_FLAT != olsr_cnf->fib_metric
     ? (RTM_NEWROUTE == cmd
        ? rt->rt_best->rtp_metric.hops
        : rt->rt_metric.hops)
@@ -216,7 +216,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
      (rt->rt_dst.prefix.v4.s_addr == INADDR_ANY) &&
      (rt->rt_dst.prefix_len == INADDR_ANY)) {
     delete_all_inet_gws();
-    olsr_cnf->del_gws = OLSR_FALSE;
+    olsr_cnf->del_gws = false;
   }
 
   rslt = ioctl(olsr_cnf->ioctl_s, SIOCADDRT, &kernel_route);

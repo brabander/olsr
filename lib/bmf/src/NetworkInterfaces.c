@@ -839,7 +839,7 @@ void FindNeighbors(
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
             bestIntf->int_name,
-            get_linkcost_text(bestLinkToNeighbor->linkcost, OLSR_FALSE, &lqbuffer));
+            get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
         }
 
         continue; /* for */
@@ -857,7 +857,7 @@ void FindNeighbors(
           PLUGIN_NAME_SHORT,
           olsr_ip_to_string(&forwardedByBuf, forwardedBy),
           olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          get_linkcost_text(previousLinkEtx + currEtx, OLSR_TRUE, &lqbuffer));
+          get_linkcost_text(previousLinkEtx + currEtx, true, &lqbuffer));
       }
 
       /* Check the topology table whether the 'forwardedBy' node is itself a direct
@@ -893,7 +893,7 @@ void FindNeighbors(
                 neighbor_iface_buf.buf,
                 olsr_ip_to_string(&forw_buf, forwardedBy),
                 neighbor_iface_buf.buf,
-                get_linkcost_text(tcEtx, OLSR_FALSE, &lqbuffer));
+                get_linkcost_text(tcEtx, false, &lqbuffer));
 
               continue; /* for */
             } /* if */

@@ -117,7 +117,7 @@ calculate_if_metric(char *);
 int
 check_wireless_interface(char *);
 
-olsr_bool
+bool
 is_if_link_up(char *);
 
 int

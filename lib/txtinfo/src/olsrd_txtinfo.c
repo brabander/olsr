@@ -145,7 +145,7 @@ int
 olsrd_plugin_init(void)
 {
     struct sockaddr_storage sst;
-    olsr_u32_t yes = 1;
+    uint32_t yes = 1;
     socklen_t addrlen;
 
     /* Init ipc socket */
@@ -454,7 +454,7 @@ static int ipc_print_link(struct ipc_conn *conn)
                             olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
                             lnk->L_link_quality, 
                             get_link_entry_text(lnk, '\t', &lqbuffer1),
-                            get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2)) < 0) {
+                            get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
             return -1;
         }
     } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
@@ -483,7 +483,7 @@ static int ipc_print_routes(struct ipc_conn *conn)
                             olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
                             olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
                             rt->rt_best->rtp_metric.hops,
-                            get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer),
+                            get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
                             if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index)) < 0) {
             return -1;
         }
@@ -515,7 +515,7 @@ static int ipc_print_topology(struct ipc_conn *conn)
                                     olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
                                     olsr_ip_to_string(&addrbuf, &tc->addr), 
                                     get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
-                                    get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2)) < 0) {
+                                    get_linkcost_text(tc_edge->cost, false, &lqbuffer2)) < 0) {
                     return -1;
                 }
             }

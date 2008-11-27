@@ -61,7 +61,7 @@ void ohs_close(int) __attribute__((noreturn));
 struct ohs_ip_link
 {
   union olsr_ip_addr   dst;
-  olsr_u8_t            quality; /* 0 - 100 */
+  uint8_t            quality; /* 0 - 100 */
   struct ohs_ip_link   *next;
 };
 
@@ -69,14 +69,14 @@ struct ohs_connection
 {
   union olsr_ip_addr     ip_addr;
   int                    socket;
-  olsr_u32_t             rx;
-  olsr_u32_t             tx;
-  olsr_u32_t             linkcnt;
+  uint32_t             rx;
+  uint32_t             tx;
+  uint32_t             linkcnt;
   struct ohs_ip_link     *links;
   struct ohs_connection  *next;
 };
 
-extern olsr_u32_t logbits;
+extern uint32_t logbits;
 
 extern struct ohs_connection *ohs_conns;
 

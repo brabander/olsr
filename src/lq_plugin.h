@@ -69,10 +69,10 @@ struct lq_handler {
   olsr_linkcost(*calc_hello_cost) (const void *lq);
   olsr_linkcost(*calc_tc_cost) (const void *lq);
 
-  olsr_bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
+  bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
 
   olsr_linkcost(*packet_loss_handler) (struct link_entry * entry, void *lq,
-				       olsr_bool lost);
+				       bool lost);
 
   void (*memorize_foreign_hello) (void *local, void *foreign);
   void (*copy_link_lq_into_tc) (void *target, void *source);
@@ -81,8 +81,8 @@ struct lq_handler {
 
   int (*serialize_hello_lq) (unsigned char *buff, void *lq);
   int (*serialize_tc_lq) (unsigned char *buff, void *lq);
-  void (*deserialize_hello_lq) (const olsr_u8_t ** curr, void *lq);
-  void (*deserialize_tc_lq) (const olsr_u8_t ** curr, void *lq);
+  void (*deserialize_hello_lq) (const uint8_t ** curr, void *lq);
+  void (*deserialize_tc_lq) (const uint8_t ** curr, void *lq);
 
   const char *(*print_hello_lq) (void *ptr, char separator, struct lqtextbuffer * buffer);
   const char *(*print_tc_lq) (void *ptr, char separator, struct lqtextbuffer * buffer);
@@ -116,17 +116,17 @@ void register_lq_handler(struct lq_handler *handler, const char *name);
 int activate_lq_handler(const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
-olsr_bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
+bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 
 int olsr_serialize_hello_lq_pair(unsigned char *buff,
 				 struct lq_hello_neighbor *neigh);
-void olsr_deserialize_hello_lq_pair(const olsr_u8_t ** curr,
+void olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
 				    struct hello_neighbor *neigh);
 int olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh);
-void olsr_deserialize_tc_lq_pair(const olsr_u8_t ** curr,
+void olsr_deserialize_tc_lq_pair(const uint8_t ** curr,
 				 struct tc_edge_entry *edge);
 
-void olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost);
+void olsr_update_packet_loss_worker(struct link_entry *entry, bool lost);
 void olsr_memorize_foreign_hello_lq(struct link_entry *local,
 				    struct hello_neighbor *foreign);
 
@@ -136,7 +136,7 @@ const char *get_link_entry_text(struct link_entry *entry,
 const char *get_tc_edge_entry_text(struct tc_edge_entry *entry,
 				   char separator,
 				   struct lqtextbuffer *buffer);
-const char *get_linkcost_text(olsr_linkcost cost, olsr_bool route,
+const char *get_linkcost_text(olsr_linkcost cost, bool route,
 			      struct lqtextbuffer *buffer);
 
 void olsr_copy_hello_lq(struct lq_hello_neighbor *target,

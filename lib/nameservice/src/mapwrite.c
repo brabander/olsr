@@ -177,7 +177,7 @@ void mapwrite_work(FILE* fmap)
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
             get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
-            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer),
+            get_linkcost_text(tc_edge->cost, false, &lqbuffer),
             lla, llb))
       {
         return;
@@ -194,7 +194,7 @@ void mapwrite_work(FILE* fmap)
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
             olsr_ip_to_string(&strbuf2, &tc->addr), 
             get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
-            get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer)))
+            get_linkcost_text(tc_edge->cost, false, &lqbuffer)))
       {
         return;
       }
@@ -247,14 +247,14 @@ int mapwrite_init(const char* fifoname)
     if (0 > mkfifo(fifoname, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH))
     {
       OLSR_PRINTF(1, "mkfifo(%s): %s", fifoname, strerror(errno));
-      return OLSR_FALSE;
+      return false;
     }
     else
     {
       olsr_start_timer(800, 5, OLSR_TIMER_PERIODIC, &mapwrite_poll, NULL, map_poll_timer_cookie->ci_id);
     }
   }
-  return OLSR_TRUE;
+  return true;
 }
 
 void mapwrite_exit(void)

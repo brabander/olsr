@@ -116,12 +116,12 @@ main(int argc, char *argv[])
 #endif
 
   /* paranoia checks */
-  assert(sizeof(olsr_u8_t) == 1);
-  assert(sizeof(olsr_u16_t) == 2);
-  assert(sizeof(olsr_u32_t) == 4);
-  assert(sizeof(olsr_8_t) == 1);
-  assert(sizeof(olsr_16_t) == 2);
-  assert(sizeof(olsr_32_t) == 4);
+  assert(sizeof(uint8_t) == 1);
+  assert(sizeof(uint16_t) == 2);
+  assert(sizeof(uint32_t) == 4);
+  assert(sizeof(int8_t) == 1);
+  assert(sizeof(int16_t) == 2);
+  assert(sizeof(int32_t) == 4);
 
   debug_handle = stdout;
   setbuf(stdout, NULL);
@@ -365,7 +365,7 @@ main(int argc, char *argv[])
   /* ctrl-C and friends */
 #ifdef WIN32
 #ifndef WINCE
-  SetConsoleCtrlHandler(SignalHandler, OLSR_TRUE);
+  SetConsoleCtrlHandler(SignalHandler, true);
 #endif
 #else
   {
@@ -386,7 +386,7 @@ main(int argc, char *argv[])
   }
 #endif
 
-  link_changes = OLSR_FALSE;
+  link_changes = false;
 
   /* Starting scheduler */
   olsr_scheduler();
@@ -683,12 +683,12 @@ olsr_process_arguments(int argc, char *argv[],
 	olsr_exit(__func__, EXIT_FAILURE);
       }
       printf("Queuing if %s\n", *argv);
-      queue_if (*argv, OLSR_FALSE);
+      queue_if (*argv, false);
 
       while (argc != 1 && (argv[1][0] != '-')) {
 	NEXT_ARG;
 	printf("Queuing if %s\n", *argv);
-	queue_if (*argv, OLSR_FALSE);
+	queue_if (*argv, false);
       }
       continue;
     }
@@ -760,7 +760,7 @@ olsr_process_arguments(int argc, char *argv[],
      * Should we display the contents of packages beeing sent?
      */
     if (strcmp(*argv, "-dispin") == 0) {
-      parser_set_disp_pack_in(OLSR_TRUE);
+      parser_set_disp_pack_in(true);
       continue;
     }
 
@@ -768,7 +768,7 @@ olsr_process_arguments(int argc, char *argv[],
      * Should we display the contents of incoming packages?
      */
     if (strcmp(*argv, "-dispout") == 0) {
-      net_set_disp_pack_out(OLSR_TRUE);
+      net_set_disp_pack_out(true);
       continue;
     }
 
@@ -811,14 +811,14 @@ olsr_process_arguments(int argc, char *argv[],
       }
       /* Add hemu interface */
 
-      ifa = queue_if("hcif01", OLSR_TRUE);
+      ifa = queue_if("hcif01", true);
       if (!ifa) {
 	continue;
       }
       ifa->cnf = get_default_if_config();
-      ifa->host_emul = OLSR_TRUE;
+      ifa->host_emul = true;
       ifa->hemu_ip.v4 = in;
-      cnf->host_emul = OLSR_TRUE;
+      cnf->host_emul = true;
       continue;
     }
 
@@ -826,12 +826,12 @@ olsr_process_arguments(int argc, char *argv[],
      * Delete possible default GWs
      */
     if (strcmp(*argv, "-delgw") == 0) {
-      olsr_cnf->del_gws = OLSR_TRUE;
+      olsr_cnf->del_gws = true;
       continue;
     }
 
     if (strcmp(*argv, "-nofork") == 0) {
-      cnf->no_fork = OLSR_TRUE;
+      cnf->no_fork = true;
       continue;
     }
 

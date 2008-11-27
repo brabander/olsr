@@ -107,9 +107,9 @@ int default_lq_serialize_hello_lq_pair_float(unsigned char *buff, void *ptr) {
   return 4;
 }
 
-void default_lq_deserialize_hello_lq_pair_float(const olsr_u8_t **curr, void *ptr) {
+void default_lq_deserialize_hello_lq_pair_float(const uint8_t **curr, void *ptr) {
   struct default_lq_float *lq = ptr;
-  olsr_u8_t lq_value, nlq_value;
+  uint8_t lq_value, nlq_value;
   
   pkt_get_u8(curr, &lq_value);
   pkt_get_u8(curr, &nlq_value);
@@ -119,7 +119,7 @@ void default_lq_deserialize_hello_lq_pair_float(const olsr_u8_t **curr, void *pt
   lq->nlq = (float)nlq_value / 255.0;
 }
 
-olsr_bool default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2) {
+bool default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2) {
   if (c1 > c2) {
     return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
   }
@@ -137,9 +137,9 @@ int default_lq_serialize_tc_lq_pair_float(unsigned char *buff, void *ptr) {
   return 4;
 }
 
-void default_lq_deserialize_tc_lq_pair_float(const olsr_u8_t **curr, void *ptr) {
+void default_lq_deserialize_tc_lq_pair_float(const uint8_t **curr, void *ptr) {
   struct default_lq_float *lq = ptr;
-  olsr_u8_t lq_value, nlq_value;
+  uint8_t lq_value, nlq_value;
   
   pkt_get_u8(curr, &lq_value);
   pkt_get_u8(curr, &nlq_value);
@@ -149,7 +149,7 @@ void default_lq_deserialize_tc_lq_pair_float(const olsr_u8_t **curr, void *ptr) 
   lq->nlq = (float)nlq_value / 255.0;
 }
 
-olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void *ptr, olsr_bool lost) {
+olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void *ptr, bool lost) {
   struct default_lq_float *tlq = ptr;
   float alpha = olsr_cnf->lq_aging;
   

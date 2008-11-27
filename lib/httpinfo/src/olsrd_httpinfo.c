@@ -140,7 +140,7 @@ struct tab_entry {
   const char *tab_label;
   const char *filename;
   build_body_callback build_body_cb;
-  olsr_bool display_tab;
+  bool display_tab;
 };
 
 struct static_bin_file_entry {
@@ -167,7 +167,7 @@ static void build_tabs(struct autobuf *abuf, int);
 
 static void parse_http_request(int, void *, unsigned int flags);
 
-static void build_http_header(struct autobuf *abuf, http_header_type, olsr_bool, olsr_u32_t);
+static void build_http_header(struct autobuf *abuf, http_header_type, bool, uint32_t);
 
 static void build_frame(struct autobuf *abuf, build_body_callback frame_body_cb);
 
@@ -189,12 +189,12 @@ static void build_about_body(struct autobuf *abuf);
 
 static void build_cfgfile_body(struct autobuf *abuf);
 
-static olsr_bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr);
+static bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr);
 
-static void build_ip_txt(struct autobuf *abuf, const olsr_bool want_link,
+static void build_ip_txt(struct autobuf *abuf, const bool want_link,
 			 const char * const ipaddrstr, const int prefix_len);
 
-static void build_ipaddr_link(struct autobuf *abuf, const olsr_bool want_link,
+static void build_ipaddr_link(struct autobuf *abuf, const bool want_link,
 			      const union olsr_ip_addr * const ipaddr,
 			      const int prefix_len);
 static void section_title(struct autobuf *abuf, const char *title);
@@ -222,16 +222,16 @@ static int netsprintf_error = 0;
 #endif
 
 static const struct tab_entry tab_entries[] = {
-    {"Configuration",  "config",  build_config_body,  OLSR_TRUE},
-    {"Routes",         "routes",  build_routes_body,  OLSR_TRUE},
-    {"Links/Topology", "nodes",   build_nodes_body,   OLSR_TRUE},
-    {"All",            "all",     build_all_body,     OLSR_TRUE},
+    {"Configuration",  "config",  build_config_body,  true},
+    {"Routes",         "routes",  build_routes_body,  true},
+    {"Links/Topology", "nodes",   build_nodes_body,   true},
+    {"All",            "all",     build_all_body,     true},
 #if ADMIN_INTERFACE
-    {"Admin",          "admin",   build_admin_body,   OLSR_TRUE},
+    {"Admin",          "admin",   build_admin_body,   true},
 #endif
-    {"About",          "about",   build_about_body,   OLSR_TRUE},
-    {"FOO",            "cfgfile", build_cfgfile_body, OLSR_FALSE},
-    {NULL,             NULL,      NULL,               OLSR_FALSE}
+    {"About",          "about",   build_about_body,   true},
+    {"FOO",            "cfgfile", build_cfgfile_body, false},
+    {NULL,             NULL,      NULL,               false}
 };
 
 static const struct static_bin_file_entry static_bin_files[] = {
@@ -259,7 +259,7 @@ static int
 get_http_socket(int port)
 {
   struct sockaddr_storage sst;
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
   socklen_t addrlen;
 
   /* Init ipc socket */
@@ -441,7 +441,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     while (dynamic_files[i].filename) {
         printf("POST checking %s\n", dynamic_files[i].filename);
         if (FILENREQ_MATCH(filename, dynamic_files[i].filename)) {
-            olsr_u32_t param_size;
+            uint32_t param_size;
 
             stats.ok_hits++;
 
@@ -454,7 +454,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
             //size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
 	    dynamic_files[i].process_data_cb(req, param_size, &body);
 
-            build_http_header(&header, HTTP_OK, OLSR_TRUE, body.len);
+            build_http_header(&header, HTTP_OK, true, body.len);
             goto send_http_data;
         }
         i++;
@@ -464,7 +464,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     //strscpy(body, HTTP_400_MSG, sizeof(body));
     abuf_puts(&body, HTTP_400_MSG);
     stats.ill_hits++;
-    build_http_header(&header, HTTP_BAD_REQ, OLSR_TRUE, body.len);
+    build_http_header(&header, HTTP_BAD_REQ, true, body.len);
   } else if (!strcmp(req_type, "GET")) {
     int i = 0;
 
@@ -479,7 +479,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
       //memcpy(body, static_bin_files[i].data, static_bin_files[i].data_size);
       abuf_memcpy(&body, static_bin_files[i].data, static_bin_files[i].data_size);
       //size = static_bin_files[i].data_size;
-      build_http_header(&header, HTTP_OK, OLSR_FALSE, body.len);
+      build_http_header(&header, HTTP_OK, false, body.len);
       goto send_http_data;
     }
 
@@ -497,7 +497,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
       //size += snprintf(&body[size], sizeof(body)-size, "%s", static_txt_files[i].data);
       abuf_puts(&body, static_txt_files[i].data);
 
-      build_http_header(&header, HTTP_OK, OLSR_FALSE, body.len);
+      build_http_header(&header, HTTP_OK, false, body.len);
       goto send_http_data;
     }
 
@@ -513,7 +513,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
     if (tab_entries[i].filename) {
 #ifdef NETDIRECT
-      build_http_header(&header, HTTP_OK, OLSR_TRUE);
+      build_http_header(&header, HTTP_OK, true);
       r = send(client_sockets[curr_clients], req, c, 0);
       if (r < 0) {
         olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
@@ -564,7 +564,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
       netsprintf_direct = 1;
       goto close_connection;
 #else
-      build_http_header(&header, HTTP_OK, OLSR_TRUE, body.len);
+      build_http_header(&header, HTTP_OK, true, body.len);
       goto send_http_data;
 #endif
     }
@@ -573,13 +573,13 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     stats.ill_hits++;
     //strscpy(body, HTTP_404_MSG, sizeof(body));
     abuf_puts(&body, HTTP_404_MSG);
-    build_http_header(&header, HTTP_BAD_FILE, OLSR_TRUE, body.len);
+    build_http_header(&header, HTTP_BAD_FILE, true, body.len);
   } else {
     /* We only support GET */
     //strscpy(body, HTTP_400_MSG, sizeof(body));
     abuf_puts(&body, HTTP_400_MSG);
     stats.ill_hits++;
-    build_http_header(&header, HTTP_BAD_REQ, OLSR_TRUE, body.len);
+    build_http_header(&header, HTTP_BAD_REQ, true, body.len);
   }
 
  send_http_data:
@@ -607,8 +607,8 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 void
 build_http_header(struct autobuf *abuf,
 		  http_header_type type,
-		  olsr_bool is_html,
-		  olsr_u32_t msgsize)
+		  bool is_html,
+		  uint32_t msgsize)
 {
   time_t currtime;
   const char *h;
@@ -720,7 +720,7 @@ static void fmt_href(struct autobuf *abuf,
 }
 
 static void build_ip_txt(struct autobuf *abuf,
-			 const olsr_bool print_link,
+			 const bool print_link,
 			 const char * const ipaddrstr,
 			 const int prefix_len)
 {
@@ -740,7 +740,7 @@ static void build_ip_txt(struct autobuf *abuf,
 }
 
 static void build_ipaddr_link(struct autobuf *abuf,
-			      const olsr_bool want_link,
+			      const bool want_link,
 			      const union olsr_ip_addr * const ipaddr,
 			      const int prefix_len)
 {
@@ -776,9 +776,9 @@ static void build_ipaddr_link(struct autobuf *abuf,
 }
 
 #define build_ipaddr_with_link(abuf, ipaddr, plen) \
-          build_ipaddr_link((abuf), OLSR_TRUE, (ipaddr), (plen))
+          build_ipaddr_link((abuf), true, (ipaddr), (plen))
 #define build_ipaddr_no_link(abuf, ipaddr, plen) \
-          build_ipaddr_link((abuf), OLSR_FALSE, (ipaddr), (plen))
+          build_ipaddr_link((abuf), false, (ipaddr), (plen))
 
 static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 {
@@ -797,7 +797,7 @@ static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 		  rt->rt_best->rtp_metric.hops);
   abuf_appendf(abuf,
 		  "<td align=\"right\">%s</td>",
-		  get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
+		  get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer));
   abuf_appendf(abuf,
 		  "<td align=\"center\">%s</td></tr>\n",
 		  if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -1010,7 +1010,7 @@ static void build_neigh_body(struct autobuf *abuf)
       abuf_appendf(abuf,
                        "<td align=\"right\">(%s) %s</td>",
                        get_link_entry_text(lnk, '/', &lqbuffer1),
-                       get_linkcost_text(lnk->linkcost, OLSR_FALSE, &lqbuffer2));
+                       get_linkcost_text(lnk->linkcost, false, &lqbuffer2));
     }
     abuf_puts(abuf, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
@@ -1077,7 +1077,7 @@ static void build_topo_body(struct autobuf *abuf)
 	    abuf_appendf(abuf,
 			     "<td align=\"right\">(%s)</td><td>&nbsp;</td><td align=\"left\">%s</td>\n",
 			     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
-			     get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+			     get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
           }
           abuf_puts(abuf, "</tr>\n");
       	}
@@ -1190,11 +1190,11 @@ static void build_cfgfile_body(struct autobuf *abuf)
            olsrd_write_cnf_buf
         */
         char tmpBuf[10000];
-        size = olsrd_write_cnf_buf(olsr_cnf, OLSR_TRUE, tmpBuf, 10000);
+        size = olsrd_write_cnf_buf(olsr_cnf, true, tmpBuf, 10000);
         snprintf(&buf[size], bufsize-size, tmpBuf);
   }
 #else
-  olsrd_write_cnf_buf(abuf, olsr_cnf, OLSR_TRUE);
+  olsrd_write_cnf_buf(abuf, olsr_cnf, true);
 #endif
 
   abuf_puts(abuf, "</pre>\n<hr/>\n");
@@ -1204,31 +1204,31 @@ static void build_cfgfile_body(struct autobuf *abuf)
 #endif
 }
 
-static olsr_bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr)
+static bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr)
 {
   const struct ip_prefix_list *ipcn;
 
   if (olsr_cnf->ip_version == AF_INET) {
     if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
-      return OLSR_TRUE;
+      return true;
     }
   } else {
     if(ip6equal(&addr->v6, &in6addr_loopback)) {
-      return OLSR_TRUE;
+      return true;
     }
     else if(ip6equal(&addr->v6, &in6addr_v4mapped_loopback)) {
-      return OLSR_TRUE;
+      return true;
     }
   }
 
   /* check nets */
   for (ipcn = all_nets; ipcn != NULL; ipcn = ipcn->next) {
     if (ip_in_net(addr, &ipcn->net)) { 
-      return OLSR_TRUE;
+      return true;
     }
   }
 
-  return OLSR_FALSE;
+  return false;
 }
 
 #if 0

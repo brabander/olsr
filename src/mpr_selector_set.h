@@ -50,16 +50,16 @@ struct mpr_selector {
   struct list_node mprs_list;
 };
 
-extern olsr_u16_t ansn;
+extern uint16_t ansn;
 
 #if 0
-olsr_bool
+bool
 olsr_is_mpr(void);
 #endif
 
 void olsr_init_mprs(void);
 
-static INLINE olsr_u16_t get_local_ansn(void) { return ansn; }
+static INLINE uint16_t get_local_ansn(void) { return ansn; }
 
 static INLINE void increase_local_ansn(void) { ansn++; }
 

@@ -58,14 +58,14 @@ olsr_process_hysteresis(struct link_entry *entry)
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "HYST[%s] link set to NOT pending!\n", 
 		  olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
 
     /* Pending = false */
     entry->L_link_pending = 0;
 
     if (!TIMED_OUT(entry->L_LOST_LINK_time)) {
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
     /* time = now -1 */
     entry->L_LOST_LINK_time = now_times - 1;
@@ -78,14 +78,14 @@ olsr_process_hysteresis(struct link_entry *entry)
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "HYST[%s] link set to pending!\n", 
 		  olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
       
     /* Pending = true */
     entry->L_link_pending = 1;
 
     if (TIMED_OUT(entry->L_LOST_LINK_time)) {
-	changes_neighborhood = OLSR_TRUE;
+	changes_neighborhood = true;
     }
     /* Timer = min (L_time, current time + NEIGHB_HOLD_TIME) */
     entry->L_LOST_LINK_time = MIN(GET_TIMESTAMP(NEIGHB_HOLD_TIME * MSEC_PER_SEC),
@@ -130,7 +130,7 @@ olsr_update_hysteresis_hello(struct link_entry *entry, olsr_reltime htime)
 
 
 void
-update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, olsr_u16_t seqno)
+update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, uint16_t seqno)
 {
   struct link_entry *lnk = lookup_link_entry(remote, NULL, local);
 
@@ -166,7 +166,7 @@ update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, 
     }
 
     lnk->olsr_seqno = seqno + 1;
-    lnk->olsr_seqno_valid = OLSR_TRUE;
+    lnk->olsr_seqno_valid = true;
 
     //printf("Updating seqno to: %d\n", lnk->olsr_seqno);
   }

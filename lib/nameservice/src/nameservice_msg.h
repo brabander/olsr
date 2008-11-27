@@ -51,8 +51,8 @@ typedef enum {
  **/
 struct name
 {
-	olsr_u16_t		type;
-	olsr_u16_t		len;	// length of the name
+	uint16_t		type;
+	uint16_t		len;	// length of the name
 	// the ip of the hostname, or the ip of the dns-server
 	// ip is irrelevant for services
 	union olsr_ip_addr	ip;
@@ -64,8 +64,8 @@ struct name
 
 struct namemsg
 {
-	olsr_u16_t version;    // version number of the nameservice plugin
-	olsr_u16_t nr_names;   // number of following packets including names, forwarders or services
+	uint16_t version;    // version number of the nameservice plugin
+	uint16_t nr_names;   // number of following packets including names, forwarders or services
 	/*
 	 * at least one struct name following
 	 */

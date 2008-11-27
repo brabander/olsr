@@ -64,7 +64,7 @@ olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname)
   printf("Writing config to file \"%s\".... ", fname);
 
   abuf_init(&abuf, 0);
-  olsrd_write_cnf_buf(&abuf, cnf, OLSR_FALSE);
+  olsrd_write_cnf_buf(&abuf, cnf, false);
   fputs(abuf.buf, fd);
 
   abuf_free(&abuf);
@@ -74,7 +74,7 @@ olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname)
   return 1;
 }
 
-static INLINE void append_float(struct autobuf *abuf, const char *name, float val, float deflt, olsr_bool first)
+static INLINE void append_float(struct autobuf *abuf, const char *name, float val, float deflt, bool first)
 {
   if (val != deflt) {
     abuf_appendf(abuf, "    %s\t%0.2f\n", name, val);
@@ -84,7 +84,7 @@ static INLINE void append_float(struct autobuf *abuf, const char *name, float va
 }
 
 void
-olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, olsr_bool write_more_comments)
+olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];             /* buffer for IPv6 inet_ntop */
   const char *s;
@@ -275,10 +275,10 @@ olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, olsr_b
   /* Interfaces */
   if (cnf->interfaces) {
     struct olsr_if *in;
-    olsr_bool first;
+    bool first;
     for (in = cnf->interfaces, first = write_more_comments;
          in != NULL;
-         in = in->next, first = OLSR_FALSE)        {
+         in = in->next, first = false)        {
       abuf_appendf(abuf, "Interface \"%s\" {\n", in->name);
 
       if (first) {

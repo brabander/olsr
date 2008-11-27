@@ -54,24 +54,24 @@
 #define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 
 struct default_lq_fpm {
-	olsr_u8_t valueLq;
-	olsr_u8_t valueNlq;
-	olsr_u16_t quickstart;
+	uint8_t valueLq;
+	uint8_t valueNlq;
+	uint16_t quickstart;
 };
 
 void default_lq_initialize_fpm(void);
 
 olsr_linkcost default_lq_calc_cost_fpm(const void *lq);
 
-olsr_bool default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2);
+bool default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2);
 
-olsr_linkcost default_lq_packet_loss_worker_fpm(struct link_entry *link, void *lq, olsr_bool lost);
+olsr_linkcost default_lq_packet_loss_worker_fpm(struct link_entry *link, void *lq, bool lost);
 void default_lq_memorize_foreign_hello_fpm(void *local, void *foreign);
 
 int default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *lq);
-void default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t **curr, void *lq);
+void default_lq_deserialize_hello_lq_pair_fpm(const uint8_t **curr, void *lq);
 int default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *lq);
-void default_lq_deserialize_tc_lq_pair_fpm(const olsr_u8_t **curr, void *lq);
+void default_lq_deserialize_tc_lq_pair_fpm(const uint8_t **curr, void *lq);
 
 void default_lq_copy_link2tc_fpm(void *target, void *source);
 void default_lq_clear_fpm(void *target);

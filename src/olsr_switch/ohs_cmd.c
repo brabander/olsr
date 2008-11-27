@@ -240,7 +240,7 @@ ohs_cmd_olsrd(const char *args)
 int
 ohs_cmd_link(const char *args)
 {
-  olsr_u8_t bi = 0, wildc_src = 0, wildc_dst = 0;
+  uint8_t bi = 0, wildc_src = 0, wildc_dst = 0;
   struct ohs_connection *src, *dst;
   struct in_addr iaddr;
   int qual;
@@ -457,7 +457,7 @@ ohs_cmd_help(const char *args)
 int
 ohs_cmd_log(const char *args)
 {
-  olsr_u8_t set = 0;
+  uint8_t set = 0;
 
   args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
   
@@ -465,7 +465,7 @@ ohs_cmd_log(const char *args)
      ((set = !strncmp(tok_buf, "set", strlen("set"))) || 
       !strncmp(tok_buf, "unset", strlen("unset"))))
     {
-        olsr_u32_t new_bit = 0;
+        uint32_t new_bit = 0;
         
         args += get_next_token(args, tok_buf, TOK_BUF_SIZE);
   

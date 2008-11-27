@@ -271,7 +271,7 @@ queue_if(const char *name, int hemu)
   tmp->interf = NULL;
   tmp->configured = 0;
 
-  tmp->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
+  tmp->host_emul = hemu ? true : false;
 
   tmp->next = olsr_cnf->interfaces;
   olsr_cnf->interfaces = tmp;

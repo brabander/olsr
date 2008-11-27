@@ -46,40 +46,40 @@
 #include "mantissa.h"
 
 struct hello_neighbor {
-  olsr_u8_t             status;
-  olsr_u8_t             link;
+  uint8_t             status;
+  uint8_t             link;
   union olsr_ip_addr    main_address;
   union olsr_ip_addr    address;
   struct hello_neighbor *next;
   olsr_linkcost         cost;
-  olsr_u32_t            linkquality[0];
+  uint32_t            linkquality[0];
 };
 
 struct hello_message {
   olsr_reltime           vtime;
   olsr_reltime           htime;
   union olsr_ip_addr     source_addr;
-  olsr_u16_t             packet_seq_number;
-  olsr_u8_t              hop_count;
-  olsr_u8_t              ttl;
-  olsr_u8_t              willingness;
+  uint16_t             packet_seq_number;
+  uint8_t              hop_count;
+  uint8_t              ttl;
+  uint8_t              willingness;
   struct hello_neighbor  *neighbors;  
 };
 
 struct tc_mpr_addr {
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
-  olsr_u32_t         linkquality[0];
+  uint32_t         linkquality[0];
 };
 
 struct tc_message {
   olsr_reltime        vtime;
   union olsr_ip_addr  source_addr;
   union olsr_ip_addr  originator;
-  olsr_u16_t          packet_seq_number;
-  olsr_u8_t           hop_count;
-  olsr_u8_t           ttl;
-  olsr_u16_t          ansn;
+  uint16_t          packet_seq_number;
+  uint8_t           hop_count;
+  uint8_t           ttl;
+  uint16_t          ansn;
   struct tc_mpr_addr  *multipoint_relay_selector_address;
 };
 

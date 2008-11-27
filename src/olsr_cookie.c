@@ -155,7 +155,7 @@ olsr_cookie_set_memory_size(struct olsr_cookie_info *ci, size_t size)
  * the free pool. This is only allowed for memory cookies.
  */
 void
-olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, olsr_bool clear)
+olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, bool clear)
 {
   if (!ci) {
     return;
@@ -176,7 +176,7 @@ olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, olsr_bool clear)
  * This is only allowed for memory cookies.
  */
 void
-olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, olsr_bool poison)
+olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, bool poison)
 {
   if (!ci) {
     return;
@@ -194,13 +194,13 @@ olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, olsr_bool poison)
 /*
  * Basic sanity checking for a passed-in cookie-id.
  */
-static olsr_bool
+static bool
 olsr_cookie_valid(olsr_cookie_t cookie_id)
 {
   if ((cookie_id < COOKIE_ID_MAX) && cookies[cookie_id]) {
-    return OLSR_TRUE;
+    return true;
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /*
@@ -252,7 +252,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-  olsr_bool reuse = OLSR_FALSE;
+  bool reuse = false;
   size_t size;
 
   /*
@@ -307,7 +307,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     }
 
     ci->ci_free_list_usage--;
-    reuse = OLSR_TRUE;
+    reuse = true;
   }
 
   /*
@@ -340,7 +340,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-  olsr_bool reuse = OLSR_FALSE;
+  bool reuse = false;
 
   branding = (struct olsr_cookie_mem_brand *)
     ((unsigned char *)ptr + ci->ci_size);
@@ -367,7 +367,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     list_node_init(free_list_node);
     list_add_before(&ci->ci_free_list, free_list_node);
     ci->ci_free_list_usage++;
-    reuse = OLSR_TRUE;
+    reuse = true;
 
   } else {
 

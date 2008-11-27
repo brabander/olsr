@@ -71,7 +71,7 @@
 static int srv_socket;
 
 #define OHS_BUFSIZE 1500
-static olsr_u8_t data_buffer[OHS_BUFSIZE];
+static uint8_t data_buffer[OHS_BUFSIZE];
 
 struct ohs_connection *ohs_conns;
 
@@ -80,7 +80,7 @@ struct ohs_connection *ohs_conns;
 static struct olsrd_config olsr_cnf_data;
 struct olsrd_config *olsr_cnf = &olsr_cnf_data;
 
-olsr_u32_t logbits;
+uint32_t logbits;
 
 /* local functions */
 static int
@@ -277,7 +277,7 @@ ohs_route_data(struct ohs_connection *oc)
 static int
 ohs_init_connect_sockets(void)
 {
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
   struct sockaddr_in sin4;
 
   printf("Initiating socket TCP port %d\n", OHS_TCP_PORT);
@@ -510,7 +510,7 @@ main(void)
       exit(EXIT_FAILURE);
     }
 
-  SetConsoleCtrlHandler(ohs_close, OLSR_TRUE);
+  SetConsoleCtrlHandler(ohs_close, true);
 
 #else
   signal(SIGINT, ohs_close);  

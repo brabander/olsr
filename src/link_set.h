@@ -65,13 +65,13 @@ struct link_entry {
   clock_t ASYM_time;
   olsr_reltime vtime;
   struct neighbor_entry *neighbor;
-  olsr_u8_t prev_status;
+  uint8_t prev_status;
 
   /*
    * Hysteresis
    */
-  olsr_bool olsr_seqno_valid;
-  olsr_u16_t olsr_seqno;
+  bool olsr_seqno_valid;
+  uint16_t olsr_seqno;
   float L_link_quality;
   int L_link_pending;
   clock_t L_LOST_LINK_time;
@@ -85,13 +85,13 @@ struct link_entry {
   struct timer_entry *link_loss_timer;
 
   /* user defined multiplies for link quality, multiplied with 65536 */
-  olsr_u32_t loss_link_multiplier;
+  uint32_t loss_link_multiplier;
 
   /* cost of this link */
   olsr_linkcost linkcost;
 
   struct list_node link_list;	       /* double linked list of all link entries */
-  olsr_u32_t linkquality[0];
+  uint32_t linkquality[0];
 };
 
 /* inline to recast from link_list back to link_entry */
@@ -115,7 +115,7 @@ LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 
 /* Externals */
 extern struct list_node link_entry_head;
-extern olsr_bool link_changes;
+extern bool link_changes;
 
 /* Function prototypes */
 
@@ -123,8 +123,8 @@ void olsr_set_link_timer(struct link_entry *, unsigned int);
 void olsr_init_link_set(void);
 void olsr_delete_link_entry_by_ip(const union olsr_ip_addr *);
 void olsr_expire_link_hello_timer(void *);
-void olsr_update_packet_loss_worker(struct link_entry *, olsr_bool);
-void signal_link_changes(olsr_bool);   /* XXX ugly */
+void olsr_update_packet_loss_worker(struct link_entry *, bool);
+void signal_link_changes(bool);   /* XXX ugly */
 
 
 struct link_entry *get_best_link_to_neighbor(const union olsr_ip_addr *);

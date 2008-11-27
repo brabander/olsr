@@ -86,8 +86,8 @@
 struct name_entry
 {
 	union olsr_ip_addr	ip;
-	olsr_u16_t		type;
-	olsr_u16_t		len;
+	uint16_t		type;
+	uint16_t		len;
 	char			*name;
 	struct name_entry	*next;		/* linked list */
 };
@@ -125,7 +125,7 @@ void olsr_expire_write_file_timer(void *);
 void olsr_namesvc_delete_db_entry(struct db_entry *);
 
 /* Parser function to register with the sceduler */
-olsr_bool
+bool
 olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 /* callback for periodic timer */
@@ -144,13 +144,13 @@ void
 free_all_list_entries(struct list_node *) ;
 
 void
-decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool *this_table_changed );
+decap_namemsg(struct name *from_packet, struct name_entry **to, bool *this_table_changed );
 
 void
 insert_new_name_in_list(union olsr_ip_addr *, struct list_node *,
-                        struct name *, olsr_bool *, olsr_reltime);
+                        struct name *, bool *, olsr_reltime);
 
-olsr_bool
+bool
 allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *hostname_or_ip);
 
 void
@@ -171,25 +171,25 @@ register_olsr_param(char *key, char *value);
 void 
 free_name_entry_list(struct name_entry **list);
 
-olsr_bool
+bool
 allowed_ip(const union olsr_ip_addr *addr);
 
-olsr_bool
+bool
 allowed_service(const char *service_line);
 
-olsr_bool
+bool
 is_name_wellformed(const char *service_line);
 
-olsr_bool
+bool
 is_service_wellformed(const char *service_line);
 
-olsr_bool
+bool
 is_service_wellformed(const char *service_line);
 
-olsr_bool
+bool
 is_latlon_wellformed(const char *latlon_line);
 
-olsr_bool
+bool
 get_isdefhna_latlon(void);
 
 void

@@ -136,7 +136,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
                   olsr_ip_to_string(&buf2, &tc->addr));
 
       olsr_delete_two_hop_neighbor_table(nbr2);
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
 
     /* Delete a possible neighbor entry */
@@ -156,7 +156,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 	/* Delete */
 	free(nbr);
 
-	changes_neighborhood = OLSR_TRUE;
+	changes_neighborhood = true;
       }
     }
   } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias);
@@ -221,7 +221,7 @@ static struct mid_entry *
 olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
                       olsr_reltime vtime,
-		      olsr_u16_t mid_seqno)
+		      uint16_t mid_seqno)
 {
   struct tc_entry *tc;
   struct ipaddr_str buf1, buf2;
@@ -282,7 +282,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
 void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
-                      olsr_reltime vtime, olsr_u16_t mid_seqno)
+                      olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
 
@@ -319,8 +319,8 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
   /*
    * Recalculate topology.
    */
-  changes_neighborhood = OLSR_TRUE;
-  changes_topology = OLSR_TRUE;
+  changes_neighborhood = true;
+  changes_topology = true;
 }
 
 /**
@@ -439,7 +439,7 @@ olsr_flush_mid_entries(struct tc_entry *tc)
  * @param mid_seqno the most recent message sequence number
  */
 void
-olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, olsr_u16_t mid_seqno)
+olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(main_addr);
   struct mid_entry *alias;
@@ -478,14 +478,14 @@ olsr_print_mid_set(void)
 /**
  * Process an incoming MID message.
  */
-olsr_bool
+bool
 olsr_input_mid(union olsr_message *msg,
                struct interface *input_if __attribute__ ((unused)),
                union olsr_ip_addr *from_addr)
 {
   struct ipaddr_str buf;
-  olsr_u16_t msg_size, msg_seq;
-  olsr_u8_t type, ttl, msg_hops;
+  uint16_t msg_size, msg_seq;
+  uint8_t type, ttl, msg_hops;
   const unsigned char *curr;
   olsr_reltime vtime;
   union olsr_ip_addr originator, alias;
@@ -493,13 +493,13 @@ olsr_input_mid(union olsr_message *msg,
 
   curr = (void *)msg;
   if (!msg) {
-    return OLSR_FALSE;
+    return false;
   }
 
   /* We are only interested in MID message types. */
   pkt_get_u8(&curr, &type);
   if (type != MID_MESSAGE) {
-    return OLSR_FALSE;
+    return false;
   }
 
   pkt_get_reltime(&curr, &vtime);
@@ -513,7 +513,7 @@ olsr_input_mid(union olsr_message *msg,
   pkt_get_u16(&curr, &msg_seq);
 
   if (!olsr_validate_address(&originator)) {
-    return OLSR_FALSE;
+    return false;
   }
 
   /*
@@ -524,7 +524,7 @@ olsr_input_mid(union olsr_message *msg,
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n",
 		olsr_ip_to_string(&buf, from_addr));
-    return OLSR_FALSE;
+    return false;
   }
 
   OLSR_PRINTF(1, "Processing MID from %s, seq 0x%04x\n",
@@ -550,7 +550,7 @@ olsr_input_mid(union olsr_message *msg,
   olsr_prune_mid_entries(&originator, msg_seq);
 
   /* Forward the message */
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

@@ -48,32 +48,32 @@
 
 
 static void
-print_messagedump(FILE *, olsr_u8_t *, olsr_16_t);
+print_messagedump(FILE *, uint8_t *, int16_t);
 
 static void
-print_midmsg(FILE *, olsr_u8_t *, olsr_16_t);
+print_midmsg(FILE *, uint8_t *, int16_t);
 
 static void
-print_hnamsg(FILE *, olsr_u8_t *, olsr_16_t);
+print_hnamsg(FILE *, uint8_t *, int16_t);
 
 static void
-print_olsr_tcmsg(FILE *, olsr_u8_t *, olsr_16_t);
+print_olsr_tcmsg(FILE *, uint8_t *, int16_t);
 
 static void
-print_olsr_tcmsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
+print_olsr_tcmsg_lq(FILE *, uint8_t *, int16_t);
 
 static void
-print_hellomsg(FILE *, olsr_u8_t *, olsr_16_t);
+print_hellomsg(FILE *, uint8_t *, int16_t);
 
 static void
-print_hellomsg_lq(FILE *, olsr_u8_t *, olsr_16_t);
+print_hellomsg_lq(FILE *, uint8_t *, int16_t);
 
 /* Entire packet */
-olsr_8_t
+int8_t
 print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt, 
-			     olsr_u16_t size, union olsr_ip_addr *from_addr)
+			     uint16_t size, union olsr_ip_addr *from_addr)
 {
-  olsr_16_t remainsize = size - OLSR_HEADERSIZE;
+  int16_t remainsize = size - OLSR_HEADERSIZE;
   union olsr_message *msg;
   struct ipaddr_str buf;
 
@@ -102,7 +102,7 @@ print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
 }
 
 /* Single message */
-olsr_8_t
+int8_t
 print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 {
   struct ipaddr_str buf;
@@ -125,41 +125,41 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
     case(MID_MESSAGE):
       print_midmsg(handle,
 		   (olsr_cnf->ip_version == AF_INET) ? 
-		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		   (uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		   ntohs(msg->v4.olsr_msgsize));
       break;
     case(HNA_MESSAGE):
       print_hnamsg(handle,
 		   (olsr_cnf->ip_version == AF_INET) ? 
-		   (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		   (uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		   ntohs(msg->v4.olsr_msgsize));
       break;
     case(TC_MESSAGE):
       print_olsr_tcmsg(handle,
 		  (olsr_cnf->ip_version == AF_INET) ? 
-		  (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		  (uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		  ntohs(msg->v4.olsr_msgsize));
       break;
     case(LQ_TC_MESSAGE):
       print_olsr_tcmsg_lq(handle,
 		     (olsr_cnf->ip_version == AF_INET) ? 
-		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		     (uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     case(HELLO_MESSAGE):
       print_hellomsg(handle,
 		     (olsr_cnf->ip_version == AF_INET) ? 
-		     (olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+		     (uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     case(LQ_HELLO_MESSAGE):
       print_hellomsg_lq(handle,
 			(olsr_cnf->ip_version == AF_INET) ? 
-			(olsr_u8_t *)&msg->v4.message : (olsr_u8_t *)&msg->v6.message,
+			(uint8_t *)&msg->v4.message : (uint8_t *)&msg->v6.message,
 		     ntohs(msg->v4.olsr_msgsize));
       break;
     default:
-      print_messagedump(handle, (olsr_u8_t *)msg, ntohs(msg->v4.olsr_msgsize));
+      print_messagedump(handle, (uint8_t *)msg, ntohs(msg->v4.olsr_msgsize));
     }
 
   fprintf(handle, "   --------------------------------------\n\n");
@@ -168,7 +168,7 @@ print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 
 
 static void
-print_messagedump(FILE *handle, olsr_u8_t *msg, olsr_16_t size)
+print_messagedump(FILE *handle, uint8_t *msg, int16_t size)
 {
   int i, x = 0;
 
@@ -191,7 +191,7 @@ print_messagedump(FILE *handle, olsr_u8_t *msg, olsr_16_t size)
 
 
 static void
-print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_hellomsg(FILE *handle, uint8_t *data, int16_t totsize)
 {
   union olsr_ip_addr *haddr;
   int hellosize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
@@ -259,7 +259,7 @@ print_hellomsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 }
 
 static void
-print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_hellomsg_lq(FILE *handle, uint8_t *data, int16_t totsize)
 {
   union olsr_ip_addr *haddr;
   int hellosize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
@@ -291,7 +291,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[8])
 	    {
               struct ipaddr_str buf;
-	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
+	      uint8_t *quality = (uint8_t *)haddr + olsr_cnf->ipsize;
 	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
@@ -320,7 +320,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 	       haddr++)
 	    {
               struct ipaddr_str buf;
-	      olsr_u8_t *quality = (olsr_u8_t *)haddr + olsr_cnf->ipsize;
+	      uint8_t *quality = (uint8_t *)haddr + olsr_cnf->ipsize;
 	      fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
 	      fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
 	    }
@@ -330,7 +330,7 @@ print_hellomsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 }
 
 static void
-print_olsr_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_olsr_tcmsg_lq(FILE *handle, uint8_t *data, int16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
   
@@ -355,7 +355,7 @@ print_olsr_tcmsg_lq(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
 
 static void
-print_olsr_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_olsr_tcmsg(FILE *handle, uint8_t *data, int16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
   
@@ -377,7 +377,7 @@ print_olsr_tcmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 
 
 static void
-print_hnamsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_hnamsg(FILE *handle, uint8_t *data, int16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 
@@ -395,7 +395,7 @@ print_hnamsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
 }
 
 static void
-print_midmsg(FILE *handle, olsr_u8_t *data, olsr_16_t totsize)
+print_midmsg(FILE *handle, uint8_t *data, int16_t totsize)
 {
   int remsize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 

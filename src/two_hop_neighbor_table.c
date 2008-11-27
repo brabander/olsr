@@ -137,7 +137,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 void
 olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 {
-  olsr_u32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
+  uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
 
 #if 0
     printf("Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
@@ -159,7 +159,7 @@ struct neighbor_2_entry *
 olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
 {
   struct neighbor_2_entry  *neighbor_2;
-  olsr_u32_t               hash = olsr_ip_hashing(dest);
+  uint32_t               hash = olsr_ip_hashing(dest);
 
   /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
   for(neighbor_2 = two_hop_neighbortable[hash].next;
@@ -195,7 +195,7 @@ struct neighbor_2_entry *
 olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
 {
   struct neighbor_2_entry  *neighbor_2;
-  olsr_u32_t               hash = olsr_ip_hashing(dest);
+  uint32_t               hash = olsr_ip_hashing(dest);
 
   /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
   for(neighbor_2 = two_hop_neighbortable[hash].next;
@@ -229,7 +229,7 @@ olsr_print_two_hop_neighbor_table(void)
          neigh2 != &two_hop_neighbortable[i];
          neigh2 = neigh2->next)	{
       struct neighbor_list_entry *entry;
-      olsr_bool first = OLSR_TRUE;
+      bool first = true;
 
       for (entry = neigh2->neighbor_2_nblist.next;
            entry != &neigh2->neighbor_2_nblist;
@@ -239,13 +239,13 @@ olsr_print_two_hop_neighbor_table(void)
         if (first) {
           OLSR_PRINTF(1, "%-15s  ",
                       olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr));
-          first = OLSR_FALSE;
+          first = false;
         } else {
           OLSR_PRINTF(1, "                 ");
         }
         OLSR_PRINTF(1, "%-15s  %s\n",
                     olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                    get_linkcost_text(entry->path_linkcost, OLSR_FALSE, &lqbuffer));
+                    get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
       }
     }
   }

@@ -101,8 +101,8 @@ olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
   free(nbr2_list);
 
   /* Set flags to recalculate the MPR set and the routing table */
-  changes_neighborhood = OLSR_TRUE;
-  changes_topology = OLSR_TRUE;
+  changes_neighborhood = true;
+  changes_topology = true;
 }
 
 /**
@@ -175,7 +175,7 @@ int
 olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 {  
   struct  neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
-  olsr_u32_t                    hash;
+  uint32_t                    hash;
   struct neighbor_entry         *entry;
 
   //printf("inserting neighbor\n");
@@ -218,7 +218,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 
   free(entry);
 
-  changes_neighborhood = OLSR_TRUE;
+  changes_neighborhood = true;
   return 1;
 
 }
@@ -235,7 +235,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 struct neighbor_entry *
 olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
 {
-  olsr_u32_t             hash;
+  uint32_t             hash;
   struct neighbor_entry  *new_neigh;
   
   hash = olsr_ip_hashing(main_addr);
@@ -263,8 +263,8 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
   new_neigh->neighbor_2_list.prev = &new_neigh->neighbor_2_list;
   
   new_neigh->linkcount = 0;
-  new_neigh->is_mpr = OLSR_FALSE;
-  new_neigh->was_mpr = OLSR_FALSE;
+  new_neigh->is_mpr = false;
+  new_neigh->was_mpr = false;
 
   /* Queue */
   QUEUE_ELEM(neighbortable[hash], new_neigh);
@@ -307,7 +307,7 @@ struct neighbor_entry *
 olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
 {
   struct neighbor_entry  *entry;
-  olsr_u32_t             hash = olsr_ip_hashing(dst);
+  uint32_t             hash = olsr_ip_hashing(dst);
   
   //printf("\nLookup %s\n", olsr_ip_to_string(&buf, dst));
   for(entry = neighbortable[hash].next;
@@ -347,10 +347,10 @@ update_neighbor_status(struct neighbor_entry *entry, int lnk)
 	      olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
 	    }
   
-	  changes_neighborhood = OLSR_TRUE;
-	  changes_topology = OLSR_TRUE;
+	  changes_neighborhood = true;
+	  changes_topology = true;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    signal_link_changes(OLSR_TRUE);
+	    signal_link_changes(true);
 	}
       entry->status = SYM;
     }
@@ -358,10 +358,10 @@ update_neighbor_status(struct neighbor_entry *entry, int lnk)
     {
       if(entry->status == SYM)
 	{
-	  changes_neighborhood = OLSR_TRUE;
-	  changes_topology = OLSR_TRUE;
+	  changes_neighborhood = true;
+	  changes_topology = true;
 	  if(olsr_cnf->tc_redundancy > 1)
-	    signal_link_changes(OLSR_TRUE);
+	    signal_link_changes(true);
 	}
       /* else N_status is set to NOT_SYM */
       entry->status = NOT_SYM;

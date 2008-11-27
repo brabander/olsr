@@ -644,7 +644,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
     char devname[IFNAMSIZ];
     char addr6p[8][5];
     int plen, scope, dad_status, if_idx;
-    olsr_bool found = OLSR_FALSE;
+    bool found = false;
     while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n",
 		  addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		  addr6p[4], addr6p[5], addr6p[6], addr6p[7],
@@ -657,23 +657,23 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
 	OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
 	OLSR_PRINTF(5, "\tScope: %d\n", scope);
 
-        if (addrtype6 == OLSR_IP6T_SITELOCAL && scope == IPV6_ADDR_SITELOCAL) found = OLSR_TRUE;
-        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && scope == IPV6_ADDR_GLOBAL) found = OLSR_TRUE;
-        else if (addrtype6 == OLSR_IP6T_GLOBAL && scope == IPV6_ADDR_GLOBAL) found = OLSR_TRUE;
+        if (addrtype6 == OLSR_IP6T_SITELOCAL && scope == IPV6_ADDR_SITELOCAL) found = true;
+        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && scope == IPV6_ADDR_GLOBAL) found = true;
+        else if (addrtype6 == OLSR_IP6T_GLOBAL && scope == IPV6_ADDR_GLOBAL) found = true;
 
-        if (found == OLSR_TRUE) {
-          found = OLSR_FALSE;
+        if (found) {
+          found = false;
           if (addr6p[0][0] == 'F' || addr6p[0][0] == 'f') {
             if (addr6p[0][1] == 'C' || addr6p[0][1] == 'c' ||
-                addr6p[0][1] == 'D' || addr6p[0][1] == 'd') found = OLSR_TRUE;
+                addr6p[0][1] == 'D' || addr6p[0][1] == 'd') found = true;
           }
-          if(addrtype6 == OLSR_IP6T_SITELOCAL) found = OLSR_TRUE;
-          else if(addrtype6 == OLSR_IP6T_UNIQUELOCAL && found == OLSR_TRUE) found = OLSR_TRUE;
-          else if(addrtype6 == OLSR_IP6T_GLOBAL && found == OLSR_FALSE) found = OLSR_TRUE;
-          else found = OLSR_FALSE;
+          if(addrtype6 == OLSR_IP6T_SITELOCAL) found = true;
+          else if(addrtype6 == OLSR_IP6T_UNIQUELOCAL && found) found = true;
+          else if(addrtype6 == OLSR_IP6T_GLOBAL && !found) found = true;
+          else found = false;
         }
 
-	if (found == OLSR_TRUE) {
+	if (found) {
 	  OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n",
 		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
@@ -858,13 +858,13 @@ calculate_if_metric(char *ifname)
 }
 
 
-olsr_bool
+bool
 is_if_link_up(char *ifname)
 {
   if(check_wireless_interface(ifname))
     {
       /* No link checking on wireless devices */
-      return OLSR_TRUE;
+      return true;
     }
   else
     {

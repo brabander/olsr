@@ -47,13 +47,13 @@
 
 #define PROMISCUOUS 0xffffffff
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(olsr_u8_t) * (((ver) == AF_INET) ? 4 : 7)))
+#define MIN_PACKET_SIZE(ver)	((int)(sizeof(uint8_t) * (((ver) == AF_INET) ? 4 : 7)))
 
 /* Function returns false if the message should not be forwarded */
-typedef olsr_bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
+typedef bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 struct parse_function_entry {
-  olsr_u32_t type;       /* If set to PROMISCUOUS all messages will be received */
+  uint32_t type;       /* If set to PROMISCUOUS all messages will be received */
   parse_function *function;
   struct parse_function_entry *next;
 };
@@ -73,7 +73,7 @@ struct packetparser_function_entry {
 };
 
 void
-parser_set_disp_pack_in(olsr_bool);
+parser_set_disp_pack_in(bool);
 
 void
 olsr_init_parser(void);
@@ -85,10 +85,10 @@ void
 olsr_input_hostemu(int, void *, unsigned int);
 
 void
-olsr_parser_add_function(parse_function, olsr_u32_t);
+olsr_parser_add_function(parse_function, uint32_t);
 
 int
-olsr_parser_remove_function(parse_function, olsr_u32_t);
+olsr_parser_remove_function(parse_function, uint32_t);
 
 void
 olsr_preprocessor_add_function(preprocessor_function);

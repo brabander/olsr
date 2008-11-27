@@ -50,7 +50,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-typedef int (*packet_transform_function)(olsr_u8_t *, int *);
+typedef int (*packet_transform_function)(uint8_t *, int *);
 
 /*
  * Used for filtering addresses.
@@ -63,9 +63,9 @@ struct filter_entry {
 AVLNODE2STRUCT(filter_tree2filter, struct filter_entry, filter_node);
 
 
-extern olsr_bool disp_pack_out;
+extern bool disp_pack_out;
 
-static INLINE void net_set_disp_pack_out(olsr_bool val) { disp_pack_out = val; }
+static INLINE void net_set_disp_pack_out(bool val) { disp_pack_out = val; }
 
 void init_net(void);
 
@@ -91,16 +91,16 @@ static INLINE int net_outbuffer_bytes_left(const struct interface *ifp) { return
  *
  * @return the number of bytes currently pending
  */
-static INLINE olsr_u16_t net_output_pending(const struct interface *ifp) { return ifp->netbuf.pending; }
+static INLINE uint16_t net_output_pending(const struct interface *ifp) { return ifp->netbuf.pending; }
 
 #if 0
 int net_reserve_bufspace(struct interface *, int);
 #endif
 
-int net_outbuffer_push(struct interface *, const void *, const olsr_u16_t);
+int net_outbuffer_push(struct interface *, const void *, const uint16_t);
 
 #if 0
-int net_outbuffer_push_reserved(struct interface *, const void *, const olsr_u16_t);
+int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t);
 #endif
 
 int net_output(struct interface *);
@@ -109,7 +109,7 @@ void add_ptf(packet_transform_function);
 
 int del_ptf(packet_transform_function);
 
-olsr_bool olsr_validate_address(const union olsr_ip_addr *);
+bool olsr_validate_address(const union olsr_ip_addr *);
 
 void olsr_add_invalid_address(const union olsr_ip_addr *);
 

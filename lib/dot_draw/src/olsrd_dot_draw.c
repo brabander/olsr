@@ -162,7 +162,7 @@ ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
 	       "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               get_linkcost_text(etx, OLSR_FALSE, &lqbuffer),
+               get_linkcost_text(etx, false, &lqbuffer),
                style);
   
   if (neighbor->is_mpr) {
@@ -175,7 +175,7 @@ static int
 plugin_ipc_init(void)
 {
   struct sockaddr_in addr;
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
 
   if (ipc_socket != -1) {
     close(ipc_socket);
@@ -330,7 +330,7 @@ ipc_print_tc_link(int ipc_connection, const struct tc_entry *entry, const struct
 	       "\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
                olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               get_linkcost_text(dst_entry->cost, OLSR_FALSE, &lqbuffer));
+               get_linkcost_text(dst_entry->cost, false, &lqbuffer));
 }
 
 

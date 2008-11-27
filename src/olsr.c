@@ -69,10 +69,10 @@
 #include <stdlib.h>
 
 
-olsr_bool changes_topology;
-olsr_bool changes_neighborhood;
-olsr_bool changes_hna;
-olsr_bool changes_force;
+bool changes_topology;
+bool changes_neighborhood;
+bool changes_hna;
+bool changes_force;
 
 /**
  * Process changes functions
@@ -86,7 +86,7 @@ struct pcf
 
 static struct pcf *pcf_list;
 
-static olsr_u16_t message_seqno;
+static uint16_t message_seqno;
 
 /* initialize it with all zeroes */
 const union olsr_ip_addr all_zero = { .v6 = IN6ADDR_ANY_INIT };
@@ -105,7 +105,7 @@ init_msg_seqno(void)
  *
  *@return the seqno
  */
-olsr_u16_t
+uint16_t
 get_msg_seqno(void)
 {
   return message_seqno++;
@@ -211,10 +211,10 @@ olsr_process_changes(void)
 			    changes_hna);
     }
 
-  changes_neighborhood = OLSR_FALSE;
-  changes_topology = OLSR_FALSE;
-  changes_hna = OLSR_FALSE;
-  changes_force = OLSR_FALSE;
+  changes_neighborhood = false;
+  changes_topology = false;
+  changes_hna = false;
+  changes_force = false;
 }
 
 /*
@@ -223,10 +223,10 @@ olsr_process_changes(void)
 void
 olsr_trigger_forced_update(void *unused __attribute__((unused))) {
 
-  changes_force = OLSR_TRUE;
-  changes_neighborhood = OLSR_TRUE;
-  changes_topology = OLSR_TRUE;
-  changes_hna = OLSR_TRUE;
+  changes_force = true;
+  changes_neighborhood = true;
+  changes_topology = true;
+  changes_hna = true;
 
   olsr_process_changes();
 }
@@ -242,9 +242,9 @@ olsr_init_tables(void)
   /* Some cookies for stats keeping */
   static struct olsr_cookie_info *periodic_spf_timer_cookie = NULL;
 
-  changes_topology = OLSR_FALSE;
-  changes_neighborhood = OLSR_FALSE;
-  changes_hna = OLSR_FALSE;
+  changes_topology = false;
+  changes_neighborhood = false;
+  changes_hna = false;
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
@@ -512,7 +512,7 @@ olsr_update_willingness(void *foo __attribute__((unused)))
  *@return a 8bit value from 0-7 representing the willingness
  */
 
-olsr_u8_t
+uint8_t
 olsr_calculate_willingness(void)
 {
   struct olsr_apm_info ainfo;
@@ -540,7 +540,7 @@ olsr_calculate_willingness(void)
 }
 
 const char *
-olsr_msgtype_to_string(olsr_u8_t msgtype)
+olsr_msgtype_to_string(uint8_t msgtype)
 {
   static char type[20];
 
@@ -568,7 +568,7 @@ olsr_msgtype_to_string(olsr_u8_t msgtype)
 
 
 const char *
-olsr_link_to_string(olsr_u8_t linktype)
+olsr_link_to_string(uint8_t linktype)
 {
   static char type[20];
 
@@ -594,7 +594,7 @@ olsr_link_to_string(olsr_u8_t linktype)
 
 
 const char *
-olsr_status_to_string(olsr_u8_t status)
+olsr_status_to_string(uint8_t status)
 {
   static char type[20];
 

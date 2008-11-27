@@ -95,16 +95,16 @@
 #define WEIGHT_HIGHEST          8192	/* Really high          */
 
 struct if_gen_property {
-  olsr_u32_t owner_id;
+  uint32_t owner_id;
   void *data;
   struct if_gen_property *next;
 };
 
 struct vtimes {
-  olsr_u8_t hello;
-  olsr_u8_t tc;
-  olsr_u8_t mid;
-  olsr_u8_t hna;
+  uint8_t hello;
+  uint8_t tc;
+  uint8_t mid;
+  uint8_t hna;
 };
 
 /*
@@ -112,7 +112,7 @@ struct vtimes {
  * but we have circular references then.
  */
 struct olsr_netbuf {
-  olsr_u8_t *buff;		       /* Pointer to the allocated buffer */
+  uint8_t *buff;		       /* Pointer to the allocated buffer */
   int bufsize;			       /* Size of the buffer */
   int maxsize;			       /* Max bytes of payload that can be added */
   int pending;			       /* How much data is currently pending */
@@ -141,7 +141,7 @@ struct interface {
   int if_index;			       /* Kernels index of this interface */
   int is_wireless;		       /* wireless interface or not */
   char *int_name;		       /* from kernel if structure */
-  olsr_u16_t olsr_seqnum;	       /* Olsr message seqno */
+  uint16_t olsr_seqnum;	       /* Olsr message seqno */
 
   /* Periodic message generation timers */
   struct timer_entry *hello_gen_timer;
@@ -152,7 +152,7 @@ struct interface {
   /* Message build related  */
   struct timer_entry *buffer_hold_timer; /* Timer for message batching */
   struct olsr_netbuf netbuf;	       /* the build buffer */
-  olsr_bool immediate_send_tc;	       /* Hello's are sent immediately normally,
+  bool immediate_send_tc;	       /* Hello's are sent immediately normally,
                                           this flag prefers to send TC's */
 
 #ifdef linux

@@ -74,10 +74,10 @@ WinSockPError(const char *);
  *and add
  */
 struct ipcmsg {
-  olsr_u8_t          msgtype;
-  olsr_u16_t         size;
-  olsr_u8_t          metric;
-  olsr_u8_t          add;
+  uint8_t          msgtype;
+  uint16_t         size;
+  uint8_t          metric;
+  uint8_t          add;
   union olsr_ip_addr target_addr;
   union olsr_ip_addr gateway_addr;
   char               device[4];
@@ -85,17 +85,17 @@ struct ipcmsg {
 
 
 struct ipc_net_msg {
-  olsr_u8_t            msgtype;
-  olsr_u16_t           size;
-  olsr_u8_t            mids; /* No. of extra interfaces */
-  olsr_u8_t            hnas; /* No. of HNA nets */
-  olsr_u8_t            unused1;
-  olsr_u16_t           hello_int;
-  olsr_u16_t           hello_lan_int;
-  olsr_u16_t           tc_int;
-  olsr_u16_t           neigh_hold;
-  olsr_u16_t           topology_hold;
-  olsr_u8_t            ipv6;
+  uint8_t            msgtype;
+  uint16_t           size;
+  uint8_t            mids; /* No. of extra interfaces */
+  uint8_t            hnas; /* No. of HNA nets */
+  uint8_t            unused1;
+  uint16_t           hello_int;
+  uint16_t           hello_lan_int;
+  uint16_t           tc_int;
+  uint16_t           neigh_hold;
+  uint16_t           topology_hold;
+  uint8_t            ipv6;
   union olsr_ip_addr   main_addr;
 };
 
@@ -116,10 +116,10 @@ static int
 ipc_input(int);
 #endif
 
-static olsr_bool
+static bool
 ipc_check_allowed_ip(const union olsr_ip_addr *);
 
-static olsr_bool
+static bool
 frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 
@@ -181,23 +181,23 @@ ipc_init(void)
   return ipc_sock;
 }
 
-static olsr_bool
+static bool
 ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 {
   struct ip_prefix_list *ipcn;
 
   if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
-    return OLSR_TRUE;
+    return true;
   }
 
   /* check nets */
   for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
     if (ip_in_net(addr, &ipcn->net)) {
-      return OLSR_TRUE;
+      return true;
     }
   }
 
-  return OLSR_FALSE;
+  return false;
 }
 
 static void
@@ -257,11 +257,11 @@ ipc_input(int sock)
  *
  *@return true for not preventing forwarding
  */
-static olsr_bool
+static bool
 frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__((unused)), union olsr_ip_addr *from_addr __attribute__((unused)))
 {
   if (ipc_conn < 0) {
-    return OLSR_TRUE;
+    return true;
   }
   if (send(ipc_conn,
 	   (void *)msg,
@@ -270,7 +270,7 @@ frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute_
     OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
     CLOSE(ipc_conn);
   }
-  return OLSR_TRUE;
+  return true;
 }
 
 
@@ -413,11 +413,11 @@ ipc_send_net_info(int fd)
   /* Different values */
   /* Temporary fixes */
   /* XXX fix IPC intervals */
-  net_msg.hello_int = 0;//htons((olsr_u16_t)hello_int);
-  net_msg.hello_lan_int = 0;//htons((olsr_u16_t)hello_int_nw);
-  net_msg.tc_int = 0;//htons((olsr_u16_t)tc_int);
-  net_msg.neigh_hold = 0;//htons((olsr_u16_t)neighbor_hold_time);
-  net_msg.topology_hold = 0;//htons((olsr_u16_t)topology_hold_time);
+  net_msg.hello_int = 0;//htons((uint16_t)hello_int);
+  net_msg.hello_lan_int = 0;//htons((uint16_t)hello_int_nw);
+  net_msg.tc_int = 0;//htons((uint16_t)tc_int);
+  net_msg.neigh_hold = 0;//htons((uint16_t)neighbor_hold_time);
+  net_msg.topology_hold = 0;//htons((uint16_t)topology_hold_time);
 
   net_msg.ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
 

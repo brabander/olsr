@@ -78,9 +78,9 @@ struct parse_function_entry *parse_functions;
 struct preprocessor_function_entry *preprocessor_functions;
 struct packetparser_function_entry *packetparser_functions;
 
-static olsr_bool disp_pack_in = OLSR_FALSE;
+static bool disp_pack_in = false;
 
-void parser_set_disp_pack_in(olsr_bool val)
+void parser_set_disp_pack_in(bool val)
 {
   disp_pack_in = val;
 }
@@ -98,7 +98,7 @@ void olsr_init_parser(void)
   olsr_init_package_process();
 }
 
-void olsr_parser_add_function(parse_function *function, olsr_u32_t type)
+void olsr_parser_add_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *new_entry;
 
@@ -116,7 +116,7 @@ void olsr_parser_add_function(parse_function *function, olsr_u32_t type)
   OLSR_PRINTF(3, "Register parse function: Added function for type %d\n", type);
 }
 
-int olsr_parser_remove_function(parse_function *function, olsr_u32_t type)
+int olsr_parser_remove_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *entry, *prev;
 
@@ -286,7 +286,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   }
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {
-    olsr_bool forward = OLSR_TRUE;
+    bool forward = true;
     
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
       break;
@@ -330,7 +330,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
       /* Promiscuous or exact match */
       if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
         if (!entry->function(m, in_if, from_addr))
-          forward = OLSR_FALSE;
+          forward = false;
       }
     }
 
@@ -453,7 +453,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   socklen_t fromlen;
   struct interface *olsr_in_if;
   union olsr_ip_addr from_addr;
-  olsr_u16_t pcklen;
+  uint16_t pcklen;
   struct preprocessor_function_entry *entry;
   char *packet;
   char inbuf[MAXMESSAGESIZE+1];

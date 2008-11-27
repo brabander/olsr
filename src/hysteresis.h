@@ -49,7 +49,7 @@ void
 olsr_update_hysteresis_hello(struct link_entry *, olsr_reltime);
 
 void
-update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, olsr_u16_t);
+update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, uint16_t);
 
 static inline float olsr_hyst_calc_stability(float old_quality) { return (((1 - olsr_cnf->hysteresis_param.scaling) * old_quality) + olsr_cnf->hysteresis_param.scaling); }
 

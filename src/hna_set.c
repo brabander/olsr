@@ -186,7 +186,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw,
   if (net_entry == NULL) {
     /* Need to add the net */
     net_entry = olsr_add_hna_net(tc, prefix);
-    changes_hna = OLSR_TRUE;
+    changes_hna = true;
   }
 
   /*
@@ -239,7 +239,7 @@ olsr_print_hna_set(void)
  * Process incoming HNA message.
  * Forwards the message if that is to be done.
  */
-olsr_bool
+bool
 olsr_input_hna(union olsr_message *msg,
                struct interface *in_if __attribute__((unused)),
                union olsr_ip_addr *from_addr)
@@ -247,16 +247,16 @@ olsr_input_hna(union olsr_message *msg,
   struct olsrmsg_hdr msg_hdr;
   struct olsr_ip_prefix prefix;
   struct ipaddr_str buf;
-  const olsr_u8_t *curr, *curr_end;
+  const uint8_t *curr, *curr_end;
   int hnasize;
 
   if (!(curr = olsr_parse_msg_hdr(msg, &msg_hdr))) {
-    return OLSR_FALSE;
+    return false;
   }
 
   /* We are only interested in HNA message types. */
   if (msg_hdr.type != HNA_MESSAGE) {
-    return OLSR_FALSE;
+    return false;
   }
 
   hnasize = msg_hdr.size - (olsr_cnf->ip_version == AF_INET ?
@@ -268,12 +268,12 @@ olsr_input_hna(union olsr_message *msg,
                 (unsigned long)(olsr_cnf->ip_version == AF_INET ?
                                 offsetof(struct olsrmsg, message) :
                                 offsetof(struct olsrmsg6, message)));
-    return OLSR_FALSE;
+    return false;
   }
 
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
     OLSR_PRINTF(0, "HNA message size %d illegal!\n", msg_hdr.size);
-    return OLSR_FALSE;
+    return false;
   }
 
   /*
@@ -284,7 +284,7 @@ olsr_input_hna(union olsr_message *msg,
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n",
                 olsr_ip_to_string(&buf, from_addr));
-    return OLSR_FALSE;
+    return false;
   }
 
   OLSR_PRINTF(1, "Processing HNA from %s, seq 0x%04x\n",
@@ -293,7 +293,7 @@ olsr_input_hna(union olsr_message *msg,
   /*
    * Now walk the list of HNA advertisements.
    */
-  curr_end = (const olsr_u8_t *)msg + msg_hdr.size;
+  curr_end = (const uint8_t *)msg + msg_hdr.size;
   while (curr < curr_end) {
 
     pkt_get_ipaddress(&curr, &prefix.prefix);
@@ -308,7 +308,7 @@ olsr_input_hna(union olsr_message *msg,
     }
   }
   /* Forward the message */
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

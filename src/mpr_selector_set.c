@@ -43,7 +43,7 @@
 
 #define OLSR_MPR_SEL_JITTER 5 /* percent */
 
-olsr_u16_t ansn = 0;
+uint16_t ansn = 0;
 
 static struct olsr_cookie_info *mpr_sel_timer_cookie;
 
@@ -82,10 +82,10 @@ olsr_init_mprs(void)
  * Check if we(this node) is selected as a MPR by any
  * neighbors. If the list is empty we are not MPR.
  */
-olsr_bool
+bool
 olsr_is_mpr(void)
 {
-    return mprs_list.next == &mprs_list ? OLSR_FALSE : OLSR_TRUE;
+    return mprs_list.next == &mprs_list ? false : true;
 }
 #endif
 
@@ -108,7 +108,7 @@ olsr_expire_mpr_sel_entry(void *context)
 
   /* Delete entry */
   free(mpr_sel);
-  signal_link_changes(OLSR_TRUE);
+  signal_link_changes(true);
 }
 
 /**
@@ -166,7 +166,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
     /* Queue */
     list_add_before(&mprs_list_head, &mprs->mprs_list);
 
-    signal_link_changes(OLSR_TRUE);
+    signal_link_changes(true);
     rv = 1;
   } else {
     OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));

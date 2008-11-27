@@ -41,11 +41,11 @@
 #include "ipcalc.h"
 
 int
-prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
+prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {
 #if !defined(NODEBUG) && defined(DEBUG)
   struct ipaddr_str buf;
-  const olsr_u8_t *a_start = a;
+  const uint8_t *a_start = a;
 #endif
   int i;
   const int end = MIN(len, prefixlen / 8);
@@ -66,13 +66,13 @@ prefix_to_netmask(olsr_u8_t *a, int len, olsr_u8_t prefixlen)
   return 1;
 }
 
-olsr_u8_t
-netmask_to_prefix(const olsr_u8_t *adr, int len)
+uint8_t
+netmask_to_prefix(const uint8_t *adr, int len)
 {
   struct ipaddr_str buf;
-  const olsr_u8_t * const a_end = adr+len;
-  olsr_u16_t prefix = 0;
-  const olsr_u8_t *a;
+  const uint8_t * const a_end = adr+len;
+  uint16_t prefix = 0;
+  const uint8_t *a;
   for (a = adr; a < a_end && *a == 0xff; a++) {
     prefix += 8;
   }
@@ -119,17 +119,17 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
 {
   int rv;
   if(olsr_cnf->ip_version == AF_INET) {
-    olsr_u32_t netmask = ntohl(~0 << (32 - net->prefix_len));
+    uint32_t netmask = ntohl(~0 << (32 - net->prefix_len));
     rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
   } else {
     /* IPv6 */
-    olsr_u32_t netmask;
-    const olsr_u32_t *i = (const olsr_u32_t *)&ipaddr->v6.s6_addr;
-    const olsr_u32_t *n = (const olsr_u32_t *)&net->prefix.v6.s6_addr;
+    uint32_t netmask;
+    const uint32_t *i = (const uint32_t *)&ipaddr->v6.s6_addr;
+    const uint32_t *n = (const uint32_t *)&net->prefix.v6.s6_addr;
     unsigned int prefix_len;
     for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
       if (*i != *n) {
-        return OLSR_FALSE;
+        return false;
       }
       i++;
       n++;

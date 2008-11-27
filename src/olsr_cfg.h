@@ -56,12 +56,12 @@
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
 #define DEF_NICCHGPOLLRT    2.5
-#define DEF_WILL_AUTO       OLSR_TRUE
-#define DEF_ALLOW_NO_INTS   OLSR_TRUE
+#define DEF_WILL_AUTO       true
+#define DEF_ALLOW_NO_INTS   true
 #define DEF_TOS             16
 #define DEF_DEBUGLVL        1
 #define DEF_IPC_CONNECTIONS 0
-#define DEF_USE_HYST        OLSR_FALSE
+#define DEF_USE_HYST        false
 #define DEF_FIB_METRIC      FIBM_FLAT
 #define DEF_LQ_LEVEL        2
 #define DEF_LQ_FISH         0
@@ -69,7 +69,7 @@
 #define DEF_LQ_DIJK_INTER   0.0
 #define DEF_LQ_NAT_THRESH   1.0
 #define DEF_LQ_AGING        0.1
-#define DEF_CLEAR_SCREEN    OLSR_FALSE
+#define DEF_CLEAR_SCREEN    false
 
 /* Bounds */
 
@@ -130,14 +130,14 @@ struct olsr_msg_params
 struct olsr_lq_mult
 {
   union olsr_ip_addr addr;
-  olsr_u32_t value;
+  uint32_t value;
   struct olsr_lq_mult *next;
 };
 
 struct olsr_if_weight
 {
   int        value;
-  olsr_bool  fixed;
+  bool  fixed;
 };
 
 struct if_config_options
@@ -152,7 +152,7 @@ struct if_config_options
   struct olsr_msg_params   mid_params;
   struct olsr_msg_params   hna_params;
   struct olsr_lq_mult      *lq_mult;
-  olsr_bool                autodetect_chg;
+  bool                autodetect_chg;
 };
 
 
@@ -161,8 +161,8 @@ struct olsr_if
 {
   char                     *name;
   char                     *config;
-  olsr_bool                configured;
-  olsr_bool                host_emul;
+  bool                configured;
+  bool                host_emul;
   union olsr_ip_addr       hemu_ip;
   struct interface         *interf;
   struct if_config_options *cnf;
@@ -211,7 +211,7 @@ struct olsrd_config
 {
  int                      ip_version;
   size_t                   ipsize;               /* Size of address */
-  olsr_u8_t                maxplen;              /* maximum prefix len */
+  uint8_t                maxplen;              /* maximum prefix len */
   unsigned char            no_fork:1;
   unsigned char            host_emul:1;
   unsigned char            allow_no_interfaces:1;
@@ -219,11 +219,11 @@ struct olsrd_config
   unsigned char            use_hysteresis:1;
   unsigned char            clear_screen:1;
   unsigned char            del_gws:1;            /* Delete InternetGWs at startup */
-  olsr_u16_t               tos;
-  olsr_u8_t                rttable;
-  olsr_u8_t                rttable_default;
-  olsr_u8_t                ipc_connections;
-  olsr_8_t                 debug_level;
+  uint16_t               tos;
+  uint8_t                rttable;
+  uint8_t                rttable_default;
+  uint8_t                ipc_connections;
+  int8_t                 debug_level;
   olsr_fib_metric_options  fib_metric;
   struct hyst_param        hysteresis_param;
   struct plugin_entry     *plugins;
@@ -231,20 +231,20 @@ struct olsrd_config
   struct ip_prefix_list   *ipc_nets;
   struct olsr_if          *interfaces;
   //float                    pollrate;
-  olsr_u32_t               pollrate; /* in microseconds */
+  uint32_t               pollrate; /* in microseconds */
   float                    nic_chgs_pollrate;
-  olsr_u8_t                tc_redundancy;
-  olsr_u8_t                mpr_coverage;
-  olsr_u8_t                lq_level;
-  olsr_u8_t                lq_fish;
+  uint8_t                tc_redundancy;
+  uint8_t                mpr_coverage;
+  uint8_t                lq_level;
+  uint8_t                lq_fish;
   float                    lq_dinter;
   float                    lq_aging;
   char                    *lq_algorithm;
-  olsr_u8_t                lq_dlimit;
-  olsr_u8_t                willingness;
+  uint8_t                lq_dlimit;
+  uint8_t                willingness;
 
   /* Stuff set by olsrd */
-  olsr_u16_t               system_tick_divider;  /* Tick resolution */
+  uint16_t               system_tick_divider;  /* Tick resolution */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
   float                    will_int;
   int                      exit_value;           /* Global return value for process termination */
@@ -276,11 +276,11 @@ extern "C" {
  * List functions
  */
 
-void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, olsr_u8_t);
+void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 
-int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, olsr_u8_t);
+int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 
-struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, olsr_u8_t prefix_len);
+struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 
 /*
@@ -297,7 +297,7 @@ void olsrd_print_cnf(const struct olsrd_config *);
 
 int olsrd_write_cnf(const struct olsrd_config *, const char *);
 
-void olsrd_write_cnf_buf(struct autobuf *, const struct olsrd_config *, olsr_bool);
+void olsrd_write_cnf_buf(struct autobuf *, const struct olsrd_config *, bool);
 
 void init_default_if_config(struct if_config_options *);
 
@@ -307,9 +307,9 @@ struct olsrd_config *olsrd_get_default_cnf(void);
 
 int check_pollrate(float *pollrate);
 
-static inline float conv_pollrate_to_secs(olsr_u32_t p)   { return p / 1000000.0; }
+static inline float conv_pollrate_to_secs(uint32_t p)   { return p / 1000000.0; }
 
-static inline olsr_u32_t conv_pollrate_to_microsecs(float p) { return p * 1000000; }
+static inline uint32_t conv_pollrate_to_microsecs(float p) { return p * 1000000; }
 
 #if defined WIN32
 void win32_stdio_hack(unsigned int);

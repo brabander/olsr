@@ -52,7 +52,7 @@
 #include <limits.h>
 #include <errno.h>
 
-olsr_bool disp_pack_out = OLSR_FALSE;
+bool disp_pack_out = false;
 
 
 #ifdef WIN32
@@ -201,7 +201,7 @@ net_reserve_bufspace(struct interface *ifp, int size)
  *  success
  */
 int
-net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t size)
+net_outbuffer_push(struct interface *ifp, const void *data, const uint16_t size)
 {
   if (ifp->netbuf.pending + size > ifp->netbuf.maxsize) {
     return 0;
@@ -225,7 +225,7 @@ net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t siz
  *  success
  */
 int
-net_outbuffer_push_reserved(struct interface *ifp, const void *data, const olsr_u16_t size)
+net_outbuffer_push_reserved(struct interface *ifp, const void *data, const uint16_t size)
 {
   if (ifp->netbuf.pending + size > ifp->netbuf.maxsize + ifp->netbuf.reserved) {
     return 0;
@@ -377,7 +377,7 @@ net_output(struct interface *ifp)
    * link qualities for the links to our neighbours
    */
 
-  lq_tc_pending = OLSR_FALSE;
+  lq_tc_pending = false;
   return retval;
 }
 
@@ -408,7 +408,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
 }
 
 
-olsr_bool
+bool
 olsr_validate_address(const union olsr_ip_addr *addr)
 {
   const struct filter_entry *filter = filter_tree2filter(avl_find(&filter_tree, addr));
@@ -417,9 +417,9 @@ olsr_validate_address(const union olsr_ip_addr *addr)
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Validation of address %s failed!\n",
                 olsr_ip_to_string(&buf, addr));
-    return OLSR_FALSE;
+    return false;
   }
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

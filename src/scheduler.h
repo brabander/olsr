@@ -76,8 +76,8 @@ struct timer_entry {
   clock_t timer_clock;		       /* when timer shall fire (absolute time) */
   unsigned int timer_period;	       /* set for periodical timers (relative time) */
   olsr_cookie_t timer_cookie;	       /* used for diag stuff */
-  olsr_u8_t timer_jitter_pct;	       /* the jitter expressed in percent */
-  olsr_u8_t timer_flags;	       /* misc flags */
+  uint8_t timer_jitter_pct;	       /* the jitter expressed in percent */
+  uint8_t timer_flags;	       /* misc flags */
   unsigned int timer_random;	       /* cache random() result for performance reasons */
   timer_cb_func timer_cb;	       /* callback function */
   void *timer_cb_context;	       /* context pointer */
@@ -94,11 +94,11 @@ LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
 /* Timers */
 void olsr_init_timers(void);
-void olsr_set_timer(struct timer_entry **, unsigned int, olsr_u8_t, olsr_bool,
+void olsr_set_timer(struct timer_entry **, unsigned int, uint8_t, bool,
 		    timer_cb_func, void *, olsr_cookie_t);
-struct timer_entry *olsr_start_timer(unsigned int, olsr_u8_t, olsr_bool,
+struct timer_entry *olsr_start_timer(unsigned int, uint8_t, bool,
 				     timer_cb_func, void *, olsr_cookie_t);
-void olsr_change_timer(struct timer_entry *, unsigned int, olsr_u8_t, olsr_bool);
+void olsr_change_timer(struct timer_entry *, unsigned int, uint8_t, bool);
 void olsr_stop_timer(struct timer_entry *);
 
 /* Printing timestamps */
