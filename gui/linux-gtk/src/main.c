@@ -85,7 +85,7 @@ main (int argc, char *argv[])
 
   /* Init node timeout */
   nodes_timeout = NEIGHB_HOLD_TIME_NW;
-  init_timer((olsr_u32_t) (nodes_timeout * 1000), &hold_time_nodes);
+  init_timer((uint32_t) (nodes_timeout * 1000), &hold_time_nodes);
 
   ipc_connect(&pin);
 

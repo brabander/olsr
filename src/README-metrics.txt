@@ -131,7 +131,7 @@ Now lets have a look at the functions.
   same as for calc_hello_cost but just for TC costs and not for hellos
 
 
-  olsr_bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
+  bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost c2);
 ---------------------------------
   This callback is called after the main loop whenever the core has 
   to decide if a new dijkstra needs to be calculated. In principle for every 
@@ -143,12 +143,12 @@ Now lets have a look at the functions.
   the plugin can decide if the cost change is relevant enough.
 
   return values:
-    OLSR_TRUE  
-    OLSR_FALSE 
+    true  
+    false 
 
 
   olsr_linkcost(*packet_loss_handler) (struct link_entry * entry, void *lq,
-                       olsr_bool lost);
+                       bool lost);
 ---------------------------------
   This callback is called 
 
@@ -183,11 +183,11 @@ Now lets have a look at the functions.
 ---------------------------------
   This callback is called when
 
-  void (*deserialize_hello_lq) (const olsr_u8_t ** curr, void *lq);
+  void (*deserialize_hello_lq) (const uint8_t ** curr, void *lq);
 ---------------------------------
   This callback is called when
 
-  void (*deserialize_tc_lq) (const olsr_u8_t ** curr, void *lq);
+  void (*deserialize_tc_lq) (const uint8_t ** curr, void *lq);
 ---------------------------------
   This callback is called whenever a packet needs to be deserialized (for every packet 
   and there for every neighour in the TC)

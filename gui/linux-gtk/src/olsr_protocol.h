@@ -40,19 +40,19 @@
 #include <sys/types.h>
 
 #ifdef WIN32
-typedef unsigned char   olsr_u8_t;
-typedef unsigned short  olsr_u16_t;
-typedef unsigned int    olsr_u32_t;
-typedef char            olsr_8_t;
-typedef short           olsr_16_t;
-typedef int             olsr_32_t;
+typedef unsigned char   uint8_t;
+typedef unsigned short  uint16_t;
+typedef unsigned int    uint32_t;
+typedef char            int8_t;
+typedef short           int16_t;
+typedef int             int32_t;
 #else
-typedef u_int8_t        olsr_u8_t;
-typedef u_int16_t       olsr_u16_t;
-typedef u_int32_t       olsr_u32_t;
-typedef int8_t          olsr_8_t;
-typedef int16_t         olsr_16_t;
-typedef int32_t         olsr_32_t;
+typedef u_int8_t        uint8_t;
+typedef u_int16_t       uint16_t;
+typedef u_int32_t       uint32_t;
+typedef int8_t          int8_t;
+typedef int16_t         int16_t;
+typedef int32_t         int32_t;
 #endif
 
 /* IPv6 address format in6_addr */
@@ -60,7 +60,7 @@ typedef int32_t         olsr_32_t;
 
 union olsr_ip_addr
 {
-  olsr_u32_t v4;
+  uint32_t v4;
   struct in6_addr v6;
 };
 
@@ -199,17 +199,17 @@ union olsr_ip_addr
  */
 struct hellinfo 
 {
-  olsr_u8_t   link_code;
-  olsr_u8_t   reserved;
-  olsr_u16_t  size;
-  olsr_u32_t  neigh_addr[1]; /* neighbor IP address(es) */
+  uint8_t   link_code;
+  uint8_t   reserved;
+  uint16_t  size;
+  uint32_t  neigh_addr[1]; /* neighbor IP address(es) */
 };
 
 struct hellomsg 
 {
-  olsr_u16_t      reserved;
-  olsr_u8_t       htime;
-  olsr_u8_t       willingness;
+  uint16_t      reserved;
+  uint8_t       htime;
+  uint8_t       willingness;
   struct hellinfo hell_info[1];
 };
 
@@ -219,17 +219,17 @@ struct hellomsg
 
 struct hellinfo6
 {
-  olsr_u8_t       link_code;
-  olsr_u8_t       reserved;
-  olsr_u16_t      size;
+  uint8_t       link_code;
+  uint8_t       reserved;
+  uint16_t      size;
   struct in6_addr neigh_addr[1]; /* neighbor IP address(es) */
 };
 
 struct hellomsg6
 {
-  olsr_u16_t         reserved;
-  olsr_u8_t          htime;
-  olsr_u8_t          willingness;
+  uint16_t         reserved;
+  uint8_t          htime;
+  uint8_t          willingness;
   struct hellinfo6 hell_info[1];
 };
 
@@ -243,14 +243,14 @@ struct hellomsg6
 
 struct neigh_info
 {
-  olsr_u32_t       addr;
+  uint32_t       addr;
 };
 
 
 struct olsr_tcmsg 
 {
-  olsr_u16_t        ansn;
-  olsr_u16_t        reserved;
+  uint16_t        ansn;
+  uint16_t        reserved;
   struct neigh_info neigh[1];
 };
 
@@ -267,8 +267,8 @@ struct neigh_info6
 
 struct olsr_tcmsg6
 {
-  olsr_u16_t           ansn;
-  olsr_u16_t           reserved;
+  uint16_t           ansn;
+  uint16_t           reserved;
   struct neigh_info6 neigh[1];
 };
 
@@ -287,7 +287,7 @@ struct olsr_tcmsg6
  */
 struct midaddr
 {
-  olsr_u32_t addr;
+  uint32_t addr;
 };
 
 
@@ -321,8 +321,8 @@ struct midmsg6
  */
 struct hnapair
 {
-  olsr_u32_t   addr;
-  olsr_u32_t   netmask;
+  uint32_t   addr;
+  uint32_t   netmask;
 };
 
 struct hnamsg
@@ -355,13 +355,13 @@ struct hnamsg6
 
 struct olsrmsg
 {
-  olsr_u8_t     olsr_msgtype;
-  olsr_u8_t     olsr_vtime;
-  olsr_u16_t    olsr_msgsize;
-  olsr_u32_t    originator;
-  olsr_u8_t     ttl;
-  olsr_u8_t     hopcnt;
-  olsr_u16_t    seqno;
+  uint8_t     olsr_msgtype;
+  uint8_t     olsr_vtime;
+  uint16_t    olsr_msgsize;
+  uint32_t    originator;
+  uint8_t     ttl;
+  uint8_t     hopcnt;
+  uint16_t    seqno;
 
   union 
   {
@@ -379,13 +379,13 @@ struct olsrmsg
 
 struct olsrmsg6
 {
-  olsr_u8_t        olsr_msgtype;
-  olsr_u8_t        olsr_vtime;
-  olsr_u16_t       olsr_msgsize;
+  uint8_t        olsr_msgtype;
+  uint8_t        olsr_vtime;
+  uint16_t       olsr_msgsize;
   struct in6_addr  originator;
-  olsr_u8_t        ttl;
-  olsr_u8_t        hopcnt;
-  olsr_u16_t       seqno;
+  uint8_t        ttl;
+  uint8_t        hopcnt;
+  uint16_t       seqno;
 
   union 
   {
@@ -405,16 +405,16 @@ struct olsrmsg6
 
 struct olsr 
 {
-  olsr_u16_t	  olsr_packlen;		/* packet length */
-  olsr_u16_t	  olsr_seqno;
+  uint16_t	  olsr_packlen;		/* packet length */
+  uint16_t	  olsr_seqno;
   struct olsrmsg  olsr_msg[1];          /* variable messages */
 };
 
 
 struct olsr6
 {
-  olsr_u16_t	    olsr_packlen;        /* packet length */
-  olsr_u16_t	    olsr_seqno;
+  uint16_t	    olsr_packlen;        /* packet length */
+  uint16_t	    olsr_seqno;
   struct olsrmsg6   olsr_msg[1];         /* variable messages */
 };
 

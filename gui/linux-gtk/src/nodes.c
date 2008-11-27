@@ -38,7 +38,7 @@ init_nodes()
  *NB! The list is NOT checked for duplicates!!
  */
 struct node *
-insert_node(struct node *n, olsr_u8_t vtime)
+insert_node(struct node *n, uint8_t vtime)
 {
   struct node *new_node;
 
@@ -76,17 +76,17 @@ insert_node(struct node *n, olsr_u8_t vtime)
  *Add a new node to the set
  */
 int
-add_node(union olsr_ip_addr *node, olsr_u8_t vtime)
+add_node(union olsr_ip_addr *node, uint8_t vtime)
 {
   struct node new;
   struct node *tmp_nodes;
   struct timeval tmp_timer;
   double dbl_time;
-  olsr_u32_t time_value;
+  uint32_t time_value;
   struct mid *tmp_mid;
 
   dbl_time = me_to_double(vtime);
-  time_value = (olsr_u32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
   tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
@@ -135,15 +135,15 @@ add_node(union olsr_ip_addr *node, olsr_u8_t vtime)
 
 
 int
-update_timer_node(union olsr_ip_addr *node, olsr_u8_t vtime)
+update_timer_node(union olsr_ip_addr *node, uint8_t vtime)
 {
   struct node *tmp_nodes;
   struct timeval tmp_timer;
   double dbl_time;
-  olsr_u32_t time_value;
+  uint32_t time_value;
 
   dbl_time = me_to_double(vtime);
-  time_value = (olsr_u32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
   tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
@@ -179,16 +179,16 @@ update_timer_node(union olsr_ip_addr *node, olsr_u8_t vtime)
  *@return 0 if node was added, 1 if not
  */
 int
-update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, olsr_u8_t vtime)
+update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, uint8_t vtime)
 {
   struct node *tmp_nodes;
   struct mpr *tmp_mpr;
   struct timeval tmp_timer;
   double dbl_time;
-  olsr_u32_t time_value;
+  uint32_t time_value;
 
   dbl_time = me_to_double(vtime);
-  time_value = (olsr_u32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
   tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
@@ -229,7 +229,7 @@ update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, olsr_u8_t vt
 
 
 int
-add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, olsr_u8_t vtime)
+add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, uint8_t vtime)
 {
 
   struct node *tmp_nodes;
@@ -308,7 +308,7 @@ add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, olsr_u8_t vtim
 
 
 int
-add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_addr *mask, olsr_u8_t vtime)
+add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_addr *mask, uint8_t vtime)
 {
 
   struct node *tmp_nodes;
@@ -702,10 +702,10 @@ time_out_mprs(union olsr_ip_addr *node)
 
 
 void
-init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
+init_timer(uint32_t time_value, struct timeval *hold_timer)
 { 
-  olsr_u16_t  time_value_sec=0;
-  olsr_u16_t  time_value_msec=0;
+  uint16_t  time_value_sec=0;
+  uint16_t  time_value_msec=0;
 
   time_value_sec=time_value/1000;
   time_value_msec=time_value-(time_value_sec*1000);
@@ -731,7 +731,7 @@ init_timer(olsr_u32_t time_value, struct timeval *hold_timer)
  *@return a double value
  */
 double
-me_to_double(olsr_u8_t me)
+me_to_double(uint8_t me)
 {
   int a = me>>4;
   int b = me - a*16;

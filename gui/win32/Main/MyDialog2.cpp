@@ -392,7 +392,7 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 	::lstrcpy(Int->name, Name);
 
 	Int->config = NULL;
-	Int->configured = OLSR_FALSE;
+	Int->configured = false;
 	Int->interf = NULL;
 
 	Int->cnf = get_default_if_config();
@@ -523,7 +523,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	m_MprCov.GetWindowText(Conv);
 	Conf->mpr_coverage = (unsigned char)atoi(Conv);
 
-	Conf->use_hysteresis = m_HystCheck.GetCheck() ? OLSR_TRUE : OLSR_FALSE;
+	Conf->use_hysteresis = m_HystCheck.GetCheck() ? true : false;
 
 	m_HystScaling.GetWindowText(Conv);
 	Conf->hysteresis_param.scaling = (float)atof(Conv);
@@ -619,7 +619,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 		}
 
 		IpcHost->net.prefix = Local;
-		IpcHost->net.prefix_len = (olsr_u8_t)Conf->ipsize;
+		IpcHost->net.prefix_len = (uint8_t)Conf->ipsize;
 
 		IpcHost->next = Conf->ipc_nets;
 		Conf->ipc_nets = IpcHost;

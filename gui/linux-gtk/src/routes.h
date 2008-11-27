@@ -40,7 +40,7 @@ struct route_entry
 {
   union olsr_ip_addr gw;
   union olsr_ip_addr dst;
-  olsr_u16_t         hopcnt;
+  uint16_t         hopcnt;
   char               if_name[MAX_IF_NAMESIZ];
   struct route_entry *next;
   struct route_entry *prev;
@@ -50,7 +50,7 @@ struct route_entry
 struct route_entry route_set;
 
 /* Counter */
-olsr_u32_t route_count;
+uint32_t route_count;
 
 /* Functions */
 

@@ -38,7 +38,7 @@ struct node nodes;
 
 
 struct node *
-insert_node(struct node *, olsr_u8_t);
+insert_node(struct node *, uint8_t);
 
 
 int
@@ -48,7 +48,7 @@ int
 remove_node_addr(union olsr_ip_addr *);
 
 double
-me_to_double(olsr_u8_t);
+me_to_double(uint8_t);
 
 
 /*

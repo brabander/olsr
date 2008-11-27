@@ -50,10 +50,10 @@ int connected;
 
 struct routemsg 
 {
-  olsr_u8_t      msgtype;
-  olsr_u16_t     size;
-  olsr_u8_t      metric;
-  olsr_u8_t      add;
+  uint8_t      msgtype;
+  uint16_t     size;
+  uint8_t      metric;
+  uint8_t      add;
   union olsr_ip_addr target_addr;
   union olsr_ip_addr gateway_addr;
   char           device[4];
@@ -62,17 +62,17 @@ struct routemsg
 
 struct netmsg
 {
-  olsr_u8_t      msgtype;
-  olsr_u16_t     size;
-  olsr_u8_t      mids; /* No. of extra interfaces */
-  olsr_u8_t      hnas; /* No. of HNA nets */
-  olsr_u8_t      unused1;
-  olsr_u16_t     hello_int;
-  olsr_u16_t     hello_lan_int;
-  olsr_u16_t     tc_int;
-  olsr_u16_t     neigh_hold;
-  olsr_u16_t     topology_hold;
-  olsr_u8_t      ipv6;
+  uint8_t      msgtype;
+  uint16_t     size;
+  uint8_t      mids; /* No. of extra interfaces */
+  uint8_t      hnas; /* No. of HNA nets */
+  uint8_t      unused1;
+  uint16_t     hello_int;
+  uint16_t     hello_lan_int;
+  uint16_t     tc_int;
+  uint16_t     neigh_hold;
+  uint16_t     topology_hold;
+  uint8_t      ipv6;
   union olsr_ip_addr   main_addr;
 };
 
@@ -93,16 +93,16 @@ int
 ipc_eval_net_info(struct netmsg *);
 
 int
-process_hello(int, olsr_u8_t, union olsr_ip_addr *, union hello_message *);
+process_hello(int, uint8_t, union olsr_ip_addr *, union hello_message *);
 
 int
-process_tc(int, olsr_u8_t, union olsr_ip_addr *, union tc_message *);
+process_tc(int, uint8_t, union olsr_ip_addr *, union tc_message *);
 
 int
-process_mid(int, olsr_u8_t, union olsr_ip_addr *, union mid_message *);
+process_mid(int, uint8_t, union olsr_ip_addr *, union mid_message *);
 
 int
-process_hna(int, olsr_u8_t, union olsr_ip_addr *, union hna_message *);
+process_hna(int, uint8_t, union olsr_ip_addr *, union hna_message *);
 
 /*
  * Local Variables:

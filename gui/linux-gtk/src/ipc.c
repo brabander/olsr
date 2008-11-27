@@ -235,10 +235,10 @@ int
 ipc_evaluate_message(union olsr_message *olsr_in)
 {
   int ipc_pack = 0;
-  olsr_u8_t type;
+  uint8_t type;
   int msgsize;
   char itoa_buf[10];
-  olsr_u8_t vtime;
+  uint8_t vtime;
   union olsr_ip_addr *originator;
 
   /* Find size, vtime, originator and type - same for IPv4 and 6 */
@@ -446,7 +446,7 @@ ipc_eval_route_packet(struct routemsg *msg)
 
 
 int
-process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union hello_message *m)
+process_hello(int size, uint8_t vtime, union olsr_ip_addr *originator, union hello_message *m)
 {
   struct hellinfo *neigh;
   struct hellinfo6 *neigh6;
@@ -543,7 +543,7 @@ process_hello(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union h
 
 
 int
-process_tc(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union tc_message *m)
+process_tc(int size, uint8_t vtime, union olsr_ip_addr *originator, union tc_message *m)
 {
 
   struct neigh_info *mprsinfo;
@@ -594,7 +594,7 @@ process_tc(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union tc_m
 
 
 int
-process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid_message *m)
+process_mid(int size, uint8_t vtime, union olsr_ip_addr *originator, union mid_message *m)
 {
   struct midaddr *midaddr;
   struct midaddr6 *midaddr6;
@@ -637,7 +637,7 @@ process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid
 
 
 int
-process_hna(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union hna_message *m)
+process_hna(int size, uint8_t vtime, union olsr_ip_addr *originator, union hna_message *m)
 {
 
 

@@ -197,28 +197,28 @@ struct node *
 find_node_t(union olsr_ip_addr *);
 
 int
-update_timer_node(union olsr_ip_addr *, olsr_u8_t);
+update_timer_node(union olsr_ip_addr *, uint8_t);
 
 int
-add_hna_node(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, olsr_u8_t);
+add_hna_node(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
 
 int
-add_mid_node(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u8_t);
+add_mid_node(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
 
 void
-init_timer(olsr_u32_t, struct timeval *);
+init_timer(uint32_t, struct timeval *);
 
 gint
 time_out_nodes(gpointer);
 
 int
-add_node(union olsr_ip_addr *, olsr_u8_t);
+add_node(union olsr_ip_addr *, uint8_t);
 
 int
 add_mpr(union olsr_ip_addr *, union olsr_ip_addr *, struct timeval *);
 
 int
-update_timer_mpr(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u8_t);
+update_timer_mpr(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
 
 int
 time_out_mprs(union olsr_ip_addr *);
