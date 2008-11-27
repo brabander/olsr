@@ -73,10 +73,11 @@ typedef signed int      int32_t;
 #define __bool_true_false_are_defined 1
 #endif
 /* add some safe-gaurds */
+#ifndef _MSC_VER
 #if !defined bool || !defined true || !defined false || !defined __bool_true_false_are_defined
 #error You have no C99-like boolean types. Please extend src/olsr_type.h!
 #endif
-
+#endif
 
 /* user defined cookies */
 typedef uint16_t        olsr_cookie_t;

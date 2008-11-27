@@ -44,6 +44,11 @@
 #include <stdarg.h>
 #include <time.h>
 
+/* compiler-specific stuff */
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
+
 #define AUTOBUFCHUNK	4096
 struct autobuf {
     int size;
