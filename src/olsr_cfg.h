@@ -45,14 +45,6 @@
 #include "olsr_types.h"
 #include "common/autobuf.h"
 
-#ifndef LINUX_POLICY_ROUTING
-#if defined linux
-#  define LINUX_POLICY_ROUTING 1
-#else
-#  define LINUX_POLICY_ROUTING 0
-#endif
-#endif
-
 /* Default values not declared in olsr_protocol.h */
 #define DEF_POLLRATE        0.05
 #define DEF_NICCHGPOLLRT    2.5
@@ -251,12 +243,12 @@ struct olsrd_config
   float                    max_tc_vtime;
 
   int                      ioctl_s;              /* Socket used for ioctl calls */
-#if LINUX_POLICY_ROUTING
-  int                      rtnl_s;               /* Socket used for rtnetlink messages */
+#if defined linux
+  int                      rts_linux;            /* Socket used for rtnetlink messages */
 #endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-  int                      rts;                  /* Socket used for route changes on BSDs */
+  int                      rts_bsd;              /* Socket used for route changes on BSDs */
 #endif
   float                    lq_nat_thresh;
 };

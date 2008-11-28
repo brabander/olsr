@@ -485,12 +485,12 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->exit_value = EXIT_SUCCESS;
     cnf->max_tc_vtime = 0.0;
     cnf->ioctl_s = 0;
-#if LINUX_POLICY_ROUTING
-    cnf->rtnl_s = 0;
-#endif
 
+#if defined linux
+    cnf->rts_linux = 0;
+#endif
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-    cnf->rts = 0;
+    cnf->rts_bsd = 0;
 #endif
 }
 

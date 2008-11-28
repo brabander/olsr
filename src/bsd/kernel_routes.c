@@ -223,9 +223,9 @@ add_del_route(const struct rt_entry *rt, int add)
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
 
-  len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
-  OLSR_PRINTF(8, "\nWrote %d bytes to rts socket (FD=%d)\n", len,
-	      olsr_cnf->rts);
+  len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
+  OLSR_PRINTF(8, "\nWrote %d bytes to rts_bsd socket (FD=%d)\n", len,
+	      olsr_cnf->rts_bsd);
 
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
     fprintf(stderr,
@@ -353,7 +353,7 @@ add_del_route6(const struct rt_entry *rt, int add)
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
 
-  len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
+  len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
   if (len < 0 && !(errno == EEXIST || errno == ESRCH))
     fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
 
@@ -377,11 +377,11 @@ add_del_route6(const struct rt_entry *rt, int add)
     memcpy(walker, &sin6, sizeof(sin6));
     walker += step;
     drtm->rtm_msglen = (unsigned short)(walker - dbuff);
-    len = write(olsr_cnf->rts, dbuff, drtm->rtm_msglen);
+    len = write(olsr_cnf->rts_bsd, dbuff, drtm->rtm_msglen);
     if (len < 0)
       fprintf(stderr, "cannot delete route: %s\n", strerror(errno));
     rtm->rtm_seq = ++seq;
-    len = write(olsr_cnf->rts, buff, rtm->rtm_msglen);
+    len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
     if (len < 0)
       fprintf(stderr, "still cannot add route: %s\n", strerror(errno));
   }

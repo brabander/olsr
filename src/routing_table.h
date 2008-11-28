@@ -237,7 +237,7 @@ static INLINE bool olsr_hopcount_change(const struct rt_metric *met1, const stru
 
 bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
 
-#if defined WIN32 || (defined linux && !LINUX_POLICY_ROUTING)
+#if defined WIN32
 /**
  * Depending if flat_metric is configured and the kernel fib operation
  * return the hopcount metric of a route.

@@ -60,7 +60,7 @@
 #include "misc.h"
 #include "common/string.h"
 
-#if LINUX_POLICY_ROUTING
+#if defined linux
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <fcntl.h>
@@ -255,21 +255,21 @@ main(int argc, char *argv[])
     olsr_exit(__func__, 0);
   }
 
-#if LINUX_POLICY_ROUTING
-  olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-  if (olsr_cnf->rtnl_s < 0) {
+#if defined linux
+  olsr_cnf->rts_linux = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+  if (olsr_cnf->rts_linux < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
     olsr_exit(__func__, 0);
   }
-  set_nonblocking(olsr_cnf->rtnl_s);
+  set_nonblocking(olsr_cnf->rts_linux);
 #endif
 
 /*
  * create routing socket
  */
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-  olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
-  if (olsr_cnf->rts < 0) {
+  olsr_cnf->rts_bsd = socket(PF_ROUTE, SOCK_RAW, 0);
+  if (olsr_cnf->rts_bsd < 0) {
     olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
     olsr_exit(__func__, 0);
   }
@@ -479,13 +479,13 @@ static void olsr_shutdown(void)
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);
 
-#if LINUX_POLICY_ROUTING
-  close(olsr_cnf->rtnl_s);
+#if defined linux
+  close(olsr_cnf->rts_linux);
 #endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
-  close(olsr_cnf->rts);
+  close(olsr_cnf->rts_bsd);
 #endif
 
   /* Free cookies and memory pools attached. */
