@@ -103,6 +103,11 @@ const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sock
 
 const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 
+/* we need to handle one value specifically since shifting 32 bits of a 32 bit integer is the same as shifting 0 bits.
+ * The result is in host-byte-order.
+ */
+static INLINE uint32_t prefix_to_netmask4(uint8_t prefixlen) { return prefixlen == 0 ? 0 : (~0U << (32 - prefixlen)); }
+
 #endif
 /*
  * Local Variables:

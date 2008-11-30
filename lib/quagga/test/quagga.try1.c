@@ -514,6 +514,7 @@ int zebra_disable_redistribute (unsigned char type) {
 
 }
   
+/* this is buggy. see prefix_to_netmask4() for a working version. */
 static uint32_t prefixlentomask (uint8_t prefix) {
   uint32_t mask;
   mask = 0xffffffff<<(32-prefix);

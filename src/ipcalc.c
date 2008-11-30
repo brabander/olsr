@@ -119,7 +119,7 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
 {
   int rv;
   if(olsr_cnf->ip_version == AF_INET) {
-    uint32_t netmask = ntohl(~0 << (32 - net->prefix_len));
+    uint32_t netmask = ntohl(prefix_to_netmask4(net->prefix_len));
     rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
   } else {
     /* IPv6 */
@@ -127,6 +127,7 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
     const uint32_t *i = (const uint32_t *)&ipaddr->v6.s6_addr;
     const uint32_t *n = (const uint32_t *)&net->prefix.v6.s6_addr;
     unsigned int prefix_len;
+    /* First we compare whole unsigned int's */
     for (prefix_len = net->prefix_len; prefix_len > 32; prefix_len -= 32) {
       if (*i != *n) {
         return false;
@@ -134,7 +135,8 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
       i++;
       n++;
     }
-    netmask = ntohl(~0 << (32 - prefix_len));
+    /* And the remaining is the same as in the IPv4 case */
+    netmask = ntohl(prefix_to_netmask4(prefix_len));
     rv = (*i & netmask) == (*n & netmask);
   }
   return rv;
