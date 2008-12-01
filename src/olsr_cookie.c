@@ -252,7 +252,9 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
+#if 0
   bool reuse = false;
+#endif
   size_t size;
 
   /*
@@ -307,7 +309,9 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     }
 
     ci->ci_free_list_usage--;
+#if 0
     reuse = true;
+#endif
   }
 
   /*
@@ -338,11 +342,11 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
-  struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
+#if 0
   bool reuse = false;
-
-  branding = (struct olsr_cookie_mem_brand *)
+#endif
+  struct olsr_cookie_mem_brand *branding = (struct olsr_cookie_mem_brand *)
     ((unsigned char *)ptr + ci->ci_size);
 
   /*
@@ -367,7 +371,9 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     list_node_init(free_list_node);
     list_add_before(&ci->ci_free_list, free_list_node);
     ci->ci_free_list_usage++;
+#if 0
     reuse = true;
+#endif
 
   } else {
 
