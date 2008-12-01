@@ -157,6 +157,7 @@ LDFLAGS +=	$(EXTRA_LDFLAGS)
 
 # we have plugins with the old interface
 #CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
+CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=0
 
 # use the new fixed point math stuff
 #CPPFLAGS +=     -DUSE_FPM
