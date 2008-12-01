@@ -543,7 +543,7 @@ static uint32_t
 prefixlentomask(uint8_t prefix)
 {
   uint32_t mask;
-  mask = 0xffffffff << (32 - prefix);
+  mask = prefix_to_netmask4(prefix);
   mask = ntohl(mask);
   return mask;
 }
