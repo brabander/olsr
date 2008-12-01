@@ -281,8 +281,6 @@ int main(int ac, char *av[])
 
     usleep(100000);
   }
-
-  return 0;
 }
 
 /*
