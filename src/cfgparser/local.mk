@@ -70,6 +70,7 @@ $(C)oparse.c: $(C)oparse.y $(C)olsrd_conf.h $(C)Makefile
 		< "$@-tmp" >"$@"
 	mv "$(subst .c,.h,$@-tmp)" "$(subst .c,.h,$@)"
 	$(RM) "$@-tmp" "$(subst .c,.h,$@-tmp)"
+$(C)oparse.o: CPPFLAGS += -DYYENABLE_NLS=0 -DYYLTYPE_IS_TRIVIAL=1
 
 # and a few files to be cleaned
 TMPFILES += $(foreach pat,oscan.c oparse.c oparse.h,$(C)$(pat) $(C)$(pat)-tmp)
