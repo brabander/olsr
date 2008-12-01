@@ -331,18 +331,20 @@ name_init(void)
 	memset(&ipz, 0, sizeof(ipz));
 
 	//compile the regex from the string
-	if ((ret = regcomp(&regex_t_name, regex_name , REG_EXTENDED)) != 0)
+	ret = regcomp(&regex_t_name, regex_name, REG_EXTENDED);
+	if (ret != 0)
 	{
 		/* #2: call regerror() if regcomp failed
 		 * commented out, because only for debuggin needed
-		 *
+		 */
+#if 0
 		int errmsgsz = regerror(ret, &regex_t_name, NULL, 0);
 		char *errmsg = malloc(errmsgsz);
 		regerror(ret, &regex_t_name, errmsg, errmsgsz);
 		fprintf(stderr, "regcomp: %s", errmsg);
 		free(errmsg);
 		regfree(&regex_t_name);
-		* */
+#endif
 		OLSR_PRINTF(0, "compilation of regex \"%s\" for hostname failed", regex_name);
 	}
 
@@ -361,14 +363,15 @@ name_init(void)
 	{
 		/* #2: call regerror() if regcomp failed
 		 * commented out, because only for debuggin needed
-		 *
+		 */
+#if 0
 		int errmsgsz = regerror(ret, &regex_t_service, NULL, 0);
 		char *errmsg = malloc(errmsgsz);
 		regerror(ret, &regex_t_service, errmsg, errmsgsz);
 		fprintf(stderr, "regcomp: %s", errmsg);
 		free(errmsg);
 		regfree(&regex_t_service);
-		* */
+#endif
 		OLSR_PRINTF(0, "compilation of regex \"%s\" for hostname failed", regex_name);
 	}
 	free(regex_service);
@@ -646,15 +649,12 @@ olsr_parser(union olsr_message *m,
 	union olsr_ip_addr originator;
 	olsr_reltime vtime;
 	int size;
-	uint16_t seqno;
 
 	/* Fetch the originator of the messsage */
 	if(olsr_cnf->ip_version == AF_INET) {
 		memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
-		seqno = ntohs(m->v4.seqno);
 	} else {
 		memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
-		seqno = ntohs(m->v6.seqno);
 	}
 
 	/* Fetch the message based on IP version */
@@ -795,7 +795,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool *this_table
 	char *name = (char*)from_packet + sizeof(struct name);
 	int type_of_from_packet = ntohs(from_packet->type);
 	unsigned int len_of_name = ntohs(from_packet->len);
-	OLSR_PRINTF(4, "NAME PLUGIN: decap type=%d, len=%d, name=%s\n",
+	OLSR_PRINTF(4, "NAME PLUGIN: decap type=%d, len=%u, name=%s\n",
 		type_of_from_packet, len_of_name, name);
 
 	//XXX: should I check the from_packet->ip here? If so, why not also check the ip from HOST and SERVICE?
@@ -810,7 +810,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool *this_table
 	//ignore all packets with a too long name
 	//or a spoofed len of its included name string
 	if (len_of_name > MAX_NAME || strlen(name) != len_of_name || NULL != strchr(name, '\\') || NULL != strchr(name, '\'')) {
-		OLSR_PRINTF(4, "NAME PLUGIN: from_packet->len %d > MAX_NAME %d or from_packet->len %d !0 strlen(name [%s] in packet)\n",
+		OLSR_PRINTF(4, "NAME PLUGIN: from_packet->len %u > MAX_NAME %d or from_packet->len %u !0 strlen(name [%s] in packet)\n",
 			len_of_name, MAX_NAME, len_of_name, name );
 		return;
 	}
