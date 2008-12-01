@@ -41,8 +41,11 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 
+#if 0
+/* these are never read */
 static export_route_function orig_addroute_function;
 static export_route_function orig_delroute_function;
+#endif
 
 static struct olsr_cookie_info *zebra_check_timer_cookie;
 
@@ -84,15 +87,19 @@ static int set_exportroutes (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   if (!strcmp(value, "only")) {
+#if 0
     orig_addroute_function = NULL;
     orig_delroute_function = NULL;
+#endif
     olsr_addroute_function = zebra_add_olsr_v4_route;
     olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
   }
   else if (!strcmp(value, "additional")) {
+#if 0
     orig_addroute_function = olsr_addroute_function;
     orig_delroute_function = olsr_delroute_function;
+#endif
     olsr_addroute_function = zebra_add_olsr_v4_route;
     olsr_delroute_function = zebra_del_olsr_v4_route;
     zebra_export_routes(1);
