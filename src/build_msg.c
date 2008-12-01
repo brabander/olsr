@@ -222,8 +222,8 @@ check_buffspace(int msgsize, int buffsize, const char *type)
 {
   if(msgsize > buffsize)
     {
-      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%u)!\n", type, msgsize, buffsize);
-      olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%u)!\n", type, msgsize, buffsize);
+      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
+      olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
       olsr_exit(__func__, EXIT_FAILURE);
     }
 }
@@ -594,7 +594,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct olsr_tcmsg *tc;
   struct neigh_info *mprsaddr; 
-  bool found = false, partial_sent = false;
+  bool found = false;
 
   if((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
     return false;
@@ -652,7 +652,6 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
 	      mprsaddr = tc->neigh;
 	      curr_size = OLSR_TC_IPV4_HDRSIZE;
 	      found = false;
-	      partial_sent = true;
 	    }
 
 	  net_output(ifp);
@@ -706,7 +705,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
   union olsr_message *m;
   struct olsr_tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6; 
-  bool found = false, partial_sent = false;
+  bool found = false;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
     return false;
@@ -760,7 +759,6 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 	      mprsaddr6 = tc6->neigh;
 	      curr_size = OLSR_TC_IPV6_HDRSIZE;
 	      found = false;
-	      partial_sent = true;
 	    }
 	  net_output(ifp);
 	  remainsize = net_outbuffer_bytes_left(ifp);
