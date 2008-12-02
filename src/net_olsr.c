@@ -96,6 +96,9 @@ init_net(void)
 {
   const char * const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
   
+  /* Init filter tree */
+  avl_init(&filter_tree, avl_comp_default);
+
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
     if (inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
@@ -104,7 +107,6 @@ init_net(void)
     }
     olsr_add_invalid_address(&addr);
   }
-  avl_init(&filter_tree, avl_comp_default);
 }
 
 /**
