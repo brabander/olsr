@@ -246,15 +246,6 @@ olsr_init_tables(void)
   changes_neighborhood = false;
   changes_hna = false;
 
-  /* Set avl tree comparator */
-  if (olsr_cnf->ipsize == 4) {
-    avl_comp_default = avl_comp_ipv4;
-    avl_comp_prefix_default = avl_comp_ipv4_prefix;
-  } else {
-    avl_comp_default = avl_comp_ipv6;
-    avl_comp_prefix_default = avl_comp_ipv6_prefix;
-  }
-
   /* Initialize lq plugin set */
   init_lq_handler_tree();
 

@@ -47,15 +47,13 @@
 #include "ipcalc.h"
 #include "common/avl.h"
 #include "net_olsr.h"
+#include "assert.h"
 
 /*
- * default comparison pointers 
- * set to the respective compare function.
- * if avl_comp_default is set to zero, a fast
- * inline ipv4 comparison will be executed.
+ * default comparison pointers set to the respective (v4/v6) compare function.
  */
 avl_tree_comp avl_comp_default = NULL;
-avl_tree_comp avl_comp_prefix_default;
+avl_tree_comp avl_comp_prefix_default = NULL;
 
 int
 avl_comp_ipv4(const void *ip1, const void *ip2)
@@ -83,73 +81,43 @@ avl_init(struct avl_tree *tree, avl_tree_comp comp)
   tree->last = NULL;
   tree->count = 0;
   
-  tree->comp = comp == avl_comp_ipv4 ? NULL : comp;
-}
-
-static struct avl_node *
-avl_find_rec_ipv4(struct avl_node *node, const void *key)
-{
-  if (*(const unsigned int *)key < *(const unsigned int *)node->key) {
-    if (node->left != NULL)
-      return avl_find_rec_ipv4(node->left, key);
-  }
-
-  else if (*(const unsigned int *)key > *(const unsigned int *)node->key) {
-    if (node->right != NULL)
-      return avl_find_rec_ipv4(node->right, key);
-  }
-
-  return node;
-}
-
-static struct avl_node *
-avl_find_rec(struct avl_node *node, const void *key, avl_tree_comp comp)
-{
-  int diff;
-
-  if (NULL == comp)
-    return avl_find_rec_ipv4(node, key);
-
-  diff = (*comp) (key, node->key);
-
-  if (diff < 0) {
-    if (node->left != NULL)
-      return avl_find_rec(node->left, key, comp);
-
-    return node;
-  }
-
-  if (diff > 0) {
-    if (node->right != NULL)
-      return avl_find_rec(node->right, key, comp);
-
-    return node;
-  }
-
-  return node;
+  assert(comp);
+  tree->comp = comp;
 }
 
 struct avl_node *
 avl_find(struct avl_tree *tree, const void *key)
 {
   struct avl_node *node;
+  int diff;
 
   if (tree->root == NULL)
     return NULL;
 
-  node = avl_find_rec(tree->root, key, tree->comp);
 
-  if (NULL == tree->comp) {
-    if (0 != ip4cmp(node->key, key))
-      return NULL;
+  /*
+   * Crawl through the tree.
+   */
+  for (node = tree->root;;) {
+    diff = (*tree->comp)(key, node->key);
+
+    if (diff < 0) {
+      if (node->left != NULL) {
+        node = node->left;
+        continue;
+      }
+    }
+
+    if (diff > 0) {
+      if (node->right != NULL) {
+        node = node->right;
+        continue;
+      }
+    }
+    break;
   }
 
-  else {
-    if ((*tree->comp) (node->key, key) != 0)
-      return NULL;
-  }
-
-  return node;
+  return (diff == 0) ? node : NULL;
 }
 
 static void
@@ -340,18 +308,32 @@ avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates)
     return 0;
   }
 
-  node = avl_find_rec(tree->root, new->key, tree->comp);
+  /*
+   * First locate insertion point.
+   */
+  for (node = tree->root;;) {
+    diff = (*tree->comp)(new->key, node->key);
+
+    if (diff < 0) {
+      if (node->left != NULL) {
+        node = node->left;
+        continue;
+      }
+    }
+
+    if (diff > 0) {
+      if (node->right != NULL) {
+        node = node->right;
+        continue;
+      }
+    }
+    break;
+  }
 
   last = node;
 
   while (last->next != NULL && last->next->leader == 0)
     last = last->next;
-
-  if (NULL == tree->comp)
-    diff = ip4cmp(new->key, node->key);
-
-  else
-    diff = (*tree->comp) (new->key, node->key);
 
   if (diff == 0) {
     if (allow_duplicates == AVL_DUP_NO)

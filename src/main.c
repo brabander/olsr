@@ -205,6 +205,15 @@ main(int argc, char *argv[])
     olsr_cnf = olsrd_get_default_cnf();
   }
 
+  /* Set avl tree comparator */
+  if (olsr_cnf->ipsize == 4) {
+    avl_comp_default = avl_comp_ipv4;
+    avl_comp_prefix_default = avl_comp_ipv4_prefix;
+  } else {
+    avl_comp_default = avl_comp_ipv6;
+    avl_comp_prefix_default = avl_comp_ipv6_prefix;
+  }
+
   init_default_if_config(&default_ifcnf);
 
   /* Initialize tick resolution */
