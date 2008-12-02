@@ -253,26 +253,28 @@ static int set_nameservice_float(const char *value, void *data, set_plugin_param
 	return 0;
 }
 
+/* *INDENT-OFF* */
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "interval",      .set_plugin_parameter = &set_plugin_int,         .data = &my_interval },
-    { .name = "timeout",       .set_plugin_parameter = &set_nameservice_float,  .data = &my_timeout },
-    { .name = "sighup-pid-file",.set_plugin_parameter = &set_plugin_string,      .data = &my_sighup_pid_file, .addon = {sizeof(my_sighup_pid_file)} },
-    { .name = "hosts-file",    .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,    .addon = {sizeof(my_hosts_file)} },
-    { .name = "name-change-script", .set_plugin_parameter = &set_plugin_string,  .data = &my_name_change_script, .addon = {sizeof(my_name_change_script)} },
-    { .name = "services-change-script", .set_plugin_parameter = &set_plugin_string, .data = &my_services_change_script, .addon = {sizeof(my_services_change_script)} },
-    { .name = "resolv-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,   .addon = {sizeof(my_resolv_file)} },
-    { .name = "suffix",        .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,        .addon = {sizeof(my_suffix)} },
-    { .name = "add-hosts",     .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,     .addon = {sizeof(my_add_hosts)} },
-    { .name = "services-file", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file, .addon = {sizeof(my_services_file)} },
-    { .name = "lat",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lat },
-    { .name = "lon",           .set_plugin_parameter = &set_nameservice_float,  .data = &my_lon },
-    { .name = "latlon-file",   .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,   .addon = {sizeof(my_latlon_file)} },
-    { .name = "latlon-infile", .set_plugin_parameter = &set_plugin_string,      .data = &latlon_in_file,   .addon = {sizeof(latlon_in_file)} },
-    { .name = "dns-server",    .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,    .addon = {NAME_FORWARDER} },
-    { .name = "name",          .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,         .addon = {NAME_HOST} },
-    { .name = "service",       .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,      .addon = {NAME_SERVICE} },
-    { .name = "",              .set_plugin_parameter = &set_nameservice_host,   .data = &my_names },
+  { .name = "interval",               .set_plugin_parameter = &set_plugin_int,         .data = &my_interval },
+  { .name = "timeout",                .set_plugin_parameter = &set_nameservice_float,  .data = &my_timeout },
+  { .name = "sighup-pid-file",        .set_plugin_parameter = &set_plugin_string,      .data = &my_sighup_pid_file,        .addon = {sizeof(my_sighup_pid_file)} },
+  { .name = "hosts-file",             .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,             .addon = {sizeof(my_hosts_file)} },
+  { .name = "name-change-script",     .set_plugin_parameter = &set_plugin_string,      .data = &my_name_change_script,     .addon = {sizeof(my_name_change_script)} },
+  { .name = "services-change-script", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_change_script, .addon = {sizeof(my_services_change_script)} },
+  { .name = "resolv-file",            .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,            .addon = {sizeof(my_resolv_file)} },
+  { .name = "suffix",                 .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,                 .addon = {sizeof(my_suffix)} },
+  { .name = "add-hosts",              .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,              .addon = {sizeof(my_add_hosts)} },
+  { .name = "services-file",          .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file,          .addon = {sizeof(my_services_file)} },
+  { .name = "lat",                    .set_plugin_parameter = &set_nameservice_float,  .data = &my_lat },
+  { .name = "lon",                    .set_plugin_parameter = &set_nameservice_float,  .data = &my_lon },
+  { .name = "latlon-file",            .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,            .addon = {sizeof(my_latlon_file)} },
+  { .name = "latlon-infile",          .set_plugin_parameter = &set_plugin_string,      .data = &latlon_in_file,            .addon = {sizeof(latlon_in_file)} },
+  { .name = "dns-server",             .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,             .addon = {NAME_FORWARDER} },
+  { .name = "name",                   .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,                  .addon = {NAME_HOST} },
+  { .name = "service",                .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,               .addon = {NAME_SERVICE} },
+  { .name = "",                       .set_plugin_parameter = &set_nameservice_host,   .data = &my_names },
 };
+/* *INDENT-ON* */
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
