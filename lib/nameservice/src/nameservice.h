@@ -161,7 +161,7 @@ olsr_bool is_name_wellformed(const char *service_line);
 
 olsr_bool is_service_wellformed(const char *service_line);
 
-olsr_bool is_service_wellformed(const char *service_line);
+olsr_bool is_mac_wellformed(const char *service_line);
 
 olsr_bool is_latlon_wellformed(const char *latlon_line);
 

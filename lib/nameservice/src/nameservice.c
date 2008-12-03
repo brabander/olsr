@@ -424,6 +424,9 @@ remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
   case NAME_SERVICE:
     valid = allowed_service(my_list->name);
     break;
+  case NAME_MACADDR:
+    valid = is_mac_wellformed(my_list->name);
+    break;
   case NAME_LATLON:
     valid = is_latlon_wellformed(my_list->name);
     break;
@@ -775,6 +778,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, olsr_bool * this
   //XXX: should I check the from_packet->ip here? If so, why not also check the ip from HOST and SERVICE?
   if ((type_of_from_packet == NAME_HOST && !is_name_wellformed(name))
       || (type_of_from_packet == NAME_SERVICE && !is_service_wellformed(name))
+      || (type_of_from_packet == NAME_MACADDR && !is_mac_wellformed(name))
       || (type_of_from_packet == NAME_LATLON && !is_latlon_wellformed(name))) {
     OLSR_PRINTF(4, "NAME PLUGIN: invalid name [%s] received, skipping.\n", name);
     return;
@@ -1512,6 +1516,22 @@ olsr_bool
 is_service_wellformed(const char *service_line)
 {
   return regexec(&regex_t_service, service_line, pmatch_service, regmatch_t_service, 0) == 0;
+}
+
+/*
+ * check if the mac matches the syntax
+ */
+olsr_bool
+is_mac_wellformed(const char *mac_line)
+{
+  size_t i;
+  olsr_bool ret;
+  int x[6], d = -1;
+  for(i = 0; i < ARRAYSIZE(x); i++) x[i] = -1;
+  sscanf(mac_line, "%02x:%02x:%02x:%02x:%02x:%02x,%d\n", &x[0], &x[1], &x[2], &x[3], &x[4], &x[5], &d);
+  ret = 0 <= d && d <= 0xffff;
+  for(i = 0; i < ARRAYSIZE(x); i++) ret = ret && 0 <= x[i];
+  return ret;
 }
 
 /**
