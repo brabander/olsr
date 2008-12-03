@@ -42,11 +42,11 @@ luaO_int2fb(unsigned int x)
   return (m << 3) | cast(int, x);
 }
 
+/* *INDENT-OFF* */
 int
 luaO_log2(unsigned int x)
 {
   static const lu_byte log_8[255] = {
-/* *INDENT-OFF* */
     0,
     1,1,
     2,2,2,2,
@@ -59,7 +59,6 @@ luaO_log2(unsigned int x)
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-/* *INDENT-ON* */
   };
   if (x >= 0x00010000) {
     if (x >= 0x01000000)
@@ -74,6 +73,7 @@ luaO_log2(unsigned int x)
     return -1;                  /* special `log' for 0 */
   }
 }
+/* *INDENT-ON* */
 
 int
 luaO_rawequalObj(const TObject * t1, const TObject * t2)
