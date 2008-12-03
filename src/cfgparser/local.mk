@@ -61,7 +61,7 @@ $(C)oscan.c: $(C)oscan.lex $(C)Makefile
 $(C)oscan.o: $(C)oparse.c
 $(C)oscan.o: CFLAGS := $(filter-out -Wunreachable-code -Wsign-compare,$(CFLAGS)) -Wno-sign-compare
 # we need potentially another -I directory
-$(C)oscan.o: CPPFLAGS += $(if $(CFGDIR),-I$(CFGDIR))
+$(C)oscan.o: CPPFLAGS += $(if $(CFGDIR),-I$(CFGDIR)) -DYY_NO_INPUT
 
 $(C)oparse.c: $(C)oparse.y $(C)olsrd_conf.h $(C)Makefile
 	$(BISON) -d -o "$@-tmp" "$<"
