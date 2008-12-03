@@ -75,8 +75,10 @@ static int my_interval = EMISSION_INTERVAL;
 static double my_timeout = NAME_VALID_TIME;
 static char my_resolv_file[MAX_FILE + 1];
 static char my_services_file[MAX_FILE + 1];
+static char my_macs_file[MAX_FILE + 1];
 static char my_name_change_script[MAX_FILE + 1];
 static char my_services_change_script[MAX_FILE + 1];
+static char my_macs_change_script[MAX_FILE + 1];
 static char latlon_in_file[MAX_FILE + 1];
 static char my_latlon_file[MAX_FILE + 1];
 float my_lat = 0.0, my_lon = 0.0;
@@ -95,6 +97,10 @@ static olsr_bool name_table_changed = OLSR_TRUE;
 static struct list_node service_list[HASHSIZE];
 static struct name_entry *my_services = NULL;
 static olsr_bool service_table_changed = OLSR_TRUE;
+
+static struct list_node mac_list[HASHSIZE];
+static struct name_entry *my_macs = NULL;
+static olsr_bool mac_table_changed = OLSR_TRUE;
 
 static struct list_node forwarder_list[HASHSIZE];
 static struct name_entry *my_forwarders = NULL;
@@ -131,6 +137,7 @@ name_constructor(void)
 
   GetWindowsDirectory(my_hosts_file, MAX_FILE - 12);
   GetWindowsDirectory(my_services_file, MAX_FILE - 12);
+  GetWindowsDirectory(my_macs_file, MAX_FILE - 12);
   GetWindowsDirectory(my_resolv_file, MAX_FILE - 12);
 
   len = strlen(my_hosts_file);
@@ -143,6 +150,11 @@ name_constructor(void)
     strscat(my_services_file, "\\", sizeof(my_services_file));
   strscat(my_services_file, "services_olsr", sizeof(my_services_file));
 
+  len = strlen(my_macs_file);
+  if (my_macs_file[len - 1] != '\\')
+    strscat(my_macs_file, "\\", sizeof(my_macs_file));
+  strscat(my_macs_file, "macs_olsr", sizeof(my_macs_file));
+
   len = strlen(my_resolv_file);
   if (my_resolv_file[len - 1] != '\\')
     strscat(my_resolv_file, "\\", sizeof(my_resolv_file));
@@ -150,6 +162,7 @@ name_constructor(void)
 #else
   strscpy(my_hosts_file, "/var/run/hosts_olsr", sizeof(my_hosts_file));
   strscpy(my_services_file, "/var/run/services_olsr", sizeof(my_services_file));
+  strscpy(my_macs_file, "/var/run/macs_olsr", sizeof(my_macs_file));
   strscpy(my_resolv_file, "/var/run/resolvconf_olsr", sizeof(my_resolv_file));
   *my_sighup_pid_file = 0;
 #endif
@@ -160,12 +173,14 @@ name_constructor(void)
   latlon_in_file[0] = '\0';
   my_name_change_script[0] = '\0';
   my_services_change_script[0] = '\0';
+  my_macs_change_script[0] = '\0';
 
   /* init the lists heads */
   for (i = 0; i < HASHSIZE; i++) {
     list_head_init(&name_list[i]);
     list_head_init(&forwarder_list[i]);
     list_head_init(&service_list[i]);
+    list_head_init(&mac_list[i]);
     list_head_init(&latlon_list[i]);
   }
 
@@ -240,10 +255,12 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   { .name = "hosts-file",             .set_plugin_parameter = &set_plugin_string,      .data = &my_hosts_file,             .addon = {sizeof(my_hosts_file)} },
   { .name = "name-change-script",     .set_plugin_parameter = &set_plugin_string,      .data = &my_name_change_script,     .addon = {sizeof(my_name_change_script)} },
   { .name = "services-change-script", .set_plugin_parameter = &set_plugin_string,      .data = &my_services_change_script, .addon = {sizeof(my_services_change_script)} },
+  { .name = "macs-change-script",     .set_plugin_parameter = &set_plugin_string,      .data = &my_macs_change_script,     .addon = {sizeof(my_macs_change_script)} },
   { .name = "resolv-file",            .set_plugin_parameter = &set_plugin_string,      .data = &my_resolv_file,            .addon = {sizeof(my_resolv_file)} },
   { .name = "suffix",                 .set_plugin_parameter = &set_plugin_string,      .data = &my_suffix,                 .addon = {sizeof(my_suffix)} },
   { .name = "add-hosts",              .set_plugin_parameter = &set_plugin_string,      .data = &my_add_hosts,              .addon = {sizeof(my_add_hosts)} },
   { .name = "services-file",          .set_plugin_parameter = &set_plugin_string,      .data = &my_services_file,          .addon = {sizeof(my_services_file)} },
+  { .name = "macs-file",              .set_plugin_parameter = &set_plugin_string,      .data = &my_macs_file,              .addon = {sizeof(my_macs_file)} },
   { .name = "lat",                    .set_plugin_parameter = &set_nameservice_float,  .data = &my_lat },
   { .name = "lon",                    .set_plugin_parameter = &set_nameservice_float,  .data = &my_lon },
   { .name = "latlon-file",            .set_plugin_parameter = &set_plugin_string,      .data = &my_latlon_file,            .addon = {sizeof(my_latlon_file)} },
@@ -251,6 +268,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   { .name = "dns-server",             .set_plugin_parameter = &set_nameservice_server, .data = &my_forwarders,             .addon = {NAME_FORWARDER} },
   { .name = "name",                   .set_plugin_parameter = &set_nameservice_name,   .data = &my_names,                  .addon = {NAME_HOST} },
   { .name = "service",                .set_plugin_parameter = &set_nameservice_name,   .data = &my_services,               .addon = {NAME_SERVICE} },
+  { .name = "mac",                    .set_plugin_parameter = &set_nameservice_name,   .data = &my_macs,                   .addon = {NAME_MACADDR} },
   { .name = "",                       .set_plugin_parameter = &set_nameservice_host,   .data = &my_names },
 };
 /* *INDENT-OFF* */
@@ -374,6 +392,7 @@ name_init(void)
   my_names = remove_nonvalid_names_from_list(my_names, NAME_HOST);
   my_forwarders = remove_nonvalid_names_from_list(my_forwarders, NAME_FORWARDER);
   my_services = remove_nonvalid_names_from_list(my_services, NAME_SERVICE);
+  my_macs = remove_nonvalid_names_from_list(my_macs, NAME_MACADDR);
 
   /* register functions with olsrd */
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
@@ -440,10 +459,12 @@ name_destructor(void)
 
   free_name_entry_list(&my_names);
   free_name_entry_list(&my_services);
+  free_name_entry_list(&my_macs);
   free_name_entry_list(&my_forwarders);
 
   free_all_list_entries(name_list);
   free_all_list_entries(service_list);
+  free_all_list_entries(mac_list);
   free_all_list_entries(forwarder_list);
   free_all_list_entries(latlon_list);
 
@@ -487,11 +508,12 @@ olsr_expire_write_file_timer(void *context __attribute__ ((unused)))
 {
   write_file_timer = NULL;
 
-  write_resolv_file();          /* if forwarder_table_changed */
-  write_hosts_file();           /* if name_table_changed */
-  write_services_file();        /* if service_table_changed */
+  write_resolv_file();             /* if forwarder_table_changed */
+  write_hosts_file();              /* if name_table_changed */
+  write_services_file(OLSR_FALSE); /* if service_table_changed */
+  write_services_file(OLSR_TRUE);  /* if mac_table_changed */
 #ifdef WIN32
-  write_latlon_file();          /* if latlon_table_changed */
+  write_latlon_file();             /* if latlon_table_changed */
 #endif
 }
 
@@ -658,7 +680,6 @@ int
 encap_namemsg(struct namemsg *msg)
 {
   struct name_entry *my_name;
-  struct name_entry *my_service;
 
   // add the hostname, service and forwarder entries after the namemsg header
   char *pos = (char *)msg + sizeof(struct namemsg);
@@ -675,8 +696,13 @@ encap_namemsg(struct namemsg *msg)
     i++;
   }
   // services
-  for (my_service = my_services; my_service != NULL; my_service = my_service->next) {
-    pos = create_packet((struct name *)pos, my_service);
+  for (my_name = my_services; my_name != NULL; my_name = my_name->next) {
+    pos = create_packet((struct name *)pos, my_name);
+    i++;
+  }
+  // macs
+  for (my_name = my_macs; my_name != NULL; my_name = my_name->next) {
+    pos = create_packet((struct name *)pos, my_name);
     i++;
   }
   // latlon
@@ -855,6 +881,9 @@ update_name_entry(union olsr_ip_addr *originator, struct namemsg *msg, int msg_s
       break;
     case NAME_SERVICE:
       insert_new_name_in_list(originator, service_list, from_packet, &service_table_changed, vtime);
+      break;
+    case NAME_MACADDR:
+      insert_new_name_in_list(originator, mac_list, from_packet, &mac_table_changed, vtime);
       break;
     case NAME_LATLON:
       insert_new_name_in_list(originator, latlon_list, from_packet, &latlon_table_changed, vtime);
@@ -1098,45 +1127,47 @@ write_hosts_file(void)
 }
 
 /**
- * write services to a file in the format:
- * service  #originator ip
+ * write services or macs to a file in the format:
+ * service-or-mac  #originator ip
  *
  * since service has a special format
  * each line will look similar to e.g.
  * http://me.olsr:80|tcp|my little homepage
+ * while a mac line will look similar to
+ * 02:ca:ff:ee:ba:be,1
  */
 void
-write_services_file(void)
+write_services_file(olsr_bool writemacs)
 {
   int hash;
   struct name_entry *name;
   struct db_entry *entry;
   struct list_node *list_head, *list_node;
-  FILE *services_file;
+  FILE *file;
   time_t currtime;
 
-  if (!service_table_changed)
+  if ((writemacs && !mac_table_changed) || (!writemacs && !service_table_changed))
     return;
 
-  OLSR_PRINTF(2, "NAME PLUGIN: writing services file\n");
+  OLSR_PRINTF(2, "NAME PLUGIN: writing %s file\n", writemacs ? "macs" : "services");
 
-  services_file = fopen(my_services_file, "w");
-  if (services_file == NULL) {
-    OLSR_PRINTF(2, "NAME PLUGIN: cant write services_file file\n");
+  file = fopen(writemacs ? my_macs_file : my_services_file, "w");
+  if (file == NULL) {
+    OLSR_PRINTF(2, "NAME PLUGIN: cant write %s\n", writemacs ? my_macs_file : my_services_file);
     return;
   }
 
-  fprintf(services_file, "### this file is overwritten regularly by olsrd\n");
-  fprintf(services_file, "### do not edit\n\n");
+  fprintf(file, "### this file is overwritten regularly by olsrd\n");
+  fprintf(file, "### do not edit\n\n");
 
-  // write own services
-  for (name = my_services; name != NULL; name = name->next) {
-    fprintf(services_file, "%s\t# my own service\n", name->name);
+  // write own services or macs
+  for (name = writemacs ? my_macs : my_services; name != NULL; name = name->next) {
+    fprintf(file, "%s\t# my own %s\n", name->name, writemacs ? "mac" : "service");
   }
 
-  // write received services
+  // write received services or macs
   for (hash = 0; hash < HASHSIZE; hash++) {
-    list_head = &service_list[hash];
+    list_head = writemacs ? &mac_list[hash] : &service_list[hash];
     for (list_node = list_head->next; list_node != list_head; list_node = list_node->next) {
 
       entry = list2db(list_node);
@@ -1146,26 +1177,38 @@ write_services_file(void)
         OLSR_PRINTF(6, "%s\t", name->name);
         OLSR_PRINTF(6, "\t#%s\n", olsr_ip_to_string(&strbuf, &entry->originator));
 
-        fprintf(services_file, "%s\t", name->name);
-        fprintf(services_file, "\t#%s\n", olsr_ip_to_string(&strbuf, &entry->originator));
+        fprintf(file, "%s\t", name->name);
+        fprintf(file, "\t#%s\n", olsr_ip_to_string(&strbuf, &entry->originator));
       }
     }
   }
 
   if (time(&currtime)) {
-    fprintf(services_file, "\n### written by olsrd at %s", ctime(&currtime));
+    fprintf(file, "\n### written by olsrd at %s", ctime(&currtime));
   }
 
-  fclose(services_file);
-  service_table_changed = OLSR_FALSE;
-
-  // Executes my_services_change_script after writing the services file
-  if (my_services_change_script[0] != '\0') {
-    if (system(my_services_change_script) != -1) {
-      OLSR_PRINTF(2, "NAME PLUGIN: Service changed, %s executed\n", my_services_change_script);
-    } else {
-      OLSR_PRINTF(2, "NAME PLUGIN: WARNING! Failed to execute %s on service change\n", my_services_change_script);
+  fclose(file);
+  if (writemacs) {
+    // Executes my_macs_change_script after writing the macs file
+    if (my_macs_change_script[0] != '\0') {
+      if (system(my_macs_change_script) != -1) {
+        OLSR_PRINTF(2, "NAME PLUGIN: Service changed, %s executed\n", my_macs_change_script);
+      } else {
+        OLSR_PRINTF(2, "NAME PLUGIN: WARNING! Failed to execute %s on mac change\n", my_macs_change_script);
+      }
     }
+    mac_table_changed = OLSR_FALSE;
+  }
+  else {
+    // Executes my_services_change_script after writing the services file
+    if (my_services_change_script[0] != '\0') {
+      if (system(my_services_change_script) != -1) {
+        OLSR_PRINTF(2, "NAME PLUGIN: Service changed, %s executed\n", my_services_change_script);
+      } else {
+        OLSR_PRINTF(2, "NAME PLUGIN: WARNING! Failed to execute %s on service change\n", my_services_change_script);
+      }
+    }
+    service_table_changed = OLSR_FALSE;
   }
 }
 
@@ -1317,6 +1360,9 @@ free_name_entry_list(struct name_entry **list)
       break;
     case NAME_SERVICE:
       service_table_changed = OLSR_TRUE;
+      break;
+    case NAME_MACADDR:
+      mac_table_changed = OLSR_TRUE;
       break;
     case NAME_LATLON:
       latlon_table_changed = OLSR_TRUE;

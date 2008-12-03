@@ -145,7 +145,7 @@ void update_name_entry(union olsr_ip_addr *, struct namemsg *, int, olsr_reltime
 
 void write_hosts_file(void);
 
-void write_services_file(void);
+void write_services_file(olsr_bool writemacs);
 
 void write_resolv_file(void);
 
