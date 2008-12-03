@@ -43,9 +43,9 @@ int luaO_int2fb (unsigned int x) {
 }
 
 
+/* *INDENT-OFF* */
 int luaO_log2 (unsigned int x) {
   static const lu_byte log_8[255] = {
-/* *INDENT-OFF* */
     0,
     1,1,
     2,2,2,2,
@@ -58,7 +58,6 @@ int luaO_log2 (unsigned int x) {
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-/* *INDENT-ON* */
   };
   if (x >= 0x00010000) {
     if (x >= 0x01000000) return log_8[((x>>24) & 0xff) - 1]+24;
@@ -70,7 +69,7 @@ int luaO_log2 (unsigned int x) {
     return -1;  /* special `log' for 0 */
   }
 }
-
+/* *INDENT-ON* */
 
 int luaO_rawequalObj (const TObject *t1, const TObject *t2) {
   if (ttype(t1) != ttype(t2)) return 0;
