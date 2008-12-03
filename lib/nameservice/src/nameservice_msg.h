@@ -43,6 +43,7 @@ typedef enum {
 	NAME_FORWARDER = 1,
 	NAME_SERVICE = 2,
 	NAME_LATLON = 3,
+	NAME_MACADDR = 4,
 } NAME_TYPE;
 
 /**

@@ -160,7 +160,7 @@ void
 write_hosts_file(void);
 
 void
-write_services_file(void);
+write_services_file(bool writemacs);
 
 void
 write_resolv_file(void);
