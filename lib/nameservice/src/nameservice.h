@@ -184,7 +184,7 @@ bool
 is_service_wellformed(const char *service_line);
 
 bool
-is_service_wellformed(const char *service_line);
+is_mac_wellformed(const char *service_line);
 
 bool
 is_latlon_wellformed(const char *latlon_line);
