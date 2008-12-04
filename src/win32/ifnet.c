@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -75,7 +75,7 @@ struct MibIpInterfaceRow
   BOOLEAN WeakHostSend;
   BOOLEAN WeakHostReceive;
   BOOLEAN UseAutomaticMetric;
-  BOOLEAN UseNeighborUnreachabilityDetection;   
+  BOOLEAN UseNeighborUnreachabilityDetection;
   BOOLEAN ManagedAddressConfigurationSupported;
   BOOLEAN OtherStatefulConfigurationSupported;
   BOOLEAN AdvertiseDefaultRoute;
@@ -89,14 +89,14 @@ struct MibIpInterfaceRow
   ULONG ZoneIndices[16];
   ULONG SitePrefixLength;
   ULONG Metric;
-  ULONG NlMtu;    
+  ULONG NlMtu;
   BOOLEAN Connected;
-  BOOLEAN SupportsWakeUpPatterns;   
+  BOOLEAN SupportsWakeUpPatterns;
   BOOLEAN SupportsNeighborDiscovery;
   BOOLEAN SupportsRouterDiscovery;
   ULONG ReachableTime;
   BYTE TransmitOffload;
-  BYTE ReceiveOffload; 
+  BYTE ReceiveOffload;
   BOOLEAN DisableDefaultRoutes;
 };
 
@@ -195,7 +195,7 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
   char FriendlyName[MAX_INTERFACE_NAME_LEN];
   HMODULE h;
   GETADAPTERSADDRESSES pfGetAdaptersAddresses;
-  
+
   h = LoadLibrary("iphlpapi.dll");
 
   if (h == NULL)
@@ -211,13 +211,13 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
     fprintf(stderr, "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n", GetLastError());
     return -1;
   }
-  
+
   BuffLen = sizeof (AdAddr);
 
   Res = pfGetAdaptersAddresses(AF_INET, 0, NULL, AdAddr, &BuffLen);
 
   if (Res != NO_ERROR)
-  {  
+  {
     fprintf(stderr, "GetAdaptersAddresses() = %08lx", GetLastError());
     return -1;
   }
@@ -226,7 +226,7 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
   {
     OLSR_PRINTF(5, "Index = %08x - ", (int)WalkerAddr->IfIndex);
 
-    wcstombs(FriendlyName, WalkerAddr->FriendlyName, MAX_INTERFACE_NAME_LEN); 
+    wcstombs(FriendlyName, WalkerAddr->FriendlyName, MAX_INTERFACE_NAME_LEN);
 
     OLSR_PRINTF(5, "Friendly name = %s\n", FriendlyName);
 
@@ -308,7 +308,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
     fprintf(stderr, "No such interface: %s!\n", Name);
     return -1;
   }
-    
+
   Info->Index = IfTable->table[TabIdx].dwIndex;
   Info->Mtu = (int)IfTable->table[TabIdx].dwMtu;
 
@@ -474,7 +474,7 @@ void ListInterfaces(void)
   IP_ADDR_STRING *Walker2;
   unsigned long Res;
   int IsWlan;
-  
+
   if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by ListInterfaces()!\n");
@@ -490,7 +490,7 @@ void ListInterfaces(void)
     printf("No interfaces detected.\n");
     return;
   }
-  
+
   if (Res != NO_ERROR)
   {
     fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", Res, StrError(Res));
@@ -529,7 +529,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   struct interface *Int, *Prev;
 
   OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
-  
+
   Int = IntConf->interf;
 
   run_ifchg_cbs(Int, IFCHG_IF_ADD);
@@ -561,7 +561,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   }
 
   /*
-   * Deregister functions for periodic message generation 
+   * Deregister functions for periodic message generation
    */
   olsr_stop_timer(Int->hello_gen_timer);
   olsr_stop_timer(Int->tc_gen_timer);
@@ -647,20 +647,20 @@ int add_hemu_if(struct olsr_if *iface)
       sin4.sin_family = AF_INET;
       sin4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
       sin4.sin_port = htons(10150);
- 
+
      /* IP version 4 */
       ifp->ip_addr.v4 = iface->hemu_ip.v4;
 
       memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-      
+
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = gethemusocket(&sin4);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -673,23 +673,23 @@ int add_hemu_if(struct olsr_if *iface)
       /* IP version 6 */
       memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
 
-#if 0      
+#if 0
       /*
        *We create one socket for each interface and bind
        *the socket to it. This to ensure that we can control
        *on what interface the message is transmitted
        */
-      
+
       ifp->olsr_socket = gethcsocket6(&addrsock6, bufspace, ifp->int_name);
-      
+
       join_mcast(ifp, ifp->olsr_socket);
-      
+
       if (ifp->olsr_socket < 0)
 	{
 	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
 	  exit(1);
 	}
-      
+
 #endif
     }
 
@@ -703,13 +703,13 @@ int add_hemu_if(struct olsr_if *iface)
   if(send(ifp->olsr_socket, (char *)addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize)
     {
       fprintf(stderr, "Error sending IP!");
-    }  
-  
+    }
+
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input_hostemu, NULL, NULL, SP_PR_READ);
 
   /*
-   * Register functions for periodic message generation 
+   * Register functions for periodic message generation
    */
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
@@ -905,7 +905,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   int IsWlan;
   struct sockaddr_in *AddrIn;
   size_t name_size;
-  
+
   if (olsr_cnf->ip_version == AF_INET6)
   {
     fprintf(stderr, "IPv6 not supported by chk_if_up()!\n");
@@ -968,23 +968,23 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   New->olsr_seqnum = rand() & 0xffff;
 
   New->ttl_index = -32; /* For the first 32 TC's, fish-eye is disabled */
-    
+
   OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n",
               IntConf->name, New->if_index);
-      
+
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
   OLSR_PRINTF(1, "\tAddress: %s\n", ip4_to_string(&buf, New->int_addr.sin_addr));
   OLSR_PRINTF(1, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
   OLSR_PRINTF(1, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_broadaddr.sin_addr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
-      
+
   New->if_index = Info.Index;
 
   OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
 
   New->olsr_socket = getsocket(BUFSPACE, New->int_name);
-      
+
   if (New->olsr_socket < 0)
   {
     fprintf(stderr, "Could not initialize socket... exiting!\n\n");
@@ -1000,7 +1000,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   IntConf->configured = 1;
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
-  
+
   if(ipequal(&NullAddr, &olsr_cnf->main_addr))
   {
     olsr_cnf->main_addr = New->ip_addr;
@@ -1010,7 +1010,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   net_add_buffer(New);
 
   /*
-   * Register functions for periodic message generation 
+   * Register functions for periodic message generation
    */
   New->hello_gen_timer =
     olsr_start_timer(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC,
@@ -1057,11 +1057,11 @@ void check_interface_updates(void *dummy __attribute__((unused)))
   {
     if(IntConf->host_emul)
       continue;
-      
+
     if(olsr_cnf->host_emul) /* XXX: TEMPORARY! */
       continue;
- 
-    if(IntConf->configured)    
+
+    if(IntConf->configured)
       chk_if_changed(IntConf);
 
     else

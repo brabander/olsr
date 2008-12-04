@@ -9,7 +9,7 @@ public:
 	TrayIcon( CFrontendDlg&, HINSTANCE );
 	~TrayIcon();
 
-	void displayPopup();	
+	void displayPopup();
 
 	static TrayIcon* getInstance()	{ return instance; }
 

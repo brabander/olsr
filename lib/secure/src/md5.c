@@ -12,15 +12,15 @@
    License is also granted to make and use derivative works provided
    that such works are identified as "derived from the RSA Data
    Security, Inc. MD5 Message-Digest Algorithm" in all material
-   mentioning or referencing the derived work.  
-                                                                    
+   mentioning or referencing the derived work.
+
    RSA Data Security, Inc. makes no representations concerning either
    the merchantability of this software or the suitability of this
    software for any particular purpose. It is provided "as is"
-   without express or implied warranty of any kind.  
-                                                                    
+   without express or implied warranty of any kind.
+
    These notices must be retained in any copies of any part of this
-   documentation and/or software.  
+   documentation and/or software.
  */
 
 #include "md5.h"
@@ -93,7 +93,7 @@ static const unsigned char PADDING[64] = {
 static void MD5_memcpy (POINTER output, POINTER input, unsigned int len)
 {
   unsigned int i;
-  
+
   for (i = 0; i < len; i++)
     output[i] = input[i];
 }
@@ -103,13 +103,13 @@ static void MD5_memcpy (POINTER output, POINTER input, unsigned int len)
 static void MD5_memset (POINTER output, int value, unsigned int len)
 {
   unsigned int i;
-  
+
   for (i = 0; i < len; i++)
     ((char *)output)[i] = (char)value;
 }
 #else
-#define MD5_memcpy(dst, src, len) memcpy((dst), (src), (len)) 
-#define MD5_memset(dst, val, len) memset((dst), (val), (len)) 
+#define MD5_memcpy(dst, src, len) memcpy((dst), (src), (len))
+#define MD5_memset(dst, val, len) memset((dst), (val), (len))
 #endif
 
 
@@ -145,7 +145,7 @@ static void Decode (UINT4 *output, const unsigned char *input, unsigned int len)
 static void MD5Transform (UINT4 state[4], const unsigned char block[64])
 {
   UINT4 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
-  
+
   Decode (x, block, 64);
 
   /* Round 1 */
@@ -224,7 +224,7 @@ static void MD5Transform (UINT4 state[4], const unsigned char block[64])
   state[1] += b;
   state[2] += c;
   state[3] += d;
-  
+
   /* Zeroize sensitive information.
    */
   MD5_memset ((POINTER)x, 0, sizeof (x));
@@ -261,26 +261,26 @@ void MD5Update (MD5_CTX *context, const unsigned char *input, const unsigned int
       < ((UINT4)inputLen << 3))
     context->count[1]++;
   context->count[1] += ((UINT4)inputLen >> 29);
-  
+
   partLen = 64 - idx;
-  
+
   /* Transform as many times as possible.
    */
   if (inputLen >= partLen) {
     MD5_memcpy
       ((POINTER)&context->buffer[idx], input, partLen);
     MD5Transform (context->state, context->buffer);
-  
+
     for (i = partLen; i + 63 < inputLen; i += 64)
       MD5Transform (context->state, &input[i]);
-    
+
     idx = 0;
   }
   else
     i = 0;
-  
+
   /* Buffer remaining input */
-  MD5_memcpy 
+  MD5_memcpy
     ((POINTER)&context->buffer[idx], &input[i],
      inputLen-i);
 }
@@ -301,13 +301,13 @@ void MD5Final (unsigned char digest[16], MD5_CTX *context)
   idx = (unsigned int)((context->count[0] >> 3) & 0x3f);
   padLen = (idx < 56) ? (56 - idx) : (120 - idx);
   MD5Update (context, PADDING, padLen);
-  
+
   /* Append length (before padding) */
   MD5Update (context, bits, 8);
 
   /* Store state in digest */
   Encode (digest, context->state, 16);
-  
+
   /* Zeroize sensitive information.
    */
   MD5_memset ((POINTER)context, 0, sizeof (*context));

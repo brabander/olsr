@@ -4,31 +4,31 @@
  * Copyright (c) 2004, Thomas Lopatic (thomas@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -137,36 +137,36 @@ static void rc4(unsigned char *buff, int len, unsigned char *key, int keyLen)
   int i, m, n;
   unsigned char state[256];
   unsigned char aux;
-	
+
   for (i = 0; i < 256; i++)
     state[i] = (unsigned char)i;
-	
+
   m = 0;
   n = 0;
-	
+
   for (i = 0; i < 256; i++)
   {
     m = (m + key[n] + state[i]) & 255;
-		
+
     aux = state[i];
     state[i] = state[m];
     state[m] = aux;
 
     n = (n + 1) % keyLen;
   }
-	
+
   m = 0;
   n = 0;
-	
+
   for (i = 0; i < len; i++)
   {
     n = (n + 1) & 255;
     m = (m + state[n]) & 255;
-		
+
     aux = state[n];
     state[n] = state[m];
     state[m] = aux;
-		
+
     buff[i] ^= state[(state[m] + state[n]) & 255];
   }
 }
@@ -1270,7 +1270,7 @@ static int serviceConn(struct connInfo *info)
     if (*line == 9 || *line == 32)
     {
       debug(DEBUG_REQUEST, "continued header line\n");
-      
+
       if (info->lastHead == NULL)
       {
         error("no previous header to continue\n");
@@ -1409,7 +1409,7 @@ static int serviceConn(struct connInfo *info)
         error("user authentication failed\n");
         writeError(info, 401);
         return 0;
-      }     
+      }
     }
 
     if (isDirectory(confRootDir, info->path) > 0)
@@ -1441,7 +1441,7 @@ static int serviceConn(struct connInfo *info)
 
       if (len2 >= len &&
           memcmp(info->path + len2 - len, extMap[i].ext, len) == 0)
-        break;      
+        break;
     }
 
     if (extMap[i].ext != NULL)
@@ -1494,7 +1494,7 @@ static int serviceConn(struct connInfo *info)
 
       writeBuff(&info->write[2], fileBuff, len);
     }
-    
+
     return 0;
 
   case STATE_LSP:
@@ -1629,7 +1629,7 @@ static int serviceConn(struct connInfo *info)
         if (info->newSess->data != NULL)
         {
           debug(DEBUG_SESSION, "freeing lua context\n");
-        
+
           freeLuaSession(info->newSess->data);
         }
 
@@ -1638,7 +1638,7 @@ static int serviceConn(struct connInfo *info)
       }
 
       debug(DEBUG_SESSION, "purging io buffer\n");
-        
+
       freeInOutBuff(&info->write[1]);
       freeInOutBuff(&info->write[2]);
 
@@ -1825,7 +1825,7 @@ int httpService(int freq)
     debug(DEBUG_MESSAGE,
           "message timed out, service ='%s', string = '%s', from = %s\n",
           tasMsg->service, tasMsg->string, tasMsg->from);
-    
+
     firstTasMsg = firstTasMsg->next;
 
     if (lastTasMsg == tasMsg)
@@ -1876,7 +1876,7 @@ void httpAddTasMessage(const char *service, const char *string,
   msg->service = myStrdup(service);
   msg->string = myStrdup(string);
   msg->from = myStrdup(from);
-  
+
   if (lastTasMsg != NULL)
     lastTasMsg->next = msg;
 
@@ -1897,7 +1897,7 @@ void httpAddTasMessage(const char *service, const char *string,
     debug(DEBUG_MESSAGE,
           "message removed, service ='%s', string = '%s', from = %s\n",
           msg->service, msg->string, msg->from);
-    
+
     firstTasMsg = firstTasMsg->next;
 
     if (lastTasMsg == msg)

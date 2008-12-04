@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -94,7 +94,7 @@ init_link_layer_notification()
   OLSR_PRINTF(1, "Initializing link-layer notification...\n");
 
 
-  for (ifd = ifnet; ifd ; ifd = ifd->int_next) 
+  for (ifd = ifnet; ifd ; ifd = ifd->int_next)
     {
       if(ifd->is_wireless)
 	clear_spy_list(ifd->int_name);
@@ -138,9 +138,9 @@ add_spy_node(union olsr_ip_addr *addr, char *interface)
   struct sockaddr	hw_address[IW_MAX_SPY];
   char	buffer[(sizeof(struct iw_quality) +
 		sizeof(struct sockaddr)) * IW_MAX_SPY];
-  
+
   OLSR_PRINTF(1, "Adding spynode!\n\n");
-  
+
   /* get all addresses already in the driver */
 
   wrq.u.data.pointer = (caddr_t) buffer;
@@ -173,15 +173,15 @@ add_spy_node(union olsr_ip_addr *addr, char *interface)
     }
   else
     return 0;
-  
+
   /* Add all addresses */
   wrq.u.data.pointer = (caddr_t) hw_address;
   wrq.u.data.length = nbr;
   wrq.u.data.flags = 0;
-  
+
   /* Set device name */
   strscpy(wrq.ifr_name, interface, sizeof(wrq.ifr_name));
-  
+
   if(ioctl(olsr_cnf->ioctl_s, SIOCSIWSPY, &wrq) < 0)
     {
       OLSR_PRINTF(1, "Could not clear spylist %s\n", strerror(errno));
@@ -202,7 +202,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
 
   memset(&arp_query, 0, sizeof(struct arpreq));
 
-  OLSR_PRINTF(1, "\nARP conversion for %s interface %s\n", 
+  OLSR_PRINTF(1, "\nARP conversion for %s interface %s\n",
 	      olsr_ip_to_string(ip),
 	      interface);
 
@@ -217,7 +217,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
   arp_query.arp_flags = 0;
 
   strscpy(arp_query.arp_dev, interface, sizeof(arp_query.arp_dev));
-  
+
   if((ioctl(olsr_cnf->ioctl_s, SIOCGARP, &arp_query) < 0) ||
      !(arp_query.arp_flags & ATF_COM)) /* ATF_COM - hw addr valid */
     {
@@ -225,7 +225,7 @@ convert_ip_to_mac(union olsr_ip_addr *ip, struct sockaddr *mac, char *interface)
 
       /* No address - create a thread that sends a PING */
       send_ping(ip);
-  
+
       return -1;
     }
 
@@ -263,7 +263,7 @@ send_ping(union olsr_ip_addr *ip)
 
   OLSR_PRINTF(1, "pinging %s\n\n", olsr_ip_to_string(ip));
 
-  if ((ping_s = socket(AF_INET, SOCK_RAW, PF_INET)) < 0) 
+  if ((ping_s = socket(AF_INET, SOCK_RAW, PF_INET)) < 0)
     {
       OLSR_PRINTF(1, "Could not create RAW socket for ping!\n%s\n", strerror(errno));
       return;
@@ -271,8 +271,8 @@ send_ping(union olsr_ip_addr *ip)
 
   /* Create packet */
   packet = malloc(MAXIPLEN + MAXICMPLEN);
-  
-  
+
+
   icp = (struct icmphdr *)packet;
   icp->type = ICMP_ECHO;
   icp->code = 0;
@@ -321,33 +321,33 @@ poll_link_layer(void *foo)
       wrq.u.data.pointer = (caddr_t) buffer;
       wrq.u.data.length = IW_MAX_SPY;
       wrq.u.data.flags = 0;
-      
+
       /* Set device name */
       strscpy(wrq.ifr_name, iflist->int_name, sizeof(wrq.ifr_name));
-      
+
       /* Do the request */
       if(ioctl(olsr_cnf->ioctl_s, SIOCGIWSPY, &wrq) < 0)
 	{
           OLSR_PRINTF(1, "%-8.16s  Interface doesn't support wireless statistic collection\n\n", iflist->int_name);
 	  return;
 	}
-      
+
       /* Get range info if we can */
       if(iw_get_range_info(iflist->int_name, &(range)) >= 0)
 	has_range = 1;
-      
+
       /* Number of addresses */
       n = wrq.u.data.length;
-      
+
       /* The two lists */
       hwa = (struct sockaddr *) buffer;
       qual = (struct iw_quality *) (buffer + (sizeof(struct sockaddr) * n));
-      
+
       for(i = 0; i < n; i++)
 	{
 	  if(!(qual->updated & 0x7))
 	    continue;
-	  
+
 	  /* Print stats for each address */
 	  OLSR_PRINTF(1, "MAC");
 	  for(j = 0; j < 6; j++)
@@ -357,17 +357,17 @@ poll_link_layer(void *foo)
 	  if(!has_range)
 	    OLSR_PRINTF(1, " : Quality:%d  Signal level:%d dBm  Noise level:%d dBm",
 			qual[i].qual,
-			qual[i].level - 0x100, 
+			qual[i].level - 0x100,
 			qual[i].noise - 0x100);
 	  else
 	    OLSR_PRINTF(1, " : Quality:%d/%d  Signal level:%d dBm  Noise level:%d dBm",
 			qual[i].qual,
 			range.max_qual.qual,
-			qual[i].level - 0x100, 
+			qual[i].level - 0x100,
 			qual[i].noise - 0x100);
-	  
+
 	  OLSR_PRINTF(1, "\n");
-	  
+
 	}
     }
 

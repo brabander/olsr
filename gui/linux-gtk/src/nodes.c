@@ -51,7 +51,7 @@ insert_node(struct node *n, uint8_t vtime)
     }
 
   memcpy(new_node, n, sizeof(struct node));
-  
+
   /* queue */
   nodes.next->prev = new_node;
   new_node->next = nodes.next;
@@ -89,7 +89,7 @@ add_node(union olsr_ip_addr *node, uint8_t vtime)
   time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
+  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
 
   /* Check if node exists */
   for(tmp_nodes = nodes.next;
@@ -103,7 +103,7 @@ add_node(union olsr_ip_addr *node, uint8_t vtime)
 	  //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
 	  gettimeofday(&now, (struct timezone *)NULL);
 	  timeradd(&now, &tmp_timer, &tmp_nodes->timer);
-	  return 0; 
+	  return 0;
 	}
       /* Check MID */
       for(tmp_mid = tmp_nodes->mid.next;
@@ -117,7 +117,7 @@ add_node(union olsr_ip_addr *node, uint8_t vtime)
 	      //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
 	      gettimeofday(&now, (struct timezone *)NULL);
 	      timeradd(&now, &tmp_timer, &tmp_nodes->timer);
-	      return 0; 
+	      return 0;
 	    }
 	}
     }
@@ -129,7 +129,7 @@ add_node(union olsr_ip_addr *node, uint8_t vtime)
   printf("1:");
   insert_node(&new, vtime);
   update_nodes_list(&new);
- 
+
   return 1;
 }
 
@@ -146,7 +146,7 @@ update_timer_node(union olsr_ip_addr *node, uint8_t vtime)
   time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
+  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
 
   //printf("Updatimng timer for: %s\n", ip_to_string(node));
   //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
@@ -162,10 +162,10 @@ update_timer_node(union olsr_ip_addr *node, uint8_t vtime)
 	  timeradd(&now, &tmp_timer, &tmp_nodes->timer);
 	  if(tmp_nodes->display)
 	    update_nodes_list(tmp_nodes);
-	  return 1; 
+	  return 1;
 	}
     }
-  
+
   return 0;
 }
 
@@ -191,7 +191,7 @@ update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, uint8_t vtim
   time_value = (uint32_t) dbl_time*1000;
 
   tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;   
+  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
 
   //printf("Updatimng MPR timer for: %s\n", ip_to_string(node));
   //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
@@ -213,7 +213,7 @@ update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, uint8_t vtim
 		  //printf("node %s\n", ip_to_string(node));
 		  gettimeofday(&now, (struct timezone *)NULL);
 		  timeradd(&now, &tmp_timer, &tmp_mpr->timer);
-		  return 1; 
+		  return 1;
 		}
 	    }
 	  /* Only add if parent is added */
@@ -271,9 +271,9 @@ add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, uint8_t vtime)
 	  tmp_mid->prev = &tmp_nodes->mid;
 
 	  remove_node_addr(alias); // Remove if already registered as a node
-	  
+
 	  update_nodes_list(tmp_nodes);
-	  return 1; 
+	  return 1;
 
 	}
     }
@@ -350,9 +350,9 @@ add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_ad
 	  tmp_hna->next = tmp_nodes->hna.next;
 	  tmp_nodes->hna.next = tmp_hna;
 	  tmp_hna->prev = &tmp_nodes->hna;
-	  
+
 	  update_nodes_list(tmp_nodes);
-	  return 1; 
+	  return 1;
 	}
     }
 
@@ -436,7 +436,7 @@ add_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, struct timeval *tmp_t
 	  tmp_mpr->prev = &tmp_nodes->mpr;
 
 	  update_nodes_list(tmp_nodes);
-	  return 1; 
+	  return 1;
 
 	}
     }
@@ -478,17 +478,17 @@ remove_node(struct node *node)
       tmp_mid = tmp_mid->next;
       free(tmp_mid2);
     }
-  
+
   /* Gemove form GUI */
   remove_nodes_list(&node->addr);
-  
+
   /* Dequeue */
   node->prev->next = node->next;
   node->next->prev = node->prev;
-  
+
   free(node);
 
-  return 1;  
+  return 1;
 }
 
 
@@ -631,7 +631,7 @@ time_out_nodes(gpointer data)
 
 	  remove_nodes_list(&node_to_delete->addr);
 	  remove_node(node_to_delete);
-	} 
+	}
       else
 	tmp_nodes = tmp_nodes->next;
     }
@@ -671,7 +671,7 @@ time_out_mprs(union olsr_ip_addr *node)
       if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
 	{
 	  tmp_mpr = tmp_nodes->mpr.next;
-	 
+
 	  while(tmp_mpr != &tmp_nodes->mpr)
 	    {
 	      if(timercmp(&tmp_mpr->timer,&now,<))
@@ -703,7 +703,7 @@ time_out_mprs(union olsr_ip_addr *node)
 
 void
 init_timer(uint32_t time_value, struct timeval *hold_timer)
-{ 
+{
   uint16_t  time_value_sec=0;
   uint16_t  time_value_msec=0;
 
@@ -711,8 +711,8 @@ init_timer(uint32_t time_value, struct timeval *hold_timer)
   time_value_msec=time_value-(time_value_sec*1000);
 
   hold_timer->tv_sec=time_value_sec;
-  hold_timer->tv_usec=time_value_msec*1000; 
-  
+  hold_timer->tv_usec=time_value_msec*1000;
+
 }
 
 

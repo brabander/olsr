@@ -227,7 +227,7 @@ chk_if_changed(struct olsr_if *iface)
   /*
    * Now check if the IP has changed
    */
-  
+
   /* IP version 6 */
   if (olsr_cnf->ip_version == AF_INET6) {
     struct sockaddr_in6 tmp_saddr6;
@@ -244,7 +244,7 @@ chk_if_changed(struct olsr_if *iface)
          OLSR_PRINTF(1, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
       goto remove_interface;
     }
-      
+
 #ifdef DEBUG
     OLSR_PRINTF(3, "\tAddress: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 #endif
@@ -335,7 +335,7 @@ chk_if_changed(struct olsr_if *iface)
 	OLSR_PRINTF(1, "IPv4 broadcast changed for %s\n", ifr.ifr_name);
 	OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
 	OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr));
-	
+
 	ifp->int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
 	if_changes = 1;
       }
@@ -463,12 +463,12 @@ int add_hemu_if (struct olsr_if *iface)
 
   if (olsr_cnf->ip_version == AF_INET) {
     struct sockaddr_in sin4;
- 
+
     memset(&sin4, 0, sizeof(sin4));
     sin4.sin_family = AF_INET;
     sin4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     sin4.sin_port = htons(10150);
- 
+
     /* IP version 4 */
     ifp->ip_addr.v4 = iface->hemu_ip.v4;
     memcpy(&ifp->int_addr.sin_addr, &iface->hemu_ip, olsr_cnf->ipsize);
@@ -685,7 +685,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     ifs.int6_multaddr.sin6_scope_id = 0;
 #endif
 
-    OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));  
+    OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
   } else {
     /* IP version 4 */
 
@@ -714,7 +714,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 	olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
 	return 0;
       }
-	
+
       ifs.int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
     }
 
@@ -724,10 +724,10 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     /* Disable ICMP redirects */
     disable_redirects(ifr_basename, &ifs, olsr_cnf->ip_version);
   }
-  
+
   /* Get interface index */
   ifs.if_index = if_nametoindex(ifr.ifr_name);
-  
+
   /* Set interface metric */
   ifs.int_metric = iface->cnf->weight.fixed ? iface->cnf->weight.value : calculate_if_metric(ifr.ifr_name);
   OLSR_PRINTF(1, "\tMetric: %d\n", ifs.int_metric);
@@ -744,7 +744,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   /* Set up buffer */
   net_add_buffer(&ifs);
-	       
+
   OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
@@ -760,15 +760,15 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     OLSR_PRINTF(1, "\tAddress: %s\n", ip6_to_string(&buf, &ifs.int6_addr.sin6_addr));
     OLSR_PRINTF(1, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
   }
-  
+
   ifp = olsr_malloc(sizeof(*ifp), "Interface update 2");
-  
+
   iface->configured = 1;
   iface->interf = ifp;
 
   //memcpy(ifp, &ifs, sizeof(*ifp));
   *ifp = ifs;
-  
+
   ifp->immediate_send_tc = iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval;
   ifp->int_name = olsr_malloc(strlen(ifr_basename) + 1, "Interface update 3");
   strcpy(ifp->int_name, ifr_basename);
@@ -814,7 +814,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   /* Register socket */
   add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
-  
+
 #ifdef linux
   {
     /* Set TOS */

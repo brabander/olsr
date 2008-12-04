@@ -1,7 +1,7 @@
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -25,9 +25,9 @@
 
 /*
  * stripString
- * 
+ *
  * this function strips leading and trailing whitespaces from a string
- * 
+ *
  * @param string to strip
  * @return stripped string
  */
@@ -39,7 +39,7 @@ stripString (char *str)
   while (*str == ' ' || *str == '\t') {
     str++;
   }
-	
+
   /* strip right whitespaces */
   int i = strlen(str);
   while (--i >= 0) {
@@ -48,16 +48,16 @@ stripString (char *str)
       break;
     }
   }
-	
+
   return str;
 }
 
 /*
  * readConnectionMatrix
- * 
+ *
  * This function reads the network settings and place them in the
  * connection matrix (float array with size "len" x "len".
- * 
+ *
  * @param pointer to begin of connection matrix
  * @param pointer to filename
  * @param number of elements in each connection matrix line
@@ -70,27 +70,27 @@ readConnectionMatrix (float *connectionMatrix, char *filename, int len)
   if (!file) {
     return 1;
   }
-	
+
   char buffer[1024];
   while (fgets(buffer, 1024, file)) {
     int from, to;
     float propability;
-    
+
     char *line = stripString(buffer);
     DPRINT("%s\n", line);
-		
+
     if (line[0] == '#' || line[0] == 0) {
       continue;
     }
-		
+
     if(sscanf(line, "%d %d %f", &from, &to, &propability) != 3) {
       continue;
     }
-		
+
     if (from < 0 || from >= len || to < 0 || to >= len || from == to) {
       continue;
     }
-		
+
     connectionMatrix[GRID(from, to, len)] = propability;
     if (connectionMatrix[GRID(to, from, len)] == 0) {
       connectionMatrix[GRID(to, from, len)] = propability;

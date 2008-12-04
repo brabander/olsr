@@ -164,7 +164,7 @@ OP_EQ,/*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
 OP_LT,/*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
 OP_LE,/*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
 
-OP_TEST,/*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
+OP_TEST,/*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/
 
 OP_CALL,/*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
 OP_TAILCALL,/*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
@@ -172,7 +172,7 @@ OP_RETURN,/*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
 
 OP_FORLOOP,/*	A sBx	R(A)+=R(A+2); if R(A) <?= R(A+1) then PC+= sBx	*/
 
-OP_TFORLOOP,/*	A C	R(A+2), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
+OP_TFORLOOP,/*	A C	R(A+2), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
                         if R(A+2) ~= nil then pc++			*/
 OP_TFORPREP,/*	A sBx	if type(R(A)) == table then R(A+1):=R(A), R(A):=next;
 			PC += sBx					*/
@@ -205,7 +205,7 @@ OP_CLOSURE/*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 
 /*
 ** masks for instruction properties
-*/  
+*/
 enum OpModeMask {
   OpModeBreg = 2,       /* B is a register */
   OpModeBrk,		/* B is a register/constant */
@@ -213,7 +213,7 @@ enum OpModeMask {
   OpModesetA,           /* instruction set register A */
   OpModeK,              /* Bx is a constant */
   OpModeT		/* operator is a test */
-  
+
 };
 
 

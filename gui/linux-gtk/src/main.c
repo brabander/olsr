@@ -44,23 +44,23 @@ main (int argc, char *argv[])
     }
 #endif
 
-  
+
   /* Get IP */
-  if ((hp = gethostbyname(argc > 1 ? argv[1] : "localhost")) == 0) 
+  if ((hp = gethostbyname(argc > 1 ? argv[1] : "localhost")) == 0)
     {
       fprintf(stderr, "Not a valid host \"%s\"\n", argv[1]);
       exit(1);
     }
-  
+
   in.s_addr=((struct in_addr *)(hp->h_addr))->s_addr;
   printf("Address: %s\n", inet_ntoa(in));
-  
+
   /* fill in the socket structure with host information */
   memset(&pin, 0, sizeof(pin));
   pin.sin_family = AF_INET;
   pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
   pin.sin_port = htons(IPC_PORT);
-  
+
   gtk_init (&argc, &argv);
 
   init_nodes();
@@ -81,7 +81,7 @@ main (int argc, char *argv[])
   memset(&null_addr, 0, sizeof(union olsr_ip_addr));
 
   /* Terminate signal */
-  signal(SIGINT, shutdown_);  
+  signal(SIGINT, shutdown_);
 
   /* Init node timeout */
   nodes_timeout = NEIGHB_HOLD_TIME_NW;

@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -71,7 +71,7 @@ struct olsrd_config *olsr_cnf;  /* The global configuration */
 #ifdef MAKEBIN
 
 /* Build as standalone binary */
-int 
+int
 main(int argc, char *argv[])
 {
   struct olsrd_config *cnf;
@@ -86,7 +86,7 @@ main(int argc, char *argv[])
     {
       if((argc > 2) && (!strcmp(argv[2], "-print")))
 	{
-	  olsrd_print_cnf(cnf);  
+	  olsrd_print_cnf(cnf);
 	  olsrd_write_cnf(cnf, "./out.conf");
 	}
       else
@@ -148,7 +148,7 @@ olsrd_parse_cnf(const char *filename)
   new_ifqueue = NULL;
 
   while(in) {
-    struct olsr_if *in_tmp = in; 
+    struct olsr_if *in_tmp = in;
     in = in->next;
 
     in_tmp->next = new_ifqueue;
@@ -257,7 +257,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   	fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
   	return -1;
   }
-  
+
   /* NIC Changes Pollrate */
   if(cnf->nic_chgs_pollrate < MIN_NICCHGPOLLRT ||
      cnf->nic_chgs_pollrate > MAX_NICCHGPOLLRT)
@@ -332,7 +332,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Interface %s has no configuration!\n", in->name);
 	  return -1;
 	}
-	
+
       /* HELLO interval */
 
       if (io->hello_params.validity_time < 0.0)
@@ -389,7 +389,7 @@ olsrd_free_cnf(struct olsrd_config *cnf)
   struct olsr_if           *ind, *in = cnf->interfaces;
   struct plugin_entry      *ped, *pe = cnf->plugins;
   struct olsr_lq_mult      *mult, *next_mult;
-  
+
   while(h)
     {
       hd = h;
@@ -446,7 +446,7 @@ void
 set_default_cnf(struct olsrd_config *cnf)
 {
     memset(cnf, 0, sizeof(*cnf));
-    
+
     cnf->debug_level = DEF_DEBUGLVL;
     cnf->no_fork = false;
     cnf->host_emul = false;
@@ -590,7 +590,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
   printf("TC redundancy    : %d\n", cnf->tc_redundancy);
 
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
-   
+
   printf("LQ level         : %d\n", cnf->lq_level);
 
   printf("LQ fish eye      : %d\n", cnf->lq_fish);
@@ -600,7 +600,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
   printf("LQ aging factor  : %f\n", cnf->lq_aging);
 
   printf("LQ algorithm name: %s\n", cnf->lq_algorithm ? cnf->lq_algorithm : "default");
-  
+
   printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
@@ -612,7 +612,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
       while(in)
 	{
 	  printf(" dev: \"%s\"\n", in->name);
-	  
+
 	  if(in->cnf->ipv4_broadcast.v4.s_addr)
 	    {
 	      printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in->cnf->ipv4_broadcast.v4));
@@ -621,19 +621,19 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
 	    {
 	      printf("\tIPv4 broadcast           : AUTO\n");
 	    }
-	  
+
 	  printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");
-	  
+
 	  //union olsr_ip_addr       ipv6_multi_site;
 	  //union olsr_ip_addr       ipv6_multi_glbl;
 	  printf("\tIPv6 multicast site/glbl : %s", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_site.v6, ipv6_buf, sizeof(ipv6_buf)));
 	  printf("/%s\n", inet_ntop(AF_INET6, &in->cnf->ipv6_multi_glbl.v6, ipv6_buf, sizeof(ipv6_buf)));
-	  
+
 	  printf("\tHELLO emission/validity  : %0.2f/%0.2f\n", in->cnf->hello_params.emission_interval, in->cnf->hello_params.validity_time);
 	  printf("\tTC emission/validity     : %0.2f/%0.2f\n", in->cnf->tc_params.emission_interval, in->cnf->tc_params.validity_time);
 	  printf("\tMID emission/validity    : %0.2f/%0.2f\n", in->cnf->mid_params.emission_interval, in->cnf->mid_params.validity_time);
 	  printf("\tHNA emission/validity    : %0.2f/%0.2f\n", in->cnf->hna_params.emission_interval, in->cnf->hna_params.validity_time);
-	  
+
           for (mult = in->cnf->lq_mult; mult != NULL; mult = mult->next)
           {
             printf("\tLinkQualityMult          : %s %0.2f\n", inet_ntop(cnf->ip_version, &mult->addr, ipv6_buf, sizeof (ipv6_buf)), (float)(mult->value)/65536.0);
@@ -730,7 +730,7 @@ void ip_prefix_list_add(struct ip_prefix_list **list,
                         uint8_t prefix_len)
 {
   struct ip_prefix_list *new_entry = malloc(sizeof(*new_entry));
-  
+
   new_entry->net.prefix = *net;
   new_entry->net.prefix_len = prefix_len;
 

@@ -179,7 +179,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
   if (!nbr_old) {
     return;
   }
-  
+
   OLSR_PRINTF(2, "MID: Main address change %s -> %s detected.\n",
 	      olsr_ip_to_string(&buf1, alias_addr),
 	      olsr_ip_to_string(&buf2, main_addr));

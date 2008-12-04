@@ -2,33 +2,33 @@
  * Copyright (c) 2007, Sven-Ola <sven-ola-aet-gmx.de>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright notice, 
+ * * Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright notice, 
- *   this list of conditions and the following disclaimer in the documentation 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * * Neither the name of the UniK olsr daemon nor the names of its contributors 
- *   may be used to endorse or promote products derived from this software 
+ * * Neither the name of the UniK olsr daemon nor the names of its contributors
+ *   may be used to endorse or promote products derived from this software
  *   without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
- 
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -133,12 +133,12 @@ void mapwrite_work(FILE* fmap)
   lookup_defhna_latlon(&ip);
   sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
   if (0 > fprintf(fmap, "Self('%s',%s,'%s','%s');\n",
-    olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str, 
+    olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str,
     olsr_ip_to_string(&strbuf2, &ip), my_names->name))
   {
     return;
   }
-  for (hash = 0; hash < HASHSIZE; hash++) 
+  for (hash = 0; hash < HASHSIZE; hash++)
   {
     struct db_entry *entry;
 	struct list_node *list_head, *list_node;
@@ -146,7 +146,7 @@ void mapwrite_work(FILE* fmap)
     list_head = &latlon_list[hash];
     for (list_node = list_head->next; list_node != list_head;
          list_node = list_node->next) {
-        
+
       entry = list2db(list_node);
 
       if (NULL != entry->names)
@@ -169,13 +169,13 @@ void mapwrite_work(FILE* fmap)
     if (NULL != lla && NULL != llb)
     {
       struct lqtextbuffer lqbuffer, lqbuffer2;
-      
+
       /*
        * To speed up processing, Links with both positions are named PLink()
        */
-      if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s);\n", 
+      if (0 > fprintf(fmap, "PLink('%s','%s',%s,%s,%s,%s);\n",
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
-            olsr_ip_to_string(&strbuf2, &tc->addr), 
+            olsr_ip_to_string(&strbuf2, &tc->addr),
             get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
             get_linkcost_text(tc_edge->cost, false, &lqbuffer),
             lla, llb))
@@ -186,13 +186,13 @@ void mapwrite_work(FILE* fmap)
     else
     {
       struct lqtextbuffer lqbuffer, lqbuffer2;
-      
+
       /*
        * If one link end pos is unkown, only send Link()
        */
-      if (0 > fprintf(fmap, "Link('%s','%s',%s,%s);\n", 
+      if (0 > fprintf(fmap, "Link('%s','%s',%s,%s);\n",
             olsr_ip_to_string(&strbuf1, &tc_edge->T_dest_addr),
-            olsr_ip_to_string(&strbuf2, &tc->addr), 
+            olsr_ip_to_string(&strbuf2, &tc->addr),
             get_tc_edge_entry_text(tc_edge, ',', &lqbuffer2),
             get_linkcost_text(tc_edge->cost, false, &lqbuffer)))
       {
@@ -209,7 +209,7 @@ void mapwrite_work(FILE* fmap)
  * Windows doesn't know fifo's AFAIK. We better write
  * to a file (done in nameservice.c, see #ifdef WIN32)
  */
- 
+
 static const char* the_fifoname = 0;
 
 static void mapwrite_poll(void *context __attribute__((unused)))
@@ -219,7 +219,7 @@ static void mapwrite_poll(void *context __attribute__((unused)))
   int fd = open(the_fifoname, O_WRONLY | O_NONBLOCK);
   if (0 <= fd)
   {
-    /* 
+    /*
      * Change to blocking, otherwhise expect fprintf errors
      */
     fcntl(fd, F_SETFL, O_WRONLY);

@@ -978,7 +978,7 @@ static void whilestat (LexState *ls, int line) {
   luaK_concat(fs, &v.f, fs->jpc);
   fs->jpc = NO_JUMP;
   sizeexp = fs->pc - expinit;  /* size of expression code */
-  if (sizeexp > MAXEXPWHILE) 
+  if (sizeexp > MAXEXPWHILE)
     luaX_syntaxerror(ls, "`while' condition too complex");
   for (i = 0; i < sizeexp; i++)  /* save `exp' code */
     codeexp[i] = fs->f->code[expinit + i];

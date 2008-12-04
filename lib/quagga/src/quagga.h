@@ -1,6 +1,6 @@
 /***************************************************************************
  projekt              : olsrd-quagga
- file                 : quagga.h  
+ file                 : quagga.h
  usage                : header for quagga.c
  copyright            : (C) 2006 by Immo 'FaUl' Wehrenberg
  e-mail               : immo@chaostreff-dortmund.de

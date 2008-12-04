@@ -37,7 +37,7 @@
 //#include "types.h"
 #include "olsr_protocol.h"
 
-#define olsrd_version "olsr.org GUI 0.2.7" 
+#define olsrd_version "olsr.org GUI 0.2.7"
 #define IPC_INTERVAL 500 //interval for IPC read timeout
 #define MAXPACKS 20
 #define BUFFSIZE 512
@@ -116,7 +116,7 @@ struct node
  */
 
 
-GtkWidget * 
+GtkWidget *
 create_main_window (void);
 
 

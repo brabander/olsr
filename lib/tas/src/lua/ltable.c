@@ -55,7 +55,7 @@
 
 
 #define hashpow2(t,n)      (gnode(t, lmod((n), sizenode(t))))
-  
+
 #define hashstr(t,str)  hashpow2(t, (str)->tsv.hash)
 #define hashboolean(t,p)        hashpow2(t, p)
 
@@ -287,7 +287,7 @@ static void resize (lua_State *L, Table *t, int nasize, int nhsize) {
   if (nasize > oldasize)  /* array part must grow? */
     setarrayvector(L, t, nasize);
   /* create new hash part with appropriate size */
-  setnodevector(L, t, nhsize);  
+  setnodevector(L, t, nhsize);
   /* re-insert elements */
   if (nasize < oldasize) {  /* array part must shrink? */
     t->sizearray = nasize;
@@ -370,11 +370,11 @@ void luaH_remove (Table *t, Node *e) {
 
 
 /*
-** inserts a new key into a hash table; first, check whether key's main 
-** position is free. If not, check whether colliding node is in its main 
-** position or not: if it is not, move colliding node to an empty place and 
-** put new key in its main position; otherwise (colliding node is in its main 
-** position), new key goes to an empty position. 
+** inserts a new key into a hash table; first, check whether key's main
+** position is free. If not, check whether colliding node is in its main
+** position or not: if it is not, move colliding node to an empty place and
+** put new key in its main position; otherwise (colliding node is in its main
+** position), new key goes to an empty position.
 */
 static TObject *newkey (lua_State *L, Table *t, const TObject *key) {
   TObject *val;

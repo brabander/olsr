@@ -101,7 +101,7 @@ node_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event, g
       /* Timeout the registered MPRs for this node */
       time_out_mprs(&host->addr);
 
-      /* Get mpr pointer AFTER timeout....(another waisted hour...) */ 
+      /* Get mpr pointer AFTER timeout....(another waisted hour...) */
       mprs = host->mpr.next;
       mids = host->mid.next;
       hnas = host->hna.next;
@@ -172,7 +172,7 @@ packet_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event,
   gtk_clist_clear(GTK_CLIST(packet_content_list));
 
   size = ntohs(pack->v4.olsr_msgsize);
-  
+
   for(y = 0; y < size;y += 4)
     {
 
@@ -181,7 +181,7 @@ packet_selection(GtkWidget *clist, gint row, gint column, GdkEventButton *event,
 	  if(display_dec)
 	    sprintf(content[x], "%03i", (u_char) packet[y+x]); /* Decimal format */
 	  else
-	    sprintf(content[x], "%02x", (u_char) packet[y+x]); /* Hex format */	    
+	    sprintf(content[x], "%02x", (u_char) packet[y+x]); /* Hex format */
 	}
 
       gtk_clist_append(GTK_CLIST(packet_content_list), content);
@@ -209,7 +209,7 @@ column_clicked_callback(GtkWidget *list,gint column)
 /*
  *Connect button callback
  */
-void 
+void
 connect_callback( GtkWidget *widget,
 		  gpointer   data )
 {
@@ -221,7 +221,7 @@ connect_callback( GtkWidget *widget,
 /*
  *Packet button callback
  */
-void 
+void
 packet_callback( GtkWidget *widget,
 		  gpointer   data )
 {
@@ -242,7 +242,7 @@ packet_callback( GtkWidget *widget,
 /*
  *Packet display button callback
  */
-void 
+void
 packet_disp_callback( GtkWidget *widget,
 		  gpointer   data )
 {

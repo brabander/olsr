@@ -5,31 +5,31 @@
  * SPF implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -70,7 +70,7 @@ static struct timer_entry *spf_backoff_timer = NULL;
  */
 static int
 avl_comp_etx (const void *etx1, const void *etx2)
-{       
+{
   if (*(const olsr_linkcost *)etx1 < *(const olsr_linkcost *)etx2) {
     return -1;
   }
@@ -228,7 +228,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
                 get_linkcost_text(new_cost, true, &lqbuffer));
 #endif
 
-    /* 
+    /*
      * if it's better than the current path quality of this edge's
      * destination node, then we've found a better path to this node.
      */
@@ -268,14 +268,14 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
  * olsr_spf_run_full
  *
  * Run the Dijkstra algorithm.
- * 
+ *
  * A node gets added to the candidate tree when one of its edges has
  * an overall better root path cost than the node itself.
  * The node with the shortest metric gets moved from the candidate to
  * the path list every pass.
  * The SPF computation is completed when there are no more nodes
- * on the candidate tree. 
- */ 
+ * on the candidate tree.
+ */
 static void
 olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
                    int *path_count)
@@ -326,7 +326,7 @@ olsr_calculate_routing_table (void)
   if (spf_backoff_timer) {
     return;
   }
-  spf_backoff_timer = 
+  spf_backoff_timer =
       olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
                        NULL, spf_backoff_timer_cookie->ci_id);
@@ -402,7 +402,7 @@ olsr_calculate_routing_table (void)
       }
 
       /*
-       * Set the next-hops of our neighbors. 
+       * Set the next-hops of our neighbors.
        */
       if (!tc_edge) {
         tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,

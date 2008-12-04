@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -109,7 +109,7 @@ bind_socket_to_device(int sock, char *dev_name)
  *@param version IP version.
  *
  *@return 1 on sucess 0 on failiure
- */ 
+ */
 int
 enable_ip_forwarding(int version)
 {
@@ -144,7 +144,7 @@ enable_ip_forwarding(int version)
     fputs("1", proc_fwd);
     fclose(proc_fwd);
   }
-  return 1;      
+  return 1;
 }
 
 int
@@ -181,14 +181,14 @@ disable_redirects_global(int version)
   }
   syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
   fputs("0", proc_redirect);
-  fclose(proc_redirect);  
+  fclose(proc_redirect);
   return 1;
 }
 
 /**
  *
  *@return 1 on sucess 0 on failiure
- */ 
+ */
 int
 disable_redirects(const char *if_name, struct interface *iface, int version)
 {
@@ -208,12 +208,12 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
 	    "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
 	    "Are you using the procfile filesystem?\n"
 	    "Does your system support IPv4?\n"
-	    "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);      
+	    "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
   iface->nic_state.redirect = fgetc(proc_redirect);
-  fclose(proc_redirect);      
+  fclose(proc_redirect);
 
   proc_redirect = fopen(procfile, "w");
   if (proc_redirect == NULL) {
@@ -231,7 +231,7 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
 /**
  *
  *@return 1 on sucess 0 on failiure
- */ 
+ */
 int
 deactivate_spoof(const char *if_name, struct interface *iface, int version)
 {
@@ -325,7 +325,7 @@ restore_settings(int version)
 	continue;
     }
     /* ICMP redirects */
-      
+
     /* Generate the procfile name */
     snprintf(procfile, sizeof(procfile), REDIRECT_PROC, ifs->int_name);
     proc_fd = fopen(procfile, "w");
@@ -337,9 +337,9 @@ restore_settings(int version)
       fputc(ifs->nic_state.redirect, proc_fd);
       fclose(proc_fd);
     }
-      
+
     /* Spoof filter */
-      
+
     /* Generate the procfile name */
     sprintf(procfile, SPOOF_PROC, ifs->int_name);
     proc_fd = fopen(procfile, "w");
@@ -390,7 +390,7 @@ gethemusocket(struct sockaddr_in *pin)
 
   printf("OK\n");
 
-  /* Keep TCP socket blocking */  
+  /* Keep TCP socket blocking */
   return sock;
 }
 
@@ -578,11 +578,11 @@ join_mcast(struct interface *ifs, int sock)
 #if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
   OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(sock,
+		IPPROTO_IPV6,
+		IPV6_ADD_MEMBERSHIP,
+		(char *)&mcastreq,
+		sizeof(struct ipv6_mreq))
      < 0)
     {
       perror("Join multicast");
@@ -595,31 +595,31 @@ join_mcast(struct interface *ifs, int sock)
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_JOIN_GROUP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(sock,
+		IPPROTO_IPV6,
+		IPV6_JOIN_GROUP,
+		(char *)&mcastreq,
+		sizeof(struct ipv6_mreq))
      < 0)
 #else
   /* Join reciever group */
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&mcastreq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(sock,
+		IPPROTO_IPV6,
+		IPV6_ADD_MEMBERSHIP,
+		(char *)&mcastreq,
+		sizeof(struct ipv6_mreq))
      < 0)
-#endif 
+#endif
     {
       perror("Join multicast send");
       return -1;
-    }  
+    }
 
-  if(setsockopt(sock, 
-		IPPROTO_IPV6, 
-		IPV6_MULTICAST_IF, 
-		(char *)&mcastreq.ipv6mr_interface, 
-		sizeof(mcastreq.ipv6mr_interface)) 
+  if(setsockopt(sock,
+		IPPROTO_IPV6,
+		IPV6_MULTICAST_IF,
+		(char *)&mcastreq.ipv6mr_interface,
+		sizeof(mcastreq.ipv6mr_interface))
      < 0)
     {
       perror("Set multicast if");
@@ -693,11 +693,11 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
  * Wrapper for sendto(2)
  */
 ssize_t
-olsr_sendto(int s, 
-	    const void *buf, 
-	    size_t len, 
-	    int flags, 
-	    const struct sockaddr *to, 
+olsr_sendto(int s,
+	    const void *buf,
+	    size_t len,
+	    int flags,
+	    const struct sockaddr *to,
 	    socklen_t tolen)
 {
   return sendto(s, buf, len, flags, to, tolen);
@@ -707,19 +707,19 @@ olsr_sendto(int s,
  * Wrapper for recvfrom(2)
  */
 
-ssize_t  
-olsr_recvfrom(int  s, 
-	      void *buf, 
-	      size_t len, 
-	      int flags, 
+ssize_t
+olsr_recvfrom(int  s,
+	      void *buf,
+	      size_t len,
+	      int flags,
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {
-  return recvfrom(s, 
-		  buf, 
-		  len, 
-		  flags, 
-		  from, 
+  return recvfrom(s,
+		  buf,
+		  len,
+		  flags,
+		  from,
 		  fromlen);
 }
 
@@ -800,14 +800,14 @@ calculate_if_metric(char *ifname)
     {
       struct ifreq ifr;
       strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-      
+
       /* Get bit rate */
       if(ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0)
 	{
           OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
 	  return WEIGHT_WLAN_11MB;
 	}
-      
+
       OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
 
       //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
@@ -845,7 +845,7 @@ calculate_if_metric(char *ifname)
       OLSR_PRINTF(1, "%s Mbit, %s duplex\n",
 		  (bmcr & MII_BMCR_100MBIT) ? "100" : "10",
 		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
-    
+
       is_if_link_up(ifname);
 
       if(mii->val_out & MII_BMCR_100MBIT)
@@ -891,7 +891,7 @@ is_if_link_up(char *ifname)
 
       OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
       OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
-    
+
       return (bmsr & MII_BMSR_LINK_VALID);
 
     }
@@ -904,7 +904,7 @@ calculate_if_metric(char *ifname)
   return check_wireless_interface(ifname);
 }
 #endif
-  
+
 /*
  * Local Variables:
  * c-basic-offset: 2

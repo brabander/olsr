@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -71,33 +71,33 @@ struct linux_apm_info
 
 
 /* ACPI related stuff */
-static const char * const acpi_info[] = 
+static const char * const acpi_info[] =
   {
     "/proc/acpi/battery/0/info",
     "/proc/acpi/battery/1/info",
     "/proc/acpi/battery/BATA/info",
     "/proc/acpi/battery/BAT0/info",
-    "/proc/acpi/battery/BAT1/info" 
+    "/proc/acpi/battery/BAT1/info"
   };
 
 static const char * const acpi_state[] =
-  {    
+  {
     "/proc/acpi/battery/0/status",
     "/proc/acpi/battery/1/status",
     "/proc/acpi/battery/BATA/state",
     "/proc/acpi/battery/BAT0/state",
-    "/proc/acpi/battery/BAT1/state" 
+    "/proc/acpi/battery/BAT1/state"
   };
 
 
 #define ACPI_BT_CNT  ARRAYSIZE(acpi_state)
 
 
-static const char * const acpi_ac[] = 
-  {    
+static const char * const acpi_ac[] =
+  {
     "/proc/acpi/ac_adapter/0/status",
     "/proc/acpi/ac_adapter/AC/state",
-    "/proc/acpi/ac_adapter/ACAD/state" 
+    "/proc/acpi/ac_adapter/ACAD/state"
   };
 
 #define ACPI_AC_CNT  ARRAYSIZE(acpi_ac)
@@ -124,7 +124,7 @@ static int
 acpi_probe(void);
 
 
-int 
+int
 apm_init(void)
 {
   struct olsr_apm_info ainfo;
@@ -136,7 +136,7 @@ apm_init(void)
     method = USE_ACPI;
   else if(apm_read_apm(&ainfo))
     method = USE_APM;
-  
+
   if(method != -1)
     apm_printinfo(&ainfo);
 
@@ -231,10 +231,10 @@ apm_read_apm(struct olsr_apm_info *ainfo)
     ainfo->ac_line_status = OLSR_AC_POWERED;
   else
     ainfo->ac_line_status = OLSR_BATTERY_POWERED;
-  
+
   ainfo->battery_percentage = lainfo.battery_percentage;
   ainfo->battery_time_left = lainfo.battery_time;
-  
+
   return 1;
 }
 
@@ -246,7 +246,7 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
   int bat_max = 5000; /* Find some sane value */
   int bat_val = 0;
   int result;
- 
+
   /* reporbe in case ac status changed */
   fd_index = acpi_probe();
 
@@ -268,23 +268,23 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
     }
 
   /* Get maxvalue */
-  if((fd = fopen(acpi_info[fd_index], "r")) == NULL) 
+  if((fd = fopen(acpi_info[fd_index], "r")) == NULL)
     return 0;
-  
-  for(;;) 
+
+  for(;;)
     {
       char s1[32], s2[32], s3[32], s4[32], inbuff[127];
       if (fgets(inbuff, sizeof(inbuff), fd) == NULL)
         break;
 
-      sscanf(inbuff, "%s %s %s %s", s1, s2, s3, s4);	
-      if (!strcasecmp(s2, "full")) 
+      sscanf(inbuff, "%s %s %s %s", s1, s2, s3, s4);
+      if (!strcasecmp(s2, "full"))
 	  bat_max = atoi(s4);
     }
   fclose(fd);
 
 
-  if((fd = fopen(acpi_state[fd_index], "r")) == NULL) 
+  if((fd = fopen(acpi_state[fd_index], "r")) == NULL)
     return 0;
 
   /* Extract battery status */
@@ -296,7 +296,7 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
       sscanf(inbuff, "%s %s %s %s", s1, s2, s3, s4);
 
       /* find remaining juice */
-      if(!strcasecmp(s1, "Remaining")) 
+      if(!strcasecmp(s1, "Remaining"))
 	  bat_val = atoi(s3);
     }
   fclose(fd);
@@ -315,7 +315,7 @@ static int
 acpi_probe(void)
 {
   unsigned int i;
-  
+
   /* First check for AC power */
   ac_power_on = 0;
 
@@ -324,11 +324,11 @@ acpi_probe(void)
       char s1[32], s2[32];
       int rc;
       FILE *fd = fopen(acpi_ac[i], "r");
-  
+
       /* Try opening the info file */
       if(fd == NULL)
 	continue;
-      
+
       /* Extract info */
       rc = fscanf(fd, "%s %s", s1, s2);
 
@@ -337,7 +337,7 @@ acpi_probe(void)
 
       if(rc < 2)
 	  continue;
-      
+
       /* Running on AC power */
       if(!strcasecmp(s2, "on-line")) {
 
@@ -354,7 +354,7 @@ acpi_probe(void)
       char s1[32], s2[32];
       int rc;
       FILE *fd = fopen(acpi_info[i], "r");
-  
+
       /* Try opening the info file */
       if(fd == NULL)
 	continue;
@@ -369,7 +369,7 @@ acpi_probe(void)
 	  continue;
 
       /* Check if battery is present */
-      if((!strcasecmp(s1, "present:")) && (!strcasecmp(s2, "no"))) 
+      if((!strcasecmp(s1, "present:")) && (!strcasecmp(s2, "no")))
 	continue;
 
       /* Open the corresponding state file */

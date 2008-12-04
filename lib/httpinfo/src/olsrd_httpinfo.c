@@ -449,7 +449,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
             req[param_size] = '\0';
             printf("Dynamic read %d bytes\n", param_size);
-	
+
             //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
             //size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
 	    dynamic_files[i].process_data_cb(req, param_size, &body);
@@ -542,11 +542,11 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
                        "</tbody>\n"
                        "</table>\n",
                        FRAMEWIDTH);
-	
+
       build_tabs(&body, i);
       build_frame(&body,
 		  tab_entries[i].build_body_cb);
-	
+
       stats.ok_hits++;
 
       abuf_appendf(&body,
@@ -559,7 +559,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
                        "</div>\n"
                        "</body>\n"
                        "</html>\n");
-	
+
 #ifdef NETDIRECT
       netsprintf_direct = 1;
       goto close_connection;
@@ -783,7 +783,7 @@ static void build_ipaddr_link(struct autobuf *abuf,
 static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 {
   struct lqtextbuffer lqbuffer;
-  
+
   abuf_puts(abuf, "<tr>");
   build_ipaddr_with_link(abuf,
 			 &rt->rt_dst.prefix,
@@ -867,7 +867,7 @@ static void build_config_body(struct autobuf *abuf)
   abuf_appendf(abuf, "<td>IP version: %d</td>\n", olsr_cnf->ip_version == AF_INET ? 4 : 6);
   abuf_appendf(abuf, "<td>Debug level: %d</td>\n", olsr_cnf->debug_level);
   abuf_appendf(abuf, "<td>FIB Metrics: %s</td>\n", FIBM_FLAT == olsr_cnf->fib_metric ? CFG_FIBM_FLAT : FIBM_CORRECT == olsr_cnf->fib_metric ? CFG_FIBM_CORRECT : CFG_FIBM_APPROX);
-		  
+
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
   abuf_appendf(abuf, "<td>Pollrate: %0.2f</td>\n", conv_pollrate_to_secs(olsr_cnf->pollrate));
@@ -1223,7 +1223,7 @@ static bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const
 
   /* check nets */
   for (ipcn = all_nets; ipcn != NULL; ipcn = ipcn->next) {
-    if (ip_in_net(addr, &ipcn->net)) { 
+    if (ip_in_net(addr, &ipcn->net)) {
       return true;
     }
   }

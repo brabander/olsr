@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -78,14 +78,14 @@ gethemusocket(struct sockaddr_in *pin)
 
   OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
 
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
       perror("hcsocket");
       return (-1);
     }
 
   /* connect to PORT on HOST */
-  if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0) 
+  if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0)
     {
       printf("FAILED\n");
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
@@ -96,7 +96,7 @@ gethemusocket(struct sockaddr_in *pin)
 
   printf("OK\n");
 
-  /* Keep TCP socket blocking */  
+  /* Keep TCP socket blocking */
   return (sock);
 }
 
@@ -137,7 +137,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
     BuffSize -= 1024;
   }
 
-  if (BuffSize <= 8192) 
+  if (BuffSize <= 8192)
     fprintf(stderr, "Cannot set IPv4 socket receive buffer.\n");
 
   memset(&Addr, 0, sizeof (Addr));
@@ -197,7 +197,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
     BuffSize -= 1024;
   }
 
-  if (BuffSize <= 8192) 
+  if (BuffSize <= 8192)
     fprintf(stderr, "Cannot set IPv6 socket receive buffer.\n");
 
   memset(&Addr6, 0, sizeof (Addr6));
@@ -244,7 +244,7 @@ int enable_ip_forwarding(int Ver)
     PError("CreateEvent()");
     return -1;
   }
-  
+
   if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING)
   {
     PError("EnableRouter()");
@@ -264,7 +264,7 @@ int disable_ip_forwarding(int Ver)
   unsigned int Count;
 
   Ver = Ver;
-  
+
   Lib = LoadLibrary(WIDE_STRING("iphlpapi.dll"));
 
   if (Lib == NULL)
@@ -368,11 +368,11 @@ int join_mcast(struct interface *Nic, int Sock)
 
   OLSR_PRINTF(3, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
   /* Send multicast */
-  if(setsockopt(Sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&McastReq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(Sock,
+		IPPROTO_IPV6,
+		IPV6_ADD_MEMBERSHIP,
+		(char *)&McastReq,
+		sizeof(struct ipv6_mreq))
      < 0)
     {
       perror("Join multicast");
@@ -382,32 +382,32 @@ int join_mcast(struct interface *Nic, int Sock)
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if(setsockopt(Sock, 
-		IPPROTO_IPV6, 
-		IPV6_JOIN_GROUP, 
-		(char *)&McastReq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(Sock,
+		IPPROTO_IPV6,
+		IPV6_JOIN_GROUP,
+		(char *)&McastReq,
+		sizeof(struct ipv6_mreq))
      < 0)
 #else
   /* Join reciever group */
-  if(setsockopt(Sock, 
-		IPPROTO_IPV6, 
-		IPV6_ADD_MEMBERSHIP, 
-		(char *)&McastReq, 
-		sizeof(struct ipv6_mreq)) 
+  if(setsockopt(Sock,
+		IPPROTO_IPV6,
+		IPV6_ADD_MEMBERSHIP,
+		(char *)&McastReq,
+		sizeof(struct ipv6_mreq))
      < 0)
-#endif 
+#endif
     {
       perror("Join multicast send");
       return -1;
     }
 
-  
-  if(setsockopt(Sock, 
-		IPPROTO_IPV6, 
-		IPV6_MULTICAST_IF, 
-		(char *)&McastReq.ipv6mr_interface, 
-		sizeof(McastReq.ipv6mr_interface)) 
+
+  if(setsockopt(Sock,
+		IPPROTO_IPV6,
+		IPV6_MULTICAST_IF,
+		(char *)&McastReq.ipv6mr_interface,
+		sizeof(McastReq.ipv6mr_interface))
      < 0)
     {
       perror("Set multicast if");
@@ -425,11 +425,11 @@ int join_mcast(struct interface *Nic, int Sock)
  */
 
 ssize_t
-olsr_sendto(int s, 
-	    const void *buf, 
-	    size_t len, 
-	    int flags, 
-	    const struct sockaddr *to, 
+olsr_sendto(int s,
+	    const void *buf,
+	    size_t len,
+	    int flags,
+	    const struct sockaddr *to,
 	    socklen_t tolen)
 {
   return sendto(s, buf, len, flags, to, tolen);
@@ -440,19 +440,19 @@ olsr_sendto(int s,
  * Wrapper for recvfrom(2)
  */
 
-ssize_t  
-olsr_recvfrom(int  s, 
-	      void *buf, 
-	      size_t len, 
-	      int flags __attribute__((unused)), 
+ssize_t
+olsr_recvfrom(int  s,
+	      void *buf,
+	      size_t len,
+	      int flags __attribute__((unused)),
 	      struct sockaddr *from,
 	      socklen_t *fromlen)
 {
-  return recvfrom(s, 
-		  buf, 
-		  len, 
-		  0, 
-		  from, 
+  return recvfrom(s,
+		  buf,
+		  len,
+		  0,
+		  from,
 		  fromlen);
 }
 

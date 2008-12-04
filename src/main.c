@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -87,8 +87,8 @@ static void print_usage(void);
 
 static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 
-static int olsr_process_arguments(int, char *[], 
-				  struct olsrd_config *, 
+static int olsr_process_arguments(int, char *[],
+				  struct olsrd_config *,
 				  struct if_config_options *);
 
 volatile enum app_state app_state = STATE_RUNNING;
@@ -148,11 +148,11 @@ main(int argc, char *argv[])
   /* Initialize timers and scheduler part */
   olsr_init_timers();
 
-  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", 
-	 olsrd_version, 
+  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n",
+	 olsrd_version,
 	 build_date,
          build_host);
-    
+
   /* Using PID as random seed */
   srandom(getpid());
 
@@ -166,9 +166,9 @@ main(int argc, char *argv[])
 #else
   conf_file_name[0] = 0;
 #endif
-  
+
   len = strlen(conf_file_name);
-  
+
   if (len == 0 || conf_file_name[len - 1] != '\\') {
     conf_file_name[len++] = '\\';
   }
@@ -191,7 +191,7 @@ main(int argc, char *argv[])
       fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", argv[1], strerror(errno));
       exit(EXIT_FAILURE);
     }
-		 
+
     strscpy(conf_file_name, argv[1], sizeof(conf_file_name));
     argv++; argc--;
   }
@@ -241,11 +241,11 @@ main(int argc, char *argv[])
 
   /* Sanity check configuration */
   if (olsrd_sanity_check_cnf(olsr_cnf) < 0) {
-      olsr_exit(__func__, EXIT_FAILURE);      
+      olsr_exit(__func__, EXIT_FAILURE);
     }
 
   /*
-   * Print configuration 
+   * Print configuration
    */
   if (olsr_cnf->debug_level > 1) {
     olsrd_print_cnf(olsr_cnf);
@@ -402,7 +402,7 @@ main(int argc, char *argv[])
 
   switch (app_state) {
   case STATE_RUNNING:
-    olsr_syslog(OLSR_LOG_ERR, "terminating and got \"running\"?");    
+    olsr_syslog(OLSR_LOG_ERR, "terminating and got \"running\"?");
     return 1;
 #ifndef WIN32
   case STATE_RECONFIGURE:
@@ -567,8 +567,8 @@ set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf)
  *
  */
 static int
-olsr_process_arguments(int argc, char *argv[], 
-		       struct olsrd_config *cnf, 
+olsr_process_arguments(int argc, char *argv[],
+		       struct olsrd_config *cnf,
 		       struct if_config_options *ifcnf)
 {
   while (argc > 1) {
@@ -622,7 +622,7 @@ olsr_process_arguments(int argc, char *argv[],
       int tmp_lq_level;
       NEXT_ARG;
       CHECK_ARGC;
-	  
+
       /* Sanity checking is done later */
       sscanf(*argv, "%d", &tmp_lq_level);
       olsr_cnf->lq_level = tmp_lq_level;
@@ -636,18 +636,18 @@ olsr_process_arguments(int argc, char *argv[],
       float tmp_lq_aging;
       NEXT_ARG;
       CHECK_ARGC;
-	  
+
       sscanf(*argv, "%f", &tmp_lq_aging);
 
       if (tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING) {
-	printf("LQ aging factor %f not allowed. Range [%f-%f]\n", 
+	printf("LQ aging factor %f not allowed. Range [%f-%f]\n",
 	       tmp_lq_aging, MIN_LQ_AGING, MAX_LQ_AGING);
 	olsr_exit(__func__, EXIT_FAILURE);
       }
       olsr_cnf->lq_aging = tmp_lq_aging;
       continue;
     }
-      
+
     /*
      * Set NAT threshold
      */
@@ -659,7 +659,7 @@ olsr_process_arguments(int argc, char *argv[],
       sscanf(*argv,"%f", &tmp_lq_nat_thresh);
 
       if (tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0) {
-	printf("NAT threshold %f not allowed. Range [%f-%f]\n", 
+	printf("NAT threshold %f not allowed. Range [%f-%f]\n",
 	       tmp_lq_nat_thresh, 0.1, 1.0);
 	olsr_exit(__func__, EXIT_FAILURE);
       }
@@ -679,7 +679,7 @@ olsr_process_arguments(int argc, char *argv[],
       cnf->debug_level = val;
       continue;
     }
-		
+
     /*
      * Interfaces to be used by olsrd.
      */
@@ -701,10 +701,10 @@ olsr_process_arguments(int argc, char *argv[],
       }
       continue;
     }
-    
+
     /*
      * Set the hello interval to be used by olsrd.
-     * 
+     *
      */
     if (strcmp(*argv, "-hint") == 0) {
       NEXT_ARG;
@@ -716,7 +716,7 @@ olsr_process_arguments(int argc, char *argv[],
 
     /*
      * Set the HNA interval to be used by olsrd.
-     * 
+     *
      */
     if (strcmp(*argv, "-hnaint") == 0) {
       NEXT_ARG;
@@ -728,7 +728,7 @@ olsr_process_arguments(int argc, char *argv[],
 
     /*
      * Set the MID interval to be used by olsrd.
-     * 
+     *
      */
     if (strcmp(*argv, "-midint") == 0) {
       NEXT_ARG;
@@ -740,7 +740,7 @@ olsr_process_arguments(int argc, char *argv[],
 
     /*
      * Set the tc interval to be used by olsrd.
-     * 
+     *
      */
     if (strcmp(*argv, "-tcint") == 0) {
       NEXT_ARG;
@@ -811,7 +811,7 @@ olsr_process_arguments(int argc, char *argv[],
     if (strcmp(*argv, "-hemu") == 0) {
       struct in_addr in;
       struct olsr_if *ifa;
-      
+
       NEXT_ARG;
       CHECK_ARGC;
       if (inet_pton(AF_INET, *argv, &in) <= 0) {

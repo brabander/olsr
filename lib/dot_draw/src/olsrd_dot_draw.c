@@ -4,31 +4,31 @@
  *                     includes code by Bruno Randolf
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -147,24 +147,24 @@ ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
   const char *style;
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
   struct lqtextbuffer lqbuffer;
-  
+
   if (neighbor->status == 0) { /* non SYM */
     style = "dashed";
-  } else {   
+  } else {
     const struct link_entry* lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
     if (lnk) {
       etx = lnk->linkcost;
     }
     style = "solid";
   }
-    
+
   ipc_send_fmt(ipc_connection,
 	       "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
                adr,
                olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
                get_linkcost_text(etx, false, &lqbuffer),
                style);
-  
+
   if (neighbor->is_mpr) {
     ipc_send_fmt(ipc_connection, "\"%s\"[shape=box];\n", adr);
   }
@@ -203,20 +203,20 @@ plugin_ipc_init(void)
 #endif
 
   /* Bind the socket */
-      
+
   /* complete the socket structure */
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(ipc_port);
-      
+
   /* bind the socket to the port number */
   if (bind(ipc_socket, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
     olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     CLOSE(ipc_socket);
     return 0;
   }
-      
+
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
     olsr_printf(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
@@ -272,7 +272,7 @@ pcf_event(int ipc_connection,
     struct neighbor_entry *neighbor_table_tmp;
     struct tc_entry *tc;
     struct ip_prefix_list *hna;
-    
+
     /* Print tables to IPC socket */
     ipc_send_str(ipc_connection, "digraph topology\n{\n");
 
@@ -281,7 +281,7 @@ pcf_event(int ipc_connection,
       ipc_print_neigh_link(ipc_connection, neighbor_table_tmp );
     } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
 
-    /* Topology */  
+    /* Topology */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
       struct tc_edge_entry *tc_edge;
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
@@ -297,7 +297,7 @@ pcf_event(int ipc_connection,
       struct hna_net *tmp_net;
       OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
 	ipc_print_net(ipc_connection,
-		      &tc->addr, 
+		      &tc->addr,
 		      &tmp_net->hna_prefix);
         }
       } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
@@ -325,7 +325,7 @@ ipc_print_tc_link(int ipc_connection, const struct tc_entry *entry, const struct
 {
   struct ipaddr_str strbuf1, strbuf2;
   struct lqtextbuffer lqbuffer;
-  
+
   ipc_send_fmt(ipc_connection,
 	       "\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),

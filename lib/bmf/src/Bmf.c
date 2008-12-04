@@ -4,29 +4,29 @@
  * Written by Erik Tromp.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of Thales, BMF nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of Thales, BMF nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -237,7 +237,7 @@ static void EncapsulateAndForwardPacket(
       udpDataLen,
       MSG_DONTROUTE,
       (struct sockaddr*) &forwardTo,
-      sizeof(forwardTo));                   
+      sizeof(forwardTo));
 
     /* Evaluate and display result */
     if (nBytesWritten != udpDataLen)
@@ -375,7 +375,7 @@ static void BmfPacketCaptured(
    * would do here (something like 'get_any_link_to_neighbor()'). */
   isFromOlsrNeighbor =
     (isFromOlsrIntf /* The frame is captured on an OLSR interface... */
-    && get_best_link_to_neighbor(origIp) != NULL); /* ...from an OLSR neighbor */ 
+    && get_best_link_to_neighbor(origIp) != NULL); /* ...from an OLSR neighbor */
 
   /* Check with OLSR if I am MPR for that neighbor */
   /* TODO: olsr_lookup_mprs_set() is not thread-safe! */
@@ -444,7 +444,7 @@ static void BmfPacketCaptured(
             PLUGIN_NAME_SHORT,
             walker->ifName,
             olsr_ip_to_string(&buf, &src));
-        }    
+        }
       }
       else if (sllPkttype == PACKET_OUTGOING && intf == walker)
       {
@@ -855,7 +855,7 @@ static void BmfEncapsulationPacketReceived(
         int nBytesWritten;
 
         if (sendUnicast)
-        {    
+        {
           /* For unicast, overwrite the local broadcast address which was filled in above */
           forwardTo.sin_addr = bestNeighborLinks.links[i]->neighbor_iface_addr.v4;
         }
@@ -867,7 +867,7 @@ static void BmfEncapsulationPacketReceived(
           encapsulationUdpDataLen,
           MSG_DONTROUTE,
           (struct sockaddr*) &forwardTo,
-          sizeof(forwardTo));                   
+          sizeof(forwardTo));
 
         /* Evaluate and display result */
         if (nBytesWritten != encapsulationUdpDataLen)
@@ -1141,7 +1141,7 @@ static void DoBmf(void)
         } /* if (pktAddr.sll_pkttype == ...) */
       } /* if (skfd >= 0 && (FD_ISSET...)) */
     } /* for */
-    
+
     /* Check if a BMF encapsulation packet was received on the listening
      * socket (if any) of each network interface */
     for (walker = BmfInterfaces; walker != NULL; walker = walker->next)
@@ -1317,7 +1317,7 @@ static void DoBmf(void)
 
       /* Receive the packet, leaving space for the BMF encapsulation header */
       ipPacket = GetIpPacket(rxBuffer);
-    
+
       bufferToRead = ipPacket;
       nBytesToRead = BMF_BUFFER_SIZE - ENCAP_HDR_LEN;
 
@@ -1440,7 +1440,7 @@ int InterfaceChange(struct interface* interf, int action)
   case (IFCHG_IF_UPDATE):
     olsr_printf(1, "%s: interface %s updated\n", PLUGIN_NAME, interf->int_name);
     break;
-      
+
   default:
     olsr_printf(
       1,

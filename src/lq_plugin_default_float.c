@@ -3,31 +3,31 @@
  * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -49,7 +49,7 @@
 /* Default lq plugin settings */
 struct lq_handler lq_etx_float_handler = {
   &default_lq_initialize_float,
-  
+
   &default_lq_calc_cost_float,
   &default_lq_calc_cost_float,
 
@@ -81,13 +81,13 @@ void default_lq_initialize_float(void) {
 olsr_linkcost default_lq_calc_cost_float(const void *ptr) {
   const struct default_lq_float *lq = ptr;
   olsr_linkcost cost;
-  
+
   if (lq->lq < MINIMAL_USEFUL_LQ || lq->nlq < MINIMAL_USEFUL_LQ) {
     return LINK_COST_BROKEN;
   }
-  
+
   cost = (olsr_linkcost)(1.0/(lq->lq * lq->nlq) * LQ_PLUGIN_LC_MULTIPLIER);
-  
+
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
   if (cost == 0) {
@@ -98,23 +98,23 @@ olsr_linkcost default_lq_calc_cost_float(const void *ptr) {
 
 int default_lq_serialize_hello_lq_pair_float(unsigned char *buff, void *ptr) {
   struct default_lq_float *lq = ptr;
-  
+
   buff[0] = (unsigned char)(lq->lq * 255);
   buff[1] = (unsigned char)(lq->nlq * 255);
   buff[2] = 0;
   buff[3] = 0;
-  
+
   return 4;
 }
 
 void default_lq_deserialize_hello_lq_pair_float(const uint8_t **curr, void *ptr) {
   struct default_lq_float *lq = ptr;
   uint8_t lq_value, nlq_value;
-  
+
   pkt_get_u8(curr, &lq_value);
   pkt_get_u8(curr, &nlq_value);
   pkt_ignore_u16(curr);
-  
+
   lq->lq = (float)lq_value / 255.0;
   lq->nlq = (float)nlq_value / 255.0;
 }
@@ -128,23 +128,23 @@ bool default_lq_is_relevant_costchange_float(olsr_linkcost c1, olsr_linkcost c2)
 
 int default_lq_serialize_tc_lq_pair_float(unsigned char *buff, void *ptr) {
   struct default_lq_float *lq = ptr;
-  
+
   buff[0] = (unsigned char)(lq->lq * 255);
   buff[1] = (unsigned char)(lq->nlq * 255);
   buff[2] = 0;
   buff[3] = 0;
-  
+
   return 4;
 }
 
 void default_lq_deserialize_tc_lq_pair_float(const uint8_t **curr, void *ptr) {
   struct default_lq_float *lq = ptr;
   uint8_t lq_value, nlq_value;
-  
+
   pkt_get_u8(curr, &lq_value);
   pkt_get_u8(curr, &nlq_value);
   pkt_ignore_u16(curr);
-  
+
   lq->lq = (float)lq_value / 255.0;
   lq->nlq = (float)nlq_value / 255.0;
 }
@@ -152,7 +152,7 @@ void default_lq_deserialize_tc_lq_pair_float(const uint8_t **curr, void *ptr) {
 olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void *ptr, bool lost) {
   struct default_lq_float *tlq = ptr;
   float alpha = olsr_cnf->lq_aging;
-  
+
   if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
     alpha = LQ_QUICKSTART_AGING; /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
     tlq->quickstart++;
@@ -168,7 +168,7 @@ olsr_linkcost default_lq_packet_loss_worker_float(struct link_entry *link, void 
 void default_lq_memorize_foreign_hello_float(void *ptrLocal, void *ptrForeign) {
   struct default_lq_float *local = ptrLocal;
   struct default_lq_float *foreign = ptrForeign;
-  
+
   if (foreign) {
     local->nlq = foreign->lq;
   }
@@ -187,7 +187,7 @@ void default_lq_clear_float(void *target) {
 
 const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_float *lq = ptr;
-  
+
   snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f",
       lq->lq,
       separator,
@@ -197,7 +197,7 @@ const char *default_lq_print_float(void *ptr, char separator, struct lqtextbuffe
 
 const char *default_lq_print_cost_float(olsr_linkcost cost, struct lqtextbuffer *buffer) {
   snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER );
-	
+
 
   return buffer->buf;
 }

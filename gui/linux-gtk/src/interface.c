@@ -183,7 +183,7 @@ create_main_window (void)
   /*
    *The node list
    */
-  
+
   node_list = gtk_clist_new (7);
   gtk_widget_ref (node_list);
   gtk_object_set_data_full (GTK_OBJECT (main_window), "node_list", node_list,
@@ -910,7 +910,7 @@ create_main_window (void)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (traffic_label);
   gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 3), traffic_label);
-  
+
 
 
 
@@ -1064,7 +1064,7 @@ route_list_del(char *dest)
     }
 
   gtk_clist_thaw(GTK_CLIST(route_list));
-  return 0;  
+  return 0;
 }
 
 
@@ -1170,7 +1170,7 @@ update_nodes_list(struct node *node)
 	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "yes");
       else
 	gtk_clist_set_text(GTK_CLIST(node_list), i, 6, "no");
-		
+
     }
   /* Add new node */
   else
@@ -1250,8 +1250,8 @@ set_net_info(gchar *info, int disp_button)
   gchar title[255];
 
   memset(&title[0], 0, 255);
-  gtk_label_set_text((GtkLabel *)info_label, info); 
-  gtk_label_set_text((GtkLabel *)net_label, "Connected"); 
+  gtk_label_set_text((GtkLabel *)info_label, info);
+  gtk_label_set_text((GtkLabel *)net_label, "Connected");
 
   strcat(title, olsrd_version);
   strcat(title, " - ");
@@ -1261,7 +1261,7 @@ set_net_info(gchar *info, int disp_button)
 
   if(disp_button)
     gtk_widget_show(connect_button);
-  else 
+  else
     gtk_widget_hide(connect_button);
 }
 
@@ -1277,7 +1277,7 @@ set_net_info_offline()
 void
 set_net_info_connecting()
 {
-  gtk_label_set_text((GtkLabel *)net_label, "Connecting...");  
+  gtk_label_set_text((GtkLabel *)net_label, "Connecting...");
 }
 
 

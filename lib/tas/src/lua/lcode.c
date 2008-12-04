@@ -373,7 +373,7 @@ void luaK_exp2nextreg (FuncState *fs, expdesc *e) {
 int luaK_exp2anyreg (FuncState *fs, expdesc *e) {
   luaK_dischargevars(fs, e);
   if (e->k == VNONRELOC) {
-    if (!hasjumps(e)) return e->info;  /* exp is already in a register */ 
+    if (!hasjumps(e)) return e->info;  /* exp is already in a register */
     if (e->info >= fs->nactvar) {  /* reg. is not a local? */
       luaK_exp2reg(fs, e, e->info);  /* put value on it */
       return e->info;

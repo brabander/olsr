@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -63,7 +63,7 @@ static struct olsr_cookie_info *event_timer_cookie;
  * Plugin interface version
  * Used by main olsrd to check plugin interface version
  */
-int 
+int
 olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
@@ -86,12 +86,12 @@ int
 olsrd_plugin_init(void)
 {
   printf("OLSRD dyn_gw_plain plugin by Sven-Ola\n");
-  
+
   gw_net.v4.s_addr = INET_NET;
   gw_netmask.v4.s_addr = INET_PREFIX;
 
   has_inet_gateway = 0;
-  
+
   /* Remove all local Inet HNA entries */
   while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask))) {
     olsr_printf(DEBUGLEV, "HNA Internet gateway deleted\n");
@@ -118,21 +118,21 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 
     FILE *fp = fopen(PROCENTRY_ROUTE, "r");
 
-    if (!fp) 
+    if (!fp)
       {
         perror(PROCENTRY_ROUTE);
         olsr_printf(DEBUGLEV, "INET (IPv4) not configured in this system.\n");
         return -1;
       }
-    
+
     rewind(fp);
 
     /*
     olsr_printf(DEBUGLEV, "Genmask         Destination     Gateway         "
                 "Flags Metric Ref    Use Iface\n");
     */
-    while (fgets(buff, 1023, fp)) 
-      {	
+    while (fgets(buff, 1023, fp))
+      {
 	num = sscanf(buff, "%16s %128X %128X %X %d %d %d %128X \n",
 		     iface, &dest_addr, &gate_addr,
 		     &iflags, &refcnt, &use, &metric, &netmask);
@@ -155,7 +155,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 	if(//(iflags & RTF_GATEWAY) &&
 	   (iflags & RTF_UP) &&
 	   (metric == 0) &&
-	   (netmask == mask->v4.s_addr) && 
+	   (netmask == mask->v4.s_addr) &&
 	   (dest_addr == net->v4.s_addr))
 	  {
             olsr_printf(DEBUGLEV, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
@@ -164,13 +164,13 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 
     }
 
-    fclose(fp);  
-  
+    fclose(fp);
+
     if(retval == 0)
       {
 	olsr_printf(DEBUGLEV, "No Internet GWs detected...\n");
       }
-  
+
     return retval;
 }
 

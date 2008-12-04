@@ -4,31 +4,31 @@
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -108,7 +108,7 @@ build_admin_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
-  
+
   if(olsr_cnf->lq_level) {
     abuf_appendf(abuf, admin_basic_setting_int,
                      "LQ level:", "lq_level", 1, olsr_cnf->lq_level);
@@ -121,8 +121,8 @@ build_admin_body(struct autobuf *abuf)
   abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
   abuf_puts(abuf, "</tr>\n");
-  
-  abuf_puts(abuf, 
+
+  abuf_puts(abuf,
 		   "</table>\n<br>\n"
 		   "<center><input type=\"submit\" value=\"Submit\" class=\"input_button\">\n"
 		   "<input type=\"reset\" value=\"Reset\" class=\"input_button\"></center>\n"
@@ -367,7 +367,7 @@ process_set_values(char *data, uint32_t data_size, struct autobuf *abuf)
       data[i] = '\0';
       if (!process_param(&data[key_start], &data[val_start])) {
 	abuf_appendf(abuf,
-		     "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n", 
+		     "<h2>FAILED PROCESSING!</h2><br>Key: %s Value: %s<br>\n",
 		     &data[key_start], &data[val_start]);
 	return -1;
       }
@@ -375,11 +375,11 @@ process_set_values(char *data, uint32_t data_size, struct autobuf *abuf)
       key_start = i + 1;
       break;
     }
-  }  
+  }
 
   if (!process_param(&data[key_start], &data[val_start])) {
     abuf_appendf(abuf,
-		 "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n", 
+		 "<b>FAILED PROCESSING!</b><br>Key: %s Value: %s<br>\n",
 		 &data[key_start], &data[val_start]);
     return -1;
   }

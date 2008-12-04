@@ -5,31 +5,31 @@
  * Timer rewrite (c) 2008, Hannes Gredler (hannes@gredler.at)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -177,7 +177,7 @@ poll_sockets(void)
 
   FD_ZERO(&ibits);
   FD_ZERO(&obits);
-  
+
   /* Adding file-descriptors to FD set */
   for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
     if (entry->process_pollrate == NULL) {
@@ -185,11 +185,11 @@ poll_sockets(void)
     }
     if ((entry->flags & SP_PR_READ) != 0) {
       fdsets |= SP_PR_READ;
-      FD_SET((unsigned int)entry->fd, &ibits); /* And we cast here since we get a warning on Win32 */    
+      FD_SET((unsigned int)entry->fd, &ibits); /* And we cast here since we get a warning on Win32 */
     }
     if ((entry->flags & SP_PR_WRITE) != 0) {
       fdsets |= SP_PR_WRITE;
-      FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
+      FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */
     }
     if ((entry->flags & (SP_PR_READ|SP_PR_WRITE)) != 0 && entry->fd >= hfd) {
       hfd = entry->fd + 1;
@@ -198,7 +198,7 @@ poll_sockets(void)
 
   /* Running select on the FD set */
   do {
-    n = olsr_select(hfd, 
+    n = olsr_select(hfd,
 		    fdsets & SP_PR_READ ? &ibits : NULL,
 		    fdsets & SP_PR_WRITE ? &obits : NULL,
 		    NULL,
@@ -266,7 +266,7 @@ static void handle_fds(const unsigned long next_interval)
     int n, hfd = 0, fdsets = 0;
     FD_ZERO(&ibits);
     FD_ZERO(&obits);
-  
+
     /* Adding file-descriptors to FD set */
     for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
       if (entry->process_immediate == NULL) {
@@ -274,11 +274,11 @@ static void handle_fds(const unsigned long next_interval)
       }
       if ((entry->flags & SP_IMM_READ) != 0) {
         fdsets |= SP_IMM_READ;
-        FD_SET((unsigned int)entry->fd, &ibits); /* And we cast here since we get a warning on Win32 */    
+        FD_SET((unsigned int)entry->fd, &ibits); /* And we cast here since we get a warning on Win32 */
       }
       if ((entry->flags & SP_IMM_WRITE) != 0) {
         fdsets |= SP_IMM_WRITE;
-        FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */    
+        FD_SET((unsigned int)entry->fd, &obits); /* And we cast here since we get a warning on Win32 */
       }
       if ((entry->flags & (SP_IMM_READ|SP_IMM_WRITE)) != 0 && entry->fd >= hfd) {
 	hfd = entry->fd + 1;
@@ -289,7 +289,7 @@ static void handle_fds(const unsigned long next_interval)
       /* we are over the interval and we have no fd's. Skip the select() etc. */
       return;
     }
-    
+
     do {
       n = olsr_select(hfd,
 		      fdsets & SP_IMM_READ ? &ibits : NULL,
@@ -429,7 +429,7 @@ olsr_init_timers(void)
 
   /* Grab initial timestamp */
   now_times = olsr_times();
-    
+
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
   }
@@ -506,7 +506,7 @@ walk_timers(clock_t * last_run)
 	   * Don't restart the periodic timer if the callback function has
 	   * stopped the timer.
 	   */
-	  if (timer->timer_period) {	    
+	  if (timer->timer_period) {
 	    /* For periodical timers, rehash the random number and restart */
 	    timer->timer_random = random();
 	    olsr_change_timer(timer, timer->timer_period,
@@ -553,7 +553,7 @@ walk_timers(clock_t * last_run)
 /**
  * Returns the difference between gmt and local time in seconds.
  * Use gmtime() and localtime() to keep things simple.
- * 
+ *
  * taken and slightly modified from www.tcpdump.org.
  */
 static int
@@ -778,7 +778,7 @@ olsr_set_timer(struct timer_entry **timer_ptr,
 	       timer_cb_func cb_func,
 	       void *context,
 	       olsr_cookie_t cookie)
-{  
+{
   assert(cookie != 0); /* we want timer cookies everywhere */
   if (!*timer_ptr) {
     /* No timer running, kick it. */

@@ -7,31 +7,31 @@
  *                     includes code by Lorenz Schori
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -194,7 +194,7 @@ olsrd_plugin_init(void)
         addr6->sin6_addr = in6addr_any;
         addr6->sin6_port = htons(ipc_port);
     }
-      
+
     /* bind the socket to the port number */
     if (bind(listen_socket, (struct sockaddr *)&sst, addrlen) == -1) {
 #ifndef NODEBUG
@@ -215,7 +215,7 @@ olsrd_plugin_init(void)
 
     /* Register with olsrd */
     add_olsr_socket(listen_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
-  
+
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) listening on port %d\n",ipc_port);
 #endif
@@ -278,7 +278,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 #ifndef NODEBUG
     olsr_printf(2, "(TXTINFO) Connect from %s\n",addr);
 #endif
-    
+
     /* make the fd non-blocking */
     if (set_nonblocking(http_connection) < 0) {
         CLOSE(http_connection);
@@ -349,7 +349,7 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
     else if (isprefix(p, "/route")) send_what=SIW_ROUTE;
     else if (isprefix(p, "/hna")) send_what=SIW_HNA;
     else if (isprefix(p, "/mid")) send_what=SIW_MID;
-    else if (isprefix(p, "/topo")) send_what=SIW_TOPO;    
+    else if (isprefix(p, "/topo")) send_what=SIW_TOPO;
     else send_what = SIW_ALL;
 
     if (send_info(conn, send_what) < 0) {
@@ -399,7 +399,7 @@ static void ipc_http(int fd, void *data, unsigned int flags)
         ipc_http_write(fd, conn);
     }
 }
-    
+
 
 static int ipc_print_neigh(struct ipc_conn *conn)
 {
@@ -452,7 +452,7 @@ static int ipc_print_link(struct ipc_conn *conn)
                             "%s\t%s\t%0.2f\t%s\t%s\t\n",
                             olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
                             olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
-                            lnk->L_link_quality, 
+                            lnk->L_link_quality,
                             get_link_entry_text(lnk, '\t', &lqbuffer1),
                             get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
             return -1;
@@ -468,7 +468,7 @@ static int ipc_print_link(struct ipc_conn *conn)
 static int ipc_print_routes(struct ipc_conn *conn)
 {
     struct rt_entry *rt;
-    
+
     if (abuf_appendf(&conn->resp, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n") < 0) {
         return -1;
     }
@@ -498,12 +498,12 @@ static int ipc_print_routes(struct ipc_conn *conn)
 static int ipc_print_topology(struct ipc_conn *conn)
 {
     struct tc_entry *tc;
-    
+
     if (abuf_appendf(&conn->resp, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n") < 0) {
         return -1;
     }
 
-    /* Topology */  
+    /* Topology */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
         struct tc_edge_entry *tc_edge;
         OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
@@ -511,9 +511,9 @@ static int ipc_print_topology(struct ipc_conn *conn)
                 struct ipaddr_str dstbuf, addrbuf;
                 struct lqtextbuffer lqbuffer1, lqbuffer2;
                 if (abuf_appendf(&conn->resp,
-                                    "%s\t%s\t%s\t%s\n", 
+                                    "%s\t%s\t%s\t%s\n",
                                     olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-                                    olsr_ip_to_string(&addrbuf, &tc->addr), 
+                                    olsr_ip_to_string(&addrbuf, &tc->addr),
                                     get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
                                     get_linkcost_text(tc_edge->cost, false, &lqbuffer2)) < 0) {
                     return -1;
@@ -619,9 +619,9 @@ static int send_info(struct ipc_conn *conn, int send_what)
                         "Content-type: text/plain\n\n") < 0) {
         return -1;
     }
- 
+
      /* Print tables to IPC socket */
-	
+
     rv = 0;
      /* links + Neighbors */
     if ((send_what & SIW_LINK) != 0 && ipc_print_link(conn) < 0) {

@@ -287,7 +287,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {
     bool forward = true;
-    
+
     if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
       break;
     }

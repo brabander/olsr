@@ -1,7 +1,7 @@
 #include "quagga.h"
 
 int main (void) {
-  
+
   init_zebra();
   zebra_redistribute (2);
   //  zebra_redistribute (1);
