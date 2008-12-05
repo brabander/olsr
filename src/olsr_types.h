@@ -47,38 +47,44 @@
 #ifndef _OLSR_TYPES_H
 #define	_OLSR_TYPES_H
 
+#if !defined linux && !defined __MacOSX__ && !defined WIN32 && !defined __FreeBSD__ && !defined __NetBSD__ && !defined __OpenBSD__
+#       error "Unsupported system"
+#endif
+
 /* types */
 #ifdef _MSC_VER
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
 #else
 #include <inttypes.h>
 #endif
 
-typedef enum {
-  OLSR_FALSE = 0,
-  OLSR_TRUE
-} olsr_bool;
+#if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
+
+/* we have a C99 environment */
+#include <stdbool.h>
+#elif defined __GNUC__
+
+/* we simulate a C99 environment */
+#define bool _Bool
+#define true 1
+#define false 0
+#define __bool_true_false_are_defined 1
+#endif
+
+/* add some safe-gaurds */
+#ifndef _MSC_VER
+#if !defined bool || !defined true || !defined false || !defined __bool_true_false_are_defined
+#error You have no C99-like boolean types. Please extend src/olsr_type.h!
+#endif
+#endif
 
 /* user defined cookies */
 typedef uint16_t olsr_cookie_t;
-
-#if defined linux || defined __MacOSX__ || defined WIN32 || defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
-
-typedef uint8_t olsr_u8_t;
-typedef uint16_t olsr_u16_t;
-typedef uint32_t olsr_u32_t;
-typedef int8_t olsr_8_t;
-typedef int16_t olsr_16_t;
-typedef int32_t olsr_32_t;
-
-#else
-#       error "Unsupported system"
-#endif
 
 /* OpenBSD wants this here */
 #include <sys/types.h>
@@ -95,10 +101,10 @@ union olsr_ip_addr {
 
 struct olsr_ip_prefix {
   union olsr_ip_addr prefix;
-  olsr_u8_t prefix_len;
+  uint8_t prefix_len;
 };
 
-typedef olsr_u32_t olsr_linkcost;
+typedef uint32_t olsr_linkcost;
 
 #endif
 
