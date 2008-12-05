@@ -150,9 +150,9 @@ olsrd_parse_cnf(const char *filename)
 
   for (in = olsr_cnf->interfaces; in != NULL; in = in->next) {
     /* set various stuff */
-    in->configured = OLSR_FALSE;
+    in->configured = false;
     in->interf = NULL;
-    in->host_emul = OLSR_FALSE;
+    in->host_emul = false;
   }
   return olsr_cnf;
 }
@@ -182,13 +182,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  if (cnf->willingness_auto == OLSR_FALSE && (cnf->willingness > MAX_WILLINGNESS)) {
+  if (cnf->willingness_auto == false && (cnf->willingness > MAX_WILLINGNESS)) {
     fprintf(stderr, "Willingness %d is not allowed\n", cnf->willingness);
     return -1;
   }
 
   /* Hysteresis */
-  if (cnf->use_hysteresis == OLSR_TRUE) {
+  if (cnf->use_hysteresis == true) {
     if (cnf->hysteresis_param.scaling < MIN_HYST_PARAM || cnf->hysteresis_param.scaling > MAX_HYST_PARAM) {
       fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
       return -1;
@@ -246,7 +246,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* Link Q and hysteresis cannot be activated at the same time */
-  if (cnf->use_hysteresis == OLSR_TRUE && cnf->lq_level) {
+  if (cnf->use_hysteresis == true && cnf->lq_level) {
     fprintf(stderr, "Hysteresis and LinkQuality cannot both be active! Deactivate one of them.\n");
     return -1;
   }
@@ -388,8 +388,8 @@ set_default_cnf(struct olsrd_config *cnf)
   memset(cnf, 0, sizeof(*cnf));
 
   cnf->debug_level = DEF_DEBUGLVL;
-  cnf->no_fork = OLSR_FALSE;
-  cnf->host_emul = OLSR_FALSE;
+  cnf->no_fork = false;
+  cnf->host_emul = false;
   cnf->ip_version = AF_INET;
   cnf->ipsize = sizeof(struct in_addr);
   cnf->maxplen = 32;
@@ -420,7 +420,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
   cnf->clear_screen = DEF_CLEAR_SCREEN;
 
-  cnf->del_gws = OLSR_FALSE;
+  cnf->del_gws = false;
   cnf->will_int = 10 * HELLO_INTERVAL;
   cnf->max_jitter = 0.0;
   cnf->exit_value = EXIT_SUCCESS;
@@ -458,7 +458,7 @@ get_default_if_config(void)
 
   io->lq_mult = NULL;
 
-  io->weight.fixed = OLSR_FALSE;
+  io->weight.fixed = false;
   io->weight.value = 0;
 
   io->ipv6_addrtype = 0;        /* global */
@@ -471,7 +471,7 @@ get_default_if_config(void)
   io->mid_params.validity_time = MID_HOLD_TIME;
   io->hna_params.emission_interval = HNA_INTERVAL;
   io->hna_params.validity_time = HNA_HOLD_TIME;
-  io->autodetect_chg = OLSR_TRUE;
+  io->autodetect_chg = true;
 
   return io;
 
@@ -660,7 +660,7 @@ win32_olsrd_free(void *ptr)
 #endif
 
 void
-ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, olsr_u8_t prefix_len)
+ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
   struct ip_prefix_list *new_entry = malloc(sizeof(*new_entry));
 
@@ -673,7 +673,7 @@ ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, 
 }
 
 int
-ip_prefix_list_remove(struct ip_prefix_list **list, const union olsr_ip_addr *net, olsr_u8_t prefix_len)
+ip_prefix_list_remove(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
   struct ip_prefix_list *h = *list, *prev = NULL;
 
@@ -695,7 +695,7 @@ ip_prefix_list_remove(struct ip_prefix_list **list, const union olsr_ip_addr *ne
 }
 
 struct ip_prefix_list *
-ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, olsr_u8_t prefix_len)
+ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
   struct ip_prefix_list *h;
   for (h = list; h != NULL; h = h->next) {

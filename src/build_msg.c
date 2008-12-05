@@ -64,7 +64,7 @@ static void check_buffspace(int msgsize, int buffsize, const char *type);
 
 /* All these functions share this buffer */
 
-static olsr_u8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+static uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
 
 static clock_t send_empty_tc;          /* TC empty message sending */
 
@@ -72,23 +72,23 @@ static clock_t send_empty_tc;          /* TC empty message sending */
 
 /* IPv4 */
 
-static olsr_bool serialize_hello4(struct hello_message *, struct interface *);
+static bool serialize_hello4(struct hello_message *, struct interface *);
 
-static olsr_bool serialize_tc4(struct tc_message *, struct interface *);
+static bool serialize_tc4(struct tc_message *, struct interface *);
 
-static olsr_bool serialize_mid4(struct interface *);
+static bool serialize_mid4(struct interface *);
 
-static olsr_bool serialize_hna4(struct interface *);
+static bool serialize_hna4(struct interface *);
 
 /* IPv6 */
 
-static olsr_bool serialize_hello6(struct hello_message *, struct interface *);
+static bool serialize_hello6(struct hello_message *, struct interface *);
 
-static olsr_bool serialize_tc6(struct tc_message *, struct interface *);
+static bool serialize_tc6(struct tc_message *, struct interface *);
 
-static olsr_bool serialize_mid6(struct interface *);
+static bool serialize_mid6(struct interface *);
 
-static olsr_bool serialize_hna6(struct interface *);
+static bool serialize_hna6(struct interface *);
 
 /**
  * Set the timer that controls the generation of
@@ -125,7 +125,7 @@ get_empty_tc_timer(void)
  *@return nada
  */
 
-olsr_bool
+bool
 queue_hello(struct hello_message * message, struct interface * ifp)
 {
 #ifdef DEBUG
@@ -138,7 +138,7 @@ queue_hello(struct hello_message * message, struct interface * ifp)
   case (AF_INET6):
     return serialize_hello6(message, ifp);
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /*
@@ -154,7 +154,7 @@ queue_hello(struct hello_message * message, struct interface * ifp)
  *@return nada
  */
 
-olsr_bool
+bool
 queue_tc(struct tc_message * message, struct interface * ifp)
 {
 #ifdef DEBUG
@@ -167,7 +167,7 @@ queue_tc(struct tc_message * message, struct interface * ifp)
   case (AF_INET6):
     return serialize_tc6(message, ifp);
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /**
@@ -178,7 +178,7 @@ queue_tc(struct tc_message * message, struct interface * ifp)
  *@return 1 on success
  */
 
-olsr_bool
+bool
 queue_mid(struct interface * ifp)
 {
 #ifdef DEBUG
@@ -191,7 +191,7 @@ queue_mid(struct interface * ifp)
   case (AF_INET6):
     return serialize_mid6(ifp);
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /**
@@ -201,7 +201,7 @@ queue_mid(struct interface * ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-olsr_bool
+bool
 queue_hna(struct interface * ifp)
 {
 #ifdef DEBUG
@@ -214,7 +214,7 @@ queue_hna(struct interface * ifp)
   case (AF_INET6):
     return serialize_hna6(ifp);
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /*
@@ -241,20 +241,20 @@ check_buffspace(int msgsize, int buffsize, const char *type)
  *@return nada
  */
 
-static olsr_bool
+static bool
 serialize_hello4(struct hello_message *message, struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   struct hello_neighbor *nb;
   union olsr_message *m;
   struct hellomsg *h;
   struct hellinfo *hinfo;
   union olsr_ip_addr *haddr;
   int i, j;
-  olsr_bool first_entry;
+  bool first_entry;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -287,7 +287,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
   h->willingness = message->willingness;
   h->htime = reltime_to_me(ifp->hello_etime);
 
-  memset(&h->reserved, 0, sizeof(olsr_u16_t));
+  memset(&h->reserved, 0, sizeof(uint16_t));
 
   /*
    *Loops trough all possible neighbor statuses
@@ -307,7 +307,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
       if (j == HIDE_LINK)
         continue;
 
-      first_entry = OLSR_TRUE;
+      first_entry = true;
 
       /* Looping trough neighbors */
       for (nb = message->neighbors; nb != NULL; nb = nb->next) {
@@ -350,7 +350,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
             hinfo = h->hell_info;
             haddr = (union olsr_ip_addr *)hinfo->neigh_addr;
             /* Make sure typeheader is added */
-            first_entry = OLSR_TRUE;
+            first_entry = true;
           }
 
           net_output(ifp);
@@ -362,7 +362,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
         }
 
         if (first_entry) {
-          memset(&hinfo->reserved, 0, sizeof(olsr_u8_t));
+          memset(&hinfo->reserved, 0, sizeof(uint8_t));
           /* Set link and status for this group of neighbors (this is the first) */
           hinfo->link_code = CREATE_LINK_CODE(i, j);
           curr_size += 4;       /* HELLO type section header */
@@ -374,7 +374,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
         haddr = (union olsr_ip_addr *)&haddr->v6.s6_addr[4];
         curr_size += olsr_cnf->ipsize;  /* IP address added */
 
-        first_entry = OLSR_FALSE;
+        first_entry = false;
       }
 
       if (!first_entry) {
@@ -391,7 +391,7 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   /* HELLO will always be generated */
-  return OLSR_TRUE;
+  return true;
 }
 
 /**
@@ -404,20 +404,20 @@ serialize_hello4(struct hello_message *message, struct interface *ifp)
  *@return nada
  */
 
-static olsr_bool
+static bool
 serialize_hello6(struct hello_message *message, struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   struct hello_neighbor *nb;
   union olsr_message *m;
   struct hellomsg6 *h6;
   struct hellinfo6 *hinfo6;
   union olsr_ip_addr *haddr;
   int i, j;
-  olsr_bool first_entry;
+  bool first_entry;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
   m = (union olsr_message *)msg_buffer;
@@ -447,7 +447,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
   /* Fill packet header */
   h6->willingness = message->willingness;
   h6->htime = reltime_to_me(ifp->hello_etime);
-  memset(&h6->reserved, 0, sizeof(olsr_u16_t));
+  memset(&h6->reserved, 0, sizeof(uint16_t));
 
   /*
    *Loops trough all possible neighbor statuses
@@ -459,7 +459,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
 #ifdef DEBUG
       struct ipaddr_str buf;
 #endif
-      first_entry = OLSR_TRUE;
+      first_entry = true;
 
       /*
        *Looping trough neighbors
@@ -505,7 +505,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
             hinfo6 = h6->hell_info;
             haddr = (union olsr_ip_addr *)hinfo6->neigh_addr;
             /* Make sure typeheader is added */
-            first_entry = OLSR_TRUE;
+            first_entry = true;
           }
           net_output(ifp);
           /* Reset size and pointers */
@@ -516,7 +516,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
         }
 
         if (first_entry) {
-          memset(&hinfo6->reserved, 0, sizeof(olsr_u8_t));
+          memset(&hinfo6->reserved, 0, sizeof(uint8_t));
           /* Set link and status for this group of neighbors (this is the first) */
           hinfo6->link_code = CREATE_LINK_CODE(i, j);
           curr_size += 4;       /* HELLO type section header */
@@ -528,7 +528,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
         haddr++;
         curr_size += olsr_cnf->ipsize;  /* IP address added */
 
-        first_entry = OLSR_FALSE;
+        first_entry = false;
       }                         /* looping trough neighbors */
 
       if (!first_entry) {
@@ -546,7 +546,7 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   /* HELLO is always buildt */
-  return OLSR_TRUE;
+  return true;
 }
 
 /**
@@ -559,21 +559,21 @@ serialize_hello6(struct hello_message *message, struct interface *ifp)
  *@return nada
  */
 
-static olsr_bool
+static bool
 serialize_tc4(struct tc_message *message, struct interface *ifp)
 {
 #ifdef DEBUG
   struct ipaddr_str buf;
 #endif
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
   struct olsr_tcmsg *tc;
   struct neigh_info *mprsaddr;
-  olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
+  bool found = false, partial_sent = false;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -621,8 +621,8 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
         /* Reset stuff */
         mprsaddr = tc->neigh;
         curr_size = OLSR_TC_IPV4_HDRSIZE;
-        found = OLSR_FALSE;
-        partial_sent = OLSR_TRUE;
+        found = false;
+        partial_sent = true;
       }
 
       net_output(ifp);
@@ -630,7 +630,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
       check_buffspace(curr_size + olsr_cnf->ipsize, remainsize, "TC2");
 
     }
-    found = OLSR_TRUE;
+    found = true;
 #ifdef DEBUG
     OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", olsr_ip_to_string(&buf, &mprs->address));
 #endif
@@ -657,7 +657,7 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
 
       net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-      found = OLSR_TRUE;
+      found = true;
     }
   }
 
@@ -674,21 +674,21 @@ serialize_tc4(struct tc_message *message, struct interface *ifp)
  *@return nada
  */
 
-static olsr_bool
+static bool
 serialize_tc6(struct tc_message *message, struct interface *ifp)
 {
 #ifdef DEBUG
   struct ipaddr_str buf;
 #endif
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   struct tc_mpr_addr *mprs;
   union olsr_message *m;
   struct olsr_tcmsg6 *tc6;
   struct neigh_info6 *mprsaddr6;
-  olsr_bool found = OLSR_FALSE, partial_sent = OLSR_FALSE;
+  bool found = false, partial_sent = false;
 
   if ((!message) || (!ifp) || (olsr_cnf->ip_version != AF_INET6))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -733,15 +733,15 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
         net_outbuffer_push(ifp, msg_buffer, curr_size);
         mprsaddr6 = tc6->neigh;
         curr_size = OLSR_TC_IPV6_HDRSIZE;
-        found = OLSR_FALSE;
-        partial_sent = OLSR_TRUE;
+        found = false;
+        partial_sent = true;
       }
       net_output(ifp);
       remainsize = net_outbuffer_bytes_left(ifp);
       check_buffspace(curr_size + olsr_cnf->ipsize, remainsize, "TC2");
 
     }
-    found = OLSR_TRUE;
+    found = true;
 #ifdef DEBUG
     OLSR_PRINTF(BMSG_DBGLVL, "\t%s\n", olsr_ip_to_string(&buf, &mprs->address));
 #endif
@@ -766,7 +766,7 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
 
       net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-      found = OLSR_TRUE;
+      found = true;
     }
   }
 
@@ -781,17 +781,17 @@ serialize_tc6(struct tc_message *message, struct interface *ifp)
  *@return 1 on success
  */
 
-static olsr_bool
+static bool
 serialize_mid4(struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr *addrs;
   struct interface *ifs;
 
   if ((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -858,7 +858,7 @@ serialize_mid4(struct interface *ifp)
   if (curr_size > OLSR_MID_IPV4_HDRSIZE)
     net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-  return OLSR_TRUE;
+  return true;
 }
 
 /**
@@ -869,10 +869,10 @@ serialize_mid4(struct interface *ifp)
  *@return 1 on success
  */
 
-static olsr_bool
+static bool
 serialize_mid6(struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct midaddr6 *addrs6;
@@ -881,7 +881,7 @@ serialize_mid6(struct interface *ifp)
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
   if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -947,7 +947,7 @@ serialize_mid6(struct interface *ifp)
   if (curr_size > OLSR_MID_IPV6_HDRSIZE)
     net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-  return OLSR_TRUE;
+  return true;
 }
 
 /**
@@ -956,10 +956,10 @@ serialize_mid6(struct interface *ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-static olsr_bool
+static bool
 serialize_hna4(struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
@@ -967,14 +967,14 @@ serialize_hna4(struct interface *ifp)
 
   /* No hna nets */
   if (ifp == NULL) {
-    return OLSR_FALSE;
+    return false;
   }
   if (olsr_cnf->ip_version != AF_INET) {
-    return OLSR_FALSE;
+    return false;
   }
   h = olsr_cnf->hna_entries;
   if (h == NULL) {
-    return OLSR_FALSE;
+    return false;
   }
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -1033,7 +1033,7 @@ serialize_hna4(struct interface *ifp)
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
   //printf("Sending HNA (%d bytes)...\n", outputsize);
-  return OLSR_FALSE;
+  return false;
 }
 
 /**
@@ -1042,10 +1042,10 @@ serialize_hna4(struct interface *ifp)
  *@param ifp the interface to send on
  *@return nada
  */
-static olsr_bool
+static bool
 serialize_hna6(struct interface *ifp)
 {
-  olsr_u16_t remainsize, curr_size;
+  uint16_t remainsize, curr_size;
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair6 *pair6;
@@ -1054,7 +1054,7 @@ serialize_hna6(struct interface *ifp)
 
   /* No hna nets */
   if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) || h == NULL)
-    return OLSR_FALSE;
+    return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -1113,7 +1113,7 @@ serialize_hna6(struct interface *ifp)
 #if 0
   printf("Sending HNA (%d bytes)...\n", outputsize);
 #endif
-  return OLSR_FALSE;
+  return false;
 
 }
 

@@ -66,10 +66,10 @@ typedef enum {
 } http_header_type;
 
 struct http_stats {
-  olsr_u32_t ok_hits;
-  olsr_u32_t dyn_hits;
-  olsr_u32_t err_hits;
-  olsr_u32_t ill_hits;
+  uint32_t ok_hits;
+  uint32_t dyn_hits;
+  uint32_t err_hits;
+  uint32_t ill_hits;
 };
 
 extern struct olsrd_config *olsr_cfg;

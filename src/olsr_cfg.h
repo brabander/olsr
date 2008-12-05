@@ -182,17 +182,17 @@ typedef enum {
 
 struct olsrd_config {
   int debug_level;
-  olsr_bool no_fork;
-  olsr_bool host_emul;
+  bool no_fork;
+  bool host_emul;
   int ip_version;
-  olsr_bool allow_no_interfaces;
+  bool allow_no_interfaces;
   uint16_t tos;
   uint8_t rttable;
   uint8_t rttable_default;
   uint8_t willingness;
-  olsr_bool willingness_auto;
+  bool willingness_auto;
   int ipc_connections;
-  olsr_bool use_hysteresis;
+  bool use_hysteresis;
   olsr_fib_metric_options fib_metric;
   struct hyst_param hysteresis_param;
   struct plugin_entry *plugins;
@@ -201,7 +201,7 @@ struct olsrd_config {
   struct olsr_if *interfaces;
   float pollrate;
   float nic_chgs_pollrate;
-  olsr_bool clear_screen;
+  bool clear_screen;
   uint8_t tc_redundancy;
   uint8_t mpr_coverage;
   uint8_t lq_level;
@@ -215,7 +215,7 @@ struct olsrd_config {
   uint16_t system_tick_divider;        /* Tick resolution */
   uint8_t maxplen;                     /* maximum prefix len */
   size_t ipsize;                       /* Size of address */
-  olsr_bool del_gws;                   /* Delete InternetGWs at startup */
+  bool del_gws;                        /* Delete InternetGWs at startup */
   union olsr_ip_addr main_addr;        /* Main address of this node */
   float will_int;
   float max_jitter;

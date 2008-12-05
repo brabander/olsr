@@ -85,7 +85,7 @@ default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_a
   const union olsr_ip_addr *main_addr;
   struct link_entry *lnk;
   struct default_lq_ff_hello *lq;
-  olsr_u32_t seq_diff;
+  uint32_t seq_diff;
 
   /* Find main address */
   main_addr = mid_lookup_main_addr(from_addr);
@@ -99,7 +99,7 @@ default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_a
   lq = (struct default_lq_ff_hello *)lnk->linkquality;
 
   if (lq->last_seq_nr > olsr->olsr_seqno) {
-    seq_diff = (olsr_u32_t) olsr->olsr_seqno + 65536 - lq->last_seq_nr;
+    seq_diff = (uint32_t) olsr->olsr_seqno + 65536 - lq->last_seq_nr;
   } else {
     seq_diff = olsr->olsr_seqno - lq->last_seq_nr;
   }
@@ -122,7 +122,7 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     struct default_lq_ff_hello *tlq = (struct default_lq_ff_hello *)link->linkquality;
     fpm ratio;
-    olsr_u16_t i, received, lost;
+    uint16_t i, received, lost;
 
     received = 0;
     lost = 0;
@@ -148,7 +148,7 @@ default_lq_ff_timer(void __attribute__ ((unused)) * context)
       ratio = fpmidiv(ratio, (int)(received + lost));
       ratio = fpmmuli(ratio, 255);
 
-      tlq->lq.valueLq = (olsr_u8_t) (fpmtoi(ratio));
+      tlq->lq.valueLq = (uint8_t) (fpmtoi(ratio));
     }
     link->linkcost = default_lq_calc_cost_ff(tlq);
 
@@ -199,7 +199,7 @@ default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *ptr)
 }
 
 void
-default_lq_deserialize_hello_lq_pair_ff(const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_hello_lq_pair_ff(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_ff *lq = ptr;
 
@@ -208,7 +208,7 @@ default_lq_deserialize_hello_lq_pair_ff(const olsr_u8_t ** curr, void *ptr)
   pkt_ignore_u16(curr);
 }
 
-olsr_bool
+bool
 default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2)
 {
   if (c1 > c2) {
@@ -231,7 +231,7 @@ default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *ptr)
 }
 
 void
-default_lq_deserialize_tc_lq_pair_ff(const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_tc_lq_pair_ff(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_ff *lq = ptr;
 
@@ -243,7 +243,7 @@ default_lq_deserialize_tc_lq_pair_ff(const olsr_u8_t ** curr, void *ptr)
 olsr_linkcost
 default_lq_packet_loss_worker_ff(struct link_entry
                                  __attribute__ ((unused)) * link, void
-                                 __attribute__ ((unused)) * ptr, olsr_bool __attribute__ ((unused)) lost)
+                                 __attribute__ ((unused)) * ptr, bool __attribute__ ((unused)) lost)
 {
   return link->linkcost;
 }

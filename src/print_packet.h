@@ -46,9 +46,9 @@
 #include "olsr_protocol.h"
 #include <stdio.h>
 
-olsr_8_t print_olsr_serialized_packet(FILE *, union olsr_packet *, olsr_u16_t, union olsr_ip_addr *);
+int8_t print_olsr_serialized_packet(FILE *, union olsr_packet *, uint16_t, union olsr_ip_addr *);
 
-olsr_8_t print_olsr_serialized_message(FILE *, union olsr_message *);
+int8_t print_olsr_serialized_message(FILE *, union olsr_message *);
 
 #endif
 

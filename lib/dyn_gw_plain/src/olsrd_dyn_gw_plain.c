@@ -106,7 +106,7 @@ int
 check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 {
   char buff[1024], iface[16];
-  olsr_u32_t gate_addr, dest_addr, netmask;
+  uint32_t gate_addr, dest_addr, netmask;
   unsigned int iflags;
   int num, metric, refcnt, use;
   int retval = 0;

@@ -61,7 +61,7 @@
 #define OLSR_IPV6_MCAST_SITE_LOCAL "ff05::15"
 #define OLSR_IPV6_MCAST_GLOBAL     "ff0e::1"
 
-#define OLSR_HEADERSIZE (sizeof(olsr_u16_t) + sizeof(olsr_u16_t))
+#define OLSR_HEADERSIZE (sizeof(uint16_t) + sizeof(uint16_t))
 
 #define OLSR_MSGHDRSZ_IPV4 12
 #define OLSR_MSGHDRSZ_IPV6 24
@@ -196,16 +196,16 @@
  *Hello info
  */
 struct hellinfo {
-  olsr_u8_t link_code;
-  olsr_u8_t reserved;
-  olsr_u16_t size;
-  olsr_u32_t neigh_addr[1];            /* neighbor IP address(es) */
+  uint8_t link_code;
+  uint8_t reserved;
+  uint16_t size;
+  uint32_t neigh_addr[1];              /* neighbor IP address(es) */
 } __attribute__ ((packed));
 
 struct hellomsg {
-  olsr_u16_t reserved;
-  olsr_u8_t htime;
-  olsr_u8_t willingness;
+  uint16_t reserved;
+  uint8_t htime;
+  uint8_t willingness;
   struct hellinfo hell_info[1];
 } __attribute__ ((packed));
 
@@ -214,16 +214,16 @@ struct hellomsg {
  */
 
 struct hellinfo6 {
-  olsr_u8_t link_code;
-  olsr_u8_t reserved;
-  olsr_u16_t size;
+  uint8_t link_code;
+  uint8_t reserved;
+  uint16_t size;
   struct in6_addr neigh_addr[1];       /* neighbor IP address(es) */
 } __attribute__ ((packed));
 
 struct hellomsg6 {
-  olsr_u16_t reserved;
-  olsr_u8_t htime;
-  olsr_u8_t willingness;
+  uint16_t reserved;
+  uint8_t htime;
+  uint8_t willingness;
   struct hellinfo6 hell_info[1];
 } __attribute__ ((packed));
 
@@ -232,12 +232,12 @@ struct hellomsg6 {
  */
 
 struct neigh_info {
-  olsr_u32_t addr;
+  uint32_t addr;
 } __attribute__ ((packed));
 
 struct olsr_tcmsg {
-  olsr_u16_t ansn;
-  olsr_u16_t reserved;
+  uint16_t ansn;
+  uint16_t reserved;
   struct neigh_info neigh[1];
 } __attribute__ ((packed));
 
@@ -250,8 +250,8 @@ struct neigh_info6 {
 } __attribute__ ((packed));
 
 struct olsr_tcmsg6 {
-  olsr_u16_t ansn;
-  olsr_u16_t reserved;
+  uint16_t ansn;
+  uint16_t reserved;
   struct neigh_info6 neigh[1];
 } __attribute__ ((packed));
 
@@ -265,7 +265,7 @@ struct olsr_tcmsg6 {
  * is associated whit each address?
  */
 struct midaddr {
-  olsr_u32_t addr;
+  uint32_t addr;
 } __attribute__ ((packed));
 
 struct midmsg {
@@ -287,8 +287,8 @@ struct midmsg6 {
  * Host and Network Association message
  */
 struct hnapair {
-  olsr_u32_t addr;
-  olsr_u32_t netmask;
+  uint32_t addr;
+  uint32_t netmask;
 } __attribute__ ((packed));
 
 struct hnamsg {
@@ -313,13 +313,13 @@ struct hnamsg6 {
  */
 
 struct olsrmsg {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
-  olsr_u32_t originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   union {
     struct hellomsg hello;
@@ -335,13 +335,13 @@ struct olsrmsg {
  */
 
 struct olsrmsg6 {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
   struct in6_addr originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   union {
     struct hellomsg6 hello;
@@ -357,14 +357,14 @@ struct olsrmsg6 {
  */
 
 struct olsr {
-  olsr_u16_t olsr_packlen;             /* packet length */
-  olsr_u16_t olsr_seqno;
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
   struct olsrmsg olsr_msg[1];          /* variable messages */
 } __attribute__ ((packed));
 
 struct olsr6 {
-  olsr_u16_t olsr_packlen;             /* packet length */
-  olsr_u16_t olsr_seqno;
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
   struct olsrmsg6 olsr_msg[1];         /* variable messages */
 } __attribute__ ((packed));
 

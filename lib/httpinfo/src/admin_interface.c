@@ -85,7 +85,7 @@ static const char admin_frame_epilog[] =
   "</table>\n<br>\n" "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n" "</form>\n";
 
 int
-build_admin_body(char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
+build_admin_body(char *buf, uint32_t bufsize __attribute__ ((unused)))
 {
   int size = 0;
   size += snprintf(&buf[size], bufsize - size, admin_frame_prolog);
@@ -155,7 +155,7 @@ int
 process_param(char *key, char *value)
 {
   static union olsr_ip_addr curr_hna_net;
-  static olsr_bool curr_hna_ok = OLSR_FALSE;
+  static bool curr_hna_ok = false;
 
   if (!strcmp(key, "debug_level")) {
     int ival = atoi(value);
@@ -266,24 +266,24 @@ process_param(char *key, char *value)
       fprintf(stderr, "Failed converting new HNA net %s\n", value);
       return -1;
     }
-    curr_hna_ok = OLSR_TRUE;
+    curr_hna_ok = true;
     return 1;
   }
 
   if (!strcmp(key, "hna_new_netmask")) {
     struct in_addr in;
-    olsr_u8_t prefixlen;
+    uint8_t prefixlen;
 
     if (!curr_hna_ok)
       return -1;
 
-    curr_hna_ok = OLSR_FALSE;
+    curr_hna_ok = false;
 
     if (inet_aton(value, &in) == 0) {
       fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
       return -1;
     }
-    prefixlen = netmask_to_prefix((olsr_u8_t *) & in, olsr_cnf->ipsize);
+    prefixlen = netmask_to_prefix((uint8_t *) & in, olsr_cnf->ipsize);
     if (prefixlen == UCHAR_MAX) {
       fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
       return -1;
@@ -296,7 +296,7 @@ process_param(char *key, char *value)
     struct in_addr net, mask;
     char ip_net[16], ip_mask[16];
     int seperator = 0;
-    olsr_u8_t prefixlen;
+    uint8_t prefixlen;
 
     while (key[7 + seperator] != '*') {
       seperator++;
@@ -315,7 +315,7 @@ process_param(char *key, char *value)
       fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
       return -1;
     }
-    prefixlen = netmask_to_prefix((olsr_u8_t *) & mask, olsr_cnf->ipsize);
+    prefixlen = netmask_to_prefix((uint8_t *) & mask, olsr_cnf->ipsize);
     if (prefixlen == UCHAR_MAX) {
       fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
       return -1;
@@ -333,11 +333,11 @@ process_param(char *key, char *value)
 }
 
 int
-process_set_values(char *data, olsr_u32_t data_size, char *buf, olsr_u32_t bufsize __attribute__ ((unused)))
+process_set_values(char *data, uint32_t data_size, char *buf, uint32_t bufsize __attribute__ ((unused)))
 {
   int size = 0;
   int val_start, key_start;
-  olsr_u32_t i;
+  uint32_t i;
 
   size += sprintf(buf, "<html>\n<head><title>olsr.org httpinfo plugin</title></head>\n<body>\n");
 

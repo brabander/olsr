@@ -550,7 +550,7 @@ add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
   union olsr_ip_addr null_addr;
-  olsr_u32_t addr[4];
+  uint32_t addr[4];
   struct ipaddr_str buf;
   size_t name_size;
 
@@ -561,11 +561,11 @@ add_hemu_if(struct olsr_if *iface)
 
   memset(ifp, 0, sizeof(struct interface));
 
-  iface->configured = OLSR_TRUE;
+  iface->configured = true;
   iface->interf = ifp;
 
   name_size = strlen("hcif01") + 1;
-  ifp->is_hcif = OLSR_TRUE;
+  ifp->is_hcif = true;
   ifp->int_name = olsr_malloc(name_size, "Interface update 3");
   ifp->int_metric = 0;
 
@@ -882,7 +882,7 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->int_flags = 0;
 
-  New->is_hcif = OLSR_FALSE;
+  New->is_hcif = false;
 
   New->int_mtu = Info.Mtu;
 

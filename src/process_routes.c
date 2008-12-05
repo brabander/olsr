@@ -68,11 +68,11 @@ static struct list_node del_kernel_list;
  * Called before enqueuing a change/delete operation
  *
  */
-olsr_u8_t
+uint8_t
 olsr_rt_flags(const struct rt_entry *rt)
 {
   const struct rt_nexthop *nh;
-  olsr_u8_t flags = RTF_UP;
+  uint8_t flags = RTF_UP;
 
   /* destination is host */
   if (rt->rt_dst.prefix_len == olsr_cnf->maxplen) {
@@ -160,7 +160,7 @@ static void
 olsr_delete_kernel_route(struct rt_entry *rt)
 {
   if (!olsr_cnf->host_emul) {
-    olsr_16_t error = olsr_cnf->ip_version == AF_INET ? olsr_delroute_function(rt) : olsr_delroute6_function(rt);
+    int16_t error = olsr_cnf->ip_version == AF_INET ? olsr_delroute_function(rt) : olsr_delroute6_function(rt);
 
     if (error < 0) {
       const char *const err_msg = strerror(errno);
@@ -182,7 +182,7 @@ olsr_add_kernel_route(struct rt_entry *rt)
 {
 
   if (!olsr_cnf->host_emul) {
-    olsr_16_t error = (olsr_cnf->ip_version == AF_INET) ? olsr_addroute_function(rt) : olsr_addroute6_function(rt);
+    int16_t error = (olsr_cnf->ip_version == AF_INET) ? olsr_addroute_function(rt) : olsr_addroute6_function(rt);
 
     if (error < 0) {
       const char *const err_msg = strerror(errno);

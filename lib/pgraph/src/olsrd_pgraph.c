@@ -215,7 +215,7 @@ static int
 plugin_ipc_init(void)
 {
   struct sockaddr_in sin;
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
 
   /* Init ipc socket */
   if ((ipc_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {

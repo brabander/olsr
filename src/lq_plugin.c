@@ -99,7 +99,7 @@ register_lq_handler(struct lq_handler *handler, const char *name)
   node->node.key = node->name;
   node->handler = handler;
 
-  avl_insert(&lq_handler_tree, &node->node, OLSR_FALSE);
+  avl_insert(&lq_handler_tree, &node->node, false);
 }
 
 int
@@ -148,7 +148,7 @@ olsr_calc_tc_cost(const struct tc_edge_entry * tc_edge)
  * @param second linkcost value
  * @return boolean
  */
-olsr_bool
+bool
 olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
 {
   return active_lq_handler->is_relevant_costchange(c1, c2);
@@ -181,7 +181,7 @@ olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neig
  * @param pointer to hello_neighbor
  */
 void
-olsr_deserialize_hello_lq_pair(const olsr_u8_t ** curr, struct hello_neighbor *neigh)
+olsr_deserialize_hello_lq_pair(const uint8_t ** curr, struct hello_neighbor *neigh)
 {
   assert((const char *)neigh + sizeof(*neigh) == (const char *)neigh->linkquality);
   active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
@@ -214,7 +214,7 @@ olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
  * @param pointer to tc_edge_entry
  */
 void
-olsr_deserialize_tc_lq_pair(const olsr_u8_t ** curr, struct tc_edge_entry *edge)
+olsr_deserialize_tc_lq_pair(const uint8_t ** curr, struct tc_edge_entry *edge)
 {
   assert((const char *)edge + sizeof(*edge) == (const char *)edge->linkquality);
   active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
@@ -228,10 +228,10 @@ olsr_deserialize_tc_lq_pair(const olsr_u8_t ** curr, struct tc_edge_entry *edge)
  * quality value.
  *
  * @param pointer to link_entry
- * @param OLSR_TRUE if hello package was lost
+ * @param true if hello package was lost
  */
 void
-olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
+olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
 {
   olsr_linkcost lq;
   assert((const char *)entry + sizeof(*entry) == (const char *)entry->linkquality);
@@ -241,15 +241,15 @@ olsr_update_packet_loss_worker(struct link_entry *entry, olsr_bool lost)
     entry->linkcost = lq;
 
     if (olsr_cnf->lq_dlimit > 0) {
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
+      changes_neighborhood = true;
+      changes_topology = true;
     }
 
     else
       OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
 
     /* XXX - we should check whether we actually announce this neighbour */
-    signal_link_changes(OLSR_TRUE);
+    signal_link_changes(true);
   }
 }
 
@@ -325,7 +325,7 @@ get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtex
  * @return pointer to buffer filled with text
  */
 const char *
-get_linkcost_text(olsr_linkcost cost, olsr_bool route, struct lqtextbuffer *buffer)
+get_linkcost_text(olsr_linkcost cost, bool route, struct lqtextbuffer *buffer)
 {
   static const char *infinite = "INFINITE";
 

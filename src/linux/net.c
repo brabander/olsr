@@ -753,12 +753,12 @@ calculate_if_metric(char *ifname)
   }
 }
 
-olsr_bool
+bool
 is_if_link_up(char *ifname)
 {
   if (check_wireless_interface(ifname)) {
     /* No link checking on wireless devices */
-    return OLSR_TRUE;
+    return true;
   } else {
     /* Mii wizardry */
     struct ifreq ifr;

@@ -61,7 +61,7 @@ static void process_message_neighbors(struct neighbor_entry *, const struct hell
 
 static void linking_this_2_entries(struct neighbor_entry *, struct neighbor_2_entry *, olsr_reltime);
 
-static olsr_bool lookup_mpr_status(const struct hello_message *, const struct interface *);
+static bool lookup_mpr_status(const struct hello_message *, const struct interface *);
 
 /**
  *Processes an list of neighbors from an incoming HELLO message.
@@ -140,8 +140,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 #ifdef DEBUG
           OLSR_PRINTF(5, "Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
+          changes_neighborhood = true;
+          changes_topology = true;
 
           two_hop_neighbor = olsr_malloc(sizeof(struct neighbor_2_entry), "Process HELLO");
 
@@ -160,8 +160,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
           /*
              linking to this two_hop_neighbor entry
            */
-          changes_neighborhood = OLSR_TRUE;
-          changes_topology = OLSR_TRUE;
+          changes_neighborhood = true;
+          changes_topology = true;
 
           linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
         }
@@ -240,8 +240,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                 walker->saved_path_linkcost = new_path_linkcost;
 
                 if (olsr_cnf->lq_dlimit > 0) {
-                  changes_neighborhood = OLSR_TRUE;
-                  changes_topology = OLSR_TRUE;
+                  changes_neighborhood = true;
+                  changes_topology = true;
                 }
 
                 else
@@ -303,7 +303,7 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
  *
  *@return 1 if we are selected as MPR 0 if not
  */
-static olsr_bool
+static bool
 lookup_mpr_status(const struct hello_message *message, const struct interface *in_if)
 {
   struct hello_neighbor *neighbors;
@@ -314,21 +314,21 @@ lookup_mpr_status(const struct hello_message *message, const struct interface *i
                                                                                   &in_if->int6_addr.sin6_addr)) {
 
       if (neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH) {
-        return OLSR_TRUE;
+        return true;
       }
       break;
     }
   }
   /* Not found */
-  return OLSR_FALSE;
+  return false;
 }
 
 static int
 deserialize_hello(struct hello_message *hello, const void *ser)
 {
   const unsigned char *limit;
-  olsr_u8_t type;
-  olsr_u16_t size;
+  uint8_t type;
+  uint16_t size;
 
   const unsigned char *curr = ser;
   pkt_get_u8(&curr, &type);
@@ -372,21 +372,21 @@ deserialize_hello(struct hello_message *hello, const void *ser)
   return 0;
 }
 
-olsr_bool
+bool
 olsr_input_hello(union olsr_message * ser, struct interface * inif, union olsr_ip_addr * from)
 {
   struct hello_message hello;
 
   if (ser == NULL) {
-    return OLSR_FALSE;
+    return false;
   }
   if (deserialize_hello(&hello, ser) != 0) {
-    return OLSR_FALSE;
+    return false;
   }
   olsr_hello_tap(&hello, inif, from);
 
   /* Do not forward hello messages */
-  return OLSR_FALSE;
+  return false;
 }
 
 /**
@@ -460,8 +460,8 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if, const uni
      *If willingness changed - recalculate
      */
     neighbor->willingness = message->willingness;
-    changes_neighborhood = OLSR_TRUE;
-    changes_topology = OLSR_TRUE;
+    changes_neighborhood = true;
+    changes_topology = true;
   }
 
   /* Don't register neighbors of neighbors that announces WILL_NEVER */

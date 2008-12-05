@@ -118,7 +118,7 @@ iterLinkTabNext(char *buff, int len)
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen), rawIpAddrToString(&iterLinkTab->neighbor_iface_addr,
                                                                                            ipAddrLen),
            rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen), iterLinkTab->L_link_quality,
-           get_linkcost_text(iterLinkTab->linkcost, OLSR_FALSE, &lqbuffer));
+           get_linkcost_text(iterLinkTab->linkcost, false, &lqbuffer));
 
   link_node = iterLinkTab->link_list.next;
   if (link_node != &link_entry_head) {
@@ -285,7 +285,7 @@ iterTcTabNext(char *buff, int len)
 
     res =
       snprintf(buff, len, "[~%d~address~%s~cost~%s~]~", i, rawIpAddrToString(&tc_edge->T_dest_addr, ipAddrLen),
-               get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer));
+               get_linkcost_text(tc_edge->cost, false, &lqbuffer));
 
     if (res < len)
       buff += res;
@@ -317,7 +317,7 @@ iterTcTabInit(void)
   iterTcTab = (node ? vertex_tree2tc(node) : NULL);
 }
 
-static olsr_bool
+static bool
 parserFunc(union olsr_message *msg, struct interface *inInt __attribute__ ((unused)), union olsr_ip_addr *neighIntAddr)
 {
   char *mess = (char *)msg;
@@ -327,16 +327,16 @@ parserFunc(union olsr_message *msg, struct interface *inInt __attribute__ ((unus
   int i;
 
   if (memcmp(orig, mainAddr, ipAddrLen) == 0)
-    return OLSR_FALSE;
+    return false;
 
   if (check_neighbor_link(neighIntAddr) != SYM_LINK) {
     error("TAS message not from symmetric neighbour\n");
-    return OLSR_FALSE;
+    return false;
   }
 
   if (len < ipAddrLen + 8 + 2) {
     error("short TAS message received (%d bytes)\n", len);
-    return OLSR_FALSE;
+    return false;
   }
 
   len -= ipAddrLen + 8;
@@ -346,12 +346,12 @@ parserFunc(union olsr_message *msg, struct interface *inInt __attribute__ ((unus
 
   if (i++ == len) {
     error("TAS message has unterminated service string\n");
-    return OLSR_FALSE;
+    return false;
   }
 
   if (i == len) {
     error("TAS message lacks payload string\n");
-    return OLSR_FALSE;
+    return false;
   }
 
   string = service + i;
@@ -361,13 +361,13 @@ parserFunc(union olsr_message *msg, struct interface *inInt __attribute__ ((unus
 
   if (i == len) {
     error("TAS message has unterminated payload string\n");
-    return OLSR_FALSE;
+    return false;
   }
 
   httpAddTasMessage(service, string, rawIpAddrToString(orig, ipAddrLen));
 
   /* Forward the message */
-  return OLSR_TRUE;
+  return true;
 }
 
 void

@@ -203,7 +203,7 @@ chk_if_changed(struct olsr_if *iface)
     goto remove_interface;
   }
 
-  ifp->is_hcif = OLSR_FALSE;
+  ifp->is_hcif = false;
 
   /* trying to detect if interface is wireless. */
   ifp->is_wireless = check_wireless_interface(ifr.ifr_name);
@@ -438,7 +438,7 @@ add_hemu_if(struct olsr_if *iface)
 {
   struct interface *ifp;
   union olsr_ip_addr null_addr;
-  olsr_u32_t addr[4];
+  uint32_t addr[4];
   struct ipaddr_str buf;
   size_t name_size;
 
@@ -449,11 +449,11 @@ add_hemu_if(struct olsr_if *iface)
 
   memset(ifp, 0, sizeof(struct interface));
 
-  iface->configured = OLSR_TRUE;
+  iface->configured = true;
   iface->interf = ifp;
 
   name_size = strlen("hcif01") + 1;
-  ifp->is_hcif = OLSR_TRUE;
+  ifp->is_hcif = true;
   ifp->int_name = olsr_malloc(name_size, "Interface update 3");
   ifp->int_metric = 0;
 
@@ -647,7 +647,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     return 0;
   }
 
-  ifs.is_hcif = OLSR_FALSE;
+  ifs.is_hcif = false;
 
   /* trying to detect if interface is wireless. */
   ifs.is_wireless = check_wireless_interface(ifr.ifr_name);
@@ -710,7 +710,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     /* Find broadcast address */
     if (iface->cnf->ipv4_broadcast.v4.s_addr) {
       /* Specified broadcast */
-      memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr, &iface->cnf->ipv4_broadcast.v4, sizeof(olsr_u32_t));
+      memcpy(&((struct sockaddr_in *)&ifs.int_broadaddr)->sin_addr.s_addr, &iface->cnf->ipv4_broadcast.v4, sizeof(uint32_t));
     } else {
       /* Autodetect */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {

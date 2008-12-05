@@ -66,7 +66,7 @@
 /* a composite metric is used for path selection */
 struct rt_metric {
   olsr_linkcost cost;
-  olsr_u32_t hops;
+  uint32_t hops;
 };
 
 /* a nexthop is a pointer to a gateway router plus an interface */
@@ -112,8 +112,8 @@ struct rt_path {
   union olsr_ip_addr rtp_originator;   /* originator of the route */
   struct avl_node rtp_prefix_tree_node; /* tc entry rtp node */
   struct olsr_ip_prefix rtp_dst;       /* the prefix */
-  olsr_u32_t rtp_version;              /* for detection of outdated rt_paths */
-  olsr_u8_t rtp_origin;                /* internal, MID or HNA */
+  uint32_t rtp_version;                /* for detection of outdated rt_paths */
+  uint8_t rtp_origin;                  /* internal, MID or HNA */
 };
 
 AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
@@ -183,13 +183,13 @@ union olsr_kernel_route {
   struct {
     struct sockaddr rt_dst;
     struct sockaddr rt_gateway;
-    olsr_u32_t metric;
+    uint32_t metric;
   } v4;
 
   struct {
     struct in6_addr rtmsg_dst;
     struct in6_addr rtmsg_gateway;
-    olsr_u32_t rtmsg_metric;
+    uint32_t rtmsg_metric;
   } v6;
 };
 
@@ -205,10 +205,10 @@ int avl_comp_ipv4_prefix(const void *, const void *);
 int avl_comp_ipv6_prefix(const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
-olsr_bool olsr_nh_change(const struct rt_nexthop *, const struct rt_nexthop *);
-olsr_bool olsr_hopcount_change(const struct rt_metric *, const struct rt_metric *);
-olsr_bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
-olsr_u8_t olsr_fib_metric(const struct rt_metric *);
+bool olsr_nh_change(const struct rt_nexthop *, const struct rt_nexthop *);
+bool olsr_hopcount_change(const struct rt_metric *, const struct rt_metric *);
+bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
+uint8_t olsr_fib_metric(const struct rt_metric *);
 
 char *olsr_rt_to_string(const struct rt_entry *);
 char *olsr_rtp_to_string(const struct rt_path *);

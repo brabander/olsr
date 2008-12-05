@@ -70,7 +70,7 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(olsr_u8_t) * (((ver) == AF_INET) ? 4 : 7)))
+#define MIN_PACKET_SIZE(ver)	((int)(sizeof(uint8_t) * (((ver) == AF_INET) ? 4 : 7)))
 
 /* Debug helper macro */
 #ifdef DEBUG
@@ -177,8 +177,8 @@ extern struct olsrd_config *olsr_cnf;
 extern clock_t now_times;              /* current idea of times(2) reported uptime */
 
 #if defined WIN32
-extern olsr_bool olsr_win32_end_request;
-extern olsr_bool olsr_win32_end_flag;
+extern bool olsr_win32_end_request;
+extern bool olsr_win32_end_flag;
 #endif
 
 /*

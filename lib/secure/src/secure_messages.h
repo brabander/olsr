@@ -77,12 +77,12 @@ extern char keyfile[FILENAME_MAX + 1];
  ****************************************************************************/
 
 struct sig_msg {
-  olsr_u8_t type;
-  olsr_u8_t algorithm;
-  olsr_u16_t reserved;
+  uint8_t type;
+  uint8_t algorithm;
+  uint16_t reserved;
 
   time_t timestamp;
-  olsr_u8_t signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 };
 
 /*
@@ -90,13 +90,13 @@ struct sig_msg {
  */
 
 struct s_olsrmsg {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
-  olsr_u32_t originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   /* YOUR PACKET GOES HERE */
   struct sig_msg sig;
@@ -108,54 +108,54 @@ struct s_olsrmsg {
  */
 
 struct challengemsg {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
-  olsr_u32_t originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  olsr_u32_t destination;
-  olsr_u32_t challenge;
+  uint32_t destination;
+  uint32_t challenge;
 
-  olsr_u8_t signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 
 };
 
 struct c_respmsg {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
-  olsr_u32_t originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  olsr_u32_t destination;
-  olsr_u32_t challenge;
+  uint32_t destination;
+  uint32_t challenge;
   time_t timestamp;
 
-  olsr_u8_t res_sig[SIGSIZE];
+  uint8_t res_sig[SIGSIZE];
 
-  olsr_u8_t signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 };
 
 struct r_respmsg {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
-  olsr_u32_t originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  olsr_u32_t destination;
+  uint32_t destination;
   time_t timestamp;
 
-  olsr_u8_t res_sig[SIGSIZE];
+  uint8_t res_sig[SIGSIZE];
 
-  olsr_u8_t signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 };
 
 /*
@@ -163,13 +163,13 @@ struct r_respmsg {
  */
 
 struct s_olsrmsg6 {
-  olsr_u8_t olsr_msgtype;
-  olsr_u8_t olsr_vtime;
-  olsr_u16_t olsr_msgsize;
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
   struct in6_addr originator;
-  olsr_u8_t ttl;
-  olsr_u8_t hopcnt;
-  olsr_u16_t seqno;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   /* YOUR PACKET GOES HERE */
   struct sig_msg sig;
@@ -180,14 +180,14 @@ struct s_olsrmsg6 {
  */
 
 struct s_olsr {
-  olsr_u16_t olsr_packlen;             /* packet length */
-  olsr_u16_t olsr_seqno;
+  uint16_t olsr_packlen;             /* packet length */
+  uint16_t olsr_seqno;
   struct s_olsrmsg olsr_msg[1];        /* variable messages */
 };
 
 struct s_olsr6 {
-  olsr_u16_t olsr_packlen;             /* packet length */
-  olsr_u16_t olsr_seqno;
+  uint16_t olsr_packlen;             /* packet length */
+  uint16_t olsr_seqno;
   struct s_olsrmsg6 olsr_msg[1];       /* variable messages */
 };
 

@@ -101,31 +101,31 @@ genipcopy(void *dst, const void *src)
 
 int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
 
-int prefix_to_netmask(olsr_u8_t *, int, olsr_u8_t);
+int prefix_to_netmask(uint8_t *, int, uint8_t);
 
 static INLINE int
-olsr_prefix_to_netmask(union olsr_ip_addr *adr, olsr_u8_t prefixlen)
+olsr_prefix_to_netmask(union olsr_ip_addr *adr, uint8_t prefixlen)
 {
   return prefix_to_netmask(adr->v6.s6_addr, olsr_cnf->ipsize, prefixlen);
 }
 
-olsr_u8_t netmask_to_prefix(const olsr_u8_t *, int);
+uint8_t netmask_to_prefix(const uint8_t *, int);
 
-static INLINE olsr_u8_t
+static INLINE uint8_t
 olsr_netmask_to_prefix(const union olsr_ip_addr *adr)
 {
   return netmask_to_prefix(adr->v6.s6_addr, olsr_cnf->ipsize);
 }
 
-static INLINE olsr_u8_t
-olsr_netmask4_to_prefix(const olsr_u32_t * a)
+static INLINE uint8_t
+olsr_netmask4_to_prefix(const uint32_t * a)
 {
-  return netmask_to_prefix((const olsr_u8_t *)a, sizeof(*a));
+  return netmask_to_prefix((const uint8_t *)a, sizeof(*a));
 }
-static INLINE olsr_u8_t
+static INLINE uint8_t
 olsr_netmask6_to_prefix(const struct in6_addr *a)
 {
-  return netmask_to_prefix((const olsr_u8_t *)a, sizeof(*a));
+  return netmask_to_prefix((const uint8_t *)a, sizeof(*a));
 }
 
 static INLINE const char *
@@ -158,8 +158,8 @@ sockaddr4_to_string(struct ipaddr_str *const buf, const struct sockaddr *const a
 /* we need to handle one value specifically since shifting 32 bits of a 32 bit integer is the same as shifting 0 bits.
  * The result is in host-byte-order.
  */
-static INLINE olsr_u32_t
-prefix_to_netmask4(olsr_u8_t prefixlen)
+static INLINE uint32_t
+prefix_to_netmask4(uint8_t prefixlen)
 {
   return prefixlen == 0 ? 0 : (~0U << (32 - prefixlen));
 }

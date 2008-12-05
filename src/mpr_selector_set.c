@@ -46,7 +46,7 @@
 #include "scheduler.h"
 #include "net_olsr.h"
 
-static olsr_u16_t ansn;
+static uint16_t ansn;
 
 /* MPR selector list */
 static struct mpr_selector mprs_list;
@@ -67,7 +67,7 @@ olsr_init_mprs_set(void)
   mprs_list.prev = &mprs_list;
 }
 
-olsr_u16_t
+uint16_t
 get_local_ansn(void)
 {
   return ansn;
@@ -85,10 +85,10 @@ increase_local_ansn(void)
  * Check if we(this node) is selected as a MPR by any
  * neighbors. If the list is empty we are not MPR.
  */
-olsr_bool
+bool
 olsr_is_mpr(void)
 {
-  return ((mprs_list.next == &mprs_list) ? OLSR_FALSE : OLSR_TRUE);
+  return ((mprs_list.next == &mprs_list) ? false : true);
 }
 #endif
 
@@ -114,7 +114,7 @@ olsr_expire_mpr_sel_entry(void *context)
 
   /* Delete entry */
   free(mpr_sel);
-  signal_link_changes(OLSR_TRUE);
+  signal_link_changes(true);
 }
 
 /**
@@ -207,7 +207,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 
   if (mprs == NULL) {
     olsr_add_mpr_selector(addr, vtime);
-    signal_link_changes(OLSR_TRUE);
+    signal_link_changes(true);
     return 1;
   }
   olsr_set_mpr_sel_timer(mprs, vtime);

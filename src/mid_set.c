@@ -128,7 +128,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, olsr_rel
 {
   struct mid_entry *tmp;
   struct mid_address *tmp_adr;
-  olsr_u32_t hash, alias_hash;
+  uint32_t hash, alias_hash;
   union olsr_ip_addr *registered_m_addr;
 
   hash = olsr_ip_hashing(m_addr);
@@ -198,7 +198,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, olsr_rel
 
       olsr_delete_two_hop_neighbor_table(tmp_2_neighbor);
 
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
 
     /* Delete a possible neighbor entry */
@@ -215,7 +215,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, olsr_rel
       /* Delete */
       free(tmp_neigh);
 
-      changes_neighborhood = OLSR_TRUE;
+      changes_neighborhood = true;
     }
     tmp_adr = tmp_adr->next_alias;
   }
@@ -285,8 +285,8 @@ insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, 
   /*
    *Recalculate topology
    */
-  changes_neighborhood = OLSR_TRUE;
-  changes_topology = OLSR_TRUE;
+  changes_neighborhood = true;
+  changes_topology = true;
 }
 
 /**
@@ -299,7 +299,7 @@ insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, 
 union olsr_ip_addr *
 mid_lookup_main_addr(const union olsr_ip_addr *adr)
 {
-  olsr_u32_t hash;
+  uint32_t hash;
   struct mid_address *tmp_list;
 
   hash = olsr_ip_hashing(adr);
@@ -323,7 +323,7 @@ struct mid_entry *
 mid_lookup_entry_bymain(const union olsr_ip_addr *adr)
 {
   struct mid_entry *tmp_list;
-  olsr_u32_t hash;
+  uint32_t hash;
 
   hash = olsr_ip_hashing(adr);
 
@@ -357,7 +357,7 @@ mid_lookup_aliases(const union olsr_ip_addr *adr)
 int
 olsr_update_mid_table(const union olsr_ip_addr *adr, olsr_reltime vtime)
 {
-  olsr_u32_t hash;
+  uint32_t hash;
   struct ipaddr_str buf;
   struct mid_entry *tmp_list = mid_set;
 
@@ -387,7 +387,7 @@ void
 olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_aliases)
 {
   struct mid_entry *entry;
-  olsr_u32_t hash;
+  uint32_t hash;
   struct mid_address *registered_aliases;
   struct mid_address *previous_alias;
   struct mid_alias *save_declared_aliases = declared_aliases;
@@ -444,8 +444,8 @@ olsr_prune_aliases(const union olsr_ip_addr *m_addr, struct mid_alias *declared_
       /*
        *Recalculate topology
        */
-      changes_neighborhood = OLSR_TRUE;
-      changes_topology = OLSR_TRUE;
+      changes_neighborhood = true;
+      changes_topology = true;
     } else {
       previous_alias = current_alias;
     }
@@ -525,7 +525,7 @@ olsr_print_mid_set(void)
  *@return 1 on success
  */
 
-olsr_bool
+bool
 olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
 #ifdef DEBUG
@@ -538,7 +538,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   if (!olsr_validate_address(&message.mid_origaddr)) {
     olsr_free_mid_packet(&message);
-    return OLSR_FALSE;
+    return false;
   }
 #ifdef DEBUG
   OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
@@ -555,7 +555,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
     struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     olsr_free_mid_packet(&message);
-    return OLSR_FALSE;
+    return false;
   }
 
   /* Update the timeout of the MID */
@@ -575,7 +575,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
   olsr_free_mid_packet(&message);
 
   /* Forward the message */
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

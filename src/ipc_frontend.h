@@ -70,35 +70,35 @@
  */
 
 struct ipcmsg {
-  olsr_u8_t msgtype;
-  olsr_u16_t size;
-  olsr_u8_t metric;
-  olsr_u8_t add;
+  uint8_t msgtype;
+  uint16_t size;
+  uint8_t metric;
+  uint8_t add;
   union olsr_ip_addr target_addr;
   union olsr_ip_addr gateway_addr;
   char device[4];
 };
 
 struct ipc_net_msg {
-  olsr_u8_t msgtype;
-  olsr_u16_t size;
-  olsr_u8_t mids;                      /* No. of extra interfaces */
-  olsr_u8_t hnas;                      /* No. of HNA nets */
-  olsr_u8_t unused1;
-  olsr_u16_t hello_int;
-  olsr_u16_t hello_lan_int;
-  olsr_u16_t tc_int;
-  olsr_u16_t neigh_hold;
-  olsr_u16_t topology_hold;
-  olsr_u8_t ipv6;
+  uint8_t msgtype;
+  uint16_t size;
+  uint8_t mids;                        /* No. of extra interfaces */
+  uint8_t hnas;                        /* No. of HNA nets */
+  uint8_t unused1;
+  uint16_t hello_int;
+  uint16_t hello_lan_int;
+  uint16_t tc_int;
+  uint16_t neigh_hold;
+  uint16_t topology_hold;
+  uint8_t ipv6;
   union olsr_ip_addr main_addr;
 };
 
-olsr_bool ipc_check_allowed_ip(const union olsr_ip_addr *);
+bool ipc_check_allowed_ip(const union olsr_ip_addr *);
 
 void ipc_accept(int);
 
-olsr_bool frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
+bool frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 int ipc_route_send_rtentry(const union olsr_ip_addr *, const union olsr_ip_addr *, int, int, const char *);
 

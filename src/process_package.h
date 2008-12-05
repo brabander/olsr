@@ -46,7 +46,7 @@
 #include "packet.h"
 #include "neighbor_table.h"
 
-olsr_bool olsr_input_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
+bool olsr_input_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void olsr_init_package_process(void);
 

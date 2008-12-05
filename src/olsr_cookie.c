@@ -152,13 +152,13 @@ olsr_cookie_set_memory_size(struct olsr_cookie_info *ci, size_t size)
 /*
  * Basic sanity checking for a passed-in cookie-id.
  */
-static olsr_bool
+static bool
 olsr_cookie_valid(olsr_cookie_t cookie_id)
 {
   if ((cookie_id < COOKIE_ID_MAX) && cookies[cookie_id]) {
-    return OLSR_TRUE;
+    return true;
   }
-  return OLSR_FALSE;
+  return false;
 }
 
 /*
@@ -210,7 +210,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-  olsr_bool reuse = OLSR_FALSE;
+  bool reuse = false;
 
   /*
    * Check first if we have reusable memory.
@@ -239,7 +239,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     ptr = (void *)free_list_node;
     memset(ptr, 0, ci->ci_size);
     ci->ci_free_list_usage--;
-    reuse = OLSR_TRUE;
+    reuse = true;
   }
 
   /*
@@ -270,7 +270,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-  olsr_bool reuse = OLSR_FALSE;
+  bool reuse = false;
 
   branding = (struct olsr_cookie_mem_brand *)((unsigned char *)ptr + ci->ci_size);
 
@@ -294,7 +294,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     list_node_init(free_list_node);
     list_add_before(&ci->ci_free_list, free_list_node);
     ci->ci_free_list_usage++;
-    reuse = OLSR_TRUE;
+    reuse = true;
 
   } else {
 

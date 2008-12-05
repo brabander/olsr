@@ -52,7 +52,7 @@
 #include <assert.h>
 #include <limits.h>
 
-static olsr_bool disp_pack_out = OLSR_FALSE;
+static bool disp_pack_out = false;
 
 #ifdef WIN32
 #define perror(x) WinSockPError(x)
@@ -88,7 +88,7 @@ static const char *const deny_ipv6_defaults[] = {
 };
 
 void
-net_set_disp_pack_out(olsr_bool val)
+net_set_disp_pack_out(bool val)
 {
   disp_pack_out = val;
 }
@@ -204,7 +204,7 @@ net_reserve_bufspace(struct interface *ifp, int size)
  *
  * @return the number of bytes currently pending
  */
-olsr_u16_t
+uint16_t
 net_output_pending(const struct interface * ifp)
 {
   return ifp->netbuf.pending;
@@ -222,7 +222,7 @@ net_output_pending(const struct interface * ifp)
  *  success
  */
 int
-net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t size)
+net_outbuffer_push(struct interface *ifp, const void *data, const uint16_t size)
 {
   if ((ifp->netbuf.pending + size) > ifp->netbuf.maxsize)
     return 0;
@@ -245,7 +245,7 @@ net_outbuffer_push(struct interface *ifp, const void *data, const olsr_u16_t siz
  *  success
  */
 int
-net_outbuffer_push_reserved(struct interface *ifp, const void *data, const olsr_u16_t size)
+net_outbuffer_push_reserved(struct interface *ifp, const void *data, const uint16_t size)
 {
   if ((ifp->netbuf.pending + size) > (ifp->netbuf.maxsize + ifp->netbuf.reserved))
     return 0;
@@ -416,7 +416,7 @@ net_output(struct interface *ifp)
    * link qualities for the links to our neighbours
    */
 
-  lq_tc_pending = OLSR_FALSE;
+  lq_tc_pending = false;
 
   return retval;
 }
@@ -436,7 +436,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *adr)
   OLSR_PRINTF(1, "Added %s to IP deny set\n", olsr_ip_to_string(&buf, &new_entry->addr));
 }
 
-olsr_bool
+bool
 olsr_validate_address(const union olsr_ip_addr *adr)
 {
   const struct deny_address_entry *deny_entry;
@@ -445,12 +445,12 @@ olsr_validate_address(const union olsr_ip_addr *adr)
     if (ipequal(adr, &deny_entry->addr)) {
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "Validation of address %s failed!\n", olsr_ip_to_string(&buf, adr));
-      return OLSR_FALSE;
+      return false;
     }
     if (deny_entry == (struct deny_address_entry *)&olsr_cnf->main_addr)
       break;
   }
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

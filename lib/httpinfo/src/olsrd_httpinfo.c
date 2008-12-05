@@ -130,13 +130,13 @@ static const char httpinfo_css[] =
   "text-align: center;\nwidth: 120px;\npadding: 0px;\ncolor: #000000;\n"
   "text-decoration: none;\nfont-family: verdana;\nfont-size: 12px;\n" "border: 1px solid #000;\n}\n";
 
-typedef int (*build_body_callback) (char *, olsr_u32_t);
+typedef int (*build_body_callback) (char *, uint32_t);
 
 struct tab_entry {
   const char *tab_label;
   const char *filename;
   build_body_callback build_body_cb;
-  olsr_bool display_tab;
+  bool display_tab;
 };
 
 struct static_bin_file_entry {
@@ -152,45 +152,44 @@ struct static_txt_file_entry {
 
 struct dynamic_file_entry {
   const char *filename;
-  int (*process_data_cb) (char *, olsr_u32_t, char *, olsr_u32_t);
+  int (*process_data_cb) (char *, uint32_t, char *, uint32_t);
 };
 
 static int get_http_socket(int);
 
-static int build_tabs(char *, olsr_u32_t, int);
+static int build_tabs(char *, uint32_t, int);
 
 static void parse_http_request(int);
 
-static int build_http_header(http_header_type, olsr_bool, olsr_u32_t, char *, olsr_u32_t);
+static int build_http_header(http_header_type, bool, uint32_t, char *, uint32_t);
 
-static int build_frame(char *, olsr_u32_t, const char *, const char *, int, build_body_callback frame_body_cb);
+static int build_frame(char *, uint32_t, const char *, const char *, int, build_body_callback frame_body_cb);
 
-static int build_routes_body(char *, olsr_u32_t);
+static int build_routes_body(char *, uint32_t);
 
-static int build_config_body(char *, olsr_u32_t);
+static int build_config_body(char *, uint32_t);
 
-static int build_neigh_body(char *, olsr_u32_t);
+static int build_neigh_body(char *, uint32_t);
 
-static int build_topo_body(char *, olsr_u32_t);
+static int build_topo_body(char *, uint32_t);
 
-static int build_mid_body(char *, olsr_u32_t);
+static int build_mid_body(char *, uint32_t);
 
-static int build_nodes_body(char *, olsr_u32_t);
+static int build_nodes_body(char *, uint32_t);
 
-static int build_all_body(char *, olsr_u32_t);
+static int build_all_body(char *, uint32_t);
 
-static int build_about_body(char *, olsr_u32_t);
+static int build_about_body(char *, uint32_t);
 
-static int build_cfgfile_body(char *, olsr_u32_t);
+static int build_cfgfile_body(char *, uint32_t);
 
 static int check_allowed_ip(const struct allowed_net *const allowed_nets, const union olsr_ip_addr *const addr);
 
-static int build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const char *const ipaddrstr,
-                        const int prefix_len);
+static int build_ip_txt(char *buf, const uint32_t bufsize, const bool want_link, const char *const ipaddrstr, const int prefix_len);
 
-static int build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr *const ipaddr,
+static int build_ipaddr_link(char *buf, const uint32_t bufsize, const bool want_link, const union olsr_ip_addr *const ipaddr,
                              const int prefix_len);
-static int section_title(char *buf, olsr_u32_t bufsize, const char *title);
+static int section_title(char *buf, uint32_t bufsize, const char *title);
 
 static ssize_t writen(int fd, const void *buf, size_t count);
 
@@ -209,16 +208,16 @@ static int netsprintf_error = 0;
 #endif
 
 static const struct tab_entry tab_entries[] = {
-  {"Configuration", "config", build_config_body, OLSR_TRUE},
-  {"Routes", "routes", build_routes_body, OLSR_TRUE},
-  {"Links/Topology", "nodes", build_nodes_body, OLSR_TRUE},
-  {"All", "all", build_all_body, OLSR_TRUE},
+  {"Configuration", "config", build_config_body, true},
+  {"Routes", "routes", build_routes_body, true},
+  {"Links/Topology", "nodes", build_nodes_body, true},
+  {"All", "all", build_all_body, true},
 #ifdef ADMIN_INTERFACE
-  {"Admin", "admin", build_admin_body, OLSR_TRUE},
+  {"Admin", "admin", build_admin_body, true},
 #endif
-  {"About", "about", build_about_body, OLSR_TRUE},
-  {"FOO", "cfgfile", build_cfgfile_body, OLSR_FALSE},
-  {NULL, NULL, NULL, OLSR_FALSE}
+  {"About", "about", build_about_body, true},
+  {"FOO", "cfgfile", build_cfgfile_body, false},
+  {NULL, NULL, NULL, false}
 };
 
 static const struct static_bin_file_entry static_bin_files[] = {
@@ -247,7 +246,7 @@ static int
 get_http_socket(int port)
 {
   struct sockaddr_in sin;
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
 
   /* Init ipc socket */
   int s = socket(AF_INET, SOCK_STREAM, 0);
@@ -384,7 +383,7 @@ parse_http_request(int fd)
     while (dynamic_files[i].filename) {
       printf("POST checking %s\n", dynamic_files[i].filename);
       if (FILENREQ_MATCH(filename, dynamic_files[i].filename)) {
-        olsr_u32_t param_size;
+        uint32_t param_size;
 
         stats.ok_hits++;
 
@@ -395,7 +394,7 @@ parse_http_request(int fd)
 
         //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
         size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body) - size);
-        c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
+        c = build_http_header(HTTP_OK, true, size, req, sizeof(req));
         goto send_http_data;
       }
       i++;
@@ -404,7 +403,7 @@ parse_http_request(int fd)
     /* We only support GET */
     strscpy(body, HTTP_400_MSG, sizeof(body));
     stats.ill_hits++;
-    c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, sizeof(req));
+    c = build_http_header(HTTP_BAD_REQ, true, strlen(body), req, sizeof(req));
   } else if (!strcmp(req_type, "GET")) {
     int i = 0;
 
@@ -418,7 +417,7 @@ parse_http_request(int fd)
       stats.ok_hits++;
       memcpy(body, static_bin_files[i].data, static_bin_files[i].data_size);
       size = static_bin_files[i].data_size;
-      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));
+      c = build_http_header(HTTP_OK, false, size, req, sizeof(req));
       goto send_http_data;
     }
 
@@ -433,7 +432,7 @@ parse_http_request(int fd)
     if (static_txt_files[i].filename) {
       stats.ok_hits++;
       size += snprintf(&body[size], sizeof(body) - size, "%s", static_txt_files[i].data);
-      c = build_http_header(HTTP_OK, OLSR_FALSE, size, req, sizeof(req));
+      c = build_http_header(HTTP_OK, false, size, req, sizeof(req));
       goto send_http_data;
     }
 
@@ -449,7 +448,7 @@ parse_http_request(int fd)
 
     if (tab_entries[i].filename) {
 #ifdef NETDIRECT
-      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
+      c = build_http_header(HTTP_OK, true, size, req, sizeof(req));
       r = send(client_sockets[curr_clients], req, c, 0);
       if (r < 0) {
         olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
@@ -487,19 +486,19 @@ parse_http_request(int fd)
       netsprintf_direct = 1;
       goto close_connection;
 #else
-      c = build_http_header(HTTP_OK, OLSR_TRUE, size, req, sizeof(req));
+      c = build_http_header(HTTP_OK, true, size, req, sizeof(req));
       goto send_http_data;
 #endif
     }
 
     stats.ill_hits++;
     strscpy(body, HTTP_404_MSG, sizeof(body));
-    c = build_http_header(HTTP_BAD_FILE, OLSR_TRUE, strlen(body), req, sizeof(req));
+    c = build_http_header(HTTP_BAD_FILE, true, strlen(body), req, sizeof(req));
   } else {
     /* We only support GET */
     strscpy(body, HTTP_400_MSG, sizeof(body));
     stats.ill_hits++;
-    c = build_http_header(HTTP_BAD_REQ, OLSR_TRUE, strlen(body), req, sizeof(req));
+    c = build_http_header(HTTP_BAD_REQ, true, strlen(body), req, sizeof(req));
   }
 
 send_http_data:
@@ -523,7 +522,7 @@ close_connection:
 }
 
 int
-build_http_header(http_header_type type, olsr_bool is_html, olsr_u32_t msgsize, char *buf, olsr_u32_t bufsize)
+build_http_header(http_header_type type, bool is_html, uint32_t msgsize, char *buf, uint32_t bufsize)
 {
   time_t currtime;
   const char *h;
@@ -578,7 +577,7 @@ build_http_header(http_header_type type, olsr_bool is_html, olsr_u32_t msgsize, 
 }
 
 static int
-build_tabs(char *buf, const olsr_u32_t bufsize, int active)
+build_tabs(char *buf, const uint32_t bufsize, int active)
 {
   int size = 0, tabs = 0;
 
@@ -610,7 +609,7 @@ olsr_plugin_exit(void)
 }
 
 static int
-section_title(char *buf, olsr_u32_t bufsize, const char *title)
+section_title(char *buf, uint32_t bufsize, const char *title)
 {
   return snprintf(buf, bufsize,
                   "<h2>%s</h2>\n" "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\">\n",
@@ -618,7 +617,7 @@ section_title(char *buf, olsr_u32_t bufsize, const char *title)
 }
 
 static int
-build_frame(char *buf, olsr_u32_t bufsize, const char *title __attribute__ ((unused)), const char *link
+build_frame(char *buf, uint32_t bufsize, const char *title __attribute__ ((unused)), const char *link
             __attribute__ ((unused)), int width __attribute__ ((unused)), build_body_callback frame_body_cb)
 {
   int size = 0;
@@ -629,13 +628,13 @@ build_frame(char *buf, olsr_u32_t bufsize, const char *title __attribute__ ((unu
 }
 
 static int
-fmt_href(char *buf, const olsr_u32_t bufsize, const char *const ipaddr)
+fmt_href(char *buf, const uint32_t bufsize, const char *const ipaddr)
 {
   return snprintf(buf, bufsize, "<a href=\"http://%s:%d/all\">", ipaddr, http_port);
 }
 
 static int
-build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool print_link, const char *const ipaddrstr, const int prefix_len)
+build_ip_txt(char *buf, const uint32_t bufsize, const bool print_link, const char *const ipaddrstr, const int prefix_len)
 {
   int size = 0;
 
@@ -656,7 +655,7 @@ build_ip_txt(char *buf, const olsr_u32_t bufsize, const olsr_bool print_link, co
 }
 
 static int
-build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link, const union olsr_ip_addr *const ipaddr,
+build_ipaddr_link(char *buf, const uint32_t bufsize, const bool want_link, const union olsr_ip_addr *const ipaddr,
                   const int prefix_len)
 {
   int size = 0;
@@ -694,12 +693,12 @@ build_ipaddr_link(char *buf, const olsr_u32_t bufsize, const olsr_bool want_link
 }
 
 #define build_ipaddr_with_link(buf, bufsize, ipaddr, plen) \
-          build_ipaddr_link((buf), (bufsize), OLSR_TRUE, (ipaddr), (plen))
+          build_ipaddr_link((buf), (bufsize), true, (ipaddr), (plen))
 #define build_ipaddr_no_link(buf, bufsize, ipaddr, plen) \
-          build_ipaddr_link((buf), (bufsize), OLSR_FALSE, (ipaddr), (plen))
+          build_ipaddr_link((buf), (bufsize), false, (ipaddr), (plen))
 
 static int
-build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry *rt)
+build_route(char *buf, uint32_t bufsize, const struct rt_entry *rt)
 {
   int size = 0;
   struct lqtextbuffer lqbuffer;
@@ -711,7 +710,7 @@ build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry *rt)
   size += snprintf(&buf[size], bufsize - size, "<td align=\"center\">%d</td>", rt->rt_best->rtp_metric.hops);
   size +=
     snprintf(&buf[size], bufsize - size, "<td align=\"right\">%s</td>",
-             get_linkcost_text(rt->rt_best->rtp_metric.cost, OLSR_TRUE, &lqbuffer));
+             get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer));
   size +=
     snprintf(&buf[size], bufsize - size, "<td align=\"center\">%s</td></tr>\n",
              if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
@@ -719,7 +718,7 @@ build_route(char *buf, olsr_u32_t bufsize, const struct rt_entry *rt)
 }
 
 static int
-build_routes_body(char *buf, olsr_u32_t bufsize)
+build_routes_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
   struct rt_entry *rt;
@@ -741,7 +740,7 @@ build_routes_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_config_body(char *buf, olsr_u32_t bufsize)
+build_config_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
   const struct olsr_if *ifs;
@@ -910,7 +909,7 @@ build_config_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_neigh_body(char *buf, olsr_u32_t bufsize)
+build_neigh_body(char *buf, uint32_t bufsize)
 {
   struct neighbor_entry *neigh;
   struct link_entry *link = NULL;
@@ -938,7 +937,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       size +=
         snprintf(&buf[size], bufsize - size, "<td align=\"right\">(%s) %s</td>", get_link_entry_text(link, '/', &lqbuffer1),
-                 get_linkcost_text(link->linkcost, OLSR_FALSE, &lqbuffer2));
+                 get_linkcost_text(link->linkcost, false, &lqbuffer2));
     }
     size += snprintf(&buf[size], bufsize - size, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
@@ -979,7 +978,7 @@ build_neigh_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_topo_body(char *buf, olsr_u32_t bufsize)
+build_topo_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
   struct tc_entry *tc;
@@ -1005,7 +1004,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
           struct lqtextbuffer lqbuffer1, lqbuffer2;
           size +=
             snprintf(&buf[size], bufsize - size, "<td align=\"right\">(%s) %s</td>\n",
-                     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, OLSR_FALSE, &lqbuffer2));
+                     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1), get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
         }
         size += snprintf(&buf[size], bufsize - size, "</tr>\n");
       }
@@ -1018,7 +1017,7 @@ build_topo_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_mid_body(char *buf, olsr_u32_t bufsize)
+build_mid_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
   int idx;
@@ -1050,7 +1049,7 @@ build_mid_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_nodes_body(char *buf, olsr_u32_t bufsize)
+build_nodes_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
 
@@ -1062,7 +1061,7 @@ build_nodes_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_all_body(char *buf, olsr_u32_t bufsize)
+build_all_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
 
@@ -1076,7 +1075,7 @@ build_all_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_about_body(char *buf, olsr_u32_t bufsize)
+build_about_body(char *buf, uint32_t bufsize)
 {
   return snprintf(buf, bufsize,
                   "<strong>" PLUGIN_NAME " version " PLUGIN_VERSION "</strong><br/>\n" "by Andreas T&oslash;nnesen (C)2005.<br/>\n"
@@ -1117,7 +1116,7 @@ build_about_body(char *buf, olsr_u32_t bufsize)
 }
 
 static int
-build_cfgfile_body(char *buf, olsr_u32_t bufsize)
+build_cfgfile_body(char *buf, uint32_t bufsize)
 {
   int size = 0;
 

@@ -62,7 +62,7 @@ olsr_init_duplicate_set(void)
 }
 
 struct dup_entry *
-olsr_create_duplicate_entry(void *ip, olsr_u16_t seqnr)
+olsr_create_duplicate_entry(void *ip, uint16_t seqnr)
 {
   struct dup_entry *entry;
   entry = olsr_malloc(sizeof(struct dup_entry), "New duplicate entry");
@@ -98,7 +98,7 @@ olsr_message_is_duplicate(union olsr_message *m)
   void *mainIp;
   clock_t valid_until;
   struct ipaddr_str buf;
-  olsr_u16_t seqnr;
+  uint16_t seqnr;
   void *ip;
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -124,7 +124,7 @@ olsr_message_is_duplicate(union olsr_message *m)
       avl_insert(&duplicate_set, &entry->avl, 0);
       entry->valid_until = valid_until;
     }
-    return OLSR_FALSE;          // okay, we process this package
+    return false;               // okay, we process this package
   }
 
   diff = (int)seqnr - (int)(entry->seqnr);
@@ -146,32 +146,32 @@ olsr_message_is_duplicate(union olsr_message *m)
       entry->too_low_counter = 0;
       entry->seqnr = seqnr;
       entry->array = 1;
-      return OLSR_FALSE;        /* start with a new sequence number, so NO duplicate */
+      return false;             /* start with a new sequence number, so NO duplicate */
     }
     OLSR_PRINTF(9, "blocked %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-    return OLSR_TRUE;           /* duplicate ! */
+    return true;                /* duplicate ! */
   }
 
   entry->too_low_counter = 0;
   if (diff <= 0) {
-    olsr_u32_t bitmask = 1 << ((olsr_u32_t) (-diff));
+    uint32_t bitmask = 1 << ((uint32_t) (-diff));
 
     if ((entry->array & bitmask) != 0) {
       OLSR_PRINTF(9, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff, entry->array, olsr_ip_to_string(&buf, mainIp));
-      return OLSR_TRUE;         /* duplicate ! */
+      return true;              /* duplicate ! */
     }
     entry->array |= bitmask;
     OLSR_PRINTF(9, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-    return OLSR_FALSE;          /* no duplicate */
+    return false;               /* no duplicate */
   } else if (diff < 32) {
-    entry->array <<= (olsr_u32_t) diff;
+    entry->array <<= (uint32_t) diff;
   } else {
     entry->array = 0;
   }
   entry->array |= 1;
   entry->seqnr = seqnr;
   OLSR_PRINTF(9, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-  return OLSR_FALSE;            /* no duplicate */
+  return false;                 /* no duplicate */
 }
 
 void

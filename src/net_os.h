@@ -85,7 +85,7 @@ int calculate_if_metric(char *);
 
 int check_wireless_interface(char *);
 
-olsr_bool is_if_link_up(char *);
+bool is_if_link_up(char *);
 
 int join_mcast(struct interface *, int);
 

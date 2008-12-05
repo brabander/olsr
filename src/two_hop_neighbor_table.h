@@ -59,9 +59,9 @@ struct neighbor_list_entry {
 
 struct neighbor_2_entry {
   union olsr_ip_addr neighbor_2_addr;
-  olsr_u8_t mpr_covered_count;         /*used in mpr calculation */
-  olsr_u8_t processed;                 /*used in mpr calculation */
-  olsr_16_t neighbor_2_pointer;        /* Neighbor count */
+  uint8_t mpr_covered_count;           /*used in mpr calculation */
+  uint8_t processed;                   /*used in mpr calculation */
+  int16_t neighbor_2_pointer;          /* Neighbor count */
   struct neighbor_list_entry neighbor_2_nblist;
   struct neighbor_2_entry *prev;
   struct neighbor_2_entry *next;

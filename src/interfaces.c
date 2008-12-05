@@ -268,7 +268,7 @@ queue_if(const char *name, int hemu)
   interf_n->interf = NULL;
   interf_n->configured = 0;
 
-  interf_n->host_emul = hemu ? OLSR_TRUE : OLSR_FALSE;
+  interf_n->host_emul = hemu ? true : false;
 
   strscpy(interf_n->name, name, name_size);
   interf_n->next = olsr_cnf->interfaces;

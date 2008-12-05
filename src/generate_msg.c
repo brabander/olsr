@@ -61,7 +61,7 @@
 static char pulsedata[] = { '\\', '|', '/', '-' };
 
 #define PULSE_MAX 4
-static olsr_u8_t pulse_state = 0;
+static uint8_t pulse_state = 0;
 
 void
 generate_hello(void *p)

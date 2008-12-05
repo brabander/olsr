@@ -700,7 +700,7 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 #endif
           OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
                       PLUGIN_NAME_SHORT, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr), bestIntf->int_name,
-                      get_linkcost_text(bestLinkToNeighbor->linkcost, OLSR_FALSE, &lqbuffer));
+                      get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
         }
 
         continue;               /* for */
@@ -713,7 +713,7 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 #endif
         OLSR_PRINTF(9, "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n", PLUGIN_NAME_SHORT,
                     olsr_ip_to_string(&forwardedByBuf, forwardedBy), olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-                    get_linkcost_text(previousLinkEtx + currEtx, OLSR_TRUE, &lqbuffer));
+                    get_linkcost_text(previousLinkEtx + currEtx, true, &lqbuffer));
       }
 
       /* Check the topology table whether the 'forwardedBy' node is itself a direct
@@ -741,7 +741,7 @@ FindNeighbors(struct TBestNeighbors *neighbors, struct link_entry **bestNeighbor
 #endif
               OLSR_PRINTF(9, "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
                           PLUGIN_NAME_SHORT, neighbor_iface_buf.buf, olsr_ip_to_string(&forw_buf, forwardedBy),
-                          neighbor_iface_buf.buf, get_linkcost_text(tcEtx, OLSR_FALSE, &lqbuffer));
+                          neighbor_iface_buf.buf, get_linkcost_text(tcEtx, false, &lqbuffer));
 
               continue;         /* for */
             }                   /* if */

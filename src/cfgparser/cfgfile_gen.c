@@ -344,7 +344,7 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
     } while (0)
 
 int
-olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
+olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, uint32_t bufsize)
 {
   struct ip_prefix_list *h = cnf->hna_entries;
   struct olsr_if *in = cnf->interfaces;
@@ -496,7 +496,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
   WRITE_TO_BUF("# can shar the same config block. Just list the\n# interfaces(e.g. Interface \"eth0\" \"eth2\"\n\n");
   /* Interfaces */
   if (in) {
-    olsr_bool first = OLSR_TRUE;
+    bool first = true;
     while (in) {
       WRITE_TO_BUF("Interface \"%s\" {\n", in->name);
 
@@ -609,7 +609,7 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, olsr_u32_t bufsize)
 
       WRITE_TO_BUF("}\n\n");
       in = in->next;
-      first = OLSR_FALSE;
+      first = false;
     }
 
   }

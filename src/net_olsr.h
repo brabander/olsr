@@ -49,9 +49,9 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-typedef int (*packet_transform_function) (olsr_u8_t *, int *);
+typedef int (*packet_transform_function) (uint8_t *, int *);
 
-void net_set_disp_pack_out(olsr_bool);
+void net_set_disp_pack_out(bool);
 
 void init_net(void);
 
@@ -61,13 +61,13 @@ int net_remove_buffer(struct interface *);
 
 int net_outbuffer_bytes_left(const struct interface *);
 
-olsr_u16_t net_output_pending(const struct interface *);
+uint16_t net_output_pending(const struct interface *);
 
 int net_reserve_bufspace(struct interface *, int);
 
-int net_outbuffer_push(struct interface *, const void *, const olsr_u16_t);
+int net_outbuffer_push(struct interface *, const void *, const uint16_t);
 
-int net_outbuffer_push_reserved(struct interface *, const void *, const olsr_u16_t);
+int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t);
 
 int net_output(struct interface *);
 
@@ -77,7 +77,7 @@ int add_ptf(packet_transform_function);
 
 int del_ptf(packet_transform_function);
 
-olsr_bool olsr_validate_address(const union olsr_ip_addr *);
+bool olsr_validate_address(const union olsr_ip_addr *);
 
 void olsr_add_invalid_address(const union olsr_ip_addr *);
 

@@ -81,7 +81,7 @@ olsr_scheduler_sleep(unsigned long scheduler_runtime)
 {
   struct timespec remainder_spec, sleeptime_spec;
   struct timeval sleeptime_val, time_used, next_interval;
-  olsr_u32_t next_interval_usec;
+  uint32_t next_interval_usec;
   unsigned long milliseconds_used;
 
   /* Calculate next planned scheduler invocation */
@@ -144,7 +144,7 @@ olsr_scheduler(void)
     if (link_changes) {
       OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn());
       increase_local_ansn();
-      link_changes = OLSR_FALSE;
+      link_changes = false;
     }
 
     /* looping trough interfaces and emmitting pending data */
@@ -188,7 +188,7 @@ olsr_scheduler(void)
  * @return the absolute timer in system clock tick units
  */
 static clock_t
-olsr_jitter(unsigned int rel_time, olsr_u8_t jitter_pct, unsigned int random)
+olsr_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random)
 {
   unsigned int jitter_time;
 
@@ -521,7 +521,7 @@ olsr_clock_string(clock_t clock)
  * @return a pointer to the created entry
  */
 struct timer_entry *
-olsr_start_timer(unsigned int rel_time, olsr_u8_t jitter_pct, olsr_bool periodical, void (*timer_cb_function) (void *),
+olsr_start_timer(unsigned int rel_time, uint8_t jitter_pct, bool periodical, void (*timer_cb_function) (void *),
                  void *context, olsr_cookie_t cookie)
 {
   struct timer_entry *timer;
@@ -598,7 +598,7 @@ olsr_stop_timer(struct timer_entry *timer)
  * @return nada
  */
 void
-olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, olsr_u8_t jitter_pct, olsr_bool periodical)
+olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, uint8_t jitter_pct, bool periodical)
 {
 
   /* Sanity check. */
@@ -636,7 +636,7 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time, olsr_u8_t ji
  * terminated.
  */
 void
-olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time, olsr_u8_t jitter_pct, olsr_bool periodical,
+olsr_set_timer(struct timer_entry **timer_ptr, unsigned int rel_time, uint8_t jitter_pct, bool periodical,
                void (*timer_cb_function) (void *), void *context, olsr_cookie_t cookie)
 {
 

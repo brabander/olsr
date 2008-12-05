@@ -67,7 +67,7 @@ void WinSockPError(const char *);
 
 static int ipc_sock = -1;
 static int ipc_conn = -1;
-static int ipc_active = OLSR_FALSE;
+static int ipc_active = false;
 
 static int ipc_send_all_routes(int fd);
 
@@ -146,7 +146,7 @@ ipc_accept(int fd)
     OLSR_PRINTF(1, "Front end connected\n");
     addr = inet_ntoa(pin.sin_addr);
     if (ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
-      ipc_active = OLSR_TRUE;
+      ipc_active = true;
       ipc_send_net_info(ipc_conn);
       ipc_send_all_routes(ipc_conn);
       OLSR_PRINTF(1, "Connection from %s\n", addr);
@@ -159,23 +159,23 @@ ipc_accept(int fd)
 
 }
 
-olsr_bool
+bool
 ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 {
   struct ip_prefix_list *ipcn;
 
   if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
-    return OLSR_TRUE;
+    return true;
   }
 
   /* check nets */
   for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
     if (ip_in_net(addr, &ipcn->net)) {
-      return OLSR_TRUE;
+      return true;
     }
   }
 
-  return OLSR_FALSE;
+  return false;
 }
 
 #if 0
@@ -210,14 +210,14 @@ ipc_input(int sock __attribute__ ((unused)))
  *
  *@return true for not preventing forwarding
  */
-olsr_bool
+bool
 frontend_msgparser(union olsr_message * msg, struct interface * in_if __attribute__ ((unused)), union olsr_ip_addr * from_addr
                    __attribute__ ((unused)))
 {
   int size;
 
   if (!ipc_active)
-    return OLSR_TRUE;
+    return true;
 
   if (olsr_cnf->ip_version == AF_INET)
     size = ntohs(msg->v4.olsr_msgsize);
@@ -227,9 +227,9 @@ frontend_msgparser(union olsr_message * msg, struct interface * in_if __attribut
   if (send(ipc_conn, (void *)msg, size, MSG_NOSIGNAL) < 0) {
     OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
     CLOSE(ipc_conn);
-    ipc_active = OLSR_FALSE;
+    ipc_active = false;
   }
-  return OLSR_TRUE;
+  return true;
 }
 
 /**
@@ -293,7 +293,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst, const union olsr_ip_addr *
     OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
     CLOSE(ipc_conn);
 
-    ipc_active = OLSR_FALSE;
+    ipc_active = false;
     return -1;
   }
 
@@ -319,7 +319,7 @@ ipc_send_all_routes(int fd)
     packet.target_addr = rt->rt_dst.prefix;
 
     packet.add = 1;
-    packet.metric = (olsr_u8_t) (rt->rt_best->rtp_metric.hops);
+    packet.metric = (uint8_t) (rt->rt_best->rtp_metric.hops);
 
     packet.gateway_addr = rt->rt_nexthop.gateway;
 
@@ -331,7 +331,7 @@ ipc_send_all_routes(int fd)
     if (send(fd, tmp, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) {
       OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
       CLOSE(ipc_conn);
-      ipc_active = OLSR_FALSE;
+      ipc_active = false;
       return -1;
     }
   }
@@ -376,11 +376,11 @@ ipc_send_net_info(int fd)
   /* Different values */
   /* Temporary fixes */
   /* XXX fix IPC intervals */
-  net_msg->hello_int = 0;       //htons((olsr_u16_t)hello_int);
-  net_msg->hello_lan_int = 0;   //htons((olsr_u16_t)hello_int_nw);
-  net_msg->tc_int = 0;          //htons((olsr_u16_t)tc_int);
-  net_msg->neigh_hold = 0;      //htons((olsr_u16_t)neighbor_hold_time);
-  net_msg->topology_hold = 0;   //htons((olsr_u16_t)topology_hold_time);
+  net_msg->hello_int = 0;       //htons((uint16_t)hello_int);
+  net_msg->hello_lan_int = 0;   //htons((uint16_t)hello_int_nw);
+  net_msg->tc_int = 0;          //htons((uint16_t)tc_int);
+  net_msg->neigh_hold = 0;      //htons((uint16_t)neighbor_hold_time);
+  net_msg->topology_hold = 0;   //htons((uint16_t)topology_hold_time);
 
   net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
 

@@ -85,7 +85,7 @@ olsr_init_hna_set(void)
  * @return the localized entry or NULL of not found
  */
 struct hna_net *
-olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
+olsr_lookup_hna_net(const struct hna_net *nets, const union olsr_ip_addr *net, uint8_t prefixlen)
 {
   struct hna_net *tmp;
 
@@ -110,7 +110,7 @@ struct hna_entry *
 olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
 {
   struct hna_entry *tmp_hna;
-  olsr_u32_t hash = olsr_ip_hashing(gw);
+  uint32_t hash = olsr_ip_hashing(gw);
 
 #if 0
   OLSR_PRINTF(5, "HNA: lookup entry\n");
@@ -138,7 +138,7 @@ struct hna_entry *
 olsr_add_hna_entry(const union olsr_ip_addr *addr)
 {
   struct hna_entry *new_entry;
-  olsr_u32_t hash;
+  uint32_t hash;
 
   new_entry = olsr_cookie_malloc(hna_entry_mem_cookie);
 
@@ -170,7 +170,7 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
  * @return the newly created entry
  */
 struct hna_net *
-olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
+olsr_add_hna_net(struct hna_entry *hna_gw, const union olsr_ip_addr *net, uint8_t prefixlen)
 {
   /* Add the net */
   struct hna_net *new_net = olsr_cookie_malloc(hna_net_mem_cookie);
@@ -242,7 +242,7 @@ olsr_expire_hna_net_entry(void *context)
  *@return nada
  */
 void
-olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen, olsr_reltime vtime)
+olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, uint8_t prefixlen, olsr_reltime vtime)
 {
   struct hna_entry *gw_entry;
   struct hna_net *net_entry;
@@ -259,7 +259,7 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
 
     /* Need to add the net */
     net_entry = olsr_add_hna_net(gw_entry, net, prefixlen);
-    changes_hna = OLSR_TRUE;
+    changes_hna = true;
   }
 
   /*
@@ -330,19 +330,19 @@ olsr_print_hna_set(void)
  *@return 1 on success
  */
 
-olsr_bool
+bool
 olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
 
-  olsr_u8_t olsr_msgtype;
+  uint8_t olsr_msgtype;
   olsr_reltime vtime;
-  olsr_u16_t olsr_msgsize;
+  uint16_t olsr_msgsize;
   union olsr_ip_addr originator;
-  olsr_u8_t hop_count;
-  olsr_u16_t packet_seq_number;
+  uint8_t hop_count;
+  uint16_t packet_seq_number;
 
   int hnasize;
-  const olsr_u8_t *curr, *curr_end;
+  const uint8_t *curr, *curr_end;
 
 #ifdef DEBUG
   OLSR_PRINTF(5, "Processing HNA\n");
@@ -350,15 +350,15 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
   /* Check if everyting is ok */
   if (!m) {
-    return OLSR_FALSE;
+    return false;
   }
-  curr = (const olsr_u8_t *)m;
+  curr = (const uint8_t *)m;
 
   /* olsr_msgtype */
   pkt_get_u8(&curr, &olsr_msgtype);
   if (olsr_msgtype != HNA_MESSAGE) {
     OLSR_PRINTF(0, "not a HNA message!\n");
-    return OLSR_FALSE;
+    return false;
   }
   /* Get vtime */
   pkt_get_reltime(&curr, &vtime);
@@ -371,13 +371,13 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     OLSR_PRINTF(0, "message size %d too small (at least %lu)!\n", olsr_msgsize,
                 (unsigned long)(olsr_cnf->ip_version ==
                                 AF_INET ? offsetof(struct olsrmsg, message) : offsetof(struct olsrmsg6, message)));
-    return OLSR_FALSE;
+    return false;
   }
   if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
     OLSR_PRINTF(0, "Illegal message size %d!\n", olsr_msgsize);
-    return OLSR_FALSE;
+    return false;
   }
-  curr_end = (const olsr_u8_t *)m + olsr_msgsize;
+  curr_end = (const uint8_t *)m + olsr_msgsize;
 
   /* validate originator */
   pkt_get_ipaddress(&curr, &originator);
@@ -400,12 +400,12 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   if (check_neighbor_link(from_addr) != SYM_LINK) {
     struct ipaddr_str buf;
     OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return OLSR_FALSE;
+    return false;
   }
 #if 1
   while (curr < curr_end) {
     union olsr_ip_addr net;
-    olsr_u8_t prefixlen;
+    uint8_t prefixlen;
     struct ip_prefix_list *entry;
 
     pkt_get_ipaddress(&curr, &net);
@@ -425,7 +425,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   }
 #endif
   /* Forward the message */
-  return OLSR_TRUE;
+  return true;
 }
 
 /*

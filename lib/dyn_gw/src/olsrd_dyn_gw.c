@@ -101,20 +101,20 @@ static struct ping_list *add_to_ping_list(const char *, struct ping_list *);
 
 struct hna_list {
   union olsr_ip_addr hna_net;
-  olsr_u8_t hna_prefixlen;
+  uint8_t hna_prefixlen;
   struct ping_list *ping_hosts;
   int hna_added;
   int probe_ok;
   struct hna_list *next;
 };
 
-static struct hna_list *add_to_hna_list(struct hna_list *, union olsr_ip_addr *hna_net, olsr_u8_t hna_prefixlen);
+static struct hna_list *add_to_hna_list(struct hna_list *, union olsr_ip_addr *hna_net, uint8_t hna_prefixlen);
 
 struct hna_list *the_hna_list = NULL;
 
 static void looped_checks(void *) __attribute__ ((noreturn));
 
-static int check_gw(union olsr_ip_addr *, olsr_u8_t, struct ping_list *);
+static int check_gw(union olsr_ip_addr *, uint8_t, struct ping_list *);
 
 static int ping_is_possible(struct ping_list *);
 
@@ -289,10 +289,10 @@ looped_checks(void *foo __attribute__ ((unused)))
 }
 
 static int
-check_gw(union olsr_ip_addr *net, olsr_u8_t prefixlen, struct ping_list *the_ping_list)
+check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_list)
 {
   char buf[1024], iface[16];
-  olsr_u32_t gate_addr, dest_addr, netmask;
+  uint32_t gate_addr, dest_addr, netmask;
   unsigned int iflags;
   int metric, refcnt, use;
   int retval = 0;
@@ -386,7 +386,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
 }
 
 static struct hna_list *
-add_to_hna_list(struct hna_list *list_root, union olsr_ip_addr *hna_net, olsr_u8_t hna_prefixlen)
+add_to_hna_list(struct hna_list *list_root, union olsr_ip_addr *hna_net, uint8_t hna_prefixlen)
 {
   struct hna_list *new = malloc(sizeof(struct hna_list));
   if (new == NULL) {

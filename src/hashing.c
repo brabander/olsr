@@ -64,14 +64,14 @@
   c -= a; c -= b; c ^= (b>>15); \
 }
 
-static inline olsr_u32_t
-jenkins_hash(const olsr_u8_t * k, olsr_u32_t length)
+static inline uint32_t
+jenkins_hash(const uint8_t * k, uint32_t length)
 {
   /* k: the key
    * length: length of the key
    * initval: the previous hash, or an arbitrary value
    */
-  olsr_u32_t a, b, c, len;
+  uint32_t a, b, c, len;
 
   /* Set up the internal state */
   len = length;
@@ -80,9 +80,9 @@ jenkins_hash(const olsr_u8_t * k, olsr_u32_t length)
 
   /* handle most of the key */
   while (len >= 12) {
-    a += (k[0] + ((olsr_u32_t) k[1] << 8) + ((olsr_u32_t) k[2] << 16) + ((olsr_u32_t) k[3] << 24));
-    b += (k[4] + ((olsr_u32_t) k[5] << 8) + ((olsr_u32_t) k[6] << 16) + ((olsr_u32_t) k[7] << 24));
-    c += (k[8] + ((olsr_u32_t) k[9] << 8) + ((olsr_u32_t) k[10] << 16) + ((olsr_u32_t) k[11] << 24));
+    a += (k[0] + ((uint32_t) k[1] << 8) + ((uint32_t) k[2] << 16) + ((uint32_t) k[3] << 24));
+    b += (k[4] + ((uint32_t) k[5] << 8) + ((uint32_t) k[6] << 16) + ((uint32_t) k[7] << 24));
+    c += (k[8] + ((uint32_t) k[9] << 8) + ((uint32_t) k[10] << 16) + ((uint32_t) k[11] << 24));
 
     __jhash_mix(a, b, c);
 
@@ -93,26 +93,26 @@ jenkins_hash(const olsr_u8_t * k, olsr_u32_t length)
   c += length;
   switch (len) {
   case 11:
-    c += ((olsr_u32_t) k[10] << 24);
+    c += ((uint32_t) k[10] << 24);
   case 10:
-    c += ((olsr_u32_t) k[9] << 16);
+    c += ((uint32_t) k[9] << 16);
   case 9:
-    c += ((olsr_u32_t) k[8] << 8);
+    c += ((uint32_t) k[8] << 8);
     /* the first byte of c is reserved for the length */
   case 8:
-    b += ((olsr_u32_t) k[7] << 24);
+    b += ((uint32_t) k[7] << 24);
   case 7:
-    b += ((olsr_u32_t) k[6] << 16);
+    b += ((uint32_t) k[6] << 16);
   case 6:
-    b += ((olsr_u32_t) k[5] << 8);
+    b += ((uint32_t) k[5] << 8);
   case 5:
     b += k[4];
   case 4:
-    a += ((olsr_u32_t) k[3] << 24);
+    a += ((uint32_t) k[3] << 24);
   case 3:
-    a += ((olsr_u32_t) k[2] << 16);
+    a += ((uint32_t) k[2] << 16);
   case 2:
-    a += ((olsr_u32_t) k[1] << 8);
+    a += ((uint32_t) k[1] << 8);
   case 1:
     a += k[0];
   }
@@ -126,17 +126,17 @@ jenkins_hash(const olsr_u8_t * k, olsr_u32_t length)
  * @param address the address to hash
  * @return the hash(a value in the (0 to HASHMASK-1) range)
  */
-olsr_u32_t
+uint32_t
 olsr_ip_hashing(const union olsr_ip_addr * address)
 {
-  olsr_u32_t hash;
+  uint32_t hash;
 
   switch (olsr_cnf->ip_version) {
   case AF_INET:
-    hash = jenkins_hash((const olsr_u8_t *)&address->v4, sizeof(olsr_u32_t));
+    hash = jenkins_hash((const uint8_t *)&address->v4, sizeof(uint32_t));
     break;
   case AF_INET6:
-    hash = jenkins_hash((const olsr_u8_t *)&address->v6, sizeof(struct in6_addr));
+    hash = jenkins_hash((const uint8_t *)&address->v6, sizeof(struct in6_addr));
     break;
   default:
     hash = 0;

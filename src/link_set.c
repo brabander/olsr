@@ -59,10 +59,10 @@
 /* head node for all link sets */
 struct list_node link_entry_head;
 
-olsr_bool link_changes;                /* is set if changes occur in MPRS set */
+bool link_changes;                     /* is set if changes occur in MPRS set */
 
 void
-signal_link_changes(olsr_bool val)
+signal_link_changes(bool val)
 {                               /* XXX ugly */
   link_changes = val;
 }
@@ -284,7 +284,7 @@ set_loss_link_multiplier(struct link_entry *entry)
   struct interface *inter;
   struct olsr_if *cfg_inter;
   struct olsr_lq_mult *mult;
-  olsr_u32_t val = 0;
+  uint32_t val = 0;
   union olsr_ip_addr null_addr;
 
   /* find the interface for the link */
@@ -350,7 +350,7 @@ olsr_delete_link_entry(struct link_entry *link)
   free(link->if_name);
   free(link);
 
-  changes_neighborhood = OLSR_TRUE;
+  changes_neighborhood = true;
 }
 
 void
@@ -382,7 +382,7 @@ olsr_expire_link_loss_timer(void *context)
   link = (struct link_entry *)context;
 
   /* count the lost packet */
-  olsr_update_packet_loss_worker(link, OLSR_TRUE);
+  olsr_update_packet_loss_worker(link, true);
 
   /* next timeout in 1.0 x htime */
   olsr_change_timer(link->link_loss_timer, link->loss_helloint, OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC);
@@ -405,7 +405,7 @@ olsr_expire_link_sym_timer(void *context)
 
   link->prev_status = lookup_link_status(link);
   update_neighbor_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
-  changes_neighborhood = OLSR_TRUE;
+  changes_neighborhood = true;
 }
 
 /**
@@ -531,7 +531,7 @@ add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote
     olsr_update_hysteresis_hello(new_link, htime);
     new_link->last_htime = htime;
     new_link->olsr_seqno = 0;
-    new_link->olsr_seqno_valid = OLSR_FALSE;
+    new_link->olsr_seqno_valid = false;
   }
 
   new_link->L_link_quality = 0.0;
@@ -763,7 +763,7 @@ olsr_print_link_set(void)
     struct lqtextbuffer lqbuffer1, lqbuffer2;
     OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n", addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
                 walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
-                                                                                                        OLSR_FALSE, &lqbuffer2));
+                                                                                                        false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }
@@ -781,7 +781,7 @@ olsr_update_packet_loss_hello_int(struct link_entry *entry, olsr_reltime loss_he
 void
 olsr_update_packet_loss(struct link_entry *entry)
 {
-  olsr_update_packet_loss_worker(entry, OLSR_FALSE);
+  olsr_update_packet_loss_worker(entry, false);
 
   /* timeout for the first lost packet is 1.5 x htime */
   olsr_set_timer(&entry->link_loss_timer, entry->loss_helloint + entry->loss_helloint / 2, OLSR_LINK_LOSS_JITTER,

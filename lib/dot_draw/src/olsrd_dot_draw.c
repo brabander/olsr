@@ -105,7 +105,7 @@ static void ipc_print_neigh_link(const struct neighbor_entry *neighbor);
 
 static void ipc_print_tc_link(const struct tc_entry *, const struct tc_edge_entry *);
 
-static void ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *, olsr_u8_t);
+static void ipc_print_net(const union olsr_ip_addr *, const union olsr_ip_addr *, uint8_t);
 
 static void ipc_send(const char *, int);
 
@@ -179,7 +179,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
   }
 
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n", adr, olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               get_linkcost_text(etx, OLSR_FALSE, &lqbuffer), style);
+               get_linkcost_text(etx, false, &lqbuffer), style);
 
   if (neighbor->is_mpr) {
     ipc_send_fmt("\"%s\"[shape=box];\n", adr);
@@ -190,7 +190,7 @@ static int
 plugin_ipc_init(void)
 {
   struct sockaddr_in sin;
-  olsr_u32_t yes = 1;
+  uint32_t yes = 1;
 
   if (ipc_socket != -1) {
     close(ipc_socket);
@@ -342,11 +342,11 @@ ipc_print_tc_link(const struct tc_entry *entry, const struct tc_edge_entry *dst_
   struct lqtextbuffer lqbuffer;
 
   ipc_send_fmt("\"%s\" -> \"%s\"[label=\"%s\"];\n", olsr_ip_to_string(&strbuf1, &entry->addr),
-               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr), get_linkcost_text(dst_entry->cost, OLSR_FALSE, &lqbuffer));
+               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr), get_linkcost_text(dst_entry->cost, false, &lqbuffer));
 }
 
 static void
-ipc_print_net(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, olsr_u8_t prefixlen)
+ipc_print_net(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, uint8_t prefixlen)
 {
   struct ipaddr_str gwbuf, netbuf;
 

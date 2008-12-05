@@ -76,16 +76,16 @@ struct lq_handler lq_etx_fpm_handler = {
   sizeof(struct default_lq_fpm)
 };
 
-olsr_u32_t aging_factor_new, aging_factor_old;
-olsr_u32_t aging_quickstart_new, aging_quickstart_old;
+uint32_t aging_factor_new, aging_factor_old;
+uint32_t aging_quickstart_new, aging_quickstart_old;
 
 void
 default_lq_initialize_fpm(void)
 {
-  aging_factor_new = (olsr_u32_t) (olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
+  aging_factor_new = (uint32_t) (olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_factor_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_factor_new;
 
-  aging_quickstart_new = (olsr_u32_t) (LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
+  aging_quickstart_new = (uint32_t) (LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_quickstart_new;
 }
 
@@ -122,7 +122,7 @@ default_lq_serialize_hello_lq_pair_fpm(unsigned char *buff, void *ptr)
 }
 
 void
-default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_hello_lq_pair_fpm(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
@@ -131,7 +131,7 @@ default_lq_deserialize_hello_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
   pkt_ignore_u16(curr);
 }
 
-olsr_bool
+bool
 default_lq_is_relevant_costchange_fpm(olsr_linkcost c1, olsr_linkcost c2)
 {
   if (c1 > c2) {
@@ -154,7 +154,7 @@ default_lq_serialize_tc_lq_pair_fpm(unsigned char *buff, void *ptr)
 }
 
 void
-default_lq_deserialize_tc_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
+default_lq_deserialize_tc_lq_pair_fpm(const uint8_t ** curr, void *ptr)
 {
   struct default_lq_fpm *lq = ptr;
 
@@ -164,13 +164,13 @@ default_lq_deserialize_tc_lq_pair_fpm(const olsr_u8_t ** curr, void *ptr)
 }
 
 olsr_linkcost
-default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, olsr_bool lost)
+default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, bool lost)
 {
   struct default_lq_fpm *tlq = ptr;
-  olsr_u32_t alpha_old = aging_factor_old;
-  olsr_u32_t alpha_new = aging_factor_new;
+  uint32_t alpha_old = aging_factor_old;
+  uint32_t alpha_new = aging_factor_new;
 
-  olsr_u32_t value;
+  uint32_t value;
   // fpm link_loss_factor = fpmidiv(itofpm(link->loss_link_multiplier), 65536);
 
   if (tlq->quickstart < LQ_QUICKSTART_STEPS) {
@@ -179,12 +179,12 @@ default_lq_packet_loss_worker_fpm(struct link_entry *link, void *ptr, olsr_bool 
     tlq->quickstart++;
   }
   // exponential moving average
-  value = (olsr_u32_t) (tlq->valueLq) * LQ_FPM_INTERNAL_MULTIPLIER / 255;
+  value = (uint32_t) (tlq->valueLq) * LQ_FPM_INTERNAL_MULTIPLIER / 255;
 
   value = (value * alpha_old + LQ_FPM_INTERNAL_MULTIPLIER - 1) / LQ_FPM_INTERNAL_MULTIPLIER;
 
   if (!lost) {
-    olsr_u32_t ratio;
+    uint32_t ratio;
 
     ratio = (alpha_new * link->loss_link_multiplier + LINK_LOSS_MULTIPLIER - 1) / LINK_LOSS_MULTIPLIER;
     value += ratio;

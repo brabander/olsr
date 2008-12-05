@@ -54,10 +54,10 @@ struct mpr_selector {
 #define OLSR_MPR_SEL_JITTER 5   /* percent */
 
 #if 0
-olsr_bool olsr_is_mpr(void);
+bool olsr_is_mpr(void);
 #endif
 
-olsr_u16_t get_local_ansn(void);
+uint16_t get_local_ansn(void);
 
 void increase_local_ansn(void);
 

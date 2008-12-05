@@ -53,7 +53,7 @@
 
 struct hna_net {
   union olsr_ip_addr A_network_addr;
-  olsr_u8_t prefixlen;
+  uint8_t prefixlen;
   struct timer_entry *hna_net_timer;
   struct hna_entry *hna_gw;            /* backpointer to the owning HNA entry */
   struct hna_net *next;
@@ -82,19 +82,19 @@ extern struct hna_entry hna_set[HASHSIZE];
 
 int olsr_init_hna_set(void);
 
-struct hna_net *olsr_lookup_hna_net(const struct hna_net *, const union olsr_ip_addr *, olsr_u8_t);
+struct hna_net *olsr_lookup_hna_net(const struct hna_net *, const union olsr_ip_addr *, uint8_t);
 
 struct hna_entry *olsr_lookup_hna_gw(const union olsr_ip_addr *);
 
 struct hna_entry *olsr_add_hna_entry(const union olsr_ip_addr *);
 
-struct hna_net *olsr_add_hna_net(struct hna_entry *, const union olsr_ip_addr *, olsr_u8_t);
+struct hna_net *olsr_add_hna_net(struct hna_entry *, const union olsr_ip_addr *, uint8_t);
 
-void olsr_update_hna_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, olsr_u8_t, olsr_reltime);
+void olsr_update_hna_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, uint8_t, olsr_reltime);
 
 void olsr_print_hna_set(void);
 
-olsr_bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
+bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif
 
