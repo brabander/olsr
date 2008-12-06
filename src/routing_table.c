@@ -416,7 +416,7 @@ olsr_rt_best(struct rt_entry *rt)
   /* grab the first entry */
   struct avl_node *node = avl_walk_first(&rt->rt_path_tree);
 
-  assert(node != 0); /* should not happen */
+  assert(node != NULL); /* should not happen */
 
   rt->rt_best = rtp_tree2rtp(node);
 
