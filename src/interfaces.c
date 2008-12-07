@@ -61,6 +61,7 @@ static struct ifchgf *ifchgf_list = NULL;
 
 
 /* Some cookies for stats keeping */
+struct olsr_cookie_info *interface_mem_cookie = NULL;
 struct olsr_cookie_info *interface_poll_timer_cookie = NULL;
 struct olsr_cookie_info *hello_gen_timer_cookie = NULL;
 struct olsr_cookie_info *tc_gen_timer_cookie = NULL;
@@ -84,6 +85,10 @@ ifinit(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
+  interface_mem_cookie =
+    olsr_alloc_cookie("Interface", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(interface_mem_cookie, sizeof(struct interface));
+
   interface_poll_timer_cookie =
     olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
   buffer_hold_timer_cookie =

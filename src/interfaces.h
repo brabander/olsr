@@ -199,6 +199,7 @@ struct olsr_if *queue_if(const char *, int);
 void add_ifchgf(ifchg_cb_func f);
 int del_ifchgf(ifchg_cb_func f);
 
+extern struct olsr_cookie_info *interface_mem_cookie;
 extern struct olsr_cookie_info *interface_poll_timer_cookie;
 extern struct olsr_cookie_info *hello_gen_timer_cookie;
 extern struct olsr_cookie_info *tc_gen_timer_cookie;

@@ -577,7 +577,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   closesocket(Int->olsr_socket);
 
   free(Int->int_name);
-  free(Int);
+  olsr_cookie_free(interface_mem_cookie, Int);
 
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
   {
@@ -601,7 +601,7 @@ int add_hemu_if(struct olsr_if *iface)
   if(!iface->host_emul)
     return -1;
 
-  ifp = olsr_malloc(sizeof (struct interface), "Interface update 2");
+  ifp = olsr_cookie_malloc(interface_mem_cookie);
 
   memset(ifp, 0, sizeof (struct interface));
 
@@ -915,7 +915,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   if (GetIntInfo(&Info, IntConf->name) < 0)
     return 0;
 
-  New = olsr_malloc(sizeof (struct interface), "Interface 1");
+  New = olsr_cookie_malloc(interface_mem_cookie);
 
   New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
 

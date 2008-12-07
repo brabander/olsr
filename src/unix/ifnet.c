@@ -404,7 +404,7 @@ chk_if_changed(struct olsr_if *iface)
 
   /* Free memory */
   free(ifp->int_name);
-  free(ifp);
+  olsr_cookie_free(interface_mem_cookie, ifp);
 
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces) {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
@@ -429,7 +429,7 @@ int add_hemu_if (struct olsr_if *iface)
   if (!iface->host_emul)
     return -1;
 
-  ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
+  ifp = olsr_cookie_malloc(interface_mem_cookie);
 
   memset(ifp, 0, sizeof(struct interface));
 
@@ -761,7 +761,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     OLSR_PRINTF(1, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
   }
 
-  ifp = olsr_malloc(sizeof(*ifp), "Interface update 2");
+  ifp = olsr_cookie_malloc(interface_mem_cookie);
 
   iface->configured = 1;
   iface->interf = ifp;
