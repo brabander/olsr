@@ -568,6 +568,11 @@ void RemoveInterface(struct olsr_if *IntConf)
   olsr_stop_timer(Int->mid_gen_timer);
   olsr_stop_timer(Int->hna_gen_timer);
 
+  /*
+   * Stop interface pacing.
+   */
+  olsr_stop_timer(ifp->buffer_hold_timer);
+
   net_remove_buffer(Int);
 
   IntConf->configured = 0;

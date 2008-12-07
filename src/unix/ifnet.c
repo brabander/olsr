@@ -394,6 +394,11 @@ chk_if_changed(struct olsr_if *iface)
   olsr_stop_timer(ifp->mid_gen_timer);
   olsr_stop_timer(ifp->hna_gen_timer);
 
+  /*
+   * Stop interface pacing.
+   */
+  olsr_stop_timer(ifp->buffer_hold_timer);
+
   iface->configured = 0;
   iface->interf = NULL;
 
