@@ -113,79 +113,68 @@
 
 #include "interfaces.h"
 
-struct olsr_msg_params
-{
-  float                    emission_interval;
-  float                    validity_time;
+struct olsr_msg_params {
+  float emission_interval;
+  float validity_time;
 };
 
-struct olsr_lq_mult
-{
-  union olsr_ip_addr addr;
-  uint32_t value;
+struct olsr_lq_mult {
+  union olsr_ip_addr   addr;
+  uint32_t             value;
   struct olsr_lq_mult *next;
 };
 
-struct olsr_if_weight
-{
-  int        value;
+struct olsr_if_weight {
+  int   value;
   bool  fixed;
 };
 
-struct if_config_options
-{
-  union olsr_ip_addr       ipv4_broadcast;
-  int                      ipv6_addrtype;
-  union olsr_ip_addr       ipv6_multi_site;
-  union olsr_ip_addr       ipv6_multi_glbl;
-  struct olsr_if_weight    weight;
-  struct olsr_msg_params   hello_params;
-  struct olsr_msg_params   tc_params;
-  struct olsr_msg_params   mid_params;
-  struct olsr_msg_params   hna_params;
-  struct olsr_lq_mult      *lq_mult;
-  bool                autodetect_chg;
+struct if_config_options {
+  union olsr_ip_addr      ipv4_broadcast;
+  int                     ipv6_addrtype;
+  union olsr_ip_addr      ipv6_multi_site;
+  union olsr_ip_addr      ipv6_multi_glbl;
+  struct olsr_if_weight   weight;
+  struct olsr_msg_params  hello_params;
+  struct olsr_msg_params  tc_params;
+  struct olsr_msg_params  mid_params;
+  struct olsr_msg_params  hna_params;
+  struct olsr_lq_mult    *lq_mult;
+  bool                    autodetect_chg;
 };
 
-
-
-struct olsr_if
-{
+struct olsr_if {
   char                     *name;
   char                     *config;
-  bool                configured;
-  bool                host_emul;
-  union olsr_ip_addr       hemu_ip;
+  bool                      configured;
+  bool                      host_emul;
+  union olsr_ip_addr        hemu_ip;
   struct interface         *interf;
   struct if_config_options *cnf;
   struct olsr_if           *next;
 };
 
-struct ip_prefix_list
-{
-  struct olsr_ip_prefix    net;
-  struct ip_prefix_list    *next;
+struct ip_prefix_list {
+  struct olsr_ip_prefix  net;
+  struct ip_prefix_list *next;
 };
 
-struct hyst_param
-{
-  float                    scaling;
-  float                    thr_high;
-  float                    thr_low;
+struct hyst_param {
+  float scaling;
+  float thr_high;
+  float thr_low;
 };
 
-struct plugin_param
-{
-  char                     *key;
-  char                     *value;
-  struct plugin_param      *next;
+struct plugin_param {
+  char                *key;
+  char                *value;
+  struct plugin_param *next;
 };
 
-struct plugin_entry
-{
-  char                     *name;
-  struct plugin_param      *params;
-  struct plugin_entry      *next;
+struct plugin_entry {
+  char                *name;
+  struct plugin_param *params;
+  struct plugin_entry *next;
 };
 
 
@@ -199,11 +188,10 @@ typedef enum {
  * The config struct
  */
 
-struct olsrd_config
-{
- int                      ip_version;
+struct olsrd_config {
+  int                      ip_version;
   size_t                   ipsize;               /* Size of address */
-  uint8_t                maxplen;              /* maximum prefix len */
+  uint8_t                  maxplen;              /* maximum prefix len */
   unsigned char            no_fork:1;
   unsigned char            host_emul:1;
   unsigned char            allow_no_interfaces:1;
@@ -211,32 +199,31 @@ struct olsrd_config
   unsigned char            use_hysteresis:1;
   unsigned char            clear_screen:1;
   unsigned char            del_gws:1;            /* Delete InternetGWs at startup */
-  uint16_t               tos;
-  uint8_t                rttable;
-  uint8_t                rttable_default;
-  uint8_t                ipc_connections;
-  int8_t                 debug_level;
+  uint16_t                 tos;
+  uint8_t                  rttable;
+  uint8_t                  rttable_default;
+  uint8_t                  ipc_connections;
+  int8_t                   debug_level;
   olsr_fib_metric_options  fib_metric;
   struct hyst_param        hysteresis_param;
   struct plugin_entry     *plugins;
   struct ip_prefix_list   *hna_entries;
   struct ip_prefix_list   *ipc_nets;
   struct olsr_if          *interfaces;
-  //float                    pollrate;
-  uint32_t               pollrate; /* in microseconds */
+  uint32_t                 pollrate; /* in microseconds */
   float                    nic_chgs_pollrate;
-  uint8_t                tc_redundancy;
-  uint8_t                mpr_coverage;
-  uint8_t                lq_level;
-  uint8_t                lq_fish;
+  uint8_t                  tc_redundancy;
+  uint8_t                  mpr_coverage;
+  uint8_t                  lq_level;
+  uint8_t                  lq_fish;
   float                    lq_dinter;
   float                    lq_aging;
   char                    *lq_algorithm;
-  uint8_t                lq_dlimit;
-  uint8_t                willingness;
+  uint8_t                  lq_dlimit;
+  uint8_t                  willingness;
 
   /* Stuff set by olsrd */
-  uint16_t               system_tick_divider;  /* Tick resolution */
+  uint16_t                 system_tick_divider;  /* Tick resolution */
   union olsr_ip_addr       main_addr;            /* Main address of this node */
   float                    will_int;
   int                      exit_value;           /* Global return value for process termination */
