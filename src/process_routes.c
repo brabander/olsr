@@ -168,6 +168,10 @@ olsr_delete_kernel_route(struct rt_entry *rt)
       OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
 
       olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
+    } else {
+
+      /* release the interface. */
+      unlock_interface(if_ifwithindex(rt->rt_nexthop.iif_index));
     }
   }
 }
@@ -198,6 +202,9 @@ olsr_add_kernel_route(struct rt_entry *rt)
       /* save the nexthop and metric in the route entry */
       rt->rt_nexthop = rt->rt_best->rtp_nexthop;
       rt->rt_metric = rt->rt_best->rtp_metric;
+
+      /* lock the interface such that it does not vanish underneath us */
+      lock_interface(if_ifwithindex(rt->rt_nexthop.iif_index));
     }
   }
 }
