@@ -147,7 +147,7 @@ const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sock
   char addrbuf[INET6_ADDRSTRLEN];
   const struct sockaddr_in * const sin4 = (const struct sockaddr_in *)addr;
   snprintf(buf, bufsize,
-	   "IPv4/%s:%u",
+	   "IPv4/%s:%d",
 	   inet_ntop(AF_INET, &sin4->sin_addr, addrbuf, sizeof(addrbuf)),
 	   sin4->sin_port);
   return buf;
@@ -158,7 +158,7 @@ const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sock
   char addrbuf[INET6_ADDRSTRLEN];
   const struct sockaddr_in6 * const sin6 = (const struct sockaddr_in6 *)addr;
   snprintf(buf, bufsize,
-	   "IPv6/[%s]:%u/%x/%x",
+	   "IPv6/[%s]:%d/%x/%x",
 	   inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, sizeof(addrbuf)),
 	   sin6->sin6_port,
 	   (unsigned)sin6->sin6_flowinfo,
@@ -178,7 +178,7 @@ const char *sockaddr_to_string(char * const buf, int bufsize, const struct socka
       const int size = MIN(addrsize-sizeof(addr->sa_family), sizeof(addr->sa_data));
       char sep = '/';
       int i;
-      int len = snprintf(buf, bufsize, "%u", addr->sa_family);
+      int len = snprintf(buf, bufsize, "%d", addr->sa_family);
       for (i = 0; i < size; i++) {
 	len += snprintf(buf+len, bufsize-len, "%c%02x", sep, addr->sa_data[i]);
 	sep = ' ';

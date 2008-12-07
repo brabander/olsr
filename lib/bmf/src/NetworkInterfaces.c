@@ -1692,7 +1692,7 @@ void CloseBmfNetworkInterfaces(void)
 
     OLSR_PRINTF(
       7,
-      "%s: %s interface \"%s\": RX pkts %d (%d dups); TX pkts %d\n",
+      "%s: %s interface \"%s\": RX pkts %u (%u dups); TX pkts %u\n",
       PLUGIN_NAME_SHORT,
       bmfIf->olsrIntf != NULL ? "OLSR" : "non-OLSR",
       bmfIf->ifName,
@@ -1738,14 +1738,14 @@ void CloseBmfNetworkInterfaces(void)
 
   OLSR_PRINTF(
     7,
-    "%s: Total all OLSR interfaces    : RX pkts %d (%d dups); TX pkts %d\n",
+    "%s: Total all OLSR interfaces    : RX pkts %u (%u dups); TX pkts %u\n",
     PLUGIN_NAME_SHORT,
     totalOlsrBmfPacketsRx,
     totalOlsrBmfPacketsRxDup,
     totalOlsrBmfPacketsTx);
   OLSR_PRINTF(
     7,
-    "%s: Total all non-OLSR interfaces: RX pkts %d (%d dups); TX pkts %d\n",
+    "%s: Total all non-OLSR interfaces: RX pkts %u (%u dups); TX pkts %u\n",
     PLUGIN_NAME_SHORT,
     totalNonOlsrBmfPacketsRx,
     totalNonOlsrBmfPacketsRxDup,

@@ -536,7 +536,7 @@ walk_timers(clock_t * last_run)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: processed %4u/%u clockwheel slots, "
+  OLSR_PRINTF(3, "TIMER: processed %4u/%d clockwheel slots, "
 	      "timers walked %4u/%u, timers fired %u\n",
 	      wheel_slot_walks, TIMER_WHEEL_SLOTS,
 	      total_timers_walked, timer_mem_cookie->ci_usage,
@@ -604,7 +604,7 @@ olsr_wallclock_string(void)
   sec = (int)now.tv_sec + olsr_get_timezone();
   usec = (int)now.tv_usec;
 
-  snprintf(buf, sizeof(buf), "%02u:%02u:%02u.%06u",
+  snprintf(buf, sizeof(buf), "%02d:%02d:%02d.%06d",
 	   (sec % 86400) / 3600, (sec % 3600) / 60, sec % 60, usec);
 
   return buf;

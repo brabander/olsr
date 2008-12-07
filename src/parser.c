@@ -102,7 +102,7 @@ void olsr_parser_add_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering event for type %d\n", type);
+  OLSR_PRINTF(3, "Parser: registering event for type %u\n", type);
 
   new_entry = olsr_malloc(sizeof(*new_entry), "Register parse function");
 
@@ -113,7 +113,7 @@ void olsr_parser_add_function(parse_function *function, uint32_t type)
   new_entry->next = parse_functions;
   parse_functions = new_entry;
 
-  OLSR_PRINTF(3, "Register parse function: Added function for type %d\n", type);
+  OLSR_PRINTF(3, "Register parse function: Added function for type %u\n", type);
 }
 
 int olsr_parser_remove_function(parse_function *function, uint32_t type)

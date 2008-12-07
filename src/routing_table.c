@@ -492,7 +492,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
     }
 
 #ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n",
+    OLSR_PRINTF(1, "RIB: add prefix %s/%d from %s\n",
                 olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
 #endif
@@ -548,7 +548,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
     olsr_delete_rt_path(rtp);
 
 #ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n",
+    OLSR_PRINTF(1, "RIB: del prefix %s/%d from %s\n",
                 olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
 #endif

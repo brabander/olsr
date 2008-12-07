@@ -131,7 +131,7 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer;
 
-    OLSR_PRINTF(3, "LQ-FF new entry for %s: rec: %u lost: %u",
+    OLSR_PRINTF(3, "LQ-FF new entry for %s: rec: %d lost: %d",
   		olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
   		tlq->received[tlq->activePtr], tlq->lost[tlq->activePtr]);
 #endif
@@ -148,7 +148,7 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
     }
 
 #if !defined(NODEBUG) && defined(DEBUG)
-    OLSR_PRINTF(3, " total-rec: %u total-lost: %u", received, lost);
+    OLSR_PRINTF(3, " total-rec: %d total-lost: %d", received, lost);
 #endif
     /* calculate link quality */
     if (received + lost == 0) {
@@ -296,7 +296,7 @@ const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *
   	i += 5;
   }
   else {
-  	i = sprintf(buffer->buf, "0.%03ul", (lq->valueLq * 1000)/255);
+  	i = sprintf(buffer->buf, "0.%03dl", (lq->valueLq * 1000)/255);
   }
   buffer->buf[i++] = separator;
 
@@ -304,7 +304,7 @@ const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *
   	strcpy(&buffer->buf[i], "1.000");
   }
   else {
-  	sprintf(&buffer->buf[i], "0.%03ul", (lq->valueNlq * 1000) / 255);
+  	sprintf(&buffer->buf[i], "0.%03dl", (lq->valueNlq * 1000) / 255);
   }
   return buffer->buf;
 }

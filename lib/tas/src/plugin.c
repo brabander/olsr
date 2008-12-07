@@ -222,7 +222,7 @@ int iterRouteTabNext(char *buff, int len)
   if (iterRouteTab == NULL)
     return -1;
 
-  snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%d~",
+  snprintf(buff, len, "destination~%s~gateway~%s~interface~%s~metric~%u~",
            rawIpAddrToString(&iterRouteTab->rt_dst.prefix, olsr_cnf->ipsize),
            rawIpAddrToString(&iterRouteTab->rt_best->rtp_nexthop.gateway, olsr_cnf->ipsize),
            if_ifwithindex_name(iterRouteTab->rt_best->rtp_nexthop.iif_index),

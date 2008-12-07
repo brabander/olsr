@@ -252,11 +252,10 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
       new_tc->hops = tc->hops + 1;
 
 #ifdef DEBUG
-      OLSR_PRINTF(2, "SPF:   better path to %s, cost %s, via %s, hops %u\n",
+      OLSR_PRINTF(2, "SPF:   better path to %s, cost %s, via %s, hops %d\n",
                   olsr_ip_to_string(&buf, &new_tc->addr),
                   get_linkcost_text(new_cost, true, &lqbuffer),
-                  tc->next_hop ? olsr_ip_to_string(
-                    &nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
+                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
                   new_tc->hops);
 #endif
 

@@ -1669,7 +1669,7 @@ static int serviceConn(struct connInfo *info)
       {
         if (numSess == MAX_SESS)
         {
-          error("session limit reached, deleting least recently used session %d\n",
+          error("session limit reached, deleting least recently used session %u\n",
                 sess[0]->id);
           freeLuaSession(sess[0]->data);
           freeMem(sess[0]);
@@ -1803,7 +1803,7 @@ int httpService(int freq)
   while (numSess > 0 && confSessTime > 0 &&
          timedOut(&sess[0]->time, confSessTime) >= 0)
   {
-    error("session %d timed out\n", sess[0]->id);
+    error("session %u timed out\n", sess[0]->id);
 
     freeLuaSession(sess[0]->data);
 

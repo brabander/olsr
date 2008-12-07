@@ -138,7 +138,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
   }
 
   if (prefixlen_arg->integer > 128) {
-    fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %d\n", prefixlen_arg->integer);
+    fprintf(stderr, "ihna6entry: Illegal IPv6 prefix length %u\n", prefixlen_arg->integer);
     return 1;
   }
 
@@ -338,7 +338,7 @@ plstmt:     plparam
 imaxipc: TOK_MAXIPC TOK_INTEGER
 {
   if ($2->integer > 255) {
-    fprintf(stderr, "\"MaxConnections\" must be >= 0 and <= 255 (and not %d)\n", $2->integer);
+    fprintf(stderr, "\"MaxConnections\" must be >= 0 and <= 255 (and not %u)\n", $2->integer);
     YYABORT;
   }
   olsr_cnf->ipc_connections = $2->integer;
@@ -694,7 +694,7 @@ isetlqmult: TOK_LQ_MULT TOK_DEFAULT TOK_FLOAT
 idebug:       TOK_DEBUGLEVEL TOK_INTEGER
 {
   if ($2->integer > 127) {
-    fprintf(stderr, "\"DebugLevel\" must be >= 0 and <= 127 (and not %d)\n", $2->integer);
+    fprintf(stderr, "\"DebugLevel\" must be >= 0 and <= 127 (and not %u)\n", $2->integer);
     YYABORT;
   }
   olsr_cnf->debug_level = $2->integer;

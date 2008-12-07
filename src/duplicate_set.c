@@ -205,19 +205,19 @@ olsr_print_duplicate_table(void)
   /* The whole function makes no sense without it. */
   struct dup_entry *entry;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
-  struct ipaddr_str addrbuf;
 
   OLSR_PRINTF(1,
 	      "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n"
-	      "%-*s %8s %s\n", olsr_wallclock_string(), ipwidth,
-	      "Node IP", "DupArray", "VTime");
+	      "%-*s %8s %s\n",
+              olsr_wallclock_string(),
+              ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
+    struct ipaddr_str addrbuf;
     OLSR_PRINTF(1, "%-*s %08x %s\n",
-		ipwidth, olsr_ip_to_string(&addrbuf,
-					   (union olsr_ip_addr *)(entry->avl.
-								  key)),
-		entry->array, olsr_clock_string(entry->valid_until));
+		ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key),
+		entry->array,
+                olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 #endif
 }

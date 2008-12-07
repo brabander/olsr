@@ -384,7 +384,7 @@ ohs_cmd_list(const char *args)
 
     while(oc) {
       struct ipaddr_str addrstr;
-      printf("\t%s - Rx: %d Tx: %d LinkCnt: %d\n",
+      printf("\t%s - Rx: %u Tx: %u LinkCnt: %u\n",
              olsr_ip_to_string(&addrstr, &oc->ip_addr),
              oc->rx,
              oc->tx,

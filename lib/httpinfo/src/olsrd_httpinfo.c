@@ -642,7 +642,7 @@ build_http_header(struct autobuf *abuf,
 
   /* Content length */
   if (msgsize > 0) {
-      abuf_appendf(abuf, "Content-length: %i\r\n", msgsize);
+      abuf_appendf(abuf, "Content-length: %u\r\n", msgsize);
   }
 
   /* Cache-control
@@ -793,7 +793,7 @@ static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 			 -1);
 
   abuf_appendf(abuf,
-		  "<td align=\"center\">%d</td>",
+		  "<td align=\"center\">%u</td>",
 		  rt->rt_best->rtp_metric.hops);
   abuf_appendf(abuf,
 		  "<td align=\"right\">%s</td>",
@@ -855,7 +855,7 @@ static void build_config_body(struct autobuf *abuf)
     abuf_appendf(abuf, "%02d hours %02d minutes %02d seconds</em><br/>\n", hours, mins, (int)uptime.tv_sec);
   }
 
-  abuf_appendf(abuf, "HTTP stats(ok/dyn/error/illegal): <em>%d/%d/%d/%d</em><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
+  abuf_appendf(abuf, "HTTP stats(ok/dyn/error/illegal): <em>%u/%u/%u/%u</em><br>\n", stats.ok_hits, stats.dyn_hits, stats.err_hits, stats.ill_hits);
 
   abuf_appendf(abuf, "Click <a href=\"/cfgfile\">here</a> to <em>generate a configuration file for this node</em>.\n");
 
@@ -1108,7 +1108,7 @@ static void build_mid_body(struct autobuf *abuf)
       abuf_appendf(abuf, "<option>%s</option>\n",
 		       olsr_ip_to_string(&strbuf, &alias->mid_alias_addr));
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
-    abuf_appendf(abuf, "</select> (%d)</td></tr>\n", tc->mid_tree.count);
+    abuf_appendf(abuf, "</select> (%u)</td></tr>\n", tc->mid_tree.count);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   abuf_puts(abuf, "</table>\n");

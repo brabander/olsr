@@ -479,7 +479,7 @@ static int ipc_print_routes(struct ipc_conn *conn)
         struct ipprefix_str prefixstr;
         struct lqtextbuffer lqbuffer;
         if (abuf_appendf(&conn->resp,
-                            "%s\t%s\t%d\t%s\t%s\t\n",
+                            "%s\t%s\t%u\t%s\t%s\t\n",
                             olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
                             olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
                             rt->rt_best->rtp_metric.hops,
