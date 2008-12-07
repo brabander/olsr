@@ -245,6 +245,30 @@ if_ifwithindex_name(const int if_index)
   return ifp == NULL ? "void" : ifp->int_name;
 }
 
+/**
+ * Lock an interface.
+ */
+void
+lock_interface(struct interface *ifp)
+{
+  ifp->refcount++;
+}
+
+/**
+ * Unlock an interface and free it if the refcount went down to zero.
+ */
+void
+unlock_interface(struct interface *ifp)
+{
+  if (--ifp->refcount) {
+    return;
+  }
+  
+  /* Free memory */
+  free(ifp->int_name);
+  olsr_cookie_free(interface_mem_cookie, ifp);
+}
+
 
 /**
  * Create a new interf_name struct using a given

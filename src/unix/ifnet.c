@@ -402,9 +402,7 @@ chk_if_changed(struct olsr_if *iface)
   close(ifp->olsr_socket);
   ifp->olsr_socket = -1;
 
-  /* Free memory */
-  free(ifp->int_name);
-  olsr_cookie_free(interface_mem_cookie, ifp);
+  unlock_interface(ifp);
 
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces) {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
@@ -892,6 +890,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
    * Call possible ifchange functions registered by plugins
    */
   run_ifchg_cbs(ifp, IFCHG_IF_ADD);
+
+  lock_interface(ifp);
 
   return 1;
 }

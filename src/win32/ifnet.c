@@ -576,8 +576,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
   closesocket(Int->olsr_socket);
 
-  free(Int->int_name);
-  olsr_cookie_free(interface_mem_cookie, Int);
+  unlock_interface(ifp);
 
   if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
   {
@@ -739,6 +738,8 @@ int add_hemu_if(struct olsr_if *iface)
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+
+  lock_interface(ifp);
 
   return 1;
 }
@@ -1040,7 +1041,12 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
   New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
+  /*
+   * Call possible ifchange functions registered by plugins
+   */
   run_ifchg_cbs(New, IFCHG_IF_ADD);
+
+  lock_interface(ifp);
 
   return 1;
 }

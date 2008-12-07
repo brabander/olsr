@@ -58,7 +58,7 @@
 struct link_entry {
   union olsr_ip_addr local_iface_addr;
   union olsr_ip_addr neighbor_iface_addr;
-  const struct interface *inter;
+  struct interface *inter;
   char *if_name;
   struct timer_entry *link_timer;
   struct timer_entry *link_sym_timer;
@@ -136,7 +136,7 @@ struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
 struct link_entry *update_link_entry(const union olsr_ip_addr *,
 				     const union olsr_ip_addr *,
 				     const struct hello_message *,
-				     const struct interface *);
+				     struct interface *);
 
 int check_neighbor_link(const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct neighbor_entry *,

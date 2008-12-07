@@ -168,6 +168,8 @@ struct interface {
   struct vtimes valtimes;
   struct if_gen_property *gen_properties; /* Generic interface properties */
   int ttl_index;		       /* index in TTL array for fish-eye */
+
+  uint32_t refcount;			/* Refcount */
   struct interface *int_next;
 };
 
@@ -198,6 +200,8 @@ struct interface *if_ifwithindex(const int if_index);
 struct olsr_if *queue_if(const char *, int);
 void add_ifchgf(ifchg_cb_func f);
 int del_ifchgf(ifchg_cb_func f);
+void lock_interface(struct interface *);
+void unlock_interface(struct interface *);
 
 extern struct olsr_cookie_info *interface_mem_cookie;
 extern struct olsr_cookie_info *interface_poll_timer_cookie;

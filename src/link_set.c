@@ -79,7 +79,7 @@ static int check_link_status(const struct hello_message *message,
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
 					 const union olsr_ip_addr *,
 					 const union olsr_ip_addr *, olsr_reltime,
-					 olsr_reltime, const struct interface *);
+					 olsr_reltime, struct interface *);
 static int get_neighbor_status(const union olsr_ip_addr *);
 
 void
@@ -374,6 +374,10 @@ olsr_delete_link_entry(struct link_entry *link)
 
   list_remove(&link->link_list);
 
+  /* Unlink Interfaces */
+  unlock_interface(link->inter);
+  link->inter = NULL;
+
   free(link->if_name);
   free(link);
 
@@ -507,9 +511,10 @@ olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
  */
 static struct link_entry *
 add_link_entry(const union olsr_ip_addr *local,
-	       const union olsr_ip_addr *remote,
+               const union olsr_ip_addr *remote,
 	       const union olsr_ip_addr *remote_main,
-	       olsr_reltime vtime, olsr_reltime htime, const struct interface *local_if)
+	       olsr_reltime vtime, olsr_reltime htime,
+               struct interface *local_if)
 {
   struct link_entry *new_link;
   struct neighbor_entry *neighbor;
@@ -546,8 +551,9 @@ add_link_entry(const union olsr_ip_addr *local,
   } else
     new_link->if_name = NULL;
 
-  /* shortcut to interface. XXX refcount */
+  /* shortcut to interface. */
   new_link->inter = local_if;
+  lock_interface(local_if);
 
   /*
    * L_local_iface_addr = Address of the interface
@@ -684,7 +690,7 @@ struct link_entry *
 update_link_entry(const union olsr_ip_addr *local,
 		  const union olsr_ip_addr *remote,
 		  const struct hello_message *message,
-		  const struct interface *in_if)
+		  struct interface *in_if)
 {
   struct link_entry *entry;
 
