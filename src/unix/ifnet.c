@@ -400,6 +400,7 @@ chk_if_changed(struct olsr_if *iface)
   olsr_stop_timer(ifp->buffer_hold_timer);
 
   iface->configured = 0;
+  unlock_interface(iface->interf);
   iface->interf = NULL;
 
   /* Close olsr socket */
@@ -438,6 +439,7 @@ int add_hemu_if (struct olsr_if *iface)
 
   iface->configured = true;
   iface->interf = ifp;
+  lock_interface(iface->interf);
 
   name_size = strlen("hcif01") + 1;
   ifp->is_hcif = true;
@@ -768,8 +770,8 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   iface->configured = 1;
   iface->interf = ifp;
+  lock_interface(iface->interf);
 
-  //memcpy(ifp, &ifs, sizeof(*ifp));
   *ifp = ifs;
 
   ifp->immediate_send_tc = iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval;

@@ -576,6 +576,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   net_remove_buffer(Int);
 
   IntConf->configured = 0;
+  unlock_interface(IntConf->interf);
   IntConf->interf = NULL;
 
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
@@ -611,6 +612,7 @@ int add_hemu_if(struct olsr_if *iface)
 
   iface->configured = true;
   iface->interf = ifp;
+  lock_interface(iface->interf);
 
   name_size = strlen("hcif01") + 1;
   ifp->is_hcif = true;
@@ -1003,6 +1005,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   ifnet = New;
 
   IntConf->interf = New;
+  lock_interface(IntConf->interf);
   IntConf->configured = 1;
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
