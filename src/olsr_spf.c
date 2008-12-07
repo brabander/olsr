@@ -394,13 +394,6 @@ olsr_calculate_routing_table (void)
         continue;
       }
 
-      /* find the interface for the link */
-      if (link->if_name) {
-        link->inter = if_ifwithname(link->if_name);
-      } else {
-        link->inter = if_ifwithaddr(&link->local_iface_addr);
-      }
-
       /*
        * Set the next-hops of our neighbors.
        */
