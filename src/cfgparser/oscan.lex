@@ -323,6 +323,11 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_TOS;
 }
 
+"RtProto" {
+  yylval = NULL;
+  return TOK_RTPROTO;
+}
+
 "RtTable" {
   yylval = NULL;
   return TOK_RTTABLE;

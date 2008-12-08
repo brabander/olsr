@@ -133,6 +133,10 @@ olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool w
   abuf_appendf(abuf, "# TOS(type of service) to use. Default is 16\n"
                       "TosValue\t%d\n\n", cnf->tos);
 
+  /* RtProto */
+    abuf_appendf(abuf, "# Routing proto flag to use. Default is 4 (BOOT)\n"
+                         "RtProto\t\t%d\n\n", cnf->rtproto);
+
   /* RtTable */
   abuf_appendf(abuf, "# Policy Routing Table to use. Default is 254\n"
                      "RtTable\t\t%d\n\n", cnf->rttable);

@@ -92,7 +92,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
   req.n.nlmsg_type = cmd;
   req.r.rtm_family = family;
   req.r.rtm_table = rttable;
-  req.r.rtm_protocol = RTPROT_BOOT;
+  req.r.rtm_protocol = ((olsr_cnf->rtproto<1)?RTPROT_BOOT:((olsr_cnf->rtproto==1)?0:olsr_cnf->rtproto));//RTPROT_BOOT;
   req.r.rtm_scope = RT_SCOPE_LINK;
   req.r.rtm_type = RTN_UNICAST;
   req.r.rtm_dst_len = rt->rt_dst.prefix_len;

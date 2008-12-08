@@ -200,6 +200,7 @@ struct olsrd_config {
   unsigned char            clear_screen:1;
   unsigned char            del_gws:1;            /* Delete InternetGWs at startup */
   uint16_t                 tos;
+  uint8_t                  rtproto;
   uint8_t                  rttable;
   uint8_t                  rttable_default;
   uint8_t                  ipc_connections;
