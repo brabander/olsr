@@ -1,6 +1,6 @@
 Valgrind is a powerful tool for performance and correctness analysis of code.
 This mini-howto discusses how to set your development environment up,
-such that you can profile a running olsr daemon and later analyze its
+such that you can profile or leakcheck a running olsr daemon and later analyze its
 recordings using a graphical frontend called Kcachegrind.
 
 First patch your makefile such that the debug symbols are not removed after
@@ -18,11 +18,17 @@ compilation
     -NO_DEBUG_MESSAGES ?= 0
     +NO_DEBUG_MESSAGES ?= 1
 
-Next run valgrind with the following command line options.
+valgrind for profiling:
 
-valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes ./olsrd -d 0 -nofork
+  run valgrind with the following command line options.
 
-Finally load kcachgrind to display the profiling data. (watch out the callgrind
-data are written with a umask of 600 as user root - so you may want to chown or
-chmod the file, otherwise kcachegrind cannot open your data and will display an
-empty screen)
+  valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes ./olsrd -d 0 -nofork
+
+  Finally load kcachgrind to display the profiling data. (watch out the callgrind
+  data are written with a umask of 600 as user root - so you may want to chown or
+  chmod the file, otherwise kcachegrind cannot open your data and will display an
+  empty screen)
+
+valgrind for memory checking:
+
+  valgrind --tool=memcheck --leak-check=full --show-reachable=yes ./olsrd -d 0 -nofork
