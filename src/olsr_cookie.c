@@ -296,7 +296,24 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     free_list_node = ci->ci_free_list.next;
     ptr = (void *)free_list_node;
     VALGRIND_MAKE_MEM_DEFINED(ptr, ci->ci_size);
-    list_remove(free_list_node);
+
+    /*
+     * Before dequeuing the node from the free list,
+     * make the list pointers of the node ahead of
+     * us accessible, such that valgrind does not
+     * log a false positive.
+     */
+    if (free_list_node->next == &ci->ci_free_list) {
+      list_remove(free_list_node);
+    } else {
+
+      /*
+       * Make next item accessible, remove it and make next item inaccessible.
+       */
+      VALGRIND_MAKE_MEM_DEFINED(free_list_node->next, ci->ci_size);
+      list_remove(free_list_node);
+      VALGRIND_MAKE_MEM_NOACCESS(free_list_node->next, ci->ci_size);
+    }
 
     /*
      * Reset the memory unless the caller has told us so.
@@ -375,7 +392,25 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 
     free_list_node = (struct list_node *)ptr;
     list_node_init(free_list_node);
-    list_add_before(&ci->ci_free_list, free_list_node);
+
+    /*
+     * Before enqueuing the node to the free list,
+     * make the list pointers of the node ahead of
+     * us accessible, such that valgrind does not
+     * log a false positive.
+     */
+    if (list_is_empty(&ci->ci_free_list)) {
+      list_add_before(&ci->ci_free_list, free_list_node);
+    } else {
+
+      /*
+       * Make next item accessible, add it and make next item inaccessible.
+       */
+      VALGRIND_MAKE_MEM_DEFINED(ci->ci_free_list.prev, ci->ci_size);
+      list_add_before(&ci->ci_free_list, free_list_node);
+      VALGRIND_MAKE_MEM_NOACCESS(ci->ci_free_list.prev, ci->ci_size);
+    }
+
     ci->ci_free_list_usage++;
 #if 0
     reuse = true;
