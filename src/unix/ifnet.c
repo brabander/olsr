@@ -72,9 +72,6 @@
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 
-static int chk_if_changed(struct olsr_if *);
-
-
 #if 0
 int
 set_flag(char *ifname, short flag __attribute__((unused)))
@@ -103,38 +100,6 @@ set_flag(char *ifname, short flag __attribute__((unused)))
 }
 #endif
 
-void
-check_interface_updates(void *foo __attribute__((unused)))
-{
-  struct olsr_if *tmp_if;
-
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Checking for updates in the interface set\n");
-#endif
-
-  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
-    if (tmp_if->host_emul) {
-	continue;
-    }
-    if (olsr_cnf->host_emul) { /* XXX: TEMPORARY! */
-      continue;
-    }
-    if (!tmp_if->cnf->autodetect_chg) {
-#ifdef DEBUG
-      /* Don't check this interface */
-      OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name);
-#endif
-      continue;
-    }
-
-    if (tmp_if->configured) {
-      chk_if_changed(tmp_if);
-    } else {
-      chk_if_up(tmp_if, 3);
-    }
-  }
-}
-
 /**
  * Checks if an initialized interface is changed
  * that is if it has been set down or the address
@@ -142,7 +107,7 @@ check_interface_updates(void *foo __attribute__((unused)))
  *
  *@param iface the olsr_if struct describing the interface
  */
-static int
+int
 chk_if_changed(struct olsr_if *iface)
 {
   struct ipaddr_str buf;

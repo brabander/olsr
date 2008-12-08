@@ -1059,30 +1059,6 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   return 1;
 }
 
-void check_interface_updates(void *dummy __attribute__((unused)))
-{
-  struct olsr_if *IntConf;
-
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Checking for updates in the interface set\n");
-#endif
-
-  for(IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next)
-  {
-    if(IntConf->host_emul)
-      continue;
-
-    if(olsr_cnf->host_emul) /* XXX: TEMPORARY! */
-      continue;
-
-    if(IntConf->configured)
-      chk_if_changed(IntConf);
-
-    else
-      chk_if_up(IntConf, 3);
-  }
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2

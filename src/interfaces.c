@@ -124,6 +124,43 @@ ifinit(void)
   return (ifnet == NULL) ? 0 : 1;
 }
 
+/**
+ * Callback function for periodic check of interface parameters.
+ */
+void
+check_interface_updates(void *foo __attribute__((unused)))
+{
+  struct olsr_if *tmp_if;
+
+#ifdef DEBUG
+  OLSR_PRINTF(3, "Checking for updates in the interface set\n");
+#endif
+
+  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
+
+    if (tmp_if->host_emul) {
+	continue;
+    }
+    if (olsr_cnf->host_emul) { /* XXX: TEMPORARY! */
+      continue;
+    }
+
+    if (!tmp_if->cnf->autodetect_chg) {
+#ifdef DEBUG
+      /* Don't check this interface */
+      OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name);
+#endif
+      continue;
+    }
+
+    if (tmp_if->configured) {
+      chk_if_changed(tmp_if);
+    } else {
+      chk_if_up(tmp_if, 3);
+    }
+  }
+}
+
 void
 run_ifchg_cbs(struct interface *ifp, int flag)
 {
