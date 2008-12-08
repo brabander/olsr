@@ -95,11 +95,13 @@
 #define WEIGHT_HIGH             4096	/* High                 */
 #define WEIGHT_HIGHEST          8192	/* Really high          */
 
+#if 0
 struct if_gen_property {
   uint32_t owner_id;
   void *data;
   struct if_gen_property *next;
 };
+#endif
 
 struct vtimes {
   uint8_t hello;
@@ -159,7 +161,6 @@ struct interface {
                                           this flag prefers to send TC's */
 
 #ifdef linux
-
 /* Struct used to store original redirect/ingress setting */
   struct nic_state {
     char redirect;		       /* The original state of icmp redirect */
@@ -169,7 +170,9 @@ struct interface {
 
   olsr_reltime hello_etime;
   struct vtimes valtimes;
+#if 0
   struct if_gen_property *gen_properties; /* Generic interface properties */
+#endif
   int ttl_index;		       /* index in TTL array for fish-eye */
 
   uint32_t refcount;			/* Refcount */

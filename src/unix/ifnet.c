@@ -736,7 +736,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   ifp->immediate_send_tc = iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval;
   ifp->int_name = olsr_malloc(strlen(ifr_basename) + 1, "Interface update 3");
   strcpy(ifp->int_name, ifr_basename);
+#if 0
   ifp->gen_properties = NULL;
+#endif
 
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);

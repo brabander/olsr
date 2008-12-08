@@ -918,9 +918,9 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   New = olsr_cookie_malloc(interface_mem_cookie);
 
   New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
-
+#if 0
   New->gen_properties = NULL;
-
+#endif
   AddrIn = &New->int_addr;
 
   AddrIn->sin_family = AF_INET;
