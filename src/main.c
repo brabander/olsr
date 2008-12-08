@@ -406,13 +406,35 @@ main(int argc, char *argv[])
     return 1;
 #ifndef WIN32
   case STATE_RECONFIGURE:
-    if (!fork()) {
-      /* New process */
-      sleep(3);
+    /* if we are started with -nofork, we do not weant to go into the
+     * background here. So we can simply be the child process.
+     */
+    switch (olsr_cnf->no_fork ? 0 : fork()) {
+      int i;
+    case 0:
+      /* child process */
+      for (i = sysconf(_SC_OPEN_MAX); --i > STDERR_FILENO; ) {
+        close(i);
+      }
+      sleep(1);
       printf("Restarting %s\n", argv[0]);
       execv(argv[0], argv);
+      /* if we reach this, the exev() failed */
+      olsr_syslog(OLSR_LOG_ERR, "execv() failed: %s", strerror(errno));
+      /* and we simply shutdown */
+      olsr_cnf->exit_value = EXIT_FAILURE;
+      break;
+    case -1:
+      /* fork() failes */
+      olsr_syslog(OLSR_LOG_ERR, "fork() failed: %s", strerror(errno));
+      /* and we simply shutdown */
+      olsr_cnf->exit_value = EXIT_FAILURE;
+      break;
+    default:
+      /* parent process */
+      printf("RECONFIGURING!\n");
+      break;
     }
-    printf("RECONFIGURING!\n");
     /* fall through */
 #endif
   case STATE_SHUTDOWN:
