@@ -183,7 +183,8 @@ get_neighbor_status(const union olsr_ip_addr *address)
   tc = olsr_locate_tc_entry(main_addr);
 
   /* Loop trough local interfaces to check all possebilities */
-  for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+  OLSR_FOR_ALL_INTERFACES(ifs) {
+
     struct mid_entry *aliases;
     struct link_entry *lnk = lookup_link_entry(main_addr, NULL, ifs);
 
@@ -200,7 +201,7 @@ get_neighbor_status(const union olsr_ip_addr *address)
 	  return SYM_LINK;
       }
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, aliases);
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifs);
 
   return 0;
 }

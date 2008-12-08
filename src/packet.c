@@ -190,7 +190,7 @@ olsr_build_hello_packet(struct hello_message *message, struct interface *outif)
 
   /* Add the rest of the neighbors if running on multiple interfaces */
 
-  if (ifnet != NULL && ifnet->int_next != NULL)
+  if (!list_is_empty(&interface_head))
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor) {
 
 #ifdef DEBUG

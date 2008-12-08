@@ -498,9 +498,10 @@ static void olsr_shutdown(void)
   }
 
   /* OLSR sockets */
-  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+  OLSR_FOR_ALL_INTERFACES(ifn) {
     close(ifn->olsr_socket);
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifn);
+
   /* Closing plug-ins */
   olsr_close_plugins();
 

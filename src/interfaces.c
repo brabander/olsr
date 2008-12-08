@@ -48,8 +48,8 @@
 #include "ipcalc.h"
 #include "common/string.h"
 
-/* The interface linked-list */
-struct interface *ifnet = NULL;
+/* The interface list head */
+struct list_node interface_head;
 
 /* Ifchange functions */
 struct ifchgf {
@@ -81,6 +81,7 @@ ifinit(void)
   struct olsr_if *tmp_if;
 
   /* Initial values */
+  list_head_init(&interface_head);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
@@ -121,7 +122,7 @@ ifinit(void)
 		   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
 		   interface_poll_timer_cookie->ci_id);
 
-  return (ifnet == NULL) ? 0 : 1;
+  return (!list_is_empty(&interface_head));
 }
 
 /**
@@ -184,28 +185,24 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
   if (!addr) {
     return NULL;
   }
+
   if (olsr_cnf->ip_version == AF_INET) {
+
     /* IPv4 */
-    for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
-/*
-      struct ipaddr_str ifbuf, addrbuf;
-      printf("Checking: %s == %s\n", ip4_to_string(&ifbuf, ifp->int_addr.sin_addr), olsr_ip_to_string(&addrbuf, addr));
-*/
+    OLSR_FOR_ALL_INTERFACES(ifp) {
       if (ip4equal(&ifp->int_addr.sin_addr, &addr->v4)) {
 	return ifp;
       }
-    }
+    } OLSR_FOR_ALL_INTERFACES_END(ifp);
+
   } else {
+
     /* IPv6 */
-    for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
-/*
-      struct ipaddr_str ifbuf, addrbuf;
-      printf("Checking %s == %s\n", ip6_to_string(&ifbuf, &ifp->int6_addr.sin6_addr), olsr_ip_to_string(&addrbuf, addr));
-*/
+    OLSR_FOR_ALL_INTERFACES(ifp) {
       if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6)) {
 	return ifp;
       }
-    }
+    } OLSR_FOR_ALL_INTERFACES_END(ifp);
   }
   return NULL;
 }
@@ -221,11 +218,13 @@ struct interface *
 if_ifwithsock(int fd)
 {
   struct interface *ifp;
-  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+
+  OLSR_FOR_ALL_INTERFACES(ifp) {
     if (ifp->olsr_socket == fd) {
       return ifp;
     }
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+
   return NULL;
 }
 
@@ -241,12 +240,14 @@ struct interface *
 if_ifwithname(const char *if_name)
 {
   struct interface *ifp;
-  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+  OLSR_FOR_ALL_INTERFACES(ifp) {
+
     /* good ol' strcmp should be sufficient here */
     if (strcmp(ifp->int_name, if_name) == 0) {
       return ifp;
     }
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+
   return NULL;
 }
 
@@ -261,11 +262,12 @@ struct interface *
 if_ifwithindex(const int if_index)
 {
   struct interface *ifp;
-  for (ifp = ifnet; ifp != NULL; ifp = ifp->int_next) {
+  OLSR_FOR_ALL_INTERFACES(ifp) {
     if (ifp->if_index == if_index) {
       return ifp;
     }
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+
   return NULL;
 }
 

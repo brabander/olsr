@@ -317,7 +317,7 @@ restore_settings(int version)
     return 0;
   }
 
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
+  OLSR_FOR_ALL_INTERFACES(ifs) {
     char procfile[FILENAME_MAX];
     FILE *proc_fd;
     /* Ignore host-emulation interfaces */
@@ -351,7 +351,8 @@ restore_settings(int version)
       fputc(ifs->nic_state.spoof, proc_fd);
       fclose(proc_fd);
     }
-  }
+  } OLSR_FOR_ALL_INTERFACES_END(ifs);
+
   return 1;
 }
 

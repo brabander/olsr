@@ -54,6 +54,7 @@
 
 #include "olsr_types.h"
 #include "mantissa.h"
+#include "common/list.h"
 
 #define _PATH_PROCNET_IFINET6           "/proc/net/if_inet6"
 
@@ -124,6 +125,8 @@ struct olsr_netbuf {
  * interface participating in the OLSRD routing
  */
 struct interface {
+  struct list_node int_node;	       /* List of all interfaces */
+
   /* IP version 4 */
   struct sockaddr_in int_addr;	       /* address */
   struct sockaddr_in int_netmask;      /* netmask */
@@ -170,8 +173,21 @@ struct interface {
   int ttl_index;		       /* index in TTL array for fish-eye */
 
   uint32_t refcount;			/* Refcount */
-  struct interface *int_next;
 };
+
+LISTNODE2STRUCT(list2interface, struct interface, int_node);
+
+/* deletion safe macro for interface list traversal */
+#define OLSR_FOR_ALL_INTERFACES(interface) \
+{ \
+  struct list_node *_interface_node, *_next_interface_node; \
+  for (_interface_node = interface_head.next; \
+    _interface_node != &interface_head; \
+    _interface_node = _next_interface_node) { \
+    _next_interface_node = _interface_node->next; \
+    interface = list2interface(_interface_node);
+#define OLSR_FOR_ALL_INTERFACES_END(interface) }}
+
 
 #define OLSR_BUFFER_HOLD_JITTER 25	/* percent */
 #define OLSR_BUFFER_HOLD_TIME 1000	/* milliseconds */
@@ -185,7 +201,7 @@ struct interface {
 #define IFCHG_IF_UPDATE        3
 
 /* The interface list head */
-extern struct interface *ifnet;
+extern struct list_node interface_head;
 
 typedef int (*ifchg_cb_func)(struct interface *, int);
 

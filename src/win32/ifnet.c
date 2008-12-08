@@ -527,6 +527,7 @@ void ListInterfaces(void)
 void RemoveInterface(struct olsr_if *IntConf)
 {
   struct interface *Int, *Prev;
+  struct ipaddr_str buf;
 
   OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
 
@@ -534,29 +535,21 @@ void RemoveInterface(struct olsr_if *IntConf)
 
   run_ifchg_cbs(Int, IFCHG_IF_ADD);
 
-  if (Int == ifnet)
-    ifnet = Int->int_next;
+  /* Dequeue */
+  list_remove(&Int->int_node);
 
-  else
-  {
-    for (Prev = ifnet; Prev->int_next != Int; Prev = Prev->int_next);
-
-    Prev->int_next = Int->int_next;
-  }
-
-  if(ipequal(&olsr_cnf->main_addr, &Int->ip_addr))
-  {
-    if(ifnet == NULL)
-    {
+  if (ipequal(&olsr_cnf->main_addr, &Int->ip_addr)) {
+    if (list_is_empty(&interface_head)) {
       memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
       OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
-    }
+    } else {
 
-    else
-    {
-      struct ipaddr_str buf;
-      olsr_cnf->main_addr = ifnet->ip_addr;
-      OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+      /* Grab the first interface in the list. */
+      olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
+      olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
+      OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
+      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
+
     }
   }
 
@@ -584,8 +577,7 @@ void RemoveInterface(struct olsr_if *IntConf)
 
   unlock_interface(ifp);
 
-  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces)
-  {
+  if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
     olsr_cnf->exit_value = EXIT_FAILURE;
     CallSignalHandler();
@@ -627,8 +619,8 @@ int add_hemu_if(struct olsr_if *iface)
 
   OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
-  ifp->int_next = ifnet;
-  ifnet = ifp;
+  /* Queue */
+  list_add_before(&interface_head, &ifp->int_node);
 
   if(ipequal(&all_zero, &olsr_cnf->main_addr))
     {
@@ -1001,8 +993,8 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
-  New->int_next = ifnet;
-  ifnet = New;
+  /* Queue */
+  list_add_before(&interface_head, &New->int_node);
 
   IntConf->interf = New;
   lock_interface(IntConf->interf);

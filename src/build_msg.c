@@ -808,9 +808,10 @@ serialize_mid4(struct interface *ifp)
   struct midaddr *addrs;
   struct interface *ifs;
 
-  if((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
+  if ((olsr_cnf->ip_version != AF_INET) || (!ifp) ||
+      list_is_empty(&interface_head)) {
     return false;
-
+  }
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -837,8 +838,7 @@ serialize_mid4(struct interface *ifp)
   addrs = m->v4.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
-    {
+  OLSR_FOR_ALL_INTERFACES(ifs) {
       if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
 	{
 #ifdef DEBUG
@@ -875,7 +875,7 @@ serialize_mid4(struct interface *ifp)
 	  addrs++;
 	  curr_size += olsr_cnf->ipsize;
 	}
-    }
+  } OLSR_FOR_ALL_INTERFACES_END(ifs);
 
 
   m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
@@ -911,8 +911,10 @@ serialize_mid6(struct interface *ifp)
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
 
-  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
+  if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) ||
+      list_is_empty(&interface_head)) {
     return false;
+  }
 
   remainsize = net_outbuffer_bytes_left(ifp);
 
@@ -939,8 +941,7 @@ serialize_mid6(struct interface *ifp)
   addrs6 = m->v6.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
-  for(ifs = ifnet; ifs != NULL; ifs = ifs->int_next)
-    {
+  OLSR_FOR_ALL_INTERFACES(ifs) {
       if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
 	{
 #ifdef DEBUG
@@ -976,7 +977,7 @@ serialize_mid6(struct interface *ifp)
 	  addrs6++;
 	  curr_size += olsr_cnf->ipsize;
 	}
-    }
+  } OLSR_FOR_ALL_INTERFACES_END(ifs);
 
   m->v6.olsr_msgsize = htons(curr_size);
   m->v6.seqno = htons(get_msg_seqno());/* seqnumber */

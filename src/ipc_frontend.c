@@ -405,7 +405,7 @@ ipc_send_net_info(int fd)
 
   /* MIDs */
   /* XXX fix IPC MIDcnt */
-  net_msg.mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
+  net_msg.mids = (!list_is_empty(&interface_head)) ? 1 : 0;
 
   /* HNAs */
   net_msg.hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;

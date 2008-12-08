@@ -324,27 +324,21 @@ chk_if_changed(struct olsr_if *iface)
   run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
 
   /* Dequeue */
-  if (ifp == ifnet) {
-    ifnet = ifp->int_next;
-  } else {
-    struct interface *tmp_ifp = ifnet;
-    while (tmp_ifp->int_next != ifp) {
-      tmp_ifp = tmp_ifp->int_next;
-    }
-    tmp_ifp->int_next = ifp->int_next;
-  }
+  list_remove(&ifp->int_node);
 
   /* Remove output buffer */
   net_remove_buffer(ifp);
 
   /* Check main addr */
   if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
-    if (ifnet == NULL) {
+    if (list_is_empty(&interface_head)) {
       /* No more interfaces */
       memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "No more interfaces...\n");
+      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
     } else {
-      olsr_cnf->main_addr = ifnet->ip_addr;
+
+      /* Grab the first interface in the list. */
+      olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
       olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
       OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
@@ -375,7 +369,7 @@ chk_if_changed(struct olsr_if *iface)
 
   unlock_interface(ifp);
 
-  if (ifnet == NULL && !olsr_cnf->allow_no_interfaces) {
+  if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
     olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
     olsr_cnf->exit_value = EXIT_FAILURE;
@@ -417,8 +411,8 @@ int add_hemu_if (struct olsr_if *iface)
   OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
   OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
-  ifp->int_next = ifnet;
-  ifnet = ifp;
+  /* Queue */
+  list_add_before(&interface_head, &ifp->int_node);
 
   if (ipequal(&all_zero, &olsr_cnf->main_addr)) {
     olsr_cnf->main_addr = iface->hemu_ip;
@@ -743,8 +737,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
   ifp->int_name = olsr_malloc(strlen(ifr_basename) + 1, "Interface update 3");
   strcpy(ifp->int_name, ifr_basename);
   ifp->gen_properties = NULL;
-  ifp->int_next = ifnet;
-  ifnet = ifp;
+
+  /* Queue */
+  list_add_before(&interface_head, &ifp->int_node);
 
   if (olsr_cnf->ip_version == AF_INET) {
     /* IP version 4 */

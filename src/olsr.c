@@ -367,8 +367,7 @@ olsr_forward_message(union olsr_message *m,
   msgsize = ntohs(m->v4.olsr_msgsize);
 
   /* looping trough interfaces */
-  for (ifn = ifnet; ifn ; ifn = ifn->int_next)
-    {
+  OLSR_FOR_ALL_INTERFACES(ifn) {
       if(net_output_pending(ifn))
 	{
 	  /*
@@ -399,7 +398,8 @@ olsr_forward_message(union olsr_message *m,
 	      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
 	    }
 	}
-    }
+  } OLSR_FOR_ALL_INTERFACES_END(ifn);
+
   return 1;
 }
 
