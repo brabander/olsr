@@ -258,17 +258,16 @@ ipc_input(int sock)
  *@return true for not preventing forwarding
  */
 static bool
-frontend_msgparser(union olsr_message *msg, struct interface *in_if __attribute__((unused)), union olsr_ip_addr *from_addr __attribute__((unused)))
+frontend_msgparser(union olsr_message *msg,
+                   struct interface *in_if __attribute__((unused)),
+                   union olsr_ip_addr *from_addr __attribute__((unused)))
 {
-  if (ipc_conn < 0) {
-    return true;
-  }
-  if (send(ipc_conn,
-	   (void *)msg,
-	   olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize),
-	   MSG_NOSIGNAL) < 0) {
-    OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
-    CLOSE(ipc_conn);
+  if (ipc_conn >= 0) {
+    const size_t len = olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize);
+    if (send(ipc_conn, (void *)msg, len, MSG_NOSIGNAL) < 0) {
+      OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
+      CLOSE(ipc_conn);
+    }
   }
   return true;
 }
