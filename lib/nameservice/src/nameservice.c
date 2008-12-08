@@ -649,8 +649,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 	}
 
 	/* looping trough interfaces */
-	for (ifn = ifnet; ifn ; ifn = ifn->int_next)
-	{
+	OLSR_FOR_ALL_INTERFACES(ifn) {
 		OLSR_PRINTF(3, "NAME PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
 		if(net_outbuffer_push(ifn, message, namesize) != namesize ) {
@@ -660,7 +659,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 				OLSR_PRINTF(1, "NAME PLUGIN: could not send on interface: %s\n", ifn->int_name);
 			}
 		}
-	}
+	} OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
 
@@ -1514,14 +1513,13 @@ allowed_ip(const union olsr_ip_addr *addr)
 
 	OLSR_PRINTF(6, "checking %s\n", olsr_ip_to_string(&strbuf, addr));
 
-	for(iface = ifnet; iface; iface = iface->int_next)
-	{
+	OLSR_FOR_ALL_INTERFACES(iface) {
 		OLSR_PRINTF(6, "interface %s\n", olsr_ip_to_string(&strbuf, &iface->ip_addr));
 		if (ipequal(&iface->ip_addr, addr)) {
 			OLSR_PRINTF(6, "MATCHED\n");
 			return true;
 		}
-	}
+	} OLSR_FOR_ALL_INTERFACES_END(iface);
 
 	if (olsr_cnf->ip_version == AF_INET) {
 		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
