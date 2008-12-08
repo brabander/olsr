@@ -302,7 +302,7 @@ unlock_interface(struct interface *ifp)
   if (--ifp->refcount) {
     return;
   }
-  
+
   /* Free memory */
   free(ifp->int_name);
   olsr_cookie_free(interface_mem_cookie, ifp);
