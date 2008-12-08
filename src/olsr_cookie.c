@@ -42,7 +42,8 @@
 #include "defs.h"
 #include "olsr_cookie.h"
 #include "log.h"
-#include "valgrind.h"
+#include "valgrind/valgrind.h"
+#include "valgrind/memcheck.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -86,7 +87,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
   /* Init the free list */
   if (cookie_type == OLSR_COOKIE_TYPE_MEMORY) {
     list_head_init(&ci->ci_free_list);
-    VALGRIND_CREATE_MEMPOOL(ci, sizeof(struct olsr_cookie_mem_brand), 1);
+    VALGRIND_CREATE_MEMPOOL(ci, 0, 1);
   }
 
   return ci;
@@ -293,8 +294,9 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
      * Carve it out of the list, and clean.
      */
     free_list_node = ci->ci_free_list.next;
-    list_remove(free_list_node);
     ptr = (void *)free_list_node;
+    VALGRIND_MAKE_MEM_DEFINED(ptr, ci->ci_size);
+    list_remove(free_list_node);
 
     /*
      * Reset the memory unless the caller has told us so.
@@ -353,8 +355,6 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   struct olsr_cookie_mem_brand *branding = (struct olsr_cookie_mem_brand *)
     ((unsigned char *)ptr + ci->ci_size);
 
-  VALGRIND_MEMPOOL_FREE(ci, ptr);
-
   /*
    * Verify if there has been a memory overrun, or
    * the wrong owner is trying to free this.
@@ -397,6 +397,8 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
 #endif
 
+  VALGRIND_MEMPOOL_FREE(ci, ptr);
+  VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);
 }
 
 /*
