@@ -185,11 +185,6 @@ httpinfo:
 		$(MAKECMD) -C lib/httpinfo 
 		$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) install 
 
-tas:
-		$(MAKECMD) -C lib/tas clean
-		$(MAKECMD) -C lib/tas
-		$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
-
 dot_draw:
 		$(MAKECMD) -C lib/dot_draw clean
 		$(MAKECMD) -C lib/dot_draw
