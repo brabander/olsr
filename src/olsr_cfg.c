@@ -165,29 +165,24 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     opt_argc++;
   }
 
+  /* get option count */
+  for (opt_idx = 0; long_options[opt_idx].name; opt_idx++);
+  
   /* Calculate short option string */
-  while (popt->name)
+  opt_str = olsr_malloc(opt_idx * 3, "create short opt_string");
+  opt_idx = 0;
+  while (popt->name != NULL && popt->val != 0)
   {
-    if (popt->val)
+    opt_str[opt_idx++] = popt->val;
+    
+    switch (popt->has_arg)
     {
-      char *opt_str_tmp = opt_str;
-      size_t l = opt_str ? strlen (opt_str) : 0;
-      opt_str = olsr_malloc (2 + l + popt->has_arg, "create short opt");
-      if (opt_str_tmp)
-        strcpy (opt_str, opt_str_tmp);
-      opt_str[0 + l] = popt->val;
-      opt_str[1 + l] = 0;
-      switch (popt->has_arg)
-      {
       case optional_argument:
-        strcat (opt_str, ":");
+        opt_str[opt_idx++] = ':';
         /* Fall through */
       case required_argument:
-        strcat (opt_str, ":");
+        opt_str[opt_idx++] = ':';
         break;
-      }
-      if (opt_str_tmp)
-        free (opt_str_tmp);
     }
     popt++;
   }
@@ -662,7 +657,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int lim = -1;
         sscanf(optarg, "%d %f", &lim, &olsr_cnf->lq_dinter);
-        if (0 <= lim && lim < (8 << sizeof(olsr_cnf->lq_dlimit)))
+        if (0 <= lim && lim < (1 << (8 * sizeof(olsr_cnf->lq_dlimit))))
           olsr_cnf->lq_dlimit = lim;
         PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %0.2f\n", olsr_cnf->lq_dlimit, olsr_cnf->lq_dinter);
       }
@@ -671,7 +666,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->lq_fish)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_fish))))
           olsr_cnf->lq_fish = arg;
         PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", olsr_cnf->lq_fish);
       }
@@ -680,7 +675,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->lq_level)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_level))))
           olsr_cnf->lq_level = arg;
         PARSER_DEBUG_PRINTF("Link quality level %d\n", olsr_cnf->lq_level);
       }
@@ -731,7 +726,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->mpr_coverage)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->mpr_coverage))))
           olsr_cnf->mpr_coverage = arg;
         PARSER_DEBUG_PRINTF("MPR coverage %d\n", olsr_cnf->mpr_coverage);
       }
@@ -744,7 +739,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->rtproto)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
           olsr_cnf->rtproto = arg;
         PARSER_DEBUG_PRINTF("RtProto: %d\n", olsr_cnf->rtproto);
       }
@@ -768,7 +763,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->rttable_default)))
+        if (0 <= arg && arg < (1 << (8 *sizeof(olsr_cnf->rttable_default))))
           olsr_cnf->rttable_default = arg;
         PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", olsr_cnf->rttable_default);
       }
@@ -777,7 +772,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->rttable)))
+        if (0 <= arg && arg < (1 << (8*sizeof(olsr_cnf->rttable))))
           olsr_cnf->rttable = arg;
         PARSER_DEBUG_PRINTF("RtTable: %d\n", olsr_cnf->rttable);
       }
@@ -786,7 +781,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->tc_redundancy)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->tc_redundancy))))
           olsr_cnf->tc_redundancy = arg;
         PARSER_DEBUG_PRINTF("TC redundancy %d\n", olsr_cnf->tc_redundancy);
       }
@@ -795,7 +790,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->tos)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->tos))))
           olsr_cnf->tos = arg;
         PARSER_DEBUG_PRINTF("TOS: %d\n", olsr_cnf->tos);
       }
@@ -808,7 +803,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->willingness)))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->willingness))))
           olsr_cnf->willingness = arg;
         olsr_cnf->willingness_auto = false;
         PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", olsr_cnf->willingness);
