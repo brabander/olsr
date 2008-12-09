@@ -295,7 +295,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'd':                  /* DebugLevel (i) */
       {
-        int arg = 0;
+        int arg = -1;
         sscanf(optarg, "%d", &arg);
         if (0 <= arg && arg < 128)
           olsr_cnf->debug_level = arg;
@@ -568,7 +568,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
             exit(EXIT_FAILURE);
           }
           if (0 == strcmp("MaxConnections", p[0])) {
-            int arg = 0;
+            int arg = -1;
             sscanf(optarg, "%d", &arg);
             if (0 <= arg && arg < 1 << (8 * sizeof(olsr_cnf->ipc_connections)))
               olsr_cnf->ipc_connections = arg;
@@ -628,7 +628,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'V':                  /* IpVersion (i) */
       {
-        int ver;
+        int ver = -1;
         sscanf(optarg, "%d", &ver);
         if (ver == 4) {
           olsr_cnf->ip_version = AF_INET;
@@ -749,7 +749,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'T':                  /* Pollrate (f) */
       {
-        float arg = 0;
+        float arg = -1;
         sscanf(optarg, "%f", &arg);
         if (0 <= arg)
           olsr_cnf->pollrate = conv_pollrate_to_microsecs(arg);
@@ -758,7 +758,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'q':                  /* RtProto (i) */
       {
-        int arg = 3;
+        int arg = -1;
         sscanf(optarg, "%d", &arg);
         if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
           olsr_cnf->rtproto = arg;
