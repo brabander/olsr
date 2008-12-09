@@ -405,15 +405,32 @@ main(int argc, char *argv[])
 void
 olsr_reconfigure(int signal __attribute__ ((unused)))
 {
-  if (!fork()) {
-    /* New process */
-    sleep(3);
-    printf("Restarting %s\n", olsr_argv[0]);
-    execv(olsr_argv[0], olsr_argv);
+  /* if we are started with -nofork, we do not weant to go into the
+   * background here. So we can simply stop on -HUP
+   */
+  olsr_syslog(OLSR_LOG_INFO, "sot: olsr_reconfigure()\n");
+  if (!olsr_cnf->no_fork) {
+    if (!fork()) {
+      int i;
+      sigset_t sigs;
+      /* New process */
+      sleep(3);
+      sigemptyset(&sigs);
+      sigaddset(&sigs, SIGHUP);
+      sigprocmask(SIG_UNBLOCK, &sigs, NULL);
+      for (i = sysconf(_SC_OPEN_MAX); --i > STDERR_FILENO; ) {
+        close(i);
+      }
+      printf("Restarting %s\n", olsr_argv[0]);
+      olsr_syslog(OLSR_LOG_INFO, "Restarting %s\n", olsr_argv[0]);
+      execv(olsr_argv[0], olsr_argv);
+      olsr_syslog(OLSR_LOG_ERR, "execv(%s) fails: %s!\n", olsr_argv[0], strerror(errno));
+    }
+    else {
+      olsr_syslog(OLSR_LOG_INFO, "RECONFIGURING!\n");
+    }
   }
   olsr_shutdown(0);
-
-  printf("RECONFIGURING!\n");
 }
 #endif
 
