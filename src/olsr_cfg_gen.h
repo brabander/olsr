@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -38,30 +39,31 @@
  *
  */
 
+#ifndef _OLSRD_CFG_GEN_H
+#define _OLSRD_CFG_GEN_H
 
-#ifndef _OLSRD_CONF_H
-#define _OLSRD_CONF_H
-
-#include "olsr_protocol.h"
 #include "olsr_cfg.h"
+#include "common/autobuf.h"
 
-/* fixme: kann weg */
-#define PARSER_VERSION "0.1.2"
-
-
-extern int current_line;
-
-struct conf_token {
-  uint32_t integer;
-  float      floating;
-  bool  boolean;
-  char       *string;
-};
-
-void
-set_default_cnf(struct olsrd_config *);
-
+#if defined __cplusplus
+extern "C" {
 #endif
+
+/*
+ * Interface config generation
+ */
+
+  void olsrd_print_cnf(const struct olsrd_config *);
+
+  int olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname);
+
+  void
+    olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
+
+#if defined __cplusplus
+}
+#endif
+#endif                                 /* _OLSRD_CFG_GEN_H */
 
 /*
  * Local Variables:

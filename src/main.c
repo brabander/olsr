@@ -58,6 +58,7 @@
 #include "net_olsr.h"
 #include "ipc_frontend.h"
 #include "misc.h"
+#include "olsr_cfg_gen.h"
 #include "common/string.h"
 
 #if defined linux

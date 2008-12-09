@@ -54,7 +54,7 @@
 #include "link_set.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
-
+#include "olsr_cfg_gen.h"
 #include "common/string.h"
 
 
