@@ -811,8 +811,11 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
   } /* while getopt_long() */
 
   while(optind < opt_argc) {
+    struct olsr_if *ifs;
     PARSER_DEBUG_PRINTF("new iface %s\n", opt_argv[optind]);
-    queue_if(opt_argv[optind++], false);
+    if (NULL != (ifs = queue_if(opt_argv[optind++], false))) {
+      ifs->cnf = get_default_if_config();
+    }
   }
 
   /* Some cleanup */
