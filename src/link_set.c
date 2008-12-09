@@ -353,6 +353,9 @@ olsr_delete_link_entry(struct link_entry *link)
   changes_neighborhood = true;
 }
 
+/**
+ * Delete all link entries matching a given interface address.
+ */
 void
 olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
 {
@@ -365,7 +368,6 @@ olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
     if (ipequal(int_addr, &link->local_iface_addr)) {
       olsr_delete_link_entry(link);
-      break;
     }
   }
   OLSR_FOR_ALL_LINK_ENTRIES_END(link);
