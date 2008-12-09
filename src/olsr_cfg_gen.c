@@ -45,7 +45,7 @@
 #include <errno.h>
 
 void
-olsrd_print_cnf(const struct olsrd_config *cnf)
+olsr_print_cnf(const struct olsrd_config *cnf)
 {
   struct ip_prefix_list *h = cnf->hna_entries;
   struct olsr_if *in = cnf->interfaces;
@@ -176,7 +176,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
 }
 
 int
-olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname)
+olsr_write_cnf(const struct olsrd_config *cnf, const char *fname)
 {
   struct autobuf abuf;
   FILE *fd = fopen(fname, "w");
@@ -188,7 +188,7 @@ olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname)
   printf("Writing config to file \"%s\".... ", fname);
 
   abuf_init(&abuf, 0);
-  olsrd_write_cnf_buf(&abuf, cnf, false);
+  olsr_write_cnf_buf(&abuf, cnf, false);
   fputs(abuf.buf, fd);
 
   abuf_free(&abuf);
@@ -209,7 +209,7 @@ append_float(struct autobuf *abuf, const char *name, float val, float deflt, boo
 }
 
 void
-olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments)
+olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
   const char *s;

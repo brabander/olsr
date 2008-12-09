@@ -64,9 +64,11 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 
 int current_line;
 
+#if 0
 /* Global stuff externed in defs.h */
 FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
 struct olsrd_config *olsr_cnf;  /* The global configuration */
+#endif
 
 #ifdef MAKEBIN
 
@@ -495,7 +497,7 @@ set_default_cnf(struct olsrd_config *cnf)
 #endif
 }
 
-void init_default_if_config(struct if_config_options *io)
+static void init_default_if_config(struct if_config_options *io)
 {
   struct in6_addr in6;
 
@@ -727,6 +729,7 @@ win32_olsrd_free(void* ptr)
 }
 #endif
 
+#if 0
 void ip_prefix_list_add(struct ip_prefix_list **list,
                         const union olsr_ip_addr *net,
                         uint8_t prefix_len)
@@ -776,6 +779,8 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
   }
   return NULL;
 }
+
+#endif
 
 /*
  * Local Variables:

@@ -170,9 +170,9 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  if (NULL == (olsr_cnf = olsrd_parse_cnf(argc, argv, conf_file_name))) {
+  if (NULL == (olsr_cnf = olsr_parse_cnf(argc, argv, conf_file_name))) {
     printf("Using default config values(no configfile)\n");
-    olsr_cnf = olsrd_get_default_cnf();
+    olsr_cnf = olsr_get_default_cnf();
   }
 
   /* Set avl tree comparator */
@@ -195,7 +195,7 @@ main(int argc, char *argv[])
   init_net();
 
   /* Sanity check configuration */
-  if (olsrd_sanity_check_cnf(olsr_cnf) < 0) {
+  if (olsr_sanity_check_cnf(olsr_cnf) < 0) {
     olsr_exit(__func__, EXIT_FAILURE);
   }
 
@@ -203,7 +203,7 @@ main(int argc, char *argv[])
    * Print configuration
    */
   if (olsr_cnf->debug_level > 1) {
-    olsrd_print_cnf(olsr_cnf);
+    olsr_print_cnf(olsr_cnf);
   }
 #ifndef WIN32
   /* Disable redirects globally */

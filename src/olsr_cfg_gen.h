@@ -53,12 +53,12 @@ extern "C" {
  * Interface config generation
  */
 
-  void olsrd_print_cnf(const struct olsrd_config *);
+  void olsr_print_cnf(const struct olsrd_config *);
 
-  int olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname);
+  int olsr_write_cnf(const struct olsrd_config *cnf, const char *fname);
 
   void
-    olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
+    olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
 
 #if defined __cplusplus
 }

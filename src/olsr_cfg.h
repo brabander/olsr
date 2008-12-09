@@ -248,17 +248,17 @@ extern "C" {
  * Interface to parser
  */
 
-  struct olsrd_config *olsrd_parse_cnf(int, char **, const char *);
+  struct olsrd_config *olsr_parse_cnf(int, char **, const char *);
 
-  int olsrd_sanity_check_cnf(struct olsrd_config *);
+  int olsr_sanity_check_cnf(struct olsrd_config *);
 
-  void olsrd_free_cnf(struct olsrd_config *);
+  void olsr_free_cnf(struct olsrd_config *);
 
-  struct olsrd_config *olsrd_get_default_cnf(void);
+  struct olsrd_config *olsr_get_default_cnf(void);
 
-  void init_default_if_config(struct if_config_options *);
+  void olsr_init_default_if_config(struct if_config_options *);
 
-  struct if_config_options *get_default_if_config(void);
+  struct if_config_options *olsr_get_default_if_config(void);
 
 /*
  * Check pollrate function
@@ -271,7 +271,7 @@ extern "C" {
     return p * 1000000;
   }
 
-  int check_pollrate(float *pollrate);
+  int olsr_check_pollrate(float *pollrate);
 
 /*
  * List functions

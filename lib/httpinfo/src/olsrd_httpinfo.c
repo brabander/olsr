@@ -1187,14 +1187,14 @@ static void build_cfgfile_body(struct autobuf *abuf)
 #ifdef NETDIRECT
   {
         /* Hack to make netdirect stuff work with
-           olsrd_write_cnf_buf
+           olsr_write_cnf_buf
         */
         char tmpBuf[10000];
-        size = olsrd_write_cnf_buf(olsr_cnf, true, tmpBuf, 10000);
+        size = olsr_write_cnf_buf(olsr_cnf, true, tmpBuf, 10000);
         snprintf(&buf[size], bufsize-size, tmpBuf);
   }
 #else
-  olsrd_write_cnf_buf(abuf, olsr_cnf, true);
+  olsr_write_cnf_buf(abuf, olsr_cnf, true);
 #endif
 
   abuf_puts(abuf, "</pre>\n<hr/>\n");

@@ -44,6 +44,7 @@
 
 #include "olsr_protocol.h"
 #include "olsr_cfg.h"
+#include "../common/autobuf.h"
 
 /* fixme: kann weg */
 #define PARSER_VERSION "0.1.2"
@@ -60,6 +61,16 @@ struct conf_token {
 
 void
 set_default_cnf(struct olsrd_config *);
+
+struct olsrd_config *olsrd_parse_cnf(const char *filename);
+void olsrd_free_cnf(struct olsrd_config *cnf);
+int olsrd_sanity_check_cnf(struct olsrd_config *cnf);
+struct olsrd_config *olsrd_get_default_cnf(void);
+struct if_config_options *get_default_if_config(void);
+void olsrd_print_cnf(const struct olsrd_config *cnf);
+int olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname);
+void olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
+int check_pollrate(float *pollrate);
 
 #endif
 

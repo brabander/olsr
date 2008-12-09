@@ -71,7 +71,7 @@ static void olsr_strtok_free(char **s);
 static int read_config (const char *filename, int *pargc, char ***pargv);
 
 struct olsrd_config *
-olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
+olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 {
   int opt;
   int opt_idx = 0;
@@ -198,7 +198,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     opt_argc = 3;
   }
 
-  olsr_cnf = olsrd_get_default_cnf();
+  olsr_cnf = olsr_get_default_cnf();
 
   while (0 <= (opt = getopt_long (opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
     char **tok;
@@ -260,7 +260,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 
         /* Add hemu interface */
         if (NULL != (ifa = queue_if("hcif01", true))) {
-          ifa->cnf = get_default_if_config();
+          ifa->cnf = olsr_get_default_if_config();
           ifa->host_emul = true;
           ifa->hemu_ip = ipaddr;
           olsr_cnf->host_emul = true;
@@ -417,7 +417,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
           while(p[0]) {
             char **p_next = tok_next;
             struct olsr_if *ifs = olsr_malloc(sizeof(*ifs), "new if");
-            ifs->cnf = get_default_if_config();
+            ifs->cnf = olsr_get_default_if_config();
             ifs->name = olsr_strdup(p[0]);
             ifs->next = olsr_cnf->interfaces;
             olsr_cnf->interfaces = ifs;
@@ -825,7 +825,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     struct olsr_if *ifs;
     PARSER_DEBUG_PRINTF("new iface %s\n", opt_argv[optind]);
     if (NULL != (ifs = queue_if(opt_argv[optind++], false))) {
-      ifs->cnf = get_default_if_config();
+      ifs->cnf = olsr_get_default_if_config();
     }
   }
 
@@ -840,7 +840,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 }
 
 int
-olsrd_sanity_check_cnf(struct olsrd_config *cnf)
+olsr_sanity_check_cnf(struct olsrd_config *cnf)
 {
   struct olsr_if *in = cnf->interfaces;
   struct if_config_options *io;
@@ -1007,7 +1007,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 }
 
 void
-olsrd_free_cnf(struct olsrd_config *cnf)
+olsr_free_cnf(struct olsrd_config *cnf)
 {
   struct ip_prefix_list *hd, *h = cnf->hna_entries;
   struct olsr_if *ind, *in = cnf->interfaces;
@@ -1098,7 +1098,7 @@ set_default_cnf(struct olsrd_config *cnf)
 }
 
 struct olsrd_config *
-olsrd_get_default_cnf(void)
+olsr_get_default_cnf(void)
 {
   struct olsrd_config *c = olsr_malloc(sizeof(struct olsrd_config), "default_cnf");
   if (c == NULL) {
@@ -1111,7 +1111,7 @@ olsrd_get_default_cnf(void)
 }
 
 void
-init_default_if_config(struct if_config_options *io)
+olsr_init_default_if_config(struct if_config_options *io)
 {
   struct in6_addr in6;
 
@@ -1144,7 +1144,7 @@ init_default_if_config(struct if_config_options *io)
 }
 
 struct if_config_options *
-get_default_if_config(void)
+olsr_get_default_if_config(void)
 {
   struct if_config_options *io = olsr_malloc(sizeof(*io), "default_if_config");
 
@@ -1152,12 +1152,12 @@ get_default_if_config(void)
     fprintf(stderr, "Out of memory %s\n", __func__);
     return NULL;
   }
-  init_default_if_config(io);
+  olsr_init_default_if_config(io);
   return io;
 }
 
 int
-check_pollrate(float *pollrate)
+olsr_check_pollrate(float *pollrate)
 {
   if (*pollrate > MAX_POLLRATE) {
     fprintf(stderr, "Pollrate %0.2f is too large\n", *pollrate);
