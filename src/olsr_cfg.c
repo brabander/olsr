@@ -135,7 +135,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"HystScaling",              required_argument, 0, 'B'}, /* (f) */
     {"HystThrHigh",              required_argument, 0, 'G'}, /* (f) */
     {"HystThrLow",               required_argument, 0, 'K'}, /* (f) */
-    {"Interface",                required_argument, 0, 'I'}, /* { Weight (i),Ip4Broadcast (ip4),Ip6AddrType (site-local/global), Ip6MulticastSite (ip6), Ip6MulticastGlobal (ip6), HelloInterval (f), HelloValidityTime (f), TcInterval (f), TcValidityTime (f), MidInterval (f), MidValidityTime (f), HnaInterval (f), HnaValidityTime (f), AutoDetectChanges (yes/no), LinkQualityMult (default) } */
+    {"Interface",                required_argument, 0, 'I'}, /* (if1 if2 {ifbody}) */
     {"IpcConnect",               required_argument, 0, 'Q'}, /* (Host,Net,MaxConnections) */
     {"IpVersion",                required_argument, 0, 'V'}, /* (i) */
     {"LinkQualityAging",         required_argument, 0, 'a'}, /* (f) */
@@ -144,12 +144,12 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
     {"LinkQualityLevel",         required_argument, 0, 'L'}, /* (i) */
     {"LinkQualityWinSize",       required_argument, 0, 'W'}, /* (i) */
-    {"LoadPlugin",               required_argument, 0, 'p'}, /* (str,PlParam) */
+    {"LoadPlugin",               required_argument, 0, 'p'}, /* (soname {PlParams}) */
     {"MprCoverage",              required_argument, 0, 'M'}, /* (i) */
     {"NatThreshold",             required_argument, 0, 'N'}, /* (f) */
     {"NicChgsPollInt",           required_argument, 0, 'Y'}, /* (f) */
-    {"RtProto",                  required_argument, 0, 'o'}, /* (i) */
     {"Pollrate",                 required_argument, 0, 'T'}, /* (f) */
+    {"RtProto",                  required_argument, 0, 'q'}, /* (i) */
     {"RtTableDefault",           required_argument, 0, 'R'}, /* (i) */
     {"RtTable",                  required_argument, 0, 'r'}, /* (i) */
     {"TcRedundancy",             required_argument, 0, 't'}, /* (i) */
@@ -276,7 +276,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 #endif
     case 'P':                  /* ipc */
       olsr_cnf->ipc_connections = 1;
-      PARSER_DEBUG_PRINTF("ipc_connections set to %d\n", olsr_cnf->ipc_connections);
+      PARSER_DEBUG_PRINTF("IPC connections: %d\n", olsr_cnf->ipc_connections);
       break;
     case 'n':                  /* nofork */
       olsr_cnf->no_fork = true;
@@ -295,9 +295,10 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'd':                  /* DebugLevel (i) */
       {
-        int lvl = 0;
-        sscanf(optarg, "%d", &lvl);
-        olsr_cnf->debug_level = lvl;
+        int arg = 0;
+        sscanf(optarg, "%d", &arg);
+        if (0 <= arg && arg < 128)
+          olsr_cnf->debug_level = arg;
         PARSER_DEBUG_PRINTF("Debug level: %d\n", olsr_cnf->debug_level);
       }
       break;
@@ -404,7 +405,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       sscanf(optarg, "%f", &olsr_cnf->hysteresis_param.thr_low);
       PARSER_DEBUG_PRINTF("Hysteresis LowerThr: %0.2f\n", olsr_cnf->hysteresis_param.thr_low);
       break;
-    case 'I':                  /* Interface { Weight (i),Ip4Broadcast (ip4),Ip6AddrType (site-local/global), Ip6MulticastSite (ip6), Ip6MulticastGlobal (ip6), HelloInterval (f), HelloValidityTime (f), TcInterval (f), TcValidityTime (f), MidInterval (f), MidValidityTime (f), HnaInterval (f), HnaValidityTime (f), AutoDetectChanges (yes/no), LinkQualityMult (default) } */
+    case 'I':                  /* Interface if1 if2 { ifbody } */
       if (NULL != (tok = olsr_strtok(optarg, &optarg_next))) {
         if ('{' != *optarg_next) {
           fprintf(stderr, "No {}\n");
@@ -441,10 +442,16 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
               }
               else if (0 == strcmp("Ip6AddrType", p_next[0])) {
                 if (0 == strcmp("site-local", p_next[1])) {
-                  ifs->cnf->ipv6_addrtype = IPV6_ADDR_SITELOCAL;
+                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
+                }
+                else if (0 == strcmp("unique-local", p_next[1])) {
+                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
+                }
+                else if (0 == strcmp("global", p_next[1])) {
+                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
                 }
                 else {
-                  ifs->cnf->ipv6_addrtype = 0;
+                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
                 }
                 PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", ifs->cnf->ipv6_addrtype);
               }
@@ -561,9 +568,10 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
             exit(EXIT_FAILURE);
           }
           if (0 == strcmp("MaxConnections", p[0])) {
-            int conn = 0;
-            sscanf(p[1], "%d", &conn);
-            olsr_cnf->ipc_connections = conn;
+            int arg = 0;
+            sscanf(optarg, "%d", &arg);
+            if (0 <= arg && arg < 1 << (8 * sizeof(olsr_cnf->ipc_connections)))
+              olsr_cnf->ipc_connections = arg;
             PARSER_DEBUG_PRINTF("\tIPC connections: %d\n", olsr_cnf->ipc_connections);
           }
           else if (0 == strcmp("Host", p[0])) {
@@ -655,10 +663,10 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'J':                  /* LinkQualityDijkstraLimit (i,f) */
       {
-        int lim = -1;
-        sscanf(optarg, "%d %f", &lim, &olsr_cnf->lq_dinter);
-        if (0 <= lim && lim < (1 << (8 * sizeof(olsr_cnf->lq_dlimit))))
-          olsr_cnf->lq_dlimit = lim;
+        int arg = -1;
+        sscanf(optarg, "%d %f", &arg, &olsr_cnf->lq_dinter);
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_dlimit))))
+          olsr_cnf->lq_dlimit = arg;
         PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %0.2f\n", olsr_cnf->lq_dlimit, olsr_cnf->lq_dinter);
       }
       break;
@@ -683,7 +691,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     case 'W':                  /* LinkQualityWinSize (i) */
       /* Ignored */
       break;
-    case 'p':                  /* LoadPlugin (str,PlParams) */
+    case 'p':                  /* LoadPlugin (soname {PlParams}) */
       if (NULL != (tok = olsr_strtok(optarg, &optarg_next))) {
         if ('{' != *optarg_next) {
           fprintf(stderr, "No {}\n");
@@ -735,28 +743,26 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       sscanf(optarg, "%f", &olsr_cnf->lq_nat_thresh);
       PARSER_DEBUG_PRINTF("NAT threshold %0.2f\n", olsr_cnf->lq_nat_thresh);
       break;
-    case 'o':                  /* RtProto (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
-          olsr_cnf->rtproto = arg;
-        PARSER_DEBUG_PRINTF("RtProto: %d\n", olsr_cnf->rtproto);
-      }
-      break;
     case 'Y':                  /* NicChgsPollInt (f) */
       sscanf(optarg, "%f", &olsr_cnf->nic_chgs_pollrate);
       PARSER_DEBUG_PRINTF("NIC Changes Pollrate %0.2f\n", olsr_cnf->nic_chgs_pollrate);
       break;
     case 'T':                  /* Pollrate (f) */
       {
-#ifndef DEBUG
-#error fixme
-#endif
-        uint32_t rate = 0;
-        sscanf(optarg, "%ud", &rate);
-        olsr_cnf->pollrate = rate;
+        float arg = 0;
+        sscanf(optarg, "%f", &arg);
+        if (0 <= arg)
+          olsr_cnf->pollrate = conv_pollrate_to_microsecs(arg);
         PARSER_DEBUG_PRINTF("Pollrate %ud\n", olsr_cnf->pollrate);
+      }
+      break;
+    case 'q':                  /* RtProto (i) */
+      {
+        int arg = -1;
+        sscanf(optarg, "%d", &arg);
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
+          olsr_cnf->rtproto = arg;
+        PARSER_DEBUG_PRINTF("RtProto: %d\n", olsr_cnf->rtproto);
       }
       break;
     case 'R':                  /* RtTableDefault (i) */
@@ -1051,6 +1057,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->maxplen = 32;
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
+  cnf->rtproto = 4;
   cnf->rttable = 254;
   cnf->rttable_default = 0;
   cnf->willingness_auto = DEF_WILL_AUTO;
@@ -1110,7 +1117,7 @@ init_default_if_config(struct if_config_options *io)
 
   memset(io, 0, sizeof(*io));
 
-  io->ipv6_addrtype = 1;        /* XXX - FixMe */
+  io->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
 
   inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6);
   io->ipv6_multi_site.v6 = in6;
@@ -1123,7 +1130,7 @@ init_default_if_config(struct if_config_options *io)
   io->weight.fixed = false;
   io->weight.value = 0;
 
-  io->ipv6_addrtype = 0;        /* global */
+  io->ipv6_addrtype = OLSR_IP6T_AUTO;
 
   io->hello_params.emission_interval = HELLO_INTERVAL;
   io->hello_params.validity_time = NEIGHB_HOLD_TIME;
