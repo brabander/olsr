@@ -200,7 +200,7 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  olsr_cnf = olsrd_parse_cnf(conf_file_name);
+  olsr_cnf = olsrd_parse_cnf(argc, argv, conf_file_name);
   if (olsr_cnf == NULL) {
     printf("Using default config values(no configfile)\n");
     olsr_cnf = olsrd_get_default_cnf();
