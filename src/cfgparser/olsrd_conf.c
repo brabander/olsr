@@ -455,6 +455,7 @@ set_default_cnf(struct olsrd_config *cnf)
     cnf->maxplen = 32;
     cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
     cnf->tos = DEF_TOS;
+    cnf->rtproto = 3;
     cnf->rttable = 254;
     cnf->rttable_default = 0;
     cnf->willingness_auto = DEF_WILL_AUTO;
@@ -563,6 +564,7 @@ olsrd_print_cnf(const struct olsrd_config *cnf)
     printf("No interfaces    : NOT ALLOWED\n");
   }
   printf("TOS              : 0x%02x\n", cnf->tos);
+  printf("RtProto          : 0x%02x\n", cnf->rtproto);
   printf("RtTable          : 0x%02x\n", cnf->rttable);
   printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
   if(cnf->willingness_auto)

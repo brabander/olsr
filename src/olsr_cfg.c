@@ -148,6 +148,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"MprCoverage",              required_argument, 0, 'M'}, /* (i) */
     {"NatThreshold",             required_argument, 0, 'N'}, /* (f) */
     {"NicChgsPollInt",           required_argument, 0, 'Y'}, /* (f) */
+    {"RtProto",                  required_argument, 0, 'o'}, /* (i) */
     {"Pollrate",                 required_argument, 0, 'T'}, /* (f) */
     {"RtTableDefault",           required_argument, 0, 'R'}, /* (i) */
     {"RtTable",                  required_argument, 0, 'r'}, /* (i) */
@@ -738,6 +739,15 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     case 'N':                  /* NatThreshold (f) */
       sscanf(optarg, "%f", &olsr_cnf->lq_nat_thresh);
       PARSER_DEBUG_PRINTF("NAT threshold %0.2f\n", olsr_cnf->lq_nat_thresh);
+      break;
+    case 'o':                  /* RtProto (i) */
+      {
+        int arg = -1;
+        sscanf(optarg, "%d", &arg);
+        if (0 <= arg && arg < (8 << sizeof(olsr_cnf->rtproto)))
+          olsr_cnf->rtproto = arg;
+        PARSER_DEBUG_PRINTF("RtProto: %d\n", olsr_cnf->rtproto);
+      }
       break;
     case 'Y':                  /* NicChgsPollInt (f) */
       sscanf(optarg, "%f", &olsr_cnf->nic_chgs_pollrate);
