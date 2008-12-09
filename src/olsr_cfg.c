@@ -758,7 +758,7 @@ olsrd_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'q':                  /* RtProto (i) */
       {
-        int arg = -1;
+        int arg = 3;
         sscanf(optarg, "%d", &arg);
         if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
           olsr_cnf->rtproto = arg;
@@ -1057,7 +1057,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->maxplen = 32;
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
-  cnf->rtproto = 4;
+  cnf->rtproto = 3;
   cnf->rttable = 254;
   cnf->rttable_default = 0;
   cnf->willingness_auto = DEF_WILL_AUTO;
