@@ -551,6 +551,25 @@ walk_timers(clock_t * last_run)
 }
 
 /**
+ * Stop and delete all timers.
+ */
+void
+olsr_flush_timers(void)
+{
+  struct list_node *timer_head_node;
+  unsigned int wheel_slot = 0;
+
+  for (wheel_slot = 0; wheel_slot < TIMER_WHEEL_SLOTS; wheel_slot++) {
+    timer_head_node = &timer_wheel[wheel_slot & TIMER_WHEEL_MASK];
+
+    /* Kill all entries hanging off this hash bucket. */
+    while (!list_is_empty(timer_head_node)) {
+      olsr_stop_timer(list2timer(timer_head_node->next));
+    }
+  }
+}
+
+/**
  * Returns the difference between gmt and local time in seconds.
  * Use gmtime() and localtime() to keep things simple.
  *

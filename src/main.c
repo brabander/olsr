@@ -456,11 +456,13 @@ olsr_shutdown(void)
   /* OLSR sockets */
   OLSR_FOR_ALL_INTERFACES(ifn) {
     close(ifn->olsr_socket);
-  }
-  OLSR_FOR_ALL_INTERFACES_END(ifn);
+  } OLSR_FOR_ALL_INTERFACES_END(ifn);
 
   /* Closing plug-ins */
   olsr_close_plugins();
+
+  /* Stop and delete all timers. */
+  olsr_flush_timers();
 
   /* Reset network settings */
   restore_settings(olsr_cnf->ip_version);

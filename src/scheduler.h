@@ -94,6 +94,7 @@ LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
 /* Timers */
 void olsr_init_timers(void);
+void olsr_flush_timers(void);
 void olsr_set_timer(struct timer_entry **, unsigned int, uint8_t, bool,
 		    timer_cb_func, void *, olsr_cookie_t);
 struct timer_entry *olsr_start_timer(unsigned int, uint8_t, bool,
