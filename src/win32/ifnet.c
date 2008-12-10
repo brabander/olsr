@@ -118,8 +118,6 @@ struct InterfaceInfo
   char Guid[39];
 };
 
-static int chk_if_changed(struct olsr_if *);
-
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
 
@@ -526,7 +524,7 @@ void ListInterfaces(void)
 
 void RemoveInterface(struct olsr_if *IntConf)
 {
-  struct interface *Int, *Prev;
+  struct interface *Int;
   struct ipaddr_str buf;
 
   OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
@@ -548,7 +546,6 @@ void RemoveInterface(struct olsr_if *IntConf)
       olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
       olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
       OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
-      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
 
     }
   }
@@ -564,7 +561,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   /*
    * Stop interface pacing.
    */
-  olsr_stop_timer(ifp->buffer_hold_timer);
+  olsr_stop_timer(Int->buffer_hold_timer);
 
   net_remove_buffer(Int);
 
@@ -575,7 +572,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
   closesocket(Int->olsr_socket);
 
-  unlock_interface(ifp);
+  unlock_interface(Int);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
     OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
@@ -743,7 +740,7 @@ int add_hemu_if(struct olsr_if *iface)
   return 1;
 }
 
-static int chk_if_changed(struct olsr_if *IntConf)
+int chk_if_changed(struct olsr_if *IntConf)
 {
   struct ipaddr_str buf;
   struct interface *Int;
@@ -1046,7 +1043,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
    */
   run_ifchg_cbs(New, IFCHG_IF_ADD);
 
-  lock_interface(ifp);
+  lock_interface(New);
 
   return 1;
 }

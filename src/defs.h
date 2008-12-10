@@ -53,6 +53,8 @@ extern const char build_host[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
+#ifdef __GNUC__
+
 /* Debug helper macro */
 #ifdef DEBUG
 #define olsr_debug(lvl, format, args...) do {                           \
@@ -70,6 +72,8 @@ extern FILE *debug_handle;
     if((olsr_cnf->debug_level >= (lvl)) && debug_handle)          \
       fprintf(debug_handle, (format), ##args);                    \
   } while (0)
+#endif
+
 #endif
 
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
