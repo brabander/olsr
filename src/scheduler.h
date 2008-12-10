@@ -145,8 +145,22 @@ struct olsr_socket_entry {
   socket_handler_func process_pollrate;
   void *data;
   unsigned int flags;
-  struct olsr_socket_entry *next;
+  struct list_node socket_node;
 };
+
+LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
+
+/* deletion safe macro for socket list traversal */
+#define OLSR_FOR_ALL_SOCKETS(socket) \
+{ \
+  struct list_node *_socket_node, *_next_socket_node; \
+  for (_socket_node = socket_head.next; \
+    _socket_node != &socket_head; \
+    _socket_node = _next_socket_node) { \
+    _next_socket_node = _socket_node->next; \
+    socket = list2socket(_socket_node);
+#define OLSR_FOR_ALL_SOCKETS_END(socket) }}
+
 
 void add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);

@@ -64,7 +64,8 @@ static clock_t timer_last_run;		/* remember the last timeslot walk */
 /* Memory cookie for the block based memory manager */
 static struct olsr_cookie_info *timer_mem_cookie = NULL;
 
-static struct olsr_socket_entry *olsr_socket_entries = NULL;
+/* Head of all OLSR used sockets */
+static struct list_node socket_head;
 
 /* Prototypes */
 static void walk_timers(clock_t *);
@@ -100,8 +101,8 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
   new_entry->flags = flags;
 
   /* Queue */
-  new_entry->next = olsr_socket_entries;
-  olsr_socket_entries = new_entry;
+  list_node_init(&new_entry->socket_node);
+  list_add_before(&socket_head, &new_entry->socket_node);
 }
 
 /**
@@ -115,7 +116,7 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
 int
 remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm)
 {
-  struct olsr_socket_entry *entry, *prev_entry;
+  struct olsr_socket_entry *entry;
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
     olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not processing...", __func__);
@@ -123,40 +124,39 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
   }
   OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd);
 
-  for (entry = olsr_socket_entries, prev_entry = NULL;
-       entry != NULL;
-       prev_entry = entry, entry = entry->next) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
-      if (prev_entry == NULL) {
-	olsr_socket_entries = entry->next;
-      } else {
-	prev_entry->next = entry->next;
-      }
+  OLSR_FOR_ALL_SOCKETS(entry) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm &&
+        entry->process_pollrate == pf_pr) {
+      list_remove(&entry->socket_node);
       free(entry);
       return 1;
     }
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
   return 0;
 }
 
 void enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry;
-  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+
+  OLSR_FOR_ALL_SOCKETS(entry) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm &&
+        entry->process_pollrate == pf_pr) {
       entry->flags |= flags;
     }
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags)
 {
   struct olsr_socket_entry *entry;
-  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
-    if (entry->fd == fd && entry->process_immediate == pf_imm && entry->process_pollrate == pf_pr) {
+
+  OLSR_FOR_ALL_SOCKETS(entry) {
+    if (entry->fd == fd && entry->process_immediate == pf_imm &&
+        entry->process_pollrate == pf_pr) {
       entry->flags &= ~flags;
     }
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 static void
@@ -171,7 +171,7 @@ poll_sockets(void)
   /* If there are no registered sockets we
    * do not call select(2)
    */
-  if (olsr_socket_entries == NULL) {
+  if (list_is_empty(&socket_head)) {
     return;
   }
 
@@ -179,7 +179,7 @@ poll_sockets(void)
   FD_ZERO(&obits);
 
   /* Adding file-descriptors to FD set */
-  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+  OLSR_FOR_ALL_SOCKETS(entry) {
     if (entry->process_pollrate == NULL) {
       continue;
     }
@@ -194,7 +194,7 @@ poll_sockets(void)
     if ((entry->flags & (SP_PR_READ|SP_PR_WRITE)) != 0 && entry->fd >= hfd) {
       hfd = entry->fd + 1;
     }
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
 
   /* Running select on the FD set */
   do {
@@ -217,7 +217,7 @@ poll_sockets(void)
 
   /* Update time since this is much used by the parsing functions */
   now_times = olsr_times();
-  for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+  OLSR_FOR_ALL_SOCKETS(entry) {
     int flags;
     if (entry->process_pollrate == NULL) {
       continue;
@@ -232,7 +232,7 @@ poll_sockets(void)
     if (flags != 0) {
       entry->process_pollrate(entry->fd, entry->data, flags);
     }
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 static void handle_fds(const unsigned long next_interval)
@@ -246,7 +246,7 @@ static void handle_fds(const unsigned long next_interval)
   remaining = next_interval - (unsigned long)now_times;
   if ((long)remaining <= 0) {
     /* we are already over the interval */
-    if (olsr_socket_entries == NULL) {
+    if (list_is_empty(&socket_head)) {
       /* If there are no registered sockets we do not call select(2) */
       return;
     }
@@ -268,7 +268,7 @@ static void handle_fds(const unsigned long next_interval)
     FD_ZERO(&obits);
 
     /* Adding file-descriptors to FD set */
-    for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+    OLSR_FOR_ALL_SOCKETS(entry) {
       if (entry->process_immediate == NULL) {
 	continue;
       }
@@ -283,7 +283,7 @@ static void handle_fds(const unsigned long next_interval)
       if ((entry->flags & (SP_IMM_READ|SP_IMM_WRITE)) != 0 && entry->fd >= hfd) {
 	hfd = entry->fd + 1;
       }
-    }
+    } OLSR_FOR_ALL_SOCKETS_END(entry);
 
     if (hfd == 0 && (long)remaining <= 0) {
       /* we are over the interval and we have no fd's. Skip the select() etc. */
@@ -308,7 +308,7 @@ static void handle_fds(const unsigned long next_interval)
 
     /* Update time since this is much used by the parsing functions */
     now_times = olsr_times();
-    for (entry = olsr_socket_entries; entry != NULL; entry = entry->next) {
+    OLSR_FOR_ALL_SOCKETS(entry) {
       int flags;
       if (entry->process_immediate == NULL) {
 	continue;
@@ -335,7 +335,7 @@ static void handle_fds(const unsigned long next_interval)
     remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
-  }
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
 /**
