@@ -31,4 +31,4 @@ valgrind for profiling:
 
 valgrind for memory checking:
 
-  valgrind --tool=memcheck --leak-check=full --show-reachable=yes ./olsrd -d 0 -nofork
+  valgrind --tool=memcheck --leak-check=full --show-reachable=yes ./olsrd --nofork -f /etc/olsrd.conf -d 0

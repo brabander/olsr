@@ -109,6 +109,19 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
 
   /* Flush all the memory on the free list */
   if (ci->ci_type == OLSR_COOKIE_TYPE_MEMORY) {
+
+    /*
+     * First make all items accessible,
+     * such that valgrind does not complain at shutdown.
+     */
+    if (!list_is_empty(&ci->ci_free_list)) {
+      for (memory_list = ci->ci_free_list.next;
+           memory_list != &ci->ci_free_list;
+           memory_list = memory_list->next) {
+        VALGRIND_MAKE_MEM_DEFINED(memory_list, ci->ci_size);
+      }
+    }
+
     while (!list_is_empty(&ci->ci_free_list)) {
       memory_list = ci->ci_free_list.next;
       list_remove(memory_list);
