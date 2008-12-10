@@ -65,7 +65,7 @@ static clock_t timer_last_run;		/* remember the last timeslot walk */
 static struct olsr_cookie_info *timer_mem_cookie = NULL;
 
 /* Head of all OLSR used sockets */
-static struct list_node socket_head;
+static struct list_node socket_head = {&socket_head, &socket_head};
 
 /* Prototypes */
 static void walk_timers(clock_t *);
