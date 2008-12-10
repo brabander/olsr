@@ -272,6 +272,8 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   tc->edge_gc_timer = NULL;
   olsr_stop_timer(tc->validity_timer);
   tc->validity_timer = NULL;
+  olsr_stop_timer(tc->mid_timer);
+  tc->mid_timer = NULL;
 
   avl_delete(&tc_tree, &tc->vertex_node);
   olsr_unlock_tc_entry(tc);
