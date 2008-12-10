@@ -161,7 +161,12 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 
   /* Copy argv array for safe free'ing later on */
   while(opt_argc < argc) {
-    opt_argv[opt_argc] = olsr_strdup(argv[opt_argc]);
+    const char* p = argv[opt_argc];
+    if (0 == strcmp(p, "-int"))
+      p = "-i";
+    else if (0 == strcmp(p, "-nofork"))
+      p = "-n";
+    opt_argv[opt_argc] = olsr_strdup(p);
     opt_argc++;
   }
 
