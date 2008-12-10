@@ -443,8 +443,14 @@ static void
 olsr_shutdown(void)
 {
   struct interface *ifn;
+  struct tc_entry *tc;
 
   olsr_delete_all_kernel_routes();
+
+  /* Flush link state database */
+  OLSR_FOR_ALL_TC_ENTRIES(tc) {
+    olsr_delete_tc_entry(tc);
+  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   OLSR_PRINTF(1, "Closing sockets...\n");
 
