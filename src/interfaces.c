@@ -44,9 +44,14 @@
 #include "ifnet.h"
 #include "scheduler.h"
 #include "olsr.h"
+#include "log.h"
+#include "parser.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "common/string.h"
+
+#include <signal.h>
+#include <unistd.h>
 
 /* The interface list head */
 struct list_node interface_head;
@@ -159,6 +164,88 @@ check_interface_updates(void *foo __attribute__((unused)))
     } else {
       chk_if_up(tmp_if, 3);
     }
+  }
+}
+
+/**
+ * Remove and cleanup a physical interface.
+ */
+void
+remove_interface(struct olsr_if *iface)
+{
+  struct interface *ifp;
+  struct ipaddr_str buf;
+
+  OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
+  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
+
+  ifp = iface->interf;
+  olsr_delete_link_entry_by_if(ifp->if_index);
+
+  /*
+   * Call possible ifchange functions registered by plugins
+   */
+  run_ifchg_cbs(ifp, IFCHG_IF_REMOVE);
+
+  /* Dequeue */
+  list_remove(&ifp->int_node);
+
+  /* Remove output buffer */
+  net_remove_buffer(ifp);
+
+  /* Check main addr */
+  if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
+    if (list_is_empty(&interface_head)) {
+      /* No more interfaces */
+      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
+      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
+    } else {
+
+      /* Grab the first interface in the list. */
+      olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
+      olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
+      OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
+      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
+    }
+  }
+
+  /*
+   * Deregister functions for periodic message generation
+   */
+  olsr_stop_timer(ifp->hello_gen_timer);
+  olsr_stop_timer(ifp->tc_gen_timer);
+  olsr_stop_timer(ifp->mid_gen_timer);
+  olsr_stop_timer(ifp->hna_gen_timer);
+
+  /*
+   * Stop interface pacing.
+   */
+  olsr_stop_timer(ifp->buffer_hold_timer);
+
+  iface->configured = 0;
+  unlock_interface(iface->interf);
+  iface->interf = NULL;
+
+  /* Close olsr socket */
+  remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
+  CLOSESOCKET(ifp->olsr_socket);
+  ifp->olsr_socket = -1;
+
+  unlock_interface(ifp);
+
+  if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
+    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
+    olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
+    olsr_cnf->exit_value = EXIT_FAILURE;
+
+    /*
+     * And exit.
+     */
+#ifndef WIN32
+    kill(getpid(), SIGINT);
+#else
+    CallSignalHandler();
+#endif
   }
 }
 

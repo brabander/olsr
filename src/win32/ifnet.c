@@ -123,7 +123,6 @@ char *StrError(unsigned int ErrNo);
 
 void ListInterfaces(void);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
-void RemoveInterface(struct olsr_if *IntConf);
 
 #define MAX_INTERFACES 100
 
@@ -522,65 +521,6 @@ void ListInterfaces(void)
   }
 }
 
-void RemoveInterface(struct olsr_if *IntConf)
-{
-  struct interface *Int;
-  struct ipaddr_str buf;
-
-  OLSR_PRINTF(1, "Removing interface %s.\n", IntConf->name);
-
-  Int = IntConf->interf;
-
-  run_ifchg_cbs(Int, IFCHG_IF_ADD);
-
-  /* Dequeue */
-  list_remove(&Int->int_node);
-
-  if (ipequal(&olsr_cnf->main_addr, &Int->ip_addr)) {
-    if (list_is_empty(&interface_head)) {
-      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
-    } else {
-
-      /* Grab the first interface in the list. */
-      olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
-      olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
-      OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
-
-    }
-  }
-
-  /*
-   * Deregister functions for periodic message generation
-   */
-  olsr_stop_timer(Int->hello_gen_timer);
-  olsr_stop_timer(Int->tc_gen_timer);
-  olsr_stop_timer(Int->mid_gen_timer);
-  olsr_stop_timer(Int->hna_gen_timer);
-
-  /*
-   * Stop interface pacing.
-   */
-  olsr_stop_timer(Int->buffer_hold_timer);
-
-  net_remove_buffer(Int);
-
-  IntConf->configured = 0;
-  unlock_interface(IntConf->interf);
-  IntConf->interf = NULL;
-
-  remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
-  CLOSESOCKET(Int->olsr_socket);
-
-  unlock_interface(Int);
-
-  if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
-    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
-    olsr_cnf->exit_value = EXIT_FAILURE;
-    CallSignalHandler();
-  }
-}
-
 /**
  * Initializes the special interface used in
  * host-client emulation
@@ -764,7 +704,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
   if (GetIntInfo(&Info, IntConf->name) < 0)
   {
-    RemoveInterface(IntConf);
+    remove_interface(IntConf);
     return 1;
   }
 
