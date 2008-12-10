@@ -61,6 +61,7 @@
 #include "misc.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
+#include "mid_set.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -442,6 +443,7 @@ olsr_shutdown(void)
 {
   struct interface *ifn;
   struct tc_entry *tc;
+  struct mid_entry *mid;
 
   olsr_delete_all_kernel_routes();
 
@@ -449,6 +451,11 @@ olsr_shutdown(void)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     olsr_delete_tc_entry(tc);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+
+  /* Flush MID database */
+  OLSR_FOR_ALL_MID_ENTRIES(mid) {
+    olsr_delete_mid_entry(mid);
+  } OLSR_FOR_ALL_MID_ENTRIES_END(mid);
 
   OLSR_PRINTF(1, "Closing sockets...\n");
 

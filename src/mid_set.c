@@ -381,7 +381,7 @@ olsr_lookup_main_addr_by_alias(const union olsr_ip_addr *adr)
  *
  * @param alias the alias to delete.
  */
-static void
+void
 olsr_delete_mid_entry(struct mid_entry *alias)
 {
   struct tc_entry *tc;
