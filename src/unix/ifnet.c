@@ -316,7 +316,7 @@ chk_if_changed(struct olsr_if *iface)
   OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
-  olsr_delete_link_entry_by_ip(&ifp->ip_addr);
+  olsr_delete_link_entry_by_if(ifp->if_index);
 
   /*
    * Call possible ifchange functions registered by plugins

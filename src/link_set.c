@@ -386,10 +386,10 @@ olsr_delete_link_entry(struct link_entry *link)
 }
 
 /**
- * Delete all link entries matching a given interface address.
- */
+ *  * Delete all link entries matching a given interface id
+ *  */
 void
-olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
+olsr_delete_link_entry_by_if(const int int_index)
 {
   struct link_entry *link;
 
@@ -398,11 +398,12 @@ olsr_delete_link_entry_by_ip(const union olsr_ip_addr *int_addr)
   }
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if (ipequal(int_addr, &link->local_iface_addr)) {
+    if (int_index == link->inter->if_index) {
       olsr_delete_link_entry(link);
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
+
 
 /**
  * Callback for the link loss timer.
