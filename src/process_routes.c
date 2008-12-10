@@ -366,7 +366,7 @@ olsr_update_rib_routes(void)
         (FIBM_CORRECT == olsr_cnf->fib_metric &&
          olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
-      if (rt->rt_nexthop.interface) {
+      if (!rt->rt_nexthop.interface) {
 
         /* fresh routes do not have an interface pointer */
         olsr_enqueue_rt(&add_kernel_list, rt);
