@@ -169,13 +169,12 @@ add_del_route(const struct rt_entry *rt, int add)
 
       for (awalker = addrs; awalker != NULL; awalker = awalker->ifa_next)
 	if (awalker->ifa_addr->sa_family == AF_LINK &&
-	    strcmp(awalker->ifa_name,
-		   if_ifwithindex_name(nexthop->iif_index)) == 0)
+	    strcmp(awalker->ifa_name, nexthop->interface->int_name) == 0)
 	  break;
 
       if (awalker == NULL) {
 	fprintf(stderr, "\nInterface %s not found\n",
-		if_ifwithindex_name(nexthop->iif_index));
+                nexthop->interface->int_name);
 	freeifaddrs(addrs);
 	return -1;
       }
@@ -315,7 +314,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
     sin6.sin6_addr.s6_addr[1] = 0x80;
-    sin6.sin6_scope_id = nexthop->iif_index;
+    sin6.sin6_scope_id = nexthop->interface->if_index;
 #ifdef __KAME__
     *(u_int16_t *) & sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
     sin6.sin6_scope_id = 0;
@@ -332,7 +331,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
     sin6.sin6_addr.s6_addr[1] = 0x80;
-    sin6.sin6_scope_id = nexthop->iif_index;
+    sin6.sin6_scope_id = nexthop->interface->if_index;
 #ifdef __KAME__
     *(u_int16_t *) & sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
     sin6.sin6_scope_id = 0;

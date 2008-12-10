@@ -113,7 +113,8 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
   if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd) {
     olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
   }
-  olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
+  olsr_netlink_addreq(&req, RTA_OIF, &nexthop->interface->if_index,
+                      sizeof(nexthop->interface->if_index));
   iov.iov_base = &req.n;
   iov.iov_len = req.n.nlmsg_len;
   ret = sendmsg(olsr_cnf->rts_linux, &msg, 0);
@@ -145,7 +146,7 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
 			     &nexthop->gateway,
 			     metric,
 			     RTM_NEWROUTE == cmd,
-			     if_ifwithindex_name(nexthop->iif_index));
+			     nexthop->interface->int_name);
     }
   }
   return ret;
@@ -186,7 +187,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
      */
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
                            rt->rt_best->rtp_metric.hops, 1,
-                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+                           rt->rt_best->rtp_nexthop.interface->int_name);
   }
   return rslt;
 }
@@ -218,7 +219,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
      */
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
                            rt->rt_best->rtp_metric.hops, 1,
-                           if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+                           rt->rt_best->rtp_nexthop.interface->int_name);
   }
 
   return rslt;

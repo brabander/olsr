@@ -365,7 +365,7 @@ ipc_send_all_routes(int fd)
 
     packet.gateway_addr = rt->rt_nexthop.gateway;
 
-    memcpy(&packet.device[0], if_ifwithindex_name(rt->rt_nexthop.iif_index), 4);
+    memcpy(&packet.device[0], rt->rt_nexthop.interface->int_name, 4);
 
     /* MSG_NOSIGNAL to avoid sigpipe */
     if (send(fd, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) {

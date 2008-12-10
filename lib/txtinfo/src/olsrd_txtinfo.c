@@ -483,7 +483,7 @@ static int ipc_print_routes(struct ipc_conn *conn)
                             olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
                             rt->rt_best->rtp_metric.hops,
                             get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
-                            if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index)) < 0) {
+                            rt->rt_best->rtp_nexthop.interface->int_name) < 0) {
             return -1;
         }
     } OLSR_FOR_ALL_RT_ENTRIES_END(rt);

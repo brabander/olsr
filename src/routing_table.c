@@ -204,7 +204,13 @@ olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc,
   rtp->rtp_nexthop.gateway = link->neighbor_iface_addr;
 
   /* interface */
-  rtp->rtp_nexthop.iif_index = link->inter->if_index;
+  if (rtp->rtp_nexthop.interface != link->inter) {
+    if (rtp->rtp_nexthop.interface) {
+      unlock_interface(rtp->rtp_nexthop.interface);
+    }
+    rtp->rtp_nexthop.interface = link->inter;
+    lock_interface(rtp->rtp_nexthop.interface);
+  }
 
   /* metric/etx */
   rtp->rtp_metric.hops = tc->hops;
@@ -224,8 +230,8 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
 
   memset(rt, 0, sizeof(*rt));
 
-  /* Mark this entry as fresh (see process_routes.c:512) */
-  rt->rt_nexthop.iif_index = -1;
+  /* Mark this entry as fresh - see olsr_update_rib_routes() */
+  rt->rt_nexthop.interface = NULL;
 
   /* set key and backpointer prior to tree insertion */
   rt->rt_dst = *prefix;
@@ -638,7 +644,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
              get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-             if_ifwithindex_name(rt->rt_nexthop.iif_index),
+             rt->rt_nexthop.interface->int_name,
              rtp->rtp_version);
     }
   }

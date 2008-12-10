@@ -67,7 +67,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
-  struct interface *iface = if_ifwithindex(rt->rt_best->rtp_nexthop.iif_index);
+  struct interface *iface = rt->rt_best->rtp_nexthop.interface;
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 
@@ -83,7 +83,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
 
   Row.dwForwardPolicy = 0;
   Row.dwForwardNextHop = rt->rt_best->rtp_nexthop.gateway.v4.s_addr;
-  Row.dwForwardIfIndex = rt->rt_best->rtp_nexthop.iif_index;
+  Row.dwForwardIfIndex = iface->if_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_best->rtp_nexthop.gateway.v4.s_addr) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
@@ -122,7 +122,7 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   if (olsr_cnf->ipc_connections > 0) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
         rt->rt_best->rtp_metric.hops, 1,
-        if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+        rt->rt_best->rtp_nexthop.interface->int_name);
   }
 
   return 0;
@@ -147,7 +147,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
-  struct interface *iface = if_ifwithindex(rt->rt_nexthop.iif_index);
+  struct interface *iface = rt->rt_nexthop.interface;
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
@@ -161,7 +161,7 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
   Row.dwForwardMask = mask.v4.s_addr;
   Row.dwForwardPolicy = 0;
   Row.dwForwardNextHop = rt->rt_nexthop.gateway.v4.s_addr;
-  Row.dwForwardIfIndex = rt->rt_nexthop.iif_index;
+  Row.dwForwardIfIndex = iface->if_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_nexthop.gateway.v4.s_addr) ? 3 : 4;
   Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT

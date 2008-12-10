@@ -73,7 +73,7 @@ struct rt_metric
 struct rt_nexthop
 {
   union olsr_ip_addr    gateway; /* gateway router */
-  int                   iif_index; /* outgoing interface index */
+  struct interface      *interface; /* outgoing interface */
 };
 
 /*
@@ -227,7 +227,7 @@ void olsr_rt_best(struct rt_entry *);
  * Check if there is an interface or gateway change.
  */
 static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
-    return !ipequal(&nh1->gateway, &nh2->gateway) || nh1->iif_index != nh2->iif_index;
+    return !ipequal(&nh1->gateway, &nh2->gateway) || nh1->interface != nh2->interface;
 }
 
 /**

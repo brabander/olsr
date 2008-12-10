@@ -799,7 +799,7 @@ static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 		  get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer));
   abuf_appendf(abuf,
 		  "<td align=\"center\">%s</td></tr>\n",
-		  if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+		  rt->rt_best->rtp_nexthop.interface->int_name);
 }
 
 static void build_routes_body(struct autobuf *abuf)

@@ -171,7 +171,7 @@ olsr_delete_kernel_route(struct rt_entry *rt)
     } else {
 
       /* release the interface. */
-      unlock_interface(if_ifwithindex(rt->rt_nexthop.iif_index));
+      unlock_interface(rt->rt_nexthop.interface);
     }
   }
 }
@@ -204,7 +204,7 @@ olsr_add_kernel_route(struct rt_entry *rt)
       rt->rt_metric = rt->rt_best->rtp_metric;
 
       /* lock the interface such that it does not vanish underneath us */
-      lock_interface(if_ifwithindex(rt->rt_nexthop.iif_index));
+      lock_interface(rt->rt_nexthop.interface);
     }
   }
 }
@@ -366,9 +366,9 @@ olsr_update_rib_routes(void)
         (FIBM_CORRECT == olsr_cnf->fib_metric &&
          olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
-      if (0 > rt->rt_nexthop.iif_index) {
+      if (rt->rt_nexthop.interface) {
 
-        /* fresh routes do have an interface index of -1. */
+        /* fresh routes do not have an interface pointer */
         olsr_enqueue_rt(&add_kernel_list, rt);
       } else {
 
