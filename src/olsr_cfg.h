@@ -240,52 +240,33 @@ struct olsrd_config {
  */
 extern struct olsrd_config *olsr_cnf;
 
-#if defined __cplusplus
-extern "C" {
-#endif
-
 /*
  * Interface to parser
  */
-
-  struct olsrd_config *olsr_parse_cnf(int, char **, const char *);
-
-  int olsr_sanity_check_cnf(struct olsrd_config *);
-
-  void olsr_free_cnf(struct olsrd_config *);
-
-  struct olsrd_config *olsr_get_default_cnf(void);
-
-  void olsr_init_default_if_config(struct if_config_options *);
-
-  struct if_config_options *olsr_get_default_if_config(void);
+struct olsrd_config *olsr_parse_cnf(int, char **, const char *);
+int olsr_sanity_check_cnf(struct olsrd_config *);
+void olsr_free_cnf(struct olsrd_config *);
+struct olsrd_config *olsr_get_default_cnf(void);
+void olsr_init_default_if_config(struct if_config_options *);
+struct if_config_options *olsr_get_default_if_config(void);
 
 /*
  * Check pollrate function
  */
-
-  static inline float conv_pollrate_to_secs(uint32_t p) {
-    return p / 1000000.0;
-  }
-  static inline uint32_t conv_pollrate_to_microsecs(float p) {
-    return p * 1000000;
-  }
-
-  int olsr_check_pollrate(float *pollrate);
+static inline float conv_pollrate_to_secs(uint32_t p) {
+  return p / 1000000.0;
+}
+static inline uint32_t conv_pollrate_to_microsecs(float p) {
+  return p * 1000000;
+}
+int olsr_check_pollrate(float *pollrate);
 
 /*
  * List functions
  */
-
-  void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-
-  int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-
-  struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
-
-#if defined __cplusplus
-}
-#endif
+void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 #endif /* _OLSRD_CFG_H */
 

@@ -45,25 +45,14 @@
 #include "olsr_cfg.h"
 #include "common/autobuf.h"
 
-#if defined __cplusplus
-extern "C" {
-#endif
-
 /*
  * Interface config generation
  */
+void olsr_print_cnf(const struct olsrd_config *);
+int olsr_write_cnf(const struct olsrd_config *cnf, const char *fname);
+void olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
 
-  void olsr_print_cnf(const struct olsrd_config *);
-
-  int olsr_write_cnf(const struct olsrd_config *cnf, const char *fname);
-
-  void
-    olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
-
-#if defined __cplusplus
-}
-#endif
-#endif                                 /* _OLSRD_CFG_GEN_H */
+#endif /* _OLSRD_CFG_GEN_H */
 
 /*
  * Local Variables:

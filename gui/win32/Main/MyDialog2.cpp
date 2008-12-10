@@ -239,9 +239,9 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	CString Conv;
 
 	if (Conf != NULL)
-		olsrd_free_cnf(Conf);
+		cfgparser_olsrd_free_cnf(Conf);
 
-	Conf = olsrd_parse_cnf(PathName);
+	Conf = cfgparser_olsrd_parse_cnf(PathName);
 
 	if (Conf == NULL)
 		return -1;
@@ -395,7 +395,7 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 	Int->configured = false;
 	Int->interf = NULL;
 
-	Int->cnf = get_default_if_config();
+	Int->cnf = cfgparser_get_default_if_config();
 
 	Int->next = (*Conf)->interfaces;
 	(*Conf)->interfaces = Int;
@@ -629,7 +629,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	// write configuration file
 
-	if (olsrd_write_cnf(Conf, PathName) < 0)
+	if (cfgparser_olsrd_write_cnf(Conf, PathName) < 0)
 		return -1;
 
 	return 0;

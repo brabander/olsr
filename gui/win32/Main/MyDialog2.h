@@ -49,7 +49,7 @@
 
 #define MAKELIB
 #define OLSR_PLUGIN
-#include <olsr_cfg.h>
+#include <cfgparser/olsrd_conf.h>
 #include "afxwin.h"
 
 class MyDialog2 : public CDialog

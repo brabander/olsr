@@ -70,7 +70,6 @@
 
 #ifdef WIN32
 int __stdcall SignalHandler(unsigned long signo);
-void ListInterfaces(void);
 void DisableIcmpRedirects(void);
 #else
 static void signal_shutdown(int);

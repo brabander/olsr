@@ -54,9 +54,9 @@
 #include <getopt.h>
 #include <errno.h>
 
-/* Global stuff externed in defs.h */
-FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
-struct olsrd_config *olsr_cnf;         /* The global configuration */
+#ifdef WIN32
+void ListInterfaces(void);
+#endif
 
 #ifdef DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)

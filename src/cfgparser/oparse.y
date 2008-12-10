@@ -143,7 +143,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
   }
 
   /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefixlen_arg->integer);
+  cfgparser_ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefixlen_arg->integer);
 
   free(ipaddr_arg->string);
   free(ipaddr_arg);
@@ -357,7 +357,7 @@ ipchost: TOK_HOSTLABEL TOK_IP4_ADDR
     YYABORT;
   }
 
-  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_cnf->maxplen);
+  cfgparser_ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_cnf->maxplen);
 
   free($2->string);
   free($2);
@@ -380,7 +380,7 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
     YYABORT;
   }
 
-  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
+  cfgparser_ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
 
   free($2->string);
   free($2);
@@ -403,7 +403,7 @@ ipcnet: TOK_NETLABEL TOK_IP4_ADDR TOK_IP4_ADDR
     YYABORT;
   }
 
-  ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, $4->integer);
+  cfgparser_ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, $4->integer);
 
   free($2->string);
   free($2);
@@ -771,7 +771,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   }
 
   /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
+  cfgparser_ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
 
   free($1->string);
   free($1);
@@ -801,7 +801,7 @@ ihna4entry:     TOK_IP4_ADDR TOK_IP4_ADDR
   }
 
   /* Queue */
-  ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, $3->integer);
+  cfgparser_ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, $3->integer);
 
   free($1->string);
   free($1);
@@ -839,7 +839,7 @@ ifnick: TOK_STRING
     YYABORT;
   }
 
-  in->cnf = get_default_if_config();
+  in->cnf = cfgparser_get_default_if_config();
   if (in->cnf == NULL) {
     fprintf(stderr, "Out of memory(ADD IFRULE)\n");
     YYABORT;
@@ -940,7 +940,7 @@ fhystlower: TOK_HYSTLOWER TOK_FLOAT
 fpollrate: TOK_POLLRATE TOK_FLOAT
 {
   PARSER_DEBUG_PRINTF("Pollrate %0.2f\n", $2->floating);
-  if (check_pollrate(&$2->floating) < 0) {
+  if (cfgparser_check_pollrate(&$2->floating) < 0) {
     YYABORT;
   }
   olsr_cnf->pollrate = conv_pollrate_to_microsecs($2->floating);

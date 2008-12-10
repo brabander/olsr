@@ -40,6 +40,10 @@
 
 #include "ipcalc.h"
 
+/* Global stuff externed in defs.h */
+FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
+struct olsrd_config *olsr_cnf;         /* The global configuration */
+
 int
 prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {

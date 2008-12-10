@@ -64,12 +64,6 @@ static char copyright_string[] __attribute__((unused)) = "The olsr.org Optimized
 
 int current_line;
 
-#if 0
-/* Global stuff externed in defs.h */
-FILE *debug_handle;             /* Where to send debug(defaults to stdout) */
-struct olsrd_config *olsr_cnf;  /* The global configuration */
-#endif
-
 #ifdef MAKEBIN
 
 /* Build as standalone binary */
@@ -111,7 +105,7 @@ main(int argc, char *argv[])
 #endif
 
 struct olsrd_config *
-olsrd_parse_cnf(const char *filename)
+cfgparser_olsrd_parse_cnf(const char *filename)
 {
   struct olsr_if *in, *new_ifqueue;
   int rc;
@@ -123,7 +117,7 @@ olsrd_parse_cnf(const char *filename)
     return NULL;
   }
 
-  set_default_cnf(olsr_cnf);
+  cfgparser_set_default_cnf(olsr_cnf);
 
   printf("Parsing file: \"%s\"\n", filename);
 
@@ -131,7 +125,7 @@ olsrd_parse_cnf(const char *filename)
   if (yyin == NULL) {
     fprintf(stderr, "Cannot open configuration file '%s': %s.\n",
             filename, strerror(errno));
-    olsrd_free_cnf(olsr_cnf);
+    cfgparser_olsrd_free_cnf(olsr_cnf);
     olsr_cnf = NULL;
     return NULL;
   }
@@ -140,7 +134,7 @@ olsrd_parse_cnf(const char *filename)
   rc = yyparse();
   fclose(yyin);
   if (rc != 0) {
-    olsrd_free_cnf(olsr_cnf);
+    cfgparser_olsrd_free_cnf(olsr_cnf);
     olsr_cnf = NULL;
     return NULL;
   }
@@ -170,7 +164,7 @@ olsrd_parse_cnf(const char *filename)
 
 
 int
-check_pollrate(float *pollrate)
+cfgparser_check_pollrate(float *pollrate)
 {
   if (*pollrate > MAX_POLLRATE) {
     fprintf(stderr, "Pollrate %0.2f is too large\n", *pollrate);
@@ -187,7 +181,7 @@ check_pollrate(float *pollrate)
 }
 
 int
-olsrd_sanity_check_cnf(struct olsrd_config *cnf)
+cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 {
   struct olsr_if           *in = cnf->interfaces;
   struct if_config_options *io;
@@ -385,7 +379,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
 
 void
-olsrd_free_cnf(struct olsrd_config *cnf)
+cfgparser_olsrd_free_cnf(struct olsrd_config *cnf)
 {
   struct ip_prefix_list   *hd,   *h = cnf->hna_entries;
   struct olsr_if           *ind, *in = cnf->interfaces;
@@ -429,7 +423,7 @@ olsrd_free_cnf(struct olsrd_config *cnf)
 
 
 struct olsrd_config *
-olsrd_get_default_cnf(void)
+cfgparser_olsrd_get_default_cnf(void)
 {
   struct olsrd_config *c = malloc(sizeof(struct olsrd_config));
   if (c == NULL) {
@@ -437,7 +431,7 @@ olsrd_get_default_cnf(void)
     return NULL;
   }
 
-  set_default_cnf(c);
+  cfgparser_set_default_cnf(c);
   return c;
 }
 
@@ -445,7 +439,7 @@ olsrd_get_default_cnf(void)
 
 
 void
-set_default_cnf(struct olsrd_config *cnf)
+cfgparser_set_default_cnf(struct olsrd_config *cnf)
 {
     memset(cnf, 0, sizeof(*cnf));
 
@@ -497,7 +491,7 @@ set_default_cnf(struct olsrd_config *cnf)
 #endif
 }
 
-static void init_default_if_config(struct if_config_options *io)
+static void cfgparser_init_default_if_config(struct if_config_options *io)
 {
   struct in6_addr in6;
 
@@ -529,7 +523,7 @@ static void init_default_if_config(struct if_config_options *io)
   io->autodetect_chg = true;
 }
 
-struct if_config_options *get_default_if_config(void)
+struct if_config_options *cfgparser_get_default_if_config(void)
 {
   struct if_config_options *io = malloc(sizeof(*io));
 
@@ -537,13 +531,13 @@ struct if_config_options *get_default_if_config(void)
     fprintf(stderr, "Out of memory %s\n", __func__);
     return NULL;
   }
-  init_default_if_config(io);
+  cfgparser_init_default_if_config(io);
   return io;
 }
 
 
 void
-olsrd_print_cnf(const struct olsrd_config *cnf)
+cfgparser_olsrd_print_cnf(const struct olsrd_config *cnf)
 {
   struct ip_prefix_list   *h  = cnf->hna_entries;
   struct olsr_if           *in = cnf->interfaces;
@@ -729,8 +723,7 @@ win32_olsrd_free(void* ptr)
 }
 #endif
 
-#if 0
-void ip_prefix_list_add(struct ip_prefix_list **list,
+void cfgparser_ip_prefix_list_add(struct ip_prefix_list **list,
                         const union olsr_ip_addr *net,
                         uint8_t prefix_len)
 {
@@ -744,7 +737,7 @@ void ip_prefix_list_add(struct ip_prefix_list **list,
   *list = new_entry;
 }
 
-int ip_prefix_list_remove(struct ip_prefix_list **list,
+int cfgparser_ip_prefix_list_remove(struct ip_prefix_list **list,
                           const union olsr_ip_addr *net,
                           uint8_t prefix_len)
 {
@@ -767,7 +760,7 @@ int ip_prefix_list_remove(struct ip_prefix_list **list,
   return 0;
 }
 
-struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
+struct ip_prefix_list *cfgparser_ip_prefix_list_find(struct ip_prefix_list *list,
                                            const union olsr_ip_addr *net,
                                            uint8_t prefix_len)
 {
@@ -779,8 +772,6 @@ struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *list,
   }
   return NULL;
 }
-
-#endif
 
 /*
  * Local Variables:

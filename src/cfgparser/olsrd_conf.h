@@ -42,7 +42,7 @@
 #ifndef _OLSRD_CONF_H
 #define _OLSRD_CONF_H
 
-#include "olsr_protocol.h"
+#include "olsr_types.h"
 #include "olsr_cfg.h"
 #include "../common/autobuf.h"
 
@@ -59,20 +59,36 @@ struct conf_token {
   char       *string;
 };
 
-void
-set_default_cnf(struct olsrd_config *);
-
-struct olsrd_config *olsrd_parse_cnf(const char *filename);
-void olsrd_free_cnf(struct olsrd_config *cnf);
-int olsrd_sanity_check_cnf(struct olsrd_config *cnf);
-struct olsrd_config *olsrd_get_default_cnf(void);
-struct if_config_options *get_default_if_config(void);
-void olsrd_print_cnf(const struct olsrd_config *cnf);
-int olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname);
-void olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
-int check_pollrate(float *pollrate);
-
+#if defined __cplusplus
+extern "C" {
 #endif
+
+void cfgparser_set_default_cnf(struct olsrd_config *);
+struct olsrd_config *cfgparser_olsrd_parse_cnf(const char *filename);
+void cfgparser_olsrd_free_cnf(struct olsrd_config *cnf);
+int cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf);
+struct olsrd_config *cfgparser_olsrd_get_default_cnf(void);
+struct if_config_options *cfgparser_get_default_if_config(void);
+void cfgparser_olsrd_print_cnf(const struct olsrd_config *cnf);
+int cfgparser_olsrd_write_cnf(const struct olsrd_config *cnf, const char *fname);
+void cfgparser_olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
+int cfgparser_check_pollrate(float *pollrate);
+
+void cfgparser_ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+int cfgparser_ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+struct ip_prefix_list *cfgparser_ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
+
+#ifdef WIN32
+void win32_stdio_hack(unsigned int);
+void *win32_olsrd_malloc(size_t size);
+void win32_olsrd_free(void *ptr);
+#endif
+
+#if defined __cplusplus
+}
+#endif
+
+#endif /* _OLSRD_CONF_H */
 
 /*
  * Local Variables:

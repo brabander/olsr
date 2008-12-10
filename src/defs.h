@@ -88,7 +88,11 @@ extern FILE *debug_handle;
  * too large inline functions, we want to have just "inline" there.
  */
 #ifndef INLINE
+#ifdef __GNUC__
 #define INLINE inline __attribute__((always_inline))
+#else
+#define INLINE inline
+#endif
 #endif
 
 #if defined NODEBUG
