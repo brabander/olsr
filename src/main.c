@@ -493,6 +493,9 @@ olsr_shutdown(void)
   /* Free cookies and memory pools attached. */
   olsr_delete_all_cookies();
 
+  /* Flush config */
+  olsr_free_cnf(olsr_cnf);
+
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
