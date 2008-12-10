@@ -118,8 +118,11 @@ extern FILE *debug_handle;
     (elem)->next->prev = (elem)->prev;     \
   } while (0)
 
-
-#define CLOSE(fd)  do { close(fd); (fd) = -1; } while (0)
+#ifdef WIN32
+#define CLOSESOCKET(fd)  do { closesocket(fd); (fd) = -1; } while (0)
+#else
+#define CLOSESOCKET(fd)  do { close(fd); (fd) = -1; } while (0)
+#endif
 
 enum app_state {
   STATE_RUNNING,

@@ -570,7 +570,7 @@ void RemoveInterface(struct olsr_if *IntConf)
   IntConf->interf = NULL;
 
   remove_olsr_socket(Int->olsr_socket, &olsr_input, NULL);
-  closesocket(Int->olsr_socket);
+  CLOSESOCKET(Int->olsr_socket);
 
   unlock_interface(Int);
 

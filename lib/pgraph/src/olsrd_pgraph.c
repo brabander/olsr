@@ -54,9 +54,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#ifdef WIN32
-#define close(x) closesocket(x)
-#endif
 
 #define PLUGIN_NAME    "OLSRD pgraph plugin"
 #define PLUGIN_VERSION "0.1"
@@ -113,11 +110,11 @@ void
 my_fini(void)
 {
   if(ipc_socket >= 0) {
-    close(ipc_socket);
+    CLOSESOCKET(ipc_socket);
     ipc_socket = -1;
   }
   if(ipc_connection >= 0) {
-    close(ipc_connection);
+    CLOSESOCKET(ipc_connection);
     ipc_connection = -1;
   }
 
@@ -289,7 +286,7 @@ static void ipc_action(int fd __attribute__((unused)), void *data __attribute__(
       if(ntohl(pin.sin_addr.s_addr) != ntohl(ipc_accept_ip.s_addr))
 	{
 	  olsr_printf(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-	  close(ipc_connection);
+	  CLOSESOCKET(ipc_connection);
 	  return;
 	}
       else
@@ -397,7 +394,7 @@ static int ipc_send(const char *data, int size)
   if (send(ipc_connection, data, size, FLAG) < 0)
     {
       olsr_printf(1, "(DOT DRAW)IPC connection lost!\n");
-      close(ipc_connection);
+      CLOSESOCKET(ipc_connection);
       ipc_connection = -1;
       return -1;
     }

@@ -75,7 +75,6 @@
 #endif
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 #define OS "Windows"
 #endif
 #ifdef linux
@@ -275,7 +274,7 @@ get_http_socket(int port)
 #ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
 #endif
-    CLOSE(s);
+    CLOSESOCKET(s);
     return -1;
   }
 
@@ -308,7 +307,7 @@ get_http_socket(int port)
 #ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
 #endif
-    CLOSE(s);
+    CLOSESOCKET(s);
     return -1;
   }
 
@@ -317,7 +316,7 @@ get_http_socket(int port)
 #ifndef NODEBUG
     olsr_printf(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
 #endif
-    CLOSE(s);
+    CLOSESOCKET(s);
     return -1;
   }
 
@@ -599,7 +598,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
  close_connection:
   abuf_free(&body);
   abuf_free(&header);
-  close(client_sockets[curr_clients]);
+  CLOSESOCKET(client_sockets[curr_clients]);
   curr_clients--;
 }
 
@@ -693,7 +692,7 @@ void
 olsr_plugin_exit(void)
 {
   if (http_socket >= 0) {
-    CLOSE(http_socket);
+    CLOSESOCKET(http_socket);
   }
 }
 

@@ -151,7 +151,7 @@ remove_nodes_list(union olsr_ip_addr *);
 int
 ipc_connect();
 
-int
+void
 ipc_close();
 
 int

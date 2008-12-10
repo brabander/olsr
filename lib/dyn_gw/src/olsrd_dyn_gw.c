@@ -62,8 +62,6 @@
 #include <windows.h>
 #undef interface
 
-#define close(x) closesocket(x)
-
 typedef HANDLE pthread_mutex_t;
 typedef HANDLE pthread_t;
 

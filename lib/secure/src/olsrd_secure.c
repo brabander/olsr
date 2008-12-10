@@ -91,7 +91,6 @@ MD5_checksum(const uint8_t *data, const uint16_t data_len, uint8_t *hashbuf)
 #endif
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define OS "Windows"

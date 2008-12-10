@@ -74,7 +74,6 @@
 #define SHUT_WR SD_SEND
 #undef strerror
 #define strerror(x) StrError(x)
-#define close(x) closesocket(x)
 #define read(fd,buf,size) recv((fd), (buf), (size), 0)
 #define write(fd,buf,size) send((fd), (buf), (size), 0)
 #endif
@@ -132,7 +131,7 @@ static int ipc_print_mid(struct ipc_conn *);
  */
 void olsr_plugin_exit(void)
 {
-    CLOSE(listen_socket);
+    CLOSESOCKET(listen_socket);
 }
 
 /**
@@ -160,14 +159,14 @@ olsrd_plugin_init(void)
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
 #endif
-        CLOSE(listen_socket);
+        CLOSESOCKET(listen_socket);
         return 0;
     }
 
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
     if (setsockopt(listen_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
         perror("SO_REUSEADDR failed");
-        CLOSE(listen_socket);
+        CLOSESOCKET(listen_socket);
         return 0;
     }
 #endif
@@ -200,7 +199,7 @@ olsrd_plugin_init(void)
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) bind()=%s\n", strerror(errno));
 #endif
-        CLOSE(listen_socket);
+        CLOSESOCKET(listen_socket);
         return 0;
     }
 
@@ -209,7 +208,7 @@ olsrd_plugin_init(void)
 #ifndef NODEBUG
         olsr_printf(1, "(TXTINFO) listen()=%s\n", strerror(errno));
 #endif
-        CLOSE(listen_socket);
+        CLOSESOCKET(listen_socket);
         return 0;
     }
 
@@ -232,7 +231,7 @@ static void conn_destroy(struct ipc_conn *conn)
 static void kill_connection(int fd, struct ipc_conn *conn)
 {
     remove_olsr_socket(fd, NULL, &ipc_http);
-    CLOSE(fd);
+    CLOSESOCKET(fd);
     conn_destroy(conn);
 }
 
@@ -259,7 +258,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
         }
         if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(http_connection);
+            CLOSESOCKET(http_connection);
             return;
         }
     } else {
@@ -271,7 +270,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
         if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
            !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
             olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSE(http_connection);
+            CLOSESOCKET(http_connection);
             return;
         }
     }
@@ -281,14 +280,14 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 
     /* make the fd non-blocking */
     if (set_nonblocking(http_connection) < 0) {
-        CLOSE(http_connection);
+        CLOSESOCKET(http_connection);
         return;
     }
 
     conn = malloc(sizeof(*conn));
     if (conn == NULL) {
         olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
-        CLOSE(http_connection);
+        CLOSESOCKET(http_connection);
         return;
     }
     conn->requlen = 0;

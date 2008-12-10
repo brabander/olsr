@@ -58,7 +58,6 @@
 #include <stdlib.h>
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
 void
 WinSockPError(const char *);
@@ -221,7 +220,7 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     } else {
       OLSR_PRINTF(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
       olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
-      CLOSE(ipc_conn);
+      CLOSESOCKET(ipc_conn);
     }
   }
 }
@@ -266,7 +265,7 @@ frontend_msgparser(union olsr_message *msg,
     const size_t len = olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize);
     if (send(ipc_conn, (void *)msg, len, MSG_NOSIGNAL) < 0) {
       OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
-      CLOSE(ipc_conn);
+      CLOSESOCKET(ipc_conn);
     }
   }
   return true;
@@ -334,7 +333,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
 
   if (send(ipc_conn, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) { // MSG_NOSIGNAL to avoid sigpipe
     OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
-    CLOSE(ipc_conn);
+    CLOSESOCKET(ipc_conn);
     return -1;
   }
 
@@ -371,7 +370,7 @@ ipc_send_all_routes(int fd)
     /* MSG_NOSIGNAL to avoid sigpipe */
     if (send(fd, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) {
       OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
-      CLOSE(ipc_conn);
+      CLOSESOCKET(ipc_conn);
       return -1;
     }
   } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
@@ -442,7 +441,7 @@ ipc_send_net_info(int fd)
 
   if (send(fd, (void *)&net_msg, sizeof(net_msg), MSG_NOSIGNAL) < 0) {
     OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n");
-    CLOSE(ipc_conn);
+    CLOSESOCKET(ipc_conn);
     return -1;
   }
   return 0;
@@ -454,8 +453,7 @@ void
 shutdown_ipc(void)
 {
   OLSR_PRINTF(1, "Shutting down IPC...\n");
-  CLOSE(ipc_sock);
-  CLOSE(ipc_conn);
+  CLOSESOCKET(ipc_conn);
 }
 
 /*

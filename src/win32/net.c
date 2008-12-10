@@ -90,7 +90,7 @@ gethemusocket(struct sockaddr_in *pin)
       printf("FAILED\n");
       fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
       printf("connection refused\n");
-      closesocket(sock);
+      CLOSESOCKET(sock);
       return (-1);
     }
 
@@ -116,7 +116,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
                  (char *)&On, sizeof (On)) < 0)
   {
     WinSockPError("getsocket/setsockopt(SO_BROADCAST)");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
@@ -124,7 +124,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
                  (char *)&On, sizeof (On)) < 0)
   {
     WinSockPError("getsocket/setsockopt(SO_REUSEADDR)");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
@@ -147,14 +147,14 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
   {
     WinSockPError("getsocket/bind()");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
   if (WSAIoctl(Sock, FIONBIO, &On, sizeof (On), NULL, 0, &Len, NULL, NULL) < 0)
   {
     WinSockPError("WSAIoctl");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
@@ -176,7 +176,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
                  (char *)&On, sizeof (On)) < 0)
   {
     WinSockPError("getsocket6/setsockopt(SO_BROADCAST)");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
@@ -184,7 +184,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
                  (char *)&On, sizeof (On)) < 0)
   {
     WinSockPError("getsocket6/setsockopt(SO_REUSEADDR)");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 
@@ -207,7 +207,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof (Addr6)) < 0)
   {
     WinSockPError("getsocket6/bind()");
-    closesocket(Sock);
+    CLOSESOCKET(Sock);
     return -1;
   }
 

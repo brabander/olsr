@@ -52,7 +52,6 @@
 #define OHS_OUT_OF_MEMORY(s) do { printf("ohsd: out of memory \"%s\"!\n", s); ohs_close(0); } while (0)
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 int __stdcall ohs_close(unsigned long signal) __attribute__((noreturn));
 #else
 void ohs_close(int) __attribute__((noreturn));

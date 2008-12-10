@@ -69,7 +69,6 @@
 #endif
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signo);
 void ListInterfaces(void);
 void DisableIcmpRedirects(void);
@@ -461,7 +460,7 @@ olsr_shutdown(void)
 
   /* OLSR sockets */
   OLSR_FOR_ALL_INTERFACES(ifn) {
-    close(ifn->olsr_socket);
+    CLOSESOCKET(ifn->olsr_socket);
   } OLSR_FOR_ALL_INTERFACES_END(ifn);
 
   /* Closing plug-ins */
@@ -474,15 +473,15 @@ olsr_shutdown(void)
   restore_settings(olsr_cnf->ip_version);
 
   /* ioctl socket */
-  close(olsr_cnf->ioctl_s);
+  CLOSESOCKET(olsr_cnf->ioctl_s);
 
 #if defined linux
-  close(olsr_cnf->rts_linux);
+  CLOSESOCKET(olsr_cnf->rts_linux);
 #endif
 
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
-  close(olsr_cnf->rts_bsd);
+  CLOSESOCKET(olsr_cnf->rts_bsd);
 #endif
 
   /* Free cookies and memory pools attached. */

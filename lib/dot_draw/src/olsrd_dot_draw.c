@@ -61,11 +61,6 @@
 #include <stdarg.h>
 #endif
 
-
-#ifdef WIN32
-#define close(x) closesocket(x)
-#endif
-
 #ifdef _WRS_KERNEL
 static int ipc_open;
 static int ipc_socket_up;
@@ -134,7 +129,7 @@ void olsr_plugin_exit(void)
 #endif
 {
   if (ipc_socket != -1) {
-    CLOSE(ipc_socket);
+    CLOSESOCKET(ipc_socket);
   }
 }
 
@@ -178,7 +173,7 @@ plugin_ipc_init(void)
   uint32_t yes = 1;
 
   if (ipc_socket != -1) {
-    close(ipc_socket);
+    CLOSESOCKET(ipc_socket);
   }
 
   /* Init ipc socket */
@@ -190,14 +185,14 @@ plugin_ipc_init(void)
 
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     perror("SO_REUSEADDR failed");
-    CLOSE(ipc_socket);
+    CLOSESOCKET(ipc_socket);
     return 0;
   }
 
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     perror("SO_REUSEADDR failed");
-    CLOSE(ipc_socket);
+    CLOSESOCKET(ipc_socket);
     return 0;
   }
 #endif
@@ -213,14 +208,14 @@ plugin_ipc_init(void)
   /* bind the socket to the port number */
   if (bind(ipc_socket, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
     olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
-    CLOSE(ipc_socket);
+    CLOSESOCKET(ipc_socket);
     return 0;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
     olsr_printf(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
-    CLOSE(ipc_socket);
+    CLOSESOCKET(ipc_socket);
     return 0;
   }
 
@@ -247,13 +242,13 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
 #ifndef _WRS_KERNEL
   if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4)) {
     olsr_printf(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
-    close(ipc_connection);
+    CLOSESOCKET(ipc_connection);
     return;
   }
 #endif
   olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   pcf_event(ipc_connection, 1, 1, 1);
-  close(ipc_connection); /* close connection after one output */
+  CLOSESOCKET(ipc_connection); /* close connection after one output */
 }
 
 
@@ -361,7 +356,7 @@ defined _WRS_KERNEL
 #endif
     if (send(ipc_connection, data, size, FLAGS) == -1) {
       olsr_printf(1, "(DOT DRAW)IPC connection lost!\n");
-      close(ipc_connection);
+      CLOSESOCKET(ipc_connection);
     }
   }
 }

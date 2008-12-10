@@ -63,7 +63,6 @@
 #define errno WSAGetLastError()
 #undef strerror
 #define strerror(x) StrError(x)
-#define close(x) closesocket(x)
 #else
 #include <sys/wait.h>
 #endif
@@ -113,7 +112,7 @@ ohs_close(int signo __attribute__((unused)))
 {
   printf("OHS: exit\n");
 
-  close(srv_socket);
+  CLOSESOCKET(srv_socket);
 
   exit(0);
 }
@@ -181,7 +180,7 @@ ohs_init_new_connection(int s)
       struct ipaddr_str addrstr;
       printf("IP: %s DUPLICATE! Disconecting client!\n", olsr_ip_to_string(&addrstr, &oc->ip_addr));
     }
-    close(s);
+    CLOSESOCKET(s);
     free(oc);
     return -1;
   }
@@ -199,7 +198,7 @@ ohs_delete_connection(struct ohs_connection *oc)
     return -1;
   }
   /* Close the socket */
-  close(oc->socket);
+  CLOSESOCKET(oc->socket);
 
   if(logbits & LOG_CONNECT) {
     struct ipaddr_str addrstr;
@@ -292,7 +291,7 @@ ohs_init_connect_sockets(void)
 		(char *)&yes, sizeof(yes)) < 0)
     {
       printf("SO_REUSEADDR failed for socket: %s\n", strerror(errno));
-      close(srv_socket);
+      CLOSESOCKET(srv_socket);
       exit(0);
     }
 
@@ -306,7 +305,7 @@ ohs_init_connect_sockets(void)
   if (bind(srv_socket, (struct sockaddr *) &sin4, sizeof(sin4)) == -1)
     {
       printf("bind failed for socket: %s\n", strerror(errno));
-      close(srv_socket);
+      CLOSESOCKET(srv_socket);
       exit(0);
     }
 
@@ -314,7 +313,7 @@ ohs_init_connect_sockets(void)
   if (listen(srv_socket, 5) == -1)
     {
       printf("listen failed for socket: %s\n", strerror(errno));
-      close(srv_socket);
+      CLOSESOCKET(srv_socket);
       exit(0);
     }
   return 1;

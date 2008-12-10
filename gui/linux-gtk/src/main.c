@@ -138,8 +138,7 @@ shutdown_(int signal)
 {
   printf("Cleaning up...\n");
 
-  if(ipc_close() < 0)
-    printf("Could not close socket!\n");
+  ipc_close();
 
   printf("BYE-BYE!\n");
   exit(signal);

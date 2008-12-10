@@ -26,7 +26,6 @@
 #include "routes.h"
 
 #ifdef WIN32
-#define close(x) closesocket(x)
 #undef errno
 #define errno WSAGetLastError()
 #undef strerror
@@ -36,14 +35,10 @@
 
 int ipc_socket = 0;
 
-int
+void
 ipc_close()
 {
-
-  if(close(ipc_socket))
-    return 1;
-
-  return 0;
+  CLOSESOCKET(ipc_socket);
 }
 
 
@@ -140,7 +135,7 @@ ipc_read()
           shutdown(ipc_socket, SHUT_RDWR);
 	  set_net_info("Disconnected from server...", TRUE);
           connected = 0;
-	  close(ipc_socket);
+	  CLOSESOCKET(ipc_socket);
         }
 
       if(bytes > 0)
