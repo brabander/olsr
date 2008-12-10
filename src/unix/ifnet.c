@@ -72,6 +72,8 @@
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 
+void remove_interface(struct olsr_if *);
+
 #if 0
 int
 set_flag(char *ifname, short flag __attribute__((unused)))
@@ -134,7 +136,7 @@ chk_if_changed(struct olsr_if *iface)
   /* Get flags (and check if interface exists) */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
     OLSR_PRINTF(3, "No such interface: %s\n", iface->name);
-    goto remove_interface;
+    remove_interface(iface);
   }
   ifp->int_flags = ifr.ifr_flags;
 
@@ -143,7 +145,7 @@ chk_if_changed(struct olsr_if *iface)
    */
   if ((ifp->int_flags & IFF_UP) == 0) {
     OLSR_PRINTF(1, "\tInterface %s not up - removing it...\n", iface->name);
-    goto remove_interface;
+    remove_interface(iface);
   }
 
   /*
@@ -157,12 +159,12 @@ chk_if_changed(struct olsr_if *iface)
       !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */
       ((ifp->int_flags & IFF_BROADCAST)) == 0) {
     OLSR_PRINTF(3, "\tNo broadcast - removing\n");
-    goto remove_interface;
+    remove_interface(iface);
   }
 
   if (ifp->int_flags & IFF_LOOPBACK) {
     OLSR_PRINTF(3, "\tThis is a loopback interface - removing it...\n");
-    goto remove_interface;
+    remove_interface(iface);
   }
 
   ifp->is_hcif = false;
@@ -207,7 +209,7 @@ chk_if_changed(struct olsr_if *iface)
          OLSR_PRINTF(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
       else
          OLSR_PRINTF(1, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
-      goto remove_interface;
+      remove_interface(iface);
     }
 
 #ifdef DEBUG
@@ -238,7 +240,7 @@ chk_if_changed(struct olsr_if *iface)
     /* Check interface address (IPv4)*/
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
       OLSR_PRINTF(1, "\tCould not get address of interface - removing it\n");
-      goto remove_interface;
+      remove_interface(iface);
     }
 
 #ifdef DEBUG
@@ -266,7 +268,7 @@ chk_if_changed(struct olsr_if *iface)
     /* Check netmask */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
       olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
-      goto remove_interface;
+      remove_interface(iface);
     }
 
 #ifdef DEBUG
@@ -288,7 +290,7 @@ chk_if_changed(struct olsr_if *iface)
       /* Check broadcast address */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
 	olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
- 	goto remove_interface;
+ 	remove_interface(iface);
       }
 
 #ifdef DEBUG
@@ -310,12 +312,21 @@ chk_if_changed(struct olsr_if *iface)
     run_ifchg_cbs(ifp, IFCHG_IF_UPDATE);
   }
   return if_changes;
+}
 
+/**
+ * Remove an interface.
+ */
+void
+remove_interface(struct olsr_if *iface)
+{
+  struct interface *ifp;
+  struct ipaddr_str buf;
 
- remove_interface:
   OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
+  ifp = iface->interf;
   olsr_delete_link_entry_by_if(ifp->if_index);
 
   /*
@@ -375,7 +386,6 @@ chk_if_changed(struct olsr_if *iface)
     olsr_cnf->exit_value = EXIT_FAILURE;
     kill(getpid(), SIGINT);
   }
-  return 0;
 }
 
 /**
