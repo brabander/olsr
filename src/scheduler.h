@@ -103,10 +103,10 @@ void olsr_change_timer(struct timer_entry *, unsigned int, uint8_t, bool);
 void olsr_stop_timer(struct timer_entry *);
 
 /* Printing timestamps */
-#ifdef DEBUG
+#ifndef NODEBUG
 const char *olsr_clock_string(clock_t);
 const char *olsr_wallclock_string(void);
-#endif
+#endif /* !NODEBUG */
 
 /* Main scheduler loop */
 void olsr_scheduler(void);

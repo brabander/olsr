@@ -55,14 +55,6 @@ extern const char build_host[];
 
 #ifdef __GNUC__
 
-/* Debug helper macro */
-#ifdef DEBUG
-#define olsr_debug(lvl, format, args...) do {                           \
-    OLSR_PRINTF((lvl), "%s (%s:%d): ", __func__, __FILE__, __LINE__);   \
-    OLSR_PRINTF((lvl), (format), ##args);                               \
-  } while (0)
-#endif
-
 extern FILE *debug_handle;
 
 #ifdef NODEBUG

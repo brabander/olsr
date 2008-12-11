@@ -246,7 +246,7 @@ olsr_cookie_usage_decr(olsr_cookie_t cookie_id)
   }
 }
 
-#ifdef DEBUG
+#ifndef NODEBUG
 /*
  * Return a cookie name.
  * Mostly used for logging purposes.
@@ -262,7 +262,7 @@ olsr_cookie_name(olsr_cookie_t cookie_id)
 
   return unknown;
 }
-#endif
+#endif /* !NODEBUG */
 
 /*
  * Allocate a fixed amount of memory based on a passed in cookie type.
