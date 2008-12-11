@@ -89,7 +89,7 @@ endif
 #ALL_WARNINGS +=	-Wunreachable-code
 ALL_WARNINGS +=	-Winline
 ALL_WARNINGS +=	-Wdisabled-optimization
-#ALL_WARNINGS +=	-Werror
+ALL_WARNINGS +=	-Werror
 ALL_WARNINGS +=	-finline-functions-called-once
 ALL_WARNINGS +=	-funit-at-a-time
 ALL_WARNINGS +=	-fearly-inlining

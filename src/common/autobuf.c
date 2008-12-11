@@ -95,6 +95,8 @@ static int autobuf_enlarge(struct autobuf *autobuf, int new_size)
     return 0;
 }
 
+static int abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__((format(printf, 2, 0)));
+
 static int abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
 {
     int rc;

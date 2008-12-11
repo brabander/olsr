@@ -372,7 +372,7 @@ olsr_delete_rt_path(struct rt_path *rtp)
  * returns TRUE if the first path is better
  * than the second one, FALSE otherwise.
  */
-bool
+static bool
 olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struct rt_path *inetgw)
 {
     olsr_linkcost etx1 = rtp1->rtp_metric.cost;

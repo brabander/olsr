@@ -102,7 +102,7 @@ extern FILE *debug_handle;
 #endif
 
 #ifdef __GNUC__
-#define PLUGIN_PUB __attribute__(( externally_visible))
+#define PLUGIN_PUB __attribute__((externally_visible))
 #else
 #define PLUGIN_PUB
 #endif
