@@ -222,6 +222,9 @@ remove_interface(struct olsr_if *iface)
    */
   olsr_stop_timer(ifp->buffer_hold_timer);
 
+  /*
+   * Unlink from config.
+   */
   unlock_interface(iface->interf);
   iface->interf = NULL;
 
