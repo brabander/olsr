@@ -125,9 +125,7 @@ chk_if_changed(struct olsr_if *iface)
     return -1;
   }
   ifp = iface->interf;
-  if (ifp == NULL) {
-    /* Should not happen */
-    iface->configured = 0;
+  if (!ifp) {
     return 0;
   }
 
@@ -330,9 +328,6 @@ int add_hemu_if (struct olsr_if *iface)
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
-  memset(ifp, 0, sizeof(struct interface));
-
-  iface->configured = true;
   iface->interf = ifp;
   lock_interface(iface->interf);
 
@@ -663,7 +658,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
-  iface->configured = 1;
   iface->interf = ifp;
   lock_interface(iface->interf);
 

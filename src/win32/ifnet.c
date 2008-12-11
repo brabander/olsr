@@ -537,9 +537,6 @@ int add_hemu_if(struct olsr_if *iface)
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
-  memset(ifp, 0, sizeof (struct interface));
-
-  iface->configured = true;
   iface->interf = ifp;
   lock_interface(iface->interf);
 
@@ -935,7 +932,6 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
 
   IntConf->interf = New;
   lock_interface(IntConf->interf);
-  IntConf->configured = 1;
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
 

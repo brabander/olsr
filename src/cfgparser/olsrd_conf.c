@@ -155,7 +155,6 @@ cfgparser_olsrd_parse_cnf(const char *filename)
 
   for (in = olsr_cnf->interfaces; in != NULL; in = in->next) {
       /* set various stuff */
-      in->configured = false;
       in->interf = NULL;
       in->host_emul = false;
   }

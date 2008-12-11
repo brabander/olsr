@@ -141,7 +141,6 @@ struct if_config_options {
 struct olsr_if {
   char *name;
   char *config;
-  bool configured;
   bool host_emul;
   union olsr_ip_addr hemu_ip;
   struct interface *interf;

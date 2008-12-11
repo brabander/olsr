@@ -159,7 +159,7 @@ check_interface_updates(void *foo __attribute__((unused)))
       continue;
     }
 
-    if (tmp_if->configured) {
+    if (tmp_if->interf) {
       chk_if_changed(tmp_if);
     } else {
       chk_if_up(tmp_if, 3);
@@ -222,7 +222,6 @@ remove_interface(struct olsr_if *iface)
    */
   olsr_stop_timer(ifp->buffer_hold_timer);
 
-  iface->configured = 0;
   unlock_interface(iface->interf);
   iface->interf = NULL;
 
@@ -424,7 +423,6 @@ queue_if(const char *name, int hemu)
   strcpy(tmp->name, name);
   tmp->cnf = NULL;
   tmp->interf = NULL;
-  tmp->configured = 0;
 
   tmp->host_emul = hemu ? true : false;
 
