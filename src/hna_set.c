@@ -48,8 +48,8 @@
 #include "tc_set.h"
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *hna_net_timer_cookie = NULL;
-struct olsr_cookie_info *hna_net_mem_cookie = NULL;
+static struct olsr_cookie_info *hna_net_timer_cookie = NULL;
+static struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 
 /**
  * Initialize the HNA set
@@ -175,7 +175,7 @@ olsr_expire_hna_net_entry(void *context)
  *
  *@return nada
  */
-void
+static void
 olsr_update_hna_entry(const union olsr_ip_addr *gw,
                       const struct olsr_ip_prefix *prefix,
 		      olsr_reltime vtime)

@@ -567,6 +567,7 @@ olsr_optimize_mpr_set(void)
   }
 }
 
+#if 0
 void
 olsr_print_mpr_set(void)
 {
@@ -590,6 +591,7 @@ olsr_print_mpr_set(void)
   OLSR_PRINTF(1, "\n");
 #endif
 }
+#endif
 
 /*
  * Local Variables:

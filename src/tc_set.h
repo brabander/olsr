@@ -168,7 +168,6 @@ static INLINE void olsr_lock_tc_entry(struct tc_entry *tc) { tc->refcount++; }
 static INLINE void olsr_unlock_tc_entry(struct tc_entry *tc) { if (--tc->refcount == 0) { /* All references are gone. */ olsr_cookie_free(tc_mem_cookie, tc); } }
 
 /* tc_edge_entry manipulation */
-char *olsr_tc_edge_to_string(struct tc_edge_entry *);
 struct tc_edge_entry *olsr_lookup_tc_edge(struct tc_entry *,
 					  union olsr_ip_addr *);
 struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *,

@@ -87,7 +87,7 @@ static char orig_global_redirect_state;
  *@return negative if error
  */
 
-int
+static int
 bind_socket_to_device(int sock, char *dev_name)
 {
   /*

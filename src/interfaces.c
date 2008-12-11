@@ -74,6 +74,8 @@ struct olsr_cookie_info *mid_gen_timer_cookie = NULL;
 struct olsr_cookie_info *hna_gen_timer_cookie = NULL;
 struct olsr_cookie_info *buffer_hold_timer_cookie = NULL;
 
+static void check_interface_updates(void *);
+
 /**
  * Do initialization of various data needed for network interface management.
  * This function also tries to set up the given interfaces.
@@ -133,7 +135,7 @@ ifinit(void)
 /**
  * Callback function for periodic check of interface parameters.
  */
-void
+static void
 check_interface_updates(void *foo __attribute__((unused)))
 {
   struct olsr_if *tmp_if;
@@ -340,6 +342,7 @@ if_ifwithname(const char *if_name)
   return NULL;
 }
 
+#if 0
 /**
  * Find the interface with a given interface index.
  *
@@ -359,7 +362,9 @@ if_ifwithindex(const int if_index)
 
   return NULL;
 }
+#endif
 
+#if 0
 /**
  * Get an interface name for a given interface index
  *
@@ -372,6 +377,7 @@ if_ifwithindex_name(const int if_index)
   const struct interface *const ifp = if_ifwithindex(if_index);
   return ifp == NULL ? "void" : ifp->int_name;
 }
+#endif
 
 /**
  * Lock an interface.
@@ -449,6 +455,7 @@ add_ifchgf(ifchg_cb_func f)
   ifchgf_list = tmp;
 }
 
+#if 0
 /*
  * Remove an ifchange function
  */
@@ -473,6 +480,7 @@ del_ifchgf(ifchg_cb_func f)
   }
   return 0;
 }
+#endif
 
 /*
  * Local Variables:

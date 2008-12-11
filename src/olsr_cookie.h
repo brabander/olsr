@@ -89,12 +89,13 @@ struct olsr_cookie_mem_brand {
 /* Externals. */
 extern struct olsr_cookie_info *olsr_alloc_cookie(const char *,
 						  olsr_cookie_type);
-extern void olsr_free_cookie(struct olsr_cookie_info *);
 extern void olsr_delete_all_cookies(void);
 extern char *olsr_cookie_name(olsr_cookie_t);
 extern void olsr_cookie_set_memory_size(struct olsr_cookie_info *, size_t);
 extern void olsr_cookie_set_memory_clear(struct olsr_cookie_info *, bool);
-extern void olsr_cookie_set_memory_poison(struct olsr_cookie_info *, bool);
+#if 0
+void olsr_cookie_set_memory_poison(struct olsr_cookie_info *, bool);
+#endif
 extern void olsr_cookie_usage_incr(olsr_cookie_t);
 extern void olsr_cookie_usage_decr(olsr_cookie_t);
 

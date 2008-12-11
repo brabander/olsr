@@ -67,11 +67,13 @@ avl_comp_ipv6(const void *ip1, const void *ip2)
   return ip6cmp(ip1, ip2);
 }
 
+#if 0
 int
 avl_comp_mac(const void *ip1, const void *ip2)
 {
   return memcmp(ip1, ip2, 6);
 }
+#endif
 
 void
 avl_init(struct avl_tree *tree, avl_tree_comp comp)

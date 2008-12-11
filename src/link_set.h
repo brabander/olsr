@@ -119,7 +119,6 @@ extern bool link_changes;
 
 /* Function prototypes */
 
-void olsr_set_link_timer(struct link_entry *, unsigned int);
 void olsr_init_link_set(void);
 void olsr_delete_link_entry_by_if(const int);
 void olsr_expire_link_hello_timer(void *);

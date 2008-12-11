@@ -45,9 +45,10 @@
 void
 olsr_calculate_mpr(void);
 
+#if 0
 void
 olsr_print_mpr_set(void);
-
+#endif
 
 #endif
 

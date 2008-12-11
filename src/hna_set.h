@@ -72,8 +72,6 @@ bool olsr_input_hna(union olsr_message *, struct interface *,
                     union olsr_ip_addr *);
 
 void olsr_init_hna_set(void);
-void olsr_update_hna_entry(const union olsr_ip_addr *,
-                           const struct olsr_ip_prefix *, olsr_reltime);
 void olsr_print_hna_set(void);
 
 #endif

@@ -69,6 +69,7 @@ static char* olsr_strndup(const char *s, size_t n);
 static char** olsr_strtok(const char *s, const char **snext);
 static void olsr_strtok_free(char **s);
 static int read_config (const char *filename, int *pargc, char ***pargv);
+static struct if_config_options *olsr_get_default_if_config(void);
 
 struct olsrd_config *
 olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
@@ -1115,7 +1116,7 @@ olsr_get_default_cnf(void)
   return c;
 }
 
-void
+static void
 olsr_init_default_if_config(struct if_config_options *io)
 {
   struct in6_addr in6;
@@ -1148,7 +1149,7 @@ olsr_init_default_if_config(struct if_config_options *io)
   io->autodetect_chg = true;
 }
 
-struct if_config_options *
+static struct if_config_options *
 olsr_get_default_if_config(void)
 {
   struct if_config_options *io = olsr_malloc(sizeof(*io), "default_if_config");
@@ -1161,6 +1162,7 @@ olsr_get_default_if_config(void)
   return io;
 }
 
+#if 0
 int
 olsr_check_pollrate(float *pollrate)
 {
@@ -1177,6 +1179,7 @@ olsr_check_pollrate(float *pollrate)
   }
   return 0;
 }
+#endif
 
 void
 ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)

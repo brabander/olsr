@@ -54,6 +54,7 @@
 
 bool disp_pack_out = false;
 
+static void olsr_add_invalid_address(const union olsr_ip_addr *);
 
 #ifdef WIN32
 #define perror(x) WinSockPError(x)
@@ -257,6 +258,7 @@ add_ptf(packet_transform_function f)
   ptf_list = new_ptf;
 }
 
+#if 0
 /**
  * Remove a packet transform function
  *
@@ -285,6 +287,7 @@ del_ptf(packet_transform_function f)
   }
   return 0;
 }
+#endif
 
 /**
  *Sends a packet on a given interface.
@@ -386,7 +389,7 @@ net_output(struct interface *ifp)
 /*
  * Adds the given IP-address to the invalid list.
  */
-void
+static void
 olsr_add_invalid_address(const union olsr_ip_addr *addr)
 {
   struct ipaddr_str buf;

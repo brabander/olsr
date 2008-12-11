@@ -492,7 +492,7 @@ olsr_expire_link_entry(void *context)
 /**
  * Set the link expiration timer.
  */
-void
+static void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER,

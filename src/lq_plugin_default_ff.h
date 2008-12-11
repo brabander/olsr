@@ -44,47 +44,7 @@
 #include "olsr_types.h"
 #include "lq_plugin.h"
 
-#define LQ_PLUGIN_LC_MULTIPLIER 1024
-#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
-
 #define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
-
-/* 16,32,64 and max. 128 */
-#define LQ_FF_WINDOW 64
-#define LQ_FF_QUICKSTART_INIT 4
-
-struct default_lq_ff {
-  uint8_t valueLq;
-  uint8_t valueNlq;
-};
-
-struct default_lq_ff_hello {
-  struct default_lq_ff lq;
-	uint8_t windowSize, activePtr;
-	uint16_t last_seq_nr;
-	uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
-};
-
-void default_lq_initialize_ff(void);
-
-olsr_linkcost default_lq_calc_cost_ff(const void *lq);
-
-bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2);
-
-olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry *link, void *lq, bool lost);
-void default_lq_memorize_foreign_hello_ff(void *local, void *foreign);
-
-int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *lq);
-void default_lq_deserialize_hello_lq_pair_ff(const uint8_t **curr, void *lq);
-int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *lq);
-void default_lq_deserialize_tc_lq_pair_ff(const uint8_t **curr, void *lq);
-
-void default_lq_copy_link2tc_ff(void *target, void *source);
-void default_lq_clear_ff(void *target);
-void default_lq_clear_ff_hello(void *target);
-
-const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer);
-const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 extern struct lq_handler lq_etx_ff_handler;
 

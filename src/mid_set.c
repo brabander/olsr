@@ -53,12 +53,16 @@
 
 #include <stdlib.h>
 
+static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
+static void olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno);
+static void olsr_flush_mid_entries(struct tc_entry *);
+
 /* Root of the MID tree */
 struct avl_tree mid_tree;
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *mid_validity_timer_cookie = NULL;
-struct olsr_cookie_info *mid_address_mem_cookie = NULL;
+static struct olsr_cookie_info *mid_validity_timer_cookie = NULL;
+static struct olsr_cookie_info *mid_address_mem_cookie = NULL;
 
 /**
  * Initialize the MID set
@@ -282,7 +286,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  * @param vtime the validity time
  * @param seq the sequence number to register a new node with
  */
-void
+static void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
                       olsr_reltime vtime, uint16_t mid_seqno)
@@ -348,7 +352,7 @@ olsr_lookup_tc_mid_entry(struct tc_entry *tc, const union olsr_ip_addr *adr)
  * @param adr the alias address to check
  * @return the MID address entry or NULL if not found
  */
-struct mid_entry *
+static struct mid_entry *
 olsr_lookup_mid_entry(const union olsr_ip_addr *adr)
 {
 #if 0
@@ -417,7 +421,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
  *
  * @param entry the tc entry holding the aliases.
  */
-void
+static void
 olsr_flush_mid_entries(struct tc_entry *tc)
 {
   struct mid_entry *alias;
@@ -442,7 +446,7 @@ olsr_flush_mid_entries(struct tc_entry *tc)
  * @param main_addr the root of MID entries.
  * @param mid_seqno the most recent message sequence number
  */
-void
+static void
 olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(main_addr);

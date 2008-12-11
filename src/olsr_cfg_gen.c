@@ -175,6 +175,7 @@ olsr_print_cnf(const struct olsrd_config *cnf)
   }
 }
 
+#if 0
 int
 olsr_write_cnf(const struct olsrd_config *cnf, const char *fname)
 {
@@ -197,6 +198,7 @@ olsr_write_cnf(const struct olsrd_config *cnf, const char *fname)
 
   return 1;
 }
+#endif
 
 static INLINE void
 append_float(struct autobuf *abuf, const char *name, float val, float deflt, bool first)

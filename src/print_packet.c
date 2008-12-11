@@ -46,6 +46,8 @@
 #include "lq_packet.h"
 #include "net_olsr.h"
 
+static int8_t
+print_olsr_serialized_message(FILE *, union olsr_message *);
 
 static void
 print_messagedump(FILE *, uint8_t *, int16_t);
@@ -102,7 +104,7 @@ print_olsr_serialized_packet(FILE *handle, union olsr_packet *pkt,
 }
 
 /* Single message */
-int8_t
+static int8_t
 print_olsr_serialized_message(FILE *handle, union olsr_message *msg)
 {
   struct ipaddr_str buf;

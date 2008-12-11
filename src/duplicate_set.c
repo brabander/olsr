@@ -51,12 +51,12 @@
 
 static void olsr_cleanup_duplicate_entry(void *unused);
 
-struct avl_tree duplicate_set;
-struct timer_entry *duplicate_cleanup_timer;
+static struct avl_tree duplicate_set;
+static struct timer_entry *duplicate_cleanup_timer;
 
 /* Some cookies for stats keeping */
-struct olsr_cookie_info *duplicate_timer_cookie = NULL;
-struct olsr_cookie_info *duplicate_mem_cookie = NULL;
+static struct olsr_cookie_info *duplicate_timer_cookie = NULL;
+static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 
 void
 olsr_init_duplicate_set(void)
@@ -81,7 +81,7 @@ olsr_init_duplicate_set(void)
                  duplicate_timer_cookie->ci_id);
 }
 
-struct dup_entry *
+static struct dup_entry *
 olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 {
   struct dup_entry *entry;

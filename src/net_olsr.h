@@ -105,13 +105,13 @@ int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t
 
 int net_output(struct interface *);
 
-void add_ptf(packet_transform_function);
+PLUGIN_PUB void add_ptf(packet_transform_function);
 
+#if 0
 int del_ptf(packet_transform_function);
+#endif
 
 bool olsr_validate_address(const union olsr_ip_addr *);
-
-void olsr_add_invalid_address(const union olsr_ip_addr *);
 
 #endif
 

@@ -97,10 +97,6 @@ static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const
 
 const char *olsr_ip_prefix_to_string(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
 
-const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr);
-
-const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sockaddr * const addr);
-
 const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 
 /* we need to handle one value specifically since shifting 32 bits of a 32 bit integer is the same as shifting 0 bits.

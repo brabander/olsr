@@ -109,11 +109,7 @@ AVLNODE2STRUCT(lq_handler_tree2lq_handler_node, struct lq_handler_node, node);
     lq = lq_handler_tree2lq_handler_node(lq_tree_node);
 #define OLSR_FOR_ALL_LQ_HANDLERS_END(tc) }}
 
-int avl_strcasecmp(const void *str1, const void *str2);
 void init_lq_handler_tree(void);
-
-void register_lq_handler(struct lq_handler *handler, const char *name);
-int activate_lq_handler(const char *name);
 
 olsr_linkcost olsr_calc_tc_cost(const struct tc_edge_entry *);
 bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);

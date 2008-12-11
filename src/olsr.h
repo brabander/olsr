@@ -48,11 +48,11 @@
 extern bool changes_topology;
 extern bool changes_neighborhood;
 extern bool changes_hna;
-extern bool changes_force;
+extern bool changes_force; /* Maybe static */
 
 extern const union olsr_ip_addr all_zero;
 
-void
+PLUGIN_PUB void
 register_pcf(int (*)(int, int, int));
 
 void
@@ -77,9 +77,6 @@ olsr_init_tables(void);
 void
 olsr_init_willingness(void);
 
-void
-olsr_update_willingness(void *);
-
 uint8_t
 olsr_calculate_willingness(void);
 
@@ -98,11 +95,8 @@ olsr_exit(const char *, int);
 void *
 olsr_malloc(size_t, const char *);
 
-int
+PLUGIN_PUB int
 olsr_printf(int, const char *, ...) __attribute__((format(printf,2,3)));
-
-void
-olsr_trigger_forced_update(void *);
 
 #endif
 

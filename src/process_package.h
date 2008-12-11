@@ -44,9 +44,6 @@
 
 #include "olsr_protocol.h"
 
-bool
-olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
-
 void
 olsr_init_package_process(void);
 

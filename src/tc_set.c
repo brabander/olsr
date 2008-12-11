@@ -312,7 +312,7 @@ olsr_locate_tc_entry(const union olsr_ip_addr *adr)
 /**
  * Format tc_edge contents into a buffer.
  */
-char *
+static char *
 olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 {
   static char buf[128];

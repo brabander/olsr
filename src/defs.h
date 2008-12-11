@@ -101,6 +101,11 @@ extern FILE *debug_handle;
 #define USED_ONLY_FOR_DEBUG
 #endif
 
+#ifdef __GNUC__
+#define PLUGIN_PUB __attribute__(( externally_visible))
+#else
+#define PLUGIN_PUB
+#endif
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 

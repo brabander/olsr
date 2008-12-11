@@ -37,14 +37,15 @@
 #ifndef _OLSRD_PLUGIN_UTIL
 #define _OLSRD_PLUGIN_UTIL
 
+#include "defs.h"
 #include "olsrd_plugin.h"
 
 /* Common/utility functions for plugins */
-set_plugin_parameter set_plugin_port;
-set_plugin_parameter set_plugin_ipaddress;
-set_plugin_parameter set_plugin_boolean;
-set_plugin_parameter set_plugin_int;
-set_plugin_parameter set_plugin_string;
+PLUGIN_PUB set_plugin_parameter set_plugin_port;
+PLUGIN_PUB set_plugin_parameter set_plugin_ipaddress;
+PLUGIN_PUB set_plugin_parameter set_plugin_boolean;
+PLUGIN_PUB set_plugin_parameter set_plugin_int;
+PLUGIN_PUB set_plugin_parameter set_plugin_string;
 
 
 #endif

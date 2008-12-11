@@ -50,6 +50,46 @@
 #include "mid_set.h"
 #include "scheduler.h"
 
+#define LQ_PLUGIN_LC_MULTIPLIER 1024
+#define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
+
+/* 16,32,64 and max. 128 */
+#define LQ_FF_WINDOW 64
+#define LQ_FF_QUICKSTART_INIT 4
+
+struct default_lq_ff {
+  uint8_t valueLq;
+  uint8_t valueNlq;
+};
+
+struct default_lq_ff_hello {
+  struct default_lq_ff lq;
+	uint8_t windowSize, activePtr;
+	uint16_t last_seq_nr;
+	uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
+};
+
+static void default_lq_initialize_ff(void);
+
+static olsr_linkcost default_lq_calc_cost_ff(const void *lq);
+
+static bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2);
+
+static olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry *link, void *lq, bool lost);
+static void default_lq_memorize_foreign_hello_ff(void *local, void *foreign);
+
+static int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *lq);
+static void default_lq_deserialize_hello_lq_pair_ff(const uint8_t **curr, void *lq);
+static int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *lq);
+static void default_lq_deserialize_tc_lq_pair_ff(const uint8_t **curr, void *lq);
+
+static void default_lq_copy_link2tc_ff(void *target, void *source);
+static void default_lq_clear_ff(void *target);
+static void default_lq_clear_ff_hello(void *target);
+
+static const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer);
+static const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer);
+
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etx_ff_handler = {
     &default_lq_initialize_ff,
@@ -178,7 +218,7 @@ static void default_lq_ff_timer(void __attribute__((unused)) *context) {
   }OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
 
-void default_lq_initialize_ff(void) {
+static void default_lq_initialize_ff(void) {
   /* Some cookies for stats keeping */
   static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 
@@ -189,7 +229,7 @@ void default_lq_initialize_ff(void) {
                    default_lq_ff_timer_cookie->ci_id);
 }
 
-olsr_linkcost default_lq_calc_cost_ff(const void *ptr) {
+static olsr_linkcost default_lq_calc_cost_ff(const void *ptr) {
   const struct default_lq_ff *lq = ptr;
   olsr_linkcost cost;
 
@@ -206,7 +246,7 @@ olsr_linkcost default_lq_calc_cost_ff(const void *ptr) {
   return cost;
 }
 
-int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *ptr) {
+static int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *ptr) {
   struct default_lq_ff *lq = ptr;
 
   buff[0] = (unsigned char)lq->valueLq;
@@ -217,7 +257,7 @@ int default_lq_serialize_hello_lq_pair_ff(unsigned char *buff, void *ptr) {
   return 4;
 }
 
-void default_lq_deserialize_hello_lq_pair_ff(const uint8_t **curr, void *ptr) {
+static void default_lq_deserialize_hello_lq_pair_ff(const uint8_t **curr, void *ptr) {
   struct default_lq_ff *lq = ptr;
 
   pkt_get_u8(curr, &lq->valueLq);
@@ -225,14 +265,14 @@ void default_lq_deserialize_hello_lq_pair_ff(const uint8_t **curr, void *ptr) {
   pkt_ignore_u16(curr);
 }
 
-bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2) {
+static bool default_lq_is_relevant_costchange_ff(olsr_linkcost c1, olsr_linkcost c2) {
   if (c1 > c2) {
     return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
   }
   return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE_FF;
 }
 
-int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *ptr) {
+static int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *ptr) {
   struct default_lq_ff *lq = ptr;
 
   buff[0] = (unsigned char)lq->valueLq;
@@ -243,7 +283,7 @@ int default_lq_serialize_tc_lq_pair_ff(unsigned char *buff, void *ptr) {
   return 4;
 }
 
-void default_lq_deserialize_tc_lq_pair_ff(const uint8_t **curr, void *ptr) {
+static void default_lq_deserialize_tc_lq_pair_ff(const uint8_t **curr, void *ptr) {
   struct default_lq_ff *lq = ptr;
 
   pkt_get_u8(curr, &lq->valueLq);
@@ -251,11 +291,11 @@ void default_lq_deserialize_tc_lq_pair_ff(const uint8_t **curr, void *ptr) {
   pkt_ignore_u16(curr);
 }
 
-olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry __attribute__((unused)) *link, void __attribute__((unused)) *ptr, bool __attribute__((unused)) lost) {
+static olsr_linkcost default_lq_packet_loss_worker_ff(struct link_entry __attribute__((unused)) *link, void __attribute__((unused)) *ptr, bool __attribute__((unused)) lost) {
   return link->linkcost;
 }
 
-void default_lq_memorize_foreign_hello_ff(void *ptrLocal, void *ptrForeign) {
+static void default_lq_memorize_foreign_hello_ff(void *ptrLocal, void *ptrForeign) {
   struct default_lq_ff *local = ptrLocal;
   struct default_lq_ff *foreign = ptrForeign;
 
@@ -266,15 +306,15 @@ void default_lq_memorize_foreign_hello_ff(void *ptrLocal, void *ptrForeign) {
   }
 }
 
-void default_lq_copy_link2tc_ff(void *target, void *source) {
+static void default_lq_copy_link2tc_ff(void *target, void *source) {
   memcpy(target, source, sizeof(struct default_lq_ff));
 }
 
-void default_lq_clear_ff(void *target) {
+static void default_lq_clear_ff(void *target) {
   memset(target, 0, sizeof(struct default_lq_ff));
 }
 
-void default_lq_clear_ff_hello(void *target) {
+static void default_lq_clear_ff_hello(void *target) {
   struct default_lq_ff_hello *local = target;
   int i;
 
@@ -285,7 +325,7 @@ void default_lq_clear_ff_hello(void *target) {
   }
 }
 
-const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer) {
+static const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *buffer) {
   struct default_lq_ff *lq = ptr;
   int i = 0;
 
@@ -309,7 +349,7 @@ const char *default_lq_print_ff(void *ptr, char separator, struct lqtextbuffer *
   return buffer->buf;
 }
 
-const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer) {
+static const char *default_lq_print_cost_ff(olsr_linkcost cost, struct lqtextbuffer *buffer) {
 	default_lq_ff_linkcost2text(buffer, cost);
   return buffer->buf;
 }

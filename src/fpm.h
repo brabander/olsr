@@ -41,6 +41,8 @@
 #ifndef _FPM_H
 #define _FPM_H
 
+#include "defs.h"
+
 #ifdef USE_FPM
 
 #if 0
@@ -194,10 +196,11 @@ typedef float sfpm;
 
 #endif /* USE_FPM */
 
+#if 0
 fpm atofpm(const char *);
 const char *fpmtoa(fpm);
 const char *etxtoa(fpm);
-
+#endif
 
 #endif
 

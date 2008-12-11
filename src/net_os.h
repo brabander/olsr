@@ -79,9 +79,6 @@ olsr_select(int,
 	    struct timeval *);
 
 int
-bind_socket_to_device(int, char *);
-
-int
 convert_ip_to_mac(union olsr_ip_addr *, struct sockaddr *, char *);
 
 int

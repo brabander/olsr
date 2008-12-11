@@ -54,10 +54,13 @@
 #include "lq_plugin_default_fpm.h"
 #include "lq_plugin_default_ff.h"
 
-struct avl_tree lq_handler_tree;
+static  struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
 
-int
+static void register_lq_handler(struct lq_handler *handler, const char *name);
+static int activate_lq_handler(const char *name);
+
+static int
 avl_strcasecmp(const void *str1, const void *str2)
 {
   return strcasecmp(str1, str2);
@@ -88,7 +91,7 @@ init_lq_handler_tree(void)
  * @param pointer to lq_handler structure
  * @param name of the link quality handler for debug output
  */
-void
+static void
 register_lq_handler(struct lq_handler *handler, const char *name)
 {
   struct lq_handler_node *node;
@@ -103,7 +106,7 @@ register_lq_handler(struct lq_handler *handler, const char *name)
   avl_insert(&lq_handler_tree, &node->node, false);
 }
 
-int
+static int
 activate_lq_handler(const char *name)
 {
   struct lq_handler_node *node;

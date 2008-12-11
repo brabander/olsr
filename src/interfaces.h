@@ -214,16 +214,22 @@ void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
 struct interface *if_ifwithaddr(const union olsr_ip_addr *);
 struct interface *if_ifwithname(const char *);
+#if 0
 const char *if_ifwithindex_name(const int if_index);
+#endif
+#if 0
 struct interface *if_ifwithindex(const int if_index);
+#endif
 struct olsr_if *queue_if(const char *, int);
-void add_ifchgf(ifchg_cb_func f);
+PLUGIN_PUB void add_ifchgf(ifchg_cb_func f);
+#if 0
 int del_ifchgf(ifchg_cb_func f);
+#endif
 void lock_interface(struct interface *);
 void unlock_interface(struct interface *);
 
 extern struct olsr_cookie_info *interface_mem_cookie;
-extern struct olsr_cookie_info *interface_poll_timer_cookie;
+extern struct olsr_cookie_info *interface_poll_timer_cookie; /* Maybe static */
 extern struct olsr_cookie_info *hello_gen_timer_cookie;
 extern struct olsr_cookie_info *tc_gen_timer_cookie;
 extern struct olsr_cookie_info *mid_gen_timer_cookie;

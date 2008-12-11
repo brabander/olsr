@@ -235,7 +235,7 @@ static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_
  */
 static INLINE bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
 
-bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
+PLUGIN_PUB bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
 
 #if defined WIN32
 /**
@@ -275,7 +275,7 @@ void olsr_insert_rt_path(struct rt_path *, struct tc_entry *, struct link_entry 
 void olsr_update_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_delete_rt_path(struct rt_path *);
 
-struct rt_entry *
+PLUGIN_PUB struct rt_entry *
 olsr_lookup_routing_table(const union olsr_ip_addr *);
 
 

@@ -49,6 +49,8 @@
 #include "olsr.h"
 #include "parser.h"
 
+static bool olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
+
 static void process_message_neighbors(struct neighbor_entry *,
                                       const struct hello_message *);
 
@@ -446,7 +448,7 @@ hello_tap(struct hello_message *message,
   olsr_free_hello_packet(message);
 }
 
-bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
+static bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
 {
   struct hello_message hello;
 

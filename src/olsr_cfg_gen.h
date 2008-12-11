@@ -49,8 +49,10 @@
  * Interface config generation
  */
 void olsr_print_cnf(const struct olsrd_config *);
+#if 0
 int olsr_write_cnf(const struct olsrd_config *cnf, const char *fname);
-void olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
+#endif
+PLUGIN_PUB void olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments);
 
 #endif /* _OLSRD_CFG_GEN_H */
 

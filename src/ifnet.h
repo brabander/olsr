@@ -58,7 +58,6 @@ int
 set_flag(char *, short);
 #endif
 
-void check_interface_updates(void *);
 void remove_interface(struct olsr_if *);
 int chk_if_up(struct olsr_if *, int);
 int chk_if_changed(struct olsr_if *);

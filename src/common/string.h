@@ -41,11 +41,12 @@
 #ifndef COMMON_STRING_H_
 #define COMMON_STRING_H_
 
+#include "defs.h"
 #include <stdlib.h>
 
 char *strscpy(char *dest, const char *src, size_t size);
 
-char *strscat(char *dest, const char *src, size_t size);
+PLUGIN_PUB char *strscat(char *dest, const char *src, size_t size);
 
 #endif
 

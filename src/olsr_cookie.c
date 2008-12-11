@@ -96,7 +96,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 /*
  * Free a cookie that is no longer being used.
  */
-void
+static void
 olsr_free_cookie(struct olsr_cookie_info *ci)
 {
   struct list_node *memory_list;
@@ -187,6 +187,7 @@ olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, bool clear)
   }
 }
 
+#if 0
 /*
  * Set if a returned memory block shall be initialized to an all zero or
  * to a poison memory pattern after returning to the free pool.
@@ -207,6 +208,7 @@ olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, bool poison)
     ci->ci_flags &= ~COOKIE_MEMPOISON;
   }
 }
+#endif
 
 /*
  * Basic sanity checking for a passed-in cookie-id.

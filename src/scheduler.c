@@ -68,6 +68,7 @@ static struct olsr_cookie_info *timer_mem_cookie = NULL;
 static struct list_node socket_head = {&socket_head, &socket_head};
 
 /* Prototypes */
+static unsigned long olsr_times(void);
 static void walk_timers(clock_t *);
 static void poll_sockets(void);
 static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
@@ -822,7 +823,7 @@ olsr_set_timer(struct timer_entry **timer_ptr,
  * the underlying kernel calls the smallest accountable time unit) are
  * inherently "unsigned" (and always incremented).
  */
-unsigned long olsr_times(void)
+static unsigned long olsr_times(void)
 {
   struct tms tms_buf;
   const long t = times(&tms_buf);

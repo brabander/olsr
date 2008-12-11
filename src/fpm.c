@@ -154,6 +154,7 @@ fpm fpmldiv(fpm a, fpm b) {
 
 #endif /* !NDEBUG */
 
+#if 0
 fpm atofpm(const char *s)
 {
   float r = 0.0;
@@ -176,9 +177,11 @@ const char *etxtoa(fpm etx)
 {
   return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
 }
+#endif
 
 #else /* USE_FPM */
 
+#if 0
 float atofpm(const char *s)
 {
   float r = 0.0;
@@ -200,6 +203,7 @@ const char *etxtoa(float etx)
 {
   return etx >= INFINITE_ETX ? "INF" : fpmtoa(etx);
 }
+#endif
 
 #endif /* USE_FPM */
 

@@ -146,7 +146,7 @@ int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net
   return rv;
 }
 
-const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
+static const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
   const struct sockaddr_in * const sin4 = (const struct sockaddr_in *)addr;
@@ -157,7 +157,7 @@ const char *sockaddr4_to_string(char * const buf, int bufsize, const struct sock
   return buf;
 }
 
-const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
+static const char *sockaddr6_to_string(char * const buf, int bufsize, const struct sockaddr * const addr)
 {
   char addrbuf[INET6_ADDRSTRLEN];
   const struct sockaddr_in6 * const sin6 = (const struct sockaddr_in6 *)addr;

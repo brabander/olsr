@@ -74,9 +74,9 @@ static void parse_packet(struct olsr *, int, struct interface *, union olsr_ip_a
  * the loop in this cases
  */
 
-struct parse_function_entry *parse_functions;
-struct preprocessor_function_entry *preprocessor_functions;
-struct packetparser_function_entry *packetparser_functions;
+static struct parse_function_entry *parse_functions;
+static struct preprocessor_function_entry *preprocessor_functions;
+static struct packetparser_function_entry *packetparser_functions;
 
 static bool disp_pack_in = false;
 
@@ -116,6 +116,7 @@ void olsr_parser_add_function(parse_function *function, uint32_t type)
   OLSR_PRINTF(3, "Register parse function: Added function for type %u\n", type);
 }
 
+#if 0
 int olsr_parser_remove_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *entry, *prev;
@@ -135,6 +136,7 @@ int olsr_parser_remove_function(parse_function *function, uint32_t type)
   }
   return 0;
 }
+#endif
 
 void olsr_preprocessor_add_function(preprocessor_function *function)
 {
@@ -190,6 +192,7 @@ void olsr_packetparser_add_function(packetparser_function *function)
 
 }
 
+#if 0
 int olsr_packetparser_remove_function(packetparser_function *function)
 {
   struct packetparser_function_entry *entry, *prev;
@@ -209,6 +212,7 @@ int olsr_packetparser_remove_function(packetparser_function *function)
   }
   return 0;
 }
+#endif
 
 /**
  * Shared code to parse the message headers and validate the message originator.

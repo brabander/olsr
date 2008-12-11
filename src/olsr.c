@@ -68,6 +68,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+static void olsr_update_willingness(void *);
+static void olsr_trigger_forced_update(void *);
 
 bool changes_topology;
 bool changes_neighborhood;
@@ -220,7 +222,7 @@ olsr_process_changes(void)
 /*
  * Callback for the periodic route calculation.
  */
-void
+static void
 olsr_trigger_forced_update(void *unused __attribute__((unused))) {
 
   changes_force = true;
@@ -480,7 +482,7 @@ olsr_init_willingness(void)
   }
 }
 
-void
+static void
 olsr_update_willingness(void *foo __attribute__((unused)))
 {
   int tmp_will = olsr_cnf->willingness;
