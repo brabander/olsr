@@ -126,10 +126,10 @@ void olsr_update_packet_loss_worker(struct link_entry *entry, bool lost);
 void olsr_memorize_foreign_hello_lq(struct link_entry *local,
 				    struct hello_neighbor *foreign);
 
-const char *get_link_entry_text(struct link_entry *entry,
+PLUGIN_PUB const char *get_link_entry_text(struct link_entry *entry,
 				char separator,
 				struct lqtextbuffer *buffer);
-const char *get_tc_edge_entry_text(struct tc_edge_entry *entry,
+PLUGIN_PUB const char *get_tc_edge_entry_text(struct tc_edge_entry *entry,
 				   char separator,
 				   struct lqtextbuffer *buffer);
 const char *get_linkcost_text(olsr_linkcost cost, bool route,

@@ -606,6 +606,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   return buff;
 }
 
+#ifdef DEBUG
 /**
  * Print the routingtree to STDOUT
  *
@@ -650,6 +651,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
   }
 #endif
 }
+#endif
 
 /*
  * Local Variables:
