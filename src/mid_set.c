@@ -259,9 +259,12 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   olsr_insert_routing_table(&alias->mid_alias_addr, olsr_cnf->maxplen,
                             main_addr, OLSR_RT_ORIGIN_MID);
   /*
-   * Start the timer.
+   * Start the timer. Because we provide the TC reference
+   * as callback data for the timer we need to lock
+   * the underlying TC entry again.
    */
   olsr_set_mid_timer(alias->mid_tc, vtime);
+  olsr_lock_tc_entry(tc);
 
   /* Set sequence number for alias purging */
   alias->mid_seqno = mid_seqno;
@@ -427,6 +430,7 @@ olsr_flush_mid_entries(struct tc_entry *tc)
    * Kill any pending timers.
    */
   olsr_set_mid_timer(tc, 0);
+  olsr_unlock_tc_entry(tc);
 }
 
 /**
