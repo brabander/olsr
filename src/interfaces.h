@@ -209,7 +209,7 @@ extern struct list_node interface_head;
 typedef int (*ifchg_cb_func)(struct interface *, int);
 
 
-int ifinit(void);
+bool ifinit(void);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
 struct interface *EXPORT(if_ifwithaddr)(const union olsr_ip_addr *);

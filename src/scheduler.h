@@ -166,6 +166,7 @@ LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
 
 void EXPORT(add_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
+void olsr_flush_sockets(void);
 void EXPORT(enable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 void EXPORT(disable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 

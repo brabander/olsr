@@ -80,9 +80,9 @@ static void check_interface_updates(void *);
  * Do initialization of various data needed for network interface management.
  * This function also tries to set up the given interfaces.
  *
- * @return the number of interfaces configured
+ * @return if more than zero interfaces were configured
  */
-int
+bool
 ifinit(void)
 {
   struct olsr_if *tmp_if;
@@ -182,6 +182,10 @@ remove_interface(struct olsr_if *iface)
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
 
   ifp = iface->interf;
+  if (!ifp) {
+    return;
+  }
+
   olsr_delete_link_entry_by_if(ifp->if_index);
 
   /*

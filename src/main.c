@@ -62,6 +62,7 @@
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
 #include "mid_set.h"
+#include "duplicate_set.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -441,7 +442,6 @@ signal_shutdown(int signo)
 static void
 olsr_shutdown(void)
 {
-  struct interface *ifn;
   struct tc_entry *tc;
   struct mid_entry *mid;
 
@@ -459,21 +459,16 @@ olsr_shutdown(void)
 
   OLSR_PRINTF(1, "Closing sockets...\n");
 
+  /* Flush duplicate set */
+  olsr_flush_duplicate_entries();
+
   /* front-end IPC socket */
   if (olsr_cnf->ipc_connections > 0) {
     shutdown_ipc();
   }
 
-  /* OLSR sockets */
-  OLSR_FOR_ALL_INTERFACES(ifn) {
-    CLOSESOCKET(ifn->olsr_socket);
-  } OLSR_FOR_ALL_INTERFACES_END(ifn);
-
   /* Closing plug-ins */
   olsr_close_plugins();
-
-  /* Stop and delete all timers. */
-  olsr_flush_timers();
 
   /* Reset network settings */
   restore_settings(olsr_cnf->ip_version);
@@ -490,11 +485,17 @@ olsr_shutdown(void)
   CLOSESOCKET(olsr_cnf->rts_bsd);
 #endif
 
-  /* Free cookies and memory pools attached. */
-  olsr_delete_all_cookies();
-
   /* Flush config */
   olsr_free_cnf(olsr_cnf);
+
+  /* Close and delete all sockets */
+  olsr_flush_sockets();
+
+  /* Stop and delete all timers. */
+  olsr_flush_timers();
+
+  /* Free cookies and memory pools attached. */
+  olsr_delete_all_cookies();
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 

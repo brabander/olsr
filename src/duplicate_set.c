@@ -99,16 +99,38 @@ olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
 }
 
 static void
+olsr_delete_duplicate_entry(struct dup_entry *entry)
+{
+  avl_delete(&duplicate_set, &entry->avl);
+  olsr_cookie_free(duplicate_mem_cookie, entry);
+}
+
+static void
 olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
 {
   struct dup_entry *entry;
 
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
     if (TIMED_OUT(entry->valid_until)) {
-      avl_delete(&duplicate_set, &entry->avl);
-      olsr_cookie_free(duplicate_mem_cookie, entry);
+      olsr_delete_duplicate_entry(entry);
     }
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
+}
+
+/**
+ * Clean up the house. Called during shutdown.
+ */
+void
+olsr_flush_duplicate_entries(void)
+{
+  struct dup_entry *entry;
+
+  OLSR_FOR_ALL_DUP_ENTRIES(entry) {
+    olsr_delete_duplicate_entry(entry);
+  } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
+
+  olsr_stop_timer(duplicate_cleanup_timer);
+  duplicate_cleanup_timer = NULL;
 }
 
 int

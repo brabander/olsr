@@ -160,6 +160,21 @@ void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func 
   } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
+/**
+ * Close and free all sockets.
+ */
+void
+olsr_flush_sockets(void)
+{
+  struct olsr_socket_entry *entry;
+
+  OLSR_FOR_ALL_SOCKETS(entry) {
+    CLOSESOCKET(entry->fd);
+    list_remove(&entry->socket_node);
+    free(entry);
+  } OLSR_FOR_ALL_SOCKETS_END(entry);
+}
+
 static void
 poll_sockets(void)
 {

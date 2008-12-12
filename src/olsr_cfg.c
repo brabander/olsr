@@ -45,6 +45,7 @@
 #include "ipcalc.h"
 #include "parser.h"
 #include "net_olsr.h"
+#include "ifnet.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -1020,17 +1021,25 @@ olsr_free_cnf(struct olsrd_config *cnf)
   struct plugin_entry *ped, *pe = cnf->plugins;
   struct olsr_lq_mult *mult, *next_mult;
 
+  /*
+   * HNAs.
+   */
   while (h) {
     hd = h;
     h = h->next;
     free(hd);
   }
 
+  /*
+   * Interfaces.
+   */
   while (in) {
     for (mult = in->cnf->lq_mult; mult != NULL; mult = next_mult) {
       next_mult = mult->next;
       free(mult);
     }
+
+    remove_interface(in);
 
     free(in->cnf);
     ind = in;
@@ -1040,6 +1049,9 @@ olsr_free_cnf(struct olsrd_config *cnf)
     free(ind);
   }
 
+  /*
+   * Plugins.
+   */
   while (pe) {
     ped = pe;
     pe = pe->next;
