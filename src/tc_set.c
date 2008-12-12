@@ -309,7 +309,7 @@ olsr_locate_tc_entry(const union olsr_ip_addr *adr)
   return tc == NULL ? olsr_add_tc_entry(adr) : tc;
 }
 
-#ifndef NODEBUG
+#ifdef DEBUG
 /**
  * Format tc_edge contents into a buffer.
  */
@@ -328,7 +328,7 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 	   get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
   return buf;
 }
-#endif /* !NODEBUG */
+#endif /* DEBUG */
 
 /**
  * Wrapper for the timer callback.
