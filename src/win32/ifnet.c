@@ -134,9 +134,9 @@ static unsigned long __stdcall SignalHandlerWrapper(void *Dummy __attribute__((u
   return 0;
 }
 
-static void CallSignalHandler(void)
+void CallSignalHandler(void)
 {
-  unsigned long ThreadId;
+  unsigned long ThreadId; /* Win9x compat */
 
   CreateThread(NULL, 0, SignalHandlerWrapper, NULL, 0, &ThreadId);
 }
