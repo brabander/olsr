@@ -691,6 +691,8 @@ static void build_tabs(struct autobuf *abuf, int active)
 void
 olsr_plugin_exit(void)
 {
+  ip_prefix_list_flush(&allowed_nets);
+
   if (http_socket >= 0) {
     CLOSESOCKET(http_socket);
   }

@@ -1194,6 +1194,20 @@ olsr_check_pollrate(float *pollrate)
 #endif
 
 void
+ip_prefix_list_flush(struct ip_prefix_list **list)
+{
+  struct ip_prefix_list *entry, *next_entry;
+
+  for (entry = *list; entry; entry = next_entry) {
+    next_entry = entry->next;
+    
+    entry->next = NULL;
+    free(entry);
+  }
+  *list = NULL;
+}
+
+void
 ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
 {
   struct ip_prefix_list *new_entry = olsr_malloc(sizeof(*new_entry), "new ip_prefix");

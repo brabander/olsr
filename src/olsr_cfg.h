@@ -265,6 +265,7 @@ int olsr_check_pollrate(float *pollrate);
  */
 void EXPORT(ip_prefix_list_add)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 int EXPORT(ip_prefix_list_remove)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+void EXPORT(ip_prefix_list_flush)(struct ip_prefix_list **);
 struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 #endif /* _OLSRD_CFG_H */
