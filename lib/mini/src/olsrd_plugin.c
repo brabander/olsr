@@ -93,7 +93,7 @@ olsrd_plugin_init(void)
 	printf("*** MINI: plugin_init\n");
 
 	/* call a function from main olsrd */
-	olsr_printf(2, "*** MINI: printed this with olsr_printf\n");
+	OLSR_PRINTF(2, "*** MINI: printed this with OLSR_PRINTF\n");
 
 	return 1;
 }

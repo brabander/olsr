@@ -64,7 +64,7 @@
 #include "mpr_selector_set.h"
 #include "routing_table.h"
 
-#define PLUGIN_NAME    "Httpinfo olsrd plugin"
+#define PLUGIN_NAME    "OLSRD httpinfo plugin"
 #define PLUGIN_VERSION "0.1"
 #define PLUGIN_AUTHOR   "Andreas Tonnesen"
 #define MOD_DESC PLUGIN_NAME " " PLUGIN_VERSION " by " PLUGIN_AUTHOR

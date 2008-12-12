@@ -58,7 +58,7 @@
 #include <stdlib.h> /* atoi, malloc */
 
 /* OLSRD includes */
-#include "olsr.h" /* olsr_printf() */
+#include "olsr.h" /* OLSR_PRINTF() */
 #include "ipcalc.h"
 #include "defs.h" /* olsr_cnf */
 #include "link_set.h" /* get_link_set() */
@@ -1617,11 +1617,11 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
 
   if (BmfInterfaces == NULL)
   {
-    olsr_printf(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
+    OLSR_PRINTF(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
   }
   else
   {
-    olsr_printf(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
+    OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
   }
   return 0;
 } /* CreateBmfNetworkInterfaces */
@@ -1643,7 +1643,7 @@ void AddInterface(struct interface* newIntf)
 
   nOpened = CreateInterface(newIntf->int_name, newIntf);
 
-  olsr_printf(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
+  OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
 } /* AddInterface */
 
 /* -------------------------------------------------------------------------
@@ -1700,7 +1700,7 @@ void CloseBmfNetworkInterfaces(void)
       bmfIf->nBmfPacketsRxDup,
       bmfIf->nBmfPacketsTx);
 
-    olsr_printf(
+    OLSR_PRINTF(
       1,
       "%s: closed %s interface \"%s\"\n",
       PLUGIN_NAME_SHORT,
@@ -1734,7 +1734,7 @@ void CloseBmfNetworkInterfaces(void)
 
   BmfInterfaces = NULL;
 
-  olsr_printf(1, "%s: closed %d sockets\n", PLUGIN_NAME_SHORT, nClosed);
+  OLSR_PRINTF(1, "%s: closed %d sockets\n", PLUGIN_NAME_SHORT, nClosed);
 
   OLSR_PRINTF(
     7,
@@ -1776,7 +1776,7 @@ int AddNonOlsrBmfIf(
 
   if (nNonOlsrIfs >= MAX_NON_OLSR_IFS)
   {
-    olsr_printf(
+    OLSR_PRINTF(
       1,
       "%s: too many non-OLSR interfaces specified, maximum is %d\n",
       PLUGIN_NAME,

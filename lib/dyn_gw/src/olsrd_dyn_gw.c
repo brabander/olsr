@@ -218,7 +218,7 @@ olsrd_plugin_init(void)
   /* Remove all local Inet HNA entries */
   /*while(remove_local_hna4_entry(&gw_net, &gw_netmask))
   {
-    olsr_printf(1, "HNA Internet gateway deleted\n");
+    OLSR_PRINTF(1, "HNA Internet gateway deleted\n");
   }*/
 
   pthread_create(&ping_thread, NULL, (void *(*)(void *))looped_checks, NULL);
@@ -244,25 +244,25 @@ olsr_event_doing_hna(void *foo __attribute__((unused)))
 	struct hna_list *li;
 	/*
   if (has_available_gw == 1 && gw_already_added == 0) {
-    olsr_printf(1, "Adding OLSR local HNA entry for Internet\n");
+    OLSR_PRINTF(1, "Adding OLSR local HNA entry for Internet\n");
     add_local_hna_entry(&gw_net, &gw_netmask);
     gw_already_added = 1;
   } else if ((has_available_gw == 0) && (gw_already_added == 1)) {
     // Remove all local Inet HNA entries /
     while(remove_local_hna4_entry(&gw_net, &gw_netmask)) {
-      olsr_printf(1, "Removing OLSR local HNA entry for Internet\n");
+      OLSR_PRINTF(1, "Removing OLSR local HNA entry for Internet\n");
     }
     gw_already_added = 0;
   }
 	*/
 	for(li=the_hna_list; li; li=li->next){
 		if((li->probe_ok==1)&&(li->hna_added==0)){
-			olsr_printf(1, "Adding OLSR local HNA entry\n");
+			OLSR_PRINTF(1, "Adding OLSR local HNA entry\n");
 			ip_prefix_list_add(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen);
 			li->hna_added=1;
 		}else if((li->probe_ok==0)&&(li->hna_added==1)){
 			while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen)) {
-				olsr_printf(1, "Removing OLSR local HNA entry\n");
+				OLSR_PRINTF(1, "Removing OLSR local HNA entry\n");
 			}
 			li->hna_added=0;
 		}
@@ -313,13 +313,13 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
     if (!fp)
       {
         perror(PROCENTRY_ROUTE);
-        olsr_printf(1, "INET (IPv4) not configured in this system.\n");
+        OLSR_PRINTF(1, "INET (IPv4) not configured in this system.\n");
 	return -1;
       }
 
     olsr_prefix_to_netmask(&mask, prefixlen);
     /*
-    olsr_printf(1, "Genmask         Destination     Gateway         "
+    OLSR_PRINTF(1, "Genmask         Destination     Gateway         "
                 "Flags Metric Ref    Use Iface\n");
     */
     while (fgets(buf, sizeof(buf), fp))
@@ -331,11 +331,11 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
 	    continue;
 
 	/*
-	olsr_printf(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&netmask));
+	OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&netmask));
 
-	olsr_printf(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&dest_addr));
+	OLSR_PRINTF(1, "%-15s ", olsr_ip_to_string((union olsr_ip_addr *)&dest_addr));
 
-	olsr_printf(1, "%-15s %-6d %-2d %7d %s\n",
+	OLSR_PRINTF(1, "%-15s %-6d %-2d %7d %s\n",
 		    olsr_ip_to_string((union olsr_ip_addr *)&gate_addr),
 		    metric, refcnt, use, iface);
 	*/
@@ -354,11 +354,11 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
             if (the_ping_list != NULL) {
               /*validate the found inet gw by pinging*/
               if (ping_is_possible(the_ping_list)) {
-                olsr_printf(1, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+                OLSR_PRINTF(1, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
                 retval=1;
               }
             } else {
-              olsr_printf(1, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+              OLSR_PRINTF(1, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
               retval=1;
             }
           }
@@ -367,7 +367,7 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
     fclose(fp);
     if(retval == 0){
       /* And we cast here since we get warnings on Win32 */
-      olsr_printf(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
+      OLSR_PRINTF(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
     }
     return retval;
 }
@@ -379,12 +379,12 @@ ping_is_possible(struct ping_list *the_ping_list)
   for(list = the_ping_list; list; list = list->next) {
     char ping_command[50];
     snprintf(ping_command, sizeof(ping_command), "ping -c 1 -q %s", list->ping_address);
-    olsr_printf(1, "\nDo ping on %s ...\n", list->ping_address);
+    OLSR_PRINTF(1, "\nDo ping on %s ...\n", list->ping_address);
     if (system(ping_command) == 0) {
-      olsr_printf(1, "...OK\n\n");
+      OLSR_PRINTF(1, "...OK\n\n");
       return 1;
     }
-    olsr_printf(1, "...FAILED\n\n");
+    OLSR_PRINTF(1, "...FAILED\n\n");
   }
   return 0;
 }

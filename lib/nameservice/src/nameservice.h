@@ -56,8 +56,8 @@
 #define PLUGIN_AUTHOR   "Bruno Randolf, Jens Nachtigall, Sven-Ola Tuecke"
 
 // useful to set for the freifunkfirmware to remove all
-// calls to olsr_printf by the empty statement ";"
-//#define olsr_printf(...) ;
+// calls to OLSR_PRINTF by the empty statement ";"
+//#define OLSR_PRINTF(...) ;
 
 #define MESSAGE_TYPE		130
 #define PARSER_TYPE		MESSAGE_TYPE

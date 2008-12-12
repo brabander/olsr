@@ -95,9 +95,6 @@ olsr_exit(const char *, int);
 void *
 olsr_malloc(size_t, const char *);
 
-int
-EXPORT(olsr_printf)(int, const char *, ...) __attribute__((format(printf,2,3)));
-
 #endif
 
 /*

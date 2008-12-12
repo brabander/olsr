@@ -655,32 +655,13 @@ olsr_malloc(size_t size, const char *id)
 
 #if 0
   /* useful for debugging */
-  olsr_printf(1, "MEMORY: alloc %s %p, %u bytes\n",
+  OLSR_PRINTF(1, "MEMORY: alloc %s %p, %u bytes\n",
               id, ptr, size);
 #endif
 
   return ptr;
 }
 
-
-/**
- *Wrapper for printf that prints to a specific
- *debuglevel upper limit
- *
- */
-
-int
-olsr_printf(int loglevel, const char *format, ...)
-{
-  if((loglevel <= olsr_cnf->debug_level) && debug_handle)
-    {
-      va_list arglist;
-      va_start(arglist, format);
-      vfprintf(debug_handle, format, arglist);
-      va_end(arglist);
-    }
-  return 0;
-}
 
 /*
  * Local Variables:

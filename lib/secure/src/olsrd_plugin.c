@@ -70,9 +70,9 @@ int olsrd_plugin_interface_version(void)
 static void my_init(void)
 {
   /* Print plugin info to stdout */
-  /* We cannot use olsr_printf yet! */
+  /* We cannot use OLSR_PRINTF yet! */
   printf("%s\n", MOD_DESC);
-  printf("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n");
+  //printf("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n");
 }
 
 /**

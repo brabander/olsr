@@ -179,7 +179,7 @@ plugin_ipc_init(void)
   /* Init ipc socket */
   ipc_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_socket == -1) {
-    olsr_printf(1, "(DOT DRAW)IPC socket %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(DOT DRAW)IPC socket %s\n", strerror(errno));
     return 0;
   }
 
@@ -207,14 +207,14 @@ plugin_ipc_init(void)
 
   /* bind the socket to the port number */
   if (bind(ipc_socket, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-    olsr_printf(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
-    olsr_printf(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
@@ -236,17 +236,17 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
   socklen_t addrlen = sizeof(struct sockaddr_in);
   int ipc_connection = accept(ipc_socket, (struct sockaddr *)&pin, &addrlen);
   if (ipc_connection == -1) {
-    olsr_printf(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
     return;
   }
 #ifndef _WRS_KERNEL
   if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4)) {
-    olsr_printf(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
+    OLSR_PRINTF(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
     CLOSESOCKET(ipc_connection);
     return;
   }
 #endif
-  olsr_printf(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
+  OLSR_PRINTF(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   pcf_event(ipc_connection, 1, 1, 1);
   CLOSESOCKET(ipc_connection); /* close connection after one output */
 }
@@ -355,7 +355,7 @@ defined _WRS_KERNEL
 #define FLAGS MSG_NOSIGNAL
 #endif
     if (send(ipc_connection, data, size, FLAGS) == -1) {
-      olsr_printf(1, "(DOT DRAW)IPC connection lost!\n");
+      OLSR_PRINTF(1, "(DOT DRAW)IPC connection lost!\n");
       CLOSESOCKET(ipc_connection);
     }
   }

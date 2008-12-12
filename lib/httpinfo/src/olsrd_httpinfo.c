@@ -265,14 +265,14 @@ get_http_socket(int port)
   int s = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
   if (s == -1) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO)socket %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(HTTPINFO)socket %s\n", strerror(errno));
 #endif
     return -1;
   }
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
 #endif
     CLOSESOCKET(s);
     return -1;
@@ -305,7 +305,7 @@ get_http_socket(int port)
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *)&sst, addrlen) == -1) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
 #endif
     CLOSESOCKET(s);
     return -1;
@@ -314,7 +314,7 @@ get_http_socket(int port)
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
 #endif
     CLOSESOCKET(s);
     return -1;
@@ -378,14 +378,14 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   client_sockets[curr_clients] = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (client_sockets[curr_clients] == -1) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO) accept: %s\n", strerror(errno));
+    OLSR_PRINTF(1, "(HTTPINFO) accept: %s\n", strerror(errno));
 #endif
     goto close_connection;
   }
 
   if(((struct sockaddr *)&pin)->sa_family != olsr_cnf->ip_version) {
 #ifndef NODEBUG
-    olsr_printf(1, "(HTTPINFO) Connection with wrong IP version?!\n");
+    OLSR_PRINTF(1, "(HTTPINFO) Connection with wrong IP version?!\n");
 #endif
     goto close_connection;
   }
@@ -400,7 +400,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
   if (!check_allowed_ip(allowed_nets, ipaddr)) {
     struct ipaddr_str strbuf;
-    olsr_printf(0, "HTTP request from non-allowed host %s!\n",
+    OLSR_PRINTF(0, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, ipaddr));
     goto close_connection;
   }
@@ -417,7 +417,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   }
 
   if (r < 0) {
-    olsr_printf(1, "(HTTPINFO) Failed to recieve data from client!\n");
+    OLSR_PRINTF(1, "(HTTPINFO) Failed to recieve data from client!\n");
     stats.err_hits++;
     goto close_connection;
   }
@@ -426,13 +426,13 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   if (sscanf(req, "%10s %250s %10s\n", req_type, filename, http_version) != 3) {
     /* Try without HTTP version */
     if (sscanf(req, "%10s %250s\n", req_type, filename) != 2) {
-      olsr_printf(1, "(HTTPINFO) Error parsing request %s!\n", req);
+      OLSR_PRINTF(1, "(HTTPINFO) Error parsing request %s!\n", req);
       stats.err_hits++;
       goto close_connection;
     }
   }
 
-  olsr_printf(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
+  OLSR_PRINTF(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
 
   if (!strcmp(req_type, "POST")) {
 #if ADMIN_INTERFACE
@@ -515,7 +515,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
       build_http_header(&header, HTTP_OK, true);
       r = send(client_sockets[curr_clients], req, c, 0);
       if (r < 0) {
-        olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+        OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
         goto close_connection;
       }
       netsprintf_error = 0;
@@ -585,13 +585,13 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
   r = writen(client_sockets[curr_clients], header.buf, header.len);
   if (r < 0) {
-      olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+      OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
   }
 
   r = writen(client_sockets[curr_clients], body.buf, body.len);
   if (r < 0) {
-      olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+      OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
   }
 
@@ -655,7 +655,7 @@ build_http_header(struct autobuf *abuf,
   /* End header */
   abuf_puts(abuf, "\r\n");
 
-  olsr_printf(1, "HEADER:\n%s", abuf->buf);
+  OLSR_PRINTF(1, "HEADER:\n%s", abuf->buf);
 }
 
 
@@ -1250,7 +1250,7 @@ int netsprintf(char *str, const char* format, ...)
 	if (0 != netsprintf_direct) {
 		if (0 == netsprintf_error) {
 			if (0 > send(client_sockets[curr_clients], str, rv, 0)) {
-				olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
+				OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
 				netsprintf_error = 1;
 			}
 		}

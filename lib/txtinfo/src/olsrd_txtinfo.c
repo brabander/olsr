@@ -151,13 +151,13 @@ olsrd_plugin_init(void)
     listen_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
     if (listen_socket == -1) {
 #ifndef NODEBUG
-        olsr_printf(1, "(TXTINFO) socket()=%s\n", strerror(errno));
+        OLSR_PRINTF(1, "(TXTINFO) socket()=%s\n", strerror(errno));
 #endif
         return 0;
     }
     if (setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
 #ifndef NODEBUG
-        olsr_printf(1, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
+        OLSR_PRINTF(1, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
 #endif
         CLOSESOCKET(listen_socket);
         return 0;
@@ -197,7 +197,7 @@ olsrd_plugin_init(void)
     /* bind the socket to the port number */
     if (bind(listen_socket, (struct sockaddr *)&sst, addrlen) == -1) {
 #ifndef NODEBUG
-        olsr_printf(1, "(TXTINFO) bind()=%s\n", strerror(errno));
+        OLSR_PRINTF(1, "(TXTINFO) bind()=%s\n", strerror(errno));
 #endif
         CLOSESOCKET(listen_socket);
         return 0;
@@ -206,7 +206,7 @@ olsrd_plugin_init(void)
     /* show that we are willing to listen */
     if (listen(listen_socket, 1) == -1) {
 #ifndef NODEBUG
-        olsr_printf(1, "(TXTINFO) listen()=%s\n", strerror(errno));
+        OLSR_PRINTF(1, "(TXTINFO) listen()=%s\n", strerror(errno));
 #endif
         CLOSESOCKET(listen_socket);
         return 0;
@@ -216,7 +216,7 @@ olsrd_plugin_init(void)
     add_olsr_socket(listen_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
 
 #ifndef NODEBUG
-    olsr_printf(2, "(TXTINFO) listening on port %d\n",ipc_port);
+    OLSR_PRINTF(2, "(TXTINFO) listening on port %d\n",ipc_port);
 #endif
     return 1;
 }
@@ -246,7 +246,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     if (http_connection == -1) {
         /* this may well happen if the other side immediately closes the connection. */
 #ifndef NODEBUG
-        olsr_printf(1, "(TXTINFO) accept()=%s\n", strerror(errno));
+        OLSR_PRINTF(1, "(TXTINFO) accept()=%s\n", strerror(errno));
 #endif
         return;
     }
@@ -257,7 +257,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
              addr[0] = '\0';
         }
         if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
-            olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+            OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             CLOSESOCKET(http_connection);
             return;
         }
@@ -269,13 +269,13 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
         if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
            !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
-            olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+            OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
             CLOSESOCKET(http_connection);
             return;
         }
     }
 #ifndef NODEBUG
-    olsr_printf(2, "(TXTINFO) Connect from %s\n",addr);
+    OLSR_PRINTF(2, "(TXTINFO) Connect from %s\n",addr);
 #endif
 
     /* make the fd non-blocking */

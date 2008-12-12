@@ -318,7 +318,7 @@ process_param(char *key, char *value)
       memcpy(ip_net, &key[7], seperator);
       ip_net[seperator] = 0;
       memcpy(ip_mask, &key[7 + seperator + 1], 16);
-      olsr_printf(1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
+      OLSR_PRINTF(1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
 
       if(inet_aton(ip_net, &net) == 0)
 	{

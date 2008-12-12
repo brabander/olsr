@@ -60,7 +60,7 @@
 #include "plugin_util.h" /* set_plugin_int */
 #include "defs.h" /* olsr_cnf, OLSR_PRINTF */
 #include "ipcalc.h"
-#include "olsr.h" /* olsr_printf */
+#include "olsr.h" /* OLSR_PRINTF */
 #include "mid_set.h" /* mid_lookup_main_addr() */
 #include "mpr_selector_set.h" /* olsr_lookup_mprs_set() */
 #include "link_set.h" /* get_best_link_to_neighbor() */
@@ -94,19 +94,21 @@ int BroadcastRetransmitCount = 1;
 void BmfPError(const char* format, ...)
 {
 #define MAX_STR_DESC 255
+#ifndef NODEBUG
   char* strErr = strerror(errno);
+#endif
   char strDesc[MAX_STR_DESC];
 
   /* Rely on short-circuit boolean evaluation */
   if (format == NULL || *format == '\0')
   {
-    olsr_printf(1, "%s: %s\n", PLUGIN_NAME, strErr);
+    OLSR_PRINTF(1, "%s: %s\n", PLUGIN_NAME, strErr);
   }
   else
   {
     va_list arglist;
 
-    olsr_printf(1, "%s: ", PLUGIN_NAME);
+    OLSR_PRINTF(1, "%s: ", PLUGIN_NAME);
 
     va_start(arglist, format);
     vsnprintf(strDesc, MAX_STR_DESC, format, arglist);
@@ -114,7 +116,7 @@ void BmfPError(const char* format, ...)
 
     strDesc[MAX_STR_DESC - 1] = '\0'; /* Ensures null termination */
 
-    olsr_printf(1, "%s: %s\n", strDesc, strErr);
+    OLSR_PRINTF(1, "%s: %s\n", strDesc, strErr);
   }
 } /* BmfPError */
 
@@ -1120,7 +1122,7 @@ static void DoBmf(void)
          * returned on a non-VLAN interface, for the same ethernet frame. */
         if (nBytes < (int)sizeof(struct ip))
         {
-          olsr_printf(
+          OLSR_PRINTF(
             1,
             "%s: captured frame too short (%d bytes) on \"%s\"\n",
             PLUGIN_NAME,
@@ -1219,7 +1221,7 @@ static void DoBmf(void)
           sizeof(struct ip);
         if (nBytes < minimumLength)
         {
-          olsr_printf(
+          OLSR_PRINTF(
             1,
             "%s: captured a too short encapsulation packet (%d bytes) on \"%s\"\n",
             PLUGIN_NAME,
@@ -1283,7 +1285,7 @@ static void DoBmf(void)
         if (nBytes < minimumLength)
         {
           struct ipaddr_str buf;
-          olsr_printf(
+          OLSR_PRINTF(
             1,
             "%s: received a too short encapsulation packet (%d bytes) from %s on \"%s\"\n",
             PLUGIN_NAME,
@@ -1333,7 +1335,7 @@ static void DoBmf(void)
          * packet which contains at least a minimum-size IP header */
         if (nBytes < (int)sizeof(struct ip))
         {
-          olsr_printf(
+          OLSR_PRINTF(
             1,
             "%s: captured packet too short (%d bytes) on \"%s\"\n",
             PLUGIN_NAME,
@@ -1423,7 +1425,7 @@ int InterfaceChange(struct interface* interf, int action)
   {
   case (IFCHG_IF_ADD):
     AddInterface(interf);
-    olsr_printf(1, "%s: interface %s added\n", PLUGIN_NAME, interf->int_name);
+    OLSR_PRINTF(1, "%s: interface %s added\n", PLUGIN_NAME, interf->int_name);
     break;
 
   case (IFCHG_IF_REMOVE):
@@ -1434,15 +1436,15 @@ int InterfaceChange(struct interface* interf, int action)
      * interfaces. After that, BMF is re-started (InitBmf(interf)). */
     CloseBmf();
     InitBmf(interf);
-    olsr_printf(1, "%s: interface %s removed\n", PLUGIN_NAME, interf->int_name);
+    OLSR_PRINTF(1, "%s: interface %s removed\n", PLUGIN_NAME, interf->int_name);
     break;
 
   case (IFCHG_IF_UPDATE):
-    olsr_printf(1, "%s: interface %s updated\n", PLUGIN_NAME, interf->int_name);
+    OLSR_PRINTF(1, "%s: interface %s updated\n", PLUGIN_NAME, interf->int_name);
     break;
 
   default:
-    olsr_printf(
+    OLSR_PRINTF(
       1,
       "%s: interface %s: error - unknown action (%d)\n",
       PLUGIN_NAME,
