@@ -45,6 +45,9 @@
 
 #include <stdio.h>
 
+/* Export symbol for use in plugins. See ../olsrd-exports.sh */
+#define EXPORT(sym) sym
+
 extern const char olsrd_version[];
 extern const char EXPORT(build_date)[];
 extern const char EXPORT(build_host)[];
@@ -92,9 +95,6 @@ extern FILE *EXPORT(debug_handle);
 #else
 #define USED_ONLY_FOR_DEBUG
 #endif
-
-/* Export symbol for use in plugins. See ../olsrd-exports.sh
-#define EXPORT(x) x
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 

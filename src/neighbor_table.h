@@ -42,6 +42,7 @@
 #ifndef _OLSR_NEIGH_TBL
 #define _OLSR_NEIGH_TBL
 
+#include "defs.h"
 #include "olsr_types.h"
 #include "hashing.h"
 
