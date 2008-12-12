@@ -59,7 +59,6 @@ static struct list_node chg_kernel_list;
 static struct list_node del_kernel_list;
 
 
-#if 0
 /**
  *
  * Calculate the kernel route flags.
@@ -85,7 +84,6 @@ olsr_rt_flags(const struct rt_entry *rt)
 
   return flags;
 }
-#endif
 
 export_route_function olsr_addroute_function;
 export_route_function olsr_addroute6_function;
