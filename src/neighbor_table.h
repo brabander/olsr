@@ -85,7 +85,7 @@ struct neighbor_entry
 /*
  * The neighbor table
  */
-extern struct neighbor_entry neighbortable[HASHSIZE];
+extern struct neighbor_entry EXPORT(neighbortable)[HASHSIZE];
 
 extern struct olsr_cookie_info *nbr2_list_timer_cookie;
 

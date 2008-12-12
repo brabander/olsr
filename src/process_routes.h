@@ -46,10 +46,10 @@
 
 typedef int (*export_route_function)(const struct rt_entry*);
 
-extern export_route_function olsr_addroute_function;
-extern export_route_function olsr_addroute6_function;
-extern export_route_function olsr_delroute_function;
-extern export_route_function olsr_delroute6_function;
+extern export_route_function EXPORT(olsr_addroute_function);
+extern export_route_function EXPORT(olsr_addroute6_function);
+extern export_route_function EXPORT(olsr_delroute_function);
+extern export_route_function EXPORT(olsr_delroute6_function);
 
 void olsr_init_export_route(void);
 void olsr_update_rib_routes(void);

@@ -46,7 +46,7 @@
 
 char *strscpy(char *dest, const char *src, size_t size);
 
-PLUGIN_PUB char *strscat(char *dest, const char *src, size_t size);
+char *EXPORT(strscat)(char *dest, const char *src, size_t size);
 
 #endif
 

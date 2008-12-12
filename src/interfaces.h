@@ -212,7 +212,7 @@ typedef int (*ifchg_cb_func)(struct interface *, int);
 int ifinit(void);
 void run_ifchg_cbs(struct interface *, int);
 struct interface *if_ifwithsock(int);
-struct interface *if_ifwithaddr(const union olsr_ip_addr *);
+struct interface *EXPORT(if_ifwithaddr)(const union olsr_ip_addr *);
 struct interface *if_ifwithname(const char *);
 #if 0
 const char *if_ifwithindex_name(const int if_index);
@@ -221,7 +221,7 @@ const char *if_ifwithindex_name(const int if_index);
 struct interface *if_ifwithindex(const int if_index);
 #endif
 struct olsr_if *queue_if(const char *, int);
-PLUGIN_PUB void add_ifchgf(ifchg_cb_func f);
+void EXPORT(add_ifchgf)(ifchg_cb_func f);
 #if 0
 int del_ifchgf(ifchg_cb_func f);
 #endif

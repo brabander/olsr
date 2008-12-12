@@ -114,7 +114,7 @@ LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 #define OLSR_FOR_ALL_LINK_ENTRIES_END(link) }}
 
 /* Externals */
-extern struct list_node link_entry_head;
+extern struct list_node EXPORT(link_entry_head);
 extern bool link_changes;
 
 /* Function prototypes */

@@ -92,11 +92,11 @@ int
 olsr_parser_remove_function(parse_function, uint32_t);
 #endif
 
-PLUGIN_PUB void
-olsr_preprocessor_add_function(preprocessor_function);
+void
+EXPORT(olsr_preprocessor_add_function)(preprocessor_function);
 
-PLUGIN_PUB int
-olsr_preprocessor_remove_function(preprocessor_function);
+int
+EXPORT(olsr_preprocessor_remove_function)(preprocessor_function);
 
 void
 olsr_packetparser_add_function(packetparser_function *function);

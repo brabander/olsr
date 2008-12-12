@@ -46,8 +46,8 @@
 #include <stdio.h>
 
 extern const char olsrd_version[];
-extern const char build_date[];
-extern const char build_host[];
+extern const char EXPORT(build_date)[];
+extern const char EXPORT(build_host)[];
 
 #define	MAXMESSAGESIZE		1500	/* max broadcast size */
 #define UDP_IPV4_HDRSIZE        28
@@ -55,7 +55,7 @@ extern const char build_host[];
 
 #ifdef __GNUC__
 
-extern FILE *debug_handle;
+extern FILE *EXPORT(debug_handle);
 
 #ifdef NODEBUG
 #define OLSR_PRINTF(lvl, format, args...) do { } while(0)
@@ -93,12 +93,8 @@ extern FILE *debug_handle;
 #define USED_ONLY_FOR_DEBUG
 #endif
 
-#ifdef __GNUC__
-#define PLUGIN_PUB
-/* __attribute__((externally_visible)) */
-#else
-#define PLUGIN_PUB
-#endif
+/* Export symbol for use in plugins. See ../olsrd-exports.sh
+#define EXPORT(x) x
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))
 

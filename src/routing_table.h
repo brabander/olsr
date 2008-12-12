@@ -201,7 +201,7 @@ union olsr_kernel_route
 };
 
 
-extern struct avl_tree routingtree;
+extern struct avl_tree EXPORT(routingtree);
 extern unsigned int routingtree_version;
 extern struct olsr_cookie_info *rt_mem_cookie;
 
@@ -235,7 +235,7 @@ static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_
  */
 static INLINE bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
 
-PLUGIN_PUB bool olsr_cmp_rt(const struct rt_entry *, const struct rt_entry *);
+bool EXPORT(olsr_cmp_rt)(const struct rt_entry *, const struct rt_entry *);
 
 #if defined WIN32
 /**
@@ -277,8 +277,8 @@ void olsr_insert_rt_path(struct rt_path *, struct tc_entry *, struct link_entry 
 void olsr_update_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_delete_rt_path(struct rt_path *);
 
-PLUGIN_PUB struct rt_entry *
-olsr_lookup_routing_table(const union olsr_ip_addr *);
+struct rt_entry *
+EXPORT(olsr_lookup_routing_table)(const union olsr_ip_addr *);
 
 
 #endif

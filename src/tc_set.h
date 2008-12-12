@@ -141,7 +141,7 @@ LISTNODE2STRUCT(pathlist2tc, struct tc_entry, path_list_node);
     rtp = rtp_prefix_tree2rtp(rtp_node);
 #define OLSR_FOR_ALL_PREFIX_ENTRIES_END(tc, rtp) }}
 
-extern struct avl_tree tc_tree;
+extern struct avl_tree EXPORT(tc_tree);
 extern struct tc_entry *tc_myself;
 extern struct olsr_cookie_info *tc_mem_cookie;
 extern struct olsr_cookie_info *spf_backoff_timer_cookie;

@@ -52,8 +52,8 @@ extern bool changes_force; /* Maybe static */
 
 extern const union olsr_ip_addr all_zero;
 
-PLUGIN_PUB void
-register_pcf(int (*)(int, int, int));
+void
+EXPORT(register_pcf)(int (*)(int, int, int));
 
 void
 olsr_process_changes(void);
@@ -62,7 +62,7 @@ void
 init_msg_seqno(void);
 
 uint16_t
-get_msg_seqno(void);
+EXPORT(get_msg_seqno)(void);
 
 int
 olsr_forward_message(union olsr_message *,
@@ -95,8 +95,8 @@ olsr_exit(const char *, int);
 void *
 olsr_malloc(size_t, const char *);
 
-PLUGIN_PUB int
-olsr_printf(int, const char *, ...) __attribute__((format(printf,2,3)));
+int
+EXPORT(olsr_printf)(int, const char *, ...) __attribute__((format(printf,2,3)));
 
 #endif
 

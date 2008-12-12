@@ -237,7 +237,7 @@ struct olsrd_config {
 /*
  * Global olsrd configuragtion
  */
-extern struct olsrd_config *olsr_cnf;
+extern struct olsrd_config *EXPORT(olsr_cnf);
 
 /*
  * Interface to parser
@@ -263,8 +263,8 @@ int olsr_check_pollrate(float *pollrate);
 /*
  * List functions
  */
-PLUGIN_PUB void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-PLUGIN_PUB int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+void EXPORT(ip_prefix_list_add)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+int EXPORT(ip_prefix_list_remove)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 #endif /* _OLSRD_CFG_H */

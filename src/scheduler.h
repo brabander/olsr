@@ -97,7 +97,7 @@ void olsr_init_timers(void);
 void olsr_flush_timers(void);
 void olsr_set_timer(struct timer_entry **, unsigned int, uint8_t, bool,
 		    timer_cb_func, void *, olsr_cookie_t);
-struct timer_entry *olsr_start_timer(unsigned int, uint8_t, bool,
+struct timer_entry *EXPORT(olsr_start_timer)(unsigned int, uint8_t, bool,
 				     timer_cb_func, void *, olsr_cookie_t);
 void olsr_change_timer(struct timer_entry *, unsigned int, uint8_t, bool);
 void olsr_stop_timer(struct timer_entry *);
@@ -128,7 +128,7 @@ void olsr_scheduler(void);
 #define TIMED_OUT(s1)	((long)((s1) - now_times) < 0)
 
 /* Timer data */
-extern clock_t now_times; /* current idea of times(2) reported uptime */
+extern clock_t EXPORT(now_times); /* current idea of times(2) reported uptime */
 
 
 #define SP_PR_READ		0x01
@@ -164,10 +164,10 @@ LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
 #define OLSR_FOR_ALL_SOCKETS_END(socket) }}
 
 
-void add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
+void EXPORT(add_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
-PLUGIN_PUB void enable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
-PLUGIN_PUB void disable_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void EXPORT(enable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void EXPORT(disable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 
 /*
  * a wrapper around times(2). times(2) has the problem, that it may return -1

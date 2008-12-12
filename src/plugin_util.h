@@ -41,11 +41,11 @@
 #include "olsrd_plugin.h"
 
 /* Common/utility functions for plugins */
-PLUGIN_PUB set_plugin_parameter set_plugin_port;
-PLUGIN_PUB set_plugin_parameter set_plugin_ipaddress;
-PLUGIN_PUB set_plugin_parameter set_plugin_boolean;
-PLUGIN_PUB set_plugin_parameter set_plugin_int;
-PLUGIN_PUB set_plugin_parameter set_plugin_string;
+set_plugin_parameter EXPORT(set_plugin_port);
+set_plugin_parameter EXPORT(set_plugin_ipaddress);
+set_plugin_parameter EXPORT(set_plugin_boolean);
+set_plugin_parameter EXPORT(set_plugin_int);
+set_plugin_parameter EXPORT(set_plugin_string);
 
 
 #endif

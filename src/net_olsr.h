@@ -105,7 +105,7 @@ int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t
 
 int net_output(struct interface *);
 
-PLUGIN_PUB void add_ptf(packet_transform_function);
+void EXPORT(add_ptf)(packet_transform_function);
 
 #if 0
 int del_ptf(packet_transform_function);

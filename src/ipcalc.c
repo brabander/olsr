@@ -40,7 +40,7 @@
 
 #include "ipcalc.h"
 
-/* Global stuff externed in defs.h */
+/* Global stuff externed in olsr_cfg.h */
 FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
 struct olsrd_config *olsr_cnf;         /* The global configuration */
 

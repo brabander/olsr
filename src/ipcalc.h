@@ -78,11 +78,11 @@ static INLINE void genipcopy(void *dst, const void *src) { memcpy(dst, src, olsr
 int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
 
 
-int prefix_to_netmask(uint8_t *, int, uint8_t);
+int EXPORT(prefix_to_netmask)(uint8_t *, int, uint8_t);
 
 static INLINE int olsr_prefix_to_netmask(union olsr_ip_addr *adr, uint8_t prefixlen) { return prefix_to_netmask(adr->v6.s6_addr, olsr_cnf->ipsize, prefixlen); }
 
-uint8_t netmask_to_prefix(const uint8_t *, int);
+uint8_t EXPORT(netmask_to_prefix)(const uint8_t *, int);
 
 static INLINE uint8_t olsr_netmask_to_prefix(const union olsr_ip_addr *adr) { return netmask_to_prefix(adr->v6.s6_addr, olsr_cnf->ipsize); }
 
