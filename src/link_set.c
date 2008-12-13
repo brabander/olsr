@@ -73,7 +73,7 @@ signal_link_changes(bool val)
 }
 
 /* Prototypes. */
-static int check_link_status(const struct hello_message *message,
+static int check_link_status(const struct lq_hello_message *message,
                              const struct interface *in_if);
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
 					 const union olsr_ip_addr *,
@@ -583,19 +583,19 @@ lookup_link_entry(const union olsr_ip_addr *remote,
 struct link_entry *
 update_link_entry(const union olsr_ip_addr *local,
 		  const union olsr_ip_addr *remote,
-		  const struct hello_message *message,
+		  const struct lq_hello_message *message,
 		  struct interface *in_if)
 {
   struct link_entry *entry;
 
   /* Add if not registered */
   entry =
-    add_link_entry(local, remote, &message->source_addr, message->vtime,
+    add_link_entry(local, remote, &message->comm.orig, message->comm.vtime,
 		   message->htime, in_if);
 
   /* Update ASYM_time */
-  entry->vtime = message->vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->vtime);
+  entry->vtime = message->comm.vtime;
+  entry->ASYM_time = GET_TIMESTAMP(message->comm.vtime);
 
   entry->prev_status = check_link_status(message, in_if);
 
@@ -608,13 +608,13 @@ update_link_entry(const union olsr_ip_addr *local,
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->vtime,
+    olsr_set_timer(&entry->link_sym_timer, message->comm.vtime,
 		   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
 		   &olsr_expire_link_sym_timer, entry,
                    link_sym_timer_cookie->ci_id);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-    olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME *
+    olsr_set_link_timer(entry, message->comm.vtime + NEIGHB_HOLD_TIME *
 			MSEC_PER_SEC);
     break;
   default:;
@@ -673,21 +673,21 @@ replace_neighbor_link_set(const struct neighbor_entry *old,
  *@return the link status
  */
 static int
-check_link_status(const struct hello_message *message,
+check_link_status(const struct lq_hello_message *message,
 		  const struct interface *in_if)
 {
   int ret = UNSPEC_LINK;
-  struct hello_neighbor *neighbors;
+  struct lq_hello_neighbor *neighbors;
 
-  neighbors = message->neighbors;
+  neighbors = message->neigh;
   while (neighbors) {
 
     /*
      * Note: If a neigh has 2 cards we can reach, the neigh
      * will send a Hello with the same IP mentined twice
      */
-    if (ipequal(&neighbors->address, &in_if->ip_addr)) {
-      ret = neighbors->link;
+    if (ipequal(&neighbors->addr, &in_if->ip_addr)) {
+      ret = neighbors->link_type;
       if (SYM_LINK == ret) {
 	break;
       }

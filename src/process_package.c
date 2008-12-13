@@ -51,16 +51,16 @@
 static bool olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
 
 static void process_message_neighbors(struct neighbor_entry *,
-                                      const struct hello_message *);
+                                      const struct lq_hello_message *);
 
 static void linking_this_2_entries(struct neighbor_entry *,
                                    struct neighbor_2_entry *,
                                    olsr_reltime);
 
-static bool lookup_mpr_status(const struct hello_message *,
+static bool lookup_mpr_status(const struct lq_hello_message *,
                                    const struct interface *);
 
-static void hello_tap(struct hello_message *, struct interface *,
+static void hello_tap(struct lq_hello_message *, struct interface *,
                       const union olsr_ip_addr *);
 
 
@@ -71,13 +71,13 @@ static void hello_tap(struct hello_message *, struct interface *,
  * @return nada
  */
 static void
-process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_message *message)
+process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello_message *message)
 {
-  struct hello_neighbor *message_neighbors;
+  struct lq_hello_neighbor *message_neighbors;
   olsr_linkcost first_hop_pathcost;
   struct link_entry *lnk;
 
-  for (message_neighbors = message->neighbors;
+  for (message_neighbors = message->neigh;
        message_neighbors != NULL;
        message_neighbors = message_neighbors->next) {
 #ifdef DEBUG
@@ -91,28 +91,28 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
      * 2 hop list
      * IMPORTANT!
      */
-    if (if_ifwithaddr(&message_neighbors->address) != NULL) {
+    if (if_ifwithaddr(&message_neighbors->addr) != NULL) {
         continue;
     }
     /* Get the main address */
-    neigh_addr = olsr_lookup_main_addr_by_alias(&message_neighbors->address);
+    neigh_addr = olsr_lookup_main_addr_by_alias(&message_neighbors->addr);
     if (neigh_addr != NULL) {
-      message_neighbors->address = *neigh_addr;
+      message_neighbors->addr = *neigh_addr;
     }
 
-    if (message_neighbors->status == SYM_NEIGH ||
-        message_neighbors->status == MPR_NEIGH) {
+    if (message_neighbors->neigh_type == SYM_NEIGH ||
+        message_neighbors->neigh_type == MPR_NEIGH) {
       struct neighbor_2_list_entry *two_hop_neighbor_yet =
-        olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+        olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
 #ifdef DEBUG
-      OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
+      OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->addr));
 #endif
       if (two_hop_neighbor_yet != NULL) {
         struct neighbor_list_entry *walker;
 
         /* Updating the holding time for this neighbor */
         olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
-                       message->vtime, OLSR_NBR2_LIST_JITTER,
+                       message->comm.vtime, OLSR_NBR2_LIST_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list,
                        two_hop_neighbor_yet, nbr2_list_timer_cookie->ci_id);
 
@@ -138,18 +138,18 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
           }
         }
       } else {
-	struct neighbor_2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->address);
+	struct neighbor_2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->addr);
         if (two_hop_neighbor == NULL) {
 #ifdef DEBUG
           OLSR_PRINTF(5,
                       "Adding 2 hop neighbor %s\n\n",
-                      olsr_ip_to_string(&buf, &message_neighbors->address));
+                      olsr_ip_to_string(&buf, &message_neighbors->addr));
 #endif
           two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
           two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
           two_hop_neighbor->neighbor_2_nblist.prev = &two_hop_neighbor->neighbor_2_nblist;
           two_hop_neighbor->neighbor_2_pointer = 0;
-          two_hop_neighbor->neighbor_2_addr = message_neighbors->address;
+          two_hop_neighbor->neighbor_2_addr = message_neighbors->addr;
           olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
         }
 	/*
@@ -157,7 +157,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
 	 */
 	changes_neighborhood = true;
 	changes_topology = true;
-	linking_this_2_entries(neighbor, two_hop_neighbor, message->vtime);
+	linking_this_2_entries(neighbor, two_hop_neighbor, message->comm.vtime);
       }
     }
   }
@@ -178,17 +178,17 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
    * different quality) we want to select only the best one, not just
    * the last one listed in the HELLO message.
    */
-  for(message_neighbors = message->neighbors;
+  for(message_neighbors = message->neigh;
       message_neighbors != NULL;
       message_neighbors = message_neighbors->next) {
-    if (if_ifwithaddr(&message_neighbors->address) != NULL) {
+    if (if_ifwithaddr(&message_neighbors->addr) != NULL) {
           continue;
     }
-    if (message_neighbors->status == SYM_NEIGH ||
-        message_neighbors->status == MPR_NEIGH) {
+    if (message_neighbors->neigh_type == SYM_NEIGH ||
+        message_neighbors->neigh_type == MPR_NEIGH) {
       struct neighbor_list_entry *walker;
       struct neighbor_2_list_entry *two_hop_neighbor_yet =
-        olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
+        olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
 
       if (!two_hop_neighbor_yet) {
         continue;
@@ -287,16 +287,16 @@ linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry 
  * @return 1 if we are selected as MPR 0 if not
  */
 static bool
-lookup_mpr_status(const struct hello_message *message,
+lookup_mpr_status(const struct lq_hello_message *message,
                   const struct interface *in_if)
 {
-  struct hello_neighbor *neighbors;
+  struct lq_hello_neighbor *neighbors;
 
-  for (neighbors = message->neighbors; neighbors; neighbors = neighbors->next) {
+  for (neighbors = message->neigh; neighbors; neighbors = neighbors->next) {
     if (olsr_cnf->ip_version == AF_INET
-        ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
-        : ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr)) {
-      return neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH ? true : false;
+        ? ip4equal(&neighbors->addr.v4, &in_if->ip_addr.v4)
+        : ip6equal(&neighbors->addr.v6, &in_if->int6_addr.sin6_addr)) {
+      return neighbors->link_type == SYM_LINK && neighbors->neigh_type == MPR_NEIGH ? true : false;
     }
   }
   /* Not found */
@@ -319,7 +319,7 @@ olsr_init_package_process(void)
 }
 
 static int
-deserialize_hello(struct hello_message *hello, const void *ser)
+deserialize_hello(struct lq_hello_message *hello, const void *ser)
 {
   const unsigned char *limit;
   uint8_t type;
@@ -331,19 +331,19 @@ deserialize_hello(struct hello_message *hello, const void *ser)
     /* No need to do anything more */
     return 1;
   }
-  pkt_get_reltime(&curr, &hello->vtime);
+  pkt_get_reltime(&curr, &hello->comm.vtime);
   pkt_get_u16(&curr, &size);
-  pkt_get_ipaddress(&curr, &hello->source_addr);
+  pkt_get_ipaddress(&curr, &hello->comm.orig);
 
-  pkt_get_u8(&curr, &hello->ttl);
-  pkt_get_u8(&curr, &hello->hop_count);
-  pkt_get_u16(&curr, &hello->packet_seq_number);
+  pkt_get_u8(&curr, &hello->comm.ttl);
+  pkt_get_u8(&curr, &hello->comm.hops);
+  pkt_get_u16(&curr, &hello->comm.seqno);
   pkt_ignore_u16(&curr);
 
   pkt_get_reltime(&curr, &hello->htime);
-  pkt_get_u8(&curr, &hello->willingness);
+  pkt_get_u8(&curr, &hello->will);
 
-  hello->neighbors = NULL;
+  hello->neigh = NULL;
   limit = ((const unsigned char *)ser) + size;
   while (curr < limit) {
     const struct lq_hello_info_header *info_head = (const struct lq_hello_info_header *)curr;
@@ -351,17 +351,17 @@ deserialize_hello(struct hello_message *hello, const void *ser)
 
     curr = (const unsigned char *)(info_head + 1);
     while (curr < limit2) {
-      struct hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
-      pkt_get_ipaddress(&curr, &neigh->address);
+      struct lq_hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
+      pkt_get_ipaddress(&curr, &neigh->addr);
 
       if (type == LQ_HELLO_MESSAGE) {
         olsr_deserialize_hello_lq_pair(&curr, neigh);
       }
-      neigh->link = EXTRACT_LINK(info_head->link_code);
-      neigh->status = EXTRACT_STATUS(info_head->link_code);
+      neigh->link_type = EXTRACT_LINK(info_head->link_code);
+      neigh->neigh_type = EXTRACT_STATUS(info_head->link_code);
 
-      neigh->next = hello->neighbors;
-      hello->neighbors = neigh;
+      neigh->next = hello->neigh;
+      hello->neigh = neigh;
     }
   }
   return 0;
@@ -369,7 +369,7 @@ deserialize_hello(struct hello_message *hello, const void *ser)
 
 
 static void
-hello_tap(struct hello_message *message,
+hello_tap(struct lq_hello_message *message,
           struct interface *in_if,
           const union olsr_ip_addr *from_addr)
 {
@@ -377,13 +377,13 @@ hello_tap(struct hello_message *message,
    * Update link status
    */
   struct link_entry *lnk = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
-  struct hello_neighbor *walker;
+  struct lq_hello_neighbor *walker;
   /* just in case our neighbor has changed its HELLO interval */
   olsr_update_packet_loss_hello_int(lnk, message->htime);
 
   /* find the input interface in the list of neighbor interfaces */
-  for (walker = message->neighbors; walker != NULL; walker = walker->next) {
-    if (ipequal(&walker->address, &in_if->ip_addr)) {
+  for (walker = message->neigh; walker != NULL; walker = walker->next) {
+    if (ipequal(&walker->addr, &in_if->ip_addr)) {
       break;
     }
   }
@@ -400,20 +400,20 @@ hello_tap(struct hello_message *message,
   /* Check if we are chosen as MPR */
   if (lookup_mpr_status(message, in_if)) {
     /* source_addr is always the main addr of a node! */
-    olsr_update_mprs_set(&message->source_addr, message->vtime);
+    olsr_update_mprs_set(&message->comm.orig, message->comm.vtime);
   }
 
   /* Check willingness */
-  if (lnk->neighbor->willingness != message->willingness) {
+  if (lnk->neighbor->willingness != message->will) {
     struct ipaddr_str buf;
     OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n",
                 olsr_ip_to_string(&buf, &lnk->neighbor->neighbor_main_addr),
                 lnk->neighbor->willingness,
-                message->willingness);
+                message->will);
     /*
      *If willingness changed - recalculate
      */
-    lnk->neighbor->willingness = message->willingness;
+    lnk->neighbor->willingness = message->will;
     changes_neighborhood = true;
     changes_topology = true;
   }
@@ -426,12 +426,12 @@ hello_tap(struct hello_message *message,
   /* Process changes immedeatly in case of MPR updates */
   olsr_process_changes();
 
-  olsr_free_hello_packet(message);
+  destroy_lq_hello(message);
 }
 
 static bool olsr_input_hello(union olsr_message *msg, struct interface *inif, union olsr_ip_addr *from)
 {
-  struct hello_message hello;
+  struct lq_hello_message hello;
 
   if (msg == NULL) {
     return false;

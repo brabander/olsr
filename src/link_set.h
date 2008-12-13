@@ -46,8 +46,8 @@
 #ifndef _LINK_SET_H
 #define _LINK_SET_H
 
+#include "lq_packet.h"
 #include "lq_plugin.h"
-#include "packet.h"
 #include "common/list.h"
 #include "mantissa.h"
 
@@ -123,7 +123,7 @@ struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
 
 struct link_entry *update_link_entry(const union olsr_ip_addr *,
 				     const union olsr_ip_addr *,
-				     const struct hello_message *,
+				     const struct lq_hello_message *,
 				     struct interface *);
 
 int check_neighbor_link(const union olsr_ip_addr *);

@@ -43,7 +43,7 @@
 #define _OLSR_MSG_PARSER
 
 #include "olsr_protocol.h"
-#include "packet.h"
+#include "lq_packet.h"
 
 #define PROMISCUOUS 0xffffffff
 
