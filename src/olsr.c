@@ -152,7 +152,6 @@ olsr_process_changes(void)
 #endif
 
   if(!changes_force &&
-     2 <= olsr_cnf->lq_level &&
      0 >= olsr_cnf->lq_dlimit)
     return;
 
@@ -168,11 +167,7 @@ olsr_process_changes(void)
   }
 
   if (changes_neighborhood) {
-    if (olsr_cnf->lq_level < 1) {
-      olsr_calculate_mpr();
-    } else {
-      olsr_calculate_lq_mpr();
-    }
+    olsr_calculate_lq_mpr();
   }
 
   /* calculate the routing table */

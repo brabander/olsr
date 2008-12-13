@@ -885,14 +885,11 @@ static void build_config_body(struct autobuf *abuf)
   abuf_appendf(abuf, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
 
   abuf_appendf(abuf, "</tr>\n<tr>\n"
-		  "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
-  if (olsr_cnf->lq_level) {
-    abuf_appendf(abuf,
-		    "<td>LQ level: %d</td>\n"
-		    "<td>LQ aging: %f</td>\n",
-		    olsr_cnf->lq_level,
-		    olsr_cnf->lq_aging);
-  }
+		  "<td>LQ algorithm: %s</td>\n", olsr_cnf->lq_algorithm);
+  abuf_appendf(abuf,
+      "<td>LQ aging: %f</td>\n",
+		  olsr_cnf->lq_aging);
+
   abuf_puts(abuf, "</tr></table>\n");
 
   abuf_puts(abuf, "<h2>Interfaces</h2>\n");
@@ -985,24 +982,20 @@ static void build_neigh_body(struct autobuf *abuf)
 
   abuf_appendf(abuf,
                    "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th>", colspan, colspan);
-  if (olsr_cnf->lq_level > 0) {
-    abuf_puts(abuf,
-                     "<th align=\"right\">LinkCost</th>");
-  }
+  abuf_puts(abuf,
+                   "<th align=\"right\">LinkCost</th>");
   abuf_puts(abuf, "</tr>\n");
 
   /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
+    struct lqtextbuffer lqbuffer1, lqbuffer2;
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &lnk->local_iface_addr, -1);
     build_ipaddr_with_link(abuf, &lnk->neighbor_iface_addr, -1);
-    if (olsr_cnf->lq_level > 0) {
-      struct lqtextbuffer lqbuffer1, lqbuffer2;
-      abuf_appendf(abuf,
-                       "<td align=\"right\">(%s) %s</td>",
-                       get_link_entry_text(lnk, '/', &lqbuffer1),
-                       get_linkcost_text(lnk->linkcost, false, &lqbuffer2));
-    }
+    abuf_appendf(abuf,
+                     "<td align=\"right\">(%s) %s</td>",
+                     get_link_entry_text(lnk, '/', &lqbuffer1),
+                     get_linkcost_text(lnk->linkcost, false, &lqbuffer2));
     abuf_puts(abuf, "</tr>\n");
   } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
@@ -1051,25 +1044,21 @@ static void build_topo_body(struct autobuf *abuf)
 
   section_title(abuf, "Topology Entries");
   abuf_appendf(abuf, "<tr><th align=\"center\"%s>Destination IP</th><th align=\"center\"%s>Last Hop IP</th>", colspan, colspan);
-  if (olsr_cnf->lq_level > 0) {
-    abuf_puts(abuf, "<th colspan=\"3\" align=\"right\">Linkcost</th>");
-  }
+  abuf_puts(abuf, "<th colspan=\"3\" align=\"right\">Linkcost</th>");
   abuf_puts(abuf, "</tr>\n");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
       struct tc_edge_entry *tc_edge;
       OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       	if (tc_edge->edge_inv)  {
+          struct lqtextbuffer lqbuffer1, lqbuffer2;
           abuf_puts(abuf, "<tr>");
           build_ipaddr_with_link(abuf, &tc_edge->T_dest_addr, -1);
           build_ipaddr_with_link(abuf, &tc->addr, -1);
-          if (olsr_cnf->lq_level > 0) {
-            struct lqtextbuffer lqbuffer1, lqbuffer2;
-	    abuf_appendf(abuf,
+          abuf_appendf(abuf,
 			     "<td align=\"right\">(%s)</td><td>&nbsp;</td><td align=\"left\">%s</td>\n",
 			     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 			     get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
-          }
           abuf_puts(abuf, "</tr>\n");
       	}
       } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);

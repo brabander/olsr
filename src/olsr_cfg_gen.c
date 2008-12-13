@@ -95,8 +95,6 @@ olsr_print_cnf(const struct olsrd_config *cnf)
 
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
 
-  printf("LQ level         : %d\n", cnf->lq_level);
-
   printf("LQ fish eye      : %d\n", cnf->lq_fish);
 
   printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
@@ -303,11 +301,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool wr
                "# Specifies how many MPRs a node should\n"
                "# try select to reach every 2 hop neighbor\n"
                "# Can be set to any integer >0\n" "# defaults to 1\n" "MprCoverage\t%d\n\n", cnf->mpr_coverage);
-
-  abuf_appendf(abuf, "# Link quality level\n"
-               "# 0 = do not use link quality\n"
-               "# 1 = use link quality for MPR selection\n"
-               "# 2 = use link quality for MPR selection and routing\n" "LinkQualityLevel\t%d\n\n", cnf->lq_level);
 
   abuf_appendf(abuf, "# Fish Eye algorithm\n"
                "# 0 = do not use fish eye\n" "# 1 = use fish eye\n" "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);

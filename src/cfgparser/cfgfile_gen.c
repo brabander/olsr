@@ -201,12 +201,6 @@ cfgparser_olsrd_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *c
                      "# defaults to 1\n"
                      "MprCoverage\t%d\n\n", cnf->mpr_coverage);
 
-  abuf_appendf(abuf, "# Link quality level\n"
-                     "# 0 = do not use link quality\n"
-                     "# 1 = use link quality for MPR selection\n"
-                     "# 2 = use link quality for MPR selection and routing\n"
-                     "LinkQualityLevel\t%d\n\n", cnf->lq_level);
-
   abuf_appendf(abuf, "# Fish Eye algorithm\n"
                      "# 0 = do not use fish eye\n"
                      "# 1 = use fish eye\n"

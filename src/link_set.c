@@ -182,8 +182,6 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
 {
   const union olsr_ip_addr *main_addr;
   struct link_entry *walker, *good_link, *backup_link;
-  struct interface *tmp_if;
-  int curr_metric = MAX_IF_METRIC;
   olsr_linkcost curr_lcost = LINK_COST_BROKEN;
   olsr_linkcost tmp_lc;
 
@@ -206,67 +204,25 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
     if (!ipequal(&walker->neighbor->neighbor_main_addr, main_addr))
       continue;
 
-    if (olsr_cnf->lq_level == 0) {
+    /* get the link cost */
+    tmp_lc = walker->linkcost;
 
-      /*
-       * handle the non-LQ, RFC-compliant case
-       */
+    /*
+     * is this link better than anything we had before ?
+     * use the requested remote interface address as a tie-breaker.
+     */
+    if ((tmp_lc < curr_lcost) ||
+        ((tmp_lc == curr_lcost) &&
+         ipequal(&walker->local_iface_addr, remote))) {
 
-      /*
-       * find the interface for the link.
-       * we select the link with the best local interface metric.
-       */
-      tmp_if = walker->if_name ? if_ifwithname(walker->if_name) :
-	if_ifwithaddr(&walker->local_iface_addr);
+      /* memorize the link quality */
+      curr_lcost = tmp_lc;
 
-      if (!tmp_if) {
-	continue;
-      }
-
-      /*
-       * is this interface better than anything we had before ?
-       * use the requested remote interface address as a tie-breaker
-       */
-      if ((tmp_if->int_metric < curr_metric) ||
-	  ((tmp_if->int_metric == curr_metric) &&
-	   ipequal(&walker->local_iface_addr, remote))) {
-
-	/* memorize the interface's metric */
-	curr_metric = tmp_if->int_metric;
-
-	/* prefer symmetric links over asymmetric links */
-	if (lookup_link_status(walker) == SYM_LINK) {
-	  good_link = walker;
-        } else {
-	  backup_link = walker;
-        }
-      }
-    } else {
-
-      /*
-       * handle the LQ, non-RFC compliant case.
-       */
-
-      /* get the link cost */
-      tmp_lc = walker->linkcost;
-
-      /*
-       * is this link better than anything we had before ?
-       * use the requested remote interface address as a tie-breaker.
-       */
-      if ((tmp_lc < curr_lcost) ||
-          ((tmp_lc == curr_lcost) &&
-           ipequal(&walker->local_iface_addr, remote))) {
-
-	/* memorize the link quality */
-	curr_lcost = tmp_lc;
-
-	/* prefer symmetric links over asymmetric links */
-	if (lookup_link_status(walker) == SYM_LINK) {
-	  good_link = walker;
-        } else {
-	  backup_link = walker;
-        }
+      /* prefer symmetric links over asymmetric links */
+      if (lookup_link_status(walker) == SYM_LINK) {
+        good_link = walker;
+      } else {
+        backup_link = walker;
       }
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
@@ -521,16 +477,14 @@ add_link_entry(const union olsr_ip_addr *local,
 
   new_link->prev_status = ASYM_LINK;
 
-  if (olsr_cnf->lq_level > 0) {
-    new_link->loss_helloint = htime;
+  new_link->loss_helloint = htime;
 
-    olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
-		   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-		   &olsr_expire_link_loss_timer, new_link,
-                   link_loss_timer_cookie->ci_id);
+  olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
+   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+   &olsr_expire_link_loss_timer, new_link,
+                 link_loss_timer_cookie->ci_id);
 
-    set_loss_link_multiplier(new_link);
-  }
+  set_loss_link_multiplier(new_link);
 
   new_link->linkcost = LINK_COST_BROKEN;
 

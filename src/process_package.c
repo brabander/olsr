@@ -74,6 +74,8 @@ static void
 process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_message *message)
 {
   struct hello_neighbor *message_neighbors;
+  olsr_linkcost first_hop_pathcost;
+  struct link_entry *lnk;
 
   for (message_neighbors = message->neighbors;
        message_neighbors != NULL;
@@ -106,6 +108,8 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
       OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->address));
 #endif
       if (two_hop_neighbor_yet != NULL) {
+        struct neighbor_list_entry *walker;
+
         /* Updating the holding time for this neighbor */
         olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
                        message->vtime, OLSR_NBR2_LIST_JITTER,
@@ -113,27 +117,24 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
                        two_hop_neighbor_yet, nbr2_list_timer_cookie->ci_id);
 
         /*
-         * For link quality OLSR, reset the path link quality here.
+         * reset the path link quality here.
          * The path link quality will be calculated in the second pass, below.
          * Keep the saved_path_link_quality for reference.
          */
-        if (olsr_cnf->lq_level > 0) {
-          /*
-           * loop through the one-hop neighbors that see this
-           * 'two_hop_neighbor'
-           */
-          struct neighbor_list_entry *walker;
-          for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
-               walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist;
-               walker = walker->next) {
-            /*
-             * have we found the one-hop neighbor that sent the
-             * HELLO message that we're current processing?
-             */
 
-            if (walker->neighbor == neighbor) {
-              walker->path_linkcost = LINK_COST_BROKEN;
-            }
+        /*
+         * loop through the one-hop neighbors that see this
+         * 'two_hop_neighbor'
+         */
+        for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
+             walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist;
+             walker = walker->next) {
+          /*
+           * have we found the one-hop neighbor that sent the
+           * HELLO message that we're current processing?
+           */
+          if (walker->neighbor == neighbor) {
+            walker->path_linkcost = LINK_COST_BROKEN;
           }
         }
       } else {
@@ -161,76 +162,72 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct hello_me
     }
   }
 
-  /* Separate, second pass for link quality OLSR */
-  /* Separate, second and third pass for link quality OLSR */
-  if (olsr_cnf->lq_level > 0) {
-    olsr_linkcost first_hop_pathcost;
-    struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+  /* Second pass */
+  lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
 
-    if (!lnk) {
-        return;
-    }
-    /* calculate first hop path quality */
-    first_hop_pathcost = lnk->linkcost;
-    /*
-     *  Second pass for link quality OLSR: calculate the best 2-hop
-     * path costs to all the 2-hop neighbors indicated in the
-     * HELLO message. Since the same 2-hop neighbor may be listed
-     * more than once in the same HELLO message (each at a possibly
-     * different quality) we want to select only the best one, not just
-     * the last one listed in the HELLO message.
-     */
-    for(message_neighbors = message->neighbors;
-        message_neighbors != NULL;
-        message_neighbors = message_neighbors->next) {
-      if (if_ifwithaddr(&message_neighbors->address) != NULL) {
-            continue;
-      }
-      if (message_neighbors->status == SYM_NEIGH ||
-          message_neighbors->status == MPR_NEIGH) {
-        struct neighbor_list_entry *walker;
-        struct neighbor_2_list_entry *two_hop_neighbor_yet =
-          olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
-
-        if (!two_hop_neighbor_yet) {
+  if (!lnk) {
+      return;
+  }
+  /* calculate first hop path quality */
+  first_hop_pathcost = lnk->linkcost;
+  /*
+   *  Second pass : calculate the best 2-hop
+   * path costs to all the 2-hop neighbors indicated in the
+   * HELLO message. Since the same 2-hop neighbor may be listed
+   * more than once in the same HELLO message (each at a possibly
+   * different quality) we want to select only the best one, not just
+   * the last one listed in the HELLO message.
+   */
+  for(message_neighbors = message->neighbors;
+      message_neighbors != NULL;
+      message_neighbors = message_neighbors->next) {
+    if (if_ifwithaddr(&message_neighbors->address) != NULL) {
           continue;
-        }
+    }
+    if (message_neighbors->status == SYM_NEIGH ||
+        message_neighbors->status == MPR_NEIGH) {
+      struct neighbor_list_entry *walker;
+      struct neighbor_2_list_entry *two_hop_neighbor_yet =
+        olsr_lookup_my_neighbors(neighbor, &message_neighbors->address);
 
+      if (!two_hop_neighbor_yet) {
+        continue;
+      }
+
+      /*
+       *  loop through the one-hop neighbors that see this
+       * 'two_hop_neighbor_yet->neighbor_2'
+       */
+      for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
+           walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist;
+           walker = walker->next) {
         /*
-         *  loop through the one-hop neighbors that see this
-         * 'two_hop_neighbor_yet->neighbor_2'
+         * have we found the one-hop neighbor that sent the
+         * HELLO message that we're current processing?
          */
-        for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
-             walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist;
-             walker = walker->next) {
-          /*
-           * have we found the one-hop neighbor that sent the
-           * HELLO message that we're current processing?
-           */
-          if (walker->neighbor == neighbor) {
-            // the link cost between the 1-hop neighbour and the
-            // 2-hop neighbour
-            olsr_linkcost new_second_hop_linkcost = message_neighbors->cost;
+        if (walker->neighbor == neighbor) {
+          // the link cost between the 1-hop neighbour and the
+          // 2-hop neighbour
+          olsr_linkcost new_second_hop_linkcost = message_neighbors->cost;
 
-            // the total cost for the route
-            // "us --- 1-hop --- 2-hop"
-            olsr_linkcost new_path_linkcost = first_hop_pathcost + new_second_hop_linkcost;
+          // the total cost for the route
+          // "us --- 1-hop --- 2-hop"
+          olsr_linkcost new_path_linkcost = first_hop_pathcost + new_second_hop_linkcost;
 
-            // Only copy the link quality if it is better than what we have
-            // for this 2-hop neighbor
-            if (new_path_linkcost < walker->path_linkcost){
-              walker->second_hop_linkcost = new_second_hop_linkcost;
-              walker->path_linkcost = new_path_linkcost;
+          // Only copy the link quality if it is better than what we have
+          // for this 2-hop neighbor
+          if (new_path_linkcost < walker->path_linkcost){
+            walker->second_hop_linkcost = new_second_hop_linkcost;
+            walker->path_linkcost = new_path_linkcost;
 
-              if (olsr_is_relevant_costchange(new_path_linkcost, walker->saved_path_linkcost)){
-                walker->saved_path_linkcost = new_path_linkcost;
+            if (olsr_is_relevant_costchange(new_path_linkcost, walker->saved_path_linkcost)){
+              walker->saved_path_linkcost = new_path_linkcost;
 
-                if (olsr_cnf->lq_dlimit > 0) {
-                  changes_neighborhood = true;
-                  changes_topology = true;
-                } else {
-                  OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
-                }
+              if (olsr_cnf->lq_dlimit > 0) {
+                changes_neighborhood = true;
+                changes_topology = true;
+              } else {
+                OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
               }
             }
           }
@@ -313,14 +310,9 @@ lookup_mpr_status(const struct hello_message *message,
 void
 olsr_init_package_process(void)
 {
-  if (olsr_cnf->lq_level == 0) {
-    olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
-    olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
-  }
-  else {
-    olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
-    olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
-  }
+  olsr_parser_add_function(&olsr_input_hello, HELLO_MESSAGE);
+  olsr_parser_add_function(&olsr_input_hello, LQ_HELLO_MESSAGE);
+  olsr_parser_add_function(&olsr_input_tc, TC_MESSAGE);
   olsr_parser_add_function(&olsr_input_tc, LQ_TC_MESSAGE);
   olsr_parser_add_function(&olsr_input_mid, MID_MESSAGE);
   olsr_parser_add_function(&olsr_input_hna, HNA_MESSAGE);
@@ -385,26 +377,25 @@ hello_tap(struct hello_message *message,
    * Update link status
    */
   struct link_entry *lnk = update_link_entry(&in_if->ip_addr, from_addr, message, in_if);
+  struct hello_neighbor *walker;
+  /* just in case our neighbor has changed its HELLO interval */
+  olsr_update_packet_loss_hello_int(lnk, message->htime);
 
-  if (olsr_cnf->lq_level > 0) {
-    struct hello_neighbor *walker;
-    /* just in case our neighbor has changed its HELLO interval */
-    olsr_update_packet_loss_hello_int(lnk, message->htime);
-
-    /* find the input interface in the list of neighbor interfaces */
-    for (walker = message->neighbors; walker != NULL; walker = walker->next) {
-      if (ipequal(&walker->address, &in_if->ip_addr)) {
-        break;
-      }
+  /* find the input interface in the list of neighbor interfaces */
+  for (walker = message->neighbors; walker != NULL; walker = walker->next) {
+    if (ipequal(&walker->address, &in_if->ip_addr)) {
+      break;
     }
-
-    // memorize our neighbour's idea of the link quality, so that we
-    // know the link quality in both directions
-    olsr_memorize_foreign_hello_lq(lnk, walker);
-
-    /* update packet loss for link quality calculation */
-    olsr_update_packet_loss(lnk);
   }
+
+  /*
+   * memorize our neighbour's idea of the link quality, so that we
+   * know the link quality in both directions
+   */
+  olsr_memorize_foreign_hello_lq(lnk, walker);
+
+  /* update packet loss for link quality calculation */
+  olsr_update_packet_loss(lnk);
 
   /* Check if we are chosen as MPR */
   if (lookup_mpr_status(message, in_if)) {

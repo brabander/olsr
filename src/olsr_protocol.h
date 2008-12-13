@@ -131,14 +131,6 @@
 #define SYM                   1
 
 /*
- *Link Hysteresis
- */
-
-#define HYST_THRESHOLD_HIGH   0.8
-#define HYST_THRESHOLD_LOW    0.3
-#define HYST_SCALING          0.5
-
-/*
  *Willingness
  */
 
