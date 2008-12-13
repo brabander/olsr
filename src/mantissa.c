@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -39,6 +40,7 @@
  */
 
 #include "mantissa.h"
+#include <assert.h>
 
 /**
  *Function that converts a double to a mantissa/exponent
@@ -54,7 +56,9 @@
  *
  *@return a 8-bit mantissa/exponent product
  */
-uint8_t reltime_to_me(const olsr_reltime interval) {
+uint8_t
+reltime_to_me(const olsr_reltime interval)
+{
   uint8_t a = 0, b = 0;                /* Underflow defaults */
 
   /* It is sufficent to compare the integer part since we test on >=.
@@ -83,7 +87,7 @@ uint8_t reltime_to_me(const olsr_reltime interval) {
       a = (interval >> (b + 2)) - 15;
     }
   }
-  
+
   return (a << 4) + b;
 }
 
@@ -122,14 +126,17 @@ uint8_t reltime_to_me(const olsr_reltime interval) {
  * 2. case: b <= 8
  *           = ((16 + a) * 1000) >> (8-b)
  */
-olsr_reltime me_to_reltime(const uint8_t me) {
+olsr_reltime
+me_to_reltime(const uint8_t me)
+{
   const uint8_t a = me >> 4;
   const uint8_t b = me & 0x0F;
 
   if (b >= 8) {
-    return ((16 + a) << (b-8)) * 1000;
+    return ((16 + a) << (b - 8)) * 1000;
   }
-  return ((16 + a) * 1000) >> (8-b);
+  assert(me == reltime_to_me(((16 + a) * 1000) >> (8 - b)));
+  return ((16 + a) * 1000) >> (8 - b);
 }
 
 /*
