@@ -43,7 +43,7 @@
 
 #include "defs.h"
 
-#ifdef USE_FPM
+#if USE_FPM
 
 #if 0
 
@@ -74,7 +74,7 @@ typedef unsigned long long ufpm;
 typedef int fpm;
 typedef signed int sfpm;
 typedef unsigned int ufpm;
-#define FPM_BIT 10
+#define FPM_BIT 12
 
 #endif
 

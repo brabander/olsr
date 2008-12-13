@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef USE_FPM
+#if USE_FPM
 
 #ifndef NDEBUG
 
