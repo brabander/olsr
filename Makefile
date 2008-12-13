@@ -157,9 +157,9 @@ ifeq ($(OS),linux)
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
-SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
+SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo watchdog
 else
-SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo
+SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
 endif
 endif
 
@@ -234,6 +234,11 @@ arprefresh:
 		$(MAKECMD) -C lib/arprefresh clean
 		$(MAKECMD) -C lib/arprefresh
 		$(MAKECMD) -C lib/arprefresh DESTDIR=$(DESTDIR) install
+
+watchdog:
+		$(MAKECMD) -C lib/watchdog clean
+		$(MAKECMD) -C lib/watchdog
+		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
 build_all:	all switch libs
 install_all:	install install_libs
