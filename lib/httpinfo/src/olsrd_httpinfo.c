@@ -884,15 +884,6 @@ static void build_config_body(struct autobuf *abuf)
   abuf_appendf(abuf, "<td>RtTableDefault: 0x%04x/%d</td>\n", olsr_cnf->rttable_default, olsr_cnf->rttable_default);
   abuf_appendf(abuf, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
 
-  if (olsr_cnf->lq_level == 0) {
-    abuf_appendf(abuf, "</tr>\n<tr>\n"
-		    "<td>Hysteresis: %s</td>\n", olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
-    if (olsr_cnf->use_hysteresis) {
-      abuf_appendf(abuf, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
-      abuf_appendf(abuf, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low, olsr_cnf->hysteresis_param.thr_high);
-    }
-  }
-
   abuf_appendf(abuf, "</tr>\n<tr>\n"
 		  "<td>LQ extension: %s</td>\n", olsr_cnf->lq_level ? "Enabled" : "Disabled");
   if (olsr_cnf->lq_level) {
@@ -993,7 +984,7 @@ static void build_neigh_body(struct autobuf *abuf)
   section_title(abuf, "Links");
 
   abuf_appendf(abuf,
-                   "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th><th align=\"right\">Hysteresis</th>", colspan, colspan);
+                   "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th>", colspan, colspan);
   if (olsr_cnf->lq_level > 0) {
     abuf_puts(abuf,
                      "<th align=\"right\">LinkCost</th>");
@@ -1005,7 +996,6 @@ static void build_neigh_body(struct autobuf *abuf)
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &lnk->local_iface_addr, -1);
     build_ipaddr_with_link(abuf, &lnk->neighbor_iface_addr, -1);
-    abuf_appendf(abuf, "<td align=\"right\">%0.2f</td>", lnk->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       abuf_appendf(abuf,

@@ -179,10 +179,6 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_WILLINGNESS
 %token TOK_IPCCON
 %token TOK_FIBMETRIC
-%token TOK_USEHYST
-%token TOK_HYSTSCALE
-%token TOK_HYSTUPPER
-%token TOK_HYSTLOWER
 %token TOK_POLLRATE
 %token TOK_NICCHGSPOLLRT
 %token TOK_TCREDUNDANCY
@@ -238,10 +234,6 @@ stmt:       idebug
           | arttable
           | arttable_default
           | awillingness
-          | busehyst
-          | fhystscale
-          | fhystupper
-          | fhystlower
           | fpollrate
           | fnicchgspollrt
           | atcredundancy
@@ -901,38 +893,6 @@ awillingness: TOK_WILLINGNESS TOK_INTEGER
   PARSER_DEBUG_PRINTF("Willingness: %d\n", $2->integer);
   olsr_cnf->willingness_auto = false;
   olsr_cnf->willingness = $2->integer;
-  free($2);
-}
-;
-
-busehyst: TOK_USEHYST TOK_BOOLEAN
-{
-  olsr_cnf->use_hysteresis = $2->boolean;
-  PARSER_DEBUG_PRINTF("Hysteresis %s\n", olsr_cnf->use_hysteresis ? "enabled" : "disabled");
-  free($2);
-}
-;
-
-fhystscale: TOK_HYSTSCALE TOK_FLOAT
-{
-  olsr_cnf->hysteresis_param.scaling = $2->floating;
-  PARSER_DEBUG_PRINTF("Hysteresis Scaling: %0.2f\n", $2->floating);
-  free($2);
-}
-;
-
-fhystupper: TOK_HYSTUPPER TOK_FLOAT
-{
-  olsr_cnf->hysteresis_param.thr_high = $2->floating;
-  PARSER_DEBUG_PRINTF("Hysteresis UpperThr: %0.2f\n", $2->floating);
-  free($2);
-}
-;
-
-fhystlower: TOK_HYSTLOWER TOK_FLOAT
-{
-  olsr_cnf->hysteresis_param.thr_low = $2->floating;
-  PARSER_DEBUG_PRINTF("Hysteresis LowerThr: %0.2f\n", $2->floating);
   free($2);
 }
 ;

@@ -52,7 +52,6 @@
 #include "mantissa.h"
 #include "process_package.h" // XXX - remove
 #include "two_hop_neighbor_table.h"
-#include "hysteresis.h"
 #include "olsr.h"
 #include "build_msg.h"
 #include "net_olsr.h"

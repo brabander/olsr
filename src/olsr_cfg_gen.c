@@ -155,15 +155,6 @@ olsr_print_cnf(const struct olsrd_config *cnf)
     }
   }
 
-  /* Hysteresis */
-  if (cnf->use_hysteresis) {
-    printf("Using hysteresis:\n");
-    printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
-    printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
-  } else {
-    printf("Not using hysteresis\n");
-  }
-
   /* HNA IPv4 and IPv6 */
   if (h) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
@@ -289,26 +280,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool wr
   }
 
   abuf_appendf(abuf, "}\n");
-
-  /* Hysteresis */
-  abuf_appendf(abuf, "# Hysteresis adds more robustness to the\n"
-               "# link sensing.\n"
-               "# Used by default. 'yes' or 'no'\n" "UseHysteresis\t%s\n\n", cnf->use_hysteresis ? "yes" : "no");
-
-  abuf_appendf(abuf, "# Hysteresis parameters\n"
-               "# Do not alter these unless you know \n"
-               "# what you are doing!\n"
-               "# Set to auto by default. Allowed\n"
-               "# values are floating point values\n"
-               "# in the interval 0,1\n"
-               "# THR_LOW must always be lower than\n"
-               "# THR_HIGH!!\n"
-               "%sHystScaling\t%0.2f\n"
-               "%sHystThrHigh\t%0.2f\n"
-               "%sHystThrLow\t%0.2f\n\n",
-               cnf->use_hysteresis ? "#" : "", cnf->hysteresis_param.scaling,
-               cnf->use_hysteresis ? "#" : "", cnf->hysteresis_param.thr_high,
-               cnf->use_hysteresis ? "#" : "", cnf->hysteresis_param.thr_low);
 
   /* Pollrate */
   abuf_appendf(abuf, "# Polling rate in seconds(float).\n"

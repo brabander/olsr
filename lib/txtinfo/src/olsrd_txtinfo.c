@@ -439,7 +439,7 @@ static int ipc_print_link(struct ipc_conn *conn)
 {
     struct link_entry *lnk;
 
-    if (abuf_appendf(&conn->resp, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n") < 0) {
+    if (abuf_appendf(&conn->resp, "Table: Links\nLocal IP\tRemote IP\tLQ\tNLQ\tCost\n") < 0) {
         return -1;
     }
 
@@ -448,10 +448,9 @@ static int ipc_print_link(struct ipc_conn *conn)
         struct ipaddr_str buf1, buf2;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
 	if (abuf_appendf(&conn->resp,
-                            "%s\t%s\t%0.2f\t%s\t%s\t\n",
+                            "%s\t%s\t%s\t%s\t\n",
                             olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
                             olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
-                            lnk->L_link_quality,
                             get_link_entry_text(lnk, '\t', &lqbuffer1),
                             get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
             return -1;

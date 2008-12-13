@@ -82,7 +82,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
   char **opt_argv = olsr_malloc(argc * sizeof(argv[0]), "argv");
 #ifdef DEBUG
   struct ipaddr_str buf;
-#endif  
+#endif
 
   /*
    * Original cmd line params
@@ -134,9 +134,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"FIBMetric",                required_argument, 0, 'F'}, /* (str) */
     {"Hna4",                     required_argument, 0, '4'}, /* (4body) */
     {"Hna6",                     required_argument, 0, '6'}, /* (6body) */
-    {"HystScaling",              required_argument, 0, 'B'}, /* (f) */
-    {"HystThrHigh",              required_argument, 0, 'G'}, /* (f) */
-    {"HystThrLow",               required_argument, 0, 'K'}, /* (f) */
     {"Interface",                required_argument, 0, 'I'}, /* (if1 if2 {ifbody}) */
     {"IpcConnect",               required_argument, 0, 'Q'}, /* (Host,Net,MaxConnections) */
     {"IpVersion",                required_argument, 0, 'V'}, /* (i) */
@@ -156,7 +153,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"RtTable",                  required_argument, 0, 'r'}, /* (i) */
     {"TcRedundancy",             required_argument, 0, 't'}, /* (i) */
     {"TosValue",                 required_argument, 0, 'Z'}, /* (i) */
-    {"UseHysteresis",            required_argument, 0, 'U'}, /* (yes/no) */
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {0, 0, 0, 0}
   }, *popt = long_options;
@@ -174,14 +170,14 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 
   /* get option count */
   for (opt_idx = 0; long_options[opt_idx].name; opt_idx++);
-  
+
   /* Calculate short option string */
   opt_str = olsr_malloc(opt_idx * 3, "create short opt_string");
   opt_idx = 0;
   while (popt->name != NULL && popt->val != 0)
   {
     opt_str[opt_idx++] = popt->val;
-    
+
     switch (popt->has_arg)
     {
       case optional_argument:
@@ -399,18 +395,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
         }
         olsr_strtok_free(tok);
       }
-      break;
-    case 'B':                  /* HystScaling (f) */
-      sscanf(optarg, "%f", &olsr_cnf->hysteresis_param.scaling);
-      PARSER_DEBUG_PRINTF("Hysteresis Scaling: %0.2f\n", olsr_cnf->hysteresis_param.scaling);
-      break;
-    case 'G':                  /* HystThrHigh (f) */
-      sscanf(optarg, "%f", &olsr_cnf->hysteresis_param.thr_high);
-      PARSER_DEBUG_PRINTF("Hysteresis UpperThr: %0.2f\n", olsr_cnf->hysteresis_param.thr_high);
-      break;
-    case 'K':                  /* HystThrLow (f) */
-      sscanf(optarg, "%f", &olsr_cnf->hysteresis_param.thr_low);
-      PARSER_DEBUG_PRINTF("Hysteresis LowerThr: %0.2f\n", olsr_cnf->hysteresis_param.thr_low);
       break;
     case 'I':                  /* Interface if1 if2 { ifbody } */
       if (NULL != (tok = olsr_strtok(optarg, &optarg_next))) {
@@ -808,10 +792,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
         PARSER_DEBUG_PRINTF("TOS: %d\n", olsr_cnf->tos);
       }
       break;
-    case 'U':                  /* UseHysteresis (yes/no) */
-      olsr_cnf->use_hysteresis =  (0 == strcmp("yes", optarg));
-      PARSER_DEBUG_PRINTF("Hysteresis %s\n", olsr_cnf->use_hysteresis ? "enabled" : "disabled");
-      break;
     case 'w':                  /* Willingness (i) */
       {
         int arg = -1;
@@ -876,30 +856,6 @@ olsr_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  /* Hysteresis */
-  if (cnf->use_hysteresis) {
-    if (cnf->hysteresis_param.scaling < MIN_HYST_PARAM || cnf->hysteresis_param.scaling > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
-      return -1;
-    }
-
-    if (cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low) {
-      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high,
-              cnf->hysteresis_param.thr_low);
-      return -1;
-    }
-
-    if (cnf->hysteresis_param.thr_high < MIN_HYST_PARAM || cnf->hysteresis_param.thr_high > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
-      return -1;
-    }
-
-    if (cnf->hysteresis_param.thr_low < MIN_HYST_PARAM || cnf->hysteresis_param.thr_low > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
-      return -1;
-    }
-  }
-
   /* Check Link quality dijkstra limit */
   if (olsr_cnf->lq_dinter < conv_pollrate_to_secs(cnf->pollrate) && olsr_cnf->lq_dlimit != 255) {
     fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
@@ -921,12 +877,6 @@ olsr_sanity_check_cnf(struct olsrd_config *cnf)
   /* MPR coverage */
   if (cnf->mpr_coverage < MIN_MPR_COVERAGE || cnf->mpr_coverage > MAX_MPR_COVERAGE) {
     fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
-    return -1;
-  }
-
-  /* Link Q and hysteresis cannot be activated at the same time */
-  if (cnf->use_hysteresis && cnf->lq_level) {
-    fprintf(stderr, "Hysteresis and LinkQuality cannot both be active! Deactivate one of them.\n");
     return -1;
   }
 
@@ -1082,11 +1032,6 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
   cnf->fib_metric = DEF_FIB_METRIC;
 
-  cnf->use_hysteresis = DEF_USE_HYST;
-  cnf->hysteresis_param.scaling = HYST_SCALING;
-  cnf->hysteresis_param.thr_high = HYST_THRESHOLD_HIGH;
-  cnf->hysteresis_param.thr_low = HYST_THRESHOLD_LOW;
-
   cnf->pollrate = conv_pollrate_to_microsecs(DEF_POLLRATE);
   cnf->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
 
@@ -1200,7 +1145,7 @@ ip_prefix_list_flush(struct ip_prefix_list **list)
 
   for (entry = *list; entry; entry = next_entry) {
     next_entry = entry->next;
-    
+
     entry->next = NULL;
     free(entry);
   }

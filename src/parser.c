@@ -43,7 +43,6 @@
 #include "defs.h"
 #include "process_package.h"
 #include "mantissa.h"
-#include "hysteresis.h"
 #include "duplicate_set.h"
 #include "mid_set.h"
 #include "olsr.h"
@@ -281,13 +280,6 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
   }
   msgsize = ntohs(olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgsize : m->v6.olsr_msgsize);
-
-  /*
-   * Hysteresis update - for every OLSR package
-   */
-  if (olsr_cnf->use_hysteresis) {
-    update_hysteresis_incoming(from_addr, in_if, ntohs(olsr->olsr_seqno));
-  }
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {
     bool forward = true;

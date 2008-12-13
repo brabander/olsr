@@ -216,37 +216,6 @@ cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
-  /* Hysteresis */
-  if(cnf->use_hysteresis)
-    {
-      if(cnf->hysteresis_param.scaling < MIN_HYST_PARAM ||
-	 cnf->hysteresis_param.scaling > MAX_HYST_PARAM)
-	{
-	  fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
-	  return -1;
-	}
-
-      if(cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low)
-	{
-	  fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
-	  return -1;
-	}
-
-      if(cnf->hysteresis_param.thr_high < MIN_HYST_PARAM ||
-	 cnf->hysteresis_param.thr_high > MAX_HYST_PARAM)
-	{
-	  fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
-	  return -1;
-	}
-
-      if(cnf->hysteresis_param.thr_low < MIN_HYST_PARAM ||
-	 cnf->hysteresis_param.thr_low > MAX_HYST_PARAM)
-	{
-	  fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
-	  return -1;
-	}
-    }
-
   /* Check Link quality dijkstra limit */
   if (olsr_cnf->lq_dinter < conv_pollrate_to_secs(cnf->pollrate) && olsr_cnf->lq_dlimit != 255) {
   	fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
@@ -274,13 +243,6 @@ cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf)
      cnf->mpr_coverage > MAX_MPR_COVERAGE)
     {
       fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
-      return -1;
-    }
-
-  /* Link Q and hysteresis cannot be activated at the same time */
-  if(cnf->use_hysteresis && cnf->lq_level)
-    {
-      fprintf(stderr, "Hysteresis and LinkQuality cannot both be active! Deactivate one of them.\n");
       return -1;
     }
 
@@ -456,11 +418,6 @@ cfgparser_set_default_cnf(struct olsrd_config *cnf)
     cnf->willingness_auto = DEF_WILL_AUTO;
     cnf->ipc_connections = DEF_IPC_CONNECTIONS;
     cnf->fib_metric = DEF_FIB_METRIC;
-
-    cnf->use_hysteresis = DEF_USE_HYST;
-    cnf->hysteresis_param.scaling = HYST_SCALING;
-    cnf->hysteresis_param.thr_high = HYST_THRESHOLD_HIGH;
-    cnf->hysteresis_param.thr_low = HYST_THRESHOLD_LOW;
 
     cnf->pollrate = conv_pollrate_to_microsecs(DEF_POLLRATE);
     cnf->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
@@ -656,15 +613,6 @@ cfgparser_olsrd_print_cnf(const struct olsrd_config *cnf)
 	  pe = pe->next;
 	}
     }
-
-  /* Hysteresis */
-  if(cnf->use_hysteresis) {
-    printf("Using hysteresis:\n");
-    printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
-    printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
-  } else {
-    printf("Not using hysteresis\n");
-  }
 
   /* HNA IPv4 and IPv6 */
   if(h) {

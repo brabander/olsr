@@ -189,7 +189,6 @@ struct olsrd_config {
   unsigned char host_emul:1;
   unsigned char allow_no_interfaces:1;
   unsigned char willingness_auto:1;
-  unsigned char use_hysteresis:1;
   unsigned char clear_screen:1;
   unsigned char del_gws:1;             /* Delete InternetGWs at startup */
   uint16_t tos;
@@ -199,7 +198,7 @@ struct olsrd_config {
   uint8_t ipc_connections;
   int8_t debug_level;
   olsr_fib_metric_options fib_metric;
-  struct hyst_param hysteresis_param;
+
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
   struct ip_prefix_list *ipc_nets;

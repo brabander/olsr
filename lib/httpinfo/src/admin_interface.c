@@ -94,21 +94,6 @@ build_admin_body(struct autobuf *abuf)
   abuf_puts(abuf, "</tr>\n"
                                              "<tr>\n");
 
-  if(olsr_cnf->use_hysteresis) {
-    abuf_appendf(abuf, admin_basic_setting_float,
-                     "Hyst scaling:", "hyst_scaling", 4, olsr_cnf->hysteresis_param.scaling);
-
-    abuf_appendf(abuf, admin_basic_setting_float,
-                     "Lower thr:", "hyst_lower", 4, olsr_cnf->hysteresis_param.thr_low);
-    abuf_appendf(abuf, admin_basic_setting_float,
-                     "Upper thr:", "hyst_upper", 4, olsr_cnf->hysteresis_param.thr_high);
-  } else {
-    abuf_puts(abuf, "<td>Hysteresis disabled</td>\n");
-  }
-
-  abuf_puts(abuf, "</tr>\n"
-                                             "<tr>\n");
-
   if(olsr_cnf->lq_level) {
     abuf_appendf(abuf, admin_basic_setting_int,
                      "LQ level:", "lq_level", 1, olsr_cnf->lq_level);

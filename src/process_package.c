@@ -40,7 +40,6 @@
 
 #include "process_package.h"
 #include "link_set.h"
-#include "hysteresis.h"
 #include "hna_set.h"
 #include "two_hop_neighbor_table.h"
 #include "neighbor_table.h"
@@ -405,15 +404,6 @@ hello_tap(struct hello_message *message,
 
     /* update packet loss for link quality calculation */
     olsr_update_packet_loss(lnk);
-  }
-
-  /*
-   * Hysteresis
-   */
-  if (olsr_cnf->use_hysteresis) {
-    /* Update HELLO timeout */
-    /* printf("MESSAGE HTIME: %f\n", message->htime);*/
-    olsr_update_hysteresis_hello(lnk, message->htime);
   }
 
   /* Check if we are chosen as MPR */

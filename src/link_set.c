@@ -45,7 +45,6 @@
 
 #include "defs.h"
 #include "link_set.h"
-#include "hysteresis.h"
 #include "mid_set.h"
 #include "mpr.h"
 #include "neighbor_table.h"
@@ -117,37 +116,6 @@ lookup_link_status(const struct link_entry *entry)
   /*
    * Hysteresis
    */
-  if (olsr_cnf->use_hysteresis) {
-
-    /*
-     * if L_LOST_LINK_time is not expired, the link is advertised
-     * with a link type of LOST_LINK.
-     */
-
-    if (!TIMED_OUT(entry->L_LOST_LINK_time)) {
-      return LOST_LINK;
-    }
-
-    /*
-     * otherwise, if L_LOST_LINK_time is expired and L_link_pending
-     * is set to "true", the link SHOULD NOT be advertised at all;
-     */
-    if (entry->L_link_pending == 1) {
-#ifndef NODEBUG
-      struct ipaddr_str buf;
-      OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n",
-		  olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
-#endif
-      return HIDE_LINK;
-    }
-
-    /*
-     * otherwise, if L_LOST_LINK_time is expired and L_link_pending
-     * is set to "false", the link is advertised as described
-     * previously in section 6.
-     */
-  }
-
   if (entry->link_sym_timer) {
     return SYM_LINK;
   }
@@ -368,8 +336,6 @@ olsr_delete_link_entry(struct link_entry *link)
   link->link_timer = NULL;
   olsr_stop_timer(link->link_sym_timer);
   link->link_sym_timer = NULL;
-  olsr_stop_timer(link->link_hello_timer);
-  link->link_hello_timer = NULL;
   olsr_stop_timer(link->link_loss_timer);
   link->link_loss_timer = NULL;
 
@@ -449,30 +415,13 @@ olsr_expire_link_sym_timer(void *context)
 void
 olsr_expire_link_hello_timer(void *context)
 {
-  struct ipaddr_str buf;
   struct link_entry *link;
 
   link = (struct link_entry *)context;
 
-  link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
-
-  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %f\n",
-	      olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-	      link->L_link_quality);
-
-  /* Update hello_timeout - NO SLACK THIS TIME */
-  olsr_change_timer(link->link_hello_timer, link->last_htime,
-		    OLSR_LINK_JITTER, OLSR_TIMER_PERIODIC);
-
-  /* Update hysteresis values */
-  olsr_process_hysteresis(link);
-
   /* update neighbor status */
   update_neighbor_status(link->neighbor,
 			 get_neighbor_status(&link->neighbor_iface_addr));
-
-  /* Update seqno - not mentioned in the RFC... kind of a hack.. */
-  link->olsr_seqno++;
 }
 
 /**
@@ -571,18 +520,6 @@ add_link_entry(const union olsr_ip_addr *local,
   olsr_set_link_timer(new_link, vtime);
 
   new_link->prev_status = ASYM_LINK;
-
-  /* HYSTERESIS */
-  if (olsr_cnf->use_hysteresis) {
-    new_link->L_link_pending = 1;
-    new_link->L_LOST_LINK_time = GET_TIMESTAMP(vtime);
-    olsr_update_hysteresis_hello(new_link, htime);
-    new_link->last_htime = htime;
-    new_link->olsr_seqno = 0;
-    new_link->olsr_seqno_valid = false;
-  }
-
-  new_link->L_link_quality = 0.0;
 
   if (olsr_cnf->lq_level > 0) {
     new_link->loss_helloint = htime;
@@ -734,10 +671,6 @@ update_link_entry(const union olsr_ip_addr *local,
     olsr_set_link_timer(entry, TIME_DUE(entry->ASYM_time));
   }
 
-  /* Update hysteresis values */
-  if (olsr_cnf->use_hysteresis)
-    olsr_process_hysteresis(entry);
-
   /* Update neighbor */
   update_neighbor_status(entry->neighbor, get_neighbor_status(remote));
 
@@ -829,9 +762,8 @@ olsr_print_link_set(void)
 
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
-    OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n",
+    OLSR_PRINTF(1, "%-*s %-14s %s\n",
 		addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-		walker->L_link_quality,
 		get_link_entry_text(walker, '/', &lqbuffer1),
 		get_linkcost_text(walker->linkcost, false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
