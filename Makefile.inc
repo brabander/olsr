@@ -160,7 +160,6 @@ LDFLAGS +=	$(EXTRA_LDFLAGS)
 CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=0
 
 # use the new fixed point math stuff
-#CPPFLAGS +=     -DUSE_FPM
 ifneq ($(USE_FPM),0)
 CPPFLAGS +=	-DUSE_FPM=1
 else
