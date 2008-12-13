@@ -141,7 +141,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"LinkQualityAlgorithm",     required_argument, 0, 'l'}, /* (str) */
     {"LinkQualityDijkstraLimit", required_argument, 0, 'J'}, /* (i,f) */
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
-    {"LinkQualityLevel",         required_argument, 0, 'L'}, /* (i) */
     {"LinkQualityWinSize",       required_argument, 0, 'W'}, /* (i) */
     {"LoadPlugin",               required_argument, 0, 'p'}, /* (soname {PlParams}) */
     {"MprCoverage",              required_argument, 0, 'M'}, /* (i) */
@@ -794,8 +793,11 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       }
       break;
     default:
-      fprintf (stderr, "?? getopt returned %d ??\n", opt);
-      exit(EXIT_FAILURE);
+      if (opt >= 32 && opt <= 255)
+        fprintf (stderr, "Unknown option '%c' for parsing ??\n", (char)opt);
+      else
+        fprintf (stderr, "?? getopt returned %d ??\n", opt);
+      fprintf(stderr, "Continue to parse the rest of the config file...\n");
     } /* switch */
   } /* while getopt_long() */
 
