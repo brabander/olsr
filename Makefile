@@ -56,7 +56,7 @@ endif
 
 SWITCHDIR =	src/olsr_switch
 CFGDIR =	src/cfgparser
-include $(CFGDIR)/local.mk
+#include $(CFGDIR)/local.mk
 TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
 .PHONY: default_target switch

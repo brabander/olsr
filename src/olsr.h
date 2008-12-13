@@ -90,10 +90,10 @@ const char *
 olsr_status_to_string(uint8_t);
 
 void
-olsr_exit(const char *, int);
+EXPORT(olsr_exit)(const char *, int);
 
 void *
-olsr_malloc(size_t, const char *);
+EXPORT(olsr_malloc)(size_t, const char *);
 
 #endif
 

@@ -97,13 +97,13 @@ static INLINE uint16_t net_output_pending(const struct interface *ifp) { return 
 int net_reserve_bufspace(struct interface *, int);
 #endif
 
-int net_outbuffer_push(struct interface *, const void *, const uint16_t);
+int EXPORT(net_outbuffer_push)(struct interface *, const void *, const uint16_t);
 
 #if 0
 int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t);
 #endif
 
-int net_output(struct interface *);
+int EXPORT(net_output)(struct interface *);
 
 void EXPORT(add_ptf)(packet_transform_function);
 

@@ -87,7 +87,7 @@ struct olsr_cookie_mem_brand {
 };
 
 /* Externals. */
-extern struct olsr_cookie_info *olsr_alloc_cookie(const char *,
+extern struct olsr_cookie_info *EXPORT(olsr_alloc_cookie)(const char *,
 						  olsr_cookie_type);
 extern void olsr_delete_all_cookies(void);
 #ifndef NODEBUG

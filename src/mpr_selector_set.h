@@ -63,7 +63,7 @@ static INLINE uint16_t get_local_ansn(void) { return ansn; }
 
 static INLINE void increase_local_ansn(void) { ansn++; }
 
-struct mpr_selector *olsr_lookup_mprs_set(const union olsr_ip_addr *);
+struct mpr_selector *EXPORT(olsr_lookup_mprs_set)(const union olsr_ip_addr *);
 
 int olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 

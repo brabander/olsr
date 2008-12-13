@@ -41,9 +41,11 @@
 #ifndef _OLSR_MISC_H
 #define _OLSR_MISC_H
 
+#include "defs.h"
+
 void clear_console(void);
 
-int set_nonblocking(int fd);
+int EXPORT(set_nonblocking)(int fd);
 
 #endif
 

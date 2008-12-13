@@ -204,7 +204,7 @@ LISTNODE2STRUCT(list2interface, struct interface, int_node);
 #define IFCHG_IF_UPDATE        3
 
 /* The interface list head */
-extern struct list_node interface_head;
+extern struct list_node EXPORT(interface_head);
 
 typedef int (*ifchg_cb_func)(struct interface *, int);
 

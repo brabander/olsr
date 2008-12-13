@@ -157,7 +157,7 @@ bool olsr_input_tc(union olsr_message *, struct interface *,
 		   union olsr_ip_addr *from);
 
 /* tc_entry manipulation */
-struct tc_entry *olsr_lookup_tc_entry(const union olsr_ip_addr *);
+struct tc_entry *EXPORT(olsr_lookup_tc_entry)(const union olsr_ip_addr *);
 struct tc_entry *olsr_locate_tc_entry(const union olsr_ip_addr *);
 /*
  * Increment the reference counter.
@@ -169,7 +169,7 @@ static INLINE void olsr_lock_tc_entry(struct tc_entry *tc) { tc->refcount++; }
 static INLINE void olsr_unlock_tc_entry(struct tc_entry *tc) { if (--tc->refcount == 0) { /* All references are gone. */ olsr_cookie_free(tc_mem_cookie, tc); } }
 
 /* tc_edge_entry manipulation */
-struct tc_edge_entry *olsr_lookup_tc_edge(struct tc_entry *,
+struct tc_edge_entry *EXPORT(olsr_lookup_tc_edge)(struct tc_entry *,
 					  union olsr_ip_addr *);
 struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *,
 					     union olsr_ip_addr *, uint16_t);

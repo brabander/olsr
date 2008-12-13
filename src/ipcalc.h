@@ -75,7 +75,7 @@ static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr 
  */
 static INLINE void genipcopy(void *dst, const void *src) { memcpy(dst, src, olsr_cnf->ipsize); }
 
-int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
+int EXPORT(ip_in_net)(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
 
 
 int EXPORT(prefix_to_netmask)(uint8_t *, int, uint8_t);
@@ -95,7 +95,7 @@ static INLINE const char *ip6_to_string(struct ipaddr_str * const buf, const str
 
 static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return inet_ntop(olsr_cnf->ip_version, addr, buf->buf, sizeof(buf->buf)); }
 
-const char *olsr_ip_prefix_to_string(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
+const char *EXPORT(olsr_ip_prefix_to_string)(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
 
 const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 

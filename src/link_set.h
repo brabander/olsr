@@ -115,7 +115,7 @@ void olsr_update_packet_loss_worker(struct link_entry *, bool);
 void signal_link_changes(bool);   /* XXX ugly */
 
 
-struct link_entry *get_best_link_to_neighbor(const union olsr_ip_addr *);
+struct link_entry *EXPORT(get_best_link_to_neighbor)(const union olsr_ip_addr *);
 
 struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
 				     const union olsr_ip_addr *remote_main,
@@ -126,7 +126,7 @@ struct link_entry *update_link_entry(const union olsr_ip_addr *,
 				     const struct lq_hello_message *,
 				     struct interface *);
 
-int check_neighbor_link(const union olsr_ip_addr *);
+int EXPORT(check_neighbor_link)(const union olsr_ip_addr *);
 int replace_neighbor_link_set(const struct neighbor_entry *,
 			    struct neighbor_entry *);
 int lookup_link_status(const struct link_entry *);

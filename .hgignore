@@ -22,6 +22,7 @@ lib/*/*so.*.*
 *.dll
 olsrd.exe
 olsr-setup.exe
+olsrd.exports
 *.opt
 *.ncb
 *.aps

@@ -57,9 +57,9 @@ struct autobuf {
     char *buf;
 };
 
-int  abuf_init(struct autobuf *autobuf, int initial_size);
-void abuf_free(struct autobuf *autobuf);
-int  abuf_appendf(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+int  EXPORT(abuf_init)(struct autobuf *autobuf, int initial_size);
+void EXPORT(abuf_free)(struct autobuf *autobuf);
+int  EXPORT(abuf_appendf)(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 int  EXPORT(abuf_puts)(struct autobuf *autobuf, const char *s);
 int  EXPORT(abuf_strftime)(struct autobuf *autobuf, const char *format, const struct tm *tm);
 int  EXPORT(abuf_memcpy)(struct autobuf *autobuf, const void *p, const unsigned int len);

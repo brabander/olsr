@@ -43,6 +43,7 @@
 #ifndef _OLSR_MANTISSA
 #define _OLSR_MANTISSA
 
+#include "defs.h"
 #include "olsr_types.h"
 
 /* olsr_reltime is a relative timestamp measured in microseconds */
@@ -61,9 +62,9 @@ typedef uint32_t olsr_reltime;
  * me is the 8 bit mantissa/exponent value
  *
  */
-olsr_reltime me_to_reltime(const uint8_t);
+olsr_reltime EXPORT(me_to_reltime)(const uint8_t);
 
-uint8_t reltime_to_me(const olsr_reltime);
+uint8_t EXPORT(reltime_to_me)(const olsr_reltime);
 
 #endif
 

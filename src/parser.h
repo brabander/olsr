@@ -85,7 +85,7 @@ void
 olsr_input_hostemu(int, void *, unsigned int);
 
 void
-olsr_parser_add_function(parse_function, uint32_t);
+EXPORT(olsr_parser_add_function)(parse_function, uint32_t);
 
 #if 0
 int
