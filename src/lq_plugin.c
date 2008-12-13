@@ -44,7 +44,6 @@
 #include "link_set.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
-#include "packet.h"
 #include "olsr.h"
 #include "two_hop_neighbor_table.h"
 #include "common/avl.h"
@@ -185,7 +184,7 @@ olsr_serialize_hello_lq_pair(unsigned char *buff,
  */
 void
 olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
-			       struct hello_neighbor *neigh)
+			       struct lq_hello_neighbor *neigh)
 {
   active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
   neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
@@ -265,7 +264,7 @@ olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
  */
 void
 olsr_memorize_foreign_hello_lq(struct link_entry *local,
-			       struct hello_neighbor *foreign)
+			       struct lq_hello_neighbor *foreign)
 {
   if (foreign) {
     active_lq_handler->memorize_foreign_hello(local->linkquality,
@@ -415,13 +414,13 @@ olsr_clear_tc_lq(struct tc_mpr_addr *target)
  *
  * @return pointer to hello_neighbor
  */
-struct hello_neighbor *
+struct lq_hello_neighbor *
 olsr_malloc_hello_neighbor(const char *id)
 {
-  struct hello_neighbor *h;
+  struct lq_hello_neighbor *h;
 
   h =
-    olsr_malloc(sizeof(struct hello_neighbor) +
+    olsr_malloc(sizeof(struct lq_hello_neighbor) +
 		active_lq_handler->hello_lq_size, id);
 
   active_lq_handler->clear_hello(h->linkquality);

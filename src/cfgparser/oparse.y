@@ -183,7 +183,6 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_NICCHGSPOLLRT
 %token TOK_TCREDUNDANCY
 %token TOK_MPRCOVERAGE
-%token TOK_LQ_LEVEL
 %token TOK_LQ_FISH
 %token TOK_LQ_DLIMIT
 %token TOK_LQ_WSIZE
@@ -238,7 +237,6 @@ stmt:       idebug
           | fnicchgspollrt
           | atcredundancy
           | amprcoverage
-          | alq_level
           | alq_plugin
           | alq_fish
           | alq_dlimit
@@ -928,14 +926,6 @@ amprcoverage: TOK_MPRCOVERAGE TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("MPR coverage %d\n", $2->integer);
   olsr_cnf->mpr_coverage = $2->integer;
-  free($2);
-}
-;
-
-alq_level: TOK_LQ_LEVEL TOK_INTEGER
-{
-  PARSER_DEBUG_PRINTF("Link quality level %d\n", $2->integer);
-  olsr_cnf->lq_level = $2->integer;
   free($2);
 }
 ;

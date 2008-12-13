@@ -42,7 +42,6 @@
 #include "link_set.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
-#include "packet.h"
 #include "olsr.h"
 #include "lq_plugin_default_float.h"
 

@@ -42,9 +42,10 @@
 #define _OLSR_TOP_SET
 
 #include "defs.h"
-#include "packet.h"
 #include "common/avl.h"
 #include "common/list.h"
+#include "olsr_protocol.h"
+#include "lq_packet.h"
 #include "scheduler.h"
 #include "olsr_cookie.h"
 

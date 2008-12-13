@@ -369,11 +369,6 @@ IPV6ADDR {IP6PAT1}|{IP6PAT2}|{IP6PAT3}|{IP6PAT4}|{IP6PAT5}|{IP6PAT6}|{IP6PAT7}|{
     return TOK_MPRCOVERAGE;
 }
 
-"LinkQualityLevel" {
-    yylval = NULL;
-    return TOK_LQ_LEVEL;
-}
-
 "LinkQualityFishEye" {
     yylval = NULL;
     return TOK_LQ_FISH;

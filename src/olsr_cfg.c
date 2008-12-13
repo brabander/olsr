@@ -141,7 +141,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"LinkQualityAlgorithm",     required_argument, 0, 'l'}, /* (str) */
     {"LinkQualityDijkstraLimit", required_argument, 0, 'J'}, /* (i,f) */
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
-    {"LinkQualityLevel",         required_argument, 0, 'L'}, /* (i) */
     {"LinkQualityWinSize",       required_argument, 0, 'W'}, /* (i) */
     {"LoadPlugin",               required_argument, 0, 'p'}, /* (soname {PlParams}) */
     {"MprCoverage",              required_argument, 0, 'M'}, /* (i) */
@@ -670,15 +669,6 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
         PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", olsr_cnf->lq_fish);
       }
       break;
-    case 'L':                  /* LinkQualityLevel (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_level))))
-          olsr_cnf->lq_level = arg;
-        PARSER_DEBUG_PRINTF("Link quality level %d\n", olsr_cnf->lq_level);
-      }
-      break;
     case 'W':                  /* LinkQualityWinSize (i) */
       /* Ignored */
       break;
@@ -803,8 +793,11 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       }
       break;
     default:
-      fprintf (stderr, "?? getopt returned %d ??\n", opt);
-      exit(EXIT_FAILURE);
+      if (opt >= 32 && opt <= 255)
+        fprintf (stderr, "Unknown option '%c' for parsing ??\n", (char)opt);
+      else
+        fprintf (stderr, "?? getopt returned %d ??\n", opt);
+      fprintf(stderr, "Continue to parse the rest of the config file...\n");
     } /* switch */
   } /* while getopt_long() */
 
@@ -880,20 +873,14 @@ olsr_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  /* Link quality level */
-  if (cnf->lq_level > MAX_LQ_LEVEL) {
-    fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
-    return -1;
-  }
-
   /* Link quality window size */
-  if (cnf->lq_level && (cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING)) {
+  if (cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING) {
     fprintf(stderr, "LQ aging factor %f is not allowed\n", cnf->lq_aging);
     return -1;
   }
 
   /* NAT threshold value */
-  if (cnf->lq_level && (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0)) {
+  if (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0) {
     fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
     return -1;
   }
@@ -920,11 +907,7 @@ olsr_sanity_check_cnf(struct olsrd_config *cnf)
     /* HELLO interval */
 
     if (io->hello_params.validity_time < 0.0) {
-      if (cnf->lq_level == 0)
-        io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-
-      else
-        io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
+      io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
     }
 
     if (io->hello_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
@@ -1037,7 +1020,6 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->tc_redundancy = TC_REDUNDANCY;
   cnf->mpr_coverage = MPR_COVERAGE;
-  cnf->lq_level = DEF_LQ_LEVEL;
   cnf->lq_fish = DEF_LQ_FISH;
   cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   cnf->lq_dinter = DEF_LQ_DIJK_INTER;

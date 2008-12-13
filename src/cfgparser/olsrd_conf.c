@@ -246,22 +246,15 @@ cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
-  /* Link quality level */
-  if(cnf->lq_level > MAX_LQ_LEVEL)
-    {
-      fprintf(stderr, "LQ level %d is not allowed\n", cnf->lq_level);
-      return -1;
-    }
-
   /* Link quality window size */
-  if(cnf->lq_level && (cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING))
+  if(cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING)
     {
       fprintf(stderr, "LQ aging factor %f is not allowed\n", cnf->lq_aging);
       return -1;
     }
 
   /* NAT threshold value */
-  if(cnf->lq_level && (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0))
+  if(cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0)
     {
       fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
       return -1;
@@ -294,11 +287,7 @@ cfgparser_olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
       if (io->hello_params.validity_time < 0.0)
       {
-        if (cnf->lq_level == 0)
-          io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-
-        else
-          io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
+        io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
       }
 
       if(io->hello_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
@@ -424,7 +413,6 @@ cfgparser_set_default_cnf(struct olsrd_config *cnf)
 
     cnf->tc_redundancy = TC_REDUNDANCY;
     cnf->mpr_coverage = MPR_COVERAGE;
-    cnf->lq_level = DEF_LQ_LEVEL;
     cnf->lq_fish = DEF_LQ_FISH;
     cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
     cnf->lq_dinter = DEF_LQ_DIJK_INTER;
@@ -544,8 +532,6 @@ cfgparser_olsrd_print_cnf(const struct olsrd_config *cnf)
   printf("TC redundancy    : %d\n", cnf->tc_redundancy);
 
   printf("MPR coverage     : %d\n", cnf->mpr_coverage);
-
-  printf("LQ level         : %d\n", cnf->lq_level);
 
   printf("LQ fish eye      : %d\n", cnf->lq_fish);
 

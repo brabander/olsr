@@ -73,7 +73,7 @@ signal_link_changes(bool val)
 }
 
 /* Prototypes. */
-static int check_link_status(const struct hello_message *message,
+static int check_link_status(const struct lq_hello_message *message,
                              const struct interface *in_if);
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
 					 const union olsr_ip_addr *,
@@ -182,8 +182,6 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
 {
   const union olsr_ip_addr *main_addr;
   struct link_entry *walker, *good_link, *backup_link;
-  struct interface *tmp_if;
-  int curr_metric = MAX_IF_METRIC;
   olsr_linkcost curr_lcost = LINK_COST_BROKEN;
   olsr_linkcost tmp_lc;
 
@@ -206,67 +204,25 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
     if (!ipequal(&walker->neighbor->neighbor_main_addr, main_addr))
       continue;
 
-    if (olsr_cnf->lq_level == 0) {
+    /* get the link cost */
+    tmp_lc = walker->linkcost;
 
-      /*
-       * handle the non-LQ, RFC-compliant case
-       */
+    /*
+     * is this link better than anything we had before ?
+     * use the requested remote interface address as a tie-breaker.
+     */
+    if ((tmp_lc < curr_lcost) ||
+        ((tmp_lc == curr_lcost) &&
+         ipequal(&walker->local_iface_addr, remote))) {
 
-      /*
-       * find the interface for the link.
-       * we select the link with the best local interface metric.
-       */
-      tmp_if = walker->if_name ? if_ifwithname(walker->if_name) :
-	if_ifwithaddr(&walker->local_iface_addr);
+      /* memorize the link quality */
+      curr_lcost = tmp_lc;
 
-      if (!tmp_if) {
-	continue;
-      }
-
-      /*
-       * is this interface better than anything we had before ?
-       * use the requested remote interface address as a tie-breaker
-       */
-      if ((tmp_if->int_metric < curr_metric) ||
-	  ((tmp_if->int_metric == curr_metric) &&
-	   ipequal(&walker->local_iface_addr, remote))) {
-
-	/* memorize the interface's metric */
-	curr_metric = tmp_if->int_metric;
-
-	/* prefer symmetric links over asymmetric links */
-	if (lookup_link_status(walker) == SYM_LINK) {
-	  good_link = walker;
-        } else {
-	  backup_link = walker;
-        }
-      }
-    } else {
-
-      /*
-       * handle the LQ, non-RFC compliant case.
-       */
-
-      /* get the link cost */
-      tmp_lc = walker->linkcost;
-
-      /*
-       * is this link better than anything we had before ?
-       * use the requested remote interface address as a tie-breaker.
-       */
-      if ((tmp_lc < curr_lcost) ||
-          ((tmp_lc == curr_lcost) &&
-           ipequal(&walker->local_iface_addr, remote))) {
-
-	/* memorize the link quality */
-	curr_lcost = tmp_lc;
-
-	/* prefer symmetric links over asymmetric links */
-	if (lookup_link_status(walker) == SYM_LINK) {
-	  good_link = walker;
-        } else {
-	  backup_link = walker;
-        }
+      /* prefer symmetric links over asymmetric links */
+      if (lookup_link_status(walker) == SYM_LINK) {
+        good_link = walker;
+      } else {
+        backup_link = walker;
       }
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
@@ -521,16 +477,14 @@ add_link_entry(const union olsr_ip_addr *local,
 
   new_link->prev_status = ASYM_LINK;
 
-  if (olsr_cnf->lq_level > 0) {
-    new_link->loss_helloint = htime;
+  new_link->loss_helloint = htime;
 
-    olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
-		   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-		   &olsr_expire_link_loss_timer, new_link,
-                   link_loss_timer_cookie->ci_id);
+  olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
+   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+   &olsr_expire_link_loss_timer, new_link,
+                 link_loss_timer_cookie->ci_id);
 
-    set_loss_link_multiplier(new_link);
-  }
+  set_loss_link_multiplier(new_link);
 
   new_link->linkcost = LINK_COST_BROKEN;
 
@@ -629,19 +583,19 @@ lookup_link_entry(const union olsr_ip_addr *remote,
 struct link_entry *
 update_link_entry(const union olsr_ip_addr *local,
 		  const union olsr_ip_addr *remote,
-		  const struct hello_message *message,
+		  const struct lq_hello_message *message,
 		  struct interface *in_if)
 {
   struct link_entry *entry;
 
   /* Add if not registered */
   entry =
-    add_link_entry(local, remote, &message->source_addr, message->vtime,
+    add_link_entry(local, remote, &message->comm.orig, message->comm.vtime,
 		   message->htime, in_if);
 
   /* Update ASYM_time */
-  entry->vtime = message->vtime;
-  entry->ASYM_time = GET_TIMESTAMP(message->vtime);
+  entry->vtime = message->comm.vtime;
+  entry->ASYM_time = GET_TIMESTAMP(message->comm.vtime);
 
   entry->prev_status = check_link_status(message, in_if);
 
@@ -654,13 +608,13 @@ update_link_entry(const union olsr_ip_addr *local,
   case (ASYM_LINK):
 
     /* L_SYM_time = current time + validity time */
-    olsr_set_timer(&entry->link_sym_timer, message->vtime,
+    olsr_set_timer(&entry->link_sym_timer, message->comm.vtime,
 		   OLSR_LINK_SYM_JITTER, OLSR_TIMER_ONESHOT,
 		   &olsr_expire_link_sym_timer, entry,
                    link_sym_timer_cookie->ci_id);
 
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
-    olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME *
+    olsr_set_link_timer(entry, message->comm.vtime + NEIGHB_HOLD_TIME *
 			MSEC_PER_SEC);
     break;
   default:;
@@ -719,21 +673,21 @@ replace_neighbor_link_set(const struct neighbor_entry *old,
  *@return the link status
  */
 static int
-check_link_status(const struct hello_message *message,
+check_link_status(const struct lq_hello_message *message,
 		  const struct interface *in_if)
 {
   int ret = UNSPEC_LINK;
-  struct hello_neighbor *neighbors;
+  struct lq_hello_neighbor *neighbors;
 
-  neighbors = message->neighbors;
+  neighbors = message->neigh;
   while (neighbors) {
 
     /*
      * Note: If a neigh has 2 cards we can reach, the neigh
      * will send a Hello with the same IP mentined twice
      */
-    if (ipequal(&neighbors->address, &in_if->ip_addr)) {
-      ret = neighbors->link;
+    if (ipequal(&neighbors->addr, &in_if->ip_addr)) {
+      ret = neighbors->link_type;
       if (SYM_LINK == ret) {
 	break;
       }

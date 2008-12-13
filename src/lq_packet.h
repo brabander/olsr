@@ -42,12 +42,12 @@
 #define _OLSR_LQ_PACKET_H
 
 #include "olsr_types.h"
-#include "packet.h"
 #include "mantissa.h"
 #include "ipcalc.h"
 
 #define LQ_HELLO_MESSAGE      201
 #define LQ_TC_MESSAGE         202
+
 
 /* deserialized OLSR header */
 
@@ -92,6 +92,7 @@ struct lq_hello_neighbor {
   uint8_t                neigh_type;
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
+  olsr_linkcost          cost;
   uint32_t               linkquality[0];
 };
 
@@ -122,6 +123,12 @@ struct lq_tc_message {
   union olsr_ip_addr    from;
   uint16_t            ansn;
   struct tc_mpr_addr    *neigh;
+};
+
+struct tc_mpr_addr {
+  union olsr_ip_addr address;
+  struct tc_mpr_addr *next;
+  uint32_t         linkquality[0];
 };
 
 /* serialized LQ_TC */
@@ -164,6 +171,8 @@ static INLINE void pkt_put_prefixlen(uint8_t **p, uint8_t var)                 {
 void olsr_output_lq_hello(void *para);
 
 void olsr_output_lq_tc(void *para);
+
+void destroy_lq_hello(struct lq_hello_message *lq_hello);
 
 extern bool lq_tc_pending;
 

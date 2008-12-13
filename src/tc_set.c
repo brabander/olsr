@@ -371,16 +371,7 @@ olsr_expire_tc_edge_gc(void *context)
 bool
 olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 {
-  olsr_linkcost old;
-
-  /*
-   * Some sanity check before recalculating the etx.
-   */
-  if (olsr_cnf->lq_level < 1) {
-    return 0;
-  }
-
-  old = tc_edge->cost;
+  olsr_linkcost old = tc_edge->cost;
   tc_edge->cost = olsr_calc_tc_cost(tc_edge);
 
   return olsr_is_relevant_costchange(old, tc_edge->cost);
@@ -607,9 +598,7 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn,
     /*
      * Update link quality if configured.
      */
-    if (olsr_cnf->lq_level > 0) {
-      olsr_deserialize_tc_lq_pair(curr, tc_edge);
-    }
+    olsr_deserialize_tc_lq_pair(curr, tc_edge);
 
     /*
      * Update the etx.

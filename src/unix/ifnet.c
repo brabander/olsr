@@ -432,13 +432,13 @@ int add_hemu_if (struct olsr_if *iface)
   ifp->hello_gen_timer =
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER, OLSR_TIMER_PERIODIC,
-                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
+                     &olsr_output_lq_hello,
                      ifp,
 		     hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
     olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
                      TC_JITTER, OLSR_TIMER_PERIODIC,
-                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
+                     &olsr_output_lq_tc,
                      ifp,
 		     tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =
@@ -762,14 +762,14 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
     olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC,
                      HELLO_JITTER,
 		     OLSR_TIMER_PERIODIC,
-                     olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello,
+                     &olsr_output_lq_hello,
                      ifp,
 		     hello_gen_timer_cookie->ci_id);
   ifp->tc_gen_timer =
     olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC,
                      TC_JITTER,
 		     OLSR_TIMER_PERIODIC,
-                     olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc,
+                     &olsr_output_lq_tc,
                      ifp,
 		     tc_gen_timer_cookie->ci_id);
   ifp->mid_gen_timer =

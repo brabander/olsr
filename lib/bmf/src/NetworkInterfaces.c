@@ -415,6 +415,10 @@ void FindNeighbors(
   union olsr_ip_addr* forwardedTo,
   int* nPossibleNeighbors)
 {
+  struct link_entry* walker;
+  olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
+  olsr_linkcost bestEtx = LINK_COST_BROKEN;
+
   int i;
 
   /* Initialize */
@@ -425,503 +429,205 @@ void FindNeighbors(
   }
   *nPossibleNeighbors = 0;
 
-  /* handle the non-LQ case */
-
-  if (olsr_cnf->lq_level == 0)
+  if (forwardedBy != NULL)
   {
-    struct link_entry* walker;
-
-    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
-      OLSR_PRINTF(
-        8,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
-        PLUGIN_NAME_SHORT,
-        intf->ifName,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
-
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      /* In the non-LQ case, it is not possible to select neigbors
-       * by quality or cost. So just remember the first found link.
-       * TODO: come on, there must be something better than to simply
-       * select the first one found! */
-      if (*bestNeighbor == NULL)
-      {
-        *bestNeighbor = walker;
-      }
-
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
-
-      *nPossibleNeighbors += 1;
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
-
+    /* Retrieve the cost of the link from 'forwardedBy' to myself */
+    struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
+    if (bestLinkFromForwarder != NULL)
+    {
+      previousLinkEtx = bestLinkFromForwarder->linkcost;
+    }
   }
-  /* handle the LQ case */
-  else
-  {
-#ifdef USING_THALES_LINK_COST_ROUTING
 
-    struct link_entry* walker;
-    float previousLinkCost = 2 * INFINITE_COST;
-    float bestLinkCost = 2 * INFINITE_COST;
+  OLSR_FOR_ALL_LINK_ENTRIES(walker) {
+    struct ipaddr_str buf;
+    union olsr_ip_addr* neighborMainIp;
+    struct link_entry* bestLinkToNeighbor;
+    struct tc_entry* tcLastHop;
+    float currEtx;
 
-    if (forwardedBy != NULL)
+    /* Consider only links from the specified interface */
+    if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
     {
-      /* Retrieve the cost of the link from 'forwardedBy' to myself */
-      struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
-      if (bestLinkFromForwarder != NULL)
-      {
-        previousLinkCost = bestLinkFromForwarder->link_cost;
-      }
+      continue; /* for */
     }
 
-    /* TODO: get_link_set() is not thread-safe! */
-    for (walker = get_link_set(); walker != NULL; walker = walker->next)
+    OLSR_PRINTF(
+      9,
+      "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+      PLUGIN_NAME_SHORT,
+      intf->ifName,
+      olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
+
+    neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
+
+    /* Consider only neighbors with an IP address that differs from the
+     * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
+    if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
     {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-      struct link_entry* bestLinkToNeighbor;
-      struct tc_entry* tcLastHop;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
       OLSR_PRINTF(
         9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+        "%s: ----> Not forwarding to %s: is source of pkt\n",
         PLUGIN_NAME_SHORT,
-        intf->ifName,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
-
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      if (walker->link_cost >= INFINITE_COST)
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
-      OLSR_PRINTF(
-        9,
-        "%s: ----> Forwarding pkt to %s will cost %5.2f\n",
-        PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-        walker->link_cost);
-
-      /* If the candidate neighbor is best reached via another interface, then skip
-       * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * TODO: get_best_link_to_neighbor() is not thread-safe. */
-      bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
-
-      if (walker != bestLinkToNeighbor)
-      {
-        if (bestLinkToNeighbor == NULL)
-        {
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: no link found\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-        }
-        else
-        {
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %5.2f\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-            bestIntf->int_name,
-            bestLinkToNeighbor->link_cost);
-        }
-
-        continue; /* for */
-      }
-
-      if (forwardedBy != NULL)
-      {
-        struct ipaddr_str forwardedByBuf, niaBuf;
-        OLSR_PRINTF(
-          9,
-          "%s: ----> 2-hop path from %s via me to %s will cost %5.2f\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
-          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          previousLinkCost + walker->link_cost);
-      }
-
-      /* Check the topology table whether the 'forwardedBy' node is itself a direct
-       * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
-       * via myself. If so, we do not need to forward the BMF packet to the candidate
-       * neighbor, because the 'forwardedBy' node will forward the packet. */
-      if (forwardedBy != NULL)
-      {
-        /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
-        tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
-        if (tcLastHop != NULL)
-        {
-          struct tc_edge_entry* tc_edge;
-
-          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
-          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-
-          /* We are not interested in dead-end or dying edges. */
-          if (tc_edge != NULL && (tc_edge->flags & OLSR_TC_EDGE_DOWN) == 0)
-          {
-            if (previousLinkCost + walker->link_cost > tc_edge->link_cost)
-            {
-#ifndef NODEBUG
-              struct ipaddr_str neighbor_iface_buf, forw_buf;
-              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
-#endif
-              OLSR_PRINTF(
-                9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
-                PLUGIN_NAME_SHORT,
-                neighbor_iface_buf.buf,
-                olsr_ip_to_string(&forw_buf, forwardedBy),
-                neighbor_iface_buf.buf,
-                tc_edge->link_cost);
-
-              continue; /* for */
-            } /* if */
-          } /* if */
-        } /* if */
-      } /* if */
-
-      /* Remember the best neighbor. If all are very bad, remember none. */
-      if (walker->link_cost < bestLinkCost)
-      {
-        *bestNeighbor = walker;
-        bestLinkCost = walker->link_cost;
-      }
-
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
-
-      *nPossibleNeighbors += 1;
-
-    } /* for */
-
-#else /* USING_THALES_LINK_COST_ROUTING */
-
-    struct link_entry* walker;
-    olsr_linkcost previousLinkEtx = LINK_COST_BROKEN;
-    olsr_linkcost bestEtx = LINK_COST_BROKEN;
-
-    if (forwardedBy != NULL)
-    {
-      /* Retrieve the cost of the link from 'forwardedBy' to myself */
-      struct link_entry* bestLinkFromForwarder = get_best_link_to_neighbor(forwardedBy);
-      if (bestLinkFromForwarder != NULL)
-      {
-        previousLinkEtx = bestLinkFromForwarder->linkcost;
-      }
+      continue; /* for */
     }
 
-    OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-      struct ipaddr_str buf;
-      union olsr_ip_addr* neighborMainIp;
-      struct link_entry* bestLinkToNeighbor;
-      struct tc_entry* tcLastHop;
-      float currEtx;
-
-      /* Consider only links from the specified interface */
-      if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
-      {
-        continue; /* for */
-      }
-
+    /* Rely on short-circuit boolean evaluation */
+    if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
+    {
       OLSR_PRINTF(
         9,
-        "%s: ----> Considering forwarding pkt on \"%s\" to %s\n",
+        "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
         PLUGIN_NAME_SHORT,
-        intf->ifName,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
-      neighborMainIp = MainAddressOf(&walker->neighbor_iface_addr);
+      continue; /* for */
+    }
 
-      /* Consider only neighbors with an IP address that differs from the
-       * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-      if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is source of pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node that forwarded the pkt\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Rely on short-circuit boolean evaluation */
-      if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Found a candidate neighbor to direct our packet to */
-
-      /* Calculate the link quality (ETX) of the link to the found neighbor */
-      currEtx = walker->linkcost;
-
-      if (currEtx >= LINK_COST_BROKEN)
-      {
-        OLSR_PRINTF(
-          9,
-          "%s: ----> Not forwarding to %s: link is timing out\n",
-          PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-
-        continue; /* for */
-      }
-
-      /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
+    /* Rely on short-circuit boolean evaluation */
+    if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
+    {
       OLSR_PRINTF(
         9,
-        "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
+        "%s: ----> Not forwarding to %s: is the node to which the pkt was forwarded\n",
         PLUGIN_NAME_SHORT,
-        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-        currEtx);
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
 
-      /* If the candidate neighbor is best reached via another interface, then skip
-       * the candidate neighbor; the candidate neighbor has been / will be selected via that
-       * other interface.
-       * TODO: get_best_link_to_neighbor() is not thread-safe. */
-      bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
+      continue; /* for */
+    }
 
-      if (walker != bestLinkToNeighbor)
+    /* Found a candidate neighbor to direct our packet to */
+
+    /* Calculate the link quality (ETX) of the link to the found neighbor */
+    currEtx = walker->linkcost;
+
+    if (currEtx >= LINK_COST_BROKEN)
+    {
+      OLSR_PRINTF(
+        9,
+        "%s: ----> Not forwarding to %s: link is timing out\n",
+        PLUGIN_NAME_SHORT,
+        olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
+
+      continue; /* for */
+    }
+
+    /* Compare costs to check if the candidate neighbor is best reached via 'intf' */
+    OLSR_PRINTF(
+      9,
+      "%s: ----> Forwarding pkt to %s will cost ETX %5.2f\n",
+      PLUGIN_NAME_SHORT,
+      olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
+      currEtx);
+
+    /*
+     * If the candidate neighbor is best reached via another interface, then skip
+     * the candidate neighbor; the candidate neighbor has been / will be selected via that
+     * other interface.
+     */
+    bestLinkToNeighbor = get_best_link_to_neighbor(&walker->neighbor_iface_addr);
+
+    if (walker != bestLinkToNeighbor)
+    {
+      if (bestLinkToNeighbor == NULL)
       {
-        if (bestLinkToNeighbor == NULL)
-        {
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: no link found\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
-        }
-        else
-        {
-#ifndef NODEBUG
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
-          struct lqtextbuffer lqbuffer;
-#endif
-          OLSR_PRINTF(
-            9,
-            "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
-            PLUGIN_NAME_SHORT,
-            olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-            bestIntf->int_name,
-            get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
-        }
-
-        continue; /* for */
+        OLSR_PRINTF(
+          9,
+          "%s: ----> Not forwarding to %s: no link found\n",
+          PLUGIN_NAME_SHORT,
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr));
       }
-
-      if (forwardedBy != NULL)
+      else
       {
 #ifndef NODEBUG
-        struct ipaddr_str forwardedByBuf, niaBuf;
+        struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
         struct lqtextbuffer lqbuffer;
 #endif
         OLSR_PRINTF(
           9,
-          "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
+          "%s: ----> Not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
           PLUGIN_NAME_SHORT,
-          olsr_ip_to_string(&forwardedByBuf, forwardedBy),
-          olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
-          get_linkcost_text(previousLinkEtx + currEtx, true, &lqbuffer));
+          olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
+          bestIntf->int_name,
+          get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
       }
 
-      /* Check the topology table whether the 'forwardedBy' node is itself a direct
-       * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
-       * via myself. If so, we do not need to forward the BMF packet to the candidate
-       * neighbor, because the 'forwardedBy' node will forward the packet. */
-      if (forwardedBy != NULL)
-      {
-        /* TODO: olsr_lookup_tc_entry() is not thread-safe. */
-        tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
-        if (tcLastHop != NULL)
-        {
-          struct tc_edge_entry* tc_edge;
+      continue; /* for */
+    }
 
-          /* TODO: olsr_lookup_tc_edge() is not thread-safe. */
-          tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
-
-          /* We are not interested in dead-end edges. */
-          if (tc_edge) {
-            olsr_linkcost tcEtx = tc_edge->cost;
-
-            if (previousLinkEtx + currEtx > tcEtx)
-            {
+    if (forwardedBy != NULL)
+    {
 #ifndef NODEBUG
-              struct ipaddr_str neighbor_iface_buf, forw_buf;
-              struct lqtextbuffer lqbuffer;
-              olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+      struct ipaddr_str forwardedByBuf, niaBuf;
+      struct lqtextbuffer lqbuffer;
 #endif
-              OLSR_PRINTF(
-                9,
-                "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
-                PLUGIN_NAME_SHORT,
-                neighbor_iface_buf.buf,
-                olsr_ip_to_string(&forw_buf, forwardedBy),
-                neighbor_iface_buf.buf,
-                get_linkcost_text(tcEtx, false, &lqbuffer));
+      OLSR_PRINTF(
+        9,
+        "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
+        PLUGIN_NAME_SHORT,
+        olsr_ip_to_string(&forwardedByBuf, forwardedBy),
+        olsr_ip_to_string(&niaBuf, &walker->neighbor_iface_addr),
+        get_linkcost_text(previousLinkEtx + currEtx, true, &lqbuffer));
+    }
 
-              continue; /* for */
-            } /* if */
+    /* Check the topology table whether the 'forwardedBy' node is itself a direct
+     * neighbor of the candidate neighbor, at a lower cost than the 2-hop route
+     * via myself. If so, we do not need to forward the BMF packet to the candidate
+     * neighbor, because the 'forwardedBy' node will forward the packet. */
+    if (forwardedBy != NULL)
+    {
+      tcLastHop = olsr_lookup_tc_entry(MainAddressOf(forwardedBy));
+      if (tcLastHop != NULL)
+      {
+        struct tc_edge_entry* tc_edge;
+
+        tc_edge = olsr_lookup_tc_edge(tcLastHop, MainAddressOf(&walker->neighbor_iface_addr));
+
+        /* We are not interested in dead-end edges. */
+        if (tc_edge) {
+          olsr_linkcost tcEtx = tc_edge->cost;
+
+          if (previousLinkEtx + currEtx > tcEtx)
+          {
+#ifndef NODEBUG
+            struct ipaddr_str neighbor_iface_buf, forw_buf;
+            struct lqtextbuffer lqbuffer;
+            olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
+#endif
+            OLSR_PRINTF(
+              9,
+              "%s: ----> Not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",
+              PLUGIN_NAME_SHORT,
+              neighbor_iface_buf.buf,
+              olsr_ip_to_string(&forw_buf, forwardedBy),
+              neighbor_iface_buf.buf,
+              get_linkcost_text(tcEtx, false, &lqbuffer));
+
+            continue; /* for */
           } /* if */
         } /* if */
       } /* if */
+    } /* if */
 
-      /* Remember the best neighbor. If all are very bad, remember none. */
-      if (currEtx < bestEtx)
-      {
-        *bestNeighbor = walker;
-        bestEtx = currEtx;
-      }
+    /* Remember the best neighbor. If all are very bad, remember none. */
+    if (currEtx < bestEtx)
+    {
+      *bestNeighbor = walker;
+      bestEtx = currEtx;
+    }
 
-      /* Fill the list with up to 'FanOutLimit' neighbors. If there
-       * are more neighbors, broadcast is used instead of unicast. In that
-       * case we do not need the list of neighbors. */
-      if (*nPossibleNeighbors < FanOutLimit)
-      {
-        neighbors->links[*nPossibleNeighbors] = walker;
-      }
+    /* Fill the list with up to 'FanOutLimit' neighbors. If there
+     * are more neighbors, broadcast is used instead of unicast. In that
+     * case we do not need the list of neighbors. */
+    if (*nPossibleNeighbors < FanOutLimit)
+    {
+      neighbors->links[*nPossibleNeighbors] = walker;
+    }
 
-      *nPossibleNeighbors += 1;
-    } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
-
-#endif /* USING_THALES_LINK_COST_ROUTING */
-
-  } /* if */
+    *nPossibleNeighbors += 1;
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 
   /* Display the result of the neighbor search */
   if (*nPossibleNeighbors == 0)

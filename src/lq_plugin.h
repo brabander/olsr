@@ -46,7 +46,6 @@
 #include "link_set.h"
 #include "olsr_spf.h"
 #include "lq_packet.h"
-#include "packet.h"
 #include "common/avl.h"
 
 #define LINK_COST_BROKEN (1<<22)
@@ -117,14 +116,14 @@ bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
 int olsr_serialize_hello_lq_pair(unsigned char *buff,
 				 struct lq_hello_neighbor *neigh);
 void olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
-				    struct hello_neighbor *neigh);
+				    struct lq_hello_neighbor *neigh);
 int olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh);
 void olsr_deserialize_tc_lq_pair(const uint8_t ** curr,
 				 struct tc_edge_entry *edge);
 
 void olsr_update_packet_loss_worker(struct link_entry *entry, bool lost);
 void olsr_memorize_foreign_hello_lq(struct link_entry *local,
-				    struct hello_neighbor *foreign);
+				    struct lq_hello_neighbor *foreign);
 
 const char *EXPORT(get_link_entry_text)(struct link_entry *entry,
 				char separator,
@@ -145,7 +144,7 @@ void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
 void olsr_clear_tc_lq(struct tc_mpr_addr *target);
 #endif
 
-struct hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
+struct lq_hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id);
 struct link_entry *olsr_malloc_link_entry(const char *id);

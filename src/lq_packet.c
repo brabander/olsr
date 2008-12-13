@@ -130,7 +130,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 }
 
-static void
+void
 destroy_lq_hello(struct lq_hello_message *lq_hello)
 {
   struct lq_hello_neighbor *walker, *aux;
