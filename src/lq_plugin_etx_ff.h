@@ -38,17 +38,52 @@
  *
  */
 
-#ifndef LQ_ETX_FPM_
-#define LQ_ETX_FPM_
+#ifndef LQ_PLUGIN_ETX_FF_
+#define LQ_PLUGIN_ETX_FF_
 
 #include "olsr_types.h"
+#include "tc_set.h"
+#include "link_set.h"
+#include "lq_packet.h"
 #include "lq_plugin.h"
 
-#define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
+#define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
 
-extern struct lq_handler lq_etx_fpm_handler;
+/* 16,32,64 and max. 128 */
+#define LQ_FF_WINDOW 64
+#define LQ_FF_QUICKSTART_INIT 4
 
-#endif /*LQ_ETX_FPM_*/
+struct lq_etxff_linkquality {
+  uint8_t valueLq;
+  uint8_t valueNlq;
+};
+
+struct lq_etxff_tc_edge {
+  struct tc_entry core;
+  struct lq_etxff_linkquality lq;
+};
+
+struct lq_etxff_tc_mpr_addr {
+  struct tc_mpr_addr core;
+  struct lq_etxff_linkquality lq;
+};
+
+struct lq_etxff_lq_hello_neighbor {
+  struct lq_hello_neighbor core;
+  struct lq_etxff_linkquality lq;
+};
+
+struct lq_etxff_link_entry {
+  struct link_entry core;
+  struct lq_etxff_linkquality lq;
+  uint8_t windowSize, activePtr;
+  uint16_t last_seq_nr;
+  uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
+};
+
+extern struct lq_handler lq_etxff_handler;
+
+#endif /*LQ_PLUGIN_ETX_FF_*/
 
 /*
  * Local Variables:

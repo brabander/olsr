@@ -54,9 +54,8 @@ struct tc_entry *tc_myself;	       /* Shortcut to ourselves */
 /* Some cookies for stats keeping */
 static struct olsr_cookie_info *tc_edge_gc_timer_cookie = NULL;
 static struct olsr_cookie_info *tc_validity_timer_cookie = NULL;
-static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
-struct olsr_cookie_info *tc_mem_cookie = NULL;
 struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
+struct olsr_cookie_info *tc_mem_cookie = NULL;
 
 /*
  * Sven-Ola 2007-Dec: These four constants include an assumption
@@ -192,12 +191,6 @@ olsr_init_tc(void)
     olsr_alloc_cookie("TC validity", OLSR_COOKIE_TYPE_TIMER);
   spf_backoff_timer_cookie =
     olsr_alloc_cookie("SPF backoff", OLSR_COOKIE_TYPE_TIMER);
-
-  tc_edge_mem_cookie =
-    olsr_alloc_cookie("tc_edge_entry", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_edge_mem_cookie,
-			      sizeof(struct tc_edge_entry) +
-			      active_lq_handler->tc_lq_size);
 
   tc_mem_cookie = olsr_alloc_cookie("tc_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_mem_cookie, sizeof(struct tc_entry));
@@ -388,7 +381,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 		       uint16_t ansn)
 {
   struct tc_entry *tc_neighbor;
-  struct tc_edge_entry *tc_edge = olsr_cookie_malloc(tc_edge_mem_cookie);
+  struct tc_edge_entry *tc_edge = olsr_malloc_tc_edge_entry();
   if (!tc_edge) {
     return NULL;
   }
@@ -477,7 +470,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
     tc_edge_inv->edge_inv = NULL;
   }
 
-  olsr_cookie_free(tc_edge_mem_cookie, tc_edge);
+  olsr_free_tc_edge_entry(tc_edge);
 }
 
 /**

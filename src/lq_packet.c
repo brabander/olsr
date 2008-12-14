@@ -70,7 +70,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
   // initialize the static fields
 
-  lq_hello->comm.type = LQ_HELLO_MESSAGE;
+  lq_hello->comm.type = olsr_get_Hello_MessageId();
   lq_hello->comm.vtime = me_to_reltime(outif->valtimes.hello);
   lq_hello->comm.size = 0;
 
@@ -89,7 +89,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     // allocate a neighbour entry
-    struct lq_hello_neighbor *neigh = olsr_malloc_lq_hello_neighbor("Build LQ_HELLO");
+    struct lq_hello_neighbor *neigh = olsr_malloc_lq_hello_neighbor();
 
     // a) this neighbor interface IS NOT visible via the output interface
     if(!ipequal(&walker->local_iface_addr, &outif->ip_addr))
@@ -140,7 +140,7 @@ destroy_lq_hello(struct lq_hello_message *lq_hello)
   for (walker = lq_hello->neigh; walker != NULL; walker = aux)
     {
       aux = walker->next;
-      free(walker);
+      olsr_free_lq_hello_neighbor(walker);
     }
 
   lq_hello->neigh = NULL;
@@ -161,7 +161,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   // initialize the static fields
 
-  lq_tc->comm.type = LQ_TC_MESSAGE;
+  lq_tc->comm.type = olsr_get_TC_MessageId();
   lq_tc->comm.vtime = me_to_reltime(outif->valtimes.tc);
   lq_tc->comm.size = 0;
 
@@ -231,7 +231,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     }
 
     /* Allocate a neighbour entry. */
-    neigh = olsr_malloc_tc_mpr_addr("Build LQ_TC");
+    neigh = olsr_malloc_tc_mpr_addr();
 
     /* Set the entry's main address. */
     neigh->address = walker->neighbor_main_addr;
@@ -278,7 +278,7 @@ destroy_lq_tc(struct lq_tc_message *lq_tc)
   for (walker = lq_tc->neigh; walker != NULL; walker = aux)
     {
       aux = walker->next;
-      free(walker);
+      olsr_free_tc_mpr_addr(walker);
     }
 }
 

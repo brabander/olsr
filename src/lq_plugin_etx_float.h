@@ -38,17 +38,43 @@
  *
  */
 
-#ifndef LQ_PLUGIN_DEFAULT_H_
-#define LQ_PLUGIN_DEFAULT_H_
+#ifndef LQ_PLUGIN_ETX_FLOAT_H_
+#define LQ_PLUGIN_ETX_FLOAT_H_
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
 
 #define LQ_ALGORITHM_ETX_FLOAT_NAME "etx_float"
 
-extern struct lq_handler lq_etx_float_handler;
+struct lq_etxfloat_linkquality {
+  float valueLq;
+  float valueNlq;
+};
 
-#endif /*LQ_PLUGIN_DEFAULT_H_*/
+struct lq_etxfloat_tc_edge {
+  struct tc_entry core;
+  struct lq_etxfloat_linkquality lq;
+};
+
+struct lq_etxfloat_tc_mpr_addr {
+  struct tc_mpr_addr core;
+  struct lq_etxfloat_linkquality lq;
+};
+
+struct lq_etxfloat_lq_hello_neighbor {
+  struct lq_hello_neighbor core;
+  struct lq_etxfloat_linkquality lq;
+};
+
+struct lq_etxfloat_link_entry {
+  struct link_entry core;
+  struct lq_etxfloat_linkquality lq;
+  uint16_t quickstart;
+};
+
+extern struct lq_handler lq_etxfloat_handler;
+
+#endif /*LQ_PLUGIN_ETX_FLOAT_H_*/
 
 /*
  * Local Variables:

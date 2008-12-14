@@ -302,7 +302,7 @@ olsr_delete_link_entry(struct link_entry *link)
   link->inter = NULL;
 
   free(link->if_name);
-  free(link);
+  olsr_free_link_entry(link);
 
   changes_neighborhood = true;
 }
@@ -448,7 +448,7 @@ add_link_entry(const union olsr_ip_addr *local,
 #endif
 
   /* a new tuple is created with... */
-  new_link = olsr_malloc_link_entry("new link entry");
+  new_link = olsr_malloc_link_entry();
 
   /* copy if_name, if it is defined */
   if (local_if->int_name) {

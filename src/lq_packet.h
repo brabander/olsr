@@ -93,7 +93,6 @@ struct lq_hello_neighbor {
   union olsr_ip_addr       addr;
   struct lq_hello_neighbor *next;
   olsr_linkcost          cost;
-  uint32_t               linkquality[0];
 };
 
 struct lq_hello_message {
@@ -128,7 +127,6 @@ struct lq_tc_message {
 struct tc_mpr_addr {
   union olsr_ip_addr address;
   struct tc_mpr_addr *next;
-  uint32_t         linkquality[0];
 };
 
 /* serialized LQ_TC */

@@ -38,17 +38,43 @@
  *
  */
 
-#ifndef LQ_ETX_FF_
-#define LQ_ETX_FF_
+#ifndef LQ_PLUGIN_ETX_FPM_H_
+#define LQ_PLUGIN_ETX_FPM_H_
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
 
-#define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
+#define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 
-extern struct lq_handler lq_etx_ff_handler;
+struct lq_etxfpm_linkquality {
+  uint8_t valueLq;
+  uint8_t valueNlq;
+};
 
-#endif /*LQ_ETX_FF_*/
+struct lq_etxfpm_tc_edge {
+  struct tc_entry core;
+  struct lq_etxfpm_linkquality lq;
+};
+
+struct lq_etxfpm_tc_mpr_addr {
+  struct tc_mpr_addr core;
+  struct lq_etxfpm_linkquality lq;
+};
+
+struct lq_etxfpm_lq_hello_neighbor {
+  struct lq_hello_neighbor core;
+  struct lq_etxfpm_linkquality lq;
+};
+
+struct lq_etxfpm_link_entry {
+  struct link_entry core;
+  struct lq_etxfpm_linkquality lq;
+  uint16_t quickstart;
+};
+
+extern struct lq_handler lq_etxfpm_handler;
+
+#endif /*LQ_PLUGIN_ETX_FPM_H_*/
 
 /*
  * Local Variables:

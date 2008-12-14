@@ -45,19 +45,22 @@
 #include "olsr_spf.h"
 #include "lq_packet.h"
 #include "olsr.h"
+#include "olsr_cookie.h"
 #include "two_hop_neighbor_table.h"
 #include "common/avl.h"
 #include "common/string.h"
 
-#include "lq_plugin_default_float.h"
-#include "lq_plugin_default_fpm.h"
-#include "lq_plugin_default_ff.h"
+#include "lq_plugin_etx_float.h"
+#include "lq_plugin_etx_fpm.h"
+#include "lq_plugin_etx_ff.h"
 
 static  struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
 
-static void register_lq_handler(struct lq_handler *handler, const char *name);
-static int activate_lq_handler(const char *name);
+static struct olsr_cookie_info *tc_mpr_addr_mem_cookie = NULL;
+static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
+static struct olsr_cookie_info *lq_hello_neighbor_mem_cookie = NULL;
+static struct olsr_cookie_info *link_entry_mem_cookie = NULL;
 
 static int
 avl_strcasecmp(const void *str1, const void *str2)
@@ -70,12 +73,9 @@ void
 init_lq_handler_tree(void)
 {
   avl_init(&lq_handler_tree, &avl_strcasecmp);
-  register_lq_handler(&lq_etx_float_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
-  register_lq_handler(&lq_etx_fpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
-  register_lq_handler(&lq_etx_ff_handler, LQ_ALGORITHM_ETX_FF_NAME);
-  if (activate_lq_handler(olsr_cnf->lq_algorithm)) {
-    activate_lq_handler(LQ_ALGORITHM_ETX_FPM_NAME);
-  }
+  register_lq_handler(&lq_etxfloat_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
+  register_lq_handler(&lq_etxfpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
+  register_lq_handler(&lq_etxff_handler, LQ_ALGORITHM_ETX_FF_NAME);
 }
 
 /*
@@ -90,7 +90,7 @@ init_lq_handler_tree(void)
  * @param pointer to lq_handler structure
  * @param name of the link quality handler for debug output
  */
-static void
+void
 register_lq_handler(struct lq_handler *handler, const char *name)
 {
   struct lq_handler_node *node;
@@ -105,25 +105,43 @@ register_lq_handler(struct lq_handler *handler, const char *name)
   avl_insert(&lq_handler_tree, &node->node, false);
 }
 
-static int
-activate_lq_handler(const char *name)
+void
+activate_lq_handler(void)
 {
-  struct lq_handler_node *node;
-  if (name == NULL) {
-    return 1;
+  const char *default_lq_algo = LQ_ALGORITHM_ETX_FPM_NAME;
+  struct lq_handler_node *node = NULL;
+
+  if (olsr_cnf->lq_algorithm) {
+    node = (struct lq_handler_node *) avl_find(&lq_handler_tree, olsr_cnf->lq_algorithm);
+    if (node == NULL) {
+      OLSR_PRINTF(1, "Error, unknown lq_handler '%s'\n", olsr_cnf->lq_algorithm);
+      olsr_exit("Cannot start without lq algorithm", 1);
+    }
+    OLSR_PRINTF(1, "Using '%s' algorithm for lq calculation.\n", olsr_cnf->lq_algorithm);
+  }
+  else {
+    node = (struct lq_handler_node *) avl_find(&lq_handler_tree, default_lq_algo);
+    OLSR_PRINTF(1, "Using default '%s' algorithm for lq calculation.\n", default_lq_algo);
+    if (node == NULL) {
+      OLSR_PRINTF(1, "Error, cannot find default algorithmus '%s'\n", default_lq_algo);
+      olsr_exit("Cannot start without lq algorithm", 1);
+    }
   }
 
-  node = (struct lq_handler_node *) avl_find(&lq_handler_tree, name);
-  if (node == NULL) {
-    OLSR_PRINTF(1, "Error, unknown lq_handler '%s'\n", name);
-    return 1;
-  }
+  tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tc_edge_mem_cookie, node->handler->size_tc_edge);
 
-  OLSR_PRINTF(1, "Using '%s' algorithm for lq calculation.\n", name);
+  tc_mpr_addr_mem_cookie = olsr_alloc_cookie("tc_mpr_addr", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(tc_mpr_addr_mem_cookie, node->handler->size_tc_mpr_addr);
+
+  lq_hello_neighbor_mem_cookie = olsr_alloc_cookie("lq_hello_neighbor", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(lq_hello_neighbor_mem_cookie, node->handler->size_lq_hello_neighbor);
+
+  link_entry_mem_cookie = olsr_alloc_cookie("link_entry", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(link_entry_mem_cookie, node->handler->size_link_entry);
+
   active_lq_handler = node->handler;
   active_lq_handler->initialize();
-
-  return 0;
 }
 
 /*
@@ -135,9 +153,9 @@ activate_lq_handler(const char *name)
  * @return linkcost
  */
 olsr_linkcost
-olsr_calc_tc_cost(const struct tc_edge_entry *tc_edge)
+olsr_calc_tc_cost(struct tc_edge_entry *tc_edge)
 {
-  return active_lq_handler->calc_tc_cost(tc_edge->linkquality);
+  return active_lq_handler->calc_tc_edge_entry_cost(tc_edge);
 }
 
 /*
@@ -170,7 +188,7 @@ int
 olsr_serialize_hello_lq_pair(unsigned char *buff,
 			     struct lq_hello_neighbor *neigh)
 {
-  return active_lq_handler->serialize_hello_lq(buff, neigh->linkquality);
+  return active_lq_handler->serialize_hello_lq(buff, neigh);
 }
 
 /*
@@ -186,8 +204,8 @@ void
 olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
 			       struct lq_hello_neighbor *neigh)
 {
-  active_lq_handler->deserialize_hello_lq(curr, neigh->linkquality);
-  neigh->cost = active_lq_handler->calc_hello_cost(neigh->linkquality);
+  active_lq_handler->deserialize_hello_lq(curr, neigh);
+  neigh->cost = active_lq_handler->calc_lq_hello_neighbor_cost(neigh);
 }
 
 /*
@@ -203,7 +221,7 @@ olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
 int
 olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
 {
-  return active_lq_handler->serialize_tc_lq(buff, neigh->linkquality);
+  return active_lq_handler->serialize_tc_lq(buff, neigh);
 }
 
 /*
@@ -217,7 +235,7 @@ olsr_serialize_tc_lq_pair(unsigned char *buff, struct tc_mpr_addr *neigh)
 void
 olsr_deserialize_tc_lq_pair(const uint8_t ** curr, struct tc_edge_entry *edge)
 {
-  active_lq_handler->deserialize_tc_lq(curr, edge->linkquality);
+  active_lq_handler->deserialize_tc_lq(curr, edge);
 }
 
 /*
@@ -234,7 +252,7 @@ void
 olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
 {
   olsr_linkcost lq;
-  lq = active_lq_handler->packet_loss_handler(entry, entry->linkquality, lost);
+  lq = active_lq_handler->packet_loss_handler(entry, lost);
 
   if (olsr_is_relevant_costchange(lq, entry->linkcost)) {
     entry->linkcost = lq;
@@ -267,10 +285,9 @@ olsr_memorize_foreign_hello_lq(struct link_entry *local,
 			       struct lq_hello_neighbor *foreign)
 {
   if (foreign) {
-    active_lq_handler->memorize_foreign_hello(local->linkquality,
-					      foreign->linkquality);
+    active_lq_handler->memorize_foreign_hello(local, foreign);
   } else {
-    active_lq_handler->memorize_foreign_hello(local->linkquality, NULL);
+    active_lq_handler->memorize_foreign_hello(local, NULL);
   }
 }
 
@@ -289,7 +306,7 @@ olsr_memorize_foreign_hello_lq(struct link_entry *local,
 const char *
 get_link_entry_text(struct link_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  return active_lq_handler->print_hello_lq(entry->linkquality, separator, buffer);
+  return active_lq_handler->print_link_entry_lq(entry, separator, buffer);
 }
 
 /*
@@ -307,7 +324,7 @@ get_link_entry_text(struct link_entry *entry, char separator, struct lqtextbuffe
 const char *
 get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtextbuffer *buffer)
 {
-  return active_lq_handler->print_tc_lq(entry->linkquality, separator, buffer);
+  return active_lq_handler->print_tc_edge_entry_lq(entry, separator, buffer);
 }
 
 /*
@@ -351,8 +368,7 @@ get_linkcost_text(olsr_linkcost cost, bool route,
 void
 olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
 {
-  memcpy(target->linkquality, source->linkquality,
-	 active_lq_handler->hello_lq_size);
+  active_lq_handler->copy_link_lq_into_neighbor(target, source);
 }
 
 /*
@@ -368,8 +384,7 @@ void
 olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target,
 				     struct link_entry *source)
 {
-  active_lq_handler->copy_link_lq_into_tc(target->linkquality,
-					  source->linkquality);
+  active_lq_handler->copy_link_entry_lq_into_tc_mpr_addr(target, source);
 }
 
 /*
@@ -385,24 +400,8 @@ void
 olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
 				       struct link_entry *source)
 {
-  active_lq_handler->copy_link_lq_into_tc(target->linkquality,
-					  source->linkquality);
+  active_lq_handler->copy_link_entry_lq_into_tc_edge_entry(target, source);
 }
-
-#if 0
-/*
- * olsr_clear_tc_lq
- *
- * this function resets the linkquality value of a tc_mpr_addr
- *
- * @param pointer to tc_mpr_addr
- */
-void
-olsr_clear_tc_lq(struct tc_mpr_addr *target)
-{
-  active_lq_handler->clear_tc(target->linkquality);
-}
-#endif
 
 /*
  * olsr_malloc_tc_mpr_addr
@@ -410,19 +409,34 @@ olsr_clear_tc_lq(struct tc_mpr_addr *target)
  * this function allocates memory for an tc_mpr_addr inclusive
  * linkquality data.
  *
- * @param id string for memory debugging
+ * @return pointer to tc_mpr_addr
+ */
+struct tc_edge_entry *olsr_malloc_tc_edge_entry(void)
+{
+  struct tc_edge_entry *t;
+
+  t = olsr_cookie_malloc(tc_edge_mem_cookie);
+  if (active_lq_handler->clear_tc_edge_entry)
+    active_lq_handler->clear_tc_edge_entry(t);
+  return t;
+}
+
+/*
+ * olsr_malloc_tc_mpr_addr
+ *
+ * this function allocates memory for an tc_mpr_addr inclusive
+ * linkquality data.
  *
  * @return pointer to tc_mpr_addr
  */
 struct tc_mpr_addr *
-olsr_malloc_tc_mpr_addr(const char *id)
+olsr_malloc_tc_mpr_addr(void)
 {
   struct tc_mpr_addr *t;
 
-  t =
-    olsr_malloc(sizeof(struct tc_mpr_addr) + active_lq_handler->tc_lq_size, id);
-
-  active_lq_handler->clear_tc(t->linkquality);
+  t = olsr_cookie_malloc(tc_mpr_addr_mem_cookie);
+  if (active_lq_handler->clear_tc_mpr_addr)
+    active_lq_handler->clear_tc_mpr_addr(t);
   return t;
 }
 
@@ -432,20 +446,16 @@ olsr_malloc_tc_mpr_addr(const char *id)
  * this function allocates memory for an lq_hello_neighbor inclusive
  * linkquality data.
  *
- * @param id string for memory debugging
- *
  * @return pointer to lq_hello_neighbor
  */
 struct lq_hello_neighbor *
-olsr_malloc_lq_hello_neighbor(const char *id)
+olsr_malloc_lq_hello_neighbor(void)
 {
   struct lq_hello_neighbor *h;
 
-  h =
-    olsr_malloc(sizeof(struct lq_hello_neighbor) +
-		active_lq_handler->hello_lq_size, id);
-
-  active_lq_handler->clear_hello(h->linkquality);
+  h = olsr_cookie_malloc(lq_hello_neighbor_mem_cookie);
+  if (active_lq_handler->clear_lq_hello_neighbor)
+    active_lq_handler->clear_lq_hello_neighbor(h);
   return h;
 }
 
@@ -455,21 +465,79 @@ olsr_malloc_lq_hello_neighbor(const char *id)
  * this function allocates memory for an link_entry inclusive
  * linkquality data.
  *
- * @param id string for memory debugging
- *
  * @return pointer to link_entry
  */
 struct link_entry *
-olsr_malloc_link_entry(const char *id)
+olsr_malloc_link_entry(void)
 {
   struct link_entry *h;
 
-  h =
-    olsr_malloc(sizeof(struct link_entry) + active_lq_handler->hello_lq_size,
-		id);
-
-  active_lq_handler->clear_hello(h->linkquality);
+  h = olsr_cookie_malloc(link_entry_mem_cookie);
+  if (active_lq_handler->clear_link_entry)
+    active_lq_handler->clear_link_entry(h);
   return h;
+}
+
+/**
+ * olsr_free_link_entry
+ *
+ * this functions free a link_entry inclusive linkquality data
+ *
+ * @param pointer to link_entry
+ */
+void olsr_free_link_entry(struct link_entry *link) {
+  olsr_cookie_free(link_entry_mem_cookie, link);
+}
+
+/**
+ * olsr_free_lq_hello_neighbor
+ *
+ * this functions free a lq_hello_neighbor inclusive linkquality data
+ *
+ * @param pointer to lq_hello_neighbor
+ */
+void olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh) {
+  olsr_cookie_free(lq_hello_neighbor_mem_cookie, neigh);
+}
+
+/**
+ * olsr_free_tc_edge_entry
+ *
+ * this functions free a tc_edge_entry inclusive linkquality data
+ *
+ * @param pointer to tc_edge_entry
+ */
+void olsr_free_tc_edge_entry(struct tc_edge_entry *edge) {
+  olsr_cookie_free(tc_edge_mem_cookie, edge);
+}
+
+/**
+ * olsr_free_tc_mpr_addr
+ *
+ * this functions free a tc_mpr_addr inclusive linkquality data
+ *
+ * @param pointer to tc_mpr_addr
+ */
+void olsr_free_tc_mpr_addr(struct tc_mpr_addr *mpr) {
+  olsr_cookie_free(tc_mpr_addr_mem_cookie, mpr);
+}
+
+/**
+ * olsr_get_Hello_MessageId
+ *
+ * @return olsr id of hello message
+ */
+uint8_t olsr_get_Hello_MessageId(void) {
+  return active_lq_handler->messageid_hello;
+}
+
+/**
+ * olsr_get_TC_MessageId
+ *
+ * @return olsr id of tc message
+ */
+uint8_t olsr_get_TC_MessageId(void) {
+  return active_lq_handler->messageid_tc;
 }
 
 /*

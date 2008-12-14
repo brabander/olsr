@@ -316,6 +316,9 @@ main(int argc, char *argv[])
   /* Load plugins */
   olsr_load_plugins();
 
+  /* activate LQ algorithm */
+  activate_lq_handler();
+
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
   /* Start syslog entry */

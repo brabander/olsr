@@ -80,7 +80,6 @@ struct link_entry {
   olsr_linkcost linkcost;
 
   struct list_node link_list;	       /* double linked list of all link entries */
-  uint32_t linkquality[0];
 };
 
 /* inline to recast from link_list back to link_entry */
