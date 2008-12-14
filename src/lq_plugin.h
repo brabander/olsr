@@ -144,7 +144,6 @@ void olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
 void olsr_clear_tc_lq(struct tc_mpr_addr *target);
 #endif
 
-struct lq_hello_neighbor *olsr_malloc_hello_neighbor(const char *id);
 struct tc_mpr_addr *olsr_malloc_tc_mpr_addr(const char *id);
 struct lq_hello_neighbor *olsr_malloc_lq_hello_neighbor(const char *id);
 struct link_entry *olsr_malloc_link_entry(const char *id);

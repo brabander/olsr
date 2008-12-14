@@ -405,29 +405,6 @@ olsr_clear_tc_lq(struct tc_mpr_addr *target)
 #endif
 
 /*
- * olsr_malloc_hello_neighbor
- *
- * this function allocates memory for an hello_neighbor inclusive
- * linkquality data.
- *
- * @param id string for memory debugging
- *
- * @return pointer to hello_neighbor
- */
-struct lq_hello_neighbor *
-olsr_malloc_hello_neighbor(const char *id)
-{
-  struct lq_hello_neighbor *h;
-
-  h =
-    olsr_malloc(sizeof(struct lq_hello_neighbor) +
-		active_lq_handler->hello_lq_size, id);
-
-  active_lq_handler->clear_hello(h->linkquality);
-  return h;
-}
-
-/*
  * olsr_malloc_tc_mpr_addr
  *
  * this function allocates memory for an tc_mpr_addr inclusive

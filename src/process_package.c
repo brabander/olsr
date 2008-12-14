@@ -351,12 +351,10 @@ deserialize_hello(struct lq_hello_message *hello, const void *ser)
 
     curr = (const unsigned char *)(info_head + 1);
     while (curr < limit2) {
-      struct lq_hello_neighbor *neigh = olsr_malloc_hello_neighbor("HELLO deserialization");
+      struct lq_hello_neighbor *neigh = olsr_malloc_lq_hello_neighbor("HELLO deserialization");
       pkt_get_ipaddress(&curr, &neigh->addr);
 
-      if (type == LQ_HELLO_MESSAGE) {
-        olsr_deserialize_hello_lq_pair(&curr, neigh);
-      }
+      olsr_deserialize_hello_lq_pair(&curr, neigh);
       neigh->link_type = EXTRACT_LINK(info_head->link_code);
       neigh->neigh_type = EXTRACT_STATUS(info_head->link_code);
 
