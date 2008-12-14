@@ -53,7 +53,6 @@
 
 #include <stdlib.h>
 
-static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
 static void olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno);
 static void olsr_flush_mid_entries(struct tc_entry *);
 
@@ -221,7 +220,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
  * @param vtime the validity time
  * @param seq the sequence number to register a new node with
  */
-static struct mid_entry *
+struct mid_entry *
 olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
                       olsr_reltime vtime,
@@ -286,7 +285,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  * @param vtime the validity time
  * @param seq the sequence number to register a new node with
  */
-static void
+void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr,
                       olsr_reltime vtime, uint16_t mid_seqno)
@@ -352,7 +351,7 @@ olsr_lookup_tc_mid_entry(struct tc_entry *tc, const union olsr_ip_addr *adr)
  * @param adr the alias address to check
  * @return the MID address entry or NULL if not found
  */
-static struct mid_entry *
+struct mid_entry *
 olsr_lookup_mid_entry(const union olsr_ip_addr *adr)
 {
 #if 0

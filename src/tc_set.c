@@ -41,6 +41,7 @@
  */
 
 #include "tc_set.h"
+#include "mid_set.h"
 #include "olsr.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
@@ -771,6 +772,22 @@ olsr_input_tc(union olsr_message *msg,
   pkt_get_u8(&curr, &upper_border);
 
   tc = olsr_lookup_tc_entry(&originator);
+
+/*learn alias ips of neighbours on the fly to speed up things!!*/
+  if (msg_hops==0) {
+    if (!ipequal(&originator,from_addr)){
+      /*new alias of new neighbour are thrown in the mid table to speed up routing*/
+      if (olsr_validate_address(from_addr)) {
+        if (!olsr_lookup_mid_entry(from_addr)){
+	  struct ipaddr_str srcbuf, origbuf;
+	  OLSR_PRINTF(1, "got tc from from unknown alias ip of direct neighbour: ip: %s main-ip: %s\n",
+	                olsr_ip_to_string(&origbuf,&originator),
+        	        olsr_ip_to_string(&srcbuf,from_addr));
+          olsr_insert_mid_entry(&originator, from_addr, vtime, msg_seq);
+        }
+      }
+    }
+  }
 
   if (tc && 0 != tc->edge_tree.count) {
     if (olsr_seq_inrange_high((int)tc->msg_seq - TC_SEQNO_WINDOW,
