@@ -89,18 +89,6 @@ struct mid_entry *olsr_lookup_tc_mid_entry(struct tc_entry *,
                                                const union olsr_ip_addr *);
 void olsr_print_mid_set(void);
 
-/*used by routing upspeed hack*/
-struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
-void olsr_update_mid_entry(const union olsr_ip_addr *,
-                           const union olsr_ip_addr *,
-                           olsr_reltime,
-                           uint16_t);
-struct mid_entry * olsr_insert_mid_entry(const union olsr_ip_addr *,
-                                         const union olsr_ip_addr *,
-                                         olsr_reltime,
-                                         uint16_t);
-
-
 #endif
 
 /*
