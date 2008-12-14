@@ -121,7 +121,7 @@ static char *default_lq_ff_linkcost2text(struct lqtextbuffer *buffer, olsr_linkc
 	uint32_t roundDown = cost >> 16;
 	uint32_t fraction = ((cost & 0xffff) * 1000) >> 16;
 
-	sprintf(buffer->buf, "%u.%u", roundDown, fraction);
+	sprintf(buffer->buf, "%u.%03u", roundDown, fraction);
 	return buffer->buf;
 }
 
