@@ -345,7 +345,7 @@ static void handle_fds(const unsigned long next_interval)
     remaining = next_interval - (unsigned long)now_times;
     if ((long)remaining <= 0) {
       /* we are already over the interval */
-      break;
+      return; /* Oops: break does not work because out-of-context OLSR_FOR_ALL_SOCKETS_END */
     }
     /* we need an absolute time - milliseconds */
     remaining *= olsr_cnf->system_tick_divider;
