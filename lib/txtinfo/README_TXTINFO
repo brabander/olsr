@@ -1,6 +1,8 @@
 LoadPlugin "olsrd_txtinfo.so.0.1"
 {
         PlParam "accept" "10.247.200.4"
+        PlParam "accept" "10.247.200.2"
+        PlParam "accept" "127.0.0.1"
 }
 
 ABOUT

@@ -50,7 +50,9 @@
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 
-extern union olsr_ip_addr ipc_accept_ip;
+extern union olsr_ip_addr *ipc_accept_ip;
+extern int ipc_accept_count;
+
 extern int ipc_port;
 extern int nompr;
 

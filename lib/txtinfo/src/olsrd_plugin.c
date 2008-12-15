@@ -63,7 +63,8 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 
-union olsr_ip_addr ipc_accept_ip;
+union olsr_ip_addr *ipc_accept_ip = NULL;
+int ipc_accept_count = 0;
 int ipc_port;
 int nompr;
 
@@ -80,10 +81,15 @@ static void my_init(void)
 
     /* defaults for parameters */
     ipc_port = 2006;
+    ipc_accept_ip = malloc(sizeof(union olsr_ip_addr));
+    if (!ipc_accept_ip) {
+        OLSR_PRINTF(0, "Error, no memory for txtinfo plugin");
+        exit(1);
+    }
     if (olsr_cnf->ip_version == AF_INET) {
-        ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
+        ipc_accept_ip[0].v4.s_addr = htonl(INADDR_LOOPBACK);
     } else {
-        ipc_accept_ip.v6 = in6addr_loopback;
+        ipc_accept_ip[0].v6 = in6addr_loopback;
     }
 
     /* highlite neighbours by default */
@@ -110,9 +116,28 @@ int olsrd_plugin_interface_version(void)
     return PLUGIN_INTERFACE_VERSION;
 }
 
+static int set_txtinfo_iplist(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
+{
+    char buf[INET6_ADDRSTRLEN];
+    union olsr_ip_addr ip_addr;
+    if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
+        OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
+        return 1;
+    }
+
+    ipc_accept_ip = realloc(ipc_accept_ip, sizeof(ip_addr) * (ipc_accept_count + 1));
+    if (ipc_accept_ip == NULL) {
+      OLSR_PRINTF(0, "Error, cannot allocate memory for ipc_accept_ip list in txtinfo plugin");
+      exit(1);
+    }
+
+    inet_ntop(olsr_cnf->ip_version, &ipc_accept_ip[ipc_accept_count++], buf, sizeof(buf));
+    return 0;
+}
+
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "port",   .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = "accept", .set_plugin_parameter = &set_plugin_ipaddress, .data = &ipc_accept_ip },
+    { .name = "accept", .set_plugin_parameter = &set_txtinfo_iplist, .data = &ipc_accept_ip },
 };
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)

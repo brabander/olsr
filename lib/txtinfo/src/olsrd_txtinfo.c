@@ -242,6 +242,8 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     char addr[INET6_ADDRSTRLEN];
     socklen_t addrlen = sizeof(pin);
     int http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
+    bool ipOkay = false;
+    int i, count;
 
     if (http_connection == -1) {
         /* this may well happen if the other side immediately closes the connection. */
@@ -250,16 +252,23 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 #endif
         return;
     }
+
     /* check if we want ot speak with it */
+    count = ipc_accept_count;
+    if (count == 0)
+      count = 1; /* default is localhost */
+
     if (olsr_cnf->ip_version == AF_INET) {
         const struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
         if (inet_ntop(olsr_cnf->ip_version, &addr4->sin_addr, addr, sizeof(addr)) == NULL) {
              addr[0] = '\0';
         }
-        if (!ip4equal(&addr4->sin_addr, &ipc_accept_ip.v4)) {
-            OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSESOCKET(http_connection);
-            return;
+
+        for (i = 0; i < ipc_accept_count; i++) {
+          if (ip4equal(&addr4->sin_addr, &ipc_accept_ip[i].v4)) {
+              ipOkay = true;
+              break;
+          }
         }
     } else {
         const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
@@ -267,12 +276,19 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
              addr[0] = '\0';
         }
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-        if (!ip6equal(&in6addr_any, &ipc_accept_ip.v6) &&
-           !ip6equal(&addr6->sin6_addr, &ipc_accept_ip.v6)) {
-            OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
-            CLOSESOCKET(http_connection);
-            return;
+        for (i = 0; i < ipc_accept_count; i++) {
+          if (ip6equal(&in6addr_any, &ipc_accept_ip[i].v6) ||
+             ip6equal(&addr6->sin6_addr, &ipc_accept_ip[i].v6)) {
+              ipOkay = true;
+              break;
+          }
         }
+    }
+
+    if (!ipOkay) {
+      OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+      CLOSESOCKET(http_connection);
+      return;
     }
 #ifndef NODEBUG
     OLSR_PRINTF(2, "(TXTINFO) Connect from %s\n",addr);
