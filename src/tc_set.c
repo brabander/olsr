@@ -166,7 +166,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   /*
    * Add a rt_path for ourselves.
    */
-  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr, OLSR_RT_ORIGIN_INT);
+  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr, OLSR_RT_ORIGIN_TC);
 
   return tc;
 }
