@@ -118,7 +118,6 @@ int olsrd_plugin_interface_version(void)
 
 static int set_txtinfo_iplist(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
-    char buf[INET6_ADDRSTRLEN];
     union olsr_ip_addr ip_addr;
     if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
         OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
@@ -131,7 +130,7 @@ static int set_txtinfo_iplist(const char *value, void *data __attribute__((unuse
       exit(1);
     }
 
-    inet_ntop(olsr_cnf->ip_version, &ipc_accept_ip[ipc_accept_count++], buf, sizeof(buf));
+    ipc_accept_ip[ipc_accept_count++] = ip_addr;
     return 0;
 }
 

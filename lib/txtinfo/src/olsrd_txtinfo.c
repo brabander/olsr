@@ -264,7 +264,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
              addr[0] = '\0';
         }
 
-        for (i = 0; i < ipc_accept_count; i++) {
+        for (i = 0; i < count; i++) {
           if (ip4equal(&addr4->sin_addr, &ipc_accept_ip[i].v4)) {
               ipOkay = true;
               break;
@@ -276,7 +276,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
              addr[0] = '\0';
         }
        /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-        for (i = 0; i < ipc_accept_count; i++) {
+        for (i = 0; i < count; i++) {
           if (ip6equal(&in6addr_any, &ipc_accept_ip[i].v6) ||
              ip6equal(&addr6->sin6_addr, &ipc_accept_ip[i].v6)) {
               ipOkay = true;
