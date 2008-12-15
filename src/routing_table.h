@@ -131,6 +131,7 @@ enum olsr_rt_origin {
   OLSR_RT_ORIGIN_TC,    /* TC main-addr route */
   OLSR_RT_ORIGIN_MID,   /* MID alias route */
   OLSR_RT_ORIGIN_HNA,   /* HNA route */
+  OLSR_RT_ORIGIN_LINK,  /* 1-hop LINK route */
   OLSR_RT_ORIGIN_MAX
 };
 
