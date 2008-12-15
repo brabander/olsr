@@ -186,7 +186,7 @@ remove_interface(struct olsr_if *iface)
     return;
   }
 
-  olsr_delete_link_entry_by_if(ifp->if_index);
+  olsr_delete_link_entry_by_if(ifp);
 
   /*
    * Call possible ifchange functions registered by plugins

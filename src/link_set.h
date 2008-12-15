@@ -108,7 +108,7 @@ extern bool link_changes;
 /* Function prototypes */
 
 void olsr_init_link_set(void);
-void olsr_delete_link_entry_by_if(const int);
+void olsr_delete_link_entry_by_if(const struct interface *);
 void olsr_expire_link_hello_timer(void *);
 void olsr_update_packet_loss_worker(struct link_entry *, bool);
 void signal_link_changes(bool);   /* XXX ugly */

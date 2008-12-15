@@ -317,7 +317,7 @@ olsr_delete_link_entry(struct link_entry *link)
  * Delete all link entries matching a given interface id
  */
 void
-olsr_delete_link_entry_by_if(const int int_index)
+olsr_delete_link_entry_by_if(const struct interface *ifp)
 {
   struct link_entry *link;
 
@@ -326,7 +326,7 @@ olsr_delete_link_entry_by_if(const int int_index)
   }
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if (int_index == link->inter->if_index) {
+    if (ifp == link->inter) {
       olsr_delete_link_entry(link);
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
