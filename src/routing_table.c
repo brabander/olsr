@@ -228,8 +228,6 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
     return NULL;
   }
 
-  memset(rt, 0, sizeof(*rt));
-
   /* Mark this entry as fresh - see olsr_update_rib_routes() */
   rt->rt_nexthop.interface = NULL;
 
@@ -356,6 +354,11 @@ olsr_delete_rt_path(struct rt_path *rtp)
     avl_delete(&rtp->rtp_tc->prefix_tree, &rtp->rtp_prefix_tree_node);
     olsr_unlock_tc_entry(rtp->rtp_tc);
     rtp->rtp_tc = NULL;
+  }
+
+  /* unlock underlying interface */
+  if (rtp->rtp_nexthop.interface) {
+    unlock_interface(rtp->rtp_nexthop.interface);
   }
 
   /* no current inet gw if the rt_path is removed */
