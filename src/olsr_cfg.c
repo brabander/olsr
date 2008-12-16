@@ -69,7 +69,7 @@ static char *olsr_strdup(const char *s);
 static char *olsr_strndup(const char *s, size_t n);
 static char **olsr_strtok(const char *s, const char **snext);
 static void olsr_strtok_free(char **s);
-static int read_config(const char *filename, int *pargc, char ***pargv);
+static int read_config(const char *filename, int *pargc, char ***pargv, int **pline);
 static struct if_config_options *olsr_get_default_if_config(void);
 
 struct olsrd_config *
@@ -79,7 +79,8 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
   int opt_idx = 0;
   char *opt_str = 0;
   int opt_argc = 0;
-  char **opt_argv = olsr_malloc(argc * sizeof(argv[0]), "argv");
+  char **opt_argv = olsr_malloc(argc * sizeof(opt_argv[0]), "opt_argv");
+  int *opt_line = olsr_malloc(argc * sizeof(opt_line[0]), "opt_line");
 #ifdef DEBUG
   struct ipaddr_str buf;
 #endif
@@ -96,8 +97,8 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
    * -hemu (queue_if(hcif01)) (-> --hemu)
    * -hint                    (removed)
    * -hnaint                  (removed)
-   * -i iface iface iface     (see comment below)
-   * -int (win32)             (preserved)
+   * -i if0 if1...            (see comment below)
+   * -int (WIN32)             (preserved)
    * -ipc (ipc conn = 1)      (-> --ipc)
    * -ipv6                    (-> -V or --IpVersion)
    * -lqa (lq aging)          (removed)
@@ -110,9 +111,8 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
    * -T (pollrate)            (preserved)
    *
    * Note: Remaining args are interpreted as list of
-   * interfaces. Because "-i*" lists interfaces, all
-   * following non-minus args are processed as ifaces
-   * under win32 which is compatible with switch.exe
+   * interfaces. For this reason, '-i' is ignored which
+   * adds the following non-minus args to the list.
    */
 
   /* *INDENT-OFF* */
@@ -123,8 +123,9 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     {"dispout",                  no_argument,       0, 'O'},
     {"help",                     no_argument,       0, 'h'},
     {"hemu",                     required_argument, 0, 'H'}, /* (ip4) */
+    {"iface",                    no_argument,       0, 'i'}, /* if0 if1... */
 #ifdef WIN32
-    {"int",                      no_argument,       0, 'i'},
+    {"int",                      no_argument,       0, 'l'},
 #endif
     {"ipc",                      no_argument,       0, 'P'},
     {"nofork",                   no_argument,       0, 'n'},
@@ -139,10 +140,9 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     {"IpcConnect",               required_argument, 0, 'Q'}, /* (Host,Net,MaxConnections) */
     {"IpVersion",                required_argument, 0, 'V'}, /* (i) */
     {"LinkQualityAging",         required_argument, 0, 'a'}, /* (f) */
-    {"LinkQualityAlgorithm",     required_argument, 0, 'l'}, /* (str) */
+    {"LinkQualityAlgorithm",     required_argument, 0, 'L'}, /* (str) */
     {"LinkQualityDijkstraLimit", required_argument, 0, 'J'}, /* (i,f) */
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
-    {"LinkQualityWinSize",       required_argument, 0, 'W'}, /* (i) */
     {"LoadPlugin",               required_argument, 0, 'p'}, /* (soname {PlParams}) */
     {"MprCoverage",              required_argument, 0, 'M'}, /* (i) */
     {"NatThreshold",             required_argument, 0, 'N'}, /* (f) */
@@ -158,13 +158,20 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
   }, *popt = long_options;
   /* *INDENT-ON* */
 
+  /*
+   * olsr_malloc() uses calloc, so opt_line is already filled
+   * memset(opt_line, 0, argc * sizeof(opt_line[0]));
+   */
+
   /* Copy argv array for safe free'ing later on */
   while (opt_argc < argc) {
     const char *p = argv[opt_argc];
-    if (0 == strcmp(p, "-int"))
-      p = "-i";
-    else if (0 == strcmp(p, "-nofork"))
+    if (0 == strcmp(p, "-nofork"))
       p = "-n";
+#ifdef WIN32
+    else if (0 == strcmp(p, "-int"))
+      p = "-l";
+#endif
     opt_argv[opt_argc] = olsr_strdup(p);
     opt_argc++;
   }
@@ -209,7 +216,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     switch (opt) {
     case 'f':                  /* config (filename) */
       PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
-      if (0 > read_config(optarg, &opt_argc, &opt_argv)) {
+      if (0 > read_config(optarg, &opt_argc, &opt_argv, &opt_line)) {
         fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", optarg, strerror(errno));
         exit(EXIT_FAILURE);
       }
@@ -228,7 +235,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
       break;
     case 'h':                  /* help */
       popt = long_options;
-      printf("Usage: olsrd [OPTIONS]... [ifaces]...\n");
+      printf("Usage: olsrd [OPTIONS]... [interfaces]...\n");
       while (popt->name) {
         if (popt->val)
           printf("-%c or ", popt->val);
@@ -268,8 +275,11 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
         PARSER_DEBUG_PRINTF("host_emul set to %d\n", olsr_cnf->host_emul);
       }
       break;
+    case 'i':                  /* iface */
+      /* Ignored */
+      break;
 #ifdef WIN32
-    case 'i':                  /* int */
+    case 'l':                  /* int */
       ListInterfaces();
       exit(0);
 #endif
@@ -506,6 +516,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
                 p_next++;
               } else {
                 fprintf(stderr, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
+                exit(EXIT_FAILURE);
               }
               p_next += 2;
             }
@@ -580,6 +591,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
             p++;
           } else {
             fprintf(stderr, "Unknown arg: %s %s\n", p[0], p[1]);
+            exit(EXIT_FAILURE);
           }
           p += 2;
         }
@@ -609,7 +621,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
       sscanf(optarg, "%f", &olsr_cnf->lq_aging);
       PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", olsr_cnf->lq_aging);
       break;
-    case 'l':                  /* LinkQualityAlgorithm (str) */
+    case 'L':                  /* LinkQualityAlgorithm (str) */
       if (NULL != (tok = olsr_strtok(optarg, NULL))) {
         olsr_cnf->lq_algorithm = olsr_strdup(*tok);
         olsr_strtok_free(tok);
@@ -636,9 +648,6 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
           olsr_cnf->lq_fish = arg;
         PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", olsr_cnf->lq_fish);
       }
-      break;
-    case 'W':                  /* LinkQualityWinSize (i) */
-      /* Ignored */
       break;
     case 'p':                  /* LoadPlugin (soname {PlParams}) */
       if (NULL != (tok = olsr_strtok(optarg, &optarg_next))) {
@@ -759,17 +768,14 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
       }
       break;
     default:
-      if (opt >= 32 && opt <= 255)
-        fprintf(stderr, "Unknown option '%c' for parsing ??\n", (char)opt);
-      else
-        fprintf(stderr, "?? getopt returned %d ??\n", opt);
-      fprintf(stderr, "Continue to parse the rest of the config file...\n");
+      fprintf(stderr, "Unknown arg in line %d.\n", opt_line[optind]);
+      exit(EXIT_FAILURE);
     }                           /* switch */
   }                             /* while getopt_long() */
 
   while (optind < opt_argc) {
     struct olsr_if *ifs;
-    PARSER_DEBUG_PRINTF("new iface %s\n", opt_argv[optind]);
+    PARSER_DEBUG_PRINTF("new interface %s\n", opt_argv[optind]);
     if (NULL != (ifs = queue_if(opt_argv[optind++], false))) {
       ifs->cnf = olsr_get_default_if_config();
     }
@@ -1228,15 +1234,30 @@ olsr_strtok_free(char **s)
   }
 }
 
+static void
+olsr_strcat(char **pdest, const char *src)
+{
+  char *tmp = *pdest;
+  if (*src) {
+    *pdest = olsr_malloc(1 + (tmp ? strlen(tmp) : 0) + strlen(src), "olsr_strcat");
+    if (tmp) {
+      strcpy(*pdest, tmp);
+      free(tmp);
+    }
+    strcat(*pdest, src);
+  }
+}
+
 static int
-read_config(const char *filename, int *pargc, char ***pargv)
+read_config(const char *filename, int *pargc, char ***pargv, int **pline)
 {
   FILE *f = fopen(filename, "r");
   if (f) {
-    int bopen = 0, optind_tmp = optind;
-    char **argv_lst = 0;
-    char sbuf[512], nbuf[512] = { 0 }, *p;
-    while ((p = fgets(sbuf, sizeof(sbuf), f)) || *nbuf) {
+    int bopen = 0, optind_tmp = optind, line_lst = 0, line = 0;
+    char **argv_lst = 0, sbuf[512], *pbuf = NULL, *p;
+
+    while ((p = fgets(sbuf, sizeof(sbuf), f)) || pbuf) {
+      line++;
       if (!p) {
         *sbuf = 0;
         goto eof;
@@ -1253,25 +1274,25 @@ read_config(const char *filename, int *pargc, char ***pargv)
       *(p + 1) = 0;
       if (*sbuf) {
         if (bopen) {
-          strcat(nbuf, sbuf);
+          olsr_strcat(&pbuf, sbuf);
           if ('}' == *p) {
             bopen = 0;
-            strcpy(sbuf, nbuf);
           }
         } else if (p == sbuf && '{' == *p) {
-          strcat(nbuf, " ");
-          strcat(nbuf, sbuf);
+          olsr_strcat(&pbuf, " ");
+          olsr_strcat(&pbuf, sbuf);
           bopen = 1;
         } else {
-          if ('{' == *p)
+          if ('{' == *p) {
             bopen = 1;
+          }
         eof:
-          if (*nbuf) {
-            int i;
+          if (pbuf) {
+            int i, *line_tmp;
             char **argv_tmp;
             int argc_tmp = *pargc + 2;
+            char *q = pbuf, *n;
 
-            char *q = nbuf, *n;
             while (*q && ' ' >= *q)
               q++;
             p = q;
@@ -1283,25 +1304,37 @@ read_config(const char *filename, int *pargc, char ***pargv)
             while (*q && ' ' >= *p)
               p++;
 
-            argv_tmp = olsr_malloc(argc_tmp * sizeof(argv_tmp[0]), "config arg1");
+            line_tmp = olsr_malloc(argc_tmp * sizeof(line_tmp[0]), "config line");
+            argv_tmp = olsr_malloc(argc_tmp * sizeof(argv_tmp[0]), "config args");
             for (i = 0; i < argc_tmp; i++) {
-              if (i < optind_tmp)
+              if (i < optind_tmp) {
+                line_tmp[i] = (*pline)[i];
                 argv_tmp[i] = (*pargv)[i];
-              else if (i == optind_tmp)
+              } else if (i == optind_tmp) {
+                line_tmp[i] = line_lst;
                 argv_tmp[i] = n;
-              else if (i == 1 + optind_tmp)
+              } else if (i == 1 + optind_tmp) {
+                line_tmp[i] = line_lst;
                 argv_tmp[i] = olsr_strdup(p);
-              else
+              } else {
+                line_tmp[i] = (*pline)[i - 2];
                 argv_tmp[i] = (*pargv)[i - 2];
+              }
             }
             optind_tmp += 2;
             *pargc = argc_tmp;
             *pargv = argv_tmp;
-            if (argv_lst)
+            if (argv_lst) {
               free(argv_lst);
+            }
+            free(*pline);
+            *pline = line_tmp;
             argv_lst = argv_tmp;
+            line_lst = line;
+            free(pbuf);
+            pbuf = NULL;
           }
-          strcpy(nbuf, sbuf);
+          olsr_strcat(&pbuf, sbuf);
         }
       }
     }
