@@ -120,8 +120,6 @@ struct InterfaceInfo
 
 void WinSockPError(char *);
 char *StrError(unsigned int ErrNo);
-
-void ListInterfaces(void);
 int GetIntInfo(struct InterfaceInfo *Info, char *Name);
 
 #define MAX_INTERFACES 100

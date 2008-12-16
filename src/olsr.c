@@ -657,6 +657,29 @@ olsr_malloc(size_t size, const char *id)
   return ptr;
 }
 
+/*
+ * Same as strdup but works with olsr_malloc
+ */
+char *
+olsr_strdup(const char *s)
+{
+  char *ret = olsr_malloc(1 + strlen(s), "olsr_strdup");
+  strcpy(ret, s);
+  return ret;
+}
+
+/*
+ * Same as strndup but works with olsr_malloc
+ */
+char *
+olsr_strndup(const char *s, size_t n)
+{
+  size_t len = n < strlen(s) ? n : strlen(s);
+  char *ret = olsr_malloc(1 + len, "olsr_strndup");
+  strncpy(ret, s, len);
+  ret[len] = 0;
+  return ret;
+}
 
 /*
  * Local Variables:

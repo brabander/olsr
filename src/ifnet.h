@@ -65,6 +65,7 @@ int add_hemu_if(struct olsr_if *);
 
 #ifdef WIN32
 void CallSignalHandler(void);
+void ListInterfaces(void);
 #endif
 
 #endif
