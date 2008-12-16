@@ -775,7 +775,7 @@
     </refsect1>
   </refentry>
 
-  <refentry id="olsr_swtich_8">
+  <refentry id="olsr_switch_8">
     <indexterm>
       <primary><command>olsr_switch</command></primary>
     </indexterm>
@@ -785,7 +785,7 @@
     </refentryinfo>
 
     <refmeta>
-      <refentrytitle id="olsr_switch_8_name">olsrd.conf</refentrytitle>
+      <refentrytitle id="olsr_switch_8_name">olsr_switch</refentrytitle>
 
       <manvolnum>8</manvolnum>
     </refmeta>
@@ -814,16 +814,16 @@
       The protocol is described in RFC3626. It is designed to be run as a
       standalone server process - but as it is still in an experimental stage
       most users will prefer running it with some debug output which is
-      directed to STDOUT. </para>
+      directed to STDOUT.</para>
 
       <para>This manual page only lists the command line arguments. For
       details of the configuration file see the comments included in
       <filename>/etc/olsrd.conf</filename>. Note that none of these options
       need to be set at the command line - all these options and others can be
-      set in the configuration file. </para>
+      set in the configuration file.</para>
 
       <para>The homepage of olsrd is <ulink
-      url="http://www.olsr.org">http://www.olsr.org</ulink> </para>
+      url="http://www.olsr.org">http://www.olsr.org</ulink></para>
     </refsect1>
 
     <refsect1>
@@ -836,7 +836,7 @@
           <listitem>
             <para>This option specifies on what network interfaces olsrd
             should run. These interfaces cannot be aliased interfaces such as
-            eth0:1. </para>
+            eth0:1.</para>
           </listitem>
         </varlistentry>
 
@@ -845,7 +845,7 @@
 
           <listitem>
             <para>This option overrides the default configuration file path
-            used by olsrd - <filename>/etc/olsrd.conf</filename> </para>
+            used by olsrd - <filename>/etc/olsrd.conf</filename></para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -860,8 +860,12 @@
     <refsect1>
       <title>See also</title>
 
-      <para><xref endterm="olsrd_8_name" linkend="olsrd_8" />, <xref
-      endterm="olsrd_conf_5_name" linkend="olsrd_conf_5" /></para>
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_8_name" linkend="olsrd_8" /></member>
+
+        <member><xref endterm="olsrd_conf_5_name"
+        linkend="olsrd_conf_5" /></member>
+      </simplelist>
     </refsect1>
   </refentry>
 </article>
