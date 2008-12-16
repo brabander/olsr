@@ -65,15 +65,15 @@ void ListInterfaces(void);
 #define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
 #endif
 
-static char* olsr_strdup(const char *s);
-static char* olsr_strndup(const char *s, size_t n);
-static char** olsr_strtok(const char *s, const char **snext);
+static char *olsr_strdup(const char *s);
+static char *olsr_strndup(const char *s, size_t n);
+static char **olsr_strtok(const char *s, const char **snext);
 static void olsr_strtok_free(char **s);
-static int read_config (const char *filename, int *pargc, char ***pargv);
+static int read_config(const char *filename, int *pargc, char ***pargv);
 static struct if_config_options *olsr_get_default_if_config(void);
 
 struct olsrd_config *
-olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
+olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
 {
   int opt;
   int opt_idx = 0;
@@ -115,6 +115,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
    * under win32 which is compatible with switch.exe
    */
 
+  /* *INDENT-OFF* */
   static struct option long_options[] = {
     {"config",                   required_argument, 0, 'f'}, /* (filename) */
     {"delgw",                    no_argument,       0, 'D'},
@@ -155,10 +156,11 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {0, 0, 0, 0}
   }, *popt = long_options;
+  /* *INDENT-ON* */
 
   /* Copy argv array for safe free'ing later on */
-  while(opt_argc < argc) {
-    const char* p = argv[opt_argc];
+  while (opt_argc < argc) {
+    const char *p = argv[opt_argc];
     if (0 == strcmp(p, "-int"))
       p = "-i";
     else if (0 == strcmp(p, "-nofork"))
@@ -173,25 +175,23 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
   /* Calculate short option string */
   opt_str = olsr_malloc(opt_idx * 3, "create short opt_string");
   opt_idx = 0;
-  while (popt->name != NULL && popt->val != 0)
-  {
+  while (popt->name != NULL && popt->val != 0) {
     opt_str[opt_idx++] = popt->val;
 
-    switch (popt->has_arg)
-    {
-      case optional_argument:
-        opt_str[opt_idx++] = ':';
-        /* Fall through */
-      case required_argument:
-        opt_str[opt_idx++] = ':';
-        break;
+    switch (popt->has_arg) {
+    case optional_argument:
+      opt_str[opt_idx++] = ':';
+      /* Fall through */
+    case required_argument:
+      opt_str[opt_idx++] = ':';
+      break;
     }
     popt++;
   }
 
   /* If no arguments, revert to default behaviour */
   if (1 == opt_argc) {
-    char* argv0_tmp = opt_argv[0];
+    char *argv0_tmp = opt_argv[0];
     free(opt_argv);
     opt_argv = olsr_malloc(3 * sizeof(opt_argv[0]), "default argv");
     opt_argv[0] = argv0_tmp;
@@ -202,15 +202,14 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
 
   olsr_cnf = olsr_get_default_cnf();
 
-  while (0 <= (opt = getopt_long (opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
+  while (0 <= (opt = getopt_long(opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
     char **tok;
     const char *optarg_next;
 
-    switch(opt)
-    {
+    switch (opt) {
     case 'f':                  /* config (filename) */
       PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
-      if (0 > read_config (optarg, &opt_argc, &opt_argv)) {
+      if (0 > read_config(optarg, &opt_argc, &opt_argv)) {
         fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", optarg, strerror(errno));
         exit(EXIT_FAILURE);
       }
@@ -229,24 +228,22 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     case 'h':                  /* help */
       popt = long_options;
-      printf ("Usage: olsrd [OPTIONS]... [ifaces]...\n");
-      while (popt->name)
-      {
+      printf("Usage: olsrd [OPTIONS]... [ifaces]...\n");
+      while (popt->name) {
         if (popt->val)
-          printf ("-%c or ", popt->val);
+          printf("-%c or ", popt->val);
         else
-          printf ("       ");
-        printf ("--%s ", popt->name);
-        switch (popt->has_arg)
-        {
+          printf("       ");
+        printf("--%s ", popt->name);
+        switch (popt->has_arg) {
         case required_argument:
-          printf ("arg");
+          printf("arg");
           break;
         case optional_argument:
-          printf ("[arg]");
+          printf("[arg]");
           break;
         }
-        printf ("\n");
+        printf("\n");
         popt++;
       }
       exit(0);
@@ -288,7 +285,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       /* Version string already printed */
       exit(0);
     case 'A':                  /* AllowNoInt (yes/no) */
-      olsr_cnf->allow_no_interfaces =  (0 == strcmp("yes", optarg));
+      olsr_cnf->allow_no_interfaces = (0 == strcmp("yes", optarg));
       PARSER_DEBUG_PRINTF("Noint set to %d\n", olsr_cnf->allow_no_interfaces);
       break;
     case 'C':                  /* ClearScreen (yes/no) */
@@ -305,21 +302,19 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       }
       break;
     case 'F':                  /* FIBMetric (str) */
-      if (NULL != (tok = olsr_strtok(optarg, NULL)))
-      {
+      if (NULL != (tok = olsr_strtok(optarg, NULL))) {
         if (strcmp(*tok, CFG_FIBM_FLAT) == 0) {
-            olsr_cnf->fib_metric = FIBM_FLAT;
+          olsr_cnf->fib_metric = FIBM_FLAT;
         } else if (strcmp(*tok, CFG_FIBM_CORRECT) == 0) {
-            olsr_cnf->fib_metric = FIBM_CORRECT;
+          olsr_cnf->fib_metric = FIBM_CORRECT;
         } else if (strcmp(*tok, CFG_FIBM_APPROX) == 0) {
-            olsr_cnf->fib_metric = FIBM_APPROX;
+          olsr_cnf->fib_metric = FIBM_APPROX;
         } else {
           fprintf(stderr, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
           exit(EXIT_FAILURE);
         }
         olsr_strtok_free(tok);
-      }
-      else {
+      } else {
         fprintf(stderr, "Error in %s\n", optarg);
         exit(EXIT_FAILURE);
       }
@@ -329,14 +324,13 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       if ('{' != *optarg) {
         fprintf(stderr, "No {}\n");
         exit(EXIT_FAILURE);
-      }
-      else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
+      } else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
         char **p = tok;
         if (AF_INET != olsr_cnf->ip_version) {
           fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4\n");
           exit(EXIT_FAILURE);
         }
-        while(p[0]) {
+        while (p[0]) {
           union olsr_ip_addr ipaddr, netmask;
           if (!p[1]) {
             fprintf(stderr, "Odd args in %s\n", optarg);
@@ -365,14 +359,13 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       if ('{' != *optarg) {
         fprintf(stderr, "No {}\n");
         exit(EXIT_FAILURE);
-      }
-      else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
+      } else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
         char **p = tok;
         if (AF_INET6 != olsr_cnf->ip_version) {
           fprintf(stderr, "IPv6 addresses can only be used if \"IpVersion\" == 6\n");
           exit(EXIT_FAILURE);
         }
-        while(p[0]) {
+        while (p[0]) {
           int prefix = -1;
           union olsr_ip_addr ipaddr;
           if (!p[1]) {
@@ -400,11 +393,10 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
         if ('{' != *optarg_next) {
           fprintf(stderr, "No {}\n");
           exit(EXIT_FAILURE);
-        }
-        else {
+        } else {
           char **tok_next = olsr_strtok(optarg_next + 1, NULL);
           char **p = tok;
-          while(p[0]) {
+          while (p[0]) {
             char **p_next = tok_next;
             struct olsr_if *ifs = olsr_malloc(sizeof(*ifs), "new if");
             ifs->cnf = olsr_get_default_if_config();
@@ -412,16 +404,15 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
             ifs->next = olsr_cnf->interfaces;
             olsr_cnf->interfaces = ifs;
             PARSER_DEBUG_PRINTF("Interface %s\n", ifs->name);
-            while(p_next[0]) {
+            while (p_next[0]) {
               if (!p_next[1]) {
                 fprintf(stderr, "Odd args in %s\n", optarg_next);
                 exit(EXIT_FAILURE);
               }
               if (0 == strcmp("AutoDetectChanges", p_next[0])) {
-                ifs->cnf->autodetect_chg =  (0 == strcmp("yes", p_next[1]));
+                ifs->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
                 PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", ifs->cnf->autodetect_chg);
-              }
-              else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
+              } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
@@ -429,23 +420,18 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
                 }
                 ifs->cnf->ipv4_broadcast = ipaddr;
                 PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, ifs->cnf->ipv4_broadcast.v4));
-              }
-              else if (0 == strcmp("Ip6AddrType", p_next[0])) {
+              } else if (0 == strcmp("Ip6AddrType", p_next[0])) {
                 if (0 == strcmp("site-local", p_next[1])) {
                   ifs->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
-                }
-                else if (0 == strcmp("unique-local", p_next[1])) {
+                } else if (0 == strcmp("unique-local", p_next[1])) {
                   ifs->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
-                }
-                else if (0 == strcmp("global", p_next[1])) {
+                } else if (0 == strcmp("global", p_next[1])) {
                   ifs->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
-                }
-                else {
+                } else {
                   ifs->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
                 }
                 PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", ifs->cnf->ipv6_addrtype);
-              }
-              else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
+              } else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
@@ -453,8 +439,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
                 }
                 ifs->cnf->ipv6_multi_site = ipaddr;
                 PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &ifs->cnf->ipv6_multi_site.v6));
-              }
-              else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
+              } else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
@@ -462,52 +447,42 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
                 }
                 ifs->cnf->ipv6_multi_glbl = ipaddr;
                 PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &ifs->cnf->ipv6_multi_glbl.v6));
-              }
-              else if (0 == strcmp("HelloInterval", p_next[0])) {
+              } else if (0 == strcmp("HelloInterval", p_next[0])) {
                 ifs->cnf->hello_params.emission_interval = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->hello_params.emission_interval);
                 PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", ifs->cnf->hello_params.emission_interval);
-              }
-              else if (0 == strcmp("HelloValidityTime", p_next[0])) {
+              } else if (0 == strcmp("HelloValidityTime", p_next[0])) {
                 ifs->cnf->hello_params.validity_time = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->hello_params.validity_time);
                 PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", ifs->cnf->hello_params.validity_time);
-              }
-              else if (0 == strcmp("TcInterval", p_next[0])) {
+              } else if (0 == strcmp("TcInterval", p_next[0])) {
                 ifs->cnf->tc_params.emission_interval = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->tc_params.emission_interval);
                 PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", ifs->cnf->tc_params.emission_interval);
-              }
-              else if (0 == strcmp("TcValidityTime", p_next[0])) {
+              } else if (0 == strcmp("TcValidityTime", p_next[0])) {
                 ifs->cnf->tc_params.validity_time = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->tc_params.validity_time);
                 PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", ifs->cnf->tc_params.validity_time);
-              }
-              else if (0 == strcmp("MidInterval", p_next[0])) {
+              } else if (0 == strcmp("MidInterval", p_next[0])) {
                 ifs->cnf->mid_params.emission_interval = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->mid_params.emission_interval);
                 PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", ifs->cnf->mid_params.emission_interval);
-              }
-              else if (0 == strcmp("MidValidityTime", p_next[0])) {
+              } else if (0 == strcmp("MidValidityTime", p_next[0])) {
                 ifs->cnf->mid_params.validity_time = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->mid_params.validity_time);
                 PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", ifs->cnf->mid_params.validity_time);
-              }
-              else if (0 == strcmp("HnaInterval", p_next[0])) {
+              } else if (0 == strcmp("HnaInterval", p_next[0])) {
                 ifs->cnf->hna_params.emission_interval = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->hna_params.emission_interval);
                 PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", ifs->cnf->hna_params.emission_interval);
-              }
-              else if (0 == strcmp("HnaValidityTime", p_next[0])) {
+              } else if (0 == strcmp("HnaValidityTime", p_next[0])) {
                 ifs->cnf->hna_params.validity_time = 0;
                 sscanf(p_next[1], "%f", &ifs->cnf->hna_params.validity_time);
                 PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", ifs->cnf->hna_params.validity_time);
-              }
-              else if (0 == strcmp("Weight", p_next[0])) {
+              } else if (0 == strcmp("Weight", p_next[0])) {
                 ifs->cnf->weight.fixed = true;
                 PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", ifs->cnf->weight.value);
-              }
-              else if (0 == strcmp("LinkQualityMult", p_next[0])) {
+              } else if (0 == strcmp("LinkQualityMult", p_next[0])) {
                 float f;
                 struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
                 if (!p_next[2]) {
@@ -523,24 +498,24 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
                 }
                 f = 0;
                 sscanf(p_next[2], "%f", &f);
-                mult->value = (uint32_t)(f * LINK_LOSS_MULTIPLIER);
+                mult->value = (uint32_t) (f * LINK_LOSS_MULTIPLIER);
                 mult->next = ifs->cnf->lq_mult;
                 ifs->cnf->lq_mult = mult;
-                PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", olsr_ip_to_string(&buf, &mult->addr), (float)mult->value / LINK_LOSS_MULTIPLIER);
+                PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", olsr_ip_to_string(&buf, &mult->addr),
+                                    (float)mult->value / LINK_LOSS_MULTIPLIER);
                 p_next++;
-              }
-              else {
+              } else {
                 fprintf(stderr, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
               }
               p_next += 2;
             }
             p++;
           }
-          if (tok_next) olsr_strtok_free(tok_next);
+          if (tok_next)
+            olsr_strtok_free(tok_next);
         }
         olsr_strtok_free(tok);
-      }
-      else {
+      } else {
         fprintf(stderr, "Error in %s\n", optarg);
         exit(EXIT_FAILURE);
       }
@@ -549,10 +524,9 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       if ('{' != *optarg) {
         fprintf(stderr, "No {}\n");
         exit(EXIT_FAILURE);
-      }
-      else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
+      } else if (NULL != (tok = olsr_strtok(optarg + 1, NULL))) {
         char **p = tok;
-        while(p[0]) {
+        while (p[0]) {
           if (!p[1]) {
             fprintf(stderr, "Odd args in %s\n", optarg);
             exit(EXIT_FAILURE);
@@ -563,8 +537,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
             if (0 <= arg && arg < 1 << (8 * sizeof(olsr_cnf->ipc_connections)))
               olsr_cnf->ipc_connections = arg;
             PARSER_DEBUG_PRINTF("\tIPC connections: %d\n", olsr_cnf->ipc_connections);
-          }
-          else if (0 == strcmp("Host", p[0])) {
+          } else if (0 == strcmp("Host", p[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(olsr_cnf->ip_version, p[1], &ipaddr) <= 0) {
               fprintf(stderr, "Failed converting IP address %s\n", p[0]);
@@ -572,8 +545,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
             }
             ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_cnf->maxplen);
             PARSER_DEBUG_PRINTF("\tIPC host: %s\n", olsr_ip_to_string(&buf, &ipaddr));
-          }
-          else if (0 == strcmp("Net", p[0])) {
+          } else if (0 == strcmp("Net", p[0])) {
             union olsr_ip_addr ipaddr;
             if (!p[2]) {
               fprintf(stderr, "Odd args in %s\n", optarg_next);
@@ -595,8 +567,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
               }
               ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
               PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
-            }
-            else {
+            } else {
               int prefix = -1;
               sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
               if (0 > prefix || 128 < prefix) {
@@ -607,8 +578,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
               PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), prefix);
             }
             p++;
-          }
-          else {
+          } else {
             fprintf(stderr, "Unknown arg: %s %s\n", p[0], p[1]);
           }
           p += 2;
@@ -640,12 +610,10 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", olsr_cnf->lq_aging);
       break;
     case 'l':                  /* LinkQualityAlgorithm (str) */
-      if (NULL != (tok = olsr_strtok(optarg, NULL)))
-      {
+      if (NULL != (tok = olsr_strtok(optarg, NULL))) {
         olsr_cnf->lq_algorithm = olsr_strdup(*tok);
         olsr_strtok_free(tok);
-      }
-      else {
+      } else {
         fprintf(stderr, "Error in %s\n", optarg);
         exit(EXIT_FAILURE);
       }
@@ -677,8 +645,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
         if ('{' != *optarg_next) {
           fprintf(stderr, "No {}\n");
           exit(EXIT_FAILURE);
-        }
-        else {
+        } else {
           char **tok_next = olsr_strtok(optarg_next + 1, NULL);
           struct plugin_entry *pe = olsr_malloc(sizeof(*pe), "plugin");
           pe->name = olsr_strdup(*tok);
@@ -688,7 +655,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
           PARSER_DEBUG_PRINTF("Plugin: %s\n", pe->name);
           if (tok_next) {
             char **p_next = tok_next;
-            while(p_next[0]) {
+            while (p_next[0]) {
               struct plugin_param *pp = olsr_malloc(sizeof(*pp), "plparam");
               if (0 != strcmp("PlParam", p_next[0]) || !p_next[1] || !p_next[2]) {
                 fprintf(stderr, "Odd args in %s\n", optarg_next);
@@ -705,8 +672,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
           }
         }
         olsr_strtok_free(tok);
-      }
-      else {
+      } else {
         fprintf(stderr, "Error in %s\n", optarg);
         exit(EXIT_FAILURE);
       }
@@ -750,7 +716,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 *sizeof(olsr_cnf->rttable_default))))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rttable_default))))
           olsr_cnf->rttable_default = arg;
         PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", olsr_cnf->rttable_default);
       }
@@ -759,7 +725,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       {
         int arg = -1;
         sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8*sizeof(olsr_cnf->rttable))))
+        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rttable))))
           olsr_cnf->rttable = arg;
         PARSER_DEBUG_PRINTF("RtTable: %d\n", olsr_cnf->rttable);
       }
@@ -794,14 +760,14 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
       break;
     default:
       if (opt >= 32 && opt <= 255)
-        fprintf (stderr, "Unknown option '%c' for parsing ??\n", (char)opt);
+        fprintf(stderr, "Unknown option '%c' for parsing ??\n", (char)opt);
       else
-        fprintf (stderr, "?? getopt returned %d ??\n", opt);
+        fprintf(stderr, "?? getopt returned %d ??\n", opt);
       fprintf(stderr, "Continue to parse the rest of the config file...\n");
-    } /* switch */
-  } /* while getopt_long() */
+    }                           /* switch */
+  }                             /* while getopt_long() */
 
-  while(optind < opt_argc) {
+  while (optind < opt_argc) {
     struct olsr_if *ifs;
     PARSER_DEBUG_PRINTF("new iface %s\n", opt_argv[optind]);
     if (NULL != (ifs = queue_if(opt_argv[optind++], false))) {
@@ -810,7 +776,7 @@ olsr_parse_cnf(int argc, char* argv[], const char *conf_file_name)
   }
 
   /* Some cleanup */
-  while(0 < opt_argc) {
+  while (0 < opt_argc) {
     free(opt_argv[--opt_argc]);
   }
   free(opt_argv);
@@ -1181,7 +1147,7 @@ ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, 
   return NULL;
 }
 
-static char*
+static char *
 olsr_strdup(const char *s)
 {
   char *ret = olsr_malloc(1 + strlen(s), "olsr_strndup");
@@ -1189,7 +1155,7 @@ olsr_strdup(const char *s)
   return ret;
 }
 
-static char*
+static char *
 olsr_strndup(const char *s, size_t n)
 {
   size_t len = n < strlen(s) ? n : strlen(s);
@@ -1203,15 +1169,15 @@ static inline bool
 olsr_strtok_delim(const char *p)
 {
   switch (*p) {
-    case 0:
-    case '{':
-    case '}':
-      return true;
+  case 0:
+  case '{':
+  case '}':
+    return true;
   }
   return false;
 }
 
-static char**
+static char **
 olsr_strtok(const char *s, const char **snext)
 {
   char **tmp, **ret = NULL;
@@ -1226,10 +1192,9 @@ olsr_strtok(const char *s, const char **snext)
       const char *q = p;
       if ('"' == *p || '\'' == *p) {
         c = *q++;
-        while(!olsr_strtok_delim(++p) && c != *p);
-      }
-      else {
-        while(!olsr_strtok_delim(p) && ' ' < *p)
+        while (!olsr_strtok_delim(++p) && c != *p);
+      } else {
+        while (!olsr_strtok_delim(p) && ' ' < *p)
           p++;
       }
       tmp = ret;
@@ -1250,11 +1215,12 @@ olsr_strtok(const char *s, const char **snext)
   return ret;
 }
 
-static void olsr_strtok_free(char **s)
+static void
+olsr_strtok_free(char **s)
 {
   if (s) {
     char **p = s;
-    while(*p) {
+    while (*p) {
       free(*p);
       p++;
     }
@@ -1263,25 +1229,20 @@ static void olsr_strtok_free(char **s)
 }
 
 static int
-read_config (const char *filename, int *pargc, char ***pargv)
+read_config(const char *filename, int *pargc, char ***pargv)
 {
-  FILE *f = fopen (filename, "r");
-  if (f)
-  {
+  FILE *f = fopen(filename, "r");
+  if (f) {
     int bopen = 0, optind_tmp = optind;
     char **argv_lst = 0;
     char sbuf[512], nbuf[512] = { 0 }, *p;
-    while ((p = fgets (sbuf, sizeof (sbuf), f)) || *nbuf)
-    {
-      if (!p)
-      {
+    while ((p = fgets(sbuf, sizeof(sbuf), f)) || *nbuf) {
+      if (!p) {
         *sbuf = 0;
         goto eof;
       }
-      while (*p && '#' != *p)
-      {
-        if ('"' == *p || '\'' == *p)
-        {
+      while (*p && '#' != *p) {
+        if ('"' == *p || '\'' == *p) {
           char sep = *p;
           while (*++p && sep != *p);
         }
@@ -1290,30 +1251,22 @@ read_config (const char *filename, int *pargc, char ***pargv)
       *p = 0;
       while (sbuf <= --p && ' ' >= *p);
       *(p + 1) = 0;
-      if (*sbuf)
-      {
-        if (bopen)
-        {
-          strcat (nbuf, sbuf);
-          if ('}' == *p)
-          {
+      if (*sbuf) {
+        if (bopen) {
+          strcat(nbuf, sbuf);
+          if ('}' == *p) {
             bopen = 0;
-            strcpy (sbuf, nbuf);
+            strcpy(sbuf, nbuf);
           }
-        }
-        else if (p == sbuf && '{' == *p)
-        {
-          strcat (nbuf, " ");
-          strcat (nbuf, sbuf);
+        } else if (p == sbuf && '{' == *p) {
+          strcat(nbuf, " ");
+          strcat(nbuf, sbuf);
           bopen = 1;
-        }
-        else
-        {
+        } else {
           if ('{' == *p)
             bopen = 1;
         eof:
-          if (*nbuf)
-          {
+          if (*nbuf) {
             int i;
             char **argv_tmp;
             int argc_tmp = *pargc + 2;
@@ -1324,21 +1277,20 @@ read_config (const char *filename, int *pargc, char ***pargv)
             p = q;
             while (' ' < *p)
               p++;
-            n = olsr_malloc (p - q + 3, "config arg0");
-            strcpy (n, "--");
-            strncat (n, q, p - q);
+            n = olsr_malloc(p - q + 3, "config arg0");
+            strcpy(n, "--");
+            strncat(n, q, p - q);
             while (*q && ' ' >= *p)
               p++;
 
-            argv_tmp = olsr_malloc (argc_tmp * sizeof (argv_tmp[0]), "config arg1");
-            for (i = 0; i < argc_tmp; i++)
-            {
+            argv_tmp = olsr_malloc(argc_tmp * sizeof(argv_tmp[0]), "config arg1");
+            for (i = 0; i < argc_tmp; i++) {
               if (i < optind_tmp)
                 argv_tmp[i] = (*pargv)[i];
               else if (i == optind_tmp)
                 argv_tmp[i] = n;
               else if (i == 1 + optind_tmp)
-                argv_tmp[i] = olsr_strdup (p);
+                argv_tmp[i] = olsr_strdup(p);
               else
                 argv_tmp[i] = (*pargv)[i - 2];
             }
@@ -1346,14 +1298,14 @@ read_config (const char *filename, int *pargc, char ***pargv)
             *pargc = argc_tmp;
             *pargv = argv_tmp;
             if (argv_lst)
-              free (argv_lst);
+              free(argv_lst);
             argv_lst = argv_tmp;
           }
-          strcpy (nbuf, sbuf);
+          strcpy(nbuf, sbuf);
         }
       }
     }
-    fclose (f);
+    fclose(f);
     return 0;
   }
   return -1;

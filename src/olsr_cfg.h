@@ -240,12 +240,17 @@ struct olsrd_config *olsr_get_default_cnf(void);
 /*
  * Check pollrate function
  */
-static inline float conv_pollrate_to_secs(uint32_t p) {
+static inline float
+conv_pollrate_to_secs(uint32_t p)
+{
   return p / 1000000.0;
 }
-static inline uint32_t conv_pollrate_to_microsecs(float p) {
+static inline uint32_t
+conv_pollrate_to_microsecs(float p)
+{
   return p * 1000000;
 }
+
 #if 0
 int olsr_check_pollrate(float *pollrate);
 #endif
@@ -253,9 +258,9 @@ int olsr_check_pollrate(float *pollrate);
 /*
  * List functions
  */
-void EXPORT(ip_prefix_list_add)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-int EXPORT(ip_prefix_list_remove)(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-void EXPORT(ip_prefix_list_flush)(struct ip_prefix_list **);
+void EXPORT(ip_prefix_list_add) (struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+int EXPORT(ip_prefix_list_remove) (struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
+void EXPORT(ip_prefix_list_flush) (struct ip_prefix_list **);
 struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 #endif /* _OLSRD_CFG_H */
