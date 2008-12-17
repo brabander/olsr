@@ -97,6 +97,7 @@ union olsr_ip_addr {
 struct olsr_ip_prefix {
   union olsr_ip_addr prefix;
   uint8_t prefix_len;
+  uint8_t prefix_origin;
 };
 
 typedef uint32_t olsr_linkcost;

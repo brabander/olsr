@@ -127,7 +127,7 @@ olsr_delete_hna_net(struct hna_net *hna_net)
    */
   olsr_delete_routing_table(&hna_net->hna_prefix.prefix,
                             hna_net->hna_prefix.prefix_len,
-                            &tc->addr);
+                            &tc->addr, OLSR_RT_ORIGIN_HNA);
 
   /*
    * Remove from the per-tc tree.

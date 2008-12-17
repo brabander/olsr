@@ -110,6 +110,14 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
     return +1;
   }
 
+  /* prefix origin */
+  if (pfx1->prefix_origin < pfx2->prefix_origin) {
+    return -1;
+  }
+  if (pfx1->prefix_origin > pfx2->prefix_origin) {
+    return +1;
+  }
+
   return 0;
 }
 
@@ -140,6 +148,14 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
     return -1;
   }
   if (pfx1->prefix_len > pfx2->prefix_len) {
+    return +1;
+  }
+
+  /* prefix origin */
+  if (pfx1->prefix_origin < pfx2->prefix_origin) {
+    return -1;
+  }
+  if (pfx1->prefix_origin > pfx2->prefix_origin) {
     return +1;
   }
 
@@ -488,6 +504,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
    */
   prefix.prefix = *dst;
   prefix.prefix_len = plen;
+  prefix.prefix_origin = origin;
 
   node = avl_find(&tc->prefix_tree, &prefix);
 
@@ -521,7 +538,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
  */
 void
 olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
-                          union olsr_ip_addr *originator)
+                          union olsr_ip_addr *originator, int origin)
 {
 #ifdef DEBUG
   struct ipaddr_str dstbuf, origbuf;
@@ -549,6 +566,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
    */
   prefix.prefix = *dst;
   prefix.prefix_len = plen;
+  prefix.prefix_origin = origin;
 
   node = avl_find(&tc->prefix_tree, &prefix);
 

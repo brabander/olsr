@@ -270,7 +270,8 @@ static INLINE const struct rt_nexthop *olsr_get_nh(const struct rt_entry *rt) {
 /* rt_path manipulation */
 struct rt_path *olsr_insert_routing_table(const union olsr_ip_addr *, const int,
                                           const union olsr_ip_addr *, const int);
-void olsr_delete_routing_table(union olsr_ip_addr *, int, union olsr_ip_addr *);
+void olsr_delete_routing_table(union olsr_ip_addr *, int, union olsr_ip_addr *,
+                               int);
 void olsr_insert_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_update_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_delete_rt_path(struct rt_path *);

@@ -284,7 +284,8 @@ olsr_delete_link_entry(struct link_entry *link)
    * Delete the rt_path for the link-end.
    */
   olsr_delete_routing_table(&link->neighbor_iface_addr, olsr_cnf->maxplen,
-                            &link->neighbor->neighbor_main_addr);
+                            &link->neighbor->neighbor_main_addr,
+                            OLSR_RT_ORIGIN_LINK);
 
   /* Delete neighbor entry */
   if (link->neighbor->linkcount == 1) {

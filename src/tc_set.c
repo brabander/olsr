@@ -249,7 +249,8 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   /*
    * Delete the rt_path for ourselves.
    */
-  olsr_delete_routing_table(&tc->addr, olsr_cnf->maxplen, &tc->addr);
+  olsr_delete_routing_table(&tc->addr, olsr_cnf->maxplen, &tc->addr,
+                            OLSR_RT_ORIGIN_TC);
 
   /* The edgetree and prefix tree must be empty before */
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
