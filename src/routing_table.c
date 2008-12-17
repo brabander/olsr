@@ -93,32 +93,22 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
   const struct olsr_ip_prefix *pfx2 = prefix2;
   const uint32_t addr1 = ntohl(pfx1->prefix.v4.s_addr);
   const uint32_t addr2 = ntohl(pfx2->prefix.v4.s_addr);
+  int diff;
 
   /* prefix */
-  if (addr1 < addr2) {
-    return -1;
-  }
-  if (addr1 > addr2) {
-    return +1;
+  diff = addr2 - addr1;
+  if (diff) {
+    return diff;
   }
 
   /* prefix length */
-  if (pfx1->prefix_len < pfx2->prefix_len) {
-    return -1;
-  }
-  if (pfx1->prefix_len > pfx2->prefix_len) {
-    return +1;
+  diff = pfx2->prefix_len - pfx1->prefix_len;
+  if (diff) {
+    return diff;
   }
 
   /* prefix origin */
-  if (pfx1->prefix_origin < pfx2->prefix_origin) {
-    return -1;
-  }
-  if (pfx1->prefix_origin > pfx2->prefix_origin) {
-    return +1;
-  }
-
-  return 0;
+  return (pfx2->prefix_origin - pfx1->prefix_origin);
 }
 
 /**
@@ -134,32 +124,24 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
 int
 avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 {
-  int res;
+  int diff;
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  res = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
-  if (res != 0) {
-    return res;
+  diff = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  if (diff) {
+    return diff;
   }
+
   /* prefix length */
-  if (pfx1->prefix_len < pfx2->prefix_len) {
-    return -1;
-  }
-  if (pfx1->prefix_len > pfx2->prefix_len) {
-    return +1;
+  diff = pfx2->prefix_len - pfx1->prefix_len;
+  if (diff) {
+    return diff;
   }
 
   /* prefix origin */
-  if (pfx1->prefix_origin < pfx2->prefix_origin) {
-    return -1;
-  }
-  if (pfx1->prefix_origin > pfx2->prefix_origin) {
-    return +1;
-  }
-
-  return 0;
+  return (pfx2->prefix_origin - pfx1->prefix_origin);
 }
 
 /**
