@@ -9,7 +9,7 @@ $(MANS): olsrd-manpages.xml
 
 # Requires 'apt-get install docbook-utils'
 index.html: olsrd-manpages.xml
-	docbook2html -V '%use-id-as-filename%' $^
+	docbook2html -V $$(echo "(define\r%html-header-tags%\r'((\"META\"(\"HTTP-EQUIV\"\"Content-Type\")(\"CONTENT\"\"text/html;charset=utf-8\"))))") -V '%use-id-as-filename%'  $^
 
 clean:
 	rm -fv $(MANS)
