@@ -246,7 +246,7 @@ static olsr_linkcost lq_etxff_calc_linkcost(struct lq_etxff_linkquality *lq) {
     return LINK_COST_BROKEN;
   }
 
-  cost = 65536 * lq->valueLq / 255 * lq->valueNlq / 255;
+  cost = 65536 * 255/(int)lq->valueLq * 255/(int)lq->valueNlq;
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
