@@ -21,33 +21,9 @@ DebugLevel		2
 
 ClearScreen		no
 
-#
-# Enable the link quality extensions?
-#
-# 0 - no
-# 1 - yes, use link quality for MPR selection
-# 2 - yes, use link quality for MPR selection and routing
-#
-
-LinkQualityLevel	0
-
 # Link quality aging factor
 # Defaults to 0.05, smaller values mean larger LQ window size
 LinkQualityAging 0.1 
-
-#
-# Do not use hysteresis
-#
-
-UseHysteresis		no
-
-#
-# If using hysteresis, use the RFC parameters
-#
-
-HystScaling		0.5
-HystThrHigh		0.8
-HystThrLow		0.3
 
 #
 # The pollrate used by the scheduler
