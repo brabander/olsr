@@ -257,6 +257,7 @@ olsr_alloc_rt_path(struct tc_entry *tc,
   memset(rtp, 0, sizeof(*rtp));
 
   rtp->rtp_dst = *prefix;
+  rtp->rtp_dst.prefix_origin = origin;
 
   /* set key and backpointer prior to tree insertion */
   rtp->rtp_prefix_tree_node.key = &rtp->rtp_dst;
