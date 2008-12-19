@@ -36,3 +36,7 @@ gui/win32/Shim/Release/
 .#*
 *.flc
 redhat/olsrd.spec
+files/index.html
+files/olsrd_8.html
+files/olsrd_conf_5.html
+files/olsr_switch_8.html

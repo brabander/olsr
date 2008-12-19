@@ -339,19 +339,19 @@ static void handle_fds(const unsigned long next_interval)
       if (flags != 0) {
 	entry->process_immediate(entry->fd, entry->data, flags);
       }
-    }
+    } OLSR_FOR_ALL_SOCKETS_END(entry);
 
     /* calculate the next timeout */
     remaining = next_interval - (unsigned long)now_times;
     if ((long)remaining <= 0) {
       /* we are already over the interval */
-      return; /* Oops: break does not work because out-of-context OLSR_FOR_ALL_SOCKETS_END */
+      break;
     }
     /* we need an absolute time - milliseconds */
     remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
-  } OLSR_FOR_ALL_SOCKETS_END(entry);
+  }
 }
 
 /**
