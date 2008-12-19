@@ -399,7 +399,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
    * Delete the rt_path for the alias.
    */
   olsr_delete_routing_table(&alias->mid_alias_addr, olsr_cnf->maxplen,
-                            &tc->addr);
+                            &tc->addr, OLSR_RT_ORIGIN_MID);
 
   /*
    * Remove from the per-tc tree.

@@ -93,35 +93,6 @@ IpcConnect
      #Net             192.168.1.0 255.255.255.0     
 }
 
-# Whether to use hysteresis or not
-# Hysteresis adds more robustness to the
-# link sensing but delays neighbor registration.
-# Used by default. 'yes' or 'no'
-
-UseHysteresis	yes
-
-# Hysteresis parameters
-# Do not alter these unless you know 
-# what you are doing!
-# Set to auto by default. Allowed
-# values are floating point values
-# in the interval 0,1
-# THR_LOW must always be lower than
-# THR_HIGH.
-
-HystScaling	0.50
-HystThrHigh	0.80
-HystThrLow	0.30
-
-
-# Link quality level
-# 0 = do not use link quality
-# 1 = use link quality for MPR selection
-# 2 = use link quality for MPR selection and routing
-# Defaults to 0
-
-#LinkQualityLevel	0
-
 # Link quality aging factor
 # Defaults to 0.05, smaller values mean larger LQ window size
 # LinkQualityAging 0.1 
@@ -279,9 +250,8 @@ Interface "XXX" "YYY"
     # but here you can specify a fixed value.
     # Olsrd will choose links with the lowest value.
     # Note:
-    # Interface weight is used only when LinkQualityLevel is set to 0.
-    # For any other value of LinkQualityLevel, the interface ETX
-    # value is used instead.
+    # Interface weight is used if LinkQualityAlgorithm is
+    # set to the currently unimplemented RFC mode plugin.
     # Weight 0
 
 
@@ -294,8 +264,8 @@ Interface "XXX" "YYY"
     # (bad) LinkQuality value and a high (bad)
     # ETX value.
     # Note:
-    # Link quality multiplier is used only when
-    # LinkQualityLevel is > 0.
+    # Interface weight is used if LinkQualityAlgorithm is set to
+    # anything but the currently unimplemented RFC mode plugin.
 
     # LinkQualityMult 192.168.0.1 0.5
 

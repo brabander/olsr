@@ -2,8 +2,6 @@ DebugLevel	2
 IpVersion	4
 FIBMetric "flat"
 ClearScreen     yes
-UseHysteresis	no
-LinkQualityLevel	2
 Pollrate	0.05
 TcRedundancy	2
 MprCoverage	3
