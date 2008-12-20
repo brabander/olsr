@@ -5,7 +5,7 @@
   <title>Unik OLSRD Man Pages</title>
 
   <articleinfo>
-    <titleabbrev>olsrd man pages</titleabbrev>
+    <titleabbrev>Olsrd Man Pages</titleabbrev>
 
     <author>
       <firstname>Sven-Ola</firstname>
@@ -109,7 +109,7 @@
 
             <arg>--config</arg>
 
-            <replaceable> configfile</replaceable>
+            <replaceable>configfile</replaceable>
           </group>
 
           <group choice="req">
@@ -117,7 +117,7 @@
 
             <arg>--DebugLevel</arg>
 
-            <replaceable> level</replaceable>
+            <replaceable>level</replaceable>
           </group>
 
           <group>
@@ -155,7 +155,7 @@
 
             <arg>--hemu</arg>
 
-            <replaceable> ipaddr</replaceable>
+            <replaceable>ipaddr</replaceable>
           </group>
 
           <arg>interface1</arg>
@@ -215,7 +215,7 @@
         <para>The following list compiles only options frequently specified on
         the command line. If you use one or more command line options, you
         normally also have to specify <option>--config</option> for the
-        desired config file. </para>
+        desired config file.</para>
 
         <variablelist>
           <varlistentry>
@@ -237,8 +237,8 @@
 
           <varlistentry>
             <term><option>-f <replaceable>configfile</replaceable></option> or
-            <option>--config <replaceable>configfile</replaceable></option>
-            </term>
+            <option>--config
+            <replaceable>configfile</replaceable></option></term>
 
             <listitem>
               <para>Reads in the specified config file. The acquired options
@@ -282,7 +282,7 @@
 
             <listitem>
               <para>This option causes <command>olsrd</command> to display all
-              outgoing packet data. </para>
+              outgoing packet data.</para>
             </listitem>
           </varlistentry>
 
@@ -325,7 +325,7 @@
             <listitem>
               <para>Ignored for compatibility - older versions of
               <command>olsrd</command> expect one or more interface names
-              after this option (see below). </para>
+              after this option (see below).</para>
             </listitem>
           </varlistentry>
 
@@ -389,15 +389,25 @@
       <refsect1>
         <title>Description</title>
 
-        <para>The file olsrd.conf Which is located in /etc by default,
-        contains run-time configuration for the Optimized Link State Routing
-        daemon <xref endterm="olsrd_8-title" linkend="olsrd_8" />. Olsrd can
-        however be set to read an alternative configuration file at startup
-        using the <option>-f</option> command line argument. A configuration
-        file parser/generator <filename>olsrd_cfgparser</filename> can be
-        built as both a standalone executable or a dynamically linked library
-        from the olsrd sources. The DLL version can be used to easily create
-        tools for generating/parsing olsrd configuration files.</para>
+        <para>The <filename>olsrd.conf</filename> file is located in /etc or
+        /usr/local/etc by default. The file contains run-time configuration
+        settings for the Optimized Link State Routing daemon <xref
+        endterm="olsrd_8-title" linkend="olsrd_8" />. During startup, the
+        <command>olsrd</command> daemon reads in the file. If no command line
+        options are present, the default configuration file is read in.
+        Otherwise, the file specified by the <option>-f</option> or
+        <option>--config</option> command line option is used. All settings
+        are inserted as command line options by prepending a double dash and
+        feeding them to the getopt parser.</para>
+
+        <note>
+          <para>With earlier versions of <command>olsrd</command>, the
+          configuration parser was offered as stand alone shared library or
+          DLL. With the exception of the Windows GUI program
+          (<command>Switch.exe</command>), this was unused. To optimize file
+          size for embedded devices, the stand-alone configuration parser was
+          discarded.</para>
+        </note>
 
         <para>The configuration file consists of comments, single options and
         option blocks.</para>
@@ -406,9 +416,10 @@
       <refsect1>
         <title>Comments</title>
 
-        <para>Comments are everything following a <emphasis>#</emphasis> in a
-        line. This data is discarded. Commenting out options is an easy way to
-        make olsrd use the default value for that option.</para>
+        <para>Comments are everything following a hash character
+        (<emphasis>#</emphasis>) in a line. This data is discarded. Commenting
+        out an option is an easy way to make olsrd use the default value for
+        that option.</para>
       </refsect1>
 
       <refsect1>
@@ -416,218 +427,275 @@
 
         <caution>
           <para>The current implementation (olsrd-0.5.7-pre as of Dec-2008)
-          discards several parameters controlling the Link Quality Extensions
-          in earlier versions (they are marked as <quote>Removed</quote>
-          below). It is planned to re-implement the old RFC-mode using a
-          special LinkQualityAlgorithm.</para>
+          discards several single options controlling the Link Quality
+          Extensions valid with earlier versions. It is planned to
+          re-implement the RFC-mode by using a special LinkQualityAlgorithm
+          plugin. Discarded options: <option>UseHysteresis</option>,
+          <option>HystScaling</option>, <option>HystThrHigh</option>,
+          <option>HystThrLow</option>, <option>LinkQualityLevel</option>, and
+          <option>LinkQualityWinsize</option>.</para>
         </caution>
 
-        <para>Single options are single lines options that consists of a
-        keyword and a user supplied value. Note that a comment can follow such
-        a option on the same line. Valid single options are:</para>
+        <para>Single options consists of a keyword and a value. Note, that a
+        comment can follow such a option on the same line. Valid single
+        options are:</para>
 
         <variablelist>
           <varlistentry>
-            <term><option>DebugLevel [0-9]</option></term>
+            <term><option>config</option> <replaceable>config
+            file</replaceable></term>
 
             <listitem>
-              <para>Controls the amount of debug output olsrd sends to STDOUT.
-              If set to 0, olsrd will detach from the current process and run
-              in the background. A value of 9 yields a maximum of debug
-              output. Defaults to <emphasis>0</emphasis>.</para>
+              <para>Nesting within config files is not supported. Do not
+              use.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>IpVersion [4|6]</option></term>
+            <term><option>delgw</option>, <option>dispin</option>,
+            <option>dispout</option>, <option>help</option>,
+            <option>hemu</option>, <option>iface</option>,
+            <option>ipc</option>, <option>nofork</option>,
+            <option>version</option>:</term>
 
             <listitem>
-              <para>Olsrd supports both IP version 4 and 6. This option
-              controls what IP version olsrd is to use. Defaults to
-              <emphasis>4</emphasis>.</para>
+              <para>While these are valid options, they do not make much sense
+              in a config file. Refer to <xref endterm="olsrd_8-title"
+              linkend="olsrd_8" /> for their meaning.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>AllowNoInt [yes|no]</option></term>
+            <term><option>AllowNoInt</option>
+            <replaceable>yes|no</replaceable></term>
 
             <listitem>
               <para>Olsrd supports dynamic configuration of network
-              interfaces. This means that interfaces on which olsrd runs, can
-              be reconfigured and olsrd will update itself with no need to be
-              restarted. Olsrd also supports removal and addition of
-              interfaces in run-time. This option specifies if olsrd should
+              interfaces. This means that interfaces on which olsrd runs on
+              can be reconfigured and olsrd will update itself with no need to
+              be restarted. Olsrd also supports removal and addition of
+              interfaces in run-time. This option specifies that olsrd should
               keep running if no network interfaces are available. Defaults to
-              <emphasis>yes</emphasis>.</para>
+              <replaceable>yes</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>TosValue [0-16]</option></term>
+            <term><option>ClearScreen</option>
+            <replaceable>yes|no</replaceable></term>
 
             <listitem>
-              <para>This value controls the type of service value to set in
-              the IP header of OLSR control traffic. Defaults to
-              <option>16</option>.</para>
+              <para>If set to <replaceable>yes</replaceable> and olsrd running
+              with a <option>DebugLevel</option> other that
+              <replaceable>0,</replaceable> the terminal to which output is
+              sent (STDOUT) is cleared prior to writing updated tables. This
+              makes it easier to follow changes in real-time.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>Willingness [0-7]</option></term>
+            <term><option>DebugLevel</option>
+            <replaceable>0-9</replaceable></term>
 
             <listitem>
-              <para>Nodes participating in a OLSR routed network will announce
-              their willingness to act as relays for OLSR control traffic for
-              their neighbors. This option specifies a fixed willingness value
-              to be announced by the local node. 4 is a neutral option here,
-              while 0 specifies that this node will never act as a relay, and
-              7 specifies that this node will always act as such a relay. If
-              this option is not set in the configuration file, then olsrd
-              will try to retrieve information about the system power and
-              dynamically update willingness according to this info. If no
-              such info can be retrieved willingness is set to
-              <emphasis>4</emphasis>.</para>
+              <para>Controls the amount of debug output olsrd prints out. If
+              set to <replaceable>0</replaceable>, olsrd will detach from the
+              current process and run in the background. A value of
+              <replaceable>9</replaceable> yields a maximum of debug output.
+              Defaults to <replaceable>0</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Removed from implementation: <option>UseHysteresis
-            [yes|no]</option></term>
+            <term><option>FIBMetric</option>
+            <replaceable>string</replaceable></term>
 
             <listitem>
-              <para>If set to yes hysteresis will be used as explained in
-              section 14 of RFC3626.</para>
+              <para>tbd</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Removed from implementation: <option>HystScaling
-            [0.01-0.99]</option></term>
+            <term><option>IpVersion</option>
+            <replaceable>4|6</replaceable></term>
 
             <listitem>
-              <para>Sets the scaling value used by the hysteresis algorithm.
-              This must be a positive floating point value smaller than 1.0.
-              Consult RFC3626 for details. The default value is
-              <emphasis>0.5</emphasis>.</para>
+              <para>Olsrd supports both IP versions:
+              <replaceable>4</replaceable> and <replaceable>6</replaceable>.
+              This option controls what IP version olsrd uses. Defaults to
+              <replaceable>4</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Removed from implementation: <option>HystThrHigh
-            [HystThrLow-0.99]</option></term>
+            <term><option>LinkQualityAging</option>
+            <replaceable>float</replaceable></term>
 
             <listitem>
-              <para>This option sets the upper threshold for accepting a link
-              in hysteresis calculation. The value must be higher than the one
-              set as the lower threshold. Defaults to
-              <emphasis>0.8</emphasis>.</para>
+              <para>tbd</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Removed from implementation: <option>HystThrLow
-            [0.01-HystThrHigh]</option></term>
+            <term><option>LinkQualityAlgorithm</option>
+            <replaceable>string</replaceable></term>
 
             <listitem>
-              <para>This option sets the lower threshold for setting a link to
-              asymmetric using hysteresis. The value must be lower than the
-              one set as the upper threshold. Defaults to
-              <emphasis>0.3</emphasis>.</para>
+              <para>tbd</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>Pollrate [0.1-10.0]</option></term>
+            <term><option>LinkQualityDijkstraLimit</option> <replaceable>int,
+            float</replaceable></term>
 
             <listitem>
-              <para>This option sets the interval, in seconds, that the olsrd
-              event scheduler should be set to poll. A setting of 0.2 will set
-              olsrd to poll for events every 0.2 seconds. Defaults to
-              <emphasis>0.1</emphasis>.</para>
+              <para>tbd</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>NicChgsPollInt [0.1-100.0]</option></term>
+            <term><option>LinkQualityFishEye</option>
+            <replaceable>0|1</replaceable></term>
+
+            <listitem>
+              <para>Enables (<replaceable>1</replaceable>) or disables
+              (<replaceable>0</replaceable>) the experimental fish eye
+              algorithm. In mesh network with high packet loss, the topology
+              information does not spread fast and synchronized, which
+              introduces routing loops. The fish eye algorithm will send TC
+              (Topology Control) messages with varying TTL values. Which
+              floods the near neighborhood more often with topology
+              information than distant nodes (in hops). Use this option
+              together with a shorter <option>TcInterval</option> and a higher
+              <option>MprCoverage</option> setting.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>MprCoverage</option> <replaceable>1 or
+            higher</replaceable></term>
+
+            <listitem>
+              <para>This value decides, how many MPRs a node should attempt to
+              select for every two hop neighbor. Defaults to
+              <emphasis><replaceable>1</replaceable></emphasis>, and any other
+              setting will severely reduce the optimization introduced by the
+              MPR scheme. Note, that when using the
+              <option>LinkQualityFishEye</option> option, a higher value is
+              recommended. </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>NatThreshold</option>
+            <replaceable>float</replaceable></term>
+
+            <listitem>
+              <para>tbd</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>NicChgsPollInt</option>
+            <replaceable>0.1-100.0</replaceable></term>
 
             <listitem>
               <para>This option sets the interval, in seconds, that olsrd will
               check the configured interfaces for changes in configuration.
-              Defaults to <emphasis>2.5</emphasis>.</para>
+              Defaults to <replaceable>2.5</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>TcRedundancy [0|1|2]</option></term>
+            <term><option>Pollrate</option>
+            <replaceable>0.1-10.0</replaceable></term>
+
+            <listitem>
+              <para>This option sets the sleep interval, in seconds. While
+              polling the interfaces, the olsrd scheduler will sleep for this
+              time if no packets are to be received. If the value is set too
+              high for the current UDP receive buffer size, packet loss will
+              occur. Note, that the current olsrd implementation internally
+              calculates timing values in milliseconds (1/1000s). Defaults to
+              <replaceable>0.1</replaceable>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>RtProto</option>
+            <replaceable>int</replaceable></term>
+
+            <listitem>
+              <para>tbd</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>RtTableDefault</option>
+            <replaceable>int</replaceable></term>
+
+            <listitem>
+              <para>tbd</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>RtTable</option>
+            <replaceable>int</replaceable></term>
+
+            <listitem>
+              <para>tbd</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>TcRedundancy</option> 0|1|2</term>
 
             <listitem>
               <para>This value controls the TC redundancy used by the local
               node in TC message generation. To enable a more robust
               understanding of the topology, nodes can be set to announce more
-              than just their MPR selector set in TC messages. If set to 0 the
-              advertised link set of the node is limited to the MPR selectors.
-              If set to 1 the advertised link set of the node is the union of
-              its MPR set and its MPR selector set. Finally, if set to 2 the
-              advertised link set of the node is the full symmetric neighbor
-              set of the node. Defaults to <emphasis>0</emphasis>.</para>
+              than just their MPR selector set in TC messages. If set to
+              <replaceable>0</replaceable>, the advertised link set of the
+              node is limited to the MPR selectors. If set to
+              <replaceable>1</replaceable>, the advertised link set of the
+              node is the union of its MPR set and its MPR selector set. If
+              set to <replaceable>2</replaceable>, the advertised link set of
+              the node is the full symmetric neighbor set of the node.
+              Defaults to <replaceable>0</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><option>MprCoverage [1-]</option></term>
+            <term><option>TosValue</option>
+            <replaceable>0-16</replaceable></term>
 
             <listitem>
-              <para>This value decides how many MPRs a node should attempt to
-              select for every two hop neighbor. Defaults to
-              <emphasis>1</emphasis>, and any other setting will severely
-              reduce the optimization introduced by the MPR scheme!</para>
+              <para>This value controls the type of service value to set in
+              the IP header of OLSR control traffic. Defaults to
+              <replaceable>16</replaceable>.</para>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Removed from implementation: <option>LinkQualityLevel
-            [1-2]</option></term>
+            <term><option>Willingness</option>
+            <replaceable>0-7</replaceable></term>
 
             <listitem>
-              <para>This setting decides the Link Quality scheme to use. If
-              set to 0 link quality is not regarded and olsrd runs in "RFC3626
-              mode". If set to 1 link quality is used when calculating MPRs.
-              If set to 2 routes will also be calculated based on distributed
-              link quality information. Note that a setting of 1 or 2
-              <emphasis>breaks RFC3626 compatibility</emphasis>! This option
-              should therefore only be set to 1 or 2 if such a setting is used
-              by all other nodes in the network.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>Removed from implementation: <option>LinkQualityWinsize
-            [number]</option></term>
-
-            <listitem>
-              <para>Window size for the Link Quality extensions.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LinkQualityFishEye [0|1]</option></term>
-
-            <listitem>
-              <para>Enables(1) or disables(0) use of the experimental Fish Eye
-              algorithm.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>ClearScreen [yes|no]</option></term>
-
-            <listitem>
-              <para>If set to yes and olsrd is running with a debuglevel &gt;0
-              the terminal to which output is sent (STDOUT) is cleared prior
-              to writing updated tables. This makes it easier to follow
-              changes in real-time by eye. If STDOUT is not a terminal (e.g.
-              it is a file), then no action is taken upon writing tables to
-              STDOUT.</para>
+              <para>Nodes participating in a OLSR routed network will announce
+              their willingness to act as relays for OLSR control traffic for
+              their neighbors (MPR). This option specifies a fixed willingness
+              value to be announced by the local node.
+              <replaceable>4</replaceable> is a neutral option here, while
+              <replaceable>0</replaceable> specifies that this node will never
+              act as a relay, and <replaceable>7</replaceable> specifies that
+              this node will always act as such a relay. If this option is
+              unset in the configuration file, then olsrd will try to retrieve
+              information about the system power and dynamically update
+              willingness according to this info. If no such info can be
+              retrieved willingness is set to
+              <replaceable>4</replaceable>.</para>
             </listitem>
           </varlistentry>
         </variablelist>
