@@ -251,9 +251,9 @@
           <listitem>
             <para>This option specifies what IPv4 broadcastaddress to use for
             OLSR control traffic. The only value that currently makes sense
-            when setting broadcast address mannually is <systemitem
+            when setting broadcast address manually is <systemitem
             class="ipaddress">255.255.255.255</systemitem>. The default action
-            is to use the broadcastaddres that the network interface is
+            is to use the broadcast address that the network interface is
             preconfigured with(per interface).</para>
           </listitem>
         </varlistentry>
@@ -295,7 +295,7 @@
           <term><option>-T <replaceable>seconds</replaceable></option></term>
 
           <listitem>
-            <para>This option sets the polling intervall of the scheduler. The
+            <para>This option sets the polling interval of the scheduler. The
             default is 0.1 seconds. This option should only be considered if
             running with really low emission intervals.</para>
           </listitem>
@@ -386,13 +386,13 @@
 
       <caution>
         <para>The current implementation (olsrd-0.5.7-pre as of Dec-2008)
-        discards several parameters controling the Link Quality Extensions in
+        discards several parameters controlling the Link Quality Extensions in
         earlier versions (they are marked as <quote>Removed</quote> below). It
         is planned to re-implement the old RFC-mode using a special
         LinkQualityAlgorithm.</para>
       </caution>
 
-      <para>Single options are single lines options that consists of a keword
+      <para>Single options are single lines options that consists of a keyword
       and a user supplied value. Note that a comment can follow such a option
       on the same line. Valid single options are:</para>
 
@@ -401,9 +401,9 @@
           <term><option>DebugLevel [0-9]</option></term>
 
           <listitem>
-            <para>Controls the amount of debug output olsrd sends to stdout.
-            If set to 0, olsrd will detatch from the current process and run
-            in the background. A value of 9 yields a maximum of debug output.
+            <para>Controls the amount of debug output olsrd sends to STDOUT.
+            If set to 0, olsrd will detach from the current process and run in
+            the background. A value of 9 yields a maximum of debug output.
             Defaults to <emphasis>0</emphasis>.</para>
           </listitem>
         </varlistentry>
@@ -425,7 +425,7 @@
             <para>Olsrd supports dynamic configuration of network interfaces.
             This means that interfaces on which olsrd runs, can be
             reconfigured and olsrd will update itself with no need to be
-            restarted. Olsrd also supports removal and addittion of interfaces
+            restarted. Olsrd also supports removal and addition of interfaces
             in run-time. This option specifies if olsrd should keep running if
             no network interfaces are available. Defaults to
             <emphasis>yes</emphasis>.</para>
@@ -517,7 +517,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term><option>NicChgsPollInt[0.1-100.0]</option></term>
+          <term><option>NicChgsPollInt [0.1-100.0]</option></term>
 
           <listitem>
             <para>This option sets the interval, in seconds, that olsrd will
@@ -548,8 +548,8 @@
           <listitem>
             <para>This value decides how many MPRs a node should attempt to
             select for every two hop neighbor. Defaults to
-            <emphasis>1</emphasis>, and any other setting will severly reduce
-            the optimization introduced by the MPR secheme!</para>
+            <emphasis>1</emphasis>, and any other setting will severely reduce
+            the optimization introduced by the MPR scheme!</para>
           </listitem>
         </varlistentry>
 
@@ -563,7 +563,7 @@
             mode". If set to 1 link quality is used when calculating MPRs. If
             set to 2 routes will also be calculated based on distributed link
             quality information. Note that a setting of 1 or 2
-            <emphasis>breaks RFC3626 compability</emphasis>! This option
+            <emphasis>breaks RFC3626 compatibility</emphasis>! This option
             should therefore only be set to 1 or 2 if such a setting is used
             by all other nodes in the network.</para>
           </listitem>
@@ -594,7 +594,7 @@
             <para>If set to yes and olsrd is running with a debuglevel &gt;0
             the terminal to which output is sent(STDOUT) is cleared prior to
             writing updated tables. This makes it easier to follow changes in
-            real-time by eye. If STDOUT is not a terminal(eg. it is a file),
+            real-time by eye. If STDOUT is not a terminal (e.g. it is a file),
             then no action is taken upon writing tables to STDOUT.</para>
           </listitem>
         </varlistentry>
@@ -616,16 +616,16 @@
             <para>Olsrd can allow processes to make a TCP connection to itself
             on which data regarding the topology will be transmitted. This is
             typically used by GUI applications to provide a user-friendly
-            front-end to olsrd. This option block controls thees kind of
+            front-end to olsrd. This option block controls this kind of
             connections.</para>
 
             <para><option>MaxConnections [0-5]</option>: This option specifies
-            how many connections that can exist simoultneously. Multiple
+            how many connections that can exist simultaneously. Multiple
             connections have not been tested, and does not work! This option
-            should only be used to control wheter or not processes can connect
-            to olsrd by setting it either to 0, which will tell olsrd not to
-            allow any connections, or by setting it to a positive value.
-            Defaults to 0.</para>
+            should only be used to control whether or not processes can
+            connect to olsrd by setting it either to 0, which will tell olsrd
+            not to allow any connections, or by setting it to a positive
+            value. Defaults to 0.</para>
 
             <para><option>Host [IPv4 address]</option>: This option specifies
             a single host that is allowed to connect to olsrd. By default only
@@ -634,7 +634,7 @@
             here. This option can be repeated to add multiple hosts.</para>
 
             <para><option>Net [IPv4 netaddress] [IPv4 netmask]</option>: Here
-            you can specify an entire netrange of IP addresses which olsrd
+            you can specify an entire net range of IP addresses which olsrd
             will allow TCP connections from. This option can be repeated to
             add multiple networks.</para>
           </listitem>
@@ -644,9 +644,9 @@
           <term><option>Hna4 {[sub-options]}</option></term>
 
           <listitem>
-            <para>Hosts in a OLSR routed network can announce connecitivty to
-            external networks using HNA messages. This optionblock is used to
-            set the IPv4 nteworks to be announced by this host.</para>
+            <para>Hosts in a OLSR routed network can announce connectivity to
+            external networks using HNA messages. This option block is used to
+            set the IPv4 networks to be announced by this host.</para>
 
             <para><option>[IPv4 netaddress] [IPv4 netmask]</option>: Specifies
             a IPv4 network to announce in HNA messages. Multiple entries can
@@ -659,9 +659,9 @@
           <term><option>Hna6 {[sub-options]}</option></term>
 
           <listitem>
-            <para>Hosts in a OLSR routed network can announce connecitivty to
-            external networks using HNA messages. This optionblock is used to
-            set the IPv6 nteworks to be announced by this host.</para>
+            <para>Hosts in a OLSR routed network can announce connectivity to
+            external networks using HNA messages. This option block is used to
+            set the IPv6 networks to be announced by this host.</para>
 
             <para><option>[IPv6 netaddress] [0-48]</option>: Specifies a IPv6
             network to announce in HNA messages. The second value is the
@@ -689,21 +689,22 @@
           {[sub-options]}</option></term>
 
           <listitem>
-            <para>This optionblock specifies one or more network interfaces on
-            which olsrd should run. Atleast one network interface block must
-            be specified for olsrd to run! Various parameters can be specified
-            on individual interfaces or groups of interfaces. This optionblock
-            can be repeated to add multiple interface configurations.</para>
+            <para>This option block specifies one or more network interfaces
+            on which olsrd should run. At least one network interface block
+            must be specified for olsrd to run! Various parameters can be
+            specified on individual interfaces or groups of interfaces. This
+            option block can be repeated to add multiple interface
+            configurations.</para>
 
-            <para><option>AutoDetectChanges [yes|no]</option>: Olsrd can
-            autodetect changes in interface configurations (polling on the
+            <para><option>AutoDetectChanges [yes|no]</option>: Olsrd can auto
+            detect changes in interface configurations (polling on the
             interval set by <option>NicChgsPollInt</option>). This is Enabled
             by default but can be turned off pr. NIC to save CPU
             cycles.</para>
 
             <para><option>Ip4Broadcast [IPv4 address]</option>: Forces the
             given IPv4 broadcast address to be used as destination address for
-            all outgoing OLSR traffic on the interface. In reallity only the
+            all outgoing OLSR traffic on the interface. In reality only the
             address <emphasis>255.255.255.255</emphasis> makes sense to set
             here. If this option is not set the broadcast address that the
             interface is configured with will be used. This address will also
@@ -714,12 +715,12 @@
             address detection. Defaults to site-local.</para>
 
             <para><option>Ip6MulticastSite [IPv6 address]</option>: Sets the
-            destionation of outgoing OLSR traffic on this interface to use the
+            destination of outgoing OLSR traffic on this interface to use the
             specified IPv6 multicast address as destination if the site-local
             address type is set on this interface.</para>
 
             <para><option>Ip6MulticastGlobal [IPv6 address]</option>: Sets the
-            destionation of outgoing OLSR traffic on this interface to use the
+            destination of outgoing OLSR traffic on this interface to use the
             specified IPv6 multicast address as destination if the global
             address type is set on this interface.</para>
 
@@ -729,7 +730,7 @@
 
             <para><option>HelloValidityTime [0.0-]</option>: Sets the validity
             time to be announced in HELLO messages generated by this host on
-            this interface. This value must be larger than than the HELLO
+            this interface. This value must be larger than the HELLO
             generation interval to make any sense. Defaults to 3 * the
             generation interval.</para>
 
@@ -739,7 +740,7 @@
 
             <para><option>TcValidityTime [0.0-]</option>: Sets the validity
             time to be announced in TC messages generated by this host on this
-            interface. This value must be larger than than the TC generation
+            interface. This value must be larger than the TC generation
             interval to make any sense. Defaults to 3 * the generation
             interval.</para>
 
@@ -749,9 +750,9 @@
 
             <para><option>MidValidityTime [0.0-]</option>: Sets the validity
             time to be announced in MID messages generated by this host on
-            this interface. This value must be larger than than the MID
-            generation interval to make any sense. Defaults to 3 * the
-            generation interval.</para>
+            this interface. This value must be larger than the MID generation
+            interval to make any sense. Defaults to 3 * the generation
+            interval.</para>
 
             <para><option>HnaInterval [0.0-]</option>: Sets the interval on
             which HNA messages will be generated and transmitted on this
@@ -759,9 +760,9 @@
 
             <para><option>HnaValidityTime [0.0-]</option>: Sets the validity
             time to be announced in HNA messages generated by this host on
-            this interface. This value must be larger than than the HNA
-            generation interval to make any sense. Defaults to 3 * the
-            generation interval.</para>
+            this interface. This value must be larger than the HNA generation
+            interval to make any sense. Defaults to 3 * the generation
+            interval.</para>
 
             <para><option>Weight [0-]</option>: When multiple links exist
             between hosts the weight of the interface is used to determine the
