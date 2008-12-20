@@ -219,6 +219,8 @@ static INLINE void olsr_bump_routingtree_version(void) { routingtree_version++; 
 
 int avl_comp_ipv4_prefix (const void *, const void *);
 int avl_comp_ipv6_prefix (const void *, const void *);
+int avl_comp_ipv4_prefix_origin (const void *, const void *);
+int avl_comp_ipv6_prefix_origin (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
 /**

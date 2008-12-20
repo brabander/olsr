@@ -121,6 +121,7 @@ avl_walk_prev_c(const struct avl_node *node)
 
 extern avl_tree_comp avl_comp_default;
 extern avl_tree_comp avl_comp_prefix_default;
+extern avl_tree_comp avl_comp_prefix_origin_default;
 extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
 #if 0

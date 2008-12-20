@@ -54,6 +54,7 @@
  */
 avl_tree_comp avl_comp_default = NULL;
 avl_tree_comp avl_comp_prefix_default = NULL;
+avl_tree_comp avl_comp_prefix_origin_default = NULL;
 
 int
 avl_comp_ipv4(const void *ip1, const void *ip2)
