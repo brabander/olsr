@@ -59,7 +59,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <assert.h>
 
 /* Redirect proc entry */
 #define REDIRECT_PROC "/proc/sys/net/ipv4/conf/%s/send_redirects"
@@ -457,7 +457,7 @@ getsocket(int bufspace, char *int_name)
   memset(&sin4, 0, sizeof(sin4));
   sin4.sin_family = AF_INET;
   sin4.sin_port = htons(OLSRPORT);
-  sin4.sin_addr.s_addr = INADDR_ANY;
+  assert(sin4.sin_addr.s_addr == INADDR_ANY);
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
@@ -554,7 +554,7 @@ getsocket6(int bufspace, char *int_name)
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
   sin6.sin6_port = htons(OLSRPORT);
-  //(addrsock6.sin6_addr).s_addr = IN6ADDR_ANY_INIT;
+  assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr))); /* == IN6ADDR_ANY_INIT */
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
