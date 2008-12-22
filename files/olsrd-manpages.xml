@@ -212,12 +212,13 @@
           <para>Set up the necessary connectivity. Configure all Wifi cards to
           Ad hoc (IBSS) or similar, use same ESSID and channel setting. All
           Wifi cards need to use a fixed IP in the same IP address range (e.g.
-          10.0.0.0/8). Verify, that the interface is configured with a correct
-          broadcast address, otherwise you will experience ARP lookups on the
-          broadcast address when running olsrd. Also stop any firewalling and
-          enable forwarding. Test the connectivity by using ping. Remember:
-          olsrd is a layer 3 routing daemon and therefore simply is not
-          responsible for any layer 2 problems. No ping - no routes.</para>
+          10.0.0.0/8). Verify, that the interfaces are configured with the
+          correct broadcast address. Otherwise you will experience ARP lookups
+          on the broadcast address when running olsrd. Also stop any
+          firewalling and enable forwarding. Test the connectivity by using
+          the <command>ping</command> command. Remember: olsrd is a layer 3
+          routing daemon and therefore simply is not responsible for any layer
+          2 problems. No ping - no routes.</para>
         </listitem>
 
         <listitem>
@@ -230,9 +231,10 @@
 
               <listitem>
                 <para>Download a stable source tar.gz. Unpack. Be sure to
-                install the build tools (e.g. apt-get install build-essential
-                flex bison). Do <command>make build_all</command>. Do
-                <command>sudo make install_all</command>. Edit the
+                install the build tools (e.g. <command>apt-get install
+                build-essential flex bison</command>). Do <command>make
+                build_all</command>. Do <command>sudo make
+                install_all</command>. Edit the
                 <filename>/usr/local/etc/olsrd.conf</filename> file and change
                 at least the <option>Interface</option> section for your Wifi
                 card. You may also want to enable the httpinfo plugin. Start
@@ -256,10 +258,10 @@
                 <filename>Switch.exe</filename> GUI as admin. Select the Wifi
                 card and de-select any other interface offered. Click the
                 <guibutton>Start</guibutton> button. Keep in mind: only a user
-                with admin rights can change the system's routing table. And
-                any active firewall solution may disturbs the cooperative
-                resource sharing required with meshing, while a personal
-                operating system is not meant for sharing.</para>
+                with admin rights can change the system's routing table. Any
+                active firewall solution may disturb the cooperative sharing
+                required with meshing, while a personal operating system is
+                not meant for sharing.</para>
               </listitem>
             </varlistentry>
 
@@ -268,8 +270,8 @@
 
               <listitem>
                 <para>Basically use the same procedure as with Linux. You need
-                to install and use the gmake command to build and
-                install.</para>
+                to install and use the <command>gmake</command> command to
+                build and install.</para>
               </listitem>
             </varlistentry>
 
@@ -282,7 +284,7 @@
                 DD-WRT has olsrd support. OpenWrt comes with a pre-compiled
                 binary for olsrd. There's an ongoing OpenWrt/Kamikaze project
                 with olsrd named ffluci. Installation and configuration is
-                different for those firmware flavours - be sure to read their
+                different for those Linux flavours - be sure to read their
                 docs or online help files.</para>
               </listitem>
             </varlistentry>
@@ -292,11 +294,12 @@
         <listitem>
           <para>If olsrd detects the correct topology as well as
           installs/removes routes matching that topology, you may offer
-          Internet on one of your routes. Either enable a manual <quote>HNA {
+          Internet on one of your devices. Either enable a manual <quote>HNA {
           0.0.0.0 0.0.0.0 }</quote> in the configuration file or use the
           dyn_gw or dyn_gw_plain plugins. For most Internet connections, you
           need to enable NAT/MASQUERADING to translate the private IP adresses
-          to the globally valid IP address on the gateway device.</para>
+          to the globally valid IP address on the Internet gateway
+          device.</para>
         </listitem>
 
         <listitem>
