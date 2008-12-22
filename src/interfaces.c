@@ -52,6 +52,7 @@
 
 #include <signal.h>
 #include <unistd.h>
+#include <assert.h>
 
 /* The interface list head */
 struct list_node interface_head;
@@ -389,6 +390,8 @@ if_ifwithindex_name(const int if_index)
 void
 lock_interface(struct interface *ifp)
 {
+  assert(ifp);
+
   ifp->refcount++;
 }
 
@@ -398,10 +401,16 @@ lock_interface(struct interface *ifp)
 void
 unlock_interface(struct interface *ifp)
 {
+  /* Node must have a positive refcount balance */
+  assert(ifp->refcount);
+
   if (--ifp->refcount) {
     return;
   }
 
+  /* Node must be dequeued at this point */
+  assert(!list_node_on_list(&ifp->int_node));
+  
   /* Free memory */
   free(ifp->int_name);
   olsr_cookie_free(interface_mem_cookie, ifp);
