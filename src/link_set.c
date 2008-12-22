@@ -431,13 +431,12 @@ add_link_entry(const union olsr_ip_addr *local,
 	       olsr_reltime vtime, olsr_reltime htime,
                struct interface *local_if)
 {
-  struct link_entry *new_link;
+  struct link_entry *link;
   struct neighbor_entry *neighbor;
-  struct link_entry *tmp_link_set;
 
-  tmp_link_set = lookup_link_entry(remote, remote_main, local_if);
-  if (tmp_link_set) {
-    return tmp_link_set;
+  link = lookup_link_entry(remote, remote_main, local_if);
+  if (link) {
+    return link;
   }
 
   /*
@@ -455,48 +454,48 @@ add_link_entry(const union olsr_ip_addr *local,
 #endif
 
   /* a new tuple is created with... */
-  new_link = olsr_malloc_link_entry();
+  link = olsr_malloc_link_entry();
 
   /* copy if_name, if it is defined */
   if (local_if->int_name) {
     size_t name_size = strlen(local_if->int_name) + 1;
-    new_link->if_name =
+    link->if_name =
       olsr_malloc(name_size, "target of if_name in new link entry");
-    strscpy(new_link->if_name, local_if->int_name, name_size);
+    strscpy(link->if_name, local_if->int_name, name_size);
   } else
-    new_link->if_name = NULL;
+    link->if_name = NULL;
 
   /* shortcut to interface. */
-  new_link->inter = local_if;
+  link->inter = local_if;
   lock_interface(local_if);
 
   /*
    * L_local_iface_addr = Address of the interface
    * which received the HELLO message
    */
-  new_link->local_iface_addr = *local;
+  link->local_iface_addr = *local;
 
   /* L_neighbor_iface_addr = Source Address */
-  new_link->neighbor_iface_addr = *remote;
+  link->neighbor_iface_addr = *remote;
 
   /* L_time = current time + validity time */
-  olsr_set_link_timer(new_link, vtime);
+  olsr_set_link_timer(link, vtime);
 
-  new_link->prev_status = ASYM_LINK;
+  link->prev_status = ASYM_LINK;
 
-  new_link->loss_helloint = htime;
+  link->loss_helloint = htime;
 
-  olsr_set_timer(&new_link->link_loss_timer, htime + htime/2,
-   OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
-   &olsr_expire_link_loss_timer, new_link,
+  olsr_set_timer(&link->link_loss_timer, htime + htime/2,
+                 OLSR_LINK_LOSS_JITTER, OLSR_TIMER_PERIODIC,
+                 &olsr_expire_link_loss_timer, link,
                  link_loss_timer_cookie->ci_id);
 
-  set_loss_link_multiplier(new_link);
+  set_loss_link_multiplier(link);
 
-  new_link->linkcost = LINK_COST_BROKEN;
+  link->linkcost = LINK_COST_BROKEN;
 
   /* Add to queue */
-  list_add_before(&link_entry_head, &new_link->link_list);
+  list_add_before(&link_entry_head, &link->link_list);
 
   /*
    * Create the neighbor entry
@@ -514,7 +513,7 @@ add_link_entry(const union olsr_ip_addr *local,
   }
 
   neighbor->linkcount++;
-  new_link->neighbor = neighbor;
+  link->neighbor = neighbor;
 
   /*
    * Add the rt_path for the link-end. This is an optimization
@@ -524,7 +523,7 @@ add_link_entry(const union olsr_ip_addr *local,
   olsr_insert_routing_table(remote, olsr_cnf->maxplen, remote_main,
                             OLSR_RT_ORIGIN_LINK);
 
-  return new_link;
+  return link;
 }
 
 
