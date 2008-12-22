@@ -926,6 +926,7 @@ int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
   add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
   /* Queue */
+  list_node_init(&New->int_node);
   list_add_before(&interface_head, &New->int_node);
 
   IntConf->interf = New;
