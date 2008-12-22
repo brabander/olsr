@@ -63,936 +63,1334 @@
     </step>
   </procedure>
 
-  <appendix id="manpages">
-    <title id="manpages-title">Man Pages</title>
+  <refentry id="olsrd_8">
+    <indexterm>
+      <primary><command>olsrd</command></primary>
+    </indexterm>
 
-    <refentry id="olsrd_8">
-      <indexterm>
-        <primary><command>olsrd</command></primary>
-      </indexterm>
+    <refentryinfo>
+      <titleabbrev><command>olsrd</command> Optimized Link State Routing
+      Protocol Daemon</titleabbrev>
+    </refentryinfo>
 
-      <refentryinfo>
-        <titleabbrev><command>olsrd</command> Optimized Link State Routing
-        Protocol Daemon</titleabbrev>
-      </refentryinfo>
+    <refmeta>
+      <refentrytitle id="olsrd_8-title">olsrd</refentrytitle>
 
-      <refmeta>
-        <refentrytitle id="olsrd_8-title">olsrd</refentrytitle>
+      <manvolnum>8</manvolnum>
+    </refmeta>
 
-        <manvolnum>8</manvolnum>
-      </refmeta>
+    <refnamediv>
+      <refname><command>olsrd</command></refname>
 
-      <refnamediv>
-        <refname><command>olsrd</command></refname>
+      <refpurpose>Optimized Link State Routing protocol daemon</refpurpose>
+    </refnamediv>
 
-        <refpurpose>Optimized Link State Routing protocol daemon</refpurpose>
-      </refnamediv>
+    <refsynopsisdiv>
+      <cmdsynopsis>
+        <command>olsrd</command>
 
-      <refsynopsisdiv>
-        <cmdsynopsis>
-          <command>olsrd</command>
+        <group>
+          <arg>-h</arg>
 
-          <group>
-            <arg>-h</arg>
+          <arg>--help</arg>
+        </group>
 
-            <arg>--help</arg>
-          </group>
+        <group>
+          <arg>-v</arg>
 
-          <group>
-            <arg>-v</arg>
+          <arg>--version</arg>
+        </group>
 
-            <arg>--version</arg>
-          </group>
+        <group choice="req">
+          <arg>-f</arg>
 
-          <group choice="req">
-            <arg>-f</arg>
+          <arg>--config</arg>
 
-            <arg>--config</arg>
+          <replaceable>configfile</replaceable>
+        </group>
 
-            <replaceable>configfile</replaceable>
-          </group>
+        <group choice="req">
+          <arg>-d</arg>
 
-          <group choice="req">
-            <arg>-d</arg>
+          <arg>--DebugLevel</arg>
 
-            <arg>--DebugLevel</arg>
+          <replaceable>level</replaceable>
+        </group>
 
-            <replaceable>level</replaceable>
-          </group>
+        <group>
+          <arg>-n</arg>
 
-          <group>
-            <arg>-n</arg>
+          <arg>--nofork</arg>
+        </group>
 
-            <arg>--nofork</arg>
-          </group>
+        <group>
+          <arg>-X</arg>
 
-          <group>
-            <arg>-X</arg>
+          <arg>--dispin</arg>
+        </group>
 
-            <arg>--dispin</arg>
-          </group>
+        <group>
+          <arg>-O</arg>
 
-          <group>
-            <arg>-O</arg>
+          <arg>--dispout</arg>
+        </group>
 
-            <arg>--dispout</arg>
-          </group>
+        <group>
+          <arg>-D</arg>
 
-          <group>
-            <arg>-D</arg>
+          <arg>--delgw</arg>
+        </group>
 
-            <arg>--delgw</arg>
-          </group>
+        <group>
+          <arg>-P</arg>
 
-          <group>
-            <arg>-P</arg>
+          <arg>--ipc</arg>
+        </group>
 
-            <arg>--ipc</arg>
-          </group>
+        <group choice="req">
+          <arg>-H</arg>
 
-          <group choice="req">
-            <arg>-H</arg>
+          <arg>--hemu</arg>
 
-            <arg>--hemu</arg>
+          <replaceable>ipaddr</replaceable>
+        </group>
 
-            <replaceable>ipaddr</replaceable>
-          </group>
-
-          <arg>interface1</arg>
-
-          <arg rep="repeat">interface2</arg>
-        </cmdsynopsis>
-
-        <note>
-          <para>Only if <command>olsrd</command> is started without arguments,
-          the default config file is loaded - usually
-          <filename>/etc/olsrd.conf</filename> or
-          <filename>/usr/local/etc/olsrd.conf</filename>.</para>
-        </note>
-      </refsynopsisdiv>
-
-      <refsect1>
-        <title>Description</title>
-
-        <para><command>olsrd</command> is an implementation of the
-        <emphasis>O</emphasis>ptimized <emphasis>L</emphasis>ink
-        <emphasis>S</emphasis>tate <emphasis>R</emphasis>outing protocol
-        (OLSR) for <emphasis>M</emphasis>obile <emphasis>A</emphasis>d-hoc
-        <emphasis>NET</emphasis>works (MANETs). The protocol is described in
-        RFC3626. It is designed to be run as a standalone server process - but
-        as it is still in an experimental stage most users will prefer running
-        it with some debug output.</para>
-
-        <para>This implementation of the OLSR protocol features an alternative
-        routing scheme based on link quality using an ETX-like metric which
-        was initially developed by the c-base community in Berlin and extended
-        by the Funkfeuer community in Vienna. This alternative routing scheme
-        uses non-standard messages and is therefore incompatible to standard
-        OLSR as it's described in the RFC. To switch back to RFC-mode, you
-        need to enable a (currently unavailable) metrics plug in using the
-        <option>--LinkQualityAlgorithm</option> option (see <xref
-        endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" />).</para>
-
-        <para>The home page of olsrd is <ulink
-        url="http://www.olsr.org">http://www.olsr.org</ulink></para>
-      </refsect1>
-
-      <refsect1>
-        <title>Options</title>
-
-        <para>You can specify options either on the command line or by using a
-        config file - usually <filename>/etc/olsrd.conf</filename> or
-        <filename>/usr/local/etc/olsrd.conf</filename>. The getopt parser
-        replaces the <option>--config</option> option with options acquired in
-        from the specified config file. While it is possible to operate using
-        only command line options, you may want a config file especially for
-        readability of the larger config options (e.g.
-        <option>--Interface</option> or <option>--LoadPlugin</option>). To
-        preset a config file setting, add an option before
-        <option>--config</option>. To overwrite a config file setting, add an
-        option after <option>--config</option>.</para>
-
-        <para>The following list compiles only options frequently specified on
-        the command line. If you use one or more command line options, you
-        normally also have to specify <option>--config</option> for the
-        desired config file.</para>
-
-        <variablelist>
-          <varlistentry>
-            <term><option>-h</option> or <option>--help</option></term>
-
-            <listitem>
-              <para>Prints out the list of valid command line / config file
-              options and exits.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-v</option> or <option>--version</option></term>
-
-            <listitem>
-              <para>Prints out the current version number and exits.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-f <replaceable>configfile</replaceable></option> or
-            <option>--config
-            <replaceable>configfile</replaceable></option></term>
-
-            <listitem>
-              <para>Reads in the specified config file. The acquired options
-              are inserted into the command line at the position of the
-              <option>-f</option> or <option>--config</option> option.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-d level</option> or <option>--DebugLevel
-            <replaceable>level</replaceable></option></term>
-
-            <listitem>
-              <para>Specifies the amount of debug information to be printed
-              out during operation. If set to 0, <command>olsrd</command> will
-              run in the background.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-n</option> or <option>--nofork</option></term>
-
-            <listitem>
-              <para>This option causes <command>olsrd</command> not to fork
-              into the background, even when started with <option>--DebugLevel
-              0</option>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-X</option> or <option>--dispin</option></term>
-
-            <listitem>
-              <para>This option causes <command>olsrd</command> to display all
-              incoming packet data.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-O</option> or <option>--dispout</option></term>
-
-            <listitem>
-              <para>This option causes <command>olsrd</command> to display all
-              outgoing packet data.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-D</option> or <option>--delgw</option></term>
-
-            <listitem>
-              <para>This option will remove a static default route when
-              <command>olsrd</command> adds an Internet route based on OLSR
-              routing.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-P</option> or <option>--ipc</option></term>
-
-            <listitem>
-              <para>This option allows the GUI front end to create one
-              connection to <command>olsrd</command> at runtime.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-H <replaceable>ipaddr</replaceable></option> or
-            <option>--hemu <replaceable>ipaddr</replaceable></option></term>
-
-            <listitem>
-              <para>Use this option to connect to the <xref
-              endterm="olsr_switch_8-title" linkend="olsr_switch_8" /> network
-              simulation application. Here <replaceable>ipaddr</replaceable>
-              will be the IP address that the process will set as its main
-              address in the emulation mode. This emulated interfaces have no
-              connection to the real IP stack and can be chosen freely.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-i</option></term>
-
-            <listitem>
-              <para>Ignored for compatibility - older versions of
-              <command>olsrd</command> expect one or more interface names
-              after this option (see below).</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option><replaceable>interface1</replaceable>
-            interface2...</option></term>
-
-            <listitem>
-              <para>Any character combination without a leading dash is
-              interpreted as a list of interfaces. The list specifies on what
-              network interfaces olsrd should run. Only the main IP address of
-              an interface is evaluated, so you cannot specify an interface
-              alias such as eth0:1. Note, that you also cannot change the
-              interface parameters such as intervals and validity times. Use
-              the <option>--Interface</option> option instead.</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </refsect1>
-
-      <refsect1>
-        <title>Files</title>
-
-        <simplelist type="vert">
-          <member><filename><?install-datadir ?>/etc/olsrd.conf</filename></member>
-        </simplelist>
-      </refsect1>
-
-      <refsect1>
-        <title>See Also</title>
-
-        <simplelist type="inline">
-          <member><xref endterm="olsrd_conf_5-title"
-          linkend="olsrd_conf_5" /></member>
-        </simplelist>
-      </refsect1>
-    </refentry>
-
-    <refentry id="olsrd_conf_5">
-      <indexterm>
-        <primary><command>olsrd.conf</command></primary>
-      </indexterm>
-
-      <refentryinfo>
-        <titleabbrev>Configuration File for Olsrd</titleabbrev>
-      </refentryinfo>
-
-      <refmeta>
-        <refentrytitle id="olsrd_conf_5-title">olsrd.conf</refentrytitle>
-
-        <manvolnum>5</manvolnum>
-      </refmeta>
-
-      <refnamediv>
-        <refname><filename>olsrd.conf</filename></refname>
-
-        <refpurpose>configuration file for <xref endterm="olsrd_8-title"
-        linkend="olsrd_8" /></refpurpose>
-      </refnamediv>
-
-      <refsect1>
-        <title>Description</title>
-
-        <para>The <filename>olsrd.conf</filename> file is located in /etc or
-        /usr/local/etc by default. The file contains run-time configuration
-        settings for the Optimized Link State Routing daemon <xref
-        endterm="olsrd_8-title" linkend="olsrd_8" />. During startup, the
-        <command>olsrd</command> daemon reads in the file. If no command line
-        options are present, the default configuration file is read in.
-        Otherwise, the file specified by the <option>-f</option> or
-        <option>--config</option> command line option is used. All settings
-        are inserted as command line options by prepending a double dash and
-        feeding them to the getopt parser.</para>
-
-        <note>
-          <para>With earlier versions of <command>olsrd</command>, the
-          configuration parser was offered as stand alone shared library or
-          DLL. With the exception of the Windows GUI program
-          (<command>Switch.exe</command>), this was unused. To optimize file
-          size for embedded devices, the stand-alone configuration parser was
-          discarded.</para>
-        </note>
-
-        <para>The configuration file consists of comments, single options and
-        option blocks.</para>
-      </refsect1>
-
-      <refsect1>
-        <title>Comments</title>
-
-        <para>Comments are everything following a hash character
-        (<emphasis>#</emphasis>) in a line. This data is discarded. Commenting
-        out an option is an easy way to make olsrd use the default value for
-        that option.</para>
-      </refsect1>
-
-      <refsect1>
-        <title>Single Options</title>
-
-        <caution>
-          <para>The current implementation (olsrd-0.5.7-pre as of Dec-2008)
-          discards several single options controlling the Link Quality
-          Extensions valid with earlier versions. It is planned to
-          re-implement the RFC-mode by using a special LinkQualityAlgorithm
-          plugin. Discarded options: <option>UseHysteresis</option>,
-          <option>HystScaling</option>, <option>HystThrHigh</option>,
-          <option>HystThrLow</option>, <option>LinkQualityLevel</option>, and
-          <option>LinkQualityWinsize</option>.</para>
-        </caution>
-
-        <para>Single options consists of a keyword and a value. Note, that a
-        comment can follow such a option on the same line. Valid single
-        options are:</para>
-
-        <variablelist>
-          <varlistentry>
-            <term><option>config</option> <replaceable>config
-            file</replaceable></term>
-
-            <listitem>
-              <para>Nesting within config files is not supported. Do not
-              use.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>delgw</option>, <option>dispin</option>,
-            <option>dispout</option>, <option>help</option>,
-            <option>hemu</option>, <option>iface</option>,
-            <option>ipc</option>, <option>nofork</option>,
-            <option>version</option>:</term>
-
-            <listitem>
-              <para>While these are valid options, they do not make much sense
-              in a config file. Refer to <xref endterm="olsrd_8-title"
-              linkend="olsrd_8" /> for their meaning.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>AllowNoInt</option>
-            <replaceable>yes|no</replaceable></term>
-
-            <listitem>
-              <para>Olsrd supports dynamic configuration of network
-              interfaces. This means that interfaces on which olsrd runs on
-              can be reconfigured and olsrd will update itself with no need to
-              be restarted. Olsrd also supports removal and addition of
-              interfaces in run-time. This option specifies that olsrd should
-              keep running if no network interfaces are available. Defaults to
-              <replaceable>yes</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>ClearScreen</option>
-            <replaceable>yes|no</replaceable></term>
-
-            <listitem>
-              <para>If set to <replaceable>yes</replaceable> and olsrd running
-              with a <option>DebugLevel</option> other that
-              <replaceable>0,</replaceable> the terminal to which output is
-              sent (STDOUT) is cleared prior to writing updated tables. This
-              makes it easier to follow changes in real-time.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>DebugLevel</option>
-            <replaceable>0-9</replaceable></term>
-
-            <listitem>
-              <para>Controls the amount of debug output olsrd prints out. If
-              set to <replaceable>0</replaceable>, olsrd will detach from the
-              current process and run in the background. A value of
-              <replaceable>9</replaceable> yields a maximum of debug output.
-              Defaults to <replaceable>0</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>FIBMetric</option>
-            <replaceable>string</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>IpVersion</option>
-            <replaceable>4|6</replaceable></term>
-
-            <listitem>
-              <para>Olsrd supports both IP versions:
-              <replaceable>4</replaceable> and <replaceable>6</replaceable>.
-              This option controls what IP version olsrd uses. Defaults to
-              <replaceable>4</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LinkQualityAging</option>
-            <replaceable>float</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LinkQualityAlgorithm</option>
-            <replaceable>string</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LinkQualityDijkstraLimit</option> <replaceable>int,
-            float</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LinkQualityFishEye</option>
-            <replaceable>0|1</replaceable></term>
-
-            <listitem>
-              <para>Enables (<replaceable>1</replaceable>) or disables
-              (<replaceable>0</replaceable>) the experimental fish eye
-              algorithm. In mesh network with high packet loss, the topology
-              information does not spread fast and synchronized, which
-              introduces routing loops. The fish eye algorithm will send TC
-              (Topology Control) messages with varying TTL values. Which
-              floods the near neighborhood more often with topology
-              information than distant nodes (in hops). Use this option
-              together with a shorter <option>TcInterval</option> and a higher
-              <option>MprCoverage</option> setting.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>MprCoverage</option> <replaceable>1 or
-            higher</replaceable></term>
-
-            <listitem>
-              <para>This value decides, how many MPRs a node should attempt to
-              select for every two hop neighbor. Defaults to
-              <emphasis><replaceable>1</replaceable></emphasis>, and any other
-              setting will severely reduce the optimization introduced by the
-              MPR scheme. Note, that when using the
-              <option>LinkQualityFishEye</option> option, a higher value is
-              recommended. </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>NatThreshold</option>
-            <replaceable>float</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>NicChgsPollInt</option>
-            <replaceable>0.1-100.0</replaceable></term>
-
-            <listitem>
-              <para>This option sets the interval, in seconds, that olsrd will
-              check the configured interfaces for changes in configuration.
-              Defaults to <replaceable>2.5</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>Pollrate</option>
-            <replaceable>0.1-10.0</replaceable></term>
-
-            <listitem>
-              <para>This option sets the sleep interval, in seconds. While
-              polling the interfaces, the olsrd scheduler will sleep for this
-              time if no packets are to be received. If the value is set too
-              high for the current UDP receive buffer size, packet loss will
-              occur. Note, that the current olsrd implementation internally
-              calculates timing values in milliseconds (1/1000s). Defaults to
-              <replaceable>0.1</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>RtProto</option>
-            <replaceable>int</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>RtTableDefault</option>
-            <replaceable>int</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>RtTable</option>
-            <replaceable>int</replaceable></term>
-
-            <listitem>
-              <para>tbd</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>TcRedundancy</option> 0|1|2</term>
-
-            <listitem>
-              <para>This value controls the TC redundancy used by the local
-              node in TC message generation. To enable a more robust
-              understanding of the topology, nodes can be set to announce more
-              than just their MPR selector set in TC messages. If set to
-              <replaceable>0</replaceable>, the advertised link set of the
-              node is limited to the MPR selectors. If set to
-              <replaceable>1</replaceable>, the advertised link set of the
-              node is the union of its MPR set and its MPR selector set. If
-              set to <replaceable>2</replaceable>, the advertised link set of
-              the node is the full symmetric neighbor set of the node.
-              Defaults to <replaceable>0</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>TosValue</option>
-            <replaceable>0-16</replaceable></term>
-
-            <listitem>
-              <para>This value controls the type of service value to set in
-              the IP header of OLSR control traffic. Defaults to
-              <replaceable>16</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>Willingness</option>
-            <replaceable>0-7</replaceable></term>
-
-            <listitem>
-              <para>Nodes participating in a OLSR routed network will announce
-              their willingness to act as relays for OLSR control traffic for
-              their neighbors (MPR). This option specifies a fixed willingness
-              value to be announced by the local node.
-              <replaceable>4</replaceable> is a neutral option here, while
-              <replaceable>0</replaceable> specifies that this node will never
-              act as a relay, and <replaceable>7</replaceable> specifies that
-              this node will always act as such a relay. If this option is
-              unset in the configuration file, then olsrd will try to retrieve
-              information about the system power and dynamically update
-              willingness according to this info. If no such info can be
-              retrieved willingness is set to
-              <replaceable>4</replaceable>.</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </refsect1>
-
-      <refsect1>
-        <title>Option Blocks</title>
-
-        <para>Option blocks are configuration options that holds a body of
-        sub-options encapsulated in curled braces ( <emphasis>{}</emphasis> ).
-        Valid options are:</para>
-
-        <variablelist>
-          <varlistentry>
-            <term><option>IpcConnect {[sub-options]}</option></term>
-
-            <listitem>
-              <para>Olsrd can allow processes to make a TCP connection to
-              itself on which data regarding the topology will be transmitted.
-              This is typically used by GUI applications to provide a
-              user-friendly front-end to olsrd. This option block controls
-              this kind of connections.</para>
-
-              <para><option>MaxConnections [0-5]</option>: This option
-              specifies how many connections that can exist simultaneously.
-              Multiple connections have not been tested, and does not work!
-              This option should only be used to control whether or not
-              processes can connect to olsrd by setting it either to 0, which
-              will tell olsrd not to allow any connections, or by setting it
-              to a positive value. Defaults to 0.</para>
-
-              <para><option>Host [IPv4 address]</option>: This option
-              specifies a single host that is allowed to connect to olsrd. By
-              default only the loopback address (127.0.0.1) is set to be
-              allowed. So if you want to be able to connect from another host
-              you should add it here. This option can be repeated to add
-              multiple hosts.</para>
-
-              <para><option>Net [IPv4 netaddress] [IPv4 netmask]</option>:
-              Here you can specify an entire net range of IP addresses which
-              olsrd will allow TCP connections from. This option can be
-              repeated to add multiple networks.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>Hna4 {[sub-options]}</option></term>
-
-            <listitem>
-              <para>Hosts in a OLSR routed network can announce connectivity
-              to external networks using HNA messages. This option block is
-              used to set the IPv4 networks to be announced by this
-              host.</para>
-
-              <para><option>[IPv4 netaddress] [IPv4 netmask]</option>:
-              Specifies a IPv4 network to announce in HNA messages. Multiple
-              entries can be added. To announce Internet connectivity set
-              <emphasis>0.0.0.0 0.0.0.0</emphasis></para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>Hna6 {[sub-options]}</option></term>
-
-            <listitem>
-              <para>Hosts in a OLSR routed network can announce connectivity
-              to external networks using HNA messages. This option block is
-              used to set the IPv6 networks to be announced by this
-              host.</para>
-
-              <para><option>[IPv6 netaddress] [0-48]</option>: Specifies a
-              IPv6 network to announce in HNA messages. The second value is
-              the prefix-length of the network address. Multiple entries can
-              be added. To announce Internet connectivity set <emphasis>::
-              0</emphasis></para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>LoadPlugin "[plugin-name]"
-            {[sub-options]}x</option></term>
-
-            <listitem>
-              <para>Specifies a plugin that olsrd is to load at
-              startup.</para>
-
-              <para><option>PlParam [key] [value]</option>: Sends a pair of
-              parameters to the plugin at initialization. Consult individual
-              plugin documentation to find the possible parameters.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>Interface "[device-name1]" "[device-name2]" ...
-            {[sub-options]}</option></term>
-
-            <listitem>
-              <para>This option block specifies one or more network interfaces
-              on which olsrd should run. At least one network interface block
-              must be specified for olsrd to run! Various parameters can be
-              specified on individual interfaces or groups of interfaces. This
-              option block can be repeated to add multiple interface
-              configurations.</para>
-
-              <para><option>AutoDetectChanges [yes|no]</option>: Olsrd can
-              auto detect changes in interface configurations (polling on the
-              interval set by <option>NicChgsPollInt</option>). This is
-              Enabled by default but can be turned off pr. NIC to save CPU
-              cycles.</para>
-
-              <para><option>Ip4Broadcast [IPv4 address]</option>: Forces the
-              given IPv4 broadcast address to be used as destination address
-              for all outgoing OLSR traffic on the interface. In reality only
-              the address <emphasis>255.255.255.255</emphasis> makes sense to
-              set here. If this option is not set the broadcast address that
-              the interface is configured with will be used. This address will
-              also be updated in run-time if a change is detected.</para>
-
-              <para><option>Ip6AddrType [site-local|global]</option>: This
-              option sets what IPv6 address type is to be used in interface
-              address detection. Defaults to site-local.</para>
-
-              <para><option>Ip6MulticastSite [IPv6 address]</option>: Sets the
-              destination of outgoing OLSR traffic on this interface to use
-              the specified IPv6 multicast address as destination if the
-              site-local address type is set on this interface.</para>
-
-              <para><option>Ip6MulticastGlobal [IPv6 address]</option>: Sets
-              the destination of outgoing OLSR traffic on this interface to
-              use the specified IPv6 multicast address as destination if the
-              global address type is set on this interface.</para>
-
-              <para><option>HelloInterval [0.0-]</option>: Sets the interval
-              on which HELLO messages will be generated and transmitted on
-              this interface.</para>
-
-              <para><option>HelloValidityTime [0.0-]</option>: Sets the
-              validity time to be announced in HELLO messages generated by
-              this host on this interface. This value must be larger than the
-              HELLO generation interval to make any sense. Defaults to 3 * the
-              generation interval.</para>
-
-              <para><option>TcInterval [0.0-]</option>: Sets the interval on
-              which TC messages will be generated and transmitted on this
-              interface.</para>
-
-              <para><option>TcValidityTime [0.0-]</option>: Sets the validity
-              time to be announced in TC messages generated by this host on
-              this interface. This value must be larger than the TC generation
-              interval to make any sense. Defaults to 3 * the generation
-              interval.</para>
-
-              <para><option>MidInterval [0.0-]</option>: Sets the interval on
-              which MID messages will be generated and transmitted on this
-              interface.</para>
-
-              <para><option>MidValidityTime [0.0-]</option>: Sets the validity
-              time to be announced in MID messages generated by this host on
-              this interface. This value must be larger than the MID
-              generation interval to make any sense. Defaults to 3 * the
-              generation interval.</para>
-
-              <para><option>HnaInterval [0.0-]</option>: Sets the interval on
-              which HNA messages will be generated and transmitted on this
-              interface.</para>
-
-              <para><option>HnaValidityTime [0.0-]</option>: Sets the validity
-              time to be announced in HNA messages generated by this host on
-              this interface. This value must be larger than the HNA
-              generation interval to make any sense. Defaults to 3 * the
-              generation interval.</para>
-
-              <para><option>Weight [0-]</option>: When multiple links exist
-              between hosts the weight of the interface is used to determine
-              the link to route by. Normally the weight is automatically
-              calculated by olsrd based on the characteristics of the
-              interface, but here you can specify a fixed value. Olsrd will
-              choose links with the lowest value.</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </refsect1>
-
-      <refsect1>
-        <title>Misc</title>
-
-        <para>The homepage of olsrd is <ulink
-        url="http://www.olsr.org">http://www.olsr.org</ulink></para>
-      </refsect1>
-
-      <refsect1>
-        <title>Files</title>
-
-        <para><filename>/etc/olsrd.conf</filename></para>
-      </refsect1>
-
-      <refsect1>
-        <title>See Also</title>
-
-        <simplelist type="inline">
-          <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
-        </simplelist>
-      </refsect1>
-    </refentry>
-
-    <refentry id="olsr_switch_8">
-      <indexterm>
-        <primary><command>olsr_switch</command></primary>
-      </indexterm>
-
-      <refentryinfo>
-        <titleabbrev>Olsrd Network Simulator</titleabbrev>
-      </refentryinfo>
-
-      <refmeta>
-        <refentrytitle id="olsr_switch_8-title">olsr_switch</refentrytitle>
-
-        <manvolnum>8</manvolnum>
-      </refmeta>
-
-      <refnamediv>
-        <refname>olsr_switch</refname>
-
-        <refpurpose>olsrd network simulator</refpurpose>
-      </refnamediv>
-
-      <refsynopsisdiv>
-        <cmdsynopsis>
-          <command>olsr_switch</command>
-
-          <arg>-foo <replaceable>foo</replaceable></arg>
-
-          <arg>-bar <replaceable>bar</replaceable></arg>
-        </cmdsynopsis>
-      </refsynopsisdiv>
-
-      <refsect1>
-        <title>Description</title>
-
-        <para><command>olsr_switch</command> is an implementation of the
-        Optimized Link State Routing protocol for Mobile Ad-Hoc networks
-        (MANET). The protocol is described in RFC3626. It is designed to be
-        run as a standalone server process - but as it is still in an
-        experimental stage most users will prefer running it with some debug
-        output which is directed to STDOUT.</para>
-
-        <para>This manual page only lists the command line arguments. For
-        details of the configuration file see the comments included in
-        <filename>/etc/olsrd.conf</filename>. Note that none of these options
-        need to be set at the command line - all these options and others can
-        be set in the configuration file.</para>
-
-        <para>The homepage of olsrd is <ulink
-        url="http://www.olsr.org">http://www.olsr.org</ulink></para>
-      </refsect1>
-
-      <refsect1>
-        <title>Options</title>
-
-        <variablelist>
-          <varlistentry>
-            <term><option>-foo <replaceable>foo</replaceable></option></term>
-
-            <listitem>
-              <para>This option specifies on what network interfaces olsrd
-              should run. These interfaces cannot be aliased interfaces such
-              as eth0:1.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-bar <replaceable>bar</replaceable></option></term>
-
-            <listitem>
-              <para>This option overrides the default configuration file path
-              used by olsrd - <filename>/etc/olsrd.conf</filename></para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </refsect1>
-
-      <refsect1>
-        <title>Files</title>
-
-        <para><filename>/etc/olsrd.conf</filename></para>
-      </refsect1>
-
-      <refsect1>
-        <title>See also</title>
-
-        <simplelist type="inline">
-          <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
-
-          <member><xref endterm="olsrd_conf_5-title"
-          linkend="olsrd_conf_5" /></member>
-        </simplelist>
-      </refsect1>
-    </refentry>
-  </appendix>
+        <arg>interface1</arg>
+
+        <arg rep="repeat">interface2</arg>
+      </cmdsynopsis>
+
+      <para></para>
+
+      <!--Sorry for two empty paras, but I want the note properly aligned.-->
+
+      <para></para>
+
+      <para><emphasis role="strong">Note</emphasis>: Only if
+      <command>olsrd</command> is started without arguments, the default
+      config file is loaded - which is usually
+      <filename>/etc/olsrd.conf</filename> or
+      <filename>/usr/local/etc/olsrd.conf</filename>.</para>
+    </refsynopsisdiv>
+
+    <refsect1>
+      <title>Description</title>
+
+      <para><command>olsrd</command> is an implementation of the
+      <emphasis>O</emphasis>ptimized <emphasis>L</emphasis>ink
+      <emphasis>S</emphasis>tate <emphasis>R</emphasis>outing protocol (OLSR)
+      for <emphasis>M</emphasis>obile <emphasis>A</emphasis>d-hoc
+      <emphasis>NET</emphasis>works (MANETs). The protocol is described in
+      RFC3626. It is designed to be run as a standalone server process - but
+      as it is still in an experimental stage most users will prefer running
+      it with some debug output.</para>
+
+      <para>This implementation of the OLSR protocol features an alternative
+      routing scheme based on link quality using an ETX-like metric which was
+      initially developed by the c-base community in Berlin and extended by
+      the Funkfeuer community in Vienna. This alternative routing scheme uses
+      non-standard messages and is therefore incompatible to standard OLSR as
+      it's described in the RFC. To switch back to RFC-mode, you need to
+      enable a (currently unavailable) metrics plug in using the
+      <option>--LinkQualityAlgorithm</option> option (see <xref
+      endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" />).</para>
+
+      <para>The home page of olsrd is <ulink
+      url="http://www.olsr.org">http://www.olsr.org</ulink></para>
+    </refsect1>
+
+    <refsect1>
+      <title>Getting Started</title>
+
+      <para>Running and maintaining a larger mesh network is a complex task.
+      Nevertheless, you may simply want to test olsrd. If you have at least 3
+      devices, all equipped with a Wifi card, the following short list of
+      steps may help.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Set up the necessary connectivity. Configure all Wifi cards to
+          Ad hoc (IBSS) or similar, use same ESSID and channel setting. All
+          Wifi cards need to use a fixed IP in the same IP address range (e.g.
+          10.0.0.0/8). Verify, that the interface is configured with a correct
+          broadcast address, otherwise you will experience ARP lookups on the
+          broadcast address when running olsrd. Also stop any firewalling and
+          enable forwarding. Test the connectivity by using ping. Remember:
+          olsrd is a layer 3 routing daemon and therefore simply is not
+          responsible for any layer 2 problems. No ping - no routes.</para>
+        </listitem>
+
+        <listitem>
+          <para>Install olsrd on every device. This is different for several
+          supported operating systems:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>Linux</term>
+
+              <listitem>
+                <para>Download a stable source tar.gz. Unpack. Be sure to
+                install the build tools (e.g. apt-get install build-essential
+                flex bison). Do <command>make build_all</command>. Do
+                <command>sudo make install_all</command>. Edit the
+                <filename>/usr/local/etc/olsrd.conf</filename> file and change
+                at least the <option>Interface</option> section for your Wifi
+                card. You may also want to enable the httpinfo plugin. Start
+                with <command>olsrd -f /usr/local/etc/olsrd.conf -d
+                1</command>.</para>
+
+                <para>You may add <option>PREFIX=/usr</option> to the
+                <command>make</command> commands which changes the
+                installation pathes to <filename>/etc</filename>,
+                <filename>/usr/sbin</filename>, and
+                <filename>/usr/lib</filename> as it's the default with
+                previous olsrd versions.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>Windows</term>
+
+              <listitem>
+                <para>Download the Windows installer. Install and run the
+                <filename>Switch.exe</filename> GUI as admin. Select the Wifi
+                card and de-select any other interface offered. Click the
+                <guibutton>Start</guibutton> button. Keep in mind: only a user
+                with admin rights can change the system's routing table. And
+                any active firewall solution may disturbs the cooperative
+                resource sharing required with meshing, while a personal
+                operating system is not meant for sharing.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>BSD</term>
+
+              <listitem>
+                <para>Basically use the same procedure as with Linux. You need
+                to install and use the gmake command to build and
+                install.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>Embedded:</term>
+
+              <listitem>
+                <para>Your mileage may vary with different embedded firmwares
+                and operating systems. You may flash the Freifunk Firmware.
+                DD-WRT has olsrd support. OpenWrt comes with a pre-compiled
+                binary for olsrd. There's an ongoing OpenWrt/Kamikaze project
+                with olsrd named ffluci. Installation and configuration is
+                different for those firmware flavours - be sure to read their
+                docs or online help files.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+
+        <listitem>
+          <para>If olsrd detects the correct topology as well as
+          installs/removes routes matching that topology, you may offer
+          Internet on one of your routes. Either enable a manual <quote>HNA {
+          0.0.0.0 0.0.0.0 }</quote> in the configuration file or use the
+          dyn_gw or dyn_gw_plain plugins. For most Internet connections, you
+          need to enable NAT/MASQUERADING to translate the private IP adresses
+          to the globally valid IP address on the gateway device.</para>
+        </listitem>
+
+        <listitem>
+          <para>Start debugging if necessary. Use the <ulink
+          url="http://localhost:8080/">http://localhost:8080/</ulink> URL to
+          query information from the httpinfo plugin. Use
+          <command>wireshark</command> or <command>tcpdump -ni [iface] udp and
+          port 698</command> to verify OLSR messaging. Take special care for
+          the Wifi cards in Ad hoc / IBSS mode: typical driver/card
+          combinations tend to disagree about the auto-negotiated BSSID over
+          time (also called IBSS-split) which may be solved by using a
+          manually configured BSSID.</para>
+        </listitem>
+      </orderedlist>
+    </refsect1>
+
+    <refsect1>
+      <title>Options</title>
+
+      <para>You can specify options either on the command line or by using a
+      config file - usually <filename>/etc/olsrd.conf</filename> or
+      <filename>/usr/local/etc/olsrd.conf</filename>. The getopt parser
+      replaces the <option>--config</option> option with options acquired in
+      from the specified config file. While it is possible to operate using
+      only command line options, you may want a config file especially for
+      readability of the larger config options (e.g.
+      <option>--Interface</option> or <option>--LoadPlugin</option>). To
+      preset a config file setting, add an option before
+      <option>--config</option>. To overwrite a config file setting, add an
+      option after <option>--config</option>.</para>
+
+      <para>The following list compiles only options frequently specified on
+      the command line. If you use one or more command line options, you
+      normally also have to specify <option>--config</option> for the desired
+      config file.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-h</option> or <option>--help</option></term>
+
+          <listitem>
+            <para>Prints out the list of valid command line / config file
+            options and exits.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-v</option> or <option>--version</option></term>
+
+          <listitem>
+            <para>Prints out the current version number and exits.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-f <replaceable>configfile</replaceable></option> or
+          <option>--config
+          <replaceable>configfile</replaceable></option></term>
+
+          <listitem>
+            <para>Reads in the specified config file. The acquired options are
+            inserted into the command line at the position of the
+            <option>-f</option> or <option>--config</option> option.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-d level</option> or <option>--DebugLevel
+          <replaceable>level</replaceable></option></term>
+
+          <listitem>
+            <para>Specifies the amount of debug information to be printed out
+            during operation. If set to 0, <command>olsrd</command> will run
+            in the background.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-n</option> or <option>--nofork</option></term>
+
+          <listitem>
+            <para>This option causes <command>olsrd</command> not to fork into
+            the background, even when started with <option>--DebugLevel
+            0</option>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-X</option> or <option>--dispin</option></term>
+
+          <listitem>
+            <para>This option causes <command>olsrd</command> to display all
+            incoming packet data.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-O</option> or <option>--dispout</option></term>
+
+          <listitem>
+            <para>This option causes <command>olsrd</command> to display all
+            outgoing packet data.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-D</option> or <option>--delgw</option></term>
+
+          <listitem>
+            <para>This option will remove a static default route when
+            <command>olsrd</command> adds an Internet route based on OLSR
+            routing.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-P</option> or <option>--ipc</option></term>
+
+          <listitem>
+            <para>This option allows the GUI front end to create one
+            connection to <command>olsrd</command> at runtime.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-H <replaceable>ipaddr</replaceable></option> or
+          <option>--hemu <replaceable>ipaddr</replaceable></option></term>
+
+          <listitem>
+            <para>Use this option to connect to the <xref
+            endterm="olsr_switch_8-title" linkend="olsr_switch_8" /> network
+            simulation application. Here <replaceable>ipaddr</replaceable>
+            will be the IP address that the process will set as its main
+            address in the emulation mode. This emulated interfaces have no
+            connection to the real IP stack and can be chosen freely.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-i</option></term>
+
+          <listitem>
+            <para>Ignored for compatibility - older versions of
+            <command>olsrd</command> expect one or more interface names after
+            this option (see below).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option><replaceable>interface1</replaceable>
+          interface2...</option></term>
+
+          <listitem>
+            <para>Any character combination without a leading dash is
+            interpreted as a list of interfaces. The list specifies on what
+            network interfaces olsrd should run. Only the main IP address of
+            an interface is evaluated, so you cannot specify an interface
+            alias such as eth0:1. Note, that you also cannot change the
+            interface parameters such as intervals and validity times. Use the
+            <option>--Interface</option> option instead.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>Files</title>
+
+      <simplelist type="vert">
+        <member><filename><?install-datadir ?>/etc/olsrd.conf</filename></member>
+      </simplelist>
+    </refsect1>
+
+    <refsect1>
+      <title>See Also</title>
+
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_conf_5-title"
+        linkend="olsrd_conf_5" /></member>
+      </simplelist>
+    </refsect1>
+  </refentry>
+
+  <refentry id="olsrd_conf_5">
+    <indexterm>
+      <primary><command>olsrd.conf</command></primary>
+    </indexterm>
+
+    <refentryinfo>
+      <titleabbrev>Configuration File for Olsrd</titleabbrev>
+    </refentryinfo>
+
+    <refmeta>
+      <refentrytitle id="olsrd_conf_5-title">olsrd.conf</refentrytitle>
+
+      <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+      <refname><filename>olsrd.conf</filename></refname>
+
+      <refpurpose>configuration file for <xref endterm="olsrd_8-title"
+      linkend="olsrd_8" /></refpurpose>
+    </refnamediv>
+
+    <refsect1>
+      <title>Description</title>
+
+      <para>The <filename>olsrd.conf</filename> file is located in /etc or
+      /usr/local/etc by default. The file contains run-time configuration
+      settings for the Optimized Link State Routing daemon <xref
+      endterm="olsrd_8-title" linkend="olsrd_8" />. During startup, the
+      <command>olsrd</command> daemon reads in the file. If no command line
+      options are present, the default configuration file is read in.
+      Otherwise, the file specified by the <option>-f</option> or
+      <option>--config</option> command line option is used. All settings are
+      inserted as command line options by prepending a double dash and feeding
+      them to the getopt parser.</para>
+
+      <para><emphasis role="strong">Tip</emphasis>: With earlier versions of
+      <command>olsrd</command>, the configuration parser was offered as stand
+      alone shared library or DLL. With the exception of the Windows GUI
+      program (<command>Switch.exe</command>), this was unused. To optimize
+      file size for embedded devices, the stand-alone configuration parser was
+      discarded.</para>
+
+      <para>The configuration file consists of comments, single options and
+      option blocks.</para>
+    </refsect1>
+
+    <refsect1>
+      <title>Comments</title>
+
+      <para>Comments are everything following a hash character
+      (<emphasis>#</emphasis>) in a line. This data is discarded. Commenting
+      out an option is an easy way to make olsrd use the default value for
+      that option.</para>
+    </refsect1>
+
+    <refsect1>
+      <title>Single Options</title>
+
+      <para><emphasis role="strong">Caution</emphasis>: The current
+      implementation (olsrd-0.5.7-pre as of Dec-2008) discards several single
+      options controlling the Link Quality Extensions valid with earlier
+      versions. It is planned to re-implement the RFC-mode by using a special
+      LinkQualityAlgorithm plugin. Discarded options:
+      <option>UseHysteresis</option>, <option>HystScaling</option>,
+      <option>HystThrHigh</option>, <option>HystThrLow</option>,
+      <option>LinkQualityLevel</option>, and
+      <option>LinkQualityWinsize</option>.</para>
+
+      <para>Single options consists of a keyword and a value. Note, that a
+      comment can follow such a option on the same line. Valid single options
+      are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>config</option>
+          <replaceable>configfile</replaceable></term>
+
+          <listitem>
+            <para>Nesting within config files is not supported. Do not
+            use.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>delgw</option>, <option>dispin</option>,
+          <option>dispout</option>, <option>help</option>,
+          <option>hemu</option>, <option>iface</option>, <option>ipc</option>,
+          <option>nofork</option>, <option>version</option>:</term>
+
+          <listitem>
+            <para>While these are valid options, they do not make much sense
+            in a config file. Refer to <xref endterm="olsrd_8-title"
+            linkend="olsrd_8" /> for their meaning.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>AllowNoInt</option>
+          <replaceable>yes</replaceable>|<replaceable>no</replaceable></term>
+
+          <listitem>
+            <para>Olsrd supports dynamic configuration of network interfaces.
+            This means that interfaces on which olsrd runs on can be
+            reconfigured and olsrd will update itself with no need to be
+            restarted. Olsrd also supports removal and addition of interfaces
+            in run-time. This option specifies that olsrd should keep running
+            if no network interfaces are available. Defaults to
+            <replaceable>yes</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>ClearScreen</option>
+          <replaceable>yes</replaceable>|<replaceable>no</replaceable></term>
+
+          <listitem>
+            <para>If set to <replaceable>yes</replaceable> and olsrd running
+            with a <option>DebugLevel</option> other that
+            <replaceable>0</replaceable>, the terminal to which output is sent
+            (STDOUT) is cleared prior to writing updated tables. This makes it
+            easier to follow changes in real-time.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>DebugLevel</option>
+          <replaceable>0</replaceable>-<replaceable>9</replaceable></term>
+
+          <listitem>
+            <para>Controls the amount of debug output olsrd prints out. If set
+            to <replaceable>0</replaceable>, olsrd will detach from the
+            current process and run in the background. A value of
+            <replaceable>9</replaceable> yields a maximum of debug output.
+            Defaults to <replaceable>0</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>FIBMetric</option>
+          <replaceable>flat</replaceable>|<replaceable>correct</replaceable>|<replaceable>approx</replaceable></term>
+
+          <listitem>
+            <para>This setting controls how the metric value for kernel routes
+            is handled. While analyzing new information of the mesh topology,
+            olsrd may change it's internal routing path to several distant
+            nodes (in hops). If this setting is set to
+            <replaceable>flat</replaceable>, kernel routes always have a
+            metric of 2. No route update is necessary if the internal routing
+            pathes change. If this setting is set to
+            <replaceable>correct</replaceable>, the kernel metric shows the
+            number of hops to the destination. This induces frequent routing
+            changes in larger meshes. If this setting is set to
+            <replaceable>approx</replaceable>, the current hop number is set
+            as a route metric but not updated if olsrd detects a hop number
+            change. Defaults to <replaceable>flat</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>IpVersion</option>
+          <replaceable>4</replaceable>|<replaceable>6</replaceable></term>
+
+          <listitem>
+            <para>Olsrd supports both IP versions:
+            <replaceable>4</replaceable> and <replaceable>6</replaceable>.
+            This option controls what IP version olsrd uses. Defaults to
+            <replaceable>4</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>LinkQualityAging</option>
+          <replaceable>0.01</replaceable>-<replaceable>1.0</replaceable></term>
+
+          <listitem>
+            <para>This setting controls the LQ/ETX change speed for the
+            <emphasis>etx_fpm</emphasis> and <emphasis>etx_float</emphasis>
+            link quality plugins. A higher value will result in faster LQ/ETX
+            changes. Defaults to <replaceable>0.1</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>LinkQualityAlgorithm</option>
+          <replaceable>etx_fpm</replaceable>|<replaceable>etx_float</replaceable>|<replaceable>etx_ff</replaceable></term>
+
+          <listitem>
+            <para>Selects one of the internal LQ/ETX detection algorithms.
+            Both <replaceable>etx_fpm</replaceable> (uses integers) and
+            <replaceable>etx_float</replaceable> (uses floating point math)
+            calculate the link quality based on HELLO and LQ_HELLO message
+            loss. Note, that HELLO messages trigger a send-buffer-flush, so
+            basically HELLOs are sent in small packets. Because the packet
+            loss for small packets is much lower than for large packets, these
+            algorithms may not discover optimal routes. If set to
+            <replaceable>etx_ff</replaceable>, LQ/ETX detection is based on
+            olsrd packet loss as it's the default with previous olsrd
+            versions. Note, that olsrd needs to send large signaling packet
+            for this to work properly, which is only true if you have a larger
+            mesh (&gt;50 nodes). Defaults to
+            <replaceable>etx_fpm</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>LinkQualityDijkstraLimit</option>
+          <replaceable>0</replaceable>|<replaceable>255</replaceable>
+          <replaceable>[Pollrate]</replaceable>-<replaceable>120.0</replaceable></term>
+
+          <listitem>
+            <para>This setting configures a calculation optimization which may
+            be necessary for large meshes with slow nodes (e.g. 100 MHz ARM
+            CPU). Normally, an incoming TC message triggers a re-calculation
+            of the internal network model. This setting can be used switch to
+            a regularly calculation (first value set to
+            <replaceable>0</replaceable>) and to use a specific calculation
+            interval in seconds (second value larger then
+            <replaceable>[Pollrate]</replaceable>). Note, that infrequent
+            re-calculation may introduce routing loops because nodes need more
+            time to adapt their routing tables. Defaults to
+            <replaceable>255</replaceable> <replaceable>0.0</replaceable>
+            (inactive).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>LinkQualityFishEye</option>
+          <replaceable>0</replaceable>|<replaceable>1</replaceable></term>
+
+          <listitem>
+            <para>Enables (<replaceable>1</replaceable>) or disables
+            (<replaceable>0</replaceable>) the experimental fish eye
+            algorithm. In mesh network with high packet loss, the topology
+            information does not spread fast and synchronized, which
+            introduces routing loops. The fish eye algorithm will send TC
+            (Topology Control) messages with varying TTL values. Which floods
+            the near neighborhood more often with topology information than
+            distant nodes (in hops). Use this option together with a shorter
+            <option>TcInterval</option> and a higher
+            <option>MprCoverage</option> setting.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>MprCoverage</option> <replaceable>1</replaceable> or
+          higher</term>
+
+          <listitem>
+            <para>This value decides, how many MPRs a node should attempt to
+            select for every two hop neighbor. Defaults to
+            <emphasis><replaceable>1</replaceable></emphasis>, and any other
+            setting will severely reduce the optimization introduced by the
+            MPR scheme. Note, that when using the
+            <option>LinkQualityFishEye</option> option, a higher value is
+            recommended.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>NatThreshold</option>
+          <replaceable>0.1</replaceable>-<replaceable>1.0</replaceable></term>
+
+          <listitem>
+            <para>In a large mesh network, several gateways may announce HNA
+            0/0 which basically says <quote>Internet here</quote>. Because
+            most Internet gateways offer their service using a translated
+            globally valid IP (NAT), switching the current gateway terminates
+            all running NATted connections. In other words: if you live
+            between 2 Internet gateways and start download, the download may
+            block some OLSR packets. The download will stop because this
+            triggers a route change - especially if you do not use traffic
+            shaping to prioritize OLSR packets. This setting introduces a
+            threshold to stop switching the default gateway on minor LQ/ETX
+            changes if another (NATted) gateway is to be used. As a trade off,
+            this may introduce routing loops or selects a bad gateway if the
+            threshold is too low. Defaults to <replaceable>1.0</replaceable>
+            (inactive).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>NicChgsPollInt</option>
+          <replaceable>0.1</replaceable>-<replaceable>100.0</replaceable></term>
+
+          <listitem>
+            <para>This option sets the interval, in seconds, that olsrd will
+            check the configured interfaces for changes in configuration.
+            Defaults to <replaceable>2.5</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Pollrate</option>
+          <replaceable>0.1</replaceable>-<replaceable>10.0</replaceable></term>
+
+          <listitem>
+            <para>This option sets the sleep interval, in seconds. While
+            polling the interfaces, the olsrd scheduler will sleep for this
+            time if no packets are to be received. If the value is set too
+            high for the current UDP receive buffer size, packet loss will
+            occur. Note, that the current olsrd implementation internally
+            calculates timing values in milliseconds (1/1000s). Defaults to
+            <replaceable>0.1</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>RtProto</option>
+          <replaceable>0</replaceable>-<replaceable>255</replaceable></term>
+
+          <listitem>
+            <para>This setting configures the routing protocol ID to be used
+            when setting routes via rtnetlink, see RTNETLINK(7) for the
+            <emphasis>rtm_protocol</emphasis> keyword. Defaults to
+            <replaceable>3</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>RtTableDefault</option>
+          <replaceable>0</replaceable>|<replaceable>1</replaceable>-<replaceable>254</replaceable></term>
+
+          <listitem>
+            <para>Defines the routing table for inserting a new default route.
+            Defaults to <replaceable>0</replaceable> (use
+            <option>RtTable</option>)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>RtTable</option>
+          <replaceable>1</replaceable>-<replaceable>254</replaceable></term>
+
+          <listitem>
+            <para>With Linux and BSD, more than one routing table exist in the
+            system. Together with a rules set that determines which table
+            handles what packets, these system functions are called
+            <quote>iproute2</quote> or <quote>Policy Routing</quote>. You may
+            want to read the <ulink url="http://lartc.org/">Linux Advanced
+            Routing &amp; Traffic Control</ulink> for details. Defaults to
+            <replaceable>254</replaceable> (or <quote>main</quote>, see
+            <filename>/etc/iproute2/rt_tables</filename>)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>TcRedundancy</option>
+          <replaceable>0</replaceable>|<replaceable>1</replaceable>|<replaceable>2</replaceable></term>
+
+          <listitem>
+            <para>This value controls the TC redundancy used by the local node
+            in TC message generation. To enable a more robust understanding of
+            the topology, nodes can be set to announce more than just their
+            MPR selector set in TC messages. If set to
+            <replaceable>0</replaceable>, the advertised link set of the node
+            is limited to the MPR selectors. If set to
+            <replaceable>1</replaceable>, the advertised link set of the node
+            is the union of its MPR set and its MPR selector set. If set to
+            <replaceable>2</replaceable>, the advertised link set of the node
+            is the full symmetric neighbor set of the node. Defaults to
+            <replaceable>0</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>TosValue</option>
+          <replaceable>0</replaceable>-<replaceable>16</replaceable></term>
+
+          <listitem>
+            <para>This value controls the type of service value to set in the
+            IP header of OLSR control traffic. Defaults to
+            <replaceable>16</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Willingness</option>
+          <replaceable>0</replaceable>-<replaceable>7</replaceable></term>
+
+          <listitem>
+            <para>Nodes participating in an OLSR routed network will announce
+            their willingness to act as relays for OLSR control traffic for
+            their neighbors (MPR). This option specifies a fixed willingness
+            value to be announced by the local node.
+            <replaceable>4</replaceable> is a neutral option here, while
+            <replaceable>0</replaceable> specifies that this node will never
+            act as a relay, and <replaceable>7</replaceable> specifies that
+            this node will always act as such a relay. If this option is unset
+            in the configuration file, then olsrd will try to retrieve
+            information about the system power and dynamically update
+            willingness according to this info. If no such info can be
+            retrieved willingness is set to
+            <replaceable>4</replaceable>.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>Option Blocks</title>
+
+      <para>Option blocks are configuration options that holds a body of
+      sub-options encapsulated in curled braces <quote>{...}</quote>. Valid
+      options are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>IpcConnect { <replaceable>sub-options</replaceable>
+          }</option></term>
+
+          <listitem>
+            <para>Olsrd can allow processes to make a TCP connection to itself
+            on which data regarding the topology will be transmitted. This is
+            typically used by GUI applications to provide a user-friendly
+            front-end to olsrd. This option block controls the IPC access. Sub
+            options are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><option>MaxConnections</option>
+                <replaceable>0</replaceable>-<replaceable>5</replaceable></term>
+
+                <listitem>
+                  <para>This option specifies how many connections that can
+                  exist simultaneously. Multiple connections have not been
+                  tested, and probably do not work! This option should only be
+                  used to control whether or not processes can connect to
+                  olsrd by setting it either to <replaceable>0</replaceable>,
+                  which will tell olsrd not to allow any connections, or by
+                  setting it to a positive value. Defaults to
+                  <replaceable>0</replaceable>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Host</option>
+                <replaceable>ipaddr</replaceable></term>
+
+                <listitem>
+                  <para>This option specifies a single host that is allowed to
+                  connect to olsrd. By default only the loopback address
+                  (127.0.0.1) is allowed to access. If you want to be able to
+                  connect from another host, you should add that IP address.
+                  You may add multiple hosts.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Net</option> <replaceable>ipaddr</replaceable>
+                <replaceable>netmask</replaceable>|<replaceable>prefix</replaceable></term>
+
+                <listitem>
+                  <para>You can specify a net range of IP addresses which
+                  olsrd will allow TCP connections from. Besides the IP
+                  address, you need to specify a netmask for IPv4 and a prefix
+                  for IPv6. You may add multiple networks.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Hna4 { <replaceable>sub-options</replaceable>
+          }</option></term>
+
+          <listitem>
+            <para>Hosts in a routed network can announce connectivity to
+            external networks or hosts using HNA messages. This option block
+            is used to set the IPv4 networks or hosts to be announced. Sub
+            options are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><replaceable>IPv4-address</replaceable>
+                <replaceable>IPv4-netmask</replaceable></term>
+
+                <listitem>
+                  <para>Specifies an IPv4 network or host to be announced via
+                  HNA messages. Multiple entries can be added. To announce
+                  Internet connectivity, add
+                  <replaceable>0.0.0.0</replaceable>
+                  <replaceable>0.0.0.0</replaceable>. To announce a single
+                  host, add <replaceable>ipaddr</replaceable>
+                  <replaceable>255.255.255.255</replaceable>.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Hna6 { <replaceable>sub-options</replaceable>
+          }</option></term>
+
+          <listitem>
+            <para>Hosts in a routed network can announce connectivity to
+            external networks or hosts using HNA messages. This option block
+            is used to set the IPv6 networks or hosts to be announced. Sub
+            options are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><replaceable>IPv6-address</replaceable> 0-48</term>
+
+                <listitem>
+                  <para>Specifies an IPv6 network or host to be announced via
+                  HNA messages. Multiple entries can be added. To announce
+                  Internet connectivity, add <replaceable>::</replaceable>
+                  <replaceable>0</replaceable> . To announce a single host,
+                  add <replaceable>ipaddr</replaceable>
+                  <replaceable>48</replaceable>.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>LoadPlugin
+          "<replaceable>plugin-filename</replaceable>" {
+          <replaceable>sub-options</replaceable> }</option></term>
+
+          <listitem>
+            <para>Specifies a plugin that olsrd should load at startup. You
+            need to specify the filename for the shared object file
+            (<filename>*.so</filename> on Linux and <filename>*.dll</filename>
+            on Windows). Read the <filename>README</filename> in the plugin's
+            source directory<!-- or refer the <xref
+            endterm="olsrd_conf_5_plugins-title"
+            linkend="olsrd_conf_5_plugins" /> section below-->. This option
+            block can be repeated to add multiple plugins. Sub options
+            are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><option>PlParam</option>
+                "<replaceable>key</replaceable>"
+                <replaceable>value</replaceable></term>
+
+                <listitem>
+                  <para>Sends a pair of parameters to the plugin at
+                  initialization. Consult individual plugin documentation for
+                  possible parameters.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Interface "<replaceable>interface1</replaceable>"
+          "<replaceable>interface2...</replaceable>" {
+          <replaceable>sub-options</replaceable> }</option></term>
+
+          <listitem>
+            <para>This option block specifies one or more network interfaces
+            on which olsrd should run. At least one network interface block
+            must be specified for olsrd to run. Various parameters can be
+            specified on individual interfaces or groups of interfaces. This
+            option block can be repeated to add multiple interface
+            configurations. Sub options are:</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><option>AutoDetectChanges</option>
+                <replaceable>yes</replaceable>|<replaceable>no</replaceable></term>
+
+                <listitem>
+                  <para>Olsrd can auto detect changes in interface
+                  configurations by polling on the interval set by
+                  <option>NicChgsPollInt</option>. This is enabled by default
+                  but can be turned off per interface to save CPU
+                  cycles.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Ip4Broadcast</option>
+                <replaceable>IPv4-address</replaceable></term>
+
+                <listitem>
+                  <para>Forces the given IPv4 broadcast address to be used as
+                  destination address for all outgoing OLSR traffic on the
+                  interface. If your mesh uses several IP address ranges, the
+                  global broadcast address
+                  <replaceable>255.255.255.255</replaceable> can be used. If
+                  you use a point-to-point link (e.g. a tun-type VPN tunnel),
+                  you may configure the neighbours IP address. If this option
+                  is unset, the broadcast address of the interface will be
+                  used. In this case, the broadcast address will be updated
+                  during run-time if a change is detected.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Ip6AddrType</option>
+                <replaceable>site-local</replaceable>|<replaceable>unique-local</replaceable>|<replaceable>global</replaceable></term>
+
+                <listitem>
+                  <para>This option sets the IPv6 address type to be used for
+                  interface address detection. Defaults to
+                  <replaceable>site-local</replaceable>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Ip6MulticastSite</option>
+                <replaceable>IPv6-address</replaceable></term>
+
+                <listitem>
+                  <para>If <option>Ip6AddrType</option> is set to
+                  <replaceable>site-local</replaceable>, this setting forces
+                  the given IPv6 broadcast address to be used as destination
+                  address for all outgoing OLSR traffic on the interface.
+                  .</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Ip6MulticastGlobal</option>
+                <replaceable>IPv6-address</replaceable></term>
+
+                <listitem>
+                  <para>If <option>Ip6AddrType</option> is set to
+                  <replaceable>global</replaceable>, this setting forces the
+                  given IPv6 broadcast address to be used as destination
+                  address for all outgoing OLSR traffic on the interface.
+                  .</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>HelloInterval</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the interval on which HELLO (RFC-mode) or
+                  LQ_HELLO (LQ/ETX-mode) messages will be generated and
+                  transmitted on the interface. Note, that HELLO messages are
+                  used to detect neighbours and determine symmetric
+                  (bi-directional) links. These messages also include the
+                  current neighbour information and always have a TTL of 1
+                  which prevents any forwarding.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>HelloValidityTime</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the validity time to be announced in HELLO or
+                  LQ_HELLO messages transmitted on the interface. This value
+                  must be larger than <option>HelloInterval</option>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>TcInterval</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the interval on which TC (RFC-mode) or LQ_TC
+                  (LQ/ETX-mode) messages will be generated and transmitted on
+                  the interface. Note, that TC (Topology Control) messages are
+                  use to spread topology information. These messages also
+                  include the current neighbour information and normally have
+                  a TTL larger than 1 to spread them in the mesh network. TC
+                  or LQ_TC messages may be forwarded delayed to support packet
+                  aggregation. If the <option>LinkQualityFishEye</option>
+                  option is enabled, the TTL for these messages is varied to
+                  faster distribute topology information in the near
+                  neighbourhood.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>TcValidityTime</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the validity time to be announced in TC or LQ_TC
+                  messages transmitted on the interface. This value must be
+                  larger than <option>TcInterval</option>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>MidInterval</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the interval on which MID messages will be
+                  generated and transmitted on the interface. Note, that MID
+                  messages spread alias information and will be emitted only
+                  by nodes with more than one olsrd interface.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>MidValidityTime</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the validity time to be announced in MID messages
+                  transmitted on the interface. This value must be larger than
+                  <option>MidInterval</option>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>HnaInterval</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the interval on which HNA messages will be
+                  generated and transmitted on the interface. Note, that HNA
+                  messages spread gateway information and will be emitted only
+                  by nodes for which the <option>Hna4</option> or
+                  <option>Hna6</option> option is configured.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>HnaValidityTime</option>
+                <replaceable>0.0</replaceable>-<replaceable>3968.0</replaceable></term>
+
+                <listitem>
+                  <para>Sets the validity time to be announced in HNA messages
+                  transmitted on the interface. This value must be larger than
+                  <option>HnaInterval</option>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>Weight</option>
+                <replaceable>0</replaceable>-<replaceable>[maxint]</replaceable></term>
+
+                <listitem>
+                  <para>When multiple links exist between hosts, the
+                  <emphasis>weight</emphasis> of the interface is used to
+                  determine the link to route by. Normally the
+                  <emphasis>weight</emphasis> is automatically calculated by
+                  olsrd based on the characteristics of the interface, but
+                  here you can specify a fixed value. Olsrd will choose links
+                  with the lowest <emphasis>weight</emphasis> value.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>LinkQualityMult</option>
+                <replaceable>default</replaceable>|<replaceable>neighbour-ipaddr</replaceable>
+                <replaceable>0.1</replaceable>-<replaceable>1.0</replaceable></term>
+
+                <listitem>
+                  <para>When using olsrd in LQ/ETX-mode, the neighbour link
+                  cost is calculated based on packet loss or hello message
+                  loss (see <option>LinkQualityAlgorithm</option> option).
+                  Because the applied measurement may not reflect the
+                  real-live connection quality and link speed, this setting
+                  allows you to manually fine-tune the measurement results.
+                  You can add one or more <option>LinkQualityMult</option>
+                  options and correlate the IP address of a neighbour with a
+                  multiplication factor. This setting only allows you to
+                  determine bad links, e.g. a factor of
+                  <replaceable>0.5</replaceable> basically says: <quote>this
+                  link is only half as good as the packet loss may
+                  indicate</quote>. For this reason, the
+                  <replaceable>default</replaceable> keyword can be used to
+                  lower all ETX/LQ values with a lower factor. You then define
+                  better links by adding further entries with known IP
+                  addresses and a higher factor.</para>
+
+                  <para><emphasis role="strong">Note</emphasis>: While
+                  switching routes generally is not harmful, people tend to
+                  fiddle with the <option>LinkQualityMult</option> setting
+                  only because their automatically selected Internet gateway
+                  changes. This is a bad habit, because it disturbs the ETX/LQ
+                  measurement and leads to sub-optimal routes. Try using the
+                  <option>NatThreshold</option> option instead. Another option
+                  is manual gateway selection either by automatic tunneling or
+                  by using a VPN technique.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <!--refsect1 id="olsrd_conf_5_plugins">
+      <title id="olsrd_conf_5_plugins-title">Plugins</title>
+
+      <para>tbd...</para>
+    </refsect1-->
+
+    <refsect1>
+      <title>Misc</title>
+
+      <para>The homepage of olsrd is <ulink
+      url="http://www.olsr.org">http://www.olsr.org</ulink></para>
+    </refsect1>
+
+    <refsect1>
+      <title>Files</title>
+
+      <para><filename>/etc/olsrd.conf</filename></para>
+    </refsect1>
+
+    <refsect1>
+      <title>See Also</title>
+
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
+      </simplelist>
+    </refsect1>
+  </refentry>
+
+  <refentry id="olsr_switch_8">
+    <indexterm>
+      <primary><command>olsr_switch</command></primary>
+    </indexterm>
+
+    <refentryinfo>
+      <titleabbrev>Olsrd Network Simulator</titleabbrev>
+    </refentryinfo>
+
+    <refmeta>
+      <refentrytitle id="olsr_switch_8-title">olsr_switch</refentrytitle>
+
+      <manvolnum>8</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+      <refname>olsr_switch</refname>
+
+      <refpurpose>olsrd network simulator</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+      <cmdsynopsis>
+        <command>olsr_switch</command>
+
+        <arg>-foo <replaceable>foo</replaceable></arg>
+
+        <arg>-bar <replaceable>bar</replaceable></arg>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+      <title>Description</title>
+
+      <para><command>olsr_switch</command> is an implementation of the
+      Optimized Link State Routing protocol for Mobile Ad-Hoc networks
+      (MANET). The protocol is described in RFC3626. It is designed to be run
+      as a standalone server process - but as it is still in an experimental
+      stage most users will prefer running it with some debug output which is
+      directed to STDOUT.</para>
+
+      <para>This manual page only lists the command line arguments. For
+      details of the configuration file see the comments included in
+      <filename>/etc/olsrd.conf</filename>. Note that none of these options
+      need to be set at the command line - all these options and others can be
+      set in the configuration file.</para>
+
+      <para>The homepage of olsrd is <ulink
+      url="http://www.olsr.org">http://www.olsr.org</ulink></para>
+    </refsect1>
+
+    <refsect1>
+      <title>Options</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-foo <replaceable>foo</replaceable></option></term>
+
+          <listitem>
+            <para>This option specifies on what network interfaces olsrd
+            should run. These interfaces cannot be aliased interfaces such as
+            eth0:1.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-bar <replaceable>bar</replaceable></option></term>
+
+          <listitem>
+            <para>This option overrides the default configuration file path
+            used by olsrd - <filename>/etc/olsrd.conf</filename></para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>Files</title>
+
+      <para><filename>/etc/olsrd.conf</filename></para>
+    </refsect1>
+
+    <refsect1>
+      <title>See also</title>
+
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
+
+        <member><xref endterm="olsrd_conf_5-title"
+        linkend="olsrd_conf_5" /></member>
+      </simplelist>
+    </refsect1>
+  </refentry>
 </article>
