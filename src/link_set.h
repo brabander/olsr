@@ -79,7 +79,8 @@ struct link_entry {
   /* cost of this link */
   olsr_linkcost linkcost;
 
-  struct list_node link_list;	       /* double linked list of all link entries */
+  struct tc_edge_entry *link_tc_edge;   /* shortcut to corresponding tc-edge */
+  struct list_node link_list;	        /* double linked list of all link entries */
 };
 
 /* inline to recast from link_list back to link_entry */
@@ -122,7 +123,7 @@ struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
 
 struct link_entry *update_link_entry(const union olsr_ip_addr *,
 				     const union olsr_ip_addr *,
-				     const struct lq_hello_message *,
+				     struct lq_hello_message *,
 				     struct interface *);
 
 int EXPORT(check_neighbor_link)(const union olsr_ip_addr *);

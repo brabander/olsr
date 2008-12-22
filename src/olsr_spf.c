@@ -373,45 +373,19 @@ olsr_calculate_routing_table (void)
   olsr_spf_add_cand_tree(&cand_tree, tc_myself);
 
   /*
-   * add edges to and from our neighbours.
+   * Set the next-hops of our neighbor link.
    */
-  OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
+  OLSR_FOR_ALL_LINK_ENTRIES(link) {
+
+    neigh = link->neighbor;
+    tc_edge = link->link_tc_edge;
 
     if (neigh->status == SYM) {
-
-      tc_edge = olsr_lookup_tc_edge(tc_myself, &neigh->neighbor_main_addr);
-      link = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-      if (!link) {
-
-        /*
-         * If there is no best link to this neighbor
-         * and we had an edge before then flush the edge.
-         */
-        if (tc_edge) {
-          olsr_delete_tc_edge_entry(tc_edge);
-        }
-        continue;
-      }
-
-      /*
-       * Set the next-hops of our neighbors.
-       */
-      if (!tc_edge) {
-        tc_edge = olsr_add_tc_edge_entry(tc_myself, &neigh->neighbor_main_addr,
-                                         0);
-      } else {
-
-        /*
-         * Update LQ and timers, such that the edge does not get deleted.
-         */
-        olsr_copylq_link_entry_2_tc_edge_entry(tc_edge, link);
-        olsr_calc_tc_edge_entry_etx(tc_edge);
-      }
       if (tc_edge->edge_inv) {
         tc_edge->edge_inv->tc->next_hop = link;
       }
     }
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);

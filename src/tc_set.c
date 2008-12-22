@@ -394,8 +394,11 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 
   /*
    * Insert into the edge tree.
+   * Expectation is to have only one tc_edge per tc pair.
+   * However we need duplicate key support for the case of local
+   * parallel links where we add one tc_edge per link_entry.
    */
-  avl_insert(&tc->edge_tree, &tc_edge->edge_node, AVL_DUP_NO);
+  avl_insert(&tc->edge_tree, &tc_edge->edge_node, AVL_DUP);
   olsr_lock_tc_entry(tc);
 
   /*

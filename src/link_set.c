@@ -77,7 +77,7 @@ static int check_link_status(const struct lq_hello_message *message,
                              const struct interface *in_if);
 static struct link_entry *add_link_entry(const union olsr_ip_addr *,
 					 const union olsr_ip_addr *,
-					 const union olsr_ip_addr *, olsr_reltime,
+					 union olsr_ip_addr *, olsr_reltime,
 					 olsr_reltime, struct interface *);
 static int get_neighbor_status(const union olsr_ip_addr *);
 
@@ -281,6 +281,12 @@ olsr_delete_link_entry(struct link_entry *link)
 {
 
   /*
+   * Delete the corresponding tc-edge for that link.
+   */
+  olsr_delete_tc_edge_entry(link->link_tc_edge);
+  link->link_tc_edge = NULL;
+
+  /*
    * Delete the rt_path for the link-end.
    */
   olsr_delete_routing_table(&link->neighbor_iface_addr, olsr_cnf->maxplen,
@@ -422,12 +428,12 @@ olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
  * @param vtime the validity time of the entry
  * @param htime the HELLO interval of the remote node
  * @param local_if the local interface
- * @return the new link_entry
+ * @return the new (or already existing) link_entry
  */
 static struct link_entry *
 add_link_entry(const union olsr_ip_addr *local,
                const union olsr_ip_addr *remote,
-	       const union olsr_ip_addr *remote_main,
+	       union olsr_ip_addr *remote_main,
 	       olsr_reltime vtime, olsr_reltime htime,
                struct interface *local_if)
 {
@@ -436,6 +442,12 @@ add_link_entry(const union olsr_ip_addr *local,
 
   link = lookup_link_entry(remote, remote_main, local_if);
   if (link) {
+
+    /*
+     * Link exists. Update tc_edge LQ and exit.
+     */
+    olsr_copylq_link_entry_2_tc_edge_entry(link->link_tc_edge, link);
+    changes_neighborhood = olsr_calc_tc_edge_entry_etx(link->link_tc_edge);
     return link;
   }
 
@@ -523,6 +535,12 @@ add_link_entry(const union olsr_ip_addr *local,
   olsr_insert_routing_table(remote, olsr_cnf->maxplen, remote_main,
                             OLSR_RT_ORIGIN_LINK);
 
+  /*
+   * Now create a tc-edge for that link.
+   */
+  link->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, remote_main, 0);
+
+  changes_neighborhood = true;
   return link;
 }
 
@@ -597,7 +615,7 @@ lookup_link_entry(const union olsr_ip_addr *remote,
 struct link_entry *
 update_link_entry(const union olsr_ip_addr *local,
 		  const union olsr_ip_addr *remote,
-		  const struct lq_hello_message *message,
+		  struct lq_hello_message *message,
 		  struct interface *in_if)
 {
   struct link_entry *entry;
