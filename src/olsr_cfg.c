@@ -1217,8 +1217,6 @@ olsr_free_cnf(struct olsrd_config *cnf)
       free(mult);
     }
 
-    remove_interface(&in->interf);
-
     free(in->cnf);
     ind = in;
     in = in->next;

@@ -449,6 +449,7 @@ olsr_shutdown(void)
 {
   struct tc_entry *tc;
   struct mid_entry *mid;
+  struct olsr_if *iface;
 
   olsr_delete_all_kernel_routes();
 
@@ -474,6 +475,11 @@ olsr_shutdown(void)
 
   /* Closing plug-ins */
   olsr_close_plugins();
+  
+  /* Remove active interfaces */
+  for (iface = olsr_cnf->interfaces; iface != NULL; iface = iface->next) {
+    remove_interface(&iface->interf);
+  }
 
   /* Reset network settings */
   restore_settings(olsr_cnf->ip_version);
