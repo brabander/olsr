@@ -699,7 +699,7 @@ int chk_if_changed(struct olsr_if *IntConf)
 
   if (GetIntInfo(&Info, IntConf->name) < 0)
   {
-    remove_interface(IntConf);
+    remove_interface(&IntConf->interf);
     return 1;
   }
 

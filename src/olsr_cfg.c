@@ -297,6 +297,43 @@ get_default_if_config(void)
   return io;
 }
 
+/**
+ * Create a new interf_name struct using a given
+ * name and insert it into the interface list.
+ *
+ * @param name the name of the interface.
+ * @return nada
+ */
+static struct olsr_if *
+queue_if(const char *name, int hemu)
+{
+  struct olsr_if *tmp;
+
+  //printf("Adding interface %s\n", name);
+
+  /* check if the inerfaces already exists */
+  for (tmp = olsr_cnf->interfaces; tmp != NULL; tmp = tmp->next) {
+    if (strcmp(tmp->name, name) == 0) {
+      fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
+      return NULL;
+    }
+  }
+
+  tmp = olsr_malloc(sizeof(*tmp), "queue interface");
+
+  tmp->name = olsr_malloc(strlen(name) + 1, "queue interface name");
+  strcpy(tmp->name, name);
+  tmp->cnf = NULL;
+  tmp->interf = NULL;
+
+  tmp->host_emul = hemu ? true : false;
+
+  tmp->next = olsr_cnf->interfaces;
+  olsr_cnf->interfaces = tmp;
+
+  return tmp;
+}
+
 /*
  * Parses command line options using the getopt() runtime
  * function. May also replace a "-f filename" combination
@@ -1180,7 +1217,7 @@ olsr_free_cnf(struct olsrd_config *cnf)
       free(mult);
     }
 
-    remove_interface(in);
+    remove_interface(&in->interf);
 
     free(in->cnf);
     ind = in;

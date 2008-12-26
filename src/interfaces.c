@@ -174,18 +174,17 @@ check_interface_updates(void *foo __attribute__((unused)))
  * Remove and cleanup a physical interface.
  */
 void
-remove_interface(struct olsr_if *iface)
+remove_interface(struct interface **pinterf)
 {
-  struct interface *ifp;
+  struct interface *ifp = *pinterf;
   struct ipaddr_str buf;
 
-  OLSR_PRINTF(1, "Removing interface %s\n", iface->name);
-  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", iface->name);
-
-  ifp = iface->interf;
   if (!ifp) {
     return;
   }
+  
+  OLSR_PRINTF(1, "Removing interface %s\n", ifp->int_name);
+  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", ifp->int_name);
 
   olsr_delete_link_entry_by_if(ifp);
 
@@ -232,8 +231,8 @@ remove_interface(struct olsr_if *iface)
   /*
    * Unlink from config.
    */
-  unlock_interface(iface->interf);
-  iface->interf = NULL;
+  unlock_interface(*pinterf);
+  *pinterf = NULL;
 
   /* Close olsr socket */
   remove_olsr_socket(ifp->olsr_socket, &olsr_input, NULL);
@@ -416,43 +415,6 @@ unlock_interface(struct interface *ifp)
   olsr_cookie_free(interface_mem_cookie, ifp);
 }
 
-
-/**
- * Create a new interf_name struct using a given
- * name and insert it into the interface list.
- *
- * @param name the name of the interface.
- * @return nada
- */
-struct olsr_if *
-queue_if(const char *name, int hemu)
-{
-  struct olsr_if *tmp;
-
-  //printf("Adding interface %s\n", name);
-
-  /* check if the inerfaces already exists */
-  for (tmp = olsr_cnf->interfaces; tmp != NULL; tmp = tmp->next) {
-    if (strcmp(tmp->name, name) == 0) {
-      fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
-      return NULL;
-    }
-  }
-
-  tmp = olsr_malloc(sizeof(*tmp), "queue interface");
-
-  tmp->name = olsr_malloc(strlen(name) + 1, "queue interface name");
-  strcpy(tmp->name, name);
-  tmp->cnf = NULL;
-  tmp->interf = NULL;
-
-  tmp->host_emul = hemu ? true : false;
-
-  tmp->next = olsr_cnf->interfaces;
-  olsr_cnf->interfaces = tmp;
-
-  return tmp;
-}
 
 /**
  * Add an ifchange function. These functions are called on all (non-initial)

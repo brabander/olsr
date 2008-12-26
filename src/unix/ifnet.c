@@ -72,8 +72,6 @@
 
 #define BUFSPACE  (127*1024)	/* max. input buffer size to request */
 
-void remove_interface(struct olsr_if *);
-
 #if 0
 int
 set_flag(char *ifname, short flag __attribute__((unused)))
@@ -134,7 +132,7 @@ chk_if_changed(struct olsr_if *iface)
   /* Get flags (and check if interface exists) */
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
     OLSR_PRINTF(3, "No such interface: %s\n", iface->name);
-    remove_interface(iface);
+    remove_interface(&iface->interf);
     return 0;
   }
   ifp->int_flags = ifr.ifr_flags;
@@ -144,7 +142,7 @@ chk_if_changed(struct olsr_if *iface)
    */
   if ((ifp->int_flags & IFF_UP) == 0) {
     OLSR_PRINTF(1, "\tInterface %s not up - removing it...\n", iface->name);
-    remove_interface(iface);
+    remove_interface(&iface->interf);
     return 0;
   }
 
@@ -159,13 +157,13 @@ chk_if_changed(struct olsr_if *iface)
       !iface->cnf->ipv4_broadcast.v4.s_addr && /* Skip if fixed bcast */
       ((ifp->int_flags & IFF_BROADCAST)) == 0) {
     OLSR_PRINTF(3, "\tNo broadcast - removing\n");
-    remove_interface(iface);
+    remove_interface(&iface->interf);
     return 0;
   }
 
   if (ifp->int_flags & IFF_LOOPBACK) {
     OLSR_PRINTF(3, "\tThis is a loopback interface - removing it...\n");
-    remove_interface(iface);
+    remove_interface(&iface->interf);
     return 0;
   }
 
@@ -211,7 +209,7 @@ chk_if_changed(struct olsr_if *iface)
          OLSR_PRINTF(1, "\tCould not find global IPv6 address for %s\n", ifr.ifr_name);
       else
          OLSR_PRINTF(1, "\tCould not find an IPv6 address for %s\n", ifr.ifr_name);
-      remove_interface(iface);
+      remove_interface(&iface->interf);
       return 0;
     }
 
@@ -243,7 +241,7 @@ chk_if_changed(struct olsr_if *iface)
     /* Check interface address (IPv4)*/
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFADDR, &ifr) < 0) {
       OLSR_PRINTF(1, "\tCould not get address of interface - removing it\n");
-      remove_interface(iface);
+      remove_interface(&iface->interf);
       return 0;
     }
 
@@ -272,7 +270,7 @@ chk_if_changed(struct olsr_if *iface)
     /* Check netmask */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
       olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
-      remove_interface(iface);
+      remove_interface(&iface->interf);
       return 0;
     }
 
@@ -295,7 +293,7 @@ chk_if_changed(struct olsr_if *iface)
       /* Check broadcast address */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
 	olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
- 	remove_interface(iface);
+ 	remove_interface(&iface->interf);
         return 0;
       }
 
