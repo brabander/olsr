@@ -257,44 +257,32 @@ parse_tok(const char *s, const char **snext)
 }
 
 /*
- * Returns default interface config
+ * Returns default interface options
  */
 static struct if_config_options *
-get_default_if_config(void)
+get_default_if_config_options(void)
 {
-  struct in6_addr in6;
-  struct if_config_options *io = olsr_malloc(sizeof(*io), "default_if_config");
+  struct if_config_options *new_io = olsr_malloc(sizeof(*new_io), "default_if_config");
 
-  /*
-   * olsr_malloc uses calloc(), no memset necessary
-   * memset(io, 0, sizeof(*io));
-   */
+  /* No memset because olsr_malloc uses calloc() */
+  /* memset(&new_io->ipv4_broadcast, 0, sizeof(new_io->ipv4_broadcast)); */
+  new_io->ipv6_addrtype = OLSR_IP6T_AUTO;
+  inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &new_io->ipv6_multi_site.v6);
+  inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &new_io->ipv6_multi_glbl.v6);
+  /* new_io->weight.fixed = false; */
+  /* new_io->weight.value = 0; */
+  new_io->hello_params.emission_interval = HELLO_INTERVAL;
+  new_io->hello_params.validity_time = NEIGHB_HOLD_TIME;
+  new_io->tc_params.emission_interval = TC_INTERVAL;
+  new_io->tc_params.validity_time = TOP_HOLD_TIME;
+  new_io->mid_params.emission_interval = MID_INTERVAL;
+  new_io->mid_params.validity_time = MID_HOLD_TIME;
+  new_io->hna_params.emission_interval = HNA_INTERVAL;
+  new_io->hna_params.validity_time = HNA_HOLD_TIME;
+  /* new_io->lq_mult = NULL; */
+  new_io->autodetect_chg = true;
 
-  io->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
-
-  inet_pton(AF_INET6, OLSR_IPV6_MCAST_SITE_LOCAL, &in6);
-  io->ipv6_multi_site.v6 = in6;
-
-  inet_pton(AF_INET6, OLSR_IPV6_MCAST_GLOBAL, &in6);
-  io->ipv6_multi_glbl.v6 = in6;
-
-  io->lq_mult = NULL;
-
-  io->weight.fixed = false;
-  io->weight.value = 0;
-
-  io->ipv6_addrtype = OLSR_IP6T_AUTO;
-
-  io->hello_params.emission_interval = HELLO_INTERVAL;
-  io->hello_params.validity_time = NEIGHB_HOLD_TIME;
-  io->tc_params.emission_interval = TC_INTERVAL;
-  io->tc_params.validity_time = TOP_HOLD_TIME;
-  io->mid_params.emission_interval = MID_INTERVAL;
-  io->mid_params.validity_time = MID_HOLD_TIME;
-  io->hna_params.emission_interval = HNA_INTERVAL;
-  io->hna_params.validity_time = HNA_HOLD_TIME;
-  io->autodetect_chg = true;
-  return io;
+  return new_io;
 }
 
 /**
@@ -302,36 +290,31 @@ get_default_if_config(void)
  * name and insert it into the interface list.
  *
  * @param name the name of the interface.
- * @return nada
  */
 static struct olsr_if *
-queue_if(const char *name, int hemu)
+queue_if(const char *name)
 {
-  struct olsr_if *tmp;
+  struct olsr_if *new_if;
 
-  //printf("Adding interface %s\n", name);
-
-  /* check if the inerfaces already exists */
-  for (tmp = olsr_cnf->interfaces; tmp != NULL; tmp = tmp->next) {
-    if (strcmp(tmp->name, name) == 0) {
+  /* check if the interface already exists */
+  for (new_if = olsr_cnf->interfaces; new_if != NULL; new_if = new_if->next) {
+    if (0 == strcmp(new_if->name, name)) {
       fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
       return NULL;
     }
   }
 
-  tmp = olsr_malloc(sizeof(*tmp), "queue interface");
+  new_if = olsr_malloc(sizeof(*new_if), "queue interface");
+  new_if->name = olsr_strdup(name);
+  /* new_if->config = NULL; */
+  /* new_if->host_emul = false; */
+  /* memset(&new_if->hemu_ip, 0, sizeof(new_if->hemu_ip)); */
+  /* new_if->interf = NULL; */
+  new_if->cnf = get_default_if_config_options();
+  new_if->next = olsr_cnf->interfaces;
+  olsr_cnf->interfaces = new_if;
 
-  tmp->name = olsr_malloc(strlen(name) + 1, "queue interface name");
-  strcpy(tmp->name, name);
-  tmp->cnf = NULL;
-  tmp->interf = NULL;
-
-  tmp->host_emul = hemu ? true : false;
-
-  tmp->next = olsr_cnf->interfaces;
-  olsr_cnf->interfaces = tmp;
-
-  return tmp;
+  return new_if;
 }
 
 /*
@@ -524,7 +507,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     case 'H':                  /* hemu (ip4) */
       {
         union olsr_ip_addr ipaddr;
-        struct olsr_if *ifa;
+        struct olsr_if *new_if;
 
         if (inet_pton(AF_INET, optarg, &ipaddr) <= 0) {
           fprintf(stderr, "Failed converting IP address %s\n", optarg);
@@ -532,12 +515,11 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
         }
 
         /* Add hemu interface */
-        if (NULL != (ifa = queue_if("hcif01", true))) {
-          ifa->cnf = get_default_if_config();
-          ifa->host_emul = true;
-          ifa->hemu_ip = ipaddr;
+        if (NULL != (new_if = queue_if("hcif01"))) {
+          new_if->host_emul = true;
+          new_if->hemu_ip = ipaddr;
           olsr_cnf->host_emul = true;
-          PARSER_DEBUG_PRINTF("host_emul with %s\n", olsr_ip_to_string(&buf, &ifa->hemu_ip));
+          PARSER_DEBUG_PRINTF("host_emul with %s\n", olsr_ip_to_string(&buf, &new_if->hemu_ip));
         }
         PARSER_DEBUG_PRINTF("host_emul set to %d\n", olsr_cnf->host_emul);
       }
@@ -675,90 +657,86 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
           char **p = tok;
           while (p[0]) {
             char **p_next = tok_next;
-            struct olsr_if *ifs = olsr_malloc(sizeof(*ifs), "new if");
-            ifs->cnf = get_default_if_config();
-            ifs->name = olsr_strdup(p[0]);
-            ifs->next = olsr_cnf->interfaces;
-            olsr_cnf->interfaces = ifs;
-            PARSER_DEBUG_PRINTF("Interface %s\n", ifs->name);
-            while (p_next[0]) {
+            struct olsr_if *new_if = queue_if(p[0]);
+            PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
+            while (new_if && p_next[0]) {
               if (!p_next[1]) {
                 fprintf(stderr, "Odd args in %s\n", optarg_next);
                 exit(EXIT_FAILURE);
               }
               if (0 == strcmp("AutoDetectChanges", p_next[0])) {
-                ifs->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
-                PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", ifs->cnf->autodetect_chg);
+                new_if->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
+                PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
               } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
                   exit(EXIT_FAILURE);
                 }
-                ifs->cnf->ipv4_broadcast = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, ifs->cnf->ipv4_broadcast.v4));
+                new_if->cnf->ipv4_broadcast = ipaddr;
+                PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, new_if->cnf->ipv4_broadcast.v4));
               } else if (0 == strcmp("Ip6AddrType", p_next[0])) {
                 if (0 == strcmp("site-local", p_next[1])) {
-                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
+                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
                 } else if (0 == strcmp("unique-local", p_next[1])) {
-                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
+                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
                 } else if (0 == strcmp("global", p_next[1])) {
-                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
+                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
                 } else {
-                  ifs->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
+                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
                 }
-                PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", ifs->cnf->ipv6_addrtype);
+                PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", new_if->cnf->ipv6_addrtype);
               } else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
                   exit(EXIT_FAILURE);
                 }
-                ifs->cnf->ipv6_multi_site = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &ifs->cnf->ipv6_multi_site.v6));
+                new_if->cnf->ipv6_multi_site = ipaddr;
+                PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_site.v6));
               } else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
                 union olsr_ip_addr ipaddr;
                 if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
                   fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
                   exit(EXIT_FAILURE);
                 }
-                ifs->cnf->ipv6_multi_glbl = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &ifs->cnf->ipv6_multi_glbl.v6));
+                new_if->cnf->ipv6_multi_glbl = ipaddr;
+                PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
               } else if (0 == strcmp("HelloInterval", p_next[0])) {
-                ifs->cnf->hello_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->hello_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", ifs->cnf->hello_params.emission_interval);
+                new_if->cnf->hello_params.emission_interval = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->hello_params.emission_interval);
+                PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", new_if->cnf->hello_params.emission_interval);
               } else if (0 == strcmp("HelloValidityTime", p_next[0])) {
-                ifs->cnf->hello_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->hello_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", ifs->cnf->hello_params.validity_time);
+                new_if->cnf->hello_params.validity_time = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->hello_params.validity_time);
+                PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", new_if->cnf->hello_params.validity_time);
               } else if (0 == strcmp("TcInterval", p_next[0])) {
-                ifs->cnf->tc_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->tc_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", ifs->cnf->tc_params.emission_interval);
+                new_if->cnf->tc_params.emission_interval = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->tc_params.emission_interval);
+                PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", new_if->cnf->tc_params.emission_interval);
               } else if (0 == strcmp("TcValidityTime", p_next[0])) {
-                ifs->cnf->tc_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->tc_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", ifs->cnf->tc_params.validity_time);
+                new_if->cnf->tc_params.validity_time = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->tc_params.validity_time);
+                PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", new_if->cnf->tc_params.validity_time);
               } else if (0 == strcmp("MidInterval", p_next[0])) {
-                ifs->cnf->mid_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->mid_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", ifs->cnf->mid_params.emission_interval);
+                new_if->cnf->mid_params.emission_interval = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->mid_params.emission_interval);
+                PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", new_if->cnf->mid_params.emission_interval);
               } else if (0 == strcmp("MidValidityTime", p_next[0])) {
-                ifs->cnf->mid_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->mid_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", ifs->cnf->mid_params.validity_time);
+                new_if->cnf->mid_params.validity_time = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->mid_params.validity_time);
+                PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", new_if->cnf->mid_params.validity_time);
               } else if (0 == strcmp("HnaInterval", p_next[0])) {
-                ifs->cnf->hna_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->hna_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", ifs->cnf->hna_params.emission_interval);
+                new_if->cnf->hna_params.emission_interval = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->hna_params.emission_interval);
+                PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", new_if->cnf->hna_params.emission_interval);
               } else if (0 == strcmp("HnaValidityTime", p_next[0])) {
-                ifs->cnf->hna_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &ifs->cnf->hna_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", ifs->cnf->hna_params.validity_time);
+                new_if->cnf->hna_params.validity_time = 0;
+                sscanf(p_next[1], "%f", &new_if->cnf->hna_params.validity_time);
+                PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", new_if->cnf->hna_params.validity_time);
               } else if (0 == strcmp("Weight", p_next[0])) {
-                ifs->cnf->weight.fixed = true;
-                PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", ifs->cnf->weight.value);
+                new_if->cnf->weight.fixed = true;
+                PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
               } else if (0 == strcmp("LinkQualityMult", p_next[0])) {
                 float f;
                 struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
@@ -776,8 +754,8 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
                 f = 0;
                 sscanf(p_next[2], "%f", &f);
                 mult->value = (uint32_t) (f * LINK_LOSS_MULTIPLIER);
-                mult->next = ifs->cnf->lq_mult;
-                ifs->cnf->lq_mult = mult;
+                mult->next = new_if->cnf->lq_mult;
+                new_if->cnf->lq_mult = mult;
                 PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", olsr_ip_to_string(&buf, &mult->addr),
                                     (float)mult->value / LINK_LOSS_MULTIPLIER);
                 p_next++;
@@ -1041,11 +1019,8 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
   }                             /* while getopt_long() */
 
   while (optind < opt_argc) {
-    struct olsr_if *ifs;
     PARSER_DEBUG_PRINTF("new interface %s\n", opt_argv[optind]);
-    if (NULL != (ifs = queue_if(opt_argv[optind++], false))) {
-      ifs->cnf = get_default_if_config();
-    }
+    queue_if(opt_argv[optind++]);
   }
 
   /* Some cleanup */
@@ -1200,7 +1175,7 @@ olsr_free_cnf(struct olsrd_config *cnf)
   struct olsr_lq_mult *mult, *next_mult;
 
   /*
-   * HNAs.
+   * Free HNAs.
    */
   while (h) {
     hd = h;
@@ -1209,7 +1184,7 @@ olsr_free_cnf(struct olsrd_config *cnf)
   }
 
   /*
-   * Interfaces.
+   * Free Interfaces - remove_interface() already called
    */
   while (in) {
     for (mult = in->cnf->lq_mult; mult != NULL; mult = next_mult) {
@@ -1226,7 +1201,7 @@ olsr_free_cnf(struct olsrd_config *cnf)
   }
 
   /*
-   * Plugins.
+   * Free Plugins - olsr_close_plugins() allready called
    */
   while (pe) {
     ped = pe;
