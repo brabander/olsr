@@ -159,7 +159,7 @@ void MyDialog2::Reset(void)
 
 	m_Ipv6Check.SetCheck(FALSE);
 
-	if (Conf->interfaces == NULL)
+	if (Conf->if_configs == NULL)
 	{
 		for (i = 0; i < Interfaces->GetSize(); i++)
 		{
@@ -231,7 +231,7 @@ void MyDialog2::OnEtxCheck()
 int MyDialog2::OpenConfigFile(CString PathName)
 {
 	struct ip_prefix_list *Hna;
-	struct olsr_if *Int, *PrevInt;
+	struct olsr_if_config *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	int NumInt = m_InterfaceList.GetItemCount();
 	int i;
@@ -249,7 +249,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	for (i = 0; i < NumInt; i++)
 		m_InterfaceList.SetCheck(i, FALSE);
 
-	for (Int = Conf->interfaces; Int != NULL; Int = Int->next)
+	for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 	{
 		IntName = Int->name;
 		IntName.MakeUpper();
@@ -261,7 +261,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 		}
 	}
 
-	Int = Conf->interfaces;
+	Int = Conf->if_configs;
 
 	MsgPar = &Int->cnf->hello_params;
 
@@ -343,7 +343,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 
 	PrevInt = NULL;
 
-	for (Int = Conf->interfaces; Int != NULL; Int = Int->next)
+	for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 	{
 		IntName = Int->name;
 
@@ -356,7 +356,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	if (Int != NULL)
 	{
 		if (PrevInt == NULL)
-			Conf->interfaces = Int->next;
+			Conf->if_configs = Int->next;
 
 		else
 			PrevInt->next = Int->next;
@@ -367,11 +367,11 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	return 0;
 }
 
-static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
+static struct olsr_if_config *AddInterface(struct olsr_config **Conf, CString Name)
 {
-	struct olsr_if *Int;
+	struct olsr_if_config *Int;
 
-	Int = (struct olsr_if *)win32_olsrd_malloc(sizeof (struct olsr_if));
+	Int = (struct olsr_if_config *)win32_olsrd_malloc(sizeof (struct olsr_if_config));
 
 	if (Int == NULL)
 	{
@@ -397,15 +397,15 @@ static struct olsr_if *AddInterface(struct olsrd_config **Conf, CString Name)
 
 	Int->cnf = cfgparser_get_default_if_config();
 
-	Int->next = (*Conf)->interfaces;
-	(*Conf)->interfaces = Int;
+	Int->next = (*Conf)->if_configs;
+	(*Conf)->if_configs = Int;
 
 	return Int;
 }
 
 int MyDialog2::SaveConfigFile(CString PathName, int Real)
 {
-	struct olsr_if *Int, *PrevInt;
+	struct olsr_if_config *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	CString Conv;
 	struct ip_prefix_list *Hna, *NewHna, *PrevHna;
@@ -419,7 +419,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	// remove interfaces that we do not want
 	
-	for (Int = Conf->interfaces; Int != NULL; Int = Int->next)
+	for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 	{
 		IntName = Int->name;
 		IntName.MakeUpper();
@@ -434,7 +434,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 				PrevInt->next = Int->next;
 
 			else
-				Conf->interfaces = Int->next;
+				Conf->if_configs = Int->next;
 		}
 	}
 	
@@ -447,7 +447,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 		IntName2 = m_InterfaceList.GetItemText(i, 0).Mid(0, 4);
 
-		for (Int = Conf->interfaces; Int != NULL; Int = Int->next)
+		for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 		{
 			IntName = Int->name;
 			IntName.MakeUpper();
@@ -462,12 +462,12 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	// add dummy interface, if there aren't any real interfaces
 
-	if (Conf->interfaces == NULL && Real != 0)
+	if (Conf->if_configs == NULL && Real != 0)
 		AddInterface(&Conf, "GUI");
 
 	// per-interface settings
 
-	for (Int = Conf->interfaces; Int != NULL; Int = Int->next)
+	for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 	{
 		MsgPar = &Int->cnf->hello_params;
 

@@ -237,7 +237,7 @@ static void
 set_loss_link_multiplier(struct link_entry *entry)
 {
   struct interface *inter;
-  struct olsr_if *cfg_inter;
+  struct olsr_if_config *cfg_inter;
   struct olsr_lq_mult *mult;
   uint32_t val = 0;
 
@@ -245,7 +245,7 @@ set_loss_link_multiplier(struct link_entry *entry)
   inter = if_ifwithaddr(&entry->local_iface_addr);
 
   /* find the interface configuration for the interface */
-  for (cfg_inter = olsr_cnf->interfaces; cfg_inter;
+  for (cfg_inter = olsr_cnf->if_configs; cfg_inter;
        cfg_inter = cfg_inter->next) {
     if (cfg_inter->interf == inter) {
       break;

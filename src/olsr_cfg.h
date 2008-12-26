@@ -122,7 +122,7 @@ struct olsr_if_weight {
   bool fixed;
 };
 
-struct if_config_options {
+struct olsr_if_options {
   union olsr_ip_addr ipv4_broadcast;
   int ipv6_addrtype;
   union olsr_ip_addr ipv6_multi_site;
@@ -136,14 +136,14 @@ struct if_config_options {
   bool autodetect_chg;
 };
 
-struct olsr_if {
+struct olsr_if_config {
   char *name;
   char *config;
   bool host_emul;
   union olsr_ip_addr hemu_ip;
   struct interface *interf;
-  struct if_config_options *cnf;
-  struct olsr_if *next;
+  struct olsr_if_options *cnf;
+  struct olsr_if_config *next;
 };
 
 struct ip_prefix_list {
@@ -173,7 +173,7 @@ typedef enum {
  * The config struct
  */
 
-struct olsrd_config {
+struct olsr_config {
   int ip_version;
   size_t ipsize;                       /* Size of address */
   uint8_t maxplen;                     /* maximum prefix len */
@@ -194,7 +194,7 @@ struct olsrd_config {
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
   struct ip_prefix_list *ipc_nets;
-  struct olsr_if *interfaces;
+  struct olsr_if_config *if_configs;
   uint32_t pollrate;                   /* in microseconds */
   float nic_chgs_pollrate;
   uint8_t tc_redundancy;
@@ -227,15 +227,15 @@ struct olsrd_config {
 /*
  * Global olsrd configuragtion
  */
-extern struct olsrd_config *EXPORT(olsr_cnf);
+extern struct olsr_config *EXPORT(olsr_cnf);
 
 /*
  * Interface to parser
  */
-struct olsrd_config *olsr_parse_cnf(int, char **, const char *);
-int olsr_sanity_check_cnf(struct olsrd_config *);
-void olsr_free_cnf(struct olsrd_config *);
-struct olsrd_config *olsr_get_default_cnf(void);
+struct olsr_config *olsr_parse_cnf(int, char **, const char *);
+int olsr_sanity_check_cnf(struct olsr_config *);
+void olsr_free_cnf(struct olsr_config *);
+struct olsr_config *olsr_get_default_cnf(void);
 
 /*
  * Check pollrate function

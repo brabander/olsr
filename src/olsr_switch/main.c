@@ -76,8 +76,8 @@ struct ohs_connection *ohs_conns;
 
 //static int ip_version;
 //int ipsize;
-static struct olsrd_config olsr_cnf_data;
-struct olsrd_config *olsr_cnf = &olsr_cnf_data;
+static struct olsr_config olsr_cnf_data;
+struct olsr_config *olsr_cnf = &olsr_cnf_data;
 
 uint32_t logbits;
 

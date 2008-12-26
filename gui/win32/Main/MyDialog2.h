@@ -66,7 +66,7 @@ public:
 	CStringArray *Addresses;
 	CStringArray *IsWlan;
 
-	struct olsrd_config *Conf;
+	struct olsr_config *Conf;
 
 	//{{AFX_DATA(MyDialog2)
 	enum { IDD = IDD_DIALOG2 };

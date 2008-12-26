@@ -823,7 +823,7 @@ static void build_routes_body(struct autobuf *abuf)
 
 static void build_config_body(struct autobuf *abuf)
 {
-  const struct olsr_if *ifs;
+  const struct olsr_if_config *ifs;
   const struct plugin_entry *pentry;
   const struct plugin_param *pparam;
   struct ipaddr_str mainaddrbuf;
@@ -894,7 +894,7 @@ static void build_config_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "<h2>Interfaces</h2>\n");
   abuf_puts(abuf, "<table width=\"100%%\" border=\"0\">\n");
-  for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
+  for (ifs = olsr_cnf->if_configs; ifs != NULL; ifs = ifs->next) {
     const struct interface * const rifs = ifs->interf;
     abuf_appendf(abuf, "<tr><th colspan=\"3\">%s</th>\n", ifs->name);
     if (!rifs) {

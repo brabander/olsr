@@ -105,10 +105,10 @@ set_flag(char *ifname, short flag __attribute__((unused)))
  * that is if it has been set down or the address
  * has been changed.
  *
- *@param iface the olsr_if struct describing the interface
+ *@param iface the olsr_if_config struct describing the interface
  */
 int
-chk_if_changed(struct olsr_if *iface)
+chk_if_changed(struct olsr_if_config *iface)
 {
   struct ipaddr_str buf;
   struct interface *ifp;
@@ -322,7 +322,7 @@ chk_if_changed(struct olsr_if *iface)
  * Initializes the special interface used in
  * host-client emulation
  */
-int add_hemu_if (struct olsr_if *iface)
+int add_hemu_if (struct olsr_if_config *iface)
 {
   struct interface *ifp;
   uint32_t addr[4];
@@ -482,12 +482,12 @@ static const char* if_basename(const char* name)
  * Initializes a interface described by iface,
  * if it is set up and is of the correct type.
  *
- *@param iface the olsr_if struct describing the interface
+ *@param iface the olsr_if_config struct describing the interface
  *@param so the socket to use for ioctls
  *
  */
 int
-chk_if_up(struct olsr_if *iface, int debuglvl __attribute__((unused)))
+chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 {
   struct interface *ifp;
   struct ifreq ifr;

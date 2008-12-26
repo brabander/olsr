@@ -48,11 +48,11 @@
 /*
  * Interface config generation
  */
-void olsr_print_cnf(const struct olsrd_config *);
+void olsr_print_cnf(const struct olsr_config *);
 #if 0
-int olsr_write_cnf(const struct olsrd_config *cnf, const char *fname);
+int olsr_write_cnf(const struct olsr_config *cnf, const char *fname);
 #endif
-void EXPORT(olsr_write_cnf_buf) (struct autobuf * abuf, const struct olsrd_config * cnf, bool write_more_comments);
+void EXPORT(olsr_write_cnf_buf) (struct autobuf * abuf, const struct olsr_config * cnf, bool write_more_comments);
 
 #endif /* _OLSRD_CFG_GEN_H */
 

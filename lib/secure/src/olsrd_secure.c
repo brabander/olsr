@@ -137,21 +137,21 @@ char aes_key[16];
 #if 0
 static void olsr_event(void);
 #endif
-static int send_challenge(struct interface *olsr_if, const union olsr_ip_addr *);
-static int send_cres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
-static int send_rres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
-static int parse_challenge(struct interface *olsr_if, char *);
-static int parse_cres(struct interface *olsr_if, char *);
+static int send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *);
+static int send_cres(struct interface *olsr_if_config, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
+static int send_rres(struct interface *olsr_if_config, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
+static int parse_challenge(struct interface *olsr_if_config, char *);
+static int parse_cres(struct interface *olsr_if_config, char *);
 static int parse_rres(char *);
-static int check_auth(struct interface *olsr_if, char *, int *);
+static int check_auth(struct interface *olsr_if_config, char *, int *);
 #if 0
 static int ipc_send(char *, int);
 #endif
 static int add_signature(uint8_t *, int*);
-static int validate_packet(struct interface *olsr_if, const char *, int*);
-static char *secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length);
+static int validate_packet(struct interface *olsr_if_config, const char *, int*);
+static char *secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr, int *length);
 static void timeout_timestamps(void*);
-static int check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *, time_t);
+static int check_timestamp(struct interface *olsr_if_config, const union olsr_ip_addr *, time_t);
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
 static int read_key_from_file(const char *);
 
@@ -244,7 +244,7 @@ ipc_send(char *data __attribute__((unused)), int size __attribute__((unused)))
 #endif
 
 static char *
-secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr __attribute__((unused)), int *length)
+secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr __attribute__((unused)), int *length)
 {
   struct olsr *olsr = (struct olsr *)packet;
   struct ipaddr_str buf;
@@ -252,13 +252,13 @@ secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr 
   /*
    * Check for challenge/response messages
    */
-  check_auth(olsr_if, packet, length);
+  check_auth(olsr_if_config, packet, length);
 
   /*
    * Check signature
    */
 
-  if(!validate_packet(olsr_if, packet, length))
+  if(!validate_packet(olsr_if_config, packet, length))
   {
     OLSR_PRINTF(1, "[ENC]Rejecting packet from %s\n", olsr_ip_to_string(&buf, from_addr));
     return NULL;
@@ -281,7 +281,7 @@ secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr 
  *
  */
 static int
-check_auth(struct interface *olsr_if, char *pck, int *size __attribute__((unused)))
+check_auth(struct interface *olsr_if_config, char *pck, int *size __attribute__((unused)))
 {
 
   OLSR_PRINTF(3, "[ENC]Checking packet for challenge response message...\n");
@@ -289,11 +289,11 @@ check_auth(struct interface *olsr_if, char *pck, int *size __attribute__((unused
   switch(pck[4])
     {
     case(TYPE_CHALLENGE):
-      parse_challenge(olsr_if, &pck[4]);
+      parse_challenge(olsr_if_config, &pck[4]);
       break;
 
     case(TYPE_CRESPONSE):
-      parse_cres(olsr_if, &pck[4]);
+      parse_cres(olsr_if_config, &pck[4]);
       break;
 
     case(TYPE_RRESPONSE):
@@ -393,7 +393,7 @@ add_signature(uint8_t *pck, int *size)
 
 
 static int
-validate_packet(struct interface *olsr_if, const char *pck, int *size)
+validate_packet(struct interface *olsr_if_config, const char *pck, int *size)
 {
   int packetsize;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -509,7 +509,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
   /* Check timestamp */
   rec_time = ntohl(sig->sig.timestamp);
 
-  if(!check_timestamp(olsr_if, (const union olsr_ip_addr *)&sig->originator, rec_time))
+  if(!check_timestamp(olsr_if_config, (const union olsr_ip_addr *)&sig->originator, rec_time))
     {
       struct ipaddr_str buf;
       OLSR_PRINTF(1, "[ENC]Timestamp missmatch in packet from %s!\n",
@@ -526,7 +526,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
 
 
 int
-check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *originator, time_t tstamp)
+check_timestamp(struct interface *olsr_if_config, const union olsr_ip_addr *originator, time_t tstamp)
 {
   struct stamp *entry;
   int diff;
@@ -537,7 +537,7 @@ check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *originator,
     {
       /* Initiate timestamp negotiation */
 
-      send_challenge(olsr_if, originator);
+      send_challenge(olsr_if_config, originator);
 
       return 0;
     }
@@ -581,7 +581,7 @@ check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *originator,
  */
 
 int
-send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
+send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_host)
 {
   struct challengemsg cmsg;
   struct stamp *entry;
@@ -629,10 +629,10 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
 	      challenge);
 
   /* Add to buffer */
-  net_outbuffer_push(olsr_if, &cmsg, sizeof(struct challengemsg));
+  net_outbuffer_push(olsr_if_config, &cmsg, sizeof(struct challengemsg));
 
   /* Send the request */
-  net_output(olsr_if);
+  net_output(olsr_if_config);
 
   /* Create new entry */
   entry = malloc(sizeof(struct stamp));
@@ -660,7 +660,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
 }
 
 int
-parse_cres(struct interface *olsr_if, char *in_msg)
+parse_cres(struct interface *olsr_if_config, char *in_msg)
 {
   struct c_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -754,7 +754,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
 	      entry->diff);
 
   /* Send response-response */
-  send_rres(olsr_if, (union olsr_ip_addr *)&msg->originator,
+  send_rres(olsr_if_config, (union olsr_ip_addr *)&msg->originator,
 	    (union olsr_ip_addr *)&msg->destination,
 	    ntohl(msg->challenge));
 
@@ -859,7 +859,7 @@ parse_rres(char *in_msg)
 
 
 int
-parse_challenge(struct interface *olsr_if, char *in_msg)
+parse_challenge(struct interface *olsr_if_config, char *in_msg)
 {
   struct challengemsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -941,7 +941,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
 
   /* Build and send response */
 
-  send_cres(olsr_if, (union olsr_ip_addr *)&msg->originator,
+  send_cres(olsr_if_config, (union olsr_ip_addr *)&msg->originator,
 	    (union olsr_ip_addr *)&msg->destination,
 	    ntohl(msg->challenge),
 	    entry);
@@ -959,7 +959,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
  *
  */
 int
-send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in, struct stamp *entry)
+send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in, struct stamp *entry)
 {
   struct c_respmsg crmsg;
   uint32_t challenge;
@@ -1028,9 +1028,9 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 	      challenge);
 
   /* Add to buffer */
-  net_outbuffer_push(olsr_if, &crmsg, sizeof(struct c_respmsg));
+  net_outbuffer_push(olsr_if_config, &crmsg, sizeof(struct c_respmsg));
   /* Send the request */
-  net_output(olsr_if);
+  net_output(olsr_if_config);
 
   return 1;
 }
@@ -1046,7 +1046,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
  *
  */
 static int
-send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in)
+send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in)
 {
   struct r_respmsg rrmsg;
   struct ipaddr_str buf;
@@ -1106,10 +1106,10 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 	      olsr_ip_to_string(&buf, to));
 
   /* add to buffer */
-  net_outbuffer_push(olsr_if, &rrmsg, sizeof(struct r_respmsg));
+  net_outbuffer_push(olsr_if_config, &rrmsg, sizeof(struct r_respmsg));
 
   /* Send the request */
-  net_output(olsr_if);
+  net_output(olsr_if_config);
 
   return 1;
 }

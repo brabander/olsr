@@ -83,7 +83,7 @@ static char* lookup_position_latlon(union olsr_ip_addr *ip)
 void mapwrite_work(FILE* fmap)
 {
   int hash;
-  struct olsr_if *ifs;
+  struct olsr_if_config *ifs;
   union olsr_ip_addr ip;
   struct ipaddr_str strbuf1, strbuf2;
   struct tc_entry *tc;
@@ -91,7 +91,7 @@ void mapwrite_work(FILE* fmap)
 
   if (!my_names || !fmap) return;
 
-  for (ifs = olsr_cnf->interfaces; ifs; ifs = ifs->next)
+  for (ifs = olsr_cnf->if_configs; ifs; ifs = ifs->next)
   {
     if (0 != ifs->interf)
     {

@@ -449,7 +449,7 @@ olsr_shutdown(void)
 {
   struct tc_entry *tc;
   struct mid_entry *mid;
-  struct olsr_if *iface;
+  struct olsr_if_config *iface;
 
   olsr_delete_all_kernel_routes();
 
@@ -477,7 +477,7 @@ olsr_shutdown(void)
   olsr_close_plugins();
   
   /* Remove active interfaces */
-  for (iface = olsr_cnf->interfaces; iface != NULL; iface = iface->next) {
+  for (iface = olsr_cnf->if_configs; iface != NULL; iface = iface->next) {
     remove_interface(&iface->interf);
   }
 

@@ -523,7 +523,7 @@ void ListInterfaces(void)
  * Initializes the special interface used in
  * host-client emulation
  */
-int add_hemu_if(struct olsr_if *iface)
+int add_hemu_if(struct olsr_if_config *iface)
 {
   struct interface *ifp;
   uint32_t addr[4];
@@ -675,7 +675,7 @@ int add_hemu_if(struct olsr_if *iface)
   return 1;
 }
 
-int chk_if_changed(struct olsr_if *IntConf)
+int chk_if_changed(struct olsr_if_config *IntConf)
 {
   struct ipaddr_str buf;
   struct interface *Int;
@@ -828,7 +828,7 @@ int chk_if_changed(struct olsr_if *IntConf)
   return Res;
 }
 
-int chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__((unused)))
+int chk_if_up(struct olsr_if_config *IntConf, int DebugLevel __attribute__((unused)))
 {
   struct ipaddr_str buf;
   struct InterfaceInfo Info;

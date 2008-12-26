@@ -86,7 +86,7 @@ static void check_interface_updates(void *);
 bool
 ifinit(void)
 {
-  struct olsr_if *tmp_if;
+  struct olsr_if_config *tmp_if;
 
   /* Initial values */
   list_head_init(&interface_head);
@@ -115,7 +115,7 @@ ifinit(void)
   OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n");
 
   /* Run trough all interfaces immediately */
-  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
+  for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
     if (tmp_if->host_emul) {
       add_hemu_if(tmp_if);
     } else {
@@ -139,13 +139,13 @@ ifinit(void)
 static void
 check_interface_updates(void *foo __attribute__((unused)))
 {
-  struct olsr_if *tmp_if;
+  struct olsr_if_config *tmp_if;
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking for updates in the interface set\n");
 #endif
 
-  for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
+  for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
 
     if (tmp_if->host_emul) {
 	continue;

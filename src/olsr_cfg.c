@@ -259,10 +259,10 @@ parse_tok(const char *s, const char **snext)
 /*
  * Returns default interface options
  */
-static struct if_config_options *
-get_default_if_config_options(void)
+static struct olsr_if_options *
+get_default_olsr_if_options(void)
 {
-  struct if_config_options *new_io = olsr_malloc(sizeof(*new_io), "default_if_config");
+  struct olsr_if_options *new_io = olsr_malloc(sizeof(*new_io), "default_if_config");
 
   /* No memset because olsr_malloc uses calloc() */
   /* memset(&new_io->ipv4_broadcast, 0, sizeof(new_io->ipv4_broadcast)); */
@@ -291,13 +291,13 @@ get_default_if_config_options(void)
  *
  * @param name the name of the interface.
  */
-static struct olsr_if *
+static struct olsr_if_config *
 queue_if(const char *name)
 {
-  struct olsr_if *new_if;
+  struct olsr_if_config *new_if;
 
   /* check if the interface already exists */
-  for (new_if = olsr_cnf->interfaces; new_if != NULL; new_if = new_if->next) {
+  for (new_if = olsr_cnf->if_configs; new_if != NULL; new_if = new_if->next) {
     if (0 == strcmp(new_if->name, name)) {
       fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
       return NULL;
@@ -310,9 +310,9 @@ queue_if(const char *name)
   /* new_if->host_emul = false; */
   /* memset(&new_if->hemu_ip, 0, sizeof(new_if->hemu_ip)); */
   /* new_if->interf = NULL; */
-  new_if->cnf = get_default_if_config_options();
-  new_if->next = olsr_cnf->interfaces;
-  olsr_cnf->interfaces = new_if;
+  new_if->cnf = get_default_olsr_if_options();
+  new_if->next = olsr_cnf->if_configs;
+  olsr_cnf->if_configs = new_if;
 
   return new_if;
 }
@@ -322,7 +322,7 @@ queue_if(const char *name)
  * function. May also replace a "-f filename" combination
  * with options read in from a config file.
  */
-struct olsrd_config *
+struct olsr_config *
 olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
 {
   int opt;
@@ -507,7 +507,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     case 'H':                  /* hemu (ip4) */
       {
         union olsr_ip_addr ipaddr;
-        struct olsr_if *new_if;
+        struct olsr_if_config *new_if;
 
         if (inet_pton(AF_INET, optarg, &ipaddr) <= 0) {
           fprintf(stderr, "Failed converting IP address %s\n", optarg);
@@ -657,7 +657,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
           char **p = tok;
           while (p[0]) {
             char **p_next = tok_next;
-            struct olsr_if *new_if = queue_if(p[0]);
+            struct olsr_if_config *new_if = queue_if(p[0]);
             PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
             while (new_if && p_next[0]) {
               if (!p_next[1]) {
@@ -1037,10 +1037,10 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
  * Checks a given config for illegal values
  */
 int
-olsr_sanity_check_cnf(struct olsrd_config *cnf)
+olsr_sanity_check_cnf(struct olsr_config *cnf)
 {
-  struct olsr_if *in = cnf->interfaces;
-  struct if_config_options *io;
+  struct olsr_if_config *in = cnf->if_configs;
+  struct olsr_if_options *io;
 
   /* Debug level */
   if (cnf->debug_level < MIN_DEBUGLVL || cnf->debug_level > MAX_DEBUGLVL) {
@@ -1167,10 +1167,10 @@ olsr_sanity_check_cnf(struct olsrd_config *cnf)
  * Free resources occupied by a configuration
  */
 void
-olsr_free_cnf(struct olsrd_config *cnf)
+olsr_free_cnf(struct olsr_config *cnf)
 {
   struct ip_prefix_list *hd, *h = cnf->hna_entries;
-  struct olsr_if *ind, *in = cnf->interfaces;
+  struct olsr_if_config *ind, *in = cnf->if_configs;
   struct plugin_entry *ped, *pe = cnf->plugins;
   struct olsr_lq_mult *mult, *next_mult;
 
@@ -1216,10 +1216,10 @@ olsr_free_cnf(struct olsrd_config *cnf)
 /*
  * Get a default config
  */
-struct olsrd_config *
+struct olsr_config *
 olsr_get_default_cnf(void)
 {
-  struct olsrd_config *cnf = olsr_malloc(sizeof(struct olsrd_config), "default_cnf");
+  struct olsr_config *cnf = olsr_malloc(sizeof(struct olsr_config), "default_cnf");
 
   /*
    * olsr_malloc calls calloc(), no memset necessary:

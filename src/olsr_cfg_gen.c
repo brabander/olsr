@@ -45,10 +45,10 @@
 #include <errno.h>
 
 void
-olsr_print_cnf(const struct olsrd_config *cnf)
+olsr_print_cnf(const struct olsr_config *cnf)
 {
   struct ip_prefix_list *h = cnf->hna_entries;
-  struct olsr_if *in = cnf->interfaces;
+  struct olsr_if_config *in = cnf->if_configs;
   struct plugin_entry *pe = cnf->plugins;
   struct ip_prefix_list *ie = cnf->ipc_nets;
   struct olsr_lq_mult *mult;
@@ -166,7 +166,7 @@ olsr_print_cnf(const struct olsrd_config *cnf)
 
 #if 0
 int
-olsr_write_cnf(const struct olsrd_config *cnf, const char *fname)
+olsr_write_cnf(const struct olsr_config *cnf, const char *fname)
 {
   struct autobuf abuf;
   FILE *fd = fopen(fname, "w");
@@ -200,7 +200,7 @@ append_float(struct autobuf *abuf, const char *name, float val, float deflt, boo
 }
 
 void
-olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool write_more_comments)
+olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
   const char *s;
@@ -342,10 +342,10 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsrd_config *cnf, bool wr
                "# Multiple interfaces with the same configuration\n"
                "# can shar the same config block. Just list the\n" "# interfaces(e.g. Interface \"eth0\" \"eth2\"\n");
   /* Interfaces */
-  if (cnf->interfaces) {
-    struct olsr_if *in;
+  if (cnf->if_configs) {
+    struct olsr_if_config *in;
     bool first;
-    for (in = cnf->interfaces, first = write_more_comments; in != NULL; in = in->next, first = false) {
+    for (in = cnf->if_configs, first = write_more_comments; in != NULL; in = in->next, first = false) {
       abuf_appendf(abuf, "Interface \"%s\" {\n", in->name);
 
       if (first) {
