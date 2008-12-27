@@ -63,10 +63,13 @@ struct tc_edge_entry {
   struct tc_entry *tc;		       /* backpointer to owning tc entry */
   olsr_linkcost cost;		       /* metric used for SPF calculation */
   uint16_t ansn;		       /* ansn of this edge, used for multipart msgs */
+  uint8_t flags;		       /* flags */
   uint32_t linkquality[0];
 };
 
 AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
+
+#define TC_EDGE_FLAG_LOCAL		(1 << 0) /* local generated edge */
 
 struct tc_entry {
   struct avl_node vertex_node;	       /* node keyed by ip address */

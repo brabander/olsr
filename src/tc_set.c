@@ -494,7 +494,8 @@ delete_outdated_tc_edges(struct tc_entry *tc)
 #endif
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
-    if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn)) {
+    if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn) &&
+        !(tc_edge->flags & TC_EDGE_FLAG_LOCAL)) {
       olsr_delete_tc_edge_entry(tc_edge);
       retval = true;
     }
@@ -540,7 +541,8 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn,
       }
     }
 
-    if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn)) {
+    if (SEQNO_GREATER_THAN(ansn, tc_edge->ansn) &&
+      !(tc_edge->flags & TC_EDGE_FLAG_LOCAL)) {
       olsr_delete_tc_edge_entry(tc_edge);
       retval = 1;
     }

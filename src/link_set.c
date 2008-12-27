@@ -541,6 +541,12 @@ add_link_entry(const union olsr_ip_addr *local,
   olsr_change_myself_tc();
   link->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, remote_main, 0);
 
+  /*
+   * Mark the edge local such that it does not get deleted
+   * during cleanup functions.
+   */
+  link->link_tc_edge->flags |= TC_EDGE_FLAG_LOCAL;
+
   changes_neighborhood = true;
   return link;
 }
