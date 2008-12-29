@@ -53,6 +53,7 @@
 #include "lq_plugin_etx_float.h"
 #include "lq_plugin_etx_fpm.h"
 #include "lq_plugin_etx_ff.h"
+#include "lq_plugin_rfc.h"
 
 static  struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
@@ -76,6 +77,7 @@ init_lq_handler_tree(void)
   register_lq_handler(&lq_etxfloat_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
   register_lq_handler(&lq_etxfpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
   register_lq_handler(&lq_etxff_handler, LQ_ALGORITHM_ETX_FF_NAME);
+  register_lq_handler(&lq_rfc_handler, LQ_ALGORITHM_RFC_NAME);
 }
 
 /*
