@@ -22,7 +22,7 @@
     <copyright>
       <year>2004</year>
 
-      <holder>Andreas Tønnesen</holder>
+      <holder>Andreas Tonnesen</holder>
     </copyright>
 
     <copyright>
@@ -37,7 +37,7 @@
   </articleinfo>
 
   <para>This document contains sources for man pages. They where converted
-  from the original man page files which are maintained by Andreas Tønnesen
+  from the original man page files which are maintained by Andreas Tonnesen
   until 2005. Because the 0.5.7 version of <productname>olsrd</productname>
   introduces several configuration changes and removes old configuration
   options, a re-write was necessary in late 2008.</para>

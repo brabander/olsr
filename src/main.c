@@ -475,7 +475,7 @@ olsr_shutdown(void)
 
   /* Closing plug-ins */
   olsr_close_plugins();
-  
+
   /* Remove active interfaces */
   for (iface = olsr_cnf->if_configs; iface != NULL; iface = iface->next) {
     remove_interface(&iface->interf);

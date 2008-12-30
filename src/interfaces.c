@@ -182,7 +182,7 @@ remove_interface(struct interface **pinterf)
   if (!ifp) {
     return;
   }
-  
+
   OLSR_PRINTF(1, "Removing interface %s\n", ifp->int_name);
   olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", ifp->int_name);
 
@@ -409,7 +409,7 @@ unlock_interface(struct interface *ifp)
 
   /* Node must be dequeued at this point */
   assert(!list_node_on_list(&ifp->int_node));
-  
+
   /* Free memory */
   free(ifp->int_name);
   olsr_cookie_free(interface_mem_cookie, ifp);
