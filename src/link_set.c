@@ -283,8 +283,10 @@ olsr_delete_link_entry(struct link_entry *link)
   /*
    * Delete the corresponding tc-edge for that link.
    */
-  olsr_delete_tc_edge_entry(link->link_tc_edge);
-  link->link_tc_edge = NULL;
+  if (link->link_tc_edge) {
+    olsr_delete_tc_edge_entry(link->link_tc_edge);
+    link->link_tc_edge = NULL;
+  }
 
   /*
    * Delete the rt_path for the link-end.

@@ -456,6 +456,7 @@ void
 olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
 {
   struct tc_entry *tc;
+  struct link_entry *link;
   struct tc_edge_entry *tc_edge_inv;
 
 #ifdef DEBUG
@@ -472,6 +473,18 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   tc_edge_inv = tc_edge->edge_inv;
   if (tc_edge_inv) {
     tc_edge_inv->edge_inv = NULL;
+  }
+
+  /*
+   * If this is a local edge, delete all references to it.
+   */
+  if (tc_edge->flags & TC_EDGE_FLAG_LOCAL) {
+    OLSR_FOR_ALL_LINK_ENTRIES(link) {
+      if (link->link_tc_edge == tc_edge) {
+        link->link_tc_edge = NULL;
+        break;
+      }
+    } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
   }
 
   olsr_free_tc_edge_entry(tc_edge);
