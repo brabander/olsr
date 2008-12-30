@@ -217,7 +217,7 @@ chk_if_changed(struct olsr_if_config *iface)
     OLSR_PRINTF(3, "\tAddress: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 #endif
 
-    if (ip6equal(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr)) {
+    if (!ip6equal(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr)) {
       OLSR_PRINTF(1, "New IP address for %s:\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));

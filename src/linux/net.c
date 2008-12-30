@@ -592,7 +592,7 @@ join_mcast(struct interface *ifs, int sock)
 #else
 #warning implement IPV6_ADD_MEMBERSHIP
 #endif
-
+#if 0
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
@@ -615,7 +615,7 @@ join_mcast(struct interface *ifs, int sock)
       perror("Join multicast send");
       return -1;
     }
-
+#endif
   if(setsockopt(sock,
 		IPPROTO_IPV6,
 		IPV6_MULTICAST_IF,
@@ -678,7 +678,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
 	  OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n",
 		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	  inet_pton(AF_INET6, addr6, saddr6);
+	  inet_pton(AF_INET6, addr6, &saddr6->sin6_addr);
 	  rv = 1;
 	  break;
 	}
