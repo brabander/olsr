@@ -93,7 +93,9 @@ static INLINE const char *ip4_to_string(struct ipaddr_str * const buf, const str
 
 static INLINE const char *ip6_to_string(struct ipaddr_str * const buf, const struct in6_addr * const addr6) {  return inet_ntop(AF_INET6, addr6, buf->buf, sizeof(buf->buf)); }
 
-static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return inet_ntop(olsr_cnf->ip_version, addr, buf->buf, sizeof(buf->buf)); }
+static INLINE const char *ip_to_string(int af, struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return inet_ntop(af, addr, buf->buf, sizeof(buf->buf)); }
+
+static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return ip_to_string(olsr_cnf->ip_version, buf, addr); }
 
 const char *EXPORT(olsr_ip_prefix_to_string)(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
 

@@ -66,11 +66,11 @@
  * joining a longer section { ... } to one string
  */
 static void
-read_cnf_cat(char **pdest, const char *src)
+read_cfg_cat(char **pdest, const char *src)
 {
   char *tmp = *pdest;
   if (*src) {
-    *pdest = olsr_malloc(1 + (tmp ? strlen(tmp) : 0) + strlen(src), "read_cnf_cat");
+    *pdest = olsr_malloc(1 + (tmp ? strlen(tmp) : 0) + strlen(src), "read_cfg_cat");
     if (tmp) {
       strcpy(*pdest, tmp);
       free(tmp);
@@ -86,7 +86,7 @@ read_cnf_cat(char **pdest, const char *src)
  * longer sections { ... } are joined to one string
  */
 static int
-read_cnf(const char *filename, int *pargc, char ***pargv, int **pline)
+read_cfg(const char *filename, int *pargc, char ***pargv, int **pline)
 {
   FILE *f = fopen(filename, "r");
   if (f) {
@@ -111,13 +111,13 @@ read_cnf(const char *filename, int *pargc, char ***pargv, int **pline)
       *(p + 1) = 0;
       if (*sbuf) {
         if (bopen) {
-          read_cnf_cat(&pbuf, sbuf);
+          read_cfg_cat(&pbuf, sbuf);
           if ('}' == *p) {
             bopen = 0;
           }
         } else if (p == sbuf && '{' == *p) {
-          read_cnf_cat(&pbuf, " ");
-          read_cnf_cat(&pbuf, sbuf);
+          read_cfg_cat(&pbuf, " ");
+          read_cfg_cat(&pbuf, sbuf);
           bopen = 1;
         } else {
           if ('{' == *p) {
@@ -168,7 +168,7 @@ read_cnf(const char *filename, int *pargc, char ***pargv, int **pline)
             free(pbuf);
             pbuf = NULL;
           }
-          read_cnf_cat(&pbuf, sbuf);
+          read_cfg_cat(&pbuf, sbuf);
         }
       }
     }
@@ -285,16 +285,14 @@ get_default_olsr_if_options(void)
 /**
  * Create a new interf_name struct using a given
  * name and insert it into the interface list.
- *
- * @param name the name of the interface.
  */
 static struct olsr_if_config *
-queue_if(const char *name)
+queue_if(const char *name, struct olsr_config *cfg)
 {
   struct olsr_if_config *new_if;
 
   /* check if the interface already exists */
-  for (new_if = olsr_cnf->if_configs; new_if != NULL; new_if = new_if->next) {
+  for (new_if = cfg->if_configs; new_if != NULL; new_if = new_if->next) {
     if (0 == strcmp(new_if->name, name)) {
       fprintf(stderr, "Duplicate interfaces defined... not adding %s\n", name);
       return NULL;
@@ -308,10 +306,590 @@ queue_if(const char *name)
   /* memset(&new_if->hemu_ip, 0, sizeof(new_if->hemu_ip)); */
   /* new_if->interf = NULL; */
   new_if->cnf = get_default_olsr_if_options();
-  new_if->next = olsr_cnf->if_configs;
-  olsr_cnf->if_configs = new_if;
+  new_if->next = cfg->if_configs;
+  cfg->if_configs = new_if;
 
   return new_if;
+}
+
+/*
+ * Parses a single hna option block
+ */
+static void
+parse_cfg_hna(const char *argstr, const int ip_version, struct olsr_config *cfg)
+{
+  char **tok;
+#ifdef DEBUG
+  struct ipaddr_str buf;
+#endif
+  if ('{' != *argstr) {
+    fprintf(stderr, "No {}\n");
+    exit(EXIT_FAILURE);
+  }
+  if (NULL != (tok = parse_tok(argstr + 1, NULL))) {
+    char **p = tok;
+    if (ip_version != cfg->ip_version) {
+      fprintf(stderr, "IPv%d addresses can only be used if \"IpVersion\" == %d\n",
+              AF_INET == ip_version ? 4 : 6, AF_INET == ip_version ? 4 : 6);
+      exit(EXIT_FAILURE);
+    }
+    while (p[0]) {
+      union olsr_ip_addr ipaddr;
+      if (!p[1]) {
+        fprintf(stderr, "Odd args in %s\n", argstr);
+        exit(EXIT_FAILURE);
+      }
+      if (inet_pton(ip_version, p[0], &ipaddr) <= 0) {
+        fprintf(stderr, "Failed converting IP address %s\n", p[0]);
+        exit(EXIT_FAILURE);
+      }
+      if (AF_INET == ip_version) {
+        union olsr_ip_addr netmask;
+        if (inet_pton(AF_INET, p[1], &netmask) <= 0) {
+          fprintf(stderr, "Failed converting IP address %s\n", p[1]);
+          exit(EXIT_FAILURE);
+        }
+        if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+          fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
+          exit(EXIT_FAILURE);
+        }
+        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
+        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
+      } else {
+        int prefix = -1;
+        sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
+        if (0 > prefix || 128 < prefix) {
+          fprintf(stderr, "Illegal IPv6 prefix %s\n", p[1]);
+          exit(EXIT_FAILURE);
+        }
+        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, prefix);
+        PARSER_DEBUG_PRINTF("Hna6 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), prefix);
+      }
+      p += 2;
+    }
+    parse_tok_free(tok);
+  }
+}
+
+/*
+ * Parses a single interface option block
+ */
+static void
+parse_cfg_interface(const char *argstr, struct olsr_config *cfg)
+{
+  char **tok;
+  const char *nxt;
+#ifdef DEBUG
+  struct ipaddr_str buf;
+#endif
+  if (NULL != (tok = parse_tok(argstr, &nxt))) {
+    if ('{' != *nxt) {
+      fprintf(stderr, "No {}\n");
+      exit(EXIT_FAILURE);
+    } else {
+      char **tok_next = parse_tok(nxt + 1, NULL);
+      char **p = tok;
+      while (p[0]) {
+        char **p_next = tok_next;
+        struct olsr_if_config *new_if = queue_if(p[0], cfg);
+        PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
+        while (new_if && p_next[0]) {
+          if (!p_next[1]) {
+            fprintf(stderr, "Odd args in %s\n", nxt);
+            exit(EXIT_FAILURE);
+          }
+          if (0 == strcmp("AutoDetectChanges", p_next[0])) {
+            new_if->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
+            PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
+          } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
+            union olsr_ip_addr ipaddr;
+            if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
+              fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
+              exit(EXIT_FAILURE);
+            }
+            new_if->cnf->ipv4_broadcast = ipaddr;
+            PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, new_if->cnf->ipv4_broadcast.v4));
+          } else if (0 == strcmp("Ip6AddrType", p_next[0])) {
+            if (0 == strcmp("site-local", p_next[1])) {
+              new_if->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
+            } else if (0 == strcmp("unique-local", p_next[1])) {
+              new_if->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
+            } else if (0 == strcmp("global", p_next[1])) {
+              new_if->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
+            } else {
+              new_if->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
+            }
+            PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", new_if->cnf->ipv6_addrtype);
+          } else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
+            union olsr_ip_addr ipaddr;
+            if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
+              fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
+              exit(EXIT_FAILURE);
+            }
+            new_if->cnf->ipv6_multi_site = ipaddr;
+            PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_site.v6));
+          } else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
+            union olsr_ip_addr ipaddr;
+            if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
+              fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
+              exit(EXIT_FAILURE);
+            }
+            new_if->cnf->ipv6_multi_glbl = ipaddr;
+            PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
+          } else if (0 == strcmp("HelloInterval", p_next[0])) {
+            new_if->cnf->hello_params.emission_interval = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->hello_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", new_if->cnf->hello_params.emission_interval);
+          } else if (0 == strcmp("HelloValidityTime", p_next[0])) {
+            new_if->cnf->hello_params.validity_time = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->hello_params.validity_time);
+            PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", new_if->cnf->hello_params.validity_time);
+          } else if (0 == strcmp("TcInterval", p_next[0])) {
+            new_if->cnf->tc_params.emission_interval = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->tc_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", new_if->cnf->tc_params.emission_interval);
+          } else if (0 == strcmp("TcValidityTime", p_next[0])) {
+            new_if->cnf->tc_params.validity_time = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->tc_params.validity_time);
+            PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", new_if->cnf->tc_params.validity_time);
+          } else if (0 == strcmp("MidInterval", p_next[0])) {
+            new_if->cnf->mid_params.emission_interval = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->mid_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", new_if->cnf->mid_params.emission_interval);
+          } else if (0 == strcmp("MidValidityTime", p_next[0])) {
+            new_if->cnf->mid_params.validity_time = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->mid_params.validity_time);
+            PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", new_if->cnf->mid_params.validity_time);
+          } else if (0 == strcmp("HnaInterval", p_next[0])) {
+            new_if->cnf->hna_params.emission_interval = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->hna_params.emission_interval);
+            PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", new_if->cnf->hna_params.emission_interval);
+          } else if (0 == strcmp("HnaValidityTime", p_next[0])) {
+            new_if->cnf->hna_params.validity_time = 0;
+            sscanf(p_next[1], "%f", &new_if->cnf->hna_params.validity_time);
+            PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", new_if->cnf->hna_params.validity_time);
+          } else if (0 == strcmp("Weight", p_next[0])) {
+            new_if->cnf->weight.fixed = true;
+            PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
+          } else if (0 == strcmp("LinkQualityMult", p_next[0])) {
+            float f;
+            struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
+            if (!p_next[2]) {
+              fprintf(stderr, "Odd args in %s\n", nxt);
+              exit(EXIT_FAILURE);
+            }
+            memset(&mult->addr, 0, sizeof(mult->addr));
+            if (0 != strcmp("default", p_next[1])) {
+              if (inet_pton(cfg->ip_version, p_next[1], &mult->addr) <= 0) {
+                fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
+                exit(EXIT_FAILURE);
+              }
+            }
+            f = 0;
+            sscanf(p_next[2], "%f", &f);
+            mult->value = (uint32_t) (f * LINK_LOSS_MULTIPLIER);
+            mult->next = new_if->cnf->lq_mult;
+            new_if->cnf->lq_mult = mult;
+            PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", ip_to_string(cfg->ip_version, &buf, &mult->addr),
+                                (float)mult->value / LINK_LOSS_MULTIPLIER);
+            p_next++;
+          } else {
+            fprintf(stderr, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
+            exit(EXIT_FAILURE);
+          }
+          p_next += 2;
+        }
+        p++;
+      }
+      if (tok_next)
+        parse_tok_free(tok_next);
+    }
+    parse_tok_free(tok);
+  } else {
+    fprintf(stderr, "Error in %s\n", argstr);
+    exit(EXIT_FAILURE);
+  }
+}
+
+/*
+ * Parses a single ipc option block
+ */
+static void
+parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
+{
+  char **tok;
+  const char *nxt;
+#ifdef DEBUG
+  struct ipaddr_str buf;
+#endif
+  if ('{' != *argstr) {
+    fprintf(stderr, "No {}\n");
+    exit(EXIT_FAILURE);
+  }
+  if (NULL != (tok = parse_tok(argstr + 1, &nxt))) {
+    char **p = tok;
+    while (p[0]) {
+      if (!p[1]) {
+        fprintf(stderr, "Odd args in %s\n", argstr);
+        exit(EXIT_FAILURE);
+      }
+      if (0 == strcmp("MaxConnections", p[0])) {
+        int arg = -1;
+        sscanf(argstr, "%d", &arg);
+        if (0 <= arg && arg < 1 << (8 * sizeof(cfg->ipc_connections)))
+          cfg->ipc_connections = arg;
+        PARSER_DEBUG_PRINTF("\tIPC connections: %d\n", cfg->ipc_connections);
+      } else if (0 == strcmp("Host", p[0])) {
+        union olsr_ip_addr ipaddr;
+        if (inet_pton(cfg->ip_version, p[1], &ipaddr) <= 0) {
+          fprintf(stderr, "Failed converting IP address %s\n", p[0]);
+          exit(EXIT_FAILURE);
+        }
+        ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, cfg->maxplen);
+        PARSER_DEBUG_PRINTF("\tIPC host: %s\n", ip_to_string(cfg->ip_version, &buf, &ipaddr));
+      } else if (0 == strcmp("Net", p[0])) {
+        union olsr_ip_addr ipaddr;
+        if (!p[2]) {
+          fprintf(stderr, "Odd args in %s\n", nxt);
+          exit(EXIT_FAILURE);
+        }
+        if (inet_pton(cfg->ip_version, p[1], &ipaddr) <= 0) {
+          fprintf(stderr, "Failed converting IP address %s\n", p[0]);
+          exit(EXIT_FAILURE);
+        }
+        if (AF_INET == cfg->ip_version) {
+          union olsr_ip_addr netmask;
+          if (inet_pton(AF_INET, p[2], &netmask) <= 0) {
+            fprintf(stderr, "Failed converting IP address %s\n", p[2]);
+            exit(EXIT_FAILURE);
+          }
+          if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
+            fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
+            exit(EXIT_FAILURE);
+          }
+          ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
+          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
+        } else {
+          int prefix = -1;
+          sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
+          if (0 > prefix || 128 < prefix) {
+            fprintf(stderr, "Illegal IPv6 prefix %s\n", p[2]);
+            exit(EXIT_FAILURE);
+          }
+          ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, prefix);
+          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), prefix);
+        }
+        p++;
+      } else {
+        fprintf(stderr, "Unknown arg: %s %s\n", p[0], p[1]);
+        exit(EXIT_FAILURE);
+      }
+      p += 2;
+    }
+    parse_tok_free(tok);
+  }
+}
+
+/*
+ * Parses a single loadplugin option block
+ */
+static void
+parse_cfg_loadplugin(const char *argstr, struct olsr_config *cfg)
+{
+  char **tok;
+  const char *nxt;
+  if (NULL != (tok = parse_tok(argstr, &nxt))) {
+    if ('{' != *nxt) {
+      fprintf(stderr, "No {}\n");
+      exit(EXIT_FAILURE);
+    } else {
+      char **tok_next = parse_tok(nxt + 1, NULL);
+      struct plugin_entry *pe = olsr_malloc(sizeof(*pe), "plugin");
+      pe->name = olsr_strdup(*tok);
+      pe->params = NULL;
+      pe->next = cfg->plugins;
+      cfg->plugins = pe;
+      PARSER_DEBUG_PRINTF("Plugin: %s\n", pe->name);
+      if (tok_next) {
+        char **p_next = tok_next;
+        while (p_next[0]) {
+          struct plugin_param *pp = olsr_malloc(sizeof(*pp), "plparam");
+          if (0 != strcmp("PlParam", p_next[0]) || !p_next[1] || !p_next[2]) {
+            fprintf(stderr, "Odd args in %s\n", nxt);
+            exit(EXIT_FAILURE);
+          }
+          pp->key = olsr_strdup(p_next[1]);
+          pp->value = olsr_strdup(p_next[2]);
+          pp->next = pe->params;
+          pe->params = pp;
+          PARSER_DEBUG_PRINTF("\tPlParam: %s %s\n", pp->key, pp->value);
+          p_next += 3;
+        }
+        parse_tok_free(tok_next);
+      }
+    }
+    parse_tok_free(tok);
+  } else {
+    fprintf(stderr, "Error in %s\n", argstr);
+    exit(EXIT_FAILURE);
+  }
+}
+
+/*
+ * Parses a single option found on the command line
+ */
+static void
+parse_cfg_option(const int optint, const char *argstr, const int line, struct olsr_config *cfg)
+{
+#ifdef DEBUG
+  struct ipaddr_str buf;
+#endif
+
+  switch (optint) {
+  case 'D':                    /* delgw */
+    cfg->del_gws = true;
+    PARSER_DEBUG_PRINTF("del_gws set to %d\n", cfg->del_gws);
+    break;
+  case 'X':                    /* dispin */
+    PARSER_DEBUG_PRINTF("Calling parser_set_disp_pack_in(true)\n");
+    parser_set_disp_pack_in(true);
+    break;
+  case 'O':                    /* dispout */
+    PARSER_DEBUG_PRINTF("Calling net_set_disp_pack_out(true)\n");
+    net_set_disp_pack_out(true);
+    break;
+  case 'H':                    /* hemu (ip4) */
+    {
+      union olsr_ip_addr ipaddr;
+      struct olsr_if_config *new_if;
+
+      if (inet_pton(AF_INET, argstr, &ipaddr) <= 0) {
+        fprintf(stderr, "Failed converting IP address %s\n", argstr);
+        exit(EXIT_FAILURE);
+      }
+
+      /* Add hemu interface */
+      if (NULL != (new_if = queue_if("hcif01", cfg))) {
+        new_if->host_emul = true;
+        new_if->hemu_ip = ipaddr;
+        cfg->host_emul = true;
+        PARSER_DEBUG_PRINTF("host_emul with %s\n", ip_to_string(cfg->ip_version, &buf, &new_if->hemu_ip));
+      }
+      PARSER_DEBUG_PRINTF("host_emul set to %d\n", cfg->host_emul);
+    }
+    break;
+  case 'i':                    /* iface */
+    /* Ignored */
+    break;
+#ifdef WIN32
+  case 'l':                    /* int */
+    ListInterfaces();
+    exit(0);
+#endif
+  case 'P':                    /* ipc */
+    cfg->ipc_connections = 1;
+    PARSER_DEBUG_PRINTF("IPC connections: %d\n", cfg->ipc_connections);
+    break;
+  case 'n':                    /* nofork */
+    cfg->no_fork = true;
+    PARSER_DEBUG_PRINTF("no_fork set to %d\n", cfg->no_fork);
+    break;
+  case 'v':                    /* version */
+    /* Version string already printed */
+    exit(0);
+  case 'A':                    /* AllowNoInt (yes/no) */
+    cfg->allow_no_interfaces = (0 == strcmp("yes", argstr));
+    PARSER_DEBUG_PRINTF("Noint set to %d\n", cfg->allow_no_interfaces);
+    break;
+  case 'C':                    /* ClearScreen (yes/no) */
+    cfg->clear_screen = (0 == strcmp("yes", argstr));
+    PARSER_DEBUG_PRINTF("Clear screen %s\n", cfg->clear_screen ? "enabled" : "disabled");
+    break;
+  case 'd':                    /* DebugLevel (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < 128)
+        cfg->debug_level = arg;
+      PARSER_DEBUG_PRINTF("Debug level: %d\n", cfg->debug_level);
+    }
+    break;
+  case 'F':                    /* FIBMetric (str) */
+    {
+      char **tok;
+      if (NULL != (tok = parse_tok(argstr, NULL))) {
+        if (strcmp(*tok, CFG_FIBM_FLAT) == 0) {
+          cfg->fib_metric = FIBM_FLAT;
+        } else if (strcmp(*tok, CFG_FIBM_CORRECT) == 0) {
+          cfg->fib_metric = FIBM_CORRECT;
+        } else if (strcmp(*tok, CFG_FIBM_APPROX) == 0) {
+          cfg->fib_metric = FIBM_APPROX;
+        } else {
+          fprintf(stderr, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
+          exit(EXIT_FAILURE);
+        }
+        parse_tok_free(tok);
+      } else {
+        fprintf(stderr, "Error in %s\n", argstr);
+        exit(EXIT_FAILURE);
+      }
+      PARSER_DEBUG_PRINTF("FIBMetric: %d=%s\n", cfg->fib_metric, argstr);
+    }
+    break;
+  case '4':                    /* Hna4 (4body) */
+    parse_cfg_hna(argstr, AF_INET, cfg);
+    break;
+  case '6':                    /* Hna6 (6body) */
+    parse_cfg_hna(argstr, AF_INET6, cfg);
+    break;
+  case 'I':                    /* Interface if1 if2 { ifbody } */
+    parse_cfg_interface(argstr, cfg);
+    break;
+  case 'Q':                    /* IpcConnect (Host,Net,MaxConnections) */
+    parse_cfg_ipc(argstr, cfg);
+    break;
+  case 'V':                    /* IpVersion (i) */
+    {
+      int ver = -1;
+      sscanf(argstr, "%d", &ver);
+      if (ver == 4) {
+        cfg->ip_version = AF_INET;
+        cfg->ipsize = sizeof(struct in_addr);
+        cfg->maxplen = 32;
+      } else if (ver == 6) {
+        cfg->ip_version = AF_INET6;
+        cfg->ipsize = sizeof(struct in6_addr);
+        cfg->maxplen = 128;
+      } else {
+        fprintf(stderr, "IpVersion must be 4 or 6!\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+    PARSER_DEBUG_PRINTF("IpVersion: %d\n", cfg->ip_version);
+    break;
+  case 'a':                    /* LinkQualityAging (f) */
+    sscanf(argstr, "%f", &cfg->lq_aging);
+    PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", cfg->lq_aging);
+    break;
+  case 'L':                    /* LinkQualityAlgorithm (str) */
+    {
+      char **tok;
+      if (NULL != (tok = parse_tok(argstr, NULL))) {
+        cfg->lq_algorithm = olsr_strdup(*tok);
+        parse_tok_free(tok);
+      } else {
+        fprintf(stderr, "Error in %s\n", argstr);
+        exit(EXIT_FAILURE);
+      }
+      PARSER_DEBUG_PRINTF("LQ Algorithm: %s\n", cfg->lq_algorithm);
+    }
+    break;
+  case 'J':                    /* LinkQualityDijkstraLimit (i,f) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d %f", &arg, &cfg->lq_dinter);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->lq_dlimit))))
+        cfg->lq_dlimit = arg;
+      PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %0.2f\n", cfg->lq_dlimit, cfg->lq_dinter);
+    }
+    break;
+  case 'E':                    /* LinkQualityFishEye (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->lq_fish))))
+        cfg->lq_fish = arg;
+      PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", cfg->lq_fish);
+    }
+    break;
+  case 'p':                    /* LoadPlugin (soname {PlParams}) */
+    parse_cfg_loadplugin(argstr, cfg);
+    break;
+  case 'M':                    /* MprCoverage (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->mpr_coverage))))
+        cfg->mpr_coverage = arg;
+      PARSER_DEBUG_PRINTF("MPR coverage %d\n", cfg->mpr_coverage);
+    }
+    break;
+  case 'N':                    /* NatThreshold (f) */
+    sscanf(argstr, "%f", &cfg->lq_nat_thresh);
+    PARSER_DEBUG_PRINTF("NAT threshold %0.2f\n", cfg->lq_nat_thresh);
+    break;
+  case 'Y':                    /* NicChgsPollInt (f) */
+    sscanf(argstr, "%f", &cfg->nic_chgs_pollrate);
+    PARSER_DEBUG_PRINTF("NIC Changes Pollrate %0.2f\n", cfg->nic_chgs_pollrate);
+    break;
+  case 'T':                    /* Pollrate (f) */
+    {
+      float arg = -1;
+      sscanf(argstr, "%f", &arg);
+      if (0 <= arg)
+        cfg->pollrate = conv_pollrate_to_microsecs(arg);
+      PARSER_DEBUG_PRINTF("Pollrate %ud\n", cfg->pollrate);
+    }
+    break;
+  case 'q':                    /* RtProto (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->rtproto))))
+        cfg->rtproto = arg;
+      PARSER_DEBUG_PRINTF("RtProto: %d\n", cfg->rtproto);
+    }
+    break;
+  case 'R':                    /* RtTableDefault (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->rttable_default))))
+        cfg->rttable_default = arg;
+      PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", cfg->rttable_default);
+    }
+    break;
+  case 'r':                    /* RtTable (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->rttable))))
+        cfg->rttable = arg;
+      PARSER_DEBUG_PRINTF("RtTable: %d\n", cfg->rttable);
+    }
+    break;
+  case 't':                    /* TcRedundancy (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->tc_redundancy))))
+        cfg->tc_redundancy = arg;
+      PARSER_DEBUG_PRINTF("TC redundancy %d\n", cfg->tc_redundancy);
+    }
+    break;
+  case 'Z':                    /* TosValue (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->tos))))
+        cfg->tos = arg;
+      PARSER_DEBUG_PRINTF("TOS: %d\n", cfg->tos);
+    }
+    break;
+  case 'w':                    /* Willingness (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(cfg->willingness))))
+        cfg->willingness = arg;
+      cfg->willingness_auto = false;
+      PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", cfg->willingness);
+    }
+    break;
+  default:
+    fprintf(stderr, "Unknown arg in line %d.\n", line);
+    exit(EXIT_FAILURE);
+  }                             /* switch */
 }
 
 /*
@@ -320,7 +898,7 @@ queue_if(const char *name)
  * with options read in from a config file.
  */
 struct olsr_config *
-olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
+olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
 {
   int opt;
   int opt_idx = 0;
@@ -328,9 +906,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
   int opt_argc = 0;
   char **opt_argv = olsr_malloc(argc * sizeof(opt_argv[0]), "opt_argv");
   int *opt_line = olsr_malloc(argc * sizeof(opt_line[0]), "opt_line");
-#ifdef DEBUG
-  struct ipaddr_str buf;
-#endif
+  struct olsr_config *cfg = olsr_get_default_cfg();
 
   /*
    * Original cmd line params
@@ -454,31 +1030,14 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     opt_argc = 3;
   }
 
-  olsr_cnf = olsr_get_default_cnf();
-
   while (0 <= (opt = getopt_long(opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
-    char **tok;
-    const char *optarg_next;
-
     switch (opt) {
     case 'f':                  /* config (filename) */
       PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
-      if (0 > read_cnf(optarg, &opt_argc, &opt_argv, &opt_line)) {
+      if (0 > read_cfg(optarg, &opt_argc, &opt_argv, &opt_line)) {
         fprintf(stderr, "Could not find specified config file %s!\n%s\n\n", optarg, strerror(errno));
         exit(EXIT_FAILURE);
       }
-      break;
-    case 'D':                  /* delgw */
-      olsr_cnf->del_gws = true;
-      PARSER_DEBUG_PRINTF("del_gws set to %d\n", olsr_cnf->del_gws);
-      break;
-    case 'X':                  /* dispin */
-      PARSER_DEBUG_PRINTF("Calling parser_set_disp_pack_in(true)\n");
-      parser_set_disp_pack_in(true);
-      break;
-    case 'O':                  /* dispout */
-      PARSER_DEBUG_PRINTF("Calling net_set_disp_pack_out(true)\n");
-      net_set_disp_pack_out(true);
       break;
     case 'h':                  /* help */
       popt = long_options;
@@ -501,523 +1060,14 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
         popt++;
       }
       exit(0);
-    case 'H':                  /* hemu (ip4) */
-      {
-        union olsr_ip_addr ipaddr;
-        struct olsr_if_config *new_if;
-
-        if (inet_pton(AF_INET, optarg, &ipaddr) <= 0) {
-          fprintf(stderr, "Failed converting IP address %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-
-        /* Add hemu interface */
-        if (NULL != (new_if = queue_if("hcif01"))) {
-          new_if->host_emul = true;
-          new_if->hemu_ip = ipaddr;
-          olsr_cnf->host_emul = true;
-          PARSER_DEBUG_PRINTF("host_emul with %s\n", olsr_ip_to_string(&buf, &new_if->hemu_ip));
-        }
-        PARSER_DEBUG_PRINTF("host_emul set to %d\n", olsr_cnf->host_emul);
-      }
-      break;
-    case 'i':                  /* iface */
-      /* Ignored */
-      break;
-#ifdef WIN32
-    case 'l':                  /* int */
-      ListInterfaces();
-      exit(0);
-#endif
-    case 'P':                  /* ipc */
-      olsr_cnf->ipc_connections = 1;
-      PARSER_DEBUG_PRINTF("IPC connections: %d\n", olsr_cnf->ipc_connections);
-      break;
-    case 'n':                  /* nofork */
-      olsr_cnf->no_fork = true;
-      PARSER_DEBUG_PRINTF("no_fork set to %d\n", olsr_cnf->no_fork);
-      break;
-    case 'v':                  /* version */
-      /* Version string already printed */
-      exit(0);
-    case 'A':                  /* AllowNoInt (yes/no) */
-      olsr_cnf->allow_no_interfaces = (0 == strcmp("yes", optarg));
-      PARSER_DEBUG_PRINTF("Noint set to %d\n", olsr_cnf->allow_no_interfaces);
-      break;
-    case 'C':                  /* ClearScreen (yes/no) */
-      olsr_cnf->clear_screen = (0 == strcmp("yes", optarg));
-      PARSER_DEBUG_PRINTF("Clear screen %s\n", olsr_cnf->clear_screen ? "enabled" : "disabled");
-      break;
-    case 'd':                  /* DebugLevel (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < 128)
-          olsr_cnf->debug_level = arg;
-        PARSER_DEBUG_PRINTF("Debug level: %d\n", olsr_cnf->debug_level);
-      }
-      break;
-    case 'F':                  /* FIBMetric (str) */
-      if (NULL != (tok = parse_tok(optarg, NULL))) {
-        if (strcmp(*tok, CFG_FIBM_FLAT) == 0) {
-          olsr_cnf->fib_metric = FIBM_FLAT;
-        } else if (strcmp(*tok, CFG_FIBM_CORRECT) == 0) {
-          olsr_cnf->fib_metric = FIBM_CORRECT;
-        } else if (strcmp(*tok, CFG_FIBM_APPROX) == 0) {
-          olsr_cnf->fib_metric = FIBM_APPROX;
-        } else {
-          fprintf(stderr, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
-          exit(EXIT_FAILURE);
-        }
-        parse_tok_free(tok);
-      } else {
-        fprintf(stderr, "Error in %s\n", optarg);
-        exit(EXIT_FAILURE);
-      }
-      PARSER_DEBUG_PRINTF("FIBMetric: %d=%s\n", olsr_cnf->fib_metric, optarg);
-      break;
-    case '4':                  /* Hna4 (4body) */
-      if ('{' != *optarg) {
-        fprintf(stderr, "No {}\n");
-        exit(EXIT_FAILURE);
-      } else if (NULL != (tok = parse_tok(optarg + 1, NULL))) {
-        char **p = tok;
-        if (AF_INET != olsr_cnf->ip_version) {
-          fprintf(stderr, "IPv4 addresses can only be used if \"IpVersion\" == 4\n");
-          exit(EXIT_FAILURE);
-        }
-        while (p[0]) {
-          union olsr_ip_addr ipaddr, netmask;
-          if (!p[1]) {
-            fprintf(stderr, "Odd args in %s\n", optarg);
-            exit(EXIT_FAILURE);
-          }
-          if (inet_pton(AF_INET, p[0], &ipaddr) <= 0) {
-            fprintf(stderr, "Failed converting IP address %s\n", p[0]);
-            exit(EXIT_FAILURE);
-          }
-          if (inet_pton(AF_INET, p[1], &netmask) <= 0) {
-            fprintf(stderr, "Failed converting IP address %s\n", p[1]);
-            exit(EXIT_FAILURE);
-          }
-          if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-            fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
-            exit(EXIT_FAILURE);
-          }
-          ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
-          PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
-          p += 2;
-        }
-        parse_tok_free(tok);
-      }
-      break;
-    case '6':                  /* Hna6 (6body) */
-      if ('{' != *optarg) {
-        fprintf(stderr, "No {}\n");
-        exit(EXIT_FAILURE);
-      } else if (NULL != (tok = parse_tok(optarg + 1, NULL))) {
-        char **p = tok;
-        if (AF_INET6 != olsr_cnf->ip_version) {
-          fprintf(stderr, "IPv6 addresses can only be used if \"IpVersion\" == 6\n");
-          exit(EXIT_FAILURE);
-        }
-        while (p[0]) {
-          int prefix = -1;
-          union olsr_ip_addr ipaddr;
-          if (!p[1]) {
-            fprintf(stderr, "Odd args in %s\n", optarg);
-            exit(EXIT_FAILURE);
-          }
-          if (inet_pton(AF_INET6, p[0], &ipaddr) <= 0) {
-            fprintf(stderr, "Failed converting IP address %s\n", p[0]);
-            exit(EXIT_FAILURE);
-          }
-          sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
-          if (0 > prefix || 128 < prefix) {
-            fprintf(stderr, "Illegal IPv6 prefix %s\n", p[1]);
-            exit(EXIT_FAILURE);
-          }
-          ip_prefix_list_add(&olsr_cnf->hna_entries, &ipaddr, prefix);
-          PARSER_DEBUG_PRINTF("Hna6 %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), prefix);
-          p += 2;
-        }
-        parse_tok_free(tok);
-      }
-      break;
-    case 'I':                  /* Interface if1 if2 { ifbody } */
-      if (NULL != (tok = parse_tok(optarg, &optarg_next))) {
-        if ('{' != *optarg_next) {
-          fprintf(stderr, "No {}\n");
-          exit(EXIT_FAILURE);
-        } else {
-          char **tok_next = parse_tok(optarg_next + 1, NULL);
-          char **p = tok;
-          while (p[0]) {
-            char **p_next = tok_next;
-            struct olsr_if_config *new_if = queue_if(p[0]);
-            PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
-            while (new_if && p_next[0]) {
-              if (!p_next[1]) {
-                fprintf(stderr, "Odd args in %s\n", optarg_next);
-                exit(EXIT_FAILURE);
-              }
-              if (0 == strcmp("AutoDetectChanges", p_next[0])) {
-                new_if->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
-                PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
-              } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
-                union olsr_ip_addr ipaddr;
-                if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
-                  fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
-                  exit(EXIT_FAILURE);
-                }
-                new_if->cnf->ipv4_broadcast = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", ip4_to_string(&buf, new_if->cnf->ipv4_broadcast.v4));
-              } else if (0 == strcmp("Ip6AddrType", p_next[0])) {
-                if (0 == strcmp("site-local", p_next[1])) {
-                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_SITELOCAL;
-                } else if (0 == strcmp("unique-local", p_next[1])) {
-                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_UNIQUELOCAL;
-                } else if (0 == strcmp("global", p_next[1])) {
-                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_GLOBAL;
-                } else {
-                  new_if->cnf->ipv6_addrtype = OLSR_IP6T_AUTO;
-                }
-                PARSER_DEBUG_PRINTF("\tIPv6 addrtype: %d\n", new_if->cnf->ipv6_addrtype);
-              } else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
-                union olsr_ip_addr ipaddr;
-                if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-                  fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
-                  exit(EXIT_FAILURE);
-                }
-                new_if->cnf->ipv6_multi_site = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv6 site-local multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_site.v6));
-              } else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
-                union olsr_ip_addr ipaddr;
-                if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-                  fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
-                  exit(EXIT_FAILURE);
-                }
-                new_if->cnf->ipv6_multi_glbl = ipaddr;
-                PARSER_DEBUG_PRINTF("\tIPv6 global multicast: %s\n", ip6_to_string(&buf, &new_if->cnf->ipv6_multi_glbl.v6));
-              } else if (0 == strcmp("HelloInterval", p_next[0])) {
-                new_if->cnf->hello_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->hello_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tHELLO interval: %0.2f\n", new_if->cnf->hello_params.emission_interval);
-              } else if (0 == strcmp("HelloValidityTime", p_next[0])) {
-                new_if->cnf->hello_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->hello_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tHELLO validity: %0.2f\n", new_if->cnf->hello_params.validity_time);
-              } else if (0 == strcmp("TcInterval", p_next[0])) {
-                new_if->cnf->tc_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->tc_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tTC interval: %0.2f\n", new_if->cnf->tc_params.emission_interval);
-              } else if (0 == strcmp("TcValidityTime", p_next[0])) {
-                new_if->cnf->tc_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->tc_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tTC validity: %0.2f\n", new_if->cnf->tc_params.validity_time);
-              } else if (0 == strcmp("MidInterval", p_next[0])) {
-                new_if->cnf->mid_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->mid_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tMID interval: %0.2f\n", new_if->cnf->mid_params.emission_interval);
-              } else if (0 == strcmp("MidValidityTime", p_next[0])) {
-                new_if->cnf->mid_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->mid_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tMID validity: %0.2f\n", new_if->cnf->mid_params.validity_time);
-              } else if (0 == strcmp("HnaInterval", p_next[0])) {
-                new_if->cnf->hna_params.emission_interval = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->hna_params.emission_interval);
-                PARSER_DEBUG_PRINTF("\tHNA interval: %0.2f\n", new_if->cnf->hna_params.emission_interval);
-              } else if (0 == strcmp("HnaValidityTime", p_next[0])) {
-                new_if->cnf->hna_params.validity_time = 0;
-                sscanf(p_next[1], "%f", &new_if->cnf->hna_params.validity_time);
-                PARSER_DEBUG_PRINTF("\tHNA validity: %0.2f\n", new_if->cnf->hna_params.validity_time);
-              } else if (0 == strcmp("Weight", p_next[0])) {
-                new_if->cnf->weight.fixed = true;
-                PARSER_DEBUG_PRINTF("\tFixed willingness: %d\n", new_if->cnf->weight.value);
-              } else if (0 == strcmp("LinkQualityMult", p_next[0])) {
-                float f;
-                struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
-                if (!p_next[2]) {
-                  fprintf(stderr, "Odd args in %s\n", optarg_next);
-                  exit(EXIT_FAILURE);
-                }
-                memset(&mult->addr, 0, sizeof(mult->addr));
-                if (0 != strcmp("default", p_next[1])) {
-                  if (inet_pton(olsr_cnf->ip_version, p_next[1], &mult->addr) <= 0) {
-                    fprintf(stderr, "Failed converting IP address %s\n", p_next[1]);
-                    exit(EXIT_FAILURE);
-                  }
-                }
-                f = 0;
-                sscanf(p_next[2], "%f", &f);
-                mult->value = (uint32_t) (f * LINK_LOSS_MULTIPLIER);
-                mult->next = new_if->cnf->lq_mult;
-                new_if->cnf->lq_mult = mult;
-                PARSER_DEBUG_PRINTF("\tLinkQualityMult %s %0.2f\n", olsr_ip_to_string(&buf, &mult->addr),
-                                    (float)mult->value / LINK_LOSS_MULTIPLIER);
-                p_next++;
-              } else {
-                fprintf(stderr, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
-                exit(EXIT_FAILURE);
-              }
-              p_next += 2;
-            }
-            p++;
-          }
-          if (tok_next)
-            parse_tok_free(tok_next);
-        }
-        parse_tok_free(tok);
-      } else {
-        fprintf(stderr, "Error in %s\n", optarg);
-        exit(EXIT_FAILURE);
-      }
-      break;
-    case 'Q':                  /* IpcConnect (Host,Net,MaxConnections) */
-      if ('{' != *optarg) {
-        fprintf(stderr, "No {}\n");
-        exit(EXIT_FAILURE);
-      } else if (NULL != (tok = parse_tok(optarg + 1, NULL))) {
-        char **p = tok;
-        while (p[0]) {
-          if (!p[1]) {
-            fprintf(stderr, "Odd args in %s\n", optarg);
-            exit(EXIT_FAILURE);
-          }
-          if (0 == strcmp("MaxConnections", p[0])) {
-            int arg = -1;
-            sscanf(optarg, "%d", &arg);
-            if (0 <= arg && arg < 1 << (8 * sizeof(olsr_cnf->ipc_connections)))
-              olsr_cnf->ipc_connections = arg;
-            PARSER_DEBUG_PRINTF("\tIPC connections: %d\n", olsr_cnf->ipc_connections);
-          } else if (0 == strcmp("Host", p[0])) {
-            union olsr_ip_addr ipaddr;
-            if (inet_pton(olsr_cnf->ip_version, p[1], &ipaddr) <= 0) {
-              fprintf(stderr, "Failed converting IP address %s\n", p[0]);
-              exit(EXIT_FAILURE);
-            }
-            ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_cnf->maxplen);
-            PARSER_DEBUG_PRINTF("\tIPC host: %s\n", olsr_ip_to_string(&buf, &ipaddr));
-          } else if (0 == strcmp("Net", p[0])) {
-            union olsr_ip_addr ipaddr;
-            if (!p[2]) {
-              fprintf(stderr, "Odd args in %s\n", optarg_next);
-              exit(EXIT_FAILURE);
-            }
-            if (inet_pton(olsr_cnf->ip_version, p[1], &ipaddr) <= 0) {
-              fprintf(stderr, "Failed converting IP address %s\n", p[0]);
-              exit(EXIT_FAILURE);
-            }
-            if (AF_INET == olsr_cnf->ip_version) {
-              union olsr_ip_addr netmask;
-              if (inet_pton(AF_INET, p[2], &netmask) <= 0) {
-                fprintf(stderr, "Failed converting IP address %s\n", p[2]);
-                exit(EXIT_FAILURE);
-              }
-              if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-                fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
-                exit(EXIT_FAILURE);
-              }
-              ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
-              PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
-            } else {
-              int prefix = -1;
-              sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
-              if (0 > prefix || 128 < prefix) {
-                fprintf(stderr, "Illegal IPv6 prefix %s\n", p[2]);
-                exit(EXIT_FAILURE);
-              }
-              ip_prefix_list_add(&olsr_cnf->ipc_nets, &ipaddr, prefix);
-              PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", olsr_ip_to_string(&buf, &ipaddr), prefix);
-            }
-            p++;
-          } else {
-            fprintf(stderr, "Unknown arg: %s %s\n", p[0], p[1]);
-            exit(EXIT_FAILURE);
-          }
-          p += 2;
-        }
-        parse_tok_free(tok);
-      }
-      break;
-    case 'V':                  /* IpVersion (i) */
-      {
-        int ver = -1;
-        sscanf(optarg, "%d", &ver);
-        if (ver == 4) {
-          olsr_cnf->ip_version = AF_INET;
-          olsr_cnf->ipsize = sizeof(struct in_addr);
-          olsr_cnf->maxplen = 32;
-        } else if (ver == 6) {
-          olsr_cnf->ip_version = AF_INET6;
-          olsr_cnf->ipsize = sizeof(struct in6_addr);
-          olsr_cnf->maxplen = 128;
-        } else {
-          fprintf(stderr, "IpVersion must be 4 or 6!\n");
-          exit(EXIT_FAILURE);
-        }
-      }
-      PARSER_DEBUG_PRINTF("IpVersion: %d\n", olsr_cnf->ip_version);
-      break;
-    case 'a':                  /* LinkQualityAging (f) */
-      sscanf(optarg, "%f", &olsr_cnf->lq_aging);
-      PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", olsr_cnf->lq_aging);
-      break;
-    case 'L':                  /* LinkQualityAlgorithm (str) */
-      if (NULL != (tok = parse_tok(optarg, NULL))) {
-        olsr_cnf->lq_algorithm = olsr_strdup(*tok);
-        parse_tok_free(tok);
-      } else {
-        fprintf(stderr, "Error in %s\n", optarg);
-        exit(EXIT_FAILURE);
-      }
-      PARSER_DEBUG_PRINTF("LQ Algorithm: %s\n", olsr_cnf->lq_algorithm);
-      break;
-    case 'J':                  /* LinkQualityDijkstraLimit (i,f) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d %f", &arg, &olsr_cnf->lq_dinter);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_dlimit))))
-          olsr_cnf->lq_dlimit = arg;
-        PARSER_DEBUG_PRINTF("Link quality dijkstra limit %d, %0.2f\n", olsr_cnf->lq_dlimit, olsr_cnf->lq_dinter);
-      }
-      break;
-    case 'E':                  /* LinkQualityFishEye (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->lq_fish))))
-          olsr_cnf->lq_fish = arg;
-        PARSER_DEBUG_PRINTF("Link quality fish eye %d\n", olsr_cnf->lq_fish);
-      }
-      break;
-    case 'p':                  /* LoadPlugin (soname {PlParams}) */
-      if (NULL != (tok = parse_tok(optarg, &optarg_next))) {
-        if ('{' != *optarg_next) {
-          fprintf(stderr, "No {}\n");
-          exit(EXIT_FAILURE);
-        } else {
-          char **tok_next = parse_tok(optarg_next + 1, NULL);
-          struct plugin_entry *pe = olsr_malloc(sizeof(*pe), "plugin");
-          pe->name = olsr_strdup(*tok);
-          pe->params = NULL;
-          pe->next = olsr_cnf->plugins;
-          olsr_cnf->plugins = pe;
-          PARSER_DEBUG_PRINTF("Plugin: %s\n", pe->name);
-          if (tok_next) {
-            char **p_next = tok_next;
-            while (p_next[0]) {
-              struct plugin_param *pp = olsr_malloc(sizeof(*pp), "plparam");
-              if (0 != strcmp("PlParam", p_next[0]) || !p_next[1] || !p_next[2]) {
-                fprintf(stderr, "Odd args in %s\n", optarg_next);
-                exit(EXIT_FAILURE);
-              }
-              pp->key = olsr_strdup(p_next[1]);
-              pp->value = olsr_strdup(p_next[2]);
-              pp->next = pe->params;
-              pe->params = pp;
-              PARSER_DEBUG_PRINTF("\tPlParam: %s %s\n", pp->key, pp->value);
-              p_next += 3;
-            }
-            parse_tok_free(tok_next);
-          }
-        }
-        parse_tok_free(tok);
-      } else {
-        fprintf(stderr, "Error in %s\n", optarg);
-        exit(EXIT_FAILURE);
-      }
-      break;
-    case 'M':                  /* MprCoverage (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->mpr_coverage))))
-          olsr_cnf->mpr_coverage = arg;
-        PARSER_DEBUG_PRINTF("MPR coverage %d\n", olsr_cnf->mpr_coverage);
-      }
-      break;
-    case 'N':                  /* NatThreshold (f) */
-      sscanf(optarg, "%f", &olsr_cnf->lq_nat_thresh);
-      PARSER_DEBUG_PRINTF("NAT threshold %0.2f\n", olsr_cnf->lq_nat_thresh);
-      break;
-    case 'Y':                  /* NicChgsPollInt (f) */
-      sscanf(optarg, "%f", &olsr_cnf->nic_chgs_pollrate);
-      PARSER_DEBUG_PRINTF("NIC Changes Pollrate %0.2f\n", olsr_cnf->nic_chgs_pollrate);
-      break;
-    case 'T':                  /* Pollrate (f) */
-      {
-        float arg = -1;
-        sscanf(optarg, "%f", &arg);
-        if (0 <= arg)
-          olsr_cnf->pollrate = conv_pollrate_to_microsecs(arg);
-        PARSER_DEBUG_PRINTF("Pollrate %ud\n", olsr_cnf->pollrate);
-      }
-      break;
-    case 'q':                  /* RtProto (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rtproto))))
-          olsr_cnf->rtproto = arg;
-        PARSER_DEBUG_PRINTF("RtProto: %d\n", olsr_cnf->rtproto);
-      }
-      break;
-    case 'R':                  /* RtTableDefault (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rttable_default))))
-          olsr_cnf->rttable_default = arg;
-        PARSER_DEBUG_PRINTF("RtTableDefault: %d\n", olsr_cnf->rttable_default);
-      }
-      break;
-    case 'r':                  /* RtTable (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->rttable))))
-          olsr_cnf->rttable = arg;
-        PARSER_DEBUG_PRINTF("RtTable: %d\n", olsr_cnf->rttable);
-      }
-      break;
-    case 't':                  /* TcRedundancy (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->tc_redundancy))))
-          olsr_cnf->tc_redundancy = arg;
-        PARSER_DEBUG_PRINTF("TC redundancy %d\n", olsr_cnf->tc_redundancy);
-      }
-      break;
-    case 'Z':                  /* TosValue (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->tos))))
-          olsr_cnf->tos = arg;
-        PARSER_DEBUG_PRINTF("TOS: %d\n", olsr_cnf->tos);
-      }
-      break;
-    case 'w':                  /* Willingness (i) */
-      {
-        int arg = -1;
-        sscanf(optarg, "%d", &arg);
-        if (0 <= arg && arg < (1 << (8 * sizeof(olsr_cnf->willingness))))
-          olsr_cnf->willingness = arg;
-        olsr_cnf->willingness_auto = false;
-        PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", olsr_cnf->willingness);
-      }
-      break;
     default:
-      fprintf(stderr, "Unknown arg in line %d.\n", opt_line[optind]);
-      exit(EXIT_FAILURE);
-    }                           /* switch */
+      parse_cfg_option(opt, optarg, opt_line[optind], cfg);
+    }                           /* switch(opt) */
   }                             /* while getopt_long() */
 
   while (optind < opt_argc) {
     PARSER_DEBUG_PRINTF("new interface %s\n", opt_argv[optind]);
-    queue_if(opt_argv[optind++]);
+    queue_if(opt_argv[optind++], cfg);
   }
 
   /* Some cleanup */
@@ -1028,75 +1078,75 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
   free(opt_line);
   free(opt_str);
 
-  return olsr_cnf;
+  return cfg;
 }
 
 /*
  * Checks a given config for illegal values
  */
 int
-olsr_sanity_check_cnf(struct olsr_config *cnf)
+olsr_sanity_check_cfg(struct olsr_config *cfg)
 {
-  struct olsr_if_config *in = cnf->if_configs;
+  struct olsr_if_config *in = cfg->if_configs;
   struct olsr_if_options *io;
 
   /* Debug level */
-  if (cnf->debug_level < MIN_DEBUGLVL || cnf->debug_level > MAX_DEBUGLVL) {
-    fprintf(stderr, "Debuglevel %d is not allowed\n", cnf->debug_level);
+  if (cfg->debug_level < MIN_DEBUGLVL || cfg->debug_level > MAX_DEBUGLVL) {
+    fprintf(stderr, "Debuglevel %d is not allowed\n", cfg->debug_level);
     return -1;
   }
 
   /* IP version */
-  if (cnf->ip_version != AF_INET && cnf->ip_version != AF_INET6) {
-    fprintf(stderr, "Ipversion %d not allowed!\n", cnf->ip_version);
+  if (cfg->ip_version != AF_INET && cfg->ip_version != AF_INET6) {
+    fprintf(stderr, "Ipversion %d not allowed!\n", cfg->ip_version);
     return -1;
   }
 
   /* TOS */
-  if (cnf->tos > MAX_TOS) {
-    fprintf(stderr, "TOS %d is not allowed\n", cnf->tos);
+  if (cfg->tos > MAX_TOS) {
+    fprintf(stderr, "TOS %d is not allowed\n", cfg->tos);
     return -1;
   }
 
   /* Willingness */
-  if (cnf->willingness_auto == false && (cnf->willingness > MAX_WILLINGNESS)) {
-    fprintf(stderr, "Willingness %d is not allowed\n", cnf->willingness);
+  if (cfg->willingness_auto == false && (cfg->willingness > MAX_WILLINGNESS)) {
+    fprintf(stderr, "Willingness %d is not allowed\n", cfg->willingness);
     return -1;
   }
 
   /* Check Link quality dijkstra limit */
-  if (olsr_cnf->lq_dinter < conv_pollrate_to_secs(cnf->pollrate) && olsr_cnf->lq_dlimit != 255) {
+  if (cfg->lq_dinter < conv_pollrate_to_secs(cfg->pollrate) && cfg->lq_dlimit != 255) {
     fprintf(stderr, "Link quality dijkstra limit must be higher than pollrate\n");
     return -1;
   }
 
   /* NIC Changes Pollrate */
-  if (cnf->nic_chgs_pollrate < MIN_NICCHGPOLLRT || cnf->nic_chgs_pollrate > MAX_NICCHGPOLLRT) {
-    fprintf(stderr, "NIC Changes Pollrate %0.2f is not allowed\n", cnf->nic_chgs_pollrate);
+  if (cfg->nic_chgs_pollrate < MIN_NICCHGPOLLRT || cfg->nic_chgs_pollrate > MAX_NICCHGPOLLRT) {
+    fprintf(stderr, "NIC Changes Pollrate %0.2f is not allowed\n", cfg->nic_chgs_pollrate);
     return -1;
   }
 
   /* TC redundancy */
-  if (cnf->tc_redundancy > MAX_TC_REDUNDANCY) {
-    fprintf(stderr, "TC redundancy %d is not allowed\n", cnf->tc_redundancy);
+  if (cfg->tc_redundancy > MAX_TC_REDUNDANCY) {
+    fprintf(stderr, "TC redundancy %d is not allowed\n", cfg->tc_redundancy);
     return -1;
   }
 
   /* MPR coverage */
-  if (cnf->mpr_coverage < MIN_MPR_COVERAGE || cnf->mpr_coverage > MAX_MPR_COVERAGE) {
-    fprintf(stderr, "MPR coverage %d is not allowed\n", cnf->mpr_coverage);
+  if (cfg->mpr_coverage < MIN_MPR_COVERAGE || cfg->mpr_coverage > MAX_MPR_COVERAGE) {
+    fprintf(stderr, "MPR coverage %d is not allowed\n", cfg->mpr_coverage);
     return -1;
   }
 
   /* Link quality window size */
-  if (cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING) {
-    fprintf(stderr, "LQ aging factor %f is not allowed\n", cnf->lq_aging);
+  if (cfg->lq_aging < MIN_LQ_AGING || cfg->lq_aging > MAX_LQ_AGING) {
+    fprintf(stderr, "LQ aging factor %f is not allowed\n", cfg->lq_aging);
     return -1;
   }
 
   /* NAT threshold value */
-  if (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0) {
-    fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
+  if (cfg->lq_nat_thresh < 0.1 || cfg->lq_nat_thresh > 1.0) {
+    fprintf(stderr, "NAT threshold %f is not allowed\n", cfg->lq_nat_thresh);
     return -1;
   }
 
@@ -1122,10 +1172,10 @@ olsr_sanity_check_cnf(struct olsr_config *cnf)
     /* HELLO interval */
 
     if (io->hello_params.validity_time < 0.0) {
-      io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cnf->lq_aging);
+      io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cfg->lq_aging);
     }
 
-    if (io->hello_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
+    if (io->hello_params.emission_interval < conv_pollrate_to_secs(cfg->pollrate) ||
         io->hello_params.emission_interval > io->hello_params.validity_time) {
       fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f)\n", io->hello_params.emission_interval,
               io->hello_params.validity_time);
@@ -1133,14 +1183,14 @@ olsr_sanity_check_cnf(struct olsr_config *cnf)
     }
 
     /* TC interval */
-    if (io->tc_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
+    if (io->tc_params.emission_interval < conv_pollrate_to_secs(cfg->pollrate) ||
         io->tc_params.emission_interval > io->tc_params.validity_time) {
       fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f)\n", io->tc_params.emission_interval, io->tc_params.validity_time);
       return -1;
     }
 
     /* MID interval */
-    if (io->mid_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
+    if (io->mid_params.emission_interval < conv_pollrate_to_secs(cfg->pollrate) ||
         io->mid_params.emission_interval > io->mid_params.validity_time) {
       fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval,
               io->mid_params.validity_time);
@@ -1148,7 +1198,7 @@ olsr_sanity_check_cnf(struct olsr_config *cnf)
     }
 
     /* HNA interval */
-    if (io->hna_params.emission_interval < conv_pollrate_to_secs(cnf->pollrate) ||
+    if (io->hna_params.emission_interval < conv_pollrate_to_secs(cfg->pollrate) ||
         io->hna_params.emission_interval > io->hna_params.validity_time) {
       fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f)\n", io->hna_params.emission_interval,
               io->hna_params.validity_time);
@@ -1165,12 +1215,12 @@ olsr_sanity_check_cnf(struct olsr_config *cnf)
  * Free resources occupied by a configuration
  */
 void
-olsr_free_cnf(struct olsr_config *cnf)
+olsr_free_cfg(struct olsr_config *cfg)
 {
-  struct ip_prefix_list *hnad, *hna = cnf->hna_entries;
-  struct ip_prefix_list *ipcd, *ipc = cnf->ipc_nets;
-  struct olsr_if_config *ind, *in = cnf->if_configs;
-  struct plugin_entry *ped, *pe = cnf->plugins;
+  struct ip_prefix_list *hnad, *hna = cfg->hna_entries;
+  struct ip_prefix_list *ipcd, *ipc = cfg->ipc_nets;
+  struct olsr_if_config *ind, *in = cfg->if_configs;
+  struct plugin_entry *ped, *pe = cfg->plugins;
   struct olsr_lq_mult *mult, *next_mult;
 
   /*
@@ -1227,9 +1277,9 @@ olsr_free_cnf(struct olsr_config *cnf)
     free(ped);
   }
 
-  if (olsr_cnf->lq_algorithm)
-    free(olsr_cnf->lq_algorithm);
-  free(cnf);
+  if (cfg->lq_algorithm)
+    free(cfg->lq_algorithm);
+  free(cfg);
 
   return;
 }
@@ -1238,56 +1288,56 @@ olsr_free_cnf(struct olsr_config *cnf)
  * Get a default config
  */
 struct olsr_config *
-olsr_get_default_cnf(void)
+olsr_get_default_cfg(void)
 {
-  struct olsr_config *cnf = olsr_malloc(sizeof(struct olsr_config), "default_cnf");
+  struct olsr_config *cfg = olsr_malloc(sizeof(struct olsr_config), "default config");
 
   /*
    * olsr_malloc calls calloc(), no memset necessary:
-   * memset(cnf, 0, sizeof(*cnf));
+   * memset(cfg, 0, sizeof(*cfg));
    */
 
-  cnf->debug_level = DEF_DEBUGLVL;
-  cnf->no_fork = false;
-  cnf->host_emul = false;
-  cnf->ip_version = AF_INET;
-  cnf->ipsize = sizeof(struct in_addr);
-  cnf->maxplen = 32;
-  cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
-  cnf->tos = DEF_TOS;
-  cnf->rtproto = 3;
-  cnf->rttable = 254;
-  cnf->rttable_default = 0;
-  cnf->willingness_auto = DEF_WILL_AUTO;
-  cnf->ipc_connections = DEF_IPC_CONNECTIONS;
-  cnf->fib_metric = DEF_FIB_METRIC;
+  cfg->debug_level = DEF_DEBUGLVL;
+  cfg->no_fork = false;
+  cfg->host_emul = false;
+  cfg->ip_version = AF_INET;
+  cfg->ipsize = sizeof(struct in_addr);
+  cfg->maxplen = 32;
+  cfg->allow_no_interfaces = DEF_ALLOW_NO_INTS;
+  cfg->tos = DEF_TOS;
+  cfg->rtproto = 3;
+  cfg->rttable = 254;
+  cfg->rttable_default = 0;
+  cfg->willingness_auto = DEF_WILL_AUTO;
+  cfg->ipc_connections = DEF_IPC_CONNECTIONS;
+  cfg->fib_metric = DEF_FIB_METRIC;
 
-  cnf->pollrate = conv_pollrate_to_microsecs(DEF_POLLRATE);
-  cnf->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
+  cfg->pollrate = conv_pollrate_to_microsecs(DEF_POLLRATE);
+  cfg->nic_chgs_pollrate = DEF_NICCHGPOLLRT;
 
-  cnf->tc_redundancy = TC_REDUNDANCY;
-  cnf->mpr_coverage = MPR_COVERAGE;
-  cnf->lq_fish = DEF_LQ_FISH;
-  cnf->lq_dlimit = DEF_LQ_DIJK_LIMIT;
-  cnf->lq_dinter = DEF_LQ_DIJK_INTER;
-  cnf->lq_aging = DEF_LQ_AGING;
-  cnf->lq_algorithm = NULL;
-  cnf->lq_nat_thresh = DEF_LQ_NAT_THRESH;
-  cnf->clear_screen = DEF_CLEAR_SCREEN;
+  cfg->tc_redundancy = TC_REDUNDANCY;
+  cfg->mpr_coverage = MPR_COVERAGE;
+  cfg->lq_fish = DEF_LQ_FISH;
+  cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
+  cfg->lq_dinter = DEF_LQ_DIJK_INTER;
+  cfg->lq_aging = DEF_LQ_AGING;
+  cfg->lq_algorithm = NULL;
+  cfg->lq_nat_thresh = DEF_LQ_NAT_THRESH;
+  cfg->clear_screen = DEF_CLEAR_SCREEN;
 
-  cnf->del_gws = false;
-  cnf->will_int = 10 * HELLO_INTERVAL;
-  cnf->exit_value = EXIT_SUCCESS;
-  cnf->max_tc_vtime = 0.0;
-  cnf->ioctl_s = 0;
+  cfg->del_gws = false;
+  cfg->will_int = 10 * HELLO_INTERVAL;
+  cfg->exit_value = EXIT_SUCCESS;
+  cfg->max_tc_vtime = 0.0;
+  cfg->ioctl_s = 0;
 
 #if defined linux
-  cnf->rts_linux = 0;
+  cfg->rts_linux = 0;
 #endif
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
-  cnf->rts_bsd = 0;
+  cfg->rts_bsd = 0;
 #endif
-  return cnf;
+  return cfg;
 }
 
 void

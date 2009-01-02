@@ -170,9 +170,9 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  if (NULL == (olsr_cnf = olsr_parse_cnf(argc, argv, conf_file_name))) {
+  if (NULL == (olsr_cnf = olsr_parse_cfg(argc, argv, conf_file_name))) {
     printf("Using default config values(no configfile)\n");
-    olsr_cnf = olsr_get_default_cnf();
+    olsr_cnf = olsr_get_default_cfg();
   }
 
   /* Set avl tree comparator */
@@ -197,7 +197,7 @@ main(int argc, char *argv[])
   init_net();
 
   /* Sanity check configuration */
-  if (olsr_sanity_check_cnf(olsr_cnf) < 0) {
+  if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
     olsr_exit(__func__, EXIT_FAILURE);
   }
 
@@ -497,7 +497,7 @@ olsr_shutdown(void)
 #endif
 
   /* Flush config */
-  olsr_free_cnf(olsr_cnf);
+  olsr_free_cfg(olsr_cnf);
 
   /* Close and delete all sockets */
   olsr_flush_sockets();

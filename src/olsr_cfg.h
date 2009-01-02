@@ -232,10 +232,10 @@ extern struct olsr_config *EXPORT(olsr_cnf);
 /*
  * Interface to parser
  */
-struct olsr_config *olsr_parse_cnf(int, char **, const char *);
-int olsr_sanity_check_cnf(struct olsr_config *);
-void olsr_free_cnf(struct olsr_config *);
-struct olsr_config *olsr_get_default_cnf(void);
+struct olsr_config *olsr_parse_cfg(int, char **, const char *);
+int olsr_sanity_check_cfg(struct olsr_config *);
+void olsr_free_cfg(struct olsr_config *);
+struct olsr_config *olsr_get_default_cfg(void);
 
 /*
  * Check pollrate function
@@ -250,10 +250,6 @@ conv_pollrate_to_microsecs(float p)
 {
   return p * 1000000;
 }
-
-#if 0
-int olsr_check_pollrate(float *pollrate);
-#endif
 
 /*
  * List functions
