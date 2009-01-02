@@ -473,6 +473,9 @@ olsr_shutdown(void)
     shutdown_ipc();
   }
 
+  /* Shut down LQ plugin */
+  deactivate_lq_handler();
+
   /* Closing plug-ins */
   olsr_close_plugins();
 
@@ -507,6 +510,12 @@ olsr_shutdown(void)
 
   /* Free cookies and memory pools attached. */
   olsr_delete_all_cookies();
+
+  /* Remove parser hooks */
+  olsr_deinit_parser();
+
+  /* Remove IP filters */
+  deinit_netfilters();
 
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 

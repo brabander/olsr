@@ -97,6 +97,12 @@ void olsr_init_parser(void)
   olsr_init_package_process();
 }
 
+void olsr_deinit_parser(void)
+{
+  OLSR_PRINTF(3, "Deinitializing parser...\n");
+  olsr_deinit_package_process();
+}
+
 void olsr_parser_add_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *new_entry;
@@ -115,7 +121,6 @@ void olsr_parser_add_function(parse_function *function, uint32_t type)
   OLSR_PRINTF(3, "Register parse function: Added function for type %u\n", type);
 }
 
-#if 0
 int olsr_parser_remove_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *entry, *prev;
@@ -135,7 +140,6 @@ int olsr_parser_remove_function(parse_function *function, uint32_t type)
   }
   return 0;
 }
-#endif
 
 void olsr_preprocessor_add_function(preprocessor_function *function)
 {
@@ -191,7 +195,6 @@ void olsr_packetparser_add_function(packetparser_function *function)
 
 }
 
-#if 0
 int olsr_packetparser_remove_function(packetparser_function *function)
 {
   struct packetparser_function_entry *entry, *prev;
@@ -211,7 +214,6 @@ int olsr_packetparser_remove_function(packetparser_function *function)
   }
   return 0;
 }
-#endif
 
 /**
  * Shared code to parse the message headers and validate the message originator.

@@ -303,9 +303,11 @@ void olsr_close_plugins(void)
     struct olsr_plugin *entry;
 
     OLSR_PRINTF(0, "Closing plugins...\n");
-    for(entry = olsr_plugins; entry != NULL; entry = entry->next) {
+    while (olsr_plugins) {
+        entry = olsr_plugins;
+        olsr_plugins = entry->next;
         dlclose(entry->dlhandle);
-        entry->dlhandle = NULL;
+        free(entry);
     }
 }
 

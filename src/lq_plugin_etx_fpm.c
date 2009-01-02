@@ -49,6 +49,7 @@
 #define LQ_FPM_LINKCOST_MULTIPLIER 65535
 
 static void lq_etxfpm_initialize(void);
+static void lq_etxfpm_deinitialize(void);
 
 static olsr_linkcost lq_etxfpm_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfpm_calc_lq_hello_neighbor_cost(
@@ -86,6 +87,7 @@ static char *lq_etxfpm_print_cost(olsr_linkcost cost, struct lqtextbuffer * buff
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxfpm_handler = {
   &lq_etxfpm_initialize,
+  &lq_etxfpm_deinitialize,
 
   &lq_etxfpm_calc_link_entry_cost,
   &lq_etxfpm_calc_lq_hello_neighbor_cost,
@@ -133,6 +135,9 @@ static void lq_etxfpm_initialize(void) {
 
   aging_quickstart_new = (uint32_t)(LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_quickstart_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_quickstart_new;
+}
+
+static void lq_etxfpm_deinitialize(void) {
 }
 
 static olsr_linkcost lq_etxfpm_calc_linkcost(struct lq_etxfpm_linkquality *lq) {

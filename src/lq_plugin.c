@@ -146,6 +146,17 @@ activate_lq_handler(void)
   active_lq_handler->initialize();
 }
 
+void
+deactivate_lq_handler(void)
+{
+  struct lq_handler_node *handler;
+  active_lq_handler->deinitialize();
+  OLSR_FOR_ALL_LQ_HANDLERS(handler) {
+    avl_delete(&lq_handler_tree, &handler->node);
+    free(handler);
+  } OLSR_FOR_ALL_LQ_HANDLERS_END(handler);
+}
+
 /*
  * olsr_calc_tc_cost
  *

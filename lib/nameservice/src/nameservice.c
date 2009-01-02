@@ -490,6 +490,8 @@ name_destructor(void)
 {
 	OLSR_PRINTF(2, "NAME PLUGIN: exit. cleaning up...\n");
 
+	olsr_parser_remove_function(&olsr_parser, PARSER_TYPE);
+
 	free_name_entry_list(&my_names);
 	free_name_entry_list(&my_services);
 	free_name_entry_list(&my_macs);

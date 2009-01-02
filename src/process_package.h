@@ -48,6 +48,9 @@ void
 olsr_init_package_process(void);
 
 void
+olsr_deinit_package_process(void);
+
+void
 olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif

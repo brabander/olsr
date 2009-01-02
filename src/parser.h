@@ -79,6 +79,9 @@ void
 olsr_init_parser(void);
 
 void
+olsr_deinit_parser(void);
+
+void
 olsr_input(int, void *, unsigned int);
 
 void
@@ -87,10 +90,8 @@ olsr_input_hostemu(int, void *, unsigned int);
 void
 EXPORT(olsr_parser_add_function)(parse_function, uint32_t);
 
-#if 0
 int
-olsr_parser_remove_function(parse_function, uint32_t);
-#endif
+EXPORT(olsr_parser_remove_function)(parse_function, uint32_t);
 
 void
 EXPORT(olsr_preprocessor_add_function)(preprocessor_function);
@@ -101,10 +102,8 @@ EXPORT(olsr_preprocessor_remove_function)(preprocessor_function);
 void
 olsr_packetparser_add_function(packetparser_function *function);
 
-#if 0
 int
 olsr_packetparser_remove_function(packetparser_function *function);
-#endif
 
 const unsigned char *
 olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);

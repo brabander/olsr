@@ -48,6 +48,7 @@
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
 static void lq_etxfloat_initialize(void);
+static void lq_etxfloat_deinitialize(void);
 
 static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(
@@ -85,6 +86,7 @@ static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer * bu
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxfloat_handler = {
   &lq_etxfloat_initialize,
+  &lq_etxfloat_deinitialize,
 
   &lq_etxfloat_calc_link_entry_cost,
   &lq_etxfloat_calc_lq_hello_neighbor_cost,
@@ -124,6 +126,9 @@ struct lq_handler lq_etxfloat_handler = {
 };
 
 static void lq_etxfloat_initialize(void) {
+}
+
+static void lq_etxfloat_deinitialize(void) {
 }
 
 static olsr_linkcost lq_etxfloat_calc_linkcost(struct lq_etxfloat_linkquality *lq) {

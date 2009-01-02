@@ -110,6 +110,15 @@ init_net(void)
   }
 }
 
+void deinit_netfilters(void)
+{
+  struct filter_entry *filter;
+  OLSR_FOR_ALL_FILTERS(filter) {
+    avl_delete(&filter_tree, &filter->filter_node);
+    free(filter);
+  } OLSR_FOR_ALL_FILTERS_END(filter);
+}
+
 /**
  * Create an outputbuffer for the given interface. This
  * function will allocate the needed storage according

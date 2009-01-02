@@ -48,6 +48,7 @@
 #define LQ_PLUGIN_LC_MULTIPLIER 1024
 
 static void lq_rfc_initialize(void);
+static void lq_rfc_deinitialize(void);
 
 static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_rfc_calc_lq_hello_neighbor_cost(
@@ -85,6 +86,7 @@ static char *lq_rfc_print_cost(olsr_linkcost cost, struct lqtextbuffer * buffer)
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_rfc_handler = {
   &lq_rfc_initialize,
+  &lq_rfc_deinitialize,
 
   &lq_rfc_calc_link_entry_cost,
   &lq_rfc_calc_lq_hello_neighbor_cost,
@@ -124,6 +126,9 @@ struct lq_handler lq_rfc_handler = {
 };
 
 static void lq_rfc_initialize(void) {
+}
+
+static void lq_rfc_deinitialize(void) {
 }
 
 static olsr_linkcost lq_rfc_calc_link_entry_cost(struct link_entry __attribute__((unused)) *link) {

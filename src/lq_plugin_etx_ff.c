@@ -52,6 +52,7 @@
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
 static void lq_etxff_initialize(void);
+static void lq_etxff_deinitialize(void);
 
 static olsr_linkcost lq_etxff_calc_link_entry_cost(struct link_entry *);
 static olsr_linkcost lq_etxff_calc_lq_hello_neighbor_cost(
@@ -93,6 +94,7 @@ static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxff_handler = {
   &lq_etxff_initialize,
+  &lq_etxff_deinitialize,
 
   &lq_etxff_calc_link_entry_cost,
   &lq_etxff_calc_lq_hello_neighbor_cost,
@@ -229,13 +231,20 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
   }OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
 
+static struct timer_entry *lq_etxff_timer_struct = NULL;
+
 static void lq_etxff_initialize(void) {
   /* Some cookies for stats keeping */
   olsr_packetparser_add_function(&lq_etxff_packet_parser);
   default_lq_ff_timer_cookie = olsr_alloc_cookie("Default Freifunk LQ",
       OLSR_COOKIE_TYPE_TIMER);
-  olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC, &lq_etxff_timer, NULL,
-      default_lq_ff_timer_cookie->ci_id);
+  lq_etxff_timer_struct = olsr_start_timer(1000, 0, OLSR_TIMER_PERIODIC,
+      &lq_etxff_timer, NULL, default_lq_ff_timer_cookie->ci_id);
+}
+
+static void lq_etxff_deinitialize(void) {
+  olsr_stop_timer(lq_etxff_timer_struct);
+  olsr_packetparser_remove_function(&lq_etxff_packet_parser);
 }
 
 static olsr_linkcost lq_etxff_calc_linkcost(struct lq_etxff_linkquality *lq) {

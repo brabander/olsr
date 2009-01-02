@@ -54,6 +54,7 @@
 #include "olsrd_txtinfo.h"
 #include "defs.h"
 #include "olsr_cfg.h"
+#include "olsr.h"
 
 
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"
@@ -81,7 +82,7 @@ static void my_init(void)
 
     /* defaults for parameters */
     ipc_port = 2006;
-    ipc_accept_ip = malloc(sizeof(union olsr_ip_addr));
+    ipc_accept_ip = olsr_malloc(sizeof(union olsr_ip_addr), "ipc_accept_ip");
     if (!ipc_accept_ip) {
         OLSR_PRINTF(0, "Error, no memory for txtinfo plugin");
         exit(1);
@@ -107,6 +108,7 @@ static void my_fini(void)
      * sourcefile and all data destruction
      * should happen there - NOT HERE!
      */
+    if (ipc_accept_ip) free(ipc_accept_ip);
     olsr_plugin_exit();
 }
 
@@ -118,16 +120,21 @@ int olsrd_plugin_interface_version(void)
 
 static int set_txtinfo_iplist(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
+    union olsr_ip_addr *tmp = ipc_accept_ip;
     union olsr_ip_addr ip_addr;
     if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
         OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
         return 1;
     }
 
-    ipc_accept_ip = realloc(ipc_accept_ip, sizeof(ip_addr) * (ipc_accept_count + 1));
+    ipc_accept_ip = (union olsr_ip_addr *)olsr_malloc(sizeof(ip_addr) * (ipc_accept_count + 1), "txtinfo iplist");
     if (ipc_accept_ip == NULL) {
       OLSR_PRINTF(0, "Error, cannot allocate memory for ipc_accept_ip list in txtinfo plugin");
       exit(1);
+    }
+    if (tmp) {
+      memmove(ipc_accept_ip, tmp, sizeof(ip_addr) * ipc_accept_count);
+      free(tmp);
     }
 
     ipc_accept_ip[ipc_accept_count++] = ip_addr;
