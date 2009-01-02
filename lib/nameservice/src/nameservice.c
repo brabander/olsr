@@ -64,7 +64,6 @@
 #include "plugin_util.h"
 #include "nameservice.h"
 #include "mapwrite.h"
-#include "compat.h"
 #include "common/string.h"
 
 
@@ -310,7 +309,7 @@ add_name_to_list(struct name_entry *my_list, const char *value, int type, const 
 {
 	struct name_entry *tmp = olsr_malloc(sizeof(struct name_entry),
 	  "new name_entry add_name_to_list");
-	tmp->name = strndup( value, MAX_NAME );
+	tmp->name = olsr_strndup( value, MAX_NAME );
 	tmp->len = strlen( tmp->name );
 	tmp->type = type;
 	// all IPs with value 0 will be set to main_addr later
@@ -1595,7 +1594,7 @@ allowed_hostname_or_ip_in_service(const char *service_line, const regmatch_t *ho
 		return false;
 	}
 
-	hostname_or_ip = strndup(&service_line[hostname_or_ip_match->rm_so], hostname_or_ip_match->rm_eo - hostname_or_ip_match->rm_so);
+	hostname_or_ip = olsr_strndup(&service_line[hostname_or_ip_match->rm_so], hostname_or_ip_match->rm_eo - hostname_or_ip_match->rm_so);
 	//hostname is one of the names, that I announce (i.e. one that i am allowed to announce)
 	for (name = my_names; name != NULL; name = name->next) {
 		if (strncmp(name->name, hostname_or_ip, name->len - strlen(my_suffix)) == 0 ) {

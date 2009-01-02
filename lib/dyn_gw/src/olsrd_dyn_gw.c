@@ -399,7 +399,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
     fprintf(stderr, "DYN GW: Out of memory!\n");
     exit(0);
   }
-  new->ping_address = strdup(ping_address);
+  new->ping_address = olsr_strdup(ping_address);
   new->next = the_ping_list;
   return new;
 }

@@ -1196,7 +1196,7 @@ olsr_free_cnf(struct olsr_config *cnf)
     ind = in;
     in = in->next;
     free(ind->name);
-    free(ind->config);
+    if (ind->config) free(ind->config);
     free(ind);
   }
 

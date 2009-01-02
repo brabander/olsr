@@ -74,14 +74,14 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
 
   assert(ci_index < COOKIE_ID_MAX);	/* increase COOKIE_ID_MAX */
 
-  ci = calloc(1, sizeof(struct olsr_cookie_info));
+  ci = olsr_malloc(sizeof(struct olsr_cookie_info), "new cookie");
   cookies[ci_index] = ci;
 
   /* Now populate the cookie info */
   ci->ci_id = ci_index;
   ci->ci_type = cookie_type;
   if (cookie_name) {
-    ci->ci_name = strdup(cookie_name);
+    ci->ci_name = olsr_strdup(cookie_name);
   }
 
   /* Init the free list */
@@ -288,14 +288,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
      * Allocate a fresh one.
      */
     size = ci->ci_size + sizeof(struct olsr_cookie_mem_brand);
-    ptr = calloc(1, size);
-
-    if (!ptr) {
-      const char *const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
-      olsr_exit(ci->ci_name, EXIT_FAILURE);
-    }
+    ptr = olsr_malloc(size, ci->ci_name);
 
     /*
      * Poison the memory for debug purposes ?

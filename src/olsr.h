@@ -96,10 +96,10 @@ void *
 EXPORT(olsr_malloc)(size_t, const char *);
 
 char *
-olsr_strdup(const char *s);
+EXPORT(olsr_strdup)(const char *s);
 
 char *
-olsr_strndup(const char *s, size_t n);
+EXPORT(olsr_strndup)(const char *s, size_t n);
 
 #endif
 
