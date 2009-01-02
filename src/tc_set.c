@@ -49,7 +49,7 @@ static bool delete_outdated_tc_edges(struct tc_entry *);
 
 /* Root of the link state database */
 struct avl_tree tc_tree;
-struct tc_entry *tc_myself;	       /* Shortcut to ourselves */
+struct tc_entry *tc_myself = NULL; /* Shortcut to ourselves */
 
 /* Some cookies for stats keeping */
 static struct olsr_cookie_info *tc_edge_gc_timer_cookie = NULL;
@@ -194,11 +194,6 @@ olsr_init_tc(void)
 
   tc_mem_cookie = olsr_alloc_cookie("tc_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_mem_cookie, sizeof(struct tc_entry));
-
-  /*
-   * Add a TC entry for ourselves.
-   */
-  tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
 }
 
 /**
