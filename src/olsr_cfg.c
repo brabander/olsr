@@ -91,7 +91,7 @@ read_cnf(const char *filename, int *pargc, char ***pargv, int **pline)
   FILE *f = fopen(filename, "r");
   if (f) {
     int bopen = 0, optind_tmp = optind, line_lst = 0, line = 0;
-    char **argv_lst = 0, sbuf[512], *pbuf = NULL, *p;
+    char sbuf[512], *pbuf = NULL, *p;
 
     while ((p = fgets(sbuf, sizeof(sbuf), f)) || pbuf) {
       line++;
@@ -160,13 +160,10 @@ read_cnf(const char *filename, int *pargc, char ***pargv, int **pline)
             }
             optind_tmp += 2;
             *pargc = argc_tmp;
+            free(*pargv);
             *pargv = argv_tmp;
-            if (argv_lst) {
-              free(argv_lst);
-            }
             free(*pline);
             *pline = line_tmp;
-            argv_lst = argv_tmp;
             line_lst = line;
             free(pbuf);
             pbuf = NULL;
@@ -1028,6 +1025,7 @@ olsr_parse_cnf(int argc, char *argv[], const char *conf_file_name)
     free(opt_argv[--opt_argc]);
   }
   free(opt_argv);
+  free(opt_line);
   free(opt_str);
 
   return olsr_cnf;
@@ -1169,7 +1167,8 @@ olsr_sanity_check_cnf(struct olsr_config *cnf)
 void
 olsr_free_cnf(struct olsr_config *cnf)
 {
-  struct ip_prefix_list *hd, *h = cnf->hna_entries;
+  struct ip_prefix_list *hnad, *hna = cnf->hna_entries;
+  struct ip_prefix_list *ipcd, *ipc = cnf->ipc_nets;
   struct olsr_if_config *ind, *in = cnf->if_configs;
   struct plugin_entry *ped, *pe = cnf->plugins;
   struct olsr_lq_mult *mult, *next_mult;
@@ -1177,10 +1176,19 @@ olsr_free_cnf(struct olsr_config *cnf)
   /*
    * Free HNAs.
    */
-  while (h) {
-    hd = h;
-    h = h->next;
-    free(hd);
+  while (hna) {
+    hnad = hna;
+    hna = hna->next;
+    free(hnad);
+  }
+
+  /*
+   * Free IPCs.
+   */
+  while (ipc) {
+    ipcd = ipc;
+    ipc = ipc->next;
+    free(ipcd);
   }
 
   /*
@@ -1196,7 +1204,8 @@ olsr_free_cnf(struct olsr_config *cnf)
     ind = in;
     in = in->next;
     free(ind->name);
-    if (ind->config) free(ind->config);
+    if (ind->config)
+      free(ind->config);
     free(ind);
   }
 
@@ -1204,11 +1213,23 @@ olsr_free_cnf(struct olsr_config *cnf)
    * Free Plugins - olsr_close_plugins() allready called
    */
   while (pe) {
+    struct plugin_param *pard, *par = pe->params;
+    while (par) {
+      pard = par;
+      par = par->next;
+      free(pard->key);
+      free(pard->value);
+      free(pard);
+    }
     ped = pe;
     pe = pe->next;
     free(ped->name);
     free(ped);
   }
+
+  if (olsr_cnf->lq_algorithm)
+    free(olsr_cnf->lq_algorithm);
+  free(cnf);
 
   return;
 }
