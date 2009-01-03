@@ -139,7 +139,6 @@ struct olsr_if_options {
 struct olsr_if_config {
   char *name;
   char *config;
-  bool host_emul;
   union olsr_ip_addr hemu_ip;
   struct interface *interf;
   struct olsr_if_options *cnf;
@@ -178,7 +177,6 @@ struct olsr_config {
   size_t ipsize;                       /* Size of address */
   uint8_t maxplen;                     /* maximum prefix len */
   unsigned char no_fork:1;
-  unsigned char host_emul:1;
   unsigned char allow_no_interfaces:1;
   unsigned char willingness_auto:1;
   unsigned char clear_screen:1;

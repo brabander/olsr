@@ -228,7 +228,6 @@ To use the plugins add them to the olsrd configuration file.
 COMPONENT/OS	Linux	Win32	FreeBSD	NetBSD	OpenBSD	OSX
 ------------------------------------------------------------
 olsrd		+/+	+/+	+/+	+/+	+/+	?
-olsr_switch	+/+	+/+	+/+	+/+	+/+	?
 ------------------------------------------------------------
 PLUGINS
 bmf		+/+	+/?	+/+	+/+	+/+	-

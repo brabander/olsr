@@ -530,9 +530,6 @@ int add_hemu_if(struct olsr_if_config *iface)
   struct ipaddr_str buf;
   size_t name_size;
 
-  if(!iface->host_emul)
-    return -1;
-
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
   iface->interf = ifp;

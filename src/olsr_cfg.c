@@ -302,7 +302,6 @@ queue_if(const char *name, struct olsr_config *cfg)
   new_if = olsr_malloc(sizeof(*new_if), "queue interface");
   new_if->name = olsr_strdup(name);
   /* new_if->config = NULL; */
-  /* new_if->host_emul = false; */
   /* memset(&new_if->hemu_ip, 0, sizeof(new_if->hemu_ip)); */
   /* new_if->interf = NULL; */
   new_if->cnf = get_default_olsr_if_options();
@@ -641,10 +640,6 @@ parse_cfg_loadplugin(const char *argstr, struct olsr_config *cfg)
 static void
 parse_cfg_option(const int optint, const char *argstr, const int line, struct olsr_config *cfg)
 {
-#ifdef DEBUG
-  struct ipaddr_str buf;
-#endif
-
   switch (optint) {
   case 'D':                    /* delgw */
     cfg->del_gws = true;
@@ -657,26 +652,6 @@ parse_cfg_option(const int optint, const char *argstr, const int line, struct ol
   case 'O':                    /* dispout */
     PARSER_DEBUG_PRINTF("Calling net_set_disp_pack_out(true)\n");
     net_set_disp_pack_out(true);
-    break;
-  case 'H':                    /* hemu (ip4) */
-    {
-      union olsr_ip_addr ipaddr;
-      struct olsr_if_config *new_if;
-
-      if (inet_pton(AF_INET, argstr, &ipaddr) <= 0) {
-        fprintf(stderr, "Failed converting IP address %s\n", argstr);
-        exit(EXIT_FAILURE);
-      }
-
-      /* Add hemu interface */
-      if (NULL != (new_if = queue_if("hcif01", cfg))) {
-        new_if->host_emul = true;
-        new_if->hemu_ip = ipaddr;
-        cfg->host_emul = true;
-        PARSER_DEBUG_PRINTF("host_emul with %s\n", ip_to_string(cfg->ip_version, &buf, &new_if->hemu_ip));
-      }
-      PARSER_DEBUG_PRINTF("host_emul set to %d\n", cfg->host_emul);
-    }
     break;
   case 'i':                    /* iface */
     /* Ignored */
@@ -928,7 +903,6 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
     {"dispin",                   no_argument,       0, 'X'},
     {"dispout",                  no_argument,       0, 'O'},
     {"help",                     no_argument,       0, 'h'},
-    {"hemu",                     required_argument, 0, 'H'}, /* (ip4) */
     {"iface",                    no_argument,       0, 'i'}, /* if0 if1... */
 #ifdef WIN32
     {"int",                      no_argument,       0, 'l'},
@@ -1268,7 +1242,6 @@ olsr_get_default_cfg(void)
 
   cfg->debug_level = DEF_DEBUGLVL;
   cfg->no_fork = false;
-  cfg->host_emul = false;
   cfg->ip_version = AF_INET;
   cfg->ipsize = sizeof(struct in_addr);
   cfg->maxplen = 32;

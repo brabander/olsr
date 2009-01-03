@@ -106,7 +106,7 @@
 
             <arg>--config</arg>
 
-            <replaceable> configfile</replaceable>
+            <replaceable>configfile</replaceable>
           </group>
 
           <group choice="req">
@@ -114,7 +114,7 @@
 
             <arg>--DebugLevel</arg>
 
-            <replaceable> level</replaceable>
+            <replaceable>level</replaceable>
           </group>
 
           <group>
@@ -152,7 +152,7 @@
 
             <arg>--hemu</arg>
 
-            <replaceable> ipaddr</replaceable>
+            <replaceable>ipaddr</replaceable>
           </group>
 
           <arg>interface1</arg>
@@ -261,8 +261,8 @@
                 support cooperation too well. To cooperate, disable at least
                 any active firewall solution on the WLAN card to enable
                 forwarding for others. For security, disable all protocols and
-                services for the WLAN card with the exception of basic TCP/IP.
-                </para>
+                services for the WLAN card with the exception of basic
+                TCP/IP.</para>
               </listitem>
             </varlistentry>
 
@@ -424,20 +424,6 @@
           <listitem>
             <para>This option allows the GUI front end to create one
             connection to <productname>olsrd</productname> at runtime.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>-H <replaceable>ipaddr</replaceable></option> or
-          <option>--hemu <replaceable>ipaddr</replaceable></option></term>
-
-          <listitem>
-            <para>Use this option to connect to the <xref
-            endterm="olsr_switch_8-title" linkend="olsr_switch_8" /> network
-            simulation application. Here <replaceable>ipaddr</replaceable>
-            will be the IP address that the process will set as its main
-            address in the emulation mode. This emulated interfaces have no
-            connection to the real IP stack and can be chosen freely.</para>
           </listitem>
         </varlistentry>
 
@@ -2195,102 +2181,6 @@
 
       <simplelist type="inline">
         <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
-      </simplelist>
-    </refsect1>
-  </refentry>
-
-  <refentry id="olsr_switch_8">
-    <indexterm>
-      <primary><command>olsr_switch</command></primary>
-    </indexterm>
-
-    <refentryinfo>
-      <titleabbrev>Olsrd Network Simulator</titleabbrev>
-    </refentryinfo>
-
-    <refmeta>
-      <refentrytitle id="olsr_switch_8-title">olsr_switch</refentrytitle>
-
-      <manvolnum>8</manvolnum>
-    </refmeta>
-
-    <refnamediv>
-      <refname>olsr_switch</refname>
-
-      <refpurpose><productname>olsrd</productname> network
-      simulator</refpurpose>
-    </refnamediv>
-
-    <refsynopsisdiv>
-      <cmdsynopsis>
-        <command>olsr_switch</command>
-
-        <arg>-foo <replaceable>foo</replaceable></arg>
-
-        <arg>-bar <replaceable>bar</replaceable></arg>
-      </cmdsynopsis>
-    </refsynopsisdiv>
-
-    <refsect1>
-      <title>Description</title>
-
-      <para><command>olsr_switch</command> is an implementation of the
-      Optimized Link State Routing protocol for Mobile Ad-Hoc networks
-      (MANET). The protocol is described in RFC3626. It is designed to be run
-      as a standalone server process - but as it is still in an experimental
-      stage most users will prefer running it with some debug output which is
-      directed to STDOUT.</para>
-
-      <para>This manual page only lists the command line arguments. For
-      details of the configuration file see the comments included in
-      <filename>/etc/olsrd.conf</filename>. Note that none of these options
-      need to be set at the command line - all these options and others can be
-      set in the configuration file.</para>
-
-      <para>The homepage of <productname>olsrd</productname> is <ulink
-      url="http://www.olsr.org">http://www.olsr.org</ulink></para>
-    </refsect1>
-
-    <refsect1>
-      <title>Options</title>
-
-      <variablelist>
-        <varlistentry>
-          <term><option>-foo <replaceable>foo</replaceable></option></term>
-
-          <listitem>
-            <para>This option specifies on what network interfaces
-            <productname>olsrd</productname> should run. These interfaces
-            cannot be aliased interfaces such as eth0:1.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>-bar <replaceable>bar</replaceable></option></term>
-
-          <listitem>
-            <para>This option overrides the default configuration file path
-            used by <productname>olsrd</productname> -
-            <filename>/etc/olsrd.conf</filename></para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
-    </refsect1>
-
-    <refsect1>
-      <title>Files</title>
-
-      <para><filename>/etc/olsrd.conf</filename></para>
-    </refsect1>
-
-    <refsect1>
-      <title>See also</title>
-
-      <simplelist type="inline">
-        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
-
-        <member><xref endterm="olsrd_conf_5-title"
-        linkend="olsrd_conf_5" /></member>
       </simplelist>
     </refsect1>
   </refentry>

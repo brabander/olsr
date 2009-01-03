@@ -116,13 +116,7 @@ ifinit(void)
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
-    if (tmp_if->host_emul) {
-      add_hemu_if(tmp_if);
-    } else {
-      if (!olsr_cnf->host_emul) {	/* XXX: TEMPORARY! */
-	chk_if_up(tmp_if, 1);
-      }
-    }
+    chk_if_up(tmp_if, 1);
   }
 
   /* Kick a periodic timer for the network interface update function */
@@ -146,13 +140,6 @@ check_interface_updates(void *foo __attribute__((unused)))
 #endif
 
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
-
-    if (tmp_if->host_emul) {
-	continue;
-    }
-    if (olsr_cnf->host_emul) { /* XXX: TEMPORARY! */
-      continue;
-    }
 
     if (!tmp_if->cnf->autodetect_chg) {
 #ifdef DEBUG

@@ -119,9 +119,6 @@ chk_if_changed(struct olsr_if_config *iface)
   OLSR_PRINTF(3, "Checking if %s is set down or changed\n", iface->name);
 #endif
 
-  if (iface->host_emul) {
-    return -1;
-  }
   ifp = iface->interf;
   if (!ifp) {
     return 0;
@@ -329,9 +326,6 @@ int add_hemu_if (struct olsr_if_config *iface)
   struct ipaddr_str buf;
   size_t name_size;
 
-  if (!iface->host_emul)
-    return -1;
-
   ifp = olsr_cookie_malloc(interface_mem_cookie);
 
   iface->interf = ifp;
@@ -492,10 +486,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   struct interface *ifp;
   struct ifreq ifr;
   const char *ifr_basename;
-
-  if (iface->host_emul) {
-    return -1;
-  }
 
   /*
    * Sanity check.

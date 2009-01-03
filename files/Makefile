@@ -1,6 +1,5 @@
 MANS += olsrd.8.gz
 MANS += olsrd.conf.5.gz
-MANS += olsr_switch.8.gz
 
 # Requires 'apt-get install docbook2x docbook-xml'
 $(MANS): olsrd-manpages.xml

@@ -54,12 +54,11 @@ LDFLAGS +=	-Wl,--out-implib=libolsrd.a
 LDFLAGS +=	-Wl,--export-all-symbols
 endif
 
-SWITCHDIR =	src/olsr_switch
 CFGDIR =	src/cfgparser
 #include $(CFGDIR)/local.mk
-TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
+TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch])
 
-.PHONY: default_target switch
+.PHONY: default_target
 default_target: $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
@@ -67,9 +66,6 @@ $(EXENAME):	$(OBJS) src/builddata.o
 
 cfgparser:	$(CFGDEPS) src/builddata.o
 		$(MAKE) -C $(CFGDIR)
-
-switch:		
-	$(MAKECMD) -C $(SWITCHDIR)
 
 show-ignored-warnings:
 	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
@@ -100,7 +96,6 @@ uberclean:	clean clean_libs
 	-rm -f $(TAGFILE)
 #	BSD-xargs has no "--no-run-if-empty" aka "-r"
 	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -print0 | xargs -0 rm -f
-	$(MAKECMD) -C $(SWITCHDIR) clean
 	$(MAKECMD) -C $(CFGDIR) clean
 
 install: install_olsrd
@@ -240,6 +235,6 @@ watchdog:
 		$(MAKECMD) -C lib/watchdog
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
-build_all:	all switch libs
+build_all:	all libs
 install_all:	install install_libs
 clean_all:	uberclean clean_libs

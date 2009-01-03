@@ -157,21 +157,19 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
 static void
 olsr_delete_kernel_route(struct rt_entry *rt)
 {
-  if(!olsr_cnf->host_emul) {
-    int16_t error = olsr_cnf->ip_version == AF_INET ?
-      olsr_delroute_function(rt) : olsr_delroute6_function(rt);
+  int16_t error = olsr_cnf->ip_version == AF_INET ?
+    olsr_delroute_function(rt) : olsr_delroute6_function(rt);
 
-    if(error < 0) {
-      const char * const err_msg = strerror(errno);
-      const char * const routestr = olsr_rt_to_string(rt);
-      OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
+  if(error < 0) {
+    const char * const err_msg = strerror(errno);
+    const char * const routestr = olsr_rt_to_string(rt);
+    OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
 
-      olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
-    } else {
+    olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
+  } else {
 
-      /* release the interface. */
-      unlock_interface(rt->rt_nexthop.interface);
-    }
+    /* release the interface. */
+    unlock_interface(rt->rt_nexthop.interface);
   }
 }
 
@@ -184,27 +182,25 @@ static void
 olsr_add_kernel_route(struct rt_entry *rt)
 {
 
-  if(!olsr_cnf->host_emul) {
-    int16_t error = (olsr_cnf->ip_version == AF_INET) ?
-      olsr_addroute_function(rt) : olsr_addroute6_function(rt);
+  int16_t error = (olsr_cnf->ip_version == AF_INET) ?
+    olsr_addroute_function(rt) : olsr_addroute6_function(rt);
 
-    if(error < 0) {
-      const char * const err_msg = strerror(errno);
-      const char * const routestr = olsr_rtp_to_string(rt->rt_best);
-      OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
+  if(error < 0) {
+    const char * const err_msg = strerror(errno);
+    const char * const routestr = olsr_rtp_to_string(rt->rt_best);
+    OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
 
-      olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
-    } else {
+    olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
+  } else {
 
-      /* route addition has suceeded */
+    /* route addition has suceeded */
 
-      /* save the nexthop and metric in the route entry */
-      rt->rt_nexthop = rt->rt_best->rtp_nexthop;
-      rt->rt_metric = rt->rt_best->rtp_metric;
+    /* save the nexthop and metric in the route entry */
+    rt->rt_nexthop = rt->rt_best->rtp_nexthop;
+    rt->rt_metric = rt->rt_best->rtp_metric;
 
-      /* lock the interface such that it does not vanish underneath us */
-      lock_interface(rt->rt_nexthop.interface);
-    }
+    /* lock the interface such that it does not vanish underneath us */
+    lock_interface(rt->rt_nexthop.interface);
   }
 }
 
