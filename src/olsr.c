@@ -243,9 +243,6 @@ olsr_init_tables(void)
   changes_neighborhood = false;
   changes_hna = false;
 
-  /* Initialize lq plugin set */
-  init_lq_handler_tree();
-
   /* Initialize link set */
   olsr_init_link_set();
 

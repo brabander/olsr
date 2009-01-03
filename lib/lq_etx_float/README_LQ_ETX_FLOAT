@@ -1,0 +1,29 @@
+---------------------------------------------------------------------
+LQ_ETX_FLOAT PLUGIN FOR OLSRD
+by Henning Rogge and others
+---------------------------------------------------------------------
+
+This is a plugin which realizes an LQ_HELLO message loss based LQ
+measurement. Load this plugin to overwrite the compiled-in default
+algorithm. This version uses floating point math
+
+---------------------------------------------------------------------
+PLUGIN PARAMETERS (PlParam)
+---------------------------------------------------------------------
+
+PlParam "LinkQualityAging" "0.01-1.0"
+	Determines adaption speed of the algorithm
+
+---------------------------------------------------------------------
+SAMPLE CONFIG
+---------------------------------------------------------------------
+
+add in /etc/olsrd.conf:
+
+LoadPlugin "olsrd_lq_etx_float.so.0.1"
+{
+	PlParam "LinkQualityAging" "0.1"
+}
+
+---------------------------------------------------------------------
+EOF

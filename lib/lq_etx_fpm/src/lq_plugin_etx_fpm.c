@@ -130,7 +130,7 @@ static uint32_t aging_factor_new, aging_factor_old;
 static uint32_t aging_quickstart_new, aging_quickstart_old;
 
 static void lq_etxfpm_initialize(void) {
-  aging_factor_new = (uint32_t)(olsr_cnf->lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
+  aging_factor_new = (uint32_t)(lq_aging * LQ_FPM_INTERNAL_MULTIPLIER);
   aging_factor_old = LQ_FPM_INTERNAL_MULTIPLIER - aging_factor_new;
 
   aging_quickstart_new = (uint32_t)(LQ_QUICKSTART_AGING * LQ_FPM_INTERNAL_MULTIPLIER);

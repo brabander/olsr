@@ -201,8 +201,6 @@ struct olsr_config {
   uint8_t mpr_coverage;
   uint8_t lq_fish;
   float lq_dinter;
-  float lq_aging;
-  char *lq_algorithm;
   uint8_t lq_dlimit;
   uint8_t willingness;
 

@@ -884,12 +884,6 @@ static void build_config_body(struct autobuf *abuf)
   abuf_appendf(abuf, "<td>RtTableDefault: 0x%04x/%d</td>\n", olsr_cnf->rttable_default, olsr_cnf->rttable_default);
   abuf_appendf(abuf, "<td>Willingness: %d %s</td>\n", olsr_cnf->willingness, olsr_cnf->willingness_auto ? "(auto)" : "");
 
-  abuf_appendf(abuf, "</tr>\n<tr>\n"
-		  "<td>LQ algorithm: %s</td>\n", olsr_cnf->lq_algorithm);
-  abuf_appendf(abuf,
-      "<td>LQ aging: %f</td>\n",
-		  olsr_cnf->lq_aging);
-
   abuf_puts(abuf, "</tr></table>\n");
 
   abuf_puts(abuf, "<h2>Interfaces</h2>\n");

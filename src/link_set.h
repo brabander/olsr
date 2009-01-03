@@ -117,7 +117,7 @@ void signal_link_changes(bool);   /* XXX ugly */
 
 struct link_entry *EXPORT(get_best_link_to_neighbor)(const union olsr_ip_addr *);
 
-struct link_entry *lookup_link_entry(const union olsr_ip_addr *,
+struct link_entry *EXPORT(lookup_link_entry)(const union olsr_ip_addr *,
 				     const union olsr_ip_addr *remote_main,
 				     const struct interface *);
 

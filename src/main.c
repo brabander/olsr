@@ -319,7 +319,7 @@ main(int argc, char *argv[])
   olsr_load_plugins();
 
   /* activate LQ algorithm */
-  activate_lq_handler();
+  init_lq_handler();
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
@@ -474,7 +474,7 @@ olsr_shutdown(void)
   }
 
   /* Shut down LQ plugin */
-  deactivate_lq_handler();
+  deinit_lq_handler();
 
   /* Closing plug-ins */
   olsr_close_plugins();

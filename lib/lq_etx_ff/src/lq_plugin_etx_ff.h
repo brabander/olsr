@@ -1,6 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
+ * Copyright (c) 2008 Henning Rogge <rogge@fgan.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,77 +38,52 @@
  *
  */
 
+#ifndef LQ_PLUGIN_ETX_FF_
+#define LQ_PLUGIN_ETX_FF_
 
-#ifndef _OLSR_MSG_PARSER
-#define _OLSR_MSG_PARSER
-
-#include "olsr_protocol.h"
+#include "olsr_types.h"
+#include "tc_set.h"
+#include "link_set.h"
 #include "lq_packet.h"
+#include "lq_plugin.h"
 
-#define PROMISCUOUS 0xffffffff
+#define LQ_ALGORITHM_ETX_FF_NAME "etx_ff"
 
-#define MIN_PACKET_SIZE(ver)	((int)(sizeof(uint8_t) * (((ver) == AF_INET) ? 4 : 7)))
+/* 16,32,64 and max. 128 */
+#define LQ_FF_WINDOW 64
+#define LQ_FF_QUICKSTART_INIT 4
 
-/* Function returns false if the message should not be forwarded */
-typedef bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
-
-struct parse_function_entry {
-  uint32_t type;       /* If set to PROMISCUOUS all messages will be received */
-  parse_function *function;
-  struct parse_function_entry *next;
+struct lq_etxff_linkquality {
+  uint8_t valueLq;
+  uint8_t valueNlq;
 };
 
-typedef char *preprocessor_function(char *packet, struct interface *, union olsr_ip_addr *, int *length);
-
-struct preprocessor_function_entry {
-  preprocessor_function *function;
-  struct preprocessor_function_entry *next;
+struct lq_etxff_tc_edge {
+  struct tc_entry core;
+  struct lq_etxff_linkquality lq;
 };
 
-typedef void packetparser_function(struct olsr *olsr, struct interface *in_if, union olsr_ip_addr *from_addr);
-
-struct packetparser_function_entry {
-  packetparser_function *function;
-  struct packetparser_function_entry *next;
+struct lq_etxff_tc_mpr_addr {
+  struct tc_mpr_addr core;
+  struct lq_etxff_linkquality lq;
 };
 
-void
-parser_set_disp_pack_in(bool);
+struct lq_etxff_lq_hello_neighbor {
+  struct lq_hello_neighbor core;
+  struct lq_etxff_linkquality lq;
+};
 
-void
-olsr_init_parser(void);
+struct lq_etxff_link_entry {
+  struct link_entry core;
+  struct lq_etxff_linkquality lq;
+  uint8_t windowSize, activePtr;
+  uint16_t last_seq_nr;
+  uint16_t received[LQ_FF_WINDOW], lost[LQ_FF_WINDOW];
+};
 
-void
-olsr_deinit_parser(void);
+extern struct lq_handler lq_etxff_handler;
 
-void
-olsr_input(int, void *, unsigned int);
-
-void
-olsr_input_hostemu(int, void *, unsigned int);
-
-void
-EXPORT(olsr_parser_add_function)(parse_function, uint32_t);
-
-int
-EXPORT(olsr_parser_remove_function)(parse_function, uint32_t);
-
-void
-EXPORT(olsr_preprocessor_add_function)(preprocessor_function);
-
-int
-EXPORT(olsr_preprocessor_remove_function)(preprocessor_function);
-
-void
-EXPORT(olsr_packetparser_add_function)(packetparser_function *function);
-
-int
-EXPORT(olsr_packetparser_remove_function)(packetparser_function *function);
-
-const unsigned char *
-olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
-
-#endif
+#endif /*LQ_PLUGIN_ETX_FF_*/
 
 /*
  * Local Variables:

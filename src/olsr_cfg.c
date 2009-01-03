@@ -767,23 +767,6 @@ parse_cfg_option(const int optint, const char *argstr, const int line, struct ol
     }
     PARSER_DEBUG_PRINTF("IpVersion: %d\n", cfg->ip_version);
     break;
-  case 'a':                    /* LinkQualityAging (f) */
-    sscanf(argstr, "%f", &cfg->lq_aging);
-    PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", cfg->lq_aging);
-    break;
-  case 'L':                    /* LinkQualityAlgorithm (str) */
-    {
-      char **tok;
-      if (NULL != (tok = parse_tok(argstr, NULL))) {
-        cfg->lq_algorithm = olsr_strdup(*tok);
-        parse_tok_free(tok);
-      } else {
-        fprintf(stderr, "Error in %s\n", argstr);
-        exit(EXIT_FAILURE);
-      }
-      PARSER_DEBUG_PRINTF("LQ Algorithm: %s\n", cfg->lq_algorithm);
-    }
-    break;
   case 'J':                    /* LinkQualityDijkstraLimit (i,f) */
     {
       int arg = -1;
@@ -962,8 +945,6 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
     {"Interface",                required_argument, 0, 'I'}, /* (if1 if2 {ifbody}) */
     {"IpcConnect",               required_argument, 0, 'Q'}, /* (Host,Net,MaxConnections) */
     {"IpVersion",                required_argument, 0, 'V'}, /* (i) */
-    {"LinkQualityAging",         required_argument, 0, 'a'}, /* (f) */
-    {"LinkQualityAlgorithm",     required_argument, 0, 'L'}, /* (str) */
     {"LinkQualityDijkstraLimit", required_argument, 0, 'J'}, /* (i,f) */
     {"LinkQualityFishEye",       required_argument, 0, 'E'}, /* (i) */
     {"LoadPlugin",               required_argument, 0, 'p'}, /* (soname {PlParams}) */
@@ -1138,12 +1119,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     return -1;
   }
 
-  /* Link quality window size */
-  if (cfg->lq_aging < MIN_LQ_AGING || cfg->lq_aging > MAX_LQ_AGING) {
-    fprintf(stderr, "LQ aging factor %f is not allowed\n", cfg->lq_aging);
-    return -1;
-  }
-
   /* NAT threshold value */
   if (cfg->lq_nat_thresh < 0.1 || cfg->lq_nat_thresh > 1.0) {
     fprintf(stderr, "NAT threshold %f is not allowed\n", cfg->lq_nat_thresh);
@@ -1170,10 +1145,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     }
 
     /* HELLO interval */
-
-    if (io->hello_params.validity_time < 0.0) {
-      io->hello_params.validity_time = (int)(REFRESH_INTERVAL / cfg->lq_aging);
-    }
 
     if (io->hello_params.emission_interval < conv_pollrate_to_secs(cfg->pollrate) ||
         io->hello_params.emission_interval > io->hello_params.validity_time) {
@@ -1277,8 +1248,6 @@ olsr_free_cfg(struct olsr_config *cfg)
     free(ped);
   }
 
-  if (cfg->lq_algorithm)
-    free(cfg->lq_algorithm);
   free(cfg);
 
   return;
@@ -1320,8 +1289,6 @@ olsr_get_default_cfg(void)
   cfg->lq_fish = DEF_LQ_FISH;
   cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   cfg->lq_dinter = DEF_LQ_DIJK_INTER;
-  cfg->lq_aging = DEF_LQ_AGING;
-  cfg->lq_algorithm = NULL;
   cfg->lq_nat_thresh = DEF_LQ_NAT_THRESH;
   cfg->clear_screen = DEF_CLEAR_SCREEN;
 

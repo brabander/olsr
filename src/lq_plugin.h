@@ -103,28 +103,8 @@ struct lq_handler {
   uint8_t messageid_tc;
 };
 
-struct lq_handler_node {
-  struct avl_node node;
-  struct lq_handler *handler;
-  char name[0];
-};
-
-AVLNODE2STRUCT(lq_handler_tree2lq_handler_node, struct lq_handler_node, node);
-
-#define OLSR_FOR_ALL_LQ_HANDLERS(lq) \
-{ \
-  struct avl_node *lq_tree_node, *next_lq_tree_node; \
-  for (lq_tree_node = avl_walk_first(&lq_handler_tree); \
-    lq_tree_node; lq_tree_node = next_lq_tree_node) { \
-    next_lq_tree_node = avl_walk_next(lq_tree_node); \
-    lq = lq_handler_tree2lq_handler_node(lq_tree_node);
-#define OLSR_FOR_ALL_LQ_HANDLERS_END(lq) }}
-
-void init_lq_handler_tree(void);
-
-void activate_lq_handler(void);
-void register_lq_handler(struct lq_handler *, const char *);
-void deactivate_lq_handler(void);
+void init_lq_handler(void);
+void deinit_lq_handler(void);
 
 olsr_linkcost olsr_calc_tc_cost(struct tc_edge_entry *);
 bool olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2);
@@ -166,7 +146,7 @@ uint8_t olsr_get_Hello_MessageId(void);
 uint8_t olsr_get_TC_MessageId(void);
 
 /* Externals. */
-extern struct lq_handler *active_lq_handler;
+extern struct lq_handler *EXPORT(active_lq_handler);
 
 
 #endif /*LQPLUGIN_H_ */

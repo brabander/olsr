@@ -50,12 +50,8 @@
 #include "common/avl.h"
 #include "common/string.h"
 
-#include "lq_plugin_etx_float.h"
-#include "lq_plugin_etx_fpm.h"
 #include "lq_plugin_etx_ff.h"
-#include "lq_plugin_rfc.h"
 
-static  struct avl_tree lq_handler_tree;
 struct lq_handler *active_lq_handler = NULL;
 
 static struct olsr_cookie_info *tc_mpr_addr_mem_cookie = NULL;
@@ -63,98 +59,36 @@ static struct olsr_cookie_info *tc_edge_mem_cookie = NULL;
 static struct olsr_cookie_info *lq_hello_neighbor_mem_cookie = NULL;
 static struct olsr_cookie_info *link_entry_mem_cookie = NULL;
 
-static int
-avl_strcasecmp(const void *str1, const void *str2)
-{
-  return strcasecmp(str1, str2);
-}
-
-
 void
-init_lq_handler_tree(void)
+init_lq_handler(void)
 {
-  avl_init(&lq_handler_tree, &avl_strcasecmp);
-  register_lq_handler(&lq_etxfloat_handler, LQ_ALGORITHM_ETX_FLOAT_NAME);
-  register_lq_handler(&lq_etxfpm_handler, LQ_ALGORITHM_ETX_FPM_NAME);
-  register_lq_handler(&lq_etxff_handler, LQ_ALGORITHM_ETX_FF_NAME);
-  register_lq_handler(&lq_rfc_handler, LQ_ALGORITHM_RFC_NAME);
-}
-
-/*
- * set_lq_handler
- *
- * this function is used by routing metric plugins to activate their link
- * quality handler
- *
- * The name parameter is marked as "unused" to squelch a compiler warning if debug
- * output is not active
- *
- * @param pointer to lq_handler structure
- * @param name of the link quality handler for debug output
- */
-void
-register_lq_handler(struct lq_handler *handler, const char *name)
-{
-  struct lq_handler_node *node;
-  size_t name_size = sizeof(*node) + strlen(name) + 1;
-
-  node = olsr_malloc(name_size, "olsr lq handler");
-
-  strscpy(node->name, name, name_size);
-  node->node.key = node->name;
-  node->handler = handler;
-
-  avl_insert(&lq_handler_tree, &node->node, false);
-}
-
-void
-activate_lq_handler(void)
-{
-  const char *default_lq_algo = LQ_ALGORITHM_ETX_FPM_NAME;
-  struct lq_handler_node *node = NULL;
-
-  if (olsr_cnf->lq_algorithm) {
-    node = (struct lq_handler_node *) avl_find(&lq_handler_tree, olsr_cnf->lq_algorithm);
-    if (node == NULL) {
-      OLSR_PRINTF(1, "Error, unknown lq_handler '%s'\n", olsr_cnf->lq_algorithm);
-      olsr_exit("Cannot start without lq algorithm", 1);
-    }
-    OLSR_PRINTF(1, "Using '%s' algorithm for lq calculation.\n", olsr_cnf->lq_algorithm);
+  if (NULL == active_lq_handler) {
+    /* No LQ plugin loaded, use build in default */
+    active_lq_handler = &lq_etxff_handler;
   }
-  else {
-    node = (struct lq_handler_node *) avl_find(&lq_handler_tree, default_lq_algo);
-    OLSR_PRINTF(1, "Using default '%s' algorithm for lq calculation.\n", default_lq_algo);
-    if (node == NULL) {
-      OLSR_PRINTF(1, "Error, cannot find default algorithmus '%s'\n", default_lq_algo);
-      olsr_exit("Cannot start without lq algorithm", 1);
-    }
-  }
-
+  
   tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_edge_mem_cookie, node->handler->size_tc_edge);
+  olsr_cookie_set_memory_size(tc_edge_mem_cookie, active_lq_handler->size_tc_edge);
 
   tc_mpr_addr_mem_cookie = olsr_alloc_cookie("tc_mpr_addr", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(tc_mpr_addr_mem_cookie, node->handler->size_tc_mpr_addr);
+  olsr_cookie_set_memory_size(tc_mpr_addr_mem_cookie, active_lq_handler->size_tc_mpr_addr);
 
   lq_hello_neighbor_mem_cookie = olsr_alloc_cookie("lq_hello_neighbor", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(lq_hello_neighbor_mem_cookie, node->handler->size_lq_hello_neighbor);
+  olsr_cookie_set_memory_size(lq_hello_neighbor_mem_cookie, active_lq_handler->size_lq_hello_neighbor);
 
   link_entry_mem_cookie = olsr_alloc_cookie("link_entry", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(link_entry_mem_cookie, node->handler->size_link_entry);
+  olsr_cookie_set_memory_size(link_entry_mem_cookie, active_lq_handler->size_link_entry);
 
-  active_lq_handler = node->handler;
   active_lq_handler->initialize();
 }
 
 void
-deactivate_lq_handler(void)
+deinit_lq_handler(void)
 {
-  struct lq_handler_node *handler;
-  active_lq_handler->deinitialize();
-  OLSR_FOR_ALL_LQ_HANDLERS(handler) {
-    avl_delete(&lq_handler_tree, &handler->node);
-    free(handler);
-  } OLSR_FOR_ALL_LQ_HANDLERS_END(handler);
+  if (NULL != active_lq_handler) {
+    active_lq_handler->deinitialize();
+    active_lq_handler = NULL;
+  }
 }
 
 /*
@@ -417,7 +351,7 @@ olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
 }
 
 /*
- * olsr_malloc_tc_mpr_addr
+ * olsr_malloc_tc_edge_entry
  *
  * this function allocates memory for an tc_mpr_addr inclusive
  * linkquality data.

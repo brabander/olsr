@@ -185,7 +185,7 @@ static olsr_linkcost lq_etxfloat_packet_loss_handler(struct link_entry *link,
     bool loss) {
   struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
 
-  float alpha = olsr_cnf->lq_aging;
+  float alpha = lq_aging;
 
   if (lq_link->quickstart < LQ_QUICKSTART_STEPS) {
     alpha = LQ_QUICKSTART_AGING; /* fast enough to get the LQ value within 6 Hellos up to 0.9 */

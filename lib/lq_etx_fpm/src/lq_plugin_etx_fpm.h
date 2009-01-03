@@ -38,43 +38,45 @@
  *
  */
 
-#ifndef LQ_PLUGIN_ETX_FLOAT_H_
-#define LQ_PLUGIN_ETX_FLOAT_H_
+#ifndef LQ_PLUGIN_ETX_FPM_H_
+#define LQ_PLUGIN_ETX_FPM_H_
 
 #include "olsr_types.h"
 #include "lq_plugin.h"
 
-#define LQ_ALGORITHM_ETX_FLOAT_NAME "etx_float"
+#define LQ_ALGORITHM_ETX_FPM_NAME "etx_fpm"
 
-struct lq_etxfloat_linkquality {
-  float valueLq;
-  float valueNlq;
+struct lq_etxfpm_linkquality {
+  uint8_t valueLq;
+  uint8_t valueNlq;
 };
 
-struct lq_etxfloat_tc_edge {
+struct lq_etxfpm_tc_edge {
   struct tc_entry core;
-  struct lq_etxfloat_linkquality lq;
+  struct lq_etxfpm_linkquality lq;
 };
 
-struct lq_etxfloat_tc_mpr_addr {
+struct lq_etxfpm_tc_mpr_addr {
   struct tc_mpr_addr core;
-  struct lq_etxfloat_linkquality lq;
+  struct lq_etxfpm_linkquality lq;
 };
 
-struct lq_etxfloat_lq_hello_neighbor {
+struct lq_etxfpm_lq_hello_neighbor {
   struct lq_hello_neighbor core;
-  struct lq_etxfloat_linkquality lq;
+  struct lq_etxfpm_linkquality lq;
 };
 
-struct lq_etxfloat_link_entry {
+struct lq_etxfpm_link_entry {
   struct link_entry core;
-  struct lq_etxfloat_linkquality lq;
+  struct lq_etxfpm_linkquality lq;
   uint16_t quickstart;
 };
 
-extern struct lq_handler lq_etxfloat_handler;
+extern struct lq_handler lq_etxfpm_handler;
 
-#endif /*LQ_PLUGIN_ETX_FLOAT_H_*/
+extern float lq_aging;                 /* Plugin PlParam */
+
+#endif /*LQ_PLUGIN_ETX_FPM_H_*/
 
 /*
  * Local Variables:

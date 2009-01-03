@@ -99,10 +99,6 @@ olsr_print_cnf(const struct olsr_config *cnf)
 
   printf("LQ Dijkstra limit: %d, %0.2f\n", cnf->lq_dlimit, cnf->lq_dinter);
 
-  printf("LQ aging factor  : %f\n", cnf->lq_aging);
-
-  printf("LQ algorithm name: %s\n", cnf->lq_algorithm ? cnf->lq_algorithm : "default");
-
   printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
@@ -303,15 +299,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool wri
 
   abuf_appendf(abuf, "# Fish Eye algorithm\n"
                "# 0 = do not use fish eye\n" "# 1 = use fish eye\n" "LinkQualityFishEye\t%d\n\n", cnf->lq_fish);
-
-  if (cnf->lq_algorithm != NULL) {
-    abuf_appendf(abuf, "# Link quality algorithm (if LinkQualityLevel > 0)\n"
-                 "# etx_fpm (hello loss, fixed point math)\n"
-                 "# etx_float (hello loss, floating point)\n"
-                 "# etx_ff (packet loss for freifunk compat)\n" "LinkQualityAlgorithm\t\"%s\"\n\n", cnf->lq_algorithm);
-  }
-
-  abuf_appendf(abuf, "# Link quality aging factor\n" "LinkQualityAging\t%f\n\n", cnf->lq_aging);
 
   abuf_appendf(abuf, "# NAT threshold\n" "NatThreshold\t%f\n\n", cnf->lq_nat_thresh);
 

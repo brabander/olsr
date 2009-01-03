@@ -1,0 +1,48 @@
+---------------------------------------------------------------------
+LQ_RFC PLUGIN FOR OLSRD
+by Henning Rogge and others
+---------------------------------------------------------------------
+
+This is a plugin which realizes an LQ_HELLO message loss based LQ
+measurement. Load this plugin to overwrite the compiled-in default
+algorithm.
+
+---------------------------------------------------------------------
+PLUGIN PARAMETERS (PlParam)
+---------------------------------------------------------------------
+
+PlParam "UseHysteresis" "no"
+	If set to yes hysteresis will be used as explained in section 14 of RFC3626.
+	Yes or no. Determines if hysterisis is used. Defaults to "no".
+
+PlParam "HystScaling" "0.5"
+	Sets the scaling value used by the hysteresis algorithm. This must be a 
+	positive floating point value smaller than 1.0. Consult RFC3626 for details. 
+	From 0.01 to 0.99. Defaults to 0.5.
+
+PlParam "HystThrHigh" "0.8"
+	This option sets the upper threshold for accepting a link in hysteresis
+	calculation. The value must be higher than the one set as the lower threshold.
+	From 0.0 to 1.0 and Low < High. Defaults to 0.8
+
+PlParam "HystThrLow" "0.3"
+	This option sets the lower threshold for setting a link to asymmetric using
+	hysteresis. The value must be lower than the one set as the upper threshold. 
+	From 0.0 to 1.0 and Low < High. Defaults to 0.3
+
+---------------------------------------------------------------------
+SAMPLE CONFIG
+---------------------------------------------------------------------
+
+add in /etc/olsrd.conf:
+
+LoadPlugin "olsrd_lq_rfc.so.0.1"
+{
+	PlParam "UseHysteresis" "no"
+	PlParam "HystScaling" "0.5"
+	PlParam "HystThrHigh" "0.8"
+	PlParam "HystThrLow" "0.3"
+}
+
+---------------------------------------------------------------------
+EOF
