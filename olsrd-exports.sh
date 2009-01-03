@@ -11,6 +11,7 @@
 # make all LDFLAGS=-Wl,--dynamic-list=olsrd.exports
 #
 # To find the used identifiers, you may use this:
-# make libs LDFLAGS=-Wl,--noinhibit-exec
+# make clean_libs libs LDFLAGS=-Wl,--noinhibit-exec 2>&1|sed -n 's/.*undefined reference to //p'|sort|uniq
+# Compare the outcome to olsrd.exports and EXPORT(xxx) all missing.
 
 sed -n -e '1s/.*/{/p;$s/.*/};/p;/#define/d;s/.*\<EXPORT\>[ 	]*(\([^)]\+\)).*/  "\1";/p' $*

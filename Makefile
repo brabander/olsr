@@ -60,7 +60,10 @@ TAG_SRCS =	$(SRCS) $(HDRS)
 default_target: $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
-		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+ifeq ($(LD_HAS_DYN), yes)
+		$(SHELL) olsrd-exports.sh $$(find src -name "*.h") > $(EXENAME).exports
+endif
+		$(CC) $(LDFLAGS) $(LDFLAGS_EXE) -o $@ $^ $(LIBS)
 
 show-ignored-warnings:
 	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
@@ -79,6 +82,7 @@ src/builddata.c:
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
+	-rm -f $(EXENAME).exports
 ifeq ($(OS), win32)
 	-rm -f libolsrd.a
 	-rm -f gui/win32/Main/olsrd_cfgparser.lib

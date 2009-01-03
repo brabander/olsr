@@ -35,6 +35,7 @@ endif
 BISON ?=	bison
 FLEX ?=		flex
 TAGCMD ?=	etags
+LD_HAS_DYN ?=   $(shell $(CC) -Wl,--help 2>&1|grep -w -q -- --dynamic-list && echo yes)
 
 # target directories and names
 PREFIX  ?= /usr/local
@@ -133,7 +134,11 @@ LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
 LDFLAGS +=	-Wl,--version-script=version-script.txt 
 else
 # c and ld flags for main
-LDFLAGS +=	-Wl,-export-dynamic 
+ifeq ($(LD_HAS_DYN), yes)
+LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
+else
+LDFLAGS_EXE +=	-Wl,-export-dynamic 
+endif
 LDFLAGS +=	-Wl,-rpath,$(LIBDIR)
 endif
 # LDFLAGS for all 
