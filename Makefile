@@ -150,9 +150,9 @@ ifeq ($(OS),linux)
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
-SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo watchdog
+SUBDIRS := dot_draw httpinfo mini secure txtinfo watchdog
 else
-SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
+SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice secure txtinfo watchdog
 endif
 endif
 
@@ -162,7 +162,6 @@ libs:
 libs_clean clean_libs:
 		-for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) clean;done
 ifeq ($(OS), win32)
-		-rm -f lib/pgraph/olsrd_pgraph.dll
 		-rm -f lib/txtinfo/olsrd_txtinfo.dll
 		-rm -f lib/httpinfo/olsrd_httpinfo.dll
 		-rm -f lib/secure/olsrd_secure.dll
@@ -202,11 +201,6 @@ secure:
 		$(MAKECMD) -C lib/secure clean
 		$(MAKECMD) -C lib/secure
 		$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) install
-
-pgraph:
-		$(MAKECMD) -C lib/pgraph clean
-		$(MAKECMD) -C lib/pgraph 
-		$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) install 
 
 bmf:
 		$(MAKECMD) -C lib/bmf clean

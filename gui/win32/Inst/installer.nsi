@@ -82,7 +82,6 @@ Section "Program Files"
         File ..\..\..\lib\dot_draw\olsrd_dot_draw.dll
         File ..\..\..\lib\httpinfo\olsrd_httpinfo.dll
         File ..\..\..\lib\mini\olsrd_mini.dll
-        File ..\..\..\lib\pgraph\olsrd_pgraph.dll
         File ..\..\..\lib\secure\olsrd_secure.dll
         File ..\..\..\lib\txtinfo\olsrd_txtinfo.dll
 
@@ -176,7 +175,6 @@ Section "Uninstall"
         Delete $INSTDIR\olsrd_dot_draw.dll
         Delete $INSTDIR\olsrd_httpinfo.dll
         Delete $INSTDIR\olsrd_mini.dll
-        Delete $INSTDIR\olsrd_pgraph.dll
         Delete $INSTDIR\olsrd_secure.dll
         Delete $INSTDIR\olsrd_txtinfo.dll
         Delete $INSTDIR\uninstall.exe

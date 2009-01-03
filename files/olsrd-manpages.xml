@@ -1987,16 +1987,6 @@
           </listitem>
         </varlistentry>
 
-        <!--varlistentry>
-          <term><option>LoadPlugin olsrd_pgraph.so.1.1 {
-          <replaceable>...</replaceable> }</option></term>
-
-          <listitem>
-            <para>We really need to get rid of this plugin, since it does not
-            work nor is the OLSRConnect.py available.</para>
-          </listitem>
-        </varlistentry-->
-
         <varlistentry>
           <term><option>LoadPlugin olsrd_quagga.so.0.2.2 {
           <replaceable>...</replaceable> }</option></term>
