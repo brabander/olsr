@@ -160,10 +160,6 @@ LDFLAGS +=	$(EXTRA_LDFLAGS)
 #
 # options to save space on small systems
 
-# we have plugins with the old interface
-#CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=1
-CPPFLAGS +=	-DSUPPORT_OLD_PLUGIN_VERSIONS=0
-
 # use the new fixed point math stuff
 ifneq ($(USE_FPM),0)
 CPPFLAGS +=	-DUSE_FPM=1

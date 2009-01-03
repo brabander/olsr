@@ -48,14 +48,8 @@
 typedef int (*plugin_init_func)(void);
 typedef int (*get_interface_version_func)(void);
 
-#if SUPPORT_OLD_PLUGIN_VERSIONS
-/* version 4 */
-typedef int (*register_param_func)(char *, char *);
-#endif
-
 /* version 5 */
 typedef void (*get_plugin_parameters_func)(const struct olsrd_plugin_parameters **params, unsigned int *size);
-
 
 struct olsr_plugin {
     /* The handle */
@@ -64,10 +58,6 @@ struct olsr_plugin {
     struct plugin_param *params;
     int plugin_interface_version;
 
-#if SUPPORT_OLD_PLUGIN_VERSIONS
-    /* version 4 */
-    register_param_func register_param;
-#endif
     plugin_init_func plugin_init;
 
     /* version 5 */
