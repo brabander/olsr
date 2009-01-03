@@ -108,16 +108,6 @@ IpcConnect
      #Net             192.168.1.0 255.255.255.0     
 }
 
-# Link quality aging factor
-# Defaults to 0.1, smaller values mean faster reaction to changing links
-
-#LinkQualityAging 0.1 
-
-# Link quality algorithm
-# Defaults to "etx_fpm" for fixpoint based etx algorithm
-
-LinkQualityAlgorithm    "etx_ff"
-
 # Polling rate in seconds(float). 
 # Default value 0.05 sec
 
@@ -127,19 +117,6 @@ Pollrate	0.05
 # changes. Defaults to 2.5 seconds
 
 NicChgsPollInt  3.0
-
-# TC redundancy
-# Specifies how much neighbor info should
-# be sent in TC messages
-# Possible values are:
-# 0 - only send MPR selectors
-# 1 - send MPR selectors and MPRs
-# 2 - send all neighbors
-#
-# defaults to 0
-
-TcRedundancy	2
-
 
 #
 # MPR coverage
@@ -163,6 +140,10 @@ MprCoverage	7
 
 # Example plugin entries with parameters:
 
+LoadPlugin "olsrd_lq_etx_ff.so.0.1"
+{
+}
+
 #LoadPlugin "olsrd_arprefresh.so.0.1"
 #{
 #}
@@ -174,7 +155,7 @@ MprCoverage	7
 #LoadPlugin "olsrd_nameservice.so.0.3"
 #{
 #	PlParam	"name"		"your-pc-hostname"
-#	PlParam	"hosts-file"	"/var/run/hosts"
+#	PlParam	"hosts-file"	"/var/run/hosts_olsr"
 #	PlParam	"suffix"	".olsr"
 #	PlParam "interval"	"180"
 #	PlParam "timeout"	"3600"
@@ -307,9 +288,8 @@ Interface "XXX" "YYY"
     # on the characteristics of the interface,
     # but here you can specify a fixed value.
     # Olsrd will choose links with the lowest value.
-    # Note:
-    # Interface weight is used if LinkQualityAlgorithm is
-    # is set the currently unimplemented RFC mode plugin.
+    # Note: Interface weight is used only if the 
+    # olsrd_rfc RFC mode plugin is loaded
     # Weight 0
 
 
@@ -321,9 +301,8 @@ Interface "XXX" "YYY"
     # A multiplier of 0.5 will result in a small
     # (bad) LinkQuality value and a high (bad)
     # ETX value.
-    # Note:
-    # Interface weight is used if LinkQualityAlgorithm is set to
-    # anything but the currently unimplemented RFC mode plugin.
+    # Note: LQ Multiplier is used only if a 
+    # olsrd_etx* non-RFC mode plugin is loaded
 
     # LinkQualityMult 192.168.0.1 0.5
 

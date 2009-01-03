@@ -13,17 +13,13 @@
 # route calculation
 #
 
-DebugLevel		2
+DebugLevel		1
 
 #
 # Don't clear the screen each time the internal state changes
 #
 
 ClearScreen		no
-
-# Link quality aging factor
-# Defaults to 0.05, smaller values mean larger LQ window size
-LinkQualityAging 0.1 
 
 #
 # The pollrate used by the scheduler
@@ -34,17 +30,7 @@ Pollrate		0.1
 # Interval to poll network interfaces for configuration 
 # changes. Defaults to 2.5 seconds
 
-NicChgsPollInt  3.0
-
-#
-# Which neighbours should be advertised via TC messages?
-#
-# 0 - only advertise our MPR selectors
-# 1 - advertise our MPR selectors and our MPRs
-# 2 - advertise all neighbors
-#
-
-TcRedundancy		2
+NicChgsPollInt		3.0
 
 #
 # Specifies by how many MPRs each two-hop neighbour should be covered
@@ -52,11 +38,17 @@ TcRedundancy		2
 
 MprCoverage		3
 
+
+LoadPlugin "olsrd_lq_etx_ff.so.0.1"
+{
+	PlParam "LinkQualityAging"	"0.1"
+}
+
 #
 # Load the dot draw plugin
 #
 
-#LoadPlugin		"olsrd_dot_draw.dll"
+#LoadPlugin "olsrd_dot_draw.dll"
 #{
 #}
 
@@ -64,7 +56,7 @@ MprCoverage		3
 # Load the name service plugin
 #
 
-#LoadPlugin		"olsrd_nameservice.dll"
+#LoadPlugin "olsrd_nameservice.dll"
 #{
 #	PlParam	"name"	"thomas"
 #}
@@ -73,7 +65,7 @@ MprCoverage		3
 # Load the HTTP info plugin
 #
 
-LoadPlugin		"olsrd_httpinfo.dll"
+LoadPlugin "olsrd_httpinfo.dll"
 {
 	PlParam	"Net"	"0.0.0.0 0.0.0.0"
 }
