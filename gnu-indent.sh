@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test -f ${0%/*}/src/cfgparser/oparse.c && {
+test -f ${0%/*}/src/olsr.d && {
   cat>&2 <<EOF
 This script reformats all source files. Be careful
 with doing so. You need a clean source tree, e.g.

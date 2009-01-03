@@ -54,18 +54,13 @@ LDFLAGS +=	-Wl,--out-implib=libolsrd.a
 LDFLAGS +=	-Wl,--export-all-symbols
 endif
 
-CFGDIR =	src/cfgparser
-#include $(CFGDIR)/local.mk
-TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch])
+TAG_SRCS =	$(SRCS) $(HDRS)
 
 .PHONY: default_target
 default_target: $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
 		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-cfgparser:	$(CFGDEPS) src/builddata.o
-		$(MAKE) -C $(CFGDIR)
 
 show-ignored-warnings:
 	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
@@ -96,7 +91,6 @@ uberclean:	clean clean_libs
 	-rm -f $(TAGFILE)
 #	BSD-xargs has no "--no-run-if-empty" aka "-r"
 	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -print0 | xargs -0 rm -f
-	$(MAKECMD) -C $(CFGDIR) clean
 
 install: install_olsrd
 
