@@ -22,7 +22,7 @@
     <copyright>
       <year>2004</year>
 
-      <holder>Andreas Tonnesen</holder>
+      <holder>Andreas Tønnesen</holder>
     </copyright>
 
     <copyright>
@@ -37,7 +37,7 @@
   </articleinfo>
 
   <para>This document contains sources for man pages. They where converted
-  from the original man page files which are maintained by Andreas Tonnesen
+  from the original man page files which are maintained by Andreas Tønnesen
   until 2005. Because the 0.5.7 version of <productname>olsrd</productname>
   introduces several configuration changes and removes old configuration
   options, a re-write was necessary in late 2008.</para>
@@ -62,6 +62,207 @@
       make</command></para>
     </step>
   </procedure>
+
+  <bridgehead>History (cited from Andreas Tønnesen's Master Thesis, Aug
+  2004)</bridgehead>
+
+  <para>Work on the olsrd implementation was started spring 2003. At first the
+  plan was to add and experiment with MID functionality in the existing <ulink
+  url="http://hipercom.inria.fr/olsr/draft-ietf-manet-olsr-03.txt">draft3</ulink>
+  compatible OLSR implementation by <ulink
+  url="http://hipercom.inria.fr/olsr/#code">INRIA</ulink>. This was completed
+  by summer 2003. This means that much olsrd code originally was based on the
+  INRIA implementation. But since then, close to all code has been rewritten
+  or heavily modified. Olsrd is therefore considered an independent OLSR
+  implementation and not just an extension to the INRIA implementation.
+  [...]</para>
+
+  <para>In October 2003 RFC3626 was released and now full RFC compliance
+  became the goal of the project. In November 2003 UniK olsrd version 0.2.0
+  was made public available through a website. But full RFC core compliance
+  was not reached until release 0.3.8 in January 2004. Not much later 0.4.0
+  was released. It covered all auxiliary functionality as well, except
+  link-layer notifications. [...]</para>
+
+  <variablelist>
+    <varlistentry>
+      <term>Andreas Tønnesen</term>
+
+      <listitem>
+        <para>Active 2003-2006: Funder of the project, active contributor and
+        maintainer until 2007, still owning the domain olsr.org. Also created
+        the dotdraw, dyn_gw, httpinfo, and secure plugins. While Andreas
+        Tønnesen published the original implementation under GPLv2, he as well
+        as all other contributors switched to BSD in Nov 2004.</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+
+  <bridgehead>Further History (a very brief version, WOS 03 to
+  OLSRD-NG)</bridgehead>
+
+  <para>In Juli 2004, Andreas Tønnesen presented his implementation on the
+  <ulink url="http://www.wizards-of-os.org/archiv/wos_3.html">Wizards of OS
+  03</ulink> conference in Berlin. He met a couple of free public network
+  activists from the <ulink url="http://www.c-base.org/">C-Base</ulink> /
+  <ulink url="http://www.freifunk.net/">Freifunk</ulink> community. While some
+  of them tried to test wireless mobility cycling around the conference center
+  with a moped, others established a general agreement of cooperation. This
+  leads to several contributors to jump in, namely (AFAICR, please add
+  yourself if your name is missing or sort the list if you think you're in the
+  wrong position):</para>
+
+  <variablelist>
+    <varlistentry>
+      <term>Thomas Lopatic</term>
+
+      <listitem>
+        <para>Active 2004-2007: Implemented the Link Quality Extensions (ETX),
+        solved lots of implementation issues, created the Windows GUI and
+        maintained the olsrd code base as well. </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Bruno Randolf</term>
+
+      <listitem>
+        <para>Active 2004-2005: Solved lots of wireless driver/hardware
+        issues, contributed to olsrd implementation (fixes, cleanups),
+        contributed to TAS and Dotdraw plugins, created the Nameservice
+        plugin.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Sven-Ola Tücke</term>
+
+      <listitem>
+        <para>Active 2004-[...]: Started the olsrd-based <ulink
+        url="http://ff-firmware.sourceforge.net/">Freifunk Firmware</ulink> in
+        late 2004, contributed bug fixes and maintenance (general and
+        Windows), the dyn_gw_plain and arprefresh plugins as well as some
+        documentation. </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Jens Nachtigall</term>
+
+      <listitem>
+        <para>Active 2004-2005: Contributed bug fixes, contributed to dyn_gw
+        plugin and nameservice plugins.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Elektra Wagenfeld</term>
+
+      <listitem>
+        <para>Active 2004-2006: Contributed ideas and valuable comments, also
+        initiated the fish-eye routing scheme.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Erik Tromp</term>
+
+      <listitem>
+        <para>Active 2006-[...]: Created the <ulink
+        url="http://sourceforge.net/projects/olsr-bmf/">BMF</ulink> (Basic
+        Multicast Forwarding) plugin.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Lorenz Schori</term>
+
+      <listitem>
+        <para>Active 2006-[...]: Created the txtinfo plugin and contributed
+        bug fixes.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>John Hay</term>
+
+      <listitem>
+        <para>Active 2006-2008: Contributed maintenance and bug fixes for
+        IPv6.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Thomas Martin</term>
+
+      <listitem>
+        <para>Active 2008: Code base maintenance (mainly BSD and
+        vxWorks).</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Immo 'FaUl' Wehrenberg</term>
+
+      <listitem>
+        <para>Active 2006-[...]: Contributed the quagga plugin.</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+
+  <bridgehead>OLSRD-NG History (also a brief version)</bridgehead>
+
+  <para>In late 2006, the Vienna based <ulink
+  url="http://www.funkfeuer.at/">Funkfeuer</ulink> community managed to get
+  some sponsoring from <ulink url="http://www.netidee.at/">IPA</ulink>. They
+  established the OLSRD-NG project which should basically lead to a much
+  larger node count and better code quality (see <ulink
+  url="http://wiki.funkfeuer.at//index.php/Olsrd-ng">Funkfeuer Wiki on
+  OLSRD-NG</ulink>). This in turn attracts new developers for the somewhat
+  silenced team from there on: </para>
+
+  <variablelist>
+    <varlistentry>
+      <term>Aaron Kaplan</term>
+
+      <listitem>
+        <para>Active 2005-[...]: Initiator/Coordinator of the OLSRD-NG
+        project, contributed bug fixes (BSD, MacOS) and documentation.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Bernd Petrovitsch</term>
+
+      <listitem>
+        <para>Active 2006-[...]: Patch-juggler for the olsrd repository,
+        rewrote the build system (Makefiles) and plugin subsystem, generalized
+        commonly used code and functions, also lots of code base maintenance
+        and bug fixes as well.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Hannes Gredler</term>
+
+      <listitem>
+        <para>Active 2007-[...] Contributed the SPF refactoring (routing code
+        optimization), code refactorings for scheduler and nearly all internal
+        data structures, code base maintenance and bug fixes. Currently also
+        hosts the mercurial repository.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Henning Rogge</term>
+
+      <listitem>
+        <para>Active 2008-[...]: Reworked the LQ/ETX algorithm, contributed
+        the netsimcap (network simulation, GPL), also lots of code base
+        maintenance and bug fixes.</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
 
   <refentry id="olsrd_8">
     <indexterm>
@@ -1705,7 +1906,7 @@
                   <para>If set to <replaceable>yes,</replaceable> hysteresis
                   will be used as explained in section 14 of RFC 3626. The
                   setting determines if hysteresis is used. Defaults to
-                  <replaceable>no</replaceable>. </para>
+                  <replaceable>no</replaceable>.</para>
                 </listitem>
               </varlistentry>
 
@@ -1718,7 +1919,7 @@
                   algorithm. This must be a positive floating point value
                   smaller than <replaceable>1.0</replaceable>. Consult RFC
                   3626 for details. Defaults to
-                  <replaceable>0.5</replaceable>. </para>
+                  <replaceable>0.5</replaceable>.</para>
                 </listitem>
               </varlistentry>
 
@@ -1730,7 +1931,7 @@
                   <para>This option sets the upper threshold for accepting a
                   link in hysteresis calculation. The value must be higher
                   than the one set as the lower threshold. Defaults to
-                  <replaceable>0.8</replaceable>. </para>
+                  <replaceable>0.8</replaceable>.</para>
                 </listitem>
               </varlistentry>
 
@@ -1739,10 +1940,10 @@
                 <replaceable>0.0</replaceable>-<replaceable>1.0</replaceable></term>
 
                 <listitem>
-                  <para> This option sets the lower threshold for setting a
+                  <para>This option sets the lower threshold for setting a
                   link to asymmetric using hysteresis. The value must be lower
                   than the one set as the upper threshold. Defaults to
-                  <replaceable>0.3</replaceable>. </para>
+                  <replaceable>0.3</replaceable>.</para>
                 </listitem>
               </varlistentry>
             </variablelist>
