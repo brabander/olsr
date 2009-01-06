@@ -46,6 +46,7 @@
 #include "parser.h"
 #include "net_olsr.h"
 #include "ifnet.h"
+#include "log.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -60,6 +61,8 @@
 #else
 #define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
 #endif
+
+#define NOEXIT_ON_DEPRECATED_OPTIONS 1
 
 /*
  * Special strcat for reading the config file and
@@ -846,6 +849,13 @@ parse_cfg_option(const int optint, const char *argstr, const int line, struct ol
     break;
   default:
     fprintf(stderr, "Unknown arg in line %d.\n", line);
+#if NOEXIT_ON_DEPRECATED_OPTIONS
+    if (0 < line) {
+
+      olsr_syslog(OLSR_LOG_ERR, "Unknown arg in line %d.\n", line);
+      break;
+    }
+#endif
     exit(EXIT_FAILURE);
   }                             /* switch */
 }
