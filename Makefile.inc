@@ -119,9 +119,8 @@ ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
 NO_STRICT_OVERFLOW = -Wstrict-overflow=0
 endif
 
-# Must be specified along with -lpthread on linux
-CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
-endif
+endif # ifndef CFLAGS
+
 ifneq ($(MUDFLAP),0)
 CFLAGS +=	-fmudflapth
 endif
@@ -150,7 +149,6 @@ LDFLAGS +=	-Wl,--warn-common
 ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
 endif
-LIBS +=		$(OS_LIB_PTHREAD)
 
 # extra options from the outside
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)

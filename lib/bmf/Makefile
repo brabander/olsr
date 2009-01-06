@@ -41,6 +41,9 @@ include $(TOPDIR)/Makefile.inc
 
 LIBS +=	$(OS_LIB_PTHREAD)
 
+# Must be specified along with -lpthread on linux
+CPPFLAGS += $(OS_CFLAG_PTHREAD)
+
 ifneq ($(OS),linux)
 
 default_target install clean: 

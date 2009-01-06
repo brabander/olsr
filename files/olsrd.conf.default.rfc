@@ -133,7 +133,7 @@ LoadPlugin "olsrd_lq_rfc.so.0.1"
 	PlParam "HystThrLow"	"0.3"
 }
 
-#LoadPlugin "olsrd_dyn_gw.so.0.3"
+#LoadPlugin "olsrd_dyn_gw.so.0.4"
 #{
     # Here parameters are set to be sent to the
     # plugin. Theese are on the form "key" "value".
