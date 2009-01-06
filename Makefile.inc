@@ -156,20 +156,9 @@ LIBS +=		$(OS_LIB_PTHREAD)
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 LDFLAGS +=	$(EXTRA_LDFLAGS)
 
-###################################
-#
-# options to save space on small systems
-
-# use the new fixed point math stuff
-ifneq ($(USE_FPM),0)
-CPPFLAGS +=	-DUSE_FPM=1
-else
-CPPFLAGS +=	-DUSE_FPM=0
-endif
-
 # search sources and headers in current dir and in src/
-SRCS +=		$(wildcard src/common/*.c src/*.c *.c)
-HDRS +=		$(wildcard src/common/*.h src/*.h *.h)
+SRCS +=		$(wildcard src/common/*.c src/*.c)
+HDRS +=		$(wildcard src/common/*.h src/*.h)
 
 # OS detection
 ifeq ($(OS),Windows_NT)
