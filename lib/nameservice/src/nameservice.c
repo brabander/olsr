@@ -60,6 +60,7 @@
 #include "hna_set.h"
 #include "mid_set.h"
 #include "link_set.h"
+#include "olsr_ip_prefix_list.h"
 
 #include "plugin_util.h"
 #include "nameservice.h"
@@ -1506,7 +1507,7 @@ free_name_entry_list(struct name_entry **list)
 bool
 allowed_ip(const union olsr_ip_addr *addr)
 {
-	struct ip_prefix_list *hna;
+	struct ip_prefix_entry *hna;
 	struct interface *iface;
 	union olsr_ip_addr tmp_ip, tmp_msk;
 	struct ipaddr_str strbuf;
@@ -1523,7 +1524,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 	} OLSR_FOR_ALL_INTERFACES_END(iface);
 
 	if (olsr_cnf->ip_version == AF_INET) {
-		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+	  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
 			union olsr_ip_addr netmask;
 			OLSR_PRINTF(6, "HNA %s\n",
 						olsr_ip_prefix_to_string(&prefixstr, &hna->net));
@@ -1535,10 +1536,9 @@ allowed_ip(const union olsr_ip_addr *addr)
 				OLSR_PRINTF(6, "MATCHED\n");
 				return true;
 			}
-		}
+		} OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 	} else {
-		for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next)
-		{
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
 			unsigned int i;
 			OLSR_PRINTF(6, "HNA %s\n",
 				olsr_ip_prefix_to_string(&prefixstr, &hna->net));
@@ -1552,7 +1552,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 				OLSR_PRINTF(6, "MATCHED\n");
 				return true;
 			}
-		}
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 	}
 	return false;
 }
@@ -1669,12 +1669,12 @@ is_latlon_wellformed(const char *latlon_line)
  */
 bool get_isdefhna_latlon(void)
 {
-	struct ip_prefix_list *hna;
-	for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next){
+	struct ip_prefix_entry *hna;
+	OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
 		if (hna->net.prefix_len == 0) {
 			return true;
 		}
-	}
+	} OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 	return false;
 }
 

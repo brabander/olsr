@@ -39,26 +39,58 @@
  *
  */
 
-#ifndef _OLSRD_CFG_GEN_H
-#define _OLSRD_CFG_GEN_H
+#include "olsr_types.h"
+#include "olsr.h"
+#include "ipcalc.h"
+#include "olsr_ip_prefix_list.h"
 
-#include "olsr_cfg.h"
-#include "common/autobuf.h"
+void
+ip_prefix_list_flush(struct list_node *ip_prefix_head)
+{
+  struct ip_prefix_entry *entry;
 
-/*
- * Interface config generation
- */
-void olsr_print_cnf(const struct olsr_config *);
-#if 0
-int olsr_write_cnf(const struct olsr_config *cnf, const char *fname);
-#endif
-void EXPORT(olsr_write_cnf_buf) (struct autobuf * abuf, struct olsr_config * cnf, bool write_more_comments);
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, entry) {
+    free(entry);
+  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
+}
 
-#endif /* _OLSRD_CFG_GEN_H */
+void
+ip_prefix_list_add(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+{
+  struct ip_prefix_entry *new_entry = olsr_malloc(sizeof(*new_entry), "new ip_prefix");
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+  new_entry->net.prefix = *net;
+  new_entry->net.prefix_len = prefix_len;
+
+  /* Queue */
+  list_add_before(ip_prefix_head, &new_entry->node);
+}
+
+int
+ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+{
+  struct ip_prefix_entry *h;
+
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
+    if (ipequal(net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
+      free(h);
+      return 1;
+    }
+  }
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
+  return 0;
+}
+
+struct ip_prefix_entry *
+ip_prefix_list_find(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+{
+  struct ip_prefix_entry *h;
+
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
+    if (prefix_len == h->net.prefix_len && ipequal(net, &h->net.prefix)) {
+      return h;
+    }
+  }
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
+  return NULL;
+}

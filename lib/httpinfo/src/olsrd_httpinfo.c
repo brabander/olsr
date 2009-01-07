@@ -56,7 +56,7 @@
 #include "lq_plugin.h"
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
-
+#include "olsr_ip_prefix_list.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -188,8 +188,6 @@ static void build_about_body(struct autobuf *abuf);
 
 static void build_cfgfile_body(struct autobuf *abuf);
 
-static bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr);
-
 static void build_ip_txt(struct autobuf *abuf, const bool want_link,
 			 const char * const ipaddrstr, const int prefix_len);
 
@@ -199,12 +197,6 @@ static void build_ipaddr_link(struct autobuf *abuf, const bool want_link,
 static void section_title(struct autobuf *abuf, const char *title);
 
 static ssize_t writen(int fd, const void *buf, size_t count);
-
-#define IN6ADDR_V4MAPPED_LOOPBACK_INIT \
-        { { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
-              0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 } } }
-
-const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT;
 
 static struct timeval start_time;
 static struct http_stats stats;
@@ -344,6 +336,17 @@ olsrd_plugin_init(void)
     exit(0);
   }
 
+  /* always allow localhost */
+  if (olsr_cnf->ip_version == AF_INET) {
+    union olsr_ip_addr ip;
+
+    ip.v4.s_addr = ntohl(INADDR_LOOPBACK);
+    ip_acl_add(&allowed_nets, &ip, 32, false);
+  } else {
+    ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
+    ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
+  }
+
   /* Register socket */
   add_olsr_socket(http_socket, &parse_http_request, NULL, NULL, SP_PR_READ);
 
@@ -356,7 +359,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 {
   struct sockaddr_storage pin;
   socklen_t addrlen;
-  const union olsr_ip_addr *ipaddr;
+  union olsr_ip_addr *ipaddr;
   char req[MAX_HTTPREQ_SIZE];
   //static char body[HTML_BUFSIZE];
   struct autobuf body, header;
@@ -391,14 +394,14 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   }
 
   if(olsr_cnf->ip_version == AF_INET) {
-    const struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
-    ipaddr = (const union olsr_ip_addr *)&addr4->sin_addr;
+    struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
+    ipaddr = (union olsr_ip_addr *)&addr4->sin_addr;
   } else {
-    const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
-    ipaddr = (const union olsr_ip_addr *)&addr6->sin6_addr;
+    struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
+    ipaddr = (union olsr_ip_addr *)&addr6->sin6_addr;
   }
 
-  if (!check_allowed_ip(allowed_nets, ipaddr)) {
+  if (!ip_acl_acceptable(&allowed_nets, ipaddr)) {
     struct ipaddr_str strbuf;
     OLSR_PRINTF(0, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, ipaddr));
@@ -691,7 +694,7 @@ static void build_tabs(struct autobuf *abuf, int active)
 void
 olsr_plugin_exit(void)
 {
-  ip_prefix_list_flush(&allowed_nets);
+  ip_acl_flush(&allowed_nets);
 
   if (http_socket >= 0) {
     CLOSESOCKET(http_socket);
@@ -951,15 +954,15 @@ static void build_config_body(struct autobuf *abuf)
   abuf_puts(abuf, "</table>\n");
 
   section_title(abuf, "Announced HNA entries");
-  if (olsr_cnf->hna_entries) {
-    struct ip_prefix_list *hna;
+  if (list_is_empty(&olsr_cnf->hna_entries)) {
+    struct ip_prefix_entry *hna;
     abuf_puts(abuf, "<tr><th>Network</th></tr>\n");
-    for (hna = olsr_cnf->hna_entries; hna; hna = hna->next) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
       struct ipprefix_str netbuf;
       abuf_appendf(abuf,
 		      "<tr><td>%s</td></tr>\n",
 		      olsr_ip_prefix_to_string(&netbuf, &hna->net));
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   } else {
     abuf_puts(abuf, "<tr><td></td></tr>\n");
   }
@@ -1177,34 +1180,6 @@ static void build_cfgfile_body(struct autobuf *abuf)
   printf("RETURNING %d\n", size);
 #endif
 }
-
-static bool check_allowed_ip(const struct ip_prefix_list * const all_nets, const union olsr_ip_addr * const addr)
-{
-  const struct ip_prefix_list *ipcn;
-
-  if (olsr_cnf->ip_version == AF_INET) {
-    if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
-      return true;
-    }
-  } else {
-    if(ip6equal(&addr->v6, &in6addr_loopback)) {
-      return true;
-    }
-    else if(ip6equal(&addr->v6, &in6addr_v4mapped_loopback)) {
-      return true;
-    }
-  }
-
-  /* check nets */
-  for (ipcn = all_nets; ipcn != NULL; ipcn = ipcn->next) {
-    if (ip_in_net(addr, &ipcn->net)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 #if 0
 /*
  * In a bigger mesh, there are probs with the fixed

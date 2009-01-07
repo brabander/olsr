@@ -43,6 +43,7 @@
 #include "scheduler.h"
 #include "olsr.h"
 #include "olsr_cookie.h"
+#include "olsr_ip_prefix_list.h"
 
 #include <stdio.h>
 #include <string.h>

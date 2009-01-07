@@ -44,6 +44,7 @@
 #include "log.h"
 #include "mantissa.h"
 #include "net_olsr.h"
+#include "olsr_ip_prefix_list.h"
 
 #include <stdlib.h>
 
@@ -366,7 +367,7 @@ serialize_hna4(struct interface *ifp)
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair *pair;
-  struct ip_prefix_list *h;
+  struct ip_prefix_entry *h;
 
   /* No hna nets */
   if (ifp == NULL) {
@@ -375,8 +376,7 @@ serialize_hna4(struct interface *ifp)
   if (olsr_cnf->ip_version != AF_INET) {
     return false;
   }
-  h = olsr_cnf->hna_entries;
-  if (h == NULL) {
+  if (list_is_empty(&olsr_cnf->hna_entries)) {
     return false;
   }
 
@@ -405,7 +405,7 @@ serialize_hna4(struct interface *ifp)
 
   pair = m->v4.message.hna.hna_net;
 
-  for (; h != NULL; h = h->next) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
 #ifdef DEBUG
       struct ipprefix_str prefixstr;
 #endif
@@ -436,7 +436,7 @@ serialize_hna4(struct interface *ifp)
       pair->netmask = ip_addr.v4.s_addr;
       pair++;
       curr_size += (2 * olsr_cnf->ipsize);
-  }
+  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
   m->v4.seqno = htons(get_msg_seqno());
   m->v4.olsr_msgsize = htons(curr_size);
@@ -462,10 +462,10 @@ serialize_hna6(struct interface *ifp)
   union olsr_message *m;
   struct hnapair6 *pair6;
   union olsr_ip_addr tmp_netmask;
-  struct ip_prefix_list *h = olsr_cnf->hna_entries;
+  struct ip_prefix_entry *h;
 
   /* No hna nets */
-  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || h == NULL)
+  if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || list_is_empty(&olsr_cnf->hna_entries))
     return false;
 
 
@@ -493,8 +493,7 @@ serialize_hna6(struct interface *ifp)
   pair6 = m->v6.message.hna.hna_net;
 
 
-  while(h)
-    {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
 #ifdef DEBUG
       struct ipprefix_str prefixstr;
 #endif
@@ -524,8 +523,7 @@ serialize_hna6(struct interface *ifp)
       pair6->netmask = tmp_netmask.v6;
       pair6++;
       curr_size += (2 * olsr_cnf->ipsize);
-      h = h->next;
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
   m->v6.olsr_msgsize = htons(curr_size);
   m->v6.seqno = htons(get_msg_seqno());

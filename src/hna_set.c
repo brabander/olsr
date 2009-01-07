@@ -46,6 +46,7 @@
 #include "scheduler.h"
 #include "net_olsr.h"
 #include "tc_set.h"
+#include "olsr_ip_prefix_list.h"
 
 /* Some cookies for stats keeping */
 static struct olsr_cookie_info *hna_net_timer_cookie = NULL;
@@ -299,7 +300,7 @@ olsr_input_hna(union olsr_message *msg,
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
 
-    if (!ip_prefix_list_find(olsr_cnf->hna_entries, &prefix.prefix,
+    if (!ip_prefix_list_find(&olsr_cnf->hna_entries, &prefix.prefix,
                              prefix.prefix_len)) {
       /*
        * Only update if it's not from us.

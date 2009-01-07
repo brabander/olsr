@@ -50,6 +50,7 @@
 #include "tc_set.h"
 #include "hna_set.h"
 #include "link_set.h"
+#include "olsr_ip_prefix_list.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -266,7 +267,7 @@ pcf_event(int ipc_connection,
   if (chgs_neighborhood || chgs_topology || chgs_hna) {
     struct neighbor_entry *neighbor_table_tmp;
     struct tc_entry *tc;
-    struct ip_prefix_list *hna;
+    struct ip_prefix_entry *hna;
 
     /* Print tables to IPC socket */
     ipc_send_str(ipc_connection, "digraph topology\n{\n");
@@ -299,11 +300,11 @@ pcf_event(int ipc_connection,
     OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
       ipc_print_net(ipc_connection,
 		    &olsr_cnf->main_addr,
                     &hna->net);
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
     ipc_send_str(ipc_connection, "}\n\n");
 
     res = 1;

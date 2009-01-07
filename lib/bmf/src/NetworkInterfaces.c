@@ -65,6 +65,7 @@
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
 #include "net_olsr.h" /* ipequal */
 #include "lq_plugin.h"
+#include "olsr_ip_prefix_list.h"
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */

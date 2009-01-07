@@ -42,15 +42,17 @@
 #include "olsr_cfg_gen.h"
 #include "olsr_protocol.h"
 #include "ipcalc.h"
+#include "olsr_ip_prefix_list.h"
+
 #include <errno.h>
 
 void
 olsr_print_cnf(const struct olsr_config *cnf)
 {
-  struct ip_prefix_list *h = cnf->hna_entries;
+  struct ip_prefix_entry *h;
   struct olsr_if_config *in = cnf->if_configs;
   struct plugin_entry *pe = cnf->plugins;
-  struct ip_prefix_list *ie = cnf->ipc_nets;
+  struct ip_prefix_entry *ie;
   struct olsr_lq_mult *mult;
   char ipv6_buf[100];                  /* buffer for IPv6 inet_htop */
 
@@ -76,7 +78,7 @@ olsr_print_cnf(const struct olsr_config *cnf)
     printf("Willingness      : %d\n", cnf->willingness);
 
   printf("IPC connections  : %d\n", cnf->ipc_connections);
-  while (ie) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->ipc_nets.accept, ie) {
     if (ie->net.prefix_len == olsr_cnf->maxplen) {
       struct ipaddr_str strbuf;
       printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
@@ -84,8 +86,7 @@ olsr_print_cnf(const struct olsr_config *cnf)
       struct ipprefix_str prefixstr;
       printf("\tNet %s\n", olsr_ip_prefix_to_string(&prefixstr, &ie->net));
     }
-    ie = ie->next;
-  }
+  } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
   printf("Pollrate         : %0.2f\n", conv_pollrate_to_secs(cnf->pollrate));
 
@@ -150,13 +151,12 @@ olsr_print_cnf(const struct olsr_config *cnf)
   }
 
   /* HNA IPv4 and IPv6 */
-  if (h) {
+  if (!list_is_empty(&olsr_cnf->hna_entries)) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
-    while (h) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
       struct ipprefix_str prefixstr;
       printf("\t%s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
-      h = h->next;
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
 }
 
@@ -196,7 +196,7 @@ append_float(struct autobuf *abuf, const char *name, float val, float deflt, boo
 }
 
 void
-olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool write_more_comments)
+olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_more_comments)
 {
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
   const char *s;
@@ -220,12 +220,13 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool wri
   /* HNA IPv4/IPv6 */
   abuf_appendf(abuf, "# HNA IPv%d routes\n"
                "# syntax: netaddr/prefix\n" "Hna%d {\n", cnf->ip_version == AF_INET ? 4 : 6, cnf->ip_version == AF_INET ? 4 : 6);
-  if (cnf->hna_entries) {
-    struct ip_prefix_list *h;
-    for (h = cnf->hna_entries; h != NULL; h = h->next) {
+  if (!list_is_empty(&cnf->hna_entries)) {
+    struct ip_prefix_entry *h;
+
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->hna_entries, h) {
       struct ipprefix_str strbuf;
       abuf_appendf(abuf, "    %s\n", olsr_ip_prefix_to_string(&strbuf, &h->net));
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
   abuf_appendf(abuf, "}\n\n");
 
@@ -259,9 +260,9 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool wri
   abuf_appendf(abuf, "# Allow processes like the GUI front-end\n"
                "# to connect to the daemon.\n" "IpcConnect {\n" "    MaxConnections\t%d\n", cnf->ipc_connections);
 
-  if (cnf->ipc_nets) {
-    struct ip_prefix_list *ie;
-    for (ie = cnf->ipc_nets; ie != NULL; ie = ie->next) {
+  if (list_is_empty(&cnf->ipc_nets.accept)) {
+    struct ip_prefix_entry *ie;
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {
       if (ie->net.prefix_len == olsr_cnf->maxplen) {
         struct ipaddr_str strbuf;
         abuf_appendf(abuf, "    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
@@ -269,7 +270,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, const struct olsr_config *cnf, bool wri
         struct ipprefix_str strbuf;
         abuf_appendf(abuf, "    Net\t\t\t%s\n", olsr_ip_prefix_to_string(&strbuf, &ie->net));
       }
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
 
   abuf_appendf(abuf, "}\n");

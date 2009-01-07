@@ -49,9 +49,9 @@
 #include "olsr_types.h"
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
+#include "olsr_ip_acl.h"
 
-extern union olsr_ip_addr *ipc_accept_ip;
-extern int ipc_accept_count;
+extern struct ip_acl allowed_nets;
 
 extern int ipc_port;
 extern int nompr;

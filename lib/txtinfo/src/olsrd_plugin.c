@@ -53,9 +53,10 @@
 #include "olsrd_plugin.h"
 #include "olsrd_txtinfo.h"
 #include "defs.h"
+#include "ipcalc.h"
 #include "olsr_cfg.h"
 #include "olsr.h"
-
+#include "olsr_ip_acl.h"
 
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"
 #define PLUGIN_VERSION "0.1"
@@ -64,8 +65,8 @@
 #define PLUGIN_INTERFACE_VERSION 5
 
 
-union olsr_ip_addr *ipc_accept_ip = NULL;
-int ipc_accept_count = 0;
+struct ip_acl allowed_nets;
+
 int ipc_port;
 int nompr;
 
@@ -82,15 +83,17 @@ static void my_init(void)
 
     /* defaults for parameters */
     ipc_port = 2006;
-    ipc_accept_ip = olsr_malloc(sizeof(union olsr_ip_addr), "ipc_accept_ip");
-    if (!ipc_accept_ip) {
-        OLSR_PRINTF(0, "Error, no memory for txtinfo plugin");
-        exit(1);
-    }
+
+    ip_acl_init(&allowed_nets);
+    /* always allow localhost */
     if (olsr_cnf->ip_version == AF_INET) {
-        ipc_accept_ip[0].v4.s_addr = htonl(INADDR_LOOPBACK);
+      union olsr_ip_addr ip;
+
+      ip.v4.s_addr = ntohl(INADDR_LOOPBACK);
+      ip_acl_add(&allowed_nets, &ip, 32, false);
     } else {
-        ipc_accept_ip[0].v6 = in6addr_loopback;
+      ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
+      ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
     }
 
     /* highlite neighbours by default */
@@ -108,8 +111,8 @@ static void my_fini(void)
      * sourcefile and all data destruction
      * should happen there - NOT HERE!
      */
-    if (ipc_accept_ip) free(ipc_accept_ip);
     olsr_plugin_exit();
+    ip_acl_flush(&allowed_nets);
 }
 
 
@@ -118,32 +121,12 @@ int olsrd_plugin_interface_version(void)
     return PLUGIN_INTERFACE_VERSION;
 }
 
-static int set_txtinfo_iplist(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    union olsr_ip_addr *tmp = ipc_accept_ip;
-    union olsr_ip_addr ip_addr;
-    if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
-        OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
-        return 1;
-    }
-
-    ipc_accept_ip = (union olsr_ip_addr *)olsr_malloc(sizeof(ip_addr) * (ipc_accept_count + 1), "txtinfo iplist");
-    if (ipc_accept_ip == NULL) {
-      OLSR_PRINTF(0, "Error, cannot allocate memory for ipc_accept_ip list in txtinfo plugin");
-      exit(1);
-    }
-    if (tmp) {
-      memmove(ipc_accept_ip, tmp, sizeof(ip_addr) * ipc_accept_count);
-      free(tmp);
-    }
-
-    ipc_accept_ip[ipc_accept_count++] = ip_addr;
-    return 0;
-}
-
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "port",   .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = "accept", .set_plugin_parameter = &set_txtinfo_iplist, .data = &ipc_accept_ip },
+    { .name = "port",          .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
+    { .name = "accept",        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
+    { .name = "reject",        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
+    { .name = "checkFirst",    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
+    { .name = "defaultPolicy", .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets }
 };
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)

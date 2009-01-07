@@ -35,7 +35,7 @@
 #include "defs.h"
 #include "routing_table.h"
 #include "common/string.h"
-
+#include "olsr_ip_prefix_list.h"
 
 #ifdef USE_UNIX_DOMAIN_SOCKET
 #include <sys/un.h>

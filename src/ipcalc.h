@@ -106,6 +106,7 @@ const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * c
  */
 static INLINE uint32_t prefix_to_netmask4(uint8_t prefixlen) { return prefixlen == 0 ? 0 : (~0U << (32 - prefixlen)); }
 
+extern const struct in6_addr EXPORT(in6addr_v4mapped_loopback);
 #endif
 /*
  * Local Variables:

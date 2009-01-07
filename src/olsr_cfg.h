@@ -105,6 +105,7 @@
 #endif
 
 #include "interfaces.h"
+#include "olsr_ip_acl.h"
 
 struct olsr_msg_params {
   float emission_interval;
@@ -143,11 +144,6 @@ struct olsr_if_config {
   struct interface *interf;
   struct olsr_if_options *cnf;
   struct olsr_if_config *next;
-};
-
-struct ip_prefix_list {
-  struct olsr_ip_prefix net;
-  struct ip_prefix_list *next;
 };
 
 struct plugin_param {
@@ -190,8 +186,8 @@ struct olsr_config {
   olsr_fib_metric_options fib_metric;
 
   struct plugin_entry *plugins;
-  struct ip_prefix_list *hna_entries;
-  struct ip_prefix_list *ipc_nets;
+  struct list_node hna_entries;
+  struct ip_acl ipc_nets;
   struct olsr_if_config *if_configs;
   uint32_t pollrate;                   /* in microseconds */
   float nic_chgs_pollrate;
@@ -246,14 +242,6 @@ conv_pollrate_to_microsecs(float p)
 {
   return p * 1000000;
 }
-
-/*
- * List functions
- */
-void EXPORT(ip_prefix_list_add) (struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-int EXPORT(ip_prefix_list_remove) (struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
-void EXPORT(ip_prefix_list_flush) (struct ip_prefix_list **);
-struct ip_prefix_list *ip_prefix_list_find(struct ip_prefix_list *, const union olsr_ip_addr *net, uint8_t prefix_len);
 
 #endif /* _OLSRD_CFG_H */
 

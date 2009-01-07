@@ -39,26 +39,32 @@
  *
  */
 
-#ifndef _OLSRD_CFG_GEN_H
-#define _OLSRD_CFG_GEN_H
+#ifndef OLSR_IP_PREFIX_ACL_H_
+#define OLSR_IP_PREFIX_ACL_H_
 
-#include "olsr_cfg.h"
-#include "common/autobuf.h"
+#include "defs.h"
+#include "olsr_types.h"
+#include "olsrd_plugin.h"
+#include "common/list.h"
 
-/*
- * Interface config generation
- */
-void olsr_print_cnf(const struct olsr_config *);
-#if 0
-int olsr_write_cnf(const struct olsr_config *cnf, const char *fname);
-#endif
-void EXPORT(olsr_write_cnf_buf) (struct autobuf * abuf, struct olsr_config * cnf, bool write_more_comments);
+struct ip_acl {
+  struct list_node accept;
+  struct list_node reject;
+  bool first_accept;
+  bool default_accept;
+};
 
-#endif /* _OLSRD_CFG_GEN_H */
+void EXPORT(ip_acl_init) (struct ip_acl *);
+void EXPORT(ip_acl_flush) (struct ip_acl *);
+void EXPORT(ip_acl_add) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
+void EXPORT(ip_acl_remove) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
+bool EXPORT(ip_acl_acceptable) (struct ip_acl *, const union olsr_ip_addr *);
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+/* accessor methods for plugins */
+int EXPORT(ip_acl_add_plugin_accept) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
+int EXPORT(ip_acl_add_plugin_reject) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
+int EXPORT(ip_acl_add_plugin_checkFirst) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
+int EXPORT(ip_acl_add_plugin_defaultPolicy) (const char *value, void *data, set_plugin_parameter_addon addon
+                                             __attribute__ ((unused)));
+
+#endif /* OLSR_IP_PREFIX_ACL_H_ */

@@ -40,6 +40,12 @@
 
 #include "ipcalc.h"
 
+#define IN6ADDR_V4MAPPED_LOOPBACK_INIT \
+        { { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+              0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 } } }
+
+const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT;
+
 /* Global stuff externed in olsr_cfg.h */
 FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
 struct olsr_config *olsr_cnf;          /* The global configuration */
@@ -47,10 +53,6 @@ struct olsr_config *olsr_cnf;          /* The global configuration */
 int
 prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {
-#if !defined(NODEBUG) && defined(DEBUG)
-  struct ipaddr_str buf;
-  const uint8_t *a_start = a;
-#endif
   int i;
   const int end = MIN(len, prefixlen / 8);
   for (i = 0; i < end; i++) {
@@ -64,9 +66,6 @@ prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
     a[i++] = 0;
   }
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Prefix %d = Netmask: %s\n", prefixlen, inet_ntop(olsr_cnf->ip_version, a_start, buf.buf, sizeof(buf.buf)));
-#endif
   return 1;
 }
 
@@ -93,15 +92,12 @@ netmask_to_prefix(const uint8_t *adr, int len)
     case 254: prefix += 7; break;
     case 255: prefix += 8; break; /* Shouldn't happen */
     default:
-      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, olsr_ip_to_string(&buf, (const union olsr_ip_addr *)adr));
+      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, ip_to_string(len == 4 ? AF_INET : AF_INET6, &buf, (const union olsr_ip_addr *)adr));
       prefix = UCHAR_MAX;
       *(int *)0 = 0;
       break;
     }
   }
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Netmask: %s = Prefix %d\n", olsr_ip_to_string(&buf, (const union olsr_ip_addr *)adr), prefix);
-#endif
   return prefix;
 }
 

@@ -53,6 +53,7 @@
 #include "scheduler.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
+#include "olsr_ip_prefix_list.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -116,7 +117,7 @@ ipc_input(int);
 #endif
 
 static bool
-ipc_check_allowed_ip(const union olsr_ip_addr *);
+ipc_check_allowed_ip(union olsr_ip_addr *);
 
 static bool
 frontend_msgparser(union olsr_message *, struct interface *, union olsr_ip_addr *);
@@ -181,22 +182,14 @@ ipc_init(void)
 }
 
 static bool
-ipc_check_allowed_ip(const union olsr_ip_addr *addr)
+ipc_check_allowed_ip(union olsr_ip_addr *addr)
 {
-  struct ip_prefix_list *ipcn;
-
   if (addr->v4.s_addr == ntohl(INADDR_LOOPBACK)) {
     return true;
   }
 
   /* check nets */
-  for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
-    if (ip_in_net(addr, &ipcn->net)) {
-      return true;
-    }
-  }
-
-  return false;
+  return ip_acl_acceptable(&olsr_cnf->ipc_nets, addr);
 }
 
 static void
@@ -406,7 +399,7 @@ ipc_send_net_info(int fd)
   net_msg.mids = (!list_is_empty(&interface_head)) ? 1 : 0;
 
   /* HNAs */
-  net_msg.hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
+  net_msg.hnas = list_is_empty(&olsr_cnf->hna_entries) ? 0 : 1;
 
   /* Different values */
   /* Temporary fixes */

@@ -42,11 +42,12 @@
 #include "olsr_cfg.h"
 
 #include "olsr.h"
-#include "ipcalc.h"
+// #include "ipcalc.h"
 #include "parser.h"
 #include "net_olsr.h"
 #include "ifnet.h"
 #include "log.h"
+#include "olsr_ip_prefix_list.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -355,8 +356,8 @@ parse_cfg_hna(const char *argstr, const int ip_version, struct olsr_config *cfg)
           fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
           exit(EXIT_FAILURE);
         }
-        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, olsr_netmask_to_prefix(&netmask));
-        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
+        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, netmask_to_prefix((uint8_t *)&netmask, cfg->ipsize));
+        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), netmask_to_prefix((uint8_t *)&netmask, cfg->ipsize));
       } else {
         int prefix = -1;
         sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
@@ -547,7 +548,8 @@ parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
           fprintf(stderr, "Failed converting IP address %s\n", p[0]);
           exit(EXIT_FAILURE);
         }
-        ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, cfg->maxplen);
+
+        ip_acl_add(&cfg->ipc_nets, &ipaddr, cfg->maxplen, false);
         PARSER_DEBUG_PRINTF("\tIPC host: %s\n", ip_to_string(cfg->ip_version, &buf, &ipaddr));
       } else if (0 == strcmp("Net", p[0])) {
         union olsr_ip_addr ipaddr;
@@ -569,7 +571,7 @@ parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
             fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
             exit(EXIT_FAILURE);
           }
-          ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask));
+          ip_acl_add(&cfg->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask), false);
           PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
         } else {
           int prefix = -1;
@@ -578,7 +580,7 @@ parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
             fprintf(stderr, "Illegal IPv6 prefix %s\n", p[2]);
             exit(EXIT_FAILURE);
           }
-          ip_prefix_list_add(&cfg->ipc_nets, &ipaddr, prefix);
+          ip_acl_add(&cfg->ipc_nets, &ipaddr, prefix, false);
           PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), prefix);
         }
         p++;
@@ -1172,8 +1174,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 void
 olsr_free_cfg(struct olsr_config *cfg)
 {
-  struct ip_prefix_list *hnad, *hna = cfg->hna_entries;
-  struct ip_prefix_list *ipcd, *ipc = cfg->ipc_nets;
   struct olsr_if_config *ind, *in = cfg->if_configs;
   struct plugin_entry *ped, *pe = cfg->plugins;
   struct olsr_lq_mult *mult, *next_mult;
@@ -1181,20 +1181,12 @@ olsr_free_cfg(struct olsr_config *cfg)
   /*
    * Free HNAs.
    */
-  while (hna) {
-    hnad = hna;
-    hna = hna->next;
-    free(hnad);
-  }
+  ip_prefix_list_flush(&cfg->hna_entries);
 
   /*
    * Free IPCs.
    */
-  while (ipc) {
-    ipcd = ipc;
-    ipc = ipc->next;
-    free(ipcd);
-  }
+  ip_acl_flush(&cfg->ipc_nets);
 
   /*
    * Free Interfaces - remove_interface() already called
@@ -1281,6 +1273,9 @@ olsr_get_default_cfg(void)
   cfg->max_tc_vtime = 0.0;
   cfg->ioctl_s = 0;
 
+  list_head_init(&cfg->hna_entries);
+  ip_acl_init(&cfg->ipc_nets);
+
 #if defined linux
   cfg->rts_linux = 0;
 #endif
@@ -1288,67 +1283,6 @@ olsr_get_default_cfg(void)
   cfg->rts_bsd = 0;
 #endif
   return cfg;
-}
-
-void
-ip_prefix_list_flush(struct ip_prefix_list **list)
-{
-  struct ip_prefix_list *entry, *next_entry;
-
-  for (entry = *list; entry; entry = next_entry) {
-    next_entry = entry->next;
-
-    entry->next = NULL;
-    free(entry);
-  }
-  *list = NULL;
-}
-
-void
-ip_prefix_list_add(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
-{
-  struct ip_prefix_list *new_entry = olsr_malloc(sizeof(*new_entry), "new ip_prefix");
-
-  new_entry->net.prefix = *net;
-  new_entry->net.prefix_len = prefix_len;
-
-  /* Queue */
-  new_entry->next = *list;
-  *list = new_entry;
-}
-
-int
-ip_prefix_list_remove(struct ip_prefix_list **list, const union olsr_ip_addr *net, uint8_t prefix_len)
-{
-  struct ip_prefix_list *h = *list, *prev = NULL;
-
-  while (h != NULL) {
-    if (ipequal(net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
-      /* Dequeue */
-      if (prev == NULL) {
-        *list = h->next;
-      } else {
-        prev->next = h->next;
-      }
-      free(h);
-      return 1;
-    }
-    prev = h;
-    h = h->next;
-  }
-  return 0;
-}
-
-struct ip_prefix_list *
-ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, uint8_t prefix_len)
-{
-  struct ip_prefix_list *h;
-  for (h = list; h != NULL; h = h->next) {
-    if (prefix_len == h->net.prefix_len && ipequal(net, &h->net.prefix)) {
-      return h;
-    }
-  }
-  return NULL;
 }
 
 /*

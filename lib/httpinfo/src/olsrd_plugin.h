@@ -63,6 +63,7 @@
 #include "mid_set.h"
 #include "mpr_selector_set.h"
 #include "routing_table.h"
+#include "olsr_ip_acl.h"
 
 #define PLUGIN_NAME    "OLSRD httpinfo plugin"
 #define PLUGIN_VERSION "0.1"
@@ -75,7 +76,7 @@ extern int resolve_ip_addresses;
 
 /* Allowed hosts stuff */
 
-extern struct ip_prefix_list *allowed_nets;
+extern struct ip_acl allowed_nets;
 
 
 /****************************************************************************

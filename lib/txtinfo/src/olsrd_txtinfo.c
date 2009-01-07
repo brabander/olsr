@@ -57,6 +57,7 @@
 #include "routing_table.h"
 #include "log.h"
 #include "misc.h"
+#include "olsr_ip_prefix_list.h"
 
 #include "common/autobuf.h"
 
@@ -242,8 +243,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     char addr[INET6_ADDRSTRLEN];
     socklen_t addrlen = sizeof(pin);
     int http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
-    bool ipOkay = false;
-    int i, count;
+    union olsr_ip_addr *ipaddr;
 
     if (http_connection == -1) {
         /* this may well happen if the other side immediately closes the connection. */
@@ -254,38 +254,15 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
     }
 
     /* check if we want ot speak with it */
-    count = ipc_accept_count;
-    if (count == 0)
-      count = 1; /* default is localhost */
-
-    if (olsr_cnf->ip_version == AF_INET) {
-        const struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &addr4->sin_addr, addr, sizeof(addr)) == NULL) {
-             addr[0] = '\0';
-        }
-
-        for (i = 0; i < count; i++) {
-          if (ip4equal(&addr4->sin_addr, &ipc_accept_ip[i].v4)) {
-              ipOkay = true;
-              break;
-          }
-        }
+    if(olsr_cnf->ip_version == AF_INET) {
+      struct sockaddr_in *addr4 = (struct sockaddr_in *)&pin;
+      ipaddr = (union olsr_ip_addr *)&addr4->sin_addr;
     } else {
-        const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
-        if (inet_ntop(olsr_cnf->ip_version, &addr6->sin6_addr, addr, sizeof(addr)) == NULL) {
-             addr[0] = '\0';
-        }
-       /* Use in6addr_any (::) in olsr.conf to allow anybody. */
-        for (i = 0; i < count; i++) {
-          if (ip6equal(&in6addr_any, &ipc_accept_ip[i].v6) ||
-             ip6equal(&addr6->sin6_addr, &ipc_accept_ip[i].v6)) {
-              ipOkay = true;
-              break;
-          }
-        }
+      struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&pin;
+      ipaddr = (union olsr_ip_addr *)&addr6->sin6_addr;
     }
 
-    if (!ipOkay) {
+    if (!ip_acl_acceptable(&allowed_nets, ipaddr)) {
       OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       CLOSESOCKET(http_connection);
       return;
@@ -556,7 +533,7 @@ static int ipc_print_hna_entry(struct autobuf *autobuf,
 
 static int ipc_print_hna(struct ipc_conn *conn)
 {
-    const struct ip_prefix_list *hna;
+    const struct ip_prefix_entry *hna;
     struct tc_entry *tc;
 
     if (abuf_appendf(&conn->resp, "Table: HNA\nDestination\tGateway\n") < 0) {
@@ -564,11 +541,11 @@ static int ipc_print_hna(struct ipc_conn *conn)
     }
 
     /* Announced HNA entries */
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
         if (ipc_print_hna_entry(&conn->resp, &hna->net, &olsr_cnf->main_addr) < 0) {
             return -1;
         }
-    }
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
     /* HNA entries */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
