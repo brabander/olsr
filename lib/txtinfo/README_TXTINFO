@@ -1,9 +1,45 @@
+ PARAMETERS
+
+The plugin takes the parameter "Port" "[portnumber]" 
+to set the TCP port on which the server is to run. 
+It defaults to 2006.
+
+The access to the plugin is controlled by two lists of ip
+addresses and ip networks, a blacklist (reject list) and
+a whitelist (accept list). Two binary flags control which
+list is to be used first and what should be the default
+reaction to an unknown IP.
+
+Examples for parameters accept/reject:
+PlParam   "accept"   "10.0.0.0/8" 
+PlParam   "reject"   "10.0.0.1" 
+PlParam   "accept"   "10.0.0.0 255.0.0.0" 
+
+Examples for parameters for binary flags
+PlParam   "checkfirst"      "reject"
+PlParam   "defaultpolicy"   "accept"
+
+The old parameters "host", "host4", "host6", "net", "net4"
+and "net6" are just alias names for "accept".
+
+The default settings are checkfirst=reject and
+defaultpolicy=reject.
+
+
+A configuration example:
 LoadPlugin "olsrd_txtinfo.so.0.1"
 {
-        PlParam "accept" "10.247.200.4"
-        PlParam "accept" "10.247.200.2"
-        PlParam "accept" "127.0.0.1"
+    PlParam     "port"          "80"
+    PlParam     "checkfirst"    "reject"
+    PlParam     "defaultpolicy" "accept"
+    PlParam     "accept"   "10.0.0.0/8"
+    PlParam     "reject"   "10.0.1.123"
 }
+
+This will run the txtinfo server on port 80(the normal
+HTTP port) and allow access from the network
+10.0.0.0/8, but not from 10.0.1.123.
+access is always allowed from 127.0.0.1(localhost).
 
 ABOUT
 

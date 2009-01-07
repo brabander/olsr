@@ -26,27 +26,42 @@ to set the TCP port on which the server is to run.
 It defaults to 1978.
 Now remember to open this port in your firewall if 
 planning to access the HTTP server from a remote host!
-The parameter "Host" "[IP address]" is used to allow
-access from a single host(muliple such entries can
-be set) and the parameter "Net" "[IP net] [IP mask]"
-is used to allow access from entire net-ranges.
-To allow access from all hosts do:
- PlParam   "Net" "0.0.0.0 0.0.0.0"
+
+The access to the plugin is controlled by two lists of ip
+addresses and ip networks, a blacklist (reject list) and
+a whitelist (accept list). Two binary flags control which
+list is to be used first and what should be the default
+reaction to an unknown IP.
+
+Examples for parameters accept/reject:
+PlParam   "accept"   "10.0.0.0/8" 
+PlParam   "reject"   "10.0.0.1" 
+PlParam   "accept"   "10.0.0.0 255.0.0.0" 
+
+Examples for parameters for binary flags
+PlParam   "checkfirst"      "reject"
+PlParam   "defaultpolicy"   "accept"
+
+The old parameters "host", "host4", "host6", "net", "net4"
+and "net6" are just alias names for "accept".
+
+The default settings are checkfirst=reject and
+defaultpolicy=reject.
+
 
 A configuration example:
 LoadPlugin "olsrd_httpinfo.so.0.1"
 {
-    PlParam     "port"   "80"
-    PlParam     "Host"   "163.24.87.3"
-    PlParam     "Host"   "80.23.53.22"
-    PlParam     "Net"    "10.0.0.0 255.0.0.0"
-    PlParam     "Net"    "192.168.0.0 255.255.0.0"
+    PlParam     "port"          "80"
+    PlParam     "checkfirst"    "reject"
+    PlParam     "defaultpolicy" "accept"
+    PlParam     "accept"   "10.0.0.0/8"
+    PlParam     "reject"   "10.0.1.123"
 }
 
 This will run the webserver on port 80(the normal
-HTTP port) and allow access from the hosts 163.24.87.3
-and 80.23.53.22 and the networks 10.0.0.0/8 and
-192.168.0.0/16.
+HTTP port) and allow access from the network
+10.0.0.0/8, but not from 10.0.1.123.
 access is always allowed from 127.0.0.1(localhost).
 
 -----------------------------------------------------

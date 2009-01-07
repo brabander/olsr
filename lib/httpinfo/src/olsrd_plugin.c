@@ -111,10 +111,10 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "net",           .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
     { .name = "host6",         .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
     { .name = "net6",          .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "accept",        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "reject",        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
-    { .name = "checkFirst",    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
-    { .name = "defaultPolicy", .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets },
+    { .name = IP_ACL_ACCEPT_PARAP,        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
+    { .name = IP_ACL_REJECT_PARAM,        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
+    { .name = IP_ACL_CHECKFIRST_PARAM,    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
+    { .name = IP_ACL_DEFAULTPOLICY_PARAM, .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets },
     { .name = "resolve",       .set_plugin_parameter = &set_plugin_boolean,  .data = &resolve_ip_addresses },
 };
 

@@ -123,10 +123,10 @@ int olsrd_plugin_interface_version(void)
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
     { .name = "port",          .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = "accept",        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "reject",        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
-    { .name = "checkFirst",    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
-    { .name = "defaultPolicy", .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets }
+    { .name = IP_ACL_ACCEPT_PARAP,        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
+    { .name = IP_ACL_REJECT_PARAM,        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
+    { .name = IP_ACL_CHECKFIRST_PARAM,    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
+    { .name = IP_ACL_DEFAULTPOLICY_PARAM, .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets }
 };
 
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
