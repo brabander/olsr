@@ -106,6 +106,7 @@
 
 #include "interfaces.h"
 #include "olsr_ip_acl.h"
+#include "olsr_logging.h"
 
 struct olsr_msg_params {
   float emission_interval;
@@ -182,8 +183,11 @@ struct olsr_config {
   uint8_t rttable;
   uint8_t rttable_default;
   uint8_t ipc_connections;
-  int8_t debug_level;
   olsr_fib_metric_options fib_metric;
+
+  /* logging information */
+  int8_t debug_level;                  /* old style */
+  bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];       /* new style */
 
   struct plugin_entry *plugins;
   struct list_node hna_entries;

@@ -319,7 +319,7 @@ queue_if(const char *name, struct olsr_config *cfg)
  * Parses a single hna option block
  */
 static void
-parse_cfg_hna(const char *argstr, const int ip_version, struct olsr_config *cfg)
+parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *cfg)
 {
   char **tok;
 #ifdef DEBUG
@@ -378,7 +378,7 @@ parse_cfg_hna(const char *argstr, const int ip_version, struct olsr_config *cfg)
  * Parses a single interface option block
  */
 static void
-parse_cfg_interface(const char *argstr, struct olsr_config *cfg)
+parse_cfg_interface(char *argstr, struct olsr_config *cfg)
 {
   char **tok;
   const char *nxt;
@@ -518,7 +518,7 @@ parse_cfg_interface(const char *argstr, struct olsr_config *cfg)
  * Parses a single ipc option block
  */
 static void
-parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
+parse_cfg_ipc(char *argstr, struct olsr_config *cfg)
 {
   char **tok;
   const char *nxt;
@@ -598,7 +598,7 @@ parse_cfg_ipc(const char *argstr, struct olsr_config *cfg)
  * Parses a single loadplugin option block
  */
 static void
-parse_cfg_loadplugin(const char *argstr, struct olsr_config *cfg)
+parse_cfg_loadplugin(char *argstr, struct olsr_config *cfg)
 {
   char **tok;
   const char *nxt;
@@ -640,10 +640,76 @@ parse_cfg_loadplugin(const char *argstr, struct olsr_config *cfg)
 }
 
 /*
+ * Parses a single loadplugin option block
+ */
+static void
+parse_cfg_log(char *argstr , struct olsr_config *cfg)
+{
+  char *p = (char *) argstr, *nextEquals, *nextColon, *nextSlash;
+  bool hasErrorOption = false;
+  int i,j;
+
+  while (p != NULL && *p != 0) {
+    /* split at ',' */
+    nextColon = strchr(p, ',');
+    if (nextColon) {
+      *nextColon++ = 0;
+    }
+
+    nextEquals = strchr(p, '=');
+    if (nextEquals) {
+      *nextEquals++ = 0;
+    }
+
+    for (j=0; j<LOG_SEVERITY_COUNT; j++) {
+      if (strcasecmp(p, LOG_SEVERITY_NAMES[j]) == 0) {
+        break;
+      }
+    }
+
+    if (j < LOG_SEVERITY_COUNT) {
+      p = nextEquals;
+      while (p != NULL && *p != 0) {
+        /* split at '/' */
+        nextSlash = strchr(p, '/');
+        if (nextSlash) {
+          *nextSlash++ = 0;
+        }
+
+        for (i=0; i<LOG_SOURCE_COUNT; i++) {
+          if (strcasecmp(p, LOG_SOURCE_NAMES[i]) == 0) {
+            break;
+          }
+        }
+
+        if (i < LOG_SOURCE_COUNT) {
+          cfg->log_event[j][i] = true;
+        }
+        p = nextSlash;
+      }
+    }
+    p = nextColon;
+  }
+
+  /* process results to clean them up */
+  for (i=0; i<LOG_SOURCE_COUNT; i++) {
+    if (cfg->log_event[INFO][i]) {
+      cfg->log_event[WARN][i] = true;
+    }
+    if (cfg->log_event[WARN][i]) {
+      cfg->log_event[ERROR][i] = true;
+    }
+    if (!hasErrorOption) {
+      cfg->log_event[ERROR][i] = true;
+    }
+  }
+}
+
+/*
  * Parses a single option found on the command line
  */
 static void
-parse_cfg_option(const int optint, const char *argstr, const int line, struct olsr_config *cfg)
+parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_config *cfg)
 {
   switch (optint) {
   case 'D':                    /* delgw */
@@ -849,6 +915,9 @@ parse_cfg_option(const int optint, const char *argstr, const int line, struct ol
       PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", cfg->willingness);
     }
     break;
+  case 'L':                    /* Log (string) */
+    parse_cfg_log(argstr, cfg);
+    break;
   default:
     fprintf(stderr, "Unknown arg in line %d.\n", line);
 #if NOEXIT_ON_DEPRECATED_OPTIONS
@@ -920,6 +989,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
     {"int",                      no_argument,       0, 'l'},
 #endif
     {"ipc",                      no_argument,       0, 'P'},
+    {"log",                      required_argument, 0, 'L'}, /* info=src1/...,warn=src3/... */
     {"nofork",                   no_argument,       0, 'n'},
     {"version",                  no_argument,       0, 'v'},
     {"AllowNoInt",               required_argument, 0, 'A'}, /* (yes/no) */
