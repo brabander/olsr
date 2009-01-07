@@ -7,40 +7,30 @@
   <articleinfo>
     <titleabbrev>Olsrd Man Pages</titleabbrev>
 
-    <author>
-      <firstname>Sven-Ola</firstname>
-
-      <surname>Tücke</surname>
-
-      <affiliation>
-        <address><email>sven-ola@gmx.de</email></address>
-      </affiliation>
-    </author>
-
     <releaseinfo>Version 0.5.7-pre</releaseinfo>
 
-    <copyright>
-      <year>2004</year>
+    <authorgroup>
+      <author>
+        <firstname>Sven-Ola</firstname>
 
-      <holder>Andreas Tønnesen</holder>
-    </copyright>
+        <surname>Tücke</surname>
 
-    <copyright>
-      <year>2008</year>
-
-      <holder>Sven-Ola Tücke</holder>
-    </copyright>
+        <email>sven-ola@gmx.de</email>
+      </author>
+    </authorgroup>
 
     <abstract>
-      <para>Source for <productname>olsrd</productname> man pages</para>
+      <para>Source for <productname>olsrd</productname> man pages and other
+      materials</para>
     </abstract>
   </articleinfo>
 
-  <para>This document contains sources for man pages. They where converted
-  from the original man page files which are maintained by Andreas Tønnesen
-  until 2005. Because the 0.5.7 version of <productname>olsrd</productname>
-  introduces several configuration changes and removes old configuration
-  options, a re-write was necessary in late 2008.</para>
+  <para>This document contains sources for man pages and other materials. They
+  where converted from the original man page files which are maintained by
+  Andreas Tønnesen until 2005. Because the 0.5.7 version of
+  <productname>olsrd</productname> introduces several configuration changes
+  and removes old configuration options, a re-write was necessary in late
+  2008.</para>
 
   <para>To process this file and convert the included man pages, use the
   <ulink url="http://docbook2x.sourceforge.net/">docbook2X</ulink> tool
@@ -119,7 +109,7 @@
       <listitem>
         <para>Active 2004-2007: Implemented the Link Quality Extensions (ETX),
         solved lots of implementation issues, created the Windows GUI and
-        maintained the olsrd code base as well. </para>
+        maintained the olsrd code base as well.</para>
       </listitem>
     </varlistentry>
 
@@ -142,7 +132,7 @@
         url="http://ff-firmware.sourceforge.net/">Freifunk Firmware</ulink> in
         late 2004, contributed bug fixes and maintenance (general and
         Windows), the dyn_gw_plain and arprefresh plugins as well as some
-        documentation. </para>
+        documentation.</para>
       </listitem>
     </varlistentry>
 
@@ -219,7 +209,7 @@
   larger node count and better code quality (see <ulink
   url="http://wiki.funkfeuer.at//index.php/Olsrd-ng">Funkfeuer Wiki on
   OLSRD-NG</ulink>). This in turn attracts new developers for the somewhat
-  silenced team from there on: </para>
+  silenced team from there on:</para>
 
   <variablelist>
     <varlistentry>
@@ -272,6 +262,24 @@
     <refentryinfo>
       <titleabbrev><productname>olsrd</productname> Optimized Link State
       Routing Protocol Daemon</titleabbrev>
+
+      <authorgroup>
+        <author>
+          <firstname>Sven-Ola</firstname>
+
+          <surname>Tücke</surname>
+
+          <email>sven-ola@gmx.de</email>
+        </author>
+
+        <author>
+          <firstname>Andreas</firstname>
+
+          <surname>Tønnesen</surname>
+
+          <email>andreto@olsr.org</email>
+        </author>
+      </authorgroup>
     </refentryinfo>
 
     <refmeta>
@@ -668,8 +676,9 @@
       <title>See Also</title>
 
       <simplelist type="inline">
-        <member><xref endterm="olsrd_conf_5-title"
-        linkend="olsrd_conf_5" /></member>
+        <member><xref endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" />
+        <xref endterm="olsrd_metrics_3-title"
+        linkend="olsrd_metrics_3" /></member>
       </simplelist>
     </refsect1>
   </refentry>
@@ -682,6 +691,24 @@
     <refentryinfo>
       <titleabbrev>Configuration File for
       <productname>olsrd</productname></titleabbrev>
+
+      <authorgroup>
+        <author>
+          <firstname>Sven-Ola</firstname>
+
+          <surname>Tücke</surname>
+
+          <email>sven-ola@gmx.de</email>
+        </author>
+
+        <author>
+          <firstname>Andreas</firstname>
+
+          <surname>Tønnesen</surname>
+
+          <email>andreto@olsr.org</email>
+        </author>
+      </authorgroup>
     </refentryinfo>
 
     <refmeta>
@@ -2476,7 +2503,386 @@
       <title>See Also</title>
 
       <simplelist type="inline">
-        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /></member>
+        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /><xref
+        endterm="olsrd_metrics_3-title" linkend="olsrd_metrics_3" /></member>
+      </simplelist>
+    </refsect1>
+  </refentry>
+
+  <refentry id="olsrd_metrics_3">
+    <indexterm>
+      <primary><productname>olsrd-metrics</productname></primary>
+    </indexterm>
+
+    <refentryinfo>
+      <titleabbrev><productname>olsrd</productname> Metrics
+      Plugin</titleabbrev>
+
+      <authorgroup>
+        <author>
+          <firstname>Leon Aaron</firstname>
+
+          <surname>Kaplan</surname>
+
+          <email>aaron@lo-res.org</email>
+        </author>
+
+        <author>
+          <firstname>Henning</firstname>
+
+          <surname>Rogge</surname>
+
+          <email>rogge@fgan.de</email>
+        </author>
+      </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+      <refentrytitle id="olsrd_metrics_3-title">olsrd-metrics
+      plugin</refentrytitle>
+
+      <manvolnum>3</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+      <refname>olsrd-metrics</refname>
+
+      <refpurpose>How to write your own metrics plugin</refpurpose>
+    </refnamediv>
+
+    <refsect1>
+      <title>Description</title>
+
+      <para>The idea behind the <filename
+      class="directory">lib/lq_*</filename> is that you can write your own
+      Link Quality (LQ) metric mostly independent of the main
+      <productname>olsrd</productname> code.</para>
+
+      <para>What is a metric? A metric is a notion of "distance" between nodes
+      in the mesh. Mobile ad hoc network (MANET) research identified the area
+      of finding proper metrics for a MANET as one of the most important
+      routing decisions. A metric basically determines the path that packets
+      will take. The Shortest Path First (SPF, also sometimes called Dijkstra
+      Algorithm) will chose the shortest sum of all possible paths. So what
+      paths do we want to chose in WLAN MANET networks?</para>
+
+      <para>In general we want to have a little collisions as possible since
+      802.11a/b/g is a broadcast medium by nature. When you compare the very
+      old Ethernet systems (coax cable, http://en.wikipedia.org/wiki/10BASE2)
+      you can observe that at a certain percentage of cable utilization (as
+      low as 40%), you would get many collisions (since the coax cable is a
+      broadcast medium just as WLAN!) and the total throughput would collapse
+      to nearly zero.</para>
+
+      <para>Another choice for metrics might be signal strength.</para>
+
+      <para>Currently <productname>olsrd</productname> (as of Oct-2008)
+      implements the following metric:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>RFC 3626 conforming hop count (each link has the metric value
+          "1")</para>
+        </listitem>
+
+        <listitem>
+          <para>ETX_default_ff (ETX from MIT roofnet, with FunkFeuer.at
+          extensions)</para>
+        </listitem>
+
+        <listitem>
+          <para>ETX_default_float (ETX with floating point arithmetic)</para>
+        </listitem>
+
+        <listitem>
+          <para>ETX_default_fpm (ETX with fixed point maths (integer). Much
+          faster on small embedded devices!</para>
+        </listitem>
+      </itemizedlist>
+    </refsect1>
+
+    <refsect1>
+      <title>Getting Started</title>
+
+      <para>Start by reading <filename>src/lq_plugin.c</filename> and
+      <filename>lq_plugin.h</filename>. Note, that struct
+      <type>lq_handler</type>: is a pseudo C++ structure ;-) there is a
+      pointer table to functions so that the plugin system knows which
+      functions it should jump to.</para>
+
+      <programlisting>struct lq_handler {
+ ...
+  /*
+   * number of bytes we need per hello in the hello DB for this specific 
+   * metric. This has nothing to do what is being sent over the net. This 
+   * is only so that you can use the structure itself to store your 
+   * metric data
+   */
+  size_t hello_lq_size;
+  size_t tc_lq_size;
+};</programlisting>
+
+      <para>Almost all functions accept a void pointer. This now points to the
+      beginning of the custom memory area that you allocated with the
+      tc_lq_size or hello_lq_size above.</para>
+
+      <para>Now...: if you want to write your own metric then you must define
+      your own struct lq_handler and pass that variable to:</para>
+
+      <programlisting>void register_lq_handler(struct lq_handler *handler, const char *name);</programlisting>
+
+      <para>for example:</para>
+
+      <programlisting>struct lq_handler my_lq_metric;
+
+... // init my_lq_metric fully (every function must be assigned)
+
+register_lq_handler(&amp;my_lq_metric, "my_lq_metric");</programlisting>
+
+      <para>For another example, take a look at
+      <filename>lq_plugin_default_float.[ch]</filename> There it is done like
+      this:</para>
+
+      <programlisting>/* Default lq plugin settings */
+struct lq_handler lq_etx_float_handler = {
+  &amp;default_lq_initialize_float,
+  
+  &amp;default_lq_calc_cost_float,
+  &amp;default_lq_calc_cost_float,
+  
+  &amp;default_lq_is_relevant_costchange_float,
+  
+  &amp;default_lq_packet_loss_worker_float,
+  &amp;default_lq_memorize_foreign_hello_float,
+  &amp;default_lq_copy_link2tc_float,
+  &amp;default_lq_clear_float,
+  &amp;default_lq_clear_float,
+
+...
+  sizeof(struct default_lq_float),
+  sizeof(struct default_lq_float)
+};</programlisting>
+
+      <para>This means, we use the <literal>sizeof(struct
+      default_lq_float)</literal> as extra memory space in the hello database
+      and a sizeof(struct default_lq_fload) as extra space in the TC
+      database.</para>
+    </refsect1>
+
+    <refsect1>
+      <title>Function Reference</title>
+
+      <para>The other entries here are pointers to functions which are defined
+      in the .h file. Now lets have a look at the functions.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>void (*initialize)(void);</term>
+
+          <listitem>
+            <para>This callback will be called when the <xref
+            endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" /> selects
+            this routing metric plugin. For example:</para>
+
+            <programlisting>#LinkQualityAlgorithm "etx_ff"</programlisting>
+
+            <para>The initializing function for example starts some timers and
+            it reserves a callback which is triggered for each packet. In
+            general you can use any initialization code in this
+            callback.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>olsr_linkcost(*calc_hello_cost) (const void *lq);</term>
+
+          <listitem>
+            <para>This callback will be called whenever a packet is
+            processed.</para>
+
+            <para>You will get a pointer to your part of the hello database
+            and your plugin is supposed to generate a hello cost in the
+            standard format from the internal representation: the core format
+            is a 32 bit unsigned integer . This then is used for adding up the
+            costs in the Dijkstra calculation. So be sure that you do not use
+            values greater than 2^24 . Otherwise for very long routes (256
+            hops) this will then add up in the internal representation so that
+            there will be integer overflows. So stay below 2^24(*). The base
+            of the cost is your business. For example, to represent fixed
+            point arithmetic you might multiply your (float) hello costs by
+            256 and treat the least significant byte as the digits behind the
+            point.</para>
+
+            <para>(*) or actually even better: us the constant
+            LINK_COST_BROKEN from <filename>lq_plugin.h</filename></para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>olsr_linkcost(*calc_tc_cost) (const void *lq);</term>
+
+          <listitem>
+            <para>This callback will be called whenever a packet is
+            processed.</para>
+
+            <para>Same as for <function>calc_hello_cost</function> but just
+            for TC costs and not for hellos.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost
+          c2);</term>
+
+          <listitem>
+            <para>This callback is called after the main loop whenever the
+            core has to decide if a new Dijkstra needs to be calculated. In
+            principle for every packet.</para>
+
+            <para>If a link quality does only change slightly, there will be
+            no recalculation of the Dijkstra algorithm which costs a lot of
+            CPU. Since only the plugin knows the range of the link quality
+            values, only the plugin can decide if the cost change is relevant
+            enough.</para>
+
+            <para>Return values: true or false.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>olsr_linkcost(*packet_loss_handler) (struct link_entry *
+          entry, void *lq, bool lost);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*memorize_foreign_hello) (void *local, void
+          *foreign);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*copy_link_lq_into_tc) (void *target, void
+          *source);</term>
+
+          <listitem>
+            <para>This callback is called when Hello packet's LQ is copied
+            over into a TC. Since this can have a different representation,
+            this function can be used to convert representations.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*clear_hello) (void *target);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*clear_tc) (void *target);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>int (*serialize_hello_lq) (unsigned char *buff, void
+          *lq);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>int (*serialize_tc_lq) (unsigned char *buff, void *lq);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*deserialize_hello_lq) (const uint8_t ** curr, void
+          *lq);</term>
+
+          <listitem>
+            <para>...</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*deserialize_tc_lq) (const uint8_t ** curr, void
+          *lq);</term>
+
+          <listitem>
+            <para>This callback is called whenever a packet needs to be
+            deserialized (for every packet and there for every neighbor in the
+            TC).</para>
+
+            <para>This function reads the lq information of a binary packet
+            into a TC.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>const char *(*print_hello_lq) (void *ptr, char separator,
+          struct lqtextbuffer * buffer);</term>
+
+          <listitem>
+            <para>This callback is called whenever any other part of the code
+            wants to convert your internal metric representation of Hellos
+            into a printable version. So it can be called at any time.</para>
+
+            <para><parameter>ptr</parameter> is a void pointer to the link
+            quality data in the Hello DB. seperator is a character which is
+            printed whenever there are multiple values (for example ',' or '/'
+            buffer is the buffer you want to sprintf into. Please do not
+            forget to \0 terminate!</para>
+
+            <para>Returns the buffer in case of errors. Please return
+            <literal>"error"</literal> as string. Because
+            <function>print_hello_lq</function> will often directly be put
+            into a <function>printf()</function>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>const char *(*print_tc_lq) (void *ptr, char separator, struct
+          lqtextbuffer * buffer);</term>
+
+          <listitem>
+            <para>Same as <function>print_hello_lq</function></para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>const char *(*print_cost) (olsr_linkcost cost, struct
+          lqtextbuffer * buffer);</term>
+
+          <listitem>
+            <para>Same as <function>print_hello_lq</function>, but for an
+            arbitrary link cost.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>See Also</title>
+
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /> <xref
+        endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" /></member>
       </simplelist>
     </refsect1>
   </refentry>
