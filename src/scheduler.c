@@ -68,11 +68,23 @@ static struct olsr_cookie_info *timer_mem_cookie = NULL;
 static struct list_node socket_head = {&socket_head, &socket_head};
 
 /* Prototypes */
-static clock_t olsr_times(void);
 static void walk_timers(clock_t *);
 static void poll_sockets(void);
 static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
                            unsigned int random_val);
+
+/*
+ * A wrapper around times(2). Note, that this function has some 
+ * portability problems, so do not rely on absolute values returned.
+ * Under Linux, uclibc and libc directly call the sys_times() located
+ * in kernel/sys.c and will only return an error if the tms_buf is
+ * not writeable.
+ */
+static INLINE clock_t olsr_times(void)
+{
+  struct tms tms_buf;
+  return times(&tms_buf);
+}
 
 /**
  * Add a socket and handler to the socketset
@@ -445,6 +457,18 @@ olsr_init_timers(void)
 
   /* Grab initial timestamp */
   now_times = olsr_times();
+  if ((clock_t)-1 == now_times) {
+    const char * const err_msg = strerror(errno);
+    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
+    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
+    sleep(1);
+    now_times = olsr_times();
+    if ((clock_t)-1 == now_times) {
+      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
+      fprintf(stderr, "Shutting down because times() does not work\n");
+      exit(EXIT_FAILURE);
+    }
+  }
 
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
@@ -831,34 +855,6 @@ olsr_set_timer(struct timer_entry **timer_ptr,
       olsr_change_timer(*timer_ptr, rel_time, jitter_pct, periodical);
     }
   }
-}
-
-/*
- * A wrapper around times(2). Note, that this function has
- * some portability problems, e.g. different operating systems
- * and linux kernel versions may return values counted from
- * an arbitrary point in time (mostly uptime, some count from
- * the epoch. The linux man page therefore recommends not to
- * use this function. On the other hand, this function has
- * proved it's functions but some olsrd implementations does
- * error handling in a clumsy way - thus inducing bugs...
- */
-static clock_t olsr_times(void)
-{
-  struct tms tms_buf;
-  clock_t t = times(&tms_buf);
-  if ((clock_t)-1 == t) {
-    const char * const err_msg = strerror(errno);
-    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
-    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
-    sleep(1);
-    t = times(&tms_buf);
-    if ((clock_t)-1 == t) {
-      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
-      fprintf(stderr, "Shutting down because times() does not work\n");
-    }
-  }
-  return t;
 }
 
 /*
