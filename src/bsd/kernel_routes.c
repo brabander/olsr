@@ -126,7 +126,12 @@ add_del_route(const struct rt_entry *rt, int add)
   OLSR_PRINTF(8, "\t- Destination of the route: %s\n", inet_ntoa(sin.sin_addr));
 
   /* change proto or tos here */
-#ifdef CODE_IS_FIXED_ON_FBSD
+#ifdef _WRS_KERNEL
+  /*
+   * These statements do not compile on Fbsd, but they
+   * where added during VxWorks cleanup. May be necessary
+   * for VxWorks operation - pls. correct me (Sven-Ola)
+   */
   OLSR_PRINTF(8, "\t- Setting Protocol: 0\n");
   ((struct sockaddr_rt *)(&sin))->srt_proto = 0;
   OLSR_PRINTF(8, "\t- Setting TOS: 0\n");
@@ -256,7 +261,7 @@ add_del_route6(const struct rt_entry *rt, int add)
   struct sockaddr_in6 sin6;
   struct sockaddr_dl sdl;
   const struct rt_nexthop *nexthop;
-  int step, step_dl;
+  int sin_size, sdl_size;
   int len;
 
   if (add) {
@@ -274,8 +279,8 @@ add_del_route6(const struct rt_entry *rt, int add)
   sdl.sdl_len = sizeof(sdl);
   sdl.sdl_family = AF_LINK;
 
-  step = 1 + ((sizeof(struct sockaddr_in6) - 1) | 3);
-  step_dl = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
+  sin_size = 1 + ((sizeof(struct sockaddr_in6) - 1) | 3);
+  sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
 
   rtm = (struct rt_msghdr *)buff;
   rtm->rtm_version = RTM_VERSION;
@@ -290,7 +295,7 @@ add_del_route6(const struct rt_entry *rt, int add)
   memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
 
   memcpy(walker, &sin6, sizeof(sin6));
-  walker += step;
+  walker += sin_size;
 
   nexthop = olsr_get_nh(rt);
   if ((rtm->rtm_flags & RTF_GATEWAY) != 0) {
@@ -305,7 +310,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     sin6.sin6_scope_id = 0;
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
-    walker += step;
+    walker += sin_size;
   }
 
   /* the host is directly reachable, so add the output interface's address */
@@ -322,14 +327,14 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
 
     memcpy(walker, &sin6, sizeof(sin6));
-    walker += step;
+    walker += sin_size;
     rtm->rtm_flags |= RTF_GATEWAY;
   }
 
   if ((rtm->rtm_flags & RTF_HOST) == 0) {
     olsr_prefix_to_netmask((union olsr_ip_addr *)&sin6.sin6_addr, rt->rt_dst.prefix_len);
     memcpy(walker, &sin6, sizeof(sin6));
-    walker += step;
+    walker += sin_size;
     rtm->rtm_addrs |= RTA_NETMASK;
   }
 
@@ -356,7 +361,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     walker = dbuff + sizeof(struct rt_msghdr);
     memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
     memcpy(walker, &sin6, sizeof(sin6));
-    walker += step;
+    walker += sin_size;
     drtm->rtm_msglen = (unsigned short)(walker - dbuff);
     len = write(olsr_cnf->rts, dbuff, drtm->rtm_msglen);
     if (len < 0)
