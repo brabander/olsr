@@ -65,6 +65,10 @@
 
 #define NOEXIT_ON_DEPRECATED_OPTIONS 1
 
+/* get logging keywords from olsr_logging.c */
+extern const char *LOG_SOURCE_NAMES[];
+extern const char *LOG_SEVERITY_NAMES[];
+
 /*
  * Special strcat for reading the config file and
  * joining a longer section { ... } to one string
@@ -692,15 +696,26 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
   }
 
   /* process results to clean them up */
-  for (i=0; i<LOG_SOURCE_COUNT; i++) {
-    if (cfg->log_event[INFO][i]) {
-      cfg->log_event[WARN][i] = true;
+
+  /* first handle "all" keyword */
+  for (i=0; i<LOG_SEVERITY_COUNT; i++) {
+    if (cfg->log_event[i][LOG_ALL]) {
+      for (j=1; j<LOG_SOURCE_COUNT; j++) {
+        cfg->log_event[i][j] = true;
+      }
     }
-    if (cfg->log_event[WARN][i]) {
-      cfg->log_event[ERROR][i] = true;
+  }
+
+  /* then copy from info to warn and from warn to error */
+  for (i=0; i<LOG_SOURCE_COUNT; i++) {
+    if (cfg->log_event[SEVERITY_INFO][i]) {
+      cfg->log_event[SEVERITY_WARN][i] = true;
+    }
+    if (cfg->log_event[SEVERITY_WARN][i]) {
+      cfg->log_event[SEVERITY_ERROR][i] = true;
     }
     if (!hasErrorOption) {
-      cfg->log_event[ERROR][i] = true;
+      cfg->log_event[SEVERITY_ERROR][i] = true;
     }
   }
 }
