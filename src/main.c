@@ -835,18 +835,32 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
 }
 
 /*
- * a wrapper around times(2). times(2) has the problem, that it may return -1
- * in case of an err (e.g. EFAULT on the parameter) or immediately before an
- * overrun (though it is not en error) just because the jiffies (or whatever
- * the underlying kernel calls the smallest accountable time unit) are
- * inherently "unsigned" (and always incremented).
+ * A wrapper around times(2). Note, that this function has
+ * some portability problems, e.g. different operating systems
+ * and linux kernel versions may return values counted from
+ * an arbitrary point in time (mostly uptime, some count from
+ * the epoch. The linux man page therefore recommends not to
+ * use this function. On the other hand, this function has
+ * proved it's functions but some olsrd implementations does
+ * error handling in a clumsy way - thus inducing bugs...
  */
-unsigned long
+clock_t
 olsr_times(void)
 {
   struct tms tms_buf;
-  const unsigned long t = (unsigned long)times(&tms_buf);
-  return (unsigned long)-1 == t ? (unsigned long)-errno : (t & ((unsigned long)-1 >> 1));
+  clock_t t = times(&tms_buf);
+  if ((clock_t)-1 == t) {
+    const char * const err_msg = strerror(errno);
+    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
+    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
+    sleep(1);
+    t = times(&tms_buf);
+    if ((clock_t)-1 == t) {
+      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
+      fprintf(stderr, "Shutting down because times() does not work\n");
+    }
+  }
+  return t;
 }
 
 /*

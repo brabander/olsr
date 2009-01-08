@@ -188,7 +188,7 @@ extern bool olsr_win32_end_flag;
  * the underlying kernel calls the smallest accountable time unit) are
  * inherently "unsigned" (and always incremented).
  */
-unsigned long olsr_times(void);
+clock_t olsr_times(void);
 
 /*
  *IPC functions
