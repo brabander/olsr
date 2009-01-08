@@ -846,7 +846,7 @@ olsr_times(void)
 {
   struct tms tms_buf;
   const long t = times(&tms_buf);
-  return t < 0 ? -errno : t;
+  return -1 == t ? -errno : (t & 0x7fffffff);
 }
 
 /*
