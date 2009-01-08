@@ -732,6 +732,17 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
   if (cfg->log_target_file == NULL && !cfg->log_target_stderr && !cfg->log_target_syslog) {
     cfg->log_target_stderr = true;
   }
+
+  /* activate log handlers */
+  if (cfg->log_target_stderr) {
+    olsr_log_addhandler(&olsr_log_stderr);
+  }
+  if (cfg->log_target_syslog) {
+    olsr_log_addhandler(&olsr_log_syslog);
+  }
+  if (cfg->log_target_file) {
+    olsr_log_addhandler(&olsr_log_file);
+  }
 }
 
 /*

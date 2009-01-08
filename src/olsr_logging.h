@@ -4,6 +4,7 @@
 #include "defs.h"
 
 #define LOGBUFFER_SIZE 1024
+#define MAX_LOG_HANDLER 8
 
 enum log_source {
   LOG_ALL,
@@ -41,5 +42,16 @@ enum log_severity {
 #define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERROR, source, __FILE__, __LINE__, format, ##args)
 #endif
 
-void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...) __attribute__((format(printf, 5, 6)));
+void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
+    char *, int));
+void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
+    char *, int));
+
+void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...)
+    __attribute__((format(printf, 5, 6)));
+
+void EXPORT(olsr_log_stderr) (enum log_severity, enum log_source, const char *, int, char *, int);
+void EXPORT(olsr_log_file) (enum log_severity, enum log_source, const char *, int, char *, int);
+void EXPORT(olsr_log_syslog) (enum log_severity, enum log_source, const char *, int, char *, int);
+
 #endif /* OLSR_LOGGING_H_ */
