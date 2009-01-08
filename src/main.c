@@ -143,6 +143,18 @@ main(int argc, char *argv[])
 
   /* Grab initial timestamp */
   now_times = olsr_times();
+  if ((clock_t)-1 == now_times) {
+    const char * const err_msg = strerror(errno);
+    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
+    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
+    sleep(1);
+    now_times = olsr_times();
+    if ((clock_t)-1 == now_times) {
+      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
+      fprintf(stderr, "Shutting down because times() does not work\n");
+      exit(EXIT_FAILURE);
+    }
+  }
 
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 
@@ -848,19 +860,7 @@ clock_t
 olsr_times(void)
 {
   struct tms tms_buf;
-  clock_t t = times(&tms_buf);
-  if ((clock_t)-1 == t) {
-    const char * const err_msg = strerror(errno);
-    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
-    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
-    sleep(1);
-    t = times(&tms_buf);
-    if ((clock_t)-1 == t) {
-      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
-      fprintf(stderr, "Shutting down because times() does not work\n");
-    }
-  }
-  return t;
+  return times(&tms_buf);
 }
 
 /*
