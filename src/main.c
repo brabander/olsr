@@ -845,8 +845,8 @@ unsigned long
 olsr_times(void)
 {
   struct tms tms_buf;
-  const long t = times(&tms_buf);
-  return -1 == t ? -errno : (t & 0x7fffffff);
+  const unsigned long t = (unsigned long)times(&tms_buf);
+  return (unsigned long)-1 == t ? (unsigned long)-errno : (t & ((unsigned long)-1 >> 1));
 }
 
 /*
