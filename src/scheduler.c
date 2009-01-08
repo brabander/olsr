@@ -843,8 +843,8 @@ olsr_set_timer(struct timer_entry **timer_ptr,
 static unsigned long olsr_times(void)
 {
   struct tms tms_buf;
-  const clock_t t = times(&tms_buf);
-  return (t == ((clock_t)-1) ) ? (clock_t)-errno : t;
+  const unsigned long t = (unsigned long)times(&tms_buf);
+  return (unsigned long)-1 == t ? (unsigned long)-errno : (t & ((unsigned long)-1 >> 1));
 }
 
 
