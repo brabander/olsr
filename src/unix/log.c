@@ -68,6 +68,9 @@ olsr_syslog(int level, const char *format, ...)
     case(OLSR_LOG_INFO):
       linux_level = LOG_INFO;
       break;
+    case(OLSR_LOG_WARN):
+      linux_level = LOG_WARNING;
+      break;
     case(OLSR_LOG_ERR):
       linux_level = LOG_ERR;
       break;

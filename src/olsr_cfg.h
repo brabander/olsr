@@ -188,6 +188,9 @@ struct olsr_config {
   /* logging information */
   int8_t debug_level;                  /* old style */
   bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];       /* new style */
+  bool log_target_stderr;
+  FILE *log_target_file;
+  bool log_target_syslog;
 
   struct plugin_entry *plugins;
   struct list_node hna_entries;

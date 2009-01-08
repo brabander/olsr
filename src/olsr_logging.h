@@ -26,19 +26,19 @@ enum log_severity {
 #ifdef REMOVE_LOG_INFO
 #define OLSR_INFO(source, format, args...) do { } while(0)
 #else
-#define OLSR_INFO(source, format, args...) olsr_log(INFO, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_INFO(source, format, args...) olsr_log(SEVERITY_INFO, source, __FILE__, __LINE__, format, ##args)
 #endif
 
 #ifdef REMOVE_LOG_WARN
 #define OLSR_WARN(source, format, args...) do { } while(0)
 #else
-#define OLSR_WARN(source, format, args...) olsr_log(WARN, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_WARN(source, format, args...) olsr_log(SEVERITY_WARN, source, __FILE__, __LINE__, format, ##args)
 #endif
 
 #ifdef REMOVE_LOG_ERROR
 #define OLSR_ERROR(source, format, args...) do { } while(0)
 #else
-#define OLSR_ERROR(source, format, args...) olsr_log(ERROR, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERROR, source, __FILE__, __LINE__, format, ##args)
 #endif
 
 void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...) __attribute__((format(printf, 5, 6)));

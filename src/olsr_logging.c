@@ -4,7 +4,7 @@
 
 #include "olsr_cfg.h"
 #include "olsr_logging.h"
-
+#include "log.h"
 
 /* keep this in the same order as the enums with the same name ! */
 const char *LOG_SOURCE_NAMES[] = {
@@ -33,8 +33,14 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
 
     assert (p1+p2 < LOGBUFFER_SIZE);
 
-    // TODO switch between different output methods
-    fputs(logbuffer, stderr);
+    if (olsr_cnf->log_target_stderr)
+      fputs(logbuffer, stderr);
+    if (olsr_cnf->log_target_file) {
+      fputs(logbuffer, olsr_cnf->log_target_file);
+      fflush(olsr_cnf->log_target_file);
+    }
+    if (olsr_cnf->log_target_syslog)
+      olsr_syslog(severity, "%s", logbuffer);
 
     va_end(ap);
   }

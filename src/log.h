@@ -48,9 +48,11 @@
 #define _OLSR_SYSLOG_H
 
 #include "defs.h"
+#include "olsr_logging.h"
 
-#define OLSR_LOG_INFO            1
-#define OLSR_LOG_ERR             2
+#define OLSR_LOG_INFO            SEVERITY_INFO
+#define OLSR_LOG_WARN            SEVERITY_WARN
+#define OLSR_LOG_ERR             SEVERITY_ERROR
 
 void
 olsr_openlog(const char *ident);
