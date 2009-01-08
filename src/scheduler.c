@@ -82,8 +82,12 @@ static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
  */
 static INLINE clock_t olsr_times(void)
 {
+#ifndef linux
   struct tms tms_buf;
   return times(&tms_buf);
+#else
+  return times(NULL);
+#endif
 }
 
 /**
@@ -457,6 +461,14 @@ olsr_init_timers(void)
 
   /* Grab initial timestamp */
   now_times = olsr_times();
+  
+#ifndef linux
+  /* 
+   * Note: if using linux, olsr_times does not return any
+   * error, because it calls the kernel sys_times(NULL)
+   * If not using linux, errors may be returned, e.g.
+   * the mandatory output buffer is not kernel-writeable
+   */
   if ((clock_t)-1 == now_times) {
     const char * const err_msg = strerror(errno);
     olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
@@ -469,6 +481,7 @@ olsr_init_timers(void)
       exit(EXIT_FAILURE);
     }
   }
+#endif
 
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
