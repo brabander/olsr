@@ -1,18 +1,21 @@
-/***************************************************************************
- projekt              : olsrd-quagga
- file                 : olsrd_plugin.c
- usage                : olsrd-plugin-handler-stuff
- copyright            : (C) 2006 by Immo 'FaUl' Wehrenberg
- e-mail               : immo@chaostreff-dortmund.de
- ***************************************************************************/
+/*
+ * OLSRd Quagga plugin
+ *
+ * Copyright (C) 2006-2008 Immo 'FaUl' Wehrenberg <immo@chaostreff-dortmund.de>
+ * Copyright (C) 2007-2008 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation or - at your option - under
+ * the terms of the GNU General Public Licence version 2 but can be
+ * linked to any BSD-Licenced Software with public available sourcecode
+ *
+ */
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License version 2 as     *
- *   published by the Free Software Foundation.                            *
- *                                                                         *
- ***************************************************************************/
+/* -------------------------------------------------------------------------
+ * File               : olsrd_plugin.c
+ * Description        : functions to setup plugin
+ * ------------------------------------------------------------------------- */
 
 
 #include <stdio.h>
@@ -20,11 +23,9 @@
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
-#include "olsr.h"
 #include "scheduler.h"
 #include "defs.h"
 #include "quagga.h"
-#include "kernel_routes.h"
 #include "net_olsr.h"
 
 #define PLUGIN_NAME    "OLSRD quagga plugin"
@@ -41,13 +42,7 @@ static set_plugin_parameter set_exportroutes;
 static set_plugin_parameter set_distance;
 static set_plugin_parameter set_localpref;
 
-#if 0
-/* these are never read */
-static export_route_function orig_addroute_function;
-static export_route_function orig_delroute_function;
-#endif
-
-static struct olsr_cookie_info *zebra_check_timer_cookie;
+static struct olsr_cookie_info *event_timer_cookie;
 
 int olsrd_plugin_interface_version (void) {
   return PLUGIN_INTERFACE_VERSION;
@@ -75,33 +70,24 @@ static int set_redistribute (const char *value,
   unsigned int i;
 
   for (i = 0; i < ARRAYSIZE(zebra_route_types); i++) {
-    if (!strcmp(value, zebra_route_types[i])) {
-      zebra_redistribute(i);
-      return 0;
-    }
+    if (!strcmp(value, zebra_route_types[i]))
+      if (zebra_redistribute (i)) return 1;
   }
-  return 1;
+
+  return 0;
 }
 
 static int set_exportroutes (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   if (!strcmp(value, "only")) {
-#if 0
-    orig_addroute_function = NULL;
-    orig_delroute_function = NULL;
-#endif
-    olsr_addroute_function = zebra_add_olsr_v4_route;
-    olsr_delroute_function = zebra_del_olsr_v4_route;
+    olsr_addroute_function = zebra_add_route;
+    olsr_delroute_function = zebra_del_route;
     zebra_export_routes(1);
   }
   else if (!strcmp(value, "additional")) {
-#if 0
-    orig_addroute_function = olsr_addroute_function;
-    orig_delroute_function = olsr_delroute_function;
-#endif
-    olsr_addroute_function = zebra_add_olsr_v4_route;
-    olsr_delroute_function = zebra_del_olsr_v4_route;
+    olsr_addroute_function = zebra_add_route;
+    olsr_delroute_function = zebra_del_route;
     zebra_export_routes(1);
   }
   else zebra_export_routes(0);
@@ -134,10 +120,10 @@ int olsrd_plugin_init(void) {
     return 1;
   }
 
-  zebra_check_timer_cookie = olsr_alloc_cookie("Quagga: Zebra Check", OLSR_COOKIE_TYPE_TIMER);
+  event_timer_cookie = olsr_alloc_cookie("Quagga: Event", OLSR_COOKIE_TYPE_TIMER);
 
   olsr_start_timer(1 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                   &zebra_check, NULL, zebra_check_timer_cookie->ci_id);
+                   &zebra_parse, NULL, event_timer_cookie->ci_id);
 
   return 0;
 }

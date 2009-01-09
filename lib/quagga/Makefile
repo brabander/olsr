@@ -40,21 +40,19 @@ OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_quagga
 PLUGIN_VER =	0.2.2
 
-TOPDIR= ../..
+TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-#CPPFLAGS +=-DMY_DEBUG 
 CFLAGS += -g
 CPPFLAGS +=-DUSE_UNIX_DOMAIN_SOCKET
 
-#uncomment the following line only if you are sure what you're doing, it will 
-#probably break things! 
-# CPPFLAGS +=-DZEBRA_HEADER_MARKER=255 
-
 ifeq ($(OS),win32)
+
 default_target install clean:
-	@echo "**** Quagga not supportet on Windows (so it would be pointless to build the Quagga Plugin)"
+	@echo "*** Quagga not supported on Windows (so it would be pointless to build the Quagga plugin)"
+
 else
+
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
@@ -66,4 +64,5 @@ install:	$(PLUGIN_FULLNAME)
 
 clean:
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
+
 endif
