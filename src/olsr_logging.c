@@ -9,6 +9,7 @@
 static void (*log_handler[MAX_LOG_HANDLER])
     (enum log_severity, enum log_source, const char *, int, char *, int, bool);
 static int log_handler_count = 0;
+static bool log_initialized = false;
 
 /* keep this in the same order as the enums with the same name ! */
 const char *LOG_SOURCE_NAMES[] = {
@@ -40,6 +41,7 @@ void olsr_log_init(void) {
   if (olsr_cnf->log_target_file) {
     olsr_log_addhandler(&olsr_log_file);
   }
+  log_initialized = true;
 }
 
 void olsr_log_addhandler(void (*handler)(enum log_severity, enum log_source, const char *, int,
@@ -66,6 +68,7 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
   static char logbuffer[LOGBUFFER_SIZE];
   va_list ap;
   int p1,p2, i;
+  bool display;
 
   va_start(ap, format);
 
@@ -75,8 +78,18 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
 
   assert (p1+p2 < LOGBUFFER_SIZE);
 
+#if DEBUG
+  /* output all event before logsystem is initialized */
+  if (!log_initialized) {
+    fputs(logbuffer, stderr);
+    return;
+  }
+#endif
+
+  /* calculate visible logging events */
+  display = olsr_cnf->log_event[severity][source];
   for (i=0; i<log_handler_count; i++) {
-    log_handler[i](severity, source, file, line, logbuffer, p1, olsr_cnf->log_event[severity][source]);
+    log_handler[i](severity, source, file, line, logbuffer, p1, display);
   }
   va_end(ap);
 }
