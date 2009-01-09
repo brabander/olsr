@@ -119,7 +119,7 @@ struct lq_handler lq_rfc_handler = {
   sizeof(struct tc_edge_entry),
   sizeof(struct tc_mpr_addr),
   sizeof(struct lq_hello_neighbor),
-  sizeof(struct link_entry),
+  sizeof(struct lq_rfc_link_entry),
 
   HELLO_MESSAGE,
   TC_MESSAGE
@@ -152,9 +152,25 @@ static bool lq_rfc_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
   return c1 != c2;
 }
 
-static olsr_linkcost lq_rfc_packet_loss_handler(struct link_entry __attribute__((unused)) *link,
-    bool __attribute__((unused)) loss) {
-  return 1;
+static olsr_linkcost lq_rfc_packet_loss_handler(struct link_entry *link, bool loss) {
+  struct lq_rfc_link_entry *link_entry = (struct lq_rfc_link_entry *)link;
+
+  if (!use_hysteresis)
+    return 1;
+
+  link_entry->hysteresis *= (1 - scaling);
+  if(!loss) {
+    link_entry->hysteresis += scaling;
+  }
+
+  if (link_entry->active && link_entry->hysteresis < thr_low) {
+    link_entry->active = false;
+  }
+  else if (!link_entry->active && link_entry->hysteresis > thr_high) {
+    link_entry->active = true;
+  }
+
+  return link_entry->active ? 1 : LINK_COST_BROKEN;
 }
 
 static void lq_rfc_memorize_foreign_hello(struct link_entry __attribute__((unused)) *target,

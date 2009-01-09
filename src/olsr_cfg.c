@@ -65,10 +65,6 @@
 
 #define NOEXIT_ON_DEPRECATED_OPTIONS 1
 
-/* get logging keywords from olsr_logging.c */
-extern const char *LOG_SOURCE_NAMES[];
-extern const char *LOG_SEVERITY_NAMES[];
-
 /*
  * Special strcat for reading the config file and
  * joining a longer section { ... } to one string

@@ -61,6 +61,12 @@ extern float scaling;                  /* Plugin PlParam */
 extern float thr_high;                 /* Plugin PlParam */
 extern float thr_low;                  /* Plugin PlParam */
 
+struct lq_rfc_link_entry {
+  struct link_entry core;
+  float hysteresis;
+  bool active;
+};
+
 #endif /*LQ_PLUGIN_RFC_H_*/
 
 /*

@@ -51,4 +51,7 @@ void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log
 void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...)
     __attribute__((format(printf, 5, 6)));
 
+extern const char *LOG_SOURCE_NAMES[];
+extern const char *LOG_SEVERITY_NAMES[];
+
 #endif /* OLSR_LOGGING_H_ */
