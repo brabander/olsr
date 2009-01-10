@@ -332,6 +332,11 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
     /* look if we have the necessary info. We get here somethign like "GET /path HTTP/1.0" */
     p = strchr(conn->requ, '/');
     if (p == NULL) {
+        /* input buffer full ? */
+        if ((sizeof(conn->requ)-conn->requlen-1) == 0) {
+          kill_connection(fd, conn);
+          return;
+        }
         /* we didn't get all. Wait for more data. */
         return;
     }
