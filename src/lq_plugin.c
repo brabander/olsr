@@ -66,7 +66,7 @@ init_lq_handler(void)
     /* No LQ plugin loaded, use build in default */
     active_lq_handler = &lq_etxff_handler;
   }
-  
+
   tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_edge_mem_cookie, active_lq_handler->size_tc_edge);
 

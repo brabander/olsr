@@ -100,7 +100,7 @@ olsrd_plugin_init(void)
     fprintf(stderr, "LQ aging factor %f is not allowed\n", lq_aging);
     return 0;
   }
-              
+
   active_lq_handler = &lq_etxfloat_handler;
   return 1;
 }

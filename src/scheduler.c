@@ -74,7 +74,7 @@ static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
                            unsigned int random_val);
 
 /*
- * A wrapper around times(2). Note, that this function has some 
+ * A wrapper around times(2). Note, that this function has some
  * portability problems, so do not rely on absolute values returned.
  * Under Linux, uclibc and libc directly call the sys_times() located
  * in kernel/sys.c and will only return an error if the tms_buf is
@@ -461,9 +461,9 @@ olsr_init_timers(void)
 
   /* Grab initial timestamp */
   now_times = olsr_times();
-  
+
 #ifndef linux
-  /* 
+  /*
    * Note: if using linux, olsr_times does not return any
    * error, because it calls the kernel sys_times(NULL)
    * If not using linux, errors may be returned, e.g.
