@@ -306,7 +306,11 @@ static unsigned char *try_read (ssize_t *size) {
   uint16_t length, offset;
   int sockstatus;
 
-  offset = *size = bufsize = 0;
+  /* initialize variables */
+  buf = NULL;
+  offset = 0;
+  *size = 0;
+  bufsize = 0;
 
   /* save socket status and set non-blocking for read */
   sockstatus = fcntl (zebra.sock, F_GETFL);
