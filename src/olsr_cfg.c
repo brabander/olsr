@@ -691,7 +691,7 @@ parse_cfg_log(char *argstr, struct olsr_config *cfg)
     } else if (strcasecmp(p, "syslog") == 0) {
       cfg->log_target_syslog = true;
     } else if (strcasecmp(p, "file") == 0) {
-      cfg->log_target_file = fopen(nextEquals, "a");
+      cfg->log_target_file = olsr_strdup(nextEquals);
     }
     p = nextColon;
   }
@@ -1273,9 +1273,9 @@ olsr_free_cfg(struct olsr_config *cfg)
   struct plugin_entry *ped, *pe = cfg->plugins;
   struct olsr_lq_mult *mult, *next_mult;
 
-  /* close logfile if necessary */
+  /* free logfile string if necessary */
   if (cfg->log_target_file) {
-    fclose(cfg->log_target_file);
+    free(cfg->log_target_file);
   }
 
   /*

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "olsr_cfg.h"
@@ -10,6 +11,7 @@ static void (*log_handler[MAX_LOG_HANDLER])
     (enum log_severity, enum log_source, const char *, int, char *, int, bool);
 static int log_handler_count = 0;
 static bool log_initialized = false;
+static FILE *log_fileoutput = NULL;
 
 /* keep this in the same order as the enums with the same name ! */
 const char *LOG_SOURCE_NAMES[] = {
@@ -39,9 +41,17 @@ void olsr_log_init(void) {
     olsr_log_addhandler(&olsr_log_syslog);
   }
   if (olsr_cnf->log_target_file) {
+    log_fileoutput = fopen(olsr_cnf->log_target_file, "a");
     olsr_log_addhandler(&olsr_log_file);
   }
   log_initialized = true;
+}
+
+void olsr_log_cleanup(void) {
+  if (log_fileoutput) {
+    fflush(log_fileoutput);
+    fclose(log_fileoutput);
+  }
 }
 
 void olsr_log_addhandler(void (*handler)(enum log_severity, enum log_source, const char *, int,
@@ -106,7 +116,7 @@ static void olsr_log_file (enum log_severity severity __attribute__((unused)), e
     const char *file __attribute__((unused)), int line __attribute__((unused)),
     char *buffer, int prefixLength __attribute__((unused)), bool visible) {
   if (visible) {
-    fputs (buffer, olsr_cnf->log_target_file);
+    fputs (buffer, log_fileoutput);
   }
 }
 

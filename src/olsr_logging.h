@@ -43,6 +43,7 @@ enum log_severity {
 #endif
 
 void EXPORT(olsr_log_init) (void);
+void EXPORT(olsr_log_cleanup) (void);
 void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
     char *, int, bool));
 void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,

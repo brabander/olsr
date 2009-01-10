@@ -525,6 +525,8 @@ olsr_shutdown(void)
   olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
+
+  olsr_log_cleanup();
 }
 
 /*
