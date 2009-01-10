@@ -63,8 +63,6 @@
 #define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
 #endif
 
-#define NOEXIT_ON_DEPRECATED_OPTIONS 1
-
 /*
  * Special strcat for reading the config file and
  * joining a longer section { ... } to one string
@@ -356,8 +354,9 @@ parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *cfg)
           fprintf(stderr, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
           exit(EXIT_FAILURE);
         }
-        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, netmask_to_prefix((uint8_t *)&netmask, cfg->ipsize));
-        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr), netmask_to_prefix((uint8_t *)&netmask, cfg->ipsize));
+        ip_prefix_list_add(&cfg->hna_entries, &ipaddr, netmask_to_prefix((uint8_t *) & netmask, cfg->ipsize));
+        PARSER_DEBUG_PRINTF("Hna4 %s/%d\n", ip_to_string(cfg->ip_version, &buf, &ipaddr),
+                            netmask_to_prefix((uint8_t *) & netmask, cfg->ipsize));
       } else {
         int prefix = -1;
         sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
@@ -643,11 +642,11 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *cfg)
  * Parses a single loadplugin option block
  */
 static void
-parse_cfg_log(char *argstr , struct olsr_config *cfg)
+parse_cfg_log(char *argstr, struct olsr_config *cfg)
 {
-  char *p = (char *) argstr, *nextEquals, *nextColon, *nextSlash;
+  char *p = (char *)argstr, *nextEquals, *nextColon, *nextSlash;
   bool hasErrorOption = false;
-  int i,j;
+  int i, j;
 
   while (p != NULL && *p != 0) {
     /* split at ',' */
@@ -661,7 +660,7 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
       *nextEquals++ = 0;
     }
 
-    for (j=0; j<LOG_SEVERITY_COUNT; j++) {
+    for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
       if (strcasecmp(p, LOG_SEVERITY_NAMES[j]) == 0) {
         break;
       }
@@ -676,7 +675,7 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
           *nextSlash++ = 0;
         }
 
-        for (i=0; i<LOG_SOURCE_COUNT; i++) {
+        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
           if (strcasecmp(p, LOG_SOURCE_NAMES[i]) == 0) {
             break;
           }
@@ -687,14 +686,11 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
         }
         p = nextSlash;
       }
-    }
-    else if(strcasecmp(p, "stderr") == 0) {
+    } else if (strcasecmp(p, "stderr") == 0) {
       cfg->log_target_stderr = true;
-    }
-    else if(strcasecmp(p, "syslog") == 0) {
+    } else if (strcasecmp(p, "syslog") == 0) {
       cfg->log_target_syslog = true;
-    }
-    else if(strcasecmp(p, "file") == 0) {
+    } else if (strcasecmp(p, "file") == 0) {
       cfg->log_target_file = fopen(nextEquals, "a");
     }
     p = nextColon;
@@ -703,16 +699,16 @@ parse_cfg_log(char *argstr , struct olsr_config *cfg)
   /* process results to clean them up */
 
   /* first handle "all" keyword */
-  for (i=0; i<LOG_SEVERITY_COUNT; i++) {
+  for (i = 0; i < LOG_SEVERITY_COUNT; i++) {
     if (cfg->log_event[i][LOG_ALL]) {
-      for (j=1; j<LOG_SOURCE_COUNT; j++) {
+      for (j = 1; j < LOG_SOURCE_COUNT; j++) {
         cfg->log_event[i][j] = true;
       }
     }
   }
 
   /* then copy from info to warn and from warn to error */
-  for (i=0; i<LOG_SOURCE_COUNT; i++) {
+  for (i = 0; i < LOG_SOURCE_COUNT; i++) {
     if (cfg->log_event[SEVERITY_INFO][i]) {
       cfg->log_event[SEVERITY_WARN][i] = true;
     }
@@ -882,7 +878,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       sscanf(argstr, "%f", &arg);
       if (0 <= arg)
         cfg->pollrate = conv_pollrate_to_microsecs(arg);
-      PARSER_DEBUG_PRINTF("Pollrate %ud\n", cfg->pollrate);
+      PARSER_DEBUG_PRINTF("Pollrate %u\n", cfg->pollrate);
     }
     break;
   case 'q':                    /* RtProto (i) */
@@ -945,13 +941,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   default:
     fprintf(stderr, "Unknown arg in line %d.\n", line);
-#if NOEXIT_ON_DEPRECATED_OPTIONS
-    if (0 < line) {
-
-      olsr_syslog(OLSR_LOG_ERR, "Unknown arg in line %d.\n", line);
-      break;
-    }
-#endif
     exit(EXIT_FAILURE);
   }                             /* switch */
 }
@@ -1039,6 +1028,14 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
     {"TcRedundancy",             required_argument, 0, 't'}, /* (i) */
     {"TosValue",                 required_argument, 0, 'Z'}, /* (i) */
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
+    {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
+    {"HystScaling",              required_argument, 0,  0 }, /* ignored */
+    {"HystThrHigh",              required_argument, 0,  0 }, /* ignored */
+    {"HystThrLow",               required_argument, 0,  0 }, /* ignored */
+    {"LinkQualityLevel",         required_argument, 0,  0 }, /* ignored */
+    {"LinkQualityWinsize",       required_argument, 0,  0 }, /* ignored */
+    {"LinkQualityAlgorithm",     required_argument, 0,  0 }, /* ignored */
+    {"LinkQualityAging",         required_argument, 0,  0 }, /* ignored */
     {0, 0, 0, 0}
   }, *popt = long_options;
   /* *INDENT-ON* */
@@ -1067,16 +1064,18 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
   /* Calculate short option string */
   opt_str = olsr_malloc(opt_idx * 3, "create short opt_string");
   opt_idx = 0;
-  while (popt->name != NULL && popt->val != 0) {
-    opt_str[opt_idx++] = popt->val;
+  while (popt->name) {
+    if (popt->val) {
+      opt_str[opt_idx++] = popt->val;
 
-    switch (popt->has_arg) {
-    case optional_argument:
-      opt_str[opt_idx++] = ':';
-      /* Fall through */
-    case required_argument:
-      opt_str[opt_idx++] = ':';
-      break;
+      switch (popt->has_arg) {
+      case optional_argument:
+        opt_str[opt_idx++] = ':';
+        /* Fall through */
+      case required_argument:
+        opt_str[opt_idx++] = ':';
+        break;
+      }
     }
     popt++;
   }
@@ -1094,6 +1093,9 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
 
   while (0 <= (opt = getopt_long(opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
     switch (opt) {
+    case 0:
+      fprintf(stderr, "Warning: ignored deprecated %s\n", long_options[opt_idx].name);
+      break;
     case 'f':                  /* config (filename) */
       PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
       if (0 > read_cfg(optarg, &opt_argc, &opt_argv, &opt_line)) {
@@ -1105,20 +1107,18 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
       popt = long_options;
       printf("Usage: olsrd [OPTIONS]... [interfaces]...\n");
       while (popt->name) {
-        if (popt->val)
-          printf("-%c or ", popt->val);
-        else
-          printf("       ");
-        printf("--%s ", popt->name);
-        switch (popt->has_arg) {
-        case required_argument:
-          printf("arg");
-          break;
-        case optional_argument:
-          printf("[arg]");
-          break;
+        if (' ' <= popt->val) {
+          printf("-%c or --%s ", popt->val, popt->name);
+          switch (popt->has_arg) {
+          case required_argument:
+            printf("arg");
+            break;
+          case optional_argument:
+            printf("[arg]");
+            break;
+          }
+          printf("\n");
         }
-        printf("\n");
         popt++;
       }
       exit(0);
@@ -1275,7 +1275,7 @@ olsr_free_cfg(struct olsr_config *cfg)
 
   /* close logfile if necessary */
   if (cfg->log_target_file) {
-    fclose (cfg->log_target_file);
+    fclose(cfg->log_target_file);
   }
 
   /*
