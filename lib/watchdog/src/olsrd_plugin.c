@@ -105,7 +105,7 @@ olsr_watchdog_write_alivefile(void *foo __attribute__ ((unused)))
   if (file == NULL) {
     OLSR_PRINTF(3, "Error, cannot write watchdog alivefile");
   } else {
-    fprintf(file, "%ld\n", time(NULL));
+    fprintf(file, "%ld\n", (long)time(NULL));
     fflush(file);
     fclose(file);
   }
