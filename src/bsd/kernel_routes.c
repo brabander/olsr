@@ -60,6 +60,32 @@
 #define OLSR_PID getpid ()
 #endif
 
+/**
+ *
+ * Calculate the kernel route flags.
+ * Called before enqueuing a change/delete operation
+ *
+ */
+static uint8_t
+olsr_rt_flags(const struct rt_entry *rt)
+{
+  const struct rt_nexthop *nh;
+  uint8_t flags = RTF_UP;
+
+  /* destination is host */
+  if (rt->rt_dst.prefix_len == 8 * olsr_cnf->ipsize) {
+    flags |= RTF_HOST;
+  }
+
+  nh = olsr_get_nh(rt);
+
+  if(!ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
+    flags |= RTF_GATEWAY;
+  }
+
+  return flags;
+}
+
 static unsigned int seq = 0;
 
 /*

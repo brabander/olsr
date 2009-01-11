@@ -59,32 +59,6 @@ static struct list_node chg_kernel_list;
 static struct list_node del_kernel_list;
 
 
-/**
- *
- * Calculate the kernel route flags.
- * Called before enqueuing a change/delete operation
- *
- */
-uint8_t
-olsr_rt_flags(const struct rt_entry *rt)
-{
-  const struct rt_nexthop *nh;
-  uint8_t flags = RTF_UP;
-
-  /* destination is host */
-  if (rt->rt_dst.prefix_len == 8 * olsr_cnf->ipsize) {
-    flags |= RTF_HOST;
-  }
-
-  nh = olsr_get_nh(rt);
-
-  if(!ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
-    flags |= RTF_GATEWAY;
-  }
-
-  return flags;
-}
-
 export_route_function olsr_addroute_function;
 export_route_function olsr_addroute6_function;
 export_route_function olsr_delroute_function;

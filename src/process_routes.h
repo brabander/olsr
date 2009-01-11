@@ -55,7 +55,6 @@ void olsr_init_export_route(void);
 void olsr_update_rib_routes(void);
 void olsr_update_kernel_routes(void);
 void olsr_delete_all_kernel_routes(void);
-uint8_t olsr_rt_flags(const struct rt_entry *);
 
 #endif
 
