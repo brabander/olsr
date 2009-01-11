@@ -225,7 +225,7 @@ olsr_init_routing_table(void)
 }
 
 /**
- * Look up a maxplen entry (= /32 or /128) in the routing table.
+ * Look up a max prefix entry (= /32 or /128) in the routing table.
  *
  * @param dst the address of the entry
  *
@@ -239,7 +239,7 @@ olsr_lookup_routing_table(const union olsr_ip_addr *dst)
   struct olsr_ip_prefix prefix;
 
   prefix.prefix = *dst;
-  prefix.prefix_len = olsr_cnf->maxplen;
+  prefix.prefix_len = 8 * olsr_cnf->ipsize;
 
   rt_tree_node = avl_find(&routingtree, &prefix);
 
@@ -354,7 +354,7 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
   /*
    * No bogus prefix lengths.
    */
-  if (rtp->rtp_dst.prefix_len > olsr_cnf->maxplen) {
+  if (rtp->rtp_dst.prefix_len > 8 * olsr_cnf->ipsize) {
     return;
   }
 
@@ -529,7 +529,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
   /*
    * No bogus prefix lengths.
    */
-  if (plen > olsr_cnf->maxplen) {
+  if (plen > 8 * (int)olsr_cnf->ipsize) {
     return NULL;
   }
 
@@ -593,7 +593,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
   /*
    * No bogus prefix lengths.
    */
-  if (plen > olsr_cnf->maxplen) {
+  if (plen > 8 * (int)olsr_cnf->ipsize) {
     return;
   }
 

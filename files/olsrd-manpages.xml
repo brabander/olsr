@@ -999,13 +999,15 @@
 
         <varlistentry>
           <term><option>RtProto</option>
-          <replaceable>0</replaceable>-<replaceable>255</replaceable></term>
+          <replaceable>0</replaceable>|<replaceable>1</replaceable>-<replaceable>255</replaceable></term>
 
           <listitem>
             <para>This setting configures the routing protocol ID to be used
             when setting routes via rtnetlink, see RTNETLINK(7) for the
-            <emphasis>rtm_protocol</emphasis> keyword. Defaults to
-            <replaceable>3</replaceable>.</para>
+            <emphasis>rtm_protocol</emphasis> keyword. Use
+            <replaceable>0</replaceable> to specify the operating system
+            default, e.g. RTPROT_BOOT on Linux). Defaults to
+            <replaceable>0</replaceable>.</para>
           </listitem>
         </varlistentry>
 
@@ -2803,7 +2805,7 @@ struct lq_handler lq_etxff_handler = {
           <listitem>
             <para>This callback is triggered every time a HELLO message for a
             certain link_entry * is lost (timeout) or received. This way the
-            plugin can update the cost for the link entry. </para>
+            plugin can update the cost for the link entry.</para>
           </listitem>
         </varlistentry>
 
@@ -2813,8 +2815,8 @@ struct lq_handler lq_etxff_handler = {
 
           <listitem>
             <para>This callback is triggerd to copy the link quality
-            information from a received HELLO message into a link entry.
-            </para>
+            information from a received HELLO message into a link
+            entry.</para>
           </listitem>
         </varlistentry>
 
@@ -2824,7 +2826,7 @@ struct lq_handler lq_etxff_handler = {
 
           <listitem>
             <para>This callback copies the link quality information from a
-            link_entry to a tc_mpr_addr. </para>
+            link_entry to a tc_mpr_addr.</para>
           </listitem>
         </varlistentry>
 
@@ -2847,7 +2849,7 @@ struct lq_handler lq_etxff_handler = {
 
           <listitem>
             <para>This callback copies the link quality information from a
-            link_entry to a lq_hello_neighbor. </para>
+            link_entry to a lq_hello_neighbor.</para>
           </listitem>
         </varlistentry>
 

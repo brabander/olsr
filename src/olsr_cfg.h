@@ -172,7 +172,6 @@ typedef enum {
 struct olsr_config {
   int ip_version;
   size_t ipsize;                       /* Size of address */
-  uint8_t maxplen;                     /* maximum prefix len */
   unsigned char no_fork:1;
   unsigned char allow_no_interfaces:1;
   unsigned char willingness_auto:1;

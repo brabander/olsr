@@ -260,7 +260,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   /*
    * Add a rt_path for the alias.
    */
-  olsr_insert_routing_table(&alias->mid_alias_addr, olsr_cnf->maxplen,
+  olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize,
                             main_addr, OLSR_RT_ORIGIN_MID);
   /*
    * Start the timer. Because we provide the TC reference
@@ -398,7 +398,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
   /*
    * Delete the rt_path for the alias.
    */
-  olsr_delete_routing_table(&alias->mid_alias_addr, olsr_cnf->maxplen,
+  olsr_delete_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize,
                             &tc->addr, OLSR_RT_ORIGIN_MID);
 
   /*

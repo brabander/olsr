@@ -734,7 +734,7 @@ static void build_ip_txt(struct autobuf *abuf,
 
   abuf_puts(abuf, ipaddrstr);
   /* print ip address or ip prefix ? */
-  if (prefix_len != -1 && prefix_len != olsr_cnf->maxplen) {
+  if (prefix_len != -1 && prefix_len != 8 * (int)olsr_cnf->ipsize) {
     abuf_appendf(abuf, "/%d", prefix_len);
   }
 
@@ -755,7 +755,7 @@ static void build_ipaddr_link(struct autobuf *abuf,
 #endif
       NULL;
   /* Print the link only if there is no prefix_len */
-  const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen);
+  const int print_link = want_link && (prefix_len == -1 || prefix_len == 8 * (int)olsr_cnf->ipsize);
   olsr_ip_to_string(&ipaddrstr, ipaddr);
 
   abuf_puts(abuf, "<td>");

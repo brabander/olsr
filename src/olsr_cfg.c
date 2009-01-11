@@ -548,7 +548,7 @@ parse_cfg_ipc(char *argstr, struct olsr_config *cfg)
           exit(EXIT_FAILURE);
         }
 
-        ip_acl_add(&cfg->ipc_nets, &ipaddr, cfg->maxplen, false);
+        ip_acl_add(&cfg->ipc_nets, &ipaddr, 8 * cfg->ipsize, false);
         PARSER_DEBUG_PRINTF("\tIPC host: %s\n", ip_to_string(cfg->ip_version, &buf, &ipaddr));
       } else if (0 == strcmp("Net", p[0])) {
         union olsr_ip_addr ipaddr;
@@ -822,11 +822,9 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       if (ver == 4) {
         cfg->ip_version = AF_INET;
         cfg->ipsize = sizeof(struct in_addr);
-        cfg->maxplen = 32;
       } else if (ver == 6) {
         cfg->ip_version = AF_INET6;
         cfg->ipsize = sizeof(struct in6_addr);
-        cfg->maxplen = 128;
       } else {
         fprintf(stderr, "IpVersion must be 4 or 6!\n");
         exit(EXIT_FAILURE);
@@ -1346,10 +1344,9 @@ olsr_get_default_cfg(void)
   cfg->no_fork = false;
   cfg->ip_version = AF_INET;
   cfg->ipsize = sizeof(struct in_addr);
-  cfg->maxplen = 32;
   cfg->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cfg->tos = DEF_TOS;
-  cfg->rtproto = 3;
+  cfg->rtproto = 0;
   cfg->rttable = 254;
   cfg->rttable_default = 0;
   cfg->willingness_auto = DEF_WILL_AUTO;

@@ -166,7 +166,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   /*
    * Add a rt_path for ourselves.
    */
-  olsr_insert_routing_table(adr, olsr_cnf->maxplen, adr, OLSR_RT_ORIGIN_TC);
+  olsr_insert_routing_table(adr, 8 * olsr_cnf->ipsize, adr, OLSR_RT_ORIGIN_TC);
 
   return tc;
 }
@@ -244,7 +244,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
   /*
    * Delete the rt_path for ourselves.
    */
-  olsr_delete_routing_table(&tc->addr, olsr_cnf->maxplen, &tc->addr,
+  olsr_delete_routing_table(&tc->addr, 8 * olsr_cnf->ipsize, &tc->addr,
                             OLSR_RT_ORIGIN_TC);
 
   /* The edgetree and prefix tree must be empty before */

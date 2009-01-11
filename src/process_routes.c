@@ -72,7 +72,7 @@ olsr_rt_flags(const struct rt_entry *rt)
   uint8_t flags = RTF_UP;
 
   /* destination is host */
-  if (rt->rt_dst.prefix_len == olsr_cnf->maxplen) {
+  if (rt->rt_dst.prefix_len == 8 * olsr_cnf->ipsize) {
     flags |= RTF_HOST;
   }
 

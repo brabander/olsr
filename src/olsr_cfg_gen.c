@@ -79,7 +79,7 @@ olsr_print_cnf(const struct olsr_config *cnf)
 
   printf("IPC connections  : %d\n", cnf->ipc_connections);
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->ipc_nets.accept, ie) {
-    if (ie->net.prefix_len == olsr_cnf->maxplen) {
+    if (ie->net.prefix_len == 8 * olsr_cnf->ipsize) {
       struct ipaddr_str strbuf;
       printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
     } else {
@@ -240,7 +240,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "# TOS(type of service) to use. Default is 16\n" "TosValue\t%d\n\n", cnf->tos);
 
   /* RtProto */
-  abuf_appendf(abuf, "# Routing proto flag to use. Default is 3 (BOOT)\n" "RtProto\t\t%d\n\n", cnf->rtproto);
+  abuf_appendf(abuf, "# Routing proto flag to use. Operating system default is 0\n" "RtProto\t\t%d\n\n", cnf->rtproto);
 
   /* RtTable */
   abuf_appendf(abuf, "# Policy Routing Table to use. Default is 254\n" "RtTable\t\t%d\n\n", cnf->rttable);
@@ -263,7 +263,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   if (list_is_empty(&cnf->ipc_nets.accept)) {
     struct ip_prefix_entry *ie;
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {
-      if (ie->net.prefix_len == olsr_cnf->maxplen) {
+      if (ie->net.prefix_len == 8 * olsr_cnf->ipsize) {
         struct ipaddr_str strbuf;
         abuf_appendf(abuf, "    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
       } else {

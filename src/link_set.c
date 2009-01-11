@@ -291,7 +291,7 @@ olsr_delete_link_entry(struct link_entry *link)
   /*
    * Delete the rt_path for the link-end.
    */
-  olsr_delete_routing_table(&link->neighbor_iface_addr, olsr_cnf->maxplen,
+  olsr_delete_routing_table(&link->neighbor_iface_addr, 8 * olsr_cnf->ipsize,
                             &link->neighbor->neighbor_main_addr,
                             OLSR_RT_ORIGIN_LINK);
 
@@ -534,7 +534,7 @@ add_link_entry(const union olsr_ip_addr *local,
    * that lets us install > 1 hop routes prior to receiving
    * the MID entry for the 1 hop neighbor.
    */
-  olsr_insert_routing_table(remote, olsr_cnf->maxplen, remote_main,
+  olsr_insert_routing_table(remote, 8 * olsr_cnf->ipsize, remote_main,
                             OLSR_RT_ORIGIN_LINK);
 
   /*
