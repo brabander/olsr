@@ -53,20 +53,20 @@ struct olsr_config *olsr_cnf;          /* The global configuration */
 int
 prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {
-  int i;
+  int i = 0;
   const int end = MIN(len, prefixlen / 8);
-  for (i = 0; i < end; i++) {
-    a[i] = 0xff;
+
+  while (i < end) {
+    a[i++] = 0xff;
   }
-  if (i >= len) {
-    return 0;
-  }
-  a[i++] = 0xff << (8 - (prefixlen % 8));
-  while (i < len) {
-    a[i++] = 0;
+  if (i < len) {
+    a[i++] = 0xff << (8 - (prefixlen % 8));
+    while (i < len) {
+      a[i++] = 0;
+    }
   }
 
-  return 1;
+  return (prefixlen <= len * 8);
 }
 
 uint8_t
