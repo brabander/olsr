@@ -2644,29 +2644,46 @@ register_lq_handler(&amp;my_lq_metric, "my_lq_metric");</programlisting>
       this:</para>
 
       <programlisting>/* Default lq plugin settings */
-struct lq_handler lq_etx_float_handler = {
-  &amp;default_lq_initialize_float,
-  
-  &amp;default_lq_calc_cost_float,
-  &amp;default_lq_calc_cost_float,
-  
-  &amp;default_lq_is_relevant_costchange_float,
-  
-  &amp;default_lq_packet_loss_worker_float,
-  &amp;default_lq_memorize_foreign_hello_float,
-  &amp;default_lq_copy_link2tc_float,
-  &amp;default_lq_clear_float,
-  &amp;default_lq_clear_float,
+struct lq_handler lq_etxff_handler = {
+  &amp;lq_etxff_initialize,
+  &amp;lq_etxff_deinitialize,
 
-...
-  sizeof(struct default_lq_float),
-  sizeof(struct default_lq_float)
+  &amp;lq_etxff_calc_link_entry_cost,
+  &amp;lq_etxff_calc_lq_hello_neighbor_cost,
+  &amp;lq_etxff_calc_tc_mpr_addr_cost,
+  &amp;lq_etxff_calc_tc_edge_entry_cost,
+
+  &amp;lq_etxff_is_relevant_costchange,
+
+  &amp;lq_etxff_packet_loss_handler,
+
+  &amp;lq_etxff_memorize_foreign_hello,
+  &amp;lq_etxff_copy_link_entry_lq_into_tc_mpr_addr,
+  &amp;lq_etxff_copy_link_entry_lq_into_tc_edge_entry,
+  &amp;lq_etxff_copy_link_lq_into_neighbor,
+
+  &amp;lq_etxff_clear_link_entry,
+  NULL, /* not necessary */
+  NULL, /* not necessary */
+  NULL, /* not necessary */
+
+  &amp;lq_etxff_serialize_hello_lq,
+  &amp;lq_etxff_serialize_tc_lq,
+  &amp;lq_etxff_deserialize_hello_lq,
+  &amp;lq_etxff_deserialize_tc_lq,
+
+  &amp;lq_etxff_print_link_entry_lq,
+  &amp;lq_etxff_print_tc_edge_entry_lq,
+  &amp;lq_etxff_print_cost,
+
+  sizeof(struct lq_etxff_tc_edge),
+  sizeof(struct lq_etxff_tc_mpr_addr),
+  sizeof(struct lq_etxff_lq_hello_neighbor),
+  sizeof(struct lq_etxff_link_entry),
+
+  LQ_HELLO_MESSAGE,
+  LQ_TC_MESSAGE
 };</programlisting>
-
-      <para>This means, we use the <literal>sizeof(struct
-      default_lq_float)</literal> as extra memory space in the hello database
-      and a sizeof(struct default_lq_fload) as extra space in the TC
-      database.</para>
     </refsect1>
 
     <refsect1>
@@ -2680,25 +2697,46 @@ struct lq_handler lq_etx_float_handler = {
           <term>void (*initialize)(void);</term>
 
           <listitem>
-            <para>This callback will be called when the <xref
-            endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" /> selects
-            this routing metric plugin. For example:</para>
+            <para>This callback is triggered shortly after loading the plugin
+            into <productname>olsrd</productname>. Note, that all
+            <option>PlParam</option> values from the configuration file are
+            alredy evaluted at this time.</para>
 
-            <programlisting>#LinkQualityAlgorithm "etx_ff"</programlisting>
-
-            <para>The initializing function for example starts some timers and
-            it reserves a callback which is triggered for each packet. In
-            general you can use any initialization code in this
-            callback.</para>
+            <para>The <function>initialize</function> function may start some
+            timers (via <function>olsr_alloc_cookie</function> ) and may
+            register hooks to be triggered when a message is received (via
+            <function>olsr_packetparser_add_function</function>).</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>olsr_linkcost(*calc_hello_cost) (const void *lq);</term>
+          <term>void (*deinitialize)(void);</term>
 
           <listitem>
-            <para>This callback will be called whenever a packet is
-            processed.</para>
+            <para>This callback is triggered shortly before unloading the
+            plugin from <productname>olsrd</productname>. Note, that it is
+            generally a good idea to free up hooks, timers and memory aquired
+            during initialization or runtime.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>olsr_linkcost (*calc_link_entry_cost) (struct link_entry
+          *);</term>
+
+          <listitem>
+            <para>This callback is currently unused.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>olsr_linkcost (*calc_lq_hello_neighbor_cost) (struct
+          lq_hello_neighbor *);</term>
+
+          <listitem>
+            <para>This callback is triggered whenever a HELLO message is
+            received and the link cost for the corresponding neighbour needs
+            to be calculated.</para>
 
             <para>You will get a pointer to your part of the hello database
             and your plugin is supposed to generate a hello cost in the
@@ -2719,39 +2757,102 @@ struct lq_handler lq_etx_float_handler = {
         </varlistentry>
 
         <varlistentry>
-          <term>olsr_linkcost(*calc_tc_cost) (const void *lq);</term>
+          <term>olsr_linkcost (*calc_tc_mpr_addr_cost) (struct tc_mpr_addr
+          *);</term>
 
           <listitem>
-            <para>This callback will be called whenever a packet is
-            processed.</para>
-
-            <para>Same as for <function>calc_hello_cost</function> but just
-            for TC costs and not for hellos.</para>
+            <para>This callback is currently unused.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>bool(*is_relevant_costchange) (olsr_linkcost c1, olsr_linkcost
-          c2);</term>
+          <term>olsr_linkcost (*calc_tc_edge_entry_cost) (struct tc_edge_entry
+          *);</term>
 
           <listitem>
-            <para>This callback is called after the main loop whenever the
-            core has to decide if a new Dijkstra needs to be calculated. In
-            principle for every packet.</para>
+            <para>This callback will be called whenever the link cost for a TC
+            edge entry needs to be calculated. Same as for
+            <function>calc_lq_hello_neighbor_cost</function> but just for TC
+            edge entires.</para>
+          </listitem>
+        </varlistentry>
 
-            <para>If a link quality does only change slightly, there will be
-            no recalculation of the Dijkstra algorithm which costs a lot of
-            CPU. Since only the plugin knows the range of the link quality
-            values, only the plugin can decide if the cost change is relevant
+        <varlistentry>
+          <term>bool (*is_relevant_costchange) (olsr_linkcost c1,
+          olsr_linkcost c2);</term>
+
+          <listitem>
+            <para>This callback is triggered after the main loop whenever the
+            core has to decide if a new Dijkstra needs to be calculated. This
+            happens, for example if the link cost for a TC edge entry was
+            updated using <function>calc_tc_edge_entry_cost</function>.</para>
+
+            <para>If a link quality does only change slightly return
+            <replaceable>false</replaceable>, so there will be no
+            recalculation of the Dijkstra algorithm which costs a lot of CPU.
+            Since only the plugin knows the range of the link quality values,
+            only the plugin can decide if the cost change is relevant
             enough.</para>
-
-            <para>Return values: true or false.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>olsr_linkcost(*packet_loss_handler) (struct link_entry *
-          entry, void *lq, bool lost);</term>
+          <term>olsr_linkcost (*packet_loss_handler) (struct link_entry *,
+          bool);</term>
+
+          <listitem>
+            <para>This callback is triggered every time a HELLO message for a
+            certain link_entry * is lost (timeout) or received. This way the
+            plugin can update the cost for the link entry. </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*memorize_foreign_hello) (struct link_entry *, struct
+          lq_hello_neighbor *);</term>
+
+          <listitem>
+            <para>This callback is triggerd to copy the link quality
+            information from a received HELLO message into a link entry.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*copy_link_entry_lq_into_tc_mpr_addr) (struct
+          tc_mpr_addr *, struct link_entry *);</term>
+
+          <listitem>
+            <para>This callback copies the link quality information from a
+            link_entry to a tc_mpr_addr. </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*copy_link_entry_lq_into_tc_edge_entry) (struct
+          tc_edge_entry *, struct link_entry *);</term>
+
+          <listitem>
+            <para>This callback copies the link quality information from a
+            link entry to a tc_edge_entry. This happens, if a HELLO message
+            was received. Since the data structures have a different
+            representation, this function is used to convert the
+            representations.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*copy_link_lq_into_neighbor) (struct lq_hello_neighbor
+          *, struct link_entry *);</term>
+
+          <listitem>
+            <para>This callback copies the link quality information from a
+            link_entry to a lq_hello_neighbor. </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>void (*clear_link_entry) (struct link_entry *);</term>
 
           <listitem>
             <para>...</para>
@@ -2759,8 +2860,8 @@ struct lq_handler lq_etx_float_handler = {
         </varlistentry>
 
         <varlistentry>
-          <term>void (*memorize_foreign_hello) (void *local, void
-          *foreign);</term>
+          <term>void (*clear_lq_hello_neighbor) (struct lq_hello_neighbor
+          *);</term>
 
           <listitem>
             <para>...</para>
@@ -2768,18 +2869,7 @@ struct lq_handler lq_etx_float_handler = {
         </varlistentry>
 
         <varlistentry>
-          <term>void (*copy_link_lq_into_tc) (void *target, void
-          *source);</term>
-
-          <listitem>
-            <para>This callback is called when Hello packet's LQ is copied
-            over into a TC. Since this can have a different representation,
-            this function can be used to convert representations.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>void (*clear_hello) (void *target);</term>
+          <term>void (*clear_tc_mpr_addr) (struct tc_mpr_addr *);</term>
 
           <listitem>
             <para>...</para>
@@ -2787,7 +2877,7 @@ struct lq_handler lq_etx_float_handler = {
         </varlistentry>
 
         <varlistentry>
-          <term>void (*clear_tc) (void *target);</term>
+          <term>void (*clear_tc_edge_entry) (struct tc_edge_entry *);</term>
 
           <listitem>
             <para>...</para>
@@ -2795,83 +2885,121 @@ struct lq_handler lq_etx_float_handler = {
         </varlistentry>
 
         <varlistentry>
-          <term>int (*serialize_hello_lq) (unsigned char *buff, void
-          *lq);</term>
+          <term>int (*serialize_hello_lq) (unsigned char *, struct
+          lq_hello_neighbor *);</term>
 
           <listitem>
-            <para>...</para>
+            <para>This callback is triggerd whenever a LQ message needs to be
+            deserialized The callback reads the message information of a
+            binary packet and writes into an neighbour buffer.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>int (*serialize_tc_lq) (unsigned char *buff, void *lq);</term>
+          <term>int (*serialize_tc_lq) (unsigned char *, struct tc_mpr_addr
+          *);</term>
 
           <listitem>
-            <para>...</para>
+            <para>This callback is triggerd whenever a TC message needs to be
+            deserialized The callback reads the message information of a
+            binary packet and writes into an MPR buffer.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>void (*deserialize_hello_lq) (const uint8_t ** curr, void
-          *lq);</term>
+          <term>char *(*print_link_entry_lq) (struct link_entry *, char ,
+          struct lqtextbuffer *);</term>
 
           <listitem>
-            <para>...</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>void (*deserialize_tc_lq) (const uint8_t ** curr, void
-          *lq);</term>
-
-          <listitem>
-            <para>This callback is called whenever a packet needs to be
-            deserialized (for every packet and there for every neighbor in the
-            TC).</para>
-
-            <para>This function reads the lq information of a binary packet
-            into a TC.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>const char *(*print_hello_lq) (void *ptr, char separator,
-          struct lqtextbuffer * buffer);</term>
-
-          <listitem>
-            <para>This callback is called whenever any other part of the code
-            wants to convert your internal metric representation of Hellos
-            into a printable version. So it can be called at any time.</para>
+            <para>This callback is triggered whenever any other part of the
+            code wants to convert your internal metric representation of
+            HELLO-determined links into a printable version. The callback may
+            be called at any time.</para>
 
             <para><parameter>ptr</parameter> is a void pointer to the link
-            quality data in the Hello DB. seperator is a character which is
-            printed whenever there are multiple values (for example ',' or '/'
-            buffer is the buffer you want to sprintf into. Please do not
-            forget to \0 terminate!</para>
-
-            <para>Returns the buffer in case of errors. Please return
-            <literal>"error"</literal> as string. Because
-            <function>print_hello_lq</function> will often directly be put
-            into a <function>printf()</function>.</para>
+            quality data in the Hello DB. <parameter>seperator</parameter> is
+            a character which is printed whenever there are multiple values
+            (for example <quote>,</quote> or <quote>/</quote>).
+            <parameter>buffer</parameter> is the buffer you want to
+            <function>sprintf</function> into. Please do not forget to zero
+            terminate the return value. The callback returns the buffer in
+            case of errors. Please return <literal>"error"</literal> as const
+            string, because <function>print_hello_lq</function> will often
+            directly be put into a <function>printf("%s")</function>.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>const char *(*print_tc_lq) (void *ptr, char separator, struct
-          lqtextbuffer * buffer);</term>
+          <term>char *(*print_tc_edge_entry_lq) (struct tc_edge_entry *, char
+          , struct lqtextbuffer *);</term>
 
           <listitem>
-            <para>Same as <function>print_hello_lq</function></para>
+            <para>Same as <function>print_link_entry_lq</function>, but for an
+            entry from the TC database.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>const char *(*print_cost) (olsr_linkcost cost, struct
-          lqtextbuffer * buffer);</term>
+          <term>char *(*print_cost) (olsr_linkcost cost, struct lqtextbuffer
+          *);</term>
 
           <listitem>
-            <para>Same as <function>print_hello_lq</function>, but for an
-            arbitrary link cost.</para>
+            <para>Same as <function>print_link_entry_lq</function>, but for an
+            arbitrary link cost element.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>size_t size_tc_edge;</term>
+
+          <listitem>
+            <para>Set to a value larger that zero to reserve extra memory in
+            the hello database.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>size_t size_tc_mpr_addr;</term>
+
+          <listitem>
+            <para>Set to a value larger that zero to reserve extra memory in
+            the mpr database.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>size_t size_lq_hello_neighbor;</term>
+
+          <listitem>
+            <para>Set to a value larger that zero to reserve extra memory in
+            the lq database.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>size_t size_link_entry;</term>
+
+          <listitem>
+            <para>Set to a value larger that zero to reserve extra memory in
+            the link database.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>uint8_t messageid_hello;</term>
+
+          <listitem>
+            <para>Determines the binary value for the OLSR message type used
+            for HELLO messages.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>uint8_t messageid_tc;</term>
+
+          <listitem>
+            <para>Determines the binary value for the OLSR message type used
+            for TC messages.</para>
           </listitem>
         </varlistentry>
       </variablelist>
