@@ -231,7 +231,7 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
   /* generate log string (insert file/line in DEBUG mode) */
 #if DEBUG
   p1 = snprintf(logbuffer, LOGBUFFER_SIZE, "%d:%02d:%02d.%03ld %s(%s) %s %d: ",
-    now.tm_hour, now.tm_min, now.tm_sec, timeval.tv_usec / 1000,
+    now.tm_hour, now.tm_min, now.tm_sec, (long)(timeval.tv_usec / 1000),
     LOG_SEVERITY_NAMES[severity], LOG_SOURCE_NAMES[source], file, line);
 #else
   p1 = snprintf(logbuffer, LOGBUFFER_SIZE, "%d:%02d:%02d.%03ld %s(%s): ",
