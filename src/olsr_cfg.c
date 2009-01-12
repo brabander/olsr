@@ -1138,6 +1138,15 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
   free(opt_line);
   free(opt_str);
 
+  /* put default value of logging system into place if necessary */
+  if (!(cfg->log_target_stderr || cfg->log_target_syslog || cfg->log_target_file != NULL)) {
+    int i;
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      cfg->log_event[SEVERITY_ERROR][i] = true;
+    }
+    cfg->log_target_stderr = true;
+  }
+
   return cfg;
 }
 

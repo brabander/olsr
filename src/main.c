@@ -178,8 +178,6 @@ main(int argc, char *argv[])
   /* initialize logging */
   olsr_log_init();
 
-  OLSR_WARN(LOG_SCHEDULER, "Test\n");
-
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
     avl_comp_default = avl_comp_ipv4;
