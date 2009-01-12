@@ -49,9 +49,17 @@
 #include "olsr_logging.h"
 #include "log.h"
 
-static void (*log_handler[MAX_LOG_HANDLER])
-    (enum log_severity, enum log_source, const char *, int, char *, int, bool);
+struct log_handler_entry {
+  void (*handler)
+      (enum log_severity, enum log_source, const char *, int, char *, int);
+  bool (*bitmask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+};
+
+static struct log_handler_entry log_handler[MAX_LOG_HANDLER];
 static int log_handler_count = 0;
+
+static bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
+
 static bool log_initialized = false;
 static FILE *log_fileoutput = NULL;
 
@@ -69,20 +77,31 @@ const char *LOG_SEVERITY_NAMES[] = {
 };
 
 static void olsr_log_stderr (enum log_severity severity, enum log_source source,
-    const char *file, int line, char *buffer, int prefixLength, bool visible);
+    const char *file, int line, char *buffer, int prefixLength);
 static void olsr_log_syslog (enum log_severity severity, enum log_source source,
-    const char *file, int line, char *buffer, int prefixLength, bool visible);
+    const char *file, int line, char *buffer, int prefixLength);
 static void olsr_log_file (enum log_severity severity, enum log_source source,
-    const char *file, int line, char *buffer, int prefixLength, bool visible);
+    const char *file, int line, char *buffer, int prefixLength);
 
+/**
+ * Called by main method just after configuration options have been parsed
+ */
 void olsr_log_init(void) {
   static char error[256];
   bool printError = false;
+  int i,j;
+
+  /* clear global mask */
+  for (j=0; j<LOG_SEVERITY_COUNT; j++) {
+    for (i=0; i<LOG_SOURCE_COUNT; i++) {
+      log_global_mask[j][i] = false;
+    }
+  }
 
   if (olsr_cnf->log_target_file) {
     log_fileoutput = fopen(olsr_cnf->log_target_file, "a");
     if (log_fileoutput) {
-      olsr_log_addhandler(&olsr_log_file);
+      olsr_log_addhandler(&olsr_log_file, NULL);
     }
     else {
       /* handle file error for logging output */
@@ -100,10 +119,10 @@ void olsr_log_init(void) {
     }
   }
   if (olsr_cnf->log_target_syslog) {
-    olsr_log_addhandler(&olsr_log_syslog);
+    olsr_log_addhandler(&olsr_log_syslog, NULL);
   }
   if (olsr_cnf->log_target_stderr) {
-    olsr_log_addhandler(&olsr_log_stderr);
+    olsr_log_addhandler(&olsr_log_stderr, NULL);
   }
   log_initialized = true;
 
@@ -112,6 +131,9 @@ void olsr_log_init(void) {
   }
 }
 
+/**
+ * Called just before olsr_shutdown finishes
+ */
 void olsr_log_cleanup(void) {
   if (log_fileoutput) {
     fflush(log_fileoutput);
@@ -119,39 +141,94 @@ void olsr_log_cleanup(void) {
   }
 }
 
+/**
+ * Call this function to register a custom logevent handler
+ * @param handler pointer to handler function
+ * @param mask pointer to custom event filter or NULL if handler use filter
+ *   from olsr_cnf
+ */
 void olsr_log_addhandler(void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int, bool)) {
+    char *, int), bool (*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]) {
 
   assert (log_handler_count < MAX_LOG_HANDLER);
-  log_handler[log_handler_count++] = handler;
+
+  log_handler[log_handler_count].handler = handler;
+  log_handler[log_handler_count].bitmask = mask;
+  log_handler_count ++;
+
+  olsr_log_updatemask();
 }
 
+/**
+ * Call this function to remove a logevent handler
+ * @param handler pointer to handler function
+ */
 void olsr_log_removehandler(void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int, bool)) {
+    char *, int)) {
   int i;
   for (i=0; i<log_handler_count;i++) {
-    if (handler == log_handler[i]) {
+    if (handler == log_handler[i].handler) {
       if (i < log_handler_count-1) {
         memmove(&log_handler[i], &log_handler[i+1], (log_handler_count-i-1) * sizeof(*log_handler));
       }
       log_handler_count--;
     }
   }
+
+  olsr_log_updatemask();
 }
 
+/**
+ * Recalculate the combination of the olsr_cnf log event mask and all (if any)
+ * custom masks of logfile handlers. Must be called every times a event mask
+ * changes.
+ */
+void olsr_log_updatemask(void) {
+  int i,j,k;
+
+  for (k=0; k<LOG_SEVERITY_COUNT; k++) {
+    for (j=0; j<LOG_SOURCE_COUNT; j++) {
+      log_global_mask[k][j] = olsr_cnf->log_event[k][j];
+
+      for (i=0; i<log_handler_count; i++) {
+        if (log_handler[i].bitmask != NULL && (*(log_handler[i].bitmask))[k][j]) {
+          log_global_mask[k][j] = true;
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * This function should not be called directly, use the macros OLSR_{DEBUG,INFO,WARN,ERROR} !
+ *
+ * Generates a logfile entry and calls all log handler to store/output it.
+ *
+ * @param severity severity of the log event (LOG_DEBUG to LOG_ERROR)
+ * @param source source of the log event (LOG_LOGGING, ... )
+ * @param file filename where the logging macro have been called
+ * @param line line number where the logging macro have been called
+ * @param format printf format string for log output plus a variable number of arguments
+ */
 void olsr_log (enum log_severity severity, enum log_source source, const char *file, int line, const char *format, ...) {
   static char logbuffer[LOGBUFFER_SIZE];
   va_list ap;
   int p1,p2, i;
-  bool display;
   struct tm now;
   struct timeval timeval;
 
+  /* test if event is consumed by any log handler */
+  if (!log_global_mask[severity][source])
+    return; /* no log handler is interested in this event, so drop it */
+
   va_start(ap, format);
 
+  /* calculate local time */
   gettimeofday(&timeval, NULL);
   localtime_r ( &timeval.tv_sec, &now );
 
+  /* generate log string (insert file/line in DEBUG mode) */
 #if DEBUG
   p1 = snprintf(logbuffer, LOGBUFFER_SIZE, "%d:%02d:%02d.%03ld %s(%s) %s %d: ",
     now.tm_hour, now.tm_min, now.tm_sec, timeval.tv_usec / 1000,
@@ -165,42 +242,41 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
 
   assert (p1+p2 < LOGBUFFER_SIZE);
 
-#if DEBUG
   /* output all events to stderr if logsystem has not been initialized */
   if (!log_initialized) {
+#if DEBUG
     fputs(logbuffer, stderr);
+#endif
     return;
   }
-#endif
 
-  /* calculate visible logging events */
-  display = olsr_cnf->log_event[severity][source];
+  /* call all log handlers */
   for (i=0; i<log_handler_count; i++) {
-    log_handler[i](severity, source, file, line, logbuffer, p1, display);
+    log_handler[i].handler(severity, source, file, line, logbuffer, p1);
   }
   va_end(ap);
 }
 
-static void olsr_log_stderr (enum log_severity severity __attribute__((unused)), enum log_source source __attribute__((unused)),
+static void olsr_log_stderr (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
-    char *buffer, int prefixLength __attribute__((unused)), bool visible) {
-  if (visible) {
+    char *buffer, int prefixLength __attribute__((unused))) {
+  if (olsr_cnf->log_event[severity][source]) {
     fputs (buffer, stderr);
   }
 }
 
-static void olsr_log_file (enum log_severity severity __attribute__((unused)), enum log_source source __attribute__((unused)),
+static void olsr_log_file (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
-    char *buffer, int prefixLength __attribute__((unused)), bool visible) {
-  if (visible) {
+    char *buffer, int prefixLength __attribute__((unused))) {
+  if (olsr_cnf->log_event[severity][source]) {
     fputs (buffer, log_fileoutput);
   }
 }
 
-static void olsr_log_syslog (enum log_severity severity, enum log_source source __attribute__((unused)),
+static void olsr_log_syslog (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
-    char *buffer, int prefixLength __attribute__((unused)), bool visible) {
-  if (visible) {
+    char *buffer, int prefixLength __attribute__((unused))) {
+  if (olsr_cnf->log_event[severity][source]) {
     olsr_syslog(severity, "%s", buffer);
   }
 }

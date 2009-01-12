@@ -64,6 +64,23 @@ enum log_severity {
   LOG_SEVERITY_COUNT
 };
 
+/**
+ * these four macros should be used to generate OLSR logging output
+ *
+ * OLSR_DEBUG should be used for all output that is only usefull for debugging a specific
+ * part of the code. This could be information about the internal progress of a function,
+ * state of variables, ...
+ *
+ * OLSR_INFO should be used for all output that does not inform the user about a
+ * problem/error in OLSR. Examples would be "SPF run triggered" or "Hello package received
+ * from XXX.XXX.XXX.XXX".
+ *
+ * OLSR_WARN should be used for all error messages that do not prevent OLSR from continue
+ * to work.
+ *
+ * OLSR_ERROR is reserved for error output to the user just before the OLSR agent will be
+ * terminated.
+ */
 #ifdef REMOVE_LOG_DEBUG
 #define OLSR_DEBUG(source, format, args...) do { } while(0)
 #else
@@ -91,9 +108,10 @@ enum log_severity {
 void EXPORT(olsr_log_init) (void);
 void EXPORT(olsr_log_cleanup) (void);
 void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int, bool));
+    char *, int), bool (*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
 void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int, bool));
+    char *, int));
+void EXPORT(olsr_log_updatemask) (void);
 
 void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...)
     __attribute__((format(printf, 5, 6)));
