@@ -20,6 +20,7 @@ LDFLAGS = -bundle -flat_namespace -undefined suppress
 else
 LDFLAGS = -dynamic
 endif
+LDFLAGS_EXE =
 
 OS_LIB_PTHREAD =
 OS_CFLAG_PTHREAD =
