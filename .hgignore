@@ -28,6 +28,7 @@ olsrd.exports
 *.aps
 *.sbr
 *.plg
+gui/win32/win32verify
 gui/win32/Main/Debug/
 gui/win32/Main/Release/
 gui/win32/Shim/Debug/

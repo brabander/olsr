@@ -46,10 +46,6 @@
 
 const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT;
 
-/* Global stuff externed in olsr_cfg.h */
-FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
-struct olsr_config *olsr_cnf;          /* The global configuration */
-
 int
 prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {

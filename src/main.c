@@ -85,6 +85,10 @@ static void olsr_shutdown(void);
 static void signal_reconfigure(int);
 #endif
 
+/* Global stuff externed in olsr_cfg.h */
+FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
+struct olsr_config *olsr_cnf;          /* The global configuration */
+
 volatile enum app_state app_state = STATE_RUNNING;
 
 static char copyright_string[] __attribute__ ((unused)) =

@@ -1087,7 +1087,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
   }
 
   /* If no arguments, revert to default behaviour */
-  if (1 == opt_argc) {
+  if (1 >= opt_argc) {
     char *argv0_tmp = opt_argv[0];
     free(opt_argv);
     opt_argv = olsr_malloc(3 * sizeof(opt_argv[0]), "default argv");

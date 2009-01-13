@@ -1,0 +1,33 @@
+#
+# VXWORKS SPECIFIC CONFIGURATION. Note, that this is used to
+# test compile with 'make OS=vxworks VXWORKS=vxworksdir'.
+# To compile as vxworks kernel task, you may want to grab
+# the mercurial branch: http://gredler.at/hg/olsrd-vxworks
+#
+
+SRCS +=		$(wildcard src/bsd/*.c src/unix/*.c)
+HDRS +=		$(wildcard src/bsd/*.h src/unix/*.h)
+
+LIBS =
+
+VXWORKS = /usr/src/cross/vxworks-6.6
+
+CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
+CPPFLAGS +=	-Dx_WRS_KERNEL -DCPU=_VX_PENTIUM -I$(VXWORKS)/target/h/wrn/coreip
+
+ifdef OLSRD_PLUGIN
+CFLAGS +=	-fPIC
+LDFLAGS +=	-fPIC
+endif
+
+PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
+INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \
+		/sbin/ldconfig
+
+OS_LIB_PTHREAD = -pthread
+OS_CFLAG_PTHREAD = -pthread
+OS_LIB_DYNLOAD =
+
+# Local Variables:
+# mode: makefile
+# End:
