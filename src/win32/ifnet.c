@@ -551,7 +551,7 @@ int add_hemu_if(struct olsr_if_config *iface)
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
 
-  if(ipequal(&all_zero, &olsr_cnf->main_addr))
+  if(!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->main_addr))
     {
       olsr_cnf->main_addr = iface->hemu_ip;
       OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -756,7 +756,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
     AddrIn->sin_port = 0;
     AddrIn->sin_addr = NewVal.v4;
 
-    if (olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr)
+    if (!olsr_cnf->fixed_origaddr && olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr)
     {
       OLSR_PRINTF(1, "\tMain address change.\n");
 
@@ -931,7 +931,7 @@ int chk_if_up(struct olsr_if_config *IntConf, int DebugLevel __attribute__((unus
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
 
-  if(ipequal(&NullAddr, &olsr_cnf->main_addr))
+  if(!olsr_cnf->fixed_origaddr && ipequal(&NullAddr, &olsr_cnf->main_addr))
   {
     olsr_cnf->main_addr = New->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));

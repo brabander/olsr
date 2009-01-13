@@ -220,9 +220,9 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
       /* Check main addr */
-      if (ip6equal(&olsr_cnf->main_addr.v6, &tmp_saddr6.sin6_addr)) {
-	/* Update main addr */
-	olsr_cnf->main_addr.v6 = tmp_saddr6.sin6_addr;
+      if (!olsr_cnf->fixed_origaddr && ip6equal(&olsr_cnf->main_addr.v6, &tmp_saddr6.sin6_addr)) {
+        /* Update main addr */
+        olsr_cnf->main_addr.v6 = tmp_saddr6.sin6_addr;
       }
 
       /* Update address */
@@ -253,10 +253,10 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
-      if (ip4equal(&olsr_cnf->main_addr.v4, &ifp->ip_addr.v4)) {
-	OLSR_PRINTF(1, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
-	olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
-	olsr_cnf->main_addr.v4 = tmp_saddr4->sin_addr;
+      if (!olsr_cnf->fixed_origaddr && ip4equal(&olsr_cnf->main_addr.v4, &ifp->ip_addr.v4)) {
+        OLSR_PRINTF(1, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
+        olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
+        olsr_cnf->main_addr.v4 = tmp_saddr4->sin_addr;
       }
 
       ifp->ip_addr.v4 = tmp_saddr4->sin_addr;
@@ -345,7 +345,7 @@ int add_hemu_if (struct olsr_if_config *iface)
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
 
-  if (ipequal(&all_zero, &olsr_cnf->main_addr)) {
+  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->main_addr)) {
     olsr_cnf->main_addr = iface->hemu_ip;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
@@ -587,6 +587,8 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 #endif
 
     OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int6_multaddr.sin6_addr));
+
+    ifp->ip_addr.v6 =  ifp->int6_addr.sin6_addr;
   } else {
     /* IP version 4 */
 
@@ -624,6 +626,15 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 
     /* Disable ICMP redirects */
     disable_redirects(ifr_basename, ifp, olsr_cnf->ip_version);
+
+    ifp->ip_addr.v4 = ifp->int_addr.sin_addr;
+  }
+
+  /* check if interface with this IP already exists */
+  if (if_ifwithaddr(&ifp->ip_addr)) {
+    OLSR_PRINTF(1, "Warning, multiple interfaces with the same IP are deprecated. Use 'OriginatorAddress'"
+        " option if you fear a changing main address. Future versions of OLSR might block using multiple"
+        " interfaces with the same IP\n");
   }
 
   /* Get interface index */
@@ -675,7 +686,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 
   if (olsr_cnf->ip_version == AF_INET) {
     /* IP version 4 */
-    ifp->ip_addr.v4 = ifp->int_addr.sin_addr;
     /*
      * We create one socket for each interface and bind
      * the socket to it. This to ensure that we can control
@@ -690,7 +700,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
     }
   } else {
     /* IP version 6 */
-    ifp->ip_addr.v6 =  ifp->int6_addr.sin6_addr;
 
     /*
      * We create one socket for each interface and bind
@@ -736,7 +745,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   /*
    * Set main address if this is the only interface
    */
-  if (ipequal(&all_zero, &olsr_cnf->main_addr)) {
+  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->main_addr)) {
     struct ipaddr_str buf;
     olsr_cnf->main_addr = ifp->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));

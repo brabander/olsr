@@ -937,6 +937,13 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
   case 'L':                    /* Log (string) */
     parse_cfg_log(argstr, cfg);
     break;
+  case 'o':                    /* Originator Address (ip) */
+    if (inet_pton(AF_INET, argstr, &cfg->main_addr) <= 0) {
+      fprintf(stderr, "Failed converting IP address %s for originator address\n", argstr);
+      exit(EXIT_FAILURE);
+    }
+    cfg->fixed_origaddr = true;
+    break;
   default:
     fprintf(stderr, "Unknown arg in line %d.\n", line);
     exit(EXIT_FAILURE);
@@ -1026,6 +1033,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *conf_file_name)
     {"TcRedundancy",             required_argument, 0, 't'}, /* (i) */
     {"TosValue",                 required_argument, 0, 'Z'}, /* (i) */
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
+    {"OriginatorAddress",        required_argument, 0, 'o'}, /* (ip) */
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
     {"HystThrHigh",              required_argument, 0,  0 }, /* ignored */
@@ -1378,6 +1386,8 @@ olsr_get_default_cfg(void)
   cfg->exit_value = EXIT_SUCCESS;
   cfg->max_tc_vtime = 0.0;
   cfg->ioctl_s = 0;
+
+  cfg->fixed_origaddr = false;
 
   list_head_init(&cfg->hna_entries);
   ip_acl_init(&cfg->ipc_nets);

@@ -177,6 +177,7 @@ struct olsr_config {
   unsigned char willingness_auto:1;
   unsigned char clear_screen:1;
   unsigned char del_gws:1;             /* Delete InternetGWs at startup */
+  unsigned char fixed_origaddr:1;
   uint16_t tos;
   uint8_t rtproto;
   uint8_t rttable;
