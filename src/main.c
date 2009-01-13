@@ -105,6 +105,7 @@ main(int argc, char *argv[])
   static struct olsr_cookie_info *pulse_timer_cookie = NULL;
 
   char conf_file_name[FILENAME_MAX];
+  char parse_msg[FILENAME_MAX + 256];
   struct ipaddr_str buf;
 #ifdef WIN32
   WSADATA WsaData;
@@ -174,10 +175,22 @@ main(int argc, char *argv[])
   /*
    * set up configuration prior to processing commandline options
    */
-  if (NULL == (olsr_cnf = olsr_parse_cfg(argc, argv, conf_file_name))) {
-    printf("Using default config values(no configfile)\n");
-    olsr_cnf = olsr_get_default_cfg();
-  }
+  switch (olsr_parse_cfg(argc, argv, conf_file_name, parse_msg, &olsr_cnf)) {
+    case CFG_ERROR:
+      fprintf(stderr, "Error: %s\n", parse_msg);
+      exit(EXIT_FAILURE);
+    break;
+    case CFG_WARN:
+      fprintf(stderr, "Warning: %s\n", parse_msg);
+      /* No exit */
+    break;
+    case CFG_EXIT:
+      exit(EXIT_SUCCESS);
+    break;
+    case CFG_OK:
+      /* Continue */
+    break;
+  } /* switch */
 
   /* initialize logging */
   olsr_log_init();

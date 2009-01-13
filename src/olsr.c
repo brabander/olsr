@@ -90,9 +90,6 @@ static struct pcf *pcf_list;
 
 static uint16_t message_seqno;
 
-/* initialize it with all zeroes */
-const union olsr_ip_addr all_zero = { .v6 = IN6ADDR_ANY_INIT };
-
 /**
  *Initialize the message sequence number as a random value
  */

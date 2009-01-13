@@ -46,6 +46,9 @@
 
 const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT;
 
+/* initialize it with all zeroes */
+const union olsr_ip_addr all_zero = { .v6 = IN6ADDR_ANY_INIT };
+
 int
 prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 {

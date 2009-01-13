@@ -170,57 +170,63 @@ typedef enum {
  */
 
 struct olsr_config {
-  int ip_version;
+  int ip_version;                      /* AF_INET of AF_INET6 */
   size_t ipsize;                       /* Size of address */
-  unsigned char no_fork:1;
-  unsigned char allow_no_interfaces:1;
-  unsigned char willingness_auto:1;
-  unsigned char clear_screen:1;
-  unsigned char del_gws:1;             /* Delete InternetGWs at startup */
-  unsigned char fixed_origaddr:1;
-  uint16_t tos;
-  uint8_t rtproto;
-  uint8_t rttable;
-  uint8_t rttable_default;
-  uint8_t ipc_connections;
-  olsr_fib_metric_options fib_metric;
+
+  unsigned char no_fork:1;             /* Should olsrd run in foreground? */
+  unsigned char allow_no_interfaces:1; /* Should olsrd stop if no ifaces? */
+  unsigned char willingness_auto:1;    /* Willingness in auto mode? */
+  unsigned char clear_screen:1;        /* Clear screen during debug output? */
+  unsigned char del_gws:1;             /* Delete InternetGWs at startup? */
+  unsigned char fixed_origaddr:1;      /* Use a fixed originator addr == Node ID? */
+
+  uint16_t tos;                        /* IP Type of Service Byte */
+  uint8_t rtproto;                     /* Policy routing proto, 0 == operating sys default */
+  uint8_t rttable;                     /* Policy routing table, 254(main) is default */
+  uint8_t rttable_default;             /* Polroute table for default route, 0==use rttable */
+  olsr_fib_metric_options fib_metric;  /* Determines route metrics update mode */
+  uint8_t ipc_connections;             /* Number of allowed IPC connections */
 
   /* logging information */
-  int8_t debug_level;                  /* old style */
-  bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]; /* new style */
-  bool log_target_stderr;
-  char *log_target_file;
-  bool log_target_syslog;
+  int8_t debug_level;                  /* Old style */
+  bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]; /* New style */
+  bool log_target_stderr;              /* Log output to stderr? */
+  char *log_target_file;               /* Filename for log output file, NULL if unused */
+  bool log_target_syslog;              /* Log output also to syslog? */
 
-  struct plugin_entry *plugins;
-  struct list_node hna_entries;
-  struct ip_acl ipc_nets;
-  struct olsr_if_config *if_configs;
-  uint32_t pollrate;                   /* in microseconds */
-  float nic_chgs_pollrate;
-  uint8_t tc_redundancy;
-  uint8_t mpr_coverage;
-  uint8_t lq_fish;
-  float lq_dinter;
-  uint8_t lq_dlimit;
-  uint8_t willingness;
+  struct plugin_entry *plugins;        /* List of plugins to load with plparams */
+  struct list_node hna_entries;        /* List of manually configured HNA entries */
+  struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */
+  struct olsr_if_config *if_configs;   /* List of devices to be used by olsrd */
 
-  /* Stuff set by olsrd */
+  uint32_t pollrate;                   /* Main loop poll rate, in microseconds */
+  float nic_chgs_pollrate;             /* Interface poll rate */
+  float lq_nat_thresh;                 /* Link quality NAT threshold, 1.0 == unused */
+  uint8_t tc_redundancy;               /* TC anncoument mode, 0=only MPR, 1=MPR+MPRS, 2=All sym neighs */
+  uint8_t mpr_coverage;                /* How many additional MPRs should be selected */
+  uint8_t lq_fish;                     /* 0==Fisheye off, 1=Fisheye on */
+  float lq_dinter;                     /* Dijkstra Calculation interval */
+  uint8_t lq_dlimit;                   /* Dijkstra Calculation limit */
+  uint8_t willingness;                 /* Manual Configured Willingness value */
+
+  /*
+   * Someone has added global variables to the config struct.
+   * Because this saves binary link info we keep it that way.
+   * ========= Please add globals below this line. =========
+   */
+
   uint16_t system_tick_divider;        /* Tick resolution */
   union olsr_ip_addr main_addr;        /* Main address of this node */
-  float will_int;
+  float will_int;                      /* Willingness update interval if willingness_auto */
   int exit_value;                      /* Global return value for process termination */
-  float max_tc_vtime;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
 #if defined linux
   int rts_linux;                       /* Socket used for rtnetlink messages */
 #endif
-
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   int rts_bsd;                         /* Socket used for route changes on BSDs */
 #endif
-  float lq_nat_thresh;
 };
 
 /*
@@ -231,9 +237,17 @@ extern struct olsr_config *EXPORT(olsr_cnf);
 /*
  * Interface to parser
  */
-struct olsr_config *olsr_parse_cfg(int, char **, const char *);
-int olsr_sanity_check_cfg(struct olsr_config *);
-void olsr_free_cfg(struct olsr_config *);
+
+typedef enum {
+  CFG_ERROR,                           /* Severe parsing error, e.g. file not found, mixed up args */
+  CFG_WARN,                            /* Non-severe error, e.g. use of deprecated option */
+  CFG_EXIT,                            /* Given options will exit() e.g. "--version" or "--help" */
+  CFG_OK                               /* Config is parsed and does not have any errors */
+} olsr_parse_cfg_result;
+
+olsr_parse_cfg_result olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config **rcfg);
+int olsr_sanity_check_cfg(struct olsr_config *cfg);
+void olsr_free_cfg(struct olsr_config *cfg);
 struct olsr_config *olsr_get_default_cfg(void);
 
 /*

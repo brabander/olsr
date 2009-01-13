@@ -49,6 +49,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+extern const union olsr_ip_addr all_zero;
+
 struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
 } USED_ONLY_FOR_DEBUG;

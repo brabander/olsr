@@ -446,10 +446,6 @@ int add_hemu_if (struct olsr_if_config *iface)
 		     ifp,
                      hna_gen_timer_cookie->ci_id);
 
-  /* Recalculate max topology hold time */
-  if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval) {
-    olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
-  }
   ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
@@ -784,10 +780,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 		     ifp,
                      hna_gen_timer_cookie->ci_id);
 
-  /* Recalculate max topology hold time */
-  if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval) {
-    olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
-  }
   ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);

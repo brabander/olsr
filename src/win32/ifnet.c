@@ -657,10 +657,6 @@ int add_hemu_if(struct olsr_if_config *iface)
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, ifp,
                      hna_gen_timer_cookie->ci_id);
 
-  /* Recalculate max topology hold time */
-  if(olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
-    olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
-
   ifp->hello_etime = (olsr_reltime)(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   ifp->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
@@ -960,9 +956,6 @@ int chk_if_up(struct olsr_if_config *IntConf, int DebugLevel __attribute__((unus
     olsr_start_timer(IntConf->cnf->hna_params.emission_interval * MSEC_PER_SEC,
                      HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New,
                      hna_gen_timer_cookie->ci_id);
-
-  if(olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
-    olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
 
   New->hello_etime = (olsr_reltime)(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC);
   New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);

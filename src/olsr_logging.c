@@ -63,19 +63,6 @@ static bool log_global_mask[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT];
 static bool log_initialized = false;
 static FILE *log_fileoutput = NULL;
 
-/* keep this in the same order as the enums with the same name ! */
-const char *LOG_SOURCE_NAMES[] = {
-  "all",
-  "logging",
-};
-
-const char *LOG_SEVERITY_NAMES[] = {
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR"
-};
-
 static void olsr_log_stderr (enum log_severity severity, enum log_source source,
     const char *file, int line, char *buffer, int prefixLength);
 static void olsr_log_syslog (enum log_severity severity, enum log_source source,

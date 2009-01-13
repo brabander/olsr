@@ -50,8 +50,6 @@ extern bool changes_neighborhood;
 extern bool changes_hna;
 extern bool changes_force; /* Maybe static */
 
-extern const union olsr_ip_addr all_zero;
-
 void
 EXPORT(register_pcf)(int (*)(int, int, int));
 
