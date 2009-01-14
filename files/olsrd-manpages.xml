@@ -647,6 +647,88 @@
         </varlistentry>
 
         <varlistentry>
+          <term><option>-L options</option> or <option>--log=options</option></term>
+
+          <listitem>
+            <para>This option controls the output of the logging system of olsrd.
+            The options are a comma-separated string of keys and key/value pairs.
+            Activating a lower level logging output (DEBUG, WARN, INFO, ERROR)
+            will automatically activate all higher level outputs of the source too.
+            All error messages will be activated unless one or multiple log sources
+            are specified for error logging level.</para>
+
+            <variablelist>
+              <varlistentry>
+                <term><option>list</option></term>
+                <listitem>
+                  <para>lists all implemented log sources and log targets. <productname>olsrd</productname>
+                  terminates after displaying this values.</para>
+                </listitem>
+              </varlistentry>
+              
+              <varlistentry>
+                <term><option>stderr</option></term>
+                <listitem>
+                  <para>activates stderr as a logging target. If no target is activated, stderr is considered
+                  the default target.</para>
+                </listitem>
+              </varlistentry>
+              
+              <varlistentry>
+                <term><option>syslog</option></term>
+                <listitem>
+                  <para>activates the syslog as a logging target.</para>
+                </listitem>
+              </varlistentry>
+              
+              <varlistentry>
+                <term><option>file=[filename]</option></term>
+                <listitem>
+                  <para>activates a user specified file as a logging target. All logging output will be
+                  appended to the file.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>debug=[logsource1/logsource2/...]</option></term>
+                <listitem>
+                  <para>activates the debug output for a number of logfiles. Debugging output will display
+                  lots of internal information about a logging source, so be careful to activate too many
+                  sources. If not specified, debug output is switched off.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>info=[logsource1/logsource2/...]</option></term>
+                <listitem>
+                  <para>activates information output for a number of logfiles. Information output will
+                  display a small amount of data about the log source.  If not specified, information output
+                  is switched off.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>warn=[logsource1/logsource2/...]</option></term>
+                <listitem>
+                  <para>activates warnings for a number of logfiles. Warnings are generated when an error
+                  has happened within the logging source, but <productname>olsrd</productname> can recover
+                  from the problem and continue to run. If not specified, warning output is switched off.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><option>error=[logsource1/logsource2/...]</option></term>
+                <listitem>
+                  <para>activates errors for a number of logfiles. Most errors are generated if an
+                  unrecoverable problem happens, so <productname>olsrd</productname> will shut down most
+                  times after an error. If not specified, error output is activated.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
           <term><option><replaceable>interface1</replaceable>
           interface2...</option></term>
 

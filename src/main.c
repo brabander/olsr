@@ -177,11 +177,13 @@ main(int argc, char *argv[])
    */
   switch (olsr_parse_cfg(argc, argv, conf_file_name, parse_msg, &olsr_cnf)) {
     case CFG_ERROR:
-      fprintf(stderr, "Error: %s\n", parse_msg);
+      if (parse_msg[0])
+        fprintf(stderr, "Error: %s\n", parse_msg);
       exit(EXIT_FAILURE);
     break;
     case CFG_WARN:
-      fprintf(stderr, "Warning: %s\n", parse_msg);
+      if (parse_msg[0])
+        fprintf(stderr, "Warning: %s\n", parse_msg);
       /* No exit */
     break;
     case CFG_EXIT:
