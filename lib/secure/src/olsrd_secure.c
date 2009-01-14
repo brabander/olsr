@@ -338,7 +338,7 @@ add_signature(uint8_t *pck, int *size)
   msg->olsr_msgtype = MESSAGE_TYPE;
   msg->olsr_vtime = 0;
   msg->olsr_msgsize = htons(sizeof(struct s_olsrmsg));
-  memcpy(&msg->originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&msg->originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
   msg->ttl = 1;
   msg->hopcnt = 0;
   msg->seqno = htons(get_msg_seqno());
@@ -600,7 +600,7 @@ send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_h
   cmsg.olsr_msgtype = TYPE_CHALLENGE;
   cmsg.olsr_vtime = 0;
   cmsg.olsr_msgsize = htons(sizeof(struct challengemsg));
-  memcpy(&cmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&cmsg.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
   cmsg.ttl = 1;
   cmsg.hopcnt = 0;
   cmsg.seqno = htons(get_msg_seqno());
@@ -978,7 +978,7 @@ send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
   crmsg.olsr_msgtype = TYPE_CRESPONSE;
   crmsg.olsr_vtime = 0;
   crmsg.olsr_msgsize = htons(sizeof(struct c_respmsg));
-  memcpy(&crmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&crmsg.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
   crmsg.ttl = 1;
   crmsg.hopcnt = 0;
   crmsg.seqno = htons(get_msg_seqno());
@@ -1058,7 +1058,7 @@ send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
   rrmsg.olsr_msgtype = TYPE_RRESPONSE;
   rrmsg.olsr_vtime = 0;
   rrmsg.olsr_msgsize = htons(sizeof(struct r_respmsg));
-  memcpy(&rrmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&rrmsg.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
   rrmsg.ttl = 1;
   rrmsg.hopcnt = 0;
   rrmsg.seqno = htons(get_msg_seqno());

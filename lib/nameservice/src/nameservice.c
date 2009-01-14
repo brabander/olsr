@@ -404,13 +404,13 @@ name_init(void)
 	for (name = my_names; name != NULL; name = name->next) {
 		if (ipequal(&name->ip, &ipz)) {
 			OLSR_PRINTF(2, "NAME PLUGIN: insert main addr for name %s \n", name->name);
-			name->ip = olsr_cnf->main_addr;
+			name->ip = olsr_cnf->router_id;
 		}
 	}
 	for (name = my_forwarders; name != NULL; name = name->next) {
 		if (name->ip.v4.s_addr == 0) {
 			OLSR_PRINTF(2, "NAME PLUGIN: insert main addr for name %s \n", name->name);
-			name->ip = olsr_cnf->main_addr;
+			name->ip = olsr_cnf->router_id;
 		}
 	}
 
@@ -624,7 +624,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 		/* IPv4 */
 		message->v4.olsr_msgtype = MESSAGE_TYPE;
 		message->v4.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
-		memcpy(&message->v4.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+		memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
 		message->v4.ttl = MAX_TTL;
 		message->v4.hopcnt = 0;
 		message->v4.seqno = htons(get_msg_seqno());
@@ -639,7 +639,7 @@ olsr_namesvc_gen(void *foo __attribute__((unused)))
 		/* IPv6 */
 		message->v6.olsr_msgtype = MESSAGE_TYPE;
 		message->v6.olsr_vtime = reltime_to_me(my_timeout * MSEC_PER_SEC);
-		memcpy(&message->v6.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+		memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
 		message->v6.ttl = MAX_TTL;
 		message->v6.hopcnt = 0;
 		message->v6.seqno = htons(get_msg_seqno());
@@ -699,7 +699,7 @@ olsr_parser(union olsr_message *m,
 
 	/* Check if message originated from this node.
 	If so - back off */
-	if(ipequal(&originator, &olsr_cnf->main_addr))
+	if(ipequal(&originator, &olsr_cnf->router_id))
 		return false;
 
 	/* Check that the neighbor this message was received from is symmetric.

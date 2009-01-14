@@ -74,7 +74,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
   lq_hello->comm.vtime = me_to_reltime(outif->valtimes.hello);
   lq_hello->comm.size = 0;
 
-  lq_hello->comm.orig = olsr_cnf->main_addr;
+  lq_hello->comm.orig = olsr_cnf->router_id;
 
   lq_hello->comm.ttl = 1;
   lq_hello->comm.hops = 0;
@@ -165,7 +165,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
   lq_tc->comm.vtime = me_to_reltime(outif->valtimes.tc);
   lq_tc->comm.size = 0;
 
-  lq_tc->comm.orig = olsr_cnf->main_addr;
+  lq_tc->comm.orig = olsr_cnf->router_id;
 
   if (olsr_cnf->lq_fish > 0)
   {
@@ -183,7 +183,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
 
   lq_tc->comm.hops = 0;
 
-  lq_tc->from = olsr_cnf->main_addr;
+  lq_tc->from = olsr_cnf->router_id;
 
   lq_tc->ansn = get_local_ansn();
 

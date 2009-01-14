@@ -1023,7 +1023,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     return parse_cfg_log(argstr, rcfg, rmsg);
     break;
   case 'o':                    /* Originator Address (ip) */
-    if (inet_pton(AF_INET, argstr, &rcfg->main_addr) <= 0) {
+    if (inet_pton(AF_INET, argstr, &rcfg->router_id) <= 0) {
       sprintf(rmsg, "Failed converting IP address %s for originator address\n", argstr);
       return CFG_ERROR;
     }
@@ -1126,7 +1126,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"TcRedundancy",             required_argument, 0, 't'}, /* (i) */
     {"TosValue",                 required_argument, 0, 'Z'}, /* (i) */
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
-    {"OriginatorAddress",        required_argument, 0, 'o'}, /* (ip) */
+    {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
     {"HystThrHigh",              required_argument, 0,  0 }, /* ignored */
@@ -1514,7 +1514,7 @@ olsr_get_default_cfg(void)
   assert(cfg->willingness == 0);
 
   assert(cfg->system_tick_divider == 0);
-  assert(0 == memcmp(&all_zero, &cfg->main_addr, sizeof(cfg->main_addr)));
+  assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));
   cfg->will_int = 10 * HELLO_INTERVAL;
   cfg->exit_value = EXIT_SUCCESS;
 

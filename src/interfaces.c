@@ -187,16 +187,16 @@ remove_interface(struct interface **pinterf)
   net_remove_buffer(ifp);
 
   /* Check main addr */
-  if (!olsr_cnf->fixed_origaddr && ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
+  if (!olsr_cnf->fixed_origaddr && ipequal(&olsr_cnf->router_id, &ifp->ip_addr)) {
     if (list_is_empty(&interface_head)) {
       /* No more interfaces */
-      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
+      memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);
       OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
     } else {
 
       /* Grab the first interface in the list. */
-      olsr_cnf->main_addr = list2interface(interface_head.next)->ip_addr;
-      olsr_ip_to_string(&buf, &olsr_cnf->main_addr);
+      olsr_cnf->router_id = list2interface(interface_head.next)->ip_addr;
+      olsr_ip_to_string(&buf, &olsr_cnf->router_id);
       OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
     }

@@ -313,7 +313,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
      */
 
     /* Should be the same for IPv4 and IPv6 */
-    if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->main_addr)
+    if (ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->router_id)
         || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
 #ifdef DEBUG
       struct ipaddr_str buf;

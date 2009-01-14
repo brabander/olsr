@@ -58,7 +58,7 @@ static char* lookup_position_latlon(union olsr_ip_addr *ip)
   struct db_entry *entry;
   struct list_node *list_head, *list_node;
 
-  if (ipequal(ip, &olsr_cnf->main_addr)) {
+  if (ipequal(ip, &olsr_cnf->router_id)) {
     return my_latlon_str;
   }
 
@@ -97,20 +97,20 @@ void mapwrite_work(FILE* fmap)
     {
       if (olsr_cnf->ip_version == AF_INET)
       {
-        if (!(ip4equal((struct in_addr *)&olsr_cnf->main_addr, &ifs->interf->int_addr.sin_addr)))
+        if (!(ip4equal((struct in_addr *)&olsr_cnf->router_id, &ifs->interf->int_addr.sin_addr)))
         {
           if (0 > fprintf(fmap, "Mid('%s','%s');\n",
-            olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+            olsr_ip_to_string(&strbuf1, &olsr_cnf->router_id),
             olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int_addr.sin_addr)))
           {
             return;
           }
         }
       }
-      else if (!(ip6equal((struct in6_addr *)&olsr_cnf->main_addr, &ifs->interf->int6_addr.sin6_addr)))
+      else if (!(ip6equal((struct in6_addr *)&olsr_cnf->router_id, &ifs->interf->int6_addr.sin6_addr)))
       {
         if (0 > fprintf(fmap, "Mid('%s','%s');\n",
-          olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr),
+          olsr_ip_to_string(&strbuf1, &olsr_cnf->router_id),
           olsr_ip_to_string(&strbuf2, (union olsr_ip_addr *)&ifs->interf->int6_addr.sin6_addr)))
         {
           return;
@@ -133,7 +133,7 @@ void mapwrite_work(FILE* fmap)
   lookup_defhna_latlon(&ip);
   sprintf(my_latlon_str, "%f,%f,%d", my_lat, my_lon, get_isdefhna_latlon());
   if (0 > fprintf(fmap, "Self('%s',%s,'%s','%s');\n",
-    olsr_ip_to_string(&strbuf1, &olsr_cnf->main_addr), my_latlon_str,
+    olsr_ip_to_string(&strbuf1, &olsr_cnf->router_id), my_latlon_str,
     olsr_ip_to_string(&strbuf2, &ip), my_names->name))
   {
     return;

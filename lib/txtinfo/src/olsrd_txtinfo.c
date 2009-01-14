@@ -547,7 +547,7 @@ static int ipc_print_hna(struct ipc_conn *conn)
 
     /* Announced HNA entries */
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
-        if (ipc_print_hna_entry(&conn->resp, &hna->net, &olsr_cnf->main_addr) < 0) {
+        if (ipc_print_hna_entry(&conn->resp, &hna->net, &olsr_cnf->router_id) < 0) {
             return -1;
         }
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()

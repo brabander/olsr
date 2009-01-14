@@ -132,7 +132,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   /*
    * Safety net against loss of the last main IP address.
    */
-  if (ipequal(&olsr_cnf->main_addr, &all_zero)) {
+  if (ipequal(&olsr_cnf->router_id, &all_zero)) {
     return NULL;
   }
 
@@ -208,7 +208,7 @@ olsr_change_myself_tc(void)
     /*
      * Check if there was a change.
      */
-    if (ipequal(&tc_myself->addr, &olsr_cnf->main_addr)) {
+    if (ipequal(&tc_myself->addr, &olsr_cnf->router_id)) {
       return;
     }
 
@@ -221,7 +221,7 @@ olsr_change_myself_tc(void)
   /*
    * The old entry for ourselves is gone, generate a new one and trigger SPF.
    */
-  tc_myself = olsr_add_tc_entry(&olsr_cnf->main_addr);
+  tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
   changes_topology = true;
 }
 

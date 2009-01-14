@@ -413,7 +413,7 @@ ipc_send_net_info(int fd)
   net_msg.ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
 
   /* Main addr */
-  net_msg.main_addr = olsr_cnf->main_addr;
+  net_msg.main_addr = olsr_cnf->router_id;
 
   /*
   printf("\t");

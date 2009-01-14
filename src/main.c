@@ -343,7 +343,7 @@ main(int argc, char *argv[])
   /* activate LQ algorithm */
   init_lq_handler();
 
-  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);

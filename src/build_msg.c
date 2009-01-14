@@ -193,7 +193,7 @@ serialize_mid4(struct interface *ifp)
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   /* Set main(first) address */
-  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
+  m->v4.originator = olsr_cnf->router_id.v4.s_addr;
   m->v4.olsr_msgtype = MID_MESSAGE;
   m->v4.olsr_vtime = ifp->valtimes.mid;
 
@@ -201,7 +201,7 @@ serialize_mid4(struct interface *ifp)
 
   /* Don't add the main address... it's already there */
   OLSR_FOR_ALL_INTERFACES(ifs) {
-      if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
+      if(!ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
 	{
 #ifdef DEBUG
           struct ipaddr_str buf;
@@ -298,13 +298,13 @@ serialize_mid6(struct interface *ifp)
   m->v6.olsr_msgtype = MID_MESSAGE;
   m->v6.olsr_vtime = ifp->valtimes.mid;
   /* Set main(first) address */
-  m->v6.originator = olsr_cnf->main_addr.v6;
+  m->v6.originator = olsr_cnf->router_id.v6;
 
   addrs6 = m->v6.message.mid.mid_addr;
 
   /* Don't add the main address... it's already there */
   OLSR_FOR_ALL_INTERFACES(ifs) {
-      if(!ipequal(&olsr_cnf->main_addr, &ifs->ip_addr))
+      if(!ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
 	{
 #ifdef DEBUG
           struct ipaddr_str buf;
@@ -396,7 +396,7 @@ serialize_hna4(struct interface *ifp)
 
 
   /* Fill header */
-  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
+  m->v4.originator = olsr_cnf->router_id.v4.s_addr;
   m->v4.hopcnt = 0;
   m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
@@ -484,7 +484,7 @@ serialize_hna6(struct interface *ifp)
   m = (union olsr_message *)msg_buffer;
 
   /* Fill header */
-  m->v6.originator = olsr_cnf->main_addr.v6;
+  m->v6.originator = olsr_cnf->router_id.v6;
   m->v6.hopcnt = 0;
   m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = HNA_MESSAGE;

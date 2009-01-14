@@ -141,7 +141,7 @@ ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
   struct ipaddr_str mainaddrstrbuf, strbuf;
   olsr_linkcost etx = 0.0;
   const char *style;
-  const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->main_addr);
+  const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->router_id);
   struct lqtextbuffer lqbuffer;
 
   if (neighbor->status == 0) { /* non SYM */
@@ -302,7 +302,7 @@ pcf_event(int ipc_connection,
     /* Local HNA entries */
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
       ipc_print_net(ipc_connection,
-		    &olsr_cnf->main_addr,
+		    &olsr_cnf->router_id,
                     &hna->net);
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
     ipc_send_str(ipc_connection, "}\n\n");

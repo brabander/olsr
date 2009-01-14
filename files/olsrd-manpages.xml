@@ -1181,6 +1181,17 @@
             <replaceable>4</replaceable>.</para>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term><option>RouterId</option>
+          <replaceable>ipaddress</replaceable></term>
+
+          <listitem>
+            <para>This value controls sets the main ip address (called originator
+            address in OLSR) to a fixed value. This prevents route loss when the
+            first interface of a router vanishes.</para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </refsect1>
 

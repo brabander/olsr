@@ -220,9 +220,9 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
       /* Check main addr */
-      if (!olsr_cnf->fixed_origaddr && ip6equal(&olsr_cnf->main_addr.v6, &tmp_saddr6.sin6_addr)) {
+      if (!olsr_cnf->fixed_origaddr && ip6equal(&olsr_cnf->router_id.v6, &tmp_saddr6.sin6_addr)) {
         /* Update main addr */
-        olsr_cnf->main_addr.v6 = tmp_saddr6.sin6_addr;
+        olsr_cnf->router_id.v6 = tmp_saddr6.sin6_addr;
       }
 
       /* Update address */
@@ -253,10 +253,10 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
-      if (!olsr_cnf->fixed_origaddr && ip4equal(&olsr_cnf->main_addr.v4, &ifp->ip_addr.v4)) {
+      if (!olsr_cnf->fixed_origaddr && ip4equal(&olsr_cnf->router_id.v4, &ifp->ip_addr.v4)) {
         OLSR_PRINTF(1, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
         olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
-        olsr_cnf->main_addr.v4 = tmp_saddr4->sin_addr;
+        olsr_cnf->router_id.v4 = tmp_saddr4->sin_addr;
       }
 
       ifp->ip_addr.v4 = tmp_saddr4->sin_addr;
@@ -345,10 +345,10 @@ int add_hemu_if (struct olsr_if_config *iface)
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
 
-  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->main_addr)) {
-    olsr_cnf->main_addr = iface->hemu_ip;
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->router_id)) {
+    olsr_cnf->router_id = iface->hemu_ip;
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
 
   ifp->int_mtu = OLSR_DEFAULT_MTU - (olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE);
@@ -741,11 +741,11 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   /*
    * Set main address if this is the only interface
    */
-  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->main_addr)) {
+  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->router_id)) {
     struct ipaddr_str buf;
-    olsr_cnf->main_addr = ifp->ip_addr;
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+    olsr_cnf->router_id = ifp->ip_addr;
+    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
 
   /*
