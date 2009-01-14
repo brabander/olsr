@@ -883,6 +883,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term><option>log</option>
+          <replaceable>logging_configuration_string</replaceable></term>
+
+          <listitem>
+            <para>This config line controls the output of the logging system of
+            <productname>olsrd</productname>. For details see the description of
+            the --log command line parameter.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term><option>delgw</option>, <option>dispin</option>,
           <option>dispout</option>, <option>help</option>,
           <option>hemu</option>, <option>iface</option>, <option>ipc</option>,
