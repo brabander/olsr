@@ -43,7 +43,10 @@
 #
 
 # first determine the tarball name
+VERS=`grep -E "^VERS" ../Makefile | sed 's/^VERS\ *//'`
 NAME=`grep -E "^VERS" ../Makefile | sed 's/^VERS..../olsrd-/;s/ *$//'`
+CHGSET=`hg log -r tip|grep changeset|sed -e s/changeset:\ */\changeset\ /`
+
 #empty the directory in case it exists already
 rm -rf /tmp/$NAME
 mkdir /tmp/$NAME
@@ -51,6 +54,7 @@ mkdir /tmp/$NAME
 cd ..;make uberclean
 # sync the stuff to a working directory
 rsync -a . /tmp/$NAME/ --exclude=.hg* --exclude=*.rej --delete
+sed -i -e "s/^VERS.*$/VERS $VERS $CHGSET/" /tmp/$NAME/Makefile
 cd /tmp/
 echo "### creating /tmp/$NAME.tar.gz"
 tar -czf /tmp/$NAME.tar.gz $NAME
