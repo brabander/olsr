@@ -42,27 +42,10 @@
 #define OLSR_LOGGING_H_
 
 #include "defs.h"
+#include "olsr_logging_data.h"
 
 #define LOGBUFFER_SIZE 1024
 #define MAX_LOG_HANDLER 8
-
-enum log_source {
-  LOG_ALL,
-  LOG_LOGGING,
-
-  /* this one must be the last of the enums ! */
-  LOG_SOURCE_COUNT
-};
-
-enum log_severity {
-  SEVERITY_DEBUG,
-  SEVERITY_INFO,
-  SEVERITY_WARN,
-  SEVERITY_ERROR,
-
-  /* this one must be the last of the enums ! */
-  LOG_SEVERITY_COUNT
-};
 
 /**
  * these four macros should be used to generate OLSR logging output
@@ -115,8 +98,5 @@ void EXPORT(olsr_log_updatemask) (void);
 
 void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...)
     __attribute__((format(printf, 5, 6)));
-
-extern const char *LOG_SOURCE_NAMES[];
-extern const char *LOG_SEVERITY_NAMES[];
 
 #endif /* OLSR_LOGGING_H_ */

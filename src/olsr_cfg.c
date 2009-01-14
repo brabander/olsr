@@ -40,6 +40,7 @@
  */
 
 #include "olsr_cfg.h"
+#include "olsr_logging_data.h"
 
 #include "olsr.h"
 #include "parser.h"
@@ -56,24 +57,6 @@
 #include <getopt.h>
 #include <errno.h>
 #include <assert.h>
-
-/*
- * String constants for olsr_log_* as used in olsrd.conf.
- * Keep this in the same order as the log_source and
- * log_severity enums (see olsr_loggin.h).
- */
-
-const char *LOG_SOURCE_NAMES[] = {
-  "all",
-  "logging",
-};
-
-const char *LOG_SEVERITY_NAMES[] = {
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR"
-};
 
 #ifdef DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
