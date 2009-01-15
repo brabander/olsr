@@ -119,10 +119,12 @@ install_olsrd:	install_bin
 		@echo 'Edit $(CFGFILE) before running olsrd!!'
 		@echo '-------------------------------------------'
 		@echo 'Installing manpages $(EXENAME)(8) and $(CFGNAME)(5)'
-		mkdir -p '$(MANDIR)/man8'
-		cp 'files/olsrd.8.gz' '$(MANDIR)/man8/$(EXENAME).8.gz'
+		mkdir -p '$(MANDIR)/man3'
+		cp 'files/olsrd-metrics.3.gz' '$(MANDIR)/man3/olsrd-metrics.3.gz'
 		mkdir -p '$(MANDIR)/man5'
 		cp 'files/olsrd.conf.5.gz' '$(MANDIR)/man5/$(CFGNAME).5.gz'
+		mkdir -p '$(MANDIR)/man8'
+		cp 'files/olsrd.8.gz' '$(MANDIR)/man8/$(EXENAME).8.gz'
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)

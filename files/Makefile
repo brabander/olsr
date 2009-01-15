@@ -1,5 +1,6 @@
 MANS += olsrd.8.gz
 MANS += olsrd.conf.5.gz
+MANS += olsrd-metrics.3
 
 # Requires 'apt-get install docbook2x docbook-xml'
 $(MANS): olsrd-manpages.xml

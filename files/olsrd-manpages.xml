@@ -76,7 +76,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Andreas Tønnesen &lt;<email>andretoæolsr.org&gt;</email></term>
+      <term>Andreas Tønnesen <email>andretoæolsr.org</email></term>
 
       <listitem>
         <para>Active 2003-2006: Funder of the project, active contributor and
@@ -104,7 +104,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Thomas Lopatic &lt;<email>thomasælopatic.de</email>&gt;</term>
+      <term>Thomas Lopatic <email>thomasælopatic.de</email></term>
 
       <listitem>
         <para>Active 2004-2007: Implemented the Link Quality Extensions (ETX),
@@ -114,7 +114,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Bruno Randolf &lt;<email>br1æeinfach.org</email>&gt;</term>
+      <term>Bruno Randolf <email>br1æeinfach.org</email></term>
 
       <listitem>
         <para>Active 2004-2005: Solved lots of wireless driver/hardware
@@ -126,7 +126,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Sven-Ola Tücke &lt;<email>sven-olaægmx.de</email>&gt;</term>
+      <term>Sven-Ola Tücke <email>sven-olaægmx.de</email></term>
 
       <listitem>
         <para>Active 2004-[...]: Started the olsrd-based <ulink
@@ -139,7 +139,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Jens Nachtigall &lt;<email>nachtigallæweb.de</email>&gt;</term>
+      <term>Jens Nachtigall <email>nachtigallæweb.de</email></term>
 
       <listitem>
         <para>Active 2004-2005: Contributed bug fixes, contributed to dyn_gw
@@ -148,8 +148,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Corinna 'Elektra' Aichele
-      &lt;<email>onelektraægmx.net</email>&gt;</term>
+      <term>Corinna 'Elektra' Aichele <email>onelektraægmx.net</email></term>
 
       <listitem>
         <para>Active 2004-2006: Contributed ideas and valuable comments, also
@@ -158,8 +157,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Erik Tromp
-      &lt;<email>erik.trompænl.thalesgroup.com</email>&gt;</term>
+      <term>Erik Tromp <email>erik.trompænl.thalesgroup.com</email></term>
 
       <listitem>
         <para>Active 2006-[...]: Created the <ulink
@@ -169,7 +167,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Lorenz Schori &lt;<email>lorenz.schoriægmx.ch</email>&gt;</term>
+      <term>Lorenz Schori <email>lorenz.schoriægmx.ch</email></term>
 
       <listitem>
         <para>Active 2006-[...]: Created the txtinfo plugin and contributed
@@ -178,7 +176,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>John Hay &lt;<email>jhayæmeraka.org.za</email>&gt;</term>
+      <term>John Hay <email>jhayæmeraka.org.za</email></term>
 
       <listitem>
         <para>Active 2006-2008: Contributed maintenance and bug fixes for
@@ -188,7 +186,7 @@
 
     <varlistentry>
       <term>Immo 'FaUl' Wehrenberg
-      &lt;<email>immoæchaostreff-dortmund.de</email>&gt;</term>
+      <email>immoæchaostreff-dortmund.de</email></term>
 
       <listitem>
         <para>Active 2006-2008: Contributed the quagga plugin.</para>
@@ -196,8 +194,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Vasilis Tsiligiannis
-      &lt;<email>acinonyxsæyahoo.gr</email>&gt;</term>
+      <term>Vasilis Tsiligiannis <email>acinonyxsæyahoo.gr</email></term>
 
       <listitem>
         <para>Active 2007-[...]: Fixes and maint for the quagga plugin.</para>
@@ -218,7 +215,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Aaron Kaplan &lt;<email>aaronælo-res.org</email>&gt;</term>
+      <term>Aaron Kaplan <email>aaronælo-res.org</email></term>
 
       <listitem>
         <para>Active 2005-[...]: Initiator/Coordinator of the OLSRD-NG
@@ -227,7 +224,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Bernd Petrovitsch &lt;<email>berndæfirmix.at</email>&gt;</term>
+      <term>Bernd Petrovitsch <email>berndæfirmix.at</email></term>
 
       <listitem>
         <para>Active 2006-[...]: Patch-juggler for the olsrd repository,
@@ -238,7 +235,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Hannes Gredler &lt;<email>hannesægredler.at</email>&gt;</term>
+      <term>Hannes Gredler <email>hannesægredler.at</email></term>
 
       <listitem>
         <para>Active 2007-[...] Contributed the SPF refactoring (routing code
@@ -250,7 +247,7 @@
 
     <varlistentry>
       <term>Thomas Martin
-      &lt;<email>thomas.martinærohde-schwarz.com</email>&gt;</term>
+      <email>thomas.martinærohde-schwarz.com</email></term>
 
       <listitem>
         <para>Active 2008: Code base maintenance (mainly BSD and
@@ -259,7 +256,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Henning Rogge &lt;<email>roggeæfgan.de</email>&gt;</term>
+      <term>Henning Rogge <email>roggeæfgan.de</email></term>
 
       <listitem>
         <para>Active 2008-[...]: Reworked the LQ/ETX algorithm, contributed
@@ -270,7 +267,7 @@
 
     <varlistentry>
       <term>Markus Kittenberger
-      &lt;<email>Markus.Kittenbergerægmx.at</email>&gt;</term>
+      <email>Markus.Kittenbergerægmx.at</email></term>
 
       <listitem>
         <para>Active 2008-[...]: Policy routing changes.</para>
@@ -2770,8 +2767,7 @@
     </refentryinfo>
 
     <refmeta>
-      <refentrytitle id="olsrd_metrics_3-title">olsrd-metrics
-      plugin</refentrytitle>
+      <refentrytitle id="olsrd_metrics_3-title">olsrd-metrics</refentrytitle>
 
       <manvolnum>3</manvolnum>
     </refmeta>
