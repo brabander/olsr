@@ -1,5 +1,17 @@
 #!/bin/sh
 
+# Working notes on license status: it's a bit mixed here
+#
+# gui/win32/Main/TrayIcon.cpp|h have none
+# gui/win32/Main/StdAfx.cpp/h are generated (have none)
+# gui/win32/Main/resource.h is generated (has none)
+# gui/linux-gtk/* is GPLv2
+# contrib/netsimpcap is GPLv3
+# src/win32/ce/ws2tcpip.h has none
+# src/olsr_ip_prefix_list.h has none
+# lib/secure/src/md5.h is some homegrown RSA Inc.
+# lib/quagga states GPLv2 or LGPLv2
+
 bsd_revised()
   cat<<EOF
 

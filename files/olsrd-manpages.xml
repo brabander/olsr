@@ -15,7 +15,7 @@
 
         <surname>Tücke</surname>
 
-        <email>sven-ola@gmx.de</email>
+        <email>sven-olaægmx.de</email>
       </author>
     </authorgroup>
 
@@ -76,7 +76,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Andreas Tønnesen</term>
+      <term>Andreas Tønnesen &lt;<email>andretoæolsr.org&gt;</email></term>
 
       <listitem>
         <para>Active 2003-2006: Funder of the project, active contributor and
@@ -104,7 +104,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Thomas Lopatic</term>
+      <term>Thomas Lopatic &lt;<email>thomasælopatic.de</email>&gt;</term>
 
       <listitem>
         <para>Active 2004-2007: Implemented the Link Quality Extensions (ETX),
@@ -114,30 +114,32 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Bruno Randolf</term>
+      <term>Bruno Randolf &lt;<email>br1æeinfach.org</email>&gt;</term>
 
       <listitem>
         <para>Active 2004-2005: Solved lots of wireless driver/hardware
         issues, contributed to olsrd implementation (fixes, cleanups),
-        contributed to TAS and Dotdraw plugins, created the Nameservice
-        plugin.</para>
+        contributed to TAS and Dotdraw plugins, created the nameservice
+        plugin. Also wrotes the related <ulink
+        url="http://br1.einfach.org/horst">horst</ulink> tool.</para>
       </listitem>
     </varlistentry>
 
     <varlistentry>
-      <term>Sven-Ola Tücke</term>
+      <term>Sven-Ola Tücke &lt;<email>sven-olaægmx.de</email>&gt;</term>
 
       <listitem>
         <para>Active 2004-[...]: Started the olsrd-based <ulink
         url="http://ff-firmware.sourceforge.net/">Freifunk Firmware</ulink> in
         late 2004, contributed bug fixes and maintenance (general and
-        Windows), the dyn_gw_plain and arprefresh plugins as well as some
+        Windows), the dyn_gw_plain and arprefresh plugins. Contiued work for
+        olsrd-ng (see below): Fixes &amp; maint, FPM, config parser, and
         documentation.</para>
       </listitem>
     </varlistentry>
 
     <varlistentry>
-      <term>Jens Nachtigall</term>
+      <term>Jens Nachtigall &lt;<email>nachtigallæweb.de</email>&gt;</term>
 
       <listitem>
         <para>Active 2004-2005: Contributed bug fixes, contributed to dyn_gw
@@ -146,7 +148,8 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Elektra Wagenfeld</term>
+      <term>Corinna 'Elektra' Aichele
+      &lt;<email>onelektraægmx.net</email>&gt;</term>
 
       <listitem>
         <para>Active 2004-2006: Contributed ideas and valuable comments, also
@@ -155,7 +158,8 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Erik Tromp</term>
+      <term>Erik Tromp
+      &lt;<email>erik.trompænl.thalesgroup.com</email>&gt;</term>
 
       <listitem>
         <para>Active 2006-[...]: Created the <ulink
@@ -165,7 +169,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Lorenz Schori</term>
+      <term>Lorenz Schori &lt;<email>lorenz.schoriægmx.ch</email>&gt;</term>
 
       <listitem>
         <para>Active 2006-[...]: Created the txtinfo plugin and contributed
@@ -174,7 +178,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>John Hay</term>
+      <term>John Hay &lt;<email>jhayæmeraka.org.za</email>&gt;</term>
 
       <listitem>
         <para>Active 2006-2008: Contributed maintenance and bug fixes for
@@ -183,19 +187,20 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Thomas Martin</term>
+      <term>Immo 'FaUl' Wehrenberg
+      &lt;<email>immoæchaostreff-dortmund.de</email>&gt;</term>
 
       <listitem>
-        <para>Active 2008: Code base maintenance (mainly BSD and
-        vxWorks).</para>
+        <para>Active 2006-2008: Contributed the quagga plugin.</para>
       </listitem>
     </varlistentry>
 
     <varlistentry>
-      <term>Immo 'FaUl' Wehrenberg</term>
+      <term>Vasilis Tsiligiannis
+      &lt;<email>acinonyxsæyahoo.gr</email>&gt;</term>
 
       <listitem>
-        <para>Active 2006-[...]: Contributed the quagga plugin.</para>
+        <para>Active 2007-[...]: Fixes and maint for the quagga plugin.</para>
       </listitem>
     </varlistentry>
   </variablelist>
@@ -213,7 +218,7 @@
 
   <variablelist>
     <varlistentry>
-      <term>Aaron Kaplan</term>
+      <term>Aaron Kaplan &lt;<email>aaronælo-res.org</email>&gt;</term>
 
       <listitem>
         <para>Active 2005-[...]: Initiator/Coordinator of the OLSRD-NG
@@ -222,7 +227,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Bernd Petrovitsch</term>
+      <term>Bernd Petrovitsch &lt;<email>berndæfirmix.at</email>&gt;</term>
 
       <listitem>
         <para>Active 2006-[...]: Patch-juggler for the olsrd repository,
@@ -233,7 +238,7 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Hannes Gredler</term>
+      <term>Hannes Gredler &lt;<email>hannesægredler.at</email>&gt;</term>
 
       <listitem>
         <para>Active 2007-[...] Contributed the SPF refactoring (routing code
@@ -244,15 +249,118 @@
     </varlistentry>
 
     <varlistentry>
-      <term>Henning Rogge</term>
+      <term>Thomas Martin
+      &lt;<email>thomas.martinærohde-schwarz.com</email>&gt;</term>
+
+      <listitem>
+        <para>Active 2008: Code base maintenance (mainly BSD and
+        vxWorks).</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Henning Rogge &lt;<email>roggeæfgan.de</email>&gt;</term>
 
       <listitem>
         <para>Active 2008-[...]: Reworked the LQ/ETX algorithm, contributed
-        the netsimcap (network simulation, GPL), also lots of code base
-        maintenance and bug fixes.</para>
+        the netsimcap (network simulation, GPL), changed logging and data
+        structures, also lots of code base maintenance and bug fixes.</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>Markus Kittenberger
+      &lt;<email>Markus.Kittenbergerægmx.at</email>&gt;</term>
+
+      <listitem>
+        <para>Active 2008-[...]: Policy routing changes.</para>
       </listitem>
     </varlistentry>
   </variablelist>
+
+  <note>
+    <para>Contributors are simply mentioned in chronological order - which
+    does not imply any other rating. If you want your name mentioned also,
+    please add to <filename>files/olsrd-manpages.xml</filename> which is the
+    source for the <filename>HISTORY</filename> file.</para>
+  </note>
+
+  <bridgehead>Licensing Summary</bridgehead>
+
+  <para>While the overall project is now (early-2009) licensed under the
+  revised BSD license (without the <quote>obnoxious BSD advertising
+  clause</quote>), licensing differs for some modules and files. This list is
+  for informal purposes only - please refer to the respective files, persons,
+  and legal bodies if you need verified licensing information.</para>
+
+  <variablelist>
+    <varlistentry>
+      <term>Overall olsrd project</term>
+
+      <listitem>
+        <para>Licensed under revised BSD (2004, Andreas Tønnesen and Thomas
+        Lopatic, olsr.org)</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>contrib/netsimcap/</term>
+
+      <listitem>
+        <para>Licensed under GPLv3 (2008, Henning Rogge)</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>gui/linux-gtk/</term>
+
+      <listitem>
+        <para>Licensed under GPLv2 (2003, Andreas Tønnesen)</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>lib/secure/src/md5.h</term>
+
+      <listitem>
+        <para>Licensed under some homebrew public domain (1991, RSA Data
+        Security, Inc.)</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>lib/bmf/</term>
+
+      <listitem>
+        <para>Licensed under revised BSD, (2005, Erik Tromp, Thales
+        Communications, Huizen, The Netherlands)</para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
+      <term>lib/quagga/</term>
+
+      <listitem>
+        <para>Licensed under GPLv2 or LGPLv2 (2006, Immo 'FaUl' Wehrenberg and
+        2007 Vasilis Tsiligiannis)</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+
+  <para>As a note to future contributors: As of Jan-2009, we removed single
+  person names from the copyright comments with the permission of the original
+  authors (with the exception of above modules and 6 files under src/ created
+  by Bernd Petrovitsch). If you contribute new files to the repository, please
+  add a copy of the license.txt file as comment. If you send in patches,
+  please add a <ulink
+  url="http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel">signed-off-by</ulink>
+  statement to express, that your patch is properly licensed. If you add a new
+  plugin, you may choose another license (see quagga, bmf). Please make sure
+  your license is compatible to olsrd, otherwise do not add to the repository.
+  To prevent automatic re-licensing, add your exception to the
+  <filename>license.sh</filename> script file also. IANAL clause: absolutely
+  no warranty for the above information, please ask your favorite lawyer if
+  you have any licensing questions or issues.</para>
 
   <refentry id="olsrd_8">
     <indexterm>
@@ -269,7 +377,7 @@
 
           <surname>Tücke</surname>
 
-          <email>sven-ola@gmx.de</email>
+          <email>sven-olaægmx.de</email>
         </author>
 
         <author>
@@ -277,7 +385,7 @@
 
           <surname>Tønnesen</surname>
 
-          <email>andreto@olsr.org</email>
+          <email>andretoæolsr.org</email>
         </author>
       </authorgroup>
     </refentryinfo>
@@ -647,87 +755,105 @@
         </varlistentry>
 
         <varlistentry>
-          <term><option>-L options</option> or <option>--log=options</option></term>
+          <term><option>-L options</option> or
+          <option>--log=options</option></term>
 
           <listitem>
-            <para>This option controls the output of the logging system of olsrd.
-            The options are a comma-separated string of keys and key/value pairs.
-            Activating a lower level logging output (DEBUG, WARN, INFO, ERROR)
-            will automatically activate all higher level outputs of the source too.
-            All error messages will be activated unless one or multiple log sources
-            are specified for error logging level.</para>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of keys and
+            key/value pairs. Activating a lower level logging output (DEBUG,
+            WARN, INFO, ERROR) will automatically activate all higher level
+            outputs of the source too. All error messages will be activated
+            unless one or multiple log sources are specified for error logging
+            level.</para>
 
             <variablelist>
               <varlistentry>
                 <term><option>list</option></term>
+
                 <listitem>
-                  <para>lists all implemented log sources and log targets. <productname>olsrd</productname>
-                  terminates after displaying this values.</para>
+                  <para>lists all implemented log sources and log targets.
+                  <productname>olsrd</productname> terminates after displaying
+                  this values.</para>
                 </listitem>
               </varlistentry>
-              
+
               <varlistentry>
                 <term><option>stderr</option></term>
+
                 <listitem>
-                  <para>activates stderr as a logging target. If no target is activated, stderr is considered
-                  the default target.</para>
+                  <para>activates stderr as a logging target. If no target is
+                  activated, stderr is considered the default target.</para>
                 </listitem>
               </varlistentry>
-              
+
               <varlistentry>
                 <term><option>syslog</option></term>
+
                 <listitem>
                   <para>activates the syslog as a logging target.</para>
                 </listitem>
               </varlistentry>
-              
+
               <varlistentry>
                 <term><option>file=[filename]</option></term>
+
                 <listitem>
-                  <para>activates a user specified file as a logging target. All logging output will be
-                  appended to the file.</para>
+                  <para>activates a user specified file as a logging target.
+                  All logging output will be appended to the file.</para>
                 </listitem>
               </varlistentry>
 
               <varlistentry>
                 <term><option>debug=[logsource1/logsource2/...]</option></term>
+
                 <listitem>
-                  <para>activates the debug output for a number of logfiles. Debugging output will display
-                  lots of internal information about a logging source, so be careful to activate too many
-                  sources. If not specified, debug output is switched off.</para>
+                  <para>activates the debug output for a number of logfiles.
+                  Debugging output will display lots of internal information
+                  about a logging source, so be careful to activate too many
+                  sources. If not specified, debug output is switched
+                  off.</para>
                 </listitem>
               </varlistentry>
 
               <varlistentry>
                 <term><option>info=[logsource1/logsource2/...]</option></term>
+
                 <listitem>
-                  <para>activates information output for a number of logfiles. Information output will
-                  display a small amount of data about the log source.  If not specified, information output
-                  is switched off.</para>
+                  <para>activates information output for a number of logfiles.
+                  Information output will display a small amount of data about
+                  the log source. If not specified, information output is
+                  switched off.</para>
                 </listitem>
               </varlistentry>
 
               <varlistentry>
                 <term><option>warn=[logsource1/logsource2/...]</option></term>
+
                 <listitem>
-                  <para>activates warnings for a number of logfiles. Warnings are generated when an error
-                  has happened within the logging source, but <productname>olsrd</productname> can recover
-                  from the problem and continue to run. If not specified, warning output is switched off.</para>
+                  <para>activates warnings for a number of logfiles. Warnings
+                  are generated when an error has happened within the logging
+                  source, but <productname>olsrd</productname> can recover
+                  from the problem and continue to run. If not specified,
+                  warning output is switched off.</para>
                 </listitem>
               </varlistentry>
 
               <varlistentry>
                 <term><option>error=[logsource1/logsource2/...]</option></term>
+
                 <listitem>
-                  <para>activates errors for a number of logfiles. Most errors are generated if an
-                  unrecoverable problem happens, so <productname>olsrd</productname> will shut down most
-                  times after an error. If not specified, error output is activated.</para>
+                  <para>activates errors for a number of logfiles. Most errors
+                  are generated if an unrecoverable problem happens, so
+                  <productname>olsrd</productname> will shut down most times
+                  after an error. If not specified, error output is
+                  activated.</para>
                 </listitem>
               </varlistentry>
             </variablelist>
           </listitem>
         </varlistentry>
-        
+
         <varlistentry>
           <term><option><replaceable>interface1</replaceable>
           interface2...</option></term>
@@ -780,7 +906,7 @@
 
           <surname>Tücke</surname>
 
-          <email>sven-ola@gmx.de</email>
+          <email>sven-olaægmx.de</email>
         </author>
 
         <author>
@@ -788,7 +914,7 @@
 
           <surname>Tønnesen</surname>
 
-          <email>andreto@olsr.org</email>
+          <email>andretoæolsr.org</email>
         </author>
       </authorgroup>
     </refentryinfo>
@@ -887,9 +1013,9 @@
           <replaceable>logging_configuration_string</replaceable></term>
 
           <listitem>
-            <para>This config line controls the output of the logging system of
-            <productname>olsrd</productname>. For details see the description of
-            the --log command line parameter.</para>
+            <para>This config line controls the output of the logging system
+            of <productname>olsrd</productname>. For details see the
+            description of the --log command line parameter.</para>
           </listitem>
         </varlistentry>
 
@@ -1187,9 +1313,9 @@
           <replaceable>ipaddress</replaceable></term>
 
           <listitem>
-            <para>This value controls sets the main ip address (called originator
-            address in OLSR) to a fixed value. This prevents route loss when the
-            first interface of a router vanishes.</para>
+            <para>This value controls sets the main IP address (called
+            originator address in OLSR) to a fixed value. This prevents route
+            loss when the first interface of a router vanishes.</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -2630,7 +2756,7 @@
 
           <surname>Kaplan</surname>
 
-          <email>aaron@lo-res.org</email>
+          <email>aaronælo-res.org</email>
         </author>
 
         <author>
@@ -2638,7 +2764,7 @@
 
           <surname>Rogge</surname>
 
-          <email>rogge@fgan.de</email>
+          <email>roggeæfgan.de</email>
         </author>
       </authorgroup>
     </refentryinfo>
@@ -2806,7 +2932,7 @@ struct lq_handler lq_etxff_handler = {
             <para>This callback is triggered shortly after loading the plugin
             into <productname>olsrd</productname>. Note, that all
             <option>PlParam</option> values from the configuration file are
-            alredy evaluted at this time.</para>
+            already evaluated at this time.</para>
 
             <para>The <function>initialize</function> function may start some
             timers (via <function>olsr_alloc_cookie</function> ) and may
@@ -2821,7 +2947,7 @@ struct lq_handler lq_etxff_handler = {
           <listitem>
             <para>This callback is triggered shortly before unloading the
             plugin from <productname>olsrd</productname>. Note, that it is
-            generally a good idea to free up hooks, timers and memory aquired
+            generally a good idea to free up hooks, timers and memory acquired
             during initialization or runtime.</para>
           </listitem>
         </varlistentry>
@@ -2918,7 +3044,7 @@ struct lq_handler lq_etxff_handler = {
           lq_hello_neighbor *);</term>
 
           <listitem>
-            <para>This callback is triggerd to copy the link quality
+            <para>This callback is triggered to copy the link quality
             information from a received HELLO message into a link
             entry.</para>
           </listitem>
@@ -2995,8 +3121,8 @@ struct lq_handler lq_etxff_handler = {
           lq_hello_neighbor *);</term>
 
           <listitem>
-            <para>This callback is triggerd whenever a LQ message needs to be
-            deserialized The callback reads the message information of a
+            <para>This callback is triggered whenever a LQ message needs to be
+            de-serialized The callback reads the message information of a
             binary packet and writes into an neighbour buffer.</para>
           </listitem>
         </varlistentry>
@@ -3006,8 +3132,8 @@ struct lq_handler lq_etxff_handler = {
           *);</term>
 
           <listitem>
-            <para>This callback is triggerd whenever a TC message needs to be
-            deserialized The callback reads the message information of a
+            <para>This callback is triggered whenever a TC message needs to be
+            de-serialized The callback reads the message information of a
             binary packet and writes into an MPR buffer.</para>
           </listitem>
         </varlistentry>
@@ -3069,7 +3195,7 @@ struct lq_handler lq_etxff_handler = {
 
           <listitem>
             <para>Set to a value larger that zero to reserve extra memory in
-            the mpr database.</para>
+            the MPR database.</para>
           </listitem>
         </varlistentry>
 
@@ -3078,7 +3204,7 @@ struct lq_handler lq_etxff_handler = {
 
           <listitem>
             <para>Set to a value larger that zero to reserve extra memory in
-            the lq database.</para>
+            the LQ database.</para>
           </listitem>
         </varlistentry>
 
