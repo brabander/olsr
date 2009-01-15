@@ -107,6 +107,7 @@ main(int argc, char *argv[])
   char conf_file_name[FILENAME_MAX];
   char parse_msg[FILENAME_MAX + 256];
   struct ipaddr_str buf;
+  int exitcode = 0;
 #ifdef WIN32
   WSADATA WsaData;
   size_t len;
@@ -381,10 +382,12 @@ main(int argc, char *argv[])
   /* Starting scheduler */
   olsr_scheduler();
 
+  exitcode = olsr_cnf->exit_value;
   switch (app_state) {
   case STATE_RUNNING:
     olsr_syslog(OLSR_LOG_ERR, "terminating and got \"running\"?");
-    return 1;
+    exitcode = EXIT_FAILURE;
+    break;
 #ifndef WIN32
   case STATE_RECONFIGURE:
     /* if we are started with -nofork, we do not weant to go into the
@@ -403,13 +406,13 @@ main(int argc, char *argv[])
       /* if we reach this, the exev() failed */
       olsr_syslog(OLSR_LOG_ERR, "execv() failed: %s", strerror(errno));
       /* and we simply shutdown */
-      olsr_cnf->exit_value = EXIT_FAILURE;
+      exitcode = EXIT_FAILURE;
       break;
     case -1:
       /* fork() failes */
       olsr_syslog(OLSR_LOG_ERR, "fork() failed: %s", strerror(errno));
       /* and we simply shutdown */
-      olsr_cnf->exit_value = EXIT_FAILURE;
+      exitcode = EXIT_FAILURE;
       break;
     default:
       /* parent process */
@@ -423,7 +426,7 @@ main(int argc, char *argv[])
     break;
   };
 
-  return olsr_cnf->exit_value;
+  return exitcode;
 }                               /* main */
 
 #ifndef WIN32
@@ -521,9 +524,6 @@ olsr_shutdown(void)
   CLOSESOCKET(olsr_cnf->rts_bsd);
 #endif
 
-  /* Flush config */
-  olsr_free_cfg(olsr_cnf);
-
   /* Close and delete all sockets */
   olsr_flush_sockets();
 
@@ -544,6 +544,9 @@ olsr_shutdown(void)
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 
   olsr_log_cleanup();
+
+  /* Flush config */
+  olsr_free_cfg(olsr_cnf);
 }
 
 /*
