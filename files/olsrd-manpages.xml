@@ -1104,7 +1104,9 @@
             <para><productname>olsrd</productname> supports both IP versions:
             <replaceable>4</replaceable> and <replaceable>6</replaceable>.
             This option controls what IP version
-            <productname>olsrd</productname> uses. Defaults to
+            <productname>olsrd</productname> uses. Note, that you need to set
+            this option early in the config file, because it determines how
+            other IP related parameters are interpreted. Defaults to
             <replaceable>4</replaceable>.</para>
           </listitem>
         </varlistentry>
