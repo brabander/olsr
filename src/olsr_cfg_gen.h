@@ -48,7 +48,7 @@
 /*
  * Interface config generation
  */
-void olsr_print_cnf(const struct olsr_config *);
+void olsr_print_cnf(struct olsr_config *);
 #if 0
 int olsr_write_cnf(const struct olsr_config *cnf, const char *fname);
 #endif

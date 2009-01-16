@@ -47,7 +47,7 @@
 #include <errno.h>
 
 void
-olsr_print_cnf(const struct olsr_config *cnf)
+olsr_print_cnf(struct olsr_config *cnf)
 {
   struct ip_prefix_entry *h;
   struct olsr_if_config *in = cnf->if_configs;
@@ -78,13 +78,13 @@ olsr_print_cnf(const struct olsr_config *cnf)
     printf("Willingness      : %d\n", cnf->willingness);
 
   printf("IPC connections  : %d\n", cnf->ipc_connections);
-  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->ipc_nets.accept, ie) {
-    if (ie->net.prefix_len == 8 * olsr_cnf->ipsize) {
+  OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {
+    if (ie->net.prefix_len == 8 * cnf->ipsize) {
       struct ipaddr_str strbuf;
-      printf("\tHost %s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+      printf("\tHost %s\n", ip_to_string(cnf->ip_version, &strbuf, &ie->net.prefix));
     } else {
       struct ipprefix_str prefixstr;
-      printf("\tNet %s\n", olsr_ip_prefix_to_string(&prefixstr, &ie->net));
+      printf("\tNet %s\n", ip_prefix_to_string(cnf->ip_version, &prefixstr, &ie->net));
     }
   } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
@@ -151,18 +151,18 @@ olsr_print_cnf(const struct olsr_config *cnf)
   }
 
   /* HNA IPv4 and IPv6 */
-  if (!list_is_empty(&olsr_cnf->hna_entries)) {
+  if (!list_is_empty(&cnf->hna_entries)) {
     printf("HNA%d entries:\n", cnf->ip_version == AF_INET ? 4 : 6);
-    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->hna_entries, h) {
       struct ipprefix_str prefixstr;
-      printf("\t%s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
+      printf("\t%s\n", ip_prefix_to_string(cnf->ip_version, &prefixstr, &h->net));
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
 }
 
 #if 0
 int
-olsr_write_cnf(const struct olsr_config *cnf, const char *fname)
+olsr_write_cnf(struct olsr_config *cnf, const char *fname)
 {
   struct autobuf abuf;
   FILE *fd = fopen(fname, "w");
@@ -225,7 +225,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
 
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->hna_entries, h) {
       struct ipprefix_str strbuf;
-      abuf_appendf(abuf, "    %s\n", olsr_ip_prefix_to_string(&strbuf, &h->net));
+      abuf_appendf(abuf, "    %s\n", ip_prefix_to_string(cnf->ip_version, &strbuf, &h->net));
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }
   abuf_appendf(abuf, "}\n\n");
@@ -263,12 +263,12 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   if (list_is_empty(&cnf->ipc_nets.accept)) {
     struct ip_prefix_entry *ie;
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&cnf->ipc_nets.accept, ie) {
-      if (ie->net.prefix_len == 8 * olsr_cnf->ipsize) {
+      if (ie->net.prefix_len == 8 * cnf->ipsize) {
         struct ipaddr_str strbuf;
-        abuf_appendf(abuf, "    Host\t\t%s\n", olsr_ip_to_string(&strbuf, &ie->net.prefix));
+        abuf_appendf(abuf, "    Host\t\t%s\n", ip_to_string(cnf->ip_version, &strbuf, &ie->net.prefix));
       } else {
         struct ipprefix_str strbuf;
-        abuf_appendf(abuf, "    Net\t\t\t%s\n", olsr_ip_prefix_to_string(&strbuf, &ie->net));
+        abuf_appendf(abuf, "    Net\t\t\t%s\n", ip_prefix_to_string(cnf->ip_version, &strbuf, &ie->net));
       }
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
   }

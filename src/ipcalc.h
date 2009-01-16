@@ -99,7 +99,9 @@ static INLINE const char *ip_to_string(int af, struct ipaddr_str * const buf, co
 
 static INLINE const char *olsr_ip_to_string(struct ipaddr_str * const buf, const union olsr_ip_addr *addr) { return ip_to_string(olsr_cnf->ip_version, buf, addr); }
 
-const char *EXPORT(olsr_ip_prefix_to_string)(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
+const char *EXPORT(ip_prefix_to_string)(int af, struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix);
+
+static INLINE const char *olsr_ip_prefix_to_string(struct ipprefix_str * const buf, const struct olsr_ip_prefix *prefix) { return ip_prefix_to_string(olsr_cnf->ip_version, buf, prefix); }
 
 const char *sockaddr_to_string(char *buf, int bufsize, const struct sockaddr * const addr, unsigned int addrsize);
 
