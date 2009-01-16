@@ -44,7 +44,7 @@
 
 #include "defs.h"
 #include "olsr_types.h"
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "common/list.h"
 
 #define IP_ACL_ACCEPT_PARAP         "accept"

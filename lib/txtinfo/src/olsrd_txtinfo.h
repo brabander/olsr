@@ -47,7 +47,7 @@
 #define _OLSRD_TXTINFO
 
 #include "olsr_types.h"
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 #include "olsr_ip_acl.h"
 

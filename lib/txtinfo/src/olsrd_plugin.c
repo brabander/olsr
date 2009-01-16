@@ -50,7 +50,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "olsrd_txtinfo.h"
 #include "defs.h"
 #include "ipcalc.h"

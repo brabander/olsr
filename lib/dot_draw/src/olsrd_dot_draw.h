@@ -46,7 +46,7 @@
 #ifndef _OLSRD_DOT_DRAW
 #define _OLSRD_DOT_DRAW
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 
 extern union olsr_ip_addr ipc_accept_ip;

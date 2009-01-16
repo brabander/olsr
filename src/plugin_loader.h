@@ -41,7 +41,7 @@
 #ifndef _OLSR_PLUGIN_LOADER
 #define _OLSR_PLUGIN_LOADER
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "olsr_types.h"
 
 /* all */

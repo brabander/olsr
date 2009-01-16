@@ -42,7 +42,7 @@
 #include <stddef.h> /* NULL */
 
 /* OLSRD includes */
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 #include "defs.h" /* uint8_t, olsr_cnf */
 #include "scheduler.h" /* olsr_start_timer() */

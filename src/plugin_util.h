@@ -38,7 +38,7 @@
 #define _OLSRD_PLUGIN_UTIL
 
 #include "defs.h"
-#include "olsrd_plugin.h"
+#include "plugin.h"
 
 /* Common/utility functions for plugins */
 set_plugin_parameter EXPORT(set_plugin_port);

@@ -45,7 +45,7 @@
 #include "olsr_protocol.h"
 #include "common/list.h"
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "nameservice_msg.h"
 #include "hashing.h"
 #include "mapwrite.h"

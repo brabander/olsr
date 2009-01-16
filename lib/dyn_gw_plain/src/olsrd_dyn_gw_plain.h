@@ -40,7 +40,7 @@
 #ifndef _OLSRD_PLUGIN_TEST
 #define _OLSRD_PLUGIN_TEST
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "olsr.h"
 
 #define INET_NET       0

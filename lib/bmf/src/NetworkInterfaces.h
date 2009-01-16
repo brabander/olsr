@@ -45,7 +45,7 @@
 
 /* OLSR includes */
 #include "olsr_types.h" /* olsr_ip_addr */
-#include "olsrd_plugin.h" /* union set_plugin_parameter_addon */
+#include "plugin.h" /* union set_plugin_parameter_addon */
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */

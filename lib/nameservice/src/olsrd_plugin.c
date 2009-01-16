@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "nameservice.h"
 
 #define PLUGIN_NAME    "OLSRD nameservice plugin"

@@ -33,8 +33,7 @@
 #include "lq_plugin_etx_ff.h"
 #include "olsr.h"
 #include "defs.h"
-
-#include "../../../src/olsrd_plugin.h"
+#include "plugin.h"
 
 #include <stdio.h>
 #include <string.h>

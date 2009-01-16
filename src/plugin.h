@@ -35,8 +35,8 @@
  * Only the bare minimum
  */
 
-#ifndef _OLSRD_PLUGIN
-#define _OLSRD_PLUGIN
+#ifndef _PLUGIN_H
+#define _PLUGIN_H
 
 
 /* Define the most recent version */
@@ -98,7 +98,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 
 #endif
 
-#endif
+#endif /* _PLUGIN_H */
 
 /*
  * Local Variables:

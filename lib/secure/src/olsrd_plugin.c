@@ -36,7 +36,7 @@
 
 
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "olsrd_secure.h"
 #include "defs.h"
 

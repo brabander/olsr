@@ -43,7 +43,7 @@
 #include "scheduler.h"
 #include "olsr_cookie.h"
 
-#include "../../../src/olsrd_plugin.h"
+#include "plugin.h"
 
 #include <stdio.h>
 #include <string.h>

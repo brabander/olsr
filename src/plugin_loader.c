@@ -39,7 +39,7 @@
  */
 
 #include "plugin_loader.h"
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 #include "defs.h"
 #include "olsr.h"

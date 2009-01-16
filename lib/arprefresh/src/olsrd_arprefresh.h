@@ -34,7 +34,7 @@
 #define _OLSRD_ARPREFRESH
 
 #include "olsr_types.h"
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 
 int olsrd_plugin_init(void);

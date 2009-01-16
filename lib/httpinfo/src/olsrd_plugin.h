@@ -55,7 +55,7 @@
 #include <time.h>
 
 #include "olsr_types.h"
-#include "../../../src/olsrd_plugin.h"
+#include "plugin.h"
 #include "neighbor_table.h"
 #include "two_hop_neighbor_table.h"
 #include "tc_set.h"

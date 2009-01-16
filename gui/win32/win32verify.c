@@ -7,7 +7,7 @@
 
 bool disp_pack_out = false;
 FILE *debug_handle = NULL;
-struct olsr_config *olsr_cnf = NULL;
+//struct olsr_config *olsr_cnf = NULL;
 
 void *olsr_malloc(size_t size, const char *id __attribute__ ((unused)))
 {

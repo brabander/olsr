@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "plugin_util.h"
 #include "scheduler.h"
 #include "defs.h"

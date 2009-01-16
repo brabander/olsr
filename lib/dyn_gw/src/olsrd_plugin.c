@@ -39,7 +39,7 @@
  *
  */
 
-#include "olsrd_plugin.h"
+#include "plugin.h"
 #include "olsrd_dyn_gw.h"
 #include <stdio.h>
 
