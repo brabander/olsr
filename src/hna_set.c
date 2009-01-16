@@ -301,7 +301,7 @@ olsr_input_hna(union olsr_message *msg,
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
 
     if (!ip_prefix_list_find(&olsr_cnf->hna_entries, &prefix.prefix,
-                             prefix.prefix_len)) {
+                             prefix.prefix_len, olsr_cnf->ip_version)) {
       /*
        * Only update if it's not from us.
        */

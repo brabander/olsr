@@ -392,7 +392,7 @@ hello_tap(struct lq_hello_message *message,
 
   /* find the input interface in the list of neighbor interfaces */
   for (walker = message->neigh; walker != NULL; walker = walker->next) {
-    if (ipequal(&walker->addr, &in_if->ip_addr)) {
+    if (olsr_ipequal(&walker->addr, &in_if->ip_addr)) {
       break;
     }
   }

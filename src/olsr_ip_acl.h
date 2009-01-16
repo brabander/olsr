@@ -47,11 +47,6 @@
 #include "plugin.h"
 #include "common/list.h"
 
-#define IP_ACL_ACCEPT_PARAP         "accept"
-#define IP_ACL_REJECT_PARAM         "reject"
-#define IP_ACL_CHECKFIRST_PARAM     "checkFirst"
-#define IP_ACL_DEFAULTPOLICY_PARAM "defaultPolicy"
-
 struct ip_acl {
   struct list_node accept;
   struct list_node reject;
@@ -62,24 +57,16 @@ struct ip_acl {
 void EXPORT(ip_acl_init) (struct ip_acl *);
 void EXPORT(ip_acl_flush) (struct ip_acl *);
 void EXPORT(ip_acl_add) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
-void EXPORT(ip_acl_remove) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
-bool EXPORT(ip_acl_acceptable) (struct ip_acl *, const union olsr_ip_addr *);
-
-/**
- *  accessor methods for plugins
- *
- *  Add the following lines into your plugins parameter list to allow acl initalization
- *  (this assumes that the acl is called allowed_nets, rename if neccesary)
- *
- *  { .name = IP_ACL_ACCEPT_PARAP,        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
- *  { .name = IP_ACL_REJECT_PARAM,        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
- *  { .name = IP_ACL_CHECKFIRST_PARAM,    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
- *  { .name = IP_ACL_DEFAULTPOLICY_PARAM, .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets },
- */
-int EXPORT(ip_acl_add_plugin_accept) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
-int EXPORT(ip_acl_add_plugin_reject) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
-int EXPORT(ip_acl_add_plugin_checkFirst) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
-int EXPORT(ip_acl_add_plugin_defaultPolicy) (const char *value, void *data, set_plugin_parameter_addon addon
-                                             __attribute__ ((unused)));
+void ip_acl_remove (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool, int);
+bool EXPORT(ip_acl_acceptable) (struct ip_acl *, const union olsr_ip_addr *, int);
 
 #endif /* OLSR_IP_PREFIX_ACL_H_ */
+
+/*
+ * Local Variables:
+ * mode: c
+ * style: linux
+ * c-basic-offset: 4
+ * indent-tabs-mode: nil
+ * End:
+ */

@@ -56,7 +56,6 @@
 #include "ipcalc.h"
 #include "olsr_cfg.h"
 #include "olsr.h"
-#include "olsr_ip_acl.h"
 
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"
 #define PLUGIN_VERSION "0.1"

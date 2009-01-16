@@ -402,7 +402,7 @@ name_init(void)
 	//for service
 
 	for (name = my_names; name != NULL; name = name->next) {
-		if (ipequal(&name->ip, &ipz)) {
+		if (olsr_ipequal(&name->ip, &ipz)) {
 			OLSR_PRINTF(2, "NAME PLUGIN: insert main addr for name %s \n", name->name);
 			name->ip = olsr_cnf->router_id;
 		}
@@ -699,7 +699,7 @@ olsr_parser(union olsr_message *m,
 
 	/* Check if message originated from this node.
 	If so - back off */
-	if(ipequal(&originator, &olsr_cnf->router_id))
+	if(olsr_ipequal(&originator, &olsr_cnf->router_id))
 		return false;
 
 	/* Check that the neighbor this message was received from is symmetric.
@@ -856,7 +856,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool *this_table
 			OLSR_PRINTF(4, "NAME PLUGIN: received name or service entry %s (%s) already in hash table\n",
 				name, olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip));
 			return;
-		} else if (type_of_from_packet==NAME_FORWARDER && ipequal(&already_saved_name_entries->ip, &from_packet->ip) ) {
+		} else if (type_of_from_packet==NAME_FORWARDER && olsr_ipequal(&already_saved_name_entries->ip, &from_packet->ip) ) {
 			OLSR_PRINTF(4, "NAME PLUGIN: received forwarder entry %s (%s) already in hash table\n",
 				name, olsr_ip_to_string(&strbuf, &already_saved_name_entries->ip));
 			return;
@@ -873,7 +873,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool *this_table
 				*this_table_changed = true;
 				olsr_start_write_file_timer();
 			}
-			if (!ipequal(&already_saved_name_entries->ip, &from_packet->ip))
+			if (!olsr_ipequal(&already_saved_name_entries->ip, &from_packet->ip))
 			{
 				struct ipaddr_str strbuf2, strbuf3;
 				OLSR_PRINTF(4, "NAME PLUGIN: updating ip %s -> %s (%s)\n",
@@ -1001,7 +1001,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator,
 
 		entry = list2db(list_node);
 
-		if (ipequal(originator, &entry->originator)) {
+		if (olsr_ipequal(originator, &entry->originator)) {
 			struct ipaddr_str strbuf;
 			// found
 			OLSR_PRINTF(4, "NAME PLUGIN: found entry for (%s) in its hash table\n",
@@ -1517,7 +1517,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 
 	OLSR_FOR_ALL_INTERFACES(iface) {
 		OLSR_PRINTF(6, "interface %s\n", olsr_ip_to_string(&strbuf, &iface->ip_addr));
-		if (ipequal(&iface->ip_addr, addr)) {
+		if (olsr_ipequal(&iface->ip_addr, addr)) {
 			OLSR_PRINTF(6, "MATCHED\n");
 			return true;
 		}
@@ -1548,7 +1548,7 @@ allowed_ip(const union olsr_ip_addr *addr)
 			for (i = 0; i < sizeof(tmp_ip.v6.s6_addr); i++) {
 				tmp_ip.v6.s6_addr[i] = addr->v6.s6_addr[i] & tmp_msk.v6.s6_addr[i];
 			}
-			if (ipequal(&tmp_ip, &hna->net.prefix)) {
+			if (olsr_ipequal(&tmp_ip, &hna->net.prefix)) {
 				OLSR_PRINTF(6, "MATCHED\n");
 				return true;
 			}
@@ -1715,7 +1715,7 @@ lookup_name_latlon(union olsr_ip_addr *ip)
 			entry = list2db(list_node);
 
 			for (name = entry->names; name != NULL; name = name->next) {
-				if (ipequal(&name->ip, ip)) return name->name;
+				if (olsr_ipequal(&name->ip, ip)) return name->name;
 			}
 		}
 	}

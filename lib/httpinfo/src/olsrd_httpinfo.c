@@ -401,7 +401,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     ipaddr = (union olsr_ip_addr *)&addr6->sin6_addr;
   }
 
-  if (!ip_acl_acceptable(&allowed_nets, ipaddr)) {
+  if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
     struct ipaddr_str strbuf;
     OLSR_PRINTF(0, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, ipaddr));

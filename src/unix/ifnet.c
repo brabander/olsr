@@ -345,7 +345,7 @@ int add_hemu_if (struct olsr_if_config *iface)
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
 
-  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->router_id)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
     olsr_cnf->router_id = iface->hemu_ip;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
     olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
@@ -741,7 +741,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   /*
    * Set main address if this is the only interface
    */
-  if (!olsr_cnf->fixed_origaddr && ipequal(&all_zero, &olsr_cnf->router_id)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
     struct ipaddr_str buf;
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));

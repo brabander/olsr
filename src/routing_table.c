@@ -453,7 +453,7 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
 
     /* originator (which is guaranteed to be unique) is final tie breaker */
     if ((rtp1->rtp_metric.hops == rtp2->rtp_metric.hops) &&
-        (ipcmp(&rtp1->rtp_originator, &rtp2->rtp_originator) < 0)) {
+        (olsr_ipcmp(&rtp1->rtp_originator, &rtp2->rtp_originator) < 0)) {
       return true;
     }
 

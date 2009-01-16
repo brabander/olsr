@@ -262,7 +262,7 @@ olsr_event_doing_hna(void *foo __attribute__((unused)))
 			ip_prefix_list_add(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen);
 			li->hna_added=1;
 		}else if((li->probe_ok==0)&&(li->hna_added==1)){
-			while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen)) {
+			while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &li->hna_net, li->hna_prefixlen, olsr_cnf->ip_version)) {
 				OLSR_PRINTF(1, "Removing OLSR local HNA entry\n");
 			}
 			li->hna_added=0;

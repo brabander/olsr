@@ -40,6 +40,7 @@
  */
 
 #include "plugin_util.h"
+#include "ipcalc.h"
 #include "olsr.h"
 #include "defs.h"
 #include "common/string.h"
@@ -133,6 +134,134 @@ int set_plugin_string(const char *value, void *data, set_plugin_parameter_addon 
         OLSR_PRINTF(0, "%s string %s\n", "Ignored", value);
     }
     return 0;
+}
+
+static int
+ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
+{
+  /* space for txt representation of ipv6 + prefixlength */
+  static char arg[INET6_ADDRSTRLEN + 5];
+
+  char *c, *slash;
+  bool ipv4 = false;
+  bool ipv6 = false;
+  int prefix;
+
+  prefix = olsr_cnf->ip_version == AF_INET ? 32 : 128;
+
+  strncpy(arg, value, sizeof(arg));
+  arg[sizeof(arg) - 1] = 0;
+
+  c = arg;
+  slash = NULL;
+  /* parse first word */
+  while (*c && *c != ' ' && *c != '\t') {
+    switch (*c) {
+    case '.':
+      ipv4 = true;
+      break;
+    case ':':
+      ipv6 = true;
+      break;
+    case '/':
+      slash = c;
+      break;
+    }
+    c++;
+  }
+
+  /* look for second word */
+  while (*c == ' ' || *c == '\t')
+    c++;
+
+  if (ipv4 == ipv6) {
+    OLSR_PRINTF(0, "Error, illegal ip net '%s'\n", value);
+    return -1;
+  }
+
+  if (slash) {
+    /* split prefixlength from ip */
+    *slash++ = 0;
+  }
+
+  if (inet_pton(olsr_cnf->ip_version, arg, addr) < 0) {
+    OLSR_PRINTF(0, "Error, illegal ip net '%s'\n", value);
+    return -1;
+  }
+
+  if (ipv4 && prefix == 128) {
+    /* translate to ipv6 if neccessary */
+    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, sizeof(in_addr_t));
+    memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
+    memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
+  } else if (ipv6 && olsr_cnf->ip_version == AF_INET) {
+    OLSR_PRINTF(0, "Ignore Ipv6 address '%s' in ipv4 mode\n", value);
+    return -1;
+  }
+
+  if (slash) {
+    /* handle numeric netmask */
+    prefix = (int)strtoul(slash, NULL, 10);
+    if (prefix < 0 || prefix > (olsr_cnf->ip_version == AF_INET ? 32 : 128)) {
+      OLSR_PRINTF(0, "Error, illegal prefix length in '%s'\n", value);
+      return -1;
+    }
+  } else if (ipv4 && *c) {
+    /* look for explicit netmask */
+    union olsr_ip_addr netmask;
+
+    if (inet_pton(AF_INET, c, &netmask) > 0) {
+      prefix = olsr_netmask_to_prefix(&netmask);
+      if (olsr_cnf->ip_version == AF_INET6) {
+        prefix += 96;
+      }
+    }
+  }
+  return prefix;
+}
+
+int
+ip_acl_add_plugin_accept(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  union olsr_ip_addr ip;
+  int prefix;
+
+  prefix = ip_acl_plugin_parse(value, &ip);
+  if (prefix == -1)
+    return -1;
+
+  ip_acl_add(data, &ip, prefix, false);
+  return 0;
+}
+
+int
+ip_acl_add_plugin_reject(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  union olsr_ip_addr ip;
+  int prefix;
+
+  prefix = ip_acl_plugin_parse(value, &ip);
+  if (prefix == -1)
+    return -1;
+
+  ip_acl_add(data, &ip, prefix, true);
+  return 0;
+}
+
+int
+ip_acl_add_plugin_checkFirst(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  struct ip_acl *acl = data;
+  acl->first_accept = strcasecmp(value, "accept") == 0;
+  return 0;
+}
+
+int
+ip_acl_add_plugin_defaultPolicy(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  struct ip_acl *acl = data;
+  acl->default_accept = strcasecmp(value, "accept") == 0;
+  return 0;
 }
 
 /*

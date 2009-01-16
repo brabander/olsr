@@ -6,8 +6,11 @@
 #include "olsr_cfg_gen.h"
 
 bool disp_pack_out = false;
+
+#ifndef NODEBUG
 FILE *debug_handle = NULL;
-//struct olsr_config *olsr_cnf = NULL;
+struct olsr_config *olsr_cnf;
+#endif
 
 void *olsr_malloc(size_t size, const char *id __attribute__ ((unused)))
 {
@@ -59,7 +62,9 @@ static int write_cnf(struct olsr_config *cnf, const char *fname)
 int main(int argc, char *argv[])
 {
   int i, ret = 0;
+#ifndef NODEBUG
   debug_handle = stdout;
+#endif
   for (i = 1; i < argc; i++) {
     struct olsr_config *cfg_tmp;
     char cfg_msg[FILENAME_MAX + 256];

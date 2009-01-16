@@ -262,7 +262,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
       ipaddr = (union olsr_ip_addr *)&addr6->sin6_addr;
     }
 
-    if (!ip_acl_acceptable(&allowed_nets, ipaddr)) {
+    if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
       OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
       CLOSESOCKET(http_connection);
       return;

@@ -69,15 +69,18 @@ static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { r
 static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
 static INLINE int ip6equal(const struct in6_addr *a, const struct in6_addr *b) { return ip6cmp(a, b) == 0; }
 
-static INLINE int ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6); }
-static INLINE int ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return olsr_cnf->ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6); }
+static INLINE int ipcmp(int ip_version, const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6); }
+static INLINE int ipequal(int ip_version, const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6); }
+
+static INLINE int olsr_ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipcmp(olsr_cnf->ip_version, a, b); }
+static INLINE int olsr_ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipequal(olsr_cnf->ip_version, a, b); }
 
 /* Do not use this - this is as evil as the COPY_IP() macro was and only used in
  * source which also needs cleanups.
  */
 static INLINE void genipcopy(void *dst, const void *src) { memcpy(dst, src, olsr_cnf->ipsize); }
 
-int EXPORT(ip_in_net)(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net);
+int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net, int ip_version);
 
 
 int EXPORT(prefix_to_netmask)(uint8_t *, int, uint8_t);

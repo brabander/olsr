@@ -63,7 +63,6 @@
 #include "mid_set.h"
 #include "mpr_selector_set.h"
 #include "routing_table.h"
-#include "olsr_ip_acl.h"
 
 #define PLUGIN_NAME    "OLSRD httpinfo plugin"
 #define PLUGIN_VERSION "0.1"

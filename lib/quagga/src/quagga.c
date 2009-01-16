@@ -284,7 +284,7 @@ void zebra_parse (void* foo __attribute__((unused))) {
           break;
         case ZEBRA_IPV4_ROUTE_DELETE:
           route = zebra_parse_route(f);
-          ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+          ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen, olsr_cnf->ip_version);
           free_ipv4_route (route);
           free (route);
           break;

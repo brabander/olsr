@@ -299,7 +299,7 @@ static void BmfPacketCaptured(
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
   if (IsMulticast(&dst) ||
-      (EnableLocalBroadcast != 0 && ipequal(&dst, &intf->broadAddr)))
+      (EnableLocalBroadcast != 0 && olsr_ipequal(&dst, &intf->broadAddr)))
   {
     /* continue */
   }
@@ -938,7 +938,7 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
 
   /* Only forward multicast packets. If configured, also forward local broadcast packets */
   if (IsMulticast(&dstIp) ||
-      (EnableLocalBroadcast != 0 && ipequal(&dstIp, &broadAddr)))
+      (EnableLocalBroadcast != 0 && olsr_ipequal(&dstIp, &broadAddr)))
   {
     /* continue */
   }

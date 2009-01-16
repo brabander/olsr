@@ -187,7 +187,7 @@ remove_interface(struct interface **pinterf)
   net_remove_buffer(ifp);
 
   /* Check main addr */
-  if (!olsr_cnf->fixed_origaddr && ipequal(&olsr_cnf->router_id, &ifp->ip_addr)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&olsr_cnf->router_id, &ifp->ip_addr)) {
     if (list_is_empty(&interface_head)) {
       /* No more interfaces */
       memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);

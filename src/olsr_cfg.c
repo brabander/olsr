@@ -612,8 +612,8 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
             parse_tok_free(tok);
             return CFG_ERROR;
           }
-          ip_acl_add(&rcfg->ipc_nets, &ipaddr, olsr_netmask_to_prefix(&netmask), false);
-          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), olsr_netmask_to_prefix(&netmask));
+          ip_acl_add(&rcfg->ipc_nets, &ipaddr, netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize), false);
+          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize));
         } else {
           int prefix = -1;
           sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);

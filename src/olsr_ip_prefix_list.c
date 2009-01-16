@@ -67,12 +67,12 @@ ip_prefix_list_add(struct list_node *ip_prefix_head, const union olsr_ip_addr *n
 }
 
 int
-ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
   struct ip_prefix_entry *h;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
-    if (ipequal(net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
+    if (ipequal(ip_version, net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
       free(h);
       return 1;
     }
@@ -82,12 +82,12 @@ ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr
 }
 
 struct ip_prefix_entry *
-ip_prefix_list_find(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len)
+ip_prefix_list_find(struct list_node *ip_prefix_head, const union olsr_ip_addr *net, uint8_t prefix_len, int ip_version)
 {
   struct ip_prefix_entry *h;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
-    if (prefix_len == h->net.prefix_len && ipequal(net, &h->net.prefix)) {
+    if (prefix_len == h->net.prefix_len && ipequal(ip_version, net, &h->net.prefix)) {
       return h;
     }
   }

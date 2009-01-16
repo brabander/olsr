@@ -94,7 +94,7 @@ olsrd_plugin_init(void)
   has_inet_gateway = 0;
 
   /* Remove all local Inet HNA entries */
-  while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask))) {
+  while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version)) {
     OLSR_PRINTF(DEBUGLEV, "HNA Internet gateway deleted\n");
   }
 
@@ -189,7 +189,7 @@ void olsr_event(void* foo __attribute__((unused)))
   }
   else if (0 == res && 1 == has_inet_gateway) {
     /* Remove all local Inet HNA entries */
-    while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask))) {
+    while(ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version)) {
       OLSR_PRINTF(DEBUGLEV, "Removing OLSR local HNA entry for Internet\n");
     }
     has_inet_gateway = 0;

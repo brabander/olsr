@@ -448,7 +448,7 @@ void FindNeighbors(
     float currEtx;
 
     /* Consider only links from the specified interface */
-    if (! ipequal(&intf->intAddr, &walker->local_iface_addr))
+    if (! olsr_ipequal(&intf->intAddr, &walker->local_iface_addr))
     {
       continue; /* for */
     }
@@ -464,7 +464,7 @@ void FindNeighbors(
 
     /* Consider only neighbors with an IP address that differs from the
      * passed IP addresses (if passed). Rely on short-circuit boolean evaluation. */
-    if (source != NULL && ipequal(neighborMainIp, MainAddressOf(source)))
+    if (source != NULL && olsr_ipequal(neighborMainIp, MainAddressOf(source)))
     {
       OLSR_PRINTF(
         9,
@@ -476,7 +476,7 @@ void FindNeighbors(
     }
 
     /* Rely on short-circuit boolean evaluation */
-    if (forwardedBy != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
+    if (forwardedBy != NULL && olsr_ipequal(neighborMainIp, MainAddressOf(forwardedBy)))
     {
       OLSR_PRINTF(
         9,
@@ -488,7 +488,7 @@ void FindNeighbors(
     }
 
     /* Rely on short-circuit boolean evaluation */
-    if (forwardedTo != NULL && ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
+    if (forwardedTo != NULL && olsr_ipequal(neighborMainIp, MainAddressOf(forwardedTo)))
     {
       OLSR_PRINTF(
         9,

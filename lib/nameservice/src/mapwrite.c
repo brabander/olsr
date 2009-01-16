@@ -58,7 +58,7 @@ static char* lookup_position_latlon(union olsr_ip_addr *ip)
   struct db_entry *entry;
   struct list_node *list_head, *list_node;
 
-  if (ipequal(ip, &olsr_cnf->router_id)) {
+  if (olsr_ipequal(ip, &olsr_cnf->router_id)) {
     return my_latlon_str;
   }
 
@@ -69,7 +69,7 @@ static char* lookup_position_latlon(union olsr_ip_addr *ip)
 
           entry = list2db(list_node);
 
-      if (entry->names && ipequal(&entry->originator, ip)) {
+      if (entry->names && olsr_ipequal(&entry->originator, ip)) {
         return entry->names->name;
       }
     }

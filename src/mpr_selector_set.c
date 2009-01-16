@@ -129,7 +129,7 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
   }
   //OLSR_PRINTF(1, "MPRS: Lookup....");
   FOR_ALL_MPRS_ENTRIES(mprs) {
-    if (ipequal(&mprs->MS_main_addr, addr)) {
+    if (olsr_ipequal(&mprs->MS_main_addr, addr)) {
       //OLSR_PRINTF(1, "MATCH\n");
       return mprs;
     }

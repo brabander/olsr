@@ -51,7 +51,7 @@ extern bool changes_hna;
 extern bool changes_force; /* Maybe static */
 
 void
-EXPORT(register_pcf)(int (*)(int, int, int));
+register_pcf(int (*)(int, int, int));
 
 void
 olsr_process_changes(void);

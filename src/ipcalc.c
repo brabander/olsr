@@ -114,10 +114,10 @@ ip_prefix_to_string(int af, struct ipprefix_str * const buf, const struct olsr_i
 /* see if the ipaddr is in the net. That is equivalent to the fact that the net part
  * of both are equal. So we must compare the first <prefixlen> bits.
  */
-int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net)
+int ip_in_net(const union olsr_ip_addr *ipaddr, const struct olsr_ip_prefix *net, int ip_version)
 {
   int rv;
-  if(olsr_cnf->ip_version == AF_INET) {
+  if(ip_version == AF_INET) {
     uint32_t netmask = ntohl(prefix_to_netmask4(net->prefix_len));
     rv = (ipaddr->v4.s_addr & netmask) == (net->prefix.v4.s_addr & netmask);
   } else {

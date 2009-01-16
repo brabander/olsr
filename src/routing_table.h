@@ -227,7 +227,7 @@ void olsr_rt_best(struct rt_entry *);
  * Check if there is an interface or gateway change.
  */
 static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
-    return !ipequal(&nh1->gateway, &nh2->gateway) || nh1->interface != nh2->interface;
+    return !olsr_ipequal(&nh1->gateway, &nh2->gateway) || nh1->interface != nh2->interface;
 }
 
 /**

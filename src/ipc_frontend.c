@@ -189,7 +189,7 @@ ipc_check_allowed_ip(union olsr_ip_addr *addr)
   }
 
   /* check nets */
-  return ip_acl_acceptable(&olsr_cnf->ipc_nets, addr);
+  return ip_acl_acceptable(&olsr_cnf->ipc_nets, addr, olsr_cnf->ip_version);
 }
 
 static void

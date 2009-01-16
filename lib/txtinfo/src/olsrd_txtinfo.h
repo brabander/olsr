@@ -49,7 +49,6 @@
 #include "olsr_types.h"
 #include "plugin.h"
 #include "plugin_util.h"
-#include "olsr_ip_acl.h"
 
 extern struct ip_acl allowed_nets;
 
