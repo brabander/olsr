@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "olsr.h"
@@ -39,11 +40,17 @@ void parser_set_disp_pack_in(bool val __attribute__ ((unused)))
 
 static int write_cnf(struct olsr_config *cnf, const char *fname)
 {
+  FILE *fd;
   struct autobuf abuf;
-  FILE *fd = fopen(fname, "w");
-  if (fd == NULL) {
-    fprintf(stderr, "Could not open file %s for writing\n%s\n", fname, strerror(errno));
-    return -1;
+  if (0 != strcmp(fname, "-")) {
+    fd = fopen(fname, "w");
+    if (fd == NULL) {
+      fprintf(stderr, "Could not open file %s for writing\n%s\n", fname, strerror(errno));
+      return -1;
+    }
+  }
+  else {
+    fd = stdout;
   }
 
   printf("Writing config to file \"%s\".... ", fname);
@@ -53,7 +60,9 @@ static int write_cnf(struct olsr_config *cnf, const char *fname)
   fputs(abuf.buf, fd);
 
   abuf_free(&abuf);
-  fclose(fd);
+  if (0 != strcmp(fname, "-")) {
+    fclose(fd);
+  }
   printf("DONE\n");
 
   return 1;
@@ -72,7 +81,7 @@ int main(int argc, char *argv[])
     printf("Verifying argv[%d]=%s\n", i, argv[i]);
     if (CFG_ERROR != olsr_parse_cfg(0, NULL, argv[i], cfg_msg, &cfg_tmp)) {
       printf("%s verified: %s\n", argv[i], 0 <= olsr_sanity_check_cfg(cfg_tmp) ? "yes" : "no");
-      if (&write_cnf != NULL) olsr_print_cnf(cfg_tmp);
+      if (&write_cnf != NULL) write_cnf(cfg_tmp, "-");
     }
     else {
       fprintf(stderr, "%s not verified. %s\n", argv[i], cfg_msg);

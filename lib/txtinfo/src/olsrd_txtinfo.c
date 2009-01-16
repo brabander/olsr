@@ -240,7 +240,9 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 {
     struct ipc_conn *conn;
     struct sockaddr_storage pin;
+#ifndef NODEBUG
     char addr[INET6_ADDRSTRLEN];
+#endif
     socklen_t addrlen = sizeof(pin);
     int http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
     union olsr_ip_addr *ipaddr;
