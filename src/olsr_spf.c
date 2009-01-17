@@ -1,8 +1,6 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
- * IPv4 performance optimization (c) 2006, sven-ola(gmx.de)
- * SPF implementation (c) 2007, Hannes Gredler (hannes@gredler.at)
+ * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,16 +36,6 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * Implementation of Dijkstras algorithm. Initially all nodes
- * are initialized to infinite cost. First we put ourselves
- * on the heap of reachable nodes. Our heap implementation
- * is based on an AVL tree which gives interesting performance
- * characteristics for the frequent operations of minimum key
- * extraction and re-keying. Next all neighbors of a node are
- * explored and put on the heap if the cost of reaching them is
- * better than reaching the current candidate node.
- * The SPF calculation is terminated if there are no more nodes
- * on the heap.
  */
 
 #include "olsr_spf.h"
