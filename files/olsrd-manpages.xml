@@ -51,313 +51,16 @@
       <para>Run the converter: <command>cd ./files &amp;&amp;
       make</command></para>
     </step>
+
+    <step>
+      <para>To convert the HISTORY: <command>man -l olsrd-history.5 &gt;
+      ../HISTORY</command></para>
+    </step>
+
+    <step>
+      <para>To generate HTML: <command>make index.html</command></para>
+    </step>
   </procedure>
-
-  <bridgehead>History (cited from Andreas Tønnesen's Master Thesis, Aug
-  2004)</bridgehead>
-
-  <para>Work on the olsrd implementation was started spring 2003. At first the
-  plan was to add and experiment with MID functionality in the existing <ulink
-  url="http://hipercom.inria.fr/olsr/draft-ietf-manet-olsr-03.txt">draft3</ulink>
-  compatible OLSR implementation by <ulink
-  url="http://hipercom.inria.fr/olsr/#code">INRIA</ulink>. This was completed
-  by summer 2003. This means that much olsrd code originally was based on the
-  INRIA implementation. But since then, close to all code has been rewritten
-  or heavily modified. Olsrd is therefore considered an independent OLSR
-  implementation and not just an extension to the INRIA implementation.
-  [...]</para>
-
-  <para>In October 2003 RFC3626 was released and now full RFC compliance
-  became the goal of the project. In November 2003 UniK olsrd version 0.2.0
-  was made public available through a website. But full RFC core compliance
-  was not reached until release 0.3.8 in January 2004. Not much later 0.4.0
-  was released. It covered all auxiliary functionality as well, except
-  link-layer notifications. [...]</para>
-
-  <variablelist>
-    <varlistentry>
-      <term>Andreas Tønnesen <email>andretoæolsr.org</email></term>
-
-      <listitem>
-        <para>Active 2003-2006: Funder of the project, active contributor and
-        maintainer until 2007, still owning the domain olsr.org. Also created
-        the dotdraw, dyn_gw, httpinfo, and secure plugins. While Andreas
-        Tønnesen published the original implementation under GPLv2, he as well
-        as all other contributors switched to BSD in Nov 2004.</para>
-      </listitem>
-    </varlistentry>
-  </variablelist>
-
-  <bridgehead>Further History (a very brief version, WOS 03 to
-  OLSRD-NG)</bridgehead>
-
-  <para>In Juli 2004, Andreas Tønnesen presented his implementation on the
-  <ulink url="http://www.wizards-of-os.org/archiv/wos_3.html">Wizards of OS
-  03</ulink> conference in Berlin. He met a couple of free public network
-  activists from the <ulink url="http://www.c-base.org/">C-Base</ulink> /
-  <ulink url="http://www.freifunk.net/">Freifunk</ulink> community. While some
-  of them tried to test wireless mobility cycling around the conference center
-  with a moped, others established a general agreement of cooperation. This
-  leads to several contributors to jump in, namely (AFAICR, please add
-  yourself if your name is missing or sort the list if you think you're in the
-  wrong position):</para>
-
-  <variablelist>
-    <varlistentry>
-      <term>Thomas Lopatic <email>thomasælopatic.de</email></term>
-
-      <listitem>
-        <para>Active 2004-2007: Implemented the Link Quality Extensions (ETX),
-        solved lots of implementation issues, created the Windows GUI and
-        maintained the olsrd code base as well.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Bruno Randolf <email>br1æeinfach.org</email></term>
-
-      <listitem>
-        <para>Active 2004-2005: Solved lots of wireless driver/hardware
-        issues, contributed to olsrd implementation (fixes, cleanups),
-        contributed to TAS and Dotdraw plugins, created the nameservice
-        plugin. Also wrotes the related <ulink
-        url="http://br1.einfach.org/horst">horst</ulink> tool.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Sven-Ola Tücke <email>sven-olaægmx.de</email></term>
-
-      <listitem>
-        <para>Active 2004-[...]: Started the olsrd-based <ulink
-        url="http://ff-firmware.sourceforge.net/">Freifunk Firmware</ulink> in
-        late 2004, contributed bug fixes and maintenance (general and
-        Windows), the dyn_gw_plain and arprefresh plugins. Contiued work for
-        olsrd-ng (see below): Fixes &amp; maint, FPM, config parser, and
-        documentation.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Jens Nachtigall <email>nachtigallæweb.de</email></term>
-
-      <listitem>
-        <para>Active 2004-2005: Contributed bug fixes, contributed to dyn_gw
-        plugin and nameservice plugins.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Corinna 'Elektra' Aichele <email>onelektraægmx.net</email></term>
-
-      <listitem>
-        <para>Active 2004-2006: Contributed ideas and valuable comments, also
-        initiated the fish-eye routing scheme.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Erik Tromp <email>erik.trompænl.thalesgroup.com</email></term>
-
-      <listitem>
-        <para>Active 2006-[...]: Created the <ulink
-        url="http://sourceforge.net/projects/olsr-bmf/">BMF</ulink> (Basic
-        Multicast Forwarding) plugin.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Lorenz Schori <email>lorenz.schoriægmx.ch</email></term>
-
-      <listitem>
-        <para>Active 2006-[...]: Created the txtinfo plugin and contributed
-        bug fixes.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>John Hay <email>jhayæmeraka.org.za</email></term>
-
-      <listitem>
-        <para>Active 2006-2008: Contributed maintenance and bug fixes for
-        IPv6.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Immo 'FaUl' Wehrenberg
-      <email>immoæchaostreff-dortmund.de</email></term>
-
-      <listitem>
-        <para>Active 2006-2008: Contributed the quagga plugin.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Vasilis Tsiligiannis <email>acinonyxsæyahoo.gr</email></term>
-
-      <listitem>
-        <para>Active 2007-[...]: Fixes and maint for the quagga plugin.</para>
-      </listitem>
-    </varlistentry>
-  </variablelist>
-
-  <bridgehead>OLSRD-NG History (also a brief version)</bridgehead>
-
-  <para>In late 2006, the Vienna based <ulink
-  url="http://www.funkfeuer.at/">Funkfeuer</ulink> community managed to get
-  some sponsoring from <ulink url="http://www.netidee.at/">IPA</ulink>. They
-  established the OLSRD-NG project which should basically lead to a much
-  larger node count and better code quality (see <ulink
-  url="http://wiki.funkfeuer.at//index.php/Olsrd-ng">Funkfeuer Wiki on
-  OLSRD-NG</ulink>). This in turn attracts new developers for the somewhat
-  silenced team from there on:</para>
-
-  <variablelist>
-    <varlistentry>
-      <term>Aaron Kaplan <email>aaronælo-res.org</email></term>
-
-      <listitem>
-        <para>Active 2005-[...]: Initiator/Coordinator of the OLSRD-NG
-        project, contributed bug fixes (BSD, MacOS) and documentation.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Bernd Petrovitsch <email>berndæfirmix.at</email></term>
-
-      <listitem>
-        <para>Active 2006-[...]: Patch-juggler for the olsrd repository,
-        rewrote the build system (Makefiles) and plugin subsystem, generalized
-        commonly used code and functions, also lots of code base maintenance
-        and bug fixes as well.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Hannes Gredler <email>hannesægredler.at</email></term>
-
-      <listitem>
-        <para>Active 2007-[...] Contributed the SPF refactoring (routing code
-        optimization), code refactorings for scheduler and nearly all internal
-        data structures, code base maintenance and bug fixes. Currently also
-        hosts the mercurial repository.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Thomas Martin
-      <email>thomas.martinærohde-schwarz.com</email></term>
-
-      <listitem>
-        <para>Active 2008: Code base maintenance (mainly BSD and
-        vxWorks).</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Henning Rogge <email>roggeæfgan.de</email></term>
-
-      <listitem>
-        <para>Active 2008-[...]: Reworked the LQ/ETX algorithm, contributed
-        the netsimcap (network simulation, GPL), changed logging and data
-        structures, also lots of code base maintenance and bug fixes.</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>Markus Kittenberger
-      <email>Markus.Kittenbergerægmx.at</email></term>
-
-      <listitem>
-        <para>Active 2008-[...]: Policy routing changes.</para>
-      </listitem>
-    </varlistentry>
-  </variablelist>
-
-  <note>
-    <para>Contributors are simply mentioned in chronological order - which
-    does not imply any other rating. If you want your name mentioned also,
-    please add to <filename>files/olsrd-manpages.xml</filename> which is the
-    source for the <filename>HISTORY</filename> file.</para>
-  </note>
-
-  <bridgehead>Licensing Summary</bridgehead>
-
-  <para>While the overall project is now (early-2009) licensed under the
-  revised BSD license (without the <quote>obnoxious BSD advertising
-  clause</quote>), licensing differs for some modules and files. This list is
-  for informal purposes only - please refer to the respective files, persons,
-  and legal bodies if you need verified licensing information.</para>
-
-  <variablelist>
-    <varlistentry>
-      <term>Overall olsrd project</term>
-
-      <listitem>
-        <para>Licensed under revised BSD (2004, Andreas Tønnesen and Thomas
-        Lopatic, olsr.org)</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>contrib/netsimcap/</term>
-
-      <listitem>
-        <para>Licensed under GPLv3 (2008, Henning Rogge)</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>gui/linux-gtk/</term>
-
-      <listitem>
-        <para>Licensed under GPLv2 (2003, Andreas Tønnesen)</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>lib/secure/src/md5.h</term>
-
-      <listitem>
-        <para>Licensed under some homebrew public domain (1991, RSA Data
-        Security, Inc.)</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>lib/bmf/</term>
-
-      <listitem>
-        <para>Licensed under revised BSD, (2005, Erik Tromp, Thales
-        Communications, Huizen, The Netherlands)</para>
-      </listitem>
-    </varlistentry>
-
-    <varlistentry>
-      <term>lib/quagga/</term>
-
-      <listitem>
-        <para>Licensed under GPLv2 or LGPLv2 (2006, Immo 'FaUl' Wehrenberg and
-        2007 Vasilis Tsiligiannis)</para>
-      </listitem>
-    </varlistentry>
-  </variablelist>
-
-  <para>As a note to future contributors: As of Jan-2009, we removed single
-  person names from the copyright comments with the permission of the original
-  authors (with the exception of above modules and 6 files under src/ created
-  by Bernd Petrovitsch). If you contribute new files to the repository, please
-  add a copy of the license.txt file as comment. If you send in patches,
-  please add a <ulink
-  url="http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel">signed-off-by</ulink>
-  statement to express, that your patch is properly licensed. If you add a new
-  plugin, you may choose another license (see quagga, bmf). Please make sure
-  your license is compatible to olsrd, otherwise do not add to the repository.
-  To prevent automatic re-licensing, add your exception to the
-  <filename>license.sh</filename> script file also. IANAL clause: absolutely
-  no warranty for the above information, please ask your favorite lawyer if
-  you have any licensing questions or issues.</para>
 
   <refentry id="olsrd_8">
     <indexterm>
@@ -3233,6 +2936,369 @@ struct lq_handler lq_etxff_handler = {
           </listitem>
         </varlistentry>
       </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>See Also</title>
+
+      <simplelist type="inline">
+        <member><xref endterm="olsrd_8-title" linkend="olsrd_8" /> <xref
+        endterm="olsrd_conf_5-title" linkend="olsrd_conf_5" /></member>
+      </simplelist>
+    </refsect1>
+  </refentry>
+
+  <refentry id="olsrd_history_5">
+    <indexterm>
+      <primary><productname>olsrd-history</productname></primary>
+    </indexterm>
+
+    <refentryinfo>
+      <titleabbrev><productname>olsrd</productname> Project
+      History</titleabbrev>
+
+      <authorgroup>
+        <author>
+          <firstname>Sven-Ola Tücke</firstname>
+
+          <email>sven-olaægmx.de</email>
+        </author>
+      </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+      <refentrytitle id="olsrd_history_5-title">olsrd-history</refentrytitle>
+
+      <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+      <refname>olsrd-history</refname>
+
+      <refpurpose>A brief summary of the <productname>olsrd</productname>
+      project history</refpurpose>
+    </refnamediv>
+
+    <refsect1>
+      <title>HISTORY (CITED FROM A.TØNNESEN MASTER THESIS, AUG 2004)</title>
+
+      <para>Work on the olsrd implementation was started spring 2003. At first
+      the plan was to add and experiment with MID functionality in the
+      existing draft3[1] compatible OLSR implementation by INRIA[2]. This was
+      completed by summer 2003. This means that much olsrd code originally was
+      based on the INRIA implementation. But since then, close to all code has
+      been rewritten or heavily modified. Olsrd is therefore considered an
+      independent OLSR implementation and not just an extension to the INRIA
+      implementation. [...]</para>
+
+      <para>In October 2003 RFC3626 was released and now full RFC compliance
+      became the goal of the project. In November 2003 UniK olsrd version
+      0.2.0 was made public available through a website. But full RFC core
+      compliance was not reached until release 0.3.8 in January 2004. Not much
+      later 0.4.0 was released. It covered all auxiliary functionality as
+      well, except link-layer notifications. [...]</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>Andreas Tønnesen <email>andretoæolsr.org</email></term>
+
+          <listitem>
+            <para>Active 2003-2006: Funder of the project, active contributor
+            and maintainer until 2007, still owning the domain olsr.org. Also
+            created the dotdraw, dyn_gw, httpinfo, and secure plugins. While
+            Andreas Tønnesen published the original implementation under
+            GPLv2, he as well as all other contributors switched to BSD in Nov
+            2004.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>[1]
+      http://hipercom.inria.fr/olsr/draft-ietf-manet-olsr-03.txt</para>
+
+      <para>[2] http://hipercom.inria.fr/olsr/#code</para>
+    </refsect1>
+
+    <refsect1>
+      <title>FURTHER HISTORY (WOS-03 TO OLSRD-NG)</title>
+
+      <para>In Juli 2004, Andreas Tønnesen presented his implementation on the
+      Wizards of OS 03[3] conference in Berlin. He met a couple of free public
+      network activists from the C-Base[4] / Freifunk[5] community. While some
+      of them tried to test wireless mobility cycling around the conference
+      center with a moped, others established a general agreement of
+      cooperation. This leads to several contributors to jump in, namely
+      (AFAICR, please add yourself if your name is missing or sort the list if
+      you think you're in the wrong position):</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>Thomas Lopatic <email>thomasælopatic.de</email></term>
+
+          <listitem>
+            <para>Active 2004-2007: Implemented the Link Quality Extensions
+            (ETX), solved lots of implementation issues, created the Windows
+            GUI and maintained the olsrd code base as well.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Bruno Randolf <email>br1æeinfach.org</email></term>
+
+          <listitem>
+            <para>Active 2004-2005: Solved lots of wireless driver/hardware
+            issues, contributed to olsrd implementation (fixes, cleanups),
+            contributed to TAS and Dotdraw plugins, created the nameservice
+            plugin. Also wrotes the related horst[6] tool.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Sven-Ola Tücke <email>sven-olaægmx.de</email></term>
+
+          <listitem>
+            <para>Active 2004-[...]: Started the olsrd-based Freifunk
+            Firmware[7] in late 2004, contributed bug fixes and maintenance
+            (general and Windows), the dyn_gw_plain and arprefresh plugins.
+            Contiued work for olsrd-ng (see below): Fixes &amp; maint, FPM,
+            config parser, and documentation.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Jens Nachtigall <email>nachtigallæweb.de</email></term>
+
+          <listitem>
+            <para>Active 2004-2005: Contributed bug fixes, contributed to
+            dyn_gw plugin and nameservice plugins.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Corinna 'Elektra' Aichele
+          <email>onelektraægmx.net</email></term>
+
+          <listitem>
+            <para>Active 2004-2006: Contributed ideas and valuable comments,
+            also initiated the fish-eye routing scheme.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Erik Tromp <email>erik.trompænl.thalesgroup.com</email></term>
+
+          <listitem>
+            <para>Active 2006-[...]: Created the <ulink
+            url="http://sourceforge.net/projects/olsr-bmf/">BMF</ulink> (Basic
+            Multicast Forwarding) plugin.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Lorenz Schori <email>lorenz.schoriægmx.ch</email></term>
+
+          <listitem>
+            <para>Active 2006-[...]: Created the txtinfo plugin and
+            contributed bug fixes.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>John Hay <email>jhayæmeraka.org.za</email></term>
+
+          <listitem>
+            <para>Active 2006-2008: Contributed maintenance and bug fixes for
+            IPv6.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Immo 'FaUl' Wehrenberg
+          <email>immoæchaostreff-dortmund.de</email></term>
+
+          <listitem>
+            <para>Active 2006-2008: Contributed the quagga plugin.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Vasilis Tsiligiannis <email>acinonyxsæyahoo.gr</email></term>
+
+          <listitem>
+            <para>Active 2007-[...]: Fixes and maint for the quagga
+            plugin.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>[3] http://www.wizards-of-os.org/archiv/wos_3.html</para>
+
+      <para>[4] http://www.c-base.org/</para>
+
+      <para>[5] http://www.freifunk.net/</para>
+
+      <para>[6] http://br1.einfach.org/horst</para>
+
+      <para>[7] http://ff-firmware.sourceforge.net/</para>
+    </refsect1>
+
+    <refsect1>
+      <title>OLSRD-NG HISTORY (STILL ACTIVE)</title>
+
+      <para>In late 2006, the Vienna based Funkfeuer[8] community managed to
+      get some sponsoring from IPA[9]. They established the OLSRD-NG project
+      which should basically lead to a much larger node count and better code
+      quality (see Funkfeuer Wiki on OLSRD-NG[10]). This in turn attracts new
+      developers for the somewhat silenced team from there on:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>Aaron Kaplan <email>aaronælo-res.org</email></term>
+
+          <listitem>
+            <para>Active 2005-[...]: Initiator/Coordinator of the OLSRD-NG
+            project, contributed bug fixes (BSD, MacOS) and
+            documentation.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Bernd Petrovitsch <email>berndæfirmix.at</email></term>
+
+          <listitem>
+            <para>Active 2006-[...]: Patch-juggler for the olsrd repository,
+            rewrote the build system (Makefiles) and plugin subsystem,
+            generalized commonly used code and functions, also lots of code
+            base maintenance and bug fixes as well.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Hannes Gredler <email>hannesægredler.at</email></term>
+
+          <listitem>
+            <para>Active 2007-[...] Contributed the SPF refactoring (routing
+            code optimization), code refactorings for scheduler and nearly all
+            internal data structures, code base maintenance and bug fixes.
+            Currently also hosts the mercurial repository.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Henning Rogge <email>roggeæfgan.de</email></term>
+
+          <listitem>
+            <para>Active 2008-[...]: Reworked the LQ/ETX algorithm,
+            contributed the netsimcap (network simulation, GPL), changed
+            logging and data structures, also lots of code base maintenance
+            and bug fixes.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>Markus Kittenberger
+          <email>Markus.Kittenbergerægmx.at</email></term>
+
+          <listitem>
+            <para>Active 2008-[...]: Policy routing changes.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <note>
+        <para>Contributors are simply mentioned in chronological order - which
+        does not imply any other rating. If you want your name mentioned also,
+        please add to <filename>files/olsrd-manpages.xml</filename> which is
+        the source for the <filename>HISTORY</filename> file.</para>
+      </note>
+
+      <para>[8] http://www.funkfeuer.at/</para>
+
+      <para>[9] http://www.netidee.at/</para>
+
+      <para>[10] http://wiki.funkfeuer.at//index.php/Olsrd-ng</para>
+    </refsect1>
+
+    <refsect1>
+      <title>LICENSING SUMMARY</title>
+
+      <para>While the overall project is now (early-2009) licensed under the
+      revised BSD license (without the <quote>obnoxious BSD advertising
+      clause</quote>), licensing differs for some modules and files. This list
+      is for informal purposes only - please refer to the respective files,
+      persons, and legal bodies if you need verified licensing
+      information.</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>Overall olsrd project</term>
+
+          <listitem>
+            <para>Licensed under revised BSD (2004, Andreas Tønnesen and
+            Thomas Lopatic, olsr.org)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>contrib/netsimcap/</term>
+
+          <listitem>
+            <para>Licensed under GPLv3 (2008, Henning Rogge)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>gui/linux-gtk/</term>
+
+          <listitem>
+            <para>Licensed under GPLv2 (2003, Andreas Tønnesen)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>lib/secure/src/md5.h</term>
+
+          <listitem>
+            <para>Licensed under some homebrew public domain (1991, RSA Data
+            Security, Inc.)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>lib/bmf/</term>
+
+          <listitem>
+            <para>Licensed under revised BSD, (2005, Erik Tromp, Thales
+            Communications, Huizen, The Netherlands)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>lib/quagga/</term>
+
+          <listitem>
+            <para>Licensed under GPLv2 or LGPLv2 (2006, Immo 'FaUl' Wehrenberg
+            and 2007 Vasilis Tsiligiannis)</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>As a note to future contributors: As of Jan-2009, we removed
+      single person names from the copyright comments with the permission of
+      the original authors (with the exception of above modules and 6 files
+      under src/ created by Bernd Petrovitsch). If you contribute new files to
+      the repository, please add a copy of the license.txt file as comment. If
+      you send in patches, please add a signed-off-by[11] statement to
+      express, that your patch is properly licensed. If you add a new plugin,
+      you may choose another license (see quagga, bmf). Please make sure your
+      license is compatible to olsrd, otherwise do not add to the repository.
+      To prevent automatic re-licensing, add your exception to the
+      <filename>license.sh</filename> script file also. IANAL clause:
+      absolutely no warranty for the above information, please ask your
+      favorite lawyer if you have any licensing questions or issues.</para>
+
+      <para>[11]
+      http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel</para>
     </refsect1>
 
     <refsect1>
