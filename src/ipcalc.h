@@ -1,13 +1,13 @@
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2007, Bernd Petrovitsch <berndæfirmix.at>
- * Copyright (c) 2007, Hannes Gredler <hannesægredler.at>
- * Copyright (c) 2007, Sven-Ola Tuecke <sven-olaægmx.de>
- * Copyright (c) 2008, Bernd Petrovitsch <berndæfirmix.at>
- * Copyright (c) 2008, Hannes Gredler <hannesægredler.at>
- * Copyright (c) 2008, Sven-Ola Tuecke <sven-olaægmx.de>
- * Copyright (c) 2009, Henning Rogge <roggeæfgan.de>
- * Copyright (c) 2009, Sven-Ola Tuecke <sven-olaægmx.de>
+ * Copyright (c) 2007, Bernd Petrovitsch <bernd-at-firmix.at>
+ * Copyright (c) 2007, Hannes Gredler <hannes-at-gredler.at>
+ * Copyright (c) 2007, Sven-Ola Tuecke <sven-ola-at-gmx.de>
+ * Copyright (c) 2008, Bernd Petrovitsch <bernd-at-firmix.at>
+ * Copyright (c) 2008, Hannes Gredler <hannes-at-gredler.at>
+ * Copyright (c) 2008, Sven-Ola Tuecke <sven-ola-at-gmx.de>
+ * Copyright (c) 2009, Henning Rogge <rogge-at-fgan.de>
+ * Copyright (c) 2009, Sven-Ola Tuecke <sven-ola-at-gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
