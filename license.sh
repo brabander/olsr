@@ -1,65 +1,133 @@
 #!/bin/sh
 
-# Working notes on license status: it's a bit mixed here
-#
-# gui/win32/Main/TrayIcon.cpp|h have none
-# gui/win32/Main/StdAfx.cpp/h are generated (have none)
-# gui/win32/Main/resource.h is generated (has none)
-# gui/linux-gtk/* is GPLv2
-# contrib/netsimpcap is GPLv3
-# src/win32/ce/ws2tcpip.h has none
-# src/olsr_ip_prefix_list.h has none
-# lib/secure/src/md5.h is some homegrown RSA Inc.
-# lib/quagga states GPLv2 or LGPLv2
+# ./contrib/netsimpcap is GPLv3
+EXCEPT="$EXCEPT -not -path './contrib/netsimpcap/*'"
 
-bsd_revised()
-  cat<<EOF
+# ./gui/linux-gtk/* is GPLv2
+EXCEPT="$EXCEPT -not -path './gui/linux-gtk/*'"
 
-The olsr.org Optimized Link-State Routing daemon(olsrd)
-$1
-All rights reserved.
+# ./gui/win32/Main/StdAfx.cpp/h are generated
+EXCEPT="$EXCEPT -not -path './gui/win32/Main/StdAfx.*'"
 
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions 
-are met:
+# ./gui/win32/Main/resource.h is generated
+EXCEPT="$EXCEPT -not -path './gui/win32/Main/resource.h'"
 
-* Redistributions of source code must retain the above copyright 
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright 
-  notice, this list of conditions and the following disclaimer in 
-  the documentation and/or other materials provided with the 
-  distribution.
-* Neither the name of olsr.org, olsrd nor the names of its 
-  contributors may be used to endorse or promote products derived 
-  from this software without specific prior written permission.
+# ./lib/bmf is other legal body
+EXCEPT="$EXCEPT -not -path './lib/bmf/*'"
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-POSSIBILITY OF SUCH DAMAGE.
-EOF
+# ./lib/quagga states GPLv2 or LGPLv2
+EXCEPT="$EXCEPT -not -path './lib/quagga/*'"
 
-case "$1" in
+# ./lib/secure/src/md5.[ch] have some homegrown license from RSA Inc.
+EXCEPT="$EXCEPT -not -path './lib/secure/src/md5.*'"
+
+# ./src/win32/ce/ws2tcpip.h has none
+EXCEPT="$EXCEPT -not -path './src/win32/ce/ws2tcpip.h'"
+
+get_license()
+{
+  echo "$1"|sed '
+    s/ *$//
+    1d
+    /^Copyright/,/^ /{
+      r/dev/stdin
+      d
+    }
+    $a\
+\
+Visit http://www.olsr.org for more information.\
+\
+If you find this software useful feel free to make a donation\
+to the project. For more information see the website or contact\
+the copyright holders.
+  ' ${0%.*}.txt
+}
+
+put_license()
+{
+  case "$1" in
     "")
-        echo "Please provide a file name."
-        exit 1
+      echo "Please provide a file name" >&2 && exit
     ;;
-    license.txt)
-        bsd_revised "Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
-                    Thomas Lopatic(thomas@lopatic.de)"|diff -q $1 - && echo "$1 matches."
-    ;;
-    src/common/string.*|src/ipcalc.*|src/plugin_util.*)
-        bsd_revised "$(hg log $1|sed -n '/user:/{s/[^ ]* *//;s/.$/&/;h};/date:/{s/[^ ]* *[^ ]* *[^ ]* *[^ ]* *[^ ]* */Copyright (c) /;s/ [^ ]*$/, /;G;s/\n//;s/@/æ/;p}'|sort|uniq)"
-    ;;
+    ./src/common/string.*|./src/ipcalc.*|./src/plugin_util.*)
+      get_license "$(hg log $1|sed '/2208:4b42f04361a3/,/^$/d'|sed -n '/user:/{s/[^ ]* *//;s/.$/&/;h};/date:/{s/[^ ]* *[^ ]* *[^ ]* *[^ ]* *[^ ]* */Copyright (c) /;s/ [^ ]*$/, /;G;s/\n//;s/@/æ/;p}'|sort|uniq)"
+      ;;
     *)
-        bsd_revised "Copyright (c) 2004-$(date +%Y), the olsr.org team - see HISTORY file"
+      get_license "Copyright (c) 2004-$(date +%Y), the olsr.org team - see HISTORY file"
     ;;
-esac
+  esac
+}
+
+put_source()
+{
+  put_license $1 | sed '
+    1i\
+/*
+    $a\
+ *\
+ */
+    s/./ * &/
+    s/^$/ */
+  ' | sed -i '
+    /\/\*/{
+      N
+      s/The olsr.org Optimized Link-State Routing daemon/&/
+      tzap
+      b
+    :zap
+      N
+      s/\*\///
+      tend
+      bzap
+    :end
+      r/dev/stdin
+      d
+    }
+  ' $1
+}
+
+put_makefile()
+{
+  put_license $1 | sed '
+    s/./# &/
+    s/^$/#/
+    $a#\
+' | sed -i '
+    1,/^$/{
+      r/dev/stdin
+      d
+    }
+  ' $1
+}
+
+put_nsis()
+{
+  put_license $1 | sed '
+    1i;
+    s/./;  &/
+    s/^$/;/
+    $a;\
+;\
+' | sed -i '
+    1,/^$/{
+      r/dev/stdin
+      d
+    }
+  ' $1
+}
+
+for file in $(eval find -type f -name "*.[ch]" $EXCEPT);do
+  put_source $file
+done
+
+for file in $(eval find -type f -name "*.cpp" $EXCEPT);do
+  put_source $file
+done
+
+for file in $(eval find -type f -name "Makefile" $EXCEPT);do
+  put_makefile $file
+done
+
+for file in $(eval find -type f -name "*.nsi" $EXCEPT);do
+  put_nsis $file
+done
