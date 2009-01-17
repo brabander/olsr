@@ -223,7 +223,7 @@ static unsigned char* zebra_route_packet (uint16_t cmd, struct zebra_route *r) {
 
   if (r->message & ZAPI_MESSAGE_NEXTHOP) {
     *t++ = r->nexthop_num + r->ifindex_num;
-    
+
       for (count = 0; count < r->nexthop_num; count++)
 	{
 	  *t++ = ZEBRA_NEXTHOP_IPV4;
@@ -354,7 +354,7 @@ static unsigned char *try_read (ssize_t *size) {
   /* set blocking socket on fragmented packet */
     if (*size != offset)
       fcntl (zebra.sock, F_SETFL, sockstatus);
- 
+
   } while (*size != offset);
 
   /* restore socket status */
@@ -367,16 +367,16 @@ static unsigned char *try_read (ssize_t *size) {
 /* Parse an ipv4-route-packet recived from zebra
  */
 static struct zebra_route *zebra_parse_route (unsigned char *opt) {
-  
+
   struct zebra_route *r;
   int c;
   size_t size;
   uint16_t length;
   unsigned char *pnt;
-      
+
   memcpy (&length, opt, sizeof length);
   length = ntohs (length);
-  
+
   r = olsr_malloc (sizeof *r , "zebra_parse_route");
   pnt = &opt[3];
   r->type = *pnt++;
@@ -421,7 +421,7 @@ static struct zebra_route *zebra_parse_route (unsigned char *opt) {
     r->metric = ntohl (r->metric);
       pnt += sizeof r->metric;
 //  }
-    
+
     if (pnt - opt != length) { olsr_exit ("(QUAGGA) length does not match ??? ", EXIT_FAILURE);
      }
 

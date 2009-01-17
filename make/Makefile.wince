@@ -11,7 +11,7 @@ LIBS +=		-lwinsock -liphlpapi
 CPPFLAGS += 	-Isrc/win32 -Isrc/win32/ce
 
 ifdef OLSRD_PLUGIN
-CFLAGS +=	
+CFLAGS +=
 LDFLAGS +=	-lolsrd
 endif
 

@@ -24,6 +24,7 @@ EOF
 
 sed -i 's/Andreas T.\{1,6\}nnesen/Andreas Tonnesen/g;s/Andreas Tønnesen/Andreas Tonnesen/g;s/Andreas TÃ¸nmnesen/Andreas Tonnesen/' $(find -type f -not -path "*/.hg*" -not -name ${0##*/} -not -name "*.xml")
 sed -i 's///g;s/[	 ]\+$//' $(find -name "*.[ch]" -not -path "*/.hg*")
+sed -i 's///g;s/[	 ]\+$//' $(find -name "Makefile*" -not -path "*/.hg*")
 
 addon=
 test "--cmp" = "$1" && {
@@ -31,6 +32,9 @@ test "--cmp" = "$1" && {
   addon="--swallow-optional-blank-lines --ignore-newlines"
   shift
 }
-indent $(cat ${0%/*}/src/.indent.pro) $addon $* $(find -name "*.[ch]" -not -path "*/.hg*")
+test "--noindent" = "$1" || {
+  indent $(cat ${0%/*}/src/.indent.pro) $addon $* $(find -name "*.[ch]" -not -path "*/.hg*")
+  shift
+}
 
 rm $(find -name "*~" -not -path "*/.hg*")

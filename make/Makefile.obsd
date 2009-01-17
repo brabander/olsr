@@ -8,7 +8,7 @@ SRCS +=		$(wildcard src/bsd/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h src/unix/*.h)
 
 CPPFLAGS +=	-D__OpenBSD__
-LIBS +=		
+LIBS +=
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \

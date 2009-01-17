@@ -10,7 +10,7 @@ SRCS += 	$(wildcard src/linux/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h src/unix/*.h)
 
 CPPFLAGS += 	-Dlinux
-LIBS +=		
+LIBS +=
 
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).so.$(PLUGIN_VER)
 INSTALL_LIB =	install -D -m 755 $(PLUGIN_FULLNAME) $(LIBDIR)/$(PLUGIN_FULLNAME); \

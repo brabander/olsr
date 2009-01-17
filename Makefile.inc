@@ -130,17 +130,17 @@ ifdef OLSRD_PLUGIN
 CPPFLAGS +=	-DOLSR_PLUGIN
 LDFLAGS +=	-shared
 LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
-LDFLAGS +=	-Wl,--version-script=version-script.txt 
+LDFLAGS +=	-Wl,--version-script=version-script.txt
 else
 # c and ld flags for main
 ifeq ($(LD_HAS_DYN), yes)
 LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
 else
-LDFLAGS_EXE +=	-Wl,-export-dynamic 
+LDFLAGS_EXE +=	-Wl,-export-dynamic
 endif
 LDFLAGS +=	-Wl,-rpath,$(LIBDIR)
 endif
-# LDFLAGS for all 
+# LDFLAGS for all
 LDFLAGS +=	-Wl,--warn-common
 # See above at "-ffunction-sections" for an explanation (and why it is disabled).
 #LDOPTS +=	-Wl,--gc-sections
@@ -212,7 +212,7 @@ endif
 TAGFILE ?=	src/TAGS
 
 help:
-	@echo 
+	@echo
 	@echo '***** olsr.org olsr daemon Make ****'
 	@echo ' Automatic detection of your OS     '
 	@echo ' failed!                            '

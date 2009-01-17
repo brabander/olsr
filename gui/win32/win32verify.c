@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
   for (i = 1; i < argc; i++) {
     struct olsr_config *cfg_tmp;
     char cfg_msg[FILENAME_MAX + 256];
-    
+
     printf("Verifying argv[%d]=%s\n", i, argv[i]);
     if (CFG_ERROR != olsr_parse_cfg(0, NULL, argv[i], cfg_msg, &cfg_tmp)) {
       printf("%s verified: %s\n", argv[i], 0 <= olsr_sanity_check_cfg(cfg_tmp) ? "yes" : "no");
