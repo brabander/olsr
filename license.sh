@@ -24,6 +24,12 @@ EXCEPT="$EXCEPT -not -path './lib/secure/src/md5.*'"
 # ./src/win32/ce/ws2tcpip.h has none
 EXCEPT="$EXCEPT -not -path './src/win32/ce/ws2tcpip.h'"
 
+# ./src/valgrind/*.h is dual licensed
+EXCEPT="$EXCEPT -not -path './src/valgrind/*.h'"
+
+# ./src/builddata.c is generated
+EXCEPT="$EXCEPT -not -path './src/builddata.c'"
+
 get_license()
 {
   echo "$1"|sed '
@@ -50,7 +56,7 @@ put_license()
       echo "Please provide a file name" >&2 && exit
     ;;
     ./src/common/string.*|./src/ipcalc.*|./src/plugin_util.*)
-      get_license "$(hg log $1|sed '/2208:4b42f04361a3/,/^$/d'|sed -n '/user:/{s/[^ ]* *//;s/.$/&/;h};/date:/{s/[^ ]* *[^ ]* *[^ ]* *[^ ]* *[^ ]* */Copyright (c) /;s/ [^ ]*$/, /;G;s/\n//;s/@/æ/;p}'|sort|uniq)"
+      get_license "$(hg log $1|sed '/2208:4b42f04361a3/,/^$/d'|sed '/2210:3de603afe4cb/,/^$/d'|sed -n '/user:/{s/[^ ]* *//;s/.$/&/;h};/date:/{s/[^ ]* *[^ ]* *[^ ]* *[^ ]* *[^ ]* */Copyright (c) /;s/ [^ ]*$/, /;G;s/\n//;s/@/-at-/;p}'|sort|uniq)"
       ;;
     *)
       get_license "Copyright (c) 2004-$(date +%Y), the olsr.org team - see HISTORY file"
@@ -115,6 +121,16 @@ put_nsis()
     }
   ' $1
 }
+
+if false;then
+  for file in $(eval find -type f -name "*.[ch]" $EXCEPT) \
+              $(eval find -type f -name "*.cpp" $EXCEPT) \
+              $(eval find -type f -name "Makefile" $EXCEPT) \
+              $(eval find -type f -name "*.nsi" $EXCEPT)
+  do
+    grep -q "The olsr.org Optimized Link-State Routing daemon" $file || echo $file
+  done
+fi
 
 for file in $(eval find -type f -name "*.[ch]" $EXCEPT);do
   put_source $file
