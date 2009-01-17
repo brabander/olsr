@@ -24,7 +24,9 @@ EOF
 
 sed -i 's/Andreas T.\{1,6\}nnesen/Andreas Tonnesen/g;s/Andreas Tønnesen/Andreas Tonnesen/g;s/Andreas TÃ¸nmnesen/Andreas Tonnesen/' $(find -type f -not -path "*/.hg*" -not -name ${0##*/} -not -name "*.xml")
 sed -i 's///g;s/[	 ]\+$//' $(find -name "*.[ch]" -not -path "*/.hg*")
+sed -i 's///g;s/[	 ]\+$//' $(find -name "*.cpp" -not -path "*/.hg*")
 sed -i 's///g;s/[	 ]\+$//' $(find -name "Makefile*" -not -path "*/.hg*")
+sed -i 's///g;s/[	 ]\+$//' $(find -name "*.nsi" -not -path "*/.hg*")
 
 addon=
 test "--cmp" = "$1" && {

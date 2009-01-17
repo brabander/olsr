@@ -3,31 +3,31 @@
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * * Redistributions of source code must retain the above copyright 
+ * * Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in 
- *   the documentation and/or other materials provided with the 
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
  *   distribution.
- * * Neither the name of olsr.org, olsrd nor the names of its 
- *   contributors may be used to endorse or promote products derived 
+ * * Neither the name of olsr.org, olsrd nor the names of its
+ *   contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Visit http://www.olsr.org for more information.
@@ -131,11 +131,11 @@ void MyDialog2::OnCancel()
 {
 }
 
-void MyDialog2::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void MyDialog2::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if (pScrollBar == (CScrollBar *)&m_DebugLevel)
 		SetDebugLevel(m_DebugLevel.GetPos());
-	
+
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -148,7 +148,7 @@ void MyDialog2::Reset(void)
 	::GetModuleFileName(NULL, PathName, MAX_PATH);
 
 	for (Walker = PathName; *Walker != 0; Walker++);
-	
+
 	while (*Walker != '\\')
 		Walker--;
 
@@ -172,12 +172,12 @@ void MyDialog2::Reset(void)
 	}
 }
 
-BOOL MyDialog2::OnInitDialog() 
+BOOL MyDialog2::OnInitDialog()
 {
 	int i;
 
 	CDialog::OnInitDialog();
-	
+
 	m_DebugLevel.SetRange(0, 9, TRUE);
 
 	m_InterfaceList.SetExtendedStyle(m_InterfaceList.GetExtendedStyle() |
@@ -201,7 +201,7 @@ BOOL MyDialog2::OnInitDialog()
 	return TRUE;
 }
 
-void MyDialog2::OnHystCheck() 
+void MyDialog2::OnHystCheck()
 {
 	BOOL EnaDis = m_HystCheck.GetCheck();
 
@@ -210,7 +210,7 @@ void MyDialog2::OnHystCheck()
 	m_HystScaling.EnableWindow(EnaDis);
 }
 
-void MyDialog2::OnEtxCheckWorker() 
+void MyDialog2::OnEtxCheckWorker()
 {
 	BOOL EnaDis = m_EtxCheck.GetCheck();
 
@@ -272,7 +272,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_HelloHold.SetWindowText(Conv);
 
 	MsgPar = &Int->cnf->tc_params;
-	
+
 	Conv.Format("%.2f", MsgPar->emission_interval);
 	m_TcInt.SetWindowText(Conv);
 
@@ -280,7 +280,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_TcHold.SetWindowText(Conv);
 
 	MsgPar = &Int->cnf->mid_params;
-	
+
 	Conv.Format("%.2f", MsgPar->emission_interval);
 	m_MidInt.SetWindowText(Conv);
 
@@ -288,7 +288,7 @@ int MyDialog2::OpenConfigFile(CString PathName)
 	m_MidHold.SetWindowText(Conv);
 
 	MsgPar = &Int->cnf->hna_params;
-	
+
 	Conv.Format("%.2f", MsgPar->emission_interval);
 	m_HnaInt.SetWindowText(Conv);
 
@@ -418,7 +418,7 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	PrevInt = NULL;
 
 	// remove interfaces that we do not want
-	
+
 	for (Int = Conf->if_configs; Int != NULL; Int = Int->next)
 	{
 		IntName = Int->name;
@@ -437,9 +437,9 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 				Conf->if_configs = Int->next;
 		}
 	}
-	
+
 	// add missing interfaces
-	
+
 	for (i = 0; i < NumInt; i++)
 	{
 		if (!m_InterfaceList.GetCheck(i))
@@ -681,17 +681,17 @@ void MyDialog2::OnOpenButton()
 	FileName.ReleaseBuffer();
 }
 
-void MyDialog2::OnResetButton() 
+void MyDialog2::OnResetButton()
 {
 	Reset();
 }
 
-void MyDialog2::OnEtxRadio1() 
+void MyDialog2::OnEtxRadio1()
 {
 	m_EtxRadio2.SetCheck(FALSE);
 }
 
-void MyDialog2::OnEtxRadio2() 
+void MyDialog2::OnEtxRadio2()
 {
 	m_EtxRadio1.SetCheck(FALSE);
 }
