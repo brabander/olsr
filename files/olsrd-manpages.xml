@@ -3196,6 +3196,15 @@ struct lq_handler lq_etxff_handler = {
         </varlistentry>
 
         <varlistentry>
+          <term>Thomas Martin
+          <email>thomas.martinærohde-schwarz.com</email></term>
+
+          <listitem>
+            <para>Active 2008: Provided VxWorks branch[11]</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>Markus Kittenberger
           <email>Markus.Kittenbergerægmx.at</email></term>
 
@@ -3217,6 +3226,8 @@ struct lq_handler lq_etxff_handler = {
       <para>[9] http://www.netidee.at/</para>
 
       <para>[10] http://wiki.funkfeuer.at//index.php/Olsrd-ng</para>
+
+      <para>[11] http://gredler.at/hg/olsrd-vxworks</para>
     </refsect1>
 
     <refsect1>
@@ -3288,7 +3299,7 @@ struct lq_handler lq_etxff_handler = {
       the original authors (with the exception of above modules and 6 files
       under src/ created by Bernd Petrovitsch). If you contribute new files to
       the repository, please add a copy of the license.txt file as comment. If
-      you send in patches, please add a signed-off-by[11] statement to
+      you send in patches, please add a signed-off-by[12] statement to
       express, that your patch is properly licensed. If you add a new plugin,
       you may choose another license (see quagga, bmf). Please make sure your
       license is compatible to olsrd, otherwise do not add to the repository.
@@ -3297,7 +3308,7 @@ struct lq_handler lq_etxff_handler = {
       absolutely no warranty for the above information, please ask your
       favorite lawyer if you have any licensing questions or issues.</para>
 
-      <para>[11]
+      <para>[12]
       http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel</para>
     </refsect1>
 

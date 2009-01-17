@@ -124,6 +124,9 @@ Henning Rogge <roggeæfgan.de>
        data  structures,  also  lots  of  code base maintenance and bug
        fixes.
 
+Thomas Martin <thomas.martinærohde-schwarz.com>
+       Active 2008: Provided VxWorks branch[11]
+
 Markus Kittenberger <Markus.Kittenbergerægmx.at>
        Active 2008-[...]: Policy routing changes.
        Note
@@ -138,6 +141,8 @@ Markus Kittenberger <Markus.Kittenbergerægmx.at>
 [9] http://www.netidee.at/
 
 [10] http://wiki.funkfeuer.at//index.php/Olsrd-ng
+
+[11] http://gredler.at/hg/olsrd-vxworks
 
 LICENSING SUMMARY
 
@@ -174,7 +179,7 @@ person names from the copyright comments with  the  permission  of  the
 original authors (with the exception of above modules and 6 files under
 src/ created by Bernd Petrovitsch). If you contribute new files to  the
 repository,  please  add  a copy of the license.txt file as comment. If
-you send in  patches,  please  add  a  signed-off-by[11]  statement  to
+you send in  patches,  please  add  a  signed-off-by[12]  statement  to
 express, that your patch is properly licensed. If you add a new plugin,
 you may choose another license (see quagga, bmf). Please make sure your
 license is compatible to olsrd, otherwise do not add to the repository.
@@ -183,4 +188,4 @@ script  file  also.  IANAL clause: absolutely no warranty for the above
 information, please ask your favorite lawyer if you have any  licensing
 questions or issues.
 
-[11] http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel
+[12] http://www.kernel.org/pub/linux/utils/util-linux-ng/README.devel
