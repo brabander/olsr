@@ -97,9 +97,7 @@ static unsigned int seq = 0;
 static int
 add_del_route(const struct rt_entry *rt, int add)
 {
-  struct rt_msghdr *rtm;               /* message to configure a route */
-  /* contains data to be written to the
-     routing socket */
+  struct rt_msghdr *rtm;               /* message to send to the routing socket */
   unsigned char buff[512];
   unsigned char *walker;               /* points within the buffer */
   struct sockaddr_in sin4;             /* internet style sockaddr */
@@ -108,8 +106,7 @@ add_del_route(const struct rt_entry *rt, int add)
   struct ifaddrs *awalker;
   const struct rt_nexthop *nexthop;
   union olsr_ip_addr mask;             /* netmask as ip address */
-  int sin_size, sdl_size;              /* size of addresses - e.g. destination
-                                          (payload of the message) */
+  int sin_size, sdl_size;              /* payload of the message */
   int len;                             /* message size written to routing socket */
 
   if (add) {
@@ -137,7 +134,6 @@ add_del_route(const struct rt_entry *rt, int add)
   rtm->rtm_version = RTM_VERSION;
   rtm->rtm_type = add ? RTM_ADD : RTM_DELETE;
   rtm->rtm_index = 0;           /* is ignored in outgoing messages */
-  /* RTF_UP [and RTF_HOST and/or RTF_GATEWAY] */
   rtm->rtm_flags = olsr_rt_flags(rt);
   rtm->rtm_pid = OLSR_PID;
   rtm->rtm_seq = ++seq;
@@ -149,17 +145,9 @@ add_del_route(const struct rt_entry *rt, int add)
    *                  SET  DESTINATION OF THE ROUTE
    **********************************************************************/
 
-  rtm->rtm_addrs = RTA_DST;     /* part of the header */
-
-  sin4.sin_addr = rt->rt_dst.prefix.v4;
-  OLSR_PRINTF(8, "\t- Destination of the route: %s\n", inet_ntoa(sin4.sin_addr));
-
-  /* change proto or tos here */
 #ifdef _WRS_KERNEL
   /*
-   * These statements do not compile on Fbsd, but they
-   * where added during VxWorks cleanup. May be necessary
-   * for VxWorks operation - pls. correct me (Sven-Ola)
+   * vxWorks: change proto or tos
    */
   OLSR_PRINTF(8, "\t- Setting Protocol: 0\n");
   ((struct sockaddr_rt *)(&sin4))->srt_proto = 0;
@@ -167,31 +155,32 @@ add_del_route(const struct rt_entry *rt, int add)
   ((struct sockaddr_rt *)(&sin4))->srt_tos = 0;
 #endif
 
+  sin4.sin_addr = rt->rt_dst.prefix.v4;
   memcpy(walker, &sin4, sizeof(sin4));
   walker += sin_size;
+  rtm->rtm_addrs = RTA_DST;
 
   /**********************************************************************
    *                  SET GATEWAY OF THE ROUTE
    **********************************************************************/
 
-  if (add || (rtm->rtm_addrs & RTF_GATEWAY)) {
-    rtm->rtm_addrs |= RTA_GATEWAY;      /* part of the header */
+#ifdef _WRS_KERNEL
+  /*
+   * vxWorks: Route with no gateway is deleted
+   */
+  if (add) {
+#endif
     nexthop = olsr_get_nh(rt);
-
-    if ((rtm->rtm_flags & RTF_GATEWAY)) {       /* GATEWAY */
+    if (0 != (rtm->rtm_flags & RTF_GATEWAY)) {
       sin4.sin_addr = nexthop->gateway.v4;
-
       memcpy(walker, &sin4, sizeof(sin4));
       walker += sin_size;
-
-      OLSR_PRINTF(8, "\t- Gateway of the route: %s\n", inet_ntoa(sin4.sin_addr));
+      rtm->rtm_addrs |= RTA_GATEWAY;
     }
-    /* NO GATEWAY - destination is directly reachable */
     else {
-      rtm->rtm_flags |= RTF_CLONING;    /* part of the header! */
-
       /*
-       * Host is directly reachable, so add the output interface MAC address.
+       * Host is directly reachable, so add
+       * the output interface MAC address.
        */
       if (getifaddrs(&addrs)) {
         fprintf(stderr, "\ngetifaddrs() failed\n");
@@ -210,38 +199,26 @@ add_del_route(const struct rt_entry *rt, int add)
 
       /* sdl is "struct sockaddr_dl" */
       sdl = (struct sockaddr_dl *)awalker->ifa_addr;
-#ifdef DEBUG
-      OLSR_PRINTF(8, "\t- Link layer address of the non gateway route: %s\n", LLADDR(sdl));
-#endif
-
       memcpy(walker, sdl, sdl->sdl_len);
       walker += sdl_size;
-
+      rtm->rtm_addrs |= RTA_GATEWAY;
+      rtm->rtm_flags |= RTF_CLONING;
       freeifaddrs(addrs);
     }
-  } else {
-    /* Route with no gateway is deleted */
+#ifdef _WRS_KERNEL
   }
+#endif
 
   /**********************************************************************
    *                         SET  NETMASK
    **********************************************************************/
 
-  if ((rtm->rtm_flags & RTF_HOST)) {
-    OLSR_PRINTF(8, "\t- No netmask needed for a host route.\n");
-  } else {                      /* NO! hoste route */
-
-    rtm->rtm_addrs |= RTA_NETMASK;      /* part of the header */
-
-    if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
-      return -1;
-    }
+  if (0 == (rtm->rtm_flags & RTF_HOST)) {
+    olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len);
     sin4.sin_addr = mask.v4;
-
     memcpy(walker, &sin4, sizeof(sin4));
     walker += sin_size;
-
-    OLSR_PRINTF(8, "\t- Netmask of the route: %s\n", inet_ntoa(sin4.sin_addr));
+    rtm->rtm_addrs |= RTA_NETMASK;
   }
 
   /**********************************************************************
@@ -249,23 +226,11 @@ add_del_route(const struct rt_entry *rt, int add)
    **********************************************************************/
 
   rtm->rtm_msglen = (unsigned short)(walker - buff);
-
   len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
-  OLSR_PRINTF(8, "\nWrote %d bytes to rts_bsd socket (FD=%d)\n", len, olsr_cnf->rts_bsd);
-
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
     fprintf(stderr, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
             strerror(errno));
   }
-
-  OLSR_PRINTF(8,
-              "\nWriting the following information to routing socket (message header):" "\n\trtm_msglen: %u" "\n\trtm_version: %u"
-              "\n\trtm_type: %u" "\n\trtm_index: %u" "\n\trtm_flags: 0x%x" "\n\trtm_addrs: %u" "\n\trtm_pid: 0x%x" "\n\trtm_seq: %u"
-              "\n\trtm_errno: 0x%x" "\n\trtm_use %u" "\n\trtm_inits: %u\n", (unsigned int)rtm->rtm_msglen,
-              (unsigned int)rtm->rtm_version, (unsigned int)rtm->rtm_type, (unsigned int)rtm->rtm_index,
-              (unsigned int)rtm->rtm_flags, (unsigned int)rtm->rtm_addrs, (unsigned int)rtm->rtm_pid, (unsigned int)rtm->rtm_seq,
-              (unsigned int)rtm->rtm_errno, (unsigned int)rtm->rtm_use, (unsigned int)rtm->rtm_inits);
-
   return 0;
 }
 
@@ -311,25 +276,38 @@ add_del_route6(const struct rt_entry *rt, int add)
   sin_size = 1 + ((sizeof(struct sockaddr_in6) - 1) | 3);
   sdl_size = 1 + ((sizeof(struct sockaddr_dl) - 1) | 3);
 
+  /**********************************************************************
+   *                  FILL THE ROUTING MESSAGE HEADER
+   **********************************************************************/
+
+  /* position header to the beginning of the buffer */
   rtm = (struct rt_msghdr *)buff;
   rtm->rtm_version = RTM_VERSION;
   rtm->rtm_type = (add != 0) ? RTM_ADD : RTM_DELETE;
   rtm->rtm_index = 0;
   rtm->rtm_flags = olsr_rt_flags(rt);
-  rtm->rtm_addrs = RTA_DST | RTA_GATEWAY;
+  rtm->rtm_pid = OLSR_PID;
   rtm->rtm_seq = ++seq;
 
+  /* walk to the end of the header */
   walker = buff + sizeof(struct rt_msghdr);
 
-  memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
+  /**********************************************************************
+   *                  SET  DESTINATION OF THE ROUTE
+   **********************************************************************/
 
+  memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
   memcpy(walker, &sin6, sizeof(sin6));
   walker += sin_size;
+  rtm->rtm_addrs = RTA_DST;
+
+  /**********************************************************************
+   *                  SET GATEWAY OF THE ROUTE
+   **********************************************************************/
 
   nexthop = olsr_get_nh(rt);
-  if ((rtm->rtm_flags & RTF_GATEWAY) != 0) {
+  if (0 != (rtm->rtm_flags & RTF_GATEWAY)) {
     memcpy(&sin6.sin6_addr.s6_addr, &nexthop->gateway.v6, sizeof(struct in6_addr));
-
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
     sin6.sin6_addr.s6_addr[1] = 0x80;
@@ -340,11 +318,13 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
+    rtm->rtm_addrs = RTA_GATEWAY;
   }
-
-  /* the host is directly reachable, so add the output interface's address */
-
   else {
+    /*
+     * Host is directly reachable, so add
+     * the output interface MAC address.
+     */
     memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
     memset(&sin6.sin6_addr.s6_addr, 0, 8);
     sin6.sin6_addr.s6_addr[0] = 0xfe;
@@ -354,26 +334,36 @@ add_del_route6(const struct rt_entry *rt, int add)
     *(u_int16_t *) & sin6.sin6_addr.s6_addr[2] = htons(sin6.sin6_scope_id);
     sin6.sin6_scope_id = 0;
 #endif
-
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
+    rtm->rtm_addrs = RTA_GATEWAY;
     rtm->rtm_flags |= RTF_GATEWAY;
   }
 
-  if ((rtm->rtm_flags & RTF_HOST) == 0) {
+  /**********************************************************************
+   *                         SET  NETMASK
+   **********************************************************************/
+
+  if (0 == (rtm->rtm_flags & RTF_HOST)) {
     olsr_prefix_to_netmask((union olsr_ip_addr *)&sin6.sin6_addr, rt->rt_dst.prefix_len);
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
     rtm->rtm_addrs |= RTA_NETMASK;
   }
 
+  /**********************************************************************
+   *           WRITE CONFIGURATION MESSAGE TO THE ROUTING SOCKET
+   **********************************************************************/
+
   rtm->rtm_msglen = (unsigned short)(walker - buff);
-
   len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
-  if (len < 0 && !(errno == EEXIST || errno == ESRCH))
+  if (len < 0 && !(errno == EEXIST || errno == ESRCH)) {
     fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
+  }
 
-  /* If we get an EEXIST error while adding, delete and retry. */
+  /*
+   * If we get an EEXIST error while adding, delete and retry.
+   */
   if (len < 0 && errno == EEXIST && rtm->rtm_type == RTM_ADD) {
     struct rt_msghdr *drtm;
     unsigned char dbuff[512];
@@ -382,7 +372,6 @@ add_del_route6(const struct rt_entry *rt, int add)
     drtm = (struct rt_msghdr *)dbuff;
     drtm->rtm_version = RTM_VERSION;
     drtm->rtm_type = RTM_DELETE;
-    drtm->rtm_addrs = RTA_DST;
     drtm->rtm_index = 0;
     drtm->rtm_flags = olsr_rt_flags(rt);
     drtm->rtm_seq = ++seq;
@@ -391,16 +380,18 @@ add_del_route6(const struct rt_entry *rt, int add)
     memcpy(&sin6.sin6_addr.s6_addr, &rt->rt_dst.prefix.v6, sizeof(struct in6_addr));
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
+    drtm->rtm_addrs = RTA_DST;
     drtm->rtm_msglen = (unsigned short)(walker - dbuff);
     len = write(olsr_cnf->rts_bsd, dbuff, drtm->rtm_msglen);
-    if (len < 0)
+    if (len < 0) {
       fprintf(stderr, "cannot delete route: %s\n", strerror(errno));
+    }
     rtm->rtm_seq = ++seq;
     len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
-    if (len < 0)
+    if (len < 0) {
       fprintf(stderr, "still cannot add route: %s\n", strerror(errno));
+    }
   }
-
   return 0;
 }
 
