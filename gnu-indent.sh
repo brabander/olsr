@@ -36,7 +36,6 @@ test "--cmp" = "$1" && {
 }
 test "--noindent" = "$1" || {
   indent $(cat ${0%/*}/src/.indent.pro) $addon $* $(find -name "*.[ch]" -not -path "*/.hg*")
-  shift
 }
 
 rm $(find -name "*~" -not -path "*/.hg*")
