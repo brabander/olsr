@@ -203,6 +203,9 @@ add_del_route(const struct rt_entry *rt, int add)
       walker += sdl_size;
       rtm->rtm_addrs |= RTA_GATEWAY;
       rtm->rtm_flags |= RTF_CLONING;
+#ifndef _WRS_KERNEL
+      rtm->rtm_flags &= ~RTF_HOST;
+#endif
       freeifaddrs(addrs);
     }
 #ifdef _WRS_KERNEL
