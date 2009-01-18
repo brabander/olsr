@@ -534,11 +534,11 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
                        "<link rel=\"stylesheet\" type=\"text/css\" href=\"httpinfo.css\">\n"
                        "</head>\n"
                        "<body bgcolor=\"#ffffff\" text=\"#000000\">\n"
-                       "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"%d\">\n"
+                       "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"%d\">\n"
                        "<tbody><tr bgcolor=\"#ffffff\">\n"
-                       "<td align=\"left\" height=\"69\" valign=\"middle\" width=\"80%%\">\n"
+                       "<td height=\"69\" valign=\"middle\" width=\"80%%\">\n"
                        "<font color=\"black\" face=\"timesroman\" size=\"6\">&nbsp;&nbsp;&nbsp;<a href=\"http://www.olsr.org/\">olsr.org OLSR daemon</a></font></td>\n"
-                       "<td align=\"right\" height=\"69\" valign=\"middle\" width=\"20%%\">\n"
+                       "<td height=\"69\" valign=\"middle\" width=\"20%%\">\n"
                        "<a href=\"http://www.olsr.org/\"><img border=\"0\" src=\"/logo.gif\" alt=\"olsrd logo\"></a></td>\n"
                        "</tr>\n"
                        "</tbody>\n"
@@ -797,13 +797,13 @@ static void build_route(struct autobuf *abuf, const struct rt_entry * rt)
 			 -1);
 
   abuf_appendf(abuf,
-		  "<td align=\"center\">%u</td>",
+		  "<td>%u</td>",
 		  rt->rt_best->rtp_metric.hops);
   abuf_appendf(abuf,
-		  "<td align=\"right\">%s</td>",
+		  "<td>%s</td>",
 		  get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer));
   abuf_appendf(abuf,
-		  "<td align=\"center\">%s</td></tr>\n",
+		  "<td>%s</td></tr>\n",
 		  rt->rt_best->rtp_nexthop.interface ? rt->rt_best->rtp_nexthop.interface->int_name : "[null]");
 }
 
@@ -813,7 +813,7 @@ static void build_routes_body(struct autobuf *abuf)
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
   section_title(abuf, "OLSR Routes in Kernel");
   abuf_appendf(abuf,
-		  "<tr><th align=\"center\"%s>Destination</th><th align=\"center\"%s>Gateway</th><th align=\"right\">Metric</th><th align=\"right\">ETX</th><th align=\"right\">Interface</th></tr>\n",
+		  "<tr><th%s>Destination</th><th%s>Gateway</th><th>Metric</th><th>ETX</th><th>Interface</th></tr>\n",
 		  colspan, colspan);
 
   /* Walk the route table */
@@ -978,9 +978,9 @@ static void build_neigh_body(struct autobuf *abuf)
   section_title(abuf, "Links");
 
   abuf_appendf(abuf,
-                   "<tr><th align=\"center\"%s>Local IP</th><th align=\"center\"%s>Remote IP</th>", colspan, colspan);
+                   "<tr><th%s>Local IP</th><th%s>Remote IP</th>", colspan, colspan);
   abuf_puts(abuf,
-                   "<th align=\"right\">LinkCost</th>");
+                   "<th>LinkCost</th>");
   abuf_puts(abuf, "</tr>\n");
 
   /* Link set */
@@ -990,7 +990,7 @@ static void build_neigh_body(struct autobuf *abuf)
     build_ipaddr_with_link(abuf, &lnk->local_iface_addr, -1);
     build_ipaddr_with_link(abuf, &lnk->neighbor_iface_addr, -1);
     abuf_appendf(abuf,
-                     "<td align=\"right\">(%s) %s</td>",
+                     "<td>(%s) %s</td>",
                      get_link_entry_text(lnk, '/', &lqbuffer1),
                      get_linkcost_text(lnk->linkcost, false, &lqbuffer2));
     abuf_puts(abuf, "</tr>\n");
@@ -1000,7 +1000,7 @@ static void build_neigh_body(struct autobuf *abuf)
 
   section_title(abuf, "Neighbors");
   abuf_appendf(abuf,
-                   "<tr><th align=\"center\"%s>IP Address</th><th align=\"center\">SYM</th><th align=\"center\">MPR</th><th align=\"center\">MPRS</th><th align=\"center\">Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
+                   "<tr><th%s>IP Address</th><th>SYM</th><th>MPR</th><th>MPRS</th><th>Willingness</th><th>2 Hop Neighbors</th></tr>\n", colspan);
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
     struct neighbor_2_list_entry *list_2;
@@ -1008,10 +1008,10 @@ static void build_neigh_body(struct autobuf *abuf)
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &neigh->neighbor_main_addr, -1);
     abuf_appendf(abuf,
-                     "<td align=\"center\">%s</td>"
-                     "<td align=\"center\">%s</td>"
-                     "<td align=\"center\">%s</td>"
-                     "<td align=\"center\">%d</td>",
+                     "<td>%s</td>"
+                     "<td>%s</td>"
+                     "<td>%s</td>"
+                     "<td>%d</td>",
                      (neigh->status == SYM) ? "YES" : "NO",
                      neigh->is_mpr ? "YES" : "NO",
                      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
@@ -1040,8 +1040,8 @@ static void build_topo_body(struct autobuf *abuf)
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
   section_title(abuf, "Topology Entries");
-  abuf_appendf(abuf, "<tr><th align=\"center\"%s>Destination IP</th><th align=\"center\"%s>Last Hop IP</th>", colspan, colspan);
-  abuf_puts(abuf, "<th colspan=\"3\" align=\"right\">Linkcost</th>");
+  abuf_appendf(abuf, "<tr><th%s>Destination IP</th><th%s>Last Hop IP</th>", colspan, colspan);
+  abuf_puts(abuf, "<th colspan=\"3\">Linkcost</th>");
   abuf_puts(abuf, "</tr>\n");
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -1053,7 +1053,7 @@ static void build_topo_body(struct autobuf *abuf)
           build_ipaddr_with_link(abuf, &tc_edge->T_dest_addr, -1);
           build_ipaddr_with_link(abuf, &tc->addr, -1);
           abuf_appendf(abuf,
-			     "<td align=\"right\">(%s)</td><td>&nbsp;</td><td align=\"left\">%s</td>\n",
+			     "<td>(%s)</td><td>&nbsp;</td><td>%s</td>\n",
 			     get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 			     get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
           abuf_puts(abuf, "</tr>\n");
@@ -1071,7 +1071,7 @@ static void build_mid_body(struct autobuf *abuf)
 
   section_title(abuf, "MID Entries");
   abuf_appendf(abuf,
-		  "<tr><th align=\"center\"%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
+		  "<tr><th%s>Main Address</th><th>Aliases</th></tr>\n", colspan);
 
   /* MID */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
