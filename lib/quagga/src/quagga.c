@@ -92,7 +92,7 @@ void zebra_cleanup (void) {
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_del_route(tmp);
+      zebra_del_route(tmp, olsr_cnf->ip_version);
     } OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
@@ -111,7 +111,7 @@ static void zebra_reconnect (void) {
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_add_route (tmp);
+      zebra_add_route (tmp, olsr_cnf->ip_version);
     } OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
@@ -481,10 +481,17 @@ static void free_ipv4_route (struct zebra_route *r) {
 }
 
 
-int zebra_add_route (const struct rt_entry *r) {
+int zebra_add_route (const struct rt_entry *r, int ip_version) {
 
   struct zebra_route route;
   int retval;
+
+  if (AF_INET != ip_version) {
+    /*
+     * Not implemented
+     */
+    return -1;
+  }
 
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
@@ -523,10 +530,17 @@ int zebra_add_route (const struct rt_entry *r) {
 
 }
 
-int zebra_del_route (const struct rt_entry *r) {
+int zebra_del_route (const struct rt_entry *r, int ip_version) {
 
   struct zebra_route route;
   int retval;
+  
+  if (AF_INET != ip_version) {
+    /*
+     * Not implemented
+     */
+    return -1;
+  }
 
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;

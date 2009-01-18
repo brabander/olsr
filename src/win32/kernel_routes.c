@@ -55,19 +55,25 @@
 
 char *StrError(unsigned int ErrNo);
 
-/**
- *Insert a route in the kernel routing table
- *
- *@param destination the route to add
- *
- *@return negative on error
+/*
+ * Insert a route in the kernel routing table
+ * @param destination the route to add
+ * @return negative on error
  */
-int olsr_ioctl_add_route(const struct rt_entry *rt)
+int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
   struct interface *iface = rt->rt_best->rtp_nexthop.interface;
+  
+  if (AF_INET != ip_version) {
+    /*
+     * Not implemented
+     */
+    return -1;
+  }
+  
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 
@@ -128,26 +134,25 @@ int olsr_ioctl_add_route(const struct rt_entry *rt)
   return 0;
 }
 
-// XXX - to be implemented
 
-int olsr_ioctl_add_route6(const struct rt_entry *rt __attribute__((unused)))
-{
-  return 0;
-}
-
-/**
- *Remove a route from the kernel
- *
- *@param destination the route to remove
- *
- *@return negative on error
+/*
+ * Remove a route from the kernel
+ * @param destination the route to remove
+ * @return negative on error
  */
-int olsr_ioctl_del_route(const struct rt_entry *rt)
+int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
   unsigned long Res;
   struct interface *iface = rt->rt_nexthop.interface;
+
+  if (AF_INET != ip_version) {
+    /*
+     * Not implemented
+     */
+    return -1;
+  }
 
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
@@ -193,13 +198,6 @@ int olsr_ioctl_del_route(const struct rt_entry *rt)
     ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0 , 0, NULL);
   }
 
-  return 0;
-}
-
-// XXX - to be implemented
-
-int olsr_ioctl_del_route6(const struct rt_entry *rt __attribute__((unused)))
-{
   return 0;
 }
 

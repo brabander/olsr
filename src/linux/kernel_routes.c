@@ -151,15 +151,13 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
   return ret;
 }
 
-/**
+/*
  * Insert a route in the kernel routing table
- *
  * @param destination the route to add
- *
  * @return negative on error
  */
 int
-olsr_ioctl_add_route(const struct rt_entry *rt)
+olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 {
   int rslt;
   int rttable;
@@ -178,7 +176,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
   rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
     ? olsr_cnf->rttable_default
     : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, AF_INET, rttable, RTM_NEWROUTE);
+  rslt = olsr_netlink_route(rt, ip_version, rttable, RTM_NEWROUTE);
 
   if (rslt >= 0) {
     /*
@@ -192,48 +190,13 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 }
 
 
-/**
- *Insert a route in the kernel routing table
- *
- *@param destination the route to add
- *
- *@return negative on error
+/*
+ * Remove a route from the kernel
+ * @param destination the route to remove
+ * @return negative on error
  */
 int
-olsr_ioctl_add_route6(const struct rt_entry *rt)
-{
-  int rslt;
-  int rttable;
-
-  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
-
-  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
-    ? olsr_cnf->rttable_default
-    : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, AF_INET6, rttable, RTM_NEWROUTE);
-
-  if (rslt >= 0) {
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
-                           rt->rt_best->rtp_metric.hops, 1,
-                           rt->rt_best->rtp_nexthop.interface->int_name);
-  }
-
-  return rslt;
-}
-
-
-/**
- *Remove a route from the kernel
- *
- *@param destination the route to remove
- *
- *@return negative on error
- */
-int
-olsr_ioctl_del_route(const struct rt_entry *rt)
+olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 {
   int rslt;
   int rttable;
@@ -250,38 +213,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
   rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
     ? olsr_cnf->rttable_default
     : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, AF_INET, rttable, RTM_DELROUTE);
-  if (rslt >= 0) {
-
-    /*
-     * Send IPC route update message
-     */
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
-  }
-
-  return rslt;
-}
-
-
-/**
- *Remove a route from the kernel
- *
- *@param destination the route to remove
- *
- *@return negative on error
- */
-int
-olsr_ioctl_del_route6(const struct rt_entry *rt)
-{
-  int rslt;
-  int rttable;
-
-  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
-
-  rttable = 0 == rt->rt_dst.prefix_len && olsr_cnf->rttable_default != 0
-    ? olsr_cnf->rttable_default
-    : olsr_cnf->rttable;
-  rslt = olsr_netlink_route(rt, AF_INET6, rttable, RTM_DELROUTE);
+  rslt = olsr_netlink_route(rt, ip_version, rttable, RTM_DELROUTE);
   if (rslt >= 0) {
 
     /*

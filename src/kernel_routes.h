@@ -45,16 +45,10 @@
 #include "routing_table.h"
 
 int
-olsr_ioctl_add_route(const struct rt_entry *);
+olsr_kernel_add_route(const struct rt_entry *, int);
 
 int
-olsr_ioctl_add_route6(const struct rt_entry *);
-
-int
-olsr_ioctl_del_route(const struct rt_entry *);
-
-int
-olsr_ioctl_del_route6(const struct rt_entry *);
+olsr_kernel_del_route(const struct rt_entry *, int);
 
 #endif
 

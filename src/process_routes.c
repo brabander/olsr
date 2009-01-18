@@ -54,11 +54,12 @@ static struct list_node add_kernel_list;
 static struct list_node chg_kernel_list;
 static struct list_node del_kernel_list;
 
-
-export_route_function olsr_addroute_function;
-export_route_function olsr_addroute6_function;
-export_route_function olsr_delroute_function;
-export_route_function olsr_delroute6_function;
+/*
+ * Function hooks for plugins to intercept
+ * adding / deleting routes from the kernel
+ */
+export_route_function olsr_add_route_function;
+export_route_function olsr_del_route_function;
 
 
 void
@@ -69,10 +70,8 @@ olsr_init_export_route(void)
   list_head_init(&chg_kernel_list);
   list_head_init(&del_kernel_list);
 
-  olsr_addroute_function = olsr_ioctl_add_route;
-  olsr_addroute6_function = olsr_ioctl_add_route6;
-  olsr_delroute_function = olsr_ioctl_del_route;
-  olsr_delroute6_function = olsr_ioctl_del_route6;
+  olsr_add_route_function = olsr_kernel_add_route;
+  olsr_del_route_function = olsr_kernel_del_route;
 }
 
 /**
@@ -125,10 +124,9 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
  *@return nada
  */
 static void
-olsr_delete_kernel_route(struct rt_entry *rt)
+olsr_del_route(struct rt_entry *rt)
 {
-  int16_t error = olsr_cnf->ip_version == AF_INET ?
-    olsr_delroute_function(rt) : olsr_delroute6_function(rt);
+  int16_t error = olsr_del_route_function(rt, olsr_cnf->ip_version);
 
   if(error < 0) {
     const char * const err_msg = strerror(errno);
@@ -149,11 +147,10 @@ olsr_delete_kernel_route(struct rt_entry *rt)
  *@return nada
  */
 static void
-olsr_add_kernel_route(struct rt_entry *rt)
+olsr_add_route(struct rt_entry *rt)
 {
 
-  int16_t error = (olsr_cnf->ip_version == AF_INET) ?
-    olsr_addroute_function(rt) : olsr_addroute6_function(rt);
+  int16_t error = olsr_add_route_function(rt, olsr_cnf->ip_version);
 
   if(error < 0) {
     const char * const err_msg = strerror(errno);
@@ -182,13 +179,13 @@ olsr_add_kernel_route(struct rt_entry *rt)
  * the queue needs to be traversed from head to tail.
  */
 static void
-olsr_add_kernel_routes(struct list_node *head_node)
+olsr_add_routes(struct list_node *head_node)
 {
   struct rt_entry *rt;
 
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
-    olsr_add_kernel_route(rt);
+    olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
   }
@@ -218,7 +215,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    */
   for (node = head_node->prev; head_node != node; node = node->prev) {
     rt = changelist2rt(node);
-    olsr_delete_kernel_route(rt);
+    olsr_del_route(rt);
   }
 
   /*
@@ -228,7 +225,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
    */
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
-    olsr_add_kernel_route(rt);
+    olsr_add_route(rt);
 
     list_remove(&rt->rt_change_node);
   }
@@ -255,7 +252,7 @@ olsr_del_kernel_routes(struct list_node *head_node)
      * set only when a route installation suceeds.
      */
     if (rt->rt_nexthop.interface) {
-      olsr_delete_kernel_route(rt);
+      olsr_del_route(rt);
     }
 
     list_remove(&rt->rt_change_node);
@@ -366,7 +363,7 @@ olsr_update_kernel_routes(void)
   olsr_chg_kernel_routes(&chg_kernel_list);
 
   /* route additions */
-  olsr_add_kernel_routes(&add_kernel_list);
+  olsr_add_routes(&add_kernel_list);
 
 #if DEBUG
   olsr_print_routing_table(&routingtree);

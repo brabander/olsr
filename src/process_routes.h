@@ -44,12 +44,10 @@
 #include "routing_table.h"
 #include <sys/ioctl.h>
 
-typedef int (*export_route_function)(const struct rt_entry*);
+typedef int (*export_route_function)(const struct rt_entry*, int ip_version);
 
-extern export_route_function EXPORT(olsr_addroute_function);
-extern export_route_function EXPORT(olsr_addroute6_function);
-extern export_route_function EXPORT(olsr_delroute_function);
-extern export_route_function EXPORT(olsr_delroute6_function);
+extern export_route_function EXPORT(olsr_add_route_function);
+extern export_route_function EXPORT(olsr_del_route_function);
 
 void olsr_init_export_route(void);
 void olsr_update_rib_routes(void);

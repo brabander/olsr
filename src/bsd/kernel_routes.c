@@ -237,18 +237,6 @@ add_del_route(const struct rt_entry *rt, int add)
   return 0;
 }
 
-int
-olsr_ioctl_add_route(const struct rt_entry *rt)
-{
-  return add_del_route(rt, 1);
-}
-
-int
-olsr_ioctl_del_route(const struct rt_entry *rt)
-{
-  return add_del_route(rt, 0);
-}
-
 static int
 add_del_route6(const struct rt_entry *rt, int add)
 {
@@ -399,15 +387,15 @@ add_del_route6(const struct rt_entry *rt, int add)
 }
 
 int
-olsr_ioctl_add_route6(const struct rt_entry *rt)
+olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 {
-  return add_del_route6(rt, 1);
+  return AF_INET == ip_version ? add_del_route(rt, 1) : add_del_route6(rt, 1);
 }
 
 int
-olsr_ioctl_del_route6(const struct rt_entry *rt)
+olsr_kernel_del_route6(const struct rt_entry *rt, int ip_version)
 {
-  return add_del_route6(rt, 0);
+  return AF_INET == ip_version ? add_del_route(rt, 0) : add_del_route6(rt, 0);
 }
 
 /*
