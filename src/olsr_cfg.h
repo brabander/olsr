@@ -179,6 +179,8 @@ struct olsr_config {
   unsigned char clear_screen:1;        /* Clear screen during debug output? */
   unsigned char del_gws:1;             /* Delete InternetGWs at startup? */
   unsigned char fixed_origaddr:1;      /* Use a fixed originator addr == Node ID? */
+  unsigned char disp_packets_in:1;     /* Display incoming packets? */
+  unsigned char disp_packets_out:1;    /* Display outgoing packets? */
 
   uint16_t tos;                        /* IP Type of Service Byte */
   uint8_t rtproto;                     /* Policy routing proto, 0 == operating sys default */
@@ -193,7 +195,7 @@ struct olsr_config {
   bool log_target_stderr;              /* Log output to stderr? */
   char *log_target_file;               /* Filename for log output file, NULL if unused */
   bool log_target_syslog;              /* Log output also to syslog? */
-
+  
   struct plugin_entry *plugins;        /* List of plugins to load with plparams */
   struct list_node hna_entries;        /* List of manually configured HNA entries */
   struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */

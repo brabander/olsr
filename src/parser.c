@@ -77,13 +77,6 @@ static struct parse_function_entry *parse_functions;
 static struct preprocessor_function_entry *preprocessor_functions;
 static struct packetparser_function_entry *packetparser_functions;
 
-static bool disp_pack_in = false;
-
-void parser_set_disp_pack_in(bool val)
-{
-  disp_pack_in = val;
-}
-
 /**
  *Initialize the parser.
  *
@@ -278,7 +271,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   //printf("Message from %s\n\n", olsr_ip_to_string(&buf, from_addr));
 
   /* Display packet */
-  if (disp_pack_in) {
+  if (olsr_cnf->disp_packets_in) {
     print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
   }
   msgsize = ntohs(olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgsize : m->v6.olsr_msgsize);

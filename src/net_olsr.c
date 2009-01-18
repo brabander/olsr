@@ -52,8 +52,6 @@
 #include <limits.h>
 #include <errno.h>
 
-bool disp_pack_out = false;
-
 static void olsr_add_invalid_address(const union olsr_ip_addr *);
 
 #ifdef WIN32
@@ -360,7 +358,7 @@ net_output(struct interface *ifp)
    * if the -dispout option was given
    * we print the content of the packets
    */
-  if (disp_pack_out) {
+  if (olsr_cnf->disp_packets_out) {
     print_olsr_serialized_packet(stdout,
 				 (union olsr_packet *)ifp->netbuf.buff,
 				 ifp->netbuf.pending, &ifp->ip_addr);

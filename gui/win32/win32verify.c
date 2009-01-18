@@ -46,7 +46,7 @@
 #include "olsr_cfg.h"
 #include "olsr_cfg_gen.h"
 
-bool disp_pack_out = false;
+/************ GLOBALS(begin) ***********/
 
 #ifndef NODEBUG
 FILE *debug_handle = NULL;
@@ -74,9 +74,7 @@ char *olsr_strndup(const char *s, size_t n)
   return ret;
 }
 
-void parser_set_disp_pack_in(bool val __attribute__ ((unused)))
-{
-}
+/************ GLOBALS(end) ***********/
 
 static int write_cnf(struct olsr_config *cnf, const char *fname)
 {

@@ -71,10 +71,6 @@ AVLNODE2STRUCT(filter_tree2filter, struct filter_entry, filter_node);
     filter = filter_tree2filter(filter_tree_node);
 #define OLSR_FOR_ALL_FILTERS_END(filter) }}
 
-extern bool disp_pack_out;
-
-static INLINE void net_set_disp_pack_out(bool val) { disp_pack_out = val; }
-
 void init_net(void);
 
 void deinit_netfilters(void);

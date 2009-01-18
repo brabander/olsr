@@ -73,9 +73,6 @@ struct packetparser_function_entry {
 };
 
 void
-parser_set_disp_pack_in(bool);
-
-void
 olsr_init_parser(void);
 
 void

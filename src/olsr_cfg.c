@@ -814,12 +814,12 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     PARSER_DEBUG_PRINTF("del_gws set to %d\n", rcfg->del_gws);
     break;
   case 'X':                    /* dispin */
-    PARSER_DEBUG_PRINTF("Calling parser_set_disp_pack_in(true)\n");
-    parser_set_disp_pack_in(true);
+    rcfg->disp_packets_in = true;
+    PARSER_DEBUG_PRINTF("disp_packets_in set to %d\n", rcfg->disp_packets_in);
     break;
   case 'O':                    /* dispout */
-    PARSER_DEBUG_PRINTF("Calling net_set_disp_pack_out(true)\n");
-    net_set_disp_pack_out(true);
+    rcfg->disp_packets_out = true;
+    PARSER_DEBUG_PRINTF("disp_packets_out set to %d\n", rcfg->disp_packets_out);
     break;
   case 'i':                    /* iface */
     /* Ignored */
@@ -1462,6 +1462,8 @@ olsr_get_default_cfg(void)
   cfg->clear_screen = DEF_CLEAR_SCREEN;
   assert(cfg->del_gws == false);
   assert(cfg->fixed_origaddr == false);
+  assert(cfg->disp_packets_in == false);
+  assert(cfg->disp_packets_out == false);
 
   cfg->tos = DEF_TOS;
   assert(cfg->rtproto == 0);
