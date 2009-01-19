@@ -40,7 +40,7 @@
  */
 
 #include "olsr_cfg.h"
-#include "olsr_logging_data.h"
+#include "olsr_cfg_data.h"
 
 #include "olsr.h"
 #include "parser.h"
@@ -281,7 +281,7 @@ get_default_olsr_if_options(void)
   new_io->hna_params.validity_time = HNA_HOLD_TIME;
   /* new_io->lq_mult = NULL; */
   new_io->autodetect_chg = true;
-
+  new_io->mode = IF_MODE_MESH;
   return new_io;
 }
 
@@ -420,7 +420,16 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             parse_tok_free(tok);
             return CFG_ERROR;
           }
-          if (0 == strcmp("AutoDetectChanges", p_next[0])) {
+          if (0 == strcmp("Mode", p_next[0])) {
+            if (0 == strcasecmp("Ether", p_next[1])) {
+              new_if->cnf->mode = IF_MODE_ETHER;
+            }
+            else {
+              new_if->cnf->mode = IF_MODE_MESH;
+            }
+            PARSER_DEBUG_PRINTF("\tMode: %s\n", INTERFACE_MODE_NAMES[new_if->cnf->mode]);
+          }
+          else if (0 == strcmp("AutoDetectChanges", p_next[0])) {
             new_if->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
             PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
           } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {

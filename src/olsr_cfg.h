@@ -136,6 +136,7 @@ struct olsr_if_options {
   struct olsr_msg_params hna_params;
   struct olsr_lq_mult *lq_mult;
   bool autodetect_chg;
+  enum interface_mode mode;
 };
 
 struct olsr_if_config {

@@ -42,7 +42,7 @@
 #define OLSR_LOGGING_H_
 
 #include "defs.h"
-#include "olsr_logging_data.h"
+#include "olsr_cfg_data.h"
 
 #define LOGBUFFER_SIZE 1024
 #define MAX_LOG_HANDLER 8

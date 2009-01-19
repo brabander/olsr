@@ -53,6 +53,7 @@
 #include <time.h>
 
 #include "olsr_types.h"
+#include "olsr_cfg_data.h"
 #include "mantissa.h"
 #include "common/list.h"
 
@@ -128,6 +129,8 @@ struct olsr_netbuf {
  */
 struct interface {
   struct list_node int_node;	       /* List of all interfaces */
+
+  enum interface_mode mode;          /* mode of the interface, default is mesh */
 
   /* IP version 4 */
   struct sockaddr_in int_addr;	       /* address */

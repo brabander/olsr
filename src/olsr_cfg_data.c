@@ -38,12 +38,12 @@
  *
  */
 
-#include "olsr_logging_data.h"
+#include "olsr_cfg_data.h"
 
 /*
- * String constants for olsr_log_* as used in olsrd.conf.
+ * String constants for olsr_log_* and if_mode as used in olsrd.conf.
  * Keep this in the same order as the log_source and
- * log_severity enums (see olsr_logging_data.h).
+ * log_severity enums (see olsr_cfg_data.h).
  */
 
 const char *LOG_SOURCE_NAMES[] = {
@@ -58,3 +58,8 @@ const char *LOG_SEVERITY_NAMES[] = {
   "ERROR"
 };
 
+
+const char *INTERFACE_MODE_NAMES[] = {
+    "mesh",
+    "ether"
+};

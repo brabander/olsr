@@ -1198,6 +1198,18 @@
 
             <variablelist>
               <varlistentry>
+                <term><option>Mode</option>
+                <replaceable>mesh</replaceable>|<replaceable>ether</replaceable></term>
+
+                <listitem>
+                  <para><productname>olsrd</productname> can be used on wireless interfaces
+                  and ethernet. To prevent unnecessary packet forwardings on switched
+                  ethernet interfaces the mode of an interface can be set to <option>ether</option>. 
+                  The default value of this option is <option>mesh</option>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
                 <term><option>AutoDetectChanges</option>
                 <replaceable>yes</replaceable>|<replaceable>no</replaceable></term>
 

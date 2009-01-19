@@ -3,7 +3,7 @@
 #CFLAGS="-O0 -ggdb -DDEBUG"
 CFLAGS="-ggdb -O2 -DNODEBUG -DNDEBUG"
 
-SRCS="olsr_cfg olsr_cfg_gen olsr_ip_acl olsr_ip_prefix_list olsr_logging_data ipcalc builddata common/autobuf"
+SRCS="olsr_cfg olsr_cfg_gen olsr_ip_acl olsr_ip_prefix_list olsr_cfg_data ipcalc builddata common/autobuf"
 OBJS=
 
 for i in $SRCS; do

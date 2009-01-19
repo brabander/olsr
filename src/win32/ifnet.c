@@ -963,6 +963,8 @@ int chk_if_up(struct olsr_if_config *IntConf, int DebugLevel __attribute__((unus
   New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
   New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
+  New->mode = IntConf->cnf->mode;
+
   /*
    * Call possible ifchange functions registered by plugins
    */

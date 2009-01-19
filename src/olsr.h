@@ -63,7 +63,7 @@ uint16_t
 EXPORT(get_msg_seqno)(void);
 
 int
-olsr_forward_message(union olsr_message *,
+olsr_forward_message(union olsr_message *, struct interface *,
 		     union olsr_ip_addr *);
 
 void

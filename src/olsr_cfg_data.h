@@ -41,25 +41,49 @@
 #ifndef OLSR_CFG_DATA_H_
 #define OLSR_CFG_DATA_H_
 
+/**
+ * defines the source of a logging event
+ */
 enum log_source {
-  LOG_ALL,
-  LOG_LOGGING,
+  LOG_ALL,        //!< LOG_ALL
+  LOG_LOGGING,    //!< LOG_LOGGING
 
   /* this one must be the last of the enums ! */
-  LOG_SOURCE_COUNT
+  LOG_SOURCE_COUNT//!< LOG_SOURCE_COUNT
 };
 
+/**
+ * defines the severity of a logging event
+ */
 enum log_severity {
-  SEVERITY_DEBUG,
-  SEVERITY_INFO,
-  SEVERITY_WARN,
-  SEVERITY_ERROR,
+  SEVERITY_DEBUG,   //!< SEVERITY_DEBUG
+  SEVERITY_INFO,    //!< SEVERITY_INFO
+  SEVERITY_WARN,    //!< SEVERITY_WARN
+  SEVERITY_ERROR,   //!< SEVERITY_ERROR
 
   /* this one must be the last of the enums ! */
-  LOG_SEVERITY_COUNT
+  LOG_SEVERITY_COUNT//!< LOG_SEVERITY_COUNT
 };
+
+/**
+ * defines the mode of the interface.
+ *
+ * - Mesh: default behavior
+ * - Ether: an interface with nearly no packet loss and a "closed" broadcast
+ *   domain. This means packages received through this interface does not need
+ *   to be forwarded through the interface again.
+ */
+enum interface_mode {
+  IF_MODE_MESH, //!< IF_MODE_MESH
+  IF_MODE_ETHER,//!< IF_MODE_ETHER
+
+  /* this must be the last entry */
+  IF_MODE_COUNT //!< IF_MODE_COUNT
+};
+
 
 extern const char *LOG_SOURCE_NAMES[];
 extern const char *LOG_SEVERITY_NAMES[];
+extern const char *INTERFACE_MODE_NAMES[];
 
 #endif /* OLSR_CFG_DATA_H_ */
