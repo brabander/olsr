@@ -96,24 +96,32 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
   req.r.rtm_type = RTN_UNICAST;
   req.r.rtm_dst_len = rt->rt_dst.prefix_len;
 
-  if (AF_INET == family) {
-    if (!ip4equal(&rt->rt_dst.prefix.v4, &nexthop->gateway.v4)) {
-      olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
-      req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+  if (NULL != nexthop->interface) {
+    if (AF_INET == family) {
+      if (!ip4equal(&rt->rt_dst.prefix.v4, &nexthop->gateway.v4)) {
+        olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
+        req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+      }
+      olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
+    } else {
+      if (!ip6equal(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6)) {
+        olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
+        req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+      }
+      olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
     }
-    olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
-  } else {
-    if (!ip6equal(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6)) {
-      olsr_netlink_addreq(&req, RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
-      req.r.rtm_scope = RT_SCOPE_UNIVERSE;
+    if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd) {
+      olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
     }
-    olsr_netlink_addreq(&req, RTA_DST, &rt->rt_dst.prefix.v6, sizeof(rt->rt_dst.prefix.v6));
+    olsr_netlink_addreq(&req, RTA_OIF, &nexthop->interface->if_index,
+                        sizeof(nexthop->interface->if_index));
   }
-  if (FIBM_APPROX != olsr_cnf->fib_metric || RTM_NEWROUTE == cmd) {
-    olsr_netlink_addreq(&req, RTA_PRIORITY, &metric, sizeof(metric));
+  else {
+    /*
+     * No interface means: remove unspecificed default route
+     */
+    req.r.rtm_scope = RT_SCOPE_NOWHERE;
   }
-  olsr_netlink_addreq(&req, RTA_OIF, &nexthop->interface->if_index,
-                      sizeof(nexthop->interface->if_index));
   iov.iov_base = &req.n;
   iov.iov_len = req.n.nlmsg_len;
   ret = sendmsg(olsr_cnf->rts_linux, &msg, 0);
@@ -215,7 +223,6 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
     : olsr_cnf->rttable;
   rslt = olsr_netlink_route(rt, ip_version, rttable, RTM_DELROUTE);
   if (rslt >= 0) {
-
     /*
      * Send IPC route update message
      */

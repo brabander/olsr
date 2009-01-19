@@ -149,17 +149,23 @@ olsr_del_route(struct rt_entry *rt)
 static void
 olsr_add_route(struct rt_entry *rt)
 {
-
-  int16_t error = olsr_add_route_function(rt, olsr_cnf->ip_version);
-
-  if(error < 0) {
+  if (olsr_cnf->del_gws && 0 == rt->rt_dst.prefix_len) {
+    struct rt_entry defrt;
+    memset(&defrt, 0, sizeof(defrt));
+    /*
+     * Note: defrt.nexthop.interface == NULL means "remove unspecified default route"
+     */
+    while (0 <= olsr_del_route_function(&defrt, olsr_cnf->ip_version)) {}
+    olsr_cnf->del_gws = false;
+exit(9);
+  }
+  
+  if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
     const char * const err_msg = strerror(errno);
     const char * const routestr = olsr_rtp_to_string(rt->rt_best);
     OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
-
     olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
   } else {
-
     /* route addition has suceeded */
 
     /* save the nexthop and metric in the route entry */
