@@ -500,8 +500,6 @@ int zebra_add_route (const struct rt_entry *r) {
 
   if (r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
        route.prefixlen == 32) {
-    return 0;			/* Quagga BUG workaround: don't add routes with destination = gateway
-				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
     route.ifindex = olsr_malloc (sizeof *route.ifindex,
 			       "zebra_add_route");
@@ -542,8 +540,6 @@ int zebra_del_route (const struct rt_entry *r) {
 
   if (r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
        route.prefixlen == 32){
-    return 0;			/* Quagga BUG workaround: don't delete routes with destination = gateway
-				   see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
     route.ifindex_num++;
     route.ifindex = olsr_malloc (sizeof *route.ifindex,
 			       "zebra_del_route");
@@ -571,6 +567,12 @@ int zebra_del_route (const struct rt_entry *r) {
 int zebra_add_route_hook (const struct rt_entry *rt, int ip_version) {
   int ret = -1;
   if (AF_INET == ip_version) {
+
+    /* Quagga BUG workaround: don't add routes with destination = gateway
+       see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
+    if (rt->rt_best->rtp_nexthop.gateway.v4.s_addr == rt->rt_dst.prefix.v4.s_addr &&
+        rt->rt_dst.prefix_len == 32) return -1;
+
     ret = zebra_add_route(rt);
   }
   if (NULL != orig_add_route_function) {
@@ -582,6 +584,12 @@ int zebra_add_route_hook (const struct rt_entry *rt, int ip_version) {
 int zebra_del_route_hook (const struct rt_entry *rt, int ip_version) {
   int ret = -1;
   if (AF_INET == ip_version) {
+
+    /* Quagga BUG workaround: don't delete routes with destination = gateway
+       see http://lists.olsr.org/pipermail/olsr-users/2006-June/001726.html */
+    if (rt->rt_nexthop.gateway.v4.s_addr == rt->rt_dst.prefix.v4.s_addr &&
+        rt->rt_dst.prefix_len == 32) return -1;
+
     ret = zebra_del_route(rt);
   }
   if (NULL != orig_del_route_function) {
