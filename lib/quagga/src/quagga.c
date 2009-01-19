@@ -42,6 +42,8 @@
 #include <sys/un.h>
 #endif
 
+export_route_function orig_add_route_function = NULL;
+export_route_function orig_del_route_function = NULL;
 
 /* prototypes intern */
 static struct {
@@ -92,7 +94,7 @@ void zebra_cleanup (void) {
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_del_route(tmp, olsr_cnf->ip_version);
+      zebra_del_route(tmp);
     } OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
@@ -111,7 +113,7 @@ static void zebra_reconnect (void) {
 
   if (zebra.options & OPTION_EXPORT) {
     OLSR_FOR_ALL_RT_ENTRIES(tmp) {
-      zebra_add_route (tmp, olsr_cnf->ip_version);
+      zebra_add_route (tmp);
     } OLSR_FOR_ALL_RT_ENTRIES_END(tmp);
   }
 
@@ -481,17 +483,10 @@ static void free_ipv4_route (struct zebra_route *r) {
 }
 
 
-int zebra_add_route (const struct rt_entry *r, int ip_version) {
+int zebra_add_route (const struct rt_entry *r) {
 
   struct zebra_route route;
   int retval;
-
-  if (AF_INET != ip_version) {
-    /*
-     * Not implemented
-     */
-    return -1;
-  }
 
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
@@ -530,18 +525,11 @@ int zebra_add_route (const struct rt_entry *r, int ip_version) {
 
 }
 
-int zebra_del_route (const struct rt_entry *r, int ip_version) {
+int zebra_del_route (const struct rt_entry *r) {
 
   struct zebra_route route;
   int retval;
   
-  if (AF_INET != ip_version) {
-    /*
-     * Not implemented
-     */
-    return -1;
-  }
-
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
@@ -578,6 +566,28 @@ int zebra_del_route (const struct rt_entry *r, int ip_version) {
   retval = zebra_send_command (zebra_route_packet (ZEBRA_IPV4_ROUTE_DELETE, &route));
   return retval;
 
+}
+
+int zebra_add_route_hook (const struct rt_entry *rt, int ip_version) {
+  int ret = -1;
+  if (AF_INET == ip_version) {
+    ret = zebra_add_route(rt);
+  }
+  if (NULL != orig_add_route_function) {
+    ret = orig_add_route_function(rt, ip_version);
+  }
+  return ret;
+}
+
+int zebra_del_route_hook (const struct rt_entry *rt, int ip_version) {
+  int ret = -1;
+  if (AF_INET == ip_version) {
+    ret = zebra_del_route(rt);
+  }
+  if (NULL != orig_del_route_function) {
+    ret = orig_del_route_function(rt, ip_version);
+  }
+  return ret;
 }
 
 void zebra_olsr_distance (unsigned char dist) {

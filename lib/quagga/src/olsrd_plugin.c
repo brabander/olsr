@@ -81,13 +81,18 @@ static int set_exportroutes (const char *value,
 			     void *data __attribute__((unused)),
 			     set_plugin_parameter_addon addon __attribute__((unused))) {
   if (!strcmp(value, "only")) {
-    olsr_add_route_function = zebra_add_route;
-    olsr_del_route_function = zebra_del_route;
+    olsr_add_route_function = zebra_add_route_hook;
+    olsr_del_route_function = zebra_del_route_hook;
     zebra_export_routes(1);
   }
   else if (!strcmp(value, "additional")) {
-    olsr_add_route_function = zebra_add_route;
-    olsr_del_route_function = zebra_del_route;
+    /*
+     * Hook up kernel route functions
+     */
+    orig_add_route_function = olsr_add_route_function;
+    orig_del_route_function = olsr_del_route_function;
+    olsr_add_route_function = zebra_add_route_hook;
+    olsr_del_route_function = zebra_del_route_hook;
     zebra_export_routes(1);
   }
   else zebra_export_routes(0);
