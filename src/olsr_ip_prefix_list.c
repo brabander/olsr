@@ -50,6 +50,7 @@ ip_prefix_list_flush(struct list_node *ip_prefix_head)
   struct ip_prefix_entry *entry;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, entry) {
+    list_remove(&entry->node);
     free(entry);
   } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END();
 }
@@ -73,6 +74,7 @@ ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
     if (ipequal(ip_version, net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
+      list_remove(&h->node);
       free(h);
       return 1;
     }
