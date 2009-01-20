@@ -65,6 +65,9 @@ ifeq ($(LD_HAS_DYN), yes)
 endif
 		$(CC) $(LDFLAGS) $(LDFLAGS_EXE) -o $@ $^ $(LIBS)
 
+CONFDIR = src/config
+include $(CONFDIR)/local.mk
+
 show-ignored-warnings:
 	CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) > /dev/null
 
@@ -90,11 +93,6 @@ ifeq ($(OS), win32)
 	-rm -fr gui/win32/Main/Release
 	-rm -fr gui/win32/Shim/Release
 endif
-
-uberclean:	clean clean_libs
-	-rm -f $(TAGFILE)
-#	BSD-xargs has no "--no-run-if-empty" aka "-r"
-	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -print0 | xargs -0 rm -f
 
 install: install_olsrd
 
@@ -229,6 +227,11 @@ watchdog:
 		$(MAKECMD) -C lib/watchdog
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
-build_all:	all libs
-install_all:	install install_libs
-clean_all:	uberclean clean_libs
+build_all:	all libs config-verify
+install_all:	install install_libs config-verify_install
+clean_all:	clean clean_libs config-verify_clean
+
+uberclean: clean_all
+	-rm -f $(TAGFILE)
+#	BSD-xargs has no "--no-run-if-empty" aka "-r"
+	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -print0 | xargs -0 rm -f

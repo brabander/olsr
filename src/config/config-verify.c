@@ -76,54 +76,42 @@ char *olsr_strndup(const char *s, size_t n)
 
 /************ GLOBALS(end) ***********/
 
-static int write_cnf(struct olsr_config *cnf, const char *fname)
-{
-  FILE *fd;
-  struct autobuf abuf;
-  if (0 != strcmp(fname, "-")) {
-    fd = fopen(fname, "w");
-    if (fd == NULL) {
-      fprintf(stderr, "Could not open file %s for writing\n%s\n", fname, strerror(errno));
-      return -1;
-    }
-  }
-  else {
-    fd = stdout;
-  }
-
-  printf("Writing config to file \"%s\".... ", fname);
-
-  abuf_init(&abuf, 0);
-  olsr_write_cnf_buf(&abuf, cnf, false);
-  fputs(abuf.buf, fd);
-
-  abuf_free(&abuf);
-  if (0 != strcmp(fname, "-")) {
-    fclose(fd);
-  }
-  printf("DONE\n");
-
-  return 1;
-}
-
 int main(int argc, char *argv[])
 {
-  int i, ret = 0;
+  int i, ret = EXIT_SUCCESS;
 #ifndef NODEBUG
   debug_handle = stdout;
 #endif
+  
   for (i = 1; i < argc; i++) {
+    const char *sres;
     struct olsr_config *cfg_tmp;
-    char cfg_msg[FILENAME_MAX + 256];
+    char cfg_msg[FILENAME_MAX + 256] = { 0 };
+    olsr_parse_cfg_result res = olsr_parse_cfg(0, NULL, argv[i], cfg_msg, &cfg_tmp);
 
-    printf("Verifying argv[%d]=%s\n", i, argv[i]);
-    if (CFG_ERROR != olsr_parse_cfg(0, NULL, argv[i], cfg_msg, &cfg_tmp)) {
-      printf("%s verified: %s\n", argv[i], 0 <= olsr_sanity_check_cfg(cfg_tmp) ? "yes" : "no");
-      if (&write_cnf != NULL) write_cnf(cfg_tmp, "-");
+    switch(res) {
+      case CFG_ERROR: sres = "ERROR"; break;
+      case CFG_WARN: sres = "WARN"; break;
+      case CFG_EXIT: sres = "EXIT"; break;
+      default: sres = "OK";
+    }
+    
+    fprintf(stderr, "Reading %s returns %s\n", argv[i], sres);
+    
+    if (CFG_OK == res) {
+      struct autobuf abuf;
+
+      fprintf(stderr, "Verifying %s returns %s\n", argv[i], 0 <= olsr_sanity_check_cfg(cfg_tmp) ? "OK" : "ERROR");
+
+      abuf_init(&abuf, 0);
+      olsr_write_cnf_buf(&abuf, cfg_tmp, false);
+      fputs(abuf.buf, stdout);
+      abuf_free(&abuf);
+      
     }
     else {
-      fprintf(stderr, "%s not verified. %s\n", argv[i], cfg_msg);
-      ret = 1;
+      fprintf(stderr, "Error message: %s\n", cfg_msg);
+      ret = EXIT_FAILURE;
     }
     olsr_free_cfg(cfg_tmp);
   }
