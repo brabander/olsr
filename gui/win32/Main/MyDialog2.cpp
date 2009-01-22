@@ -230,21 +230,21 @@ void MyDialog2::OnEtxCheck()
 
 int MyDialog2::OpenConfigFile(CString PathName)
 {
-	struct ip_prefix_list *Hna;
+	struct ip_prefix_entry *Hna;
 	struct olsr_if_config *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	int NumInt = m_InterfaceList.GetItemCount();
 	int i;
 	CString IntName;
 	CString Conv;
+    char cfg_message[FILENAME_MAX + 256] = { 0 };
 
 	if (Conf != NULL)
-		cfgparser_olsrd_free_cnf(Conf);
+		olsr_free_cfg(Conf);
 
-	Conf = cfgparser_olsrd_parse_cnf(PathName);
-
-	if (Conf == NULL)
+	if (CFG_ERROR == olsr_parse_cfg(0, NULL, PathName, cfg_message, &Conf)) {
 		return -1;
+	}
 
 	for (i = 0; i < NumInt; i++)
 		m_InterfaceList.SetCheck(i, FALSE);
@@ -305,6 +305,20 @@ int MyDialog2::OpenConfigFile(CString PathName)
 
 	m_TcRed.SetCurSel(Conf->tc_redundancy);
 
+#if _DEBUG
+	m_LqAlgo.SetCurSel(m_LqAlgo.FindStringExact(-1, "etx_ff"));
+
+	m_HystCheck.SetCheck(false);
+
+	Conv.Format("%.2f", 0.5);
+	m_HystScaling.SetWindowText(Conv);
+
+	Conv.Format("%.2f", 0.8);
+	m_HystThresholdHigh.SetWindowText(Conv);
+
+	Conv.Format("%.2f", 0.3);
+	m_HystThresholdLow.SetWindowText(Conv);
+#else
 	m_LqAlgo.SetCurSel(m_LqAlgo.FindStringExact(-1, Conf->lq_algorithm));
 
 	m_HystCheck.SetCheck(Conf->use_hysteresis);
@@ -317,29 +331,49 @@ int MyDialog2::OpenConfigFile(CString PathName)
 
 	Conv.Format("%.2f", Conf->hysteresis_param.thr_low);
 	m_HystThresholdLow.SetWindowText(Conv);
+#endif
 
 	OnHystCheck();
 
 	m_FishEyeCheck.SetCheck(Conf->lq_fish > 0);
 
+#if _DEBUG
+	m_EtxCheck.SetCheck(2 > 0);
+#else
 	m_EtxCheck.SetCheck(Conf->lq_level > 0);
+#endif
 
 #if 0
 	Conv.Format("%d", Conf->lq_wsize);
 	m_EtxWindowSize.SetWindowText(Conv);
 #endif
 
+#if _DEBUG
+	m_EtxRadio1.SetCheck(2 == 1);
+	m_EtxRadio2.SetCheck(2 == 0 || 2 == 2);
+#else
 	m_EtxRadio1.SetCheck(Conf->lq_level == 1);
 	m_EtxRadio2.SetCheck(Conf->lq_level == 0 || Conf->lq_level == 2);
+#endif
 
 	OnEtxCheckWorker();
 
 	m_InternetCheck.SetCheck(FALSE);
 
-	for (Hna = Conf->hna_entries; Hna != NULL; Hna = Hna->next)
-		if (0 == Hna->net.prefix_len &&
-			m_InternetCheck.IsWindowEnabled())
-		m_InternetCheck.SetCheck(TRUE);
+/*
+{
+  struct list_node *link_head_node, *link_node, *next_link_node;
+  link_head_node = &Conf->hna_entries;
+  for (link_node = link_head_node->next;
+    link_node != link_head_node; link_node = next_link_node) {
+    next_link_node = link_node->next;
+    Hna = list2ipprefix(link_node);
+*/
+    OLSR_FOR_ALL_IPPREFIX_ENTRIES(&Conf->hna_entries, Hna) {
+		if (0 == Hna->net.prefix_len && m_InternetCheck.IsWindowEnabled()) {
+			m_InternetCheck.SetCheck(TRUE);
+		}
+    } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
 
 	PrevInt = NULL;
 
@@ -392,10 +426,12 @@ static struct olsr_if_config *AddInterface(struct olsr_config **Conf, CString Na
 	::lstrcpy(Int->name, Name);
 
 	Int->config = NULL;
+#ifndef _DEBUG
 	Int->configured = false;
+#endif
 	Int->interf = NULL;
 
-	Int->cnf = cfgparser_get_default_if_config();
+	Int->cnf = olsr_get_default_if_options();
 
 	Int->next = (*Conf)->if_configs;
 	(*Conf)->if_configs = Int;
@@ -408,11 +444,9 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	struct olsr_if_config *Int, *PrevInt;
 	struct olsr_msg_params *MsgPar;
 	CString Conv;
-	struct ip_prefix_list *Hna, *NewHna, *PrevHna;
 	int NumInt = m_InterfaceList.GetItemCount();
 	int i;
 	CString IntName, IntName2;
-	struct ip_prefix_list *IpcHost;
 	union olsr_ip_addr Local;
 
 	PrevInt = NULL;
@@ -512,36 +546,57 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	Conf->tc_redundancy = (unsigned char)m_TcRed.GetCurSel();
 
 	i = m_LqAlgo.GetCurSel();
+#ifndef _DEBUG
 	Conf->lq_algorithm = NULL;
+#endif
 	if (0 <= i)
 	{
 		CString str;
 		m_LqAlgo.GetLBText(i, str);
+#ifndef _DEBUG
 		Conf->lq_algorithm = strdup((LPCTSTR)str);
+#endif
 	}
 
 	m_MprCov.GetWindowText(Conv);
 	Conf->mpr_coverage = (unsigned char)atoi(Conv);
 
+#ifndef _DEBUG
 	Conf->use_hysteresis = m_HystCheck.GetCheck() ? true : false;
+#endif
 
 	m_HystScaling.GetWindowText(Conv);
+#ifndef _DEBUG
 	Conf->hysteresis_param.scaling = (float)atof(Conv);
+#endif
 
 	m_HystThresholdHigh.GetWindowText(Conv);
+#ifndef _DEBUG
 	Conf->hysteresis_param.thr_high = (float)atof(Conv);
+#endif
 
 	m_HystThresholdLow.GetWindowText(Conv);
+#ifndef _DEBUG
 	Conf->hysteresis_param.thr_low = (float)atof(Conv);
+#endif
 
-	if (!m_EtxCheck.GetCheck())
+	if (!m_EtxCheck.GetCheck()) {
+#ifndef _DEBUG
 		Conf->lq_level = 0;
+#endif
+	}
 
-	else if (m_EtxRadio1.GetCheck())
+	else if (m_EtxRadio1.GetCheck()) {
+#ifndef _DEBUG
 		Conf->lq_level = 1;
+#endif
+	}
 
-	else
+	else {
+#ifndef _DEBUG
 		Conf->lq_level = 2;
+#endif
+	}
 
 	if (!m_FishEyeCheck.GetCheck())
 		Conf->lq_fish = 0;
@@ -549,50 +604,23 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 	else
 		Conf->lq_fish = 1;
 
-	PrevHna = NULL;
-
-	// check for a default gateway HNA4 entry
-
-	for (Hna = Conf->hna_entries; Hna != NULL; Hna = Hna->next)
+	if (m_InternetCheck.GetCheck())
 	{
-		if (0 == Hna->net.prefix_len)
-			break;
-
-		PrevHna = Hna;
+		// add default gateway HNA entry
+		union olsr_ip_addr ip;
+		uint8_t prefix = 0;
+		memset(&ip, 0, sizeof(ip));
+		ip_prefix_list_add(&Conf->hna_entries, &ip, prefix);
 	}
-
-	// add default gateway HNA entry
-
-	if (m_InternetCheck.GetCheck() && Hna == NULL)
+	else
 	{
-		NewHna = (struct ip_prefix_list * )
-			win32_olsrd_malloc(sizeof (struct ip_prefix_list));
-
-		if (NewHna == NULL)
-		{
-			AfxMessageBox("Cannot allocate memory.");
-			return -1;
+		// remove default gateway HNA entry
+		union olsr_ip_addr ip;
+		uint8_t prefix = 0;
+		memset(&ip, 0, sizeof(ip));
+		while (ip_prefix_list_remove(&Conf->hna_entries, &ip, prefix, Conf->ip_version)) {
 		}
-
-		memset(NewHna, 0, sizeof (struct ip_prefix_list));
-
-		NewHna->next = Conf->hna_entries;
-		Conf->hna_entries = NewHna;
 	}
-
-	// remove default gateway HNA4 entry
-
-	if (!m_InternetCheck.GetCheck() && Hna != NULL)
-	{
-		if (PrevHna == NULL)
-			Conf->hna_entries = Hna->next;
-
-		else
-			PrevHna->next = Hna->next;
-
-		win32_olsrd_free(Hna);
-	}
-
 	if (AF_INET == Conf->ip_version)
 	{
 		Local.v4.s_addr = ::inet_addr("127.0.0.1");
@@ -603,27 +631,12 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 		Local.v6.u.Byte[15] = 1;
 	}
 
-	for (IpcHost = Conf->ipc_nets; IpcHost != NULL; IpcHost = IpcHost->next)
-		if (0 == memcmp(&IpcHost->net.prefix, &Local, Conf->ipsize))
-			break;
-
-	if (IpcHost == NULL && Real == 0)
-	{
-		IpcHost = (struct ip_prefix_list *)
-			win32_olsrd_malloc(sizeof (struct ip_prefix_list));
-
-		if (IpcHost == NULL)
-		{
-			AfxMessageBox("Cannot allocate memory.");
-			return -1;
-		}
-
-		IpcHost->net.prefix = Local;
-		IpcHost->net.prefix_len = (uint8_t)Conf->ipsize;
-
-		IpcHost->next = Conf->ipc_nets;
-		Conf->ipc_nets = IpcHost;
-
+	if (Real == 0 && !ip_acl_acceptable(&Conf->ipc_nets, &Local, Conf->ip_version)) {
+        ip_acl_add(
+			&Conf->ipc_nets, 
+			&Local, 
+			8 * Conf->ipsize, 
+			false);
 		Conf->ipc_connections++;
 	}
 

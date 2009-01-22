@@ -85,7 +85,7 @@
 #ifdef REMOVE_LOG_ERROR
 #define OLSR_ERROR(source, format, args...) do { } while(0)
 #else
-#define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERROR, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERR, source, __FILE__, __LINE__, format, ##args)
 #endif
 
 void EXPORT(olsr_log_init) (void);

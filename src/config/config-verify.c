@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -53,19 +54,22 @@ FILE *debug_handle = NULL;
 struct olsr_config *olsr_cnf;
 #endif
 
-void *olsr_malloc(size_t size, const char *id __attribute__ ((unused)))
+void *
+olsr_malloc(size_t size, const char *id __attribute__ ((unused)))
 {
   return calloc(1, size);
 }
 
-char *olsr_strdup(const char *s)
+char *
+olsr_strdup(const char *s)
 {
   char *ret = olsr_malloc(1 + strlen(s), "olsr_strdup");
   strcpy(ret, s);
   return ret;
 }
 
-char *olsr_strndup(const char *s, size_t n)
+char *
+olsr_strndup(const char *s, size_t n)
 {
   size_t len = n < strlen(s) ? n : strlen(s);
   char *ret = olsr_malloc(1 + len, "olsr_strndup");
@@ -76,7 +80,8 @@ char *olsr_strndup(const char *s, size_t n)
 
 /************ GLOBALS(end) ***********/
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
   int i, ret = EXIT_SUCCESS;
 #ifndef NODEBUG
@@ -89,11 +94,18 @@ int main(int argc, char *argv[])
     char cfg_msg[FILENAME_MAX + 256] = { 0 };
     olsr_parse_cfg_result res = olsr_parse_cfg(0, NULL, argv[i], cfg_msg, &cfg_tmp);
 
-    switch(res) {
-      case CFG_ERROR: sres = "ERROR"; break;
-      case CFG_WARN: sres = "WARN"; break;
-      case CFG_EXIT: sres = "EXIT"; break;
-      default: sres = "OK";
+    switch (res) {
+    case CFG_ERROR:
+      sres = "ERROR";
+      break;
+    case CFG_WARN:
+      sres = "WARN";
+      break;
+    case CFG_EXIT:
+      sres = "EXIT";
+      break;
+    default:
+      sres = "OK";
     }
 
     fprintf(stderr, "Reading %s returns %s\n", argv[i], sres);
@@ -108,8 +120,7 @@ int main(int argc, char *argv[])
       fputs(abuf.buf, stdout);
       abuf_free(&abuf);
 
-    }
-    else {
+    } else {
       fprintf(stderr, "Error message: %s\n", cfg_msg);
       ret = EXIT_FAILURE;
     }

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -38,34 +39,29 @@
  *
  */
 
-#ifndef _COMMON_AUTOBUF_H
-#define _COMMON_AUTOBUF_H
+#ifndef _OLSR_CFG_LIB_H
+#define _OLSR_CFG_LIB_H
 
-#include "defs.h"
-#include <stdarg.h>
-#include <time.h>
-
-#define AUTOBUFCHUNK	4096
-struct autobuf {
-    int size;
-    int len;
-    char *buf;
-};
-
-int  EXPORT(abuf_init)(struct autobuf *autobuf, int initial_size);
-void EXPORT(abuf_free)(struct autobuf *autobuf);
-int  EXPORT(abuf_appendf)(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-int  EXPORT(abuf_puts)(struct autobuf *autobuf, const char *s);
-int  EXPORT(abuf_strftime)(struct autobuf *autobuf, const char *format, const struct tm *tm);
-int  EXPORT(abuf_memcpy)(struct autobuf *autobuf, const void *p, const unsigned int len);
-
+#if defined __cplusplus
+extern "C" {
 #endif
+
+  int cfgparser_olsrd_write_cnf(const struct olsr_config *cnf, const char *fname);
+
+#ifdef WIN32
+  void win32_stdio_hack(unsigned int);
+  void *win32_olsrd_malloc(size_t size);
+  void win32_olsrd_free(void *ptr);
+#endif
+
+#if defined __cplusplus
+}
+#endif
+#endif                                 /* _OLSR_CFG_LIB_H */
 
 /*
  * Local Variables:
- * mode: c
- * style: linux
- * c-basic-offset: 4
+ * c-basic-offset: 2
  * indent-tabs-mode: nil
  * End:
  */

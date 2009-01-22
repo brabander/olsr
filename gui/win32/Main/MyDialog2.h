@@ -49,7 +49,9 @@
 
 #define MAKELIB
 #define OLSR_PLUGIN
-#include <cfgparser/olsrd_conf.h>
+#include <olsr_cfg.h>
+#include <olsr_ip_prefix_list.h>
+#include <config/olsr_cfg_lib.h>
 #include "afxwin.h"
 
 class MyDialog2 : public CDialog

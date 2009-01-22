@@ -285,6 +285,7 @@ int CFrontendApp::RedirectStdHandles(void)
 	// stdout->_file = 1;
 	stderr->_file = 2;
 
+	// Initializes stdio redirection in DLL
 	win32_stdio_hack((unsigned int)OutWrite);
 
 	return 0;

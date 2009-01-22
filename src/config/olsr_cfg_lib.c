@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -38,34 +39,77 @@
  *
  */
 
-#ifndef _COMMON_AUTOBUF_H
-#define _COMMON_AUTOBUF_H
+#include "olsr_cfg_lib.h"
 
-#include "defs.h"
-#include <stdarg.h>
-#include <time.h>
+int
+cfgparser_olsrd_write_cnf(const struct olsr_config *cnf, const char *fname)
+{
+  struct autobuf abuf;
+  FILE *fd = fopen(fname, "w");
+  if (fd == NULL) {
+    fprintf(stderr, "Could not open file %s for writing\n%s\n", fname, strerror(errno));
+    return -1;
+  }
+  printf("Writing config to file \"%s\".... ", fname);
+  abuf_init(&abuf, 0);
+  cfgparser_olsrd_write_cnf_buf(&abuf, cnf, false);
+  fputs(abuf.buf, fd);
+  abuf_free(&abuf);
+  fclose(fd);
+  printf("DONE\n");
+  return 1;
+}
 
-#define AUTOBUFCHUNK	4096
-struct autobuf {
-    int size;
-    int len;
-    char *buf;
+#ifdef WIN32
+
+struct ioinfo {
+  unsigned int handle;
+  unsigned char attr;
+  char buff;
+  int flag;
+  CRITICAL_SECTION lock;
 };
 
-int  EXPORT(abuf_init)(struct autobuf *autobuf, int initial_size);
-void EXPORT(abuf_free)(struct autobuf *autobuf);
-int  EXPORT(abuf_appendf)(struct autobuf *autobuf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-int  EXPORT(abuf_puts)(struct autobuf *autobuf, const char *s);
-int  EXPORT(abuf_strftime)(struct autobuf *autobuf, const char *format, const struct tm *tm);
-int  EXPORT(abuf_memcpy)(struct autobuf *autobuf, const void *p, const unsigned int len);
+void
+win32_stdio_hack(unsigned int handle)
+{
+  HMODULE lib;
+  struct ioinfo **info;
+
+  lib = LoadLibrary("msvcrt.dll");
+
+  info = (struct ioinfo **)GetProcAddress(lib, "__pioinfo");
+
+  // (*info)[1].handle = handle;
+  // (*info)[1].attr = 0x89; // FOPEN | FTEXT | FPIPE;
+
+  (*info)[2].handle = handle;
+  (*info)[2].attr = 0x89;
+
+  // stdout->_file = 1;
+  stderr->_file = 2;
+
+  // setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+}
+
+void *
+win32_olsrd_malloc(size_t size)
+{
+  return malloc(size);
+}
+
+void
+win32_olsrd_free(void *ptr)
+{
+  free(ptr);
+}
 
 #endif
 
 /*
  * Local Variables:
- * mode: c
- * style: linux
- * c-basic-offset: 4
+ * c-basic-offset: 2
  * indent-tabs-mode: nil
  * End:
  */

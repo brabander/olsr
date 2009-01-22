@@ -259,8 +259,8 @@ parse_tok(const char *s, const char **snext)
 /*
  * Returns default interface options
  */
-static struct olsr_if_options *
-get_default_olsr_if_options(void)
+struct olsr_if_options *
+olsr_get_default_if_options(void)
 {
   struct olsr_if_options *new_io = olsr_malloc(sizeof(*new_io), "default_if_config");
 
@@ -307,7 +307,7 @@ queue_if(const char *name, struct olsr_config *cfg)
   /* new_if->config = NULL; */
   /* memset(&new_if->hemu_ip, 0, sizeof(new_if->hemu_ip)); */
   /* new_if->interf = NULL; */
-  new_if->cnf = get_default_olsr_if_options();
+  new_if->cnf = olsr_get_default_if_options();
   new_if->next = cfg->if_configs;
   cfg->if_configs = new_if;
 
@@ -791,10 +791,10 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg)
       rcfg->log_event[SEVERITY_WARN][i] = true;
     }
     if (rcfg->log_event[SEVERITY_WARN][i]) {
-      rcfg->log_event[SEVERITY_ERROR][i] = true;
+      rcfg->log_event[SEVERITY_ERR][i] = true;
     }
     if (!hasErrorOption) {
-      rcfg->log_event[SEVERITY_ERROR][i] = true;
+      rcfg->log_event[SEVERITY_ERR][i] = true;
     }
   }
 
@@ -1486,7 +1486,7 @@ olsr_get_default_cfg(void)
     assert(cfg->log_event[SEVERITY_DEBUG][i] == false);
     assert(cfg->log_event[SEVERITY_INFO][i] == false);
     assert(cfg->log_event[SEVERITY_WARN][i] == false);
-    cfg->log_event[SEVERITY_ERROR][i] = true;
+    cfg->log_event[SEVERITY_ERR][i] = true;
   }
   cfg->log_target_stderr = true;
   assert(cfg->log_target_file == NULL);

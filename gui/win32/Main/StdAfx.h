@@ -24,6 +24,13 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 
+/* compiler-specific stuff */
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
+
+#undef EXPORT
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
 

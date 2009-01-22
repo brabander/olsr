@@ -52,7 +52,7 @@
 
 #define OLSR_LOG_INFO            SEVERITY_INFO
 #define OLSR_LOG_WARN            SEVERITY_WARN
-#define OLSR_LOG_ERR             SEVERITY_ERROR
+#define OLSR_LOG_ERR             SEVERITY_ERR
 
 void
 olsr_openlog(const char *ident);

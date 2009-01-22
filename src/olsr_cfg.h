@@ -106,7 +106,7 @@
 
 #include "interfaces.h"
 #include "olsr_ip_acl.h"
-#include "olsr_logging.h"
+#include "olsr_cfg_data.h"
 
 struct olsr_msg_params {
   float emission_interval;
@@ -249,9 +249,10 @@ typedef enum {
 } olsr_parse_cfg_result;
 
 olsr_parse_cfg_result olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config **rcfg);
+struct olsr_if_options *olsr_get_default_if_options(void);
+struct olsr_config *olsr_get_default_cfg(void);
 int olsr_sanity_check_cfg(struct olsr_config *cfg);
 void olsr_free_cfg(struct olsr_config *cfg);
-struct olsr_config *olsr_get_default_cfg(void);
 
 /*
  * Check pollrate function
@@ -259,12 +260,12 @@ struct olsr_config *olsr_get_default_cfg(void);
 static inline float
 conv_pollrate_to_secs(uint32_t p)
 {
-  return p / 1000000.0;
+  return p / (float)1000000.0;
 }
 static inline uint32_t
 conv_pollrate_to_microsecs(float p)
 {
-  return p * 1000000;
+  return (uint32_t)(p * 1000000);
 }
 
 #endif /* _OLSRD_CFG_H */
