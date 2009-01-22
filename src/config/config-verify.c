@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 #ifndef NODEBUG
   debug_handle = stdout;
 #endif
-  
+
   for (i = 1; i < argc; i++) {
     const char *sres;
     struct olsr_config *cfg_tmp;
@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
       case CFG_EXIT: sres = "EXIT"; break;
       default: sres = "OK";
     }
-    
+
     fprintf(stderr, "Reading %s returns %s\n", argv[i], sres);
-    
+
     if (CFG_OK == res) {
       struct autobuf abuf;
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
       olsr_write_cnf_buf(&abuf, cfg_tmp, false);
       fputs(abuf.buf, stdout);
       abuf_free(&abuf);
-      
+
     }
     else {
       fprintf(stderr, "Error message: %s\n", cfg_msg);

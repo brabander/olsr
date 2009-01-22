@@ -66,14 +66,14 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   union olsr_ip_addr mask;
   unsigned long Res;
   struct interface *iface = rt->rt_best->rtp_nexthop.interface;
-  
+
   if (AF_INET != ip_version) {
     /*
      * Not implemented
      */
     return -1;
   }
-  
+
 
   OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 

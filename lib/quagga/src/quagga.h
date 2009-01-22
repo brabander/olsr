@@ -93,7 +93,7 @@ struct zebra_route {
 
 extern export_route_function orig_add_route_function;
 extern export_route_function orig_del_route_function;
-        
+
 void init_zebra (void);
 void zebra_cleanup (void);
 void zebra_parse (void*);

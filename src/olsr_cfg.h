@@ -196,7 +196,7 @@ struct olsr_config {
   bool log_target_stderr;              /* Log output to stderr? */
   char *log_target_file;               /* Filename for log output file, NULL if unused */
   bool log_target_syslog;              /* Log output also to syslog? */
-  
+
   struct plugin_entry *plugins;        /* List of plugins to load with plparams */
   struct list_node hna_entries;        /* List of manually configured HNA entries */
   struct ip_acl ipc_nets;              /* List of allowed IPC peer IPs */

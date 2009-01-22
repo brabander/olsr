@@ -159,7 +159,7 @@ olsr_add_route(struct rt_entry *rt)
     olsr_cnf->del_gws = false;
 exit(9);
   }
-  
+
   if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
     const char * const err_msg = strerror(errno);
     const char * const routestr = olsr_rtp_to_string(rt->rt_best);
