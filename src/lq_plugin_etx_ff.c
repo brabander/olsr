@@ -396,22 +396,21 @@ static void lq_etxff_deserialize_tc_lq(uint8_t const ** curr,
 static char *lq_etxff_print_lq(struct lq_etxff_linkquality *lq, char separator,
     struct lqtextbuffer *buffer) {
   int i = 0;
-  char str[] = "1.000";
 
   if (lq->valueLq == 255) {
-  	strncpy(buffer->buf, str, sizeof(str));
+  	strcpy(buffer->buf, "1.000");
   	i += 5;
   }
   else {
-    i = snprintf(buffer->buf, 6, "0.%03d", (lq->valueLq * 1000)/255);
+    i = sprintf(buffer->buf, "0.%03d", (lq->valueLq * 1000)/255);
   }
   buffer->buf[i++] = separator;
 
   if (lq->valueNlq == 255) {
-    strncpy(&buffer->buf[i], str, sizeof(str));
+    strcpy(&buffer->buf[i], "1.000");
   }
   else {
-    snprintf(&buffer->buf[i], 6, "0.%03d", (lq->valueNlq * 1000) / 255);
+    sprintf(&buffer->buf[i], "0.%03d", (lq->valueNlq * 1000) / 255);
   }
   return buffer->buf;
 }
@@ -435,7 +434,7 @@ static char *lq_etxff_print_cost(olsr_linkcost cost, struct lqtextbuffer * buffe
   uint32_t roundDown = cost >> 16;
   uint32_t fraction = ((cost & 0xffff) * 1000) >> 16;
 
-  snprintf(buffer->buf, 6, "%u.%03u", roundDown, fraction);
+  sprintf(buffer->buf, "%u.%03u", roundDown, fraction);
   return buffer->buf;
 }
 

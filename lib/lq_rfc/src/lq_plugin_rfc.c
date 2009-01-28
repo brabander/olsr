@@ -207,13 +207,13 @@ static void lq_rfc_deserialize_tc_lq(uint8_t const __attribute__((unused)) ** cu
 
 static char *lq_rfc_print_link_entry_lq(struct link_entry __attribute__((unused)) *link, char __attribute__((unused)) separator,
     struct lqtextbuffer *buffer) {
-    strncpy(buffer->buf, "", 0);
+    strcpy(buffer->buf, "");
     return buffer->buf;
 }
 
 static char *lq_rfc_print_tc_edge_entry_lq(struct tc_edge_entry __attribute__((unused)) *edge,
     char __attribute__((unused)) separator, struct lqtextbuffer * buffer) {
-    strncpy(buffer->buf, "", 0);
+    strcpy(buffer->buf, "");
     return buffer->buf;
 }
 

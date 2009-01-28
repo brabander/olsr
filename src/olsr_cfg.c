@@ -72,17 +72,13 @@ static void
 read_cfg_cat(char **pdest, const char *src)
 {
   char *tmp = *pdest;
-  int len;
-
   if (*src) {
-    len= ( tmp ? strlen(tmp) : 0) + strlen(src);
-
-    *pdest = olsr_malloc(1 + len, "read_cfg_cat");
+    *pdest = olsr_malloc(1 + (tmp ? strlen(tmp) : 0) + strlen(src), "read_cfg_cat");
     if (tmp) {
-      strncpy(*pdest, tmp, strlen(tmp));
+      strcpy(*pdest, tmp);
       free(tmp);
     }
-    strncat(*pdest, src, strlen(src));
+    strcat(*pdest, src);
   }
 }
 
@@ -143,7 +139,7 @@ read_cfg(const char *filename, int *pargc, char ***pargv, int **pline)
             while (' ' < *p)
               p++;
             n = olsr_malloc(p - q + 3, "config arg0");
-            strncpy(n, "--", sizeof("--"));
+            strcpy(n, "--");
             strncat(n, q, p - q);
             while (*q && ' ' >= *p)
               p++;
@@ -334,14 +330,13 @@ parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg, char
   struct ipaddr_str buf;
 #endif
   if ('{' != *argstr) {
-    char str[] = "No {}\n";
-    snprintf(rmsg, sizeof(str), str);
+    sprintf(rmsg, "No {}\n");
     return CFG_ERROR;
   }
   if (NULL != (tok = parse_tok(argstr + 1, NULL))) {
     char **p = tok;
     if (ip_version != rcfg->ip_version) {
-      snprintf(rmsg, FILENAME_MAX+256,"IPv%d addresses can only be used if \"IpVersion\" == %d\n",
+      sprintf(rmsg, "IPv%d addresses can only be used if \"IpVersion\" == %d\n",
               AF_INET == ip_version ? 4 : 6, AF_INET == ip_version ? 4 : 6);
       parse_tok_free(tok);
       return CFG_ERROR;
@@ -349,24 +344,24 @@ parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg, char
     while (p[0]) {
       union olsr_ip_addr ipaddr;
       if (!p[1]) {
-        snprintf(rmsg, FILENAME_MAX+256, "Odd args in %s\n", argstr);
+        sprintf(rmsg, "Odd args in %s\n", argstr);
         parse_tok_free(tok);
         return CFG_ERROR;
       }
       if (inet_pton(ip_version, p[0], &ipaddr) <= 0) {
-        snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p[0]);
+        sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
         parse_tok_free(tok);
         return CFG_ERROR;
       }
       if (AF_INET == ip_version) {
         union olsr_ip_addr netmask;
         if (inet_pton(AF_INET, p[1], &netmask) <= 0) {
-          snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p[1]);
+          sprintf(rmsg, "Failed converting IP address %s\n", p[1]);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
         if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-          snprintf(rmsg, FILENAME_MAX + 256, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
+          sprintf(rmsg, "The IP address %s/%s is not a network address!\n", p[0], p[1]);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
@@ -377,7 +372,7 @@ parse_cfg_hna(char *argstr, const int ip_version, struct olsr_config *rcfg, char
         int prefix = -1;
         sscanf('/' == *p[1] ? p[1] + 1 : p[1], "%d", &prefix);
         if (0 > prefix || 128 < prefix) {
-          snprintf(rmsg, FILENAME_MAX + 256, "Illegal IPv6 prefix %s\n", p[1]);
+          sprintf(rmsg, "Illegal IPv6 prefix %s\n", p[1]);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
@@ -408,7 +403,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
 #endif
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
     if ('{' != *nxt) {
-      snprintf(rmsg, FILENAME_MAX + 256, "No {}\n");
+      sprintf(rmsg, "No {}\n");
       parse_tok_free(tok);
       return CFG_ERROR;
     } else {
@@ -420,7 +415,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
         PARSER_DEBUG_PRINTF("Interface %s\n", p[0]);
         while (new_if && p_next[0]) {
           if (!p_next[1]) {
-            snprintf(rmsg, FILENAME_MAX + 256,"Odd args in %s\n", nxt);
+            sprintf(rmsg, "Odd args in %s\n", nxt);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
             return CFG_ERROR;
@@ -440,7 +435,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET, p_next[1], &ipaddr) <= 0) {
-              snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p_next[1]);
+              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
               return CFG_ERROR;
@@ -461,7 +456,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           } else if (0 == strcmp("Ip6MulticastSite", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-              snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p_next[1]);
+              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
               return CFG_ERROR;
@@ -471,7 +466,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           } else if (0 == strcmp("Ip6MulticastGlobal", p_next[0])) {
             union olsr_ip_addr ipaddr;
             if (inet_pton(AF_INET6, p_next[1], &ipaddr) <= 0) {
-              snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p_next[1]);
+              sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
               return CFG_ERROR;
@@ -517,7 +512,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             float f;
             struct olsr_lq_mult *mult = olsr_malloc(sizeof(*mult), "lqmult");
             if (!p_next[2]) {
-              snprintf(rmsg, FILENAME_MAX + 256, "Odd args in %s\n", nxt);
+              sprintf(rmsg, "Odd args in %s\n", nxt);
               parse_tok_free(tok_next);
               parse_tok_free(tok);
               return CFG_ERROR;
@@ -525,7 +520,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
             memset(&mult->addr, 0, sizeof(mult->addr));
             if (0 != strcmp("default", p_next[1])) {
               if (inet_pton(rcfg->ip_version, p_next[1], &mult->addr) <= 0) {
-                snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p_next[1]);
+                sprintf(rmsg, "Failed converting IP address %s\n", p_next[1]);
                 parse_tok_free(tok_next);
                 parse_tok_free(tok);
                 return CFG_ERROR;
@@ -540,7 +535,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
                                 (float)mult->value / LINK_LOSS_MULTIPLIER);
             p_next++;
           } else {
-            snprintf(rmsg, FILENAME_MAX + 256, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
+            sprintf(rmsg, "Unknown arg: %s %s\n", p_next[0], p_next[1]);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
             return CFG_ERROR;
@@ -553,7 +548,7 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
     }
     parse_tok_free(tok);
   } else {
-    snprintf(rmsg, FILENAME_MAX + 256, "Error in %s\n", argstr);
+    sprintf(rmsg, "Error in %s\n", argstr);
     return CFG_ERROR;
   }
   return CFG_OK;
@@ -575,14 +570,14 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
   struct ipaddr_str buf;
 #endif
   if ('{' != *argstr) {
-    snprintf(rmsg, FILENAME_MAX + 256, "No {}\n");
+    sprintf(rmsg, "No {}\n");
     return CFG_ERROR;
   }
   if (NULL != (tok = parse_tok(argstr + 1, &nxt))) {
     char **p = tok;
     while (p[0]) {
       if (!p[1]) {
-        snprintf(rmsg, FILENAME_MAX + 256, "Odd args in %s\n", argstr);
+        sprintf(rmsg, "Odd args in %s\n", argstr);
         parse_tok_free(tok);
         return CFG_ERROR;
       }
@@ -595,7 +590,7 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
       } else if (0 == strcmp("Host", p[0])) {
         union olsr_ip_addr ipaddr;
         if (inet_pton(rcfg->ip_version, p[1], &ipaddr) <= 0) {
-          snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p[0]);
+          sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
@@ -605,24 +600,24 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
       } else if (0 == strcmp("Net", p[0])) {
         union olsr_ip_addr ipaddr;
         if (!p[2]) {
-          snprintf(rmsg, FILENAME_MAX + 256, "Odd args in %s\n", nxt);
+          sprintf(rmsg, "Odd args in %s\n", nxt);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
         if (inet_pton(rcfg->ip_version, p[1], &ipaddr) <= 0) {
-          snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p[0]);
+          sprintf(rmsg, "Failed converting IP address %s\n", p[0]);
           parse_tok_free(tok);
           return CFG_ERROR;
         }
         if (AF_INET == rcfg->ip_version) {
           union olsr_ip_addr netmask;
           if (inet_pton(AF_INET, p[2], &netmask) <= 0) {
-            snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s\n", p[2]);
+            sprintf(rmsg, "Failed converting IP address %s\n", p[2]);
             parse_tok_free(tok);
             return CFG_ERROR;
           }
           if ((ipaddr.v4.s_addr & ~netmask.v4.s_addr) != 0) {
-            snprintf(rmsg, FILENAME_MAX + 256, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
+            sprintf(rmsg, "The IP address %s/%s is not a network address!\n", p[1], p[2]);
             parse_tok_free(tok);
             return CFG_ERROR;
           }
@@ -632,7 +627,7 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
           int prefix = -1;
           sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
           if (0 > prefix || 128 < prefix) {
-            snprintf(rmsg, FILENAME_MAX + 256, "Illegal IPv6 prefix %s\n", p[2]);
+            sprintf(rmsg, "Illegal IPv6 prefix %s\n", p[2]);
             parse_tok_free(tok);
             return CFG_ERROR;
           }
@@ -641,7 +636,7 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
         }
         p++;
       } else {
-        snprintf(rmsg, FILENAME_MAX + 256, "Unknown arg: %s %s\n", p[0], p[1]);
+        sprintf(rmsg, "Unknown arg: %s %s\n", p[0], p[1]);
         parse_tok_free(tok);
         return CFG_ERROR;
       }
@@ -666,7 +661,7 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
   const char *nxt;
   if (NULL != (tok = parse_tok(argstr, &nxt))) {
     if ('{' != *nxt) {
-      snprintf(rmsg, FILENAME_MAX + 256, "No {}\n");
+      sprintf(rmsg, "No {}\n");
       parse_tok_free(tok);
       return CFG_ERROR;
     } else {
@@ -682,7 +677,7 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
         while (p_next[0]) {
           struct plugin_param *pp = olsr_malloc(sizeof(*pp), "plparam");
           if (0 != strcmp("PlParam", p_next[0]) || !p_next[1] || !p_next[2]) {
-            snprintf(rmsg, FILENAME_MAX + 256, "Odd args in %s\n", nxt);
+            sprintf(rmsg, "Odd args in %s\n", nxt);
             parse_tok_free(tok_next);
             parse_tok_free(tok);
             return CFG_ERROR;
@@ -699,7 +694,7 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
     }
     parse_tok_free(tok);
   } else {
-    snprintf(rmsg, FILENAME_MAX + 256, "Error in %s\n", argstr);
+    sprintf(rmsg, "Error in %s\n", argstr);
     return CFG_ERROR;
   }
   return CFG_OK;
@@ -773,7 +768,7 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg)
       rcfg->log_target_file = olsr_strdup(nextEquals);
     }
     else {
-      snprintf(rmsg, FILENAME_MAX + 256, "Unknown keyword %s for log parameter\n", p);
+      sprintf(rmsg, "Unknown keyword %s for log parameter\n", p);
       return CFG_ERROR;
     }
     p = nextColon;
@@ -874,12 +869,12 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
         } else if (strcmp(*tok, CFG_FIBM_APPROX) == 0) {
           rcfg->fib_metric = FIBM_APPROX;
         } else {
-          snprintf(rmsg, FILENAME_MAX + 256, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
+          sprintf(rmsg, "FIBMetric must be \"%s\", \"%s\", or \"%s\"!\n", CFG_FIBM_FLAT, CFG_FIBM_CORRECT, CFG_FIBM_APPROX);
           return CFG_ERROR;
         }
         parse_tok_free(tok);
       } else {
-        snprintf(rmsg, FILENAME_MAX + 256, "Error in %s\n", argstr);
+        sprintf(rmsg, "Error in %s\n", argstr);
         return CFG_ERROR;
       }
       PARSER_DEBUG_PRINTF("FIBMetric: %d=%s\n", rcfg->fib_metric, argstr);
@@ -908,7 +903,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
         rcfg->ip_version = AF_INET6;
         rcfg->ipsize = sizeof(struct in6_addr);
       } else {
-        snprintf(rmsg, FILENAME_MAX + 256, "IpVersion must be 4 or 6!\n");
+        sprintf(rmsg, "IpVersion must be 4 or 6!\n");
         return CFG_ERROR;
       }
     }
@@ -1021,13 +1016,13 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     break;
   case 'o':                    /* Originator Address (ip) */
     if (inet_pton(AF_INET, argstr, &rcfg->router_id) <= 0) {
-      snprintf(rmsg, FILENAME_MAX + 256, "Failed converting IP address %s for originator address\n", argstr);
+      sprintf(rmsg, "Failed converting IP address %s for originator address\n", argstr);
       return CFG_ERROR;
     }
     rcfg->fixed_origaddr = true;
     break;
   default:
-    snprintf(rmsg, FILENAME_MAX + 256, "Unknown arg in line %d.\n", line);
+    sprintf(rmsg, "Unknown arg in line %d.\n", line);
     return CFG_ERROR;
   }                             /* switch */
   return CFG_OK;
@@ -1196,13 +1191,13 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   while (0 <= (opt = getopt_long(opt_argc, opt_argv, opt_str, long_options, &opt_idx))) {
     switch (opt) {
     case 0:
-      snprintf(rmsg, FILENAME_MAX + 256, "Ignored deprecated %s\n", long_options[opt_idx].name);
+      sprintf(rmsg, "Ignored deprecated %s\n", long_options[opt_idx].name);
       rslt = CFG_WARN;
       break;
     case 'f':                  /* config (filename) */
       PARSER_DEBUG_PRINTF("Read config from %s\n", optarg);
       if (0 > read_cfg(optarg, &opt_argc, &opt_argv, &opt_line)) {
-        snprintf(rmsg, FILENAME_MAX + 256, "Could not read specified config file %s!\n%s", optarg, strerror(errno));
+        sprintf(rmsg, "Could not read specified config file %s!\n%s", optarg, strerror(errno));
         return CFG_ERROR;
       }
       break;

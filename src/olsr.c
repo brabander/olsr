@@ -662,7 +662,7 @@ char *
 olsr_strdup(const char *s)
 {
   char *ret = olsr_malloc(1 + strlen(s), "olsr_strdup");
-  strncpy(ret, s, strlen(s)+1);
+  strcpy(ret, s);
   return ret;
 }
 
