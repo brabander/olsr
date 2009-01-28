@@ -39,6 +39,7 @@
  */
 
 #include "common/autobuf.h"
+#include "common/string.h"
 #include "defs.h"
 
 #include <stdio.h>
@@ -134,7 +135,7 @@ int abuf_puts(struct autobuf *autobuf, const char *s)
     if (autobuf_enlarge(autobuf, autobuf->len + len + 1) < 0) {
         return -1;
     }
-    strcpy(autobuf->buf+autobuf->len, s);
+    strscpy(autobuf->buf+autobuf->len, s, len /* make openbsd shut up */);
     autobuf->len += len;
     return len;
 }

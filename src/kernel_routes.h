@@ -50,6 +50,7 @@ olsr_kernel_add_route(const struct rt_entry *, int);
 int
 olsr_kernel_del_route(const struct rt_entry *, int);
 
+
 #endif
 
 /*

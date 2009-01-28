@@ -673,7 +673,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
    * Clone interface name.
    */
   ifp->int_name = olsr_malloc(strlen(ifr_basename) + 1, "Interface update 3");
-  strcpy(ifp->int_name, ifr_basename);
+  strncpy(ifp->int_name, ifr_basename, strlen(ifr_basename));
 
   ifp->immediate_send_tc = iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval;
 #if 0
