@@ -392,12 +392,6 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   return AF_INET == ip_version ? add_del_route(rt, 1) : add_del_route6(rt, 1);
 }
 
-int
-olsr_kernel_del_route6(const struct rt_entry *rt, int ip_version)
-{
-  return AF_INET == ip_version ? add_del_route(rt, 0) : add_del_route6(rt, 0);
-}
-
 /*
  * Local Variables:
  * c-basic-offset: 2
