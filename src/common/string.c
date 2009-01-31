@@ -55,7 +55,6 @@ char *strscpy(char *dest, const char *src, size_t size)
 {
        register size_t l = 0;
 #if !defined(NODEBUG) && defined(DEBUG)
-       if (sizeof(dest) == size) fprintf(stderr, "Warning: probably sizeof(pointer) in strscpy(%p, %s, %ld)!\n", dest, src, (long)size);
        if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
        if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
 #endif
@@ -68,6 +67,11 @@ char *strscpy(char *dest, const char *src, size_t size)
        return strncpy(dest, src, l);
 }
 
+/*
+ * A somewhat safe version of strncat. Note, that the
+ * size parameter denotes the complete size of dest,
+ * which is different from the strncat semantics.
+ */
 char *strscat(char *dest, const char *src, size_t size)
 {
   const size_t l = strlen(dest);

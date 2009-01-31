@@ -44,6 +44,7 @@ CONFSRCS += src/olsr_cfg_data.c
 CONFSRCS += src/ipcalc.c
 CONFSRCS += src/builddata.c
 CONFSRCS += src/common/autobuf.c
+CONFSRCS += src/common/string.c
 CONFSRCS += $(CONFDIR)/config-verify.c
 
 CONFOBJS += $(CONFSRCS:%.c=%.o)

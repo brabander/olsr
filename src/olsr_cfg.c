@@ -48,6 +48,7 @@
 #include "ifnet.h"
 #include "log.h"
 #include "olsr_ip_prefix_list.h"
+#include "common/string.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -73,12 +74,14 @@ read_cfg_cat(char **pdest, const char *src)
 {
   char *tmp = *pdest;
   if (*src) {
-    *pdest = olsr_malloc(1 + (tmp ? strlen(tmp) : 0) + strlen(src), "read_cfg_cat");
+    size_t size = 1 + (tmp ? strlen(tmp) : 0) + strlen(src);
+    *pdest = olsr_malloc(size, "read_cfg_cat");
+    assert(0 == **pdest);
     if (tmp) {
-      strcpy(*pdest, tmp);
+      strscpy(*pdest, tmp, size);
       free(tmp);
     }
-    strcat(*pdest, src);
+    strscat(*pdest, src, size);
   }
 }
 
@@ -132,15 +135,17 @@ read_cfg(const char *filename, int *pargc, char ***pargv, int **pline)
             char **argv_tmp;
             int argc_tmp = *pargc + 2;
             char *q = pbuf, *n;
+            size_t size;
 
             while (*q && ' ' >= *q)
               q++;
             p = q;
             while (' ' < *p)
               p++;
-            n = olsr_malloc(p - q + 3, "config arg0");
-            strcpy(n, "--");
-            strncat(n, q, p - q);
+            size = p - q + 3;
+            n = olsr_malloc(size, "config arg0");
+            strscpy(n, "--", size);
+            strscat(n, q, size);
             while (*q && ' ' >= *p)
               p++;
 
