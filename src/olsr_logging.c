@@ -214,7 +214,7 @@ void olsr_log (enum log_severity severity, enum log_source source, const char *f
 
   /* calculate local time */
   gettimeofday(&timeval, NULL);
-  localtime_r ( &timeval.tv_sec, &now );
+  localtime_r ( (time_t *) &timeval.tv_sec, &now );
 
   /* generate log string (insert file/line in DEBUG mode) */
 #if DEBUG

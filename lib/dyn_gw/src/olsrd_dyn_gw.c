@@ -155,7 +155,7 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
     char s_mask[128];
 
     //192.168.1.0  255.255.255.0
-    int i = sscanf(value,"%128s %128s", s_netaddr, s_mask);
+    int i = sscanf(value,"%127s %127s", s_netaddr, s_mask);
     if (i != 2) {
         OLSR_PRINTF(0, "Cannot get IP address and netmask from \"%s\"", value);
         return 1;
