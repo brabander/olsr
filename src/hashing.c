@@ -64,7 +64,7 @@
   c -= a; c -= b; c ^= (b>>15); \
 }
 
-static inline uint32_t
+static uint32_t
 jenkins_hash(const uint8_t * k, uint32_t length)
 {
   /* k: the key
