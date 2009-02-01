@@ -385,7 +385,7 @@ ipc_send(const char *data, int size)
   if (ipc_connection == -1)
     return 0;
 
-#if defined __FreeBSD__ || defined __MacOSX__
+#if defined __FreeBSD__ || defined __MacOSX__ || __OpenBSD__
 #define FLAG 0
 #else
 #define FLAG MSG_NOSIGNAL

@@ -105,7 +105,7 @@ olsrd_plugin_init(void)
 int
 check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
 {
-  char buff[1024], iface[16];
+  char buff[1024], iface[17];
   uint32_t gate_addr, dest_addr, netmask;
   unsigned int iflags;
   int num, metric, refcnt, use;
