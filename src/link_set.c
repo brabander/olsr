@@ -327,6 +327,14 @@ set_loss_link_multiplier(struct link_entry *entry)
 static void
 olsr_delete_link_entry(struct link_entry *link)
 {
+  struct tc_edge_entry *tc_edge;
+
+  /* delete tc edges we made for SPF */
+  tc_edge = olsr_lookup_tc_edge(tc_myself, &link->neighbor_iface_addr);
+  if (tc_edge != NULL) {
+    olsr_delete_tc_edge_entry(tc_edge);
+  }
+
 
   /* Delete neighbor entry */
   if (link->neighbor->linkcount == 1) {
