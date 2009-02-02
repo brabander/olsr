@@ -508,6 +508,8 @@ delete_outdated_tc_edges(struct tc_entry *tc)
     }
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
 
+  if (retval)
+    changes_topology = true;
   return retval;
 }
 
@@ -555,6 +557,8 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn,
     }
   } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
 
+  if (retval)
+    changes_topology = true;
   return retval;
 }
 
@@ -699,7 +703,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
     return 0;
   }
   if (lower_border == 0xff) {
-    memset(&lower_border_ip, 0, sizeof(lower_border_ip));
+    memset(lower_border_ip, 0, sizeof(lower_border_ip));
   } else {
     int i;
 
@@ -714,7 +718,7 @@ olsr_calculate_tc_border(uint8_t lower_border,
   }
 
   if (upper_border == 0xff) {
-    memset(&upper_border_ip, 0xff, sizeof(upper_border_ip));
+    memset(upper_border_ip, 0xff, sizeof(upper_border_ip));
   } else {
     int i;
 

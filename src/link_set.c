@@ -286,6 +286,8 @@ olsr_delete_link_entry(struct link_entry *link)
   if (link->link_tc_edge) {
     olsr_delete_tc_edge_entry(link->link_tc_edge);
     link->link_tc_edge = NULL;
+
+    changes_topology = true;
   }
 
   /*
@@ -530,14 +532,6 @@ add_link_entry(const union olsr_ip_addr *local,
   link->neighbor = neighbor;
 
   /*
-   * Add the rt_path for the link-end. This is an optimization
-   * that lets us install > 1 hop routes prior to receiving
-   * the MID entry for the 1 hop neighbor.
-   */
-  olsr_insert_routing_table(remote, 8 * olsr_cnf->ipsize, remote_main,
-                            OLSR_RT_ORIGIN_LINK);
-
-  /*
    * Now create a tc-edge for that link.
    */
   olsr_change_myself_tc();
@@ -548,6 +542,14 @@ add_link_entry(const union olsr_ip_addr *local,
    * during cleanup functions.
    */
   link->link_tc_edge->flags |= TC_EDGE_FLAG_LOCAL;
+
+  /*
+   * Add the rt_path for the link-end. This is an optimization
+   * that lets us install > 1 hop routes prior to receiving
+   * the MID entry for the 1 hop neighbor.
+   */
+  olsr_insert_routing_table(remote, 8 * olsr_cnf->ipsize, remote_main,
+                            OLSR_RT_ORIGIN_LINK);
 
   changes_neighborhood = true;
   return link;
