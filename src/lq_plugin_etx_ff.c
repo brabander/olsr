@@ -164,12 +164,14 @@ static void lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if,
   lnk->lost[lnk->activePtr] += (seq_diff - 1);
 
   lnk->last_seq_nr = olsr->olsr_seqno;
+  lnk->missed_seconds = 0;
 }
 
 static void lq_etxff_timer(void __attribute__((unused)) *context) {
   struct link_entry *link;
   OLSR_FOR_ALL_LINK_ENTRIES(link)
-{    struct lq_etxff_link_entry *lq_link;
+  {
+    struct lq_etxff_link_entry *lq_link;
     uint32_t ratio;
     uint16_t i, received, lost;
 
@@ -185,8 +187,6 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
         olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
         lq_link->received[lq_link->activePtr], lq_link->lost[lq_link->activePtr]);
 #endif
-
-    lq_link = (struct lq_etxff_link_entry *)link;
 
     received = 0;
     lost = 0;
@@ -208,6 +208,9 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
       lq_link->lq.valueLq = 0;
     }
     else {
+      /* keep missed hello periods in mind (round up hello interval to seconds) */
+      lost += lq_link->missed_seconds / ((lq_link->core.link_loss_timer->timer_period + 999) / 1000);
+
       // start with link-loss-factor
       ratio = link->loss_link_multiplier;
 
@@ -228,6 +231,7 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
     lq_link->activePtr = (lq_link->activePtr + 1) % LQ_FF_WINDOW;
     lq_link->lost[lq_link->activePtr] = 0;
     lq_link->received[lq_link->activePtr] = 0;
+    lq_link->missed_seconds++;
   }OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 }
 
