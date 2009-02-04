@@ -712,7 +712,7 @@ encap_namemsg(struct namemsg *msg)
   if ('\0' != latlon_in_file[0]) {
     FILE *in = fopen(latlon_in_file, "r");
     if (in != NULL) {
-      fscanf(in, "%f,%f", &my_lat, &my_lon);
+      if (fscanf(in, "%f,%f", &my_lat, &my_lon)) {}
       fclose(in);
     } else {
       OLSR_PRINTF(0, "NAME PLUGIN: cant read latlon in file %s\n", latlon_in_file);

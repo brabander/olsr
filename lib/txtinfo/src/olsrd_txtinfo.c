@@ -462,7 +462,7 @@ ipc_print_mid(void)
 
     while (entry != &mid_set[index]) {
       struct ipaddr_str buf;
-      ipc_sendf(olsr_ip_to_string(&buf, &entry->main_addr));
+      ipc_sendf("%s", olsr_ip_to_string(&buf, &entry->main_addr));
       alias = entry->aliases;
       is_first = 1;
 
