@@ -767,7 +767,7 @@ encap_namemsg(struct namemsg* msg)
 	{
 		FILE* in = fopen( latlon_in_file, "r" );
 		if (in != NULL) {
-			fscanf(in, "%f,%f", &my_lat, &my_lon);
+			if (fscanf(in, "%f,%f", &my_lat, &my_lon)) {}
 			fclose(in);
 		}
 		else
