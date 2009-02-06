@@ -240,8 +240,7 @@ poll_sockets(void)
     return;
   }
   if (n == -1) {	/* Did something go wrong? */
-    const char * const err_msg = strerror(errno);
-    OLSR_WARN(LOG_SCHEDULER, "select error: %s", err_msg);
+    OLSR_WARN(LOG_SCHEDULER, "select error: %s", strerror(errno));
     return;
   }
 

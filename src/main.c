@@ -106,8 +106,10 @@ main(int argc, char *argv[])
 
   char conf_file_name[FILENAME_MAX];
   char parse_msg[FILENAME_MAX + 256];
-  struct ipaddr_str buf;
   int exitcode = 0;
+#ifndef REMOVE_LOG_INFO
+  struct ipaddr_str buf;
+#endif
 #ifdef WIN32
   WSADATA WsaData;
   size_t len;
@@ -282,7 +284,7 @@ main(int argc, char *argv[])
     } else {
       olsr_cnf->willingness = olsr_calculate_willingness();
 
-      OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
+      OLSR_INFO(LOG_MAIN, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
     }
   }
 
@@ -331,7 +333,7 @@ main(int argc, char *argv[])
   /* activate LQ algorithm */
   init_lq_handler();
 
-  OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+  OLSR_INFO(LOG_MAIN, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
 
   /* Start syslog entry */
   OLSR_INFO(LOG_MAIN, "%s successfully started", olsrd_version);
@@ -429,7 +431,7 @@ main(int argc, char *argv[])
  *@param signal the signal that triggered this callback
  */
 static void
-signal_reconfigure(int signo)
+signal_reconfigure(int signo __attribute__ ((unused)))
 {
   const int save_errno = errno;
   OLSR_INFO(LOG_MAIN, "Received signal %d - requesting reconfiguration", signo);
@@ -449,7 +451,7 @@ int __stdcall
 SignalHandler(unsigned long signo)
 #else
 static void
-signal_shutdown(int signo)
+signal_shutdown(int signo __attribute__ ((unused)))
 #endif
 {
   const int save_errno = errno;
@@ -480,7 +482,7 @@ olsr_shutdown(void)
     olsr_delete_mid_entry(mid);
   } OLSR_FOR_ALL_MID_ENTRIES_END(mid);
 
-  OLSR_PRINTF(1, "Closing sockets...\n");
+  OLSR_INFO(LOG_MAIN, "Closing sockets...\n");
 
   /* Flush duplicate set */
   olsr_flush_duplicate_entries();
@@ -531,9 +533,7 @@ olsr_shutdown(void)
   /* Remove IP filters */
   deinit_netfilters();
 
-  OLSR_INFO(LOG_MAIN, "%s stopped", olsrd_version);
-
-  OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
+  OLSR_INFO(LOG_MAIN, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 
   olsr_log_cleanup();
 

@@ -55,9 +55,10 @@ enum log_source {
   LOG_ROUTING,            //!< LOG_ROUTING
   LOG_SCHEDULER,          //!< LOG_SCHEDULER
   LOG_PLUGINS,            //!< LOG_PLUGINS
-
   LOG_LQ_PLUGINS,         //!< LOG_LQ_PLUGINS
   LOG_LL_PLUGINS,         //!< LOG_LL_PLUGINS
+
+  LOG_DUPLICATE_SET,      //!< LOG_DUPLICATE_SET
 
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT//!< LOG_SOURCE_COUNT

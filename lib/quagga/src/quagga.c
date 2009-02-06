@@ -69,7 +69,7 @@ static void zebra_reconnect (void);
 static void free_ipv4_route (struct zebra_route *);
 
 
-static void *my_realloc (void *buf, size_t s, const char *c) {
+static void *my_realloc (void *buf, size_t s, const char *c __attribute__ ((unused))) {
   buf = realloc (buf, s);
   if (!buf) {
     OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) %s OUT OF MEMORY: %s\n", c, strerror(errno));

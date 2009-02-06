@@ -477,6 +477,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   struct interface *ifp;
   struct ifreq ifr;
   const char *ifr_basename;
+  struct ipaddr_str buf;
 
   /*
    * Sanity check.
@@ -530,7 +531,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   /* IP version 6 */
   if (olsr_cnf->ip_version == AF_INET6) {
     /* Get interface address */
-    struct ipaddr_str buf;
     int result;
 
     if (iface->cnf->ipv6_addrtype == OLSR_IP6T_AUTO) {
@@ -654,12 +654,10 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   OLSR_PRINTF(1, "\tIndex %d\n", ifp->if_index);
 
   if(olsr_cnf->ip_version == AF_INET) {
-    struct ipaddr_str buf;
     OLSR_PRINTF(1, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
     OLSR_PRINTF(1, "\tNetmask:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
     OLSR_PRINTF(1, "\tBroadcast address:%s\n", ip4_to_string(&buf, ifp->int_broadaddr.sin_addr));
   } else {
-    struct ipaddr_str buf;
     OLSR_PRINTF(1, "\tAddress: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
     OLSR_PRINTF(1, "\tMulticast: %s\n", ip6_to_string(&buf, &ifp->int6_multaddr.sin6_addr));
   }
@@ -731,7 +729,6 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
    * Set main address if this is the only interface
    */
   if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
-    struct ipaddr_str buf;
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }

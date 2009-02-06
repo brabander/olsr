@@ -143,7 +143,7 @@ queue_hna(struct interface *ifp)
 
 
 static void
-check_buffspace(int msgsize, int buffsize, const char *type)
+check_buffspace(int msgsize, int buffsize, const char *type __attribute__ ((unused)))
 {
   if(msgsize > buffsize)
     {

@@ -58,7 +58,8 @@ const char *LOG_SOURCE_NAMES[] = {
   "scheduler",
   "plugins",
   "lq-plugins",
-  "ll-plugins"
+  "ll-plugins",
+  "duplicate-set"
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

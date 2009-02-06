@@ -628,7 +628,7 @@ olsr_exit(int val)
  * @return a void pointer to the memory allocated
  */
 void *
-olsr_malloc(size_t size, const char *id)
+olsr_malloc(size_t size, const char *id __attribute__((unused)))
 {
   void *ptr;
 
@@ -639,8 +639,7 @@ olsr_malloc(size_t size, const char *id)
   ptr = calloc(1, size);
 
   if (!ptr) {
-      const char * const err_msg = strerror(errno);
-      OLSR_ERROR(LOG_MAIN, "Out of memory for id '%s': %s\n", id, err_msg);
+      OLSR_ERROR(LOG_MAIN, "Out of memory for id '%s': %s\n", id, strerror(errno));
       olsr_exit(EXIT_FAILURE);
   }
 

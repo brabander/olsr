@@ -84,7 +84,7 @@ static struct packetparser_function_entry *packetparser_functions;
  */
 void olsr_init_parser(void)
 {
-  OLSR_PRINTF(3, "Initializing parser...\n");
+  OLSR_INFO(LOG_PACKET_PARSING, "Initializing parser...\n");
 
   /* Initialize the packet functions */
   olsr_init_package_process();
@@ -92,15 +92,13 @@ void olsr_init_parser(void)
 
 void olsr_deinit_parser(void)
 {
-  OLSR_PRINTF(3, "Deinitializing parser...\n");
+  OLSR_INFO(LOG_PACKET_PARSING, "Deinitializing parser...\n");
   olsr_deinit_package_process();
 }
 
 void olsr_parser_add_function(parse_function *function, uint32_t type)
 {
   struct parse_function_entry *new_entry;
-
-  OLSR_PRINTF(3, "Parser: registering event for type %u\n", type);
 
   new_entry = olsr_malloc(sizeof(*new_entry), "Register parse function");
 
@@ -111,7 +109,7 @@ void olsr_parser_add_function(parse_function *function, uint32_t type)
   new_entry->next = parse_functions;
   parse_functions = new_entry;
 
-  OLSR_PRINTF(3, "Register parse function: Added function for type %u\n", type);
+  OLSR_INFO(LOG_PACKET_PARSING, "Register parse function: Added function for type %u\n", type);
 }
 
 int olsr_parser_remove_function(parse_function *function, uint32_t type)
@@ -138,8 +136,6 @@ void olsr_preprocessor_add_function(preprocessor_function *function)
 {
   struct preprocessor_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering preprocessor\n");
-
   new_entry = olsr_malloc(sizeof(*new_entry), "Register preprocessor function");
   new_entry->function = function;
 
@@ -147,7 +143,7 @@ void olsr_preprocessor_add_function(preprocessor_function *function)
   new_entry->next = preprocessor_functions;
   preprocessor_functions = new_entry;
 
-  OLSR_PRINTF(3, "Registered preprocessor function\n");
+  OLSR_INFO(LOG_PACKET_PARSING, "Registered preprocessor function\n");
 }
 
 int olsr_preprocessor_remove_function(preprocessor_function *function)
@@ -174,8 +170,6 @@ void olsr_packetparser_add_function(packetparser_function *function)
 {
   struct packetparser_function_entry *new_entry;
 
-  OLSR_PRINTF(3, "Parser: registering packetparser\n");
-
   new_entry = olsr_malloc(sizeof(struct packetparser_function_entry), "Register packetparser function");
 
   new_entry->function = function;
@@ -184,8 +178,7 @@ void olsr_packetparser_add_function(packetparser_function *function)
   new_entry->next = packetparser_functions;
   packetparser_functions = new_entry;
 
-  OLSR_PRINTF(3, "Registered packetparser  function\n");
-
+  OLSR_INFO(LOG_PACKET_PARSING, "Registered packetparser  function\n");
 }
 
 int olsr_packetparser_remove_function(packetparser_function *function)
@@ -249,12 +242,14 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   struct parse_function_entry *entry;
   struct packetparser_function_entry *packetparser;
   int count = size - ((char *)m - (char *)olsr);
+#if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_WARN)
+  struct ipaddr_str buf;
+#endif
 
   if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
     return;
   }
   if (ntohs(olsr->olsr_packlen) != size) {
-    struct ipaddr_str buf;
     OLSR_WARN(LOG_PACKET_PARSING, "Size error detected in received packet from %s.\nRecieved %d, in packet %d\n",
         olsr_ip_to_string(&buf, from_addr), size, ntohs(olsr->olsr_packlen));
     return;
@@ -288,7 +283,6 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
 
     /* Check size of message */
     if (count < 0) {
-      struct ipaddr_str buf;
       OLSR_WARN(LOG_PACKET_PARSING, "packet length error in  packet received from %s!",
                   olsr_ip_to_string(&buf, from_addr));
       break;
@@ -305,11 +299,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     /* Should be the same for IPv4 and IPv6 */
     if (olsr_ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->router_id)
         || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
-#ifdef DEBUG
-      struct ipaddr_str buf;
-      OLSR_PRINTF(3, "Not processing message originating from %s!\n",
+      OLSR_INFO(LOG_PACKET_PARSING, "Not processing message originating from %s!\n",
                   olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));
-#endif
       continue;
     }
 
@@ -340,6 +331,12 @@ void
 olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
 {
   unsigned int cpu_overload_exit = 0;
+#ifndef REMOVE_LOG_DEBUG
+      char addrbuf[128];
+#endif
+#ifndef REMOVE_LOG_WARN
+      struct ipaddr_str buf;
+#endif
 
   for (;;) {
     struct interface *olsr_in_if;
@@ -353,7 +350,7 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     char inbuf[MAXMESSAGESIZE+1];
 
     if (32 < ++cpu_overload_exit) {
-      OLSR_PRINTF(1, "CPU overload detected, ending olsr_input() loop\n");
+      OLSR_WARN(LOG_PACKET_PARSING, "CPU overload detected, ending olsr_input() loop\n");
       break;
     }
 
@@ -367,14 +364,7 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
       break;
     }
 
-#ifdef DEBUG
-    {
-#ifndef NODEBUG
-      char addrbuf[128];
-#endif
-      OLSR_PRINTF(5, "Recieved a packet from %s\n", sockaddr_to_string(addrbuf, sizeof(addrbuf), (struct sockaddr *)&from, fromlen));
-    }
-#endif
+    OLSR_DEBUG(LOG_PACKET_PARSING, "Recieved a packet from %s\n", sockaddr_to_string(addrbuf, sizeof(addrbuf), (struct sockaddr *)&from, fromlen));
 
     if (olsr_cnf->ip_version == AF_INET) {
       /* IPv4 sender address */
@@ -396,7 +386,6 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     }
     olsr_in_if = if_ifwithsock(fd);
     if (olsr_in_if == NULL) {
-      struct ipaddr_str buf;
       OLSR_WARN(LOG_PACKET_PARSING, "Could not find input interface for message from %s size %d\n",
                   olsr_ip_to_string(&buf, &from_addr),
                   cc);
@@ -441,6 +430,9 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   struct preprocessor_function_entry *entry;
   char *packet;
   char inbuf[MAXMESSAGESIZE+1];
+#ifndef REMOVE_LOG_WARN
+  struct ipaddr_str buf;
+#endif
 
   /* Host emulator receives IP address first to emulate
    direct link */
@@ -463,7 +455,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
       OLSR_ERROR(LOG_NETWORKING, "Lost olsr_switch connection - exit!\n");
       olsr_exit(EXIT_FAILURE);
     }
-    fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
+    OLSR_WARN(LOG_NETWORKING, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
     return;
   }
   pcklen = ntohs(pcklen);
@@ -472,8 +464,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   cc = olsr_recvfrom(fd, inbuf, pcklen, 0, (struct sockaddr *)&from, &fromlen);
   if (cc <= 0) {
     if (cc < 0 && errno != EWOULDBLOCK) {
-      const char * const err_msg = strerror(errno);
-      OLSR_WARN(LOG_NETWORKING, "error recvfrom: %s", err_msg);
+      OLSR_WARN(LOG_NETWORKING, "error recvfrom: %s", strerror(errno));
     }
     return;
   }
@@ -485,7 +476,6 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
 
   olsr_in_if = if_ifwithsock(fd);
   if (olsr_in_if == NULL) {
-    struct ipaddr_str buf;
     OLSR_WARN(LOG_NETWORKING, "Could not find input interface for message from %s size %d\n",
                 olsr_ip_to_string(&buf, &from_addr),
                 cc);
