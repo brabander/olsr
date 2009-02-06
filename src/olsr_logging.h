@@ -66,37 +66,45 @@
  */
 #ifdef REMOVE_LOG_DEBUG
 #define OLSR_DEBUG(source, format, args...) do { } while(0)
+#define OLSR_DEBUG_NH(source, format, args...) do { } while(0)
 #else
-#define OLSR_DEBUG(source, format, args...) olsr_log(SEVERITY_DEBUG, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_DEBUG(source, format, args...) olsr_log(SEVERITY_DEBUG, source, false, __FILE__, __LINE__, format, ##args)
+#define OLSR_DEBUG_NH(source, format, args...) olsr_log(SEVERITY_DEBUG, source, true, __FILE__, __LINE__, format, ##args)
 #endif
 
 #ifdef REMOVE_LOG_INFO
 #define OLSR_INFO(source, format, args...) do { } while(0)
+#define OLSR_INFO_NH(source, format, args...) do { } while(0)
 #else
-#define OLSR_INFO(source, format, args...) olsr_log(SEVERITY_INFO, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_INFO(source, format, args...) olsr_log(SEVERITY_INFO, source, false, __FILE__, __LINE__, format, ##args)
+#define OLSR_INFO_NH(source, format, args...) olsr_log(SEVERITY_INFO, source, true, __FILE__, __LINE__, format, ##args)
 #endif
 
 #ifdef REMOVE_LOG_WARN
 #define OLSR_WARN(source, format, args...) do { } while(0)
+#define OLSR_WARN_NH(source, format, args...) do { } while(0)
 #else
-#define OLSR_WARN(source, format, args...) olsr_log(SEVERITY_WARN, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_WARN(source, format, args...) olsr_log(SEVERITY_WARN, source, false, __FILE__, __LINE__, format, ##args)
+#define OLSR_WARN_NH(source, format, args...) olsr_log(SEVERITY_WARN, source, true, __FILE__, __LINE__, format, ##args)
 #endif
 
 #ifdef REMOVE_LOG_ERROR
 #define OLSR_ERROR(source, format, args...) do { } while(0)
+#define OLSR_ERROR_NH(source, format, args...) do { } while(0)
 #else
-#define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERR, source, __FILE__, __LINE__, format, ##args)
+#define OLSR_ERROR(source, format, args...) olsr_log(SEVERITY_ERR, source, false, __FILE__, __LINE__, format, ##args)
+#define OLSR_ERROR_NH(source, format, args...) olsr_log(SEVERITY_ERR, source, true, __FILE__, __LINE__, format, ##args)
 #endif
 
 void EXPORT(olsr_log_init) (void);
 void EXPORT(olsr_log_cleanup) (void);
-void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int), bool (*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
-void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, const char *, int,
-    char *, int));
+void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, bool,
+    const char *, int, char *, int), bool (*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
+void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, bool,
+    const char *, int, char *, int));
 void EXPORT(olsr_log_updatemask) (void);
 
-void EXPORT(olsr_log) (enum log_severity, enum log_source, const char *, int, const char * , ...)
-    __attribute__((format(printf, 5, 6)));
+void EXPORT(olsr_log) (enum log_severity, enum log_source, bool, const char *, int, const char * , ...)
+    __attribute__((format(printf, 6, 7)));
 
 #endif /* OLSR_LOGGING_H_ */
