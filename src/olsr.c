@@ -377,8 +377,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if,
 
 	      if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
 		{
-		  OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
-		  olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
+      OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
 		}
 	    }
 	}
@@ -389,8 +388,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if,
 
 	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
 	    {
-	      OLSR_PRINTF(1, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
-	      olsr_syslog(OLSR_LOG_ERR, "Received message to big to be forwarded on %s(%d bytes)!", ifn->int_name, msgsize);
+	      OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
 	    }
 	}
   } OLSR_FOR_ALL_INTERFACES_END(ifn);
@@ -605,16 +603,17 @@ olsr_status_to_string(uint8_t status)
  *Termination function to be called whenever a error occures
  *that requires the daemon to terminate
  *
- *@param msg the message to write to the syslog and possibly stdout
+ *@param val the exit code for OLSR
  */
 
 void
-olsr_exit(const char *msg, int val)
+olsr_exit(int val)
 {
-  OLSR_PRINTF(1, "OLSR EXIT: %s\n", msg);
-  olsr_syslog(OLSR_LOG_ERR, "olsrd exit: %s\n", msg);
   fflush(stdout);
   olsr_cnf->exit_value = val;
+  if (app_state == STATE_INIT) {
+    exit(val);
+  }
   app_state = STATE_SHUTDOWN;
 }
 
@@ -641,9 +640,8 @@ olsr_malloc(size_t size, const char *id)
 
   if (!ptr) {
       const char * const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "OUT OF MEMORY: %s\n", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
-      olsr_exit(id, EXIT_FAILURE);
+      OLSR_ERROR(LOG_MAIN, "Out of memory for id '%s': %s\n", id, err_msg);
+      olsr_exit(EXIT_FAILURE);
   }
 
 #if 0

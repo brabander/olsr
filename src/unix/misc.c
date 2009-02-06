@@ -74,17 +74,17 @@ void clear_console(void)
 
 int set_nonblocking(int fd)
 {
-    /* make the fd non-blocking */
-    int socket_flags = fcntl(fd, F_GETFL);
-    if (socket_flags < 0) {
-        olsr_syslog(OLSR_LOG_ERR, "Cannot get the socket flags: %s", strerror(errno));
-        return -1;
-    }
-    if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
-        olsr_syslog(OLSR_LOG_ERR, "Cannot set the socket flags: %s", strerror(errno));
-        return -1;
-    }
-    return 0;
+  /* make the fd non-blocking */
+  int socket_flags = fcntl(fd, F_GETFL);
+  if (socket_flags < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot get the socket flags: %s", strerror(errno));
+    return -1;
+  }
+  if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", strerror(errno));
+    return -1;
+  }
+  return 0;
 }
 
 /*

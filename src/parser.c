@@ -255,8 +255,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   }
   if (ntohs(olsr->olsr_packlen) != size) {
     struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Size error detected in received packet.\nRecieved %d, in packet %d\n", size, ntohs(olsr->olsr_packlen));
-    olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!", olsr_ip_to_string(&buf, from_addr));
+    OLSR_WARN(LOG_PACKET_PARSING, "Size error detected in received packet from %s.\nRecieved %d, in packet %d\n",
+        olsr_ip_to_string(&buf, from_addr), size, ntohs(olsr->olsr_packlen));
     return;
   }
 
@@ -289,11 +289,8 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     /* Check size of message */
     if (count < 0) {
       struct ipaddr_str buf;
-      OLSR_PRINTF(1, "packet length error in  packet received from %s!",
+      OLSR_WARN(LOG_PACKET_PARSING, "packet length error in  packet received from %s!",
                   olsr_ip_to_string(&buf, from_addr));
-
-      olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!",
-      olsr_ip_to_string(&buf, from_addr));
       break;
     }
 
@@ -365,8 +362,7 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
 
     if (cc <= 0) {
       if (cc < 0 && errno != EWOULDBLOCK) {
-        OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno));
-        olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
+        OLSR_WARN(LOG_PACKET_PARSING, "error recvfrom: %s", strerror(errno));
       }
       break;
     }
@@ -401,10 +397,7 @@ olsr_input(int fd, void *data __attribute__((unused)), unsigned int flags __attr
     olsr_in_if = if_ifwithsock(fd);
     if (olsr_in_if == NULL) {
       struct ipaddr_str buf;
-      OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-                  olsr_ip_to_string(&buf, &from_addr),
-                  cc);
-      olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
+      OLSR_WARN(LOG_PACKET_PARSING, "Could not find input interface for message from %s size %d\n",
                   olsr_ip_to_string(&buf, &from_addr),
                   cc);
       return;
@@ -467,8 +460,8 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   cc = recv(fd, (void *)&pcklen, 2, MSG_PEEK);/* Win needs a cast */
   if (cc != 2) {
     if (cc <= 0) {
-      fprintf(stderr, "Lost olsr_switch connection - exit!\n");
-      olsr_exit(__func__, EXIT_FAILURE);
+      OLSR_ERROR(LOG_NETWORKING, "Lost olsr_switch connection - exit!\n");
+      olsr_exit(EXIT_FAILURE);
     }
     fprintf(stderr, "[hust-emu] error extracting size(%d) %s!\n", cc, strerror(errno));
     return;
@@ -480,8 +473,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   if (cc <= 0) {
     if (cc < 0 && errno != EWOULDBLOCK) {
       const char * const err_msg = strerror(errno);
-      OLSR_PRINTF(1, "error recvfrom: %s", err_msg);
-      olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %s", err_msg);
+      OLSR_WARN(LOG_NETWORKING, "error recvfrom: %s", err_msg);
     }
     return;
   }
@@ -494,10 +486,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   olsr_in_if = if_ifwithsock(fd);
   if (olsr_in_if == NULL) {
     struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Could not find input interface for message from %s size %d\n",
-                olsr_ip_to_string(&buf, &from_addr),
-                cc);
-    olsr_syslog(OLSR_LOG_ERR, "Could not find input interface for message from %s size %d\n",
+    OLSR_WARN(LOG_NETWORKING, "Could not find input interface for message from %s size %d\n",
                 olsr_ip_to_string(&buf, &from_addr),
                 cc);
     return;

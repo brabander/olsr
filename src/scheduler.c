@@ -103,7 +103,7 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
   struct olsr_socket_entry *new_entry;
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
-    olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not registering...", __func__);
+    OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not registering...");
     return;
   }
   OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd);
@@ -135,7 +135,7 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
   struct olsr_socket_entry *entry;
 
   if (fd < 0 || (pf_pr == NULL && pf_imm == NULL)) {
-    olsr_syslog(OLSR_LOG_ERR, "%s: Bogus socket entry - not processing...", __func__);
+    OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
     return 0;
   }
   OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd);
@@ -241,8 +241,7 @@ poll_sockets(void)
   }
   if (n == -1) {	/* Did something go wrong? */
     const char * const err_msg = strerror(errno);
-    olsr_syslog(OLSR_LOG_ERR, "select: %s", err_msg);
-    OLSR_PRINTF(1, "Error select: %s", err_msg);
+    OLSR_WARN(LOG_SCHEDULER, "select error: %s", err_msg);
     return;
   }
 
@@ -333,7 +332,7 @@ static void handle_fds(const unsigned long next_interval)
       break;
     }
     if (n == -1) { /* Did something go wrong? */
-      olsr_syslog(OLSR_LOG_ERR, "select: %s", strerror(errno));
+      OLSR_WARN(LOG_SCHEDULER, "select error: %s", strerror(errno));
       break;
     }
 

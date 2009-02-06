@@ -47,7 +47,7 @@
 #include <stdarg.h>
 
 void
-olsr_openlog(const char *ident)
+olsr_open_syslog(const char *ident)
 {
   openlog(ident, LOG_PID | LOG_ODELAY, LOG_DAEMON);
   setlogmask(LOG_UPTO(LOG_INFO));
@@ -57,7 +57,7 @@ olsr_openlog(const char *ident)
 
 
 void
-olsr_syslog(int level, const char *format, ...)
+olsr_print_syslog(int level, const char *format, ...)
 {
 
   int linux_level;
@@ -65,13 +65,16 @@ olsr_syslog(int level, const char *format, ...)
 
   switch(level)
     {
-    case(OLSR_LOG_INFO):
+    case(SEVERITY_DEBUG):
+      linux_level = LOG_DEBUG;
+      break;
+    case(SEVERITY_INFO):
       linux_level = LOG_INFO;
       break;
-    case(OLSR_LOG_WARN):
+    case(SEVERITY_WARN):
       linux_level = LOG_WARNING;
       break;
-    case(OLSR_LOG_ERR):
+    case(SEVERITY_ERR):
       linux_level = LOG_ERR;
       break;
     default:

@@ -89,7 +89,7 @@ static void signal_reconfigure(int);
 FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
 struct olsr_config *olsr_cnf;          /* The global configuration */
 
-volatile enum app_state app_state = STATE_RUNNING;
+volatile enum app_state app_state = STATE_INIT;
 
 static char copyright_string[] __attribute__ ((unused)) =
   "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
@@ -125,35 +125,13 @@ main(int argc, char *argv[])
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
-#ifndef WIN32
-  /* Check if user is root */
-  if (geteuid()) {
-    fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
-    exit(EXIT_FAILURE);
-  }
-#else
-  DisableIcmpRedirects();
-
-  if (WSAStartup(0x0202, &WsaData)) {
-    fprintf(stderr, "Could not initialize WinSock.\n");
-    olsr_exit(__func__, EXIT_FAILURE);
-  }
-#endif
-
-  /* Open syslog */
-  olsr_openlog("olsrd");
-
-  /* Initialize timers and scheduler part */
-  olsr_init_timers();
-
   printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 
   /* Using PID as random seed */
   srandom(getpid());
 
   /*
-   * Set configfile name and
-   * check if a configfile name was given as parameter
+   * Set default configfile name
    */
 #ifdef WIN32
 #ifndef WINCE
@@ -195,8 +173,31 @@ main(int argc, char *argv[])
     break;
   } /* switch */
 
+  /* Sanity check configuration */
+  if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
+    olsr_exit(EXIT_FAILURE);
+  }
+
+#ifndef WIN32
+  /* Check if user is root */
+  if (geteuid()) {
+    fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
+    exit(EXIT_FAILURE);
+  }
+#else
+  DisableIcmpRedirects();
+
+  if (WSAStartup(0x0202, &WsaData)) {
+    fprintf(stderr, "Could not initialize WinSock.\n");
+    olsr_exit(__func__, EXIT_FAILURE);
+  }
+#endif
+
   /* initialize logging */
   olsr_log_init();
+
+  /* Initialize timers and scheduler part */
+  olsr_init_timers();
 
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
@@ -219,11 +220,6 @@ main(int argc, char *argv[])
   /* Initialize net */
   init_net();
 
-  /* Sanity check configuration */
-  if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
-    olsr_exit(__func__, EXIT_FAILURE);
-  }
-
 #ifndef WIN32
   /* Disable redirects globally */
   disable_redirects_global(olsr_cnf->ip_version);
@@ -234,14 +230,14 @@ main(int argc, char *argv[])
    */
   olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
   if (olsr_cnf->ioctl_s < 0) {
-    olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
-    olsr_exit(__func__, 0);
+    OLSR_ERROR(LOG_MAIN, "ioctl socket: %s\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 #if defined linux
   olsr_cnf->rts_linux = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
   if (olsr_cnf->rts_linux < 0) {
-    olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
-    olsr_exit(__func__, 0);
+    OLSR_ERROR(LOG_MAIN, "rtnetlink socket: %s\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
   set_nonblocking(olsr_cnf->rts_linux);
 #endif
@@ -279,9 +275,7 @@ main(int argc, char *argv[])
    */
   if (olsr_cnf->willingness_auto) {
     if (apm_init() < 0) {
-      OLSR_PRINTF(1, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
-
-      olsr_syslog(OLSR_LOG_ERR, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
+      OLSR_INFO(LOG_MAIN, "Could not read APM info - setting default willingness(%d)\n", WILL_DEFAULT);
 
       olsr_cnf->willingness_auto = 0;
       olsr_cnf->willingness = WILL_DEFAULT;
@@ -295,12 +289,11 @@ main(int argc, char *argv[])
   /* Initializing networkinterfaces */
   if (!ifinit()) {
     if (olsr_cnf->allow_no_interfaces) {
-      fprintf(stderr,
-              "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
+      OLSR_INFO(LOG_MAIN, "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
       sleep(5);
     } else {
-      fprintf(stderr, "No interfaces detected!\nBailing out!\n");
-      olsr_exit(__func__, EXIT_FAILURE);
+      OLSR_ERROR(LOG_MAIN, "No interfaces detected!\nBailing out!\n");
+      olsr_exit(EXIT_FAILURE);
     }
   }
 
@@ -341,7 +334,7 @@ main(int argc, char *argv[])
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
 
   /* Start syslog entry */
-  olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);
+  OLSR_INFO(LOG_MAIN, "%s successfully started", olsrd_version);
 
   /*
    *signal-handlers
@@ -374,12 +367,17 @@ main(int argc, char *argv[])
   link_changes = false;
 
   /* Starting scheduler */
+  app_state = STATE_RUNNING;
   olsr_scheduler();
 
   exitcode = olsr_cnf->exit_value;
   switch (app_state) {
+  case STATE_INIT:
+      OLSR_ERROR(LOG_MAIN, "terminating and got \"init\"?");
+      exitcode = EXIT_FAILURE;
+      break;
   case STATE_RUNNING:
-    olsr_syslog(OLSR_LOG_ERR, "terminating and got \"running\"?");
+    OLSR_ERROR(LOG_MAIN, "terminating and got \"running\"?");
     exitcode = EXIT_FAILURE;
     break;
 #ifndef WIN32
@@ -398,13 +396,13 @@ main(int argc, char *argv[])
       printf("Restarting %s\n", argv[0]);
       execv(argv[0], argv);
       /* if we reach this, the exev() failed */
-      olsr_syslog(OLSR_LOG_ERR, "execv() failed: %s", strerror(errno));
+      OLSR_ERROR(LOG_MAIN, "execv() failed: %s", strerror(errno));
       /* and we simply shutdown */
       exitcode = EXIT_FAILURE;
       break;
     case -1:
       /* fork() failes */
-      olsr_syslog(OLSR_LOG_ERR, "fork() failed: %s", strerror(errno));
+      OLSR_ERROR(LOG_MAIN, "fork() failed: %s", strerror(errno));
       /* and we simply shutdown */
       exitcode = EXIT_FAILURE;
       break;
@@ -434,7 +432,7 @@ static void
 signal_reconfigure(int signo)
 {
   const int save_errno = errno;
-  olsr_syslog(OLSR_LOG_INFO, "Received signal %d - requesting reconfiguration", signo);
+  OLSR_INFO(LOG_MAIN, "Received signal %d - requesting reconfiguration", signo);
   app_state = STATE_RECONFIGURE;
   errno = save_errno;
 }
@@ -455,7 +453,7 @@ signal_shutdown(int signo)
 #endif
 {
   const int save_errno = errno;
-  olsr_syslog(OLSR_LOG_INFO, "Received signal %d - requesting shutdown", (int)signo);
+  OLSR_INFO(LOG_MAIN, "Received signal %d - requesting shutdown", (int)signo);
   app_state = STATE_SHUTDOWN;
   errno = save_errno;
 #ifdef WIN32
@@ -533,7 +531,7 @@ olsr_shutdown(void)
   /* Remove IP filters */
   deinit_netfilters();
 
-  olsr_syslog(OLSR_LOG_INFO, "%s stopped", olsrd_version);
+  OLSR_INFO(LOG_MAIN, "%s stopped", olsrd_version);
 
   OLSR_PRINTF(1, "\n <<<< %s - terminating >>>>\n           http://www.olsr.org\n", olsrd_version);
 

@@ -131,9 +131,8 @@ olsr_del_route(struct rt_entry *rt)
   if(error < 0) {
     const char * const err_msg = strerror(errno);
     const char * const routestr = olsr_rt_to_string(rt);
-    OLSR_PRINTF(1, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
 
-    olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
+    OLSR_WARN(LOG_ROUTING, "KERN: ERROR deleting %s: %s\n", routestr, err_msg);
   } else {
 
     /* release the interface. */
@@ -163,8 +162,7 @@ exit(9);
   if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
     const char * const err_msg = strerror(errno);
     const char * const routestr = olsr_rtp_to_string(rt->rt_best);
-    OLSR_PRINTF(1, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
-    olsr_syslog(OLSR_LOG_ERR, "Add route %s: %s", routestr, err_msg);
+    OLSR_WARN(LOG_ROUTING, "KERN: ERROR adding %s: %s\n", routestr, err_msg);
   } else {
     /* route addition has suceeded */
 

@@ -254,8 +254,7 @@ chk_if_changed(struct olsr_if_config *iface)
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
       if (!olsr_cnf->fixed_origaddr && ip4equal(&olsr_cnf->router_id.v4, &ifp->ip_addr.v4)) {
-        OLSR_PRINTF(1, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
-        olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
+        OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
         olsr_cnf->router_id.v4 = tmp_saddr4->sin_addr;
       }
 
@@ -266,7 +265,7 @@ chk_if_changed(struct olsr_if_config *iface)
 
     /* Check netmask */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
-      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
+      OLSR_WARN(LOG_NETWORKING, "%s: ioctl (get broadaddr) failed", ifr.ifr_name);
       remove_interface(&iface->interf);
       return 0;
     }
@@ -289,8 +288,7 @@ chk_if_changed(struct olsr_if_config *iface)
     if (!iface->cnf->ipv4_broadcast.v4.s_addr) {
       /* Check broadcast address */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
-	olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
- 	remove_interface(&iface->interf);
+        OLSR_WARN(LOG_NETWORKING, "%s: ioctl (get broadaddr) failed", ifr.ifr_name);
         return 0;
       }
 
@@ -347,8 +345,7 @@ int add_hemu_if (struct olsr_if_config *iface)
 
   if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
     olsr_cnf->router_id = iface->hemu_ip;
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
-    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
 
   ifp->int_mtu = OLSR_DEFAULT_MTU - (olsr_cnf->ip_version == AF_INET6 ? UDP_IPV6_HDRSIZE : UDP_IPV4_HDRSIZE);
@@ -376,10 +373,8 @@ int add_hemu_if (struct olsr_if_config *iface)
 
     ifp->olsr_socket = gethemusocket(&sin4);
     if (ifp->olsr_socket < 0) {
-      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-      olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      kill(getpid(), SIGINT);
+      OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
     }
   } else {
     /* IP version 6 */
@@ -598,7 +593,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 
     /* Find netmask */
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFNETMASK, &ifr) < 0) {
-      olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get netmask)", ifr.ifr_name);
+      OLSR_WARN(LOG_NETWORKING, "%s: ioctl (get netmask) failed", ifr.ifr_name);
       goto cleanup;
     }
     ifp->int_netmask = *(struct sockaddr_in *)&ifr.ifr_netmask;
@@ -610,8 +605,8 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
     } else {
       /* Autodetect */
       if (ioctl(olsr_cnf->ioctl_s, SIOCGIFBRDADDR, &ifr) < 0) {
-	olsr_syslog(OLSR_LOG_ERR, "%s: ioctl (get broadaddr)", ifr.ifr_name);
-	goto cleanup;
+        OLSR_WARN(LOG_NETWORKING, "%s: ioctl (get broadaddr) failed", ifr.ifr_name);
+        goto cleanup;
       }
 
       ifp->int_broadaddr = *(struct sockaddr_in *)&ifr.ifr_broadaddr;
@@ -655,7 +650,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
 
   OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifp->int_mtu);
 
-  olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
+  OLSR_INFO(LOG_NETWORKING, "Adding interface %s\n", iface->name);
   OLSR_PRINTF(1, "\tIndex %d\n", ifp->if_index);
 
   if(olsr_cnf->ip_version == AF_INET) {
@@ -689,10 +684,8 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
      */
     ifp->olsr_socket = getsocket(BUFSPACE, ifp->int_name);
     if (ifp->olsr_socket < 0) {
-      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-      olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      kill(getpid(), SIGINT);
+      OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
     }
   } else {
     /* IP version 6 */
@@ -704,10 +697,8 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
      */
     ifp->olsr_socket = getsocket6(BUFSPACE, ifp->int_name);
     if (ifp->olsr_socket < 0)	{
-      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-      olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      kill(getpid(), SIGINT);
+      OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
+      olsr_exit(EXIT_FAILURE);
     }
     join_mcast(ifp, ifp->olsr_socket);
   }
@@ -722,13 +713,11 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
     /* Set TOS */
     int data = IPTOS_PREC(olsr_cnf->tos);
     if (setsockopt(ifp->olsr_socket, SOL_SOCKET, SO_PRIORITY, (char*)&data, sizeof(data)) < 0) {
-      perror("setsockopt(SO_PRIORITY)");
-      olsr_syslog(OLSR_LOG_ERR, "OLSRD: setsockopt(SO_PRIORITY) error %m");
+      OLSR_WARN(LOG_NETWORKING, "setsockopt(SO_PRIORITY) error %s", strerror(errno));
     }
     data = IPTOS_TOS(olsr_cnf->tos);
     if (setsockopt(ifp->olsr_socket, SOL_IP, IP_TOS, (char*)&data, sizeof(data)) < 0) {
-      perror("setsockopt(IP_TOS)");
-      olsr_syslog(OLSR_LOG_ERR, "setsockopt(IP_TOS) error %m");
+      OLSR_WARN(LOG_NETWORKING, "setsockopt(IP_TOS) error %s", strerror(errno));
     }
   }
 #endif
@@ -744,8 +733,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
     struct ipaddr_str buf;
     olsr_cnf->router_id = ifp->ip_addr;
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
-    olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
 
   /*

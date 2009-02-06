@@ -49,6 +49,14 @@
 const char *LOG_SOURCE_NAMES[] = {
   "all",
   "logging",
+  "ipc",
+  "main",
+  "networking",
+  "packet_creation",
+  "packet_parsing",
+  "routing",
+  "scheduler",
+  "plugins"
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

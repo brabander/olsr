@@ -147,9 +147,8 @@ check_buffspace(int msgsize, int buffsize, const char *type)
 {
   if(msgsize > buffsize)
     {
-      OLSR_PRINTF(1, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
-      olsr_syslog(OLSR_LOG_ERR, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
-      olsr_exit(__func__, EXIT_FAILURE);
+      OLSR_ERROR(LOG_PACKET_CREATION, "%s build, outputbuffer to small(%d/%d)!\n", type, msgsize, buffsize);
+      olsr_exit(EXIT_FAILURE);
     }
 }
 

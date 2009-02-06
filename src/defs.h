@@ -123,6 +123,7 @@ extern FILE *EXPORT(debug_handle);
 #endif
 
 enum app_state {
+  STATE_INIT,
   STATE_RUNNING,
   STATE_SHUTDOWN,
 #ifndef WIN32

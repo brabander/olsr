@@ -72,9 +72,8 @@ static void free_ipv4_route (struct zebra_route *);
 static void *my_realloc (void *buf, size_t s, const char *c) {
   buf = realloc (buf, s);
   if (!buf) {
-    OLSR_PRINTF (1, "(QUAGGA) OUT OF MEMORY: %s\n", strerror(errno));
-    olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %m\n");
-    olsr_exit(c, EXIT_FAILURE);
+    OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) %s OUT OF MEMORY: %s\n", c, strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
   return buf;
 }
@@ -82,9 +81,10 @@ static void *my_realloc (void *buf, size_t s, const char *c) {
 
 void init_zebra (void) {
   zebra_connect();
-  if (!(zebra.status&STATUS_CONNECTED))
-    olsr_exit ("(QUAGGA) AIIIII, could not connect to zebra! is zebra running?",
-	       EXIT_FAILURE);
+  if (!(zebra.status&STATUS_CONNECTED)) {
+    OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) AIIIII, could not connect to zebra! is zebra running?");
+    olsr_exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -138,13 +138,17 @@ static void zebra_connect (void) {
   zebra.sock = socket (AF_INET,SOCK_STREAM, 0);
 #else
   struct sockaddr_un i;
-  if (close (zebra.sock) < 0) olsr_exit ("(QUAGGA) Could not close socket!", EXIT_FAILURE);
-
+  if (close (zebra.sock) < 0) {
+    OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) Could not close socket!");
+    olsr_exit(EXIT_FAILURE);
+  }
   zebra.sock = socket (AF_UNIX,SOCK_STREAM, 0);
 #endif
 
-  if (zebra.sock <0 )
-    olsr_exit("(QUAGGA) Could not create socket!", EXIT_FAILURE);
+  if (zebra.sock <0 ) {
+    OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) Could not create socket!");
+    olsr_exit(EXIT_FAILURE);
+  }
 
   memset (&i, 0, sizeof i);
 #ifndef USE_UNIX_DOMAIN_SOCKET
@@ -274,8 +278,10 @@ void zebra_parse (void* foo __attribute__((unused))) {
     do {
       memcpy (&length, f, sizeof length);
       length = ntohs (length);
-      if (!length) // something wired happened
-	olsr_exit ("(QUAGGA) Zero message length??? ", EXIT_FAILURE);
+      if (!length) { // something wired happened
+        OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) Zero message length???");
+        olsr_exit(EXIT_FAILURE);
+      }
       command = f[2];
       switch (command) {
         case ZEBRA_IPV4_ROUTE_ADD:
@@ -424,8 +430,10 @@ static struct zebra_route *zebra_parse_route (unsigned char *opt) {
       pnt += sizeof r->metric;
 //  }
 
-    if (pnt - opt != length) { olsr_exit ("(QUAGGA) length does not match ??? ", EXIT_FAILURE);
-     }
+    if (pnt - opt != length) {
+      OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) length does not match ???");
+      olsr_exit(EXIT_FAILURE);
+    }
 
   return r;
 }
@@ -450,8 +458,10 @@ static unsigned char *zebra_redistribute_packet (unsigned char cmd, unsigned cha
 /* start redistribution FROM zebra */
 int zebra_redistribute (unsigned char type) {
 
-      if (zebra_send_command(zebra_redistribute_packet (ZEBRA_REDISTRIBUTE_ADD, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute add command", EXIT_FAILURE);
+      if (zebra_send_command(zebra_redistribute_packet (ZEBRA_REDISTRIBUTE_ADD, type)) < 0) {
+        OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) could not send redistribute add command");
+        olsr_exit(EXIT_FAILURE);
+      }
 
   if (type > ZEBRA_ROUTE_MAX-1) return -1;
   zebra.redistribute[type] = 1;
@@ -464,8 +474,10 @@ int zebra_redistribute (unsigned char type) {
 /* end redistribution FROM zebra */
 int zebra_disable_redistribute (unsigned char type) {
 
-      if (zebra_send_command(zebra_redistribute_packet (ZEBRA_REDISTRIBUTE_DELETE, type)) < 0)
-        olsr_exit("(QUAGGA) could not send redistribute delete command", EXIT_FAILURE);
+      if (zebra_send_command(zebra_redistribute_packet (ZEBRA_REDISTRIBUTE_DELETE, type)) < 0) {
+        OLSR_ERROR(LOG_PLUGINS, "(QUAGGA) could not send redistribute delete command");
+        olsr_exit(EXIT_FAILURE);
+      }
 
   if (type > ZEBRA_ROUTE_MAX-1) return -1;
   zebra.redistribute[type] = 0;

@@ -45,8 +45,16 @@
  * defines the source of a logging event
  */
 enum log_source {
-  LOG_ALL,        //!< LOG_ALL
-  LOG_LOGGING,    //!< LOG_LOGGING
+  LOG_ALL,                //!< LOG_ALL
+  LOG_LOGGING,            //!< LOG_LOGGING
+  LOG_IPC,                //!< LOG_IPC
+  LOG_MAIN,               //!< LOG_MAIN
+  LOG_NETWORKING,         //!< LOG_NETWORKING
+  LOG_PACKET_CREATION,    //!< LOG_PACKET_CREATION
+  LOG_PACKET_PARSING,     //!< LOG_PACKET_PARSING
+  LOG_ROUTING,            //!< LOG_ROUTING
+  LOG_SCHEDULER,          //!< LOG_SCHEDULER
+  LOG_PLUGINS,            //!< LOG_PLUGINS
 
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT//!< LOG_SOURCE_COUNT

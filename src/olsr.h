@@ -88,7 +88,7 @@ const char *
 olsr_status_to_string(uint8_t);
 
 void
-EXPORT(olsr_exit)(const char *, int);
+EXPORT(olsr_exit)(int);
 
 void *
 EXPORT(olsr_malloc)(size_t, const char *);

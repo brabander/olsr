@@ -378,7 +378,8 @@ net_output(struct interface *ifp)
     fprintf(stderr, "Socket: %d interface: %d/%s\n", ifp->olsr_socket, ifp->if_index, ifp->int_name);
     fprintf(stderr, "Outputsize: %d\n", ifp->netbuf.pending);
 #endif
-    olsr_syslog(OLSR_LOG_ERR, "OLSR: sendto IPv%d: %s", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
+
+    OLSR_WARN(LOG_NETWORKING, "OLSR: sendto IPv%d: %s", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
     retval = -1;
   }
 

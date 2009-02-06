@@ -142,7 +142,7 @@ ipc_init(void)
   ipc_sock = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_sock == -1) {
     perror("IPC socket");
-    olsr_exit("IPC socket", EXIT_FAILURE);
+    olsr_exit(EXIT_FAILURE);
   }
 
   yes = 1;
@@ -164,7 +164,7 @@ ipc_init(void)
     sleep(10);
     if (bind(ipc_sock, (struct sockaddr *)&sin4, sizeof(sin4)) == -1) {
       perror("IPC bind");
-      olsr_exit("IPC bind", EXIT_FAILURE);
+      olsr_exit(EXIT_FAILURE);
     }
     OLSR_PRINTF(1, "OK\n");
   }
@@ -172,7 +172,7 @@ ipc_init(void)
   /* show that we are willing to listen */
   if (listen(ipc_sock, olsr_cnf->ipc_connections) == -1) {
     perror("IPC listen");
-    olsr_exit("IPC listen", EXIT_FAILURE);
+    olsr_exit(EXIT_FAILURE);
   }
 
   /* Register the socket with the socket parser */
@@ -202,7 +202,7 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
   ipc_conn = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (ipc_conn == -1) {
     perror("IPC accept");
-    olsr_exit("IPC accept", EXIT_FAILURE);
+    olsr_exit(EXIT_FAILURE);
   } else {
     OLSR_PRINTF(1, "Front end connected\n");
     addr = inet_ntoa(pin.sin_addr);
@@ -211,8 +211,7 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
       ipc_send_all_routes(ipc_conn);
       OLSR_PRINTF(1, "Connection from %s\n",addr);
     } else {
-      OLSR_PRINTF(1, "Front end-connection from foregin host(%s) not allowed!\n", addr);
-      olsr_syslog(OLSR_LOG_ERR, "OLSR: Front end-connection from foregin host(%s) not allowed!\n", addr);
+      OLSR_WARN(LOG_IPC, "Front end-connection from foregin host(%s) not allowed!\n", addr);
       CLOSESOCKET(ipc_conn);
     }
   }

@@ -170,8 +170,7 @@ remove_interface(struct interface **pinterf)
     return;
   }
 
-  OLSR_PRINTF(1, "Removing interface %s\n", ifp->int_name);
-  olsr_syslog(OLSR_LOG_INFO, "Removing interface %s\n", ifp->int_name);
+  OLSR_INFO(LOG_NETWORKING, "Removing interface %s\n", ifp->int_name);
 
   olsr_delete_link_entry_by_if(ifp);
 
@@ -197,8 +196,7 @@ remove_interface(struct interface **pinterf)
       /* Grab the first interface in the list. */
       olsr_cnf->router_id = list2interface(interface_head.next)->ip_addr;
       olsr_ip_to_string(&buf, &olsr_cnf->router_id);
-      OLSR_PRINTF(1, "New main address: %s\n", buf.buf);
-      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", buf.buf);
+      OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", buf.buf);
     }
   }
 
@@ -229,18 +227,8 @@ remove_interface(struct interface **pinterf)
   unlock_interface(ifp);
 
   if (list_is_empty(&interface_head) && !olsr_cnf->allow_no_interfaces) {
-    OLSR_PRINTF(1, "No more active interfaces - exiting.\n");
-    olsr_syslog(OLSR_LOG_INFO, "No more active interfaces - exiting.\n");
-    olsr_cnf->exit_value = EXIT_FAILURE;
-
-    /*
-     * And exit.
-     */
-#ifndef WIN32
-    kill(getpid(), SIGINT);
-#else
-    CallSignalHandler();
-#endif
+    OLSR_ERROR(LOG_NETWORKING, "No more active interfaces - exiting.\n");
+    olsr_exit(EXIT_FAILURE);
   }
 }
 

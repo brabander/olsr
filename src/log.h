@@ -55,10 +55,10 @@
 #define OLSR_LOG_ERR             SEVERITY_ERR
 
 void
-olsr_openlog(const char *ident);
+olsr_open_syslog(const char *ident);
 
 void
-EXPORT(olsr_syslog)(int level, const char *format, ...) __attribute__((format(printf,2,3)));
+EXPORT(olsr_print_syslog)(int level, const char *format, ...) __attribute__((format(printf,2,3)));
 
 
 #endif

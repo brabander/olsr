@@ -277,7 +277,7 @@ static void ipc_action(int fd, void *data __attribute__((unused)), unsigned int 
 
     conn = malloc(sizeof(*conn));
     if (conn == NULL) {
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) Out of memory!");
+        OLSR_WARN(LOG_PLUGINS, "(TXTINFO) Out of memory!");
         CLOSESOCKET(http_connection);
         return;
     }
@@ -320,7 +320,7 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
         if (errno == EINTR || errno == EAGAIN) {
             return;
         }
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) read error: %s", strerror(errno));
+        OLSR_WARN(LOG_PLUGINS, "(TXTINFO) read error: %s", strerror(errno));
         kill_connection(fd, conn);
         return;
     }
@@ -362,7 +362,7 @@ static void ipc_http_write(int fd, struct ipc_conn *conn)
         if (errno == EINTR || errno == EAGAIN) {
             return;
         }
-        olsr_syslog(OLSR_LOG_ERR, "(TXTINFO) write error: %s", strerror(errno));
+        OLSR_WARN(LOG_PLUGINS, "(TXTINFO) write error: %s", strerror(errno));
         kill_connection(fd, conn);
         return;
     }
