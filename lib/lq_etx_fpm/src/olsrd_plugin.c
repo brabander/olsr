@@ -44,6 +44,7 @@
 #include "olsr.h"
 #include "defs.h"
 #include "plugin.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -73,9 +74,9 @@ set_plugin_float(const char *value, void *data, set_plugin_parameter_addon addon
 {
   if (data != NULL) {
     sscanf(value, "%f", (float *)data);
-    OLSR_PRINTF(1, "%s float %f\n", "Got", *(float *)data);
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %f\n", "Got", *(float *)data);
   } else {
-    OLSR_PRINTF(0, "%s float %s\n", "Ignored", value);
+    OLSR_INFO(LOG_LQ_PLUGINS, "%s float %s\n", "Ignored", value);
   }
   return 0;
 }
@@ -106,7 +107,7 @@ olsrd_plugin_init(void)
 {
   /* Verify parameters */
   if (lq_aging < MIN_LQ_AGING || lq_aging > MAX_LQ_AGING) {
-    fprintf(stderr, "LQ aging factor %f is not allowed\n", lq_aging);
+    OLSR_ERROR(LOG_LQ_PLUGINS, "LQ aging factor %f is not allowed\n", lq_aging);
     return 0;
   }
 
@@ -130,7 +131,7 @@ static void
 my_init(void)
 {
   /* Print plugin info to stdout */
-  printf("%s\n", MOD_DESC);
+  OLSR_INFO(LOG_LQ_PLUGINS, "%s\n", MOD_DESC);
 }
 
 /**

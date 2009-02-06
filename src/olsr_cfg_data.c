@@ -56,7 +56,9 @@ const char *LOG_SOURCE_NAMES[] = {
   "packet_parsing",
   "routing",
   "scheduler",
-  "plugins"
+  "plugins",
+  "lq-plugins",
+  "ll-plugins"
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

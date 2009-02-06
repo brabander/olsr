@@ -56,6 +56,9 @@ enum log_source {
   LOG_SCHEDULER,          //!< LOG_SCHEDULER
   LOG_PLUGINS,            //!< LOG_PLUGINS
 
+  LOG_LQ_PLUGINS,         //!< LOG_LQ_PLUGINS
+  LOG_LL_PLUGINS,         //!< LOG_LL_PLUGINS
+
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT//!< LOG_SOURCE_COUNT
 };

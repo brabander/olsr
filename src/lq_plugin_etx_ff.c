@@ -48,6 +48,7 @@
 #include "parser.h"
 #include "mid_set.h"
 #include "scheduler.h"
+#include "olsr_logging.h"
 
 #define LQ_PLUGIN_RELEVANT_COSTCHANGE_FF 16
 
@@ -175,18 +176,15 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
     uint32_t ratio;
     uint16_t i, received, lost;
 
-#if !defined(NODEBUG) && defined(DEBUG)
+#ifndef REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer;
 #endif
-
     lq_link = (struct lq_etxff_link_entry *)link;
 
-#if !defined(NODEBUG) && defined(DEBUG)
-    OLSR_PRINTF(3, "LQ-FF new entry for %s: rec: %d lost: %d",
-        olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
-        lq_link->received[lq_link->activePtr], lq_link->lost[lq_link->activePtr]);
-#endif
+    OLSR_DEBUG(LOG_LQ_PLUGINS, "LQ-FF new entry for %s: rec: %d lost: %d",
+      olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
+      lq_link->received[lq_link->activePtr], lq_link->lost[lq_link->activePtr]);
 
     received = 0;
     lost = 0;
@@ -200,9 +198,8 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
       lost += lq_link->lost[i];
     }
 
-#if !defined(NODEBUG) && defined(DEBUG)
-    OLSR_PRINTF(3, " total-rec: %d total-lost: %d", received, lost);
-#endif
+    OLSR_DEBUG(LOG_LQ_PLUGINS, " total-rec: %d total-lost: %d", received, lost);
+
     /* calculate link quality */
     if (received + lost == 0) {
       lq_link->lq.valueLq = 0;
@@ -223,9 +220,7 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
     }
     link->linkcost = lq_etxff_calc_link_entry_cost(link);
 
-#if !defined(NODEBUG) && defined(DEBUG)
-    OLSR_PRINTF(3, " linkcost: %s\n", lq_etxff_print_cost(link->linkcost, &lqbuffer));
-#endif
+    OLSR_DEBUG(LOG_LQ_PLUGINS, " linkcost: %s\n", lq_etxff_print_cost(link->linkcost, &lqbuffer));
 
     // shift buffer
     lq_link->activePtr = (lq_link->activePtr + 1) % LQ_FF_WINDOW;
