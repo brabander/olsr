@@ -250,8 +250,8 @@ main(int argc, char *argv[])
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts_bsd = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts_bsd < 0) {
-    olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
-    olsr_exit(__func__, 0);
+	OLSR_ERROR(LOG_MAIN, "routing socket: %s\n", strerror(errno));
+	olsr_exit(EXIT_FAILURE);
   }
 #endif
 

@@ -466,18 +466,16 @@ olsr_init_timers(void)
    * If not using linux, errors may be returned, e.g.
    * the mandatory output buffer is not kernel-writeable
    */
-  if ((clock_t)-1 == now_times) {
-    const char * const err_msg = strerror(errno);
-    olsr_syslog(OLSR_LOG_ERR, "Error in times(): %s, sleeping for a second", err_msg);
-    OLSR_PRINTF(1, "Error in times(): %s, sleeping for a second", err_msg);
-    sleep(1);
-    now_times = olsr_times();
-    if ((clock_t)-1 == now_times) {
-      olsr_syslog(OLSR_LOG_ERR, "Shutting down because times() does not work");
-      fprintf(stderr, "Shutting down because times() does not work\n");
-      exit(EXIT_FAILURE);
-    }
-  }
+	if ((clock_t)-1 == now_times) {
+		const char * const err_msg = strerror(errno);
+		OLSR_WARN(LOG_SCHEDULER, "Error in times(): %s, sleeping for a second", err_msg);
+		sleep(1);
+		now_times = olsr_times();
+		if ((clock_t)-1 == now_times) {
+				OLSR_ERROR(LOG_SCHEDULER, "Shutting down because times() does not work");
+			exit(EXIT_FAILURE);
+		}
+	}
 #endif
 
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
