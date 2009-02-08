@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 
   if (WSAStartup(0x0202, &WsaData)) {
     fprintf(stderr, "Could not initialize WinSock.\n");
-    olsr_exit(__func__, EXIT_FAILURE);
+    olsr_exit(EXIT_FAILURE);
   }
 #endif
 
