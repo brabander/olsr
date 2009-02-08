@@ -195,7 +195,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
 
   if (ipv4 && prefix == 128) {
     /* translate to ipv6 if neccessary */
-    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, sizeof(in_addr_t));
+    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, 4*sizeof(uint8_t));
     memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
     memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
   } else if (ipv6 && olsr_cnf->ip_version == AF_INET) {
