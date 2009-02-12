@@ -56,6 +56,8 @@ static struct olsr_cookie_info *tc_validity_timer_cookie = NULL;
 struct olsr_cookie_info *spf_backoff_timer_cookie = NULL;
 struct olsr_cookie_info *tc_mem_cookie = NULL;
 
+static uint32_t relevantTcCount = 0;
+
 /*
  * Sven-Ola 2007-Dec: These four constants include an assumption
  * on how long a typical olsrd mesh memorizes (TC) messages in the
@@ -757,6 +759,7 @@ olsr_input_tc(union olsr_message *msg,
   union olsr_ip_addr originator;
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
+  bool relevantTc;
 
   union olsr_ip_addr lower_border_ip, upper_border_ip;
   int borderSet = 0;
@@ -867,15 +870,21 @@ olsr_input_tc(union olsr_message *msg,
 
   limit = (unsigned char *)msg + size;
   borderSet = 0;
+  relevantTc = false;
   while (curr < limit) {
     if (olsr_tc_update_edge(tc, ansn, &curr, &upper_border_ip)) {
-      changes_topology = true;
+      relevantTc = true;
     }
 
     if (!borderSet) {
       borderSet = 1;
       memcpy(&lower_border_ip, &upper_border_ip, sizeof(lower_border_ip));
     }
+  }
+
+  if (relevantTc) {
+    relevantTcCount++;
+    changes_topology = true;
   }
 
   /*
@@ -912,6 +921,11 @@ olsr_input_tc(union olsr_message *msg,
 
   /* Forward the message */
   return true;
+}
+
+uint32_t
+getRelevantTcCount(void) {
+  return relevantTcCount;
 }
 
 /*

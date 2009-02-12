@@ -180,6 +180,7 @@ void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 
+uint32_t getRelevantTcCount(void);
 #endif
 
 /*

@@ -54,6 +54,7 @@
 #include "log.h"
 #include "misc.h"
 #include "olsr_ip_prefix_list.h"
+#include "parser.h"
 
 #include "common/autobuf.h"
 
@@ -113,6 +114,14 @@ static int ipc_print_hna(struct ipc_conn *);
 
 static int ipc_print_mid(struct ipc_conn *);
 
+static int ipc_print_stat(struct ipc_conn *);
+
+static void update_statistics_ptr(void);
+static bool olsr_msg_statistics(union olsr_message *msg,
+               struct interface *input_if, union olsr_ip_addr *from_addr);
+static char *olsr_packet_statistics(char *packet, struct interface *interface,
+               union olsr_ip_addr *, int *length);
+
 #define isprefix(str, pre) (strncmp((str), (pre), strlen(pre)) == 0)
 
 #define SIW_NEIGH	(1 << 0)
@@ -121,16 +130,22 @@ static int ipc_print_mid(struct ipc_conn *);
 #define SIW_HNA		(1 << 3)
 #define SIW_MID		(1 << 4)
 #define SIW_TOPO	(1 << 5)
+#define SIW_STAT  (1 << 6)
 #define SIW_ALL		(SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
+
+/* variables for statistics */
+static uint32_t recv_packets[60], recv_messages[60][6];
+static clock_t recv_last_now, recv_last_relevantTCs;
 
 /**
  * destructor - called at unload
  */
 void olsr_plugin_exit(void)
 {
+    olsr_parser_remove_function(&olsr_msg_statistics, PROMISCUOUS);
+    olsr_preprocessor_remove_function(&olsr_packet_statistics);
     CLOSESOCKET(listen_socket);
 }
-
 /**
  *Do initialization here
  *
@@ -215,7 +230,92 @@ olsrd_plugin_init(void)
 #ifndef NODEBUG
     OLSR_PRINTF(2, "(TXTINFO) listening on port %d\n",ipc_port);
 #endif
+
+    memset(recv_packets, 0, sizeof(recv_packets));
+    memset(recv_messages, 0, sizeof(recv_messages));
+
+    recv_last_now = now_times / 100;
+    recv_last_relevantTCs = 0;
+    olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
+    olsr_preprocessor_add_function(&olsr_packet_statistics);
     return 1;
+}
+
+
+static void update_statistics_ptr(void) {
+  int now = now_times / 100;
+  if (recv_last_now < now) {
+    if (recv_last_now + 60 <= now) {
+      memset(recv_packets, 0, sizeof(recv_packets));
+      memset(recv_messages, 0, sizeof(recv_messages));
+      recv_last_now = now % 60;
+    }
+    else {
+      do {
+        int i;
+        recv_last_now++;
+        recv_packets[recv_last_now % 60] = 0;
+
+        for (i=0; i<6; i++) {
+          recv_messages[recv_last_now % 60][i] = 0;
+        }
+      } while (recv_last_now < now);
+    }
+    while (recv_last_relevantTCs != getRelevantTcCount()) {
+      recv_messages[recv_last_now % 60][5]++;
+      recv_last_relevantTCs++;
+    }
+  }
+}
+
+/* update message statistics */
+static bool
+olsr_msg_statistics(union olsr_message *msg,
+               struct interface *input_if __attribute__ ((unused)),
+               union olsr_ip_addr *from_addr __attribute__ ((unused))) {
+  int idx, msgtype;
+
+  update_statistics_ptr();
+  if (olsr_cnf->ip_version == AF_INET) {
+    msgtype = msg->v4.olsr_msgtype;
+  }
+  else {
+    msgtype = msg->v6.olsr_msgtype;
+  }
+
+  switch (msgtype) {
+    case HELLO_MESSAGE:
+    case TC_MESSAGE:
+    case MID_MESSAGE:
+    case HNA_MESSAGE:
+      idx = msgtype - 1;
+      break;
+
+    case LQ_HELLO_MESSAGE:
+      idx = 0;
+      break;
+    case LQ_TC_MESSAGE:
+      idx = 1;
+      break;
+    default:
+      idx = 4;
+      break;
+  }
+
+  recv_messages[recv_last_now % 60][idx]++;
+  return false;
+}
+
+/* update traffic statistics */
+static char *olsr_packet_statistics(char *packet __attribute__ ((unused)),
+  struct interface *interface __attribute__ ((unused)),
+  union olsr_ip_addr *ip __attribute__ ((unused)),
+  int *length __attribute__ ((unused))) {
+
+  update_statistics_ptr();
+  recv_packets[recv_last_now % 60] += *length;
+
+  return packet;
 }
 
 /* destroy the connection */
@@ -345,6 +445,7 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
     else if (isprefix(p, "/hna")) send_what=SIW_HNA;
     else if (isprefix(p, "/mid")) send_what=SIW_MID;
     else if (isprefix(p, "/topo")) send_what=SIW_TOPO;
+    else if (isprefix(p, "/stat")) send_what=SIW_STAT;
     else send_what = SIW_ALL;
 
     if (send_info(conn, send_what) < 0) {
@@ -603,6 +704,50 @@ static int ipc_print_mid(struct ipc_conn *conn)
     return 0;
 }
 
+static int ipc_print_stat(struct ipc_conn *conn)
+{
+    static const char *names[] = { "HELLO", "TC", "MID", "HNA", "Other", "Rel.TCs" };
+
+    uint32_t msgs[5], traffic, i, j;
+    clock_t slot = (now_times/100 + 59) % 60;
+
+    if (abuf_appendf(&conn->resp, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {
+        return -1;
+    }
+
+    for (j=0; j<5; j++) {
+      msgs[j] = 0;
+      for (i=0; i<60; i++) {
+        msgs[j] += recv_messages[i][j];
+      }
+    }
+
+    traffic = 0;
+    for (i=0; i<60; i++) {
+      traffic += recv_packets[i];
+    }
+
+    for (i=0; i<6; i++) {
+      if (abuf_appendf(&conn->resp, "%s\t%u\t%u\t%u\t%u\t%u\t%u\t\t%u\n", names[i],
+            recv_messages[(slot)%60][i],
+            recv_messages[(slot+59)%60][i],
+            recv_messages[(slot+58)%60][i],
+            recv_messages[(slot+57)%60][i],
+            recv_messages[(slot+56)%60][i],
+            msgs[i],
+            msgs[i]/60) < 0) {
+          return -1;
+      }
+    }
+    if (abuf_appendf(&conn->resp, "\nTraffic: %8u bytes/s\t%u bytes/minute\taverage %u bytes/s\n",
+          recv_packets[(slot)%60],
+          traffic,
+          traffic/60) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static int send_info(struct ipc_conn *conn, int send_what)
 {
     int rv;
@@ -639,6 +784,10 @@ static int send_info(struct ipc_conn *conn, int send_what)
      /* routes */
     if ((send_what & SIW_ROUTE) != 0) {
         rv = ipc_print_routes(conn);
+    }
+    /* statistics */
+    if ((send_what & SIW_STAT) != 0) {
+        rv = ipc_print_stat(conn);
     }
     return rv;
 }
