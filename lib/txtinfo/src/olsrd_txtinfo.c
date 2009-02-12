@@ -135,7 +135,8 @@ static char *olsr_packet_statistics(char *packet, struct interface *interface,
 
 /* variables for statistics */
 static uint32_t recv_packets[60], recv_messages[60][6];
-static clock_t recv_last_now, recv_last_relevantTCs;
+static clock_t recv_last_now;
+static uint32_t recv_last_relevantTCs;
 
 /**
  * destructor - called at unload
@@ -243,7 +244,7 @@ olsrd_plugin_init(void)
 
 
 static void update_statistics_ptr(void) {
-  int now = now_times / 100;
+  clock_t now = now_times / (1000 / olsr_cnf->system_tick_divider);
   if (recv_last_now < now) {
     if (recv_last_now + 60 <= now) {
       memset(recv_packets, 0, sizeof(recv_packets));
@@ -708,14 +709,14 @@ static int ipc_print_stat(struct ipc_conn *conn)
 {
     static const char *names[] = { "HELLO", "TC", "MID", "HNA", "Other", "Rel.TCs" };
 
-    uint32_t msgs[5], traffic, i, j;
+    uint32_t msgs[6], traffic, i, j;
     clock_t slot = (now_times/100 + 59) % 60;
 
     if (abuf_appendf(&conn->resp, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {
         return -1;
     }
 
-    for (j=0; j<5; j++) {
+    for (j=0; j<6; j++) {
       msgs[j] = 0;
       for (i=0; i<60; i++) {
         msgs[j] += recv_messages[i][j];
