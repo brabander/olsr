@@ -128,7 +128,8 @@ UseHysteresis	no
 LinkQualityLevel	2
 
 # Link quality aging factor
-# Defaults to 0.1, smaller values mean faster reaction to changing links
+# Defaults to 0.1, larger values mean faster reaction to changing links but
+# more instable ETX values
 
 #LinkQualityAging 0.1 
 
