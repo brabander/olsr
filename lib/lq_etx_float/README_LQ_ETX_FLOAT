@@ -13,6 +13,8 @@ PLUGIN PARAMETERS (PlParam)
 
 PlParam "LinkQualityAging" "0.01-1.0"
 	Determines adaption speed of the algorithm
+	Larger aging parameter means faster adaption to new LQ values
+	but more instable ETX values.
 
 ---------------------------------------------------------------------
 SAMPLE CONFIG
