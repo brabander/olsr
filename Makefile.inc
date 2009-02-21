@@ -87,7 +87,8 @@ endif
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-WARNINGS +=	-Werror
+# Disable -Werror in stable branch
+#WARNINGS +=	-Werror
 WARNINGS +=	-finline-functions-called-once
 WARNINGS +=	-fearly-inlining
 ifeq ($(DEBUG),0)

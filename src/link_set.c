@@ -466,6 +466,11 @@ olsr_expire_link_entry(void *context)
 void
 olsr_set_link_timer(struct link_entry *link, unsigned int rel_timer)
 {
+  struct ipaddr_str buf;
+
+  fprintf(stderr, "reset link timer: %s = %u\n",
+    olsr_ip_to_string(&buf, &link->neighbor_iface_addr),
+    (unsigned int)(olsr_times() + rel_timer/1000));
   olsr_set_timer(&link->link_timer, rel_timer, OLSR_LINK_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_link_entry, link, 0);
 }
 
