@@ -105,6 +105,7 @@ extern void olsr_cookie_usage_decr(olsr_cookie_t);
 extern void *olsr_cookie_malloc(struct olsr_cookie_info *);
 extern void olsr_cookie_free(struct olsr_cookie_info *, void *);
 
+struct olsr_cookie_info *EXPORT(olsr_cookie_get)(int i);
 
 #endif /* _OLSR_COOKIE_H */
 

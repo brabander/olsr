@@ -447,6 +447,9 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);
 }
 
+struct olsr_cookie_info *olsr_cookie_get(int i) {
+  return cookies[i];
+}
 /*
  * Local Variables:
  * c-basic-offset: 2

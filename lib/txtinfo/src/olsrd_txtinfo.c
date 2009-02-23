@@ -124,14 +124,15 @@ static char *olsr_packet_statistics(char *packet, struct interface *interface,
 
 #define isprefix(str, pre) (strncmp((str), (pre), strlen(pre)) == 0)
 
-#define SIW_NEIGH	(1 << 0)
-#define SIW_LINK	(1 << 1)
-#define SIW_ROUTE	(1 << 2)
-#define SIW_HNA		(1 << 3)
-#define SIW_MID		(1 << 4)
-#define SIW_TOPO	(1 << 5)
-#define SIW_STAT  (1 << 6)
-#define SIW_ALL		(SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
+#define SIW_NEIGH	  (1 << 0)
+#define SIW_LINK	  (1 << 1)
+#define SIW_ROUTE	  (1 << 2)
+#define SIW_HNA		  (1 << 3)
+#define SIW_MID		  (1 << 4)
+#define SIW_TOPO	  (1 << 5)
+#define SIW_STAT    (1 << 6)
+#define SIW_COOKIES (1<<7)
+#define SIW_ALL		  (SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
 
 /* variables for statistics */
 static uint32_t recv_packets[60], recv_messages[60][6];
@@ -447,6 +448,7 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
     else if (isprefix(p, "/mid")) send_what=SIW_MID;
     else if (isprefix(p, "/topo")) send_what=SIW_TOPO;
     else if (isprefix(p, "/stat")) send_what=SIW_STAT;
+    else if (isprefix(p, "/cookies")) send_what=SIW_COOKIES;
     else send_what = SIW_ALL;
 
     if (send_info(conn, send_what) < 0) {
@@ -749,6 +751,49 @@ static int ipc_print_stat(struct ipc_conn *conn)
     return 0;
 }
 
+static int ipc_print_cookies(struct ipc_conn *conn) {
+  int i;
+
+  if (abuf_appendf(&conn->resp, "Memory cookies:\n") < 0) {
+    return -1;
+  }
+
+  for (i=1; i<COOKIE_ID_MAX; i++) {
+    struct olsr_cookie_info *c = olsr_cookie_get(i);
+    if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_MEMORY) {
+      continue;
+    }
+    if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
+      return -1;
+    }
+
+    if (abuf_appendf(&conn->resp, "(MEMORY) size: %lu usage: %u freelist: %u\n",
+        c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
+      return -1;
+    }
+  }
+
+  if (abuf_appendf(&conn->resp, "\nTimer cookies:\n") < 0) {
+    return -1;
+  }
+
+  for (i=1; i<COOKIE_ID_MAX; i++) {
+    struct olsr_cookie_info *c = olsr_cookie_get(i);
+    if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_TIMER) {
+      continue;
+    }
+    if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
+      return -1;
+    }
+
+    if (abuf_appendf(&conn->resp, "(TIMER) usage: %u changes: %u\n",
+        c->ci_usage, c->ci_changes) < 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
 static int send_info(struct ipc_conn *conn, int send_what)
 {
     int rv;
@@ -789,6 +834,10 @@ static int send_info(struct ipc_conn *conn, int send_what)
     /* statistics */
     if ((send_what & SIW_STAT) != 0) {
         rv = ipc_print_stat(conn);
+    }
+    /* cookies */
+    if ((send_what & SIW_COOKIES) != 0) {
+        rv = ipc_print_cookies(conn);
     }
     return rv;
 }
