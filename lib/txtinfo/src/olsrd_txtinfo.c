@@ -768,7 +768,7 @@ static int ipc_print_cookies(struct ipc_conn *conn) {
     }
 
     if (abuf_appendf(&conn->resp, "(MEMORY) size: %lu usage: %u freelist: %u\n",
-        c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
+        (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
       return -1;
     }
   }
