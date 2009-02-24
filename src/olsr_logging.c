@@ -254,7 +254,7 @@ static void olsr_log_stderr (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
     char *buffer, int prefixLength __attribute__((unused))) {
   if (olsr_cnf->log_event[severity][source]) {
-    fputs (buffer, stderr);
+    fprintf(stderr, "%s\n", buffer);
   }
 }
 
@@ -263,7 +263,7 @@ static void olsr_log_file (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
     char *buffer, int prefixLength __attribute__((unused))) {
   if (olsr_cnf->log_event[severity][source]) {
-    fputs (buffer, log_fileoutput);
+    fprintf (log_fileoutput, "%s\n", buffer);
   }
 }
 
@@ -272,6 +272,6 @@ static void olsr_log_syslog (enum log_severity severity, enum log_source source,
     const char *file __attribute__((unused)), int line __attribute__((unused)),
     char *buffer, int prefixLength __attribute__((unused))) {
   if (olsr_cnf->log_event[severity][source]) {
-    olsr_print_syslog(severity, "%s", buffer);
+    olsr_print_syslog(severity, "%s\n", buffer);
   }
 }
