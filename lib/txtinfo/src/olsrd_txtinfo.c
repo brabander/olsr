@@ -305,7 +305,7 @@ olsr_msg_statistics(union olsr_message *msg,
   }
 
   recv_messages[recv_last_now % 60][idx]++;
-  return false;
+  return true;
 }
 
 /* update traffic statistics */
