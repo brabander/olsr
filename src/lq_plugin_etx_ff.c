@@ -178,7 +178,7 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
 
 #ifndef REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
-    struct lqtextbuffer lqbuffer;
+    // struct lqtextbuffer lqbuffer;
 #endif
     lq_link = (struct lq_etxff_link_entry *)link;
 
@@ -205,8 +205,10 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
       lq_link->lq.valueLq = 0;
     }
     else {
+
       /* keep missed hello periods in mind (round up hello interval to seconds) */
-      lost += lq_link->missed_seconds / ((lq_link->core.link_loss_timer->timer_period + 999) / 1000);
+      uint32_t missed_hello_cost = lq_link->missed_seconds / ((lq_link->core.link_loss_timer->timer_period + 999) / 1000);
+      lost += missed_hello_cost * missed_hello_cost;
 
       // start with link-loss-factor
       ratio = link->loss_link_multiplier;
@@ -218,9 +220,6 @@ static void lq_etxff_timer(void __attribute__((unused)) *context) {
 
       lq_link->lq.valueLq = (uint8_t)(ratio);
     }
-    link->linkcost = lq_etxff_calc_link_entry_cost(link);
-
-    OLSR_DEBUG(LOG_LQ_PLUGINS, " linkcost: %s\n", lq_etxff_print_cost(link->linkcost, &lqbuffer));
 
     // shift buffer
     lq_link->activePtr = (lq_link->activePtr + 1) % LQ_FF_WINDOW;
@@ -298,7 +297,7 @@ static bool lq_etxff_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) 
 
 static olsr_linkcost lq_etxff_packet_loss_handler(struct link_entry *link,
     bool loss __attribute__((unused))) {
-  return link->linkcost;
+  return lq_etxff_calc_link_entry_cost(link);
 }
 
 static void lq_etxff_memorize_foreign_hello(struct link_entry *target,
