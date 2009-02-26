@@ -82,6 +82,7 @@ struct ipc_conn {
     int respstart;
     int requlen;
     char requ[256];
+    char csv;
 };
 
 static int listen_socket = -1;
@@ -109,7 +110,7 @@ static int ipc_print_routes(struct ipc_conn *);
 
 static int ipc_print_topology(struct ipc_conn *);
 
-static int ipc_print_hna_entry(struct autobuf *, const struct olsr_ip_prefix *, const union olsr_ip_addr *);
+static int ipc_print_hna_entry(struct autobuf *, const struct olsr_ip_prefix *, const union olsr_ip_addr *, char csv);
 static int ipc_print_hna(struct ipc_conn *);
 
 static int ipc_print_mid(struct ipc_conn *);
@@ -130,8 +131,9 @@ static char *olsr_packet_statistics(char *packet, struct interface *interface,
 #define SIW_HNA		  (1 << 3)
 #define SIW_MID		  (1 << 4)
 #define SIW_TOPO	  (1 << 5)
-#define SIW_STAT    (1 << 6)
-#define SIW_COOKIES (1<<7)
+#define SIW_STAT	  (1 << 6)
+#define SIW_COOKIES	  (1 << 7)
+#define SIW_CSV		  (1 << 8)
 #define SIW_ALL		  (SIW_NEIGH|SIW_LINK|SIW_ROUTE|SIW_HNA|SIW_MID|SIW_TOPO)
 
 /* variables for statistics */
@@ -415,7 +417,7 @@ static void ipc_http_read_dummy(int fd, struct ipc_conn *conn)
 
 static void ipc_http_read(int fd, struct ipc_conn *conn)
 {
-    int send_what;
+    int send_what = 0;
     const char *p;
     ssize_t bytes_read = read(fd, conn->requ+conn->requlen, sizeof(conn->requ)-conn->requlen-1); /* leave space for a terminating '\0' */
     if (bytes_read < 0) {
@@ -428,6 +430,7 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
     }
     conn->requlen += bytes_read;
     conn->requ[conn->requlen] = '\0';
+    conn->csv = 0;
 
     /* look if we have the necessary info. We get here somethign like "GET /path HTTP/1.0" */
     p = strchr(conn->requ, '/');
@@ -440,16 +443,24 @@ static void ipc_http_read(int fd, struct ipc_conn *conn)
         /* we didn't get all. Wait for more data. */
         return;
     }
-    if (isprefix(p, "/neighbours")) send_what=SIW_LINK|SIW_NEIGH;
-    else if (isprefix(p, "/neigh")) send_what=SIW_NEIGH;
-    else if (isprefix(p, "/link")) send_what=SIW_LINK;
-    else if (isprefix(p, "/route")) send_what=SIW_ROUTE;
-    else if (isprefix(p, "/hna")) send_what=SIW_HNA;
-    else if (isprefix(p, "/mid")) send_what=SIW_MID;
-    else if (isprefix(p, "/topo")) send_what=SIW_TOPO;
-    else if (isprefix(p, "/stat")) send_what=SIW_STAT;
-    else if (isprefix(p, "/cookies")) send_what=SIW_COOKIES;
-    else send_what = SIW_ALL;
+    while (p != NULL) {
+		if (isprefix(p, "/neighbours")) send_what=send_what|SIW_LINK|SIW_NEIGH;
+		else if (isprefix(p, "/neigh")) send_what=send_what|SIW_NEIGH;
+		else if (isprefix(p, "/link")) send_what=send_what|SIW_LINK;
+		else if (isprefix(p, "/route")) send_what=send_what|SIW_ROUTE;
+		else if (isprefix(p, "/hna")) send_what=send_what|SIW_HNA;
+		else if (isprefix(p, "/mid")) send_what=send_what|SIW_MID;
+		else if (isprefix(p, "/topo")) send_what=send_what|SIW_TOPO;
+		else if (isprefix(p, "/stat")) send_what=send_what|SIW_STAT;
+		else if (isprefix(p, "/cookies")) send_what=send_what|SIW_COOKIES;
+		else if (isprefix(p, "/csv")) send_what=send_what|SIW_CSV;
+		p = strchr(++p, '/');
+    }
+    if (send_what == 0) {
+    	send_what = SIW_ALL;
+    } else if (send_what == SIW_CSV) {
+    	send_what = SIW_ALL|SIW_CSV;
+    }
 
     if (send_info(conn, send_what) < 0) {
         kill_connection(fd, conn);
@@ -504,8 +515,10 @@ static int ipc_print_neigh(struct ipc_conn *conn)
 {
     struct neighbor_entry *neigh;
 
-    if (abuf_appendf(&conn->resp, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+    	if (abuf_appendf(&conn->resp, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n") < 0) {
+    		return -1;
+    	}
     }
 
     /* Neighbors */
@@ -518,19 +531,35 @@ static int ipc_print_neigh(struct ipc_conn *conn)
              list_2 = list_2->next) {
             thop_cnt++;
         }
-        if (abuf_appendf(&conn->resp,
-                            "%s\t%s\t%s\t%s\t%d\t%d\n",
-                            olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-                            neigh->status == SYM ? "YES" : "NO",
-                            neigh->is_mpr ? "YES" : "NO",
-                            olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                            neigh->willingness,
-                            thop_cnt) < 0) {
-            return -1;
+        if (!conn->csv) {
+			if (abuf_appendf(&conn->resp,
+								"%s\t%s\t%s\t%s\t%d\t%d\n",
+								olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+								neigh->status == SYM ? "YES" : "NO",
+								neigh->is_mpr ? "YES" : "NO",
+								olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+								neigh->willingness,
+								thop_cnt) < 0) {
+				return -1;
+			}
+        } else {
+			if (abuf_appendf(&conn->resp,
+								"neigh,%s,%s,%s,%s,%d,%d\n",
+								olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+								neigh->status == SYM ? "YES" : "NO",
+								neigh->is_mpr ? "YES" : "NO",
+								olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+								neigh->willingness,
+								thop_cnt) < 0) {
+				return -1;
+			}
         }
     } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
@@ -539,26 +568,41 @@ static int ipc_print_link(struct ipc_conn *conn)
 {
     struct link_entry *lnk;
 
-    if (abuf_appendf(&conn->resp, "Table: Links\nLocal IP\tRemote IP\tLQ\tNLQ\tCost\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: Links\nLocal IP\tRemote IP\tLQ\tNLQ\tCost\n") < 0) {
+			return -1;
+		}
     }
 
     /* Link set */
     OLSR_FOR_ALL_LINK_ENTRIES(lnk) {
         struct ipaddr_str buf1, buf2;
         struct lqtextbuffer lqbuffer1, lqbuffer2;
-	if (abuf_appendf(&conn->resp,
-                            "%s\t%s\t%s\t%s\t\n",
-                            olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
-                            olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
-                            get_link_entry_text(lnk, '\t', &lqbuffer1),
-                            get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
-            return -1;
+        if (!conn->csv) {
+			if (abuf_appendf(&conn->resp,
+									"%s\t%s\t%s\t%s\t\n",
+									olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
+									olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
+									get_link_entry_text(lnk, '\t', &lqbuffer1),
+									get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
+					return -1;
+			}
+        } else {
+			if (abuf_appendf(&conn->resp,
+									"link,%s,%s,%s,%s\n",
+									olsr_ip_to_string(&buf1, &lnk->local_iface_addr),
+									olsr_ip_to_string(&buf2, &lnk->neighbor_iface_addr),
+									get_link_entry_text(lnk, ',', &lqbuffer1),
+									get_linkcost_text(lnk->linkcost, false, &lqbuffer2)) < 0) {
+					return -1;
+			}
         }
     } OLSR_FOR_ALL_LINK_ENTRIES_END(lnk);
 
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
@@ -567,8 +611,10 @@ static int ipc_print_routes(struct ipc_conn *conn)
 {
     struct rt_entry *rt;
 
-    if (abuf_appendf(&conn->resp, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n") < 0) {
+			return -1;
+		}
     }
 
     /* Walk the route table */
@@ -576,19 +622,33 @@ static int ipc_print_routes(struct ipc_conn *conn)
         struct ipaddr_str buf;
         struct ipprefix_str prefixstr;
         struct lqtextbuffer lqbuffer;
-        if (abuf_appendf(&conn->resp,
-                            "%s\t%s\t%u\t%s\t%s\t\n",
-                            olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
-                            olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
-                            rt->rt_best->rtp_metric.hops,
-                            get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
-                            rt->rt_best->rtp_nexthop.interface ? rt->rt_best->rtp_nexthop.interface->int_name : "[null]") < 0) {
-            return -1;
+        if (!conn->csv) {
+			if (abuf_appendf(&conn->resp,
+								"%s\t%s\t%u\t%s\t%s\t\n",
+								olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
+								olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
+								rt->rt_best->rtp_metric.hops,
+								get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
+								rt->rt_best->rtp_nexthop.interface ? rt->rt_best->rtp_nexthop.interface->int_name : "[null]") < 0) {
+				return -1;
+			}
+        } else {
+			if (abuf_appendf(&conn->resp,
+								"route,%s,%s,%u,%s,%s\n",
+								olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
+								olsr_ip_to_string(&buf, &rt->rt_best->rtp_nexthop.gateway),
+								rt->rt_best->rtp_metric.hops,
+								get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
+								rt->rt_best->rtp_nexthop.interface ? rt->rt_best->rtp_nexthop.interface->int_name : "[null]") < 0) {
+				return -1;
+			}
         }
     } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
@@ -597,8 +657,10 @@ static int ipc_print_topology(struct ipc_conn *conn)
 {
     struct tc_entry *tc;
 
-    if (abuf_appendf(&conn->resp, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n") < 0) {
+			return -1;
+		}
     }
 
     /* Topology */
@@ -608,34 +670,55 @@ static int ipc_print_topology(struct ipc_conn *conn)
             if (tc_edge->edge_inv)  {
                 struct ipaddr_str dstbuf, addrbuf;
                 struct lqtextbuffer lqbuffer1, lqbuffer2;
-                if (abuf_appendf(&conn->resp,
-                                    "%s\t%s\t%s\t%s\n",
-                                    olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-                                    olsr_ip_to_string(&addrbuf, &tc->addr),
-                                    get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
-                                    get_linkcost_text(tc_edge->cost, false, &lqbuffer2)) < 0) {
-                    return -1;
+                if (!conn->csv) {
+					if (abuf_appendf(&conn->resp,
+										"%s\t%s\t%s\t%s\n",
+										olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+										olsr_ip_to_string(&addrbuf, &tc->addr),
+										get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
+										get_linkcost_text(tc_edge->cost, false, &lqbuffer2)) < 0) {
+						return -1;
+					}
+                } else {
+					if (abuf_appendf(&conn->resp,
+										"topo,%s,%s,%s,%s\n",
+										olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+										olsr_ip_to_string(&addrbuf, &tc->addr),
+										get_tc_edge_entry_text(tc_edge, ',', &lqbuffer1),
+										get_linkcost_text(tc_edge->cost, false, &lqbuffer2)) < 0) {
+						return -1;
+					}
                 }
             }
         } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
 
 static int ipc_print_hna_entry(struct autobuf *autobuf,
                                const struct olsr_ip_prefix *hna_prefix,
-                               const union olsr_ip_addr *ipaddr)
+                               const union olsr_ip_addr *ipaddr,
+                               char csv)
 {
     struct ipaddr_str mainaddrbuf;
     struct ipprefix_str addrbuf;
-    return abuf_appendf(autobuf,
-                           "%s\t%s\n",
-                           olsr_ip_prefix_to_string(&addrbuf, hna_prefix),
-                           olsr_ip_to_string(&mainaddrbuf, ipaddr));
+    if (!csv) {
+		return abuf_appendf(autobuf,
+							   "%s\t%s\n",
+							   olsr_ip_prefix_to_string(&addrbuf, hna_prefix),
+							   olsr_ip_to_string(&mainaddrbuf, ipaddr));
+    } else {
+		return abuf_appendf(autobuf,
+							   "hna,%s,%s\n",
+							   olsr_ip_prefix_to_string(&addrbuf, hna_prefix),
+							   olsr_ip_to_string(&mainaddrbuf, ipaddr));
+    }
 }
 
 static int ipc_print_hna(struct ipc_conn *conn)
@@ -643,13 +726,15 @@ static int ipc_print_hna(struct ipc_conn *conn)
     const struct ip_prefix_entry *hna;
     struct tc_entry *tc;
 
-    if (abuf_appendf(&conn->resp, "Table: HNA\nDestination\tGateway\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: HNA\nDestination\tGateway\n") < 0) {
+			return -1;
+		}
     }
 
     /* Announced HNA entries */
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
-        if (ipc_print_hna_entry(&conn->resp, &hna->net, &olsr_cnf->router_id) < 0) {
+    	if (ipc_print_hna_entry(&conn->resp, &hna->net, &olsr_cnf->router_id, conn->csv) < 0) {
             return -1;
         }
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
@@ -659,14 +744,16 @@ static int ipc_print_hna(struct ipc_conn *conn)
         struct hna_net *tmp_net;
         /* Check all networks */
         OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
-            if (ipc_print_hna_entry(&conn->resp, &tmp_net->hna_prefix, &tc->addr) < 0) {
+            if (ipc_print_hna_entry(&conn->resp, &tmp_net->hna_prefix, &tc->addr, conn->csv) < 0) {
                 return -1;
             }
         } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_net);
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
@@ -675,8 +762,10 @@ static int ipc_print_mid(struct ipc_conn *conn)
 {
     struct tc_entry *tc;
 
-    if (abuf_appendf(&conn->resp, "Table: MID\nIP address\tAliases\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: MID\nIP address\tAliases\n") < 0) {
+			return -1;
+		}
     }
 
     /* MID root is the TC entry */
@@ -684,9 +773,19 @@ static int ipc_print_mid(struct ipc_conn *conn)
         struct ipaddr_str buf;
         struct mid_entry *alias;
         char sep = '\t';
-        if (abuf_puts(&conn->resp,  olsr_ip_to_string(&buf, &tc->addr)) < 0) {
-            return -1;
+        if (conn->csv) {
+        	sep = ',';
         }
+
+    	if (!conn->csv) {
+			if (abuf_puts(&conn->resp,  olsr_ip_to_string(&buf, &tc->addr)) < 0) {
+				return -1;
+			}
+    	} else {
+    		if (abuf_appendf(&conn->resp, "mid,%s", olsr_ip_to_string(&buf, &tc->addr)) < 0) {
+    		   	return -1;
+    	 	}
+    	}
 
         OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
             if (abuf_appendf(&conn->resp,
@@ -695,14 +794,20 @@ static int ipc_print_mid(struct ipc_conn *conn)
                                 olsr_ip_to_string(&buf, &alias->mid_alias_addr)) < 0) {
                 return -1;
             }
-            sep = ';';
-        }  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+            if (!conn->csv) {
+            	sep = ';';
+            } else {
+            	sep = ',';
+            }
+        } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
         if (abuf_appendf(&conn->resp, "\n") < 0) {
             return -1;
         }
     } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-    if (abuf_appendf(&conn->resp, "\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+    	if (abuf_appendf(&conn->resp, "\n") < 0) {
+    		return -1;
+    	}
     }
     return 0;
 }
@@ -714,8 +819,10 @@ static int ipc_print_stat(struct ipc_conn *conn)
     uint32_t msgs[6], traffic, i, j;
     clock_t slot = (now_times/100 + 59) % 60;
 
-    if (abuf_appendf(&conn->resp, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {
+			return -1;
+		}
     }
 
     for (j=0; j<6; j++) {
@@ -731,22 +838,50 @@ static int ipc_print_stat(struct ipc_conn *conn)
     }
 
     for (i=0; i<6; i++) {
-      if (abuf_appendf(&conn->resp, "%s\t%u\t%u\t%u\t%u\t%u\t%u\t\t%u\n", names[i],
-            recv_messages[(slot)%60][i],
-            recv_messages[(slot+59)%60][i],
-            recv_messages[(slot+58)%60][i],
-            recv_messages[(slot+57)%60][i],
-            recv_messages[(slot+56)%60][i],
-            msgs[i],
-            msgs[i]/60) < 0) {
-          return -1;
+      if (!conn->csv) {
+		  if (abuf_appendf(&conn->resp, "%s\t%u\t%u\t%u\t%u\t%u\t%u\t\t%u\n", names[i],
+				recv_messages[(slot)%60][i],
+				recv_messages[(slot+59)%60][i],
+				recv_messages[(slot+58)%60][i],
+				recv_messages[(slot+57)%60][i],
+				recv_messages[(slot+56)%60][i],
+				msgs[i],
+				msgs[i]/60) < 0) {
+			  return -1;
+		  }
+      } else {
+		  if (abuf_appendf(&conn->resp, "stat,%s,%u,%u,%u,%u,%u,%u,%u\n", names[i],
+				recv_messages[(slot)%60][i],
+				recv_messages[(slot+59)%60][i],
+				recv_messages[(slot+58)%60][i],
+				recv_messages[(slot+57)%60][i],
+				recv_messages[(slot+56)%60][i],
+				msgs[i],
+				msgs[i]/60) < 0) {
+			  return -1;
+		  }
       }
     }
-    if (abuf_appendf(&conn->resp, "\nTraffic: %8u bytes/s\t%u bytes/minute\taverage %u bytes/s\n",
-          recv_packets[(slot)%60],
-          traffic,
-          traffic/60) < 0) {
-        return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\nTraffic: %8u bytes/s\t%u bytes/minute\taverage %u bytes/s\n",
+			  recv_packets[(slot)%60],
+			  traffic,
+			  traffic/60) < 0) {
+			return -1;
+		}
+    } else {
+		if (abuf_appendf(&conn->resp, "stat,Traffic,%u,%u,%u\n",
+			  recv_packets[(slot)%60],
+			  traffic,
+			  traffic/60) < 0) {
+			return -1;
+		}
+    }
+
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
     }
     return 0;
 }
@@ -754,8 +889,10 @@ static int ipc_print_stat(struct ipc_conn *conn)
 static int ipc_print_cookies(struct ipc_conn *conn) {
   int i;
 
-  if (abuf_appendf(&conn->resp, "Memory cookies:\n") < 0) {
-    return -1;
+  if (!conn->csv) {
+	  if (abuf_appendf(&conn->resp, "Memory cookies:\n") < 0) {
+	    return -1;
+	  }
   }
 
   for (i=1; i<COOKIE_ID_MAX; i++) {
@@ -763,18 +900,26 @@ static int ipc_print_cookies(struct ipc_conn *conn) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_MEMORY) {
       continue;
     }
-    if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
-      return -1;
-    }
-
-    if (abuf_appendf(&conn->resp, "(MEMORY) size: %lu usage: %u freelist: %u\n",
-        (unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
-      return -1;
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
+		  return -1;
+		}
+		if (abuf_appendf(&conn->resp, "(MEMORY) size: %lu usage: %u freelist: %u\n",
+			(unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
+		  return -1;
+		}
+    } else {
+		if (abuf_appendf(&conn->resp, "mem_cookie,%s,%lu,%u,%u\n", c->ci_name == NULL ? "Unknown" : c->ci_name,
+			(unsigned long)c->ci_size, c->ci_usage, c->ci_free_list_usage) < 0) {
+		  return -1;
+		}
     }
   }
 
-  if (abuf_appendf(&conn->resp, "\nTimer cookies:\n") < 0) {
-    return -1;
+  if (!conn->csv) {
+	  if (abuf_appendf(&conn->resp, "\nTimer cookies:\n") < 0) {
+	    return -1;
+	  }
   }
 
   for (i=1; i<COOKIE_ID_MAX; i++) {
@@ -782,14 +927,26 @@ static int ipc_print_cookies(struct ipc_conn *conn) {
     if (c == NULL || c->ci_type != OLSR_COOKIE_TYPE_TIMER) {
       continue;
     }
-    if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
-      return -1;
+    if (!conn->csv) {
+    	if (abuf_appendf(&conn->resp, "%-25s ", c->ci_name == NULL ? "Unknown" : c->ci_name) < 0) {
+    		return -1;
+    	}
+    	if (abuf_appendf(&conn->resp, "(TIMER) usage: %u changes: %u\n",
+			c->ci_usage, c->ci_changes) < 0) {
+		  return -1;
+		}
+    } else {
+		if (abuf_appendf(&conn->resp, "tmr_cookie,%s,%u,%u\n", c->ci_name == NULL ? "Unknown" : c->ci_name,
+			c->ci_usage, c->ci_changes) < 0) {
+		  return -1;
+		}
     }
+  }
 
-    if (abuf_appendf(&conn->resp, "(TIMER) usage: %u changes: %u\n",
-        c->ci_usage, c->ci_changes) < 0) {
-      return -1;
-    }
+  if (!conn->csv) {
+		if (abuf_appendf(&conn->resp, "\n") < 0) {
+			return -1;
+		}
   }
   return 0;
 }
@@ -798,11 +955,18 @@ static int send_info(struct ipc_conn *conn, int send_what)
 {
     int rv;
 
-    /* Print minimal http header */
-    if (abuf_appendf(&conn->resp,
-                        "HTTP/1.0 200 OK\n"
-                        "Content-type: text/plain\n\n") < 0) {
-        return -1;
+     /* comma separated values output format */
+    if ((send_what & SIW_CSV) != 0) {
+    	conn->csv = 1;
+    }
+
+     /* Print minimal http header */
+    if (!conn->csv) {
+		if (abuf_appendf(&conn->resp,
+							"HTTP/1.0 200 OK\n"
+							"Content-type: text/plain\n\n") < 0) {
+			return -1;
+		}
     }
 
      /* Print tables to IPC socket */

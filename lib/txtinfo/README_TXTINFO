@@ -41,6 +41,12 @@ HTTP port) and allow access from the network
 10.0.0.0/8, but not from 10.0.1.123.
 access is always allowed from 127.0.0.1(localhost).
 
+For CSV-Mode just add /csv to your query and receive
+a comma separated output. You can also use more than
+one flag to query the plugin. The parameters can be
+in any order.
+e.g.: /csv/links/route
+
 ABOUT
 
 telnet 127.0.0.1 2006
