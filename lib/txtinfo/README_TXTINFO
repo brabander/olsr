@@ -45,7 +45,7 @@ For CSV-Mode just add /csv to your query and receive
 a comma separated output. You can also use more than
 one flag to query the plugin. The parameters can be
 in any order.
-e.g.: /csv/links/route
+e.g.: /csv/link/route
 
 ABOUT
 
