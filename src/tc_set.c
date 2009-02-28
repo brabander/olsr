@@ -43,6 +43,8 @@
 #include "olsr.h"
 #include "lq_packet.h"
 #include "net_olsr.h"
+#include "link_set.h"
+#include "neighbor_table.h"
 
 static bool delete_outdated_tc_edges(struct tc_entry *);
 
@@ -204,6 +206,8 @@ olsr_init_tc(void)
 void
 olsr_change_myself_tc(void)
 {
+  struct link_entry *entry;
+
   if (tc_myself) {
 
     /*
@@ -223,6 +227,22 @@ olsr_change_myself_tc(void)
    * The old entry for ourselves is gone, generate a new one and trigger SPF.
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
+
+  OLSR_FOR_ALL_LINK_ENTRIES(entry) {
+    /**
+     * check if a main ip change destroyed our TC entries
+     */
+    if (entry->link_tc_edge == NULL) {
+      struct neighbor_entry *ne = entry->neighbor;
+      entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->neighbor_main_addr, 0);
+
+      /*
+       * Mark the edge local such that it does not get deleted
+       * during cleanup functions.
+       */
+      entry->link_tc_edge->flags |= TC_EDGE_FLAG_LOCAL;
+    }
+  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
   changes_topology = true;
 }
 

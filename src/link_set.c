@@ -446,7 +446,6 @@ add_link_entry(const union olsr_ip_addr *local,
 
   link = lookup_link_entry(remote, remote_main, local_if);
   if (link) {
-
     /*
      * Link exists. Update tc_edge LQ and exit.
      */
