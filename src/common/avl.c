@@ -610,6 +610,9 @@ avl_delete(struct avl_tree *tree, struct avl_node *node)
   struct avl_node *left;
   struct avl_node *right;
 
+  /* sanity check */
+  assert(tree->count > 0);
+
   if (node->leader != 0) {
     next = node->next;
 
