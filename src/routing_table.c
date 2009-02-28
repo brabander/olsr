@@ -383,7 +383,7 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
   rtp->rtp_tree_node.key = &rtp->rtp_originator;
 
   /* insert to the route entry originator tree */
-  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
+  avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP);
 
   /* backlink to the owning route entry */
   rtp->rtp_rt = rt;
