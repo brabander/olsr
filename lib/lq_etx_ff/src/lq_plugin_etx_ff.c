@@ -150,6 +150,13 @@ static void lq_etxff_packet_parser(struct olsr *olsr, struct interface *in_if,
     return;
   }
 
+  if (lnk->last_seq_nr == olsr->olsr_seqno ) {
+#ifndef REMOVE_LOG_WARN
+    struct ipaddr_str buf;
+#endif
+    OLSR_WARN(LOG_LQ_PLUGINS, "Got package with same sequence number from %s\n", olsr_ip_to_string(&buf, from_addr));
+    return;
+  }
   if (lnk->last_seq_nr > olsr->olsr_seqno) {
     seq_diff = (uint32_t) olsr->olsr_seqno + 65536 - lnk->last_seq_nr;
   } else {
