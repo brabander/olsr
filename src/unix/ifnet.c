@@ -568,7 +568,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
     ifp->int6_multaddr.sin6_family   = AF_INET6;
     ifp->int6_multaddr.sin6_flowinfo = htonl(0);
     ifp->int6_multaddr.sin6_scope_id = if_nametoindex(ifr.ifr_name);
-    ifp->int6_multaddr.sin6_port     = htons(OLSRPORT);
+    ifp->int6_multaddr.sin6_port     = htons(olsr_cnf->olsr_port);
     ifp->int6_multaddr.sin6_addr = iface->cnf->ipv6_addrtype == OLSR_IP6T_SITELOCAL
         ? iface->cnf->ipv6_multi_site.v6
         : iface->cnf->ipv6_multi_glbl.v6;

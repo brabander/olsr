@@ -213,6 +213,7 @@ struct olsr_config {
   uint8_t lq_dlimit;                   /* Dijkstra Calculation limit */
   uint8_t willingness;                 /* Manual Configured Willingness value */
 
+  uint16_t olsr_port;                  /* port number used for OLSR packages */
   /*
    * Someone has added global variables to the config struct.
    * Because this saves binary link info we keep it that way.

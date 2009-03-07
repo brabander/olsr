@@ -122,7 +122,7 @@ int IsOlsrOrBmfPacket(unsigned char* ipPacket)
 
   assert(ipPacket != NULL);
 
-  /* OLSR packets are UDP - port 698
+  /* OLSR packets are UDP - port 698 (as default)
    * OLSR-BMF packets are UDP - port 50698
    * OLSR-Autodetect probe packets are UDP - port 51698 */
 
@@ -146,7 +146,7 @@ int IsOlsrOrBmfPacket(unsigned char* ipPacket)
   udpHeader = (struct udphdr*) (ipPacket + ipHeaderLen);
   destPort = ntohs(udpHeader->dest);
 
-  if (destPort == OLSRPORT || destPort == BMF_ENCAP_PORT || destPort == 51698)
+  if (destPort == olsr_cnf->olsr_port || destPort == BMF_ENCAP_PORT || destPort == 51698)
       /* TODO: #define for 51698 */
   {
     return 1;

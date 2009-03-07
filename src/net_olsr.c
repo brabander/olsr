@@ -336,7 +336,7 @@ net_output(struct interface *ifp)
     /* Copy sin */
     dstaddr.sin4 = ifp->int_broadaddr;
     if (dstaddr.sin4.sin_port == 0) {
-      dstaddr.sin4.sin_port = htons(OLSRPORT);
+      dstaddr.sin4.sin_port = htons(olsr_cnf->olsr_port);
     }
     dstaddr_size = sizeof(dstaddr.sin4);
   } else {

@@ -1030,6 +1030,15 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     }
     rcfg->fixed_origaddr = true;
     break;
+  case '1':                    /* port (i) */
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->olsr_port))))
+        rcfg->olsr_port = arg;
+      PARSER_DEBUG_PRINTF("OLSR port: %d\n", rcfg->olsr_port);
+    }
+    break;
   default:
     sprintf(rmsg, "Unknown arg in line %d.\n", line);
     return CFG_ERROR;
@@ -1129,6 +1138,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
     {"SourceIpMode",             required_argument, 0, 's'}, /* (yes/no) */
+    {"Port",                     required_argument, 0, '1'}, /* (i) */
 
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
@@ -1335,6 +1345,12 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     return -1;
   }
 
+  /* check OLSR port */
+  if (cfg->olsr_port == 0) {
+    fprintf(stderr, "0 is not a valid UDP port\n");
+    return -1;
+  }
+
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
     return -1;
@@ -1523,6 +1539,8 @@ olsr_get_default_cfg(void)
   cfg->lq_dinter = DEF_LQ_DIJK_INTER;
   cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   assert(cfg->willingness == 0);
+
+  cfg->olsr_port = 698;
 
   assert(cfg->system_tick_divider == 0);
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));

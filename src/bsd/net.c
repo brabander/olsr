@@ -630,8 +630,8 @@ olsr_sendto(int s,
     ip_id = (u_int16_t) (arc4random() & 0xffff);
   }
 
-  udp_tag = libnet_build_udp(698,	/* src port */
-			     698,	/* dest port */
+  udp_tag = libnet_build_udp(olsr_cnf->olsr_port,	/* src port */
+           olsr_cnf->olsr_port,	/* dest port */
 			     LIBNET_UDP_H + len,	/* length */
 			     0,	/* checksum */
 			     buf,	/* payload */

@@ -456,7 +456,7 @@ getsocket(int bufspace, char *int_name)
 
   memset(&sin4, 0, sizeof(sin4));
   sin4.sin_family = AF_INET;
-  sin4.sin_port = htons(OLSRPORT);
+  sin4.sin_port = htons(olsr_cnf->olsr_port);
   assert(sin4.sin_addr.s_addr == INADDR_ANY);
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
     perror("bind");
@@ -553,7 +553,7 @@ getsocket6(int bufspace, char *int_name)
 
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
-  sin6.sin6_port = htons(OLSRPORT);
+  sin6.sin6_port = htons(olsr_cnf->olsr_port);
   assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr))); /* == IN6ADDR_ANY_INIT */
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     perror("bind");
