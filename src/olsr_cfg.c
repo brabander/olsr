@@ -1039,6 +1039,10 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       PARSER_DEBUG_PRINTF("OLSR port: %d\n", rcfg->olsr_port);
     }
     break;
+  case '2':
+    rcfg->dlPath = strdup(argstr);
+    PARSER_DEBUG_PRINTF("Dynamic library path: %s\n", rcfg->dlPath);
+    break;
   default:
     sprintf(rmsg, "Unknown arg in line %d.\n", line);
     return CFG_ERROR;
@@ -1139,6 +1143,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
     {"SourceIpMode",             required_argument, 0, 's'}, /* (yes/no) */
     {"Port",                     required_argument, 0, '1'}, /* (i) */
+    {"dlPath",                   required_argument, 0, '2'}, /* (path) */
 
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
@@ -1423,6 +1428,11 @@ olsr_free_cfg(struct olsr_config *cfg)
     free(cfg->log_target_file);
   }
 
+  /* free dynamic library path */
+  if (cfg->dlPath) {
+    free(cfg->dlPath);
+  }
+
   /*
    * Free HNAs.
    */
@@ -1541,6 +1551,7 @@ olsr_get_default_cfg(void)
   assert(cfg->willingness == 0);
 
   cfg->olsr_port = 698;
+  assert(cfg->dlPath == NULL);
 
   assert(cfg->system_tick_divider == 0);
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));

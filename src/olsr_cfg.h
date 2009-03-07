@@ -214,6 +214,8 @@ struct olsr_config {
   uint8_t willingness;                 /* Manual Configured Willingness value */
 
   uint16_t olsr_port;                  /* port number used for OLSR packages */
+  char *dlPath;                        /* absolute path for dynamic libraries */
+
   /*
    * Someone has added global variables to the config struct.
    * Because this saves binary link info we keep it that way.

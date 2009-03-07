@@ -93,7 +93,16 @@ static int olsr_load_dl(char *libname, struct plugin_param *params)
 
     OLSR_PRINTF(0, "---------- LOADING LIBRARY %s ----------\n", libname);
 
-    plugin->dlhandle = dlopen(libname, RTLD_NOW);
+    if (olsr_cnf->dlPath) {
+      char *path = olsr_malloc(strlen(olsr_cnf->dlPath) + strlen(libname)+1, "Memory for absolute library path");
+      strcpy(path, olsr_cnf->dlPath);
+      strcat(path, libname);
+      plugin->dlhandle = dlopen(libname, RTLD_NOW);
+      free(path);
+    }
+    else {
+      plugin->dlhandle = dlopen(libname, RTLD_NOW);
+    }
     if(plugin->dlhandle == NULL) {
         const int save_errno = errno;
         OLSR_PRINTF(0, "DL loading failed: \"%s\"!\n", dlerror());
