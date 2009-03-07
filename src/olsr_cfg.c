@@ -1019,6 +1019,10 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
   case 'L':                    /* Log (string) */
     return parse_cfg_log(argstr, rcfg, rmsg);
     break;
+  case 's':                    /* SourceIpMode (string) */
+    rcfg->source_ip_mode = (0 == strcmp("yes", argstr)) ? 1 : 0;
+    PARSER_DEBUG_PRINTF("Source IP mode %s\n", rcfg->source_ip_mode ? "enabled" : "disabled");
+    break;
   case 'o':                    /* Originator Address (ip) */
     if (inet_pton(AF_INET, argstr, &rcfg->router_id) <= 0) {
       sprintf(rmsg, "Failed converting IP address %s for originator address\n", argstr);
@@ -1124,6 +1128,8 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"TosValue",                 required_argument, 0, 'Z'}, /* (i) */
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
+    {"SourceIpMode",             required_argument, 0, 's'}, /* (yes/no) */
+
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
     {"HystThrHigh",              required_argument, 0,  0 }, /* ignored */
@@ -1323,6 +1329,12 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
     return -1;
   }
 
+  /* Source ip mode need fixed router id */
+  if (0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)) && cfg->source_ip_mode) {
+    fprintf(stderr, "You cannot use source ip routing without setting a fixed router id\n");
+    return -1;
+  }
+
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
     return -1;
@@ -1514,6 +1526,7 @@ olsr_get_default_cfg(void)
 
   assert(cfg->system_tick_divider == 0);
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));
+  assert(0 == cfg->source_ip_mode);
   cfg->will_int = 10 * HELLO_INTERVAL;
   cfg->exit_value = EXIT_SUCCESS;
 

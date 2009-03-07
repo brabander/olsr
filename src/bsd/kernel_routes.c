@@ -398,6 +398,14 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
   return AF_INET == ip_version ? add_del_route(rt, 0) : add_del_route6(rt, 0);
 }
 
+int olsr_create_lo_interface(union olsr_ip_addr *ip  __attribute__((unused))) {
+  return 0;
+}
+
+int olsr_delete_lo_interface(union olsr_ip_addr *ip   __attribute__((unused))) {
+  return 0;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2

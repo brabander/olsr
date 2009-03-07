@@ -63,6 +63,7 @@
 #include "common/string.h"
 #include "mid_set.h"
 #include "duplicate_set.h"
+#include "kernel_routes.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -107,7 +108,7 @@ main(int argc, char *argv[])
   char conf_file_name[FILENAME_MAX];
   char parse_msg[FILENAME_MAX + 256];
   int exitcode = 0;
-#ifndef REMOVE_LOG_INFO
+#if !defined(REMOVE_LOG_INFO) || !defined(REMOVE_LOG_ERROR)
   struct ipaddr_str buf;
 #endif
 #ifdef WIN32
@@ -288,6 +289,12 @@ main(int argc, char *argv[])
     }
   }
 
+  /* Initializing lo:olsr if necessary */
+  if (olsr_cnf->source_ip_mode) {
+    if (olsr_create_lo_interface(&olsr_cnf->router_id) <= 0) {
+      OLSR_ERROR(LOG_NETWORKING, "Cannot create lo:olsr interface for ip '%s'\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    }
+  }
   /* Initializing networkinterfaces */
   if (!ifinit()) {
     if (olsr_cnf->allow_no_interfaces) {
@@ -501,6 +508,11 @@ olsr_shutdown(void)
   /* Remove active interfaces */
   for (iface = olsr_cnf->if_configs; iface != NULL; iface = iface->next) {
     remove_interface(&iface->interf);
+  }
+
+  /* delete lo:olsr if neccesarry */
+  if (olsr_cnf->source_ip_mode) {
+    olsr_delete_lo_interface(&olsr_cnf->router_id);
   }
 
   /* Reset network settings */
