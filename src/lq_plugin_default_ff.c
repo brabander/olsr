@@ -98,6 +98,11 @@ default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_a
 
   lq = (struct default_lq_ff_hello *)lnk->linkquality;
 
+  /* ignore double package */
+  if (lq->last_seq_nr == olsr->olsr_seqno) {
+    return;
+  }
+
   if (lq->last_seq_nr > olsr->olsr_seqno) {
     seq_diff = (uint32_t) olsr->olsr_seqno + 65536 - lq->last_seq_nr;
   } else {
