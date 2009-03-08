@@ -48,6 +48,7 @@
 #include "ifnet.h"
 #include "log.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_protocol.h"
 #include "common/string.h"
 
 #include <unistd.h>
@@ -1550,7 +1551,7 @@ olsr_get_default_cfg(void)
   cfg->lq_dlimit = DEF_LQ_DIJK_LIMIT;
   assert(cfg->willingness == 0);
 
-  cfg->olsr_port = 698;
+  cfg->olsr_port = OLSRPORT;
   assert(cfg->dlPath == NULL);
 
   assert(cfg->system_tick_divider == 0);

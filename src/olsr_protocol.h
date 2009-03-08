@@ -51,6 +51,9 @@
 
 #include <string.h>
 
+
+#define OLSRPORT	698
+
 /* Default IPv6 multicast addresses */
 
 #define OLSR_IPV6_MCAST_SITE_LOCAL "ff05::15"
