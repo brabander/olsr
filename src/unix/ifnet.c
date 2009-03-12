@@ -260,12 +260,14 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
+      /* deactivated to prevent change of originator IP */
+#if 0
       /* Check main addr */
       if (memcmp(&olsr_cnf->main_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize) == 0) {
         /* Update main addr */
         memcpy(&olsr_cnf->main_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       }
-
+#endif
       /* Update address */
       memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
@@ -298,13 +300,14 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
-
+      /* deactivated to prevent change of originator IP */
+#if 0
       if (memcmp(&olsr_cnf->main_addr, &ifp->ip_addr, olsr_cnf->ipsize) == 0) {
         OLSR_PRINTF(1, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
         olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
         memcpy(&olsr_cnf->main_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize);
       }
-
+#endif
       memcpy(&ifp->ip_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize);
 
       if_changes = 1;
@@ -387,6 +390,8 @@ remove_interface:
   net_remove_buffer(ifp);
 
   /* Check main addr */
+  /* deactivated to prevent change of originator IP */
+#if 0
   if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
     if (ifnet == NULL) {
       /* No more interfaces */
@@ -399,7 +404,7 @@ remove_interface:
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
   }
-
+#endif
   /*
    * Deregister functions for periodic message generation
    */

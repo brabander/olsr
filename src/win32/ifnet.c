@@ -506,6 +506,8 @@ RemoveInterface(struct olsr_if *IntConf)
     Prev->int_next = Int->int_next;
   }
 
+  /* deactivated to prevent change of originator IP */
+#if 0
   if (ipequal(&olsr_cnf->main_addr, &Int->ip_addr)) {
     if (ifnet == NULL) {
       memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
@@ -518,7 +520,7 @@ RemoveInterface(struct olsr_if *IntConf)
       OLSR_PRINTF(1, "New main address: %s.\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
   }
-
+#endif
   /*
    * Deregister functions for periodic message generation
    */
@@ -763,12 +765,14 @@ chk_if_changed(struct olsr_if *IntConf)
     AddrIn->sin_port = 0;
     AddrIn->sin_addr = NewVal.v4;
 
+    /* deactivated to prevent change of originator IP */
+#if 0
     if (olsr_cnf->main_addr.v4.s_addr == OldVal.v4.s_addr) {
       OLSR_PRINTF(1, "\tMain address change.\n");
 
       olsr_cnf->main_addr.v4 = NewVal.v4;
     }
-
+#endif
     Res = 1;
   }
 
