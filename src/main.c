@@ -62,6 +62,7 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <fcntl.h>
+#include "kernel_routes.h"
 #endif
 
 #ifdef WIN32
@@ -213,6 +214,8 @@ main(int argc, char *argv[])
     printf("Using default config values(no configfile)\n");
     olsr_cnf = olsrd_get_default_cnf();
   }
+  //allowing only FLAT metric, as this olsrd does on the fly route generation on gateway routes!
+  olsr_cnf->fib_metric=FIBM_FLAT;
 
   default_ifcnf = get_default_if_config();
   if (default_ifcnf == NULL) {
@@ -331,6 +334,13 @@ main(int argc, char *argv[])
 
   /* Initialize net */
   init_net();
+
+#if LINUX_POLICY_ROUTING
+  /* Create rule for RtTable to resolve route insertion problems*/
+  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+  }
+#endif
 
   /* Initializing networkinterfaces */
   if (!ifinit()) {
@@ -497,6 +507,11 @@ olsr_shutdown(int signal __attribute__ ((unused)))
   close(olsr_cnf->ioctl_s);
 
 #if LINUX_POLICY_ROUTING
+  /* RtTable (linux only!!) */
+  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_DELRULE);
+  }
+
   close(olsr_cnf->rtnl_s);
 #endif
 

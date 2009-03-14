@@ -53,6 +53,9 @@ int olsr_ioctl_del_route(const struct rt_entry *);
 
 int olsr_ioctl_del_route6(const struct rt_entry *);
 
+int olsr_netlink_rule(uint8_t, uint8_t, uint16_t);
+
+
 #endif
 
 /*
