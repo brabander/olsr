@@ -49,6 +49,7 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "common/string.h"
+#include "olsr_logging.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -112,7 +113,7 @@ ifinit(void)
   hna_gen_timer_cookie =
     olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
 
-  OLSR_PRINTF(1, "\n ---- Interface configuration ---- \n\n");
+  OLSR_INFO(LOG_NETWORKING, "\n ---- Interface configuration ---- \n\n");
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
@@ -135,17 +136,13 @@ check_interface_updates(void *foo __attribute__((unused)))
 {
   struct olsr_if_config *tmp_if;
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Checking for updates in the interface set\n");
-#endif
+  OLSR_DEBUG(LOG_NETWORKING, "Checking for updates in the interface set\n");
 
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
 
     if (!tmp_if->cnf->autodetect_chg) {
-#ifdef DEBUG
       /* Don't check this interface */
-      OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name);
-#endif
+      OLSR_DEBUG(LOG_NETWORKING, "Not checking interface %s\n", tmp_if->name);
       continue;
     }
 
@@ -190,7 +187,7 @@ remove_interface(struct interface **pinterf)
     if (list_is_empty(&interface_head)) {
       /* No more interfaces */
       memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "Removed last interface. Cleared main address.\n");
+      OLSR_INFO(LOG_NETWORKING, "Removed last interface. Cleared main address.\n");
     } else {
 
       /* Grab the first interface in the list. */

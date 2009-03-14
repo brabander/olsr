@@ -54,15 +54,10 @@
 #include "net_olsr.h"
 #include "ipcalc.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 #include <unistd.h>
 #include <stdlib.h>
-
-#ifdef WIN32
-#define perror(x) WinSockPError(x)
-void
-WinSockPError(const char *);
-#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -141,13 +136,13 @@ ipc_init(void)
   /* get an internet domain socket */
   ipc_sock = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_sock == -1) {
-    perror("IPC socket");
+    OLSR_ERROR(LOG_IPC, "Could not open IPC socket\n");
     olsr_exit(EXIT_FAILURE);
   }
 
   yes = 1;
   if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_WARN(LOG_IPC, "Could not allow socket to reuse port\n");
     return 0;
   }
 
@@ -159,19 +154,17 @@ ipc_init(void)
 
   /* bind the socket to the port number */
   if (bind(ipc_sock, (struct sockaddr *)&sin4, sizeof(sin4)) == -1) {
-    perror("IPC bind");
-    OLSR_PRINTF(1, "Will retry in 10 seconds...\n");
+    OLSR_WARN(LOG_IPC, "Could not bind IPC socket, will retry in 10 seconds...\n");
     sleep(10);
     if (bind(ipc_sock, (struct sockaddr *)&sin4, sizeof(sin4)) == -1) {
-      perror("IPC bind");
+      OLSR_ERROR(LOG_IPC, "Second attempt to bind IPC socket failed\n");
       olsr_exit(EXIT_FAILURE);
     }
-    OLSR_PRINTF(1, "OK\n");
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_sock, olsr_cnf->ipc_connections) == -1) {
-    perror("IPC listen");
+    OLSR_ERROR(LOG_IPC, "Could not listen to IPC socket\n");
     olsr_exit(EXIT_FAILURE);
   }
 
@@ -201,15 +194,14 @@ ipc_accept(int fd, void *data __attribute__((unused)), unsigned int flags __attr
 
   ipc_conn = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (ipc_conn == -1) {
-    perror("IPC accept");
+    OLSR_ERROR(LOG_IPC, "Could not accept incoming connection to IPC socket\n");
     olsr_exit(EXIT_FAILURE);
   } else {
-    OLSR_PRINTF(1, "Front end connected\n");
     addr = inet_ntoa(pin.sin_addr);
     if (ipc_check_allowed_ip((union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
       ipc_send_net_info(ipc_conn);
       ipc_send_all_routes(ipc_conn);
-      OLSR_PRINTF(1, "Connection from %s\n",addr);
+      OLSR_INFO(LOG_IPC, "Front end connected from %s\n", addr);
     } else {
       OLSR_WARN(LOG_IPC, "Front end-connection from foregin host(%s) not allowed!\n", addr);
       CLOSESOCKET(ipc_conn);
@@ -256,7 +248,7 @@ frontend_msgparser(union olsr_message *msg,
   if (ipc_conn >= 0) {
     const size_t len = olsr_cnf->ip_version == AF_INET ? ntohs(msg->v4.olsr_msgsize) : ntohs(msg->v6.olsr_msgsize);
     if (send(ipc_conn, (void *)msg, len, MSG_NOSIGNAL) < 0) {
-      OLSR_PRINTF(1, "(OUTPUT)IPC connection lost!\n");
+      OLSR_WARN(LOG_IPC, "(OUTPUT)IPC connection lost!\n");
       CLOSESOCKET(ipc_conn);
     }
   }
@@ -324,7 +316,7 @@ ipc_route_send_rtentry(const union olsr_ip_addr *dst,
   */
 
   if (send(ipc_conn, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) { // MSG_NOSIGNAL to avoid sigpipe
-    OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
+    OLSR_WARN(LOG_IPC, "(RT_ENTRY)IPC connection lost!\n");
     CLOSESOCKET(ipc_conn);
     return -1;
   }
@@ -361,7 +353,7 @@ ipc_send_all_routes(int fd)
 
     /* MSG_NOSIGNAL to avoid sigpipe */
     if (send(fd, (void *)&packet, IPC_PACK_SIZE, MSG_NOSIGNAL) < 0) {
-      OLSR_PRINTF(1, "(RT_ENTRY)IPC connection lost!\n");
+      OLSR_WARN(LOG_IPC, "(RT_ENTRY)IPC connection lost!\n");
       CLOSESOCKET(ipc_conn);
       return -1;
     }
@@ -384,7 +376,7 @@ ipc_send_net_info(int fd)
   //int x, i;
   struct ipc_net_msg net_msg;
 
-  OLSR_PRINTF(1, "Sending net-info to front end...\n");
+  OLSR_DEBUG(LOG_IPC, "Sending net-info to front end...\n");
 
   memset(&net_msg, 0, sizeof(net_msg));
 
@@ -432,7 +424,7 @@ ipc_send_net_info(int fd)
   */
 
   if (send(fd, (void *)&net_msg, sizeof(net_msg), MSG_NOSIGNAL) < 0) {
-    OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n");
+    OLSR_WARN(LOG_IPC, "(NETINFO)IPC connection lost!\n");
     CLOSESOCKET(ipc_conn);
     return -1;
   }
@@ -444,7 +436,7 @@ ipc_send_net_info(int fd)
 void
 shutdown_ipc(void)
 {
-  OLSR_PRINTF(1, "Shutting down IPC...\n");
+  OLSR_INFO(LOG_IPC, "Shutting down IPC...\n");
   CLOSESOCKET(ipc_conn);
 }
 

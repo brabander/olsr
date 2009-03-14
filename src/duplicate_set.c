@@ -226,23 +226,22 @@ olsr_message_is_duplicate(union olsr_message *m)
 void
 olsr_print_duplicate_table(void)
 {
-#ifndef REMOVE_LOG_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct dup_entry *entry;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  OLSR_INFO(LOG_DUPLICATE_SET,
-	      "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n"
-	      "%-*s %8s %s\n",
-              olsr_wallclock_string(),
-              ipwidth, "Node IP", "DupArray", "VTime");
+  OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n",
+    olsr_wallclock_string());
+  OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n",
+    ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
-		ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key),
-		entry->array,
-                olsr_clock_string(entry->valid_until));
+		  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key),
+		  entry->array,
+      olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 #endif
 }

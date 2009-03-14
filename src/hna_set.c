@@ -47,6 +47,7 @@
 #include "net_olsr.h"
 #include "tc_set.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 /* Some cookies for stats keeping */
 static struct olsr_cookie_info *hna_net_timer_cookie = NULL;
@@ -58,7 +59,7 @@ static struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 void
 olsr_init_hna_set(void)
 {
-  OLSR_PRINTF(5, "HNA: init\n");
+  OLSR_DEBUG(LOG_HNA, "HNA: init\n");
 
   hna_net_timer_cookie =
     olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
@@ -149,14 +150,14 @@ static void
 olsr_expire_hna_net_entry(void *context)
 {
   struct hna_net *hna_net = context;
-#ifdef DEBUG
+#if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
+#endif
 
-  OLSR_PRINTF(5, "HNA: timeout %s via hna-gw %s\n",
+  OLSR_DEBUG(5, "HNA: timeout %s via hna-gw %s\n",
               olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix),
               olsr_ip_to_string(&buf, &hna_net->hna_tc->addr));
-#endif
 
   hna_net->hna_net_timer = NULL; /* be pedandic */
 
@@ -216,22 +217,22 @@ void
 olsr_print_hna_set(void)
 {
   /* The whole function doesn't do anything else. */
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   struct tc_entry *tc;
+  struct ipaddr_str buf;
+  struct ipprefix_str prefixstr;
+  struct hna_net *hna_net;
 
-  OLSR_PRINTF(1,
+  OLSR_INFO(LOG_HNA,
 	      "\n--- %s ------------------------------------------------- HNA\n\n",
 	      olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
-    struct ipaddr_str buf;
-    struct hna_net *hna_net;
-    OLSR_PRINTF(1, "HNA-gw %s: ", olsr_ip_to_string(&buf, &tc->addr));
+    OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));
+
     OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) {
-      struct ipprefix_str prefixstr;
-      OLSR_PRINTF(1, "%-27s", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
+      OLSR_INFO_NH(LOG_HNA, "\t%-27s\n", olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix));
     } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net);
-    OLSR_PRINTF(1, "\n");
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
 }
@@ -247,9 +248,10 @@ olsr_input_hna(union olsr_message *msg,
 {
   struct olsrmsg_hdr msg_hdr;
   struct olsr_ip_prefix prefix;
-  struct ipaddr_str buf;
   const uint8_t *curr, *curr_end;
-  int hnasize;
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
 
   if (!(curr = olsr_parse_msg_hdr(msg, &msg_hdr))) {
     return false;
@@ -260,35 +262,18 @@ olsr_input_hna(union olsr_message *msg,
     return false;
   }
 
-  hnasize = msg_hdr.size - (olsr_cnf->ip_version == AF_INET ?
-                            offsetof(struct olsrmsg, message) :
-                            offsetof(struct olsrmsg6, message));
-  if (hnasize < 0) {
-    OLSR_PRINTF(0, "HNA message size %d too small (at least %lu)!\n",
-                msg_hdr.size,
-                (unsigned long)(olsr_cnf->ip_version == AF_INET ?
-                                offsetof(struct olsrmsg, message) :
-                                offsetof(struct olsrmsg6, message)));
-    return false;
-  }
-
-  if ((hnasize % (2 * olsr_cnf->ipsize)) != 0) {
-    OLSR_PRINTF(0, "HNA message size %d illegal!\n", msg_hdr.size);
-    return false;
-  }
-
   /*
    * If the sender interface (NB: not originator) of this message
    * is not in the symmetric 1-hop neighborhood of this node, the
    * message MUST be discarded.
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    OLSR_PRINTF(2, "Received HNA from NON SYM neighbor %s\n",
+    OLSR_DEBUG(LOG_HNA, "Received HNA from NON SYM neighbor %s\n",
                 olsr_ip_to_string(&buf, from_addr));
     return false;
   }
 
-  OLSR_PRINTF(1, "Processing HNA from %s, seq 0x%04x\n",
+  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n",
 	      olsr_ip_to_string(&buf, &msg_hdr.originator), msg_hdr.seqno);
 
   /*

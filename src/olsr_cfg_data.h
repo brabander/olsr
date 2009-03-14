@@ -63,6 +63,7 @@ enum log_source {
   LOG_MPRS,               //!< LOG_MPRS
   LOG_2NEIGH,             //!< LOG_2NEIGH
   LOG_TC,                 //!< LOG_TC
+  LOG_HNA,                //!< LOG_HNA
   LOG_DUPLICATE_SET,      //!< LOG_DUPLICATE_SET
 
   /* this one must be the last of the enums ! */

@@ -48,8 +48,6 @@
 
 #include <stdlib.h>
 
-#define BMSG_DBGLVL 5
-
 #define OLSR_IPV4_HDRSIZE          12
 #define OLSR_IPV6_HDRSIZE          24
 
@@ -98,9 +96,7 @@ serialize_hna6(struct interface *);
 bool
 queue_mid(struct interface *ifp)
 {
-#ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building MID on %s\n-------------------\n", ifp->int_name);
-#endif
+  OLSR_INFO(LOG_PACKET_CREATION, "Building MID on %s\n-------------------\n", ifp->int_name);
 
   switch(olsr_cnf->ip_version)
     {
@@ -123,9 +119,7 @@ queue_mid(struct interface *ifp)
 bool
 queue_hna(struct interface *ifp)
 {
-#ifdef DEBUG
-  OLSR_PRINTF(BMSG_DBGLVL, "Building HNA on %s\n-------------------\n", ifp->int_name);
-#endif
+  OLSR_INFO(LOG_PACKET_CREATION, "Building HNA on %s\n-------------------\n", ifp->int_name);
 
   switch(olsr_cnf->ip_version)
     {
@@ -168,7 +162,9 @@ serialize_mid4(struct interface *ifp)
   union olsr_message *m;
   struct midaddr *addrs;
   struct interface *ifs;
-
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
   if ((olsr_cnf->ip_version != AF_INET) || (!ifp) ||
       list_is_empty(&interface_head)) {
     return false;
@@ -202,18 +198,12 @@ serialize_mid4(struct interface *ifp)
   OLSR_FOR_ALL_INTERFACES(ifs) {
       if(!olsr_ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
 	{
-#ifdef DEBUG
-          struct ipaddr_str buf;
-#endif
-
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {
 	      /* Only add MID message if it contains data */
 	      if(curr_size > OLSR_MID_IPV4_HDRSIZE)
 		{
-#ifdef DEBUG
-		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif
+		  OLSR_DEBUG(LOG_PACKET_CREATION, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 		  /* set size */
 		  m->v4.olsr_msgsize = htons(curr_size);
 		  m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
@@ -226,11 +216,9 @@ serialize_mid4(struct interface *ifp)
 	      remainsize = net_outbuffer_bytes_left(ifp);
 	      check_buffspace(curr_size, remainsize, "MID2");
 	    }
-#ifdef DEBUG
-	  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n",
+	  OLSR_DEBUG(LOG_PACKET_CREATION, "\t%s(%s)\n",
 		      olsr_ip_to_string(&buf, &ifs->ip_addr),
 		      ifs->int_name);
-#endif
 
           addrs->addr = ifs->ip_addr.v4.s_addr;
 	  addrs++;
@@ -242,10 +230,8 @@ serialize_mid4(struct interface *ifp)
   m->v4.seqno = htons(get_msg_seqno());/* seqnumber */
   m->v4.olsr_msgsize = htons(curr_size);
 
-  //printf("Sending MID (%d bytes)...\n", outputsize);
   if(curr_size > OLSR_MID_IPV4_HDRSIZE)
     net_outbuffer_push(ifp, msg_buffer, curr_size);
-
 
   return true;
 }
@@ -268,9 +254,9 @@ serialize_mid6(struct interface *ifp)
   union olsr_message *m;
   struct midaddr6 *addrs6;
   struct interface *ifs;
-
-  //printf("\t\tGenerating mid on %s\n", ifn->int_name);
-
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
 
   if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) ||
       list_is_empty(&interface_head)) {
@@ -305,17 +291,12 @@ serialize_mid6(struct interface *ifp)
   OLSR_FOR_ALL_INTERFACES(ifs) {
       if(!olsr_ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
 	{
-#ifdef DEBUG
-          struct ipaddr_str buf;
-#endif
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {
 	      /* Only add MID message if it contains data */
 	      if(curr_size > OLSR_MID_IPV6_HDRSIZE)
 		{
-#ifdef DEBUG
-		  OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif
+		  OLSR_DEBUG(LOG_PACKET_CREATION, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 		  /* set size */
 		  m->v6.olsr_msgsize = htons(curr_size);
 		  m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
@@ -328,11 +309,9 @@ serialize_mid6(struct interface *ifp)
 	      remainsize = net_outbuffer_bytes_left(ifp);
 	      check_buffspace(curr_size + olsr_cnf->ipsize, remainsize, "MID2");
 	    }
-#ifdef DEBUG
-		  OLSR_PRINTF(BMSG_DBGLVL, "\t%s(%s)\n",
+		  OLSR_DEBUG(LOG_PACKET_CREATION, "\t%s(%s)\n",
 			      olsr_ip_to_string(&buf, &ifs->ip_addr),
 			      ifs->int_name);
-#endif
 
           addrs6->addr = ifs->ip_addr.v6;
 	  addrs6++;
@@ -343,7 +322,6 @@ serialize_mid6(struct interface *ifp)
   m->v6.olsr_msgsize = htons(curr_size);
   m->v6.seqno = htons(get_msg_seqno());/* seqnumber */
 
-  //printf("Sending MID (%d bytes)...\n", outputsize);
   if(curr_size > OLSR_MID_IPV6_HDRSIZE)
     net_outbuffer_push(ifp, msg_buffer, curr_size);
 
@@ -367,7 +345,9 @@ serialize_hna4(struct interface *ifp)
   union olsr_message *m;
   struct hnapair *pair;
   struct ip_prefix_entry *h;
-
+#if !defined REMOVE_DEBUG
+  struct ipprefix_str prefixstr;
+#endif
   /* No hna nets */
   if (ifp == NULL) {
     return false;
@@ -405,18 +385,13 @@ serialize_hna4(struct interface *ifp)
   pair = m->v4.message.hna.hna_net;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
-#ifdef DEBUG
-      struct ipprefix_str prefixstr;
-#endif
       union olsr_ip_addr ip_addr;
       if((curr_size + (2 * olsr_cnf->ipsize)) > remainsize)
 	{
 	  /* Only add HNA message if it contains data */
 	  if(curr_size > OLSR_HNA_IPV4_HDRSIZE)
 	    {
-#ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif
+	      OLSR_DEBUG(LOG_PACKET_CREATION, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 	      m->v4.seqno = htons(get_msg_seqno());
 	      m->v4.olsr_msgsize = htons(curr_size);
 	      net_outbuffer_push(ifp, msg_buffer, curr_size);
@@ -427,9 +402,7 @@ serialize_hna4(struct interface *ifp)
 	  remainsize = net_outbuffer_bytes_left(ifp);
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
-#ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
-#endif
+      OLSR_DEBUG(LOG_PACKET_CREATION, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
       pair->addr = h->net.prefix.v4.s_addr;
       olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
       pair->netmask = ip_addr.v4.s_addr;
@@ -442,7 +415,6 @@ serialize_hna4(struct interface *ifp)
 
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
-  //printf("Sending HNA (%d bytes)...\n", outputsize);
   return false;
 }
 
@@ -462,6 +434,9 @@ serialize_hna6(struct interface *ifp)
   struct hnapair6 *pair6;
   union olsr_ip_addr tmp_netmask;
   struct ip_prefix_entry *h;
+#if !defined REMOVE_DEBUG
+  struct ipprefix_str prefixstr;
+#endif
 
   /* No hna nets */
   if((olsr_cnf->ip_version != AF_INET6) || (!ifp) || list_is_empty(&olsr_cnf->hna_entries))
@@ -493,17 +468,12 @@ serialize_hna6(struct interface *ifp)
 
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, h) {
-#ifdef DEBUG
-      struct ipprefix_str prefixstr;
-#endif
       if((curr_size + (2 * olsr_cnf->ipsize)) > remainsize)
 	{
 	  /* Only add HNA message if it contains data */
 	  if(curr_size > OLSR_HNA_IPV6_HDRSIZE)
 	    {
-#ifdef DEBUG
-	      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif
+	      OLSR_DEBUG(LOG_PACKET_CREATION, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 	      m->v6.seqno = htons(get_msg_seqno());
 	      m->v6.olsr_msgsize = htons(curr_size);
 	      net_outbuffer_push(ifp, msg_buffer, curr_size);
@@ -514,9 +484,7 @@ serialize_hna6(struct interface *ifp)
 	  remainsize = net_outbuffer_bytes_left(ifp);
 	  check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
 	}
-#ifdef DEBUG
-      OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
-#endif
+      OLSR_DEBUG(LOG_PACKET_CREATION, "\tNet: %s\n", olsr_ip_prefix_to_string(&prefixstr, &h->net));
       pair6->addr = h->net.prefix.v6;
       olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
       pair6->netmask = tmp_netmask.v6;
@@ -528,11 +496,7 @@ serialize_hna6(struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());
 
   net_outbuffer_push(ifp, msg_buffer, curr_size);
-#if 0
-  printf("Sending HNA (%d bytes)...\n", outputsize);
-#endif
   return false;
-
 }
 
 /*
