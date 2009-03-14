@@ -40,8 +40,7 @@
 #include "mpr_selector_set.h"
 #include "link_set.h"
 #include "olsr.h"
-
-#define OLSR_MPR_SEL_JITTER 5 /* percent */
+#include "olsr_logging.h"
 
 uint16_t ansn = 0;
 
@@ -49,20 +48,6 @@ static struct olsr_cookie_info *mpr_sel_timer_cookie;
 
 /* MPR selector list */
 static struct list_node mprs_list_head;
-
-/* inline to recast from link_list back to link_entry */
-LISTNODE2STRUCT(list2mpr, struct mpr_selector, mprs_list);
-
-#define FOR_ALL_MPRS_ENTRIES(elem)	\
-{ \
-  struct list_node *elem_node, *next_elem_node; \
-  for (elem_node = mprs_list_head.next;			 \
-       elem_node != &mprs_list_head; /* circular list */ \
-       elem_node = next_elem_node) { \
-    next_elem_node = elem_node->next; \
-    elem = list2mpr(elem_node);
-
-#define FOR_ALL_MPRS_ENTRIES_END(elem) }}
 
 
 void
@@ -77,19 +62,6 @@ olsr_init_mprs(void)
     olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
 }
 
-#if 0
-/**
- * Check if we(this node) is selected as a MPR by any
- * neighbors. If the list is empty we are not MPR.
- */
-bool
-olsr_is_mpr(void)
-{
-    return mprs_list.next == &mprs_list ? false : true;
-}
-#endif
-
-
 /**
  * Wrapper for the timer callback.
  */
@@ -97,11 +69,12 @@ static void
 olsr_expire_mpr_sel_entry(void *context)
 {
   struct mpr_selector *mpr_sel = context;
-#ifdef DEBUG
+#if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
-  OLSR_PRINTF(1, "MPRS: Timing out %st\n",
-              olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
 #endif
+  OLSR_DEBUG(LOG_MPRS, "MPRS: Timing out %st\n",
+              olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
+
   mpr_sel->MS_timer = NULL;
 
   list_remove(&mpr_sel->mprs_list);
@@ -127,14 +100,11 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
   if (addr == NULL) {
     return NULL;
   }
-  //OLSR_PRINTF(1, "MPRS: Lookup....");
   FOR_ALL_MPRS_ENTRIES(mprs) {
     if (olsr_ipequal(&mprs->MS_main_addr, addr)) {
-      //OLSR_PRINTF(1, "MATCH\n");
       return mprs;
     }
   } FOR_ALL_MPRS_ENTRIES_END(mprs);
-  //OLSR_PRINTF(1, "NO MACH\n");
   return NULL;
 }
 
@@ -152,13 +122,15 @@ int
 olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
   int rv;
+#if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
+#endif
   struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
 
   if (mprs == NULL) {
     mprs = olsr_malloc(sizeof(*mprs), "Add MPR selector");
 
-    OLSR_PRINTF(1, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
+    OLSR_DEBUG(LOG_MPRS, "MPRS: adding %s\n", olsr_ip_to_string(&buf, addr));
 
     /* Fill struct */
     mprs->MS_main_addr = *addr;
@@ -169,7 +141,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
     signal_link_changes(true);
     rv = 1;
   } else {
-    OLSR_PRINTF(5, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
+    OLSR_DEBUG(LOG_MPRS, "MPRS: Update %s\n", olsr_ip_to_string(&buf, addr));
     rv = 0;
   }
   olsr_set_timer(&mprs->MS_timer,
@@ -183,22 +155,23 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 }
 
 
-#if 0
 /**
  *Print the current MPR selector set to STDOUT
  */
 void
 olsr_print_mprs_set(void)
 {
+#if !defined REMOVE_INFO
+  struct ipaddr_str buf;
   struct mpr_selector *mprs;
-  OLSR_PRINTF(1, "MPR SELECTORS: ");
+
+  OLSR_INFO(LOG_MPRS, "MPR SELECTORS:\n");
+
   FOR_ALL_MPRS_ENTRIES(mprs) {
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "%s ", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
+    OLSR_INFO_NH(LOG_MPRS, "\t%s\n", olsr_ip_to_string(&buf, &mprs->MS_main_addr));
   } FOR_ALL_MPRS_ENTRIES_END(mprs);
-  OLSR_PRINTF(1, "\n");
-}
 #endif
+}
 
 /*
  * Local Variables:

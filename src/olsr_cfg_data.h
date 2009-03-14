@@ -57,7 +57,12 @@ enum log_source {
   LOG_PLUGINS,            //!< LOG_PLUGINS
   LOG_LQ_PLUGINS,         //!< LOG_LQ_PLUGINS
   LOG_LL_PLUGINS,         //!< LOG_LL_PLUGINS
-
+  LOG_LINKS,              //!< LOG_LINKS
+  LOG_NEIGHTABLE,         //!< LOG_NEIGHTABLE
+  LOG_MPR,                //!< LOG_MPR
+  LOG_MPRS,               //!< LOG_MPRS
+  LOG_2NEIGH,             //!< LOG_2NEIGH
+  LOG_TC,                 //!< LOG_TC
   LOG_DUPLICATE_SET,      //!< LOG_DUPLICATE_SET
 
   /* this one must be the last of the enums ! */

@@ -55,6 +55,7 @@
 #include "ipcalc.h"
 #include "lq_plugin.h"
 #include "common/string.h"
+#include "olsr_logging.h"
 
 /* head node for all link sets */
 struct list_node link_entry_head;
@@ -62,7 +63,6 @@ struct list_node link_entry_head;
 static struct olsr_cookie_info *link_dead_timer_cookie = NULL;
 static struct olsr_cookie_info *link_loss_timer_cookie = NULL;
 static struct olsr_cookie_info *link_sym_timer_cookie = NULL;
-
 
 bool link_changes;		       /* is set if changes occur in MPRS set */
 
@@ -443,6 +443,9 @@ add_link_entry(const union olsr_ip_addr *local,
 {
   struct link_entry *link;
   struct neighbor_entry *neighbor;
+#if !defined  REMOVE_LOG_DEBUG
+  struct ipaddr_str localbuf, rembuf;
+#endif
 
   link = lookup_link_entry(remote, remote_main, local_if);
   if (link) {
@@ -459,14 +462,8 @@ add_link_entry(const union olsr_ip_addr *local,
    * L_neighbor_iface_addr == Source Address
    */
 
-#ifdef DEBUG
-  {
-    struct ipaddr_str localbuf, rembuf;
-    OLSR_PRINTF(1, "Adding %s=>%s to link set\n",
-		olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf,
-								       remote));
-  }
-#endif
+  OLSR_DEBUG(LOG_LINKS,  "Adding %s=>%s to link set\n",
+      olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf, remote));
 
   /* a new tuple is created with... */
   link = olsr_malloc_link_entry();
@@ -519,11 +516,8 @@ add_link_entry(const union olsr_ip_addr *local,
   /* Neighbor MUST exist! */
   neighbor = olsr_lookup_neighbor_table(remote_main);
   if (!neighbor) {
-#ifdef DEBUG
-    struct ipaddr_str buf;
-    OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n",
-		olsr_ip_to_string(&buf, remote_main));
-#endif
+    OLSR_DEBUG(LOG_LINKS, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n",
+		    olsr_ip_to_string(&rembuf, remote_main));
     neighbor = olsr_insert_neighbor_table(remote_main);
   }
 
@@ -599,9 +593,11 @@ lookup_link_entry(const union olsr_ip_addr *remote,
       if (NULL != remote_main && !olsr_ipequal(remote_main, &link->neighbor->neighbor_main_addr))
       {
         /* Neighbor has changed it's main_addr, update */
+#if !defined REMOVE_DEBUG
         struct ipaddr_str oldbuf, newbuf;
-        OLSR_PRINTF(1, "Neighbor changed main_ip, updating %s -> %s\n",
-          olsr_ip_to_string(&oldbuf, &link->neighbor->neighbor_main_addr), olsr_ip_to_string(&newbuf, remote_main));
+#endif
+        OLSR_DEBUG(LOG_LINKS, "Neighbor changed main_ip, updating %s -> %s\n",
+              olsr_ip_to_string(&oldbuf, &link->neighbor->neighbor_main_addr), olsr_ip_to_string(&newbuf, remote_main));
         link->neighbor->neighbor_main_addr = *remote_main;
       }
       return link;
@@ -743,25 +739,24 @@ check_link_status(const struct lq_hello_message *message,
 void
 olsr_print_link_set(void)
 {
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  OLSR_PRINTF(0,
-	      "\n--- %s ---------------------------------------------------- LINKS\n\n",
+  OLSR_INFO(LOG_LINKS, "\n--- %s ---------------------------------------------------- LINKS\n\n",
 	      olsr_wallclock_string());
-  OLSR_PRINTF(1, "%-*s  %-6s %-14s %s\n", addrsize, "IP address", "hyst",
+  OLSR_INFO_NH(LOG_LINKS, "%-*s  %-6s %-14s %s\n", addrsize, "IP address", "hyst",
 	      "      LQ      ", "ETX");
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
-
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
-    OLSR_PRINTF(1, "%-*s %-14s %s\n",
-		addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-		get_link_entry_text(walker, '/', &lqbuffer1),
-		get_linkcost_text(walker->linkcost, false, &lqbuffer2));
+
+    OLSR_INFO_NH(LOG_LINKS, "%-*s %-14s %s\n",
+		    addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
+		    get_link_entry_text(walker, '/', &lqbuffer1),
+		    get_linkcost_text(walker->linkcost, false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif
 }

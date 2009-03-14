@@ -59,6 +59,12 @@ const char *LOG_SOURCE_NAMES[] = {
   "plugins",
   "lq-plugins",
   "ll-plugins",
+  "links",
+  "neightable",
+  "mpr",
+  "mprset",
+  "2-neigh",
+  "tc",
   "duplicate-set"
 };
 

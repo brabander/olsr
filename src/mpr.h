@@ -42,13 +42,12 @@
 #ifndef _OLSR_MPR
 #define _OLSR_MPR
 
+#include "defs.h"
+
 void
 olsr_calculate_mpr(void);
 
-#if 0
-void
-olsr_print_mpr_set(void);
-#endif
+void olsr_print_mpr_set(void);
 
 #endif
 

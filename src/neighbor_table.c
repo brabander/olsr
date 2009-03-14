@@ -49,6 +49,7 @@
 #include "link_set.h"
 #include "mpr_selector_set.h"
 #include "net_olsr.h"
+#include "olsr_logging.h"
 
 #include <stdlib.h>
 
@@ -178,7 +179,10 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
   uint32_t                    hash;
   struct neighbor_entry         *entry;
 
-  //printf("inserting neighbor\n");
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
+  OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, neighbor_addr));
 
   hash = olsr_ip_hashing(neighbor_addr);
 
@@ -190,7 +194,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
   while(entry != &neighbortable[hash])
     {
       if(olsr_ipequal(&entry->neighbor_main_addr, neighbor_addr))
-	break;
+        break;
 
       entry = entry->next;
     }
@@ -237,6 +241,9 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
 {
   uint32_t             hash;
   struct neighbor_entry  *new_neigh;
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
 
   hash = olsr_ip_hashing(main_addr);
 
@@ -247,10 +254,10 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
       new_neigh = new_neigh->next)
     {
       if(olsr_ipequal(&new_neigh->neighbor_main_addr, main_addr))
-	return new_neigh;
+        return new_neigh;
     }
 
-  //printf("inserting neighbor\n");
+  OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, main_addr));
 
   new_neigh = olsr_malloc(sizeof(struct neighbor_entry), "New neighbor entry");
 
@@ -309,17 +316,13 @@ olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
   struct neighbor_entry  *entry;
   uint32_t             hash = olsr_ip_hashing(dst);
 
-  //printf("\nLookup %s\n", olsr_ip_to_string(&buf, dst));
   for(entry = neighbortable[hash].next;
       entry != &neighbortable[hash];
       entry = entry->next)
     {
-      //printf("Checking %s\n", olsr_ip_to_string(&buf, &entry->neighbor_main_addr));
       if(olsr_ipequal(&entry->neighbor_main_addr, dst))
-	return entry;
-
+        return entry;
     }
-  //printf("NOPE\n\n");
 
   return NULL;
 
@@ -404,11 +407,11 @@ olsr_expire_nbr2_list(void *context)
 void
 olsr_print_neighbor_table(void)
 {
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   /* The whole function doesn't do anything else. */
   const int ipwidth = olsr_cnf->ip_version == AF_INET ?  15 : 39;
   int idx;
-  OLSR_PRINTF(1, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
+  OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
               "%*s  LQ    SYM   MPR   MPRS  will\n",
 			  olsr_wallclock_string(),
               ipwidth, "IP address");
@@ -419,7 +422,7 @@ olsr_print_neighbor_table(void)
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
       if(lnk) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(1, "%-*s  %s  %s  %s  %d\n",
+        OLSR_INFO(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
                     ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
                     neigh->status == SYM ? "YES " : "NO  ",
                     neigh->is_mpr ? "YES " : "NO  ",

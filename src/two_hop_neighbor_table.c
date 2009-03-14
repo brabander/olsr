@@ -44,6 +44,7 @@
 #include "neighbor_table.h"
 #include "net_olsr.h"
 #include "scheduler.h"
+#include "olsr_logging.h"
 
 #include <stdlib.h>
 
@@ -137,11 +138,12 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 void
 olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 {
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
   uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
 
-#if 0
-    printf("Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
-#endif
+  OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
 
   /* Queue */
   QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
@@ -161,13 +163,11 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
   struct neighbor_2_entry  *neighbor_2;
   uint32_t               hash = olsr_ip_hashing(dest);
 
-  /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next) {
     struct tc_entry *tc;
 
-    /* printf("Checking %s\n", olsr_ip_to_string(&buf, dest)); */
     if (olsr_ipequal(&neighbor_2->neighbor_2_addr, dest)) {
       return neighbor_2;
     }
@@ -197,7 +197,6 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
   struct neighbor_2_entry  *neighbor_2;
   uint32_t               hash = olsr_ip_hashing(dest);
 
-  /* printf("LOOKING FOR %s\n", olsr_ip_to_string(&buf, dest)); */
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next) {
@@ -215,11 +214,11 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
 void
 olsr_print_two_hop_neighbor_table(void)
 {
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   /* The whole function makes no sense without it. */
   int i;
 
-  OLSR_PRINTF(1, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
+  OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
               "IP addr (2-hop)  IP addr (1-hop)  Total cost\n",
               olsr_wallclock_string());
 
@@ -236,16 +235,13 @@ olsr_print_two_hop_neighbor_table(void)
            entry = entry->next) {
         struct ipaddr_str buf;
         struct lqtextbuffer lqbuffer;
-        if (first) {
-          OLSR_PRINTF(1, "%-15s  ",
-                      olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr));
-          first = false;
-        } else {
-          OLSR_PRINTF(1, "                 ");
-        }
-        OLSR_PRINTF(1, "%-15s  %s\n",
-                    olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                    get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
+
+        OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
+                      first ? "": olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr),
+                      olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
+                      get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
+
+        first = false;
       }
     }
   }

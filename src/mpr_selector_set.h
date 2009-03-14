@@ -44,18 +44,30 @@
 #include "defs.h"
 #include "common/list.h"
 
+#define OLSR_MPR_SEL_JITTER 5 /* percent */
+
 struct mpr_selector {
   union olsr_ip_addr  MS_main_addr;
   struct timer_entry  *MS_timer;
   struct list_node mprs_list;
 };
 
-extern uint16_t ansn;
+/* inline to recast from link_list back to link_entry */
+LISTNODE2STRUCT(list2mpr, struct mpr_selector, mprs_list);
 
-#if 0
-bool
-olsr_is_mpr(void);
-#endif
+#define FOR_ALL_MPRS_ENTRIES(elem)  \
+{ \
+  struct list_node *elem_node, *next_elem_node; \
+  for (elem_node = mprs_list_head.next;      \
+       elem_node != &mprs_list_head; /* circular list */ \
+       elem_node = next_elem_node) { \
+    next_elem_node = elem_node->next; \
+    elem = list2mpr(elem_node);
+
+#define FOR_ALL_MPRS_ENTRIES_END(elem) }}
+
+
+extern uint16_t ansn;
 
 void olsr_init_mprs(void);
 
@@ -67,10 +79,8 @@ struct mpr_selector *EXPORT(olsr_lookup_mprs_set)(const union olsr_ip_addr *);
 
 int olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
-#if 0
 void
 olsr_print_mprs_set(void);
-#endif
 
 #endif
 

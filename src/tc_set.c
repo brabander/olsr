@@ -45,6 +45,7 @@
 #include "net_olsr.h"
 #include "link_set.h"
 #include "neighbor_table.h"
+#include "olsr_logging.h"
 
 static bool delete_outdated_tc_edges(struct tc_entry *);
 
@@ -127,7 +128,7 @@ olsr_seq_inrange_high(int beg, int end, uint16_t seq)
 static struct tc_entry *
 olsr_add_tc_entry(const union olsr_ip_addr *adr)
 {
-#ifdef DEBUG
+#if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc;
@@ -139,9 +140,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
     return NULL;
   }
 
-#ifdef DEBUG
-  OLSR_PRINTF(1, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
-#endif
+  OLSR_DEBUG(LOG_TC, "TC: add entry %s\n", olsr_ip_to_string(&buf, adr));
 
   tc = olsr_cookie_malloc(tc_mem_cookie);
   if (!tc) {
@@ -181,7 +180,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
 void
 olsr_init_tc(void)
 {
-  OLSR_PRINTF(5, "TC: init topo\n");
+  OLSR_DEBUG(LOG_TC, "TC: init topo\n");
 
   avl_init(&tc_tree, avl_comp_default);
 
@@ -257,10 +256,11 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
   struct rt_path *rtp;
-#if 0
+#if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
-  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 #endif
+  OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+
 
   /*
    * Delete the rt_path for ourselves.
@@ -300,10 +300,6 @@ olsr_lookup_tc_entry(const union olsr_ip_addr *adr)
 {
   struct avl_node *node;
 
-#if 0
-  OLSR_PRINTF(1, "TC: lookup entry\n");
-#endif
-
   node = avl_find(&tc_tree, adr);
   return node ? vertex_tree2tc(node) : NULL;
 }
@@ -319,7 +315,6 @@ olsr_locate_tc_entry(const union olsr_ip_addr *adr)
   return tc == NULL ? olsr_add_tc_entry(adr) : tc;
 }
 
-#if defined(DEBUG) && !defined(NODEBUG)
 /**
  * Format tc_edge contents into a buffer.
  */
@@ -338,7 +333,6 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 	   get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
   return buf;
 }
-#endif /* !NODEBUG */
 
 /**
  * Wrapper for the timer callback.
@@ -399,6 +393,9 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 {
   struct tc_entry *tc_neighbor;
   struct tc_edge_entry *tc_edge = olsr_malloc_tc_edge_entry();
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
   if (!tc_edge) {
     return NULL;
   }
@@ -429,18 +426,13 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
   tc_neighbor = olsr_lookup_tc_entry(&tc_edge->T_dest_addr);
   if (tc_neighbor) {
     struct tc_edge_entry *tc_edge_inv;
-#ifdef DEBUG
-    struct ipaddr_str buf;
-    OLSR_PRINTF(1, "TC:   found neighbor tc_entry %s\n",
-		olsr_ip_to_string(&buf, &tc_neighbor->addr));
-#endif
+    OLSR_DEBUG(LOG_TC, "TC:   found neighbor tc_entry %s\n",
+		  olsr_ip_to_string(&buf, &tc_neighbor->addr));
 
     tc_edge_inv = olsr_lookup_tc_edge(tc_neighbor, &tc->addr);
     if (tc_edge_inv) {
-#ifdef DEBUG
-      OLSR_PRINTF(1, "TC:   found inverse edge for %s\n",
-		  olsr_ip_to_string(&buf, &tc_edge_inv->T_dest_addr));
-#endif
+      OLSR_DEBUG(LOG_TC, "TC:   found inverse edge for %s\n",
+		    olsr_ip_to_string(&buf, &tc_edge_inv->T_dest_addr));
 
       /*
        * Connect the edges mutually.
@@ -455,9 +447,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
    */
   olsr_calc_tc_edge_entry_etx(tc_edge);
 
-#ifdef DEBUG
-  OLSR_PRINTF(1, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
-#endif
+  OLSR_DEBUG(LOG_TC, "TC: add edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 
   return tc_edge;
 }
@@ -475,9 +465,7 @@ olsr_delete_tc_edge_entry(struct tc_edge_entry *tc_edge)
   struct link_entry *link;
   struct tc_edge_entry *tc_edge_inv;
 
-#ifdef DEBUG
-  OLSR_PRINTF(1, "TC: del edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
-#endif
+  OLSR_DEBUG(LOG_TC, "TC: del edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
 
   tc = tc_edge->tc;
   avl_delete(&tc->edge_tree, &tc_edge->edge_node);
@@ -518,9 +506,7 @@ delete_outdated_tc_edges(struct tc_entry *tc)
   struct tc_edge_entry *tc_edge;
   bool retval = false;
 
-#if 0
-  OLSR_PRINTF(5, "TC: deleting outdated TC-edge entries\n");
-#endif
+  OLSR_DEBUG(LOG_TC, "TC: deleting outdated TC-edge entries\n");
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
     if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn) &&
@@ -550,12 +536,9 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn,
 {
   struct tc_edge_entry *tc_edge;
   int retval = 0;
-
-#if 0
-  OLSR_PRINTF(5, "TC: deleting MPRS\n");
-#endif
-
   bool passedLowerBorder = false;
+
+  OLSR_DEBUG(LOG_TC, "TC: deleting revoked TCs\n");
 
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
     if (!passedLowerBorder) {
@@ -640,12 +623,10 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn,
 	edge_change = 1;
       }
     }
-#if DEBUG
     if (edge_change) {
-      OLSR_PRINTF(1, "TC:   chg edge entry %s\n",
-		  olsr_tc_edge_to_string(tc_edge));
+      OLSR_DEBUG(LOG_TC, "TC:   chg edge entry %s\n",
+		    olsr_tc_edge_to_string(tc_edge));
     }
-#endif
   }
   return edge_change;
 }
@@ -662,10 +643,6 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 {
   struct avl_node *edge_node;
 
-#if 0
-  OLSR_PRINTF(1, "TC: lookup dst\n");
-#endif
-
   edge_node = avl_find(&tc->edge_tree, edge_addr);
 
   return edge_node ? edge_tree2tc_edge(edge_node) : NULL;
@@ -677,14 +654,15 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 void
 olsr_print_tc_table(void)
 {
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   /* The whole function makes no sense without it. */
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
-  OLSR_PRINTF(1,
-	      "\n--- %s ------------------------------------------------- TOPOLOGY\n\n"
-	      "%-*s %-*s %-14s  %s\n", olsr_wallclock_string(), ipwidth,
+  OLSR_INFO(LOG_TC,
+	      "\n--- %s ------------------------------------------------- TOPOLOGY\n\n",
+	      olsr_wallclock_string());
+	OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-14s  %s\n", ipwidth,
 	      "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ",
 	      "ETX");
 
@@ -694,12 +672,12 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-      OLSR_PRINTF(1, "%-*s %-*s %-14s %s\n",
-		  ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
-		  ipwidth, olsr_ip_to_string(&dstaddrbuf,
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-14s %s\n",
+		    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
+		    ipwidth, olsr_ip_to_string(&dstaddrbuf,
 					     &tc_edge->T_dest_addr),
-		  get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
-		  get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
+		    get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
+		    get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -772,7 +750,6 @@ olsr_input_tc(union olsr_message *msg,
 	      struct interface *input_if __attribute__ ((unused)),
 	      union olsr_ip_addr *from_addr)
 {
-  struct ipaddr_str buf;
   uint16_t size, msg_seq, ansn;
   uint8_t type, ttl, msg_hops, lower_border, upper_border;
   olsr_reltime vtime;
@@ -780,7 +757,9 @@ olsr_input_tc(union olsr_message *msg,
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
   bool relevantTc;
-
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
   union olsr_ip_addr lower_border_ip, upper_border_ip;
   int borderSet = 0;
 
@@ -825,8 +804,8 @@ olsr_input_tc(union olsr_message *msg,
 	return false;
       }
 
-      OLSR_PRINTF(1, "Ignored to much LQTC's for %s, restarting\n",
-		  olsr_ip_to_string(&buf, &originator));
+      OLSR_DEBUG(LOG_TC, "Ignored to much LQTC's for %s, restarting\n",
+		    olsr_ip_to_string(&buf, &originator));
 
     } else
       if (!olsr_seq_inrange_high
@@ -849,8 +828,8 @@ olsr_input_tc(union olsr_message *msg,
 	return false;
       }
 
-      OLSR_PRINTF(2, "Detected node restart for %s\n",
-		  olsr_ip_to_string(&buf, &originator));
+      OLSR_DEBUG(LOG_TC, "Detected node restart for %s\n",
+		    olsr_ip_to_string(&buf, &originator));
     }
   }
 
@@ -876,12 +855,12 @@ olsr_input_tc(union olsr_message *msg,
    * message MUST be discarded.
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n",
-		olsr_ip_to_string(&buf, from_addr));
+    OLSR_DEBUG(LOG_TC, "Received TC from NON SYM neighbor %s\n",
+		  olsr_ip_to_string(&buf, from_addr));
     return false;
   }
 
-  OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n",
+  OLSR_DEBUG(LOG_TC, "Processing TC from %s, seq 0x%04x\n",
 	      olsr_ip_to_string(&buf, &originator), tc->msg_seq);
 
   /*
