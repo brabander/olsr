@@ -78,10 +78,13 @@ prefix_to_netmask(uint8_t *a, int len, uint8_t prefixlen)
 uint8_t
 netmask_to_prefix(const uint8_t *adr, int len)
 {
-  struct ipaddr_str buf;
   const uint8_t * const a_end = adr+len;
   uint16_t prefix = 0;
   const uint8_t *a;
+#if 0
+  struct ipaddr_str buf;
+#endif
+
   for (a = adr; a < a_end && *a == 0xff; a++) {
     prefix += 8;
   }
@@ -98,7 +101,8 @@ netmask_to_prefix(const uint8_t *adr, int len)
     case 254: prefix += 7; break;
     case 255: prefix += 8; break; /* Shouldn't happen */
     default:
-      OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, ip_to_string(len == 4 ? AF_INET : AF_INET6, &buf, (const union olsr_ip_addr *)adr));
+      // removed because of cfg-checker
+      // OLSR_WARN(LOG_??, "Got bogus netmask %s\n", ip_to_string(len == 4 ? AF_INET : AF_INET6, &buf, (const union olsr_ip_addr *)adr));
       prefix = UCHAR_MAX;
       break;
     }
