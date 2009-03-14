@@ -100,7 +100,6 @@ netmask_to_prefix(const uint8_t *adr, int len)
     default:
       OLSR_PRINTF(0, "%s: Got bogus netmask %s\n", __func__, ip_to_string(len == 4 ? AF_INET : AF_INET6, &buf, (const union olsr_ip_addr *)adr));
       prefix = UCHAR_MAX;
-      *(int *)0 = 0;
       break;
     }
   }
