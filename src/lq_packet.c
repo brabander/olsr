@@ -54,6 +54,7 @@
 #include "build_msg.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "olsr_logging.h"
 
 #include <stdlib.h>
 
@@ -65,6 +66,9 @@ static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 {
   struct link_entry *walker;
+#if !defined REMOVE_WARN
+  struct ipaddr_str buf;
+#endif
 
   // initialize the static fields
 
@@ -113,7 +117,8 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
       neigh->neigh_type = NOT_NEIGH;
 
     else {
-      OLSR_PRINTF(0, "Error: neigh_type undefined");
+      OLSR_WARN(LOG_PACKET_CREATION, "Error: neigh_type %d in link %s undefined\n",
+        walker->neighbor->status, olsr_ip_to_string(&buf, &walker->neighbor->neighbor_main_addr));
       neigh->neigh_type = NOT_NEIGH;
     }
 
@@ -173,7 +178,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     lq_tc->comm.ttl = (0 <= outif->ttl_index ? ttl_list[outif->ttl_index] : MAX_TTL);
     outif->ttl_index++;
 
-    OLSR_PRINTF(3, "Creating LQ TC with TTL %d.\n", lq_tc->comm.ttl);
+    OLSR_DEBUG(LOG_PACKET_CREATION, "Creating LQ TC with TTL %d.\n", lq_tc->comm.ttl);
   }
 
   else

@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -326,9 +325,9 @@ main(int argc, char *argv[])
   /* daemon mode */
 #ifndef WIN32
   if (olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
-    printf("%s detaching from the current process...\n", olsrd_version);
+    OLSR_INFO(LOG_MAIN, "%s detaching from the current process...\n", olsrd_version);
     if (daemon(0, 0) < 0) {
-      printf("daemon(3) failed: %s\n", strerror(errno));
+      OLSR_ERROR(LOG_MAIN, "daemon(3) failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
   }
@@ -402,7 +401,7 @@ main(int argc, char *argv[])
         close(i);
       }
       sleep(1);
-      printf("Restarting %s\n", argv[0]);
+      OLSR_INFO(LOG_MAIN, "Restarting %s\n", argv[0]);
       execv(argv[0], argv);
       /* if we reach this, the exev() failed */
       OLSR_ERROR(LOG_MAIN, "execv() failed: %s", strerror(errno));
@@ -417,7 +416,7 @@ main(int argc, char *argv[])
       break;
     default:
       /* parent process */
-      printf("RECONFIGURING!\n");
+      OLSR_INFO(LOG_MAIN, "Reconfiguring OLSR\n");
       break;
     }
     /* fall through */

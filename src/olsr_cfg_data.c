@@ -66,6 +66,7 @@ const char *LOG_SOURCE_NAMES[] = {
   "2-neigh",
   "tc",
   "hna",
+  "mid",
   "duplicate-set"
 };
 
