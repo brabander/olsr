@@ -67,7 +67,8 @@ const char *LOG_SOURCE_NAMES[] = {
   "tc",
   "hna",
   "mid",
-  "duplicate-set"
+  "duplicate-set",
+  "cookie",
 };
 
 const char *LOG_SEVERITY_NAMES[] = {

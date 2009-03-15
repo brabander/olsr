@@ -274,7 +274,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-#if 0
+#if !defined REMOVE_DEBUG
   bool reuse = false;
 #endif
   size_t size;
@@ -342,7 +342,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     }
 
     ci->ci_free_list_usage--;
-#if 0
+#if !defined REMOVE_DEBUG
     reuse = true;
 #endif
   }
@@ -360,10 +360,8 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   /* Stats keeping */
   olsr_cookie_usage_incr(ci->ci_id);
 
-#if 0
-  OLSR_PRINTF(1, "MEMORY: alloc %s, %p, %u bytes%s\n",
-	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
-#endif
+  OLSR_DEBUG(LOG_COOKIE, "MEMORY: alloc %s, %p, %lu bytes%s\n",
+	      ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
 
   VALGRIND_MEMPOOL_ALLOC(ci, ptr, ci->ci_size);
   return ptr;
@@ -377,7 +375,7 @@ void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct list_node *free_list_node;
-#if 0
+#if !defined REMOVE_DEBUG
   bool reuse = false;
 #endif
   struct olsr_cookie_mem_brand *branding = (struct olsr_cookie_mem_brand *)
@@ -423,7 +421,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     }
 
     ci->ci_free_list_usage++;
-#if 0
+#if !defined REMOVE_DEBUG
     reuse = true;
 #endif
 
@@ -438,10 +436,8 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   /* Stats keeping */
   olsr_cookie_usage_decr(ci->ci_id);
 
-#if 0
-  OLSR_PRINTF(1, "MEMORY: free %s, %p, %u bytes%s\n",
-	      ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
-#endif
+  OLSR_DEBUG(LOG_COOKIE, "MEMORY: free %s, %p, %lu bytes%s\n",
+	      ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
 
   VALGRIND_MEMPOOL_FREE(ci, ptr);
   VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);

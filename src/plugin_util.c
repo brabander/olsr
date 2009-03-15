@@ -48,6 +48,7 @@
 #include "olsr.h"
 #include "defs.h"
 #include "common/string.h"
+#include "olsr_logging.h"
 
 #include <arpa/inet.h>
 
@@ -56,19 +57,19 @@ int set_plugin_port(const char *value, void *data, set_plugin_parameter_addon ad
     char *endptr;
     const unsigned int port = strtoul(value, &endptr, 0);
     if (*endptr != '\0' || endptr == value) {
-        OLSR_PRINTF(0, "Illegal port number \"%s\"", value);
+        OLSR_WARN(LOG_PLUGINS, "Illegal port number \"%s\"", value);
         return 1;
     }
     if (port > 65535) {
-        OLSR_PRINTF(0, "Port number %u out of range", port);
-        return 1;
+      OLSR_WARN(LOG_PLUGINS, "Port number %u out of range", port);
+      return 1;
     }
     if (data != NULL) {
-        int *v = data;
-        *v = port;
-        OLSR_PRINTF(1, "%s port number %u\n", "Got", port);
+      int *v = data;
+      *v = port;
+      OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Got", port);
     } else {
-        OLSR_PRINTF(0, "%s port number %u\n", "Ignored", port);
+      OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Ignored", port);
     }
     return 0;
 }
@@ -78,16 +79,16 @@ int set_plugin_ipaddress(const char *value, void *data, set_plugin_parameter_add
     char buf[INET6_ADDRSTRLEN];
     union olsr_ip_addr ip_addr;
     if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
-        OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
+        OLSR_WARN(LOG_PLUGINS, "Illegal IP address \"%s\"", value);
         return 1;
     }
     inet_ntop(olsr_cnf->ip_version, &ip_addr, buf, sizeof(buf));
     if (data != NULL) {
         union olsr_ip_addr *v = data;
         *v = ip_addr;
-        OLSR_PRINTF(1, "%s IP address %s\n", "Got", buf);
+        OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Got", buf);
     } else {
-        OLSR_PRINTF(0, "%s IP address %s\n", "Ignored", buf);
+        OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Ignored", buf);
     }
     return 0;
 }
@@ -111,15 +112,15 @@ int set_plugin_int(const char *value, void *data, set_plugin_parameter_addon add
     char *endptr;
     const int theint = strtol(value, &endptr, 0);
     if (*endptr != '\0' || endptr == value) {
-        OLSR_PRINTF(0, "Illegal int \"%s\"", value);
+        OLSR_WARN(LOG_PLUGINS, "Illegal int \"%s\"", value);
         return 1;
     }
     if (data != NULL) {
         int *v = data;
         *v = theint;
-        OLSR_PRINTF(1, "%s int %d\n", "Got", theint);
+        OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Got", theint);
     } else {
-        OLSR_PRINTF(0, "%s int %d\n", "Ignored", theint);
+        OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Ignored", theint);
     }
     return 0;
 }
@@ -129,13 +130,13 @@ int set_plugin_string(const char *value, void *data, set_plugin_parameter_addon 
     if (data != NULL) {
         char *v = data;
         if ((unsigned)strlen(value) >= addon.ui) {
-            OLSR_PRINTF(0, "String too long \"%s\"", value);
+            OLSR_WARN(LOG_PLUGINS, "String too long \"%s\"", value);
             return 1;
         }
         strscpy(v, value, addon.ui);
-        OLSR_PRINTF(1, "%s string %s\n", "Got", value);
+        OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Got", value);
     } else {
-        OLSR_PRINTF(0, "%s string %s\n", "Ignored", value);
+        OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Ignored", value);
     }
     return 0;
 }
@@ -179,7 +180,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
     c++;
 
   if (ipv4 == ipv6) {
-    OLSR_PRINTF(0, "Error, illegal ip net '%s'\n", value);
+    OLSR_WARN(LOG_PLUGINS, "Error, illegal ip net '%s'\n", value);
     return -1;
   }
 
@@ -189,7 +190,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
   }
 
   if (inet_pton(olsr_cnf->ip_version, arg, addr) < 0) {
-    OLSR_PRINTF(0, "Error, illegal ip net '%s'\n", value);
+    OLSR_WARN(LOG_PLUGINS, "Error, illegal ip net '%s'\n", value);
     return -1;
   }
 
@@ -199,7 +200,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
     memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
     memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
   } else if (ipv6 && olsr_cnf->ip_version == AF_INET) {
-    OLSR_PRINTF(0, "Ignore Ipv6 address '%s' in ipv4 mode\n", value);
+    OLSR_WARN(LOG_PLUGINS, "Ignore Ipv6 address '%s' in ipv4 mode\n", value);
     return -1;
   }
 
@@ -207,7 +208,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
     /* handle numeric netmask */
     prefix = (int)strtoul(slash, NULL, 10);
     if (prefix < 0 || prefix > (olsr_cnf->ip_version == AF_INET ? 32 : 128)) {
-      OLSR_PRINTF(0, "Error, illegal prefix length in '%s'\n", value);
+      OLSR_WARN(LOG_PLUGINS, "Error, illegal prefix length in '%s'\n", value);
       return -1;
     }
   } else if (ipv4 && *c) {

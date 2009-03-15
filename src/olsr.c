@@ -62,6 +62,7 @@
 #include "common/avl.h"
 #include "net_olsr.h"
 #include "lq_plugin.h"
+#include "olsr_logging.h"
 
 #include <stdarg.h>
 #include <errno.h>
@@ -116,7 +117,7 @@ register_pcf(int (*f)(int, int, int))
 {
   struct pcf *new_pcf;
 
-  OLSR_PRINTF(1, "Registering pcf function\n");
+  OLSR_DEBUG(LOG_MAIN, "Registering pcf function\n");
 
   new_pcf = olsr_malloc(sizeof(struct pcf), "New PCF");
 
@@ -139,14 +140,12 @@ olsr_process_changes(void)
 {
   struct pcf *tmp_pc_list;
 
-#ifdef DEBUG
   if(changes_neighborhood)
-    OLSR_PRINTF(3, "CHANGES IN NEIGHBORHOOD\n");
+    OLSR_DEBUG(LOG_MAIN, "CHANGES IN NEIGHBORHOOD\n");
   if(changes_topology)
-    OLSR_PRINTF(3, "CHANGES IN TOPOLOGY\n");
+    OLSR_DEBUG(LOG_MAIN, "CHANGES IN TOPOLOGY\n");
   if(changes_hna)
-    OLSR_PRINTF(3, "CHANGES IN HNA\n");
-#endif
+    OLSR_DEBUG(LOG_MAIN, "CHANGES IN HNA\n");
 
   if(!changes_force &&
      0 >= olsr_cnf->lq_dlimit)
@@ -172,29 +171,13 @@ olsr_process_changes(void)
     olsr_calculate_routing_table();
   }
 
-  if (olsr_cnf->debug_level > 0)
-    {
-      if (olsr_cnf->debug_level > 2)
-        {
-          olsr_print_mid_set();
-
-          if (olsr_cnf->debug_level > 3)
-            {
-             if (olsr_cnf->debug_level > 8)
-               {
-                 olsr_print_duplicate_table();
-               }
-              olsr_print_hna_set();
-            }
-        }
-
-#if 1
-      olsr_print_link_set();
-      olsr_print_neighbor_table();
-      olsr_print_two_hop_neighbor_table();
-      olsr_print_tc_table();
-#endif
-    }
+  olsr_print_link_set();
+  olsr_print_neighbor_table();
+  olsr_print_two_hop_neighbor_table();
+  olsr_print_tc_table();
+  olsr_print_mid_set();
+  olsr_print_duplicate_table();
+  olsr_print_hna_set();
 
   for(tmp_pc_list = pcf_list;
       tmp_pc_list != NULL;
@@ -267,11 +250,6 @@ olsr_init_tables(void)
   /* Initialize MPRS */
   olsr_init_mprs();
 
-#if 0
-  /* Initialize Layer 1/2 database */
-  olsr_initialize_layer12();
-#endif
-
   /* Start periodic SPF and RIB recalculation */
   if (olsr_cnf->lq_dinter > 0.0) {
     periodic_spf_timer_cookie = olsr_alloc_cookie("Periodic SPF",
@@ -326,14 +304,10 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if,
     return 0;
 
   /* Check MPR */
-  if(olsr_lookup_mprs_set(src) == NULL)
-    {
-#ifdef DEBUG
-      struct ipaddr_str buf;
-      OLSR_PRINTF(5, "Forward - sender %s not MPR selector\n", olsr_ip_to_string(&buf, src));
-#endif
-      return 0;
-    }
+  if(olsr_lookup_mprs_set(src) == NULL) {
+    /* don't forward packages if not a MPR */
+    return 0;
+  }
 
   /* check if we already forwarded this message */
   if (olsr_message_is_duplicate(m)) {
@@ -359,38 +333,33 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if,
 
   /* looping trough interfaces */
   OLSR_FOR_ALL_INTERFACES(ifn) {
-      if(net_output_pending(ifn))
-	{
-    /* dont forward to incoming interface if interface is mode ether */
-    if (in_if->mode == IF_MODE_ETHER && ifn == in_if)
-      continue;
+    if(net_output_pending(ifn)) {
+      /* dont forward to incoming interface if interface is mode ether */
+      if (in_if->mode == IF_MODE_ETHER && ifn == in_if)
+        continue;
 
-	  /*
-	   * Check if message is to big to be piggybacked
-	   */
-	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-	    {
+	    /*
+	     * Check if message is to big to be piggybacked
+	     */
+	    if(net_outbuffer_push(ifn, m, msgsize) != msgsize) {
 	      /* Send */
 	      net_output(ifn);
 	      /* Buffer message */
 	      set_buffer_timer(ifn);
 
-	      if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-		{
-      OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
-		}
+	      if(net_outbuffer_push(ifn, m, msgsize) != msgsize) {
+          OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
+        }
 	    }
-	}
-      else
-	{
-	  /* No forwarding pending */
-	  set_buffer_timer(ifn);
+    }
+    else {
+	    /* No forwarding pending */
+	    set_buffer_timer(ifn);
 
-	  if(net_outbuffer_push(ifn, m, msgsize) != msgsize)
-	    {
+	    if(net_outbuffer_push(ifn, m, msgsize) != msgsize) {
 	      OLSR_WARN(LOG_NETWORKING, "Received message to big to be forwarded in %s(%d bytes)!", ifn->int_name, msgsize);
 	    }
-	}
+	  }
   } OLSR_FOR_ALL_INTERFACES_END(ifn);
 
   return 1;
@@ -413,16 +382,14 @@ olsr_expire_buffer_timer(void *context)
    */
   ifn->buffer_hold_timer = NULL;
 
-#ifdef DEBUG
-  OLSR_PRINTF(1, "Buffer Holdtimer for %s timed out\n", ifn->int_name);
-#endif
-
   /*
    * Do we have something to emit ?
    */
   if (!net_output_pending(ifn)) {
     return;
   }
+
+  OLSR_DEBUG(LOG_NETWORKING, "Buffer Holdtimer for %s timed out, sending data.\n", ifn->int_name);
 
   net_output(ifn);
 }
@@ -481,10 +448,9 @@ olsr_update_willingness(void *foo __attribute__((unused)))
   /* Re-calculate willingness */
   olsr_cnf->willingness = olsr_calculate_willingness();
 
-  if(tmp_will != olsr_cnf->willingness)
-    {
-      OLSR_PRINTF(1, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
-    }
+  if(tmp_will != olsr_cnf->willingness) {
+    OLSR_INFO(LOG_MAIN, "Local willingness updated: old %d new %d\n", tmp_will, olsr_cnf->willingness);
+  }
 }
 
 
@@ -639,16 +605,9 @@ olsr_malloc(size_t size, const char *id __attribute__((unused)))
   ptr = calloc(1, size);
 
   if (!ptr) {
-      OLSR_ERROR(LOG_MAIN, "Out of memory for id '%s': %s\n", id, strerror(errno));
-      olsr_exit(EXIT_FAILURE);
+    OLSR_ERROR(LOG_MAIN, "Out of memory for id '%s': %s\n", id, strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
-
-#if 0
-  /* useful for debugging */
-  OLSR_PRINTF(1, "MEMORY: alloc %s %p, %u bytes\n",
-              id, ptr, size);
-#endif
-
   return ptr;
 }
 

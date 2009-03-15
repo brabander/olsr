@@ -47,6 +47,7 @@
 #include "mid_set.h"
 #include "olsr.h"
 #include "parser.h"
+#include "olsr_logging.h"
 
 static bool olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
 
@@ -80,7 +81,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
   for (message_neighbors = message->neigh;
        message_neighbors != NULL;
        message_neighbors = message_neighbors->next) {
-#ifdef DEBUG
+#if !defined REMOVE_DEBUG
     struct ipaddr_str buf;
 #endif
     union olsr_ip_addr *neigh_addr;
@@ -104,9 +105,6 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
         message_neighbors->neigh_type == MPR_NEIGH) {
       struct neighbor_2_list_entry *two_hop_neighbor_yet =
         olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
-#ifdef DEBUG
-      OLSR_PRINTF(7, "\tProcessing %s\n", olsr_ip_to_string(&buf, &message_neighbors->addr));
-#endif
       if (two_hop_neighbor_yet != NULL) {
         struct neighbor_list_entry *walker;
 
@@ -140,11 +138,9 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
       } else {
 	struct neighbor_2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->addr);
         if (two_hop_neighbor == NULL) {
-#ifdef DEBUG
-          OLSR_PRINTF(5,
+          OLSR_DEBUG(LOG_LINKS,
                       "Adding 2 hop neighbor %s\n\n",
                       olsr_ip_to_string(&buf, &message_neighbors->addr));
-#endif
           two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
           two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
           two_hop_neighbor->neighbor_2_nblist.prev = &two_hop_neighbor->neighbor_2_nblist;
@@ -226,8 +222,6 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
               if (olsr_cnf->lq_dlimit > 0) {
                 changes_neighborhood = true;
                 changes_topology = true;
-              } else {
-                OLSR_PRINTF(3, "Skipping Dijkstra (3)\n");
               }
             }
           }
@@ -415,7 +409,7 @@ hello_tap(struct lq_hello_message *message,
   /* Check willingness */
   if (lnk->neighbor->willingness != message->will) {
     struct ipaddr_str buf;
-    OLSR_PRINTF(1, "Willingness for %s changed from %d to %d - UPDATING\n",
+    OLSR_DEBUG(LOG_LINKS, "Willingness for %s changed from %d to %d - UPDATING\n",
                 olsr_ip_to_string(&buf, &lnk->neighbor->neighbor_main_addr),
                 lnk->neighbor->willingness,
                 message->will);

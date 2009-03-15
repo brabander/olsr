@@ -263,8 +263,6 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
     packetparser->function(olsr, in_if, from_addr);
   }
 
-  //printf("Message from %s\n\n", olsr_ip_to_string(&buf, from_addr));
-
   /* Display packet */
   if (olsr_cnf->disp_packets_in) {
     print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
@@ -439,7 +437,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
 
   int cc = recv(fd, from_addr.v6.s6_addr, olsr_cnf->ipsize, 0);
   if (cc != (int)olsr_cnf->ipsize) {
-    fprintf(stderr, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
+    OLSR_WARN(LOG_NETWORKING, "Error receiving host-client IP hook(%d) %s!\n", cc, strerror(errno));
     memcpy(&from_addr, &((struct olsr *)inbuf)->olsr_msg->originator, olsr_cnf->ipsize);
   }
 
@@ -470,7 +468,7 @@ void olsr_input_hostemu(int fd, void *data __attribute__((unused)), unsigned int
   }
 
   if (cc != pcklen) {
-    printf("Could not read whole packet(size %d, read %d)\n", pcklen, cc);
+    OLSR_WARN(LOG_NETWORKING, "Could not read whole packet(size %d, read %d)\n", pcklen, cc);
     return;
   }
 
