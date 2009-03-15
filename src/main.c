@@ -214,8 +214,6 @@ main(int argc, char *argv[])
     printf("Using default config values(no configfile)\n");
     olsr_cnf = olsrd_get_default_cnf();
   }
-  //allowing only FLAT metric, as this olsrd does on the fly route generation on gateway routes!
-  olsr_cnf->fib_metric=FIBM_FLAT;
 
   default_ifcnf = get_default_if_config();
   if (default_ifcnf == NULL) {
