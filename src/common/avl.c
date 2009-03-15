@@ -52,6 +52,7 @@
  * default comparison pointers set to the respective (v4/v6) compare function.
  */
 avl_tree_comp avl_comp_default = NULL;
+avl_tree_comp avl_comp_addr_origin_default = NULL;
 avl_tree_comp avl_comp_prefix_default = NULL;
 avl_tree_comp avl_comp_prefix_origin_default = NULL;
 

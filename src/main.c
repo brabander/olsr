@@ -204,10 +204,12 @@ main(int argc, char *argv[])
   /* Set avl tree comparator */
   if (olsr_cnf->ipsize == 4) {
     avl_comp_default = avl_comp_ipv4;
+    avl_comp_addr_origin_default = avl_comp_ipv4_addr_origin;
     avl_comp_prefix_default = avl_comp_ipv4_prefix;
     avl_comp_prefix_origin_default = avl_comp_ipv4_prefix_origin;
   } else {
     avl_comp_default = avl_comp_ipv6;
+    avl_comp_addr_origin_default = avl_comp_ipv6_addr_origin;
     avl_comp_prefix_default = avl_comp_ipv6_prefix;
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }

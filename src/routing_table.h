@@ -111,11 +111,10 @@ struct rt_path
   struct rt_nexthop     rtp_nexthop;
   struct rt_metric      rtp_metric;
   struct avl_node       rtp_tree_node; /* global rtp node */
-  union olsr_ip_addr    rtp_originator; /* originator of the route */
+  struct olsr_ip_prefix rtp_originator; /* originator of the route */
   struct avl_node       rtp_prefix_tree_node; /* tc entry rtp node */
   struct olsr_ip_prefix rtp_dst; /* the prefix */
-  uint32_t            rtp_version; /* for detection of outdated rt_paths */
-  uint8_t             rtp_origin; /* internal, MID or HNA */
+  uint32_t              rtp_version; /* for detection of outdated rt_paths */
 };
 
 AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
@@ -220,6 +219,8 @@ int avl_comp_ipv4_prefix (const void *, const void *);
 int avl_comp_ipv6_prefix (const void *, const void *);
 int avl_comp_ipv4_prefix_origin (const void *, const void *);
 int avl_comp_ipv6_prefix_origin (const void *, const void *);
+int avl_comp_ipv4_addr_origin (const void *, const void *);
+int avl_comp_ipv6_addr_origin (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
 /**

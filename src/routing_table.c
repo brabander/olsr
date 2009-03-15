@@ -202,6 +202,58 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
 }
 
 /**
+ * avl_comp_ipv4_addr_origin
+ *
+ * first compare the addresses, then compare the origin code.
+ *
+ * return 0 if there is an exact match and
+ * -1 / +1 depending on being smaller or bigger.
+ */
+int
+avl_comp_ipv4_addr_origin (const void *prefix1, const void *prefix2)
+{
+  const struct olsr_ip_prefix *pfx1 = prefix1;
+  const struct olsr_ip_prefix *pfx2 = prefix2;
+  const uint32_t addr1 = ntohl(pfx1->prefix.v4.s_addr);
+  const uint32_t addr2 = ntohl(pfx2->prefix.v4.s_addr);
+  int diff;
+
+  /* prefix */
+  diff = addr2 - addr1;
+  if (diff) {
+    return diff;
+  }
+
+  /* prefix origin */
+  return (pfx2->prefix_origin - pfx1->prefix_origin);
+}
+
+/**
+ * avl_comp_ipv6_addr_origin
+ *
+ * first compare the addresses, then compare the origin code.
+ *
+ * return 0 if there is an exact match and
+ * -1 / +1 depending on being smaller or bigger.
+ */
+int
+avl_comp_ipv6_addr_origin (const void *prefix1, const void *prefix2)
+{
+  int diff;
+  const struct olsr_ip_prefix *pfx1 = prefix1;
+  const struct olsr_ip_prefix *pfx2 = prefix2;
+
+  /* prefix */
+  diff = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  if (diff) {
+    return diff;
+  }
+
+  /* prefix origin */
+  return (pfx2->prefix_origin - pfx1->prefix_origin);
+}
+
+/**
  * Initialize the routingtree and kernel change queues.
  */
 void
@@ -293,7 +345,7 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
   avl_insert(&routingtree, &rt->rt_tree_node, AVL_DUP_NO);
 
   /* init the originator subtree */
-  avl_init(&rt->rt_path_tree, avl_comp_default);
+  avl_init(&rt->rt_path_tree, avl_comp_addr_origin_default);
 
   return rt;
 }
@@ -326,8 +378,19 @@ olsr_alloc_rt_path(struct tc_entry *tc,
   /* backlink to the owning tc entry */
   rtp->rtp_tc = tc;
 
-  /* store the origin of the route */
-  rtp->rtp_origin = origin;
+  /*
+   * Initialize the key for the per-originator subtree.
+   * Note that the path will not yet be inserted into the routing tree.
+   * This will happen later using olsr_insert_rt_path()
+   * when the node becomes reachable post SPF calculation.
+   * In the originator subtree the prefix length will be set to
+   * max. we do not really need this in avl_comp_addr_origin, but since
+   * the datatype is olsr_ip_prefix lets keep the environment a tidy place.
+   */
+  rtp->rtp_originator.prefix = tc->addr;
+  rtp->rtp_originator.prefix_len = 8 * olsr_cnf->ipsize;
+  rtp->rtp_originator.prefix_origin = origin;
+  rtp->rtp_tree_node.key = &rtp->rtp_originator;
 
   return rtp;
 }
@@ -375,14 +438,10 @@ olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
     rt = rt_tree2rt(node);
   }
 
-
-  /* Now insert the rt_path to the owning rt_entry tree */
-  rtp->rtp_originator = tc->addr;
-
-  /* set key and backpointer prior to tree insertion */
-  rtp->rtp_tree_node.key = &rtp->rtp_originator;
-
-  /* insert to the route entry originator tree */
+  /*
+   * Insert to the route entry originator tree
+   * The key has been initialized in olsr_alloc_rt_path().
+   */
   avl_insert(&rt->rt_path_tree, &rtp->rtp_tree_node, AVL_DUP_NO);
 
   /* backlink to the owning route entry */
@@ -443,20 +502,31 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
     if (etx1 < etx2) {
       return true;
     }
+    if (etx1 > etx2) {
+      return false;
+    }
 
     /* hopcount is next tie breaker */
-    if ((etx1 == etx2) &&
-        (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops)) {
+    if (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops) {
       return true;
     }
-
-    /* originator (which is guaranteed to be unique) is final tie breaker */
-    if ((rtp1->rtp_metric.hops == rtp2->rtp_metric.hops) &&
-        (olsr_ipcmp(&rtp1->rtp_originator, &rtp2->rtp_originator) < 0)) {
-      return true;
+    if (rtp1->rtp_metric.hops > rtp2->rtp_metric.hops) {
+      return false;
     }
 
-    return false;
+    /* originator type code is next tie breaker */
+    if (rtp1->rtp_originator.prefix_origin <
+        rtp2->rtp_originator.prefix_origin) {
+      return true;
+    }
+    if (rtp1->rtp_originator.prefix_origin >
+        rtp2->rtp_originator.prefix_origin) {
+      return false;
+    }
+
+    /* originator address is final breaker */
+    return(olsr_ipcmp(&rtp1->rtp_originator.prefix,
+                      &rtp2->rtp_originator.prefix));
 }
 
 /**
@@ -660,7 +730,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            "%s from %s via %s dev %s, "
            "cost %s, metric %u, v %u",
            olsr_ip_prefix_to_string(&prefixstr, &rtp->rtp_rt->rt_dst),
-           olsr_ip_to_string(&origstr, &rtp->rtp_originator),
+           olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
            rtp->rtp_nexthop.interface ? rtp->rtp_nexthop.interface->int_name : "(null)",
            get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
@@ -698,7 +768,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
            olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
            olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
            rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)",
-           olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator));
+           olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator.prefix));
 
     /* walk the per-originator path tree of routes */
     for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
@@ -706,7 +776,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
          rtp_tree_node = avl_walk_next(rtp_tree_node)) {
       struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
       OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
-             olsr_ip_to_string(&origstr, &rtp->rtp_originator),
+             olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
              get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
              rtp->rtp_metric.hops,
              olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
