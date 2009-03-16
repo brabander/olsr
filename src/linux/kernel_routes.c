@@ -61,6 +61,7 @@ static int delete_all_inet_gws(void);
 
 #include <assert.h>
 #include <linux/types.h>
+#include <net/if.h>
 #include <linux/rtnetlink.h>
 
 struct olsr_rtreq {
@@ -192,35 +193,39 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 	      const char *const err_msg = strerror(errno);
               struct ipaddr_str buf;
               rt_ret = -1;
+              char ifbuf[IF_NAMESIZE];
               /*debug output for original and retry attempts*/
               if ( cmd == RTM_NEWRULE ) {
-                olsr_syslog(OLSR_LOG_ERR,"Error %u: (%s) on inserting policy rule to activate RtTable %u!",errno, err_msg, rttable);
+                olsr_syslog(OLSR_LOG_ERR,"Error '%s' (%d) on inserting empty policy rule aimed to activate RtTable %u!", err_msg, errno, rttable);
               }
               else if ( cmd == RTM_DELRULE ) {
-                olsr_syslog(OLSR_LOG_ERR,"Error %u: (%s) on inserting policy rule to activate rtTable %u!",errno, err_msg, rttable);
+                olsr_syslog(OLSR_LOG_ERR,"Error '%s' (%d) on deleting empty policy rule aimed to activate rtTable %u!", err_msg, errno, rttable);
               }
-              else if ( flag <= RT_RETRY_AFTER_DELETE_SIMILAR ) {
-                if (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)
-                  olsr_syslog(OLSR_LOG_ERR, "error %d %s %s route to %s/%d via %s dev %d", errno, err_msg, (cmd == RTM_NEWROUTE) ? "add" : "del",
-                             olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
-                             req.r.rtm_dst_len,
-                             olsr_ip_to_string(&gbuf,&nexthop->gateway), nexthop->iif_index); 
-                else olsr_syslog(OLSR_LOG_ERR, "error %d %s %s route to %s/%d dev %d", errno, err_msg, (cmd == RTM_NEWROUTE) ? "add" : "del",
-                                olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
-                                req.r.rtm_dst_len, nexthop->iif_index);
-              }
-	      //deug output for autogen routes
-              else if (flag == RT_AUTO_ADD_GATEWAY_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error %d %s auto-add route to %s dev %d", errno, err_msg,
-                               olsr_ip_to_string(&ibuf,&nexthop->gateway), nexthop->iif_index);
-              //debug output for auto-delete similar
-              else if (flag == RT_DELETE_SIMILAR_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error %d %s auto-delete route to %s", errno, err_msg,
-                                             olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix));
-              //debug output for auto-delete similar
-              else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". . error %d %s auto-del-similar route to %s", errno, err_msg,
-                                                             olsr_ip_to_string(&ibuf,&nexthop->gateway));
-	      //should never happen
-	      else {
-                olsr_syslog(OLSR_LOG_ERR, "# invalid internal route delete/add flag (%d) used!", flag);
+              else {
+                if_indextoname(nexthop->iif_index, *ifbuf);
+                if ( flag <= RT_RETRY_AFTER_DELETE_SIMILAR ) {
+                  if (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)
+                    olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d via %s dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
+                               olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
+                               req.r.rtm_dst_len,
+                               olsr_ip_to_string(&gbuf,&nexthop->gateway), ifbuf); 
+                  else olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
+                                  olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
+                                  req.r.rtm_dst_len, ifbuf);
+                }
+	        //deug output for autogen routes
+                else if (flag == RT_AUTO_ADD_GATEWAY_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-add route to %s dev %d", err_msg, errno, 
+                                 olsr_ip_to_string(&ibuf,&nexthop->gateway), ifbuf);
+                //debug output for auto-delete similar
+                else if (flag == RT_DELETE_SIMILAR_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-delete route to %s dev %s", err_msg, errno, 
+                                               olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix), ifbuf);
+                //debug output for auto-delete similar
+                else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". . error '%s' (%d) auto-delete similar route to %s dev %s", err_msg, errno, 
+                                                               olsr_ip_to_string(&ibuf,&nexthop->gateway), ifbuf);
+ 	        //should never happen
+                else {
+                  olsr_syslog(OLSR_LOG_ERR, "# invalid internal route delete/add flag (%d) used!", flag);
+                }
               }
             }
             else {
@@ -233,23 +238,24 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
             /* resolve "File exist" (17) propblems (on orig and autogen routes)*/	
 	    if ((errno == 17) & ((flag == RT_ORIG_REQUEST) | (flag == RT_AUTO_ADD_GATEWAY_ROUTE)) & (cmd == RTM_NEWROUTE)) {
               /*a simlar route going over another gateway may be present, which should be deleted*/
-              olsr_syslog(OLSR_LOG_ERR, ". auto-deleting similar routes to resolve '17 - File exists' while adding route!");
+              olsr_syslog(OLSR_LOG_ERR, ". auto-deleting similar routes to resolve 'File exists' (17) while adding route!");
               rt_ret = RT_DELETE_SIMILAR_ROUTE;/*processing will contiune after this loop is finished as otherwise the rtnetlink is still blocked*/
             }
             /* report success on "No such process" (3) */
             else if ((errno == 3) & (cmd == RTM_DELROUTE) & (flag == RT_ORIG_REQUEST)) {
               /*another similar (but different) route may be present, but as we don not have a better route, nothing to think about*/
-              olsr_syslog(OLSR_LOG_ERR, ". ignoring '3 - No such process' while deleting route!");
+              olsr_syslog(OLSR_LOG_ERR, ". ignoring 'No such process' (3) while deleting route!");
               rt_ret = 0;
             }
-            /* insert route to gateway on the fly if "Network unreachable" (128) 
-             * is issued by rtnetlink when adding route via gateway!
+            /* insert route to gateway on the fly if "Network unreachable" (128) on 2.4 kernels
+             * or on 2.6 kernel No such process (3) is reported in rtneltink response
              * do this only with flat metric, as using metric values inherited from 
              * a target behind the gateway is really strange, and could lead to multiple routes!
-             * anyways if invalid gateways ips may happen we are f*cked up!!
-             * but if not, these on the fly generated routes are no problem*/
-            else if ((errno == 128) & (flag == RT_ORIG_REQUEST) & (FIBM_FLAT == olsr_cnf->fib_metric) & (cmd == RTM_NEWROUTE) & (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)) {
-              olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle '128 - Network unreachable' while adding route!");
+             * anyways if invalid gateway ips may happen we are f*cked up!!
+             * but if not, these on the fly generated routes are no problem, and will only get used when needed*/
+            else if (((errno == 3)|(errno == 128)) & (flag == RT_ORIG_REQUEST) & (FIBM_FLAT == olsr_cnf->fib_metric) & (cmd == RTM_NEWROUTE) & (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)) {
+              if (errno == 128) olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'Network unreachable' (128) while adding route!");
+              else olsr_syslog(OLSR_LOG_ERR, ". autogenerating route to handle 'No such process' (3) while adding route!");
               rt_ret = RT_AUTO_ADD_GATEWAY_ROUTE;/*processing will contiune after this loop is finished as otherwise the rtnetlink is still blocked*/
             }
           }
