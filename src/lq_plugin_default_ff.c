@@ -51,6 +51,7 @@
 #include "fpm.h"
 #include "mid_set.h"
 #include "scheduler.h"
+#include "log.h"
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etx_ff_handler = {
@@ -100,6 +101,9 @@ default_lq_parser_ff(struct olsr *olsr, struct interface *in_if, union olsr_ip_a
 
   /* ignore double package */
   if (lq->last_seq_nr == olsr->olsr_seqno) {
+    struct ipaddr_str buf;
+    olsr_syslog(OLSR_LOG_INFO, "detected duplicate packet with seqnr %d from %s on %s (%d Bytes)",
+		olsr->olsr_seqno,olsr_ip_to_string(&buf, from_addr),in_if->int_name,ntohs(olsr->olsr_packlen));
     return;
   }
 
