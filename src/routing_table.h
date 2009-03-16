@@ -152,29 +152,6 @@ enum olsr_rt_origin {
     rt = rt_tree2rt(rt_tree_node);
 #define OLSR_FOR_ALL_RT_ENTRIES_END(rt) }}
 
-/*
- * OLSR_FOR_ALL_HNA_RT_ENTRIES
- *
- * macro for traversing the entire routing table and pick only
- * HNA routes. This is not optimal - however, If the RIBs become
- * too big one day then we keep an additional per origin tree
- * in order to speed up traversal.
- * In the meantime it is recommended to use this macro because
- * it hides all the internal datastructure from the callers
- * and the core maintainers do not have to update all the plugins
- * once we decide to change the datastructures.
- */
-#define OLSR_FOR_ALL_HNA_RT_ENTRIES(rt) \
-{ \
-  struct avl_node *rt_tree_node, *next_rt_tree_node; \
-  for (rt_tree_node = avl_walk_first(&routingtree); \
-    rt_tree_node; rt_tree_node = next_rt_tree_node) { \
-    next_rt_tree_node = avl_walk_next(rt_tree_node); \
-    rt = rt_tree2rt(rt_tree_node); \
-    if (rt->rt_best->rtp_origin != OLSR_RT_ORIGIN_HNA) \
-      continue;
-#define OLSR_FOR_ALL_HNA_RT_ENTRIES_END(rt) }}
-
 
 /**
  * IPv4 <-> IPv6 wrapper
@@ -196,13 +173,11 @@ union olsr_kernel_route
   } v6;
 };
 
-
 extern struct avl_tree EXPORT(routingtree);
 extern unsigned int routingtree_version;
 extern struct olsr_cookie_info *rt_mem_cookie;
 
-void
-olsr_init_routing_table(void);
+void olsr_init_routing_table(void);
 
 /**
  * Bump the version number of the routing tree.
@@ -223,6 +198,7 @@ int avl_comp_ipv4_addr_origin (const void *, const void *);
 int avl_comp_ipv6_addr_origin (const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
+
 /**
  * Check if there is an interface or gateway change.
  */
