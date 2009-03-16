@@ -441,7 +441,7 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
 
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
-  sin.sin6_port = htons(DEF_OLSRPORT);
+  sin.sin6_port = htons(olsr_cnf->olsrport);
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
@@ -591,10 +591,10 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
     ip_id = (u_int16_t) (arc4random() & 0xffff);
   }
 
-  udp_tag = libnet_build_udp(698,       /* src port */
-                             698,       /* dest port */
+  udp_tag = libnet_build_udp(olsr_cnf->olsrport,        /* src port */
+                             olsr_cnf->olsrport,        /* dest port */
                              LIBNET_UDP_H + len,        /* length */
-                             0, /* checksum */
+                             0,         /* checksum */
                              buf,       /* payload */
                              len,       /* payload size */
                              context,   /* context */
