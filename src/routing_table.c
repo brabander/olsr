@@ -446,15 +446,20 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
   if (etx1 < etx2) {
     return true;
   }
+  if (etx1 > etx2) {
+    return false;
+  }
 
   /* hopcount is next tie breaker */
-  if ((etx1 == etx2) && (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops)) {
+  if (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops) {
     return true;
+  }
+  if (rtp1->rtp_metric.hops > rtp2->rtp_metric.hops) {
+    return false;
   }
 
   /* originator (which is guaranteed to be unique) is final tie breaker */
-  if ((rtp1->rtp_metric.hops == rtp2->rtp_metric.hops)
-      && (memcmp(&rtp1->rtp_originator, &rtp2->rtp_originator, olsr_cnf->ipsize) == -1)) {
+  if (memcmp(&rtp1->rtp_originator, &rtp2->rtp_originator, olsr_cnf->ipsize) < 0) {
     return true;
   }
 
