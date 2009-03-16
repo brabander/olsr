@@ -91,6 +91,9 @@
 #define WEIGHT_HIGH             4096    /* High                 */
 #define WEIGHT_HIGHEST          8192    /* Really high          */
 
+#define IF_MODE_MESH   	0
+#define IF_MODE_ETHER   1
+
 struct if_gen_property {
   uint32_t owner_id;
   void *data;
@@ -123,6 +126,7 @@ struct interface {
   struct sockaddr_in int_addr;         /* address */
   struct sockaddr_in int_netmask;      /* netmask */
   struct sockaddr_in int_broadaddr;    /* broadcast address */
+  int mode;                            /* interface mode */
   /* IP version 6 */
   struct sockaddr_in6 int6_addr;       /* Address */
   struct sockaddr_in6 int6_multaddr;   /* Multicast */

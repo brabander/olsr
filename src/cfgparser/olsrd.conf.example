@@ -238,6 +238,13 @@ Interface "eth1"
 
     # Ip4Broadcast	255.255.255.255
 
+    # Interface Mode is used to prevent unnecessary
+    # packet forwardin on switched ethernet interfaces
+    # valid Modes are mesh and ether
+    # The default value is mesh!
+
+    # Mode ether
+
     # IPv6 address scope to use.
     # Must be 'site-local' or 'global'
 

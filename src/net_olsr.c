@@ -363,7 +363,7 @@ net_output(struct interface *ifp)
     sin = &dst;
 
     if (sin->sin_port == 0)
-      sin->sin_port = htons(OLSRPORT);
+      sin->sin_port = htons(olsr_cnf->olsrport);
   } else {
     struct sockaddr_in6 dst6;
     /* IP version 6 */

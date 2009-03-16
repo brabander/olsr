@@ -60,7 +60,7 @@ void init_msg_seqno(void);
 
 uint16_t get_msg_seqno(void);
 
-int olsr_forward_message(union olsr_message *, union olsr_ip_addr *);
+int olsr_forward_message(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void set_buffer_timer(struct interface *);
 

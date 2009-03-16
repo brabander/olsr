@@ -357,7 +357,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
     }
 
     if (forward) {
-      olsr_forward_message(m, from_addr);
+      olsr_forward_message(m, in_if, from_addr);
     }
   }                             /* for olsr_msg */
 }

@@ -140,7 +140,7 @@ IsOlsrOrBmfPacket(unsigned char *ipPacket)
   udpHeader = (struct udphdr *)(ipPacket + ipHeaderLen);
   destPort = ntohs(udpHeader->dest);
 
-  if (destPort == OLSRPORT || destPort == BMF_ENCAP_PORT || destPort == 51698)
+  if (destPort == olsr_cnf->olsrport || destPort == BMF_ENCAP_PORT || destPort == 51698)
     /* TODO: #define for 51698 */
   {
     return 1;

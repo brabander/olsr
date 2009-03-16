@@ -370,7 +370,7 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
-  sin.sin_port = htons(OLSRPORT);
+  sin.sin_port = htons(olsr_cnf->olsrport);
   sin.sin_addr.s_addr = INADDR_ANY;
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");

@@ -395,7 +395,9 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->maxplen = 32;
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
+  cnf->olsrport = DEF_OLSRPORT;
   cnf->rttable = 254;
+  cnf->rtproto = 3;
   cnf->rttable_default = 0;
   cnf->willingness_auto = DEF_WILL_AUTO;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
@@ -499,6 +501,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   else
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
+  printf("OlsrPort          : 0x%03x\n", cnf->olsrport);
   printf("RtTable          : 0x%02x\n", cnf->rttable);
   printf("RtTableDefault   : 0x%02x\n", cnf->rttable_default);
   if (cnf->willingness_auto)
@@ -549,6 +552,12 @@ olsrd_print_cnf(struct olsrd_config *cnf)
         printf("\tIPv4 broadcast           : %s\n", inet_ntoa(in->cnf->ipv4_broadcast.v4));
       } else {
         printf("\tIPv4 broadcast           : AUTO\n");
+      }
+      
+      if (in->cnf->mode==IF_MODE_ETHER){
+        printf("\tMode           : ether\n");
+      } else {
+        printf("\tMode           : mesh\n");
       }
 
       printf("\tIPv6 addrtype            : %s\n", in->cnf->ipv6_addrtype ? "site-local" : "global");

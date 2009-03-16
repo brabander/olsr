@@ -283,12 +283,13 @@ olsr_init_tables(void)
  *@returns positive if forwarded
  */
 int
-olsr_forward_message(union olsr_message *m, union olsr_ip_addr *from_addr)
+olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
   struct neighbor_entry *neighbor;
   int msgsize;
   struct interface *ifn;
+
 
   /*
    * Sven-Ola: We should not flood the mesh with overdue messages. Because
@@ -345,6 +346,10 @@ olsr_forward_message(union olsr_message *m, union olsr_ip_addr *from_addr)
   /* looping trough interfaces */
   for (ifn = ifnet; ifn; ifn = ifn->int_next) {
     if (net_output_pending(ifn)) {
+
+      /* dont forward to incoming interface if interface is mode ether */
+      if (in_if->mode == IF_MODE_ETHER && ifn == in_if) continue;
+
       /*
        * Check if message is to big to be piggybacked
        */

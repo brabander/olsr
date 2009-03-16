@@ -21,12 +21,13 @@ MUDFLAP ?= 0
 #
 
 # programs
-CCACHE ?=       $(shell IFS=:; for i in $$PATH;do test -x "$$i/ccache" && echo "$$i/ccache" && break; done)
-ifeq ($(origin CC),default)
-CC = 		$(CCACHE) gcc
-else
-CC ?= 		$(CCACHE) gcc
-endif
+#CCACHE ?=       $(shell IFS=:; for i in $$PATH;do test -x "$$i/ccache" && echo "$$i/ccache" && break; done)
+#ifeq ($(origin CC),default)
+#CC = 		$(CCACHE) gcc
+#else
+#CC ?= 		$(CCACHE) gcc
+#endif
+CC=/home/markus/freifunk/whiterussian/openwrt/staging_dir_mipsel/bin/mipsel-linux-uclibc-gcc
 ifeq ($(DEBUG),0)
 STRIP ?=	strip
 else
@@ -87,10 +88,9 @@ endif
 #WARNINGS +=	-Wunreachable-code
 WARNINGS +=	-Winline
 WARNINGS +=	-Wdisabled-optimization
-# Disable -Werror in stable branch
-#WARNINGS +=	-Werror
+WARNINGS +=	-Werror
 WARNINGS +=	-finline-functions-called-once
-WARNINGS +=	-fearly-inlining
+#WARNINGS +=	-fearly-inlining
 ifeq ($(DEBUG),0)
 WARNINGS +=	-fomit-frame-pointer
 endif
@@ -111,7 +111,7 @@ CFLAGS +=	$(OPTIMIZE)
 CFLAGS +=	$(EXTRA_CFLAGS)
 
 # Must be specified along with -lpthread on linux
-CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
+#CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
 endif
 ifneq ($(MUDFLAP),0)
 CFLAGS +=	-fmudflapth
@@ -137,7 +137,7 @@ LDFLAGS +=	-Wl,--warn-common
 ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
 endif
-LIBS +=		$(OS_LIB_PTHREAD)
+#LIBS +=		$(OS_LIB_PTHREAD)
 
 # extra options from the outside
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)

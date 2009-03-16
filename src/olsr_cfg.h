@@ -69,6 +69,7 @@
 #define DEF_LQ_NAT_THRESH   1.0
 #define DEF_LQ_AGING        0.1
 #define DEF_CLEAR_SCREEN    false
+#define DEF_OLSRPORT        698
 
 /* Bounds */
 
@@ -124,6 +125,7 @@ struct olsr_if_weight {
 
 struct if_config_options {
   union olsr_ip_addr ipv4_broadcast;
+  int mode;
   int ipv6_addrtype;
   union olsr_ip_addr ipv6_multi_site;
   union olsr_ip_addr ipv6_multi_glbl;
@@ -181,12 +183,14 @@ typedef enum {
  */
 
 struct olsrd_config {
+  uint16_t olsrport;
   int debug_level;
   bool no_fork;
   bool host_emul;
   int ip_version;
   bool allow_no_interfaces;
   uint16_t tos;
+  uint8_t rtproto;
   uint8_t rttable;
   uint8_t rttable_default;
   uint8_t willingness;

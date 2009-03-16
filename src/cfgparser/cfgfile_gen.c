@@ -108,9 +108,17 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
   fprintf(fd, "# TOS(type of service) to use. Default is 16\n\n");
   fprintf(fd, "TosValue\t%d\n\n", cnf->tos);
 
+  /* OlsrPort */
+  fprintf(fd, "# Port to use. Default is 698! and using other port than IANA assigned one needs a really good reason!\n#possible values 698 or >1000\n\n");
+  fprintf(fd, "OlsrPort\t\t%d\n\n", cnf->olsrport);
+
   /* RtTable */
   fprintf(fd, "# Policy Routing Table to use. Default is 254\n\n");
   fprintf(fd, "RtTable\t\t%d\n\n", cnf->rttable);
+
+  /* RtProto */
+  fprintf(fd, "# Policy Routing Proto to use. Default is 3\n\n");
+  fprintf(fd, "RtProto\t\t%d\n\n", cnf->rtproto);
 
   /* RtTableDefault */
   fprintf(fd,
@@ -235,6 +243,15 @@ olsrd_write_cnf(struct olsrd_config *cnf, const char *fname)
         fprintf(fd, "    Ip4Broadcast\t%s\n\n", inet_ntoa(in->cnf->ipv4_broadcast.v4));
       } else {
         fprintf(fd, "    #Ip4Broadcast\t255.255.255.255\n\n");
+      }
+ 
+      fprintf(fd,
+              "    # Interface Mode to use. Defines\n    # forward behaviour depending on\n    # interface type\n    # valid option are mesh and ether\nDefault is mesh!\n\n");
+
+      if (in->cnf->mode!=IF_MODE_ETHER) {
+        fprintf(fd, "    #Mode\tMesh\n\n");
+      } else {
+        fprintf(fd, "    Mode\tEther\n\n");
       }
 
       fprintf(fd, "    # IPv6 address scope to use.\n    # Must be 'site-local' or 'global'\n\n");
@@ -398,8 +415,16 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, uint32_t bufsize)
   WRITE_TO_BUF("TosValue\t%d\n\n", cnf->tos);
 
   /* RtTable */
-  WRITE_TO_BUF("# Policy Routing Tableto use. Default is 254\n\n");
+  WRITE_TO_BUF("# Port to use. Default is 698! and using other port than IANA assigned one needs a really good reason!!\n\n");
+  WRITE_TO_BUF("OlsrPort\t\t%d\n\n", cnf->olsrport);
+
+  /* RtTable */
+  WRITE_TO_BUF("# Policy Routing Table to use. Default is 254\n\n");
   WRITE_TO_BUF("RtTable\t\t%d\n\n", cnf->rttable);
+
+  /* RtProto */
+  WRITE_TO_BUF("# Routing proto flag to use. Default is 3 (BOOT)\n\n");
+  WRITE_TO_BUF("RtProto\t\t%d\n\n", cnf->rtproto);
 
   /* Willingness */
   WRITE_TO_BUF
@@ -509,6 +534,17 @@ olsrd_write_cnf_buf(struct olsrd_config *cnf, char *buf, uint32_t bufsize)
       } else {
         if (first)
           WRITE_TO_BUF("    #Ip4Broadcast\t255.255.255.255\n");
+      }
+
+      if (first)
+        WRITE_TO_BUF
+          ("   # Interface Mode to use. Defines\n    # forward behaviour depending on\n    # interface type\n    # valid option are [mesh] and ether\n\n");
+
+      if (in->cnf->mode!=1) {
+        WRITE_TO_BUF("    #Mode\tmesh\n\n");
+      } else {
+        if (first)
+          WRITE_TO_BUF("    Mode\tether\n\n");
       }
 
       if (first)
