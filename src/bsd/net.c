@@ -44,6 +44,7 @@
 #include "../ipcalc.h"
 #include "../parser.h"          /* dnc: needed for call to packet_parser() */
 #include "../olsr_protocol.h"
+#include "../olsr_cfg.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -440,7 +441,7 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
 
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
-  sin.sin6_port = htons(OLSRPORT);
+  sin.sin6_port = htons(DEF_OLSRPORT);
   if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
     perror("bind");
     syslog(LOG_ERR, "bind: %m");
