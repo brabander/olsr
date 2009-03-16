@@ -87,12 +87,20 @@ olsr_load_plugins(void)
 static int
 olsr_load_dl(char *libname, struct plugin_param *params)
 {
+#if TESTLIB_PATH
+  char path[256] = "/usr/testlib/";
+#endif
   struct olsr_plugin *plugin = olsr_malloc(sizeof(struct olsr_plugin), "Plugin entry");
   int rv;
 
   OLSR_PRINTF(0, "---------- LOADING LIBRARY %s ----------\n", libname);
 
+#if TESTLIB_PATH
+  strcat(path, libname);
+  plugin->dlhandle = dlopen(path, RTLD_NOW);
+#else
   plugin->dlhandle = dlopen(libname, RTLD_NOW);
+#endif
   if (plugin->dlhandle == NULL) {
     const int save_errno = errno;
     OLSR_PRINTF(0, "DL loading failed: \"%s\"!\n", dlerror());

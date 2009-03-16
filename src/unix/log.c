@@ -43,6 +43,7 @@
  * System logging interface for GNU/Linux systems
  */
 
+#include "../olsr_cfg.h"
 #include "../log.h"
 #include <syslog.h>
 #include <stdarg.h>
@@ -56,9 +57,21 @@ olsr_openlog(const char *ident)
   return;
 }
 
-void
+#if SYSLOG_NUMBERING
+
+unsigned int olsr_syslog_ctr = 0;
+
+void 
+olsr_syslog_real(int level, const char *format, ...)
+{
+
+#else
+
+void 
 olsr_syslog(int level, const char *format, ...)
 {
+
+#endif
 
   int linux_level;
   va_list arglist;

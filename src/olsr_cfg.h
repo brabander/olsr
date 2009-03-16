@@ -44,6 +44,10 @@
 
 #include "olsr_types.h"
 
+#define TESTLIB_PATH 0
+#define SYSLOG_NUMBERING 0
+#define SOURCE_IP_ROUTES 0
+
 #ifndef LINUX_POLICY_ROUTING
 #if defined linux
 #  define LINUX_POLICY_ROUTING 1

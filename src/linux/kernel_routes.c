@@ -131,6 +131,12 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
       req.r.rtm_scope = RT_SCOPE_LINK;
       /*add interface*/
       olsr_netlink_addreq(&req, RTA_OIF, &nexthop->iif_index, sizeof(nexthop->iif_index));
+
+#if SOURCE_IP_ROUTES
+      /* source ip here is based on now static olsr_cnf->main_addr in this olsr-0.5.6-r4, should be based on orignator-id in newer olsrds*/
+      if (AF_INET == family) olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v4.s_addr, sizeof(olsr_cnf->main_addr.v4.s_addr));
+      else olsr_netlink_addreq(&req, RTA_PREFSRC, &olsr_cnf->main_addr.v6.s6_addr, sizeof(olsr_cnf->main_addr.v6.s6_addr));
+#endif
     }
 
     /*metric is specified always as we can only delete one route per iteration, and wanna hit the correct one first*/
