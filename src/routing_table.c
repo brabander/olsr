@@ -130,7 +130,7 @@ avl_comp_ipv6_prefix_origin (const void *prefix1, const void *prefix2)
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  diff = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  diff = ip6cmp(&pfx1->prefix.v6, &pfx2->prefix.v6) == 0;
   if (diff) {
     return diff;
   }
@@ -192,7 +192,7 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  diff = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  diff = ip6cmp(&pfx1->prefix.v6, &pfx2->prefix.v6) == 0;
   if (diff) {
     return diff;
   }
@@ -244,7 +244,7 @@ avl_comp_ipv6_addr_origin (const void *prefix1, const void *prefix2)
   const struct olsr_ip_prefix *pfx2 = prefix2;
 
   /* prefix */
-  diff = ip6equal(&pfx1->prefix.v6, &pfx2->prefix.v6);
+  diff = ip6cmp(&pfx1->prefix.v6, &pfx2->prefix.v6) == 0;
   if (diff) {
     return diff;
   }

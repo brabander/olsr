@@ -288,8 +288,8 @@ lookup_mpr_status(const struct lq_hello_message *message,
 
   for (neighbors = message->neigh; neighbors; neighbors = neighbors->next) {
     if (olsr_cnf->ip_version == AF_INET
-        ? ip4equal(&neighbors->addr.v4, &in_if->ip_addr.v4)
-        : ip6equal(&neighbors->addr.v6, &in_if->int6_addr.sin6_addr)) {
+        ? ip4cmp(&neighbors->addr.v4, &in_if->ip_addr.v4) == 0
+        : ip6cmp(&neighbors->addr.v6, &in_if->int6_addr.sin6_addr) == 0) {
       return neighbors->link_type == SYM_LINK && neighbors->neigh_type == MPR_NEIGH ? true : false;
     }
   }
@@ -386,7 +386,7 @@ hello_tap(struct lq_hello_message *message,
 
   /* find the input interface in the list of neighbor interfaces */
   for (walker = message->neigh; walker != NULL; walker = walker->next) {
-    if (olsr_ipequal(&walker->addr, &in_if->ip_addr)) {
+    if (olsr_ipcmp(&walker->addr, &in_if->ip_addr) == 0) {
       break;
     }
   }

@@ -146,13 +146,13 @@ static int olsr_netlink_route(const struct rt_entry *rt, uint8_t family, uint8_t
 
   if (NULL != nexthop->interface) {
     if (AF_INET == family) {
-      if (!ip4equal(&rt->rt_dst.prefix.v4, &nexthop->gateway.v4)) {
+      if (ip4cmp(&rt->rt_dst.prefix.v4, &nexthop->gateway.v4) != 0) {
         olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &nexthop->gateway.v4, sizeof(nexthop->gateway.v4));
         req.r.rtm_scope = RT_SCOPE_UNIVERSE;
       }
       olsr_netlink_addreq(&req.n, sizeof(req), RTA_DST, &rt->rt_dst.prefix.v4, sizeof(rt->rt_dst.prefix.v4));
     } else {
-      if (!ip6equal(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6)) {
+      if (ip6cmp(&rt->rt_dst.prefix.v6, &nexthop->gateway.v6) != 0) {
         olsr_netlink_addreq(&req.n, sizeof(req), RTA_GATEWAY, &nexthop->gateway.v6, sizeof(nexthop->gateway.v6));
         req.r.rtm_scope = RT_SCOPE_UNIVERSE;
       }

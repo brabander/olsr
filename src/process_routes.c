@@ -111,7 +111,7 @@ olsr_enqueue_rt(struct list_node *head_node, struct rt_entry *rt)
    */
   nh = olsr_get_nh(rt);
 
-  if (olsr_ipequal(&rt->rt_dst.prefix, &nh->gateway)) {
+  if (olsr_ipcmp(&rt->rt_dst.prefix, &nh->gateway) == 0) {
     list_add_after(head_node, &rt->rt_change_node);
   } else {
     list_add_before(head_node, &rt->rt_change_node);

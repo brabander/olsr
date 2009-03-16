@@ -240,7 +240,7 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
     return;
   }
 #ifndef _WRS_KERNEL
-  if (!ip4equal(&pin.sin_addr, &ipc_accept_ip.v4)) {
+  if (ip4cmp(&pin.sin_addr, &ipc_accept_ip.v4) != 0) {
     OLSR_PRINTF(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
     CLOSESOCKET(ipc_connection);
     return;

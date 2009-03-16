@@ -201,7 +201,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     /* if this is not a link to the neighour in question, skip */
-    if (!olsr_ipequal(&walker->neighbor->neighbor_main_addr, main_addr))
+    if (olsr_ipcmp(&walker->neighbor->neighbor_main_addr, main_addr) != 0)
       continue;
 
     /* get the link cost */
@@ -213,7 +213,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
      */
     if ((tmp_lc < curr_lcost) ||
         ((tmp_lc == curr_lcost) &&
-         olsr_ipequal(&walker->local_iface_addr, remote))) {
+         olsr_ipcmp(&walker->local_iface_addr, remote) == 0)) {
 
       /* memorize the link quality */
       curr_lcost = tmp_lc;
@@ -258,8 +258,8 @@ set_loss_link_multiplier(struct link_entry *entry)
      * use the default multiplier only if there isn't any entry that
      * has a matching IP address.
      */
-    if ((val == 0 && olsr_ipequal(&mult->addr, &all_zero)) ||
-	olsr_ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
+    if ((val == 0 && olsr_ipcmp(&mult->addr, &all_zero) == 0) ||
+        olsr_ipcmp(&mult->addr, &entry->neighbor_iface_addr) == 0) {
       val = mult->value;
     }
   }
@@ -561,7 +561,7 @@ check_neighbor_link(const union olsr_ip_addr *int_addr)
   struct link_entry *link;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if (olsr_ipequal(int_addr, &link->neighbor_iface_addr)) {
+    if (olsr_ipcmp(int_addr, &link->neighbor_iface_addr) == 0) {
       return lookup_link_status(link);
     }
   } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
@@ -585,12 +585,12 @@ lookup_link_entry(const union olsr_ip_addr *remote,
   struct link_entry *link;
 
   OLSR_FOR_ALL_LINK_ENTRIES(link) {
-    if (olsr_ipequal(remote, &link->neighbor_iface_addr) &&
+    if (olsr_ipcmp(remote, &link->neighbor_iface_addr) == 0 &&
 	(link->if_name ? !strcmp(link->if_name, local->int_name)
-	 : olsr_ipequal(&local->ip_addr, &link->local_iface_addr)))
+	 : olsr_ipcmp(&local->ip_addr, &link->local_iface_addr) == 0))
     {
       /* check the remote-main address only if there is one given */
-      if (NULL != remote_main && !olsr_ipequal(remote_main, &link->neighbor->neighbor_main_addr))
+      if (NULL != remote_main && olsr_ipcmp(remote_main, &link->neighbor->neighbor_main_addr) != 0)
       {
         /* Neighbor has changed it's main_addr, update */
 #if !defined REMOVE_DEBUG
@@ -724,7 +724,7 @@ check_link_status(const struct lq_hello_message *message,
      * Note: If a neigh has 2 cards we can reach, the neigh
      * will send a Hello with the same IP mentined twice
      */
-    if (olsr_ipequal(&neighbors->addr, &in_if->ip_addr)) {
+    if (olsr_ipcmp(&neighbors->addr, &in_if->ip_addr) == 0) {
       ret = neighbors->link_type;
       if (SYM_LINK == ret) {
 	break;

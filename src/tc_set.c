@@ -136,7 +136,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
   /*
    * Safety net against loss of the last main IP address.
    */
-  if (olsr_ipequal(&olsr_cnf->router_id, &all_zero)) {
+  if (olsr_ipcmp(&olsr_cnf->router_id, &all_zero) == 0) {
     return NULL;
   }
 
@@ -212,7 +212,7 @@ olsr_change_myself_tc(void)
     /*
      * Check if there was a change.
      */
-    if (olsr_ipequal(&tc_myself->addr, &olsr_cnf->router_id)) {
+    if (olsr_ipcmp(&tc_myself->addr, &olsr_cnf->router_id) == 0) {
       return;
     }
 

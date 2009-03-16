@@ -71,16 +71,12 @@ struct ipprefix_str {
  * Macros for comparing and copying IP addresses
  */
 static INLINE int ip4cmp(const struct in_addr *a, const struct in_addr *b) { return a->s_addr > b->s_addr ? +1 : a->s_addr < b->s_addr ? -1 : 0; }
-static INLINE int ip4equal(const struct in_addr *a, const struct in_addr *b) { return a->s_addr == b->s_addr; }
 
 static INLINE int ip6cmp(const struct in6_addr *a, const struct in6_addr *b) { return memcmp(a, b, sizeof(*a)); }
-static INLINE int ip6equal(const struct in6_addr *a, const struct in6_addr *b) { return ip6cmp(a, b) == 0; }
 
 static INLINE int ipcmp(int ip_version, const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ip_version == AF_INET ? ip4cmp(&a->v4, &b->v4) : ip6cmp(&a->v6, &b->v6); }
-static INLINE int ipequal(int ip_version, const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ip_version == AF_INET ? ip4equal(&a->v4, &b->v4) : ip6equal(&a->v6, &b->v6); }
 
 static INLINE int olsr_ipcmp(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipcmp(olsr_cnf->ip_version, a, b); }
-static INLINE int olsr_ipequal(const union olsr_ip_addr *a, const union olsr_ip_addr *b) { return ipequal(olsr_cnf->ip_version, a, b); }
 
 /* Do not use this - this is as evil as the COPY_IP() macro was and only used in
  * source which also needs cleanups.

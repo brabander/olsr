@@ -80,7 +80,7 @@ olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, const union
   struct neighbor_list_entry *entry = two_hop_entry->neighbor_2_nblist.next;
   while(entry != &two_hop_entry->neighbor_2_nblist)
     {
-      if(olsr_ipequal(&entry->neighbor->neighbor_main_addr, address))
+      if(olsr_ipcmp(&entry->neighbor->neighbor_main_addr, address) == 0)
 	{
 	  struct neighbor_list_entry *entry_to_delete = entry;
 	  entry = entry->next;
@@ -168,7 +168,7 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
       neighbor_2 = neighbor_2->next) {
     struct tc_entry *tc;
 
-    if (olsr_ipequal(&neighbor_2->neighbor_2_addr, dest)) {
+    if (olsr_ipcmp(&neighbor_2->neighbor_2_addr, dest) == 0) {
       return neighbor_2;
     }
     /*
@@ -200,7 +200,7 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
   for(neighbor_2 = two_hop_neighbortable[hash].next;
       neighbor_2 != &two_hop_neighbortable[hash];
       neighbor_2 = neighbor_2->next) {
-    if (olsr_ipequal(&neighbor_2->neighbor_2_addr, dest))
+    if (olsr_ipcmp(&neighbor_2->neighbor_2_addr, dest) == 0)
       return neighbor_2;
   }
   return NULL;

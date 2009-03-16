@@ -295,7 +295,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
      */
 
     /* Should be the same for IPv4 and IPv6 */
-    if (olsr_ipequal((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->router_id)
+    if (olsr_ipcmp((union olsr_ip_addr *)&m->v4.originator, &olsr_cnf->router_id) == 0
         || !olsr_validate_address((union olsr_ip_addr *)&m->v4.originator)) {
       OLSR_INFO(LOG_PACKET_PARSING, "Not processing message originating from %s!\n",
                   olsr_ip_to_string(&buf,(union olsr_ip_addr *)&m->v4.originator));

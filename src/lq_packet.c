@@ -94,7 +94,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
     struct lq_hello_neighbor *neigh = olsr_malloc_lq_hello_neighbor();
 
     // a) this neighbor interface IS NOT visible via the output interface
-    if(!olsr_ipequal(&walker->local_iface_addr, &outif->ip_addr))
+    if(olsr_ipcmp(&walker->local_iface_addr, &outif->ip_addr) != 0)
       neigh->link_type = UNSPEC_LINK;
 
     // b) this neighbor interface IS visible via the output interface

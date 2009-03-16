@@ -196,7 +196,7 @@ serialize_mid4(struct interface *ifp)
 
   /* Don't add the main address... it's already there */
   OLSR_FOR_ALL_INTERFACES(ifs) {
-      if(!olsr_ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
+      if(olsr_ipcmp(&olsr_cnf->router_id, &ifs->ip_addr) != 0)
 	{
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {
@@ -289,7 +289,7 @@ serialize_mid6(struct interface *ifp)
 
   /* Don't add the main address... it's already there */
   OLSR_FOR_ALL_INTERFACES(ifs) {
-      if(!olsr_ipequal(&olsr_cnf->router_id, &ifs->ip_addr))
+      if(olsr_ipcmp(&olsr_cnf->router_id, &ifs->ip_addr) != 0)
 	{
 	  if((curr_size + olsr_cnf->ipsize) > remainsize)
 	    {

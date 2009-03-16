@@ -122,7 +122,7 @@ olsr_delete_neighbor_2_pointer(struct neighbor_entry *neighbor, union olsr_ip_ad
   nbr2_list = neighbor->neighbor_2_list.next;
 
   while (nbr2_list != &neighbor->neighbor_2_list) {
-    if (olsr_ipequal(&nbr2_list->neighbor_2->neighbor_2_addr, address)) {
+    if (olsr_ipcmp(&nbr2_list->neighbor_2->neighbor_2_addr, address) == 0) {
       olsr_del_nbr2_list(nbr2_list);
       return 1;
     }
@@ -153,7 +153,7 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
       entry = entry->next)
     {
 
-      if(olsr_ipequal(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address))
+      if(olsr_ipcmp(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address) == 0)
 	return entry;
 
     }
@@ -193,7 +193,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
    */
   while(entry != &neighbortable[hash])
     {
-      if(olsr_ipequal(&entry->neighbor_main_addr, neighbor_addr))
+      if(olsr_ipcmp(&entry->neighbor_main_addr, neighbor_addr) == 0)
         break;
 
       entry = entry->next;
@@ -253,7 +253,7 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
       new_neigh != &neighbortable[hash];
       new_neigh = new_neigh->next)
     {
-      if(olsr_ipequal(&new_neigh->neighbor_main_addr, main_addr))
+      if(olsr_ipcmp(&new_neigh->neighbor_main_addr, main_addr) == 0)
         return new_neigh;
     }
 
@@ -320,7 +320,7 @@ olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
       entry != &neighbortable[hash];
       entry = entry->next)
     {
-      if(olsr_ipequal(&entry->neighbor_main_addr, dst))
+      if(olsr_ipcmp(&entry->neighbor_main_addr, dst) == 0)
         return entry;
     }
 

@@ -183,7 +183,7 @@ remove_interface(struct interface **pinterf)
   net_remove_buffer(ifp);
 
   /* Check main addr */
-  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&olsr_cnf->router_id, &ifp->ip_addr)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&olsr_cnf->router_id, &ifp->ip_addr) == 0) {
     if (list_is_empty(&interface_head)) {
       /* No more interfaces */
       memset(&olsr_cnf->router_id, 0, olsr_cnf->ipsize);
@@ -257,8 +257,8 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
 
     /* IPv4 */
     OLSR_FOR_ALL_INTERFACES(ifp) {
-      if (ip4equal(&ifp->int_addr.sin_addr, &addr->v4)) {
-	return ifp;
+      if (ip4cmp(&ifp->int_addr.sin_addr, &addr->v4) == 0) {
+        return ifp;
       }
     } OLSR_FOR_ALL_INTERFACES_END(ifp);
 
@@ -266,8 +266,8 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
 
     /* IPv6 */
     OLSR_FOR_ALL_INTERFACES(ifp) {
-      if (ip6equal(&ifp->int6_addr.sin6_addr, &addr->v6)) {
-	return ifp;
+      if (ip6cmp(&ifp->int6_addr.sin6_addr, &addr->v6) == 0) {
+        return ifp;
       }
     } OLSR_FOR_ALL_INTERFACES_END(ifp);
   }

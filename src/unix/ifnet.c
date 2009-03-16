@@ -214,13 +214,13 @@ chk_if_changed(struct olsr_if_config *iface)
     OLSR_PRINTF(3, "\tAddress: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 #endif
 
-    if (!ip6equal(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr)) {
+    if (ip6cmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr) != 0) {
       OLSR_PRINTF(1, "New IP address for %s:\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
       /* Check main addr */
-      if (!olsr_cnf->fixed_origaddr && ip6equal(&olsr_cnf->router_id.v6, &tmp_saddr6.sin6_addr)) {
+      if (!olsr_cnf->fixed_origaddr && ip6cmp(&olsr_cnf->router_id.v6, &tmp_saddr6.sin6_addr) != 0) {
         /* Update main addr */
         olsr_cnf->router_id.v6 = tmp_saddr6.sin6_addr;
       }
@@ -246,14 +246,14 @@ chk_if_changed(struct olsr_if_config *iface)
       OLSR_PRINTF(3, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
 #endif
 
-    if (!ip4equal(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr)) {
+    if (ip4cmp(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr) != 0) {
       /* New address */
       OLSR_PRINTF(1, "IPv4 address changed for %s\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
       OLSR_PRINTF(1, "\tNew:%s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)&ifr.ifr_addr;
-      if (!olsr_cnf->fixed_origaddr && ip4equal(&olsr_cnf->router_id.v4, &ifp->ip_addr.v4)) {
+      if (!olsr_cnf->fixed_origaddr && ip4cmp(&olsr_cnf->router_id.v4, &ifp->ip_addr.v4) == 0) {
         OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", ip4_to_string(&buf, tmp_saddr4->sin_addr));
         olsr_cnf->router_id.v4 = tmp_saddr4->sin_addr;
       }
@@ -274,7 +274,7 @@ chk_if_changed(struct olsr_if_config *iface)
     OLSR_PRINTF(3, "\tNetmask:%s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr));
 #endif
 
-    if (!ip4equal(&ifp->int_netmask.sin_addr, &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr)) {
+    if (ip4cmp(&ifp->int_netmask.sin_addr, &((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr) != 0) {
       /* New address */
       OLSR_PRINTF(1, "IPv4 netmask changed for %s\n", ifr.ifr_name);
       OLSR_PRINTF(1, "\tOld:%s\n", ip4_to_string(&buf, ifp->int_netmask.sin_addr));
@@ -343,7 +343,7 @@ int add_hemu_if (struct olsr_if_config *iface)
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
 
-  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
     olsr_cnf->router_id = iface->hemu_ip;
     OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
@@ -728,7 +728,7 @@ chk_if_up(struct olsr_if_config *iface, int debuglvl __attribute__((unused)))
   /*
    * Set main address if this is the only interface
    */
-  if (!olsr_cnf->fixed_origaddr && olsr_ipequal(&all_zero, &olsr_cnf->router_id)) {
+  if (!olsr_cnf->fixed_origaddr && olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0) {
     olsr_cnf->router_id = ifp->ip_addr;
     OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }

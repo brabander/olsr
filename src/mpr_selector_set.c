@@ -101,7 +101,7 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
     return NULL;
   }
   FOR_ALL_MPRS_ENTRIES(mprs) {
-    if (olsr_ipequal(&mprs->MS_main_addr, addr)) {
+    if (olsr_ipcmp(&mprs->MS_main_addr, addr) == 0) {
       return mprs;
     }
   } FOR_ALL_MPRS_ENTRIES_END(mprs);

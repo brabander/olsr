@@ -73,7 +73,7 @@ ip_prefix_list_remove(struct list_node *ip_prefix_head, const union olsr_ip_addr
   struct ip_prefix_entry *h;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
-    if (ipequal(ip_version, net, &h->net.prefix) && h->net.prefix_len == prefix_len) {
+    if (ipcmp(ip_version, net, &h->net.prefix) == 0 && h->net.prefix_len == prefix_len) {
       list_remove(&h->node);
       free(h);
       return 1;
@@ -89,7 +89,7 @@ ip_prefix_list_find(struct list_node *ip_prefix_head, const union olsr_ip_addr *
   struct ip_prefix_entry *h;
 
   OLSR_FOR_ALL_IPPREFIX_ENTRIES(ip_prefix_head, h) {
-    if (prefix_len == h->net.prefix_len && ipequal(ip_version, net, &h->net.prefix)) {
+    if (prefix_len == h->net.prefix_len && ipcmp(ip_version, net, &h->net.prefix) == 0) {
       return h;
     }
   }
