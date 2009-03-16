@@ -61,7 +61,6 @@ static int delete_all_inet_gws(void);
 
 #include <assert.h>
 #include <linux/types.h>
-#include <net/if.h>
 #include <linux/rtnetlink.h>
 
 struct olsr_rtreq {
@@ -201,31 +200,28 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
               else if ( cmd == RTM_DELRULE ) {
                 olsr_syslog(OLSR_LOG_ERR,"Error '%s' (%d) on deleting empty policy rule aimed to activate rtTable %u!", err_msg, errno, rttable);
               }
+              else if ( flag <= RT_RETRY_AFTER_DELETE_SIMILAR ) {
+                if (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)
+                  olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d via %s dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
+                             olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
+                             req.r.rtm_dst_len,
+                             olsr_ip_to_string(&gbuf,&nexthop->gateway), if_ifwithindex_name(nexthop->iif_index));
+                else olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
+                                olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
+                                req.r.rtm_dst_len, if_ifwithindex_name(nexthop->iif_index));
+              }
+              //deug output for autogen routes
+              else if (flag == RT_AUTO_ADD_GATEWAY_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-add route to %s dev %s", err_msg, errno,
+                               olsr_ip_to_string(&ibuf,&nexthop->gateway), if_ifwithindex_name(nexthop->iif_index));
+              //debug output for auto-delete similar
+              else if (flag == RT_DELETE_SIMILAR_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-delete route to %s dev %s", err_msg, errno,
+                                             olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix), if_ifwithindex_name(nexthop->iif_index));
+              //debug output for auto-delete similar
+              else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". . error '%s' (%d) auto-delete similar route to %s dev %s", err_msg, errno,
+                                                             olsr_ip_to_string(&ibuf,&nexthop->gateway), if_ifwithindex_name(nexthop->iif_index));
+              //should never happen
               else {
-                if_indextoname(nexthop->iif_index, *ifbuf);
-                if ( flag <= RT_RETRY_AFTER_DELETE_SIMILAR ) {
-                  if (rt->rt_dst.prefix.v4.s_addr!=nexthop->gateway.v4.s_addr)
-                    olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d via %s dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
-                               olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
-                               req.r.rtm_dst_len,
-                               olsr_ip_to_string(&gbuf,&nexthop->gateway), ifbuf); 
-                  else olsr_syslog(OLSR_LOG_ERR, "error '%s' (%d) %s route to %s/%d dev %s", err_msg, errno, (cmd == RTM_NEWROUTE) ? "add" : "del",
-                                  olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix),
-                                  req.r.rtm_dst_len, ifbuf);
-                }
-	        //deug output for autogen routes
-                else if (flag == RT_AUTO_ADD_GATEWAY_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-add route to %s dev %d", err_msg, errno, 
-                                 olsr_ip_to_string(&ibuf,&nexthop->gateway), ifbuf);
-                //debug output for auto-delete similar
-                else if (flag == RT_DELETE_SIMILAR_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". error '%s' (%d) auto-delete route to %s dev %s", err_msg, errno, 
-                                               olsr_ip_to_string(&ibuf,&rt->rt_dst.prefix), ifbuf);
-                //debug output for auto-delete similar
-                else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE) olsr_syslog(OLSR_LOG_ERR, ". . error '%s' (%d) auto-delete similar route to %s dev %s", err_msg, errno, 
-                                                               olsr_ip_to_string(&ibuf,&nexthop->gateway), ifbuf);
- 	        //should never happen
-                else {
-                  olsr_syslog(OLSR_LOG_ERR, "# invalid internal route delete/add flag (%d) used!", flag);
-                }
+                olsr_syslog(OLSR_LOG_ERR, "# invalid internal route delete/add flag (%d) used!", flag);
               }
             }
             else {
