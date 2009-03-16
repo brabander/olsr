@@ -132,7 +132,7 @@ getsocket(int BuffSize, char *Int __attribute__ ((unused)))
 
   memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
-  Addr.sin_port = htons(OLSRPORT);
+  Addr.sin_port = htons(olsr_cnf->olsrport);
   Addr.sin_addr.s_addr = INADDR_ANY;
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
     WinSockPError("getsocket/bind()");
