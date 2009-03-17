@@ -885,7 +885,7 @@ olsr_times(void)
      * which we can safely "ignore" -> return 0; */
   }
   else {
-    olsr_syslog(OLSR_LOG_ERR,"WARNING: times() reported negative result %i which olsr ignored (Did time went backwards ?)", t);
+    olsr_syslog(OLSR_LOG_ERR,"WARNING: times() reported negative result %f which olsr ignored (Did time went backwards ?)",(double) t);
     /* report time went backwards to syslog */
   }
   return 0;
