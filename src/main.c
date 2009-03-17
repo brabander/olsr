@@ -873,7 +873,22 @@ clock_t
 olsr_times(void)
 {
   struct tms tms_buf;
-  return times(&tms_buf);
+  clock_t t=times(&tms_buf);
+  if ( t >=0 ) return t;
+  if ( t == -1) { 
+    const char *const err_msg = strerror(errno);
+    olsr_syslog(OLSR_LOG_ERR,"Time error: '%s' (%d)", err_msg, errno);
+
+    return -1; /* todo: only on 'unrecoverable' errors (like errno=14) */
+
+    /* todo: read syslog and learn error codes 
+     * which we can safely "ignore" -> return 0; */
+  }
+  else {
+    olsr_syslog(OLSR_LOG_ERR,"WARNING: times() reported negative result %i which olsr ignored (Did time went backwards ?)", t);
+    /* report time went backwards to syslog */
+  }
+  return 0;
 }
 
 /*
