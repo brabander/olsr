@@ -868,6 +868,30 @@ olsr_process_arguments(int argc, char *argv[], struct olsrd_config *cnf, struct 
  * use this function. On the other hand, this function has
  * proved it's functions but some olsrd implementations does
  * error handling in a clumsy way - thus inducing bugs...
+ * 
+ * Analysis of times() in different OSes:
+ * Linux: 
+ *   times() returns the number of clock ticks that have 
+ *   elapsed since an arbitrary point in the past.  The return 
+ *   value may overflow the possible range of type clock_t.   On
+ *     error, (clock_t) -1 is returned, and errno is set appropriately.
+ * 
+ * BSDs:  
+ *  The times() function returns the value of time in CLK_TCK's 
+ *  of a second since 0 hours, 0 minutes, 0 seconds, January 1, 
+ *  1970, Coordinated Universal Time.
+ * 
+ * Values for clock_t in different OSes:
+ *  OSX ............ unsigned long
+ *  linux .......... long int (signed !) 
+ *  win32 cygwin.... unsigned long
+ *  openBSD ........ int
+ * 
+ * We therefore need to be very very careful how to (portably)
+ * handle overflows!!
+ * This current commit does not solve the problem yet. 
+ * it merely documents the problems with times()
+ * 
  */
 clock_t
 olsr_times(void)
