@@ -49,7 +49,7 @@
 
 #include <time.h>
 
-#define TIMER_WHEEL_SLOTS 256
+#define TIMER_WHEEL_SLOTS 1024
 #define TIMER_WHEEL_MASK (TIMER_WHEEL_SLOTS - 1)
 
 /* Some defs for juggling with timers */
@@ -72,7 +72,7 @@ typedef void (*timer_cb_func)(void *);	       /* callback function */
  */
 struct timer_entry {
   struct list_node timer_list;	       /* Wheel membership */
-  clock_t timer_clock;		       /* when timer shall fire (absolute time) */
+  uint32_t timer_clock;		       /* when timer shall fire (absolute time) */
   unsigned int timer_period;	       /* set for periodical timers (relative time) */
   olsr_cookie_t timer_cookie;	       /* used for diag stuff */
   uint8_t timer_jitter_pct;	       /* the jitter expressed in percent */
@@ -103,7 +103,7 @@ void EXPORT(olsr_stop_timer)(struct timer_entry *);
 
 /* Printing timestamps */
 #ifndef NODEBUG
-const char *olsr_clock_string(clock_t);
+const char *olsr_clock_string(uint32_t);
 const char *olsr_wallclock_string(void);
 #endif /* !NODEBUG */
 
@@ -111,23 +111,18 @@ const char *olsr_wallclock_string(void);
 void olsr_scheduler(void);
 
 /*
- * Provides a timestamp s1 milliseconds in the future according
- * to system ticks returned by times(2)
- * We cast the result of the division to clock_t. That serves two purposes:
- * - it workarounds numeric underflows if the pollrate is <= 0.5
- * - since we add "now_times" which is an integer, users (hopefully) expect
- *   to get integeres as result (which is without the cast not guaranteed)
+ * Provides a timestamp s1 milliseconds in the future
  */
-#define GET_TIMESTAMP(s1)	(now_times + (clock_t)((s1) / olsr_cnf->system_tick_divider))
+#define GET_TIMESTAMP(s1)	olsr_getTimestamp(s1)
 
 /* Compute the time in milliseconds when a timestamp will expire. */
-#define TIME_DUE(s1)    ((long)((s1) * olsr_cnf->system_tick_divider) - now_times)
+#define TIME_DUE(s1)    olsr_getTimeDue(s1)
 
 /* Returns TRUE if a timestamp is expired */
-#define TIMED_OUT(s1)	((long)((s1) - now_times) < 0)
+#define TIMED_OUT(s1)	  olsr_isTimedOut(s1)
 
 /* Timer data */
-extern clock_t EXPORT(now_times); /* current idea of times(2) reported uptime */
+extern uint32_t EXPORT(now_times); /* current idea of times(2) reported uptime */
 
 
 #define SP_PR_READ		0x01
@@ -162,6 +157,9 @@ LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
     socket = list2socket(_socket_node);
 #define OLSR_FOR_ALL_SOCKETS_END(socket) }}
 
+uint32_t EXPORT(olsr_getTimestamp)(uint32_t s);
+int32_t EXPORT(olsr_getTimeDue)(uint32_t s);
+bool EXPORT(olsr_isTimedOut)(uint32_t s);
 
 void EXPORT(add_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
 int EXPORT(remove_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);

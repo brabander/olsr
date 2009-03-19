@@ -222,7 +222,6 @@ struct olsr_config {
    * ========= Please add globals below this line. =========
    */
 
-  uint16_t system_tick_divider;        /* Tick resolution */
   union olsr_ip_addr router_id;        /* Main address of this node */
   float will_int;                      /* Willingness update interval if willingness_auto */
   int exit_value;                      /* Global return value for process termination */

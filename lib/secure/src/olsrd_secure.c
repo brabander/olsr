@@ -120,8 +120,8 @@ struct stamp
   int diff;
   uint32_t challenge;
   uint8_t validated;
-  clock_t valtime; /* Validity time */
-  clock_t conftime; /* Reconfiguration time */
+  uint32_t valtime; /* Validity time */
+  uint32_t conftime; /* Reconfiguration time */
   struct stamp *prev;
   struct stamp *next;
 };

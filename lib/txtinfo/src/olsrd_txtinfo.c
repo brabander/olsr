@@ -118,9 +118,10 @@ static int ipc_print_mid(struct ipc_conn *);
 
 static int ipc_print_stat(struct ipc_conn *);
 
-static void update_statistics_ptr(void);
+static void update_statistics_ptr(void *);
 static bool olsr_msg_statistics(union olsr_message *msg, struct interface *input_if, union olsr_ip_addr *from_addr);
 static char *olsr_packet_statistics(char *packet, struct interface *interface, union olsr_ip_addr *, int *length);
+static void update_statistics_ptr(void *data __attribute__ ((unused)));
 
 #define isprefix(str, pre) (strncmp((str), (pre), strlen(pre)) == 0)
 
@@ -137,8 +138,8 @@ static char *olsr_packet_statistics(char *packet, struct interface *interface, u
 
 /* variables for statistics */
 static uint32_t recv_packets[60], recv_messages[60][6];
-static clock_t recv_last_now;
 static uint32_t recv_last_relevantTCs;
+struct olsr_cookie_info *statistics_timer = NULL;
 
 /**
  * destructor - called at unload
@@ -163,6 +164,9 @@ olsrd_plugin_init(void)
   struct sockaddr_storage sst;
   uint32_t yes = 1;
   socklen_t addrlen;
+
+  statistics_timer = olsr_alloc_cookie("Txtinfo statistics timer", OLSR_COOKIE_TYPE_TIMER);
+  olsr_start_timer(1000, 0, true, &update_statistics_ptr, NULL, statistics_timer->ci_id);
 
   /* Init ipc socket */
   listen_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
@@ -238,7 +242,6 @@ olsrd_plugin_init(void)
   memset(recv_packets, 0, sizeof(recv_packets));
   memset(recv_messages, 0, sizeof(recv_messages));
 
-  recv_last_now = now_times / 100;
   recv_last_relevantTCs = 0;
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
@@ -247,29 +250,14 @@ olsrd_plugin_init(void)
 
 
 static void
-update_statistics_ptr(void)
+update_statistics_ptr(void *data __attribute__ ((unused)))
 {
-  clock_t now = now_times / (1000 / olsr_cnf->system_tick_divider);
-  if (recv_last_now < now) {
-    if (recv_last_now + 60 <= now) {
-      memset(recv_packets, 0, sizeof(recv_packets));
-      memset(recv_messages, 0, sizeof(recv_messages));
-      recv_last_now = now % 60;
-    } else {
-      do {
-        int i;
-        recv_last_now++;
-        recv_packets[recv_last_now % 60] = 0;
+  uint32_t now = now_times / 1000;
+  int i;
 
-        for (i = 0; i < 6; i++) {
-          recv_messages[recv_last_now % 60][i] = 0;
-        }
-      } while (recv_last_now < now);
-    }
-    while (recv_last_relevantTCs != getRelevantTcCount()) {
-      recv_messages[recv_last_now % 60][5]++;
-      recv_last_relevantTCs++;
-    }
+  recv_packets[now % 60] = 0;
+  for (i = 0; i < 6; i++) {
+    recv_messages[now % 60][i] = 0;
   }
 }
 
@@ -278,9 +266,9 @@ static bool
 olsr_msg_statistics(union olsr_message *msg,
                     struct interface *input_if __attribute__ ((unused)), union olsr_ip_addr *from_addr __attribute__ ((unused)))
 {
+  uint32_t now = now_times / 1000;
   int idx, msgtype;
 
-  update_statistics_ptr();
   if (olsr_cnf->ip_version == AF_INET) {
     msgtype = msg->v4.olsr_msgtype;
   } else {
@@ -306,7 +294,11 @@ olsr_msg_statistics(union olsr_message *msg,
     break;
   }
 
-  recv_messages[recv_last_now % 60][idx]++;
+  recv_messages[now % 60][idx]++;
+  if (recv_last_relevantTCs != getRelevantTcCount()) {
+    recv_messages[now % 60][5]++;
+    recv_last_relevantTCs ++;
+  }
   return true;
 }
 
@@ -316,9 +308,8 @@ olsr_packet_statistics(char *packet __attribute__ ((unused)),
                        struct interface *interface __attribute__ ((unused)),
                        union olsr_ip_addr *ip __attribute__ ((unused)), int *length __attribute__ ((unused)))
 {
-
-  update_statistics_ptr();
-  recv_packets[recv_last_now % 60] += *length;
+  uint32_t now = now_times / 1000;
+  recv_packets[now % 60] += *length;
 
   return packet;
 }
@@ -835,7 +826,7 @@ ipc_print_stat(struct ipc_conn *conn)
   static const char *names[] = { "HELLO", "TC", "MID", "HNA", "Other", "Rel.TCs" };
 
   uint32_t msgs[6], traffic, i, j;
-  clock_t slot = (now_times / 100 + 59) % 60;
+  uint32_t slot = (now_times / 1000 + 59) % 60;
 
   if (!conn->csv) {
     if (abuf_appendf(&conn->resp, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {

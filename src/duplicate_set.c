@@ -140,7 +140,7 @@ olsr_message_is_duplicate(union olsr_message *m)
   struct dup_entry *entry;
   int diff;
   union olsr_ip_addr *mainIp;
-  clock_t valid_until;
+  uint32_t valid_until;
   uint16_t seqnr;
   union olsr_ip_addr *ip;
 #if !defined(REMOVE_LOG_DEBUG)

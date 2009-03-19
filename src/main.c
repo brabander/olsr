@@ -214,13 +214,6 @@ main(int argc, char *argv[])
     avl_comp_prefix_origin_default = avl_comp_ipv6_prefix_origin;
   }
 
-  /* Initialize tick resolution */
-#ifndef WIN32
-  olsr_cnf->system_tick_divider = 1000 / sysconf(_SC_CLK_TCK);
-#else
-  olsr_cnf->system_tick_divider = 1;
-#endif
-
   /* Initialize net */
   init_net();
 

@@ -62,7 +62,7 @@ struct link_entry {
   char *if_name;
   struct timer_entry *link_timer;
   struct timer_entry *link_sym_timer;
-  clock_t ASYM_time;
+  uint32_t ASYM_time;
   olsr_reltime vtime;
   struct neighbor_entry *neighbor;
   uint8_t prev_status;

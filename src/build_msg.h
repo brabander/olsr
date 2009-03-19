@@ -42,13 +42,6 @@
 #define _BUILD_MSG_H
 
 #include "olsr_protocol.h"
-#include <time.h> /* For clock_t */
-
-void
-set_empty_tc_timer(clock_t);
-
-clock_t
-get_empty_tc_timer(void);
 
 bool
 queue_mid(struct interface *);

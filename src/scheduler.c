@@ -54,11 +54,13 @@
 #include <assert.h>
 
 /* Timer data, global. Externed in scheduler.h */
-clock_t now_times;		        /* current idea of times(2) reported uptime */
+uint32_t now_times;		        /* relative time compared to startup (in milliseconds */
+struct timeval first_tv;      /* timevalue during startup */
+struct timeval last_tv;     /* timevalue used for last olsr_times() calculation */
 
 /* Hashed root of all timers */
 static struct list_node timer_wheel[TIMER_WHEEL_SLOTS];
-static clock_t timer_last_run;		/* remember the last timeslot walk */
+static uint32_t timer_last_run;		/* remember the last timeslot walk */
 
 /* Memory cookie for the block based memory manager */
 static struct olsr_cookie_info *timer_mem_cookie = NULL;
@@ -67,9 +69,9 @@ static struct olsr_cookie_info *timer_mem_cookie = NULL;
 static struct list_node socket_head = {&socket_head, &socket_head};
 
 /* Prototypes */
-static void walk_timers(clock_t *);
+static void walk_timers(uint32_t *);
 static void poll_sockets(void);
-static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
+static uint32_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
                            unsigned int random_val);
 
 /*
@@ -79,14 +81,78 @@ static clock_t calc_jitter(unsigned int rel_time, uint8_t jitter_pct,
  * in kernel/sys.c and will only return an error if the tms_buf is
  * not writeable.
  */
-static INLINE clock_t olsr_times(void)
+static uint32_t olsr_times(void)
 {
-#ifndef linux
-  struct tms tms_buf;
-  return times(&tms_buf);
-#else
-  return times(NULL);
-#endif
+  struct timeval tv;
+  uint32_t t;
+
+  if (gettimeofday(&tv, NULL) != 0) {
+    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
+    olsr_exit(1);
+  }
+
+  /* test if time jumped backward or more than 60 seconds forward */
+  if (tv.tv_sec < last_tv.tv_sec
+      || (tv.tv_sec == last_tv.tv_sec && tv.tv_usec < last_tv.tv_usec)
+      || tv.tv_sec - last_tv.tv_sec > 60) {
+    OLSR_WARN(LOG_SCHEDULER, "Time jump (%d.%06d to %d.%06d)\n",
+        (int32_t)(last_tv.tv_sec), (int32_t)(last_tv.tv_usec), (int32_t)(tv.tv_sec), (int32_t)(tv.tv_usec));
+
+    t = (last_tv.tv_sec - first_tv.tv_sec) * 1000 + (last_tv.tv_usec - first_tv.tv_usec) / 1000;
+    t++; /* advance time by one millisecond */
+
+    first_tv = tv;
+    first_tv.tv_sec -= (t / 1000);
+    first_tv.tv_usec -= ((t % 1000) * 1000);
+
+    if (first_tv.tv_usec < 0) {
+      first_tv.tv_sec--;
+      first_tv.tv_usec += 1000000;
+    }
+    last_tv = tv;
+    return t;
+  }
+  last_tv = tv;
+  return (tv.tv_sec - first_tv.tv_sec) * 1000 + (tv.tv_usec - first_tv.tv_usec) / 1000;
+}
+
+/**
+ * Returns a timestamp s seconds in the future
+ */
+uint32_t olsr_getTimestamp(uint32_t s) {
+  return now_times + s;
+}
+
+/**
+ * Returns the number of milliseconds until the timestamp will happen
+ */
+
+int32_t olsr_getTimeDue(uint32_t s) {
+  uint32_t diff;
+  if (s > now_times) {
+    diff = s - now_times;
+
+    /* overflow ? */
+    if (diff > (1u<<31)) {
+      return -(int32_t)(0xffffffff - diff);
+    }
+    return (int32_t)(diff);
+  }
+
+  diff = now_times - s;
+  /* overflow ? */
+  if (diff > (1u<<31)) {
+    return (int32_t)(0xffffffff - diff);
+  }
+  return -(int32_t)(diff);
+}
+
+bool olsr_isTimedOut(uint32_t s) {
+  if (s > now_times) {
+    return s - now_times > (1u<<31);
+  }
+
+  return now_times - s <= (1u<<31);
 }
 
 /**
@@ -138,7 +204,7 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
     return 0;
   }
-  OLSR_PRINTF(1, "Removing OLSR socket entry %d\n", fd);
+  OLSR_PRINTF(2, "Removing OLSR socket entry %d\n", fd);
 
   OLSR_FOR_ALL_SOCKETS(entry) {
     if (entry->fd == fd && entry->process_immediate == pf_imm &&
@@ -264,16 +330,16 @@ poll_sockets(void)
   } OLSR_FOR_ALL_SOCKETS_END(entry);
 }
 
-static void handle_fds(const unsigned long next_interval)
+static void handle_fds(uint32_t next_interval)
 {
   struct timeval tvp;
-  unsigned long remaining;
+  int32_t remaining;
 
   /* calculate the first timeout */
   now_times = olsr_times();
 
-  remaining = next_interval - (unsigned long)now_times;
-  if ((long)remaining <= 0) {
+  remaining = TIME_DUE(next_interval);
+  if (remaining <= 0) {
     /* we are already over the interval */
     if (list_is_empty(&socket_head)) {
       /* If there are no registered sockets we do not call select(2) */
@@ -283,7 +349,6 @@ static void handle_fds(const unsigned long next_interval)
     tvp.tv_usec = 0;
   } else {
     /* we need an absolute time - milliseconds */
-    remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
   }
@@ -355,13 +420,12 @@ static void handle_fds(const unsigned long next_interval)
     } OLSR_FOR_ALL_SOCKETS_END(entry);
 
     /* calculate the next timeout */
-    remaining = next_interval - (unsigned long)now_times;
-    if ((long)remaining <= 0) {
+    remaining = TIME_DUE(next_interval);
+    if (remaining <= 0) {
       /* we are already over the interval */
       break;
     }
     /* we need an absolute time - milliseconds */
-    remaining *= olsr_cnf->system_tick_divider;
     tvp.tv_sec = remaining / MSEC_PER_SEC;
     tvp.tv_usec = (remaining % MSEC_PER_SEC) * USEC_PER_MSEC;
   }
@@ -383,7 +447,7 @@ olsr_scheduler(void)
 
   /* Main scheduler loop */
   while (app_state == STATE_RUNNING) {
-    clock_t next_interval;
+    uint32_t next_interval;
 
     /*
      * Update the global timestamp. We are using a non-wallclock timer here
@@ -421,7 +485,7 @@ olsr_scheduler(void)
  * @param cached result of random() at system init.
  * @return the absolute timer in system clock tick units
  */
-static clock_t
+static uint32_t
 calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
 {
   unsigned int jitter_time;
@@ -457,26 +521,12 @@ olsr_init_timers(void)
   int idx;
 
   /* Grab initial timestamp */
+  if (gettimeofday(&first_tv, NULL)) {
+    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
+    olsr_exit(1);
+  }
+  last_tv = first_tv;
   now_times = olsr_times();
-
-#ifndef linux
-  /*
-   * Note: if using linux, olsr_times does not return any
-   * error, because it calls the kernel sys_times(NULL)
-   * If not using linux, errors may be returned, e.g.
-   * the mandatory output buffer is not kernel-writeable
-   */
-	if ((clock_t)-1 == now_times) {
-		const char * const err_msg = strerror(errno);
-		OLSR_WARN(LOG_SCHEDULER, "Error in times(): %s, sleeping for a second", err_msg);
-		sleep(1);
-		now_times = olsr_times();
-		if ((clock_t)-1 == now_times) {
-				OLSR_ERROR(LOG_SCHEDULER, "Shutting down because times() does not work");
-			exit(EXIT_FAILURE);
-		}
-	}
-#endif
 
   for (idx = 0; idx < TIMER_WHEEL_SLOTS; idx++) {
     list_head_init(&timer_wheel[idx]);
@@ -499,7 +549,7 @@ olsr_init_timers(void)
  * Callback the provided function with the context pointer.
  */
 static void
-walk_timers(clock_t * last_run)
+walk_timers(uint32_t * last_run)
 {
   unsigned int total_timers_walked = 0, total_timers_fired = 0;
   unsigned int wheel_slot_walks = 0;
@@ -584,7 +634,7 @@ walk_timers(clock_t * last_run)
   }
 
 #ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: processed %4u/%d clockwheel slots, "
+  OLSR_PRINTF(4, "TIMER: processed %4u/%d clockwheel slots, "
 	      "timers walked %4u/%u, timers fired %u\n",
 	      wheel_slot_walks, TIMER_WHEEL_SLOTS,
 	      total_timers_walked, timer_mem_cookie->ci_usage,
@@ -687,13 +737,13 @@ olsr_wallclock_string(void)
  * @return buffer to a formatted system time string.
  */
 const char *
-olsr_clock_string(clock_t clk)
+olsr_clock_string(uint32_t clk)
 {
   static char buf[sizeof("00:00:00.000")];
 
   /* On most systems a clocktick is a 10ms quantity. */
-  unsigned int msec = olsr_cnf->system_tick_divider * (unsigned int)(clk - now_times);
-  unsigned int sec = msec / MSEC_PER_SEC;
+  unsigned int msec = clk % 1000;
+  unsigned int sec = clk / 1000;
 
   snprintf(buf, sizeof(buf), "%02u:%02u:%02u.%03u",
 	   sec / 3600, (sec % 3600) / 60, (sec % 60), (msec % MSEC_PER_SEC));

@@ -1554,7 +1554,6 @@ olsr_get_default_cfg(void)
   cfg->olsr_port = OLSRPORT;
   assert(cfg->dlPath == NULL);
 
-  assert(cfg->system_tick_divider == 0);
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));
   assert(0 == cfg->source_ip_mode);
   cfg->will_int = 10 * HELLO_INTERVAL;
