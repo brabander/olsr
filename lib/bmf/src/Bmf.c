@@ -65,6 +65,7 @@
 #include "mpr_selector_set.h" /* olsr_lookup_mprs_set() */
 #include "link_set.h" /* get_best_link_to_neighbor() */
 #include "net_olsr.h" /* ipequal */
+#include "olsr_logging.h"
 
 /* BMF includes */
 #include "NetworkInterfaces.h" /* TBmfInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
@@ -79,46 +80,6 @@ static int BmfThreadRunning = 0;
 int FanOutLimit = 2;
 
 int BroadcastRetransmitCount = 1;
-
-/* -------------------------------------------------------------------------
- * Function   : BmfPError
- * Description: Prints an error message at OLSR debug level 1.
- *              First the plug-in name is printed. Then (if format is not NULL
- *              and *format is not empty) the arguments are printed, followed
- *              by a colon and a blank. Then the message and a new-line.
- * Input      : format, arguments
- * Output     : none
- * Return     : none
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-void BmfPError(const char* format, ...)
-{
-#define MAX_STR_DESC 255
-#ifndef NODEBUG
-  char* strErr = strerror(errno);
-#endif
-  char strDesc[MAX_STR_DESC];
-
-  /* Rely on short-circuit boolean evaluation */
-  if (format == NULL || *format == '\0')
-  {
-    OLSR_PRINTF(1, "%s: %s\n", PLUGIN_NAME, strErr);
-  }
-  else
-  {
-    va_list arglist;
-
-    OLSR_PRINTF(1, "%s: ", PLUGIN_NAME);
-
-    va_start(arglist, format);
-    vsnprintf(strDesc, MAX_STR_DESC, format, arglist);
-    va_end(arglist);
-
-    strDesc[MAX_STR_DESC - 1] = '\0'; /* Ensures null termination */
-
-    OLSR_PRINTF(1, "%s: %s\n", strDesc, strErr);
-  }
-} /* BmfPError */
 
 /* -------------------------------------------------------------------------
  * Function   : MainAddressOf
@@ -174,10 +135,9 @@ static void EncapsulateAndForwardPacket(
 
   if (nPossibleNeighbors <= 0)
   {
-    OLSR_PRINTF(
-      8,
-      "%s: --> not encap-forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
-      PLUGIN_NAME_SHORT,
+    OLSR_DEBUG(
+      LOG_PLUGINS,
+      "BMF: not encap-forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
       intf->ifName);
     return;
   }
@@ -244,17 +204,16 @@ static void EncapsulateAndForwardPacket(
     /* Evaluate and display result */
     if (nBytesWritten != udpDataLen)
     {
-      BmfPError("sendto() error forwarding pkt on \"%s\"", intf->ifName);
+      OLSR_WARN(LOG_PLUGINS, "BMF: sendto() error forwarding pkt on \"%s\"", intf->ifName);
     }
     else
     {
       /* Increase counter */
       intf->nBmfPacketsTx++;
 
-      OLSR_PRINTF(
-        8,
-        "%s: --> encapsulated and forwarded on \"%s\" to %s\n",
-        PLUGIN_NAME_SHORT,
+      OLSR_DEBUG(
+        LOG_PLUGINS,
+        "BMF: encapsulated and forwarded on \"%s\" to %s\n",
         intf->ifName,
         inet_ntoa(forwardTo.sin_addr));
     } /* if (nBytesWritten != udpDataLen) */
@@ -333,10 +292,9 @@ static void BmfPacketCaptured(
 
   src.v4 = ipHeader->ip_src;
 
-  OLSR_PRINTF(
-    8,
-    "%s: %s pkt of %ld bytes captured on %s interface \"%s\": %s->%s\n",
-    PLUGIN_NAME_SHORT,
+  OLSR_DEBUG(
+    LOG_PLUGINS,
+    "BMF: %s pkt of %ld bytes captured on %s interface \"%s\": %s->%s\n",
     sllPkttype == PACKET_OUTGOING ? "outgoing" : "incoming",
     (long)ipPacketLen,
     isFromOlsrIntf ? "OLSR" : "non-OLSR",
@@ -356,10 +314,7 @@ static void BmfPacketCaptured(
     /* Increase counter */
     intf->nBmfPacketsRxDup++;
 
-    OLSR_PRINTF(
-      8,
-      "%s: --> discarding: packet is duplicate\n",
-      PLUGIN_NAME_SHORT);
+    OLSR_DEBUG(LOG_PLUGINS, "BMF: discarding: packet is duplicate\n");
     return;
   }
 
@@ -440,20 +395,18 @@ static void BmfPacketCaptured(
         /* Case 1.1 */
         {
           struct ipaddr_str buf;
-          OLSR_PRINTF(
-            8,
-            "%s: --> not encap-forwarding on \"%s\": I am not selected as MPR by neighbor %s\n",
-            PLUGIN_NAME_SHORT,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "BMF: not encap-forwarding on \"%s\": I am not selected as MPR by neighbor %s\n",
             walker->ifName,
             olsr_ip_to_string(&buf, &src));
         }
       }
       else if (sllPkttype == PACKET_OUTGOING && intf == walker)
       {
-        OLSR_PRINTF(
-          8,
-          "%s: --> not encap-forwarding on \"%s\": pkt was captured on that interface\n",
-          PLUGIN_NAME_SHORT,
+        OLSR_DEBUG(
+          LOG_PLUGINS,
+          "BMF: not encap-forwarding on \"%s\": pkt was captured on that interface\n",
           walker->ifName);
       }
       else
@@ -498,14 +451,14 @@ static void BmfPacketCaptured(
         sizeof(dest));
       if (nBytesWritten != ipPacketLen)
       {
-        BmfPError("sendto() error forwarding pkt on \"%s\"", walker->ifName);
+        OLSR_WARN(LOG_PLUGINS, "BMF: sendto() error forwarding pkt on \"%s\"", walker->ifName);
       }
       else
       {
         /* Increase counter */
         walker->nBmfPacketsTx++;
 
-        OLSR_PRINTF(8, "%s: --> forwarded on \"%s\"\n", PLUGIN_NAME_SHORT, walker->ifName);
+        OLSR_WARN(LOG_PLUGINS, "BMF: forwarded on \"%s\"\n", walker->ifName);
       }
     } /* else if (isFromOlsrIntf && !isToOlsrIntf) */
 
@@ -524,10 +477,9 @@ static void BmfPacketCaptured(
       /* Don't forward on interface on which packet was received */
       if (intf == walker)
       {
-        OLSR_PRINTF(
-          8,
-          "%s: --> not forwarding on \"%s\": pkt was captured on that interface\n",
-          PLUGIN_NAME_SHORT,
+        OLSR_DEBUG(
+          LOG_PLUGINS,
+          "not forwarding on \"%s\": pkt was captured on that interface\n",
           walker->ifName);
       }
 
@@ -564,17 +516,16 @@ static void BmfPacketCaptured(
           sizeof(dest));
         if (nBytesWritten != ipPacketLen)
         {
-          BmfPError("sendto() error forwarding pkt on \"%s\"", walker->ifName);
+          OLSR_WARN(LOG_PLUGINS, "BMF: sendto() error forwarding pkt on \"%s\"", walker->ifName);
         }
         else
         {
           /* Increase counter */
           walker->nBmfPacketsTx++;
 
-          OLSR_PRINTF(
-            8,
-            "%s: --> forwarded from non-OLSR on non-OLSR \"%s\"\n",
-            PLUGIN_NAME_SHORT,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "BMF: forwarded from non-OLSR on non-OLSR \"%s\"\n",
             walker->ifName);
         }
       } /* if (intf == walker) */
@@ -638,11 +589,9 @@ static void BmfEncapsulationPacketReceived(
   /* Increase counter */
   intf->nBmfPacketsRx++;
 
-  /* Beware: not possible to call olsr_ip_to_string more than 4 times in same printf */
-  OLSR_PRINTF(
-    8,
-    "%s: encapsulated pkt of %ld bytes incoming on \"%s\": %s->%s, forwarded by %s to %s\n",
-    PLUGIN_NAME_SHORT,
+  OLSR_DEBUG(
+    LOG_PLUGINS,
+    "BMF: encapsulated pkt of %ld bytes incoming on \"%s\": %s->%s, forwarded by %s to %s\n",
     (long)ipPacketLen,
     intf->ifName,
     olsr_ip_to_string(&mcSrcBuf, &mcSrc),
@@ -658,8 +607,8 @@ static void BmfEncapsulationPacketReceived(
       encapsulationHdr->len != BMF_ENCAP_LEN ||
       ntohs(encapsulationHdr->reserved != 0))
   {
-    OLSR_PRINTF(
-      8,
+    OLSR_DEBUG(
+      LOG_PLUGINS,
       "%s: --> discarding: format of BMF encapsulation header not recognized\n",
       PLUGIN_NAME_SHORT);
     return;
@@ -671,10 +620,7 @@ static void BmfEncapsulationPacketReceived(
     /* Increase counter */
     intf->nBmfPacketsRxDup++;
 
-    OLSR_PRINTF(
-      8,
-      "%s: --> discarding: packet is duplicate\n",
-      PLUGIN_NAME_SHORT);
+    OLSR_DEBUG(LOG_PLUGINS, "BMF: discarding: packet is duplicate\n");
     return;
   }
 
@@ -700,15 +646,11 @@ static void BmfEncapsulationPacketReceived(
     nBytesWritten = write(EtherTunTapFd, bufferToWrite, nBytesToWrite);
     if (nBytesWritten != nBytesToWrite)
     {
-      BmfPError("write() error forwarding encapsulated pkt on \"%s\"", EtherTunTapIfName);
+      OLSR_WARN(LOG_PLUGINS, "BMF: write() error forwarding encapsulated pkt on \"%s\"", EtherTunTapIfName);
     }
     else
     {
-      OLSR_PRINTF(
-        8,
-        "%s: --> unpacked and delivered locally on \"%s\"\n",
-        PLUGIN_NAME_SHORT,
-        EtherTunTapIfName);
+      OLSR_DEBUG(LOG_PLUGINS, "BMF: unpacked and delivered locally on \"%s\"\n", EtherTunTapIfName);
     }
   } /* if (EtherTunTapFd >= 0) */
 
@@ -770,17 +712,16 @@ static void BmfEncapsulationPacketReceived(
         sizeof(dest));
       if (nBytesWritten != ipPacketLen)
       {
-        BmfPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"", walker->ifName);
+        OLSR_WARN(LOG_PLUGINS, "BMF: sendto() error forwarding unpacked encapsulated pkt on \"%s\"", walker->ifName);
       }
       else
       {
         /* Increase counter */
         walker->nBmfPacketsTx++;
 
-        OLSR_PRINTF(
-          8,
-          "%s: --> unpacked and forwarded on \"%s\"\n",
-          PLUGIN_NAME_SHORT,
+        OLSR_DEBUG(
+          LOG_PLUGINS,
+          "unpacked and forwarded on \"%s\"\n",
           walker->ifName);
       }
     } /* if (walker->olsrIntf == NULL) */
@@ -808,10 +749,9 @@ static void BmfEncapsulationPacketReceived(
 
       if (nPossibleNeighbors <= 0)
       {
-        OLSR_PRINTF(
-          8,
-          "%s: --> not forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
-          PLUGIN_NAME_SHORT,
+        OLSR_DEBUG(
+          LOG_PLUGINS,
+          "not forwarding on \"%s\": there is no neighbor that needs my retransmission\n",
           walker->ifName);
 
         continue; /* for */
@@ -874,17 +814,16 @@ static void BmfEncapsulationPacketReceived(
         /* Evaluate and display result */
         if (nBytesWritten != encapsulationUdpDataLen)
         {
-          BmfPError("sendto() error forwarding encapsulated pkt on \"%s\"", walker->ifName);
+          OLSR_WARN(LOG_PLUGINS, "sendto() error forwarding encapsulated pkt on \"%s\"", walker->ifName);
         }
         else
         {
           /* Increase counter */
           walker->nBmfPacketsTx++;
 
-          OLSR_PRINTF(
-            8,
-            "%s: --> forwarded on \"%s\" to %s\n",
-            PLUGIN_NAME_SHORT,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "forwarded on \"%s\" to %s\n",
             walker->ifName,
             inet_ntoa(forwardTo.sin_addr));
         } /* if */
@@ -896,10 +835,9 @@ static void BmfEncapsulationPacketReceived(
       struct ipaddr_str buf;
       /* 'walker' is an OLSR interface, but I am not selected as MPR. In that
        * case, don't forward. */
-      OLSR_PRINTF(
-        8,
-        "%s: --> not forwarding on \"%s\": I am not selected as MPR by %s\n",
-        PLUGIN_NAME_SHORT,
+      OLSR_DEBUG(
+        LOG_PLUGINS,
+        "not forwarding on \"%s\": I am not selected as MPR by %s\n",
         walker->ifName,
         olsr_ip_to_string(&buf, forwardedBy));
     } /* else */
@@ -949,10 +887,9 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
 
   srcIp.v4 = ipHeader->ip_src;
 
-  OLSR_PRINTF(
-    8,
-    "%s: outgoing pkt of %ld bytes captured on tuntap interface \"%s\": %s->%s\n",
-    PLUGIN_NAME_SHORT,
+  OLSR_DEBUG(
+    LOG_PLUGINS,
+    "outgoing pkt of %ld bytes captured on tuntap interface \"%s\": %s->%s\n",
     (long)ipPacketLen,
     EtherTunTapIfName,
     olsr_ip_to_string(&srcIpBuf, &srcIp),
@@ -964,10 +901,7 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
   /* Check if this packet was seen recently */
   if (CheckAndMarkRecentPacket(crc32))
   {
-    OLSR_PRINTF(
-      8,
-      "%s: --> discarding: packet is duplicate\n",
-      PLUGIN_NAME_SHORT);
+    OLSR_DEBUG(LOG_PLUGINS, "discarding: packet is duplicate\n");
     return;
   }
 
@@ -1027,17 +961,16 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
         sizeof(dest));
       if (nBytesWritten != ipPacketLen)
       {
-        BmfPError("sendto() error forwarding pkt on \"%s\"", walker->ifName);
+        OLSR_WARN(LOG_PLUGINS, "sendto() error forwarding pkt on \"%s\"", walker->ifName);
       }
       else
       {
         /* Increase counter */
         walker->nBmfPacketsTx++;
 
-        OLSR_PRINTF(
-          8,
-          "%s: --> forwarded from non-OLSR to non-OLSR \"%s\"\n",
-          PLUGIN_NAME_SHORT,
+        OLSR_DEBUG(
+          LOG_PLUGINS,
+          "forwarded from non-OLSR to non-OLSR \"%s\"\n",
           walker->ifName);
       } /* if */
     } /* if */
@@ -1072,7 +1005,7 @@ static void DoBmf(void)
   {
     if (errno != EINTR)
     {
-      BmfPError("select() error");
+      OLSR_WARN(LOG_PLUGINS, "select() error");
     }
     return;
   }
@@ -1109,7 +1042,7 @@ static void DoBmf(void)
           &addrLen);
         if (nBytes < 0)
         {
-          BmfPError("recvfrom() error on \"%s\"", walker->ifName);
+          OLSR_WARN(LOG_PLUGINS, "recvfrom() error on \"%s\"", walker->ifName);
 
           continue; /* for */
         } /* if (nBytes < 0) */
@@ -1122,10 +1055,9 @@ static void DoBmf(void)
          * returned on a non-VLAN interface, for the same ethernet frame. */
         if (nBytes < (int)sizeof(struct ip))
         {
-          OLSR_PRINTF(
-            1,
-            "%s: captured frame too short (%d bytes) on \"%s\"\n",
-            PLUGIN_NAME,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "captured frame too short (%d bytes) on \"%s\"\n",
             nBytes,
             walker->ifName);
 
@@ -1174,7 +1106,7 @@ static void DoBmf(void)
           &addrLen);
         if (nBytes < 0)
         {
-          BmfPError("recvfrom() error on \"%s\"", walker->ifName);
+          OLSR_WARN(LOG_PLUGINS, "recvfrom() error on \"%s\"", walker->ifName);
 
           continue; /* for */
         } /* if (nBytes < 0) */
@@ -1221,10 +1153,9 @@ static void DoBmf(void)
           sizeof(struct ip);
         if (nBytes < minimumLength)
         {
-          OLSR_PRINTF(
-            1,
-            "%s: captured a too short encapsulation packet (%d bytes) on \"%s\"\n",
-            PLUGIN_NAME,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "captured a too short encapsulation packet (%d bytes) on \"%s\"\n",
             nBytes,
             walker->ifName);
 
@@ -1268,7 +1199,7 @@ static void DoBmf(void)
           &fromLen);
         if (nBytes < 0)
         {
-          BmfPError("recvfrom() error on \"%s\"", walker->ifName);
+          OLSR_WARN(LOG_PLUGINS, "recvfrom() error on \"%s\"", walker->ifName);
 
           continue; /* for */
         } /* if (nBytes < 0) */
@@ -1285,10 +1216,9 @@ static void DoBmf(void)
         if (nBytes < minimumLength)
         {
           struct ipaddr_str buf;
-          OLSR_PRINTF(
-            1,
-            "%s: received a too short encapsulation packet (%d bytes) from %s on \"%s\"\n",
-            PLUGIN_NAME,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "received a too short encapsulation packet (%d bytes) from %s on \"%s\"\n",
             nBytes,
             olsr_ip_to_string(&buf, &forwardedBy),
             walker->ifName);
@@ -1327,7 +1257,7 @@ static void DoBmf(void)
 
       if (nBytes < 0)
       {
-        BmfPError("recvfrom() error on \"%s\"", EtherTunTapIfName);
+        OLSR_WARN(LOG_PLUGINS, "recvfrom() error on \"%s\"", EtherTunTapIfName);
       }
       else
       {
@@ -1335,10 +1265,9 @@ static void DoBmf(void)
          * packet which contains at least a minimum-size IP header */
         if (nBytes < (int)sizeof(struct ip))
         {
-          OLSR_PRINTF(
-            1,
-            "%s: captured packet too short (%d bytes) on \"%s\"\n",
-            PLUGIN_NAME,
+          OLSR_DEBUG(
+            LOG_PLUGINS,
+            "captured packet too short (%d bytes) on \"%s\"\n",
             nBytes,
             EtherTunTapIfName);
         }
@@ -1385,7 +1314,7 @@ static void* BmfRun(void* useless __attribute__((unused)))
   sigdelset(&blockedSigs, SIGALRM);
   if (pthread_sigmask(SIG_BLOCK, &blockedSigs, NULL) != 0)
   {
-    BmfPError("pthread_sigmask() error");
+    OLSR_WARN(LOG_PLUGINS, "pthread_sigmask() error");
   }
 
   /* Set up the signal handler for the process: use SIGALRM to terminate
@@ -1396,7 +1325,7 @@ static void* BmfRun(void* useless __attribute__((unused)))
    * function (see DoBmf()). */
   if (signal(SIGALRM, BmfSignalHandler) == SIG_ERR)
   {
-    BmfPError("signal() error");
+    OLSR_WARN(LOG_PLUGINS, "signal() error");
   }
 
   /* Call the thread function until flagged to exit */
@@ -1425,7 +1354,7 @@ int InterfaceChange(struct interface* interf, int action)
   {
   case (IFCHG_IF_ADD):
     AddInterface(interf);
-    OLSR_PRINTF(1, "%s: interface %s added\n", PLUGIN_NAME, interf->int_name);
+    OLSR_DEBUG(LOG_PLUGINS, "interface %s added\n", interf->int_name);
     break;
 
   case (IFCHG_IF_REMOVE):
@@ -1436,18 +1365,17 @@ int InterfaceChange(struct interface* interf, int action)
      * interfaces. After that, BMF is re-started (InitBmf(interf)). */
     CloseBmf();
     InitBmf(interf);
-    OLSR_PRINTF(1, "%s: interface %s removed\n", PLUGIN_NAME, interf->int_name);
+    OLSR_DEBUG(LOG_PLUGINS, "interface %s removed\n", interf->int_name);
     break;
 
   case (IFCHG_IF_UPDATE):
-    OLSR_PRINTF(1, "%s: interface %s updated\n", PLUGIN_NAME, interf->int_name);
+    OLSR_DEBUG(LOG_PLUGINS, "interface %s updated\n", interf->int_name);
     break;
 
   default:
-    OLSR_PRINTF(
-      1,
-      "%s: interface %s: error - unknown action (%d)\n",
-      PLUGIN_NAME,
+    OLSR_WARN(
+      LOG_PLUGINS,
+      "interface %s: error - unknown action (%d)\n",
       interf->int_name, action);
     break;
   }
@@ -1499,7 +1427,7 @@ int InitBmf(struct interface* skipThisIntf)
   BmfThreadRunning = 1;
   if (pthread_create(&BmfThread, NULL, BmfRun, NULL) != 0)
   {
-    BmfPError("pthread_create() error");
+    OLSR_WARN(LOG_PLUGINS, "pthread_create() error");
     return 0;
   }
 
@@ -1546,13 +1474,13 @@ void CloseBmf(void)
      * signal in its thread entry function BmfRun(...). */
     if (pthread_kill(BmfThread, SIGALRM) != 0)
     {
-      BmfPError("pthread_kill() error");
+      OLSR_WARN(LOG_PLUGINS, "pthread_kill() error");
     }
 
     /* Wait for BmfThread to acknowledge */
     if (pthread_join(BmfThread, NULL) != 0)
     {
-      BmfPError("pthread_join() error");
+      OLSR_WARN(LOG_PLUGINS, "pthread_join() error");
     }
   }
 

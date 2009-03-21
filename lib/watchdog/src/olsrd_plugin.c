@@ -51,6 +51,7 @@
 #include "defs.h"
 #include "scheduler.h"
 #include "olsr_cookie.h"
+#include "olsr_logging.h"
 
 #include "plugin.h"
 
@@ -112,7 +113,7 @@ olsr_watchdog_write_alivefile(void *foo __attribute__ ((unused)))
 {
   FILE *file = fopen(watchdog_filename, "w");
   if (file == NULL) {
-    OLSR_PRINTF(3, "Error, cannot write watchdog alivefile");
+    OLSR_WARN(LOG_PLUGINS, "Error, cannot write watchdog alivefile");
   } else {
     fprintf(file, "%ld\n", (long)time(NULL));
     fflush(file);

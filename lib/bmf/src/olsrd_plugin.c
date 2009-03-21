@@ -48,6 +48,7 @@
 #include "scheduler.h" /* olsr_start_timer() */
 #include "olsr_cfg.h" /* olsr_cnf() */
 #include "olsr_cookie.h" /* olsr_alloc_cookie() */
+#include "olsr_logging.h"
 
 /* BMF includes */
 #include "Bmf.h" /* InitBmf(), CloseBmf() */
@@ -91,7 +92,7 @@ int olsrd_plugin_init(void)
   /* Check validity */
   if (olsr_cnf->ip_version != AF_INET)
   {
-    fprintf(stderr, PLUGIN_NAME ": This plugin only supports IPv4!\n");
+    OLSR_WARN(LOG_PLUGINS, PLUGIN_NAME ": This plugin only supports IPv4!\n");
     return 0;
   }
 
@@ -165,7 +166,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 static void my_init(void)
 {
   /* Print plugin info to stdout */
-  printf("%s\n", MOD_DESC);
+  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
   return;
 }

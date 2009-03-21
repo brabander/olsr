@@ -64,8 +64,8 @@
 #include "kernel_routes.h"
 #include "scheduler.h"
 #include "misc.h"
+#include "olsr_logging.h"
 
-#undef ARPREFRESH_DEBUG
 #define PLUGIN_INTERFACE_VERSION 5
 
 /****************************************************************************
@@ -140,7 +140,7 @@ static void olsr_arp_event(void* foo __attribute__((unused)))
 			memcpy(&req.arp.arp_ha.sa_data, &buf.eth.h_source, sizeof(buf.eth.h_source));
 			req.arp.arp_flags = ATF_COM;
 			if_indextoname(from.sll_ifindex, req.arp.arp_dev);
-#ifdef ARPREFRESH_DEBUG
+#if 0
 			{
 				int i;
 				OLSR_PRINTF(0, "Refresh on %s, %s=", req.arp.arp_dev,
@@ -152,7 +152,7 @@ static void olsr_arp_event(void* foo __attribute__((unused)))
 			}
 #endif
 			if (ioctl(arprefresh_sockfd, SIOCSARP, &req) < 0) {
-				OLSR_PRINTF(1, "*** ARPREFRESH: SIOCSARP: %s\n", strerror(errno));
+				OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: SIOCSARP: %s\n", strerror(errno));
 				close(arprefresh_sockfd);
 				arprefresh_sockfd = -1;
 				return;
@@ -205,12 +205,12 @@ int olsrd_plugin_init(void)
 		}
 		else
 		{
-			OLSR_PRINTF(1, "*** ARPREFRESH: Cannot create non-blocking filtering packet socket: %s\n", strerror(errno));
+			OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: Cannot create non-blocking filtering packet socket: %s\n", strerror(errno));
 		}
 	}
 	else
 	{
-		OLSR_PRINTF(1, "*** ARPREFRESH: IPv6 not supported\n");
+	  OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: IPv6 not supported\n");
 	}
 	return ret;
 }
@@ -224,7 +224,7 @@ static void __attribute__ ((destructor)) my_fini(void);
 
 static void my_init(void)
 {
-	printf("OLSRD arprefresh plugin by Sven-Ola\n");
+  OLSR_INFO(LOG_PLUGINS, "OLSRD arprefresh plugin by Sven-Ola\n");
 }
 
 /**

@@ -50,6 +50,7 @@
 #include "scheduler.h"
 #include "olsr_cookie.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 #include <net/route.h>
 #include <arpa/inet.h>
@@ -129,7 +130,7 @@ static int set_plugin_ping(const char *value, void *data __attribute__((unused))
     union olsr_ip_addr foo_addr;
 
     if (inet_pton(olsr_cnf->ip_version, value, &foo_addr) <= 0) {
-        OLSR_PRINTF(0, "Illegal IP address \"%s\"", value);
+        OLSR_WARN(LOG_PLUGINS, "Illegal IP address \"%s\"", value);
         return 1;
     }
     /*if first ping without hna then assume inet gateway*/
@@ -157,19 +158,19 @@ static int set_plugin_hna(const char *value, void *data __attribute__((unused)),
     //192.168.1.0  255.255.255.0
     int i = sscanf(value,"%127s %127s", s_netaddr, s_mask);
     if (i != 2) {
-        OLSR_PRINTF(0, "Cannot get IP address and netmask from \"%s\"", value);
+        OLSR_WARN(LOG_PLUGINS, "Cannot get IP address and netmask from \"%s\"", value);
         return 1;
     }
 
     //printf("%s():i:%i; net:%s; mask:%s\n",__func__,i,s_netaddr,s_mask);
     if (inet_pton(olsr_cnf->ip_version, s_netaddr, &temp_net) <= 0) {
-        OLSR_PRINTF(0, "Illegal IP address \"%s\"", s_netaddr);
+      OLSR_WARN(LOG_PLUGINS, "Illegal IP address \"%s\"", s_netaddr);
         return 1;
     }
 
     //printf("GOT: %s(%08x)",inet_ntoa(foo_addr),foo_addr.s_addr);
     if (inet_pton(olsr_cnf->ip_version, s_mask, &temp_netmask) <= 0) {
-        OLSR_PRINTF(0, "Illegal netmask \"%s\"", s_netaddr);
+      OLSR_WARN(LOG_PLUGINS, "Illegal netmask \"%s\"", s_netaddr);
         return 1;
     }
 
@@ -313,8 +314,7 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
     FILE *fp = fopen(PROCENTRY_ROUTE, "r");
     if (!fp)
       {
-        perror(PROCENTRY_ROUTE);
-        OLSR_PRINTF(1, "INET (IPv4) not configured in this system.\n");
+        OLSR_WARN(LOG_PLUGINS, "Cannot read proc file %s: %s\n", PROCENTRY_ROUTE, strerror(errno));
 	return -1;
       }
 
@@ -355,11 +355,11 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
             if (the_ping_list != NULL) {
               /*validate the found inet gw by pinging*/
               if (ping_is_possible(the_ping_list)) {
-                OLSR_PRINTF(1, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+                OLSR_DEBUG(LOG_PLUGINS, "HNA[%08x/%08x](ping is possible) VIA %s detected in routing table.\n", dest_addr,netmask,iface);
                 retval=1;
               }
             } else {
-              OLSR_PRINTF(1, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
+              OLSR_DEBUG(LOG_PLUGINS, "HNA[%08x/%08x] VIA %s detected in routing table.\n", dest_addr,netmask,iface);
               retval=1;
             }
           }
@@ -368,7 +368,7 @@ check_gw(union olsr_ip_addr *net, uint8_t prefixlen, struct ping_list *the_ping_
     fclose(fp);
     if(retval == 0){
       /* And we cast here since we get warnings on Win32 */
-      OLSR_PRINTF(1, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
+      OLSR_WARN(LOG_PLUGINS, "HNA[%08x/%08x] is invalid\n", (unsigned int)net->v4.s_addr, (unsigned int)mask.v4.s_addr);
     }
     return retval;
 }
@@ -380,12 +380,11 @@ ping_is_possible(struct ping_list *the_ping_list)
   for(list = the_ping_list; list; list = list->next) {
     char ping_command[50];
     snprintf(ping_command, sizeof(ping_command), "ping -c 1 -q %s", list->ping_address);
-    OLSR_PRINTF(1, "\nDo ping on %s ...\n", list->ping_address);
     if (system(ping_command) == 0) {
-      OLSR_PRINTF(1, "...OK\n\n");
+      OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... ok\n", list->ping_address);
       return 1;
     }
-    OLSR_PRINTF(1, "...FAILED\n\n");
+    OLSR_DEBUG(LOG_PLUGINS, "\nDo ping on %s ... failed\n", list->ping_address);
   }
   return 0;
 }
@@ -394,12 +393,7 @@ ping_is_possible(struct ping_list *the_ping_list)
 static struct ping_list *
 add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
 {
-  struct ping_list *new = malloc(sizeof(struct ping_list));
-  if(!new)
-  {
-    fprintf(stderr, "DYN GW: Out of memory!\n");
-    exit(0);
-  }
+  struct ping_list *new = olsr_malloc(sizeof(struct ping_list), "ping list");
   new->ping_address = olsr_strdup(ping_address);
   new->next = the_ping_list;
   return new;
@@ -410,12 +404,7 @@ add_to_ping_list(const char *ping_address, struct ping_list *the_ping_list)
 static struct hna_list *
 add_to_hna_list(struct hna_list * list_root, union olsr_ip_addr *hna_net, uint8_t hna_prefixlen )
 {
-  struct hna_list *new = malloc(sizeof(struct hna_list));
-  if(new == NULL)
-  {
-    fprintf(stderr, "DYN GW: Out of memory!\n");
-    exit(0);
-  }
+  struct hna_list *new = olsr_malloc(sizeof(struct hna_list), "hna list");
   //memcpy(&new->hna_net,hna_net,sizeof(union hna_net));
   //memcpy(&new->hna_netmask,hna_netmask,sizeof(union hna_netmask));
   new->hna_net.v4=hna_net->v4;

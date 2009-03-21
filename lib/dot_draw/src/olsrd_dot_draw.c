@@ -50,6 +50,7 @@
 #include "hna_set.h"
 #include "link_set.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 #ifdef _WRS_KERNEL
 #include <vxWorks.h>
@@ -179,19 +180,19 @@ plugin_ipc_init(void)
   /* Init ipc socket */
   ipc_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (ipc_socket == -1) {
-    OLSR_PRINTF(1, "(DOT DRAW)IPC socket %s\n", strerror(errno));
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC socket %s\n", strerror(errno));
     return 0;
   }
 
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
 
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
@@ -207,22 +208,19 @@ plugin_ipc_init(void)
 
   /* bind the socket to the port number */
   if (bind(ipc_socket, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-    OLSR_PRINTF(1, "(DOT DRAW)IPC bind %s\n", strerror(errno));
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
 
   /* show that we are willing to listen */
   if (listen(ipc_socket, 1) == -1) {
-    OLSR_PRINTF(1, "(DOT DRAW)IPC listen %s\n", strerror(errno));
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC listen %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
   }
 
   /* Register with olsrd */
-#if 0
-  printf("Adding socket with olsrd\n");
-#endif
   add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
   return 1;
@@ -236,17 +234,17 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
   socklen_t addrlen = sizeof(struct sockaddr_in);
   int ipc_connection = accept(ipc_socket, (struct sockaddr *)&pin, &addrlen);
   if (ipc_connection == -1) {
-    OLSR_PRINTF(1, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
+    OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC accept: %s\n", strerror(errno));
     return;
   }
 #ifndef _WRS_KERNEL
   if (ip4cmp(&pin.sin_addr, &ipc_accept_ip.v4) != 0) {
-    OLSR_PRINTF(0, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
+    OLSR_WARN(LOG_PLUGINS, "Front end-connection from foreign host (%s) not allowed!\n", inet_ntoa(pin.sin_addr));
     CLOSESOCKET(ipc_connection);
     return;
   }
 #endif
-  OLSR_PRINTF(1, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
+  OLSR_DEBUG(LOG_PLUGINS, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   pcf_event(ipc_connection, 1, 1, 1);
   CLOSESOCKET(ipc_connection); /* close connection after one output */
 }

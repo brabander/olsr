@@ -46,6 +46,7 @@
 #include "olsr.h"
 #include "olsr_cookie.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,8 +54,6 @@
 #include <net/route.h>
 #include <unistd.h>
 #include <errno.h>
-
-#define DEBUGLEV 1
 
 #define PLUGIN_INTERFACE_VERSION 5
 
@@ -90,7 +89,7 @@ olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *
 int
 olsrd_plugin_init(void)
 {
-  printf("OLSRD dyn_gw_plain plugin by Sven-Ola\n");
+  OLSR_INFO(LOG_PLUGINS, "OLSRD dyn_gw_plain plugin by Sven-Ola\n");
 
   gw_net.v4.s_addr = INET_NET;
   gw_netmask.v4.s_addr = INET_PREFIX;
@@ -99,7 +98,7 @@ olsrd_plugin_init(void)
 
   /* Remove all local Inet HNA entries */
   while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version)) {
-    OLSR_PRINTF(DEBUGLEV, "HNA Internet gateway deleted\n");
+    OLSR_DEBUG(LOG_PLUGINS, "HNA Internet gateway deleted\n");
   }
 
   /* create the cookie */
@@ -123,8 +122,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
   FILE *fp = fopen(PROCENTRY_ROUTE, "r");
 
   if (!fp) {
-    perror(PROCENTRY_ROUTE);
-    OLSR_PRINTF(DEBUGLEV, "INET (IPv4) not configured in this system.\n");
+    OLSR_WARN(LOG_PLUGINS, "Cannot read proc file %s: %s\n", PROCENTRY_ROUTE, strerror(errno));
     return -1;
   }
 
@@ -135,7 +133,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
      "Flags Metric Ref    Use Iface\n");
    */
   while (fgets(buff, 1023, fp)) {
-#ifdef DEBUG
+#if !defined REMOVE_DEBUG
     struct ipaddr_str buf;
 #endif
     num =
@@ -145,18 +143,15 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
     if (num < 8) {
       continue;
     }
-#ifdef DEBUG
-    OLSR_PRINTF(DEBUGLEV, "%-15s ", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&netmask));
-
-    OLSR_PRINTF(DEBUGLEV, "%-15s ", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&dest_addr));
-
-    OLSR_PRINTF(DEBUGLEV, "%-15s %-6d %-2d %7d %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)&gate_addr), metric, refcnt,
-                use, iface);
-#endif
+    OLSR_DEBUG(LOG_PLUGINS, "%-15s %-15s %-15s %-6d %-2d %7d %s\n",
+        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&netmask),
+        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&dest_addr),
+        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&gate_addr),
+        metric, refcnt, use, iface);
 
     if (                        /* (iflags & RTF_GATEWAY) && */
          (iflags & RTF_UP) && (metric == 0) && (netmask == mask->v4.s_addr) && (dest_addr == net->v4.s_addr)) {
-      OLSR_PRINTF(DEBUGLEV, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
+      OLSR_DEBUG(LOG_PLUGINS, "INTERNET GATEWAY VIA %s detected in routing table.\n", iface);
       retval = 1;
     }
 
@@ -165,7 +160,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
   fclose(fp);
 
   if (retval == 0) {
-    OLSR_PRINTF(DEBUGLEV, "No Internet GWs detected...\n");
+    OLSR_DEBUG(LOG_PLUGINS, "No Internet GWs detected...\n");
   }
 
   return retval;
@@ -180,13 +175,13 @@ olsr_event(void *foo __attribute__ ((unused)))
 {
   int res = check_gw(&gw_net, &gw_netmask);
   if (1 == res && 0 == has_inet_gateway) {
-    OLSR_PRINTF(DEBUGLEV, "Adding OLSR local HNA entry for Internet\n");
+    OLSR_DEBUG(LOG_PLUGINS, "Adding OLSR local HNA entry for Internet\n");
     ip_prefix_list_add(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask));
     has_inet_gateway = 1;
   } else if (0 == res && 1 == has_inet_gateway) {
     /* Remove all local Inet HNA entries */
     while (ip_prefix_list_remove(&olsr_cnf->hna_entries, &gw_net, olsr_netmask_to_prefix(&gw_netmask), olsr_cnf->ip_version)) {
-      OLSR_PRINTF(DEBUGLEV, "Removing OLSR local HNA entry for Internet\n");
+      OLSR_DEBUG(LOG_PLUGINS, "Removing OLSR local HNA entry for Internet\n");
     }
     has_inet_gateway = 0;
   }

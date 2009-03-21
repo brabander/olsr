@@ -171,21 +171,17 @@ olsrd_plugin_init(void)
   /* Init ipc socket */
   listen_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
   if (listen_socket == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(TXTINFO) socket()=%s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) socket()=%s\n", strerror(errno));
     return 0;
   }
   if (setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) setsockopt()=%s\n", strerror(errno));
     CLOSESOCKET(listen_socket);
     return 0;
   }
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(listen_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) reusing address failed: %s", strerror(errno));
     CLOSESOCKET(listen_socket);
     return 0;
   }
@@ -216,18 +212,14 @@ olsrd_plugin_init(void)
 
   /* bind the socket to the port number */
   if (bind(listen_socket, (struct sockaddr *)&sst, addrlen) == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(TXTINFO) bind()=%s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) bind()=%s\n", strerror(errno));
     CLOSESOCKET(listen_socket);
     return 0;
   }
 
   /* show that we are willing to listen */
   if (listen(listen_socket, 1) == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(TXTINFO) listen()=%s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) listen()=%s\n", strerror(errno));
     CLOSESOCKET(listen_socket);
     return 0;
   }
@@ -235,9 +227,7 @@ olsrd_plugin_init(void)
   /* Register with olsrd */
   add_olsr_socket(listen_socket, NULL, &ipc_action, NULL, SP_IMM_READ);
 
-#ifndef NODEBUG
-  OLSR_PRINTF(2, "(TXTINFO) listening on port %d\n", ipc_port);
-#endif
+  OLSR_INFO(LOG_PLUGINS, "(TXTINFO) listening on port %d\n", ipc_port);
 
   memset(recv_packets, 0, sizeof(recv_packets));
   memset(recv_messages, 0, sizeof(recv_messages));
@@ -344,9 +334,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 
   if (http_connection == -1) {
     /* this may well happen if the other side immediately closes the connection. */
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(TXTINFO) accept()=%s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) accept()=%s\n", strerror(errno));
     return;
   }
 
@@ -360,13 +348,11 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
   }
 
   if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
-    OLSR_PRINTF(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) From host(%s) not allowed!\n", addr);
     CLOSESOCKET(http_connection);
     return;
   }
-#ifndef NODEBUG
-  OLSR_PRINTF(2, "(TXTINFO) Connect from %s\n", addr);
-#endif
+  OLSR_WARN(LOG_PLUGINS, "(TXTINFO) Connect from %s\n", addr);
 
   /* make the fd non-blocking */
   if (set_nonblocking(http_connection) < 0) {

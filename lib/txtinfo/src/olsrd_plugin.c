@@ -56,6 +56,7 @@
 #include "ipcalc.h"
 #include "olsr_cfg.h"
 #include "olsr.h"
+#include "olsr_logging.h"
 
 #define PLUGIN_NAME    "OLSRD txtinfo plugin"
 #define PLUGIN_VERSION "0.1"
@@ -78,7 +79,7 @@ static void my_fini(void) __attribute__ ((destructor));
 static void my_init(void)
 {
     /* Print plugin info to stdout */
-    printf("%s\n", MOD_DESC);
+    OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
     /* defaults for parameters */
     ipc_port = 2006;

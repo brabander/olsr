@@ -44,6 +44,7 @@
 #include "olsrd_dot_draw.h"
 #include "olsr.h"
 #include "defs.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -72,7 +73,7 @@ static void my_fini(void) __attribute__((destructor));
 static void my_init(void)
 {
     /* Print plugin info to stdout */
-    printf("%s\n", MOD_DESC);
+    OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
     /* defaults for parameters */
     ipc_port = 2004;
