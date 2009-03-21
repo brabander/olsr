@@ -45,6 +45,8 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 
+#include "olsr_logging.h"
+
 struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg    r;
@@ -192,7 +194,7 @@ olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   int rslt;
   int rttable;
 
-  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+  OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
 
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable)
   {
@@ -231,7 +233,7 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
   int rslt;
   int rttable;
 
-  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+  OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
   if (0 == olsr_cnf->rttable_default && 0 == rt->rt_dst.prefix_len && 253 > olsr_cnf->rttable)
   {

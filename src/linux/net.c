@@ -48,6 +48,8 @@
 #include "../common/string.h"
 #include "../olsr_protocol.h"
 #include "../misc.h"
+#include "../olsr_logging.h"
+#include "../olsr.h"
 
 #include <net/if.h>
 
@@ -93,7 +95,7 @@ bind_socket_to_device(int sock, char *dev_name)
   /*
    *Bind to device using the SO_BINDTODEVICE flag
    */
-  OLSR_PRINTF(3, "Binding socket %d to device %s\n", sock, dev_name);
+  OLSR_DEBUG(LOG_NETWORKING, "Binding socket %d to device %s\n", sock, dev_name);
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
 }
 
@@ -119,7 +121,7 @@ enable_ip_forwarding(int version)
   FILE *proc_fwd = fopen(procfile, "r");
 
   if (proc_fwd == NULL) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "WARNING! Could not open the %s file to check/enable IP forwarding!\n"
 	    "Are you using the procfile filesystem?\nDoes your system support IPv%d?\n"
 	    "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabled!\n\n",
@@ -131,16 +133,16 @@ enable_ip_forwarding(int version)
   fclose(proc_fwd);
 
   if(orig_fwd_state == '1') {
-    OLSR_PRINTF(3, "\nIP forwarding is enabled on this system\n");
+    OLSR_INFO(LOG_NETWORKING, "\nIP forwarding is enabled on this system\n");
   } else {
     proc_fwd = fopen(procfile, "w");
     if (proc_fwd == NULL) {
-      fprintf(stderr, "Could not open %s for writing!\n", procfile);
-      fprintf(stderr, "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabeled!\n\n");
+      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
+        "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabeled!\n\n",
+        procfile);
       sleep(3);
       return 0;
     }
-    syslog(LOG_INFO, "Writing \"1\" to %s\n", procfile);
     fputs("1", proc_fwd);
     fclose(proc_fwd);
   }
@@ -158,7 +160,7 @@ disable_redirects_global(int version)
   }
   proc_redirect = fopen(procfile, "r");
   if (proc_redirect == NULL) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
 	    "Are you using the procfile filesystem?\n"
 	    "Does your system support IPv4?\n"
@@ -174,12 +176,12 @@ disable_redirects_global(int version)
   }
   proc_redirect = fopen(procfile, "w");
   if (proc_redirect == NULL) {
-    fprintf(stderr, "Could not open %s for writing!\n", procfile);
-    fprintf(stderr, "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n");
+    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
+        "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n",
+        procfile);
     sleep(3);
     return 0;
   }
-  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
   fputs("0", proc_redirect);
   fclose(proc_redirect);
   return 1;
@@ -204,7 +206,7 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
 
   proc_redirect = fopen(procfile, "r");
   if (proc_redirect == NULL) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
 	    "Are you using the procfile filesystem?\n"
 	    "Does your system support IPv4?\n"
@@ -217,12 +219,12 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
 
   proc_redirect = fopen(procfile, "w");
   if (proc_redirect == NULL) {
-    fprintf(stderr, "Could not open %s for writing!\n", procfile);
-    fprintf(stderr, "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n");
+    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
+        "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n",
+        procfile);
     sleep(3);
     return 0;
   }
-  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
   fputs("0", proc_redirect);
   fclose(proc_redirect);
   return 1;
@@ -247,7 +249,7 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
 
   proc_spoof = fopen(procfile, "r");
   if (proc_spoof == NULL) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
 	    "Are you using the procfile filesystem?\n"
 	    "Does your system support IPv4?\n"
@@ -260,12 +262,12 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
 
   proc_spoof = fopen(procfile, "w");
   if (proc_spoof == NULL) {
-    fprintf(stderr, "Could not open %s for writing!\n", procfile);
-    fprintf(stderr, "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n");
+    OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
+        "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n",
+        procfile);
     sleep(3);
     return 0;
   }
-  syslog(LOG_INFO, "Writing \"0\" to %s", procfile);
   fputs("0", proc_spoof);
   fclose(proc_spoof);
   return 1;
@@ -279,7 +281,7 @@ restore_settings(int version)
 {
   struct interface *ifs;
 
-  OLSR_PRINTF(1, "Restoring network state\n");
+  OLSR_INFO(LOG_NETWORKING, "Restoring network state\n");
 
   /* Restore IP forwarding to "off" */
   if (orig_fwd_state == '0') {
@@ -289,9 +291,8 @@ restore_settings(int version)
     FILE *proc_fd = fopen(procfile, "w");
 
     if (proc_fd == NULL) {
-      fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
     } else {
-      syslog(LOG_INFO, "Resetting %s to %c\n", procfile, orig_fwd_state);
       fputc(orig_fwd_state, proc_fd);
       fclose(proc_fd);
     }
@@ -304,9 +305,8 @@ restore_settings(int version)
       FILE *proc_fd = fopen(procfile, "w");
 
       if (proc_fd == NULL) {
-	fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+	OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
       } else {
-	syslog(LOG_INFO, "Resetting %s to %c\n", procfile, orig_global_redirect_state);
 	fputc(orig_global_redirect_state, proc_fd);
 	fclose(proc_fd);
       }
@@ -330,10 +330,8 @@ restore_settings(int version)
     snprintf(procfile, sizeof(procfile), REDIRECT_PROC, ifs->int_name);
     proc_fd = fopen(procfile, "w");
     if (proc_fd == NULL) {
-      fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
     } else {
-      syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.redirect);
-
       fputc(ifs->nic_state.redirect, proc_fd);
       fclose(proc_fd);
     }
@@ -344,10 +342,8 @@ restore_settings(int version)
     sprintf(procfile, SPOOF_PROC, ifs->int_name);
     proc_fd = fopen(procfile, "w");
     if (proc_fd == NULL) {
-      fprintf(stderr, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+      OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
     } else {
-      syslog(LOG_INFO, "Resetting %s to %c\n", procfile, ifs->nic_state.spoof);
-
       fputc(ifs->nic_state.spoof, proc_fd);
       fclose(proc_fd);
     }
@@ -366,30 +362,25 @@ gethemusocket(struct sockaddr_in *pin)
 {
   int sock, on;
 
-  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d\n", pin->sin_port);
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("hcsocket");
-    syslog(LOG_ERR, "hcsocket: %m");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for emulation (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   /* connect to PORT on HOST */
   if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0) {
-    printf("FAILED\n");
-    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
-    printf("connection refused\n");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot connect socket for emulation (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
-
-  printf("OK\n");
 
   /* Keep TCP socket blocking */
   return sock;
@@ -408,35 +399,33 @@ getsocket(int bufspace, char *int_name)
   int on;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   on = 1;
 #ifdef SO_BROADCAST
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) {
-    perror("setsockopt");
-    syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 #endif
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
 #ifdef SO_RCVBUF
   for (on = bufspace; ; on -= 1024) {
     if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
+      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
     }
     if (on <= 8*1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
   }
@@ -448,10 +437,9 @@ getsocket(int bufspace, char *int_name)
 
   /* Bind to device */
   if (bind_socket_to_device(sock, int_name) < 0) {
-    fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
-    syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
+    OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   memset(&sin4, 0, sizeof(sin4));
@@ -459,10 +447,9 @@ getsocket(int bufspace, char *int_name)
   sin4.sin_port = htons(olsr_cnf->olsr_port);
   assert(sin4.sin_addr.s_addr == INADDR_ANY);
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   set_nonblocking(sock);
@@ -482,16 +469,14 @@ getsocket6(int bufspace, char *int_name)
   int on;
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
   if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return (-1);
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
 #ifdef IPV6_V6ONLY
   on = 1;
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) < 0) {
-    perror("setsockopt(IPV6_V6ONLY)");
-    syslog(LOG_ERR, "setsockopt(IPV6_V6ONLY): %m");
+    OLSR_WARN(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to ipv6 only (%s)\n", strerror(errno));
   }
 #endif
 
@@ -511,11 +496,11 @@ getsocket6(int bufspace, char *int_name)
 #ifdef SO_RCVBUF
   for (on = bufspace; ; on -= 1024) {
     if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
+      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
     }
     if (on <= 8*1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
   }
@@ -523,9 +508,9 @@ getsocket6(int bufspace, char *int_name)
 
   on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return (-1);
+    olsr_exit(EXIT_FAILURE);
   }
 
   /*
@@ -533,9 +518,9 @@ getsocket6(int bufspace, char *int_name)
    * hop limit value.
    */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &on, sizeof(on)) < 0) {
-    perror ("setsockopt");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set multicast hops to 1 for socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return (-1);
+    olsr_exit(EXIT_FAILURE);
   }
 
 
@@ -545,10 +530,9 @@ getsocket6(int bufspace, char *int_name)
 
   /* Bind to device */
   if(bind_socket_to_device(sock, int_name) < 0) {
-    fprintf(stderr, "Could not bind socket to device... exiting!\n\n");
-    syslog(LOG_ERR, "Could not bind socket to device... exiting!\n\n");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s (%s)\n", int_name, strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   memset(&sin6, 0, sizeof(sin6));
@@ -556,10 +540,9 @@ getsocket6(int bufspace, char *int_name)
   sin6.sin6_port = htons(olsr_cnf->olsr_port);
   assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr))); /* == IN6ADDR_ANY_INIT */
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return (-1);
+    olsr_exit(EXIT_FAILURE);
   }
 
   set_nonblocking(sock);
@@ -576,8 +559,7 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-#if !defined __FreeBSD__ && !defined __MacOSX__ && !defined __NetBSD__
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
+  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s\n", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(sock,
 		IPPROTO_IPV6,
@@ -586,12 +568,9 @@ join_mcast(struct interface *ifs, int sock)
 		sizeof(struct ipv6_mreq))
      < 0)
     {
-      perror("Join multicast");
+      OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
       return -1;
     }
-#else
-#warning implement IPV6_ADD_MEMBERSHIP
-#endif
 #if 0
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
@@ -623,12 +602,10 @@ join_mcast(struct interface *ifs, int sock)
 		sizeof(mcastreq.ipv6mr_interface))
      < 0)
     {
-      perror("Set multicast if");
+      OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
       return -1;
     }
 
-
-  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 
@@ -655,8 +632,6 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
 	sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
 		addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 		addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-	OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
-	OLSR_PRINTF(5, "\tScope: %d\n", scope);
 
         if (addrtype6 == OLSR_IP6T_SITELOCAL && scope == IPV6_ADDR_SITELOCAL) found = true;
         else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && scope == IPV6_ADDR_GLOBAL) found = true;
@@ -675,9 +650,6 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
         }
 
 	if (found) {
-	  OLSR_PRINTF(4, "Found addr: %s:%s:%s:%s:%s:%s:%s:%s\n",
-		      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-		      addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
 	  inet_pton(AF_INET6, addr6, &saddr6->sin6_addr);
 	  rv = 1;
 	  break;

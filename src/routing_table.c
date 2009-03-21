@@ -50,6 +50,7 @@
 #include "common/avl.h"
 #include "olsr_spf.h"
 #include "net_olsr.h"
+#include "olsr_logging.h"
 
 #include <assert.h>
 
@@ -259,7 +260,7 @@ avl_comp_ipv6_addr_origin (const void *prefix1, const void *prefix2)
 void
 olsr_init_routing_table(void)
 {
-  OLSR_PRINTF(5, "RIB: init routing tree\n");
+  OLSR_INFO(LOG_ROUTING, "RIB: init routing tree\n");
 
   /* the routing tree */
   avl_init(&routingtree, avl_comp_prefix_default);
@@ -627,11 +628,9 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
       return NULL;
     }
 
-#ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: add prefix %s/%d from %s\n",
+    OLSR_DEBUG(LOG_ROUTING, "RIB: add prefix %s/%d from %s\n",
                 olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
-#endif
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -684,11 +683,9 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
     rtp = rtp_prefix_tree2rtp(node);
     olsr_delete_rt_path(rtp);
 
-#ifdef DEBUG
-    OLSR_PRINTF(1, "RIB: del prefix %s/%d from %s\n",
+    OLSR_DEBUG(LOG_ROUTING, "RIB: del prefix %s/%d from %s\n",
                 olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
-#endif
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -740,7 +737,6 @@ olsr_rtp_to_string(const struct rt_path *rtp)
   return buff;
 }
 
-#ifdef DEBUG
 /**
  * Print the routingtree to STDOUT
  *
@@ -749,11 +745,11 @@ void
 olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
 {
   /* The whole function makes no sense without it. */
-#ifndef NODEBUG
+#if !defined REMOVE_INFO
   struct avl_node *rt_tree_node;
   struct lqtextbuffer lqbuffer;
 
-  OLSR_PRINTF(6, "ROUTING TABLE\n");
+  OLSR_INFO(LOG_ROUTING, "ROUTING TABLE\n");
 
   for (rt_tree_node = avl_walk_first(tree);
        rt_tree_node != NULL;
@@ -764,7 +760,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
     struct rt_entry *rt = rt_tree2rt(rt_tree_node);
 
     /* first the route entry */
-    OLSR_PRINTF(6, "%s, via %s dev %s, best-originator %s\n",
+    OLSR_INFO_NH(LOG_ROUTING, "%s, via %s dev %s, best-originator %s\n",
            olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
            olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
            rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)",
@@ -775,7 +771,7 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
          rtp_tree_node != NULL;
          rtp_tree_node = avl_walk_next(rtp_tree_node)) {
       struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
-      OLSR_PRINTF(6, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
+      OLSR_INFO_NH(LOG_ROUTING, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
              olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
              get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
              rtp->rtp_metric.hops,
@@ -786,7 +782,6 @@ olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
   }
 #endif
 }
-#endif
 
 /*
  * Local Variables:

@@ -57,11 +57,6 @@
 #ifdef WIN32
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
-#undef errno
-#define errno WSAGetLastError()
-#undef strerror
-#define strerror(x) StrError(x)
-extern char *StrError(unsigned int ErrNo);
 #endif
 
 static void parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);

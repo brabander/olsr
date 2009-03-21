@@ -117,7 +117,7 @@ ifinit(void)
 
   /* Run trough all interfaces immediately */
   for (tmp_if = olsr_cnf->if_configs; tmp_if != NULL; tmp_if = tmp_if->next) {
-    chk_if_up(tmp_if, 1);
+    chk_if_up(tmp_if);
   }
 
   /* Kick a periodic timer for the network interface update function */
@@ -149,7 +149,7 @@ check_interface_updates(void *foo __attribute__((unused)))
     if (tmp_if->interf) {
       chk_if_changed(tmp_if);
     } else {
-      chk_if_up(tmp_if, 3);
+      chk_if_up(tmp_if);
     }
   }
 }

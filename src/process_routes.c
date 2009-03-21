@@ -41,14 +41,9 @@
 #include "process_routes.h"
 #include "log.h"
 #include "kernel_routes.h"
+#include "olsr_logging.h"
 
 #include <errno.h>
-
-#ifdef WIN32
-#undef strerror
-#define strerror(x) StrError(x)
-extern char *StrError(unsigned int ErrNo);
-#endif
 
 static struct list_node add_kernel_list;
 static struct list_node chg_kernel_list;
@@ -85,7 +80,7 @@ olsr_init_export_route(void)
 void
 olsr_delete_all_kernel_routes(void)
 {
-  OLSR_PRINTF(1, "Deleting all routes...\n");
+  OLSR_DEBUG(LOG_ROUTING, "Deleting all routes...\n");
 
   olsr_bump_routingtree_version();
   olsr_update_rib_routes();
@@ -309,7 +304,7 @@ olsr_update_rib_routes(void)
 {
   struct rt_entry *rt;
 
-  OLSR_PRINTF(3, "Updating kernel routes...\n");
+  OLSR_DEBUG(LOG_ROUTING, "Updating kernel routes...\n");
 
   /* walk all routes in the RIB. */
 
@@ -364,9 +359,7 @@ olsr_update_kernel_routes(void)
   /* route additions */
   olsr_add_routes(&add_kernel_list);
 
-#if DEBUG
   olsr_print_routing_table(&routingtree);
-#endif
 }
 
 /*

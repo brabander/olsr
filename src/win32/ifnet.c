@@ -588,12 +588,6 @@ int add_hemu_if(struct olsr_if_config *iface)
 
       ifp->olsr_socket = gethemusocket(&sin4);
 
-      if (ifp->olsr_socket < 0)
-	{
-	  fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-	  exit(1);
-	}
-
     }
   else
     {
@@ -821,7 +815,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
   return Res;
 }
 
-int chk_if_up(struct olsr_if_config *IntConf, int DebugLevel __attribute__((unused)))
+int chk_if_up(struct olsr_if_config *IntConf)
 {
   struct ipaddr_str buf;
   struct InterfaceInfo Info;

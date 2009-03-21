@@ -46,10 +46,10 @@
 #include "olsr.h"
 #include "olsr_cookie.h"
 #include "net_os.h"
+#include "olsr_logging.h"
 
 #include <sys/times.h>
 
-#include <errno.h>
 #include <unistd.h>
 #include <assert.h>
 
@@ -87,7 +87,7 @@ static uint32_t olsr_times(void)
   uint32_t t;
 
   if (gettimeofday(&tv, NULL) != 0) {
-    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
+    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
     olsr_exit(1);
   }
 
@@ -172,7 +172,7 @@ add_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, v
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not registering...");
     return;
   }
-  OLSR_PRINTF(2, "Adding OLSR socket entry %d\n", fd);
+  OLSR_DEBUG(LOG_SCHEDULER, "Adding OLSR socket entry %d\n", fd);
 
   new_entry = olsr_malloc(sizeof(*new_entry), "Socket entry");
 
@@ -204,7 +204,7 @@ remove_olsr_socket(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm
     OLSR_WARN(LOG_SCHEDULER, "Bogus socket entry - not processing...");
     return 0;
   }
-  OLSR_PRINTF(2, "Removing OLSR socket entry %d\n", fd);
+  OLSR_DEBUG(LOG_SCHEDULER, "Removing OLSR socket entry %d\n", fd);
 
   OLSR_FOR_ALL_SOCKETS(entry) {
     if (entry->fd == fd && entry->process_immediate == pf_imm &&
@@ -443,7 +443,7 @@ static void handle_fds(uint32_t next_interval)
 void
 olsr_scheduler(void)
 {
-  OLSR_PRINTF(1, "Scheduler started - polling every %u microseconds\n", olsr_cnf->pollrate);
+  OLSR_INFO(LOG_SCHEDULER, "Scheduler started - polling every %u microseconds\n", olsr_cnf->pollrate);
 
   /* Main scheduler loop */
   while (app_state == STATE_RUNNING) {
@@ -467,7 +467,7 @@ olsr_scheduler(void)
 
     /* Check for changes in topology */
     if (link_changes) {
-      OLSR_PRINTF(3, "ANSN UPDATED %d\n\n", get_local_ansn());
+      OLSR_DEBUG(LOG_SCHEDULER, "ANSN UPDATED %d\n\n", get_local_ansn());
       increase_local_ansn();
       link_changes = false;
     }
@@ -504,10 +504,8 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
   jitter_time = (jitter_pct * rel_time) / 100;
   jitter_time = random_val / (1 + RAND_MAX / jitter_time);
 
-#if 0
-  OLSR_PRINTF(3, "TIMER: jitter %u%% rel_time %ums to %ums\n",
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: jitter %u%% rel_time %ums to %ums\n",
 	      jitter_pct, rel_time, rel_time - jitter_time);
-#endif
 
   return GET_TIMESTAMP(rel_time - jitter_time);
 }
@@ -522,7 +520,7 @@ olsr_init_timers(void)
 
   /* Grab initial timestamp */
   if (gettimeofday(&first_tv, NULL)) {
-    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%d)\n", errno);
+    OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));
     olsr_exit(1);
   }
   last_tv = first_tv;
@@ -588,7 +586,7 @@ walk_timers(uint32_t * last_run)
       /* Ready to fire ? */
       if (TIMED_OUT(timer->timer_clock)) {
 
-	OLSR_PRINTF(3, "TIMER: fire %s timer %p, ctx %p, "
+	OLSR_DEBUG(LOG_SCHEDULER, "TIMER: fire %s timer %p, ctx %p, "
 		    "at clocktick %u (%s)\n",
 		    olsr_cookie_name(timer->timer_cookie),
 		    timer, timer->timer_cb_context,
@@ -633,13 +631,11 @@ walk_timers(uint32_t * last_run)
     wheel_slot_walks++;
   }
 
-#ifdef DEBUG
-  OLSR_PRINTF(4, "TIMER: processed %4u/%d clockwheel slots, "
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: processed %4u/%d clockwheel slots, "
 	      "timers walked %4u/%u, timers fired %u\n",
 	      wheel_slot_walks, TIMER_WHEEL_SLOTS,
 	      total_timers_walked, timer_mem_cookie->ci_usage,
               total_timers_fired);
-#endif
 
   /*
    * If the scheduler has slipped and we have walked all wheel slots,
@@ -802,11 +798,9 @@ olsr_start_timer(unsigned int rel_time,
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK],
 		  &timer->timer_list);
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: start %s timer %p firing in %s, ctx %p\n",
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: start %s timer %p firing in %s, ctx %p\n",
 	      olsr_cookie_name(timer->timer_cookie),
 	      timer, olsr_clock_string(timer->timer_clock), context);
-#endif
 
   return timer;
 }
@@ -825,11 +819,9 @@ olsr_stop_timer(struct timer_entry *timer)
     return;
   }
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: stop %s timer %p, ctx %p\n",
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: stop %s timer %p, ctx %p\n",
 	      olsr_cookie_name(timer->timer_cookie),
 	      timer, timer->timer_cb_context);
-#endif
 
   assert(timer->timer_cookie != 0); /* we want timer cookies everywhere */
 
@@ -876,11 +868,9 @@ olsr_change_timer(struct timer_entry *timer, unsigned int rel_time,
   list_add_before(&timer_wheel[timer->timer_clock & TIMER_WHEEL_MASK],
 		  &timer->timer_list);
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
+  OLSR_DEBUG(LOG_SCHEDULER, "TIMER: change %s timer %p, firing to %s, ctx %p\n",
 	      olsr_cookie_name(timer->timer_cookie), timer,
 	      olsr_clock_string(timer->timer_clock), timer->timer_cb_context);
-#endif
 }
 
 /*

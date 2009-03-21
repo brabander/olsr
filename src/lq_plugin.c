@@ -49,6 +49,7 @@
 #include "two_hop_neighbor_table.h"
 #include "common/avl.h"
 #include "common/string.h"
+#include "olsr_logging.h"
 
 #include "lq_plugin_etx_ff.h"
 
@@ -210,7 +211,7 @@ olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
     }
 
     else
-      OLSR_PRINTF(3, "Skipping Dijkstra (1)\n");
+      OLSR_DEBUG(LOG_LQ_PLUGINS, "Skipping Dijkstra (1)\n");
 
     /* XXX - we should check whether we actually announce this neighbour */
     signal_link_changes(true);

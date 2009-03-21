@@ -65,7 +65,6 @@
 #include "olsr_logging.h"
 
 #include <stdarg.h>
-#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 

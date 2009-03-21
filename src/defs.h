@@ -44,6 +44,17 @@
 #include "olsr_types.h"
 
 #include <stdio.h>
+#include <errno.h>
+
+/* handle Windows specific errno/strerror name */
+#ifdef WIN32
+// #define olsr_errno WSAGetLastError()
+// #define olsr_strerror(x) StrError(x)
+// extern char *StrError(unsigned int ErrNo);
+#else
+// #define olsr_errno errno
+// #define olsr_strerror(x) strerror(x)
+#endif
 
 /* Export symbol for use in plugins. See ../olsrd-exports.sh */
 #define EXPORT(sym) sym

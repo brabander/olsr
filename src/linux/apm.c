@@ -46,6 +46,7 @@
 #include "apm.h"
 #include "defs.h"
 #include "olsr_cfg.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -130,7 +131,7 @@ apm_init(void)
   struct olsr_apm_info ainfo;
 
   method = -1;
-  OLSR_PRINTF(3, "Initializing APM\n");
+  OLSR_INFO(LOG_MAIN, "Initializing APM\n");
 
   if((((fd_index = acpi_probe()) >= 0) || ac_power_on) && apm_read_acpi(&ainfo))
     method = USE_ACPI;
@@ -147,7 +148,7 @@ apm_init(void)
 void
 apm_printinfo(struct olsr_apm_info *ainfo)
 {
-  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
+  OLSR_INFO(LOG_MAIN, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\tBattery time left %d mins\n\n",
 	      ainfo->ac_line_status,
 	      ainfo->battery_percentage,
 	      ainfo->battery_time_left);
@@ -190,7 +191,7 @@ apm_read_apm(struct olsr_apm_info *ainfo)
       if(fgets(buffer, sizeof(buffer), apm_procfile) == NULL)
 	{
 	  /* Giving up */
-	  fprintf(stderr, "OLSRD: Could not read APM info - setting willingness to default");
+	  OLSR_WARN(LOG_MAIN, "OLSRD: Could not read APM info - setting willingness to default\n");
 	  fclose(apm_procfile);
 	  return 0;
 	}

@@ -110,9 +110,9 @@ add_del_route(const struct rt_entry *rt, int add)
   int len;                             /* message size written to routing socket */
 
   if (add) {
-    OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+    OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
   } else {
-    OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+    OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   }
 
   memset(buff, 0, sizeof(buff));
@@ -149,9 +149,9 @@ add_del_route(const struct rt_entry *rt, int add)
   /*
    * vxWorks: change proto or tos
    */
-  OLSR_PRINTF(8, "\t- Setting Protocol: 0\n");
+  OLSR_DEBUG(LOG_ROUTING, "\t- Setting Protocol: 0\n");
   ((struct sockaddr_rt *)(&sin4))->srt_proto = 0;
-  OLSR_PRINTF(8, "\t- Setting TOS: 0\n");
+  OLSR_DEBUG(LOG_ROUTING, "\t- Setting TOS: 0\n");
   ((struct sockaddr_rt *)(&sin4))->srt_tos = 0;
 #endif
 
@@ -183,7 +183,7 @@ add_del_route(const struct rt_entry *rt, int add)
        * the output interface MAC address.
        */
       if (getifaddrs(&addrs)) {
-        fprintf(stderr, "\ngetifaddrs() failed\n");
+        OLSR_WARN(LOG_ROUTING, "\ngetifaddrs() failed\n");
         return -1;
       }
 
@@ -192,7 +192,7 @@ add_del_route(const struct rt_entry *rt, int add)
           break;
 
       if (awalker == NULL) {
-        fprintf(stderr, "\nInterface %s not found\n", nexthop->interface->int_name);
+        OLSR_WARN(LOG_ROUTING, "\nInterface %s not found\n", nexthop->interface->int_name);
         freeifaddrs(addrs);
         return -1;
       }
@@ -231,7 +231,7 @@ add_del_route(const struct rt_entry *rt, int add)
   rtm->rtm_msglen = (unsigned short)(walker - buff);
   len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
-    fprintf(stderr, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
+    OLSR_WARN(LOG_ROUTING, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
             strerror(errno));
   }
   return 0;
@@ -250,9 +250,9 @@ add_del_route6(const struct rt_entry *rt, int add)
   int len;
 
   if (add) {
-    OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
+    OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rtp_to_string(rt->rt_best));
   } else {
-    OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+    OLSR_DEBUG(LOG_ROUTING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   }
 
   memset(buff, 0, sizeof(buff));
@@ -349,7 +349,7 @@ add_del_route6(const struct rt_entry *rt, int add)
   rtm->rtm_msglen = (unsigned short)(walker - buff);
   len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
   if (len < 0 && !(errno == EEXIST || errno == ESRCH)) {
-    fprintf(stderr, "cannot write to routing socket: %s\n", strerror(errno));
+    OLSR_WARN(LOG_ROUTING, "cannot write to routing socket: %s\n", strerror(errno));
   }
 
   /*
@@ -375,12 +375,12 @@ add_del_route6(const struct rt_entry *rt, int add)
     drtm->rtm_msglen = (unsigned short)(walker - dbuff);
     len = write(olsr_cnf->rts_bsd, dbuff, drtm->rtm_msglen);
     if (len < 0) {
-      fprintf(stderr, "cannot delete route: %s\n", strerror(errno));
+      OLSR_WARN(LOG_ROUTING, "cannot delete route: %s\n", strerror(errno));
     }
     rtm->rtm_seq = ++seq;
     len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
     if (len < 0) {
-      fprintf(stderr, "still cannot add route: %s\n", strerror(errno));
+      OLSR_WARN(LOG_ROUTING, "still cannot add route: %s\n", strerror(errno));
     }
   }
   return 0;

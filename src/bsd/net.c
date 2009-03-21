@@ -71,7 +71,7 @@
 #include "wrn/coreip/net/ifaddrs.h"
 #include <selectLib.h>
 #include <logLib.h>
-#define syslog(a, b) fdprintf(a, b);
+// #define syslog(a, b) fdprintf(a, b);
 #else
 #include <sys/param.h>
 #endif
@@ -124,6 +124,7 @@
 #endif
 
 #include <sys/sysctl.h>
+#include <sys/sockio.h>
 
 static int ignore_redir;
 static int send_redir;
@@ -184,7 +185,7 @@ enable_ip_forwarding(int version)
 
   gateway = set_sysctl_int(name, 1);
   if (gateway < 0) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "Cannot enable IP forwarding. Please enable IP forwarding manually."
             " Continuing in 3 seconds...\n");
     sleep(3);
@@ -225,7 +226,7 @@ disable_redirects_global(int version)
 #endif
 
   if (ignore_redir < 0) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "Cannot disable incoming ICMP redirect messages. "
             "Please disable them manually. Continuing in 3 seconds...\n");
     sleep(3);
@@ -240,7 +241,7 @@ disable_redirects_global(int version)
 
   send_redir = set_sysctl_int(name, 0);
   if (send_redir < 0) {
-    fprintf(stderr,
+    OLSR_WARN(LOG_NETWORKING,
 	    "Cannot disable outgoing ICMP redirect messages. "
             "Please disable them manually. Continuing in 3 seconds...\n");
     sleep(3);
@@ -315,30 +316,25 @@ gethemusocket(struct sockaddr_in *pin)
 {
   int sock, on = 1;
 
-  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d...", pin->sin_port);
 
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("hcsocket");
-    syslog(LOG_ERR, "hcsocket: %m");
-    return (-1);
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket options for emulation (%s)\n", strerror(errno));
     close(sock);
-    return (-1);
+    olsr_exit(EXIT_FAILURE);
   }
   /* connect to PORT on HOST */
   if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
-    printf("FAILED\n");
-    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
-    printf("connection refused\n");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot connect socket for emulation (%s)\n", strerror(errno));
     close(sock);
-    return (-1);
+    olsr_exit(EXIT_FAILURE);
   }
-
-  printf("OK\n");
 
   /* Keep TCP socket blocking */
   return (sock);
@@ -352,43 +348,42 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
   int on;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on)) < 0) {
-    perror("setsockopt");
-    syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEADDR failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEPORT failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse port for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(sock, IPPROTO_IP, IP_RECVIF, (char *)&on, sizeof(on)) < 0) {
-    perror("IP_RECVIF failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol option REECVIF for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
+      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
+    }
     if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
   }
@@ -398,10 +393,9 @@ getsocket(int bufspace, char *int_name __attribute__ ((unused)))
   sin4.sin_port = htons(OLSRPORT);
   sin4.sin_addr.s_addr = INADDR_ANY;
   if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   set_nonblocking(sock);
@@ -416,44 +410,43 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   int sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
   if (sock < 0) {
-    perror("socket");
-    syslog(LOG_ERR, "socket: %m");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   for (on = bufspace;; on -= 1024) {
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0)
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&on, sizeof(on)) == 0) {
+      OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
+    }
     if (on <= 8 * 1024) {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_RCVBUF: %m");
+      OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for OLSR PDUs (%s)\n", strerror(errno));
+    close(sock);
+    olsr_exit(EXIT_FAILURE);
+  }
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
     perror("SO_REUSEADDR failed");
     close(sock);
     return -1;
   }
-
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
-    perror("SO_REUSEPORT failed");
-    close(sock);
-    return -1;
-  }
 #ifdef IPV6_RECVPKTINFO
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, (char *)&on, sizeof(on))
-      < 0) {
-    perror("IPV6_RECVPKTINFO failed");
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, (char *)&on, sizeof(on)) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol options RECVPKTINFO for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 #elif defined IPV6_PKTINFO
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on, sizeof(on)) < 0) {
-    perror("IPV6_PKTINFO failed");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set protocol options PKTINFO for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 #endif
 
@@ -461,10 +454,9 @@ getsocket6(int bufspace, char *int_name __attribute__ ((unused)))
   sin6.sin6_family = AF_INET6;
   sin6.sin6_port = htons(OLSRPORT);
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
-    perror("bind");
-    syslog(LOG_ERR, "bind: %m");
+    OLSR_ERROR(LOG_NETWORKING, "Coult not bind socket for OLSR PDUs to port (%s)\n", strerror(errno));
     close(sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   set_nonblocking(sock);
@@ -483,7 +475,7 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name,
+  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s.\n", ifs->int_name,
 	      olsr_ip_to_string(&addrstr,
 				(union olsr_ip_addr *)&ifs->int6_multaddr.
 				sin6_addr));
@@ -503,7 +495,7 @@ join_mcast(struct interface *ifs, int sock)
 		 (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #endif
   {
-    perror("Join multicast send");
+    OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
     return -1;
   }
 
@@ -513,12 +505,9 @@ join_mcast(struct interface *ifs, int sock)
 		 IPV6_MULTICAST_IF,
 		 (char *)&mcastreq.ipv6mr_interface,
 		 sizeof(mcastreq.ipv6mr_interface)) < 0) {
-    perror("Set multicast if");
+    OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
     return -1;
   }
-
-
-  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 
@@ -536,7 +525,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
   u_int32_t flags6;
 
   if (getifaddrs(&ifap) != 0) {
-    OLSR_PRINTF(3, "get_ipv6_address: getifaddrs() failed.\n");
+    OLSR_WARN(LOG_NETWORKING, "getifaddrs() failed (%s).\n", strerro(errno));
     return 0;
   }
 
@@ -548,12 +537,12 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
 	continue;
       strscpy(ifr6.ifr_name, ifname, sizeof(ifr6.ifr_name));
       if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-	OLSR_PRINTF(3, "socket(AF_INET6,SOCK_DGRAM)");
+	OLSR_WARN(LOG_NETWORKING, "Cannot open datagram socket (%s)\n", strerror(errno));
 	break;
       }
       ifr6.ifr_addr = *sin6;
       if (ioctl(s6, SIOCGIFAFLAG_IN6, (int)&ifr6) < 0) {
-	OLSR_PRINTF(3, "ioctl(SIOCGIFAFLAG_IN6)");
+	OLSR_WARN(LOG_NETWORKING, "ioctl(SIOCGIFAFLAG_IN6) failed (%s)", strerror(errno));
 	close(s6);
 	break;
       }
@@ -621,7 +610,7 @@ olsr_sendto(int s,
   /* initialize libnet */
   context = libnet_init(LIBNET_LINK, iface->int_name, errbuf);
   if (context == NULL) {
-    OLSR_PRINTF(1, "libnet init: %s\n", libnet_geterror(context));
+    OLSR_WARN(LOG_NETWORKING, "libnet init: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -639,7 +628,7 @@ olsr_sendto(int s,
 			     context,	/* context */
 			     udp_tag);	/* pblock */
   if (udp_tag == -1) {
-    OLSR_PRINTF(1, "libnet UDP header: %s\n", libnet_geterror(context));
+    OLSR_WARN(LOG_NETWORKING, "libnet UDP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -657,7 +646,7 @@ olsr_sendto(int s,
 			     context,	/* context */
 			     ip_tag);	/* pblock */
   if (ip_tag == -1) {
-    OLSR_PRINTF(1, "libnet IP header: %s\n", libnet_geterror(context));
+    OLSR_WARN(LOG_NETWORKING, "libnet IP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -669,13 +658,13 @@ olsr_sendto(int s,
 				    context,	/* libnet handle */
 				    ether_tag);	/* pblock tag */
   if (ether_tag == -1) {
-    OLSR_PRINTF(1, "libnet ethernet header: %s\n", libnet_geterror(context));
+    OLSR_WARN(LOG_NETWORKING, "libnet ethernet header: %s\n", libnet_geterror(context));
     return (0);
   }
 
   status = libnet_write(context);
   if (status == -1) {
-    OLSR_PRINTF(1, "libnet packet write: %s\n", libnet_geterror(context));
+    OLSR_WARN(LOG_NETWORKING, "libnet packet write: %s\n", libnet_geterror(context));
     return (0);
   }
 
@@ -757,7 +746,7 @@ olsr_recvfrom(int s,
   ifc = if_ifwithsock(s);
 
   sin6 = (struct sockaddr_in6 *)from;
-  OLSR_PRINTF(4,
+  OLSR_DEBUG(LOG_NETWORKING,
 	      "%d bytes from %s, socket associated %s really received on %s\n",
 	      count, inet_ntop(olsr_cnf->ip_version,
 			       olsr_cnf->ip_version ==
@@ -811,8 +800,6 @@ check_wireless_interface(char *ifname)
 #endif
 }
 
-#include <sys/sockio.h>
-
 int
 calculate_if_metric(char *ifname)
 {
@@ -829,11 +816,11 @@ calculate_if_metric(char *ifname)
     strlcpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
 
     if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0) {
-      OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
+      OLSR_WARN(LOG_NETWORKING, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
       return WEIGHT_ETHERNET_DEFAULT;
     }
 
-    OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
+    OLSR_DEBUG(LOG_NETWORKING, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
 #endif
     return WEIGHT_ETHERNET_DEFAULT;
   }
