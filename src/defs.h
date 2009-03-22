@@ -67,7 +67,7 @@ extern const char EXPORT(build_host)[];
 #define UDP_IPV4_HDRSIZE        28
 #define UDP_IPV6_HDRSIZE        62
 
-#ifdef __GNUC__
+#if __GNUC__
 
 extern FILE *EXPORT(debug_handle);
 

@@ -50,7 +50,7 @@
 
 /* OLSRD includes */
 #include "defs.h" /* GET_TIMESTAMP, TIMED_OUT */
-#include "olsr.h" /* OLSR_PRINTF */
+#include "olsr.h"
 #include "scheduler.h" /* now_times */
 
 /* Plugin includes */

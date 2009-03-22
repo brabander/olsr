@@ -260,7 +260,7 @@ process_param(char *key, char *value)
     {
       if(inet_pton(olsr_cnf->ipsize, value, &curr_hna_net.v4) == 0)
 	{
-	  fprintf(stderr, "Failed converting new HNA net %s\n", value);
+	  OLSR_WARN(LOG_PLUGINS, "Failed converting new HNA net %s\n", value);
 	  return -1;
 	}
       curr_hna_ok = true;
@@ -278,12 +278,12 @@ process_param(char *key, char *value)
       curr_hna_ok = false;
 
       if(inet_aton(value, &in) == 0) {
-        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        OLSR_WARN(LOG_PLUGINS, "Failed converting new HNA netmask %s\n", value);
         return -1;
       }
       prefixlen = netmask_to_prefix((uint8_t *)&in, olsr_cnf->ipsize);
       if(prefixlen == UCHAR_MAX) {
-        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        OLSR_WARN(LOG_PLUGINS, "Failed converting new HNA netmask %s\n", value);
         return -1;
       }
       ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);
@@ -303,21 +303,21 @@ process_param(char *key, char *value)
       memcpy(ip_net, &key[7], seperator);
       ip_net[seperator] = 0;
       memcpy(ip_mask, &key[7 + seperator + 1], 16);
-      OLSR_PRINTF(1, "Deleting HNA %s/%s\n", ip_net, ip_mask);
+      OLSR_INFO(LOG_PLUGINS, "Deleting HNA %s/%s\n", ip_net, ip_mask);
 
       if(inet_aton(ip_net, &net) == 0)
 	{
-	  fprintf(stderr, "Failed converting HNA net %s for deletion\n", ip_net);
+	  OLSR_WARN(LOG_PLUGINS, "Failed converting HNA net %s for deletion\n", ip_net);
 	  return -1;
 	}
 
       if(inet_aton(ip_mask, &mask) == 0) {
-        fprintf(stderr, "Failed converting HNA netmask %s for deletion\n", ip_mask);
+        OLSR_WARN(LOG_PLUGINS, "Failed converting HNA netmask %s for deletion\n", ip_mask);
         return -1;
       }
       prefixlen = netmask_to_prefix((uint8_t *)&mask, olsr_cnf->ipsize);
       if(prefixlen == UCHAR_MAX) {
-        fprintf(stderr, "Failed converting new HNA netmask %s\n", value);
+        OLSR_WARN(LOG_PLUGINS, "Failed converting new HNA netmask %s\n", value);
         return -1;
       }
       ip_prefix_list_add(&olsr_cnf->hna_entries, &curr_hna_net, prefixlen);

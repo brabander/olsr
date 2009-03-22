@@ -57,6 +57,7 @@
 #include "olsr_cfg_gen.h"
 #include "common/string.h"
 #include "olsr_ip_prefix_list.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -256,16 +257,12 @@ get_http_socket(int port)
   /* Init ipc socket */
   int s = socket(olsr_cnf->ip_version, SOCK_STREAM, 0);
   if (s == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO)socket %s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO)socket %s\n", strerror(errno));
     return -1;
   }
 
   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO)SO_REUSEADDR failed %s\n", strerror(errno));
     CLOSESOCKET(s);
     return -1;
   }
@@ -296,18 +293,14 @@ get_http_socket(int port)
 
   /* bind the socket to the port number */
   if (bind(s, (struct sockaddr *)&sst, addrlen) == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO) bind failed %s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) bind failed %s\n", strerror(errno));
     CLOSESOCKET(s);
     return -1;
   }
 
   /* show that we are willing to listen */
   if (listen(s, 1) == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO) listen failed %s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) listen failed %s\n", strerror(errno));
     CLOSESOCKET(s);
     return -1;
   }
@@ -332,8 +325,8 @@ olsrd_plugin_init(void)
   http_socket = get_http_socket(http_port != 0 ? http_port :  DEFAULT_TCP_PORT);
 
   if (http_socket < 0) {
-    fprintf(stderr, "(HTTPINFO) could not initialize HTTP socket\n");
-    exit(0);
+    OLSR_ERROR(LOG_PLUGINS, "(HTTPINFO) could not initialize HTTP socket\n");
+    olsr_exit(0);
   }
 
   /* always allow localhost */
@@ -380,16 +373,12 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   addrlen = sizeof(pin);
   client_sockets[curr_clients] = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (client_sockets[curr_clients] == -1) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO) accept: %s\n", strerror(errno));
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) accept: %s\n", strerror(errno));
     goto close_connection;
   }
 
   if(((struct sockaddr *)&pin)->sa_family != olsr_cnf->ip_version) {
-#ifndef NODEBUG
-    OLSR_PRINTF(1, "(HTTPINFO) Connection with wrong IP version?!\n");
-#endif
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Connection with wrong IP version?!\n");
     goto close_connection;
   }
 
@@ -403,7 +392,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
   if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
     struct ipaddr_str strbuf;
-    OLSR_PRINTF(0, "HTTP request from non-allowed host %s!\n",
+    OLSR_WARN(LOG_PLUGINS, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, ipaddr));
     goto close_connection;
   }
@@ -420,7 +409,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   }
 
   if (r < 0) {
-    OLSR_PRINTF(1, "(HTTPINFO) Failed to recieve data from client!\n");
+    OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Failed to recieve data from client!\n");
     stats.err_hits++;
     goto close_connection;
   }
@@ -429,19 +418,19 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   if (sscanf(req, "%10s %250s %10s\n", req_type, filename, http_version) != 3) {
     /* Try without HTTP version */
     if (sscanf(req, "%10s %250s\n", req_type, filename) != 2) {
-      OLSR_PRINTF(1, "(HTTPINFO) Error parsing request %s!\n", req);
+      OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Error parsing request %s!\n", req);
       stats.err_hits++;
       goto close_connection;
     }
   }
 
-  OLSR_PRINTF(1, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
+  OLSR_DEBUG(LOG_PLUGINS, "Request: %s\nfile: %s\nVersion: %s\n\n", req_type, filename, http_version);
 
   if (!strcmp(req_type, "POST")) {
 #if ADMIN_INTERFACE
     int i = 0;
     while (dynamic_files[i].filename) {
-        printf("POST checking %s\n", dynamic_files[i].filename);
+        OLSR_DEBUG(LOG_PLUGINS, "POST checking %s\n", dynamic_files[i].filename);
         if (FILENREQ_MATCH(filename, dynamic_files[i].filename)) {
             uint32_t param_size;
 
@@ -450,7 +439,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
             param_size = recv(client_sockets[curr_clients], req, sizeof(req)-1, 0);
 
             req[param_size] = '\0';
-            printf("Dynamic read %d bytes\n", param_size);
+            OLSR_DEBUG(LOG_PLUGINS, "Dynamic read %d bytes\n", param_size);
 
             //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
             //size += dynamic_files[i].process_data_cb(req, param_size, &body[size], sizeof(body)-size);
@@ -463,7 +452,6 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
     }
 #endif
     /* We only support GET */
-    //strscpy(body, HTTP_400_MSG, sizeof(body));
     abuf_puts(&body, HTTP_400_MSG);
     stats.ill_hits++;
     build_http_header(&header, HTTP_BAD_REQ, true, body.len);
@@ -518,7 +506,7 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
       build_http_header(&header, HTTP_OK, true);
       r = send(client_sockets[curr_clients], req, c, 0);
       if (r < 0) {
-        OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
+        OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Failed sending data to client!\n");
         goto close_connection;
       }
       netsprintf_error = 0;
@@ -573,12 +561,10 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
 
     stats.ill_hits++;
-    //strscpy(body, HTTP_404_MSG, sizeof(body));
     abuf_puts(&body, HTTP_404_MSG);
     build_http_header(&header, HTTP_BAD_FILE, true, body.len);
   } else {
     /* We only support GET */
-    //strscpy(body, HTTP_400_MSG, sizeof(body));
     abuf_puts(&body, HTTP_400_MSG);
     stats.ill_hits++;
     build_http_header(&header, HTTP_BAD_REQ, true, body.len);
@@ -588,13 +574,13 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
 
   r = writen(client_sockets[curr_clients], header.buf, header.len);
   if (r < 0) {
-      OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
+      OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
   }
 
   r = writen(client_sockets[curr_clients], body.buf, body.len);
   if (r < 0) {
-      OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
+      OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Failed sending data to client!\n");
       goto close_connection;
   }
 
@@ -658,7 +644,7 @@ build_http_header(struct autobuf *abuf,
   /* End header */
   abuf_puts(abuf, "\r\n");
 
-  OLSR_PRINTF(1, "HEADER:\n%s", abuf->buf);
+  OLSR_DEBUG(LOG_PLUGINS, "HEADER:\n%s", abuf->buf);
 }
 
 
@@ -1175,10 +1161,6 @@ static void build_cfgfile_body(struct autobuf *abuf)
 #endif
 
   abuf_puts(abuf, "</pre>\n<hr/>\n");
-
-#if 0
-  printf("RETURNING %d\n", size);
-#endif
 }
 #if 0
 /*
@@ -1198,7 +1180,7 @@ int netsprintf(char *str, const char* format, ...)
 	if (0 != netsprintf_direct) {
 		if (0 == netsprintf_error) {
 			if (0 > send(client_sockets[curr_clients], str, rv, 0)) {
-				OLSR_PRINTF(1, "(HTTPINFO) Failed sending data to client!\n");
+				OLSR_WARN(LOG_PLUGINS, "(HTTPINFO) Failed sending data to client!\n");
 				netsprintf_error = 1;
 			}
 		}

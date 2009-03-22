@@ -353,7 +353,7 @@ defined _WRS_KERNEL
 #define FLAGS MSG_NOSIGNAL
 #endif
     if (send(ipc_connection, data, size, FLAGS) == -1) {
-      OLSR_PRINTF(1, "(DOT DRAW)IPC connection lost!\n");
+      OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC connection lost!\n");
       CLOSESOCKET(ipc_connection);
     }
   }

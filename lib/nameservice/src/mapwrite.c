@@ -54,6 +54,7 @@
 #include "tc_set.h"
 #include "ipcalc.h"
 #include "lq_plugin.h"
+#include "olsr_logging.h"
 
 #include "mapwrite.h"
 
@@ -256,7 +257,7 @@ int mapwrite_init(const char* fifoname)
     unlink(fifoname);
     if (0 > mkfifo(fifoname, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH))
     {
-      OLSR_PRINTF(1, "mkfifo(%s): %s", fifoname, strerror(errno));
+      OLSR_WARN(LOG_PLUGINS, "mkfifo(%s): %s", fifoname, strerror(errno));
       return false;
     }
     else

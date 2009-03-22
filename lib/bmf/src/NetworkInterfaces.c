@@ -58,7 +58,7 @@
 #include <stdlib.h> /* atoi, malloc */
 
 /* OLSRD includes */
-#include "olsr.h" /* OLSR_PRINTF() */
+#include "olsr.h"
 #include "ipcalc.h"
 #include "defs.h" /* olsr_cnf */
 #include "link_set.h" /* get_link_set() */

@@ -27,6 +27,7 @@
 #include "common/string.h" /* strscpy */
 #include "olsr_ip_prefix_list.h" /* ip_prefix_list_add
                                     ip_prefix_list_remove */
+#include "olsr_logging.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -191,7 +192,7 @@ static int zebra_send_command (unsigned char *options) {
 	continue;
       }
       else {
-	OLSR_PRINTF (1, "(QUAGGA) Disconnected from zebra\n");
+	OLSR_WARN (LOG_PLUGINS, "(QUAGGA) Disconnected from zebra\n");
 	zebra.status &= ~STATUS_CONNECTED;
 	free (options);
 	return -1;
@@ -344,7 +345,7 @@ static unsigned char *try_read (ssize_t *size) {
     if (bytes < 0) {
   /* handle disconnect */
       if (errno != EAGAIN) { // oops - we got disconnected
-        OLSR_PRINTF (1, "(QUAGGA) Disconnected from zebra\n");
+        OLSR_WARN(LOG_PLUGINS, "(QUAGGA) Disconnected from zebra\n");
         zebra.status &= ~STATUS_CONNECTED;
       }
       free (buf);

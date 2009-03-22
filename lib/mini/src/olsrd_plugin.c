@@ -49,6 +49,7 @@
 #include "olsr.h"
 #include "defs.h"
 #include "plugin.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -72,7 +73,7 @@ int olsrd_plugin_interface_version(void)
 
 static int set_plugin_test(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
-    printf("\n*** MINI: parameter test: %s\n", value);
+    OLSR_INFO(LOG_PLUGINS, "\n*** MINI: parameter test: %s\n", value);
     return 0;
 }
 
@@ -98,10 +99,7 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 int
 olsrd_plugin_init(void)
 {
-	printf("*** MINI: plugin_init\n");
-
-	/* call a function from main olsrd */
-	OLSR_PRINTF(2, "*** MINI: printed this with OLSR_PRINTF\n");
+	OLSR_INFO(LOG_PLUGINS, "*** MINI: plugin_init\n");
 
 	return 1;
 }
@@ -122,7 +120,7 @@ static void my_fini(void) __attribute__ ((destructor));
  */
 static void my_init(void)
 {
-    printf("*** MINI: constructor\n");
+    // MINI: constructor
 }
 
 
@@ -131,7 +129,7 @@ static void my_init(void)
  */
 static void my_fini(void)
 {
-    printf("*** MINI: destructor\n");
+    // MINI: destructor
 }
 
 /*

@@ -43,6 +43,7 @@
 #include "plugin.h"
 #include "olsrd_secure.h"
 #include "defs.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -73,10 +74,7 @@ int olsrd_plugin_interface_version(void)
  */
 static void my_init(void)
 {
-  /* Print plugin info to stdout */
-  /* We cannot use OLSR_PRINTF yet! */
-  printf("%s\n", MOD_DESC);
-  //printf("[ENC]Accepted parameter pairs: (\"Keyfile\" <FILENAME>)\n");
+  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 }
 
 /**
@@ -121,13 +119,13 @@ int olsrd_plugin_init(void) {
    */
   if(!secure_plugin_init())
     {
-      fprintf(stderr, "Could not initialize plugin!\n");
+      OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin!\n");
       return 0;
     }
 
   if(!plugin_ipc_init())
     {
-      fprintf(stderr, "Could not initialize plugin IPC!\n");
+      OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin IPC!\n");
       return 0;
     }
   return 1;
