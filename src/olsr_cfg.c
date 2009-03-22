@@ -66,6 +66,18 @@
 #define PARSER_DEBUG_PRINTF(x, ...)   do { } while (0)
 #endif
 
+/* options that have no short command line variant */
+#define CFG_LOG_DEBUG       256
+#define CFG_LOG_INFO        257
+#define CFG_LOG_WARN        258
+#define CFG_LOG_ERROR       269
+#define CFG_LOG_STDERR      270
+#define CFG_LOG_SYSLOG      271
+#define CFG_LOG_FILE        272
+
+/* remember which log severities have been explicitly set */
+static bool cfg_has_log[LOG_SEVERITY_COUNT];
+
 /*
  * Special strcat for reading the config file and
  * joining a longer section { ... } to one string
@@ -707,31 +719,77 @@ parse_cfg_loadplugin(char *argstr, struct olsr_config *rcfg, char *rmsg)
 }
 
 /*
- * Parses a the parameter string of --log
+ * Parses a the parameter string of --log(debug|info|warn|error)
  * @argstr:     arguments string
  * @rcfg:       config struct to write/change values into
  * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
  * @returns configuration status as defined in olsr_parse_cfg_result
  */
 static olsr_parse_cfg_result
-parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg)
+parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
 {
-  char *p = (char *)argstr, *nextEquals, *nextColon, *nextSlash;
-  bool hasErrorOption = false;
-  int i, j;
+  int dlevel, i;
+  dlevel = atoi(argstr);
 
-  while (p != NULL && *p != 0) {
-    /* split at ',' */
-    nextColon = strchr(p, ',');
-    if (nextColon) {
-      *nextColon++ = 0;
-    }
+  if (dlevel < -2 || dlevel > 2) {
+    sprintf(rmsg, "Error, debug level must be between -2 and 4\n");
+    return CFG_EXIT;
+  }
 
-    nextEquals = strchr(p, '=');
-    if (nextEquals) {
-      *nextEquals++ = 0;
-    }
+  switch(dlevel) {
+    case 3:
+      /* all logging */
+      for (i=0; i<LOG_SOURCE_COUNT; i++) {
+        rcfg->log_event[SEVERITY_DEBUG][i] = true;
+      }
+    case 2:
+      /* all info, warnings and errors */
+      for (i=0; i<LOG_SOURCE_COUNT; i++) {
+        rcfg->log_event[SEVERITY_INFO][i] = true;
+      }
+    case 1:
+      /* some INFO level output, plus all warnings and errors */
+      rcfg->log_event[SEVERITY_INFO][LOG_2NEIGH] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_LINKS] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_MAIN] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_NEIGHTABLE] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_PLUGINS] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_ROUTING] = true;
+      rcfg->log_event[SEVERITY_INFO][LOG_TC] = true;
+    case 0:
+      /* errors and warnings */
+      for (i=0; i<LOG_SOURCE_COUNT; i++) {
+        rcfg->log_event[SEVERITY_WARN][i] = true;
+      }
+    case -1:
+      /* only error messages */
+      for (i=0; i<LOG_SOURCE_COUNT; i++) {
+        rcfg->log_event[SEVERITY_ERR][i] = true;
+      }
+    default:      /* no logging at all ! */
+      break;
+  }
 
+  PARSER_DEBUG_PRINTF("Debug level: %d\n", dlevel);
+
+  /* prevent fallback to default 0 */
+  cfg_has_log[SEVERITY_ERR] = true;
+  return CFG_OK;
+}
+/*
+ * Parses a the parameter string of --log(debug|info|warn|error)
+ * @argstr:     arguments string
+ * @rcfg:       config struct to write/change values into
+ * @rmsg:   a buf[FILENAME_MAX + 256] to sprint err msgs
+ * @returns configuration status as defined in olsr_parse_cfg_result
+ */
+static olsr_parse_cfg_result
+parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_severity sev)
+{
+  char *p = (char *)argstr, *next;
+  int i;
+
+#if 0
     if (strcasecmp(p, "list") == 0) {
       printf("Available logging sources: ");
       for (i = 0; i < LOG_SOURCE_COUNT; i++) {
@@ -740,74 +798,37 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg)
       printf("\n");
       return CFG_EXIT;
     }
-    for (j = 0; j < LOG_SEVERITY_COUNT; j++) {
-      if (strcasecmp(p, LOG_SEVERITY_NAMES[j]) == 0) {
+#endif
+  while (p != NULL) {
+    /* split at ',' */
+    next = strchr(p, ',');
+    if (next) {
+      *next++ = 0;
+    }
+
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      if (strcasecmp(p, LOG_SOURCE_NAMES[i]) == 0) {
         break;
       }
     }
 
-    if (j < LOG_SEVERITY_COUNT) {
-      p = nextEquals;
-      while (p != NULL && *p != 0) {
-        /* split at '/' */
-        nextSlash = strchr(p, '/');
-        if (nextSlash) {
-          *nextSlash++ = 0;
-        }
-
-        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-          if (strcasecmp(p, LOG_SOURCE_NAMES[i]) == 0) {
-            break;
-          }
-        }
-
-        if (i < LOG_SOURCE_COUNT) {
-          rcfg->log_event[j][i] = true;
-        }
-        p = nextSlash;
-      }
-    } else if (strcasecmp(p, "stderr") == 0) {
-      rcfg->log_target_stderr = true;
-    } else if (strcasecmp(p, "syslog") == 0) {
-      rcfg->log_target_syslog = true;
-    } else if (strcasecmp(p, "file") == 0) {
-      rcfg->log_target_file = olsr_strdup(nextEquals);
+    if (i < LOG_SOURCE_COUNT) {
+      rcfg->log_event[sev][i] = true;
     }
     else {
-      sprintf(rmsg, "Unknown keyword %s for log parameter\n", p);
-      return CFG_ERROR;
+      sprintf(rmsg, "Error, unknown logging source: %s\n", p);
+      return CFG_EXIT;
     }
-    p = nextColon;
+    p = next;
   }
 
-  /* process results to clean them up */
-
-  /* first handle "all" keyword */
-  for (i = 0; i < LOG_SEVERITY_COUNT; i++) {
-    if (rcfg->log_event[i][LOG_ALL]) {
-      for (j = 1; j < LOG_SOURCE_COUNT; j++) {
-        rcfg->log_event[i][j] = true;
-      }
+  /* handle "all" keyword */
+  if (rcfg->log_event[sev][LOG_ALL]) {
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      rcfg->log_event[sev][i] = true;
     }
   }
-
-  /* then copy from info to warn and from warn to error */
-  for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-    if (rcfg->log_event[SEVERITY_INFO][i]) {
-      rcfg->log_event[SEVERITY_WARN][i] = true;
-    }
-    if (rcfg->log_event[SEVERITY_WARN][i]) {
-      rcfg->log_event[SEVERITY_ERR][i] = true;
-    }
-    if (!hasErrorOption) {
-      rcfg->log_event[SEVERITY_ERR][i] = true;
-    }
-  }
-
-  /* choose stderr as target if none activated */
-  if (rcfg->log_target_file == NULL && !rcfg->log_target_stderr && !rcfg->log_target_syslog) {
-    rcfg->log_target_stderr = true;
-  }
+  cfg_has_log[sev] = true;
   return CFG_OK;
 }
 
@@ -856,13 +877,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     PARSER_DEBUG_PRINTF("Clear screen %s\n", rcfg->clear_screen ? "enabled" : "disabled");
     break;
   case 'd':                    /* DebugLevel (i) */
-    {
-      int arg = -1;
-      sscanf(argstr, "%d", &arg);
-      if (0 <= arg && arg < 128)
-        rcfg->debug_level = arg;
-      PARSER_DEBUG_PRINTF("Debug level: %d\n", rcfg->debug_level);
-    }
+    return parse_cfg_debug(argstr, rcfg, rmsg);
     break;
   case 'F':                    /* FIBMetric (str) */
     {
@@ -1017,9 +1032,28 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", rcfg->willingness);
     }
     break;
-  case 'L':                    /* Log (string) */
-    return parse_cfg_log(argstr, rcfg, rmsg);
+  case CFG_LOG_DEBUG:                    /* Log (string) */
+    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_DEBUG);
     break;
+  case CFG_LOG_INFO:                    /* Log (string) */
+    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_INFO);
+    break;
+  case CFG_LOG_WARN:                    /* Log (string) */
+    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_WARN);
+    break;
+  case CFG_LOG_ERROR:                   /* Log (string) */
+    return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_ERR);
+    break;
+  case CFG_LOG_STDERR:
+    rcfg->log_target_stderr = true;
+    break;
+  case CFG_LOG_SYSLOG:
+    rcfg->log_target_syslog = true;
+    break;
+  case CFG_LOG_FILE:
+    rcfg->log_target_file = strdup(argstr);
+    break;
+
   case 's':                    /* SourceIpMode (string) */
     rcfg->source_ip_mode = (0 == strcmp("yes", argstr)) ? 1 : 0;
     PARSER_DEBUG_PRINTF("Source IP mode %s\n", rcfg->source_ip_mode ? "enabled" : "disabled");
@@ -1116,7 +1150,13 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"int",                      no_argument,       0, 'l'},
 #endif
     {"ipc",                      no_argument,       0, 'P'},
-    {"log",                      required_argument, 0, 'L'}, /* info=src1/...,warn=src3/... */
+    {"log_debug",                required_argument, 0, CFG_LOG_DEBUG}, /* src1,src2,... */
+    {"log_info",                 required_argument, 0, CFG_LOG_INFO}, /* src1,src2,... */
+    {"log_warn",                 required_argument, 0, CFG_LOG_WARN}, /* src1,src2,... */
+    {"log_error",                required_argument, 0, CFG_LOG_ERROR}, /* src1,src2,... */
+    {"log_stderr",               no_argument,       0, CFG_LOG_STDERR},
+    {"log_syslog",               no_argument,       0, CFG_LOG_SYSLOG},
+    {"log_file",                 required_argument, 0, CFG_LOG_FILE}, /* (filename) */
     {"nofork",                   no_argument,       0, 'n'},
     {"version",                  no_argument,       0, 'v'},
     {"AllowNoInt",               required_argument, 0, 'A'}, /* (yes/no) */
@@ -1162,6 +1202,12 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
    * olsr_malloc() uses calloc, so opt_line is already filled
    * memset(opt_line, 0, argc * sizeof(opt_line[0]));
    */
+
+  /* cleanup static logsource flags */
+  cfg_has_log[SEVERITY_DEBUG] = false;
+  cfg_has_log[SEVERITY_INFO] = false;
+  cfg_has_log[SEVERITY_WARN] = false;
+  cfg_has_log[SEVERITY_ERR] = false;
 
   /* Copy argv array for safe free'ing later on */
   while (opt_argc < argc) {
@@ -1279,6 +1325,26 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   free(opt_line);
   free(opt_str);
 
+  /* logging option post processing */
+  if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
+    (*rcfg)->log_target_stderr = true;
+  }
+  for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
+    if (!cfg_has_log[opt] && cfg_has_log[opt-1]) {
+      int i;
+
+      /* copy debug to info, info to warning, warning to error (if neccessary) */
+      for (i=0; i < LOG_SOURCE_COUNT; i++) {
+        (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt-1][i];
+      }
+      cfg_has_log[opt] = true;
+    }
+  }
+  if (!cfg_has_log[SEVERITY_ERR]) {
+    /* no logging at all defined ? fall back to default */
+    char def[2] = "0";
+    parse_cfg_debug(def, *rcfg, rmsg);
+  }
   return rslt;
 }
 
@@ -1290,12 +1356,6 @@ olsr_sanity_check_cfg(struct olsr_config *cfg)
 {
   struct olsr_if_config *in = cfg->if_configs;
   struct olsr_if_options *io;
-
-  /* Debug level */
-  if (cfg->debug_level < MIN_DEBUGLVL || cfg->debug_level > MAX_DEBUGLVL) {
-    fprintf(stderr, "Debuglevel %d is not allowed\n", cfg->debug_level);
-    return -1;
-  }
 
   /* IP version */
   if (cfg->ip_version != AF_INET && cfg->ip_version != AF_INET6) {
@@ -1525,12 +1585,11 @@ olsr_get_default_cfg(void)
   cfg->ipc_connections = DEF_IPC_CONNECTIONS;
   cfg->fib_metric = DEF_FIB_METRIC;
 
-  cfg->debug_level = DEF_DEBUGLVL;
   for (i = 0; i < LOG_SOURCE_COUNT; i++) {
     assert(cfg->log_event[SEVERITY_DEBUG][i] == false);
     assert(cfg->log_event[SEVERITY_INFO][i] == false);
     assert(cfg->log_event[SEVERITY_WARN][i] == false);
-    cfg->log_event[SEVERITY_ERR][i] = true;
+    assert(cfg->log_event[SEVERITY_ERR][i] == false);
   }
   cfg->log_target_stderr = true;
   assert(cfg->log_target_file == NULL);

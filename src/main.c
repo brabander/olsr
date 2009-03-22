@@ -303,7 +303,7 @@ main(int argc, char *argv[])
   /* Print heartbeat to stdout */
 
 #if !defined WINCE
-  if (olsr_cnf->debug_level > 0 && isatty(STDOUT_FILENO)) {
+  if (olsr_cnf->log_target_stderr > 0 && isatty(STDOUT_FILENO)) {
     pulse_timer_cookie = olsr_alloc_cookie("Pulse", OLSR_COOKIE_TYPE_TIMER);
     olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC, &generate_stdout_pulse, NULL, pulse_timer_cookie->ci_id);
   }
@@ -319,7 +319,7 @@ main(int argc, char *argv[])
 
   /* daemon mode */
 #ifndef WIN32
-  if (olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
+  if (!olsr_cnf->no_fork) {
     OLSR_INFO(LOG_MAIN, "%s detaching from the current process...\n", olsrd_version);
     if (daemon(0, 0) < 0) {
       OLSR_ERROR(LOG_MAIN, "daemon(3) failed: %s\n", strerror(errno));

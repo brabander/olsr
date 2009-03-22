@@ -192,7 +192,6 @@ struct olsr_config {
   uint8_t ipc_connections;             /* Number of allowed IPC connections */
 
   /* logging information */
-  int8_t debug_level;                  /* Old style */
   bool log_event[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]; /* New style */
   bool log_target_stderr;              /* Log output to stderr? */
   char *log_target_file;               /* Filename for log output file, NULL if unused */

@@ -155,7 +155,7 @@ olsr_process_changes(void)
      !changes_hna)
     return;
 
-  if (olsr_cnf->debug_level > 0 && olsr_cnf->clear_screen && isatty(1))
+  if (olsr_cnf->log_target_stderr && olsr_cnf->clear_screen && isatty(STDOUT_FILENO))
   {
       clear_console();
       printf("       *** %s (%s on %s) ***\n", olsrd_version, build_date, build_host);

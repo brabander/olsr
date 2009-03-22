@@ -234,6 +234,12 @@ void olsr_log (enum log_severity severity, enum log_source source, bool no_heade
 
   assert (p1+p2 < LOGBUFFER_SIZE);
 
+  /* remove \n at the end of the line if necessary */
+  if (logbuffer[p1+p2-1] == '\n') {
+    logbuffer[p1+p2-1] = 0;
+    p2--;
+  }
+
   /* output all events to stderr if logsystem has not been initialized */
   if (!log_initialized) {
 #if DEBUG

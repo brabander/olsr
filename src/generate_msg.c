@@ -79,12 +79,10 @@ generate_hna(void *p)
 void
 generate_stdout_pulse(void *foo __attribute__((unused)))
 {
-  if (olsr_cnf->debug_level > 0) {
-    if (pulsedata[++pulse_state] == '\0') {
-      pulse_state = 0;
-    }
-    printf("%c\r", pulsedata[pulse_state]);
+  if (pulsedata[++pulse_state] == '\0') {
+    pulse_state = 0;
   }
+  fprintf(stderr, "%c\r", pulsedata[pulse_state]);
 }
 
 /*

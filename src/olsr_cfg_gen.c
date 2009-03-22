@@ -65,10 +65,6 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   abuf_appendf(abuf, "#\n"
                "# Generated config file for %s\n" "#\n\n", olsrd_version);
 
-  /* Debug level */
-  abuf_appendf(abuf, "# Debug level(0-9)\n"
-               "# If set to 0 the daemon runs in the background\n" "DebugLevel\t%d\n\n", cnf->debug_level);
-
   /* IP version */
   abuf_appendf(abuf, "# IP version to use (4 or 6)\n" "IpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);
 
