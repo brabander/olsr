@@ -772,6 +772,10 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
 
   PARSER_DEBUG_PRINTF("Debug level: %d\n", dlevel);
 
+  if (dlevel > 0) {
+    rcfg->no_fork = 1;
+  }
+
   /* prevent fallback to default 0 */
   cfg_has_log[SEVERITY_ERR] = true;
   return CFG_OK;
