@@ -76,25 +76,20 @@ gethemusocket(struct sockaddr_in *pin)
 {
   int sock;
 
-  OLSR_PRINTF(1, "       Connecting to switch daemon port 10150...");
+  OLSR_INFO(LOG_NETWORKING, "       Connecting to switch daemon port %d\n", pin->sin_port);
 
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-      perror("hcsocket");
-      return (-1);
-    }
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for emulation (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
+  }
 
   /* connect to PORT on HOST */
   if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0)
-    {
-      printf("FAILED\n");
-      fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
-      printf("connection refused\n");
-      CLOSESOCKET(sock);
-      return (-1);
-    }
-
-  printf("OK\n");
+  {
+    OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for emulation (%s)\n", strerror(errno));
+    CLOSESOCKET(sock);
+    olsr_exit(EXIT_FAILURE);
+  }
 
   /* Keep TCP socket blocking */
   return (sock);
@@ -108,24 +103,24 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   int Sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (Sock < 0)
   {
-    WinSockPError("getsocket/socket()");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST,
                  (char *)&On, sizeof (On)) < 0)
   {
-    WinSockPError("getsocket/setsockopt(SO_BROADCAST)");
-    CLOSESOCKET(Sock);
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
+    CLOSESOCKET(sock);
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR,
                  (char *)&On, sizeof (On)) < 0)
   {
-    WinSockPError("getsocket/setsockopt(SO_REUSEADDR)");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   while (BuffSize > 8192)
@@ -138,7 +133,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   }
 
   if (BuffSize <= 8192)
-    fprintf(stderr, "Cannot set IPv4 socket receive buffer.\n");
+    OLSR_WARN(LOG_NETWORKING, "Cannot set IPv4 socket receive buffer.\n");
 
   memset(&Addr, 0, sizeof (Addr));
   Addr.sin_family = AF_INET;
@@ -146,16 +141,16 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   Addr.sin_addr.s_addr = INADDR_ANY;
   if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
   {
-    WinSockPError("getsocket/bind()");
+    OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (WSAIoctl(Sock, FIONBIO, &On, sizeof (On), NULL, 0, &Len, NULL, NULL) < 0)
   {
-    WinSockPError("WSAIoctl");
+    OLSR_ERROR(LOG_NETWORKING, "WSAIoctl");
     CLOSESOCKET(Sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   return Sock;
@@ -168,24 +163,24 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   int Sock = socket(AF_INET6, SOCK_DGRAM, 0);
   if (Sock < 0)
   {
-    WinSockPError("getsocket6/socket()");
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST,
                  (char *)&On, sizeof (On)) < 0)
   {
-    WinSockPError("getsocket6/setsockopt(SO_BROADCAST)");
-    CLOSESOCKET(Sock);
-    return -1;
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
+    CLOSESOCKET(sock);
+    olsr_exit(EXIT_FAILURE);
   }
 
   if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR,
                  (char *)&On, sizeof (On)) < 0)
   {
-    WinSockPError("getsocket6/setsockopt(SO_REUSEADDR)");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   while (BuffSize > 8192)
@@ -198,7 +193,7 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   }
 
   if (BuffSize <= 8192)
-    fprintf(stderr, "Cannot set IPv6 socket receive buffer.\n");
+    OLSR_WARN(LOG_NETWORKING, "Cannot set IPv6 socket receive buffer.\n");
 
   memset(&Addr6, 0, sizeof (Addr6));
   Addr6.sin6_family = AF_INET6;
@@ -206,9 +201,9 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
   if (bind(Sock, (struct sockaddr *)&Addr6, sizeof (Addr6)) < 0)
   {
-    WinSockPError("getsocket6/bind()");
+    OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
-    return -1;
+    olsr_exit(EXIT_FAILURE);
   }
 
   return Sock;
@@ -241,17 +236,17 @@ int enable_ip_forwarding(int Ver)
 
   if (RouterOver.hEvent == NULL)
   {
-    PError("CreateEvent()");
+    OLSR_WARN(LOG_NETWORKING, "CreateEvent()");
     return -1;
   }
 
   if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING)
   {
-    PError("EnableRouter()");
+    OLSR_WARN(LOG_NETWORKING, "EnableRouter()");
     return -1;
   }
 
-  OLSR_PRINTF(3, "Routing enabled.\n");
+  OLSR_DEBUG(LOG_NETWORKING, "Routing enabled.\n");
 
   return 0;
 }
@@ -278,11 +273,11 @@ int disable_ip_forwarding(int Ver)
 
   if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR)
   {
-    PError("UnenableRouter()");
+    OLSR_WARN(LOG_NETWORKING, "UnenableRouter()");
     return -1;
   }
 
-  OLSR_PRINTF(3, "Routing disabled, count = %u.\n", Count);
+  OLSR_DEBUG(LOG_NETWORKING, "Routing disabled, count = %u.\n", Count);
 
   return 0;
 }
@@ -337,21 +332,21 @@ void DisableIcmpRedirects(void)
   if (Res != 1)
     return;
 
-  fprintf(stderr, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
+  OLSR_ERROR(LOG_NETWORKING, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
 
 #if 0
   if (Res < 0)
   {
-    fprintf(stderr, "Cannot disable ICMP redirect processing in the registry.\n");
-    fprintf(stderr, "Please disable it manually. Continuing in 3 seconds...\n");
+    OLSR_ERROR(LOG_NETWORKING, "Cannot disable ICMP redirect processing in the registry.\n");
+    OLSR_ERROR(LOG_NETWORKING, "Please disable it manually. Continuing in 3 seconds...\n");
     Sleep(3000);
 
     return;
   }
 #endif
 
-  fprintf(stderr, "I have disabled ICMP redirect processing in the registry for you.\n");
-  fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
+  OLSR_ERROR(LOG_NETWORKING, "I have disabled ICMP redirect processing in the registry for you.\n");
+  OLSR_ERROR(LOG_NETWORKING, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
 
   exit(0);
 }
@@ -366,7 +361,7 @@ int join_mcast(struct interface *Nic, int Sock)
   McastReq.ipv6mr_multiaddr = Nic->int6_multaddr.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 
-  OLSR_PRINTF(3, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
+  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
   /* Send multicast */
   if(setsockopt(Sock,
 		IPPROTO_IPV6,
@@ -375,7 +370,7 @@ int join_mcast(struct interface *Nic, int Sock)
 		sizeof(struct ipv6_mreq))
      < 0)
     {
-      perror("Join multicast");
+      OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
       return -1;
     }
 
@@ -398,7 +393,7 @@ int join_mcast(struct interface *Nic, int Sock)
      < 0)
 #endif
     {
-      perror("Join multicast send");
+      OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
       return -1;
     }
 
@@ -410,12 +405,10 @@ int join_mcast(struct interface *Nic, int Sock)
 		sizeof(McastReq.ipv6mr_interface))
      < 0)
     {
-      perror("Set multicast if");
+      OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
       return -1;
     }
 
-
-  OLSR_PRINTF(3, "OK\n");
   return 0;
 }
 

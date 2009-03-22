@@ -75,7 +75,7 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   }
 
 
-  OLSR_PRINTF(2, "KERN: Adding %s\n", olsr_rt_to_string(rt));
+  OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 
   memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
 
@@ -106,14 +106,14 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   if (Res != NO_ERROR)
   {
     if (Res != ERROR_NOT_FOUND)
-      fprintf(stderr, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+      OLSR_WARN(LOG_ROUTING, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     Res = CreateIpForwardEntry(&Row);
   }
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "CreateIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_ROUTING, "CreateIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     // XXX - report error in a different way
 
@@ -154,7 +154,7 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
     return -1;
   }
 
-  OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
+  OLSR_DEBUG(LOG_NETWORKING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
   memset(&Row, 0, sizeof (Row));
 
@@ -182,7 +182,7 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "DeleteIpForwardEntry() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "DeleteIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     // XXX - report error in a different way
 

@@ -52,6 +52,7 @@
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "common/string.h"
+#include "olsr_logging.h"
 
 #include <iphlpapi.h>
 #include <iprtrmib.h>
@@ -195,7 +196,7 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 
   if (h == NULL)
   {
-    fprintf(stderr, "LoadLibrary() = %08lx", GetLastError());
+    OLSR_WARN(LOG_NETWORKING, "LoadLibrary() = %08lx", GetLastError());
     return -1;
   }
 
@@ -203,7 +204,7 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 
   if (pfGetAdaptersAddresses == NULL)
   {
-    fprintf(stderr, "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n", GetLastError());
+    OLSR_WARN(LOG_NETWORKING, "Unable to use adapter friendly name (GetProcAddress() = %08lx)\n", GetLastError());
     return -1;
   }
 
@@ -213,17 +214,17 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "GetAdaptersAddresses() = %08lx", GetLastError());
+    OLSR_WARN(LOG_NETWORKING, "GetAdaptersAddresses() = %08lx", GetLastError());
     return -1;
   }
 
   for (WalkerAddr = AdAddr; WalkerAddr != NULL; WalkerAddr = WalkerAddr->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x - ", (int)WalkerAddr->IfIndex);
+    OLSR_DEBUG(LOG_NETWORKING, "Index = %08x - ", (int)WalkerAddr->IfIndex);
 
     wcstombs(FriendlyName, WalkerAddr->FriendlyName, MAX_INTERFACE_NAME_LEN);
 
-    OLSR_PRINTF(5, "Friendly name = %s\n", FriendlyName);
+    OLSR_DEBUG(LOG_NETWORKING, "Friendly name = %s\n", FriendlyName);
 
     if (strncmp(FriendlyName, String, MAX_INTERFACE_NAME_LEN) == 0)
       break;
@@ -231,7 +232,7 @@ static int FriendlyNameToMiniIndex(int *MiniIndex, char *String)
 
   if (WalkerAddr == NULL)
   {
-    fprintf(stderr, "No such interface: %s!\n", String);
+    OLSR_WARN(LOG_NETWORKING, "No such interface: %s!\n", String);
     return -1;
   }
 
@@ -255,7 +256,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
-    fprintf(stderr, "IPv6 not supported by GetIntInfo()!\n");
+    OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by GetIntInfo()!\n");
     return -1;
   }
 
@@ -264,7 +265,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   {
     if (FriendlyNameToMiniIndex(&MiniIndex, Name) < 0)
     {
-      fprintf(stderr, "No such interface: %s!\n", Name);
+      OLSR_WARN(LOG_NETWORKING, "No such interface: %s!\n", Name);
       return -1;
     }
   }
@@ -273,7 +274,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
   {
     if (IntNameToMiniIndex(&MiniIndex, Name) < 0)
     {
-      fprintf(stderr, "No such interface: %s!\n", Name);
+      OLSR_WARN(LOG_NETWORKING, "No such interface: %s!\n", Name);
       return -1;
     }
   }
@@ -286,13 +287,13 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "GetIfTable() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "GetIfTable() = %08lx, %s", Res, StrError(Res));
     return -1;
   }
 
   for (TabIdx = 0; TabIdx < (int)IfTable->dwNumEntries; TabIdx++)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", (int)IfTable->table[TabIdx].dwIndex);
+    OLSR_DEBUG(LOG_NETWORKING, "Index = %08x\n", (int)IfTable->table[TabIdx].dwIndex);
 
     if ((int)(IfTable->table[TabIdx].dwIndex & 255) == MiniIndex)
       break;
@@ -300,7 +301,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (TabIdx == (int)IfTable->dwNumEntries)
   {
-    fprintf(stderr, "No such interface: %s!\n", Name);
+    OLSR_WARN(LOG_NETWORKING, "No such interface: %s!\n", Name);
     return -1;
   }
 
@@ -313,7 +314,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (Lib == NULL)
   {
-    fprintf(stderr, "Cannot load iphlpapi.dll: %08lx\n", GetLastError());
+    OLSR_WARN(LOG_NETWORKING, "Cannot load iphlpapi.dll: %08lx\n", GetLastError());
     return -1;
   }
 
@@ -321,7 +322,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (InterfaceEntry == NULL)
   {
-    OLSR_PRINTF(5, "Not running on Vista - setting interface metric to 0.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "Not running on Vista - setting interface metric to 0.\n");
 
     Info->Metric = 0;
   }
@@ -337,14 +338,14 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
     if (Res != NO_ERROR)
     {
-      fprintf(stderr, "GetIpInterfaceEntry() = %08lx", Res);
+      OLSR_WARN(LOG_NETWORKING, "GetIpInterfaceEntry() = %08lx", Res);
       FreeLibrary(Lib);
       return -1;
     }
 
     Info->Metric = Row.Metric;
 
-    OLSR_PRINTF(5, "Running on Vista - interface metric is %d.\n", Info->Metric);
+    OLSR_DEBUG(LOG_NETWORKING, "Running on Vista - interface metric is %d.\n", Info->Metric);
   }
 
   FreeLibrary(Lib);
@@ -355,14 +356,14 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", GetLastError(),
+    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", GetLastError(),
             StrError(Res));
     return -1;
   }
 
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index);
+    OLSR_DEBUG(LOG_NETWORKING, "Index = %08x\n", (int)Walker->Index);
 
     if ((int)(Walker->Index & 255) == MiniIndex)
       break;
@@ -370,7 +371,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if (Walker == NULL)
   {
-    fprintf(stderr, "No such interface: %s!\n", Name);
+    OLSR_WARN(LOG_NETWORKING, "No such interface: %s!\n", Name);
     return -1;
   }
 
@@ -385,7 +386,7 @@ int GetIntInfo(struct InterfaceInfo *Info, char *Name)
       IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL) ||
       Info->Addr == 0)
   {
-    OLSR_PRINTF(3, "Interface %s not up!\n", Name);
+    OLSR_WARN(LOG_NETWORKING, "Interface %s not up!\n", Name);
     return -1;
   }
 
@@ -421,7 +422,7 @@ static int IsWireless(char *IntName)
 
   strscpy(DevName + 4, Info.Guid, sizeof(DevName) - 4);
 
-  OLSR_PRINTF(5, "Checking whether interface %s is wireless.\n", DevName);
+  OLSR_INFO(LOG_NETWORKING, "Checking whether interface %s is wireless.\n", DevName);
 
   DevHand = CreateFile(DevName, GENERIC_READ,
                        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
@@ -431,7 +432,7 @@ static int IsWireless(char *IntName)
   {
     ErrNo = GetLastError();
 
-    OLSR_PRINTF(5, "CreateFile() = %08x, %s\n", ErrNo, StrError(ErrNo));
+    OLSR_WARN(LOG_NETWORKING, "CreateFile() = %08x, %s\n", ErrNo, StrError(ErrNo));
     return -1;
   }
 
@@ -448,11 +449,11 @@ static int IsWireless(char *IntName)
 
     if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER)
     {
-      OLSR_PRINTF(5, "OID not supported. Device probably not wireless.\n");
+      OLSR_INFO(LOG_NETWORKING, "OID not supported. Device probably not wireless.\n");
       return 0;
     }
 
-    OLSR_PRINTF(5, "DeviceIoControl() = %08x, %s\n", ErrNo, StrError(ErrNo));
+    OLSR_WARN(LOG_NETWORKING, "DeviceIoControl() = %08x, %s\n", ErrNo, StrError(ErrNo));
     return -1;
   }
 
@@ -472,7 +473,7 @@ void ListInterfaces(void)
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
-    fprintf(stderr, "IPv6 not supported by ListInterfaces()!\n");
+    OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by ListInterfaces()!\n");
     return;
   }
 
@@ -482,22 +483,23 @@ void ListInterfaces(void)
 
   if (Res == ERROR_NO_DATA)
   {
-    printf("No interfaces detected.\n");
+    LOG_INFO(LOG_NETWORKING, "No interfaces detected.\n");
     return;
   }
 
   if (Res != NO_ERROR)
   {
-    fprintf(stderr, "GetAdaptersInfo() = %08lx, %s", Res, StrError(Res));
+    OLSR_WARN(LOG_NETWORKING, "GetAdaptersInfo() = %08lx, %s", Res, StrError(Res));
     return;
   }
 
+  // TODO: change to new logging API ?
   for (Walker = AdInfo; Walker != NULL; Walker = Walker->Next)
   {
-    OLSR_PRINTF(5, "Index = %08x\n", (int)Walker->Index);
+    OLSR_DEBUG(LOG_NETWORKING, "Index = %08x\n", (int)Walker->Index);
 
     MiniIndexToIntName(IntName, Walker->Index);
-
+#if 0
     printf("%s: ", IntName);
 
     IsWlan = IsWireless(IntName);
@@ -516,6 +518,7 @@ void ListInterfaces(void)
       printf(" %s", Walker2->IpAddress.String);
 
     printf("\n");
+#endif
   }
 }
 
@@ -542,11 +545,11 @@ int add_hemu_if(struct olsr_if_config *iface)
 
   strscpy(ifp->int_name, "hcif01", name_size);
 
-  OLSR_PRINTF(1, "Adding %s(host emulation):\n", ifp->int_name);
+  OLSR_INFO(LOG_NETWORKING, "Adding %s(host emulation):\n", ifp->int_name);
 
-  OLSR_PRINTF(1, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
+  OLSR_INFO(LOG_NETWORKING, "       Address:%s\n", olsr_ip_to_string(&buf, &iface->hemu_ip));
 
-  OLSR_PRINTF(1, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
+  OLSR_INFO(LOG_NETWORKING, "       NB! This is a emulated interface\n       that does not exist in the kernel!\n");
 
   /* Queue */
   list_add_before(&interface_head, &ifp->int_node);
@@ -554,7 +557,7 @@ int add_hemu_if(struct olsr_if_config *iface)
   if(!olsr_cnf->fixed_origaddr && olsr_ipcmp(&all_zero, &olsr_cnf->router_id) == 0)
     {
       olsr_cnf->router_id = iface->hemu_ip;
-      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+      OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
     }
 
   ifp->int_mtu = OLSR_DEFAULT_MTU;
@@ -623,7 +626,7 @@ int add_hemu_if(struct olsr_if_config *iface)
 
   if(send(ifp->olsr_socket, (char *)addr, olsr_cnf->ipsize, 0) != (int)olsr_cnf->ipsize)
     {
-      fprintf(stderr, "Error sending IP!");
+      OLSR_WARN(LOG_NETWORKING, "Error sending IP!");
     }
 
   /* Register socket */
@@ -674,13 +677,9 @@ int chk_if_changed(struct olsr_if_config *IntConf)
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
-    fprintf(stderr, "IPv6 not supported by chk_if_changed()!\n");
+    OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by chk_if_changed()!\n");
     return 0;
   }
-
-#ifdef DEBUG
-  OLSR_PRINTF(3, "Checking if %s is set down or changed\n", IntConf->name);
-#endif
 
   Int = IntConf->interf;
 
@@ -699,7 +698,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
 
   if (Int->is_wireless != IsWlan)
   {
-    OLSR_PRINTF(1, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
+    OLSR_INFO(LOG_NETWORKING, "\tLAN/WLAN change: %d -> %d.\n", Int->is_wireless, IsWlan);
 
     Int->is_wireless = IsWlan;
 
@@ -714,7 +713,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
 
   if (Int->int_mtu != Info.Mtu)
   {
-    OLSR_PRINTF(1, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu,
+    OLSR_INFO(LOG_NETWORKING, "\tMTU change: %d -> %d.\n", (int)Int->int_mtu,
                 Info.Mtu);
 
     Int->int_mtu = Info.Mtu;
@@ -728,15 +727,13 @@ int chk_if_changed(struct olsr_if_config *IntConf)
   OldVal.v4 = Int->int_addr.sin_addr;
   NewVal.v4.s_addr = Info.Addr;
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
-    OLSR_PRINTF(1, "\tAddress change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tAddress change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     Int->ip_addr.v4 = NewVal.v4;
 
@@ -748,7 +745,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
 
     if (!olsr_cnf->fixed_origaddr && olsr_cnf->router_id.v4.s_addr == OldVal.v4.s_addr)
     {
-      OLSR_PRINTF(1, "\tMain address change.\n");
+      OLSR_INFO(LOG_NETWORKING, "\tMain address change.\n");
 
       olsr_cnf->router_id.v4 = NewVal.v4;
     }
@@ -757,20 +754,18 @@ int chk_if_changed(struct olsr_if_config *IntConf)
   }
 
   else
-    OLSR_PRINTF(3, "\tNo address change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tNo address change.\n");
 
   OldVal.v4 = ((struct sockaddr_in *)&Int->int_netmask)->sin_addr;
   NewVal.v4.s_addr = Info.Mask;
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+  OLSR_INFO(LOG_NETWORKING, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
-    OLSR_PRINTF(1, "\tNetmask change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tNetmask change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     AddrIn = (struct sockaddr_in *)&Int->int_netmask;
 
@@ -782,20 +777,18 @@ int chk_if_changed(struct olsr_if_config *IntConf)
   }
 
   else
-    OLSR_PRINTF(3, "\tNo netmask change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tNo netmask change.\n");
 
   OldVal.v4 = Int->int_broadaddr.sin_addr;
   NewVal.v4.s_addr = Info.Broad;
 
-#ifdef DEBUG
-  OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr)
   {
-    OLSR_PRINTF(1, "\tBroadcast address change.\n");
-    OLSR_PRINTF(1, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
-    OLSR_PRINTF(1, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tBroadcast address change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tOld: %s\n", olsr_ip_to_string(&buf, &OldVal));
+    OLSR_DEBUG(LOG_NETWORKING, "\tNew: %s\n", olsr_ip_to_string(&buf, &NewVal));
 
     AddrIn = &Int->int_broadaddr;
 
@@ -807,7 +800,7 @@ int chk_if_changed(struct olsr_if_config *IntConf)
   }
 
   else
-    OLSR_PRINTF(3, "\tNo broadcast address change.\n");
+    OLSR_DEBUG(LOG_NETWORKING, "\tNo broadcast address change.\n");
 
   if (Res != 0)
     run_ifchg_cbs(Int, IFCHG_IF_UPDATE);
@@ -827,7 +820,7 @@ int chk_if_up(struct olsr_if_config *IntConf)
 
   if (olsr_cnf->ip_version == AF_INET6)
   {
-    fprintf(stderr, "IPv6 not supported by chk_if_up()!\n");
+    OLSR_WARN(LOG_NETWORKING, "IPv6 not supported by chk_if_up()!\n");
     return 0;
   }
 
@@ -888,26 +881,26 @@ int chk_if_up(struct olsr_if_config *IntConf)
 
   New->ttl_index = -32; /* For the first 32 TC's, fish-eye is disabled */
 
-  OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n",
+  OLSR_INFO(LOG_NETWORKING, "\tInterface %s set up for use with index %d\n\n",
               IntConf->name, New->if_index);
 
-  OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
-  OLSR_PRINTF(1, "\tAddress: %s\n", ip4_to_string(&buf, New->int_addr.sin_addr));
-  OLSR_PRINTF(1, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
-  OLSR_PRINTF(1, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_broadaddr.sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tMTU: %d\n", New->int_mtu);
+  OLSR_INFO(LOG_NETWORKING, "\tAddress: %s\n", ip4_to_string(&buf, New->int_addr.sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tNetmask: %s\n", ip4_to_string(&buf, ((struct sockaddr_in *)&New->int_netmask)->sin_addr));
+  OLSR_INFO(LOG_NETWORKING, "\tBroadcast address: %s\n", ip4_to_string(&buf, New->int_broadaddr.sin_addr));
 
   New->ip_addr.v4 = New->int_addr.sin_addr;
 
   New->if_index = Info.Index;
 
-  OLSR_PRINTF(3, "\tKernel index: %08x\n", New->if_index);
+  OLSR_INFO(LOG_NETWORKING, "\tKernel index: %08x\n", New->if_index);
 
   New->olsr_socket = getsocket(BUFSPACE, New->int_name);
 
   if (New->olsr_socket < 0)
   {
-    fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-    exit(1);
+    OLSR_ERROR(LOG_NETWORKING, "Could not initialize socket... exiting!\n\n");
+    olsr_exit(1);
   }
 
   add_olsr_socket(New->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
@@ -924,7 +917,7 @@ int chk_if_up(struct olsr_if_config *IntConf)
   if(!olsr_cnf->fixed_origaddr && olsr_ipcmp(&NullAddr, &olsr_cnf->router_id) == 0)
   {
     olsr_cnf->router_id = New->ip_addr;
-    OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+    OLSR_INFO(LOG_NETWORKING, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
   }
 
   net_add_buffer(New);

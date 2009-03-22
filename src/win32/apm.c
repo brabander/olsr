@@ -41,6 +41,7 @@
 #include "apm.h"
 #include "defs.h"
 #include "olsr_cfg.h"
+#include "olsr_logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,7 +54,7 @@ int apm_init(void)
 {
   struct olsr_apm_info ApmInfo;
 
-  OLSR_PRINTF(3, "Initializing APM\n");
+  OLSR_INFO(LOG_MAIN, "Initializing APM\n");
 
   if(apm_read(&ApmInfo) < 0)
     return -1;
@@ -65,7 +66,7 @@ int apm_init(void)
 
 void apm_printinfo(struct olsr_apm_info *ApmInfo)
 {
-  OLSR_PRINTF(5, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
+  OLSR_INFO(LOG_MAIN, "APM info:\n\tAC status %d\n\tBattery percentage %d%%\n\n",
 	      ApmInfo->ac_line_status,
 	      ApmInfo->battery_percentage);
 }
