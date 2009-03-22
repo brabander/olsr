@@ -63,6 +63,8 @@ struct lqtextbuffer {
 };
 
 struct lq_handler {
+  const char *name;
+
   void (*initialize)(void);
   void (*deinitialize)(void);
 

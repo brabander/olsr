@@ -97,6 +97,7 @@ void
 init_msg_seqno(void)
 {
   message_seqno = random() & 0xFFFF;
+  OLSR_DEBUG(LOG_MAIN, "Settings initial message sequence number to %u\n", message_seqno);
 }
 
 /**
@@ -427,7 +428,7 @@ olsr_init_willingness(void)
   static struct olsr_cookie_info *willingness_timer_cookie = NULL;
 
   if (olsr_cnf->willingness_auto) {
-
+    OLSR_INFO(LOG_MAIN, "Initialize automatic willingness...\n");
     /* Run it first and then periodic. */
     olsr_update_willingness(NULL);
 

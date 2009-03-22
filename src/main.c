@@ -127,7 +127,7 @@ main(int argc, char *argv[])
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
-  printf("\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
+  OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 
   /* Using PID as random seed */
   srandom(getpid());
@@ -285,8 +285,10 @@ main(int argc, char *argv[])
 
   /* Initializing lo:olsr if necessary */
   if (olsr_cnf->source_ip_mode) {
+    OLSR_INFO(LOG_NETWORKING, "Initializing lo:olsr interface for source ip mode...\n");
     if (olsr_create_lo_interface(&olsr_cnf->router_id) <= 0) {
       OLSR_ERROR(LOG_NETWORKING, "Cannot create lo:olsr interface for ip '%s'\n", olsr_ip_to_string(&buf, &olsr_cnf->router_id));
+      olsr_exit(EXIT_FAILURE);
     }
   }
   /* Initializing networkinterfaces */

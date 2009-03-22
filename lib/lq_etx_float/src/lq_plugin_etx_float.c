@@ -85,6 +85,8 @@ static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer * bu
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxfloat_handler = {
+  "etx (float)",
+
   &lq_etxfloat_initialize,
   &lq_etxfloat_deinitialize,
 

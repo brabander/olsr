@@ -260,7 +260,7 @@ avl_comp_ipv6_addr_origin (const void *prefix1, const void *prefix2)
 void
 olsr_init_routing_table(void)
 {
-  OLSR_INFO(LOG_ROUTING, "RIB: init routing tree\n");
+  OLSR_INFO(LOG_ROUTING, "RIB: initialize routing tree...\n");
 
   /* the routing tree */
   avl_init(&routingtree, avl_comp_prefix_default);

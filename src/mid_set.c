@@ -71,7 +71,7 @@ static struct olsr_cookie_info *mid_address_mem_cookie = NULL;
 void
 olsr_init_mid_set(void)
 {
-  OLSR_INFO(LOG_MID, "MID: init\n");
+  OLSR_INFO(LOG_MID, "Initialize MID set...\n");
 
   avl_init(&mid_tree, avl_comp_default);
 

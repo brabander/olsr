@@ -94,6 +94,8 @@ static struct olsr_cookie_info *default_lq_ff_timer_cookie = NULL;
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxff_handler = {
+  "internal etx (freifunk)",
+
   &lq_etxff_initialize,
   &lq_etxff_deinitialize,
 

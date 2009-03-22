@@ -68,6 +68,8 @@ init_lq_handler(void)
     active_lq_handler = &lq_etxff_handler;
   }
 
+  OLSR_INFO(LOG_LQ_PLUGINS, "Initializing LQ handler %s...\n", active_lq_handler->name);
+
   tc_edge_mem_cookie = olsr_alloc_cookie("tc_edge", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tc_edge_mem_cookie, active_lq_handler->size_tc_edge);
 

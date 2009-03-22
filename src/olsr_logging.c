@@ -75,7 +75,7 @@ static void olsr_log_file (enum log_severity severity, enum log_source source,
  * Called by main method just after configuration options have been parsed
  */
 void olsr_log_init(void) {
-  static char error[256];
+  char error[256];
   bool printError = false;
   int i,j;
 
@@ -117,6 +117,9 @@ void olsr_log_init(void) {
 
   if (printError) {
     OLSR_WARN(LOG_LOGGING, "%s", error);
+  }
+  else {
+    OLSR_INFO(LOG_LOGGING, "Initialized Logger...\n");
   }
 }
 

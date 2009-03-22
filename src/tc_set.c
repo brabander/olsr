@@ -180,7 +180,7 @@ olsr_add_tc_entry(const union olsr_ip_addr *adr)
 void
 olsr_init_tc(void)
 {
-  OLSR_DEBUG(LOG_TC, "TC: init topo\n");
+  OLSR_INFO(LOG_TC, "Initialize topology set...\n");
 
   avl_init(&tc_tree, avl_comp_default);
 

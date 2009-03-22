@@ -518,6 +518,8 @@ olsr_init_timers(void)
 {
   int idx;
 
+  OLSR_INFO(LOG_SCHEDULER, "Initializing scheduler.\n");
+
   /* Grab initial timestamp */
   if (gettimeofday(&first_tv, NULL)) {
     OLSR_ERROR(LOG_SCHEDULER, "OS clock is not working, have to shut down OLSR (%s)\n", strerror(errno));

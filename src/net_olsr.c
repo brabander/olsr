@@ -99,6 +99,10 @@ init_net(void)
   /* Init filter tree */
   avl_init(&filter_tree, avl_comp_default);
 
+  if (*defaults) {
+    OLSR_INFO(LOG_NETWORKING, "Initializing invalid IP list.\n");
+  }
+
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
     if (inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){

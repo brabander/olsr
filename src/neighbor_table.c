@@ -64,6 +64,8 @@ olsr_init_neighbor_table(void)
 {
   int i;
 
+  OLSR_INFO(LOG_NEIGHTABLE, "Initialize neighbor table...\n");
+
   for(i = 0; i < HASHSIZE; i++)
     {
       neighbortable[i].next = &neighbortable[i];

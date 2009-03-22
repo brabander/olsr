@@ -53,6 +53,8 @@ static struct list_node mprs_list_head;
 void
 olsr_init_mprs(void)
 {
+  OLSR_INFO(LOG_MPRS, "Initialize MPR set...\n");
+
   list_head_init(&mprs_list_head);
 
   /*

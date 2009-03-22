@@ -59,7 +59,7 @@ static struct olsr_cookie_info *hna_net_mem_cookie = NULL;
 void
 olsr_init_hna_set(void)
 {
-  OLSR_DEBUG(LOG_HNA, "HNA: init\n");
+  OLSR_INFO(LOG_HNA, "Initialize HNA set...\n");
 
   hna_net_timer_cookie =
     olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);

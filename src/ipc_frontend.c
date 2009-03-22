@@ -168,6 +168,8 @@ ipc_init(void)
     olsr_exit(EXIT_FAILURE);
   }
 
+  OLSR_INFO(LOG_IPC, "Initializing IPC connection...\n");
+
   /* Register the socket with the socket parser */
   add_olsr_socket(ipc_sock, &ipc_accept, NULL, NULL, SP_PR_READ);
 

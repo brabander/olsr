@@ -86,6 +86,8 @@ static char *lq_etxfpm_print_cost(olsr_linkcost cost, struct lqtextbuffer * buff
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxfpm_handler = {
+  "etx (fpm)",
+
   &lq_etxfpm_initialize,
   &lq_etxfpm_deinitialize,
 

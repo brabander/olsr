@@ -62,6 +62,8 @@ static struct olsr_cookie_info *duplicate_mem_cookie = NULL;
 void
 olsr_init_duplicate_set(void)
 {
+  OLSR_INFO(LOG_DUPLICATE_SET, "Initialize duplicate set...\n");
+
   avl_init(&duplicate_set,
 	   olsr_cnf->ip_version == AF_INET ? &avl_comp_ipv4 : &avl_comp_ipv6);
 

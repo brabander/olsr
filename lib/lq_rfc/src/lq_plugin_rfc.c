@@ -85,6 +85,8 @@ static char *lq_rfc_print_cost(olsr_linkcost cost, struct lqtextbuffer * buffer)
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_rfc_handler = {
+  "rfc",
+
   &lq_rfc_initialize,
   &lq_rfc_deinitialize,
 

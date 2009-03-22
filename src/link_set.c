@@ -84,6 +84,7 @@ static int get_neighbor_status(const union olsr_ip_addr *);
 void
 olsr_init_link_set(void)
 {
+  OLSR_INFO(LOG_LINKS, "Initialize linkset...\n");
 
   /* Init list head */
   list_head_init(&link_entry_head);

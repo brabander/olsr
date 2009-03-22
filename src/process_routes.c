@@ -60,6 +60,8 @@ export_route_function olsr_del_route_function;
 void
 olsr_init_export_route(void)
 {
+  OLSR_INFO(LOG_ROUTING, "Initialize route processing...\n");
+
   /* the add/chg/del kernel queues */
   list_head_init(&add_kernel_list);
   list_head_init(&chg_kernel_list);

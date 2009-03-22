@@ -57,6 +57,9 @@ void
 olsr_init_two_hop_table(void)
 {
   int idx;
+
+  OLSR_INFO(LOG_2NEIGH, "Initialize two-hop neighbortable...\n");
+
   for(idx=0;idx<HASHSIZE;idx++)
     {
       two_hop_neighbortable[idx].next = &two_hop_neighbortable[idx];
