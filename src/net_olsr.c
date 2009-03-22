@@ -375,7 +375,7 @@ net_output(struct interface *ifp)
 		  &dstaddr.sin,
 		  dstaddr_size) < 0) {
     const int save_errno = errno;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     char sabuf[1024];
 #endif
     dstaddr.sin.sa_family = olsr_cnf->ip_version;
@@ -403,7 +403,7 @@ net_output(struct interface *ifp)
 static void
 olsr_add_invalid_address(const union olsr_ip_addr *addr)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
 #endif
   struct filter_entry *filter;
@@ -432,7 +432,7 @@ olsr_validate_address(const union olsr_ip_addr *addr)
   const struct filter_entry *filter = filter_tree2filter(avl_find(&filter_tree, addr));
 
   if (filter) {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif
     OLSR_DEBUG(LOG_NETWORKING, "Validation of address %s failed!\n",

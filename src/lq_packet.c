@@ -66,7 +66,7 @@ static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 {
   struct link_entry *walker;
-#if !defined REMOVE_WARN
+#if !defined REMOVE_LOG_WARN
   struct ipaddr_str buf;
 #endif
 

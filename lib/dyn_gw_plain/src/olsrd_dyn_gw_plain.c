@@ -133,7 +133,7 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
      "Flags Metric Ref    Use Iface\n");
    */
   while (fgets(buff, 1023, fp)) {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif
     num =

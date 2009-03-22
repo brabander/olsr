@@ -141,7 +141,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 void
 olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
@@ -217,7 +217,7 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
 void
 olsr_print_two_hop_neighbor_table(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   int i;
 

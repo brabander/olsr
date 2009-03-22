@@ -94,7 +94,7 @@ static void
 olsr_expire_mid_entries(void *context)
 {
   struct tc_entry *tc = context;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
@@ -128,7 +128,7 @@ static void
 olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 {
   struct tc_entry *tc = alias->mid_tc;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
 
@@ -181,7 +181,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
   struct neighbor_entry *nbr_new, *nbr_old = olsr_lookup_neighbor_table_alias(alias_addr);
   struct mid_entry *mid_old;
   int ne_ref_rp_count;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
 
@@ -232,7 +232,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
 {
   struct tc_entry *tc;
   struct mid_entry *alias;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf1, buf2;
 #endif
 
@@ -459,7 +459,7 @@ olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
 void
 olsr_print_mid_set(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   struct tc_entry *tc;
   struct mid_entry *alias;
   struct ipaddr_str buf;
@@ -493,7 +493,7 @@ olsr_input_mid(union olsr_message *msg,
   olsr_reltime vtime;
   union olsr_ip_addr originator, alias;
   int alias_count;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 

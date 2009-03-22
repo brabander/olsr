@@ -531,7 +531,7 @@ void FindNeighbors(
       }
       else
       {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
         struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
         struct lqtextbuffer lqbuffer;
 #endif
@@ -548,7 +548,7 @@ void FindNeighbors(
 
     if (forwardedBy != NULL)
     {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
 struct ipaddr_str forwardedByBuf, niaBuf;
       struct lqtextbuffer lqbuffer;
 #endif
@@ -579,7 +579,7 @@ struct ipaddr_str forwardedByBuf, niaBuf;
 
           if (previousLinkEtx + currEtx > tcEtx)
           {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
             struct ipaddr_str neighbor_iface_buf, forw_buf;
             struct lqtextbuffer lqbuffer;
             olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);

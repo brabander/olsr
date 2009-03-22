@@ -71,7 +71,7 @@ static void
 olsr_expire_mpr_sel_entry(void *context)
 {
   struct mpr_selector *mpr_sel = context;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   OLSR_DEBUG(LOG_MPRS, "MPRS: Timing out %st\n",
@@ -124,7 +124,7 @@ int
 olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 {
   int rv;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   struct mpr_selector *mprs = olsr_lookup_mprs_set(addr);
@@ -163,7 +163,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
 void
 olsr_print_mprs_set(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
   struct mpr_selector *mprs;
 

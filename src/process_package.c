@@ -81,7 +81,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
   for (message_neighbors = message->neigh;
        message_neighbors != NULL;
        message_neighbors = message_neighbors->next) {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif
     union olsr_ip_addr *neigh_addr;

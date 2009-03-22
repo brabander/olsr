@@ -150,7 +150,7 @@ static void
 olsr_expire_hna_net_entry(void *context)
 {
   struct hna_net *hna_net = context;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
 #endif
@@ -217,7 +217,7 @@ void
 olsr_print_hna_set(void)
 {
   /* The whole function doesn't do anything else. */
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   struct tc_entry *tc;
   struct ipaddr_str buf;
   struct ipprefix_str prefixstr;
@@ -249,7 +249,7 @@ olsr_input_hna(union olsr_message *msg,
   struct olsrmsg_hdr msg_hdr;
   struct olsr_ip_prefix prefix;
   const uint8_t *curr, *curr_end;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 

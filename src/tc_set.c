@@ -128,7 +128,7 @@ olsr_seq_inrange_high(int beg, int end, uint16_t seq)
 static struct tc_entry *
 olsr_add_tc_entry(const union olsr_ip_addr *adr)
 {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   struct tc_entry *tc;
@@ -256,7 +256,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
   struct rt_path *rtp;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   OLSR_DEBUG(LOG_TC, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
@@ -393,7 +393,7 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr,
 {
   struct tc_entry *tc_neighbor;
   struct tc_edge_entry *tc_edge = olsr_malloc_tc_edge_entry();
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   if (!tc_edge) {
@@ -654,7 +654,7 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 void
 olsr_print_tc_table(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
@@ -757,7 +757,7 @@ olsr_input_tc(union olsr_message *msg,
   const unsigned char *limit, *curr;
   struct tc_entry *tc;
   bool relevantTc;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   union olsr_ip_addr lower_border_ip, upper_border_ip;

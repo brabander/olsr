@@ -745,7 +745,7 @@ void
 olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
 {
   /* The whole function makes no sense without it. */
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   struct avl_node *rt_tree_node;
   struct lqtextbuffer lqbuffer;
 

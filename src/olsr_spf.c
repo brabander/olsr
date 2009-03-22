@@ -80,7 +80,7 @@ static void
 olsr_spf_add_cand_tree (struct avl_tree *tree,
                         struct tc_entry *tc)
 {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
   struct lqtextbuffer lqbuffer;
 #endif
@@ -103,7 +103,7 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
                         struct tc_entry *tc)
 {
 
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
   struct lqtextbuffer lqbuffer;
 #endif
@@ -123,7 +123,7 @@ static void
 olsr_spf_add_path_list (struct list_node *head, int *path_count,
                         struct tc_entry *tc)
 {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str pathbuf, nbuf;
   struct lqtextbuffer lqbuffer;
 #endif
@@ -165,7 +165,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
   struct avl_node *edge_node;
   olsr_linkcost new_cost;
 
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf, nbuf;
   struct lqtextbuffer lqbuffer;
 #endif
@@ -391,7 +391,7 @@ olsr_calculate_routing_table (void)
        * does not contain a next-hop.
        */
       if (tc != tc_myself) {
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str buf;
 #endif
         OLSR_DEBUG(LOG_ROUTING, "SPF: %s no next-hop\n", olsr_ip_to_string(&buf, &tc->addr));

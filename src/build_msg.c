@@ -162,7 +162,7 @@ serialize_mid4(struct interface *ifp)
   union olsr_message *m;
   struct midaddr *addrs;
   struct interface *ifs;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   if ((olsr_cnf->ip_version != AF_INET) || (!ifp) ||
@@ -254,7 +254,7 @@ serialize_mid6(struct interface *ifp)
   union olsr_message *m;
   struct midaddr6 *addrs6;
   struct interface *ifs;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
@@ -345,7 +345,7 @@ serialize_hna4(struct interface *ifp)
   union olsr_message *m;
   struct hnapair *pair;
   struct ip_prefix_entry *h;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipprefix_str prefixstr;
 #endif
   /* No hna nets */
@@ -434,7 +434,7 @@ serialize_hna6(struct interface *ifp)
   struct hnapair6 *pair6;
   union olsr_ip_addr tmp_netmask;
   struct ip_prefix_entry *h;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipprefix_str prefixstr;
 #endif
 

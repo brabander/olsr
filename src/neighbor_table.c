@@ -181,7 +181,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
   uint32_t                    hash;
   struct neighbor_entry         *entry;
 
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, neighbor_addr));
@@ -243,7 +243,7 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
 {
   uint32_t             hash;
   struct neighbor_entry  *new_neigh;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
 
@@ -409,7 +409,7 @@ olsr_expire_nbr2_list(void *context)
 void
 olsr_print_neighbor_table(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function doesn't do anything else. */
   const int ipwidth = olsr_cnf->ip_version == AF_INET ?  15 : 39;
   int idx;

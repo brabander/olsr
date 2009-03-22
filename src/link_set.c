@@ -594,7 +594,7 @@ lookup_link_entry(const union olsr_ip_addr *remote,
       if (NULL != remote_main && olsr_ipcmp(remote_main, &link->neighbor->neighbor_main_addr) != 0)
       {
         /* Neighbor has changed it's main_addr, update */
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str oldbuf, newbuf;
 #endif
         OLSR_DEBUG(LOG_LINKS, "Neighbor changed main_ip, updating %s -> %s\n",
@@ -740,7 +740,7 @@ check_link_status(const struct lq_hello_message *message,
 void
 olsr_print_link_set(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;

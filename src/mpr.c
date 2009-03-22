@@ -107,7 +107,7 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
   struct neighbor_2_list_entry *two_hop_list = NULL;
   struct neighbor_entry        *dup_neighbor;
   struct neighbor_2_entry      *two_hop_neighbor = NULL;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   for(idx=0;idx<HASHSIZE;idx++)
@@ -171,7 +171,7 @@ olsr_chosen_mpr(struct neighbor_entry *one_hop_neighbor, uint16_t *two_hop_cover
   struct neighbor_2_list_entry *second_hop_entries;
   struct neighbor_entry        *dup_neighbor;
   uint16_t                   count;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str            buf;
 #endif
   count = *two_hop_covered_count;
@@ -246,7 +246,7 @@ olsr_find_maximum_covered(int willingness)
   uint16_t                  maximum;
   struct neighbor_entry       *a_neighbor;
   struct neighbor_entry       *mpr_candidate = NULL;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   maximum = 0;
@@ -411,7 +411,7 @@ add_will_always_nodes(void)
 {
   struct neighbor_entry *a_neighbor;
   uint16_t count = 0;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   OLSR_FOR_ALL_NBR_ENTRIES(a_neighbor) {
@@ -511,7 +511,7 @@ static void
 olsr_optimize_mpr_set(void)
 {
   int i;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
   OLSR_DEBUG(LOG_MPR, "\n**MPR OPTIMIZING**\n\n");
@@ -559,7 +559,7 @@ olsr_optimize_mpr_set(void)
 void
 olsr_print_mpr_set(void)
 {
-#if !defined REMOVE_INFO
+#if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
   struct neighbor_entry *a_neighbor;
 

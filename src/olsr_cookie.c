@@ -274,7 +274,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   void *ptr;
   struct olsr_cookie_mem_brand *branding;
   struct list_node *free_list_node;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
   size_t size;
@@ -342,7 +342,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     }
 
     ci->ci_free_list_usage--;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     reuse = true;
 #endif
   }
@@ -375,7 +375,7 @@ void
 olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 {
   struct list_node *free_list_node;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
   bool reuse = false;
 #endif
   struct olsr_cookie_mem_brand *branding = (struct olsr_cookie_mem_brand *)
@@ -421,7 +421,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     }
 
     ci->ci_free_list_usage++;
-#if !defined REMOVE_DEBUG
+#if !defined REMOVE_LOG_DEBUG
     reuse = true;
 #endif
 
