@@ -1148,7 +1148,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"delgw",                    no_argument,       0, 'D'},
     {"dispin",                   no_argument,       0, 'X'},
     {"dispout",                  no_argument,       0, 'O'},
-    {"help",                     no_argument,       0, 'h'},
+    {"help",                     optional_argument, 0, 'h'},
     {"iface",                    no_argument,       0, 'i'}, /* if0 if1... */
 #ifdef WIN32
     {"int",                      no_argument,       0, 'l'},
@@ -1233,7 +1233,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   opt_str = olsr_malloc(opt_idx * 3, "create short opt_string");
   opt_idx = 0;
   while (popt->name) {
-    if (popt->val) {
+    if (popt->val > 0 && popt->val < 128) {
       opt_str[opt_idx++] = popt->val;
 
       switch (popt->has_arg) {
@@ -1292,8 +1292,13 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
       popt = long_options;
       printf("Usage: olsrd [OPTIONS]... [interfaces]...\n");
       while (popt->name) {
-        if (' ' <= popt->val) {
-          printf("-%c or --%s ", popt->val, popt->name);
+        if (popt->val) {
+          if (popt->val > 0 && popt->val < 128) {
+            printf("-%c or --%s ", popt->val, popt->name);
+          }
+          else {
+            printf("      --%s ", popt->name);
+          }
           switch (popt->has_arg) {
           case required_argument:
             printf("arg");
@@ -1305,6 +1310,17 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
           printf("\n");
         }
         popt++;
+      }
+      if (optarg == NULL) {
+        printf("Use '--help=log'for help about the available logging sources\n");
+      }
+      else if (strcmp(optarg, "log") == 0) {
+        int i;
+
+        printf("Log sources for --log_debug, --log_info, --log_warn and --log_error:\n");
+        for (i=0; i < LOG_SOURCE_COUNT; i++) {
+          printf("\t%s\n", LOG_SOURCE_NAMES[i]);
+        }
       }
       rslt = CFG_EXIT;
       break;
@@ -1330,24 +1346,26 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   free(opt_str);
 
   /* logging option post processing */
-  if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
-    (*rcfg)->log_target_stderr = true;
-  }
-  for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
-    if (!cfg_has_log[opt] && cfg_has_log[opt-1]) {
-      int i;
-
-      /* copy debug to info, info to warning, warning to error (if neccessary) */
-      for (i=0; i < LOG_SOURCE_COUNT; i++) {
-        (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt-1][i];
-      }
-      cfg_has_log[opt] = true;
+  if (rslt != CFG_ERROR && rslt != CFG_EXIT) {
+    if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
+      (*rcfg)->log_target_stderr = true;
     }
-  }
-  if (!cfg_has_log[SEVERITY_ERR]) {
-    /* no logging at all defined ? fall back to default */
-    char def[2] = "0";
-    parse_cfg_debug(def, *rcfg, rmsg);
+    for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
+      if (!cfg_has_log[opt] && cfg_has_log[opt-1]) {
+        int i;
+
+        /* copy debug to info, info to warning, warning to error (if neccessary) */
+        for (i=0; i < LOG_SOURCE_COUNT; i++) {
+          (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt-1][i];
+        }
+        cfg_has_log[opt] = true;
+      }
+    }
+    if (!cfg_has_log[SEVERITY_ERR]) {
+      /* no logging at all defined ? fall back to default */
+      char def[2] = "0";
+      parse_cfg_debug(def, *rcfg, rmsg);
+    }
   }
   return rslt;
 }
