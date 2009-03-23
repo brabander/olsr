@@ -208,7 +208,7 @@ void olsr_log (enum log_severity severity, enum log_source source, bool no_heade
   static char logbuffer[LOGBUFFER_SIZE];
   va_list ap;
   int p1 = 0,p2 = 0, i;
-  struct tm now;
+  struct tm now, *tm_ptr;
   struct timeval timeval;
 
   /* test if event is consumed by any log handler */
@@ -219,7 +219,10 @@ void olsr_log (enum log_severity severity, enum log_source source, bool no_heade
 
   /* calculate local time */
   gettimeofday(&timeval, NULL);
-  localtime_r ( (time_t *) &timeval.tv_sec, &now );
+
+  /* there is no localtime_r in win32 */
+  tm_ptr = localtime ( (time_t *) &timeval.tv_sec);
+  now = *tm_ptr;
 
   /* generate log string (insert file/line in DEBUG mode) */
   if (!no_header) {

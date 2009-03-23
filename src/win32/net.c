@@ -57,6 +57,7 @@
 #include "net_os.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
+#include "olsr_logging.h"
 
 #if defined WINCE
 #define WIDE_STRING(s) L##s
@@ -111,7 +112,7 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
                  (char *)&On, sizeof (On)) < 0)
   {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
-    CLOSESOCKET(sock);
+    CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
