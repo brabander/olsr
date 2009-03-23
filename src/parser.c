@@ -75,7 +75,8 @@ struct parse_function_entry *parse_functions;
 struct preprocessor_function_entry *preprocessor_functions;
 struct packetparser_function_entry *packetparser_functions;
 
-static char inbuf[MAXMESSAGESIZE + 1];
+static uint32_t inbuf_aligned[MAXMESSAGESIZE/sizeof(uint32_t) + 1];
+static char *inbuf = (char *)inbuf_aligned;
 
 static bool disp_pack_in = false;
 
