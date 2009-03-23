@@ -396,7 +396,7 @@ olsr_input(int fd)
     }
 
     fromlen = sizeof(struct sockaddr_storage);
-    cc = olsr_recvfrom(fd, inbuf, sizeof(inbuf), 0, (struct sockaddr *)&from, &fromlen);
+    cc = olsr_recvfrom(fd, inbuf, sizeof(inbuf_aligned), 0, (struct sockaddr *)&from, &fromlen);
 
     if (cc <= 0) {
       if (cc < 0 && errno != EWOULDBLOCK) {

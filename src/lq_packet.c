@@ -61,7 +61,8 @@
 
 bool lq_tc_pending = false;
 
-static unsigned char msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+static uint32_t msg_buffer_aligned[(MAXMESSAGESIZE - OLSR_HEADERSIZE) / sizeof(uint32_t) + 1];
+static unsigned char *msg_buffer = (unsigned char *)msg_buffer_aligned;
 
 static void
 create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)

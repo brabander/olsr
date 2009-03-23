@@ -64,7 +64,8 @@ static void check_buffspace(int msgsize, int buffsize, const char *type);
 
 /* All these functions share this buffer */
 
-static uint8_t msg_buffer[MAXMESSAGESIZE - OLSR_HEADERSIZE];
+static uint32_t msg_buffer_align[(MAXMESSAGESIZE - OLSR_HEADERSIZE)/sizeof(uint32_t) + 1];
+static uint8_t *msg_buffer = (uint8_t *)msg_buffer_align;
 
 static clock_t send_empty_tc;          /* TC empty message sending */
 
