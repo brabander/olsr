@@ -415,7 +415,7 @@ olsr_input(int fd)
 
 #ifdef DEBUG
     OLSR_PRINTF(5, "Recieved a packet from %s\n",
-                olsr_ip_to_string(&buf, (union olsr_ip_addr *)&((struct sockaddr_in *)&from)->sin_addr.s_addr));
+        olsr_ip_to_string(&buf, &from_addr));
 #endif
 
     if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof(struct sockaddr_in)))
