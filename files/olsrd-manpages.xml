@@ -919,6 +919,15 @@
         </varlistentry>
 
         <varlistentry>
+          <term><option>OlsrPort</option>
+          &gt;<replaceable>1000</replaceable></term>
+
+          <listitem>
+            <para>If set olsr uses specified port instead of its default IANA assigned port 698!</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term><option>RtProto</option>
           <replaceable>0</replaceable>|<replaceable>1</replaceable>-<replaceable>255</replaceable></term>
 
