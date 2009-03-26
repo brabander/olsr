@@ -176,7 +176,9 @@ add_del_route(const struct rt_entry *rt, int add)
       memcpy(walker, sdl, sdl->sdl_len);
       walker += sdl_size;
       rtm->rtm_addrs |= RTA_GATEWAY;
+#ifdef RTF_CLONING
       rtm->rtm_flags |= RTF_CLONING;
+#endif
 #ifndef _WRS_KERNEL
       rtm->rtm_flags &= ~RTF_HOST;
 #endif
@@ -295,7 +297,7 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
-    rtm->rtm_addrs = RTA_GATEWAY;
+    rtm->rtm_addrs |= RTA_GATEWAY;
   }
   else {
     /*
@@ -313,7 +315,7 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
-    rtm->rtm_addrs = RTA_GATEWAY;
+    rtm->rtm_addrs |= RTA_GATEWAY;
     rtm->rtm_flags |= RTF_GATEWAY;
   }
 
