@@ -136,9 +136,9 @@ IpcConnect
 # 0 = do not use link quality
 # 1 = use link quality for MPR selection
 # 2 = use link quality for MPR selection and routing
-# Defaults to 0
+# Defaults to 2
 
-#LinkQualityLevel	0
+LinkQualityLevel	0
 
 # Link quality algorithm (only for lq level 1 or 2)
 # Defaults to "etx_fpm" for fixpoint based etx algorithm
@@ -237,8 +237,8 @@ MprCoverage	1
 # available if you use windows/BSD.
 # For windows try the "dll" versions of LoadPlugin examples
 
-LoadPlugin "olsrd_httpinfo.so.0.1"
 # LoadPlugin "olsrd_httpinfo.dll"
+LoadPlugin "olsrd_httpinfo.so.0.1"
 {
     # port number the txtinfo plugin will be listening
     PlParam     "port"   "8000"
@@ -253,8 +253,8 @@ LoadPlugin "olsrd_httpinfo.so.0.1"
 #   PlParam     "Net"    "192.168.0.0 255.255.0.0"
 }
 
-LoadPlugin "olsrd_txtinfo.so.0.1"
 # LoadPlugin "olsrd_txtinfo.dll"
+LoadPlugin "olsrd_txtinfo.so.0.1"
 {
     # port number the txtinfo plugin will be listening
     PlParam     "port"   "81"
