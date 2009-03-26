@@ -28,14 +28,14 @@ Hna4
 # HNA IPv6 routes
 # syntax: netaddr prefix
 # Example Internet gateway:
-Hna6
-{
-     ::              0
-    fecb:ab:ed:: 48
-    fecb:ff:dd::dd:d 48
-    fec0:2200:106:: 48
-    fec0:2200:106:0:0:0:0:0 48
-}
+#Hna6
+#{
+#     ::              0
+#    fecb:ab:ed:: 48
+#    fecb:ff:dd::dd:d 48
+#    fec0:2200:106:: 48
+#    fec0:2200:106:0:0:0:0:0 48
+#}
 
 # Specify the routing Table olsr uses
 # currently only implemented in linux versions, (bsd planned)
@@ -71,7 +71,10 @@ Hna6
 # RtProto 111
 
 # For testing purposes it may be nice to use another port for olsrd
-# defaults to port 698 (IANA assigned olsr-port!)
+# for using another port than the IANA assigned one 
+# for a production network, there should be a good reason!!
+# defaults to 698 (IANA assigned olsr-port)
+# valid values are 698 or > 1000
 
 # OlsrPort 698
 
@@ -199,7 +202,7 @@ LoadPlugin "olsrd_txtinfo.so.0.1"
         PlParam     "port"   "81"
         PlParam     "Accept"   "127.0.0.1"
 }
-LoadPlugin "olsrd_secure.so.0.3"
+#LoadPlugin "olsrd_secure.so.0.3"
 #{
 #    PlParam     "key1"   "value1"
      # Might be possible to set options here in
@@ -212,7 +215,8 @@ LoadPlugin "olsrd_secure.so.0.3"
 #}
 
 # olsrd_dyn_gw_plain.so.0.4
-# olsrd_power.so.0.1
+# {
+# }
 
 
 
@@ -237,7 +241,7 @@ Interface "eth0" "eth1"
     # valid Modes are mesh and ether
     # The default value is mesh!
 
-    Mode ether
+    Mode "ether"
 
     # IPv6 address scope to use.
     # Must be 'site-local' or 'global'
