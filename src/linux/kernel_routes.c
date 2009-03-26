@@ -264,7 +264,7 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
             }
           }
           /* report invalid message size */
-          else olsr_syslog(OLSR_LOG_INFO,"_received invalid netlink message size %u != %u",sizeof(struct nlmsgerr), h->nlmsg_len);
+          else olsr_syslog(OLSR_LOG_INFO,"_received invalid netlink message size %lu != %u",(unsigned long int)sizeof(struct nlmsgerr), h->nlmsg_len);
         }
         /* log all other messages */
         else olsr_syslog(OLSR_LOG_INFO,"_received %u Byte rtnetlink response of type %u with seqnr %u and flags %u from %u (%u)",
