@@ -152,7 +152,7 @@ else
 ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini secure txtinfo watchdog
 else
-SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini nameservice secure txtinfo watchdog
+SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mdns mini nameservice secure txtinfo watchdog
 endif
 endif
 
@@ -207,6 +207,10 @@ bmf:
 		$(MAKECMD) -C lib/bmf
 		$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) install
 
+mdns:
+		$(MAKECMD) -C lib/mdns clean
+		$(MAKECMD) -C lib/mdns
+		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install
 quagga:
 		$(MAKECMD) -C lib/quagga clean
 		$(MAKECMD) -C lib/quagga
