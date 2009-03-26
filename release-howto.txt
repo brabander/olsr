@@ -29,9 +29,15 @@ cheat sheet for making a (stable) release tarball.
 
    VERS =          0.5.6-r4
 
-4. commit & push
+4. Change Version strings in
+   gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
+   gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
 
-5. display the used tags: 
+5. Update changelog
+
+6. commit & push
+
+7. display the used tags: 
    
    $ hg tags
    tip                             1757:77e1ccb98227
@@ -60,7 +66,7 @@ cheat sheet for making a (stable) release tarball.
 
    $ hg tag OLSRD_0_5_6_R4
 
-6. make the release tarball
+8. make the release tarball
 
    $ cd scripts/
    $ ./mk-tarball.sh
@@ -70,13 +76,13 @@ cheat sheet for making a (stable) release tarball.
    ### creating /tmp/olsrd-0.5.6-r4.tar.bz2
    e476819be5747758e3d6f579e4096bce  /tmp/olsrd-0.5.6-r4.tar.bz2
 
-7. check if everything is in the release tarball (ideally on a a
+9. check if everything is in the release tarball (ideally on a a
    differnt machine) and try to build from the tarball.
 
-8. upload the the .tgz and .bz2 tarballs to the http://www.olsr.org/downaload/0.5/
+10. upload the the .tgz and .bz2 tarballs to the http://www.olsr.org/downaload/0.5/
    sectaion and add a release articel on the web.
 
-9. Change VERS in Makefile.inc to your *next* target release.
+11. Change VERS in Makefile.inc to your *next* target release.
    in this example the next target release is pre-0.5.6-r5
 
    change it from:
