@@ -128,6 +128,9 @@ olsr_netlink_route_int(const struct rt_entry *rt, uint8_t family, uint8_t rttabl
 
     /* do not specify much as we wanna delete similar/conflicting routes */
     if ( ( flag != RT_DELETE_SIMILAR_ROUTE ) & ( flag != RT_DELETE_SIMILAR_AUTO_ROUTE )) {
+      /* 0 gets replaced by OS-specifc default (3)
+       * 1 is reserved so we take 0 instead (this really makes some sense)
+       * other numbers are used 1:1 */
       req.r.rtm_protocol = ( (olsr_cnf->rtproto<1) ? RTPROT_BOOT : ( (olsr_cnf->rtproto==1) ? 0 : olsr_cnf->rtproto) );
       req.r.rtm_scope = RT_SCOPE_LINK;
 

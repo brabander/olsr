@@ -37,6 +37,43 @@ Hna6
     fec0:2200:106:0:0:0:0:0 48
 }
 
+# Specify the routing Table olsr uses
+# currently only implemented in linux versions, (bsd planned)
+# useful for policyrouting, to ensure that olsr can use 
+# the table a policy rule with priority 65536 is auto-installed
+# by olsrd if an value < 253 ist specified!
+# value defaults to 253 (main table)
+# valid values are 1 .. 254
+# (freifunkfirmware uses 111 for its policy routing)
+
+# RtTable 111
+
+#you may specify another table for the default route only
+#if used no policy route will get auto-installed for this table, 
+#but the default route gets also inserted into table 254 
+#(the last table used in default linux policy routing)
+#valid tables are the same as for RtTable
+
+# RtTableDefault 112
+
+# Specify the proto tag to be used for routes olsr inserts into kernel
+# currently only implemented for linux, (bsd is planned)
+# defaults to 0 which gets replaced by an OS-specific default value
+# under linux 3 (BOOT) gets used as default (for backward compatibility)
+# under bsd 1 will get used
+# valid values under linux are 1 .. 254
+# 1 gets remapped by olsrd to 0 UNSPECIFIED (1 is reserved for ICMP redirects)
+# 2 KERNEL routes (not very wise to use)
+# 3 BOOT (should in fact not be used by routing daemons)
+# 4 STATIC 
+# 8 .. 15 various routing daemons (gated, zebra, bird, & co)
+
+# RtProto 111
+
+# For testing purposes it may be nice to use another port for olsrd
+# defaults to port 698 (IANA assigned olsr-port!)
+
+# OlsrPort 698
 
 # Should olsrd keep on running even if there are
 # no interfaces available? This is a good idea
@@ -105,7 +142,7 @@ UseHysteresis	yes
 # Polling rate in seconds(float). 
 # Default value 0.05 sec
 
-Pollrate	0.05
+# Pollrate	0.05
 
 
 # TC redundancy
@@ -118,7 +155,7 @@ Pollrate	0.05
 #
 # defaults to 0
 
-TcRedundancy	0
+# TcRedundancy	0
 
 #
 # NatThreshold 
@@ -127,8 +164,11 @@ TcRedundancy	0
 # If the NAT-Endpoint (the preferred 0/0 HNA 
 # emitting node) is to be changed, the ETX value of the current 0/0 is 
 # compared to the new one. If the ETX difference is too small, the default 
-# route isn't changed. 
-#NatThreshold  0.9
+# route isn't changed. defaults to 1.0
+# The configured route gets multiplied by the treshhold, 
+# before comparing which route is better
+
+# NatThreshold  0.9
 
 #
 # MPR coverage
@@ -149,38 +189,55 @@ MprCoverage	1
 #   environment variable.
 # - The list of libraries cached in /etc/ld.so.cache
 # - /lib, followed by /usr/lib
+LoadPlugin "olsrd_httpinfo.so.0.1"
+{
+        PlParam     "port"   "8000"
+        PlParam     "Net"    "0.0.0.0 0.0.0.0"
+}
+LoadPlugin "olsrd_txtinfo.so.0.1"
+{
+        PlParam     "port"   "81"
+        PlParam     "Accept"   "127.0.0.1"
+}
 LoadPlugin "olsrd_secure.so.0.3"
-{
-    PlParam     "key1"   "value1"
+#{
+#    PlParam     "key1"   "value1"
+     # Might be possible to set options here in
+     # future versions
+#}
+#LoadPlugin "olsrd_dyn_gw.so.0.1"
+#{
     # Might be possible to set options here in
     # future versions
-}
+#}
 
-LoadPlugin "olsrd_dyn_gw.so.0.1"
-{
-    PlParam     "key4"   "value3"
-    # Might be possible to set options here in
-    # future versions
-}
-
-# olsrd_dyn_gw.so.0.1
+# olsrd_dyn_gw_plain.so.0.4
 # olsrd_power.so.0.1
-
 
 
 
 # Interfaces and their rules
 # Omitted options will be set to the
 # default values.
-Interface "eth0"
+# multiple interfaces can be speicified
+Interface "eth0" "eth1"
 {
 
     # IPv4 broadcast address to use. The
     # one usefull example would be 255.255.255.255
     # If not defined the broadcastaddress
     # every card is configured with is used
+    # The second useful value would be to
+    # specify the peer adress of an ptp-tunnel
+ 
+    # Ip4Broadcast      255.255.255.255
 
-    Ip4Broadcast	255.255.255.255
+    # Interface Mode is used to prevent unnecessary
+    # packet forwardin on switched ethernet interfaces
+    # valid Modes are mesh and ether
+    # The default value is mesh!
+
+    Mode ether
 
     # IPv6 address scope to use.
     # Must be 'site-local' or 'global'
@@ -229,12 +286,14 @@ Interface "eth0"
     # HnaValidityTime 	15.0
 }
 
-Interface "eth1"
+Interface "ath1"
 {
-    # IPv4 broadcast address to use. The
-    # one usefull example would be 255.255.255.255
-    # If not defined the broadcastaddress
-    # every card is configured with is used
+    # IPv4 broadcast address to use. 
+    # One usefull example would be 255.255.255.255
+    # If not defined the broadcastaddress of
+    # every interface which has one configured gets used
+    # The second useful value would be to 
+    # specify the peer adress of an ptp-tunnel
 
     # Ip4Broadcast	255.255.255.255
 

@@ -74,12 +74,14 @@
 #define DEF_LQ_AGING        0.1
 #define DEF_CLEAR_SCREEN    false
 #define DEF_OLSRPORT        698
+#define DEF_RTPROTO         0 /* 0 means OS-specific default */
+#define DEF_RTTABLE         254
 
 /* Bounds */
 
 #define MIN_INTERVAL        0.01
 
-#define MAX_POLLRATE        10.0
+#define MAX_POLLRATE        1.0
 #define MIN_POLLRATE        0.01
 #define MAX_NICCHGPOLLRT    100.0
 #define MIN_NICCHGPOLLRT    1.0

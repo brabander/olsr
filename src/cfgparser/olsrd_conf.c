@@ -396,8 +396,8 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->allow_no_interfaces = DEF_ALLOW_NO_INTS;
   cnf->tos = DEF_TOS;
   cnf->olsrport = DEF_OLSRPORT;
-  cnf->rttable = 254;
-  cnf->rtproto = 3;
+  cnf->rttable = DEF_RTTABLE;
+  cnf->rtproto = DEF_RTPROTO;
   cnf->rttable_default = 0;
   cnf->willingness_auto = DEF_WILL_AUTO;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
