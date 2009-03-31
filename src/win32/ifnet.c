@@ -971,6 +971,8 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
   New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
+  New->mode = iface->cnf->mode;
+
   run_ifchg_cbs(New, IFCHG_IF_ADD);
 
   return 1;
