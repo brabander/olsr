@@ -333,13 +333,6 @@ main(int argc, char *argv[])
   /* Initialize net */
   init_net();
 
-#if LINUX_POLICY_ROUTING
-  /* Create rule for RtTable to resolve route insertion problems*/
-  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
-    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
-  }
-#endif
-
   /* Initializing networkinterfaces */
   if (!ifinit()) {
     if (olsr_cnf->allow_no_interfaces) {
@@ -383,6 +376,13 @@ main(int argc, char *argv[])
   olsr_load_plugins();
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
+
+#if LINUX_POLICY_ROUTING
+  /* Create rule for RtTable to resolve route insertion problems*/
+  if ( ( olsr_cnf->rttable < 253) & ( olsr_cnf->rttable > 0 ) ) {
+    olsr_netlink_rule(olsr_cnf->ip_version, olsr_cnf->rttable, RTM_NEWRULE);
+  }
+#endif
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);
