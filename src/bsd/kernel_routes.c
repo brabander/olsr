@@ -312,7 +312,7 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
-    rtm->rtm_addrs = RTA_GATEWAY;
+    rtm->rtm_addrs |= RTA_GATEWAY;
   }
   else {
     /*
@@ -330,7 +330,7 @@ add_del_route6(const struct rt_entry *rt, int add)
 #endif
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
-    rtm->rtm_addrs = RTA_GATEWAY;
+    rtm->rtm_addrs |= RTA_GATEWAY;
     rtm->rtm_flags |= RTF_GATEWAY;
   }
 
