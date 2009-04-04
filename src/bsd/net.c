@@ -39,13 +39,14 @@
  *
  */
 
-#include "../defs.h"
-#include "../net_os.h"
-#include "../ipcalc.h"
-#include "../parser.h"		/* dnc: needed for call to packet_parser() */
-#include "../olsr_protocol.h"
-#include "../common/string.h"
-#include "../misc.h"
+#include "defs.h"
+#include "net_os.h"
+#include "ipcalc.h"
+#include "parser.h"		/* dnc: needed for call to packet_parser() */
+#include "olsr_protocol.h"
+#include "common/string.h"
+#include "misc.h"
+#include "olsr_logging.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -541,7 +542,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
   u_int32_t flags6;
 
   if (getifaddrs(&ifap) != 0) {
-    OLSR_WARN(LOG_NETWORKING, "getifaddrs() failed (%s).\n", strerro(errno));
+    OLSR_WARN(LOG_NETWORKING, "getifaddrs() failed (%s).\n", strerror(errno));
     return 0;
   }
 

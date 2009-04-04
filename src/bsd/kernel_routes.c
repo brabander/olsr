@@ -45,6 +45,7 @@
 #include "process_routes.h"
 #include "net_olsr.h"
 #include "ipcalc.h"
+#include "olsr_logging.h"
 
 #include <errno.h>
 #include <unistd.h>
