@@ -47,6 +47,7 @@
 #include "common/string.h"
 #include "misc.h"
 #include "olsr_logging.h"
+#include "olsr.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
