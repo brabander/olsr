@@ -424,7 +424,7 @@ olsr_print_neighbor_table(void)
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
       if(lnk) {
         struct ipaddr_str buf;
-        OLSR_INFO(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
+        OLSR_INFO_NH(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
                     ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
                     neigh->status == SYM ? "YES " : "NO  ",
                     neigh->is_mpr ? "YES " : "NO  ",

@@ -240,7 +240,7 @@ olsr_print_two_hop_neighbor_table(void)
         struct lqtextbuffer lqbuffer;
 
         OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
-                      first ? "": olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr),
+                      first ? olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr) : "",
                       olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
                       get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
 

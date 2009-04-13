@@ -665,7 +665,7 @@ olsr_print_tc_table(void)
   OLSR_INFO(LOG_TC,
 	      "\n--- %s ------------------------------------------------- TOPOLOGY\n\n",
 	      olsr_wallclock_string());
-	OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-14s  %s\n", ipwidth,
+	OLSR_INFO_NH(LOG_TC, "%-*s %-*s           %-14s  %s\n", ipwidth,
 	      "Source IP addr", ipwidth, "Dest IP addr", "      LQ      ",
 	      "ETX");
 
@@ -675,11 +675,11 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %d %-14s %s\n",
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %5s      %-14s %s\n",
 		    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
 		    ipwidth, olsr_ip_to_string(&dstaddrbuf,
 					     &tc_edge->T_dest_addr),
-			  tc_edge->flags,
+			  (tc_edge->flags & TC_EDGE_FLAG_LOCAL) ? "local" : "",
 		    get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 		    get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
 

@@ -297,7 +297,9 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
-
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf1, buf2;
+#endif
   if (!olsr_validate_address(alias_addr)) {
     return;
   }
@@ -307,7 +309,6 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
    */
   alias = olsr_lookup_mid_entry(alias_addr);
   if (alias) {
-
     /* Update sequence number for alias purging */
     alias->mid_seqno = mid_seqno;
 
@@ -317,6 +318,7 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
     olsr_set_mid_timer(alias->mid_tc, vtime);
     return;
   }
+
   /*
    * This is a fresh alias.
    */
@@ -444,7 +446,6 @@ olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(main_addr);
   struct mid_entry *alias;
-
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
     if (alias->mid_seqno != mid_seqno) {
       olsr_delete_mid_entry(alias);
@@ -462,7 +463,7 @@ olsr_print_mid_set(void)
 #if !defined REMOVE_LOG_INFO
   struct tc_entry *tc;
   struct mid_entry *alias;
-  struct ipaddr_str buf;
+  struct ipaddr_str buf1, buf2;
 
   OLSR_INFO(LOG_MID,
 	      "\n--- %s ------------------------------------------------- MID\n\n",
@@ -472,8 +473,9 @@ olsr_print_mid_set(void)
     bool first = true;
     OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
       OLSR_INFO_NH(LOG_MID, "%-15s: %s\n",
-          first ? olsr_ip_to_string(&buf, &tc->addr) : "",
-          olsr_ip_to_string(&buf, &alias->mid_alias_addr));
+          first ? olsr_ip_to_string(&buf1, &tc->addr) : "",
+          olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
+      first = false;
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 #endif
@@ -533,14 +535,14 @@ olsr_input_mid(union olsr_message *msg,
     return false;
   }
 
-  OLSR_DEBUG(LOG_MID, "Processing MID from %s, seq 0x%04x\n",
-	      olsr_ip_to_string(&buf, &originator), msg_seq);
 
   /*
    * How many aliases ?
    */
   alias_count = (msg_size - 12) / olsr_cnf->ipsize;
 
+  OLSR_DEBUG(LOG_MID, "Processing MID from %s with %d aliases, seq 0x%04x\n",
+        olsr_ip_to_string(&buf, &originator), alias_count, msg_seq);
   /*
    * Now walk the list of alias advertisements one by one.
    */
