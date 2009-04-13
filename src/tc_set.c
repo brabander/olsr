@@ -206,7 +206,7 @@ void
 olsr_change_myself_tc(void)
 {
   struct link_entry *entry;
-
+  bool refresh = false;
   if (tc_myself) {
 
     /*
@@ -220,6 +220,7 @@ olsr_change_myself_tc(void)
      * Flush our own tc_entry.
      */
     olsr_delete_tc_entry(tc_myself);
+    refresh = true;
   }
 
   /*
@@ -231,7 +232,7 @@ olsr_change_myself_tc(void)
     /**
      * check if a main ip change destroyed our TC entries
      */
-    if (entry->link_tc_edge == NULL) {
+    if (refresh || entry->link_tc_edge == NULL) {
       struct neighbor_entry *ne = entry->neighbor;
       entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->neighbor_main_addr, 0);
 
@@ -674,10 +675,11 @@ olsr_print_tc_table(void)
       struct ipaddr_str addrbuf, dstaddrbuf;
       struct lqtextbuffer lqbuffer1, lqbuffer2;
 
-      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %-14s %s\n",
+      OLSR_INFO_NH(LOG_TC, "%-*s %-*s %d %-14s %s\n",
 		    ipwidth, olsr_ip_to_string(&addrbuf, &tc->addr),
 		    ipwidth, olsr_ip_to_string(&dstaddrbuf,
 					     &tc_edge->T_dest_addr),
+			  tc_edge->flags,
 		    get_tc_edge_entry_text(tc_edge, '/', &lqbuffer1),
 		    get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
 

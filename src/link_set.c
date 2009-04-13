@@ -529,7 +529,9 @@ add_link_entry(const union olsr_ip_addr *local,
    * Now create a tc-edge for that link.
    */
   olsr_change_myself_tc();
-  link->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, remote_main, 0);
+  if (link->link_tc_edge == NULL) {
+    link->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, remote_main, 0);
+  }
 
   /*
    * Mark the edge local such that it does not get deleted
