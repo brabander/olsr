@@ -731,7 +731,7 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
   int dlevel, i;
   dlevel = atoi(argstr);
 
-  if (dlevel < -2 || dlevel > 3) {
+  if (dlevel < MIN_DEBUGLVL || dlevel > MAX_DEBUGLVL) {
     sprintf(rmsg, "Error, debug level must be between -2 and 4\n");
     return CFG_ERROR;
   }
@@ -1363,7 +1363,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     }
     if (!cfg_has_log[SEVERITY_ERR]) {
       /* no logging at all defined ? fall back to default */
-      char def[2] = "0";
+      char def[10] = DEF_DEBUGLVL;
       parse_cfg_debug(def, *rcfg, rmsg);
     }
   }

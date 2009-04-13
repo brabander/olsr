@@ -48,7 +48,7 @@
 #define DEF_WILL_AUTO          true
 #define DEF_ALLOW_NO_INTS      true
 #define DEF_TOS                16
-#define DEF_DEBUGLVL           1
+#define DEF_DEBUGLVL           "0"
 #define DEF_IPC_CONNECTIONS    0
 #define DEF_USE_HYST           false
 #define DEF_FIB_METRIC         FIBM_FLAT
@@ -68,8 +68,8 @@
 #define MIN_POLLRATE        0.01
 #define MAX_NICCHGPOLLRT    100.0
 #define MIN_NICCHGPOLLRT    1.0
-#define MAX_DEBUGLVL        9
-#define MIN_DEBUGLVL        0
+#define MAX_DEBUGLVL        3
+#define MIN_DEBUGLVL        -2
 #define MAX_TOS             16
 #define MAX_WILLINGNESS     7
 #define MIN_WILLINGNESS     0
