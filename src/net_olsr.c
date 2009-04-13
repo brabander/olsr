@@ -374,7 +374,9 @@ net_output(struct interface *ifp)
 		  MSG_DONTROUTE,
 		  &dstaddr.sin,
 		  dstaddr_size) < 0) {
+#if !defined REMOVE_LOG_WARN
     const int save_errno = errno;
+#endif
 #if !defined REMOVE_LOG_DEBUG
     char sabuf[1024];
 #endif

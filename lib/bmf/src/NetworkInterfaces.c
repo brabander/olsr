@@ -437,7 +437,9 @@ void FindNeighbors(
   }
 
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
+#endif
     union olsr_ip_addr* neighborMainIp;
     struct link_entry* bestLinkToNeighbor;
     struct tc_entry* tcLastHop;
@@ -626,7 +628,9 @@ struct ipaddr_str forwardedByBuf, niaBuf;
   }
   else
   {
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
+#endif
     OLSR_DEBUG(
       LOG_PLUGINS,
       "%d neighbors found on \"%s\"; best neighbor to forward to: %s\n",

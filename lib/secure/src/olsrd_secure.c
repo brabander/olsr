@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -252,8 +251,9 @@ static char *
 secure_preprocessor(char *packet, struct interface *olsr_if_config, union olsr_ip_addr *from_addr __attribute__((unused)), int *length)
 {
   struct olsr *olsr = (struct olsr *)packet;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
-
+#endif
   /*
    * Check for challenge/response messages
    */
@@ -383,10 +383,10 @@ add_signature(uint8_t *pck, int *size)
       OLSR_PRINTF(1, "  %3i", sigmsg[i]);
       j++;
       if(j == 4)
-	{
-	  OLSR_PRINTF(1, "\n");
-	  j = 0;
-	}
+        {
+          OLSR_PRINTF(1, "\n");
+          j = 0;
+        }
     }
   }
 #endif
@@ -431,10 +431,10 @@ validate_packet(struct interface *olsr_if_config, const char *pck, int *size)
       OLSR_PRINTF(1, "  %3i", sigmsg[i]);
       j++;
       if(j == 4)
-	{
-	  OLSR_PRINTF(1, "\n");
-	  j = 0;
-	}
+        {
+          OLSR_PRINTF(1, "\n");
+          j = 0;
+        }
     }
   }
 #endif
@@ -455,12 +455,12 @@ validate_packet(struct interface *olsr_if_config, const char *pck, int *size)
     {
     case(ONE_CHECKSUM):
       switch(sig->sig.algorithm)
-	{
-	case(SCHEME):
-	  goto one_checksum_SHA; /* Ahhh... fix this */
-	  break;
+        {
+        case(SCHEME):
+          goto one_checksum_SHA; /* Ahhh... fix this */
+          break;
 
-	}
+        }
       break;
 
     default:
@@ -516,9 +516,11 @@ validate_packet(struct interface *olsr_if_config, const char *pck, int *size)
 
   if(!check_timestamp(olsr_if_config, (const union olsr_ip_addr *)&sig->originator, rec_time))
     {
+#if !defined REMOVE_LOG_DEBUG
       struct ipaddr_str buf;
+#endif
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Timestamp missmatch in packet from %s!\n",
-		  olsr_ip_to_string(&buf, (const union olsr_ip_addr *)&sig->originator));
+                  olsr_ip_to_string(&buf, (const union olsr_ip_addr *)&sig->originator));
       return 0;
     }
 
@@ -591,7 +593,9 @@ send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_h
   struct challengemsg cmsg;
   struct stamp *entry;
   uint32_t challenge, hash;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Building CHALLENGE message\n");
 
@@ -626,12 +630,12 @@ send_challenge(struct interface *olsr_if_config, const union olsr_ip_addr *new_h
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   cmsg.signature);
+           (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           cmsg.signature);
   }
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Sending timestamp request to %s challenge 0x%x\n",
-	      olsr_ip_to_string(&buf, new_host),
-	      challenge);
+              olsr_ip_to_string(&buf, new_host),
+              challenge);
 
   /* Add to buffer */
   net_outbuffer_push(olsr_if_config, &cmsg, sizeof(struct challengemsg));
@@ -670,7 +674,9 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
   struct c_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   msg = (struct c_respmsg *)in_msg;
 
@@ -697,8 +703,8 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   sha1_hash);
+           (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           sha1_hash);
   }
 
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
@@ -714,7 +720,7 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
   if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Received challenge-response from non-registered node %s!\n",
-		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
+                  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       return 0;
     }
 
@@ -730,14 +736,14 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   sizeof(uint32_t) + olsr_cnf->ipsize,
-	   sha1_hash);
+           sizeof(uint32_t) + olsr_cnf->ipsize,
+           sha1_hash);
   }
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Error in challenge signature from %s!\n",
-		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
+                  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
 
       return 0;
     }
@@ -755,13 +761,13 @@ parse_cres(struct interface *olsr_if_config, char *in_msg)
   entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]%s registered with diff %d!\n",
-	      olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
-	      entry->diff);
+              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
+              entry->diff);
 
   /* Send response-response */
   send_rres(olsr_if_config, (union olsr_ip_addr *)&msg->originator,
-	    (union olsr_ip_addr *)&msg->destination,
-	    ntohl(msg->challenge));
+            (union olsr_ip_addr *)&msg->destination,
+            ntohl(msg->challenge));
 
   return 1;
 }
@@ -773,7 +779,9 @@ parse_rres(char *in_msg)
   struct r_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   msg = (struct r_respmsg *)in_msg;
 
@@ -798,8 +806,8 @@ parse_rres(char *in_msg)
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   sha1_hash);
+           (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           sha1_hash);
   }
 
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
@@ -815,7 +823,7 @@ parse_rres(char *in_msg)
   if((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL)
     {
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Received response-response from non-registered node %s!\n",
-		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
+                  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
       return 0;
     }
 
@@ -831,14 +839,14 @@ parse_rres(char *in_msg)
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   sizeof(uint32_t) + olsr_cnf->ipsize,
-	   sha1_hash);
+           sizeof(uint32_t) + olsr_cnf->ipsize,
+           sha1_hash);
   }
 
   if(memcmp(msg->res_sig, sha1_hash, SIGNATURE_SIZE) != 0)
     {
       OLSR_DEBUG(LOG_PLUGINS, "[ENC]Error in response signature from %s!\n",
-		  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
+                  olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator));
 
       return 0;
     }
@@ -856,8 +864,8 @@ parse_rres(char *in_msg)
   entry->valtime = GET_TIMESTAMP(TIMESTAMP_HOLD_TIME * 1000);
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]%s registered with diff %d!\n",
-	      olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
-	      entry->diff);
+              olsr_ip_to_string(&buf, (union olsr_ip_addr *)&msg->originator),
+              entry->diff);
 
   return 1;
 }
@@ -870,7 +878,9 @@ parse_challenge(struct interface *olsr_if_config, char *in_msg)
   uint8_t sha1_hash[SIGNATURE_SIZE];
   struct stamp *entry;
   uint32_t hash;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   msg = (struct challengemsg *)in_msg;
 
@@ -901,15 +911,15 @@ parse_challenge(struct interface *olsr_if_config, char *in_msg)
     {
       /* Check configuration timeout */
       if(!TIMED_OUT(entry->conftime))
-	{
-	  /* If registered - do not accept! */
-	  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge from registered node...dropping!\n");
-	  return 0;
-	}
+        {
+          /* If registered - do not accept! */
+          OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge from registered node...dropping!\n");
+          return 0;
+        }
       else
-	{
-	  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge from registered node...accepted!\n");
-	}
+        {
+          OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge from registered node...accepted!\n");
+        }
     }
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Challenge: 0x%lx\n", (unsigned long)ntohl(msg->challenge)); /* ntohl() returns a unsignedlong onwin32 */
@@ -926,8 +936,8 @@ parse_challenge(struct interface *olsr_if_config, char *in_msg)
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   sha1_hash);
+           (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           sha1_hash);
   }
   if(memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0)
     {
@@ -947,9 +957,9 @@ parse_challenge(struct interface *olsr_if_config, char *in_msg)
   /* Build and send response */
 
   send_cres(olsr_if_config, (union olsr_ip_addr *)&msg->originator,
-	    (union olsr_ip_addr *)&msg->destination,
-	    ntohl(msg->challenge),
-	    entry);
+            (union olsr_ip_addr *)&msg->destination,
+            ntohl(msg->challenge),
+            entry);
 
   return 1;
 }
@@ -968,7 +978,9 @@ send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 {
   struct c_respmsg crmsg;
   uint32_t challenge;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Building CRESPONSE message\n");
 
@@ -1008,8 +1020,8 @@ send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   sizeof(uint32_t) + olsr_cnf->ipsize,
-	   crmsg.res_sig);
+           sizeof(uint32_t) + olsr_cnf->ipsize,
+           crmsg.res_sig);
   }
 
   /* Now create the digest of the message and the key */
@@ -1024,13 +1036,13 @@ send_cres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   crmsg.signature);
+           (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           crmsg.signature);
   }
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Sending challenge response to %s challenge 0x%x\n",
-	      olsr_ip_to_string(&buf, to),
-	      challenge);
+              olsr_ip_to_string(&buf, to),
+              challenge);
 
   /* Add to buffer */
   net_outbuffer_push(olsr_if_config, &crmsg, sizeof(struct c_respmsg));
@@ -1054,7 +1066,9 @@ static int
 send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in)
 {
   struct r_respmsg rrmsg;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Building RRESPONSE message\n");
 
@@ -1087,8 +1101,8 @@ send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   sizeof(uint32_t) + olsr_cnf->ipsize,
-	   rrmsg.res_sig);
+           sizeof(uint32_t) + olsr_cnf->ipsize,
+           rrmsg.res_sig);
   }
 
   /* Now create the digest of the message and the key */
@@ -1103,12 +1117,12 @@ send_rres(struct interface *olsr_if_config, union olsr_ip_addr *to, union olsr_i
 
   /* Create the hash */
   CHECKSUM(checksum_cache,
-	   (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
-	   rrmsg.signature);
+           (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH,
+           rrmsg.signature);
   }
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]Sending response response to %s\n",
-	      olsr_ip_to_string(&buf, to));
+              olsr_ip_to_string(&buf, to));
 
   /* add to buffer */
   net_outbuffer_push(olsr_if_config, &rrmsg, sizeof(struct r_respmsg));
@@ -1126,7 +1140,9 @@ lookup_timestamp_entry(const union olsr_ip_addr *adr)
 {
   uint32_t hash;
   struct stamp *entry;
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
+#endif
 
   hash = olsr_ip_hashing(adr);
 
@@ -1135,10 +1151,10 @@ lookup_timestamp_entry(const union olsr_ip_addr *adr)
       entry = entry->next)
     {
       if(memcmp(&entry->addr, adr, olsr_cnf->ipsize) == 0)
-	{
-	  OLSR_DEBUG(LOG_PLUGINS, "[ENC]Match for %s\n", olsr_ip_to_string(&buf, adr));
-	  return entry;
-	}
+        {
+          OLSR_DEBUG(LOG_PLUGINS, "[ENC]Match for %s\n", olsr_ip_to_string(&buf, adr));
+          return entry;
+        }
     }
 
   OLSR_DEBUG(LOG_PLUGINS, "[ENC]No match for %s\n", olsr_ip_to_string(&buf, adr));
@@ -1168,26 +1184,28 @@ timeout_timestamps(void* foo __attribute__((unused)))
       tmp_list = timestamps[idx].next;
       /*Traverse MID list*/
       while(tmp_list != &timestamps[idx])
-	{
-	  /*Check if the entry is timed out*/
-	  if((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime)))
-	    {
-              struct ipaddr_str buf;
-	      entry_to_delete = tmp_list;
-	      tmp_list = tmp_list->next;
+        {
+          /*Check if the entry is timed out*/
+          if((TIMED_OUT(tmp_list->valtime)) && (TIMED_OUT(tmp_list->conftime)))
+            {
+#if !defined REMOVE_LOG_DEBUG
+        struct ipaddr_str buf;
+#endif
+              entry_to_delete = tmp_list;
+              tmp_list = tmp_list->next;
 
-	      OLSR_DEBUG(LOG_PLUGINS, "[ENC]timestamp info for %s timed out.. deleting it\n",
-			  olsr_ip_to_string(&buf, &entry_to_delete->addr));
+              OLSR_DEBUG(LOG_PLUGINS, "[ENC]timestamp info for %s timed out.. deleting it\n",
+                          olsr_ip_to_string(&buf, &entry_to_delete->addr));
 
-	      /*Delete it*/
-	      entry_to_delete->next->prev = entry_to_delete->prev;
-	      entry_to_delete->prev->next = entry_to_delete->next;
+              /*Delete it*/
+              entry_to_delete->next->prev = entry_to_delete->prev;
+              entry_to_delete->prev->next = entry_to_delete->next;
 
-	      free(entry_to_delete);
-	    }
-	  else
-	      tmp_list = tmp_list->next;
-	}
+              free(entry_to_delete);
+            }
+          else
+              tmp_list = tmp_list->next;
+        }
     }
 
   return;

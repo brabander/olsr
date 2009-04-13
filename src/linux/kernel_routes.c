@@ -60,7 +60,7 @@ struct olsr_ipadd_req {
 };
 
 
-static void olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize, int type, const void *data, int len)
+static void olsr_netlink_addreq(struct nlmsghdr *n, size_t reqSize __attribute__((unused)), int type, const void *data, int len)
 {
   struct rtattr *rta = (struct rtattr*)(((char*)n) + NLMSG_ALIGN(n->nlmsg_len));
   n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_LENGTH(len);

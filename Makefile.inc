@@ -4,11 +4,15 @@
 #
 #
 
-# activate debugging with 1 or deactivate with 0
+# set DEBUG to 1 to add debugger symbols to olsrd and filename/linenumbers to logging
+# set DEBUG to 0 to remove both and optimize olsrd for size
 DEBUG ?= 1
 
-# compile OLSR_PRINTF out
-NO_DEBUG_MESSAGES ?= 0
+# set to 1 to remove a severity level of logging from olsrd
+NO_LOG_DEBUG ?= 0
+NO_LOG_INFO  ?= 0
+NO_LOG_WARN  ?= 0
+NO_LOG_ERROR ?= 0
 
 # enable mudflap with 1 or deactivate with 0
 # you need a recent enough gcc and the libmudflap installed
@@ -52,12 +56,34 @@ CFGFILE ?= $(ETCDIR)/$(CFGNAME)
 CPPFLAGS =	$(filter-out -I./src,-Isrc -I$(TOPDIR)/src)
 CPPFLAGS +=	-DOLSRD_CONF_FILE_NAME='"$(CFGNAME)"'
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE='"$(CFGFILE)"'
-#CPPFLAGS +=	-DREMOVE_LOG_DEBUG
-#CPPFLAGS +=	-DREMOVE_LOG_INFO
-#CPPFLAGS +=	-DREMOVE_LOG_WARN
-#CPPFLAGS +=	-DREMOVE_LOG_ERROR
 
+#############
+# handle debugging and logging options
+#############
+ifeq ($(NO_LOG_DEBUG),1)
+CPPFLAGS +=	-DREMOVE_LOG_DEBUG
+endif
+ifeq ($(NO_LOG_INFO),1)
+CPPFLAGS +=	-DREMOVE_LOG_INFO
+endif
+ifeq ($(NO_LOG_WARN),1)
+CPPFLAGS +=	-DREMOVE_LOG_WARN
+endif
+ifeq ($(NO_LOG_ERROR),1)
+CPPFLAGS +=	-DREMOVE_LOG_ERROR
+endif
+ifeq ($(DEBUG),1)
+CPPFLAGS +=	-DDEBUG
+CFLAGS +=	-ggdb
+OPTIMIZE ?=	-O0
+else
+OPTIMIZE ?=	-Os
+endif
+
+
+##############
 # add gcc warnings and optimizations if CFLAGS not set
+##############
 ifndef CFLAGS
 ifndef WARNINGS
 ALL_WARNINGS +=	-Wall
@@ -179,20 +205,6 @@ endif
 
 # one object for each source file
 OBJS +=		$(SRCS:%.c=%.o)
-
-# debugging or non-debugging flags
-ifeq ($(DEBUG),1)
-CPPFLAGS +=	-DDEBUG
-CFLAGS +=	-ggdb
-OPTIMIZE ?=	-O0
-else
-CPPFLAGS +=	-DNDEBUG
-OPTIMIZE ?=	-O2
-endif
-ifeq ($(NO_DEBUG_MESSAGES),1)
-CPPFLAGS +=	-DNODEBUG
-OPTIMIZE ?=	-Os
-endif
 
 # a make function to quote "/" and "."
 quote = $(subst .,\.,$(subst /,\/,$1))

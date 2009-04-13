@@ -7,7 +7,7 @@ local %SYM = ();
 local $all = (0 <= $#ARGV && "-a" eq $ARGV[0]);
 
 foreach(`make LDFLAGS=-Wl,--cref`)
-#foreach(`make DEBUG=0 NO_DEBUG_MESSAGES=1 LDFLAGS=-Wl,--cref`)
+#foreach(`make DEBUG=0 NO_LOG_DEBUG=1 NO_LOG_INFO=1 NO_LOG_WARN=1 NO_LOG_ERROR=1 LDFLAGS=-Wl,--cref`)
 {
   chomp;
   if (m#^Cross Reference Table#s)

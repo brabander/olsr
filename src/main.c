@@ -86,7 +86,6 @@ static void signal_reconfigure(int);
 #endif
 
 /* Global stuff externed in olsr_cfg.h */
-FILE *debug_handle;                    /* Where to send debug(defaults to stdout) */
 struct olsr_config *olsr_cnf;          /* The global configuration */
 
 volatile enum app_state app_state = STATE_INIT;
@@ -123,7 +122,6 @@ main(int argc, char *argv[])
   assert(sizeof(int16_t) == 2);
   assert(sizeof(int32_t) == 4);
 
-  debug_handle = stdout;
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 

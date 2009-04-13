@@ -60,12 +60,12 @@ extern const union olsr_ip_addr all_zero;
 
 struct ipaddr_str {
   char buf[MAX(INET6_ADDRSTRLEN, INET_ADDRSTRLEN)];
-} USED_ONLY_FOR_DEBUG;
+};
 
 struct ipprefix_str {
   /* We need for IPv6 an IP address + '/' + prefix and for IPv4 an IP address + '/' + a netmask */
   char buf[MAX(INET6_ADDRSTRLEN + 1 + 3, INET_ADDRSTRLEN + 1 + 2)];
-} USED_ONLY_FOR_DEBUG;
+};
 
 /*
  * Macros for comparing and copying IP addresses

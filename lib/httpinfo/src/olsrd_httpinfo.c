@@ -391,7 +391,9 @@ parse_http_request(int fd, void *data __attribute__((unused)), unsigned int flag
   }
 
   if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
+#if !defined REMOVE_LOG_WARN
     struct ipaddr_str strbuf;
+#endif
     OLSR_WARN(LOG_PLUGINS, "HTTP request from non-allowed host %s!\n",
                 olsr_ip_to_string(&strbuf, ipaddr));
     goto close_connection;

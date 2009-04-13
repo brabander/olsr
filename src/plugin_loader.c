@@ -101,9 +101,11 @@ static int olsr_load_dl(char *libname, struct plugin_param *params)
       strcat(path, libname);
       plugin->dlhandle = dlopen(libname, RTLD_NOW);
       free(path);
+      fprintf(stderr, "1\n");
     }
     else {
       plugin->dlhandle = dlopen(libname, RTLD_NOW);
+      fprintf(stderr, "2\n");
     }
     if(plugin->dlhandle == NULL) {
         const int save_errno = errno;

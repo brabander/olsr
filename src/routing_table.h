@@ -228,9 +228,7 @@ static INLINE uint8_t olsr_fib_metric(const struct rt_metric *met) {
 
 char *olsr_rt_to_string(const struct rt_entry *);
 char *olsr_rtp_to_string(const struct rt_path *);
-#ifdef DEBUG
 void olsr_print_routing_table(struct avl_tree *);
-#endif
 
 /**
  * depending on the operation (add/chg/del) the nexthop

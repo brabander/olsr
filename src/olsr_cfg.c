@@ -731,9 +731,9 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
   int dlevel, i;
   dlevel = atoi(argstr);
 
-  if (dlevel < -2 || dlevel > 2) {
+  if (dlevel < -2 || dlevel > 3) {
     sprintf(rmsg, "Error, debug level must be between -2 and 4\n");
-    return CFG_EXIT;
+    return CFG_ERROR;
   }
 
   switch(dlevel) {
@@ -1575,18 +1575,6 @@ olsr_get_default_cfg(void)
 {
   int i;
   struct olsr_config *cfg = olsr_malloc(sizeof(struct olsr_config), "default config");
-
-#ifndef NDEBUG
-  /*
-   * Use of assert() creates a warning suppressed by this
-   */
-  if (!cfg) return NULL;
-#endif
-
-  /*
-   * olsr_malloc calls calloc(), no memset necessary:
-   * memset(cfg, 0, sizeof(*cfg));
-   */
 
   cfg->ip_version = AF_INET;
   cfg->ipsize = sizeof(struct in_addr);

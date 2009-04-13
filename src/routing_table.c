@@ -588,7 +588,7 @@ struct rt_path *
 olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
                           const union olsr_ip_addr *originator, int origin)
 {
-#ifdef DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str dstbuf, origbuf;
 #endif
   struct tc_entry *tc;
@@ -649,7 +649,7 @@ void
 olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
                           union olsr_ip_addr *originator, int origin)
 {
-#ifdef DEBUG
+#if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str dstbuf, origbuf;
 #endif
 
@@ -742,7 +742,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
  *
  */
 void
-olsr_print_routing_table(struct avl_tree *tree USED_ONLY_FOR_DEBUG)
+olsr_print_routing_table(struct avl_tree *tree __attribute__((unused)))
 {
   /* The whole function makes no sense without it. */
 #if !defined REMOVE_LOG_INFO

@@ -325,13 +325,14 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 {
   struct ipc_conn *conn;
   struct sockaddr_storage pin;
-#ifndef NODEBUG
-  char addr[INET6_ADDRSTRLEN];
+#if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_WARN
+  struct ipaddr_str buf;
 #endif
   socklen_t addrlen = sizeof(pin);
-  int http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
+  int http_connection;
   union olsr_ip_addr *ipaddr;
 
+  http_connection = accept(fd, (struct sockaddr *)&pin, &addrlen);
   if (http_connection == -1) {
     /* this may well happen if the other side immediately closes the connection. */
     OLSR_WARN(LOG_PLUGINS, "(TXTINFO) accept()=%s\n", strerror(errno));
@@ -348,11 +349,11 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
   }
 
   if (!ip_acl_acceptable(&allowed_nets, ipaddr, olsr_cnf->ip_version)) {
-    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) From host(%s) not allowed!\n", addr);
+    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) From host(%s) not allowed!\n", olsr_ip_to_string(&buf, ipaddr));
     CLOSESOCKET(http_connection);
     return;
   }
-  OLSR_WARN(LOG_PLUGINS, "(TXTINFO) Connect from %s\n", addr);
+  OLSR_DEBUG(LOG_PLUGINS, "(TXTINFO) Connect from %s\n", olsr_ip_to_string(&buf, ipaddr));
 
   /* make the fd non-blocking */
   if (set_nonblocking(http_connection) < 0) {
@@ -360,12 +361,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     return;
   }
 
-  conn = malloc(sizeof(*conn));
-  if (conn == NULL) {
-    OLSR_WARN(LOG_PLUGINS, "(TXTINFO) Out of memory!");
-    CLOSESOCKET(http_connection);
-    return;
-  }
+  conn = olsr_malloc(sizeof(*conn), "Connection object for ");
   conn->requlen = 0;
   *conn->requ = '\0';
   conn->respstart = 0;

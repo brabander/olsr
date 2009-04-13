@@ -408,7 +408,9 @@ hello_tap(struct lq_hello_message *message,
 
   /* Check willingness */
   if (lnk->neighbor->willingness != message->will) {
+#if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
+#endif
     OLSR_DEBUG(LOG_LINKS, "Willingness for %s changed from %d to %d - UPDATING\n",
                 olsr_ip_to_string(&buf, &lnk->neighbor->neighbor_main_addr),
                 lnk->neighbor->willingness,

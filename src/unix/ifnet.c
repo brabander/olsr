@@ -110,7 +110,9 @@ set_flag(char *ifname, short flag __attribute__((unused)))
 int
 chk_if_changed(struct olsr_if_config *iface)
 {
+#if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
+#endif
   struct interface *ifp;
   struct ifreq ifr;
   int if_changes = 0;
@@ -240,9 +242,7 @@ chk_if_changed(struct olsr_if_config *iface)
       return 0;
     }
 
-#ifdef DEBUG
-      OLSR_DEBUG(LOG_NETWORKING, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
-#endif
+    OLSR_DEBUG(LOG_NETWORKING, "\tAddress:%s\n", ip4_to_string(&buf, ifp->int_addr.sin_addr));
 
     if (ip4cmp(&ifp->int_addr.sin_addr, &tmp_saddr4->sin_addr) != 0) {
       /* New address */
@@ -321,7 +321,9 @@ int add_hemu_if (struct olsr_if_config *iface)
 {
   struct interface *ifp;
   uint32_t addr[4];
+#if !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
+#endif
   size_t name_size;
 
   ifp = olsr_cookie_malloc(interface_mem_cookie);
@@ -469,7 +471,9 @@ chk_if_up(struct olsr_if_config *iface)
   struct interface *ifp;
   struct ifreq ifr;
   const char *ifr_basename;
+#if !defined REMOVE_LOG_DEBUG || !defined REMOVE_LOG_INFO
   struct ipaddr_str buf;
+#endif
 
   /*
    * Sanity check.

@@ -50,6 +50,7 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "mpr_selector_set.h" /* olsr_lookup_mprs_set() */
 #include "link_set.h" /* get_best_link_to_neighbor() */
 #include "net_olsr.h" /* ipequal */
+#include "olsr_logging.h"
 
 /* plugin includes */
 #include "NetworkInterfaces.h" /* TBmfInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
@@ -125,7 +126,7 @@ static void PacketReceivedFromOLSR(
         //  walker->ifName);
      }
     } /* if (walker->olsrIntf == NULL) */
-} 
+}
 } /* PacketReceivedFromOLSR */
 
 
@@ -148,7 +149,7 @@ olsr_parser(union olsr_message *m,
                 memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
 		vtime = me_to_reltime(m->v6.olsr_vtime);
   	        size = ntohs(m->v6.olsr_msgsize);
-        }    
+        }
 
         /* Check if message originated from this node.
  *         If so - back off */
@@ -161,8 +162,8 @@ olsr_parser(union olsr_message *m,
                 //struct ipaddr_str strbuf;
                 //OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
                 return false;
-        }    
-	
+        }
+
         if(olsr_cnf->ip_version == AF_INET){
 	PacketReceivedFromOLSR((unsigned char*) &m->v4.message,size-12);
 	}
@@ -185,34 +186,34 @@ olsr_mdns_gen(unsigned char* packet, int len)
 
         /* fill message */
         if(olsr_cnf->ip_version == AF_INET)
-        {    
+        {
                 /* IPv4 */
                 message->v4.olsr_msgtype = MESSAGE_TYPE;
                 message->v4.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
                 memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
                 message->v4.ttl = MAX_TTL;
-                message->v4.hopcnt = 0; 
+                message->v4.hopcnt = 0;
                 message->v4.seqno = htons(get_msg_seqno());
 
                 message->v4.olsr_msgsize = htons(len+12);
 
 		memcpy(&message->v4.message,packet,len);
                 len=len+12;
-        }    
-        else 
-        {    
+        }
+        else
+        {
                 /* IPv6 */
                 message->v6.olsr_msgtype = MESSAGE_TYPE;
                 message->v6.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
                 memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
                 message->v6.ttl = MAX_TTL;
-                message->v6.hopcnt = 0; 
+                message->v6.hopcnt = 0;
                 message->v6.seqno = htons(get_msg_seqno());
 
                 message->v6.olsr_msgsize = htons(len+12+96);
 		memcpy(&message->v6.message,packet,len);
                 len=len+12+96;
-        }    
+        }
 
         /* looping trough interfaces */
         OLSR_FOR_ALL_INTERFACES(ifn) {
@@ -223,8 +224,8 @@ olsr_mdns_gen(unsigned char* packet, int len)
                         net_output(ifn);
                         if(net_outbuffer_push(ifn, message, len) != len) {
                                 //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
-                        }    
-                }    
+                        }
+                }
         } OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
@@ -243,21 +244,19 @@ olsr_mdns_gen(unsigned char* packet, int len)
 void BmfPError(const char* format, ...)
 {
 #define MAX_STR_DESC 255
-#ifndef NODEBUG
-  //char* strErr = strerror(errno);
-#endif
   char strDesc[MAX_STR_DESC];
 
+#if !defined REMOVE_LOG_DEBUG
+  char *stringErr = strerror(errno);
+#endif
   /* Rely on short-circuit boolean evaluation */
   if (format == NULL || *format == '\0')
   {
-    //OLSR_PRINTF(1, "%s: %s\n", PLUGIN_NAME, strErr);
+    OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", PLUGIN_NAME, stringErr);
   }
   else
   {
     va_list arglist;
-
-    //OLSR_PRINTF(1, "%s: ", PLUGIN_NAME);
 
     va_start(arglist, format);
     vsnprintf(strDesc, MAX_STR_DESC, format, arglist);
@@ -265,7 +264,7 @@ void BmfPError(const char* format, ...)
 
     strDesc[MAX_STR_DESC - 1] = '\0'; /* Ensures null termination */
 
-    //OLSR_PRINTF(1, "%s: %s\n", strDesc, strErr);
+    OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", strDesc, stringErr);
   }
 } /* BmfPError */
 
@@ -318,7 +317,7 @@ static void BmfPacketCaptured(
   struct ip6_hdr* ipHeader6; /* The IP header inside the captured IP packet */
   struct udphdr* udpHeader;
   u_int16_t destPort;
-  
+
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) { //IPV4
 
             ipHeader = (struct ip*) encapsulationUdpData;
@@ -344,12 +343,12 @@ static void BmfPacketCaptured(
             destPort = ntohs(udpHeader->dest);
             if (destPort != 5353)
             {
-               return; 
+               return;
             }
   }//END IPV4
 
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) { //IPv6
-  
+
             ipHeader6 = (struct ip6_hdr*) encapsulationUdpData;
             if (ipHeader6->ip6_dst.s6_addr[0] == 0xff) //Multicast
             {
@@ -369,7 +368,7 @@ static void BmfPacketCaptured(
             destPort = ntohs(udpHeader->dest);
             if (destPort != 5353)
             {
-               return; 
+               return;
             }
   } //END IPV6
   else return; //Is not IP packet
@@ -392,7 +391,7 @@ static void BmfPacketCaptured(
  * Input      : none
  * Output     : none
  * Return     : none
- * Data Used  : 
+ * Data Used  :
  * ------------------------------------------------------------------------- */
 void DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 
@@ -460,7 +459,7 @@ void DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __
 
 int InitMDNS(struct interface* skipThisIntf)
 {
-  
+
 
   //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
@@ -476,10 +475,10 @@ int InitMDNS(struct interface* skipThisIntf)
  * Input      : none
  * Output     : none
  * Return     : none
- * Data Used  : 
+ * Data Used  :
  * ------------------------------------------------------------------------- */
 void CloseMDNS(void)
 {
   CloseBmfNetworkInterfaces();
-} 
+}
 

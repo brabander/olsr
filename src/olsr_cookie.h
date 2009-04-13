@@ -88,22 +88,18 @@ struct olsr_cookie_mem_brand {
 };
 
 /* Externals. */
-extern struct olsr_cookie_info *EXPORT(olsr_alloc_cookie)(const char *,
+struct olsr_cookie_info *EXPORT(olsr_alloc_cookie)(const char *,
 						  olsr_cookie_type);
-extern void olsr_delete_all_cookies(void);
-#ifndef NODEBUG
-extern char *olsr_cookie_name(olsr_cookie_t);
-#endif /* !NODEBUG */
-extern void olsr_cookie_set_memory_size(struct olsr_cookie_info *, size_t);
-extern void olsr_cookie_set_memory_clear(struct olsr_cookie_info *, bool);
-#if 0
-void olsr_cookie_set_memory_poison(struct olsr_cookie_info *, bool);
-#endif
-extern void olsr_cookie_usage_incr(olsr_cookie_t);
-extern void olsr_cookie_usage_decr(olsr_cookie_t);
+void olsr_delete_all_cookies(void);
+char *EXPORT(olsr_cookie_name)(olsr_cookie_t);
+void EXPORT(olsr_cookie_set_memory_size)(struct olsr_cookie_info *, size_t);
+void EXPORT(olsr_cookie_set_memory_clear)(struct olsr_cookie_info *, bool);
+void EXPORT(olsr_cookie_set_memory_poison)(struct olsr_cookie_info *, bool);
+void EXPORT(olsr_cookie_usage_incr)(olsr_cookie_t);
+void EXPORT(olsr_cookie_usage_decr)(olsr_cookie_t);
 
-extern void *olsr_cookie_malloc(struct olsr_cookie_info *);
-extern void olsr_cookie_free(struct olsr_cookie_info *, void *);
+void *EXPORT(olsr_cookie_malloc)(struct olsr_cookie_info *);
+void EXPORT(olsr_cookie_free)(struct olsr_cookie_info *, void *);
 
 struct olsr_cookie_info *EXPORT(olsr_cookie_get)(int i);
 

@@ -360,8 +360,9 @@ olsr_update_kernel_routes(void)
 
   /* route additions */
   olsr_add_routes(&add_kernel_list);
-
+#ifdef DEBUG
   olsr_print_routing_table(&routingtree);
+#endif
 }
 
 /*

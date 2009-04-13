@@ -71,15 +71,6 @@ extern const char EXPORT(build_host)[];
 
 extern FILE *EXPORT(debug_handle);
 
-#ifdef NODEBUG
-#define OLSR_PRINTF(lvl, format, args...) do { } while(0)
-#else
-#define OLSR_PRINTF(lvl, format, args...) do {                    \
-    if((olsr_cnf->debug_level >= (lvl)) && debug_handle)          \
-      fprintf(debug_handle, (format), ##args);                    \
-  } while (0)
-#endif
-
 #endif
 
 #define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
@@ -99,12 +90,6 @@ extern FILE *EXPORT(debug_handle);
 #else
 #define INLINE inline
 #endif
-#endif
-
-#if defined NODEBUG
-#define USED_ONLY_FOR_DEBUG __attribute__((unused))
-#else
-#define USED_ONLY_FOR_DEBUG
 #endif
 
 #define ROUND_UP_TO_POWER_OF_2(val, pow2) (((val) + (pow2) - 1) & ~((pow2) - 1))

@@ -42,9 +42,7 @@
 #include "common/string.h"
 
 #include <string.h>
-#if !defined(NODEBUG) && defined(DEBUG)
-#include <stdio.h>
-#endif
+#include <assert.h>
 
 /*
  * A somewhat safe version of strncpy and strncat. Note, that
@@ -53,18 +51,17 @@
  */
 char *strscpy(char *dest, const char *src, size_t size)
 {
-       register size_t l = 0;
-#if !defined(NODEBUG) && defined(DEBUG)
-       if (NULL == dest) fprintf(stderr, "Warning: dest is NULL in strscpy!\n");
-       if (NULL == src) fprintf(stderr, "Warning: src is NULL in strscpy!\n");
-#endif
-       if (NULL != dest && NULL != src)
-       {
-               /* src does not need to be null terminated */
-               if (0 < size--) while(l < size && 0 != src[l]) l++;
-               dest[l] = 0;
-       }
-       return strncpy(dest, src, l);
+  size_t l = 0;
+  assert (dest != NULL);
+  assert (src != NULL);
+  if (NULL != dest && NULL != src) {
+    /* src does not need to be null terminated */
+    if (0 < size--) {
+      while(l < size && 0 != src[l]) l++;
+    }
+    dest[l] = 0;
+  }
+  return strncpy(dest, src, l);
 }
 
 /*

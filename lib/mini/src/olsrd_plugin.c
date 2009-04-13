@@ -71,7 +71,7 @@ int olsrd_plugin_interface_version(void)
 }
 
 
-static int set_plugin_test(const char *value, void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
+static int set_plugin_test(const char *value __attribute__((unused)), void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
 {
     OLSR_INFO(LOG_PLUGINS, "\n*** MINI: parameter test: %s\n", value);
     return 0;

@@ -665,7 +665,6 @@ olsr_flush_timers(void)
   }
 }
 
-#ifndef NODEBUG
 /**
  * Returns the difference between gmt and local time in seconds.
  * Use gmtime() and localtime() to keep things simple.
@@ -748,7 +747,6 @@ olsr_clock_string(uint32_t clk)
 
   return buf;
 }
-#endif /* !NODEBUG */
 
 /**
  * Start a new timer.

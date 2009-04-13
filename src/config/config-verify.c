@@ -49,15 +49,15 @@
 
 /************ GLOBALS(begin) ***********/
 
-#ifndef NODEBUG
-FILE *debug_handle = NULL;
-struct olsr_config *olsr_cnf;
-#endif
-
 void *
-olsr_malloc(size_t size, const char *id __attribute__ ((unused)))
+olsr_malloc(size_t size, const char *id)
 {
-  return calloc(1, size);
+  void *ptr = calloc(1, size);
+  if (ptr == NULL) {
+    fprintf(stderr, "error, no memory left for '%s'\n", id);
+    exit(1);
+  }
+  return ptr;
 }
 
 char *
@@ -84,9 +84,6 @@ int
 main(int argc, char *argv[])
 {
   int i, ret = EXIT_SUCCESS;
-#ifndef NODEBUG
-  debug_handle = stdout;
-#endif
 
   for (i = 1; i < argc; i++) {
     const char *sres;

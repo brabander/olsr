@@ -3,20 +3,18 @@ This mini-howto discusses how to set your development environment up,
 such that you can profile or leakcheck a running olsr daemon and later analyze its
 recordings using a graphical frontend called Kcachegrind.
 
-First patch your makefile such that the debug symbols are not removed after
+First change your makefile.inc such that the debug symbols are not removed after
 compilation
 
-    diff -r 26494c58ff86 Makefile.inc
-    --- a/Makefile.inc Wed Jan 09 22:01:18 2008 +0100
-    +++ b/Makefile.inc Thu Jan 10 14:46:27 2008 +0100
-    @@ -5,10 +5,10 @@
-    #
-    # activate debugging with 1 or deactivate with 0
-    -DEBUG ?= 0
-    +DEBUG ?= 1
-    # compile OLSR_PRINTF out
-    -NO_DEBUG_MESSAGES ?= 0
-    +NO_DEBUG_MESSAGES ?= 1
+    # set DEBUG to 1 to add debugger symbols to olsrd and filename/linenumbers to logging
+    # set DEBUG to 0 to remove both and optimize olsrd for size
+    DEBUG ?= 1
+
+    # set to 1 to remove a severity level of logging from olsrd
+    NO_LOG_DEBUG ?= 0
+    NO_LOG_INFO  ?= 0
+    NO_LOG_WARN  ?= 0
+    NO_LOG_ERROR ?= 0
 
 valgrind for profiling:
 

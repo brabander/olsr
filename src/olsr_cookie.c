@@ -188,7 +188,6 @@ olsr_cookie_set_memory_clear(struct olsr_cookie_info *ci, bool clear)
   }
 }
 
-#if 0
 /*
  * Set if a returned memory block shall be initialized to an all zero or
  * to a poison memory pattern after returning to the free pool.
@@ -209,7 +208,6 @@ olsr_cookie_set_memory_poison(struct olsr_cookie_info *ci, bool poison)
     ci->ci_flags &= ~COOKIE_MEMPOISON;
   }
 }
-#endif
 
 /*
  * Basic sanity checking for a passed-in cookie-id.
@@ -247,7 +245,6 @@ olsr_cookie_usage_decr(olsr_cookie_t cookie_id)
   }
 }
 
-#ifndef NODEBUG
 /*
  * Return a cookie name.
  * Mostly used for logging purposes.
@@ -263,7 +260,6 @@ olsr_cookie_name(olsr_cookie_t cookie_id)
 
   return unknown;
 }
-#endif /* !NODEBUG */
 
 /*
  * Allocate a fixed amount of memory based on a passed in cookie type.
