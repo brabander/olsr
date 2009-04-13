@@ -93,19 +93,17 @@ static int olsr_load_dl(char *libname, struct plugin_param *params)
     struct olsr_plugin *plugin = olsr_malloc(sizeof(struct olsr_plugin), "Plugin entry");
     int rv;
 
-    OLSR_INFO(LOG_PLUGINS, "---------- LOADING LIBRARY %s ----------\n", libname);
-
     if (olsr_cnf->dlPath) {
       char *path = olsr_malloc(strlen(olsr_cnf->dlPath) + strlen(libname)+1, "Memory for absolute library path");
       strcpy(path, olsr_cnf->dlPath);
       strcat(path, libname);
-      plugin->dlhandle = dlopen(libname, RTLD_NOW);
+      OLSR_INFO(LOG_PLUGINS, "---------- LOADING LIBRARY %s from %s (%s)----------\n", libname, olsr_cnf->dlPath, path);
+      plugin->dlhandle = dlopen(path, RTLD_NOW);
       free(path);
-      fprintf(stderr, "1\n");
     }
     else {
+      OLSR_INFO(LOG_PLUGINS, "---------- LOADING LIBRARY %s ----------\n", libname);
       plugin->dlhandle = dlopen(libname, RTLD_NOW);
-      fprintf(stderr, "2\n");
     }
     if(plugin->dlhandle == NULL) {
         const int save_errno = errno;

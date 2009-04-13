@@ -244,7 +244,7 @@ static void parse_packet(struct olsr *olsr, int size, struct interface *in_if, u
   if (count < MIN_PACKET_SIZE(olsr_cnf->ip_version)) {
     return;
   }
-  if (ntohs(olsr->olsr_packlen) != size) {
+  if (ntohs(olsr->olsr_packlen) != (size_t)size) {
     OLSR_WARN(LOG_PACKET_PARSING, "Size error detected in received packet from %s.\nRecieved %d, in packet %d\n",
         olsr_ip_to_string(&buf, from_addr), size, ntohs(olsr->olsr_packlen));
     return;
