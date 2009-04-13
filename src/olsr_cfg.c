@@ -75,6 +75,9 @@
 #define CFG_LOG_SYSLOG      271
 #define CFG_LOG_FILE        272
 
+#define CFG_OLSRPORT        273
+#define CFG_DLPATH          274
+
 /* remember which log severities have been explicitly set */
 static bool cfg_has_log[LOG_SEVERITY_COUNT];
 
@@ -1069,7 +1072,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     }
     rcfg->fixed_origaddr = true;
     break;
-  case '1':                    /* port (i) */
+  case CFG_OLSRPORT:                    /* port (i) */
     {
       int arg = -1;
       sscanf(argstr, "%d", &arg);
@@ -1078,7 +1081,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       PARSER_DEBUG_PRINTF("OLSR port: %d\n", rcfg->olsr_port);
     }
     break;
-  case '2':
+  case CFG_DLPATH:
     rcfg->dlPath = strdup(argstr);
     PARSER_DEBUG_PRINTF("Dynamic library path: %s\n", rcfg->dlPath);
     break;
@@ -1187,8 +1190,8 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
     {"SourceIpMode",             required_argument, 0, 's'}, /* (yes/no) */
-    {"Port",                     required_argument, 0, '1'}, /* (i) */
-    {"dlPath",                   required_argument, 0, '2'}, /* (path) */
+    {"OlsrPort",                 required_argument, 0, CFG_OLSRPORT}, /* (i) */
+    {"dlPath",                   required_argument, 0, CFG_DLPATH}, /* (path) */
 
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
