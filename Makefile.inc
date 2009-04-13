@@ -27,15 +27,16 @@ MUDFLAP ?= 0
 # programs
 CCACHE ?=       $(shell IFS=:; for i in $$PATH;do test -x "$$i/ccache" && echo "$$i/ccache" && break; done)
 ifeq ($(origin CC),default)
-CC = 		$(CCACHE) gcc
+  CC = 		$(CCACHE) gcc
 else
-CC ?= 		$(CCACHE) gcc
+  CC ?= 		$(CCACHE) gcc
 endif
 ifeq ($(DEBUG),0)
-STRIP ?=	strip
+  STRIP ?=	strip
 else
-STRIP ?=	:
+  STRIP ?=	:
 endif
+
 BISON ?=	bison
 FLEX ?=		flex
 TAGCMD ?=	etags
@@ -61,23 +62,23 @@ CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE='"$(CFGFILE)"'
 # handle debugging and logging options
 #############
 ifeq ($(NO_LOG_DEBUG),1)
-CPPFLAGS +=	-DREMOVE_LOG_DEBUG
+  CPPFLAGS +=	-DREMOVE_LOG_DEBUG
 endif
 ifeq ($(NO_LOG_INFO),1)
-CPPFLAGS +=	-DREMOVE_LOG_INFO
+  CPPFLAGS +=	-DREMOVE_LOG_INFO
 endif
 ifeq ($(NO_LOG_WARN),1)
-CPPFLAGS +=	-DREMOVE_LOG_WARN
+  CPPFLAGS +=	-DREMOVE_LOG_WARN
 endif
 ifeq ($(NO_LOG_ERROR),1)
-CPPFLAGS +=	-DREMOVE_LOG_ERROR
+  CPPFLAGS +=	-DREMOVE_LOG_ERROR
 endif
 ifeq ($(DEBUG),1)
-CPPFLAGS +=	-DDEBUG
-CFLAGS +=	-ggdb
-OPTIMIZE ?=	-O0
+  CPPFLAGS +=	-DDEBUG
+  CFLAGS +=	-ggdb
+  OPTIMIZE ?=	-O0
 else
-OPTIMIZE ?=	-Os
+  OPTIMIZE ?=	-Os
 endif
 
 
@@ -85,99 +86,110 @@ endif
 # add gcc warnings and optimizations if CFLAGS not set
 ##############
 ifndef CFLAGS
-ifndef WARNINGS
-ALL_WARNINGS +=	-Wall
-ALL_WARNINGS +=	-Wextra
-ALL_WARNINGS +=	-Wold-style-definition
-ALL_WARNINGS +=	-Wdeclaration-after-statement
-ALL_WARNINGS +=	-Wmissing-prototypes
-ALL_WARNINGS +=	-Wstrict-prototypes
-ALL_WARNINGS +=	-Wmissing-declarations
-ALL_WARNINGS +=	-Wsign-compare
-ALL_WARNINGS +=	-Waggregate-return
-ALL_WARNINGS +=	-Wmissing-noreturn
-ALL_WARNINGS +=	-Wmissing-format-attribute
-ALL_WARNINGS +=	-Wno-multichar
-ALL_WARNINGS +=	-Wno-deprecated-declarations
-ALL_WARNINGS +=	-Wendif-labels
-ALL_WARNINGS +=	-Wwrite-strings
-ALL_WARNINGS +=	-Wbad-function-cast
-ALL_WARNINGS +=	-Wpointer-arith
-ALL_WARNINGS +=	-Wcast-qual
-ALL_WARNINGS +=	-Wshadow
-ALL_WARNINGS +=	-Wformat-2
-ALL_WARNINGS +=	-Wsequence-point
-ALL_WARNINGS +=	-Wpointer-arith
-ALL_WARNINGS +=	-Wcast-align
-# the following 2 do not work yet and need more work on it
-#ALL_WARNINGS +=	-Wconversion
-#ALL_WARNINGS +=	-Wredundant-decls
-ifeq ($(MUDFLAP),0)
-# work around a bug in gcc-4.*
-ALL_WARNINGS +=	-Wnested-externs
-endif
-# Alas, htons() triggers this so we can't seriously activate it.
-#ALL_WARNINGS +=	-Wunreachable-code
-ALL_WARNINGS +=	-Winline
-ALL_WARNINGS +=	-Wdisabled-optimization
-ALL_WARNINGS +=	-Werror
-ALL_WARNINGS +=	-finline-functions-called-once
-ALL_WARNINGS +=	-funit-at-a-time
-ALL_WARNINGS +=	-fearly-inlining
-ifeq ($(DEBUG),0)
-ALL_WARNINGS +=	-fomit-frame-pointer
-endif
-# we have small inline functions in src/ipcalc.h which should always be inlined
-ALL_WARNINGS +=	-finline-limit=350
-# These tell gcc to put each function and global variable in a separate section.
-# The linker can than remove all unreferenced section. But in the olsrd binary
-# unused doesn't imply unused at all since the function may be used by plugins,
-# e.g. the ones in src/plugin_utils.c.
-# So we can use that feature at most to identify unused functions and remove them
-# from the source by hand.
-#ALL_WARNINGS +=	-ffunction-sections
-#ALL_WARNINGS +=	-fdata-sections
-ALL_WARNINGS +=	-Wstrict-overflow=5
-ALL_WARNINGS +=	$(EXTRA_WARNINGS)
-WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
-endif
-CFLAGS +=	$(WARNINGS)
-CFLAGS +=	$(OPTIMIZE)
-CFLAGS +=	$(EXTRA_CFLAGS)
+  ifndef WARNINGS
+    ALL_WARNINGS +=	-Wall
+    ALL_WARNINGS +=	-Wextra
+    ALL_WARNINGS +=	-Wold-style-definition
+    ALL_WARNINGS +=	-Wdeclaration-after-statement
+    ALL_WARNINGS +=	-Wmissing-prototypes
+    ALL_WARNINGS +=	-Wstrict-prototypes
+    ALL_WARNINGS +=	-Wmissing-declarations
+    ALL_WARNINGS +=	-Wsign-compare
+    ALL_WARNINGS +=	-Waggregate-return
+    ALL_WARNINGS +=	-Wmissing-noreturn
+    ALL_WARNINGS +=	-Wmissing-format-attribute
+    ALL_WARNINGS +=	-Wno-multichar
+    ALL_WARNINGS +=	-Wno-deprecated-declarations
+    ALL_WARNINGS +=	-Wendif-labels
+    ALL_WARNINGS +=	-Wwrite-strings
+    ALL_WARNINGS +=	-Wbad-function-cast
+    ALL_WARNINGS +=	-Wpointer-arith
+    ALL_WARNINGS +=	-Wcast-qual
+    ALL_WARNINGS +=	-Wshadow
+    ALL_WARNINGS +=	-Wformat-2
+    ALL_WARNINGS +=	-Wsequence-point
+    ALL_WARNINGS +=	-Wpointer-arith
+    ALL_WARNINGS +=	-Wcast-align
 
-ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
-NO_STRICT_OVERFLOW = -Wstrict-overflow=0
-endif
+    # the following 2 do not work yet and need more work on it
+    #ALL_WARNINGS +=	-Wconversion
+    #ALL_WARNINGS +=	-Wredundant-decls
+    
+    ifeq ($(MUDFLAP),0)
+      # work around a bug in gcc-4.*
+      ALL_WARNINGS +=	-Wnested-externs
+    endif
+    
+    # Alas, htons() triggers this so we can't seriously activate it.
+    #ALL_WARNINGS +=	-Wunreachable-code
+    
+    ALL_WARNINGS +=	-Winline
+    ALL_WARNINGS +=	-Wdisabled-optimization
+    ALL_WARNINGS +=	-Werror
+    ALL_WARNINGS +=	-finline-functions-called-once
+    ALL_WARNINGS +=	-funit-at-a-time
+    ALL_WARNINGS +=	-fearly-inlining
+    
+    ifeq ($(DEBUG),0)
+      ALL_WARNINGS +=	-fomit-frame-pointer
+    endif
+
+    # we have small inline functions in src/ipcalc.h which should always be inlined
+    ALL_WARNINGS +=	-finline-limit=350
+    
+    # These tell gcc to put each function and global variable in a separate section.
+    # The linker can than remove all unreferenced section. But in the olsrd binary
+    # unused doesn't imply unused at all since the function may be used by plugins,
+    # e.g. the ones in src/plugin_utils.c.
+    # So we can use that feature at most to identify unused functions and remove them
+    # from the source by hand.
+    
+    #ALL_WARNINGS +=	-ffunction-sections
+    #ALL_WARNINGS +=	-fdata-sections
+    ALL_WARNINGS +=	-Wstrict-overflow=5
+    ALL_WARNINGS +=	$(EXTRA_WARNINGS)
+    WARNINGS :=	$(shell CC="$(CC)" $(TOPDIR)/gcc-warnings $(ALL_WARNINGS) 2> /dev/null)
+  endif
+
+  CFLAGS +=	$(WARNINGS)
+  CFLAGS +=	$(OPTIMIZE)
+  CFLAGS +=	$(EXTRA_CFLAGS)
+
+  ifneq ($(filter -Wstrict-overflow%,$(WARNINGS)),)
+    NO_STRICT_OVERFLOW = -Wstrict-overflow=0
+  endif
 
 endif # ifndef CFLAGS
 
 ifneq ($(MUDFLAP),0)
-CFLAGS +=	-fmudflapth
+  CFLAGS +=	-fmudflapth
 endif
 
 ifdef OLSRD_PLUGIN
-# c and ld flags for libraries (plugins)
-CPPFLAGS +=	-DOLSR_PLUGIN
-LDFLAGS +=	-shared
-LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
-LDFLAGS +=	-Wl,--version-script=version-script.txt
+  # c and ld flags for libraries (plugins)
+  CPPFLAGS +=	-DOLSR_PLUGIN
+  LDFLAGS +=	-shared
+  LDFLAGS +=	-Wl,-soname,$(PLUGIN_NAME)
+  LDFLAGS +=	-Wl,--version-script=version-script.txt
 else
-# c and ld flags for main
-ifeq ($(LD_HAS_DYN), yes)
-LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
-else
-LDFLAGS_EXE +=	-Wl,-export-dynamic
+  # c and ld flags for main
+  ifeq ($(LD_HAS_DYN), yes)
+    LDFLAGS_EXE +=	-Wl,--dynamic-list=$(EXENAME).exports
+  else
+    LDFLAGS_EXE +=	-Wl,-export-dynamic
+  endif
+  LDFLAGS +=	-Wl,-rpath,$(LIBDIR)
 endif
-LDFLAGS +=	-Wl,-rpath,$(LIBDIR)
-endif
+
 # LDFLAGS for all
 LDFLAGS +=	-Wl,--warn-common
+
 # See above at "-ffunction-sections" for an explanation (and why it is disabled).
 #LDOPTS +=	-Wl,--gc-sections
 #LDOPTS +=	-Wl,--print-gc-sections
 #LDFLAGS +=	$(shell CC="$(CC)" $(TOPDIR)/ld-warnings $(LDOPTS))
 ifneq ($(MUDFLAP),0)
-LIBS +=		-lmudflapth
+  LIBS +=		-lmudflapth
 endif
 
 # extra options from the outside
@@ -190,10 +202,10 @@ HDRS +=		$(wildcard src/common/*.h src/*.h)
 
 # OS detection
 ifeq ($(OS),Windows_NT)
-OS := win32
+  OS := win32
 endif
 ifeq ($(OS),)
-OS := $(shell sh $(TOPDIR)/make/guess_os.sh)
+  OS := $(shell sh $(TOPDIR)/make/guess_os.sh)
 endif
 ifeq ($(OS),UNKNOWN)
 all: help
@@ -219,10 +231,10 @@ src/common/autobuf.o src/mpr.o: CFLAGS += $(NO_STRICT_OVERFLOW)
 # for legacy since now
 CPPFLAGS += $(INCLUDES) $(DEFINES)
 ifneq ($(INCLUDES),)
-$(warning Use CPPFLAGS instead of INCLUDES for -I)
+  $(warning Use CPPFLAGS instead of INCLUDES for -I)
 endif
 ifneq ($(DEFINES),)
-$(warning Use CPPFLAGS instead of DEFINES for -D)
+  $(warning Use CPPFLAGS instead of DEFINES for -D)
 endif
 
 TAGFILE ?=	src/TAGS
