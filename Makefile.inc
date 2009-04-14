@@ -9,10 +9,10 @@
 DEBUG ?= 1
 
 # set to 1 to remove a severity level of logging from olsrd
-NO_LOG_DEBUG ?= 0
-NO_LOG_INFO  ?= 0
-NO_LOG_WARN  ?= 0
-NO_LOG_ERROR ?= 0
+REMOVE_LOG_DEBUG ?= 1
+REMOVE_LOG_INFO  ?= 1
+REMOVE_LOG_WARN  ?= 1
+REMOVE_LOG_ERROR ?= 1
 
 # enable mudflap with 1 or deactivate with 0
 # you need a recent enough gcc and the libmudflap installed
@@ -61,16 +61,16 @@ CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE='"$(CFGFILE)"'
 #############
 # handle debugging and logging options
 #############
-ifeq ($(NO_LOG_DEBUG),1)
+ifeq ($(REMOVE_LOG_DEBUG),1)
   CPPFLAGS +=	-DREMOVE_LOG_DEBUG
 endif
-ifeq ($(NO_LOG_INFO),1)
+ifeq ($(REMOVE_LOG_INFO),1)
   CPPFLAGS +=	-DREMOVE_LOG_INFO
 endif
-ifeq ($(NO_LOG_WARN),1)
+ifeq ($(REMOVE_LOG_WARN),1)
   CPPFLAGS +=	-DREMOVE_LOG_WARN
 endif
-ifeq ($(NO_LOG_ERROR),1)
+ifeq ($(REMOVE_LOG_ERROR),1)
   CPPFLAGS +=	-DREMOVE_LOG_ERROR
 endif
 ifeq ($(DEBUG),1)
