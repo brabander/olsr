@@ -386,7 +386,8 @@ hello_tap(struct lq_hello_message *message,
 
   /* find the input interface in the list of neighbor interfaces */
   for (walker = message->neigh; walker != NULL; walker = walker->next) {
-    if (olsr_ipcmp(&walker->addr, &in_if->ip_addr) == 0) {
+    if (walker->link_type != UNSPEC_LINK
+        && olsr_ipcmp(&walker->addr, &in_if->ip_addr) == 0) {
       break;
     }
   }
@@ -394,6 +395,9 @@ hello_tap(struct lq_hello_message *message,
   /*
    * memorize our neighbour's idea of the link quality, so that we
    * know the link quality in both directions
+   *
+   * walker is NULL if there the current interface was not included in
+   * the message (or was included as an UNSPEC_LINK)
    */
   olsr_memorize_foreign_hello_lq(lnk, walker);
 
