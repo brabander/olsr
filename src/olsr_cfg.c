@@ -795,17 +795,8 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
 {
   char *p = (char *)argstr, *next;
   int i;
+  bool first;
 
-#if 0
-    if (strcasecmp(p, "list") == 0) {
-      printf("Available logging sources: ");
-      for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-        printf("%s%s", i>0 ? ", " : "", LOG_SOURCE_NAMES[i]);
-      }
-      printf("\n");
-      return CFG_EXIT;
-    }
-#endif
   while (p != NULL) {
     /* split at ',' */
     next = strchr(p, ',');
@@ -819,22 +810,29 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
       }
     }
 
-    if (i < LOG_SOURCE_COUNT) {
-      rcfg->log_event[sev][i] = true;
-    }
-    else {
+    if (i == LOG_SOURCE_COUNT) {
       sprintf(rmsg, "Error, unknown logging source: %s\n", p);
       return CFG_EXIT;
     }
+    rcfg->log_event[sev][i] = true;
     p = next;
   }
 
   /* handle "all" keyword */
-  if (rcfg->log_event[sev][LOG_ALL]) {
+  if (i == LOG_ALL) {
     for (i = 0; i < LOG_SOURCE_COUNT; i++) {
       rcfg->log_event[sev][i] = true;
     }
   }
+
+  PARSER_DEBUG_PRINTF("Log_%s:", LOG_SEVERITY_NAMES[sev]);
+  for (i = 0, first = true; i < LOG_SOURCE_COUNT; i++) {
+    if (rcfg->log_event[sev][i]) {
+      PARSER_DEBUG_PRINTF("%c%s", first ? ' ' : ',', LOG_SOURCE_NAMES[i]);
+      first = false;
+    }
+  }
+  PARSER_DEBUG_PRINTF("\n");
   cfg_has_log[sev] = true;
   return CFG_OK;
 }
@@ -1352,10 +1350,13 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   if (rslt != CFG_ERROR && rslt != CFG_EXIT) {
     if (!((*rcfg)->log_target_syslog || (*rcfg)->log_target_syslog || (*rcfg)->log_target_file != NULL)) {
       (*rcfg)->log_target_stderr = true;
+      PARSER_DEBUG_PRINTF("Log: activate default logging target stderr\n");
     }
     for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
       if (!cfg_has_log[opt] && cfg_has_log[opt-1]) {
         int i;
+
+        PARSER_DEBUG_PRINTF("Log: copy log level %s to %s\n", LOG_SEVERITY_NAMES[opt-1], LOG_SEVERITY_NAMES[opt]);
 
         /* copy debug to info, info to warning, warning to error (if neccessary) */
         for (i=0; i < LOG_SOURCE_COUNT; i++) {
