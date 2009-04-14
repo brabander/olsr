@@ -9,10 +9,10 @@
 DEBUG ?= 1
 
 # set to 1 to remove a severity level of logging from olsrd
-REMOVE_LOG_DEBUG ?= 1
-REMOVE_LOG_INFO  ?= 1
-REMOVE_LOG_WARN  ?= 1
-REMOVE_LOG_ERROR ?= 1
+REMOVE_LOG_DEBUG ?= 0
+REMOVE_LOG_INFO  ?= 0
+REMOVE_LOG_WARN  ?= 0
+REMOVE_LOG_ERROR ?= 0
 
 # enable mudflap with 1 or deactivate with 0
 # you need a recent enough gcc and the libmudflap installed
