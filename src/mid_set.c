@@ -297,9 +297,6 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
-#if !defined REMOVE_LOG_DEBUG
-  struct ipaddr_str buf1, buf2;
-#endif
   if (!olsr_validate_address(alias_addr)) {
     return;
   }
