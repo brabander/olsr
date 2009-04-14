@@ -423,12 +423,20 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if, const uni
     olsr_update_packet_loss_hello_int(lnk, message->htime);
 
     /* find the input interface in the list of neighbor interfaces */
-    for (walker = message->neighbors; walker != NULL; walker = walker->next)
-      if (ipequal(&walker->address, &in_if->ip_addr))
+    for (walker = message->neighbors; walker != NULL; walker = walker->next) {
+      if (walker->link != UNSPEC_LINK
+          && ipequal(&walker->address, &in_if->ip_addr)) {
         break;
+      }
+    }
 
-    // memorize our neighbour's idea of the link quality, so that we
-    // know the link quality in both directions
+    /*
+     * memorize our neighbour's idea of the link quality, so that we
+     * know the link quality in both directions
+     *
+     * walker is NULL if there the current interface was not included in
+     * the message (or was included as an UNSPEC_LINK)
+     */
     olsr_memorize_foreign_hello_lq(lnk, walker);
 
     /* update packet loss for link quality calculation */
