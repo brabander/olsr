@@ -1,0 +1,162 @@
+==============================================
+           Logging in OLSRd 0.5.7
+==============================================
+by Henning Rogge (hrogge@googlemail.com)
+
+
+OLSRd versions up to 0.5.6 had a strange mix of syslog, printf and OLSR_PRINT
+macro to create logging entries. Some events were send to multiple logging
+targets (syslog and OLSR_PRINTF for example), other were just put into one
+category.
+
+In addition to this the OLSR_PRINTF debug level tried to put all
+logging events into a linear sorted priority list. Most times a logging level
+was creating to many or not enough logging output, frustrating everyone
+while debugging a problem.
+
+Finally there were a group of compiler directives to control the amount of
+debugging code compiled into the routing agent, which is important for
+embedded hardware distributions (less binary size). There were three macros
+called DEBUG, NODEBUG and NO_DEBUG_MESSAGES and it wasn't clear which macro
+was responsible for a certain job.
+
+The OLSRd 0.5.7 contains a new logging API that allows much more flexibility
+for logging events. It cleans up the debug-macros grown during the last years,
+adds a more flexible filter system for logging events from the command line
+and allows the user control the target of the logging events. Every logging
+event can contain the filename/linenumber where the event happened to speedup
+bug hunting.
+
+The new logging system has three new concepts, log severity, log source and
+log target.
+
+  !!! Each logging message has ONE severity and ONE source !!!
+
+Log severity means the importance of a logging event. There are four severity
+levels:
+
+- ERROR, something really bad has happened, the OLSRd routing agent will shut
+  down after this message.
+- WARN, an error has happened but the agent will continue to run.
+- INFO contains important information for the user, like state of a database
+  (link, tc, ...)
+- DEBUG has lot's of detailed information for debugging, much of them are
+  useless without looking at the specific source code.
+
+Log sources are logical parts of the routing agent like NETWORKING, PLUGINS,
+and LINKS. You can get a list of all log sources by using the command line
+option "--help=log".
+
+Log targets are the different 'backends' for logging events. At the moment
+the OLSRd supports three different targets, which can be used individually
+or together:
+
+- STDERR prints all logging events to the console
+- FILE stores them into an user defined file
+- SYSLOG puts them into the syslog
+
+
+
+
+    Logging for users
+------------------------- 
+
+The logging system is controlled by a number of command line/config file options.
+
+log_debug=<source-list>
+log_info=<source-list>
+log_warn=<source-list>
+log_error=<source-list>
+
+  These four options control which log SOURCES are visible down to a certain
+  severity level. The parameter is a comma separated list of log sources. If you
+  set a source for a lower severity level (--log_info=links  for example) and do
+  NOT set the higher severity level (warn for example) the sources are copied
+  there too.
+
+log_debug=<debug_level>
+
+  This is a simple way to define a few default logging options. It's additional
+  purpose is to provide limited backward compatiblity to the old debugging
+  level option of 0.5.6.
+  
+    debug level -2: no debug output.
+    debug level -1: only ERROR messages.
+    debug level  0: only ERROR and WARNING messages.
+    debug level  1: all ERRORs, all WARNINGs and INFO messages for
+                  MAIN, PLUGINS, ROUTING, LINKS, NEIGHTABLE, 2NEIGH and TC.
+    debug level  2: all ERRORs, WARNINGs and INFOs.
+    debug level  3: all debug messages
+
+  If no debug severity is set (log_debug/info/warn/error) and no debug level is
+  set (log_debug) the routing agent falls back to it's default "log_debug=0".
+
+log_syslog
+log_stderr
+log_file=<filename>
+
+  These three options activate a certain log TARGET. Each log target can be used
+  once. If not set the routing agent falls back to the default "log_stderr".
+
+
+
+
+    Logging for OLSRd developers
+------------------------------------
+
+To use the new logging API you have to include the file "olsr_logging.h".
+
+There are eight macros to create a logging event, two for each severity level.
+
+OLSR_DEBUG(source, format, args...)
+OLSR_INFO(source, format, args...)
+OLSR_WARN(source, format, args...)
+OLSR_ERROR(source, format, args...)
+
+These four macros work like a printf() command with an additional log SOURCE
+as the first parameter. The source must be a member of the enum log_source
+(see src/olsr_cfg_data.h). The source LOG_ALL can NOT be used for the macros,
+it's just for the configuration parser !
+
+OLSR_DEBUG_NH(source, format, args...)
+OLSR_INFO_NH(source, format, args...)
+OLSR_WARN_NH(source, format, args...)
+OLSR_ERROR_NH(source, format, args...)
+
+These macros work like the other ones, but don't produce a header with filename,
+line number, timestamp, ... (NH = no header)
+You should use them to create multiline logging events (first one macro of the
+first group of macros, then multiple of this group)
+
+example:
+
+OLSR_INFO(LOG_MAIN, "This is the first line of a macro");
+OLSR_INFO_NH(LOG_MAIN, "and this is the second time...");
+
+
+
+
+    Logging for firmware developers
+---------------------------------------
+
+There are five compiler defines in Makefile.inc that can be used to control
+the size of the binary of Olsrd.
+
+DEBUG = 0/1
+
+Set DEBUG to 1 to add debugger symbols to olsrd.
+Set DEBUG to 0 to remove debugger symbols and optimize olsrd for size.
+
+REMOVE_LOG_DEBUG = 0/1
+REMOVE_LOG_INFO = 0/1
+REMOVE_LOG_WARN = 0/1
+REMOVE_LOG_ERROR = 0/1
+
+Set one of this four defines to 1 to remove all code for creating logging
+events of this severity level.
+
+A good way to create a compact OLSRd for small embedded devices would be:
+
+  DEBUG = 0
+  REMOVE_LOG_DEBUG = 1
+  REMOVE_LOG_INFO = 1
