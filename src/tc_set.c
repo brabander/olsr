@@ -792,6 +792,16 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
     return false;
   }
 
+  /*
+   * If the sender interface (NB: not originator) of this message
+   * is not in the symmetric 1-hop neighborhood of this node, the
+   * message MUST be discarded.
+   */
+  if (check_neighbor_link(from_addr) != SYM_LINK) {
+    OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
+    return false;
+  }
+
   pkt_get_reltime(&curr, &vtime);
   pkt_get_u16(&curr, &size);
 
@@ -856,16 +866,6 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
   tc->ansn = ansn;
   tc->ignored = 0;
   tc->err_seq_valid = false;
-
-  /*
-   * If the sender interface (NB: not originator) of this message
-   * is not in the symmetric 1-hop neighborhood of this node, the
-   * message MUST be discarded.
-   */
-  if (check_neighbor_link(from_addr) != SYM_LINK) {
-    OLSR_PRINTF(2, "Received TC from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
-    return false;
-  }
 
   OLSR_PRINTF(1, "Processing TC from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &originator), tc->msg_seq);
 
