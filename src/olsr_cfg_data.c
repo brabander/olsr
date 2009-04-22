@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -80,6 +81,6 @@ const char *LOG_SEVERITY_NAMES[] = {
 
 
 const char *INTERFACE_MODE_NAMES[] = {
-    "mesh",
-    "ether"
+  "mesh",
+  "ether"
 };

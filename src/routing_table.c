@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -88,7 +89,7 @@ unsigned int routingtree_version;
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv4_prefix_origin (const void *prefix1, const void *prefix2)
+avl_comp_ipv4_prefix_origin(const void *prefix1, const void *prefix2)
 {
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
@@ -124,7 +125,7 @@ avl_comp_ipv4_prefix_origin (const void *prefix1, const void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv6_prefix_origin (const void *prefix1, const void *prefix2)
+avl_comp_ipv6_prefix_origin(const void *prefix1, const void *prefix2)
 {
   int diff;
   const struct olsr_ip_prefix *pfx1 = prefix1;
@@ -157,7 +158,7 @@ avl_comp_ipv6_prefix_origin (const void *prefix1, const void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
+avl_comp_ipv4_prefix(const void *prefix1, const void *prefix2)
 {
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
@@ -186,7 +187,7 @@ avl_comp_ipv4_prefix (const void *prefix1, const void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
+avl_comp_ipv6_prefix(const void *prefix1, const void *prefix2)
 {
   int diff;
   const struct olsr_ip_prefix *pfx1 = prefix1;
@@ -211,7 +212,7 @@ avl_comp_ipv6_prefix (const void *prefix1, const void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv4_addr_origin (const void *prefix1, const void *prefix2)
+avl_comp_ipv4_addr_origin(const void *prefix1, const void *prefix2)
 {
   const struct olsr_ip_prefix *pfx1 = prefix1;
   const struct olsr_ip_prefix *pfx2 = prefix2;
@@ -238,7 +239,7 @@ avl_comp_ipv4_addr_origin (const void *prefix1, const void *prefix2)
  * -1 / +1 depending on being smaller or bigger.
  */
 int
-avl_comp_ipv6_addr_origin (const void *prefix1, const void *prefix2)
+avl_comp_ipv6_addr_origin(const void *prefix1, const void *prefix2)
 {
   int diff;
   const struct olsr_ip_prefix *pfx1 = prefix1;
@@ -302,8 +303,7 @@ olsr_lookup_routing_table(const union olsr_ip_addr *dst)
  * Update gateway/interface/etx/hopcount and the version for a route path.
  */
 void
-olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc,
-                    struct link_entry *link)
+olsr_update_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry *link)
 {
 
   rtp->rtp_version = routingtree_version;
@@ -355,8 +355,7 @@ olsr_alloc_rt_entry(struct olsr_ip_prefix *prefix)
  * Alloc and key a new rt_path.
  */
 static struct rt_path *
-olsr_alloc_rt_path(struct tc_entry *tc,
-                   struct olsr_ip_prefix *prefix, uint8_t origin)
+olsr_alloc_rt_path(struct tc_entry *tc, struct olsr_ip_prefix *prefix, uint8_t origin)
 {
   struct rt_path *rtp = olsr_cookie_malloc(rtp_mem_cookie);
 
@@ -401,8 +400,7 @@ olsr_alloc_rt_path(struct tc_entry *tc,
  * insert it into the global RIB tree.
  */
 void
-olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc,
-                    struct link_entry *link)
+olsr_insert_rt_path(struct rt_path *rtp, struct tc_entry *tc, struct link_entry *link)
 {
   struct rt_entry *rt;
   struct avl_node *node;
@@ -494,40 +492,39 @@ olsr_delete_rt_path(struct rt_path *rtp)
 static bool
 olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struct rt_path *inetgw)
 {
-    olsr_linkcost etx1 = rtp1->rtp_metric.cost;
-    olsr_linkcost etx2 = rtp2->rtp_metric.cost;
-    if (inetgw == rtp1) etx1 *= olsr_cnf->lq_nat_thresh;
-    if (inetgw == rtp2) etx2 *= olsr_cnf->lq_nat_thresh;
+  olsr_linkcost etx1 = rtp1->rtp_metric.cost;
+  olsr_linkcost etx2 = rtp2->rtp_metric.cost;
+  if (inetgw == rtp1)
+    etx1 *= olsr_cnf->lq_nat_thresh;
+  if (inetgw == rtp2)
+    etx2 *= olsr_cnf->lq_nat_thresh;
 
-    /* etx comes first */
-    if (etx1 < etx2) {
-      return true;
-    }
-    if (etx1 > etx2) {
-      return false;
-    }
+  /* etx comes first */
+  if (etx1 < etx2) {
+    return true;
+  }
+  if (etx1 > etx2) {
+    return false;
+  }
 
-    /* hopcount is next tie breaker */
-    if (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops) {
-      return true;
-    }
-    if (rtp1->rtp_metric.hops > rtp2->rtp_metric.hops) {
-      return false;
-    }
+  /* hopcount is next tie breaker */
+  if (rtp1->rtp_metric.hops < rtp2->rtp_metric.hops) {
+    return true;
+  }
+  if (rtp1->rtp_metric.hops > rtp2->rtp_metric.hops) {
+    return false;
+  }
 
-    /* originator type code is next tie breaker */
-    if (rtp1->rtp_originator.prefix_origin <
-        rtp2->rtp_originator.prefix_origin) {
-      return true;
-    }
-    if (rtp1->rtp_originator.prefix_origin >
-        rtp2->rtp_originator.prefix_origin) {
-      return false;
-    }
+  /* originator type code is next tie breaker */
+  if (rtp1->rtp_originator.prefix_origin < rtp2->rtp_originator.prefix_origin) {
+    return true;
+  }
+  if (rtp1->rtp_originator.prefix_origin > rtp2->rtp_originator.prefix_origin) {
+    return false;
+  }
 
-    /* originator address is final breaker */
-    return(olsr_ipcmp(&rtp1->rtp_originator.prefix,
-                      &rtp2->rtp_originator.prefix));
+  /* originator address is final breaker */
+  return (olsr_ipcmp(&rtp1->rtp_originator.prefix, &rtp2->rtp_originator.prefix));
 }
 
 /**
@@ -537,9 +534,9 @@ olsr_cmp_rtp(const struct rt_path *rtp1, const struct rt_path *rtp2, const struc
  * than the second one, FALSE otherwise.
  */
 bool
-olsr_cmp_rt(const struct rt_entry *rt1, const struct rt_entry *rt2)
+olsr_cmp_rt(const struct rt_entry * rt1, const struct rt_entry * rt2)
 {
-    return olsr_cmp_rtp(rt1->rt_best, rt2->rt_best, NULL);
+  return olsr_cmp_rtp(rt1->rt_best, rt2->rt_best, NULL);
 }
 
 /**
@@ -552,7 +549,7 @@ olsr_rt_best(struct rt_entry *rt)
   /* grab the first entry */
   struct avl_node *node = avl_walk_first(&rt->rt_path_tree);
 
-  assert(node != NULL); /* should not happen */
+  assert(node != NULL);         /* should not happen */
 
   rt->rt_best = rtp_tree2rtp(node);
 
@@ -585,8 +582,7 @@ olsr_rt_best(struct rt_entry *rt)
  *@return the new rt_path struct
  */
 struct rt_path *
-olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
-                          const union olsr_ip_addr *originator, int origin)
+olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen, const union olsr_ip_addr *originator, int origin)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str dstbuf, origbuf;
@@ -629,8 +625,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
     }
 
     OLSR_DEBUG(LOG_ROUTING, "RIB: add prefix %s/%d from %s\n",
-                olsr_ip_to_string(&dstbuf, dst), plen,
-                olsr_ip_to_string(&origbuf, originator));
+               olsr_ip_to_string(&dstbuf, dst), plen, olsr_ip_to_string(&origbuf, originator));
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -646,8 +641,7 @@ olsr_insert_routing_table(const union olsr_ip_addr *dst, int plen,
  * Delete a prefix from the prefix tree hanging off a lsdb (tc) entry.
  */
 void
-olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
-                          union olsr_ip_addr *originator, int origin)
+olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr *originator, int origin)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str dstbuf, origbuf;
@@ -684,8 +678,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen,
     olsr_delete_rt_path(rtp);
 
     OLSR_DEBUG(LOG_ROUTING, "RIB: del prefix %s/%d from %s\n",
-                olsr_ip_to_string(&dstbuf, dst), plen,
-                olsr_ip_to_string(&origbuf, originator));
+               olsr_ip_to_string(&dstbuf, dst), plen, olsr_ip_to_string(&origbuf, originator));
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -706,8 +699,7 @@ olsr_rt_to_string(const struct rt_entry *rt)
            "%s via %s dev %s",
            olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
            olsr_ip_to_string(&gwstr, &rt->rt_nexthop.gateway),
-           rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)"
-  );
+           rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)");
 
   return buff;
 }
@@ -730,9 +722,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
            olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
            olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
            rtp->rtp_nexthop.interface ? rtp->rtp_nexthop.interface->int_name : "(null)",
-           get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
-           rtp->rtp_metric.hops,
-           rtp->rtp_version);
+           get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer), rtp->rtp_metric.hops, rtp->rtp_version);
 
   return buff;
 }
@@ -742,7 +732,7 @@ olsr_rtp_to_string(const struct rt_path *rtp)
  *
  */
 void
-olsr_print_routing_table(struct avl_tree *tree __attribute__((unused)))
+olsr_print_routing_table(struct avl_tree *tree __attribute__ ((unused)))
 {
   /* The whole function makes no sense without it. */
 #if !defined REMOVE_LOG_INFO
@@ -751,9 +741,7 @@ olsr_print_routing_table(struct avl_tree *tree __attribute__((unused)))
 
   OLSR_INFO(LOG_ROUTING, "ROUTING TABLE\n");
 
-  for (rt_tree_node = avl_walk_first(tree);
-       rt_tree_node != NULL;
-       rt_tree_node = avl_walk_next(rt_tree_node)) {
+  for (rt_tree_node = avl_walk_first(tree); rt_tree_node != NULL; rt_tree_node = avl_walk_next(rt_tree_node)) {
     struct avl_node *rtp_tree_node;
     struct ipaddr_str origstr, gwstr;
     struct ipprefix_str prefixstr;
@@ -761,23 +749,20 @@ olsr_print_routing_table(struct avl_tree *tree __attribute__((unused)))
 
     /* first the route entry */
     OLSR_INFO_NH(LOG_ROUTING, "%s, via %s dev %s, best-originator %s\n",
-           olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
-           olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
-           rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)",
-           olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator.prefix));
+                 olsr_ip_prefix_to_string(&prefixstr, &rt->rt_dst),
+                 olsr_ip_to_string(&origstr, &rt->rt_nexthop.gateway),
+                 rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)",
+                 olsr_ip_to_string(&gwstr, &rt->rt_best->rtp_originator.prefix));
 
     /* walk the per-originator path tree of routes */
-    for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
-         rtp_tree_node != NULL;
-         rtp_tree_node = avl_walk_next(rtp_tree_node)) {
+    for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = avl_walk_next(rtp_tree_node)) {
       struct rt_path *rtp = rtp_tree2rtp(rtp_tree_node);
       OLSR_INFO_NH(LOG_ROUTING, "\tfrom %s, cost %s, metric %u, via %s, dev %s, v %u\n",
-             olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
-             get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
-             rtp->rtp_metric.hops,
-             olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
-             rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)",
-             rtp->rtp_version);
+                   olsr_ip_to_string(&origstr, &rtp->rtp_originator.prefix),
+                   get_linkcost_text(rtp->rtp_metric.cost, true, &lqbuffer),
+                   rtp->rtp_metric.hops,
+                   olsr_ip_to_string(&gwstr, &rtp->rtp_nexthop.gateway),
+                   rt->rt_nexthop.interface ? rt->rt_nexthop.interface->int_name : "(null)", rtp->rtp_version);
     }
   }
 #endif

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -48,56 +49,47 @@
 extern bool changes_topology;
 extern bool changes_neighborhood;
 extern bool changes_hna;
-extern bool changes_force; /* Maybe static */
+extern bool changes_force;             /* Maybe static */
 
 void
-register_pcf(int (*)(int, int, int));
+  register_pcf(int (*)(int, int, int));
 
 void
-olsr_process_changes(void);
+  olsr_process_changes(void);
 
 void
-init_msg_seqno(void);
+  init_msg_seqno(void);
 
-uint16_t
-EXPORT(get_msg_seqno)(void);
+uint16_t EXPORT(get_msg_seqno) (void);
 
 int
-olsr_forward_message(union olsr_message *, struct interface *,
-		     union olsr_ip_addr *);
+  olsr_forward_message(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void
-set_buffer_timer(struct interface *);
+  set_buffer_timer(struct interface *);
 
 void
-olsr_init_tables(void);
+  olsr_init_tables(void);
 
 void
-olsr_init_willingness(void);
+  olsr_init_willingness(void);
 
-uint8_t
-olsr_calculate_willingness(void);
+uint8_t olsr_calculate_willingness(void);
 
-const char *
-olsr_msgtype_to_string(uint8_t);
+const char *olsr_msgtype_to_string(uint8_t);
 
-const char *
-olsr_link_to_string(uint8_t);
+const char *olsr_link_to_string(uint8_t);
 
-const char *
-olsr_status_to_string(uint8_t);
+const char *olsr_status_to_string(uint8_t);
 
 void
-EXPORT(olsr_exit)(int);
+  EXPORT(olsr_exit) (int);
 
-void *
-EXPORT(olsr_malloc)(size_t, const char *);
+void *EXPORT(olsr_malloc) (size_t, const char *);
 
-char *
-EXPORT(olsr_strdup)(const char *s);
+char *EXPORT(olsr_strdup) (const char *s);
 
-char *
-EXPORT(olsr_strndup)(const char *s, size_t n);
+char *EXPORT(olsr_strndup) (const char *s, size_t n);
 
 #endif
 

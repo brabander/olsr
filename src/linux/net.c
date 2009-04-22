@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -73,8 +74,8 @@
  *Wireless definitions for ioctl calls
  *(from linux/wireless.h)
  */
-#define SIOCGIWNAME	0x8B01		/* get name == wireless protocol */
-#define SIOCGIWRATE	0x8B21		/* get default bit rate (bps) */
+#define SIOCGIWNAME	0x8B01  /* get name == wireless protocol */
+#define SIOCGIWRATE	0x8B21  /* get default bit rate (bps) */
 
 /* The original state of the IP forwarding proc entry */
 static char orig_fwd_state;
@@ -96,7 +97,7 @@ bind_socket_to_device(int sock, char *dev_name)
    *Bind to device using the SO_BINDTODEVICE flag
    */
   OLSR_DEBUG(LOG_NETWORKING, "Binding socket %d to device %s\n", sock, dev_name);
-  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name)+1);
+  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev_name, strlen(dev_name) + 1);
 }
 
 
@@ -115,31 +116,28 @@ bind_socket_to_device(int sock, char *dev_name)
 int
 enable_ip_forwarding(int version)
 {
-  const char * const procfile = version == AF_INET
-      ? "/proc/sys/net/ipv4/ip_forward"
-      : "/proc/sys/net/ipv6/conf/all/forwarding";
+  const char *const procfile = version == AF_INET ? "/proc/sys/net/ipv4/ip_forward" : "/proc/sys/net/ipv6/conf/all/forwarding";
   FILE *proc_fwd = fopen(procfile, "r");
 
   if (proc_fwd == NULL) {
     OLSR_WARN(LOG_NETWORKING,
-	    "WARNING! Could not open the %s file to check/enable IP forwarding!\n"
-	    "Are you using the procfile filesystem?\nDoes your system support IPv%d?\n"
-	    "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabled!\n\n",
-	    procfile, version == AF_INET ? 4 : 6);
+              "WARNING! Could not open the %s file to check/enable IP forwarding!\n"
+              "Are you using the procfile filesystem?\nDoes your system support IPv%d?\n"
+              "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabled!\n\n",
+              procfile, version == AF_INET ? 4 : 6);
     sleep(3);
     return 0;
   }
   orig_fwd_state = fgetc(proc_fwd);
   fclose(proc_fwd);
 
-  if(orig_fwd_state == '1') {
+  if (orig_fwd_state == '1') {
     OLSR_INFO(LOG_NETWORKING, "\nIP forwarding is enabled on this system\n");
   } else {
     proc_fwd = fopen(procfile, "w");
     if (proc_fwd == NULL) {
       OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-        "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabeled!\n\n",
-        procfile);
+                "I will continue(in 3 sec) - but you should manually ensure that IP forwarding is enabeled!\n\n", procfile);
       sleep(3);
       return 0;
     }
@@ -153,7 +151,7 @@ int
 disable_redirects_global(int version)
 {
   FILE *proc_redirect;
-  const char * const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
+  const char *const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
 
   if (version == AF_INET6) {
     return -1;
@@ -161,24 +159,23 @@ disable_redirects_global(int version)
   proc_redirect = fopen(procfile, "r");
   if (proc_redirect == NULL) {
     OLSR_WARN(LOG_NETWORKING,
-	    "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
-	    "Are you using the procfile filesystem?\n"
-	    "Does your system support IPv4?\n"
-	    "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
+              "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
+              "Are you using the procfile filesystem?\n"
+              "Does your system support IPv4?\n"
+              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
     sleep(3);
     return -1;
   }
   orig_global_redirect_state = fgetc(proc_redirect);
   fclose(proc_redirect);
 
-  if(orig_global_redirect_state == '0') {
-      return 0;
+  if (orig_global_redirect_state == '0') {
+    return 0;
   }
   proc_redirect = fopen(procfile, "w");
   if (proc_redirect == NULL) {
     OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-        "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n",
-        procfile);
+              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
@@ -207,10 +204,10 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
   proc_redirect = fopen(procfile, "r");
   if (proc_redirect == NULL) {
     OLSR_WARN(LOG_NETWORKING,
-	    "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
-	    "Are you using the procfile filesystem?\n"
-	    "Does your system support IPv4?\n"
-	    "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
+              "WARNING! Could not open the %s file to check/disable ICMP redirects!\n"
+              "Are you using the procfile filesystem?\n"
+              "Does your system support IPv4?\n"
+              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirects are disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
@@ -220,8 +217,7 @@ disable_redirects(const char *if_name, struct interface *iface, int version)
   proc_redirect = fopen(procfile, "w");
   if (proc_redirect == NULL) {
     OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-        "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n",
-        procfile);
+              "I will continue(in 3 sec) - but you should manually ensure that ICMP redirect is disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
@@ -240,7 +236,7 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
   FILE *proc_spoof;
   char procfile[FILENAME_MAX];
 
-  if(version == AF_INET6) {
+  if (version == AF_INET6) {
     return -1;
   }
 
@@ -250,10 +246,10 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
   proc_spoof = fopen(procfile, "r");
   if (proc_spoof == NULL) {
     OLSR_WARN(LOG_NETWORKING,
-	    "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
-	    "Are you using the procfile filesystem?\n"
-	    "Does your system support IPv4?\n"
-	    "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n", procfile);
+              "WARNING! Could not open the %s file to check/disable the IP spoof filter!\n"
+              "Are you using the procfile filesystem?\n"
+              "Does your system support IPv4?\n"
+              "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
@@ -263,8 +259,7 @@ deactivate_spoof(const char *if_name, struct interface *iface, int version)
   proc_spoof = fopen(procfile, "w");
   if (proc_spoof == NULL) {
     OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\n"
-        "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n",
-        procfile);
+              "I will continue(in 3 sec) - but you should manually ensure that IP spoof filtering is disabled!\n\n", procfile);
     sleep(3);
     return 0;
   }
@@ -285,9 +280,7 @@ restore_settings(int version)
 
   /* Restore IP forwarding to "off" */
   if (orig_fwd_state == '0') {
-    const char * const procfile = version == AF_INET
-        ? "/proc/sys/net/ipv4/ip_forward"
-        : "/proc/sys/net/ipv6/conf/all/forwarding";
+    const char *const procfile = version == AF_INET ? "/proc/sys/net/ipv4/ip_forward" : "/proc/sys/net/ipv6/conf/all/forwarding";
     FILE *proc_fd = fopen(procfile, "w");
 
     if (proc_fd == NULL) {
@@ -299,16 +292,16 @@ restore_settings(int version)
   }
 
   /* Restore global ICMP redirect setting */
-  if(orig_global_redirect_state != '0') {
-    if(version == AF_INET) {
-      const char * const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
+  if (orig_global_redirect_state != '0') {
+    if (version == AF_INET) {
+      const char *const procfile = "/proc/sys/net/ipv4/conf/all/send_redirects";
       FILE *proc_fd = fopen(procfile, "w");
 
       if (proc_fd == NULL) {
-	OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
+        OLSR_WARN(LOG_NETWORKING, "Could not open %s for writing!\nSettings not restored!\n", procfile);
       } else {
-	fputc(orig_global_redirect_state, proc_fd);
-	fclose(proc_fd);
+        fputc(orig_global_redirect_state, proc_fd);
+        fclose(proc_fd);
       }
     }
   }
@@ -322,7 +315,7 @@ restore_settings(int version)
     FILE *proc_fd;
     /* Ignore host-emulation interfaces */
     if (ifs->is_hcif) {
-	continue;
+      continue;
     }
     /* ICMP redirects */
 
@@ -347,7 +340,8 @@ restore_settings(int version)
       fputc(ifs->nic_state.spoof, proc_fd);
       fclose(proc_fd);
     }
-  } OLSR_FOR_ALL_INTERFACES_END(ifs);
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifs);
 
   return 1;
 }
@@ -376,7 +370,7 @@ gethemusocket(struct sockaddr_in *pin)
   }
 
   /* connect to PORT on HOST */
-  if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0) {
+  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot connect socket for emulation (%s)\n", strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);
@@ -417,14 +411,13 @@ getsocket(int bufspace, char *int_name)
     close(sock);
     olsr_exit(EXIT_FAILURE);
   }
-
 #ifdef SO_RCVBUF
-  for (on = bufspace; ; on -= 1024) {
+  for (on = bufspace;; on -= 1024) {
     if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
       OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
     }
-    if (on <= 8*1024) {
+    if (on <= 8 * 1024) {
       OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
@@ -472,7 +465,6 @@ getsocket6(int bufspace, char *int_name)
     OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
     olsr_exit(EXIT_FAILURE);
   }
-
 #ifdef IPV6_V6ONLY
   on = 1;
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) < 0) {
@@ -483,23 +475,23 @@ getsocket6(int bufspace, char *int_name)
 
   //#ifdef SO_BROADCAST
   /*
-  if (setsockopt(sock, SOL_SOCKET, SO_MULTICAST, &on, sizeof(on)) < 0)
-    {
-      perror("setsockopt");
-      syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
-      close(sock);
-      return (-1);
-    }
-  */
+     if (setsockopt(sock, SOL_SOCKET, SO_MULTICAST, &on, sizeof(on)) < 0)
+     {
+     perror("setsockopt");
+     syslog(LOG_ERR, "setsockopt SO_BROADCAST: %m");
+     close(sock);
+     return (-1);
+     }
+   */
   //#endif
 
 #ifdef SO_RCVBUF
-  for (on = bufspace; ; on -= 1024) {
+  for (on = bufspace;; on -= 1024) {
     if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &on, sizeof(on)) == 0) {
       OLSR_DEBUG(LOG_NETWORKING, "Set socket buffer space to %d\n", on);
       break;
     }
-    if (on <= 8*1024) {
+    if (on <= 8 * 1024) {
       OLSR_WARN(LOG_NETWORKING, "Could not set a socket buffer space for OLSR PDUs (%s)\n", strerror(errno));
       break;
     }
@@ -529,7 +521,7 @@ getsocket6(int bufspace, char *int_name)
    */
 
   /* Bind to device */
-  if(bind_socket_to_device(sock, int_name) < 0) {
+  if (bind_socket_to_device(sock, int_name) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs to interface %s (%s)\n", int_name, strerror(errno));
     close(sock);
     olsr_exit(EXIT_FAILURE);
@@ -538,7 +530,7 @@ getsocket6(int bufspace, char *int_name)
   memset(&sin6, 0, sizeof(sin6));
   sin6.sin6_family = AF_INET6;
   sin6.sin6_port = htons(olsr_cnf->olsr_port);
-  assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr))); /* == IN6ADDR_ANY_INIT */
+  assert(0 == memcmp(&sin6.sin6_addr, &in6addr_any, sizeof(sin6.sin6_addr)));   /* == IN6ADDR_ANY_INIT */
   if (bind(sock, (struct sockaddr *)&sin6, sizeof(sin6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot bind socket for OLSR PDUs (%s)\n", strerror(errno));
     close(sock);
@@ -561,52 +553,35 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s\n", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
+  OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s\n", ifs->int_name,
+            ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
   /* Send multicast */
-  if(setsockopt(sock,
-		IPPROTO_IPV6,
-		IPV6_ADD_MEMBERSHIP,
-		(char *)&mcastreq,
-		sizeof(struct ipv6_mreq))
-     < 0)
-    {
-      OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
-      return -1;
-    }
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
+    return -1;
+  }
 #if 0
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if(setsockopt(sock,
-		IPPROTO_IPV6,
-		IPV6_JOIN_GROUP,
-		(char *)&mcastreq,
-		sizeof(struct ipv6_mreq))
-     < 0)
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
+      < 0)
 #else
   /* Join reciever group */
-  if(setsockopt(sock,
-		IPPROTO_IPV6,
-		IPV6_ADD_MEMBERSHIP,
-		(char *)&mcastreq,
-		sizeof(struct ipv6_mreq))
-     < 0)
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
+      < 0)
 #endif
-    {
-      perror("Join multicast send");
-      return -1;
-    }
+  {
+    perror("Join multicast send");
+    return -1;
+  }
 #endif
-  if(setsockopt(sock,
-		IPPROTO_IPV6,
-		IPV6_MULTICAST_IF,
-		(char *)&mcastreq.ipv6mr_interface,
-		sizeof(mcastreq.ipv6mr_interface))
-     < 0)
-    {
-      OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
-      return -1;
-    }
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&mcastreq.ipv6mr_interface, sizeof(mcastreq.ipv6mr_interface))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
+    return -1;
+  }
 
   return 0;
 }
@@ -626,36 +601,41 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
     int plen, scope, dad_status, if_idx;
     bool found = false;
     while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x %02x %02x %02x %20s\n",
-		  addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-		  addr6p[4], addr6p[5], addr6p[6], addr6p[7],
-		  &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
+                  addr6p[0], addr6p[1], addr6p[2], addr6p[3],
+                  addr6p[4], addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
       if (strcmp(devname, ifname) == 0) {
-	char addr6[40];
-	sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
-		addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-		addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
+        char addr6[40];
+        sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
+                addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
 
-        if (addrtype6 == OLSR_IP6T_SITELOCAL && scope == IPV6_ADDR_SITELOCAL) found = true;
-        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && scope == IPV6_ADDR_GLOBAL) found = true;
-        else if (addrtype6 == OLSR_IP6T_GLOBAL && scope == IPV6_ADDR_GLOBAL) found = true;
+        if (addrtype6 == OLSR_IP6T_SITELOCAL && scope == IPV6_ADDR_SITELOCAL)
+          found = true;
+        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && scope == IPV6_ADDR_GLOBAL)
+          found = true;
+        else if (addrtype6 == OLSR_IP6T_GLOBAL && scope == IPV6_ADDR_GLOBAL)
+          found = true;
 
         if (found) {
           found = false;
           if (addr6p[0][0] == 'F' || addr6p[0][0] == 'f') {
-            if (addr6p[0][1] == 'C' || addr6p[0][1] == 'c' ||
-                addr6p[0][1] == 'D' || addr6p[0][1] == 'd') found = true;
+            if (addr6p[0][1] == 'C' || addr6p[0][1] == 'c' || addr6p[0][1] == 'D' || addr6p[0][1] == 'd')
+              found = true;
           }
-          if(addrtype6 == OLSR_IP6T_SITELOCAL) found = true;
-          else if(addrtype6 == OLSR_IP6T_UNIQUELOCAL && found) found = true;
-          else if(addrtype6 == OLSR_IP6T_GLOBAL && !found) found = true;
-          else found = false;
+          if (addrtype6 == OLSR_IP6T_SITELOCAL)
+            found = true;
+          else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && found)
+            found = true;
+          else if (addrtype6 == OLSR_IP6T_GLOBAL && !found)
+            found = true;
+          else
+            found = false;
         }
 
-	if (found) {
-	  inet_pton(AF_INET6, addr6, &saddr6->sin6_addr);
-	  rv = 1;
-	  break;
-	}
+        if (found) {
+          inet_pton(AF_INET6, addr6, &saddr6->sin6_addr);
+          rv = 1;
+          break;
+        }
       }
     }
     fclose(f);
@@ -668,12 +648,7 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
  * Wrapper for sendto(2)
  */
 ssize_t
-olsr_sendto(int s,
-	    const void *buf,
-	    size_t len,
-	    int flags,
-	    const struct sockaddr *to,
-	    socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
 {
   return sendto(s, buf, len, flags, to, tolen);
 }
@@ -683,19 +658,9 @@ olsr_sendto(int s,
  */
 
 ssize_t
-olsr_recvfrom(int  s,
-	      void *buf,
-	      size_t len,
-	      int flags,
-	      struct sockaddr *from,
-	      socklen_t *fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr * from, socklen_t * fromlen)
 {
-  return recvfrom(s,
-		  buf,
-		  len,
-		  flags,
-		  from,
-		  fromlen);
+  return recvfrom(s, buf, len, flags, from, fromlen);
 }
 
 /**
@@ -703,21 +668,13 @@ olsr_recvfrom(int  s,
  */
 
 int
-olsr_select(int nfds,
-            fd_set *readfds,
-            fd_set *writefds,
-            fd_set *exceptfds,
-            struct timeval *timeout)
+olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
-  return select(nfds,
-                readfds,
-                writefds,
-                exceptfds,
-                timeout);
+  return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
 int
-check_wireless_interface(char * ifname)
+check_wireless_interface(char *ifname)
 {
   struct ifreq ifr;
 
@@ -734,10 +691,10 @@ check_wireless_interface(char * ifname)
 
 /* This data structure is used for all the MII ioctl's */
 struct mii_data {
-    __u16	phy_id;
-    __u16	reg_num;
-    __u16	val_in;
-    __u16	val_out;
+  __u16 phy_id;
+  __u16 reg_num;
+  __u16 val_in;
+  __u16 val_out;
 };
 
 
@@ -771,105 +728,92 @@ struct mii_data {
 int
 calculate_if_metric(char *ifname)
 {
-  if(check_wireless_interface(ifname))
-    {
-      struct ifreq ifr;
-      strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+  if (check_wireless_interface(ifname)) {
+    struct ifreq ifr;
+    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-      /* Get bit rate */
-      if(ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0)
-	{
-          OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
-	  return WEIGHT_WLAN_11MB;
-	}
-
-      OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
-
-      //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
-      //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
-      //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
-      return WEIGHT_WLAN_LOW;
+    /* Get bit rate */
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0) {
+      OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
+      return WEIGHT_WLAN_11MB;
     }
-  else
-    {
-      /* Ethernet */
-      /* Mii wizardry */
-      struct ifreq ifr;
-      struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-      int bmcr;
-      memset(&ifr, 0, sizeof(ifr));
-      strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-	if (errno != ENODEV)
-	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno));
-	return WEIGHT_ETHERNET_DEFAULT;
-      }
+    OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
 
-      mii->reg_num = MII_BMCR;
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno));
-	return WEIGHT_ETHERNET_DEFAULT;
-      }
-      bmcr = mii->val_out;
+    //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
+    //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
+    //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
+    return WEIGHT_WLAN_LOW;
+  } else {
+    /* Ethernet */
+    /* Mii wizardry */
+    struct ifreq ifr;
+    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
+    int bmcr;
+    memset(&ifr, 0, sizeof(ifr));
+    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 
-
-      OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-      OLSR_PRINTF(1, "%s Mbit, %s duplex\n",
-		  (bmcr & MII_BMCR_100MBIT) ? "100" : "10",
-		  (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
-
-      is_if_link_up(ifname);
-
-      if(mii->val_out & MII_BMCR_100MBIT)
-	return WEIGHT_ETHERNET_100MB;
-      else
-	return WEIGHT_ETHERNET_10MB;
-      //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
-
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+      if (errno != ENODEV)
+        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
+      return WEIGHT_ETHERNET_DEFAULT;
     }
+
+    mii->reg_num = MII_BMCR;
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
+      return WEIGHT_ETHERNET_DEFAULT;
+    }
+    bmcr = mii->val_out;
+
+
+    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
+    OLSR_PRINTF(1, "%s Mbit, %s duplex\n", (bmcr & MII_BMCR_100MBIT) ? "100" : "10", (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
+
+    is_if_link_up(ifname);
+
+    if (mii->val_out & MII_BMCR_100MBIT)
+      return WEIGHT_ETHERNET_100MB;
+    else
+      return WEIGHT_ETHERNET_10MB;
+    //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
+
+  }
 }
 
 
 bool
 is_if_link_up(char *ifname)
 {
-  if(check_wireless_interface(ifname))
-    {
-      /* No link checking on wireless devices */
-      return true;
+  if (check_wireless_interface(ifname)) {
+    /* No link checking on wireless devices */
+    return true;
+  } else {
+    /* Mii wizardry */
+    struct ifreq ifr;
+    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
+    int bmsr;
+    memset(&ifr, 0, sizeof(ifr));
+    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
+      if (errno != ENODEV)
+        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
+      return WEIGHT_ETHERNET_DEFAULT;
     }
-  else
-    {
-      /* Mii wizardry */
-      struct ifreq ifr;
-      struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-      int bmsr;
-      memset(&ifr, 0, sizeof(ifr));
-      strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-	if (errno != ENODEV)
-	  OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n",
-		      ifr.ifr_name, strerror(errno));
-	return WEIGHT_ETHERNET_DEFAULT;
-      }
-      mii->reg_num = MII_BMSR;
-      if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-	OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name,
-		    strerror(errno));
-	return WEIGHT_ETHERNET_DEFAULT;
-      }
-      bmsr = mii->val_out;
-
-      OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-      OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
-
-      return (bmsr & MII_BMSR_LINK_VALID);
-
+    mii->reg_num = MII_BMSR;
+    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
+      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
+      return WEIGHT_ETHERNET_DEFAULT;
     }
+    bmsr = mii->val_out;
+
+    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
+    OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
+
+    return (bmsr & MII_BMSR_LINK_VALID);
+
+  }
 }
 
 #else

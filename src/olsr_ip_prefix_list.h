@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -74,7 +75,7 @@ LISTNODE2STRUCT(list2ipprefix, struct ip_prefix_entry, node);
  */
 void EXPORT(ip_prefix_list_add) (struct list_node *, const union olsr_ip_addr *, uint8_t);
 int EXPORT(ip_prefix_list_remove) (struct list_node *, const union olsr_ip_addr *, uint8_t, int);
-void ip_prefix_list_flush (struct list_node *);
+void ip_prefix_list_flush(struct list_node *);
 struct ip_prefix_entry *ip_prefix_list_find(struct list_node *, const union olsr_ip_addr *, uint8_t, int);
 
 

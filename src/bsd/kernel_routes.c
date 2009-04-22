@@ -177,8 +177,7 @@ add_del_route(const struct rt_entry *rt, int add)
       memcpy(walker, &sin4, sizeof(sin4));
       walker += sin_size;
       rtm->rtm_addrs |= RTA_GATEWAY;
-    }
-    else {
+    } else {
       /*
        * Host is directly reachable, so add
        * the output interface MAC address.
@@ -235,7 +234,7 @@ add_del_route(const struct rt_entry *rt, int add)
   len = write(olsr_cnf->rts_bsd, buff, rtm->rtm_msglen);
   if (0 != rtm->rtm_errno || len < rtm->rtm_msglen) {
     OLSR_WARN(LOG_ROUTING, "\nCannot write to routing socket: (rtm_errno= 0x%x) (last error message: %s)\n", rtm->rtm_errno,
-            strerror(errno));
+              strerror(errno));
   }
   return 0;
 }
@@ -313,8 +312,7 @@ add_del_route6(const struct rt_entry *rt, int add)
     memcpy(walker, &sin6, sizeof(sin6));
     walker += sin_size;
     rtm->rtm_addrs |= RTA_GATEWAY;
-  }
-  else {
+  } else {
     /*
      * Host is directly reachable, so add
      * the output interface MAC address.
@@ -401,11 +399,15 @@ olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
   return AF_INET == ip_version ? add_del_route(rt, 0) : add_del_route6(rt, 0);
 }
 
-int olsr_create_lo_interface(union olsr_ip_addr *ip  __attribute__((unused))) {
+int
+olsr_create_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
+{
   return 0;
 }
 
-int olsr_delete_lo_interface(union olsr_ip_addr *ip   __attribute__((unused))) {
+int
+olsr_delete_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
+{
   return 0;
 }
 

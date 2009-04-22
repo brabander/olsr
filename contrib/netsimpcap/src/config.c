@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -32,7 +33,7 @@
  * @return stripped string
  */
 char *
-stripString (char *str)
+stripString(char *str)
 {
 
   /* strip left whitespaces */
@@ -43,7 +44,7 @@ stripString (char *str)
   /* strip right whitespaces */
   int i = strlen(str);
   while (--i >= 0) {
-    if(str[i]==' ' || str[i]=='\r' || str[i]=='\n' || str[i]=='\t') {
+    if (str[i] == ' ' || str[i] == '\r' || str[i] == '\n' || str[i] == '\t') {
       str[i] = 0;
       break;
     }
@@ -64,7 +65,7 @@ stripString (char *str)
  * @return 0 if function was successfull, 1 if an error happened
  */
 int
-readConnectionMatrix (float *connectionMatrix, char *filename, int len)
+readConnectionMatrix(float *connectionMatrix, char *filename, int len)
 {
   FILE *file = fopen(filename, "r");
   if (!file) {
@@ -83,7 +84,7 @@ readConnectionMatrix (float *connectionMatrix, char *filename, int len)
       continue;
     }
 
-    if(sscanf(line, "%d %d %f", &from, &to, &propability) != 3) {
+    if (sscanf(line, "%d %d %f", &from, &to, &propability) != 3) {
       continue;
     }
 

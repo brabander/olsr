@@ -62,8 +62,7 @@ olsr_write_cnf_buf(struct autobuf *abuf, struct olsr_config *cnf, bool write_mor
   char ipv6_buf[INET6_ADDRSTRLEN];     /* buffer for IPv6 inet_ntop */
   const char *s;
 
-  abuf_appendf(abuf, "#\n"
-               "# Generated config file for %s\n" "#\n\n", olsrd_version);
+  abuf_appendf(abuf, "#\n" "# Generated config file for %s\n" "#\n\n", olsrd_version);
 
   /* IP version */
   abuf_appendf(abuf, "# IP version to use (4 or 6)\n" "IpVersion\t%d\n\n", cnf->ip_version == AF_INET ? 4 : 6);

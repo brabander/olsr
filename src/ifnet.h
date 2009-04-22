@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -55,7 +56,7 @@
 
 #if 0
 int
-set_flag(char *, short);
+  set_flag(char *, short);
 #endif
 
 int chk_if_up(struct olsr_if_config *);

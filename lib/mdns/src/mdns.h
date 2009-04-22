@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -25,15 +26,15 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #define _MDNS_MDNS_H
 
 
-#include "plugin.h" /* union set_plugin_parameter_addon */
+#include "plugin.h"             /* union set_plugin_parameter_addon */
 
 #include "parser.h"
 
 #define MESSAGE_TYPE 132
 #define PARSER_TYPE		MESSAGE_TYPE
-#define EMISSION_INTERVAL       10     /* seconds */
+#define EMISSION_INTERVAL       10      /* seconds */
 #define EMISSION_JITTER         25      /* percent */
-#define MDNS_VALID_TIME          1800    /* seconds */
+#define MDNS_VALID_TIME          1800   /* seconds */
 
 /* BMF plugin data */
 #define PLUGIN_NAME "OLSRD MDNS plugin"
@@ -53,21 +54,20 @@ struct interface;
 //extern int FanOutLimit;
 //extern int BroadcastRetransmitCount;
 
-void DoMDNS(int sd, void * x, unsigned int y);
-void BmfPError(const char* format, ...) __attribute__((format(printf, 1, 2)));
-union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip);
+void DoMDNS(int sd, void *x, unsigned int y);
+void BmfPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
+union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
 //int InterfaceChange(struct interface* interf, int action);
 //int SetFanOutLimit(const char* value, void* data, set_plugin_parameter_addon addon);
 //int InitBmf(struct interface* skipThisIntf);
 //void CloseBmf(void);
-int InitMDNS(struct interface* skipThisIntf);
+int InitMDNS(struct interface *skipThisIntf);
 void CloseMDNS(void);
 
-void olsr_mdns_gen(unsigned char*  packet, int len);
+void olsr_mdns_gen(unsigned char *packet, int len);
 
 /* Parser function to register with the scheduler */
-bool
-olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *); 
+bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif /* _MDNS_MDNS_H */
 

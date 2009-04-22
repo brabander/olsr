@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -63,54 +64,58 @@
 union olsr_ip_addr ipc_accept_ip;
 int ipc_port;
 
-static void my_init(void) __attribute__((constructor));
-static void my_fini(void) __attribute__((destructor));
+static void my_init(void) __attribute__ ((constructor));
+static void my_fini(void) __attribute__ ((destructor));
 
 
 /**
  *Constructor
  */
-static void my_init(void)
+static void
+my_init(void)
 {
-    /* Print plugin info to stdout */
-    OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
+  /* Print plugin info to stdout */
+  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
-    /* defaults for parameters */
-    ipc_port = 2004;
-    ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
+  /* defaults for parameters */
+  ipc_port = 2004;
+  ipc_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
 }
 
 
 /**
  *Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
-    /* Calls the destruction function
-     * olsr_plugin_exit()
-     * This function should be present in your
-     * sourcefile and all data destruction
-     * should happen there - NOT HERE!
-     */
-    olsr_plugin_exit();
+  /* Calls the destruction function
+   * olsr_plugin_exit()
+   * This function should be present in your
+   * sourcefile and all data destruction
+   * should happen there - NOT HERE!
+   */
+  olsr_plugin_exit();
 }
 
 
-int  olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "port",   .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = "accept", .set_plugin_parameter = &set_plugin_ipaddress, .data = &ipc_accept_ip },
+  {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
+  {.name = "accept",.set_plugin_parameter = &set_plugin_ipaddress,.data = &ipc_accept_ip},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 /*

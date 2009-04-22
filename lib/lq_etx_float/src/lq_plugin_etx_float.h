@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -76,7 +77,7 @@ extern struct lq_handler lq_etxfloat_handler;
 
 extern float lq_aging;                 /* Plugin PlParam */
 
-#endif /*LQ_PLUGIN_ETX_FLOAT_H_*/
+#endif /*LQ_PLUGIN_ETX_FLOAT_H_ */
 
 /*
  * Local Variables:

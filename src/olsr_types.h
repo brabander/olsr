@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -52,26 +53,29 @@
 
 /* types */
 #ifdef _MSC_VER
-typedef unsigned char   uint8_t;
+typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
-typedef unsigned int   uint32_t;
-typedef signed char      int8_t;
-typedef signed short    int16_t;
-typedef signed int      int32_t;
+typedef unsigned int uint32_t;
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
 #else
 #include <inttypes.h>
 #endif
 
 #if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
+
 /* we have a C99 environment */
 #include <stdbool.h>
 #elif defined __GNUC__
+
 /* we simulate a C99 environment */
 #define bool _Bool
 #define true 1
 #define false 0
 #define __bool_true_false_are_defined 1
 #endif
+
 /* add some safe-gaurds */
 #ifndef _MSC_VER
 #if !defined bool || !defined true || !defined false || !defined __bool_true_false_are_defined
@@ -80,10 +84,11 @@ typedef signed int      int32_t;
 #endif
 
 /* user defined cookies */
-typedef uint16_t        olsr_cookie_t;
+typedef uint16_t olsr_cookie_t;
 
 /* OpenBSD wants this here */
 #include <sys/types.h>
+
 /* IPv6 address format in6_addr */
 #ifndef _MSC_VER
 #include <netinet/in.h>

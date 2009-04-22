@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -47,49 +48,47 @@
 
 #include "NodeEntry.h"
 
-class NodeInfo
-{
+class NodeInfo {
 public:
-	CStringArray MprList;
-	CStringArray MidList;
-	CStringArray HnaList;
+  CStringArray MprList;
+  CStringArray MidList;
+  CStringArray HnaList;
 };
 
-class MyDialog3 : public CDialog
-{
+class MyDialog3:public CDialog {
 public:
-	MyDialog3(CWnd* pParent = NULL);
+  MyDialog3(CWnd * pParent = NULL);
 
-	BOOL Create(CWnd *Parent);
+  BOOL Create(CWnd * Parent);
 
-	void UpdateNodeInfo(CList<class NodeEntry, class NodeEntry &> &);
-	void ClearNodeInfo(void);
+  void UpdateNodeInfo(CList < class NodeEntry, class NodeEntry & >&);
+  void ClearNodeInfo(void);
 
-	//{{AFX_DATA(MyDialog3)
-	enum { IDD = IDD_DIALOG3 };
-	CListCtrl	m_HnaList;
-	CListCtrl	m_MidList;
-	CListCtrl	m_MprList;
-	CListCtrl	m_NodeList;
-	//}}AFX_DATA
+  //{{AFX_DATA(MyDialog3)
+  enum { IDD = IDD_DIALOG3 };
+  CListCtrl m_HnaList;
+  CListCtrl m_MidList;
+  CListCtrl m_MprList;
+  CListCtrl m_NodeList;
+  //}}AFX_DATA
 
 
-	//{{AFX_VIRTUAL(MyDialog3)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);
-	//}}AFX_VIRTUAL
+  //{{AFX_VIRTUAL(MyDialog3)
+protected:
+    virtual void DoDataExchange(CDataExchange * pDX);
+  //}}AFX_VIRTUAL
 
 protected:
-	unsigned __int64 LastUpdate;
-	class NodeInfo *Info;
+  unsigned __int64 LastUpdate;
+  class NodeInfo *Info;
 
-	//{{AFX_MSG(MyDialog3)
-	afx_msg void OnOK();
-	afx_msg void OnCancel();
-	virtual BOOL OnInitDialog();
-	afx_msg void OnItemchangedNodeList(NMHDR* pNMHDR, LRESULT* pResult);
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+  //{{AFX_MSG(MyDialog3)
+  afx_msg void OnOK();
+  afx_msg void OnCancel();
+  virtual BOOL OnInitDialog();
+  afx_msg void OnItemchangedNodeList(NMHDR * pNMHDR, LRESULT * pResult);
+  //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 };
 
 //{{AFX_INSERT_LOCATION}}

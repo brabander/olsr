@@ -633,9 +633,9 @@ int MyDialog2::SaveConfigFile(CString PathName, int Real)
 
 	if (Real == 0 && !ip_acl_acceptable(&Conf->ipc_nets, &Local, Conf->ip_version)) {
         ip_acl_add(
-			&Conf->ipc_nets, 
-			&Local, 
-			8 * Conf->ipsize, 
+			&Conf->ipc_nets,
+			&Local,
+			8 * Conf->ipsize,
 			false);
 		Conf->ipc_connections++;
 	}

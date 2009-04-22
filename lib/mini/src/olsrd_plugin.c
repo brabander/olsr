@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -40,9 +41,9 @@
 
 
  /*
- * Example plugin for olsrd.org OLSR daemon
- * Only the bare minimum
- */
+  * Example plugin for olsrd.org OLSR daemon
+  * Only the bare minimum
+  */
 
 
 #include "olsrd_plugin.h"
@@ -65,16 +66,19 @@
  * Plugin interface version
  * Used by main olsrd to check plugin interface version
  */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 
-static int set_plugin_test(const char *value __attribute__((unused)), void *data __attribute__((unused)), set_plugin_parameter_addon addon __attribute__((unused)))
+static int
+set_plugin_test(const char *value __attribute__ ((unused)), void *data __attribute__ ((unused)), set_plugin_parameter_addon addon
+                __attribute__ ((unused)))
 {
-    OLSR_INFO(LOG_PLUGINS, "\n*** MINI: parameter test: %s\n", value);
-    return 0;
+  OLSR_INFO(LOG_PLUGINS, "\n*** MINI: parameter test: %s\n", value);
+  return 0;
 }
 
 /**
@@ -82,13 +86,14 @@ static int set_plugin_test(const char *value __attribute__((unused)), void *data
  * Called for all plugin parameters
  */
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "test",   .set_plugin_parameter = &set_plugin_test,      .data = NULL },
+  {.name = "test",.set_plugin_parameter = &set_plugin_test,.data = NULL},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 
@@ -99,9 +104,9 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
 int
 olsrd_plugin_init(void)
 {
-	OLSR_INFO(LOG_PLUGINS, "*** MINI: plugin_init\n");
+  OLSR_INFO(LOG_PLUGINS, "*** MINI: plugin_init\n");
 
-	return 1;
+  return 1;
 }
 
 
@@ -118,18 +123,20 @@ static void my_fini(void) __attribute__ ((destructor));
 /**
  * Optional Private Constructor
  */
-static void my_init(void)
+static void
+my_init(void)
 {
-    // MINI: constructor
+  // MINI: constructor
 }
 
 
 /**
  * Optional Private Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
-    // MINI: destructor
+  // MINI: destructor
 }
 
 /*

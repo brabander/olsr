@@ -45,7 +45,7 @@
 #ifndef _OLSR_COOKIE_H
 #define _OLSR_COOKIE_H
 
-#define COOKIE_ID_MAX  40	/* maximum number of cookies in the system */
+#define COOKIE_ID_MAX  40       /* maximum number of cookies in the system */
 
 typedef enum olsr_cookie_type_ {
   OLSR_COOKIE_TYPE_MIN,
@@ -60,23 +60,23 @@ typedef enum olsr_cookie_type_ {
  * for locating memory corruption.
  */
 struct olsr_cookie_info {
-  olsr_cookie_t ci_id;		       /* ID */
-  char *ci_name;		       /* Name */
-  olsr_cookie_type ci_type;	       /* Type of cookie */
-  size_t ci_size;		       /* Fixed size for block allocations */
-  unsigned int ci_flags;	       /* Misc. flags */
-  unsigned int ci_usage;	       /* Stats, resource usage */
-  unsigned int ci_changes;	       /* Stats, resource churn */
+  olsr_cookie_t ci_id;                 /* ID */
+  char *ci_name;                       /* Name */
+  olsr_cookie_type ci_type;            /* Type of cookie */
+  size_t ci_size;                      /* Fixed size for block allocations */
+  unsigned int ci_flags;               /* Misc. flags */
+  unsigned int ci_usage;               /* Stats, resource usage */
+  unsigned int ci_changes;             /* Stats, resource churn */
   struct list_node ci_free_list;       /* List head for recyclable blocks */
   unsigned int ci_free_list_usage;     /* Length of free list */
 };
 
 /* Cookie flags */
-#define COOKIE_NO_MEMCLEAR  ( 1 << 0)	/* Do not clear memory */
-#define COOKIE_MEMPOISON    ( 2 << 0)	/* Poison memory pattern */
+#define COOKIE_NO_MEMCLEAR  ( 1 << 0)   /* Do not clear memory */
+#define COOKIE_MEMPOISON    ( 2 << 0)   /* Poison memory pattern */
 
-#define COOKIE_MEMPOISON_PATTERN  0xa6 /* Pattern to spoil memory */
-#define COOKIE_FREE_LIST_THRESHOLD 10  /* Blocks / Percent  */
+#define COOKIE_MEMPOISON_PATTERN  0xa6  /* Pattern to spoil memory */
+#define COOKIE_FREE_LIST_THRESHOLD 10   /* Blocks / Percent  */
 
 /*
  * Small brand which gets appended on the end of every block allocation.
@@ -88,20 +88,19 @@ struct olsr_cookie_mem_brand {
 };
 
 /* Externals. */
-struct olsr_cookie_info *EXPORT(olsr_alloc_cookie)(const char *,
-						  olsr_cookie_type);
+struct olsr_cookie_info *EXPORT(olsr_alloc_cookie) (const char *, olsr_cookie_type);
 void olsr_delete_all_cookies(void);
-char *EXPORT(olsr_cookie_name)(olsr_cookie_t);
-void EXPORT(olsr_cookie_set_memory_size)(struct olsr_cookie_info *, size_t);
-void EXPORT(olsr_cookie_set_memory_clear)(struct olsr_cookie_info *, bool);
-void EXPORT(olsr_cookie_set_memory_poison)(struct olsr_cookie_info *, bool);
-void EXPORT(olsr_cookie_usage_incr)(olsr_cookie_t);
-void EXPORT(olsr_cookie_usage_decr)(olsr_cookie_t);
+char *EXPORT(olsr_cookie_name) (olsr_cookie_t);
+void EXPORT(olsr_cookie_set_memory_size) (struct olsr_cookie_info *, size_t);
+void EXPORT(olsr_cookie_set_memory_clear) (struct olsr_cookie_info *, bool);
+void EXPORT(olsr_cookie_set_memory_poison) (struct olsr_cookie_info *, bool);
+void EXPORT(olsr_cookie_usage_incr) (olsr_cookie_t);
+void EXPORT(olsr_cookie_usage_decr) (olsr_cookie_t);
 
-void *EXPORT(olsr_cookie_malloc)(struct olsr_cookie_info *);
-void EXPORT(olsr_cookie_free)(struct olsr_cookie_info *, void *);
+void *EXPORT(olsr_cookie_malloc) (struct olsr_cookie_info *);
+void EXPORT(olsr_cookie_free) (struct olsr_cookie_info *, void *);
 
-struct olsr_cookie_info *EXPORT(olsr_cookie_get)(int i);
+struct olsr_cookie_info *EXPORT(olsr_cookie_get) (int i);
 
 #endif /* _OLSR_COOKIE_H */
 

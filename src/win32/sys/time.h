@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -78,8 +79,7 @@
   while (0)
 
 #if !defined WINCE
-struct timespec
-{
+struct timespec {
   unsigned int tv_sec;
   unsigned int tv_nsec;
 };

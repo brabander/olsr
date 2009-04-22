@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,55 +46,54 @@
 #pragma once
 #endif
 
-class MyDialog1 : public CDialog
-{
+class MyDialog1:public CDialog {
 public:
-	MyDialog1(CWnd* pParent = NULL);
+  MyDialog1(CWnd * pParent = NULL);
 
-	BOOL Create(CWnd *Parent);
+  BOOL Create(CWnd * Parent);
 
-	void AddOutputLine(CString);
-	void SetFrozen(int);
-	void HandleStart(void);
-	void HandleStop(void);
+  void AddOutputLine(CString);
+  void SetFrozen(int);
+  void HandleStart(void);
+  void HandleStop(void);
 
-	//{{AFX_DATA(MyDialog1)
-	enum { IDD = IDD_DIALOG1 };
-	CButton	m_SaveButton;
-	CButton	m_FreezeButton;
-	CButton	m_ContinueButton;
-	CButton	m_ClearButton;
-	CEdit	m_OutputWindow;
-	//}}AFX_DATA
+  //{{AFX_DATA(MyDialog1)
+  enum { IDD = IDD_DIALOG1 };
+  CButton m_SaveButton;
+  CButton m_FreezeButton;
+  CButton m_ContinueButton;
+  CButton m_ClearButton;
+  CEdit m_OutputWindow;
+  //}}AFX_DATA
 
 
-	//{{AFX_VIRTUAL(MyDialog1)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);
-	//}}AFX_VIRTUAL
+  //{{AFX_VIRTUAL(MyDialog1)
+protected:
+    virtual void DoDataExchange(CDataExchange * pDX);
+  //}}AFX_VIRTUAL
 
 protected:
 
-	//{{AFX_MSG(MyDialog1)
-	afx_msg void OnOK();
-	afx_msg void OnCancel();
-	virtual BOOL OnInitDialog();
-	afx_msg void OnClearButton();
-	afx_msg void OnContinueButton();
-	afx_msg void OnFreezeButton();
-	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-	afx_msg void OnSaveButton();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+  //{{AFX_MSG(MyDialog1)
+    afx_msg void OnOK();
+  afx_msg void OnCancel();
+  virtual BOOL OnInitDialog();
+  afx_msg void OnClearButton();
+  afx_msg void OnContinueButton();
+  afx_msg void OnFreezeButton();
+  afx_msg HBRUSH OnCtlColor(CDC * pDC, CWnd * pWnd, UINT nCtlColor);
+  afx_msg void OnSaveButton();
+  //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 
-	CCriticalSection CritSect;
-	CString Output;
-	int NumLines;
+  CCriticalSection CritSect;
+  CString Output;
+  int NumLines;
 
-	int Frozen;
+  int Frozen;
 
-	CFont EditFont;
-	CBrush WhiteBrush;
+  CFont EditFont;
+  CBrush WhiteBrush;
 };
 
 //{{AFX_INSERT_LOCATION}}

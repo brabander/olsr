@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -44,11 +45,11 @@
 #include "defs.h"
 #include "common/list.h"
 
-#define OLSR_MPR_SEL_JITTER 5 /* percent */
+#define OLSR_MPR_SEL_JITTER 5   /* percent */
 
 struct mpr_selector {
-  union olsr_ip_addr  MS_main_addr;
-  struct timer_entry  *MS_timer;
+  union olsr_ip_addr MS_main_addr;
+  struct timer_entry *MS_timer;
   struct list_node mprs_list;
 };
 
@@ -71,16 +72,24 @@ extern uint16_t ansn;
 
 void olsr_init_mprs(void);
 
-static INLINE uint16_t get_local_ansn(void) { return ansn; }
+static INLINE uint16_t
+get_local_ansn(void)
+{
+  return ansn;
+}
 
-static INLINE void increase_local_ansn(void) { ansn++; }
+static INLINE void
+increase_local_ansn(void)
+{
+  ansn++;
+}
 
-struct mpr_selector *EXPORT(olsr_lookup_mprs_set)(const union olsr_ip_addr *);
+struct mpr_selector *EXPORT(olsr_lookup_mprs_set) (const union olsr_ip_addr *);
 
 int olsr_update_mprs_set(const union olsr_ip_addr *, olsr_reltime);
 
 void
-olsr_print_mprs_set(void);
+  olsr_print_mprs_set(void);
 
 #endif
 

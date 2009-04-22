@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -43,29 +44,28 @@
 
 class CFrontendDlg;
 
-class TrayIcon
-{
+class TrayIcon {
 public:
-	TrayIcon( CFrontendDlg&, HINSTANCE );
-	~TrayIcon();
+  TrayIcon(CFrontendDlg &, HINSTANCE);
+  ~TrayIcon();
 
-	void displayPopup();
+  void displayPopup();
 
-	static TrayIcon* getInstance()	{ return instance; }
+  static TrayIcon *getInstance() {
+    return instance;
+  } enum status { CONNECTED, ON, OFF };
 
-	enum status { CONNECTED, ON, OFF };
-
-	void setStatus( status con_status, const char* message );
+  void setStatus(status con_status, const char *message);
 
 private:
-	void setTrayAppearance( bool, unsigned int, const char* message );
+  void setTrayAppearance(bool, unsigned int, const char *message);
 
-	HINSTANCE hInst;
+  HINSTANCE hInst;
 
-	CFrontendDlg& main_dlg;
+  CFrontendDlg & main_dlg;
 
-	friend LRESULT CALLBACK TrayIconProc( HWND, UINT, WPARAM, LPARAM );
-	static TrayIcon* instance;
+  friend LRESULT CALLBACK TrayIconProc(HWND, UINT, WPARAM, LPARAM);
+  static TrayIcon *instance;
 };
 
 #endif // TRAYICON_H_171149531

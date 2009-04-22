@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -21,21 +22,21 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
  */
 
 /* System includes */
-#include <assert.h> /* assert() */
-#include <stddef.h> /* NULL */
+#include <assert.h>             /* assert() */
+#include <stddef.h>             /* NULL */
 
 /* OLSRD includes */
 #include "plugin.h"
 #include "plugin_util.h"
-#include "defs.h" /* uint8_t, olsr_cnf */
-#include "scheduler.h" /* olsr_start_timer() */
-#include "olsr_cfg.h" /* olsr_cnf() */
-#include "olsr_cookie.h" /* olsr_alloc_cookie() */
+#include "defs.h"               /* uint8_t, olsr_cnf */
+#include "scheduler.h"          /* olsr_start_timer() */
+#include "olsr_cfg.h"           /* olsr_cnf() */
+#include "olsr_cookie.h"        /* olsr_alloc_cookie() */
 
 /* BMF includes */
-#include "mdns.h" /* InitBmf(), CloseBmf() */
-#include "NetworkInterfaces.h" /* AddNonOlsrBmfIf(), SetBmfInterfaceIp(), ... */
-#include "Address.h" /* DoLocalBroadcast() */
+#include "mdns.h"               /* InitBmf(), CloseBmf() */
+#include "NetworkInterfaces.h"  /* AddNonOlsrBmfIf(), SetBmfInterfaceIp(), ... */
+#include "Address.h"            /* DoLocalBroadcast() */
 
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
@@ -54,7 +55,8 @@ void olsr_plugin_exit(void);
  * Notes      : Called by main OLSRD (olsr_load_dl) to check plugin interface
  *              version
  * ------------------------------------------------------------------------- */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -68,7 +70,8 @@ int olsrd_plugin_interface_version(void)
  * Data Used  : olsr_cnf
  * Notes      : Called by main OLSRD (init_olsr_plugin) to initialize plugin
  * ------------------------------------------------------------------------- */
-int olsrd_plugin_init(void)
+int
+olsrd_plugin_init(void)
 {
   /* Clear the packet history */
   //InitPacketHistory();
@@ -96,20 +99,21 @@ int olsrd_plugin_init(void)
  * Data Used  : none
  * Notes      : Called by my_fini() at unload of shared object
  * ------------------------------------------------------------------------- */
-void olsr_plugin_exit(void)
+void
+olsr_plugin_exit(void)
 {
   CloseMDNS();
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "NonOlsrIf", .set_plugin_parameter = &AddNonOlsrBmfIf, .data = NULL },
-    //{ .name = "DoLocalBroadcast", .set_plugin_parameter = &DoLocalBroadcast, .data = NULL },
-    //{ .name = "BmfInterface", .set_plugin_parameter = &SetBmfInterfaceName, .data = NULL },
-    //{ .name = "BmfInterfaceIp", .set_plugin_parameter = &SetBmfInterfaceIp, .data = NULL },
-    //{ .name = "CapturePacketsOnOlsrInterfaces", .set_plugin_parameter = &SetCapturePacketsOnOlsrInterfaces, .data = NULL },
-    //{ .name = "BmfMechanism", .set_plugin_parameter = &SetBmfMechanism, .data = NULL },
-    //{ .name = "FanOutLimit", .set_plugin_parameter = &SetFanOutLimit, .data = NULL },
-    //{ .name = "BroadcastRetransmitCount", .set_plugin_parameter = &set_plugin_int, .data = &BroadcastRetransmitCount},
+  {.name = "NonOlsrIf",.set_plugin_parameter = &AddNonOlsrBmfIf,.data = NULL},
+  //{ .name = "DoLocalBroadcast", .set_plugin_parameter = &DoLocalBroadcast, .data = NULL },
+  //{ .name = "BmfInterface", .set_plugin_parameter = &SetBmfInterfaceName, .data = NULL },
+  //{ .name = "BmfInterfaceIp", .set_plugin_parameter = &SetBmfInterfaceIp, .data = NULL },
+  //{ .name = "CapturePacketsOnOlsrInterfaces", .set_plugin_parameter = &SetCapturePacketsOnOlsrInterfaces, .data = NULL },
+  //{ .name = "BmfMechanism", .set_plugin_parameter = &SetBmfMechanism, .data = NULL },
+  //{ .name = "FanOutLimit", .set_plugin_parameter = &SetFanOutLimit, .data = NULL },
+  //{ .name = "BroadcastRetransmitCount", .set_plugin_parameter = &set_plugin_int, .data = &BroadcastRetransmitCount},
 };
 
 /* -------------------------------------------------------------------------
@@ -122,10 +126,11 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
  * Data Used  : plugin_parameters
  * Notes      : Called by main OLSR (init_olsr_plugin) for all plugins
  * ------------------------------------------------------------------------- */
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 /* -------------------------------------------------------------------------
@@ -137,7 +142,8 @@ void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, 
  * Data Used  : none
  * Notes      : Called at load of shared object
  * ------------------------------------------------------------------------- */
-static void my_init(void)
+static void
+my_init(void)
 {
   /* Print plugin info to stdout */
   printf("%s\n", MOD_DESC);
@@ -154,7 +160,8 @@ static void my_init(void)
  * Data Used  : none
  * Notes      : Called at unload of shared object
  * ------------------------------------------------------------------------- */
-static void my_fini(void)
+static void
+my_fini(void)
 {
   olsr_plugin_exit();
 }

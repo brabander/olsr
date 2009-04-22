@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2007, Bernd Petrovitsch <bernd-at-firmix.at>
@@ -52,93 +53,98 @@
 
 #include <arpa/inet.h>
 
-int set_plugin_port(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
+int
+set_plugin_port(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
-    char *endptr;
-    const unsigned int port = strtoul(value, &endptr, 0);
-    if (*endptr != '\0' || endptr == value) {
-        OLSR_WARN(LOG_PLUGINS, "Illegal port number \"%s\"", value);
-        return 1;
-    }
-    if (port > 65535) {
-      OLSR_WARN(LOG_PLUGINS, "Port number %u out of range", port);
+  char *endptr;
+  const unsigned int port = strtoul(value, &endptr, 0);
+  if (*endptr != '\0' || endptr == value) {
+    OLSR_WARN(LOG_PLUGINS, "Illegal port number \"%s\"", value);
+    return 1;
+  }
+  if (port > 65535) {
+    OLSR_WARN(LOG_PLUGINS, "Port number %u out of range", port);
+    return 1;
+  }
+  if (data != NULL) {
+    int *v = data;
+    *v = port;
+    OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Got", port);
+  } else {
+    OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Ignored", port);
+  }
+  return 0;
+}
+
+int
+set_plugin_ipaddress(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  char buf[INET6_ADDRSTRLEN];
+  union olsr_ip_addr ip_addr;
+  if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
+    OLSR_WARN(LOG_PLUGINS, "Illegal IP address \"%s\"", value);
+    return 1;
+  }
+  inet_ntop(olsr_cnf->ip_version, &ip_addr, buf, sizeof(buf));
+  if (data != NULL) {
+    union olsr_ip_addr *v = data;
+    *v = ip_addr;
+    OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Got", buf);
+  } else {
+    OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Ignored", buf);
+  }
+  return 0;
+}
+
+
+int
+set_plugin_boolean(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  int *v = data;
+  if (strcasecmp(value, "yes") == 0 || strcasecmp(value, "true") == 0) {
+    *v = 1;
+  } else if (strcasecmp(value, "no") == 0 || strcasecmp(value, "false") == 0) {
+    *v = 0;
+  } else {
+    return 1;
+  }
+  return 0;
+}
+
+int
+set_plugin_int(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  char *endptr;
+  const int theint = strtol(value, &endptr, 0);
+  if (*endptr != '\0' || endptr == value) {
+    OLSR_WARN(LOG_PLUGINS, "Illegal int \"%s\"", value);
+    return 1;
+  }
+  if (data != NULL) {
+    int *v = data;
+    *v = theint;
+    OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Got", theint);
+  } else {
+    OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Ignored", theint);
+  }
+  return 0;
+}
+
+int
+set_plugin_string(const char *value, void *data, set_plugin_parameter_addon addon)
+{
+  if (data != NULL) {
+    char *v = data;
+    if ((unsigned)strlen(value) >= addon.ui) {
+      OLSR_WARN(LOG_PLUGINS, "String too long \"%s\"", value);
       return 1;
     }
-    if (data != NULL) {
-      int *v = data;
-      *v = port;
-      OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Got", port);
-    } else {
-      OLSR_INFO(LOG_PLUGINS, "%s port number %u\n", "Ignored", port);
-    }
-    return 0;
-}
-
-int set_plugin_ipaddress(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    char buf[INET6_ADDRSTRLEN];
-    union olsr_ip_addr ip_addr;
-    if (inet_pton(olsr_cnf->ip_version, value, &ip_addr) <= 0) {
-        OLSR_WARN(LOG_PLUGINS, "Illegal IP address \"%s\"", value);
-        return 1;
-    }
-    inet_ntop(olsr_cnf->ip_version, &ip_addr, buf, sizeof(buf));
-    if (data != NULL) {
-        union olsr_ip_addr *v = data;
-        *v = ip_addr;
-        OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Got", buf);
-    } else {
-        OLSR_INFO(LOG_PLUGINS, "%s IP address %s\n", "Ignored", buf);
-    }
-    return 0;
-}
-
-
-int set_plugin_boolean(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    int *v = data;
-    if (strcasecmp (value, "yes") == 0 || strcasecmp (value, "true") == 0) {
-        *v = 1;
-    } else if (strcasecmp (value, "no") == 0 || strcasecmp (value, "false") == 0) {
-        *v = 0;
-    } else {
-        return 1;
-    }
-    return 0;
-}
-
-int set_plugin_int(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
-{
-    char *endptr;
-    const int theint = strtol(value, &endptr, 0);
-    if (*endptr != '\0' || endptr == value) {
-        OLSR_WARN(LOG_PLUGINS, "Illegal int \"%s\"", value);
-        return 1;
-    }
-    if (data != NULL) {
-        int *v = data;
-        *v = theint;
-        OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Got", theint);
-    } else {
-        OLSR_INFO(LOG_PLUGINS, "%s int %d\n", "Ignored", theint);
-    }
-    return 0;
-}
-
-int set_plugin_string(const char *value, void *data, set_plugin_parameter_addon addon)
-{
-    if (data != NULL) {
-        char *v = data;
-        if ((unsigned)strlen(value) >= addon.ui) {
-            OLSR_WARN(LOG_PLUGINS, "String too long \"%s\"", value);
-            return 1;
-        }
-        strscpy(v, value, addon.ui);
-        OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Got", value);
-    } else {
-        OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Ignored", value);
-    }
-    return 0;
+    strscpy(v, value, addon.ui);
+    OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Got", value);
+  } else {
+    OLSR_INFO(LOG_PLUGINS, "%s string %s\n", "Ignored", value);
+  }
+  return 0;
 }
 
 static int
@@ -196,7 +202,7 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
 
   if (ipv4 && prefix == 128) {
     /* translate to ipv6 if neccessary */
-    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, 4*sizeof(uint8_t));
+    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, 4 * sizeof(uint8_t));
     memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
     memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
   } else if (ipv6 && olsr_cnf->ip_version == AF_INET) {

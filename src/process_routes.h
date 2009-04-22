@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -44,7 +45,7 @@
 #include "routing_table.h"
 #include <sys/ioctl.h>
 
-typedef int (*export_route_function)(const struct rt_entry*, int ip_version);
+typedef int (*export_route_function) (const struct rt_entry *, int ip_version);
 
 extern export_route_function EXPORT(olsr_add_route_function);
 extern export_route_function EXPORT(olsr_del_route_function);

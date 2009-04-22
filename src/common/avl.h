@@ -71,7 +71,7 @@ struct avl_tree {
 #define AVL_DUP_NO 0
 
 void avl_init(struct avl_tree *, avl_tree_comp);
-struct avl_node *EXPORT(avl_find)(struct avl_tree *, const void *);
+struct avl_node *EXPORT(avl_find) (struct avl_tree *, const void *);
 int avl_insert(struct avl_tree *, struct avl_node *, int);
 void avl_delete(struct avl_tree *, struct avl_node *);
 

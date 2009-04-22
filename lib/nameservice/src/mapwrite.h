@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -42,8 +43,8 @@
 #ifndef _MAPWRITE_H
 #define _MAPWRITE_H
 
-int mapwrite_init(const char* fifoname);
-void mapwrite_work(FILE* fmap);
+int mapwrite_init(const char *fifoname);
+void mapwrite_work(FILE * fmap);
 void mapwrite_exit(void);
 
 #endif /* _MAPWRITE_H */

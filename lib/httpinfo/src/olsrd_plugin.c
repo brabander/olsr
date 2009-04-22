@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -53,6 +54,7 @@
 #ifndef WIN32
 #include <arpa/nameser.h>
 #else
+
 /* The -mno-cygwin prevent these defs. Otherwise we pull in cygwin1.dll */
 typedef uint32_t in_addr_t;
 typedef uint16_t sa_family_t;
@@ -73,55 +75,59 @@ static void my_fini(void) __attribute__ ((destructor));
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
  * Do not alter unless you know what you are doing!
  */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 /**
  *Constructor
  */
-static void my_init(void)
+static void
+my_init(void)
 {
-    /* Print plugin info to stdout */
-    printf("%s\n", MOD_DESC);
+  /* Print plugin info to stdout */
+  printf("%s\n", MOD_DESC);
 
-    ip_acl_init(&allowed_nets);
+  ip_acl_init(&allowed_nets);
 }
 
 /**
  *Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
-    /* Calls the destruction function
-     * olsr_plugin_exit()
-     * This function should be present in your
-     * sourcefile and all data destruction
-     * should happen there - NOT HERE!
-     */
-    olsr_plugin_exit();
+  /* Calls the destruction function
+   * olsr_plugin_exit()
+   * This function should be present in your
+   * sourcefile and all data destruction
+   * should happen there - NOT HERE!
+   */
+  olsr_plugin_exit();
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "port",          .set_plugin_parameter = &set_plugin_port,     .data = &http_port },
-    { .name = "host4",         .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "net4",          .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "host",          .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "net",           .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "host6",         .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = "net6",          .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = IP_ACL_ACCEPT_PARAP,        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = IP_ACL_REJECT_PARAM,        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
-    { .name = IP_ACL_CHECKFIRST_PARAM,    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
-    { .name = IP_ACL_DEFAULTPOLICY_PARAM, .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets },
-    { .name = "resolve",       .set_plugin_parameter = &set_plugin_boolean,  .data = &resolve_ip_addresses },
+  {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &http_port},
+  {.name = "host4",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = "net4",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = "host",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = "net",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = "host6",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = "net6",.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = IP_ACL_ACCEPT_PARAP,.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = IP_ACL_REJECT_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_reject,.data = &allowed_nets},
+  {.name = IP_ACL_CHECKFIRST_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_checkFirst,.data = &allowed_nets},
+  {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets},
+  {.name = "resolve",.set_plugin_parameter = &set_plugin_boolean,.data = &resolve_ip_addresses},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 /*

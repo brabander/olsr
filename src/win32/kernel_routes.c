@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -60,7 +61,8 @@ char *StrError(unsigned int ErrNo);
  * @param destination the route to add
  * @return negative on error
  */
-int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
+int
+olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
@@ -77,14 +79,14 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 
   OLSR_DEBUG(LOG_ROUTING, "KERN: Adding %s\n", olsr_rt_to_string(rt));
 
-  memset(&Row, 0, sizeof (MIB_IPFORWARDROW));
+  memset(&Row, 0, sizeof(MIB_IPFORWARDROW));
 
   Row.dwForwardDest = rt->rt_dst.prefix.v4.s_addr;
 
   if (!olsr_prefix_to_netmask(&mask, rt->rt_dst.prefix_len)) {
     return -1;
   } else {
-      Row.dwForwardMask = mask.v4.s_addr;
+    Row.dwForwardMask = mask.v4.s_addr;
   }
 
   Row.dwForwardPolicy = 0;
@@ -92,7 +94,7 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
   Row.dwForwardIfIndex = iface->if_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_best->rtp_nexthop.gateway.v4.s_addr) ? 3 : 4;
-  Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
+  Row.dwForwardProto = 3;       // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
   Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_best->rtp_metric);
@@ -103,16 +105,14 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
 
   Res = SetIpForwardEntry(&Row);
 
-  if (Res != NO_ERROR)
-  {
+  if (Res != NO_ERROR) {
     if (Res != ERROR_NOT_FOUND)
       OLSR_WARN(LOG_ROUTING, "SetIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     Res = CreateIpForwardEntry(&Row);
   }
 
-  if (Res != NO_ERROR)
-  {
+  if (Res != NO_ERROR) {
     OLSR_WARN(LOG_ROUTING, "CreateIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     // XXX - report error in a different way
@@ -127,8 +127,7 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
    */
   if (olsr_cnf->ipc_connections > 0) {
     ipc_route_send_rtentry(&rt->rt_dst.prefix, &rt->rt_best->rtp_nexthop.gateway,
-        rt->rt_best->rtp_metric.hops, 1,
-        rt->rt_best->rtp_nexthop.interface->int_name);
+                           rt->rt_best->rtp_metric.hops, 1, rt->rt_best->rtp_nexthop.interface->int_name);
   }
 
   return 0;
@@ -140,7 +139,8 @@ int olsr_kernel_add_route(const struct rt_entry *rt, int ip_version)
  * @param destination the route to remove
  * @return negative on error
  */
-int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
+int
+olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 {
   MIB_IPFORWARDROW Row;
   union olsr_ip_addr mask;
@@ -156,7 +156,7 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 
   OLSR_DEBUG(LOG_NETWORKING, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
 
-  memset(&Row, 0, sizeof (Row));
+  memset(&Row, 0, sizeof(Row));
 
   Row.dwForwardDest = rt->rt_dst.prefix.v4.s_addr;
 
@@ -169,7 +169,7 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
   Row.dwForwardIfIndex = iface->if_index;
   // MIB_IPROUTE_TYPE_DIRECT and MIB_IPROUTE_TYPE_INDIRECT
   Row.dwForwardType = (rt->rt_dst.prefix.v4.s_addr == rt->rt_nexthop.gateway.v4.s_addr) ? 3 : 4;
-  Row.dwForwardProto = 3; // MIB_IPPROTO_NETMGMT
+  Row.dwForwardProto = 3;       // MIB_IPPROTO_NETMGMT
   Row.dwForwardAge = INFINITE;
   Row.dwForwardNextHopAS = 0;
   Row.dwForwardMetric1 = iface ? iface->int_metric : 0 + olsr_fib_metric(&rt->rt_metric);
@@ -180,8 +180,7 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
 
   Res = DeleteIpForwardEntry(&Row);
 
-  if (Res != NO_ERROR)
-  {
+  if (Res != NO_ERROR) {
     OLSR_WARN(LOG_NETWORKING, "DeleteIpForwardEntry() = %08lx, %s", Res, StrError(Res));
 
     // XXX - report error in a different way
@@ -195,17 +194,21 @@ int olsr_kernel_del_route(const struct rt_entry *rt, int ip_version)
    * Send IPC route update message
    */
   if (olsr_cnf->ipc_connections > 0) {
-    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0 , 0, NULL);
+    ipc_route_send_rtentry(&rt->rt_dst.prefix, NULL, 0, 0, NULL);
   }
 
   return 0;
 }
 
-int olsr_create_lo_interface(union olsr_ip_addr *ip  __attribute__((unused))) {
+int
+olsr_create_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
+{
   return 0;
 }
 
-int olsr_delete_lo_interface(union olsr_ip_addr *ip   __attribute__((unused))) {
+int
+olsr_delete_lo_interface(union olsr_ip_addr *ip __attribute__ ((unused)))
+{
   return 0;
 }
 

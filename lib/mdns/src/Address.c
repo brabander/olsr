@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -24,19 +25,19 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "Address.h"
 
 /* System includes */
-#include <stddef.h> /* NULL */
-#include <string.h> /* strcmp */
-#include <assert.h> /* assert() */
-#include <netinet/ip.h> /* struct ip */
-#include <netinet/udp.h> /* struct udphdr */
+#include <stddef.h>             /* NULL */
+#include <string.h>             /* strcmp */
+#include <assert.h>             /* assert() */
+#include <netinet/ip.h>         /* struct ip */
+#include <netinet/udp.h>        /* struct udphdr */
 
 /* OLSRD includes */
-#include "defs.h" /* ipequal */
-#include "olsr_protocol.h" /* OLSRPORT */
+#include "defs.h"               /* ipequal */
+#include "olsr_protocol.h"      /* OLSRPORT */
 
 /* Plugin includes */
-#include "mdns.h" /* BMF_ENCAP_PORT */
-#include "NetworkInterfaces.h" /* TBmfInterface */
+#include "mdns.h"               /* BMF_ENCAP_PORT */
+#include "NetworkInterfaces.h"  /* TBmfInterface */
 
 /* Whether or not to flood local broadcast packets (e.g. packets with IP
  * destination 192.168.1.255). May be overruled by setting the plugin
@@ -51,10 +52,10 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
  * Return     : true (1) or false (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int IsMulticast(union olsr_ip_addr* ipAddress)
+int
+IsMulticast(union olsr_ip_addr *ipAddress)
 {
   assert(ipAddress != NULL);
 
   return (ntohl(ipAddress->v4.s_addr) & 0xF0000000) == 0xE0000000;
 }
-

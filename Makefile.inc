@@ -114,36 +114,36 @@ ifndef CFLAGS
     # the following 2 do not work yet and need more work on it
     #ALL_WARNINGS +=	-Wconversion
     #ALL_WARNINGS +=	-Wredundant-decls
-    
+
     ifeq ($(MUDFLAP),0)
       # work around a bug in gcc-4.*
       ALL_WARNINGS +=	-Wnested-externs
     endif
-    
+
     # Alas, htons() triggers this so we can't seriously activate it.
     #ALL_WARNINGS +=	-Wunreachable-code
-    
+
     ALL_WARNINGS +=	-Winline
     ALL_WARNINGS +=	-Wdisabled-optimization
     ALL_WARNINGS +=	-Werror
     ALL_WARNINGS +=	-finline-functions-called-once
     ALL_WARNINGS +=	-funit-at-a-time
     ALL_WARNINGS +=	-fearly-inlining
-    
+
     ifeq ($(DEBUG),0)
       ALL_WARNINGS +=	-fomit-frame-pointer
     endif
 
     # we have small inline functions in src/ipcalc.h which should always be inlined
     ALL_WARNINGS +=	-finline-limit=350
-    
+
     # These tell gcc to put each function and global variable in a separate section.
     # The linker can than remove all unreferenced section. But in the olsrd binary
     # unused doesn't imply unused at all since the function may be used by plugins,
     # e.g. the ones in src/plugin_utils.c.
     # So we can use that feature at most to identify unused functions and remove them
     # from the source by hand.
-    
+
     #ALL_WARNINGS +=	-ffunction-sections
     #ALL_WARNINGS +=	-fdata-sections
     ALL_WARNINGS +=	-Wstrict-overflow=5

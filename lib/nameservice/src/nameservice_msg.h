@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -48,37 +49,35 @@
 
 /* type of the packet of name_entry */
 typedef enum {
-	NAME_HOST = 0,
-	NAME_FORWARDER = 1,
-	NAME_SERVICE = 2,
-	NAME_LATLON = 3,
-	NAME_MACADDR = 4,
+  NAME_HOST = 0,
+  NAME_FORWARDER = 1,
+  NAME_SERVICE = 2,
+  NAME_LATLON = 3,
+  NAME_MACADDR = 4,
 } NAME_TYPE;
 
 /**
  * the name, forwarder or service entry as found in a packet within a
  * message
  **/
-struct name
-{
-	uint16_t		type;
-	uint16_t		len;	// length of the name
-	// the ip of the hostname, or the ip of the dns-server
-	// ip is irrelevant for services
-	union olsr_ip_addr	ip;
-	/*
-	 * name or service is written in plain text after this struct and padded to 4 byte
-	 */
+struct name {
+  uint16_t type;
+  uint16_t len;                        // length of the name
+  // the ip of the hostname, or the ip of the dns-server
+  // ip is irrelevant for services
+  union olsr_ip_addr ip;
+  /*
+   * name or service is written in plain text after this struct and padded to 4 byte
+   */
 };
 
 
-struct namemsg
-{
-	uint16_t version;    // version number of the nameservice plugin
-	uint16_t nr_names;   // number of following packets including names, forwarders or services
-	/*
-	 * at least one struct name following
-	 */
+struct namemsg {
+  uint16_t version;                    // version number of the nameservice plugin
+  uint16_t nr_names;                   // number of following packets including names, forwarders or services
+  /*
+   * at least one struct name following
+   */
 };
 
 #endif

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,7 +46,7 @@
 
 void clear_console(void);
 
-int EXPORT(set_nonblocking)(int fd);
+int EXPORT(set_nonblocking) (int fd);
 
 #endif
 

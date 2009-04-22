@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -53,81 +54,73 @@
 
 #pragma pack(push, BeforeIpcMessages, 1)
 
-struct OlsrHeader
-{
-	unsigned char Type;
-	unsigned char VTime;
-	unsigned short Size;
-	unsigned int Orig;
-	unsigned char Ttl;
-	unsigned char Hops;
-	unsigned short SeqNo;
+struct OlsrHeader {
+  unsigned char Type;
+  unsigned char VTime;
+  unsigned short Size;
+  unsigned int Orig;
+  unsigned char Ttl;
+  unsigned char Hops;
+  unsigned short SeqNo;
 };
 
-struct OlsrHello
-{
-	struct OlsrHeader Header;
+struct OlsrHello {
+  struct OlsrHeader Header;
 
-	unsigned short Reserved;
-	unsigned char HTime;
-	unsigned char Will;
+  unsigned short Reserved;
+  unsigned char HTime;
+  unsigned char Will;
 };
 
-struct OlsrHelloLink
-{
-	unsigned char LinkCode;
-	unsigned char Reserved;
-	unsigned short Size;
+struct OlsrHelloLink {
+  unsigned char LinkCode;
+  unsigned char Reserved;
+  unsigned short Size;
 };
 
-struct OlsrTc
-{
-	struct OlsrHeader Header;
+struct OlsrTc {
+  struct OlsrHeader Header;
 
-	unsigned short Ansn;
-	unsigned short Reserved;
+  unsigned short Ansn;
+  unsigned short Reserved;
 };
 
-union IpcIpAddr
-{
-	unsigned int v4;
-	unsigned char v6[16];
+union IpcIpAddr {
+  unsigned int v4;
+  unsigned char v6[16];
 };
 
-struct IpcHeader
-{
-	unsigned char Type;
-	unsigned char Reserved;
-	unsigned short Size;
+struct IpcHeader {
+  unsigned char Type;
+  unsigned char Reserved;
+  unsigned short Size;
 };
 
-struct IpcRoute
-{
-	struct IpcHeader Header;
+struct IpcRoute {
+  struct IpcHeader Header;
 
-	unsigned char Metric;
-	unsigned char Add;
-	unsigned char Reserved[2];
-	union IpcIpAddr Dest;
-	union IpcIpAddr Gate;
-	char Int[4];
+  unsigned char Metric;
+  unsigned char Add;
+  unsigned char Reserved[2];
+  union IpcIpAddr Dest;
+  union IpcIpAddr Gate;
+  char Int[4];
 };
 
-struct IpcConfig
-{
-	struct IpcHeader Header;
+struct IpcConfig {
+  struct IpcHeader Header;
 
-	unsigned char NumMid;
-	unsigned char NumHna;
-	unsigned char Reserved1[2];
-	unsigned short HelloInt;
-	unsigned short WiredHelloInt;
-	unsigned short TcInt;
-	unsigned short HelloHold;
-	unsigned short TcHold;
-	unsigned char Ipv6;
-	unsigned char Reserved2;
-	IpcIpAddr MainAddr;
+  unsigned char NumMid;
+  unsigned char NumHna;
+  unsigned char Reserved1[2];
+  unsigned short HelloInt;
+  unsigned short WiredHelloInt;
+  unsigned short TcInt;
+  unsigned short HelloHold;
+  unsigned short TcHold;
+  unsigned char Ipv6;
+  unsigned char Reserved2;
+  IpcIpAddr MainAddr;
 };
 
 #pragma pack (pop, BeforeIpcMessages)

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,26 +46,26 @@
 #include "olsr_types.h"
 
 /* all */
-typedef int (*plugin_init_func)(void);
-typedef int (*get_interface_version_func)(void);
+typedef int (*plugin_init_func) (void);
+typedef int (*get_interface_version_func) (void);
 
 /* version 5 */
-typedef void (*get_plugin_parameters_func)(const struct olsrd_plugin_parameters **params, unsigned int *size);
+typedef void (*get_plugin_parameters_func) (const struct olsrd_plugin_parameters ** params, unsigned int *size);
 
 struct olsr_plugin {
-    /* The handle */
-    void *dlhandle;
+  /* The handle */
+  void *dlhandle;
 
-    struct plugin_param *params;
-    int plugin_interface_version;
+  struct plugin_param *params;
+  int plugin_interface_version;
 
-    plugin_init_func plugin_init;
+  plugin_init_func plugin_init;
 
-    /* version 5 */
-    const struct olsrd_plugin_parameters *plugin_parameters;
-    unsigned int plugin_parameters_size;
+  /* version 5 */
+  const struct olsrd_plugin_parameters *plugin_parameters;
+  unsigned int plugin_parameters_size;
 
-    struct olsr_plugin *next;
+  struct olsr_plugin *next;
 };
 
 void olsr_load_plugins(void);

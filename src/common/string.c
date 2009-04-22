@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008, Bernd Petrovitsch <bernd-at-firmix.at>
@@ -49,15 +50,17 @@
  * BSD/Solaris strlcpy()/strlcat() differ in implementation, while
  * the BSD compiler prints out a warning if you use plain strcpy().
  */
-char *strscpy(char *dest, const char *src, size_t size)
+char *
+strscpy(char *dest, const char *src, size_t size)
 {
   size_t l = 0;
-  assert (dest != NULL);
-  assert (src != NULL);
+  assert(dest != NULL);
+  assert(src != NULL);
   if (NULL != dest && NULL != src) {
     /* src does not need to be null terminated */
     if (0 < size--) {
-      while(l < size && 0 != src[l]) l++;
+      while (l < size && 0 != src[l])
+        l++;
     }
     dest[l] = 0;
   }
@@ -69,7 +72,8 @@ char *strscpy(char *dest, const char *src, size_t size)
  * size parameter denotes the complete size of dest,
  * which is different from the strncat semantics.
  */
-char *strscat(char *dest, const char *src, size_t size)
+char *
+strscat(char *dest, const char *src, size_t size)
 {
   const size_t l = strlen(dest);
   return strscpy(dest + l, src, size > l ? size - l : 0);

@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -38,7 +39,7 @@
 #include "olsr_protocol.h"
 
 #define olsrd_version "olsr.org GUI 0.2.7"
-#define IPC_INTERVAL 500 //interval for IPC read timeout
+#define IPC_INTERVAL 500        //interval for IPC read timeout
 #define MAXPACKS 20
 #define BUFFSIZE 512
 
@@ -54,7 +55,7 @@ union olsr_ip_addr null_addr;
 
 int ipversion;
 int ipsize;
-char ipv6_buf[100];      /* buffer for IPv6 inet_htop */
+char ipv6_buf[100];                    /* buffer for IPv6 inet_htop */
 
 int nodes_timeout;
 
@@ -67,23 +68,20 @@ extern int timeouts;
  */
 
 
-struct mid
-{
+struct mid {
   union olsr_ip_addr alias;
   struct mid *next;
   struct mid *prev;
 };
 
-struct hna
-{
+struct hna {
   union olsr_ip_addr net;
   union olsr_ip_addr mask;
   struct hna *next;
   struct hna *prev;
 };
 
-struct mpr
-{
+struct mpr {
   union olsr_ip_addr addr;
   struct timeval timer;
   struct mpr *next;
@@ -91,8 +89,7 @@ struct mpr
 };
 
 
-struct node
-{
+struct node {
   union olsr_ip_addr addr;
   union olsr_ip_addr gw_addr;
   int hopcount;
@@ -116,56 +113,54 @@ struct node
  */
 
 
-GtkWidget *
-create_main_window (void);
+GtkWidget *create_main_window(void);
 
 
 void
-packet_list_add(char *, char *, char *);
+  packet_list_add(char *, char *, char *);
 
 void
-route_list_add(char *, char *, char *, char *);
+  route_list_add(char *, char *, char *, char *);
 
 int
-route_list_del(char *);
+  route_list_del(char *);
 
 void
-route_list_update(char *);
+  route_list_update(char *);
 
 
 void
-set_net_info(gchar *, int);
+  set_net_info(gchar *, int);
 
 void
-set_net_info_offline();
+  set_net_info_offline();
 
 void
-update_nodes_list(struct node *);
+  update_nodes_list(struct node *);
 
 int
-remove_nodes_list(union olsr_ip_addr *);
+  remove_nodes_list(union olsr_ip_addr *);
 
 /*
  *IPC public
  */
 int
-ipc_connect();
+  ipc_connect();
 
 void
-ipc_close();
+  ipc_close();
 
 int
-ipc_read();
+  ipc_read();
 
 int
-ipc_send();
+  ipc_send();
 
 
-char *
-ip_to_string(union olsr_ip_addr *);
+char *ip_to_string(union olsr_ip_addr *);
 
 int
-gui_itoa(int, char *);
+  gui_itoa(int, char *);
 
 
 /*
@@ -173,11 +168,10 @@ gui_itoa(int, char *);
  */
 
 int
-add_packet_to_buffer(union olsr_message *, int);
+  add_packet_to_buffer(union olsr_message *, int);
 
 
-union olsr_message *
-get_packet(int);
+union olsr_message *get_packet(int);
 
 
 
@@ -188,40 +182,37 @@ get_packet(int);
 
 
 void
-init_nodes();
+  init_nodes();
 
-struct node *
-find_node(char *);
+struct node *find_node(char *);
 
-struct node *
-find_node_t(union olsr_ip_addr *);
+struct node *find_node_t(union olsr_ip_addr *);
 
 int
-update_timer_node(union olsr_ip_addr *, uint8_t);
+  update_timer_node(union olsr_ip_addr *, uint8_t);
 
 int
-add_hna_node(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
+  add_hna_node(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
 
 int
-add_mid_node(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
+  add_mid_node(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
 
 void
-init_timer(uint32_t, struct timeval *);
+  init_timer(uint32_t, struct timeval *);
 
-gint
-time_out_nodes(gpointer);
-
-int
-add_node(union olsr_ip_addr *, uint8_t);
+gint time_out_nodes(gpointer);
 
 int
-add_mpr(union olsr_ip_addr *, union olsr_ip_addr *, struct timeval *);
+  add_node(union olsr_ip_addr *, uint8_t);
 
 int
-update_timer_mpr(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
+  add_mpr(union olsr_ip_addr *, union olsr_ip_addr *, struct timeval *);
 
 int
-time_out_mprs(union olsr_ip_addr *);
+  update_timer_mpr(union olsr_ip_addr *, union olsr_ip_addr *, uint8_t);
+
+int
+  time_out_mprs(union olsr_ip_addr *);
 
 
 

@@ -95,23 +95,16 @@ ifinit(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  interface_mem_cookie =
-    olsr_alloc_cookie("Interface", OLSR_COOKIE_TYPE_MEMORY);
+  interface_mem_cookie = olsr_alloc_cookie("Interface", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(interface_mem_cookie, sizeof(struct interface));
 
-  interface_poll_timer_cookie =
-    olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
-  buffer_hold_timer_cookie =
-    olsr_alloc_cookie("Buffer Hold", OLSR_COOKIE_TYPE_TIMER);
+  interface_poll_timer_cookie = olsr_alloc_cookie("Interface Polling", OLSR_COOKIE_TYPE_TIMER);
+  buffer_hold_timer_cookie = olsr_alloc_cookie("Buffer Hold", OLSR_COOKIE_TYPE_TIMER);
 
-  hello_gen_timer_cookie =
-    olsr_alloc_cookie("Hello Generation", OLSR_COOKIE_TYPE_TIMER);
-  tc_gen_timer_cookie =
-    olsr_alloc_cookie("TC Generation", OLSR_COOKIE_TYPE_TIMER);
-  mid_gen_timer_cookie =
-    olsr_alloc_cookie("MID Generation", OLSR_COOKIE_TYPE_TIMER);
-  hna_gen_timer_cookie =
-    olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
+  hello_gen_timer_cookie = olsr_alloc_cookie("Hello Generation", OLSR_COOKIE_TYPE_TIMER);
+  tc_gen_timer_cookie = olsr_alloc_cookie("TC Generation", OLSR_COOKIE_TYPE_TIMER);
+  mid_gen_timer_cookie = olsr_alloc_cookie("MID Generation", OLSR_COOKIE_TYPE_TIMER);
+  hna_gen_timer_cookie = olsr_alloc_cookie("HNA Generation", OLSR_COOKIE_TYPE_TIMER);
 
   OLSR_INFO(LOG_NETWORKING, "\n ---- Interface configuration ---- \n\n");
 
@@ -122,8 +115,7 @@ ifinit(void)
 
   /* Kick a periodic timer for the network interface update function */
   olsr_start_timer(olsr_cnf->nic_chgs_pollrate * MSEC_PER_SEC, 5,
-		   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL,
-		   interface_poll_timer_cookie->ci_id);
+                   OLSR_TIMER_PERIODIC, &check_interface_updates, NULL, interface_poll_timer_cookie->ci_id);
 
   return (!list_is_empty(&interface_head));
 }
@@ -132,7 +124,7 @@ ifinit(void)
  * Callback function for periodic check of interface parameters.
  */
 static void
-check_interface_updates(void *foo __attribute__((unused)))
+check_interface_updates(void *foo __attribute__ ((unused)))
 {
   struct olsr_if_config *tmp_if;
 
@@ -260,7 +252,8 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
       if (ip4cmp(&ifp->int_addr.sin_addr, &addr->v4) == 0) {
         return ifp;
       }
-    } OLSR_FOR_ALL_INTERFACES_END(ifp);
+    }
+    OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   } else {
 
@@ -269,7 +262,8 @@ if_ifwithaddr(const union olsr_ip_addr *addr)
       if (ip6cmp(&ifp->int6_addr.sin6_addr, &addr->v6) == 0) {
         return ifp;
       }
-    } OLSR_FOR_ALL_INTERFACES_END(ifp);
+    }
+    OLSR_FOR_ALL_INTERFACES_END(ifp);
   }
   return NULL;
 }
@@ -290,7 +284,8 @@ if_ifwithsock(int fd)
     if (ifp->olsr_socket == fd) {
       return ifp;
     }
-  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
@@ -313,12 +308,14 @@ if_ifwithname(const char *if_name)
     if (strcmp(ifp->int_name, if_name) == 0) {
       return ifp;
     }
-  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
 
 #if 0
+
 /**
  * Find the interface with a given interface index.
  *
@@ -334,13 +331,15 @@ if_ifwithindex(const int if_index)
     if (ifp->if_index == if_index) {
       return ifp;
     }
-  } OLSR_FOR_ALL_INTERFACES_END(ifp);
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifp);
 
   return NULL;
 }
 #endif
 
 #if 0
+
 /**
  * Get an interface name for a given interface index
  *
@@ -403,6 +402,7 @@ add_ifchgf(ifchg_cb_func f)
 }
 
 #if 0
+
 /*
  * Remove an ifchange function
  */
@@ -411,15 +411,13 @@ del_ifchgf(ifchg_cb_func f)
 {
   struct ifchgf *tmp, *prev;
 
-  for (tmp = ifchgf_list, prev = NULL;
-       tmp != NULL;
-       prev = tmp, tmp = tmp->next) {
+  for (tmp = ifchgf_list, prev = NULL; tmp != NULL; prev = tmp, tmp = tmp->next) {
     if (tmp->function == f) {
       /* Remove entry */
       if (prev == NULL) {
-	ifchgf_list = tmp->next;
+        ifchgf_list = tmp->next;
       } else {
-	prev->next = tmp->next;
+        prev->next = tmp->next;
       }
       free(tmp);
       return 1;

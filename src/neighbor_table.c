@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -66,14 +67,12 @@ olsr_init_neighbor_table(void)
 
   OLSR_INFO(LOG_NEIGHTABLE, "Initialize neighbor table...\n");
 
-  for(i = 0; i < HASHSIZE; i++)
-    {
-      neighbortable[i].next = &neighbortable[i];
-      neighbortable[i].prev = &neighbortable[i];
-    }
+  for (i = 0; i < HASHSIZE; i++) {
+    neighbortable[i].next = &neighbortable[i];
+    neighbortable[i].prev = &neighbortable[i];
+  }
 
-  nbr2_list_timer_cookie = olsr_alloc_cookie("2-Hop Neighbor List",
-                                             OLSR_COOKIE_TYPE_TIMER);
+  nbr2_list_timer_cookie = olsr_alloc_cookie("2-Hop Neighbor List", OLSR_COOKIE_TYPE_TIMER);
 
 }
 
@@ -88,8 +87,8 @@ olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
   nbr2 = nbr2_list->neighbor_2;
 
   if (nbr2->neighbor_2_pointer < 1) {
-      DEQUEUE_ELEM(nbr2);
-      free(nbr2);
+    DEQUEUE_ELEM(nbr2);
+    free(nbr2);
   }
 
   /*
@@ -150,15 +149,12 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
 {
   struct neighbor_2_list_entry *entry;
 
-  for(entry = neighbor->neighbor_2_list.next;
-      entry != &neighbor->neighbor_2_list;
-      entry = entry->next)
-    {
+  for (entry = neighbor->neighbor_2_list.next; entry != &neighbor->neighbor_2_list; entry = entry->next) {
 
-      if(olsr_ipcmp(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address) == 0)
-	return entry;
+    if (olsr_ipcmp(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address) == 0)
+      return entry;
 
-    }
+  }
   return NULL;
 }
 
@@ -177,9 +173,9 @@ olsr_lookup_my_neighbors(const struct neighbor_entry *neighbor, const union olsr
 int
 olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 {
-  struct  neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
-  uint32_t                    hash;
-  struct neighbor_entry         *entry;
+  struct neighbor_2_list_entry *two_hop_list, *two_hop_to_delete;
+  uint32_t hash;
+  struct neighbor_entry *entry;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -193,30 +189,28 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
   /*
    * Find neighbor entry
    */
-  while(entry != &neighbortable[hash])
-    {
-      if(olsr_ipcmp(&entry->neighbor_main_addr, neighbor_addr) == 0)
-        break;
+  while (entry != &neighbortable[hash]) {
+    if (olsr_ipcmp(&entry->neighbor_main_addr, neighbor_addr) == 0)
+      break;
 
-      entry = entry->next;
-    }
+    entry = entry->next;
+  }
 
-  if(entry == &neighbortable[hash])
+  if (entry == &neighbortable[hash])
     return 0;
 
 
   two_hop_list = entry->neighbor_2_list.next;
 
   while (two_hop_list != &entry->neighbor_2_list) {
-      two_hop_to_delete = two_hop_list;
-      two_hop_list = two_hop_list->next;
+    two_hop_to_delete = two_hop_list;
+    two_hop_list = two_hop_list->next;
 
-      two_hop_to_delete->neighbor_2->neighbor_2_pointer--;
-      olsr_delete_neighbor_pointer(two_hop_to_delete->neighbor_2,
-                                   &entry->neighbor_main_addr);
+    two_hop_to_delete->neighbor_2->neighbor_2_pointer--;
+    olsr_delete_neighbor_pointer(two_hop_to_delete->neighbor_2, &entry->neighbor_main_addr);
 
-      olsr_del_nbr2_list(two_hop_to_delete);
-    }
+    olsr_del_nbr2_list(two_hop_to_delete);
+  }
 
 
   /* Dequeue */
@@ -241,8 +235,8 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
 struct neighbor_entry *
 olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
 {
-  uint32_t             hash;
-  struct neighbor_entry  *new_neigh;
+  uint32_t hash;
+  struct neighbor_entry *new_neigh;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -251,13 +245,10 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
 
   /* Check if entry exists */
 
-  for(new_neigh = neighbortable[hash].next;
-      new_neigh != &neighbortable[hash];
-      new_neigh = new_neigh->next)
-    {
-      if(olsr_ipcmp(&new_neigh->neighbor_main_addr, main_addr) == 0)
-        return new_neigh;
-    }
+  for (new_neigh = neighbortable[hash].next; new_neigh != &neighbortable[hash]; new_neigh = new_neigh->next) {
+    if (olsr_ipcmp(&new_neigh->neighbor_main_addr, main_addr) == 0)
+      return new_neigh;
+  }
 
   OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, main_addr));
 
@@ -298,7 +289,7 @@ olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
    *Find main address of node
    */
   union olsr_ip_addr *tmp_ip = olsr_lookup_main_addr_by_alias(dst);
-  if(tmp_ip != NULL)
+  if (tmp_ip != NULL)
     dst = tmp_ip;
   return olsr_lookup_neighbor_table_alias(dst);
 }
@@ -315,16 +306,13 @@ olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
 struct neighbor_entry *
 olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
 {
-  struct neighbor_entry  *entry;
-  uint32_t             hash = olsr_ip_hashing(dst);
+  struct neighbor_entry *entry;
+  uint32_t hash = olsr_ip_hashing(dst);
 
-  for(entry = neighbortable[hash].next;
-      entry != &neighbortable[hash];
-      entry = entry->next)
-    {
-      if(olsr_ipcmp(&entry->neighbor_main_addr, dst) == 0)
-        return entry;
-    }
+  for (entry = neighbortable[hash].next; entry != &neighbortable[hash]; entry = entry->next) {
+    if (olsr_ipcmp(&entry->neighbor_main_addr, dst) == 0)
+      return entry;
+  }
 
   return NULL;
 
@@ -339,39 +327,33 @@ update_neighbor_status(struct neighbor_entry *entry, int lnk)
    * Update neighbor entry
    */
 
-  if(lnk == SYM_LINK)
-    {
-      /* N_status is set to SYM */
-      if(entry->status == NOT_SYM)
-	{
-	  struct neighbor_2_entry *two_hop_neighbor;
+  if (lnk == SYM_LINK) {
+    /* N_status is set to SYM */
+    if (entry->status == NOT_SYM) {
+      struct neighbor_2_entry *two_hop_neighbor;
 
-	  /* Delete posible 2 hop entry on this neighbor */
-	  if((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->neighbor_main_addr))!=NULL)
-	    {
-	      olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
-	    }
+      /* Delete posible 2 hop entry on this neighbor */
+      if ((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->neighbor_main_addr)) != NULL) {
+        olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
+      }
 
-	  changes_neighborhood = true;
-	  changes_topology = true;
-	  if(olsr_cnf->tc_redundancy > 1)
-	    signal_link_changes(true);
-	}
-      entry->status = SYM;
+      changes_neighborhood = true;
+      changes_topology = true;
+      if (olsr_cnf->tc_redundancy > 1)
+        signal_link_changes(true);
     }
-  else
-    {
-      if(entry->status == SYM)
-	{
-	  changes_neighborhood = true;
-	  changes_topology = true;
-	  if(olsr_cnf->tc_redundancy > 1)
-	    signal_link_changes(true);
-	}
-      /* else N_status is set to NOT_SYM */
-      entry->status = NOT_SYM;
-      /* remove neighbor from routing list */
+    entry->status = SYM;
+  } else {
+    if (entry->status == SYM) {
+      changes_neighborhood = true;
+      changes_topology = true;
+      if (olsr_cnf->tc_redundancy > 1)
+        signal_link_changes(true);
     }
+    /* else N_status is set to NOT_SYM */
+    entry->status = NOT_SYM;
+    /* remove neighbor from routing list */
+  }
 
   return entry->status;
 }
@@ -411,25 +393,22 @@ olsr_print_neighbor_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function doesn't do anything else. */
-  const int ipwidth = olsr_cnf->ip_version == AF_INET ?  15 : 39;
+  const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 39;
   int idx;
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
-              "%*s  LQ    SYM   MPR   MPRS  will\n",
-			  olsr_wallclock_string(),
-              ipwidth, "IP address");
+            "%*s  LQ    SYM   MPR   MPRS  will\n", olsr_wallclock_string(), ipwidth, "IP address");
 
   for (idx = 0; idx < HASHSIZE; idx++) {
     struct neighbor_entry *neigh;
-    for(neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
+    for (neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-      if(lnk) {
+      if (lnk) {
         struct ipaddr_str buf;
         OLSR_INFO_NH(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
-                    ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
-                    neigh->status == SYM ? "YES " : "NO  ",
-                    neigh->is_mpr ? "YES " : "NO  ",
-                    olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
-                    neigh->willingness);
+                     ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                     neigh->status == SYM ? "YES " : "NO  ",
+                     neigh->is_mpr ? "YES " : "NO  ",
+                     olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ", neigh->willingness);
       }
     }
   }

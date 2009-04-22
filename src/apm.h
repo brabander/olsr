@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -49,11 +50,10 @@
 #define OLSR_BATTERY_POWERED  0
 #define OLSR_AC_POWERED       1
 
-struct olsr_apm_info
-{
+struct olsr_apm_info {
   int ac_line_status;
   int battery_percentage;
-  int battery_time_left; /* Time left in minutes */
+  int battery_time_left;               /* Time left in minutes */
 };
 
 

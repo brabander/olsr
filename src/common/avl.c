@@ -100,7 +100,7 @@ avl_find(struct avl_tree *tree, const void *key)
    * Crawl through the tree.
    */
   for (node = tree->root;;) {
-    diff = (*tree->comp)(key, node->key);
+    diff = (*tree->comp) (key, node->key);
 
     if (diff < 0) {
       if (node->left != NULL) {
@@ -234,8 +234,7 @@ post_insert(struct avl_tree *tree, struct avl_node *node)
 }
 
 static void
-avl_insert_before(struct avl_tree *tree, struct avl_node *pos_node,
-		  struct avl_node *node)
+avl_insert_before(struct avl_tree *tree, struct avl_node *pos_node, struct avl_node *node)
 {
   if (pos_node->prev != NULL)
     pos_node->prev->next = node;
@@ -251,8 +250,7 @@ avl_insert_before(struct avl_tree *tree, struct avl_node *pos_node,
 }
 
 static void
-avl_insert_after(struct avl_tree *tree, struct avl_node *pos_node,
-		 struct avl_node *node)
+avl_insert_after(struct avl_tree *tree, struct avl_node *pos_node, struct avl_node *node)
 {
   if (pos_node->next != NULL)
     pos_node->next->prev = node;
@@ -313,7 +311,7 @@ avl_insert(struct avl_tree *tree, struct avl_node *new, int allow_duplicates)
    * First locate insertion point.
    */
   for (node = tree->root;;) {
-    diff = (*tree->comp)(new->key, node->key);
+    diff = (*tree->comp) (new->key, node->key);
 
     if (diff < 0) {
       if (node->left != NULL) {
@@ -483,22 +481,22 @@ avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
       parent->balance++;
 
       if (parent->balance == 1)
-	return;
+        return;
 
       if (parent->balance == 0) {
-	avl_post_delete(tree, parent);
-	return;
+        avl_post_delete(tree, parent);
+        return;
       }
 
       if (parent->right->balance == 0) {
-	avl_rotate_left(tree, parent);
-	return;
+        avl_rotate_left(tree, parent);
+        return;
       }
 
       if (parent->right->balance == 1) {
-	avl_rotate_left(tree, parent);
-	avl_post_delete(tree, parent->parent);
-	return;
+        avl_rotate_left(tree, parent);
+        avl_post_delete(tree, parent->parent);
+        return;
       }
 
       avl_rotate_right(tree, parent->right);
@@ -512,22 +510,22 @@ avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
       parent->balance--;
 
       if (parent->balance == -1)
-	return;
+        return;
 
       if (parent->balance == 0) {
-	avl_post_delete(tree, parent);
-	return;
+        avl_post_delete(tree, parent);
+        return;
       }
 
       if (parent->left->balance == 0) {
-	avl_rotate_right(tree, parent);
-	return;
+        avl_rotate_right(tree, parent);
+        return;
       }
 
       if (parent->left->balance == -1) {
-	avl_rotate_right(tree, parent);
-	avl_post_delete(tree, parent->parent);
-	return;
+        avl_rotate_right(tree, parent);
+        avl_post_delete(tree, parent->parent);
+        return;
       }
 
       avl_rotate_left(tree, parent->left);
@@ -630,21 +628,21 @@ avl_delete(struct avl_tree *tree, struct avl_node *node)
       next->right = right;
 
       if (parent == NULL)
-	tree->root = next;
+        tree->root = next;
 
       else {
-	if (node == parent->left)
-	  parent->left = next;
+        if (node == parent->left)
+          parent->left = next;
 
-	else
-	  parent->right = next;
+        else
+          parent->right = next;
       }
 
       if (left != NULL)
-	left->parent = next;
+        left->parent = next;
 
       if (right != NULL)
-	right->parent = next;
+        right->parent = next;
     }
 
     else

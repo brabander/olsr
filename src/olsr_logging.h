@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -98,13 +99,13 @@
 
 void EXPORT(olsr_log_init) (void);
 void EXPORT(olsr_log_cleanup) (void);
-void EXPORT(olsr_log_addhandler) (void (*handler)(enum log_severity, enum log_source, bool,
-    const char *, int, char *, int), bool (*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
-void EXPORT(olsr_log_removehandler) (void (*handler)(enum log_severity, enum log_source, bool,
-    const char *, int, char *, int));
+void EXPORT(olsr_log_addhandler) (void (*handler) (enum log_severity, enum log_source, bool,
+                                                   const char *, int, char *, int),
+                                  bool(*mask)[LOG_SEVERITY_COUNT][LOG_SOURCE_COUNT]);
+void EXPORT(olsr_log_removehandler) (void (*handler) (enum log_severity, enum log_source, bool, const char *, int, char *, int));
 void EXPORT(olsr_log_updatemask) (void);
 
-void EXPORT(olsr_log) (enum log_severity, enum log_source, bool, const char *, int, const char * , ...)
-    __attribute__((format(printf, 6, 7)));
+void EXPORT(olsr_log) (enum log_severity, enum log_source, bool, const char *, int, const char *, ...)
+  __attribute__ ((format(printf, 6, 7)));
 
 #endif /* OLSR_LOGGING_H_ */

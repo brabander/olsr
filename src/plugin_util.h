@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2007, Bernd Petrovitsch <bernd-at-firmix.at>
@@ -79,7 +80,8 @@ set_plugin_parameter EXPORT(set_plugin_string);
 int EXPORT(ip_acl_add_plugin_accept) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
 int EXPORT(ip_acl_add_plugin_reject) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
 int EXPORT(ip_acl_add_plugin_checkFirst) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
-int EXPORT(ip_acl_add_plugin_defaultPolicy) (const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)));
+int EXPORT(ip_acl_add_plugin_defaultPolicy) (const char *value, void *data, set_plugin_parameter_addon addon
+                                             __attribute__ ((unused)));
 
 #endif
 

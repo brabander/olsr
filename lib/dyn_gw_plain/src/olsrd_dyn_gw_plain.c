@@ -144,10 +144,9 @@ check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask)
       continue;
     }
     OLSR_DEBUG(LOG_PLUGINS, "%-15s %-15s %-15s %-6d %-2d %7d %s\n",
-        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&netmask),
-        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&dest_addr),
-        olsr_ip_to_string(&buf, (union olsr_ip_addr *)&gate_addr),
-        metric, refcnt, use, iface);
+               olsr_ip_to_string(&buf, (union olsr_ip_addr *)&netmask),
+               olsr_ip_to_string(&buf, (union olsr_ip_addr *)&dest_addr),
+               olsr_ip_to_string(&buf, (union olsr_ip_addr *)&gate_addr), metric, refcnt, use, iface);
 
     if (                        /* (iflags & RTF_GATEWAY) && */
          (iflags & RTF_UP) && (metric == 0) && (netmask == mask->v4.s_addr) && (dest_addr == net->v4.s_addr)) {

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -60,8 +61,7 @@ olsr_init_mprs(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  mpr_sel_timer_cookie =
-    olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
+  mpr_sel_timer_cookie = olsr_alloc_cookie("MPR Selector", OLSR_COOKIE_TYPE_TIMER);
 }
 
 /**
@@ -74,8 +74,7 @@ olsr_expire_mpr_sel_entry(void *context)
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  OLSR_DEBUG(LOG_MPRS, "MPRS: Timing out %st\n",
-              olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
+  OLSR_DEBUG(LOG_MPRS, "MPRS: Timing out %st\n", olsr_ip_to_string(&buf, &mpr_sel->MS_main_addr));
 
   mpr_sel->MS_timer = NULL;
 
@@ -106,7 +105,8 @@ olsr_lookup_mprs_set(const union olsr_ip_addr *addr)
     if (olsr_ipcmp(&mprs->MS_main_addr, addr) == 0) {
       return mprs;
     }
-  } FOR_ALL_MPRS_ENTRIES_END(mprs);
+  }
+  FOR_ALL_MPRS_ENTRIES_END(mprs);
   return NULL;
 }
 
@@ -147,12 +147,7 @@ olsr_update_mprs_set(const union olsr_ip_addr *addr, olsr_reltime vtime)
     rv = 0;
   }
   olsr_set_timer(&mprs->MS_timer,
-		 vtime,
-		 OLSR_MPR_SEL_JITTER,
-                 OLSR_TIMER_ONESHOT,
-		 &olsr_expire_mpr_sel_entry,
-		 mprs,
-		 mpr_sel_timer_cookie->ci_id);
+                 vtime, OLSR_MPR_SEL_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_mpr_sel_entry, mprs, mpr_sel_timer_cookie->ci_id);
   return rv;
 }
 

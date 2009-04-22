@@ -78,13 +78,10 @@ olsr_init_mid_set(void)
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  mid_validity_timer_cookie =
-    olsr_alloc_cookie("MID validity", OLSR_COOKIE_TYPE_TIMER);
+  mid_validity_timer_cookie = olsr_alloc_cookie("MID validity", OLSR_COOKIE_TYPE_TIMER);
 
-  mid_address_mem_cookie =
-    olsr_alloc_cookie("MID address", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(mid_address_mem_cookie,
-                              sizeof(struct mid_entry));
+  mid_address_mem_cookie = olsr_alloc_cookie("MID address", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(mid_address_mem_cookie, sizeof(struct mid_entry));
 }
 
 /**
@@ -98,8 +95,7 @@ olsr_expire_mid_entries(void *context)
   struct ipaddr_str buf;
 #endif
 
-  OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n",
-	      olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_DEBUG(LOG_MID, "MID aliases for %s timed out\n", olsr_ip_to_string(&buf, &tc->addr));
 
   olsr_flush_mid_entries(tc);
 }
@@ -114,8 +110,7 @@ static void
 olsr_set_mid_timer(struct tc_entry *tc, olsr_reltime rel_timer)
 {
   olsr_set_timer(&tc->mid_timer, rel_timer, OLSR_MID_JITTER,
-		 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc,
-                 mid_validity_timer_cookie->ci_id);
+                 OLSR_TIMER_ONESHOT, &olsr_expire_mid_entries, tc, mid_validity_timer_cookie->ci_id);
 }
 
 /**
@@ -139,8 +134,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
     /* Delete possible 2 hop neighbor */
     if (nbr2) {
       OLSR_DEBUG(LOG_MID, "Delete 2hop neighbor: %s to %s\n",
-		      olsr_ip_to_string(&buf1, &alias->mid_alias_addr),
-          olsr_ip_to_string(&buf2, &tc->addr));
+                 olsr_ip_to_string(&buf1, &alias->mid_alias_addr), olsr_ip_to_string(&buf2, &tc->addr));
 
       olsr_delete_two_hop_neighbor_table(nbr2);
       changes_neighborhood = true;
@@ -152,21 +146,21 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
       struct neighbor_entry *real_nbr = olsr_lookup_neighbor_table_alias(&tc->addr);
       if (real_nbr) {
 
-	OLSR_DEBUG(LOG_MID, "Delete bogus neighbor entry %s (real %s)\n",
-		    olsr_ip_to_string(&buf1, &alias->mid_alias_addr),
-		    olsr_ip_to_string(&buf2, &tc->addr));
+        OLSR_DEBUG(LOG_MID, "Delete bogus neighbor entry %s (real %s)\n",
+                   olsr_ip_to_string(&buf1, &alias->mid_alias_addr), olsr_ip_to_string(&buf2, &tc->addr));
 
-	replace_neighbor_link_set(nbr, real_nbr);
+        replace_neighbor_link_set(nbr, real_nbr);
 
-	/* Dequeue */
-	DEQUEUE_ELEM(nbr);
-	/* Delete */
-	free(nbr);
+        /* Dequeue */
+        DEQUEUE_ELEM(nbr);
+        /* Delete */
+        free(nbr);
 
-	changes_neighborhood = true;
+        changes_neighborhood = true;
       }
     }
-  } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias);
+  }
+  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias);
 }
 
 /**
@@ -175,8 +169,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
  * neighbortable and link_set will be created by way of this mid entry.
  */
 static void
-olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
-			 const union olsr_ip_addr *alias_addr)
+olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_ip_addr *alias_addr)
 {
   struct neighbor_entry *nbr_new, *nbr_old = olsr_lookup_neighbor_table_alias(alias_addr);
   struct mid_entry *mid_old;
@@ -190,8 +183,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
   }
 
   OLSR_DEBUG(LOG_MID, "Main address change %s -> %s detected.\n",
-	      olsr_ip_to_string(&buf1, alias_addr),
-	      olsr_ip_to_string(&buf2, main_addr));
+             olsr_ip_to_string(&buf1, alias_addr), olsr_ip_to_string(&buf2, main_addr));
 
   olsr_delete_neighbor_table(alias_addr);
   nbr_new = olsr_insert_neighbor_table(main_addr);
@@ -201,8 +193,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
 
   if (ne_ref_rp_count > 0) {
     OLSR_DEBUG(LOG_MID, "Performed %d neighbortable-pointer replacements "
-		    "(%p -> %p) in link_set.\n",
-		    ne_ref_rp_count, nbr_old, nbr_new);
+               "(%p -> %p) in link_set.\n", ne_ref_rp_count, nbr_old, nbr_new);
   }
 
   mid_old = olsr_lookup_mid_entry(alias_addr);
@@ -226,9 +217,7 @@ olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr,
  */
 static struct mid_entry *
 olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr,
-                      olsr_reltime vtime,
-		      uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct tc_entry *tc;
   struct mid_entry *alias;
@@ -236,9 +225,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   struct ipaddr_str buf1, buf2;
 #endif
 
-  OLSR_DEBUG(LOG_MID, "Inserting alias %s for %s\n",
-              olsr_ip_to_string(&buf1, alias_addr),
-              olsr_ip_to_string(&buf2, main_addr));
+  OLSR_DEBUG(LOG_MID, "Inserting alias %s for %s\n", olsr_ip_to_string(&buf1, alias_addr), olsr_ip_to_string(&buf2, main_addr));
 
   /*
    * Locate first the hookup point
@@ -265,8 +252,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
   /*
    * Add a rt_path for the alias.
    */
-  olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize,
-                            main_addr, OLSR_RT_ORIGIN_MID);
+  olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize, main_addr, OLSR_RT_ORIGIN_MID);
   /*
    * Start the timer. Because we provide the TC reference
    * as callback data for the timer we need to lock
@@ -293,8 +279,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
  */
 static void
 olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
-                      const union olsr_ip_addr *alias_addr,
-                      olsr_reltime vtime, uint16_t mid_seqno)
+                      const union olsr_ip_addr *alias_addr, olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
   if (!olsr_validate_address(alias_addr)) {
@@ -390,8 +375,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
   /*
    * Delete the rt_path for the alias.
    */
-  olsr_delete_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize,
-                            &tc->addr, OLSR_RT_ORIGIN_MID);
+  olsr_delete_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize, &tc->addr, OLSR_RT_ORIGIN_MID);
 
   /*
    * Remove from the per-tc tree.
@@ -447,7 +431,8 @@ olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno)
     if (alias->mid_seqno != mid_seqno) {
       olsr_delete_mid_entry(alias);
     }
-  } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
+  }
+  OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
 }
 
 /**
@@ -462,16 +447,13 @@ olsr_print_mid_set(void)
   struct mid_entry *alias;
   struct ipaddr_str buf1, buf2;
 
-  OLSR_INFO(LOG_MID,
-	      "\n--- %s ------------------------------------------------- MID\n\n",
-	      olsr_wallclock_string());
+  OLSR_INFO(LOG_MID, "\n--- %s ------------------------------------------------- MID\n\n", olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     bool first = true;
     OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
       OLSR_INFO_NH(LOG_MID, "%-15s: %s\n",
-          first ? olsr_ip_to_string(&buf1, &tc->addr) : "",
-          olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
+                   first ? olsr_ip_to_string(&buf1, &tc->addr) : "", olsr_ip_to_string(&buf2, &alias->mid_alias_addr));
       first = false;
     } OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, alias);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
@@ -482,9 +464,7 @@ olsr_print_mid_set(void)
  * Process an incoming MID message.
  */
 bool
-olsr_input_mid(union olsr_message *msg,
-               struct interface *input_if __attribute__ ((unused)),
-               union olsr_ip_addr *from_addr)
+olsr_input_mid(union olsr_message *msg, struct interface *input_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
   uint16_t msg_size, msg_seq;
   uint8_t type, ttl, msg_hops;
@@ -527,8 +507,7 @@ olsr_input_mid(union olsr_message *msg,
    * message MUST be discarded.
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    OLSR_DEBUG(LOG_MID, "Received MID from NON SYM neighbor %s\n",
-		    olsr_ip_to_string(&buf, from_addr));
+    OLSR_DEBUG(LOG_MID, "Received MID from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     return false;
   }
 
@@ -539,7 +518,7 @@ olsr_input_mid(union olsr_message *msg,
   alias_count = (msg_size - 12) / olsr_cnf->ipsize;
 
   OLSR_DEBUG(LOG_MID, "Processing MID from %s with %d aliases, seq 0x%04x\n",
-        olsr_ip_to_string(&buf, &originator), alias_count, msg_seq);
+             olsr_ip_to_string(&buf, &originator), alias_count, msg_seq);
   /*
    * Now walk the list of alias advertisements one by one.
    */

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -51,8 +52,7 @@ static void lq_etxfloat_initialize(void);
 static void lq_etxfloat_deinitialize(void);
 
 static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *);
-static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(
-    struct lq_hello_neighbor *);
+static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *);
 static olsr_linkcost lq_etxfloat_calc_tc_mpr_addr_cost(struct tc_mpr_addr *);
 static olsr_linkcost lq_etxfloat_calc_tc_edge_entry_cost(struct tc_edge_entry *);
 
@@ -60,28 +60,19 @@ static bool lq_etxfloat_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c
 
 static olsr_linkcost lq_etxfloat_packet_loss_handler(struct link_entry *, bool);
 
-static void lq_etxfloat_memorize_foreign_hello(struct link_entry *,
-    struct lq_hello_neighbor *);
-static void lq_etxfloat_copy_link_entry_lq_into_tc_mpr_addr(
-    struct tc_mpr_addr *target, struct link_entry *source);
-static void lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry(
-    struct tc_edge_entry *target, struct link_entry *source);
-static void lq_etxfloat_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target,
-    struct link_entry *source);
+static void lq_etxfloat_memorize_foreign_hello(struct link_entry *, struct lq_hello_neighbor *);
+static void lq_etxfloat_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source);
+static void lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source);
+static void lq_etxfloat_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source);
 
-static int lq_etxfloat_serialize_hello_lq(unsigned char *buff,
-    struct lq_hello_neighbor *lq);
+static int lq_etxfloat_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *lq);
 static int lq_etxfloat_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *lq);
-static void lq_etxfloat_deserialize_hello_lq(uint8_t const ** curr,
-    struct lq_hello_neighbor *lq);
-static void lq_etxfloat_deserialize_tc_lq(uint8_t const ** curr,
-    struct tc_edge_entry *lq);
+static void lq_etxfloat_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *lq);
+static void lq_etxfloat_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *lq);
 
-static char *lq_etxfloat_print_link_entry_lq(struct link_entry *entry, char separator,
-    struct lqtextbuffer *buffer);
-static char *lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *ptr,
-    char separator, struct lqtextbuffer * buffer);
-static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer * buffer);
+static char *lq_etxfloat_print_link_entry_lq(struct link_entry *entry, char separator, struct lqtextbuffer *buffer);
+static char *lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *ptr, char separator, struct lqtextbuffer *buffer);
+static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer);
 
 /* etx lq plugin (freifunk fpm version) settings */
 struct lq_handler lq_etxfloat_handler = {
@@ -127,20 +118,26 @@ struct lq_handler lq_etxfloat_handler = {
   LQ_TC_MESSAGE
 };
 
-static void lq_etxfloat_initialize(void) {
+static void
+lq_etxfloat_initialize(void)
+{
 }
 
-static void lq_etxfloat_deinitialize(void) {
+static void
+lq_etxfloat_deinitialize(void)
+{
 }
 
-static olsr_linkcost lq_etxfloat_calc_linkcost(struct lq_etxfloat_linkquality *lq) {
+static olsr_linkcost
+lq_etxfloat_calc_linkcost(struct lq_etxfloat_linkquality *lq)
+{
   olsr_linkcost cost;
 
   if (lq->valueLq < MINIMAL_USEFUL_LQ || lq->valueNlq < MINIMAL_USEFUL_LQ) {
     return LINK_COST_BROKEN;
   }
 
-  cost = (olsr_linkcost)(1.0/(lq->valueLq * lq->valueNlq) * LQ_PLUGIN_LC_MULTIPLIER);
+  cost = (olsr_linkcost) (1.0 / (lq->valueLq * lq->valueNlq) * LQ_PLUGIN_LC_MULTIPLIER);
 
   if (cost > LINK_COST_BROKEN)
     return LINK_COST_BROKEN;
@@ -150,47 +147,56 @@ static olsr_linkcost lq_etxfloat_calc_linkcost(struct lq_etxfloat_linkquality *l
   return cost;
 }
 
-static olsr_linkcost lq_etxfloat_calc_link_entry_cost(struct link_entry *link) {
-  struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *) link;
+static olsr_linkcost
+lq_etxfloat_calc_link_entry_cost(struct link_entry *link)
+{
+  struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
 
   return lq_etxfloat_calc_linkcost(&lq_link->lq);
 }
 
-static olsr_linkcost lq_etxfloat_calc_lq_hello_neighbor_cost(
-    struct lq_hello_neighbor *neigh) {
-  struct lq_etxfloat_lq_hello_neighbor *lq_neigh =
-      (struct lq_etxfloat_lq_hello_neighbor *) neigh;
+static olsr_linkcost
+lq_etxfloat_calc_lq_hello_neighbor_cost(struct lq_hello_neighbor *neigh)
+{
+  struct lq_etxfloat_lq_hello_neighbor *lq_neigh = (struct lq_etxfloat_lq_hello_neighbor *)neigh;
 
   return lq_etxfloat_calc_linkcost(&lq_neigh->lq);
 }
 
-static olsr_linkcost lq_etxfloat_calc_tc_mpr_addr_cost(struct tc_mpr_addr *mpr) {
-  struct lq_etxfloat_tc_mpr_addr *lq_mpr = (struct lq_etxfloat_tc_mpr_addr *) mpr;
+static olsr_linkcost
+lq_etxfloat_calc_tc_mpr_addr_cost(struct tc_mpr_addr *mpr)
+{
+  struct lq_etxfloat_tc_mpr_addr *lq_mpr = (struct lq_etxfloat_tc_mpr_addr *)mpr;
 
   return lq_etxfloat_calc_linkcost(&lq_mpr->lq);
 }
 
-static olsr_linkcost lq_etxfloat_calc_tc_edge_entry_cost(struct tc_edge_entry *edge) {
-  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *) edge;
+static olsr_linkcost
+lq_etxfloat_calc_tc_edge_entry_cost(struct tc_edge_entry *edge)
+{
+  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *)edge;
 
   return lq_etxfloat_calc_linkcost(&lq_edge->lq);
 }
 
-static bool lq_etxfloat_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2) {
+static bool
+lq_etxfloat_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
+{
   if (c1 > c2) {
     return c2 - c1 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
   }
   return c1 - c2 > LQ_PLUGIN_RELEVANT_COSTCHANGE;
 }
 
-static olsr_linkcost lq_etxfloat_packet_loss_handler(struct link_entry *link,
-    bool loss) {
+static olsr_linkcost
+lq_etxfloat_packet_loss_handler(struct link_entry *link, bool loss)
+{
   struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
 
   float alpha = lq_aging;
 
   if (lq_link->quickstart < LQ_QUICKSTART_STEPS) {
-    alpha = LQ_QUICKSTART_AGING; /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
+    alpha = LQ_QUICKSTART_AGING;        /* fast enough to get the LQ value within 6 Hellos up to 0.9 */
     lq_link->quickstart++;
   }
   // exponential moving average
@@ -201,11 +207,11 @@ static olsr_linkcost lq_etxfloat_packet_loss_handler(struct link_entry *link,
   return lq_etxfloat_calc_linkcost(&lq_link->lq);
 }
 
-static void lq_etxfloat_memorize_foreign_hello(struct link_entry *target,
-    struct lq_hello_neighbor *source) {
-  struct lq_etxfloat_link_entry *lq_target = (struct lq_etxfloat_link_entry *) target;
-  struct lq_etxfloat_lq_hello_neighbor *lq_source =
-      (struct lq_etxfloat_lq_hello_neighbor *) source;
+static void
+lq_etxfloat_memorize_foreign_hello(struct link_entry *target, struct lq_hello_neighbor *source)
+{
+  struct lq_etxfloat_link_entry *lq_target = (struct lq_etxfloat_link_entry *)target;
+  struct lq_etxfloat_lq_hello_neighbor *lq_source = (struct lq_etxfloat_lq_hello_neighbor *)source;
 
   if (source) {
     lq_target->lq.valueNlq = lq_source->lq.valueLq;
@@ -215,58 +221,62 @@ static void lq_etxfloat_memorize_foreign_hello(struct link_entry *target,
 
 }
 
-static void lq_etxfloat_copy_link_entry_lq_into_tc_mpr_addr(
-    struct tc_mpr_addr *target, struct link_entry *source) {
-  struct lq_etxfloat_tc_mpr_addr *lq_target = (struct lq_etxfloat_tc_mpr_addr *) target;
-  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *) source;
+static void
+lq_etxfloat_copy_link_entry_lq_into_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source)
+{
+  struct lq_etxfloat_tc_mpr_addr *lq_target = (struct lq_etxfloat_tc_mpr_addr *)target;
+  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *)source;
 
   lq_target->lq = lq_source->lq;
 }
 
-static void lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry(
-    struct tc_edge_entry *target, struct link_entry *source) {
-  struct lq_etxfloat_tc_edge *lq_target = (struct lq_etxfloat_tc_edge *) target;
-  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *) source;
+static void
+lq_etxfloat_copy_link_entry_lq_into_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source)
+{
+  struct lq_etxfloat_tc_edge *lq_target = (struct lq_etxfloat_tc_edge *)target;
+  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *)source;
 
   lq_target->lq = lq_source->lq;
 }
 
-static void lq_etxfloat_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target,
-    struct link_entry *source) {
-  struct lq_etxfloat_lq_hello_neighbor *lq_target =
-      (struct lq_etxfloat_lq_hello_neighbor *) target;
-  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *) source;
+static void
+lq_etxfloat_copy_link_lq_into_neighbor(struct lq_hello_neighbor *target, struct link_entry *source)
+{
+  struct lq_etxfloat_lq_hello_neighbor *lq_target = (struct lq_etxfloat_lq_hello_neighbor *)target;
+  struct lq_etxfloat_link_entry *lq_source = (struct lq_etxfloat_link_entry *)source;
 
   lq_target->lq = lq_source->lq;
 }
 
-static int lq_etxfloat_serialize_hello_lq(unsigned char *buff,
-    struct lq_hello_neighbor *neigh) {
-  struct lq_etxfloat_lq_hello_neighbor *lq_neigh =
-      (struct lq_etxfloat_lq_hello_neighbor *) neigh;
+static int
+lq_etxfloat_serialize_hello_lq(unsigned char *buff, struct lq_hello_neighbor *neigh)
+{
+  struct lq_etxfloat_lq_hello_neighbor *lq_neigh = (struct lq_etxfloat_lq_hello_neighbor *)neigh;
 
-  buff[0] = (unsigned char) (lq_neigh->lq.valueLq * 255);
-  buff[1] = (unsigned char) (lq_neigh->lq.valueNlq * 255);
-  buff[2] = (unsigned char) (0);
-  buff[3] = (unsigned char) (0);
+  buff[0] = (unsigned char)(lq_neigh->lq.valueLq * 255);
+  buff[1] = (unsigned char)(lq_neigh->lq.valueNlq * 255);
+  buff[2] = (unsigned char)(0);
+  buff[3] = (unsigned char)(0);
 
   return 4;
 }
-static int lq_etxfloat_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *mpr) {
-  struct lq_etxfloat_tc_mpr_addr *lq_mpr = (struct lq_etxfloat_tc_mpr_addr *) mpr;
+static int
+lq_etxfloat_serialize_tc_lq(unsigned char *buff, struct tc_mpr_addr *mpr)
+{
+  struct lq_etxfloat_tc_mpr_addr *lq_mpr = (struct lq_etxfloat_tc_mpr_addr *)mpr;
 
-  buff[0] = (unsigned char) (lq_mpr->lq.valueLq * 255);
-  buff[1] = (unsigned char) (lq_mpr->lq.valueNlq * 255);
-  buff[2] = (unsigned char) (0);
-  buff[3] = (unsigned char) (0);
+  buff[0] = (unsigned char)(lq_mpr->lq.valueLq * 255);
+  buff[1] = (unsigned char)(lq_mpr->lq.valueNlq * 255);
+  buff[2] = (unsigned char)(0);
+  buff[3] = (unsigned char)(0);
 
   return 4;
 }
 
-static void lq_etxfloat_deserialize_hello_lq(uint8_t const ** curr,
-    struct lq_hello_neighbor *neigh) {
-  struct lq_etxfloat_lq_hello_neighbor *lq_neigh =
-      (struct lq_etxfloat_lq_hello_neighbor *) neigh;
+static void
+lq_etxfloat_deserialize_hello_lq(uint8_t const **curr, struct lq_hello_neighbor *neigh)
+{
+  struct lq_etxfloat_lq_hello_neighbor *lq_neigh = (struct lq_etxfloat_lq_hello_neighbor *)neigh;
 
   uint8_t lq_value, nlq_value;
 
@@ -278,9 +288,10 @@ static void lq_etxfloat_deserialize_hello_lq(uint8_t const ** curr,
   lq_neigh->lq.valueNlq = (float)nlq_value / 255.0;
 }
 
-static void lq_etxfloat_deserialize_tc_lq(uint8_t const ** curr,
-    struct tc_edge_entry *edge) {
-  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *) edge;
+static void
+lq_etxfloat_deserialize_tc_lq(uint8_t const **curr, struct tc_edge_entry *edge)
+{
+  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *)edge;
 
   uint8_t lq_value, nlq_value;
 
@@ -292,32 +303,34 @@ static void lq_etxfloat_deserialize_tc_lq(uint8_t const ** curr,
   lq_edge->lq.valueNlq = (float)nlq_value / 255.0;
 }
 
-static char *lq_etxfloat_print_lq(struct lq_etxfloat_linkquality *lq, char separator,
-    struct lqtextbuffer *buffer) {
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f",
-      lq->valueLq,
-      separator,
-      lq->valueNlq);
+static char *
+lq_etxfloat_print_lq(struct lq_etxfloat_linkquality *lq, char separator, struct lqtextbuffer *buffer)
+{
+  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f%c%2.3f", lq->valueLq, separator, lq->valueNlq);
   return buffer->buf;
 }
 
-static char *lq_etxfloat_print_link_entry_lq(struct link_entry *link, char separator,
-    struct lqtextbuffer *buffer) {
-  struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *) link;
+static char *
+lq_etxfloat_print_link_entry_lq(struct link_entry *link, char separator, struct lqtextbuffer *buffer)
+{
+  struct lq_etxfloat_link_entry *lq_link = (struct lq_etxfloat_link_entry *)link;
 
   return lq_etxfloat_print_lq(&lq_link->lq, separator, buffer);
 }
 
-static char *lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *edge,
-    char separator, struct lqtextbuffer * buffer) {
-  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *) edge;
+static char *
+lq_etxfloat_print_tc_edge_entry_lq(struct tc_edge_entry *edge, char separator, struct lqtextbuffer *buffer)
+{
+  struct lq_etxfloat_tc_edge *lq_edge = (struct lq_etxfloat_tc_edge *)edge;
 
   return lq_etxfloat_print_lq(&lq_edge->lq, separator, buffer);
 }
 
-static char *lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer * buffer) {
+static char *
+lq_etxfloat_print_cost(olsr_linkcost cost, struct lqtextbuffer *buffer)
+{
   // must calculate
-  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost)/LQ_PLUGIN_LC_MULTIPLIER );
+  snprintf(buffer->buf, sizeof(struct lqtextbuffer), "%2.3f", ((float)cost) / LQ_PLUGIN_LC_MULTIPLIER);
   return buffer->buf;
 }
 

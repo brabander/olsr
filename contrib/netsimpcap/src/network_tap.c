@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -54,7 +55,7 @@ char macBroadcast[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
  * @return 0 if successful, 1 for an error
  */
 int
-readMac (char *value, MacAddress *target)
+readMac(char *value, MacAddress * target)
 {
   char buffer[13];
   int index = 0;
@@ -96,16 +97,16 @@ readMac (char *value, MacAddress *target)
     }
   }
 
-  if(index < 12) {
+  if (index < 12) {
     return 1;
   }
 
   for (index = 5; index >= 0; index--) {
-    buffer[index*2+2] = 0;
+    buffer[index * 2 + 2] = 0;
 
     int value;
     sscanf(&buffer[index], "%x", &value);
-    target->mac[index] = (char) value;
+    target->mac[index] = (char)value;
   }
   return 0;
 }
@@ -118,7 +119,7 @@ readMac (char *value, MacAddress *target)
  * @param file destriptor of the tap device
  */
 void
-closeTap (int fd)
+closeTap(int fd)
 {
   close(fd);
 }
@@ -135,7 +136,7 @@ closeTap (int fd)
  * happened
  */
 int
-createTap (char *name, MacAddress *mac)
+createTap(char *name, MacAddress * mac)
 {
   static const char deviceName[] = "/dev/net/tun";
   int etfd;
@@ -152,7 +153,7 @@ createTap (char *name, MacAddress *mac)
 
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
 
   /*
@@ -170,7 +171,7 @@ createTap (char *name, MacAddress *mac)
 
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
   ifreq.ifr_addr.sa_family = AF_INET;
 
   ioctlSkfd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -209,7 +210,7 @@ createTap (char *name, MacAddress *mac)
   /* Set the multicast flag on the interface */
   memset(&ifreq, 0, sizeof(ifreq));
   strncpy(ifreq.ifr_name, name, IFNAMSIZ - 1);
-  ifreq.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  ifreq.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
 
   ioctlres = ioctl(ioctlSkfd, SIOCGIFFLAGS, &ifreq);
   if (ioctlres >= 0) {

@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -49,11 +50,10 @@ add_route_entry(struct route_entry *entry)
 {
   struct route_entry *new_entry;
 
-  if((new_entry = malloc(sizeof(struct route_entry))) == 0)
-    {
-      fprintf(stderr, "OUT OF MEMORY!\n");
-      exit(1);
-    }
+  if ((new_entry = malloc(sizeof(struct route_entry))) == 0) {
+    fprintf(stderr, "OUT OF MEMORY!\n");
+    exit(1);
+  }
 
   /* queue */
   new_entry->next = route_set.next;

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,13 +46,13 @@
 #include "olsr_protocol.h"
 
 void
-olsr_init_package_process(void);
+  olsr_init_package_process(void);
 
 void
-olsr_deinit_package_process(void);
+  olsr_deinit_package_process(void);
 
 void
-olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
+  olsr_process_received_hello(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 #endif
 

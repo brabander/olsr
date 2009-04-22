@@ -42,7 +42,7 @@
 #include "defs.h"
 #include "net_os.h"
 #include "ipcalc.h"
-#include "parser.h"		/* dnc: needed for call to packet_parser() */
+#include "parser.h"             /* dnc: needed for call to packet_parser() */
 #include "olsr_protocol.h"
 #include "common/string.h"
 #include "misc.h"
@@ -90,7 +90,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp_var.h>
 #include <netinet/icmp6.h>
-#include <netinet6/in6_var.h>	/* For struct in6_ifreq */
+#include <netinet6/in6_var.h>   /* For struct in6_ifreq */
 #include <ifaddrs.h>
 #include <sys/uio.h>
 #include <net80211/ieee80211.h>
@@ -121,7 +121,7 @@
 #endif /* SPOOF */
 
 #if 0
-#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)	/* generic IF get op */
+#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)    /* generic IF get op */
 #define SIOCGWAVELAN SIOCGIFGENERIC
 #endif
 
@@ -182,14 +182,11 @@ set_sysctl_int(const char *name, int new)
 int
 enable_ip_forwarding(int version)
 {
-  const char *name =
-    version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   gateway = set_sysctl_int(name, 1);
   if (gateway < 0) {
-    OLSR_WARN(LOG_NETWORKING,
-	    "Cannot enable IP forwarding. Please enable IP forwarding manually."
-            " Continuing in 3 seconds...\n");
+    OLSR_WARN(LOG_NETWORKING, "Cannot enable IP forwarding. Please enable IP forwarding manually." " Continuing in 3 seconds...\n");
     sleep(3);
   }
 
@@ -229,8 +226,7 @@ disable_redirects_global(int version)
 
   if (ignore_redir < 0) {
     OLSR_WARN(LOG_NETWORKING,
-	    "Cannot disable incoming ICMP redirect messages. "
-            "Please disable them manually. Continuing in 3 seconds...\n");
+              "Cannot disable incoming ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
     sleep(3);
   }
 
@@ -244,8 +240,7 @@ disable_redirects_global(int version)
   send_redir = set_sysctl_int(name, 0);
   if (send_redir < 0) {
     OLSR_WARN(LOG_NETWORKING,
-	    "Cannot disable outgoing ICMP redirect messages. "
-            "Please disable them manually. Continuing in 3 seconds...\n");
+              "Cannot disable outgoing ICMP redirect messages. " "Please disable them manually. Continuing in 3 seconds...\n");
     sleep(3);
   }
 
@@ -254,9 +249,7 @@ disable_redirects_global(int version)
 
 int
 disable_redirects(const char *if_name
-		  __attribute__ ((unused)), struct interface *iface
-		  __attribute__ ((unused)), int version
-		  __attribute__ ((unused)))
+                  __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
 {
   /*
    *  this function gets called for each interface olsrd uses; however,
@@ -269,8 +262,7 @@ disable_redirects(const char *if_name
 
 int
 deactivate_spoof(const char *if_name
-		 __attribute__ ((unused)), struct interface *iface
-		 __attribute__ ((unused)), int version __attribute__ ((unused)))
+                 __attribute__ ((unused)), struct interface *iface __attribute__ ((unused)), int version __attribute__ ((unused)))
 {
   return 1;
 }
@@ -279,25 +271,18 @@ int
 restore_settings(int version)
 {
   /* reset IP forwarding */
-  const char *name =
-    version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
+  const char *name = version == AF_INET ? "net.inet.ip.forwarding" : "net.inet6.ip6.forwarding";
 
   set_sysctl_int(name, gateway);
 
   /* reset incoming ICMP redirects */
 
 #ifdef __OpenBSD__
-  name =
-    version ==
-    AF_INET ? "net.inet.icmp.rediraccept" : "net.inet6.icmp6.rediraccept";
+  name = version == AF_INET ? "net.inet.icmp.rediraccept" : "net.inet6.icmp6.rediraccept";
 #elif defined __FreeBSD__ || defined __MacOSX__
-  name =
-    version ==
-    AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
+  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
 #else
-  name =
-    version ==
-    AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
+  name = version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
 #endif
   set_sysctl_int(name, ignore_redir);
 
@@ -481,23 +466,16 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_interface = ifs->if_index;
 
   OLSR_INFO(LOG_NETWORKING, "Interface %s joining multicast %s.\n", ifs->int_name,
-	      olsr_ip_to_string(&addrstr,
-				(union olsr_ip_addr *)&ifs->int6_multaddr.
-				sin6_addr));
+            olsr_ip_to_string(&addrstr, (union olsr_ip_addr *)&ifs->int6_multaddr.sin6_addr));
 
   /* rfc 3493 */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq))
       < 0)
 #else /* rfc 2133, obsoleted */
   /* Join receiver group */
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_ADD_MEMBERSHIP,
-		 (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #endif
   {
     OLSR_WARN(LOG_NETWORKING, "Cannot join multicast group (%s)\n", strerror(errno));
@@ -505,15 +483,10 @@ join_mcast(struct interface *ifs, int sock)
   }
 
 
-  if (setsockopt(sock,
-		 IPPROTO_IPV6,
-		 IPV6_MULTICAST_IF,
-		 (char *)&mcastreq.ipv6mr_interface,
-		 sizeof(mcastreq.ipv6mr_interface)) < 0) {
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&mcastreq.ipv6mr_interface, sizeof(mcastreq.ipv6mr_interface)) < 0) {
     OLSR_WARN(LOG_NETWORKING, "Cannot set multicast interface (%s)\n", strerror(errno));
     return -1;
   }
-
 #ifdef IPV6_USE_MIN_MTU
   /*
    * This allow multicast packets to use the full interface MTU and not
@@ -548,35 +521,33 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, int addrtype6)
   }
 
   for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-    if ((ifa->ifa_addr->sa_family == AF_INET6) &&
-	(strcmp(ifa->ifa_name, ifname) == 0)) {
+    if ((ifa->ifa_addr->sa_family == AF_INET6) && (strcmp(ifa->ifa_name, ifname) == 0)) {
       sin6 = (const struct sockaddr_in6 *)(ifa->ifa_addr);
       if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
-	continue;
+        continue;
       strscpy(ifr6.ifr_name, ifname, sizeof(ifr6.ifr_name));
       if ((s6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-	OLSR_WARN(LOG_NETWORKING, "Cannot open datagram socket (%s)\n", strerror(errno));
-	break;
+        OLSR_WARN(LOG_NETWORKING, "Cannot open datagram socket (%s)\n", strerror(errno));
+        break;
       }
       ifr6.ifr_addr = *sin6;
       if (ioctl(s6, SIOCGIFAFLAG_IN6, (int)&ifr6) < 0) {
-	OLSR_WARN(LOG_NETWORKING, "ioctl(SIOCGIFAFLAG_IN6) failed (%s)", strerror(errno));
-	close(s6);
-	break;
+        OLSR_WARN(LOG_NETWORKING, "ioctl(SIOCGIFAFLAG_IN6) failed (%s)", strerror(errno));
+        close(s6);
+        break;
       }
       close(s6);
       flags6 = ifr6.ifr_ifru.ifru_flags6;
       if ((flags6 & IN6_IFF_ANYCAST) != 0)
-	continue;
+        continue;
       if (IN6_IS_ADDR_SITELOCAL(&sin6->sin6_addr)) {
-        if (addrtype6 == OLSR_IP6T_SITELOCAL) found = 1;
+        if (addrtype6 == OLSR_IP6T_SITELOCAL)
+          found = 1;
       } else {
-        if (addrtype6 == OLSR_IP6T_GLOBAL &&
-            (sin6->sin6_addr.s6_addr[0] != 0xfc &&
-             sin6->sin6_addr.s6_addr[0] != 0xfd)) found = 1;
-        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL &&
-               (sin6->sin6_addr.s6_addr[0] == 0xfc ||
-                sin6->sin6_addr.s6_addr[0] == 0xfd)) found = 1;
+        if (addrtype6 == OLSR_IP6T_GLOBAL && (sin6->sin6_addr.s6_addr[0] != 0xfc && sin6->sin6_addr.s6_addr[0] != 0xfd))
+          found = 1;
+        else if (addrtype6 == OLSR_IP6T_UNIQUELOCAL && (sin6->sin6_addr.s6_addr[0] == 0xfc || sin6->sin6_addr.s6_addr[0] == 0xfd))
+          found = 1;
       }
       if (found) {
         memcpy(&saddr6->sin6_addr, &sin6->sin6_addr, sizeof(struct in6_addr));
@@ -603,11 +574,7 @@ static u_int16_t ip_id = 0;
 #endif /* SPOOF */
 
 ssize_t
-olsr_sendto(int s,
-	    const void *buf,
-	    size_t len,
-	    int flags __attribute__ ((unused)),
-	    const struct sockaddr *to, socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused)), const struct sockaddr *to, socklen_t tolen)
 {
 #ifdef SPOOF
   /* IPv4 for now! */
@@ -637,44 +604,44 @@ olsr_sendto(int s,
     ip_id = (u_int16_t) (arc4random() & 0xffff);
   }
 
-  udp_tag = libnet_build_udp(olsr_cnf->olsr_port,	/* src port */
-           olsr_cnf->olsr_port,	/* dest port */
-			     LIBNET_UDP_H + len,	/* length */
-			     0,	/* checksum */
-			     buf,	/* payload */
-			     len,	/* payload size */
-			     context,	/* context */
-			     udp_tag);	/* pblock */
+  udp_tag = libnet_build_udp(olsr_cnf->olsr_port,       /* src port */
+                             olsr_cnf->olsr_port,       /* dest port */
+                             LIBNET_UDP_H + len,        /* length */
+                             0, /* checksum */
+                             buf,       /* payload */
+                             len,       /* payload size */
+                             context,   /* context */
+                             udp_tag);  /* pblock */
   if (udp_tag == -1) {
     OLSR_WARN(LOG_NETWORKING, "libnet UDP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
-  ip_tag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + len,	/* len */
-			     0,	/* TOS */
-			     ip_id++,	/* IP id */
-			     0,	/* IP frag */
-			     1,	/* IP TTL */
-			     IPPROTO_UDP,	/* protocol */
-			     0,	/* checksum */
-			     libnet_get_ipaddr4(context),	/* src IP */
-			     destip,	/* dest IP */
-			     NULL,	/* payload */
-			     0,	/* payload len */
-			     context,	/* context */
-			     ip_tag);	/* pblock */
+  ip_tag = libnet_build_ipv4(LIBNET_IPV4_H + LIBNET_UDP_H + len,        /* len */
+                             0, /* TOS */
+                             ip_id++,   /* IP id */
+                             0, /* IP frag */
+                             1, /* IP TTL */
+                             IPPROTO_UDP,       /* protocol */
+                             0, /* checksum */
+                             libnet_get_ipaddr4(context),       /* src IP */
+                             destip,    /* dest IP */
+                             NULL,      /* payload */
+                             0, /* payload len */
+                             context,   /* context */
+                             ip_tag);   /* pblock */
   if (ip_tag == -1) {
     OLSR_WARN(LOG_NETWORKING, "libnet IP header: %s\n", libnet_geterror(context));
     return (0);
   }
 
-  ether_tag = libnet_build_ethernet(enet_broadcast,	/* ethernet dest */
-				    libnet_get_hwaddr(context),	/* ethernet source */
-				    ETHERTYPE_IP,	/* protocol type */
-				    NULL,	/* payload */
-				    0,	/* payload size */
-				    context,	/* libnet handle */
-				    ether_tag);	/* pblock tag */
+  ether_tag = libnet_build_ethernet(enet_broadcast,     /* ethernet dest */
+                                    libnet_get_hwaddr(context), /* ethernet source */
+                                    ETHERTYPE_IP,       /* protocol type */
+                                    NULL,       /* payload */
+                                    0,  /* payload size */
+                                    context,    /* libnet handle */
+                                    ether_tag); /* pblock tag */
   if (ether_tag == -1) {
     OLSR_WARN(LOG_NETWORKING, "libnet ethernet header: %s\n", libnet_geterror(context));
     return (0);
@@ -691,8 +658,7 @@ olsr_sendto(int s,
   return (len);
 
 #else
-  return sendto(s, buf, len, flags, (const struct sockaddr *)to,
-		tolen);
+  return sendto(s, buf, len, flags, (const struct sockaddr *)to, tolen);
 #endif
 }
 
@@ -702,11 +668,7 @@ olsr_sendto(int s,
  */
 
 ssize_t
-olsr_recvfrom(int s,
-	      void *buf,
-	      size_t len,
-	      int flags __attribute__ ((unused)),
-	      struct sockaddr *from, socklen_t * fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr *from, socklen_t * fromlen)
 {
   struct msghdr mhdr;
   struct iovec iov;
@@ -746,12 +708,11 @@ olsr_recvfrom(int s,
   /* this needs to get communicated back to caller */
   *fromlen = mhdr.msg_namelen;
   if (olsr_cnf->ip_version == AF_INET6) {
-    for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(&mhdr); cm;
-	 cm = (struct cmsghdr *)CMSG_NXTHDR(&mhdr, cm)) {
+    for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(&mhdr); cm; cm = (struct cmsghdr *)CMSG_NXTHDR(&mhdr, cm)) {
       if (cm->cmsg_level == IPPROTO_IPV6 && cm->cmsg_type == IPV6_PKTINFO) {
-	pkti = (struct in6_pktinfo *)CMSG_DATA(cm);
-	iaddr6 = &pkti->ipi6_addr;
-	if_indextoname(pkti->ipi6_ifindex, iname);
+        pkti = (struct in6_pktinfo *)CMSG_DATA(cm);
+        iaddr6 = &pkti->ipi6_addr;
+        if_indextoname(pkti->ipi6_ifindex, iname);
       }
     }
   } else {
@@ -765,12 +726,11 @@ olsr_recvfrom(int s,
 
   sin6 = (struct sockaddr_in6 *)from;
   OLSR_DEBUG(LOG_NETWORKING,
-	      "%d bytes from %s, socket associated %s really received on %s\n",
-	      count, inet_ntop(olsr_cnf->ip_version,
-			       olsr_cnf->ip_version ==
-			       AF_INET6 ? (char *)&sin6->
-			       sin6_addr : (char *)&sin4->sin_addr, addrstr,
-			       sizeof(addrstr)), ifc->int_name, iname);
+             "%d bytes from %s, socket associated %s really received on %s\n",
+             count, inet_ntop(olsr_cnf->ip_version,
+                              olsr_cnf->ip_version ==
+                              AF_INET6 ? (char *)&sin6->
+                              sin6_addr : (char *)&sin4->sin_addr, addrstr, sizeof(addrstr)), ifc->int_name, iname);
 
   if (strcmp(ifc->int_name, iname) != 0) {
     return (0);
@@ -784,9 +744,7 @@ olsr_recvfrom(int s,
  */
 
 int
-olsr_select(int nfds,
-	    fd_set * readfds,
-	    fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
+olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
   return select(nfds, readfds, writefds, exceptfds, timeout);
 }
@@ -813,7 +771,7 @@ check_wireless_interface(char *ifname)
   strlcpy(nr.nr_ifname, ifname, sizeof(nr.nr_ifname));
   return (ioctl(olsr_cnf->ioctl_s, SIOCG80211FLAGS, &nr) >= 0) ? 1 : 0;
 #else
-  ifname = NULL;		/* squelsh compiler warning */
+  ifname = NULL;                /* squelsh compiler warning */
   return 0;
 #endif
 }

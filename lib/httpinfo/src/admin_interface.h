@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -51,13 +52,13 @@
 #include "common/autobuf.h"
 
 void
-build_admin_body(struct autobuf *abuf);
+  build_admin_body(struct autobuf *abuf);
 
 int
-process_set_values(char*, uint32_t, struct autobuf *abuf);
+  process_set_values(char *, uint32_t, struct autobuf *abuf);
 
 int
-process_param(char *, char *);
+  process_param(char *, char *);
 
 #endif
 

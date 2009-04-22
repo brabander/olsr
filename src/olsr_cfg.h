@@ -267,7 +267,7 @@ conv_pollrate_to_secs(uint32_t p)
 static inline uint32_t
 conv_pollrate_to_microsecs(float p)
 {
-  return (uint32_t)(p * 1000000);
+  return (uint32_t) (p * 1000000);
 }
 
 #endif /* _OLSRD_CFG_H */

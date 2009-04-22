@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -40,96 +41,91 @@
 
 #include <windows.h>
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-	STARTUPINFO StartInfo;
-	PROCESS_INFORMATION ProcInfo;
-	int i;
-	char *CmdLine;
-	char *Walker;
-	char NewCmdLine[MAX_PATH + 500];
-	HANDLE Handles[2];
-	unsigned long Res;
-	int Quotes;
+  STARTUPINFO StartInfo;
+  PROCESS_INFORMATION ProcInfo;
+  int i;
+  char *CmdLine;
+  char *Walker;
+  char NewCmdLine[MAX_PATH + 500];
+  HANDLE Handles[2];
+  unsigned long Res;
+  int Quotes;
 
-	Handles[0] = OpenEvent(EVENT_ALL_ACCESS, FALSE, "TheOlsrdShimEvent");
+  Handles[0] = OpenEvent(EVENT_ALL_ACCESS, FALSE, "TheOlsrdShimEvent");
 
-	if (Handles[0] == NULL)
-	{
-		MessageBox(NULL, "Cannot open event.", "Shim Error", MB_ICONERROR | MB_OK);
-		ExitProcess(1);
-	}
+  if (Handles[0] == NULL) {
+    MessageBox(NULL, "Cannot open event.", "Shim Error", MB_ICONERROR | MB_OK);
+    ExitProcess(1);
+  }
 
-	CmdLine = GetCommandLine();
+  CmdLine = GetCommandLine();
 
-	Quotes = 0;
+  Quotes = 0;
 
-	while (*CmdLine != 0)
-	{
-		if (*CmdLine == '"')
-			Quotes = !Quotes;
+  while (*CmdLine != 0) {
+    if (*CmdLine == '"')
+      Quotes = !Quotes;
 
-		else if (*CmdLine == ' ' && !Quotes)
-			break;
+    else if (*CmdLine == ' ' && !Quotes)
+      break;
 
-		CmdLine++;
-	}
+    CmdLine++;
+  }
 
-	if (*CmdLine == 0)
-	{
-		MessageBox(NULL, "Missing arguments.", "Shim Error", MB_ICONERROR | MB_OK);
-		ExitProcess(1);
-	}
+  if (*CmdLine == 0) {
+    MessageBox(NULL, "Missing arguments.", "Shim Error", MB_ICONERROR | MB_OK);
+    ExitProcess(1);
+  }
 
-	GetModuleFileName(NULL, NewCmdLine, MAX_PATH);
+  GetModuleFileName(NULL, NewCmdLine, MAX_PATH);
 
-	for (Walker = NewCmdLine; *Walker != 0; Walker++);
+  for (Walker = NewCmdLine; *Walker != 0; Walker++);
 
-	while (*Walker != '\\')
-		Walker--;
+  while (*Walker != '\\')
+    Walker--;
 
-	Walker[1] = 'o';
-	Walker[2] = 'l';
-	Walker[3] = 's';
-	Walker[4] = 'r';
-	Walker[5] = 'd';
-	Walker[6] = '.';
-	Walker[7] = 'e';
-	Walker[8] = 'x';
-	Walker[9] = 'e';
+  Walker[1] = 'o';
+  Walker[2] = 'l';
+  Walker[3] = 's';
+  Walker[4] = 'r';
+  Walker[5] = 'd';
+  Walker[6] = '.';
+  Walker[7] = 'e';
+  Walker[8] = 'x';
+  Walker[9] = 'e';
 
-	Walker[10] = ' ';
+  Walker[10] = ' ';
 
-	Walker += 11;
+  Walker += 11;
 
-	while ((*Walker++ = *CmdLine++) != 0);
+  while ((*Walker++ = *CmdLine++) != 0);
 
-	for (i = 0; i < sizeof (STARTUPINFO); i++)
-		((char *)&StartInfo)[i] = 0;
+  for (i = 0; i < sizeof(STARTUPINFO); i++)
+    ((char *)&StartInfo)[i] = 0;
 
-	StartInfo.cb = sizeof (STARTUPINFO);
+  StartInfo.cb = sizeof(STARTUPINFO);
 
-	if (!CreateProcess(NULL, NewCmdLine, NULL, NULL, TRUE,
-		CREATE_NEW_PROCESS_GROUP, NULL, NULL, &StartInfo, &ProcInfo))
-	{
-		MessageBox(NULL, "Cannot execute OLSR server.", "Shim Error", MB_ICONERROR | MB_OK);
-		ExitProcess(1);
-	}
+  if (!CreateProcess(NULL, NewCmdLine, NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &StartInfo, &ProcInfo)) {
+    MessageBox(NULL, "Cannot execute OLSR server.", "Shim Error", MB_ICONERROR | MB_OK);
+    ExitProcess(1);
+  }
 
-	Handles[1] = ProcInfo.hProcess;
+  Handles[1] = ProcInfo.hProcess;
 
-	Res = WaitForMultipleObjects(2, Handles, FALSE, INFINITE);
+  Res = WaitForMultipleObjects(2, Handles, FALSE, INFINITE);
 
-	if (Res == WAIT_OBJECT_0)
-	{
-		GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, ProcInfo.dwProcessId);
-		WaitForSingleObject(ProcInfo.hProcess, INFINITE);
-	}
+  if (Res == WAIT_OBJECT_0) {
+    GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, ProcInfo.dwProcessId);
+    WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+  }
 
-	CloseHandle(ProcInfo.hThread);
-	CloseHandle(ProcInfo.hProcess);
+  CloseHandle(ProcInfo.hThread);
+  CloseHandle(ProcInfo.hProcess);
 
-	ExitProcess(0);
+  ExitProcess(0);
 }
 
 /*

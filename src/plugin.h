@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -57,6 +58,7 @@
  *                Functions that the plugin MUST provide                    *
  ****************************************************************************/
 #if 1
+
 /* We hide them from the compiler here to allow the plugins itself to declare them
  * as they also implement them if we activate -Wredundant-decls.
  * Normally we leave it seen so that we enforce a check by the compiler if they are
@@ -78,6 +80,7 @@ int olsrd_plugin_init(void);
 
 
 /* Interface version 4 */
+
 /**
  * Register parameters from config file
  * Called for all plugin parameters
@@ -87,17 +90,17 @@ int olsrd_plugin_register_param(char *key, char *value);
 /* Interface version 5 */
 
 typedef union {
-    unsigned int ui;
-    char *pc;
+  unsigned int ui;
+  char *pc;
 } set_plugin_parameter_addon;
 
 typedef int set_plugin_parameter(const char *value, void *data, set_plugin_parameter_addon addon);
 
 struct olsrd_plugin_parameters {
-    const char *name;
-    set_plugin_parameter *set_plugin_parameter;
-    void *data;
-    set_plugin_parameter_addon addon;
+  const char *name;
+  set_plugin_parameter *set_plugin_parameter;
+  void *data;
+  set_plugin_parameter_addon addon;
 };
 
 /**

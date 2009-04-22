@@ -75,17 +75,17 @@ jenkins_hash(const uint8_t * k, uint32_t length)
 
   /* Set up the internal state */
   len = length;
-  a = b = 0x9e3779b9;		/* the golden ratio; an arbitrary value */
-  c = 0;			/* the previous hash value */
+  a = b = 0x9e3779b9;           /* the golden ratio; an arbitrary value */
+  c = 0;                        /* the previous hash value */
 
   /* handle most of the key */
   while (len >= 12) {
     a += (k[0] + ((uint32_t) k[1] << 8) + ((uint32_t) k[2] << 16)
-	  + ((uint32_t) k[3] << 24));
+          + ((uint32_t) k[3] << 24));
     b += (k[4] + ((uint32_t) k[5] << 8) + ((uint32_t) k[6] << 16)
-	  + ((uint32_t) k[7] << 24));
+          + ((uint32_t) k[7] << 24));
     c += (k[8] + ((uint32_t) k[9] << 8) + ((uint32_t) k[10] << 16)
-	  + ((uint32_t) k[11] << 24));
+          + ((uint32_t) k[11] << 24));
 
     __jhash_mix(a, b, c);
 
@@ -131,18 +131,16 @@ jenkins_hash(const uint8_t * k, uint32_t length)
  * @return the hash(a value in the (0 to HASHMASK-1) range)
  */
 uint32_t
-olsr_ip_hashing(const union olsr_ip_addr *address)
+olsr_ip_hashing(const union olsr_ip_addr * address)
 {
   uint32_t hash;
 
   switch (olsr_cnf->ip_version) {
   case AF_INET:
-    hash = jenkins_hash((const uint8_t *)&address->v4,
-                        sizeof(uint32_t));
+    hash = jenkins_hash((const uint8_t *)&address->v4, sizeof(uint32_t));
     break;
   case AF_INET6:
-    hash = jenkins_hash((const uint8_t *)&address->v6,
-			sizeof(struct in6_addr));
+    hash = jenkins_hash((const uint8_t *)&address->v6, sizeof(struct in6_addr));
     break;
   default:
     hash = 0;

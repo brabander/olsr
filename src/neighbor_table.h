@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -47,10 +48,9 @@
 #include "hashing.h"
 
 
-struct neighbor_2_list_entry
-{
-  struct neighbor_entry *nbr2_nbr; /* backpointer to owning nbr entry */
-  struct neighbor_2_entry      *neighbor_2;
+struct neighbor_2_list_entry {
+  struct neighbor_entry *nbr2_nbr;     /* backpointer to owning nbr entry */
+  struct neighbor_2_entry *neighbor_2;
   struct timer_entry *nbr2_list_timer;
   struct neighbor_2_list_entry *next;
   struct neighbor_2_list_entry *prev;
@@ -58,19 +58,18 @@ struct neighbor_2_list_entry
 
 #define OLSR_NBR2_LIST_JITTER 5 /* percent */
 
-struct neighbor_entry
-{
-  union olsr_ip_addr           neighbor_main_addr;
-  uint8_t                    status;
-  uint8_t                    willingness;
-  unsigned char                is_mpr:1;
-  unsigned char                was_mpr:1; /* Used to detect changes in MPR */
-  unsigned char                skip:1;
-  int                          neighbor_2_nocov;
-  int                          linkcount;
+struct neighbor_entry {
+  union olsr_ip_addr neighbor_main_addr;
+  uint8_t status;
+  uint8_t willingness;
+  unsigned char is_mpr:1;
+  unsigned char was_mpr:1;             /* Used to detect changes in MPR */
+  unsigned char skip:1;
+  int neighbor_2_nocov;
+  int linkcount;
   struct neighbor_2_list_entry neighbor_2_list;
-  struct neighbor_entry        *next;
-  struct neighbor_entry        *prev;
+  struct neighbor_entry *next;
+  struct neighbor_entry *prev;
 };
 
 #define OLSR_FOR_ALL_NBR_ENTRIES(nbr) \
@@ -86,44 +85,41 @@ struct neighbor_entry
 /*
  * The neighbor table
  */
-extern struct neighbor_entry EXPORT(neighbortable)[HASHSIZE];
+extern struct neighbor_entry
+EXPORT(neighbortable)[HASHSIZE];
 
-extern struct olsr_cookie_info *nbr2_list_timer_cookie;
+     extern struct olsr_cookie_info *nbr2_list_timer_cookie;
 
-void
-olsr_init_neighbor_table(void);
+     void
+       olsr_init_neighbor_table(void);
 
-int
-olsr_delete_neighbor_2_pointer(struct neighbor_entry *, union olsr_ip_addr *);
+     int
+       olsr_delete_neighbor_2_pointer(struct neighbor_entry *, union olsr_ip_addr *);
 
-struct neighbor_2_list_entry *
-olsr_lookup_my_neighbors(const struct neighbor_entry *, const union olsr_ip_addr *);
+     struct neighbor_2_list_entry *olsr_lookup_my_neighbors(const struct neighbor_entry *, const union olsr_ip_addr *);
 
-int
-olsr_delete_neighbor_table(const union olsr_ip_addr *);
+     int
+       olsr_delete_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *
-olsr_insert_neighbor_table(const union olsr_ip_addr *);
+     struct neighbor_entry *olsr_insert_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *
-olsr_lookup_neighbor_table(const union olsr_ip_addr *);
+     struct neighbor_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_entry *
-olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
+     struct neighbor_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
 
-void
-olsr_time_out_two_hop_neighbors(struct neighbor_entry  *);
+     void
+       olsr_time_out_two_hop_neighbors(struct neighbor_entry *);
 
-void
-olsr_time_out_neighborhood_tables(void);
-void olsr_expire_nbr2_list(void *);
+     void
+       olsr_time_out_neighborhood_tables(void);
+     void olsr_expire_nbr2_list(void *);
 
-void
-olsr_print_neighbor_table(void);
+     void
+       olsr_print_neighbor_table(void);
 
 
-int
-update_neighbor_status(struct neighbor_entry *, int);
+     int
+       update_neighbor_status(struct neighbor_entry *, int);
 
 #endif
 

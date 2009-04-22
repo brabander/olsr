@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -42,8 +43,7 @@
 
 #define TL_SYS_TIMES_H_INCLUDED
 
-struct tms
-{
+struct tms {
   int dummy;
 };
 

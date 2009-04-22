@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -58,7 +59,7 @@ static struct timer_entry *spf_backoff_timer = NULL;
  * after compiler optimization.
  */
 static int
-avl_comp_etx (const void *etx1, const void *etx2)
+avl_comp_etx(const void *etx1, const void *etx2)
 {
   if (*(const olsr_linkcost *)etx1 < *(const olsr_linkcost *)etx2) {
     return -1;
@@ -77,8 +78,7 @@ avl_comp_etx (const void *etx1, const void *etx2)
  * Key an existing vertex to a candidate tree.
  */
 static void
-olsr_spf_add_cand_tree (struct avl_tree *tree,
-                        struct tc_entry *tc)
+olsr_spf_add_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
@@ -87,8 +87,7 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
   tc->cand_tree_node.key = &tc->path_cost;
 
   OLSR_DEBUG(LOG_ROUTING, "SPF: insert candidate %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr),
-              get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
 
   avl_insert(tree, &tc->cand_tree_node, AVL_DUP);
 }
@@ -99,8 +98,7 @@ olsr_spf_add_cand_tree (struct avl_tree *tree,
  * Unkey an existing vertex from a candidate tree.
  */
 static void
-olsr_spf_del_cand_tree (struct avl_tree *tree,
-                        struct tc_entry *tc)
+olsr_spf_del_cand_tree(struct avl_tree *tree, struct tc_entry *tc)
 {
 
 #if !defined REMOVE_LOG_DEBUG
@@ -108,8 +106,7 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
   struct lqtextbuffer lqbuffer;
 #endif
   OLSR_DEBUG(LOG_ROUTING, "SPF: delete candidate %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr),
-              get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
 
   avl_delete(tree, &tc->cand_tree_node);
 }
@@ -120,8 +117,7 @@ olsr_spf_del_cand_tree (struct avl_tree *tree,
  * Insert an SPF result at the end of the path list.
  */
 static void
-olsr_spf_add_path_list (struct list_node *head, int *path_count,
-                        struct tc_entry *tc)
+olsr_spf_add_path_list(struct list_node *head, int *path_count, struct tc_entry *tc)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str pathbuf, nbuf;
@@ -129,10 +125,9 @@ olsr_spf_add_path_list (struct list_node *head, int *path_count,
 #endif
 
   OLSR_DEBUG(LOG_ROUTING, "SPF: append path %s, cost %s, via %s\n",
-              olsr_ip_to_string(&pathbuf, &tc->addr),
-              get_linkcost_text(tc->path_cost, false, &lqbuffer),
-              tc->next_hop ? olsr_ip_to_string(
-                &nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
+             olsr_ip_to_string(&pathbuf, &tc->addr),
+             get_linkcost_text(tc->path_cost, false, &lqbuffer),
+             tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "-");
 
   list_add_before(head, &tc->path_list_node);
   *path_count = *path_count + 1;
@@ -144,11 +139,11 @@ olsr_spf_add_path_list (struct list_node *head, int *path_count,
  * return the node with the minimum pathcost.
  */
 static struct tc_entry *
-olsr_spf_extract_best (struct avl_tree *tree)
+olsr_spf_extract_best(struct avl_tree *tree)
 {
   struct avl_node *node = avl_walk_first(tree);
 
-  return (node ? cand_tree2tc(node) :  NULL);
+  return (node ? cand_tree2tc(node) : NULL);
 }
 
 
@@ -160,7 +155,7 @@ olsr_spf_extract_best (struct avl_tree *tree)
  * path cost is better.
  */
 static void
-olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
+olsr_spf_relax(struct avl_tree *cand_tree, struct tc_entry *tc)
 {
   struct avl_node *edge_node;
   olsr_linkcost new_cost;
@@ -170,15 +165,12 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
   struct lqtextbuffer lqbuffer;
 #endif
   OLSR_DEBUG(LOG_ROUTING, "SPF: exploring node %s, cost %s\n",
-              olsr_ip_to_string(&buf, &tc->addr),
-              get_linkcost_text(tc->path_cost, false, &lqbuffer));
+             olsr_ip_to_string(&buf, &tc->addr), get_linkcost_text(tc->path_cost, false, &lqbuffer));
 
   /*
    * loop through all edges of this vertex.
    */
-  for (edge_node = avl_walk_first(&tc->edge_tree);
-       edge_node;
-       edge_node = avl_walk_next(edge_node)) {
+  for (edge_node = avl_walk_first(&tc->edge_tree); edge_node; edge_node = avl_walk_next(edge_node)) {
 
     struct tc_entry *new_tc;
     struct tc_edge_entry *tc_edge = edge_tree2tc_edge(edge_node);
@@ -187,8 +179,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
      * We are not interested in dead-end edges.
      */
     if (!tc_edge->edge_inv) {
-      OLSR_DEBUG(LOG_ROUTING, "SPF:   ignoring edge %s\n",
-                  olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
+      OLSR_DEBUG(LOG_ROUTING, "SPF:   ignoring edge %s\n", olsr_ip_to_string(&buf, &tc_edge->T_dest_addr));
       if (!tc_edge->edge_inv) {
         OLSR_DEBUG(LOG_ROUTING, "SPF:     no inverse edge\n");
       }
@@ -202,8 +193,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
     new_cost = tc->path_cost + tc_edge->cost;
 
     OLSR_DEBUG(LOG_ROUTING, "SPF:   exploring edge %s, cost %s\n",
-                olsr_ip_to_string(&buf, &tc_edge->T_dest_addr),
-                get_linkcost_text(new_cost, true, &lqbuffer));
+               olsr_ip_to_string(&buf, &tc_edge->T_dest_addr), get_linkcost_text(new_cost, true, &lqbuffer));
 
     /*
      * if it's better than the current path quality of this edge's
@@ -229,10 +219,9 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
       new_tc->hops = tc->hops + 1;
 
       OLSR_DEBUG(LOG_ROUTING, "SPF:   better path to %s, cost %s, via %s, hops %d\n",
-                  olsr_ip_to_string(&buf, &new_tc->addr),
-                  get_linkcost_text(new_cost, true, &lqbuffer),
-                  tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>",
-                  new_tc->hops);
+                 olsr_ip_to_string(&buf, &new_tc->addr),
+                 get_linkcost_text(new_cost, true, &lqbuffer),
+                 tc->next_hop ? olsr_ip_to_string(&nbuf, &tc->next_hop->neighbor_iface_addr) : "<none>", new_tc->hops);
     }
   }
 }
@@ -250,8 +239,7 @@ olsr_spf_relax (struct avl_tree *cand_tree, struct tc_entry *tc)
  * on the candidate tree.
  */
 static void
-olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
-                   int *path_count)
+olsr_spf_run_full(struct avl_tree *cand_tree, struct list_node *path_list, int *path_count)
 {
   struct tc_entry *tc;
 
@@ -274,20 +262,20 @@ olsr_spf_run_full (struct avl_tree *cand_tree, struct list_node *path_list,
  * Callback for the SPF backoff timer.
  */
 static void
-olsr_expire_spf_backoff(void *context __attribute__((unused)))
+olsr_expire_spf_backoff(void *context __attribute__ ((unused)))
 {
   spf_backoff_timer = NULL;
 }
 
 void
-olsr_calculate_routing_table (void)
+olsr_calculate_routing_table(void)
 {
 #ifdef SPF_PROFILING
   struct timeval t1, t2, t3, t4, t5, spf_init, spf_run, route, kernel, total;
 #endif
   struct avl_tree cand_tree;
   struct avl_node *rtp_tree_node;
-  struct list_node path_list; /* head of the path_list */
+  struct list_node path_list;          /* head of the path_list */
   struct tc_entry *tc;
   struct rt_path *rtp;
   struct tc_edge_entry *tc_edge;
@@ -300,9 +288,8 @@ olsr_calculate_routing_table (void)
     return;
   }
   spf_backoff_timer =
-      olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
-                       OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff,
-                       NULL, spf_backoff_timer_cookie->ci_id);
+    olsr_start_timer(OLSR_SPF_BACKOFF_TIME, OLSR_SPF_BACKOFF_JITTER,
+                     OLSR_TIMER_ONESHOT, &olsr_expire_spf_backoff, NULL, spf_backoff_timer_cookie->ci_id);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t1, NULL);
@@ -322,7 +309,8 @@ olsr_calculate_routing_table (void)
     tc->next_hop = NULL;
     tc->path_cost = ROUTE_COST_BROKEN;
     tc->hops = 0;
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+  }
+  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
 
   /*
@@ -359,7 +347,8 @@ olsr_calculate_routing_table (void)
         tc_edge->edge_inv->tc->next_hop = link;
       }
     }
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(link);
+  }
+  OLSR_FOR_ALL_LINK_ENTRIES_END(link);
 
 #ifdef SPF_PROFILING
   gettimeofday(&t2, NULL);
@@ -370,8 +359,7 @@ olsr_calculate_routing_table (void)
    */
   olsr_spf_run_full(&cand_tree, &path_list, &path_count);
 
-  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n",
-              olsr_wallclock_string());
+  OLSR_DEBUG(LOG_ROUTING, "\n--- %s ------------------------------------------------- DIJKSTRA\n\n", olsr_wallclock_string());
 
 #ifdef SPF_PROFILING
   gettimeofday(&t3, NULL);
@@ -405,9 +393,7 @@ olsr_calculate_routing_table (void)
      * If the prefix is already in the RIB, refresh the entry such
      * that olsr_delete_outdated_routes() does not purge it off.
      */
-    for (rtp_tree_node = avl_walk_first(&tc->prefix_tree);
-         rtp_tree_node;
-         rtp_tree_node = avl_walk_next(rtp_tree_node)) {
+    for (rtp_tree_node = avl_walk_first(&tc->prefix_tree); rtp_tree_node; rtp_tree_node = avl_walk_next(rtp_tree_node)) {
 
       rtp = rtp_prefix_tree2rtp(rtp_tree_node);
 
@@ -452,10 +438,9 @@ olsr_calculate_routing_table (void)
   timersub(&t5, &t4, &kernel);
   timersub(&t5, &t1, &total);
   OLSR_DEBUG(LOG_ROUTING, "\n--- SPF-stats for %d nodes, %d routes (total/init/run/route/kern): "
-              "%d, %d, %d, %d, %d\n",
-              path_count, routingtree.count,
-              (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec,
-              (int)route.tv_usec, (int)kernel.tv_usec);
+             "%d, %d, %d, %d, %d\n",
+             path_count, routingtree.count,
+             (int)total.tv_usec, (int)spf_init.tv_usec, (int)spf_run.tv_usec, (int)route.tv_usec, (int)kernel.tv_usec);
 #endif
 }
 

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -64,24 +65,19 @@ olsr_init_duplicate_set(void)
 {
   OLSR_INFO(LOG_DUPLICATE_SET, "Initialize duplicate set...\n");
 
-  avl_init(&duplicate_set,
-	   olsr_cnf->ip_version == AF_INET ? &avl_comp_ipv4 : &avl_comp_ipv6);
+  avl_init(&duplicate_set, olsr_cnf->ip_version == AF_INET ? &avl_comp_ipv4 : &avl_comp_ipv6);
 
   /*
    * Get some cookies for getting stats to ease troubleshooting.
    */
-  duplicate_timer_cookie =
-    olsr_alloc_cookie("Duplicate Set", OLSR_COOKIE_TYPE_TIMER);
+  duplicate_timer_cookie = olsr_alloc_cookie("Duplicate Set", OLSR_COOKIE_TYPE_TIMER);
 
-  duplicate_mem_cookie =
-    olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
+  duplicate_mem_cookie = olsr_alloc_cookie("dup_entry", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(duplicate_mem_cookie, sizeof(struct dup_entry));
 
 
   olsr_set_timer(&duplicate_cleanup_timer, DUPLICATE_CLEANUP_INTERVAL,
-		 DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC,
-		 &olsr_cleanup_duplicate_entry, NULL,
-                 duplicate_timer_cookie->ci_id);
+                 DUPLICATE_CLEANUP_JITTER, OLSR_TIMER_PERIODIC, &olsr_cleanup_duplicate_entry, NULL, duplicate_timer_cookie->ci_id);
 }
 
 static struct dup_entry *
@@ -90,9 +86,7 @@ olsr_create_duplicate_entry(union olsr_ip_addr *ip, uint16_t seqnr)
   struct dup_entry *entry;
   entry = olsr_cookie_malloc(duplicate_mem_cookie);
   if (entry != NULL) {
-    memcpy(&entry->ip, ip,
-	   olsr_cnf->ip_version ==
-	   AF_INET ? sizeof(entry->ip.v4) : sizeof(entry->ip.v6));
+    memcpy(&entry->ip, ip, olsr_cnf->ip_version == AF_INET ? sizeof(entry->ip.v4) : sizeof(entry->ip.v6));
     entry->seqnr = seqnr;
     entry->too_low_counter = 0;
     entry->avl.key = &entry->ip;
@@ -117,7 +111,8 @@ olsr_cleanup_duplicate_entry(void __attribute__ ((unused)) * unused)
     if (TIMED_OUT(entry->valid_until)) {
       olsr_delete_duplicate_entry(entry);
     }
-  } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
+  }
+  OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 }
 
 /**
@@ -172,7 +167,7 @@ olsr_message_is_duplicate(union olsr_message *m)
       avl_insert(&duplicate_set, &entry->avl, 0);
       entry->valid_until = valid_until;
     }
-    return false;			// okay, we process this package
+    return false;               // okay, we process this package
   }
 
   diff = (int)seqnr - (int)(entry->seqnr);
@@ -194,11 +189,10 @@ olsr_message_is_duplicate(union olsr_message *m)
       entry->too_low_counter = 0;
       entry->seqnr = seqnr;
       entry->array = 1;
-      return false; /* start with a new sequence number, so NO duplicate */
+      return false;             /* start with a new sequence number, so NO duplicate */
     }
-    OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x from %s\n", seqnr,
-        olsr_ip_to_string(&buf, mainIp));
-    return true; /* duplicate ! */
+    OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
+    return true;                /* duplicate ! */
   }
 
   entry->too_low_counter = 0;
@@ -207,12 +201,12 @@ olsr_message_is_duplicate(union olsr_message *m)
 
     if ((entry->array & bitmask) != 0) {
       OLSR_DEBUG(LOG_DUPLICATE_SET, "blocked %x (diff=%d,mask=%08x) from %s\n", seqnr, diff,
-          entry->array, olsr_ip_to_string(&buf, mainIp));
-      return true; /* duplicate ! */
+                 entry->array, olsr_ip_to_string(&buf, mainIp));
+      return true;              /* duplicate ! */
     }
     entry->array |= bitmask;
     OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
-    return false; /* no duplicate */
+    return false;               /* no duplicate */
   } else if (diff < 32) {
     entry->array <<= (uint32_t) diff;
   } else {
@@ -220,9 +214,8 @@ olsr_message_is_duplicate(union olsr_message *m)
   }
   entry->array |= 1;
   entry->seqnr = seqnr;
-  OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr,
-	      olsr_ip_to_string(&buf, mainIp));
-  return false; /* no duplicate */
+  OLSR_DEBUG(LOG_DUPLICATE_SET, "processed %x from %s\n", seqnr, olsr_ip_to_string(&buf, mainIp));
+  return false;                 /* no duplicate */
 }
 
 void
@@ -234,16 +227,13 @@ olsr_print_duplicate_table(void)
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 30;
 
   OLSR_INFO(LOG_DUPLICATE_SET, "\n--- %s ------------------------------------------------- DUPLICATE SET\n\n",
-    olsr_wallclock_string());
-  OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n",
-    ipwidth, "Node IP", "DupArray", "VTime");
+            olsr_wallclock_string());
+  OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %8s %s\n", ipwidth, "Node IP", "DupArray", "VTime");
 
   OLSR_FOR_ALL_DUP_ENTRIES(entry) {
     struct ipaddr_str addrbuf;
     OLSR_INFO_NH(LOG_DUPLICATE_SET, "%-*s %08x %s\n",
-		  ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key),
-		  entry->array,
-      olsr_clock_string(entry->valid_until));
+                 ipwidth, olsr_ip_to_string(&addrbuf, entry->avl.key), entry->array, olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
 #endif
 }

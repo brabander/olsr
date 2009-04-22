@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -55,10 +56,10 @@
 
 static void olsr_add_invalid_address(const union olsr_ip_addr *);
 
-#if 0 // WIN32
+#if 0                           // WIN32
 #define perror(x) WinSockPError(x)
 void
-WinSockPError(const char *);
+  WinSockPError(const char *);
 #endif
 
 /*
@@ -75,13 +76,13 @@ struct ptf {
 
 static struct ptf *ptf_list;
 
-static const char * const deny_ipv4_defaults[] = {
+static const char *const deny_ipv4_defaults[] = {
   "0.0.0.0",
   "127.0.0.1",
   NULL
 };
 
-static const char * const deny_ipv6_defaults[] = {
+static const char *const deny_ipv6_defaults[] = {
   "0::0",
   "0::1",
   NULL
@@ -94,7 +95,7 @@ static const char * const deny_ipv6_defaults[] = {
 void
 init_net(void)
 {
-  const char * const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
+  const char *const *defaults = olsr_cnf->ip_version == AF_INET ? deny_ipv4_defaults : deny_ipv6_defaults;
 
   /* Init filter tree */
   avl_init(&filter_tree, avl_comp_default);
@@ -105,7 +106,7 @@ init_net(void)
 
   for (; *defaults != NULL; defaults++) {
     union olsr_ip_addr addr;
-    if (inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0){
+    if (inet_pton(olsr_cnf->ip_version, *defaults, &addr) <= 0) {
       OLSR_WARN(LOG_NETWORKING, "Error converting fixed IP %s for deny rule!!\n", *defaults);
       continue;
     }
@@ -113,7 +114,8 @@ init_net(void)
   }
 }
 
-void deinit_netfilters(void)
+void
+deinit_netfilters(void)
 {
   struct filter_entry *filter;
   OLSR_FOR_ALL_FILTERS(filter) {
@@ -177,6 +179,7 @@ net_remove_buffer(struct interface *ifp)
 }
 
 #if 0
+
 /**
  * Reserve space in a outputbuffer. This should only be needed
  * in very special cases. This will decrease the reported size
@@ -228,6 +231,7 @@ net_outbuffer_push(struct interface *ifp, const void *data, const uint16_t size)
 }
 
 #if 0
+
 /**
  * Add data to the reserved part of a buffer
  *
@@ -271,6 +275,7 @@ add_ptf(packet_transform_function f)
 }
 
 #if 0
+
 /**
  * Remove a packet transform function
  *
@@ -283,15 +288,13 @@ int
 del_ptf(packet_transform_function f)
 {
   struct ptf *prev, *tmp_ptf;
-  for (prev = NULL, tmp_ptf = ptf_list;
-       tmp_ptf != NULL;
-       prev = tmp_ptf, tmp_ptf = tmp_ptf->next) {
+  for (prev = NULL, tmp_ptf = ptf_list; tmp_ptf != NULL; prev = tmp_ptf, tmp_ptf = tmp_ptf->next) {
     if (tmp_ptf->function == f) {
       /* Remove entry */
       if (prev == NULL) {
-	ptf_list = tmp_ptf->next;
+        ptf_list = tmp_ptf->next;
       } else {
-	prev->next = tmp_ptf->next;
+        prev->next = tmp_ptf->next;
       }
       free(tmp_ptf);
       return 1;
@@ -348,7 +351,7 @@ net_output(struct interface *ifp)
     /* IP version 6 */
     /* Copy sin */
     dstaddr.sin6 = ifp->int6_multaddr;
-   /* No port number???? */
+    /* No port number???? */
     dstaddr_size = sizeof(dstaddr.sin6);
   }
 
@@ -364,16 +367,9 @@ net_output(struct interface *ifp)
    * we print the content of the packets
    */
   if (olsr_cnf->disp_packets_out) {
-    print_olsr_serialized_packet(stdout,
-				 (union olsr_packet *)ifp->netbuf.buff,
-				 ifp->netbuf.pending, &ifp->ip_addr);
+    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, ifp->netbuf.pending, &ifp->ip_addr);
   }
-  if (olsr_sendto(ifp->olsr_socket,
-		  ifp->netbuf.buff,
-		  ifp->netbuf.pending,
-		  MSG_DONTROUTE,
-		  &dstaddr.sin,
-		  dstaddr_size) < 0) {
+  if (olsr_sendto(ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, &dstaddr.sin, dstaddr_size) < 0) {
 #if !defined REMOVE_LOG_WARN
     const int save_errno = errno;
 #endif
@@ -382,7 +378,8 @@ net_output(struct interface *ifp)
 #endif
     dstaddr.sin.sa_family = olsr_cnf->ip_version;
     OLSR_WARN(LOG_NETWORKING, "OLSR: sendto IPv%d: %s\n", olsr_cnf->ip_version == AF_INET ? 4 : 6, strerror(save_errno));
-    OLSR_DEBUG_NH(LOG_NETWORKING, "To: %s (size: %d)\n", sockaddr_to_string(sabuf, sizeof(sabuf), &dstaddr.sin, dstaddr_size), dstaddr_size);
+    OLSR_DEBUG_NH(LOG_NETWORKING, "To: %s (size: %d)\n", sockaddr_to_string(sabuf, sizeof(sabuf), &dstaddr.sin, dstaddr_size),
+                  dstaddr_size);
     OLSR_DEBUG_NH(LOG_NETWORKING, "Socket: %d interface: %d/%s\n", ifp->olsr_socket, ifp->if_index, ifp->int_name);
     OLSR_DEBUG_NH(LOG_NETWORKING, "Outputsize: %d\n", ifp->netbuf.pending);
     retval = -1;
@@ -423,8 +420,7 @@ olsr_add_invalid_address(const union olsr_ip_addr *addr)
   filter->filter_node.key = &filter->filter_addr;
   avl_insert(&filter_tree, &filter->filter_node, AVL_DUP_NO);
 
-  OLSR_INFO(LOG_NETWORKING, "Added %s to filter set\n",
-              olsr_ip_to_string(&buf, &filter->filter_addr));
+  OLSR_INFO(LOG_NETWORKING, "Added %s to filter set\n", olsr_ip_to_string(&buf, &filter->filter_addr));
 }
 
 
@@ -437,8 +433,7 @@ olsr_validate_address(const union olsr_ip_addr *addr)
 #if !defined REMOVE_LOG_DEBUG
     struct ipaddr_str buf;
 #endif
-    OLSR_DEBUG(LOG_NETWORKING, "Validation of address %s failed!\n",
-                olsr_ip_to_string(&buf, addr));
+    OLSR_DEBUG(LOG_NETWORKING, "Validation of address %s failed!\n", olsr_ip_to_string(&buf, addr));
     return false;
   }
   return true;

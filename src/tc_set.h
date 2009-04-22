@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -56,53 +57,53 @@
  */
 
 struct tc_edge_entry {
-  struct avl_node edge_node;	       /* edge_tree node in tc_entry */
+  struct avl_node edge_node;           /* edge_tree node in tc_entry */
   union olsr_ip_addr T_dest_addr;      /* edge_node key */
   struct tc_edge_entry *edge_inv;      /* shortcut, used during SPF calculation */
-  struct tc_entry *tc;		       /* backpointer to owning tc entry */
-  olsr_linkcost cost;		       /* metric used for SPF calculation */
-  uint16_t ansn;		       /* ansn of this edge, used for multipart msgs */
-  uint8_t flags;		       /* flags */
+  struct tc_entry *tc;                 /* backpointer to owning tc entry */
+  olsr_linkcost cost;                  /* metric used for SPF calculation */
+  uint16_t ansn;                       /* ansn of this edge, used for multipart msgs */
+  uint8_t flags;                       /* flags */
   uint32_t linkquality[0];
 };
 
 AVLNODE2STRUCT(edge_tree2tc_edge, struct tc_edge_entry, edge_node);
 
-#define TC_EDGE_FLAG_LOCAL		(1 << 0) /* local generated edge */
+#define TC_EDGE_FLAG_LOCAL		(1 << 0)        /* local generated edge */
 
 struct tc_entry {
-  struct avl_node vertex_node;	       /* node keyed by ip address */
-  union olsr_ip_addr addr;	       /* vertex_node key */
+  struct avl_node vertex_node;         /* node keyed by ip address */
+  union olsr_ip_addr addr;             /* vertex_node key */
   struct avl_node cand_tree_node;      /* SPF candidate heap, node keyed by path_etx */
-  olsr_linkcost path_cost;	       /* SPF calculated distance, cand_tree_node key */
+  olsr_linkcost path_cost;             /* SPF calculated distance, cand_tree_node key */
   struct list_node path_list_node;     /* SPF result list */
-  struct avl_tree edge_tree;	       /* subtree for edges */
-  struct avl_tree prefix_tree;	       /* subtree for prefixes */
+  struct avl_tree edge_tree;           /* subtree for edges */
+  struct avl_tree prefix_tree;         /* subtree for prefixes */
   struct avl_tree mid_tree;            /* subtree for MID entries */
   struct avl_tree hna_tree;            /* subtree for HNA entries */
   struct timer_entry *mid_timer;       /* aging timer for MID advertisements */
-  struct link_entry *next_hop;	       /* SPF calculated link to the 1st hop neighbor */
+  struct link_entry *next_hop;         /* SPF calculated link to the 1st hop neighbor */
   struct timer_entry *edge_gc_timer;   /* used for edge garbage collection */
   struct timer_entry *validity_timer;  /* tc validity time */
-  uint32_t refcount;		       /* reference counter */
-  uint16_t msg_seq;		       /* sequence number of the tc message */
-  uint8_t msg_hops;		       /* hopcount as per the tc message */
-  uint8_t hops;		       /* SPF calculated hopcount */
-  uint16_t ansn;		       /* ANSN number of the tc message */
-  uint16_t ignored;		       /* how many TC messages ignored in a sequence
+  uint32_t refcount;                   /* reference counter */
+  uint16_t msg_seq;                    /* sequence number of the tc message */
+  uint8_t msg_hops;                    /* hopcount as per the tc message */
+  uint8_t hops;                        /* SPF calculated hopcount */
+  uint16_t ansn;                       /* ANSN number of the tc message */
+  uint16_t ignored;                    /* how many TC messages ignored in a sequence
                                           (kindof emergency brake) */
-  uint16_t err_seq;		       /* sequence number of an unplausible TC */
-  bool err_seq_valid;	       /* do we have an error (unplauible seq/ansn) */
+  uint16_t err_seq;                    /* sequence number of an unplausible TC */
+  bool err_seq_valid;                  /* do we have an error (unplauible seq/ansn) */
 };
 
 /*
  * Garbage collection time for edges.
  * This is used for multipart messages.
  */
-#define OLSR_TC_EDGE_GC_TIME (2*1000)	/* milliseconds */
-#define OLSR_TC_EDGE_GC_JITTER 5	/* percent */
+#define OLSR_TC_EDGE_GC_TIME (2*1000)   /* milliseconds */
+#define OLSR_TC_EDGE_GC_JITTER 5        /* percent */
 
-#define OLSR_TC_VTIME_JITTER 25	/* percent */
+#define OLSR_TC_VTIME_JITTER 25 /* percent */
 
 
 AVLNODE2STRUCT(vertex_tree2tc, struct tc_entry, vertex_node);
@@ -155,26 +156,35 @@ void olsr_print_tc_table(void);
 void olsr_time_out_tc_set(void);
 
 /* tc msg input parser */
-bool olsr_input_tc(union olsr_message *, struct interface *,
-		   union olsr_ip_addr *from);
+bool olsr_input_tc(union olsr_message *, struct interface *, union olsr_ip_addr *from);
 
 /* tc_entry manipulation */
-struct tc_entry *EXPORT(olsr_lookup_tc_entry)(const union olsr_ip_addr *);
+struct tc_entry *EXPORT(olsr_lookup_tc_entry) (const union olsr_ip_addr *);
 struct tc_entry *olsr_locate_tc_entry(const union olsr_ip_addr *);
+
 /*
  * Increment the reference counter.
  */
-static INLINE void olsr_lock_tc_entry(struct tc_entry *tc) { tc->refcount++; }
+static INLINE void
+olsr_lock_tc_entry(struct tc_entry *tc)
+{
+  tc->refcount++;
+}
+
 /*
  * Unlock and free a tc_entry once all references are gone.
  */
-static INLINE void olsr_unlock_tc_entry(struct tc_entry *tc) { if (--tc->refcount == 0) { /* All references are gone. */ olsr_cookie_free(tc_mem_cookie, tc); } }
+static INLINE void
+olsr_unlock_tc_entry(struct tc_entry *tc)
+{
+  if (--tc->refcount == 0) {    /* All references are gone. */
+    olsr_cookie_free(tc_mem_cookie, tc);
+  }
+}
 
 /* tc_edge_entry manipulation */
-struct tc_edge_entry *EXPORT(olsr_lookup_tc_edge)(struct tc_entry *,
-					  union olsr_ip_addr *);
-struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *,
-					     union olsr_ip_addr *, uint16_t);
+struct tc_edge_entry *EXPORT(olsr_lookup_tc_edge) (struct tc_entry *, union olsr_ip_addr *);
+struct tc_edge_entry *olsr_add_tc_edge_entry(struct tc_entry *, union olsr_ip_addr *, uint16_t);
 void olsr_delete_tc_entry(struct tc_entry *);
 void olsr_delete_tc_edge_entry(struct tc_edge_entry *);
 bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);

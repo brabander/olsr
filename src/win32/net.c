@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -39,7 +40,7 @@
  */
 
 #if defined WINCE
-#include <sys/types.h> // for time_t
+#include <sys/types.h>          // for time_t
 #endif
 
 #define WIN32_LEAN_AND_MEAN
@@ -85,8 +86,7 @@ gethemusocket(struct sockaddr_in *pin)
   }
 
   /* connect to PORT on HOST */
-  if (connect(sock,(struct sockaddr *) pin, sizeof(*pin)) < 0)
-  {
+  if (connect(sock, (struct sockaddr *)pin, sizeof(*pin)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot reuse address for socket for emulation (%s)\n", strerror(errno));
     CLOSESOCKET(sock);
     olsr_exit(EXIT_FAILURE);
@@ -96,38 +96,32 @@ gethemusocket(struct sockaddr_in *pin)
   return (sock);
 }
 
-int getsocket(int BuffSize, char *Int __attribute__((unused)))
+int
+getsocket(int BuffSize, char *Int __attribute__ ((unused)))
 {
   struct sockaddr_in Addr;
   int On = 1;
   unsigned long Len;
   int Sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (Sock < 0)
-  {
+  if (Sock < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
     olsr_exit(EXIT_FAILURE);
   }
 
-  if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST,
-                 (char *)&On, sizeof (On)) < 0)
-  {
+  if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR,
-                 (char *)&On, sizeof (On)) < 0)
-  {
+  if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  while (BuffSize > 8192)
-  {
-    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize,
-                   sizeof (BuffSize)) == 0)
+  while (BuffSize > 8192) {
+    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize, sizeof(BuffSize)) == 0)
       break;
 
     BuffSize -= 1024;
@@ -136,19 +130,17 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   if (BuffSize <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv4 socket receive buffer.\n");
 
-  memset(&Addr, 0, sizeof (Addr));
+  memset(&Addr, 0, sizeof(Addr));
   Addr.sin_family = AF_INET;
   Addr.sin_port = htons(OLSRPORT);
   Addr.sin_addr.s_addr = INADDR_ANY;
-  if (bind(Sock, (struct sockaddr *)&Addr, sizeof (Addr)) < 0)
-  {
+  if (bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  if (WSAIoctl(Sock, FIONBIO, &On, sizeof (On), NULL, 0, &Len, NULL, NULL) < 0)
-  {
+  if (WSAIoctl(Sock, FIONBIO, &On, sizeof(On), NULL, 0, &Len, NULL, NULL) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "WSAIoctl");
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
@@ -157,37 +149,31 @@ int getsocket(int BuffSize, char *Int __attribute__((unused)))
   return Sock;
 }
 
-int getsocket6(int BuffSize, char *Int __attribute__((unused)))
+int
+getsocket6(int BuffSize, char *Int __attribute__ ((unused)))
 {
   struct sockaddr_in6 Addr6;
   int On = 1;
   int Sock = socket(AF_INET6, SOCK_DGRAM, 0);
-  if (Sock < 0)
-  {
+  if (Sock < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot open socket for OLSR PDUs (%s)\n", strerror(errno));
     olsr_exit(EXIT_FAILURE);
   }
 
-  if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST,
-                 (char *)&On, sizeof (On)) < 0)
-  {
+  if (setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR,
-                 (char *)&On, sizeof (On)) < 0)
-  {
+  if (setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (char *)&On, sizeof(On)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot set socket for OLSR PDUs to broadcast mode (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
   }
 
-  while (BuffSize > 8192)
-  {
-    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize,
-                   sizeof (BuffSize)) == 0)
+  while (BuffSize > 8192) {
+    if (setsockopt(Sock, SOL_SOCKET, SO_RCVBUF, (char *)&BuffSize, sizeof(BuffSize)) == 0)
       break;
 
     BuffSize -= 1024;
@@ -196,12 +182,11 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
   if (BuffSize <= 8192)
     OLSR_WARN(LOG_NETWORKING, "Cannot set IPv6 socket receive buffer.\n");
 
-  memset(&Addr6, 0, sizeof (Addr6));
+  memset(&Addr6, 0, sizeof(Addr6));
   Addr6.sin6_family = AF_INET6;
   Addr6.sin6_port = htons(OLSRPORT);
   //Addr6.sin6_addr.s_addr = IN6ADDR_ANY_INIT;
-  if (bind(Sock, (struct sockaddr *)&Addr6, sizeof (Addr6)) < 0)
-  {
+  if (bind(Sock, (struct sockaddr *)&Addr6, sizeof(Addr6)) < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Could not bind socket for OLSR PDUs to device (%s)\n", strerror(errno));
     CLOSESOCKET(Sock);
     olsr_exit(EXIT_FAILURE);
@@ -212,10 +197,11 @@ int getsocket6(int BuffSize, char *Int __attribute__((unused)))
 
 static OVERLAPPED RouterOver;
 
-int enable_ip_forwarding(int Ver)
+int
+enable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int __stdcall (*EnableRouterFunc)(HANDLE *Hand, OVERLAPPED *Over);
+  unsigned int __stdcall(*EnableRouterFunc) (HANDLE * Hand, OVERLAPPED * Over);
   HANDLE Hand;
 
   Ver = Ver;
@@ -225,24 +211,22 @@ int enable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  EnableRouterFunc = (unsigned int __stdcall (*)(HANDLE *, OVERLAPPED *))
+  EnableRouterFunc = (unsigned int __stdcall(*)(HANDLE *, OVERLAPPED *))
     GetProcAddress(Lib, WIDE_STRING("EnableRouter"));
 
   if (EnableRouterFunc == NULL)
     return 0;
 
-  memset(&RouterOver, 0, sizeof (OVERLAPPED));
+  memset(&RouterOver, 0, sizeof(OVERLAPPED));
 
   RouterOver.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-  if (RouterOver.hEvent == NULL)
-  {
+  if (RouterOver.hEvent == NULL) {
     OLSR_WARN(LOG_NETWORKING, "CreateEvent()");
     return -1;
   }
 
-  if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING)
-  {
+  if (EnableRouterFunc(&Hand, &RouterOver) != ERROR_IO_PENDING) {
     OLSR_WARN(LOG_NETWORKING, "EnableRouter()");
     return -1;
   }
@@ -252,11 +236,11 @@ int enable_ip_forwarding(int Ver)
   return 0;
 }
 
-int disable_ip_forwarding(int Ver)
+int
+disable_ip_forwarding(int Ver)
 {
   HMODULE Lib;
-  unsigned int  __stdcall (*UnenableRouterFunc)(OVERLAPPED *Over,
-                                            unsigned int *Count);
+  unsigned int __stdcall(*UnenableRouterFunc) (OVERLAPPED * Over, unsigned int *Count);
   unsigned int Count;
 
   Ver = Ver;
@@ -266,14 +250,13 @@ int disable_ip_forwarding(int Ver)
   if (Lib == NULL)
     return 0;
 
-  UnenableRouterFunc = (unsigned int __stdcall (*)(OVERLAPPED *, unsigned int *))
+  UnenableRouterFunc = (unsigned int __stdcall(*)(OVERLAPPED *, unsigned int *))
     GetProcAddress(Lib, WIDE_STRING("UnenableRouter"));
 
   if (UnenableRouterFunc == NULL)
     return 0;
 
-  if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR)
-  {
+  if (UnenableRouterFunc(&RouterOver, &Count) != NO_ERROR) {
     OLSR_WARN(LOG_NETWORKING, "UnenableRouter()");
     return -1;
   }
@@ -283,14 +266,16 @@ int disable_ip_forwarding(int Ver)
   return 0;
 }
 
-int restore_settings(int Ver)
+int
+restore_settings(int Ver)
 {
   disable_ip_forwarding(Ver);
 
   return 0;
 }
 
-static int SetEnableRedirKey(unsigned long New)
+static int
+SetEnableRedirKey(unsigned long New)
 {
 #if !defined WINCE
   HKEY Key;
@@ -299,20 +284,15 @@ static int SetEnableRedirKey(unsigned long New)
   unsigned long Old;
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                   "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                   0, KEY_READ | KEY_WRITE, &Key) != ERROR_SUCCESS)
+                   "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ | KEY_WRITE, &Key) != ERROR_SUCCESS)
     return -1;
 
-  Len = sizeof (Old);
+  Len = sizeof(Old);
 
-  if (RegQueryValueEx(Key, "EnableICMPRedirect", NULL, &Type,
-                      (unsigned char *)&Old, &Len) != ERROR_SUCCESS ||
-      Type != REG_DWORD)
+  if (RegQueryValueEx(Key, "EnableICMPRedirect", NULL, &Type, (unsigned char *)&Old, &Len) != ERROR_SUCCESS || Type != REG_DWORD)
     Old = 1;
 
-  if (RegSetValueEx(Key, "EnableICMPRedirect", 0, REG_DWORD,
-                    (unsigned char *)&New, sizeof (New)))
-  {
+  if (RegSetValueEx(Key, "EnableICMPRedirect", 0, REG_DWORD, (unsigned char *)&New, sizeof(New))) {
     RegCloseKey(Key);
     return -1;
   }
@@ -324,7 +304,8 @@ static int SetEnableRedirKey(unsigned long New)
 #endif
 }
 
-void DisableIcmpRedirects(void)
+void
+DisableIcmpRedirects(void)
 {
   int Res;
 
@@ -336,8 +317,7 @@ void DisableIcmpRedirects(void)
   OLSR_ERROR(LOG_NETWORKING, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
 
 #if 0
-  if (Res < 0)
-  {
+  if (Res < 0) {
     OLSR_ERROR(LOG_NETWORKING, "Cannot disable ICMP redirect processing in the registry.\n");
     OLSR_ERROR(LOG_NETWORKING, "Please disable it manually. Continuing in 3 seconds...\n");
     Sleep(3000);
@@ -353,7 +333,8 @@ void DisableIcmpRedirects(void)
 }
 
 
-int join_mcast(struct interface *Nic, int Sock)
+int
+join_mcast(struct interface *Nic, int Sock)
 {
   /* See linux/in6.h */
   struct ipaddr_str buf;
@@ -362,53 +343,36 @@ int join_mcast(struct interface *Nic, int Sock)
   McastReq.ipv6mr_multiaddr = Nic->int6_multaddr.sin6_addr;
   McastReq.ipv6mr_interface = Nic->if_index;
 
-  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name, olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
+  OLSR_DEBUG(LOG_NETWORKING, "Interface %s joining multicast %s...", Nic->int_name,
+             olsr_ip_to_string(&buf, (union olsr_ip_addr *)&Nic->int6_multaddr.sin6_addr));
   /* Send multicast */
-  if(setsockopt(Sock,
-		IPPROTO_IPV6,
-		IPV6_ADD_MEMBERSHIP,
-		(char *)&McastReq,
-		sizeof(struct ipv6_mreq))
-     < 0)
-    {
-      OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
-      return -1;
-    }
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast: %s\n", strerror(errno));
+    return -1;
+  }
 
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join reciever group */
-  if(setsockopt(Sock,
-		IPPROTO_IPV6,
-		IPV6_JOIN_GROUP,
-		(char *)&McastReq,
-		sizeof(struct ipv6_mreq))
-     < 0)
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
 #else
   /* Join reciever group */
-  if(setsockopt(Sock,
-		IPPROTO_IPV6,
-		IPV6_ADD_MEMBERSHIP,
-		(char *)&McastReq,
-		sizeof(struct ipv6_mreq))
-     < 0)
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq))
+      < 0)
 #endif
-    {
-      OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
-      return -1;
-    }
+  {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast send: %s\n", strerror(errno));
+    return -1;
+  }
 
 
-  if(setsockopt(Sock,
-		IPPROTO_IPV6,
-		IPV6_MULTICAST_IF,
-		(char *)&McastReq.ipv6mr_interface,
-		sizeof(McastReq.ipv6mr_interface))
-     < 0)
-    {
-      OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
-      return -1;
-    }
+  if (setsockopt(Sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char *)&McastReq.ipv6mr_interface, sizeof(McastReq.ipv6mr_interface))
+      < 0) {
+    OLSR_WARN(LOG_NETWORKING, "Join multicast if: %s\n", strerror(errno));
+    return -1;
+  }
 
   return 0;
 }
@@ -419,12 +383,7 @@ int join_mcast(struct interface *Nic, int Sock)
  */
 
 ssize_t
-olsr_sendto(int s,
-	    const void *buf,
-	    size_t len,
-	    int flags,
-	    const struct sockaddr *to,
-	    socklen_t tolen)
+olsr_sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr * to, socklen_t tolen)
 {
   return sendto(s, buf, len, flags, to, tolen);
 }
@@ -435,19 +394,9 @@ olsr_sendto(int s,
  */
 
 ssize_t
-olsr_recvfrom(int  s,
-	      void *buf,
-	      size_t len,
-	      int flags __attribute__((unused)),
-	      struct sockaddr *from,
-	      socklen_t *fromlen)
+olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), struct sockaddr * from, socklen_t * fromlen)
 {
-  return recvfrom(s,
-		  buf,
-		  len,
-		  0,
-		  from,
-		  fromlen);
+  return recvfrom(s, buf, len, 0, from, fromlen);
 }
 
 /**
@@ -455,17 +404,9 @@ olsr_recvfrom(int  s,
  */
 
 int
-olsr_select(int nfds,
-            fd_set *readfds,
-            fd_set *writefds,
-            fd_set *exceptfds,
-            struct timeval *timeout)
+olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout)
 {
-  return select(nfds,
-                readfds,
-                writefds,
-                exceptfds,
-                timeout);
+  return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
 /*

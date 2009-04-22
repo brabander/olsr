@@ -79,17 +79,17 @@ struct link_entry {
   /* cost of this link */
   olsr_linkcost linkcost;
 
-  struct tc_edge_entry *link_tc_edge;   /* shortcut to corresponding tc-edge */
-  struct list_node link_list;	        /* double linked list of all link entries */
+  struct tc_edge_entry *link_tc_edge;  /* shortcut to corresponding tc-edge */
+  struct list_node link_list;          /* double linked list of all link entries */
 };
 
 /* inline to recast from link_list back to link_entry */
 LISTNODE2STRUCT(list2link, struct link_entry, link_list);
 
-#define OLSR_LINK_JITTER       5	/* percent */
-#define OLSR_LINK_HELLO_JITTER 0	/* percent jitter */
-#define OLSR_LINK_SYM_JITTER   0	/* percent jitter */
-#define OLSR_LINK_LOSS_JITTER  0	/* percent jitter */
+#define OLSR_LINK_JITTER       5        /* percent */
+#define OLSR_LINK_HELLO_JITTER 0        /* percent jitter */
+#define OLSR_LINK_SYM_JITTER   0        /* percent jitter */
+#define OLSR_LINK_LOSS_JITTER  0        /* percent jitter */
 
 /* deletion safe macro for link entry traversal */
 #define OLSR_FOR_ALL_LINK_ENTRIES(link) \
@@ -112,23 +112,19 @@ void olsr_init_link_set(void);
 void olsr_delete_link_entry_by_if(const struct interface *);
 void olsr_expire_link_hello_timer(void *);
 void olsr_update_packet_loss_worker(struct link_entry *, bool);
-void signal_link_changes(bool);   /* XXX ugly */
+void signal_link_changes(bool);        /* XXX ugly */
 
 
-struct link_entry *EXPORT(get_best_link_to_neighbor)(const union olsr_ip_addr *);
+struct link_entry *EXPORT(get_best_link_to_neighbor) (const union olsr_ip_addr *);
 
-struct link_entry *EXPORT(lookup_link_entry)(const union olsr_ip_addr *,
-				     const union olsr_ip_addr *remote_main,
-				     const struct interface *);
+struct link_entry *EXPORT(lookup_link_entry) (const union olsr_ip_addr *,
+                                              const union olsr_ip_addr * remote_main, const struct interface *);
 
 struct link_entry *update_link_entry(const union olsr_ip_addr *,
-				     const union olsr_ip_addr *,
-				     struct lq_hello_message *,
-				     struct interface *);
+                                     const union olsr_ip_addr *, struct lq_hello_message *, struct interface *);
 
-int EXPORT(check_neighbor_link)(const union olsr_ip_addr *);
-int replace_neighbor_link_set(const struct neighbor_entry *,
-			    struct neighbor_entry *);
+int EXPORT(check_neighbor_link) (const union olsr_ip_addr *);
+int replace_neighbor_link_set(const struct neighbor_entry *, struct neighbor_entry *);
 int lookup_link_status(const struct link_entry *);
 void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
 void olsr_update_packet_loss(struct link_entry *entry);

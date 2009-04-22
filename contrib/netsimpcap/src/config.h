@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -23,7 +24,7 @@
 #define GRID(x,y,width) ((x) + (y) * (width))
 
 int readConnectionMatrix(float *connectionMatrix, char *filename, int len);
-#endif /*CONFIG_H_*/
+#endif /*CONFIG_H_ */
 
 /*
  * Local Variables:

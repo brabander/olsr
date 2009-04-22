@@ -1,3 +1,4 @@
+
 /* -*- c -*-
    ----------------------------------------------------------------
 
@@ -119,8 +120,11 @@
 
 
 /* ------------------------------------------------------------------ */
+
 /* ARCHITECTURE SPECIFICS for SPECIAL INSTRUCTIONS.  There is nothing */
+
 /* in here of use to end-users -- skip to the next section.           */
+
 /* ------------------------------------------------------------------ */
 
 #if defined(NVALGRIND)
@@ -135,7 +139,7 @@
       (_zzq_rlval) = (_zzq_default);                              \
    }
 
-#else  /* ! NVALGRIND */
+#else /* ! NVALGRIND */
 
 /* The following defines the magic code sequences which the JITter
    spots and handles magically.  Don't look too closely at them as
@@ -177,10 +181,9 @@
 #if defined(PLAT_x86_linux)
 
 typedef
-   struct {
-      unsigned int nraddr; /* where's the code? */
-   }
-   OrigFn;
+  struct {
+  unsigned int nraddr;                 /* where's the code? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "roll $3,  %%edi ; roll $13, %%edi\n\t"      \
@@ -231,10 +234,9 @@ typedef
 #if defined(PLAT_amd64_linux)
 
 typedef
-   struct {
-      unsigned long long int nraddr; /* where's the code? */
-   }
-   OrigFn;
+  struct {
+  unsigned long long int nraddr;       /* where's the code? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rolq $3,  %%rdi ; rolq $13, %%rdi\n\t"      \
@@ -285,10 +287,9 @@ typedef
 #if defined(PLAT_ppc32_linux)
 
 typedef
-   struct {
-      unsigned int nraddr; /* where's the code? */
-   }
-   OrigFn;
+  struct {
+  unsigned int nraddr;                 /* where's the code? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rlwinm 0,0,3,0,0  ; rlwinm 0,0,13,0,0\n\t"  \
@@ -345,11 +346,10 @@ typedef
 #if defined(PLAT_ppc64_linux)
 
 typedef
-   struct {
-      unsigned long long int nraddr; /* where's the code? */
-      unsigned long long int r2;  /* what tocptr do we need? */
-   }
-   OrigFn;
+  struct {
+  unsigned long long int nraddr;       /* where's the code? */
+  unsigned long long int r2;           /* what tocptr do we need? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rotldi 0,0,3  ; rotldi 0,0,13\n\t"          \
@@ -411,11 +411,10 @@ typedef
 #if defined(PLAT_ppc32_aix5)
 
 typedef
-   struct {
-      unsigned int nraddr; /* where's the code? */
-      unsigned int r2;  /* what tocptr do we need? */
-   }
-   OrigFn;
+  struct {
+  unsigned int nraddr;                 /* where's the code? */
+  unsigned int r2;                     /* what tocptr do we need? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rlwinm 0,0,3,0,0  ; rlwinm 0,0,13,0,0\n\t"  \
@@ -483,11 +482,10 @@ typedef
 #if defined(PLAT_ppc64_aix5)
 
 typedef
-   struct {
-      unsigned long long int nraddr; /* where's the code? */
-      unsigned long long int r2;  /* what tocptr do we need? */
-   }
-   OrigFn;
+  struct {
+  unsigned long long int nraddr;       /* where's the code? */
+  unsigned long long int r2;           /* what tocptr do we need? */
+} OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rotldi 0,0,3  ; rotldi 0,0,13\n\t"          \
@@ -556,8 +554,11 @@ typedef
 
 
 /* ------------------------------------------------------------------ */
+
 /* PLATFORM SPECIFICS for FUNCTION WRAPPING.  This is all very        */
+
 /* ugly.  It's the least-worst tradeoff I can think of.               */
+
 /* ------------------------------------------------------------------ */
 
 /* This section defines magic (a.k.a appalling-hack) macros for doing
@@ -3562,8 +3563,11 @@ typedef
 
 
 /* ------------------------------------------------------------------ */
+
 /* ARCHITECTURE INDEPENDENT MACROS for CLIENT REQUESTS.               */
+
 /*                                                                    */
+
 /* ------------------------------------------------------------------ */
 
 /* Some request codes.  There are many more of these, but most are not
@@ -3586,50 +3590,50 @@ typedef
    which use client requests.  DO NOT CHANGE THE ORDER OF THESE
    ENTRIES, NOR DELETE ANY -- add new ones at the end. */
 typedef
-   enum { VG_USERREQ__RUNNING_ON_VALGRIND  = 0x1001,
-          VG_USERREQ__DISCARD_TRANSLATIONS = 0x1002,
+  enum { VG_USERREQ__RUNNING_ON_VALGRIND = 0x1001,
+  VG_USERREQ__DISCARD_TRANSLATIONS = 0x1002,
 
-          /* These allow any function to be called from the simulated
-             CPU but run on the real CPU.  Nb: the first arg passed to
-             the function is always the ThreadId of the running
-             thread!  So CLIENT_CALL0 actually requires a 1 arg
-             function, etc. */
-          VG_USERREQ__CLIENT_CALL0 = 0x1101,
-          VG_USERREQ__CLIENT_CALL1 = 0x1102,
-          VG_USERREQ__CLIENT_CALL2 = 0x1103,
-          VG_USERREQ__CLIENT_CALL3 = 0x1104,
+  /* These allow any function to be called from the simulated
+     CPU but run on the real CPU.  Nb: the first arg passed to
+     the function is always the ThreadId of the running
+     thread!  So CLIENT_CALL0 actually requires a 1 arg
+     function, etc. */
+  VG_USERREQ__CLIENT_CALL0 = 0x1101,
+  VG_USERREQ__CLIENT_CALL1 = 0x1102,
+  VG_USERREQ__CLIENT_CALL2 = 0x1103,
+  VG_USERREQ__CLIENT_CALL3 = 0x1104,
 
-          /* Can be useful in regression testing suites -- eg. can
-             send Valgrind's output to /dev/null and still count
-             errors. */
-          VG_USERREQ__COUNT_ERRORS = 0x1201,
+  /* Can be useful in regression testing suites -- eg. can
+     send Valgrind's output to /dev/null and still count
+     errors. */
+  VG_USERREQ__COUNT_ERRORS = 0x1201,
 
-          /* These are useful and can be interpreted by any tool that
-             tracks malloc() et al, by using vg_replace_malloc.c. */
-          VG_USERREQ__MALLOCLIKE_BLOCK = 0x1301,
-          VG_USERREQ__FREELIKE_BLOCK   = 0x1302,
-          /* Memory pool support. */
-          VG_USERREQ__CREATE_MEMPOOL   = 0x1303,
-          VG_USERREQ__DESTROY_MEMPOOL  = 0x1304,
-          VG_USERREQ__MEMPOOL_ALLOC    = 0x1305,
-          VG_USERREQ__MEMPOOL_FREE     = 0x1306,
-          VG_USERREQ__MEMPOOL_TRIM     = 0x1307,
-          VG_USERREQ__MOVE_MEMPOOL     = 0x1308,
-          VG_USERREQ__MEMPOOL_CHANGE   = 0x1309,
-          VG_USERREQ__MEMPOOL_EXISTS   = 0x130a,
+  /* These are useful and can be interpreted by any tool that
+     tracks malloc() et al, by using vg_replace_malloc.c. */
+  VG_USERREQ__MALLOCLIKE_BLOCK = 0x1301,
+  VG_USERREQ__FREELIKE_BLOCK = 0x1302,
+  /* Memory pool support. */
+  VG_USERREQ__CREATE_MEMPOOL = 0x1303,
+  VG_USERREQ__DESTROY_MEMPOOL = 0x1304,
+  VG_USERREQ__MEMPOOL_ALLOC = 0x1305,
+  VG_USERREQ__MEMPOOL_FREE = 0x1306,
+  VG_USERREQ__MEMPOOL_TRIM = 0x1307,
+  VG_USERREQ__MOVE_MEMPOOL = 0x1308,
+  VG_USERREQ__MEMPOOL_CHANGE = 0x1309,
+  VG_USERREQ__MEMPOOL_EXISTS = 0x130a,
 
-          /* Allow printfs to valgrind log. */
-          VG_USERREQ__PRINTF           = 0x1401,
-          VG_USERREQ__PRINTF_BACKTRACE = 0x1402,
+  /* Allow printfs to valgrind log. */
+  VG_USERREQ__PRINTF = 0x1401,
+  VG_USERREQ__PRINTF_BACKTRACE = 0x1402,
 
-          /* Stack support. */
-          VG_USERREQ__STACK_REGISTER   = 0x1501,
-          VG_USERREQ__STACK_DEREGISTER = 0x1502,
-          VG_USERREQ__STACK_CHANGE     = 0x1503
-   } Vg_ClientRequest;
+  /* Stack support. */
+  VG_USERREQ__STACK_REGISTER = 0x1501,
+  VG_USERREQ__STACK_DEREGISTER = 0x1502,
+  VG_USERREQ__STACK_CHANGE = 0x1503
+} Vg_ClientRequest;
 
 #if !defined(__GNUC__)
-#  define __extension__ /* */
+#  define __extension__         /* */
 #endif
 
 /* Returns the number of Valgrinds this code is running under.  That
@@ -3670,33 +3674,29 @@ typedef
 /* Modern GCC will optimize the static routine out if unused,
    and unused attribute will shut down warnings about it.  */
 static int VALGRIND_PRINTF(const char *format, ...)
-   __attribute__((format(__printf__, 1, 2), __unused__));
+  __attribute__ ((format(__printf__, 1, 2), __unused__));
 static int
 VALGRIND_PRINTF(const char *format, ...)
 {
-   unsigned long _qzz_res;
-   va_list vargs;
-   va_start(vargs, format);
-   VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF,
-                              (unsigned long)format, (unsigned long)vargs,
-                              0, 0, 0);
-   va_end(vargs);
-   return (int)_qzz_res;
+  unsigned long _qzz_res;
+  va_list vargs;
+  va_start(vargs, format);
+  VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF, (unsigned long)format, (unsigned long)vargs, 0, 0, 0);
+  va_end(vargs);
+  return (int)_qzz_res;
 }
 
 static int VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
-   __attribute__((format(__printf__, 1, 2), __unused__));
+  __attribute__ ((format(__printf__, 1, 2), __unused__));
 static int
 VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 {
-   unsigned long _qzz_res;
-   va_list vargs;
-   va_start(vargs, format);
-   VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF_BACKTRACE,
-                              (unsigned long)format, (unsigned long)vargs,
-                              0, 0, 0);
-   va_end(vargs);
-   return (int)_qzz_res;
+  unsigned long _qzz_res;
+  va_list vargs;
+  va_start(vargs, format);
+  VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF_BACKTRACE, (unsigned long)format, (unsigned long)vargs, 0, 0, 0);
+  va_end(vargs);
+  return (int)_qzz_res;
 }
 
 #endif /* NVALGRIND */
@@ -3921,4 +3921,4 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 #undef PLAT_ppc32_aix5
 #undef PLAT_ppc64_aix5
 
-#endif   /* __VALGRIND_H */
+#endif /* __VALGRIND_H */

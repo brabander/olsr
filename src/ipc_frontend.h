@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -51,9 +52,9 @@
 #include "olsr_types.h"
 
 #define IPC_PORT 1212
-#define IPC_PACK_SIZE 44 /* Size of the IPC_ROUTE packet */
-#define	ROUTE_IPC 11    /* IPC to front-end telling of route changes */
-#define NET_IPC 12      /* IPC to front end net-info */
+#define IPC_PACK_SIZE 44        /* Size of the IPC_ROUTE packet */
+#define	ROUTE_IPC 11            /* IPC to front-end telling of route changes */
+#define NET_IPC 12              /* IPC to front end net-info */
 
 /*
  *IPC functions
@@ -62,13 +63,13 @@
 */
 
 int
-ipc_init(void);
+  ipc_init(void);
 
 void
-shutdown_ipc(void);
+  shutdown_ipc(void);
 
 int
-ipc_route_send_rtentry(const union olsr_ip_addr *, const union olsr_ip_addr *, int, int, const char *);
+  ipc_route_send_rtentry(const union olsr_ip_addr *, const union olsr_ip_addr *, int, int, const char *);
 
 #endif
 

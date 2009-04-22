@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -41,14 +42,13 @@
 #if !defined TL_MIDENTRY_H
 #define TL_MIDENTRY_H
 
-class MidEntry
-{
+class MidEntry {
 public:
-	unsigned int Addr;
-	unsigned __int64 Timeout;
+  unsigned int Addr;
+  unsigned __int64 Timeout;
 
-	class MidEntry &MidEntry::operator=(class MidEntry &);
-	BOOL MidEntry::operator==(const class MidEntry &) const;
+  class MidEntry & MidEntry::operator=(class MidEntry &);
+  BOOL MidEntry::operator==(const class MidEntry &) const;
 };
 
 #endif

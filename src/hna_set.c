@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -61,11 +62,9 @@ olsr_init_hna_set(void)
 {
   OLSR_INFO(LOG_HNA, "Initialize HNA set...\n");
 
-  hna_net_timer_cookie =
-    olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
+  hna_net_timer_cookie = olsr_alloc_cookie("HNA Network", OLSR_COOKIE_TYPE_TIMER);
 
-  hna_net_mem_cookie =
-    olsr_alloc_cookie("hna_net", OLSR_COOKIE_TYPE_MEMORY);
+  hna_net_mem_cookie = olsr_alloc_cookie("hna_net", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(hna_net_mem_cookie, sizeof(struct hna_net));
 }
 
@@ -127,9 +126,7 @@ olsr_delete_hna_net(struct hna_net *hna_net)
   /*
    * Delete the rt_path for the hna_net.
    */
-  olsr_delete_routing_table(&hna_net->hna_prefix.prefix,
-                            hna_net->hna_prefix.prefix_len,
-                            &tc->addr, OLSR_RT_ORIGIN_HNA);
+  olsr_delete_routing_table(&hna_net->hna_prefix.prefix, hna_net->hna_prefix.prefix_len, &tc->addr, OLSR_RT_ORIGIN_HNA);
 
   /*
    * Remove from the per-tc tree.
@@ -156,10 +153,9 @@ olsr_expire_hna_net_entry(void *context)
 #endif
 
   OLSR_DEBUG(5, "HNA: timeout %s via hna-gw %s\n",
-              olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix),
-              olsr_ip_to_string(&buf, &hna_net->hna_tc->addr));
+             olsr_ip_prefix_to_string(&prefixstr, &hna_net->hna_prefix), olsr_ip_to_string(&buf, &hna_net->hna_tc->addr));
 
-  hna_net->hna_net_timer = NULL; /* be pedandic */
+  hna_net->hna_net_timer = NULL;        /* be pedandic */
 
   olsr_delete_hna_net(hna_net);
 }
@@ -178,9 +174,7 @@ olsr_expire_hna_net_entry(void *context)
  *@return nada
  */
 static void
-olsr_update_hna_entry(const union olsr_ip_addr *gw,
-                      const struct olsr_ip_prefix *prefix,
-		      olsr_reltime vtime)
+olsr_update_hna_entry(const union olsr_ip_addr *gw, const struct olsr_ip_prefix *prefix, olsr_reltime vtime)
 {
   struct tc_entry *tc = olsr_locate_tc_entry(gw);
   struct hna_net *net_entry = olsr_lookup_hna_net(tc, prefix);
@@ -194,18 +188,13 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw,
   /*
    * Add the rt_path for the entry.
    */
-  olsr_insert_routing_table(&net_entry->hna_prefix.prefix,
-                            net_entry->hna_prefix.prefix_len,
-                            &tc->addr,
-                            OLSR_RT_ORIGIN_HNA);
+  olsr_insert_routing_table(&net_entry->hna_prefix.prefix, net_entry->hna_prefix.prefix_len, &tc->addr, OLSR_RT_ORIGIN_HNA);
 
   /*
    * Start, or refresh the timer, whatever is appropriate.
    */
   olsr_set_timer(&net_entry->hna_net_timer, vtime,
-                 OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT,
-                 &olsr_expire_hna_net_entry, net_entry,
-                 hna_net_timer_cookie->ci_id);
+                 OLSR_HNA_NET_JITTER, OLSR_TIMER_ONESHOT, &olsr_expire_hna_net_entry, net_entry, hna_net_timer_cookie->ci_id);
 }
 
 /**
@@ -223,9 +212,7 @@ olsr_print_hna_set(void)
   struct ipprefix_str prefixstr;
   struct hna_net *hna_net;
 
-  OLSR_INFO(LOG_HNA,
-	      "\n--- %s ------------------------------------------------- HNA\n\n",
-	      olsr_wallclock_string());
+  OLSR_INFO(LOG_HNA, "\n--- %s ------------------------------------------------- HNA\n\n", olsr_wallclock_string());
 
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     OLSR_INFO_NH(LOG_HNA, "HNA-gw %s:\n", olsr_ip_to_string(&buf, &tc->addr));
@@ -242,9 +229,7 @@ olsr_print_hna_set(void)
  * Forwards the message if that is to be done.
  */
 bool
-olsr_input_hna(union olsr_message *msg,
-               struct interface *in_if __attribute__((unused)),
-               union olsr_ip_addr *from_addr)
+olsr_input_hna(union olsr_message *msg, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
   struct olsrmsg_hdr msg_hdr;
   struct olsr_ip_prefix prefix;
@@ -268,13 +253,11 @@ olsr_input_hna(union olsr_message *msg,
    * message MUST be discarded.
    */
   if (check_neighbor_link(from_addr) != SYM_LINK) {
-    OLSR_DEBUG(LOG_HNA, "Received HNA from NON SYM neighbor %s\n",
-                olsr_ip_to_string(&buf, from_addr));
+    OLSR_DEBUG(LOG_HNA, "Received HNA from NON SYM neighbor %s\n", olsr_ip_to_string(&buf, from_addr));
     return false;
   }
 
-  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n",
-	      olsr_ip_to_string(&buf, &msg_hdr.originator), msg_hdr.seqno);
+  OLSR_DEBUG(LOG_HNA, "Processing HNA from %s, seq 0x%04x\n", olsr_ip_to_string(&buf, &msg_hdr.originator), msg_hdr.seqno);
 
   /*
    * Now walk the list of HNA advertisements.
@@ -285,8 +268,7 @@ olsr_input_hna(union olsr_message *msg,
     pkt_get_ipaddress(&curr, &prefix.prefix);
     pkt_get_prefixlen(&curr, &prefix.prefix_len);
 
-    if (!ip_prefix_list_find(&olsr_cnf->hna_entries, &prefix.prefix,
-                             prefix.prefix_len, olsr_cnf->ip_version)) {
+    if (!ip_prefix_list_find(&olsr_cnf->hna_entries, &prefix.prefix, prefix.prefix_len, olsr_cnf->ip_version)) {
       /*
        * Only update if it's not from us.
        */

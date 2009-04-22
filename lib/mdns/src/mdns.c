@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -24,38 +25,38 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "mdns.h"
 
 /* System includes */
-#include <stddef.h> /* NULL */
-#include <sys/types.h> /* ssize_t */
-#include <string.h> /* strerror() */
-#include <stdarg.h> /* va_list, va_start, va_end */
-#include <errno.h> /* errno */
-#include <assert.h> /* assert() */
-#include <linux/if_ether.h> /* ETH_P_IP */
-#include <linux/if_packet.h> /* struct sockaddr_ll, PACKET_MULTICAST */
+#include <stddef.h>             /* NULL */
+#include <sys/types.h>          /* ssize_t */
+#include <string.h>             /* strerror() */
+#include <stdarg.h>             /* va_list, va_start, va_end */
+#include <errno.h>              /* errno */
+#include <assert.h>             /* assert() */
+#include <linux/if_ether.h>     /* ETH_P_IP */
+#include <linux/if_packet.h>    /* struct sockaddr_ll, PACKET_MULTICAST */
 //#include <pthread.h> /* pthread_t, pthread_create() */
-#include <signal.h> /* sigset_t, sigfillset(), sigdelset(), SIGINT */
-#include <netinet/ip.h> /* struct ip */
-#include <netinet/udp.h> /* struct udphdr */
-#include <unistd.h> /* close() */
+#include <signal.h>             /* sigset_t, sigfillset(), sigdelset(), SIGINT */
+#include <netinet/ip.h>         /* struct ip */
+#include <netinet/udp.h>        /* struct udphdr */
+#include <unistd.h>             /* close() */
 
 #include <netinet/in.h>
 #include <netinet/ip6.h>
 
 /* OLSRD includes */
-#include "plugin_util.h" /* set_plugin_int */
-#include "defs.h" /* olsr_cnf, //OLSR_PRINTF */
+#include "plugin_util.h"        /* set_plugin_int */
+#include "defs.h"               /* olsr_cnf, //OLSR_PRINTF */
 #include "ipcalc.h"
-#include "olsr.h" /* //OLSR_PRINTF */
-#include "mid_set.h" /* mid_lookup_main_addr() */
-#include "mpr_selector_set.h" /* olsr_lookup_mprs_set() */
-#include "link_set.h" /* get_best_link_to_neighbor() */
-#include "net_olsr.h" /* ipequal */
+#include "olsr.h"               /* //OLSR_PRINTF */
+#include "mid_set.h"            /* mid_lookup_main_addr() */
+#include "mpr_selector_set.h"   /* olsr_lookup_mprs_set() */
+#include "link_set.h"           /* get_best_link_to_neighbor() */
+#include "net_olsr.h"           /* ipequal */
 #include "olsr_logging.h"
 
 /* plugin includes */
-#include "NetworkInterfaces.h" /* TBmfInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
-#include "Address.h" /* IsMulticast() */
-#include "Packet.h" /* ENCAP_HDR_LEN, BMF_ENCAP_TYPE, BMF_ENCAP_LEN etc. */
+#include "NetworkInterfaces.h"  /* TBmfInterface, CreateBmfNetworkInterfaces(), CloseBmfNetworkInterfaces() */
+#include "Address.h"            /* IsMulticast() */
+#include "Packet.h"             /* ENCAP_HDR_LEN, BMF_ENCAP_TYPE, BMF_ENCAP_LEN etc. */
 
 
 /* -------------------------------------------------------------------------
@@ -66,14 +67,14 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
  * Return     : none
  * Data Used  : BmfInterfaces
  * ------------------------------------------------------------------------- */
-static void PacketReceivedFromOLSR(
-  unsigned char* encapsulationUdpData, int len)
+static void
+PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 {
-  struct ip* ipHeader; /* IP header inside the encapsulated IP packet */
-  union olsr_ip_addr mcSrc; /* Original source of the encapsulated multicast packet */
-  union olsr_ip_addr mcDst; /* Multicast destination of the encapsulated packet */
-  struct TBmfInterface* walker;
-  ipHeader = (struct ip*) encapsulationUdpData;
+  struct ip *ipHeader;                 /* IP header inside the encapsulated IP packet */
+  union olsr_ip_addr mcSrc;            /* Original source of the encapsulated multicast packet */
+  union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
+  struct TBmfInterface *walker;
+  ipHeader = (struct ip *)encapsulationUdpData;
   mcSrc.v4 = ipHeader->ip_src;
   mcDst.v4 = ipHeader->ip_dst;
 
@@ -81,18 +82,18 @@ static void PacketReceivedFromOLSR(
 
 
   /* Check with each network interface what needs to be done on it */
-  for (walker = BmfInterfaces; walker != NULL; walker = walker->next)
-  {
+  for (walker = BmfInterfaces; walker != NULL; walker = walker->next) {
     /* To a non-OLSR interface: unpack the encapsulated IP packet and forward it */
-    if (walker->olsrIntf == NULL)
-    {
+    if (walker->olsrIntf == NULL) {
       int nBytesWritten;
       struct sockaddr_ll dest;
 
       memset(&dest, 0, sizeof(dest));
       dest.sll_family = AF_PACKET;
-      if ((encapsulationUdpData[0] & 0xf0) == 0x40) dest.sll_protocol = htons(ETH_P_IP);
-      if ((encapsulationUdpData[0] & 0xf0) == 0x60) dest.sll_protocol = htons(ETH_P_IPV6);
+      if ((encapsulationUdpData[0] & 0xf0) == 0x40)
+        dest.sll_protocol = htons(ETH_P_IP);
+      if ((encapsulationUdpData[0] & 0xf0) == 0x60)
+        dest.sll_protocol = htons(ETH_P_IPV6);
       //TODO: if packet is not IP die here
       dest.sll_ifindex = if_nametoindex(walker->ifName);
       dest.sll_halen = IFHWADDRLEN;
@@ -105,128 +106,114 @@ static void PacketReceivedFromOLSR(
        * in that case. */
       memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
 
-      nBytesWritten = sendto(
-        walker->capturingSkfd,
-        encapsulationUdpData,
-        len,
-        0,
-        (struct sockaddr*) &dest,
-        sizeof(dest));
-      if (nBytesWritten != len)
-      {
+      nBytesWritten = sendto(walker->capturingSkfd, encapsulationUdpData, len, 0, (struct sockaddr *)&dest, sizeof(dest));
+      if (nBytesWritten != len) {
         BmfPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"", walker->ifName);
-      }
-      else
-      {
+      } else {
 
         //OLSR_PRINTF(
         //  2,
         //  "%s: --> unpacked and forwarded on \"%s\"\n",
         //  PLUGIN_NAME_SHORT,
         //  walker->ifName);
-     }
-    } /* if (walker->olsrIntf == NULL) */
-}
-} /* PacketReceivedFromOLSR */
+      }
+    }                           /* if (walker->olsrIntf == NULL) */
+  }
+}                               /* PacketReceivedFromOLSR */
 
 
 
 bool
-olsr_parser(union olsr_message *m,
-            struct interface *in_if __attribute__((unused)),
-            union olsr_ip_addr *ipaddr)
+olsr_parser(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr)
 {
-        union olsr_ip_addr originator;
-        int size;
-        olsr_reltime vtime;
-        //OLSR_PRINTF(2, "MDNS PLUGIN: Received msg in parser\n");
-        /* Fetch the originator of the messsage */
-        if(olsr_cnf->ip_version == AF_INET) {
-                memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
-		vtime = me_to_reltime(m->v4.olsr_vtime);
-                size = ntohs(m->v4.olsr_msgsize);
-        } else {
-                memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
-		vtime = me_to_reltime(m->v6.olsr_vtime);
-  	        size = ntohs(m->v6.olsr_msgsize);
-        }
+  union olsr_ip_addr originator;
+  int size;
+  olsr_reltime vtime;
+  //OLSR_PRINTF(2, "MDNS PLUGIN: Received msg in parser\n");
+  /* Fetch the originator of the messsage */
+  if (olsr_cnf->ip_version == AF_INET) {
+    memcpy(&originator, &m->v4.originator, olsr_cnf->ipsize);
+    vtime = me_to_reltime(m->v4.olsr_vtime);
+    size = ntohs(m->v4.olsr_msgsize);
+  } else {
+    memcpy(&originator, &m->v6.originator, olsr_cnf->ipsize);
+    vtime = me_to_reltime(m->v6.olsr_vtime);
+    size = ntohs(m->v6.olsr_msgsize);
+  }
 
-        /* Check if message originated from this node.
- *         If so - back off */
-        if(olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
-                return false;
+  /* Check if message originated from this node.
+   *         If so - back off */
+  if (olsr_ipcmp(&originator, &olsr_cnf->router_id) == 0)
+    return false;
 
-        /* Check that the neighbor this message was received from is symmetric.
- *         If not - back off*/
-        if(check_neighbor_link(ipaddr) != SYM_LINK) {
-                //struct ipaddr_str strbuf;
-                //OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
-                return false;
-        }
+  /* Check that the neighbor this message was received from is symmetric.
+   *         If not - back off*/
+  if (check_neighbor_link(ipaddr) != SYM_LINK) {
+    //struct ipaddr_str strbuf;
+    //OLSR_PRINTF(3, "NAME PLUGIN: Received msg from NON SYM neighbor %s\n", olsr_ip_to_string(&strbuf, ipaddr));
+    return false;
+  }
 
-        if(olsr_cnf->ip_version == AF_INET){
-	PacketReceivedFromOLSR((unsigned char*) &m->v4.message,size-12);
-	}
-	else {
-	PacketReceivedFromOLSR((unsigned char*) &m->v6.message,size-12-96);
-	}
-        /* Forward the message */
-        return true;
+  if (olsr_cnf->ip_version == AF_INET) {
+    PacketReceivedFromOLSR((unsigned char *)&m->v4.message, size - 12);
+  } else {
+    PacketReceivedFromOLSR((unsigned char *)&m->v6.message, size - 12 - 96);
+  }
+  /* Forward the message */
+  return true;
 }
 
 //Sends a packet in the OLSR network
 void
-olsr_mdns_gen(unsigned char* packet, int len)
+olsr_mdns_gen(unsigned char *packet, int len)
 {
-        /* send buffer: huge */
-        char buffer[10240];
-        union olsr_message *message = (union olsr_message *)buffer;
-        struct interface *ifn;
-        //int namesize;
+  /* send buffer: huge */
+  char buffer[10240];
+  union olsr_message *message = (union olsr_message *)buffer;
+  struct interface *ifn;
+  //int namesize;
 
-        /* fill message */
-        if(olsr_cnf->ip_version == AF_INET)
-        {
-                /* IPv4 */
-                message->v4.olsr_msgtype = MESSAGE_TYPE;
-                message->v4.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
-                memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-                message->v4.ttl = MAX_TTL;
-                message->v4.hopcnt = 0;
-                message->v4.seqno = htons(get_msg_seqno());
+  /* fill message */
+  if (olsr_cnf->ip_version == AF_INET) {
+    /* IPv4 */
+    message->v4.olsr_msgtype = MESSAGE_TYPE;
+    message->v4.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
+    memcpy(&message->v4.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
+    message->v4.ttl = MAX_TTL;
+    message->v4.hopcnt = 0;
+    message->v4.seqno = htons(get_msg_seqno());
 
-                message->v4.olsr_msgsize = htons(len+12);
+    message->v4.olsr_msgsize = htons(len + 12);
 
-		memcpy(&message->v4.message,packet,len);
-                len=len+12;
-        }
-        else
-        {
-                /* IPv6 */
-                message->v6.olsr_msgtype = MESSAGE_TYPE;
-                message->v6.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
-                memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
-                message->v6.ttl = MAX_TTL;
-                message->v6.hopcnt = 0;
-                message->v6.seqno = htons(get_msg_seqno());
+    memcpy(&message->v4.message, packet, len);
+    len = len + 12;
+  } else {
+    /* IPv6 */
+    message->v6.olsr_msgtype = MESSAGE_TYPE;
+    message->v6.olsr_vtime = reltime_to_me(MDNS_VALID_TIME * MSEC_PER_SEC);
+    memcpy(&message->v6.originator, &olsr_cnf->router_id, olsr_cnf->ipsize);
+    message->v6.ttl = MAX_TTL;
+    message->v6.hopcnt = 0;
+    message->v6.seqno = htons(get_msg_seqno());
 
-                message->v6.olsr_msgsize = htons(len+12+96);
-		memcpy(&message->v6.message,packet,len);
-                len=len+12+96;
-        }
+    message->v6.olsr_msgsize = htons(len + 12 + 96);
+    memcpy(&message->v6.message, packet, len);
+    len = len + 12 + 96;
+  }
 
-        /* looping trough interfaces */
-        OLSR_FOR_ALL_INTERFACES(ifn) {
-                //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
+  /* looping trough interfaces */
+  OLSR_FOR_ALL_INTERFACES(ifn) {
+    //OLSR_PRINTF(1, "MDNS PLUGIN: Generating packet - [%s]\n", ifn->int_name);
 
-                if(net_outbuffer_push(ifn, message, len) != len) {
-                        /* send data and try again */
-                        net_output(ifn);
-                        if(net_outbuffer_push(ifn, message, len) != len) {
-                                //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
-                        }
-                }
-        } OLSR_FOR_ALL_INTERFACES_END(ifn);
+    if (net_outbuffer_push(ifn, message, len) != len) {
+      /* send data and try again */
+      net_output(ifn);
+      if (net_outbuffer_push(ifn, message, len) != len) {
+        //OLSR_PRINTF(1, "MDNS PLUGIN: could not send on interface: %s\n", ifn->int_name);
+      }
+    }
+  }
+  OLSR_FOR_ALL_INTERFACES_END(ifn);
 }
 
 /* -------------------------------------------------------------------------
@@ -241,7 +228,8 @@ olsr_mdns_gen(unsigned char* packet, int len)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 
-void BmfPError(const char* format, ...)
+void
+BmfPError(const char *format, ...)
 {
 #define MAX_STR_DESC 255
   char strDesc[MAX_STR_DESC];
@@ -250,23 +238,20 @@ void BmfPError(const char* format, ...)
   char *stringErr = strerror(errno);
 #endif
   /* Rely on short-circuit boolean evaluation */
-  if (format == NULL || *format == '\0')
-  {
+  if (format == NULL || *format == '\0') {
     OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", PLUGIN_NAME, stringErr);
-  }
-  else
-  {
+  } else {
     va_list arglist;
 
     va_start(arglist, format);
     vsnprintf(strDesc, MAX_STR_DESC, format, arglist);
     va_end(arglist);
 
-    strDesc[MAX_STR_DESC - 1] = '\0'; /* Ensures null termination */
+    strDesc[MAX_STR_DESC - 1] = '\0';   /* Ensures null termination */
 
     OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", strDesc, stringErr);
   }
-} /* BmfPError */
+}                               /* BmfPError */
 
 /* -------------------------------------------------------------------------
  * Function   : MainAddressOf
@@ -276,18 +261,18 @@ void BmfPError(const char* format, ...)
  * Return     : The main IP address of the node
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip)
+union olsr_ip_addr *
+MainAddressOf(union olsr_ip_addr *ip)
 {
-  union olsr_ip_addr* result;
+  union olsr_ip_addr *result;
 
   /* TODO: mid_lookup_main_addr() is not thread-safe! */
   result = olsr_lookup_main_addr_by_alias(ip);
-  if (result == NULL)
-  {
+  if (result == NULL) {
     result = ip;
   }
   return result;
-} /* MainAddressOf */
+}                               /* MainAddressOf */
 
 
 /* -------------------------------------------------------------------------
@@ -304,74 +289,66 @@ union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip)
  * Notes      : The IP packet is assumed to be captured on a socket of family
  *              PF_PACKET and type SOCK_DGRAM (cooked).
  * ------------------------------------------------------------------------- */
-static void BmfPacketCaptured(
-  //struct TBmfInterface* intf,
-  //unsigned char sllPkttype,
-  unsigned char* encapsulationUdpData,
-  int nBytes)
+static void
+BmfPacketCaptured(
+                   //struct TBmfInterface* intf,
+                   //unsigned char sllPkttype,
+                   unsigned char *encapsulationUdpData, int nBytes)
 {
-  union olsr_ip_addr src; /* Source IP address in captured packet */
-  union olsr_ip_addr dst; /* Destination IP address in captured packet */
-  union olsr_ip_addr* origIp; /* Main OLSR address of source of captured packet */
-  struct ip* ipHeader; /* The IP header inside the captured IP packet */
-  struct ip6_hdr* ipHeader6; /* The IP header inside the captured IP packet */
-  struct udphdr* udpHeader;
+  union olsr_ip_addr src;              /* Source IP address in captured packet */
+  union olsr_ip_addr dst;              /* Destination IP address in captured packet */
+  union olsr_ip_addr *origIp;          /* Main OLSR address of source of captured packet */
+  struct ip *ipHeader;                 /* The IP header inside the captured IP packet */
+  struct ip6_hdr *ipHeader6;           /* The IP header inside the captured IP packet */
+  struct udphdr *udpHeader;
   u_int16_t destPort;
 
-  if ((encapsulationUdpData[0] & 0xf0) == 0x40) { //IPV4
+  if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
 
-            ipHeader = (struct ip*) encapsulationUdpData;
+    ipHeader = (struct ip *)encapsulationUdpData;
 
-            dst.v4 = ipHeader->ip_dst;
+    dst.v4 = ipHeader->ip_dst;
 
-            /* Only forward multicast packets. If configured, also forward local broadcast packets */
-            if (IsMulticast(&dst))
-            {
-              /* continue */
-            }
-            else
-            {
-              return;
-            }
-            if (ipHeader->ip_p != SOL_UDP)
-            {
-              /* Not UDP */
-              //OLSR_PRINTF(1,"NON UDP PACKET\n");
-              return; /* for */
-            }
-            udpHeader = (struct udphdr*)(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
-            destPort = ntohs(udpHeader->dest);
-            if (destPort != 5353)
-            {
-               return;
-            }
-  }//END IPV4
+    /* Only forward multicast packets. If configured, also forward local broadcast packets */
+    if (IsMulticast(&dst)) {
+      /* continue */
+    } else {
+      return;
+    }
+    if (ipHeader->ip_p != SOL_UDP) {
+      /* Not UDP */
+      //OLSR_PRINTF(1,"NON UDP PACKET\n");
+      return;                   /* for */
+    }
+    udpHeader = (struct udphdr *)(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
+    destPort = ntohs(udpHeader->dest);
+    if (destPort != 5353) {
+      return;
+    }
+  }                             //END IPV4
 
-  else if ((encapsulationUdpData[0] & 0xf0) == 0x60) { //IPv6
+  else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
-            ipHeader6 = (struct ip6_hdr*) encapsulationUdpData;
-            if (ipHeader6->ip6_dst.s6_addr[0] == 0xff) //Multicast
-            {
-              //Continua
-            }
-            else
-            {
-            return; //not multicast
-            }
-            if (ipHeader6->ip6_nxt != SOL_UDP)
-            {
-              /* Not UDP */
-              //OLSR_PRINTF(1,"NON UDP PACKET\n");
-              return; /* for */
-            }
-            udpHeader = (struct udphdr*)(encapsulationUdpData + 40);
-            destPort = ntohs(udpHeader->dest);
-            if (destPort != 5353)
-            {
-               return;
-            }
-  } //END IPV6
-  else return; //Is not IP packet
+    ipHeader6 = (struct ip6_hdr *)encapsulationUdpData;
+    if (ipHeader6->ip6_dst.s6_addr[0] == 0xff)  //Multicast
+    {
+      //Continua
+    } else {
+      return;                   //not multicast
+    }
+    if (ipHeader6->ip6_nxt != SOL_UDP) {
+      /* Not UDP */
+      //OLSR_PRINTF(1,"NON UDP PACKET\n");
+      return;                   /* for */
+    }
+    udpHeader = (struct udphdr *)(encapsulationUdpData + 40);
+    destPort = ntohs(udpHeader->dest);
+    if (destPort != 5353) {
+      return;
+    }
+  }                             //END IPV6
+  else
+    return;                     //Is not IP packet
 
   /* Check if the frame is captured on an OLSR-enabled interface */
   //isFromOlsrIntf = (intf->olsrIntf != NULL); TODO: put again this check
@@ -381,8 +358,8 @@ static void BmfPacketCaptured(
   origIp = MainAddressOf(&src);
 
   // send the packet to OLSR forward mechanism
-  olsr_mdns_gen(encapsulationUdpData,nBytes);
-} /* BmfPacketCaptured */
+  olsr_mdns_gen(encapsulationUdpData, nBytes);
+}                               /* BmfPacketCaptured */
 
 
 /* -------------------------------------------------------------------------
@@ -393,71 +370,63 @@ static void BmfPacketCaptured(
  * Return     : none
  * Data Used  :
  * ------------------------------------------------------------------------- */
-void DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
-
+void
+DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   unsigned char rxBuffer[BMF_BUFFER_SIZE];
-      if (skfd >= 0)
-      {
-        struct sockaddr_ll pktAddr;
-        socklen_t addrLen = sizeof(pktAddr);
-        int nBytes;
-        unsigned char* ipPacket;
+  if (skfd >= 0) {
+    struct sockaddr_ll pktAddr;
+    socklen_t addrLen = sizeof(pktAddr);
+    int nBytes;
+    unsigned char *ipPacket;
 
-        /* Receive the captured Ethernet frame, leaving space for the BMF
-         * encapsulation header */
-	ipPacket = GetIpPacket(rxBuffer);
-	nBytes = recvfrom(
-			skfd,
-			ipPacket,
-			BMF_BUFFER_SIZE, //TODO: understand how to change this
-			0,
-			(struct sockaddr*)&pktAddr,
-			&addrLen);
-	if (nBytes < 0)
-	{
+    /* Receive the captured Ethernet frame, leaving space for the BMF
+     * encapsulation header */
+    ipPacket = GetIpPacket(rxBuffer);
+    nBytes = recvfrom(skfd, ipPacket, BMF_BUFFER_SIZE,  //TODO: understand how to change this
+                      0, (struct sockaddr *)&pktAddr, &addrLen);
+    if (nBytes < 0) {
 
-		return; /* for */
-	} /* if (nBytes < 0) */
+      return;                   /* for */
+    }
 
-	/* Check if the number of received bytes is large enough for an IP
-	 * packet which contains at least a minimum-size IP header.
-	 * Note: There is an apparent bug in the packet socket implementation in
-	 * combination with VLAN interfaces. On a VLAN interface, the value returned
-	 * by 'recvfrom' may (but need not) be 4 (bytes) larger than the value
-	 * returned on a non-VLAN interface, for the same ethernet frame. */
-	if (nBytes < (int)sizeof(struct ip))
-	{
-		////OLSR_PRINTF(
-		//		1,
-		//		"%s: captured frame too short (%d bytes) on \"%s\"\n",
-		//		PLUGIN_NAME,
-		//		nBytes,
-		//		walker->ifName);
+    /* if (nBytes < 0) */
+    /* Check if the number of received bytes is large enough for an IP
+     * packet which contains at least a minimum-size IP header.
+     * Note: There is an apparent bug in the packet socket implementation in
+     * combination with VLAN interfaces. On a VLAN interface, the value returned
+     * by 'recvfrom' may (but need not) be 4 (bytes) larger than the value
+     * returned on a non-VLAN interface, for the same ethernet frame. */
+    if (nBytes < (int)sizeof(struct ip)) {
+      ////OLSR_PRINTF(
+      //              1,
+      //              "%s: captured frame too short (%d bytes) on \"%s\"\n",
+      //              PLUGIN_NAME,
+      //              nBytes,
+      //              walker->ifName);
 
-		return; /* for */
-	}
+      return;                   /* for */
+    }
 
-	if (pktAddr.sll_pkttype == PACKET_OUTGOING ||
-			pktAddr.sll_pkttype == PACKET_MULTICAST ||
-			pktAddr.sll_pkttype == PACKET_BROADCAST)
-	{
-		/* A multicast or broadcast packet was captured */
+    if (pktAddr.sll_pkttype == PACKET_OUTGOING ||
+        pktAddr.sll_pkttype == PACKET_MULTICAST || pktAddr.sll_pkttype == PACKET_BROADCAST) {
+      /* A multicast or broadcast packet was captured */
 
-		////OLSR_PRINTF(
-		//		1,
-		//		"%s: captured frame (%d bytes) on \"%s\"\n",
-		//		PLUGIN_NAME,
-		//		nBytes,
-		//		walker->ifName);
-		//BmfPacketCaptured(walker, pktAddr.sll_pkttype, rxBuffer);
-		BmfPacketCaptured(ipPacket,nBytes);
+      ////OLSR_PRINTF(
+      //              1,
+      //              "%s: captured frame (%d bytes) on \"%s\"\n",
+      //              PLUGIN_NAME,
+      //              nBytes,
+      //              walker->ifName);
+      //BmfPacketCaptured(walker, pktAddr.sll_pkttype, rxBuffer);
+      BmfPacketCaptured(ipPacket, nBytes);
 
-        } /* if (pktAddr.sll_pkttype == ...) */
-      } /* if (skfd >= 0 && (FD_ISSET...)) */
-} /* DoMDNS */
+    }                           /* if (pktAddr.sll_pkttype == ...) */
+  }                             /* if (skfd >= 0 && (FD_ISSET...)) */
+}                               /* DoMDNS */
 
-int InitMDNS(struct interface* skipThisIntf)
+int
+InitMDNS(struct interface *skipThisIntf)
 {
 
 
@@ -467,7 +436,7 @@ int InitMDNS(struct interface* skipThisIntf)
   CreateBmfNetworkInterfaces(skipThisIntf);
 
   return 0;
-} /* InitMDNS */
+}                               /* InitMDNS */
 
 /* -------------------------------------------------------------------------
  * Function   : CloseMDNS
@@ -477,8 +446,8 @@ int InitMDNS(struct interface* skipThisIntf)
  * Return     : none
  * Data Used  :
  * ------------------------------------------------------------------------- */
-void CloseMDNS(void)
+void
+CloseMDNS(void)
 {
   CloseBmfNetworkInterfaces();
 }
-

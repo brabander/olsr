@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -84,7 +85,7 @@ struct lq_etxff_link_entry {
 
 extern struct lq_handler lq_etxff_handler;
 
-#endif /*LQ_PLUGIN_ETX_FF_*/
+#endif /*LQ_PLUGIN_ETX_FF_ */
 
 /*
  * Local Variables:

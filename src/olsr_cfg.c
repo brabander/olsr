@@ -444,13 +444,11 @@ parse_cfg_interface(char *argstr, struct olsr_config *rcfg, char *rmsg)
           if (0 == strcmp("Mode", p_next[0])) {
             if (0 == strcasecmp("Ether", p_next[1])) {
               new_if->cnf->mode = IF_MODE_ETHER;
-            }
-            else {
+            } else {
               new_if->cnf->mode = IF_MODE_MESH;
             }
             PARSER_DEBUG_PRINTF("\tMode: %s\n", INTERFACE_MODE_NAMES[new_if->cnf->mode]);
-          }
-          else if (0 == strcmp("AutoDetectChanges", p_next[0])) {
+          } else if (0 == strcmp("AutoDetectChanges", p_next[0])) {
             new_if->cnf->autodetect_chg = (0 == strcmp("yes", p_next[1]));
             PARSER_DEBUG_PRINTF("\tAutodetect changes: %d\n", new_if->cnf->autodetect_chg);
           } else if (0 == strcmp("Ip4Broadcast", p_next[0])) {
@@ -643,7 +641,8 @@ parse_cfg_ipc(char *argstr, struct olsr_config *rcfg, char *rmsg)
             return CFG_ERROR;
           }
           ip_acl_add(&rcfg->ipc_nets, &ipaddr, netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize), false);
-          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr), netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize));
+          PARSER_DEBUG_PRINTF("\tIPC net: %s/%d\n", ip_to_string(rcfg->ip_version, &buf, &ipaddr),
+                              netmask_to_prefix(netmask.v6.s6_addr, rcfg->ipsize));
         } else {
           int prefix = -1;
           sscanf('/' == *p[2] ? p[2] + 1 : p[2], "%d", &prefix);
@@ -739,38 +738,38 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
     return CFG_ERROR;
   }
 
-  switch(dlevel) {
-    case 3:
-      /* all logging */
-      for (i=0; i<LOG_SOURCE_COUNT; i++) {
-        rcfg->log_event[SEVERITY_DEBUG][i] = true;
-      }
-    case 2:
-      /* all info, warnings and errors */
-      for (i=0; i<LOG_SOURCE_COUNT; i++) {
-        rcfg->log_event[SEVERITY_INFO][i] = true;
-      }
-    case 1:
-      /* some INFO level output, plus all warnings and errors */
-      rcfg->log_event[SEVERITY_INFO][LOG_2NEIGH] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_LINKS] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_MAIN] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_NEIGHTABLE] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_PLUGINS] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_ROUTING] = true;
-      rcfg->log_event[SEVERITY_INFO][LOG_TC] = true;
-    case 0:
-      /* errors and warnings */
-      for (i=0; i<LOG_SOURCE_COUNT; i++) {
-        rcfg->log_event[SEVERITY_WARN][i] = true;
-      }
-    case -1:
-      /* only error messages */
-      for (i=0; i<LOG_SOURCE_COUNT; i++) {
-        rcfg->log_event[SEVERITY_ERR][i] = true;
-      }
-    default:      /* no logging at all ! */
-      break;
+  switch (dlevel) {
+  case 3:
+    /* all logging */
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      rcfg->log_event[SEVERITY_DEBUG][i] = true;
+    }
+  case 2:
+    /* all info, warnings and errors */
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      rcfg->log_event[SEVERITY_INFO][i] = true;
+    }
+  case 1:
+    /* some INFO level output, plus all warnings and errors */
+    rcfg->log_event[SEVERITY_INFO][LOG_2NEIGH] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_LINKS] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_MAIN] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_NEIGHTABLE] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_PLUGINS] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_ROUTING] = true;
+    rcfg->log_event[SEVERITY_INFO][LOG_TC] = true;
+  case 0:
+    /* errors and warnings */
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      rcfg->log_event[SEVERITY_WARN][i] = true;
+    }
+  case -1:
+    /* only error messages */
+    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+      rcfg->log_event[SEVERITY_ERR][i] = true;
+    }
+  default:                     /* no logging at all ! */
+    break;
   }
 
   PARSER_DEBUG_PRINTF("Debug level: %d\n", dlevel);
@@ -783,6 +782,7 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
   cfg_has_log[SEVERITY_ERR] = true;
   return CFG_OK;
 }
+
 /*
  * Parses a the parameter string of --log(debug|info|warn|error)
  * @argstr:     arguments string
@@ -1037,16 +1037,16 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
       PARSER_DEBUG_PRINTF("Willingness: %d (no auto)\n", rcfg->willingness);
     }
     break;
-  case CFG_LOG_DEBUG:                    /* Log (string) */
+  case CFG_LOG_DEBUG:          /* Log (string) */
     return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_DEBUG);
     break;
-  case CFG_LOG_INFO:                    /* Log (string) */
+  case CFG_LOG_INFO:           /* Log (string) */
     return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_INFO);
     break;
-  case CFG_LOG_WARN:                    /* Log (string) */
+  case CFG_LOG_WARN:           /* Log (string) */
     return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_WARN);
     break;
-  case CFG_LOG_ERROR:                   /* Log (string) */
+  case CFG_LOG_ERROR:          /* Log (string) */
     return parse_cfg_log(argstr, rcfg, rmsg, SEVERITY_ERR);
     break;
   case CFG_LOG_STDERR:
@@ -1070,7 +1070,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     }
     rcfg->fixed_origaddr = true;
     break;
-  case CFG_OLSRPORT:                    /* port (i) */
+  case CFG_OLSRPORT:           /* port (i) */
     {
       int arg = -1;
       sscanf(argstr, "%d", &arg);
@@ -1103,7 +1103,7 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
  * @returns a parsing status result code
  */
 olsr_parse_cfg_result
-olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config **rcfg)
+olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr_config ** rcfg)
 {
   int opt;
   int opt_idx = 0;
@@ -1296,8 +1296,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
         if (popt->val) {
           if (popt->val > 0 && popt->val < 128) {
             printf("-%c or --%s ", popt->val, popt->name);
-          }
-          else {
+          } else {
             printf("      --%s ", popt->name);
           }
           switch (popt->has_arg) {
@@ -1314,12 +1313,11 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
       }
       if (optarg == NULL) {
         printf("Use '--help=log'for help about the available logging sources\n");
-      }
-      else if (strcmp(optarg, "log") == 0) {
+      } else if (strcmp(optarg, "log") == 0) {
         int i;
 
         printf("Log sources for --log_debug, --log_info, --log_warn and --log_error:\n");
-        for (i=0; i < LOG_SOURCE_COUNT; i++) {
+        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
           printf("\t%s\n", LOG_SOURCE_NAMES[i]);
         }
       }
@@ -1353,14 +1351,14 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
       PARSER_DEBUG_PRINTF("Log: activate default logging target stderr\n");
     }
     for (opt = SEVERITY_INFO; opt < LOG_SEVERITY_COUNT; opt++) {
-      if (!cfg_has_log[opt] && cfg_has_log[opt-1]) {
+      if (!cfg_has_log[opt] && cfg_has_log[opt - 1]) {
         int i;
 
-        PARSER_DEBUG_PRINTF("Log: copy log level %s to %s\n", LOG_SEVERITY_NAMES[opt-1], LOG_SEVERITY_NAMES[opt]);
+        PARSER_DEBUG_PRINTF("Log: copy log level %s to %s\n", LOG_SEVERITY_NAMES[opt - 1], LOG_SEVERITY_NAMES[opt]);
 
         /* copy debug to info, info to warning, warning to error (if neccessary) */
-        for (i=0; i < LOG_SOURCE_COUNT; i++) {
-          (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt-1][i];
+        for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+          (*rcfg)->log_event[opt][i] = (*rcfg)->log_event[opt - 1][i];
         }
         cfg_has_log[opt] = true;
       }

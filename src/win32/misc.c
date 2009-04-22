@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -44,7 +45,8 @@
 #include "misc.h"
 #include "log.h"
 
-void clear_console(void)
+void
+clear_console(void)
 {
 #if !defined WINCE
   HANDLE Hand;
@@ -57,17 +59,13 @@ void clear_console(void)
   if (Hand == INVALID_HANDLE_VALUE)
     return;
 
-  if(!GetConsoleScreenBufferInfo(Hand, &Info))
+  if (!GetConsoleScreenBufferInfo(Hand, &Info))
     return;
 
-  if(!FillConsoleOutputCharacter(Hand, ' ',
-                                 Info.dwSize.X * Info.dwSize.Y, Home,
-                                 &Written))
+  if (!FillConsoleOutputCharacter(Hand, ' ', Info.dwSize.X * Info.dwSize.Y, Home, &Written))
     return;
 
-  if(!FillConsoleOutputAttribute(Hand, Info.wAttributes,
-                                 Info.dwSize.X * Info.dwSize.Y, Home,
-                                 &Written))
+  if (!FillConsoleOutputAttribute(Hand, Info.wAttributes, Info.dwSize.X * Info.dwSize.Y, Home, &Written))
     return;
 
   SetConsoleCursorPosition(Hand, Home);
@@ -76,15 +74,16 @@ void clear_console(void)
 
 extern char *StrError(unsigned int ErrNo);
 
-int set_nonblocking(int fd)
+int
+set_nonblocking(int fd)
 {
-    /* make the fd non-blocking */
-    unsigned long flags = 1;
-    if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
-        olsr_syslog(OLSR_LOG_ERR, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
-        return -1;
-    }
-    return 0;
+  /* make the fd non-blocking */
+  unsigned long flags = 1;
+  if (ioctlsocket(fd, FIONBIO, &flags) != 0) {
+    olsr_syslog(OLSR_LOG_ERR, "Cannot set the socket flags: %s", StrError(WSAGetLastError()));
+    return -1;
+  }
+  return 0;
 }
 
 /*

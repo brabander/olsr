@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -63,7 +64,8 @@ static void my_fini(void) __attribute__ ((destructor));
  * THIS IS NOT THE VERSION OF YOUR PLUGIN!
  * Do not alter unless you know what you are doing!
  */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
   return PLUGIN_INTERFACE_VERSION;
 }
@@ -72,7 +74,8 @@ int olsrd_plugin_interface_version(void)
 /**
  *Constructor
  */
-static void my_init(void)
+static void
+my_init(void)
 {
   OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 }
@@ -80,7 +83,8 @@ static void my_init(void)
 /**
  *Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
 
   /* Calls the destruction function
@@ -92,42 +96,44 @@ static void my_fini(void)
   secure_plugin_exit();
 }
 
-static int store_string(const char *value, void *data, set_plugin_parameter_addon addon __attribute__((unused)))
+static int
+store_string(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *str = data;
-  snprintf(str, FILENAME_MAX+1, "%s", value);
+  snprintf(str, FILENAME_MAX + 1, "%s", value);
   return 0;
 }
 
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "keyfile", .set_plugin_parameter = &store_string, .data = keyfile },
+  {.name = "keyfile",.set_plugin_parameter = &store_string,.data = keyfile},
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
-int olsrd_plugin_init(void) {
+int
+olsrd_plugin_init(void)
+{
   /* Calls the initialization function
    * olsr_plugin_init()
    * This function should be present in your
    * sourcefile and all data initialization
    * should happen there - NOT HERE!
    */
-  if(!secure_plugin_init())
-    {
-      OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin!\n");
-      return 0;
-    }
+  if (!secure_plugin_init()) {
+    OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin!\n");
+    return 0;
+  }
 
-  if(!plugin_ipc_init())
-    {
-      OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin IPC!\n");
-      return 0;
-    }
+  if (!plugin_ipc_init()) {
+    OLSR_WARN(LOG_PLUGINS, "Could not initialize plugin IPC!\n");
+    return 0;
+  }
   return 1;
 
 }

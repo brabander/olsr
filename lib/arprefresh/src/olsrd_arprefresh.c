@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -76,26 +77,27 @@
  * Plugin interface version
  * Used by main olsrd to check plugin interface version
  */
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
-	return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
-typedef struct
-{
-	struct ethhdr eth;
-	struct iphdr ip;
-	struct udphdr udp;
-} __attribute__((packed)) arprefresh_buf;
+typedef struct {
+  struct ethhdr eth;
+  struct iphdr ip;
+  struct udphdr udp;
+} __attribute__ ((packed)) arprefresh_buf;
 
 static int arprefresh_sockfd = -1;
 static struct olsr_cookie_info *arp_event_timer_cookie;
@@ -104,115 +106,105 @@ static struct olsr_cookie_info *arp_event_timer_cookie;
  * Scheduled event to fetch gathered packets and update the ARP cache
  * called from olsrd main thread
  */
-static void olsr_arp_event(void* foo __attribute__((unused)))
+static void
+olsr_arp_event(void *foo __attribute__ ((unused)))
 {
-	if (0 <= arprefresh_sockfd)
-	{
-		arprefresh_buf buf;
-		struct sockaddr_ll from;
-		socklen_t fromlen = sizeof(from);
+  if (0 <= arprefresh_sockfd) {
+    arprefresh_buf buf;
+    struct sockaddr_ll from;
+    socklen_t fromlen = sizeof(from);
 
-		/*
-		 * Grab a single snapshot on the packet socket. This only works
-		 * if not too much IP traffic is currently flowing through.
-		 */
-		ssize_t size = recvfrom(arprefresh_sockfd, &buf, sizeof(buf),
-			MSG_TRUNC, (struct sockaddr *)&from, &fromlen);
+    /*
+     * Grab a single snapshot on the packet socket. This only works
+     * if not too much IP traffic is currently flowing through.
+     */
+    ssize_t size = recvfrom(arprefresh_sockfd, &buf, sizeof(buf),
+                            MSG_TRUNC, (struct sockaddr *)&from, &fromlen);
 
-		if (0 <= size &&
-		    size >= (ssize_t)sizeof(buf) /*** &&
+    if (0 <= size && size >= (ssize_t) sizeof(buf) /*** &&
 		    ETH_P_IP == ntohs(buf.eth.h_proto) &&
 		    IPPROTO_UDP == buf.ip.protocol &&
 		    arprefresh_portnum == ntohs(buf.udp.source) &&
-		    arprefresh_portnum == ntohs(buf.udp.dest) ***/)
-		{
-			union
-			{
-				struct arpreq arp;
-				struct sockaddr_in in_pa;
-				struct sockaddr_in6 in_pa6;
-			} req;
+		    arprefresh_portnum == ntohs(buf.udp.dest) ***/ ) {
+      union {
+        struct arpreq arp;
+        struct sockaddr_in in_pa;
+        struct sockaddr_in6 in_pa6;
+      } req;
 
-			memset(&req, 0, sizeof(req));
-			req.in_pa.sin_family = AF_INET;
-			memcpy(&req.in_pa.sin_addr, &buf.ip.saddr, sizeof(buf.ip.saddr));
-			req.arp.arp_ha.sa_family = AF_LOCAL;
-			memcpy(&req.arp.arp_ha.sa_data, &buf.eth.h_source, sizeof(buf.eth.h_source));
-			req.arp.arp_flags = ATF_COM;
-			if_indextoname(from.sll_ifindex, req.arp.arp_dev);
+      memset(&req, 0, sizeof(req));
+      req.in_pa.sin_family = AF_INET;
+      memcpy(&req.in_pa.sin_addr, &buf.ip.saddr, sizeof(buf.ip.saddr));
+      req.arp.arp_ha.sa_family = AF_LOCAL;
+      memcpy(&req.arp.arp_ha.sa_data, &buf.eth.h_source, sizeof(buf.eth.h_source));
+      req.arp.arp_flags = ATF_COM;
+      if_indextoname(from.sll_ifindex, req.arp.arp_dev);
 #if 0
-			{
-				int i;
-				OLSR_PRINTF(0, "Refresh on %s, %s=", req.arp.arp_dev,
-					inet_ntoa(*((struct in_addr*)&buf.ip.saddr)));
-				for(i = 0; i < (ssize_t)sizeof(buf.eth.h_source); i++)
-				{
-					OLSR_PRINTF(0, "%02x%s", ((unsigned char *)&buf.eth.h_source)[i], i < (ssize_t)sizeof(buf.eth.h_source) -1 ? ":" : "\n");
-				}
-			}
+      {
+        int i;
+        OLSR_PRINTF(0, "Refresh on %s, %s=", req.arp.arp_dev, inet_ntoa(*((struct in_addr *)&buf.ip.saddr)));
+        for (i = 0; i < (ssize_t) sizeof(buf.eth.h_source); i++) {
+          OLSR_PRINTF(0, "%02x%s", ((unsigned char *)&buf.eth.h_source)[i],
+                      i < (ssize_t) sizeof(buf.eth.h_source) - 1 ? ":" : "\n");
+        }
+      }
 #endif
-			if (ioctl(arprefresh_sockfd, SIOCSARP, &req) < 0) {
-				OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: SIOCSARP: %s\n", strerror(errno));
-				close(arprefresh_sockfd);
-				arprefresh_sockfd = -1;
-				return;
-			}
-		}
-	}
+      if (ioctl(arprefresh_sockfd, SIOCSARP, &req) < 0) {
+        OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: SIOCSARP: %s\n", strerror(errno));
+        close(arprefresh_sockfd);
+        arprefresh_sockfd = -1;
+        return;
+      }
+    }
+  }
 }
 
 /**
  * Initialize plugin
  * Called after all parameters are passed
  */
-int olsrd_plugin_init(void)
+int
+olsrd_plugin_init(void)
 {
-	int ret = 0;
-	arp_event_timer_cookie  = olsr_alloc_cookie("Arprefresh: event", OLSR_COOKIE_TYPE_TIMER);
-	if (AF_INET == olsr_cnf->ip_version)
-	{
-		struct sock_fprog filter;
-		struct sock_filter BPF_code[]=
-		{
-			/* tcpdump -s [sizeof(arprefresh_buf)] -ni lo udp and dst port [arprefresh_portnum] -dd */
-			{ 0x28, 0, 0, 0x0000000c },
-			{ 0x15, 0, 4, 0x000086dd },
-			{ 0x30, 0, 0, 0x00000014 },
-			{ 0x15, 0, 11, 0x00000011 },
-			{ 0x28, 0, 0, 0x00000038 },
-			{ 0x15, 8, 9, olsr_cnf->olsr_port },
-			{ 0x15, 0, 8, 0x00000800 },
-			{ 0x30, 0, 0, 0x00000017 },
-			{ 0x15, 0, 6, 0x00000011 },
-			{ 0x28, 0, 0, 0x00000014 },
-			{ 0x45, 4, 0, 0x00001fff },
-			{ 0xb1, 0, 0, 0x0000000e },
-			{ 0x48, 0, 0, 0x00000010 },
-			{ 0x15, 0, 1, olsr_cnf->olsr_port },
-			{ 0x6, 0, 0, sizeof(arprefresh_buf) },
-			{ 0x6, 0, 0, 0x00000000 }
-		};
-		filter.len = ARRAYSIZE(BPF_code);
-		filter.filter = BPF_code;
-		if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP))) &&
-		    0 <= set_nonblocking(arprefresh_sockfd) &&
-		    0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter)))
-		{
-			/* Register the ARP refresh event */
-                        olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC,
-                                         &olsr_arp_event, NULL, arp_event_timer_cookie->ci_id);
-			ret = 1;
-		}
-		else
-		{
-			OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: Cannot create non-blocking filtering packet socket: %s\n", strerror(errno));
-		}
-	}
-	else
-	{
-	  OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: IPv6 not supported\n");
-	}
-	return ret;
+  int ret = 0;
+  arp_event_timer_cookie = olsr_alloc_cookie("Arprefresh: event", OLSR_COOKIE_TYPE_TIMER);
+  if (AF_INET == olsr_cnf->ip_version) {
+    struct sock_fprog filter;
+    struct sock_filter BPF_code[] = {
+      /* tcpdump -s [sizeof(arprefresh_buf)] -ni lo udp and dst port [arprefresh_portnum] -dd */
+      {0x28, 0, 0, 0x0000000c},
+      {0x15, 0, 4, 0x000086dd},
+      {0x30, 0, 0, 0x00000014},
+      {0x15, 0, 11, 0x00000011},
+      {0x28, 0, 0, 0x00000038},
+      {0x15, 8, 9, olsr_cnf->olsr_port},
+      {0x15, 0, 8, 0x00000800},
+      {0x30, 0, 0, 0x00000017},
+      {0x15, 0, 6, 0x00000011},
+      {0x28, 0, 0, 0x00000014},
+      {0x45, 4, 0, 0x00001fff},
+      {0xb1, 0, 0, 0x0000000e},
+      {0x48, 0, 0, 0x00000010},
+      {0x15, 0, 1, olsr_cnf->olsr_port},
+      {0x6, 0, 0, sizeof(arprefresh_buf)}
+      ,
+      {0x6, 0, 0, 0x00000000}
+    };
+    filter.len = ARRAYSIZE(BPF_code);
+    filter.filter = BPF_code;
+    if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP))) &&
+        0 <= set_nonblocking(arprefresh_sockfd) &&
+        0 <= setsockopt(arprefresh_sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(filter))) {
+      /* Register the ARP refresh event */
+      olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &olsr_arp_event, NULL, arp_event_timer_cookie->ci_id);
+      ret = 1;
+    } else {
+      OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: Cannot create non-blocking filtering packet socket: %s\n", strerror(errno));
+    }
+  } else {
+    OLSR_WARN(LOG_PLUGINS, "*** ARPREFRESH: IPv6 not supported\n");
+  }
+  return ret;
 }
 
 /****************************************************************************
@@ -222,7 +214,8 @@ int olsrd_plugin_init(void)
 static void __attribute__ ((constructor)) my_init(void);
 static void __attribute__ ((destructor)) my_fini(void);
 
-static void my_init(void)
+static void
+my_init(void)
 {
   OLSR_INFO(LOG_PLUGINS, "OLSRD arprefresh plugin by Sven-Ola\n");
 }
@@ -230,13 +223,13 @@ static void my_init(void)
 /**
  * Optional Private Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
-	if (0 <= arprefresh_sockfd)
-	{
-		close(arprefresh_sockfd);
-		arprefresh_sockfd = -1;
-	}
+  if (0 <= arprefresh_sockfd) {
+    close(arprefresh_sockfd);
+    arprefresh_sockfd = -1;
+  }
 }
 
 /*

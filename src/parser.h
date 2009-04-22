@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -53,7 +54,7 @@
 typedef bool parse_function(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 struct parse_function_entry {
-  uint32_t type;       /* If set to PROMISCUOUS all messages will be received */
+  uint32_t type;                       /* If set to PROMISCUOUS all messages will be received */
   parse_function *function;
   struct parse_function_entry *next;
 };
@@ -73,37 +74,36 @@ struct packetparser_function_entry {
 };
 
 void
-olsr_init_parser(void);
+  olsr_init_parser(void);
 
 void
-olsr_deinit_parser(void);
+  olsr_deinit_parser(void);
 
 void
-olsr_input(int, void *, unsigned int);
+  olsr_input(int, void *, unsigned int);
 
 void
-olsr_input_hostemu(int, void *, unsigned int);
+  olsr_input_hostemu(int, void *, unsigned int);
 
 void
-EXPORT(olsr_parser_add_function)(parse_function, uint32_t);
+  EXPORT(olsr_parser_add_function) (parse_function, uint32_t);
 
 int
-EXPORT(olsr_parser_remove_function)(parse_function, uint32_t);
+  EXPORT(olsr_parser_remove_function) (parse_function, uint32_t);
 
 void
-EXPORT(olsr_preprocessor_add_function)(preprocessor_function);
+  EXPORT(olsr_preprocessor_add_function) (preprocessor_function);
 
 int
-EXPORT(olsr_preprocessor_remove_function)(preprocessor_function);
+  EXPORT(olsr_preprocessor_remove_function) (preprocessor_function);
 
 void
-EXPORT(olsr_packetparser_add_function)(packetparser_function *function);
+  EXPORT(olsr_packetparser_add_function) (packetparser_function * function);
 
 int
-EXPORT(olsr_packetparser_remove_function)(packetparser_function *function);
+  EXPORT(olsr_packetparser_remove_function) (packetparser_function * function);
 
-const unsigned char *
-olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
+const unsigned char *olsr_parse_msg_hdr(const union olsr_message *, struct olsrmsg_hdr *);
 
 #endif
 

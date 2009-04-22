@@ -73,7 +73,7 @@ olsr_alloc_cookie(const char *cookie_name, olsr_cookie_type cookie_type)
     }
   }
 
-  assert(ci_index < COOKIE_ID_MAX);	/* increase COOKIE_ID_MAX */
+  assert(ci_index < COOKIE_ID_MAX);     /* increase COOKIE_ID_MAX */
 
   ci = olsr_malloc(sizeof(struct olsr_cookie_info), "new cookie");
   cookies[ci_index] = ci;
@@ -116,9 +116,7 @@ olsr_free_cookie(struct olsr_cookie_info *ci)
      * such that valgrind does not complain at shutdown.
      */
     if (!list_is_empty(&ci->ci_free_list)) {
-      for (memory_list = ci->ci_free_list.next;
-           memory_list != &ci->ci_free_list;
-           memory_list = memory_list->next) {
+      for (memory_list = ci->ci_free_list.next; memory_list != &ci->ci_free_list; memory_list = memory_list->next) {
         VALGRIND_MAKE_MEM_DEFINED(memory_list, ci->ci_size);
       }
     }
@@ -357,7 +355,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
   olsr_cookie_usage_incr(ci->ci_id);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: alloc %s, %p, %lu bytes%s\n",
-	      ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
+             ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
 
   VALGRIND_MEMPOOL_ALLOC(ci, ptr, ci->ci_size);
   return ptr;
@@ -381,8 +379,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    * Verify if there has been a memory overrun, or
    * the wrong owner is trying to free this.
    */
-  assert(!memcmp(&branding->cmb_sig, "cookie", 6) &&
-	 branding->cmb_id == ci->ci_id);
+  assert(!memcmp(&branding->cmb_sig, "cookie", 6) && branding->cmb_id == ci->ci_id);
 
   /* Kill the brand */
   memset(branding, 0, sizeof(*branding));
@@ -392,8 +389,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
    * point. Keep at least ten percent of the active used blocks or at least
    * ten blocks on the free list.
    */
-  if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD) ||
-      (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
+  if ((ci->ci_free_list_usage < COOKIE_FREE_LIST_THRESHOLD) || (ci->ci_free_list_usage < ci->ci_usage / COOKIE_FREE_LIST_THRESHOLD)) {
 
     free_list_node = (struct list_node *)ptr;
     list_node_init(free_list_node);
@@ -433,15 +429,18 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
   olsr_cookie_usage_decr(ci->ci_id);
 
   OLSR_DEBUG(LOG_COOKIE, "MEMORY: free %s, %p, %lu bytes%s\n",
-	      ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
+             ci->ci_name, ptr, (unsigned long)ci->ci_size, reuse ? ", reuse" : "");
 
   VALGRIND_MEMPOOL_FREE(ci, ptr);
   VALGRIND_MAKE_MEM_NOACCESS(ptr, ci->ci_size);
 }
 
-struct olsr_cookie_info *olsr_cookie_get(int i) {
+struct olsr_cookie_info *
+olsr_cookie_get(int i)
+{
   return cookies[i];
 }
+
 /*
  * Local Variables:
  * c-basic-offset: 2

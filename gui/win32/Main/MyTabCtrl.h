@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -50,34 +51,33 @@
 #include "MyDialog3.h"
 #include "MyDialog4.h"
 
-class MyTabCtrl : public CTabCtrl
-{
+class MyTabCtrl:public CTabCtrl {
 public:
-	MyTabCtrl();
+  MyTabCtrl();
 
-	class MyDialog1 m_Dialog1;
-	class MyDialog2 m_Dialog2;
-	class MyDialog3 m_Dialog3;
-	class MyDialog4 m_Dialog4;
+  class MyDialog1 m_Dialog1;
+  class MyDialog2 m_Dialog2;
+  class MyDialog3 m_Dialog3;
+  class MyDialog4 m_Dialog4;
 
-	void InitTabDialogs(CStringArray *, CStringArray *, CStringArray *);
-	void DisplayTabDialog(void);
+  void InitTabDialogs(CStringArray *, CStringArray *, CStringArray *);
+  void DisplayTabDialog(void);
 
-	//{{AFX_VIRTUAL(MyTabCtrl)
-	//}}AFX_VIRTUAL
+  //{{AFX_VIRTUAL(MyTabCtrl)
+  //}}AFX_VIRTUAL
 
-	virtual ~MyTabCtrl();
+    virtual ~ MyTabCtrl();
 
 protected:
-	CDialog *Dialogs[4];
+    CDialog * Dialogs[4];
 
-	int Sel;
+  int Sel;
 
-	//{{AFX_MSG(MyTabCtrl)
-	afx_msg void OnSelchange(NMHDR* pNMHDR, LRESULT* pResult);
-	//}}AFX_MSG
+  //{{AFX_MSG(MyTabCtrl)
+  afx_msg void OnSelchange(NMHDR * pNMHDR, LRESULT * pResult);
+  //}}AFX_MSG
 
-	DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 };
 
 //{{AFX_INSERT_LOCATION}}

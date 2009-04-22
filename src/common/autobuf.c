@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -50,118 +51,126 @@
 static int autobuf_enlarge(struct autobuf *autobuf, int new_size);
 
 
-int abuf_init(struct autobuf *autobuf, int initial_size)
+int
+abuf_init(struct autobuf *autobuf, int initial_size)
 {
-    autobuf->len = 0;
-    if (initial_size <= 0) {
-        autobuf->size = 0;
-        autobuf->buf = NULL;
-        return 0;
-    }
-    autobuf->size = ROUND_UP_TO_POWER_OF_2(initial_size, AUTOBUFCHUNK);
-    autobuf->buf = malloc(autobuf->size);
-    if (autobuf->buf == NULL) {
-        autobuf->size = 0;
-        return  -1;
-    }
-    *autobuf->buf = '\0';
-    return 0;
-}
-
-void abuf_free(struct autobuf *autobuf)
-{
-    free(autobuf->buf);
-    autobuf->buf = NULL;
-    autobuf->len = 0;
+  autobuf->len = 0;
+  if (initial_size <= 0) {
     autobuf->size = 0;
+    autobuf->buf = NULL;
+    return 0;
+  }
+  autobuf->size = ROUND_UP_TO_POWER_OF_2(initial_size, AUTOBUFCHUNK);
+  autobuf->buf = malloc(autobuf->size);
+  if (autobuf->buf == NULL) {
+    autobuf->size = 0;
+    return -1;
+  }
+  *autobuf->buf = '\0';
+  return 0;
 }
 
-static int autobuf_enlarge(struct autobuf *autobuf, int new_size)
+void
+abuf_free(struct autobuf *autobuf)
 {
-    if (new_size >= autobuf->size) {
-        char *p;
-        autobuf->size = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
-        p = realloc(autobuf->buf, autobuf->size);
-        if (p == NULL) {
+  free(autobuf->buf);
+  autobuf->buf = NULL;
+  autobuf->len = 0;
+  autobuf->size = 0;
+}
+
+static int
+autobuf_enlarge(struct autobuf *autobuf, int new_size)
+{
+  if (new_size >= autobuf->size) {
+    char *p;
+    autobuf->size = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
+    p = realloc(autobuf->buf, autobuf->size);
+    if (p == NULL) {
 #ifdef WIN32
-	    WSASetLastError(ENOMEM);
+      WSASetLastError(ENOMEM);
 #else
-            errno = ENOMEM;
+      errno = ENOMEM;
 #endif
-            return -1;
-        }
-        autobuf->buf = p;
+      return -1;
     }
-    return 0;
+    autobuf->buf = p;
+  }
+  return 0;
 }
 
-static int abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__((format(printf, 2, 0)));
+static int abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__ ((format(printf, 2, 0)));
 
-static int abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
+static int
+abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
 {
-    int rc;
-    int min_size;
-    va_list ap2;
-    va_copy(ap2, ap);
-    rc = vsnprintf(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, ap);
-    va_end(ap);
-    min_size = autobuf->len + rc;
-    if (min_size >= autobuf->size) {
-        if (autobuf_enlarge(autobuf, min_size) < 0) {
-            autobuf->buf[autobuf->len] = '\0';
-            return -1;
-        }
-        vsnprintf(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, ap2);
+  int rc;
+  int min_size;
+  va_list ap2;
+  va_copy(ap2, ap);
+  rc = vsnprintf(autobuf->buf + autobuf->len, autobuf->size - autobuf->len, format, ap);
+  va_end(ap);
+  min_size = autobuf->len + rc;
+  if (min_size >= autobuf->size) {
+    if (autobuf_enlarge(autobuf, min_size) < 0) {
+      autobuf->buf[autobuf->len] = '\0';
+      return -1;
     }
-    va_end(ap2);
-    autobuf->len = min_size;
-    return 0;
+    vsnprintf(autobuf->buf + autobuf->len, autobuf->size - autobuf->len, format, ap2);
+  }
+  va_end(ap2);
+  autobuf->len = min_size;
+  return 0;
 }
 
-int abuf_appendf(struct autobuf *autobuf, const char *fmt, ...)
+int
+abuf_appendf(struct autobuf *autobuf, const char *fmt, ...)
 {
-    int rv;
-    va_list ap;
-    va_start(ap, fmt);
-    rv = abuf_vappendf(autobuf, fmt, ap);
-    va_end(ap);
-    return rv;
+  int rv;
+  va_list ap;
+  va_start(ap, fmt);
+  rv = abuf_vappendf(autobuf, fmt, ap);
+  va_end(ap);
+  return rv;
 }
 
-int abuf_puts(struct autobuf *autobuf, const char *s)
+int
+abuf_puts(struct autobuf *autobuf, const char *s)
 {
-    int len = strlen(s);
-    if (autobuf_enlarge(autobuf, autobuf->len + len + 1) < 0) {
-        return -1;
-    }
-    strcpy(autobuf->buf+autobuf->len, s);
-    autobuf->len += len;
-    return len;
+  int len = strlen(s);
+  if (autobuf_enlarge(autobuf, autobuf->len + len + 1) < 0) {
+    return -1;
+  }
+  strcpy(autobuf->buf + autobuf->len, s);
+  autobuf->len += len;
+  return len;
 }
 
-int abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *tm)
+int
+abuf_strftime(struct autobuf *autobuf, const char *format, const struct tm *tm)
 {
-    int rc = strftime(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, tm);
-    if (rc == 0) {
-        /* we had an error! Probably the buffer too small. So we add some bytes. */
-        if (autobuf_enlarge(autobuf, autobuf->size+AUTOBUFCHUNK) < 0) {
-            autobuf->buf[autobuf->len] = '\0';
-            return -1;
-        }
-        rc = strftime(autobuf->buf+autobuf->len, autobuf->size-autobuf->len, format, tm);
+  int rc = strftime(autobuf->buf + autobuf->len, autobuf->size - autobuf->len, format, tm);
+  if (rc == 0) {
+    /* we had an error! Probably the buffer too small. So we add some bytes. */
+    if (autobuf_enlarge(autobuf, autobuf->size + AUTOBUFCHUNK) < 0) {
+      autobuf->buf[autobuf->len] = '\0';
+      return -1;
     }
-    autobuf->len += rc;
-    return rc;
+    rc = strftime(autobuf->buf + autobuf->len, autobuf->size - autobuf->len, format, tm);
+  }
+  autobuf->len += rc;
+  return rc;
 }
 
-int abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len)
+int
+abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len)
 {
-    if (autobuf_enlarge(autobuf, autobuf->len + len) < 0) {
-        return -1;
-    }
-    memcpy(autobuf->buf+autobuf->len, p, len);
-    autobuf->len += len;
-    return len;
+  if (autobuf_enlarge(autobuf, autobuf->len + len) < 0) {
+    return -1;
+  }
+  memcpy(autobuf->buf + autobuf->len, p, len);
+  autobuf->len += len;
+  return len;
 }
 
 /*

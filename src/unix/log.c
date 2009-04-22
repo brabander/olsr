@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -63,23 +64,22 @@ olsr_print_syslog(int level, const char *format, ...)
   int linux_level;
   va_list arglist;
 
-  switch(level)
-    {
-    case(SEVERITY_DEBUG):
-      linux_level = LOG_DEBUG;
-      break;
-    case(SEVERITY_INFO):
-      linux_level = LOG_INFO;
-      break;
-    case(SEVERITY_WARN):
-      linux_level = LOG_WARNING;
-      break;
-    case(SEVERITY_ERR):
-      linux_level = LOG_ERR;
-      break;
-    default:
-      return;
-    }
+  switch (level) {
+  case (SEVERITY_DEBUG):
+    linux_level = LOG_DEBUG;
+    break;
+  case (SEVERITY_INFO):
+    linux_level = LOG_INFO;
+    break;
+  case (SEVERITY_WARN):
+    linux_level = LOG_WARNING;
+    break;
+  case (SEVERITY_ERR):
+    linux_level = LOG_ERR;
+    break;
+  default:
+    return;
+  }
 
   va_start(arglist, format);
   vsyslog(linux_level, format, arglist);

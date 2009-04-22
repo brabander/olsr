@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -57,40 +58,40 @@
 
 
 static void __attribute__ ((constructor))
-my_init(void);
+  my_init(void);
 
 static void __attribute__ ((destructor))
-my_fini(void);
+  my_fini(void);
 
 int
 olsrd_plugin_interface_version(void)
 {
-	return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 int
 olsrd_plugin_init(void)
 {
-	return name_init();
+  return name_init();
 }
 
 
 static void
 my_init(void)
 {
-	/* Print plugin info to stdout */
-	printf("%s\n", MOD_DESC);
+  /* Print plugin info to stdout */
+  printf("%s\n", MOD_DESC);
 
-	name_constructor();
+  name_constructor();
 
-	return;
+  return;
 }
 
 
 static void
 my_fini(void)
 {
-	name_destructor();
+  name_destructor();
 }
 
 /*

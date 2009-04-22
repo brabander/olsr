@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -71,6 +72,7 @@
 #define LOWER_DIFF -3
 
 extern char aes_key[16];
+
 /* Seconds of slack allowed */
 #define SLACK 3
 

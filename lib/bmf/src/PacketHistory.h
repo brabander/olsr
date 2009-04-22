@@ -42,7 +42,7 @@
  * ------------------------------------------------------------------------- */
 
 /* System includes */
-#include <sys/types.h> /* ssize_t */
+#include <sys/types.h>          /* ssize_t */
 
 #define N_HASH_BITS 12
 #define HISTORY_HASH_SIZE (1 << N_HASH_BITS)
@@ -50,19 +50,18 @@
 /* Time-out of duplicate entries, in milliseconds */
 #define HISTORY_HOLD_TIME 3000
 
-struct TDupEntry
-{
+struct TDupEntry {
   u_int32_t crc32;
   u_int32_t timeOut;
-  struct TDupEntry* next;
+  struct TDupEntry *next;
 };
 
 void InitPacketHistory(void);
-u_int32_t PacketCrc32(unsigned char* ipPkt, ssize_t len);
+u_int32_t PacketCrc32(unsigned char *ipPkt, ssize_t len);
 u_int32_t Hash(u_int32_t from32);
 void MarkRecentPacket(u_int32_t crc32);
 int CheckAndMarkRecentPacket(u_int32_t crc32);
-void PrunePacketHistory(void*);
+void PrunePacketHistory(void *);
 
 #endif /* _BMF_PACKETHISTORY_H */
 

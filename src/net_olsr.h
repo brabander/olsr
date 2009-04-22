@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -50,7 +51,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-typedef int (*packet_transform_function)(uint8_t *, int *);
+typedef int (*packet_transform_function) (uint8_t *, int *);
 
 /*
  * Used for filtering addresses.
@@ -87,7 +88,11 @@ void net_remove_buffer(struct interface *);
  *
  * @return the number of bytes available in the buffer or
  */
-static INLINE int net_outbuffer_bytes_left(const struct interface *ifp) { return ifp->netbuf.maxsize - ifp->netbuf.pending; }
+static INLINE int
+net_outbuffer_bytes_left(const struct interface *ifp)
+{
+  return ifp->netbuf.maxsize - ifp->netbuf.pending;
+}
 
 /**
  * Returns the number of bytes pending in the buffer. That
@@ -97,21 +102,25 @@ static INLINE int net_outbuffer_bytes_left(const struct interface *ifp) { return
  *
  * @return the number of bytes currently pending
  */
-static INLINE uint16_t net_output_pending(const struct interface *ifp) { return ifp->netbuf.pending; }
+static INLINE uint16_t
+net_output_pending(const struct interface *ifp)
+{
+  return ifp->netbuf.pending;
+}
 
 #if 0
 int net_reserve_bufspace(struct interface *, int);
 #endif
 
-int EXPORT(net_outbuffer_push)(struct interface *, const void *, const uint16_t);
+int EXPORT(net_outbuffer_push) (struct interface *, const void *, const uint16_t);
 
 #if 0
 int net_outbuffer_push_reserved(struct interface *, const void *, const uint16_t);
 #endif
 
-int EXPORT(net_output)(struct interface *);
+int EXPORT(net_output) (struct interface *);
 
-void EXPORT(add_ptf)(packet_transform_function);
+void EXPORT(add_ptf) (packet_transform_function);
 
 #if 0
 int del_ptf(packet_transform_function);

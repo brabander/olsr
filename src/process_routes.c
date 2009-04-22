@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -125,7 +126,7 @@ olsr_del_route(struct rt_entry *rt)
 {
   int16_t error = olsr_del_route_function(rt, olsr_cnf->ip_version);
 
-  if(error < 0) {
+  if (error < 0) {
     OLSR_WARN(LOG_ROUTING, "KERN: ERROR deleting %s: %s\n", olsr_rt_to_string(rt), strerror(errno));
   } else {
 
@@ -148,9 +149,10 @@ olsr_add_route(struct rt_entry *rt)
     /*
      * Note: defrt.nexthop.interface == NULL means "remove unspecified default route"
      */
-    while (0 <= olsr_del_route_function(&defrt, olsr_cnf->ip_version)) {}
+    while (0 <= olsr_del_route_function(&defrt, olsr_cnf->ip_version)) {
+    }
     olsr_cnf->del_gws = false;
-exit(9);
+    exit(9);
   }
 
   if (0 > olsr_add_route_function(rt, olsr_cnf->ip_version)) {
@@ -268,9 +270,7 @@ olsr_delete_outdated_routes(struct rt_entry *rt)
   struct rt_path *rtp;
   struct avl_node *rtp_tree_node, *next_rtp_tree_node;
 
-  for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree);
-       rtp_tree_node != NULL;
-       rtp_tree_node = next_rtp_tree_node) {
+  for (rtp_tree_node = avl_walk_first(&rt->rt_path_tree); rtp_tree_node != NULL; rtp_tree_node = next_rtp_tree_node) {
 
     /*
      * pre-fetch the next node before loosing context.
@@ -329,8 +329,7 @@ olsr_update_rib_routes(void)
 
     /* nexthop or hopcount change ? */
     if (olsr_nh_change(&rt->rt_best->rtp_nexthop, &rt->rt_nexthop) ||
-        (FIBM_CORRECT == olsr_cnf->fib_metric &&
-         olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
+        (FIBM_CORRECT == olsr_cnf->fib_metric && olsr_hopcount_change(&rt->rt_best->rtp_metric, &rt->rt_metric))) {
 
       if (!rt->rt_nexthop.interface) {
 
@@ -342,7 +341,8 @@ olsr_update_rib_routes(void)
         olsr_enqueue_rt(&chg_kernel_list, rt);
       }
     }
-  } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+  }
+  OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 }
 
 /**

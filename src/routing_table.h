@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -62,17 +63,15 @@
 #define RT_METRIC_DEFAULT 2
 
 /* a composite metric is used for path selection */
-struct rt_metric
-{
-  olsr_linkcost       cost;
-  uint32_t 	        hops;
+struct rt_metric {
+  olsr_linkcost cost;
+  uint32_t hops;
 };
 
 /* a nexthop is a pointer to a gateway router plus an interface */
-struct rt_nexthop
-{
-  union olsr_ip_addr    gateway; /* gateway router */
-  struct interface      *interface; /* outgoing interface */
+struct rt_nexthop {
+  union olsr_ip_addr gateway;          /* gateway router */
+  struct interface *interface;         /* outgoing interface */
 };
 
 /*
@@ -82,15 +81,14 @@ struct rt_nexthop
  * originated by different routers. It also contains a shortcut
  * for accessing the best route among all contributing routes.
  */
-struct rt_entry
-{
+struct rt_entry {
   struct olsr_ip_prefix rt_dst;
-  struct avl_node       rt_tree_node;
-  struct rt_path        *rt_best; /* shortcut to the best path */
-  struct rt_nexthop     rt_nexthop; /* nexthop of FIB route */
-  struct rt_metric      rt_metric; /* metric of FIB route */
-  struct avl_tree       rt_path_tree;
-  struct list_node      rt_change_node; /* queue for kernel FIB add/chg/del */
+  struct avl_node rt_tree_node;
+  struct rt_path *rt_best;             /* shortcut to the best path */
+  struct rt_nexthop rt_nexthop;        /* nexthop of FIB route */
+  struct rt_metric rt_metric;          /* metric of FIB route */
+  struct avl_tree rt_path_tree;
+  struct list_node rt_change_node;     /* queue for kernel FIB add/chg/del */
 };
 
 AVLNODE2STRUCT(rt_tree2rt, struct rt_entry, rt_tree_node);
@@ -104,17 +102,16 @@ LISTNODE2STRUCT(changelist2rt, struct rt_entry, rt_change_node);
  * If during the SPF calculation the tc_entry becomes reachable via
  * a local nexthop it is inserted into the global RIB tree.
  */
-struct rt_path
-{
-  struct rt_entry       *rtp_rt; /* backpointer to owning route head */
-  struct tc_entry       *rtp_tc; /* backpointer to owning tc entry */
-  struct rt_nexthop     rtp_nexthop;
-  struct rt_metric      rtp_metric;
-  struct avl_node       rtp_tree_node; /* global rtp node */
+struct rt_path {
+  struct rt_entry *rtp_rt;             /* backpointer to owning route head */
+  struct tc_entry *rtp_tc;             /* backpointer to owning tc entry */
+  struct rt_nexthop rtp_nexthop;
+  struct rt_metric rtp_metric;
+  struct avl_node rtp_tree_node;       /* global rtp node */
   struct olsr_ip_prefix rtp_originator; /* originator of the route */
-  struct avl_node       rtp_prefix_tree_node; /* tc entry rtp node */
-  struct olsr_ip_prefix rtp_dst; /* the prefix */
-  uint32_t              rtp_version; /* for detection of outdated rt_paths */
+  struct avl_node rtp_prefix_tree_node; /* tc entry rtp node */
+  struct olsr_ip_prefix rtp_dst;       /* the prefix */
+  uint32_t rtp_version;                /* for detection of outdated rt_paths */
 };
 
 AVLNODE2STRUCT(rtp_tree2rtp, struct rt_path, rtp_tree_node);
@@ -126,10 +123,10 @@ AVLNODE2STRUCT(rtp_prefix_tree2rtp, struct rt_path, rtp_prefix_tree_node);
  */
 enum olsr_rt_origin {
   OLSR_RT_ORIGIN_MIN,
-  OLSR_RT_ORIGIN_TC,    /* TC main-addr route */
-  OLSR_RT_ORIGIN_MID,   /* MID alias route */
-  OLSR_RT_ORIGIN_HNA,   /* HNA route */
-  OLSR_RT_ORIGIN_LINK,  /* 1-hop LINK route */
+  OLSR_RT_ORIGIN_TC,                   /* TC main-addr route */
+  OLSR_RT_ORIGIN_MID,                  /* MID alias route */
+  OLSR_RT_ORIGIN_HNA,                  /* HNA route */
+  OLSR_RT_ORIGIN_LINK,                 /* 1-hop LINK route */
   OLSR_RT_ORIGIN_MAX
 };
 
@@ -156,17 +153,14 @@ enum olsr_rt_origin {
 /**
  * IPv4 <-> IPv6 wrapper
  */
-union olsr_kernel_route
-{
-  struct
-  {
+union olsr_kernel_route {
+  struct {
     struct sockaddr rt_dst;
     struct sockaddr rt_gateway;
     uint32_t metric;
   } v4;
 
-  struct
-  {
+  struct {
     struct in6_addr rtmsg_dst;
     struct in6_addr rtmsg_gateway;
     uint32_t rtmsg_metric;
@@ -187,33 +181,44 @@ void olsr_init_routing_table(void);
  * This is a lightweight detection if a node or prefix went away,
  * rather than brute force old vs. new rt_entry comparision.
  */
-static INLINE void olsr_bump_routingtree_version(void) { routingtree_version++; }
+static INLINE void
+olsr_bump_routingtree_version(void)
+{
+  routingtree_version++;
+}
 
 
-int avl_comp_ipv4_prefix (const void *, const void *);
-int avl_comp_ipv6_prefix (const void *, const void *);
-int avl_comp_ipv4_prefix_origin (const void *, const void *);
-int avl_comp_ipv6_prefix_origin (const void *, const void *);
-int avl_comp_ipv4_addr_origin (const void *, const void *);
-int avl_comp_ipv6_addr_origin (const void *, const void *);
+int avl_comp_ipv4_prefix(const void *, const void *);
+int avl_comp_ipv6_prefix(const void *, const void *);
+int avl_comp_ipv4_prefix_origin(const void *, const void *);
+int avl_comp_ipv6_prefix_origin(const void *, const void *);
+int avl_comp_ipv4_addr_origin(const void *, const void *);
+int avl_comp_ipv6_addr_origin(const void *, const void *);
 
 void olsr_rt_best(struct rt_entry *);
 
 /**
  * Check if there is an interface or gateway change.
  */
-static INLINE bool olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2) {
-    return olsr_ipcmp(&nh1->gateway, &nh2->gateway) != 0 || nh1->interface != nh2->interface;
+static INLINE bool
+olsr_nh_change(const struct rt_nexthop *nh1, const struct rt_nexthop *nh2)
+{
+  return olsr_ipcmp(&nh1->gateway, &nh2->gateway) != 0 || nh1->interface != nh2->interface;
 }
 
 /**
  * Check if there is a hopcount change.
  */
-static INLINE bool olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2) { return met1->hops != met2->hops; }
+static INLINE bool
+olsr_hopcount_change(const struct rt_metric *met1, const struct rt_metric *met2)
+{
+  return met1->hops != met2->hops;
+}
 
-bool EXPORT(olsr_cmp_rt)(const struct rt_entry *, const struct rt_entry *);
+bool EXPORT(olsr_cmp_rt) (const struct rt_entry *, const struct rt_entry *);
 
 #if defined WIN32
+
 /**
  * Depending if flat_metric is configured and the kernel fib operation
  * return the hopcount metric of a route.
@@ -221,8 +226,10 @@ bool EXPORT(olsr_cmp_rt)(const struct rt_entry *, const struct rt_entry *);
  * for deletes this is the metric of the route that got stored in the rt_entry,
  * during route installation.
  */
-static INLINE uint8_t olsr_fib_metric(const struct rt_metric *met) {
-  return  FIBM_CORRECT == olsr_cnf->fib_metric ? met->hops : RT_METRIC_DEFAULT;
+static INLINE uint8_t
+olsr_fib_metric(const struct rt_metric *met)
+{
+  return FIBM_CORRECT == olsr_cnf->fib_metric ? met->hops : RT_METRIC_DEFAULT;
 }
 #endif
 
@@ -234,7 +241,9 @@ void olsr_print_routing_table(struct avl_tree *);
  * depending on the operation (add/chg/del) the nexthop
  * field from the route entry or best route path shall be used.
  */
-static INLINE const struct rt_nexthop *olsr_get_nh(const struct rt_entry *rt) {
+static INLINE const struct rt_nexthop *
+olsr_get_nh(const struct rt_entry *rt)
+{
   return rt->rt_best != NULL
     /* this is a route add/chg - grab nexthop from the best route. */
     ? &rt->rt_best->rtp_nexthop
@@ -244,16 +253,13 @@ static INLINE const struct rt_nexthop *olsr_get_nh(const struct rt_entry *rt) {
 
 
 /* rt_path manipulation */
-struct rt_path *olsr_insert_routing_table(const union olsr_ip_addr *, const int,
-                                          const union olsr_ip_addr *, const int);
-void olsr_delete_routing_table(union olsr_ip_addr *, int, union olsr_ip_addr *,
-                               int);
+struct rt_path *olsr_insert_routing_table(const union olsr_ip_addr *, const int, const union olsr_ip_addr *, const int);
+void olsr_delete_routing_table(union olsr_ip_addr *, int, union olsr_ip_addr *, int);
 void olsr_insert_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_update_rt_path(struct rt_path *, struct tc_entry *, struct link_entry *);
 void olsr_delete_rt_path(struct rt_path *);
 
-struct rt_entry *
-EXPORT(olsr_lookup_routing_table)(const union olsr_ip_addr *);
+struct rt_entry *EXPORT(olsr_lookup_routing_table) (const union olsr_ip_addr *);
 
 
 #endif

@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -24,41 +25,41 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #include "NetworkInterfaces.h"
 
 /* System includes */
-#include <stddef.h> /* NULL */
-#include <syslog.h> /* syslog() */
-#include <string.h> /* strerror(), strchr(), strcmp() */
-#include <errno.h> /* errno */
-#include <unistd.h> /* close() */
-#include <sys/ioctl.h> /* ioctl() */
-#include <fcntl.h> /* fcntl() */
-#include <assert.h> /* assert() */
-#include <net/if.h> /* socket(), ifreq, if_indextoname(), if_nametoindex() */
-#include <netinet/in.h> /* htons() */
-#include <linux/if_ether.h> /* ETH_P_IP */
-#include <linux/if_packet.h> /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
-#include <linux/if_tun.h> /* IFF_TAP */
-#include <netinet/ip.h> /* struct ip */
-#include <netinet/udp.h> /* SOL_UDP */
-#include <stdlib.h> /* atoi, malloc */
+#include <stddef.h>             /* NULL */
+#include <syslog.h>             /* syslog() */
+#include <string.h>             /* strerror(), strchr(), strcmp() */
+#include <errno.h>              /* errno */
+#include <unistd.h>             /* close() */
+#include <sys/ioctl.h>          /* ioctl() */
+#include <fcntl.h>              /* fcntl() */
+#include <assert.h>             /* assert() */
+#include <net/if.h>             /* socket(), ifreq, if_indextoname(), if_nametoindex() */
+#include <netinet/in.h>         /* htons() */
+#include <linux/if_ether.h>     /* ETH_P_IP */
+#include <linux/if_packet.h>    /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
+#include <linux/if_tun.h>       /* IFF_TAP */
+#include <netinet/ip.h>         /* struct ip */
+#include <netinet/udp.h>        /* SOL_UDP */
+#include <stdlib.h>             /* atoi, malloc */
 
 /* OLSRD includes */
-#include "olsr.h" /* OLSR_PRINTF() */
+#include "olsr.h"               /* OLSR_PRINTF() */
 #include "ipcalc.h"
-#include "defs.h" /* olsr_cnf */
-#include "link_set.h" /* get_link_set() */
-#include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
-#include "net_olsr.h" /* ipequal */
+#include "defs.h"               /* olsr_cnf */
+#include "link_set.h"           /* get_link_set() */
+#include "tc_set.h"             /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
+#include "net_olsr.h"           /* ipequal */
 #include "lq_plugin.h"
 #include "olsr_ip_prefix_list.h"
 
 /* Plugin includes */
-#include "Packet.h" /* IFHWADDRLEN */
-#include "mdns.h" /* PLUGIN_NAME, MainAddressOf() */
-#include "Address.h" /* IsMulticast() */
+#include "Packet.h"             /* IFHWADDRLEN */
+#include "mdns.h"               /* PLUGIN_NAME, MainAddressOf() */
+#include "Address.h"            /* IsMulticast() */
 
 /* List of network interface objects used by BMF plugin */
-struct TBmfInterface* BmfInterfaces = NULL;
-struct TBmfInterface* LastBmfInterface = NULL;
+struct TBmfInterface *BmfInterfaces = NULL;
+struct TBmfInterface *LastBmfInterface = NULL;
 
 /* Highest-numbered open socket file descriptor. To be used as first
  * parameter in calls to select(...). */
@@ -78,7 +79,8 @@ fd_set InputSet;
  * Notes      : The socket is a cooked IP packet socket, bound to the specified
  *              network interface
  * ------------------------------------------------------------------------- */
-static int CreateCaptureSocket(const char* ifName)
+static int
+CreateCaptureSocket(const char *ifName)
 {
   int ifIndex = if_nametoindex(ifName);
   struct packet_mreq mreq;
@@ -86,14 +88,12 @@ static int CreateCaptureSocket(const char* ifName)
   struct sockaddr_ll bindTo;
   int skfd = 0;
   /* Open cooked IP packet socket */
-  if (olsr_cnf->ip_version == AF_INET){
-  skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IP));
+  if (olsr_cnf->ip_version == AF_INET) {
+    skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IP));
+  } else {
+    skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IPV6));
   }
-  else {
-  skfd = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_IPV6));
-  }
-  if (skfd < 0)
-  {
+  if (skfd < 0) {
     BmfPError("socket(PF_PACKET) error");
     return -1;
   }
@@ -102,8 +102,7 @@ static int CreateCaptureSocket(const char* ifName)
   memset(&mreq, 0, sizeof(struct packet_mreq));
   mreq.mr_ifindex = ifIndex;
   mreq.mr_type = PACKET_MR_PROMISC;
-  if (setsockopt(skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
-  {
+  if (setsockopt(skfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
     BmfPError("setsockopt(PACKET_MR_PROMISC) error");
     close(skfd);
     return -1;
@@ -112,9 +111,8 @@ static int CreateCaptureSocket(const char* ifName)
   /* Get hardware (MAC) address */
   memset(&req, 0, sizeof(struct ifreq));
   strncpy(req.ifr_name, ifName, IFNAMSIZ - 1);
-  req.ifr_name[IFNAMSIZ-1] = '\0'; /* Ensures null termination */
-  if (ioctl(skfd, SIOCGIFHWADDR, &req) < 0)
-  {
+  req.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
+  if (ioctl(skfd, SIOCGIFHWADDR, &req) < 0) {
     BmfPError("error retrieving MAC address");
     close(skfd);
     return -1;
@@ -123,36 +121,32 @@ static int CreateCaptureSocket(const char* ifName)
   /* Bind the socket to the specified interface */
   memset(&bindTo, 0, sizeof(bindTo));
   bindTo.sll_family = AF_PACKET;
-  if (olsr_cnf->ip_version == AF_INET){
-  bindTo.sll_protocol = htons(ETH_P_IP);
-  }
-  else{
-  bindTo.sll_protocol = htons(ETH_P_IPV6);
+  if (olsr_cnf->ip_version == AF_INET) {
+    bindTo.sll_protocol = htons(ETH_P_IP);
+  } else {
+    bindTo.sll_protocol = htons(ETH_P_IPV6);
   }
   bindTo.sll_ifindex = ifIndex;
   memcpy(bindTo.sll_addr, req.ifr_hwaddr.sa_data, IFHWADDRLEN);
   bindTo.sll_halen = IFHWADDRLEN;
 
-  if (bind(skfd, (struct sockaddr*)&bindTo, sizeof(bindTo)) < 0)
-  {
+  if (bind(skfd, (struct sockaddr *)&bindTo, sizeof(bindTo)) < 0) {
     BmfPError("bind() error");
     close(skfd);
     return -1;
   }
 
   /* Set socket to blocking operation */
-  if (fcntl(skfd, F_SETFL, fcntl(skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0)
-  {
+  if (fcntl(skfd, F_SETFL, fcntl(skfd, F_GETFL, 0) & ~O_NONBLOCK) < 0) {
     BmfPError("fcntl() error");
     close(skfd);
     return -1;
   }
-
   //AddDescriptorToInputSet(skfd);
-  add_olsr_socket(skfd,&DoMDNS,NULL,NULL,SP_PR_READ);
+  add_olsr_socket(skfd, &DoMDNS, NULL, NULL, SP_PR_READ);
 
   return skfd;
-} /* CreateCaptureSocket */
+}                               /* CreateCaptureSocket */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateInterface
@@ -168,9 +162,8 @@ static int CreateCaptureSocket(const char* ifName)
 
 //FOR MDNS IS ALWAYS CALLED WITH NULL AS SECOND ARG
 
-static int CreateInterface(
-  const char* ifName,
-  struct interface* olsrIntf)
+static int
+CreateInterface(const char *ifName, struct interface *olsrIntf)
 {
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
@@ -178,25 +171,21 @@ static int CreateInterface(
   int ioctlSkfd;
   struct ifreq ifr;
   int nOpened = 0;
-  struct TBmfInterface* newIf = malloc(sizeof(struct TBmfInterface));
+  struct TBmfInterface *newIf = malloc(sizeof(struct TBmfInterface));
 
   assert(ifName != NULL);
 
-  if (newIf == NULL)
-  {
+  if (newIf == NULL) {
     return 0;
   }
-
 //TODO: assert interface is not talking OLSR
 
 
   /* Create socket for capturing and sending of multicast packets on
    * non-OLSR interfaces, and on OLSR-interfaces if configured. */
-  if ((olsrIntf == NULL) )
-  {
+  if ((olsrIntf == NULL)) {
     capturingSkfd = CreateCaptureSocket(ifName);
-    if (capturingSkfd < 0)
-    {
+    if (capturingSkfd < 0) {
       close(encapsulatingSkfd);
       free(newIf);
       return 0;
@@ -212,9 +201,8 @@ static int CreateInterface(
   /* Retrieve the MAC address of the interface. */
   memset(&ifr, 0, sizeof(struct ifreq));
   strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-  ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-  if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0)
-  {
+  ifr.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
+  if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0) {
     BmfPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
     close(capturingSkfd);
     close(encapsulatingSkfd);
@@ -229,28 +217,22 @@ static int CreateInterface(
   memcpy(newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
   memcpy(newIf->ifName, ifName, IFNAMSIZ);
   newIf->olsrIntf = olsrIntf;
-  if (olsrIntf != NULL)
-  {
+  if (olsrIntf != NULL) {
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
     newIf->intAddr.v4 = olsrIntf->int_addr.sin_addr;
     newIf->broadAddr.v4 = olsrIntf->int_broadaddr.sin_addr;
-  }
-  else
-  {
+  } else {
     /* For a non-OLSR interface, retrieve the IP address ourselves */
     memset(&ifr, 0, sizeof(struct ifreq));
     strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-    ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFADDR, &ifr) < 0)
-    {
+    ifr.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
+    if (ioctl(ioctlSkfd, SIOCGIFADDR, &ifr) < 0) {
       BmfPError("ioctl(SIOCGIFADDR) error for interface \"%s\"", ifName);
 
       newIf->intAddr.v4.s_addr = inet_addr("0.0.0.0");
-    }
-    else
-    {
+    } else {
       /* Downcast to correct sockaddr subtype */
       newIf->intAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
     }
@@ -258,15 +240,12 @@ static int CreateInterface(
     /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
     memset(&ifr, 0, sizeof(struct ifreq));
     strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-    ifr.ifr_name[IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
-    if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0)
-    {
+    ifr.ifr_name[IFNAMSIZ - 1] = '\0';  /* Ensures null termination */
+    if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0) {
       BmfPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
 
       newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
-    }
-    else
-    {
+    } else {
       /* Downcast to correct sockaddr subtype */
       newIf->broadAddr.v4 = ((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr;
     }
@@ -283,23 +262,18 @@ static int CreateInterface(
 
   /* Add new TBmfInterface object to global list. OLSR interfaces are
    * added at the front of the list, non-OLSR interfaces at the back. */
-  if (BmfInterfaces == NULL)
-  {
+  if (BmfInterfaces == NULL) {
     /* First TBmfInterface object in list */
     BmfInterfaces = newIf;
     LastBmfInterface = newIf;
-  }
-  else if (olsrIntf != NULL)
-  {
+  } else if (olsrIntf != NULL) {
     /* Add new TBmfInterface object at front of list */
     newIf->next = BmfInterfaces;
     BmfInterfaces = newIf;
-  }
-  else
-  {
+  } else {
     /* Add new TBmfInterface object at back of list */
     newIf->next = NULL;
-    LastBmfInterface->next= newIf;
+    LastBmfInterface->next = newIf;
     LastBmfInterface = newIf;
   }
 
@@ -313,7 +287,7 @@ static int CreateInterface(
   //  ifName);
 
   return nOpened;
-} /* CreateInterface */
+}                               /* CreateInterface */
 
 /* -------------------------------------------------------------------------
  * Function   : CreateBmfNetworkInterfaces
@@ -324,12 +298,13 @@ static int CreateInterface(
  * Return     : fail (-1) or success (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
+int
+CreateBmfNetworkInterfaces(struct interface *skipThisIntf)
 {
   int skfd;
   struct ifconf ifc;
   int numreqs = 30;
-  struct ifreq* ifr;
+  struct ifreq *ifr;
   int n;
   int nOpenedSockets = 0;
 
@@ -337,44 +312,39 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
   FD_ZERO(&InputSet);
 
   skfd = socket(PF_INET, SOCK_DGRAM, 0);
-  if (skfd < 0)
-  {
+  if (skfd < 0) {
     BmfPError("no inet socket available to retrieve interface list");
     return -1;
   }
 
   /* Retrieve the network interface configuration list */
   ifc.ifc_buf = NULL;
-  for (;;)
-  {
+  for (;;) {
     ifc.ifc_len = sizeof(struct ifreq) * numreqs;
     ifc.ifc_buf = realloc(ifc.ifc_buf, ifc.ifc_len);
 
-    if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0)
-    {
+    if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0) {
       BmfPError("ioctl(SIOCGIFCONF) error");
 
       close(skfd);
       free(ifc.ifc_buf);
       return -1;
     }
-    if ((unsigned)ifc.ifc_len == sizeof(struct ifreq) * numreqs)
-    {
+    if ((unsigned)ifc.ifc_len == sizeof(struct ifreq) * numreqs) {
       /* Assume it overflowed; double the space and try again */
       numreqs *= 2;
       assert(numreqs < 1024);
-      continue; /* for (;;) */
+      continue;                 /* for (;;) */
     }
-    break; /* for (;;) */
-  } /* for (;;) */
+    break;                      /* for (;;) */
+  }                             /* for (;;) */
 
   close(skfd);
 
   /* For each item in the interface configuration list... */
   ifr = ifc.ifc_req;
-  for (n = ifc.ifc_len / sizeof(struct ifreq); --n >= 0; ifr++)
-  {
-    struct interface* olsrIntf;
+  for (n = ifc.ifc_len / sizeof(struct ifreq); --n >= 0; ifr++) {
+    struct interface *olsrIntf;
     union olsr_ip_addr ipAddr;
 
     /* Skip the BMF network interface itself */
@@ -384,44 +354,38 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
     //}
 
     /* ...find the OLSR interface structure, if any */
-    ipAddr.v4 =  ((struct sockaddr_in*)&ifr->ifr_addr)->sin_addr;
+    ipAddr.v4 = ((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr;
     olsrIntf = if_ifwithaddr(&ipAddr);
 
-    if (skipThisIntf != NULL && olsrIntf == skipThisIntf)
-    {
-      continue; /* for (n = ...) */
+    if (skipThisIntf != NULL && olsrIntf == skipThisIntf) {
+      continue;                 /* for (n = ...) */
     }
 
-    if (olsrIntf == NULL && ! IsNonOlsrBmfIf(ifr->ifr_name))
-    {
+    if (olsrIntf == NULL && !IsNonOlsrBmfIf(ifr->ifr_name)) {
       /* Interface is neither OLSR interface, nor specified as non-OLSR BMF
        * interface in the BMF plugin parameter list */
-      continue; /* for (n = ...) */
+      continue;                 /* for (n = ...) */
     }
-	
-    if (! IsNonOlsrBmfIf(ifr->ifr_name))
-    {
-      	//If the interface is not specified in the configuration file then go ahead
-	continue; /* for (n = ...) */
+
+    if (!IsNonOlsrBmfIf(ifr->ifr_name)) {
+      //If the interface is not specified in the configuration file then go ahead
+      continue;                 /* for (n = ...) */
     }
-   //TODO: asser if->ifr_name is not talking OLSR
+    //TODO: asser if->ifr_name is not talking OLSR
     //nOpenedSockets += CreateInterface(ifr->ifr_name, olsrIntf);
     nOpenedSockets += CreateInterface(ifr->ifr_name, NULL);
 
-  } /* for (n = ...) */
+  }                             /* for (n = ...) */
 
   free(ifc.ifc_buf);
 
-  if (BmfInterfaces == NULL)
-  {
+  if (BmfInterfaces == NULL) {
     //OLSR_PRINTF(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
-  }
-  else
-  {
+  } else {
     //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
   }
   return 0;
-} /* CreateBmfNetworkInterfaces */
+}                               /* CreateBmfNetworkInterfaces */
 
 /* -------------------------------------------------------------------------
  * Function   : AddInterface
@@ -432,7 +396,8 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
  * Return     : none
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-void AddInterface(struct interface* newIntf)
+void
+AddInterface(struct interface *newIntf)
 {
   int nOpened;
 
@@ -441,7 +406,7 @@ void AddInterface(struct interface* newIntf)
   nOpened = CreateInterface(newIntf->int_name, newIntf);
 
   //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
-} /* AddInterface */
+}                               /* AddInterface */
 
 /* -------------------------------------------------------------------------
  * Function   : CloseBmfNetworkInterfaces
@@ -459,7 +424,8 @@ void AddInterface(struct interface* newIntf)
  *              Also restores the network state to the situation before BMF
  *              was started.
  * ------------------------------------------------------------------------- */
-void CloseBmfNetworkInterfaces(void)
+void
+CloseBmfNetworkInterfaces(void)
 {
   int nClosed = 0;
   u_int32_t totalOlsrBmfPacketsRx = 0;
@@ -470,23 +436,19 @@ void CloseBmfNetworkInterfaces(void)
   u_int32_t totalNonOlsrBmfPacketsTx = 0;
 
   /* Close all opened sockets */
-  struct TBmfInterface* nextBmfIf = BmfInterfaces;
-  while (nextBmfIf != NULL)
-  {
-    struct TBmfInterface* bmfIf = nextBmfIf;
+  struct TBmfInterface *nextBmfIf = BmfInterfaces;
+  while (nextBmfIf != NULL) {
+    struct TBmfInterface *bmfIf = nextBmfIf;
     nextBmfIf = bmfIf->next;
 
-    if (bmfIf->capturingSkfd >= 0)
-    {
+    if (bmfIf->capturingSkfd >= 0) {
       close(bmfIf->capturingSkfd);
       nClosed++;
     }
-    if (bmfIf->encapsulatingSkfd >= 0)
-    {
+    if (bmfIf->encapsulatingSkfd >= 0) {
       close(bmfIf->encapsulatingSkfd);
       nClosed++;
     }
-
     //OLSR_PRINTF(
     //  7,
     //  "%s: %s interface \"%s\": RX pkts %u (%u dups); TX pkts %u\n",
@@ -505,27 +467,24 @@ void CloseBmfNetworkInterfaces(void)
     //  bmfIf->ifName);
 
     /* Add totals */
-    if (bmfIf->olsrIntf != NULL)
-    {
+    if (bmfIf->olsrIntf != NULL) {
       totalOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
       totalOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
       totalOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
-    }
-    else
-    {
+    } else {
       totalNonOlsrBmfPacketsRx += bmfIf->nBmfPacketsRx;
       totalNonOlsrBmfPacketsRxDup += bmfIf->nBmfPacketsRxDup;
       totalNonOlsrBmfPacketsTx += bmfIf->nBmfPacketsTx;
     }
 
     free(bmfIf);
-  } /* while */
+  }                             /* while */
 
   BmfInterfaces = NULL;
 
   //OLSR_PRINTF(1, "%s: closed %d sockets\n", PLUGIN_NAME_SHORT, nClosed);
 
-} /* CloseBmfNetworkInterfaces */
+}                               /* CloseBmfNetworkInterfaces */
 
 #define MAX_NON_OLSR_IFS 32
 static char NonOlsrIfNames[MAX_NON_OLSR_IFS][IFNAMSIZ];
@@ -542,15 +501,12 @@ static int nNonOlsrIfs = 0;
  * Return     : success (0) or fail (1)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int AddNonOlsrBmfIf(
-  const char* ifName,
-  void* data __attribute__((unused)),
-  set_plugin_parameter_addon addon __attribute__((unused)))
+int
+AddNonOlsrBmfIf(const char *ifName, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   assert(ifName != NULL);
 
-  if (nNonOlsrIfs >= MAX_NON_OLSR_IFS)
-  {
+  if (nNonOlsrIfs >= MAX_NON_OLSR_IFS) {
     //OLSR_PRINTF(
     //  1,
     //  "%s: too many non-OLSR interfaces specified, maximum is %d\n",
@@ -560,10 +516,10 @@ int AddNonOlsrBmfIf(
   }
 
   strncpy(NonOlsrIfNames[nNonOlsrIfs], ifName, IFNAMSIZ - 1);
-  NonOlsrIfNames[nNonOlsrIfs][IFNAMSIZ - 1] = '\0'; /* Ensures null termination */
+  NonOlsrIfNames[nNonOlsrIfs][IFNAMSIZ - 1] = '\0';     /* Ensures null termination */
   nNonOlsrIfs++;
   return 0;
-} /* AddNonOlsrBmfIf */
+}                               /* AddNonOlsrBmfIf */
 
 /* -------------------------------------------------------------------------
  * Function   : IsNonOlsrBmfIf
@@ -573,17 +529,16 @@ int AddNonOlsrBmfIf(
  * Return     : true (1) or false (0)
  * Data Used  : NonOlsrIfNames
  * ------------------------------------------------------------------------- */
-int IsNonOlsrBmfIf(const char* ifName)
+int
+IsNonOlsrBmfIf(const char *ifName)
 {
   int i;
 
   assert(ifName != NULL);
 
-  for (i = 0; i < nNonOlsrIfs; i++)
-  {
-    if (strncmp(NonOlsrIfNames[i], ifName, IFNAMSIZ) == 0) return 1;
+  for (i = 0; i < nNonOlsrIfs; i++) {
+    if (strncmp(NonOlsrIfNames[i], ifName, IFNAMSIZ) == 0)
+      return 1;
   }
   return 0;
-} /* IsNonOlsrBmfIf */
-
-
+}                               /* IsNonOlsrBmfIf */

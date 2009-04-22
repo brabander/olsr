@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,10 +46,10 @@
 #include "routing_table.h"
 
 int
-olsr_kernel_add_route(const struct rt_entry *, int);
+  olsr_kernel_add_route(const struct rt_entry *, int);
 
 int
-olsr_kernel_del_route(const struct rt_entry *, int);
+  olsr_kernel_del_route(const struct rt_entry *, int);
 
 int olsr_create_lo_interface(union olsr_ip_addr *ip);
 int olsr_delete_lo_interface(union olsr_ip_addr *ip);

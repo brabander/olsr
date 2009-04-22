@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -40,26 +41,25 @@
 #include <sys/types.h>
 
 #ifdef WIN32
-typedef unsigned char   uint8_t;
-typedef unsigned short  uint16_t;
-typedef unsigned int    uint32_t;
-typedef char            int8_t;
-typedef short           int16_t;
-typedef int             int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef char int8_t;
+typedef short int16_t;
+typedef int int32_t;
 #else
-typedef u_int8_t        uint8_t;
-typedef u_int16_t       uint16_t;
-typedef u_int32_t       uint32_t;
-typedef int8_t          int8_t;
-typedef int16_t         int16_t;
-typedef int32_t         int32_t;
+typedef u_int8_t uint8_t;
+typedef u_int16_t uint16_t;
+typedef u_int32_t uint32_t;
+typedef int8_t int8_t;
+typedef int16_t int16_t;
+typedef int32_t int32_t;
 #endif
 
 /* IPv6 address format in6_addr */
 #include <netinet/in.h>
 
-union olsr_ip_addr
-{
+union olsr_ip_addr {
   uint32_t v4;
   struct in6_addr v6;
 };
@@ -81,6 +81,7 @@ union olsr_ip_addr
  */
 
 #define NEIGHB_HOLD_TIME      3 * REFRESH_INTERVAL
+
 /*extra: time to delete for non-wireless interfaces */
 #define NEIGHB_HOLD_TIME_NW   NEIGHB_HOLD_TIME * 2
 #define TOP_HOLD_TIME         3 * TC_INTERVAL
@@ -197,19 +198,17 @@ union olsr_ip_addr
 /*
  *Hello info
  */
-struct hellinfo
-{
-  uint8_t   link_code;
-  uint8_t   reserved;
-  uint16_t  size;
-  uint32_t  neigh_addr[1]; /* neighbor IP address(es) */
+struct hellinfo {
+  uint8_t link_code;
+  uint8_t reserved;
+  uint16_t size;
+  uint32_t neigh_addr[1];              /* neighbor IP address(es) */
 };
 
-struct hellomsg
-{
-  uint16_t      reserved;
-  uint8_t       htime;
-  uint8_t       willingness;
+struct hellomsg {
+  uint16_t reserved;
+  uint8_t htime;
+  uint8_t willingness;
   struct hellinfo hell_info[1];
 };
 
@@ -217,19 +216,17 @@ struct hellomsg
  *IPv6
  */
 
-struct hellinfo6
-{
-  uint8_t       link_code;
-  uint8_t       reserved;
-  uint16_t      size;
-  struct in6_addr neigh_addr[1]; /* neighbor IP address(es) */
+struct hellinfo6 {
+  uint8_t link_code;
+  uint8_t reserved;
+  uint16_t size;
+  struct in6_addr neigh_addr[1];       /* neighbor IP address(es) */
 };
 
-struct hellomsg6
-{
-  uint16_t         reserved;
-  uint8_t          htime;
-  uint8_t          willingness;
+struct hellomsg6 {
+  uint16_t reserved;
+  uint8_t htime;
+  uint8_t willingness;
   struct hellinfo6 hell_info[1];
 };
 
@@ -241,16 +238,14 @@ struct hellomsg6
  * Topology Control packet
  */
 
-struct neigh_info
-{
-  uint32_t       addr;
+struct neigh_info {
+  uint32_t addr;
 };
 
 
-struct olsr_tcmsg
-{
-  uint16_t        ansn;
-  uint16_t        reserved;
+struct olsr_tcmsg {
+  uint16_t ansn;
+  uint16_t reserved;
   struct neigh_info neigh[1];
 };
 
@@ -259,16 +254,14 @@ struct olsr_tcmsg
  *IPv6
  */
 
-struct neigh_info6
-{
-  struct in6_addr      addr;
+struct neigh_info6 {
+  struct in6_addr addr;
 };
 
 
-struct olsr_tcmsg6
-{
-  uint16_t           ansn;
-  uint16_t           reserved;
+struct olsr_tcmsg6 {
+  uint16_t ansn;
+  uint16_t reserved;
   struct neigh_info6 neigh[1];
 };
 
@@ -285,14 +278,12 @@ struct olsr_tcmsg6
  * For example: do we want to tell what type of interface
  * is associated whit each address?
  */
-struct midaddr
-{
+struct midaddr {
   uint32_t addr;
 };
 
 
-struct midmsg
-{
+struct midmsg {
   struct midaddr mid_addr[1];
 };
 
@@ -300,14 +291,12 @@ struct midmsg
 /*
  *IPv6
  */
-struct midaddr6
-{
+struct midaddr6 {
   struct in6_addr addr;
 };
 
 
-struct midmsg6
-{
+struct midmsg6 {
   struct midaddr6 mid_addr[1];
 };
 
@@ -319,14 +308,12 @@ struct midmsg6
 /*
  * Host and Network Association message
  */
-struct hnapair
-{
-  uint32_t   addr;
-  uint32_t   netmask;
+struct hnapair {
+  uint32_t addr;
+  uint32_t netmask;
 };
 
-struct hnamsg
-{
+struct hnamsg {
   struct hnapair hna_net[1];
 };
 
@@ -334,14 +321,12 @@ struct hnamsg
  *IPv6
  */
 
-struct hnapair6
-{
-  struct in6_addr   addr;
-  struct in6_addr   netmask;
+struct hnapair6 {
+  struct in6_addr addr;
+  struct in6_addr netmask;
 };
 
-struct hnamsg6
-{
+struct hnamsg6 {
   struct hnapair6 hna_net[1];
 };
 
@@ -353,22 +338,20 @@ struct hnamsg6
  * OLSR message (several can exist in one OLSR packet)
  */
 
-struct olsrmsg
-{
-  uint8_t     olsr_msgtype;
-  uint8_t     olsr_vtime;
-  uint16_t    olsr_msgsize;
-  uint32_t    originator;
-  uint8_t     ttl;
-  uint8_t     hopcnt;
-  uint16_t    seqno;
+struct olsrmsg {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  union
-  {
+  union {
     struct hellomsg hello;
-    struct olsr_tcmsg    tc;
-    struct hnamsg   hna;
-    struct midmsg   mid;
+    struct olsr_tcmsg tc;
+    struct hnamsg hna;
+    struct midmsg mid;
   } message;
 
 };
@@ -377,22 +360,20 @@ struct olsrmsg
  *IPv6
  */
 
-struct olsrmsg6
-{
-  uint8_t        olsr_msgtype;
-  uint8_t        olsr_vtime;
-  uint16_t       olsr_msgsize;
-  struct in6_addr  originator;
-  uint8_t        ttl;
-  uint8_t        hopcnt;
-  uint16_t       seqno;
+struct olsrmsg6 {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  struct in6_addr originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  union
-  {
+  union {
     struct hellomsg6 hello;
-    struct olsr_tcmsg6    tc;
-    struct hnamsg6   hna;
-    struct midmsg6   mid;
+    struct olsr_tcmsg6 tc;
+    struct hnamsg6 hna;
+    struct midmsg6 mid;
   } message;
 
 };
@@ -403,32 +384,28 @@ struct olsrmsg6
  * Generic OLSR packet
  */
 
-struct olsr
-{
-  uint16_t	  olsr_packlen;		/* packet length */
-  uint16_t	  olsr_seqno;
-  struct olsrmsg  olsr_msg[1];          /* variable messages */
+struct olsr {
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
+  struct olsrmsg olsr_msg[1];          /* variable messages */
 };
 
 
-struct olsr6
-{
-  uint16_t	    olsr_packlen;        /* packet length */
-  uint16_t	    olsr_seqno;
-  struct olsrmsg6   olsr_msg[1];         /* variable messages */
+struct olsr6 {
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
+  struct olsrmsg6 olsr_msg[1];         /* variable messages */
 };
 
 
 /* IPv4 <-> IPv6 compability */
 
-union olsr_message
-{
+union olsr_message {
   struct olsrmsg v4;
   struct olsrmsg6 v6;
 };
 
-union olsr_packet
-{
+union olsr_packet {
   struct olsr v4;
   struct olsr6 v6;
 };

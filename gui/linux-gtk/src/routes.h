@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -36,12 +37,11 @@
 
 #define MAX_IF_NAMESIZ  10
 
-struct route_entry
-{
+struct route_entry {
   union olsr_ip_addr gw;
   union olsr_ip_addr dst;
-  uint16_t         hopcnt;
-  char               if_name[MAX_IF_NAMESIZ];
+  uint16_t hopcnt;
+  char if_name[MAX_IF_NAMESIZ];
   struct route_entry *next;
   struct route_entry *prev;
 };
@@ -55,13 +55,13 @@ uint32_t route_count;
 /* Functions */
 
 int
-init_route_entries();
+  init_route_entries();
 
 int
-add_route_entry(struct route_entry *);
+  add_route_entry(struct route_entry *);
 
 int
-del_route_entry(struct route_entry *);
+  del_route_entry(struct route_entry *);
 
 
 #endif

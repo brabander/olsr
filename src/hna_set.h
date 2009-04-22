@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -46,17 +47,16 @@
 #include "olsr_protocol.h"
 #include "common/avl.h"
 
-struct hna_net
-{
-  struct avl_node hna_tc_node;          /* node in the per-tc hna tree */
-  struct olsr_ip_prefix hna_prefix;     /* the prefix, key */
-  struct timer_entry *hna_net_timer;    /* expiration timer */
-  struct tc_entry    *hna_tc;           /* backpointer to the owning tc entry */
+struct hna_net {
+  struct avl_node hna_tc_node;         /* node in the per-tc hna tree */
+  struct olsr_ip_prefix hna_prefix;    /* the prefix, key */
+  struct timer_entry *hna_net_timer;   /* expiration timer */
+  struct tc_entry *hna_tc;             /* backpointer to the owning tc entry */
 };
 
 AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
 
-#define OLSR_HNA_NET_JITTER 5 /* percent */
+#define OLSR_HNA_NET_JITTER 5   /* percent */
 
 #define OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, hna_net) \
 { \
@@ -68,8 +68,7 @@ AVLNODE2STRUCT(hna_tc_tree2hna, struct hna_net, hna_tc_node);
 #define OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, hna_net) }}
 
 /* HNA msg input parser */
-bool olsr_input_hna(union olsr_message *, struct interface *,
-                    union olsr_ip_addr *);
+bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void olsr_init_hna_set(void);
 void olsr_print_hna_set(void);

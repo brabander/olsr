@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -46,29 +47,27 @@
 #include "hashing.h"
 #include "lq_plugin.h"
 
-#define	NB2S_COVERED 	0x1		/* node has been covered by a MPR */
+#define	NB2S_COVERED 	0x1     /* node has been covered by a MPR */
 
 
-struct neighbor_list_entry
-{
-  struct	neighbor_entry *neighbor;
+struct neighbor_list_entry {
+  struct neighbor_entry *neighbor;
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;
   olsr_linkcost saved_path_linkcost;
-  struct	neighbor_list_entry *next;
-  struct	neighbor_list_entry *prev;
+  struct neighbor_list_entry *next;
+  struct neighbor_list_entry *prev;
 };
 
 
-struct neighbor_2_entry
-{
-  union olsr_ip_addr         neighbor_2_addr;
-  uint8_t      	     mpr_covered_count;    /*used in mpr calculation*/
-  uint8_t      	     processed;            /*used in mpr calculation*/
-  int16_t                  neighbor_2_pointer;   /* Neighbor count */
+struct neighbor_2_entry {
+  union olsr_ip_addr neighbor_2_addr;
+  uint8_t mpr_covered_count;           /*used in mpr calculation */
+  uint8_t processed;                   /*used in mpr calculation */
+  int16_t neighbor_2_pointer;          /* Neighbor count */
   struct neighbor_list_entry neighbor_2_nblist;
-  struct neighbor_2_entry    *prev;
-  struct neighbor_2_entry    *next;
+  struct neighbor_2_entry *prev;
+  struct neighbor_2_entry *next;
 };
 
 
@@ -76,25 +75,23 @@ extern struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
 
 
 void
-olsr_init_two_hop_table(void);
+  olsr_init_two_hop_table(void);
 
 void
-olsr_delete_neighbor_pointer(struct neighbor_2_entry *, const union olsr_ip_addr *);
+  olsr_delete_neighbor_pointer(struct neighbor_2_entry *, const union olsr_ip_addr *);
 
 void
-olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
+  olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
 
 void
-olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);
+  olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);
 
-struct neighbor_2_entry *
-olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
+struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
 
-struct neighbor_2_entry *
-olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *);
+struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *);
 
 void
-olsr_print_two_hop_neighbor_table(void);
+  olsr_print_two_hop_neighbor_table(void);
 
 #endif
 

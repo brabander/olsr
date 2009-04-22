@@ -1,3 +1,4 @@
+
 /*
  * OLSRd Quagga plugin
  *
@@ -18,9 +19,9 @@
  * ------------------------------------------------------------------------- */
 
 
-#include "routing_table.h" /* rt_entry */
-#include "process_routes.h" /* export_route_function */
-#include "olsr_types.h" /* olsr_ip_addr */
+#include "routing_table.h"      /* rt_entry */
+#include "process_routes.h"     /* export_route_function */
+#include "olsr_types.h"         /* olsr_ip_addr */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -94,17 +95,17 @@ struct zebra_route {
 extern export_route_function orig_add_route_function;
 extern export_route_function orig_del_route_function;
 
-void init_zebra (void);
-void zebra_cleanup (void);
-void zebra_parse (void*);
-int zebra_redistribute (unsigned char);
-int zebra_disable_redistribute (unsigned char);
-int zebra_add_route (const struct rt_entry *);
-int zebra_del_route (const struct rt_entry *);
-int zebra_add_route_hook (const struct rt_entry *, int);
-int zebra_del_route_hook (const struct rt_entry *, int);
-void zebra_olsr_localpref (void);
-void zebra_olsr_distance (unsigned char);
+void init_zebra(void);
+void zebra_cleanup(void);
+void zebra_parse(void *);
+int zebra_redistribute(unsigned char);
+int zebra_disable_redistribute(unsigned char);
+int zebra_add_route(const struct rt_entry *);
+int zebra_del_route(const struct rt_entry *);
+int zebra_add_route_hook(const struct rt_entry *, int);
+int zebra_del_route_hook(const struct rt_entry *, int);
+void zebra_olsr_localpref(void);
+void zebra_olsr_distance(unsigned char);
 void zebra_export_routes(unsigned char);
 
 /*

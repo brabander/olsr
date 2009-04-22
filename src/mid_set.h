@@ -46,11 +46,11 @@
 #include "common/avl.h"
 
 struct mid_entry {
-  struct avl_node mid_tc_node;       /* node in the per-tc mid tree */
-  struct avl_node mid_node;             /* node in the global mid tree */
-  union olsr_ip_addr mid_alias_addr;    /* key for both trees */
-  struct tc_entry  *mid_tc;             /* backpointer to owning tc entry */
-  uint16_t mid_seqno;                 /* msg seq number for change tracking */
+  struct avl_node mid_tc_node;         /* node in the per-tc mid tree */
+  struct avl_node mid_node;            /* node in the global mid tree */
+  union olsr_ip_addr mid_alias_addr;   /* key for both trees */
+  struct tc_entry *mid_tc;             /* backpointer to owning tc entry */
+  uint16_t mid_seqno;                  /* msg seq number for change tracking */
 };
 
 AVLNODE2STRUCT(global_tree2mid, struct mid_entry, mid_node);
@@ -74,19 +74,17 @@ AVLNODE2STRUCT(alias_tree2mid, struct mid_entry, mid_tc_node);
     mid_alias = alias_tree2mid(mid_alias_node);
 #define OLSR_FOR_ALL_TC_MID_ENTRIES_END(tc, mid_alias) }}
 
-#define OLSR_MID_JITTER 5	/* percent */
+#define OLSR_MID_JITTER 5       /* percent */
 
 extern struct avl_tree mid_tree;
 
 /* MID msg input parser */
-bool olsr_input_mid(union olsr_message *, struct interface *,
-                    union olsr_ip_addr *);
+bool olsr_input_mid(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 void olsr_init_mid_set(void);
 void olsr_delete_mid_entry(struct mid_entry *);
-union olsr_ip_addr *EXPORT(olsr_lookup_main_addr_by_alias)(const union olsr_ip_addr *);
-struct mid_entry *olsr_lookup_tc_mid_entry(struct tc_entry *,
-                                               const union olsr_ip_addr *);
+union olsr_ip_addr *EXPORT(olsr_lookup_main_addr_by_alias) (const union olsr_ip_addr *);
+struct mid_entry *olsr_lookup_tc_mid_entry(struct tc_entry *, const union olsr_ip_addr *);
 void olsr_print_mid_set(void);
 
 #endif

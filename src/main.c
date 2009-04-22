@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -155,29 +156,28 @@ main(int argc, char *argv[])
    * set up configuration prior to processing commandline options
    */
   switch (olsr_parse_cfg(argc, argv, conf_file_name, parse_msg, &olsr_cnf)) {
-    case CFG_ERROR:
-      if (parse_msg[0])
-        fprintf(stderr, "Error: %s\n", parse_msg);
-      exit(EXIT_FAILURE);
+  case CFG_ERROR:
+    if (parse_msg[0])
+      fprintf(stderr, "Error: %s\n", parse_msg);
+    exit(EXIT_FAILURE);
     break;
-    case CFG_WARN:
-      if (parse_msg[0])
-        fprintf(stderr, "Warning: %s\n", parse_msg);
-      /* No exit */
+  case CFG_WARN:
+    if (parse_msg[0])
+      fprintf(stderr, "Warning: %s\n", parse_msg);
+    /* No exit */
     break;
-    case CFG_EXIT:
-      exit(EXIT_SUCCESS);
+  case CFG_EXIT:
+    exit(EXIT_SUCCESS);
     break;
-    case CFG_OK:
-      /* Continue */
+  case CFG_OK:
+    /* Continue */
     break;
-  } /* switch */
+  }                             /* switch */
 
   /* Sanity check configuration */
   if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
     olsr_exit(EXIT_FAILURE);
   }
-
 #ifndef WIN32
   /* Check if user is root */
   if (geteuid()) {
@@ -243,8 +243,8 @@ main(int argc, char *argv[])
 #if defined __FreeBSD__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts_bsd = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts_bsd < 0) {
-	OLSR_ERROR(LOG_MAIN, "routing socket: %s\n", strerror(errno));
-	olsr_exit(EXIT_FAILURE);
+    OLSR_ERROR(LOG_MAIN, "routing socket: %s\n", strerror(errno));
+    olsr_exit(EXIT_FAILURE);
   }
 #endif
 
@@ -292,7 +292,8 @@ main(int argc, char *argv[])
   /* Initializing networkinterfaces */
   if (!ifinit()) {
     if (olsr_cnf->allow_no_interfaces) {
-      OLSR_INFO(LOG_MAIN, "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
+      OLSR_INFO(LOG_MAIN,
+                "No interfaces detected! This might be intentional, but it also might mean that your configuration is fubar.\nI will continue after 5 seconds...\n");
       sleep(5);
     } else {
       OLSR_ERROR(LOG_MAIN, "No interfaces detected!\nBailing out!\n");
@@ -376,9 +377,9 @@ main(int argc, char *argv[])
   exitcode = olsr_cnf->exit_value;
   switch (app_state) {
   case STATE_INIT:
-      OLSR_ERROR(LOG_MAIN, "terminating and got \"init\"?");
-      exitcode = EXIT_FAILURE;
-      break;
+    OLSR_ERROR(LOG_MAIN, "terminating and got \"init\"?");
+    exitcode = EXIT_FAILURE;
+    break;
   case STATE_RUNNING:
     OLSR_ERROR(LOG_MAIN, "terminating and got \"running\"?");
     exitcode = EXIT_FAILURE;

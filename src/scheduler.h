@@ -58,7 +58,7 @@
 #define NSEC_PER_USEC 1000
 #define USEC_PER_MSEC 1000
 
-typedef void (*timer_cb_func)(void *);	       /* callback function */
+typedef void (*timer_cb_func) (void *); /* callback function */
 
 /*
  * Our timer implementation is a based on individual timers arranged in
@@ -71,35 +71,33 @@ typedef void (*timer_cb_func)(void *);	       /* callback function */
  * which causes the timer to run forever until manually stopped.
  */
 struct timer_entry {
-  struct list_node timer_list;	       /* Wheel membership */
-  uint32_t timer_clock;		       /* when timer shall fire (absolute time) */
-  unsigned int timer_period;	       /* set for periodical timers (relative time) */
-  olsr_cookie_t timer_cookie;	       /* used for diag stuff */
-  uint8_t timer_jitter_pct;	       /* the jitter expressed in percent */
-  uint8_t timer_flags;	       /* misc flags */
-  unsigned int timer_random;	       /* cache random() result for performance reasons */
-  timer_cb_func timer_cb;	       /* callback function */
-  void *timer_cb_context;	       /* context pointer */
+  struct list_node timer_list;         /* Wheel membership */
+  uint32_t timer_clock;                /* when timer shall fire (absolute time) */
+  unsigned int timer_period;           /* set for periodical timers (relative time) */
+  olsr_cookie_t timer_cookie;          /* used for diag stuff */
+  uint8_t timer_jitter_pct;            /* the jitter expressed in percent */
+  uint8_t timer_flags;                 /* misc flags */
+  unsigned int timer_random;           /* cache random() result for performance reasons */
+  timer_cb_func timer_cb;              /* callback function */
+  void *timer_cb_context;              /* context pointer */
 };
 
 /* inline to recast from timer_list back to timer_entry */
 LISTNODE2STRUCT(list2timer, struct timer_entry, timer_list);
 
-#define OLSR_TIMER_ONESHOT    0	/* One shot timer */
-#define OLSR_TIMER_PERIODIC   1	/* Periodic timer */
+#define OLSR_TIMER_ONESHOT    0 /* One shot timer */
+#define OLSR_TIMER_PERIODIC   1 /* Periodic timer */
 
 /* Timer flags */
-#define OLSR_TIMER_RUNNING  ( 1 << 0)	/* this timer is running */
+#define OLSR_TIMER_RUNNING  ( 1 << 0)   /* this timer is running */
 
 /* Timers */
 void olsr_init_timers(void);
 void olsr_flush_timers(void);
-void EXPORT(olsr_set_timer)(struct timer_entry **, unsigned int, uint8_t, bool,
-		    timer_cb_func, void *, olsr_cookie_t);
-struct timer_entry *EXPORT(olsr_start_timer)(unsigned int, uint8_t, bool,
-				     timer_cb_func, void *, olsr_cookie_t);
+void EXPORT(olsr_set_timer) (struct timer_entry **, unsigned int, uint8_t, bool, timer_cb_func, void *, olsr_cookie_t);
+struct timer_entry *EXPORT(olsr_start_timer) (unsigned int, uint8_t, bool, timer_cb_func, void *, olsr_cookie_t);
 void olsr_change_timer(struct timer_entry *, unsigned int, uint8_t, bool);
-void EXPORT(olsr_stop_timer)(struct timer_entry *);
+void EXPORT(olsr_stop_timer) (struct timer_entry *);
 
 /* Printing timestamps */
 const char *olsr_clock_string(uint32_t);
@@ -120,7 +118,7 @@ void olsr_scheduler(void);
 #define TIMED_OUT(s1)	  olsr_isTimedOut(s1)
 
 /* Timer data */
-extern uint32_t EXPORT(now_times); /* current idea of times(2) reported uptime */
+extern uint32_t EXPORT(now_times);     /* current idea of times(2) reported uptime */
 
 
 #define SP_PR_READ		0x01
@@ -130,7 +128,7 @@ extern uint32_t EXPORT(now_times); /* current idea of times(2) reported uptime *
 #define SP_IMM_WRITE		0x08
 
 
-typedef void (*socket_handler_func)(int fd, void *data, unsigned int flags);
+typedef void (*socket_handler_func) (int fd, void *data, unsigned int flags);
 
 
 struct olsr_socket_entry {
@@ -155,15 +153,15 @@ LISTNODE2STRUCT(list2socket, struct olsr_socket_entry, socket_node);
     socket = list2socket(_socket_node);
 #define OLSR_FOR_ALL_SOCKETS_END(socket) }}
 
-uint32_t EXPORT(olsr_getTimestamp)(uint32_t s);
-int32_t EXPORT(olsr_getTimeDue)(uint32_t s);
-bool EXPORT(olsr_isTimedOut)(uint32_t s);
+uint32_t EXPORT(olsr_getTimestamp) (uint32_t s);
+int32_t EXPORT(olsr_getTimeDue) (uint32_t s);
+bool EXPORT(olsr_isTimedOut) (uint32_t s);
 
-void EXPORT(add_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
-int EXPORT(remove_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
+void EXPORT(add_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, void *data, unsigned int flags);
+int EXPORT(remove_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm);
 void olsr_flush_sockets(void);
-void EXPORT(enable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
-void EXPORT(disable_olsr_socket)(int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void EXPORT(enable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
+void EXPORT(disable_olsr_socket) (int fd, socket_handler_func pf_pr, socket_handler_func pf_imm, unsigned int flags);
 
 /*
  * a wrapper around times(2). times(2) has the problem, that it may return -1

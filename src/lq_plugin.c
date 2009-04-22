@@ -135,8 +135,7 @@ olsr_is_relevant_costchange(olsr_linkcost c1, olsr_linkcost c2)
  * @return number of bytes that have been written
  */
 int
-olsr_serialize_hello_lq_pair(unsigned char *buff,
-			     struct lq_hello_neighbor *neigh)
+olsr_serialize_hello_lq_pair(unsigned char *buff, struct lq_hello_neighbor *neigh)
 {
   return active_lq_handler->serialize_hello_lq(buff, neigh);
 }
@@ -151,8 +150,7 @@ olsr_serialize_hello_lq_pair(unsigned char *buff,
  * @param pointer to hello_neighbor
  */
 void
-olsr_deserialize_hello_lq_pair(const uint8_t ** curr,
-			       struct lq_hello_neighbor *neigh)
+olsr_deserialize_hello_lq_pair(const uint8_t ** curr, struct lq_hello_neighbor *neigh)
 {
   active_lq_handler->deserialize_hello_lq(curr, neigh);
   neigh->cost = active_lq_handler->calc_lq_hello_neighbor_cost(neigh);
@@ -231,8 +229,7 @@ olsr_update_packet_loss_worker(struct link_entry *entry, bool lost)
  * of the link entry has to be reset to "zero"
  */
 void
-olsr_memorize_foreign_hello_lq(struct link_entry *local,
-			       struct lq_hello_neighbor *foreign)
+olsr_memorize_foreign_hello_lq(struct link_entry *local, struct lq_hello_neighbor *foreign)
 {
   if (foreign) {
     active_lq_handler->memorize_foreign_hello(local, foreign);
@@ -289,8 +286,7 @@ get_tc_edge_entry_text(struct tc_edge_entry *entry, char separator, struct lqtex
  * @return pointer to buffer filled with text
  */
 const char *
-get_linkcost_text(olsr_linkcost cost, bool route,
-		  struct lqtextbuffer *buffer)
+get_linkcost_text(olsr_linkcost cost, bool route, struct lqtextbuffer *buffer)
 {
   static const char *infinite = "INFINITE";
 
@@ -331,8 +327,7 @@ olsr_copy_hello_lq(struct lq_hello_neighbor *target, struct link_entry *source)
  * @param pointer to link_entry
  */
 void
-olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target,
-				     struct link_entry *source)
+olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target, struct link_entry *source)
 {
   active_lq_handler->copy_link_entry_lq_into_tc_mpr_addr(target, source);
 }
@@ -347,8 +342,7 @@ olsr_copylq_link_entry_2_tc_mpr_addr(struct tc_mpr_addr *target,
  * @param pointer to link_entry
  */
 void
-olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
-				       struct link_entry *source)
+olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target, struct link_entry *source)
 {
   active_lq_handler->copy_link_entry_lq_into_tc_edge_entry(target, source);
 }
@@ -361,7 +355,8 @@ olsr_copylq_link_entry_2_tc_edge_entry(struct tc_edge_entry *target,
  *
  * @return pointer to tc_mpr_addr
  */
-struct tc_edge_entry *olsr_malloc_tc_edge_entry(void)
+struct tc_edge_entry *
+olsr_malloc_tc_edge_entry(void)
 {
   struct tc_edge_entry *t;
 
@@ -435,7 +430,9 @@ olsr_malloc_link_entry(void)
  *
  * @param pointer to link_entry
  */
-void olsr_free_link_entry(struct link_entry *link) {
+void
+olsr_free_link_entry(struct link_entry *link)
+{
   olsr_cookie_free(link_entry_mem_cookie, link);
 }
 
@@ -446,7 +443,9 @@ void olsr_free_link_entry(struct link_entry *link) {
  *
  * @param pointer to lq_hello_neighbor
  */
-void olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh) {
+void
+olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh)
+{
   olsr_cookie_free(lq_hello_neighbor_mem_cookie, neigh);
 }
 
@@ -457,7 +456,9 @@ void olsr_free_lq_hello_neighbor(struct lq_hello_neighbor *neigh) {
  *
  * @param pointer to tc_edge_entry
  */
-void olsr_free_tc_edge_entry(struct tc_edge_entry *edge) {
+void
+olsr_free_tc_edge_entry(struct tc_edge_entry *edge)
+{
   olsr_cookie_free(tc_edge_mem_cookie, edge);
 }
 
@@ -468,7 +469,9 @@ void olsr_free_tc_edge_entry(struct tc_edge_entry *edge) {
  *
  * @param pointer to tc_mpr_addr
  */
-void olsr_free_tc_mpr_addr(struct tc_mpr_addr *mpr) {
+void
+olsr_free_tc_mpr_addr(struct tc_mpr_addr *mpr)
+{
   olsr_cookie_free(tc_mpr_addr_mem_cookie, mpr);
 }
 
@@ -477,7 +480,9 @@ void olsr_free_tc_mpr_addr(struct tc_mpr_addr *mpr) {
  *
  * @return olsr id of hello message
  */
-uint8_t olsr_get_Hello_MessageId(void) {
+uint8_t
+olsr_get_Hello_MessageId(void)
+{
   return active_lq_handler->messageid_hello;
 }
 
@@ -486,7 +491,9 @@ uint8_t olsr_get_Hello_MessageId(void) {
  *
  * @return olsr id of tc message
  */
-uint8_t olsr_get_TC_MessageId(void) {
+uint8_t
+olsr_get_TC_MessageId(void)
+{
   return active_lq_handler->messageid_tc;
 }
 

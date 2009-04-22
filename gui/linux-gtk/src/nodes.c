@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -44,11 +45,10 @@ insert_node(struct node *n, uint8_t vtime)
 
   printf("Inserting node %s\n", ip_to_string((union olsr_ip_addr *)&n->addr));
 
-  if((new_node = malloc(sizeof(struct node))) == 0)
-    {
-      fprintf(stderr, "OUT OF MEMORY!\n");
-      exit(1);
-    }
+  if ((new_node = malloc(sizeof(struct node))) == 0) {
+    fprintf(stderr, "OUT OF MEMORY!\n");
+    exit(1);
+  }
 
   memcpy(new_node, n, sizeof(struct node));
 
@@ -86,41 +86,33 @@ add_node(union olsr_ip_addr *node, uint8_t vtime)
   struct mid *tmp_mid;
 
   dbl_time = me_to_double(vtime);
-  time_value = (uint32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time *1000;
 
-  tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
+  tmp_timer.tv_sec = time_value / 1000;
+  tmp_timer.tv_usec = (time_value - (tmp_timer.tv_sec * 1000)) * 1000;
 
   /* Check if node exists */
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  //printf("updating timer for node %s\n", ip_to_string(node));
-	  //printf("Updatimng timer for: %s\n", ip_to_string(node));
-	  //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
-	  gettimeofday(&now, (struct timezone *)NULL);
-	  timeradd(&now, &tmp_timer, &tmp_nodes->timer);
-	  return 0;
-	}
-      /* Check MID */
-      for(tmp_mid = tmp_nodes->mid.next;
-	  tmp_mid != &tmp_nodes->mid;
-	  tmp_mid = tmp_mid->next)
-	{
-	  if(memcmp(&tmp_mid->alias, node, ipsize) == 0)
-	    {
-	      //printf("updating timer for node %s\n", ip_to_string(node));
-	      //printf("Updatimng timer for (MID): %s\n", ip_to_string(&tmp_nodes->addr));
-	      //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
-	      gettimeofday(&now, (struct timezone *)NULL);
-	      timeradd(&now, &tmp_timer, &tmp_nodes->timer);
-	      return 0;
-	    }
-	}
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      //printf("updating timer for node %s\n", ip_to_string(node));
+      //printf("Updatimng timer for: %s\n", ip_to_string(node));
+      //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
+      gettimeofday(&now, (struct timezone *)NULL);
+      timeradd(&now, &tmp_timer, &tmp_nodes->timer);
+      return 0;
     }
+    /* Check MID */
+    for (tmp_mid = tmp_nodes->mid.next; tmp_mid != &tmp_nodes->mid; tmp_mid = tmp_mid->next) {
+      if (memcmp(&tmp_mid->alias, node, ipsize) == 0) {
+        //printf("updating timer for node %s\n", ip_to_string(node));
+        //printf("Updatimng timer for (MID): %s\n", ip_to_string(&tmp_nodes->addr));
+        //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
+        gettimeofday(&now, (struct timezone *)NULL);
+        timeradd(&now, &tmp_timer, &tmp_nodes->timer);
+        return 0;
+      }
+    }
+  }
 
   /* New node */
   memset(&new, 0, sizeof(struct node));
@@ -143,28 +135,24 @@ update_timer_node(union olsr_ip_addr *node, uint8_t vtime)
   uint32_t time_value;
 
   dbl_time = me_to_double(vtime);
-  time_value = (uint32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time *1000;
 
-  tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
+  tmp_timer.tv_sec = time_value / 1000;
+  tmp_timer.tv_usec = (time_value - (tmp_timer.tv_sec * 1000)) * 1000;
 
   //printf("Updatimng timer for: %s\n", ip_to_string(node));
   //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  //printf("updating timer for node %s\n", ip_to_string(node));
-	  gettimeofday(&now, (struct timezone *)NULL);
-	  timeradd(&now, &tmp_timer, &tmp_nodes->timer);
-	  if(tmp_nodes->display)
-	    update_nodes_list(tmp_nodes);
-	  return 1;
-	}
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      //printf("updating timer for node %s\n", ip_to_string(node));
+      gettimeofday(&now, (struct timezone *)NULL);
+      timeradd(&now, &tmp_timer, &tmp_nodes->timer);
+      if (tmp_nodes->display)
+        update_nodes_list(tmp_nodes);
+      return 1;
     }
+  }
 
   return 0;
 }
@@ -188,39 +176,31 @@ update_timer_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, uint8_t vtim
   uint32_t time_value;
 
   dbl_time = me_to_double(vtime);
-  time_value = (uint32_t) dbl_time*1000;
+  time_value = (uint32_t) dbl_time *1000;
 
-  tmp_timer.tv_sec = time_value/1000;
-  tmp_timer.tv_usec = (time_value-(tmp_timer.tv_sec*1000)) * 1000;
+  tmp_timer.tv_sec = time_value / 1000;
+  tmp_timer.tv_usec = (time_value - (tmp_timer.tv_sec * 1000)) * 1000;
 
   //printf("Updatimng MPR timer for: %s\n", ip_to_string(node));
   //printf("Secs: %d, usecs: %d\n", (int)tmp_timer.tv_sec, (int)tmp_timer.tv_usec);
 
   //printf("Updatimng timer for: %s\n", ip_to_string(node));
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  for(tmp_mpr = tmp_nodes->mpr.next;
-	      tmp_mpr != &tmp_nodes->mpr;
-	      tmp_mpr = tmp_mpr->next)
-	    {
-	      if(memcmp(&tmp_mpr->addr, mpr, ipsize) == 0)
-		{
-		  //printf("updating timer for MPR %s ", ip_to_string(mpr));
-		  //printf("node %s\n", ip_to_string(node));
-		  gettimeofday(&now, (struct timezone *)NULL);
-		  timeradd(&now, &tmp_timer, &tmp_mpr->timer);
-		  return 1;
-		}
-	    }
-	  /* Only add if parent is added */
-	  add_mpr(node, mpr, &tmp_timer);
-	  return 0;
-	}
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      for (tmp_mpr = tmp_nodes->mpr.next; tmp_mpr != &tmp_nodes->mpr; tmp_mpr = tmp_mpr->next) {
+        if (memcmp(&tmp_mpr->addr, mpr, ipsize) == 0) {
+          //printf("updating timer for MPR %s ", ip_to_string(mpr));
+          //printf("node %s\n", ip_to_string(node));
+          gettimeofday(&now, (struct timezone *)NULL);
+          timeradd(&now, &tmp_timer, &tmp_mpr->timer);
+          return 1;
+        }
+      }
+      /* Only add if parent is added */
+      add_mpr(node, mpr, &tmp_timer);
+      return 0;
     }
+  }
 
   return 0;
 }
@@ -240,43 +220,35 @@ add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, uint8_t vtime)
 
   //update_timer_node(node, vtime);
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  for(tmp_mid = tmp_nodes->mid.next;
-	      tmp_mid != &tmp_nodes->mid;
-	      tmp_mid = tmp_mid->next)
-	    {
-	      if(memcmp(&tmp_mid->alias, alias, ipsize) == 0)
-		return 0;
-	    }
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      for (tmp_mid = tmp_nodes->mid.next; tmp_mid != &tmp_nodes->mid; tmp_mid = tmp_mid->next) {
+        if (memcmp(&tmp_mid->alias, alias, ipsize) == 0)
+          return 0;
+      }
 
-	  /* we didn't find the address */
-	  printf("(1)NEW MID %s ", ip_to_string(alias));
-	  printf("ADDED FOR %s\n", ip_to_string(node));
-	  if((tmp_mid = malloc(sizeof(struct mid))) == 0)
-	    {
-	      fprintf(stderr, "OUT OF MEMORY\n");
-	      exit(1);
-	    }
+      /* we didn't find the address */
+      printf("(1)NEW MID %s ", ip_to_string(alias));
+      printf("ADDED FOR %s\n", ip_to_string(node));
+      if ((tmp_mid = malloc(sizeof(struct mid))) == 0) {
+        fprintf(stderr, "OUT OF MEMORY\n");
+        exit(1);
+      }
 
-	  memcpy(&tmp_mid->alias, alias, ipsize);
+      memcpy(&tmp_mid->alias, alias, ipsize);
 
-	  tmp_nodes->mid.next->prev = tmp_mid;
-	  tmp_mid->next = tmp_nodes->mid.next;
-	  tmp_nodes->mid.next = tmp_mid;
-	  tmp_mid->prev = &tmp_nodes->mid;
+      tmp_nodes->mid.next->prev = tmp_mid;
+      tmp_mid->next = tmp_nodes->mid.next;
+      tmp_nodes->mid.next = tmp_mid;
+      tmp_mid->prev = &tmp_nodes->mid;
 
-	  remove_node_addr(alias); // Remove if already registered as a node
+      remove_node_addr(alias);  // Remove if already registered as a node
 
-	  update_nodes_list(tmp_nodes);
-	  return 1;
+      update_nodes_list(tmp_nodes);
+      return 1;
 
-	}
     }
+  }
 
 
 
@@ -288,11 +260,10 @@ add_mid_node(union olsr_ip_addr *node, union olsr_ip_addr *alias, uint8_t vtime)
   memcpy(&new.addr, node, ipsize);
   inserted = insert_node(&new, vtime);
 
-  if((tmp_mid = malloc(sizeof(struct mid))) == 0)
-    {
-      fprintf(stderr, "OUT OF MEMORY!\n");
-      exit(1);
-    }
+  if ((tmp_mid = malloc(sizeof(struct mid))) == 0) {
+    fprintf(stderr, "OUT OF MEMORY!\n");
+    exit(1);
+  }
 
   memcpy(&tmp_mid->alias, alias, ipsize);
 
@@ -319,42 +290,34 @@ add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_ad
 
   update_timer_node(node, vtime);
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  for(tmp_hna = tmp_nodes->hna.next;
-	      tmp_hna != &tmp_nodes->hna;
-	      tmp_hna = tmp_hna->next)
-	    {
-	      if((memcmp(&tmp_hna->net, net, ipsize) == 0) && (memcmp(&tmp_hna->mask, mask, ipsize) == 0))
-		return 0;
-	    }
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      for (tmp_hna = tmp_nodes->hna.next; tmp_hna != &tmp_nodes->hna; tmp_hna = tmp_hna->next) {
+        if ((memcmp(&tmp_hna->net, net, ipsize) == 0) && (memcmp(&tmp_hna->mask, mask, ipsize) == 0))
+          return 0;
+      }
 
-	  //printf("NEW HNA ADDED FOR %s ", ip_to_string(node));
-	  //printf("net: %s \n", ip_to_string(&net));
-	  /* we didn't find the address */
-	  if((tmp_hna = malloc(sizeof(struct hna))) == 0)
-	    {
-	      fprintf(stderr, "OUT OF MEMORY\n");
-	      exit(1);
-	    }
+      //printf("NEW HNA ADDED FOR %s ", ip_to_string(node));
+      //printf("net: %s \n", ip_to_string(&net));
+      /* we didn't find the address */
+      if ((tmp_hna = malloc(sizeof(struct hna))) == 0) {
+        fprintf(stderr, "OUT OF MEMORY\n");
+        exit(1);
+      }
 
-	  memcpy(&tmp_hna->net, net, ipsize);
-	  memcpy(&tmp_hna->mask, mask, ipsize);
+      memcpy(&tmp_hna->net, net, ipsize);
+      memcpy(&tmp_hna->mask, mask, ipsize);
 
-	  /* queue */
-	  tmp_nodes->hna.next->prev = tmp_hna;
-	  tmp_hna->next = tmp_nodes->hna.next;
-	  tmp_nodes->hna.next = tmp_hna;
-	  tmp_hna->prev = &tmp_nodes->hna;
+      /* queue */
+      tmp_nodes->hna.next->prev = tmp_hna;
+      tmp_hna->next = tmp_nodes->hna.next;
+      tmp_nodes->hna.next = tmp_hna;
+      tmp_hna->prev = &tmp_nodes->hna;
 
-	  update_nodes_list(tmp_nodes);
-	  return 1;
-	}
+      update_nodes_list(tmp_nodes);
+      return 1;
     }
+  }
 
 
 
@@ -364,11 +327,10 @@ add_hna_node(union olsr_ip_addr *node, union olsr_ip_addr *net, union olsr_ip_ad
   memcpy(&new.addr, node, ipsize);
   inserted = insert_node(&new, vtime);
 
-  if((tmp_hna = malloc(sizeof(struct hna))) == 0)
-    {
-      fprintf(stderr, "OUT OF MEMORY!\n");
-      exit(1);
-    }
+  if ((tmp_hna = malloc(sizeof(struct hna))) == 0) {
+    fprintf(stderr, "OUT OF MEMORY!\n");
+    exit(1);
+  }
 
   memcpy(&tmp_hna->net, net, ipsize);
   memcpy(&tmp_hna->mask, mask, ipsize);
@@ -400,46 +362,38 @@ add_mpr(union olsr_ip_addr *node, union olsr_ip_addr *mpr, struct timeval *tmp_t
   struct mpr *mprs;
   struct mpr *tmp_mpr;
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  for(mprs = tmp_nodes->mpr.next;
-	      mprs != &tmp_nodes->mpr;
-	      mprs = mprs->next)
-	    {
-	      if(memcmp(&mprs->addr, mpr, ipsize) == 0)
-		  return 0;
-	    }
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      for (mprs = tmp_nodes->mpr.next; mprs != &tmp_nodes->mpr; mprs = mprs->next) {
+        if (memcmp(&mprs->addr, mpr, ipsize) == 0)
+          return 0;
+      }
 
-	  //printf("Adding MPR %s to ", ip_to_string(mpr));
-	  //printf("%s\n", ip_to_string(node));
-	  /* Add mpr */
+      //printf("Adding MPR %s to ", ip_to_string(mpr));
+      //printf("%s\n", ip_to_string(node));
+      /* Add mpr */
 
-	  if((tmp_mpr = malloc(sizeof(struct mpr))) == 0)
-	    {
-	      fprintf(stderr, "OUT OF MEMORY\n");
-	      exit(1);
-	    }
+      if ((tmp_mpr = malloc(sizeof(struct mpr))) == 0) {
+        fprintf(stderr, "OUT OF MEMORY\n");
+        exit(1);
+      }
 
-	  memcpy(&tmp_mpr->addr, mpr, ipsize);
+      memcpy(&tmp_mpr->addr, mpr, ipsize);
 
-	  gettimeofday(&now, (struct timezone *)NULL);
-	  timeradd(&now, tmp_timer, &tmp_mpr->timer);
+      gettimeofday(&now, (struct timezone *)NULL);
+      timeradd(&now, tmp_timer, &tmp_mpr->timer);
 
-	  /* queue */
-	  tmp_nodes->mpr.next->prev = tmp_mpr;
-	  tmp_mpr->next = tmp_nodes->mpr.next;
-	  tmp_nodes->mpr.next = tmp_mpr;
-	  tmp_mpr->prev = &tmp_nodes->mpr;
+      /* queue */
+      tmp_nodes->mpr.next->prev = tmp_mpr;
+      tmp_mpr->next = tmp_nodes->mpr.next;
+      tmp_nodes->mpr.next = tmp_mpr;
+      tmp_mpr->prev = &tmp_nodes->mpr;
 
-	  update_nodes_list(tmp_nodes);
-	  return 1;
+      update_nodes_list(tmp_nodes);
+      return 1;
 
-	}
     }
+  }
 
   return 1;
 }
@@ -458,26 +412,23 @@ remove_node(struct node *node)
 
 
   tmp_hna = node->hna.next;
-  while(tmp_hna != &node->hna)
-    {
-      tmp_hna2 = tmp_hna;
-      tmp_hna = tmp_hna->next;
-      free(tmp_hna2);
-    }
+  while (tmp_hna != &node->hna) {
+    tmp_hna2 = tmp_hna;
+    tmp_hna = tmp_hna->next;
+    free(tmp_hna2);
+  }
   tmp_mpr = node->mpr.next;
-  while(tmp_mpr != &node->mpr)
-    {
-      tmp_mpr2 = tmp_mpr;
-      tmp_mpr = tmp_mpr->next;
-      free(tmp_mpr2);
-    }
+  while (tmp_mpr != &node->mpr) {
+    tmp_mpr2 = tmp_mpr;
+    tmp_mpr = tmp_mpr->next;
+    free(tmp_mpr2);
+  }
   tmp_mid = node->mid.next;
-  while(tmp_mid != &node->mid)
-    {
-      tmp_mid2 = tmp_mid;
-      tmp_mid = tmp_mid->next;
-      free(tmp_mid2);
-    }
+  while (tmp_mid != &node->mid) {
+    tmp_mid2 = tmp_mid;
+    tmp_mid = tmp_mid->next;
+    free(tmp_mid2);
+  }
 
   /* Gemove form GUI */
   remove_nodes_list(&node->addr);
@@ -513,48 +464,43 @@ remove_node_addr(union olsr_ip_addr *node)
 
   tmp_nodes = nodes.next;
 
-  while(tmp_nodes != &nodes)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  printf("(2)Deleting node %s\n", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));
+  while (tmp_nodes != &nodes) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      printf("(2)Deleting node %s\n", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));
 
-	  tmp_hna = tmp_nodes->hna.next;
-	  while(tmp_hna != &tmp_nodes->hna)
-	    {
-	      tmp_hna2 = tmp_hna;
-	      tmp_hna = tmp_hna->next;
-	      free(tmp_hna2);
-	    }
-	  tmp_mpr = tmp_nodes->mpr.next;
-	  while(tmp_mpr != &tmp_nodes->mpr)
-	    {
-	      tmp_mpr2 = tmp_mpr;
-	      tmp_mpr = tmp_mpr->next;
-	      free(tmp_mpr2);
-	    }
-	  tmp_mid = tmp_nodes->mid.next;
-	  while(tmp_mid != &tmp_nodes->mid)
-	    {
-	      tmp_mid2 = tmp_mid;
-	      tmp_mid = tmp_mid->next;
-	      free(tmp_mid2);
-	    }
+      tmp_hna = tmp_nodes->hna.next;
+      while (tmp_hna != &tmp_nodes->hna) {
+        tmp_hna2 = tmp_hna;
+        tmp_hna = tmp_hna->next;
+        free(tmp_hna2);
+      }
+      tmp_mpr = tmp_nodes->mpr.next;
+      while (tmp_mpr != &tmp_nodes->mpr) {
+        tmp_mpr2 = tmp_mpr;
+        tmp_mpr = tmp_mpr->next;
+        free(tmp_mpr2);
+      }
+      tmp_mid = tmp_nodes->mid.next;
+      while (tmp_mid != &tmp_nodes->mid) {
+        tmp_mid2 = tmp_mid;
+        tmp_mid = tmp_mid->next;
+        free(tmp_mid2);
+      }
 
-	  /* Gemove form GUI */
-	  remove_nodes_list(&tmp_nodes->addr);
+      /* Gemove form GUI */
+      remove_nodes_list(&tmp_nodes->addr);
 
-	  /* Dequeue */
-	  tmp_nodes->prev->next = tmp_nodes->next;
-	  tmp_nodes->next->prev = tmp_nodes->prev;
+      /* Dequeue */
+      tmp_nodes->prev->next = tmp_nodes->next;
+      tmp_nodes->next->prev = tmp_nodes->prev;
 
-	  free(tmp_nodes);
+      free(tmp_nodes);
 
-	  return 1;
-	}
-
-      tmp_nodes = tmp_nodes->next;
+      return 1;
     }
+
+    tmp_nodes = tmp_nodes->next;
+  }
 
   return 0;
 }
@@ -567,13 +513,10 @@ find_node(char *ip)
 {
   struct node *tmp_nodes;
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(strcmp(ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr), ip) == 0)
-	return tmp_nodes;
-    }
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (strcmp(ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr), ip) == 0)
+      return tmp_nodes;
+  }
 
   return NULL;
 }
@@ -584,13 +527,10 @@ find_node_t(union olsr_ip_addr *ip)
 {
   struct node *tmp_nodes;
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, ip, ipsize) == 0)
-	return tmp_nodes;
-    }
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, ip, ipsize) == 0)
+      return tmp_nodes;
+  }
 
 
   return 0;
@@ -607,34 +547,29 @@ time_out_nodes(gpointer data)
   struct node *node_to_delete;
 
   /* Wait before starting timing out */
-  if(timeouts)
-    {
-      timeouts--;
-      //printf("Waiting...\n");
-      return 1;
-    }
-
+  if (timeouts) {
+    timeouts--;
+    //printf("Waiting...\n");
+    return 1;
+  }
   //printf("Timing out nodes...\n");
   gettimeofday(&now, (struct timezone *)NULL);
 
   tmp_nodes = nodes.next;
 
-  while(tmp_nodes != &nodes)
-    {
-      //printf("%s: %6d < %6d\n", ip_to_string(&tmp_nodes->addr), tmp_nodes->timer.tv_sec, now.tv_sec);
-      if(timercmp(&tmp_nodes->timer,&now,<))
-	{
-	  printf("Node %s timed out...\n", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));
-	  node_to_delete = tmp_nodes;
+  while (tmp_nodes != &nodes) {
+    //printf("%s: %6d < %6d\n", ip_to_string(&tmp_nodes->addr), tmp_nodes->timer.tv_sec, now.tv_sec);
+    if (timercmp(&tmp_nodes->timer, &now, <)) {
+      printf("Node %s timed out...\n", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));
+      node_to_delete = tmp_nodes;
 
-	  tmp_nodes = tmp_nodes->next;
+      tmp_nodes = tmp_nodes->next;
 
-	  remove_nodes_list(&node_to_delete->addr);
-	  remove_node(node_to_delete);
-	}
-      else
-	tmp_nodes = tmp_nodes->next;
-    }
+      remove_nodes_list(&node_to_delete->addr);
+      remove_node(node_to_delete);
+    } else
+      tmp_nodes = tmp_nodes->next;
+  }
 
   return 1;
 }
@@ -664,37 +599,31 @@ time_out_mprs(union olsr_ip_addr *node)
    * -Andreas
    */
 
-  for(tmp_nodes = nodes.next;
-      tmp_nodes != &nodes;
-      tmp_nodes = tmp_nodes->next)
-    {
-      if(memcmp(&tmp_nodes->addr, node, ipsize) == 0)
-	{
-	  tmp_mpr = tmp_nodes->mpr.next;
+  for (tmp_nodes = nodes.next; tmp_nodes != &nodes; tmp_nodes = tmp_nodes->next) {
+    if (memcmp(&tmp_nodes->addr, node, ipsize) == 0) {
+      tmp_mpr = tmp_nodes->mpr.next;
 
-	  while(tmp_mpr != &tmp_nodes->mpr)
-	    {
-	      if(timercmp(&tmp_mpr->timer,&now,<))
-		{
-		  printf("MPR %s OF NODE ", ip_to_string((union olsr_ip_addr *)&tmp_mpr->addr));
-		  printf("%s TIMIED OUT ", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));fflush(stdout);
+      while (tmp_mpr != &tmp_nodes->mpr) {
+        if (timercmp(&tmp_mpr->timer, &now, <)) {
+          printf("MPR %s OF NODE ", ip_to_string((union olsr_ip_addr *)&tmp_mpr->addr));
+          printf("%s TIMIED OUT ", ip_to_string((union olsr_ip_addr *)&tmp_nodes->addr));
+          fflush(stdout);
 
-		  mpr_to_delete = tmp_mpr;
-		  tmp_mpr = tmp_mpr->next;
+          mpr_to_delete = tmp_mpr;
+          tmp_mpr = tmp_mpr->next;
 
-		  /* Dequeue */
-		  mpr_to_delete->next->prev = mpr_to_delete->prev;
-		  mpr_to_delete->prev->next = mpr_to_delete->next;
-		  /* Delete */
-		  free(mpr_to_delete);
-		}
-	      else
-		tmp_mpr = tmp_mpr->next;
-	    }
+          /* Dequeue */
+          mpr_to_delete->next->prev = mpr_to_delete->prev;
+          mpr_to_delete->prev->next = mpr_to_delete->next;
+          /* Delete */
+          free(mpr_to_delete);
+        } else
+          tmp_mpr = tmp_mpr->next;
+      }
 
-	  return 1;
-	}
+      return 1;
     }
+  }
 
   return 0;
 }
@@ -704,14 +633,14 @@ time_out_mprs(union olsr_ip_addr *node)
 void
 init_timer(uint32_t time_value, struct timeval *hold_timer)
 {
-  uint16_t  time_value_sec=0;
-  uint16_t  time_value_msec=0;
+  uint16_t time_value_sec = 0;
+  uint16_t time_value_msec = 0;
 
-  time_value_sec=time_value/1000;
-  time_value_msec=time_value-(time_value_sec*1000);
+  time_value_sec = time_value / 1000;
+  time_value_msec = time_value - (time_value_sec * 1000);
 
-  hold_timer->tv_sec=time_value_sec;
-  hold_timer->tv_usec=time_value_msec*1000;
+  hold_timer->tv_sec = time_value_sec;
+  hold_timer->tv_usec = time_value_msec * 1000;
 
 }
 
@@ -733,9 +662,9 @@ init_timer(uint32_t time_value, struct timeval *hold_timer)
 double
 me_to_double(uint8_t me)
 {
-  int a = me>>4;
-  int b = me - a*16;
-  return (double)(VTIME_SCALE_FACTOR*(1+(double)a/16)*(double)pow(2,b));
+  int a = me >> 4;
+  int b = me - a * 16;
+  return (double)(VTIME_SCALE_FACTOR * (1 + (double)a / 16) * (double)pow(2, b));
 }
 
 /*

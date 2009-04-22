@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -72,29 +73,29 @@ static int ipc_socket;
 
 /* IPC initialization function */
 static int
-plugin_ipc_init(void);
+  plugin_ipc_init(void);
 
 /* Event function to register with the sceduler */
 static int
-pcf_event(int, int, int, int);
+  pcf_event(int, int, int, int);
 
 static void
-ipc_action(int, void *, unsigned int);
+  ipc_action(int, void *, unsigned int);
 
 static void
-ipc_print_neigh_link(int, const struct neighbor_entry *neighbor);
+  ipc_print_neigh_link(int, const struct neighbor_entry *neighbor);
 
 static void
-ipc_print_tc_link(int, const struct tc_entry *, const struct tc_edge_entry *);
+  ipc_print_tc_link(int, const struct tc_entry *, const struct tc_edge_entry *);
 
 static void
-ipc_print_net(int, const union olsr_ip_addr *, const struct olsr_ip_prefix *);
+  ipc_print_net(int, const union olsr_ip_addr *, const struct olsr_ip_prefix *);
 
 static void
-ipc_send(int, const char *, int);
+  ipc_send(int, const char *, int);
 
 static void
-ipc_send_fmt(int, const char *format, ...) __attribute__((format(printf,2,3)));
+  ipc_send_fmt(int, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
 
 #define ipc_send_str(fd, data) ipc_send((fd), (data), strlen(data))
 
@@ -106,9 +107,11 @@ ipc_send_fmt(int, const char *format, ...) __attribute__((format(printf,2,3)));
  *function in uolsrd_plugin.c
  */
 #ifdef _WRS_KERNEL
-int olsrd_dotdraw_init(void)
+int
+olsrd_dotdraw_init(void)
 #else
-int olsrd_plugin_init(void)
+int
+olsrd_plugin_init(void)
 #endif
 {
   /* Initial IPC value */
@@ -124,9 +127,11 @@ int olsrd_plugin_init(void)
  * destructor - called at unload
  */
 #ifdef _WRS_KERNEL
-void olsrd_dotdraw_exit(void)
+void
+olsrd_dotdraw_exit(void)
 #else
-void olsr_plugin_exit(void)
+void
+olsr_plugin_exit(void)
 #endif
 {
   if (ipc_socket != -1) {
@@ -144,10 +149,10 @@ ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
   const char *adr = olsr_ip_to_string(&mainaddrstrbuf, &olsr_cnf->router_id);
   struct lqtextbuffer lqbuffer;
 
-  if (neighbor->status == 0) { /* non SYM */
+  if (neighbor->status == 0) {  /* non SYM */
     style = "dashed";
   } else {
-    const struct link_entry* lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+    const struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
     if (lnk) {
       etx = lnk->linkcost;
     }
@@ -155,11 +160,8 @@ ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
   }
 
   ipc_send_fmt(ipc_connection,
-	       "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
-               adr,
-               olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr),
-               get_linkcost_text(etx, false, &lqbuffer),
-               style);
+               "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
+               adr, olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr), get_linkcost_text(etx, false, &lqbuffer), style);
 
   if (neighbor->is_mpr) {
     ipc_send_fmt(ipc_connection, "\"%s\"[shape=box];\n", adr);
@@ -189,7 +191,6 @@ plugin_ipc_init(void)
     CLOSESOCKET(ipc_socket);
     return 0;
   }
-
 #if defined __FreeBSD__ && defined SO_NOSIGPIPE
   if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) {
     OLSR_WARN(LOG_PLUGINS, "SO_REUSEADDR failed %s\n", strerror(errno));
@@ -207,7 +208,7 @@ plugin_ipc_init(void)
   addr.sin_port = htons(ipc_port);
 
   /* bind the socket to the port number */
-  if (bind(ipc_socket, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+  if (bind(ipc_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     OLSR_WARN(LOG_PLUGINS, "(DOT DRAW)IPC bind %s\n", strerror(errno));
     CLOSESOCKET(ipc_socket);
     return 0;
@@ -228,7 +229,7 @@ plugin_ipc_init(void)
 
 
 static void
-ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), unsigned int flags __attribute__((unused)))
+ipc_action(int fd __attribute__ ((unused)), void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   struct sockaddr_in pin;
   socklen_t addrlen = sizeof(struct sockaddr_in);
@@ -246,7 +247,7 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
 #endif
   OLSR_DEBUG(LOG_PLUGINS, "(DOT DRAW)IPC: Connection from %s\n", inet_ntoa(pin.sin_addr));
   pcf_event(ipc_connection, 1, 1, 1);
-  CLOSESOCKET(ipc_connection); /* close connection after one output */
+  CLOSESOCKET(ipc_connection);  /* close connection after one output */
 }
 
 
@@ -254,10 +255,7 @@ ipc_action(int fd __attribute__((unused)), void *data __attribute__((unused)), u
  *Scheduled event
  */
 static int
-pcf_event(int ipc_connection,
-	  int chgs_neighborhood,
-	  int chgs_topology,
-	  int chgs_hna)
+pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs_hna)
 {
   int res = 0;
 
@@ -271,7 +269,7 @@ pcf_event(int ipc_connection,
 
     /* Neighbors */
     OLSR_FOR_ALL_NBR_ENTRIES(neighbor_table_tmp) {
-      ipc_print_neigh_link(ipc_connection, neighbor_table_tmp );
+      ipc_print_neigh_link(ipc_connection, neighbor_table_tmp);
     } OLSR_FOR_ALL_NBR_ENTRIES_END(neighbor_table_tmp);
 
     /* Topology */
@@ -281,28 +279,26 @@ pcf_event(int ipc_connection,
         if (tc_edge->edge_inv) {
           ipc_print_tc_link(ipc_connection, tc, tc_edge);
         }
-      } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-    } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+      }
+      OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+    }
+    OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* HNA entries */
     OLSR_FOR_ALL_TC_ENTRIES(tc) {
       /* Check all networks */
       struct hna_net *tmp_net;
       OLSR_FOR_ALL_TC_HNA_ENTRIES(tc, tmp_net) {
-	ipc_print_net(ipc_connection,
-		      &tc->addr,
-		      &tmp_net->hna_prefix);
-        }
-      } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
+        ipc_print_net(ipc_connection, &tc->addr, &tmp_net->hna_prefix);
+      }
+    } OLSR_FOR_ALL_TC_HNA_ENTRIES_END(tc, tmp_hna);
     OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
     /* Local HNA entries */
     OLSR_FOR_ALL_IPPREFIX_ENTRIES(&olsr_cnf->hna_entries, hna) {
-      ipc_print_net(ipc_connection,
-		    &olsr_cnf->router_id,
-                    &hna->net);
+      ipc_print_net(ipc_connection, &olsr_cnf->router_id, &hna->net);
     } OLSR_FOR_ALL_IPPREFIX_ENTRIES_END()
-    ipc_send_str(ipc_connection, "}\n\n");
+      ipc_send_str(ipc_connection, "}\n\n");
 
     res = 1;
   }
@@ -320,10 +316,9 @@ ipc_print_tc_link(int ipc_connection, const struct tc_entry *entry, const struct
   struct lqtextbuffer lqbuffer;
 
   ipc_send_fmt(ipc_connection,
-	       "\"%s\" -> \"%s\"[label=\"%s\"];\n",
+               "\"%s\" -> \"%s\"[label=\"%s\"];\n",
                olsr_ip_to_string(&strbuf1, &entry->addr),
-               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr),
-               get_linkcost_text(dst_entry->cost, false, &lqbuffer));
+               olsr_ip_to_string(&strbuf2, &dst_entry->T_dest_addr), get_linkcost_text(dst_entry->cost, false, &lqbuffer));
 }
 
 
@@ -334,12 +329,8 @@ ipc_print_net(int ipc_connection, const union olsr_ip_addr *gw, const struct ols
   struct ipprefix_str netbuf;
 
   ipc_send_fmt(ipc_connection,
-	       "\"%s\" -> \"%s\"[label=\"HNA\"];\n",
-               olsr_ip_to_string(&gwbuf, gw),
-	       olsr_ip_prefix_to_string(&netbuf, net));
-  ipc_send_fmt(ipc_connection,
-	       "\"%s\"[shape=diamond];\n",
-               netbuf.buf);
+               "\"%s\" -> \"%s\"[label=\"HNA\"];\n", olsr_ip_to_string(&gwbuf, gw), olsr_ip_prefix_to_string(&netbuf, net));
+  ipc_send_fmt(ipc_connection, "\"%s\"[shape=diamond];\n", netbuf.buf);
 }
 
 static void

@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -53,10 +54,10 @@
 
 /* Initialization function */
 int
-olsrd_plugin_init(void);
+  olsrd_plugin_init(void);
 
 int
-olsrd_plugin_interface_version(void);
+  olsrd_plugin_interface_version(void);
 
 #endif
 

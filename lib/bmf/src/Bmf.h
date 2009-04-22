@@ -40,7 +40,7 @@
  *
  * ------------------------------------------------------------------------- */
 
-#include "plugin.h" /* union set_plugin_parameter_addon */
+#include "plugin.h"             /* union set_plugin_parameter_addon */
 
 /* BMF plugin data */
 #define PLUGIN_NAME "OLSRD Basic Multicast Forwarding (BMF) plugin"
@@ -60,10 +60,10 @@ struct interface;
 extern int FanOutLimit;
 extern int BroadcastRetransmitCount;
 
-union olsr_ip_addr* MainAddressOf(union olsr_ip_addr* ip);
-int InterfaceChange(struct interface* interf, int action);
-int SetFanOutLimit(const char* value, void* data, set_plugin_parameter_addon addon);
-int InitBmf(struct interface* skipThisIntf);
+union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
+int InterfaceChange(struct interface *interf, int action);
+int SetFanOutLimit(const char *value, void *data, set_plugin_parameter_addon addon);
+int InitBmf(struct interface *skipThisIntf);
 void CloseBmf(void);
 
 #endif /* _BMF_BMF_H */

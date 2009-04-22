@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -47,7 +48,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
-void clear_console(void)
+void
+clear_console(void)
 {
   static int len = -1;
   static char clear_buff[100];
@@ -58,7 +60,7 @@ void clear_console(void)
     for (len = 0; len < (int)sizeof(clear_buff); len++) {
       int c = fgetc(pip);
       if (c == EOF) {
-            break;
+        break;
       }
       clear_buff[len] = c;
     }
@@ -72,7 +74,8 @@ void clear_console(void)
   fflush(stdout);
 }
 
-int set_nonblocking(int fd)
+int
+set_nonblocking(int fd)
 {
   /* make the fd non-blocking */
   int socket_flags = fcntl(fd, F_GETFL);
@@ -80,7 +83,7 @@ int set_nonblocking(int fd)
     OLSR_WARN(LOG_NETWORKING, "Cannot get the socket flags: %s", strerror(errno));
     return -1;
   }
-  if (fcntl(fd, F_SETFL, socket_flags|O_NONBLOCK) < 0) {
+  if (fcntl(fd, F_SETFL, socket_flags | O_NONBLOCK) < 0) {
     OLSR_WARN(LOG_NETWORKING, "Cannot set the socket flags: %s", strerror(errno));
     return -1;
   }

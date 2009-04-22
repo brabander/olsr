@@ -1,3 +1,4 @@
+
 /*
 OLSR MDNS plugin.
 Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>.
@@ -24,13 +25,12 @@ Written by Saverio Proto <zioproto@gmail.com> and Claudio Pisa <clauz@ninux.org>
 #ifndef _MDNS_ADDRESS_H
 #define _MDNS_ADDRESS_H
 
-#include "olsr_types.h" /* olsr_ip_addr */
-#include "plugin.h"     /* union set_plugin_parameter_addon */
-#include "interfaces.h" /* struct interface */
+#include "olsr_types.h"         /* olsr_ip_addr */
+#include "plugin.h"             /* union set_plugin_parameter_addon */
+#include "interfaces.h"         /* struct interface */
 
 struct TBmfInterface;
 
-int IsMulticast(union olsr_ip_addr* ipAddress);
+int IsMulticast(union olsr_ip_addr *ipAddress);
 
 #endif /* _MDNS_ADDRESS_H */
-

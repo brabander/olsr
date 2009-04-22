@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2008, Bernd Petrovitsch <bernd-at-firmix.at>
@@ -45,9 +46,9 @@
 #include "defs.h"
 #include <stdlib.h>
 
-char *EXPORT(strscpy)(char *dest, const char *src, size_t size);
+char *EXPORT(strscpy) (char *dest, const char *src, size_t size);
 
-char *EXPORT(strscat)(char *dest, const char *src, size_t size);
+char *EXPORT(strscat) (char *dest, const char *src, size_t size);
 
 #endif
 

@@ -287,7 +287,7 @@ olsr_msg_statistics(union olsr_message *msg,
   recv_messages[now % 60][idx]++;
   if (recv_last_relevantTCs != getRelevantTcCount()) {
     recv_messages[now % 60][5]++;
-    recv_last_relevantTCs ++;
+    recv_last_relevantTCs++;
   }
   return true;
 }

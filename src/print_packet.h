@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -45,8 +46,7 @@
 #include "olsr_protocol.h"
 #include <stdio.h>
 
-int8_t
-print_olsr_serialized_packet(FILE *, union olsr_packet *, uint16_t, union olsr_ip_addr *);
+int8_t print_olsr_serialized_packet(FILE *, union olsr_packet *, uint16_t, union olsr_ip_addr *);
 
 #endif
 

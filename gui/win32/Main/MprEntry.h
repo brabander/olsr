@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -41,14 +42,13 @@
 #if !defined TL_MPRENTRY_H
 #define TL_MPRENTRY_H
 
-class MprEntry
-{
+class MprEntry {
 public:
-	unsigned int Addr;
-	unsigned __int64 Timeout;
+  unsigned int Addr;
+  unsigned __int64 Timeout;
 
-	class MprEntry &MprEntry::operator=(class MprEntry &);
-	BOOL MprEntry::operator==(const class MprEntry &) const;
+  class MprEntry & MprEntry::operator=(class MprEntry &);
+  BOOL MprEntry::operator==(const class MprEntry &) const;
 };
 
 #endif

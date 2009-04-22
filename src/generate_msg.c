@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -77,7 +78,7 @@ generate_hna(void *p)
 
 
 void
-generate_stdout_pulse(void *foo __attribute__((unused)))
+generate_stdout_pulse(void *foo __attribute__ ((unused)))
 {
   if (pulsedata[++pulse_state] == '\0') {
     pulse_state = 0;

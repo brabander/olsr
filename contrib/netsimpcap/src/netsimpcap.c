@@ -1,3 +1,4 @@
+
 /*
  * NetsimPcap - a userspace network bridge with simulated packet loss
  *             Copyright 2008 H. Rogge (rogge@fgan.de)
@@ -48,7 +49,7 @@ int debugMode = 0;
 
 int running;
 
-pcap_t* devices[128];
+pcap_t *devices[128];
 int deviceFD[128];
 int deviceCount;
 
@@ -67,7 +68,7 @@ u_int8_t mac_bc[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
  * to stop
  */
 static void
-signalHandler (int signo __attribute__((unused)))
+signalHandler(int signo __attribute__ ((unused)))
 {
   running = 0;
 }
@@ -80,7 +81,7 @@ signalHandler (int signo __attribute__((unused)))
  * @param 1 if matrix contains drop-propabilities
  */
 void
-calculateConnections (float *connMatrix, int socketcount, int drop)
+calculateConnections(float *connMatrix, int socketcount, int drop)
 {
 
   /* calculating unicast/broadcast matrix */
@@ -91,8 +92,8 @@ calculateConnections (float *connMatrix, int socketcount, int drop)
 
   float broadcast, unicast;
   int i, j;
-  for (j=0; j<socketcount; j++) {
-    for (i=0; i<socketcount; i++) {
+  for (j = 0; j < socketcount; j++) {
+    for (i = 0; i < socketcount; i++) {
       float prop = connMatrix[GRID(i, j, socketcount)];
       if (drop) {
         prop = 1.0 - prop;
@@ -104,33 +105,33 @@ calculateConnections (float *connMatrix, int socketcount, int drop)
        * are lost.
        */
       prop = 1 - prop;
-      unicast = (1 - prop)*(1 + prop + prop*prop + prop*prop*prop + prop*prop*prop*prop);
+      unicast = (1 - prop) * (1 + prop + prop * prop + prop * prop * prop + prop * prop * prop * prop);
 
-      connBC[GRID(i, j, socketcount)] = (1<<24) * broadcast;
-      connUni[GRID(i, j, socketcount)] = (1<<24) * unicast;
+      connBC[GRID(i, j, socketcount)] = (1 << 24) * broadcast;
+      connUni[GRID(i, j, socketcount)] = (1 << 24) * unicast;
     }
   }
 
   if (debugMode) {
     printf("Connection matrix for unicast:\n");
-    for (j=0; j<socketcount; j++) {
-      for (i=0; i<socketcount; i++) {
-        if (i>0) {
+    for (j = 0; j < socketcount; j++) {
+      for (i = 0; i < socketcount; i++) {
+        if (i > 0) {
           printf(" ");
         }
 
-        printf("%1.2f", (float)connBC[GRID(i,j, socketcount)] / (float)(1<<24));
+        printf("%1.2f", (float)connBC[GRID(i, j, socketcount)] / (float)(1 << 24));
       }
       printf("\n");
     }
     printf("\nConnectionmatrix for broadcast:\n");
-    for (j=0; j<socketcount; j++) {
-      for (i=0; i<socketcount; i++) {
-        if (i>0) {
+    for (j = 0; j < socketcount; j++) {
+      for (i = 0; i < socketcount; i++) {
+        if (i > 0) {
           printf(" ");
         }
 
-        printf("%1.2f", (float)connUni[GRID(i,j, socketcount)] / (float)(1<<24));
+        printf("%1.2f", (float)connUni[GRID(i, j, socketcount)] / (float)(1 << 24));
       }
       printf("\n");
     }
@@ -144,13 +145,13 @@ calculateConnections (float *connMatrix, int socketcount, int drop)
  * (optional) tap device. It retransmits the package to all connected devices.
  */
 void
-tap_callback (void)
+tap_callback(void)
 {
   int len, i;
 
   len = read(tapFD, buffer, sizeof(buffer));
   if (len > 0) {
-    for (i=0; i<deviceCount; i++) {
+    for (i = 0; i < deviceCount; i++) {
       pcap_inject(devices[i], buffer, len);
     }
   }
@@ -167,7 +168,7 @@ tap_callback (void)
  * See libpcap documentation for parameters
  */
 void
-capture_callback (u_char *args, const struct pcap_pkthdr* hdr, const u_char* packet)
+capture_callback(u_char * args, const struct pcap_pkthdr *hdr, const u_char * packet)
 {
   int *index = (int *)args;
   int unicast = memcmp(packet, mac_bc, 6) != 0;
@@ -189,7 +190,7 @@ capture_callback (u_char *args, const struct pcap_pkthdr* hdr, const u_char* pac
     }
   }
 
-  for (i=0; i<deviceCount; i++) {
+  for (i = 0; i < deviceCount; i++) {
     u_int32_t prop;
     if (unicast) {
       prop = connUni[GRID(*index, i, deviceCount)];
@@ -197,7 +198,7 @@ capture_callback (u_char *args, const struct pcap_pkthdr* hdr, const u_char* pac
       prop = connBC[GRID(*index, i, deviceCount)];
     }
 
-    if (prop == 0 || prop < (rand() % (1<<24))) {
+    if (prop == 0 || prop < (rand() % (1 << 24))) {
       continue;
     }
 
@@ -206,50 +207,49 @@ capture_callback (u_char *args, const struct pcap_pkthdr* hdr, const u_char* pac
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
   int i;
   int dropPropability = 0;
-  char *connectionFile= NULL;
+  char *connectionFile = NULL;
   int deviceIndex = -1;
   int hubMode = 0;
 
   MacAddress mac;
   char *tapname = NULL;
 
-  if (argc==1 || (argc == 2 && strcmp(argv[1], "--help")==0)) {
-    printf("%s: [-con <connectionfile>] [-hub] [-debug]"
-        " [-tap <devname> <mac>] [-drop] -dev <dev1> <dev2> <dev3>...\n", argv[0]);
+  if (argc == 1 || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
+    printf("%s: [-con <connectionfile>] [-hub] [-debug]" " [-tap <devname> <mac>] [-drop] -dev <dev1> <dev2> <dev3>...\n", argv[0]);
     return 0;
   }
 
   deviceCount = 0;
   tapFD = -1;
 
-  for (i=1; i<argc; i++) {
-    if (strcmp(argv[i], "-con")==0 && i < argc-1) {
-      connectionFile = argv[i+1];
+  for (i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-con") == 0 && i < argc - 1) {
+      connectionFile = argv[i + 1];
       i++;
     }
-    if (strcmp(argv[i], "-drop")==0) {
+    if (strcmp(argv[i], "-drop") == 0) {
       dropPropability = 1;
     }
-    if (strcmp(argv[i], "-dev")==0) {
+    if (strcmp(argv[i], "-dev") == 0) {
       deviceIndex = ++i;
       while (i < argc && argv[i][0] != '-') {
         i++;
         deviceCount++;
       }
-      i--; /* to cancel the i++ in the for loop */
+      i--;                      /* to cancel the i++ in the for loop */
     }
-    if (strcmp(argv[i], "-hub")==0) {
+    if (strcmp(argv[i], "-hub") == 0) {
       hubMode = 1;
     }
-    if (strcmp(argv[i], "-tap")==0 && i < argc-2) {
+    if (strcmp(argv[i], "-tap") == 0 && i < argc - 2) {
       tapname = argv[++i];
       readMac(argv[++i], &mac);
     }
-    if (strcmp(argv[i], "-debug")==0) {
+    if (strcmp(argv[i], "-debug") == 0) {
       debugMode = 1;
     }
   }
@@ -276,7 +276,7 @@ main (int argc, char **argv)
 
   if (tapname) {
     tapFD = createTap(tapname, &mac);
-    if (tapFD==-1) {
+    if (tapFD == -1) {
       printf("Error, cannot open tap device '%s'\n", tapname);
       return 1;
     }
@@ -287,21 +287,22 @@ main (int argc, char **argv)
   float *connMatrix = malloc(sizeof(float) * deviceCount * deviceCount);
   if (!connMatrix) {
     printf("Error, not enough memory for mac buffer!");
-    if (tapFD != -1)    closeTap(tapFD);
+    if (tapFD != -1)
+      closeTap(tapFD);
     return 1;
   }
 
   if (hubMode) {
-    int x,y;
+    int x, y;
 
     /*
      * In hub mode the any-to-any loss factor is 1.0, which
      * means we can skip reading a matrix file.
      */
-    for (y=0; y<deviceCount; y++) {
-      for (x=0; x<deviceCount; x++) {
+    for (y = 0; y < deviceCount; y++) {
+      for (x = 0; x < deviceCount; x++) {
         if (x != y) {
-          connMatrix[GRID(x,y,deviceCount)] = 1.0;
+          connMatrix[GRID(x, y, deviceCount)] = 1.0;
         }
       }
     }
@@ -309,7 +310,8 @@ main (int argc, char **argv)
     if (readConnectionMatrix(connMatrix, connectionFile, deviceCount)) {
       printf("Error while reading matrix file\n");
       free(connMatrix);
-      if (tapFD != -1)    closeTap(tapFD);
+      if (tapFD != -1)
+        closeTap(tapFD);
       return 1;
     }
   }
@@ -322,7 +324,7 @@ main (int argc, char **argv)
   if (tapFD != -1) {
     maxDeviceFD = tapFD;
   }
-  for (i=0; i<deviceCount; i++) {
+  for (i = 0; i < deviceCount; i++) {
     devices[i] = pcap_open_live(argv[i + deviceIndex], BUFSIZ, 0, -1, errbuf);
     deviceFD[i] = -1;
     if (devices[i] == NULL) {
@@ -350,22 +352,22 @@ main (int argc, char **argv)
     timeout.tv_usec = 0;
 
     FD_ZERO(&socketSet);
-    for (i=0; i<deviceCount; i++) {
+    for (i = 0; i < deviceCount; i++) {
       FD_SET(deviceFD[i], &socketSet);
     }
     if (tapFD != -1) {
       FD_SET(tapFD, &socketSet);
     }
 
-    socketsReady = select(maxDeviceFD+1, &socketSet, (fd_set *) 0, (fd_set *) 0, &timeout);
+    socketsReady = select(maxDeviceFD + 1, &socketSet, (fd_set *) 0, (fd_set *) 0, &timeout);
     if (socketsReady <= 0) {
       break;
     }
 
-    for (i=0; i<deviceCount; i++) {
+    for (i = 0; i < deviceCount; i++) {
       if (FD_ISSET(deviceFD[i], &socketSet)) {
         int error = pcap_dispatch(devices[i], -1, capture_callback,
-          (u_char *)&i);
+                                  (u_char *) & i);
 
         if (error == -1) {
           printf("Error during pcap_dispatch for device %s\n", argv[i + deviceIndex]);
@@ -379,7 +381,7 @@ main (int argc, char **argv)
     }
   }
 
-  for (i=0; i<deviceCount; i++) {
+  for (i = 0; i < deviceCount; i++) {
     if (devices[i] != NULL) {
       pcap_close(devices[i]);
     }
@@ -387,7 +389,8 @@ main (int argc, char **argv)
   free(connUni);
   free(connBC);
 
-  if (tapFD != -1)    closeTap(tapFD);
+  if (tapFD != -1)
+    closeTap(tapFD);
   return 0;
 }
 

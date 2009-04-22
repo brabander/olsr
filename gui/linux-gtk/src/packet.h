@@ -1,3 +1,4 @@
+
 /*
  * OLSR ad-hoc routing table management protocol GUI front-end
  * Copyright (C) 2003 Andreas Tonnesen (andreto@ifi.uio.no)
@@ -30,8 +31,7 @@
 #ifndef _PACKET_H
 #define _PACKET_H
 
-struct packnode
-{
+struct packnode {
   union olsr_message *packet;
   struct packnode *next;
 };
@@ -42,30 +42,26 @@ struct packnode
  * Unions for IPv4 <-> IPv6 compability
  */
 
-union hello_message
-{
+union hello_message {
   struct hellomsg v4;
   struct hellomsg6 v6;
 };
 
 
-union tc_message
-{
+union tc_message {
   struct olsr_tcmsg v4;
   struct olsr_tcmsg6 v6;
 };
 
 
-union mid_message
-{
+union mid_message {
   struct midmsg v4;
   struct midmsg6 v6;
 };
 
 
 
-union hna_message
-{
+union hna_message {
   struct hnamsg v4;
   struct hnamsg6 v6;
 };

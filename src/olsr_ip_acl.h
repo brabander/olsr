@@ -57,7 +57,7 @@ struct ip_acl {
 void EXPORT(ip_acl_init) (struct ip_acl *);
 void EXPORT(ip_acl_flush) (struct ip_acl *);
 void EXPORT(ip_acl_add) (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool);
-void ip_acl_remove (struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool, int);
+void ip_acl_remove(struct ip_acl *, const union olsr_ip_addr *, uint8_t, bool, int);
 bool EXPORT(ip_acl_acceptable) (struct ip_acl *, const union olsr_ip_addr *, int);
 
 #endif /* OLSR_IP_PREFIX_ACL_H_ */

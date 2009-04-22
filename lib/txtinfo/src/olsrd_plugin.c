@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -76,63 +77,67 @@ static void my_fini(void) __attribute__ ((destructor));
 /**
  *Constructor
  */
-static void my_init(void)
+static void
+my_init(void)
 {
-    /* Print plugin info to stdout */
-    OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
+  /* Print plugin info to stdout */
+  OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
-    /* defaults for parameters */
-    ipc_port = 2006;
+  /* defaults for parameters */
+  ipc_port = 2006;
 
-    ip_acl_init(&allowed_nets);
-    /* always allow localhost */
-    if (olsr_cnf->ip_version == AF_INET) {
-      union olsr_ip_addr ip;
+  ip_acl_init(&allowed_nets);
+  /* always allow localhost */
+  if (olsr_cnf->ip_version == AF_INET) {
+    union olsr_ip_addr ip;
 
-      ip.v4.s_addr = ntohl(INADDR_LOOPBACK);
-      ip_acl_add(&allowed_nets, &ip, 32, false);
-    } else {
-      ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
-      ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
-    }
+    ip.v4.s_addr = ntohl(INADDR_LOOPBACK);
+    ip_acl_add(&allowed_nets, &ip, 32, false);
+  } else {
+    ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_loopback, 128, false);
+    ip_acl_add(&allowed_nets, (const union olsr_ip_addr *)&in6addr_v4mapped_loopback, 128, false);
+  }
 
-    /* highlite neighbours by default */
-    nompr = 0;
+  /* highlite neighbours by default */
+  nompr = 0;
 }
 
 /**
  *Destructor
  */
-static void my_fini(void)
+static void
+my_fini(void)
 {
-    /* Calls the destruction function
-     * olsr_plugin_exit()
-     * This function should be present in your
-     * sourcefile and all data destruction
-     * should happen there - NOT HERE!
-     */
-    olsr_plugin_exit();
-    ip_acl_flush(&allowed_nets);
+  /* Calls the destruction function
+   * olsr_plugin_exit()
+   * This function should be present in your
+   * sourcefile and all data destruction
+   * should happen there - NOT HERE!
+   */
+  olsr_plugin_exit();
+  ip_acl_flush(&allowed_nets);
 }
 
 
-int olsrd_plugin_interface_version(void)
+int
+olsrd_plugin_interface_version(void)
 {
-    return PLUGIN_INTERFACE_VERSION;
+  return PLUGIN_INTERFACE_VERSION;
 }
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
-    { .name = "port",          .set_plugin_parameter = &set_plugin_port,      .data = &ipc_port },
-    { .name = IP_ACL_ACCEPT_PARAP,        .set_plugin_parameter = &ip_acl_add_plugin_accept,  .data = &allowed_nets },
-    { .name = IP_ACL_REJECT_PARAM,        .set_plugin_parameter = &ip_acl_add_plugin_reject,  .data = &allowed_nets },
-    { .name = IP_ACL_CHECKFIRST_PARAM,    .set_plugin_parameter = &ip_acl_add_plugin_checkFirst, .data = &allowed_nets },
-    { .name = IP_ACL_DEFAULTPOLICY_PARAM, .set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy, .data = &allowed_nets }
+  {.name = "port",.set_plugin_parameter = &set_plugin_port,.data = &ipc_port},
+  {.name = IP_ACL_ACCEPT_PARAP,.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
+  {.name = IP_ACL_REJECT_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_reject,.data = &allowed_nets},
+  {.name = IP_ACL_CHECKFIRST_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_checkFirst,.data = &allowed_nets},
+  {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets}
 };
 
-void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
+void
+olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size)
 {
-    *params = plugin_parameters;
-    *size = ARRAYSIZE(plugin_parameters);
+  *params = plugin_parameters;
+  *size = ARRAYSIZE(plugin_parameters);
 }
 
 /*

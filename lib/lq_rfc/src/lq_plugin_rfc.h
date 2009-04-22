@@ -1,3 +1,4 @@
+
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
@@ -67,7 +68,7 @@ struct lq_rfc_link_entry {
   bool active;
 };
 
-#endif /*LQ_PLUGIN_RFC_H_*/
+#endif /*LQ_PLUGIN_RFC_H_ */
 
 /*
  * Local Variables:

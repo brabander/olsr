@@ -70,7 +70,7 @@
 #define TYPE_RRESPONSE 13
 
 
-extern char keyfile[FILENAME_MAX+1];
+extern char keyfile[FILENAME_MAX + 1];
 
 
 #ifdef USE_OPENSSL
@@ -83,29 +83,27 @@ extern char keyfile[FILENAME_MAX+1];
  *                            PACKET SECTION                                *
  ****************************************************************************/
 
-struct sig_msg
-{
-  uint8_t     type;
-  uint8_t     algorithm;
-  uint16_t    reserved;
+struct sig_msg {
+  uint8_t type;
+  uint8_t algorithm;
+  uint16_t reserved;
 
-  time_t        timestamp;
-  uint8_t     signature[SIGSIZE];
+  time_t timestamp;
+  uint8_t signature[SIGSIZE];
 };
 
 /*
  * OLSR message (several can exist in one OLSR packet)
  */
 
-struct s_olsrmsg
-{
-  uint8_t     olsr_msgtype;
-  uint8_t     olsr_vtime;
-  uint16_t    olsr_msgsize;
-  uint32_t    originator;
-  uint8_t     ttl;
-  uint8_t     hopcnt;
-  uint16_t    seqno;
+struct s_olsrmsg {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   /* YOUR PACKET GOES HERE */
   struct sig_msg sig;
@@ -117,61 +115,58 @@ struct s_olsrmsg
  * Challenge response messages
  */
 
-struct challengemsg
-{
-  uint8_t     olsr_msgtype;
-  uint8_t     olsr_vtime;
-  uint16_t    olsr_msgsize;
-  uint32_t    originator;
-  uint8_t     ttl;
-  uint8_t     hopcnt;
-  uint16_t    seqno;
+struct challengemsg {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  uint32_t    destination;
-  uint32_t    challenge;
+  uint32_t destination;
+  uint32_t challenge;
 
-  uint8_t     signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 
 };
 
 
 
-struct c_respmsg
-{
-  uint8_t     olsr_msgtype;
-  uint8_t     olsr_vtime;
-  uint16_t    olsr_msgsize;
-  uint32_t    originator;
-  uint8_t     ttl;
-  uint8_t     hopcnt;
-  uint16_t    seqno;
+struct c_respmsg {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  uint32_t    destination;
-  uint32_t    challenge;
-  time_t        timestamp;
+  uint32_t destination;
+  uint32_t challenge;
+  time_t timestamp;
 
-  uint8_t     res_sig[SIGSIZE];
+  uint8_t res_sig[SIGSIZE];
 
-  uint8_t     signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 };
 
 
-struct r_respmsg
-{
-  uint8_t     olsr_msgtype;
-  uint8_t     olsr_vtime;
-  uint16_t    olsr_msgsize;
-  uint32_t    originator;
-  uint8_t     ttl;
-  uint8_t     hopcnt;
-  uint16_t    seqno;
+struct r_respmsg {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  uint32_t originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
-  uint32_t    destination;
-  time_t        timestamp;
+  uint32_t destination;
+  time_t timestamp;
 
-  uint8_t     res_sig[SIGSIZE];
+  uint8_t res_sig[SIGSIZE];
 
-  uint8_t     signature[SIGSIZE];
+  uint8_t signature[SIGSIZE];
 };
 
 
@@ -179,37 +174,34 @@ struct r_respmsg
  *IPv6
  */
 
-struct s_olsrmsg6
-{
-  uint8_t        olsr_msgtype;
-  uint8_t        olsr_vtime;
-  uint16_t       olsr_msgsize;
-  struct in6_addr  originator;
-  uint8_t        ttl;
-  uint8_t        hopcnt;
-  uint16_t       seqno;
+struct s_olsrmsg6 {
+  uint8_t olsr_msgtype;
+  uint8_t olsr_vtime;
+  uint16_t olsr_msgsize;
+  struct in6_addr originator;
+  uint8_t ttl;
+  uint8_t hopcnt;
+  uint16_t seqno;
 
   /* YOUR PACKET GOES HERE */
-  struct sig_msg   sig;
+  struct sig_msg sig;
 };
 
 /*
  * Generic OLSR packet - DO NOT ALTER
  */
 
-struct s_olsr
-{
-  uint16_t	  olsr_packlen;		/* packet length */
-  uint16_t	  olsr_seqno;
-  struct s_olsrmsg  olsr_msg[1];          /* variable messages */
+struct s_olsr {
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
+  struct s_olsrmsg olsr_msg[1];        /* variable messages */
 };
 
 
-struct s_olsr6
-{
-  uint16_t	    olsr_packlen;        /* packet length */
-  uint16_t	    olsr_seqno;
-  struct s_olsrmsg6   olsr_msg[1];         /* variable messages */
+struct s_olsr6 {
+  uint16_t olsr_packlen;               /* packet length */
+  uint16_t olsr_seqno;
+  struct s_olsrmsg6 olsr_msg[1];       /* variable messages */
 };
 
 
