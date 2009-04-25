@@ -362,6 +362,10 @@ olsr_expire_tc_entry(void *context)
   struct tc_entry *tc;
 
   tc = (struct tc_entry *)context;
+
+  struct ipaddr_str buf;
+  OLSR_PRINTF(3, "TCX: expired entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+
   tc->validity_timer = NULL;
 
   olsr_delete_tc_entry(tc);
@@ -379,6 +383,10 @@ olsr_expire_tc_edge_gc(void *context)
   struct tc_entry *tc;
 
   tc = (struct tc_entry *)context;
+
+  struct ipaddr_str buf;
+  OLSR_PRINTF(3, "TCX: garbaged entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+
   tc->edge_gc_timer = NULL;
 
   if (olsr_delete_outdated_tc_edges(tc)) {
