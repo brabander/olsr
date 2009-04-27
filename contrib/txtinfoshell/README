@@ -1,0 +1,12 @@
+   txtinfo shell
+===================
+
+txtinfo-sh is a small helper programm to allow external users a secure
+access to the txtinfo plugin. It can be used as a shell for an user
+in /etc/passwd and connects the incoming ssh session directly to port 2006
+of the olsrd txtinfo plugin. The txtinfo itself have to be configured to
+allow access by 127.0.0.1.
+
+If txtinfo is running on another port change the DEFAULT_TXTINFO_PORT
+constant in txtinfoshell.c or use a shell script as a wrapper that
+starts txtinfo-sh with the port number as the only parameter.

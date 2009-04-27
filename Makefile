@@ -231,7 +231,10 @@ watchdog:
 		$(MAKECMD) -C lib/watchdog
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
 
-build_all:	all libs config-verify
+txtinfoshell:
+	$(MAKECMD) -C contrib/txtinfoshell
+
+build_all:	all libs txtinfoshell config-verify
 install_all:	install install_libs config-verify_install
 clean_all:	clean clean_libs config-verify_clean
 
