@@ -364,7 +364,7 @@ olsr_expire_tc_entry(void *context)
 
   tc = (struct tc_entry *)context;
 
-  OLSR_PRINTF(3, "TCX: expired entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_PRINTF(3, "TC: expire node entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 
   tc->validity_timer = NULL;
 
@@ -385,7 +385,7 @@ olsr_expire_tc_edge_gc(void *context)
 
   tc = (struct tc_entry *)context;
 
-  OLSR_PRINTF(3, "TCX: garbaged entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
+  OLSR_PRINTF(3, "TC: expire edge entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
 
   tc->edge_gc_timer = NULL;
 
