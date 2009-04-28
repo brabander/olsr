@@ -814,16 +814,19 @@ parse_cfg_log(char *argstr, struct olsr_config *rcfg, char *rmsg, enum log_sever
       sprintf(rmsg, "Error, unknown logging source: %s\n", p);
       return CFG_EXIT;
     }
-    rcfg->log_event[sev][i] = true;
+
+    /* handle "all" keyword */
+    if (i == LOG_ALL) {
+      for (i = 0; i < LOG_SOURCE_COUNT; i++) {
+        rcfg->log_event[sev][i] = true;
+      }
+    }
+    else {
+      rcfg->log_event[sev][i] = true;
+    }
     p = next;
   }
 
-  /* handle "all" keyword */
-  if (i == LOG_ALL) {
-    for (i = 0; i < LOG_SOURCE_COUNT; i++) {
-      rcfg->log_event[sev][i] = true;
-    }
-  }
 
   PARSER_DEBUG_PRINTF("Log_%s:", LOG_SEVERITY_NAMES[sev]);
   for (i = 0, first = true; i < LOG_SOURCE_COUNT; i++) {
