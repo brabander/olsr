@@ -39,3 +39,5 @@ files/olsrd_conf_5.html
 files/olsr_switch_8.html
 files/olsrd_metrics_3.html
 files/olsrd-history.5
+contrib/txtinfoshell/txtinfo-sh
+
