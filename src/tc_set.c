@@ -341,8 +341,14 @@ olsr_tc_edge_to_string(struct tc_edge_entry *tc_edge)
 static void
 olsr_expire_tc_entry(void *context)
 {
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
   struct tc_entry *tc = context;
   tc->validity_timer = NULL;
+
+  OLSR_DEBUG(LOG_TC, "TC: expire node entry %s\n",
+             olsr_ip_to_string(&buf, &tc->addr));
 
   olsr_delete_tc_entry(tc);
   changes_topology = true;
@@ -356,7 +362,14 @@ olsr_expire_tc_entry(void *context)
 static void
 olsr_expire_tc_edge_gc(void *context)
 {
+#if !defined REMOVE_LOG_DEBUG
+  struct ipaddr_str buf;
+#endif
   struct tc_entry *tc = context;
+
+  OLSR_DEBUG(LOG_TC, "TC: expire edge GC for %s\n",
+             olsr_ip_to_string(&buf, &tc->addr));
+
   tc->edge_gc_timer = NULL;
 
   if (delete_outdated_tc_edges(tc)) {
