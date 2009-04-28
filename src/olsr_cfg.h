@@ -180,8 +180,6 @@ struct olsr_config {
   unsigned char clear_screen:1;        /* Clear screen during debug output? */
   unsigned char del_gws:1;             /* Delete InternetGWs at startup? */
   unsigned char fixed_origaddr:1;      /* Use a fixed originator addr == Node ID? */
-  unsigned char disp_packets_in:1;     /* Display incoming packets? */
-  unsigned char disp_packets_out:1;    /* Display outgoing packets? */
   unsigned char source_ip_mode:1;      /* Run OLSR routing in sourceip mode */
 
   uint16_t tos;                        /* IP Type of Service Byte */

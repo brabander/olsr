@@ -49,7 +49,6 @@
 #include "olsr.h"
 #include "net_os.h"
 #include "log.h"
-#include "print_packet.h"
 #include "net_olsr.h"
 
 #include <errno.h>
@@ -261,10 +260,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
     packetparser->function(olsr, in_if, from_addr);
   }
 
-  /* Display packet */
-  if (olsr_cnf->disp_packets_in) {
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
-  }
   msgsize = ntohs(olsr_cnf->ip_version == AF_INET ? m->v4.olsr_msgsize : m->v6.olsr_msgsize);
 
   for (; count > 0; m = (union olsr_message *)((char *)m + msgsize)) {

@@ -854,14 +854,6 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     rcfg->del_gws = true;
     PARSER_DEBUG_PRINTF("del_gws set to %d\n", rcfg->del_gws);
     break;
-  case 'X':                    /* dispin */
-    rcfg->disp_packets_in = true;
-    PARSER_DEBUG_PRINTF("disp_packets_in set to %d\n", rcfg->disp_packets_in);
-    break;
-  case 'O':                    /* dispout */
-    rcfg->disp_packets_out = true;
-    PARSER_DEBUG_PRINTF("disp_packets_out set to %d\n", rcfg->disp_packets_out);
-    break;
   case 'i':                    /* iface */
     /* Ignored */
     break;
@@ -1147,8 +1139,6 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
   static struct option long_options[] = {
     {"config",                   required_argument, 0, 'f'}, /* (filename) */
     {"delgw",                    no_argument,       0, 'D'},
-    {"dispin",                   no_argument,       0, 'X'},
-    {"dispout",                  no_argument,       0, 'O'},
     {"help",                     optional_argument, 0, 'h'},
     {"iface",                    no_argument,       0, 'i'}, /* if0 if1... */
 #ifdef WIN32
@@ -1199,6 +1189,8 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"LinkQualityWinsize",       required_argument, 0,  0 }, /* ignored */
     {"LinkQualityAlgorithm",     required_argument, 0,  0 }, /* ignored */
     {"LinkQualityAging",         required_argument, 0,  0 }, /* ignored */
+    {"dispout",                  no_argument,       0,  0 }, /* ignored */
+    {"dispin",                   no_argument,       0,  0 }, /* ignored */
     {0, 0, 0, 0}
   }, *popt = long_options;
   /* *INDENT-ON* */
@@ -1587,8 +1579,6 @@ olsr_get_default_cfg(void)
   cfg->clear_screen = DEF_CLEAR_SCREEN;
   assert(cfg->del_gws == false);
   assert(cfg->fixed_origaddr == false);
-  assert(cfg->disp_packets_in == false);
-  assert(cfg->disp_packets_out == false);
 
   cfg->tos = DEF_TOS;
   assert(cfg->rtproto == 0);

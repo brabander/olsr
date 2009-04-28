@@ -44,7 +44,6 @@
 #include "log.h"
 #include "olsr.h"
 #include "net_os.h"
-#include "print_packet.h"
 #include "link_set.h"
 #include "lq_packet.h"
 #include "olsr_logging.h"
@@ -362,13 +361,6 @@ net_output(struct interface *ifp)
     tmp_ptf->function(ifp->netbuf.buff, &ifp->netbuf.pending);
   }
 
-  /*
-   * if the -dispout option was given
-   * we print the content of the packets
-   */
-  if (olsr_cnf->disp_packets_out) {
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, ifp->netbuf.pending, &ifp->ip_addr);
-  }
   if (olsr_sendto(ifp->olsr_socket, ifp->netbuf.buff, ifp->netbuf.pending, MSG_DONTROUTE, &dstaddr.sin, dstaddr_size) < 0) {
 #if !defined REMOVE_LOG_WARN
     const int save_errno = errno;
