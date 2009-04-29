@@ -749,7 +749,8 @@ check_link_status(const struct hello_message *message, const struct interface *i
      * Note: If a neigh has 2 cards we can reach, the neigh
      * will send a Hello with the same IP mentined twice
      */
-    if (ipequal(&neighbors->address, &in_if->ip_addr)) {
+    if (ipequal(&neighbors->address, &in_if->ip_addr) &&
+        neighbors->link != UNSPEC_LINK) {
       ret = neighbors->link;
       if (SYM_LINK == ret) {
         break;
