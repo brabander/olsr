@@ -698,7 +698,8 @@ check_link_status(const struct lq_hello_message *message, const struct interface
      * Note: If a neigh has 2 cards we can reach, the neigh
      * will send a Hello with the same IP mentined twice
      */
-    if (olsr_ipcmp(&neighbors->addr, &in_if->ip_addr) == 0) {
+    if (olsr_ipcmp(&neighbors->addr, &in_if->ip_addr) == 0
+        && neighbors->link_type != UNSPEC_LINK) {
       ret = neighbors->link_type;
       if (SYM_LINK == ret) {
         break;
