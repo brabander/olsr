@@ -73,14 +73,6 @@ endif
 ifeq ($(REMOVE_LOG_ERROR),1)
   CPPFLAGS +=	-DREMOVE_LOG_ERROR
 endif
-ifeq ($(DEBUG),1)
-  CPPFLAGS +=	-DDEBUG
-  CFLAGS +=	-ggdb
-  OPTIMIZE ?=	-O0
-else
-  OPTIMIZE ?=	-Os
-endif
-
 
 ##############
 # add gcc warnings and optimizations if CFLAGS not set
@@ -160,6 +152,14 @@ ifndef CFLAGS
   endif
 
 endif # ifndef CFLAGS
+
+ifeq ($(DEBUG),1)
+  CPPFLAGS +=	-DDEBUG
+  CFLAGS +=	-ggdb
+  OPTIMIZE ?=	-O0
+else
+  OPTIMIZE ?=	-Os
+endif
 
 ifneq ($(MUDFLAP),0)
   CFLAGS +=	-fmudflapth
