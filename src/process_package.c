@@ -309,9 +309,10 @@ lookup_mpr_status(const struct hello_message *message, const struct interface *i
   struct hello_neighbor *neighbors;
 
   for (neighbors = message->neighbors; neighbors; neighbors = neighbors->next) {
-    if (olsr_cnf->ip_version ==
-        AF_INET ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4) : ip6equal(&neighbors->address.v6,
-                                                                                  &in_if->int6_addr.sin6_addr)) {
+    if ( neighbors->link != UNSPEC_LINK
+        && (olsr_cnf->ip_version == AF_INET
+            ? ip4equal(&neighbors->address.v4, &in_if->ip_addr.v4)
+            : ip6equal(&neighbors->address.v6, &in_if->int6_addr.sin6_addr))) {
 
       if (neighbors->link == SYM_LINK && neighbors->status == MPR_NEIGH) {
         return true;
