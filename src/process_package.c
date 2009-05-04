@@ -268,8 +268,10 @@ lookup_mpr_status(const struct lq_hello_message *message, const struct interface
   struct lq_hello_neighbor *neighbors;
 
   for (neighbors = message->neigh; neighbors; neighbors = neighbors->next) {
-    if (olsr_cnf->ip_version == AF_INET
-        ? ip4cmp(&neighbors->addr.v4, &in_if->ip_addr.v4) == 0 : ip6cmp(&neighbors->addr.v6, &in_if->int6_addr.sin6_addr) == 0) {
+    if ( neighbors->link_type != UNSPEC_LINK
+        && (olsr_cnf->ip_version == AF_INET
+            ? ip4cmp(&neighbors->addr.v4, &in_if->ip_addr.v4) == 0
+            : ip6cmp(&neighbors->addr.v6, &in_if->int6_addr.sin6_addr) == 0)) {
       return neighbors->link_type == SYM_LINK && neighbors->neigh_type == MPR_NEIGH ? true : false;
     }
   }
