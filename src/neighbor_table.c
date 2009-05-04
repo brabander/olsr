@@ -351,7 +351,7 @@ olsr_expire_nbr2_list(void *context)
   nbr2 = nbr2_list->neighbor_2;
 
   nbr2->neighbor_2_pointer--;
-  olsr_delete_neighbor_pointer(nbr2, &nbr->neighbor_main_addr);
+  olsr_delete_neighbor_pointer(nbr2, nbr);
 
   olsr_del_nbr2_list(nbr2_list);
 }
