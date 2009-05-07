@@ -83,6 +83,7 @@ bool olsr_input_mid(union olsr_message *, struct interface *, union olsr_ip_addr
 
 void olsr_init_mid_set(void);
 void olsr_delete_mid_entry(struct mid_entry *);
+void olsr_flush_mid_entries(struct tc_entry *);
 union olsr_ip_addr *EXPORT(olsr_lookup_main_addr_by_alias) (const union olsr_ip_addr *);
 struct mid_entry *olsr_lookup_tc_mid_entry(struct tc_entry *, const union olsr_ip_addr *);
 void olsr_print_mid_set(void);

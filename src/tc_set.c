@@ -44,6 +44,7 @@
 #include "lq_packet.h"
 #include "net_olsr.h"
 #include "link_set.h"
+#include "mid_set.h"
 #include "neighbor_table.h"
 #include "olsr_logging.h"
 
@@ -275,13 +276,17 @@ olsr_delete_tc_entry(struct tc_entry *tc)
     olsr_delete_rt_path(rtp);
   } OLSR_FOR_ALL_PREFIX_ENTRIES_END(tc, rtp);
 
+  /* Flush all MID aliases and kill the MID timer */
+  olsr_flush_mid_entries(tc);
+
+  /* Flush all HNA Networks and kill its timers */
+  olsr_flush_hna_nets(tc);
+
   /* Stop running timers */
   olsr_stop_timer(tc->edge_gc_timer);
   tc->edge_gc_timer = NULL;
   olsr_stop_timer(tc->validity_timer);
   tc->validity_timer = NULL;
-  olsr_stop_timer(tc->mid_timer);
-  tc->mid_timer = NULL;
 
   avl_delete(&tc_tree, &tc->vertex_node);
   olsr_unlock_tc_entry(tc);

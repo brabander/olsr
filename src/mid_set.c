@@ -56,7 +56,6 @@
 
 static struct mid_entry *olsr_lookup_mid_entry(const union olsr_ip_addr *);
 static void olsr_prune_mid_entries(const union olsr_ip_addr *main_addr, uint16_t mid_seqno);
-static void olsr_flush_mid_entries(struct tc_entry *);
 
 /* Root of the MID tree */
 struct avl_tree mid_tree;
@@ -253,6 +252,7 @@ olsr_insert_mid_entry(const union olsr_ip_addr *main_addr,
    * Add a rt_path for the alias.
    */
   olsr_insert_routing_table(&alias->mid_alias_addr, 8 * olsr_cnf->ipsize, main_addr, OLSR_RT_ORIGIN_MID);
+
   /*
    * Start the timer. Because we provide the TC reference
    * as callback data for the timer we need to lock
@@ -282,6 +282,7 @@ olsr_update_mid_entry(const union olsr_ip_addr *main_addr,
                       const union olsr_ip_addr *alias_addr, olsr_reltime vtime, uint16_t mid_seqno)
 {
   struct mid_entry *alias;
+
   if (!olsr_validate_address(alias_addr)) {
     return;
   }
@@ -397,7 +398,7 @@ olsr_delete_mid_entry(struct mid_entry *alias)
  *
  * @param entry the tc entry holding the aliases.
  */
-static void
+void
 olsr_flush_mid_entries(struct tc_entry *tc)
 {
   struct mid_entry *alias;
