@@ -567,6 +567,8 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
       OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
       OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));
       insert_mid_alias(&message.mid_origaddr, &tmp_adr->alias_addr, message.vtime);
+    } else {
+      olsr_insert_routing_table(&tmp_adr->alias_addr, olsr_cnf->maxplen, &message.mid_origaddr, OLSR_RT_ORIGIN_MID);
     }
     tmp_adr = tmp_adr->next;
   }
