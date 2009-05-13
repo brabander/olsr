@@ -791,7 +791,7 @@ serialize_mid4(struct interface *ifp)
   struct midaddr *addrs;
   struct interface *ifs;
 
-  if ((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL || ((ifnet->int_next == NULL) && (ipequal(&olsr_cnf->main_addr, &ifnet->ip_addr)))))
+  if ((olsr_cnf->ip_version != AF_INET) || (!ifp) || (ifnet == NULL) || ((ifnet->int_next == NULL) && (ipequal(&olsr_cnf->main_addr, &ifnet->ip_addr))))
     return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
@@ -881,7 +881,7 @@ serialize_mid6(struct interface *ifp)
 
   //printf("\t\tGenerating mid on %s\n", ifn->int_name);
 
-  if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL || ifnet->int_next == NULL))
+  if ((olsr_cnf->ip_version != AF_INET6) || (!ifp) || (ifnet == NULL) || ((ifnet->int_next == NULL) && (ipequal(&olsr_cnf->main_addr, &ifnet->ip_addr))))
     return false;
 
   remainsize = net_outbuffer_bytes_left(ifp);
