@@ -60,17 +60,17 @@ struct nbr2_list_entry {
 
 struct nbr_entry {
   union olsr_ip_addr neighbor_main_addr;
-  uint8_t status;
-  uint8_t willingness;
-  unsigned char is_mpr:1;
-  unsigned char was_mpr:1;             /* Used to detect changes in MPR */
-  unsigned char skip:1;
+  unsigned int status:3;
+  unsigned int willingness:3;
+  unsigned int is_mpr:1;
+  unsigned int was_mpr:1;             /* Used to detect changes in MPR */
+  unsigned int skip:1;
   int neighbor_2_nocov;
-  int linkcount;
+  unsigned int linkcount;
   struct nbr2_list_entry neighbor_2_list;
   struct nbr_entry *next;
   struct nbr_entry *prev;
-};
+} __attribute__ ((packed));
 
 #define OLSR_FOR_ALL_NBR_ENTRIES(nbr) \
 { \
