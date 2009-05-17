@@ -505,7 +505,7 @@ ipc_http(int fd, void *data, unsigned int flags)
 static int
 ipc_print_neigh(struct ipc_conn *conn)
 {
-  struct neighbor_entry *neigh;
+  struct nbr_entry *neigh;
 
   if (!conn->csv) {
     if (abuf_appendf(&conn->resp, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.\t2 Hop Neighbors\n") < 0) {
@@ -515,7 +515,7 @@ ipc_print_neigh(struct ipc_conn *conn)
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    struct neighbor_2_list_entry *list_2;
+    struct nbr2_list_entry *list_2;
     struct ipaddr_str buf1;
     int thop_cnt = 0;
     for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {

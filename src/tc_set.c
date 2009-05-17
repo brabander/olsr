@@ -232,7 +232,7 @@ olsr_change_myself_tc(void)
      * check if a main ip change destroyed our TC entries
      */
     if (refresh || entry->link_tc_edge == NULL) {
-      struct neighbor_entry *ne = entry->neighbor;
+      struct nbr_entry *ne = entry->neighbor;
       entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->neighbor_main_addr, 0);
 
       /*

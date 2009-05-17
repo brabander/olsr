@@ -431,7 +431,7 @@ add_link_entry(const union olsr_ip_addr *local,
                union olsr_ip_addr *remote_main, olsr_reltime vtime, olsr_reltime htime, struct interface *local_if)
 {
   struct link_entry *link;
-  struct neighbor_entry *neighbor;
+  struct nbr_entry *neighbor;
 #if !defined  REMOVE_LOG_DEBUG
   struct ipaddr_str localbuf, rembuf;
 #endif
@@ -655,7 +655,7 @@ update_link_entry(const union olsr_ip_addr *local,
  * @return the number of entries updated
  */
 int
-replace_neighbor_link_set(const struct neighbor_entry *old, struct neighbor_entry *new)
+replace_neighbor_link_set(const struct nbr_entry *old, struct nbr_entry *new)
 {
   struct link_entry *link;
   int retval = 0;

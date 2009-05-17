@@ -51,7 +51,7 @@
 
 
 struct neighbor_list_entry {
-  struct neighbor_entry *neighbor;
+  struct nbr_entry *neighbor;
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;
   olsr_linkcost saved_path_linkcost;
@@ -78,7 +78,7 @@ void
   olsr_init_two_hop_table(void);
 
 void
-  olsr_delete_neighbor_pointer(struct neighbor_2_entry *, struct neighbor_entry *);
+  olsr_delete_neighbor_pointer(struct neighbor_2_entry *, struct nbr_entry *);
 
 void
   olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);

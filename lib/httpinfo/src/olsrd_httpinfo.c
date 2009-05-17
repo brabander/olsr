@@ -925,7 +925,7 @@ build_config_body(struct autobuf *abuf)
 static void
 build_neigh_body(struct autobuf *abuf)
 {
-  struct neighbor_entry *neigh;
+  struct nbr_entry *neigh;
   struct link_entry *lnk;
   const char *colspan = resolve_ip_addresses ? " colspan=\"2\"" : "";
 
@@ -955,7 +955,7 @@ build_neigh_body(struct autobuf *abuf)
                colspan);
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    struct neighbor_2_list_entry *list_2;
+    struct nbr2_list_entry *list_2;
     int thop_cnt;
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &neigh->neighbor_main_addr, -1);

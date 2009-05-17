@@ -127,7 +127,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 #endif
 
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
-    struct neighbor_entry *nbr;
+    struct nbr_entry *nbr;
     struct neighbor_2_entry *nbr2 = olsr_lookup_two_hop_neighbor_table_mid(&alias->mid_alias_addr);
 
     /* Delete possible 2 hop neighbor */
@@ -142,7 +142,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
     /* Delete a possible neighbor entry */
     nbr = olsr_lookup_neighbor_table_alias(&alias->mid_alias_addr);
     if (nbr) {
-      struct neighbor_entry *real_nbr = olsr_lookup_neighbor_table_alias(&tc->addr);
+      struct nbr_entry *real_nbr = olsr_lookup_neighbor_table_alias(&tc->addr);
       if (real_nbr) {
 
         OLSR_DEBUG(LOG_MID, "Delete bogus neighbor entry %s (real %s)\n",
@@ -170,7 +170,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 static void
 olsr_fixup_mid_main_addr(const union olsr_ip_addr *main_addr, const union olsr_ip_addr *alias_addr)
 {
-  struct neighbor_entry *nbr_new, *nbr_old = olsr_lookup_neighbor_table_alias(alias_addr);
+  struct nbr_entry *nbr_new, *nbr_old = olsr_lookup_neighbor_table_alias(alias_addr);
   struct mid_entry *mid_old;
   int ne_ref_rp_count;
 #if !defined REMOVE_LOG_DEBUG

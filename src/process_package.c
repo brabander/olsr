@@ -52,9 +52,9 @@
 
 static bool olsr_input_hello(union olsr_message *ser, struct interface *inif, union olsr_ip_addr *from);
 
-static void process_message_neighbors(struct neighbor_entry *, const struct lq_hello_message *);
+static void process_message_neighbors(struct nbr_entry *, const struct lq_hello_message *);
 
-static void linking_this_2_entries(struct neighbor_entry *, struct neighbor_2_entry *, olsr_reltime);
+static void linking_this_2_entries(struct nbr_entry *, struct neighbor_2_entry *, olsr_reltime);
 
 static bool lookup_mpr_status(const struct lq_hello_message *, const struct interface *);
 
@@ -68,7 +68,7 @@ static void hello_tap(struct lq_hello_message *, struct interface *, const union
  * @return nada
  */
 static void
-process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello_message *message)
+process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_message *message)
 {
   struct lq_hello_neighbor *message_neighbors;
   olsr_linkcost first_hop_pathcost;
@@ -96,7 +96,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
     }
 
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
-      struct neighbor_2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
+      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
       if (two_hop_neighbor_yet != NULL) {
         struct neighbor_list_entry *walker;
 
@@ -168,7 +168,7 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
     }
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
       struct neighbor_list_entry *walker;
-      struct neighbor_2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
+      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
 
       if (!two_hop_neighbor_yet) {
         continue;
@@ -222,10 +222,10 @@ process_message_neighbors(struct neighbor_entry *neighbor, const struct lq_hello
  * @return nada
  */
 static void
-linking_this_2_entries(struct neighbor_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, olsr_reltime vtime)
+linking_this_2_entries(struct nbr_entry *neighbor, struct neighbor_2_entry *two_hop_neighbor, olsr_reltime vtime)
 {
   struct neighbor_list_entry *list_of_1_neighbors = olsr_malloc(sizeof(*list_of_1_neighbors), "Link entries 1");
-  struct neighbor_2_list_entry *list_of_2_neighbors = olsr_malloc(sizeof(*list_of_2_neighbors), "Link entries 2");
+  struct nbr2_list_entry *list_of_2_neighbors = olsr_malloc(sizeof(*list_of_2_neighbors), "Link entries 2");
 
   list_of_1_neighbors->neighbor = neighbor;
   list_of_1_neighbors->path_linkcost = LINK_COST_BROKEN;

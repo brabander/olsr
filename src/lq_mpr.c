@@ -53,7 +53,7 @@ olsr_calculate_lq_mpr(void)
   struct neighbor_2_entry *neigh2;
   struct neighbor_list_entry *walker;
   int i, k;
-  struct neighbor_entry *neigh;
+  struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
   bool mpr_changes = false;
 

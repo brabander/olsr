@@ -279,7 +279,7 @@ olsr_calculate_routing_table(void)
   struct tc_entry *tc;
   struct rt_path *rtp;
   struct tc_edge_entry *tc_edge;
-  struct neighbor_entry *neigh;
+  struct nbr_entry *neigh;
   struct link_entry *link;
   int path_count = 0;
 

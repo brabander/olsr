@@ -83,7 +83,7 @@ static void
   ipc_action(int, void *, unsigned int);
 
 static void
-  ipc_print_neigh_link(int, const struct neighbor_entry *neighbor);
+  ipc_print_neigh_link(int, const struct nbr_entry *neighbor);
 
 static void
   ipc_print_tc_link(int, const struct tc_entry *, const struct tc_edge_entry *);
@@ -141,7 +141,7 @@ olsr_plugin_exit(void)
 
 
 static void
-ipc_print_neigh_link(int ipc_connection, const struct neighbor_entry *neighbor)
+ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
 {
   struct ipaddr_str mainaddrstrbuf, strbuf;
   olsr_linkcost etx = 0.0;
@@ -260,7 +260,7 @@ pcf_event(int ipc_connection, int chgs_neighborhood, int chgs_topology, int chgs
   int res = 0;
 
   if (chgs_neighborhood || chgs_topology || chgs_hna) {
-    struct neighbor_entry *neighbor_table_tmp;
+    struct nbr_entry *neighbor_table_tmp;
     struct tc_entry *tc;
     struct ip_prefix_entry *hna;
 

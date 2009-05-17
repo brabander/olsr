@@ -78,7 +78,7 @@ olsr_init_two_hop_table(void)
  *@return nada
  */
 void
-olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, struct neighbor_entry *neigh)
+olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, struct nbr_entry *neigh)
 {
   struct neighbor_list_entry *entry = two_hop_entry->neighbor_2_nblist.next;
   while (entry != &two_hop_entry->neighbor_2_nblist) {
@@ -112,7 +112,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 
   /* Delete one hop links */
   while (one_hop_list != &two_hop_neighbor->neighbor_2_nblist) {
-    struct neighbor_entry *one_hop_entry = one_hop_list->neighbor;
+    struct nbr_entry *one_hop_entry = one_hop_list->neighbor;
     struct neighbor_list_entry *entry_to_delete = one_hop_list;
 
     olsr_delete_neighbor_2_pointer(one_hop_entry, two_hop_neighbor);

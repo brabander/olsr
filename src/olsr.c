@@ -262,7 +262,7 @@ int
 olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_ip_addr *from_addr)
 {
   union olsr_ip_addr *src;
-  struct neighbor_entry *neighbor;
+  struct nbr_entry *neighbor;
   int msgsize;
   struct interface *ifn;
 
