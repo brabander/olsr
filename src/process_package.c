@@ -96,7 +96,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
     }
 
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
-      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
+      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_nbr2_list_entry(neighbor, &message_neighbors->addr);
       if (two_hop_neighbor_yet != NULL) {
         struct neighbor_list_entry *walker;
 
@@ -168,7 +168,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
     }
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
       struct neighbor_list_entry *walker;
-      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_my_neighbors(neighbor, &message_neighbors->addr);
+      struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_nbr2_list_entry(neighbor, &message_neighbors->addr);
 
       if (!two_hop_neighbor_yet) {
         continue;

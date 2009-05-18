@@ -115,7 +115,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
     struct nbr_entry *one_hop_entry = one_hop_list->neighbor;
     struct neighbor_list_entry *entry_to_delete = one_hop_list;
 
-    olsr_delete_neighbor_2_pointer(one_hop_entry, two_hop_neighbor);
+    olsr_delete_nbr2_list_entry(one_hop_entry, two_hop_neighbor);
     one_hop_list = one_hop_list->next;
     /* no need to dequeue */
     free(entry_to_delete);

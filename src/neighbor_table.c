@@ -116,7 +116,7 @@ olsr_del_nbr2_list(struct nbr2_list_entry *nbr2_list)
  * @return positive if entry deleted
  */
 int
-olsr_delete_neighbor_2_pointer(struct nbr_entry *neighbor, struct neighbor_2_entry *neigh2)
+olsr_delete_nbr2_list_entry(struct nbr_entry *neighbor, struct neighbor_2_entry *neigh2)
 {
   struct nbr2_list_entry *nbr2_list;
 
@@ -145,7 +145,7 @@ olsr_delete_neighbor_2_pointer(struct nbr_entry *neighbor, struct neighbor_2_ent
  *representing the two hop neighbor if found. NULL if not found.
  */
 struct nbr2_list_entry *
-olsr_lookup_my_neighbors(const struct nbr_entry *neighbor, const union olsr_ip_addr *neighbor_main_address)
+olsr_lookup_nbr2_list_entry(const struct nbr_entry *neighbor, const union olsr_ip_addr *neighbor_main_address)
 {
   struct nbr2_list_entry *entry;
 
@@ -171,7 +171,7 @@ olsr_lookup_my_neighbors(const struct nbr_entry *neighbor, const union olsr_ip_a
  */
 
 int
-olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
+olsr_delete_nbr_entry(const union olsr_ip_addr *neighbor_addr)
 {
   struct nbr2_list_entry *two_hop_list, *two_hop_to_delete;
   uint32_t hash;
@@ -233,7 +233,7 @@ olsr_delete_neighbor_table(const union olsr_ip_addr *neighbor_addr)
  *@return 0 if neighbor already exists 1 if inserted
  */
 struct nbr_entry *
-olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
+olsr_add_nbr_entry(const union olsr_ip_addr *main_addr)
 {
   uint32_t hash;
   struct nbr_entry *new_neigh;
@@ -283,7 +283,7 @@ olsr_insert_neighbor_table(const union olsr_ip_addr *main_addr)
  *address. NULL if not found.
  */
 struct nbr_entry *
-olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
+olsr_lookup_nbr_entry(const union olsr_ip_addr *dst)
 {
   /*
    *Find main address of node
@@ -291,7 +291,7 @@ olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
   union olsr_ip_addr *tmp_ip = olsr_lookup_main_addr_by_alias(dst);
   if (tmp_ip != NULL)
     dst = tmp_ip;
-  return olsr_lookup_neighbor_table_alias(dst);
+  return olsr_lookup_nbr_entry_alias(dst);
 }
 
 
@@ -304,7 +304,7 @@ olsr_lookup_neighbor_table(const union olsr_ip_addr *dst)
  *address. NULL if not found.
  */
 struct nbr_entry *
-olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
+olsr_lookup_nbr_entry_alias(const union olsr_ip_addr *dst)
 {
   struct nbr_entry *entry;
   uint32_t hash = olsr_ip_hashing(dst);
@@ -321,7 +321,7 @@ olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *dst)
 
 
 int
-update_neighbor_status(struct nbr_entry *entry, int lnk)
+olsr_update_nbr_status(struct nbr_entry *entry, int lnk)
 {
   /*
    * Update neighbor entry

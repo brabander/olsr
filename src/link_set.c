@@ -293,7 +293,7 @@ olsr_delete_link_entry(struct link_entry *link)
 
   /* Delete neighbor entry */
   if (link->neighbor->linkcount == 1) {
-    olsr_delete_neighbor_table(&link->neighbor->neighbor_main_addr);
+    olsr_delete_nbr_entry(&link->neighbor->neighbor_main_addr);
   } else {
     link->neighbor->linkcount--;
   }
@@ -371,7 +371,7 @@ olsr_expire_link_sym_timer(void *context)
   }
 
   link->prev_status = lookup_link_status(link);
-  update_neighbor_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
+  olsr_update_nbr_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
   changes_neighborhood = true;
 }
 
@@ -386,7 +386,7 @@ olsr_expire_link_hello_timer(void *context)
   link = (struct link_entry *)context;
 
   /* update neighbor status */
-  update_neighbor_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
+  olsr_update_nbr_status(link->neighbor, get_neighbor_status(&link->neighbor_iface_addr));
 }
 
 /**
@@ -499,10 +499,10 @@ add_link_entry(const union olsr_ip_addr *local,
    */
 
   /* Neighbor MUST exist! */
-  neighbor = olsr_lookup_neighbor_table(remote_main);
+  neighbor = olsr_lookup_nbr_entry(remote_main);
   if (!neighbor) {
     OLSR_DEBUG(LOG_LINKS, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(&rembuf, remote_main));
-    neighbor = olsr_insert_neighbor_table(remote_main);
+    neighbor = olsr_add_nbr_entry(remote_main);
   }
 
   neighbor->linkcount++;
@@ -639,7 +639,7 @@ update_link_entry(const union olsr_ip_addr *local,
   }
 
   /* Update neighbor */
-  update_neighbor_status(entry->neighbor, get_neighbor_status(remote));
+  olsr_update_nbr_status(entry->neighbor, get_neighbor_status(remote));
 
   return entry;
 }

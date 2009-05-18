@@ -90,7 +90,7 @@ olsr_calculate_lq_mpr(void)
 
       /* check whether this 2-hop neighbour is also a neighbour */
 
-      neigh = olsr_lookup_neighbor_table(&neigh2->neighbor_2_addr);
+      neigh = olsr_lookup_nbr_entry(&neigh2->neighbor_2_addr);
 
       /* if it's a neighbour and also symmetric, then examine
          the link quality */

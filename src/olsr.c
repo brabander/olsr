@@ -284,7 +284,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   if (!src)
     src = from_addr;
 
-  neighbor = olsr_lookup_neighbor_table(src);
+  neighbor = olsr_lookup_nbr_entry(src);
   if (!neighbor)
     return 0;
 

@@ -94,18 +94,18 @@ EXPORT(neighbortable)[HASHSIZE];
        olsr_init_neighbor_table(void);
 
      int
-       olsr_delete_neighbor_2_pointer(struct nbr_entry *, struct neighbor_2_entry *);
+       olsr_delete_nbr2_list_entry(struct nbr_entry *, struct neighbor_2_entry *);
 
-     struct nbr2_list_entry *olsr_lookup_my_neighbors(const struct nbr_entry *, const union olsr_ip_addr *);
+     struct nbr2_list_entry *olsr_lookup_nbr2_list_entry(const struct nbr_entry *, const union olsr_ip_addr *);
 
      int
-       olsr_delete_neighbor_table(const union olsr_ip_addr *);
+       olsr_delete_nbr_entry(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_insert_neighbor_table(const union olsr_ip_addr *);
+     struct nbr_entry *olsr_add_nbr_entry(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
+     struct nbr_entry *olsr_lookup_nbr_entry(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
+     struct nbr_entry *olsr_lookup_nbr_entry_alias(const union olsr_ip_addr *);
 
      void
        olsr_time_out_two_hop_neighbors(struct nbr_entry *);
@@ -119,7 +119,7 @@ EXPORT(neighbortable)[HASHSIZE];
 
 
      int
-       update_neighbor_status(struct nbr_entry *, int);
+       olsr_update_nbr_status(struct nbr_entry *, int);
 
 #endif
 

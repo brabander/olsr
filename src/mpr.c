@@ -115,7 +115,7 @@ olsr_find_2_hop_neighbors_with_1_link(int willingness)
       //two_hop_neighbor->neighbor_2_state=0;
       //two_hop_neighbor->mpr_covered_count = 0;
 
-      dup_neighbor = olsr_lookup_neighbor_table(&two_hop_neighbor->neighbor_2_addr);
+      dup_neighbor = olsr_lookup_nbr_entry(&two_hop_neighbor->neighbor_2_addr);
 
       if ((dup_neighbor != NULL) && (dup_neighbor->status != NOT_SYM)) {
         OLSR_DEBUG(LOG_MPR, "(1)Skipping 2h neighbor %s - already 1hop\n",
@@ -176,7 +176,7 @@ olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_c
 
   for (second_hop_entries = one_hop_neighbor->neighbor_2_list.next;
        second_hop_entries != &one_hop_neighbor->neighbor_2_list; second_hop_entries = second_hop_entries->next) {
-    dup_neighbor = olsr_lookup_neighbor_table(&second_hop_entries->neighbor_2->neighbor_2_addr);
+    dup_neighbor = olsr_lookup_nbr_entry(&second_hop_entries->neighbor_2->neighbor_2_addr);
 
     if ((dup_neighbor != NULL) && (dup_neighbor->status == SYM)) {
       OLSR_DEBUG(LOG_MPR, "(2)Skipping 2h neighbor %s - already 1hop\n",
@@ -357,7 +357,7 @@ olsr_calculate_two_hop_neighbors(void)
     for (twohop_neighbors = a_neighbor->neighbor_2_list.next;
          twohop_neighbors != &a_neighbor->neighbor_2_list; twohop_neighbors = twohop_neighbors->next) {
 
-      dup_neighbor = olsr_lookup_neighbor_table(&twohop_neighbors->neighbor_2->neighbor_2_addr);
+      dup_neighbor = olsr_lookup_nbr_entry(&twohop_neighbors->neighbor_2->neighbor_2_addr);
 
       if ((dup_neighbor == NULL) || (dup_neighbor->status != SYM)) {
         n_count++;
@@ -504,7 +504,7 @@ olsr_optimize_mpr_set(void)
         for (two_hop_list = a_neighbor->neighbor_2_list.next;
              two_hop_list != &a_neighbor->neighbor_2_list; two_hop_list = two_hop_list->next) {
 
-          const struct nbr_entry *dup_neighbor = olsr_lookup_neighbor_table(&two_hop_list->neighbor_2->neighbor_2_addr);
+          const struct nbr_entry *dup_neighbor = olsr_lookup_nbr_entry(&two_hop_list->neighbor_2->neighbor_2_addr);
 
           if ((dup_neighbor != NULL) && (dup_neighbor->status != NOT_SYM)) {
             continue;
