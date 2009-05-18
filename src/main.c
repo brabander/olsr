@@ -478,6 +478,7 @@ olsr_shutdown(void)
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
     olsr_delete_tc_entry(tc);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+  olsr_unlock_tc_entry(tc_myself);
 
   /* Flush MID database */
   OLSR_FOR_ALL_MID_ENTRIES(mid) {

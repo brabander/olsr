@@ -204,7 +204,8 @@ void
 olsr_change_myself_tc(void)
 {
   struct link_entry *entry;
-  bool refresh = false;
+  bool main_ip_change = false;
+
   if (tc_myself) {
 
     /*
@@ -218,20 +219,28 @@ olsr_change_myself_tc(void)
      * Flush our own tc_entry.
      */
     olsr_delete_tc_entry(tc_myself);
-    refresh = true;
+
+    /*
+     * Clear the reference.
+     */
+    olsr_unlock_tc_entry(tc_myself);
+    tc_myself = NULL;
+
+    main_ip_change = true;
   }
 
   /*
    * The old entry for ourselves is gone, generate a new one and trigger SPF.
    */
   tc_myself = olsr_add_tc_entry(&olsr_cnf->router_id);
+  olsr_lock_tc_entry(tc_myself);
 
   OLSR_FOR_ALL_LINK_ENTRIES(entry) {
 
     /**
      * check if a main ip change destroyed our TC entries
      */
-    if (refresh || entry->link_tc_edge == NULL) {
+    if (main_ip_change || entry->link_tc_edge == NULL) {
       struct nbr_entry *ne = entry->neighbor;
       entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->neighbor_main_addr, 0);
 
