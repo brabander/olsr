@@ -8,6 +8,7 @@ syntax: glob
 *.swp
 *~
 *.out.*
+*-backup
 TAGS
 olsrd
 config-verify
