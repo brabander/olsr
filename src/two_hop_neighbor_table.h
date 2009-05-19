@@ -70,28 +70,33 @@ struct neighbor_2_entry {
   struct neighbor_2_entry *next;
 };
 
+/*
+ * macros for traversing two-hop neighbors lists.
+ * it is recommended to use this because it hides all the internal
+ * datastructure from the callers.
+ *
+ * the loop prefetches the next node in order to not loose context if
+ * for example the caller wants to delete the current entry.
+ */
+#define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) \
+  { \
+  int _idx; \
+  for (_idx = 0; _idx < HASHSIZE; _idx++) { \
+  for(nbr2 = two_hop_neighbortable[_idx].next; \
+  nbr2 != &two_hop_neighbortable[_idx]; \
+  nbr2 = nbr2->next)
+#define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) }}
 
 extern struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
 
-
-void
-  olsr_init_two_hop_table(void);
-
-void
-  olsr_delete_neighbor_pointer(struct neighbor_2_entry *, struct nbr_entry *);
-
-void
-  olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
-
-void
-  olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);
-
+void olsr_init_two_hop_table(void); 
+void olsr_delete_neighbor_pointer(struct neighbor_2_entry *, struct nbr_entry *);
+void olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
+void olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);
 struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
-
 struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *);
-
-void
-  olsr_print_two_hop_neighbor_table(void);
+void olsr_link_nbr_nbr2(struct nbr_entry *, struct neighbor_2_entry *, float);
+void olsr_print_two_hop_neighbor_table(void);
 
 #endif
 

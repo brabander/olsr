@@ -49,6 +49,7 @@
 
 
 struct nbr2_list_entry {
+  struct avl_node nbr2_list_node;
   struct nbr_entry *nbr2_nbr;     /* backpointer to owning nbr entry */
   struct neighbor_2_entry *neighbor_2;
   struct timer_entry *nbr2_list_timer;
@@ -56,21 +57,28 @@ struct nbr2_list_entry {
   struct nbr2_list_entry *prev;
 };
 
+AVLNODE2STRUCT(nbr2_list_node_to_nbr2_list, struct nbr2_list_entry, nbr2_list_node);
+
 #define OLSR_NBR2_LIST_JITTER 5 /* percent */
 
 struct nbr_entry {
+  struct avl_node nbr_node; /* nbr keyed by ip address */
   union olsr_ip_addr neighbor_main_addr;
+  struct avl_tree nbr2_list_tree; /* subtree for nbr2 pointers */ 
   unsigned int status:3;
   unsigned int willingness:3;
   unsigned int is_mpr:1;
   unsigned int was_mpr:1;             /* Used to detect changes in MPR */
   unsigned int skip:1;
-  int neighbor_2_nocov;
+  unsigned int neighbor_2_nocov;
   unsigned int linkcount;
+  unsigned int nbr_refcount;
   struct nbr2_list_entry neighbor_2_list;
   struct nbr_entry *next;
   struct nbr_entry *prev;
 } __attribute__ ((packed));
+
+AVLNODE2STRUCT(nbr_node_to_nbr, struct nbr_entry, nbr_node);
 
 #define OLSR_FOR_ALL_NBR_ENTRIES(nbr) \
 { \
@@ -81,6 +89,11 @@ struct nbr_entry {
         nbr = nbr->next)
 #define OLSR_FOR_ALL_NBR_ENTRIES_END(nbr) }}
 
+/*
+ * The one hop neighbor tree
+ */
+extern struct avl_tree
+EXPORT(nbr_tree);
 
 /*
  * The neighbor table
@@ -88,38 +101,38 @@ struct nbr_entry {
 extern struct nbr_entry
 EXPORT(neighbortable)[HASHSIZE];
 
-     extern struct olsr_cookie_info *nbr2_list_timer_cookie;
+extern struct olsr_cookie_info *nbr2_list_timer_cookie;
 
-     void
-       olsr_init_neighbor_table(void);
+void
+olsr_init_neighbor_table(void);
 
-     int
-       olsr_delete_nbr2_list_entry(struct nbr_entry *, struct neighbor_2_entry *);
+int
+olsr_delete_neighbor_2_pointer(struct nbr_entry *, struct neighbor_2_entry *);
 
-     struct nbr2_list_entry *olsr_lookup_nbr2_list_entry(const struct nbr_entry *, const union olsr_ip_addr *);
+struct nbr2_list_entry *olsr_lookup_nbr2_list_entry(struct nbr_entry *,
+                                                    const union olsr_ip_addr *);
+int
+olsr_delete_neighbor_table(const union olsr_ip_addr *);
 
-     int
-       olsr_delete_nbr_entry(const union olsr_ip_addr *);
+struct nbr_entry *olsr_insert_neighbor_table(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_add_nbr_entry(const union olsr_ip_addr *);
+struct nbr_entry *olsr_lookup_neighbor_table(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_lookup_nbr_entry(const union olsr_ip_addr *);
+struct nbr_entry *olsr_lookup_neighbor_table_alias(const union olsr_ip_addr *);
 
-     struct nbr_entry *olsr_lookup_nbr_entry_alias(const union olsr_ip_addr *);
+void
+olsr_time_out_two_hop_neighbors(struct nbr_entry *);
 
-     void
-       olsr_time_out_two_hop_neighbors(struct nbr_entry *);
+void
+olsr_time_out_neighborhood_tables(void);
+void olsr_expire_nbr2_list(void *);
 
-     void
-       olsr_time_out_neighborhood_tables(void);
-     void olsr_expire_nbr2_list(void *);
-
-     void
-       olsr_print_neighbor_table(void);
+void
+olsr_print_neighbor_table(void);
 
 
-     int
-       olsr_update_nbr_status(struct nbr_entry *, int);
+int
+update_neighbor_status(struct nbr_entry *, int);
 
 #endif
 

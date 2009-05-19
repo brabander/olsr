@@ -39,6 +39,7 @@
  *
  */
 #include "two_hop_neighbor_table.h"
+#include "olsr.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "mid_set.h"
@@ -115,7 +116,7 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
     struct nbr_entry *one_hop_entry = one_hop_list->neighbor;
     struct neighbor_list_entry *entry_to_delete = one_hop_list;
 
-    olsr_delete_nbr2_list_entry(one_hop_entry, two_hop_neighbor);
+    olsr_delete_nbr2_list_entry_by_addr(one_hop_entry, &two_hop_neighbor->neighbor_2_addr);
     one_hop_list = one_hop_list->next;
     /* no need to dequeue */
     free(entry_to_delete);
@@ -199,6 +200,37 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
   }
   return NULL;
 }
+
+
+/**
+ * Links a one-hop neighbor with a 2-hop neighbor.
+ *
+ * @param neighbor the 1-hop neighbor
+ * @param two_hop_neighbor the 2-hop neighbor
+ * @return nada
+ */
+void
+olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, float vtime)
+{
+  struct neighbor_list_entry *nbr_list;
+
+  nbr_list = olsr_malloc(sizeof(struct neighbor_list_entry), "Link entries 1");
+
+  nbr_list->neighbor = nbr;
+
+  nbr_list->second_hop_linkcost = LINK_COST_BROKEN;
+  nbr_list->path_linkcost = LINK_COST_BROKEN;
+  nbr_list->saved_path_linkcost = LINK_COST_BROKEN;
+
+  /* Add nbr_list to nbr2 */
+  nbr2->neighbor_2_nblist.next->prev = nbr_list;
+  nbr_list->next = nbr2->neighbor_2_nblist.next;
+  nbr2->neighbor_2_nblist.next = nbr_list;
+  nbr_list->prev = &nbr2->neighbor_2_nblist;
+
+  olsr_add_nbr2_list_entry(nbr, nbr2, vtime);
+}
+
 
 /**
  *Print the two hop neighbor table to STDOUT.
