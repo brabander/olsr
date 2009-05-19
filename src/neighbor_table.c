@@ -54,8 +54,7 @@
 
 #include <stdlib.h>
 
-/* Root of the one hop neighbor database */
-struct avl_tree nbr_tree;
+
 struct nbr_entry neighbortable[HASHSIZE];
 
 /* Some cookies for stats keeping */
@@ -64,10 +63,17 @@ struct olsr_cookie_info *nbr2_list_timer_cookie = NULL;
 void
 olsr_init_neighbor_table(void)
 {
+  int i;
+
   OLSR_INFO(LOG_NEIGHTABLE, "Initialize neighbor table...\n");
-  avl_init(&nbr_tree, avl_comp_default);
+
+  for (i = 0; i < HASHSIZE; i++) {
+    neighbortable[i].next = &neighbortable[i];
+    neighbortable[i].prev = &neighbortable[i];
+  }
 
   nbr2_list_timer_cookie = olsr_alloc_cookie("2-Hop Neighbor List", OLSR_COOKIE_TYPE_TIMER);
+
 }
 
 /**
@@ -139,21 +145,23 @@ olsr_delete_nbr2_list_entry(struct nbr_entry *neighbor, struct neighbor_2_entry 
  *representing the two hop neighbor if found. NULL if not found.
  */
 struct nbr2_list_entry *
-olsr_lookup_nbr2_list_entry(struct nbr_entry *nbr,
-                            const union olsr_ip_addr *addr)
+olsr_lookup_nbr2_list_entry(const struct nbr_entry *neighbor, const union olsr_ip_addr *neighbor_main_address)
 {
-  struct avl_node *node;
+  struct nbr2_list_entry *entry;
 
-  node = avl_find(&nbr->nbr2_list_tree, addr);
-  if (node) {
-    return nbr2_list_node_to_nbr2_list(node);
+  for (entry = neighbor->neighbor_2_list.next; entry != &neighbor->neighbor_2_list; entry = entry->next) {
+
+    if (olsr_ipcmp(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address) == 0)
+      return entry;
+
   }
   return NULL;
-}  
+}
+
 
 
 /**
- *Delete a neighbor table entry.
+ *Delete a neighbr table entry.
  *
  *Remember: Deleting a neighbor entry results
  *the deletion of its 2 hop neighbors list!!!
