@@ -76,7 +76,7 @@ show-ignored-warnings:
 src/builddata.c:
 	@$(RM) "$@"
 	@echo "#include \"defs.h\"" >> "$@"
-	@echo "const char olsrd_version[] = \"olsr.org - $(VERS)`hg log -r tip|grep changeset|sed -e s/changeset:\ */\ changeset\ /`\";"  >> "$@"
+	@echo "const char olsrd_version[] = \"olsr.org - $(VERS)`hg log -r tip|grep -E "^changeset:"|sed -e s/changeset:\ */\ changeset\ /`\";"  >> "$@"
 	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@"
 	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@"
 
