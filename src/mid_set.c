@@ -150,10 +150,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 
         replace_neighbor_link_set(nbr, real_nbr);
 
-        /* Dequeue */
-        DEQUEUE_ELEM(nbr);
-        /* Delete */
-        free(nbr);
+        olsr_delete_nbr_entry(&alias->mid_alias_addr);
 
         changes_neighborhood = true;
       }

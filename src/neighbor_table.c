@@ -54,38 +54,86 @@
 
 #include <stdlib.h>
 
-
-struct nbr_entry neighbortable[HASHSIZE];
+/* Root of the one hop neighbor database */
+struct avl_tree nbr_tree;
 
 /* Some cookies for stats keeping */
 struct olsr_cookie_info *nbr2_list_timer_cookie = NULL;
+struct olsr_cookie_info *nbr2_list_mem_cookie = NULL;
+struct olsr_cookie_info *nbr_mem_cookie = NULL;
 
+/*
+ * Init neighbor tables.
+ */
 void
 olsr_init_neighbor_table(void)
 {
-  int i;
-
-  OLSR_INFO(LOG_NEIGHTABLE, "Initialize neighbor table...\n");
-
-  for (i = 0; i < HASHSIZE; i++) {
-    neighbortable[i].next = &neighbortable[i];
-    neighbortable[i].prev = &neighbortable[i];
-  }
+  OLSR_INFO(LOG_NEIGHTABLE, "Initializing neighbor tree.\n");
+  avl_init(&nbr_tree, avl_comp_default);
 
   nbr2_list_timer_cookie = olsr_alloc_cookie("2-Hop Neighbor List", OLSR_COOKIE_TYPE_TIMER);
 
+  nbr2_list_mem_cookie = olsr_alloc_cookie("2-Hop Neighbor List", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(nbr2_list_mem_cookie, sizeof(struct nbr2_list_entry));
+
+  nbr_mem_cookie = olsr_alloc_cookie("1-Hop Neighbor", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(nbr_mem_cookie, sizeof(struct nbr_entry));
 }
+
+
+/**
+ * Add a neighbor 2 reference to a neighbor.
+ */
+struct nbr2_list_entry *
+olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, float vtime)
+{
+  struct nbr2_list_entry *nbr2_list;
+
+  /*
+   * check first if the entry exists.
+   */
+  nbr2_list = olsr_lookup_nbr2_list_entry(nbr, &nbr2->neighbor_2_addr);
+  if (nbr2_list) {
+
+    /* 
+     * Refresh timer.
+     */
+    olsr_change_timer(nbr2_list->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+    return nbr2_list;
+  }
+
+  /*
+   * Reference not found, allocate and init a fresh one.
+   */
+  nbr2_list = olsr_cookie_malloc(nbr2_list_mem_cookie);
+
+  nbr2_list->neighbor_2 = nbr2;
+  nbr2->neighbor_2_pointer++;   /* XXX move to olsr_lock_nbr2 () */
+  nbr2_list->nbr2_nbr = nbr;    /* XXX nbr needs refcount protection as well */
+
+  /*
+   * Start the timer.
+   */
+  olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT,
+                   &olsr_expire_nbr2_list, nbr2_list, nbr2_list_timer_cookie->ci_id);
+
+  return nbr2_list;
+}
+
 
 /**
  * Unlink, delete and free a nbr2_list entry.
  */
 static void
-olsr_del_nbr2_list(struct nbr2_list_entry *nbr2_list)
+olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
 {
   struct neighbor_2_entry *nbr2;
+  struct nbr_entry *nbr;
 
   nbr2 = nbr2_list->neighbor_2;
+  nbr = nbr2_list->nbr2_nbr;
 
+  /* XXX move to olsr_unlock_nbr2() */
   if (nbr2->neighbor_2_pointer < 1) {
     DEQUEUE_ELEM(nbr2);
     free(nbr2);
@@ -97,10 +145,10 @@ olsr_del_nbr2_list(struct nbr2_list_entry *nbr2_list)
   olsr_stop_timer(nbr2_list->nbr2_list_timer);
   nbr2_list->nbr2_list_timer = NULL;
 
-  /* Dequeue */
-  DEQUEUE_ELEM(nbr2_list);
+  /* Remove from neighbor2 reference subtree */
+  avl_delete(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node);
 
-  free(nbr2_list);
+  olsr_cookie_free(nbr2_list_mem_cookie, nbr2_list);
 
   /* Set flags to recalculate the MPR set and the routing table */
   changes_neighborhood = true;
@@ -115,209 +163,181 @@ olsr_del_nbr2_list(struct nbr2_list_entry *nbr2_list)
  *
  * @return positive if entry deleted
  */
-int
-olsr_delete_nbr2_list_entry(struct nbr_entry *neighbor, struct neighbor_2_entry *neigh2)
+bool
+olsr_delete_nbr2_list_entry_by_addr(struct nbr_entry *nbr, union olsr_ip_addr *addr)
 {
   struct nbr2_list_entry *nbr2_list;
 
-  nbr2_list = neighbor->neighbor_2_list.next;
+  nbr2_list = olsr_lookup_nbr2_list_entry(nbr, addr);
 
-  while (nbr2_list != &neighbor->neighbor_2_list) {
-    if (nbr2_list->neighbor_2 == neigh2) {
-      olsr_del_nbr2_list(nbr2_list);
-      return 1;
-    }
-    nbr2_list = nbr2_list->next;
+  if (nbr2_list) {
+    olsr_delete_nbr2_list_entry(nbr2_list);
+    return true;
   }
-  return 0;
+
+  return false;
 }
 
 
 /**
- *Check if a two hop neighbor is reachable via a given
- *neighbor.
+ * Check if a two hop neighbor is reachable via a given
+ * neighbor.
  *
- *@param neighbor neighbor-entry to check via
- *@param neighbor_main_address the addres of the two hop neighbor
- *to find.
+ * @param nbr neighbor-entry to check via
+ * @param addr the addres of the two hop neighbor to find.
  *
- *@return a pointer to the nbr2_list_entry struct
- *representing the two hop neighbor if found. NULL if not found.
+ * @return a pointer to the nbr2_list_entry struct
+ * representing the two hop neighbor if found. NULL if not found.
  */
 struct nbr2_list_entry *
-olsr_lookup_nbr2_list_entry(const struct nbr_entry *neighbor, const union olsr_ip_addr *neighbor_main_address)
+olsr_lookup_nbr2_list_entry(struct nbr_entry *nbr, const union olsr_ip_addr *addr)
 {
-  struct nbr2_list_entry *entry;
+  struct avl_node *node;
 
-  for (entry = neighbor->neighbor_2_list.next; entry != &neighbor->neighbor_2_list; entry = entry->next) {
-
-    if (olsr_ipcmp(&entry->neighbor_2->neighbor_2_addr, neighbor_main_address) == 0)
-      return entry;
-
+  node = avl_find(&nbr->nbr2_list_tree, addr);
+  if (node) {
+    return nbr2_list_node_to_nbr2_list(node);
   }
   return NULL;
 }
 
 
-
 /**
- *Delete a neighbr table entry.
+ * Delete a neighbor table entry.
  *
- *Remember: Deleting a neighbor entry results
- *the deletion of its 2 hop neighbors list!!!
- *@param neighbor the neighbor entry to delete
+ * Remember: Deleting a neighbor entry results the deletion of its 2 hop neighbors list!!!
+ * @param addr the neighbor entry to delete
  *
- *@return nada
+ * @return TRUE on success, FALSE otherwise.
  */
-
-int
-olsr_delete_nbr_entry(const union olsr_ip_addr *neighbor_addr)
+bool
+olsr_delete_nbr_entry(const union olsr_ip_addr * addr)
 {
-  struct nbr2_list_entry *two_hop_list, *two_hop_to_delete;
-  uint32_t hash;
-  struct nbr_entry *entry;
+  struct nbr2_list_entry *nbr2_list;
+  struct nbr_entry *nbr;
 
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, neighbor_addr));
-
-  hash = olsr_ip_hashing(neighbor_addr);
-
-  entry = neighbortable[hash].next;
 
   /*
    * Find neighbor entry
    */
-  while (entry != &neighbortable[hash]) {
-    if (olsr_ipcmp(&entry->neighbor_main_addr, neighbor_addr) == 0)
-      break;
-
-    entry = entry->next;
+  nbr = olsr_lookup_nbr_entry(addr);
+  if (!nbr) {
+    return false;
   }
 
-  if (entry == &neighbortable[hash])
-    return 0;
+  OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
+  OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
+    nbr2_list->neighbor_2->neighbor_2_pointer--;        /* XXX move to olsr_nbr2_unlock() */
+    olsr_delete_neighbor_pointer(nbr2_list->neighbor_2, nbr);
+    olsr_delete_nbr2_list_entry(nbr2_list);
+  } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list);
 
-  two_hop_list = entry->neighbor_2_list.next;
+  /* Remove from global neighbor tree */
+  avl_delete(&nbr_tree, &nbr->nbr_node);
 
-  while (two_hop_list != &entry->neighbor_2_list) {
-    two_hop_to_delete = two_hop_list;
-    two_hop_list = two_hop_list->next;
-
-    two_hop_to_delete->neighbor_2->neighbor_2_pointer--;
-    olsr_delete_neighbor_pointer(two_hop_to_delete->neighbor_2, entry);
-
-    olsr_del_nbr2_list(two_hop_to_delete);
-  }
-
-
-  /* Dequeue */
-  DEQUEUE_ELEM(entry);
-
-  free(entry);
+  olsr_cookie_free(nbr_mem_cookie, nbr);
 
   changes_neighborhood = true;
-  return 1;
 
+  return true;
 }
 
 
-
 /**
- *Insert a neighbor entry in the neighbor table
+ * Insert a neighbor entry in the neighbor table.
  *
- *@param main_addr the main address of the new node
- *
- *@return 0 if neighbor already exists 1 if inserted
+ * @param addr the main address of the new node
+ * @return pointer to an already existting (or new created) neighbor entry
  */
 struct nbr_entry *
-olsr_add_nbr_entry(const union olsr_ip_addr *main_addr)
+olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 {
-  uint32_t hash;
-  struct nbr_entry *new_neigh;
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
+  struct nbr_entry *nbr;
 
-  hash = olsr_ip_hashing(main_addr);
-
-  /* Check if entry exists */
-
-  for (new_neigh = neighbortable[hash].next; new_neigh != &neighbortable[hash]; new_neigh = new_neigh->next) {
-    if (olsr_ipcmp(&new_neigh->neighbor_main_addr, main_addr) == 0)
-      return new_neigh;
+  /*
+   * Check if neighbor entry exists.
+   */
+  nbr = olsr_lookup_nbr_entry(addr);
+  if (nbr) {
+    return nbr;
   }
 
-  OLSR_DEBUG(LOG_NEIGHTABLE, "delete neighbor: %s\n", olsr_ip_to_string(&buf, main_addr));
+  OLSR_DEBUG(LOG_NEIGHTABLE, "Add 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
-  new_neigh = olsr_malloc(sizeof(struct nbr_entry), "New neighbor entry");
+  nbr = olsr_cookie_malloc(nbr_mem_cookie);
 
   /* Set address, willingness and status */
-  new_neigh->neighbor_main_addr = *main_addr;
-  new_neigh->willingness = WILL_NEVER;
-  new_neigh->status = NOT_SYM;
+  nbr->neighbor_main_addr = *addr;
+  nbr->willingness = WILL_NEVER;
+  nbr->status = NOT_SYM;
 
-  new_neigh->neighbor_2_list.next = &new_neigh->neighbor_2_list;
-  new_neigh->neighbor_2_list.prev = &new_neigh->neighbor_2_list;
+  /* Init subtree for nbr2 pointers */
+  avl_init(&nbr->nbr2_list_tree, avl_comp_default);
 
-  new_neigh->linkcount = 0;
-  new_neigh->is_mpr = false;
-  new_neigh->was_mpr = false;
+  nbr->linkcount = 0;
+  nbr->is_mpr = false;
+  nbr->was_mpr = false;
 
-  /* Queue */
-  QUEUE_ELEM(neighbortable[hash], new_neigh);
+  /* Add to the global neighbor tree */
+  avl_insert(&nbr_tree, &nbr->nbr_node, AVL_DUP_NO);
 
-  return new_neigh;
+  return nbr;
 }
 
 
 
 /**
- *Lookup a neighbor entry in the neighbortable based on an address.
+ * Lookup a neighbor entry in the neighbortable based on an address.
+ * Unalias the passed in address before.
+ * 
+ * @param addr the IP address of the neighbor to look up
  *
- *@param dst the IP address of the neighbor to look up
- *
- *@return a pointer to the neighbor struct registered on the given
- *address. NULL if not found.
+ * @return a pointer to the neighbor struct registered on the given
+ * address. NULL if not found.
  */
 struct nbr_entry *
-olsr_lookup_nbr_entry(const union olsr_ip_addr *dst)
+olsr_lookup_nbr_entry(const union olsr_ip_addr *addr)
 {
+  const union olsr_ip_addr *main_addr;
+
   /*
-   *Find main address of node
+   * Find main address of node
    */
-  union olsr_ip_addr *tmp_ip = olsr_lookup_main_addr_by_alias(dst);
-  if (tmp_ip != NULL)
-    dst = tmp_ip;
-  return olsr_lookup_nbr_entry_alias(dst);
-}
-
-
-/**
- *Lookup a neighbor entry in the neighbortable based on an address.
- *
- *@param dst the IP address of the neighbor to look up
- *
- *@return a pointer to the neighbor struct registered on the given
- *address. NULL if not found.
- */
-struct nbr_entry *
-olsr_lookup_nbr_entry_alias(const union olsr_ip_addr *dst)
-{
-  struct nbr_entry *entry;
-  uint32_t hash = olsr_ip_hashing(dst);
-
-  for (entry = neighbortable[hash].next; entry != &neighbortable[hash]; entry = entry->next) {
-    if (olsr_ipcmp(&entry->neighbor_main_addr, dst) == 0)
-      return entry;
+  main_addr = olsr_lookup_main_addr_by_alias(addr);
+  if (!main_addr) {
+    main_addr = addr;
   }
 
-  return NULL;
-
+  return olsr_lookup_nbr_entry_alias(main_addr);
 }
 
+
+/**
+ * Lookup a neighbor entry in the neighbortable based on an address.
+ *
+ * @param addr the IP address of the neighbor to look up
+ *
+ * @return a pointer to the neighbor struct registered on the given
+ *  address. NULL if not found.
+ */
+struct nbr_entry *
+olsr_lookup_nbr_entry_alias(const union olsr_ip_addr *addr)
+{
+  struct avl_node *node;
+
+  node = avl_find(&nbr_tree, addr);
+  if (node) {
+    return nbr_node_to_nbr(node);
+  }
+  return NULL;
+}
 
 
 int
@@ -375,43 +395,45 @@ olsr_expire_nbr2_list(void *context)
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->neighbor_2;
 
-  nbr2->neighbor_2_pointer--;
+  nbr2->neighbor_2_pointer--;   /* XXX move to olsr_unlock_nbr2() */
   olsr_delete_neighbor_pointer(nbr2, nbr);
 
-  olsr_del_nbr2_list(nbr2_list);
+  olsr_delete_nbr2_list_entry(nbr2_list);
 }
 
 
 /**
- *Prints the registered neighbors and two hop neighbors
- *to STDOUT.
+ * Print the registered neighbors and two hop neighbors to STDOUT.
  *
- *@return nada
+ * @return nada
  */
 void
 olsr_print_neighbor_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function doesn't do anything else. */
+
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 39;
-  int idx;
+  struct nbr_entry *nbr;
+  struct link_entry *lnk;
+  struct ipaddr_str buf;
+
   OLSR_INFO(LOG_NEIGHTABLE, "\n--- %s ------------------------------------------------ NEIGHBORS\n\n"
             "%*s  LQ    SYM   MPR   MPRS  will\n", olsr_wallclock_string(), ipwidth, "IP address");
 
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    struct nbr_entry *neigh;
-    for (neigh = neighbortable[idx].next; neigh != &neighbortable[idx]; neigh = neigh->next) {
-      struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
-      if (lnk) {
-        struct ipaddr_str buf;
-        OLSR_INFO_NH(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
-                     ipwidth, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
-                     neigh->status == SYM ? "YES " : "NO  ",
-                     neigh->is_mpr ? "YES " : "NO  ",
-                     olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ", neigh->willingness);
-      }
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+
+    lnk = get_best_link_to_neighbor(&nbr->neighbor_main_addr);
+    if (!lnk) {
+      continue;
     }
-  }
+
+    OLSR_INFO_NH(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
+                 ipwidth, olsr_ip_to_string(&buf, &nbr->neighbor_main_addr),
+                 nbr->status == SYM ? "YES " : "NO  ",
+                 nbr->is_mpr ? "YES " : "NO  ",
+                 olsr_lookup_mprs_set(&nbr->neighbor_main_addr) == NULL ? "NO  " : "YES ", nbr->willingness);
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
 #endif
 }
 

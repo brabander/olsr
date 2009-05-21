@@ -969,11 +969,12 @@ build_neigh_body(struct autobuf *abuf)
 
     abuf_puts(abuf, "<td><select>\n" "<option>IP ADDRESS</option>\n");
 
-
-    for (list_2 = neigh->neighbor_2_list.next, thop_cnt = 0; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next, thop_cnt++) {
+    thop_cnt = 0;
+    OLSR_FOR_ALL_NBR2_LIST_ENTRIES(neigh, list_2) {
       struct ipaddr_str strbuf;
       abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
-    }
+      thop_cnt++;
+    } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(neigh, list_2);
     abuf_appendf(abuf, "</select> (%d)</td></tr>\n", thop_cnt);
   } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
 

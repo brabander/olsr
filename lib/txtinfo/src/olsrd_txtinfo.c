@@ -518,9 +518,9 @@ ipc_print_neigh(struct ipc_conn *conn)
     struct nbr2_list_entry *list_2;
     struct ipaddr_str buf1;
     int thop_cnt = 0;
-    for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
+    OLSR_FOR_ALL_NBR2_LIST_ENTRIES(neigh, list_2) {
       thop_cnt++;
-    }
+    } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(neigh, list_2);
     if (!conn->csv) {
       if (abuf_appendf(&conn->resp,
                        "%s\t%s\t%s\t%s\t%d\t%d\n",
