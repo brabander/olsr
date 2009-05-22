@@ -307,7 +307,7 @@ set_loss_link_multiplier(struct link_entry *entry)
      * use the default multiplier only if there isn't any entry that
      * has a matching IP address.
      */
-    if ((ipequal(&mult->addr, &null_addr) && val < 0.0) || ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
+    if ((ipequal(&mult->addr, &null_addr) && val == 0) || ipequal(&mult->addr, &entry->neighbor_iface_addr)) {
       val = mult->value;
     }
   }
