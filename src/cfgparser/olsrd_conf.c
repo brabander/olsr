@@ -275,6 +275,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
+  if (cnf->min_tc_vtime < 0.0) {
+	fprintf(stderr, "Error, negative minimal tc time not allowed.\n");
+	return -1;
+  }
+  if (cnf->min_tc_vtime > 0.0) {
+	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
+  }
+
   /* Interfaces */
   while (in) {
     io = in->cnf;
@@ -311,6 +319,10 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
+    if (cnf->min_tc_vtime > 0.0 && (io->tc_params.validity_time / io->tc_params.emission_interval) < 128) {
+      fprintf(stderr, "Please use a tc vtime at least 128 times the emission interval while using the min_tc_vtime hack.\n");
+      return -1;
+    }
     /* MID interval */
     if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
       fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f)\n", io->mid_params.emission_interval,
@@ -553,7 +565,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
       } else {
         printf("\tIPv4 broadcast           : AUTO\n");
       }
-      
+
       if (in->cnf->mode==IF_MODE_ETHER){
         printf("\tMode           : ether\n");
       } else {

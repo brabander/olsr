@@ -827,6 +827,10 @@ olsr_input_tc(union olsr_message * msg, struct interface * input_if __attribute_
 
   tc = olsr_lookup_tc_entry(&originator);
 
+  if (vtime < (olsr_reltime)(olsr_cnf->min_tc_vtime*1000)) {
+	  vtime = (olsr_reltime)(olsr_cnf->min_tc_vtime*1000);
+  }
+
   if (tc && 0 != tc->edge_tree.count) {
     if (olsr_seq_inrange_high((int)tc->msg_seq - TC_SEQNO_WINDOW, tc->msg_seq, msg_seq)
         && olsr_seq_inrange_high((int)tc->ansn - TC_ANSN_WINDOW, tc->ansn, ansn)) {

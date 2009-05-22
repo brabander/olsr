@@ -198,6 +198,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LQ_MULT
 %token TOK_CLEAR_SCREEN
 %token TOK_PLPARAM
+%token TOK_MIN_TC_VTIME
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -259,6 +260,7 @@ stmt:       idebug
           | alq_aging
           | bclear_screen
           | vcomment
+          | amin_tc_vtime
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1039,6 +1041,14 @@ alq_aging: TOK_LQ_AGING TOK_FLOAT
 {
   PARSER_DEBUG_PRINTF("Link quality aging factor %f\n", $2->floating);
   olsr_cnf->lq_aging = $2->floating;
+  free($2);
+}
+;
+
+amin_tc_vtime: TOK_MIN_TC_VTIME TOK_FLOAT
+{
+  PARSER_DEBUG_PRINTF("Minimum TC validity time %f\n", $2->floating);
+  olsr_cnf->min_tc_vtime = $2->floating;
   free($2);
 }
 ;
