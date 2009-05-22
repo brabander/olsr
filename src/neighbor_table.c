@@ -117,6 +117,10 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
   olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT,
                    &olsr_expire_nbr2_list, nbr2_list, nbr2_list_timer_cookie->ci_id);
 
+  /* Add to the nbr2 reference subtree */
+  nbr2_list->nbr2_list_node.key = &nbr2->neighbor_2_addr;
+  avl_insert(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node, AVL_DUP_NO);
+
   return nbr2_list;
 }
 
@@ -286,6 +290,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr->was_mpr = false;
 
   /* Add to the global neighbor tree */
+  nbr->nbr_node.key = &nbr->neighbor_main_addr;
   avl_insert(&nbr_tree, &nbr->nbr_node, AVL_DUP_NO);
 
   return nbr;
