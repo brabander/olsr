@@ -155,11 +155,11 @@ olsr_netlink_send(struct nlmsghdr *n, char *buf, size_t bufSize, uint8_t flag, c
                   OLSR_DEBUG(LOG_ROUTING, ". error '%s' (%d) auto-add route to %s dev %s", err_msg, errno,
                              olsr_ip_to_string(&ibuf, &nexthop->gateway), nexthop->interface->int_name);
                 else if (flag == RT_DELETE_SIMILAR_ROUTE)
-                  OLSR_DEBUG(LOG_ROUTING, ". error '%s' (%d) auto-delete route to %s dev %s", err_msg, errno,
-                             olsr_ip_to_string(&ibuf, &rt->rt_dst.prefix), nexthop->interface->int_name);
+                  OLSR_DEBUG(LOG_ROUTING, ". error '%s' (%d) auto-delete route to %s gw %s", err_msg, errno,
+                             olsr_ip_to_string(&ibuf, &rt->rt_dst.prefix), olsr_ip_to_string(&gbuf, &nexthop->gateway));
                 else if (flag == RT_DELETE_SIMILAR_AUTO_ROUTE)
-                  OLSR_DEBUG(LOG_ROUTING, ". . error '%s' (%d) auto-delete similar route to %s dev %s", err_msg, errno,
-                             olsr_ip_to_string(&ibuf, &nexthop->gateway), nexthop->interface->int_name);
+                  OLSR_DEBUG(LOG_ROUTING, ". . error '%s' (%d) auto-delete similar route to %s gw %s", err_msg, errno,
+                             olsr_ip_to_string(&ibuf, &nexthop->gateway), olsr_ip_to_string(&gbuf, &nexthop->gateway));
                 else {          /* should never happen */
                   OLSR_DEBUG(LOG_ROUTING, "# invalid internal route delete/add flag (%d) used!", flag);
                 }
