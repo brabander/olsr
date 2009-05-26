@@ -4,7 +4,7 @@
 #
 #
 
-# set DEBUG to 1 to add debugger symbols to olsrd and filename/linenumbers to logging
+# set DEBUG to 1 to add debugger symbols to olsrd
 # set DEBUG to 0 to remove both and optimize olsrd for size
 DEBUG ?= 1
 

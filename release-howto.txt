@@ -5,13 +5,16 @@ cheat sheet for making a (stable) release tarball.
 
 1. clone a fresh tree:
 
-   $ hg clone http://gredler.at/hg/olsrd-0.5.6
-   $ hg update -C OLSRD_0_5_6_BRANCH
+   $ hg clone http://gredler.at/hg/olsrd-0.5.7
+   $ hg update -C OLSRD_0_5_7_BRANCH
 
 2. check if the DEBUG settings in Makefile.inc are correct:
 
    DEBUG ?= 0
-   NO_DEBUG_MESSAGES ?= 1
+   REMOVE_LOG_DEBUG ?= 0
+   REMOVE_LOG_INFO  ?= 0
+   REMOVE_LOG_WARN  ?= 0
+   REMOVE_LOG_ERROR ?= 0
 
    now check if it builds correct:
 
