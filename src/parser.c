@@ -294,15 +294,20 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       continue;
     }
 
-    for (entry = parse_functions; entry != NULL; entry = entry->next) {
-      /* Should be the same for IPv4 and IPv6 */
-      /* Promiscuous or exact match */
-      if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
-        if (!entry->function(m, in_if, from_addr))
-          forward = false;
+    if (olsr_message_is_duplicate(m, false)) {
+      OLSR_INFO(LOG_PACKET_PARSING, "Not processing message duplicate from %s!\n",
+          olsr_ip_to_string(&buf, (union olsr_ip_addr *)&m->v4.originator));
+    }
+    else {
+      for (entry = parse_functions; entry != NULL; entry = entry->next) {
+        /* Should be the same for IPv4 and IPv6 */
+        /* Promiscuous or exact match */
+        if ((entry->type == PROMISCUOUS) || (entry->type == m->v4.olsr_msgtype)) {
+          if (!entry->function(m, in_if, from_addr))
+            forward = false;
+        }
       }
     }
-
     if (forward) {
       olsr_forward_message(m, in_if, from_addr);
     }

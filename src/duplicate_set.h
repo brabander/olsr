@@ -47,7 +47,7 @@
 #include "mantissa.h"
 #include "common/avl.h"
 
-#define DUPLICATE_CLEANUP_INTERVAL 15000
+#define DUPLICATE_CLEANUP_INTERVAL 30000
 #define DUPLICATE_CLEANUP_JITTER 25
 #define DUPLICATE_VTIME 120000
 
@@ -63,14 +63,14 @@ struct dup_entry {
 AVLNODE2STRUCT(duptree2dupentry, struct dup_entry, avl);
 
 void olsr_init_duplicate_set(void);
-int olsr_message_is_duplicate(union olsr_message *m);
+int olsr_message_is_duplicate(union olsr_message *m, bool forward_set);
 void olsr_print_duplicate_table(void);
 void olsr_flush_duplicate_entries(void);
 
-#define OLSR_FOR_ALL_DUP_ENTRIES(dup) \
+#define OLSR_FOR_ALL_DUP_ENTRIES(avltree, dup) \
 { \
   struct avl_node *dup_tree_node, *next_dup_tree_node; \
-  for (dup_tree_node = avl_walk_first(&duplicate_set); \
+  for (dup_tree_node = avl_walk_first(avltree); \
     dup_tree_node; dup_tree_node = next_dup_tree_node) { \
     next_dup_tree_node = avl_walk_next(dup_tree_node); \
     dup = duptree2dupentry(dup_tree_node);
