@@ -57,6 +57,8 @@
 #include "parser.h"
 #include "olsr_comport_txt.h"
 #include "olsrd_debuginfo.h"
+#include "olsr_types.h"
+#include "defs.h"
 
 #include "common/autobuf.h"
 
@@ -75,7 +77,7 @@ struct debuginfo_cmd {
 static void debuginfo_new(void) __attribute__ ((constructor));
 static void debuginfo_delete(void) __attribute__ ((destructor));
 
-static enum olsr_txtcommand_result debuginfo_stat(struct comport_connection *con,  char *cmd, char *param);
+static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,  char *cmd, char *param);
 static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,  char *cmd, char *param);
 
 static void update_statistics_ptr(void *);
@@ -85,25 +87,31 @@ static void update_statistics_ptr(void *data __attribute__ ((unused)));
 
 /* plugin configuration */
 static struct ip_acl allowed_nets;
+static uint32_t traffic_interval, traffic_slots, current_slot;
 
 /* plugin parameters */
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = IP_ACL_ACCEPT_PARAP,.set_plugin_parameter = &ip_acl_add_plugin_accept,.data = &allowed_nets},
   {.name = IP_ACL_REJECT_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_reject,.data = &allowed_nets},
   {.name = IP_ACL_CHECKFIRST_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_checkFirst,.data = &allowed_nets},
-  {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets}
+  {.name = IP_ACL_DEFAULTPOLICY_PARAM,.set_plugin_parameter = &ip_acl_add_plugin_defaultPolicy,.data = &allowed_nets},
+  {.name = "stat_interval", .set_plugin_parameter = &set_plugin_int, .data = &traffic_interval},
+  {.name = "stat_slots", .set_plugin_parameter = &set_plugin_int, .data = &traffic_slots},
 };
 
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
-    {"stat", &debuginfo_stat, NULL, NULL},
+    {"msgstat", &debuginfo_msgstat, NULL, NULL},
     {"cookies", &debuginfo_cookies, NULL, NULL}
 };
 
 /* variables for statistics */
-static uint32_t recv_packets[60], recv_messages[60][6];
-static uint32_t recv_last_relevantTCs;
+static struct avl_tree statistics_tree;
+static struct debug_traffic_count total_traffic;
 static struct olsr_cookie_info *statistics_timer = NULL;
+static struct olsr_cookie_info *statistics_mem = NULL;
+
+static union olsr_ip_addr total_ip_addr;
 
 int
 olsrd_plugin_interface_version(void)
@@ -129,6 +137,12 @@ debuginfo_new(void)
   OLSR_INFO(LOG_PLUGINS, "%s\n", MOD_DESC);
 
   ip_acl_init(&allowed_nets);
+
+  traffic_interval = 5; /* seconds */
+  traffic_slots = 12;      /* number of 5000 second slots */
+  current_slot = 0;
+
+  memset(&total_ip_addr, 255, sizeof(total_ip_addr));
 
   /* always allow localhost */
   if (olsr_cnf->ip_version == AF_INET) {
@@ -171,29 +185,73 @@ olsrd_plugin_init(void)
     commands[i].csv->acl = &allowed_nets;
   }
 
+  i = sizeof(struct debug_traffic) + sizeof(struct debug_traffic_count) * traffic_slots;
+
   statistics_timer = olsr_alloc_cookie("debuginfo statistics timer", OLSR_COOKIE_TYPE_TIMER);
-  olsr_start_timer(1000, 0, true, &update_statistics_ptr, NULL, statistics_timer->ci_id);
+  olsr_start_timer(traffic_interval * 1000, 0, true, &update_statistics_ptr, NULL, statistics_timer->ci_id);
 
-  memset(recv_packets, 0, sizeof(recv_packets));
-  memset(recv_messages, 0, sizeof(recv_messages));
+  statistics_mem = olsr_alloc_cookie("debuginfo statistics memory", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(statistics_mem, i);
 
-  recv_last_relevantTCs = 0;
+  memset(&total_traffic, 0, sizeof(total_traffic));
+  avl_init(&statistics_tree, avl_comp_default);
+
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
   return 1;
 }
 
+static struct debug_traffic *get_debugtraffic_entry(union olsr_ip_addr *ip) {
+  struct debug_traffic *tr;
+  tr = (struct debug_traffic *) avl_find(&statistics_tree, ip);
+  if (tr == NULL) {
+    tr = olsr_cookie_malloc(statistics_mem);
+
+    memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
+    tr->node.key = &tr->ip;
+
+    avl_insert(&statistics_tree, &tr->node, AVL_DUP_NO);
+  }
+  return tr;
+}
 
 static void
 update_statistics_ptr(void *data __attribute__ ((unused)))
 {
-  uint32_t now = now_times / 1000;
-  int i;
+  struct debug_traffic *traffic;
+  uint32_t last_slot, i;
 
-  recv_packets[now % 60] = 0;
-  for (i = 0; i < 6; i++) {
-    recv_messages[now % 60][i] = 0;
+  last_slot = current_slot;
+  current_slot++;
+  if (current_slot == traffic_slots) {
+    current_slot = 0;
   }
+
+  /* move data from "current" template to slot array */
+  OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(traffic) {
+    /* subtract old values from node count and total count */
+    for (i=0; i<DTR_COUNT; i++) {
+      traffic->total.data[i] -= traffic->traffic[current_slot].data[i];
+    }
+
+    /* copy new traffic into slot */
+    traffic->traffic[current_slot] = traffic->current;
+
+    /* add new values to node count and total count */
+    for (i=0; i<DTR_COUNT; i++) {
+      traffic->total.data[i] += traffic->current.data[i];
+    }
+
+    /* erase new traffic */
+    memset(&traffic->current, 0, sizeof(traffic->current));
+
+    if (traffic->total.data[DTR_MESSAGES] == 0) {
+      /* no traffic left, cleanup ! */
+
+      avl_delete(&statistics_tree, &traffic->node);
+      olsr_cookie_free(statistics_mem, traffic);
+    }
+  } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(traffic)
 }
 
 /* update message statistics */
@@ -201,39 +259,63 @@ static bool
 olsr_msg_statistics(union olsr_message *msg,
                     struct interface *input_if __attribute__ ((unused)), union olsr_ip_addr *from_addr __attribute__ ((unused)))
 {
-  uint32_t now = now_times / 1000;
-  int idx, msgtype;
+  int msgtype, msgsize;
+  union olsr_ip_addr origaddr;
+  enum debug_traffic_type type;
+  struct debug_traffic *tr;
+#if !defined REMOVE_DEBUG
+  struct ipaddr_str buf;
+#endif
 
+  memset(&origaddr, 0, sizeof(origaddr));
   if (olsr_cnf->ip_version == AF_INET) {
     msgtype = msg->v4.olsr_msgtype;
+    msgsize = ntohs(msg->v4.olsr_msgsize);
+    origaddr.v4.s_addr = msg->v4.originator;
   } else {
     msgtype = msg->v6.olsr_msgtype;
+    msgsize = ntohs(msg->v6.olsr_msgsize);
+    origaddr.v6 = msg->v6.originator;
   }
 
   switch (msgtype) {
   case HELLO_MESSAGE:
-  case TC_MESSAGE:
-  case MID_MESSAGE:
-  case HNA_MESSAGE:
-    idx = msgtype - 1;
+    type = DTR_HELLO;
     break;
-
+  case TC_MESSAGE:
+    type = DTR_TC;
+    break;
+  case MID_MESSAGE:
+    type = DTR_MID;
+    break;
+  case HNA_MESSAGE:
+    type = DTR_HNA;
+    break;
   case LQ_HELLO_MESSAGE:
-    idx = 0;
+    type = DTR_HELLO;
     break;
   case LQ_TC_MESSAGE:
-    idx = 1;
+    type = DTR_TC;
     break;
   default:
-    idx = 4;
+    type = DTR_OTHER;
     break;
   }
 
-  recv_messages[now % 60][idx]++;
-  if (recv_last_relevantTCs != getRelevantTcCount()) {
-    recv_messages[now % 60][5]++;
-    recv_last_relevantTCs++;
-  }
+  /* input data for specific node */
+  tr = get_debugtraffic_entry(&origaddr);
+  tr->current.data[type]++;
+  tr->current.data[DTR_MESSAGES]++;
+  tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
+
+  OLSR_DEBUG(LOG_PLUGINS, "Added message type %d to statistics of %s: %d\n",
+      type, olsr_ip_to_string(&buf, &tr->ip), tr->current.data[type]);
+
+  /* input data for total traffic handling */
+  tr = get_debugtraffic_entry(&total_ip_addr);
+  tr->current.data[type]++;
+  tr->current.data[DTR_MESSAGES]++;
+  tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
   return true;
 }
 
@@ -241,55 +323,112 @@ olsr_msg_statistics(union olsr_message *msg,
 static char *
 olsr_packet_statistics(char *packet __attribute__ ((unused)),
                        struct interface *interface __attribute__ ((unused)),
-                       union olsr_ip_addr *ip __attribute__ ((unused)), int *length __attribute__ ((unused)))
+                       union olsr_ip_addr *ip, int *length)
 {
-  uint32_t now = now_times / 1000;
-  recv_packets[now % 60] += *length;
+  struct debug_traffic *tr;
+  tr = (struct debug_traffic *) avl_find(&statistics_tree, ip);
+  if (tr == NULL) {
+    tr = olsr_cookie_malloc(statistics_mem);
+
+    memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
+    tr->node.key = &tr->ip;
+
+    avl_insert(&statistics_tree, &tr->node, AVL_DUP_NO);
+  }
+
+  tr->current.data[DTR_PACK_TRAFFIC] += *length;
+  tr->current.data[DTR_PACKETS] ++;
 
   return packet;
 }
 
+static const char *debuginfo_print_trafficip(struct ipaddr_str *buf, union olsr_ip_addr *ip) {
+  static const char *total = "Total";
+  if (olsr_ipcmp(ip, &total_ip_addr) == 0) {
+    return total;
+  }
+  return olsr_ip_to_string(buf, ip);
+}
+
+
+static bool debuginfo_print_nodestat(struct autobuf *buf, union olsr_ip_addr *ip, struct debug_traffic_count *cnt, const char *template) {
+  struct ipaddr_str strbuf;
+
+  return abuf_appendf(buf, template,
+      olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, debuginfo_print_trafficip(&strbuf, ip),
+      cnt->data[DTR_HELLO],
+      cnt->data[DTR_TC],
+      cnt->data[DTR_MID],
+      cnt->data[DTR_HNA],
+      cnt->data[DTR_OTHER],
+      cnt->data[DTR_MESSAGES],
+      cnt->data[DTR_MSG_TRAFFIC]) < 0;
+}
+
 static enum olsr_txtcommand_result
-debuginfo_stat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
 {
-  static const char *names[] = { "HELLO", "TC", "MID", "HNA", "Other", "Rel.TCs" };
+  struct debug_traffic *tr;
 
-  uint32_t msgs[6], traffic, i, j;
-  uint32_t slot = (now_times / 1000 + 59) % 60;
-
-  if (!con->is_csv && abuf_puts(&con->out, "Table: Statistics (without duplicates)\nType\tlast seconds\t\t\t\tlast min.\taverage\n") < 0) {
-    return ABUF_ERROR;
-  }
-
-  for (j = 0; j < 6; j++) {
-    msgs[j] = 0;
-    for (i = 0; i < 60; i++) {
-      msgs[j] += recv_messages[i][j];
+  if (!con->is_csv) {
+    if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
+      return ABUF_ERROR;
+    }
+    if (abuf_appendf(&con->out,
+        "Table: Statistics (without duplicates)\n%-*s\tHello\tTC\tMID\tHNA\tOther\tTotal\tBytes\n",
+        olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
+        ) < 0) {
+      return ABUF_ERROR;
     }
   }
 
-  traffic = 0;
-  for (i = 0; i < 60; i++) {
-    traffic += recv_packets[i];
-  }
-
-  for (i = 0; i < 6; i++) {
-    if (abuf_appendf(&con->out, !con->is_csv ? "%s\t%u\t%u\t%u\t%u\t%u\t%u\t\t%u\n" : "stat,%s,%u,%u,%u,%u,%u,%u,%u\n",
-                     names[i],
-                     recv_messages[(slot) % 60][i],
-                     recv_messages[(slot + 59) % 60][i],
-                     recv_messages[(slot + 58) % 60][i],
-                     recv_messages[(slot + 57) % 60][i],
-                     recv_messages[(slot + 56) % 60][i],
-                     msgs[i],
-                     msgs[i] / 60) < 0) {
+  if (param == NULL || strcasecmp(param, "node") == 0) {
+    OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) {
+      if (debuginfo_print_nodestat(&con->out, &tr->ip, &tr->traffic[current_slot],
+          "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n")) {
         return ABUF_ERROR;
+      }
+    } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tr)
+  }
+  else {
+    uint32_t mult = 1, divisor = 1;
+    struct debug_traffic_count cnt;
+    int i;
+
+    if (strcasecmp(param, "total") == 0) {
+      divisor = 1;
     }
+    else if (strcasecmp(param, "average") == 0) {
+      divisor = traffic_slots;
+    }
+    else if (strcasecmp(param, "avgsec") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 1;
+    }
+    else if (strcasecmp(param, "avgmin") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 60;
+    }
+    else if (strcasecmp(param, "avghour") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 3600;
+    }
+    else {
+      abuf_appendf(&con->out, "Error, unknown parameter %s for msgstat\n", param);
+      return CONTINUE;
+    }
+
+    OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) {
+      for (i=0; i<DTR_COUNT; i++) {
+        cnt.data[i] = (tr->total.data[i] * mult) / divisor;
+      }
+      if (debuginfo_print_nodestat(&con->out, &tr->ip, &cnt,
+          "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n")) {
+        return ABUF_ERROR;
+      }
+    } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tr)
   }
-  if (abuf_appendf(&con->out, !con->is_csv ? "\nTraffic: %8u bytes/s\t%u bytes/minute\taverage %u bytes/s\n" : "stat,Traffic,%u,%u,%u\n",
-      recv_packets[(slot) % 60], traffic, traffic / 60) < 0) {
-    return ABUF_ERROR;
-  }
+
   return CONTINUE;
 }
 

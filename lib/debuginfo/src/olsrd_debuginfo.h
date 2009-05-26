@@ -49,8 +49,46 @@
 #include "olsr_types.h"
 #include "plugin.h"
 #include "plugin_util.h"
+#include "common/avl.h"
 
-extern int nompr;
+enum debug_traffic_type {
+  DTR_HELLO,
+  DTR_TC,
+  DTR_MID,
+  DTR_HNA,
+  DTR_OTHER,
+
+  DTR_MESSAGES,
+  DTR_MSG_TRAFFIC,
+
+  DTR_PACKETS,
+  DTR_PACK_TRAFFIC,
+
+  /* this one must be the last one */
+  DTR_COUNT
+};
+
+struct debug_traffic_count {
+  uint32_t data[DTR_COUNT];
+};
+
+struct debug_traffic {
+  struct avl_node node;
+  union olsr_ip_addr ip;
+
+  struct debug_traffic_count total;
+  struct debug_traffic_count current;
+  struct debug_traffic_count traffic[0];
+};
+
+#define OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) \
+{ \
+  struct avl_node *tr_tree_node, *next_tr_tree_node; \
+  for (tr_tree_node = avl_walk_first(&statistics_tree); \
+    tr_tree_node; tr_tree_node = next_tr_tree_node) { \
+    next_tr_tree_node = avl_walk_next(tr_tree_node); \
+    tr = (struct debug_traffic *)(tr_tree_node);
+#define OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tc) }}
 
 #endif
 
