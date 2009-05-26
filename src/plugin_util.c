@@ -195,16 +195,14 @@ ip_acl_plugin_parse(const char *value, union olsr_ip_addr *addr)
     *slash++ = 0;
   }
 
-  if (inet_pton(olsr_cnf->ip_version, arg, addr) < 0) {
+  if (inet_pton(ipv4 ? AF_INET : AF_INET6, arg, addr) < 0) {
     OLSR_WARN(LOG_PLUGINS, "Error, illegal ip net '%s'\n", value);
     return -1;
   }
 
   if (ipv4 && prefix == 128) {
     /* translate to ipv6 if neccessary */
-    memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, 4 * sizeof(uint8_t));
-    memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
-    memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
+    ip_map_4to6(addr);
   } else if (ipv6 && olsr_cnf->ip_version == AF_INET) {
     OLSR_WARN(LOG_PLUGINS, "Ignore Ipv6 address '%s' in ipv4 mode\n", value);
     return -1;

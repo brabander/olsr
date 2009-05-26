@@ -38,50 +38,51 @@
  * the copyright holders.
  *
  */
+#ifndef OLSR_COMPORT_HTTP_H_
+#define OLSR_COMPORT_HTTP_H_
 
-#include "olsr_cfg_data.h"
+#include "common/avl.h"
+#include "common/autobuf.h"
+#include "olsr_ip_acl.h"
+#include "olsr_comport.h"
 
-/*
- * String constants for olsr_log_* and if_mode as used in olsrd.conf.
- * Keep this in the same order as the log_source and
- * log_severity enums (see olsr_cfg_data.h).
- */
+/* this is a html site datastructure for each site */
+/* it is stored in an AVL tree */
+struct olsr_html_site {
+  struct avl_node node;
 
-const char *LOG_SOURCE_NAMES[] = {
-  "all",
-  "logging",
-  "ipc",
-  "main",
-  "networking",
-  "packet_creation",
-  "packet_parsing",
-  "routing",
-  "scheduler",
-  "plugins",
-  "lq-plugins",
-  "ll-plugins",
-  "links",
-  "neighbors",
-  "mpr",
-  "mprset",
-  "2-hop",
-  "tc",
-  "hna",
-  "mid",
-  "duplicate-set",
-  "cookie",
-  "comport"
+  bool static_site;   /* is this a static site y/n? */
+
+  char **auth;		  /* ptr to list of char* name=passwd in base64 */
+  int auth_count;	  /* number of list entries */
+
+  struct ip_acl *acl; /* allow only certain IPs ? */
+
+	/* for static sites... */
+  char *site_data;
+  size_t site_length;
+
+	/* for non static, this is the handler */
+  void (*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]);
 };
 
-const char *LOG_SEVERITY_NAMES[] = {
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR"
-};
+void olsr_com_init_http(void);
 
+struct olsr_html_site *EXPORT(olsr_com_add_htmlsite) (
+    char *path, char *content, size_t length);
+struct olsr_html_site *EXPORT(olsr_com_add_htmlhandler) (
+    void (*sitehandler)(struct autobuf *buf, char *path, int parameter_count, char *parameters[]),
+    char *path);
+void EXPORT(olsr_com_remove_htmlsite) (struct olsr_html_site *site);
+void EXPORT(olsr_com_set_htmlsite_acl_auth) (struct olsr_html_site *site,
+    struct ip_acl *acl, int auth_count, char **auth_entries);
 
-const char *INTERFACE_MODE_NAMES[] = {
-  "mesh",
-  "ether"
-};
+bool olsr_com_handle_htmlsite(struct comport_connection *con, char *path,
+    char *filename, int para_count, char **para);
+
+void EXPORT(olsr_com_build_httpheader) (struct comport_connection *con);
+void EXPORT(olsr_com_create_httperror) (struct comport_connection *con);
+char *EXPORT(olsr_com_get_http_message) (enum http_header_type type);
+void EXPORT(olsr_com_decode_url) (char *str);
+
+#endif /* OLSR_COMPORT_HTTP_H_ */

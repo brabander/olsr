@@ -38,7 +38,7 @@
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_txtinfo
-PLUGIN_VER =	0.1
+PLUGIN_VER =	0.2
 
 TOPDIR =	../..
 include $(TOPDIR)/Makefile.inc

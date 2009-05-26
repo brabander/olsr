@@ -74,6 +74,10 @@ avl_comp_mac(const void *ip1, const void *ip2)
   return memcmp(ip1, ip2, 6);
 }
 
+int avl_comp_strcasecmp(const void *txt1, const void *txt2) {
+  return strcasecmp(txt1, txt2);
+}
+
 void
 avl_init(struct avl_tree *tree, avl_tree_comp comp)
 {

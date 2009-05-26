@@ -68,6 +68,7 @@ enum log_source {
   LOG_MID,                             //!< LOG_MID
   LOG_DUPLICATE_SET,                   //!< LOG_DUPLICATE_SET
   LOG_COOKIE,                          //!< LOG_COOKIE
+  LOG_COMPORT,                         //!< LOG_COMPORT
 
   /* this one must be the last of the enums ! */
   LOG_SOURCE_COUNT                     //!< LOG_SOURCE_COUNT

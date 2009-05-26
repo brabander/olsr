@@ -178,6 +178,9 @@ prefix_to_netmask4(uint8_t prefixlen)
 }
 
 extern const struct in6_addr EXPORT(in6addr_v4mapped_loopback);
+
+void EXPORT(ip_map_4to6) (union olsr_ip_addr *ip);
+
 #endif
 
 /*

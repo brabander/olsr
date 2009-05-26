@@ -64,6 +64,7 @@
 #include "mid_set.h"
 #include "duplicate_set.h"
 #include "kernel_routes.h"
+#include "olsr_comport.h"
 
 #if defined linux
 #include <linux/types.h>
@@ -126,8 +127,6 @@ main(int argc, char *argv[])
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
-  OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
-
   /* Using PID as random seed */
   srandom(getpid());
 
@@ -173,6 +172,8 @@ main(int argc, char *argv[])
     /* Continue */
     break;
   }                             /* switch */
+
+  OLSR_INFO(LOG_MAIN, "\n *** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
 
   /* Sanity check configuration */
   if (olsr_sanity_check_cfg(olsr_cnf) < 0) {
@@ -317,6 +318,9 @@ main(int argc, char *argv[])
   }
   /* Initialisation of different tables to be used. */
   olsr_init_tables();
+
+  /* initialize built in server services */
+  olsr_com_init();
 
   /* daemon mode */
 #ifndef WIN32

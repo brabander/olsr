@@ -125,6 +125,7 @@ extern avl_tree_comp avl_comp_prefix_origin_default;
 extern int avl_comp_ipv4(const void *, const void *);
 extern int avl_comp_ipv6(const void *, const void *);
 extern int avl_comp_mac(const void *, const void *);
+extern int avl_comp_strcasecmp(const void *, const void *);
 
 /*
  * Macro to define an inline function to map from a list_node offset back to the

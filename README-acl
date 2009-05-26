@@ -1,0 +1,43 @@
+   Using access control lists in OLSRd
+=========================================
+
+Several plugins in OLSRd allow you to limit the access to
+their server functions by IP. This file will explain how to
+use the ACL features.
+ 
+The access is controlled by two lists of ip
+addresses and ip networks, a blacklist (reject list) and
+a whitelist (accept list). Two binary flags control which
+list is to be used first and what should be the default
+reaction to an unknown IP.
+
+The parameter "accept" contains an IP address or network
+which is allowed to access the service, the parameter "reject"
+contains a IP/network which is NOT allow to access it.
+
+The parameter "checkfirst" tells the service which of the
+two lists have to be checked first.
+The default setting is "reject".
+
+The last parameter "defaultpolicy" controls what the server
+should do with IPs which are not found in BOTH lists.
+The default setting is "reject".
+
+
+   Examples for ACL usage
+============================
+
+Examples for parameters accept/reject:
+PlParam   "accept"   "10.0.0.0/8" 
+PlParam   "reject"   "10.0.0.1" 
+PlParam   "accept"   "10.0.0.0 255.0.0.0" 
+
+Examples for parameters for binary flags
+PlParam   "checkfirst"      "reject"
+PlParam   "defaultpolicy"   "accept"
+
+
+   Legacy parameters
+=======================
+The old parameters "host", "host4", "host6", "net", "net4"
+and "net6" are just alias names for "accept".

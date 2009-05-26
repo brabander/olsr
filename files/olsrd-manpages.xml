@@ -17,6 +17,11 @@
 
         <email>sven-olaægmx.de</email>
       </author>
+      <author>
+        <firstname>Henning</firstname>
+        <surname>Rogge</surname>
+        <email>hrogge@googlemail.com</email>
+      </author>
     </authorgroup>
 
     <abstract>
@@ -138,18 +143,6 @@
             <arg>-n</arg>
 
             <arg>--nofork</arg>
-          </group>
-
-          <group>
-            <arg>-X</arg>
-
-            <arg>--dispin</arg>
-          </group>
-
-          <group>
-            <arg>-O</arg>
-
-            <arg>--dispout</arg>
           </group>
 
           <group>
@@ -393,7 +386,7 @@
           <listitem>
             <para>Specifies the amount of debug information to be printed out
             during operation. If set to 0, <productname>olsrd</productname>
-            will run in the background.</para>
+            will run in the background unless you use the nofork option.</para>
           </listitem>
         </varlistentry>
 
@@ -404,24 +397,6 @@
             <para>This option causes <productname>olsrd</productname> not to
             fork into the background, even when started with
             <option>--DebugLevel 0</option>.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>-X</option> or <option>--dispin</option></term>
-
-          <listitem>
-            <para>This option causes <productname>olsrd</productname> to
-            display all incoming packet data.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>-O</option> or <option>--dispout</option></term>
-
-          <listitem>
-            <para>This option causes <productname>olsrd</productname> to
-            display all outgoing packet data.</para>
           </listitem>
         </varlistentry>
 
@@ -455,105 +430,145 @@
         </varlistentry>
 
         <varlistentry>
-          <term><option>-L options</option> or
-          <option>--log=options</option></term>
+          <term><option>--log_debug=options</option></term>
 
           <listitem>
             <para>This option controls the output of the logging system of
-            olsrd. The options are a comma-separated string of keys and
-            key/value pairs. Activating a lower level logging output (DEBUG,
-            WARN, INFO, ERROR) will automatically activate all higher level
-            outputs of the source too. All error messages will be activated
-            unless one or multiple log sources are specified for error logging
-            level.</para>
+            olsrd. The options are a comma-separated string of log sources
+            which should produce DEBUG level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_info=options</option></term>
 
-            <variablelist>
-              <varlistentry>
-                <term><option>list</option></term>
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce INFO level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_warn=options</option></term>
 
-                <listitem>
-                  <para>lists all implemented log sources and log targets.
-                  <productname>olsrd</productname> terminates after displaying
-                  this values.</para>
-                </listitem>
-              </varlistentry>
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce WARN level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_error=options</option></term>
 
-              <varlistentry>
-                <term><option>stderr</option></term>
-
-                <listitem>
-                  <para>activates stderr as a logging target. If no target is
-                  activated, stderr is considered the default target.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>syslog</option></term>
-
-                <listitem>
-                  <para>activates the syslog as a logging target.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>file=[filename]</option></term>
-
-                <listitem>
-                  <para>activates a user specified file as a logging target.
-                  All logging output will be appended to the file.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>debug=[logsource1/logsource2/...]</option></term>
-
-                <listitem>
-                  <para>activates the debug output for a number of logfiles.
-                  Debugging output will display lots of internal information
-                  about a logging source, so be careful to activate too many
-                  sources. If not specified, debug output is switched
-                  off.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>info=[logsource1/logsource2/...]</option></term>
-
-                <listitem>
-                  <para>activates information output for a number of logfiles.
-                  Information output will display a small amount of data about
-                  the log source. If not specified, information output is
-                  switched off.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>warn=[logsource1/logsource2/...]</option></term>
-
-                <listitem>
-                  <para>activates warnings for a number of logfiles. Warnings
-                  are generated when an error has happened within the logging
-                  source, but <productname>olsrd</productname> can recover
-                  from the problem and continue to run. If not specified,
-                  warning output is switched off.</para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term><option>error=[logsource1/logsource2/...]</option></term>
-
-                <listitem>
-                  <para>activates errors for a number of logfiles. Most errors
-                  are generated if an unrecoverable problem happens, so
-                  <productname>olsrd</productname> will shut down most times
-                  after an error. If not specified, error output is
-                  activated.</para>
-                </listitem>
-              </varlistentry>
-            </variablelist>
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce ERROR level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_stderr</option></term>
+          
+          <listitem>
+            <para>This option activates log output to stderr. If no target is
+            activated, stderr is considered the default target.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_syslog</option></term>
+          
+          <listitem>
+            <para>This option activates log output to the syslog.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--log_file=filename</option></term>
+          
+          <listitem>
+            <para>This option activates log output to a file.
+            </para>
           </listitem>
         </varlistentry>
 
+        <varlistentry>
+          <term><option>--olsrport=portnumber</option></term>
+          
+          <listitem>
+            <para>This option sets the port for the OLSR protocol messages.
+            Default value is 698.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>--dlpath=path</option></term>
+          
+          <listitem>
+            <para>This option tells <productname>olsrd</productname> to
+            load all dynamic libraries from a certain path.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--httpport=portnumber</option></term>
+          
+          <listitem>
+            <para>This option sets the listening port for http services.
+            Default value is 8080.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--httplimit=connectioncount</option></term>
+          
+          <listitem>
+            <para>This option sets the maximum number of simultanous
+            http sessions. Default value is 3.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--txtport=portnumber</option></term>
+          
+          <listitem>
+            <para>This option sets the listening port for telnet services.
+            Default value is 2006.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>--txtlimit=connectioncount</option></term>
+          
+          <listitem>
+            <para>This option sets the maximum number of simultanous
+            telnet sessions. Default value is 3.
+            </para>
+          </listitem>
+        </varlistentry>
+        
         <varlistentry>
           <term><option><replaceable>interface1</replaceable>
           interface2...</option></term>
@@ -768,12 +783,14 @@
           <replaceable>0</replaceable>-<replaceable>9</replaceable></term>
 
           <listitem>
-            <para>Controls the amount of debug output
-            <productname>olsrd</productname> prints out. If set to
+            <para>This option is legacy support for the new
+            <productname>olsrd</productname> logging system. If set to
             <replaceable>0</replaceable>, <productname>olsrd</productname>
             will detach from the current process and run in the background. A
-            value of <replaceable>9</replaceable> yields a maximum of debug
-            output. Defaults to <replaceable>0</replaceable>.</para>
+            value of <replaceable>3</replaceable> yields a maximum of log
+            output, a value of <replaceable>-2</replaceable> will mean no log
+            output at all, not even error messages.
+            Defaults to <replaceable>0</replaceable>.</para>
           </listitem>
         </varlistentry>
 
@@ -1029,6 +1046,137 @@
             loss when the first interface of a router vanishes.</para>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term><option>Log_debug=options</option></term>
+
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce DEBUG level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_info=options</option></term>
+
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce INFO level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_warn=options</option></term>
+
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce WARN level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_error=options</option></term>
+
+          <listitem>
+            <para>This option controls the output of the logging system of
+            olsrd. The options are a comma-separated string of log sources
+            which should produce ERROR level output (if available). Call
+            <productname>olsrd</productname> with parameter
+            <option>--help=log</option> for a complete list of debug sources.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_stderr</option></term>
+          
+          <listitem>
+            <para>This option activates log output to stderr. If no target is
+            activated, stderr is considered the default target.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_syslog</option></term>
+          
+          <listitem>
+            <para>This option activates log output to the syslog.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>Log_file=filename</option></term>
+          
+          <listitem>
+            <para>This option activates log output to a file.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>Dlpath=path</option></term>
+          
+          <listitem>
+            <para>This option tells <productname>olsrd</productname> to
+            load all dynamic libraries from a certain path.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>HttpPort=portnumber</option></term>
+          
+          <listitem>
+            <para>This option sets the listening port for http services.
+            Default value is 8080.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>HttpLimit=connectioncount</option></term>
+          
+          <listitem>
+            <para>This option sets the maximum number of simultanous
+            http sessions. Default value is 3.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>TxtPort=portnumber</option></term>
+          
+          <listitem>
+            <para>This option sets the listening port for telnet services.
+            Default value is 2006.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term><option>TxtLimit=connectioncount</option></term>
+          
+          <listitem>
+            <para>This option sets the maximum number of simultanous
+            telnet sessions. Default value is 3.
+            </para>
+          </listitem>
+        </varlistentry>
+
       </variablelist>
     </refsect1>
 

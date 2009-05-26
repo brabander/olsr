@@ -1,0 +1,85 @@
+   HTTP/Telnet services in olsrd
+===================================
+
+Olsrd contains an integrated telnet and http server core, which is
+used by plugins and the core to provide easy access the html pages
+and text commands.
+
+
+   HTTP services
+-------------------
+
+The http server core supports both GET and POST parameter processing,
+allows the plugin/provider to set up a ACL and provides http basic
+password authentification (should be used together with an https proxy
+for security).
+
+Plugins use the function olsr_com_add_htmlsite() to set up a static
+webpage for a filename or a whole path, the function
+olsr_com_add_htmlhandler() can be used to set up a callback for dynamic
+webpage generation.
+
+olsr_com_set_htmlsite_acl_auth() can be used on the returned
+olsr_html_site pointer from one of the "add" functions to set up an
+ip ACL and/or a list of username/passwords. The username/password
+strings must be base64 encoded as defined in the http basic
+authentification standard.
+(see  http://en.wikipedia.org/wiki/Basic_access_authentication )
+
+
+   Telnet services
+---------------------
+
+The telnet server implements a simple text interface to the olsr core,
+which can be equipped with any number of commands.
+
+The first way to use a telnet command is to enter the commands name,
+followed by it's parameters (similar to a normal console). After the
+command is finished, a new prompt will be displayed and you can
+enter another command.
+
+The second way is to prefix a command with a '/' character. No parameters
+can be used in this mode, but multiple commands can be concatenated in
+a single line. After the last command finished the telnet server will
+hang up. This mode emulates the commands of the old txtinfo plugin.
+
+Some commands will not stop after a predefined output but will continue
+to output data to the console. They can be stopped by sending a single
+character to the telnet server.
+
+The server will hang up the connection if no input/output happens for
+a certain period of time (default 120 seconds).
+
+
+   Builtin telnet commands
+-----------------------------
+
+"quit" or "exit":
+  Ends the telnet session and hangup the connection.
+
+"help":
+  Displays a list of available commands.
+
+"help <commandname>":
+  Displays a help text for a certain command (if available).
+
+"csv":
+  Activates the csv (comma separated value) output mode. All
+  commands capable to use this flag will switch to a CSV output
+  format.
+
+"csvoff"
+  Deactivates the csv output mode.
+
+"timeout <seconds>":
+  Sets the telnet session timeout to a new value. A parameter
+  of '0' will deactivate the timeout.
+
+"version"
+  Displays a version string of the olsrd.
+
+"repeat <seconds> <command and parameters>":
+  Calls another internal command every few seconds. Of course
+  the other command must not be one with continous output
+  itself.
+  

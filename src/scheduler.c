@@ -506,7 +506,7 @@ calc_jitter(unsigned int rel_time, uint8_t jitter_pct, unsigned int random_val)
    * Play some tricks to avoid overflows with integer arithmetic.
    */
   jitter_time = (jitter_pct * rel_time) / 100;
-  jitter_time = random_val / (1 + RAND_MAX / jitter_time);
+  jitter_time = random_val / (1 + RAND_MAX / (jitter_time + 1));
 
   OLSR_DEBUG(LOG_SCHEDULER, "TIMER: jitter %u%% rel_time %ums to %ums\n", jitter_pct, rel_time, rel_time - jitter_time);
 

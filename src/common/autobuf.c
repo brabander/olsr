@@ -61,7 +61,7 @@ abuf_init(struct autobuf *autobuf, int initial_size)
     return 0;
   }
   autobuf->size = ROUND_UP_TO_POWER_OF_2(initial_size, AUTOBUFCHUNK);
-  autobuf->buf = malloc(autobuf->size);
+  autobuf->buf = calloc(autobuf->size, 1);
   if (autobuf->buf == NULL) {
     autobuf->size = 0;
     return -1;
@@ -82,10 +82,11 @@ abuf_free(struct autobuf *autobuf)
 static int
 autobuf_enlarge(struct autobuf *autobuf, int new_size)
 {
-  if (new_size >= autobuf->size) {
+  new_size++;
+  if (new_size > autobuf->size) {
     char *p;
-    autobuf->size = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
-    p = realloc(autobuf->buf, autobuf->size);
+    int roundUpSize = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
+    p = realloc(autobuf->buf, roundUpSize);
     if (p == NULL) {
 #ifdef WIN32
       WSASetLastError(ENOMEM);
@@ -95,13 +96,14 @@ autobuf_enlarge(struct autobuf *autobuf, int new_size)
       return -1;
     }
     autobuf->buf = p;
+
+    memset(&autobuf->buf[autobuf->size], 0, roundUpSize - autobuf->size);
+    autobuf->size = roundUpSize;
   }
   return 0;
 }
 
-static int abuf_vappendf(struct autobuf *autobuf, const char *fmt, va_list ap) __attribute__ ((format(printf, 2, 0)));
-
-static int
+int
 abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
 {
   int rc;
@@ -173,6 +175,42 @@ abuf_memcpy(struct autobuf *autobuf, const void *p, const unsigned int len)
   return len;
 }
 
+int
+abuf_memcpy_prefix(struct autobuf *autobuf, const void *p, const unsigned int len)
+{
+  if (autobuf_enlarge(autobuf, autobuf->len + len) < 0) {
+    return -1;
+  }
+  memmove(&autobuf->buf[len], autobuf->buf, autobuf->len);
+  memcpy(autobuf->buf, p, len);
+  autobuf->len += len;
+  return len;
+}
+
+int
+abuf_pull(struct autobuf * autobuf, int len) {
+  char *p;
+  size_t newsize;
+
+  if (len != autobuf->len) {
+    memmove(autobuf->buf, &autobuf->buf[len], autobuf->len - len);
+  }
+  autobuf->len -= len;
+
+  newsize = ROUND_UP_TO_POWER_OF_2(autobuf->len + 1, AUTOBUFCHUNK);
+  p = realloc(autobuf->buf, newsize);
+  if (p == NULL) {
+#ifdef WIN32
+    WSASetLastError(ENOMEM);
+#else
+    errno = ENOMEM;
+#endif
+    return -1;
+  }
+  autobuf->buf = p;
+  autobuf->size = newsize;
+  return 0;
+}
 /*
  * Local Variables:
  * mode: c

@@ -38,50 +38,47 @@
  * the copyright holders.
  *
  */
+#ifndef OLSR_COMPORT_TXT_H_
+#define OLSR_COMPORT_TXT_H_
 
-#include "olsr_cfg_data.h"
+#include "common/autobuf.h"
+#include "common/avl.h"
+#include "olsr_ip_acl.h"
 
-/*
- * String constants for olsr_log_* and if_mode as used in olsrd.conf.
- * Keep this in the same order as the log_source and
- * log_severity enums (see olsr_cfg_data.h).
- */
+#include "olsr_comport.h"
 
-const char *LOG_SOURCE_NAMES[] = {
-  "all",
-  "logging",
-  "ipc",
-  "main",
-  "networking",
-  "packet_creation",
-  "packet_parsing",
-  "routing",
-  "scheduler",
-  "plugins",
-  "lq-plugins",
-  "ll-plugins",
-  "links",
-  "neighbors",
-  "mpr",
-  "mprset",
-  "2-hop",
-  "tc",
-  "hna",
-  "mid",
-  "duplicate-set",
-  "cookie",
-  "comport"
+enum olsr_txtcommand_result {
+  CONTINUE,
+  CONTINOUS,
+  QUIT,
+  ABUF_ERROR,
+  UNKNOWN,
 };
 
-const char *LOG_SEVERITY_NAMES[] = {
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR"
+typedef enum olsr_txtcommand_result (*olsr_txthandler)
+    (struct comport_connection *con, char *command, char *parameter);
+
+struct olsr_txtcommand {
+  struct avl_node node;
+  struct ip_acl *acl;
+
+  olsr_txthandler handler;
 };
 
 
-const char *INTERFACE_MODE_NAMES[] = {
-  "mesh",
-  "ether"
-};
+void olsr_com_init_txt(void);
+
+struct olsr_txtcommand *EXPORT(olsr_com_add_normal_txtcommand) (
+    const char *command, olsr_txthandler handler);
+struct olsr_txtcommand *EXPORT(olsr_com_add_csv_txtcommand) (
+    const char *command, olsr_txthandler handler);
+struct olsr_txtcommand *EXPORT(olsr_com_add_help_txtcommand) (
+    const char *command, olsr_txthandler handler);
+void EXPORT(olsr_com_remove_normal_txtcommand) (struct olsr_txtcommand *cmd);
+void EXPORT(olsr_com_remove_csv_txtcommand) (struct olsr_txtcommand *cmd);
+void EXPORT(olsr_com_remove_help_txtcommand) (struct olsr_txtcommand *cmd);
+
+enum olsr_txtcommand_result olsr_com_handle_txtcommand(struct comport_connection *con,
+    char *command, char *parameter);
+
+#endif /* OLSR_COMPORT_TXT_H_ */

@@ -150,9 +150,9 @@ ifeq ($(OS),linux)
 SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
 else
 ifeq ($(OS),win32)
-SUBDIRS := dot_draw httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini secure txtinfo watchdog
+SUBDIRS := debug dot_draw httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mini secure txtinfo watchdog
 else
-SUBDIRS := bmf dot_draw dyn_gw dyn_gw_plain httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mdns mini nameservice secure txtinfo watchdog
+SUBDIRS := bmf debuginfo dot_draw dyn_gw dyn_gw_plain httpinfo lq_etx_ff lq_etx_float lq_etx_fpm lq_rfc mdns mini nameservice secure txtinfo watchdog
 endif
 endif
 
@@ -230,6 +230,11 @@ watchdog:
 		$(MAKECMD) -C lib/watchdog clean
 		$(MAKECMD) -C lib/watchdog
 		$(MAKECMD) -C lib/watchdog DESTDIR=$(DESTDIR) install
+
+debuginfo:
+		$(MAKECMD) -C lib/debuginfo clean
+		$(MAKECMD) -C lib/debuginfo
+		$(MAKECMD) -C lib/debuginfo DESTDIR=$(DESTDIR) install
 
 txtinfoshell:
 	$(MAKECMD) -C contrib/txtinfoshell

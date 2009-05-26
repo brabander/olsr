@@ -67,16 +67,23 @@
 #endif
 
 /* options that have no short command line variant */
-#define CFG_LOG_DEBUG       256
-#define CFG_LOG_INFO        257
-#define CFG_LOG_WARN        258
-#define CFG_LOG_ERROR       269
-#define CFG_LOG_STDERR      270
-#define CFG_LOG_SYSLOG      271
-#define CFG_LOG_FILE        272
+enum cfg_long_options {
+  CFG_LOG_DEBUG = 256,
+  CFG_LOG_INFO,
+  CFG_LOG_WARN,
+  CFG_LOG_ERROR,
+  CFG_LOG_STDERR,
+  CFG_LOG_SYSLOG,
+  CFG_LOG_FILE,
 
-#define CFG_OLSRPORT        273
-#define CFG_DLPATH          274
+  CFG_OLSRPORT,
+  CFG_DLPATH,
+
+  CFG_HTTPPORT,
+  CFG_HTTPLIMIT,
+  CFG_TXTPORT,
+  CFG_TXTLIMIT
+};
 
 /* remember which log severities have been explicitly set */
 static bool cfg_has_log[LOG_SEVERITY_COUNT];
@@ -1078,6 +1085,42 @@ parse_cfg_option(const int optint, char *argstr, const int line, struct olsr_con
     rcfg->dlPath = strdup(argstr);
     PARSER_DEBUG_PRINTF("Dynamic library path: %s\n", rcfg->dlPath);
     break;
+  case CFG_HTTPPORT:
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_http))))
+        rcfg->comport_http = arg;
+      PARSER_DEBUG_PRINTF("HTTP port: %d\n", rcfg->comport_http);
+    }
+    break;
+  case CFG_HTTPLIMIT:
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_http_limit))))
+        rcfg->comport_http_limit = arg;
+      PARSER_DEBUG_PRINTF("HTTP connection limit: %d\n", rcfg->comport_http_limit);
+    }
+    break;
+  case CFG_TXTPORT:
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_txt))))
+        rcfg->comport_txt = arg;
+      PARSER_DEBUG_PRINTF("TXT port: %d\n", rcfg->comport_txt);
+    }
+    break;
+  case CFG_TXTLIMIT:
+    {
+      int arg = -1;
+      sscanf(argstr, "%d", &arg);
+      if (0 <= arg && arg < (1 << (8 * sizeof(rcfg->comport_txt_limit))))
+        rcfg->comport_txt_limit = arg;
+      PARSER_DEBUG_PRINTF("TXT connection limit: %d\n", rcfg->comport_txt_limit);
+    }
+    break;
   default:
     sprintf(rmsg, "Unknown arg in line %d.\n", line);
     return CFG_ERROR;
@@ -1181,8 +1224,12 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
     {"Willingness",              required_argument, 0, 'w'}, /* (i) */
     {"RouterId",                 required_argument, 0, 'o'}, /* (ip) */
     {"SourceIpMode",             required_argument, 0, 's'}, /* (yes/no) */
-    {"OlsrPort",                 required_argument, 0, CFG_OLSRPORT}, /* (i) */
-    {"dlPath",                   required_argument, 0, CFG_DLPATH}, /* (path) */
+    {"OlsrPort",                 required_argument, 0, CFG_OLSRPORT},  /* (i) */
+    {"dlPath",                   required_argument, 0, CFG_DLPATH},    /* (path) */
+    {"HttpPort",                 required_argument, 0, CFG_HTTPPORT},  /* (i) */
+    {"HttpLimit",                required_argument, 0, CFG_HTTPLIMIT}, /* (i) */
+    {"TxtPort",                  required_argument, 0, CFG_TXTPORT},   /* (i) */
+    {"TxtLimit",                 required_argument, 0, CFG_TXTLIMIT},  /* (i) */
 
     {"UseHysteresis",            required_argument, 0,  0 }, /* ignored */
     {"HystScaling",              required_argument, 0,  0 }, /* ignored */
@@ -1281,7 +1328,7 @@ olsr_parse_cfg(int argc, char *argv[], const char *file, char *rmsg, struct olsr
       break;
 #endif
     case 'v':                  /* version */
-      /* Version string already printed */
+      fprintf(stderr,  "*** %s ***\n Build date: %s on %s\n http://www.olsr.org\n\n", olsrd_version, build_date, build_host);
       rslt = CFG_EXIT;
       break;
     case 'h':                  /* help */
@@ -1617,6 +1664,11 @@ olsr_get_default_cfg(void)
 
   cfg->olsr_port = OLSRPORT;
   assert(cfg->dlPath == NULL);
+
+  cfg->comport_http       = DEF_HTTPPORT;
+  cfg->comport_http_limit = DEF_HTTPLIMIT;
+  cfg->comport_txt        = DEF_TXTPORT;
+  cfg->comport_txt_limit  = DEF_TXTLIMIT;
 
   assert(0 == memcmp(&all_zero, &cfg->router_id, sizeof(cfg->router_id)));
   assert(0 == cfg->source_ip_mode);

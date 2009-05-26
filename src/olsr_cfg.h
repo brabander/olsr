@@ -59,6 +59,10 @@
 #define DEF_LQ_NAT_THRESH      1.0
 #define DEF_LQ_AGING           0.1
 #define DEF_CLEAR_SCREEN       false
+#define DEF_HTTPPORT           8080
+#define DEF_HTTPLIMIT          3
+#define DEF_TXTPORT            2006
+#define DEF_TXTLIMIT           3
 
 /* Bounds */
 
@@ -212,6 +216,11 @@ struct olsr_config {
 
   uint16_t olsr_port;                  /* port number used for OLSR packages */
   char *dlPath;                        /* absolute path for dynamic libraries */
+
+  uint16_t comport_http;               /* communication port for http connections */
+  uint16_t comport_http_limit;         /* maximum number of connections (including interactive ones) */
+  uint16_t comport_txt;                /* communication port for txt connections */
+  uint16_t comport_txt_limit;          /* maximum number of interactive connections */
 
   /*
    * Someone has added global variables to the config struct.

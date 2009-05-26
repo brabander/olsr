@@ -57,6 +57,14 @@ const struct in6_addr in6addr_v4mapped_loopback = IN6ADDR_V4MAPPED_LOOPBACK_INIT
 /* initialize it with all zeroes */
 const union olsr_ip_addr all_zero = {.v6 = IN6ADDR_ANY_INIT };
 
+void
+ip_map_4to6(union olsr_ip_addr *addr) {
+  /* ipv4-mapped-ipv6 = ::ff:<ipv4> */
+  memmove(&addr->v6.s6_addr[12], &addr->v4.s_addr, 4 * sizeof(uint8_t));
+  memset(&addr->v6.s6_addr[0], 0x00, 10 * sizeof(uint8_t));
+  memset(&addr->v6.s6_addr[10], 0xff, 2 * sizeof(uint8_t));
+}
+
 int
 prefix_to_netmask(uint8_t * a, int len, uint8_t prefixlen)
 {

@@ -9,7 +9,7 @@ There are no futher parameters.
    A configuration example
 -----------------------------
 
-LoadPlugin "olsrd_txtinfo.so.0.2"
+LoadPlugin "olsrd_debuginfo.so.0.1"
 {
     PlParam     "checkfirst"    "reject"
     PlParam     "defaultpolicy" "reject"
@@ -25,9 +25,8 @@ access is always allowed from 127.0.0.1(localhost).
    PLUGIN USAGE
 ==================
 
-The plugin commands are "link", "neigh", "routes",
-"topology", "hna" and "mid". All commands support
-both normal and csv mode.
+The plugin commands are "cookies" and "stats".
+All commands support both normal and csv mode.
 
 The plugin commands are used through the normal OLSR
 telnet server. See README-http-txt-services for details.
