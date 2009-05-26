@@ -65,6 +65,7 @@ struct neighbor_2_entry {
   uint8_t mpr_covered_count;           /*used in mpr calculation */
   uint8_t processed;                   /*used in mpr calculation */
   int16_t neighbor_2_pointer;          /* Neighbor count */
+  struct timer_entry *nbr2_list_timer;
   struct neighbor_list_entry neighbor_2_nblist;
   struct neighbor_2_entry *prev;
   struct neighbor_2_entry *next;
@@ -89,7 +90,7 @@ struct neighbor_2_entry {
 
 extern struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
 
-void olsr_init_two_hop_table(void); 
+void olsr_init_two_hop_table(void);
 void olsr_delete_neighbor_pointer(struct neighbor_2_entry *, struct nbr_entry *);
 void olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *);
 void olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *);

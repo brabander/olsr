@@ -99,7 +99,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
         struct neighbor_list_entry *walker;
 
         /* Updating the holding time for this neighbor */
-        olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
+        olsr_set_timer(&two_hop_neighbor_yet->neighbor_2->nbr2_list_timer,
                        message->comm.vtime, OLSR_NBR2_LIST_JITTER,
                        OLSR_TIMER_ONESHOT, &olsr_expire_nbr2_list, two_hop_neighbor_yet, nbr2_list_timer_cookie->ci_id);
 
