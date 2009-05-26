@@ -734,7 +734,7 @@ parse_cfg_debug(char *argstr, struct olsr_config *rcfg, char *rmsg)
   dlevel = atoi(argstr);
 
   if (dlevel < MIN_DEBUGLVL || dlevel > MAX_DEBUGLVL) {
-    sprintf(rmsg, "Error, debug level must be between -2 and 4\n");
+    sprintf(rmsg, "Error, debug level must be between -2 and 3\n");
     return CFG_ERROR;
   }
 
