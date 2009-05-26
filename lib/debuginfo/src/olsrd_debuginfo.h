@@ -51,7 +51,7 @@
 #include "plugin_util.h"
 #include "common/avl.h"
 
-enum debug_traffic_type {
+enum debug_msgtraffic_type {
   DTR_HELLO,
   DTR_TC,
   DTR_MID,
@@ -61,34 +61,62 @@ enum debug_traffic_type {
   DTR_MESSAGES,
   DTR_MSG_TRAFFIC,
 
+  /* this one must be the last one */
+  DTR_MSG_COUNT
+};
+
+enum debug_pkttraffic_type {
   DTR_PACKETS,
   DTR_PACK_TRAFFIC,
 
   /* this one must be the last one */
-  DTR_COUNT
+  DTR_PKT_COUNT
 };
 
-struct debug_traffic_count {
-  uint32_t data[DTR_COUNT];
+struct debug_msgtraffic_count {
+  uint32_t data[DTR_MSG_COUNT];
 };
 
-struct debug_traffic {
+struct debug_pkttraffic_count {
+  uint32_t data[DTR_PKT_COUNT];
+};
+
+struct debug_msgtraffic {
   struct avl_node node;
   union olsr_ip_addr ip;
 
-  struct debug_traffic_count total;
-  struct debug_traffic_count current;
-  struct debug_traffic_count traffic[0];
+  struct debug_msgtraffic_count total;
+  struct debug_msgtraffic_count current;
+  struct debug_msgtraffic_count traffic[0];
 };
 
-#define OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) \
+struct debug_pkttraffic {
+  struct avl_node node;
+  union olsr_ip_addr ip;
+  char *int_name;
+
+  struct debug_pkttraffic_count total;
+  struct debug_pkttraffic_count current;
+  struct debug_pkttraffic_count traffic[0];
+};
+
+#define OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) \
 { \
   struct avl_node *tr_tree_node, *next_tr_tree_node; \
-  for (tr_tree_node = avl_walk_first(&statistics_tree); \
+  for (tr_tree_node = avl_walk_first(&stat_msg_tree); \
     tr_tree_node; tr_tree_node = next_tr_tree_node) { \
     next_tr_tree_node = avl_walk_next(tr_tree_node); \
-    tr = (struct debug_traffic *)(tr_tree_node);
-#define OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tc) }}
+    tr = (struct debug_msgtraffic *)(tr_tree_node);
+#define OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr) }}
+
+#define OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) \
+{ \
+  struct avl_node *tr_tree_node, *next_tr_tree_node; \
+  for (tr_tree_node = avl_walk_first(&stat_pkt_tree); \
+    tr_tree_node; tr_tree_node = next_tr_tree_node) { \
+    next_tr_tree_node = avl_walk_next(tr_tree_node); \
+    tr = (struct debug_pkttraffic *)(tr_tree_node);
+#define OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr) }}
 
 #endif
 

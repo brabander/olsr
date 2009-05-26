@@ -78,6 +78,7 @@ static void debuginfo_new(void) __attribute__ ((constructor));
 static void debuginfo_delete(void) __attribute__ ((destructor));
 
 static enum olsr_txtcommand_result debuginfo_msgstat(struct comport_connection *con,  char *cmd, char *param);
+static enum olsr_txtcommand_result debuginfo_pktstat(struct comport_connection *con,  char *cmd, char *param);
 static enum olsr_txtcommand_result debuginfo_cookies(struct comport_connection *con,  char *cmd, char *param);
 
 static void update_statistics_ptr(void *);
@@ -102,14 +103,19 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 /* command callbacks and names */
 static struct debuginfo_cmd commands[] = {
     {"msgstat", &debuginfo_msgstat, NULL, NULL},
+    {"pktstat", &debuginfo_pktstat, NULL, NULL},
     {"cookies", &debuginfo_cookies, NULL, NULL}
 };
 
 /* variables for statistics */
-static struct avl_tree statistics_tree;
-static struct debug_traffic_count total_traffic;
+static struct avl_tree stat_msg_tree, stat_pkt_tree;
+
+static struct debug_msgtraffic_count total_msg_traffic;
+static struct debug_pkttraffic_count total_pkt_traffic;
+
 static struct olsr_cookie_info *statistics_timer = NULL;
-static struct olsr_cookie_info *statistics_mem = NULL;
+static struct olsr_cookie_info *statistics_msg_mem = NULL;
+static struct olsr_cookie_info *statistics_pkt_mem = NULL;
 
 static union olsr_ip_addr total_ip_addr;
 
@@ -185,32 +191,53 @@ olsrd_plugin_init(void)
     commands[i].csv->acl = &allowed_nets;
   }
 
-  i = sizeof(struct debug_traffic) + sizeof(struct debug_traffic_count) * traffic_slots;
-
   statistics_timer = olsr_alloc_cookie("debuginfo statistics timer", OLSR_COOKIE_TYPE_TIMER);
   olsr_start_timer(traffic_interval * 1000, 0, true, &update_statistics_ptr, NULL, statistics_timer->ci_id);
 
-  statistics_mem = olsr_alloc_cookie("debuginfo statistics memory", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(statistics_mem, i);
+  statistics_msg_mem = olsr_alloc_cookie("debuginfo msg statistics memory", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(statistics_msg_mem,
+      sizeof(struct debug_msgtraffic) + sizeof(struct debug_msgtraffic_count) * traffic_slots);
 
-  memset(&total_traffic, 0, sizeof(total_traffic));
-  avl_init(&statistics_tree, avl_comp_default);
+  statistics_pkt_mem = olsr_alloc_cookie("debuginfo pkt statistics memory", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(statistics_pkt_mem,
+      sizeof(struct debug_pkttraffic) + sizeof(struct debug_pkttraffic_count) * traffic_slots);
+
+  memset(&total_msg_traffic, 0, sizeof(total_msg_traffic));
+  memset(&total_pkt_traffic, 0, sizeof(total_pkt_traffic));
+  avl_init(&stat_msg_tree, avl_comp_default);
+  avl_init(&stat_pkt_tree, avl_comp_default);
 
   olsr_parser_add_function(&olsr_msg_statistics, PROMISCUOUS);
   olsr_preprocessor_add_function(&olsr_packet_statistics);
   return 1;
 }
 
-static struct debug_traffic *get_debugtraffic_entry(union olsr_ip_addr *ip) {
-  struct debug_traffic *tr;
-  tr = (struct debug_traffic *) avl_find(&statistics_tree, ip);
+static struct debug_msgtraffic *get_msgtraffic_entry(union olsr_ip_addr *ip) {
+  struct debug_msgtraffic *tr;
+  tr = (struct debug_msgtraffic *) avl_find(&stat_msg_tree, ip);
   if (tr == NULL) {
-    tr = olsr_cookie_malloc(statistics_mem);
+    tr = olsr_cookie_malloc(statistics_msg_mem);
 
     memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
     tr->node.key = &tr->ip;
 
-    avl_insert(&statistics_tree, &tr->node, AVL_DUP_NO);
+    avl_insert(&stat_msg_tree, &tr->node, AVL_DUP_NO);
+  }
+  return tr;
+}
+
+static struct debug_pkttraffic *get_pkttraffic_entry(union olsr_ip_addr *ip, struct interface *in) {
+  struct debug_pkttraffic *tr;
+  tr = (struct debug_pkttraffic *) avl_find(&stat_pkt_tree, ip);
+  if (tr == NULL) {
+    tr = olsr_cookie_malloc(statistics_pkt_mem);
+
+    memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
+    tr->node.key = &tr->ip;
+
+    tr->int_name = strdup(in ? in->int_name : "---");
+
+    avl_insert(&stat_pkt_tree, &tr->node, AVL_DUP_NO);
   }
   return tr;
 }
@@ -218,7 +245,8 @@ static struct debug_traffic *get_debugtraffic_entry(union olsr_ip_addr *ip) {
 static void
 update_statistics_ptr(void *data __attribute__ ((unused)))
 {
-  struct debug_traffic *traffic;
+  struct debug_msgtraffic *msg;
+  struct debug_pkttraffic *pkt;
   uint32_t last_slot, i;
 
   last_slot = current_slot;
@@ -228,30 +256,56 @@ update_statistics_ptr(void *data __attribute__ ((unused)))
   }
 
   /* move data from "current" template to slot array */
-  OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(traffic) {
+  OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(msg) {
     /* subtract old values from node count and total count */
-    for (i=0; i<DTR_COUNT; i++) {
-      traffic->total.data[i] -= traffic->traffic[current_slot].data[i];
+    for (i=0; i<DTR_MSG_COUNT; i++) {
+      msg->total.data[i] -= msg->traffic[current_slot].data[i];
     }
 
     /* copy new traffic into slot */
-    traffic->traffic[current_slot] = traffic->current;
+    msg->traffic[current_slot] = msg->current;
 
     /* add new values to node count and total count */
-    for (i=0; i<DTR_COUNT; i++) {
-      traffic->total.data[i] += traffic->current.data[i];
+    for (i=0; i<DTR_MSG_COUNT; i++) {
+      msg->total.data[i] += msg->current.data[i];
     }
 
     /* erase new traffic */
-    memset(&traffic->current, 0, sizeof(traffic->current));
+    memset(&msg->current, 0, sizeof(msg->current));
 
-    if (traffic->total.data[DTR_MESSAGES] == 0) {
+    if (msg->total.data[DTR_MESSAGES] == 0) {
       /* no traffic left, cleanup ! */
 
-      avl_delete(&statistics_tree, &traffic->node);
-      olsr_cookie_free(statistics_mem, traffic);
+      avl_delete(&stat_msg_tree, &msg->node);
+      olsr_cookie_free(statistics_msg_mem, msg);
     }
-  } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(traffic)
+  } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(msg)
+
+  OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(pkt) {
+    /* subtract old values from node count and total count */
+    for (i=0; i<DTR_PKT_COUNT; i++) {
+      pkt->total.data[i] -= pkt->traffic[current_slot].data[i];
+    }
+
+    /* copy new traffic into slot */
+    pkt->traffic[current_slot] = pkt->current;
+
+    /* add new values to node count and total count */
+    for (i=0; i<DTR_PKT_COUNT; i++) {
+      pkt->total.data[i] += pkt->current.data[i];
+    }
+
+    /* erase new traffic */
+    memset(&pkt->current, 0, sizeof(pkt->current));
+
+    if (pkt->total.data[DTR_PACKETS] == 0) {
+      /* no traffic left, cleanup ! */
+
+      avl_delete(&stat_msg_tree, &pkt->node);
+      free(pkt->int_name);
+      olsr_cookie_free(statistics_msg_mem, pkt);
+    }
+  } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(pkt)
 }
 
 /* update message statistics */
@@ -261,8 +315,8 @@ olsr_msg_statistics(union olsr_message *msg,
 {
   int msgtype, msgsize;
   union olsr_ip_addr origaddr;
-  enum debug_traffic_type type;
-  struct debug_traffic *tr;
+  enum debug_msgtraffic_type type;
+  struct debug_msgtraffic *tr;
 #if !defined REMOVE_DEBUG
   struct ipaddr_str buf;
 #endif
@@ -303,7 +357,7 @@ olsr_msg_statistics(union olsr_message *msg,
   }
 
   /* input data for specific node */
-  tr = get_debugtraffic_entry(&origaddr);
+  tr = get_msgtraffic_entry(&origaddr);
   tr->current.data[type]++;
   tr->current.data[DTR_MESSAGES]++;
   tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
@@ -312,7 +366,7 @@ olsr_msg_statistics(union olsr_message *msg,
       type, olsr_ip_to_string(&buf, &tr->ip), tr->current.data[type]);
 
   /* input data for total traffic handling */
-  tr = get_debugtraffic_entry(&total_ip_addr);
+  tr = get_msgtraffic_entry(&total_ip_addr);
   tr->current.data[type]++;
   tr->current.data[DTR_MESSAGES]++;
   tr->current.data[DTR_MSG_TRAFFIC] += msgsize;
@@ -322,23 +376,17 @@ olsr_msg_statistics(union olsr_message *msg,
 /* update traffic statistics */
 static char *
 olsr_packet_statistics(char *packet __attribute__ ((unused)),
-                       struct interface *interface __attribute__ ((unused)),
+                       struct interface *interface,
                        union olsr_ip_addr *ip, int *length)
 {
-  struct debug_traffic *tr;
-  tr = (struct debug_traffic *) avl_find(&statistics_tree, ip);
-  if (tr == NULL) {
-    tr = olsr_cookie_malloc(statistics_mem);
-
-    memcpy(&tr->ip, ip, sizeof(union olsr_ip_addr));
-    tr->node.key = &tr->ip;
-
-    avl_insert(&statistics_tree, &tr->node, AVL_DUP_NO);
-  }
-
+  struct debug_pkttraffic *tr;
+  tr = get_pkttraffic_entry(ip, interface);
   tr->current.data[DTR_PACK_TRAFFIC] += *length;
   tr->current.data[DTR_PACKETS] ++;
 
+  tr = get_pkttraffic_entry(&total_ip_addr, NULL);
+  tr->current.data[DTR_PACK_TRAFFIC] += *length;
+  tr->current.data[DTR_PACKETS] ++;
   return packet;
 }
 
@@ -350,11 +398,22 @@ static const char *debuginfo_print_trafficip(struct ipaddr_str *buf, union olsr_
   return olsr_ip_to_string(buf, ip);
 }
 
-
-static bool debuginfo_print_nodestat(struct autobuf *buf, union olsr_ip_addr *ip, struct debug_traffic_count *cnt, const char *template) {
+static bool debuginfo_print_msgstat(struct autobuf *buf, bool csv, union olsr_ip_addr *ip, struct debug_msgtraffic_count *cnt) {
   struct ipaddr_str strbuf;
 
-  return abuf_appendf(buf, template,
+  if (csv) {
+    return abuf_appendf(buf, "msgstat,%s,%d,%d,%d,%d,%d,%d,%d\n",
+        debuginfo_print_trafficip(&strbuf, ip),
+        cnt->data[DTR_HELLO],
+        cnt->data[DTR_TC],
+        cnt->data[DTR_MID],
+        cnt->data[DTR_HNA],
+        cnt->data[DTR_OTHER],
+        cnt->data[DTR_MESSAGES],
+        cnt->data[DTR_MSG_TRAFFIC]) < 0;
+  }
+
+  return abuf_appendf(buf, "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n",
       olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, debuginfo_print_trafficip(&strbuf, ip),
       cnt->data[DTR_HELLO],
       cnt->data[DTR_TC],
@@ -368,7 +427,7 @@ static bool debuginfo_print_nodestat(struct autobuf *buf, union olsr_ip_addr *ip
 static enum olsr_txtcommand_result
 debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
 {
-  struct debug_traffic *tr;
+  struct debug_msgtraffic *tr;
 
   if (!con->is_csv) {
     if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
@@ -383,16 +442,15 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
   }
 
   if (param == NULL || strcasecmp(param, "node") == 0) {
-    OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) {
-      if (debuginfo_print_nodestat(&con->out, &tr->ip, &tr->traffic[current_slot],
-          "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n")) {
+    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) {
+      if (debuginfo_print_msgstat(&con->out, con->is_csv, &tr->ip, &tr->traffic[current_slot])) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
   }
   else {
     uint32_t mult = 1, divisor = 1;
-    struct debug_traffic_count cnt;
+    struct debug_msgtraffic_count cnt;
     int i;
 
     if (strcasecmp(param, "total") == 0) {
@@ -418,15 +476,97 @@ debuginfo_msgstat(struct comport_connection *con,  char *cmd __attribute__ ((unu
       return CONTINUE;
     }
 
-    OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES(tr) {
-      for (i=0; i<DTR_COUNT; i++) {
+    OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES(tr) {
+      for (i=0; i<DTR_MSG_COUNT; i++) {
         cnt.data[i] = (tr->total.data[i] * mult) / divisor;
       }
-      if (debuginfo_print_nodestat(&con->out, &tr->ip, &cnt,
-          "%-*s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n")) {
+      if (debuginfo_print_msgstat(&con->out, con->is_csv, &tr->ip, &cnt)) {
         return ABUF_ERROR;
       }
-    } OLSR_FOR_ALL_DEBUGTRAFFIC_ENTRIES_END(tr)
+    } OLSR_FOR_ALL_MSGTRAFFIC_ENTRIES_END(tr)
+  }
+
+  return CONTINUE;
+}
+
+static bool debuginfo_print_pktstat(struct autobuf *buf, bool csv, union olsr_ip_addr *ip, char *int_name, struct debug_pkttraffic_count *cnt) {
+  struct ipaddr_str strbuf;
+
+  if (csv) {
+    return abuf_appendf(buf, "msgstat,%s,%s,%d,%d\n",
+        debuginfo_print_trafficip(&strbuf, ip),
+        int_name,
+        cnt->data[DTR_PACKETS],
+        cnt->data[DTR_PACK_TRAFFIC]) < 0;
+  }
+
+  return abuf_appendf(buf, "%-*s\t%s\t%d\t%d\n",
+      olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, debuginfo_print_trafficip(&strbuf, ip),
+      int_name,
+      cnt->data[DTR_PACKETS],
+      cnt->data[DTR_PACK_TRAFFIC]) < 0;
+}
+
+static enum olsr_txtcommand_result
+debuginfo_pktstat(struct comport_connection *con,  char *cmd __attribute__ ((unused)), char *param __attribute__ ((unused)))
+{
+  struct debug_pkttraffic *tr;
+
+  if (!con->is_csv) {
+    if (abuf_appendf(&con->out, "Slot size: %d seconds\tSlot count: %d\n", traffic_interval, traffic_slots) < 0) {
+      return ABUF_ERROR;
+    }
+    if (abuf_appendf(&con->out,
+        "Table: Statistics (without duplicates)\n%-*s\tInterf.\tPackets\tBytes\n",
+        olsr_cnf->ip_version == AF_INET ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN, "IP"
+        ) < 0) {
+      return ABUF_ERROR;
+    }
+  }
+
+  if (param == NULL || strcasecmp(param, "node") == 0) {
+    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) {
+      if (debuginfo_print_pktstat(&con->out, con->is_csv, &tr->ip, tr->int_name, &tr->traffic[current_slot])) {
+        return ABUF_ERROR;
+      }
+    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
+  }
+  else {
+    uint32_t mult = 1, divisor = 1;
+    struct debug_pkttraffic_count cnt;
+    int i;
+
+    if (strcasecmp(param, "total") == 0) {
+      divisor = 1;
+    }
+    else if (strcasecmp(param, "average") == 0) {
+      divisor = traffic_slots;
+    }
+    else if (strcasecmp(param, "avgsec") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 1;
+    }
+    else if (strcasecmp(param, "avgmin") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 60;
+    }
+    else if (strcasecmp(param, "avghour") == 0) {
+      divisor = traffic_slots * traffic_interval;
+      mult = 3600;
+    }
+    else {
+      abuf_appendf(&con->out, "Error, unknown parameter %s for msgstat\n", param);
+      return CONTINUE;
+    }
+
+    OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES(tr) {
+      for (i=0; i<DTR_PKT_COUNT; i++) {
+        cnt.data[i] = (tr->total.data[i] * mult) / divisor;
+      }
+      if (debuginfo_print_pktstat(&con->out, con->is_csv, &tr->ip, tr->int_name, &cnt)) {
+        return ABUF_ERROR;
+      }
+    } OLSR_FOR_ALL_PKTTRAFFIC_ENTRIES_END(tr)
   }
 
   return CONTINUE;
