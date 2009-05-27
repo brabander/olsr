@@ -85,20 +85,20 @@ olsr_init_neighbor_table(void)
  * Add a neighbor 2 reference to a neighbor.
  */
 struct nbr2_list_entry *
-olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, float vtime)
+olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float vtime)
 {
   struct nbr2_list_entry *nbr2_list;
 
   /*
    * check first if the entry exists.
    */
-  nbr2_list = olsr_lookup_nbr2_list_entry(nbr, &nbr2->neighbor_2_addr);
+  nbr2_list = olsr_lookup_nbr2_list_entry(nbr, &nbr2->nbr2_addr);
   if (nbr2_list) {
 
     /*
      * Refresh timer.
      */
-    olsr_change_timer(nbr2_list->neighbor_2->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+    olsr_change_timer(nbr2_list->nbr2->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
     return nbr2_list;
   }
 
@@ -107,8 +107,8 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
    */
   nbr2_list = olsr_cookie_malloc(nbr2_list_mem_cookie);
 
-  nbr2_list->neighbor_2 = nbr2;
-  nbr2->neighbor_2_pointer++;   /* XXX move to olsr_lock_nbr2 () */
+  nbr2_list->nbr2 = nbr2;
+  nbr2->nbr2_pointer++;   /* XXX move to olsr_lock_nbr2 () */
   nbr2_list->nbr2_nbr = nbr;    /* XXX nbr needs refcount protection as well */
 
   /*
@@ -118,7 +118,7 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
                    &olsr_expire_nbr2_list, nbr2_list, nbr2_list_timer_cookie->ci_id);
 
   /* Add to the nbr2 reference subtree */
-  nbr2_list->nbr2_list_node.key = &nbr2->neighbor_2_addr;
+  nbr2_list->nbr2_list_node.key = &nbr2->nbr2_addr;
   avl_insert(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node, AVL_DUP_NO);
 
   return nbr2_list;
@@ -131,14 +131,14 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
 static void
 olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
 {
-  struct neighbor_2_entry *nbr2;
+  struct nbr2_entry *nbr2;
   struct nbr_entry *nbr;
 
-  nbr2 = nbr2_list->neighbor_2;
+  nbr2 = nbr2_list->nbr2;
   nbr = nbr2_list->nbr2_nbr;
 
   /* XXX move to olsr_unlock_nbr2() */
-  if (nbr2->neighbor_2_pointer < 1) {
+  if (nbr2->nbr2_pointer < 1) {
     DEQUEUE_ELEM(nbr2);
     free(nbr2);
   }
@@ -146,8 +146,8 @@ olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
   /*
    * Kill running timers.
    */
-  olsr_stop_timer(nbr2_list->neighbor_2->nbr2_list_timer);
-  nbr2_list->neighbor_2->nbr2_list_timer = NULL;
+  olsr_stop_timer(nbr2_list->nbr2->nbr2_list_timer);
+  nbr2_list->nbr2->nbr2_list_timer = NULL;
 
   /* Remove from neighbor2 reference subtree */
   avl_delete(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node);
@@ -235,8 +235,8 @@ olsr_delete_nbr_entry(const union olsr_ip_addr * addr)
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
   OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
-    nbr2_list->neighbor_2->neighbor_2_pointer--;        /* XXX move to olsr_nbr2_unlock() */
-    olsr_delete_neighbor_pointer(nbr2_list->neighbor_2, nbr);
+    nbr2_list->nbr2->nbr2_pointer--;        /* XXX move to olsr_nbr2_unlock() */
+    olsr_delete_neighbor_pointer(nbr2_list->nbr2, nbr);
     olsr_delete_nbr2_list_entry(nbr2_list);
   } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list);
 
@@ -355,7 +355,7 @@ olsr_update_nbr_status(struct nbr_entry *entry, int lnk)
   if (lnk == SYM_LINK) {
     /* N_status is set to SYM */
     if (entry->status == NOT_SYM) {
-      struct neighbor_2_entry *two_hop_neighbor;
+      struct nbr2_entry *two_hop_neighbor;
 
       /* Delete posible 2 hop entry on this neighbor */
       if ((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->neighbor_main_addr)) != NULL) {
@@ -392,15 +392,15 @@ olsr_expire_nbr2_list(void *context)
 {
   struct nbr2_list_entry *nbr2_list;
   struct nbr_entry *nbr;
-  struct neighbor_2_entry *nbr2;
+  struct nbr2_entry *nbr2;
 
   nbr2_list = (struct nbr2_list_entry *)context;
-  nbr2_list->neighbor_2->nbr2_list_timer = NULL;
+  nbr2_list->nbr2->nbr2_list_timer = NULL;
 
   nbr = nbr2_list->nbr2_nbr;
-  nbr2 = nbr2_list->neighbor_2;
+  nbr2 = nbr2_list->nbr2;
 
-  nbr2->neighbor_2_pointer--;   /* XXX move to olsr_unlock_nbr2() */
+  nbr2->nbr2_pointer--;   /* XXX move to olsr_unlock_nbr2() */
   olsr_delete_neighbor_pointer(nbr2, nbr);
 
   olsr_delete_nbr2_list_entry(nbr2_list);

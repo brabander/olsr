@@ -972,7 +972,7 @@ build_neigh_body(struct autobuf *abuf)
     thop_cnt = 0;
     OLSR_FOR_ALL_NBR2_LIST_ENTRIES(neigh, list_2) {
       struct ipaddr_str strbuf;
-      abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->neighbor_2->neighbor_2_addr));
+      abuf_appendf(abuf, "<option>%s</option>\n", olsr_ip_to_string(&strbuf, &list_2->nbr2->nbr2_addr));
       thop_cnt++;
     } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(neigh, list_2);
     abuf_appendf(abuf, "</select> (%d)</td></tr>\n", thop_cnt);

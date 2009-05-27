@@ -50,7 +50,7 @@
 
 #include <stdlib.h>
 
-struct neighbor_2_entry two_hop_neighbortable[HASHSIZE];
+struct nbr2_entry two_hop_neighbortable[HASHSIZE];
 
 /**
  *Initialize 2 hop neighbor table
@@ -79,12 +79,12 @@ olsr_init_two_hop_table(void)
  *@return nada
  */
 void
-olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, struct nbr_entry *neigh)
+olsr_delete_neighbor_pointer(struct nbr2_entry *two_hop_entry, struct nbr_entry *neigh)
 {
-  struct neighbor_list_entry *entry = two_hop_entry->neighbor_2_nblist.next;
-  while (entry != &two_hop_entry->neighbor_2_nblist) {
+  struct nbr_list_entry *entry = two_hop_entry->nbr2_nblist.next;
+  while (entry != &two_hop_entry->nbr2_nblist) {
     if (entry->neighbor == neigh) {
-      struct neighbor_list_entry *entry_to_delete = entry;
+      struct nbr_list_entry *entry_to_delete = entry;
       entry = entry->next;
 
       /* dequeue */
@@ -105,18 +105,18 @@ olsr_delete_neighbor_pointer(struct neighbor_2_entry *two_hop_entry, struct nbr_
  *@return nada
  */
 void
-olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
+olsr_delete_two_hop_neighbor_table(struct nbr2_entry *two_hop_neighbor)
 {
-  struct neighbor_list_entry *one_hop_list;
+  struct nbr_list_entry *one_hop_list;
 
-  one_hop_list = two_hop_neighbor->neighbor_2_nblist.next;
+  one_hop_list = two_hop_neighbor->nbr2_nblist.next;
 
   /* Delete one hop links */
-  while (one_hop_list != &two_hop_neighbor->neighbor_2_nblist) {
+  while (one_hop_list != &two_hop_neighbor->nbr2_nblist) {
     struct nbr_entry *one_hop_entry = one_hop_list->neighbor;
-    struct neighbor_list_entry *entry_to_delete = one_hop_list;
+    struct nbr_list_entry *entry_to_delete = one_hop_list;
 
-    olsr_delete_nbr2_list_entry_by_addr(one_hop_entry, &two_hop_neighbor->neighbor_2_addr);
+    olsr_delete_nbr2_list_entry_by_addr(one_hop_entry, &two_hop_neighbor->nbr2_addr);
     one_hop_list = one_hop_list->next;
     /* no need to dequeue */
     free(entry_to_delete);
@@ -135,14 +135,14 @@ olsr_delete_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
  *@return nada
  */
 void
-olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
+olsr_insert_two_hop_neighbor_table(struct nbr2_entry *two_hop_neighbor)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->neighbor_2_addr);
+  uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->nbr2_addr);
 
-  OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
+  OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->nbr2_addr));
 
   /* Queue */
   QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
@@ -153,27 +153,27 @@ olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
  *
  *@param dest the IP address of the entry to find
  *
- *@return a pointer to a neighbor_2_entry struct
+ *@return a pointer to a nbr2_entry struct
  *representing the two hop neighbor
  */
-struct neighbor_2_entry *
+struct nbr2_entry *
 olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
 {
-  struct neighbor_2_entry *neighbor_2;
+  struct nbr2_entry *nbr2;
   uint32_t hash = olsr_ip_hashing(dest);
 
-  for (neighbor_2 = two_hop_neighbortable[hash].next; neighbor_2 != &two_hop_neighbortable[hash]; neighbor_2 = neighbor_2->next) {
+  for (nbr2 = two_hop_neighbortable[hash].next; nbr2 != &two_hop_neighbortable[hash]; nbr2 = nbr2->next) {
     struct tc_entry *tc;
 
-    if (olsr_ipcmp(&neighbor_2->neighbor_2_addr, dest) == 0) {
-      return neighbor_2;
+    if (olsr_ipcmp(&nbr2->nbr2_addr, dest) == 0) {
+      return nbr2;
     }
     /*
      * Locate the hookup point and check if this is a registered alias.
      */
-    tc = olsr_locate_tc_entry(&neighbor_2->neighbor_2_addr);
+    tc = olsr_locate_tc_entry(&nbr2->nbr2_addr);
     if (olsr_lookup_tc_mid_entry(tc, dest)) {
-      return neighbor_2;
+      return nbr2;
     }
   }
   return NULL;
@@ -185,18 +185,18 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
  *
  *@param dest the IP address of the entry to find
  *
- *@return a pointer to a neighbor_2_entry struct
+ *@return a pointer to a nbr2_entry struct
  *representing the two hop neighbor
  */
-struct neighbor_2_entry *
+struct nbr2_entry *
 olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
 {
-  struct neighbor_2_entry *neighbor_2;
+  struct nbr2_entry *nbr2;
   uint32_t hash = olsr_ip_hashing(dest);
 
-  for (neighbor_2 = two_hop_neighbortable[hash].next; neighbor_2 != &two_hop_neighbortable[hash]; neighbor_2 = neighbor_2->next) {
-    if (olsr_ipcmp(&neighbor_2->neighbor_2_addr, dest) == 0)
-      return neighbor_2;
+  for (nbr2 = two_hop_neighbortable[hash].next; nbr2 != &two_hop_neighbortable[hash]; nbr2 = nbr2->next) {
+    if (olsr_ipcmp(&nbr2->nbr2_addr, dest) == 0)
+      return nbr2;
   }
   return NULL;
 }
@@ -210,11 +210,11 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
  * @return nada
  */
 void
-olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, float vtime)
+olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float vtime)
 {
-  struct neighbor_list_entry *nbr_list;
+  struct nbr_list_entry *nbr_list;
 
-  nbr_list = olsr_malloc(sizeof(struct neighbor_list_entry), "Link entries 1");
+  nbr_list = olsr_malloc(sizeof(struct nbr_list_entry), "Link entries 1");
 
   nbr_list->neighbor = nbr;
 
@@ -223,10 +223,10 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, float v
   nbr_list->saved_path_linkcost = LINK_COST_BROKEN;
 
   /* Add nbr_list to nbr2 */
-  nbr2->neighbor_2_nblist.next->prev = nbr_list;
-  nbr_list->next = nbr2->neighbor_2_nblist.next;
-  nbr2->neighbor_2_nblist.next = nbr_list;
-  nbr_list->prev = &nbr2->neighbor_2_nblist;
+  nbr2->nbr2_nblist.next->prev = nbr_list;
+  nbr_list->next = nbr2->nbr2_nblist.next;
+  nbr2->nbr2_nblist.next = nbr_list;
+  nbr_list->prev = &nbr2->nbr2_nblist;
 
   olsr_add_nbr2_list_entry(nbr, nbr2, vtime);
 }
@@ -248,17 +248,17 @@ olsr_print_two_hop_neighbor_table(void)
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
 
   for (i = 0; i < HASHSIZE; i++) {
-    struct neighbor_2_entry *neigh2;
+    struct nbr2_entry *neigh2;
     for (neigh2 = two_hop_neighbortable[i].next; neigh2 != &two_hop_neighbortable[i]; neigh2 = neigh2->next) {
-      struct neighbor_list_entry *entry;
+      struct nbr_list_entry *entry;
       bool first = true;
 
-      for (entry = neigh2->neighbor_2_nblist.next; entry != &neigh2->neighbor_2_nblist; entry = entry->next) {
+      for (entry = neigh2->nbr2_nblist.next; entry != &neigh2->nbr2_nblist; entry = entry->next) {
         struct ipaddr_str buf;
         struct lqtextbuffer lqbuffer;
 
         OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
-                     first ? olsr_ip_to_string(&buf, &neigh2->neighbor_2_addr) : "",
+                     first ? olsr_ip_to_string(&buf, &neigh2->nbr2_addr) : "",
                      olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
                      get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
 
