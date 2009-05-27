@@ -56,6 +56,7 @@ struct nbr2_list_entry {
   struct avl_node nbr2_list_node;
   struct nbr_entry *nbr2_nbr;          /* backpointer to owning nbr entry */
   struct neighbor_2_entry *neighbor_2;
+  struct timer_entry *nbr2_list_timer;
 };
 
 AVLNODE2STRUCT(nbr2_list_node_to_nbr2_list, struct nbr2_list_entry, nbr2_list_node);

@@ -95,10 +95,10 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
   nbr2_list = olsr_lookup_nbr2_list_entry(nbr, &nbr2->neighbor_2_addr);
   if (nbr2_list) {
 
-    /*
+    /* 
      * Refresh timer.
      */
-    olsr_change_timer(nbr2_list->neighbor_2->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
+    olsr_change_timer(nbr2_list->nbr2_list_timer, vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT);
     return nbr2_list;
   }
 
@@ -114,7 +114,7 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct neighbor_2_entry *nbr2, f
   /*
    * Start the timer.
    */
-  nbr2->nbr2_list_timer = olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT,
+  olsr_start_timer(vtime, OLSR_NBR2_LIST_JITTER, OLSR_TIMER_ONESHOT,
                    &olsr_expire_nbr2_list, nbr2_list, nbr2_list_timer_cookie->ci_id);
 
   /* Add to the nbr2 reference subtree */
@@ -146,8 +146,8 @@ olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
   /*
    * Kill running timers.
    */
-  olsr_stop_timer(nbr2_list->neighbor_2->nbr2_list_timer);
-  nbr2_list->neighbor_2->nbr2_list_timer = NULL;
+  olsr_stop_timer(nbr2_list->nbr2_list_timer);
+  nbr2_list->nbr2_list_timer = NULL;
 
   /* Remove from neighbor2 reference subtree */
   avl_delete(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node);
@@ -301,7 +301,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
 /**
  * Lookup a neighbor entry in the neighbortable based on an address.
  * Unalias the passed in address before.
- *
+ * 
  * @param addr the IP address of the neighbor to look up
  *
  * @return a pointer to the neighbor struct registered on the given
@@ -395,7 +395,7 @@ olsr_expire_nbr2_list(void *context)
   struct neighbor_2_entry *nbr2;
 
   nbr2_list = (struct nbr2_list_entry *)context;
-  nbr2_list->neighbor_2->nbr2_list_timer = NULL;
+  nbr2_list->nbr2_list_timer = NULL;
 
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->neighbor_2;
