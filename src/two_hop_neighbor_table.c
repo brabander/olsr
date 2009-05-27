@@ -69,6 +69,33 @@ olsr_init_two_hop_table(void)
 }
 
 /**
+ * A Reference to a two-hop neighbor entry has been added.
+ * Bump the refcouunt.
+ */
+void
+olsr_lock_nbr2(struct nbr2_entry *nbr2)
+{
+  nbr2->nbr2_refcount++;
+}
+
+/**
+ * Unlock and free a neighbor 2 entry if the refcount has gone below 1.
+ */
+void
+olsr_unlock_nbr2(struct nbr2_entry *nbr2)
+{
+  if (--nbr2->nbr2_refcount) {
+    return;
+  }
+
+  /*
+   * Nobody is interested in this nbr2 anymore.
+   * Remove all references to it and free.
+   */
+  olsr_delete_two_hop_neighbor_table(nbr2);
+}
+
+/**
  *Remove a one hop neighbor from a two hop neighbors
  *one hop list.
  *

@@ -360,7 +360,7 @@ olsr_calculate_mpr(void)
       /*
        * Eliminate 2 hop neighbors which are not single link.
        */
-      if (nbr2->nbr2_pointer != 1) {
+      if (nbr2->nbr2_refcount != 1) {
         OLSR_DEBUG(LOG_MPR, "Skipping 2-hop neighbor %s - not single link\n",
                    olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
         continue;

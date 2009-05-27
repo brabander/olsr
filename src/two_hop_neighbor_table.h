@@ -66,7 +66,7 @@ struct nbr2_entry {
   struct nbr2_entry *next;
   unsigned int mpr_covered_count;      /* Used in mpr calculation */
   unsigned int processed:1;            /* Used in mpr calculation */
-  unsigned int nbr2_pointer;           /* Neighbor count */
+  unsigned int nbr2_refcount;          /* Reference counter */
   struct timer_entry *nbr2_list_timer;
   struct nbr_list_entry nbr2_nblist;
 } __attribute__ ((packed));;
@@ -91,6 +91,8 @@ struct nbr2_entry {
 extern struct nbr2_entry two_hop_neighbortable[HASHSIZE];
 
 void olsr_init_two_hop_table(void);
+void olsr_lock_nbr2(struct nbr2_entry *);
+void olsr_unlock_nbr2(struct nbr2_entry *);
 void olsr_delete_neighbor_pointer(struct nbr2_entry *, struct nbr_entry *);
 void olsr_delete_two_hop_neighbor_table(struct nbr2_entry *);
 void olsr_insert_two_hop_neighbor_table(struct nbr2_entry *);

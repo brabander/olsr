@@ -108,8 +108,9 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float v
   nbr2_list = olsr_cookie_malloc(nbr2_list_mem_cookie);
 
   nbr2_list->nbr2 = nbr2;
-  nbr2->nbr2_pointer++;   /* XXX move to olsr_lock_nbr2 () */
-  nbr2_list->nbr2_nbr = nbr;    /* XXX nbr needs refcount protection as well */
+  olsr_lock_nbr2(nbr2);
+
+  nbr2_list->nbr2_nbr = nbr;    /* XXX nbr refcount protection */
 
   /*
    * Start the timer.
@@ -137,12 +138,6 @@ olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
   nbr2 = nbr2_list->nbr2;
   nbr = nbr2_list->nbr2_nbr;
 
-  /* XXX move to olsr_unlock_nbr2() */
-  if (nbr2->nbr2_pointer < 1) {
-    DEQUEUE_ELEM(nbr2);
-    free(nbr2);
-  }
-
   /*
    * Kill running timers.
    */
@@ -151,6 +146,10 @@ olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
 
   /* Remove from neighbor2 reference subtree */
   avl_delete(&nbr->nbr2_list_tree, &nbr2_list->nbr2_list_node);
+
+  /* Remove reference to a two-hop neighbor, unlock */
+  nbr2_list->nbr2 = NULL;
+  olsr_unlock_nbr2(nbr2);
 
   olsr_cookie_free(nbr2_list_mem_cookie, nbr2_list);
 
@@ -235,7 +234,6 @@ olsr_delete_nbr_entry(const union olsr_ip_addr * addr)
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
   OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
-    nbr2_list->nbr2->nbr2_pointer--;        /* XXX move to olsr_nbr2_unlock() */
     olsr_delete_neighbor_pointer(nbr2_list->nbr2, nbr);
     olsr_delete_nbr2_list_entry(nbr2_list);
   } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list);
@@ -400,8 +398,8 @@ olsr_expire_nbr2_list(void *context)
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->nbr2;
 
-  nbr2->nbr2_pointer--;   /* XXX move to olsr_unlock_nbr2() */
   olsr_delete_neighbor_pointer(nbr2, nbr);
+  olsr_unlock_nbr2(nbr2);
 
   olsr_delete_nbr2_list_entry(nbr2_list);
 }

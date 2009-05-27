@@ -130,7 +130,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
           two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
           two_hop_neighbor->nbr2_nblist.next = &two_hop_neighbor->nbr2_nblist;
           two_hop_neighbor->nbr2_nblist.prev = &two_hop_neighbor->nbr2_nblist;
-          two_hop_neighbor->nbr2_pointer = 0;
+          two_hop_neighbor->nbr2_refcount = 0;
           two_hop_neighbor->nbr2_addr = message_neighbors->addr;
           olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
         }
