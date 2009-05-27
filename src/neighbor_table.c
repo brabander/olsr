@@ -369,7 +369,6 @@ olsr_expire_nbr2_list(void *context)
   struct nbr2_entry *nbr2;
 
   nbr2_list = (struct nbr2_list_entry *)context;
-  nbr2_list->nbr2_list_timer = NULL;
 
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->nbr2;
