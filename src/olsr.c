@@ -298,7 +298,7 @@ olsr_forward_message(union olsr_message *m, struct interface *in_if, union olsr_
   }
 
   /* check if we already forwarded this message */
-  if (olsr_message_is_duplicate(m)) {
+  if (olsr_message_is_duplicate(m, true)) {
     return 0;                   /* it's a duplicate, forget about it */
   }
 

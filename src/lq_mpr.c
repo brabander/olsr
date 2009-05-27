@@ -50,8 +50,8 @@
 void
 olsr_calculate_lq_mpr(void)
 {
-  struct neighbor_2_entry *neigh2;
-  struct neighbor_list_entry *walker;
+  struct nbr2_entry *neigh2;
+  struct nbr_list_entry *walker;
   int i, k;
   struct nbr_entry *neigh;
   olsr_linkcost best, best_1hop;
@@ -90,7 +90,7 @@ olsr_calculate_lq_mpr(void)
 
       /* check whether this 2-hop neighbour is also a neighbour */
 
-      neigh = olsr_lookup_nbr_entry(&neigh2->neighbor_2_addr);
+      neigh = olsr_lookup_nbr_entry(&neigh2->nbr2_addr);
 
       /* if it's a neighbour and also symmetric, then examine
          the link quality */
@@ -111,7 +111,7 @@ olsr_calculate_lq_mpr(void)
 
         /* see wether we find a better route via an MPR */
 
-        for (walker = neigh2->neighbor_2_nblist.next; walker != &neigh2->neighbor_2_nblist; walker = walker->next)
+        for (walker = neigh2->nbr2_nblist.next; walker != &neigh2->nbr2_nblist; walker = walker->next)
           if (walker->path_linkcost < best_1hop)
             break;
 
@@ -119,7 +119,7 @@ olsr_calculate_lq_mpr(void)
          * a better route via an MPR - so, skip MPR selection for
          * this 1-hop neighbor */
 
-        if (walker == &neigh2->neighbor_2_nblist)
+        if (walker == &neigh2->nbr2_nblist)
           continue;
       }
 
@@ -128,7 +128,7 @@ olsr_calculate_lq_mpr(void)
 
       /* mark all 1-hop neighbours as not selected */
 
-      for (walker = neigh2->neighbor_2_nblist.next; walker != &neigh2->neighbor_2_nblist; walker = walker->next)
+      for (walker = neigh2->nbr2_nblist.next; walker != &neigh2->nbr2_nblist; walker = walker->next)
         walker->neighbor->skip = false;
 
       for (k = 0; k < olsr_cnf->mpr_coverage; k++) {
@@ -138,7 +138,7 @@ olsr_calculate_lq_mpr(void)
         neigh = NULL;
         best = LINK_COST_BROKEN;
 
-        for (walker = neigh2->neighbor_2_nblist.next; walker != &neigh2->neighbor_2_nblist; walker = walker->next)
+        for (walker = neigh2->nbr2_nblist.next; walker != &neigh2->nbr2_nblist; walker = walker->next)
           if (walker->neighbor->status == SYM && !walker->neighbor->skip && walker->path_linkcost < best) {
             neigh = walker->neighbor;
             best = walker->path_linkcost;

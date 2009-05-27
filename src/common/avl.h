@@ -43,7 +43,6 @@
 #define _AVL_H
 
 #include "../defs.h"
-
 #include <stddef.h>
 
 struct avl_node {
@@ -70,10 +69,10 @@ struct avl_tree {
 #define AVL_DUP    1
 #define AVL_DUP_NO 0
 
-void avl_init(struct avl_tree *, avl_tree_comp);
+void EXPORT(avl_init)(struct avl_tree *, avl_tree_comp);
 struct avl_node *EXPORT(avl_find) (struct avl_tree *, const void *);
-int avl_insert(struct avl_tree *, struct avl_node *, int);
-void avl_delete(struct avl_tree *, struct avl_node *);
+int EXPORT(avl_insert)(struct avl_tree *, struct avl_node *, int);
+void EXPORT(avl_delete)(struct avl_tree *, struct avl_node *);
 
 static INLINE struct avl_node *
 avl_walk_first(struct avl_tree *tree)

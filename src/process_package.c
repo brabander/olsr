@@ -96,7 +96,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
       struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_nbr2_list_entry(neighbor, &message_neighbors->addr);
       if (two_hop_neighbor_yet != NULL) {
-        struct neighbor_list_entry *walker;
+        struct nbr_list_entry *walker;
 
         /* Updating the holding time for this neighbor */
         olsr_set_timer(&two_hop_neighbor_yet->nbr2_list_timer,
@@ -113,8 +113,8 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
          * loop through the one-hop neighbors that see this
          * 'two_hop_neighbor'
          */
-        for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
-             walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist; walker = walker->next) {
+        for (walker = two_hop_neighbor_yet->nbr2->nbr2_nblist.next;
+             walker != &two_hop_neighbor_yet->nbr2->nbr2_nblist; walker = walker->next) {
           /*
            * have we found the one-hop neighbor that sent the
            * HELLO message that we're current processing?
@@ -124,14 +124,14 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
           }
         }
       } else {
-        struct neighbor_2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->addr);
+        struct nbr2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->addr);
         if (two_hop_neighbor == NULL) {
           OLSR_DEBUG(LOG_LINKS, "Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&buf, &message_neighbors->addr));
           two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
-          two_hop_neighbor->neighbor_2_nblist.next = &two_hop_neighbor->neighbor_2_nblist;
-          two_hop_neighbor->neighbor_2_nblist.prev = &two_hop_neighbor->neighbor_2_nblist;
-          two_hop_neighbor->neighbor_2_pointer = 0;
-          two_hop_neighbor->neighbor_2_addr = message_neighbors->addr;
+          two_hop_neighbor->nbr2_nblist.next = &two_hop_neighbor->nbr2_nblist;
+          two_hop_neighbor->nbr2_nblist.prev = &two_hop_neighbor->nbr2_nblist;
+          two_hop_neighbor->nbr2_refcount = 0;
+          two_hop_neighbor->nbr2_addr = message_neighbors->addr;
           olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
         }
         /*
@@ -165,7 +165,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
       continue;
     }
     if (message_neighbors->neigh_type == SYM_NEIGH || message_neighbors->neigh_type == MPR_NEIGH) {
-      struct neighbor_list_entry *walker;
+      struct nbr_list_entry *walker;
       struct nbr2_list_entry *two_hop_neighbor_yet = olsr_lookup_nbr2_list_entry(neighbor, &message_neighbors->addr);
 
       if (!two_hop_neighbor_yet) {
@@ -174,10 +174,10 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
 
       /*
        *  loop through the one-hop neighbors that see this
-       * 'two_hop_neighbor_yet->neighbor_2'
+       * 'two_hop_neighbor_yet->nbr2'
        */
-      for (walker = two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist.next;
-           walker != &two_hop_neighbor_yet->neighbor_2->neighbor_2_nblist; walker = walker->next) {
+      for (walker = two_hop_neighbor_yet->nbr2->nbr2_nblist.next;
+           walker != &two_hop_neighbor_yet->nbr2->nbr2_nblist; walker = walker->next) {
         /*
          * have we found the one-hop neighbor that sent the
          * HELLO message that we're current processing?

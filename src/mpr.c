@@ -76,7 +76,7 @@ static int olsr_chosen_mpr(struct nbr_entry *, uint16_t *);
 static int
 olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_count)
 {
-  struct neighbor_list_entry *the_one_hop_list;
+  struct nbr_list_entry *the_one_hop_list;
   struct nbr2_list_entry *second_hop_entries;
   struct nbr_entry *dup_neighbor;
   uint16_t count;
@@ -93,34 +93,34 @@ olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_c
 
   OLSR_FOR_ALL_NBR2_LIST_ENTRIES(one_hop_neighbor, second_hop_entries) {
 
-    dup_neighbor = olsr_lookup_nbr_entry(&second_hop_entries->neighbor_2->neighbor_2_addr);
+    dup_neighbor = olsr_lookup_nbr_entry(&second_hop_entries->nbr2->nbr2_addr);
 
     if ((dup_neighbor != NULL) && (dup_neighbor->status == SYM)) {
       OLSR_DEBUG(LOG_MPR, "(2)Skipping 2h neighbor %s - already 1hop\n",
-                 olsr_ip_to_string(&buf, &second_hop_entries->neighbor_2->neighbor_2_addr));
+                 olsr_ip_to_string(&buf, &second_hop_entries->nbr2->nbr2_addr));
       continue;
     }
-    //      if(!second_hop_entries->neighbor_2->neighbor_2_state)
-    //if(second_hop_entries->neighbor_2->mpr_covered_count < olsr_cnf->mpr_coverage)
+    //      if(!second_hop_entries->nbr2->nbr2_state)
+    //if(second_hop_entries->nbr2->mpr_covered_count < olsr_cnf->mpr_coverage)
     //{
     /*
        Now the neighbor is covered by this mpr
      */
-    second_hop_entries->neighbor_2->mpr_covered_count++;
-    the_one_hop_list = second_hop_entries->neighbor_2->neighbor_2_nblist.next;
+    second_hop_entries->nbr2->mpr_covered_count++;
+    the_one_hop_list = second_hop_entries->nbr2->nbr2_nblist.next;
 
     OLSR_DEBUG(LOG_MPR, "[%s] has coverage %d\n",
-               olsr_ip_to_string(&buf, &second_hop_entries->neighbor_2->neighbor_2_addr),
-               second_hop_entries->neighbor_2->mpr_covered_count);
+               olsr_ip_to_string(&buf, &second_hop_entries->nbr2->nbr2_addr),
+               second_hop_entries->nbr2->mpr_covered_count);
 
-    if (second_hop_entries->neighbor_2->mpr_covered_count >= olsr_cnf->mpr_coverage)
+    if (second_hop_entries->nbr2->mpr_covered_count >= olsr_cnf->mpr_coverage)
       count++;
 
-    while (the_one_hop_list != &second_hop_entries->neighbor_2->neighbor_2_nblist) {
+    while (the_one_hop_list != &second_hop_entries->nbr2->nbr2_nblist) {
 
       if ((the_one_hop_list->neighbor->status == SYM)) {
-        if (second_hop_entries->neighbor_2->mpr_covered_count >= olsr_cnf->mpr_coverage) {
-          the_one_hop_list->neighbor->neighbor_2_nocov--;
+        if (second_hop_entries->nbr2->mpr_covered_count >= olsr_cnf->mpr_coverage) {
+          the_one_hop_list->neighbor->nbr2_nocov--;
         }
       }
       the_one_hop_list = the_one_hop_list->next;
@@ -156,11 +156,11 @@ olsr_find_maximum_covered(int willingness)
 
     OLSR_DEBUG(LOG_MPR, "[%s] nocov: %d mpr: %d will: %d max: %d\n\n",
                olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr),
-               a_neighbor->neighbor_2_nocov, a_neighbor->is_mpr, a_neighbor->willingness, maximum);
+               a_neighbor->nbr2_nocov, a_neighbor->is_mpr, a_neighbor->willingness, maximum);
 
-    if ((!a_neighbor->is_mpr) && (a_neighbor->willingness == willingness) && (maximum < a_neighbor->neighbor_2_nocov)) {
+    if ((!a_neighbor->is_mpr) && (a_neighbor->willingness == willingness) && (maximum < a_neighbor->nbr2_nocov)) {
 
-      maximum = a_neighbor->neighbor_2_nocov;
+      maximum = a_neighbor->nbr2_nocov;
       mpr_candidate = a_neighbor;
     }
   } OLSR_FOR_ALL_NBR_ENTRIES_END(a_neighbor);
@@ -188,7 +188,7 @@ olsr_clear_mprs(void)
 
     /* Clear two hop neighbors coverage count/ */
     OLSR_FOR_ALL_NBR2_LIST_ENTRIES(a_neighbor, two_hop_list) {
-      two_hop_list->neighbor_2->mpr_covered_count = 0;
+      two_hop_list->nbr2->mpr_covered_count = 0;
     } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(a_neighbor, two_hop_list);
   } OLSR_FOR_ALL_NBR_ENTRIES_END(a_neighbor);
 }
@@ -232,10 +232,10 @@ olsr_clear_two_hop_processed(void)
   int idx;
 
   for (idx = 0; idx < HASHSIZE; idx++) {
-    struct neighbor_2_entry *neighbor_2;
-    for (neighbor_2 = two_hop_neighbortable[idx].next; neighbor_2 != &two_hop_neighbortable[idx]; neighbor_2 = neighbor_2->next) {
+    struct nbr2_entry *nbr2;
+    for (nbr2 = two_hop_neighbortable[idx].next; nbr2 != &two_hop_neighbortable[idx]; nbr2 = nbr2->next) {
       /* Clear */
-      neighbor_2->processed = 0;
+      nbr2->processed = 0;
     }
   }
 
@@ -260,22 +260,22 @@ olsr_calculate_two_hop_neighbors(void)
   OLSR_FOR_ALL_NBR_ENTRIES(a_neighbor) {
 
     if (a_neighbor->status == NOT_SYM) {
-      a_neighbor->neighbor_2_nocov = count;
+      a_neighbor->nbr2_nocov = count;
       continue;
     }
 
     OLSR_FOR_ALL_NBR2_LIST_ENTRIES(a_neighbor, twohop_neighbors) {
-      dup_neighbor = olsr_lookup_nbr_entry(&twohop_neighbors->neighbor_2->neighbor_2_addr);
+      dup_neighbor = olsr_lookup_nbr_entry(&twohop_neighbors->nbr2->nbr2_addr);
 
       if ((dup_neighbor == NULL) || (dup_neighbor->status != SYM)) {
         n_count++;
-        if (!twohop_neighbors->neighbor_2->processed) {
+        if (!twohop_neighbors->nbr2->processed) {
           count++;
-          twohop_neighbors->neighbor_2->processed = 1;
+          twohop_neighbors->nbr2->processed = 1;
         }
       }
     } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(a_neighbor, twohop_neighbors);
-    a_neighbor->neighbor_2_nocov = n_count;
+    a_neighbor->nbr2_nocov = n_count;
 
     /* Add the two hop count */
     sum += count;
@@ -324,7 +324,7 @@ olsr_calculate_mpr(void)
   struct ipaddr_str buf;
 #endif
 
-  struct neighbor_2_entry *nbr2;
+  struct nbr2_entry *nbr2;
   struct nbr_entry *nbr;
   struct nbr_entry *mprs;
   uint16_t two_hop_covered_count;
@@ -350,28 +350,28 @@ olsr_calculate_mpr(void)
       /*
        * Eliminate 2 hop neighbors which already are in our 1 hop neighborhood.
        */
-      nbr = olsr_lookup_nbr_entry(&nbr2->neighbor_2_addr);
+      nbr = olsr_lookup_nbr_entry(&nbr2->nbr2_addr);
       if (nbr && (nbr->status != NOT_SYM)) {
         OLSR_DEBUG(LOG_MPR, "Skipping 2-hop neighbor2 %s - already 1hop\n",
-                   olsr_ip_to_string(&buf, &nbr2->neighbor_2_addr));
+                   olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
         continue;
       }
 
       /*
        * Eliminate 2 hop neighbors which are not single link.
        */
-      if (nbr2->neighbor_2_pointer != 1) {
+      if (nbr2->nbr2_refcount != 1) {
         OLSR_DEBUG(LOG_MPR, "Skipping 2-hop neighbor %s - not single link\n",
-                   olsr_ip_to_string(&buf, &nbr2->neighbor_2_addr));
+                   olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
         continue;
       }
 
-      nbr = nbr2->neighbor_2_nblist.next->neighbor;
+      nbr = nbr2->nbr2_nblist.next->neighbor;
 
       /* Already an elected MPR ? */
       if (nbr->is_mpr) {
         OLSR_DEBUG(LOG_MPR, "Skipping 2-hop neighbor %s - already MPR\n",
-                   olsr_ip_to_string(&buf, &nbr2->neighbor_2_addr));
+                   olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
         continue;
       }
 
@@ -388,7 +388,7 @@ olsr_calculate_mpr(void)
       /*
        * This 2 hop neighbor is good enough.
        */
-      OLSR_DEBUG(LOG_MPR, "One link adding %s\n", olsr_ip_to_string(&buf, &nbr2->neighbor_2_addr));
+      OLSR_DEBUG(LOG_MPR, "One link adding %s\n", olsr_ip_to_string(&buf, &nbr2->nbr2_addr));
       olsr_chosen_mpr(nbr, &two_hop_covered_count);
 
     } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
@@ -454,16 +454,16 @@ olsr_optimize_mpr_set(void)
         int remove_it = 1;
 
         OLSR_FOR_ALL_NBR2_LIST_ENTRIES(a_neighbor, two_hop_list) {
-          const struct nbr_entry *dup_neighbor = olsr_lookup_nbr_entry(&two_hop_list->neighbor_2->neighbor_2_addr);
+          const struct nbr_entry *dup_neighbor = olsr_lookup_nbr_entry(&two_hop_list->nbr2->nbr2_addr);
 
           if ((dup_neighbor != NULL) && (dup_neighbor->status != NOT_SYM)) {
             continue;
           }
 
-          OLSR_DEBUG(LOG_MPR, "\t[%s] coverage %d\n", olsr_ip_to_string(&buf, &two_hop_list->neighbor_2->neighbor_2_addr),
-                     two_hop_list->neighbor_2->mpr_covered_count);
+          OLSR_DEBUG(LOG_MPR, "\t[%s] coverage %d\n", olsr_ip_to_string(&buf, &two_hop_list->nbr2->nbr2_addr),
+                     two_hop_list->nbr2->mpr_covered_count);
           /* Do not remove if we find a entry which need this MPR */
-          if (two_hop_list->neighbor_2->mpr_covered_count <= olsr_cnf->mpr_coverage) {
+          if (two_hop_list->nbr2->mpr_covered_count <= olsr_cnf->mpr_coverage) {
             remove_it = 0;
             break;
           }

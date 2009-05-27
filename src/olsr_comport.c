@@ -363,8 +363,6 @@ static void olsr_com_parse_connection(int fd, void *data, unsigned int flags) {
     }
   }
 
-  fprintf(stderr, "State: %d\n", con->state);
-
   /* end of connection ? */
   if (con->state == CLEANUP) {
     OLSR_DEBUG(LOG_COMPORT, "  cleanup\n");
