@@ -193,14 +193,19 @@ remove_interface(struct interface **pinterf)
    * Deregister functions for periodic message generation
    */
   olsr_stop_timer(ifp->hello_gen_timer);
+  ifp->hello_gen_timer = NULL;
   olsr_stop_timer(ifp->tc_gen_timer);
+  ifp->tc_gen_timer = NULL;
   olsr_stop_timer(ifp->mid_gen_timer);
+  ifp->mid_gen_timer = NULL;
   olsr_stop_timer(ifp->hna_gen_timer);
+  ifp->hna_gen_timer = NULL;
 
   /*
    * Stop interface pacing.
    */
   olsr_stop_timer(ifp->buffer_hold_timer);
+  ifp->buffer_hold_timer = NULL;
 
   /*
    * Unlink from config.
