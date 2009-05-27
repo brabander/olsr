@@ -132,26 +132,35 @@ olsr_delete_neighbor_pointer(struct nbr2_entry *two_hop_entry, struct nbr_entry 
  *@return nada
  */
 void
-olsr_delete_two_hop_neighbor_table(struct nbr2_entry *two_hop_neighbor)
+olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
 {
-  struct nbr_list_entry *one_hop_list;
+  struct nbr_entry *nbr;
+  struct nbr_list_entry *nbr_list;
+  struct nbr2_list_entry *nbr2_list;
 
-  one_hop_list = two_hop_neighbor->nbr2_nblist.next;
+  /*
+   * Kill all references to this nbr2.
+   */
+  OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
+    OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
+      if (nbr2_list->nbr2 == nbr2) {
+        olsr_delete_nbr2_list_entry(nbr2_list);
+        break;
+      }
+    } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list)
+  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
 
-  /* Delete one hop links */
-  while (one_hop_list != &two_hop_neighbor->nbr2_nblist) {
-    struct nbr_entry *one_hop_entry = one_hop_list->neighbor;
-    struct nbr_list_entry *entry_to_delete = one_hop_list;
-
-    olsr_delete_nbr2_list_entry_by_addr(one_hop_entry, &two_hop_neighbor->nbr2_addr);
-    one_hop_list = one_hop_list->next;
-    /* no need to dequeue */
-    free(entry_to_delete);
+  /*
+   * Delete all the one hop backlinks hanging off this nbr2
+   */
+  while (nbr2->nbr2_nblist.next != &nbr2->nbr2_nblist) {
+    nbr_list = nbr2->nbr2_nblist.next; 
+    DEQUEUE_ELEM(nbr_list);
+    free(nbr_list);
   }
 
-  /* dequeue */
-  DEQUEUE_ELEM(two_hop_neighbor);
-  free(two_hop_neighbor);
+  DEQUEUE_ELEM(nbr2);
+  free(nbr2);
 }
 
 /**

@@ -129,7 +129,7 @@ olsr_add_nbr2_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float v
 /**
  * Unlink, delete and free a nbr2_list entry.
  */
-static void
+void
 olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
 {
   struct nbr2_entry *nbr2;
@@ -157,30 +157,6 @@ olsr_delete_nbr2_list_entry(struct nbr2_list_entry *nbr2_list)
   changes_neighborhood = true;
   changes_topology = true;
 }
-
-/**
- * Delete a two hop neighbor from a neighbors two hop neighbor list.
- *
- * @param neighbor the neighbor to delete the two hop neighbor from.
- * @param address the IP address of the two hop neighbor to delete.
- *
- * @return positive if entry deleted
- */
-bool
-olsr_delete_nbr2_list_entry_by_addr(struct nbr_entry *nbr, union olsr_ip_addr *addr)
-{
-  struct nbr2_list_entry *nbr2_list;
-
-  nbr2_list = olsr_lookup_nbr2_list_entry(nbr, addr);
-
-  if (nbr2_list) {
-    olsr_delete_nbr2_list_entry(nbr2_list);
-    return true;
-  }
-
-  return false;
-}
-
 
 /**
  * Check if a two hop neighbor is reachable via a given

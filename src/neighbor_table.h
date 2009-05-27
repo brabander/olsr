@@ -111,9 +111,9 @@ extern struct avl_tree EXPORT(nbr_tree);
 extern struct olsr_cookie_info *nbr2_list_timer_cookie;
 
 void olsr_init_neighbor_table(void);
-bool olsr_delete_nbr2_list_entry_by_addr(struct nbr_entry *, union olsr_ip_addr *);
 struct nbr2_list_entry *olsr_lookup_nbr2_list_entry(struct nbr_entry *, const union olsr_ip_addr *);
 struct nbr2_list_entry *olsr_add_nbr2_list_entry(struct nbr_entry *, struct nbr2_entry *, float);
+void olsr_delete_nbr2_list_entry(struct nbr2_list_entry *);
 bool olsr_delete_nbr_entry(const union olsr_ip_addr *);
 void olsr_link_nbr_nbr2(struct nbr_entry *, struct nbr2_entry *, float);
 struct nbr_entry *olsr_add_nbr_entry(const union olsr_ip_addr *);
