@@ -100,14 +100,11 @@ olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_c
                  olsr_ip_to_string(&buf, &second_hop_entries->nbr2->nbr2_addr));
       continue;
     }
-    //      if(!second_hop_entries->nbr2->nbr2_state)
-    //if(second_hop_entries->nbr2->mpr_covered_count < olsr_cnf->mpr_coverage)
-    //{
+
     /*
-       Now the neighbor is covered by this mpr
+     * Now the neighbor is covered by this mpr
      */
     second_hop_entries->nbr2->mpr_covered_count++;
-    the_one_hop_list = second_hop_entries->nbr2->nbr2_nblist.next;
 
     OLSR_DEBUG(LOG_MPR, "[%s] has coverage %d\n",
                olsr_ip_to_string(&buf, &second_hop_entries->nbr2->nbr2_addr),
@@ -116,15 +113,13 @@ olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_c
     if (second_hop_entries->nbr2->mpr_covered_count >= olsr_cnf->mpr_coverage)
       count++;
 
-    while (the_one_hop_list != &second_hop_entries->nbr2->nbr2_nblist) {
-
+    OLSR_FOR_ALL_NBR_LIST_ENTRIES(second_hop_entries->nbr2, the_one_hop_list) {
       if ((the_one_hop_list->neighbor->status == SYM)) {
         if (second_hop_entries->nbr2->mpr_covered_count >= olsr_cnf->mpr_coverage) {
           the_one_hop_list->neighbor->nbr2_nocov--;
         }
       }
-      the_one_hop_list = the_one_hop_list->next;
-    }
+    } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(second_hop_entries->nbr2, the_one_hop_list);
   } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(one_hop_neighbor, second_hop_entries);
 
   *two_hop_covered_count = count;
@@ -362,7 +357,7 @@ olsr_calculate_mpr(void)
         continue;
       }
 
-      nbr = nbr2->nbr2_nblist.next->neighbor;
+      nbr = nbr_list_node_to_nbr_list(avl_walk_first(&nbr2->nbr2_nbr_list_tree))->neighbor;
 
       /* Already an elected MPR ? */
       if (nbr->is_mpr) {

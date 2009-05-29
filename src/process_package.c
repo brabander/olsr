@@ -118,8 +118,8 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
        * loop through the one-hop neighbors that see this
        * 'two_hop_neighbor'
        */
-      for (nbr_list = nbr2_list->nbr2->nbr2_nblist.next;
-           nbr_list != &nbr2_list->nbr2->nbr2_nblist; nbr_list = nbr_list->next) {
+      OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2_list->nbr2, nbr_list) {
+
         /*
          * have we found the one-hop neighbor that sent the
          * HELLO message that we're current processing?
@@ -127,7 +127,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
         if (nbr_list->neighbor == neighbor) {
           nbr_list->path_linkcost = LINK_COST_BROKEN;
         }
-      }
+      } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2_list->nbr2, nbr_list);
     } else {
       struct nbr2_entry *two_hop_neighbor = olsr_add_nbr2_entry(&message_neighbors->addr);
 
@@ -168,11 +168,10 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
       }
 
       /*
-       *  loop through the one-hop neighbors that see this
-       * 'nbr2_list->nbr2'
+       * Loop through the one-hop neighbors that see this 'nbr2_list->nbr2'
        */
-      for (nbr_list = nbr2_list->nbr2->nbr2_nblist.next;
-           nbr_list != &nbr2_list->nbr2->nbr2_nblist; nbr_list = nbr_list->next) {
+      OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2_list->nbr2, nbr_list) {
+
         /*
          * have we found the one-hop neighbor that sent the
          * HELLO message that we're current processing?
@@ -202,7 +201,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
             }
           }
         }
-      }
+      } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2_list->nbr2, nbr_list);
     }
   }
 }

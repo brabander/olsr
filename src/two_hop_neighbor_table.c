@@ -92,6 +92,21 @@ olsr_unlock_nbr2(struct nbr2_entry *nbr2)
   olsr_delete_two_hop_neighbor_table(nbr2);
 }
 
+/*
+ * Lookup a neighbor list. 
+ */
+static struct nbr_list_entry *
+olsr_lookup_nbr_list_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *addr)
+{
+  struct avl_node *node;
+
+  node = avl_find(&nbr2->nbr2_nbr_list_tree, addr);
+  if (node) {
+    return nbr_list_node_to_nbr_list(node);
+  }
+  return NULL;
+}
+
 /**
  *Remove a one hop neighbor from a two hop neighbors
  *one hop list.
@@ -103,22 +118,17 @@ olsr_unlock_nbr2(struct nbr2_entry *nbr2)
  *@return nada
  */
 void
-olsr_delete_neighbor_pointer(struct nbr2_entry *two_hop_entry, struct nbr_entry *neigh)
+olsr_delete_nbr_list_by_addr(struct nbr2_entry *nbr2, const union olsr_ip_addr *addr)
 {
-  struct nbr_list_entry *entry = two_hop_entry->nbr2_nblist.next;
-  while (entry != &two_hop_entry->nbr2_nblist) {
-    if (entry->neighbor == neigh) {
-      struct nbr_list_entry *entry_to_delete = entry;
-      entry = entry->next;
+  struct nbr_list_entry *nbr_list;
 
-      /* dequeue */
-      DEQUEUE_ELEM(entry_to_delete);
-
-      free(entry_to_delete);
-    } else {
-      entry = entry->next;
-    }
+  nbr_list = olsr_lookup_nbr_list_entry(nbr2, addr);
+  if (!nbr_list) {
+    return;
   }
+
+  avl_delete(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node);
+  free(nbr_list);
 }
 
 /**
@@ -144,17 +154,18 @@ olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
         olsr_delete_nbr2_list_entry(nbr2_list);
         break;
       }
-    } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list)
-  } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
+    }
+    OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list)
+  }
+  OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
 
   /*
    * Delete all the one hop backlinks hanging off this nbr2
    */
-  while (nbr2->nbr2_nblist.next != &nbr2->nbr2_nblist) {
-    nbr_list = nbr2->nbr2_nblist.next; 
-    DEQUEUE_ELEM(nbr_list);
-    free(nbr_list);
+  OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, nbr_list) {
+    avl_delete(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node);
   }
+  OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, nbr_list);
 
   avl_delete(&nbr2_tree, &nbr2->nbr2_node);
   free(nbr2);
@@ -186,8 +197,10 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr)
   OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, addr));
 
   nbr2 = olsr_malloc(sizeof(*nbr2), "Process HELLO");
-  nbr2->nbr2_nblist.next = &nbr2->nbr2_nblist;
-  nbr2->nbr2_nblist.prev = &nbr2->nbr2_nblist;
+
+  /* Init neighbor reference subtree */
+  avl_init(&nbr2->nbr2_nbr_list_tree, avl_comp_default);
+
   nbr2->nbr2_refcount = 0;
   nbr2->nbr2_addr = *addr;
 
@@ -242,6 +255,34 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *addr)
   return olsr_lookup_nbr2_entry_alias(main_addr);
 }
 
+/*
+ * Add a nbr_list reference to a nbr2 refernce subtree.
+ */
+static void
+olsr_add_nbr_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2)
+{
+  struct nbr_list_entry *nbr_list;
+
+  /*
+   * Check if the entry exists.
+   */
+  nbr_list = olsr_lookup_nbr_list_entry(nbr2, &nbr->neighbor_main_addr);
+  if (!nbr_list) {
+
+    /*
+     * Unknown, Create a fresh one.
+     */
+    nbr_list = olsr_malloc(sizeof(struct nbr_list_entry), "Link entries 1");
+    nbr_list->neighbor = nbr;   /* XXX refcount */
+    nbr_list->second_hop_linkcost = LINK_COST_BROKEN;
+    nbr_list->path_linkcost = LINK_COST_BROKEN;
+    nbr_list->saved_path_linkcost = LINK_COST_BROKEN;
+
+    nbr_list->nbr_list_node.key = &nbr->neighbor_main_addr;
+    avl_insert(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node, AVL_DUP_NO);
+  }
+}
+
 /**
  * Links a one-hop neighbor with a 2-hop neighbor.
  *
@@ -252,22 +293,7 @@ olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *addr)
 void
 olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float vtime)
 {
-  struct nbr_list_entry *nbr_list;
-
-  nbr_list = olsr_malloc(sizeof(struct nbr_list_entry), "Link entries 1");
-
-  nbr_list->neighbor = nbr;
-
-  nbr_list->second_hop_linkcost = LINK_COST_BROKEN;
-  nbr_list->path_linkcost = LINK_COST_BROKEN;
-  nbr_list->saved_path_linkcost = LINK_COST_BROKEN;
-
-  /* Add nbr_list to nbr2 */
-  nbr2->nbr2_nblist.next->prev = nbr_list;
-  nbr_list->next = nbr2->nbr2_nblist.next;
-  nbr2->nbr2_nblist.next = nbr_list;
-  nbr_list->prev = &nbr2->nbr2_nblist;
-
+  olsr_add_nbr_list_entry(nbr, nbr2);
   olsr_add_nbr2_list_entry(nbr, nbr2, vtime);
 }
 
@@ -284,6 +310,8 @@ olsr_print_two_hop_neighbor_table(void)
   /* The whole function makes no sense without it. */
   struct nbr2_entry *neigh2;
   struct nbr_list_entry *entry;
+  struct ipaddr_str buf;
+  struct lqtextbuffer lqbuffer;
   bool first;
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
@@ -291,18 +319,14 @@ olsr_print_two_hop_neighbor_table(void)
 
   OLSR_FOR_ALL_NBR2_ENTRIES(neigh2) {
     first = true;
-
-    for (entry = neigh2->nbr2_nblist.next; entry != &neigh2->nbr2_nblist; entry = entry->next) {
-      struct ipaddr_str buf;
-      struct lqtextbuffer lqbuffer;
-
+    OLSR_FOR_ALL_NBR_LIST_ENTRIES(neigh2, entry) {
       OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
                    first ? olsr_ip_to_string(&buf, &neigh2->nbr2_addr) : "",
                    olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
                    get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
 
       first = false;
-    }
+    } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(neigh2, entry);
   } OLSR_FOR_ALL_NBR2_ENTRIES_END(neigh2);
 #endif
 }

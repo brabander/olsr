@@ -210,7 +210,7 @@ olsr_delete_nbr_entry(const union olsr_ip_addr * addr)
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
   OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
-    olsr_delete_neighbor_pointer(nbr2_list->nbr2, nbr);
+    olsr_delete_nbr_list_by_addr(nbr2_list->nbr2, &nbr->neighbor_main_addr);
     olsr_delete_nbr2_list_entry(nbr2_list);
   } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list);
 
@@ -373,7 +373,7 @@ olsr_expire_nbr2_list(void *context)
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->nbr2;
 
-  olsr_delete_neighbor_pointer(nbr2, nbr);
+  olsr_delete_nbr_list_by_addr(nbr2, &nbr->neighbor_main_addr);
   olsr_delete_nbr2_list_entry(nbr2_list);
 }
 

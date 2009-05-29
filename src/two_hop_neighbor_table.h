@@ -51,14 +51,14 @@
 
 
 struct nbr_list_entry {
+  struct avl_node nbr_list_node;
   struct nbr_entry *neighbor;          /* backpointer to owning nbr entry */
   olsr_linkcost second_hop_linkcost;
   olsr_linkcost path_linkcost;
   olsr_linkcost saved_path_linkcost;
-  struct nbr_list_entry *next;
-  struct nbr_list_entry *prev;
 };
 
+AVLNODE2STRUCT(nbr_list_node_to_nbr_list, struct nbr_list_entry, nbr_list_node);
 
 struct nbr2_entry {
   struct avl_node nbr2_node;
@@ -66,13 +66,13 @@ struct nbr2_entry {
   unsigned int mpr_covered_count;      /* Used in mpr calculation */
   unsigned int processed:1;            /* Used in mpr calculation */
   unsigned int nbr2_refcount;          /* Reference counter */
-  struct nbr_list_entry nbr2_nblist;
+  struct avl_tree nbr2_nbr_list_tree;  /* subtree for nbr pointers */
 } __attribute__ ((packed));;
 
 AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
 
 /*
- * macros for traversing two-hop neighbors.
+ * macros for traversing two-hop neighbors and neighbor ref lists.
  * it is recommended to use this because it hides all the internal
  * datastructure from the callers.
  *
@@ -88,6 +88,15 @@ AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
     nbr2 = nbr2_node_to_nbr2(nbr2_tree_node);
 #define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) }}
 
+#define OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, nbr_list) \
+{ \
+  struct avl_node *nbr_list_node, *next_nbr_list_node; \
+  for (nbr_list_node = avl_walk_first(&nbr2->nbr2_nbr_list_tree); \
+    nbr_list_node; nbr_list_node = next_nbr_list_node) { \
+    next_nbr_list_node = avl_walk_next(nbr_list_node); \
+    nbr_list = nbr_list_node_to_nbr_list(nbr_list_node);
+#define OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, nbr_list) }}
+
 /*
  * The two hop neighbor tree
  */
@@ -96,7 +105,7 @@ extern struct avl_tree EXPORT(nbr2_tree);
 void olsr_init_two_hop_table(void);
 void olsr_lock_nbr2(struct nbr2_entry *);
 void olsr_unlock_nbr2(struct nbr2_entry *);
-void olsr_delete_neighbor_pointer(struct nbr2_entry *, struct nbr_entry *);
+void olsr_delete_nbr_list_by_addr(struct nbr2_entry *, const union olsr_ip_addr *);
 void olsr_delete_two_hop_neighbor_table(struct nbr2_entry *);
 struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *);
 struct nbr2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
