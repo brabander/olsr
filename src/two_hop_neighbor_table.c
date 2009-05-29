@@ -100,8 +100,13 @@ olsr_unlock_nbr2(struct nbr2_entry *nbr2)
   olsr_delete_nbr2_entry(nbr2);
 }
 
-/*
- * Lookup a neighbor list. 
+/**
+ * Lookup a neighbor list entry hanging off a nbr2 subtree. 
+ *
+ * @param nbr2 holding the root of the tree.
+ * @param addr the address of the one hop neighbor
+ *
+ * @return nada
  */
 static struct nbr_list_entry *
 olsr_lookup_nbr_list_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *addr)
@@ -116,14 +121,12 @@ olsr_lookup_nbr_list_entry(struct nbr2_entry *nbr2, const union olsr_ip_addr *ad
 }
 
 /**
- *Remove a one hop neighbor from a two hop neighbors
- *one hop list.
+ * Remove a one hop neighbor from a two hop neighbors one hop subtree.
  *
- *@param two_hop_entry the two hop neighbor to remove the
- *one hop neighbor from
- *@param address the address of the one hop neighbor to remove
+ * @param nbr2 the two hop neighbor to remove the one hop neighbor from
+ * @param addr the address of the one hop neighbor to remove
  *
- *@return nada
+ * @return nada
  */
 void
 olsr_delete_nbr_list_by_addr(struct nbr2_entry *nbr2, const union olsr_ip_addr *addr)
@@ -140,11 +143,10 @@ olsr_delete_nbr_list_by_addr(struct nbr2_entry *nbr2, const union olsr_ip_addr *
 }
 
 /**
- *Delete an entry from the two hop neighbor table.
+ * Delete an entry from the two hop neighbor table.
  *
- *@param two_hop_neighbor the two hop neighbor to delete.
- *
- *@return nada
+ * @param nbr2 the two hop neighbor to delete.
+ * @return nada
  */
 void
 olsr_delete_nbr2_entry(struct nbr2_entry *nbr2)
@@ -184,8 +186,7 @@ olsr_delete_nbr2_entry(struct nbr2_entry *nbr2)
 /**
  * Insert a new entry to the two hop neighbor table.
  *
- * @param two_hop_neighbor the entry to insert
- *
+ * @param addr the entry to insert
  * @return nada
  */
 struct nbr2_entry *
@@ -199,7 +200,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr)
   /*
    * Check first if the entry exists.
    */
-  nbr2 = olsr_lookup_two_hop_neighbor_table(addr);
+  nbr2 = olsr_lookup_nbr2_entry(addr);
   if (nbr2) {
     return nbr2;
   }
@@ -221,12 +222,10 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr)
   return nbr2;
 }
 
-
 /**
  * Lookup a neighbor2 entry in the neighbortable2 based on an address.
  *
  * @param addr the IP address of the neighbor to look up
- *
  * @return a pointer to the neighbor2 struct registered on the given
  *  address. NULL if not found.
  */
@@ -243,15 +242,15 @@ olsr_lookup_nbr2_entry_alias(const union olsr_ip_addr *addr)
 }
 
 /**
- *Look up an entry in the two hop neighbor table.
+ * Look up an entry in the two hop neighbor table.
+ * Unalias the passed in address before.
  *
- *@param dest the IP address of the entry to find
- *
- *@return a pointer to a nbr2_entry struct
- *representing the two hop neighbor
+ * @param dest the IP address of the entry to find
+ * @return a pointer to a nbr2_entry struct
+ *  representing the two hop neighbor
  */
 struct nbr2_entry *
-olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *addr)
+olsr_lookup_nbr2_entry(const union olsr_ip_addr *addr)
 {
   const union olsr_ip_addr *main_addr;
 
@@ -296,8 +295,9 @@ olsr_add_nbr_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2)
 /**
  * Links a one-hop neighbor with a 2-hop neighbor.
  *
- * @param neighbor the 1-hop neighbor
- * @param two_hop_neighbor the 2-hop neighbor
+ * @param nbr  the 1-hop neighbor
+ * @param nbr2 the 2-hop neighbor
+ * @param vtime validity time of the 2hop neighbor
  * @return nada
  */
 void
@@ -307,9 +307,8 @@ olsr_link_nbr_nbr2(struct nbr_entry *nbr, struct nbr2_entry *nbr2, float vtime)
   olsr_add_nbr2_list_entry(nbr, nbr2, vtime);
 }
 
-
 /**
- *Print the two hop neighbor table to STDOUT.
+  *Print the two hop neighbor table to STDOUT.
  *
  *@return nada
  */

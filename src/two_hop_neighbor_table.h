@@ -107,7 +107,7 @@ void olsr_unlock_nbr2(struct nbr2_entry *);
 void olsr_delete_nbr_list_by_addr(struct nbr2_entry *, const union olsr_ip_addr *);
 void olsr_delete_nbr2_entry(struct nbr2_entry *);
 struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *);
-struct nbr2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
+struct nbr2_entry *olsr_lookup_nbr2_entry(const union olsr_ip_addr *);
 struct nbr2_entry *olsr_lookup_nbr2_entry_alias(const union olsr_ip_addr *);
 void olsr_link_nbr_nbr2(struct nbr_entry *, struct nbr2_entry *, float);
 void olsr_print_two_hop_neighbor_table(void);

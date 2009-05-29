@@ -332,7 +332,7 @@ olsr_update_nbr_status(struct nbr_entry *entry, int lnk)
       struct nbr2_entry *two_hop_neighbor;
 
       /* Delete posible 2 hop entry on this neighbor */
-      if ((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->nbr_addr)) != NULL) {
+      if ((two_hop_neighbor = olsr_lookup_nbr2_entry(&entry->nbr_addr)) != NULL) {
         olsr_delete_nbr2_entry(two_hop_neighbor);
       }
 
