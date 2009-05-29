@@ -50,22 +50,19 @@
 
 #include <stdlib.h>
 
-struct nbr2_entry two_hop_neighbortable[HASHSIZE];
+/* Root of the two hop neighbor database */
+struct avl_tree nbr2_tree;
 
 /**
- *Initialize 2 hop neighbor table
+ * Initialize 2 hop neighbor table
  */
 void
 olsr_init_two_hop_table(void)
 {
-  int idx;
+  OLSR_INFO(LOG_NEIGHTABLE, "Initializing neighbor2 tree.\n");
+  avl_init(&nbr2_tree, avl_comp_default);
 
-  OLSR_INFO(LOG_2NEIGH, "Initialize two-hop neighbortable...\n");
-
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    two_hop_neighbortable[idx].next = &two_hop_neighbortable[idx];
-    two_hop_neighbortable[idx].prev = &two_hop_neighbortable[idx];
-  }
+  /* XXX cookie allocation */
 }
 
 /**
@@ -159,29 +156,67 @@ olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
     free(nbr_list);
   }
 
-  DEQUEUE_ELEM(nbr2);
+  avl_delete(&nbr2_tree, &nbr2->nbr2_node);
   free(nbr2);
 }
 
 /**
- *Insert a new entry to the two hop neighbor table.
+ * Insert a new entry to the two hop neighbor table.
  *
- *@param two_hop_neighbor the entry to insert
+ * @param two_hop_neighbor the entry to insert
  *
- *@return nada
+ * @return nada
  */
-void
-olsr_insert_two_hop_neighbor_table(struct nbr2_entry *two_hop_neighbor)
+struct nbr2_entry *
+olsr_add_nbr2_entry(const union olsr_ip_addr *addr)
 {
 #if !defined REMOVE_LOG_DEBUG
   struct ipaddr_str buf;
 #endif
-  uint32_t hash = olsr_ip_hashing(&two_hop_neighbor->nbr2_addr);
+  struct nbr2_entry *nbr2;
 
-  OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->nbr2_addr));
+  /*
+   * Check first if the entry exists.
+   */
+  nbr2 = olsr_lookup_two_hop_neighbor_table(addr);
+  if (nbr2) {
+    return nbr2;
+  }
 
-  /* Queue */
-  QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
+  OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, addr));
+
+  nbr2 = olsr_malloc(sizeof(*nbr2), "Process HELLO");
+  nbr2->nbr2_nblist.next = &nbr2->nbr2_nblist;
+  nbr2->nbr2_nblist.prev = &nbr2->nbr2_nblist;
+  nbr2->nbr2_refcount = 0;
+  nbr2->nbr2_addr = *addr;
+
+  /* Add to global neighbor 2 tree */
+  nbr2->nbr2_node.key = &nbr2->nbr2_addr;
+  avl_insert(&nbr2_tree, &nbr2->nbr2_node, AVL_DUP_NO);
+
+  return nbr2;
+}
+
+
+/**
+ * Lookup a neighbor2 entry in the neighbortable2 based on an address.
+ *
+ * @param addr the IP address of the neighbor to look up
+ *
+ * @return a pointer to the neighbor2 struct registered on the given
+ *  address. NULL if not found.
+ */
+struct nbr2_entry *
+olsr_lookup_nbr2_entry_alias(const union olsr_ip_addr *addr)
+{
+  struct avl_node *node;
+
+  node = avl_find(&nbr2_tree, addr);
+  if (node) {
+    return nbr2_node_to_nbr2(node);
+  }
+  return NULL;
 }
 
 /**
@@ -193,50 +228,19 @@ olsr_insert_two_hop_neighbor_table(struct nbr2_entry *two_hop_neighbor)
  *representing the two hop neighbor
  */
 struct nbr2_entry *
-olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *dest)
+olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *addr)
 {
-  struct nbr2_entry *nbr2;
-  uint32_t hash = olsr_ip_hashing(dest);
+  const union olsr_ip_addr *main_addr;
 
-  for (nbr2 = two_hop_neighbortable[hash].next; nbr2 != &two_hop_neighbortable[hash]; nbr2 = nbr2->next) {
-    struct tc_entry *tc;
-
-    if (olsr_ipcmp(&nbr2->nbr2_addr, dest) == 0) {
-      return nbr2;
-    }
-    /*
-     * Locate the hookup point and check if this is a registered alias.
-     */
-    tc = olsr_locate_tc_entry(&nbr2->nbr2_addr);
-    if (olsr_lookup_tc_mid_entry(tc, dest)) {
-      return nbr2;
-    }
+  /*
+   * Find main address of node
+   */
+  main_addr = olsr_lookup_main_addr_by_alias(addr);
+  if (!main_addr) {
+    main_addr = addr;
   }
-  return NULL;
+  return olsr_lookup_nbr2_entry_alias(main_addr);
 }
-
-/**
- *Look up an entry in the two hop neighbor table.
- *NO CHECK FOR MAIN ADDRESS OR ALIASES!
- *
- *@param dest the IP address of the entry to find
- *
- *@return a pointer to a nbr2_entry struct
- *representing the two hop neighbor
- */
-struct nbr2_entry *
-olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
-{
-  struct nbr2_entry *nbr2;
-  uint32_t hash = olsr_ip_hashing(dest);
-
-  for (nbr2 = two_hop_neighbortable[hash].next; nbr2 != &two_hop_neighbortable[hash]; nbr2 = nbr2->next) {
-    if (olsr_ipcmp(&nbr2->nbr2_addr, dest) == 0)
-      return nbr2;
-  }
-  return NULL;
-}
-
 
 /**
  * Links a one-hop neighbor with a 2-hop neighbor.
@@ -278,30 +282,28 @@ olsr_print_two_hop_neighbor_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  int i;
+  struct nbr2_entry *neigh2;
+  struct nbr_list_entry *entry;
+  bool first;
 
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
 
-  for (i = 0; i < HASHSIZE; i++) {
-    struct nbr2_entry *neigh2;
-    for (neigh2 = two_hop_neighbortable[i].next; neigh2 != &two_hop_neighbortable[i]; neigh2 = neigh2->next) {
-      struct nbr_list_entry *entry;
-      bool first = true;
+  OLSR_FOR_ALL_NBR2_ENTRIES(neigh2) {
+    first = true;
 
-      for (entry = neigh2->nbr2_nblist.next; entry != &neigh2->nbr2_nblist; entry = entry->next) {
-        struct ipaddr_str buf;
-        struct lqtextbuffer lqbuffer;
+    for (entry = neigh2->nbr2_nblist.next; entry != &neigh2->nbr2_nblist; entry = entry->next) {
+      struct ipaddr_str buf;
+      struct lqtextbuffer lqbuffer;
 
-        OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
-                     first ? olsr_ip_to_string(&buf, &neigh2->nbr2_addr) : "",
-                     olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
-                     get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
+      OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
+                   first ? olsr_ip_to_string(&buf, &neigh2->nbr2_addr) : "",
+                   olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
+                   get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
 
-        first = false;
-      }
+      first = false;
     }
-  }
+  } OLSR_FOR_ALL_NBR2_ENTRIES_END(neigh2);
 #endif
 }
 

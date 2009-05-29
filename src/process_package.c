@@ -68,10 +68,6 @@ static void hello_tap(struct lq_hello_message *, struct interface *, const union
 static void
 process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_message *message)
 {
-#if !defined REMOVE_LOG_DEBUG
-    struct ipaddr_str buf;
-#endif
-
   struct lq_hello_neighbor *message_neighbors;
   olsr_linkcost first_hop_pathcost;
   struct link_entry *lnk;
@@ -133,16 +129,8 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
         }
       }
     } else {
-      struct nbr2_entry *two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&message_neighbors->addr);
-      if (two_hop_neighbor == NULL) {
-        OLSR_DEBUG(LOG_LINKS, "Adding 2 hop neighbor %s\n\n", olsr_ip_to_string(&buf, &message_neighbors->addr));
-        two_hop_neighbor = olsr_malloc(sizeof(*two_hop_neighbor), "Process HELLO");
-        two_hop_neighbor->nbr2_nblist.next = &two_hop_neighbor->nbr2_nblist;
-        two_hop_neighbor->nbr2_nblist.prev = &two_hop_neighbor->nbr2_nblist;
-        two_hop_neighbor->nbr2_refcount = 0;
-        two_hop_neighbor->nbr2_addr = message_neighbors->addr;
-        olsr_insert_two_hop_neighbor_table(two_hop_neighbor);
-      }
+      struct nbr2_entry *two_hop_neighbor = olsr_add_nbr2_entry(&message_neighbors->addr);
+
       /*
        * linking to this two_hop_neighbor entry
        */

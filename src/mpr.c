@@ -223,22 +223,18 @@ olsr_check_mpr_changes(void)
 
 
 /**
- *Clears out proccess registration
- *on two hop neighbors
+ * Clears out proccess registration on two hop neighbors
  */
 static void
 olsr_clear_two_hop_processed(void)
 {
-  int idx;
+  struct nbr2_entry *nbr2;
 
-  for (idx = 0; idx < HASHSIZE; idx++) {
-    struct nbr2_entry *nbr2;
-    for (nbr2 = two_hop_neighbortable[idx].next; nbr2 != &two_hop_neighbortable[idx]; nbr2 = nbr2->next) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) {
+
       /* Clear */
       nbr2->processed = 0;
-    }
-  }
-
+  } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
 }
 
 

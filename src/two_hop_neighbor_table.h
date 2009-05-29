@@ -61,14 +61,15 @@ struct nbr_list_entry {
 
 
 struct nbr2_entry {
+  struct avl_node nbr2_node;
   union olsr_ip_addr nbr2_addr;
-  struct nbr2_entry *prev;
-  struct nbr2_entry *next;
   unsigned int mpr_covered_count;      /* Used in mpr calculation */
   unsigned int processed:1;            /* Used in mpr calculation */
   unsigned int nbr2_refcount;          /* Reference counter */
   struct nbr_list_entry nbr2_nblist;
 } __attribute__ ((packed));;
+
+AVLNODE2STRUCT(nbr2_node_to_nbr2, struct nbr2_entry, nbr2_node);
 
 /*
  * macros for traversing two-hop neighbors.
@@ -79,24 +80,27 @@ struct nbr2_entry {
  * for example the caller wants to delete the current entry.
  */
 #define OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) \
-  { \
-  int _idx; \
-  for (_idx = 0; _idx < HASHSIZE; _idx++) { \
-  for(nbr2 = two_hop_neighbortable[_idx].next; \
-  nbr2 != &two_hop_neighbortable[_idx]; \
-  nbr2 = nbr2->next)
+{ \
+  struct avl_node *nbr2_tree_node, *next_nbr2_tree_node; \
+  for (nbr2_tree_node = avl_walk_first(&nbr2_tree); \
+    nbr2_tree_node; nbr2_tree_node = next_nbr2_tree_node) { \
+    next_nbr2_tree_node = avl_walk_next(nbr2_tree_node); \
+    nbr2 = nbr2_node_to_nbr2(nbr2_tree_node);
 #define OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2) }}
 
-extern struct nbr2_entry two_hop_neighbortable[HASHSIZE];
+/*
+ * The two hop neighbor tree
+ */
+extern struct avl_tree EXPORT(nbr2_tree);
 
 void olsr_init_two_hop_table(void);
 void olsr_lock_nbr2(struct nbr2_entry *);
 void olsr_unlock_nbr2(struct nbr2_entry *);
 void olsr_delete_neighbor_pointer(struct nbr2_entry *, struct nbr_entry *);
 void olsr_delete_two_hop_neighbor_table(struct nbr2_entry *);
-void olsr_insert_two_hop_neighbor_table(struct nbr2_entry *);
+struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *);
 struct nbr2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
-struct nbr2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *);
+struct nbr2_entry *olsr_lookup_nbr2_entry_alias(const union olsr_ip_addr *);
 void olsr_link_nbr_nbr2(struct nbr_entry *, struct nbr2_entry *, float);
 void olsr_print_two_hop_neighbor_table(void);
 

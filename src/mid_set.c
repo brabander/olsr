@@ -128,7 +128,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
 
   OLSR_FOR_ALL_TC_MID_ENTRIES(tc, alias) {
     struct nbr_entry *nbr;
-    struct nbr2_entry *nbr2 = olsr_lookup_two_hop_neighbor_table_mid(&alias->mid_alias_addr);
+    struct nbr2_entry *nbr2 = olsr_lookup_nbr2_entry_alias(&alias->mid_alias_addr);
 
     /* Delete possible 2 hop neighbor */
     if (nbr2) {
