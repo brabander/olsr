@@ -65,7 +65,7 @@ AVLNODE2STRUCT(nbr2_list_node_to_nbr2_list, struct nbr2_list_entry, nbr2_list_no
 
 struct nbr_entry {
   struct avl_node nbr_node;            /* nbr keyed by ip address */
-  union olsr_ip_addr neighbor_main_addr;
+  union olsr_ip_addr nbr_addr;
   unsigned int status:3;
   unsigned int willingness:3;
   unsigned int is_mpr:1;

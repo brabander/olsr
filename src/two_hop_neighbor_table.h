@@ -106,7 +106,7 @@ void olsr_init_two_hop_table(void);
 void olsr_lock_nbr2(struct nbr2_entry *);
 void olsr_unlock_nbr2(struct nbr2_entry *);
 void olsr_delete_nbr_list_by_addr(struct nbr2_entry *, const union olsr_ip_addr *);
-void olsr_delete_two_hop_neighbor_table(struct nbr2_entry *);
+void olsr_delete_nbr2_entry(struct nbr2_entry *);
 struct nbr2_entry *olsr_add_nbr2_entry(const union olsr_ip_addr *);
 struct nbr2_entry *olsr_lookup_two_hop_neighbor_table(const union olsr_ip_addr *);
 struct nbr2_entry *olsr_lookup_nbr2_entry_alias(const union olsr_ip_addr *);

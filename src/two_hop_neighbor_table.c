@@ -97,7 +97,7 @@ olsr_unlock_nbr2(struct nbr2_entry *nbr2)
    * Nobody is interested in this nbr2 anymore.
    * Remove all references to it and free.
    */
-  olsr_delete_two_hop_neighbor_table(nbr2);
+  olsr_delete_nbr2_entry(nbr2);
 }
 
 /*
@@ -147,7 +147,7 @@ olsr_delete_nbr_list_by_addr(struct nbr2_entry *nbr2, const union olsr_ip_addr *
  *@return nada
  */
 void
-olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
+olsr_delete_nbr2_entry(struct nbr2_entry *nbr2)
 {
   struct nbr_entry *nbr;
   struct nbr_list_entry *nbr_list;
@@ -276,7 +276,7 @@ olsr_add_nbr_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2)
   /*
    * Check if the entry exists.
    */
-  nbr_list = olsr_lookup_nbr_list_entry(nbr2, &nbr->neighbor_main_addr);
+  nbr_list = olsr_lookup_nbr_list_entry(nbr2, &nbr->nbr_addr);
   if (!nbr_list) {
 
     /*
@@ -288,7 +288,7 @@ olsr_add_nbr_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2)
     nbr_list->path_linkcost = LINK_COST_BROKEN;
     nbr_list->saved_path_linkcost = LINK_COST_BROKEN;
 
-    nbr_list->nbr_list_node.key = &nbr->neighbor_main_addr;
+    nbr_list->nbr_list_node.key = &nbr->nbr_addr;
     avl_insert(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node, AVL_DUP_NO);
   }
 }
@@ -318,7 +318,7 @@ olsr_print_two_hop_neighbor_table(void)
 {
 #if !defined REMOVE_LOG_INFO
   /* The whole function makes no sense without it. */
-  struct nbr2_entry *neigh2;
+  struct nbr2_entry *nbr2;
   struct nbr_list_entry *entry;
   struct ipaddr_str buf;
   struct lqtextbuffer lqbuffer;
@@ -327,17 +327,17 @@ olsr_print_two_hop_neighbor_table(void)
   OLSR_INFO(LOG_2NEIGH, "\n--- %s ----------------------- TWO-HOP NEIGHBORS\n\n"
             "IP addr (2-hop)  IP addr (1-hop)  Total cost\n", olsr_wallclock_string());
 
-  OLSR_FOR_ALL_NBR2_ENTRIES(neigh2) {
+  OLSR_FOR_ALL_NBR2_ENTRIES(nbr2) {
     first = true;
-    OLSR_FOR_ALL_NBR_LIST_ENTRIES(neigh2, entry) {
+    OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, entry) {
       OLSR_INFO_NH(LOG_2NEIGH, "%-15s  %-15s  %s\n",
-                   first ? olsr_ip_to_string(&buf, &neigh2->nbr2_addr) : "",
-                   olsr_ip_to_string(&buf, &entry->neighbor->neighbor_main_addr),
+                   first ? olsr_ip_to_string(&buf, &nbr2->nbr2_addr) : "",
+                   olsr_ip_to_string(&buf, &entry->neighbor->nbr_addr),
                    get_linkcost_text(entry->path_linkcost, false, &lqbuffer));
 
       first = false;
-    } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(neigh2, entry);
-  } OLSR_FOR_ALL_NBR2_ENTRIES_END(neigh2);
+    } OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, entry);
+  } OLSR_FOR_ALL_NBR2_ENTRIES_END(nbr2);
 #endif
 }
 

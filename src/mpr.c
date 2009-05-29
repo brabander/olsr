@@ -85,7 +85,7 @@ olsr_chosen_mpr(struct nbr_entry *one_hop_neighbor, uint16_t * two_hop_covered_c
 #endif
   count = *two_hop_covered_count;
 
-  OLSR_DEBUG(LOG_MPR, "Setting %s as MPR\n", olsr_ip_to_string(&buf, &one_hop_neighbor->neighbor_main_addr));
+  OLSR_DEBUG(LOG_MPR, "Setting %s as MPR\n", olsr_ip_to_string(&buf, &one_hop_neighbor->nbr_addr));
 
   //printf("PRE COUNT: %d\n\n", count);
 
@@ -150,7 +150,7 @@ olsr_find_maximum_covered(int willingness)
   OLSR_FOR_ALL_NBR_ENTRIES(a_neighbor) {
 
     OLSR_DEBUG(LOG_MPR, "[%s] nocov: %d mpr: %d will: %d max: %d\n\n",
-               olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr),
+               olsr_ip_to_string(&buf, &a_neighbor->nbr_addr),
                a_neighbor->nbr2_nocov, a_neighbor->is_mpr, a_neighbor->willingness, maximum);
 
     if ((!a_neighbor->is_mpr) && (a_neighbor->willingness == willingness) && (maximum < a_neighbor->nbr2_nocov)) {
@@ -297,7 +297,7 @@ add_will_always_nodes(void)
     }
     olsr_chosen_mpr(a_neighbor, &count);
 
-    OLSR_DEBUG(LOG_MPR, "Adding WILL_ALWAYS: %s\n", olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr));
+    OLSR_DEBUG(LOG_MPR, "Adding WILL_ALWAYS: %s\n", olsr_ip_to_string(&buf, &a_neighbor->nbr_addr));
 
   } OLSR_FOR_ALL_NBR_ENTRIES_END(a_neighbor);
 
@@ -461,7 +461,7 @@ olsr_optimize_mpr_set(void)
         } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(a_neighbor, two_hop_list_list);
 
         if (remove_it) {
-          OLSR_DEBUG(LOG_MPR, "MPR OPTIMIZE: removiong mpr %s\n\n", olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr));
+          OLSR_DEBUG(LOG_MPR, "MPR OPTIMIZE: removiong mpr %s\n\n", olsr_ip_to_string(&buf, &a_neighbor->nbr_addr));
           a_neighbor->is_mpr = false;
         }
       }
@@ -485,7 +485,7 @@ olsr_print_mpr_set(void)
      */
     if (a_neighbor->is_mpr) {
       struct ipaddr_str buf;
-      OLSR_INFO_NH(LOG_MPR, "\t[%s]\n", olsr_ip_to_string(&buf, &a_neighbor->neighbor_main_addr));
+      OLSR_INFO_NH(LOG_MPR, "\t[%s]\n", olsr_ip_to_string(&buf, &a_neighbor->nbr_addr));
     }
   } OLSR_FOR_ALL_NBR_ENTRIES_END(a_neighbor);
 #endif

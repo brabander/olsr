@@ -135,7 +135,7 @@ olsr_flush_nbr2_duplicates(struct mid_entry *alias)
       OLSR_DEBUG(LOG_MID, "Delete 2hop neighbor: %s to %s\n",
                  olsr_ip_to_string(&buf1, &alias->mid_alias_addr), olsr_ip_to_string(&buf2, &tc->addr));
 
-      olsr_delete_two_hop_neighbor_table(nbr2);
+      olsr_delete_nbr2_entry(nbr2);
       changes_neighborhood = true;
     }
 

@@ -152,7 +152,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
   if (neighbor->status == 0) {  /* non SYM */
     style = "dashed";
   } else {
-    const struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+    const struct link_entry *lnk = get_best_link_to_neighbor(&neighbor->nbr_addr);
     if (lnk) {
       etx = lnk->linkcost;
     }
@@ -161,7 +161,7 @@ ipc_print_neigh_link(int ipc_connection, const struct nbr_entry *neighbor)
 
   ipc_send_fmt(ipc_connection,
                "\"%s\" -> \"%s\"[label=\"%s\", style=%s];\n",
-               adr, olsr_ip_to_string(&strbuf, &neighbor->neighbor_main_addr), get_linkcost_text(etx, false, &lqbuffer), style);
+               adr, olsr_ip_to_string(&strbuf, &neighbor->nbr_addr), get_linkcost_text(etx, false, &lqbuffer), style);
 
   if (neighbor->is_mpr) {
     ipc_send_fmt(ipc_connection, "\"%s\"[shape=box];\n", adr);

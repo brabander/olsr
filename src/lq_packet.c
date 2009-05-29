@@ -119,7 +119,7 @@ create_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
     else {
       OLSR_WARN(LOG_PACKET_CREATION, "Error: neigh_type %d in link %s undefined\n",
-                walker->neighbor->status, olsr_ip_to_string(&buf, &walker->neighbor->neighbor_main_addr));
+                walker->neighbor->status, olsr_ip_to_string(&buf, &walker->neighbor->nbr_addr));
       neigh->neigh_type = NOT_NEIGH;
     }
 
@@ -208,7 +208,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
      *
      * Only consider MPRs and MPR selectors
      */
-    if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr && !olsr_lookup_mprs_set(&walker->neighbor_main_addr)) {
+    if (olsr_cnf->tc_redundancy == 1 && !walker->is_mpr && !olsr_lookup_mprs_set(&walker->nbr_addr)) {
       continue;
     }
 
@@ -217,12 +217,12 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
      *
      * Only consider MPR selectors
      */
-    if (olsr_cnf->tc_redundancy == 0 && !olsr_lookup_mprs_set(&walker->neighbor_main_addr)) {
+    if (olsr_cnf->tc_redundancy == 0 && !olsr_lookup_mprs_set(&walker->nbr_addr)) {
       continue;
     }
 
     /* Set the entry's link quality */
-    lnk = get_best_link_to_neighbor(&walker->neighbor_main_addr);
+    lnk = get_best_link_to_neighbor(&walker->nbr_addr);
     if (!lnk) {
       continue;                 // no link ?
     }
@@ -235,7 +235,7 @@ create_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     neigh = olsr_malloc_tc_mpr_addr();
 
     /* Set the entry's main address. */
-    neigh->address = walker->neighbor_main_addr;
+    neigh->address = walker->nbr_addr;
 
     if (lnk) {
       olsr_copylq_link_entry_2_tc_mpr_addr(neigh, lnk);

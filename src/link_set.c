@@ -199,7 +199,7 @@ get_best_link_to_neighbor(const union olsr_ip_addr *remote)
   OLSR_FOR_ALL_LINK_ENTRIES(walker) {
 
     /* if this is not a link to the neighour in question, skip */
-    if (olsr_ipcmp(&walker->neighbor->neighbor_main_addr, main_addr) != 0)
+    if (olsr_ipcmp(&walker->neighbor->nbr_addr, main_addr) != 0)
       continue;
 
     /* get the link cost */
@@ -289,11 +289,11 @@ olsr_delete_link_entry(struct link_entry *link)
    * Delete the rt_path for the link-end.
    */
   olsr_delete_routing_table(&link->neighbor_iface_addr, 8 * olsr_cnf->ipsize,
-                            &link->neighbor->neighbor_main_addr, OLSR_RT_ORIGIN_LINK);
+                            &link->neighbor->nbr_addr, OLSR_RT_ORIGIN_LINK);
 
   /* Delete neighbor entry */
   if (link->neighbor->linkcount == 1) {
-    olsr_delete_nbr_entry(&link->neighbor->neighbor_main_addr);
+    olsr_delete_nbr_entry(&link->neighbor->nbr_addr);
   } else {
     link->neighbor->linkcount--;
   }
@@ -572,14 +572,14 @@ lookup_link_entry(const union olsr_ip_addr *remote, const union olsr_ip_addr *re
     if (olsr_ipcmp(remote, &link->neighbor_iface_addr) == 0 && (link->if_name ? !strcmp(link->if_name, local->int_name)
                                                                 : olsr_ipcmp(&local->ip_addr, &link->local_iface_addr) == 0)) {
       /* check the remote-main address only if there is one given */
-      if (NULL != remote_main && olsr_ipcmp(remote_main, &link->neighbor->neighbor_main_addr) != 0) {
+      if (NULL != remote_main && olsr_ipcmp(remote_main, &link->neighbor->nbr_addr) != 0) {
         /* Neighbor has changed it's main_addr, update */
 #if !defined REMOVE_LOG_DEBUG
         struct ipaddr_str oldbuf, newbuf;
 #endif
         OLSR_DEBUG(LOG_LINKS, "Neighbor changed main_ip, updating %s -> %s\n",
-                   olsr_ip_to_string(&oldbuf, &link->neighbor->neighbor_main_addr), olsr_ip_to_string(&newbuf, remote_main));
-        link->neighbor->neighbor_main_addr = *remote_main;
+                   olsr_ip_to_string(&oldbuf, &link->neighbor->nbr_addr), olsr_ip_to_string(&newbuf, remote_main));
+        link->neighbor->nbr_addr = *remote_main;
       }
       return link;
     }

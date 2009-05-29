@@ -958,14 +958,14 @@ build_neigh_body(struct autobuf *abuf)
     struct nbr2_list_entry *list_2;
     int thop_cnt;
     abuf_puts(abuf, "<tr>");
-    build_ipaddr_with_link(abuf, &neigh->neighbor_main_addr, -1);
+    build_ipaddr_with_link(abuf, &neigh->nbr_addr, -1);
     abuf_appendf(abuf,
                  "<td>%s</td>"
                  "<td>%s</td>"
                  "<td>%s</td>"
                  "<td>%d</td>",
                  (neigh->status == SYM) ? "YES" : "NO",
-                 neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO", neigh->willingness);
+                 neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->nbr_addr) ? "YES" : "NO", neigh->willingness);
 
     abuf_puts(abuf, "<td><select>\n" "<option>IP ADDRESS</option>\n");
 

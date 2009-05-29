@@ -210,7 +210,7 @@ olsr_delete_nbr_entry(const union olsr_ip_addr * addr)
   OLSR_DEBUG(LOG_NEIGHTABLE, "Delete 1-hop neighbor: %s\n", olsr_ip_to_string(&buf, addr));
 
   OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
-    olsr_delete_nbr_list_by_addr(nbr2_list->nbr2, &nbr->neighbor_main_addr);
+    olsr_delete_nbr_list_by_addr(nbr2_list->nbr2, &nbr->nbr_addr);
     olsr_delete_nbr2_list_entry(nbr2_list);
   } OLSR_FOR_ALL_NBR2_LIST_ENTRIES_END(nbr, nbr2_list);
 
@@ -252,7 +252,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr = olsr_cookie_malloc(nbr_mem_cookie);
 
   /* Set address, willingness and status */
-  nbr->neighbor_main_addr = *addr;
+  nbr->nbr_addr = *addr;
   nbr->willingness = WILL_NEVER;
   nbr->status = NOT_SYM;
 
@@ -264,7 +264,7 @@ olsr_add_nbr_entry(const union olsr_ip_addr *addr)
   nbr->was_mpr = false;
 
   /* Add to the global neighbor tree */
-  nbr->nbr_node.key = &nbr->neighbor_main_addr;
+  nbr->nbr_node.key = &nbr->nbr_addr;
   avl_insert(&nbr_tree, &nbr->nbr_node, AVL_DUP_NO);
 
   return nbr;
@@ -332,8 +332,8 @@ olsr_update_nbr_status(struct nbr_entry *entry, int lnk)
       struct nbr2_entry *two_hop_neighbor;
 
       /* Delete posible 2 hop entry on this neighbor */
-      if ((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->neighbor_main_addr)) != NULL) {
-        olsr_delete_two_hop_neighbor_table(two_hop_neighbor);
+      if ((two_hop_neighbor = olsr_lookup_two_hop_neighbor_table(&entry->nbr_addr)) != NULL) {
+        olsr_delete_nbr2_entry(two_hop_neighbor);
       }
 
       changes_neighborhood = true;
@@ -373,7 +373,7 @@ olsr_expire_nbr2_list(void *context)
   nbr = nbr2_list->nbr2_nbr;
   nbr2 = nbr2_list->nbr2;
 
-  olsr_delete_nbr_list_by_addr(nbr2, &nbr->neighbor_main_addr);
+  olsr_delete_nbr_list_by_addr(nbr2, &nbr->nbr_addr);
   olsr_delete_nbr2_list_entry(nbr2_list);
 }
 
@@ -399,16 +399,16 @@ olsr_print_neighbor_table(void)
 
   OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
 
-    lnk = get_best_link_to_neighbor(&nbr->neighbor_main_addr);
+    lnk = get_best_link_to_neighbor(&nbr->nbr_addr);
     if (!lnk) {
       continue;
     }
 
     OLSR_INFO_NH(LOG_NEIGHTABLE, "%-*s  %s  %s  %s  %d\n",
-                 ipwidth, olsr_ip_to_string(&buf, &nbr->neighbor_main_addr),
+                 ipwidth, olsr_ip_to_string(&buf, &nbr->nbr_addr),
                  nbr->status == SYM ? "YES " : "NO  ",
                  nbr->is_mpr ? "YES " : "NO  ",
-                 olsr_lookup_mprs_set(&nbr->neighbor_main_addr) == NULL ? "NO  " : "YES ", nbr->willingness);
+                 olsr_lookup_mprs_set(&nbr->nbr_addr) == NULL ? "NO  " : "YES ", nbr->willingness);
   } OLSR_FOR_ALL_NBR_ENTRIES_END(nbr);
 #endif
 }

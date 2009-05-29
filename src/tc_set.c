@@ -242,7 +242,7 @@ olsr_change_myself_tc(void)
      */
     if (main_ip_change || entry->link_tc_edge == NULL) {
       struct nbr_entry *ne = entry->neighbor;
-      entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->neighbor_main_addr, 0);
+      entry->link_tc_edge = olsr_add_tc_edge_entry(tc_myself, &ne->nbr_addr, 0);
 
       /*
        * Mark the edge local such that it does not get deleted

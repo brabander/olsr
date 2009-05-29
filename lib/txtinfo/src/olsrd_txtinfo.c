@@ -188,10 +188,10 @@ txtinfo_neigh(struct comport_connection *con,  char *cmd __attribute__ ((unused)
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
     struct ipaddr_str buf1;
     if (abuf_appendf(&con->out, !con->is_csv ? "%s\t%s\t%s\t%s\t%d\t%d\n" : "neigh,%s,%s,%s,%s,%d,%d\n",
-                       olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+                       olsr_ip_to_string(&buf1, &neigh->nbr_addr),
                        neigh->status == SYM ? "YES" : "NO",
                        neigh->is_mpr ? "YES" : "NO",
-                       olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO", neigh->willingness, neigh->nbr2_list_tree.count) < 0) {
+                       olsr_lookup_mprs_set(&neigh->nbr_addr) ? "YES" : "NO", neigh->willingness, neigh->nbr2_list_tree.count) < 0) {
         return ABUF_ERROR;
     }
   } OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);

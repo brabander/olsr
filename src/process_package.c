@@ -141,7 +141,7 @@ process_message_neighbors(struct nbr_entry *neighbor, const struct lq_hello_mess
   }
 
   /* Second pass */
-  lnk = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+  lnk = get_best_link_to_neighbor(&neighbor->nbr_addr);
 
   if (!lnk) {
     return;
@@ -348,7 +348,7 @@ hello_tap(struct lq_hello_message *message, struct interface *in_if, const union
     struct ipaddr_str buf;
 #endif
     OLSR_DEBUG(LOG_LINKS, "Willingness for %s changed from %d to %d - UPDATING\n",
-               olsr_ip_to_string(&buf, &lnk->neighbor->neighbor_main_addr), lnk->neighbor->willingness, message->will);
+               olsr_ip_to_string(&buf, &lnk->neighbor->nbr_addr), lnk->neighbor->willingness, message->will);
     /*
      *If willingness changed - recalculate
      */
