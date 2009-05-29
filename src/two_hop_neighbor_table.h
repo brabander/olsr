@@ -44,7 +44,6 @@
 #define _OLSR_TWO_HOP_TABLE
 
 #include "defs.h"
-#include "hashing.h"
 #include "lq_plugin.h"
 
 #define	NB2S_COVERED 	0x1     /* node has been covered by a MPR */
