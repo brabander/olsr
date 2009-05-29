@@ -53,6 +53,10 @@
 /* Root of the two hop neighbor database */
 struct avl_tree nbr2_tree;
 
+/* Some cookies for stats keeping */
+struct olsr_cookie_info *nbr_list_mem_cookie = NULL;
+struct olsr_cookie_info *nbr2_mem_cookie = NULL;
+
 /**
  * Initialize 2 hop neighbor table
  */
@@ -62,7 +66,11 @@ olsr_init_two_hop_table(void)
   OLSR_INFO(LOG_NEIGHTABLE, "Initializing neighbor2 tree.\n");
   avl_init(&nbr2_tree, avl_comp_default);
 
-  /* XXX cookie allocation */
+  nbr_list_mem_cookie = olsr_alloc_cookie("1-Hop Neighbor List", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(nbr_list_mem_cookie, sizeof(struct nbr_list_entry));
+
+  nbr2_mem_cookie = olsr_alloc_cookie("2-Hop Neighbor", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(nbr2_mem_cookie, sizeof(struct nbr2_entry));
 }
 
 /**
@@ -128,7 +136,7 @@ olsr_delete_nbr_list_by_addr(struct nbr2_entry *nbr2, const union olsr_ip_addr *
   }
 
   avl_delete(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node);
-  free(nbr_list);
+  olsr_cookie_free(nbr_list_mem_cookie, nbr_list);
 }
 
 /**
@@ -165,11 +173,12 @@ olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
    */
   OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, nbr_list) {
     avl_delete(&nbr2->nbr2_nbr_list_tree, &nbr_list->nbr_list_node);
+    olsr_cookie_free(nbr_list_mem_cookie, nbr_list);
   }
   OLSR_FOR_ALL_NBR_LIST_ENTRIES_END(nbr2, nbr_list);
 
   avl_delete(&nbr2_tree, &nbr2->nbr2_node);
-  free(nbr2);
+  olsr_cookie_free(nbr2_mem_cookie, nbr2);
 }
 
 /**
@@ -197,7 +206,7 @@ olsr_add_nbr2_entry(const union olsr_ip_addr *addr)
 
   OLSR_DEBUG(LOG_2NEIGH, "Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, addr));
 
-  nbr2 = olsr_malloc(sizeof(*nbr2), "Process HELLO");
+  nbr2 = olsr_cookie_malloc(nbr2_mem_cookie);
 
   /* Init neighbor reference subtree */
   avl_init(&nbr2->nbr2_nbr_list_tree, avl_comp_default);
@@ -273,7 +282,7 @@ olsr_add_nbr_list_entry(struct nbr_entry *nbr, struct nbr2_entry *nbr2)
     /*
      * Unknown, Create a fresh one.
      */
-    nbr_list = olsr_malloc(sizeof(struct nbr_list_entry), "Link entries 1");
+    nbr_list = olsr_cookie_malloc(nbr_list_mem_cookie);
     nbr_list->neighbor = nbr;   /* XXX refcount */
     nbr_list->second_hop_linkcost = LINK_COST_BROKEN;
     nbr_list->path_linkcost = LINK_COST_BROKEN;
