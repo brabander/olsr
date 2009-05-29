@@ -109,6 +109,7 @@ olsr_calculate_lq_mpr(void)
       best_1hop = lnk->linkcost;
 
       /* see wether we find a better route via an MPR */
+      walker = NULL;
       OLSR_FOR_ALL_NBR_LIST_ENTRIES(nbr2, walker) {
         if (walker->path_linkcost < best_1hop) {
           break;
