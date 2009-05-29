@@ -81,7 +81,7 @@ olsr_lock_nbr2(struct nbr2_entry *nbr2)
 void
 olsr_unlock_nbr2(struct nbr2_entry *nbr2)
 {
-  if (--nbr2->nbr2_refcount) {
+  if (!nbr2 || --nbr2->nbr2_refcount) {
     return;
   }
 
@@ -151,6 +151,7 @@ olsr_delete_two_hop_neighbor_table(struct nbr2_entry *nbr2)
   OLSR_FOR_ALL_NBR_ENTRIES(nbr) {
     OLSR_FOR_ALL_NBR2_LIST_ENTRIES(nbr, nbr2_list) {
       if (nbr2_list->nbr2 == nbr2) {
+        nbr2_list->nbr2 = NULL; /* break recursion through olsr_unlock_nbr2() */
         olsr_delete_nbr2_list_entry(nbr2_list);
         break;
       }
